@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -19,8 +20,6 @@ from ccba_legal.sync import (
     safe_rmtree,
     sync_legal_assets,
 )
-
-pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 @pytest.fixture
@@ -224,4 +223,85 @@ def test_sync_legal_assets_helper_pull_assets(
     )
     assert res_full["status"] == "success"
     assert len(res_full["bundles_synced"]) == 1
+
+
+def test_safe_copy2_destination_directory_with_readonly_file(tmp_path: Path) -> None:
+    """Test safe_copy2 clears Read-Only on target file inside directory when dst is a directory."""
+    src_file = tmp_path / "data.txt"
+    src_file.write_text("updated content", encoding="utf-8")
+
+    dst_dir = tmp_path / "output_dir"
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    existing_file = dst_dir / "data.txt"
+    existing_file.write_text("initial content", encoding="utf-8")
+    os.chmod(existing_file, stat.S_IREAD)
+
+    res = safe_copy2(src_file, dst_dir)
+    assert Path(res).read_text(encoding="utf-8") == "updated content"
+    assert (dst_dir / "data.txt").read_text(encoding="utf-8") == "updated content"
+
+
+def test_safe_copy2_self_copy_to_parent_directory(tmp_path: Path) -> None:
+    """Test safe_copy2 avoids SameFileError when dst is the parent directory of src."""
+    file_path = tmp_path / "sample.txt"
+    file_path.write_text("sample data", encoding="utf-8")
+
+    # Copying to its own parent directory should be detected as self-copy
+    res = safe_copy2(file_path, tmp_path)
+    assert Path(res).exists()
+    assert Path(res).read_text(encoding="utf-8") == "sample data"
+
+
+def test_safe_remove_windows_junction(tmp_path: Path) -> None:
+    """Test safe_remove correctly deletes Windows NTFS directory junctions without deleting target contents."""
+    if sys.platform != "win32":
+        pytest.skip("Windows NTFS directory junction test requires win32")
+
+    import _winapi
+
+    target_dir = tmp_path / "junction_target"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_file = target_dir / "payload.txt"
+    target_file.write_text("protected content", encoding="utf-8")
+
+    junction_path = tmp_path / "junction_link"
+    _winapi.CreateJunction(str(target_dir), str(junction_path))
+
+    assert junction_path.exists()
+    assert (junction_path / "payload.txt").exists()
+
+    safe_remove(junction_path)
+
+    # Junction link should be gone, but target contents preserved
+    assert not junction_path.exists()
+    assert target_dir.exists()
+    assert target_file.exists()
+    assert target_file.read_text(encoding="utf-8") == "protected content"
+
+
+def test_legal_registry_manager_save_lock_retry(tmp_path: Path) -> None:
+    """Test LegalRegistryManager.save retries on temporary permission/lock error."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text("laws: []\n", encoding="utf-8")
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+
+    call_count = 0
+    orig_open = open
+
+    def mock_open(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        # Fail first call with PermissionError, succeed on second
+        if call_count == 1 and len(args) > 1 and "w" in args[1]:
+            raise PermissionError("[WinError 32] File locked by background sync")
+        return orig_open(*args, **kwargs)
+
+    with patch("builtins.open", side_effect=mock_open):
+        mgr.save({"laws": [{"id": "RETRY-TEST"}]})
+
+    saved_data = yaml.safe_load(reg_file.read_text(encoding="utf-8"))
+    assert saved_data["laws"][0]["id"] == "RETRY-TEST"
+    assert call_count >= 2
 

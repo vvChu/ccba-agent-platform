@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import stat
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -231,17 +232,29 @@ class LegalRegistryManager:
                     "resolutions": [],
                 }
 
-    def save(self, data: dict[str, Any]) -> None:
-        """Save the updated registry to YAML."""
+    def save(
+        self,
+        data: dict[str, Any],
+        max_retries: int = 3,
+        retry_delay: float = 0.1,
+    ) -> None:
+        """Save the updated registry to YAML with Windows Read-Only clearance and lock retry."""
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-        if self.registry_path.exists():
+        for attempt in range(max_retries):
             try:
-                os.chmod(self.registry_path, stat.S_IWRITE | stat.S_IREAD)
-            except Exception:
-                pass
-        with open(self.registry_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
-        print(f"[Registry] Successfully saved registry to {self.registry_path}")
+                if self.registry_path.exists():
+                    try:
+                        os.chmod(self.registry_path, stat.S_IWRITE | stat.S_IREAD)
+                    except Exception:
+                        pass
+                with open(self.registry_path, "w", encoding="utf-8") as f:
+                    yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+                print(f"[Registry] Successfully saved registry to {self.registry_path}")
+                return
+            except (PermissionError, OSError):
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(retry_delay)
 
     def register_document(self, doc_id: str, doc_data: dict[str, Any]) -> None:
         """Register or update a document in the registry."""

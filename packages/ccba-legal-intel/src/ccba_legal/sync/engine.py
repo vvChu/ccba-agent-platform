@@ -29,10 +29,12 @@ from ccba_legal.sync.notebooklm_sync import (
     sync_registry_to_notebooklm,
 )
 from ccba_legal.sync.utils import (
+    _is_link_or_junction,
     calculate_md5,
     calculate_sha256,
     is_port_open,
     safe_copy2,
+    safe_remove,
 )
 
 DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
@@ -295,6 +297,8 @@ class LegalSyncEngine:
                             for item in bundle_dir.iterdir():
                                 if item.is_dir():
                                     dest_subdir = target_bundle / item.name
+                                    if dest_subdir.is_file() or _is_link_or_junction(dest_subdir):
+                                        safe_remove(dest_subdir)
                                     shutil.copytree(
                                         item,
                                         dest_subdir,
@@ -302,7 +306,10 @@ class LegalSyncEngine:
                                         copy_function=safe_copy2,
                                     )
                                 else:
-                                    safe_copy2(item, target_bundle / item.name)
+                                    target_file = target_bundle / item.name
+                                    if target_file.is_dir():
+                                        safe_remove(target_file)
+                                    safe_copy2(item, target_file)
 
                             synced_bundles.append(f"{cat}/{slug}")
 
