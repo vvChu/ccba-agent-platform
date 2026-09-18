@@ -32,7 +32,7 @@ uv pip install -e "packages/ccba-maskara[dev]" --system
 # Test suites — always scope to the affected package; never run unscoped pytest
 pytest packages/mdconverter/tests/ -v --cov=src/mdconverter --cov-report=term-missing
 python -m unittest discover -s scripts/tests
-python scripts/run_harness_evals.py --all
+python scripts/eval/run_harness_evals.py --all
 
 # Single-test examples
 pytest packages/mdconverter/tests/test_registry.py::TestConverterRegistry::test_auto_select_for_pdf -v
