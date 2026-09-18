@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -163,6 +164,14 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
     },
 ]
 
+# Synchronize suggested replacement text directly from canonical KNOWN_STATUTORY_REPLACEMENTS (ADR 0050)
+from ccba_legal.registry import KNOWN_STATUTORY_REPLACEMENTS
+
+for _entry in OBSOLETE_LEGAL_PATTERNS:
+    _sid = _entry.get("id", "")
+    if _sid in KNOWN_STATUTORY_REPLACEMENTS and "title" in KNOWN_STATUTORY_REPLACEMENTS[_sid]:
+        _entry["replacement"] = KNOWN_STATUTORY_REPLACEMENTS[_sid]["title"]
+
 
 def normalize_statute_code(code: str) -> str:
     """Normalize statutory citation code for robust comparison (handles Đ/D and casing)."""
@@ -182,6 +191,33 @@ KNOWN_ACTIVE_STATUTES: set[str] = {
     "105/2025/NĐ-CP",
     "105/2025/ND-CP",
 }
+
+
+@functools.lru_cache(maxsize=16)
+def get_cached_active_docs(registry_path_str: str | None) -> frozenset[str]:
+    """Retrieve canonical active document codes, cached across file linting calls."""
+    active: set[str] = {normalize_statute_code(s) for s in KNOWN_ACTIVE_STATUTES}
+    if registry_path_str:
+        p = Path(registry_path_str)
+        if p.exists():
+            try:
+                from ccba_legal.registry import LegalRegistryManager
+
+                reg_mgr = LegalRegistryManager(p)
+                reg_data = reg_mgr.load()
+                for cat in ["laws", "decrees", "circulars", "decisions"]:
+                    for d in reg_data.get(cat, []):
+                        if isinstance(d, dict) and str(d.get("status", "")).lower() in {
+                            "active",
+                            "current",
+                            "còn hiệu lực",
+                        }:
+                            if d.get("document_number"):
+                                active.add(normalize_statute_code(str(d["document_number"])))
+            except Exception:
+                pass
+    return frozenset(active)
+
 
 # Regex to detect statutory references for two-tier unverified audit
 GENERIC_STATUTE_REGEX = re.compile(
@@ -306,6 +342,9 @@ def is_transitional_context(clause: str, line_context: str = "") -> bool:
     return False
 
 
+MAX_XML_ENTRY_SIZE = 50 * 1024 * 1024  # 50 MB safety limit for uncompressed XML entries
+
+
 def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
     """Extract lines and location labels across Markdown, Text, PPTX, and DOCX files.
 
@@ -336,7 +375,17 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
                     s_num = (
                         int(re.search(r"\d+", s_name).group()) if re.search(r"\d+", s_name) else 1
                     )
-                    tree = safe_parse_xml(z.read(s_name))
+                    zinfo = z.getinfo(s_name)
+                    if zinfo.file_size > MAX_XML_ENTRY_SIZE:
+                        results.append(
+                            (
+                                s_num,
+                                f"Slide {s_num}",
+                                f"Slide XML exceeds maximum allowed size ({zinfo.file_size} bytes)",
+                            )
+                        )
+                        continue
+                    tree = safe_parse_xml(z.read(zinfo))
                     p_idx = 0
                     for node in tree.iter():
                         if node.tag.endswith("}p"):
@@ -355,7 +404,17 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
         try:
             with zipfile.ZipFile(file_path, "r") as z:
                 if "word/document.xml" in z.namelist():
-                    tree = safe_parse_xml(z.read("word/document.xml"))
+                    zinfo = z.getinfo("word/document.xml")
+                    if zinfo.file_size > MAX_XML_ENTRY_SIZE:
+                        results.append(
+                            (
+                                1,
+                                "Error",
+                                f"Document XML exceeds maximum allowed size ({zinfo.file_size} bytes)",
+                            )
+                        )
+                        return results
+                    tree = safe_parse_xml(z.read(zinfo))
                     p_idx = 0
                     for node in tree.iter():
                         if node.tag.endswith("}p"):
@@ -380,23 +439,8 @@ def lint_file_currency(
     lines_data = extract_file_lines(file_path)
     findings: list[dict[str, Any]] = []
 
-    active_docs: set[str] = {normalize_statute_code(s) for s in KNOWN_ACTIVE_STATUTES}
-    if registry_path and registry_path.exists():
-        try:
-            from ccba_legal.registry import LegalRegistryManager
-
-            reg_mgr = LegalRegistryManager(registry_path)
-            reg_data = reg_mgr.load()
-            for cat in ["laws", "decrees", "circulars", "decisions"]:
-                for d in reg_data.get(cat, []):
-                    if isinstance(d, dict) and str(d.get("status", "")).lower() in {
-                        "active",
-                        "current",
-                    }:
-                        if d.get("document_number"):
-                            active_docs.add(normalize_statute_code(str(d["document_number"])))
-        except Exception:
-            pass
+    reg_key = str(registry_path.resolve()) if registry_path else None
+    active_docs = get_cached_active_docs(reg_key)
 
     for line_no, loc_label, text in lines_data:
         if not text.strip():
