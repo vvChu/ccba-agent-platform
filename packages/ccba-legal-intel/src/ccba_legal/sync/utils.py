@@ -11,7 +11,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
 
 
 def calculate_md5(file_path: Path) -> str:
@@ -93,11 +92,14 @@ def _is_link_or_junction(path: Path) -> bool:
         st = os.lstat(path)
         if stat.S_ISLNK(st.st_mode):
             return True
-        if sys.platform == "win32" and (
-            getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
-            and getattr(st, "st_reparse_tag", 0) == stat.IO_REPARSE_TAG_MOUNT_POINT
-        ):
-            return True
+        if sys.platform == "win32":
+            reparse_attr = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+            mount_point_tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003)
+            if (
+                getattr(st, "st_file_attributes", 0) & reparse_attr
+                and getattr(st, "st_reparse_tag", 0) == mount_point_tag
+            ):
+                return True
     except OSError:
         pass
     return path.is_symlink()
@@ -132,7 +134,7 @@ def safe_copy2(
 
     for attempt in range(max_retries):
         try:
-            if actual_dst_p.exists():
+            if actual_dst_p.exists() and not _is_link_or_junction(actual_dst_p):
                 try:
                     os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
                 except Exception:
@@ -141,7 +143,7 @@ def safe_copy2(
             return copied
         except (PermissionError, OSError):
             try:
-                if actual_dst_p.exists():
+                if actual_dst_p.exists() and not _is_link_or_junction(actual_dst_p):
                     os.chmod(actual_dst_p, stat.S_IWRITE | stat.S_IREAD)
             except Exception:
                 pass
@@ -151,22 +153,53 @@ def safe_copy2(
     return str(actual_dst_p) if isinstance(dst, str) else actual_dst_p
 
 
-def _handle_remove_readonly(func: Any, path: str, exc_info: Any) -> None:
-    """Clear Read-Only bit and reattempt removal for Python <= 3.11 onerror hook."""
+def _safe_remove_leaf(p: Path) -> None:
+    """Safely remove a leaf item (file, symlink, or NTFS junction) without mutating target permissions."""
+    if not p.is_symlink():
+        try:
+            os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+        except Exception:
+            pass
     try:
-        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
-        func(path)
-    except Exception:
+        if os.name == "nt" and p.is_dir() and not p.is_symlink():
+            os.rmdir(p)
+        else:
+            p.unlink()
+    except FileNotFoundError:
         pass
 
 
-def _handle_remove_readonly_onexc(func: Any, path: str, exc: Exception) -> None:
-    """Clear Read-Only bit and reattempt removal for Python 3.12+ onexc hook."""
+def _safe_remove_dir(p: Path) -> None:
+    """Safely remove an empty directory after clearing read-only attributes."""
     try:
-        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
-        func(path)
+        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
     except Exception:
         pass
+    try:
+        os.rmdir(p)
+    except FileNotFoundError:
+        pass
+
+
+def _safe_rmtree_tree(p: Path) -> None:
+    """Recursively remove directory contents, treating symlinks and NTFS junctions as non-traversed leaves."""
+    if not p.exists() and not _is_link_or_junction(p):
+        return
+    try:
+        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+    except Exception:
+        pass
+    try:
+        with os.scandir(p) as it:
+            for entry in it:
+                entry_path = Path(entry.path)
+                if _is_link_or_junction(entry_path) or not entry.is_dir(follow_symlinks=False):
+                    _safe_remove_leaf(entry_path)
+                else:
+                    _safe_rmtree_tree(entry_path)
+    except FileNotFoundError:
+        return
+    _safe_remove_dir(p)
 
 
 def safe_remove(
@@ -183,15 +216,7 @@ def safe_remove(
     if _is_link_or_junction(p) or p.is_file():
         for attempt in range(max_retries):
             try:
-                if not p.is_symlink():
-                    try:
-                        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-                    except Exception:
-                        pass
-                if os.name == "nt" and p.is_dir() and not p.is_symlink():
-                    os.rmdir(p)
-                else:
-                    p.unlink()
+                _safe_remove_leaf(p)
                 return
             except Exception:
                 if attempt == max_retries - 1:
@@ -199,58 +224,16 @@ def safe_remove(
                 time.sleep(retry_delay)
         return
 
-    # Directory removal
+    # Directory tree removal (junction and symlink safe)
     for attempt in range(max_retries):
         try:
-            if sys.version_info >= (3, 12):
-                shutil.rmtree(p, onexc=_handle_remove_readonly_onexc)
-            else:
-                shutil.rmtree(p, onerror=_handle_remove_readonly)
+            _safe_rmtree_tree(p)
             if not p.exists() and not _is_link_or_junction(p):
                 return
         except Exception:
-            pass
-
-        if not p.exists() and not _is_link_or_junction(p):
-            return
-
-        # Fallback: reverse-walk, chmod, and delete
-        try:
-            for root, dirs, files in os.walk(p, topdown=False):
-                for name in files:
-                    file_path = os.path.join(root, name)
-                    try:
-                        os.chmod(file_path, stat.S_IWRITE | stat.S_IREAD)
-                        os.remove(file_path)
-                    except Exception:
-                        pass
-                for name in dirs:
-                    dir_path = os.path.join(root, name)
-                    try:
-                        os.chmod(dir_path, stat.S_IWRITE | stat.S_IREAD)
-                        os.rmdir(dir_path)
-                    except Exception:
-                        pass
-            try:
-                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-                os.rmdir(p)
-                return
-            except Exception:
-                pass
-        except Exception:
-            pass
-
-        if not p.exists() and not _is_link_or_junction(p):
-            return
-
-        if attempt == max_retries - 1:
-            try:
-                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-                os.rmdir(p)
-                return
-            except Exception:
+            if attempt == max_retries - 1:
                 raise
-        time.sleep(retry_delay)
+            time.sleep(retry_delay)
 
 
 safe_rmtree = safe_remove
