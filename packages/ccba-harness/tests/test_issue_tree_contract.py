@@ -38,10 +38,10 @@ def lint_issue_tree_output(text: str, target_os: str = "windows") -> tuple[bool,
     # Check 2: MECE workplan labels check if What-Tree / Workplan is present
     if "What-Tree" in text or "gói việc" in text.lower() or "kế hoạch" in text.lower():
         required_labels = ["[ANALYSIS]", "[DECISION]", "[COMMITMENT]", "[SYNTHESIS]"]
-        found_any = any(label in text for label in required_labels)
-        if not found_any:
+        missing_labels = [label for label in required_labels if label not in text]
+        if missing_labels:
             violations.append(
-                "Workplan/What-Tree must include standardized MECE labels ([ANALYSIS], [DECISION], [COMMITMENT], [SYNTHESIS])."
+                f"Workplan/What-Tree must include the complete standardized MECE labels set ([ANALYSIS], [DECISION], [COMMITMENT], [SYNTHESIS]). Missing: {', '.join(missing_labels)}"
             )
 
     # Check 3: OS / Shell Awareness check
@@ -147,3 +147,26 @@ def test_linter_accepts_valid_powershell_and_python_on_windows() -> None:
     """
     valid, violations = lint_issue_tree_output(good_windows_output, target_os="windows")
     assert valid, f"Expected valid output, got violations: {violations}"
+
+
+def test_linter_requires_all_mece_labels_for_what_tree() -> None:
+    # Missing [DECISION] and [SYNTHESIS]
+    partial_mece_output = """
+    ## Cây Gói Việc (What-Tree)
+    ### [ACT-01] [ANALYSIS] Đánh giá hiện trạng
+    ### [ACT-02] [COMMITMENT] Thực hiện cam kết
+    """
+    valid, violations = lint_issue_tree_output(partial_mece_output)
+    assert not valid
+    assert any("Missing: [DECISION], [SYNTHESIS]" in v for v in violations)
+
+    # Full MECE set
+    complete_mece_output = """
+    ## Cây Gói Việc (What-Tree)
+    ### [ACT-01] [ANALYSIS] Đánh giá hiện trạng
+    ### [ACT-02] [DECISION] Phê duyệt phương án
+    ### [ACT-03] [COMMITMENT] Cam kết thời gian
+    ### [ACT-04] [SYNTHESIS] Tổng hợp kết quả
+    """
+    valid, violations = lint_issue_tree_output(complete_mece_output)
+    assert valid, f"Expected valid output, got: {violations}"

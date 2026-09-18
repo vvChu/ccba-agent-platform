@@ -103,3 +103,17 @@ def test_federated_rag_discovers_spoke_cwd(tmp_path: Path, monkeypatch) -> None:
     engine = FederatedLegalEngine(embedding_enabled=False)
     discovered_bundles = engine._resolve_corpus_paths()
     assert any(b.resolve() == bundle_dir.resolve() for b in discovered_bundles)
+
+
+def test_find_local_knowledge_corpus_malformed_yaml(tmp_path: Path) -> None:
+    """Xác minh LegalSyncEngine xử lý an toàn lỗi OSError/YAMLError khi file workspace context bị hỏng."""
+    broken_spoke = tmp_path / "broken_spoke"
+    (broken_spoke / ".md").mkdir(parents=True, exist_ok=True)
+    (broken_spoke / ".md" / "workspace_context.yaml").write_text(
+        "invalid: yaml: [unclosed_token", encoding="utf-8"
+    )
+
+    engine = LegalSyncEngine(project_root=broken_spoke)
+    # Không văng unhandled exception, trả về None hoặc candidate hợp lệ khác
+    discovered = engine.find_local_knowledge_corpus()
+    assert discovered is None or isinstance(discovered, Path)

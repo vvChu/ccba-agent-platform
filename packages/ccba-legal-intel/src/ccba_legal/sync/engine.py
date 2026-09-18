@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -9,6 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 from ccba_legal.registry import LegalRegistryManager, load_legal_registry
 from ccba_legal.sync.cdp_discovery import (
@@ -162,8 +165,8 @@ class LegalSyncEngine:
                                                 ).exists()
                                             ):
                                                 return cand.resolve()
-                except Exception:
-                    pass
+                except (OSError, yaml.YAMLError) as e:
+                    logger.debug("Lỗi khi đọc file cấu hình hub/workspace: %s", e)
 
         candidates = [
             self.project_root.parent / "ccba-legal-knowledge",
@@ -182,7 +185,7 @@ class LegalSyncEngine:
                     or (resolved / ".md" / "data" / "legal_registry.yaml").exists()
                 ):
                     return resolved
-            except Exception:
+            except OSError:
                 continue
 
         # Check if project_root itself contains legal_docs

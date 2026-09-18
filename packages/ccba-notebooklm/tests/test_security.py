@@ -50,3 +50,22 @@ async def test_query_rag_blocks_critical_secrets(capsys):
     assert code == 3
     captured = capsys.readouterr()
     assert "CHẶN" in captured.err
+
+
+def test_sanitize_prompt_fallback_when_maskara_unavailable(monkeypatch, capsys):
+    """Khi ccba_maskara không khả dụng, fallback scanner vẫn phát hiện và chặn key nhạy cảm (Fail-Closed)."""
+    import ccba_notebooklm._security as sec
+
+    monkeypatch.setattr(sec, "detect_secrets_in_text", None)
+    monkeypatch.setattr(sec, "apply_raw_redactions", None)
+
+    fake_openai = "sk-" + "x" * 25
+    with pytest.raises(ValueError, match="CHẶN"):
+        sec.sanitize_prompt_for_query(f"Tra cứu key {fake_openai}")
+    captured = capsys.readouterr()
+    assert "fallback regex scanner" in captured.err
+    assert "CRITICAL SECURITY ERROR" in captured.err
+
+    # Clean prompt passes safely
+    clean_res = sec.sanitize_prompt_for_query("Tra cứu thông tin sạch")
+    assert clean_res == "Tra cứu thông tin sạch"
