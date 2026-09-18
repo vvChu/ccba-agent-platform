@@ -219,3 +219,13 @@
   - `ruff check packages/ccba-legal-intel/ scripts/spoke/ scripts/ccba_platform_cli.py`: PASS (0 errors)
   - `mypy packages/ccba-legal-intel/src/ccba_legal/sync/ scripts/spoke/sync/ --ignore-missing-imports`: PASS (0 errors)
 
+---
+
+## 4. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #290)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4051355934` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:190` | `safe_remove()` gọi `os.rmdir()` cho mọi đường dẫn thỏa `is_dir()` và `_is_link_or_junction()`. Trên POSIX, symlink trỏ tới thư mục làm `Path.is_dir()` trả về `True`, nhưng symlink phải được gỡ bằng `unlink()`, không phải `rmdir()`; điều này có thể ném `NotADirectoryError`. | **ĐÃ KHẮC PHỤC**: Phân nhánh rõ ràng: chỉ gọi `os.rmdir(p)` khi `os.name == "nt" and p.is_dir() and not p.is_symlink()` (NTFS directory junction / mount point trên Windows); các symlink POSIX và Windows thông thường đều dùng `p.unlink()`. |
+| `4051355961` | `packages/ccba-legal-intel/tests/test_zero_bloat_sync.py:256` | Kiểm thử junction dựa vào module nội bộ `_winapi` và gọi `_winapi.CreateJunction` vô điều kiện. `CreateJunction` có thể khuyết thiếu trên một số bản dựng Python/Windows. | **ĐÃ KHẮC PHỤC**: Thêm khối `try/except ImportError` và kiểm tra `hasattr(_winapi, "CreateJunction")` để `pytest.skip()` an toàn khi môi trường không hỗ trợ. |
+| `PRR_kwDOQzfV088AAAABOSCFzQ` | Toàn bộ PR #290 | Copilot Review tổng thể yêu cầu sửa 2 điểm trên. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: 100% các góp ý đã được xử lý triệt để. |
+
