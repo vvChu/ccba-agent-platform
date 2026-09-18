@@ -10,7 +10,7 @@
 
 ## 1. Hiện Tượng & Phát Hiện Nghiên Cứu (Empirical Findings)
 
-Trong báo cáo tiến hóa [nightly_tuner_report_20260918_061841.md](../../reports/nightly_tuner_report_20260918_061841.md), Nightly Tuner quét đủ **73/73 kỹ năng**, tuy nhiên:
+Trong báo cáo tiến hóa `nightly_tuner_report_20260918_061841.md`, Nightly Tuner quét đủ **73/73 kỹ năng**, tuy nhiên:
 - Có tới **9 kỹ năng chuyên biệt** bị kẹt ở mức điểm rất thấp (11.7% đến 67.6%) và hoàn toàn không thể tối ưu (`0.0% Delta`, `0 Commits`, trạng thái `UNCHANGED`):
   * Nhóm BIM (`bigbim-governance`, `bigbim-rase`, `bigbim-risk`): **11.7%**
   * Nhóm Copywriting (`ccba-copywriting`): **20.0%**
