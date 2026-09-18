@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import stat
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -233,6 +234,11 @@ class LegalRegistryManager:
     def save(self, data: dict[str, Any]) -> None:
         """Save the updated registry to YAML."""
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
+        if self.registry_path.exists():
+            try:
+                os.chmod(self.registry_path, stat.S_IWRITE | stat.S_IREAD)
+            except Exception:
+                pass
         with open(self.registry_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
         print(f"[Registry] Successfully saved registry to {self.registry_path}")

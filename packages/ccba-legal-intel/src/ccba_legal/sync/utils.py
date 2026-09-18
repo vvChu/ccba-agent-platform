@@ -1,13 +1,17 @@
-"""Hash and Port Utilities for Legal Sync Module."""
+"""Hash, Port, and Filesystem Hardening Utilities for Legal Sync Module."""
 
 from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 import socket
+import stat
 import subprocess
+import sys
 import time
 from pathlib import Path
+from typing import Any
 
 
 def calculate_md5(file_path: Path) -> str:
@@ -81,3 +85,117 @@ def ensure_chrome_debug_port() -> bool:
         return False
     except Exception:
         return False
+
+
+def safe_copy2(
+    src: str | Path,
+    dst: str | Path,
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+) -> str | Path:
+    """Copy file with self-copy guard, Windows Read-Only clearance, and retry on file locks."""
+    src_p = Path(src)
+    dst_p = Path(dst)
+
+    try:
+        if src_p.resolve() == dst_p.resolve():
+            return dst
+    except OSError:
+        pass
+
+    for attempt in range(max_retries):
+        try:
+            if dst_p.exists():
+                try:
+                    os.chmod(dst_p, stat.S_IWRITE | stat.S_IREAD)
+                except Exception:
+                    pass
+            shutil.copy2(src, dst)
+            return dst
+        except (PermissionError, OSError):
+            try:
+                if dst_p.exists():
+                    os.chmod(dst_p, stat.S_IWRITE | stat.S_IREAD)
+            except Exception:
+                pass
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(retry_delay)
+    return dst
+
+
+def _handle_remove_readonly(func: Any, path: str, exc_info: Any) -> None:
+    """Clear Read-Only bit and reattempt removal for Python <= 3.11 onerror hook."""
+    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+    func(path)
+
+
+def _handle_remove_readonly_onexc(func: Any, path: str, exc: Exception) -> None:
+    """Clear Read-Only bit and reattempt removal for Python 3.12+ onexc hook."""
+    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+    func(path)
+
+
+def safe_remove(
+    path: str | Path,
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+) -> None:
+    """Safely remove a file, symlink, or directory handling Windows Read-Only permissions and locks (RULE-2.7)."""
+    p = Path(path)
+    if not p.exists() and not p.is_symlink():
+        return
+
+    if p.is_symlink() or p.is_file():
+        for attempt in range(max_retries):
+            try:
+                try:
+                    os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+                except Exception:
+                    pass
+                p.unlink()
+                return
+            except Exception:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(retry_delay)
+        return
+
+    # Directory removal
+    for attempt in range(max_retries):
+        try:
+            if sys.version_info >= (3, 12):
+                shutil.rmtree(p, onexc=_handle_remove_readonly_onexc)
+            else:
+                shutil.rmtree(p, onerror=_handle_remove_readonly)
+            return
+        except Exception:
+            if not p.exists():
+                return
+            # Fallback: reverse-walk, chmod, and delete
+            for root, dirs, files in os.walk(p, topdown=False):
+                for name in files:
+                    file_path = os.path.join(root, name)
+                    try:
+                        os.chmod(file_path, stat.S_IWRITE | stat.S_IREAD)
+                        os.remove(file_path)
+                    except Exception:
+                        pass
+                for name in dirs:
+                    dir_path = os.path.join(root, name)
+                    try:
+                        os.chmod(dir_path, stat.S_IWRITE | stat.S_IREAD)
+                        os.rmdir(dir_path)
+                    except Exception:
+                        pass
+            try:
+                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+                os.rmdir(p)
+                return
+            except Exception:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(retry_delay)
+
+
+safe_rmtree = safe_remove
