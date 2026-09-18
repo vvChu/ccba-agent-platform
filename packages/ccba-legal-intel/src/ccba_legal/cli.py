@@ -574,7 +574,7 @@ def handle_lint(args: argparse.Namespace) -> int:
             print(f"    - Viện dẫn : {f['matched_text']} ({f['obsolete_doc']})")
             print(f"    - Thay thế : 👉 {f['replacement']}")
             if f.get("context"):
-                print(f"    - Ngữ cảnh : \"{f['context']}\"")
+                print(f'    - Ngữ cảnh : "{f["context"]}"')
 
     if warnings_list:
         print("\n⚠️ [VĂN BẢN CHƯA XÁC THỰC / UNVERIFIED CITATIONS] (Cần đối soát):")
@@ -584,11 +584,15 @@ def handle_lint(args: argparse.Namespace) -> int:
 
     print("\n=================================================================")
     if res["total_errors"] > 0:
-        print("❌ [FAIL] Khóa cứng ADR-0058: Phát hiện lỗi định dạng, liên kết hoặc văn bản bãi bỏ!")
+        print(
+            "❌ [FAIL] Khóa cứng ADR-0058: Phát hiện lỗi định dạng, liên kết hoặc văn bản bãi bỏ!"
+        )
         return 1
 
     if res.get("currency_warnings", 0) > 0:
-        print("⚠️ [PASSED WITH WARNINGS] Zero lỗi nghiêm trọng. Vui lòng rà soát cảnh báo văn bản chưa xác thực.")
+        print(
+            "⚠️ [PASSED WITH WARNINGS] Zero lỗi nghiêm trọng. Vui lòng rà soát cảnh báo văn bản chưa xác thực."
+        )
         return 0
 
     print("✅ [PASSED] 100% Visual Parity, Zero Broken Links & Zero Obsolete Citations!")
