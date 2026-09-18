@@ -160,3 +160,30 @@ def test_lifecycle_and_find_doc_nd_cp_equivalence(tmp_path: Path) -> None:
     life_obs_ascii = mgr.get_lifecycle("15/2021/ND-CP")
     assert str(life_obs_ascii["status"]).upper() == "SUPERSEDED"
     assert life_obs_ascii["suggested_replacement"]["id"] == "ND-217-2026"
+
+
+def test_find_doc_colon_punctuation_equivalence(tmp_path: Path) -> None:
+    """Verify find_doc treats colons and hyphens in standard identifiers as equivalent."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """standards:
+  - id: TCVN-2737-2023
+    document_number: "TCVN 2737:2023"
+    title: Tải trọng và tác động
+    short_name: TCVN 2737:2023
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+
+    # find_doc with hyphen instead of colon should match
+    doc_hyphen = mgr.find_doc("TCVN 2737-2023")
+    assert doc_hyphen is not None
+    assert doc_hyphen["id"] == "TCVN-2737-2023"
+
+    # find_doc with colon should also match
+    doc_colon = mgr.find_doc("TCVN 2737:2023")
+    assert doc_colon is not None
+    assert doc_colon["id"] == "TCVN-2737-2023"

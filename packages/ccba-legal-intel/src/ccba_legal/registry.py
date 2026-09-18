@@ -342,7 +342,7 @@ class LegalRegistryManager:
         # Build inverted replacements index
         self._inverted_replacements = {}
         for old_ref, rep_meta in KNOWN_STATUTORY_REPLACEMENTS.items():
-            norm_old = re.sub(r"[\s\-_/.,]+", "", old_ref.lower()).replace("đ", "d")
+            norm_old = re.sub(r"[\s\-_/.,:]+", "", old_ref.lower()).replace("đ", "d")
             self._inverted_replacements[norm_old] = {
                 "id": rep_meta["id"],
                 "document_number": rep_meta["document_number"],
@@ -379,7 +379,7 @@ class LegalRegistryManager:
                     else:
                         rep_str = str(rep).strip()
                     if rep_str:
-                        norm_key = re.sub(r"[\s\-_/.,]+", "", rep_str.lower()).replace("đ", "d")
+                        norm_key = re.sub(r"[\s\-_/.,:]+", "", rep_str.lower()).replace("đ", "d")
                         self._inverted_replacements[norm_key] = doc
 
         return loaded
@@ -503,21 +503,21 @@ class LegalRegistryManager:
     def find_doc(self, identifier: str) -> dict[str, Any] | None:
         """Find a document by ID, document_number, or short_name (case and punctuation insensitive)."""
         data = self.load()
-        norm_target = re.sub(r"[\s\-_/.,]+", "", identifier.lower()).replace("đ", "d")
+        norm_target = re.sub(r"[\s\-_/.,:]+", "", identifier.lower()).replace("đ", "d")
 
         for _category, docs in data.items():
             if isinstance(docs, list):
                 for doc in docs:
                     if not isinstance(doc, dict):
                         continue
-                    doc_id = re.sub(r"[\s\-_/.,]+", "", str(doc.get("id", "")).lower()).replace(
+                    doc_id = re.sub(r"[\s\-_/.,:]+", "", str(doc.get("id", "")).lower()).replace(
                         "đ", "d"
                     )
                     doc_num = re.sub(
-                        r"[\s\-_/.,]+", "", str(doc.get("document_number", "")).lower()
+                        r"[\s\-_/.,:]+", "", str(doc.get("document_number", "")).lower()
                     ).replace("đ", "d")
                     short_name = re.sub(
-                        r"[\s\-_/.,]+", "", str(doc.get("short_name", "")).lower()
+                        r"[\s\-_/.,:]+", "", str(doc.get("short_name", "")).lower()
                     ).replace("đ", "d")
 
                     if (
@@ -550,7 +550,7 @@ class LegalRegistryManager:
                 doc = self.find_doc(alt_identifier)
 
         if not doc:
-            norm_id = re.sub(r"[\s\-_/.,]+", "", identifier.lower()).replace("đ", "d")
+            norm_id = re.sub(r"[\s\-_/.,:]+", "", identifier.lower()).replace("đ", "d")
             if norm_id in self._inverted_replacements:
                 rep_stub = self._inverted_replacements[norm_id]
                 rep_id = str(rep_stub.get("id", rep_stub.get("document_number", "")))

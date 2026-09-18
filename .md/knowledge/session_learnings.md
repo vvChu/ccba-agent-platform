@@ -57,7 +57,7 @@
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**: Tra `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn `/`. `references/*.md` CẤM dùng `/`.
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**: Tiêu chí hoàn thành phải kiểm chứng từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
 - **RULE-4.4 [GitHub Copilot Review Gating & Walkthrough Mirroring]**: Báo cáo nghiệm thu ghi `review_id`/`id` vào `.md/knowledge/reports/walkthrough.md`.
-- **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**: LiteLLM Spark: Bearer `sk-spark-secure-key-2026`. Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary`.
+- **RULE-4.5 [AI Gateway Spark Auth & Fast-Inference Gating]**: LiteLLM Spark: Bearer `${SPARK_API_KEY}` (cấu hình qua biến môi trường). Ưu tiên `gemini-3.7-flash` (< 1s), route `qwen-local-primary`.
 - **RULE-4.6 [Tier 3 Orchestrator & Deterministic Gating — ADR-0057 / ADR-0058]**: SSOT tại `.agents/skills/ccba-platform/SKILL.md`, Single-Writer. Spoke sync kích hoạt `ccba-harness verify-patch`.
 - **RULE-4.7 [ArtifactMetadata Workspace Invariant]**: `ArtifactMetadata` CHỈ dùng cho brain (`<appDataDir>\brain\<id>/`). Bỏ qua khi ghi workspace.
 - **RULE-4.8 [Zero-Polling & Reactive Wakeup Hard Invariant]**: CẤM polling loop `manage_task(status)`. Dừng tool để runtime tự đánh thức qua Reactive Wakeup.
