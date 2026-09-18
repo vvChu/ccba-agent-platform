@@ -418,9 +418,36 @@ class DocAutoEvolutionEngine:
 
         # Live Execution: Git branch & PR
         try:
-            subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True)
+            prev_head_res = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            prev_ref = prev_head_res.stdout.strip() if prev_head_res.returncode == 0 else "HEAD"
+            if prev_ref == "HEAD":
+                rev_res = subprocess.run(
+                    ["git", "rev-parse", "HEAD"],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if rev_res.returncode == 0:
+                    prev_ref = rev_res.stdout.strip()
+
             subprocess.run(
-                ["git", "add", "CONTEXT.md", ".md/knowledge/"], check=True, capture_output=True
+                ["git", "checkout", "-b", branch_name],
+                cwd=str(self.root),
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "add", "CONTEXT.md", ".md/knowledge/"],
+                cwd=str(self.root),
+                check=True,
+                capture_output=True,
             )
             commit_res = subprocess.run(
                 [
@@ -429,36 +456,64 @@ class DocAutoEvolutionEngine:
                     "-m",
                     f"docs(auto-evolution): nightly knowledge base audit {now_str}",
                 ],
+                cwd=str(self.root),
                 capture_output=True,
                 text=True,
             )
             if commit_res.returncode == 0:
                 report.commits_created = 1
 
-            subprocess.run(
-                ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True
-            )
-            pr_body = self.generate_pr_body(report)
+            # Empty Push Guard (REC-05 / Ticket 02): Only push and open PR if there are real commits
+            if report.commits_created > 0:
+                subprocess.run(
+                    ["git", "push", "-u", "origin", branch_name],
+                    cwd=str(self.root),
+                    check=True,
+                    capture_output=True,
+                )
+                pr_body = self.generate_pr_body(report)
 
-            gh_res = subprocess.run(
-                [
-                    "gh",
-                    "pr",
-                    "create",
-                    "--title",
-                    f"docs: nightly knowledge evolution {now_str}",
-                    "--body",
-                    pr_body,
-                    "--label",
-                    "triage:doc-refactor",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            if gh_res.returncode == 0:
-                report.pr_url = gh_res.stdout.strip()
+                gh_res = subprocess.run(
+                    [
+                        "gh",
+                        "pr",
+                        "create",
+                        "--title",
+                        f"docs: nightly knowledge evolution {now_str}",
+                        "--body",
+                        pr_body,
+                        "--label",
+                        "triage:doc-refactor",
+                    ],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    text=True,
+                )
+                if gh_res.returncode == 0:
+                    report.pr_url = gh_res.stdout.strip()
+            else:
+                logger.info(
+                    "ℹ️ Không có thay đổi tài liệu nào cần commit. Tự động thu hồi nhánh rỗng..."
+                )
+                subprocess.run(
+                    ["git", "checkout", prev_ref],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    check=False,
+                )
+                subprocess.run(
+                    ["git", "branch", "-D", branch_name],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    check=False,
+                )
         except Exception as e:
             logger.warning(f"⚠️ Lỗi trong quá trình tạo Git branch/PR: {e}")
+            try:
+                subprocess.run(["git", "checkout", "-"], cwd=str(self.root), capture_output=True, check=False)
+                subprocess.run(["git", "branch", "-D", branch_name], cwd=str(self.root), capture_output=True, check=False)
+            except Exception:
+                pass
 
         self.send_telegram_alert(report)
         return report

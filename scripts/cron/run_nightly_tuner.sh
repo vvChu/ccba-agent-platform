@@ -38,6 +38,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# 2.1. Process Mutex / Concurrency Lock (ADR-0043 / REC-04)
+LOCK_FILE="/tmp/ccba_nightly_runner.lock"
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+    echo "⚠️ [LOCK BUSY] Một tiến trình Nightly Tuner khác đang chạy. Dừng thực thi an toàn."
+    exit 0
+fi
+
 # 3. Auto-load .env secrets if present
 if [ -f "$PROJECT_ROOT/.env" ]; then
     set -a
@@ -142,12 +150,19 @@ if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
     source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
+# Ensure full PYTHONPATH across packages and monorepo root
+export PYTHONPATH="$PROJECT_ROOT/packages/ccba-harness/src:$PROJECT_ROOT/packages/ccba-ai/src:$PROJECT_ROOT:${PYTHONPATH:-}"
+
 # Switch into isolated worktree context
 cd "$WORKTREE_DIR"
 
 # 8. Run Document Auto-Evolution Engine (Audit -> AST Grounding -> Zero-Deletion -> PR)
 echo "📚 [1/2] Running Document Auto-Evolution Engine..."
 python3 scripts/eval/doc_refactor_daemon.py ${DRY_RUN_FLAG}
+
+# 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
+echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF..."
+git checkout --detach "$TARGET_REF" 2>/dev/null || true
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
 echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."

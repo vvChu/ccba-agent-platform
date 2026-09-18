@@ -151,10 +151,12 @@ def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> No
     fake_branches = (
         "  auto-tune/nightly-20200101_000000\n"  # Very old, empty
         "  auto-tune/nightly-20200102_000000\n"  # Very old, has unique commits
+        "  docs/auto-refactor-20200101_120000\n"  # Very old doc refactor, empty
         "  auto-tune/nightly-20990101_000000\n"  # Future/recent
     )
 
     deleted_branches: list[str] = []
+    remote_deleted_branches: list[str] = []
 
     def mock_run(cmd, *args, **kwargs):
         class MockRes:
@@ -164,9 +166,9 @@ def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> No
 
         if cmd[:3] == ["git", "branch", "--list"]:
             return MockRes(stdout=fake_branches)
-        elif cmd[:3] == ["git", "cherry", "main"]:
+        elif cmd[:2] == ["git", "cherry"]:
             branch = cmd[3]
-            # Simulate nightly-20200101 has no unique commits, 20200102 has unique commit
+            # Simulate branches with 20200101 have no unique commits, 20200102 has unique commit
             if "20200101" in branch:
                 return MockRes(stdout="")
             else:
@@ -174,14 +176,25 @@ def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> No
         elif cmd[:3] == ["git", "branch", "-D"]:
             deleted_branches.append(cmd[3])
             return MockRes()
+        elif cmd[:4] == ["git", "push", "origin", "--delete"]:
+            remote_deleted_branches.append(cmd[4])
+            return MockRes()
         return MockRes()
 
     import subprocess
+
     monkeypatch.setattr(subprocess, "run", mock_run)
 
     count = daemon._cleanup_old_empty_branches(days=7)
-    assert count == 1
-    assert deleted_branches == ["auto-tune/nightly-20200101_000000"]
+    assert count == 2
+    assert deleted_branches == [
+        "auto-tune/nightly-20200101_000000",
+        "docs/auto-refactor-20200101_120000",
+    ]
+    assert remote_deleted_branches == [
+        "auto-tune/nightly-20200101_000000",
+        "docs/auto-refactor-20200101_120000",
+    ]
 
 
 def test_tuner_tiered_budget_and_early_stopping() -> None:

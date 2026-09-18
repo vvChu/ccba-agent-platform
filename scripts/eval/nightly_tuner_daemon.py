@@ -347,10 +347,10 @@ class NightlyTunerDaemon:
         )
 
     def _cleanup_old_empty_branches(self, days: int = 7) -> int:
-        """Cleans up local auto-tune branches older than `days` that have no unique commits."""
+        """Cleans up local and remote auto-tune and doc-refactor branches older than `days` with no unique commits."""
         try:
             res = subprocess.run(
-                ["git", "branch", "--list", "auto-tune/nightly-*"],
+                ["git", "branch", "--list", "auto-tune/nightly-*", "docs/auto-refactor-*"],
                 cwd=str(self.root),
                 capture_output=True,
                 text=True,
@@ -360,16 +360,27 @@ class NightlyTunerDaemon:
             deleted_count = 0
             cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
 
+            # Determine base ref for comparison (prefer origin/main, fallback to main)
+            base_ref = "origin/main"
+            check_ref = subprocess.run(
+                ["git", "rev-parse", "--verify", "origin/main"],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
+            )
+            if check_ref.returncode != 0:
+                base_ref = "main"
+
             for b in branches:
-                match = re.search(r"nightly-(\d{8})_\d{6}", b)
+                match = re.search(r"(?:nightly|auto-refactor)-(\d{8})", b)
                 if match:
                     date_str = match.group(1)
                     try:
                         b_date = datetime.datetime.strptime(date_str, "%Y%m%d")
                         if b_date < cutoff:
-                            # Check if branch has unique commits not on main
+                            # Check if branch has unique commits not on base_ref
                             diff_res = subprocess.run(
-                                ["git", "cherry", "main", b],
+                                ["git", "cherry", base_ref, b],
                                 cwd=str(self.root),
                                 capture_output=True,
                                 text=True,
@@ -381,7 +392,18 @@ class NightlyTunerDaemon:
                                     capture_output=True,
                                     check=False,
                                 )
-                                logger.info(f"🧹 Đã dọn dẹp nhánh rác cũ: {b}")
+                                logger.info(f"🧹 Đã dọn dẹp nhánh rác cục bộ: {b}")
+                                # Best-effort deletion of remote branch if present
+                                try:
+                                    subprocess.run(
+                                        ["git", "push", "origin", "--delete", b],
+                                        cwd=str(self.root),
+                                        capture_output=True,
+                                        check=False,
+                                        timeout=10,
+                                    )
+                                except Exception:
+                                    pass
                                 deleted_count += 1
                     except Exception as e:
                         logger.debug(f"Bỏ qua nhánh {b}: {e}")
