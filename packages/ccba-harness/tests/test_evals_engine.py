@@ -353,6 +353,10 @@ def test_llm_rubric_scorer_corrupted_db_fallback(tmp_path):
         cache_db_path=corrupted_db,
     )
     assert scorer.enable_cache is False
+    res = asyncio.run(scorer.score("Response text", EvalItem(id="test", input_prompt="Prompt")))
+    assert client.calls == 1
+    assert res.score == 1.0
+    assert res.raw_output == 5
 
 
 def test_orchestration_scorers():
