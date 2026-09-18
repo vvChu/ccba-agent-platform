@@ -1,3 +1,48 @@
+# Walkthrough: PR #286 — Hiện Đại Hóa Nightly Auto-Tuner Daemon, Real LLM Adapter & Multi-Domain Evals
+
+## 1. Tổng Quan PR #286
+- **Branch:** `feat/nightly-tuner-worktree-and-dataset-router` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(tuner): modernize nightly auto-tuner daemon, real llm adapter, and domain evals`
+- **PR liên quan:** [PR #286](https://github.com/vvChu/ccba-agent-platform/pull/286)
+- **Commit hợp nhất:** `df311bb66cc53dc4f3888ada8b060a83a9fc2d57`
+- **Thể chế & Kiến trúc:** ADR-0023, ADR-0045, ADR-0047, ADR-0057, ADR-0058, Wayfinder Roadmap `nightly-tuner-evolution`
+
+---
+
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #286)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| Inline 1 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:113` | `LLMTaskAdapter` chuyển `circuit_breaker` sang `AIClient` nhưng không khởi tạo mặc định khi không truyền vào, khiến fast-fail `CircuitBreakerOpenError` không kích hoạt trong thực tế. | **ĐÃ KHẮC PHỤC**: Cập nhật `LLMTaskAdapter.__init__` tự động gán `self.circuit_breaker = circuit_breaker or (CircuitBreaker() if CircuitBreaker is not None else None)` và truyền xuống `AIClient`. |
+| Inline 2 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:195` | `CCBA_TUNER_TOKEN_BUDGET` ghi đè vô điều kiện `RatchetConfig.token_budget` ngay cả khi người gọi đã truyền giá trị tường minh (e.g. `remaining_budget` từ daemon). | **ĐÃ KHẮC PHỤC**: Chuyển `token_budget` thành `int | None = None` và chỉ nạp từ biến môi trường nếu `self.token_budget is None`, bảo vệ toàn vẹn ngân sách token của daemon. |
+| Inline 3 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:1275` | Rào chắn compaction guard chỉ loại bỏ dòng comment HTML `<!-- Ratchet Optimization Refinement ... -->` nhưng bỏ sót dòng bullet `- Cập nhật quy chuẩn...` dẫn đến tích tụ dòng thừa. | **ĐÃ KHẮC PHỤC**: Cập nhật bộ lọc compaction guard loại bỏ cả 2 dòng comment và dòng bullet tự sinh, ngăn ngừa phình to prompt vượt quá 300 dòng. |
+| Inline 4 | `scripts/eval/nightly_tuner_daemon.py:236` | `NightlyTunerDaemon` nhận `early_stopping_patience` nhưng không truyền vào `RatchetConfig(patience=...)`, khiến tuner luôn dùng mặc định `patience=3`. | **ĐÃ KHẮC PHỤC**: Nối tham số `patience=self.early_stopping_patience` trực tiếp vào khởi tạo `RatchetConfig`. |
+| Inline 5 | `scripts/eval/nightly_tuner_daemon.py:415, 445` | `_cleanup_old_empty_branches` xóa nhánh khi `git cherry` trả về rỗng nhưng không kiểm tra mã thoát; thiếu `encoding="utf-8", errors="replace"` cho Windows subprocess. | **ĐÃ KHẮC PHỤC**: Thêm `encoding="utf-8", errors="replace"` và kiểm tra chặt `diff_res.returncode == 0 and not diff_res.stdout.strip()` trước khi xóa nhánh. |
+| Inline 6 | `scripts/cron/run_nightly_tuner.sh:172` | `PYTHONPATH` được thiết lập từ `$PROJECT_ROOT` trước khi `cd $WORKTREE_DIR`, khiến các tiến trình con có thể import mã từ thư mục chính thay vì worktree cô lập. | **ĐÃ KHẮC PHỤC**: `cd "$WORKTREE_DIR"` trước và thiết lập `PYTHONPATH` trỏ vào `$WORKTREE_DIR`, đảm bảo tính cô lập tuyệt đối của ephemeral worktree. |
+| Inline 7 | `packages/ccba-harness/tests/test_evals_engine.py:355` | `test_llm_rubric_scorer_corrupted_db_fallback` đã loại bỏ các assertion gọi `score()`, không kiểm chứng được luồng fallback thực tế. | **ĐÃ KHẮC PHỤC**: Khôi phục gọi `scorer.score()` và assert `client.calls == 1`, `res.score == 1.0`, `res.raw_output == 5`. |
+| Inline 8 | `scripts/tests/test_nightly_tuner_daemon.py:202` | `test_tuner_tiered_budget_and_early_stopping` chỉ kiểm tra gán `patience`, không chạy optimizer hoặc kiểm tra dừng sớm; trỏ vào tệp SKILL thật. | **ĐÃ KHẮC PHỤC**: Nâng cấp kiểm thử với môi trường cô lập `tmp_path`, mock dataset và mock task để kiểm chứng cả 2 hành vi: kẹp ngân sách 1 vòng khi baseline 100% và dừng sớm sau `effective_patience` vòng lặp. |
+
+---
+
+## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
+1. **Wayfinder Ticket 01 (Evaluation Control Flow & Deadlock Resolution):**
+   - Loại bỏ fall-through trong `mock_agent_task` bằng thang `if-elif`.
+   - Tiêm bất biến *Trí Nhớ Số (Digital Memory)* vào Chiến lược 1 giải phóng deadlock tam hợp miền BIM.
+   - Chuẩn hóa routing dataset cho `ccba-ai-qc` (`eval_pccc_audit_redteam.json`) và bổ sung từ khóa Luật 135/2025.
+2. **Wayfinder Ticket 02 (Git Safety, Process Locking & Remote Branch Pruning):**
+   - Khóa tiến trình `flock -n 200` tại `/tmp/ccba_nightly_runner.lock` trong cron runner.
+   - Cô lập Git Worktree tạm thời (`.worktrees/nightly-*`), ngắt `detached HEAD` giữa các daemon.
+   - Bổ sung Empty Push Guard tại `doc_refactor_daemon.py` và dọn dẹp remote branch an toàn.
+3. **Wayfinder Ticket 03 (Unified Real LLM Adapter, Token Budget Ceiling & Circuit Breaker):**
+   - Bộ điều hợp `LLMTaskAdapter` kết nối `GitRatchetOptimizer` với `ccba_ai.client.AIClient.chat_with_metadata()`.
+   - Theo dõi tiêu thụ token phiên qua `TokenUsageTracker` và trần ngân sách 5M tokens.
+   - Ngắt mạch tức thì `CircuitBreakerOpenError` khi gặp 3 lỗi 429/503 liên tiếp.
+4. **Wayfinder Ticket 04 (Specialized BIM V2 Dataset & Orchestration Domain Scorers):**
+   - Bộ dữ liệu `eval_bigbim_risk.json` (12 test cases) đánh giá xung đột phi hình học BIM V2.
+   - Bộ 3 Scorers điều phối đa tác tử: `SingleWriterInvariantScorer`, `ProgressiveDisclosureScorer`, `HandoffProtocolScorer`.
+
+---
+
 # Walkthrough: PR #287 — Nâng Cấp ccba-issue-tree v1.1.0, Tra Cứu Tri Thức Liên-Spoke 3 Tầng & Đồng Bộ README
 
 ## 1. Tổng Quan PR #287
