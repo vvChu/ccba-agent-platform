@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -114,10 +115,30 @@ def sanitize_prompt_for_query(prompt: str) -> str:
     Returns:
         str: Câu hỏi đã được làm sạch và che giấu bí mật nếu có.
     """
-    if detect_secrets_in_text is None or apply_raw_redactions is None:
+    if not prompt or not prompt.strip():
         return prompt
 
-    if not prompt or not prompt.strip():
+    if detect_secrets_in_text is None or apply_raw_redactions is None:
+        print(
+            "[Warning] [Maskara Gate] ccba-maskara không khả dụng. Kích hoạt fallback regex scanner...",
+            file=sys.stderr,
+        )
+        fallback_patterns = [
+            r"sk-[a-zA-Z0-9_-]{20,}",
+            r"ghp_[a-zA-Z0-9]{20,}",
+            r"gho_[a-zA-Z0-9]{20,}",
+            r"AIza[0-9A-Za-z-_]{35}",
+            r"sk-ant-[a-zA-Z0-9_-]{20,}",
+        ]
+        for pat in fallback_patterns:
+            if re.search(pat, prompt):
+                print(
+                    "\n[CRITICAL SECURITY ERROR] Phát hiện API Key nhạy cảm qua fallback scanner!",
+                    file=sys.stderr,
+                )
+                raise ValueError(
+                    "Truy vấn RAG bị CHẶN vì chứa API key nhạy cảm (Fallback Scanner)."
+                )
         return prompt
 
     try:
