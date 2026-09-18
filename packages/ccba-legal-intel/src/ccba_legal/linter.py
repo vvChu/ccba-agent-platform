@@ -544,20 +544,17 @@ def lint_target_path(
 
     elif target_path.is_dir():
         if check_currency:
-            all_candidates = sorted(target_path.rglob("*"))
-            target_files = [
+            target_files = sorted(
                 p
-                for p in all_candidates
+                for p in target_path.rglob("*")
                 if p.is_file()
                 and p.suffix.lower() in supported_currency_exts
                 and not is_ignored_path(p)
-            ]
+            )
         else:
-            target_files = [
-                p
-                for p in sorted(target_path.rglob("*.md"))
-                if p.is_file() and not is_ignored_path(p)
-            ]
+            target_files = sorted(
+                p for p in target_path.rglob("*.md") if p.is_file() and not is_ignored_path(p)
+            )
 
         result["files_scanned"] = len(target_files)
 
