@@ -567,4 +567,3 @@ def lint_target_path(
     )
     result["total_warnings"] = result["currency_warnings"]
     return result
-
