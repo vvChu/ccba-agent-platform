@@ -125,3 +125,55 @@ class TestDocRefactorDaemon:
         pr_body = engine.generate_pr_body(report)
         assert "Automated Knowledge Documentation Evolution Report" in pr_body
         assert "Trụ Cột" in pr_body
+
+    def test_empty_push_guard_when_zero_commits(
+        self, project_root: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Verifies that when commits_created is 0, no push or PR is made and empty branch is cleaned up."""
+        import subprocess
+
+        executed_cmds: list[list[str]] = []
+
+        class MockRes:
+            def __init__(self, stdout: str = "", returncode: int = 0):
+                self.stdout = stdout
+                self.returncode = returncode
+
+        def mock_run(cmd, *args, **kwargs):
+            cmd_list = list(cmd)
+            executed_cmds.append(cmd_list)
+
+            if cmd_list[:3] == ["git", "rev-parse", "--abbrev-ref"]:
+                return MockRes(stdout="main\n", returncode=0)
+            elif cmd_list[:2] == ["git", "commit"]:
+                # Simulate nothing to commit (clean working tree)
+                return MockRes(stdout="nothing to commit, working tree clean", returncode=1)
+            return MockRes(returncode=0)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        engine = DocAutoEvolutionEngine(root=project_root)
+        report = engine.run_nightly_evolution(dry_run=False)
+
+        assert report.commits_created == 0
+        assert report.pr_url is None
+
+        # Assert git push was NEVER called
+        push_calls = [c for c in executed_cmds if len(c) >= 2 and c[:2] == ["git", "push"]]
+        assert len(push_calls) == 0, f"Expected 0 git push calls, found: {push_calls}"
+
+        # Assert gh pr create was NEVER called
+        pr_calls = [c for c in executed_cmds if len(c) >= 3 and c[:3] == ["gh", "pr", "create"]]
+        assert len(pr_calls) == 0, f"Expected 0 gh pr create calls, found: {pr_calls}"
+
+        # Assert checkout previous ref and delete empty branch were called
+        checkout_prev = [
+            c for c in executed_cmds if len(c) >= 3 and c[:2] == ["git", "checkout"] and c[2] == "main"
+        ]
+        assert len(checkout_prev) == 1, "Expected checkout back to previous ref"
+
+        delete_branch = [
+            c for c in executed_cmds if len(c) >= 3 and c[:3] == ["git", "branch", "-D"]
+        ]
+        assert len(delete_branch) == 1, "Expected git branch -D to clean up empty branch"
+
