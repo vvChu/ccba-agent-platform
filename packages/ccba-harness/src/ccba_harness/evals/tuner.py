@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -24,7 +26,134 @@ from .scorers import (
     RegexScorer,
 )
 
+try:
+    from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+    from ccba_ai.client import AIClient
+except ImportError:
+    AIClient = None  # type: ignore[assignment, misc]
+    CircuitBreaker = None  # type: ignore[assignment, misc]
+
+    class CircuitBreakerOpenError(Exception):  # type: ignore[no-redef]
+        """Fallback CircuitBreakerOpenError when ccba-ai is not installed."""
+
+        pass
+
 logger = logging.getLogger("ccba.eval.ratchet")
+
+
+class TokenBudgetExceededError(Exception):
+    """Raised when session-wide token budget ceiling is reached."""
+
+    pass
+
+
+@dataclass
+class TokenUsageTracker:
+    """Session-wide token consumption tracker and circuit breaker observer."""
+
+    budget_ceiling: int = 5_000_000
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    total_calls: int = 0
+    total_latency_s: float = 0.0
+    warning_triggered: bool = False
+    halt_triggered: bool = False
+
+    def record_usage(
+        self, prompt_tokens: int, completion_tokens: int, latency_s: float = 0.0
+    ) -> None:
+        """Records token usage and latency from a model inference call."""
+        self.prompt_tokens += prompt_tokens
+        self.completion_tokens += completion_tokens
+        self.total_tokens += prompt_tokens + completion_tokens
+        self.total_calls += 1
+        self.total_latency_s += latency_s
+
+        # 90% warning threshold (REC-08)
+        if not self.warning_triggered and self.total_tokens >= 0.9 * self.budget_ceiling:
+            self.warning_triggered = True
+            logger.warning(
+                f"⚠️ [Token Budget Warning] Tổng token ({self.total_tokens:,}) đã chạm ngưỡng 90% ngân sách ({self.budget_ceiling:,})!"
+            )
+
+        # 100% hard ceiling halt
+        if self.total_tokens >= self.budget_ceiling:
+            self.halt_triggered = True
+            logger.error(
+                f"🛑 [Token Budget Halt] Tổng token ({self.total_tokens:,}) đã vượt trần ngân sách ({self.budget_ceiling:,})! Kích hoạt dừng khẩn cấp."
+            )
+
+    @property
+    def is_exhausted(self) -> bool:
+        """Checks whether token budget ceiling has been exhausted."""
+        return self.total_tokens >= self.budget_ceiling or self.halt_triggered
+
+    @property
+    def avg_latency_s(self) -> float:
+        """Returns average latency per call in seconds."""
+        return self.total_latency_s / self.total_calls if self.total_calls > 0 else 0.0
+
+
+class LLMTaskAdapter:
+    """Connects GitRatchetOptimizer with ccba_ai client for Real LLM evaluations."""
+
+    def __init__(
+        self,
+        model: str | None = None,
+        client: Any | None = None,
+        token_tracker: TokenUsageTracker | None = None,
+        circuit_breaker: Any | None = None,
+    ) -> None:
+        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        self.token_tracker = token_tracker or TokenUsageTracker()
+        self.circuit_breaker = circuit_breaker
+
+        if client is not None:
+            self.client = client
+        elif AIClient is not None:
+            self.client = AIClient(
+                default_model=self.model,
+                circuit_breaker=self.circuit_breaker,
+            )
+        else:
+            raise ImportError(
+                "ccba-ai package is required for real LLM evaluation. Install via: pip install -e packages/ccba-ai"
+            )
+
+    def create_eval_task(self, skill_content: str) -> Callable[[EvalItem], str]:
+        """Creates a callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
+
+        def llm_eval_task(item: EvalItem) -> str:
+            if self.token_tracker.is_exhausted:
+                raise TokenBudgetExceededError(
+                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+                )
+
+            t0 = time.perf_counter()
+            try:
+                res = self.client.chat_with_metadata(
+                    message=str(item.input_prompt),
+                    system=skill_content,
+                    model=self.model,
+                    temperature=0.0,
+                )
+                latency = time.perf_counter() - t0
+                p_tok = res.usage.prompt_tokens if res.usage else 0
+                c_tok = res.usage.completion_tokens if res.usage else 0
+                self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
+                return res.content
+            except CircuitBreakerOpenError:
+                # Re-raise circuit breaker fast-fail to trigger early stopping
+                raise
+            except Exception as e:
+                if self.circuit_breaker is not None and hasattr(
+                    self.circuit_breaker, "record_failure"
+                ):
+                    self.circuit_breaker.record_failure(e)
+                raise
+
+        return llm_eval_task
 
 
 @dataclass
@@ -40,6 +169,9 @@ class RatchetConfig:
     skill_name: str = ""
     full_sweep: bool = False
     patience: int = 3
+    use_real_llm: bool = False
+    llm_model: str = ""
+    token_budget: int = 5_000_000
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -50,6 +182,15 @@ class RatchetConfig:
             tf = self.target_file
             if "skills" in tf.parts or "skills" in str(tf):
                 self.skill_name = tf.parent.name if tf.name.lower() == "skill.md" else tf.name
+        if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
+            self.use_real_llm = True
+        if not self.llm_model:
+            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        if os.getenv("CCBA_TUNER_TOKEN_BUDGET"):
+            try:
+                self.token_budget = int(os.getenv("CCBA_TUNER_TOKEN_BUDGET", "5000000"))
+            except ValueError:
+                pass
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -127,12 +268,29 @@ class RatchetConfig:
         # Extract skill name from target file if possible
         skill_name = target_path.parent.name if "skills" in str(target_path) else "custom_skill"
 
+        # Parse Engine (Real LLM or Mock)
+        engine_match = re.search(r"-\s*\*\*Engine\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
+        use_real_llm = False
+        if engine_match:
+            use_real_llm = "real" in engine_match.group(1).lower()
+
+        # Parse Model
+        model_match = re.search(r"-\s*\*\*Model\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
+        llm_model = model_match.group(1).strip() if model_match else ""
+
+        # Parse Token Budget
+        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*(\d+)", content, re.IGNORECASE)
+        token_budget = int(budget_match.group(1)) if budget_match else 5_000_000
+
         return cls(
             target_file=target_path,
             eval_dataset_file=dataset_path,
             target_score=target_score,
             max_iterations=max_iterations,
             skill_name=skill_name,
+            use_real_llm=use_real_llm,
+            llm_model=llm_model,
+            token_budget=token_budget,
         )
 
 
@@ -147,6 +305,10 @@ class RatchetTrialResult:
     decision: str  # 'KEEP' | 'REVERT'
     summary: str
     diff_snippet: str = ""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    latency_s: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         """Converts result to JSON-serializable dictionary."""
@@ -164,6 +326,11 @@ class RatchetReport:
     kept_commits: int
     reverted_trials: int
     history: list[RatchetTrialResult] = field(default_factory=list)
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    avg_latency_s: float = 0.0
+    halt_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Converts report to JSON-serializable dictionary."""
@@ -175,6 +342,11 @@ class RatchetReport:
             "kept_commits": self.kept_commits,
             "reverted_trials": self.reverted_trials,
             "history": [t.to_dict() for t in self.history],
+            "total_tokens": self.total_tokens,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "avg_latency_s": self.avg_latency_s,
+            "halt_reason": self.halt_reason,
         }
 
 
@@ -312,11 +484,15 @@ class GitRatchetOptimizer:
         root: Path | None = None,
         task: Callable[[EvalItem], Any] | None = None,
         dataset: list[EvalItem] | None = None,
+        client: Any | None = None,
+        circuit_breaker: Any | None = None,
     ) -> None:
         self.config = config
         self.target_file = Path(config.target_file).resolve()
         self.dry_run_git = dry_run_git
         self.custom_task = task
+        self.client = client
+        self.circuit_breaker = circuit_breaker
 
         effective_root = project_root if project_root is not None else root
         if effective_root is not None:
@@ -337,6 +513,17 @@ class GitRatchetOptimizer:
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.runner = EvalRunner(default_pass_threshold=config.target_score)
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
+
+        # Token budget governance & Real LLM adapter (REC-08 / Ticket 03)
+        self.token_tracker = TokenUsageTracker(budget_ceiling=config.token_budget)
+        self.llm_adapter: LLMTaskAdapter | None = None
+        if config.use_real_llm:
+            self.llm_adapter = LLMTaskAdapter(
+                model=config.llm_model,
+                client=client,
+                token_tracker=self.token_tracker,
+                circuit_breaker=circuit_breaker,
+            )
 
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
@@ -393,6 +580,28 @@ class GitRatchetOptimizer:
                 task=self.custom_task,
                 scorers=self.scorers,
             )
+
+        # Real LLM task execution with token governance & circuit breaker
+        if self.config.use_real_llm and self.llm_adapter is not None:
+            llm_task = self.llm_adapter.create_eval_task(content)
+            report = self.runner.run_sync(
+                dataset=self.dataset,
+                task=llm_task,
+                scorers=self.scorers,
+            )
+            for item_res in report.item_results:
+                if item_res.error:
+                    err_l = item_res.error.lower()
+                    if "circuit" in err_l and ("open" in err_l or "breaker" in err_l):
+                        raise CircuitBreakerOpenError(item_res.error)
+                    if "token budget" in err_l and "exceeded" in err_l:
+                        raise TokenBudgetExceededError(item_res.error)
+
+            if self.token_tracker.is_exhausted:
+                raise TokenBudgetExceededError(
+                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+                )
+            return report
 
         # Grounded task execution taking into account current prompt content
         def mock_agent_task(item: EvalItem) -> str:
@@ -1069,8 +1278,32 @@ class GitRatchetOptimizer:
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
-        baseline_report = self.evaluate_content(initial_content)
-        baseline_score = baseline_report.overall_score
+        halt_reason: str | None = None
+
+        try:
+            baseline_report = self.evaluate_content(initial_content)
+            baseline_score = baseline_report.overall_score
+        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
+            logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
+            reason = (
+                "CIRCUIT_BREAKER_OPEN"
+                if isinstance(init_err, CircuitBreakerOpenError)
+                else "TOKEN_BUDGET_EXCEEDED"
+            )
+            return RatchetReport(
+                target_file=str(self.target_file),
+                initial_score=0.0,
+                final_score=0.0,
+                total_iterations=0,
+                kept_commits=0,
+                reverted_trials=0,
+                history=[],
+                total_tokens=self.token_tracker.total_tokens,
+                prompt_tokens=self.token_tracker.prompt_tokens,
+                completion_tokens=self.token_tracker.completion_tokens,
+                avg_latency_s=self.token_tracker.avg_latency_s,
+                halt_reason=reason,
+            )
 
         # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
         if baseline_score >= 100.0:
@@ -1099,6 +1332,11 @@ class GitRatchetOptimizer:
         try:
             for i in range(1, effective_max_iter + 1):
                 logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_p_tokens = self.token_tracker.prompt_tokens
+                prev_c_tokens = self.token_tracker.completion_tokens
+                prev_tot_tokens = self.token_tracker.total_tokens
+                iter_t0 = time.perf_counter()
+
                 try:
                     mutated_content = self.propose_mutation(best_content, i)
 
@@ -1136,6 +1374,10 @@ class GitRatchetOptimizer:
                         critical_fails=crit_fails,
                         decision=decision,
                         summary=summary,
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
                     )
                     history.append(trial)
                     logger.info(f"📌 Quyết định [{decision}]: {summary}")
@@ -1152,6 +1394,44 @@ class GitRatchetOptimizer:
                             f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
                         )
                         break
+                except TokenBudgetExceededError as budget_err:
+                    logger.error(f"🛑 [Token Budget Halt] {budget_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "TOKEN_BUDGET_EXCEEDED"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary=f"Dừng sớm: {budget_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
+                except CircuitBreakerOpenError as cb_err:
+                    logger.error(f"⚡ [Circuit Breaker Fast-Fail] {cb_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "CIRCUIT_BREAKER_OPEN"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary="Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
                 except Exception as iter_err:
                     logger.error(f"Error during iteration {i}: {iter_err}")
                     self.git_rollback_target(best_content, has_committed=has_committed)
@@ -1163,6 +1443,10 @@ class GitRatchetOptimizer:
                         critical_fails=1,
                         decision="REVERT",
                         summary=f"Lỗi thực thi vòng lặp: {iter_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
                     )
                     history.append(trial)
         finally:
@@ -1184,6 +1468,11 @@ class GitRatchetOptimizer:
             kept_commits=kept_count,
             reverted_trials=reverted_count,
             history=history,
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=halt_reason,
         )
 
 

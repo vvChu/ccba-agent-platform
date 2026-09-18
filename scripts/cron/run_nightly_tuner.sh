@@ -17,6 +17,9 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DRY_RUN_FLAG=""
 MAX_ITER="30"
 TARGET_REF="${TARGET_REF:-origin/main}"
+USE_REAL_LLM_FLAG=""
+TOKEN_BUDGET_FLAG=""
+MODEL_FLAG=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -30,6 +33,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --ref)
             TARGET_REF="$2"
+            shift 2
+            ;;
+        --use-real-llm)
+            USE_REAL_LLM_FLAG="--use-real-llm"
+            shift
+            ;;
+        --token-budget)
+            TOKEN_BUDGET_FLAG="--token-budget $2"
+            shift 2
+            ;;
+        --model)
+            MODEL_FLAG="--model $2"
             shift 2
             ;;
         *)
@@ -166,7 +181,7 @@ git checkout --detach "$TARGET_REF" 2>/dev/null || true
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
 echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."
-python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG}
+python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG}
 
 echo "================================================================="
 echo "[CCBA Nightly Daemon] Finished successfully at $(date)"

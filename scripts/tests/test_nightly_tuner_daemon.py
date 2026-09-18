@@ -213,3 +213,60 @@ def test_tuner_tiered_budget_and_early_stopping() -> None:
     opt = GitRatchetOptimizer(cfg, root=project_root)
     assert opt.config.patience == 3
 
+
+def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify daemon initializes real LLM configuration, engine flag, and token budget."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(
+        root=project_root,
+        max_iterations_low=1,
+        use_real_llm=True,
+        token_budget=200_000,
+        model="qwen-local-primary",
+    )
+    assert daemon.use_real_llm is True
+    assert daemon.token_budget == 200_000
+    assert daemon.model == "qwen-local-primary"
+
+    # Mock discover to 1 skill for ultra-fast unit test execution
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "ccba-test-skill",
+                "target_file": project_root / ".agents" / "skills" / "ccba-copywriting" / "SKILL.md",
+                "dataset_file": project_root / "packages" / "ccba-harness" / "evals" / "datasets" / "eval_copywriting.json",
+                "baseline_score": 85.0,
+            }
+        ],
+    )
+
+    def mock_run(self):
+        return RatchetReport(
+            target_file=str(self.config.target_file),
+            initial_score=100.0,
+            final_score=100.0,
+            total_iterations=1,
+            kept_commits=0,
+            reverted_trials=0,
+            history=[],
+            total_tokens=1500,
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+    monkeypatch.setattr("ccba_harness.evals.tuner.GitRatchetOptimizer.run", mock_run)
+
+    # Dry run should reflect REAL_LLM engine flag and aggregate tokens
+    report = daemon.run_nightly_batch(dry_run=True)
+    assert report.engine == "REAL_LLM"
+    assert report.total_skills_scanned == 1
+    assert report.total_tokens == 1500
+    assert report.prompt_tokens == 1000
+    assert report.completion_tokens == 500
+
+
+
+

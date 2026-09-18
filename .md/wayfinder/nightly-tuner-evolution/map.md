@@ -26,14 +26,15 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[ADR 0058] Khắc phục Subprocess Exit 127:** Cấu hình `sys.executable` fallback trong `ccba_harness.verifier` khi môi trường Linux thiếu lệnh `python`.
 - [x] **[T-01 / REC-01..03] Vá Lỗi Đánh Giá & Tháo Gỡ Deadlock:** Hợp nhất `if-elif` trong `mock_agent_task`, thu hẹp từ khóa BIM, bổ sung Trí Nhớ Số vào Strategy 1 BIM, bổ sung Luật 135/2025 vào legal fallback, điều hướng `ccba-ai-qc` sang redteam dataset; đưa `bigbim-risk`, `ccba-ai-qc`, `ccba-legal-intel` đạt 100.0%.
 - [x] **[T-02 / REC-04..06] Khóa Đơn Nhiệm Flock & Quản Trị Vòng Đời Nhánh Git:** Bổ sung `flock -n 200` tại `/tmp/ccba_nightly_runner.lock`, Empty Push Guard trong `doc_refactor_daemon.py`, cách ly HEAD sạch giữa daemons, mở rộng `_cleanup_old_empty_branches` đối soát `origin/main` và dọn dẹp remote branch rỗng.
+- [x] **[T-03 / REC-08] Cầu Nối Real LLM Adapter, Token Budget Ceiling & Circuit Breaker:** Xây dựng `TokenUsageTracker` và `LLMTaskAdapter` trong `tuner.py`, kết nối `AIClient.chat_with_metadata`, giới hạn trần ngân sách token hàng đêm (mặc định 5M tokens) với fail-safe early halt `TokenBudgetExceededError`, và ngắt an toàn với `CircuitBreakerOpenError`. Chuyển tiếp cấu hình `--use-real-llm`, `--token-budget`, `--model` qua daemon và shell runner.
 
 ---
 
 ## 🎫 Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
 - [x] **[T-01: Vá Lỗi Đánh Giá, Tháo Gỡ Deadlock BIM & Khắc Phục Lệch Đề Thi](tickets/01_evaluation_logic_and_deadlock_quickfix.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-02: Gia Cố Vận Hành Git, Khóa An Toàn Flock & Dọn Dẹp Nhánh Rác Remote](tickets/02_git_safety_and_remote_branch_lifecycle.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
-- [ ] **[T-03: Cầu Nối Adapter Real LLM, Token Budget Ceiling & Circuit Breaker](tickets/03_real_llm_adapter_and_token_governance.md)** `[Research / Task [AFK]]` *(UNBLOCKED - Ưu tiên tiếp theo)*
-- [ ] **[T-04: Xây Dựng Bộ Đề Thi & Scorer Chuyên Biệt Cho Coordination V2 & Orchestration](tickets/04_specialized_domain_datasets_and_scorers.md)** `[Research [AFK] / Prototype [HITL]]` *(UNBLOCKED)*
+- [x] **[T-03: Cầu Nối Adapter Real LLM, Token Budget Ceiling & Circuit Breaker](tickets/03_real_llm_adapter_and_token_governance.md)** `[Research / Task [AFK]]` *(ĐÃ HOÀN THÀNH)*
+- [ ] **[T-04: Xây Dựng Bộ Đề Thi & Scorer Chuyên Biệt Cho Coordination V2 & Orchestration](tickets/04_specialized_domain_datasets_and_scorers.md)** `[Research [AFK] / Prototype [HITL]]` *(UNBLOCKED - Ưu tiên tiếp theo)*
 
 ---
 

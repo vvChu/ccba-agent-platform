@@ -59,6 +59,10 @@ class SkillEvolutionSummary:
     commits_kept: int
     rollbacks: int
     status: str = "UNCHANGED"
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    halt_reason: str | None = None
 
     @property
     def score_delta(self) -> float:
@@ -77,6 +81,10 @@ class NightlyDaemonReport:
     results: list[SkillEvolutionSummary] = field(default_factory=list)
     pr_url: str | None = None
     telegram_notified: bool = False
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    engine: str = "MOCK"
 
 
 class WeightedPriorityQueue:
@@ -107,11 +115,17 @@ class NightlyTunerDaemon:
         max_iterations_low: int = 30,
         max_iterations_perfect: int = 1,
         early_stopping_patience: int = 5,
+        use_real_llm: bool = False,
+        token_budget: int = 5_000_000,
+        model: str = "",
     ) -> None:
         self.root = root
         self.max_iterations_low = max_iterations_low
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
+        self.use_real_llm = use_real_llm
+        self.token_budget = token_budget
+        self.model = model
         self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
 
@@ -199,6 +213,10 @@ class NightlyTunerDaemon:
 
         summaries: list[SkillEvolutionSummary] = []
         total_commits = 0
+        total_tokens = 0
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
+        remaining_budget = self.token_budget
 
         # 3. Chạy tối ưu từng kỹ năng theo hàng đợi
         for item in ranked_skills:
@@ -216,6 +234,9 @@ class NightlyTunerDaemon:
                 max_iterations=self.max_iterations_low,
                 skill_name=skill_name,
                 full_sweep=False,
+                use_real_llm=self.use_real_llm,
+                llm_model=self.model,
+                token_budget=remaining_budget,
             )
 
             try:
@@ -225,6 +246,13 @@ class NightlyTunerDaemon:
                 status = "IMPROVED" if result.final_score > result.initial_score else "UNCHANGED"
                 if result.final_score == 100.0 and result.initial_score == 100.0:
                     status = "PERFECT_VERIFIED"
+                if result.halt_reason:
+                    status = f"HALT_{result.halt_reason}"
+
+                total_tokens += result.total_tokens
+                total_prompt_tokens += result.prompt_tokens
+                total_completion_tokens += result.completion_tokens
+                remaining_budget = max(0, remaining_budget - result.total_tokens)
 
                 summary = SkillEvolutionSummary(
                     skill_name=skill_name,
@@ -234,9 +262,19 @@ class NightlyTunerDaemon:
                     commits_kept=result.kept_commits,
                     rollbacks=result.reverted_trials,
                     status=status,
+                    total_tokens=result.total_tokens,
+                    prompt_tokens=result.prompt_tokens,
+                    completion_tokens=result.completion_tokens,
+                    halt_reason=result.halt_reason,
                 )
                 summaries.append(summary)
                 total_commits += result.kept_commits
+
+                if result.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN"):
+                    logger.warning(
+                        f"🛑 [Nightly Tuner Early Halt] Dừng quét toàn bộ hàng đợi kỹ năng do: {result.halt_reason}"
+                    )
+                    break
 
             except Exception as e:
                 logger.error(f"❌ Lỗi trong quá trình tối ưu {skill_name}: {e}")
@@ -261,6 +299,10 @@ class NightlyTunerDaemon:
             skills_optimized=skills_improved,
             total_commits=total_commits,
             results=summaries,
+            total_tokens=total_tokens,
+            prompt_tokens=total_prompt_tokens,
+            completion_tokens=total_completion_tokens,
+            engine="REAL_LLM" if self.use_real_llm else "MOCK",
         )
 
         report_md = self.generate_evolution_report_markdown(report)
@@ -286,16 +328,24 @@ class NightlyTunerDaemon:
         """Renders an evolution summary report in Markdown format."""
         lines = [
             "# 🌙 CCBA Nightly Auto-Tuner Evolution Report",
-            f"> **Thời gian thực thi:** `{report.timestamp}`  ",
+            f"> **Thời gian thực thi:** `{report.timestamp}` | **Engine:** `{report.engine}`  ",
             f"> **Nhánh Git:** `{report.branch_name}`  ",
             f"> **Tổng kỹ năng quét:** `{report.total_skills_scanned}` | **Kỹ năng cải thiện:** `{report.skills_optimized}` | **Số Commits:** `{report.total_commits}`",
-            "",
-            "---",
-            "",
-            "### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)",
-            "| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Trạng Thái |",
-            "| :--- | :---: | :---: | :---: | :---: | :---: |",
         ]
+        if report.total_tokens > 0:
+            lines.append(
+                f"> **Tổng Token Tiêu Thụ:** `{report.total_tokens:,}` (Prompt: `{report.prompt_tokens:,}` | Completion: `{report.completion_tokens:,}`)"
+            )
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)",
+                "| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |",
+                "| :--- | :---: | :---: | :---: | :---: | :---: | :---: |",
+            ]
+        )
 
         for s in report.results:
             delta_str = f"+{s.score_delta:.1f}%" if s.score_delta > 0 else f"{s.score_delta:.1f}%"
@@ -304,8 +354,11 @@ class NightlyTunerDaemon:
                 if s.score_delta > 0
                 else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
             )
+            if s.halt_reason:
+                badge = f"⚠️ {s.status}"
+            token_str = f"{s.total_tokens:,}" if s.total_tokens > 0 else "-"
             lines.append(
-                f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | {badge} |"
+                f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | `{token_str}` | {badge} |"
             )
 
         lines.extend(
@@ -327,11 +380,13 @@ class NightlyTunerDaemon:
         """Dispatches an alert to Telegram channel via Bot API."""
         message = (
             f"🌙 *CCBA NIGHTLY AUTO-TUNER REPORT* 🌙\n"
-            f"📅 Thời gian: `{report.timestamp}`\n"
+            f"📅 Thời gian: `{report.timestamp}` (Engine: `{report.engine}`)\n"
             f"🌿 Nhánh Git: `{report.branch_name}`\n"
             f"📈 Kỹ năng nâng cấp: *{report.skills_optimized}/{report.total_skills_scanned}*\n"
             f"💾 Số Git Commits: *{report.total_commits}*\n"
         )
+        if report.total_tokens > 0:
+            message += f"🪙 Tổng Token: *{report.total_tokens:,}*\n"
         if report.pr_url:
             message += f"🔗 Pull Request: {report.pr_url}\n"
 
@@ -478,9 +533,23 @@ def main() -> None:
         "--dry-run", action="store_true", help="Run without creating git branches or PRs"
     )
     parser.add_argument("--max-iter", type=int, default=10, help="Max iterations for weak skills")
+    parser.add_argument(
+        "--use-real-llm", action="store_true", help="Use real LLM inference instead of mock task"
+    )
+    parser.add_argument(
+        "--token-budget", type=int, default=5000000, help="Total session token budget ceiling"
+    )
+    parser.add_argument(
+        "--model", type=str, default="", help="Model alias for real LLM evaluation"
+    )
     args = parser.parse_args()
 
-    daemon = NightlyTunerDaemon(max_iterations_low=args.max_iter)
+    daemon = NightlyTunerDaemon(
+        max_iterations_low=args.max_iter,
+        use_real_llm=args.use_real_llm,
+        token_budget=args.token_budget,
+        model=args.model,
+    )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 
 
