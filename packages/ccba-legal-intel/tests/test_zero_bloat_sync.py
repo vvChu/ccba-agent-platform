@@ -306,3 +306,62 @@ def test_legal_registry_manager_save_lock_retry(tmp_path: Path) -> None:
     saved_data = yaml.safe_load(reg_file.read_text(encoding="utf-8"))
     assert saved_data["laws"][0]["id"] == "RETRY-TEST"
     assert call_count >= 2
+
+
+def test_safe_remove_directory_with_nested_junction(tmp_path: Path) -> None:
+    """Test safe_remove on directory containing an NTFS junction removes junction without deleting target files."""
+    if sys.platform != "win32":
+        pytest.skip("Windows NTFS directory junction test requires win32")
+
+    try:
+        import _winapi
+
+        if not hasattr(_winapi, "CreateJunction"):
+            pytest.skip("_winapi.CreateJunction not available on this platform")
+    except ImportError:
+        pytest.skip("_winapi not available on this platform")
+
+    parent_dir = tmp_path / "parent_dir"
+    parent_dir.mkdir(parents=True, exist_ok=True)
+    (parent_dir / "regular_file.txt").write_text("file in parent", encoding="utf-8")
+
+    external_target_dir = tmp_path / "external_target_dir"
+    external_target_dir.mkdir(parents=True, exist_ok=True)
+    external_file = external_target_dir / "preserve_me.txt"
+    external_file.write_text("do not delete", encoding="utf-8")
+
+    nested_junction = parent_dir / "nested_junction"
+    _winapi.CreateJunction(str(external_target_dir), str(nested_junction))
+
+    assert (nested_junction / "preserve_me.txt").exists()
+
+    safe_remove(parent_dir)
+
+    assert not parent_dir.exists()
+    assert not nested_junction.exists()
+    # Ensure external target and its file were NOT deleted!
+    assert external_target_dir.exists()
+    assert external_file.exists()
+    assert external_file.read_text(encoding="utf-8") == "do not delete"
+
+
+def test_safe_copy2_destination_symlink_does_not_chmod_target(tmp_path: Path) -> None:
+    """Test safe_copy2 avoids calling chmod on symlink destination to protect target permissions."""
+    src_file = tmp_path / "src.txt"
+    src_file.write_text("new content", encoding="utf-8")
+
+    target_file = tmp_path / "target.txt"
+    target_file.write_text("old content", encoding="utf-8")
+
+    symlink_file = tmp_path / "symlink.txt"
+    try:
+        symlink_file.symlink_to(target_file)
+    except (OSError, NotImplementedError):
+        pytest.skip("Creating symlinks requires privileges or Developer Mode on Windows")
+
+    # Spy on os.chmod to verify it is never invoked on symlink_file
+    with patch("os.chmod", wraps=os.chmod) as mock_chmod:
+        safe_copy2(src_file, symlink_file)
+        for call_args in mock_chmod.call_args_list:
+            called_path = Path(call_args[0][0])
+            assert not (called_path.is_symlink())
