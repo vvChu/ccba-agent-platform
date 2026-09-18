@@ -82,7 +82,7 @@ def test_legal_registry_manager_temp():
         assert new_data["decrees"][0]["title"] == "Nghị định 06/2021/NĐ-CP"
 
 
-def test_registry_manager_path_resolution(tmp_path: Path):
+def test_registry_manager_path_resolution(tmp_path: Path, monkeypatch) -> None:
     from ccba_legal.registry import discover_master_registry_path
 
     # Deterministic test with explicit custom path
@@ -91,11 +91,21 @@ def test_registry_manager_path_resolution(tmp_path: Path):
     custom_manager = LegalRegistryManager(registry_path=custom_reg)
     assert custom_manager.registry_path.resolve() == custom_reg.resolve()
 
-    # Default discovery path test
-    manager = LegalRegistryManager()
-    cwd_cand = Path.cwd() / ".md" / "data" / "legal_registry.yaml"
-    expected_path = cwd_cand.resolve() if cwd_cand.is_file() else discover_master_registry_path()
-    assert manager.registry_path.resolve() == expected_path.resolve()
+    # Branch 1: When CWD contains .md/data/legal_registry.yaml
+    cwd_dir = tmp_path / "workspace"
+    local_reg = cwd_dir / ".md" / "data" / "legal_registry.yaml"
+    local_reg.parent.mkdir(parents=True)
+    local_reg.write_text("metadata: {}", encoding="utf-8")
+    monkeypatch.chdir(cwd_dir)
+    manager_local = LegalRegistryManager()
+    assert manager_local.registry_path.resolve() == local_reg.resolve()
+
+    # Branch 2: When CWD does not contain local registry, fallback to master registry
+    empty_cwd = tmp_path / "empty_workspace"
+    empty_cwd.mkdir()
+    monkeypatch.chdir(empty_cwd)
+    manager_master = LegalRegistryManager()
+    assert manager_master.registry_path.resolve() == discover_master_registry_path().resolve()
 
 
 def test_lifecycle_resolution_with_replacement(tmp_path: Path) -> None:

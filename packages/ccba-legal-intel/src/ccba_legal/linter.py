@@ -532,7 +532,7 @@ def lint_target_path(
 
     if target_path.is_file():
         ext = target_path.suffix.lower()
-        if ext == ".md":
+        if ext in {".md", ".markdown"}:
             result["files_scanned"] = 1
             errs = lint_markdown_file(target_path)
             if errs:
@@ -567,13 +567,17 @@ def lint_target_path(
             )
         else:
             target_files = sorted(
-                p for p in target_path.rglob("*.md") if p.is_file() and not is_ignored_path(p)
+                p
+                for p in target_path.rglob("*")
+                if p.is_file()
+                and p.suffix.lower() in {".md", ".markdown"}
+                and not is_ignored_path(p)
             )
 
         result["files_scanned"] = len(target_files)
 
         for f in target_files:
-            if f.suffix.lower() == ".md":
+            if f.suffix.lower() in {".md", ".markdown"}:
                 errs = lint_markdown_file(f)
                 if errs:
                     result["format_errors"] += len(errs)
