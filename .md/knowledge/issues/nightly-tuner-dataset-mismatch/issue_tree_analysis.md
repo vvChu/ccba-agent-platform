@@ -132,7 +132,7 @@ graph TD
 | :--- | :---: | :--- | :--- | :---: |
 | `ACT-01` | `[ANALYSIS]` | Rà soát toàn bộ 73 skills hiện có, phân loại thành 6 nhóm Domain Archetypes: `LEGAL`, `BIM`, `QC_PCCC`, `ACADEMIC`, `COPYWRITING`, `SOFTWARE_CORE` | `KY_SU_THUC_THI` | `DECISION_READY` |
 | `ACT-02` | `[DECISION]` | Phê chuẩn kiến trúc **Domain-Aligned Dataset Router** (tự động ghép cặp dựa trên từ khóa skill name và frontmatter `bundle`/`category`) | `TRUONG_PHONG_RD_HTQT` | `DECISION_READY` |
-| `ACT-03` | `[SYNTHESIS]` | Cập nhật hàm `discover_skills_and_datasets()` trong [nightly_tuner_daemon.py](file:///home/vvc/ccba/ccba-agent-platform/scripts/eval/nightly_tuner_daemon.py) sử dụng logic định tuyến linh hoạt thay vì hardcoded dict 7 phần tử | `CHU_TRI_BO_MON` | `UNVERIFIED` |
+| `ACT-03` | `[SYNTHESIS]` | Cập nhật hàm `discover_skills_and_datasets()` trong [nightly_tuner_daemon.py](../../../../scripts/eval/nightly_tuner_daemon.py) sử dụng logic định tuyến linh hoạt thay vì hardcoded dict 7 phần tử | `CHU_TRI_BO_MON` | `UNVERIFIED` |
 | `ACT-04` | `[SYNTHESIS]` | Đăng ký sử dụng ngay các bộ đề có sẵn: `eval_copywriting.json`, `eval_agent_orchestration.json`, `eval_bigbim_classification.json`, `eval_legal_intel.json` | `KY_SU_THUC_THI` | `UNVERIFIED` |
 | `ACT-05` | `[ANALYSIS]` | Chạy thử nghiệm Nightly Tuner Dry-Run để đo lường ma trận điểm số sau khi ghép đúng đề thi | `KY_SU_THUC_THI` | `UNVERIFIED` |
 | `ACT-06` | `[SYNTHESIS]` | Xuất bản báo cáo đối soát trước/sau khi chuẩn hóa, nghiệm thu triệt tiêu hiện tượng điểm liệt giả lập | `CHU_TRI_BO_MON` | `UNVERIFIED` |
@@ -141,7 +141,7 @@ graph TD
 
 ## 5. Đặc Tả Kiến Trúc Đề Xuất (Technical Design)
 
-Trong [scripts/eval/nightly_tuner_daemon.py](file:///home/vvc/ccba/ccba-agent-platform/scripts/eval/nightly_tuner_daemon.py), thay thế dictionary cứng 7 phần tử bằng hàm định tuyến thông minh:
+Trong [scripts/eval/nightly_tuner_daemon.py](../../../../scripts/eval/nightly_tuner_daemon.py), thay thế dictionary cứng 7 phần tử bằng hàm định tuyến thông minh:
 
 ```python
 def resolve_dataset_for_skill(skill_name: str, skill_dir: Path, test_cases_dir: Path) -> Path:
