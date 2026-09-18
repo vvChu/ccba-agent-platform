@@ -48,7 +48,7 @@ applies_to:
 | Tiêu Chí | Đánh Giá Cụ Thể | Ghi Chú / Bằng Chứng |
 | :--- | :--- | :--- |
 | **Giá trị Nghiệp vụ (Value)** | Tối thượng | Bảo đảm 100% hồ sơ tư vấn CCBA tuân thủ khung pháp lý hiện hành 2025–2026 |
-| **Độ Phức tạp (Complexity)** | Rất thấp (KISS) | Thuần thư viện chuẩn Python (`zipfile`, `xml.etree.ElementTree`, `re`), zero external dependency |
+| **Độ Phức tạp (Complexity)** | Rất thấp (KISS) | Tối giản, tích hợp thư viện chuẩn Python (`zipfile`, `re`) cùng dependency nhẹ `defusedxml` bảo mật phân tích OOXML chống DoS / DTD |
 | **Rủi ro Rò rỉ (Risk)** | 0% (Triệt tiêu) | Không chứa bất kỳ dữ liệu thương mại, thông tin khách hàng hay bí mật dự án nào |
 | **Bảo tồn Tiêu chuẩn** | Tuân thủ 100% | Vượt qua `validate_skills.py --enforce-gpi` (73/73 skills) và ADR-0058 |
 

@@ -539,8 +539,13 @@ def handle_lint(args: argparse.Namespace) -> int:
         print(json.dumps(res, indent=2, ensure_ascii=False))
         return 1 if res["total_errors"] > 0 else 0
 
+    banner_title = (
+        "CCBA LEGAL INTEL - VISUAL PARITY & LEGAL CURRENCY LINTER"
+        if check_curr
+        else "CCBA LEGAL INTEL - VISUAL PARITY & HYPERLINK INTEGRITY LINTER"
+    )
     print("=================================================================")
-    print("     CCBA LEGAL INTEL - VISUAL PARITY & LEGAL CURRENCY LINTER    ")
+    print(f"     {banner_title}    ")
     print("=================================================================")
     print(f"🎯 Target Path: {args.target_path}")
     print("-----------------------------------------------------------------")
@@ -561,26 +566,29 @@ def handle_lint(args: argparse.Namespace) -> int:
             for lerr in item.get("link_errors", []):
                 print(f"  • {item.get('file', '')} -> {lerr}")
 
-    # Legal Currency issues
-    curr_findings = res.get("currency_findings", [])
-    errors_list = [f for f in curr_findings if f.get("severity") == "ERROR"]
-    warnings_list = [f for f in curr_findings if f.get("severity") == "WARNING"]
+    # Legal Currency issues (only shown when currency checks are enabled)
+    if check_curr:
+        curr_findings = res.get("currency_findings", [])
+        errors_list = [f for f in curr_findings if f.get("severity") == "ERROR"]
+        warnings_list = [f for f in curr_findings if f.get("severity") == "WARNING"]
 
-    if errors_list:
-        print("\n🔴 [VĂN BẢN HẾT HIỆU LỰC / OBSOLETE CITATIONS] (Vi phạm ADR-0058):")
-        for f in errors_list:
-            f_name = Path(f["file"]).name
-            print(f"  • [{f_name}] [{f['location']}]")
-            print(f"    - Viện dẫn : {f['matched_text']} ({f['obsolete_doc']})")
-            print(f"    - Thay thế : 👉 {f['replacement']}")
-            if f.get("context"):
-                print(f'    - Ngữ cảnh : "{f["context"]}"')
+        if errors_list:
+            print("\n🔴 [VĂN BẢN HẾT HIỆU LỰC / OBSOLETE CITATIONS] (Vi phạm ADR-0058):")
+            for f in errors_list:
+                f_name = Path(f["file"]).name
+                print(f"  • [{f_name}] [{f['location']}]")
+                print(f"    - Viện dẫn : {f['matched_text']} ({f['obsolete_doc']})")
+                print(f"    - Thay thế : 👉 {f['replacement']}")
+                if f.get("context"):
+                    print(f'    - Ngữ cảnh : "{f["context"]}"')
 
-    if warnings_list:
-        print("\n⚠️ [VĂN BẢN CHƯA XÁC THỰC / UNVERIFIED CITATIONS] (Cần đối soát):")
-        for f in warnings_list:
-            f_name = Path(f["file"]).name
-            print(f"  • [{f_name}] [{f['location']}]: {f['matched_text']} -> {f['replacement']}")
+        if warnings_list:
+            print("\n⚠️ [VĂN BẢN CHƯA XÁC THỰC / UNVERIFIED CITATIONS] (Cần đối soát):")
+            for f in warnings_list:
+                f_name = Path(f["file"]).name
+                print(
+                    f"  • [{f_name}] [{f['location']}]: {f['matched_text']} -> {f['replacement']}"
+                )
 
     print("\n=================================================================")
     if res["total_errors"] > 0:
@@ -589,13 +597,16 @@ def handle_lint(args: argparse.Namespace) -> int:
         )
         return 1
 
-    if res.get("currency_warnings", 0) > 0:
+    if check_curr and res.get("currency_warnings", 0) > 0:
         print(
             "⚠️ [PASSED WITH WARNINGS] Zero lỗi nghiêm trọng. Vui lòng rà soát cảnh báo văn bản chưa xác thực."
         )
         return 0
 
-    print("✅ [PASSED] 100% Visual Parity, Zero Broken Links & Zero Obsolete Citations!")
+    if check_curr:
+        print("✅ [PASSED] 100% Visual Parity, Zero Broken Links & Zero Obsolete Citations!")
+    else:
+        print("✅ [PASSED] 100% Visual Parity & Zero Broken Links!")
     return 0
 
 

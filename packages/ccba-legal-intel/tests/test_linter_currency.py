@@ -5,6 +5,8 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
+import pytest
+
 from ccba_legal.linter import (
     extract_file_lines,
     lint_file_currency,
@@ -185,3 +187,24 @@ def test_statute_code_normalization(tmp_path: Path) -> None:
     assert len(errors) == 1
     assert "15/2021/ND-CP" in errors[0]["matched_text"]
     assert len(warnings) == 0  # 217/2026/ND-CP is recognized as active
+
+
+def test_ooxml_size_guard(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify extract_file_lines guards against oversized XML entries."""
+    from ccba_legal import linter
+
+    monkeypatch.setattr(linter, "MAX_XML_ENTRY_SIZE", 50)
+
+    pptx_path = tmp_path / "bomb.pptx"
+    with zipfile.ZipFile(pptx_path, "w") as z:
+        z.writestr("ppt/slides/slide1.xml", "<p:sld>" + ("A" * 100) + "</p:sld>")
+
+    lines = linter.extract_file_lines(pptx_path)
+    assert any("exceeds maximum allowed size" in text for _, _, text in lines)
+
+    docx_path = tmp_path / "bomb.docx"
+    with zipfile.ZipFile(docx_path, "w") as z:
+        z.writestr("word/document.xml", "<w:document>" + ("B" * 100) + "</w:document>")
+
+    lines_docx = linter.extract_file_lines(docx_path)
+    assert any("exceeds maximum allowed size" in text for _, _, text in lines_docx)

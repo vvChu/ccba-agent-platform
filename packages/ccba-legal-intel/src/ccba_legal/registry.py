@@ -200,10 +200,25 @@ KNOWN_STATUTORY_REPLACEMENTS: dict[str, dict[str, str]] = {
         "document_number": "217/2026/NĐ-CP",
         "title": "Nghị định 217/2026/NĐ-CP (Quản lý dự án đầu tư xây dựng)",
     },
+    "35/2023/NĐ-CP": {
+        "id": "ND-217-2026",
+        "document_number": "217/2026/NĐ-CP",
+        "title": "Nghị định 217/2026/NĐ-CP",
+    },
+    "35/2023/ND-CP": {
+        "id": "ND-217-2026",
+        "document_number": "217/2026/NĐ-CP",
+        "title": "Nghị định 217/2026/NĐ-CP",
+    },
     "06/2021/TT-BXD": {
         "id": "TT-34-2026-BXD",
         "document_number": "34/2026/TT-BXD",
         "title": "Thông tư 34/2026/TT-BXD (Phân cấp công trình xây dựng)",
+    },
+    "03/2016/TT-BXD": {
+        "id": "TT-34-2026-BXD",
+        "document_number": "34/2026/TT-BXD",
+        "title": "Thông tư 34/2026/TT-BXD",
     },
     "06/2021/NĐ-CP": {
         "id": "ND-207-2026",
@@ -215,10 +230,25 @@ KNOWN_STATUTORY_REPLACEMENTS: dict[str, dict[str, str]] = {
         "document_number": "207/2026/NĐ-CP",
         "title": "Nghị định 207/2026/NĐ-CP (Quản lý chất lượng & thi công xây dựng)",
     },
+    "46/2015/NĐ-CP": {
+        "id": "ND-207-2026",
+        "document_number": "207/2026/NĐ-CP",
+        "title": "Nghị định 207/2026/NĐ-CP",
+    },
+    "46/2015/ND-CP": {
+        "id": "ND-207-2026",
+        "document_number": "207/2026/NĐ-CP",
+        "title": "Nghị định 207/2026/NĐ-CP",
+    },
     "12/2021/TT-BXD": {
         "id": "TT-38-2026-BXD",
         "document_number": "38/2026/TT-BXD",
         "title": "Thông tư 38/2026/TT-BXD (Định mức xây dựng và quản lý chi phí)",
+    },
+    "09/2024/TT-BXD": {
+        "id": "TT-38-2026-BXD",
+        "document_number": "38/2026/TT-BXD",
+        "title": "Thông tư 38/2026/TT-BXD",
     },
     "50/2014/QH13": {
         "id": "LXD-2025",
