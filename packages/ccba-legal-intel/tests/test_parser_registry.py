@@ -96,3 +96,25 @@ def test_registry_manager_path_resolution(tmp_path: Path):
     cwd_cand = Path.cwd() / ".md" / "data" / "legal_registry.yaml"
     expected_path = cwd_cand.resolve() if cwd_cand.is_file() else discover_master_registry_path()
     assert manager.registry_path.resolve() == expected_path.resolve()
+
+
+def test_lifecycle_resolution_with_replacement(tmp_path: Path) -> None:
+    """Verify get_lifecycle resolves obsolete statute replacement via KNOWN_STATUTORY_REPLACEMENTS."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """decrees:
+  - id: ND-217-2026
+    document_number: 217/2026/NĐ-CP
+    title: Nghị định về quản lý dự án đầu tư xây dựng
+    short_name: Nghị định 217/2026/NĐ-CP
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+    life = mgr.get_lifecycle("15/2021/NĐ-CP")
+    assert str(life["status"]).upper() == "SUPERSEDED"
+    assert life["suggested_replacement"]["id"] == "ND-217-2026"
+    assert life["suggested_replacement"]["document_number"] == "217/2026/NĐ-CP"
+    assert "217/2026/NĐ-CP" in life["warning"]
