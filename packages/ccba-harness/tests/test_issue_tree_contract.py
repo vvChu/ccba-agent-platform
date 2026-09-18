@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-import pytest
 
 
 def get_project_root() -> Path:
@@ -41,19 +40,23 @@ def lint_issue_tree_output(text: str, target_os: str = "windows") -> tuple[bool,
         required_labels = ["[ANALYSIS]", "[DECISION]", "[COMMITMENT]", "[SYNTHESIS]"]
         found_any = any(label in text for label in required_labels)
         if not found_any:
-            violations.append("Workplan/What-Tree must include standardized MECE labels ([ANALYSIS], [DECISION], [COMMITMENT], [SYNTHESIS]).")
+            violations.append(
+                "Workplan/What-Tree must include standardized MECE labels ([ANALYSIS], [DECISION], [COMMITMENT], [SYNTHESIS])."
+            )
 
     # Check 3: OS / Shell Awareness check
     if target_os.lower() in ("windows", "nt"):
         forbidden_bash_patterns = [
-            r"\[\s+-n\s+",      # [ -n ... ]
-            r"date\s+\+%s",     # date +%s
-            r"\$\(date\s+",     # $(date ...)
+            r"\[\s+-n\s+",  # [ -n ... ]
+            r"date\s+\+%s",  # date +%s
+            r"\$\(date\s+",  # $(date ...)
             r"export\s+[A-Z_]+=",  # export VAR=
         ]
         for pattern in forbidden_bash_patterns:
             if re.search(pattern, text):
-                violations.append(f"Forbidden Unix/Bash syntax detected on Windows: pattern '{pattern}'")
+                violations.append(
+                    f"Forbidden Unix/Bash syntax detected on Windows: pattern '{pattern}'"
+                )
 
     return (len(violations) == 0, violations)
 

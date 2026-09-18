@@ -34,7 +34,9 @@ def test_find_local_knowledge_corpus_via_hub_path(tmp_path: Path) -> None:
             }
         ]
     }
-    with open(hub_dir / ".md" / "data" / "spoke_registry_decrypted.yaml", "w", encoding="utf-8") as f:
+    with open(
+        hub_dir / ".md" / "data" / "spoke_registry_decrypted.yaml", "w", encoding="utf-8"
+    ) as f:
         yaml.safe_dump(spoke_reg, f)
 
     # 3. Tạo mock Spoke chỉ chứa workspace_context.yaml có hub_path
