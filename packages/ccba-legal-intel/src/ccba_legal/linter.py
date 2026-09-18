@@ -219,9 +219,20 @@ def is_ignored_path(path: Path) -> bool:
         if part.startswith(".") and part not in {".md", ".agents", "."}:
             return True
     posix_path = path.as_posix().lower()
-    if "/legal_docs" in posix_path or posix_path.endswith("/legal_docs"):
+    if "/legal_docs/" in posix_path or posix_path.endswith("/legal_docs"):
         return True
     return False
+
+
+def safe_parse_xml(xml_bytes: bytes) -> ET.Element:
+    """Parse XML bytes safely with entity resolution disabled (mitigates XML entity expansion / DTD DoS)."""
+    try:
+        import defusedxml.ElementTree as DefusedET
+
+        return DefusedET.fromstring(xml_bytes)
+    except ImportError:
+        parser = ET.XMLParser()
+        return ET.fromstring(xml_bytes, parser=parser)
 
 
 def get_sentence_context(text: str, match_start: int, match_end: int) -> str:
@@ -294,7 +305,7 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
                     s_num = (
                         int(re.search(r"\d+", s_name).group()) if re.search(r"\d+", s_name) else 1
                     )
-                    tree = ET.fromstring(z.read(s_name))
+                    tree = safe_parse_xml(z.read(s_name))
                     p_idx = 0
                     for node in tree.iter():
                         if node.tag.endswith("}p"):
@@ -313,7 +324,7 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
         try:
             with zipfile.ZipFile(file_path, "r") as z:
                 if "word/document.xml" in z.namelist():
-                    tree = ET.fromstring(z.read("word/document.xml"))
+                    tree = safe_parse_xml(z.read("word/document.xml"))
                     p_idx = 0
                     for node in tree.iter():
                         if node.tag.endswith("}p"):
@@ -361,7 +372,7 @@ def lint_file_currency(
             continue
 
         # 1. Check known obsolete statutory patterns
-        matched_statutes_on_line = set()
+        matched_statute_ids_on_line: set[str] = set()
         for item in OBSOLETE_LEGAL_PATTERNS:
             for match in item["pattern"].finditer(text):
                 matched_str = match.group(0)
@@ -370,7 +381,10 @@ def lint_file_currency(
                 if is_transitional_context(sentence, text):
                     continue
 
-                matched_statutes_on_line.add(normalize_statute_code(matched_str))
+                matched_statute_ids_on_line.add(normalize_statute_code(item["id"]))
+                for gm in GENERIC_STATUTE_REGEX.finditer(matched_str):
+                    matched_statute_ids_on_line.add(normalize_statute_code(gm.group(1)))
+
                 findings.append(
                     {
                         "file": str(file_path),
@@ -388,7 +402,7 @@ def lint_file_currency(
         for gen_match in GENERIC_STATUTE_REGEX.finditer(text):
             gen_str = gen_match.group(1)
             norm_gen = normalize_statute_code(gen_str)
-            if any(norm_gen in obs for obs in matched_statutes_on_line):
+            if norm_gen in matched_statute_ids_on_line:
                 continue
             if norm_gen in active_docs:
                 continue
