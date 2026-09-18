@@ -8,7 +8,7 @@ user-invocable: true
 command: /ccba-issue-tree
 disable-model-invocation: true
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -47,6 +47,10 @@ Kỹ năng master điều phối phân rã các bài toán phức tạp, sự c�
    - Cây vấn đề không phải là sơ đồ tĩnh để chiêm ngưỡng. Mỗi nút lá là một đối tượng sống chuyển dịch qua 6 trạng thái vòng đời xác định (`UNVERIFIED`, `IN_INVESTIGATION`, `VERIFIED_FACT`, `FALSIFIED`, `DECISION_READY`, `COMMITTED`).
 4. **Verbatim Evidence Grounding (ADR-0059):**
    - Mọi giả thuyết chuyển sang `VERIFIED_FACT` phải có bằng chứng thực nghiệm (log máy tính, số liệu đo đạc) hoặc trích dẫn pháp lý nguyên văn 100% từ văn bản chính thống kèm mã băm SHA-256.
+5. **Bất Biến Môi Trường Thực Thi (OS & Shell Awareness Guard):**
+   - Khi xuất đoạn mã hoặc lệnh ở các nút lá `[COMMITMENT]` / `[SYNTHESIS]`, Agent bắt buộc phải đọc thông tin hệ điều hành từ `user_information.OS`. Trên môi trường Windows, cấm tuyệt đối sinh cú pháp Unix Bash (như `[ -n ... ]`, `date +%s`). Mọi script tự động hóa phải dùng PowerShell hợp lệ hoặc lệnh Python chuẩn (`python -m ...`).
+6. **Nguyên Tắc Stateless Tuân Thủ KISS:**
+   - Cây vấn đề vận hành hoàn toàn trong ngữ cảnh hội thoại Markdown (Stateless). Tuyệt đối không tự ý sinh tệp trạng thái phụ (`.yaml`, `.json`) trong workspace để tránh phát sinh tệp rác.
 
 ---
 
@@ -70,6 +74,15 @@ Xác định câu hỏi trọng tâm của bài toán để chọn đúng loại
    - Khi bài toán toàn trình trải dài từ điều tra sự cố đến thực thi: Khởi đầu bằng `Why-Tree` (chẩn đoán xác định gốc rễ) $\rightarrow$ Lấy nguyên nhân đã kiểm chứng (`VERIFIED_FACT`) làm Gốc cho `How-Tree` (tìm đòn bẩy giải pháp) $\rightarrow$ Lấy phương án được chọn (`COMMITTED`) làm Gốc cho `What-Tree` (bóc tách gói việc deliverable). Tuyệt đối không gộp chung cả 3 mục đích vào 1 cây đơn lẻ.
 5. **Rào Chắn Phân Tách Đa Bộ Môn (Multi-disciplinary Partitioning):**
    - Khi bài toán có sự chồng lấn giữa kỹ thuật và pháp lý (ví dụ: vừa sụt lún vừa tranh chấp hợp đồng FIDIC), bắt buộc phân tách rạch ròi ở Tầng 1 theo ranh giới bộ môn (Nhánh 1: Kỹ thuật địa chất/kết cấu; Nhánh 2: Pháp lý hợp đồng & quản lý dự án), triệt tiêu hiện tượng lai tạp chéo (no mixed branches).
+6. **Chế Độ Phân Nhánh Tự Động: Fast-Tree vs. Full-Tree (Adaptive Branching):**
+   - **Điều kiện Fast-Tree (Cục bộ):** Tự động áp dụng khi bài toán thuộc phạm vi cục bộ ($\le 2$ files bị ảnh hưởng, script độc lập, bugfix đơn lẻ không rò rỉ deadlock).
+   - **Chu trình rút gọn 3 bước:** Chuyển dịch nhanh qua `UNVERIFIED` $\rightarrow$ `VERIFIED` $\rightarrow$ `SOLVED`.
+   - **Lược bỏ RACI:** Tự động cắt giảm ma trận RACI 12 ghế và định dạng chi tiết 200 dòng để tiết kiệm 60% output. Chỉ xuất cây phân rã gọn gàng và bảng gói việc MECE với 4 nhãn chuẩn tắc: `[ANALYSIS]`, `[DECISION]`, `[COMMITMENT]`, `[SYNTHESIS]`.
+   - **Dòng thông báo xác nhận chuẩn (Confirmation Header):** Luôn in dòng thông báo sau ở ngay đầu phản hồi để người dùng kiểm soát và chủ động điều hướng:
+     ```markdown
+     > 💡 [Phân loại: Fast-Tree] Bài toán được xếp loại Cục bộ (Fast-Tree). Gõ `/ccba-issue-tree --full` nếu muốn mở rộng toàn diện (Full-Tree với 6 trạng thái & RACI).
+     ```
+   - **Điều kiện Full-Tree:** Áp dụng khi bài toán liên quan đến $\ge 3$ packages, tranh chấp pháp lý hợp đồng, kiến trúc hệ thống lớn, deadlock/race condition phức tạp, hoặc khi có cờ tường minh `--full`.
 - **Tiêu chí hoàn thành:** Xác định duy nhất 1 loại cây phù hợp với câu hỏi bài toán trọng tâm và không gian giả định ban đầu.
 
 ### Pha 2: Dựng Cây & Phân Rã Chuyên Biệt (Tree Construction)

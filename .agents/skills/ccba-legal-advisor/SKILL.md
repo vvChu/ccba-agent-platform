@@ -50,10 +50,19 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 > [!CRITICAL]
 > **MANDATORY GROUNDING INVARIANT (RÀO CHẮN BẮT BUỘC):**
 > Tuyệt đối **KHÔNG ĐƯỢC** xuất kết luận pháp lý chỉ dựa trên bộ nhớ mô hình (LLM parametric memory).
-> Agent **BẮT BUỘC** phải thực thi lệnh gọi công cụ kiểm chứng (`grep_search`, `find_by_name` hoặc `view_file`)
-> theo thứ tự phân giải đường dẫn 3 tầng:
-> 1. **Tầng 1 (Cục bộ Spoke):** Quét thư mục `.\.md\legal_docs\` tại Spoke hiện tại.
-> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động quét thư mục lân cận `<ccba-legal-knowledge>/legal_docs/` (Virtual Hub Fallback).
+> Agent **BẮT BUỘC** phải thực thi kiểm chứng thực tế và ưu tiên sử dụng Deep Seam CLI để chống cháy ngữ cảnh (tiết kiệm 95% token so với đọc file thô):
+> - **Lệnh trích xuất điều khoản trực tiếp (Ưu tiên số 1):**
+>   ```bash
+>   python -m ccba_legal get-clause --doc <doc_id> --clause <clause_id>
+>   ```
+> - **Lệnh tìm kiếm ngữ nghĩa:**
+>   ```bash
+>   python -m ccba_legal query "<nội_dung_cần_tra_cứu>"
+>   ```
+> 
+> Thứ tự phân giải đường dẫn 3 tầng tự động:
+> 1. **Tầng 1 (Virtual-First / Cục bộ Spoke):** Trích xuất qua Deep Seam CLI hoặc quét thư mục `.\.md\legal_docs\` tại Spoke. Khi cần cô lập ngoại tuyến, kéo chọn lọc đúng văn bản dự án: `python -m ccba_legal sync --pull-latest --doc <doc_id>`.
+> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua con trỏ `hub_path` trong `.md/workspace_context.yaml` (tra cứu tự động qua Hub registry) hoặc biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH`.
 > 3. **Tầng 3 (Danh mục SSOT):** Kiểm tra `legal_registry.yaml` và `metadata.yaml` của từng gói để xác nhận trường `relations.replaces` nhằm loại bỏ triệt để văn bản/quy chuẩn đã hết hiệu lực.
 
 * Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của các gói văn bản.

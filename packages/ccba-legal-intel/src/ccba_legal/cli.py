@@ -711,9 +711,20 @@ def handle_sync(args: argparse.Namespace) -> int:
         )
     print("-----------------------------------------------------------------")
 
-    if res.get("status") in {"success", "fallback_cloud_vault"}:
+    status = res.get("status")
+    bundles_count = len(res.get("bundles_synced", []))
+
+    if status == "success" and bundles_count > 0:
         print("✅ 1-Click Legal Sync Completed Successfully!")
         return 0
+    elif status == "fallback_cloud_vault" or (status == "success" and bundles_count == 0):
+        print(
+            f"⚠️ {res.get('message', 'Thư mục tri thức cục bộ ccba-legal-knowledge chưa được tìm thấy.')}"
+        )
+        print(
+            "❌ Không có gói tri thức nào được tải về máy. Đồng bộ CHƯA hoàn tất (ADR-0058 Hard Completion Lock)."
+        )
+        return 1
     else:
         print(f"❌ Sync failed: {res.get('message', 'Unknown error')}")
         return 1

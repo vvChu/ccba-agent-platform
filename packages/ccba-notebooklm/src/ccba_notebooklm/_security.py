@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -103,3 +104,71 @@ def run_maskara_gate(source_path: str) -> tuple[str, bool]:
         print(f"[Warn] Lỗi khi chạy Maskara Gate: {e}", file=sys.stderr)
 
     return source_path, False
+
+
+def sanitize_prompt_for_query(prompt: str) -> str:
+    """Kiểm tra và che giấu thông tin nhạy cảm trong câu hỏi trước khi gửi tới NotebookLM.
+
+    Args:
+        prompt: Nội dung câu hỏi truy vấn RAG.
+
+    Returns:
+        str: Câu hỏi đã được làm sạch và che giấu bí mật nếu có.
+    """
+    if not prompt or not prompt.strip():
+        return prompt
+
+    if detect_secrets_in_text is None or apply_raw_redactions is None:
+        print(
+            "[Warning] [Maskara Gate] ccba-maskara không khả dụng. Kích hoạt fallback regex scanner...",
+            file=sys.stderr,
+        )
+        fallback_patterns = [
+            r"sk-[a-zA-Z0-9_-]{20,}",
+            r"ghp_[a-zA-Z0-9]{20,}",
+            r"gho_[a-zA-Z0-9]{20,}",
+            r"AIza[0-9A-Za-z-_]{35}",
+            r"sk-ant-[a-zA-Z0-9_-]{20,}",
+        ]
+        for pat in fallback_patterns:
+            if re.search(pat, prompt):
+                print(
+                    "\n[CRITICAL SECURITY ERROR] Phát hiện API Key nhạy cảm qua fallback scanner!",
+                    file=sys.stderr,
+                )
+                raise ValueError(
+                    "Truy vấn RAG bị CHẶN vì chứa API key nhạy cảm (Fallback Scanner)."
+                )
+        return prompt
+
+    try:
+        findings = detect_secrets_in_text(prompt, "query_prompt", "notebooklm")
+        if findings:
+            critical_findings = [f for f in findings if f.get("severity") in ("critical", "high")]
+            if any(
+                f.get("rule_id")
+                in ("openai-api-key", "anthropic-api-key", "github-token", "google-api-key")
+                for f in critical_findings
+            ):
+                print(
+                    "\n[CRITICAL SECURITY ERROR] Phát hiện API Key nhạy cảm trong câu hỏi RAG!",
+                    file=sys.stderr,
+                )
+                raise ValueError("Truy vấn RAG bị CHẶN vì chứa API key nhạy cảm.")
+
+            print(
+                f"[Warning] [Maskara Gate] Phát hiện {len(findings)} thông tin nhạy cảm trong câu hỏi. Đang che giấu (redact)...",
+                file=sys.stderr,
+            )
+            prompt_bytes = prompt.encode("utf-8")
+            rewritten_bytes, _ = apply_raw_redactions(prompt_bytes, findings)
+            return rewritten_bytes.decode("utf-8")
+        return prompt
+    except Exception as e:
+        if "CHẶN" in str(e) or "nhạy cảm" in str(e):
+            raise
+        print(
+            f"[ERROR] [Maskara Gate] Lỗi bảo mật khi làm sạch prompt (Fail-Closed): {e}",
+            file=sys.stderr,
+        )
+        raise RuntimeError(f"Kiểm tra bảo mật Maskara Gate thất bại (Fail-Closed): {e}") from e

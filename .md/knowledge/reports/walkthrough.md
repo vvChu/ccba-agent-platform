@@ -1,3 +1,36 @@
+# Walkthrough: PR #287 — Nâng Cấp ccba-issue-tree v1.1.0, Tra Cứu Tri Thức Liên-Spoke 3 Tầng & Đồng Bộ README
+
+## 1. Tổng Quan PR #287
+- **Branch:** `feat/issue-tree-and-hub-mediated-discovery` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(issue-tree,legal-intel): enhance ccba-issue-tree v1.1.0, hub-mediated discovery & sync parity`
+- **PR liên quan:** [PR #287](https://github.com/vvChu/ccba-agent-platform/pull/287)
+- **Thể chế & Kiến trúc:** ADR-0050 (Spoke Knowledge Sync), ADR-0051 (Virtual Hub Fallback), ADR-0057 (Two-Stage Governance & GPI), ADR-0058 (Hard Completion Lock), ADR-0059 (Verbatim Grounding & Acquisition First)
+
+---
+
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #287)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4044184663` | `packages/ccba-notebooklm/src/ccba_notebooklm/_security.py` | `sanitize_prompt_for_query()` nuốt lỗi khi Maskara gặp exception bất ngờ (fail-open), làm rò rỉ prompt chưa làm sạch sang NotebookLM. | **ĐÃ KHẮC PHỤC**: Áp dụng nguyên tắc "Fail-Closed" tuyệt đối: khi phát hiện lỗi bất ngờ trong quá trình làm sạch prompt qua Maskara, lập tức raise `RuntimeError("Kiểm tra bảo mật Maskara Gate thất bại (Fail-Closed)")`. |
+| `4044184708` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py` | `is_port_open()` có thể bị truyền tham số timeout lớn hơn 1.0s hoặc số âm/0 gây treo socket trên Windows. | **ĐÃ KHẮC PHỤC**: Cưỡng chế trần cứng `safe_timeout = max(0.05, min(float(timeout), 1.0))` ngay bên trong hàm để bảo vệ socket probe an toàn trên Windows. |
+| `4044184735` | `.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md` | Ví dụ chứng cứ mã băm dùng URI `file:///C:/...` vi phạm quy tắc cấm `file:///` trong tài liệu. | **ĐÃ KHẮC PHỤC**: Thay thế bằng placeholder đa nền tảng `<ABSOLUTE_LOG_PATH>/runner_deadlock_trace.log#L340-L385`. |
+| `4044184756` | `.md/knowledge/research_and_studies/research-ccba-issue-tree-upgrade-proposals.md` | Tài liệu nghiên cứu dùng các liên kết tuyệt đối `file:///...` vi phạm quy tắc documentation parity. | **ĐÃ KHẮC PHỤC**: Thay thế 100% các link `file:///` thành repo-relative links (`../../../.agents/skills/...`). |
+| `4044251104` | `packages/ccba-notebooklm/src/ccba_notebooklm/_security.py` | `sanitize_prompt_for_query()` trở thành silent no-op khi `ccba_maskara` không khả dụng (fail-open), khiến query chứa API key vẫn bị gửi đi. | **ĐÃ KHẮC PHỤC**: Bổ sung fallback regex scanner phát hiện các mẫu khóa nhạy cảm phổ biến (`sk-`, `ghp_`, `gho_`, `AIza`, `sk-ant-`) và chặn đứng với `ValueError` (Fail-Closed) kèm cảnh báo ra `sys.stderr` khi `ccba_maskara` vắng mặt; bổ sung unit test kiểm chứng. |
+| `PRR_kwDOQzfV088AAAABOJzN7w` (Suppressed 1) | `packages/ccba-harness/tests/test_issue_tree_contract.py` | `lint_issue_tree_output()` chỉ kiểm tra có ít nhất một nhãn MECE (`found_any`), trong khi hợp đồng yêu cầu kiểm tra đầy đủ cả bộ nhãn chuẩn tắc. | **ĐÃ KHẮC PHỤC**: Sửa hàm linter yêu cầu có đầy đủ toàn bộ bộ 4 nhãn MECE chuẩn (`[ANALYSIS]`, `[DECISION]`, `[COMMITMENT]`, `[SYNTHESIS]`) khi phát hiện What-Tree/gói việc và báo rõ các nhãn bị thiếu; bổ sung test case kiểm chứng hợp đồng. |
+| `PRR_kwDOQzfV088AAAABOJzN7w` (Suppressed 2) | `packages/ccba-legal-intel/src/ccba_legal/sync/engine.py` | `find_local_knowledge_corpus()` nuốt toàn bộ lỗi (`except Exception: pass`) trong quá trình tìm kiếm qua Hub, có thể ẩn giấu lỗi IO/YAML thực tế. | **ĐÃ KHẮC PHỤC**: Thu hẹp ngoại lệ thành `except (OSError, yaml.YAMLError) as e:` kèm ghi log debug; xử lý an toàn `except OSError:` cho candidate paths và bổ sung test case kiểm thử. |
+
+---
+
+## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
+1. **ccba-issue-tree (v1.1.0):** Tích hợp Adaptive Fast-Tree vs Full-Tree, OS & Shell Awareness Guard (bảo vệ Windows PowerShell), Cascading Branch Pruning, và bộ kiểm thử tự động `eval_ccba_issue_tree.json` (3/3 pass).
+2. **Kiến trúc Tra cứu Tri thức Liên-Spoke 3 Tầng:** Tầng 1 Virtual Spoke Fallback qua AST/CLI nguyên tử (`get-clause`, $<500$ tokens), Tầng 2 AI Gateway Legal RAG trên Server Spark (:8090), Tầng 3 Cloud Fallback qua Google NotebookLM. Tự động khám phá qua `spoke_registry_decrypted.yaml` trên Hub.
+3. **Cập nhật Pháp lý Hiện Hành:** Cập nhật Luật Xây dựng 2025 (`135/2025/QH15`), Nghị định 217/2026/NĐ-CP, và Nghị định 207/2026/NĐ-CP vào `ccba-completion-checklist`.
+4. **Đồng bộ Tài liệu & Quick Start:** Chuẩn hóa 9 packages monorepo (`ccba-qc-core`), 73 skills trong `README.md` và bổ sung 3 slash commands hạt nhân (`/ccba-issue-tree`, `/ccba-create-pr`, `/ccba-legal-advisor`).
+5. **Nén Bộ Nhớ Làm Việc (Tiered Memory Model):** Đạt chuẩn $9.99\text{ KB} \le 10.0\text{ KB}$ cho `session_learnings.md` (bảo toàn 14 invariants bắt buộc).
+
+---
+
 # Walkthrough: PR #284 — Giao Thức TRIHT (Release Cleanliness & Hermetic Teardown Gate)
 
 ## 1. Tổng Quan PR #284
