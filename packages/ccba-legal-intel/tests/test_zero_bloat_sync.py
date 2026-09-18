@@ -368,4 +368,3 @@ def test_safe_copy2_destination_symlink_does_not_chmod_target(tmp_path: Path) ->
             called_mode = call_args[0][1]
             if called_path.is_symlink():
                 assert called_mode != readonly_clear_mode
-
