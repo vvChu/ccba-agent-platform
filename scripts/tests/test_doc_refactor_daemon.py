@@ -168,7 +168,9 @@ class TestDocRefactorDaemon:
 
         # Assert checkout previous ref and delete empty branch were called
         checkout_prev = [
-            c for c in executed_cmds if len(c) >= 3 and c[:2] == ["git", "checkout"] and c[2] == "main"
+            c
+            for c in executed_cmds
+            if len(c) >= 3 and c[:2] == ["git", "checkout"] and c[2] == "main"
         ]
         assert len(checkout_prev) == 1, "Expected checkout back to previous ref"
 
@@ -176,4 +178,3 @@ class TestDocRefactorDaemon:
             c for c in executed_cmds if len(c) >= 3 and c[:3] == ["git", "branch", "-D"]
         ]
         assert len(delete_branch) == 1, "Expected git branch -D to clean up empty branch"
-

@@ -959,6 +959,7 @@ def test_tuner_circuit_breaker_halt(tmp_path: Path):
     mock_client = MagicMock()
     # Baseline succeeds
     from types import SimpleNamespace
+
     mock_res_ok = SimpleNamespace(
         content="Valid content",
         usage=SimpleNamespace(prompt_tokens=10, completion_tokens=10, total_tokens=20),
@@ -1135,5 +1136,3 @@ Mâu thuẫn thông tin (Information Conflict) tại bước phối hợp V2 - C
     # Score must achieve >= 85.0% without critical failures
     assert report.initial_score >= 85.0
     assert report.final_score >= 85.0
-
-

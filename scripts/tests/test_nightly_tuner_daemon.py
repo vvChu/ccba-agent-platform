@@ -238,8 +238,17 @@ def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> No
         lambda: [
             {
                 "skill_name": "ccba-test-skill",
-                "target_file": project_root / ".agents" / "skills" / "ccba-copywriting" / "SKILL.md",
-                "dataset_file": project_root / "packages" / "ccba-harness" / "evals" / "datasets" / "eval_copywriting.json",
+                "target_file": project_root
+                / ".agents"
+                / "skills"
+                / "ccba-copywriting"
+                / "SKILL.md",
+                "dataset_file": project_root
+                / "packages"
+                / "ccba-harness"
+                / "evals"
+                / "datasets"
+                / "eval_copywriting.json",
                 "baseline_score": 85.0,
             }
         ],
@@ -268,7 +277,3 @@ def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> No
     assert report.total_tokens == 1500
     assert report.prompt_tokens == 1000
     assert report.completion_tokens == 500
-
-
-
-
