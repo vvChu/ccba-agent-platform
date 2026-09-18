@@ -14,6 +14,22 @@
 
 ---
 
+## Merge Danger Assessment
+
+<!-- Phân loại rủi ro khi merge để tối ưu hóa thời gian review của con người -->
+- **Door**:
+  - [ ] **Two-way door** (Dễ revert, thay đổi cô lập/nội bộ, không ảnh hưởng behavior/contract dùng chung)
+  - [ ] **One-way door** (Khó đảo ngược, breaking change, thay đổi schema/contract hoặc migration tốn kém)
+  - *Lý do*: <!-- Giải thích ngắn gọn tại sao dễ đảo ngược hoặc khó đảo ngược -->
+- **Blast Radius**:
+  - [ ] **Localized** (Cục bộ 1 file hoặc hàm nội bộ, không đổi API public)
+  - [ ] **Package-wide** (Ảnh hưởng toàn bộ 1 package trong monorepo)
+  - [ ] **Monorepo-wide** (Chạm vào tooling dùng chung, scripts/, CI, hoặc cross-package)
+  - [ ] **Spoke-affecting** (Thay đổi contract/interface mà các Spoke downstream đang phụ thuộc)
+  - *Tác động tiềm tàng*: <!-- Điều gì có thể bị gãy nếu có sự cố xảy ra? -->
+
+---
+
 ## Architectural Governance & Two-Stage Granularity Check
 
 <!-- If this PR introduces or modifies any Agent Skill (.agents/skills/*), complete this section per RES-2026-ARCH-001 v1.2 -->
