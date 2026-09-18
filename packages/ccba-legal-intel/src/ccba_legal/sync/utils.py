@@ -183,10 +183,11 @@ def safe_remove(
     if _is_link_or_junction(p) or p.is_file():
         for attempt in range(max_retries):
             try:
-                try:
-                    os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
-                except Exception:
-                    pass
+                if not p.is_symlink():
+                    try:
+                        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+                    except Exception:
+                        pass
                 if os.name == "nt" and p.is_dir() and not p.is_symlink():
                     os.rmdir(p)
                 else:
