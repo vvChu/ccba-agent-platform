@@ -133,9 +133,11 @@ class NightlyTunerDaemon:
         """Dynamically matches a skill to its optimal Domain Archetype evaluation dataset."""
         sname = skill_name.lower()
 
+        if "risk" in sname or "conflict" in sname:
+            return "eval_bigbim_risk.json"
         if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl", "ingest", "advisor"]):
             return "eval_legal_intel.json"
-        if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance", "risk"]):
+        if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance"]):
             return "eval_bigbim_classification.json"
         if any(k in sname for k in ["pccc", "qc", "audit"]):
             return "eval_pccc_audit.json"
@@ -157,7 +159,7 @@ class NightlyTunerDaemon:
             "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
             "bigbim-classification": "eval_bigbim_classification.json",
             "bigbim-governance": "eval_bigbim_classification.json",
-            "bigbim-risk": "eval_bigbim_classification.json",
+            "bigbim-risk": "eval_bigbim_risk.json",
             "bigbim-rase": "eval_bigbim_classification.json",
             "ccba-completion-checklist": "eval_general_domain.json",
             "ccba-legal-document-tracker": "eval_legal_intel.json",

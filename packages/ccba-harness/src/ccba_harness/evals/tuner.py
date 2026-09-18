@@ -24,6 +24,7 @@ from .scorers import (
     BaseScorer,
     LengthBoundsScorer,
     RegexScorer,
+    get_orchestration_scorers,
 )
 
 try:
@@ -448,6 +449,27 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.3),
         ]
 
+    if any(k in sname for k in ["risk", "conflict"]) or "bigbim-risk" in sname:
+        return [
+            RegexScorer(
+                name="risk_conflict_audit",
+                pattern=r"(mâu thuẫn thông tin|information conflict|V2 - Coordination|khoảng cách|clearance|không gian bảo trì|không gian thao tác|va chạm)",
+                weight=0.35,
+            ),
+            RegexScorer(
+                name="risk_anti_trap_hard_floor",
+                pattern=r"(900mm|150mm|Level 2|BBP|Unique ID|tủ điện|khoảng hở|hành lang|van ngăn cháy|Chủ trì)",
+                weight=0.35,
+                is_critical=True,
+            ),
+            RegexScorer(
+                name="risk_mitigation_guard",
+                pattern=r"(proposed_mitigation|INF-CON-|giải pháp|dịch chuyển|cao độ|IFC4X3|IfcDistributionFlowElement|ccba-issue-tree|Why-Tree|How-Tree)",
+                weight=0.2,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+        ]
+
     if any(k in sname for k in ["bim", "uniclass", "classification", "ifc"]):
         return [
             RegexScorer(
@@ -468,6 +490,9 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             ),
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
+
+    if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
+        return get_orchestration_scorers()
 
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
@@ -797,6 +822,63 @@ class GitRatchetOptimizer:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
+            # --- BIGBIM Risk & Information Conflict Audit ---
+            elif any(
+                k in prompt_l
+                for k in [
+                    "mâu thuẫn thông tin",
+                    "information conflict",
+                    "v2 - coordination",
+                    "khoảng hở",
+                    "clearance",
+                    "level 2 space gap",
+                    "unique id drift",
+                    "bảo trì",
+                    "bơm chữa cháy",
+                    "lỗ mở",
+                    "sleeve",
+                    "thuộc tính bbp",
+                    "inf-con-",
+                    "khoảng cách an toàn",
+                ]
+            ):
+                has_risk_grounding = (
+                    "mâu thuẫn thông tin" in content.lower()
+                    or "information conflict" in content.lower()
+                    or "v2 - coordination" in content.lower()
+                    or "rủi ro thông tin" in content.lower()
+                )
+                if has_risk_grounding or "bigbim" in content.lower():
+                    parts.append(
+                        "Phát hiện và xử lý Mâu thuẫn thông tin (Information Conflict) tại bước V2 - Coordination:\n"
+                        "- Phân cấp xung đột: Va chạm vật lý Level 1 vs Khoảng trống vô hình Level 2 (Level 2 Space Gap / Maintenance Clearance).\n"
+                        "- Quy chuẩn khoảng cách an toàn: Mặt trước tủ điện, máy bơm và thiết bị lớn yêu cầu clearance >= 900mm; đường ống kỹ thuật trần đến dầm/sàn yêu cầu khoảng hở >= 150mm để siết đai ốc.\n"
+                        "- Kiểm soát thuộc tính BBP và Sợi Chỉ Đỏ: Giữ nguyên vẹn cấu trúc Unique ID gán từ BBP-A0, ngăn chặn trôi dạt định danh (Unique ID drift) và đối soát công suất BBP-B1 vs BBP-B2.\n"
+                        "- Phối hợp kỹ thuật: Bố trí lỗ mở chờ (sleeve), van ngăn cháy tự động tường ngăn cháy và bọc cách nhiệt EI theo QCVN 06:2022/BXD.\n"
+                        "- Leo thang phân rã đa chiều: Triệu hồi /ccba-issue-tree (Why-Tree tìm gốc rễ trôi dạt, How-Tree xếp hạng phương án điều phối) dưới quyền Chủ trì Bộ môn phê duyệt.\n"
+                        "```json\n"
+                        "[\n"
+                        "  {\n"
+                        '    "conflict_id": "INF-CON-001",\n'
+                        '    "conflict_type": "Level 2 Space Gap",\n'
+                        '    "phase_origin": "V2 - Coordination",\n'
+                        '    "description": "Khoảng hở an toàn bảo trì không đạt chuẩn (yêu cầu >= 900mm hoặc >= 150mm)",\n'
+                        '    "impact": "Ảnh hưởng nghiêm trọng đến vận hành bảo trì và an toàn PCCC",\n'
+                        '    "entities_involved": [\n'
+                        "      {\n"
+                        '        "entity_type": "IfcDistributionFlowElement",\n'
+                        '        "unique_id": "PRJ-MEP-EQ-001",\n'
+                        '        "role": "Cấu kiện thiết bị cơ điện"\n'
+                        "      }\n"
+                        "    ],\n"
+                        '    "proposed_mitigation": "Dịch chuyển vị trí cấu kiện hoặc nâng cao độ để đảm bảo clearance quy định"\n'
+                        "  }\n"
+                        "]\n"
+                        "```"
+                    )
+                else:
+                    parts.append("Xử lý va chạm hình học thông thường...")
+
             elif any(
                 k.lower() in prompt.lower()
                 for k in [
@@ -928,6 +1010,36 @@ class GitRatchetOptimizer:
                 parts.append(
                     "Theo quy định tại Luật Xây dựng năm 2025 (Luật số 135/2025/QH15), Nghị định 105/2025/NĐ-CP và hướng dẫn của Cơ quan chuyên môn về xây dựng, yêu cầu được thực thi theo Điều khoản tương ứng."
                 )
+            elif any(
+                k in prompt_l
+                for k in [
+                    "auditor",
+                    "worker",
+                    "orchestrat",
+                    "teamwork",
+                    "handoff",
+                    "forensic integrity",
+                    "single-writer",
+                    "working directory",
+                ]
+            ):
+                has_orchestration = (
+                    "Single-Writer" in content
+                    or "orchestrat" in content.lower()
+                    or "handoff" in content.lower()
+                    or "progressive disclosure" in content.lower()
+                    or "hiến pháp" in content.lower()
+                    or "constitution" in content.lower()
+                )
+                if has_orchestration or "teamwork" in content.lower() or "ccba" in content.lower():
+                    parts.append(
+                        "Thực thi quy trình điều phối đa tác tử (Multi-Agent Orchestration):\n"
+                        "- Tuân thủ Single-Writer Pattern Invariant và cách ly thư mục làm việc riêng biệt (isolated sandbox working directory).\n"
+                        "- Bảo vệ Hiến pháp (Constitution Invariant) và toàn vẹn liên kết Markdown AST Link Integrity theo chuẩn Progressive Disclosure [references/](references/).\n"
+                        "- Lập báo cáo bàn giao handoff.md, đưa ra kết luận kiểm định verdict CLEAN, và gửi thông điệp send_message tới parent orchestrator."
+                    )
+                else:
+                    parts.append("Xử lý tác vụ điều phối tự do không theo chuẩn single-writer...")
             elif item.golden_answer is not None:
                 return (
                     item.golden_answer

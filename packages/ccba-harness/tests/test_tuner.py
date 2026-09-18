@@ -1066,3 +1066,74 @@ def test_tuner_token_budget_exceeded_during_baseline(tmp_path: Path):
     assert report.total_iterations == 0
     assert len(report.history) == 0
 
+
+def test_get_default_domain_scorers_risk_and_orchestration():
+    """Verify get_default_domain_scorers provides specialized scorers for risk and orchestration."""
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    # 1. bigbim-risk
+    risk_scorers = get_default_domain_scorers("bigbim-risk")
+    risk_names = [s.name for s in risk_scorers]
+    assert "risk_conflict_audit" in risk_names
+    assert "risk_anti_trap_hard_floor" in risk_names
+    assert "risk_mitigation_guard" in risk_names
+
+    # 2. orchestration
+    orch_scorers = get_default_domain_scorers("ccba-teamwork")
+    orch_names = [s.name for s in orch_scorers]
+    assert "single_writer_invariant" in orch_names
+    assert "progressive_disclosure_links" in orch_names
+    assert "handoff_protocol" in orch_names
+
+    # 3. platform-loader / ccba-handoff / ccba-issue-tree
+    for name in ["platform-loader", "ccba-handoff", "ccba-issue-tree"]:
+        scs = get_default_domain_scorers(name)
+        assert any(s.name == "single_writer_invariant" for s in scs)
+
+
+def test_bigbim_risk_eval_dataset_and_scorer(tmp_path: Path):
+    """Verify bigbim-risk skill evaluates against eval_bigbim_risk.json with high fidelity score >= 85%."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        """---
+name: bigbim-risk
+triggers:
+- mâu thuẫn thông tin
+- information conflict
+- V2 - Coordination
+---
+# BIGBIM Risk & Information Conflict Audit Skill
+Mâu thuẫn thông tin (Information Conflict) tại bước phối hợp V2 - Coordination:
+- Phân biệt Va chạm vật lý Level 1 và Khoảng hở thao tác Level 2 (Level 2 Space Gap).
+- Khoảng cách an toàn tối thiểu mặt trước tủ điện >= 900mm và ống trần đến dầm/sàn >= 150mm.
+- Bảo vệ thuộc tính BBP và Sợi Chỉ Đỏ, giữ nguyên cấu trúc Unique ID gán từ BBP-A0.
+- Leo thang /ccba-issue-tree (Why-Tree và How-Tree) dưới quyền phê duyệt của Chủ trì Bộ môn.
+""",
+        encoding="utf-8",
+    )
+
+    dataset_file = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / ".agents"
+        / "skills"
+        / "ccba-eval-gate"
+        / "test_cases"
+        / "eval_bigbim_risk.json"
+    )
+    assert dataset_file.exists(), f"Dataset file must exist at {dataset_file}"
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        eval_dataset_file=dataset_file,
+        skill_name="bigbim-risk",
+        max_iterations=1,
+    )
+
+    opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=tmp_path)
+    report = opt.run()
+
+    # Score must achieve >= 85.0% without critical failures
+    assert report.initial_score >= 85.0
+    assert report.final_score >= 85.0
+
+
