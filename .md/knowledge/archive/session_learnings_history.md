@@ -400,3 +400,35 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
     and "/tests/" not in filepath
     ```
 
+---
+
+## 18. Hub-Mediated Discovery, Fail-Fast Security & Deterministic Completion Gating (2026-09-17)
+
+- **Core Pattern P23.1 — Hub-Mediated Spoke Discovery (Zero Extra Config):**
+  - **Vấn đề:** Đề xuất ban đầu định thêm trường `legal_knowledge_path` vào `.md/workspace_context.yaml` tại Spoke và hardcode các đường dẫn ổ đĩa `C:`/`D:`. Điều này vừa gây gãy tính di động khi chạy trên Linux/CI/macOS, vừa tạo thêm gánh nặng cấu hình thủ công.
+  - **Giải pháp:** Tận dụng con trỏ `hub_path` có sẵn trong `workspace_context.yaml`. SDK `ccba_legal` tự động đọc `hub_path` để tra cứu `spoke_registry_decrypted.yaml` (hoặc `spoke_registry.yaml`) trên Hub nhằm định vị Spoke pháp điển (`ccba-legal-knowledge`) trên máy trạm mà không cần thêm trường mới.
+
+- **Core Pattern P23.2 — Dual-Personality Conflict & Virtual-First Knowledge Retrieval:**
+  - **Vấn đề:** Xung đột giữa mô hình Zero-Copy (ADR-0051) và Full-Copy (ADR-0050). Việc tự động copy toàn bộ kho dữ liệu pháp lý (hàng trăm MB, hàng ngàn tệp PDF/CSV/JSON) về Spoke dự án trên OneDrive/SharePoint gây nghẽn mạng đồng bộ (sync churn), khóa file và tràn giới hạn đường dẫn Windows (`MAX_PATH > 260`). Ngoài ra, copy vật lý mà không có cache invalidation sẽ khiến Spoke đọc dữ liệu luật cũ khi Spoke gốc cập nhật.
+  - **Giải pháp:** Thiết lập thứ tự phân giải 3 tầng ưu tiên Virtual-First:
+    1. Tầng 1 (Virtual / Local): Trích xuất qua CLI Deep Seam hoặc quét `.md/legal_docs/`. Chỉ kéo chọn lọc qua `python -m ccba_legal sync --pull-latest --doc <id>` khi cần offline.
+    2. Tầng 2 (Master Registry): Khám phá tự động qua Hub.
+    3. Tầng 3 (SSOT): Đối soát `legal_registry.yaml` để loại trừ văn bản hết hiệu lực.
+
+- **Core Pattern P23.3 — False-Positive Completion Gating vs ADR-0058 Hard Completion Lock:**
+  - **Vấn đề:** Trong `ccba_legal/cli.py`, khi không tìm thấy kho tri thức cục bộ, lệnh `sync` rơi vào `fallback_cloud_vault` với `bundles_synced: []` (0 tệp), nhưng CLI vẫn in thông báo thành công màu xanh và trả về `Exit Code 0`. Điều này vi phạm nghiêm trọng ADR-0058 vì Agent tưởng việc đồng bộ đã xong trong khi thư mục trống trơn.
+  - **Giải pháp:** Sửa điều kiện: nếu `status == "fallback_cloud_vault"` hoặc `len(bundles_synced) == 0`, lệnh `sync` BẮT BUỘC trả về `Exit Code 1` kèm thông báo lỗi rõ ràng.
+
+- **Core Pattern P23.4 — Fail-Fast Maskara Security Gate for RAG Queries:**
+  - **Vấn đề:** Gửi prompt RAG chứa API keys hoặc thông tin nhạy cảm lên Cloud (Google NotebookLM) trước khi kiểm tra bảo mật gây rò rỉ credential và lãng phí quota API.
+  - **Giải pháp:** Đưa hàm `sanitize_prompt_for_query()` lên ngay dòng đầu tiên của `query_rag()`. Phát hiện critical keys (Google, OpenAI, Anthropic, GitHub) sẽ lập tức chặn đứng (ném `ValueError`, exit code 3) trước khi khởi tạo client hay kết nối mạng.
+
+- **Core Pattern P23.5 — Deep Seam CLI Over Raw File Ingestion (Context Bloat Anti-Pattern):**
+  - **Vấn đề:** Hướng dẫn Agent dùng `view_file` mở file Markdown thô của một bộ luật (như Luật Xây dựng 2025 nặng 194 KB ~ 60.000 tokens) gây cháy toàn bộ context window của Agent, dẫn đến mất tập trung và hallucination.
+  - **Giải pháp:** Cưỡng chế Agent ưu tiên gọi CLI Deep Seam `python -m ccba_legal get-clause --doc <id> --clause <id>` trích xuất AST nguyên tử với chi phí < 500 tokens (tiết kiệm 95% token).
+
+- **Core Pattern P23.6 — Windows Socket Connect Timeout Invariant:**
+  - **Vấn đề:** Hàm kiểm tra cổng `is_port_open(port)` sử dụng socket stream mặc định không timeout, khiến trên Windows nếu cổng bị drop hoặc chặn bởi firewall thì lệnh kiểm tra Chrome CDP bị treo vô hạn.
+  - **Giải pháp:** Luôn gán `s.settimeout(1.0)` trong mọi hàm socket probing.
+
+

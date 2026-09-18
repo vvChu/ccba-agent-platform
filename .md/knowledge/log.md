@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-18] [synthesize] | Kiến Trúc Tra Cứu Tri Thức Liên-Spoke 3 Tầng, Gia Cố ccba-legal-advisor & Deep Seam Hub-Mediated Discovery
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-issue-tree, /boost & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-legal-intel/`, `.agents/skills/ccba-legal-advisor/`, `packages/ccba-notebooklm/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất đợt nghiên cứu và nâng cấp kiến trúc tra cứu tri thức liên Spoke theo mô hình Hub-Spoke: (1) Nghiên cứu đối kháng kép (Double-Pass Adversarial Review) và hoàn thiện Mô hình tra cứu tri thức 3 tầng (Tầng 1 Virtual Spoke Fallback qua AST/CLI cục bộ, Tầng 2 AI Gateway Legal RAG qua Server Spark, Tầng 3 Cloud Fallback qua Google NotebookLM); (2) Thiết lập Quy trình Nhận diện 5 Lớp (5-Layer Discovery Pipeline) để Spoke tự động khám phá và liên kết Spoke pháp điển (`ccba-legal-knowledge`) thông qua `hub_path` và `spoke_registry_decrypted.yaml` trên Hub; (3) Nâng cấp `ccba-legal-advisor` chuẩn hóa quy trình viện dẫn nguyên tử (Atomic Clause Ingestion qua CLI `get-clause`), chặn nguy cơ phình ngữ cảnh do nạp thô Markdown; (4) Gia cố rào chắn bảo mật Fail-Fast Maskara cho `ccba-notebooklm` ngăn rò rỉ API keys; (5) Sửa đổi `ccba_legal cli.py` tuân thủ ADR-0058 Hard Completion Lock (bắt buộc Exit Code 1 khi sync rỗng); (6) Bổ sung bộ test `test_hub_mediated_sync.py` (3/3 pass), đóng băng các quy tắc RULE-1.14, RULE-2.12, RULE-3.5 vào `session_learnings.md` và `session_learnings_history.md`.
+
+---
+
 ## [2026-09-17] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất Spoke PR #283: Dynamic Base Branch Detection cho ccba-create-pr (v1.2.0)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/ccba-create-pr/SKILL.md`, `.agents/proposals/2026-09-17_dynamic-base-branch-for-create-pr.md`, `scripts/governance/drift_auditor.py`, `tests/governance/test_global_skills_integrity.py`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`

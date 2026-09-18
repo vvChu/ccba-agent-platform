@@ -5,7 +5,7 @@
 > **Cấp công trình**: {{PROJECT_GRADE}}
 > **Chủ đầu tư**: {{INVESTOR}}
 > **Ngày tạo**: {{DATE}}
-> **Căn cứ**: NĐ 06/2021/NĐ-CP (Phụ lục VIb), NĐ 35/2023/NĐ-CP
+> **Căn cứ**: Nghị định 207/2026/NĐ-CP (thay thế NĐ 06/2021/NĐ-CP từ 01/07/2026), Luật Xây dựng 2025 (135/2025/QH15)
 
 ---
 

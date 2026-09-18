@@ -41,7 +41,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 | File | Mô tả |
 |------|--------|
-| `resources/checklist_master.yaml` | Danh mục hồ sơ master theo NĐ 06/2021 Phụ lục VIb |
+| `resources/checklist_master.yaml` | Danh mục hồ sơ master theo NĐ 207/2026/NĐ-CP (thay thế NĐ 06/2021) |
 | `resources/checklist_by_project.md` | Template checklist theo loại công trình |
 | `resources/training_handout.md` | Template tài liệu tập huấn cho kỹ sư giám sát |
 

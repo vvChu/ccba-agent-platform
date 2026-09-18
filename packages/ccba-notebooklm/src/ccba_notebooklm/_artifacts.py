@@ -28,7 +28,7 @@ from ._registry import (
     save_task_state,
     update_registry,
 )
-from ._security import run_maskara_gate
+from ._security import run_maskara_gate, sanitize_prompt_for_query
 
 logger = logging.getLogger(__name__)
 
@@ -351,6 +351,8 @@ async def query_rag(source_path: str, prompt: str) -> int:
     project_name = Path(os.getcwd()).name
 
     try:
+        sanitized_prompt = sanitize_prompt_for_query(prompt)
+
         async with get_client() as client:
             if not HAS_NOTEBOOKLM and not client.use_mock:
                 print("ERROR: Thư viện 'notebooklm-py' chưa được cài đặt.", file=sys.stderr)
@@ -363,7 +365,7 @@ async def query_rag(source_path: str, prompt: str) -> int:
             print(f"[Info] Đang gửi câu hỏi RAG cô lập tới nguồn ID '{target_id}'...")
 
             result = await client.ask_chat(
-                notebook_id=notebook_id, question=prompt, source_ids=[target_id]
+                notebook_id=notebook_id, question=sanitized_prompt, source_ids=[target_id]
             )
 
             print("\n=== 📋 CÂU TRẢ LỜI CỦA NOTEBOOKLM ===")
