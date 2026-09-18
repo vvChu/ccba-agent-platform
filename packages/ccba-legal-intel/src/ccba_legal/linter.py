@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import xml.etree.ElementTree as ET
 import zipfile
@@ -222,6 +223,31 @@ def is_ignored_path(path: Path) -> bool:
     if "/legal_docs/" in posix_path or posix_path.endswith("/legal_docs"):
         return True
     return False
+
+
+def collect_scannable_files(
+    target_dir: Path,
+    valid_exts: set[str],
+) -> list[Path]:
+    """Collect scannable files while pruning ignored directories top-down for optimal performance."""
+    collected: list[Path] = []
+    for root, dirnames, filenames in os.walk(target_dir, topdown=True):
+        # Prune ignored directories in-place so os.walk does not descend into them
+        dirnames[:] = [
+            d
+            for d in dirnames
+            if d not in IGNORED_SCAN_DIRS
+            and not (d.startswith(".") and d not in {".md", ".agents"})
+            and d != "legal_docs"
+        ]
+        root_path = Path(root)
+        for fname in filenames:
+            ext = Path(fname).suffix.lower()
+            if ext in valid_exts:
+                fpath = root_path / fname
+                if not is_ignored_path(fpath):
+                    collected.append(fpath)
+    return sorted(collected)
 
 
 def safe_parse_xml(xml_bytes: bytes) -> ET.Element:
@@ -562,23 +588,8 @@ def lint_target_path(
                 result["currency_findings"].append(f)
 
     elif target_path.is_dir():
-        if check_currency:
-            target_files = sorted(
-                p
-                for p in target_path.rglob("*")
-                if p.is_file()
-                and p.suffix.lower() in supported_currency_exts
-                and not is_ignored_path(p)
-            )
-        else:
-            target_files = sorted(
-                p
-                for p in target_path.rglob("*")
-                if p.is_file()
-                and p.suffix.lower() in {".md", ".markdown"}
-                and not is_ignored_path(p)
-            )
-
+        scan_exts = supported_currency_exts if check_currency else {".md", ".markdown"}
+        target_files = collect_scannable_files(target_path, scan_exts)
         result["files_scanned"] = len(target_files)
 
         for f in target_files:
