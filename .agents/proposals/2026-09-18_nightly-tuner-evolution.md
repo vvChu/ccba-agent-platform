@@ -2,7 +2,9 @@
 proposal_id: "2026-09-18_nightly-tuner-evolution"
 type: "infrastructure"
 name: "nightly-tuner-evolution"
-status: "open"
+status: "merged"
+merged_commit: "df311bb66cc53dc4f3888ada8b060a83a9fc2d57"
+merged_date: "2026-09-18"
 priority: "Cao"
 proposed_by_project: "ccba-agent-platform"
 proposed_by_archetype: "core_framework"
@@ -17,7 +19,7 @@ applies_to:
 
 - **Tác giả đề xuất:** CCBA Core & Eval Maintainers
 - **Ngày lập:** 2026-09-18
-- **Trạng thái:** Đang thẩm định (In Review / PR #286)
+- **Trạng thái:** Đã hợp nhất (Merged) — Commit df311bb6 (PR #286)
 - **Căn cứ kiến trúc & pháp lý:** ADR-0023, ADR-0045, ADR-0047, ADR-0057, ADR-0058
 
 ---
