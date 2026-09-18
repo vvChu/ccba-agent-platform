@@ -83,9 +83,7 @@ def test_pull_latest_okf_bundles_zero_bloat_reference(
     assert any(doc.get("id") == "LXD-2025" for doc in data.get("laws", []))
 
 
-def test_pull_latest_okf_bundles_full_assets(
-    mock_master_corpus: Path, tmp_path: Path
-) -> None:
+def test_pull_latest_okf_bundles_full_assets(mock_master_corpus: Path, tmp_path: Path) -> None:
     """Test pull_latest_okf_bundles with pull_assets=True copies OKF bundles and sources."""
     spoke_root = tmp_path / "test_spoke_full"
     spoke_root.mkdir(parents=True, exist_ok=True)
@@ -201,9 +199,7 @@ def test_cli_reference_only_flag_and_zero_bloat_exit_0(
         assert exit_code == 0
 
 
-def test_sync_legal_assets_helper_pull_assets(
-    mock_master_corpus: Path, tmp_path: Path
-) -> None:
+def test_sync_legal_assets_helper_pull_assets(mock_master_corpus: Path, tmp_path: Path) -> None:
     """Test sync_legal_assets convenience helper passes pull_assets correctly."""
     spoke_root = tmp_path / "helper_spoke"
     spoke_root.mkdir(parents=True, exist_ok=True)
@@ -304,4 +300,3 @@ def test_legal_registry_manager_save_lock_retry(tmp_path: Path) -> None:
     saved_data = yaml.safe_load(reg_file.read_text(encoding="utf-8"))
     assert saved_data["laws"][0]["id"] == "RETRY-TEST"
     assert call_count >= 2
-

@@ -420,9 +420,7 @@ class LegalKnowledgeSyncOrchestrator:
             return True
         return False
 
-    def sync_or_advise(
-        self, dry_run: bool = False, pull_assets: bool = False
-    ) -> dict[str, Any]:
+    def sync_or_advise(self, dry_run: bool = False, pull_assets: bool = False) -> dict[str, Any]:
         """Executes automatic Two-Tier Legal Sync for legal Spokes or emits zero-bloat advisory.
 
         Returns:
