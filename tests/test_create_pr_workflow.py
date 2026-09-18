@@ -17,6 +17,4 @@ def test_ccba_create_pr_workflow_has_local_ci_first() -> None:
 
     assert ci_pos != -1, "ccba-create-pr SKILL.md must reference verification gate"
     assert push_pos != -1, "ccba-create-pr SKILL.md must reference git push"
-    assert ci_pos < push_pos, (
-        "Local CI check must appear BEFORE git push in workflow"
-    )
+    assert ci_pos < push_pos, "Local CI check must appear BEFORE git push in workflow"

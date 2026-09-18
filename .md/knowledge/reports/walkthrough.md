@@ -4,6 +4,7 @@
 - **Branch:** `feat/nightly-tuner-worktree-and-dataset-router` $\rightarrow$ `main`
 - **Tiêu đề:** `feat(tuner): modernize nightly auto-tuner daemon, real llm adapter, and domain evals`
 - **PR liên quan:** [PR #286](https://github.com/vvChu/ccba-agent-platform/pull/286)
+- **Commit hợp nhất:** `df311bb66cc53dc4f3888ada8b060a83a9fc2d57`
 - **Thể chế & Kiến trúc:** ADR-0023, ADR-0045, ADR-0047, ADR-0057, ADR-0058, Wayfinder Roadmap `nightly-tuner-evolution`
 
 ---

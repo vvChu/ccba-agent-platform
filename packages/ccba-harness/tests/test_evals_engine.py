@@ -352,8 +352,72 @@ def test_llm_rubric_scorer_corrupted_db_fallback(tmp_path):
         enable_cache=True,
         cache_db_path=corrupted_db,
     )
-    item = EvalItem(id="c1", input_prompt="Q")
-    res = asyncio.run(scorer.score("output", item))
-    assert res.score == 1.0
-    assert client.calls == 1
     assert scorer.enable_cache is False
+    res = asyncio.run(scorer.score("Response text", EvalItem(id="test", input_prompt="Prompt")))
+    assert client.calls == 1
+    assert res.score == 1.0
+    assert res.raw_output == 5
+
+
+def test_orchestration_scorers():
+    """Verify OrchestrationScorers evaluate single-writer, progressive disclosure, and handoff protocols."""
+    from ccba_harness.evals.scorers import (
+        HandoffProtocolScorer,
+        ProgressiveDisclosureScorer,
+        SingleWriterInvariantScorer,
+        get_orchestration_scorers,
+    )
+
+    item = EvalItem(id="orch1", input_prompt="Teamwork preview task")
+
+    # 1. SingleWriterInvariantScorer
+    sw_scorer = SingleWriterInvariantScorer(is_critical=True)
+    res_sw_pass = asyncio.run(
+        sw_scorer.score(
+            "Working in isolated sandbox directory .agents/worker_1 with append-only log",
+            item,
+        )
+    )
+    assert res_sw_pass.score == 1.0
+    assert not res_sw_pass.is_critical_fail
+
+    res_sw_fail = asyncio.run(
+        sw_scorer.score("Writing directly to shared repo root files concurrently", item)
+    )
+    assert res_sw_fail.score == 0.0
+    assert res_sw_fail.is_critical_fail
+
+    # 2. ProgressiveDisclosureScorer
+    pd_scorer = ProgressiveDisclosureScorer()
+    res_pd_pass = asyncio.run(
+        pd_scorer.score(
+            "Refer to [references/discovery.md](references/discovery.md) for Level 2 instructions.",
+            item,
+        )
+    )
+    assert res_pd_pass.score == 1.0
+
+    res_pd_fail = asyncio.run(
+        pd_scorer.score("Plain flat text without any links or references.", item)
+    )
+    assert res_pd_fail.score == 0.0
+
+    # 3. HandoffProtocolScorer
+    hp_scorer = HandoffProtocolScorer()
+    res_hp_pass = asyncio.run(
+        hp_scorer.score(
+            "Audit report saved to handoff.md. Verdict: CLEAN. send_message sent to parent.",
+            item,
+        )
+    )
+    assert res_hp_pass.score == 1.0
+
+    res_hp_fail = asyncio.run(hp_scorer.score("Task finished without notifying anyone.", item))
+    assert res_hp_fail.score == 0.0
+
+    # 4. get_orchestration_scorers factory
+    suite = get_orchestration_scorers()
+    assert len(suite) == 3
+    assert any(s.name == "single_writer_invariant" for s in suite)
+    assert any(s.name == "progressive_disclosure_links" for s in suite)
+    assert any(s.name == "handoff_protocol" for s in suite)

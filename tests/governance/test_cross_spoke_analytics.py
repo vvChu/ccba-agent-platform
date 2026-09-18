@@ -408,4 +408,3 @@ def test_proposal_template_passes_leakage_audit():
     auditor = SpokeLeakageAuditor(Path.cwd(), strict=True)
     assert auditor.audit_proposal_file(template_file) is True
     assert len(auditor.errors) == 0
-

@@ -1,0 +1,201 @@
+[
+  {
+    "id": "test_bigbim_risk_01",
+    "input_prompt": "Tại bước phối hợp V2 - Coordination, phát hiện tủ điện phân phối chính HLB-EQ-EL-045 có khoảng hở mặt trước đến ống gió trần là 450mm. Trên mô hình 3D không có va chạm hình học. Hãy xác định cấp độ mâu thuẫn thông tin, quy tắc kiểm duyệt khoảng cách an toàn và đề xuất biện pháp xử lý theo chuẩn BIGBIM.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-001",
+      "conflict_type": "Level 2 Space Gap",
+      "phase_origin": "V2 - Coordination",
+      "clearance_rule": "Mặt trước tủ điện yêu cầu không gian trống tối thiểu >= 900mm để mở cửa thao tác và bảo trì",
+      "proposed_mitigation": "Dịch chuyển tủ điện hoặc nâng cao độ ống gió để đảm bảo clearance >= 900mm"
+    },
+    "rubric": "Phải xác định đúng Mâu thuẫn thông tin Level 2 (Level 2 Space Gap), chỉ ra vi phạm khoảng cách an toàn >= 900mm cho tủ điện và đề xuất dịch chuyển cao độ hoặc vị trí cấu kiện.",
+    "metadata": {
+      "discipline": "BIM Coordination / Electrical",
+      "conflict_level": "Level 2 Space Gap",
+      "standard": "BIGBIM Information Conflict Framework"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_02",
+    "input_prompt": "Kiểm tra hệ thống đường ống kỹ thuật cấp nước trần tại khu vực hành lang kỹ thuật tầng hầm B1: Khoảng hở từ đỉnh ống đến đáy dầm bê tông cốt thép là 80mm. Mô hình 3D báo không có clash. Đánh giá rủi ro mâu thuẫn thông tin và tiêu chuẩn khoảng cách thao tác.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-002",
+      "conflict_type": "Level 2 Space Gap",
+      "phase_origin": "V2 - Coordination",
+      "clearance_rule": "Khoảng cách trống tối thiểu từ ống kỹ thuật trần đến dầm/sàn bê tông phải >= 150mm để nhân công đưa tay và dụng cụ siết đai ốc",
+      "proposed_mitigation": "Hạ cao độ treo ống hoặc điều chỉnh lộ trình tuyến ống để đảm bảo khoảng hở >= 150mm"
+    },
+    "rubric": "Xác định đúng lỗi thiếu không gian lắp đặt/thao tác Level 2, nêu rõ quy tắc khoảng cách tối thiểu >= 150mm đến dầm/sàn bê tông để siết đai ốc.",
+    "metadata": {
+      "discipline": "MEP / Plumbing",
+      "conflict_level": "Level 2 Space Gap",
+      "standard": "BIGBIM Information Conflict Framework"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_03",
+    "input_prompt": "Trong dự án tòa nhà hỗn hợp Landmark, bảng dữ liệu thiết bị BBP-B1 ghi nhận máy làm lạnh nước Chiller CH-01 công suất lạnh 500kW. Đến pha BBP-B2 mua sắm vật tư, hồ sơ trình duyệt thể hiện mã hiệu thiết bị tương ứng công suất 420kW. Phân tích loại mâu thuẫn thông tin và quy trình kiểm soát chất lượng BBP.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-003",
+      "conflict_type": "Attribute Logic Conflict",
+      "phase_origin": "BBP Consistency Check",
+      "description": "Mâu thuẫn logic thuộc tính công suất thiết bị giữa BBP-B1 (500kW) và BBP-B2 (420kW)",
+      "impact": "Không đủ công suất làm mát toàn tải cho tòa nhà, dẫn đến quá tải và vi phạm hồ sơ thiết kế cơ sở đã thẩm tra"
+    },
+    "rubric": "Phải nhận diện Nhóm B: Mâu thuẫn logic thuộc tính (Attribute logic conflict) giữa các giai đoạn BBP-B1 và BBP-B2, đánh giá tác động kỹ thuật.",
+    "metadata": {
+      "discipline": "HVAC / Procurement",
+      "conflict_level": "Attribute Logic Conflict",
+      "standard": "BBP Phase Consistency"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_04",
+    "input_prompt": "Một cụm bơm chữa cháy PCCC được gắn Unique ID tại pha BBP-A0 là 'PRJ-MEP-PUMP-001'. Tại pha BBP-B2 mua sắm vật tư, mã này bị đổi thành 'PUMP-FIRE-B01' trong danh mục nghiệm thu. Kiểm tra tính tuân thủ rào chắn Sợi Chỉ Đỏ (Red Thread Guardrails) và Unique ID.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-004",
+      "conflict_type": "BBP Unique ID Drift",
+      "phase_origin": "BBP Data Integrity",
+      "description": "Trôi dạt Unique ID gán từ BBP-A0 bị thay đổi cấu trúc ký tự tại BBP-B2",
+      "impact": "Làm gãy chuỗi liên kết dữ liệu Sợi Chỉ Vàng, mất khả năng truy xuất nguồn gốc thiết bị trong mô hình AIM bàn giao"
+    },
+    "rubric": "Phải cảnh báo vi phạm Sợi Chỉ Đỏ, chỉ ra lỗi trôi dạt định danh Unique ID gán từ BBP-A0 và yêu cầu giữ nguyên cấu trúc định danh xuyên suốt vòng đời BBP.",
+    "metadata": {
+      "discipline": "BIM Governance / Fire Protection",
+      "conflict_level": "Data Integrity / Unique ID",
+      "standard": "Sợi Chỉ Vàng / Sợi Chỉ Đỏ"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_05",
+    "input_prompt": "Ống thoát nước mưa trục đứng D150 đi xuyên qua dầm chính bê tông cốt thép trục 3 tầng 2 nhưng trên bản vẽ kết cấu và mô hình IFC không có chi tiết lỗ mở chờ (sleeve/opening). Phân loại cấp độ va chạm và yêu cầu phối hợp kỹ thuật.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-005",
+      "conflict_type": "Level 1 Geometry Clash",
+      "phase_origin": "V2 - Coordination",
+      "description": "Giao cắt hình học trực tiếp giữa ống D150 và dầm bê tông cốt thép không có lỗ mở sleeve",
+      "proposed_mitigation": "Bổ sung lỗ mở chờ kỹ thuật được Chủ trì Kết cấu phê duyệt hoặc dịch chuyển tuyến ống tránh dầm"
+    },
+    "rubric": "Xác định đúng va chạm vật lý Cấp độ 1 (Level 1 Geometry Clash), yêu cầu cung cấp lỗ mở dầm hoặc điều chỉnh lộ trình có sự phê duyệt của Chủ trì Kết cấu.",
+    "metadata": {
+      "discipline": "Structure / MEP",
+      "conflict_level": "Level 1 Geometry Clash",
+      "standard": "V2 Coordination Gate"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_06",
+    "input_prompt": "Tại vị trí ống hút khói sự cố xuyên qua tường ngăn cháy của khoang đệm thang bộ N2, mô hình thiết kế không bố trí van ngăn cháy tự động và khoảng hở đến mép tường không đủ bọc cách nhiệt EI. Phân tích rủi ro an toàn kỹ thuật và điều kiện phối hợp V2.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-006",
+      "conflict_type": "Level 2 Non-Geometric Gap & PCCC Violation",
+      "phase_origin": "V2 - Coordination",
+      "description": "Thiếu van ngăn cháy tự động và không gian bọc bảo ôn chống cháy lan EI tại vị trí xuyên tường ngăn cháy",
+      "impact": "Vi phạm nghiêm trọng QCVN 06:2022/BXD, nguy cơ khói và nhiệt lan vào buồng đệm thang bộ N2"
+    },
+    "rubric": "Chỉ ra mâu thuẫn không gian bảo ôn Level 2 và vi phạm an toàn PCCC QCVN 06:2022/BXD tại tường ngăn cháy buồng đệm thang bộ, yêu cầu van ngăn cháy tự động và bọc EI.",
+    "metadata": {
+      "discipline": "Fire Protection / HVAC",
+      "conflict_level": "PCCC Compliance / Level 2",
+      "standard": "QCVN 06:2022/BXD / V2 Gate"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_07",
+    "input_prompt": "Cửa phòng kỹ thuật điện mở ra hành lang đệm chiếm 70% chiều rộng thông thủy thoát nạn khi mở 90 độ, đồng thời va chạm với hướng mở cửa buồng thang bộ thoát nạn. Trên mô hình tĩnh 3D cửa đóng nên không phát hiện clash. Đánh giá theo tư duy Mâu thuẫn thông tin BIGBIM.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-007",
+      "conflict_type": "Level 2 Dynamic Operational Conflict",
+      "phase_origin": "V2 - Coordination",
+      "description": "Xung đột không gian động khi mở cửa phòng kỹ thuật cản trở hành lang thoát nạn và cửa buồng thang",
+      "proposed_mitigation": "Đổi hướng mở cửa vào trong phòng hoặc dịch chuyển vị trí cửa phòng kỹ thuật điện"
+    },
+    "rubric": "Phải phân biệt clash tĩnh (cửa đóng không va chạm) với mâu thuẫn không gian động vận hành Level 2, yêu cầu bảo toàn chiều rộng thông thủy hành lang đệm.",
+    "metadata": {
+      "discipline": "Architecture / Safety",
+      "conflict_level": "Dynamic Space Gap",
+      "standard": "BIGBIM Information Conflict Framework"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_08",
+    "input_prompt": "Thiết bị xử lý không khí AHU-02 đặt trong phòng kỹ thuật tầng 5 có khoảng hở mặt bên phía tháo motor và lọc bụi đến tường xây là 400mm. Yêu cầu nhà sản xuất cần tối thiểu 900mm. Phân tích tác động và đề xuất giải pháp.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-008",
+      "conflict_type": "Level 2 Maintenance Clearance Gap",
+      "phase_origin": "V2 - Coordination",
+      "description": "Khoảng hở bảo trì AHU chỉ đạt 400mm so với yêu cầu kỹ thuật >= 900mm",
+      "impact": "Không thể rút màng lọc bụi hoặc tháo động cơ để sửa chữa bảo dưỡng định kỳ trong giai đoạn FM"
+    },
+    "rubric": "Nhận diện đúng Level 2 Maintenance Clearance Gap, chỉ ra khoảng cách tối thiểu >= 900mm phục vụ bảo dưỡng quạt và màng lọc.",
+    "metadata": {
+      "discipline": "HVAC / Facility Management",
+      "conflict_level": "Maintenance Clearance",
+      "standard": "BIGBIM Information Conflict Framework"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_09",
+    "input_prompt": "Bản vẽ 2D hệ thống cấp nước thể hiện cụm van giảm áp kèm van 1 chiều tại trục đứng tầng 10, nhưng mô hình IFC4X3 chỉ thể hiện đoạn ống thẳng IfcDuct/IfcPipe và không có thuộc tính Pset_ValveType. Đánh giá mâu thuẫn thông tin V2.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-009",
+      "conflict_type": "2D-to-IFC Discrepancy / Information Gap",
+      "phase_origin": "V2 - Coordination",
+      "description": "Bản vẽ 2D có phụ kiện van giảm áp nhưng mô hình IFC4X3 thiếu thực thể IfcDistributionFlowElement và thuộc tính Pset",
+      "impact": "Thiếu hụt khối lượng BOQ và không đủ thông tin cho nhà thầu MEP lắp đặt van thực tế"
+    },
+    "rubric": "Phải phát hiện mâu thuẫn thông tin giữa bản vẽ 2D và mô hình IFC4X3 (Information Gap), yêu cầu cập nhật đầy đủ thực thể IfcDistributionFlowElement và Pset.",
+    "metadata": {
+      "discipline": "Plumbing / IFC Alignment",
+      "conflict_level": "Information Gap",
+      "standard": "IFC4X3 / ISO 19650"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_10",
+    "input_prompt": "Trong phòng máy bơm PCCC tầng hầm B2, khoảng cách giữa bệ bơm chữa cháy số 1 và số 2 là 600mm. Khoảng cách an toàn thao tác quy định >= 900mm. Xác định loại mâu thuẫn và đề xuất phương án điều phối.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-010",
+      "conflict_type": "Level 2 Space Gap",
+      "phase_origin": "V2 - Coordination",
+      "clearance_rule": "Khoảng cách an toàn thao tác và bảo trì máy bơm phòng PCCC tối thiểu >= 900mm",
+      "proposed_mitigation": "Bố trí lại layout bệ bơm hoặc mở rộng khoảng cách giữa các bệ máy để đạt clearance >= 900mm"
+    },
+    "rubric": "Xác định đúng mâu thuẫn không gian bảo trì Level 2, yêu cầu khoảng cách thao tác giữa các bệ máy bơm >= 900mm.",
+    "metadata": {
+      "discipline": "Fire Protection / MEP",
+      "conflict_level": "Maintenance Clearance",
+      "standard": "BIGBIM Information Conflict Framework"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_11",
+    "input_prompt": "Khi phát hiện mâu thuẫn không gian đa bộ môn phức tạp (Level 2 Space Gap) giữa dầm kết cấu, thang máng cáp điện và ống thông gió tầng hầm không thể xử lý cục bộ, quy trình BIGBIM quy định leo thang phân rã đa chiều (Escalation) như thế nào?",
+    "golden_answer": {
+      "escalation_procedure": "Triệu hồi kỹ năng ccba-issue-tree",
+      "analytical_methods": "Sử dụng Why-Tree để chẩn đoán nguyên nhân gốc đụng độ xuyên bộ môn và How-Tree để xếp hạng phương án phối hợp không gian",
+      "approval_authority": "Trình phương án phê duyệt dưới quyền Chủ trì Bộ môn"
+    },
+    "rubric": "Nêu rõ quy trình leo thang triệu hồi ccba-issue-tree, áp dụng Why-Tree chẩn đoán nguyên nhân gốc và How-Tree xếp hạng phương án điều phối dưới quyền Chủ trì Bộ môn.",
+    "metadata": {
+      "discipline": "Coordination Protocol / Escalation",
+      "conflict_level": "Multi-discipline Escalation",
+      "standard": "BIGBIM Coordination Protocol"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_12",
+    "input_prompt": "Hãy xuất kết quả phân tích mâu thuẫn thông tin cho xung đột thiếu không gian mở cửa tủ điện phòng kỹ thuật theo đúng định dạng JSON cấu trúc bắt buộc của kỹ năng bigbim-risk.",
+    "golden_answer": {
+      "format": "JSON Array with required keys",
+      "required_keys": ["conflict_id", "conflict_type", "phase_origin", "description", "impact", "entities_involved", "proposed_mitigation"]
+    },
+    "rubric": "Phải xuất mảng JSON chuẩn xác với đầy đủ các khóa: conflict_id, conflict_type, phase_origin, description, impact, entities_involved, proposed_mitigation.",
+    "metadata": {
+      "discipline": "Output Schema / JSON Template",
+      "conflict_level": "Schema Compliance",
+      "standard": "BIGBIM Output Specification"
+    }
+  }
+]

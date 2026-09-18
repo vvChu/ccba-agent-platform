@@ -21,11 +21,6 @@ from ccba_legal.crawler import TVPLCrawler, get_tvpl_credentials
 from ccba_legal.docx_converter import convert_docx_to_okf_bundle
 from ccba_legal.gold_standard import GoldStandardProcessor
 
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
 
 def build_parser() -> argparse.ArgumentParser:
     """Build unified argument parser for ccba-legal CLI with logical lifecycle ordering."""
