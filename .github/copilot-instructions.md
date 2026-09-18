@@ -9,7 +9,7 @@ Hub-and-spoke monorepo for CCBA agent services. This repository is the **Hub** (
 Before planning or coding anything:
 
 1. **Read session learnings**: `cat .md/knowledge/session_learnings.md` — loads active architectural invariants and known workarounds.
-2. **Check the catalog** before writing any new utility: `cat catalog.yaml` — Reuse-First Gate (ADR-0057). Document reuse decision in your plan.
+2. **Check the catalog** before writing any new utility: `cat .agents/skills/platform-loader/catalog.yaml` — Reuse-First Gate (ADR-0057). Document reuse decision in your plan.
 3. **Confirm environment**: `git remote get-url origin` — if it contains `ccba-agent-platform`, you are in **Hub** mode; all Hub-only guardrails apply.
 
 ---
