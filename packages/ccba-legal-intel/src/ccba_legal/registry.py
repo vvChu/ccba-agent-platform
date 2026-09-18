@@ -189,24 +189,47 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
     return fallback_path
 
 
+KNOWN_STATUTORY_REPLACEMENTS: dict[str, str] = {
+    "15/2021/NĐ-CP": "nghi_dinh_217_2026_nd_cp",
+    "15/2021/ND-CP": "nghi_dinh_217_2026_nd_cp",
+    "06/2021/TT-BXD": "thong_tu_34_2026_tt_bxd",
+    "06/2021/NĐ-CP": "nghi_dinh_207_2026_nd_cp",
+    "06/2021/ND-CP": "nghi_dinh_207_2026_nd_cp",
+    "12/2021/TT-BXD": "thong_tu_38_2026_tt_bxd",
+    "50/2014/QH13": "Luat-Xay-dung-2025-135-2025-QH15",
+    "62/2020/QH14": "Luat-Xay-dung-2025-135-2025-QH15",
+    "27/2001/QH10": "Luat-Phong-chay-chua-chay-va-cuu-nan-cuu-ho-2024-55-2024-QH15-621347",
+    "136/2020/NĐ-CP": "nghi_dinh_105_2025_nd_cp",
+    "136/2020/ND-CP": "nghi_dinh_105_2025_nd_cp",
+    "TCVN 2737:1995": "TCVN 2737:2023",
+    "TCVN 5575:2012": "TCVN 5575:2024",
+    "TCVN 9386:2012": "TCVN 9386:2025",
+}
+
+
 class LegalRegistryManager:
     """Manages loading, updating, saving and lifecycle resolution of the CCBA Legal Document Registry (legal_registry.yaml)."""
 
     def __init__(self, registry_path: Path | str | None = None) -> None:
-        """Initialize the manager, resolving default registry paths relative to the project root."""
+        """Initialize the manager, resolving default registry paths relative to the project root or canonical master registry."""
         if registry_path:
             self.registry_path = Path(registry_path)
         else:
-            project_root = resolve_project_root()
-            self.registry_path = project_root / ".md" / "data" / "legal_registry.yaml"
+            cwd_cand = Path.cwd() / ".md" / "data" / "legal_registry.yaml"
+            if cwd_cand.is_file():
+                self.registry_path = cwd_cand.resolve()
+            else:
+                self.registry_path = discover_master_registry_path()
+        self._inverted_replacements: dict[str, dict[str, Any]] = {}
 
     def load(self) -> dict[str, Any]:
         """Load the legal document registry from YAML."""
+        loaded: dict[str, Any] = {}
         if not self.registry_path.exists():
             print(
                 f"[Registry] Warning: Registry file {self.registry_path} not found. Starting with empty registry."
             )
-            return {
+            loaded = {
                 "metadata": {},
                 "laws": [],
                 "decrees": [],
@@ -214,21 +237,62 @@ class LegalRegistryManager:
                 "decisions": [],
                 "resolutions": [],
             }
+        else:
+            with open(self.registry_path, encoding="utf-8") as f:
+                try:
+                    res = yaml.safe_load(f)
+                    loaded = res if isinstance(res, dict) else {}
+                except Exception as e:
+                    print(f"[Registry] Error loading YAML: {e}")
+                    loaded = {
+                        "metadata": {},
+                        "laws": [],
+                        "decrees": [],
+                        "circulars": [],
+                        "decisions": [],
+                        "resolutions": [],
+                    }
 
-        with open(self.registry_path, encoding="utf-8") as f:
-            try:
-                loaded = yaml.safe_load(f)
-                return loaded if isinstance(loaded, dict) else {}
-            except Exception as e:
-                print(f"[Registry] Error loading YAML: {e}")
-                return {
-                    "metadata": {},
-                    "laws": [],
-                    "decrees": [],
-                    "circulars": [],
-                    "decisions": [],
-                    "resolutions": [],
-                }
+        # Build inverted replacements index
+        self._inverted_replacements = {}
+        for old_ref, new_ref in KNOWN_STATUTORY_REPLACEMENTS.items():
+            norm_old = re.sub(r"[\s\-_/.,]+", "", old_ref.lower())
+            self._inverted_replacements[norm_old] = {
+                "id": new_ref,
+                "document_number": new_ref,
+                "title": f"Văn bản thay thế [{new_ref}]",
+                "status": "active",
+            }
+
+        for _category, docs in loaded.items():
+            if not isinstance(docs, list):
+                continue
+            for doc in docs:
+                if not isinstance(doc, dict):
+                    continue
+                replaces_list = []
+                for field in ["replaces", "supersedes", "replaced_docs"]:
+                    val = doc.get(field)
+                    if isinstance(val, list):
+                        replaces_list.extend(val)
+                    elif isinstance(val, str) and val.strip():
+                        replaces_list.append(val.strip())
+                relations = doc.get("relations")
+                if isinstance(relations, dict):
+                    for field in ["replaces", "supersedes", "replaced_docs"]:
+                        val = relations.get(field)
+                        if isinstance(val, list):
+                            replaces_list.extend(val)
+                        elif isinstance(val, str) and val.strip():
+                            replaces_list.append(val.strip())
+
+                for rep in replaces_list:
+                    rep_str = str(rep).strip()
+                    if rep_str:
+                        norm_key = re.sub(r"[\s\-_/.,]+", "", rep_str.lower())
+                        self._inverted_replacements[norm_key] = doc
+
+        return loaded
 
     def save(self, data: dict[str, Any]) -> None:
         """Save the updated registry to YAML."""
@@ -381,15 +445,49 @@ class LegalRegistryManager:
         """
         doc = self.find_doc(identifier)
         if not doc:
-            return {
-                "doc_id": identifier,
-                "document_number": identifier,
-                "title": "",
-                "short_name": identifier,
-                "status": LegalDocStatus.ACTIVE.value,
-                "warning": None,
-                "suggested_replacement": None,
-            }
+            norm_id = re.sub(r"[\s\-_/.,]+", "", identifier.lower())
+            if norm_id in self._inverted_replacements:
+                rep_doc = self._inverted_replacements[norm_id]
+                rep_id = str(rep_doc.get("id", rep_doc.get("document_number", "")))
+                rep_num = str(rep_doc.get("document_number", rep_id))
+                rep_title = str(rep_doc.get("title", rep_id))
+                rep_short = str(rep_doc.get("short_name", rep_num or rep_id))
+                full_rep = self.find_doc(rep_id) or rep_doc
+                rep_status = normalize_doc_status(full_rep.get("status", "active")).value
+
+                info = LegalLifecycleInfo(
+                    doc_id=identifier,
+                    document_number=identifier,
+                    title=f"Văn bản đã hết hiệu lực (thay thế bởi {rep_short})",
+                    short_name=identifier,
+                    status=LegalDocStatus.SUPERSEDED,
+                    superseded_by=rep_id,
+                    warning=(
+                        f"⚠️ [CẢNH BÁO PHÁP LÝ]: Văn bản [{identifier}] đã HẾT HIỆU LỰC toàn bộ, "
+                        f"được thay thế bởi [{rep_title} - {rep_num}]. "
+                        f"Cần kiểm tra kỹ các quy định chuyển tiếp hoặc áp dụng văn bản thay thế hiện hành."
+                    ),
+                    suggested_replacement={
+                        "id": full_rep.get("id", rep_id),
+                        "document_number": full_rep.get("document_number", rep_num),
+                        "title": full_rep.get("title", rep_title),
+                        "short_name": full_rep.get("short_name", rep_short),
+                        "status": rep_status,
+                        "effective_date": full_rep.get("effective_date"),
+                    },
+                )
+                return info.to_dict()
+
+            info = LegalLifecycleInfo(
+                doc_id=identifier,
+                document_number=identifier,
+                title="",
+                short_name=identifier,
+                status=LegalDocStatus.UNVERIFIED,
+                warning=f"⚠️ [CHƯA XÁC MINH]: Văn bản [{identifier}] không có trong cơ sở dữ liệu pháp luật chính thức. Cần kiểm tra kỹ tính pháp lý.",
+                suggested_replacement=None,
+            )
+            return info.to_dict()
 
         raw_status = doc.get("status")
         status_enum = normalize_doc_status(raw_status)
@@ -401,8 +499,14 @@ class LegalRegistryManager:
         superseded_date = str(doc["superseded_date"]) if doc.get("superseded_date") else None
 
         # Resolve supersedes / replaced docs
+        rel = doc.get("relations") if isinstance(doc.get("relations"), dict) else {}
         raw_supersedes = (
-            doc.get("supersedes") or doc.get("replaces") or doc.get("replaced_docs") or []
+            doc.get("supersedes")
+            or doc.get("replaces")
+            or doc.get("replaced_docs")
+            or rel.get("replaces")
+            or rel.get("supersedes")
+            or []
         )
         if isinstance(raw_supersedes, str):
             supersedes = [raw_supersedes]
@@ -411,7 +515,11 @@ class LegalRegistryManager:
 
         # Resolve superseded_by / replacement doc
         raw_superseded_by = (
-            doc.get("superseded_by") or doc.get("replaced_by") or doc.get("replaced_by_docs")
+            doc.get("superseded_by")
+            or doc.get("replaced_by")
+            or doc.get("replaced_by_docs")
+            or rel.get("superseded_by")
+            or rel.get("replaced_by")
         )
         if isinstance(raw_superseded_by, list) and raw_superseded_by:
             superseded_by: str | None = str(raw_superseded_by[0])
