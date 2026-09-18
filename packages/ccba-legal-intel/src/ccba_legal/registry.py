@@ -447,12 +447,16 @@ class LegalRegistryManager:
         if not doc:
             norm_id = re.sub(r"[\s\-_/.,]+", "", identifier.lower())
             if norm_id in self._inverted_replacements:
-                rep_doc = self._inverted_replacements[norm_id]
-                rep_id = str(rep_doc.get("id", rep_doc.get("document_number", "")))
-                rep_num = str(rep_doc.get("document_number", rep_id))
-                rep_title = str(rep_doc.get("title", rep_id))
-                rep_short = str(rep_doc.get("short_name", rep_num or rep_id))
-                full_rep = self.find_doc(rep_id) or rep_doc
+                rep_stub = self._inverted_replacements[norm_id]
+                rep_id = str(rep_stub.get("id", rep_stub.get("document_number", "")))
+                full_rep = self.find_doc(rep_id) or rep_stub
+                rep_num = str(
+                    full_rep.get("document_number") or rep_stub.get("document_number") or rep_id
+                )
+                rep_title = str(full_rep.get("title") or rep_stub.get("title") or rep_id)
+                rep_short = str(
+                    full_rep.get("short_name") or rep_stub.get("short_name") or rep_num or rep_id
+                )
                 rep_status = normalize_doc_status(full_rep.get("status", "active")).value
 
                 info = LegalLifecycleInfo(
