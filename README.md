@@ -17,8 +17,8 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
                               ┌─────────────────────────────────────────┐
                               │            CCBA HUB (Bộ Não)             │
                               │  ├── Hiến pháp AGENTS.md (Layer 1)      │
-                              │  ├── 99 Kỹ năng (Skills) & 69 Archived  │
-                              │  ├── 8 Service Packages (ccba-*)        │
+                              │  ├── 73 Kỹ năng (Skills) & 68 Archived  │
+                              │  ├── 9 Service Packages (ccba-*)        │
                               │  └── Spoke Synchronizer Engine          │
                               └────────────────────┬────────────────────┘
                                                    │
@@ -32,7 +32,7 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
        └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
 ```
 
-- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 99 kỹ năng AI (và 69 workflows được lưu trữ/hợp nhất theo ADR-0056), 8 gói thư viện lõi và công cụ điều phối đồng bộ.
+- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 73 kỹ năng AI (và 68 workflows được lưu trữ/hợp nhất theo ADR-0056), 9 gói thư viện lõi và công cụ điều phối đồng bộ.
 - **Dự Án Con (Spokes)**: Các repositories chuyên biệt (như `ccba-legal-knowledge`, `ccba-qc-web-app`, các dự án thẩm tra công trình cụ thể). Spoke kế thừa toàn bộ năng lực AI của Hub thông qua cơ chế **Reuse-First Gate** và công cụ đồng bộ **`sync_spoke.py`**.
 
 ---
@@ -48,7 +48,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   └── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->73<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-09 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->73<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-18 -->
 │   │   ├── ccba-ai-gateway-sdk/       ←   Kết nối AI Gateway (50+ models)
 │   │   ├── ccba-spoke-adopter/        ←   Tiếp nhận Brownfield Spoke an toàn
 │   │   ├── ccba-sharepoint-iac/       ←   SharePoint Lists Schema & IaC
@@ -63,7 +63,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, ADRs, Session Learnings
 │   ├── seminars/                      ←   Agenda & biên bản thảo luận
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
-├── packages/                          ← 8 Internal Service Modules (pip installable)
+├── packages/                          ← 9 Internal Service Modules (pip installable)
 │   ├── ccba-harness/                  ←   Testing harness, Two-Stage Decision Framework & GPI Calculator (ADR 0057), evals engine, singleton locks & process monitors
 │   ├── ccba-ai/                       ←   AI Gateway SDK (v1.2.0), drop_params embedding, reasoning streaming token floor & timeout scaling
 │   ├── ccba-maskara/                  ←   Secret detection, PII redaction & privacy guard
@@ -71,6 +71,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── ccba-pdf-prep/                 ←   PDF Vision Preprocessor (tiling, title-block, chunks)
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
 │   ├── ccba-legal-intel/              ←   Legal intelligence connectors, OKF v2.2 GoldStandardProcessor & VisualParityAuditor
+│   ├── ccba-qc-core/                  ←   Multi-disciplinary design audit engine (PCCC, MEP, Architectural compliance)
 │   └── mdconverter/                   ←   Document-to-Markdown converter (PDF/DOCX/HTML)
 ├── scripts/                           ← CLI Tooling & Governance Engines
 │   ├── spoke/                         ←   Spoke governance, adoption & synchronization engines
@@ -93,7 +94,7 @@ ccba-agent-platform/                    ← Hub Repository
 
 ---
 
-## 📦 8 Service Modules (Gói Dịch Vụ Cốt Lõi)
+## 📦 9 Service Modules (Gói Dịch Vụ Cốt Lõi)
 
 Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thiết kế dưới dạng Deep Modules độc lập, có thể cài đặt trực tiếp vào môi trường Python của kỹ sư:
 
@@ -106,6 +107,7 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 | **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: Phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
 | **`ccba-notebooklm`** | Tích hợp Google NotebookLM Cloud RAG, sinh Audio Overview, hỗ trợ Mock Client chạy test offline. | `pip install -e "packages/ccba-notebooklm"` |
 | **`ccba-legal-intel`** | Pipeline tự động hóa TVPL VIP, đóng gói bộ chuẩn OKF Bundle v2.2 (`OKFBundlePackager`, `GoldStandardProcessor`), giải mã nhị phân công thức MathType MTEF (ADR 0040), kiểm định Visual Parity Gate 4, bóc tách phụ lục, AST diffing và hợp nhất Văn Bản Hợp Nhất (VBHN). | `pip install -e "packages/ccba-legal-intel"` |
+| **`ccba-qc-core`** | Động cơ thẩm tra thiết kế đa bộ môn (PCCC, MEP, Kiến trúc), phân tích sai lệch quy chuẩn và xuất báo cáo đối soát. | `pip install -e "packages/ccba-qc-core"` |
 | **`mdconverter`** | Chuyển đổi PDF/DOCX/HTML sang Markdown chuẩn, phục hồi bảng biểu vỡ và tiêm anchor điều khoản. | `pip install -e "packages/mdconverter[dev,llm]"` |
 
 ---
@@ -121,7 +123,7 @@ Dành cho Kỹ sư khi clone `ccba-agent-platform` về máy cá nhân để s�
 
 ---
 
-### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 8 Packages
+### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 9 Packages
 
 Mở terminal tại thư mục gốc dự án và thực hiện tuần tự:
 
@@ -135,7 +137,7 @@ python -m venv .venv
 # Trên Linux / macOS:
 source .venv/bin/activate
 
-# 3. Cài đặt toàn bộ 8 internal packages ở chế độ Editable (-e)
+# 3. Cài đặt toàn bộ 9 internal packages ở chế độ Editable (-e)
 pip install -e "packages/ccba-harness" \
             -e "packages/ccba-ai" \
             -e "packages/ccba-maskara" \
@@ -143,6 +145,7 @@ pip install -e "packages/ccba-harness" \
             -e "packages/ccba-pdf-prep" \
             -e "packages/ccba-notebooklm" \
             -e "packages/ccba-legal-intel" \
+            -e "packages/ccba-qc-core" \
             -e "packages/mdconverter[dev,llm]"
 ```
 
@@ -180,7 +183,7 @@ python -c "from ccba_ai import ai; print('✅ AI Gateway Models:', len(ai.models
 # 2. Chạy toàn bộ Fast Test Suite (< 2.0s per test, loại trừ test mạng nặng)
 pytest -m "not slow"
 
-# 3. Chạy Governance Gate (Kiểm định 83 Skills & Toàn bộ Tài liệu Markdown)
+# 3. Chạy Governance Gate (Kiểm định 73 Skills & Toàn bộ Tài liệu Markdown)
 python scripts/validate_skills.py
 python scripts/validate_docs.py
 
@@ -249,7 +252,10 @@ Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 | **`/ccba-init-spoke`** | Khởi tạo dự án Spoke mới đạt chuẩn kiến trúc CCBA Hub-and-Spoke. |
 | **`/ccba-update-spoke`** | Cập nhật các kỹ năng và test guardrails mới nhất từ Hub về Spoke. |
 | **`/ccba-issue-to-hub`** | Soạn thảo RFC và tạo GitHub Issue đề xuất ý tưởng/tính năng mới lên Hub. |
+| **`/ccba-create-pr`** | Tự động phân giải base branch, đóng gói kiểm thử và mở Pull Request đa Spoke. |
 | **`/ccba-contribute-to-hub`** | Đóng gói mã nguồn, tests và mở Pull Request lên Hub kèm Self-Healing CI. |
+| **`/ccba-issue-tree`** | Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời. |
+| **`/ccba-legal-advisor`** | Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng và xuất Phiếu Ý kiến Pháp lý. |
 | **`/ccba-ai-qc-pccc-audit`** | Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) qua Semantic Map-Reduce. |
 | **`/ccba-markdown-document-processing`** | Chuyển đổi PDF/Word sang Markdown cấu trúc cao bằng `mdconverter`. |
 | **`/ccba-codebase-design`** | Quét module nông, sinh sơ đồ Mermaid trực quan và làm sâu module. |

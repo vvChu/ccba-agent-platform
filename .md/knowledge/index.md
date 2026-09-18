@@ -42,6 +42,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-ccba-issue-tree-upgrade-proposals.md](research_and_studies/research-ccba-issue-tree-upgrade-proposals.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Phương Hướng Nâng Cấp Kỹ Năng /ccba-issue-tree, Tra Cứu Tri Thức Liên-Spoke 3 Tầng & Cơ Chế Cắt Tỉa Nhánh Tự Động.
 - [research_and_studies/research-ccba-ai-module-architecture.md](research_and_studies/research-ccba-ai-module-architecture.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Kiến trúc Module ccba-ai, Embedding Compatibility, Streaming Tokens & Timeout Scaling (Issue #280).
 - [research_and_studies/research-agent-architecture-packages-skills-orchestrators.md](research_and_studies/research-agent-architecture-packages-skills-orchestrators.md): **[MỚI]** Báo cáo Nghiên cứu RES-2026-ARCH-001 v1.2: Kiến trúc Agent 3 Tầng, Khung Quyết Định Hai Giai Đoạn và Chỉ số Phân rã Kỹ năng (GPI).
 - [research_and_studies/research-rename-skills-vs-alias.md](research_and_studies/research-rename-skills-vs-alias.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện: Đổi tên trực tiếp Skills sang namespace ccba-* vs Cơ chế Alias.
