@@ -3,13 +3,13 @@
 **Phương pháp thực hiện:** Nghiên cứu phản biện đa tác nhân đối kháng kép (Dual-Agent Adversarial Research qua `/ccba-research`).  
 **Tác nhân thực hiện:** Subagent A (`Solution Explorer`) đối soát song song với Subagent B (`Risk & Boundary Challenger`).  
 **Thời điểm hoàn tất:** 2026-09-17T20:47:00+07:00  
-**Tệp mục tiêu:** [`.agents/skills/ccba-issue-tree/SKILL.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/SKILL.md) (v1.1.0)
+**Tệp mục tiêu:** [`.agents/skills/ccba-issue-tree/SKILL.md`](../../../.agents/skills/ccba-issue-tree/SKILL.md) (v1.1.0)
 
 ---
 
 ## 1. Tóm Tắt Thực Thi (Executive Summary)
 
-Kỹ năng master [`/ccba-issue-tree`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/SKILL.md) hiện đóng vai trò là "bộ não điều phối phân rã bài toán" thuộc tầng Kernel (`bundle: _core`). Sau đợt nâng cấp v1.1.0 bổ sung cơ chế **Adaptive Fast-Tree** và **OS/Shell Awareness Guard**, câu hỏi đặt ra là: *Làm thế nào để nâng cấp kỹ năng này lên tầm cao mới mà không vi phạm nguyên tắc KISS và không phá vỡ trần ngân sách Token của hệ thống?*
+Kỹ năng master [`/ccba-issue-tree`](../../../.agents/skills/ccba-issue-tree/SKILL.md) hiện đóng vai trò là "bộ não điều phối phân rã bài toán" thuộc tầng Kernel (`bundle: _core`). Sau đợt nâng cấp v1.1.0 bổ sung cơ chế **Adaptive Fast-Tree** và **OS/Shell Awareness Guard**, câu hỏi đặt ra là: *Làm thế nào để nâng cấp kỹ năng này lên tầm cao mới mà không vi phạm nguyên tắc KISS và không phá vỡ trần ngân sách Token của hệ thống?*
 
 Qua nghiên cứu đối kháng kép, chúng tôi xác định:
 1. **Các ranh giới bất biến (Non-Negotiable Invariants):** Tuyệt đối duy trì `disable-model-invocation: true` (bảo toàn trần cứng 10 skills của `_core` theo ADR-0040), giữ nguyên tắc **Stateless thuần Markdown** (không sinh file `.yaml` rác), và bảo vệ cấu trúc phân tầng **Progressive Disclosure** (không nhồi nhét templates vào `SKILL.md`).
@@ -53,11 +53,11 @@ Qua phân biện đối kháng từ Subagent Challenger, **5 cạm bẫy thiết
 ## 3. Khuyến Nghị Triển Khai (Implementation Recommendations)
 
 ### Giai đoạn 1 (v1.2.0 - Ưu tiên cao, Không sửa đổi mã nguồn harness)
-1. **Nâng cấp Cẩm nang Vận hành Level 3 ([`references/governed_lifecycle_guide.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md)):**
+1. **Nâng cấp Cẩm nang Vận hành Level 3 ([`references/governed_lifecycle_guide.md`](../../../.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md)):**
    - Bổ sung quy tắc **Cascading Falsification**: Khi một nút cha bị `FALSIFIED`, tự động gán nhãn `FALSIFIED_BY_CASCADE` cho toàn bộ nhánh con phụ thuộc.
    - Bổ sung quy tắc **Discriminative Test Matrix**: Hướng dẫn kỹ sư thiết kế 1 bài kiểm tra nhị phân để loại trừ 50% số nhánh giả thuyết cùng lúc.
    - Thể chế hóa định dạng **Cryptographic Evidence Stamping** với mã băm SHA-256 cho nút `VERIFIED_FACT`.
-2. **Bổ sung Mẫu Cây Phân Định Vào Level 3 ([`references/tree_templates.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/references/tree_templates.md)):**
+2. **Bổ sung Mẫu Cây Phân Định Vào Level 3 ([`references/tree_templates.md`](../../../.agents/skills/ccba-issue-tree/references/tree_templates.md)):**
    - Đưa vào mẫu biểu Mermaid biểu diễn nhánh bị cắt tỉa (`classDef pruned fill:#f9f9f9,stroke:#ccc,stroke-dasharray: 5 5`).
 
 ### Giai đoạn 2 (v1.3.0 - Tích hợp Hệ sinh thái)
@@ -84,13 +84,13 @@ Qua phân biện đối kháng từ Subagent Challenger, **5 cạm bẫy thiết
 
 ## 5. Tài Liệu Tham Chiếu & Citations
 
-1. [`.agents/skills/ccba-issue-tree/SKILL.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/SKILL.md) — Đặc tả kỹ năng v1.1.0.
-2. [`references/governed_lifecycle_guide.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md) — Hướng dẫn tầng vận hành 6 trạng thái và ma trận RACI.
-3. [`references/tree_templates.md`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-issue-tree/references/tree_templates.md) — Mẫu biểu Mermaid và Text Tree chuẩn hóa.
-4. [`AGENTS.md`](file:///d:/GitHubProjects/ccba-agent-platform/AGENTS.md) — Hiến chương nền tảng CCBA Layer 1.
-5. [`packages/ccba-harness/src/ccba_harness/skill_validator.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/skill_validator.py) — Ngưỡng kiểm soát `MAX_MODEL_INVOKED_PER_BUNDLE = 10` (ADR-0040).
-6. [`docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md) — Quy chuẩn mã băm chứng cứ SHA-256.
-7. [`.agents/skills/ccba-completion-checklist/resources/checklist_master.yaml`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-completion-checklist/resources/checklist_master.yaml) — Khung danh mục hồ sơ hoàn thành (đang quy chiếu NĐ 06/2021 chuyển tiếp; đang được chuẩn bị nâng cấp lên Nghị định 207/2026/NĐ-CP hiện hành).
+1. [`.agents/skills/ccba-issue-tree/SKILL.md`](../../../.agents/skills/ccba-issue-tree/SKILL.md) — Đặc tả kỹ năng v1.1.0.
+2. [`references/governed_lifecycle_guide.md`](../../../.agents/skills/ccba-issue-tree/references/governed_lifecycle_guide.md) — Hướng dẫn tầng vận hành 6 trạng thái và ma trận RACI.
+3. [`references/tree_templates.md`](../../../.agents/skills/ccba-issue-tree/references/tree_templates.md) — Mẫu biểu Mermaid và Text Tree chuẩn hóa.
+4. [`AGENTS.md`](../../../AGENTS.md) — Hiến chương nền tảng CCBA Layer 1.
+5. [`packages/ccba-harness/src/ccba_harness/skill_validator.py`](../../../packages/ccba-harness/src/ccba_harness/skill_validator.py) — Ngưỡng kiểm soát `MAX_MODEL_INVOKED_PER_BUNDLE = 10` (ADR-0040).
+6. [`docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md`](../../../docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md) — Quy chuẩn mã băm chứng cứ SHA-256.
+7. [`.agents/skills/ccba-completion-checklist/resources/checklist_master.yaml`](../../../.agents/skills/ccba-completion-checklist/resources/checklist_master.yaml) — Khung danh mục hồ sơ hoàn thành (đang quy chiếu NĐ 06/2021 chuyển tiếp; đang được chuẩn bị nâng cấp lên Nghị định 207/2026/NĐ-CP hiện hành).
 
 ---
 

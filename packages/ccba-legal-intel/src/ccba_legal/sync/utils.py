@@ -29,10 +29,11 @@ def calculate_sha256(file_path: Path) -> str:
 
 
 def is_port_open(port: int, timeout: float = 1.0) -> bool:
-    """Check if TCP port is active."""
+    """Check if TCP port is active with enforced Windows socket timeout ceiling."""
     try:
+        safe_timeout = max(0.05, min(float(timeout), 1.0))
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(timeout)
+            s.settimeout(safe_timeout)
             return s.connect_ex(("127.0.0.1", port)) == 0
     except Exception:
         return False
