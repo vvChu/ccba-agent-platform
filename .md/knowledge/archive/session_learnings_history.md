@@ -431,4 +431,34 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Hàm kiểm tra cổng `is_port_open(port)` sử dụng socket stream mặc định không timeout, khiến trên Windows nếu cổng bị drop hoặc chặn bởi firewall thì lệnh kiểm tra Chrome CDP bị treo vô hạn.
   - **Giải pháp:** Luôn gán `s.settimeout(1.0)` trong mọi hàm socket probing.
 
+---
+
+## 19. Nightly Tuner Evolution, Worktree Isolation & Merge Danger Governance (2026-09-18)
+
+- **Core Pattern P24.1 — Tuner Circuit Breaker & Real LLM Fast-Fail Invariant:**
+  - **Vấn đề:** `LLMTaskAdapter` chuyển `circuit_breaker` sang `AIClient` nhưng không tự khởi tạo nếu caller không truyền vào, khiến cơ chế Fast-Fail `CircuitBreakerOpenError` khi gặp chuỗi lỗi 429/503 liên tiếp không được kích hoạt trong thực tế.
+  - **Giải pháp:** `LLMTaskAdapter.__init__` tự động gán `self.circuit_breaker = circuit_breaker or (CircuitBreaker() if CircuitBreaker is not None else None)`, bảo đảm Fast-Fail luôn thường trực.
+
+- **Core Pattern P24.2 — Caller-Specified Budget Ceiling Preservation:**
+  - **Vấn đề:** Biến môi trường `CCBA_TUNER_TOKEN_BUDGET` ghi đè vô điều kiện `RatchetConfig.token_budget` ngay cả khi daemon đã truyền `remaining_budget` tường minh, phá vỡ hạch toán ngân sách tổng phiên.
+  - **Giải pháp:** Đặt default `token_budget: int | None = None` và chỉ nạp từ biến môi trường khi `self.token_budget is None`.
+
+- **Core Pattern P24.3 — Prompt Compaction Double-Strip (Comment & Auto-Generated Bullets):**
+  - **Vấn đề:** Rào chắn phình to prompt (> 300 dòng) chỉ xóa dòng comment HTML `<!-- Ratchet Optimization Refinement ... -->` mà bỏ quên dòng bullet `- Cập nhật quy chuẩn rà soát vòng...`, khiến prompt tiếp tục tích lũy dòng rác qua các vòng lặp ratchet.
+  - **Giải pháp:** Bộ lọc splitlines xóa song hành cả dòng comment và dòng bullet bắt đầu bằng `- Cập nhật quy chuẩn rà soát vòng`.
+
+- **Core Pattern P24.4 — Worktree Subprocess Isolation & Localized PYTHONPATH:**
+  - **Vấn đề:** Trong runner `run_nightly_tuner.sh`, `PYTHONPATH` được gán trỏ về `$PROJECT_ROOT` trước khi `cd "$WORKTREE_DIR"`. Các tiến trình con (`python3 -m ccba_harness ...`) trong worktree cô lập vẫn import module từ cây làm việc chính (có thể bị bẩn hoặc lệch pha).
+  - **Giải pháp:** Chuyển vào `$WORKTREE_DIR` trước, sau đó gán `export PYTHONPATH="$WORKTREE_DIR/packages/...:$WORKTREE_DIR"`.
+
+- **Core Pattern P24.5 — Subprocess Error Verification on Git Branch Cleanup:**
+  - **Vấn đề:** `_cleanup_old_empty_branches` kiểm tra nhánh rỗng bằng `git cherry base_ref b`. Nếu lệnh thất bại (thiếu base_ref, detached HEAD, tên nhánh lỗi), `diff_res.stdout` trả về rỗng và hàm xóa nhầm nhánh.
+  - **Giải pháp:** Kiểm tra nghiêm ngặt `diff_res.returncode == 0 and not diff_res.stdout.strip()` kèm `encoding="utf-8", errors="replace"`.
+
+- **Core Pattern P24.6 — Merge Danger Assessment (Two-Way vs One-Way Door):**
+  - **Quy chuẩn:** Phân loại rủi ro cho mọi PR và Implementation Plan:
+    * **Door:** `Two-way` (dễ đảo ngược, thay đổi cô lập nội bộ) vs `One-way` (khó đảo ngược, breaking change, thay đổi schema/contract hoặc migration).
+    * **Blast Radius:** `Localized` (cục bộ 1 hàm/file) vs `Package-wide` vs `Monorepo-wide` vs `Spoke-affecting` (ảnh hưởng Spoke downstream).
+
+
 

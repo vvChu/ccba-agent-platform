@@ -64,3 +64,6 @@ python -m pymarkdown scan README.md PLATFORM.md
 - `mdconverter` reads converter-specific env settings from `.env` at CWD (Pydantic settings), while `ccba-ai` client also searches upward for `.env`/`.env.ai-gateway`; avoid assuming one env-loading behavior across packages.
 - For legal (VBPL) outputs, preserve required status markers/disclaimer conventions from `.agents/AGENTS.md` and `packages/mdconverter/docs/user-guide/vn-legal.md`.
 - Use `scripts/validate_docs.py` for markdown correctness checks and `scripts/maskara.py scan --root .` for privacy/security scan alignment with CI.
+- **PR Review & Merge Danger**: When summarizing or reviewing PRs, always classify the **Merge Danger**:
+  - **Door**: `Two-way` (trivial to revert, isolated fix) vs `One-way` (hard/costly to revert, breaking change, DB/contract migration).
+  - **Blast Radius**: `Localized` (single internal func/file) vs `Package-wide` vs `Monorepo-wide` vs `Spoke-affecting` (breaks downstream Spoke repos).

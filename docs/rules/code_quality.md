@@ -24,6 +24,7 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
 1. **TDD (Test-Driven Development)**: Viết unit tests trước tại các điểm khớp nối công khai (seams).
 2. **Continuous Validation**: Chạy kiểm tra kiểu (`mypy`) và chạy test suite liên tục.
 3. **Review before Merge**: Chạy `/ccba-code-review` để quét code smells trước khi tạo PR.
+4. **Merge Danger Triage**: Mọi PR và Kế hoạch Thực thi (`implementation_plan.md`) bắt buộc tự phân loại mức độ nguy hiểm: Khả năng đảo ngược (**One-way door** vs **Two-way door**) và Bán kính ảnh hưởng (**Localized** vs **Package-wide** vs **Monorepo-wide** vs **Spoke-affecting**) để tối ưu hóa thời gian review của con người.
 
 ---
 

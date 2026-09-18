@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.3.0
+  version: 1.4.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -76,6 +76,10 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 - **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) theo Single-Writer Protocol mà không phát sinh đệ quy sub-agent.
 
 ### 5. Tổng hợp báo cáo & Phân giải Kiểm tra Khách quan (Aggregate Findings & Deterministic Gate)
+- **Đánh giá Merge Danger (Reversibility & Blast Radius):** Ngay đầu báo cáo tổng hợp, Agent bắt buộc phải xuất mục `## Merge Danger` gồm 2 chỉ số cốt lõi để người duyệt ra quyết định nhanh:
+  * **Door:** `Two-way` (Trivial to revert, thay đổi cô lập/nội bộ) hoặc `One-way` (Khó đảo ngược, breaking change, thay đổi schema/contract hoặc migration phức tạp).
+  * **Blast Radius:** `Localized` (1 file/hàm nội bộ), `Package-wide` (trong 1 package), `Monorepo-wide` (ảnh hưởng tooling/scripts/CI), hoặc `Spoke-affecting` (thay đổi contract/interface mà Spoke phụ thuộc).
+  * *Tóm tắt lý do và tác động rủi ro (1-2 câu).*
 - Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` và `## Spec`.
 - Chạy cổng kiểm tra máy tính khách quan đối với codebase hiện tại:
   * **Phân giải target package:** Nếu diff chỉ giới hạn trong một gói cụ thể thuộc monorepo (`packages/<pkg_name>`), chạy scoped test:
