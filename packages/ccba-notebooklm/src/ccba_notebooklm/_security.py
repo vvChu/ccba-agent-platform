@@ -142,9 +142,12 @@ def sanitize_prompt_for_query(prompt: str) -> str:
             prompt_bytes = prompt.encode("utf-8")
             rewritten_bytes, _ = apply_raw_redactions(prompt_bytes, findings)
             return rewritten_bytes.decode("utf-8")
+        return prompt
     except Exception as e:
         if "CHẶN" in str(e) or "nhạy cảm" in str(e):
             raise
-        print(f"[Warn] Lỗi khi làm sạch prompt qua Maskara Gate: {e}", file=sys.stderr)
-
-    return prompt
+        print(
+            f"[ERROR] [Maskara Gate] Lỗi bảo mật khi làm sạch prompt (Fail-Closed): {e}",
+            file=sys.stderr,
+        )
+        raise RuntimeError(f"Kiểm tra bảo mật Maskara Gate thất bại (Fail-Closed): {e}") from e

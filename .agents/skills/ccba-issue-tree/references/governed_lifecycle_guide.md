@@ -107,7 +107,7 @@ Tuân thủ nghiêm ngặt Hiến pháp Layer 1 (`AGENTS.md`) và Nguyên tắc 
 ### [WHY-01.2] Lỗi rò rỉ tiến trình con không kế thừa Session Leader
 - **Trạng thái:** `VERIFIED_FACT`
 - **Cấp độ bằng chứng:** `FACT_LOG`
-- **Nguồn chứng cứ:** file:///C:/ccba_runtime/logs/runner_deadlock_trace.log#L340-L385
+- **Nguồn chứng cứ:** `<ABSOLUTE_LOG_PATH>/runner_deadlock_trace.log#L340-L385`
 - **Mã băm SHA-256:** `a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0`
 - **Thời điểm xác nhận:** 2026-09-17T20:55:00+07:00
 - **Ghế thẩm duyệt:** CHU_TRI_BO_MON
