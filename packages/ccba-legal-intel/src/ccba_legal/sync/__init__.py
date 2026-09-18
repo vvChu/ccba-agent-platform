@@ -14,7 +14,6 @@ from .drive_uploader import (
 from .engine import DEFAULT_DRIVE_FOLDER, LegalSyncEngine, sync_legal_assets
 from .notebooklm_sync import sync_registry_to_notebooklm
 from .utils import (
-    _is_link_or_junction,
     calculate_md5,
     calculate_sha256,
     ensure_chrome_debug_port,
@@ -26,7 +25,6 @@ from .utils import (
 
 __all__ = [
     "DEFAULT_DRIVE_FOLDER",
-    "_is_link_or_junction",
     "calculate_md5",
     "calculate_sha256",
     "is_port_open",
