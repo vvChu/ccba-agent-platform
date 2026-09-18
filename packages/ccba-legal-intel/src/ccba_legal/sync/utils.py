@@ -157,7 +157,10 @@ def _safe_remove_leaf(p: Path) -> None:
     """Safely remove a leaf item (file, symlink, or NTFS junction) without mutating target permissions."""
     if not p.is_symlink():
         try:
-            os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+            if p.is_dir():
+                os.chmod(p, stat.S_IRWXU)
+            else:
+                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
         except Exception:
             pass
     try:
@@ -165,6 +168,15 @@ def _safe_remove_leaf(p: Path) -> None:
             os.rmdir(p)
         else:
             p.unlink()
+    except PermissionError:
+        # On POSIX, removing an item requires write+exec on its parent directory
+        try:
+            os.chmod(p.parent, stat.S_IRWXU)
+            if not p.is_symlink():
+                os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+            p.unlink()
+        except Exception:
+            raise
     except FileNotFoundError:
         pass
 
@@ -172,7 +184,7 @@ def _safe_remove_leaf(p: Path) -> None:
 def _safe_remove_dir(p: Path) -> None:
     """Safely remove an empty directory after clearing read-only attributes."""
     try:
-        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+        os.chmod(p, stat.S_IRWXU)
     except Exception:
         pass
     try:
@@ -186,7 +198,7 @@ def _safe_rmtree_tree(p: Path) -> None:
     if not p.exists() and not _is_link_or_junction(p):
         return
     try:
-        os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+        os.chmod(p, stat.S_IRWXU)
     except Exception:
         pass
     try:
