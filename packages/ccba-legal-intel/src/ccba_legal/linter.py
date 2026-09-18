@@ -162,15 +162,24 @@ OBSOLETE_LEGAL_PATTERNS: list[dict[str, Any]] = [
     },
 ]
 
+
+def normalize_statute_code(code: str) -> str:
+    """Normalize statutory citation code for robust comparison (handles Đ/D and casing)."""
+    return code.upper().replace("Đ", "D")
+
+
 # Canonical active 2024-2026 statutes to avoid false warnings
 KNOWN_ACTIVE_STATUTES: set[str] = {
     "135/2025/QH15",
     "217/2026/NĐ-CP",
+    "217/2026/ND-CP",
     "207/2026/NĐ-CP",
+    "207/2026/ND-CP",
     "34/2026/TT-BXD",
     "38/2026/TT-BXD",
     "55/2024/QH15",
     "105/2025/NĐ-CP",
+    "105/2025/ND-CP",
 }
 
 # Regex to detect statutory references for two-tier unverified audit
@@ -329,7 +338,7 @@ def lint_file_currency(
     lines_data = extract_file_lines(file_path)
     findings: list[dict[str, Any]] = []
 
-    active_docs: set[str] = set(KNOWN_ACTIVE_STATUTES)
+    active_docs: set[str] = {normalize_statute_code(s) for s in KNOWN_ACTIVE_STATUTES}
     if registry_path and registry_path.exists():
         try:
             from ccba_legal.registry import LegalRegistryManager
@@ -343,7 +352,7 @@ def lint_file_currency(
                         "current",
                     }:
                         if d.get("document_number"):
-                            active_docs.add(d["document_number"].upper())
+                            active_docs.add(normalize_statute_code(str(d["document_number"])))
         except Exception:
             pass
 
@@ -361,7 +370,7 @@ def lint_file_currency(
                 if is_transitional_context(sentence, text):
                     continue
 
-                matched_statutes_on_line.add(matched_str.upper())
+                matched_statutes_on_line.add(normalize_statute_code(matched_str))
                 findings.append(
                     {
                         "file": str(file_path),
@@ -377,10 +386,11 @@ def lint_file_currency(
 
         # 2. Check for generic statutory references (Two-tier severity: WARNING if unverified)
         for gen_match in GENERIC_STATUTE_REGEX.finditer(text):
-            gen_str = gen_match.group(1).upper()
-            if any(gen_str in obs for obs in matched_statutes_on_line):
+            gen_str = gen_match.group(1)
+            norm_gen = normalize_statute_code(gen_str)
+            if any(norm_gen in obs for obs in matched_statutes_on_line):
                 continue
-            if gen_str in active_docs:
+            if norm_gen in active_docs:
                 continue
 
             sentence = get_sentence_context(text, gen_match.start(), gen_match.end())
@@ -533,13 +543,21 @@ def lint_target_path(
                 result["currency_findings"].append(f)
 
     elif target_path.is_dir():
-        scan_exts = supported_currency_exts if check_currency else {".md"}
-        all_candidates = sorted(target_path.rglob("*"))
-        target_files = [
-            p
-            for p in all_candidates
-            if p.is_file() and p.suffix.lower() in scan_exts and not is_ignored_path(p)
-        ]
+        if check_currency:
+            all_candidates = sorted(target_path.rglob("*"))
+            target_files = [
+                p
+                for p in all_candidates
+                if p.is_file()
+                and p.suffix.lower() in supported_currency_exts
+                and not is_ignored_path(p)
+            ]
+        else:
+            target_files = [
+                p
+                for p in sorted(target_path.rglob("*.md"))
+                if p.is_file() and not is_ignored_path(p)
+            ]
 
         result["files_scanned"] = len(target_files)
 

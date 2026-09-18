@@ -165,3 +165,23 @@ def test_directory_scan_ignores_legal_docs(tmp_path: Path) -> None:
     assert res["files_scanned"] == 1  # Only deliverable.md, raw_file skipped!
     assert res["currency_errors"] == 1
     assert res["total_errors"] == 1
+
+
+def test_statute_code_normalization(tmp_path: Path) -> None:
+    """Verify ASCII 'ND-CP' and diacritic 'NĐ-CP' are treated equivalently (normalization)."""
+    doc = tmp_path / "ascii_test.md"
+    doc.write_text(
+        """# Quy định
+- Tham chiếu Nghị định 217/2026/ND-CP hiện hành (không bị cảnh báo unverified).
+- Căn cứ Nghị định 15/2021/ND-CP trong hồ sơ đề xuất kỹ thuật.
+""",
+        encoding="utf-8",
+    )
+
+    findings = lint_file_currency(doc)
+    errors = [f for f in findings if f["severity"] == "ERROR"]
+    warnings = [f for f in findings if f["severity"] == "WARNING"]
+
+    assert len(errors) == 1
+    assert "15/2021/ND-CP" in errors[0]["matched_text"]
+    assert len(warnings) == 0  # 217/2026/ND-CP is recognized as active
