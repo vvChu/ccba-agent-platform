@@ -83,7 +83,8 @@ def test_legal_registry_manager_temp():
 
 
 def test_registry_manager_path_resolution():
+    from ccba_legal.registry import discover_master_registry_path
     manager = LegalRegistryManager()
-    project_root = resolve_project_root()
-    expected_path = project_root / ".md" / "data" / "legal_registry.yaml"
+    cwd_cand = Path.cwd() / ".md" / "data" / "legal_registry.yaml"
+    expected_path = cwd_cand.resolve() if cwd_cand.is_file() else discover_master_registry_path()
     assert manager.registry_path.resolve() == expected_path.resolve()
