@@ -405,6 +405,14 @@ class GitRatchetOptimizer:
             has_guardrail = (
                 "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
             )
+            has_pccc_guardrail = "QCVN 06" in content and (
+                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
+            )
+            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
+            has_academic_bibtex = "BibTeX" in content and "APA" in content
+            has_cars_stems = (
+                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
+            )
 
             parts = []
             if has_xml:
@@ -468,13 +476,8 @@ class GitRatchetOptimizer:
                 else:
                     return "Căn cứ Thông tư 149/2020/TT-BCA..."
 
-            # --- PCCC Domain Redteam Traps ---
-            has_pccc_guardrail = "QCVN 06" in content and (
-                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
-            )
-
             # PCCC Trap 1: 65m height & Bậc II
-            if "65m" in prompt and "Bậc II" in prompt:
+            elif "65m" in prompt and "Bậc II" in prompt:
                 if has_pccc_guardrail:
                     return (
                         "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
@@ -532,13 +535,7 @@ class GitRatchetOptimizer:
                     )
 
             # --- Academic Writing Domain Tasks ---
-            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
-            has_academic_bibtex = "BibTeX" in content and "APA" in content
-            has_cars_stems = (
-                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
-            )
-
-            if "CARS" in prompt or "Introduction" in prompt:
+            elif "CARS" in prompt or "Introduction" in prompt:
                 if has_cars_stems or has_academic_grounding:
                     parts.append(
                         "Biên soạn phần Introduction theo mô hình CARS (John Swales, 1990):\n"
@@ -594,23 +591,15 @@ class GitRatchetOptimizer:
             elif any(
                 k.lower() in prompt.lower()
                 for k in [
-                    "phân loại",
-                    "phân biệt",
-                    "phân định",
-                    "chuẩn hóa",
-                    "thiết lập",
-                    "xác định",
                     "uniclass",
                     "iso 19650",
+                    "iso 12006",
+                    "iso 21511",
                     "ifc",
-                    "bảng",
-                    "không gian",
+                    "bim",
                     "cấu kiện",
-                    "hệ thống",
-                    "thực thể",
                     "hộp kỹ thuật",
                     "dam d1",
-                    "bóc tách",
                     "boq",
                     "đoạn đường cong",
                     "khoang đệm",
@@ -728,7 +717,7 @@ class GitRatchetOptimizer:
                 )
             elif has_legal_grounding:
                 parts.append(
-                    "Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
+                    "Theo quy định tại Luật Xây dựng năm 2025 (Luật số 135/2025/QH15), Nghị định 105/2025/NĐ-CP và hướng dẫn của Cơ quan chuyên môn về xây dựng, yêu cầu được thực thi theo Điều khoản tương ứng."
                 )
             elif item.golden_answer is not None:
                 return (
@@ -801,14 +790,15 @@ class GitRatchetOptimizer:
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
                 ),
             ]
-        elif any(k in sname for k in ["bim", "uniclass", "classification"]):
+        elif any(k in sname for k in ["bim", "uniclass", "classification", "risk", "rase", "governance"]):
             strategies = [
                 (
                     "BIM Classification Rules & ISO Alignment",
                     "\n\n## 4. Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
                     "* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).\n"
                     "* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.\n"
-                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.",
+                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.\n"
+                    "* **Bảo tồn Trí Nhớ Số (Digital Memory):** Đảm bảo tính nhất quán định danh Container và cấu trúc dữ liệu cho mọi BIM Object.",
                 ),
                 (
                     "Digital Memory & Spatial Structure Invariants",
@@ -852,20 +842,20 @@ class GitRatchetOptimizer:
             strategies = [
                 (
                     "QCVN 06:2022/BXD & Map 1 Invariants",
-                    "\n\n## 5. Quy Chuẩn Kỹ Thuật PCCC & Bảng Đối Soát Bậc H.1 (Map 1)\n"
+                    "\n\n## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)\n"
                     "* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).\n"
                     "* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.\n"
                     "* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.",
                 ),
                 (
                     "Fire Compartment & Structural Protection Hard Floor",
-                    "\n\n## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu\n"
+                    "\n\n## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD\n"
                     "* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.\n"
                     "* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.",
                 ),
                 (
                     "PCCC Evacuation & Dead-End Corridor Limits",
-                    "\n\n## 7. Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt\n"
+                    "\n\n## 7. Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD\n"
                     "* **Khoảng cách thoát nạn:** Khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động).\n"
                     "* **Cơ quan thẩm tra:** Phân định rõ thẩm quyền: Công an PC07 thẩm duyệt hệ thống PCCC MEP; Cơ quan chuyên môn về xây dựng thẩm tra kiến trúc và thoát nạn.",
                 ),
@@ -1176,14 +1166,15 @@ class GitRatchetOptimizer:
                     )
                     history.append(trial)
         finally:
-            # Final invariant: verify disk content matches best_content
+            # Final invariant: verify disk content matches best_content (or initial_content in dry-run)
             if self.target_file.exists():
                 try:
+                    final_target = initial_content if self.dry_run_git else best_content
                     current_disk = self.target_file.read_text(encoding="utf-8")
-                    if current_disk != best_content:
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                except Exception:
-                    pass
+                    if current_disk != final_target:
+                        self.git_rollback_target(final_target, has_committed=has_committed)
+                except Exception as e:
+                    logger.error(f"Error restoring disk file: {e}")
 
         return RatchetReport(
             target_file=str(self.target_file),

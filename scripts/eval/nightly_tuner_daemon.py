@@ -123,13 +123,13 @@ class NightlyTunerDaemon:
             return "eval_legal_intel.json"
         if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance", "risk"]):
             return "eval_bigbim_classification.json"
-        if any(k in sname for k in ["pccc", "qc", "audit", "preprocessor"]):
+        if any(k in sname for k in ["pccc", "qc", "audit"]):
             return "eval_pccc_audit.json"
         if any(k in sname for k in ["academic", "khoahoc", "writing"]):
             return "eval_academic_writing.json"
         if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
             return "eval_copywriting.json"
-        if any(k in sname for k in ["teamwork", "orchestrat", "platform-loader", "handoff", "issue-tree"]):
+        if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
             return "eval_agent_orchestration.json"
 
         return "eval_general_domain.json"
@@ -151,7 +151,7 @@ class NightlyTunerDaemon:
             "ccba-legal-ingest": "eval_legal_intel.json",
             "bigbim-vbpl-digest": "eval_legal_intel.json",
             "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
-            "ccba-ai-qc": "eval_pccc_audit.json",
+            "ccba-ai-qc": "eval_pccc_audit_redteam.json",
         }
 
         discovered: list[dict[str, Any]] = []
