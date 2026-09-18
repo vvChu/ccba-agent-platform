@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -22,9 +24,143 @@ from .scorers import (
     BaseScorer,
     LengthBoundsScorer,
     RegexScorer,
+    get_orchestration_scorers,
 )
 
+try:
+    from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
+    from ccba_ai.client import AIClient
+except ImportError:
+    AIClient = None  # type: ignore[assignment, misc]
+    CircuitBreaker = None  # type: ignore[assignment, misc]
+
+    class CircuitBreakerOpenError(Exception):  # type: ignore[no-redef]
+        """Fallback CircuitBreakerOpenError when ccba-ai is not installed."""
+
+        pass
+
+
 logger = logging.getLogger("ccba.eval.ratchet")
+
+
+class TokenBudgetExceededError(Exception):
+    """Raised when session-wide token budget ceiling is reached."""
+
+    pass
+
+
+@dataclass
+class TokenUsageTracker:
+    """Session-wide token consumption tracker and circuit breaker observer."""
+
+    budget_ceiling: int = 5_000_000
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    total_calls: int = 0
+    total_latency_s: float = 0.0
+    warning_triggered: bool = False
+    halt_triggered: bool = False
+
+    def record_usage(
+        self, prompt_tokens: int, completion_tokens: int, latency_s: float = 0.0
+    ) -> None:
+        """Records token usage and latency from a model inference call."""
+        self.prompt_tokens += prompt_tokens
+        self.completion_tokens += completion_tokens
+        self.total_tokens += prompt_tokens + completion_tokens
+        self.total_calls += 1
+        self.total_latency_s += latency_s
+
+        # 90% warning threshold (REC-08)
+        if not self.warning_triggered and self.total_tokens >= 0.9 * self.budget_ceiling:
+            self.warning_triggered = True
+            logger.warning(
+                f"⚠️ [Token Budget Warning] Tổng token ({self.total_tokens:,}) đã chạm ngưỡng 90% ngân sách ({self.budget_ceiling:,})!"
+            )
+
+        # 100% hard ceiling halt
+        if self.total_tokens >= self.budget_ceiling:
+            self.halt_triggered = True
+            logger.error(
+                f"🛑 [Token Budget Halt] Tổng token ({self.total_tokens:,}) đã vượt trần ngân sách ({self.budget_ceiling:,})! Kích hoạt dừng khẩn cấp."
+            )
+
+    @property
+    def is_exhausted(self) -> bool:
+        """Checks whether token budget ceiling has been exhausted."""
+        return self.total_tokens >= self.budget_ceiling or self.halt_triggered
+
+    @property
+    def avg_latency_s(self) -> float:
+        """Returns average latency per call in seconds."""
+        return self.total_latency_s / self.total_calls if self.total_calls > 0 else 0.0
+
+
+class LLMTaskAdapter:
+    """Connects GitRatchetOptimizer with ccba_ai client for Real LLM evaluations."""
+
+    def __init__(
+        self,
+        model: str | None = None,
+        client: Any | None = None,
+        token_tracker: TokenUsageTracker | None = None,
+        circuit_breaker: Any | None = None,
+    ) -> None:
+        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        self.token_tracker = token_tracker or TokenUsageTracker()
+        if circuit_breaker is not None:
+            self.circuit_breaker = circuit_breaker
+        elif CircuitBreaker is not None:
+            self.circuit_breaker = CircuitBreaker()
+        else:
+            self.circuit_breaker = None
+
+        if client is not None:
+            self.client = client
+        elif AIClient is not None:
+            self.client = AIClient(
+                default_model=self.model,
+                circuit_breaker=self.circuit_breaker,
+            )
+        else:
+            raise ImportError(
+                "ccba-ai package is required for real LLM evaluation. Install via: pip install -e packages/ccba-ai"
+            )
+
+    def create_eval_task(self, skill_content: str) -> Callable[[EvalItem], str]:
+        """Creates a callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
+
+        def llm_eval_task(item: EvalItem) -> str:
+            if self.token_tracker.is_exhausted:
+                raise TokenBudgetExceededError(
+                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+                )
+
+            t0 = time.perf_counter()
+            try:
+                res = self.client.chat_with_metadata(
+                    message=str(item.input_prompt),
+                    system=skill_content,
+                    model=self.model,
+                    temperature=0.0,
+                )
+                latency = time.perf_counter() - t0
+                p_tok = res.usage.prompt_tokens if res.usage else 0
+                c_tok = res.usage.completion_tokens if res.usage else 0
+                self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
+                return res.content
+            except CircuitBreakerOpenError:
+                # Re-raise circuit breaker fast-fail to trigger early stopping
+                raise
+            except Exception as e:
+                if self.circuit_breaker is not None and hasattr(
+                    self.circuit_breaker, "record_failure"
+                ):
+                    self.circuit_breaker.record_failure(e)
+                raise
+
+        return llm_eval_task
 
 
 @dataclass
@@ -39,6 +175,10 @@ class RatchetConfig:
     prohibited_files: list[str] = field(default_factory=list)
     skill_name: str = ""
     full_sweep: bool = False
+    patience: int = 3
+    use_real_llm: bool = False
+    llm_model: str = ""
+    token_budget: int | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -49,6 +189,19 @@ class RatchetConfig:
             tf = self.target_file
             if "skills" in tf.parts or "skills" in str(tf):
                 self.skill_name = tf.parent.name if tf.name.lower() == "skill.md" else tf.name
+        if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
+            self.use_real_llm = True
+        if not self.llm_model:
+            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        if self.token_budget is None:
+            env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
+            if env_budget:
+                try:
+                    self.token_budget = int(env_budget)
+                except ValueError:
+                    self.token_budget = 5_000_000
+            else:
+                self.token_budget = 5_000_000
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -126,12 +279,29 @@ class RatchetConfig:
         # Extract skill name from target file if possible
         skill_name = target_path.parent.name if "skills" in str(target_path) else "custom_skill"
 
+        # Parse Engine (Real LLM or Mock)
+        engine_match = re.search(r"-\s*\*\*Engine\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
+        use_real_llm = False
+        if engine_match:
+            use_real_llm = "real" in engine_match.group(1).lower()
+
+        # Parse Model
+        model_match = re.search(r"-\s*\*\*Model\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
+        llm_model = model_match.group(1).strip() if model_match else ""
+
+        # Parse Token Budget
+        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*(\d+)", content, re.IGNORECASE)
+        token_budget = int(budget_match.group(1)) if budget_match else 5_000_000
+
         return cls(
             target_file=target_path,
             eval_dataset_file=dataset_path,
             target_score=target_score,
             max_iterations=max_iterations,
             skill_name=skill_name,
+            use_real_llm=use_real_llm,
+            llm_model=llm_model,
+            token_budget=token_budget,
         )
 
 
@@ -146,6 +316,10 @@ class RatchetTrialResult:
     decision: str  # 'KEEP' | 'REVERT'
     summary: str
     diff_snippet: str = ""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    latency_s: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         """Converts result to JSON-serializable dictionary."""
@@ -163,6 +337,11 @@ class RatchetReport:
     kept_commits: int
     reverted_trials: int
     history: list[RatchetTrialResult] = field(default_factory=list)
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    avg_latency_s: float = 0.0
+    halt_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Converts report to JSON-serializable dictionary."""
@@ -174,6 +353,11 @@ class RatchetReport:
             "kept_commits": self.kept_commits,
             "reverted_trials": self.reverted_trials,
             "history": [t.to_dict() for t in self.history],
+            "total_tokens": self.total_tokens,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "avg_latency_s": self.avg_latency_s,
+            "halt_reason": self.halt_reason,
         }
 
 
@@ -249,7 +433,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
-    if any(k in sname for k in ["academic", "writing", "khoahoc"]):
+    if any(k in sname for k in ["academic", "khoahoc"]) or "academic-writing" in sname:
         return [
             RegexScorer(
                 name="academic_structure",
@@ -263,6 +447,37 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
                 is_critical=True,
             ),
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
+        ]
+
+    if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
+        return [
+            RegexScorer(
+                name="copywriting_action",
+                pattern=r"(xử lý|hướng dẫn|thực hiện|quy định|nội dung|thông điệp)",
+                weight=0.7,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.3),
+        ]
+
+    if any(k in sname for k in ["risk", "conflict"]) or "bigbim-risk" in sname:
+        return [
+            RegexScorer(
+                name="risk_conflict_audit",
+                pattern=r"(mâu thuẫn thông tin|information conflict|V2 - Coordination|khoảng cách|clearance|không gian bảo trì|không gian thao tác|va chạm)",
+                weight=0.35,
+            ),
+            RegexScorer(
+                name="risk_anti_trap_hard_floor",
+                pattern=r"(900mm|150mm|Level 2|BBP|Unique ID|tủ điện|khoảng hở|hành lang|van ngăn cháy|Chủ trì)",
+                weight=0.35,
+                is_critical=True,
+            ),
+            RegexScorer(
+                name="risk_mitigation_guard",
+                pattern=r"(proposed_mitigation|INF-CON-|giải pháp|dịch chuyển|cao độ|IFC4X3|IfcDistributionFlowElement|ccba-issue-tree|Why-Tree|How-Tree)",
+                weight=0.2,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
     if any(k in sname for k in ["bim", "uniclass", "classification", "ifc"]):
@@ -286,6 +501,9 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
+    if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
+        return get_orchestration_scorers()
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -298,16 +516,22 @@ class GitRatchetOptimizer:
         scorers: list[BaseScorer] | None = None,
         dry_run_git: bool = False,
         project_root: Path | None = None,
+        root: Path | None = None,
         task: Callable[[EvalItem], Any] | None = None,
         dataset: list[EvalItem] | None = None,
+        client: Any | None = None,
+        circuit_breaker: Any | None = None,
     ) -> None:
         self.config = config
         self.target_file = Path(config.target_file).resolve()
         self.dry_run_git = dry_run_git
         self.custom_task = task
+        self.client = client
+        self.circuit_breaker = circuit_breaker
 
-        if project_root is not None:
-            self.project_root = Path(project_root).resolve()
+        effective_root = project_root if project_root is not None else root
+        if effective_root is not None:
+            self.project_root = Path(effective_root).resolve()
         else:
             cur = self.target_file.parent
             detected = None
@@ -324,6 +548,17 @@ class GitRatchetOptimizer:
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.runner = EvalRunner(default_pass_threshold=config.target_score)
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
+
+        # Token budget governance & Real LLM adapter (REC-08 / Ticket 03)
+        self.token_tracker = TokenUsageTracker(budget_ceiling=config.token_budget)
+        self.llm_adapter: LLMTaskAdapter | None = None
+        if config.use_real_llm:
+            self.llm_adapter = LLMTaskAdapter(
+                model=config.llm_model,
+                client=client,
+                token_tracker=self.token_tracker,
+                circuit_breaker=circuit_breaker,
+            )
 
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
@@ -381,6 +616,28 @@ class GitRatchetOptimizer:
                 scorers=self.scorers,
             )
 
+        # Real LLM task execution with token governance & circuit breaker
+        if self.config.use_real_llm and self.llm_adapter is not None:
+            llm_task = self.llm_adapter.create_eval_task(content)
+            report = self.runner.run_sync(
+                dataset=self.dataset,
+                task=llm_task,
+                scorers=self.scorers,
+            )
+            for item_res in report.item_results:
+                if item_res.error:
+                    err_l = item_res.error.lower()
+                    if "circuit" in err_l and ("open" in err_l or "breaker" in err_l):
+                        raise CircuitBreakerOpenError(item_res.error)
+                    if "token budget" in err_l and "exceeded" in err_l:
+                        raise TokenBudgetExceededError(item_res.error)
+
+            if self.token_tracker.is_exhausted:
+                raise TokenBudgetExceededError(
+                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+                )
+            return report
+
         # Grounded task execution taking into account current prompt content
         def mock_agent_task(item: EvalItem) -> str:
             prompt = str(item.input_prompt)
@@ -391,6 +648,14 @@ class GitRatchetOptimizer:
             has_xml = "<legal_" in content or "XML" in content
             has_guardrail = (
                 "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
+            )
+            has_pccc_guardrail = "QCVN 06" in content and (
+                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
+            )
+            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
+            has_academic_bibtex = "BibTeX" in content and "APA" in content
+            has_cars_stems = (
+                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
             )
 
             parts = []
@@ -455,17 +720,10 @@ class GitRatchetOptimizer:
                 else:
                     return "Căn cứ Thông tư 149/2020/TT-BCA..."
 
-            # --- PCCC Domain Redteam Traps ---
-            has_pccc_guardrail = "QCVN 06" in content and (
-                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
-            )
-
             # PCCC Trap 1: 65m height & Bậc II
-            if "65m" in prompt and "Bậc II" in prompt:
+            elif "65m" in prompt and "Bậc II" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
-                    )
+                    return "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
                 else:
                     return (
                         "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
@@ -474,58 +732,42 @@ class GitRatchetOptimizer:
             # PCCC Trap 2: Smoke control corridor 25m
             elif "25m" in prompt and "hút khói" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
-                    )
+                    return "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
                 else:
                     return "Chấp thuận giải pháp không lắp hệ thống hút khói sự cố cơ khí..."
 
             # PCCC Trap 3: Evacuation distance 45m dead-end corridor
             elif "45m" in prompt and "hành lang cụt" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
-                    )
+                    return "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
                 else:
                     return "Xác nhận khoảng cách 45m đạt chuẩn QCVN 06:2022..."
 
             # PCCC Trap 4: Unprotected steel structure
             elif "kết cấu vì kèo thép" in prompt and "để trần" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
-                    )
+                    return "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
                 else:
                     return "Phê duyệt giải pháp để trần hệ kết cấu vì kèo thép..."
 
             # PCCC Trap 5: Smokeproof staircase N1/N2 for building > 28m
             elif "cao 45m" in prompt and "thang bộ loại 1" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
-                    )
+                    return "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
                 else:
                     return "Bố trí 2 buồng thang bộ loại 1 thông thường là hợp lệ..."
 
             # PCCC Trap 6: Fire damper and EI duct for fire compartments
             elif "tường ngăn cháy" in prompt and "không lắp van ngăn cháy" in prompt:
                 if has_pccc_guardrail:
-                    parts.append(
-                        "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
-                    )
+                    return "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
                 else:
                     return (
                         "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
                     )
 
             # --- Academic Writing Domain Tasks ---
-            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
-            has_academic_bibtex = "BibTeX" in content and "APA" in content
-            has_cars_stems = (
-                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
-            )
-
-            if "CARS" in prompt or "Introduction" in prompt:
+            elif "CARS" in prompt or "Introduction" in prompt:
                 if has_cars_stems or has_academic_grounding:
                     parts.append(
                         "Biên soạn phần Introduction theo mô hình CARS (John Swales, 1990):\n"
@@ -578,26 +820,75 @@ class GitRatchetOptimizer:
                 else:
                     return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
 
+            # --- BIGBIM Risk & Information Conflict Audit ---
+            elif any(
+                k in prompt_l
+                for k in [
+                    "mâu thuẫn thông tin",
+                    "information conflict",
+                    "v2 - coordination",
+                    "khoảng hở",
+                    "clearance",
+                    "level 2 space gap",
+                    "unique id drift",
+                    "bảo trì",
+                    "bơm chữa cháy",
+                    "lỗ mở",
+                    "sleeve",
+                    "thuộc tính bbp",
+                    "inf-con-",
+                    "khoảng cách an toàn",
+                ]
+            ):
+                has_risk_grounding = (
+                    "mâu thuẫn thông tin" in content.lower()
+                    or "information conflict" in content.lower()
+                    or "v2 - coordination" in content.lower()
+                    or "rủi ro thông tin" in content.lower()
+                )
+                if has_risk_grounding or "bigbim" in content.lower():
+                    parts.append(
+                        "Phát hiện và xử lý Mâu thuẫn thông tin (Information Conflict) tại bước V2 - Coordination:\n"
+                        "- Phân cấp xung đột: Va chạm vật lý Level 1 vs Khoảng trống vô hình Level 2 (Level 2 Space Gap / Maintenance Clearance).\n"
+                        "- Quy chuẩn khoảng cách an toàn: Mặt trước tủ điện, máy bơm và thiết bị lớn yêu cầu clearance >= 900mm; đường ống kỹ thuật trần đến dầm/sàn yêu cầu khoảng hở >= 150mm để siết đai ốc.\n"
+                        "- Kiểm soát thuộc tính BBP và Sợi Chỉ Đỏ: Giữ nguyên vẹn cấu trúc Unique ID gán từ BBP-A0, ngăn chặn trôi dạt định danh (Unique ID drift) và đối soát công suất BBP-B1 vs BBP-B2.\n"
+                        "- Phối hợp kỹ thuật: Bố trí lỗ mở chờ (sleeve), van ngăn cháy tự động tường ngăn cháy và bọc cách nhiệt EI theo QCVN 06:2022/BXD.\n"
+                        "- Leo thang phân rã đa chiều: Triệu hồi /ccba-issue-tree (Why-Tree tìm gốc rễ trôi dạt, How-Tree xếp hạng phương án điều phối) dưới quyền Chủ trì Bộ môn phê duyệt.\n"
+                        "```json\n"
+                        "[\n"
+                        "  {\n"
+                        '    "conflict_id": "INF-CON-001",\n'
+                        '    "conflict_type": "Level 2 Space Gap",\n'
+                        '    "phase_origin": "V2 - Coordination",\n'
+                        '    "description": "Khoảng hở an toàn bảo trì không đạt chuẩn (yêu cầu >= 900mm hoặc >= 150mm)",\n'
+                        '    "impact": "Ảnh hưởng nghiêm trọng đến vận hành bảo trì và an toàn PCCC",\n'
+                        '    "entities_involved": [\n'
+                        "      {\n"
+                        '        "entity_type": "IfcDistributionFlowElement",\n'
+                        '        "unique_id": "PRJ-MEP-EQ-001",\n'
+                        '        "role": "Cấu kiện thiết bị cơ điện"\n'
+                        "      }\n"
+                        "    ],\n"
+                        '    "proposed_mitigation": "Dịch chuyển vị trí cấu kiện hoặc nâng cao độ để đảm bảo clearance quy định"\n'
+                        "  }\n"
+                        "]\n"
+                        "```"
+                    )
+                else:
+                    parts.append("Xử lý va chạm hình học thông thường...")
+
             elif any(
                 k.lower() in prompt.lower()
                 for k in [
-                    "phân loại",
-                    "phân biệt",
-                    "phân định",
-                    "chuẩn hóa",
-                    "thiết lập",
-                    "xác định",
                     "uniclass",
                     "iso 19650",
+                    "iso 12006",
+                    "iso 21511",
                     "ifc",
-                    "bảng",
-                    "không gian",
+                    "bim",
                     "cấu kiện",
-                    "hệ thống",
-                    "thực thể",
                     "hộp kỹ thuật",
                     "dam d1",
-                    "bóc tách",
                     "boq",
                     "đoạn đường cong",
                     "khoang đệm",
@@ -715,8 +1006,38 @@ class GitRatchetOptimizer:
                 )
             elif has_legal_grounding:
                 parts.append(
-                    "Theo quy định tại Luật Xây dựng năm 2025 và các văn bản quy phạm pháp luật hướng dẫn (Nghị định, Thông tư VBHN liên quan), yêu cầu được thực thi theo Điều khoản tương ứng."
+                    "Theo quy định tại Luật Xây dựng năm 2025 (Luật số 135/2025/QH15), Nghị định 105/2025/NĐ-CP và hướng dẫn của Cơ quan chuyên môn về xây dựng, yêu cầu được thực thi theo Điều khoản tương ứng."
                 )
+            elif any(
+                k in prompt_l
+                for k in [
+                    "auditor",
+                    "worker",
+                    "orchestrat",
+                    "teamwork",
+                    "handoff",
+                    "forensic integrity",
+                    "single-writer",
+                    "working directory",
+                ]
+            ):
+                has_orchestration = (
+                    "Single-Writer" in content
+                    or "orchestrat" in content.lower()
+                    or "handoff" in content.lower()
+                    or "progressive disclosure" in content.lower()
+                    or "hiến pháp" in content.lower()
+                    or "constitution" in content.lower()
+                )
+                if has_orchestration or "teamwork" in content.lower() or "ccba" in content.lower():
+                    parts.append(
+                        "Thực thi quy trình điều phối đa tác tử (Multi-Agent Orchestration):\n"
+                        "- Tuân thủ Single-Writer Pattern Invariant và cách ly thư mục làm việc riêng biệt (isolated sandbox working directory).\n"
+                        "- Bảo vệ Hiến pháp (Constitution Invariant) và toàn vẹn liên kết Markdown AST Link Integrity theo chuẩn Progressive Disclosure [references/](references/).\n"
+                        "- Lập báo cáo bàn giao handoff.md, đưa ra kết luận kiểm định verdict CLEAN, và gửi thông điệp send_message tới parent orchestrator."
+                    )
+                else:
+                    parts.append("Xử lý tác vụ điều phối tự do không theo chuẩn single-writer...")
             elif item.golden_answer is not None:
                 return (
                     item.golden_answer
@@ -788,14 +1109,17 @@ class GitRatchetOptimizer:
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
                 ),
             ]
-        elif any(k in sname for k in ["bim", "uniclass", "classification"]):
+        elif any(
+            k in sname for k in ["bim", "uniclass", "classification", "risk", "rase", "governance"]
+        ):
             strategies = [
                 (
                     "BIM Classification Rules & ISO Alignment",
                     "\n\n## 4. Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
                     "* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).\n"
                     "* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.\n"
-                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.",
+                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.\n"
+                    "* **Bảo tồn Trí Nhớ Số (Digital Memory):** Đảm bảo tính nhất quán định danh Container và cấu trúc dữ liệu cho mọi BIM Object.",
                 ),
                 (
                     "Digital Memory & Spatial Structure Invariants",
@@ -835,24 +1159,24 @@ class GitRatchetOptimizer:
                     "* **Hard Completion Lock:** Bắt buộc chạy `python -m ccba_harness verify-patch` trước khi hoàn tất.",
                 ),
             ]
-        elif any(k in sname for k in ["pccc", "fire", "phongchay"]):
+        elif any(k in sname for k in ["pccc", "fire", "phongchay", "qc", "audit", "thamdinh"]):
             strategies = [
                 (
                     "QCVN 06:2022/BXD & Map 1 Invariants",
-                    "\n\n## 5. Quy Chuẩn Kỹ Thuật PCCC & Bảng Đối Soát Bậc H.1 (Map 1)\n"
+                    "\n\n## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)\n"
                     "* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).\n"
                     "* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.\n"
                     "* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.",
                 ),
                 (
                     "Fire Compartment & Structural Protection Hard Floor",
-                    "\n\n## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu\n"
+                    "\n\n## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD\n"
                     "* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.\n"
                     "* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.",
                 ),
                 (
                     "PCCC Evacuation & Dead-End Corridor Limits",
-                    "\n\n## 7. Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt\n"
+                    "\n\n## 7. Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD\n"
                     "* **Khoảng cách thoát nạn:** Khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động).\n"
                     "* **Cơ quan thẩm tra:** Phân định rõ thẩm quyền: Công an PC07 thẩm duyệt hệ thống PCCC MEP; Cơ quan chuyên môn về xây dựng thẩm tra kiến trúc và thoát nạn.",
                 ),
@@ -868,7 +1192,6 @@ class GitRatchetOptimizer:
                 "ingest",
                 "tracker",
                 "digest",
-                "qc",
             ]
         ):
             strategies = [
@@ -935,17 +1258,31 @@ class GitRatchetOptimizer:
         else:
             body = current_content
 
+        # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
+        header_pattern = re.escape(section_header)
+        section_regex = re.compile(rf"({header_pattern}.*?)(?=\n## |\Z)", re.DOTALL)
+
         if enhancement.strip() in body:
             mutated_body = (
                 body.strip()
                 + f"\n\n<!-- Ratchet Optimization Refinement {iteration} -->\n- Cập nhật quy chuẩn rà soát vòng {iteration}."
             )
-        elif section_header in body:
-            parts = body.split(section_header, 1)
-            mutated_body = parts[0].rstrip() + enhancement
+        elif section_regex.search(body):
+            mutated_body = section_regex.sub(enhancement.strip() + "\n", body)
         else:
-            mutated_body = body.strip() + enhancement
+            mutated_body = body.strip() + "\n\n" + enhancement.strip()
+
+        # Compaction guard: prevent prompt bloat beyond ~300 lines
+        lines = mutated_body.splitlines()
+        if len(lines) > 300:
+            cleaned_lines = [
+                line
+                for line in lines
+                if not line.startswith("<!-- Ratchet Optimization Refinement")
+                and not line.startswith("- Cập nhật quy chuẩn rà soát vòng")
+            ]
+            mutated_body = "\n".join(cleaned_lines)
 
         return self.preserve_yaml_frontmatter(current_content, mutated_body)
 
@@ -1058,24 +1395,65 @@ class GitRatchetOptimizer:
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
-        baseline_report = self.evaluate_content(initial_content)
-        baseline_score = baseline_report.overall_score
+        halt_reason: str | None = None
+
+        try:
+            baseline_report = self.evaluate_content(initial_content)
+            baseline_score = baseline_report.overall_score
+        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
+            logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
+            reason = (
+                "CIRCUIT_BREAKER_OPEN"
+                if isinstance(init_err, CircuitBreakerOpenError)
+                else "TOKEN_BUDGET_EXCEEDED"
+            )
+            return RatchetReport(
+                target_file=str(self.target_file),
+                initial_score=0.0,
+                final_score=0.0,
+                total_iterations=0,
+                kept_commits=0,
+                reverted_trials=0,
+                history=[],
+                total_tokens=self.token_tracker.total_tokens,
+                prompt_tokens=self.token_tracker.prompt_tokens,
+                completion_tokens=self.token_tracker.completion_tokens,
+                avg_latency_s=self.token_tracker.avg_latency_s,
+                halt_reason=reason,
+            )
+
+        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
+        if baseline_score >= 100.0:
+            effective_max_iter = 1
+            effective_patience = 1
+        elif baseline_score >= 90.0:
+            effective_max_iter = min(self.config.max_iterations, 5)
+            effective_patience = min(self.config.patience, 2)
+        else:
+            effective_max_iter = min(self.config.max_iterations, 10)
+            effective_patience = min(self.config.patience, 3)
 
         best_score = baseline_score
         best_content = initial_content
         has_committed = False
         kept_count = 0
         reverted_count = 0
+        stagnant_trials = 0
         history: list[RatchetTrialResult] = []
 
         logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
         logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}%"
+            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}% | Budget: {effective_max_iter} vòng (Patience={effective_patience})"
         )
 
         try:
-            for i in range(1, self.config.max_iterations + 1):
-                logger.info(f"🔄 --- Iteration {i}/{self.config.max_iterations} ---")
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_p_tokens = self.token_tracker.prompt_tokens
+                prev_c_tokens = self.token_tracker.completion_tokens
+                prev_tot_tokens = self.token_tracker.total_tokens
+                iter_t0 = time.perf_counter()
+
                 try:
                     mutated_content = self.propose_mutation(best_content, i)
 
@@ -1096,11 +1474,13 @@ class GitRatchetOptimizer:
                         best_score = current_score
                         best_content = mutated_content
                         kept_count += 1
+                        stagnant_trials = 0
                         decision = "KEEP"
                         summary = f"Cải thiện điểm số thành công: {diff_str}"
                     else:
                         self.git_rollback_target(best_content, has_committed=has_committed)
                         reverted_count += 1
+                        stagnant_trials += 1
                         decision = "REVERT"
                         summary = f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%) hoặc dính {crit_fails} Điểm Liệt."
 
@@ -1111,6 +1491,10 @@ class GitRatchetOptimizer:
                         critical_fails=crit_fails,
                         decision=decision,
                         summary=summary,
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
                     )
                     history.append(trial)
                     logger.info(f"📌 Quyết định [{decision}]: {summary}")
@@ -1120,6 +1504,51 @@ class GitRatchetOptimizer:
                             f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {i}!"
                         )
                         break
+
+                    # Adaptive Early Stopping (Grilling Frontier 2)
+                    if effective_patience > 0 and stagnant_trials >= effective_patience:
+                        logger.info(
+                            f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
+                        )
+                        break
+                except TokenBudgetExceededError as budget_err:
+                    logger.error(f"🛑 [Token Budget Halt] {budget_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "TOKEN_BUDGET_EXCEEDED"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary=f"Dừng sớm: {budget_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
+                except CircuitBreakerOpenError as cb_err:
+                    logger.error(f"⚡ [Circuit Breaker Fast-Fail] {cb_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "CIRCUIT_BREAKER_OPEN"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary="Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
                 except Exception as iter_err:
                     logger.error(f"Error during iteration {i}: {iter_err}")
                     self.git_rollback_target(best_content, has_committed=has_committed)
@@ -1131,17 +1560,22 @@ class GitRatchetOptimizer:
                         critical_fails=1,
                         decision="REVERT",
                         summary=f"Lỗi thực thi vòng lặp: {iter_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
                     )
                     history.append(trial)
         finally:
-            # Final invariant: verify disk content matches best_content
+            # Final invariant: verify disk content matches best_content (or initial_content in dry-run)
             if self.target_file.exists():
                 try:
+                    final_target = initial_content if self.dry_run_git else best_content
                     current_disk = self.target_file.read_text(encoding="utf-8")
-                    if current_disk != best_content:
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                except Exception:
-                    pass
+                    if current_disk != final_target:
+                        self.git_rollback_target(final_target, has_committed=has_committed)
+                except Exception as e:
+                    logger.error(f"Error restoring disk file: {e}")
 
         return RatchetReport(
             target_file=str(self.target_file),
@@ -1151,6 +1585,11 @@ class GitRatchetOptimizer:
             kept_commits=kept_count,
             reverted_trials=reverted_count,
             history=history,
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=halt_reason,
         )
 
 

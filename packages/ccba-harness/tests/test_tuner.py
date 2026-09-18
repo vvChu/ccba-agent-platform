@@ -21,11 +21,15 @@ from ccba_harness.evals.models import EvalItem, EvalItemResult, EvalReport, Scor
 from ccba_harness.evals.runner import run_eval_pipeline
 from ccba_harness.evals.scorers import RegexScorer
 from ccba_harness.evals.tuner import (
+    CircuitBreakerOpenError,
     GitRatchetOptimizer,
     GitRatchetTuner,
+    LLMTaskAdapter,
     RatchetConfig,
     RatchetReport,
     RatchetTrialResult,
+    TokenBudgetExceededError,
+    TokenUsageTracker,
     get_default_domain_scorers,
     preserve_yaml_frontmatter,
 )
@@ -811,3 +815,324 @@ def test_preserve_yaml_frontmatter_crlf():
     merged = preserve_yaml_frontmatter(orig, edited)
     assert "\r\n" in merged
     assert merged.startswith("---\r\nname: crlf-skill\r\n---")
+
+
+# =========================================================================
+# 7. Real LLM Adapter, Token Budget Ceiling & Circuit Breaker Tests (Ticket 03)
+# =========================================================================
+
+
+def test_token_usage_tracker_accumulation_and_thresholds():
+    """Verify TokenUsageTracker correctly accumulates usage and sets warning / halt flags."""
+    tracker = TokenUsageTracker(budget_ceiling=1000)
+
+    # 1. Initial state
+    assert tracker.total_tokens == 0
+    assert tracker.is_exhausted is False
+    assert tracker.warning_triggered is False
+    assert tracker.halt_triggered is False
+
+    # 2. Record below 90%
+    tracker.record_usage(prompt_tokens=400, completion_tokens=400, latency_s=1.0)
+    assert tracker.total_tokens == 800
+    assert tracker.warning_triggered is False
+    assert tracker.is_exhausted is False
+
+    # 3. Reach 90% (900 tokens) -> Warning triggered
+    tracker.record_usage(prompt_tokens=50, completion_tokens=50, latency_s=0.5)
+    assert tracker.total_tokens == 900
+    assert tracker.warning_triggered is True
+    assert tracker.halt_triggered is False
+    assert tracker.is_exhausted is False
+
+    # 4. Reach 100% (1000 tokens) -> Hard ceiling halt triggered
+    tracker.record_usage(prompt_tokens=60, completion_tokens=50, latency_s=0.5)
+    assert tracker.total_tokens == 1010
+    assert tracker.halt_triggered is True
+    assert tracker.is_exhausted is True
+    assert tracker.total_calls == 3
+    assert tracker.avg_latency_s == (1.0 + 0.5 + 0.5) / 3
+
+
+def test_llm_task_adapter_call_and_token_recording():
+    """Verify LLMTaskAdapter executes inference, records tokens, and returns response content."""
+    from types import SimpleNamespace
+
+    mock_client = MagicMock()
+    mock_res = SimpleNamespace(
+        content="Quy định PCCC Bậc I...",
+        usage=SimpleNamespace(prompt_tokens=30, completion_tokens=70, total_tokens=100),
+    )
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    tracker = TokenUsageTracker(budget_ceiling=10000)
+    adapter = LLMTaskAdapter(
+        model="gemini-3.7-flash-high",
+        client=mock_client,
+        token_tracker=tracker,
+    )
+
+    eval_task = adapter.create_eval_task(skill_content="# Skill Content")
+    item = EvalItem(id="case_1", input_prompt="Kiểm tra bậc chịu lửa")
+
+    output = eval_task(item)
+    assert output == "Quy định PCCC Bậc I..."
+    assert tracker.prompt_tokens == 30
+    assert tracker.completion_tokens == 70
+    assert tracker.total_tokens == 100
+    assert tracker.total_calls == 1
+
+    # Verify call parameters
+    mock_client.chat_with_metadata.assert_called_once_with(
+        message="Kiểm tra bậc chịu lửa",
+        system="# Skill Content",
+        model="gemini-3.7-flash-high",
+        temperature=0.0,
+    )
+
+
+def test_llm_task_adapter_budget_exhaustion_raises_error():
+    """Verify LLMTaskAdapter raises TokenBudgetExceededError when tracker is exhausted."""
+    tracker = TokenUsageTracker(budget_ceiling=500)
+    tracker.record_usage(300, 300)  # Total 600 > 500 ceiling
+    assert tracker.is_exhausted is True
+
+    mock_client = MagicMock()
+    adapter = LLMTaskAdapter(client=mock_client, token_tracker=tracker)
+    eval_task = adapter.create_eval_task(skill_content="# Skill")
+    item = EvalItem(id="case_1", input_prompt="Prompt")
+
+    with pytest.raises(TokenBudgetExceededError, match="Token budget ceiling"):
+        eval_task(item)
+    mock_client.chat_with_metadata.assert_not_called()
+
+
+def test_tuner_with_real_llm_adapter_telemetry(tmp_path: Path):
+    """Verify GitRatchetOptimizer in real LLM mode records tokens in report and history."""
+    from types import SimpleNamespace
+
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-llm-skill\n---\n# Test Skill\nCăn cứ Luật Xây dựng...",
+        encoding="utf-8",
+    )
+
+    mock_client = MagicMock()
+    mock_res = SimpleNamespace(
+        content="Nghị định 105/2025/NĐ-CP và Luật Xây dựng quy định...",
+        usage=SimpleNamespace(prompt_tokens=40, completion_tokens=60, total_tokens=100),
+    )
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        llm_model="gemini-3.7-flash-high",
+        max_iterations=2,
+        token_budget=10000,
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        client=mock_client,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    report = opt.run()
+    assert report.total_tokens > 0
+    assert report.prompt_tokens > 0
+    assert report.completion_tokens > 0
+    assert report.avg_latency_s >= 0.0
+    assert len(report.history) > 0
+    assert report.history[0].total_tokens > 0
+
+
+def test_tuner_circuit_breaker_halt(tmp_path: Path):
+    """Verify GitRatchetOptimizer halts gracefully without crashing when CircuitBreaker is open."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-cb-skill\n---\n# Skill Content",
+        encoding="utf-8",
+    )
+
+    mock_client = MagicMock()
+    # Baseline succeeds
+    from types import SimpleNamespace
+
+    mock_res_ok = SimpleNamespace(
+        content="Valid content",
+        usage=SimpleNamespace(prompt_tokens=10, completion_tokens=10, total_tokens=20),
+    )
+    # Iteration fails with CircuitBreakerOpenError
+    mock_client.chat_with_metadata.side_effect = [
+        mock_res_ok,
+        mock_res_ok,
+        CircuitBreakerOpenError("Circuit is OPEN"),
+    ]
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_iterations=5,
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        client=mock_client,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    report = opt.run()
+    assert report.halt_reason == "CIRCUIT_BREAKER_OPEN"
+    assert len(report.history) > 0
+    last_trial = report.history[-1]
+    assert last_trial.decision == "REVERT"
+    assert "Circuit Breaker" in last_trial.summary
+
+
+def test_tuner_token_budget_exceeded_halt(tmp_path: Path):
+    """Verify GitRatchetOptimizer halts when token budget is exceeded."""
+    from types import SimpleNamespace
+
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-budget-skill\n---\n# Skill Content",
+        encoding="utf-8",
+    )
+
+    mock_client = MagicMock()
+    # Returns 100 tokens per call, while budget ceiling is only 50
+    mock_res = SimpleNamespace(
+        content="Content...",
+        usage=SimpleNamespace(prompt_tokens=50, completion_tokens=50, total_tokens=100),
+    )
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_iterations=5,
+        token_budget=250,  # Allows baseline (200 tokens) but exhausts on iteration 1
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        client=mock_client,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    report = opt.run()
+    assert report.halt_reason == "TOKEN_BUDGET_EXCEEDED"
+    assert len(report.history) > 0
+    assert report.history[-1].decision == "REVERT"
+    assert "token budget" in report.history[-1].summary.lower()
+
+
+def test_tuner_token_budget_exceeded_during_baseline(tmp_path: Path):
+    """Verify GitRatchetOptimizer halts gracefully if budget is exceeded during baseline."""
+    from types import SimpleNamespace
+
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-budget-baseline-skill\n---\n# Skill Content",
+        encoding="utf-8",
+    )
+
+    mock_client = MagicMock()
+    mock_res = SimpleNamespace(
+        content="Content...",
+        usage=SimpleNamespace(prompt_tokens=50, completion_tokens=50, total_tokens=100),
+    )
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_iterations=5,
+        token_budget=50,  # Smaller than 1 call (100 tokens)
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        client=mock_client,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    report = opt.run()
+    assert report.halt_reason == "TOKEN_BUDGET_EXCEEDED"
+    assert report.total_iterations == 0
+    assert len(report.history) == 0
+
+
+def test_get_default_domain_scorers_risk_and_orchestration():
+    """Verify get_default_domain_scorers provides specialized scorers for risk and orchestration."""
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    # 1. bigbim-risk
+    risk_scorers = get_default_domain_scorers("bigbim-risk")
+    risk_names = [s.name for s in risk_scorers]
+    assert "risk_conflict_audit" in risk_names
+    assert "risk_anti_trap_hard_floor" in risk_names
+    assert "risk_mitigation_guard" in risk_names
+
+    # 2. orchestration
+    orch_scorers = get_default_domain_scorers("ccba-teamwork")
+    orch_names = [s.name for s in orch_scorers]
+    assert "single_writer_invariant" in orch_names
+    assert "progressive_disclosure_links" in orch_names
+    assert "handoff_protocol" in orch_names
+
+    # 3. platform-loader / ccba-handoff / ccba-issue-tree
+    for name in ["platform-loader", "ccba-handoff", "ccba-issue-tree"]:
+        scs = get_default_domain_scorers(name)
+        assert any(s.name == "single_writer_invariant" for s in scs)
+
+
+def test_bigbim_risk_eval_dataset_and_scorer(tmp_path: Path):
+    """Verify bigbim-risk skill evaluates against eval_bigbim_risk.json with high fidelity score >= 85%."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        """---
+name: bigbim-risk
+triggers:
+- mâu thuẫn thông tin
+- information conflict
+- V2 - Coordination
+---
+# BIGBIM Risk & Information Conflict Audit Skill
+Mâu thuẫn thông tin (Information Conflict) tại bước phối hợp V2 - Coordination:
+- Phân biệt Va chạm vật lý Level 1 và Khoảng hở thao tác Level 2 (Level 2 Space Gap).
+- Khoảng cách an toàn tối thiểu mặt trước tủ điện >= 900mm và ống trần đến dầm/sàn >= 150mm.
+- Bảo vệ thuộc tính BBP và Sợi Chỉ Đỏ, giữ nguyên cấu trúc Unique ID gán từ BBP-A0.
+- Leo thang /ccba-issue-tree (Why-Tree và How-Tree) dưới quyền phê duyệt của Chủ trì Bộ môn.
+""",
+        encoding="utf-8",
+    )
+
+    dataset_file = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / ".agents"
+        / "skills"
+        / "ccba-eval-gate"
+        / "test_cases"
+        / "eval_bigbim_risk.json"
+    )
+    assert dataset_file.exists(), f"Dataset file must exist at {dataset_file}"
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        eval_dataset_file=dataset_file,
+        skill_name="bigbim-risk",
+        max_iterations=1,
+    )
+
+    opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=tmp_path)
+    report = opt.run()
+
+    # Score must achieve >= 85.0% without critical failures
+    assert report.initial_score >= 85.0
+    assert report.final_score >= 85.0
