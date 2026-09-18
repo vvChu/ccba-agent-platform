@@ -128,3 +128,35 @@ def test_lifecycle_resolution_with_replacement(tmp_path: Path) -> None:
     assert life["suggested_replacement"]["id"] == "ND-217-2026"
     assert life["suggested_replacement"]["document_number"] == "217/2026/NĐ-CP"
     assert "217/2026/NĐ-CP" in life["warning"]
+
+
+def test_lifecycle_and_find_doc_nd_cp_equivalence(tmp_path: Path) -> None:
+    """Verify ASCII ND-CP and diacritic NĐ-CP are treated as equivalent in find_doc and get_lifecycle."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """decrees:
+  - id: ND-217-2026
+    document_number: 217/2026/NĐ-CP
+    title: Nghị định về quản lý dự án đầu tư xây dựng
+    short_name: Nghị định 217/2026/NĐ-CP
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+
+    # 1. find_doc with ASCII ND-CP should find diacritic NĐ-CP doc
+    doc_ascii = mgr.find_doc("217/2026/ND-CP")
+    assert doc_ascii is not None
+    assert doc_ascii["id"] == "ND-217-2026"
+
+    # 2. get_lifecycle with ASCII ND-CP should return ACTIVE (never downgraded to UNVERIFIED)
+    life_ascii = mgr.get_lifecycle("217/2026/ND-CP")
+    assert str(life_ascii["status"]).lower() == "active"
+    assert life_ascii["warning"] is None
+
+    # 3. Obsolete query with ASCII ND-CP should resolve to SUPERSEDED
+    life_obs_ascii = mgr.get_lifecycle("15/2021/ND-CP")
+    assert str(life_obs_ascii["status"]).upper() == "SUPERSEDED"
+    assert life_obs_ascii["suggested_replacement"]["id"] == "ND-217-2026"

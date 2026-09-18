@@ -342,7 +342,7 @@ class LegalRegistryManager:
         # Build inverted replacements index
         self._inverted_replacements = {}
         for old_ref, rep_meta in KNOWN_STATUTORY_REPLACEMENTS.items():
-            norm_old = re.sub(r"[\s\-_/.,]+", "", old_ref.lower())
+            norm_old = re.sub(r"[\s\-_/.,]+", "", old_ref.lower()).replace("đ", "d")
             self._inverted_replacements[norm_old] = {
                 "id": rep_meta["id"],
                 "document_number": rep_meta["document_number"],
@@ -374,9 +374,12 @@ class LegalRegistryManager:
                             replaces_list.append(val.strip())
 
                 for rep in replaces_list:
-                    rep_str = str(rep).strip()
+                    if isinstance(rep, dict):
+                        rep_str = str(rep.get("document_number") or rep.get("id") or "").strip()
+                    else:
+                        rep_str = str(rep).strip()
                     if rep_str:
-                        norm_key = re.sub(r"[\s\-_/.,]+", "", rep_str.lower())
+                        norm_key = re.sub(r"[\s\-_/.,]+", "", rep_str.lower()).replace("đ", "d")
                         self._inverted_replacements[norm_key] = doc
 
         return loaded
@@ -485,14 +488,14 @@ class LegalRegistryManager:
     def find_doc_by_id(self, doc_id: str) -> dict[str, Any] | None:
         """Find a document in the registry by its ID (case-insensitive)."""
         data = self.load()
-        norm_id = doc_id.lower().replace("-", "_")
+        norm_id = doc_id.lower().replace("-", "_").replace("đ", "d")
         for _category, docs in data.items():
             if isinstance(docs, list):
                 for doc in docs:
                     if (
                         isinstance(doc, dict)
                         and doc.get("id")
-                        and doc["id"].lower().replace("-", "_") == norm_id
+                        and doc["id"].lower().replace("-", "_").replace("đ", "d") == norm_id
                     ):
                         return doc
         return None
@@ -500,18 +503,22 @@ class LegalRegistryManager:
     def find_doc(self, identifier: str) -> dict[str, Any] | None:
         """Find a document by ID, document_number, or short_name (case and punctuation insensitive)."""
         data = self.load()
-        norm_target = re.sub(r"[\s\-_/.,]+", "", identifier.lower())
+        norm_target = re.sub(r"[\s\-_/.,]+", "", identifier.lower()).replace("đ", "d")
 
         for _category, docs in data.items():
             if isinstance(docs, list):
                 for doc in docs:
                     if not isinstance(doc, dict):
                         continue
-                    doc_id = re.sub(r"[\s\-_/.,]+", "", str(doc.get("id", "")).lower())
+                    doc_id = re.sub(r"[\s\-_/.,]+", "", str(doc.get("id", "")).lower()).replace(
+                        "đ", "d"
+                    )
                     doc_num = re.sub(
                         r"[\s\-_/.,]+", "", str(doc.get("document_number", "")).lower()
-                    )
-                    short_name = re.sub(r"[\s\-_/.,]+", "", str(doc.get("short_name", "")).lower())
+                    ).replace("đ", "d")
+                    short_name = re.sub(
+                        r"[\s\-_/.,]+", "", str(doc.get("short_name", "")).lower()
+                    ).replace("đ", "d")
 
                     if (
                         norm_target in {doc_id, doc_num, short_name}
@@ -532,7 +539,18 @@ class LegalRegistryManager:
         """
         doc = self.find_doc(identifier)
         if not doc:
-            norm_id = re.sub(r"[\s\-_/.,]+", "", identifier.lower())
+            # Fallback retry with alternate ND-CP / NĐ-CP variant if diacritic normalization missed
+            alt_identifier: str | None = None
+            if "nd-cp" in identifier.lower() or "nd_cp" in identifier.lower():
+                alt_identifier = re.sub(r"(?i)nd[-_]cp", "NĐ-CP", identifier)
+            elif "nđ-cp" in identifier.lower() or "nđ_cp" in identifier.lower():
+                alt_identifier = re.sub(r"(?i)nđ[-_]cp", "ND-CP", identifier)
+
+            if alt_identifier:
+                doc = self.find_doc(alt_identifier)
+
+        if not doc:
+            norm_id = re.sub(r"[\s\-_/.,]+", "", identifier.lower()).replace("đ", "d")
             if norm_id in self._inverted_replacements:
                 rep_stub = self._inverted_replacements[norm_id]
                 rep_id = str(rep_stub.get("id", rep_stub.get("document_number", "")))
