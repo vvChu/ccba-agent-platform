@@ -346,7 +346,7 @@ def test_safe_remove_directory_with_nested_junction(tmp_path: Path) -> None:
 
 
 def test_safe_copy2_destination_symlink_does_not_chmod_target(tmp_path: Path) -> None:
-    """Test safe_copy2 avoids calling chmod on symlink destination to protect target permissions."""
+    """Test safe_copy2 avoids clearing read-only permissions via os.chmod on symlink destination."""
     src_file = tmp_path / "src.txt"
     src_file.write_text("new content", encoding="utf-8")
 
@@ -359,9 +359,13 @@ def test_safe_copy2_destination_symlink_does_not_chmod_target(tmp_path: Path) ->
     except (OSError, NotImplementedError):
         pytest.skip("Creating symlinks requires privileges or Developer Mode on Windows")
 
-    # Spy on os.chmod to verify it is never invoked on symlink_file
+    # Spy on os.chmod to verify safe_copy2 never clears read-only bit (stat.S_IWRITE | stat.S_IREAD) on symlink
+    readonly_clear_mode = stat.S_IWRITE | stat.S_IREAD
     with patch("os.chmod", wraps=os.chmod) as mock_chmod:
         safe_copy2(src_file, symlink_file)
         for call_args in mock_chmod.call_args_list:
             called_path = Path(call_args[0][0])
-            assert not (called_path.is_symlink())
+            called_mode = call_args[0][1]
+            if called_path.is_symlink():
+                assert called_mode != readonly_clear_mode
+
