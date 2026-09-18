@@ -499,3 +499,118 @@ Also output either 'correct' (if score >= 3) or 'incorrect' (if score < 3) insid
                 reasoning=f"LLM judge evaluation failed: {e}",
                 is_critical_fail=self.is_critical,
             )
+
+
+class SingleWriterInvariantScorer(BaseScorer):
+    """Validates that agent coordination outputs respect Single-Writer invariants and isolated sandboxes."""
+
+    def __init__(
+        self,
+        name: str = "single_writer_invariant",
+        weight: float = 1.0,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(single-writer|isolated|sandbox|working directory|thư mục làm việc|riêng biệt|độc lập|mutex|flock|\.agents/|append-only)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Single-Writer invariant verified (isolated sandbox / separate directory / lock)"
+                if matched
+                else "Single-Writer violation: missing working directory isolation, sandbox, or mutex guardrail"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class ProgressiveDisclosureScorer(BaseScorer):
+    """Validates Markdown link integrity and Level 1/2/3 Progressive Disclosure architecture."""
+
+    def __init__(
+        self,
+        name: str = "progressive_disclosure_links",
+        weight: float = 1.0,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+        self.disclosure_pattern = re.compile(
+            r"(progressive disclosure|bộc lộ dần|references/|tham chiếu|level [123]|pha [123]|chỉ mục)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        has_links = bool(self.link_pattern.search(out_str))
+        has_disclosure = bool(self.disclosure_pattern.search(out_str))
+        valid = has_links or has_disclosure
+        score = 1.0 if valid else 0.0
+        is_crit_fail = self.is_critical and not valid
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output={"has_links": has_links, "has_disclosure": has_disclosure},
+            reasoning=(
+                "Progressive disclosure structure or valid markdown links detected"
+                if valid
+                else "Missing progressive disclosure cues or valid markdown reference links"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class HandoffProtocolScorer(BaseScorer):
+    """Validates agent handoff protocol, parent notification, RACI alignment, and completion verdicts."""
+
+    def __init__(
+        self,
+        name: str = "handoff_protocol",
+        weight: float = 1.0,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.protocol_pattern = re.compile(
+            r"(handoff|send_message|parent|verdict|kết luận|bàn giao|raci|chủ trì|bộ môn|clean|violation|hoàn tất|báo cáo)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.protocol_pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Handoff protocol verified (send_message / handoff report / verdict / role boundary)"
+                if matched
+                else "Missing handoff protocol, completion verdict, or parent notification pattern"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_orchestration_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for multi-agent orchestration skills."""
+    return [
+        SingleWriterInvariantScorer(weight=0.35, is_critical=True),
+        ProgressiveDisclosureScorer(weight=0.35),
+        HandoffProtocolScorer(weight=0.30),
+    ]
+
