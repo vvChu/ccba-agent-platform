@@ -109,7 +109,12 @@ class LLMTaskAdapter:
     ) -> None:
         self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
         self.token_tracker = token_tracker or TokenUsageTracker()
-        self.circuit_breaker = circuit_breaker
+        if circuit_breaker is not None:
+            self.circuit_breaker = circuit_breaker
+        elif CircuitBreaker is not None:
+            self.circuit_breaker = CircuitBreaker()
+        else:
+            self.circuit_breaker = None
 
         if client is not None:
             self.client = client
@@ -173,7 +178,7 @@ class RatchetConfig:
     patience: int = 3
     use_real_llm: bool = False
     llm_model: str = ""
-    token_budget: int = 5_000_000
+    token_budget: int | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -188,11 +193,15 @@ class RatchetConfig:
             self.use_real_llm = True
         if not self.llm_model:
             self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
-        if os.getenv("CCBA_TUNER_TOKEN_BUDGET"):
-            try:
-                self.token_budget = int(os.getenv("CCBA_TUNER_TOKEN_BUDGET", "5000000"))
-            except ValueError:
-                pass
+        if self.token_budget is None:
+            env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
+            if env_budget:
+                try:
+                    self.token_budget = int(env_budget)
+                except ValueError:
+                    self.token_budget = 5_000_000
+            else:
+                self.token_budget = 5_000_000
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -1271,6 +1280,7 @@ class GitRatchetOptimizer:
                 line
                 for line in lines
                 if not line.startswith("<!-- Ratchet Optimization Refinement")
+                and not line.startswith("- Cập nhật quy chuẩn rà soát vòng")
             ]
             mutated_body = "\n".join(cleaned_lines)
 

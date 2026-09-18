@@ -165,11 +165,11 @@ if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
     source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
-# Ensure full PYTHONPATH across packages and monorepo root
-export PYTHONPATH="$PROJECT_ROOT/packages/ccba-harness/src:$PROJECT_ROOT/packages/ccba-ai/src:$PROJECT_ROOT:${PYTHONPATH:-}"
-
 # Switch into isolated worktree context
 cd "$WORKTREE_DIR"
+
+# Ensure full PYTHONPATH across packages and isolated worktree root
+export PYTHONPATH="$WORKTREE_DIR/packages/ccba-harness/src:$WORKTREE_DIR/packages/ccba-ai/src:$WORKTREE_DIR:${PYTHONPATH:-}"
 
 # 8. Run Document Auto-Evolution Engine (Audit -> AST Grounding -> Zero-Deletion -> PR)
 echo "📚 [1/2] Running Document Auto-Evolution Engine..."

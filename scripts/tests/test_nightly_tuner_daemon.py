@@ -199,21 +199,54 @@ def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> No
     ]
 
 
-def test_tuner_tiered_budget_and_early_stopping() -> None:
+def test_tuner_tiered_budget_and_early_stopping(tmp_path: Path) -> None:
     """Verify GitRatchetOptimizer sets correct effective budget and early stops."""
-    from ccba_harness.evals.tuner import GitRatchetOptimizer, RatchetConfig
+    from ccba_harness.evals import EvalItem, ExactMatchScorer, GitRatchetOptimizer, RatchetConfig
 
-    # 1. Config with patience
-    cfg = RatchetConfig(
-        target_file=project_root / ".agents" / "skills" / "ccba-academic-writing" / "SKILL.md",
+    dataset = [EvalItem(id="item1", input_prompt="Hello", golden_answer="Pass")]
+    scorers = [ExactMatchScorer()]
+
+    # 1. Test 100% baseline budget clamping to 1 iteration
+    perfect_skill = tmp_path / "perfect_skill.md"
+    perfect_skill.write_text("# Perfect Skill\n", encoding="utf-8")
+    cfg_perfect = RatchetConfig(
+        target_file=perfect_skill,
         max_iterations=10,
         patience=3,
+        target_score=100.0,
     )
-    assert cfg.patience == 3
+    opt_perfect = GitRatchetOptimizer(
+        cfg_perfect,
+        root=tmp_path,
+        dry_run_git=True,
+        dataset=dataset,
+        scorers=scorers,
+        task=lambda item: "Pass",
+    )
+    report_perfect = opt_perfect.run()
+    assert report_perfect.initial_score == 100.0
+    assert report_perfect.total_iterations == 1
 
-    # 2. Optimizer mock run with 100% baseline -> effective max_iter=1, patience=1
-    opt = GitRatchetOptimizer(cfg, root=project_root)
-    assert opt.config.patience == 3
+    # 2. Test early stopping when mutations are stagnant (patience=2)
+    stagnant_skill = tmp_path / "stagnant_skill.md"
+    stagnant_skill.write_text("# Stagnant Skill\n", encoding="utf-8")
+    cfg_stagnant = RatchetConfig(
+        target_file=stagnant_skill,
+        max_iterations=10,
+        patience=2,
+        target_score=100.0,
+    )
+    opt_stagnant = GitRatchetOptimizer(
+        cfg_stagnant,
+        root=tmp_path,
+        dry_run_git=True,
+        dataset=dataset,
+        scorers=scorers,
+        task=lambda item: "Fail",
+    )
+    report_stagnant = opt_stagnant.run()
+    # Should halt after effective_patience (2) iterations instead of running all 10
+    assert report_stagnant.total_iterations == 2
 
 
 def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> None:

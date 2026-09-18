@@ -236,6 +236,7 @@ class NightlyTunerDaemon:
                 max_iterations=self.max_iterations_low,
                 skill_name=skill_name,
                 full_sweep=False,
+                patience=self.early_stopping_patience,
                 use_real_llm=self.use_real_llm,
                 llm_model=self.model,
                 token_budget=remaining_budget,
@@ -411,6 +412,8 @@ class NightlyTunerDaemon:
                 cwd=str(self.root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
             )
             branches = [b.strip().lstrip("* ") for b in res.stdout.splitlines() if b.strip()]
@@ -441,8 +444,10 @@ class NightlyTunerDaemon:
                                 cwd=str(self.root),
                                 capture_output=True,
                                 text=True,
+                                encoding="utf-8",
+                                errors="replace",
                             )
-                            if not diff_res.stdout.strip():
+                            if diff_res.returncode == 0 and not diff_res.stdout.strip():
                                 subprocess.run(
                                     ["git", "branch", "-D", b],
                                     cwd=str(self.root),
