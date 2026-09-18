@@ -148,3 +148,5 @@ secret_credential.*
 specs/modules/
 .md/telemetry/
 
+# Git Worktrees (Isolated Cron Runners)
+.worktrees/

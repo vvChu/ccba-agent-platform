@@ -125,3 +125,188 @@ def test_daemon_dry_run_execution() -> None:
     assert isinstance(report, NightlyDaemonReport)
     assert report.total_skills_scanned > 0
     assert len(report.results) == report.total_skills_scanned
+
+
+def test_discover_skills_and_datasets_routing() -> None:
+    """Verify specific skills are routed to their proper domain datasets."""
+    daemon = NightlyTunerDaemon(root=project_root)
+    discovered = daemon.discover_skills_and_datasets()
+    mapping = {d["skill_name"]: d["eval_dataset_file"].name for d in discovered}
+
+    if "ccba-copywriting" in mapping:
+        assert mapping["ccba-copywriting"] == "eval_copywriting.json"
+    if "ccba-ai-qc" in mapping:
+        assert mapping["ccba-ai-qc"] == "eval_pccc_audit_redteam.json"
+    if "bigbim-classification" in mapping:
+        assert mapping["bigbim-classification"] == "eval_bigbim_classification.json"
+    if "bigbim-risk" in mapping:
+        assert mapping["bigbim-risk"] == "eval_bigbim_risk.json"
+    if "ccba-legal-advisor" in mapping:
+        assert mapping["ccba-legal-advisor"] == "eval_legal_intel.json"
+
+
+def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _cleanup_old_empty_branches deletes only branches > 7 days without unique commits."""
+    daemon = NightlyTunerDaemon(root=project_root)
+
+    # Mock git branch output
+    fake_branches = (
+        "  auto-tune/nightly-20200101_000000\n"  # Very old, empty
+        "  auto-tune/nightly-20200102_000000\n"  # Very old, has unique commits
+        "  docs/auto-refactor-20200101_120000\n"  # Very old doc refactor, empty
+        "  auto-tune/nightly-20990101_000000\n"  # Future/recent
+    )
+
+    deleted_branches: list[str] = []
+    remote_deleted_branches: list[str] = []
+
+    def mock_run(cmd, *args, **kwargs):
+        class MockRes:
+            def __init__(self, stdout: str = "", returncode: int = 0):
+                self.stdout = stdout
+                self.returncode = returncode
+
+        if cmd[:3] == ["git", "branch", "--list"]:
+            return MockRes(stdout=fake_branches)
+        elif cmd[:2] == ["git", "cherry"]:
+            branch = cmd[3]
+            # Simulate branches with 20200101 have no unique commits, 20200102 has unique commit
+            if "20200101" in branch:
+                return MockRes(stdout="")
+            else:
+                return MockRes(stdout="+ 1234567 commit msg\n")
+        elif cmd[:3] == ["git", "branch", "-D"]:
+            deleted_branches.append(cmd[3])
+            return MockRes()
+        elif cmd[:4] == ["git", "push", "origin", "--delete"]:
+            remote_deleted_branches.append(cmd[4])
+            return MockRes()
+        return MockRes()
+
+    import subprocess
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    count = daemon._cleanup_old_empty_branches(days=7)
+    assert count == 2
+    assert deleted_branches == [
+        "auto-tune/nightly-20200101_000000",
+        "docs/auto-refactor-20200101_120000",
+    ]
+    assert remote_deleted_branches == [
+        "auto-tune/nightly-20200101_000000",
+        "docs/auto-refactor-20200101_120000",
+    ]
+
+
+def test_tuner_tiered_budget_and_early_stopping(tmp_path: Path) -> None:
+    """Verify GitRatchetOptimizer sets correct effective budget and early stops."""
+    from ccba_harness.evals import EvalItem, ExactMatchScorer, GitRatchetOptimizer, RatchetConfig
+
+    dataset = [EvalItem(id="item1", input_prompt="Hello", golden_answer="Pass")]
+    scorers = [ExactMatchScorer()]
+
+    # 1. Test 100% baseline budget clamping to 1 iteration
+    perfect_skill = tmp_path / "perfect_skill.md"
+    perfect_skill.write_text("# Perfect Skill\n", encoding="utf-8")
+    cfg_perfect = RatchetConfig(
+        target_file=perfect_skill,
+        max_iterations=10,
+        patience=3,
+        target_score=100.0,
+    )
+    opt_perfect = GitRatchetOptimizer(
+        cfg_perfect,
+        root=tmp_path,
+        dry_run_git=True,
+        dataset=dataset,
+        scorers=scorers,
+        task=lambda item: "Pass",
+    )
+    report_perfect = opt_perfect.run()
+    assert report_perfect.initial_score == 100.0
+    assert report_perfect.total_iterations == 1
+
+    # 2. Test early stopping when mutations are stagnant (patience=2)
+    stagnant_skill = tmp_path / "stagnant_skill.md"
+    stagnant_skill.write_text("# Stagnant Skill\n", encoding="utf-8")
+    cfg_stagnant = RatchetConfig(
+        target_file=stagnant_skill,
+        max_iterations=10,
+        patience=2,
+        target_score=100.0,
+    )
+    opt_stagnant = GitRatchetOptimizer(
+        cfg_stagnant,
+        root=tmp_path,
+        dry_run_git=True,
+        dataset=dataset,
+        scorers=scorers,
+        task=lambda item: "Fail",
+    )
+    report_stagnant = opt_stagnant.run()
+    # Should halt after effective_patience (2) iterations instead of running all 10
+    assert report_stagnant.total_iterations == 2
+
+
+def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify daemon initializes real LLM configuration, engine flag, and token budget."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(
+        root=project_root,
+        max_iterations_low=1,
+        use_real_llm=True,
+        token_budget=200_000,
+        model="qwen-local-primary",
+    )
+    assert daemon.use_real_llm is True
+    assert daemon.token_budget == 200_000
+    assert daemon.model == "qwen-local-primary"
+
+    # Mock discover to 1 skill for ultra-fast unit test execution
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "ccba-test-skill",
+                "target_file": project_root
+                / ".agents"
+                / "skills"
+                / "ccba-copywriting"
+                / "SKILL.md",
+                "dataset_file": project_root
+                / "packages"
+                / "ccba-harness"
+                / "evals"
+                / "datasets"
+                / "eval_copywriting.json",
+                "baseline_score": 85.0,
+            }
+        ],
+    )
+
+    def mock_run(self):
+        return RatchetReport(
+            target_file=str(self.config.target_file),
+            initial_score=100.0,
+            final_score=100.0,
+            total_iterations=1,
+            kept_commits=0,
+            reverted_trials=0,
+            history=[],
+            total_tokens=1500,
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+    monkeypatch.setattr("ccba_harness.evals.tuner.GitRatchetOptimizer.run", mock_run)
+
+    # Dry run should reflect REAL_LLM engine flag and aggregate tokens
+    report = daemon.run_nightly_batch(dry_run=True)
+    assert report.engine == "REAL_LLM"
+    assert report.total_skills_scanned == 1
+    assert report.total_tokens == 1500
+    assert report.prompt_tokens == 1000
+    assert report.completion_tokens == 500

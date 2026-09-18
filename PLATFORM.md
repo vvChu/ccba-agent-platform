@@ -80,7 +80,7 @@ Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua S
 Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự động kích hoạt bởi model khi thực hiện tác vụ:
 *   **Bootstrap & Kết nối:** `platform-loader` (bootstrap hệ thống), `ccba-ai-gateway-sdk` (giao tiếp AI Gateway).
 *   **Quy chuẩn & Pipeline:** `ccba-llm-pipeline-patterns` (patterns pipeline), `ccba-file-stability-guard` (phát hiện file sync), `ccba-api-circuit-breaker` (middleware rate limit), `ccba-append-only-logger` (thread-safe logger).
-*   **Bảo mật & Kiểm định:** `ccba-maskara` (tự động quét/redact keys), `ccba-docs-validator` (linter tài liệu), `ccba-eval-gate` (kiểm định chất lượng).
+*   **Bảo mật & Kiểm định:** `ccba-maskara` (tự động quét/redact keys), `ccba-docs-validator` (linter tài liệu), `ccba-eval-gate` (kiểm định chất lượng, test cases domain BIGBIM/Legal/QC/Orchestration), `scripts/cron/run_nightly_tuner.sh` (Nightly Auto-Tuner daemon tối ưu hóa prompt qua Git worktree độc lập).
 *   **Master Skills với Progressive References:** `ccba-markdown-document-processing` (xử lý tài liệu Markdown), `ccba-ai-qc` (thẩm tra thiết kế đa bộ môn).
 *   **Phát hiện rủi ro (BIGBIM):** `bigbim-rase`, `bigbim-governance`, `bigbim-classification`, `bigbim-risk`, `bigbim-vbpl-digest`.
 *   **Thư viện phân tích file:** `ccba-pdf`, `ccba-pptx`, `ccba-docx` (các parser/manipulator định dạng OOXML/PDF).
@@ -91,7 +91,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 | Package | Mô tả | Install |
 |---------|--------|---------|
 | `ccba-ai` | AI Gateway client & SDK (v1.2.0) — Đa mô hình, Drop Params Embedding, Streaming Token Floor & Auto-Timeout Scaling | `pip install -e "packages/ccba-ai"` |
-| `ccba-harness` | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), multi-scorer evaluation engine | `pip install -e "packages/ccba-harness"` |
+| `ccba-harness` | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), multi-scorer evaluation engine (Domain Scorers, Orchestration Scorers, Token Budget Tracker, Real LLM Task Adapter, Auto-Tuner) | `pip install -e "packages/ccba-harness"` |
 | `ccba-legal-intel` | Legal intelligence services, legislative consolidator, OKF v2.4 GoldStandard, Gate 4 & Federated RAG | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
