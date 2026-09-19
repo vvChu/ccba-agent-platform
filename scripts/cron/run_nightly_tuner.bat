@@ -55,7 +55,7 @@ if defined LEGAL_SPOKE_DIR if exist "%LEGAL_SPOKE_DIR%\.md\tools\run_nightly_tel
     pushd "%LEGAL_SPOKE_DIR%"
     set "DRY_RUN_ARG="
     if /i "%~1"=="--dry-run" set "DRY_RUN_ARG=--dry-run"
-    python .md\tools\run_nightly_telemetry.py --cohorts golden %DRY_RUN_ARG%
+    python .md\tools\run_nightly_telemetry.py --cohorts all %DRY_RUN_ARG%
     if errorlevel 1 (
         echo [WARNING] Legal telemetry encountered regression errors.
         python -c "import sys; from pathlib import Path; sys.path.insert(0, r'%~dp0\..\..'); from scripts.eval.telegram_alert import send_telegram_alert; send_telegram_alert('🚨 *[CCBA CRON WARNING] Lỗi Hồi Quy Kiểm Chuẩn Pháp Lý Ban Đêm!*\n• *Spoke:* `ccba-legal-knowledge`\n• *Lỗi:* Telemetry Parity / Master CI thất bại\n• *Chi tiết:* Xem báo cáo `.md/reports/nightly_*.md`', parse_mode='Markdown', mock_fallback=True)" 2>nul

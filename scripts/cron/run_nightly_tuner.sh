@@ -216,10 +216,10 @@ if [ -n "$LEGAL_SPOKE_DIR" ] && [ -f "$LEGAL_SPOKE_DIR/.md/tools/run_nightly_tel
     (
         cd "$LEGAL_SPOKE_DIR"
         if [ -n "$DRY_RUN_FLAG" ]; then
-            echo "   [DRY-RUN] Executing: python3 .md/tools/run_nightly_telemetry.py --cohorts golden --dry-run"
-            python3 .md/tools/run_nightly_telemetry.py --cohorts golden --dry-run
+            echo "   [DRY-RUN] Executing: python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run"
+            python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run
         else
-            python3 .md/tools/run_nightly_telemetry.py --cohorts golden || TELEMETRY_EXIT=$?
+            python3 .md/tools/run_nightly_telemetry.py --cohorts all || TELEMETRY_EXIT=$?
             if [ $TELEMETRY_EXIT -ne 0 ]; then
                 echo "🚨 [TELEMETRY REGRESSION] Legal Parity / Master CI phát hiện lỗi hồi quy (Exit: $TELEMETRY_EXIT)!" >&2
                 python3 -c "
