@@ -4,8 +4,8 @@
 Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Daemon` & `Doc-Auto-Evolution`) vận hành 100% tự chủ, ổn định 24/7 trên máy chủ Spark (:8090), đạt chuẩn **ADR-0023**, **ADR-0043**, **ADR-0058** và **ADR-0059**, bao gồm:
 1. **100% Đánh Giá Chuẩn Xác & Không Điểm Liệt Giả Lập:** Toàn bộ 73 kỹ năng trong catalog được định tuyến đúng bộ đề thi chuyên biệt, triệt tiêu 100% hiện tượng fallthrough luồng điều khiển và conjunctive deadlock (`bigbim-risk`, `ccba-ai-qc`, Legal skills). *(Giai đoạn 1 đã hoàn thành)*.
 2. **Hạ Tầng Git Độc Lập, Khóa Cứng & Tự Dọn Dẹp:** Quản trị vòng đời nhánh Git trơn tru qua Ephemeral Git Worktree, khóa đơn nhiệm `flock`, cách ly giữa các daemons, chặn đứng việc xả nhánh rỗng lên remote và dọn dẹp triệt để nhánh rác mồ côi > 7 ngày. *(Giai đoạn 1 đã hoàn thành)*.
-3. **Mở Pull Request Tự Động 100% (Zero-Swallowed Error & Label Self-Healing):** Cơ chế tự động mở PR không bị lỗi khi thiếu nhãn GitHub, có fallback retry không nhãn, ghi log chi tiết mã lỗi stderr và chuẩn hóa UTF-8 subprocess trên Windows/Linux. *(Giai đoạn 2 - Đang triển khai)*.
-4. **Sẵn Sàng Vận Hành Real LLM Với Token Budget Governance trên Spark (:8090):** Kết nối an toàn với AI Gateway LiteLLM trên máy chủ Spark, kiểm soát trần ngân sách token hàng đêm, circuit breaker ngắt an toàn và đo lường latency/throughput thực tế. *(Giai đoạn 2 - Đang triển khai)*.
+3. **Mở Pull Request Tự Động 100% (Zero-Swallowed Error & Label Self-Healing):** Cơ chế tự động mở PR không bị lỗi khi thiếu nhãn GitHub, có fallback retry không nhãn, ghi log chi tiết mã lỗi stderr và chuẩn hóa UTF-8 subprocess trên Windows/Linux. *(Giai đoạn 2 - Đã hoàn thành)*.
+4. **Sẵn Sàng Vận Hành Real LLM Với Token Budget Governance trên Spark (:8090):** Kết nối an toàn với AI Gateway LiteLLM trên máy chủ Spark, kiểm soát trần ngân sách token hàng đêm, circuit breaker ngắt an toàn và đo lường latency/throughput thực tế. *(Giai đoạn 2 - Đã hoàn thành)*.
 
 ---
 
@@ -28,7 +28,10 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-02 / REC-04..06] Khóa Đơn Nhiệm Flock & Quản Trị Vòng Đời Nhánh Git:** Bổ sung `flock -n 200` tại `/tmp/ccba_nightly_runner.lock`, Empty Push Guard trong `doc_refactor_daemon.py`, cách ly HEAD sạch giữa daemons, mở rộng `_cleanup_old_empty_branches` đối soát `origin/main` và dọn dẹp remote branch rỗng.
 - [x] **[T-03 / REC-08] Cầu Nối Real LLM Adapter, Token Budget Ceiling & Circuit Breaker:** Xây dựng `TokenUsageTracker` và `LLMTaskAdapter` trong `tuner.py`, kết nối `AIClient.chat_with_metadata`, giới hạn trần ngân sách token hàng đêm (mặc định 5M tokens) với fail-safe early halt `TokenBudgetExceededError`, và ngắt an toàn với `CircuitBreakerOpenError`. Chuyển tiếp cấu hình `--use-real-llm`, `--token-budget`, `--model` qua daemon và shell runner.
 - [x] **[T-04 / REC-07] Bộ Đề Thi & Scorer Chuyên Biệt Coordination V2 & Orchestration:** Thiết kế `eval_bigbim_risk.json` (12 câu tình huống Mâu thuẫn thông tin V2, clearance $\ge 900\text{mm}$, $\ge 150\text{mm}$, BBP logic, Unique ID drift); xây dựng bộ `OrchestrationScorers` (`SingleWriterInvariantScorer`, `ProgressiveDisclosureScorer`, `HandoffProtocolScorer`); tích hợp chấm miền tự động trong `get_default_domain_scorers` và định tuyến daemon `bigbim-risk`.
-- [x] **[T-05 / Bugfix-20260919] Vá Lỗi Mở PR Tự Động & Hậu Kiểm Copilot Review:** Chuyển đổi nhãn mặc định sang `needs-triage` / `documentation`, bổ sung fallback retry không kèm nhãn, ghi log chi tiết stderr, chuẩn hóa UTF-8 subprocess và so sánh ngày cho branch age cutoff.
+- [x] **[T-05 / Bugfix-20260919] Vá Lỗi Mở PR Tự Động & Hậu Kiểm Copilot Review:** Chuyển đổi nhãn mặc định sang `needs-triage` / `documentation`, bổ sung fallback retry không kèm nhãn, ghi log chi tiết stderr, chuẩn hóa UTF-8 subprocess và so sánh ngày cho branch age cutoff (Merged qua PR #293).
+- [x] **[T-06 / Auto-Tune-20260919] Tối Ưu Hóa Kỹ Năng Pháp Lý:** Bổ sung Hard Floor Invariant (NĐ 105/2025/NĐ-CP, QCVN 06:2022/BXD SĐ 1:2023), đưa `ccba-legal-ingest` đạt 100.0% (Merged qua PR #294).
+- [x] **[T-07 / Spark-Eval] Khảo Sát Spark LiteLLM Gateway (:8090):** Đánh giá 22 models, chọn `qwen-local-primary` ($0 chi phí, 45.24 tps, không giới hạn rate limit) làm mô hình mặc định cho Nightly Tuner.
+- [x] **[T-08 / CI-Fix] Khắc Phục CI GitHub Pages:** Bổ sung `PYTHONPATH: .` và `sys.path` injection cho kiểm thử tính toàn vẹn tài liệu kỹ năng.
 
 ---
 
@@ -40,9 +43,9 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-03: Cầu Nối Adapter Real LLM, Token Budget Ceiling & Circuit Breaker](tickets/03_real_llm_adapter_and_token_governance.md)** `[Research / Task [AFK]]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-04: Xây Dựng Bộ Đề Thi & Scorer Chuyên Biệt Cho Coordination V2 & Orchestration](tickets/04_specialized_domain_datasets_and_scorers.md)** `[Research [AFK] / Prototype [HITL]]` *(ĐÃ HOÀN THÀNH)*
 
-### Giai Đoạn 2: Vận Hành Thực Chiến & Khắc Phục Lỗi Hệ Thống (Hiện Tại)
-- [x] **[T-05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging](tickets/05_pr_creation_label_fallback_and_copilot_review_resolution.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH - [PR #293](https://github.com/vvChu/ccba-agent-platform/pull/293))*
-- [x] **[T-06: Nghiệm Thu & Chốt Kết Quả Auto-Tune Đêm 19/09 Cho Kỹ Năng ccba-legal-ingest](tickets/06_verify_and_merge_ccba_legal_ingest_nightly_optimization.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH - [PR #294](https://github.com/vvChu/ccba-agent-platform/pull/294))*
+### Giai Đoạn 2: Vận Hành Thực Chiến & Khắc Phục Lỗi Hệ Thống (Đã Hoàn Thành)
+- [x] **[T-05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging](tickets/05_pr_creation_label_fallback_and_copilot_review_resolution.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH - [PR #293](https://github.com/vvChu/ccba-agent-platform/pull/293) MERGED)*
+- [x] **[T-06: Nghiệm Thu & Chốt Kết Quả Auto-Tune Đêm 19/09 Cho Kỹ Năng ccba-legal-ingest](tickets/06_verify_and_merge_ccba_legal_ingest_nightly_optimization.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH - [PR #294](https://github.com/vvChu/ccba-agent-platform/pull/294) MERGED)*
 - [x] **[T-07: Khảo Sát & Đánh Giá Cấu Hình Real LLM trên Máy Chủ Spark (:8090) Cho Nightly Tuner](tickets/07_spark_litellm_real_llm_benchmark_and_deployment.md)** `[Research [AFK]]` *(ĐÃ HOÀN THÀNH - [Báo Cáo Nghiên Cứu](../../knowledge/reports/spark_litellm_nightly_tuner_evaluation.md))*
 - [x] **[T-08: Sửa Lỗi CI Deploy Skills Docs to GitHub Pages Đang Thất Bại Trên main](tickets/08_fix_deploy_skills_docs_ci_pipeline.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
 

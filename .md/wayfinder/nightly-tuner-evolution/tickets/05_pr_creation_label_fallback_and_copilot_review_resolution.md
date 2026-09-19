@@ -46,4 +46,4 @@ Khắc phục triệt để sự cố lệnh `gh pr create` thất bại do tham
 - [x] 2. Toàn bộ 36 tests trong `scripts/tests/test_nightly_tuner_daemon.py`, `scripts/tests/test_doc_refactor_daemon.py`, và `packages/ccba-harness/tests/test_evals_engine.py` đạt 100% PASS.
 - [x] 3. `ruff check` đạt 0 lỗi, `mypy` trên `tuner.py` đạt Success: no issues found.
 - [x] 4. `python -m ccba_harness verify-patch --preset code` đạt PASS (exit code 0).
-- [ ] 5. Mở Pull Request lên GitHub từ branch `fix/nightly-tuner-pr-creation-and-copilot-feedback`.
+- [x] 5. Mở Pull Request lên GitHub từ branch `fix/nightly-tuner-pr-creation-and-copilot-feedback` và đã merged thành công vào `main` (PR #293).
