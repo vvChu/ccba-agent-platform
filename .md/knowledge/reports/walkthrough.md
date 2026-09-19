@@ -238,5 +238,56 @@
 | `4051505389` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:172` | `_safe_remove_leaf()` chỉ bỏ qua chmod khi `p.is_symlink()`, nhưng junctions không phải symlink nên vẫn bị gọi `_make_writable` làm biến đổi quyền target. | **ĐÃ KHẮC PHỤC**: Đổi điều kiện kiểm tra thành `if not _is_link_or_junction(p):` ở cả 2 vị trí, đảm bảo tuyệt đối không chmod target của junction. |
 | `PRR_kwDOQzfV088AAAABOSMPeQ` | Toàn bộ PR #290 | Copilot Review tổng quan về quyền file `registry.py` và junction permission mutation. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã cập nhật `_is_link_or_junction`, `_safe_remove_leaf`, và `LegalRegistryManager.save` bảo toàn các bit mode hiện có. |
 
+---
+
+# Walkthrough: PR #289 — Linter Hiệu Lực Pháp Lý Đa Định Dạng & Vá Lỗi Tầng Nhân Khám Phá Registry
+
+## 1. Tổng Quan PR #289
+- **Branch:** `proposal/legal-currency-linter-and-registry-discovery` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(legal-intel): add legal currency linter and fix registry discovery`
+- **PR liên quan:** [PR #289](https://github.com/vvChu/ccba-agent-platform/pull/289)
+- **Issue liên quan:** [Issue #288](https://github.com/vvChu/ccba-agent-platform/issues/288)
+- **Đề xuất RFC:** `.agents/proposals/2026-09-18_legal-currency-linter-and-registry-discovery.md`
+- **Thể chế & Kiến trúc:** ADR-0029, ADR-0030, ADR-0045, ADR-0050, ADR-0057, ADR-0058, ADR-0059
+
+---
+
+## 2. Các Thay Đổi Cốt Lõi (Core Deliverables)
+
+1. **Vá lỗi Tầng Nhân Tra Cứu Registry (`registry.py` & `models.py`):**
+   - Khắc phục thứ tự ưu tiên 6 tầng `discover_master_registry_path()` (ADR 0050), giải quyết lỗi fallback nhầm vào stub rỗng thay vì registry Spoke 928 dòng.
+   - Thêm cơ chế lập chỉ mục đảo `_inverted_replacements` và từ điển ánh xạ chuyển tiếp chuẩn `KNOWN_STATUTORY_REPLACEMENTS`.
+   - Chuẩn hóa trạng thái `LegalDocStatus.UNVERIFIED` cho văn bản chưa được đăng ký thay vì gán nhầm `ACTIVE`.
+   - Chuẩn hóa đối chiếu tương đương giữa `NĐ-CP` (ASCII `ND-CP`) và các biến thể dấu hai chấm (`TCVN 2737:1995` vs `TCVN 2737-1995`).
+2. **Linter Nhận Thức Ngữ Cảnh Đa Định Dạng (`linter.py`):**
+   - Hỗ trợ bóc tách trên đa định dạng giao nộp: `.md`, `.markdown`, `.txt`, `.pptx` (đọc trực tiếp XML `ppt/slides/slide*.xml`), `.docx` (`word/document.xml`).
+   - Miễn trừ ngữ cảnh chuyển tiếp/đối chiếu lịch sử (`is_transitional_context`: *thay thế, bãi bỏ, trước đây là, so sánh, superseding*).
+   - Kiểm soát nghiêm ngặt 2 tầng: `ERROR` (exit code 1) cho văn bản bãi bỏ bị khẳng định; `WARNING` (exit code 0) cho văn bản chưa thẩm định.
+   - Bảo mật OOXML: Tích hợp `defusedxml` chống tấn công DTD / Entity Expansion, chặn tệp giải nén vượt quá `MAX_XML_ENTRY_SIZE` (10MB).
+3. **Mở rộng CLI (`cli.py`):**
+   - Bổ sung cờ `--check-currency` (`-c`) và `--json` cho lệnh `ccba_legal lint`.
+4. **Bộ kiểm thử toàn diện (`test_linter_currency.py`):**
+   - 8 test cases bao phủ toàn diện mọi kịch bản khẳng định bãi bỏ, miễn trừ chuyển tiếp, trích xuất slide PPTX, biến thể ASCII và kích thước XML.
+
+---
+
+## 3. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #289)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4047565884` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:446` | `lint_file_currency()` không bắt được số hiệu nghị định viết dạng ASCII `ND-CP` không dấu. | **ĐÃ KHẮC PHỤC**: Mở rộng biểu thức chính quy và hàm chuẩn hóa để xử lý tương đương cả 2 biến thể `NĐ-CP` và `ND-CP`. |
+| `4047565934` | `packages/ccba-legal-intel/src/ccba_legal/linter.py` | Quét thư mục dùng `rglob('*')` tải toàn bộ cây thư mục vào bộ nhớ trước khi lọc. | **ĐÃ KHẮC PHỤC**: Chuyển sang `os.walk` với cơ chế loại bỏ top-down các thư mục bị bỏ qua (`.git`, `.venv`, `legal_docs`), tối ưu bộ nhớ và thời gian quét. |
+| `4047565981` | `packages/ccba-legal-intel/tests/test_linter_currency.py:169` | Thiếu regression test cho dạng đầu vào `.../ND-CP` (ASCII). | **ĐÃ KHẮC PHỤC**: Bổ sung test case `test_statute_code_normalization` kiểm thử cả hai dạng `ND-CP` và `NĐ-CP`. |
+| `4047785304` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:478` | Rào chặn trùng lặp cảnh báo dùng substring matching thay vì so sánh bằng trên ID chuẩn hóa. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa mã văn bản và so sánh bằng (`norm_gen == obs`) để tránh bỏ sót hoặc cảnh báo trùng. |
+| `4047834831` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:609` | `lint_target_path()` chỉ nhận diện `.md` là Markdown mà bỏ sót đuôi mở rộng `.markdown`. | **ĐÃ KHẮC PHỤC**: Bổ sung hỗ trợ đuôi `.markdown` đồng bộ với `.md` trong cả linter định dạng và linter hiệu lực. |
+| `4047834889` | `.md/knowledge/log.md:5` | Tệp nhật ký Append-Only bị mất khối mô tả blockquote ở đầu tệp. | **ĐÃ KHẮC PHỤC**: Khôi phục lại khối blockquote mô tả mục đích sử dụng tệp. |
+| `4047878708` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:302` | `safe_parse_xml()` fallback sử dụng `xml.etree.ElementTree` có nguy cơ bị tấn công DTD / Entity Expansion. | **ĐÃ KHẮC PHỤC**: Bổ sung `defusedxml` vào dependencies và chủ động kiểm tra từ chối payload XML chứa `<!DOCTYPE` hoặc `<!ENTITY` trong fallback stdlib. |
+| `4047927534` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:303` | Rà soát an toàn phân tích cú pháp XML đối với các payload untrusted OOXML. | **ĐÃ KHẮC PHỤC**: Chặn đứng việc parse nếu phát hiện khai báo thực thể nguy hiểm khi không có `defusedxml`. |
+| `4047985753` | `.agents/proposals/2026-09-18_legal-currency-linter-and-registry-discovery.md` | Tệp proposal ghi "zero external dependency" nhưng thực tế có bổ sung dependency nhẹ `defusedxml`. | **ĐÃ KHẮC PHỤC**: Cập nhật tài liệu RFC proposal làm rõ việc sử dụng dependency nhẹ `defusedxml` để tăng cường bảo mật. |
+| `4051397478` | `packages/ccba-legal-intel/src/ccba_legal/registry.py:577` | `get_lifecycle()` và `find_doc()` không nhận diện `217/2026/ND-CP` và `217/2026/NĐ-CP` là một. | **ĐÃ KHẮC PHỤC**: Tự động tra cứu thử biến thể đối ứng (`NĐ-CP` $\leftrightarrow$ `ND-CP`) trong `find_doc()` và `get_lifecycle()`. |
+| `4051457124` | `.md/knowledge/session_learnings.md` | Tài liệu chứa giá trị token mẫu có thể gây cảnh báo secret scanner. | **ĐÃ KHẮC PHỤC**: Thay thế bằng placeholder biến môi trường `${SPARK_API_KEY}` theo đúng quy tắc RULE-4.5. |
+| `PRR_kwDOQzfV088AAAABOSIylg` | Toàn bộ PR #289 | Tổng quan đánh giá của Copilot về chuẩn hóa `find_doc()` và bảo mật tài liệu. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã xử lý toàn diện qua các commit bổ sung. |
+| `PRR_kwDOQzfV088AAAABOSLTeA` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:371` | Sắp xếp slide PPTX gọi `re.search()` 2 lần mỗi phần tử và danh sách `docx` chưa định kiểu strict mypy. | **ĐÃ KHẮC PHỤC**: Dùng assignment expression `m := re.search(r"\d+", x)` để cache kết quả và gán `results: list[tuple[int, str, str]] = []`. |
+
 
 

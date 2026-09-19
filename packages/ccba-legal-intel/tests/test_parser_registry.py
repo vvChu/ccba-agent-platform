@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from ccba_legal.cleaners import Cleaners
 from ccba_legal.parser import LegalAnalysisEngine
-from ccba_legal.registry import LegalRegistryManager, resolve_project_root
+from ccba_legal.registry import LegalRegistryManager
 
 
 def test_cleaners_strip_think_tags():
@@ -82,8 +82,108 @@ def test_legal_registry_manager_temp():
         assert new_data["decrees"][0]["title"] == "Nghị định 06/2021/NĐ-CP"
 
 
-def test_registry_manager_path_resolution():
-    manager = LegalRegistryManager()
-    project_root = resolve_project_root()
-    expected_path = project_root / ".md" / "data" / "legal_registry.yaml"
-    assert manager.registry_path.resolve() == expected_path.resolve()
+def test_registry_manager_path_resolution(tmp_path: Path, monkeypatch) -> None:
+    from ccba_legal.registry import discover_master_registry_path
+
+    # Deterministic test with explicit custom path
+    custom_reg = tmp_path / "custom_registry.yaml"
+    custom_reg.write_text("metadata: {}", encoding="utf-8")
+    custom_manager = LegalRegistryManager(registry_path=custom_reg)
+    assert custom_manager.registry_path.resolve() == custom_reg.resolve()
+
+    # Branch 1: When CWD contains .md/data/legal_registry.yaml
+    cwd_dir = tmp_path / "workspace"
+    local_reg = cwd_dir / ".md" / "data" / "legal_registry.yaml"
+    local_reg.parent.mkdir(parents=True)
+    local_reg.write_text("metadata: {}", encoding="utf-8")
+    monkeypatch.chdir(cwd_dir)
+    manager_local = LegalRegistryManager()
+    assert manager_local.registry_path.resolve() == local_reg.resolve()
+
+    # Branch 2: When CWD does not contain local registry, fallback to master registry
+    empty_cwd = tmp_path / "empty_workspace"
+    empty_cwd.mkdir()
+    monkeypatch.chdir(empty_cwd)
+    manager_master = LegalRegistryManager()
+    assert manager_master.registry_path.resolve() == discover_master_registry_path().resolve()
+
+
+def test_lifecycle_resolution_with_replacement(tmp_path: Path) -> None:
+    """Verify get_lifecycle resolves obsolete statute replacement via KNOWN_STATUTORY_REPLACEMENTS."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """decrees:
+  - id: ND-217-2026
+    document_number: 217/2026/NĐ-CP
+    title: Nghị định về quản lý dự án đầu tư xây dựng
+    short_name: Nghị định 217/2026/NĐ-CP
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+    life = mgr.get_lifecycle("15/2021/NĐ-CP")
+    assert str(life["status"]).upper() == "SUPERSEDED"
+    assert life["suggested_replacement"]["id"] == "ND-217-2026"
+    assert life["suggested_replacement"]["document_number"] == "217/2026/NĐ-CP"
+    assert "217/2026/NĐ-CP" in life["warning"]
+
+
+def test_lifecycle_and_find_doc_nd_cp_equivalence(tmp_path: Path) -> None:
+    """Verify ASCII ND-CP and diacritic NĐ-CP are treated as equivalent in find_doc and get_lifecycle."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """decrees:
+  - id: ND-217-2026
+    document_number: 217/2026/NĐ-CP
+    title: Nghị định về quản lý dự án đầu tư xây dựng
+    short_name: Nghị định 217/2026/NĐ-CP
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+
+    # 1. find_doc with ASCII ND-CP should find diacritic NĐ-CP doc
+    doc_ascii = mgr.find_doc("217/2026/ND-CP")
+    assert doc_ascii is not None
+    assert doc_ascii["id"] == "ND-217-2026"
+
+    # 2. get_lifecycle with ASCII ND-CP should return ACTIVE (never downgraded to UNVERIFIED)
+    life_ascii = mgr.get_lifecycle("217/2026/ND-CP")
+    assert str(life_ascii["status"]).lower() == "active"
+    assert life_ascii["warning"] is None
+
+    # 3. Obsolete query with ASCII ND-CP should resolve to SUPERSEDED
+    life_obs_ascii = mgr.get_lifecycle("15/2021/ND-CP")
+    assert str(life_obs_ascii["status"]).upper() == "SUPERSEDED"
+    assert life_obs_ascii["suggested_replacement"]["id"] == "ND-217-2026"
+
+
+def test_find_doc_colon_punctuation_equivalence(tmp_path: Path) -> None:
+    """Verify find_doc treats colons and hyphens in standard identifiers as equivalent."""
+    reg_file = tmp_path / "legal_registry.yaml"
+    reg_file.write_text(
+        """standards:
+  - id: TCVN-2737-2023
+    document_number: "TCVN 2737:2023"
+    title: Tải trọng và tác động
+    short_name: TCVN 2737:2023
+    status: active
+""",
+        encoding="utf-8",
+    )
+
+    mgr = LegalRegistryManager(registry_path=reg_file)
+
+    # find_doc with hyphen instead of colon should match
+    doc_hyphen = mgr.find_doc("TCVN 2737-2023")
+    assert doc_hyphen is not None
+    assert doc_hyphen["id"] == "TCVN-2737-2023"
+
+    # find_doc with colon should also match
+    doc_colon = mgr.find_doc("TCVN 2737:2023")
+    assert doc_colon is not None
+    assert doc_colon["id"] == "TCVN-2737-2023"

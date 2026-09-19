@@ -21,11 +21,6 @@ from ccba_legal.crawler import TVPLCrawler, get_tvpl_credentials
 from ccba_legal.docx_converter import convert_docx_to_okf_bundle
 from ccba_legal.gold_standard import GoldStandardProcessor
 
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
 
 def build_parser() -> argparse.ArgumentParser:
     """Build unified argument parser for ccba-legal CLI with logical lifecycle ordering."""
@@ -152,6 +147,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lint_parser.add_argument(
         "--no-links", action="store_true", help="Disable relative link and anchor verification"
+    )
+    lint_parser.add_argument(
+        "-c",
+        "--check-currency",
+        action="store_true",
+        help="Audit legal citations for obsolete/repealed statutes (ADR 0050 & ADR 0058)",
+    )
+    lint_parser.add_argument(
+        "--json", action="store_true", help="Output results in raw JSON format"
+    )
+    lint_parser.add_argument(
+        "-r",
+        "--registry",
+        type=Path,
+        default=None,
+        help="Optional path to legal_registry.yaml",
     )
 
     # 7. Sync Subcommand (Automated Spoke OKF Sync & Cloud Vault - ADR 0050)
@@ -513,32 +524,90 @@ def handle_login(args: argparse.Namespace) -> int:
 
 
 def handle_lint(args: argparse.Namespace) -> int:
-    """Handle lint subcommand."""
-    print("=================================================================")
-    print("     CCBA LEGAL INTEL - VISUAL PARITY & LINK LINTER GATE         ")
-    print("=================================================================")
-    print(f"🎯 Target Path: {args.target_path}")
-
+    """Handle lint subcommand with visual parity, link integrity, and legal currency gates."""
     from ccba_legal.linter import lint_target_path
 
-    res = lint_target_path(args.target_path, check_links=not args.no_links)
+    check_curr = getattr(args, "check_currency", False)
+    reg_path = getattr(args, "registry", None)
+    res = lint_target_path(
+        args.target_path,
+        check_links=not args.no_links,
+        check_currency=check_curr,
+        registry_path=reg_path,
+    )
 
+    if getattr(args, "json", False):
+        print(json.dumps(res, indent=2, ensure_ascii=False))
+        return 1 if res["total_errors"] > 0 else 0
+
+    banner_title = (
+        "CCBA LEGAL INTEL - VISUAL PARITY & LEGAL CURRENCY LINTER"
+        if check_curr
+        else "CCBA LEGAL INTEL - VISUAL PARITY & HYPERLINK INTEGRITY LINTER"
+    )
+    print("=================================================================")
+    print(f"     {banner_title}    ")
+    print("=================================================================")
+    print(f"🎯 Target Path: {args.target_path}")
     print("-----------------------------------------------------------------")
-    print(f"Scanned files  : {res['files_scanned']}")
-    print(f"Format errors  : {res['format_errors']}")
-    print(f"Link errors    : {res['link_errors']}")
+    print(f"Scanned files    : {res['files_scanned']}")
+    print(f"Format errors    : {res['format_errors']}")
+    print(f"Link errors      : {res['link_errors']}")
+    if check_curr:
+        print(f"Currency errors  : {res.get('currency_errors', 0)} (Khóa cứng ADR-0058)")
+        print(f"Currency warnings: {res.get('currency_warnings', 0)}")
     print("-----------------------------------------------------------------")
 
-    if res["total_errors"] > 0:
-        print("❌ [FAIL] Issues detected:")
+    # Format & Link issues
+    if res["format_errors"] > 0 or res["link_errors"] > 0:
+        print("\n❌ [FORMAT & LINK ISSUES DETECTED]:")
         for item in res["details"]:
             for err in item.get("errors", []):
-                print(f"  - {err}")
+                print(f"  • {item.get('file', '')} -> {err}")
             for lerr in item.get("link_errors", []):
-                print(f"  - {lerr}")
+                print(f"  • {item.get('file', '')} -> {lerr}")
+
+    # Legal Currency issues (only shown when currency checks are enabled)
+    if check_curr:
+        curr_findings = res.get("currency_findings", [])
+        errors_list = [f for f in curr_findings if f.get("severity") == "ERROR"]
+        warnings_list = [f for f in curr_findings if f.get("severity") == "WARNING"]
+
+        if errors_list:
+            print("\n🔴 [VĂN BẢN HẾT HIỆU LỰC / OBSOLETE CITATIONS] (Vi phạm ADR-0058):")
+            for f in errors_list:
+                f_name = Path(f["file"]).name
+                print(f"  • [{f_name}] [{f['location']}]")
+                print(f"    - Viện dẫn : {f['matched_text']} ({f['obsolete_doc']})")
+                print(f"    - Thay thế : 👉 {f['replacement']}")
+                if f.get("context"):
+                    print(f'    - Ngữ cảnh : "{f["context"]}"')
+
+        if warnings_list:
+            print("\n⚠️ [VĂN BẢN CHƯA XÁC THỰC / UNVERIFIED CITATIONS] (Cần đối soát):")
+            for f in warnings_list:
+                f_name = Path(f["file"]).name
+                print(
+                    f"  • [{f_name}] [{f['location']}]: {f['matched_text']} -> {f['replacement']}"
+                )
+
+    print("\n=================================================================")
+    if res["total_errors"] > 0:
+        print(
+            "❌ [FAIL] Khóa cứng ADR-0058: Phát hiện lỗi định dạng, liên kết hoặc văn bản bãi bỏ!"
+        )
         return 1
 
-    print("✅ PASSED: 100% Visual Parity & Zero Broken Links!")
+    if check_curr and res.get("currency_warnings", 0) > 0:
+        print(
+            "⚠️ [PASSED WITH WARNINGS] Zero lỗi nghiêm trọng. Vui lòng rà soát cảnh báo văn bản chưa xác thực."
+        )
+        return 0
+
+    if check_curr:
+        print("✅ [PASSED] 100% Visual Parity, Zero Broken Links & Zero Obsolete Citations!")
+    else:
+        print("✅ [PASSED] 100% Visual Parity & Zero Broken Links!")
     return 0
 
 

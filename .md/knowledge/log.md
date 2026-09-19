@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-18] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất PR #286: Modernize Nightly Auto-Tuner Daemon, Real LLM Adapter & Merge Danger Governance
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal, /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/eval/`, `.agents/skills/ccba-code-review/`, `.agents/skills/ccba-release-feature/`, `.github/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất thẩm định, tự chữa lành và squash-merge PR #286 vào `main` (commit `df311bb6`), cập nhật RFC proposal `2026-09-18_nightly-tuner-evolution.md` sang trạng thái `merged` (commit `531f6979`): (1) Nâng cấp daemon auto-tuner ban đêm với Git Worktree runner cô lập (`run_nightly_tuner.sh`) và cơ chế dynamic Domain Archetype Router; (2) Tích hợp `LLMTaskAdapter` kết nối AI Gateway thực tế với trần token ceiling và Fast-Fail `CircuitBreaker`; (3) Xây dựng bộ dataset chuyên biệt `bigbim-risk` và orchestration domain scorers; (4) Giải quyết triệt để các lỗi phản biện từ Copilot Review về override `token_budget`, compaction double-strip (> 300 dòng), localized `PYTHONPATH` trong worktree, và kiểm tra `diff_res.returncode == 0` khi dọn dẹp nhánh Git rác; (5) Ban hành quy chuẩn Phân loại Rủi ro Hợp nhất (Merge Danger Assessment: Two-way vs One-way Door, Blast Radius) tích hợp vào PR template, Copilot instructions, `ccba-code-review` (v1.4.0) và `ccba-release-feature` (v1.2.0); (6) Đóng băng các quy tắc RULE-2.13, RULE-4.14, RULE-5.5 vào `session_learnings.md` (< 10 KB).
+
+---
+
 ## [2026-09-18] [synthesize] | Kiến Trúc Tra Cứu Tri Thức Liên-Spoke 3 Tầng, Gia Cố ccba-legal-advisor & Deep Seam Hub-Mediated Discovery
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-issue-tree, /boost & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-legal-intel/`, `.agents/skills/ccba-legal-advisor/`, `packages/ccba-notebooklm/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
