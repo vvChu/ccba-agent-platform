@@ -49,7 +49,7 @@ NORMATIVE_KEYWORDS = [
     "khoảng cách",
     "nhiệt độ",
     "cường độ",
-    "đơn vị",
+    "đơn vị tính",
     "đường kính",
     "loại ống",
     "bội số",
@@ -61,6 +61,9 @@ def _is_admin_layout_table(text: str, rows: int, cols: int, num_density: float =
     # 1. Zero-Loss Guard: Numeric & Engineering unit density >= 30% -> ALWAYS a data table!
     if num_density >= 0.30:
         return False
+    # Signature / Distribution block (Nơi nhận & Chữ ký lãnh đạo)
+    if "nơi nhận:" in text and ("lưu: vt" in text or "kt." in text or "thủ tướng" in text or "bộ trưởng" in text or "chủ tịch" in text):
+        return True
     if rows <= 8 and cols <= 3:
         if any(k in text for k in LAYOUT_KEYWORDS) and not any(
             k in text for k in NORMATIVE_KEYWORDS
@@ -146,6 +149,7 @@ def _export_table_files(
     csv_dir: Path,
     json_dir: Path,
     bundle_dir: Path,
+    title: str = "",
 ) -> dict[str, Any]:
     """Export 2D table grid to CSV and JSON files."""
     csv_file = csv_dir / f"{table_slug}.csv"
@@ -168,6 +172,7 @@ def _export_table_files(
         json.dump(
             {
                 "table_id": table_slug,
+                "title": title or table_slug.replace("_", " ").title(),
                 "rows_count": len(grid),
                 "columns_count": len(headers),
                 "headers": headers,
@@ -181,11 +186,13 @@ def _export_table_files(
 
     return {
         "table_id": table_slug,
+        "title": title or table_slug.replace("_", " ").title(),
         "rows": len(grid),
         "cols": len(headers),
         "footnotes_count": len(footnotes),
-        "csv": str(csv_file.relative_to(bundle_dir)),
-        "json": str(json_file.relative_to(bundle_dir)),
+        "footnotes": footnotes,
+        "csv": str(csv_file.relative_to(bundle_dir)).replace("\\", "/"),
+        "json": str(json_file.relative_to(bundle_dir)).replace("\\", "/"),
     }
 
 
@@ -286,6 +293,7 @@ def classify_and_extract_tables(
 
         grid: list[list[str]] = []
         v_merge_col_values: dict[int, str] = {}
+        internal_footnotes: list[str] = []
 
         for tr in tbl_element.xpath("./w:tr"):
             row_cells: list[str] = []
@@ -318,26 +326,60 @@ def classify_and_extract_tables(
                     row_cells = row_cells[:num_grid_cols]
 
             if row_cells and any(row_cells):
+                non_empty = [c.strip() for c in row_cells if c.strip()]
+                first_text = non_empty[0] if non_empty else ""
+                if first_text.lower().startswith(("ghi chú:", "chú thích:", "chú dẫn:")):
+                    internal_footnotes.append(first_text)
+                    continue
                 grid.append(row_cells)
 
         if not grid:
             continue
 
         norm_grid, headers = resolve_hierarchical_headers(grid)
+        clean_cap = caption_num.strip(".- \t") if caption_num else None
         table_slug = (
-            f"bang_{int(caption_num):02d}"
-            if caption_num and caption_num.isdigit()
+            f"bang_{int(clean_cap):02d}"
+            if clean_cap and clean_cap.isdigit()
             else (
-                f"bang_{caption_num.replace('.', '_')}"
-                if caption_num
+                f"bang_{clean_cap.replace('.', '_')}"
+                if clean_cap
                 else f"bang_{table_counter:02d}"
             )
         )
-        footnotes = _harvest_table_footnotes(blocks, block_idx)
+        footnotes = internal_footnotes + _harvest_table_footnotes(blocks, block_idx)
+        table_title = caption_title or f"Bảng {table_counter:02d}"
         extracted_tables.append(
             _export_table_files(
-                norm_grid, headers, footnotes, table_slug, csv_dir, json_dir, bundle_dir
+                norm_grid,
+                headers,
+                footnotes,
+                table_slug,
+                csv_dir,
+                json_dir,
+                bundle_dir,
+                title=table_title,
             )
         )
+
+    if extracted_tables:
+        catalog_entries: list[dict[str, Any]] = []
+        for t_info in extracted_tables:
+            catalog_entries.append({
+                "table_id": t_info["table_id"],
+                "file_stem": t_info["table_id"],
+                "title": t_info.get("title") or t_info["table_id"].replace("_", " ").title(),
+                "columns_count": t_info["cols"],
+                "rows_count": t_info["rows"],
+                "footnotes_count": t_info["footnotes_count"],
+                "json_path": t_info["json"],
+                "csv_path": t_info["csv"],
+                "has_normative_conditions": True,
+                "footnotes": t_info.get("footnotes", []),
+            })
+
+        catalog_path = tables_dir / "tables_catalog.json"
+        with open(catalog_path, "w", encoding="utf-8") as f:
+            json.dump(catalog_entries, f, ensure_ascii=False, indent=2)
 
     return extracted_tables
