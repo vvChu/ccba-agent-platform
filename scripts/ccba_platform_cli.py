@@ -344,6 +344,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run deterministic ccba-harness verify-patch in Spoke post-sync (ADR-0058 Hard Completion Lock)",
     )
+    sync_p.add_argument(
+        "--pull-assets",
+        action="store_true",
+        default=False,
+        help="Physically copy OKF legal document bundles into Spoke (default: False, Reference-Only Zero-Bloat)",
+    )
 
     # bootstrap-spoke (ADR 0044)
     boot_p = subparsers.add_parser(
@@ -443,6 +449,7 @@ def main() -> int:
                 include_sandboxes=args.include_sandboxes,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
         else:
             from scripts.spoke import sync_project
@@ -454,6 +461,7 @@ def main() -> int:
                 force=args.force,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
 
     elif args.command == "bootstrap-spoke":

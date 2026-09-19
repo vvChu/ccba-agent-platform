@@ -214,7 +214,13 @@ class SharedSdkInspector:
                     elif isinstance(raw_declared, str) and raw_declared.strip():
                         declared.append(raw_declared.strip())
                     if not arch:
-                        arch = data.get("project", {}).get("archetype") or data.get("archetype")
+                        raw_arch = (
+                            data.get("project", {}).get("archetype")
+                            if isinstance(data.get("project"), dict)
+                            else None
+                        ) or data.get("archetype")
+                        if isinstance(raw_arch, str):
+                            arch = raw_arch
                 except Exception:
                     pass
 
@@ -223,7 +229,7 @@ class SharedSdkInspector:
             from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE
 
             raw_type = str(self.project_type).strip().lower()
-            arch = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type)
+            arch = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type) or ""
 
         # Tier 1: Archetype Defaults
         if arch == "knowledge_corpus":
@@ -414,7 +420,7 @@ class LegalKnowledgeSyncOrchestrator:
             return True
         return False
 
-    def sync_or_advise(self, dry_run: bool = False) -> dict[str, Any]:
+    def sync_or_advise(self, dry_run: bool = False, pull_assets: bool = False) -> dict[str, Any]:
         """Executes automatic Two-Tier Legal Sync for legal Spokes or emits zero-bloat advisory.
 
         Returns:
@@ -437,9 +443,14 @@ class LegalKnowledgeSyncOrchestrator:
         if self.is_legal_related_spoke():
             print("\n📚 [Legal Sync] Tự động đồng bộ Tri thức Pháp lý (ADR 0050):")
             if dry_run:
-                print(
-                    "   - [DRY-RUN] Sẽ kiểm tra và kéo gói OKF v2.4 chuẩn cùng sáp nhập legal_registry.yaml"
-                )
+                if pull_assets:
+                    print(
+                        "   - [DRY-RUN] [Full Assets] Sẽ kiểm tra và kéo gói OKF v2.4 chuẩn cùng sáp nhập legal_registry.yaml"
+                    )
+                else:
+                    print(
+                        "   - [DRY-RUN] [Zero-Bloat Reference] Sẽ sáp nhập legal_registry.yaml (Reference-Only, không sao chép legal_docs/)"
+                    )
                 return {"is_legal": True, "dry_run": True, "status": "simulated"}
 
             try:
@@ -455,11 +466,22 @@ class LegalKnowledgeSyncOrchestrator:
                 res = sync_legal_assets(
                     target_dir=self.spoke_root / ".md" / "legal_docs",
                     project_root=self.spoke_root,
+                    pull_assets=pull_assets,
                 )
                 if res.get("status") == "success":
-                    copied = res.get("copied_docs", 0)
-                    msg = res.get("message", "Đồng bộ thành công")
-                    print(f"   ✅ {msg} ({copied} gói văn bản đã đồng bộ).")
+                    copied = len(res.get("bundles_synced", []))
+                    if pull_assets:
+                        msg = res.get("message", "Đồng bộ thành công")
+                        print(f"   ✅ {msg} ({copied} gói văn bản đã đồng bộ).")
+                    else:
+                        reg_summary = res.get("registry_merge", {})
+                        reg_info = f"updated={reg_summary.get('updated', 0)}, added={reg_summary.get('added', 0)}"
+                        print(
+                            f"   ✅ [Zero-Bloat Reference] Sáp nhập legal_registry.yaml thành công ({reg_info})."
+                        )
+                        print(
+                            "      💡 Bật cờ '--pull-assets' nếu Spoke thực sự cần sao chép vật lý legal_docs/."
+                        )
                 else:
                     print(f"   ℹ️ {res.get('message', 'Không có dữ liệu mới.')}")
                 return {"is_legal": True, "dry_run": False, "result": res}

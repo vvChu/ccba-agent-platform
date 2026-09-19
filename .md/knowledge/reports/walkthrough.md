@@ -181,3 +181,62 @@
 
 **Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
 
+---
+
+# Walkthrough: Issue #285 — Kiến Trúc Tham Chiếu Zero-Bloat & Gia Cố Phân Quyền Windows/OneDrive
+
+## 1. Tổng Quan Issue #285
+- **Branch:** `refactor/issue-285-zero-bloat-legal-sync-onedrive-hardening`
+- **Tiêu đề:** `refactor(legal-sync): adopt Zero-Bloat reference architecture for Spokes and harden Windows/OneDrive permissions`
+- **Issue liên quan:** [#285](https://github.com/vvChu/ccba-agent-platform/issues/285)
+- **Thể chế & Kiến trúc:** ADR-0050 (Spoke Knowledge Sync), ADR-0051 (Virtual Hub Fallback & Zero-Bloat), ADR-0058 (Hard Completion Lock), RULE-2.7 (Safe Remove)
+
+---
+
+## 2. Các Thay Đổi Cốt Lõi (Core Deliverables)
+
+1. **Triệt tiêu nhân bản vật lý (Zero-Bloat Reference Mode - ADR-0051):**
+   - Mặc định khi chạy `sync_spoke.py` hoặc `LegalKnowledgeSyncOrchestrator`, hệ thống kích hoạt chế độ **Reference-Only**, chỉ cập nhật siêu dữ liệu `legal_registry.yaml` mà không tự động sao chép hàng trăm MB tài liệu PDF/DOCX sang Spoke.
+   - Cung cấp cờ tường minh `--pull-assets` khi cần tải trọn bộ tài liệu về Spoke để làm việc offline biệt lập.
+2. **Gia cố an toàn tệp tin trên Windows / OneDrive:**
+   - Loại bỏ hoàn toàn `shutil.rmtree(dest_subdir)` gây lỗi crash `PermissionError: [WinError 5] Access is denied`.
+   - Thay thế bằng `shutil.copytree(item, dest_subdir, dirs_exist_ok=True, copy_function=safe_copy2)`.
+   - `safe_copy2` tự động nhận diện và gỡ cờ Read-Only (`stat.S_IWRITE | stat.S_IREAD`) trên tệp đích trước khi ghi đè.
+   - `safe_remove` (RULE-2.7) nhận diện NTFS Directory Junctions / Mount Points trên Windows, xử lý an toàn với `onexc`/`onerror` hook và retry loop xử lý khóa tệp `WinError 32`.
+   - Gia cố `LegalRegistryManager.save()` gỡ cờ Read-Only trước khi ghi đè và hỗ trợ retry backoff chống xung đột lock với OneDrive daemon.
+3. **Rào chắn Self-Copy trên Master Legal Corpus:**
+   - Ngăn chặn triệt để nguy cơ `shutil.SameFileError` và hủy hoại SSOT khi chạy sync ngay tại repo `ccba-legal-knowledge`.
+4. **Bảo tồn Hard Completion Lock (ADR-0058):**
+   - Bổ sung cờ `--reference-only` vào CLI `ccba-legal sync` và `--pull-assets` vào `sync_spoke.py`/`ccba_platform_cli.py`.
+
+---
+
+## 3. Kết Quả Kiểm Định Tự Động (Deterministic Hard Completion Verification)
+
+- **`verify-patch` (ccba_harness):** ✅ **ALL 4/4 COMMANDS PASSED (Exit Code 0)**
+  - `pytest packages/ccba-legal-intel/tests/test_zero_bloat_sync.py ...`: 24/24 passed (100%)
+  - `pytest scripts/tests/test_spoke_sync_modules.py -v`: 35/35 passed (100%)
+  - `ruff check packages/ccba-legal-intel/ scripts/spoke/ scripts/ccba_platform_cli.py`: PASS (0 errors)
+  - `mypy packages/ccba-legal-intel/src/ccba_legal/sync/ scripts/spoke/sync/ --ignore-missing-imports`: PASS (0 errors)
+
+---
+
+## 4. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #290)
+
+| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+|---|---|---|---|
+| `4051355934` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:190` | `safe_remove()` gọi `os.rmdir()` cho mọi đường dẫn thỏa `is_dir()` và `_is_link_or_junction()`. Trên POSIX, symlink trỏ tới thư mục làm `Path.is_dir()` trả về `True`, nhưng symlink phải được gỡ bằng `unlink()`, không phải `rmdir()`; điều này có thể ném `NotADirectoryError`. | **ĐÃ KHẮC PHỤC**: Phân nhánh rõ ràng: chỉ gọi `os.rmdir(p)` khi `os.name == "nt" and p.is_dir() and not p.is_symlink()` (NTFS directory junction / mount point trên Windows); các symlink POSIX và Windows thông thường đều dùng `p.unlink()`. |
+| `4051355961` | `packages/ccba-legal-intel/tests/test_zero_bloat_sync.py:256` | Kiểm thử junction dựa vào module nội bộ `_winapi` và gọi `_winapi.CreateJunction` vô điều kiện. `CreateJunction` có thể khuyết thiếu trên một số bản dựng Python/Windows. | **ĐÃ KHẮC PHỤC**: Thêm khối `try/except ImportError` và kiểm tra `hasattr(_winapi, "CreateJunction")` để `pytest.skip()` an toàn khi môi trường không hỗ trợ. |
+| `4051391194` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:186` | `safe_remove()` gọi `os.chmod(p, ...)` cả khi `p` là symlink, làm thay đổi quyền của target file trên POSIX. | **ĐÃ KHẮC PHỤC**: Thêm điều kiện `if not p.is_symlink():` trước khi chmod; symlink được unlink trực tiếp không can thiệp target file. |
+| `4051413719` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:208` | `safe_remove()` xóa cây thư mục qua `shutil.rmtree` có thể đệ quy vào trong NTFS directory junction trên Windows, xóa nhầm dữ liệu bên ngoài cây mục tiêu. | **ĐÃ KHẮC PHỤC**: Thay thế `shutil.rmtree` bằng `_safe_rmtree_tree` đệ quy kiểm tra `_is_link_or_junction(entry)` trước khi duyệt, đối xử junction/symlink như leaf node (`os.rmdir`/`unlink`) không bao giờ đệ quy vào trong target; bổ sung test case `test_safe_remove_directory_with_nested_junction`. |
+| `4051442353` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:191` | `os.chmod(p, stat.S_IWRITE | stat.S_IREAD)` gán mode tuyệt đối `0o600` làm mất bit thực thi (`stat.S_IXUSR`) trên thư mục ở Linux, gây lỗi `PermissionError` khi xóa file con. | **ĐÃ KHẮC PHỤC**: Triển khai `_make_writable(p)` bảo toàn các bit chế độ hiện có (`st.st_mode | stat.S_IWUSR`), giữ nguyên quyền thực thi/duyệt thư mục của POSIX đồng thời gỡ cờ Read-Only trên Windows. |
+| `4051475199` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:146` | `safe_copy2()` tính `actual_dst_p` khi `dst` là thư mục nhưng vẫn truyền `dst` gốc vào `shutil.copyfile/copy2`, gây lỗi khi file đích thực tế là symlink hoặc junction. | **ĐÃ KHẮC PHỤC**: Chuẩn hóa biến `target_dst = str(actual_dst_p) if isinstance(dst, str) else actual_dst_p` và truyền `target_dst` cho cả `shutil.copyfile` lẫn `shutil.copy2`. |
+| `PRR_kwDOQzfV088AAAABOSEnRQ` | `packages/ccba-legal-intel/src/ccba_legal/sync/__init__.py:29` | `_is_link_or_junction` là private helper nhưng lại được export trong `__all__`. | **ĐÃ KHẮC PHỤC**: Loại bỏ `_is_link_or_junction` khỏi `__all__` tuân thủ RULE-1.3 (Thin Seams). |
+| `PRR_kwDOQzfV088AAAABOSGGlA` | Toàn bộ PR #290 | Copilot Review tổng quan về rủi ro duyệt NTFS junctions và chmod symlinks. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: 100% đã được giải quyết qua `_safe_rmtree_tree`, `_make_writable`, và test coverage mở rộng. |
+| `PRR_kwDOQzfV088AAAABOSJ8LA` | Toàn bộ PR #290 | Copilot Review tổng quan về `safe_copy2` destination path và `_safe_remove_leaf`. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã xử lý với `target_dst` và `_make_writable`. |
+| `4051492631` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:102` | Trên Python 3.10-3.11 Windows, `st_reparse_tag` có thể không khả dụng khiến `_is_link_or_junction` bỏ sót NTFS directory junctions. | **ĐÃ KHẮC PHỤC**: Khi phát hiện cờ `FILE_ATTRIBUTE_REPARSE_POINT`, nếu `st_reparse_tag` không tồn tại hoặc bằng 0 thì nhận diện ngay là junction/mount point. |
+| `4051505389` | `packages/ccba-legal-intel/src/ccba_legal/sync/utils.py:172` | `_safe_remove_leaf()` chỉ bỏ qua chmod khi `p.is_symlink()`, nhưng junctions không phải symlink nên vẫn bị gọi `_make_writable` làm biến đổi quyền target. | **ĐÃ KHẮC PHỤC**: Đổi điều kiện kiểm tra thành `if not _is_link_or_junction(p):` ở cả 2 vị trí, đảm bảo tuyệt đối không chmod target của junction. |
+| `PRR_kwDOQzfV088AAAABOSMPeQ` | Toàn bộ PR #290 | Copilot Review tổng quan về quyền file `registry.py` và junction permission mutation. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã cập nhật `_is_link_or_junction`, `_safe_remove_leaf`, và `LegalRegistryManager.save` bảo toàn các bit mode hiện có. |
+
+
+

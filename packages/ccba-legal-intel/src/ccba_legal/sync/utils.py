@@ -1,11 +1,14 @@
-"""Hash and Port Utilities for Legal Sync Module."""
+"""Hash, Port, and Filesystem Hardening Utilities for Legal Sync Module."""
 
 from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 import socket
+import stat
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -81,3 +84,171 @@ def ensure_chrome_debug_port() -> bool:
         return False
     except Exception:
         return False
+
+
+def _is_link_or_junction(path: Path) -> bool:
+    """Check if path is a symlink or Windows NTFS directory junction / reparse point."""
+    try:
+        st = os.lstat(path)
+        if stat.S_ISLNK(st.st_mode):
+            return True
+        if sys.platform == "win32":
+            reparse_attr = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+            mount_point_tag = getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003)
+            if getattr(st, "st_file_attributes", 0) & reparse_attr:
+                tag = getattr(st, "st_reparse_tag", None)
+                if tag is None or tag == mount_point_tag or stat.S_ISDIR(st.st_mode):
+                    return True
+    except OSError:
+        pass
+    return path.is_symlink()
+
+
+def _make_writable(p: Path) -> None:
+    """Ensure path has write permissions while preserving existing mode bits (e.g. directory execute bit)."""
+    try:
+        st = p.stat()
+        os.chmod(p, st.st_mode | stat.S_IWUSR)
+    except Exception:
+        try:
+            os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+        except Exception:
+            pass
+
+
+def safe_copy2(
+    src: str | Path,
+    dst: str | Path,
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+    *,
+    follow_symlinks: bool = True,
+) -> str | Path:
+    """Copy file with self-copy guard, Windows Read-Only clearance, and retry on file locks."""
+    src_p = Path(src)
+    dst_p = Path(dst)
+
+    # Determine actual target file path (handling case where dst is an existing directory)
+    if dst_p.is_dir():
+        actual_dst_p = dst_p / src_p.name
+    else:
+        actual_dst_p = dst_p
+
+    try:
+        if src_p.resolve() == actual_dst_p.resolve():
+            return str(actual_dst_p) if isinstance(dst, str) else actual_dst_p
+    except OSError:
+        pass
+
+    # Ensure destination parent directory exists
+    actual_dst_p.parent.mkdir(parents=True, exist_ok=True)
+    target_dst = str(actual_dst_p) if isinstance(dst, str) else actual_dst_p
+
+    for attempt in range(max_retries):
+        try:
+            if _is_link_or_junction(actual_dst_p):
+                copied = shutil.copyfile(src, target_dst)
+            else:
+                if actual_dst_p.exists():
+                    _make_writable(actual_dst_p)
+                copied = shutil.copy2(src, target_dst, follow_symlinks=follow_symlinks)
+            return copied
+        except (PermissionError, OSError):
+            try:
+                if actual_dst_p.exists() and not _is_link_or_junction(actual_dst_p):
+                    _make_writable(actual_dst_p)
+            except Exception:
+                pass
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(retry_delay)
+    return target_dst
+
+
+def _safe_remove_leaf(p: Path) -> None:
+    """Safely remove a leaf item (file, symlink, or NTFS junction) without mutating target permissions."""
+    if not _is_link_or_junction(p) and not p.is_symlink():
+        _make_writable(p)
+    try:
+        if os.name == "nt" and p.is_dir() and not p.is_symlink():
+            os.rmdir(p)
+        else:
+            p.unlink()
+    except PermissionError:
+        # On POSIX, removing an item requires write+exec on its parent directory
+        try:
+            _make_writable(p.parent)
+            if not _is_link_or_junction(p) and not p.is_symlink():
+                _make_writable(p)
+            if os.name == "nt" and p.is_dir() and not p.is_symlink():
+                os.rmdir(p)
+            else:
+                p.unlink()
+        except Exception:
+            raise
+    except FileNotFoundError:
+        pass
+
+
+def _safe_remove_dir(p: Path) -> None:
+    """Safely remove an empty directory after ensuring write permissions."""
+    _make_writable(p)
+    try:
+        os.rmdir(p)
+    except FileNotFoundError:
+        pass
+
+
+def _safe_rmtree_tree(p: Path) -> None:
+    """Recursively remove directory contents, treating symlinks and NTFS junctions as non-traversed leaves."""
+    if not p.exists() and not _is_link_or_junction(p):
+        return
+    _make_writable(p)
+    try:
+        with os.scandir(p) as it:
+            for entry in it:
+                entry_path = Path(entry.path)
+                if _is_link_or_junction(entry_path) or not entry.is_dir(follow_symlinks=False):
+                    _safe_remove_leaf(entry_path)
+                else:
+                    _safe_rmtree_tree(entry_path)
+    except FileNotFoundError:
+        return
+    _safe_remove_dir(p)
+
+
+def safe_remove(
+    path: str | Path,
+    max_retries: int = 3,
+    retry_delay: float = 0.1,
+) -> None:
+    """Safely remove a file, symlink, junction, or directory handling Windows Read-Only permissions and locks (RULE-2.7)."""
+    p = Path(path)
+    if not p.exists() and not _is_link_or_junction(p):
+        return
+
+    # Handle symlinks, Windows directory junctions, and files
+    if _is_link_or_junction(p) or p.is_file():
+        for attempt in range(max_retries):
+            try:
+                _safe_remove_leaf(p)
+                return
+            except Exception:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(retry_delay)
+        return
+
+    # Directory tree removal (junction and symlink safe)
+    for attempt in range(max_retries):
+        try:
+            _safe_rmtree_tree(p)
+            if not p.exists() and not _is_link_or_junction(p):
+                return
+        except Exception:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(retry_delay)
+
+
+safe_rmtree = safe_remove
