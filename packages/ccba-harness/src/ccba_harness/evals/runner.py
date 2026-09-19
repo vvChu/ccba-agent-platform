@@ -317,6 +317,9 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-ai-qc": ["ai_qc", "pccc_audit"],
     "ccba-grilling": ["grilling", "grill"],
     "grilling": ["grilling", "grill"],
+    "ccba-adr-lifecycle": ["adr_lifecycle", "adr"],
+    "adr_lifecycle": ["adr_lifecycle", "adr"],
+    "bigbim-risk-redteam": ["bigbim_risk_redteam", "bigbim_risk"],
 }
 
 

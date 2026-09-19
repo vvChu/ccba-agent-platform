@@ -525,6 +525,27 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
+    if any(k in sname for k in ["adr", "architecture-decision"]):
+        return [
+            RegexScorer(
+                name="adr_scaffolding_and_lifecycle",
+                pattern=r"(ADR|HUB-ADR|SPOKE-ADR|ACCEPTED|SUPERSEDED|DEPRECATED|docs/adr/|TRACEABILITY_MATRIX|matrix)",
+                weight=0.35,
+            ),
+            RegexScorer(
+                name="adr_anti_trap_hard_floor",
+                pattern=r"(superseded_by|supersedes|validate_adr_traceability|CI Parity|Context|Decision|Consequences|Invariants)",
+                weight=0.35,
+                is_critical=True,
+            ),
+            RegexScorer(
+                name="adr_governance_guard",
+                pattern=r"(Hub vs Spoke|SPOKE-ADR|HUB-ADR|Living Traceability Matrix|README\.md|YAML Frontmatter|parity)",
+                weight=0.2,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+        ]
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -1094,6 +1115,33 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
+            elif any(
+                k in prompt_l
+                for k in [
+                    "adr",
+                    "architecture decision",
+                    "traceability_matrix",
+                    "scaffolding",
+                    "status cascading",
+                    "ci parity",
+                ]
+            ):
+                has_adr_grounding = (
+                    "ccba-adr-lifecycle" in content
+                    or "Quản Trị Vòng Đời Quyết Định Kiến Trúc" in content
+                    or "docs/adr/" in content
+                    or "HUB-ADR" in content
+                )
+                if has_adr_grounding or "adr" in content.lower():
+                    parts.append(
+                        "Quản trị Vòng đời Quyết định Kiến trúc (ADR Lifecycle Governance):\n"
+                        "- Scaffolding: Khởi tạo tệp docs/adr/00XX-<slug>.md với đầy đủ YAML Frontmatter (id: HUB-ADR-00XX hoặc SPOKE-ADR-00XX, status: ACCEPTED, pillar) cùng các mục Context, Decision, Consequences, Invariants.\n"
+                        "- Status Cascading: Cập nhật status SUPERSEDED cho ADR cũ và bổ sung liên kết hai chiều superseded_by / supersedes.\n"
+                        "- Matrix Sync: Quét và cập nhật Living Traceability Matrix docs/adr/TRACEABILITY_MATRIX.md cùng bảng mục lục README.md.\n"
+                        "- CI Parity Gate: Kiểm tra tính toàn vẹn và chống lệch pha tài liệu qua python scripts/validate_adr_traceability.py."
+                    )
+                else:
+                    parts.append("Tạo file markdown ghi chép kiến trúc thông thường...")
             elif item.golden_answer is not None:
                 return (
                     item.golden_answer

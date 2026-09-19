@@ -1,0 +1,87 @@
+[
+  {
+    "id": "test_bigbim_risk_redteam_01_compound_chain_conflict",
+    "input_prompt": "Tại tầng hầm B2 khu vực phòng máy biến áp: Dầm chính kết cấu hạ cao độ 200mm do tải trọng bên trên. Để tránh clash dầm, nhà thầu cơ điện tự ý hạ tuyến ống hút khói PCCC DN400 xuống cao độ +2400. Tuyến ống này đi ngang qua mặt trước tủ phân phối hạ thế MSB, tạo khoảng sáng đứng 1850mm và khoảng hở mặt trước tủ là 550mm. Mô hình 3D báo 0 clash hình học. Đánh giá mâu thuẫn thông tin dây chuyền và cấp độ rủi ro theo chuẩn BIGBIM.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-RT-01",
+      "conflict_type": "Compound Chain Conflict / Level 2 Space Gap",
+      "phase_origin": "V2 - Coordination",
+      "clearance_rule": "Mặt trước tủ điện yêu cầu không gian thao tác tĩnh >= 900mm và chiều cao tĩnh thông thủy >= 2000mm",
+      "proposed_mitigation": "Triệu hồi ccba-issue-tree (Why-Tree) chẩn đoán nguyên nhân gốc từ dầm kết cấu và định tuyến lại ống hút khói sang trục khác"
+    },
+    "rubric": "Phải nhận diện mâu thuẫn thông tin dây chuyền (Compound Chain Conflict), chỉ ra việc giải quyết cục bộ va chạm dầm đã gây ra lỗi Level 2 nghiêm trọng (vi phạm clearance mặt trước tủ điện 550mm < 900mm và chiều cao thông thủy < 2000mm), đề xuất leo thang phối hợp đa bộ môn.",
+    "metadata": {
+      "discipline": "Multi-Discipline Coordination (Structural - Fire - Electrical)",
+      "conflict_level": "Compound Chain Conflict",
+      "standard": "BIGBIM Information Conflict Red-Team"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_redteam_02_spatial_zone_smoke_compartment",
+    "input_prompt": "Một tuyến ống cấp gió tươi HVAC đi xuyên qua tường ngăn cháy giữa khoang cháy 1 và khoang cháy 2 tại tầng 5. Trên mô hình 3D, kiến trúc đã để sẵn lỗ mở sleeve kích thước 600x400mm và ống gió đi lọt qua êm đẹp, bộ kiểm tra va chạm hình học (Clash Detective) báo 0 CLASH. Kiểm tra tính toàn vẹn mâu thuẫn thông tin phi hình học theo QCVN 06:2022/BXD.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-RT-02",
+      "conflict_type": "Invisible Spatial Boundary Violation / Missing Fire Damper",
+      "phase_origin": "V2 - Coordination / Fire Safety",
+      "clearance_rule": "Ống gió đi xuyên tường ngăn cháy bắt buộc phải gắn Van ngăn cháy (Fire Damper) có giới hạn chịu lửa tương ứng và cảm biến nhiệt tự đóng",
+      "proposed_mitigation": "Bổ sung van ngăn cháy tại vị trí xuyên tường ngăn cháy và gán Unique ID kiểm soát cho bộ môn PCCC"
+    },
+    "rubric": "Chỉ ra điểm mù của Clash Detection truyền thống: va chạm hình học = 0 nhưng là mâu thuẫn thông tin phi hình học cực kỳ nghiêm trọng (xuyên khoang cháy thiếu van ngăn cháy Fire Damper theo QCVN 06:2022/BXD).",
+    "metadata": {
+      "discipline": "Fire Safety / HVAC Spatial Coordination",
+      "conflict_level": "Spatial Boundary Conflict",
+      "standard": "BIGBIM Information Conflict Red-Team"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_redteam_03_diagonal_clearance_shadow",
+    "input_prompt": "Cụm bơm chữa cháy chính được đặt cách tường 1000mm (đạt clearance trực giao >= 900mm). Tuy nhiên, bệ máy của thiết bị làm lạnh Chiller bên cạnh đặt chéo một góc 45 độ, khiến cung xoay mở nắp kiểm tra buồng bơm chỉ đạt 620mm khi đo theo phương chéo. Phân tích lỗi khoảng hở thao tác hình học chéo và giải pháp.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-RT-03",
+      "conflict_type": "Diagonal Operational Clearance Shadow",
+      "phase_origin": "V2 - Coordination",
+      "clearance_rule": "Không gian thao tác và bảo dưỡng phải tính theo toàn bộ thể tích quét mở cửa/nắp (swept envelope) chứ không chỉ khoảng cách trực giao",
+      "proposed_mitigation": "Dịch chuyển bệ chiller hoặc xoay hướng bơm để khoảng cách xoay mở nắp đạt tối thiểu >= 900mm"
+    },
+    "rubric": "Phải nhận diện lỗi khoảng hở thao tác góc chéo (Diagonal / Swept Envelope Clearance), chỉ ra khoảng cách thực tế 620mm < 900mm cản trở bảo trì và yêu cầu kiểm tra thể tích xoay mở thay vì khoảng cách trực giao 2D.",
+    "metadata": {
+      "discipline": "Mechanical Room Coordination",
+      "conflict_level": "Diagonal Clearance Shadow",
+      "standard": "BIGBIM Information Conflict Red-Team"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_redteam_04_circular_dependency_deadlock",
+    "input_prompt": "Tại khu vực trục kỹ thuật đứng, bộ môn Điện từ chối chốt vị trí thang cáp vì chờ Kiến trúc chốt kích thước hộp gen; trong khi Kiến trúc từ chối chốt hộp gen vì chờ Điện cung cấp tổng tiết diện cáp. Quá trình phối hợp V2 bị nghẽn (Deadlock) suốt 2 tuần. Quy trình BIGBIM giải quyết nghịch lý phụ thuộc vòng tròn này ra sao?",
+    "golden_answer": {
+      "conflict_id": "INF-CON-RT-04",
+      "conflict_type": "Coordination Circular Dependency Deadlock",
+      "phase_origin": "V2 - Coordination Protocol",
+      "escalation_procedure": "Kích hoạt phiên Grilling Loop và triệu hồi ccba-issue-tree (How-Tree)",
+      "proposed_mitigation": "Áp dụng quy tắc Freeze Baseline tạm thời (Rule of Thumb estimation) có hệ số dự phòng 20% do Chủ trì phối hợp chỉ định để unblock tiến độ"
+    },
+    "rubric": "Phải nhận diện tình trạng Deadlock do phụ thuộc vòng tròn trong phối hợp thông tin, đưa ra quy trình leo thang triệu hồi ccba-issue-tree và chỉ định Freeze Baseline tạm thời có hệ số an toàn.",
+    "metadata": {
+      "discipline": "Coordination Protocol / Deadlock Resolution",
+      "conflict_level": "Process & Decision Deadlock",
+      "standard": "BIGBIM Information Conflict Red-Team"
+    }
+  },
+  {
+    "id": "test_bigbim_risk_redteam_05_ifc4x3_unit_drift_trap",
+    "input_prompt": "Mô hình IFC4X3 từ phần mềm A thể hiện lưu lượng gió thải quạt tăng áp là 36,000 (đơn vị ngầm định m3/h). Khi nạp vào phần mềm B của đơn vị thẩm định, thuộc tính IfcDistributionFlowElement bị đọc theo đơn vị SI mặc định là m3/s, dẫn đến công suất quạt bị hiểu gấp 3600 lần thực tế. Phân tích loại mâu thuẫn thông tin và cơ chế phòng chống.",
+    "golden_answer": {
+      "conflict_id": "INF-CON-RT-05",
+      "conflict_type": "Semantic Unit Drift / IFC4X3 Schema Misalignment",
+      "phase_origin": "Data Exchange & Ingestion",
+      "clearance_rule": "Bắt buộc khai báo rõ ràng IfcUnitAssignment và gắn siêu dữ liệu đơn vị tính trong Property Set",
+      "proposed_mitigation": "Kích hoạt bộ kiểm tra hợp đồng dữ liệu IFC Validation Schema trước khi ingestion"
+    },
+    "rubric": "Phải nhận diện lỗi Trôi dạt ngữ nghĩa đơn vị tính (Unit Drift) trong sơ đồ IFC4X3, giải thích tác động sai lệch 3600 lần và đề xuất cưỡng chế khai báo tường minh IfcUnitAssignment.",
+    "metadata": {
+      "discipline": "OpenBIM / IFC4X3 Data Exchange",
+      "conflict_level": "Semantic Schema Drift",
+      "standard": "BIGBIM Information Conflict Red-Team"
+    }
+  }
+]
