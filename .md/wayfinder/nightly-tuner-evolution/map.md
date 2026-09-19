@@ -41,7 +41,7 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-04: Xây Dựng Bộ Đề Thi & Scorer Chuyên Biệt Cho Coordination V2 & Orchestration](tickets/04_specialized_domain_datasets_and_scorers.md)** `[Research [AFK] / Prototype [HITL]]` *(ĐÃ HOÀN THÀNH)*
 
 ### Giai Đoạn 2: Vận Hành Thực Chiến & Khắc Phục Lỗi Hệ Thống (Hiện Tại)
-- [ ] **[T-05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging](tickets/05_pr_creation_label_fallback_and_copilot_review_resolution.md)** `[Task (AFK)]` *(SẴN SÀNG TẠO PR)*
+- [x] **[T-05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging](tickets/05_pr_creation_label_fallback_and_copilot_review_resolution.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH - [PR #293](https://github.com/vvChu/ccba-agent-platform/pull/293))*
 - [ ] **[T-06: Nghiệm Thu & Chốt Kết Quả Auto-Tune Đêm 19/09 Cho Kỹ Năng ccba-legal-ingest](tickets/06_verify_and_merge_ccba_legal_ingest_nightly_optimization.md)** `[Task (AFK)]` *(SẴN SÀNG KIỂM ĐỊNH)*
 - [ ] **[T-07: Khảo Sát & Đánh Giá Cấu Hình Real LLM trên Máy Chủ Spark (:8090) Cho Nightly Tuner](tickets/07_spark_litellm_real_llm_benchmark_and_deployment.md)** `[Research [AFK]]` *(SUBAGENT ĐANG CHẠY)*
 - [ ] **[T-08: Sửa Lỗi CI Deploy Skills Docs to GitHub Pages Đang Thất Bại Trên main](tickets/08_fix_deploy_skills_docs_ci_pipeline.md)** `[Task (AFK)]` *(SẴN SÀNG TRIỂN KHAI)*

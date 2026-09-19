@@ -1,8 +1,9 @@
 # Ticket 05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging
 
 - **Type:** Task (AFK / Code Implementation)
-- **Status:** ready_for_review
+- **Status:** closed
 - **Assignee:** Antigravity AI Agent
+- **PR:** [#293](https://github.com/vvChu/ccba-agent-platform/pull/293)
 - **Target Seam:** `scripts/eval/nightly_tuner_daemon.py`, `scripts/eval/doc_refactor_daemon.py`, `packages/ccba-harness/src/ccba_harness/evals/tuner.py`, `scripts/cron/run_nightly_tuner.sh`
 - **Reference:** Sự cố Nightly Tuner ngày 19/09/2026 & Phản hồi Copilot Review PR #286
 
