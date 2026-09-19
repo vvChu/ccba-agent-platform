@@ -1185,6 +1185,10 @@ skills:
   - office
   - ccba-docx
   - docx
+  - điền form word
+  - fill form doc
+  - form-filler
+  - layout guard
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
   command: /ccba-xu-ly-van-phong
   package_path: packages/ccba-ooxml

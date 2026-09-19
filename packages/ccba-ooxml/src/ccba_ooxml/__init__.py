@@ -23,6 +23,19 @@ from .docx import (
     suggest_deletion,
     suggest_paragraph,
 )
+from .form_filler import (
+    BaseFormFillerEngine,
+    EngineUnavailableError,
+    FormFillConfig,
+    FormFillerError,
+    FormLayoutGuard,
+    LayoutGuardError,
+    SofficeFallbackEngine,
+    TableRule,
+    TemplateNotFoundError,
+    WinwordEngine,
+    WordFormFiller,
+)
 from .format import FormattingProfile, convert_md_to_docx, format_docx
 from .pack import pack_document, validate_document
 from .pptx import (
@@ -114,4 +127,16 @@ __all__ = [
     "rearrange_presentation",
     "rearrange_slides",
     "generate_thumbnails",
+    # Form filler & layout guard (Issue #296)
+    "WordFormFiller",
+    "FormFillConfig",
+    "TableRule",
+    "FormLayoutGuard",
+    "BaseFormFillerEngine",
+    "WinwordEngine",
+    "SofficeFallbackEngine",
+    "FormFillerError",
+    "EngineUnavailableError",
+    "TemplateNotFoundError",
+    "LayoutGuardError",
 ]
