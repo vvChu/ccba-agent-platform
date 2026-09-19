@@ -9,6 +9,7 @@ export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:/snap/bin:${PATH:-}"
 export LANG="C.UTF-8"
 export LC_ALL="C.UTF-8"
 export PYTHONIOENCODING="utf-8"
+export PYTHONUNBUFFERED=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -215,6 +216,7 @@ if [ -n "$LEGAL_SPOKE_DIR" ] && [ -f "$LEGAL_SPOKE_DIR/.md/tools/run_nightly_tel
     TELEMETRY_EXIT=0
     (
         cd "$LEGAL_SPOKE_DIR"
+        export CI=1
         if [ -n "$DRY_RUN_FLAG" ]; then
             echo "   [DRY-RUN] Executing: python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run"
             python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run

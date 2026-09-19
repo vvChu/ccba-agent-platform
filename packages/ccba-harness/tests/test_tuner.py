@@ -651,22 +651,33 @@ def test_ratchet_config_auto_infers_skill_name(tmp_path: Path):
 
 
 def test_propose_mutation_distinct_enhancements_across_iterations(tmp_path: Path):
-    """Test that propose_mutation produces distinct changes on subsequent iterations."""
+    """Test that propose_mutation produces distinct changes across iterations and halts cleanly without HTML comment junk."""
     target = tmp_path / "SKILL.md"
-    initial_text = "---\nname: ccba-test\n---\n# Baseline\nInitial text."
+    initial_text = "---\nname: ccba-codebase-design\n---\n# Baseline\nInitial text."
     target.write_text(initial_text, encoding="utf-8")
 
-    cfg = RatchetConfig(target_file=target, skill_name="generic")
+    cfg = RatchetConfig(target_file=target, skill_name="ccba-codebase-design")
     tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
 
-    # Iteration 1 adds enhancement
+    # Iteration 1 adds Strategy 1 (Hard Completion Lock)
     mut1 = tuner.propose_mutation(initial_text, 1)
-    assert "## 5. Bất Biến Vận Hành & Khóa Cứng Hoàn Tất" in mut1
+    assert "Bất Biến Vận Hành & Khóa Cứng Hoàn Tất" in mut1
+    assert "python -m ccba_harness verify-patch" in mut1
 
-    # Iteration 2 with same strategy must add refinement, NOT produce identical text
+    # Iteration 2 adds Strategy 2 (Double-Pass Review)
     mut2 = tuner.propose_mutation(mut1, 2)
     assert mut2 != mut1
-    assert "<!-- Ratchet Optimization Refinement 2 -->" in mut2
+    assert "Double-Pass Adversarial Review" in mut2
+
+    # Iteration 3 adds Strategy 3 (KISS & Error Handling)
+    mut3 = tuner.propose_mutation(mut2, 3)
+    assert mut3 != mut2
+    assert "KISS, Idempotency & Error Handling" in mut3
+
+    # Iteration 4: All strategies applied -> returns unchanged (HALT_NO_FURTHER_STRATEGIES)
+    mut4 = tuner.propose_mutation(mut3, 4)
+    assert mut4 == mut3
+    assert "<!-- Ratchet Optimization Refinement" not in mut4
 
 
 def test_propose_mutation_pccc_domain(tmp_path: Path):
@@ -1216,3 +1227,125 @@ def test_llm_task_adapter_with_rate_limiter():
     res2 = task(item)
     assert res2 == "Answer"
     assert len(wait_calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_hard_completion_lock_scorer_evaluation():
+    """Verify HardCompletionLockScorer requires verify-patch and fails critically otherwise."""
+    from ccba_harness.evals.scorers import HardCompletionLockScorer
+
+    scorer = HardCompletionLockScorer(weight=0.4, is_critical=True)
+    item = EvalItem(id="test-lock", input_prompt="Hoàn tất mã nguồn")
+
+    # Failing output
+    res_fail = await scorer.score("Tôi đã hoàn thành sửa đổi mà không chạy test.", item)
+    assert res_fail.score == 0.0
+    assert res_fail.is_critical_fail is True
+
+    # Passing output
+    res_pass = await scorer.score(
+        "Đã thực hiện xác minh tất định qua `python -m ccba_harness verify-patch` thành công (exit code 0).",
+        item,
+    )
+    assert res_pass.score == 1.0
+    assert res_pass.is_critical_fail is False
+
+
+@pytest.mark.asyncio
+async def test_engineering_discipline_scorer_evaluation():
+    """Verify EngineeringDisciplineScorer graduated dual-pillar evaluation (0.0 -> 0.5 -> 1.0)."""
+    from ccba_harness.evals.scorers import EngineeringDisciplineScorer
+
+    scorer = EngineeringDisciplineScorer(weight=0.35)
+    item = EvalItem(id="test-eng", input_prompt="Thiết kế module")
+
+    # None
+    res_fail = await scorer.score("Viết function tùy ý...", item)
+    assert res_fail.score == 0.0
+
+    # Partial: Double-Pass only
+    res_partial_dp = await scorer.score("Áp dụng kỷ luật Double-Pass Review và RCA.", item)
+    assert res_partial_dp.score == 0.5
+
+    # Partial: KISS / Rigor only
+    res_partial_rigor = await scorer.score("Tuân thủ nguyên tắc KISS và xử lý explicit error handling.", item)
+    assert res_partial_rigor.score == 0.5
+
+    # Full: Both pillars
+    res_pass = await scorer.score(
+        "Tuân thủ nguyên tắc KISS, Deep Module Seam, và Double-Pass Review.",
+        item,
+    )
+    assert res_pass.score == 1.0
+
+
+def test_get_default_domain_scorers_coding():
+    """Verify get_default_domain_scorers routes coding skills to get_coding_scorers()."""
+    from ccba_harness.evals.scorers import HardCompletionLockScorer
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    scorers = get_default_domain_scorers("ccba-codebase-design")
+    assert any(isinstance(s, HardCompletionLockScorer) for s in scorers)
+    assert len(scorers) == 3
+
+    # ccba-code-review must route to coding scorers, NOT fallback or orchestration
+    scorers_review = get_default_domain_scorers("ccba-code-review")
+    assert any(isinstance(s, HardCompletionLockScorer) for s in scorers_review)
+
+
+def test_code_review_skill_routing_and_mutation(tmp_path: Path):
+    """Verify ccba-code-review selects coding strategies, while ccba-review-proposal selects platform."""
+    from ccba_harness.evals.daemon import NightlyTunerDaemon
+    from ccba_harness.evals.tuner import mutate_skill
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    # ccba-code-review -> eval_codebase_engineering.json
+    assert daemon._resolve_dataset_file("ccba-code-review") == "eval_codebase_engineering.json"
+    # ccba-review-proposal -> eval_general_domain.json or platform
+    assert daemon._resolve_dataset_file("ccba-review-proposal") != "eval_codebase_engineering.json"
+
+    initial_text = "# Code Review Skill\nInstructions here."
+    mutated = mutate_skill(initial_text, 1, skill_name="ccba-code-review")
+    # Must apply Hard Completion Lock (Coding strategy), NOT Single-Writer (Orchestration strategy)
+    assert "Bất Biến Vận Hành & Khóa Cứng Hoàn Tất" in mutated
+    assert "Single-Writer & Sandbox Isolation" not in mutated
+
+
+def test_resolve_dataset_file_coding(tmp_path: Path):
+    """Verify NightlyTunerDaemon._resolve_dataset_file maps coding keywords to eval_codebase_engineering.json."""
+    from ccba_harness.evals.daemon import NightlyTunerDaemon
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    assert daemon._resolve_dataset_file("ccba-codebase-design") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-bug-diagnostic") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-implement-workflow") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-tdd-loop") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-codebase-engineering") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-refactor-service") == "eval_codebase_engineering.json"
+
+
+def test_mutate_skill_alias_and_halt_when_exhausted(tmp_path: Path):
+    """Verify mutate_skill alias exists and returns unchanged content when all strategies applied."""
+    from ccba_harness.evals import mutate_skill
+
+    target = tmp_path / "SKILL.md"
+    initial_text = "---\nname: ccba-codebase-design\n---\n# Baseline\nInitial text."
+    target.write_text(initial_text, encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=target, skill_name="ccba-codebase-design")
+    tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
+
+    # Mutate 1, 2, 3 via method
+    m1 = tuner.mutate_skill(initial_text, 1)
+    m2 = tuner.mutate_skill(m1, 2)
+    m3 = tuner.mutate_skill(m2, 3)
+    # Mutate 4: all 3 strategies applied -> must return m3 unchanged without HTML comment
+    m4 = tuner.mutate_skill(m3, 4)
+    assert m4 == m3
+    assert "<!-- Ratchet Optimization Refinement" not in m4
+
+    # Also verify top-level function works identically
+    m1_func = mutate_skill(initial_text, 1, skill_name="ccba-codebase-design")
+    assert m1_func == m1
+
+
