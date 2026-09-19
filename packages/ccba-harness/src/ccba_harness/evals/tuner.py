@@ -149,7 +149,7 @@ class LLMTaskAdapter:
                 p_tok = res.usage.prompt_tokens if res.usage else 0
                 c_tok = res.usage.completion_tokens if res.usage else 0
                 self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
-                return res.content
+                return str(res.content)
             except CircuitBreakerOpenError:
                 # Re-raise circuit breaker fast-fail to trigger early stopping
                 raise
@@ -550,7 +550,8 @@ class GitRatchetOptimizer:
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
 
         # Token budget governance & Real LLM adapter (REC-08 / Ticket 03)
-        self.token_tracker = TokenUsageTracker(budget_ceiling=config.token_budget)
+        budget = config.token_budget if config.token_budget is not None else 5_000_000
+        self.token_tracker = TokenUsageTracker(budget_ceiling=budget)
         self.llm_adapter: LLMTaskAdapter | None = None
         if config.use_real_llm:
             self.llm_adapter = LLMTaskAdapter(
