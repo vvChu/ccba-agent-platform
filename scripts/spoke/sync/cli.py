@@ -93,6 +93,12 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
         action="store_true",
         help="List available snapshot backups for the target Spoke.",
     )
+    parser.add_argument(
+        "--pull-assets",
+        action="store_true",
+        default=False,
+        help="Physically copy OKF legal document bundles into Spoke (default: False, Reference-Only Zero-Bloat).",
+    )
     args = parser.parse_args(args_list)
 
     if args.list_backups:
@@ -120,6 +126,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 include_sandboxes=args.include_sandboxes,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
         elif args.apply:
             return sync_all_spokes(
@@ -130,6 +137,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 include_sandboxes=args.include_sandboxes,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
         else:
             print(
@@ -143,6 +151,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 include_sandboxes=args.include_sandboxes,
                 bootstrap=False,
                 verify=False,
+                pull_assets=args.pull_assets,
             )
             if preview_code != 0:
                 return preview_code
@@ -161,6 +170,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             include_sandboxes=args.include_sandboxes,
                             bootstrap=args.bootstrap,
                             verify=args.verify,
+                            pull_assets=args.pull_assets,
                         )
                     else:
                         print(
@@ -187,6 +197,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 backup=not args.no_backup,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
         elif args.apply:
             return sync_project(
@@ -197,6 +208,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 backup=not args.no_backup,
                 bootstrap=args.bootstrap,
                 verify=args.verify,
+                pull_assets=args.pull_assets,
             )
         else:
             # Phase 1: Preview simulation
@@ -209,6 +221,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 backup=not args.no_backup,
                 bootstrap=False,
                 verify=False,
+                pull_assets=args.pull_assets,
             )
             if preview_code != 0:
                 return preview_code
@@ -228,6 +241,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             backup=not args.no_backup,
                             bootstrap=args.bootstrap,
                             verify=args.verify,
+                            pull_assets=args.pull_assets,
                         )
                     else:
                         print(

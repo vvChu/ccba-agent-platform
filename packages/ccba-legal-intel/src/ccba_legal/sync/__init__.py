@@ -18,6 +18,9 @@ from .utils import (
     calculate_sha256,
     ensure_chrome_debug_port,
     is_port_open,
+    safe_copy2,
+    safe_remove,
+    safe_rmtree,
 )
 
 __all__ = [
@@ -26,6 +29,9 @@ __all__ = [
     "calculate_sha256",
     "is_port_open",
     "ensure_chrome_debug_port",
+    "safe_copy2",
+    "safe_remove",
+    "safe_rmtree",
     "GOOGLE_API_AVAILABLE",
     "get_credentials_dir",
     "get_drive_service",
