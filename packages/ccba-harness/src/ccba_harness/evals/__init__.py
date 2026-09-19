@@ -5,6 +5,13 @@ Provides local-first evaluation runners, code-based scorers, and model-based rub
 
 from __future__ import annotations
 
+from .daemon import (
+    NightlyDaemonReport,
+    NightlyTunerDaemon,
+    SkillEvolutionSummary,
+    WeightedPriorityQueue,
+    send_telegram_alert,
+)
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
 from .scorers import (
@@ -47,4 +54,9 @@ __all__ = [
     "get_default_domain_scorers",
     "GitRatchetOptimizer",
     "GitRatchetTuner",
+    "NightlyDaemonReport",
+    "NightlyTunerDaemon",
+    "SkillEvolutionSummary",
+    "WeightedPriorityQueue",
+    "send_telegram_alert",
 ]
