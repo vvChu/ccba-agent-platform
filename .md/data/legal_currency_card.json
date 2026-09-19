@@ -1,0 +1,86 @@
+{
+  "version": "2026.1",
+  "effective_year": "2025-2026",
+  "project_context": "IBST_GE_VERNOVA_HVDC_BIDDING",
+  "statutory_replacements": [
+    {
+      "domain": "Luật Xây dựng",
+      "active_law": "Luật Xây dựng số 135/2025/QH15",
+      "document_number": "135/2025/QH15",
+      "effective_date": "2026-07-01",
+      "supersedes": [
+        "50/2014/QH13",
+        "62/2020/QH14"
+      ]
+    },
+    {
+      "domain": "Quản lý dự án đầu tư xây dựng & Thẩm tra thiết kế",
+      "active_decree": "Nghị định số 217/2026/NĐ-CP",
+      "document_number": "217/2026/NĐ-CP",
+      "effective_date": "2026-07-01",
+      "supersedes": [
+        "15/2021/NĐ-CP",
+        "35/2023/NĐ-CP",
+        "59/2015/NĐ-CP"
+      ]
+    },
+    {
+      "domain": "Quản lý chất lượng, thi công và bảo trì",
+      "active_decree": "Nghị định số 207/2026/NĐ-CP",
+      "document_number": "207/2026/NĐ-CP",
+      "effective_date": "2026-07-01",
+      "supersedes": [
+        "06/2021/NĐ-CP",
+        "46/2015/NĐ-CP"
+      ]
+    },
+    {
+      "domain": "Phân cấp công trình xây dựng (Cấp I)",
+      "active_circular": "Thông tư số 34/2026/TT-BXD",
+      "document_number": "34/2026/TT-BXD",
+      "effective_date": "2026-07-01",
+      "supersedes": [
+        "06/2021/TT-BXD",
+        "03/2016/TT-BXD"
+      ]
+    },
+    {
+      "domain": "Định mức chi phí tư vấn và QLDA",
+      "active_circular": "Thông tư số 38/2026/TT-BXD",
+      "document_number": "38/2026/TT-BXD",
+      "effective_date": "2026-07-01",
+      "supersedes": [
+        "12/2021/TT-BXD",
+        "09/2024/TT-BXD"
+      ]
+    },
+    {
+      "domain": "PCCC và Cứu nạn, cứu hộ",
+      "active_law": "Luật PCCC&CNCH số 55/2024/QH15 & Nghị định 105/2025/NĐ-CP",
+      "document_number": "55/2024/QH15",
+      "effective_date": "2025-07-01",
+      "supersedes": [
+        "27/2001/QH10",
+        "40/2013/QH13",
+        "136/2020/NĐ-CP"
+      ]
+    }
+  ],
+  "technical_standards_replacements": [
+    {
+      "code": "TCVN 2737:2023",
+      "title": "Tải trọng và tác động",
+      "supersedes": "TCVN 2737:1995"
+    },
+    {
+      "code": "TCVN 5575:2024",
+      "title": "Kết cấu thép - Tiêu chuẩn thiết kế",
+      "supersedes": "TCVN 5575:2012"
+    },
+    {
+      "code": "TCVN 9386:2025",
+      "title": "Thiết kế công trình chịu động đất",
+      "supersedes": "TCVN 9386:2012"
+    }
+  ]
+}

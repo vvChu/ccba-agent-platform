@@ -18,6 +18,7 @@ class LegalDocStatus(str, Enum):
     PARTIALLY_AMENDED = "PARTIALLY_AMENDED"
     PENDING_EFFECTIVE = "PENDING_EFFECTIVE"
     DRAFT = "DRAFT"
+    UNVERIFIED = "UNVERIFIED"
 
 
 def normalize_doc_status(raw_status: str | None) -> LegalDocStatus:
@@ -39,6 +40,8 @@ def normalize_doc_status(raw_status: str | None) -> LegalDocStatus:
         return LegalDocStatus.PENDING_EFFECTIVE
     if s in {"DRAFT", "DỰ THẢO", "DU_THAO"}:
         return LegalDocStatus.DRAFT
+    if s in {"UNVERIFIED", "UNKNOWN", "CHƯA XÁC MINH", "CHUA_XAC_MINH"}:
+        return LegalDocStatus.UNVERIFIED
 
     return LegalDocStatus.ACTIVE
 
