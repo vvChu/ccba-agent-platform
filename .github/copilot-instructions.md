@@ -62,9 +62,9 @@ python scripts/governance/compile_catalog.py --check
 - **Workspace model**: root `pyproject.toml` uses `uv` workspace members (`packages/*`) and centralizes lint/type config for package code.
 - **Hub assets**:
   - `.agents/skills/` + `.agents/workflows/`: reusable agent behavior and automation.
-  - `.md/`: central knowledge and legal-document data. Root `.md/` contains only `workspace_context.yaml`, `extracted_docs/`, `knowledge/`, `archive/`.
+  - `.md/`: central knowledge and legal-document data. Root `.md/` includes `workspace_context.yaml` plus top-level directories such as `data/`, `dogfood/`, `extracted_docs/`, `knowledge/`, `projects/`, `reports/`, `scratch/`, `seminars/`, `wayfinder/`, and `youtube-learn/`.
   - `scripts/`: lifecycle hooks, docs validation, privacy scan, and CI helper tooling.
-- **Service modules** (`packages/`): `ccba-ai`, `ccba-harness`, `ccba-legal-intel`, `ccba-maskara`, `ccba-notebooklm`, `ccba-ooxml`, `ccba-pdf-prep`, `mdconverter`.
+- **Service modules** (`packages/`): `ccba-ai`, `ccba-harness`, `ccba-legal-intel`, `ccba-maskara`, `ccba-notebooklm`, `ccba-ooxml`, `ccba-pdf-prep`, `ccba-qc-core`, `mdconverter`.
 - **mdconverter flow**:
   - Typer CLI (`mdconverter.cli`) dispatches to command modules.
   - `ConversionPipeline` orchestrates analyze → convert → post-process → cache.
