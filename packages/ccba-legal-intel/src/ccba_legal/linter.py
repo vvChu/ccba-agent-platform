@@ -369,12 +369,11 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
                     n for n in z.namelist() if re.match(r"^ppt/slides/slide\d+\.xml$", n)
                 ]
                 slide_files.sort(
-                    key=lambda x: int(re.search(r"\d+", x).group()) if re.search(r"\d+", x) else 0
+                    key=lambda x: int(m.group()) if (m := re.search(r"\d+", x)) else 0
                 )
                 for s_name in slide_files:
-                    s_num = (
-                        int(re.search(r"\d+", s_name).group()) if re.search(r"\d+", s_name) else 1
-                    )
+                    m = re.search(r"\d+", s_name)
+                    s_num = int(m.group()) if m else 1
                     zinfo = z.getinfo(s_name)
                     if zinfo.file_size > MAX_XML_ENTRY_SIZE:
                         results.append(
@@ -400,7 +399,7 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
         return results
 
     if ext == ".docx":
-        results = []
+        results: list[tuple[int, str, str]] = []
         try:
             with zipfile.ZipFile(file_path, "r") as z:
                 if "word/document.xml" in z.namelist():

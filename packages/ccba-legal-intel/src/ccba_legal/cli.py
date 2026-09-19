@@ -177,6 +177,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Pull latest OKF bundles and merge registry into local Spoke",
     )
     sync_parser.add_argument(
+        "--reference-only",
+        action="store_true",
+        default=False,
+        help="Only merge legal_registry.yaml without physically copying legal_docs/ bundles (Zero-Bloat Reference Architecture).",
+    )
+    sync_parser.add_argument(
         "-o",
         "--output-dir",
         type=Path,
@@ -755,13 +761,21 @@ def handle_sync(args: argparse.Namespace) -> int:
             return 1
 
     # Spoke Pull Mode (Tier 1 Local Corpus -> Tier 2 Cloud Vault)
-    print("📥 Pulling latest OKF v2.4 legal bundles into Spoke...")
+    is_ref_only = getattr(args, "reference_only", False)
+    if is_ref_only:
+        print(
+            "⚡ [Zero-Bloat Reference Architecture] Kéo tham chiếu legal_registry.yaml, không sao chép legal_docs/..."
+        )
+    else:
+        print("📥 Pulling latest OKF v2.4 legal bundles into Spoke...")
+
     doc_ids = [args.doc] if args.doc else None
     res = engine.pull_latest_okf_bundles(
         target_dir=args.output_dir,
         doc_ids=doc_ids,
         source_corpus_dir=args.source_corpus,
         update_registry=True,
+        pull_assets=not is_ref_only,
     )
 
     print("-----------------------------------------------------------------")
@@ -782,8 +796,9 @@ def handle_sync(args: argparse.Namespace) -> int:
 
     status = res.get("status")
     bundles_count = len(res.get("bundles_synced", []))
+    is_preserved = res.get("mode") == "master_corpus_preserved"
 
-    if status == "success" and bundles_count > 0:
+    if status == "success" and (bundles_count > 0 or is_ref_only or is_preserved):
         print("✅ 1-Click Legal Sync Completed Successfully!")
         return 0
     elif status == "fallback_cloud_vault" or (status == "success" and bundles_count == 0):
