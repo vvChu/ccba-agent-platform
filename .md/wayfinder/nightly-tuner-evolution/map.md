@@ -33,6 +33,7 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-07 / Spark-Eval] Khảo Sát Spark LiteLLM Gateway (:8090):** Đánh giá 22 models, chọn `qwen-local-primary` ($0 chi phí, 45.24 tps, không giới hạn rate limit) làm mô hình mặc định cho Nightly Tuner.
 - [x] **[T-08 / CI-Fix] Khắc Phục CI GitHub Pages:** Bổ sung `PYTHONPATH: .` và `sys.path` injection cho kiểm thử tính toàn vẹn tài liệu kỹ năng.
 - [x] **[T-10 / ADR-0035/0057] Đóng Gói Deep Seam Cho Daemons & Adaptive Rate Limiter:** Đóng gói toàn bộ logic `NightlyTunerDaemon`, `DocAutoEvolutionEngine`, `CodeGroundingEngine`, `PillarBalanceAuditor`, `send_telegram_alert` vào monorepo package `ccba-harness` (`ccba_harness.evals.daemon` và `ccba_harness.docs.daemon`), cắt giảm > 1,200 dòng bloat từ `scripts/eval/` thành Thin CLI Facades < 80 dòng. Triển khai `AdaptiveRateLimiter` (token-bucket + latency backoff) bảo vệ gateway LiteLLM trên Spark (:8090).
+- [x] **[T-11 / Real-LLM-Trial] Nghiệm Thu Vận Hành Thực Chiến Real LLM Nightly Auto-Tuner:** Chạy thực nghiệm thành công chế độ `--use-real-llm --model qwen-local-primary` trên máy chủ Spark (:8090) cho kỹ năng `ccba-adr-lifecycle`. Điểm kiểm thử đạt **100.0% Perfect**, tiêu thụ 26,719 tokens, `AdaptiveRateLimiter` điều tiết trơn tru, không có hiện tượng nghẽn hàng đợi hoặc lỗi quota.
 
 ---
 
@@ -51,11 +52,12 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-08: Sửa Lỗi CI Deploy Skills Docs to GitHub Pages Đang Thất Bại Trên main](tickets/08_fix_deploy_skills_docs_ci_pipeline.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-09: Tối Ưu Hóa Đề Thi Chuyên Biệt, Red-Team Hardening & Thiết Lập Real LLM Cron](tickets/)** `[Task [AFK]]` *(ĐÃ HOÀN THÀNH)*: Khởi tạo `eval_grilling.json` (5 cases, baseline 93.0% trên Qwen Local), `eval_adr_lifecycle.json` (5 cases), `eval_bigbim_risk_redteam.json` (5 cases); bổ sung domain scorers & routers; cập nhật crontab hệ thống với `--use-real-llm --model qwen-local-primary`.
 - [x] **[T-10: Đóng Gói Deep Seam Cho Daemons (ADR-0035/0057) & Triển Khai Adaptive Rate Limiter](tickets/)** `[Task [AFK]]` *(ĐÃ HOÀN THÀNH)*: Đóng gói `ccba_harness.evals.daemon` và `ccba_harness.docs.daemon`, refactor `scripts/eval/*.py` thành Thin CLI Facades < 80 dòng; bổ sung `AdaptiveRateLimiter` cho `LLMTaskAdapter`.
+- [x] **[T-11: Nghiệm Thu Thực Chiến Real LLM Nightly Auto-Tuner & Trích Xuất Deep Seam Log Eval Miner](tickets/)** `[Task [AFK]]` *(ĐÃ HOÀN THÀNH)*: Trích xuất `log_eval_miner.py` sang `ccba_harness.evals.miner` (giảm 1,048 dòng bloat); bổ sung `--help` an toàn cho cron runners; chạy thực tế Real LLM (`qwen-local-primary`) đạt 100.0% Perfect trên `ccba-adr-lifecycle`.
 
 ---
 
 ## 🌫️ Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not yet specified)
-- **Tiêu Chí Đánh Giá Chất Lượng Prompt Khi Dùng Real LLM vs Mock Task:** Thiết lập ma trận so sánh điểm số và tính hữu ích thực tế của prompt được tối ưu bằng mô hình thật so với prompt sinh ra từ mô phỏng ngữ nghĩa tĩnh.
+- *Hiện tại toàn bộ các mục sương mù kỹ thuật chính đã được giải mã và thực nghiệm hoàn tất.*
 
 ---
 
