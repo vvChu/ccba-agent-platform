@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_adr_lifecycle_scaffold_new_adr",
+    "input_prompt": "Tôi muốn đề xuất kiến trúc cơ chế Ephemeral Git Worktree để cô lập runner ban đêm. Hãy khởi tạo ADR mới theo đúng chuẩn scaffolding của ccba-adr-lifecycle.",
+    "golden_answer": null,
+    "rubric": "Phải quét docs/adr/ lấy số thứ tự lớn nhất tiếp theo, khởi tạo tệp docs/adr/00XX-<slug>.md với đầy đủ YAML frontmatter chuẩn (id: HUB-ADR-00XX, title, status: ACCEPTED, date, pillar), kèm các mục chuẩn Context, Decision, Consequences, và Invariants.",
+    "metadata": {
+      "phase": "Step 1: Scaffolding",
+      "rule": "Correct Next Sequence & YAML Frontmatter",
+      "target_skill": "ccba-adr-lifecycle"
+    }
+  },
+  {
+    "id": "test_adr_lifecycle_status_cascading_supersede",
+    "input_prompt": "ADR-0043 Ephemeral Worktree đã thay thế hoàn toàn cơ chế Shared Directory Runner của ADR-0026. Hãy thực hiện lan truyền trạng thái thay thế (status cascading) theo chuẩn.",
+    "golden_answer": null,
+    "rubric": "Phải cập nhật status của ADR cũ (ADR-0026) thành SUPERSEDED và bổ sung khóa superseded_by trỏ đến HUB-ADR-0043; đồng thời cập nhật ADR mới có trường supersedes trỏ về HUB-ADR-0026.",
+    "metadata": {
+      "phase": "Step 2: Status Cascading",
+      "rule": "Bidirectional Supersede Linkage",
+      "target_skill": "ccba-adr-lifecycle"
+    }
+  },
+  {
+    "id": "test_adr_lifecycle_traceability_matrix_compilation",
+    "input_prompt": "Sau khi bổ sung các quyết định kiến trúc mới, hãy biên dịch và đồng bộ lại Living Traceability Matrix TRACEABILITY_MATRIX.md và README.md.",
+    "golden_answer": null,
+    "rubric": "Phải quét toàn bộ docs/adr/00*.md, bóc tách bảng đối soát trụ cột, trạng thái và cập nhật docs/adr/TRACEABILITY_MATRIX.md cùng bảng mục lục docs/adr/README.md mà không làm mất các ghi chú tùy chỉnh.",
+    "metadata": {
+      "phase": "Step 3: Matrix Compilation",
+      "rule": "Traceability Matrix & README Synchronization",
+      "target_skill": "ccba-adr-lifecycle"
+    }
+  },
+  {
+    "id": "test_adr_lifecycle_ci_parity_validation",
+    "input_prompt": "Chạy kiểm định tính toàn vẹn và chống lệch pha của hệ thống ADR theo cổng CI Parity.",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt hoặc hướng dẫn chạy script kiểm tra tính hợp lệ và toàn vẹn của ADR (python scripts/validate_adr_traceability.py hoặc kiểm tra parity qua ccba_harness verifier), bắt buộc exit code 0.",
+    "metadata": {
+      "phase": "Step 4: CI Parity Gate",
+      "rule": "Deterministic Parity Check",
+      "target_skill": "ccba-adr-lifecycle"
+    }
+  },
+  {
+    "id": "test_adr_lifecycle_spoke_hub_prefix_isolation",
+    "input_prompt": "Dự án hiện tại là Spoke (spoke-hanoi-bim). Hãy khởi tạo một ADR cục bộ tại Spoke và giải thích quy tắc phân định tiền tố ID.",
+    "golden_answer": null,
+    "rubric": "Phải phân định đúng tiền tố ID theo nguyên tắc Hub vs Spoke: Sử dụng tiền tố SPOKE-ADR-00XX khi ở môi trường Spoke và HUB-ADR-00XX khi ở Hub, lưu vào docs/adr/ cục bộ của Spoke.",
+    "metadata": {
+      "phase": "Governance & Environment",
+      "rule": "Hub vs Spoke Prefix Isolation",
+      "target_skill": "ccba-adr-lifecycle"
+    }
+  }
+]
