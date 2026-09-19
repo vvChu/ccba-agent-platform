@@ -505,6 +505,7 @@ class SpokeSynchronizer:
         bootstrap: bool = False,
         force: bool = False,
         archetype: str = "",
+        pull_assets: bool = False,
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         if not project_type:
@@ -910,7 +911,7 @@ class SpokeSynchronizer:
         # 8. Automatic Legal Knowledge Sync & Zero-Bloat Advisory (ADR 0050)
         LegalKnowledgeSyncOrchestrator(
             spoke_root, hub_root, project_type, archetype=archetype
-        ).sync_or_advise(dry_run=dry_run)
+        ).sync_or_advise(dry_run=dry_run, pull_assets=pull_assets)
 
         if dry_run:
             print("\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa.")
@@ -929,6 +930,7 @@ class SpokeSynchronizer:
         bootstrap: bool = False,
         verify: bool = False,
         pull_hub: bool = True,
+        pull_assets: bool = False,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
@@ -1125,6 +1127,7 @@ class SpokeSynchronizer:
                 bootstrap=bootstrap,
                 force=force,
                 archetype=spoke_archetype,
+                pull_assets=pull_assets,
             )
 
         if res_code != 0:
@@ -1250,6 +1253,7 @@ class SpokeSynchronizer:
         bootstrap: bool = False,
         verify: bool = False,
         pull_hub: bool = True,
+        pull_assets: bool = False,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1262,6 +1266,7 @@ class SpokeSynchronizer:
             bootstrap=bootstrap,
             verify=verify,
             pull_hub=pull_hub,
+            pull_assets=pull_assets,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1297,6 +1302,7 @@ def sync_project(
     bootstrap: bool = False,
     verify: bool = False,
     pull_hub: bool = True,
+    pull_assets: bool = False,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1309,6 +1315,7 @@ def sync_project(
         bootstrap=bootstrap,
         verify=verify,
         pull_hub=pull_hub,
+        pull_assets=pull_assets,
     )
 
 
@@ -1337,6 +1344,7 @@ def sync_all_spokes(
     include_sandboxes: bool = False,
     bootstrap: bool = False,
     verify: bool = False,
+    pull_assets: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -1384,6 +1392,7 @@ def sync_all_spokes(
                 bootstrap=bootstrap,
                 verify=verify,
                 pull_hub=(idx == 1),
+                pull_assets=pull_assets,
             )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})

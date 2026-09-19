@@ -29,9 +29,12 @@ from ccba_legal.sync.notebooklm_sync import (
     sync_registry_to_notebooklm,
 )
 from ccba_legal.sync.utils import (
+    _is_link_or_junction,
     calculate_md5,
     calculate_sha256,
     is_port_open,
+    safe_copy2,
+    safe_remove,
 )
 
 DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
@@ -200,6 +203,7 @@ class LegalSyncEngine:
         doc_ids: list[str] | None = None,
         source_corpus_dir: Path | str | None = None,
         update_registry: bool = True,
+        pull_assets: bool = True,
     ) -> dict[str, Any]:
         """Pull and synchronize OKF v2.4 legal bundles into Spoke with Non-Destructive Registry Merge (ADR 0050).
 
@@ -208,6 +212,7 @@ class LegalSyncEngine:
             doc_ids: Optional list of specific document IDs/numbers to sync. If None, syncs all available.
             source_corpus_dir: Optional explicit path to ccba-legal-knowledge repository.
             update_registry: Whether to perform Non-Destructive Additive Merge on local legal_registry.yaml.
+            pull_assets: Whether to physically copy OKF bundles into target_dir (default: True, False for Zero-Bloat reference mode).
 
         Returns:
             Dictionary reporting sync status, tier used, synced bundle slugs, and registry merge counts.
@@ -237,49 +242,76 @@ class LegalSyncEngine:
                 if is_master
                 else (self.project_root / ".md" / "legal_docs")
             )
-        dest_root.mkdir(parents=True, exist_ok=True)
 
         explicit = Path(source_corpus_dir) if source_corpus_dir else None
         corpus_path = self.find_local_knowledge_corpus(explicit)
+
+        # Self-copy guard for Master Legal Corpus
+        if corpus_path:
+            try:
+                if (corpus_path / "legal_docs").resolve() == dest_root.resolve():
+                    return {
+                        "status": "success",
+                        "mode": "master_corpus_preserved",
+                        "tier": "tier_1_local_corpus",
+                        "source": str(corpus_path),
+                        "target": str(dest_root),
+                        "bundles_synced": [],
+                        "registry_merge": {"updated": 0, "added": 0, "preserved": 0},
+                    }
+            except OSError:
+                pass
+
+        if pull_assets:
+            dest_root.mkdir(parents=True, exist_ok=True)
 
         synced_bundles: list[str] = []
         registry_merge_summary: dict[str, int] = {"updated": 0, "added": 0, "preserved": 0}
 
         if corpus_path:
             # Tier 1: Local Knowledge Corpus Sync (0s Offline Speed)
-            source_legal_docs = corpus_path / "legal_docs"
-            if source_legal_docs.exists():
-                categories = ["01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"]
-                for cat in categories:
-                    cat_dir = source_legal_docs / cat
-                    if not cat_dir.exists():
-                        continue
-                    for bundle_dir in sorted(cat_dir.iterdir()):
-                        if not bundle_dir.is_dir():
+            if pull_assets:
+                source_legal_docs = corpus_path / "legal_docs"
+                if source_legal_docs.exists():
+                    categories = ["01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"]
+                    for cat in categories:
+                        cat_dir = source_legal_docs / cat
+                        if not cat_dir.exists():
                             continue
-                        slug = bundle_dir.name
-
-                        # Filter by doc_ids if specified
-                        if doc_ids:
-                            norm_ids = [re.sub(r"[\s\-_/.]+", "", d.lower()) for d in doc_ids]
-                            norm_slug = re.sub(r"[\s\-_/.]+", "", slug.lower())
-                            if not any(nid in norm_slug for nid in norm_ids):
+                        for bundle_dir in sorted(cat_dir.iterdir()):
+                            if not bundle_dir.is_dir():
                                 continue
+                            slug = bundle_dir.name
 
-                        target_bundle = dest_root / cat / slug
-                        target_bundle.mkdir(parents=True, exist_ok=True)
+                            # Filter by doc_ids if specified
+                            if doc_ids:
+                                norm_ids = [re.sub(r"[\s\-_/.]+", "", d.lower()) for d in doc_ids]
+                                norm_slug = re.sub(r"[\s\-_/.]+", "", slug.lower())
+                                if not any(nid in norm_slug for nid in norm_ids):
+                                    continue
 
-                        # Copy bundle assets
-                        for item in bundle_dir.iterdir():
-                            if item.is_dir():
-                                dest_subdir = target_bundle / item.name
-                                if dest_subdir.exists():
-                                    shutil.rmtree(dest_subdir)
-                                shutil.copytree(item, dest_subdir)
-                            else:
-                                shutil.copy2(item, target_bundle / item.name)
+                            target_bundle = dest_root / cat / slug
+                            target_bundle.mkdir(parents=True, exist_ok=True)
 
-                        synced_bundles.append(f"{cat}/{slug}")
+                            # Copy bundle assets
+                            for item in bundle_dir.iterdir():
+                                if item.is_dir():
+                                    dest_subdir = target_bundle / item.name
+                                    if dest_subdir.is_file() or _is_link_or_junction(dest_subdir):
+                                        safe_remove(dest_subdir)
+                                    shutil.copytree(
+                                        item,
+                                        dest_subdir,
+                                        dirs_exist_ok=True,
+                                        copy_function=safe_copy2,
+                                    )
+                                else:
+                                    target_file = target_bundle / item.name
+                                    if target_file.is_dir():
+                                        safe_remove(target_file)
+                                    safe_copy2(item, target_file)
+
+                            synced_bundles.append(f"{cat}/{slug}")
 
             # Merge master registry
             if update_registry:
@@ -325,6 +357,7 @@ def sync_legal_assets(
     source_corpus_dir: Path | str | None = None,
     update_registry: bool = True,
     project_root: Path | None = None,
+    pull_assets: bool = True,
 ) -> dict[str, Any]:
     """Convenience helper to synchronize legal assets into Spoke (ADR 0050)."""
     engine = LegalSyncEngine(project_root=project_root)
@@ -333,4 +366,5 @@ def sync_legal_assets(
         doc_ids=doc_ids,
         source_corpus_dir=source_corpus_dir,
         update_registry=update_registry,
+        pull_assets=pull_assets,
     )
