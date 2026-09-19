@@ -24,13 +24,17 @@ from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
 from .scorers import (
     BaseScorer,
+    EngineeringDisciplineScorer,
     ExactMatchScorer,
+    HardCompletionLockScorer,
     JsonSchemaScorer,
     LengthBoundsScorer,
     LLMRubricScorer,
     RegexScorer,
+    get_coding_scorers,
 )
 from .tuner import (
+    CODING_ARCHETYPE_KEYWORDS,
     AdaptiveRateLimiter,
     GitRatchetOptimizer,
     GitRatchetTuner,
@@ -39,10 +43,13 @@ from .tuner import (
     RatchetTrialResult,
     RateLimiter,
     get_default_domain_scorers,
+    mutate_skill,
     preserve_yaml_frontmatter,
 )
 
 __all__ = [
+    "CODING_ARCHETYPE_KEYWORDS",
+    "mutate_skill",
     "EvalItem",
     "ScoreResult",
     "EvalItemResult",
@@ -53,6 +60,9 @@ __all__ = [
     "LengthBoundsScorer",
     "JsonSchemaScorer",
     "LLMRubricScorer",
+    "HardCompletionLockScorer",
+    "EngineeringDisciplineScorer",
+    "get_coding_scorers",
     "EvalRunner",
     "AutoItemScorer",
     "load_eval_dataset",

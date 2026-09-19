@@ -24,6 +24,7 @@ from .scorers import (
     BaseScorer,
     LengthBoundsScorer,
     RegexScorer,
+    get_coding_scorers,
     get_orchestration_scorers,
 )
 
@@ -465,6 +466,18 @@ def preserve_yaml_frontmatter(original_content: str, edited_content: str) -> str
     return f"{frontmatter_block}{nl}"
 
 
+CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "code",
+    "bug",
+    "diagnos",
+    "implement",
+    "tdd",
+    "design",
+    "refactor",
+    "engineering",
+)
+
+
 def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
     """Provides domain-aligned default scorers based on target skill."""
     sname = skill_name.lower()
@@ -613,6 +626,9 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
+    if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
+        return get_coding_scorers()
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -757,7 +773,9 @@ class GitRatchetOptimizer:
             prompt_l = prompt.lower()
 
             # Check if prompt content has legal guidance and hard floor guardrails
-            has_legal_grounding = "Nghị định" in content or "Luật" in content or "VBHN" in content
+            has_legal_grounding = bool(
+                re.search(r"\b(Nghị định|Thông tư|VBHN)\b|(?<!Kỷ\s)Luật\s", content)
+            )
             has_xml = "<legal_" in content or "XML" in content
             has_guardrail = (
                 "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
@@ -1117,7 +1135,22 @@ class GitRatchetOptimizer:
                 parts.append(
                     "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
                 )
-            elif has_legal_grounding:
+            elif has_legal_grounding and any(
+                k in prompt_l
+                for k in [
+                    "pháp luật",
+                    "luật",
+                    "nghị định",
+                    "thông tư",
+                    "văn bản",
+                    "thủ tục",
+                    "pháp lý",
+                    "vbpl",
+                    "tvpl",
+                    "quy phạm",
+                    "căn cứ pháp lý",
+                ]
+            ):
                 parts.append(
                     "Theo quy định tại Luật Xây dựng năm 2025 (Luật số 135/2025/QH15), Nghị định 105/2025/NĐ-CP và hướng dẫn của Cơ quan chuyên môn về xây dựng, yêu cầu được thực thi theo Điều khoản tương ứng."
                 )
@@ -1185,6 +1218,68 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
+            elif any(
+                k in self.config.skill_name.lower()
+                for k in CODING_ARCHETYPE_KEYWORDS
+            ) or any(
+                k in prompt_l
+                for k in [
+                    "code",
+                    "bug",
+                    "diagnos",
+                    "implement",
+                    "tdd",
+                    "design",
+                    "refactor",
+                    "unit test",
+                    "rca",
+                    "codebase",
+                    "engineering",
+                ]
+            ):
+                has_hard_lock = (
+                    "verify-patch" in content
+                    or "Khóa Cứng Hoàn Tất" in content
+                    or "Hard Completion Lock" in content
+                )
+                has_double_pass = "Double-Pass" in content or "Rà Soát Hai Vòng" in content
+                has_engineering_rigor = (
+                    "KISS" in content
+                    or "Deep Module" in content
+                    or "seam" in content.lower()
+                    or "idempotent" in content.lower()
+                    or "error handling" in content.lower()
+                )
+
+                coding_blocks = []
+                if has_double_pass or has_engineering_rigor:
+                    sub_blocks = []
+                    if has_double_pass:
+                        sub_blocks.append(
+                            "- Chẩn đoán Root Cause Analysis (RCA) với tham chiếu tệp và dòng cụ thể theo quy luật Double-Pass Review."
+                        )
+                    if has_engineering_rigor:
+                        sub_blocks.append(
+                            "- Triển khai tái cấu trúc (refactoring) tuân thủ nguyên tắc KISS, Deep Module Seam, và Idempotency Guardrails.\n"
+                            "- Bổ sung unit tests đảm bảo test coverage và xử lý ngoại lệ tường minh (explicit error handling)."
+                        )
+                    coding_blocks.append(
+                        "Thực thi quy trình kỹ thuật phần mềm chuẩn mực (Codebase Engineering Discipline):\n"
+                        + "\n".join(sub_blocks)
+                    )
+
+                if has_hard_lock:
+                    coding_blocks.append(
+                        "Hard Completion Lock (ADR-0058):\n"
+                        "- Bắt buộc thực hiện kiểm chứng tất định qua lệnh:\n"
+                        "  python -m ccba_harness verify-patch\n"
+                        "- Hoàn tất với exit code 0 trước khi bàn giao kết quả."
+                    )
+
+                if coding_blocks:
+                    parts.append("\n\n".join(coding_blocks))
+                else:
+                    parts.append("Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định...")
             elif any(
                 k in prompt_l
                 for k in [
@@ -1320,10 +1415,38 @@ class GitRatchetOptimizer:
                     "* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).",
                 ),
             ]
+        elif any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
+            strategies = [
+                (
+                    "Operational Invariants & Hard Completion Lock",
+                    "\n\n## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)\n"
+                    "* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.\n"
+                    "* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:\n"
+                    "  ```bash\n"
+                    "  python -m ccba_harness verify-patch\n"
+                    "  ```\n"
+                    "* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.",
+                ),
+                (
+                    "Double-Pass Review Discipline & Verification Invariants",
+                    "\n\n## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)\n"
+                    "* **Vòng 1 (Code-First Research):** Luôn đọc implementation thực tế và kiểm tra data flow end-to-end trước khi sửa đổi. Không suy đoán hành vi từ tên hàm hay docstring.\n"
+                    "* **Vòng 2 (Self-Adversarial Review):** Tự đặt câu hỏi: *Đề xuất này có thể SAI ở đâu?* Kiểm chứng tối thiểu 3 giả định cốt lõi bằng dữ liệu và kiểm thử thực tế trước khi bàn giao.\n"
+                    "* **Bảo tồn Invariants:** Không bao giờ xóa hoặc nới lỏng (weaken) các bài test hiện có để làm cho bài test vượt qua.",
+                ),
+                (
+                    "KISS, Idempotency & Explicit Error Handling Guardrails",
+                    "\n\n## Chuẩn Mực Thiết Kế Mã Nguồn: KISS, Idempotency & Error Handling\n"
+                    "* **KISS (Keep It Simple, Stupid):** Ưu tiên giải pháp đơn giản nhất; không tạo abstraction/seam giả định khi chưa có ít nhất 2 adapter thực tế.\n"
+                    "* **Idempotency:** Mọi script thao tác tệp, database hay git worktree phải đảm bảo tính lũy kế an toàn (chạy nhiều lần cho ra cùng một kết quả vững chắc).\n"
+                    "* **Explicit Error Handling:** Xử lý ngoại lệ cụ thể (Specific Exceptions); nghiêm cấm sử dụng bare `except:` hoặc nuốt lỗi âm thầm.\n"
+                    "* **Type Hints & Docstrings:** Mọi hàm/phương thức public bắt buộc có type annotations đầy đủ và docstrings chuẩn mực.",
+                ),
+            ]
         elif any(
             k in sname
-            for k in ["platform", "router", "orchestrator", "core", "docs", "adr", "eval", "review"]
-        ):
+            for k in ["platform", "router", "orchestrator", "core", "docs", "adr", "eval"]
+        ) or ("review" in sname and not any(k in sname for k in CODING_ARCHETYPE_KEYWORDS)):
             strategies = [
                 (
                     "Deterministic Routing & Boundary Invariants",
@@ -1422,9 +1545,6 @@ class GitRatchetOptimizer:
                 ),
             ]
 
-        strategy_idx = (iteration - 1) % len(strategies)
-        _name, enhancement = strategies[strategy_idx]
-
         # Extract only body to apply mutations, preserving frontmatter untouched
         fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL)
         if fm_match:
@@ -1432,17 +1552,29 @@ class GitRatchetOptimizer:
         else:
             body = current_content
 
+        # Find first strategy not yet fully present in body (Goodhart's Law Trap Breaker)
+        chosen_strategy = None
+        base_idx = (iteration - 1) % len(strategies)
+        for offset in range(len(strategies)):
+            idx = (base_idx + offset) % len(strategies)
+            s_name, s_enhancement = strategies[idx]
+            if s_enhancement.strip() not in body:
+                chosen_strategy = (s_name, s_enhancement)
+                break
+
+        # If all strategies are already applied, return current content untouched
+        # (Cleanly triggers HALT_NO_FURTHER_STRATEGIES in optimization loop without junk comments)
+        if chosen_strategy is None:
+            return current_content
+
+        _name, enhancement = chosen_strategy
+
         # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
         header_pattern = re.escape(section_header)
         section_regex = re.compile(rf"({header_pattern}.*?)(?=\n## |\Z)", re.DOTALL)
 
-        if enhancement.strip() in body:
-            mutated_body = (
-                body.strip()
-                + f"\n\n<!-- Ratchet Optimization Refinement {iteration} -->\n- Cập nhật quy chuẩn rà soát vòng {iteration}."
-            )
-        elif section_regex.search(body):
+        if section_regex.search(body):
             mutated_body = section_regex.sub(enhancement.strip() + "\n", body)
         else:
             mutated_body = body.strip() + "\n\n" + enhancement.strip()
@@ -1459,6 +1591,10 @@ class GitRatchetOptimizer:
             mutated_body = "\n".join(cleaned_lines)
 
         return self.preserve_yaml_frontmatter(current_content, mutated_body)
+
+    def mutate_skill(self, current_content: str, iteration: int) -> str:
+        """Mutates skill content by applying unapplied optimization strategies without junk comments."""
+        return self.propose_mutation(current_content, iteration)
 
     def git_commit_improvement(self, score_diff: str) -> bool:
         """Commits target file change to Git repository."""
@@ -1630,6 +1766,12 @@ class GitRatchetOptimizer:
 
                 try:
                     mutated_content = self.propose_mutation(best_content, i)
+                    if mutated_content == best_content:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
 
                     # Apply candidate mutation
                     self.target_file.write_text(mutated_content, encoding="utf-8")
@@ -1769,3 +1911,12 @@ class GitRatchetOptimizer:
 
 # Public alias for backwards compatibility
 GitRatchetTuner = GitRatchetOptimizer
+
+
+def mutate_skill(content: str, iteration: int, skill_name: str = "generic") -> str:
+    """Mutates skill content by applying unapplied optimization strategies without junk comments."""
+    from pathlib import Path
+
+    cfg = RatchetConfig(target_file=Path("SKILL.md"), skill_name=skill_name)
+    optimizer = GitRatchetOptimizer(cfg, dry_run_git=True)
+    return optimizer.propose_mutation(content, iteration)

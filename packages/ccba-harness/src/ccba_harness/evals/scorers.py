@@ -613,3 +613,94 @@ def get_orchestration_scorers() -> list[BaseScorer]:
         ProgressiveDisclosureScorer(weight=0.35),
         HandoffProtocolScorer(weight=0.30),
     ]
+
+
+class HardCompletionLockScorer(BaseScorer):
+    """Validates that coding/engineering tasks enforce deterministic verification and Hard Completion Lock (ADR-0058)."""
+
+    def __init__(
+        self,
+        name: str = "hard_completion_lock",
+        weight: float = 0.4,
+        is_critical: bool = True,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(python -m ccba_harness verify-patch|verify-patch|pytest|test execution|deterministic verification|khóa cứng hoàn tất|hard completion lock)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Hard Completion Lock verified (python -m ccba_harness verify-patch / deterministic verification)"
+                if matched
+                else "Missing Hard Completion Lock: must verify via `python -m ccba_harness verify-patch` or deterministic test suite"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class EngineeringDisciplineScorer(BaseScorer):
+    """Validates engineering rigor: Double-Pass Review, KISS, idempotency, RCA, and explicit error handling."""
+
+    def __init__(
+        self,
+        name: str = "engineering_discipline",
+        weight: float = 0.35,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.double_pass_pattern = re.compile(
+            r"(double-pass|self-adversarial|root cause|rca|code-first|rà soát hai vòng)",
+            re.IGNORECASE,
+        )
+        self.engineering_rigor_pattern = re.compile(
+            r"(kiss|idempotent|idempotency|error handling|test coverage|type hint|deep module|seam|refactor)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        has_dp = bool(self.double_pass_pattern.search(out_str))
+        has_rigor = bool(self.engineering_rigor_pattern.search(out_str))
+
+        if has_dp and has_rigor:
+            score = 1.0
+            reasoning = "Engineering discipline fully verified (Double-Pass Review + KISS / Rigor Guardrails)"
+        elif has_dp or has_rigor:
+            score = 0.5
+            reasoning = (
+                "Partial engineering discipline verified: "
+                + ("Double-Pass present, missing KISS/Rigor" if has_dp else "KISS/Rigor present, missing Double-Pass")
+            )
+        else:
+            score = 0.0
+            reasoning = "Missing engineering discipline guardrails (Double-Pass Review, KISS, RCA, or Error Handling)"
+
+        is_crit_fail = self.is_critical and score == 0.0
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output={"double_pass": has_dp, "rigor": has_rigor},
+            reasoning=reasoning,
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_coding_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for coding and software engineering skills."""
+    return [
+        HardCompletionLockScorer(weight=0.4, is_critical=True),
+        EngineeringDisciplineScorer(weight=0.35),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.25),
+    ]

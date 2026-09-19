@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_codebase_engineering_debugging_rca",
+    "input_prompt": "Phát hiện lỗi hồi quy ngoại lệ (Unhandled Exception) trong pipeline xử lý dữ liệu khi gặp input bất thường. Hãy thực hiện chẩn đoán nguyên nhân gốc rễ (Root Cause Analysis - RCA) và lập phương án khắc phục chuẩn kỹ thuật.",
+    "golden_answer": null,
+    "rubric": "Phải tuân thủ kỷ luật Double-Pass Review, xác định nguyên nhân gốc rễ (RCA) kèm tham chiếu vị trí mã nguồn cụ thể, không nuốt ngoại lệ (explicit error handling), và khóa cứng hoàn tất bằng lệnh python -m ccba_harness verify-patch.",
+    "metadata": {
+      "phase": "Debugging & RCA",
+      "rule": "Double-Pass Review Discipline & Root Cause Analysis",
+      "target_archetype": "codebase_engineering"
+    }
+  },
+  {
+    "id": "test_codebase_engineering_deep_module_refactoring",
+    "input_prompt": "Module xử lý hiện đang có giao diện quá nông (shallow interface) và phân mảnh logic trên nhiều hàm tự do. Hãy đề xuất kế hoạch tái cấu trúc (refactoring) thành Deep Module theo chuẩn KISS và Deep Seams Pattern.",
+    "golden_answer": null,
+    "rubric": "Phải thiết kế Seam tối giản theo Deep Module Pattern, tuân thủ nguyên tắc KISS, đảm bảo tính lũy kế an toàn (idempotency), bảo tồn ranh giới gói, và xác minh tất định bằng python -m ccba_harness verify-patch.",
+    "metadata": {
+      "phase": "Architecture & Refactoring",
+      "rule": "Deep Module Seam & KISS Invariant",
+      "target_archetype": "codebase_engineering"
+    }
+  },
+  {
+    "id": "test_codebase_engineering_implementation_plan",
+    "input_prompt": "Lập kế hoạch triển khai (implementation plan) cho tính năng Circuit Breaker và Adaptive Rate Limiter mới trong package ccba-ai để bảo vệ AI Gateway.",
+    "golden_answer": null,
+    "rubric": "Phải xây dựng kế hoạch triển khai chi tiết, type hints đầy đủ, xử lý lỗi tường minh, xác định boundary values và khóa cứng hoàn tất bằng python -m ccba_harness verify-patch.",
+    "metadata": {
+      "phase": "Implementation Planning",
+      "rule": "Implementation Planning & Type Safety",
+      "target_archetype": "codebase_engineering"
+    }
+  },
+  {
+    "id": "test_codebase_engineering_test_coverage_and_verification",
+    "input_prompt": "Hãy thiết kế bộ kiểm thử đơn vị (unit tests) và kiểm thử các ca biên (boundary edge cases) để nâng cao test coverage cho seam dịch vụ mới.",
+    "golden_answer": null,
+    "rubric": "Phải thiết kế các ca kiểm thử bao quát input rỗng, giá trị biên, đường dẫn lỗi (error paths), không làm yếu các bài test hiện có, và xác minh qua python -m ccba_harness verify-patch.",
+    "metadata": {
+      "phase": "Testing & Verification",
+      "rule": "Test Coverage & Edge Case Verification",
+      "target_archetype": "codebase_engineering"
+    }
+  },
+  {
+    "id": "test_codebase_engineering_hard_completion_lock",
+    "input_prompt": "Toàn bộ code và cấu hình cho tính năng mới đã hoàn tất. Hãy thực hiện quy trình kiểm chứng tất định và kích hoạt Khóa Cứng Hoàn Tất (Hard Completion Lock) theo quy chuẩn ADR-0058 trước khi bàn giao.",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Hard Completion Lock (ADR-0058), bắt buộc thực thi lệnh xác minh tự động python -m ccba_harness verify-patch, và yêu cầu exit code 0 trước khi báo cáo hoàn thành.",
+    "metadata": {
+      "phase": "Completion Lock",
+      "rule": "Hard Completion Lock ADR-0058",
+      "target_archetype": "codebase_engineering"
+    }
+  }
+]
