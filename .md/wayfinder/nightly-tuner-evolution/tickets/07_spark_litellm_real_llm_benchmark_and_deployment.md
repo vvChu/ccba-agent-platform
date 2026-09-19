@@ -1,8 +1,9 @@
 # Ticket 07: Khảo Sát & Đánh Giá Cấu Hình Real LLM trên Máy Chủ Spark (:8090) Cho Nightly Tuner
 
 - **Type:** Research (AFK / Architectural Investigation)
-- **Status:** in_progress
-- **Assignee:** Antigravity AI Agent (delegated to subagent `research`)
+- **Status:** closed
+- **Assignee:** Antigravity AI Agent & Research Subagent
+- **Report:** [.md/knowledge/reports/spark_litellm_nightly_tuner_evaluation.md](../../../knowledge/reports/spark_litellm_nightly_tuner_evaluation.md)
 - **Target Seam:** `packages/ccba-ai/src/ccba_ai/`, `.agents/skills/ccba-ai-gateway-sdk/SKILL.md`
 - **Reference:** ADR-0023, Ticket 03 Nightly Tuner Evolution
 
