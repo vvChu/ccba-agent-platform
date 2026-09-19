@@ -55,6 +55,10 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `office`
 - `ccba-docx`
 - `docx`
+- `điền form word`
+- `fill form doc`
+- `form-filler`
+- `layout guard`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tự động hóa xử lý văn thư và biểu mẫu hành chính xây dựng.
