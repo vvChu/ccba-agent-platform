@@ -1,44 +1,50 @@
-# Walkthrough: PR #284 — Giao Thức TRIHT (Release Cleanliness & Hermetic Teardown Gate)
+# Walkthrough: PR #297 — Word COM Single-Pass Form Filler Module & Form Layout Guard
 
-## 1. Tổng Quan PR #284
-- **Branch:** `feat/release-hermetic-cleanliness-gate` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(release): implement TRIHT protocol cleanliness gate and hermetic scoped teardown`
-- **PR liên quan:** [PR #284](https://github.com/vvChu/ccba-agent-platform/pull/284)
-- **Thể chế & Kiến trúc:** ADR-0058 (Hard Completion Lock), ADR-0057 (Two-Stage Governance), TRIHT Protocol
+## 1. Tổng Quan PR #297
+- **Branch:** `feat/ooxml-form-filler-guard` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(ooxml): add Word COM single-pass form filler module with layout guard`
+- **PR liên quan:** [PR #297](https://github.com/vvChu/ccba-agent-platform/pull/297)
+- **Issue liên quan:** Closes [#296](https://github.com/vvChu/ccba-agent-platform/issues/296)
+- **Commit hợp nhất:** `3f2972aa` (Squash and merge)
+- **Thể chế & Kiến trúc:** ADR-0058 (Hard Completion Lock), ADR-0057 (Two-Stage Governance), KISS & Architecture Parity
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #284)
+## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #297)
 
 | ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
 |---|---|---|---|
-| `4035452784` | `.agents/skills/ccba-release-feature/SKILL.md` | Lệnh `git checkout --no-pager main` không đúng cú pháp: `--no-pager` là global option của `git` và phải đứng sau `git` (`git --no-pager checkout main`). | **ĐÃ KHẮC PHỤC**: Đã cập nhật cú pháp chuẩn: `git --no-pager checkout main && git pull origin main` tại dòng 146 của `SKILL.md`. |
-| `4035452828` | `scripts/validation/check_release_cleanliness.py` | Nếu `git status` thất bại hàm đang `return []` (fail-open), khiến release gate hiểu nhầm repo sạch. | **ĐÃ KHẮC PHỤC**: Chuyển sang cơ chế "Fail-Closed" tuyệt đối: khi gặp `CalledProcessError` hoặc `FileNotFoundError`, trả về sentinel `[("!!", f"GIT_STATUS_FAILED: {e}")]` chặn đứng tiến trình release. |
-| `4035452859` | `scripts/validation/check_release_cleanliness.py` | Khối teardown ghép path mà không ràng buộc nằm trong `repo_root` (nguy cơ path traversal), và ignore_errors nuốt lỗi xóa. | **ĐÃ KHẮC PHỤC**: Thêm rào chắn an ninh `abs_path.resolve().relative_to(root.resolve())` chống path traversal, kiểm tra `not abs_path.exists()` sau xóa và cảnh báo lỗi nếu tệp vẫn tồn tại. |
-| `4035452897` | `scripts/tests/test_check_release_cleanliness.py` | Chưa có test bao phủ trường hợp `git status` thất bại (CalledProcessError / FileNotFoundError) kiểm chứng fail-closed. | **ĐÃ KHẮC PHỤC**: Bổ sung 2 unit tests `test_get_porcelain_status_git_error_fails_closed` và `test_get_porcelain_status_git_not_found_fails_closed` (11/11 tests pass). |
-| `4035869238` | `scripts/validation/check_release_cleanliness.py` | `run_post_check` tự động xóa tệp tracked nếu tên khớp `KNOWN_TEST_ARTIFACTS`. | **ĐÃ KHẮC PHỤC**: Đảm bảo tệp tracked bị `M/D/A/R/C/U` luôn luôn bị chặn (BLOCK) và không bao giờ bị xóa tự động. Chỉ tệp untracked (`??`) khớp danh mục cache mới được thu hồi an toàn. Đã bổ sung test `test_run_post_check_does_not_purge_tracked_modified_known_artifact`. |
-| `4035905024` | `scripts/validation/check_release_cleanliness.py` | Gọi `sys.stdout/sys.stderr.reconfigure()` ở module level vi phạm repo guidance và phá vỡ pytest I/O capture trên Windows. | **ĐÃ KHẮC PHỤC**: Di dời toàn bộ stream reconfiguration vào bên trong CLI entrypoint `main()`. |
+| Review PR #297 | Toàn bộ PR #297 | Rà soát tự động GitHub Copilot | **HOÀN TOÀN SẠCH**: 0 pending review requests, 0 comments. |
+| Audit Script | `audit_pr_comments.py` | Kiểm tra tự động các thay đổi và comments | **[OK]**: All Copilot reviews and comments on PR #297 are clean or resolved. |
+| Maintainer Gate | PR #297 | Phê duyệt hợp nhất và kích hoạt quy trình release | **ĐÃ PHÊ DUYỆT & MERGE**: Squash merge thành công vào `main` tại commit `3f2972aa`. |
 
 ---
 
 ## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
 
-1. **Cổng 0.1 (Pre-Flight Cleanliness Lock):** Chặn đứng quy trình trước khi chạy test nếu phát hiện tệp chưa commit, bảo toàn 100% mã nguồn của kỹ sư.
-2. **Cổng 0.3 (Post-Test Hermetic Scoped Teardown):** Đối soát trạng thái sau khi chạy integration tests, tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) kèm cảnh báo vàng; chặn đứng nếu có bài test làm thay đổi mã nguồn hoặc tệp lạ.
-3. **Tiện ích CLI Chuyên Trách ([`check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/validation/check_release_cleanliness.py)):** Xây dựng công cụ kiểm tra độc lập hỗ trợ `--phase pre` và `--phase post`, tương thích tuyệt đối Windows UTF-8 (`sys.stdout.reconfigure`), xử lý tệp qua `git status --porcelain -z` (null-terminated), fail-closed khi lỗi, và chống path traversal.
-4. **Nâng Cấp Kỹ Năng ([`ccba-release-feature`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-release-feature/SKILL.md)):** Tích hợp Cổng 0.1 và Cổng 0.3 vào Bước 0; bổ sung dọn dẹp tiến trình mồ côi (`ensure_single_instance('pytest')`) và `git --no-pager checkout main` cho Bước 3.2 chuyển nhánh an toàn.
-5. **Bộ Kiểm Thử Tự Động ([`test_check_release_cleanliness.py`](file:///d:/GitHubProjects/ccba-agent-platform/scripts/tests/test_check_release_cleanliness.py)):** 11 unit tests kiểm tra toàn diện cả 2 phase pre/post, fail-closed, cách ly path traversal và bảo vệ tệp tracked (100% pass).
-6. **Giải Quyết Sự Cố CI Runner Treo & Architecture Drift:** Kế thừa bản vá process safety (`ancestor_pids` guard, CI bypass) từ PR #281 và đăng ký `scripts/validation/` vào `README.md`.
+1. **Sub-module Form Filler Mới ([`ccba_ooxml.form_filler`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-ooxml/src/ccba_ooxml/form_filler/)):**
+   - **Unified Facade (`WordFormFiller`):** Giao diện thống nhất hỗ trợ auto-detect hệ điều hành (`engine="auto"`), context manager tự thu hồi tiến trình Word an toàn (`with WordFormFiller(...) as filler:`), và fluent chaining API.
+   - **Engine A (`WinwordEngine` — Windows Native):**
+     - Thao tác trực tiếp trên Word DOM qua COM (`win32com.client`).
+     - Điền trực tiếp trên file `.doc` (Word 97-2003 nhị phân) và `.docx` gốc (In-Place Single-Pass) theo `Paragraph.Range` và `Table.Cell`, không qua chuyển đổi trung gian.
+     - Tự động đóng tài liệu và tắt tiến trình Word an toàn trong khối `finally`, triệt tiêu nguy cơ rò rỉ tiến trình `WINWORD.EXE`.
+   - **Engine B (`SofficeFallbackEngine` — Cross-Platform Linux/Docker):**
+     - Sử dụng LibreOffice (`soffice` headless runner trong `ccba_ooxml.soffice`) kết hợp `python-docx` khi chạy trên Linux, container Docker hoặc máy chủ không có Microsoft Word.
+     - Thao tác trực tiếp trên cây XML OpenXML (`w:cantSplit`).
 
----
+2. **Form Layout Guard (`FormLayoutGuard`):**
+   - **Anti-Row Split:** Cưỡng chế `Row.AllowBreakAcrossPages = False` (COM) hoặc chèn thẻ `<w:cantSplit/>` (DOCX XML) để bảo vệ toàn vẹn bảng biểu, ngăn hàng bị xé đôi giữa 2 trang in.
+   - **Empty Row Pruning:** Tự động cắt tỉa các dòng mẫu trống thừa trong bảng biểu danh sách động.
+   - **Page Break Enforcement:** Tự động chèn ngắt trang (`PageBreakBefore`) cho các phần kết luận/chữ ký theo từ khóa nhận diện.
 
-## 4. Kết Quả Kiểm Định CI Cuối Cùng Trên GitHub Actions (PR #284)
+3. **Tài Liệu & Quản Trị Hệ Thống:**
+   - Sổ tay kỹ thuật: [`.agents/skills/ccba-xu-ly-van-phong/resources/form-filling.md`](file:///home/vvc/ccba/ccba-agent-platform/.agents/skills/ccba-xu-ly-van-phong/resources/form-filling.md).
+   - Đăng ký triggers trong `platform-loader/catalog.yaml` và `ccba-xu-ly-van-phong/SKILL.md` (`điền form word`, `fill form doc`, `form-filler`, `layout guard`).
+   - Cập nhật tài liệu kiến trúc `README.md` loại bỏ Architecture Drift.
+   - Biên dịch web docs tự động (`docs/`).
 
-- **`validate` (Documentation Check):** ✅ PASS (24s)
-- **`scan` (Security & Privacy):** ✅ PASS (12s)
-- **`Lint Markdown`:** ✅ PASS (10s)
-- **`Test - Python 3.10`:** ✅ PASS (3m25s)
-- **`Test - Python 3.11`:** ✅ PASS (3m5s)
-- **`Test - Python 3.12`:** ✅ PASS (2m23s)
-
-**Tổng kết:** 6/6 Checks PASS 100%. Trạng thái `CLEAN` / `MERGEABLE`.
+4. **Kiểm Thử Tự Động & CI:**
+   - Unit tests: [`test_form_filler.py`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-ooxml/tests/test_form_filler.py) (7/7 tests passed).
+   - Package tests: `packages/ccba-ooxml/tests/` (67/67 tests passed).
+   - Monorepo isolated tests: 11/11 package suites passed.
+   - GitHub Actions CI: 6/6 jobs passed (Markdown lint, Python 3.10, 3.11, 3.12, Security scan, Documentation check).
