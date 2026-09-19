@@ -84,6 +84,7 @@ python scripts/governance/compile_catalog.py --check
 
 ## 3. Key repository conventions
 
+- **Hub constitution**: follow Layer 1 rules in `.agents/AGENTS.md`; this repository runs in Hub mode, so Reuse-First and CCBA legal/identity constraints are mandatory.
 - **Python baseline**: 3.10+, strict mypy, ruff line length 100, double quotes.
 - **Imports**: absolute within package (e.g., `from mdconverter.core...`). Never import `_*` private symbols across packages.
 - **Env loading**: `mdconverter` reads `.env` at CWD; `ccba-ai` searches upward for `.env`/`.env.ai-gateway`. Do not assume shared env-loading behavior.
