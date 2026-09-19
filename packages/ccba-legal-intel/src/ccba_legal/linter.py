@@ -368,9 +368,7 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
                 slide_files = [
                     n for n in z.namelist() if re.match(r"^ppt/slides/slide\d+\.xml$", n)
                 ]
-                slide_files.sort(
-                    key=lambda x: int(m.group()) if (m := re.search(r"\d+", x)) else 0
-                )
+                slide_files.sort(key=lambda x: int(m.group()) if (m := re.search(r"\d+", x)) else 0)
                 for s_name in slide_files:
                     m = re.search(r"\d+", s_name)
                     s_num = int(m.group()) if m else 1
