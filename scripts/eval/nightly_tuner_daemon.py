@@ -149,6 +149,8 @@ class NightlyTunerDaemon:
             return "eval_copywriting.json"
         if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
             return "eval_agent_orchestration.json"
+        if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
+            return "eval_grilling.json"
 
         return "eval_general_domain.json"
 
@@ -196,6 +198,7 @@ class NightlyTunerDaemon:
             "bigbim-vbpl-digest": "eval_legal_intel.json",
             "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
             "ccba-ai-qc": "eval_pccc_audit_redteam.json",
+            "ccba-grilling": "eval_grilling.json",
         }
 
         recent_scores = self._load_recent_baseline_scores()

@@ -315,6 +315,8 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-teamwork": ["agent_orchestration", "teamwork"],
     "agent_orchestration": ["agent_orchestration", "teamwork"],
     "ccba-ai-qc": ["ai_qc", "pccc_audit"],
+    "ccba-grilling": ["grilling", "grill"],
+    "grilling": ["grilling", "grill"],
 }
 
 

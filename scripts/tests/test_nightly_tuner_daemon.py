@@ -198,6 +198,26 @@ def test_discover_skills_and_datasets_routing() -> None:
         assert mapping["bigbim-risk"] == "eval_bigbim_risk.json"
     if "ccba-legal-advisor" in mapping:
         assert mapping["ccba-legal-advisor"] == "eval_legal_intel.json"
+    if "ccba-grilling" in mapping:
+        assert mapping["ccba-grilling"] == "eval_grilling.json"
+
+
+def test_grilling_scorers_and_dataset_integration() -> None:
+    """Verify grilling skills have dedicated scorers and valid dataset items."""
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    scorers = get_default_domain_scorers("ccba-grilling")
+    scorer_names = [s.name for s in scorers]
+    assert "grilling_one_by_one_and_recommendation" in scorer_names
+    assert "grilling_anti_trap_hard_floor" in scorer_names
+    assert "grilling_escalation_guard" in scorer_names
+
+    items = load_eval_dataset(skill_name="ccba-grilling")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_grilling_standard_stress_test_single_question" in item_ids
+    assert "test_grilling_escalation_issue_tree" in item_ids
 
 
 def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> None:
