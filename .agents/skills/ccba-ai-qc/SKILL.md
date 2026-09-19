@@ -37,6 +37,7 @@ triggers:
 - multi-discipline audit
 - heat map report
 ---
+
 # Master Deep Skill: Kiểm Soát Chất Lượng Thiết Kế Đa Bộ Môn (`ccba-ai-qc`)
 
 Kỹ năng này là cổng điều phối thống nhất cho toàn bộ quy trình kiểm soát chất lượng (QC) và phát hiện xung đột bản vẽ thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC) thông qua Deep Seam **`QCAuditPipeline`** ([`packages/ccba-qc-core`](../../../packages/ccba-qc-core)).
@@ -123,4 +124,9 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/discovery.md` | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
 | `references/integrated_audit.md` | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
 | `references/reporter.md` | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
-| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+
+## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
+* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
+* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
+* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.
