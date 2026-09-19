@@ -289,5 +289,63 @@
 | `PRR_kwDOQzfV088AAAABOSIylg` | Toàn bộ PR #289 | Tổng quan đánh giá của Copilot về chuẩn hóa `find_doc()` và bảo mật tài liệu. | **ĐÃ KHẮC PHỤC HOÀN TOÀN**: Đã xử lý toàn diện qua các commit bổ sung. |
 | `PRR_kwDOQzfV088AAAABOSLTeA` | `packages/ccba-legal-intel/src/ccba_legal/linter.py:371` | Sắp xếp slide PPTX gọi `re.search()` 2 lần mỗi phần tử và danh sách `docx` chưa định kiểu strict mypy. | **ĐÃ KHẮC PHỤC**: Dùng assignment expression `m := re.search(r"\d+", x)` để cache kết quả và gán `results: list[tuple[int, str, str]] = []`. |
 
+---
+
+# Walkthrough: PR #295 — Tích Hợp Pha 1 Legal Ground Truth Parity & Telemetry Vào Nightly Tuner
+
+## 1. Tổng Quan PR #295
+- **Branch:** `proposal/nightly-legal-parity-tuner-integration` $\rightarrow$ `main`
+- **Tiêu đề:** `feat(cron): integrate Phase 1 legal ground truth parity and telemetry into nightly tuner`
+- **PR liên quan:** [PR #295](https://github.com/vvChu/ccba-agent-platform/pull/295)
+- **Đề xuất RFC:** `.agents/proposals/2026-09-19_nightly-legal-parity-tuner-integration.md`
+- **Commit hợp nhất:** `5cdc0d787be4db8cac11c21d0874b4c4b4490c5d` (Squash Merge)
+- **Thể chế & Kiến trúc:** ADR-0037, ADR-0041, ADR-0042, ADR-0045, ADR-0047, ADR-0057, ADR-0058
+
+---
+
+## 2. Các Thay Đổi Cốt Lõi (Core Deliverables)
+
+1. **Tích hợp Pha 1 Telemetry vào Cỗ máy Ban đêm (`run_nightly_tuner.sh` & `.bat`):**
+   - Bổ sung khối kiểm định Pha 1: Chạy `run_nightly_telemetry.py --cohorts golden` trước Pha 2 (Document Auto-Evolution) và Pha 3 (Nightly Auto-Tuner).
+   - Tự động hóa commit và push báo cáo telemetry ban đêm (`nightly_*.md`, `nightly_*.json`) với danh tính daemon `CCBA Nightly Daemon` và cờ `--no-verify` tránh CI loops.
+   - Gửi cảnh báo Telegram tức thì khi phát hiện lỗi hồi quy kiểm chuẩn pháp lý / Master CI.
+   - Cơ chế fallback linh hoạt và hỗ trợ đầy đủ cờ `--dry-run`.
+2. **Cập nhật Bất biến Kỹ năng Ingestion & Processing:**
+   - `.agents/skills/ccba-legal-ingest/SKILL.md`: Bổ sung Kịch bản 5 về Session Takeover TVPL Pro, định tuyến Tab Tiêu chuẩn TCVN và mô hình Safe Landing Download.
+   - `.agents/skills/ccba-markdown-document-processing/SKILL.md`: Bổ sung Mục 4 về kiểm chuẩn Verbatim Ground Truth ($\ge 98.0\%$ greedy coverage) và Anti-Vacuous Table Regularity (zero ragged rows, tách rời chú thích chân bảng).
+3. **Quản trị Đề xuất & Hệ sinh thái:**
+   - `.agents/proposals/2026-09-19_nightly-legal-parity-tuner-integration.md`: RFC proposal chính thức ghi nhận đầy đủ ma trận Giá trị × Rủi ro × KISS.
+   - `docs/adr/TRACEABILITY_MATRIX.md`: Bổ sung ánh xạ ADR-0037 và ADR-0041 cho kỹ năng markdown document processing.
+   - `.md/data/spoke_registry.yaml`: Cập nhật mã định danh spoke bảo mật.
+
+---
+
+## 3. Kết Quả Kiểm Định Tự Động (Deterministic Hard Completion Verification)
+
+- **Worker 1 (Spoke Leakage & Privacy Guard):** ✅ **PASSED** (7 files, 0 critical violations, 0 warnings).
+- **Worker 2 (Deep Seams & Skills Governance):**
+  - `python scripts/validate_skills.py --enforce-gpi`: ✅ **PASSED** (73/73 skills validated, 0 errors).
+  - `bash -n scripts/cron/run_nightly_tuner.sh`: ✅ **PASSED** (Cú pháp hợp lệ).
+  - `python -m ccba_harness verify-patch --preset skill`: ✅ **ALL 2/2 COMMANDS PASSED** (`validate_skills` + `compile_catalog`).
+- **Worker 3 (Proposal Lifecycle & Catalog Governance):**
+  - Metadata frontmatter hợp chuẩn, catalog tái biên dịch thành công 73 skills.
+- **GitHub Actions CI (6/6 checks):**
+  - `Lint Markdown`: SUCCESS
+  - `Test - Python 3.10`: SUCCESS
+  - `Test - Python 3.11`: SUCCESS
+  - `Test - Python 3.12`: SUCCESS
+  - `scan`: SUCCESS
+  - `validate`: SUCCESS
+
+---
+
+## 4. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot & Maintainer
+
+| ID / Review | Tệp Tin | Vấn Đề / Yêu Cầu | Trạng Thái & Giải Pháp |
+|---|---|---|---|
+| Review PR #295 | Toàn bộ PR #295 | Rà soát tự động GitHub Copilot | **HOÀN TOÀN SẠCH**: 0 pending review requests, 0 comments. |
+| Maintainer Gate | Toàn bộ PR #295 | Phê duyệt hợp nhất và kích hoạt Bước 5 Post-Merge Governance | **ĐÃ PHÊ DUYỆT**: Squash merge thành công vào `main` tại commit `5cdc0d78`. |
+
+
 
 
