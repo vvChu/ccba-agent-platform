@@ -289,9 +289,12 @@ def test_legal_knowledge_sync_orchestrator(tmp_path: Path):
     orch_legal = LegalKnowledgeSyncOrchestrator(legal_spoke, tmp_path, "Pháp điển")
     assert orch_legal.is_legal_related_spoke() is True
     assert orch_legal.is_master_legal_corpus() is False
-    res_legal = orch_legal.sync_or_advise(dry_run=True)
+    res_legal = orch_legal.sync_or_advise(dry_run=True, pull_assets=False)
     assert res_legal["is_legal"] is True
     assert res_legal["dry_run"] is True
+    res_legal_full = orch_legal.sync_or_advise(dry_run=True, pull_assets=True)
+    assert res_legal_full["is_legal"] is True
+    assert res_legal_full["dry_run"] is True
 
     # 3. Spoke with legal_registry.yaml
     custom_spoke = tmp_path / "custom_spoke"
@@ -445,6 +448,7 @@ def test_run_spoke_sync_cli_with_bootstrap(tmp_path: Path):
             backup=True,
             bootstrap=True,
             verify=False,
+            pull_assets=False,
         )
 
 
@@ -462,6 +466,25 @@ def test_run_spoke_sync_cli_with_verify(tmp_path: Path):
             backup=True,
             bootstrap=False,
             verify=True,
+            pull_assets=False,
+        )
+
+
+def test_run_spoke_sync_cli_with_pull_assets(tmp_path: Path):
+    """Test run_spoke_sync_cli accepts --pull-assets and passes it to sync_project."""
+    with patch("scripts.spoke.sync.cli.sync_project") as mock_sync:
+        mock_sync.return_value = 0
+        code = run_spoke_sync_cli(["--spoke", str(tmp_path), "--apply", "--pull-assets"])
+        assert code == 0
+        mock_sync.assert_called_once_with(
+            str(tmp_path),
+            None,
+            dry_run=False,
+            force=False,
+            backup=True,
+            bootstrap=False,
+            verify=False,
+            pull_assets=True,
         )
 
 
@@ -484,6 +507,7 @@ def test_ccba_platform_cli_arguments():
             "--verify",
             "--force",
             "--include-sandboxes",
+            "--pull-assets",
         ]
     )
     assert sync_args.apply is True
@@ -491,6 +515,7 @@ def test_ccba_platform_cli_arguments():
     assert sync_args.verify is True
     assert sync_args.force is True
     assert sync_args.include_sandboxes is True
+    assert sync_args.pull_assets is True
 
     # Test doc-audit flags
     doc_args = parser.parse_args(["doc-audit", "--fix", "--changed", "--root", "."])
