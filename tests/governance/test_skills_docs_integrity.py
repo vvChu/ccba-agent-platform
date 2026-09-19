@@ -7,8 +7,16 @@ Verifies that:
 4. check_skills_docs_in_sync passes without error.
 """
 
+import sys
+from pathlib import Path
+
 import pytest
 import yaml
+
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from scripts.governance.compile_skills_docs import (
     HUB_ROOT,
     PIPELINE_MAP,

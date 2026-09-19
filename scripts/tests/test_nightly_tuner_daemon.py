@@ -310,3 +310,38 @@ def test_daemon_real_llm_and_token_budget(monkeypatch: pytest.MonkeyPatch) -> No
     assert report.total_tokens == 1500
     assert report.prompt_tokens == 1000
     assert report.completion_tokens == 500
+
+
+def test_create_pull_request_logs_error_and_retries_without_bad_label(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify _create_pull_request logs gh CLI errors and retries without invalid labels."""
+    import logging
+
+    daemon = NightlyTunerDaemon(root=project_root)
+
+    def mock_subprocess_run(cmd, *args, **kwargs):
+        class MockResult:
+            def __init__(self, returncode: int, stdout: str, stderr: str):
+                self.returncode = returncode
+                self.stdout = stdout
+                self.stderr = stderr
+
+        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
+        if "verify-patch" in cmd_str:
+            return MockResult(0, "PASSED", "")
+        if "git" in cmd_str and "push" in cmd_str:
+            return MockResult(0, "", "")
+        if "gh" in cmd_str and "pr" in cmd_str and "create" in cmd_str:
+            if "--label" in cmd_str:
+                return MockResult(1, "", "could not add label: 'triage:auto-tuned' not found")
+            return MockResult(0, "https://github.com/vvChu/ccba-agent-platform/pull/293\n", "")
+        return MockResult(0, "", "")
+
+    monkeypatch.setattr("subprocess.run", mock_subprocess_run)
+
+    with caplog.at_level(logging.WARNING):
+        pr_url = daemon._create_pull_request("auto-tune/nightly-test", "Report body")
+
+    assert pr_url == "https://github.com/vvChu/ccba-agent-platform/pull/293"
+    assert "could not add label: 'triage:auto-tuned' not found" in caplog.text
