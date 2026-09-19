@@ -62,6 +62,49 @@ def test_discover_skills_with_scoped_target_skills() -> None:
     assert "ccba-academic-writing" not in skill_names
 
 
+def test_load_recent_baseline_scores(tmp_path: Path) -> None:
+    """Verify daemon extracts recent baseline scores from reports directory."""
+    reports_dir = tmp_path / ".md" / "knowledge" / "reports"
+    reports_dir.mkdir(parents=True)
+    report_file = reports_dir / "nightly_tuner_report_20260919_120000.md"
+    report_file.write_text(
+        "| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu |\n"
+        "| :--- | :---: | :---: |\n"
+        "| `ccba-grilling` | 71.7% | **85.5%** |\n"
+        "| `bigbim-risk` | 96.7% | **100.0%** |\n",
+        encoding="utf-8",
+    )
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    scores = daemon._load_recent_baseline_scores()
+    assert scores.get("ccba-grilling") == 85.5
+    assert scores.get("bigbim-risk") == 100.0
+
+
+def test_save_plateau_brief(tmp_path: Path) -> None:
+    """Verify plateau escalation brief is exported properly under ADR-0052."""
+    from scripts.eval.git_ratchet_tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    mock_report = RatchetReport(
+        target_file=str(tmp_path / "SKILL.md"),
+        initial_score=75.0,
+        final_score=75.0,
+        total_iterations=3,
+        kept_commits=0,
+        reverted_trials=3,
+        history=[],
+    )
+
+    brief_path = daemon._save_plateau_brief("ccba-test-skill", tmp_path / "SKILL.md", mock_report)
+    assert brief_path.exists()
+    assert brief_path.name == "ccba-test-skill_plateau.md"
+    content = brief_path.read_text(encoding="utf-8")
+    assert "# ⚠️ CCBA Plateau Escalation Brief (ADR-0052)" in content
+    assert "75.0%" in content
+    assert "gemini-3.8-flash-high" in content
+
+
 def test_generate_evolution_report_markdown() -> None:
     """Verify Markdown report generation contains all required metrics and safety badges."""
     report = NightlyDaemonReport(
