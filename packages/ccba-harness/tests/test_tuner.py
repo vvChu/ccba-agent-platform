@@ -1136,3 +1136,83 @@ Mâu thuẫn thông tin (Information Conflict) tại bước phối hợp V2 - C
     # Score must achieve >= 85.0% without critical failures
     assert report.initial_score >= 85.0
     assert report.final_score >= 85.0
+
+
+def test_adaptive_rate_limiter_timing_and_backoff():
+    """Verify AdaptiveRateLimiter enforces intervals and increases backoff on high latency."""
+    from ccba_harness.evals.tuner import AdaptiveRateLimiter
+
+    simulated_time = 100.0
+    sleeps: list[float] = []
+
+    def mock_time():
+        nonlocal simulated_time
+        return simulated_time
+
+    def mock_sleep(d: float):
+        nonlocal simulated_time
+        sleeps.append(d)
+        simulated_time += d
+
+    # 60 RPM = 1.0s interval
+    limiter = AdaptiveRateLimiter(
+        requests_per_minute=60.0,
+        latency_threshold_s=4.0,
+        backoff_multiplier=1.5,
+        sleeper=mock_sleep,
+        time_fn=mock_time,
+    )
+
+    # First call: no previous call, base interval is satisfied
+    d1 = limiter.wait(last_latency_s=1.0)
+    assert d1 == 0.0
+
+    # Second call immediately (0 elapsed): should delay ~1.0s
+    d2 = limiter.wait(last_latency_s=1.0)
+    assert d2 == 1.0
+    assert len(sleeps) == 1
+
+    # Third call with high latency (6.0s > 4.0s threshold): excess 2.0s * 0.5 = 1.0s backoff
+    # If 0s elapsed, delay = 1.0 (base) + 1.0 (backoff) = 2.0s
+    d3 = limiter.wait(last_latency_s=6.0)
+    assert d3 == 2.0
+    assert len(sleeps) == 2
+
+
+def test_llm_task_adapter_with_rate_limiter():
+    """Verify LLMTaskAdapter invokes rate_limiter.wait() on each eval call."""
+    from unittest.mock import MagicMock
+
+    from ccba_harness.evals.models import EvalItem
+    from ccba_harness.evals.tuner import LLMTaskAdapter
+
+    mock_client = MagicMock()
+    mock_res = MagicMock()
+    mock_res.content = "Answer"
+    mock_res.usage.prompt_tokens = 10
+    mock_res.usage.completion_tokens = 10
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    wait_calls: list[float] = []
+
+    class MockLimiter:
+        def wait(self, last_latency_s: float = 0.0) -> float:
+            wait_calls.append(last_latency_s)
+            return 0.1
+
+    adapter = LLMTaskAdapter(
+        client=mock_client,
+        rate_limiter=MockLimiter(),
+    )
+
+    task = adapter.create_eval_task("Skill content")
+    item = EvalItem(id="test-1", input_prompt="Hello")
+
+    res1 = task(item)
+    assert res1 == "Answer"
+    assert len(wait_calls) == 1
+    assert wait_calls[0] == 0.0
+
+    res2 = task(item)
+    assert res2 == "Answer"
+    assert len(wait_calls) == 2
