@@ -200,6 +200,34 @@ def test_discover_skills_and_datasets_routing() -> None:
         assert mapping["ccba-legal-advisor"] == "eval_legal_intel.json"
     if "ccba-grilling" in mapping:
         assert mapping["ccba-grilling"] == "eval_grilling.json"
+    if "ccba-adr-lifecycle" in mapping:
+        assert mapping["ccba-adr-lifecycle"] == "eval_adr_lifecycle.json"
+
+
+def test_adr_lifecycle_and_risk_redteam_integration() -> None:
+    """Verify adr lifecycle has dedicated scorers and risk redteam dataset is valid."""
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    # 1. ADR Lifecycle
+    adr_scorers = get_default_domain_scorers("ccba-adr-lifecycle")
+    adr_scorer_names = [s.name for s in adr_scorers]
+    assert "adr_scaffolding_and_lifecycle" in adr_scorer_names
+    assert "adr_anti_trap_hard_floor" in adr_scorer_names
+    assert "adr_governance_guard" in adr_scorer_names
+
+    adr_items = load_eval_dataset(skill_name="ccba-adr-lifecycle")
+    assert len(adr_items) == 5
+    adr_item_ids = [it.id for it in adr_items]
+    assert "test_adr_lifecycle_scaffold_new_adr" in adr_item_ids
+    assert "test_adr_lifecycle_status_cascading_supersede" in adr_item_ids
+
+    # 2. BigBIM Risk Red-Team
+    rt_items = load_eval_dataset(skill_name="bigbim-risk-redteam")
+    assert len(rt_items) >= 17
+    rt_item_ids = [it.id for it in rt_items]
+    assert "test_bigbim_risk_redteam_01_compound_chain_conflict" in rt_item_ids
+    assert "test_bigbim_risk_redteam_02_spatial_zone_smoke_compartment" in rt_item_ids
 
 
 def test_grilling_scorers_and_dataset_integration() -> None:
