@@ -178,3 +178,45 @@ class TestDocRefactorDaemon:
             c for c in executed_cmds if len(c) >= 3 and c[:3] == ["git", "branch", "-D"]
         ]
         assert len(delete_branch) == 1, "Expected git branch -D to clean up empty branch"
+
+    def test_doc_refactor_pr_creation_logs_error_and_retries_without_bad_label(
+        self, project_root: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verifies doc_refactor_daemon logs gh errors and falls back to opening PR without invalid label."""
+        import logging
+        import subprocess
+
+        class MockRes:
+            def __init__(self, stdout: str = "", stderr: str = "", returncode: int = 0):
+                self.stdout = stdout
+                self.stderr = stderr
+                self.returncode = returncode
+
+        def mock_run(cmd, *args, **kwargs):
+            cmd_list = list(cmd)
+            if cmd_list[:3] == ["git", "rev-parse", "--abbrev-ref"]:
+                return MockRes(stdout="main\n", returncode=0)
+            if cmd_list[:2] == ["git", "commit"]:
+                return MockRes(stdout="[docs/auto-refactor] commit", returncode=0)
+            if cmd_list[:2] == ["git", "push"]:
+                return MockRes(returncode=0)
+            if cmd_list[:3] == ["gh", "pr", "create"]:
+                if "--label" in cmd_list:
+                    return MockRes(
+                        stderr="could not add label: 'documentation' not found", returncode=1
+                    )
+                return MockRes(
+                    stdout="https://github.com/vvChu/ccba-agent-platform/pull/294\n", returncode=0
+                )
+            return MockRes(returncode=0)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        engine = DocAutoEvolutionEngine(root=project_root)
+        with caplog.at_level(logging.WARNING):
+            report = engine.run_nightly_evolution(dry_run=False)
+
+        assert report.commits_created == 1
+        assert report.pr_url == "https://github.com/vvChu/ccba-agent-platform/pull/294"
+        assert "could not add label: 'documentation' not found" in caplog.text
+

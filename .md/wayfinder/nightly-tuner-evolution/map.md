@@ -2,19 +2,19 @@
 
 ## 🎯 Điểm Đích (Destination)
 Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Daemon` & `Doc-Auto-Evolution`) vận hành 100% tự chủ, ổn định 24/7 trên máy chủ Spark (:8090), đạt chuẩn **ADR-0023**, **ADR-0043**, **ADR-0058** và **ADR-0059**, bao gồm:
-1. **100% Đánh Giá Chuẩn Xác & Không Điểm Liệt Giả Lập:** Toàn bộ 73 kỹ năng trong catalog được định tuyến đúng bộ đề thi chuyên biệt, triệt tiêu 100% hiện tượng fallthrough luồng điều khiển và conjunctive deadlock (`bigbim-risk`, `ccba-ai-qc`, Legal skills).
-2. **Hạ Tầng Git Độc Lập, Khóa Cứng & Tự Dọn Dẹp:** Quản trị vòng đời nhánh Git trơn tru qua Ephemeral Git Worktree, khóa đơn nhiệm `flock`, cách ly giữa các daemons, chặn đứng việc xả nhánh rỗng lên remote và dọn dẹp triệt để nhánh rác mồ côi > 7 ngày.
-3. **Sẵn Sàng Mở Rộng Real LLM Với Token Budget Governance:** Kiến trúc adapter thống nhất giữa `ccba_harness.evals.tuner` và `ccba_ai.eval_runner`, tích hợp trần ngân sách token hàng đêm và circuit breaker an toàn khi kết nối vLLM/LiteLLM server.
-4. **Bộ Đề Thi & Scorers Đa Miền Chuyên Sâu:** Xây dựng bộ đề kiểm thử chuẩn tắc cho bài toán mâu thuẫn thông tin phi hình học BIM V2 và Scorer chuyên biệt cho các kỹ năng điều phối đa tác tử (Orchestration).
+1. **100% Đánh Giá Chuẩn Xác & Không Điểm Liệt Giả Lập:** Toàn bộ 73 kỹ năng trong catalog được định tuyến đúng bộ đề thi chuyên biệt, triệt tiêu 100% hiện tượng fallthrough luồng điều khiển và conjunctive deadlock (`bigbim-risk`, `ccba-ai-qc`, Legal skills). *(Giai đoạn 1 đã hoàn thành)*.
+2. **Hạ Tầng Git Độc Lập, Khóa Cứng & Tự Dọn Dẹp:** Quản trị vòng đời nhánh Git trơn tru qua Ephemeral Git Worktree, khóa đơn nhiệm `flock`, cách ly giữa các daemons, chặn đứng việc xả nhánh rỗng lên remote và dọn dẹp triệt để nhánh rác mồ côi > 7 ngày. *(Giai đoạn 1 đã hoàn thành)*.
+3. **Mở Pull Request Tự Động 100% (Zero-Swallowed Error & Label Self-Healing):** Cơ chế tự động mở PR không bị lỗi khi thiếu nhãn GitHub, có fallback retry không nhãn, ghi log chi tiết mã lỗi stderr và chuẩn hóa UTF-8 subprocess trên Windows/Linux. *(Giai đoạn 2 - Đang triển khai)*.
+4. **Sẵn Sàng Vận Hành Real LLM Với Token Budget Governance trên Spark (:8090):** Kết nối an toàn với AI Gateway LiteLLM trên máy chủ Spark, kiểm soát trần ngân sách token hàng đêm, circuit breaker ngắt an toàn và đo lường latency/throughput thực tế. *(Giai đoạn 2 - Đang triển khai)*.
 
 ---
 
 ## 📝 Ghi Chú (Notes)
 - **Tài liệu tham chiếu & bối cảnh:**
   - `.md/knowledge/issues/nightly-tuner-dirty-tree-crash/DECISION_LOG.md` (Phiên Grilling chốt kiến trúc Ephemeral Worktree)
-  - `.md/knowledge/issues/nightly-tuner-dirty-tree-crash/issue_tree_analysis.md` (Issue Tree sự cố dirty working tree)
-  - `.md/knowledge/issues/nightly-tuner-dataset-mismatch/issue_tree_analysis.md` (Issue Tree sự cố lệch đề thi và bộ chấm)
-  - Báo cáo nghiên cứu `/boost` chuyên sâu ngày 18/09/2026.
+  - `.agents/proposals/2026-09-18_nightly-tuner-evolution.md` (RFC Proposal PR #286)
+  - Phản hồi review từ Copilot trên PR #286 ngày 18/09/2026.
+  - Sự cố Nightly Tuner không mở được PR tự động ngày 19/09/2026.
 - **Quy chuẩn thực thi:** Tuân thủ nguyên tắc *Plan, don't do* của Wayfinder; phân tách rạch ròi giữa các Ticket độc lập (~100K token/session), luôn xác minh bằng `python -m ccba_harness verify-patch` trước khi đóng ticket.
 
 ---
@@ -28,24 +28,33 @@ Hệ thống tự động hóa tối ưu kỹ năng ban đêm (`Nightly Tuner Da
 - [x] **[T-02 / REC-04..06] Khóa Đơn Nhiệm Flock & Quản Trị Vòng Đời Nhánh Git:** Bổ sung `flock -n 200` tại `/tmp/ccba_nightly_runner.lock`, Empty Push Guard trong `doc_refactor_daemon.py`, cách ly HEAD sạch giữa daemons, mở rộng `_cleanup_old_empty_branches` đối soát `origin/main` và dọn dẹp remote branch rỗng.
 - [x] **[T-03 / REC-08] Cầu Nối Real LLM Adapter, Token Budget Ceiling & Circuit Breaker:** Xây dựng `TokenUsageTracker` và `LLMTaskAdapter` trong `tuner.py`, kết nối `AIClient.chat_with_metadata`, giới hạn trần ngân sách token hàng đêm (mặc định 5M tokens) với fail-safe early halt `TokenBudgetExceededError`, và ngắt an toàn với `CircuitBreakerOpenError`. Chuyển tiếp cấu hình `--use-real-llm`, `--token-budget`, `--model` qua daemon và shell runner.
 - [x] **[T-04 / REC-07] Bộ Đề Thi & Scorer Chuyên Biệt Coordination V2 & Orchestration:** Thiết kế `eval_bigbim_risk.json` (12 câu tình huống Mâu thuẫn thông tin V2, clearance $\ge 900\text{mm}$, $\ge 150\text{mm}$, BBP logic, Unique ID drift); xây dựng bộ `OrchestrationScorers` (`SingleWriterInvariantScorer`, `ProgressiveDisclosureScorer`, `HandoffProtocolScorer`); tích hợp chấm miền tự động trong `get_default_domain_scorers` và định tuyến daemon `bigbim-risk`.
+- [x] **[T-05 / Bugfix-20260919] Vá Lỗi Mở PR Tự Động & Hậu Kiểm Copilot Review:** Chuyển đổi nhãn mặc định sang `needs-triage` / `documentation`, bổ sung fallback retry không kèm nhãn, ghi log chi tiết stderr, chuẩn hóa UTF-8 subprocess và so sánh ngày cho branch age cutoff.
 
 ---
 
 ## 🎫 Danh Sách Ticket Tại Biên Giới (Frontier Tickets)
+
+### Giai Đoạn 1: Cốt Lõi Hạ Tầng & Tối Ưu Hóa (Đã Hoàn Thành)
 - [x] **[T-01: Vá Lỗi Đánh Giá, Tháo Gỡ Deadlock BIM & Khắc Phục Lệch Đề Thi](tickets/01_evaluation_logic_and_deadlock_quickfix.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-02: Gia Cố Vận Hành Git, Khóa An Toàn Flock & Dọn Dẹp Nhánh Rác Remote](tickets/02_git_safety_and_remote_branch_lifecycle.md)** `[Task (AFK)]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-03: Cầu Nối Adapter Real LLM, Token Budget Ceiling & Circuit Breaker](tickets/03_real_llm_adapter_and_token_governance.md)** `[Research / Task [AFK]]` *(ĐÃ HOÀN THÀNH)*
 - [x] **[T-04: Xây Dựng Bộ Đề Thi & Scorer Chuyên Biệt Cho Coordination V2 & Orchestration](tickets/04_specialized_domain_datasets_and_scorers.md)** `[Research [AFK] / Prototype [HITL]]` *(ĐÃ HOÀN THÀNH)*
 
+### Giai Đoạn 2: Vận Hành Thực Chiến & Khắc Phục Lỗi Hệ Thống (Hiện Tại)
+- [ ] **[T-05: Đóng Gói Bản Vá Post-Merge PR #286, PR Creation Label Fallback & Stderr Logging](tickets/05_pr_creation_label_fallback_and_copilot_review_resolution.md)** `[Task (AFK)]` *(SẴN SÀNG TẠO PR)*
+- [ ] **[T-06: Nghiệm Thu & Chốt Kết Quả Auto-Tune Đêm 19/09 Cho Kỹ Năng ccba-legal-ingest](tickets/06_verify_and_merge_ccba_legal_ingest_nightly_optimization.md)** `[Task (AFK)]` *(SẴN SÀNG KIỂM ĐỊNH)*
+- [ ] **[T-07: Khảo Sát & Đánh Giá Cấu Hình Real LLM trên Máy Chủ Spark (:8090) Cho Nightly Tuner](tickets/07_spark_litellm_real_llm_benchmark_and_deployment.md)** `[Research [AFK]]` *(SUBAGENT ĐANG CHẠY)*
+- [ ] **[T-08: Sửa Lỗi CI Deploy Skills Docs to GitHub Pages Đang Thất Bại Trên main](tickets/08_fix_deploy_skills_docs_ci_pipeline.md)** `[Task (AFK)]` *(SẴN SÀNG TRIỂN KHAI)*
+
 ---
 
 ## 🌫️ Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not yet specified)
-- **Hạ Tầng vLLM / LiteLLM Spark (:8090):** Khi chuyển sang Real LLM, cần xác định mô hình tối ưu cho Evaluator (Gemini 3.7 Flash vs Qwen-2.5-72B local) và cơ chế batching chống quá tải GPU.
-- **Chính Sách Quyền Token GitHub PAT:** Cần kiểm tra xem PAT chạy cron trên Server Spark có quyền `delete-branch` trên remote `origin` hay không để thực hiện dọn dẹp từ xa.
-- **Tiêu Chí Chấm Điểm Cho Orchestration:** Định nghĩa rõ barem điểm đo lường tính toàn vẹn của Single-Writer Pattern và AST Link Integrity mà không dựa dẫm vào regex thô sơ.
+- **Kiểm soát Quota LiteLLM khi Chạy Batch Đồng Thời:** Cần theo dõi hành vi của LiteLLM router trên Spark (:8090) khi daemon gửi hàng trăm prompt requests liên tục, xác định xem có cần thêm adaptive rate limiter ngủ giữa các iterations hay không.
+- **Tiêu Chí Đánh Giá Chất Lượng Prompt Khi Dùng Real LLM vs Mock Task:** Thiết lập ma trận so sánh điểm số và tính hữu ích thực tế của prompt được tối ưu bằng mô hình thật so với prompt sinh ra từ mô phỏng ngữ nghĩa tĩnh.
 
 ---
 
 ## 🚫 Ngoài Phạm Vi (Out of scope)
 - Thay đổi cấu trúc cơ sở dữ liệu IDOP hoặc các bảng thực thể trong `IDOP-CCBA-WAY`.
 - Sửa đổi nội dung hiến chương cốt lõi trong `bigbim-governance` ngoài phạm vi bổ sung từ khóa Uniclass.
+- Nâng cấp phần cứng GPU vật lý trên cụm máy chủ Spark (:8090).
