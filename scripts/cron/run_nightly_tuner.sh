@@ -129,10 +129,18 @@ echo "================================================================="
 
 # 6. Tri-Repo Sequential Pull Gate (ADR 0042)
 BASE_DIR="$(cd "$PROJECT_ROOT/.." && pwd)"
-
+LEGAL_SPOKE_DIR=""
 if [ -d "$BASE_DIR/ccba-legal-knowledge" ]; then
-    echo "🔄 Updating ccba-legal-knowledge..."
-    (cd "$BASE_DIR/ccba-legal-knowledge" && git fetch origin main && git checkout -q main && git pull -q origin main) || echo "⚠️ Warning: Failed to pull ccba-legal-knowledge"
+    LEGAL_SPOKE_DIR="$BASE_DIR/ccba-legal-knowledge"
+elif [ -d "$HOME/ccba/ccba-legal-knowledge" ]; then
+    LEGAL_SPOKE_DIR="$HOME/ccba/ccba-legal-knowledge"
+elif [ -d "/home/ccba/ccba/ccba-legal-knowledge" ]; then
+    LEGAL_SPOKE_DIR="/home/ccba/ccba/ccba-legal-knowledge"
+fi
+
+if [ -n "$LEGAL_SPOKE_DIR" ]; then
+    echo "🔄 Updating ccba-legal-knowledge ($LEGAL_SPOKE_DIR)..."
+    (cd "$LEGAL_SPOKE_DIR" && git fetch origin main && git checkout -q main && git pull -q origin main) || echo "⚠️ Warning: Failed to pull ccba-legal-knowledge"
 fi
 
 if [ -d "$BASE_DIR/IDOP-CCBA-WAY" ]; then
@@ -176,8 +184,53 @@ cd "$WORKTREE_DIR"
 # Ensure full PYTHONPATH across packages and isolated worktree root
 export PYTHONPATH="$WORKTREE_DIR/packages/ccba-harness/src:$WORKTREE_DIR/packages/ccba-ai/src:$WORKTREE_DIR:${PYTHONPATH:-}"
 
+# 7.4. Phase 1: Legal Ground Truth Parity & Master CI Telemetry
+echo "⚖️ [1/3] Running Legal Ground Truth Parity & Master CI Telemetry..."
+if [ -n "$LEGAL_SPOKE_DIR" ] && [ -f "$LEGAL_SPOKE_DIR/.md/tools/run_nightly_telemetry.py" ]; then
+    echo "🔍 Executing Nightly Telemetry Runner in $LEGAL_SPOKE_DIR..."
+    TELEMETRY_EXIT=0
+    (
+        cd "$LEGAL_SPOKE_DIR"
+        if [ -n "$DRY_RUN_FLAG" ]; then
+            echo "   [DRY-RUN] Executing: python3 .md/tools/run_nightly_telemetry.py --cohorts golden --dry-run"
+            python3 .md/tools/run_nightly_telemetry.py --cohorts golden --dry-run
+        else
+            python3 .md/tools/run_nightly_telemetry.py --cohorts golden || TELEMETRY_EXIT=$?
+            if [ $TELEMETRY_EXIT -ne 0 ]; then
+                echo "🚨 [TELEMETRY REGRESSION] Legal Parity / Master CI phát hiện lỗi hồi quy (Exit: $TELEMETRY_EXIT)!" >&2
+                python3 -c "
+import sys
+sys.path.insert(0, '$PROJECT_ROOT')
+try:
+    from scripts.eval.telegram_alert import send_telegram_alert
+    code_str = sys.argv[1]
+    send_telegram_alert(
+        message='🚨 *[CCBA CRON WARNING] Lỗi Hồi Quy Kiểm Chuẩn Pháp Lý Ban Đêm!*\\n'
+                '• *Spoke:* \`ccba-legal-knowledge\`\\n'
+                f'• *Lỗi:* Telemetry Parity / Master CI thất bại (exit code: \`{code_str}\`)\\n'
+                '• *Chi tiết:* Xem báo cáo \`.md/reports/nightly_*.md\`',
+        parse_mode='Markdown',
+        mock_fallback=True
+    )
+except Exception as e:
+    print(f'Lỗi khi gửi telegram alert: {e}', file=sys.stderr)
+" "$TELEMETRY_EXIT" 2>/dev/null || true
+            fi
+            # Auto-commit and push nightly reports if generated
+            if git status --porcelain .md/reports/ 2>/dev/null | grep -q "nightly_"; then
+                echo "📝 Committing and pushing nightly legal telemetry reports..."
+                git add .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
+                git -c user.name="CCBA Nightly Daemon" -c user.email="daemon@ccba-ai.local" commit --no-verify -m "chore(telemetry): record automated nightly legal verification report [skip ci]" || true
+                git push origin main || echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+            fi
+        fi
+    )
+else
+    echo "⚠️ Warning: ccba-legal-knowledge not found or run_nightly_telemetry.py missing. Skipping Phase 1."
+fi
+
 # 8. Run Document Auto-Evolution Engine (Audit -> AST Grounding -> Zero-Deletion -> PR)
-echo "📚 [1/2] Running Document Auto-Evolution Engine..."
+echo "📚 [2/3] Running Document Auto-Evolution Engine..."
 python3 scripts/eval/doc_refactor_daemon.py ${DRY_RUN_FLAG}
 
 # 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
@@ -185,7 +238,7 @@ echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF
 git checkout --detach "$TARGET_REF"
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
-echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."
+echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."
 python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
 
 echo "================================================================="
