@@ -20,6 +20,7 @@ TARGET_REF="${TARGET_REF:-origin/main}"
 USE_REAL_LLM_FLAG=""
 TOKEN_BUDGET_FLAG=""
 MODEL_FLAG=""
+SKILL_FLAG=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -45,6 +46,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --model)
             MODEL_FLAG="--model $2"
+            shift 2
+            ;;
+        --skill|--skills)
+            SKILL_FLAG="--skill $2"
             shift 2
             ;;
         *)
@@ -181,7 +186,7 @@ git checkout --detach "$TARGET_REF"
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
 echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."
-python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG}
+python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
 
 echo "================================================================="
 echo "[CCBA Nightly Daemon] Finished successfully at $(date)"
