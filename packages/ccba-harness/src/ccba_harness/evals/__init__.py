@@ -12,6 +12,14 @@ from .daemon import (
     WeightedPriorityQueue,
     send_telegram_alert,
 )
+from .miner import (
+    classify_target_skill,
+    generate_eval_spec_item,
+    identify_failures,
+    mine_logs_and_export,
+    parse_transcript_logs,
+    redact_sensitive_info,
+)
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
 from .scorers import (
@@ -63,4 +71,10 @@ __all__ = [
     "SkillEvolutionSummary",
     "WeightedPriorityQueue",
     "send_telegram_alert",
+    "classify_target_skill",
+    "generate_eval_spec_item",
+    "identify_failures",
+    "mine_logs_and_export",
+    "parse_transcript_logs",
+    "redact_sensitive_info",
 ]

@@ -2,6 +2,23 @@
 REM run_nightly_tuner.bat - Windows Task Scheduler wrapper for CCBA Nightly Auto-Tuner
 REM Run at 00:00 daily
 
+if "%~1"=="--help" goto show_help
+if "%~1"=="-h" goto show_help
+if "%~1"=="/?" goto show_help
+goto run
+
+:show_help
+echo CCBA Nightly Auto-Tuner ^& Evolution Runner (Windows)
+echo.
+echo Su dung:
+echo   run_nightly_tuner.bat [--dry-run]
+echo.
+echo Tuy chon:
+echo   -h, --help, /?  Hien thi huong dan su dung
+echo   --dry-run       Chay kiem thu an toan, khong commit/push hoac mo PR
+exit /b 0
+
+:run
 cd /d "%~dp0\..\.."
 
 echo =================================================================
