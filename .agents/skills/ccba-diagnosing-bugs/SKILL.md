@@ -184,3 +184,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 <!-- Ratchet Optimization Refinement 4 -->
 - Cập nhật quy chuẩn rà soát vòng 4.
+
+<!-- Ratchet Optimization Refinement 6 -->
+- Cập nhật quy chuẩn rà soát vòng 6.
