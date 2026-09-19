@@ -178,3 +178,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/mock_debugging_patterns.md` | Mẫu hình mock dữ liệu và tạo ca kiểm thử mô phỏng khi chẩn đoán lỗi phần mềm |
 
+## 5. Bất Biến Vận Hành & Khóa Cứng Hoàn Tất
+* **Tiêu chí hoàn thành tường minh:** Mọi bước thực thi đều phải có tiêu chí kiểm chứng khách quan.
+* **Hard Completion Lock:** Bắt buộc xác minh qua `python -m ccba_harness verify-patch` trước khi báo cáo hoàn thành.
