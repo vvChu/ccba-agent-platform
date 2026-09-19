@@ -40,21 +40,20 @@
 
 ### Stage 2: Granularity & Placement Index (GPI) Evaluation
 Run the automated GPI evaluation CLI:
-`ash
+```bash
 ccba-harness evaluate-gpi --file .agents/skills/<skill-name>/SKILL.md
-`
+```
 - [ ] **GPI Score Verified**: Attached CLI output below.
 - [ ] **Placement Compliance**:
   - **GPI >= 12.0**: Qualified as **Tier 2B Standalone Kernel Skill** (.agents/skills/ccba-<name>/).
-  - **GPI < 12.0**: Routed as **Tier 2A Progressive Reference** (
-eferences/*.md within parent Master Skill).
+  - **GPI < 12.0**: Routed as **Tier 2A Progressive Reference** (`references/*.md` within parent Master Skill).
 
 <details>
 <summary>📋 Paste <code>ccba-harness evaluate-gpi</code> output here</summary>
 
-`	ext
+```text
 <!-- Paste output here -->
-`
+```
 </details>
 
 ---

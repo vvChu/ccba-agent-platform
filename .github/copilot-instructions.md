@@ -94,6 +94,9 @@ python scripts/governance/compile_catalog.py --check
 - **Windows subprocess**: always pass `encoding="utf-8", errors="replace"` with `text=True`.
 - **Directory deletion on Windows**: use `safe_rmtree` pattern (`shutil.rmtree(..., onerror=...)` that `chmod`s failing paths to `stat.S_IWRITE` then retries).
 - **Simplify gate**: commits touching >400 LOC or >8 files are blocked by `pre-tool` hooks; add `# APPROVED: <reason>` comment to bypass.
+- **PR Review & Merge Danger**: When summarizing or reviewing PRs, always classify the **Merge Danger**:
+  - **Door**: `Two-way` (trivial to revert, isolated fix) vs `One-way` (hard/costly to revert, breaking change, DB/contract migration).
+  - **Blast Radius**: `Localized` (single internal func/file) vs `Package-wide` vs `Monorepo-wide` vs `Spoke-affecting` (breaks downstream Spoke repos).
 
 ---
 
