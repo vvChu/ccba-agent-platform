@@ -19,7 +19,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .tuner import GitRatchetTuner, RatchetConfig, RatchetReport
+from .tuner import (
+    CODING_ARCHETYPE_KEYWORDS,
+    GitRatchetTuner,
+    RatchetConfig,
+    RatchetReport,
+)
 
 logger = logging.getLogger("ccba.eval.nightly")
 
@@ -205,6 +210,8 @@ class NightlyTunerDaemon:
             return "eval_grilling.json"
         if any(k in sname for k in ["adr", "architecture-decision"]):
             return "eval_adr_lifecycle.json"
+        if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
+            return "eval_codebase_engineering.json"
 
         return "eval_general_domain.json"
 
@@ -341,7 +348,11 @@ class NightlyTunerDaemon:
                 if result.final_score == 100.0 and result.initial_score == 100.0:
                     status = "PERFECT_VERIFIED"
                 if result.halt_reason:
-                    status = f"HALT_{result.halt_reason}"
+                    status = (
+                        result.halt_reason
+                        if result.halt_reason.startswith("HALT_")
+                        else f"HALT_{result.halt_reason}"
+                    )
 
                 total_tokens += result.total_tokens
                 total_prompt_tokens += result.prompt_tokens
@@ -452,7 +463,7 @@ class NightlyTunerDaemon:
                 if s.score_delta > 0
                 else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
             )
-            if s.halt_reason:
+            if s.halt_reason and s.score_delta <= 0:
                 badge = f"⚠️ {s.status}"
             token_str = f"{s.total_tokens:,}" if s.total_tokens > 0 else "-"
             lines.append(

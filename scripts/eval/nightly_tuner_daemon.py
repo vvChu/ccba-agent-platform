@@ -8,6 +8,7 @@ Designed for automated execution on Server Spark (00:00 - 06:00).
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
@@ -49,6 +50,7 @@ __all__ = [
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     parser = argparse.ArgumentParser(description="CCBA Nightly Auto-Tuner Daemon")
     parser.add_argument(
         "--dry-run", action="store_true", help="Run without creating git branches or PRs"
