@@ -7,9 +7,7 @@
 
 ## Miền 1. 🏛️ Kiến Trúc & Phân Tầng Kỹ Năng (Architecture & Governance)
 
-- **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
-  - Cổng 0: Deep Seams (`packages/*/`). `SKILL.md` cấm logic trần. Cổng 1: Tier 3 Composite Orchestrator.
-  - $\mathbf{GPI} = 2.5S + 2K + 2A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals ép $A = 1.0$.
+- **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & GPI]**: Cổng 0: Deep Seams (`packages/*/`). Cổng 1: Tier 3 Orchestrator. $\mathbf{GPI} = 2.5S + 2K + 2A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals ép $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol]**: Đa tác tử: Lead duy nhất ghi codebase/logs; subagents chỉ xuất PatchBlocks. Hợp nhất qua `execute_swarm_patches`.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**: Thin Seam: Package chỉ bộc lộ `__all__`/`__init__.py`, cấm import `_*`. Gỡ bypass trong `check_dependency_contracts.py`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Directory Hygiene]**: `.\.md\`: Gốc chỉ chứa `workspace_context.yaml`, `extracted_docs/`, `knowledge/`, `archive/`.
@@ -20,11 +18,9 @@
 - **RULE-1.9 [Corpus Discovery]**: Quét `project_root` qua `reg_parent/{, .md/}legal_docs`, `project_root/{, .md/}legal_docs`.
 - **RULE-1.10 [ADR 0057 — Skill Promotion Triad]**: Tier 2A $\rightarrow$ Tier 2B: (1) Xóa triggers trùng; (2) Trỏ alias ngắn; (3) Tách Hub vs Spoke.
 - **RULE-1.11 [Diagramming Hygiene]**: Mermaid: Subgraph dùng `style <id>`, cấm `classDef`. Nhãn `["..."]`, ngắt `<br/>`. D2/Kroki: SVG.
-- **RULE-1.12 [Model-Invocation Budget & Cognitive Skills]**: Trần 10 model-invoked skills/bundle (ADR-0040). Kỹ năng tư duy (`ccba-issue-tree`) gán `disable-model-invocation: true` không tốn tokens.
+- **RULE-1.12 [Model-Invocation Budget & Cognitive Skills]**: Trần 10 skills/bundle (ADR-0040). Kỹ năng tư duy (`ccba-issue-tree`) gán `disable-model-invocation: true`.
 - **RULE-1.13 [Cross-Platform Default Branch Resolution]**: `ccba-create-pr` cấm hardcode `main`. Dò qua `git symbolic-ref --short refs/remotes/origin/HEAD` hoặc fallback `origin/main`.
-- **RULE-1.14 [ADR 0050 & ADR 0051 — Hub-Mediated Spoke Discovery & Virtual-First Retrieval]**:
-  - Spoke chỉ cần `hub_path`. SDK tự tra `spoke_registry_decrypted.yaml` trên Hub định vị `ccba-legal-knowledge`.
-  - Phân giải 3 tầng: T1 (CLI `get-clause`/`.\.md\legal_docs\`) $\rightarrow$ T2 (Master Registry) $\rightarrow$ T3 (SSOT `legal_registry.yaml`). Cấm copy cả kho luật về Spoke (tránh nghẽn OneDrive).
+- **RULE-1.14 [ADR 0050/0051 — Spoke Discovery & Virtual-First Retrieval]**: Spoke chỉ cần `hub_path`. Tra `spoke_registry_decrypted.yaml` định vị legal corpus. 3 tầng: T1 (CLI `get-clause`/`.\.md\legal_docs\`) $\rightarrow$ T2 (Master Registry) $\rightarrow$ T3 (SSOT `legal_registry.yaml`). Zero-Bloat: cấm copy cả kho luật về Spoke.
 
 ---
 
@@ -35,27 +31,23 @@
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**: Tests $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp 100% CLI và `SKILL.md`.
 - **RULE-2.4 [Relative Link Resolution Depth]**: `SKILL.md` trỏ pkg 3 cấp `../../../packages/`; `references/` trỏ root 4 cấp. CẤM link `file:///` hay `conversation://`.
 - **RULE-2.5 [Windows Subprocess UTF-8 Encoding Standard]**: `subprocess.run(..., text=True)` trên Windows: `encoding="utf-8", errors="replace"`.
-- **RULE-2.7 [Safe-Remove & Read-Only Cleanup]**: `safe_remove`: Check `is_symlink() or is_file()`, `chmod(0o666)` trước xóa; tránh `NotADirectoryError`.
+- **RULE-2.7 [Cross-Platform Safe-Remove, Junctions & POSIX +x]**: Top-down `safe_remove`: Win junction (`0x400`, Py3.10-3.11 thiếu `st_reparse_tag`) dùng `rmdir`, cấm đệ quy; cấm `chmod` link target. `_make_writable`: Giữ `+x` (`st_mode | S_IWUSR`), CẤM mode tĩnh (`0o600`) làm mất `S_IXUSR` trên POSIX dirs.
 - **RULE-2.8 [Offline XML/OOXML Validation]**: `lxml`: Nhúng schema offline, XMLParser(no_network=True, resolve_entities=False).
 - **RULE-2.9 [Flaky Test Root-Cause Transparency]**: Test retry PASS chưa sửa mã: CẤM coi là đã sửa xong. Phải tìm gốc rễ.
 - **RULE-2.10 [Git Simplify Gate Bypass]**: `simplify_gate` chặn diff $> 400$ LOC, $> 8$ files. Commit thêm `# APPROVED: <lý_do>`.
 - **RULE-2.11 [CI Mock Isolation & Drift Auditor Path Normalization]**: CI `.github/workflows/ci.yml` duy trì `CCBA_AI_MOCK: "1"`. `drift_auditor.py` loại trừ `not filepath.startswith("tests/") and "/tests/" not in filepath`.
 - **RULE-2.12 [Deterministic Completion, Fail-Fast Security & Socket Safety]**:
   - ADR-0058 Hard Completion: CLI `sync` khi `len(bundles_synced) == 0` hoặc fallback cloud BẮT BUỘC exit 1.
-  - Fail-Fast Maskara: Chặn API keys đầu `query_rag()`. Socket: `is_port_open` clamp `timeout <= 1.0s` an toàn Windows.
+  - Maskara: Chặn API keys đầu `query_rag()`. Socket `is_port_open` clamp `timeout <= 1.0s` trên Windows.
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu (Legal & Data Standards)
 
-- **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - MỌI VB viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT). Chặn LLM Legacy Bias.
-  - HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP** (thay NĐ 175 & 15), **NĐ 207/2026/NĐ-CP** (thay NĐ 06). CẤM VB hết hiệu lực.
+- **RULE-3.1 [Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**: MỌI VB viện dẫn BẮT BUỘC CURRENT. Chặn LLM Legacy Bias. HIỆN HÀNH: **Luật XD 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP** (thay NĐ 175 & 15), **NĐ 207/2026/NĐ-CP** (thay NĐ 06). CẤM VB hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**: Tier 1 (`part=-100`): VIP Vector PDF. Tier 2 (`part=-1&docx=1`): VIP Word (`docx_converter.py`). Tier 3 (`part=0`): Gazette Scan PDF.
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**: Footnote: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng qua tiêu đề và `| :--- |`.
-- **RULE-3.4 [ADR 0059 — Cưỡng Chế Nguyên Văn & Chống Bịa Đặt Dữ Liệu Pháp Lý]**:
-  - CẤM tự suy diễn/bịa đặt VBPL; trích dẫn nguyên văn 100%.
-  - Thiếu tệp gốc: dùng `TVPLCrawler` tải PDF/DOCX chính thức, đóng dấu SHA-256 (`pdf_sha256`), kiểm `validate_bundle_provenance()`.
+- **RULE-3.4 [ADR 0059 — Nguyên Văn 100% & Chống Bịa Đặt Dữ Liệu Pháp Lý]**: CẤM tự suy diễn/bịa đặt VBPL; trích dẫn nguyên văn. Thiếu tệp: dùng `TVPLCrawler` tải PDF/DOCX chính thức, đóng dấu SHA-256 (`pdf_sha256`), kiểm `validate_bundle_provenance()`.
 - **RULE-3.5 [Deep Seam CLI Retrieval Over Raw File Ingestion]**: Agent gọi CLI `python -m ccba_legal get-clause --doc <id> --clause <id>` trích xuất AST (< 500 tokens) thay vì dùng `view_file` mở file MD thô (~60k tokens).
 
 ---
@@ -74,7 +66,7 @@
 - **RULE-4.10 [ADR-0045 Spoke Leakage Guard & Report Mirroring Location]**: Gốc `.md/` CHỈ chứa `workspace_context.yaml`. Báo cáo nghiệm thu BẮT BUỘC tại `.md/knowledge/reports/walkthrough.md` (CẤM tại `.md/walkthrough.md`).
 - **RULE-4.11 [OpenAI SDK Embedding & Reasoning Timeout Scaling]**: `embed()`: `extra_body={"drop_params": True}` (`gemini-embedding-2`). Reasoning: sàn `max_tokens` $\ge 16,384$, auto-timeout `max(timeout, max_tokens/50.0)`.
 - **RULE-4.12 [Cross-Skill Referral Hooks & Concept-Level Invariants]**: Tích hợp qua Referral Hooks tại rẽ nhánh. Dùng định danh khái niệm ("các Ghế CCBA", "ma trận RACI") chống drift.
-- **RULE-4.13 [Cross-Shell PR Body Variable Formatting]**: `gh pr create`: Truyền nội dung qua biến môi trường (`--body "$PR_BODY"`). CẤM escape `\n` trần trong quotes hoặc PowerShell `` `n `` trong bash blocks.
+- **RULE-4.13 [Cross-Shell PR Body Formatting]**: `gh pr create`: Truyền body qua env (`--body "$PR_BODY"`). CẤM escape `\n` trong quotes hoặc PowerShell `` `n `` trong bash.
 
 ---
 
@@ -83,4 +75,4 @@
 - **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**: Profile `~/.gemini/antigravity/chrome_vip` cổng 9222. `Browser.setDownloadBehavior` qua WebSocket.
 - **RULE-5.2 [Windows Path Quotes & Hook Protection]**: Windows: IDE bọc `hooks.json` trong `"C:\..."` $\rightarrow$ vô hiệu bằng `{}` và khóa `IsReadOnly = $true` trên PowerShell. Timeout $\ge 60\text{s}$.
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]**: Query TVPL: thay `/`, `:`, `-` bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
-- **RULE-5.4 [Upstream Git Engine Windows Safety]**: Git Windows: Mutex `.md/scratch/upstream_sync.lock`; chữa stale `index.lock`; `safe_rmtree` với `chmod(0o666)`.
+- **RULE-5.4 [Upstream Git Engine Windows Safety]**: Git Windows: Mutex `.md/scratch/upstream_sync.lock`; chữa stale `index.lock`; dọn dẹp bằng `safe_remove` (RULE-2.7).
