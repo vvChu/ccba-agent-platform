@@ -22,6 +22,7 @@ triggers:
 - tvpl vip
 - vip crawler
 ---
+
 # Kỹ Năng Cào & Đóng Gói Văn Bản VIP Thư Viện Pháp Luật (`tvpl-vip-crawler`)
 
 Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, tự động quản lý cookie qua `CookieVault`, bảo vệ phiên làm việc bằng `TVPLSessionMutex`, vượt các rào chắn kiểm tra Cloudflare/Popups và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle** thông qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
@@ -71,3 +72,10 @@ Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản
 2. **Khóa Mutex An Toàn (`TVPLSessionMutex`):** Tự động khóa và giải phóng lock file kèm nhịp Jitter Delay tránh bị khóa IP/tài khoản VIP.
 3. **Multi-tier Fallback:** Tự động chuyển đổi giữa HTTP Crawler tốc độ cao và Chrome CDP Browser khi gặp Cloudflare/Anti-bot.
 4. **Tri-Tier Cloud Vault (ADR 0035):** Tích hợp cờ `--upload-drive` tự động đồng bộ tài sản nhị phân lên Google Drive Vault `CCBA_Legal_Vault` và sinh Native Google Docs cho Google NotebookLM.
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
+  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.
+  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.
+  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
