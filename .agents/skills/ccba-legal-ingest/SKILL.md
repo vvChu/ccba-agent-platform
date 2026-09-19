@@ -82,6 +82,13 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   Đối với các tiêu chuẩn cũ (như TCVN 4474:1987, TCVN 4513:1988, TCVN 9362:2012, TCVN 10304:2014) mà tệp PDF từ TVPL là bản photocopy scan mờ hoặc lỗi phông mã hóa chữ TCVN3/VNI:
   - Lưu giữ nguyên vẹn bản scan gốc dưới tên `sources/<doc_slug>_raw_scan.pdf` để bảo toàn vết truy xuất nguồn gốc pháp lý.
   - Sử dụng Word COM (`docx2pdf` / `win32com`) xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
+
+* **Kịch bản 5 — Tự động giải phóng xung đột phiên TVPL & Định tuyến Tab TCVN (Session Takeover & Safe Landing):**
+  - **Chiếm lại phiên TVPL Pro (Eviction):** Khi gặp hộp thoại cảnh báo đăng nhập đa phiên `#logintfrom_w`, tự động bấm `'Đồng ý'` (hoặc gọi `CheckFullLogin()` / gửi `action=Login` tới `ajaxcontroler.aspx`) để hủy phiên từ xa và chiếm lại đặc quyền Pro cho tác vụ nạp.
+  - **Định tuyến Tab Tiêu chuẩn TCVN:** Tiêu chuẩn TCVN sử dụng chuyển tab JavaScript phía client (`#aTabTaiVe` $\rightarrow$ `#tab8`). Tránh reload URL tham số `?tab=7` (gây redirect loop), thay vào đó click `#aTabTaiVe` và trích xuất liên kết endpoint trực tiếp:
+    * File Word: `/documents/download.aspx?id=...&part=-1&docx=1`
+    * File PDF: `/documents/download.aspx?id=...&part=0&docx=`
+  - **Mô hình Safe Landing Download:** Không bao giờ trỏ download path trực tiếp vào `sources/`. Luôn tải qua thư mục đệm ngoài workspace (như `Downloads/`), quan sát đến khi tệp `stat().st_size > 0` và sạch đuôi `.crdownload`, sau đó mới dùng `shutil.move()` chuyển vào `sources/<doc_slug>.<ext>`. Quy tắc này bảo vệ tuyệt đối Gate 11 không bị crash bởi tệp rác 0-byte.
 - **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/`.
 
 ---

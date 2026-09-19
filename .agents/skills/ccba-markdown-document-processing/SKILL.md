@@ -116,6 +116,16 @@ Khi xử lý văn bản có phụ lục kỹ thuật (như QCVN, TCVN):
 
 ---
 
+## 4. Kiểm Chuẩn Đối Soát Ground Truth & Anti-Vacuous Table Regularity (ADR 0037, ADR 0041)
+
+1. **Chuẩn Đối Soát Văn Bản Nguyên Văn (Verbatim Ground Truth):**
+   - Đạt tỷ lệ trùng khớp $\ge 98.0\%$ qua thuật toán Greedy Multi-Span Coverage (`min_span >= 4`, độ phủ $\ge 70\%$).
+   - Nghiêm cấm mọi hành vi tóm tắt, viết tắt hoặc làm mất ký hiệu toán inline dạng VML/OLE.
+2. **Nguyên Tắc Chống Đạt Chuẩn Bảng Rỗng (Anti-Vacuous Pass):**
+   - Nếu tài liệu nguồn DOCX/PDF có bảng số liệu quan hệ, bundle bắt buộc phải có tệp CSV/JSON tương ứng trong `tables/`, không được để trống thư mục. Toàn bộ bảng CSV phải là ma trận 2D chữ nhật (Zero Ragged Rows) và tách rời 100% chú thích chân bảng.
+
+---
+
 ## 🛑 Điều cấm & Quy tắc rào chắn (Negative Constraints)
 
 - **Không tự phân mảnh quy trình**: Tránh việc gọi lần lượt từng script phụ nếu đã có thể xử lý trọn gói bằng `ConversionPipeline`.
