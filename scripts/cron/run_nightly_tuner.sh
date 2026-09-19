@@ -24,6 +24,29 @@ SKILL_FLAG=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        -h|--help)
+            cat << 'EOF'
+CCBA Nightly Auto-Tuner & Evolution Runner (Server Spark :8090)
+
+Sử dụng:
+  run_nightly_tuner.sh [TÙY CHỌN]
+
+Tùy chọn:
+  -h, --help           Hiển thị hướng dẫn sử dụng và thoát
+  --dry-run            Chạy kiểm thử an toàn, không commit/push git hoặc mở Pull Request
+  --max-iter N         Số vòng lặp tối đa cho mỗi kỹ năng (mặc định: 30)
+  --ref TARGET_REF     Git target ref để so khớp baseline (mặc định: origin/main)
+  --use-real-llm       Kích hoạt chạy với mô hình LLM thực tế qua AI Gateway LiteLLM
+  --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 5,000,000)
+  --model MODEL_NAME   Tên mô hình LLM (mặc định: qwen-local-primary)
+  --skill SKILL_NAME   Chỉ định tối ưu một kỹ năng cụ thể (bỏ qua queue toàn bộ catalog)
+
+Ví dụ:
+  ./scripts/cron/run_nightly_tuner.sh --dry-run
+  ./scripts/cron/run_nightly_tuner.sh --use-real-llm --model qwen-local-primary --skill ccba-legal-ingest
+EOF
+            exit 0
+            ;;
         --dry-run)
             DRY_RUN_FLAG="--dry-run"
             shift
@@ -53,6 +76,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
+            echo "⚠️ [CẢNH BÁO] Bỏ qua cờ không xác định: $1"
             shift
             ;;
     esac
