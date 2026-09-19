@@ -177,7 +177,7 @@ python3 scripts/eval/doc_refactor_daemon.py ${DRY_RUN_FLAG}
 
 # 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
 echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF..."
-git checkout --detach "$TARGET_REF" 2>/dev/null || true
+git checkout --detach "$TARGET_REF"
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
 echo "🌙 [2/2] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."

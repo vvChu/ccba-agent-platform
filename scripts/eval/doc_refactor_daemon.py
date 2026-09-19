@@ -423,6 +423,8 @@ class DocAutoEvolutionEngine:
                 cwd=str(self.root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
             )
             prev_ref = prev_head_res.stdout.strip() if prev_head_res.returncode == 0 else "HEAD"
@@ -432,6 +434,8 @@ class DocAutoEvolutionEngine:
                     cwd=str(self.root),
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=False,
                 )
                 if rev_res.returncode == 0:
@@ -442,12 +446,18 @@ class DocAutoEvolutionEngine:
                 cwd=str(self.root),
                 check=True,
                 capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             subprocess.run(
                 ["git", "add", "CONTEXT.md", ".md/knowledge/"],
                 cwd=str(self.root),
                 check=True,
                 capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             commit_res = subprocess.run(
                 [
@@ -459,6 +469,9 @@ class DocAutoEvolutionEngine:
                 cwd=str(self.root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
             )
             if commit_res.returncode == 0:
                 report.commits_created = 1
@@ -470,27 +483,67 @@ class DocAutoEvolutionEngine:
                     cwd=str(self.root),
                     check=True,
                     capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
                 pr_body = self.generate_pr_body(report)
 
+                cmd = [
+                    "gh",
+                    "pr",
+                    "create",
+                    "--head",
+                    branch_name,
+                    "--title",
+                    f"docs: nightly knowledge evolution {now_str}",
+                    "--body",
+                    pr_body,
+                    "--label",
+                    "documentation",
+                ]
                 gh_res = subprocess.run(
-                    [
-                        "gh",
-                        "pr",
-                        "create",
-                        "--title",
-                        f"docs: nightly knowledge evolution {now_str}",
-                        "--body",
-                        pr_body,
-                        "--label",
-                        "triage:doc-refactor",
-                    ],
+                    cmd,
                     cwd=str(self.root),
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
                 if gh_res.returncode == 0:
                     report.pr_url = gh_res.stdout.strip()
+                    logger.info(f"🎉 Đã mở Pull Request: {report.pr_url}")
+                else:
+                    err_msg = gh_res.stderr.strip() or f"exit code {gh_res.returncode}"
+                    logger.warning(f"⚠️ gh pr create thất bại (exit {gh_res.returncode}): {err_msg}")
+                    # Fallback retry without --label
+                    if "--label" in cmd:
+                        logger.info("🔄 Thử tạo lại PR không kèm nhãn (--label)...")
+                        cmd_no_label = [
+                            arg
+                            for i, arg in enumerate(cmd)
+                            if arg != "--label" and (i == 0 or cmd[i - 1] != "--label")
+                        ]
+                        retry_res = subprocess.run(
+                            cmd_no_label,
+                            cwd=str(self.root),
+                            capture_output=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="replace",
+                        )
+                        if retry_res.returncode == 0:
+                            report.pr_url = retry_res.stdout.strip()
+                            logger.info(
+                                f"🎉 Đã mở Pull Request thành công (fallback không nhãn): {report.pr_url}"
+                            )
+                        else:
+                            retry_err = (
+                                retry_res.stderr.strip() or f"exit code {retry_res.returncode}"
+                            )
+                            logger.error(
+                                f"❌ Fallback gh pr create thất bại (exit {retry_res.returncode}): {retry_err}"
+                            )
             else:
                 logger.info(
                     "ℹ️ Không có thay đổi tài liệu nào cần commit. Tự động thu hồi nhánh rỗng..."
@@ -499,12 +552,18 @@ class DocAutoEvolutionEngine:
                     ["git", "checkout", prev_ref],
                     cwd=str(self.root),
                     capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=False,
                 )
                 subprocess.run(
                     ["git", "branch", "-D", branch_name],
                     cwd=str(self.root),
                     capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=False,
                 )
         except Exception as e:

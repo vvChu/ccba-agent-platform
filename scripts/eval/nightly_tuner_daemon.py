@@ -418,7 +418,7 @@ class NightlyTunerDaemon:
             )
             branches = [b.strip().lstrip("* ") for b in res.stdout.splitlines() if b.strip()]
             deleted_count = 0
-            cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
+            cutoff_date = (datetime.datetime.now() - datetime.timedelta(days=days)).date()
 
             # Determine base ref for comparison (prefer origin/main, fallback to main)
             base_ref = "origin/main"
@@ -436,8 +436,8 @@ class NightlyTunerDaemon:
                 if match:
                     date_str = match.group(1)
                     try:
-                        b_date = datetime.datetime.strptime(date_str, "%Y%m%d")
-                        if b_date < cutoff:
+                        b_date = datetime.datetime.strptime(date_str, "%Y%m%d").date()
+                        if b_date < cutoff_date:
                             # Check if branch has unique commits not on base_ref
                             diff_res = subprocess.run(
                                 ["git", "cherry", base_ref, b],
@@ -462,8 +462,8 @@ class NightlyTunerDaemon:
                                         cwd=str(self.root),
                                         capture_output=True,
                                         check=False,
-                                        timeout=10,
                                     )
+                                    logger.info(f"🧹 Đã dọn dẹp nhánh rác remote: {b}")
                                 except Exception:
                                     pass
                                 deleted_count += 1
@@ -477,7 +477,15 @@ class NightlyTunerDaemon:
     def _create_git_branch(self, branch_name: str) -> None:
         """Creates and checks out a new feature branch for the nightly run."""
         try:
-            subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "checkout", "-b", branch_name],
+                cwd=str(self.root),
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
             logger.info(f"🌿 Đã tạo nhánh Git mới: {branch_name}")
         except subprocess.CalledProcessError as e:
             logger.warning(f"⚠️ Không thể tạo nhánh {branch_name}: {e}")
@@ -492,6 +500,8 @@ class NightlyTunerDaemon:
                 cwd=str(self.root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if verify_res.returncode != 0:
                 logger.error(
@@ -506,29 +516,69 @@ class NightlyTunerDaemon:
         # 2. Push & Create PR
         try:
             subprocess.run(
-                ["git", "push", "-u", "origin", branch_name], check=True, capture_output=True
+                ["git", "push", "-u", "origin", branch_name],
+                cwd=str(self.root),
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             logger.info(f"🚀 Đã push nhánh {branch_name} lên remote.")
 
+            cmd = [
+                "gh",
+                "pr",
+                "create",
+                "--head",
+                branch_name,
+                "--title",
+                f"auto-tune: nightly skill optimization {branch_name}",
+                "--body",
+                report_body,
+                "--label",
+                "needs-triage",
+            ]
             res = subprocess.run(
-                [
-                    "gh",
-                    "pr",
-                    "create",
-                    "--title",
-                    f"auto-tune: nightly skill optimization {branch_name}",
-                    "--body",
-                    report_body,
-                    "--label",
-                    "triage:auto-tuned",
-                ],
+                cmd,
+                cwd=str(self.root),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if res.returncode == 0:
                 pr_url = res.stdout.strip()
                 logger.info(f"🎉 Đã mở Pull Request: {pr_url}")
                 return pr_url
+
+            err_msg = res.stderr.strip() or f"exit code {res.returncode}"
+            logger.warning(f"⚠️ gh pr create thất bại (exit {res.returncode}): {err_msg}")
+
+            # Fallback: Retry without --label in case label fails or does not exist
+            if "--label" in cmd:
+                logger.info("🔄 Thử tạo lại PR không kèm nhãn (--label)...")
+                cmd_no_label = [
+                    arg
+                    for i, arg in enumerate(cmd)
+                    if arg != "--label" and (i == 0 or cmd[i - 1] != "--label")
+                ]
+                retry_res = subprocess.run(
+                    cmd_no_label,
+                    cwd=str(self.root),
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+                if retry_res.returncode == 0:
+                    pr_url = retry_res.stdout.strip()
+                    logger.info(f"🎉 Đã mở Pull Request thành công (fallback không nhãn): {pr_url}")
+                    return pr_url
+                retry_err = retry_res.stderr.strip() or f"exit code {retry_res.returncode}"
+                logger.error(
+                    f"❌ Fallback gh pr create thất bại (exit {retry_res.returncode}): {retry_err}"
+                )
         except Exception as e:
             logger.warning(f"⚠️ Không thể mở PR qua GitHub CLI: {e}")
         return None

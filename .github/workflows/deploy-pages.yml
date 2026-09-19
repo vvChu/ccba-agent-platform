@@ -43,6 +43,8 @@ jobs:
           python scripts/governance/compile_skills_docs.py --check
 
       - name: Run Skills Docs Integrity Test Suite
+        env:
+          PYTHONPATH: .
         run: |
           pytest tests/governance/test_skills_docs_integrity.py
 
