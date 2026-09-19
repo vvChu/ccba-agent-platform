@@ -28,9 +28,13 @@ triggers:
 - office
 - ccba-docx
 - docx
+- điền form word
+- fill form doc
+- form-filler
+- layout guard
 metadata:
   author: CCBA
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Xử lý Văn phòng
@@ -57,6 +61,7 @@ Cách dùng tool, thư viện, quy trình kỹ thuật. Đọc file phù hợp v
 | `resources/pdf.md` | Xử lý PDF cục bộ. Phân biệt PDF digital vs PDF scan |
 | `resources/office-xml.md` | Kỹ thuật Unpack/Pack XML — giữ nguyên format file mẫu, chỉ thay nội dung |
 | `resources/convert.md` | Pipeline chuyển đổi: MD→DOCX, PDF→DOCX, DOCX→PDF |
+| `resources/form-filling.md` | Điền form Word (.doc/.docx) bảo toàn bố cục & chống vỡ trang (Dual-Engine) |
 
 ---
 
