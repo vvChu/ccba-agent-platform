@@ -23,11 +23,13 @@ from .scorers import (
     RegexScorer,
 )
 from .tuner import (
+    AdaptiveRateLimiter,
     GitRatchetOptimizer,
     GitRatchetTuner,
     RatchetConfig,
     RatchetReport,
     RatchetTrialResult,
+    RateLimiter,
     get_default_domain_scorers,
     preserve_yaml_frontmatter,
 )
@@ -54,6 +56,8 @@ __all__ = [
     "get_default_domain_scorers",
     "GitRatchetOptimizer",
     "GitRatchetTuner",
+    "RateLimiter",
+    "AdaptiveRateLimiter",
     "NightlyDaemonReport",
     "NightlyTunerDaemon",
     "SkillEvolutionSummary",

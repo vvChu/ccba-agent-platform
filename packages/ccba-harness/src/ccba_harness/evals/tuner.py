@@ -16,7 +16,7 @@ import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
@@ -97,6 +97,65 @@ class TokenUsageTracker:
         return self.total_latency_s / self.total_calls if self.total_calls > 0 else 0.0
 
 
+@runtime_checkable
+class RateLimiter(Protocol):
+    """Protocol for request throughput rate limiting in batch LLM evaluations."""
+
+    def wait(self, last_latency_s: float = 0.0) -> float: ...
+
+
+class AdaptiveRateLimiter:
+    """Token-Bucket / Leaky-Bucket Rate Limiter with adaptive latency backoff.
+
+    Protects LLM gateways (such as LiteLLM on Server Spark) from queue congestion
+    and rate limit exhaustion during bulk overnight evaluation sweeps.
+    """
+
+    def __init__(
+        self,
+        requests_per_minute: float = 60.0,
+        min_delay_s: float = 0.01,
+        max_delay_s: float = 10.0,
+        latency_threshold_s: float = 4.0,
+        backoff_multiplier: float = 1.5,
+        sleeper: Callable[[float], None] = time.sleep,
+        time_fn: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self.requests_per_minute = max(1.0, requests_per_minute)
+        self.min_interval = 60.0 / self.requests_per_minute
+        self.min_delay_s = min_delay_s
+        self.max_delay_s = max_delay_s
+        self.latency_threshold_s = latency_threshold_s
+        self.backoff_multiplier = backoff_multiplier
+        self.sleeper = sleeper
+        self.time_fn = time_fn
+        self.last_request_time: float = 0.0
+
+    def wait(self, last_latency_s: float = 0.0) -> float:
+        """Enforces rate limit interval and applies adaptive backoff if latency is high.
+
+        Returns:
+            The total delay in seconds waited.
+        """
+        now = self.time_fn()
+        elapsed = (
+            now - self.last_request_time if self.last_request_time > 0.0 else self.min_interval
+        )
+        base_delay = max(0.0, self.min_interval - elapsed)
+
+        backoff_delay = 0.0
+        if last_latency_s > self.latency_threshold_s:
+            excess = last_latency_s - self.latency_threshold_s
+            backoff_delay = min(excess * (self.backoff_multiplier - 1.0), self.max_delay_s)
+
+        total_delay = min(base_delay + backoff_delay, self.max_delay_s)
+        if total_delay >= self.min_delay_s:
+            self.sleeper(total_delay)
+
+        self.last_request_time = self.time_fn()
+        return total_delay
+
+
 class LLMTaskAdapter:
     """Connects GitRatchetOptimizer with ccba_ai client for Real LLM evaluations."""
 
@@ -106,9 +165,12 @@ class LLMTaskAdapter:
         client: Any | None = None,
         token_tracker: TokenUsageTracker | None = None,
         circuit_breaker: Any | None = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
         self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
         self.token_tracker = token_tracker or TokenUsageTracker()
+        self.rate_limiter = rate_limiter
+        self._last_latency_s = 0.0
         if circuit_breaker is not None:
             self.circuit_breaker = circuit_breaker
         elif CircuitBreaker is not None:
@@ -137,6 +199,9 @@ class LLMTaskAdapter:
                     f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
                 )
 
+            if self.rate_limiter is not None:
+                self.rate_limiter.wait(last_latency_s=self._last_latency_s)
+
             t0 = time.perf_counter()
             try:
                 res = self.client.chat_with_metadata(
@@ -146,6 +211,7 @@ class LLMTaskAdapter:
                     temperature=0.0,
                 )
                 latency = time.perf_counter() - t0
+                self._last_latency_s = latency
                 p_tok = res.usage.prompt_tokens if res.usage else 0
                 c_tok = res.usage.completion_tokens if res.usage else 0
                 self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
@@ -179,6 +245,7 @@ class RatchetConfig:
     use_real_llm: bool = False
     llm_model: str = ""
     token_budget: int | None = None
+    rate_limiter: RateLimiter | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -563,6 +630,7 @@ class GitRatchetOptimizer:
         dataset: list[EvalItem] | None = None,
         client: Any | None = None,
         circuit_breaker: Any | None = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
         self.config = config
         self.target_file = Path(config.target_file).resolve()
@@ -570,6 +638,7 @@ class GitRatchetOptimizer:
         self.custom_task = task
         self.client = client
         self.circuit_breaker = circuit_breaker
+        self.rate_limiter = rate_limiter or config.rate_limiter
 
         effective_root = project_root if project_root is not None else root
         if effective_root is not None:
@@ -601,6 +670,7 @@ class GitRatchetOptimizer:
                 client=client,
                 token_tracker=self.token_tracker,
                 circuit_breaker=circuit_breaker,
+                rate_limiter=self.rate_limiter,
             )
 
     def _load_dataset(self) -> list[EvalItem]:
