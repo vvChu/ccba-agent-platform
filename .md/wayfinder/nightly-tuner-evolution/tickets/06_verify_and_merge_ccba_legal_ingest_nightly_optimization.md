@@ -31,5 +31,5 @@ Kỹ năng `ccba-legal-ingest` đã được cải thiện từ **86.7% lên 100
 ---
 
 ## ✅ Tiêu Chí Nghiệm Thu (Acceptance Criteria)
-- [ ] 1. Toàn bộ kiểm định kỹ năng `validate_skills.py` và `verify-patch --preset skill` đạt 100% PASS.
-- [ ] 2. PR được tạo thành công trên GitHub bằng `gh pr create`.
+- [x] 1. Toàn bộ kiểm định kỹ năng `validate_skills.py` và `verify-patch --preset skill` đạt 100% PASS.
+- [x] 2. PR được tạo thành công trên GitHub bằng `gh pr create` và đã merged thành công vào `main` (PR #294).
