@@ -61,4 +61,29 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
   ```
 - Tuyệt đối không để lệnh mở file trần không có xử lý ngoại lệ gây crash hoặc đứt gãy luồng thực thi tự động trong môi trường headless, CI runner, hoặc SSH sessions.
 
+---
+
+## 7. Cross-Platform Filesystem Hardening & Permissions Invariant
+- **Bảo toàn quyền thực thi thư mục (`+x` trên POSIX):**
+  - Khi gỡ bỏ cờ Read-Only (`_make_writable`), **TUYỆT ĐỐI CẤM** gán mode tĩnh (ví dụ `0o600`, `0o666`, `stat.S_IWRITE | stat.S_IREAD`) vì sẽ tước bỏ bit `stat.S_IXUSR` (`+x`) của thư mục trên Linux/macOS, gây ra `PermissionError: [Errno 13]` khi thao tác tệp con bên trong.
+  - **Quy chuẩn bắt buộc:** Luôn bảo toàn các bit mode hiện có:
+    ```python
+    def _make_writable(p: Path) -> None:
+        try:
+            st = p.stat()
+            p.chmod(st.st_mode | stat.S_IWUSR)
+        except OSError:
+            pass
+    ```
+- **Xử lý an toàn Windows NTFS Directory Junctions vs Symlinks (`safe_remove`):**
+  - `shutil.rmtree` và `os.walk(..., topdown=False)` trên Windows không coi junction là symlink (`is_symlink() == False`), dẫn đến việc xóa nhầm dữ liệu bên ngoài target.
+  - Bắt buộc duyệt `topdown=True`, kiểm tra cờ `FILE_ATTRIBUTE_REPARSE_POINT` (0x400) cho cả Python 3.10-3.11 (nơi `st_reparse_tag` bị khuyết thiếu trên `os.lstat`).
+  - Xử lý junction như lá cây: dùng `os.rmdir(p)` trên Windows junction mà không đệ quy; dùng `p.unlink()` trên symlink.
+- **Chặn đột biến quyền của Symlink/Junction Target:**
+  - Tuyệt đối không gọi `os.chmod` lên symlink hoặc junction vì trên POSIX sẽ làm biến đổi quyền của tệp gốc bên ngoài.
+- **Phân giải đích thư mục trong `safe_copy2`:**
+  - Khi sao chép tệp ghi đè quyền Read-Only, nếu `dst` là thư mục, bắt buộc chuẩn hóa:
+    `target_dst = (dst / src.name) if dst.is_dir() else dst`.
+
+
 
