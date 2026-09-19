@@ -345,4 +345,3 @@ def test_create_pull_request_logs_error_and_retries_without_bad_label(
 
     assert pr_url == "https://github.com/vvChu/ccba-agent-platform/pull/293"
     assert "could not add label: 'triage:auto-tuned' not found" in caplog.text
-

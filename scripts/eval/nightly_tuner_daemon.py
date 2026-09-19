@@ -573,9 +573,7 @@ class NightlyTunerDaemon:
                 )
                 if retry_res.returncode == 0:
                     pr_url = retry_res.stdout.strip()
-                    logger.info(
-                        f"🎉 Đã mở Pull Request thành công (fallback không nhãn): {pr_url}"
-                    )
+                    logger.info(f"🎉 Đã mở Pull Request thành công (fallback không nhãn): {pr_url}")
                     return pr_url
                 retry_err = retry_res.stderr.strip() or f"exit code {retry_res.returncode}"
                 logger.error(
