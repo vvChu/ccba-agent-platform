@@ -118,6 +118,7 @@ class NightlyTunerDaemon:
         use_real_llm: bool = False,
         token_budget: int = 5_000_000,
         model: str = "",
+        target_skills: list[str] | None = None,
     ) -> None:
         self.root = root
         self.max_iterations_low = max_iterations_low
@@ -126,6 +127,7 @@ class NightlyTunerDaemon:
         self.use_real_llm = use_real_llm
         self.token_budget = token_budget
         self.model = model
+        self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
 
@@ -191,6 +193,9 @@ class NightlyTunerDaemon:
                     "eval_dataset_file": full_dataset_path,
                 }
             )
+
+        if self.target_skills:
+            discovered = [d for d in discovered if d["skill_name"].lower() in self.target_skills]
 
         return discovered
 
@@ -597,13 +602,23 @@ def main() -> None:
         "--token-budget", type=int, default=5000000, help="Total session token budget ceiling"
     )
     parser.add_argument("--model", type=str, default="", help="Model alias for real LLM evaluation")
+    parser.add_argument(
+        "--skill",
+        "--skills",
+        type=str,
+        default="",
+        help="Comma-separated skill names to scope optimization (e.g. 'bigbim-risk')",
+    )
     args = parser.parse_args()
+
+    target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
 
     daemon = NightlyTunerDaemon(
         max_iterations_low=args.max_iter,
         use_real_llm=args.use_real_llm,
         token_budget=args.token_budget,
         model=args.model,
+        target_skills=target_skills,
     )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 

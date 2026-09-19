@@ -50,6 +50,18 @@ def test_discover_skills_and_datasets() -> None:
     assert "ccba-legal-intel" in skill_names
 
 
+def test_discover_skills_with_scoped_target_skills() -> None:
+    """Verify daemon correctly filters discovered skills when target_skills is specified."""
+    daemon = NightlyTunerDaemon(root=project_root, target_skills=["bigbim-risk", "ccba-grilling"])
+    discovered = daemon.discover_skills_and_datasets()
+
+    skill_names = [d["skill_name"] for d in discovered]
+    assert len(discovered) == 2
+    assert "bigbim-risk" in skill_names
+    assert "ccba-grilling" in skill_names
+    assert "ccba-academic-writing" not in skill_names
+
+
 def test_generate_evolution_report_markdown() -> None:
     """Verify Markdown report generation contains all required metrics and safety badges."""
     report = NightlyDaemonReport(
