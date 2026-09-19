@@ -219,4 +219,3 @@ class TestDocRefactorDaemon:
         assert report.commits_created == 1
         assert report.pr_url == "https://github.com/vvChu/ccba-agent-platform/pull/294"
         assert "could not add label: 'documentation' not found" in caplog.text
-

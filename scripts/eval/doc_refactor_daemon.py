@@ -515,9 +515,7 @@ class DocAutoEvolutionEngine:
                     logger.info(f"🎉 Đã mở Pull Request: {report.pr_url}")
                 else:
                     err_msg = gh_res.stderr.strip() or f"exit code {gh_res.returncode}"
-                    logger.warning(
-                        f"⚠️ gh pr create thất bại (exit {gh_res.returncode}): {err_msg}"
-                    )
+                    logger.warning(f"⚠️ gh pr create thất bại (exit {gh_res.returncode}): {err_msg}")
                     # Fallback retry without --label
                     if "--label" in cmd:
                         logger.info("🔄 Thử tạo lại PR không kèm nhãn (--label)...")
