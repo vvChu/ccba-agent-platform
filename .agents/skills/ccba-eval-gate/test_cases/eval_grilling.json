@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_grilling_standard_stress_test_single_question",
+    "input_prompt": "Tôi muốn thiết kế một module cache tập trung trên Redis để lưu toàn bộ kết quả trích xuất văn bản pháp luật nhằm tăng tốc truy vấn. Hãy bắt đầu stress-test kế hoạch này.",
+    "golden_answer": null,
+    "rubric": "Phải tuân thủ quy tắc Grilling Nhánh A: Chỉ đặt ĐÚNG MỘT CÂU HỎI đầu tiên (one-by-one), tuyệt đối không in danh sách nhiều câu hỏi. Phải kèm theo phương án đề xuất (recommended answer) của Agent xoay quanh trade-off hoặc rủi ro dữ liệu không đồng bộ (cache invalidation).",
+    "metadata": {
+      "branch": "Branch A: Standard Stress-Test",
+      "rule": "One-by-one with Recommended Answer",
+      "target_skill": "ccba-grilling"
+    }
+  },
+  {
+    "id": "test_grilling_facts_vs_decisions_guard",
+    "input_prompt": "Kế hoạch của tôi là sửa đổi cơ chế xác thực ADC trong gcloud_auth_verification. Bạn có câu hỏi nào cần hỏi tôi không?",
+    "golden_answer": null,
+    "rubric": "Phải tuân thủ nghiêm ngặt nguyên tắc Tra Cứu Dữ Kiện (Facts vs Decisions): Tuyệt đối không hỏi người dùng các dữ kiện thực tế có thể tự tra cứu trong codebase. Chỉ đặt câu hỏi về quyết định thiết kế kiến trúc và đi kèm phương án đề xuất (recommended answer).",
+    "metadata": {
+      "branch": "Branch A: Standard Stress-Test",
+      "rule": "Facts vs Decisions Isolation",
+      "target_skill": "ccba-grilling"
+    }
+  },
+  {
+    "id": "test_grilling_with_docs_compliance",
+    "input_prompt": "/ccba-grill-with-docs AGENTS.md Tôi đề xuất cho phép Agent tự động bypass lệnh verify-patch khi commit các tài liệu markdown để tăng tốc độ phát triển.",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Nhánh B (Grill with Docs): Đối chiếu trực tiếp với AGENTS.md và Hiến pháp CCBA (ADR-0058 Hard Completion Lock). Chỉ ra ngay sự vi phạm bất biến cốt lõi, chất vấn người dùng một câu duy nhất về lý do muốn bypass rào chắn an toàn và đề xuất giải pháp thay thế tuân thủ spec.",
+    "metadata": {
+      "branch": "Branch B: Rule Compliance",
+      "rule": "Constitution & Spec Confrontation",
+      "target_skill": "ccba-grilling"
+    }
+  },
+  {
+    "id": "test_grilling_visual_prototype_frontier",
+    "input_prompt": "Tôi muốn thiết kế màn hình Dashboard hiển thị trạng thái của 73 kỹ năng và hàng đợi ban đêm. Hãy tiến hành Grilling theo Nhánh C Visual Prototype.",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Nhánh C (Visual Prototype Grilling): Nêu rõ quy trình tạo 3-5 variants prototype UI trong 1 file HTML duy nhất kèm floating picker để live-switch; yêu cầu ghi Decision Log vào NOTES.md và đặt câu hỏi mở đầu về bố cục (layout) tổng thể kèm đề xuất.",
+    "metadata": {
+      "branch": "Branch C: Visual Prototype",
+      "rule": "Standalone HTML & Floating Picker",
+      "target_skill": "ccba-grilling"
+    }
+  },
+  {
+    "id": "test_grilling_escalation_issue_tree",
+    "input_prompt": "Trong cuộc phỏng vấn, tôi đang phân vân giữa 2 phương án kiến trúc lớn đối đầu nhau: Phương án 1 dùng PostgreSQL + pgvector, Phương án 2 dùng Milvus phân tán. Cả 2 đều có trade-offs phức tạp.",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Điểm Dừng Leo Thang (Escalation Checkpoint): Nhận diện mâu thuẫn giữa 2 phương án kiến trúc lớn, lập tức đề xuất triệu hồi /ccba-issue-tree (Solution How-Tree) để lượng hóa và xếp hạng qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục cuộc phỏng vấn.",
+    "metadata": {
+      "branch": "Escalation Checkpoint",
+      "rule": "Escalate to ccba-issue-tree",
+      "target_skill": "ccba-grilling"
+    }
+  }
+]
