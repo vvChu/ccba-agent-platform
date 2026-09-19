@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-19] [synthesize] | Phát Hành Release PR #297: Word COM Single-Pass Form Filler Module, Layout Guard & TRIHT Cleanliness Gate (Issue #296)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-ooxml/`, `.agents/skills/ccba-xu-ly-van-phong/`, `README.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/`, `walkthrough.md`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
+- **Summary**: Hoàn tất phát triển, tích hợp và phát hành Pull Request #297 giải quyết triệt để Issue #296: (1) Xây dựng sub-module `ccba_ooxml.form_filler` với kiến trúc Dual-Engine (`WinwordEngine` thao tác in-place single-pass trên `.doc` Word 97-2003 và `.docx` qua Word DOM COM native, tự động thu hồi `WINWORD.EXE` trong `finally`; `SofficeFallbackEngine` chạy headless LibreOffice kết hợp `python-docx` trên Linux/Docker); (2) Xây dựng `FormLayoutGuard` với cơ chế Anti-Row Split (`AllowBreakAcrossPages = False` / `<w:cantSplit/>`), tự động cắt tỉa hàng mẫu trống thừa (Empty Row Pruning) và ép ngắt trang chữ ký; (3) Soạn thảo sổ tay kỹ thuật `form-filling.md`, cập nhật triggers trong catalog/skill và đồng bộ web portal docs; (4) Giải quyết triệt để lỗi Architecture Drift của CI `validate-docs` bằng cách cập nhật tài liệu kiến trúc tại `README.md`; (5) Vượt qua Giao thức TRIHT buồng kín 3 cổng (phát hiện và hoàn tác sửa đổi mock registry do test `--stress` gây ra); (6) Vượt qua 100% 6/6 GitHub Actions CI checks, 0 Copilot review requests/comments, và squash merge vào `main` tại commit `3f2972aa` với cờ `--admin`; (7) Bổ sung các quy tắc RULE-2.15, RULE-2.16, RULE-2.17, RULE-4.16 vào `session_learnings.md` (< 10 KB).
+
+---
+
 ## [2026-09-18] [synthesize] | Thẩm Định & Hợp Nhất Đề Xuất PR #286: Modernize Nightly Auto-Tuner Daemon, Real LLM Adapter & Merge Danger Governance
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal, /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/eval/`, `.agents/skills/ccba-code-review/`, `.agents/skills/ccba-release-feature/`, `.github/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
