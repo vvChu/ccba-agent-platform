@@ -152,8 +152,34 @@ class NightlyTunerDaemon:
 
         return "eval_general_domain.json"
 
+    def _load_recent_baseline_scores(self) -> dict[str, float]:
+        """Loads historical scores from recent reports to calibrate priority queue ranking."""
+        reports_dir = self.root / ".md" / "knowledge" / "reports"
+        if not reports_dir.exists():
+            return {}
+
+        report_files = sorted(reports_dir.glob("nightly_tuner_report_*.md"), reverse=True)
+        scores: dict[str, float] = {}
+        pattern = re.compile(
+            r"\|\s*`?([a-zA-Z0-9_-]+)`?\s*\|\s*([0-9.]+)%\s*\|\s*\*\*?([0-9.]+)%\*\*?"
+        )
+
+        for r_file in report_files:
+            try:
+                content = r_file.read_text(encoding="utf-8", errors="replace")
+                for match in pattern.finditer(content):
+                    s_name, _, s_final = match.groups()
+                    if s_name not in scores:
+                        scores[s_name] = float(s_final)
+                if scores:
+                    break
+            except Exception:
+                continue
+
+        return scores
+
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
-        """Maps discovered skills to their optimal evaluation datasets."""
+        """Maps discovered skills to their optimal evaluation datasets with historical baseline scores."""
         skill_dataset_map = {
             "ccba-academic-writing": "eval_academic_writing.json",
             "ccba-copywriting": "eval_copywriting.json",
@@ -172,6 +198,7 @@ class NightlyTunerDaemon:
             "ccba-ai-qc": "eval_pccc_audit_redteam.json",
         }
 
+        recent_scores = self._load_recent_baseline_scores()
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
@@ -191,6 +218,7 @@ class NightlyTunerDaemon:
                     "target_file": skill_path,
                     "dataset_file": full_dataset_path,
                     "eval_dataset_file": full_dataset_path,
+                    "baseline_score": recent_scores.get(skill_name, 0.0),
                 }
             )
 
@@ -277,6 +305,10 @@ class NightlyTunerDaemon:
                 )
                 summaries.append(summary)
                 total_commits += result.kept_commits
+
+                # ADR-0052: Export Plateau Escalation Brief if skill remains stagnant < 90%
+                if not dry_run and result.final_score < 90.0 and result.kept_commits == 0:
+                    self._save_plateau_brief(skill_name, target_file, result)
 
                 if result.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN"):
                     logger.warning(
@@ -399,15 +431,64 @@ class NightlyTunerDaemon:
             message += f"🔗 Pull Request: {report.pr_url}\n"
 
         message += "\n🏆 *Top Cải Thiện:*\n"
-        for s in report.results[:5]:
-            if s.score_delta > 0:
+        improved = [s for s in report.results if s.score_delta > 0]
+        if improved:
+            for s in improved[:5]:
                 message += f"• `{s.skill_name}`: {s.baseline_score:.0f}% ➔ *{s.final_score:.0f}%* (+{s.score_delta:.0f}%)\n"
+        else:
+            message += "• Không có kỹ năng nào tăng điểm.\n"
+
+        stagnant = [
+            s
+            for s in report.results
+            if s.baseline_score < 90.0 and s.commits_kept == 0 and s.final_score < 90.0
+        ]
+        if stagnant:
+            message += "\n⚠️ *Cần Can Thiệp (/boost):*\n"
+            for s in stagnant[:3]:
+                message += f"• `{s.skill_name}`: kẹt ở *{s.final_score:.0f}%*\n"
 
         return send_telegram_alert(
             message=message,
             parse_mode="Markdown",
             mock_fallback=True,
         )
+
+    def _save_plateau_brief(
+        self, skill_name: str, target_file: Path, result: RatchetReport
+    ) -> Path:
+        """Saves a Deep Problem Brief for stagnant skills under ADR-0052 for daytime human review."""
+        escalations_dir = self.root / ".md" / "knowledge" / "escalations"
+        escalations_dir.mkdir(parents=True, exist_ok=True)
+        brief_file = escalations_dir / f"{skill_name}_plateau.md"
+
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        content = f"""# ⚠️ CCBA Plateau Escalation Brief (ADR-0052)
+
+- **Kỹ năng:** `{skill_name}`
+- **Tệp nguồn:** [`{target_file.name}`]({target_file})
+- **Thời gian ghi nhận:** `{now_str}`
+- **Điểm ban đầu:** `{result.initial_score:.1f}%`
+- **Điểm cao nhất đạt được:** `{result.final_score:.1f}%`
+- **Số vòng thử nghiệm:** `{result.total_iterations}` vòng
+- **Số lần rollback:** `{result.reverted_trials}` lần
+- **Trạng thái:** `STAGNANT_PLATEAU` (Cần can thiệp suy luận sâu)
+
+---
+
+## 🔍 Khuyến Nghị Hành Động (Actionable Directive)
+Kỹ năng này đã cạn kiệt ngân sách kiên nhẫn (`patience`) trên mô hình cục bộ mà không vượt qua được điểm nghẽn.
+Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hãy chủ động can thiệp ban ngày:
+
+1. Chạy lệnh interactive boost trên CLI hoặc Antigravity IDE:
+   ```bash
+   python scripts/eval/nightly_tuner_daemon.py --skill {skill_name} --use-real-llm --model gemini-3.8-flash-high --max-iter 2
+   ```
+2. Rà soát lại bộ tiêu chí chấm điểm và rào chắn `SKILL.md` để phát hiện mâu thuẫn chỉ thị (Instruction Conflict).
+"""
+        brief_file.write_text(content, encoding="utf-8")
+        logger.info(f"📋 Đã xuất Plateau Brief: {brief_file}")
+        return brief_file
 
     def _cleanup_old_empty_branches(self, days: int = 7) -> int:
         """Cleans up local and remote auto-tune and doc-refactor branches older than `days` with no unique commits."""
