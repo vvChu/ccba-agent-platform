@@ -504,6 +504,27 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
     if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
         return get_orchestration_scorers()
 
+    if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
+        return [
+            RegexScorer(
+                name="grilling_one_by_one_and_recommendation",
+                pattern=r"(câu hỏi|one-by-one|đề xuất|phương án|recommended|stress-test|chất vấn|front-end|picker)",
+                weight=0.35,
+            ),
+            RegexScorer(
+                name="grilling_anti_trap_hard_floor",
+                pattern=r"(từng câu|đề xuất trước|facts vs decisions|tra cứu|tự tra cứu|codebase|NOTES\.md|ccba-issue-tree|vi phạm|bất biến)",
+                weight=0.35,
+                is_critical=True,
+            ),
+            RegexScorer(
+                name="grilling_escalation_guard",
+                pattern=r"(ccba-issue-tree|How-Tree|Why-Tree|Solution How-Tree|ma trận|Giá trị|Độ phức tạp|Rủi ro|KISS|Frontier|prerequisites)",
+                weight=0.2,
+            ),
+            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+        ]
+
     return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
 
 
@@ -1039,6 +1060,40 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Xử lý tác vụ điều phối tự do không theo chuẩn single-writer...")
+            elif any(
+                k in prompt_l
+                for k in [
+                    "grill",
+                    "stress-test",
+                    "phỏng vấn",
+                    "chất vấn",
+                    "redis",
+                    "adc",
+                    "gcloud_auth_verification",
+                    "visual prototype",
+                    "milvus",
+                    "pgvector",
+                ]
+            ):
+                has_grilling = (
+                    "ccba-grilling" in content
+                    or "Phỏng Vấn Dồn Dập" in content
+                    or "Grilling Loop" in content
+                    or "stress-test" in content.lower()
+                )
+                has_one_by_one = "từng câu một" in content or "one-by-one" in content
+
+                if has_grilling or has_one_by_one:
+                    parts.append(
+                        "Thực thi quy trình Grilling Socrates (Phỏng vấn dồn dập & Đối chiếu quy chuẩn):\n"
+                        "- Quy tắc câu hỏi: Chỉ đặt đúng một câu hỏi duy nhất (one-by-one) ở Frontier, kèm phương án đề xuất (recommended answer) của Agent trước.\n"
+                        "- Nguyên tắc tra cứu: Tự tra cứu dữ kiện thực tế (facts vs decisions) từ codebase, tuyệt đối không hỏi người dùng các thông tin có thể tự đọc được.\n"
+                        "- Đối chiếu quy chuẩn: Đối chiếu trực tiếp với AGENTS.md, chỉ ra vi phạm bất biến cốt lõi (ADR-0058 Hard Completion Lock) nếu có.\n"
+                        "- Visual Prototype Grilling: Tạo 3-5 variants trong 1 file HTML duy nhất với floating picker, ghi Decision Log vào NOTES.md.\n"
+                        "- Escalation Checkpoint: Triệu hồi /ccba-issue-tree (Solution How-Tree) để lượng hóa và xếp hạng các phương án đối đầu qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS."
+                    )
+                else:
+                    parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
             elif item.golden_answer is not None:
                 return (
                     item.golden_answer
