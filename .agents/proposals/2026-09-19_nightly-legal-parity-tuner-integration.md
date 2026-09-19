@@ -2,7 +2,9 @@
 proposal_id: "2026-09-19_nightly-legal-parity-tuner-integration"
 type: "workflows"
 name: "nightly-legal-parity-tuner-integration"
-status: "proposed"
+status: "merged"
+merged_commit: "5cdc0d787be4db8cac11c21d0874b4c4b4490c5d"
+merged_date: "2026-09-19"
 priority: "Cao"
 proposed_by_project: "ccba-legal-knowledge"
 proposed_by_archetype: "knowledge_corpus"
@@ -17,7 +19,7 @@ applies_to:
 
 - **Tác giả đề xuất:** Kỹ sư / Agent đại diện Spoke (`ccba-legal-knowledge`)
 - **Ngày lập:** 2026-09-19
-- **Trạng thái:** Đang đề xuất (Proposed)
+- **Trạng thái:** Đã hợp nhất (Merged) — Commit 5cdc0d78 (PR #295)
 - **Căn cứ pháp lý nền tảng:** [ADR-0042](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md).
 
 ---
