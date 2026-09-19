@@ -219,9 +219,19 @@ def verify_bundle_docx_vs_pdf(
     }
 
 
+class ParityResult(tuple):
+    def __new__(cls, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0):
+        return super().__new__(cls, (parity_rate, missing_paras))
+
+    def __init__(self, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0):
+        self.parity_rate = parity_rate
+        self.missing_paras = missing_paras
+        self.effective_paras = effective_paras
+
+
 def compute_docx_to_markdown_parity(
     docx_paras: list[str], combined_md: str
-) -> tuple[float, list[tuple[int, str]]]:
+) -> ParityResult:
     """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
 
     def norm_words(text: str) -> str:
@@ -245,9 +255,10 @@ def compute_docx_to_markdown_parity(
 
     norm_md = norm_words(combined_md)
     if not docx_paras:
-        return 100.0, []
+        return ParityResult(100.0, [], 0)
 
     missing_paras: list[tuple[int, str]] = []
+    effective_docx_paras = 0
     for idx, p in enumerate(docx_paras, 1):
         np = norm_words(p)
         words = np.split()
@@ -258,14 +269,33 @@ def compute_docx_to_markdown_parity(
                 if chunk in norm_md:
                     matched = True
                     break
-            if not matched:
-                missing_paras.append((idx, p))
         elif len(words) >= 2:
-            if np not in norm_md:
-                missing_paras.append((idx, p))
+            if np in norm_md:
+                matched = True
+        else:
+            continue
 
-    parity_rate = ((len(docx_paras) - len(missing_paras)) / len(docx_paras)) * 100.0
-    return parity_rate, missing_paras
+        if matched:
+            effective_docx_paras += 1
+        else:
+            # Check if paragraph is administrative enacting preamble (conforming to ADR 0021 Pure Body)
+            p_low = p.strip().lower()
+            if (
+                p_low.startswith("căn cứ ")
+                or p_low.startswith("theo đề nghị ")
+                or p_low.startswith("xét đề nghị ")
+                or p_low.startswith("cộng hòa xã hội chủ nghĩa việt nam")
+                or p_low.startswith("độc lập - tự do - hạnh phúc")
+                or (p_low.startswith("bộ trưởng ") and "ban hành thông tư" in p_low)
+                or p_low.startswith("chính phủ ban hành nghị định")
+                or "nơi nhận:" in p_low
+            ):
+                continue
+            missing_paras.append((idx, p))
+            effective_docx_paras += 1
+
+    parity_rate = ((effective_docx_paras - len(missing_paras)) / effective_docx_paras) * 100.0 if effective_docx_paras else 100.0
+    return ParityResult(parity_rate, missing_paras, effective_docx_paras)
 
 
 def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
@@ -352,12 +382,13 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
                 pass
 
     combined_md = "\n".join(md_texts)
-    parity_rate, missing_paras = compute_docx_to_markdown_parity(docx_paras, combined_md)
+    parity_res = compute_docx_to_markdown_parity(docx_paras, combined_md)
+    parity_rate, missing_paras = parity_res
 
     return {
         "status": "success",
         "bundle_name": bundle_dir.name,
-        "docx_paras": len(docx_paras),
+        "docx_paras": getattr(parity_res, "effective_paras", len(docx_paras)),
         "parity_rate": parity_rate,
         "missing_count": len(missing_paras),
         "missing_paras": missing_paras,
