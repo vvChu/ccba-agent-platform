@@ -1,9 +1,10 @@
 # Ticket 06: Nghiệm Thu & Chốt Kết Quả Auto-Tune Đêm 19/09 Cho Kỹ Năng `ccba-legal-ingest`
 
 - **Type:** Task (AFK / Review & PR)
-- **Status:** open
+- **Status:** closed
 - **Assignee:** Antigravity AI Agent
-- **Target Branch:** `auto-tune/nightly-20260919_000014`
+- **PR:** [#294](https://github.com/vvChu/ccba-agent-platform/pull/294)
+- **Target Branch:** `auto-tune/legal-ingest-optimization-20260919`
 - **Target Seam:** `.agents/skills/ccba-legal-ingest/SKILL.md`
 - **Reference:** Commit `ac1d445658cc0cf9be5f11cc9cf115eb39b043be`
 

@@ -1,7 +1,7 @@
 # Ticket 08: Sửa Lỗi CI `Deploy Skills Docs to GitHub Pages` Đang Thất Bại Trên `main`
 
 - **Type:** Task (AFK / CI & Infra Fix)
-- **Status:** open
+- **Status:** closed
 - **Assignee:** Antigravity AI Agent
 - **Target Seam:** `.github/workflows/deploy-pages.yml`, `tests/governance/test_skills_docs_integrity.py`
 - **Reference:** GitHub Actions Run ID #35412113932
