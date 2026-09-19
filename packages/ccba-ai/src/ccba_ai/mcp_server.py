@@ -64,12 +64,12 @@ if cwd_scripts.exists():
 # Initialize FastMCP Server
 mcp = FastMCP("ccba-mcp-server")
 
-LOG_DIR = Path(".md")
+LOG_DIR = Path(".md") / "logs"
 LOG_FILE = LOG_DIR / "mcp_server.log"
 
 
 def log(msg: str) -> None:
-    """Write timestamped message to .md/mcp_server.log."""
+    """Write timestamped message to .md/logs/mcp_server.log."""
     try:
         if not LOG_DIR.exists():
             LOG_DIR.mkdir(parents=True, exist_ok=True)
