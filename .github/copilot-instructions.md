@@ -28,6 +28,7 @@ uv pip install -e "packages/ccba-ooxml[dev]" --system
 uv pip install -e "packages/ccba-pdf-prep[dev]" --system
 uv pip install -e "packages/mdconverter[dev]" --system
 uv pip install -e "packages/ccba-maskara[dev]" --system
+uv pip install -e "packages/ccba-qc-core[dev]" --system
 
 # Test suites — always scope to the affected package; never run unscoped pytest
 pytest packages/mdconverter/tests/ -v --cov=src/mdconverter --cov-report=term-missing
