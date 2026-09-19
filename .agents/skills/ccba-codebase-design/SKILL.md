@@ -215,3 +215,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+## 5. Bất Biến Vận Hành & Khóa Cứng Hoàn Tất
+* **Tiêu chí hoàn thành tường minh:** Mọi bước thực thi đều phải có tiêu chí kiểm chứng khách quan.
+* **Hard Completion Lock:** Bắt buộc xác minh qua `python -m ccba_harness verify-patch` trước khi báo cáo hoàn thành.
