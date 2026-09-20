@@ -30,6 +30,7 @@ portals:
       - ccba-codebase-design
       - ccba-diagnosing-bugs
       - ccba-web-testing
+      - ccba-chrome-debug
       - ccba-design
       - ccba-domain-modeling
       - ccba-excalidraw-diagram
