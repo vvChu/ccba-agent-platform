@@ -112,26 +112,58 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
             pass
 
     # Tier 4: Hub's spoke registry cache
-    hub_candidates = []
+    hub_candidates: list[Path] = []
+
+    # Priority: CCBA_HUB_PATH from environment
+    for env_hub_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+        env_hub = os.environ.get(env_hub_key)
+        if env_hub:
+            p_hub = Path(env_hub).resolve()
+            if p_hub.exists():
+                hub_candidates.append(p_hub)
+
     if local_ctx_path.is_file():
         try:
             with open(local_ctx_path, encoding="utf-8") as f:
                 ctx = yaml.safe_load(f) or {}
             if isinstance(ctx, dict) and ctx.get("hub_path"):
-                cand_h = Path(ctx["hub_path"])
-                if not cand_h.is_absolute():
-                    cand_h = project_root / cand_h
-                hub_candidates.append(cand_h)
+                hub_val = ctx["hub_path"]
+                raw_hp: str = ""
+                if isinstance(hub_val, dict):
+                    os_k = "windows" if os.name == "nt" else "linux"
+                    raw_hp = str(hub_val.get(os_k) or hub_val.get("posix") or "")
+                elif isinstance(hub_val, str):
+                    raw_hp = hub_val
+                if raw_hp:
+                    is_win_drive = bool(re.match(r"^[A-Za-z]:[\\/]", raw_hp))
+                    if not (os.name != "nt" and is_win_drive):
+                        cand_h = Path(raw_hp)
+                        if not cand_h.is_absolute():
+                            cand_h = project_root / cand_h
+                        hub_candidates.append(cand_h)
         except Exception:
             pass
+
     hub_candidates.extend(
         [
             project_root,
             project_root.parent / "ccba-agent-platform",
-            Path("D:/GitHubProjects/ccba-agent-platform"),
-            Path("C:/GitHubProjects/ccba-agent-platform"),
         ]
     )
+    if os.name == "nt":
+        hub_candidates.extend(
+            [
+                Path("D:/GitHubProjects/ccba-agent-platform"),
+                Path("C:/GitHubProjects/ccba-agent-platform"),
+            ]
+        )
+    else:
+        hub_candidates.extend(
+            [
+                Path.home() / "ccba" / "ccba-agent-platform",
+                Path.home() / "GitHubProjects" / "ccba-agent-platform",
+            ]
+        )
 
     for h_path in hub_candidates:
         if not h_path.exists():
@@ -163,9 +195,21 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
     candidates = [
         project_root.parent / "ccba-legal-knowledge",
         project_root / ".." / "ccba-legal-knowledge",
-        Path("D:/GitHubProjects/ccba-legal-knowledge"),
-        Path("C:/GitHubProjects/ccba-legal-knowledge"),
     ]
+    if os.name == "nt":
+        candidates.extend(
+            [
+                Path("D:/GitHubProjects/ccba-legal-knowledge"),
+                Path("C:/GitHubProjects/ccba-legal-knowledge"),
+            ]
+        )
+    else:
+        candidates.extend(
+            [
+                Path.home() / "ccba" / "ccba-legal-knowledge",
+                Path.home() / "GitHubProjects" / "ccba-legal-knowledge",
+            ]
+        )
     try:
         candidates.extend(
             [

@@ -52,6 +52,57 @@ SYS_PATH_HACK_PATTERN = re.compile(
     r"sys\.path\.(?:insert|append)\s*\(\s*0?\s*,\s*.*hub", re.IGNORECASE
 )
 
+# Patterns detecting hardcoded machine state leakage (drive letters or home user paths)
+MACHINE_STATE_LEAK_PATTERNS = [
+    (
+        re.compile(r"""(?:["']|[=:]\s*)[A-Za-z]:[\\/]+[A-Za-z0-9_.-]+[\\/]+"""),
+        "Hardcoded Windows drive path",
+    ),
+    (
+        re.compile(r"""(?:["']|[=:]\s*)/home/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"""),
+        "Hardcoded POSIX user home path",
+    ),
+]
+
+
+def check_machine_state_leakage(
+    target_files: list[Path],
+) -> list[tuple[Path, int, str]]:
+    """Checks for hardcoded machine-specific absolute paths (e.g. C:\\, D:\\, /home/user)."""
+    violations: list[tuple[Path, int, str]] = []
+    for filepath in target_files:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+
+        in_docstring = False
+        for line_num, line in enumerate(content.splitlines(), start=1):
+            stripped = line.strip()
+            if stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1:
+                in_docstring = not in_docstring
+            if (
+                in_docstring
+                or stripped.startswith(("#", "//", "/*", "*"))
+                or "ccba:allow-machine-path" in stripped
+                or "noqa" in stripped
+                or "path/to" in stripped
+                or "example" in stripped
+                or "dummy" in stripped
+            ):
+                continue
+            for pattern, desc in MACHINE_STATE_LEAK_PATTERNS:
+                if pattern.search(stripped):
+                    violations.append(
+                        (
+                            filepath,
+                            line_num,
+                            f"{desc} detected. Use environment variables (e.g. CCBA_HUB_PATH) or relative paths.",
+                        )
+                    )
+                    break
+    return violations
+
 
 def check_script_count(scripts_dir: Path, max_scripts: int = 15) -> tuple[list[Path], list[Path]]:
     """Checks the number of top-level scripts in the scripts/ folder.
@@ -156,7 +207,18 @@ def scan_spoke_cleanliness(
                     [
                         f
                         for f in d.rglob("*.py")
-                        if not any(p in (".venv", "venv", "__pycache__", "tests") for p in f.parts)
+                        if not any(
+                            p
+                            in (
+                                ".venv",
+                                "venv",
+                                "__pycache__",
+                                "tests",
+                                "archive",
+                                "legacy_scripts",
+                            )
+                            for p in f.parts
+                        )
                     ]
                 )
 
@@ -169,6 +231,27 @@ def scan_spoke_cleanliness(
                     f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in dup_violations
                 )
             )
+
+        # Scan for machine-state leakage (scripts/, src/, workspace_context.yaml)
+        files_to_check_machine: list[Path] = list(py_files_to_scan)
+        for ctx_name in [".md/workspace_context.yaml", "workspace_context.yaml"]:
+            ctx_cand = spoke_root / ctx_name
+            if ctx_cand.is_file():
+                files_to_check_machine.append(ctx_cand)
+
+        machine_violations = check_machine_state_leakage(files_to_check_machine)
+        if machine_violations:
+            has_errors = True
+            messages.append(
+                f"❌ [Vi phạm Machine-State Leakage] Phát hiện {len(machine_violations)} vị trí chứa đường dẫn máy tuyệt đối:\n"
+                + "\n".join(
+                    f"   - {f.relative_to(spoke_root)}:{ln}: {msg}"
+                    for f, ln, msg in machine_violations
+                )
+                + "\n   💡 Hãy dùng biến môi trường (CCBA_HUB_PATH) hoặc đường dẫn tương đối để tránh xung đột đa máy."
+            )
+        else:
+            messages.append("✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.")
 
     exit_code = 1 if has_errors or (strict and has_warnings) else 0
     return exit_code, messages
