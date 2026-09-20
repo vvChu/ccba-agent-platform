@@ -6,7 +6,7 @@ applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
 - Thiết kế
-- Tất cả Spokes
+- Tác vụ Admin
 bundle: _core
 tier: kernel
 user-invocable: true
