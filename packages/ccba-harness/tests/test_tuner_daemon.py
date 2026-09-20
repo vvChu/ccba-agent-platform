@@ -312,8 +312,8 @@ def test_load_historical_metrics_cooldown_and_real_llm_filter(tmp_path: Path) ->
     assert "skill_stuck" in cooldown_skills
     assert "skill_halted" in cooldown_skills
     assert "skill_improved" not in cooldown_skills  # commits > 0
-    assert "skill_mock" not in cooldown_skills      # MOCK engine
-    assert "skill_old" not in cooldown_skills       # Older than 3 days
+    assert "skill_mock" not in cooldown_skills  # MOCK engine
+    assert "skill_old" not in cooldown_skills  # Older than 3 days
 
 
 def test_remove_stale_plateau_brief(tmp_path: Path) -> None:

@@ -1567,7 +1567,9 @@ def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
     daemon = NightlyTunerDaemon(root=tmp_path)
     assert daemon._resolve_dataset_file("ccba-ai-gateway-sdk") == "eval_codebase_engineering.json"
     assert daemon._resolve_dataset_file("ccba-completion-checklist") == "eval_legal_intel.json"
-    assert daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_codebase_engineering.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-xu-ly-van-phong") == "eval_copywriting.json"
     assert daemon._resolve_dataset_file("ccba-mermaid-diagram") == "eval_visual_diagram.json"
     assert daemon._resolve_dataset_file("ccba-excalidraw-diagram") == "eval_visual_diagram.json"

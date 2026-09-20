@@ -219,7 +219,9 @@ class NightlyTunerDaemon:
 
         if "risk" in sname or "conflict" in sname:
             return "eval_bigbim_risk.json"
-        if "ccba-completion-checklist" in sname or any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
+        if "ccba-completion-checklist" in sname or any(
+            k in sname for k in LEGAL_ARCHETYPE_KEYWORDS
+        ):
             return "eval_legal_intel.json"
         if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
             return "eval_pccc_audit.json"
@@ -271,9 +273,7 @@ class NightlyTunerDaemon:
         except Exception:
             return None
 
-    def _load_historical_metrics(
-        self, cooldown_days: int = 3
-    ) -> tuple[dict[str, float], set[str]]:
+    def _load_historical_metrics(self, cooldown_days: int = 3) -> tuple[dict[str, float], set[str]]:
         """Loads baseline scores across all available reports and identifies cooldown skills.
 
         Cooldown conditions (ADR-0052):
@@ -351,9 +351,7 @@ class NightlyTunerDaemon:
                         if s_name not in evaluated_recent:
                             evaluated_recent.add(s_name)
                             if commits == 0 and (
-                                s_final < 90.0
-                                or "UNCHANGED" in status_str
-                                or "HALT_" in status_str
+                                s_final < 90.0 or "UNCHANGED" in status_str or "HALT_" in status_str
                             ):
                                 cooldown_skills.add(s_name)
 
@@ -759,7 +757,9 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
         # If running inside a git worktree, also delete from main repo root
         main_root = self._get_main_repo_root()
         if main_root and main_root != self.root:
-            main_brief = main_root / ".md" / "knowledge" / "escalations" / f"{skill_name}_plateau.md"
+            main_brief = (
+                main_root / ".md" / "knowledge" / "escalations" / f"{skill_name}_plateau.md"
+            )
             if main_brief.exists():
                 try:
                     main_brief.unlink()

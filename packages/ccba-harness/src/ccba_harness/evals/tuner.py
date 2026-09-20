@@ -382,14 +382,18 @@ class RatchetConfig:
         llm_model = model_match.group(1).strip() if model_match else ""
 
         # Parse Token Budget
-        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE)
+        budget_match = re.search(
+            r"-\s*\*\*Token\s*Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE
+        )
         token_budget = (
             int(re.sub(r"[,_]", "", budget_match.group(1))) if budget_match else 5_000_000
         )
 
         # Parse Per Skill Mutation Budget
         per_skill_match = re.search(
-            r"-\s*\*\*Per\s*Skill\s*(?:Mutation\s*)?Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE
+            r"-\s*\*\*Per\s*Skill\s*(?:Mutation\s*)?Budget\*\*:\s*([0-9,_]+)",
+            content,
+            re.IGNORECASE,
         )
         per_skill_mutation_budget = (
             int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else 250_000
@@ -1292,7 +1296,15 @@ class GitRatchetOptimizer:
             ):
                 has_office = any(
                     k in content.lower()
-                    for k in ["nghị định 30", "thể thức", "typography", "docx", "pptx", "văn bản", "phông chữ"]
+                    for k in [
+                        "nghị định 30",
+                        "thể thức",
+                        "typography",
+                        "docx",
+                        "pptx",
+                        "văn bản",
+                        "phông chữ",
+                    ]
                 )
                 if has_office or "ccba" in content.lower():
                     parts.append(
