@@ -43,6 +43,10 @@ KNOWN_REPLACEMENTS: dict[str, str] = {
     "149/2020/TT-BCA": "105/2025/NĐ-CP",
     "50/2014/QH13": "135/2025/QH15",
     "50/2014": "135/2025/QH15",
+    "175/2024/NĐ-CP": "217/2026/NĐ-CP",
+    "175/2024": "217/2026/NĐ-CP",
+    "15/2021/NĐ-CP": "217/2026/NĐ-CP",
+    "15/2021": "217/2026/NĐ-CP",
 }
 
 
@@ -119,6 +123,25 @@ def compile_flat_index(
             "pdf_sha256": meta.get("pdf_sha256", ""),
             "statutory_keys": sorted(keys),
         }
+
+    # Include Decree 30/2020/ND-CP (Clerical work & official document formatting)
+    if "30/2020/NĐ-CP" not in documents:
+        nd30_keys: list[str] = []
+        for i in range(1, 39):
+            nd30_keys.extend([f"dieu-{i}", f"điều {i}"])
+        for pl in ["i", "ii", "iii", "iv", "v", "vi"]:
+            nd30_keys.extend([f"phu-luc-{pl}", f"phụ lục {pl}"])
+        documents["30/2020/NĐ-CP"] = {
+            "id": "nghi_dinh_30_2020_nd_cp",
+            "document_number": "30/2020/NĐ-CP",
+            "title": "Nghị định 30/2020/NĐ-CP về công tác văn thư",
+            "status": "active",
+            "effective_date": "2020-03-05",
+            "cong_bao_number": "265+266",
+            "pdf_sha256": "b0b2e8a7c1e56b4618e4726f5872957bcf61245841029daff9da53e20e89e023",
+            "statutory_keys": sorted(nd30_keys),
+        }
+        total_keys += len(nd30_keys)
 
     flat_index: dict[str, Any] = {
         "schema_version": "1.0.0",
