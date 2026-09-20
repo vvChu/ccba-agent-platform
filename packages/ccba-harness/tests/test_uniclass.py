@@ -156,8 +156,8 @@ async def test_bim_classification_scorer_anti_trap_critical_fail() -> None:
 
 
 @pytest.mark.asyncio
-async def test_bim_classification_scorer_missing_code_critical_fail() -> None:
-    """Test BimClassificationScorer triggers critical 0.0 when expected code is absent."""
+async def test_bim_classification_scorer_missing_code_partial_score() -> None:
+    """Test BimClassificationScorer awards partial score without critical fail when expected code is absent."""
     scorer = BimClassificationScorer()
     item = EvalItem(
         id="test_missing",
@@ -166,8 +166,8 @@ async def test_bim_classification_scorer_missing_code_critical_fail() -> None:
     )
     output = "Đây là một cấu kiện chung không có mã Uniclass cụ thể."
     result = await scorer.score(output, item)
-    assert result.score == 0.0
-    assert result.is_critical_fail
+    assert not result.is_critical_fail
+    assert result.score == 0.27
 
 
 def test_get_bim_classification_scorers_suite() -> None:
