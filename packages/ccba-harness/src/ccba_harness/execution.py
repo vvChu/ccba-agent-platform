@@ -103,9 +103,9 @@ class DetachedExecutionEngine:
 
                 creationflags = 0
                 if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
-                    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+                    creationflags = int(getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
                     if hasattr(subprocess, "CREATE_NO_WINDOW"):
-                        creationflags |= subprocess.CREATE_NO_WINDOW
+                        creationflags |= int(getattr(subprocess, "CREATE_NO_WINDOW", 0))
 
                 env = os.environ.copy()
                 env["PYTHONUNBUFFERED"] = "1"
