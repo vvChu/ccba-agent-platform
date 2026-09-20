@@ -135,6 +135,7 @@ class FileMutexLock:
 
                         try:
                             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                            locked_os = True
                             # On POSIX, verify file wasn't unlinked before lock acquisition
                             try:
                                 stat_fd = os.fstat(fd)
