@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .legal_index import LegalFlatIndex, StatutoryDocument, load_legal_flat_index
 from .models import EvalItem, ScoreResult
 
 
@@ -803,4 +804,274 @@ def get_lean_structural_scorers() -> list[BaseScorer]:
         ProgressiveDisclosureScorer(weight=0.4),
         LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.3),
         AntiDebrisScorer(weight=0.3),
+    ]
+
+
+class LegalVerbatimProvenanceScorer(BaseScorer):
+    """Evaluates legal verbatim provenance, gazette citations, and anti-trap constraints (ADR-0059).
+
+    Enforces the Zero-Hallucination & Anti-Trap Critical Hard Floor:
+    1. Output must cite valid statutory documents (Decrees, Laws, Circulars, QCVN, TCVN).
+    2. Citing expired/superseded documents (e.g. NĐ 136/2020, Luật 50/2014, QCVN 06:2020) without
+       acknowledging replacement results in score=0.0 with is_critical_fail=True.
+    3. Citing fabricated/non-existent statutory documents results in score=0.0 with is_critical_fail=True.
+    4. Citing non-existent clauses (Điều, Khoản, Mục, Bảng, Phụ lục) in a document results in
+       score=0.0 with is_critical_fail=True.
+    5. Records cryptographic SHA-256 provenance and official gazette numbers in metadata.
+    """
+
+    def __init__(
+        self,
+        name: str = "legal_verbatim_provenance",
+        weight: float = 0.5,
+        is_critical: bool = True,
+        require_citation: bool = True,
+        index: LegalFlatIndex | None = None,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.require_citation = require_citation
+        self._index = index
+
+        self.doc_patterns: list[re.Pattern[str]] = [
+            re.compile(
+                r"(?:Nghị\s*định|NĐ)\s+(?:số\s+)?([0-9]+/[0-9]{4}(?:/[A-ZĐa-z0-9\-]+)?)",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"Luật(?:\s+[A-Za-zÀ-ỹ\s]+)?\s+(?:số\s+)?([0-9]+/[0-9]{4}(?:/QH[0-9]+)?)",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?:Thông\s*tư|TT)\s+(?:số\s+)?([0-9]+/[0-9]{4}(?:/[A-Z0-9\-]+)?)",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(QCVN\s+[0-9]+(?::[0-9]{4})?(?:/[A-Z0-9\-]+)?)", re.IGNORECASE),
+            re.compile(r"(TCVN\s+[0-9]+(?::[0-9]{4})?(?:/[A-Z0-9\-]+)?)", re.IGNORECASE),
+            re.compile(
+                r"\b([0-9]+/[0-9]{4}/(?:NĐ-CP|ND-CP|QH[0-9]+|TT-[A-Z0-9]+|QĐ-[A-Z0-9]+))\b",
+                re.IGNORECASE,
+            ),
+        ]
+
+        self.clause_doc_patterns: list[tuple[re.Pattern[str], int, int]] = [
+            (
+                re.compile(
+                    r"((?:Khoản\s+\d+\s+)?Điều\s+\d+|Mục\s+[0-9\.]+|Bảng\s+[A-Za-z0-9\.]+|Phụ\s+lục\s+[A-Za-z0-9\.]+)\s*(?:của|tại|theo)?\s*[^,\.\n]{0,30}?(?:Nghị\s*định|NĐ|Luật|Thông\s*tư|TT|QCVN|TCVN)\s+(?:số\s+)?([A-Za-z0-9_:\/\-Đđ]+)",
+                    re.IGNORECASE,
+                ),
+                1,
+                2,
+            ),
+            (
+                re.compile(
+                    r"(?:Nghị\s*định|NĐ|Luật|Thông\s*tư|TT|QCVN|TCVN)\s+(?:số\s+)?([A-Za-z0-9_:\/\-Đđ]+)[^,\.\n]{0,30}?(?:tại|theo|khoản|điều|mục|bảng|phụ\s+lục)?\s*((?:Khoản\s+\d+\s+)?Điều\s+\d+|Mục\s+[0-9\.]+|Bảng\s+[A-Za-z0-9\.]+|Phụ\s+lục\s+[A-Za-z0-9\.]+)",
+                    re.IGNORECASE,
+                ),
+                2,
+                1,
+            ),
+        ]
+
+        self.replacement_indicators: tuple[str, ...] = (
+            "thay thế",
+            "hết hiệu lực",
+            "bãi bỏ",
+            "hết hạn",
+            "bị thay",
+            "superseded",
+            "expired",
+            "thay bằng",
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        if not out_str.strip():
+            if self.require_citation:
+                return ScoreResult(
+                    scorer_name=self.name,
+                    score=0.0,
+                    reasoning="Văn bản phản hồi rỗng, không phát hiện trích dẫn căn cứ pháp lý",
+                    is_critical_fail=self.is_critical,
+                )
+            return ScoreResult(
+                scorer_name=self.name,
+                score=1.0,
+                reasoning="Empty output allowed without citations",
+                is_critical_fail=False,
+            )
+
+        index = self._index or load_legal_flat_index()
+        out_lower = out_str.lower()
+
+        # 1. Extract candidate document references
+        detected_doc_refs: list[str] = []
+        for pat in self.doc_patterns:
+            for m in pat.finditer(out_str):
+                ref = m.group(1).strip(".,;:() ") if m.groups() else m.group(0).strip(".,;:() ")
+                if ref and ref not in detected_doc_refs:
+                    detected_doc_refs.append(ref)
+
+        # Also check known documents & replacements mentioned by string in text
+        for doc_num in list(index.documents.keys()) + list(index.replaces_map.keys()):
+            if doc_num.lower() in out_lower and doc_num not in detected_doc_refs:
+                detected_doc_refs.append(doc_num)
+
+        # 2. Extract clause-document pairs
+        extracted_pairs: list[tuple[str, str]] = []
+        for pat, clause_grp, doc_grp in self.clause_doc_patterns:
+            for m in pat.finditer(out_str):
+                clause = m.group(clause_grp).strip(".,;:() ")
+                dref = m.group(doc_grp).strip(".,;:() ")
+                if clause and dref:
+                    extracted_pairs.append((clause, dref))
+
+        # 3. Check zero citations
+        if not detected_doc_refs:
+            if self.require_citation:
+                return ScoreResult(
+                    scorer_name=self.name,
+                    score=0.0,
+                    raw_output={"citations_found": 0},
+                    reasoning=(
+                        "Không phát hiện trích dẫn văn bản quy phạm pháp luật nào "
+                        "(Luật, Nghị định, Thông tư, QCVN, TCVN) theo quy chuẩn ADR-0059"
+                    ),
+                    is_critical_fail=self.is_critical,
+                )
+            return ScoreResult(
+                scorer_name=self.name,
+                score=1.0,
+                reasoning="No citations required",
+                is_critical_fail=False,
+            )
+
+        # 4. Verify each detected document reference
+        verified_docs: list[StatutoryDocument] = []
+        seen_doc_numbers: set[str] = set()
+
+        for doc_ref in detected_doc_refs:
+            is_exp, replacement = index.is_expired_or_replaced(doc_ref)
+            if is_exp:
+                # Must acknowledge expiration or replacement
+                has_indicator = any(kw in out_lower for kw in self.replacement_indicators)
+                has_rep_cited = False
+                if replacement:
+                    rep_short = replacement.split("/")[0].lower()
+                    has_rep_cited = rep_short in out_lower or replacement.lower() in out_lower
+                else:
+                    has_rep_cited = True
+
+                if not (has_indicator and has_rep_cited):
+                    return ScoreResult(
+                        scorer_name=self.name,
+                        score=0.0,
+                        raw_output={"trap_doc": doc_ref, "replacement": replacement},
+                        reasoning=(
+                            f"Bẫy pháp lý (Anti-Trap Hard Floor): Trích dẫn văn bản đã hết hiệu lực/bị thay thế '{doc_ref}' "
+                            f"mà không nêu rõ đã được thay thế bởi '{replacement}'"
+                        ),
+                        is_critical_fail=True,
+                    )
+                # Properly acknowledged expired trap, continue
+                continue
+
+            doc = index.get_document(doc_ref)
+            if doc is None:
+                return ScoreResult(
+                    scorer_name=self.name,
+                    score=0.0,
+                    raw_output={"unknown_doc": doc_ref},
+                    reasoning=(
+                        f"Bịa đặt căn cứ pháp lý (Zero-Hallucination Hard Floor): "
+                        f"Văn bản '{doc_ref}' không tồn tại trong công báo hoặc chỉ mục pháp luật"
+                    ),
+                    is_critical_fail=True,
+                )
+
+            if doc.document_number not in seen_doc_numbers:
+                verified_docs.append(doc)
+                seen_doc_numbers.add(doc.document_number)
+
+        # 5. Verify clauses
+        doc_clause_map: dict[str, list[str]] = {}
+        for clause, dref in extracted_pairs:
+            matched_doc = index.get_document(dref)
+            if matched_doc:
+                doc_clause_map.setdefault(matched_doc.document_number, []).append(clause)
+
+        for doc_num, clauses in doc_clause_map.items():
+            target_doc = index.documents.get(doc_num)
+            if not target_doc:
+                continue
+            for cl in clauses:
+                if not target_doc.has_clause(cl):
+                    return ScoreResult(
+                        scorer_name=self.name,
+                        score=0.0,
+                        raw_output={"doc": doc_num, "fake_clause": cl},
+                        reasoning=(
+                            f"Bịa đặt điều khoản (Zero-Hallucination Hard Floor): "
+                            f"Điều/Khoản '{cl}' không tồn tại trong văn bản '{target_doc.document_number}'"
+                        ),
+                        is_critical_fail=True,
+                    )
+
+        # 6. Verify target law match if specified in test item metadata
+        target_law = item.metadata.get("target_law") or item.metadata.get("law")
+        if target_law:
+            target_nums = re.findall(
+                r"\b([0-9]+/[0-9]{4}|QCVN\s+[0-9]+(?::[0-9]{4})?|TCVN\s+[0-9]+(?::[0-9]{4})?)\b",
+                str(target_law),
+                re.IGNORECASE,
+            )
+            if target_nums and not any(num.lower() in out_lower for num in target_nums):
+                target_matched = False
+                for num in target_nums:
+                    is_exp, rep = index.is_expired_or_replaced(num)
+                    if rep and rep.lower() in out_lower:
+                        target_matched = True
+                        break
+                if not target_matched:
+                    return ScoreResult(
+                        scorer_name=self.name,
+                        score=0.0,
+                        raw_output={"target_law": target_law},
+                        reasoning=f"Không viện dẫn đúng văn bản mục tiêu '{target_law}' theo yêu cầu nghiệp vụ",
+                        is_critical_fail=True,
+                    )
+
+        provenance_records = [
+            {
+                "document_number": d.document_number,
+                "title": d.title,
+                "cong_bao_number": d.cong_bao_number,
+                "pdf_sha256": d.pdf_sha256,
+                "verified_clauses": doc_clause_map.get(d.document_number, []),
+            }
+            for d in verified_docs
+        ]
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=1.0,
+            raw_output={
+                "verified_documents": [d.document_number for d in verified_docs],
+                "provenance": provenance_records,
+            },
+            reasoning=(
+                f"Xác thực căn cứ pháp lý thành công: {len(verified_docs)} văn bản hợp lệ "
+                f"(SHA-256 đối soát công báo)"
+            ),
+            is_critical_fail=False,
+            metadata={"provenance": provenance_records},
+        )
+
+
+def get_legal_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for legal domain skills (ADR-0059)."""
+    return [
+        LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True),
+        ProgressiveDisclosureScorer(weight=0.2),
+        AntiDebrisScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
     ]

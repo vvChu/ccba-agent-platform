@@ -19,7 +19,7 @@ import pytest
 
 from ccba_harness.evals.models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from ccba_harness.evals.runner import run_eval_pipeline
-from ccba_harness.evals.scorers import RegexScorer
+from ccba_harness.evals.scorers import LegalVerbatimProvenanceScorer, RegexScorer, get_legal_scorers
 from ccba_harness.evals.tuner import (
     CircuitBreakerOpenError,
     GitRatchetOptimizer,
@@ -200,12 +200,117 @@ Original text
 
 
 def test_get_default_domain_scorers_legal():
-    """Test domain scorers for legal skill."""
+    """Test domain scorers for legal skill routes to get_legal_scorers() (ADR-0059)."""
     scorers = get_default_domain_scorers("ccba-legal-advisor")
     names = [s.name for s in scorers]
-    assert "legal_grounding" in names
-    assert "anti_trap_hard_floor" in names
+    assert "legal_verbatim_provenance" in names
     assert any(s.is_critical for s in scorers)
+    assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_valid_citation():
+    """Verify valid citation with existing article passes with SHA-256 provenance."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_valid", input_prompt="Quy định thẩm duyệt PCCC mới nhất")
+    text = (
+        "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 15, việc thẩm định thiết kế PCCC "
+        "được phân định thẩm quyền rõ ràng cho Cơ quan chuyên môn về xây dựng."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 1.0
+    assert result.is_critical_fail is False
+    assert "Xác thực căn cứ pháp lý thành công" in result.reasoning
+    assert "provenance" in result.metadata
+    prov = result.metadata["provenance"]
+    assert len(prov) >= 1
+    assert prov[0]["document_number"] == "105/2025/NĐ-CP"
+    assert len(prov[0]["pdf_sha256"]) == 64
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_expired_trap_fails_critically():
+    """Verify citing expired statute without replacement notice fails critically (score 0.0)."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_trap", input_prompt="Thẩm duyệt PCCC theo NĐ 136")
+    text = (
+        "Căn cứ theo Nghị định 136/2020/NĐ-CP Điều 13, hồ sơ thẩm duyệt thiết kế PCCC "
+        "bao gồm đơn đề nghị và bản vẽ thiết kế cơ sở."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Anti-Trap Hard Floor" in result.reasoning
+    assert "136/2020" in result.reasoning
+    assert "105/2025" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_expired_trap_with_replacement_passes():
+    """Verify citing expired statute WITH replacement acknowledgement passes."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_trap_resolved", input_prompt="Thẩm duyệt PCCC theo NĐ 136")
+    text = (
+        "Lưu ý: Nghị định 136/2020/NĐ-CP đã hết hiệu lực và được thay thế bởi Nghị định 105/2025/NĐ-CP. "
+        "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 15, thẩm quyền thẩm duyệt được thực hiện..."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 1.0
+    assert result.is_critical_fail is False
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_hallucinated_statute_fails_critically():
+    """Verify citing non-existent statutory document fails critically (score 0.0)."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_hallucinated_doc", input_prompt="Hỏi luật")
+    text = (
+        "Căn cứ theo Nghị định số 999/2026/NĐ-CP quy định chi tiết về quản lý quy hoạch xây dựng..."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Zero-Hallucination Hard Floor" in result.reasoning
+    assert "999/2026/NĐ-CP" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_hallucinated_clause_fails_critically():
+    """Verify citing non-existent clause in valid document fails critically (score 0.0)."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_hallucinated_clause", input_prompt="Hỏi luật")
+    text = (
+        "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 999 quy định về chế tài xử phạt..."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Zero-Hallucination Hard Floor" in result.reasoning
+    assert "Điều 999" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_legal_verbatim_provenance_scorer_no_citation_fails_critically():
+    """Verify legal skill output without any statutory citation fails critically."""
+    scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legal_no_cite", input_prompt="Hỏi luật")
+    text = "Để thực hiện thủ tục này, chủ đầu tư cần liên hệ cơ quan có thẩm quyền để được giải quyết."
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Không phát hiện trích dẫn" in result.reasoning
+
+
+def test_get_legal_scorers_composition():
+    """Verify composition and weights of get_legal_scorers()."""
+    scorers = get_legal_scorers()
+    names = [s.name for s in scorers]
+    assert "legal_verbatim_provenance" in names
+    assert "progressive_disclosure_links" in names
+    assert "anti_debris" in names
+    assert "depth" in names
+    assert any(s.is_critical for s in scorers)
+    assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
 
 
 def test_get_default_domain_scorers_pccc():
