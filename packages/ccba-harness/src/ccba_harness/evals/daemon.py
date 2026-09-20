@@ -125,6 +125,10 @@ class SkillEvolutionSummary:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     halt_reason: str | None = None
+    slicing_tier: str | None = None
+    holdout_score: float | None = None
+    tuning_size: int = 0
+    holdout_size: int = 0
 
     @property
     def score_delta(self) -> float:
@@ -392,6 +396,10 @@ class NightlyTunerDaemon:
                     prompt_tokens=result.prompt_tokens,
                     completion_tokens=result.completion_tokens,
                     halt_reason=result.halt_reason,
+                    slicing_tier=result.slicing_tier,
+                    holdout_score=result.holdout_score,
+                    tuning_size=result.tuning_size,
+                    holdout_size=result.holdout_size,
                 )
                 summaries.append(summary)
                 total_commits += result.kept_commits

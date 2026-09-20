@@ -50,6 +50,13 @@ from .scorers import (
     get_pccc_scorers,
     get_visual_diagram_scorers,
 )
+from .slicing import (
+    AdaptiveDataSlicer,
+    DynamicPerturbationEngine,
+    SlicedDataset,
+    SlicingTier,
+    classify_slicing_tier,
+)
 from .tuner import (
     ACADEMIC_ARCHETYPE_KEYWORDS,
     BIM_ARCHETYPE_KEYWORDS,
@@ -133,4 +140,9 @@ __all__ = [
     "StatutoryDocument",
     "LegalFlatIndex",
     "load_legal_flat_index",
+    "SlicingTier",
+    "classify_slicing_tier",
+    "SlicedDataset",
+    "DynamicPerturbationEngine",
+    "AdaptiveDataSlicer",
 ]

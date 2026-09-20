@@ -1,7 +1,7 @@
 # 🗺️ BẢN ĐỒ ĐỊNH HƯỚNG: TIẾN HÓA BỘ ĐÁNH GIÁ ĐA BỘ MÔN (WAYFINDER MAP)
 > **Mã định danh:** `WAYFINDER-EVALUATOR-EVOLUTION`  
 > **Trạng thái:** ĐANG HOẠCH ĐỊNH & THỰC THI (ACTIVE)  
-> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.2.0` (Cập nhật sau hoàn tất TICKET-004)  
+> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.3.0` (Cập nhật sau hoàn tất TICKET-006)  
 > **Phạm vi áp dụng:** Toàn bộ 73 Agent Skills & Nightly Auto-Tuner Daemon
 
 ---
@@ -37,6 +37,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 *   `[TICKET-003B] [Legal Verbatim Provenance Scorer Chuẩn ADR-0059]`: Đã triển khai `LegalVerbatimProvenanceScorer` và `get_legal_scorers()` (`legal_verbatim_provenance` [0.5, critical] + `progressive_disclosure_links` [0.2] + `anti_debris` [0.15] + `depth` [0.15]), cưỡng chế rào chắn Điểm Liệt (Anti-Trap Hard Floor & Zero-Hallucination Hard Floor: trích dẫn văn bản hết hiệu lực không có cảnh báo/thay thế, hoặc bịa đặt văn bản/điều luật $\rightarrow$ điểm 0.0 critical fail), kiểm chứng SHA-256 provenance đối soát trực tiếp từ `legal_clauses_flat.json` (Commit [`1cab6743`](https://github.com/vvChu/ccba-agent-platform/commit/1cab6743)). 272 passed, 6 skipped tests.
 *   `[TICKET-002A] [Mở Rộng Archetype Routing Cho 73 Skills]`: Đã triển khai Taxonomy phân loại hoàn chỉnh cho 8 domain archetypes (Coding, Legal, Tech QC, BIM, Academic, Office, Visual, Orchestration) trong `tuner.py` và `daemon.py`. Xây dựng các scorers chuyên biệt `OfficeStandardScorer` (NĐ 30/2020) và `DiagramSyntaxScorer` (Mermaid/Excalidraw). Số lượng kỹ năng rơi vào bộ chấm fallback giảm từ 46 xuống 0/73 skills (đạt 100% độ phủ chuyên môn). Vượt qua 100% CI Gates (`verify-patch --preset code/eval/skill`) (Commit [`3a3d4025`](https://github.com/vvChu/ccba-agent-platform/commit/3a3d4025)).
 *   `[TICKET-004] [PCCC & Technical QC Parametric Condition Scorer]`: Đã mở rộng `eval_pccc_audit.json` lên 12 test cases thực tế theo QCVN 06:2022/BXD, QCVN 02:2020/BXD và TCVN 3890:2023 với schema `parametric_rules`. Triển khai `PcccParametricScorer` với kiến trúc 2 tầng (Gate 1 Deterministic Schema Filter < 1ms, 0 token, Dual Critical Hard Floor cho kết luận đảo ngược an toàn & bẫy quan niệm kỹ thuật sai lệch; Gate 2 Advisory Escalation LLM Judge với cơ chế graceful fallback). Tích hợp vào `get_pccc_scorers()` và `tuner.py` cho `TECH_QC_ARCHETYPE_KEYWORDS`. Đạt 282 passed tests và 100% PASS trên tất cả presets (`code/eval/skill`).
+*   `[TICKET-006] [Thiết Kế Cơ Chế Three-Tier Adaptive Slicing & Dynamic Perturbation]`: Đã triển khai module `slicing.py` hoàn chỉnh với `AdaptiveDataSlicer` và `DynamicPerturbationEngine` (FOG-001). Phân loại chính xác 3 cấp độ: Tier A ($N < 12$, 100% evaluation + dynamic perturbation chống học vẹt), Tier B ($12 \le N < 30$, phân tầng Stratified 70% Tuning / 30% Holdout), Tier C ($N \ge 30$, Blinded Multi-Seed Split). Tích hợp vào `GitRatchetOptimizer`, `RatchetReport` (bổ sung `slicing_tier`, `tuning_size`, `holdout_size`, `holdout_score`, `holdout_initial_score`) và `NightlyTunerDaemon`. 290 passed tests, 0 regressions trên 658 tests toàn sàn.
 
 ---
 
@@ -53,21 +54,13 @@ Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay the
     - **Trạng thái:** 🟢 READY (Unblocked - Domain routing độc lập tại `tuner.py:650`)
     - **Assignee:** Unassigned
 
-*   **`[TICKET-006]` [Thiết Kế Cơ Chế Three-Tier Adaptive Slicing & Dynamic Perturbation] [Research & Task - AFK]**
-    - **Mục tiêu:** Thiết kế cấu trúc phân tách dữ liệu kiểm thử trong `daemon.py` và `tuner.py` theo mô hình Phân Tầng Ba Cấp (Three-Tier Adaptive Slicing):
-      - **Tier A ($N < 12$ cases):** Giữ 100% bộ đề kiểm định, kích hoạt **Dynamic Parameter Perturbation (FOG-001)** hoán đổi ngẫu nhiên các số liệu hình học để chống học vẹt context.
-      - **Tier B ($12 \le N < 30$ cases):** Phân tách phân tầng **Stratified 70% Tuning / 30% Holdout** (bảo đảm tập Tuning luôn có từ 8 đến 21 câu hỏi định hướng đột biến).
-      - **Tier C ($N \ge 30$ cases):** Kích hoạt **Blinded Multi-Seed Split** (50/50 hoặc 70/30).
-    - **Trạng thái:** 🟢 READY (Đã hoàn thiện thiết kế toán học)
-    - **Assignee:** Unassigned
-
 ---
 
 ### 🔵 GIAI ĐOẠN 3 (P2: Executable Evals & Sandbox Cô Lập)
 
 *   **`[TICKET-007]` [Executable Docker Sandbox Evaluation Cho Coding Archetype] [Prototype - HITL]**
     - **Mục tiêu:** Xây dựng mẫu thử chạy `pytest` thật trong ephemeral container cô lập để chấm điểm trực tiếp code sinh ra bởi Agent.
-    - **Trạng thái:** 🟡 BLOCKED bởi `[TICKET-006]`
+    - **Trạng thái:** 🟢 READY (Unblocked bởi hoàn tất `[TICKET-006]`)
     - **Assignee:** Unassigned
 
 ---
