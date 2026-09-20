@@ -1514,14 +1514,75 @@ def test_fallback_skill_tuning_without_hard_lock(tmp_path: Path):
     """Test generic fallback skill runs auto-tuning without requiring Hard Completion Lock."""
     skill_file = tmp_path / "SKILL.md"
     skill_file.write_text(
-        "---\nname: ccba-pptx-deck\n---\n# Slide Deck Generation\nTham chiếu [Mẫu Slide](references/template.md).\n",
+        "---\nname: ccba-generic-sample\n---\n# Generic Skill\nTham chiếu [Mẫu](references/template.md).\n",
         encoding="utf-8",
     )
-    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-pptx-deck", max_iterations=1)
+    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-generic-sample", max_iterations=1)
     tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
     scorers = tuner.scorers
     assert not any(s.is_critical for s in scorers)
     rep = tuner.evaluate_content(skill_file.read_text(encoding="utf-8"))
     assert rep.overall_score >= 70.0
+
+
+def test_archetype_taxonomy_coverage_threshold():
+    """Verify that expanded archetype routing covers >= 60 skills and fallback count < 15 (TICKET-002A)."""
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    skills_dir = Path(".agents/skills")
+    if not skills_dir.exists():
+        pytest.skip(".agents/skills not found")
+
+    fallback_count = 0
+    total_skills = 0
+    for p in sorted(skills_dir.iterdir()):
+        if p.is_dir() and (p / "SKILL.md").exists():
+            total_skills += 1
+            scorers = get_default_domain_scorers(p.name)
+            names = [s.name for s in scorers]
+            if names == ["progressive_disclosure_links", "depth", "anti_debris"]:
+                fallback_count += 1
+
+    assert total_skills >= 70, f"Expected >= 70 skills, found {total_skills}"
+    assert fallback_count < 15, f"Fallback count {fallback_count} exceeds target < 15 (TICKET-002A)"
+
+
+def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
+    """Verify NightlyTunerDaemon._resolve_dataset_file routes expanded archetypes correctly."""
+    from ccba_harness.evals.daemon import NightlyTunerDaemon
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    assert daemon._resolve_dataset_file("ccba-ai-gateway-sdk") == "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-completion-checklist") == "eval_legal_intel.json"
+    assert daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_pccc_audit.json"
+    assert daemon._resolve_dataset_file("ccba-xu-ly-van-phong") == "eval_copywriting.json"
+    assert daemon._resolve_dataset_file("ccba-mermaid-diagram") == "eval_agent_orchestration.json"
+    assert daemon._resolve_dataset_file("ccba-pptx") == "eval_copywriting.json"
+
+
+def test_get_default_domain_scorers_expanded_archetypes():
+    """Verify get_default_domain_scorers routes expanded archetypes to specialized suites."""
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    # Coding / SDK
+    coding_names = [s.name for s in get_default_domain_scorers("ccba-ai-gateway-sdk")]
+    assert "hard_completion_lock" in coding_names
+
+    # Legal / Checklist
+    legal_names = [s.name for s in get_default_domain_scorers("ccba-completion-checklist")]
+    assert "legal_verbatim_provenance" in legal_names
+
+    # Technical QC / Preprocessor
+    tech_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
+    assert "technical_qc" in tech_names
+
+    # Office / Docx
+    office_names = [s.name for s in get_default_domain_scorers("ccba-xu-ly-van-phong")]
+    assert "office_standard" in office_names
+
+    # Visual / Diagram
+    visual_names = [s.name for s in get_default_domain_scorers("ccba-mermaid-diagram")]
+    assert "diagram_syntax" in visual_names
+
 
 

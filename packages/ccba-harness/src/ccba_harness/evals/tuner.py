@@ -27,7 +27,9 @@ from .scorers import (
     get_coding_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
+    get_office_scorers,
     get_orchestration_scorers,
+    get_visual_diagram_scorers,
 )
 
 try:
@@ -477,16 +479,116 @@ CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "design",
     "refactor",
     "engineering",
+    "sdk",
+    "circuit-breaker",
+    "logger",
+    "stability-guard",
+    "rag",
+    "pipeline-patterns",
+    "maskara",
+    "testing",
+    "modeling",
+    "feature",
+    "iac",
+    "to-spec",
+    "docs",
+)
+
+LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "legal",
+    "luat",
+    "tvpl",
+    "vbpl",
+    "advisor",
+    "checklist",
+    "hsht",
+    "phap-ly",
+    "ingest",
+)
+
+TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "pccc",
+    "qc",
+    "audit",
+    "thamdinh",
+    "preprocessor",
+)
+
+OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "van-phong",
+    "docx",
+    "pptx",
+    "presentation",
+    "markdown-document",
+    "seminar",
+    "typography",
+    "copywriting",
+    "vietbai",
+    "truyenthong",
+)
+
+VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "mermaid",
+    "excalidraw",
+    "diagram",
+)
+
+ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "teamwork",
+    "orchestrat",
+    "platform",
+    "handoff",
+    "issue-tree",
+    "ask",
+    "xia",
+    "wayfinder",
+    "spoke",
+    "upstream",
+    "hub",
+    "pr",
+    "guardrails",
+    "proposal",
+    "adr",
+    "grill",
+    "stresstest",
+    "stress-test",
+    "retrospective",
+    "knowledge",
+    "research",
+    "notebooklm",
+    "youtube",
+    "skill-repair",
+    "build-skill",
+    "setup-skills",
+    "eval-gate",
+    "rd",
+    "graduate",
+)
+
+BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "bim",
+    "uniclass",
+    "classification",
+    "rase",
+    "governance",
+    "risk",
+    "conflict",
+    "ifc",
+)
+
+ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "academic",
+    "khoahoc",
 )
 
 
 def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
     """Provides domain-aligned default scorers based on target skill."""
     sname = skill_name.lower()
-    if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl"]):
+    if any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
         return get_legal_scorers()
 
-    if any(k in sname for k in ["pccc", "qc", "audit", "thamdinh"]):
+    if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
         return [
             RegexScorer(
                 name="technical_qc",
@@ -502,7 +604,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
-    if any(k in sname for k in ["academic", "khoahoc"]) or "academic-writing" in sname:
+    if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
         return [
             RegexScorer(
                 name="academic_structure",
@@ -518,15 +620,11 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
         ]
 
-    if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
-        return [
-            RegexScorer(
-                name="copywriting_action",
-                pattern=r"(xử lý|hướng dẫn|thực hiện|quy định|nội dung|thông điệp)",
-                weight=0.7,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.3),
-        ]
+    if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
+        return get_office_scorers()
+
+    if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
+        return get_visual_diagram_scorers()
 
     if any(k in sname for k in ["risk", "conflict"]) or "bigbim-risk" in sname:
         return [
@@ -549,7 +647,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
             LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
         ]
 
-    if any(k in sname for k in ["bim", "uniclass", "classification", "ifc"]):
+    if any(k in sname for k in ["bim", "uniclass", "classification", "ifc", "rase", "governance"]):
         return [
             RegexScorer(
                 name="bim_classification_rules",
@@ -617,6 +715,9 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
 
     if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
         return get_coding_scorers()
+
+    if any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
+        return get_orchestration_scorers()
 
     return get_lean_structural_scorers()
 
