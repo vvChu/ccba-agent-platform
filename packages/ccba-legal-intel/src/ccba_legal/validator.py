@@ -94,3 +94,66 @@ def validate_template_and_table_integrity(
                                 )
 
     return (errors, warnings)
+
+
+def validate_registry_sync(
+    spoke_root: Path,
+    registry_path: Path | None = None,
+    docs_dir: Path | None = None,
+) -> tuple[list[str], list[str]]:
+    """Validate that legal_registry.yaml is 100% in sync with sharded metadata.yaml bundles.
+
+    Args:
+        spoke_root: Root directory of Spoke or Legal Knowledge workspace.
+        registry_path: Optional explicit path to target legal_registry.yaml.
+        docs_dir: Optional explicit path to directory containing sharded legal documents.
+
+    Returns:
+        tuple (errors, warnings)
+    """
+    from ccba_legal.compiler import compile_sharded_registry
+
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # 1. Resolve docs_dir
+    target_docs = docs_dir
+    if not target_docs:
+        cand1 = spoke_root / "legal_docs"
+        cand2 = spoke_root / ".md" / "legal_docs"
+        if cand1.is_dir():
+            target_docs = cand1
+        elif cand2.is_dir():
+            target_docs = cand2
+        else:
+            target_docs = cand1
+
+    if not target_docs.exists():
+        warnings.append(f"Docs directory not found: {target_docs}")
+        return errors, warnings
+
+    # 2. Resolve registry_path
+    target_reg = registry_path
+    if not target_reg:
+        cand_reg1 = spoke_root / "legal_registry.yaml"
+        cand_reg2 = spoke_root / ".md" / "data" / "legal_registry.yaml"
+        if cand_reg1.is_file():
+            target_reg = cand_reg1
+        elif cand_reg2.is_file():
+            target_reg = cand_reg2
+        else:
+            target_reg = cand_reg1
+
+    # 3. Check synchronization
+    _compiled, is_in_sync, issues = compile_sharded_registry(
+        docs_dir=target_docs,
+        output_file=target_reg,
+        check_only=True,
+        project_root=spoke_root,
+    )
+
+    if not is_in_sync:
+        for iss in issues:
+            errors.append(f"Registry Sync Discrepancy: {iss}")
+
+    return errors, warnings

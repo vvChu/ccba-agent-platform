@@ -20,6 +20,7 @@ from .ast_parser import (
     DeltaPatchItem,
 )
 from .cleaners import Cleaners
+from .compiler import compile_sharded_registry
 from .consolidator import (
     ConsolidationResult,
     DocMode,
@@ -174,7 +175,10 @@ from .registry import (
     search_legal_registry,
 )
 from .sync import LegalSyncEngine, sync_legal_assets
-from .validator import validate_template_and_table_integrity
+from .validator import (
+    validate_registry_sync,
+    validate_template_and_table_integrity,
+)
 from .vbhn_engine import MergedLegalDocument, VBHNEngine
 from .vbhn_merger import VBHNMerger
 from .visual_parity import (
@@ -298,6 +302,8 @@ __all__ = [
     "normalize_clause_numbers",
     "classify_and_extract_tables",
     "validate_template_and_table_integrity",
+    "validate_registry_sync",
+    "compile_sharded_registry",
     # === Technical Figure Extraction & Centered Cards (ADR 0030 / ADR 0034) ===
     "extract_docx_figures",
     "extract_technical_figures",
