@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +22,10 @@ import yaml
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("compile_legal_flat_index")
 
-DEFAULT_KNOWLEDGE_DIR = Path("/home/vvc/ccba/ccba-legal-knowledge")
+DEFAULT_KNOWLEDGE_DIR = Path(
+    os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH")
+    or (Path(__file__).resolve().parent.parent.parent.parent / "ccba-legal-knowledge")
+)
 DEFAULT_OUTPUT_PATH = (
     Path(__file__).resolve().parent.parent.parent
     / "packages"

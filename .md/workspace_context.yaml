@@ -1,4 +1,4 @@
-hub_path: D:\GitHubProjects\ccba-agent-platform
+hub_path: .
 project:
   mode: hybrid
   name: ccba-agent-platform

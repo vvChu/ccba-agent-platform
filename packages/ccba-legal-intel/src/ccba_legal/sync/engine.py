@@ -132,6 +132,36 @@ class LegalSyncEngine:
                     return p.parent.resolve()
                 return p.resolve()
 
+        # Check CCBA_HUB_PATH environment variable first
+        for env_hub_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+            env_hub = os.environ.get(env_hub_key)
+            if env_hub:
+                hub_p = Path(env_hub).resolve()
+                for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
+                    spoke_reg = hub_p / ".md" / "data" / reg_name
+                    if spoke_reg.is_file():
+                        try:
+                            with open(spoke_reg, encoding="utf-8") as rf:
+                                reg_content = yaml.safe_load(rf) or {}
+                            for sp in reg_content.get("spokes", []):
+                                if isinstance(sp, dict) and (
+                                    sp.get("name") == "ccba-legal-knowledge"
+                                    or "legal-knowledge" in str(sp.get("name", "")).lower()
+                                    or sp.get("archetype") == "knowledge_corpus"
+                                ):
+                                    p_str = sp.get("path")
+                                    if p_str:
+                                        cand = Path(p_str)
+                                        if cand.exists() and (
+                                            (cand / "legal_docs").exists()
+                                            or (
+                                                cand / ".md" / "data" / "legal_registry.yaml"
+                                            ).exists()
+                                        ):
+                                            return cand.resolve()
+                        except Exception:
+                            pass
+
         # Hub-mediated discovery via workspace_context.yaml (KISS - Zero Extra Config)
         for ctx_name in [".md/workspace_context.yaml", ".agents/workspace_context.yaml"]:
             local_ctx = self.project_root / ctx_name
@@ -140,34 +170,49 @@ class LegalSyncEngine:
                     with open(local_ctx, encoding="utf-8") as f:
                         ctx_data = yaml.safe_load(f) or {}
                     proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
-                    hub_path_str = ctx_data.get("hub_path") or (
+                    hub_val = ctx_data.get("hub_path") or (
                         proj_data.get("hub_path") if isinstance(proj_data, dict) else None
                     )
+                    hub_path_str: str = ""
+                    if isinstance(hub_val, dict):
+                        os_k = "windows" if os.name == "nt" else "linux"
+                        hub_path_str = str(hub_val.get(os_k) or hub_val.get("posix") or "")
+                    elif isinstance(hub_val, str):
+                        hub_path_str = hub_val
+
                     if hub_path_str:
-                        hub_p = Path(hub_path_str)
-                        if not hub_p.is_absolute():
-                            hub_p = (self.project_root / hub_p).resolve()
-                        for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
-                            spoke_reg = hub_p / ".md" / "data" / reg_name
-                            if spoke_reg.is_file():
-                                with open(spoke_reg, encoding="utf-8") as rf:
-                                    reg_content = yaml.safe_load(rf) or {}
-                                for sp in reg_content.get("spokes", []):
-                                    if isinstance(sp, dict) and (
-                                        sp.get("name") == "ccba-legal-knowledge"
-                                        or "legal-knowledge" in str(sp.get("name", "")).lower()
-                                        or sp.get("archetype") == "knowledge_corpus"
-                                    ):
-                                        p_str = sp.get("path")
-                                        if p_str:
-                                            cand = Path(p_str)
-                                            if cand.exists() and (
-                                                (cand / "legal_docs").exists()
-                                                or (
-                                                    cand / ".md" / "data" / "legal_registry.yaml"
-                                                ).exists()
-                                            ):
-                                                return cand.resolve()
+                        is_win_drive = bool(re.match(r"^[A-Za-z]:[\\/]", hub_path_str))
+                        if not (os.name != "nt" and is_win_drive):
+                            hub_p = Path(hub_path_str)
+                            if not hub_p.is_absolute():
+                                hub_p = (self.project_root / hub_p).resolve()
+                            for reg_name in [
+                                "spoke_registry_decrypted.yaml",
+                                "spoke_registry.yaml",
+                            ]:
+                                spoke_reg = hub_p / ".md" / "data" / reg_name
+                                if spoke_reg.is_file():
+                                    with open(spoke_reg, encoding="utf-8") as rf:
+                                        reg_content = yaml.safe_load(rf) or {}
+                                    for sp in reg_content.get("spokes", []):
+                                        if isinstance(sp, dict) and (
+                                            sp.get("name") == "ccba-legal-knowledge"
+                                            or "legal-knowledge" in str(sp.get("name", "")).lower()
+                                            or sp.get("archetype") == "knowledge_corpus"
+                                        ):
+                                            p_str = sp.get("path")
+                                            if p_str:
+                                                cand = Path(p_str)
+                                                if cand.exists() and (
+                                                    (cand / "legal_docs").exists()
+                                                    or (
+                                                        cand
+                                                        / ".md"
+                                                        / "data"
+                                                        / "legal_registry.yaml"
+                                                    ).exists()
+                                                ):
+                                                    return cand.resolve()
                 except (OSError, yaml.YAMLError) as e:
                     logger.debug("Lỗi khi đọc file cấu hình hub/workspace: %s", e)
 

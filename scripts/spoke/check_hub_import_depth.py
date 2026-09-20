@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import ast
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -38,6 +39,39 @@ FALLBACK_HUB_PACKAGES: tuple[str, ...] = (
 )
 
 
+_WIN_DRIVE_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
+
+
+def _resolve_candidate_hub_path(raw: str, base_dir: Path) -> Path | None:
+    """Safely resolve a candidate hub path string across Windows and POSIX."""
+    raw = raw.strip().strip("'\"")
+    if not raw:
+        return None
+    if os.name != "nt" and _WIN_DRIVE_PATTERN.match(raw):
+        import shutil
+        import subprocess
+
+        if shutil.which("wslpath"):
+            try:
+                res = subprocess.run(
+                    ["wslpath", "-u", raw], capture_output=True, text=True, timeout=2
+                )
+                if res.returncode == 0 and res.stdout.strip():
+                    cand = Path(res.stdout.strip())
+                    if cand.exists():
+                        return cand
+            except Exception:
+                pass
+        return None
+
+    p = Path(raw)
+    if not p.is_absolute():
+        p = (base_dir / p).resolve()
+    else:
+        p = p.resolve()
+    return p
+
+
 def _read_hub_path_from_dir(directory: Path) -> Path | None:
     """Extract Hub packages directory from workspace_context.yaml in directory."""
     for rel in [
@@ -47,21 +81,46 @@ def _read_hub_path_from_dir(directory: Path) -> Path | None:
     ]:
         if rel.is_file():
             try:
-                for line in rel.read_text(encoding="utf-8").splitlines():
+                spoke_dir = (
+                    rel.parent.parent if rel.parent.name in (".agents", ".md") else rel.parent
+                )
+                content = rel.read_text(encoding="utf-8")
+                # Try parsing as YAML for multi-OS or complex structures
+                try:
+                    import yaml
+
+                    data = yaml.safe_load(content)
+                    if isinstance(data, dict):
+                        hub_val = data.get("hub_path")
+                        if not hub_val and isinstance(data.get("project"), dict):
+                            hub_val = data["project"].get("hub_path")
+                        if isinstance(hub_val, dict):
+                            os_key = "windows" if os.name == "nt" else "linux"
+                            raw = str(hub_val.get(os_key) or hub_val.get("posix") or "")
+                        elif isinstance(hub_val, str):
+                            raw = hub_val
+                        else:
+                            raw = ""
+                        if raw:
+                            hp = _resolve_candidate_hub_path(raw, spoke_dir)
+                            if hp:
+                                pkg_dir = hp if hp.name == "packages" else hp / "packages"
+                                if pkg_dir.is_dir():
+                                    return pkg_dir
+                except Exception:
+                    pass
+
+                # Fallback line-by-line parsing
+                for line in content.splitlines():
                     line_s = line.strip()
                     if line_s.startswith("hub_path:"):
                         raw = line_s.split(":", 1)[1].split("#")[0].strip().strip("'\"")
                         if raw:
-                            raw_p = Path(raw)
-                            spoke_dir = (
-                                rel.parent.parent
-                                if rel.parent.name in (".agents", ".md")
-                                else rel.parent
-                            )
-                            hp = raw_p if raw_p.is_absolute() else (spoke_dir / raw_p).resolve()
-                            pkg_dir = hp if hp.name == "packages" else hp / "packages"
-                            if pkg_dir.is_dir():
-                                return pkg_dir
+                            hp = _resolve_candidate_hub_path(raw, spoke_dir)
+                            if hp:
+                                pkg_dir = hp if hp.name == "packages" else hp / "packages"
+                                if pkg_dir.is_dir():
+                                    return pkg_dir
             except OSError:
                 pass
     return None
@@ -72,9 +131,9 @@ def find_hub_packages_dir(start_path: Path | None = None) -> Path | None:
 
     Searches:
     1. start_path and its parents for packages/ or workspace_context.yaml hub_path
-    2. Relative to this file's location (Hub or Spoke repo)
-    3. Current working directory and its parents
-    4. Environment variables (CCBA_HUB_PATH, HUB_PATH)
+    2. Environment variables (CCBA_HUB_PATH, HUB_PATH)
+    3. Relative to this file's location (Hub or Spoke repo)
+    4. Current working directory and its parents
     """
     if start_path is not None:
         resolved = start_path.resolve()
@@ -87,7 +146,31 @@ def find_hub_packages_dir(start_path: Path | None = None) -> Path | None:
             spoke_hub = _read_hub_path_from_dir(cand)
             if spoke_hub:
                 return spoke_hub
+
+        # Fallback to env variables if start_path did not find packages directory directly
+        for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+            env_val = os.environ.get(env_key)
+            if env_val:
+                hp = Path(env_val).resolve()
+                pkg_dir = hp if hp.name == "packages" else hp / "packages"
+                if pkg_dir.is_dir():
+                    return pkg_dir
+
+        # Sibling directory check
+        sibling = resolved.parent / "ccba-agent-platform" / "packages"
+        if sibling.is_dir():
+            return sibling
+
         return None
+
+    # Check environment variables early
+    for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+        env_val = os.environ.get(env_key)
+        if env_val:
+            hp = Path(env_val).resolve()
+            pkg_dir = hp if hp.name == "packages" else hp / "packages"
+            if pkg_dir.is_dir():
+                return pkg_dir
 
     # When start_path is None, use discovery heuristics
     this_file = Path(__file__).resolve()
@@ -107,14 +190,6 @@ def find_hub_packages_dir(start_path: Path | None = None) -> Path | None:
         spoke_hub = _read_hub_path_from_dir(candidate)
         if spoke_hub:
             return spoke_hub
-
-    for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
-        env_val = os.environ.get(env_key)
-        if env_val:
-            hp = Path(env_val).resolve()
-            pkg_dir = hp if hp.name == "packages" else hp / "packages"
-            if pkg_dir.is_dir():
-                return pkg_dir
 
     return None
 

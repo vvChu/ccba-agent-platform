@@ -73,16 +73,18 @@ def resolve_default_legal_spoke(spoke_name_or_path: str | None = None) -> Path:
     except Exception:
         pass
 
-    env_spoke = os.getenv("CCBA_LEGAL_SPOKE_PATH")
+    env_spoke = os.getenv("CCBA_LEGAL_SPOKE_PATH") or os.getenv("CCBA_LEGAL_KNOWLEDGE_PATH")
     if env_spoke and Path(env_spoke).exists():
         return Path(env_spoke)
 
     # Standard default paths
     candidates = [
-        Path("D:/GitHubProjects/ccba-legal-knowledge"),
         _ROOT_DIR.parent / "ccba-legal-knowledge",
         Path.cwd() / "ccba-legal-knowledge",
+        Path.home() / "ccba" / "ccba-legal-knowledge",
+        Path.home() / "GitHubProjects" / "ccba-legal-knowledge",
     ]
+
     for c in candidates:
         if c.exists() and (c / "legal_registry.yaml").exists():
             return c
@@ -159,10 +161,8 @@ def execute_ingest_legal(
             print(f"  [Mocked] Generated sandbox .docx at {temp_docx_path}")
         else:
             try:
-                from ccba_legal.coordinator import (
-                    LegalIntelPipeline,  # type: ignore[import-untyped]
-                )
-                from ccba_legal.crawler import TVPLSessionMutex  # type: ignore[import-untyped]
+                from ccba_legal.coordinator import LegalIntelPipeline
+                from ccba_legal.crawler import TVPLSessionMutex
 
                 mutex = TVPLSessionMutex()
                 with mutex:
@@ -207,7 +207,7 @@ def execute_ingest_legal(
     if sync_cloud:
         print("\n[Cloud Sync] Triggering LegalSyncEngine to update NotebookLM...")
         try:
-            from ccba_legal.sync import LegalSyncEngine  # type: ignore[import-untyped]
+            from ccba_legal.sync import LegalSyncEngine
 
             _sync_engine = LegalSyncEngine()
             _ = _sync_engine
@@ -499,7 +499,7 @@ def main() -> int:
             cli_args.append("--changed")
         if args.root:
             cli_args.extend(["--root", str(args.root)])
-        return auditor.run_docs_validation_cli(cli_args)
+        return int(auditor.run_docs_validation_cli(cli_args))
 
     elif args.command == "validate-cross-ref":
         from scripts.governance.cross_ref_validator import validate_cross_references
