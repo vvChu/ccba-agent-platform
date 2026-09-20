@@ -46,6 +46,10 @@ RE_DEAD_WOOD: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bAskUserQuestion\b"), "Claude Tool (AskUserQuestion)"),
     (re.compile(r"\bcode-reviewer\.md\b"), "Missing ClaudeKit Template (code-reviewer.md)"),
     (re.compile(r"\bcodebase-summary\.md\b"), "Missing ClaudeKit File (codebase-summary.md)"),
+    (
+        re.compile(r"<!--\s*Ratchet Optimization Refinement"),
+        "Ratchet Optimization Junk Comment (ADR-0058)",
+    ),
 ]
 
 RE_BASHISMS: list[tuple[re.Pattern[str], str]] = [
