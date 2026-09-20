@@ -33,6 +33,7 @@ from .form_filler import (
     SofficeFallbackEngine,
     TableRule,
     TemplateNotFoundError,
+    TemplateProtectionError,
     WinwordEngine,
     WordFormFiller,
 )
@@ -138,5 +139,6 @@ __all__ = [
     "FormFillerError",
     "EngineUnavailableError",
     "TemplateNotFoundError",
+    "TemplateProtectionError",
     "LayoutGuardError",
 ]
