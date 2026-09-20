@@ -125,6 +125,10 @@ class SkillEvolutionSummary:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     halt_reason: str | None = None
+    slicing_tier: str | None = None
+    holdout_score: float | None = None
+    tuning_size: int = 0
+    holdout_size: int = 0
 
     @property
     def score_delta(self) -> float:
@@ -392,6 +396,10 @@ class NightlyTunerDaemon:
                     prompt_tokens=result.prompt_tokens,
                     completion_tokens=result.completion_tokens,
                     halt_reason=result.halt_reason,
+                    slicing_tier=result.slicing_tier,
+                    holdout_score=result.holdout_score,
+                    tuning_size=result.tuning_size,
+                    holdout_size=result.holdout_size,
                 )
                 summaries.append(summary)
                 total_commits += result.kept_commits
@@ -702,7 +710,9 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
                 check=False,
             )
             if diff_check.returncode == 0:
-                logger.warning("⚠️ Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR.")
+                logger.warning(
+                    "⚠️ Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR."
+                )
                 return None
             if diff_check.returncode not in (0, 1):
                 logger.warning(

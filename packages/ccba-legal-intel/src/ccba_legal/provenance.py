@@ -220,18 +220,20 @@ def verify_bundle_docx_vs_pdf(
 
 
 class ParityResult(tuple):
-    def __new__(cls, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0):
+    def __new__(
+        cls, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0
+    ):
         return super().__new__(cls, (parity_rate, missing_paras))
 
-    def __init__(self, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0):
+    def __init__(
+        self, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0
+    ):
         self.parity_rate = parity_rate
         self.missing_paras = missing_paras
         self.effective_paras = effective_paras
 
 
-def compute_docx_to_markdown_parity(
-    docx_paras: list[str], combined_md: str
-) -> ParityResult:
+def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> ParityResult:
     """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
 
     def norm_words(text: str) -> str:
@@ -294,7 +296,11 @@ def compute_docx_to_markdown_parity(
             missing_paras.append((idx, p))
             effective_docx_paras += 1
 
-    parity_rate = ((effective_docx_paras - len(missing_paras)) / effective_docx_paras) * 100.0 if effective_docx_paras else 100.0
+    parity_rate = (
+        ((effective_docx_paras - len(missing_paras)) / effective_docx_paras) * 100.0
+        if effective_docx_paras
+        else 100.0
+    )
     return ParityResult(parity_rate, missing_paras, effective_docx_paras)
 
 

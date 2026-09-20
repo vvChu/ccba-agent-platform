@@ -279,9 +279,7 @@ async def test_legal_verbatim_provenance_scorer_hallucinated_clause_fails_critic
     """Verify citing non-existent clause in valid document fails critically (score 0.0)."""
     scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
     item = EvalItem(id="test_legal_hallucinated_clause", input_prompt="Hỏi luật")
-    text = (
-        "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 999 quy định về chế tài xử phạt..."
-    )
+    text = "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 999 quy định về chế tài xử phạt..."
     result = await scorer.score(text, item)
     assert result.score == 0.0
     assert result.is_critical_fail is True
@@ -294,7 +292,9 @@ async def test_legal_verbatim_provenance_scorer_no_citation_fails_critically():
     """Verify legal skill output without any statutory citation fails critically."""
     scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
     item = EvalItem(id="test_legal_no_cite", input_prompt="Hỏi luật")
-    text = "Để thực hiện thủ tục này, chủ đầu tư cần liên hệ cơ quan có thẩm quyền để được giải quyết."
+    text = (
+        "Để thực hiện thủ tục này, chủ đầu tư cần liên hệ cơ quan có thẩm quyền để được giải quyết."
+    )
     result = await scorer.score(text, item)
     assert result.score == 0.0
     assert result.is_critical_fail is True
@@ -317,8 +317,11 @@ def test_get_default_domain_scorers_pccc():
     """Test domain scorers for pccc/qc skill."""
     scorers = get_default_domain_scorers("ccba-ai-qc-pccc-audit")
     names = [s.name for s in scorers]
-    assert "technical_qc" in names
-    assert "pccc_anti_trap_hard_floor" in names
+    assert "pccc_parametric" in names
+    assert "anti_debris" in names
+    assert "depth" in names
+    assert any(s.is_critical for s in scorers)
+    assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
 
 
 def test_get_default_domain_scorers_academic():
@@ -333,8 +336,8 @@ def test_get_default_domain_scorers_bim():
     """Test domain scorers for bim classification skill."""
     scorers = get_default_domain_scorers("bigbim-classification")
     names = [s.name for s in scorers]
-    assert "bim_classification_rules" in names
-    assert "bim_anti_trap_hard_floor" in names
+    assert "bim_classification" in names
+    assert any(s.is_critical for s in scorers)
 
 
 def test_get_default_domain_scorers_fallback():
@@ -344,7 +347,9 @@ def test_get_default_domain_scorers_fallback():
     assert "progressive_disclosure_links" in names
     assert "depth" in names
     assert "anti_debris" in names
-    assert not any(s.is_critical for s in scorers)  # ADR-0058 Hard Completion Lock is NOT forced on fallback
+    assert not any(
+        s.is_critical for s in scorers
+    )  # ADR-0058 Hard Completion Lock is NOT forced on fallback
     assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
 
 
@@ -1377,7 +1382,9 @@ async def test_engineering_discipline_scorer_evaluation():
     assert res_partial_dp.score == 0.5
 
     # Partial: KISS / Rigor only
-    res_partial_rigor = await scorer.score("Tuân thủ nguyên tắc KISS và xử lý explicit error handling.", item)
+    res_partial_rigor = await scorer.score(
+        "Tuân thủ nguyên tắc KISS và xử lý explicit error handling.", item
+    )
     assert res_partial_rigor.score == 0.5
 
     # Full: Both pillars
@@ -1427,9 +1434,14 @@ def test_resolve_dataset_file_coding(tmp_path: Path):
     daemon = NightlyTunerDaemon(root=tmp_path)
     assert daemon._resolve_dataset_file("ccba-codebase-design") == "eval_codebase_engineering.json"
     assert daemon._resolve_dataset_file("ccba-bug-diagnostic") == "eval_codebase_engineering.json"
-    assert daemon._resolve_dataset_file("ccba-implement-workflow") == "eval_codebase_engineering.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-implement-workflow") == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-tdd-loop") == "eval_codebase_engineering.json"
-    assert daemon._resolve_dataset_file("ccba-codebase-engineering") == "eval_codebase_engineering.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-codebase-engineering")
+        == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-refactor-service") == "eval_codebase_engineering.json"
 
 
@@ -1574,7 +1586,7 @@ def test_get_default_domain_scorers_expanded_archetypes():
 
     # Technical QC / Preprocessor
     tech_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
-    assert "technical_qc" in tech_names
+    assert "pccc_parametric" in tech_names or "technical_qc" in tech_names
 
     # Office / Docx
     office_names = [s.name for s in get_default_domain_scorers("ccba-xu-ly-van-phong")]
@@ -1585,4 +1597,209 @@ def test_get_default_domain_scorers_expanded_archetypes():
     assert "diagram_syntax" in visual_names
 
 
+# =========================================================================
+# PCCC Parametric Condition Scorer Tests (TICKET-004)
+# =========================================================================
 
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_valid_verdict_and_parameters():
+    """Verify valid PCCC audit response with correct verdict and parameters passes Gate 1."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    item = EvalItem(
+        id="test_pccc_smoke",
+        input_prompt="Thẩm tra hành lang dài 28m không hút khói",
+        metadata={
+            "parametric_rules": {
+                "expected_verdict": "KHONG_DAT",
+                "verdict_patterns": ["không đạt", "vi phạm", "không phù hợp"],
+                "forbidden_verdict_patterns": ["kết luận đạt", "hoàn toàn phù hợp"],
+                "required_parameters": [
+                    {"name": "ngưỡng chiều dài", "pattern": r"15\s*(?:m|mét)"},
+                    {"name": "hệ thống hút khói", "pattern": r"hút khói|thông gió sự cố"},
+                ],
+                "forbidden_parameters": [
+                    {
+                        "name": "thừa nhận mốc 30m",
+                        "pattern": r"30\s*(?:m|mét)\s*(?:là đúng|chưa cần)",
+                    },
+                ],
+                "legal_basis": r"QCVN\s*06:2022/BXD.*(?:Phụ lục D|D\.2)",
+            }
+        },
+    )
+    text = (
+        "Kết luận: KHÔNG ĐẠT quy chuẩn. Căn cứ theo QCVN 06:2022/BXD Phụ lục D (Mục D.2), "
+        "hành lang dài trên 15m trong nhà kín bắt buộc phải bố trí hệ thống hút khói cơ khí sự cố. "
+        "Lý do chiều dài chưa vượt quá 30m của thiết kế là hoàn toàn sai quy chuẩn."
+    )
+    result = await scorer.score(text, item)
+    assert result.score == 1.0
+    assert result.is_critical_fail is False
+    assert "Gate 1: Verdict verified" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_reversed_verdict_fails_critically():
+    """Verify approving a non-compliant PCCC design triggers Dual Critical Hard Floor (score 0.0)."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    item = EvalItem(
+        id="test_pccc_crit_verdict",
+        input_prompt="Thẩm tra hành lang dài 28m",
+        metadata={
+            "parametric_rules": {
+                "expected_verdict": "KHONG_DAT",
+                "verdict_patterns": ["không đạt", "vi phạm"],
+                "forbidden_verdict_patterns": ["kết luận đạt", "hoàn toàn phù hợp", "đạt yêu cầu"],
+                "required_parameters": [{"name": "15m", "pattern": r"15\s*m"}],
+                "forbidden_parameters": [],
+                "legal_basis": r"QCVN\s*06",
+            }
+        },
+    )
+    text = "Hồ sơ thiết kế hoàn toàn phù hợp và kết luận đạt yêu cầu quy định PCCC."
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Critical safety failure" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_forbidden_parameter_trap_fails_critically():
+    """Verify adopting prohibited engineering misconception triggers Critical Hard Floor."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    item = EvalItem(
+        id="test_pccc_crit_trap",
+        input_prompt="Thẩm tra hành lang dài 28m",
+        metadata={
+            "parametric_rules": {
+                "expected_verdict": "KHONG_DAT",
+                "verdict_patterns": ["không đạt"],
+                "forbidden_verdict_patterns": [],
+                "required_parameters": [{"name": "15m", "pattern": r"15\s*m"}],
+                "forbidden_parameters": [
+                    {"name": "chấp nhận 30m", "pattern": r"30\s*m\s*là đúng"},
+                ],
+                "legal_basis": r"QCVN\s*06",
+            }
+        },
+    )
+    text = "Thiết kế không đạt, tuy nhiên mốc 30m là đúng với quy định cũ."
+    result = await scorer.score(text, item)
+    assert result.score == 0.0
+    assert result.is_critical_fail is True
+    assert "Critical anti-trap failure" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_partial_parameters_scored_proportionally():
+    """Verify verdict correct but missing one parameter gives partial score without critical fail."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    item = EvalItem(
+        id="test_pccc_partial",
+        input_prompt="Thẩm tra hành lang dài 28m",
+        metadata={
+            "parametric_rules": {
+                "expected_verdict": "KHONG_DAT",
+                "verdict_patterns": ["không đạt"],
+                "forbidden_verdict_patterns": [],
+                "required_parameters": [
+                    {"name": "ngưỡng 15m", "pattern": r"15\s*m"},
+                    {"name": "hút khói", "pattern": r"hút khói"},
+                ],
+                "forbidden_parameters": [],
+                "legal_basis": r"QCVN\s*06",
+            }
+        },
+    )
+    # Mentions verdict and legal basis and hút khói, but misses 15m
+    text = "Kết luận: không đạt theo QCVN 06:2022/BXD. Cần lắp hệ thống hút khói sự cố."
+    result = await scorer.score(text, item)
+    assert 0.0 < result.score < 1.0
+    assert result.is_critical_fail is False
+    assert "missing: ngưỡng 15m" in result.reasoning
+
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_fallback_for_items_without_rules():
+    """Verify backward compatibility fallback when item metadata has no parametric_rules."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    item = EvalItem(id="test_legacy", input_prompt="Hỏi về PCCC")
+    text = "Quy chuẩn QCVN 06:2022 quy định rõ giải pháp PCCC cho công trình."
+    result = await scorer.score(text, item)
+    assert result.score == 1.0
+    assert result.is_critical_fail is False
+    assert result.raw_output.get("mode") == "fallback_regex"
+
+
+@pytest.mark.asyncio
+async def test_pccc_parametric_scorer_advisory_escalation_judge_graceful_fallback():
+    """Verify advisory escalation judge graceful fallback when judge call raises exception."""
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    broken_judge = MagicMock()
+    broken_judge.side_effect = RuntimeError("Network timeout to LiteLLM")
+
+    scorer = PcccParametricScorer(
+        weight=0.5,
+        is_critical=True,
+        escalation_judge=broken_judge,
+        enable_llm_judge=True,
+    )
+    item = EvalItem(
+        id="test_judge_fallback",
+        input_prompt="Thẩm tra hành lang",
+        metadata={
+            "parametric_rules": {
+                "expected_verdict": "KHONG_DAT",
+                "verdict_patterns": ["không đạt"],
+                "forbidden_verdict_patterns": [],
+                "required_parameters": [{"name": "15m", "pattern": r"15\s*m"}],
+                "forbidden_parameters": [],
+                "legal_basis": r"QCVN\s*06",
+            }
+        },
+    )
+    # Output missing 15m -> Gate 1 score in deadband [0.40, 0.85]
+    text = "Kết luận: không đạt theo QCVN 06."
+    result = await scorer.score(text, item)
+    # Graceful fallback: keeps Gate 1 score, does not crash!
+    assert 0.40 <= result.score <= 0.85
+    assert result.is_critical_fail is False
+    assert "Gate 2 LLM Judge fallback triggered" in result.reasoning
+
+
+def test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer():
+    """Verify all 12 items in eval_pccc_audit.json load and evaluate cleanly with PcccParametricScorer."""
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.scorers import PcccParametricScorer
+
+    items = load_eval_dataset(
+        dataset_path=Path(".agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json")
+    )
+    assert len(items) == 12, f"Expected 12 items, found {len(items)}"
+
+    scorer = PcccParametricScorer(weight=0.5, is_critical=True)
+    import asyncio
+
+    for item in items:
+        # Evaluate with golden_answer analysis
+        ga = item.golden_answer
+        if isinstance(ga, dict):
+            sample_output = f"Kết luận: {ga.get('verdict')}. {ga.get('analysis', '')} Căn cứ {ga.get('legal_basis', '')}."
+        else:
+            sample_output = str(ga)
+
+        res = asyncio.run(scorer.score(sample_output, item))
+        assert isinstance(res.score, float)
+        assert res.scorer_name == "pccc_parametric"

@@ -481,4 +481,3 @@ def test_create_pull_request_cancels_on_whitespace_or_empty_diff(
 
     assert pr_url is None
     assert "Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR." in caplog.text
-

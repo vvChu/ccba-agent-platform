@@ -25,7 +25,42 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "bác bỏ",
+          "từ chối",
+          "sai quy chuẩn"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu",
+          "hợp lệ"
+        ],
+        "required_parameters": [
+          {
+            "name": "bậc chịu lửa yêu cầu",
+            "pattern": "Bậc I|Bậc II"
+          },
+          {
+            "name": "căn cứ quy chuẩn",
+            "pattern": "Bảng H\\.3|Phụ lục H|QCVN\\s*06"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp thuận bậc III",
+            "pattern": "Bậc III\\s*(?:là phù hợp|đạt yêu cầu|chấp nhận được)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*Bảng H\\.3"
+      }
     }
   },
   {
@@ -54,7 +89,42 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "bác bỏ",
+          "từ chối",
+          "sai quy chuẩn"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu",
+          "hợp lệ"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng chiều dài hành lang",
+            "pattern": "15\\s*(?:m|mét)"
+          },
+          {
+            "name": "hệ thống hút khói",
+            "pattern": "hút khói|thông gió sự cố"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "thừa nhận mốc 30m của thiết kế",
+            "pattern": "30\\s*(?:m|mét)\\s*(?:là đúng|chưa cần|phù hợp)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Phụ lục D|D\\.2)"
+      }
     }
   },
   {
@@ -83,7 +153,40 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "vượt quá",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng khoảng cách tối đa",
+            "pattern": "20\\s*(?:m|mét)|25\\s*(?:m|mét)"
+          },
+          {
+            "name": "đặc điểm hành lang cụt",
+            "pattern": "hành lang cụt"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận khoảng cách 32m",
+            "pattern": "32\\s*(?:m|mét)\\s*(?:là phù hợp|đạt|chấp nhận)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Bảng G|Phụ lục G)"
+      }
     }
   },
   {
@@ -112,7 +215,40 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "lỗi nghiêm trọng",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "thiết bị bắt buộc",
+            "pattern": "van ngăn cháy|fire damper"
+          },
+          {
+            "name": "giới hạn chịu lửa van",
+            "pattern": "EI\\s*120|EI\\s*150|EI\\s*60|EI\\s*90"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp thuận chỉ chèn vữa",
+            "pattern": "chỉ chèn vữa\\s*(?:là đủ|đạt yêu cầu|phù hợp)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Điều 4\\.14|Phụ lục A)"
+      }
     }
   },
   {
@@ -140,7 +276,41 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "BAC_BO",
+        "verdict_patterns": [
+          "bác bỏ",
+          "không chấp thuận",
+          "không đạt",
+          "không phù hợp",
+          "từ chối",
+          "vi phạm"
+        ],
+        "forbidden_verdict_patterns": [
+          "chấp thuận",
+          "cho phép chuyển đổi",
+          "hoàn toàn phù hợp",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng chiều cao PCCC bắt buộc N1/N2",
+            "pattern": "28\\s*(?:m|mét)"
+          },
+          {
+            "name": "loại thang không nhiễm khói",
+            "pattern": "N1|N2|N3|không nhiễm khói"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận thang loại 1 cho nhà cao > 28m",
+            "pattern": "thang bộ loại 1\\s*(?:là phù hợp|được phép|chấp nhận được)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Điều 3\\.4\\.12|3\\.4)"
+      }
     }
   },
   {
@@ -170,7 +340,413 @@
           "min_length": 50,
           "max_length": 10000
         }
-      ]
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vượt quá",
+          "vi phạm",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "khoảng cách tối đa giữa 2 đầu phun",
+            "pattern": "4\\.0\\s*(?:m|mét)|3\\.5\\s*(?:m|mét)"
+          },
+          {
+            "name": "khoảng cách tối đa tới tường",
+            "pattern": "2\\.0\\s*(?:m|mét)|1\\.8\\s*(?:m|mét)"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận khoảng cách 4.2m",
+            "pattern": "4\\.2\\s*(?:m|mét)\\s*(?:là phù hợp|đạt yêu cầu)"
+          }
+        ],
+        "legal_basis": "TCVN\\s*7336.*|TCVN\\s*3890.*"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_fire_pump_redundancy_qcvn02",
+    "input_prompt": "Thẩm tra giải pháp trạm bơm nước chữa cháy: Công trình khách sạn cao 65m (nhóm F1.2) có tầng hầm 2 bố trí phòng máy bơm cấp nước chữa cháy. Hồ sơ thiết kế cơ điện thể hiện hệ thống sử dụng 01 máy bơm chính dẫn động bằng động cơ điện có công suất và lưu lượng đạt 100% nhu cầu chữa cháy đồng thời của tòa nhà. Thiết kế không bố trí máy bơm dự phòng với lý do trạm bơm đã được cấp điện từ 02 nguồn ưu tiên độc lập (lưới điện trung thế và máy phát điện dự phòng tự động ATS). Hãy thẩm tra giải pháp này theo QCVN 02:2020/BXD và TCVN 3890:2023.",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "required_redundancy": "Bắt buộc phải có máy bơm dự phòng 100% công suất (bơm động cơ diesel hoặc bơm điện độc lập)",
+      "legal_basis": "QCVN 02:2020/BXD Mục 2.3 và TCVN 3890:2023",
+      "analysis": "Nguồn điện dự phòng chỉ bảo đảm độ tin cậy về nguồn năng lượng, không thể thay thế máy bơm dự phòng về mặt cơ khí; công trình nhóm 1 cao trên 25m bắt buộc phải có máy bơm chữa cháy dự phòng có công suất tương đương bơm chính."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT hoặc VI PHẠM. Căn cứ Mục 2.3 QCVN 02:2020/BXD và TCVN 3890:2023, trạm bơm chữa cháy cho công trình cao 65m bắt buộc phải bố trí máy bơm dự phòng có công suất và lưu lượng không nhỏ hơn bơm chính. Việc có 2 nguồn điện chỉ giải quyết dự phòng cấp điện, không thể dự phòng sự cố kẹt cơ khí, cháy cuộn dây hoặc hỏng cánh bơm chính.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Fire Water Supply / Pumping Station",
+      "standard": "QCVN 02:2020/BXD Mục 2.3 & TCVN 3890:2023",
+      "difficulty": "hard",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(bơm dự phòng|bơm chữa cháy|QCVN\\s*02|TCVN\\s*3890|không đạt|vi phạm|cơ khí)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "bác bỏ",
+          "từ chối"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "yêu cầu máy bơm dự phòng",
+            "pattern": "bơm dự phòng|máy bơm dự phòng|bơm diesel"
+          },
+          {
+            "name": "phân biệt sự cố cơ khí vs điện",
+            "pattern": "cơ khí|hỏng hóc|công suất tương đương|100%"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận không cần bơm dự phòng",
+            "pattern": "không cần bơm dự phòng\\s*(?:là phù hợp|đạt|chấp nhận)"
+          }
+        ],
+        "legal_basis": "QCVN\\s*02:2020.*|TCVN\\s*3890.*"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_separation_distance_appendix_e",
+    "input_prompt": "Thẩm tra khoảng cách an toàn PCCC giữa hai công trình trong khu công nghiệp: Nhà máy sản xuất linh kiện cơ khí A (bậc chịu lửa Bậc II, hạng sản xuất C) được quy hoạch cách Nhà kho thành phẩm B (bậc chịu lửa Bậc III, hạng sản xuất C) một khoảng cách thông thủy đo giữa hai mép tường ngoài đối diện là 8.5m. Tường ngoài của cả hai nhà đều có cửa sổ chiếu sáng bằng kính thông thường, không trang bị màn nước dập cháy lan. Hãy thẩm tra khoảng cách này theo QCVN 06:2022/BXD Phụ lục E.",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "required_separation_m": 12.0,
+      "legal_basis": "QCVN 06:2022/BXD Bảng E.1 Phụ lục E",
+      "analysis": "Khoảng cách PCCC tối thiểu giữa nhà bậc chịu lửa II và nhà bậc chịu lửa III thuộc hạng sản xuất C khi tường có lỗ mở kính thông thường bắt buộc không được nhỏ hơn 12.0m; khoảng cách 8.5m là vi phạm nghiêm trọng."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT hoặc VI PHẠM KHOẢNG CÁCH. Căn cứ Bảng E.1 Phụ lục E QCVN 06:2022/BXD, khoảng cách an toàn PCCC giữa nhà sản xuất bậc II và nhà kho bậc III (cùng hạng C) có cửa sổ không chống cháy bắt buộc phải từ 12m trở lên. Khoảng cách 8.5m có nguy cơ cháy lan bức xạ nhiệt trực tiếp khi xảy ra hỏa hoạn.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Site Planning / Fire Separation Distance",
+      "standard": "QCVN 06:2022/BXD Bảng E.1",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Bảng E\\.1|Phụ lục E|12\\s*m|khoảng cách|an toàn PCCC|không đạt|cháy lan)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "chưa đạt",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng khoảng cách tối thiểu yêu cầu",
+            "pattern": "12\\s*(?:m|mét)"
+          },
+          {
+            "name": "nguy cơ cháy lan",
+            "pattern": "cháy lan|bức xạ nhiệt|lỗ mở"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận khoảng cách 8.5m",
+            "pattern": "8\\.5\\s*(?:m|mét)\\s*(?:là phù hợp|đạt|chấp nhận được)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Bảng E\\.1|Phụ lục E)"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_elevator_air_pressurization_appendix_d",
+    "input_prompt": "Thẩm tra giải pháp tăng áp cho giếng thang máy chữa cháy: Một công trình văn phòng cao 54m (nhóm F4.3) có 02 tầng hầm để xe. Bản vẽ thiết kế thông gió điều áp PCCC chỉ bố trí đường ống cấp gió tạo áp suất dương vào giếng thang máy chữa cháy mà không bố trí hệ thống cấp khí tạo áp suất dương vào khoang đệm ngăn cháy (sảnh thang máy chữa cháy) ở các tầng hầm khi có hỏa hoạn. Đơn vị thiết kế giải thích 'áp suất trong giếng thang sẽ tự tràn ra sảnh tầng hầm khi mở cửa'. Hãy thẩm tra giải pháp này.",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "required_pressurization_pa": "20 Pa đến 50 Pa tại khoang đệm",
+      "legal_basis": "QCVN 06:2022/BXD Phụ lục D (Mục D.3, D.8)",
+      "analysis": "Khoang đệm của thang máy chữa cháy tại tầng hầm bắt buộc phải được cấp không khí chống tụ khói độc lập với áp suất dư từ 20 Pa đến 50 Pa; không được phụ thuộc vào áp suất tự tràn từ giếng thang."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT hoặc VI PHẠM NGUYÊN LÝ ĐIỀU ÁP. Căn cứ Phụ lục D (Mục D.3 và D.8) QCVN 06:2022/BXD, khoang đệm của thang máy chữa cháy ở các tầng hầm bắt buộc phải có hệ thống cấp gió tạo áp suất dương độc lập (20 Pa đến 50 Pa khi các cửa đóng). Lập luận để gió tự tràn từ giếng thang sẽ khiến khói độc tầng hầm tràn ngược vào buồng thang máy khi cửa mở, làm vô hiệu hóa đường tiếp cận của lính cứu hỏa.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Smoke Control / Pressurization System",
+      "standard": "QCVN 06:2022/BXD Phụ lục D (D.3, D.8)",
+      "difficulty": "hard",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Phụ lục D|khoang đệm|thang máy chữa cháy|áp suất dương|20\\s*Pa|50\\s*Pa|không đạt)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "bác bỏ",
+          "từ chối"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng áp suất dư",
+            "pattern": "20\\s*Pa|50\\s*Pa"
+          },
+          {
+            "name": "khoang đệm độc lập",
+            "pattern": "khoang đệm|sảnh thang máy|độc lập"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận gió tự tràn",
+            "pattern": "tự tràn\\s*(?:là phù hợp|đạt yêu cầu|chấp nhận)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Phụ lục D|D\\.3|D\\.8)"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_warehouse_compartment_area_table_h4",
+    "input_prompt": "Thẩm tra diện tích khoang cháy nhà kho: Một nhà kho chứa hàng hóa tổng hợp (nhóm F5.2, hạng nguy hiểm cháy nổ C) được thiết kế quy mô 1 tầng, kết cấu khung thép tiền chế bậc chịu lửa Bậc IV. Thiết kế mặt bằng là một khoang cháy đơn liên thông có diện tích sàn xây dựng là 3.200 m2 và không trang bị hệ thống chữa cháy tự động Sprinkler (chỉ trang bị bình chữa cháy xách tay và họng nước vách tường). Diện tích khoang cháy này có tuân thủ QCVN 06:2022/BXD không?",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "max_allowed_area_m2": 1200,
+      "legal_basis": "QCVN 06:2022/BXD Bảng H.4 Phụ lục H",
+      "analysis": "Nhà kho 1 tầng hạng C bậc chịu lửa IV không có chữa cháy tự động diện tích khoang cháy tối đa chỉ cho phép 1.200 m2; diện tích 3.200 m2 vượt hơn 2.6 lần giới hạn tối đa."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT hoặc VƯỢT QUÁ DIỆN TÍCH CHO PHÉP. Căn cứ Bảng H.4 Phụ lục H QCVN 06:2022/BXD, đối với nhà kho hạng C bậc chịu lửa IV quy mô 1 tầng không có hệ thống chữa cháy tự động, diện tích khoang cháy tối đa cho phép chỉ là 1.200 m2. Thiết kế 3.200 m2 vi phạm nghiêm trọng, bắt buộc phải xây tường ngăn cháy loại 1 phân chia thành tối thiểu 3 khoang cháy hoặc nâng bậc chịu lửa lên Bậc II/I kèm sprinkler.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Fire Compartmentation / Industrial Warehouse",
+      "standard": "QCVN 06:2022/BXD Bảng H.4",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Bảng H\\.4|Phụ lục H|1\\.200\\s*m2|1200\\s*m2|khoang cháy|vượt quá|không đạt)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "vượt quá",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng diện tích tối đa",
+            "pattern": "1\\.?200\\s*(?:m2|m²)"
+          },
+          {
+            "name": "phân chia khoang cháy",
+            "pattern": "khoang cháy|tường ngăn cháy|sprinkler"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận diện tích 3200m2",
+            "pattern": "3\\.?200\\s*(?:m2|m²)\\s*(?:là phù hợp|đạt|chấp nhận)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Bảng H\\.4|Phụ lục H)"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_kindergarten_egress_distance_table_g1",
+    "input_prompt": "Thẩm tra giải pháp thoát nạn cơ sở giáo dục mầm non: Trường mầm non (nhóm nguy hiểm cháy F1.1) quy mô 3 tầng, công trình có bậc chịu lửa Bậc II. Mặt bằng tầng 3 bố trí các phòng học của trẻ. Khoảng cách đo dọc theo hành lang từ cửa phòng học xa nhất đến cửa buồng thang bộ thoát nạn gần nhất (nằm giữa hai lối thoát nạn) là 42m. Đơn vị thiết kế áp dụng khoảng cách 45m của nhà công cộng thông thường. Hãy đánh giá tính phù hợp theo QCVN 06:2022/BXD.",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "max_allowed_distance_m": 25,
+      "legal_basis": "QCVN 06:2022/BXD Bảng G.1 Phụ lục G (Nhóm F1.1)",
+      "analysis": "Đối với cơ sở mẫu giáo/mầm non nhóm F1.1, khoảng cách thoát nạn tối đa từ cửa phòng ra lối thoát nạn tại tầng 3 chỉ cho phép từ 20m đến 25m; mốc 45m của nhà công cộng thông thường không áp dụng cho đối tượng trẻ nhỏ hạn chế khả năng tự thoát nạn."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT hoặc ÁP DỤNG SAI QUY CHUẨN. Căn cứ Bảng G.1 Phụ lục G QCVN 06:2022/BXD, nhóm F1.1 (trường mầm non) có yêu cầu thoát nạn cực kỳ nghiêm ngặt, khoảng cách tối đa từ cửa phòng học xa nhất đến buồng thang bộ ở tầng 3 chỉ được phép tối đa là 25m. Việc áp dụng mốc 45m của nhà công cộng thông thường là sai quy chuẩn và đe dọa an toàn tính mạng của trẻ em.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Life Safety / Education Egress",
+      "standard": "QCVN 06:2022/BXD Bảng G.1",
+      "difficulty": "hard",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Bảng G\\.1|F1\\.1|25\\s*m|20\\s*m|mầm non|thoát nạn|không đạt|vi phạm)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "áp dụng sai",
+          "bác bỏ"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "ngưỡng khoảng cách tối đa cho F1.1",
+            "pattern": "20\\s*(?:m|mét)|25\\s*(?:m|mét)"
+          },
+          {
+            "name": "nhóm công năng đặc thù",
+            "pattern": "F1\\.1|mầm non|trẻ em"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận khoảng cách 45m cho mầm non",
+            "pattern": "45\\s*(?:m|mét)\\s*(?:là phù hợp|đạt|chấp nhận được)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Bảng G\\.1|Phụ lục G)"
+      }
+    }
+  },
+  {
+    "id": "test_pccc_audit_exit_door_clear_height_direction",
+    "input_prompt": "Thẩm tra kích thước và chiều mở cửa thoát nạn: Một hội trường/phòng họp đa năng quy mô 75 chỗ ngồi tại tầng 4 tòa nhà văn phòng có 01 cửa thoát nạn chính mở ra sảnh chung. Bản vẽ chi tiết thể hiện cửa đi có kích thước thông thủy chiều cao là 1.85m, chiều rộng thông thủy là 0.85m. Cánh cửa được thiết kế mở vào trong lòng phòng họp (ngược chiều thoát nạn) để không làm cản trở lưu thông người đi lại tại sảnh chung. Hãy thẩm tra kích thước và chiều mở cửa theo QCVN 06:2022/BXD.",
+    "golden_answer": {
+      "verdict": "KHONG_DAT",
+      "min_clear_height_m": 1.9,
+      "required_opening_direction": "Mở ra ngoài (theo chiều thoát nạn)",
+      "legal_basis": "QCVN 06:2022/BXD Điều 3.2.9 và Điều 3.2.10",
+      "analysis": "Chiều cao thông thủy cửa thoát nạn bắt buộc tối thiểu phải đạt 1.9m (1.85m là vi phạm); phòng họp có trên 15 người bắt buộc cửa thoát nạn phải mở theo chiều thoát nạn (mở ra ngoài), không được mở vào trong phòng."
+    },
+    "rubric": "Phải kết luận KHÔNG ĐẠT (VI PHẠM CẢ CHIỀU CAO VÀ CHIỀU MỞ CỬA). Căn cứ Điều 3.2.9 và Điều 3.2.10 QCVN 06:2022/BXD: (1) Chiều cao thông thủy của cửa thoát nạn không được nhỏ hơn 1.9m (thiết kế 1.85m vi phạm); (2) Các phòng có sức chứa trên 15 người bắt buộc cửa thoát nạn phải mở theo chiều thoát nạn ra ngoài. Mở vào trong gây nguy cơ chèn ép kẹt cứng cửa khi xảy ra hoảng loạn.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "Architectural Life Safety / Egress Doors",
+      "standard": "QCVN 06:2022/BXD Điều 3.2.9 & 3.2.10",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Điều 3\\.2|1\\.9\\s*m|1\\.90\\s*m|chiều mở|chiều thoát nạn|mở ra ngoài|không đạt|vi phạm)",
+          "is_critical": true
+        },
+        {
+          "type": "length",
+          "min_length": 50,
+          "max_length": 10000
+        }
+      ],
+      "parametric_rules": {
+        "expected_verdict": "KHONG_DAT",
+        "verdict_patterns": [
+          "không đạt",
+          "không phù hợp",
+          "vi phạm",
+          "bác bỏ",
+          "từ chối"
+        ],
+        "forbidden_verdict_patterns": [
+          "kết luận đạt",
+          "hoàn toàn phù hợp",
+          "chấp thuận",
+          "đạt yêu cầu"
+        ],
+        "required_parameters": [
+          {
+            "name": "chiều cao thông thủy tối thiểu",
+            "pattern": "1\\.9\\s*(?:m|mét)|1\\.90\\s*(?:m|mét)"
+          },
+          {
+            "name": "chiều mở cửa thoát nạn",
+            "pattern": "mở ra ngoài|theo chiều thoát nạn|ngược chiều"
+          }
+        ],
+        "forbidden_parameters": [
+          {
+            "name": "chấp nhận cửa mở vào trong",
+            "pattern": "mở vào trong\\s*(?:là phù hợp|đạt yêu cầu|chấp nhận được)"
+          }
+        ],
+        "legal_basis": "QCVN 06:2022/BXD.*(?:Điều 3\\.2|3\\.2\\.9|3\\.2\\.10)"
+      }
     }
   }
 ]
