@@ -34,8 +34,19 @@ Trong quá trình vận hành thực tế tại Spoke (`vvc_working_space`) và 
   > *"Virtual Hub Fallback: In Spoke mode, if a referenced skill is not physically present in `.\.agents\skills\`, the Agent MUST transparently read the skill definition directly from `[hub_path]\.agents\skills\<skill_name>\SKILL.md`."*
 - Giúp Spoke duy trì trạng thái Zero-Bloat tối đa mà vẫn có khả năng vận hành đầy đủ 100% kỹ năng của toàn bộ nền tảng CCBA.
 
+### F. Phân Giải Đường Dẫn Đa Hệ Điều Hành (Multi-OS Dynamic Hub Path Resolution)
+- Hỗ trợ biến môi trường ưu tiên cao nhất `CCBA_HUB_PATH` trên toàn bộ các công cụ phát hiện và engine đồng bộ Spoke (`scripts/spoke/sync/discovery.py`).
+- Mở rộng lược đồ `workspace_context.yaml` cho phép khai báo `hub_path` dưới dạng từ điển đa hệ điều hành:
+  ```yaml
+  hub_path:
+    windows: "D:\\GitHubProjects\\ccba-agent-platform"
+    linux: "/home/vvc/ccba/ccba-agent-platform"
+  ```
+- Trên các hệ thống Linux/WSL/POSIX, các hàm phân giải đường dẫn (`resolve_hub_path()`) tự động bỏ qua các chuỗi mang ký tự ổ đĩa Windows (`D:\...`) nếu không tồn tại trên đĩa, ngăn chặn lỗi `FileNotFoundError` và rò rỉ trạng thái máy cục bộ.
+
 ## 4. Hệ Quả (Consequences)
 - **Bảo Vệ Toàn Vẹn Cấu Hình Spoke:** Cập nhật Hub không bao giờ làm mất cấu hình tracker, nhãn hoặc hướng dẫn riêng của Spoke.
 - **Không Còn Ghost Workflows:** Loại bỏ triệt để các liên kết gãy giữa workflow và skill.
 - **Linh Hoạt Đa Bundle:** Một Spoke Phần mềm có thể dễ dàng kích hoạt thêm bộ công cụ Tư vấn/Pháp lý chỉ bằng 1 dòng `additional_bundles: [_consulting]`.
 - **Tức Thì 0ms:** Agent có thể tra cứu và thực thi mọi skill trên Hub qua Virtual Hub Fallback mà không cần tải hàng trăm MB về máy.
+- **Liền Mạch Đa Nền Tảng (Cross-Platform Parity):** Agent vận hành trơn tru trên cả Linux, WSL, CI và Windows mà không cần sửa đổi thủ công cấu hình khi chuyển đổi máy trạm.
