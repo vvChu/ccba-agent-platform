@@ -1,6 +1,7 @@
 ---
 name: ccba-excalidraw-diagram
 description: Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
+disable-model-invocation: true
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -8,6 +9,7 @@ applies_to:
 - Tất cả Spokes
 bundle: _core
 tier: kernel
+user-invocable: true
 command: /ccba-excalidraw-diagram
 metadata:
   version: "1.0.0"
