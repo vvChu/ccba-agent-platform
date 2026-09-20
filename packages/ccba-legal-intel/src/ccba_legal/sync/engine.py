@@ -154,7 +154,9 @@ class LegalSyncEngine:
                                         cand = Path(p_str)
                                         if cand.exists() and (
                                             (cand / "legal_docs").exists()
-                                            or (cand / ".md" / "data" / "legal_registry.yaml").exists()
+                                            or (
+                                                cand / ".md" / "data" / "legal_registry.yaml"
+                                            ).exists()
                                         ):
                                             return cand.resolve()
                         except Exception:
@@ -184,7 +186,10 @@ class LegalSyncEngine:
                             hub_p = Path(hub_path_str)
                             if not hub_p.is_absolute():
                                 hub_p = (self.project_root / hub_p).resolve()
-                            for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
+                            for reg_name in [
+                                "spoke_registry_decrypted.yaml",
+                                "spoke_registry.yaml",
+                            ]:
                                 spoke_reg = hub_p / ".md" / "data" / reg_name
                                 if spoke_reg.is_file():
                                     with open(spoke_reg, encoding="utf-8") as rf:
@@ -201,7 +206,10 @@ class LegalSyncEngine:
                                                 if cand.exists() and (
                                                     (cand / "legal_docs").exists()
                                                     or (
-                                                        cand / ".md" / "data" / "legal_registry.yaml"
+                                                        cand
+                                                        / ".md"
+                                                        / "data"
+                                                        / "legal_registry.yaml"
                                                     ).exists()
                                                 ):
                                                     return cand.resolve()

@@ -101,7 +101,7 @@ def test_check_machine_state_leakage(tmp_path: Path) -> None:
     bad_script = scripts_dir / "bad_path.py"
     bad_script.write_text(
         'HUB_DIR = "D:\\\\GitHubProjects\\\\ccba-agent-platform"\n'
-        '# This comment with D:\\\\is\\\\ignored\n'
+        "# This comment with D:\\\\is\\\\ignored\n"
         'ALLOWED = "C:\\\\dummy"  # ccba:allow-machine-path\n',
         encoding="utf-8",
     )
