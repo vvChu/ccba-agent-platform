@@ -459,7 +459,7 @@ def extract_last_exchange(file_content: str, max_chars: int = 4_000) -> dict[str
 
 | Task trong pipeline | Model khuyến nghị | Lý do |
 |---|---|---|
-| Deep reasoning & synthesis | `claude-opus-4-6-thinking` | Port 8045 / Spark, deep academic reasoning, Map-Reduce Reduce phase |
+| Deep reasoning & synthesis | `claude-opus-4-6-thinking` | Port 8090 / Spark, deep academic reasoning, Map-Reduce Reduce phase |
 | Fast JIT Map / Interactive | `gemini-3.8-flash-high` | Port 8090, ~2s ultra-fast response, JIT URL Map phase, auto-downgrade fallback |
 | OCR / Vision extract | `ocr-primary` (Gemini Flash) | Fast, cheap, multimodal |
 | Draft synthesis (Pass 1) | `qwen-local-primary` | Fast local GPU, Vietnamese |

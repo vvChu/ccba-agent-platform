@@ -244,7 +244,7 @@ class TieredFallbackRouter:
         self,
         primary_fn: Callable[[], Any],
         model: str,
-        timeout: float = 60.0,
+        timeout: float = 90.0,
         circuit_breaker: CircuitBreaker | None = None,
         fallback_fn_builder: Callable[[Any, str], Any] | None = None,
     ) -> Any:
@@ -352,7 +352,7 @@ class TieredFallbackRouter:
         self,
         primary_coro_fn: Callable[[], Any],
         model: str,
-        timeout: float = 60.0,
+        timeout: float = 90.0,
         circuit_breaker: CircuitBreaker | None = None,
         fallback_coro_builder: Callable[[Any, str], Any] | None = None,
     ) -> Any:

@@ -43,24 +43,79 @@ class TestAIClientInit:
         assert client.default_model == "custom-model"
 
     def test_init_default_timeout(self) -> None:
-        """Test client defaults to 60.0s timeout."""
+        """Test client defaults to 90.0s timeout."""
         with patch.dict("os.environ", {}, clear=True):
-            client = AIClient(base_url="http://fake:1/v1", api_key="fake")
-            assert client.timeout == 60.0
-            assert client._client.timeout == 60.0
+            with patch("ccba_ai.client._find_and_load_env"):
+                client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+                assert client.timeout == 90.0
+                assert client._client.timeout == 90.0
 
     @patch.dict("os.environ", {"AI_GATEWAY_TIMEOUT": "45.0"}, clear=False)
     def test_init_timeout_from_env(self) -> None:
         """Test client picks up timeout from environment."""
-        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
-        assert client.timeout == 45.0
-        assert client._client.timeout == 45.0
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+            assert client.timeout == 45.0
+            assert client._client.timeout == 45.0
 
     def test_init_explicit_timeout(self) -> None:
         """Test client uses explicitly provided timeout."""
         client = AIClient(base_url="http://fake:1/v1", api_key="fake", timeout=30.0)
         assert client.timeout == 30.0
         assert client._client.timeout == 30.0
+
+    def test_url_sanitizer_redirects_8045_explicit(self) -> None:
+        """Test URL sanitizer automatically redirects :8045 to :8090."""
+        client = AIClient(base_url="http://100.83.192.30:8045/v1")
+        assert "8090" in str(client._client.base_url)
+        assert "8045" not in str(client._client.base_url)
+        assert client.base_url == "http://100.83.192.30:8090/v1"
+
+    @patch.dict("os.environ", {"AI_GATEWAY_URL": "http://localhost:8045/v1"}, clear=False)
+    def test_url_sanitizer_redirects_8045_from_env(self) -> None:
+        """Test URL sanitizer automatically redirects env var containing :8045 to :8090."""
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient()
+            assert "8090" in str(client._client.base_url)
+            assert "8045" not in str(client._client.base_url)
+            assert client.base_url == "http://100.83.192.30:8090/v1"
+
+    @patch.dict("os.environ", {"AI_GATEWAY_URL": ""}, clear=False)
+    def test_url_sanitizer_empty_env_fallback(self) -> None:
+        """Test URL sanitizer falls back to 8090 when AI_GATEWAY_URL is empty string."""
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient()
+            assert client.base_url == "http://100.83.192.30:8090/v1"
+
+    def test_url_sanitizer_whitespace_trim(self) -> None:
+        """Test URL sanitizer trims whitespace and sanitizes port."""
+        client = AIClient(base_url="   http://100.83.192.30:8045/v1\n  ")
+        assert client.base_url == "http://100.83.192.30:8090/v1"
+
+    @patch.dict(
+        "os.environ", {"AI_GATEWAY_KEY": "", "OPENAI_API_KEY": "fallback-test-key"}, clear=False
+    )
+    def test_api_key_empty_gateway_key_fallback(self) -> None:
+        """Test api_key falls back to OPENAI_API_KEY when AI_GATEWAY_KEY is empty."""
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient(base_url="http://fake:1/v1")
+            assert client._client.api_key == "fallback-test-key"
+
+    def test_complete_alias_calls_chat(self) -> None:
+        """Test complete() acts as an alias for chat()."""
+        client = AIClient(base_url="http://fake:1/v1", api_key="fake")
+        with patch.object(client, "chat", return_value="completion result") as mock_chat:
+            res = client.complete("Hello", model="test-model", timeout=15.0)
+            assert res == "completion result"
+            mock_chat.assert_called_once_with(
+                "Hello",
+                model="test-model",
+                system=None,
+                max_tokens=1024,
+                temperature=0.7,
+                strip_thinking=True,
+                timeout=15.0,
+            )
 
 
 class TestAIClientChat:

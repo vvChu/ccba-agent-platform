@@ -56,6 +56,8 @@ def choose_model(task_type: str) -> str:
         "audit": ModelArchetype.REASONING,
         "research": ModelArchetype.REASONING,
         "legal": ModelArchetype.REASONING,
+        "synthesis": ModelArchetype.CLAUDE_OPUS_46,
+        "deep_reasoning": ModelArchetype.CLAUDE_OPUS_46,
         "private": ModelArchetype.LOCAL,
         "local": ModelArchetype.LOCAL,
         "rag": ModelArchetype.RAG,
@@ -85,9 +87,12 @@ def is_reasoning_model(model_name: str) -> bool:
             "reasoning",
             "o1",
             "o3",
+            "opus-4-6",
+            "opus-4.6",
             ModelArchetype.REASONING.lower(),
             ModelArchetype.REASONING_ALT.lower(),
             ModelArchetype.REASONING_GEMMA.lower(),
+            ModelArchetype.CLAUDE_OPUS_46.lower(),
         )
     )
 
