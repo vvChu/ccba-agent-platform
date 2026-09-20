@@ -28,6 +28,13 @@ from .miner import (
 )
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
+from .sandbox import (
+    DockerSandboxRunner,
+    DockerSandboxScorer,
+    SandboxConfig,
+    SandboxExecutionResult,
+    extract_code_blocks,
+)
 from .scorers import (
     AntiDebrisScorer,
     BaseScorer,
@@ -159,4 +166,9 @@ __all__ = [
     "SlicedDataset",
     "DynamicPerturbationEngine",
     "AdaptiveDataSlicer",
+    "SandboxConfig",
+    "SandboxExecutionResult",
+    "DockerSandboxRunner",
+    "DockerSandboxScorer",
+    "extract_code_blocks",
 ]
