@@ -1,55 +1,101 @@
-# Walkthrough: PR #286 — Hiện Đại Hóa Nightly Auto-Tuner Daemon, Real LLM Adapter & Multi-Domain Evals
+# Walkthrough Báo Cáo Hoàn Thành: Issue #302
 
-## 1. Tổng Quan PR #286
-- **Branch:** `feat/nightly-tuner-worktree-and-dataset-router` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(tuner): modernize nightly auto-tuner daemon, real llm adapter, and domain evals`
-- **PR liên quan:** [PR #286](https://github.com/vvChu/ccba-agent-platform/pull/286)
-- **Commit hợp nhất:** `df311bb66cc53dc4f3888ada8b060a83a9fc2d57`
-- **Thể chế & Kiến trúc:** ADR-0023, ADR-0045, ADR-0047, ADR-0057, ADR-0058, Wayfinder Roadmap `nightly-tuner-evolution`
+> **Chủ đề:** `feat(ooxml): auto-label form filler, immutable template guard, and cross-spoke personal entity vault`  
+> **Working Branch:** `feat/issue-302-auto-label-form-filler`  
+> **Tiêu chuẩn tuân thủ:** ADR-0035 (Deep Modules), ADR-0047 (Reuse-First), ADR-0057 (3-Tier Governance), ADR-0058 (Deterministic Hard Completion Lock), ADR-0059 (Legal/PII Data Integrity)
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot (PR #286)
+## 1. Tóm Tắt Các Thay Đổi (Summary of Changes)
 
-| ID / Review | Tệp Tin | Vấn Đề Copilot Nêu | Trạng Thái & Giải Pháp Khắc Phục |
-|---|---|---|---|
-| Inline 1 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:113` | `LLMTaskAdapter` chuyển `circuit_breaker` sang `AIClient` nhưng không khởi tạo mặc định khi không truyền vào, khiến fast-fail `CircuitBreakerOpenError` không kích hoạt trong thực tế. | **ĐÃ KHẮC PHỤC**: Cập nhật `LLMTaskAdapter.__init__` tự động gán `self.circuit_breaker = circuit_breaker or (CircuitBreaker() if CircuitBreaker is not None else None)` và truyền xuống `AIClient`. |
-| Inline 2 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:195` | `CCBA_TUNER_TOKEN_BUDGET` ghi đè vô điều kiện `RatchetConfig.token_budget` ngay cả khi người gọi đã truyền giá trị tường minh (e.g. `remaining_budget` từ daemon). | **ĐÃ KHẮC PHỤC**: Chuyển `token_budget` thành `int | None = None` và chỉ nạp từ biến môi trường nếu `self.token_budget is None`, bảo vệ toàn vẹn ngân sách token của daemon. |
-| Inline 3 | `packages/ccba-harness/src/ccba_harness/evals/tuner.py:1275` | Rào chắn compaction guard chỉ loại bỏ dòng comment HTML `<!-- Ratchet Optimization Refinement ... -->` nhưng bỏ sót dòng bullet `- Cập nhật quy chuẩn...` dẫn đến tích tụ dòng thừa. | **ĐÃ KHẮC PHỤC**: Cập nhật bộ lọc compaction guard loại bỏ cả 2 dòng comment và dòng bullet tự sinh, ngăn ngừa phình to prompt vượt quá 300 dòng. |
-| Inline 4 | `scripts/eval/nightly_tuner_daemon.py:236` | `NightlyTunerDaemon` nhận `early_stopping_patience` nhưng không truyền vào `RatchetConfig(patience=...)`, khiến tuner luôn dùng mặc định `patience=3`. | **ĐÃ KHẮC PHỤC**: Nối tham số `patience=self.early_stopping_patience` trực tiếp vào khởi tạo `RatchetConfig`. |
-| Inline 5 | `scripts/eval/nightly_tuner_daemon.py:415, 445` | `_cleanup_old_empty_branches` xóa nhánh khi `git cherry` trả về rỗng nhưng không kiểm tra mã thoát; thiếu `encoding="utf-8", errors="replace"` cho Windows subprocess. | **ĐÃ KHẮC PHỤC**: Thêm `encoding="utf-8", errors="replace"` và kiểm tra chặt `diff_res.returncode == 0 and not diff_res.stdout.strip()` trước khi xóa nhánh. |
-| Inline 6 | `scripts/cron/run_nightly_tuner.sh:172` | `PYTHONPATH` được thiết lập từ `$PROJECT_ROOT` trước khi `cd $WORKTREE_DIR`, khiến các tiến trình con có thể import mã từ thư mục chính thay vì worktree cô lập. | **ĐÃ KHẮC PHỤC**: `cd "$WORKTREE_DIR"` trước và thiết lập `PYTHONPATH` trỏ vào `$WORKTREE_DIR`, đảm bảo tính cô lập tuyệt đối của ephemeral worktree. |
-| Inline 7 | `packages/ccba-harness/tests/test_evals_engine.py:355` | `test_llm_rubric_scorer_corrupted_db_fallback` đã loại bỏ các assertion gọi `score()`, không kiểm chứng được luồng fallback thực tế. | **ĐÃ KHẮC PHỤC**: Khôi phục gọi `scorer.score()` và assert `client.calls == 1`, `res.score == 1.0`, `res.raw_output == 5`. |
-| Inline 8 | `scripts/tests/test_nightly_tuner_daemon.py:202` | `test_tuner_tiered_budget_and_early_stopping` chỉ kiểm tra gán `patience`, không chạy optimizer hoặc kiểm tra dừng sớm; trỏ vào tệp SKILL thật. | **ĐÃ KHẮC PHỤC**: Nâng cấp kiểm thử với môi trường cô lập `tmp_path`, mock dataset và mock task để kiểm chứng cả 2 hành vi: kẹp ngân sách 1 vòng khi baseline 100% và dừng sớm sau `effective_patience` vòng lặp. |
+### 1.1. Gói Hạ Tầng `packages/ccba-ooxml`
+- **Dependencies (`pyproject.toml`):** Bổ sung chính thức `pydantic>=2.0` và `pyyaml>=6.0` vào runtime dependencies.
+- **Deep Seams & Exports (`AGENTS.md`, `__init__.py`, `form_filler/__init__.py`):**
+  - Cập nhật tài liệu Public Deep Seams với `WordFormFiller`, `FormFillConfig`, `TableRule`, `TemplateProtectionError`.
+  - Export `TemplateProtectionError` tại package root `ccba_ooxml` và submodule `ccba_ooxml.form_filler`.
+- **Lớp Bảo Vệ Template Bất Biến (`Immutable Template Guard`):**
+  - Khai báo exception `TemplateProtectionError(FormFillerError)` trong `exceptions.py`.
+  - Bổ sung cấu hình `read_only_template: bool = Field(default=True)` trong `FormFillConfig` (`models.py`).
+  - Triển khai `validate_output_path(output_path)` trong `BaseFormFillerEngine` (`base.py`), kiểm tra trùng lặp đường dẫn `output_path` với `template_path` (so sánh canonical path và `os.path.samefile`).
+  - Thực thi cưỡng chế `validate_output_path()` tại đầu phương thức `export(doc_out, pdf_out)` trên cả hai engine (`WinwordEngine` và `SofficeFallbackEngine`).
+- **Từ Điển Bí Danh & Chuẩn Hóa Nhãn (`aliases.py`):**
+  - Tạo mới module `src/ccba_ooxml/form_filler/aliases.py`.
+  - Cung cấp từ điển chuẩn hóa `ADMINISTRATIVE_FIELD_ALIASES` (ánh xạ nhãn tiếng Việt có dấu, không dấu, viết hoa/thường, slug sang canonical keys) và `ADMINISTRATIVE_TABLE_ALIASES`.
+  - Hàm `normalize_label(label: str) -> str` loại bỏ tiền tố số mục ('1.', '1.1.', 'a)'), dấu câu, chuyển ký tự tiếng Việt sang ASCII lowercase snake_case.
+  - Hàm `flatten_data(data: dict) -> dict` phẳng hóa dictionary lồng nhau mà bảo toàn mảng `list[dict]`.
+  - Hàm `resolve_field_value(label, flat_data)` giải quyết giá trị trường bằng reverse lookup alias chuẩn hóa.
+- **Thuật Toán Điền Biểu Mẫu Tự Động (`auto_map_fields`):**
+  - Khai báo abstract method `auto_map_fields(self, data: dict[str, Any]) -> None` tại `BaseFormFillerEngine`.
+  - Bổ sung phương thức fluent chaining `WordFormFiller.auto_map_fields(data) -> WordFormFiller`.
+  - Triển khai trên `SofficeFallbackEngine`:
+    1. **Free-text / Inline Paragraphs:** Quét nhãn kèm chuỗi chấm/gạch dưới (`<Nhãn>:\s*([\.…_–—]{2,})`) hoặc template placeholder (`{{key}}`), bảo toàn font in đậm/kích thước bằng helper `_replace_text_in_paragraph_runs()`.
+    2. **Trường Dấu Kiểm (Checkboxes):** Nhận diện dạng `Nam [ ]   Nữ [ ]` và `[ ] Đã kết hôn`, tự động đánh dấu `[X]` hoặc `(X)` / `☒` dựa trên giá trị boolean hoặc string trong dữ liệu.
+    3. **Property Sheet Tables:** Tự động phát hiện ô chứa nhãn (Key) và điền ô giá trị (Value) ở bảng 2 cột hoặc 4 cột, bảo vệ tránh lặp ô gộp (`cell._tc`).
+    4. **Dynamic Data Tables:** Tự động đối sánh tiêu đề cột với các trường mảng `list[dict]`, xếp hạng điểm khớp (`score >= 2`), tự động điền STT và gọi `apply_tables()` kèm chống xé hàng `cantSplit`.
+  - Triển khai trên `WinwordEngine`:
+    - Áp dụng các thuật toán trên thông qua Word COM DOM (`win32com.client`) với `Range.Find.Execute(Replace=wdReplaceOne)` để duy trì 100% định dạng font.
+- **Unit Tests (`tests/test_form_filler.py`):**
+  - Sửa lỗi `test_engine_auto_detection_on_linux` bằng cách tách helper `_is_windows()` và monkeypatch phạm vi an toàn không làm hỏng `pathlib.Path`.
+  - Bổ sung test case `test_template_protection_error_raises`.
+  - Bổ sung test case `test_auto_map_fields_paragraphs_and_checkboxes`.
+  - Bổ sung test case `test_auto_map_fields_tables_and_lists`.
 
 ---
 
-## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
-1. **Wayfinder Ticket 01 (Evaluation Control Flow & Deadlock Resolution):**
-   - Loại bỏ fall-through trong `mock_agent_task` bằng thang `if-elif`.
-   - Tiêm bất biến *Trí Nhớ Số (Digital Memory)* vào Chiến lược 1 giải phóng deadlock tam hợp miền BIM.
-   - Chuẩn hóa routing dataset cho `ccba-ai-qc` (`eval_pccc_audit_redteam.json`) và bổ sung từ khóa Luật 135/2025.
-2. **Wayfinder Ticket 02 (Git Safety, Process Locking & Remote Branch Pruning):**
-   - Khóa tiến trình `flock -n 200` tại `/tmp/ccba_nightly_runner.lock` trong cron runner.
-   - Cô lập Git Worktree tạm thời (`.worktrees/nightly-*`), ngắt `detached HEAD` giữa các daemon.
-   - Bổ sung Empty Push Guard tại `doc_refactor_daemon.py` và dọn dẹp remote branch an toàn.
-3. **Wayfinder Ticket 03 (Unified Real LLM Adapter, Token Budget Ceiling & Circuit Breaker):**
-   - Bộ điều hợp `LLMTaskAdapter` kết nối `GitRatchetOptimizer` với `ccba_ai.client.AIClient.chat_with_metadata()`.
-   - Theo dõi tiêu thụ token phiên qua `TokenUsageTracker` và trần ngân sách 5M tokens.
-   - Ngắt mạch tức thì `CircuitBreakerOpenError` khi gặp 3 lỗi 429/503 liên tiếp.
-4. **Wayfinder Ticket 04 (Specialized BIM V2 Dataset & Orchestration Domain Scorers):**
-   - Bộ dữ liệu `eval_bigbim_risk.json` (12 test cases) đánh giá xung đột phi hình học BIM V2.
-   - Bộ 3 Scorers điều phối đa tác tử: `SingleWriterInvariantScorer`, `ProgressiveDisclosureScorer`, `HandoffProtocolScorer`.
+### 1.2. Gói Tiền Xử Lý PDF `packages/ccba-pdf-prep`
+- **In-Memory Streaming Deep Seams (`core.py`, `manipulation.py`, `__init__.py`, `AGENTS.md`):**
+  - Triển khai `render_page_to_image_stream(pdf_source: Path | str | bytes, page_num: int, dpi: int = 150, image_format: str = "png") -> bytes` sử dụng PyMuPDF (`fitz.open(stream=...)` và `pix.tobytes()`).
+  - Triển khai `extract_pdf_pages_stream(source: str | Path | bytes, pages: str | Sequence[int]) -> bytes` sử dụng `pypdf.PdfWriter` ghi trực tiếp vào `io.BytesIO`.
+  - Cập nhật public exports tại `ccba_pdf_prep/__init__.py` và tài liệu `AGENTS.md`.
+- **Unit Tests (`tests/test_core.py`, `tests/test_manipulation.py`):**
+  - Thêm `TestRenderPageToImageStream` kiểm tra render từ đường dẫn tệp, từ mảng bytes thô, và các trường hợp ngoại lệ (trang vượt giới hạn, tệp không tồn tại).
+  - Thêm `test_extract_pdf_pages_stream_from_path`, `test_extract_pdf_pages_stream_from_bytes`, `test_extract_pdf_pages_stream_invalid`.
 
 ---
 
-# Walkthrough: PR #287 — Nâng Cấp ccba-issue-tree v1.1.0, Tra Cứu Tri Thức Liên-Spoke 3 Tầng & Đồng Bộ README
+### 1.3. Tầng Kỹ Năng & Tài Liệu (`.agents/skills/ccba-xu-ly-van-phong`)
+- **Canonical Schema Template:**
+  - Tạo mới tệp mẫu: [`.agents/skills/ccba-xu-ly-van-phong/templates/personal_profile.template.yaml`](file:///d:/GitHubProjects/ccba-agent-platform/.agents/skills/ccba-xu-ly-van-phong/templates/personal_profile.template.yaml).
+  - Định nghĩa cấu trúc nhân thân, định danh pháp lý (CMND/CCCD, Hộ chiếu), nơi cư trú, quá trình công tác, thành viên gia đình.
+- **Tài Liệu Hướng Dẫn (`form-filling.md`):**
+  - Cập nhật mục Quickstart với ví dụ minh họa `auto_map_fields()`.
+  - Bổ sung quy tắc bảo mật PII và cơ chế **Cascading Vault Resolver** (nạp từ spoke local `./.md/knowledge/personal_profile.yaml` $\rightarrow$ central vault `~/.ccba/personal_profile.yaml` $\rightarrow$ biến môi trường `$CCBA_PERSONAL_VAULT`).
 
-## 1. Tổng Quan PR #287
-- **Branch:** `feat/issue-tree-and-hub-mediated-discovery` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(issue-tree,legal-intel): enhance ccba-issue-tree v1.1.0, hub-mediated discovery & sync parity`
-- **PR liên quan:** [PR #287](https://github.com/vvChu/ccba-agent-platform/pull/287)
-- **Thể chế & Kiến trúc:** ADR-0050 (Spoke Knowledge Sync), ADR-0051 (Virtual Hub Fallback), ADR-0057 (Two-Stage Governance & GPI), ADR-0058 (Hard Completion Lock), ADR-0059 (Verbatim Grounding & Acquisition First)
+---
+
+## 2. Kết Quả Kiểm Định (Verification Record)
+
+### 2.1. Cổng Kiểm Định Nghiêm Ngặt ADR-0058 (Hard Completion Lock)
+```powershell
+python -m ccba_harness verify-patch -c `
+  "python -m ruff check packages/ccba-ooxml packages/ccba-pdf-prep" `
+  "python -m pytest packages/ccba-ooxml/tests/test_form_filler.py -v" `
+  "python -m pytest packages/ccba-pdf-prep/tests/test_core.py packages/ccba-pdf-prep/tests/test_manipulation.py -v"
+```
+
+**Kết quả thực thi:**
+```
+# 🛡️ Deterministic Patch Verification Report: ✅ ALL PASSED
+
+- Overall Status: PASS
+- Commands Executed: 3/3 passed
+- Total Duration: 6091.0 ms
+
+| Status | Exit Code | Duration | Command |
+| :---: | :---: | :---: | :--- |
+| PASS | 0 | 142.7ms | python -m ruff check packages/ccba-ooxml packages/ccba-pdf-prep |
+| PASS | 0 | 3029.7ms | python -m pytest packages/ccba-ooxml/tests/test_form_filler.py -v |
+| PASS | 0 | 2918.6ms | python -m pytest packages/ccba-pdf-prep/tests/test_core.py packages/ccba-pdf-prep/tests/test_manipulation.py -v |
+```
+
+### 2.2. Kiểm Định Rộng (Regression Testing)
+- **`packages/ccba-ooxml` & `packages/ccba-pdf-prep` Unit Suites:**
+  - 83 tests đã chạy và vượt qua 100% (0 failures, 0 errors).
+- **Linter & Formatting:**
+  - `python -m ruff check packages/ccba-ooxml packages/ccba-pdf-prep`: `All checks passed!`
+  - `python -m ruff format --check packages/ccba-ooxml packages/ccba-pdf-prep`: `77 files already formatted`
+- **Kỹ Năng Governance (`validate_skills.py`):**
+  - `python scripts/validate_skills.py --file .agents/skills/ccba-xu-ly-van-phong/SKILL.md`: `Successfully validated 1 SKILL.md file(s) across all CI Gates.`
 
 ---
 

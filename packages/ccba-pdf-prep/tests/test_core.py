@@ -9,6 +9,7 @@ from ccba_pdf_prep import (
     PDFCategory,
     Segment,
     get_blind_chunks,
+    render_page_to_image_stream,
     split_pdf,
 )
 
@@ -167,3 +168,33 @@ class TestPageDetail:
         # A4 is ~210 × 297 mm
         assert 200 < p0.width_mm < 220
         assert 290 < p0.height_mm < 300
+
+
+# ---------------------------------------------------------------------------
+# render_page_to_image_stream
+# ---------------------------------------------------------------------------
+class TestRenderPageToImageStream:
+    """Tests for in-memory page image rendering."""
+
+    def test_render_stream_from_path(self, tmp_pdf_text: Path) -> None:
+        img_bytes = render_page_to_image_stream(
+            tmp_pdf_text, page_num=0, dpi=100, image_format="png"
+        )
+        assert isinstance(img_bytes, bytes)
+        assert len(img_bytes) > 0
+        assert img_bytes[:8] == b"\x89PNG\r\n\x1a\n"
+
+    def test_render_stream_from_bytes(self, tmp_pdf_text: Path) -> None:
+        raw_pdf = tmp_pdf_text.read_bytes()
+        img_bytes = render_page_to_image_stream(raw_pdf, page_num=1, dpi=72, image_format="jpeg")
+        assert isinstance(img_bytes, bytes)
+        assert len(img_bytes) > 0
+        assert img_bytes[:2] == b"\xff\xd8"
+
+    def test_render_stream_invalid_page(self, tmp_pdf_text: Path) -> None:
+        with pytest.raises(IndexError):
+            render_page_to_image_stream(tmp_pdf_text, page_num=99)
+
+    def test_render_stream_file_not_found(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError):
+            render_page_to_image_stream(tmp_path / "missing.pdf", page_num=0)

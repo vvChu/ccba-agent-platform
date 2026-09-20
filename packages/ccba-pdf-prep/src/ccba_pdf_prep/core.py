@@ -343,3 +343,45 @@ def render_page_to_image(
         doc.close()
 
     return output_path
+
+
+def render_page_to_image_stream(
+    pdf_source: Path | str | bytes,
+    page_num: int,
+    dpi: int = 150,
+    image_format: str = "png",
+) -> bytes:
+    """Render a single page of a PDF directly to image bytes in memory.
+
+    Args:
+        pdf_source: Path, string path, or raw bytes of the PDF.
+        page_num: 0-indexed page number to render.
+        dpi: Target DPI for rendering.
+        image_format: Target image format ('png', 'jpeg', etc.).
+
+    Returns:
+        Image content as raw bytes.
+
+    Raises:
+        FileNotFoundError: If pdf_source is a non-existent file path.
+        IndexError: If page_num is out of range.
+    """
+    import fitz
+
+    if isinstance(pdf_source, (bytes, bytearray)):
+        doc = fitz.open(stream=pdf_source, filetype="pdf")
+    else:
+        src_path = Path(pdf_source)
+        if not src_path.exists():
+            raise FileNotFoundError(f"PDF not found: {src_path}")
+        doc = fitz.open(str(src_path))
+
+    try:
+        if page_num < 0 or page_num >= len(doc):
+            raise IndexError(f"Page number {page_num} out of range for PDF with {len(doc)} pages")
+        page = doc[page_num]
+        matrix = fitz.Matrix(dpi / 72, dpi / 72)
+        pix = page.get_pixmap(matrix=matrix)
+        return pix.tobytes(output=image_format)
+    finally:
+        doc.close()

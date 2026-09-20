@@ -32,6 +32,9 @@ from .core import (
     render_page_to_image as render_page_to_image,
 )
 from .core import (
+    render_page_to_image_stream as render_page_to_image_stream,
+)
+from .core import (
     split_pdf as split_pdf,
 )
 from .detector import TitleBlockDetector as TitleBlockDetector
@@ -41,6 +44,9 @@ from .forms import (
 )
 from .forms import (
     get_field_info as get_field_info,
+)
+from .manipulation import (
+    extract_pdf_pages_stream as extract_pdf_pages_stream,
 )
 from .manipulation import (
     extract_text_from_pdf as extract_text_from_pdf,
@@ -127,6 +133,8 @@ __all__ = [
     "split_pdf_pages",
     "extract_text_from_pdf",
     "parse_pages",
+    "render_page_to_image_stream",
+    "extract_pdf_pages_stream",
     # === MEDIA DEEP SEAMS (YouTube & Video extraction) ===
     "extract_youtube_video_id",
     "format_whisper_transcript",
