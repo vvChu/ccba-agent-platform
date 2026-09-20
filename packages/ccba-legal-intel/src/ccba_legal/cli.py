@@ -543,6 +543,7 @@ def handle_login(args: argparse.Namespace) -> int:
             [
                 str(browser_exe),
                 f"--remote-debugging-port={port}",
+                "--remote-allow-origins=*",
                 f"--user-data-dir={user_data}",
                 "--no-first-run",
                 "--no-default-browser-check",

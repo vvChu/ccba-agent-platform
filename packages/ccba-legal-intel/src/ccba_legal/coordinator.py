@@ -247,6 +247,7 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
                 [
                     str(chrome_cmd),
                     f"--remote-debugging-port={port}",
+                    "--remote-allow-origins=*",
                     f"--user-data-dir={temp_dir}",
                     "--no-first-run",
                     "--no-default-browser-check",
