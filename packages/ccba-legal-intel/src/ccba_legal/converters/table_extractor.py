@@ -62,7 +62,13 @@ def _is_admin_layout_table(text: str, rows: int, cols: int, num_density: float =
     if num_density >= 0.30:
         return False
     # Signature / Distribution block (Nơi nhận & Chữ ký lãnh đạo)
-    if "nơi nhận:" in text and ("lưu: vt" in text or "kt." in text or "thủ tướng" in text or "bộ trưởng" in text or "chủ tịch" in text):
+    if "nơi nhận:" in text and (
+        "lưu: vt" in text
+        or "kt." in text
+        or "thủ tướng" in text
+        or "bộ trưởng" in text
+        or "chủ tịch" in text
+    ):
         return True
     if rows <= 8 and cols <= 3:
         if any(k in text for k in LAYOUT_KEYWORDS) and not any(
@@ -342,9 +348,7 @@ def classify_and_extract_tables(
             f"bang_{int(clean_cap):02d}"
             if clean_cap and clean_cap.isdigit()
             else (
-                f"bang_{clean_cap.replace('.', '_')}"
-                if clean_cap
-                else f"bang_{table_counter:02d}"
+                f"bang_{clean_cap.replace('.', '_')}" if clean_cap else f"bang_{table_counter:02d}"
             )
         )
         footnotes = internal_footnotes + _harvest_table_footnotes(blocks, block_idx)
@@ -365,18 +369,20 @@ def classify_and_extract_tables(
     if extracted_tables:
         catalog_entries: list[dict[str, Any]] = []
         for t_info in extracted_tables:
-            catalog_entries.append({
-                "table_id": t_info["table_id"],
-                "file_stem": t_info["table_id"],
-                "title": t_info.get("title") or t_info["table_id"].replace("_", " ").title(),
-                "columns_count": t_info["cols"],
-                "rows_count": t_info["rows"],
-                "footnotes_count": t_info["footnotes_count"],
-                "json_path": t_info["json"],
-                "csv_path": t_info["csv"],
-                "has_normative_conditions": True,
-                "footnotes": t_info.get("footnotes", []),
-            })
+            catalog_entries.append(
+                {
+                    "table_id": t_info["table_id"],
+                    "file_stem": t_info["table_id"],
+                    "title": t_info.get("title") or t_info["table_id"].replace("_", " ").title(),
+                    "columns_count": t_info["cols"],
+                    "rows_count": t_info["rows"],
+                    "footnotes_count": t_info["footnotes_count"],
+                    "json_path": t_info["json"],
+                    "csv_path": t_info["csv"],
+                    "has_normative_conditions": True,
+                    "footnotes": t_info.get("footnotes", []),
+                }
+            )
 
         catalog_path = tables_dir / "tables_catalog.json"
         with open(catalog_path, "w", encoding="utf-8") as f:

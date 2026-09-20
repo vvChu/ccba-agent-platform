@@ -50,7 +50,9 @@ __all__ = [
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
     parser = argparse.ArgumentParser(description="CCBA Nightly Auto-Tuner Daemon")
     parser.add_argument(
         "--dry-run", action="store_true", help="Run without creating git branches or PRs"

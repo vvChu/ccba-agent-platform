@@ -28,9 +28,17 @@ from .miner import (
 )
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
+from .sandbox import (
+    DockerSandboxRunner,
+    DockerSandboxScorer,
+    SandboxConfig,
+    SandboxExecutionResult,
+    extract_code_blocks,
+)
 from .scorers import (
     AntiDebrisScorer,
     BaseScorer,
+    BimClassificationScorer,
     DiagramSyntaxScorer,
     EngineeringDisciplineScorer,
     ExactMatchScorer,
@@ -41,12 +49,22 @@ from .scorers import (
     LengthBoundsScorer,
     LLMRubricScorer,
     OfficeStandardScorer,
+    PcccParametricScorer,
     RegexScorer,
+    get_bim_classification_scorers,
     get_coding_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
     get_office_scorers,
+    get_pccc_scorers,
     get_visual_diagram_scorers,
+)
+from .slicing import (
+    AdaptiveDataSlicer,
+    DynamicPerturbationEngine,
+    SlicedDataset,
+    SlicingTier,
+    classify_slicing_tier,
 )
 from .tuner import (
     ACADEMIC_ARCHETYPE_KEYWORDS,
@@ -67,6 +85,12 @@ from .tuner import (
     get_default_domain_scorers,
     mutate_skill,
     preserve_yaml_frontmatter,
+)
+from .uniclass_index import (
+    DEFAULT_UNICLASS_INDEX_PATH,
+    UniclassEntry,
+    UniclassFlatIndex,
+    load_uniclass_flat_index,
 )
 
 __all__ = [
@@ -96,11 +120,15 @@ __all__ = [
     "LegalVerbatimProvenanceScorer",
     "OfficeStandardScorer",
     "DiagramSyntaxScorer",
+    "PcccParametricScorer",
+    "BimClassificationScorer",
     "get_coding_scorers",
     "get_lean_structural_scorers",
     "get_legal_scorers",
     "get_office_scorers",
+    "get_pccc_scorers",
     "get_visual_diagram_scorers",
+    "get_bim_classification_scorers",
     "EvalRunner",
     "AutoItemScorer",
     "load_eval_dataset",
@@ -129,4 +157,18 @@ __all__ = [
     "StatutoryDocument",
     "LegalFlatIndex",
     "load_legal_flat_index",
+    "DEFAULT_UNICLASS_INDEX_PATH",
+    "UniclassEntry",
+    "UniclassFlatIndex",
+    "load_uniclass_flat_index",
+    "SlicingTier",
+    "classify_slicing_tier",
+    "SlicedDataset",
+    "DynamicPerturbationEngine",
+    "AdaptiveDataSlicer",
+    "SandboxConfig",
+    "SandboxExecutionResult",
+    "DockerSandboxRunner",
+    "DockerSandboxScorer",
+    "extract_code_blocks",
 ]

@@ -15,9 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-DEFAULT_FLAT_INDEX_PATH = (
-    Path(__file__).resolve().parent / "datasets" / "legal_clauses_flat.json"
-)
+DEFAULT_FLAT_INDEX_PATH = Path(__file__).resolve().parent / "datasets" / "legal_clauses_flat.json"
 
 
 def normalize_clause_variants(ref: str) -> list[str]:
@@ -26,9 +24,7 @@ def normalize_clause_variants(ref: str) -> list[str]:
     variants = [raw]
 
     # Remove Vietnamese accents for slug matching
-    slug = "".join(
-        c for c in unicodedata.normalize("NFD", raw) if unicodedata.category(c) != "Mn"
-    )
+    slug = "".join(c for c in unicodedata.normalize("NFD", raw) if unicodedata.category(c) != "Mn")
     slug = slug.replace("đ", "d")
     variants.append(slug)
 
