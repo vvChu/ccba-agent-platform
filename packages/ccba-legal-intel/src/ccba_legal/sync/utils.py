@@ -71,6 +71,7 @@ def ensure_chrome_debug_port() -> bool:
         cmd = [
             chrome_path,
             "--remote-debugging-port=9222",
+            "--remote-allow-origins=*",
             f"--user-data-dir={user_data_dir}",
             "--no-first-run",
             "--no-default-browser-check",

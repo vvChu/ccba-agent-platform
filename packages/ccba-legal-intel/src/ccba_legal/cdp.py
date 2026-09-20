@@ -74,6 +74,7 @@ class ChromeCDP:
                     [
                         browser_path,
                         f"--remote-debugging-port={self.port}",
+                        "--remote-allow-origins=*",
                         f"--user-data-dir={user_data}",
                         "--no-first-run",
                         "--no-default-browser-check",

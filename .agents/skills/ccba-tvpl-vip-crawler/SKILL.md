@@ -32,11 +32,13 @@ Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản
 ## 🛠️ Hướng Dẫn Vận Hành & Luồng Thực Thi
 
 1. **Khởi Tạo & Quản Lý Phiên VIP (Persistent Chromium VIP Session - ADR 0031)**:
-   - Đăng nhập phiên VIP một lần duy nhất qua lệnh CLI:
+   - **Hạ tầng Trình duyệt Chuẩn:** Kế thừa trực tiếp hạ tầng CDP và Persistent Profile thống nhất từ kỹ năng [`ccba-chrome-debug`](../ccba-chrome-debug/SKILL.md).
+   - **Khởi chạy nhanh (Khuyên dùng):** Mở shortcut Desktop **`Chrome (AI Debug Mode)`** hoặc chạy `Launch-Chrome-Debug.cmd` (cổng `9222`, profile `~/.gemini/antigravity-browser-profile`).
+   - **Hoặc khởi chạy qua CLI:**
      ```powershell
      python -m ccba_legal login
      ```
-   - Hệ thống tự động mở Chromium/Edge trên cổng `9222`, lưu profile phiên làm việc tại `~/.gemini/antigravity/chrome_vip`. Toàn bộ các lệnh fetch/ingest tiếp theo sẽ tự động kế thừa phiên VIP này.
+   - Hệ thống tự động mở Chromium trên cổng `9222` với cờ bắt buộc `--remote-allow-origins=*`. Toàn bộ phiên đăng nhập được chia sẻ đồng bộ giữa lệnh CLI và subagent `/browser`.
 
 2. **Kích hoạt Lệnh Thu Thập Văn Bản 3 Tầng (3-Tier Acquisition)**:
    - **Cách 1: Thu thập đơn lẻ tải cả DOCX và VIP Digital Vector PDF:**

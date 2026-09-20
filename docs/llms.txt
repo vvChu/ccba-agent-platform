@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 73 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 74 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 73 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 74 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 73 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 74 skills.
 
-## All Active Skills (73 Skills)
+## All Active Skills (74 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -35,6 +35,7 @@
 - [ccba-ask](skills/ccba-ask.md): /ccba-ask — Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
 - [ccba-autoresearch](skills/ccba-autoresearch.md): /ccba-autoresearch — Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
 - [ccba-build-skill](skills/ccba-build-skill.md): /ccba-build-skill — Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
+- [ccba-chrome-debug](skills/ccba-chrome-debug.md): /ccba-chrome-debug — Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.
 - [ccba-code-review](skills/ccba-code-review.md): /ccba-code-review — Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
 - [ccba-codebase-design](skills/ccba-codebase-design.md): /ccba-codebase-design — Shared vocabulary for designing deep modules (locality, depth, leverage, seams) to improve testability and code quality. Reference skill.
 - [ccba-completion-checklist](skills/ccba-completion-checklist.md): /ccba-completion-checklist — Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ trợ xuất Markdown và Word (.docx).

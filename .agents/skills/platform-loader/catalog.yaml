@@ -324,6 +324,20 @@ skills:
   skill_path: .agents/skills/ccba-build-skill/SKILL.md
   command: /ccba-build-skill
   tier: kernel
+- name: ccba-chrome-debug
+  bundle: _software
+  description: Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent
+    Profile và công cụ /browser cho Antigravity & CCBA Platform.
+  triggers:
+  - ccba-chrome-debug
+  - chrome debug
+  - cdp port 9222
+  - browser tools
+  - mở chrome debug
+  - kiểm tra kết nối browser
+  skill_path: .agents/skills/ccba-chrome-debug/SKILL.md
+  command: /ccba-chrome-debug
+  tier: kernel
 - name: ccba-code-review
   bundle: _software
   description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)

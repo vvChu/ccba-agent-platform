@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 73 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 74 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -13,7 +13,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 - [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (21 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
-- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (27 skills)
+- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (28 skills)
 
 ---
 
@@ -104,7 +104,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="governance_upkeep"></a>
-## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (27 Kỹ Năng)
+## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (28 Kỹ Năng)
 
 *Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.*
 
@@ -116,6 +116,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling... |
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
+| [ccba-chrome-debug](ccba-chrome-debug.md) | `/ccba-chrome-debug` | `kernel` | `User` | Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Pro... |
 | [ccba-contribute-to-hub](ccba-contribute-to-hub.md) | `/ccba-contribute-to-hub` | `kernel` | `User` | Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừn... |
 | [ccba-docs-manager](ccba-docs-manager.md) | `/ccba-docs-manager` | `kernel` | `User` | Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform. |
 | [ccba-eval-gate](ccba-eval-gate.md) | `/ccba-eval-gate` | `kernel` | `User` | Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (... |
