@@ -139,3 +139,79 @@
        ```
     3. Mẫu này đảm bảo bảo toàn 100% mã hóa UTF-8, định dạng Markdown, bảng biểu và không bao giờ bị bộ lọc an toàn command-line từ chối.
 
+---
+
+## 13. Multi-Client Issue & Pull Request Coordination Protocol (Quy Chuẩn Điều Phối Issue và PR Đa Máy & Khóa Nhận Việc)
+
+### A. Quy Trình Khóa Nhận Việc Cho GitHub Issues (Issue Claim Locking - TTL 24h)
+1. **Chuyển trạng thái tức thì:**
+   - Kiểm tra nhãn hiện tại qua `gh issue view <id> --json labels`. Chỉ gỡ `ready-for-agent` hoặc `backlog` nếu nhãn đó thực sự tồn tại (tránh lỗi API 404).
+   - Gán nhãn `in-progress` và gán assignee động theo tài khoản đang đăng nhập:
+     ```bash
+     gh issue edit <id> --add-label "in-progress" --add-assignee "@me"
+     ```
+2. **Đăng thông báo nhận việc máy-đọc-được (Machine-Parseable Claim Notice):**
+   - Tạo tệp nội dung tạm thời trong `.md/scratch/` và đăng qua cờ `-F` (tuân thủ Guardrail 12):
+     ```markdown
+     <!-- CCBA_PEER_CLAIM_LOCK
+     host: [linux-workstation / windows-pc / wsl]
+     branch: feat/issue-[id]-[short-desc]
+     claimed_at: [ISO-8601-UTC-Timestamp]
+     ttl_hours: 24
+     -->
+     🤖 **Agent Claim & Coordination Notice**: Issue này đang được xử lý trong phiên làm việc hiện tại trên môi trường [OS]. Vui lòng bỏ qua, không claim nhận việc trùng lặp.
+     ```
+3. **Khóa an toàn chống đua đồng thời (Post-Claim Verification & Concurrency Safe-Guard):**
+   - Sau khi đăng claim, Agent bắt buộc đọc lại danh sách comments: `gh issue view <id> --json comments`.
+   - Nếu phát hiện có một Claim Notice của peer agent khác được đăng trước comment của mình dù chỉ vài giây: Agent nhận việc sau **bắt buộc phải nhượng bộ (yield)**, tự động rollback (`--remove-label "in-progress"`) và chuyển sang tìm issue khác.
+4. **Xử lý Stale Claims (Cơ Chế Takeover Sau 24h):**
+   - Nếu một issue mang nhãn `in-progress` nhưng không có commit mới nào trên nhánh remote liên kết trong vòng **24 giờ** $\rightarrow$ issue được coi là *Stale Claim*.
+   - **Chế độ tương tác (Interactive):** Agent hỏi ý kiến người dùng: *"⚠️ Issue #X đang in-progress bởi client cũ nhưng đã ngừng hoạt động > 24h. Bạn có muốn tiếp quản (re-claim) issue này không?"*. Khi người dùng đồng ý, Agent đăng comment takeover và đổi assignee sang `@me`.
+   - **Chế độ tự động/ngầm (Headless/CI/Daemon):** Agent tự động bỏ qua (skip) để tránh treo tiến trình.
+5. **Nghiệm thu & Đóng Issue sạch sẽ (Clean Handoff & Closure):**
+   - Khi hoàn tất và PR được squash merge vào `main`, để lại bình luận tổng kết nghiệm thu kèm PR link/Commit SHA và đóng issue ngay lập tức (`gh issue close <id> --reason "completed"`).
+
+### B. Quy Trình Khóa Tranh Chấp Cho Pull Requests (PR Claim Locking & Lease Push - TTL 4h)
+1. **Khóa Nhận Xử Lý PR (PR Assignee & Status Locking):**
+   - Khi Agent tiếp nhận một PR để review, sửa lỗi CI, hoặc đối soát nhận xét Copilot:
+     ```bash
+     gh pr edit <id> --add-assignee "@me" --add-label "in-progress"
+     ```
+2. **Đăng PR Lock Notice (TTL = 4 giờ):**
+   - Đăng comment khóa PR qua tệp tin trong `.md/scratch/`:
+     ```markdown
+     <!-- CCBA_PR_CLAIM_LOCK
+     host: [linux-workstation / windows-pc / wsl]
+     agent_role: [pr-review / ci-repair / merge-release]
+     branch: [head-branch-name]
+     claimed_at: [ISO-8601-UTC-Timestamp]
+     ttl_hours: 4
+     -->
+     🤖 **Agent PR Claim Notice**: PR này đang được tiếp nhận xử lý bởi Agent trên môi trường [OS]. Vui lòng không can thiệp hoặc push đè lên nhánh `[branch]`.
+     ```
+3. **Rào Chắn Đẩy Mã Nguồn An Toàn (Pre-Push Lease Invariant):**
+   - Tuyệt đối **NGHIÊM CẤM** sử dụng lệnh bare `git push --force` (`-f`) trên các nhánh PR.
+   - Khi cần cập nhật nhánh sau rebase, **BẮT BUỘC** sử dụng:
+     ```bash
+     git fetch origin
+     git push --force-with-lease origin <branch-name>
+     ```
+   - Lệnh này đảm bảo nếu có Agent khác vừa đẩy commit lên remote trong lúc bạn đang làm việc, lệnh push sẽ bị từ chối an toàn thay vì ghi đè làm mất mã nguồn của đồng đội.
+4. **Giải Quyết Xung Đột Đồng Thời Trên PR (Post-Claim Verification for PRs):**
+   - Sau khi claim PR, Agent đọc lại comments: `gh pr view <id> --json comments`.
+   - Nếu có peer claim đăng trước, Agent lập tức hủy claim (`gh pr edit <id> --remove-assignee "@me"`).
+5. **Cơ Chế Giải Phóng Khóa (Release / Takeover Protocol for PRs):**
+   - **Tự động đóng khóa khi merge:** Khi PR được squash merge vào `main`, trạng thái khóa tự động kết thúc.
+   - **Chủ động giải phóng khi dừng phiên:** Nếu Agent dừng phiên trước khi PR hoàn tất, bắt buộc đăng comment `<!-- CCBA_PR_CLAIM_RELEASE -->` và gỡ assignee: `gh pr edit <id> --remove-assignee "@me"`.
+   - **Stale PR Claim Takeover (Ngưỡng 4 giờ):** Nếu một PR bị khóa nhưng nhánh không có commit mới sau **4 giờ**, Agent ở máy khác được phép kích hoạt Interactive Takeover để tiếp quản việc sửa PR.
+
+---
+
+## 14. Cross-Platform Machine-State Isolation & Environment Parity Invariant (Quy Chuẩn Cách Ly Trạng Thái Máy & Đồng Bộ Đa Nền Tảng)
+- Nhằm đảm bảo mã nguồn và tài liệu vận hành trơn tru giữa máy Windows và Linux/WSL:
+  1. **Ưu tiên biến môi trường `$CCBA_HUB_PATH`:** Mọi script phân giải vị trí Hub/Spoke bắt buộc phải kiểm tra biến môi trường `$CCBA_HUB_PATH` lên hàng đầu trước khi duyệt file system.
+  2. **Bảo vệ đường dẫn ổ đĩa Windows trên POSIX:** Trên môi trường Linux/WSL/POSIX, tuyệt đối không truyền chuỗi đường dẫn mang ký tự ổ đĩa (`D:\...`, `C:\...`) trực tiếp vào `Path()`, phải sử dụng hàm phân giải đường dẫn an toàn (`resolve_cross_platform_path()`).
+  3. **Chống rò rỉ trạng thái máy (Zero Machine-State Leakage):** Nghiêm cấm commit các đường dẫn máy cục bộ (`/home/...`, `D:/...`, `C:/...`). Kiểm định bắt buộc bằng lệnh `check_spoke_cleanliness.py`.
+  4. **Chuẩn hóa Line Endings (LF Invariant):** Mọi repository thuộc hệ sinh thái CCBA bắt buộc có cấu hình `.gitattributes` chuẩn hóa (`* text=auto eol=lf`) để triệt tiêu xung đột CRLF/LF khi làm việc đa nền tảng.
+  5. **Cổng Cưỡng Chế Sharded Registry (Hard Completion Gate):** Tại các Spoke tri thức quản lý văn bản pháp lý (có thư mục `legal_docs/`), lệnh kiểm tra tính toàn vẹn `ccba-legal compile-registry --check` (hoặc `validate_registry_sync()`) là điều kiện tiên quyết bắt buộc phải trả về `exit code 0`. Nếu có drift, Agent phải chạy compile trước khi commit.
+  6. **Skills Hygiene Linting Rule:** Trong các tài liệu `SKILL.md`, các đoạn mã bash có chứa lệnh gán biến môi trường (`export VAR=...`) bắt buộc phải gắn nhãn ngôn ngữ chứa `linux` hoặc `ubuntu` (ví dụ ````bash (linux)````) để vượt qua bộ lọc chống Windows Bashism của `audit_skills_hygiene.py`.
