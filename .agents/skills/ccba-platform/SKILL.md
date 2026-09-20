@@ -57,6 +57,28 @@ Trước khi hiển thị Ma Trận Điều Phối hoặc thực thi bất kỳ 
      - Nếu đã có `.md/` nhưng thiếu `workspace_context.yaml` $\rightarrow$ Đề xuất cập nhật cấu hình Spoke khai báo `archetype` và `hub_packages`.
    * **Tiêu chí hoàn thành:** Đảm bảo thư mục `.md/` tồn tại và tệp SSoT `workspace_context.yaml` sẵn sàng.
 
+4. **Kiểm Định Cấu Hình Tô Pô Hệ Điều Hành (OS Topology Audit - HUB-ADR-0049 / HUB-ADR-0051):**
+   * Tự động nhận diện hệ điều hành môi trường thực thi (Linux, WSL, Windows, macOS).
+   * Kiểm tra tính tương thích của đường dẫn Hub (`hub_path`) trong `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH`:
+     - **Nếu vận hành trên Linux/WSL/POSIX** nhưng `hub_path` mang format ký tự ổ đĩa Windows (`D:\...`, `C:\...`) và chưa có nhánh đường dẫn POSIX hợp lệ:
+       - **Cảnh báo lỗi tô pô:** Phát hiện nguy cơ lỗi đường dẫn chéo hệ điều hành (`FileNotFoundError` hoặc rò rỉ trạng thái máy).
+       - **Hướng dẫn khắc phục:** Thiết lập biến môi trường hệ thống:
+         - Trên Linux / WSL:
+           ```bash (linux)
+           export CCBA_HUB_PATH="/path/to/ccba-agent-platform"
+           ```
+         - Trên Windows PowerShell:
+           ```powershell
+           $env:CCBA_HUB_PATH = "D:\GitHubProjects\ccba-agent-platform"
+           ```
+         Hoặc khai báo từ điển multi-OS trong `workspace_context.yaml`:
+         ```yaml
+         hub_path:
+           windows: "D:\\GitHubProjects\\ccba-agent-platform"
+           linux: "/home/vvc/ccba/ccba-agent-platform"
+         ```
+   * **Tiêu chí hoàn thành:** Đường dẫn Hub tương thích 100% với hệ điều hành thực tế, không gây crash hoặc gián đoạn các engine đồng bộ và discovery.
+
 ---
 
 ## ⚡ Ma Trận Điều Phối Kỹ Năng Toàn Cục (Global Dispatch Matrix)
