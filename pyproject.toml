@@ -101,6 +101,8 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
+    "yaml",
+    "yaml.*",
     "numpy.*",
     "pandas.*",
     "llama_index.*",

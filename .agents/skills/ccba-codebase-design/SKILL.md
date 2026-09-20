@@ -3,6 +3,7 @@ name: ccba-codebase-design
 description: Shared vocabulary for designing deep modules (locality, depth, leverage,
   seams) to improve testability and code quality. Reference skill.
 disable-model-invocation: true
+auto-tune: false
 category: engineering
 user-invocable: true
 command: /ccba-codebase-design

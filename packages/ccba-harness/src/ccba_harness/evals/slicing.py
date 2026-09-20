@@ -140,7 +140,10 @@ class DynamicPerturbationEngine:
 
     def perturb_item(self, item: EvalItem, seed: int = 42) -> EvalItem:
         """Creates a perturbed copy of an EvalItem with invariant-preserving variations."""
-        new_prompt = self.perturb_prompt(item.input_prompt, seed=seed)
+        if isinstance(item.input_prompt, str):
+            new_prompt: str | dict[str, Any] = self.perturb_prompt(item.input_prompt, seed=seed)
+        else:
+            new_prompt = item.input_prompt
         new_meta = copy.deepcopy(item.metadata) if isinstance(item.metadata, dict) else {}
         new_meta["is_perturbed"] = True
         new_meta["perturbation_seed"] = seed

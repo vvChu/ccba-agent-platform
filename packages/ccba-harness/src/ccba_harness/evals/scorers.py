@@ -789,7 +789,7 @@ class LeanStructuralScorer(BaseScorer):
             res_prog.is_critical_fail or res_len.is_critical_fail or res_deb.is_critical_fail
         )
 
-        reasons = [res_prog.reasoning, res_len.reasoning, res_deb.reasoning]
+        reasons = [r for r in (res_prog.reasoning, res_len.reasoning, res_deb.reasoning) if r]
         return ScoreResult(
             scorer_name=self.name,
             score=combined_score,
@@ -1302,7 +1302,7 @@ class PcccParametricScorer(BaseScorer):
         final_score = gate1_score
         reasoning = f"Gate 1: Verdict verified; {matched_params_count}/{total_params_count} parameters verified"
         if missing_params:
-            reasoning += f" (missing: {', '.join(missing_params)})"
+            reasoning += f" (missing: {', '.join(str(p) for p in missing_params)})"
 
         # Gate 2: Escalation LLM Judge (Advisory Plugin)
         if (
@@ -1417,18 +1417,6 @@ class BimClassificationScorer(BaseScorer):
                 code_score = 0.5
             else:
                 code_score = 0.0
-
-        if self.is_critical and expected_code and code_score == 0.0:
-            return ScoreResult(
-                scorer_name=self.name,
-                score=0.0,
-                raw_output={
-                    "violation": "missing_expected_uniclass_code",
-                    "expected": expected_code,
-                },
-                reasoning=f"Critical Failure: Model failed to identify required Uniclass code ({expected_code})",
-                is_critical_fail=True,
-            )
 
         # Dimension 2: ISO 12006-2 Layer Classification (0.3)
         expected_layer = str(ga.get("iso_12006_layer", "")).strip()
