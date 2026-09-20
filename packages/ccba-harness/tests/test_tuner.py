@@ -1938,3 +1938,89 @@ def test_from_markdown_program_formatted_budgets(tmp_path: Path):
     cfg = RatchetConfig.from_markdown_program(prog_file, root=tmp_path)
     assert cfg.token_budget == 6_500_000
     assert cfg.per_skill_mutation_budget == 250_000
+
+
+def test_archetype_ssot_resolution():
+    """Verify SSOT resolution in archetypes.py correctly maps all 11 domain archetypes."""
+    from ccba_harness.evals.archetypes import (
+        DOMAIN_ARCHETYPES,
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+
+    assert len(DOMAIN_ARCHETYPES) == 11
+
+    # Check each archetype has non-empty keywords and valid dataset
+    for arch in DOMAIN_ARCHETYPES:
+        assert len(arch.keywords) > 0
+        assert arch.dataset_file.endswith(".json")
+        scorers = arch.scorer_factory()
+        assert len(scorers) > 0
+
+    # Test key representatives
+    test_cases = [
+        ("ccba-grilling", "eval_grilling.json"),
+        ("ccba-adr-lifecycle", "eval_adr_lifecycle.json"),
+        ("bigbim-risk", "eval_bigbim_risk.json"),
+        ("ccba-legal-intel", "eval_legal_intel.json"),
+        ("ccba-ai-qc-pccc-audit", "eval_pccc_audit.json"),
+        ("ccba-academic-writing", "eval_academic_writing.json"),
+        ("ccba-copywriting", "eval_copywriting.json"),
+        ("ccba-mermaid-diagram", "eval_visual_diagram.json"),
+        ("bigbim-classification", "eval_bigbim_classification.json"),
+        ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
+        ("platform-loader", "eval_agent_orchestration.json"),
+    ]
+    for skill_name, expected_dataset in test_cases:
+        assert resolve_domain_dataset(skill_name) == expected_dataset
+        assert resolve_domain_archetype(skill_name) is not None
+        scorers = get_default_domain_scorers(skill_name)
+        assert len(scorers) > 0
+
+    # Fallback case
+    assert resolve_domain_archetype("ccba-design") is None
+    assert resolve_domain_dataset("ccba-design") == "eval_general_domain.json"
+
+
+def test_archetype_zero_collision_cross_domain():
+    """Verify that multi-keyword combinations resolve to a single unified archetype (no split between dataset and scorers)."""
+    from ccba_harness.evals.archetypes import (
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+
+    collision_candidates = [
+        "ccba-risk-mermaid",
+        "ccba-legal-risk",
+        "ccba-pccc-risk",
+        "ccba-academic-risk",
+        "ccba-van-phong-risk",
+        "ccba-bim-van-phong",
+        "ccba-bim-mermaid",
+        "ccba-academic-bim",
+        "ccba-grill-teamwork",
+        "ccba-adr-teamwork",
+        "ccba-platform-grill",
+    ]
+    for candidate in collision_candidates:
+        arch = resolve_domain_archetype(candidate)
+        assert arch is not None, f"Candidate {candidate} should resolve to a known archetype"
+        dataset = resolve_domain_dataset(candidate)
+        assert dataset == arch.dataset_file, f"Dataset for {candidate} must match archetype dataset"
+        scorers = get_default_domain_scorers(candidate)
+        expected_scorer_names = [s.name for s in arch.scorer_factory()]
+        actual_scorer_names = [s.name for s in scorers]
+        assert actual_scorer_names == expected_scorer_names, (
+            f"Scorers for {candidate} must match archetype scorer factory"
+        )
+
+
+def test_flagship_redteam_overrides():
+    """Verify FLAGSHIP_REDTEAM_DATASET_OVERRIDES contains exactly 4 flagship skills."""
+    from ccba_harness.evals.daemon import FLAGSHIP_REDTEAM_DATASET_OVERRIDES
+
+    assert len(FLAGSHIP_REDTEAM_DATASET_OVERRIDES) == 4
+    for _skill, dataset in FLAGSHIP_REDTEAM_DATASET_OVERRIDES.items():
+        assert dataset.endswith("_redteam.json")

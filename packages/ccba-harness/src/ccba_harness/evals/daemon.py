@@ -21,15 +21,10 @@ from typing import Any
 
 import yaml
 
+from .archetypes import (
+    resolve_domain_dataset,
+)
 from .tuner import (
-    ACADEMIC_ARCHETYPE_KEYWORDS,
-    BIM_ARCHETYPE_KEYWORDS,
-    CODING_ARCHETYPE_KEYWORDS,
-    LEGAL_ARCHETYPE_KEYWORDS,
-    OFFICE_ARCHETYPE_KEYWORDS,
-    ORCHESTRATION_ARCHETYPE_KEYWORDS,
-    TECH_QC_ARCHETYPE_KEYWORDS,
-    VISUAL_ARCHETYPE_KEYWORDS,
     GitRatchetTuner,
     RatchetConfig,
     RatchetReport,
@@ -172,6 +167,15 @@ class WeightedPriorityQueue:
         return sorted(skills_data, key=priority_key)
 
 
+# Specialized Red-Team dataset overrides for flagship skills (all others resolve via SSOT)
+FLAGSHIP_REDTEAM_DATASET_OVERRIDES: dict[str, str] = {
+    "ccba-legal-intel": "eval_legal_intel_redteam.json",
+    "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
+    "bigbim-classification": "eval_bigbim_classification_redteam.json",
+    "ccba-ai-qc": "eval_pccc_audit_redteam.json",
+}
+
+
 class NightlyTunerDaemon:
     """Orchestrates multi-skill batch optimization overnight."""
 
@@ -214,35 +218,8 @@ class NightlyTunerDaemon:
         self.skills_dir = self.root / ".agents" / "skills"
 
     def _resolve_dataset_file(self, skill_name: str) -> str:
-        """Dynamically matches a skill to its optimal Domain Archetype evaluation dataset."""
-        sname = skill_name.lower()
-
-        if "risk" in sname or "conflict" in sname:
-            return "eval_bigbim_risk.json"
-        if "ccba-completion-checklist" in sname or any(
-            k in sname for k in LEGAL_ARCHETYPE_KEYWORDS
-        ):
-            return "eval_legal_intel.json"
-        if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
-            return "eval_pccc_audit.json"
-        if any(k in sname for k in BIM_ARCHETYPE_KEYWORDS):
-            return "eval_bigbim_classification.json"
-        if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
-            return "eval_academic_writing.json"
-        if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
-            return "eval_copywriting.json"
-        if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
-            return "eval_visual_diagram.json"
-        if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
-            return "eval_grilling.json"
-        if any(k in sname for k in ["adr", "architecture-decision"]):
-            return "eval_adr_lifecycle.json"
-        if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
-            return "eval_codebase_engineering.json"
-        if any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
-            return "eval_agent_orchestration.json"
-
-        return "eval_general_domain.json"
+        """Dynamically matches a skill to its optimal Domain Archetype evaluation dataset (SSOT Delegation)."""
+        return resolve_domain_dataset(skill_name)
 
     def _extract_report_date(self, r_file: Path, content: str) -> datetime.date | None:
         """Extracts date from report filename or content with fallback to file mtime."""
@@ -375,29 +352,6 @@ class NightlyTunerDaemon:
 
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
         """Maps discovered skills to their optimal evaluation datasets with historical baseline scores."""
-        skill_dataset_map = {
-            "ccba-academic-writing": "eval_academic_writing.json",
-            "ccba-copywriting": "eval_copywriting.json",
-            "ccba-legal-intel": "eval_legal_intel_redteam.json",
-            "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
-            "bigbim-classification": "eval_bigbim_classification_redteam.json",
-            "bigbim-governance": "eval_bigbim_classification.json",
-            "bigbim-risk": "eval_bigbim_risk.json",
-            "bigbim-rase": "eval_bigbim_classification.json",
-            "ccba-completion-checklist": "eval_legal_intel.json",
-            "ccba-legal-document-tracker": "eval_legal_intel.json",
-            "ccba-legal-advisor": "eval_legal_intel.json",
-            "ccba-legal-ingest": "eval_legal_intel.json",
-            "bigbim-vbpl-digest": "eval_legal_intel.json",
-            "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
-            "ccba-ai-qc": "eval_pccc_audit_redteam.json",
-            "ccba-ai-pdf-preprocessor": "eval_codebase_engineering.json",
-            "ccba-mermaid-diagram": "eval_visual_diagram.json",
-            "ccba-excalidraw-diagram": "eval_visual_diagram.json",
-            "ccba-grilling": "eval_grilling.json",
-            "ccba-adr-lifecycle": "eval_adr_lifecycle.json",
-        }
-
         recent_scores, cooldown_skills = self._load_historical_metrics(cooldown_days=3)
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
@@ -419,10 +373,9 @@ class NightlyTunerDaemon:
                 except Exception as e:
                     logger.debug(f"Failed to parse frontmatter for {skill_path}: {e}")
 
-            if skill_name in skill_dataset_map:
-                dataset_file = skill_dataset_map[skill_name]
-            else:
-                dataset_file = self._resolve_dataset_file(skill_name)
+            dataset_file = FLAGSHIP_REDTEAM_DATASET_OVERRIDES.get(
+                skill_name, self._resolve_dataset_file(skill_name)
+            )
 
             full_dataset_path = self.test_cases_dir / dataset_file
 

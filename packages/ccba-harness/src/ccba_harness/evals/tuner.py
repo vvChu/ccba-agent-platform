@@ -22,16 +22,6 @@ from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
     BaseScorer,
-    LengthBoundsScorer,
-    RegexScorer,
-    get_bim_classification_scorers,
-    get_coding_scorers,
-    get_lean_structural_scorers,
-    get_legal_scorers,
-    get_office_scorers,
-    get_orchestration_scorers,
-    get_pccc_scorers,
-    get_visual_diagram_scorers,
 )
 from .slicing import (
     AdaptiveDataSlicer,
@@ -515,226 +505,27 @@ def preserve_yaml_frontmatter(original_content: str, edited_content: str) -> str
     return f"{frontmatter_block}{nl}"
 
 
-CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "code",
-    "bug",
-    "diagnos",
-    "implement",
-    "tdd",
-    "codebase-design",
-    "refactor",
-    "engineering",
-    "sdk",
-    "circuit-breaker",
-    "logger",
-    "stability-guard",
-    "rag",
-    "pipeline-patterns",
-    "maskara",
-    "testing",
-    "modeling",
-    "feature",
-    "iac",
-    "to-spec",
-    "docs",
-    "pdf-prep",
-    "preprocessor",
+# ---------------------------------------------------------------------------
+# Domain Archetypes (Re-exported from SSOT archetypes.py)
+# ---------------------------------------------------------------------------
+from .archetypes import (  # noqa: F401
+    ACADEMIC_ARCHETYPE_KEYWORDS,
+    ADR_ARCHETYPE_KEYWORDS,
+    BIM_ARCHETYPE_KEYWORDS,
+    CODING_ARCHETYPE_KEYWORDS,
+    DOMAIN_ARCHETYPES,
+    GRILLING_ARCHETYPE_KEYWORDS,
+    LEGAL_ARCHETYPE_KEYWORDS,
+    OFFICE_ARCHETYPE_KEYWORDS,
+    ORCHESTRATION_ARCHETYPE_KEYWORDS,
+    RISK_ARCHETYPE_KEYWORDS,
+    TECH_QC_ARCHETYPE_KEYWORDS,
+    VISUAL_ARCHETYPE_KEYWORDS,
+    DomainArchetype,
+    get_default_domain_scorers,
+    resolve_domain_archetype,
+    resolve_domain_dataset,
 )
-
-LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "legal",
-    "luat",
-    "tvpl",
-    "vbpl",
-    "advisor",
-    "checklist",
-    "hsht",
-    "phap-ly",
-    "ingest",
-)
-
-TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "pccc",
-    "qc",
-    "audit",
-    "thamdinh",
-)
-
-OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "van-phong",
-    "docx",
-    "pptx",
-    "presentation",
-    "markdown-document",
-    "seminar",
-    "typography",
-    "copywriting",
-    "vietbai",
-    "truyenthong",
-)
-
-VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "mermaid",
-    "excalidraw",
-    "diagram",
-)
-
-ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "teamwork",
-    "orchestrat",
-    "platform",
-    "handoff",
-    "issue-tree",
-    "ask",
-    "xia",
-    "wayfinder",
-    "spoke",
-    "upstream",
-    "hub",
-    "pr",
-    "guardrails",
-    "proposal",
-    "adr",
-    "grill",
-    "stresstest",
-    "stress-test",
-    "retrospective",
-    "knowledge",
-    "research",
-    "notebooklm",
-    "youtube",
-    "skill-repair",
-    "build-skill",
-    "setup-skills",
-    "eval-gate",
-    "rd",
-    "graduate",
-)
-
-BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "bim",
-    "uniclass",
-    "classification",
-    "rase",
-    "governance",
-    "risk",
-    "conflict",
-    "ifc",
-)
-
-ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "academic",
-    "khoahoc",
-)
-
-
-def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
-    """Provides domain-aligned default scorers based on target skill."""
-    sname = skill_name.lower()
-    if any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
-        return get_legal_scorers()
-
-    if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
-        return get_pccc_scorers()
-
-    if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
-        return [
-            RegexScorer(
-                name="academic_structure",
-                pattern=r"(IMRAD|CARS|Move 1|Move 2|Move 3|Materials|Methods|Results|Discussion|References|Style|Yale|APA)",
-                weight=0.5,
-            ),
-            RegexScorer(
-                name="academic_rigor_hard_floor",
-                pattern=r"(Swales|Kallestinova|APA|BibTeX|limitations|giới hạn|bị động|passive|De-nominalization)",
-                weight=0.3,
-                is_critical=True,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
-        ]
-
-    if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
-        return get_office_scorers()
-
-    if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
-        return get_visual_diagram_scorers()
-
-    if any(k in sname for k in ["risk", "conflict"]) or "bigbim-risk" in sname:
-        return [
-            RegexScorer(
-                name="risk_conflict_audit",
-                pattern=r"(mâu thuẫn thông tin|information conflict|V2 - Coordination|khoảng cách|clearance|không gian bảo trì|không gian thao tác|va chạm)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="risk_anti_trap_hard_floor",
-                pattern=r"(900mm|150mm|Level 2|BBP|Unique ID|tủ điện|khoảng hở|hành lang|van ngăn cháy|Chủ trì)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="risk_mitigation_guard",
-                pattern=r"(proposed_mitigation|INF-CON-|giải pháp|dịch chuyển|cao độ|IFC4X3|IfcDistributionFlowElement|ccba-issue-tree|Why-Tree|How-Tree)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in ["bim", "uniclass", "classification", "ifc", "rase", "governance"]):
-        return get_bim_classification_scorers()
-
-    if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
-        return get_orchestration_scorers()
-
-    if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
-        return [
-            RegexScorer(
-                name="grilling_one_by_one_and_recommendation",
-                pattern=r"(câu hỏi|one-by-one|đề xuất|phương án|recommended|stress-test|chất vấn|front-end|picker)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="grilling_anti_trap_hard_floor",
-                pattern=r"(từng câu|đề xuất trước|facts vs decisions|tra cứu|tự tra cứu|codebase|NOTES\.md|ccba-issue-tree|vi phạm|bất biến)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="grilling_escalation_guard",
-                pattern=r"(ccba-issue-tree|How-Tree|Why-Tree|Solution How-Tree|ma trận|Giá trị|Độ phức tạp|Rủi ro|KISS|Frontier|prerequisites)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in ["adr", "architecture-decision"]):
-        return [
-            RegexScorer(
-                name="adr_scaffolding_and_lifecycle",
-                pattern=r"(ADR|HUB-ADR|SPOKE-ADR|ACCEPTED|SUPERSEDED|DEPRECATED|docs/adr/|TRACEABILITY_MATRIX|matrix)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="adr_anti_trap_hard_floor",
-                pattern=r"(superseded_by|supersedes|validate_adr_traceability|CI Parity|Context|Decision|Consequences|Invariants)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="adr_governance_guard",
-                pattern=r"(Hub vs Spoke|SPOKE-ADR|HUB-ADR|Living Traceability Matrix|README\.md|YAML Frontmatter|parity)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
-        return get_coding_scorers()
-
-    if any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
-        return get_orchestration_scorers()
-
-    return get_lean_structural_scorers()
 
 
 class GitRatchetOptimizer:
