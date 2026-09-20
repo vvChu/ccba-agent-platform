@@ -1,6 +1,6 @@
 # ccba-excalidraw-diagram
 
-> **Mô tả ngắn**: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+> **Mô tả ngắn**: Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
 
 ---
 
@@ -23,14 +23,14 @@ python scripts/spoke/sync_spoke.py --skills ccba-excalidraw-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 16.00)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=3.0 | P=3.0 (GPI: 19.50)` |
 
 ---
 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,8 +45,13 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `ccba-show-me`
-- `show-me`
+- `excalidraw`
+- `vẽ sơ đồ`
+- `diagram`
+- `layout engine`
+- `sơ đồ kiến trúc`
+- `vẽ quy trình`
+- `layout router`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Sinh sơ đồ kiến trúc Excalidraw trực quan từ văn bản mô tả.
