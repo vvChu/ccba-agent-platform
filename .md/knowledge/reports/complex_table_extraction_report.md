@@ -62,10 +62,10 @@
 
 ---
 
-## 2. Kết Quả Bóc Tách Bảng 2: Phụ lục VIb Nghị định 06/2021/NĐ-CP
+## 2. Kết Quả Bóc Tách Bảng 2: Phụ lục VIb Nghị định 06/2021/NĐ-CP (Đã được thay thế bởi NĐ 105/2025/NĐ-CP)
 
 ### Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình xây dựng
-**Căn cứ pháp lý:** *Nghị định 06/2021/NĐ-CP (Hợp nhất theo VBHN 19/VBHN-BXD)*
+**Căn cứ pháp lý:** *Nghị định 06/2021/NĐ-CP (Đã được thay thế bởi NĐ 105/2025/NĐ-CP, Hợp nhất theo VBHN 19/VBHN-BXD)*
 
 | STT > Chủ đầu tư | Danh mục hồ sơ, tài liệu > Cơ quan chuyên môn | Trách nhiệm lưu trữ | Trách nhiệm lưu trữ | Ghi chú |
 | --- | --- | --- | --- | --- |

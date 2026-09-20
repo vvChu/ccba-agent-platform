@@ -1,0 +1,28 @@
+# Auto-detect text files and ensure LF endings across Windows, Linux, and WSL
+* text=auto eol=lf
+
+# Code files
+*.py text diff=python eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.ps1 text eol=crlf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+
+# Binary / Document files
+*.docx binary
+*.doc binary
+*.pdf binary
+*.xlsx binary
+*.xls binary
+*.pptx binary
+*.ppt binary
+*.zip binary
+*.tar.gz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
