@@ -92,10 +92,7 @@ def test_adaptive_slicer_tier_b_stratified_split():
 
 def test_adaptive_slicer_tier_c_blinded_multi_seed():
     """Verify Tier C (N >= 30) splits 70/30 deterministically according to seed."""
-    items = [
-        EvalItem(id=f"item_{i:02d}", input_prompt=f"Prompt {i}")
-        for i in range(40)
-    ]
+    items = [EvalItem(id=f"item_{i:02d}", input_prompt=f"Prompt {i}") for i in range(40)]
     slicer = AdaptiveDataSlicer()
     sliced1 = slicer.slice(items, split_ratio=0.7, seed=42)
     sliced2 = slicer.slice(items, split_ratio=0.7, seed=42)
@@ -139,6 +136,7 @@ def test_dynamic_perturbation_engine_preserves_regulatory_invariant():
         perturbed = engine.perturb_prompt(prompt, seed=s)
         # Verify length extracted is strictly > 15m to preserve regulatory invariant
         import re
+
         m = re.search(r"(\d+)\s*m", perturbed)
         assert m is not None
         val = int(m.group(1))

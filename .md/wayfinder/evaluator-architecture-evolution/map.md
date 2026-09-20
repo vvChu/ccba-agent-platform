@@ -23,7 +23,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 
 ## 📝 2. Ghi Chú (Notes)
 - **Kỹ năng liên quan:** `/ccba-grilling`, `/ccba-implement`, `/ccba-tdd`, `/ccba-review-proposal`.
-- **Hiến pháp đối chiếu:** [ADR-0030](../../docs/adr/0030-progressive-disclosure-and-instruction-budget-optimization.md), [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0052](../../docs/adr/0052-boost-deep-reasoning-plateau-escalation.md), [ADR-0057](../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md), [ADR-0058](../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [ADR-0059](../../docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md).
+- **Hiến pháp đối chiếu:** [ADR-0030](../../../docs/adr/0030-progressive-disclosure-and-instruction-budget-optimization.md), [ADR-0045](../../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0052](../../../docs/adr/0052-boost-deep-reasoning-protocol-and-escalation-gate.md), [ADR-0057](../../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md), [ADR-0058](../../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [ADR-0059](../../../docs/adr/0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md).
 - **Nguyên tắc hành động:** *"Plan, don't do"* — mỗi ticket chỉ tập trung vào một quyết định kiến trúc hoặc một khối nghiệm thu khép kín. Không mở rộng phạm vi ra ngoài điểm đích.
 
 ---

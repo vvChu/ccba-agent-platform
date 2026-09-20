@@ -100,7 +100,7 @@ Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thi
 
 | Package | Mô tả Chức năng | Lệnh Cài Đặt (Editable Mode) |
 | :--- | :--- | :--- |
-| **`ccba-harness`** | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), Evals Engine đa tiêu chí (Code & LLM Rubrics), Singleton Process Locks, giám sát tệp tin và tiến trình an toàn. | `pip install -e "packages/ccba-harness"` |
+| **`ccba-harness`** | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), Multi-Disciplinary Evals Engine v2/v3 (Legal Verbatim Provenance ADR 0059, PCCC Parametric, Uniclass 200 BIM, Three-Tier Slicing & Docker Ephemeral Sandbox), Singleton Process Locks, giám sát tệp tin và tiến trình an toàn. | `pip install -e "packages/ccba-harness"` |
 | **`ccba-ai`** | AI Gateway SDK (v1.2.0) — Kết nối 50+ models qua 1 endpoint, hỗ trợ gemini-embedding-2 drop_params, streaming ceiling 16k tokens, auto-timeout scaling, bóc tách ChatResult.thinking và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
 | **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
 | **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx, .doc), điền form biểu mẫu tự động bảo toàn bố cục (`WordFormFiller` & `FormLayoutGuard`), sinh slide PowerPoint tự động chuẩn Swiss Minimalist & Storytelling With You (`DeckBuilder`), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
