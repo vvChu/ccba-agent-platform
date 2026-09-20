@@ -26,6 +26,7 @@ from .scorers import (
     RegexScorer,
     get_coding_scorers,
     get_lean_structural_scorers,
+    get_legal_scorers,
     get_orchestration_scorers,
 )
 
@@ -483,20 +484,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
     """Provides domain-aligned default scorers based on target skill."""
     sname = skill_name.lower()
     if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl"]):
-        return [
-            RegexScorer(
-                name="legal_grounding",
-                pattern=r"(Nghị định|Thông tư|Luật|Quy chuẩn|Điều|Khoản|VBHN|pháp lý)",
-                weight=0.5,
-            ),
-            RegexScorer(
-                name="anti_trap_hard_floor",
-                pattern=r"(105/2025|06:2022|212/2026|135/2025|thay thế|hết hiệu lực|bãi bỏ|Sở Xây dựng|Cơ quan chuyên môn)",
-                weight=0.3,
-                is_critical=True,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
-        ]
+        return get_legal_scorers()
 
     if any(k in sname for k in ["pccc", "qc", "audit", "thamdinh"]):
         return [

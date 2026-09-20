@@ -8,6 +8,8 @@ SHA-256 signatures without requiring external repository cloning during CI runs.
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -16,6 +18,53 @@ from typing import Any
 DEFAULT_FLAT_INDEX_PATH = (
     Path(__file__).resolve().parent / "datasets" / "legal_clauses_flat.json"
 )
+
+
+def normalize_clause_variants(ref: str) -> list[str]:
+    """Generates normalized lookup variants for a statutory clause reference."""
+    raw = ref.strip().lower()
+    variants = [raw]
+
+    # Remove Vietnamese accents for slug matching
+    slug = "".join(
+        c for c in unicodedata.normalize("NFD", raw) if unicodedata.category(c) != "Mn"
+    )
+    slug = slug.replace("đ", "d")
+    variants.append(slug)
+
+    # Hyphenated slug
+    hyphen_slug = re.sub(r"[\s\.\,\_\:]+", "-", slug).strip("-")
+    variants.append(hyphen_slug)
+
+    # Clause like 'Điều 15' -> 'dieu-15', 'điều 15'
+    m_dieu = re.search(r"(?:điều|dieu)\s+(\d+)", raw)
+    if m_dieu:
+        d_num = m_dieu.group(1)
+        variants.extend([f"dieu-{d_num}", f"điều {d_num}"])
+        m_khoan = re.search(r"(?:khoản|khoan)\s+(\d+)", raw)
+        if m_khoan:
+            k_num = m_khoan.group(1)
+            variants.append(f"dieu-{d_num}-khoan-{k_num}")
+
+    # Section like 'Mục 1.4' -> '1.4', 'muc-1-4'
+    m_muc = re.search(r"(?:mục|muc)\s+([0-9a-z\.\-]+)", raw)
+    if m_muc:
+        sec = m_muc.group(1)
+        variants.extend([sec, sec.replace(".", "-"), f"muc-{sec.replace('.', '-')}"])
+
+    # Table like 'Bảng A.1' -> 'bang-a.1', 'bang-a-1', 'a.1'
+    m_bang = re.search(r"(?:bảng|bang)\s+([0-9a-z\.\-]+)", raw)
+    if m_bang:
+        tab = m_bang.group(1)
+        variants.extend([f"bang-{tab}", f"bang-{tab.replace('.', '-')}", tab])
+
+    # Annex like 'Phụ lục A' -> 'phu-luc-a', 'phụ lục a'
+    m_pl = re.search(r"(?:phụ\s+lục|phu\s+luc)\s+([0-9a-z\.\-]+)", raw)
+    if m_pl:
+        pl = m_pl.group(1)
+        variants.extend([f"phu-luc-{pl}", f"phụ lục {pl}"])
+
+    return list(dict.fromkeys(variants))
 
 
 @dataclass(frozen=True)
@@ -33,8 +82,9 @@ class StatutoryDocument:
 
     def has_clause(self, clause_ref: str) -> bool:
         """Checks whether a clause reference or key exists in this document."""
-        ref_l = clause_ref.strip().lower()
-        return ref_l in self.statutory_keys or any(ref_l == k for k in self.statutory_keys)
+        variants = normalize_clause_variants(clause_ref)
+        key_set = set(self.statutory_keys)
+        return any(v in key_set for v in variants)
 
 
 @dataclass(frozen=True)
@@ -55,7 +105,12 @@ class LegalFlatIndex:
 
         norm_l = norm.lower()
         for num, doc in self.documents.items():
-            if norm_l == num.lower() or norm_l in doc.title.lower() or doc.id.lower() == norm_l:
+            if (
+                norm_l == num.lower()
+                or norm_l in doc.title.lower()
+                or doc.id.lower() == norm_l
+                or norm_l in num.lower()
+            ):
                 return doc
         return None
 
@@ -67,7 +122,7 @@ class LegalFlatIndex:
         """
         ref_l = doc_ref.strip().lower()
         for old_doc, new_doc in self.replaces_map.items():
-            if old_doc.lower() in ref_l:
+            if old_doc.lower() in ref_l or (len(ref_l) >= 7 and ref_l in old_doc.lower()):
                 return True, new_doc
         return False, None
 
