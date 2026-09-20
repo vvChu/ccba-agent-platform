@@ -704,3 +704,103 @@ def get_coding_scorers() -> list[BaseScorer]:
         EngineeringDisciplineScorer(weight=0.35),
         LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.25),
     ]
+
+
+class AntiDebrisScorer(BaseScorer):
+    """Validates that skill outputs do not contain dead wood, junk HTML comments, or template debris."""
+
+    def __init__(
+        self,
+        name: str = "anti_debris",
+        weight: float = 0.3,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.debris_patterns: list[tuple[re.Pattern[str], str]] = [
+            (
+                re.compile(r"<!--\s*Ratchet Optimization Refinement", re.IGNORECASE),
+                "Ratchet optimization junk comment",
+            ),
+            (
+                re.compile(r"<!--\s*(TODO|FIXME|TEMP|TEST)\b", re.IGNORECASE),
+                "Temporary debris comment",
+            ),
+            (
+                re.compile(r"(/ck:[a-zA-Z0-9_\-]+|/ultrathink\b|<tasks\b|TaskCreate|AskUserQuestion)"),
+                "ClaudeKit dead wood remnant",
+            ),
+        ]
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        detected: list[str] = []
+        for pattern, label in self.debris_patterns:
+            if pattern.search(out_str):
+                detected.append(label)
+
+        clean = len(detected) == 0
+        score = 1.0 if clean else 0.0
+        is_crit_fail = self.is_critical and not clean
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output={"clean": clean, "detected": detected},
+            reasoning=(
+                "Output is clean of debris and junk comments"
+                if clean
+                else f"Debris detected in output: {', '.join(detected)}"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class LeanStructuralScorer(BaseScorer):
+    """Composite lean structural scorer evaluating progressive disclosure, length bounds, and anti-debris."""
+
+    def __init__(
+        self,
+        name: str = "lean_structural",
+        weight: float = 1.0,
+        is_critical: bool = False,
+        min_length: int = 20,
+        max_length: int = 25000,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.progressive_scorer = ProgressiveDisclosureScorer(weight=0.4)
+        self.length_scorer = LengthBoundsScorer(
+            name="depth", min_length=min_length, max_length=max_length, weight=0.3
+        )
+        self.debris_scorer = AntiDebrisScorer(weight=0.3)
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        res_prog = await self.progressive_scorer.score(output, item)
+        res_len = await self.length_scorer.score(output, item)
+        res_deb = await self.debris_scorer.score(output, item)
+
+        combined_score = (res_prog.score * 0.4) + (res_len.score * 0.3) + (res_deb.score * 0.3)
+        is_crit = self.is_critical and (
+            res_prog.is_critical_fail or res_len.is_critical_fail or res_deb.is_critical_fail
+        )
+
+        reasons = [res_prog.reasoning, res_len.reasoning, res_deb.reasoning]
+        return ScoreResult(
+            scorer_name=self.name,
+            score=combined_score,
+            raw_output={
+                "progressive": res_prog.score,
+                "length": res_len.score,
+                "anti_debris": res_deb.score,
+            },
+            reasoning="; ".join(reasons),
+            is_critical_fail=is_crit,
+        )
+
+
+def get_lean_structural_scorers() -> list[BaseScorer]:
+    """Returns the standard safe lean structural scorer suite for generic and non-coding skills."""
+    return [
+        ProgressiveDisclosureScorer(weight=0.4),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.3),
+        AntiDebrisScorer(weight=0.3),
+    ]

@@ -233,10 +233,14 @@ def test_get_default_domain_scorers_bim():
 
 
 def test_get_default_domain_scorers_fallback():
-    """Test fallback scorers for generic skill."""
+    """Test fallback scorers for generic skill uses safe LeanStructuralScorer suite."""
     scorers = get_default_domain_scorers("generic-skill")
-    assert len(scorers) == 1
-    assert isinstance(scorers[0], RegexScorer)
+    names = [s.name for s in scorers]
+    assert "progressive_disclosure_links" in names
+    assert "depth" in names
+    assert "anti_debris" in names
+    assert not any(s.is_critical for s in scorers)  # ADR-0058 Hard Completion Lock is NOT forced on fallback
+    assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
 
 
 # =========================================================================
@@ -1347,5 +1351,72 @@ def test_mutate_skill_alias_and_halt_when_exhausted(tmp_path: Path):
     # Also verify top-level function works identically
     m1_func = mutate_skill(initial_text, 1, skill_name="ccba-codebase-design")
     assert m1_func == m1
+
+
+@pytest.mark.asyncio
+async def test_anti_debris_scorer_evaluation():
+    """Test AntiDebrisScorer detects junk comments and dead wood."""
+    from ccba_harness.evals.scorers import AntiDebrisScorer
+
+    scorer = AntiDebrisScorer()
+    item = EvalItem(id="t1", input_prompt="Tạo tài liệu")
+
+    # Clean content passes
+    res_clean = await scorer.score("Nội dung sạch [Hướng dẫn](guide.md)", item)
+    assert res_clean.score == 1.0
+    assert not res_clean.is_critical_fail
+
+    # Ratchet junk comment fails
+    res_junk = await scorer.score(
+        "Nội dung <!-- Ratchet Optimization Refinement 1 -->\nChi tiết", item
+    )
+    assert res_junk.score == 0.0
+
+    # Dead wood remnant fails
+    res_dead_wood = await scorer.score("Thực hiện /ultrathink để phân tích", item)
+    assert res_dead_wood.score == 0.0
+
+
+@pytest.mark.asyncio
+async def test_lean_structural_scorer_evaluation():
+    """Test LeanStructuralScorer composite evaluation."""
+    from ccba_harness.evals.scorers import LeanStructuralScorer
+
+    scorer = LeanStructuralScorer()
+    item = EvalItem(id="t1", input_prompt="Hướng dẫn")
+
+    # Clean content with link and proper length passes fully
+    res_full = await scorer.score(
+        "Đây là quy trình chuẩn mực: tham chiếu [Tài liệu hướng dẫn](references/guide.md).",
+        item,
+    )
+    assert res_full.score == 1.0
+
+    # Clean content without link has partial score (0.6)
+    res_partial = await scorer.score(
+        "Đây là quy trình chuẩn mực không có liên kết nhưng đủ độ dài.", item
+    )
+    assert res_partial.score == pytest.approx(0.6)
+
+    # Content with junk has reduced score
+    res_debris = await scorer.score(
+        "Quy trình <!-- Ratchet Optimization Refinement 1 --> [Link](ref.md)", item
+    )
+    assert res_debris.score == pytest.approx(0.7)
+
+
+def test_fallback_skill_tuning_without_hard_lock(tmp_path: Path):
+    """Test generic fallback skill runs auto-tuning without requiring Hard Completion Lock."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: ccba-pptx-deck\n---\n# Slide Deck Generation\nTham chiếu [Mẫu Slide](references/template.md).\n",
+        encoding="utf-8",
+    )
+    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-pptx-deck", max_iterations=1)
+    tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
+    scorers = tuner.scorers
+    assert not any(s.is_critical for s in scorers)
+    rep = tuner.evaluate_content(skill_file.read_text(encoding="utf-8"))
+    assert rep.overall_score >= 70.0
 
 
