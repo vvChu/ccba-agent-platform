@@ -140,6 +140,56 @@ def split_pdf_pages(
     return out_path
 
 
+def extract_pdf_pages_stream(
+    source: str | Path | bytes,
+    pages: str | Sequence[int],
+) -> bytes:
+    """Extract specified pages from a PDF source directly into bytes in memory.
+
+    Args:
+        source: Path, string path, or raw bytes of the input PDF.
+        pages: Either a string specification ('1-3,5') or a sequence of 0-indexed page indices.
+
+    Returns:
+        New PDF document as raw bytes.
+
+    Raises:
+        FileNotFoundError: If source is a non-existent file path.
+        ValueError: If no valid pages are found.
+    """
+    import io
+
+    if isinstance(source, (bytes, bytearray)):
+        reader = PdfReader(io.BytesIO(source))
+    else:
+        src_path = Path(source)
+        if not src_path.exists():
+            raise FileNotFoundError(f"Input PDF not found: {src_path}")
+        reader = PdfReader(str(src_path))
+
+    if isinstance(pages, str):
+        page_indices = parse_pages(pages)
+    else:
+        page_indices = list(pages)
+
+    writer = PdfWriter()
+    total_pages = len(reader.pages)
+    valid_count = 0
+    for p in page_indices:
+        if 0 <= p < total_pages:
+            writer.add_page(reader.pages[p])
+            valid_count += 1
+        else:
+            logger.warning("Page index %d out of bounds (0-%d), skipping", p, total_pages - 1)
+
+    if valid_count == 0:
+        raise ValueError("No valid pages found to extract from source")
+
+    out_io = io.BytesIO()
+    writer.write(out_io)
+    return out_io.getvalue()
+
+
 def extract_text_from_pdf(input_pdf: str | Path, output: str | Path | None = None) -> str:
     """Extract text content from all pages of a PDF file.
 

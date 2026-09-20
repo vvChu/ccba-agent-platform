@@ -75,3 +75,7 @@ class FormFillConfig(BaseModel):
         gt=0,
         description="Maximum execution timeout in seconds.",
     )
+    read_only_template: bool = Field(
+        default=True,
+        description="Enforce immutable template protection preventing output from overwriting template.",
+    )

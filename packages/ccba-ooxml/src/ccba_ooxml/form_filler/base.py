@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from .exceptions import TemplateProtectionError
 from .models import FormFillConfig, TableRule
 
 
@@ -16,6 +18,34 @@ class BaseFormFillerEngine(ABC):
     def __init__(self, template_path: Path, config: FormFillConfig | None = None) -> None:
         self.template_path = Path(template_path).resolve()
         self.config = config or FormFillConfig()
+
+    def validate_output_path(self, output_path: Path | str | None) -> None:
+        """Ensures output path does not overwrite immutable template file.
+
+        Raises:
+            TemplateProtectionError: If output_path resolves to the same file as template_path.
+        """
+        if output_path is None or not getattr(self.config, "read_only_template", True):
+            return
+        out = Path(output_path).resolve()
+        tpl = self.template_path.resolve()
+        if str(out).lower() == str(tpl).lower():
+            raise TemplateProtectionError(
+                f"Immutable Template Guard: output_path '{out}' cannot overwrite template_path '{self.template_path}'."
+            )
+        if out.exists() and tpl.exists():
+            try:
+                if os.path.samefile(out, tpl):
+                    raise TemplateProtectionError(
+                        f"Immutable Template Guard: output_path '{out}' cannot overwrite template_path '{self.template_path}'."
+                    )
+            except (ValueError, OSError):
+                pass
+
+    @abstractmethod
+    def auto_map_fields(self, data: dict[str, Any]) -> None:
+        """Automatically maps and fills form fields, checkboxes, and tables from data."""
+        ...
 
     @abstractmethod
     def apply_paragraphs(self, mapping: dict[str, str]) -> None:

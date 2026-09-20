@@ -1,0 +1,90 @@
+# ==============================================================================
+# CCBA Personal Profile Template (Canonical Schema)
+# ==============================================================================
+# Sổ tay thực thể cá nhân chuẩn hóa dùng cho các thủ tục hành chính,
+# hồ sơ xin thị thực (Visa), trích lục lý lịch, hợp đồng và biểu mẫu văn phòng.
+#
+# LƯU Ý BẢO MẬT PII:
+# - KHÔNG commit file chứa thông tin thực tế vào git repository công khai.
+# - Lưu trữ file thực tế theo cơ chế nạp tăng tiến (Cascading Vault Resolver):
+#   1. Cục bộ Spoke: ./.md/knowledge/personal_profile.yaml (ghi đè theo dự án)
+#   2. Central User Vault: ~/.ccba/personal_profile.yaml (hoặc $CCBA_PERSONAL_VAULT)
+# ==============================================================================
+
+thong_tin_co_ban:
+  ho_va_ten: "NGUYỄN VĂN A"
+  ho_va_ten_khai_sinh: "NGUYỄN VĂN A"
+  ten_thuong_dung: ""
+  gioi_tinh: "Nam"                  # "Nam" hoặc "Nữ"
+  ngay_sinh: "15/08/1990"          # DD/MM/YYYY
+  noi_sinh: "Hà Nội"
+  que_quan: "Hà Nội"
+  dan_toc: "Kinh"
+  ton_giao: "Không"
+  quoc_tich: "Việt Nam"
+  tinh_trang_hon_nhan: "Đã kết hôn" # "Đã kết hôn", "Độc thân", "Ly hôn"
+
+dinh_danh_phap_ly:
+  so_cmnd_cccd: "001090001234"
+  ngay_cap_cccd: "10/05/2021"
+  noi_cap_cccd: "Cục Cảnh sát QLHC về TTXH"
+  ho_chieu_so: "C1234567"
+  ngay_cap_ho_chieu: "15/06/2022"
+  noi_cap_ho_chieu: "Cục Quản lý xuất nhập cảnh"
+  ngay_het_han_ho_chieu: "15/06/2032"
+
+lien_lac_va_cu_tru:
+  so_dien_thoai: "0901234567"
+  email: "nguyenvana@example.com"
+  dia_chi_thuong_tru: "Số 123 Đường ABC, Phường XYZ, Quận Ba Đình, Hà Nội"
+  noi_o_hien_nay: "Số 123 Đường ABC, Phường XYZ, Quận Ba Đình, Hà Nội"
+
+nghe_nghiep_va_hoc_van:
+  nghe_nghiep: "Kỹ sư Xây dựng"
+  chuc_vu: "Trưởng phòng Kỹ thuật"
+  noi_lam_viec: "Công ty Cổ phần Tư vấn CCBA"
+  dia_chi_co_quan: "Tầng 5, Tòa nhà CCBA, Hà Nội"
+  dien_thoai_co_quan: "0243123456"
+  trinh_do_hoc_van: "Đại học"
+  chuyen_mon: "Kỹ thuật Xây dựng Dân dụng & Công nghiệp"
+
+thong_tin_chuyen_di:
+  muc_dich_chuyen_di: "Du lịch tự túc"
+  thoi_gian_luu_tru: "14 ngày"
+  ngay_nhap_canh_du_kien: "10/10/2026"
+  ngay_xuat_canh_du_kien: "24/10/2026"
+  nguoi_bao_lanh: ""
+  dia_chi_nguoi_bao_lanh: ""
+
+# Danh sách lặp điền vào bảng động (Dynamic Data Tables)
+thanh_vien_gia_dinh:
+  - stt: 1
+    quan_he: "Bố"
+    ho_va_ten: "NGUYỄN VĂN B"
+    ngay_sinh: "01/01/1955"
+    nghe_nghiep: "Hưu trí"
+    dia_chi: "Hà Nội"
+  - stt: 2
+    quan_he: "Mẹ"
+    ho_va_ten: "TRẦN THỊ C"
+    ngay_sinh: "02/02/1958"
+    nghe_nghiep: "Hưu trí"
+    dia_chi: "Hà Nội"
+  - stt: 3
+    quan_he: "Vợ"
+    ho_va_ten: "LÊ THỊ D"
+    ngay_sinh: "03/03/1992"
+    nghe_nghiep: "Giáo viên"
+    dia_chi: "Hà Nội"
+
+qua_trinh_cong_tac:
+  - stt: 1
+    thoi_gian: "09/2012 - 12/2018"
+    don_vi: "Công ty TNHH Xây dựng Đông Á"
+    chuc_vu: "Kỹ sư giám sát"
+    dia_chi: "Hà Nội"
+  - stt: 2
+    thoi_gian: "01/2019 - Hiện nay"
+    don_vi: "Công ty Cổ phần Tư vấn CCBA"
+    chuc_vu: "Trưởng phòng Kỹ thuật"
+    dia_chi: "Hà Nội"
