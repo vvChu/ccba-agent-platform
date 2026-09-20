@@ -16,11 +16,16 @@ from .exceptions import (
     FormFillerError,
     LayoutGuardError,
     TemplateNotFoundError,
+    TemplateProtectionError,
 )
 from .fallback_engine import SofficeFallbackEngine
 from .layout_guard import FormLayoutGuard
 from .models import FormFillConfig, TableRowData, TableRule
 from .winword_engine import WinwordEngine
+
+
+def _is_windows() -> bool:
+    return os.name == "nt"
 
 
 class WordFormFiller:
@@ -53,7 +58,7 @@ class WordFormFiller:
             return SofficeFallbackEngine(self.template_path, self.config)
 
         # "auto" detection
-        if os.name == "nt":
+        if _is_windows():
             try:
                 return WinwordEngine(self.template_path, self.config)
             except Exception:
@@ -61,6 +66,14 @@ class WordFormFiller:
                 return SofficeFallbackEngine(self.template_path, self.config)
 
         return SofficeFallbackEngine(self.template_path, self.config)
+
+    def auto_map_fields(self, data: dict[str, Any]) -> WordFormFiller:
+        """Automatically maps and fills form fields, checkboxes, and tables from data.
+
+        Returns self for fluent method chaining.
+        """
+        self._engine.auto_map_fields(data)
+        return self
 
     def apply_paragraphs(self, mapping: dict[str, str]) -> WordFormFiller:
         """Substitutes placeholder mappings in body paragraphs and table cells.
@@ -117,6 +130,7 @@ __all__ = [
     "TableRowData",
     "TableRule",
     "TemplateNotFoundError",
+    "TemplateProtectionError",
     "WinwordEngine",
     "WordFormFiller",
 ]

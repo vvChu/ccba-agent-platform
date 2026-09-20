@@ -8,6 +8,7 @@ import pytest
 from pypdf import PdfReader
 
 from ccba_pdf_prep.manipulation import (
+    extract_pdf_pages_stream,
     extract_text_from_pdf,
     merge_pdfs,
     parse_pages,
@@ -127,3 +128,39 @@ def test_extract_text_missing_file(tmp_path: Path):
     """Test extract_text_from_pdf raises FileNotFoundError on missing file."""
     with pytest.raises(FileNotFoundError):
         extract_text_from_pdf(tmp_path / "not_found.pdf")
+
+
+def test_extract_pdf_pages_stream_from_path(tmp_path: Path):
+    """Test extracting pages into stream from file path."""
+    import io
+
+    src_pdf = _make_dummy_pdf(tmp_path / "stream_src.pdf", num_pages=5)
+    pdf_bytes = extract_pdf_pages_stream(src_pdf, "1,3,5")
+    assert isinstance(pdf_bytes, bytes)
+    assert len(pdf_bytes) > 0
+
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    assert len(reader.pages) == 3
+
+
+def test_extract_pdf_pages_stream_from_bytes(tmp_path: Path):
+    """Test extracting pages into stream from in-memory raw bytes."""
+    import io
+
+    src_pdf = _make_dummy_pdf(tmp_path / "bytes_src.pdf", num_pages=4)
+    raw = src_pdf.read_bytes()
+    pdf_bytes = extract_pdf_pages_stream(raw, [0, 2])
+    assert isinstance(pdf_bytes, bytes)
+
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    assert len(reader.pages) == 2
+
+
+def test_extract_pdf_pages_stream_invalid(tmp_path: Path):
+    """Test extract_pdf_pages_stream failure on missing file or invalid pages."""
+    with pytest.raises(FileNotFoundError):
+        extract_pdf_pages_stream(tmp_path / "non_existent.pdf", "1-2")
+
+    src_pdf = _make_dummy_pdf(tmp_path / "src.pdf", num_pages=2)
+    with pytest.raises(ValueError):
+        extract_pdf_pages_stream(src_pdf, [10, 11])

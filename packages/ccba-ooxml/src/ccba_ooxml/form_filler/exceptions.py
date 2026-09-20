@@ -18,3 +18,7 @@ class TemplateNotFoundError(FormFillerError):
 
 class LayoutGuardError(FormFillerError):
     """Raised when applying layout guard rules fails."""
+
+
+class TemplateProtectionError(FormFillerError):
+    """Raised when an attempt is made to overwrite or modify an immutable template document."""
