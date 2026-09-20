@@ -175,6 +175,7 @@ class NightlyTunerDaemon:
         model: str = "",
         target_skills: list[str] | None = None,
         alert_emitter: Callable[[str], bool] | None = None,
+        target_ref: str = "origin/main",
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low = max_iterations_low
@@ -185,6 +186,17 @@ class NightlyTunerDaemon:
         self.model = model
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
+        # Determine valid target_ref (fallback to main if origin/main cannot be verified)
+        if target_ref == "origin/main":
+            check_ref = subprocess.run(
+                ["git", "rev-parse", "--verify", "origin/main"],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
+            )
+            if check_ref.returncode != 0:
+                target_ref = "main"
+        self.target_ref = target_ref
         self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
 
@@ -578,10 +590,10 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
             deleted_count = 0
             cutoff_date = (datetime.datetime.now() - datetime.timedelta(days=days)).date()
 
-            # Determine base ref for comparison (prefer origin/main, fallback to main)
-            base_ref = "origin/main"
+            # Determine base ref for comparison (prefer self.target_ref, fallback to main)
+            base_ref = self.target_ref
             check_ref = subprocess.run(
-                ["git", "rev-parse", "--verify", "origin/main"],
+                ["git", "rev-parse", "--verify", self.target_ref],
                 cwd=str(self.root),
                 capture_output=True,
                 check=False,
@@ -673,6 +685,21 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
 
         # 2. Push & Create PR
         try:
+            diff_check = subprocess.run(
+                ["git", "diff", "-w", "--exit-code", f"{self.target_ref}...HEAD"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if diff_check.returncode == 0:
+                logger.warning("⚠️ Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR.")
+                return None
+            if diff_check.returncode not in (0, 1):
+                logger.warning(
+                    f"⚠️ Lỗi kiểm tra git diff đối chiếu {self.target_ref} (mã {diff_check.returncode}): {diff_check.stderr.strip()}"
+                )
+
             subprocess.run(
                 ["git", "push", "-u", "origin", branch_name],
                 cwd=str(self.root),
