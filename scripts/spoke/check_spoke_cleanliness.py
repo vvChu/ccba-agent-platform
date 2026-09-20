@@ -208,7 +208,15 @@ def scan_spoke_cleanliness(
                         f
                         for f in d.rglob("*.py")
                         if not any(
-                            p in (".venv", "venv", "__pycache__", "tests", "archive", "legacy_scripts")
+                            p
+                            in (
+                                ".venv",
+                                "venv",
+                                "__pycache__",
+                                "tests",
+                                "archive",
+                                "legacy_scripts",
+                            )
                             for p in f.parts
                         )
                     ]

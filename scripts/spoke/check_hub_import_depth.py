@@ -82,9 +82,7 @@ def _read_hub_path_from_dir(directory: Path) -> Path | None:
         if rel.is_file():
             try:
                 spoke_dir = (
-                    rel.parent.parent
-                    if rel.parent.name in (".agents", ".md")
-                    else rel.parent
+                    rel.parent.parent if rel.parent.name in (".agents", ".md") else rel.parent
                 )
                 content = rel.read_text(encoding="utf-8")
                 # Try parsing as YAML for multi-OS or complex structures

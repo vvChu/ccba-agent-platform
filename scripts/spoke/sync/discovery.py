@@ -152,6 +152,8 @@ class HubDiscoverer:
                         yaml.dump(self.context, f, allow_unicode=True)
                     print(f"[Sync] Auto-saved discovered Hub path: {save_path}")
                 except Exception as e:
-                    print(f"[Sync] Warning: Could not save Hub path to context: {e}", file=sys.stderr)
+                    print(
+                        f"[Sync] Warning: Could not save Hub path to context: {e}", file=sys.stderr
+                    )
 
         return hub_root

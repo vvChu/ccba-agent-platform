@@ -46,12 +46,16 @@ def test_hub_discoverer_env_variable_priority(tmp_path: Path):
     # Hub 1 (from workspace_context.yaml)
     hub1 = tmp_path / "hub_from_yaml"
     (hub1 / ".agents" / "skills" / "platform-loader").mkdir(parents=True)
-    (hub1 / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text("skills: []\n", encoding="utf-8")
+    (hub1 / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text(
+        "skills: []\n", encoding="utf-8"
+    )
 
     # Hub 2 (from CCBA_HUB_PATH)
     hub2 = tmp_path / "hub_from_env"
     (hub2 / ".agents" / "skills" / "platform-loader").mkdir(parents=True)
-    (hub2 / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text("skills: []\n", encoding="utf-8")
+    (hub2 / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text(
+        "skills: []\n", encoding="utf-8"
+    )
 
     context = {"hub_path": str(hub1)}
     discoverer = HubDiscoverer(spoke_root, context=context)
@@ -68,7 +72,9 @@ def test_hub_discoverer_multi_os_dict(tmp_path: Path):
 
     hub_linux = tmp_path / "hub_linux"
     (hub_linux / ".agents" / "skills" / "platform-loader").mkdir(parents=True)
-    (hub_linux / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text("skills: []\n", encoding="utf-8")
+    (hub_linux / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text(
+        "skills: []\n", encoding="utf-8"
+    )
 
     context = {
         "hub_path": {
@@ -91,7 +97,9 @@ def test_hub_discoverer_preserves_existing_config_without_overwriting(tmp_path: 
 
     valid_hub = tmp_path / "relative_hub"
     (valid_hub / ".agents" / "skills" / "platform-loader").mkdir(parents=True)
-    (valid_hub / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text("skills: []\n", encoding="utf-8")
+    (valid_hub / ".agents" / "skills" / "platform-loader" / "catalog.yaml").write_text(
+        "skills: []\n", encoding="utf-8"
+    )
 
     context = {"hub_path": "../relative_hub"}
     discoverer = HubDiscoverer(spoke_root, context=context, context_file=ctx_file)
@@ -110,7 +118,9 @@ def test_check_hub_import_depth_cross_platform(tmp_path: Path):
     md_dir.mkdir(parents=True)
 
     ctx_file = md_dir / "workspace_context.yaml"
-    ctx_file.write_text('hub_path: "D:\\\\GitHubProjects\\\\ccba-agent-platform"\n', encoding="utf-8")
+    ctx_file.write_text(
+        'hub_path: "D:\\\\GitHubProjects\\\\ccba-agent-platform"\n', encoding="utf-8"
+    )
 
     with patch("os.name", "posix"):
         pkg_dir = _read_hub_path_from_dir(spoke_root)

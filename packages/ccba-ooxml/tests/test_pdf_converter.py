@@ -32,8 +32,10 @@ def test_convert_to_pdf_via_soffice(tmp_path: Path):
         (tmp_path / f"{stem}.pdf").write_bytes(b"%PDF-1.5 sample")
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="OK", stderr="")
 
-    with patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"), \
-         patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice):
+    with (
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
+        patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
+    ):
         res = convert_to_pdf(in_docx, out_pdf, prefer_engine="soffice")
         assert res == out_pdf.resolve()
         assert out_pdf.exists()
@@ -50,8 +52,10 @@ def test_docx_to_pdf_alias_and_default_output(tmp_path: Path):
         expected_pdf.write_bytes(b"%PDF-1.4 contract")
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
-    with patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"), \
-         patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice):
+    with (
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
+        patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
+    ):
         res = docx_to_pdf(in_docx)
         assert res == expected_pdf.resolve()
         assert expected_pdf.exists()
@@ -62,8 +66,10 @@ def test_convert_to_pdf_missing_soffice_raises_engine_error(tmp_path: Path):
     in_docx = tmp_path / "test.docx"
     in_docx.write_text("text", encoding="utf-8")
 
-    with patch("ccba_ooxml.converter.find_soffice_bin", return_value=None), \
-         patch("os.name", "posix"):
+    with (
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value=None),
+        patch("os.name", "posix"),
+    ):
         with pytest.raises(EngineUnavailableError) as exc_info:
             convert_to_pdf(in_docx, prefer_engine="soffice")
         assert "sudo apt-get install -y libreoffice-writer" in str(exc_info.value)
@@ -78,8 +84,10 @@ def test_convert_to_pdf_soffice_failure_raises_form_filler_error(tmp_path: Path)
         args=["soffice"], returncode=1, stdout="", stderr="Corrupted file format"
     )
 
-    with patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"), \
-         patch("ccba_ooxml.converter.run_soffice", return_value=bad_proc):
+    with (
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
+        patch("ccba_ooxml.converter.run_soffice", return_value=bad_proc),
+    ):
         with pytest.raises(FormFillerError) as exc_info:
             convert_to_pdf(in_docx, prefer_engine="soffice")
         assert "exited with error code 1" in str(exc_info.value)
@@ -95,10 +103,14 @@ def test_convert_to_pdf_auto_winword_fallback_to_soffice(tmp_path: Path):
         expected_pdf.write_bytes(b"%PDF-1.5 fallback")
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
-    with patch("sys.platform", "win32"), \
-         patch("ccba_ooxml.converter._convert_via_winword", side_effect=Exception("Word COM crashed")), \
-         patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"), \
-         patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice):
+    with (
+        patch("sys.platform", "win32"),
+        patch(
+            "ccba_ooxml.converter._convert_via_winword", side_effect=Exception("Word COM crashed")
+        ),
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
+        patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
+    ):
         res = convert_to_pdf(in_docx, prefer_engine="auto")
         assert res == expected_pdf.resolve()
         assert expected_pdf.exists()
