@@ -1,7 +1,7 @@
 # 🗺️ BẢN ĐỒ ĐỊNH HƯỚNG: TIẾN HÓA BỘ ĐÁNH GIÁ ĐA BỘ MÔN (WAYFINDER MAP)
 > **Mã định danh:** `WAYFINDER-EVALUATOR-EVOLUTION`  
 > **Trạng thái:** ĐANG HOẠCH ĐỊNH & THỰC THI (ACTIVE)  
-> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.1.0` (Cập nhật sau Double-Pass Adversarial Audit)  
+> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.2.0` (Cập nhật sau hoàn tất TICKET-004)  
 > **Phạm vi áp dụng:** Toàn bộ 73 Agent Skills & Nightly Auto-Tuner Daemon
 
 ---
@@ -36,6 +36,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 *   `[TICKET-003A] [Biên Soạn Chỉ Mục Phẳng Legal Clauses Flat Index (~259 KB)]`: Đã biên dịch toàn diện 55 văn bản pháp luật, 19,724 statutory keys, và 24 replaces mappings vào `packages/ccba-harness/src/ccba_harness/evals/datasets/legal_clauses_flat.json`, tích hợp engine `load_legal_flat_index()` và CLI `compile_legal_flat_index.py`, bảo đảm 100% CI Parity. 265 passed, 6 skipped tests.
 *   `[TICKET-003B] [Legal Verbatim Provenance Scorer Chuẩn ADR-0059]`: Đã triển khai `LegalVerbatimProvenanceScorer` và `get_legal_scorers()` (`legal_verbatim_provenance` [0.5, critical] + `progressive_disclosure_links` [0.2] + `anti_debris` [0.15] + `depth` [0.15]), cưỡng chế rào chắn Điểm Liệt (Anti-Trap Hard Floor & Zero-Hallucination Hard Floor: trích dẫn văn bản hết hiệu lực không có cảnh báo/thay thế, hoặc bịa đặt văn bản/điều luật $\rightarrow$ điểm 0.0 critical fail), kiểm chứng SHA-256 provenance đối soát trực tiếp từ `legal_clauses_flat.json` (Commit [`1cab6743`](https://github.com/vvChu/ccba-agent-platform/commit/1cab6743)). 272 passed, 6 skipped tests.
 *   `[TICKET-002A] [Mở Rộng Archetype Routing Cho 73 Skills]`: Đã triển khai Taxonomy phân loại hoàn chỉnh cho 8 domain archetypes (Coding, Legal, Tech QC, BIM, Academic, Office, Visual, Orchestration) trong `tuner.py` và `daemon.py`. Xây dựng các scorers chuyên biệt `OfficeStandardScorer` (NĐ 30/2020) và `DiagramSyntaxScorer` (Mermaid/Excalidraw). Số lượng kỹ năng rơi vào bộ chấm fallback giảm từ 46 xuống 0/73 skills (đạt 100% độ phủ chuyên môn). Vượt qua 100% CI Gates (`verify-patch --preset code/eval/skill`) (Commit [`3a3d4025`](https://github.com/vvChu/ccba-agent-platform/commit/3a3d4025)).
+*   `[TICKET-004] [PCCC & Technical QC Parametric Condition Scorer]`: Đã mở rộng `eval_pccc_audit.json` lên 12 test cases thực tế theo QCVN 06:2022/BXD, QCVN 02:2020/BXD và TCVN 3890:2023 với schema `parametric_rules`. Triển khai `PcccParametricScorer` với kiến trúc 2 tầng (Gate 1 Deterministic Schema Filter < 1ms, 0 token, Dual Critical Hard Floor cho kết luận đảo ngược an toàn & bẫy quan niệm kỹ thuật sai lệch; Gate 2 Advisory Escalation LLM Judge với cơ chế graceful fallback). Tích hợp vào `get_pccc_scorers()` và `tuner.py` cho `TECH_QC_ARCHETYPE_KEYWORDS`. Đạt 282 passed tests và 100% PASS trên tất cả presets (`code/eval/skill`).
 
 ---
 
@@ -46,15 +47,6 @@ Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay the
 ---
 
 ### 🟡 GIAI ĐOẠN 2 (P1: Nâng Cấp Kỹ Thuật Xây Dựng, PCCC & BIM)
-
-*   **`[TICKET-004]` [PCCC & Technical QC Parametric Condition Scorer] [Task - Co-Design Blueprint]**
-    - **Mục tiêu:** 
-      1. Triển khai `PcccParametricScorer` theo Kiến Trúc Phân Tầng Tách Rời (Decoupled Pluggable Two-Tier):
-         - **Gate 1 (Deterministic Schema Filter - Primary Default):** Phân tích cú pháp tham số kỹ thuật, đối soát trực tiếp `parametric_rules` trong metadata (Expected Verdict, Required Parameters, Forbidden Anti-Trap Parameters, Legal Basis QCVN 06:2022/BXD) với cơ chế Điểm Liệt Kép (Critical Hard Floor), chạy < 1ms, 0 token LLM, 100% CI Parity (ADR-0058).
-         - **Gate 2 (Escalation LLM Judge - Advisory Plugin):** Mặc định `escalation_judge=None`. Được cung cấp dưới dạng plugin phúc thẩm độc lập phục vụ kiểm toán ngoại tuyến hoặc chẩn đoán suy luận sâu khi kỹ năng bị kẹt bế tắc ([ADR-0052](../../docs/adr/0052-boost-deep-reasoning-plateau-escalation.md)), không chạy trong vòng lặp Nightly Ratchet tự động nhằm tránh nghẽn token.
-      2. Mở rộng `eval_pccc_audit.json` từ 6 lên 12 test cases tham số kỹ thuật thực tế theo QCVN 06:2022/BXD (Bậc chịu lửa, Hút khói hành lang, Khoảng cách thoát nạn, Bơm PCCC, Khoang ngăn cháy). Bảo toàn nguyên vẹn tính đối kháng của `eval_pccc_audit_redteam.json`.
-    - **Trạng thái:** 🟢 READY (Đã chốt thiết kế qua Grilling & Adversarial Audit)
-    - **Assignee:** Unassigned
 
 *   **`[TICKET-005]` [Uniclass 200 & ISO 12006-2 Taxonomy Validator Cho BIM] [Research - AFK]**
     - **Mục tiêu:** Khảo sát, thu thập nguồn dữ liệu chính thức và biên soạn bảng mã phân loại Uniclass 200 (Co, En, SL, EF, Ss, Pr, PM) vào `uniclass_tables_flat.json`, tích hợp vào `BimClassificationScorer` kiểm tra tính khớp nối thực thể và mã gán.

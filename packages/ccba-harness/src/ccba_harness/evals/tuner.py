@@ -29,6 +29,7 @@ from .scorers import (
     get_legal_scorers,
     get_office_scorers,
     get_orchestration_scorers,
+    get_pccc_scorers,
     get_visual_diagram_scorers,
 )
 
@@ -589,20 +590,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
         return get_legal_scorers()
 
     if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
-        return [
-            RegexScorer(
-                name="technical_qc",
-                pattern=r"(QCVN|PCCC|bậc chịu lửa|khói|thẩm tra|tiêu chuẩn|thiết kế)",
-                weight=0.5,
-            ),
-            RegexScorer(
-                name="pccc_anti_trap_hard_floor",
-                pattern=r"(Bậc I|hút khói|15m|20m|25m|R45|R90|R120|N1|N2|N3|van ngăn cháy|chống cháy lan|không đạt|từ chối|vi phạm)",
-                weight=0.3,
-                is_critical=True,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
-        ]
+        return get_pccc_scorers()
 
     if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
         return [
