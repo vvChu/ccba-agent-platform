@@ -366,6 +366,38 @@ def build_parser() -> argparse.ArgumentParser:
     )
     table_parser.add_argument("--json", action="store_true", help="Output table in raw JSON format")
 
+    # 13. Compile Registry Subcommand (Sharded Metadata Compiler)
+    compile_reg_parser = subparsers.add_parser(
+        "compile-registry",
+        help="Compile sharded metadata.yaml bundles into consolidated legal_registry.yaml",
+    )
+    compile_reg_parser.add_argument(
+        "--docs-dir",
+        "-d",
+        type=Path,
+        default=None,
+        help="Directory containing legal document bundles with metadata.yaml (default: legal_docs or .md/legal_docs)",
+    )
+    compile_reg_parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=None,
+        help="Path to output legal_registry.yaml (default: .md/data/legal_registry.yaml or legal_registry.yaml)",
+    )
+    compile_reg_parser.add_argument(
+        "--base",
+        "-b",
+        type=Path,
+        default=None,
+        help="Base registry to preserve non-document sections (metadata, monitoring, seminars)",
+    )
+    compile_reg_parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Dry-run verification mode. Exit 0 if registry matches shards, exit 1 if out of sync",
+    )
+
     return parser
 
 
@@ -990,6 +1022,73 @@ def handle_get_table(args: argparse.Namespace) -> int:
     return 0
 
 
+def handle_compile_registry(args: argparse.Namespace) -> int:
+    """Handle compile-registry subcommand."""
+    from ccba_legal.compiler import compile_sharded_registry
+
+    docs_dir = args.docs_dir
+    if not docs_dir:
+        cand1 = Path("legal_docs")
+        cand2 = Path(".md/legal_docs")
+        if cand1.is_dir():
+            docs_dir = cand1
+        elif cand2.is_dir():
+            docs_dir = cand2
+        else:
+            docs_dir = cand1
+
+    output_path = args.output
+    if not output_path:
+        cand_out1 = Path(".md/data/legal_registry.yaml")
+        cand_out2 = Path("legal_registry.yaml")
+        if cand_out1.parent.is_dir():
+            output_path = cand_out1
+        else:
+            output_path = cand_out2
+
+    print("=================================================================")
+    print("         CCBA LEGAL INTELLIGENCE (SHARDED REGISTRY COMPILER)      ")
+    print("=================================================================")
+    print(f"📂 Docs Directory: {docs_dir}")
+    print(f"📄 Target Registry: {output_path}")
+    print(f"🔍 Mode: {'Check Synchronization (--check)' if args.check else 'Compile & Write'}")
+
+    compiled, is_in_sync, issues = compile_sharded_registry(
+        docs_dir=docs_dir,
+        output_file=output_path,
+        base_registry_path=args.base,
+        check_only=args.check,
+    )
+
+    doc_count = sum(
+        len(v)
+        for k, v in compiled.items()
+        if k in {"laws", "decrees", "circulars", "decisions", "resolutions", "standards"}
+    )
+    print(f"\n✅ Total compiled legal documents: {doc_count}")
+    for cat in ["laws", "decrees", "circulars", "decisions", "resolutions", "standards"]:
+        count = len(compiled.get(cat, []))
+        if count > 0:
+            print(f"   - {cat}: {count}")
+
+    if args.check:
+        if is_in_sync:
+            print(
+                "\n🛡️ [CHECK PASS] legal_registry.yaml is 100% in sync with sharded metadata.yaml bundles."
+            )
+            return 0
+        else:
+            print(
+                "\n❌ [CHECK FAILED] Discrepancies detected between registry and sharded bundles:"
+            )
+            for iss in issues:
+                print(f"   - {iss}")
+            return 1
+
+    print(f"\n🎉 Successfully compiled registry to: {output_path}")
+    return 0
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -1030,6 +1129,8 @@ def main() -> None:
         sys.exit(handle_get_clause(args))
     elif args.command == "get-table":
         sys.exit(handle_get_table(args))
+    elif args.command == "compile-registry":
+        sys.exit(handle_compile_registry(args))
     else:
         parser.print_help()
         sys.exit(1)
