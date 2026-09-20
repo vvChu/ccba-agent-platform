@@ -37,6 +37,7 @@ from .economy import (
     scan_all_skills_economy,
 )
 from .evals import (
+    AntiDebrisScorer,
     AutoItemScorer,
     BaseScorer,
     EvalItem,
@@ -47,6 +48,7 @@ from .evals import (
     GitRatchetOptimizer,
     GitRatchetTuner,
     JsonSchemaScorer,
+    LeanStructuralScorer,
     LengthBoundsScorer,
     LLMRubricScorer,
     RatchetConfig,
@@ -55,6 +57,7 @@ from .evals import (
     RegexScorer,
     ScoreResult,
     get_default_domain_scorers,
+    get_lean_structural_scorers,
     load_eval_dataset,
     preserve_yaml_frontmatter,
     run_eval_pipeline,
@@ -170,6 +173,9 @@ __all__ = [
     "LengthBoundsScorer",
     "JsonSchemaScorer",
     "LLMRubricScorer",
+    "AntiDebrisScorer",
+    "LeanStructuralScorer",
+    "get_lean_structural_scorers",
     "EvalRunner",
     "AutoItemScorer",
     "load_eval_dataset",

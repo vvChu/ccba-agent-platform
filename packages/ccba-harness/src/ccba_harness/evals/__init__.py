@@ -23,15 +23,18 @@ from .miner import (
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipeline
 from .scorers import (
+    AntiDebrisScorer,
     BaseScorer,
     EngineeringDisciplineScorer,
     ExactMatchScorer,
     HardCompletionLockScorer,
     JsonSchemaScorer,
+    LeanStructuralScorer,
     LengthBoundsScorer,
     LLMRubricScorer,
     RegexScorer,
     get_coding_scorers,
+    get_lean_structural_scorers,
 )
 from .tuner import (
     CODING_ARCHETYPE_KEYWORDS,
@@ -62,7 +65,10 @@ __all__ = [
     "LLMRubricScorer",
     "HardCompletionLockScorer",
     "EngineeringDisciplineScorer",
+    "AntiDebrisScorer",
+    "LeanStructuralScorer",
     "get_coding_scorers",
+    "get_lean_structural_scorers",
     "EvalRunner",
     "AutoItemScorer",
     "load_eval_dataset",
