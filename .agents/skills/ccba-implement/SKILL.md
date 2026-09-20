@@ -82,3 +82,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/prototype_logic.md` | Hướng dẫn tạo prototype logic dòng lệnh và thuật toán kiểm chứng nhanh |
 | `references/prototype_ui.md` | Hướng dẫn tạo prototype giao diện người dùng tương tác trực quan |
 
+## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)
+* **Vòng 1 (Code-First Research):** Luôn đọc implementation thực tế và kiểm tra data flow end-to-end trước khi sửa đổi. Không suy đoán hành vi từ tên hàm hay docstring.
+* **Vòng 2 (Self-Adversarial Review):** Tự đặt câu hỏi: *Đề xuất này có thể SAI ở đâu?* Kiểm chứng tối thiểu 3 giả định cốt lõi bằng dữ liệu và kiểm thử thực tế trước khi bàn giao.
+* **Bảo tồn Invariants:** Không bao giờ xóa hoặc nới lỏng (weaken) các bài test hiện có để làm cho bài test vượt qua.
