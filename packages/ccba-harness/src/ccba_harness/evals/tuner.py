@@ -22,16 +22,6 @@ from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
     BaseScorer,
-    LengthBoundsScorer,
-    RegexScorer,
-    get_bim_classification_scorers,
-    get_coding_scorers,
-    get_lean_structural_scorers,
-    get_legal_scorers,
-    get_office_scorers,
-    get_orchestration_scorers,
-    get_pccc_scorers,
-    get_visual_diagram_scorers,
 )
 from .slicing import (
     AdaptiveDataSlicer,
@@ -261,6 +251,7 @@ class RatchetConfig:
     split_ratio: float = 0.7
     slicing_seed: int = 42
     enable_perturbation: bool = True
+    per_skill_mutation_budget: int | None = 250_000
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -284,6 +275,15 @@ class RatchetConfig:
                     self.token_budget = 5_000_000
             else:
                 self.token_budget = 5_000_000
+        if self.per_skill_mutation_budget == 250_000:
+            env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
+            if env_ps_budget:
+                try:
+                    self.per_skill_mutation_budget = int(
+                        env_ps_budget.replace(",", "").replace("_", "")
+                    )
+                except ValueError:
+                    pass
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -372,8 +372,22 @@ class RatchetConfig:
         llm_model = model_match.group(1).strip() if model_match else ""
 
         # Parse Token Budget
-        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*(\d+)", content, re.IGNORECASE)
-        token_budget = int(budget_match.group(1)) if budget_match else 5_000_000
+        budget_match = re.search(
+            r"-\s*\*\*Token\s*Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE
+        )
+        token_budget = (
+            int(re.sub(r"[,_]", "", budget_match.group(1))) if budget_match else 5_000_000
+        )
+
+        # Parse Per Skill Mutation Budget
+        per_skill_match = re.search(
+            r"-\s*\*\*Per\s*Skill\s*(?:Mutation\s*)?Budget\*\*:\s*([0-9,_]+)",
+            content,
+            re.IGNORECASE,
+        )
+        per_skill_mutation_budget = (
+            int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else 250_000
+        )
 
         return cls(
             target_file=target_path,
@@ -384,6 +398,7 @@ class RatchetConfig:
             use_real_llm=use_real_llm,
             llm_model=llm_model,
             token_budget=token_budget,
+            per_skill_mutation_budget=per_skill_mutation_budget,
         )
 
 
@@ -490,225 +505,27 @@ def preserve_yaml_frontmatter(original_content: str, edited_content: str) -> str
     return f"{frontmatter_block}{nl}"
 
 
-CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "code",
-    "bug",
-    "diagnos",
-    "implement",
-    "tdd",
-    "design",
-    "refactor",
-    "engineering",
-    "sdk",
-    "circuit-breaker",
-    "logger",
-    "stability-guard",
-    "rag",
-    "pipeline-patterns",
-    "maskara",
-    "testing",
-    "modeling",
-    "feature",
-    "iac",
-    "to-spec",
-    "docs",
+# ---------------------------------------------------------------------------
+# Domain Archetypes (Re-exported from SSOT archetypes.py)
+# ---------------------------------------------------------------------------
+from .archetypes import (  # noqa: F401
+    ACADEMIC_ARCHETYPE_KEYWORDS,
+    ADR_ARCHETYPE_KEYWORDS,
+    BIM_ARCHETYPE_KEYWORDS,
+    CODING_ARCHETYPE_KEYWORDS,
+    DOMAIN_ARCHETYPES,
+    GRILLING_ARCHETYPE_KEYWORDS,
+    LEGAL_ARCHETYPE_KEYWORDS,
+    OFFICE_ARCHETYPE_KEYWORDS,
+    ORCHESTRATION_ARCHETYPE_KEYWORDS,
+    RISK_ARCHETYPE_KEYWORDS,
+    TECH_QC_ARCHETYPE_KEYWORDS,
+    VISUAL_ARCHETYPE_KEYWORDS,
+    DomainArchetype,
+    get_default_domain_scorers,
+    resolve_domain_archetype,
+    resolve_domain_dataset,
 )
-
-LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "legal",
-    "luat",
-    "tvpl",
-    "vbpl",
-    "advisor",
-    "checklist",
-    "hsht",
-    "phap-ly",
-    "ingest",
-)
-
-TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "pccc",
-    "qc",
-    "audit",
-    "thamdinh",
-    "preprocessor",
-)
-
-OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "van-phong",
-    "docx",
-    "pptx",
-    "presentation",
-    "markdown-document",
-    "seminar",
-    "typography",
-    "copywriting",
-    "vietbai",
-    "truyenthong",
-)
-
-VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "mermaid",
-    "excalidraw",
-    "diagram",
-)
-
-ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "teamwork",
-    "orchestrat",
-    "platform",
-    "handoff",
-    "issue-tree",
-    "ask",
-    "xia",
-    "wayfinder",
-    "spoke",
-    "upstream",
-    "hub",
-    "pr",
-    "guardrails",
-    "proposal",
-    "adr",
-    "grill",
-    "stresstest",
-    "stress-test",
-    "retrospective",
-    "knowledge",
-    "research",
-    "notebooklm",
-    "youtube",
-    "skill-repair",
-    "build-skill",
-    "setup-skills",
-    "eval-gate",
-    "rd",
-    "graduate",
-)
-
-BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "bim",
-    "uniclass",
-    "classification",
-    "rase",
-    "governance",
-    "risk",
-    "conflict",
-    "ifc",
-)
-
-ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "academic",
-    "khoahoc",
-)
-
-
-def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
-    """Provides domain-aligned default scorers based on target skill."""
-    sname = skill_name.lower()
-    if any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
-        return get_legal_scorers()
-
-    if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
-        return get_pccc_scorers()
-
-    if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
-        return [
-            RegexScorer(
-                name="academic_structure",
-                pattern=r"(IMRAD|CARS|Move 1|Move 2|Move 3|Materials|Methods|Results|Discussion|References|Style|Yale|APA)",
-                weight=0.5,
-            ),
-            RegexScorer(
-                name="academic_rigor_hard_floor",
-                pattern=r"(Swales|Kallestinova|APA|BibTeX|limitations|giới hạn|bị động|passive|De-nominalization)",
-                weight=0.3,
-                is_critical=True,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
-        ]
-
-    if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
-        return get_office_scorers()
-
-    if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
-        return get_visual_diagram_scorers()
-
-    if any(k in sname for k in ["risk", "conflict"]) or "bigbim-risk" in sname:
-        return [
-            RegexScorer(
-                name="risk_conflict_audit",
-                pattern=r"(mâu thuẫn thông tin|information conflict|V2 - Coordination|khoảng cách|clearance|không gian bảo trì|không gian thao tác|va chạm)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="risk_anti_trap_hard_floor",
-                pattern=r"(900mm|150mm|Level 2|BBP|Unique ID|tủ điện|khoảng hở|hành lang|van ngăn cháy|Chủ trì)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="risk_mitigation_guard",
-                pattern=r"(proposed_mitigation|INF-CON-|giải pháp|dịch chuyển|cao độ|IFC4X3|IfcDistributionFlowElement|ccba-issue-tree|Why-Tree|How-Tree)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in ["bim", "uniclass", "classification", "ifc", "rase", "governance"]):
-        return get_bim_classification_scorers()
-
-    if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
-        return get_orchestration_scorers()
-
-    if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
-        return [
-            RegexScorer(
-                name="grilling_one_by_one_and_recommendation",
-                pattern=r"(câu hỏi|one-by-one|đề xuất|phương án|recommended|stress-test|chất vấn|front-end|picker)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="grilling_anti_trap_hard_floor",
-                pattern=r"(từng câu|đề xuất trước|facts vs decisions|tra cứu|tự tra cứu|codebase|NOTES\.md|ccba-issue-tree|vi phạm|bất biến)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="grilling_escalation_guard",
-                pattern=r"(ccba-issue-tree|How-Tree|Why-Tree|Solution How-Tree|ma trận|Giá trị|Độ phức tạp|Rủi ro|KISS|Frontier|prerequisites)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in ["adr", "architecture-decision"]):
-        return [
-            RegexScorer(
-                name="adr_scaffolding_and_lifecycle",
-                pattern=r"(ADR|HUB-ADR|SPOKE-ADR|ACCEPTED|SUPERSEDED|DEPRECATED|docs/adr/|TRACEABILITY_MATRIX|matrix)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="adr_anti_trap_hard_floor",
-                pattern=r"(superseded_by|supersedes|validate_adr_traceability|CI Parity|Context|Decision|Consequences|Invariants)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="adr_governance_guard",
-                pattern=r"(Hub vs Spoke|SPOKE-ADR|HUB-ADR|Living Traceability Matrix|README\.md|YAML Frontmatter|parity)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
-
-    if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
-        return get_coding_scorers()
-
-    if any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
-        return get_orchestration_scorers()
-
-    return get_lean_structural_scorers()
 
 
 class GitRatchetOptimizer:
@@ -1242,10 +1059,87 @@ class GitRatchetOptimizer:
                     parts.append("Phân loại theo bảng Uniclass 200 và ISO 12006-2.")
                 else:
                     return "Xử lý phân loại chung không theo chuẩn Uniclass..."
-            elif "nghị định 30" in prompt_l:
-                parts.append(
-                    "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+            elif any(
+                k in prompt_l
+                for k in [
+                    "nghị định 30",
+                    "nđ 30",
+                    "thể thức",
+                    "soạn thảo",
+                    "times new roman",
+                    "bố cục",
+                    "tiêu đề",
+                    "quốc hiệu",
+                    "nơi nhận",
+                    "phông chữ",
+                    "docx",
+                    "pptx",
+                    "slide",
+                    "trình bày",
+                    "typography",
+                    "heading",
+                    "bảng",
+                    "mục lục",
+                    "canh lề",
+                    "seminar",
+                    "agenda",
+                ]
+            ):
+                has_office = any(
+                    k in content.lower()
+                    for k in [
+                        "nghị định 30",
+                        "thể thức",
+                        "typography",
+                        "docx",
+                        "pptx",
+                        "văn bản",
+                        "phông chữ",
+                    ]
                 )
+                if has_office or "ccba" in content.lower():
+                    parts.append(
+                        "Thực thi quy chuẩn soạn thảo văn bản và định dạng văn phòng:\n"
+                        "- Căn cứ Nghị định 30/2020/NĐ-CP (NĐ 30/2020) về công tác văn thư: Tuân thủ nghiêm ngặt thể thức soạn thảo văn bản hành chính, bố cục tiêu đề, Quốc hiệu, Tiêu ngữ và Nơi nhận.\n"
+                        "- Tiêu chuẩn Typography & Phông chữ: Sử dụng phông chữ Times New Roman chuẩn Unicode, canh lề theo quy định, phân cấp heading rõ ràng, tự động sinh mục lục tài liệu và định dạng bảng phụ lục.\n"
+                        "- Trình chiếu PowerPoint (.pptx): Bố cục dàn trang slide theo phong cách tối giản, trình bày súc tích và tương phản trực quan.\n"
+                        "Chi tiết tham chiếu xem tại [references/](references/)."
+                    )
+                else:
+                    parts.append("Soạn thảo văn bản thông thường...")
+            elif any(
+                k in prompt_l
+                for k in [
+                    "mermaid",
+                    "excalidraw",
+                    "diagram",
+                    "sơ đồ",
+                    "flowchart",
+                    "sequence",
+                ]
+            ):
+                has_diagram = (
+                    "mermaid" in content.lower()
+                    or "excalidraw" in content.lower()
+                    or "diagram" in content.lower()
+                    or "sơ đồ" in content.lower()
+                )
+                if has_diagram or "ccba" in content.lower():
+                    parts.append(
+                        "Khởi tạo sơ đồ trực quan kiến trúc (Visual Diagram):\n"
+                        "```mermaid\n"
+                        "flowchart TD\n"
+                        "    A[Khởi đầu] --> B[Xử lý trung tâm]\n"
+                        "    B --> C{Kiểm tra điều kiện}\n"
+                        "    C -->|Hợp lệ| D[Hoàn tất]\n"
+                        "    C -->|Không hợp lệ| E[Xử lý lỗi]\n"
+                        "    style A fill:#f9f9f9,stroke:#333\n"
+                        "    style D fill:#e6ffe6,stroke:#333\n"
+                        "```\n"
+                        "Sơ đồ tuân thủ quy chuẩn Academic Grayscale và định danh theo [references/](references/)."
+                    )
+                else:
+                    parts.append("Tạo biểu đồ thông thường...")
             elif "qcvn 06" in prompt_l or "pccc" in prompt_l:
                 parts.append(
                     "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
@@ -1886,6 +1780,8 @@ class GitRatchetOptimizer:
             except Exception as e:
                 logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
 
+        baseline_tokens = self.token_tracker.total_tokens
+
         # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
         if baseline_score >= 100.0:
             effective_max_iter = 1
@@ -1975,6 +1871,20 @@ class GitRatchetOptimizer:
                         )
                         break
 
+                    # Per-skill mutation budget check
+                    mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+                    if (
+                        self.config.per_skill_mutation_budget is not None
+                        and mutation_tokens >= self.config.per_skill_mutation_budget
+                        and kept_count == 0
+                        and i >= 2
+                    ):
+                        logger.info(
+                            f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
+                        )
+                        halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+                        break
+
                     # Adaptive Early Stopping (Grilling Frontier 2)
                     if effective_patience > 0 and stagnant_trials >= effective_patience:
                         logger.info(
@@ -2049,19 +1959,25 @@ class GitRatchetOptimizer:
 
         final_holdout_score: float | None = None
         if self.holdout_dataset:
-            try:
-                try:
-                    holdout_final_rep = self.evaluate_content(
-                        best_content, dataset=self.holdout_dataset
-                    )
-                except TypeError:
-                    holdout_final_rep = self.evaluate_content(best_content)
-                final_holdout_score = holdout_final_rep.overall_score
+            if kept_count == 0 and initial_holdout_score is not None:
+                final_holdout_score = initial_holdout_score
                 logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
                 )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            else:
+                try:
+                    try:
+                        holdout_final_rep = self.evaluate_content(
+                            best_content, dataset=self.holdout_dataset
+                        )
+                    except TypeError:
+                        holdout_final_rep = self.evaluate_content(best_content)
+                    final_holdout_score = holdout_final_rep.overall_score
+                    logger.info(
+                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                    )
+                except Exception as e:
+                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
 
         slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
         return RatchetReport(

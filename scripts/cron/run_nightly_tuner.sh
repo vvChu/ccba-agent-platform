@@ -19,7 +19,7 @@ DRY_RUN_FLAG=""
 MAX_ITER="30"
 TARGET_REF="${TARGET_REF:-origin/main}"
 USE_REAL_LLM_FLAG=""
-TOKEN_BUDGET_FLAG=""
+TOKEN_BUDGET_FLAG="--token-budget 6500000"
 MODEL_FLAG=""
 SKILL_FLAG=""
 
@@ -38,7 +38,7 @@ Tùy chọn:
   --max-iter N         Số vòng lặp tối đa cho mỗi kỹ năng (mặc định: 30)
   --ref TARGET_REF     Git target ref để so khớp baseline (mặc định: origin/main)
   --use-real-llm       Kích hoạt chạy với mô hình LLM thực tế qua AI Gateway LiteLLM
-  --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 5,000,000)
+  --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 6,500,000)
   --model MODEL_NAME   Tên mô hình LLM (mặc định: qwen-local-primary)
   --skill SKILL_NAME   Chỉ định tối ưu một kỹ năng cụ thể (bỏ qua queue toàn bộ catalog)
 
@@ -136,10 +136,14 @@ cleanup_worktree() {
     echo "🧹 Đang thu hồi tài nguyên Ephemeral Worktree..."
     cd "$PROJECT_ROOT"
     if [ -d "$WORKTREE_DIR" ]; then
-        # Copy newly generated reports back to main project root if any
+        # Copy newly generated reports and plateau briefs back to main project root
         if [ -d "$WORKTREE_DIR/.md/knowledge/reports" ]; then
             mkdir -p "$PROJECT_ROOT/.md/knowledge/reports"
-            cp -n "$WORKTREE_DIR/.md/knowledge/reports"/nightly_tuner_report_*.md "$PROJECT_ROOT/.md/knowledge/reports/" 2>/dev/null || true
+            find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
+        fi
+        if [ -d "$WORKTREE_DIR/.md/knowledge/escalations" ]; then
+            mkdir -p "$PROJECT_ROOT/.md/knowledge/escalations"
+            find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
         fi
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
     fi
@@ -196,6 +200,16 @@ git worktree add --detach "$WORKTREE_DIR" "$TARGET_REF"
 # Replicate .env if exists
 if [ -f "$PROJECT_ROOT/.env" ] && [ ! -f "$WORKTREE_DIR/.env" ]; then
     cp -n "$PROJECT_ROOT/.env" "$WORKTREE_DIR/.env" 2>/dev/null || true
+fi
+
+# Replicate historical reports and plateau briefs to ephemeral worktree to eliminate Blind Worktree vulnerability
+if [ -d "$PROJECT_ROOT/.md/knowledge/reports" ]; then
+    mkdir -p "$WORKTREE_DIR/.md/knowledge/reports"
+    find "$PROJECT_ROOT/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/reports/" \; 2>/dev/null || true
+fi
+if [ -d "$PROJECT_ROOT/.md/knowledge/escalations" ]; then
+    mkdir -p "$WORKTREE_DIR/.md/knowledge/escalations"
+    find "$PROJECT_ROOT/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/escalations/" \; 2>/dev/null || true
 fi
 
 # Activate python virtualenv if exists

@@ -173,7 +173,7 @@ class AIClient:
             except ValueError:
                 self.timeout = 90.0
 
-        self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
+        self._mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
         if mock_provider is not None:
             self.mock_provider = mock_provider
         elif (
@@ -187,7 +187,7 @@ class AIClient:
         self.fallback_router = fallback_router or TieredFallbackRouter(
             mock_provider=self.mock_provider,
             enable_fallback=enable_failover,
-            mock_mode=self.mock_mode,
+            mock_mode=self._mock_mode,
         )
 
         sanitized_base_url = _sanitize_gateway_url(base_url)
@@ -205,6 +205,16 @@ class AIClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.circuit_breaker = circuit_breaker if circuit_breaker is not None else CircuitBreaker()
+
+    @property
+    def mock_mode(self) -> bool:
+        return self._mock_mode
+
+    @mock_mode.setter
+    def mock_mode(self, value: bool) -> None:
+        self._mock_mode = bool(value)
+        if hasattr(self, "fallback_router") and self.fallback_router is not None:
+            self.fallback_router.mock_mode = bool(value)
 
     def chat(
         self,
@@ -749,7 +759,7 @@ class AsyncAIClient:
             except ValueError:
                 self.timeout = 90.0
 
-        self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
+        self._mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
         if mock_provider is not None:
             self.mock_provider = mock_provider
         elif (
@@ -763,7 +773,7 @@ class AsyncAIClient:
         self.fallback_router = fallback_router or TieredFallbackRouter(
             mock_provider=self.mock_provider,
             enable_fallback=enable_failover,
-            mock_mode=self.mock_mode,
+            mock_mode=self._mock_mode,
         )
 
         sanitized_base_url = _sanitize_gateway_url(base_url)
@@ -781,6 +791,16 @@ class AsyncAIClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.circuit_breaker = circuit_breaker if circuit_breaker is not None else CircuitBreaker()
+
+    @property
+    def mock_mode(self) -> bool:
+        return self._mock_mode
+
+    @mock_mode.setter
+    def mock_mode(self, value: bool) -> None:
+        self._mock_mode = bool(value)
+        if hasattr(self, "fallback_router") and self.fallback_router is not None:
+            self.fallback_router.mock_mode = bool(value)
 
     async def chat(
         self,

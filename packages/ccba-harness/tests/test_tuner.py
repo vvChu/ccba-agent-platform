@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -1566,27 +1567,29 @@ def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
     daemon = NightlyTunerDaemon(root=tmp_path)
     assert daemon._resolve_dataset_file("ccba-ai-gateway-sdk") == "eval_codebase_engineering.json"
     assert daemon._resolve_dataset_file("ccba-completion-checklist") == "eval_legal_intel.json"
-    assert daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_pccc_audit.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-xu-ly-van-phong") == "eval_copywriting.json"
-    assert daemon._resolve_dataset_file("ccba-mermaid-diagram") == "eval_agent_orchestration.json"
+    assert daemon._resolve_dataset_file("ccba-mermaid-diagram") == "eval_visual_diagram.json"
+    assert daemon._resolve_dataset_file("ccba-excalidraw-diagram") == "eval_visual_diagram.json"
     assert daemon._resolve_dataset_file("ccba-pptx") == "eval_copywriting.json"
+    assert daemon._resolve_dataset_file("ccba-design") != "eval_codebase_engineering.json"
 
 
 def test_get_default_domain_scorers_expanded_archetypes():
     """Verify get_default_domain_scorers routes expanded archetypes to specialized suites."""
     from ccba_harness.evals.tuner import get_default_domain_scorers
 
-    # Coding / SDK
+    # Coding / SDK & Preprocessor
     coding_names = [s.name for s in get_default_domain_scorers("ccba-ai-gateway-sdk")]
     assert "hard_completion_lock" in coding_names
+    pdf_prep_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
+    assert "hard_completion_lock" in pdf_prep_names
 
     # Legal / Checklist
     legal_names = [s.name for s in get_default_domain_scorers("ccba-completion-checklist")]
     assert "legal_verbatim_provenance" in legal_names
-
-    # Technical QC / Preprocessor
-    tech_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
-    assert "pccc_parametric" in tech_names or "technical_qc" in tech_names
 
     # Office / Docx
     office_names = [s.name for s in get_default_domain_scorers("ccba-xu-ly-van-phong")]
@@ -1803,3 +1806,221 @@ def test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer():
         res = asyncio.run(scorer.score(sample_output, item))
         assert isinstance(res.score, float)
         assert res.scorer_name == "pccc_parametric"
+
+
+def test_tuner_per_skill_mutation_budget_halt(tmp_path: Path):
+    """Verify tuner halts with PER_SKILL_TOKEN_BUDGET_EXCEEDED after >= 2 trials when kept_count == 0."""
+    from types import SimpleNamespace
+
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-mutation-budget-skill\n---\n# Skill Content",
+        encoding="utf-8",
+    )
+
+    mock_client = MagicMock()
+    # Baseline: 2 default items * 50_000 tokens = 100_000 baseline tokens
+    # Iteration 1: 2 items * 50_000 tokens = 100_000 mutation tokens
+    # Iteration 2: 2 items * 50_000 tokens = 200_000 cumulative mutation tokens
+    mock_res = SimpleNamespace(
+        content="Normal output",
+        usage=SimpleNamespace(prompt_tokens=25_000, completion_tokens=25_000, total_tokens=50_000),
+    )
+    mock_client.chat_with_metadata.return_value = mock_res
+
+    # Even with very small per_skill_mutation_budget (e.g. 50_000),
+    # the >= 2 trials invariant guarantees trial 1 completes without early halting.
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_iterations=5,
+        token_budget=10_000_000,
+        per_skill_mutation_budget=50_000,
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        client=mock_client,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    report = opt.run()
+    assert report.halt_reason == "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+    assert report.total_iterations == 2
+    assert report.kept_commits == 0
+
+
+def test_tuner_skip_holdout_re_evaluation_when_unchanged(tmp_path: Path):
+    """Verify final holdout re-evaluation is skipped when kept_count == 0."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        "---\nname: test-holdout-skill\n---\n# Skill Content",
+        encoding="utf-8",
+    )
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        max_iterations=1,
+    )
+
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+    opt.holdout_dataset = [EvalItem(id="holdout_1", input_prompt="Holdout prompt")]
+
+    # Force propose_mutation to produce content that does not improve score
+    opt.propose_mutation = lambda content, i: content + "\n<!-- non-improving mutation -->"
+
+    eval_calls: list[tuple[str, Any]] = []
+    orig_eval = opt.evaluate_content
+
+    def spy_eval(content: str, dataset: Any = None) -> Any:
+        eval_calls.append((content, dataset))
+        rep = orig_eval(content, dataset=dataset)
+        if "<!-- non-improving mutation -->" in content:
+            rep.overall_score = 10.0  # lower than baseline -> REVERT
+        return rep
+
+    opt.evaluate_content = spy_eval  # type: ignore[assignment]
+
+    report = opt.run()
+
+    # Kept count is 0 (unchanged) -> holdout re-evaluation skipped
+    assert report.kept_commits == 0
+    assert report.holdout_score is not None
+    assert report.holdout_initial_score is not None
+    assert report.holdout_score == report.holdout_initial_score
+
+    # Only 1 call with holdout_dataset (initial baseline holdout), no re-eval at the end
+    holdout_calls = [c for c in eval_calls if c[1] is opt.holdout_dataset]
+    assert len(holdout_calls) == 1
+
+
+def test_ratchet_config_explicit_per_skill_budget_not_overwritten_by_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Verify that explicit per_skill_mutation_budget is not clobbered by env variable."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text("# Test", encoding="utf-8")
+    monkeypatch.setenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET", "400_000")
+
+    # 1. Explicit value preserved
+    cfg_explicit = RatchetConfig(target_file=skill_file, per_skill_mutation_budget=75_000)
+    assert cfg_explicit.per_skill_mutation_budget == 75_000
+
+    # 2. Explicit None (disabled budget) preserved
+    cfg_none = RatchetConfig(target_file=skill_file, per_skill_mutation_budget=None)
+    assert cfg_none.per_skill_mutation_budget is None
+
+    # 3. Default (250_000) takes env override
+    cfg_default = RatchetConfig(target_file=skill_file)
+    assert cfg_default.per_skill_mutation_budget == 400_000
+
+
+def test_from_markdown_program_formatted_budgets(tmp_path: Path):
+    """Verify from_markdown_program parses numbers containing commas and underscores."""
+    prog_file = tmp_path / "program.md"
+    prog_file.write_text(
+        """# Tuner Program
+- **Target File**: SKILL.md
+- **Dataset**: eval_test.json
+- **Token Budget**: 6,500,000
+- **Per Skill Mutation Budget**: 250_000
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "SKILL.md").write_text("# Skill", encoding="utf-8")
+    (tmp_path / "eval_test.json").write_text("[]", encoding="utf-8")
+
+    cfg = RatchetConfig.from_markdown_program(prog_file, root=tmp_path)
+    assert cfg.token_budget == 6_500_000
+    assert cfg.per_skill_mutation_budget == 250_000
+
+
+def test_archetype_ssot_resolution():
+    """Verify SSOT resolution in archetypes.py correctly maps all 11 domain archetypes."""
+    from ccba_harness.evals.archetypes import (
+        DOMAIN_ARCHETYPES,
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+
+    assert len(DOMAIN_ARCHETYPES) == 11
+
+    # Check each archetype has non-empty keywords and valid dataset
+    for arch in DOMAIN_ARCHETYPES:
+        assert len(arch.keywords) > 0
+        assert arch.dataset_file.endswith(".json")
+        scorers = arch.scorer_factory()
+        assert len(scorers) > 0
+
+    # Test key representatives
+    test_cases = [
+        ("ccba-grilling", "eval_grilling.json"),
+        ("ccba-adr-lifecycle", "eval_adr_lifecycle.json"),
+        ("bigbim-risk", "eval_bigbim_risk.json"),
+        ("ccba-legal-intel", "eval_legal_intel.json"),
+        ("ccba-ai-qc-pccc-audit", "eval_pccc_audit.json"),
+        ("ccba-academic-writing", "eval_academic_writing.json"),
+        ("ccba-copywriting", "eval_copywriting.json"),
+        ("ccba-mermaid-diagram", "eval_visual_diagram.json"),
+        ("bigbim-classification", "eval_bigbim_classification.json"),
+        ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
+        ("platform-loader", "eval_agent_orchestration.json"),
+    ]
+    for skill_name, expected_dataset in test_cases:
+        assert resolve_domain_dataset(skill_name) == expected_dataset
+        assert resolve_domain_archetype(skill_name) is not None
+        scorers = get_default_domain_scorers(skill_name)
+        assert len(scorers) > 0
+
+    # Fallback case
+    assert resolve_domain_archetype("ccba-design") is None
+    assert resolve_domain_dataset("ccba-design") == "eval_general_domain.json"
+
+
+def test_archetype_zero_collision_cross_domain():
+    """Verify that multi-keyword combinations resolve to a single unified archetype (no split between dataset and scorers)."""
+    from ccba_harness.evals.archetypes import (
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+
+    collision_candidates = [
+        "ccba-risk-mermaid",
+        "ccba-legal-risk",
+        "ccba-pccc-risk",
+        "ccba-academic-risk",
+        "ccba-van-phong-risk",
+        "ccba-bim-van-phong",
+        "ccba-bim-mermaid",
+        "ccba-academic-bim",
+        "ccba-grill-teamwork",
+        "ccba-adr-teamwork",
+        "ccba-platform-grill",
+    ]
+    for candidate in collision_candidates:
+        arch = resolve_domain_archetype(candidate)
+        assert arch is not None, f"Candidate {candidate} should resolve to a known archetype"
+        dataset = resolve_domain_dataset(candidate)
+        assert dataset == arch.dataset_file, f"Dataset for {candidate} must match archetype dataset"
+        scorers = get_default_domain_scorers(candidate)
+        expected_scorer_names = [s.name for s in arch.scorer_factory()]
+        actual_scorer_names = [s.name for s in scorers]
+        assert actual_scorer_names == expected_scorer_names, (
+            f"Scorers for {candidate} must match archetype scorer factory"
+        )
+
+
+def test_flagship_redteam_overrides():
+    """Verify FLAGSHIP_REDTEAM_DATASET_OVERRIDES contains exactly 4 flagship skills."""
+    from ccba_harness.evals.daemon import FLAGSHIP_REDTEAM_DATASET_OVERRIDES
+
+    assert len(FLAGSHIP_REDTEAM_DATASET_OVERRIDES) == 4
+    for _skill, dataset in FLAGSHIP_REDTEAM_DATASET_OVERRIDES.items():
+        assert dataset.endswith("_redteam.json")
