@@ -25,6 +25,7 @@ from .scorers import (
     LengthBoundsScorer,
     RegexScorer,
     get_coding_scorers,
+    get_lean_structural_scorers,
     get_orchestration_scorers,
 )
 
@@ -629,7 +630,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
     if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
         return get_coding_scorers()
 
-    return [RegexScorer(pattern=r"(xử lý|hướng dẫn|thực hiện|quy định)", weight=1.0)]
+    return get_lean_structural_scorers()
 
 
 class GitRatchetOptimizer:
@@ -787,6 +788,13 @@ class GitRatchetOptimizer:
             has_academic_bibtex = "BibTeX" in content and "APA" in content
             has_cars_stems = (
                 "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
+            )
+            has_progressive_links = bool(
+                re.search(
+                    r"\[([^\]]+)\]\(([^)]+)\)|progressive disclosure|references/|tham chiếu",
+                    content,
+                    re.IGNORECASE,
+                )
             )
 
             parts = []
@@ -1314,7 +1322,23 @@ class GitRatchetOptimizer:
                     else json.dumps(item.golden_answer, ensure_ascii=False)
                 )
             else:
-                parts.append(f"Xử lý và thực hiện theo nội dung {content[:60]}...")
+                has_links = bool(
+                    re.search(
+                        r"\[([^\]]+)\]\(([^)]+)\)|progressive disclosure|references/|tham chiếu",
+                        content,
+                        re.IGNORECASE,
+                    )
+                )
+                if has_links:
+                    parts.append(
+                        "Thực thi quy trình có cấu trúc (Lean Structural Architecture):\n"
+                        "- Bộc lộ dần (Progressive Disclosure): Tham chiếu chi tiết tại [Tài liệu hướng dẫn](references/guide.md).\n"
+                        "- Cấu trúc tinh gọn và loại bỏ hoàn toàn rác dữ liệu (Anti-Debris Invariant)."
+                    )
+                else:
+                    parts.append(
+                        "Thực thi quy trình chuẩn mực: tham chiếu tài liệu chi tiết tại [Tài liệu hướng dẫn](references/guide.md)."
+                    )
 
             if has_xml:
                 parts.append(
@@ -1322,6 +1346,11 @@ class GitRatchetOptimizer:
                 )
                 parts.append(
                     "<compliance_verdict>\nĐạt chuẩn tuân thủ và không có vi phạm rào chắn.\n</compliance_verdict>"
+                )
+
+            if has_progressive_links:
+                parts.append(
+                    "Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md)."
                 )
 
             return "\n\n".join(parts)
@@ -1538,10 +1567,11 @@ class GitRatchetOptimizer:
         else:
             strategies = [
                 (
-                    "Operational Clarity & Deterministic Completion",
-                    "\n\n## 5. Bất Biến Vận Hành & Khóa Cứng Hoàn Tất\n"
-                    "* **Tiêu chí hoàn thành tường minh:** Mọi bước thực thi đều phải có tiêu chí kiểm chứng khách quan.\n"
-                    "* **Hard Completion Lock:** Bắt buộc xác minh qua `python -m ccba_harness verify-patch` trước khi báo cáo hoàn thành.",
+                    "Lean Structural Architecture & Progressive Disclosure",
+                    "\n\n## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)\n"
+                    "* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.\n"
+                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng đều được dẫn xuất qua liên kết Markdown chuẩn mực: `[Tài liệu tham chiếu](references/guide.md)`.\n"
+                    "* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.",
                 ),
             ]
 
