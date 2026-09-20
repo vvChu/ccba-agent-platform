@@ -1,7 +1,7 @@
 # 🗺️ BẢN ĐỒ ĐỊNH HƯỚNG: TIẾN HÓA BỘ ĐÁNH GIÁ ĐA BỘ MÔN (WAYFINDER MAP)
 > **Mã định danh:** `WAYFINDER-EVALUATOR-EVOLUTION`  
 > **Trạng thái:** ĐANG HOẠCH ĐỊNH & THỰC THI (ACTIVE)  
-> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.3.0` (Cập nhật sau hoàn tất TICKET-006)  
+> **Khởi tạo:** `2026-09-20` | **Phiên bản:** `1.4.0` (Cập nhật sau hoàn tất TICKET-005)  
 > **Phạm vi áp dụng:** Toàn bộ 73 Agent Skills & Nightly Auto-Tuner Daemon
 
 ---
@@ -16,7 +16,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 2. **100% kỹ năng cốt lõi (Core Archetypes)** có bộ chấm chuyên biệt đa trục trực giao (Dual/Multi-Pillar) kèm rào chắn Điểm Liệt (Critical Hard Floor).
 3. Triển khai thành công **Legal Verbatim Provenance Scorer (ADR-0059)** đối soát trực tiếp với kho `legal_clauses_flat.json` (~261 KB, 267,526 bytes) đóng gói nội bộ package.
 4. Triển khai cơ chế **Blinded Adaptive Holdout Split** có ngưỡng sàn kích thước mẫu và cơ chế Dynamic Parameter Perturbation ngăn chặn học vẹt đề thi.
-5. Bảo đảm Zero-Regression: Toàn bộ 275 passed (6 skipped, 81 deselected) tests của `ccba-harness` và CI Gates của 73 kỹ năng đạt PASS 100%.
+5. Bảo đảm Zero-Regression: Toàn bộ 299 passed (6 skipped, 81 deselected) tests của `ccba-harness` và CI Gates của 73 kỹ năng đạt PASS 100%.
 6. Bảo đảm Độ Phủ Chuyên Môn Tuyệt Đối: Duy trì 100% Archetype Taxonomy Routing trên toàn bộ 73 kỹ năng (0 fallback).
 
 ---
@@ -38,6 +38,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 *   `[TICKET-002A] [Mở Rộng Archetype Routing Cho 73 Skills]`: Đã triển khai Taxonomy phân loại hoàn chỉnh cho 8 domain archetypes (Coding, Legal, Tech QC, BIM, Academic, Office, Visual, Orchestration) trong `tuner.py` và `daemon.py`. Xây dựng các scorers chuyên biệt `OfficeStandardScorer` (NĐ 30/2020) và `DiagramSyntaxScorer` (Mermaid/Excalidraw). Số lượng kỹ năng rơi vào bộ chấm fallback giảm từ 46 xuống 0/73 skills (đạt 100% độ phủ chuyên môn). Vượt qua 100% CI Gates (`verify-patch --preset code/eval/skill`) (Commit [`3a3d4025`](https://github.com/vvChu/ccba-agent-platform/commit/3a3d4025)).
 *   `[TICKET-004] [PCCC & Technical QC Parametric Condition Scorer]`: Đã mở rộng `eval_pccc_audit.json` lên 12 test cases thực tế theo QCVN 06:2022/BXD, QCVN 02:2020/BXD và TCVN 3890:2023 với schema `parametric_rules`. Triển khai `PcccParametricScorer` với kiến trúc 2 tầng (Gate 1 Deterministic Schema Filter < 1ms, 0 token, Dual Critical Hard Floor cho kết luận đảo ngược an toàn & bẫy quan niệm kỹ thuật sai lệch; Gate 2 Advisory Escalation LLM Judge với cơ chế graceful fallback). Tích hợp vào `get_pccc_scorers()` và `tuner.py` cho `TECH_QC_ARCHETYPE_KEYWORDS`. Đạt 282 passed tests và 100% PASS trên tất cả presets (`code/eval/skill`).
 *   `[TICKET-006] [Thiết Kế Cơ Chế Three-Tier Adaptive Slicing & Dynamic Perturbation]`: Đã triển khai module `slicing.py` hoàn chỉnh với `AdaptiveDataSlicer` và `DynamicPerturbationEngine` (FOG-001). Phân loại chính xác 3 cấp độ: Tier A ($N < 12$, 100% evaluation + dynamic perturbation chống học vẹt), Tier B ($12 \le N < 30$, phân tầng Stratified 70% Tuning / 30% Holdout), Tier C ($N \ge 30$, Blinded Multi-Seed Split). Tích hợp vào `GitRatchetOptimizer`, `RatchetReport` (bổ sung `slicing_tier`, `tuning_size`, `holdout_size`, `holdout_score`, `holdout_initial_score`) và `NightlyTunerDaemon`. 290 passed tests, 0 regressions trên 658 tests toàn sàn.
+*   `[TICKET-005] [Uniclass 200 & ISO 12006-2 Taxonomy Validator Cho BIM]`: Đã biên soạn chỉ mục phẳng `uniclass_tables_flat.json` (109 mã Uniclass chuẩn quốc tế qua 7 bảng Co, En, SL, EF, Ss, Pr, PM, 38 KB) và engine `uniclass_index.py` (<1ms in-memory lookup). Triển khai `BimClassificationScorer` và `get_bim_classification_scorers()` đánh giá đa chiều (Mã Uniclass & Bảng [0.4], Lớp ISO 12006-2 [0.3], Cú pháp ISO 19650 Container & IFC Alignment Linear [0.3]), tích hợp Anti-Trap Hard Floor (0.0 critical fail cho 5 bẫy kỹ thuật kinh điển). Định tuyến chính thức toàn bộ BIM/Classification/IFC/RASE/Governance skills. 299 passed tests, 100% PASS tất cả presets.
 
 ---
 
@@ -47,20 +48,11 @@ Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay the
 
 ---
 
-### 🟡 GIAI ĐOẠN 2 (P1: Nâng Cấp Kỹ Thuật Xây Dựng, PCCC & BIM)
-
-*   **`[TICKET-005]` [Uniclass 200 & ISO 12006-2 Taxonomy Validator Cho BIM] [Research - AFK]**
-    - **Mục tiêu:** Khảo sát, thu thập nguồn dữ liệu chính thức và biên soạn bảng mã phân loại Uniclass 200 (Co, En, SL, EF, Ss, Pr, PM) vào `uniclass_tables_flat.json`, tích hợp vào `BimClassificationScorer` kiểm tra tính khớp nối thực thể và mã gán.
-    - **Trạng thái:** 🟢 READY (Unblocked - Domain routing độc lập tại `tuner.py:650`)
-    - **Assignee:** Unassigned
-
----
-
 ### 🔵 GIAI ĐOẠN 3 (P2: Executable Evals & Sandbox Cô Lập)
 
 *   **`[TICKET-007]` [Executable Docker Sandbox Evaluation Cho Coding Archetype] [Prototype - HITL]**
     - **Mục tiêu:** Xây dựng mẫu thử chạy `pytest` thật trong ephemeral container cô lập để chấm điểm trực tiếp code sinh ra bởi Agent.
-    - **Trạng thái:** 🟢 READY (Unblocked bởi hoàn tất `[TICKET-006]`)
+    - **Trạng thái:** 🟢 READY (Unblocked bởi hoàn tất `[TICKET-005]` và `[TICKET-006]`)
     - **Assignee:** Unassigned
 
 ---

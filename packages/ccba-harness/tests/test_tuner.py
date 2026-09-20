@@ -279,9 +279,7 @@ async def test_legal_verbatim_provenance_scorer_hallucinated_clause_fails_critic
     """Verify citing non-existent clause in valid document fails critically (score 0.0)."""
     scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
     item = EvalItem(id="test_legal_hallucinated_clause", input_prompt="Hỏi luật")
-    text = (
-        "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 999 quy định về chế tài xử phạt..."
-    )
+    text = "Căn cứ theo Nghị định số 105/2025/NĐ-CP tại Điều 999 quy định về chế tài xử phạt..."
     result = await scorer.score(text, item)
     assert result.score == 0.0
     assert result.is_critical_fail is True
@@ -294,7 +292,9 @@ async def test_legal_verbatim_provenance_scorer_no_citation_fails_critically():
     """Verify legal skill output without any statutory citation fails critically."""
     scorer = LegalVerbatimProvenanceScorer(weight=0.5, is_critical=True)
     item = EvalItem(id="test_legal_no_cite", input_prompt="Hỏi luật")
-    text = "Để thực hiện thủ tục này, chủ đầu tư cần liên hệ cơ quan có thẩm quyền để được giải quyết."
+    text = (
+        "Để thực hiện thủ tục này, chủ đầu tư cần liên hệ cơ quan có thẩm quyền để được giải quyết."
+    )
     result = await scorer.score(text, item)
     assert result.score == 0.0
     assert result.is_critical_fail is True
@@ -336,8 +336,8 @@ def test_get_default_domain_scorers_bim():
     """Test domain scorers for bim classification skill."""
     scorers = get_default_domain_scorers("bigbim-classification")
     names = [s.name for s in scorers]
-    assert "bim_classification_rules" in names
-    assert "bim_anti_trap_hard_floor" in names
+    assert "bim_classification" in names
+    assert any(s.is_critical for s in scorers)
 
 
 def test_get_default_domain_scorers_fallback():
@@ -347,7 +347,9 @@ def test_get_default_domain_scorers_fallback():
     assert "progressive_disclosure_links" in names
     assert "depth" in names
     assert "anti_debris" in names
-    assert not any(s.is_critical for s in scorers)  # ADR-0058 Hard Completion Lock is NOT forced on fallback
+    assert not any(
+        s.is_critical for s in scorers
+    )  # ADR-0058 Hard Completion Lock is NOT forced on fallback
     assert pytest.approx(sum(s.weight for s in scorers)) == 1.0
 
 
@@ -1380,7 +1382,9 @@ async def test_engineering_discipline_scorer_evaluation():
     assert res_partial_dp.score == 0.5
 
     # Partial: KISS / Rigor only
-    res_partial_rigor = await scorer.score("Tuân thủ nguyên tắc KISS và xử lý explicit error handling.", item)
+    res_partial_rigor = await scorer.score(
+        "Tuân thủ nguyên tắc KISS và xử lý explicit error handling.", item
+    )
     assert res_partial_rigor.score == 0.5
 
     # Full: Both pillars
@@ -1430,9 +1434,14 @@ def test_resolve_dataset_file_coding(tmp_path: Path):
     daemon = NightlyTunerDaemon(root=tmp_path)
     assert daemon._resolve_dataset_file("ccba-codebase-design") == "eval_codebase_engineering.json"
     assert daemon._resolve_dataset_file("ccba-bug-diagnostic") == "eval_codebase_engineering.json"
-    assert daemon._resolve_dataset_file("ccba-implement-workflow") == "eval_codebase_engineering.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-implement-workflow") == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-tdd-loop") == "eval_codebase_engineering.json"
-    assert daemon._resolve_dataset_file("ccba-codebase-engineering") == "eval_codebase_engineering.json"
+    assert (
+        daemon._resolve_dataset_file("ccba-codebase-engineering")
+        == "eval_codebase_engineering.json"
+    )
     assert daemon._resolve_dataset_file("ccba-refactor-service") == "eval_codebase_engineering.json"
 
 
@@ -1608,11 +1617,14 @@ async def test_pccc_parametric_scorer_valid_verdict_and_parameters():
                 "verdict_patterns": ["không đạt", "vi phạm", "không phù hợp"],
                 "forbidden_verdict_patterns": ["kết luận đạt", "hoàn toàn phù hợp"],
                 "required_parameters": [
-                  {"name": "ngưỡng chiều dài", "pattern": r"15\s*(?:m|mét)"},
-                  {"name": "hệ thống hút khói", "pattern": r"hút khói|thông gió sự cố"},
+                    {"name": "ngưỡng chiều dài", "pattern": r"15\s*(?:m|mét)"},
+                    {"name": "hệ thống hút khói", "pattern": r"hút khói|thông gió sự cố"},
                 ],
                 "forbidden_parameters": [
-                  {"name": "thừa nhận mốc 30m", "pattern": r"30\s*(?:m|mét)\s*(?:là đúng|chưa cần)"},
+                    {
+                        "name": "thừa nhận mốc 30m",
+                        "pattern": r"30\s*(?:m|mét)\s*(?:là đúng|chưa cần)",
+                    },
                 ],
                 "legal_basis": r"QCVN\s*06:2022/BXD.*(?:Phụ lục D|D\.2)",
             }
@@ -1772,7 +1784,9 @@ def test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer():
     from ccba_harness.evals.runner import load_eval_dataset
     from ccba_harness.evals.scorers import PcccParametricScorer
 
-    items = load_eval_dataset(dataset_path=Path(".agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json"))
+    items = load_eval_dataset(
+        dataset_path=Path(".agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json")
+    )
     assert len(items) == 12, f"Expected 12 items, found {len(items)}"
 
     scorer = PcccParametricScorer(weight=0.5, is_critical=True)

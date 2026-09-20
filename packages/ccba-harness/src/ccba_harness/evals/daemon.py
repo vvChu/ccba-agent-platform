@@ -710,7 +710,9 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
                 check=False,
             )
             if diff_check.returncode == 0:
-                logger.warning("⚠️ Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR.")
+                logger.warning(
+                    "⚠️ Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR."
+                )
                 return None
             if diff_check.returncode not in (0, 1):
                 logger.warning(

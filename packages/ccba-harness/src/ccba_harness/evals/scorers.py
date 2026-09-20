@@ -18,6 +18,7 @@ from typing import Any
 
 from .legal_index import LegalFlatIndex, StatutoryDocument, load_legal_flat_index
 from .models import EvalItem, ScoreResult
+from .uniclass_index import UniclassFlatIndex, load_uniclass_flat_index
 
 
 class BaseScorer(ABC):
@@ -680,9 +681,10 @@ class EngineeringDisciplineScorer(BaseScorer):
             reasoning = "Engineering discipline fully verified (Double-Pass Review + KISS / Rigor Guardrails)"
         elif has_dp or has_rigor:
             score = 0.5
-            reasoning = (
-                "Partial engineering discipline verified: "
-                + ("Double-Pass present, missing KISS/Rigor" if has_dp else "KISS/Rigor present, missing Double-Pass")
+            reasoning = "Partial engineering discipline verified: " + (
+                "Double-Pass present, missing KISS/Rigor"
+                if has_dp
+                else "KISS/Rigor present, missing Double-Pass"
             )
         else:
             score = 0.0
@@ -728,7 +730,9 @@ class AntiDebrisScorer(BaseScorer):
                 "Temporary debris comment",
             ),
             (
-                re.compile(r"(/ck:[a-zA-Z0-9_\-]+|/ultrathink\b|<tasks\b|TaskCreate|AskUserQuestion)"),
+                re.compile(
+                    r"(/ck:[a-zA-Z0-9_\-]+|/ultrathink\b|<tasks\b|TaskCreate|AskUserQuestion)"
+                ),
                 "ClaudeKit dead wood remnant",
             ),
         ]
@@ -1211,7 +1215,9 @@ class PcccParametricScorer(BaseScorer):
                 scorer_name=self.name,
                 score=score,
                 raw_output={"mode": "fallback_regex", "matched": matched},
-                reasoning="Standard PCCC terminology detected" if matched else "Missing basic PCCC terminology",
+                reasoning="Standard PCCC terminology detected"
+                if matched
+                else "Missing basic PCCC terminology",
                 is_critical_fail=is_crit_fail,
             )
 
@@ -1237,7 +1243,11 @@ class PcccParametricScorer(BaseScorer):
                 return ScoreResult(
                     scorer_name=self.name,
                     score=0.0,
-                    raw_output={"gate": 1, "violation": "forbidden_parameter", "matched_pattern": pat},
+                    raw_output={
+                        "gate": 1,
+                        "violation": "forbidden_parameter",
+                        "matched_pattern": pat,
+                    },
                     reasoning=f"Critical anti-trap failure: Model adopted prohibited misconception ({name})",
                     is_critical_fail=True,
                 )
@@ -1290,9 +1300,7 @@ class PcccParametricScorer(BaseScorer):
         gate1_score = 0.4 * 1.0 + 0.4 * param_score + 0.2 * legal_score
 
         final_score = gate1_score
-        reasoning = (
-            f"Gate 1: Verdict verified; {matched_params_count}/{total_params_count} parameters verified"
-        )
+        reasoning = f"Gate 1: Verdict verified; {matched_params_count}/{total_params_count} parameters verified"
         if missing_params:
             reasoning += f" (missing: {', '.join(missing_params)})"
 
@@ -1339,3 +1347,176 @@ def get_pccc_scorers() -> list[BaseScorer]:
         LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
     ]
 
+
+class BimClassificationScorer(BaseScorer):
+    """BIM Classification & Uniclass 200 / ISO 12006-2 Validator (TICKET-005).
+
+    Evaluates:
+    - Dimension 1: Uniclass Code & Table Validity (Weight 0.4, Critical Hard Floor on anti-trap violations).
+      Checks whether candidate Uniclass codes (e.g. EF_20_10_15, SL_25_10_72, Ss_60_40_36, Pr_60_65_62)
+      are present in output and match expected code or table from golden_answer / metadata.
+      Enforces Anti-Trap Hard Floor: If output triggers a prohibited anti-trap misconception (e.g. confusing
+      BIM object Result EF_25_30 with BOQ Procurement Resource Pr_30_59_24) -> 0.0 critical failure.
+    - Dimension 2: ISO 12006-2 Classification Layer (Weight 0.3).
+      Verifies model correctly distinguishes Results (Complexes, Entities, Spaces, Elements, Systems)
+      from Resources (Products/Materials) or Processes (Project Management).
+    - Dimension 3: Container Naming Convention & Standards Compliance (Weight 0.3).
+      Checks ISO 19650 Room Naming syntax ([Project]-[Building]-[Floor]-[Uniclass]-[Seq]) or
+      IFC Alignment linear naming syntax ([Route]-[KM]-[Element]-[Uniclass]), and mentions of ISO 22274/12006-2.
+    """
+
+    def __init__(
+        self,
+        name: str = "bim_classification",
+        weight: float = 0.5,
+        is_critical: bool = True,
+        index: UniclassFlatIndex | None = None,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.index = index or load_uniclass_flat_index()
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        ga = item.golden_answer if isinstance(item.golden_answer, dict) else {}
+
+        # 1. Anti-Trap Hard Floor (Dual Critical Hard Floor)
+        has_trap, trap_reason = self.index.check_anti_traps(out_str)
+        if has_trap:
+            return ScoreResult(
+                scorer_name=self.name,
+                score=0.0,
+                raw_output={"violation": "anti_trap", "reason": trap_reason},
+                reasoning=f"Critical Hard Floor Failure: {trap_reason}",
+                is_critical_fail=True,
+            )
+
+        # 2. Extract Candidate Uniclass codes from output
+        extracted_codes = self.index.extract_uniclass_codes(out_str)
+        expected_code = str(ga.get("uniclass_code", "")).strip().upper()
+
+        # Dimension 1: Uniclass Code & Table Validity (0.4)
+        code_score = 0.0
+        if expected_code:
+            if expected_code in extracted_codes:
+                code_score = 1.0
+            elif any(c.startswith(expected_code[:5]) for c in extracted_codes):
+                code_score = 0.7  # Matching table and branch prefix
+            elif any(c.split("_")[0] == expected_code.split("_")[0] for c in extracted_codes):
+                code_score = 0.5  # Matching table prefix
+            else:
+                code_score = 0.0
+        elif extracted_codes:
+            # Check if extracted codes are valid in index
+            valid_count = sum(1 for c in extracted_codes if self.index.is_valid_code(c))
+            code_score = 1.0 if valid_count > 0 else 0.5
+        else:
+            # Fallback if no specific code expected but mentions Uniclass
+            if re.search(
+                r"\b(Uniclass|ISO\s*12006|EF_|SL_|Ss_|Pr_|En_|Co_|PM_)\b", out_str, re.IGNORECASE
+            ):
+                code_score = 0.5
+            else:
+                code_score = 0.0
+
+        if self.is_critical and expected_code and code_score == 0.0:
+            return ScoreResult(
+                scorer_name=self.name,
+                score=0.0,
+                raw_output={
+                    "violation": "missing_expected_uniclass_code",
+                    "expected": expected_code,
+                },
+                reasoning=f"Critical Failure: Model failed to identify required Uniclass code ({expected_code})",
+                is_critical_fail=True,
+            )
+
+        # Dimension 2: ISO 12006-2 Layer Classification (0.3)
+        expected_layer = str(ga.get("iso_12006_layer", "")).strip()
+        layer_score = 0.0
+        if expected_layer:
+            layer_kw = expected_layer.split()[0].lower()  # 'result', 'resource', 'process'
+            if re.search(rf"\b{re.escape(layer_kw)}\b", out_str, re.IGNORECASE):
+                layer_score = 1.0
+            elif "iso 12006" in out_str.lower() or "iso 22274" in out_str.lower():
+                layer_score = 0.6
+            else:
+                layer_score = 0.3
+        else:
+            if re.search(
+                r"(ISO\s*12006|Result|Resource|Process|Property|kết quả|nguồn lực|quy trình)",
+                out_str,
+                re.IGNORECASE,
+            ):
+                layer_score = 1.0
+            else:
+                layer_score = 0.5
+
+        # Dimension 3: Container Naming Convention & Standards Compliance (0.3)
+        expected_naming = ga.get("iso_19650_naming") or ga.get("ifc_alignment_naming")
+        naming_score = 0.0
+        if expected_naming:
+            expected_naming_str = str(expected_naming).strip()
+            if expected_naming_str in out_str:
+                naming_score = 1.0
+            elif self.index.validate_iso_19650_naming(expected_naming_str) and any(
+                self.index.validate_iso_19650_naming(line.strip()) for line in out_str.splitlines()
+            ):
+                naming_score = 0.8
+            elif self.index.validate_ifc_alignment_naming(expected_naming_str) and any(
+                self.index.validate_ifc_alignment_naming(line.strip())
+                for line in out_str.splitlines()
+            ):
+                naming_score = 0.8
+            elif re.search(
+                r"ISO\s*19650|IFC\s*Alignment|Container|đặt tên", out_str, re.IGNORECASE
+            ):
+                naming_score = 0.5
+            else:
+                naming_score = 0.2
+        else:
+            if any(
+                self.index.validate_iso_19650_naming(line.strip()) for line in out_str.splitlines()
+            ) or any(
+                self.index.validate_ifc_alignment_naming(line.strip())
+                for line in out_str.splitlines()
+            ):
+                naming_score = 1.0
+            elif re.search(
+                r"(ISO\s*19650|IFC\s*Alignment|ISO\s*22274|ISO\s*21511|Digital Memory|Trí Nhớ Số)",
+                out_str,
+                re.IGNORECASE,
+            ):
+                naming_score = 0.8
+            else:
+                naming_score = 0.4
+
+        final_score = 0.4 * code_score + 0.3 * layer_score + 0.3 * naming_score
+        reasoning = (
+            f"BIM Validation: Code score={code_score:.2f}, "
+            f"ISO 12006-2 layer score={layer_score:.2f}, "
+            f"Naming syntax score={naming_score:.2f}"
+        )
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=final_score,
+            raw_output={
+                "extracted_codes": extracted_codes,
+                "expected_code": expected_code,
+                "code_score": code_score,
+                "layer_score": layer_score,
+                "naming_score": naming_score,
+            },
+            reasoning=reasoning,
+            is_critical_fail=False,
+        )
+
+
+def get_bim_classification_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for BIM, Uniclass 200, and ISO 12006-2 classification skills."""
+    return [
+        BimClassificationScorer(weight=0.5, is_critical=True),
+        ProgressiveDisclosureScorer(weight=0.2),
+        AntiDebrisScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
+    ]

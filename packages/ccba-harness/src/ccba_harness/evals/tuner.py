@@ -24,6 +24,7 @@ from .scorers import (
     BaseScorer,
     LengthBoundsScorer,
     RegexScorer,
+    get_bim_classification_scorers,
     get_coding_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
@@ -654,25 +655,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
         ]
 
     if any(k in sname for k in ["bim", "uniclass", "classification", "ifc", "rase", "governance"]):
-        return [
-            RegexScorer(
-                name="bim_classification_rules",
-                pattern=r"(Uniclass|ISO 12006-2|ISO 22274|ISO 21511|En_|PM_|Pr_|Ss_|EF_|SL_|WBS|phân loại)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="bim_anti_trap_hard_floor",
-                pattern=r"(ISO 19650|IFC4X3|IFC Alignment|BIM Object|Spatial Structure|Trí Nhớ Số|Digital Memory)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="bim_redteam_disambiguation_guard",
-                pattern=r"(EF_25_10|EF_20_20|EF_25_30|Pr_30_59|EF_10_10|SL_25_30_70|phân tách|chuẩn hóa|Result|Resource|Air-lock|khoang đệm)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
+        return get_bim_classification_scorers()
 
     if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
         return get_orchestration_scorers()
@@ -848,9 +831,7 @@ class GitRatchetOptimizer:
         """Preserves YAML frontmatter metadata when mutating SKILL.md body."""
         return preserve_yaml_frontmatter(original_content, edited_content)
 
-    def evaluate_content(
-        self, content: str, dataset: list[EvalItem] | None = None
-    ) -> EvalReport:
+    def evaluate_content(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
         """Evaluates given skill prompt content against test dataset (or tuning/holdout subset)."""
         target_dataset = dataset if dataset is not None else self.tuning_dataset
         if self.custom_task is not None:
@@ -1340,10 +1321,7 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
-            elif any(
-                k in self.config.skill_name.lower()
-                for k in CODING_ARCHETYPE_KEYWORDS
-            ) or any(
+            elif any(k in self.config.skill_name.lower() for k in CODING_ARCHETYPE_KEYWORDS) or any(
                 k in prompt_l
                 for k in [
                     "code",
@@ -1401,7 +1379,9 @@ class GitRatchetOptimizer:
                 if coding_blocks:
                     parts.append("\n\n".join(coding_blocks))
                 else:
-                    parts.append("Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định...")
+                    parts.append(
+                        "Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định..."
+                    )
             elif any(
                 k in prompt_l
                 for k in [
@@ -1463,9 +1443,7 @@ class GitRatchetOptimizer:
                 )
 
             if has_progressive_links:
-                parts.append(
-                    "Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md)."
-                )
+                parts.append("Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md).")
 
             return "\n\n".join(parts)
 
@@ -1884,7 +1862,9 @@ class GitRatchetOptimizer:
         if self.holdout_dataset:
             try:
                 try:
-                    holdout_base_rep = self.evaluate_content(initial_content, dataset=self.holdout_dataset)
+                    holdout_base_rep = self.evaluate_content(
+                        initial_content, dataset=self.holdout_dataset
+                    )
                 except TypeError:
                     holdout_base_rep = self.evaluate_content(initial_content)
                 initial_holdout_score = holdout_base_rep.overall_score
@@ -2059,7 +2039,9 @@ class GitRatchetOptimizer:
         if self.holdout_dataset:
             try:
                 try:
-                    holdout_final_rep = self.evaluate_content(best_content, dataset=self.holdout_dataset)
+                    holdout_final_rep = self.evaluate_content(
+                        best_content, dataset=self.holdout_dataset
+                    )
                 except TypeError:
                     holdout_final_rep = self.evaluate_content(best_content)
                 final_holdout_score = holdout_final_rep.overall_score

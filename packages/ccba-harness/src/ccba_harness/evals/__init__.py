@@ -31,6 +31,7 @@ from .runner import AutoItemScorer, EvalRunner, load_eval_dataset, run_eval_pipe
 from .scorers import (
     AntiDebrisScorer,
     BaseScorer,
+    BimClassificationScorer,
     DiagramSyntaxScorer,
     EngineeringDisciplineScorer,
     ExactMatchScorer,
@@ -43,6 +44,7 @@ from .scorers import (
     OfficeStandardScorer,
     PcccParametricScorer,
     RegexScorer,
+    get_bim_classification_scorers,
     get_coding_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
@@ -77,6 +79,12 @@ from .tuner import (
     mutate_skill,
     preserve_yaml_frontmatter,
 )
+from .uniclass_index import (
+    DEFAULT_UNICLASS_INDEX_PATH,
+    UniclassEntry,
+    UniclassFlatIndex,
+    load_uniclass_flat_index,
+)
 
 __all__ = [
     "CODING_ARCHETYPE_KEYWORDS",
@@ -106,12 +114,14 @@ __all__ = [
     "OfficeStandardScorer",
     "DiagramSyntaxScorer",
     "PcccParametricScorer",
+    "BimClassificationScorer",
     "get_coding_scorers",
     "get_lean_structural_scorers",
     "get_legal_scorers",
     "get_office_scorers",
     "get_pccc_scorers",
     "get_visual_diagram_scorers",
+    "get_bim_classification_scorers",
     "EvalRunner",
     "AutoItemScorer",
     "load_eval_dataset",
@@ -140,6 +150,10 @@ __all__ = [
     "StatutoryDocument",
     "LegalFlatIndex",
     "load_legal_flat_index",
+    "DEFAULT_UNICLASS_INDEX_PATH",
+    "UniclassEntry",
+    "UniclassFlatIndex",
+    "load_uniclass_flat_index",
     "SlicingTier",
     "classify_slicing_tier",
     "SlicedDataset",
