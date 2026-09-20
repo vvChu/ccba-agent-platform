@@ -50,7 +50,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-design](ccba-design.md) | `/ccba-design` | `kernel` | `User` | Design brand identity, logos, banners, and visual assets. Use for brand syste... |
 | [ccba-diagnosing-bugs](ccba-diagnosing-bugs.md) | `/ccba-diagnosing-bugs` | `kernel` | `User` | Diagnosis loop for hard bugs and performance regressions. Use when the user s... |
 | [ccba-domain-modeling](ccba-domain-modeling.md) | `/ccba-domain-modeling` | `kernel` | `User` | Build, refine, and maintain the project's domain model, ubiquitous language, ... |
-| [ccba-excalidraw-diagram](ccba-excalidraw-diagram.md) | `/ccba-excalidraw-diagram` | `kernel` | `User` | Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và... |
+| [ccba-excalidraw-diagram](ccba-excalidraw-diagram.md) | `/ccba-excalidraw-diagram` | `kernel` | `User` | Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines v... |
 | [ccba-git-guardrails](ccba-git-guardrails.md) | `/ccba-git-guardrails` | `kernel` | `User` | Guardrails to block or request explicit user permission before executing dang... |
 | [ccba-grilling](ccba-grilling.md) | `/ccba-grilling` | `kernel` | `User` | Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (... |
 | [ccba-implement](ccba-implement.md) | `/ccba-implement` | `orchestrator` | `User` | Implement a piece of work based on a spec or set of tickets. |

@@ -19,7 +19,7 @@
 | [HUB-ADR 0007](0007-multimodal-youtube-learning-and-transcription.md) | **Multimodal Video Ingestion and Belief Archaeology Analysis** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0008](0008-spoke-classification-and-functional-ownership.md) | **Spoke Classification and Functional Ownership Mapping in CCBA** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0009](0009-hub-spoke-sync-and-partition-strategy.md) | **Hub-Spoke Synchronization and Directory Partitioning Strategy** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
-| [HUB-ADR 0010](0010-skills-integration-and-rag-boundaries.md) | **Phân Định Ranh Giới Tích Hợp Kỹ Năng Nghiên Cứu & Mẫu Thử** | ✅ ACCEPTED | `.agents/skills/ccba-adr-lifecycle/SKILL.md`<br>`.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md`<br>`.agents/skills/ccba-excalidraw-diagram/SKILL.md` |
+| [HUB-ADR 0010](0010-skills-integration-and-rag-boundaries.md) | **Phân Định Ranh Giới Tích Hợp Kỹ Năng Nghiên Cứu & Mẫu Thử** | ✅ ACCEPTED | `.agents/skills/ccba-adr-lifecycle/SKILL.md`<br>`.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |
 | [HUB-ADR 0017](0017-dynamic-override-notebook-ids-via-environment-variables.md) | **Dynamic Override of Notebook IDs via Environment Variables** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0018](0018-remove-idop-scaffolder-from-hub.md) | **Loại bỏ skill ccba-idop-scaffolder khỏi Central Hub** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0019](0019-port-matt-pocock-engineering-skills.md) | **Đồng bộ Quy trình Triển khai Kỹ nghệ từ Thượng nguồn & Dọn dẹp Thành phần Lỗi thời** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |

@@ -89,3 +89,14 @@ Hoặc qua dòng lệnh:
 ccba-diagram layout input.json -o output.json --engine auto
 ccba-diagram spec-table input.json
 ```
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ thiết kế và tối ưu sơ đồ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| [`references/visual_concepts.md`](references/visual_concepts.md) | Cẩm nang nguyên lý thị giác, bảng màu Academic Grayscale & Pastel, typography 16:9 và bố cục ma trận |
+
