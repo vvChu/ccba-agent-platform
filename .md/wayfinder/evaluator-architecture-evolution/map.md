@@ -16,7 +16,7 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 2. **100% kỹ năng cốt lõi (Core Archetypes)** có bộ chấm chuyên biệt đa trục trực giao (Dual/Multi-Pillar) kèm rào chắn Điểm Liệt (Critical Hard Floor).
 3. Triển khai thành công **Legal Verbatim Provenance Scorer (ADR-0059)** đối soát trực tiếp với kho `legal_clauses_flat.json` (~188 KB) đóng gói nội bộ package.
 4. Triển khai cơ chế **Blinded Holdout Split (30% Tuning / 70% Validation)** có ngưỡng sàn kích thước mẫu ($N \ge 10$) ngăn chặn học vẹt đề thi.
-5. Bảo đảm Zero-Regression: Toàn bộ 258 passed (6 skipped) tests của `ccba-harness` và CI Gates của 73 kỹ năng đạt PASS 100%.
+5. Bảo đảm Zero-Regression: Toàn bộ 265 passed (6 skipped) tests của `ccba-harness` và CI Gates của 73 kỹ năng đạt PASS 100%.
 6. Bảo đảm Điểm Benchmark Ổn định: Điểm chuẩn trên 46 fallback skills giữ vững $\ge 70.75\%$, không gây tụt điểm giả tạo (false regression) khi đổi bộ chấm fallback.
 
 ---
@@ -32,7 +32,8 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 
 *   `[TICKET-000] [Dập tắt Goodhart's Law cho Coding Archetype]`: Đã triển khai `HardCompletionLockScorer` + Dual-Pillar `EngineeringDisciplineScorer`, cấm comment HTML rác và tạo dataset `eval_codebase_engineering.json` (Commit [`496a8d98`](https://github.com/vvChu/ccba-agent-platform/commit/496a8d98)).
 *   `[TICKET-001] [Hệ thống Phòng thủ 4 Tầng cho Nightly Runner & Review Proposal]`: Đã triển khai Pre-PR Gate (`git diff -w`), rào cấm `RE_DEAD_WOOD` trong `audit_skills_hygiene.py` và Progressive Disclosure Level 3 Reference cho `ccba-review-proposal` (Commit [`6fbbdc9a`](https://github.com/vvChu/ccba-agent-platform/commit/6fbbdc9a)).
-*   `[TICKET-002B] [Thay Thế Dòng 632 Bằng LeanStructuralScorer An Toàn]`: Đã xóa bỏ 4 regex quan liêu `(xử lý|hướng dẫn|thực hiện|quy định)`, thay thế bằng bộ chấm `get_lean_structural_scorers` (`ProgressiveDisclosureScorer` [0.4] + `LengthBoundsScorer` [0.3] + `AntiDebrisScorer` [0.3]), KHÔNG áp đặt điểm liệt critical hard floor, bảo vệ 46 non-coding skills. 261 passed, 6 skipped tests.
+*   `[TICKET-002B] [Thay Thế Dòng 632 Bằng LeanStructuralScorer An Toàn]`: Đã xóa bỏ 4 regex quan liêu `(xử lý|hướng dẫn|thực hiện|quy định)`, thay thế bằng bộ chấm `get_lean_structural_scorers` (`ProgressiveDisclosureScorer` [0.4] + `LengthBoundsScorer` [0.3] + `AntiDebrisScorer` [0.3]), KHÔNG áp đặt điểm liệt critical hard floor, bảo vệ 46 non-coding skills. 261 passed, 6 skipped tests (Commit [`39e8a83f`](https://github.com/vvChu/ccba-agent-platform/commit/39e8a83f)).
+*   `[TICKET-003A] [Biên Soạn Chỉ Mục Phẳng Legal Clauses Flat Index (~259 KB)]`: Đã biên dịch toàn diện 55 văn bản pháp luật, 19,724 statutory keys, và 24 replaces mappings vào `packages/ccba-harness/src/ccba_harness/evals/datasets/legal_clauses_flat.json`, tích hợp engine `load_legal_flat_index()` và CLI `compile_legal_flat_index.py`, bảo đảm 100% CI Parity. 265 passed, 6 skipped tests.
 
 ---
 
@@ -42,22 +43,16 @@ Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay the
 
 ### 🔴 GIAI ĐOẠN 1 (P0: Khẩn Cấp Trước 00:00 Đêm Nay)
 
+*   **`[TICKET-003B]` [Legal Verbatim Provenance Scorer Chuẩn ADR-0059] [Task - AFK]**
+    - **Mục tiêu:** Nâng cấp bộ chấm nhóm Pháp lý từ regex chuỗi rời rạc thành kiểm tra sự tồn tại của Điều/Khoản đối chiếu với `legal_clauses_flat.json`.
+    - **Rào chắn Điểm Liệt:** Nếu trích dẫn sai số hiệu văn bản công báo hoặc bịa đặt điều luật $\rightarrow$ Điểm = 0.0 (Anti-Hallucination Hard Floor).
+    - **Trạng thái:** 🟢 READY (Unblocked)
+    - **Assignee:** Unassigned
+
 *   **`[TICKET-002A]` [Mở Rộng Archetype Routing Cho 73 Skills] [Research & Task - AFK]**
     - **Mục tiêu:** Bổ sung ánh xạ phân loại chuyên môn (Archetype Taxonomy) trong `daemon.py` và `tuner.py` cho các nhóm: Office/Docx/Pptx, Visual/Mermaid, Legal, Technical/QC, BIM, Coding.
     - **Kết quả:** Giảm số lượng kỹ năng phải rơi vào bộ chấm fallback xuống mức tối thiểu (< 15 skills).
     - **Trạng thái:** 🟢 READY (Unblocked)
-    - **Assignee:** Unassigned
-
-*   **`[TICKET-003A]` [Biên Soạn Chỉ Mục Phẳng Legal Clauses Flat Index (~188 KB)] [Task - AFK]**
-    - **Mục tiêu:** Biên dịch trích xuất các điều khoản cốt lõi từ 55 bundles của `ccba-legal-knowledge` thành file `legal_clauses_flat.json` (~188 KB) đóng gói trực tiếp vào `packages/ccba-harness/src/ccba_harness/evals/datasets/`.
-    - **Bảo đảm CI Parity:** GitHub Actions CI không clone Spoke `ccba-legal-knowledge`, file chỉ mục phẳng nội bộ giúp harness chạy độc lập 100% không bị `FileNotFoundError`.
-    - **Trạng thái:** 🟢 READY (Unblocked)
-    - **Assignee:** Unassigned
-
-*   **`[TICKET-003B]` [Legal Verbatim Provenance Scorer Chuẩn ADR-0059] [Task - AFK]**
-    - **Mục tiêu:** Nâng cấp bộ chấm nhóm Pháp lý từ regex chuỗi rời rạc thành kiểm tra sự tồn tại của Điều/Khoản đối chiếu với `legal_clauses_flat.json`.
-    - **Rào chắn Điểm Liệt:** Nếu trích dẫn sai số hiệu văn bản công báo hoặc bịa đặt điều luật $\rightarrow$ Điểm = 0.0 (Anti-Hallucination Hard Floor).
-    - **Trạng thái:** 🟡 BLOCKED bởi `[TICKET-003A]`
     - **Assignee:** Unassigned
 
 ---

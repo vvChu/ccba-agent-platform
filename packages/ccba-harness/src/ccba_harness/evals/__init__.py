@@ -12,6 +12,12 @@ from .daemon import (
     WeightedPriorityQueue,
     send_telegram_alert,
 )
+from .legal_index import (
+    DEFAULT_FLAT_INDEX_PATH,
+    LegalFlatIndex,
+    StatutoryDocument,
+    load_legal_flat_index,
+)
 from .miner import (
     classify_target_skill,
     generate_eval_spec_item,
@@ -93,4 +99,8 @@ __all__ = [
     "mine_logs_and_export",
     "parse_transcript_logs",
     "redact_sensitive_info",
+    "DEFAULT_FLAT_INDEX_PATH",
+    "StatutoryDocument",
+    "LegalFlatIndex",
+    "load_legal_flat_index",
 ]
