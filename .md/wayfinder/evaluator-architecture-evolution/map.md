@@ -34,21 +34,14 @@ Xây dựng và hoàn thiện **Hệ thống Đánh giá Thế hệ 2 & 3 (Struc
 *   `[TICKET-001] [Hệ thống Phòng thủ 4 Tầng cho Nightly Runner & Review Proposal]`: Đã triển khai Pre-PR Gate (`git diff -w`), rào cấm `RE_DEAD_WOOD` trong `audit_skills_hygiene.py` và Progressive Disclosure Level 3 Reference cho `ccba-review-proposal` (Commit [`6fbbdc9a`](https://github.com/vvChu/ccba-agent-platform/commit/6fbbdc9a)).
 *   `[TICKET-002B] [Thay Thế Dòng 632 Bằng LeanStructuralScorer An Toàn]`: Đã xóa bỏ 4 regex quan liêu `(xử lý|hướng dẫn|thực hiện|quy định)`, thay thế bằng bộ chấm `get_lean_structural_scorers` (`ProgressiveDisclosureScorer` [0.4] + `LengthBoundsScorer` [0.3] + `AntiDebrisScorer` [0.3]), KHÔNG áp đặt điểm liệt critical hard floor, bảo vệ 46 non-coding skills. 261 passed, 6 skipped tests (Commit [`39e8a83f`](https://github.com/vvChu/ccba-agent-platform/commit/39e8a83f)).
 *   `[TICKET-003A] [Biên Soạn Chỉ Mục Phẳng Legal Clauses Flat Index (~259 KB)]`: Đã biên dịch toàn diện 55 văn bản pháp luật, 19,724 statutory keys, và 24 replaces mappings vào `packages/ccba-harness/src/ccba_harness/evals/datasets/legal_clauses_flat.json`, tích hợp engine `load_legal_flat_index()` và CLI `compile_legal_flat_index.py`, bảo đảm 100% CI Parity. 265 passed, 6 skipped tests.
-*   `[TICKET-003B] [Legal Verbatim Provenance Scorer Chuẩn ADR-0059]`: Đã triển khai `LegalVerbatimProvenanceScorer` và `get_legal_scorers()` (`legal_verbatim_provenance` [0.5, critical] + `progressive_disclosure_links` [0.2] + `anti_debris` [0.15] + `depth` [0.15]), cưỡng chế rào chắn Điểm Liệt (Anti-Trap Hard Floor & Zero-Hallucination Hard Floor: trích dẫn văn bản hết hiệu lực không có cảnh báo/thay thế, hoặc bịa đặt văn bản/điều luật $\rightarrow$ điểm 0.0 critical fail), kiểm chứng SHA-256 provenance đối soát trực tiếp từ `legal_clauses_flat.json`. 272 passed, 6 skipped tests.
+*   `[TICKET-003B] [Legal Verbatim Provenance Scorer Chuẩn ADR-0059]`: Đã triển khai `LegalVerbatimProvenanceScorer` và `get_legal_scorers()` (`legal_verbatim_provenance` [0.5, critical] + `progressive_disclosure_links` [0.2] + `anti_debris` [0.15] + `depth` [0.15]), cưỡng chế rào chắn Điểm Liệt (Anti-Trap Hard Floor & Zero-Hallucination Hard Floor: trích dẫn văn bản hết hiệu lực không có cảnh báo/thay thế, hoặc bịa đặt văn bản/điều luật $\rightarrow$ điểm 0.0 critical fail), kiểm chứng SHA-256 provenance đối soát trực tiếp từ `legal_clauses_flat.json` (Commit [`1cab6743`](https://github.com/vvChu/ccba-agent-platform/commit/1cab6743)). 272 passed, 6 skipped tests.
+*   `[TICKET-002A] [Mở Rộng Archetype Routing Cho 73 Skills]`: Đã triển khai Taxonomy phân loại hoàn chỉnh cho 8 domain archetypes (Coding, Legal, Tech QC, BIM, Academic, Office, Visual, Orchestration) trong `tuner.py` và `daemon.py`. Xây dựng các scorers chuyên biệt `OfficeStandardScorer` (NĐ 30/2020) và `DiagramSyntaxScorer` (Mermaid/Excalidraw). Số lượng kỹ năng rơi vào bộ chấm fallback giảm từ 46 xuống 0/73 skills (đạt 100% độ phủ chuyên môn). Vượt qua 100% CI Gates (`verify-patch --preset code/eval/skill`).
 
 ---
 
 ## ⚡ 4. Rìa Biên Giới & Các Ticket Hành Động (The Frontier Tickets)
 
 Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay theo thứ tự ưu tiên:
-
-### 🔴 GIAI ĐOẠN 1 (P0: Khẩn Cấp Trước 00:00 Đêm Nay)
-
-*   **`[TICKET-002A]` [Mở Rộng Archetype Routing Cho 73 Skills] [Research & Task - AFK]**
-    - **Mục tiêu:** Bổ sung ánh xạ phân loại chuyên môn (Archetype Taxonomy) trong `daemon.py` và `tuner.py` cho các nhóm: Office/Docx/Pptx, Visual/Mermaid, Legal, Technical/QC, BIM, Coding.
-    - **Kết quả:** Giảm số lượng kỹ năng phải rơi vào bộ chấm fallback xuống mức tối thiểu (< 15 skills).
-    - **Trạng thái:** 🟢 READY (Unblocked)
-    - **Assignee:** Unassigned
 
 ---
 

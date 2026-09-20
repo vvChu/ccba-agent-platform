@@ -1075,3 +1075,91 @@ def get_legal_scorers() -> list[BaseScorer]:
         AntiDebrisScorer(weight=0.15),
         LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
     ]
+
+
+class OfficeStandardScorer(BaseScorer):
+    """Evaluates Office document formatting, typography, and administrative standards (NĐ 30/2020)."""
+
+    def __init__(
+        self,
+        name: str = "office_standard",
+        weight: float = 0.45,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(Nghị định 30/2020|NĐ 30/2020|thể thức|soạn thảo|Times New Roman|bố cục|tiêu đề|Quốc hiệu|Nơi nhận|phông chữ|docx|pptx|slide|trình bày|typography|heading|bảng|mục lục|canh lề)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Office document standard verified (NĐ 30/2020 / typography / layout guidelines)"
+                if matched
+                else "Missing office document formatting or typography standards (NĐ 30/2020, layout, or style)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_office_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for Office, Docx, Pptx, and typography skills."""
+    return [
+        OfficeStandardScorer(weight=0.45),
+        ProgressiveDisclosureScorer(weight=0.25),
+        AntiDebrisScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
+    ]
+
+
+class DiagramSyntaxScorer(BaseScorer):
+    """Evaluates Mermaid, Excalidraw, and architectural visual diagram syntax."""
+
+    def __init__(
+        self,
+        name: str = "diagram_syntax",
+        weight: float = 0.45,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(graph\s+(?:TD|LR|TB|BT)|flowchart\s+(?:TD|LR|TB|BT)|sequenceDiagram|classDiagram|erDiagram|stateDiagram|-->|---|subgraph|style|fill:|stroke:|```mermaid|```excalidraw|nodes|edges)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Diagram syntax verified (Mermaid / Excalidraw notation or visual flow syntax)"
+                if matched
+                else "Missing visual diagram syntax (Mermaid flowchart, sequence, or Excalidraw block)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_visual_diagram_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for Mermaid, Excalidraw, and diagram skills."""
+    return [
+        DiagramSyntaxScorer(weight=0.45),
+        ProgressiveDisclosureScorer(weight=0.25),
+        AntiDebrisScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
+    ]

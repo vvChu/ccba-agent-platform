@@ -20,7 +20,14 @@ from pathlib import Path
 from typing import Any
 
 from .tuner import (
+    ACADEMIC_ARCHETYPE_KEYWORDS,
+    BIM_ARCHETYPE_KEYWORDS,
     CODING_ARCHETYPE_KEYWORDS,
+    LEGAL_ARCHETYPE_KEYWORDS,
+    OFFICE_ARCHETYPE_KEYWORDS,
+    ORCHESTRATION_ARCHETYPE_KEYWORDS,
+    TECH_QC_ARCHETYPE_KEYWORDS,
+    VISUAL_ARCHETYPE_KEYWORDS,
     GitRatchetTuner,
     RatchetConfig,
     RatchetReport,
@@ -206,17 +213,17 @@ class NightlyTunerDaemon:
 
         if "risk" in sname or "conflict" in sname:
             return "eval_bigbim_risk.json"
-        if any(k in sname for k in ["legal", "luat", "tvpl", "vbpl", "ingest", "advisor"]):
+        if any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
             return "eval_legal_intel.json"
-        if any(k in sname for k in ["bim", "uniclass", "classification", "rase", "governance"]):
-            return "eval_bigbim_classification.json"
-        if any(k in sname for k in ["pccc", "qc", "audit"]):
+        if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
             return "eval_pccc_audit.json"
-        if any(k in sname for k in ["academic", "khoahoc", "writing"]):
+        if any(k in sname for k in BIM_ARCHETYPE_KEYWORDS):
+            return "eval_bigbim_classification.json"
+        if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
             return "eval_academic_writing.json"
-        if any(k in sname for k in ["copywriting", "vietbai", "truyenthong"]):
+        if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
             return "eval_copywriting.json"
-        if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
+        if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
             return "eval_agent_orchestration.json"
         if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
             return "eval_grilling.json"
@@ -224,6 +231,8 @@ class NightlyTunerDaemon:
             return "eval_adr_lifecycle.json"
         if any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
             return "eval_codebase_engineering.json"
+        if any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
+            return "eval_agent_orchestration.json"
 
         return "eval_general_domain.json"
 
