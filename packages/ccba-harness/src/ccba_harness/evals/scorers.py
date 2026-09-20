@@ -1508,3 +1508,90 @@ def get_bim_classification_scorers() -> list[BaseScorer]:
         AntiDebrisScorer(weight=0.15),
         LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
     ]
+
+
+def get_academic_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for academic and scientific writing skills."""
+    return [
+        RegexScorer(
+            name="academic_structure",
+            pattern=r"(IMRAD|CARS|Move 1|Move 2|Move 3|Materials|Methods|Results|Discussion|References|Style|Yale|APA)",
+            weight=0.5,
+        ),
+        RegexScorer(
+            name="academic_rigor_hard_floor",
+            pattern=r"(Swales|Kallestinova|APA|BibTeX|limitations|giới hạn|bị động|passive|De-nominalization)",
+            weight=0.3,
+            is_critical=True,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
+    ]
+
+
+def get_bigbim_risk_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for BigBIM risk and information conflict detection."""
+    return [
+        RegexScorer(
+            name="risk_conflict_audit",
+            pattern=r"(mâu thuẫn thông tin|information conflict|V2 - Coordination|khoảng cách|clearance|không gian bảo trì|không gian thao tác|va chạm)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="risk_anti_trap_hard_floor",
+            pattern=r"(900mm|150mm|Level 2|BBP|Unique ID|tủ điện|khoảng hở|hành lang|van ngăn cháy|Chủ trì)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="risk_mitigation_guard",
+            pattern=r"(proposed_mitigation|INF-CON-|giải pháp|dịch chuyển|cao độ|IFC4X3|IfcDistributionFlowElement|ccba-issue-tree|Why-Tree|How-Tree)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]
+
+
+def get_grilling_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for Socratic grilling, design stress-testing, and prototype review."""
+    return [
+        RegexScorer(
+            name="grilling_one_by_one_and_recommendation",
+            pattern=r"(câu hỏi|one-by-one|đề xuất|phương án|recommended|stress-test|chất vấn|front-end|picker)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="grilling_anti_trap_hard_floor",
+            pattern=r"(từng câu|đề xuất trước|facts vs decisions|tra cứu|tự tra cứu|codebase|NOTES\.md|ccba-issue-tree|vi phạm|bất biến)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="grilling_escalation_guard",
+            pattern=r"(ccba-issue-tree|How-Tree|Why-Tree|Solution How-Tree|ma trận|Giá trị|Độ phức tạp|Rủi ro|KISS|Frontier|prerequisites)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]
+
+
+def get_adr_lifecycle_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for Architecture Decision Record (ADR) lifecycle governance."""
+    return [
+        RegexScorer(
+            name="adr_scaffolding_and_lifecycle",
+            pattern=r"(ADR|HUB-ADR|SPOKE-ADR|ACCEPTED|SUPERSEDED|DEPRECATED|docs/adr/|TRACEABILITY_MATRIX|matrix)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="adr_anti_trap_hard_floor",
+            pattern=r"(superseded_by|supersedes|validate_adr_traceability|CI Parity|Context|Decision|Consequences|Invariants)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="adr_governance_guard",
+            pattern=r"(Hub vs Spoke|SPOKE-ADR|HUB-ADR|Living Traceability Matrix|README\.md|YAML Frontmatter|parity)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]

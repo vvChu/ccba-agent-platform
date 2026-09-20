@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
 import subprocess
 from pathlib import Path
@@ -222,3 +223,200 @@ def test_daemon_create_pull_request_real_git_semantic_change(
 
     assert res == "https://github.com/vvChu/ccba-agent-platform/pull/999"
     assert "Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng." not in caplog.text
+
+
+def test_weighted_priority_queue_cooldown() -> None:
+    """Verify that in_cooldown skills are placed in tier after non-cooldown skills."""
+    skills = [
+        {"skill_name": "s_weak_cooldown", "baseline_score": 50.0, "in_cooldown": True},
+        {"skill_name": "s_weak_active", "baseline_score": 60.0, "in_cooldown": False},
+        {"skill_name": "s_mid_active", "baseline_score": 95.0, "in_cooldown": False},
+        {"skill_name": "s_perfect_active", "baseline_score": 100.0, "in_cooldown": False},
+        {"skill_name": "s_mid_cooldown", "baseline_score": 92.0, "in_cooldown": True},
+    ]
+    ranked = WeightedPriorityQueue.rank_skills(skills)
+    names = [s["skill_name"] for s in ranked]
+    # Non-cooldown skills come first: s_weak_active (tier 0), s_mid_active (tier 1), s_perfect_active (tier 2).
+    # Then cooldown skills: s_weak_cooldown (tier 0), s_mid_cooldown (tier 1).
+    assert names == [
+        "s_weak_active",
+        "s_mid_active",
+        "s_perfect_active",
+        "s_weak_cooldown",
+        "s_mid_cooldown",
+    ]
+
+
+def test_load_historical_metrics_cooldown_and_real_llm_filter(tmp_path: Path) -> None:
+    """Verify _load_historical_metrics parses scores and filters cooldown based on REAL_LLM and date."""
+    reports_dir = tmp_path / ".md" / "knowledge" / "reports"
+    reports_dir.mkdir(parents=True)
+
+    today = datetime.date.today()
+    today_str = today.strftime("%Y%m%d")
+    yesterday_str = (today - datetime.timedelta(days=1)).strftime("%Y%m%d")
+    five_days_ago_str = (today - datetime.timedelta(days=5)).strftime("%Y%m%d")
+
+    # 1. Report from today with REAL_LLM engine
+    rep1 = reports_dir / f"nightly_tuner_report_{today_str}_010000.md"
+    rep1.write_text(
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{today_str}_010000` | **Engine:** `REAL_LLM`
+### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
+| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `skill_stuck` | 75.0% | **75.0%** | `0.0%` | 0 | `250,000` | ⚪ UNCHANGED |
+| `skill_halted` | 80.0% | **80.0%** | `0.0%` | 0 | `250,000` | ⚠️ HALT_PER_SKILL_TOKEN_BUDGET_EXCEEDED |
+| `skill_improved` | 70.0% | **95.0%** | `+25.0%` | 2 | `100,000` | 🟢 IMPROVED |
+""",
+        encoding="utf-8",
+    )
+
+    # 2. Report from yesterday with MOCK engine
+    rep2 = reports_dir / f"nightly_tuner_report_{yesterday_str}_020000.md"
+    rep2.write_text(
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{yesterday_str}_020000` | **Engine:** `MOCK`
+### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
+| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `skill_mock` | 60.0% | **60.0%** | `0.0%` | 0 | `-` | ⚪ UNCHANGED |
+""",
+        encoding="utf-8",
+    )
+
+    # 3. Report from 5 days ago (older than 3-day cutoff) with REAL_LLM engine
+    rep3 = reports_dir / f"nightly_tuner_report_{five_days_ago_str}_030000.md"
+    rep3.write_text(
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{five_days_ago_str}_030000` | **Engine:** `REAL_LLM`
+### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
+| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `skill_old` | 55.0% | **55.0%** | `0.0%` | 0 | `250,000` | ⚪ UNCHANGED |
+""",
+        encoding="utf-8",
+    )
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    scores, cooldown_skills = daemon._load_historical_metrics(cooldown_days=3)
+
+    # Scores loaded across all reports
+    assert scores.get("skill_stuck") == 75.0
+    assert scores.get("skill_halted") == 80.0
+    assert scores.get("skill_improved") == 95.0
+    assert scores.get("skill_mock") == 60.0
+    assert scores.get("skill_old") == 55.0
+
+    # Cooldown filtered strictly by: REAL_LLM, within 3 days, commits == 0, and score < 90 or UNCHANGED/HALT_
+    assert "skill_stuck" in cooldown_skills
+    assert "skill_halted" in cooldown_skills
+    assert "skill_improved" not in cooldown_skills  # commits > 0
+    assert "skill_mock" not in cooldown_skills  # MOCK engine
+    assert "skill_old" not in cooldown_skills  # Older than 3 days
+
+
+def test_remove_stale_plateau_brief(tmp_path: Path) -> None:
+    """Verify stale plateau briefs are deleted when skill improves or crosses 90.0% threshold."""
+    escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
+    escalations_dir.mkdir(parents=True)
+    brief_file = escalations_dir / "test_skill_plateau.md"
+    brief_file.write_text("# Old Plateau Brief", encoding="utf-8")
+    assert brief_file.exists()
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    removed = daemon._remove_stale_plateau_brief("test_skill")
+    assert removed is True
+    assert not brief_file.exists()
+
+    # Calling again on nonexistent file returns False without raising error
+    assert daemon._remove_stale_plateau_brief("test_skill") is False
+
+
+def test_resolve_dataset_file_completion_checklist() -> None:
+    """Verify ccba-completion-checklist maps to eval_legal_intel.json."""
+    daemon = NightlyTunerDaemon()
+    ds = daemon._resolve_dataset_file("ccba-completion-checklist")
+    assert ds == "eval_legal_intel.json"
+
+
+def test_weighted_priority_queue_safe_with_none_score() -> None:
+    """Verify WeightedPriorityQueue safely handles skills with baseline_score=None."""
+    skills = [
+        {"skill_name": "s_none", "baseline_score": None, "in_cooldown": False},
+        {"skill_name": "s_active", "baseline_score": 70.0, "in_cooldown": False},
+    ]
+    ranked = WeightedPriorityQueue.rank_skills(skills)
+    # s_none has score 0.0 (tier 0), so it ranks before 70.0
+    assert ranked[0]["skill_name"] == "s_none"
+    assert ranked[1]["skill_name"] == "s_active"
+
+
+def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -> None:
+    """Verify _load_historical_metrics handles plain unbolded scores and sorts by actual date."""
+    reports_dir = tmp_path / ".md" / "knowledge" / "reports"
+    reports_dir.mkdir(parents=True)
+
+    # Older report (2026-09-20) with no hyphens
+    rep_older = reports_dir / "nightly_tuner_report_20260920_010000.md"
+    rep_older.write_text(
+        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `20260920_010000` | **Engine:** `REAL_LLM`
+### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
+| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `skill_mixed` | 60.0% | **60.0%** | `0.0%` | 0 | `100,000` | ⚪ UNCHANGED |
+""",
+        encoding="utf-8",
+    )
+
+    # Newer report (2026-09-21) with hyphens in date AND unbolded final score AND backticks on commits
+    rep_newer = reports_dir / "nightly_tuner_report_2026-09-21_010000.md"
+    rep_newer.write_text(
+        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `2026-09-21_010000` | **Engine:** `REAL_LLM`
+### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
+| Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `skill_mixed` | 85.0% | 85.0% | `0.0%` | `0` | `-` | ⚪ UNCHANGED |
+""",
+        encoding="utf-8",
+    )
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    scores, cooldown_skills = daemon._load_historical_metrics(cooldown_days=3)
+
+    # The newer report (85.0%) should win over the older report (60.0%)
+    assert scores.get("skill_mixed") == 85.0
+    assert "skill_mixed" in cooldown_skills
+
+
+def test_remove_stale_plateau_brief_worktree(tmp_path: Path) -> None:
+    """Verify _remove_stale_plateau_brief removes brief from main repo root when executed in a worktree."""
+    main_repo = tmp_path / "main_repo"
+    worktree = tmp_path / "worktree"
+
+    main_escalations = main_repo / ".md" / "knowledge" / "escalations"
+    main_escalations.mkdir(parents=True)
+    main_brief = main_escalations / "test_wt_skill_plateau.md"
+    main_brief.write_text("# Main Brief", encoding="utf-8")
+
+    wt_escalations = worktree / ".md" / "knowledge" / "escalations"
+    wt_escalations.mkdir(parents=True)
+    wt_brief = wt_escalations / "test_wt_skill_plateau.md"
+    wt_brief.write_text("# WT Brief", encoding="utf-8")
+
+    # Simulate worktree .git file structure:
+    # main_repo/.git/worktrees/nightly-runner
+    gitdir = main_repo / ".git" / "worktrees" / "nightly-runner"
+    gitdir.mkdir(parents=True)
+    wt_git = worktree / ".git"
+    wt_git.write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
+
+    daemon = NightlyTunerDaemon(root=worktree)
+    assert daemon._get_main_repo_root() == main_repo
+
+    removed = daemon._remove_stale_plateau_brief("test_wt_skill")
+    assert removed is True
+    assert not wt_brief.exists()
+    assert not main_brief.exists()

@@ -62,7 +62,13 @@ def main() -> None:
         "--use-real-llm", action="store_true", help="Use real LLM inference instead of mock task"
     )
     parser.add_argument(
-        "--token-budget", type=int, default=5000000, help="Total session token budget ceiling"
+        "--token-budget", type=int, default=6500000, help="Total session token budget ceiling"
+    )
+    parser.add_argument(
+        "--per-skill-mutation-budget",
+        type=int,
+        default=250000,
+        help="Per-skill token budget ceiling for mutations (default: 250,000)",
     )
     parser.add_argument("--model", type=str, default="", help="Model alias for real LLM evaluation")
     parser.add_argument(
@@ -87,6 +93,7 @@ def main() -> None:
         max_iterations_low=args.max_iter,
         use_real_llm=args.use_real_llm,
         token_budget=args.token_budget,
+        per_skill_mutation_budget=args.per_skill_mutation_budget,
         model=args.model,
         target_skills=target_skills,
         alert_emitter=send_telegram_alert,
