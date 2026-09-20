@@ -120,12 +120,18 @@ COMMON_PATH_SEGMENTS: set[str] = {
 
 ALLOWED_HOST_COMMANDS: set[str] = {
     "/boost",
-    "/skill-repair",
+    "/browser",
     "/clear",
     "/compact",
+    "/goal",
+    "/grill-me",
     "/init",
-    "/ui-ux-pro-max",
+    "/learn",
+    "/schedule",
     "/ship",
+    "/skill-repair",
+    "/teamwork-preview",
+    "/ui-ux-pro-max",
 }
 
 GITLAB_QUICK_ACTIONS: set[str] = {

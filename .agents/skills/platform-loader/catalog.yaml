@@ -519,11 +519,16 @@ skills:
   tier: kernel
 - name: ccba-excalidraw-diagram
   bundle: _core
-  description: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian
-    và excalidraw.com.
+  description: Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout
+    engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
   triggers:
-  - ccba-show-me
-  - show-me
+  - excalidraw
+  - vẽ sơ đồ
+  - diagram
+  - layout engine
+  - sơ đồ kiến trúc
+  - vẽ quy trình
+  - layout router
   skill_path: .agents/skills/ccba-excalidraw-diagram/SKILL.md
   command: /ccba-excalidraw-diagram
   tier: kernel

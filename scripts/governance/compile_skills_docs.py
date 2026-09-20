@@ -126,6 +126,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "ccba-code-review / Báo cáo nghiệm thu",
         "role": "Kiểm thử tự động giao diện End-to-End và kiểm chứng hành vi người dùng.",
     },
+    "ccba-chrome-debug": {
+        "upstream": "Web testing / Tự động hóa trình duyệt qua CDP",
+        "downstream": "Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử",
+        "role": "Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.",
+    },
     "ccba-design": {
         "upstream": "Yêu cầu giao diện hoặc trải nghiệm người dùng mới",
         "downstream": "ccba-to-spec / ccba-implement",
