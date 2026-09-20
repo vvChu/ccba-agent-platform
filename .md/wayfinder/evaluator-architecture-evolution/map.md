@@ -47,9 +47,13 @@ Các ticket mở, không bị phụ thuộc, sẵn sàng giải quyết ngay the
 
 ### 🟡 GIAI ĐOẠN 2 (P1: Nâng Cấp Kỹ Thuật Xây Dựng, PCCC & BIM)
 
-*   **`[TICKET-004]` [PCCC & Technical QC Parametric Condition Scorer] [Grilling - HITL]**
-    - **Mục tiêu:** Chốt thiết kế bộ kiểm tra logic tham số kỹ thuật PCCC (Key-Value threshold condition, ví dụ `chiều dài > 30m` bắt buộc đi kèm `chia khoang ngăn khói`).
-    - **Trạng thái:** 🟢 READY (Unblocked - Domain routing độc lập tại `tuner.py:500`)
+*   **`[TICKET-004]` [PCCC & Technical QC Parametric Condition Scorer] [Task - Co-Design Blueprint]**
+    - **Mục tiêu:** 
+      1. Triển khai `PcccParametricScorer` theo Kiến Trúc Phân Tầng Hai Cấp (Pluggable Two-Tier):
+         - **Gate 1 (Deterministic Schema Filter):** Đối soát trực tiếp `parametric_rules` trong metadata (Expected Verdict, Required Parameters, Forbidden Anti-Trap Parameters, Legal Basis) với cơ chế Điểm Liệt Kép (Critical Hard Floor), chạy < 1ms không tốn token.
+         - **Gate 2 (Escalation LLM Judge):** Phúc thẩm tự động khi điểm sơ bộ rơi vào Vùng Nghi Ngờ (40% - 85%), có Graceful Fallback khi chạy CI offline (ADR-0058).
+      2. Mở rộng `eval_pccc_audit.json` từ 6 lên 12 test cases tham số kỹ thuật thực tế theo QCVN 06:2022/BXD (Bậc chịu lửa, Hút khói hành lang, Khoảng cách thoát nạn, Bơm PCCC, Khoang ngăn cháy). Bảo toàn nguyên vẹn tính đối kháng của `eval_pccc_audit_redteam.json`.
+    - **Trạng thái:** 🟢 READY (Đã chốt thiết kế qua Grilling)
     - **Assignee:** Unassigned
 
 *   **`[TICKET-005]` [Uniclass 200 & ISO 12006-2 Taxonomy Validator Cho BIM] [Research - AFK]**
