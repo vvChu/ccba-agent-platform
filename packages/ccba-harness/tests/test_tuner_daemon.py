@@ -82,6 +82,7 @@ def test_daemon_send_telegram_alert_mock(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_daemon_target_ref_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify target_ref defaults and fallback to main when origin/main cannot be verified."""
+
     class MockResult:
         def __init__(self, returncode: int) -> None:
             self.returncode = returncode
@@ -155,7 +156,9 @@ def test_daemon_create_pull_request_real_git_whitespace(
     # Mock verify-patch so it passes without needing full harness dependencies in tmp repo
     original_run = subprocess.run
 
-    def mock_run(cmd: list[str] | str, *args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def mock_run(
+        cmd: list[str] | str, *args: object, **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
         cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
         if "verify-patch" in cmd_str:
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="PASSED", stderr="")
@@ -194,7 +197,9 @@ def test_daemon_create_pull_request_real_git_semantic_change(
 
     original_run = subprocess.run
 
-    def mock_run(cmd: list[str] | str, *args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def mock_run(
+        cmd: list[str] | str, *args: object, **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
         cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
         if "verify-patch" in cmd_str:
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="PASSED", stderr="")
@@ -202,7 +207,10 @@ def test_daemon_create_pull_request_real_git_semantic_change(
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="pushed", stderr="")
         if "gh" in cmd_str and "pr" in cmd_str and "create" in cmd_str:
             return subprocess.CompletedProcess(
-                args=cmd, returncode=0, stdout="https://github.com/vvChu/ccba-agent-platform/pull/999\n", stderr=""
+                args=cmd,
+                returncode=0,
+                stdout="https://github.com/vvChu/ccba-agent-platform/pull/999\n",
+                stderr="",
             )
         # Real git diff runs natively
         return original_run(cmd, *args, **kwargs)

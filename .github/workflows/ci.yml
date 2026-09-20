@@ -64,6 +64,43 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
 
+  deterministic-parity:
+    name: Deterministic Parity & Schema Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install packages and dev tools
+        run: |
+          uv pip install ruff mypy pytest pytest-cov pytest-timeout pyyaml requests pydantic pydantic-settings psutil --system
+          uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+          uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-qc-core" --system
+          uv pip install -e "packages/ccba-legal-intel[dev]" --system
+          uv pip install -e "packages/ccba-notebooklm[dev]" --system
+          uv pip install -e "packages/ccba-ooxml[dev]" --system
+          uv pip install -e "packages/ccba-maskara[dev]" --system
+          uv pip install -e "packages/mdconverter[dev]" --system
+
+      - name: Run Deterministic Hard Completion Lock (ADR-0058)
+        env:
+          PYTHONPATH: .
+          CCBA_AI_MOCK: "1"
+        run: python -m ccba_harness verify-patch --preset ci
+
   lint-markdown:
     name: Lint Markdown
     runs-on: ubuntu-latest

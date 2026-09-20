@@ -24,12 +24,18 @@ from .scorers import (
     BaseScorer,
     LengthBoundsScorer,
     RegexScorer,
+    get_bim_classification_scorers,
     get_coding_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
     get_office_scorers,
     get_orchestration_scorers,
+    get_pccc_scorers,
     get_visual_diagram_scorers,
+)
+from .slicing import (
+    AdaptiveDataSlicer,
+    SlicedDataset,
 )
 
 try:
@@ -251,6 +257,10 @@ class RatchetConfig:
     llm_model: str = ""
     token_budget: int | None = None
     rate_limiter: RateLimiter | None = None
+    enable_adaptive_slicing: bool = True
+    split_ratio: float = 0.7
+    slicing_seed: int = 42
+    enable_perturbation: bool = True
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -414,6 +424,11 @@ class RatchetReport:
     completion_tokens: int = 0
     avg_latency_s: float = 0.0
     halt_reason: str | None = None
+    slicing_tier: str | None = None
+    tuning_size: int = 0
+    holdout_size: int = 0
+    holdout_score: float | None = None
+    holdout_initial_score: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Converts report to JSON-serializable dictionary."""
@@ -430,6 +445,11 @@ class RatchetReport:
             "completion_tokens": self.completion_tokens,
             "avg_latency_s": self.avg_latency_s,
             "halt_reason": self.halt_reason,
+            "slicing_tier": self.slicing_tier,
+            "tuning_size": self.tuning_size,
+            "holdout_size": self.holdout_size,
+            "holdout_score": self.holdout_score,
+            "holdout_initial_score": self.holdout_initial_score,
         }
 
 
@@ -589,20 +609,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
         return get_legal_scorers()
 
     if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
-        return [
-            RegexScorer(
-                name="technical_qc",
-                pattern=r"(QCVN|PCCC|bậc chịu lửa|khói|thẩm tra|tiêu chuẩn|thiết kế)",
-                weight=0.5,
-            ),
-            RegexScorer(
-                name="pccc_anti_trap_hard_floor",
-                pattern=r"(Bậc I|hút khói|15m|20m|25m|R45|R90|R120|N1|N2|N3|van ngăn cháy|chống cháy lan|không đạt|từ chối|vi phạm)",
-                weight=0.3,
-                is_critical=True,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.2),
-        ]
+        return get_pccc_scorers()
 
     if any(k in sname for k in ACADEMIC_ARCHETYPE_KEYWORDS) or "academic-writing" in sname:
         return [
@@ -648,25 +655,7 @@ def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
         ]
 
     if any(k in sname for k in ["bim", "uniclass", "classification", "ifc", "rase", "governance"]):
-        return [
-            RegexScorer(
-                name="bim_classification_rules",
-                pattern=r"(Uniclass|ISO 12006-2|ISO 22274|ISO 21511|En_|PM_|Pr_|Ss_|EF_|SL_|WBS|phân loại)",
-                weight=0.35,
-            ),
-            RegexScorer(
-                name="bim_anti_trap_hard_floor",
-                pattern=r"(ISO 19650|IFC4X3|IFC Alignment|BIM Object|Spatial Structure|Trí Nhớ Số|Digital Memory)",
-                weight=0.35,
-                is_critical=True,
-            ),
-            RegexScorer(
-                name="bim_redteam_disambiguation_guard",
-                pattern=r"(EF_25_10|EF_20_20|EF_25_30|Pr_30_59|EF_10_10|SL_25_30_70|phân tách|chuẩn hóa|Result|Resource|Air-lock|khoang đệm)",
-                weight=0.2,
-            ),
-            LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
-        ]
+        return get_bim_classification_scorers()
 
     if any(k in sname for k in ["teamwork", "orchestrat", "platform", "handoff", "issue-tree"]):
         return get_orchestration_scorers()
@@ -766,6 +755,22 @@ class GitRatchetOptimizer:
         self.runner = EvalRunner(default_pass_threshold=config.target_score)
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
 
+        # Three-Tier Adaptive Slicing (TICKET-006 / ADR-0058)
+        if config.enable_adaptive_slicing and self.dataset:
+            self.slicer = AdaptiveDataSlicer()
+            self.sliced_data: SlicedDataset | None = self.slicer.slice(
+                self.dataset,
+                split_ratio=config.split_ratio,
+                seed=config.slicing_seed,
+                enable_perturbation=config.enable_perturbation,
+            )
+            self.tuning_dataset: list[EvalItem] = self.sliced_data.tuning_items
+            self.holdout_dataset: list[EvalItem] = self.sliced_data.holdout_items
+        else:
+            self.sliced_data = None
+            self.tuning_dataset = list(self.dataset)
+            self.holdout_dataset = []
+
         # Token budget governance & Real LLM adapter (REC-08 / Ticket 03)
         budget = config.token_budget if config.token_budget is not None else 5_000_000
         self.token_tracker = TokenUsageTracker(budget_ceiling=budget)
@@ -826,11 +831,12 @@ class GitRatchetOptimizer:
         """Preserves YAML frontmatter metadata when mutating SKILL.md body."""
         return preserve_yaml_frontmatter(original_content, edited_content)
 
-    def evaluate_content(self, content: str) -> EvalReport:
-        """Evaluates given skill prompt content against test dataset."""
+    def evaluate_content(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
+        """Evaluates given skill prompt content against test dataset (or tuning/holdout subset)."""
+        target_dataset = dataset if dataset is not None else self.tuning_dataset
         if self.custom_task is not None:
             return self.runner.run_sync(
-                dataset=self.dataset,
+                dataset=target_dataset,
                 task=self.custom_task,
                 scorers=self.scorers,
             )
@@ -839,7 +845,7 @@ class GitRatchetOptimizer:
         if self.config.use_real_llm and self.llm_adapter is not None:
             llm_task = self.llm_adapter.create_eval_task(content)
             report = self.runner.run_sync(
-                dataset=self.dataset,
+                dataset=target_dataset,
                 task=llm_task,
                 scorers=self.scorers,
             )
@@ -1315,10 +1321,7 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
-            elif any(
-                k in self.config.skill_name.lower()
-                for k in CODING_ARCHETYPE_KEYWORDS
-            ) or any(
+            elif any(k in self.config.skill_name.lower() for k in CODING_ARCHETYPE_KEYWORDS) or any(
                 k in prompt_l
                 for k in [
                     "code",
@@ -1376,7 +1379,9 @@ class GitRatchetOptimizer:
                 if coding_blocks:
                     parts.append("\n\n".join(coding_blocks))
                 else:
-                    parts.append("Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định...")
+                    parts.append(
+                        "Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định..."
+                    )
             elif any(
                 k in prompt_l
                 for k in [
@@ -1438,14 +1443,12 @@ class GitRatchetOptimizer:
                 )
 
             if has_progressive_links:
-                parts.append(
-                    "Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md)."
-                )
+                parts.append("Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md).")
 
             return "\n\n".join(parts)
 
         return self.runner.run_sync(
-            dataset=self.dataset,
+            dataset=target_dataset,
             task=mock_agent_task,
             scorers=self.scorers,
         )
@@ -1836,6 +1839,7 @@ class GitRatchetOptimizer:
                 if isinstance(init_err, CircuitBreakerOpenError)
                 else "TOKEN_BUDGET_EXCEEDED"
             )
+            slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
             return RatchetReport(
                 target_file=str(self.target_file),
                 initial_score=0.0,
@@ -1849,7 +1853,26 @@ class GitRatchetOptimizer:
                 completion_tokens=self.token_tracker.completion_tokens,
                 avg_latency_s=self.token_tracker.avg_latency_s,
                 halt_reason=reason,
+                slicing_tier=slicing_tier_str,
+                tuning_size=len(self.tuning_dataset),
+                holdout_size=len(self.holdout_dataset),
             )
+
+        initial_holdout_score: float | None = None
+        if self.holdout_dataset:
+            try:
+                try:
+                    holdout_base_rep = self.evaluate_content(
+                        initial_content, dataset=self.holdout_dataset
+                    )
+                except TypeError:
+                    holdout_base_rep = self.evaluate_content(initial_content)
+                initial_holdout_score = holdout_base_rep.overall_score
+                logger.info(
+                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
+                )
+            except Exception as e:
+                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
 
         # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
         if baseline_score >= 100.0:
@@ -2012,6 +2035,23 @@ class GitRatchetOptimizer:
                 except Exception as e:
                     logger.error(f"Error restoring disk file: {e}")
 
+        final_holdout_score: float | None = None
+        if self.holdout_dataset:
+            try:
+                try:
+                    holdout_final_rep = self.evaluate_content(
+                        best_content, dataset=self.holdout_dataset
+                    )
+                except TypeError:
+                    holdout_final_rep = self.evaluate_content(best_content)
+                final_holdout_score = holdout_final_rep.overall_score
+                logger.info(
+                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                )
+            except Exception as e:
+                logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+
+        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
         return RatchetReport(
             target_file=str(self.target_file),
             initial_score=baseline_score,
@@ -2025,6 +2065,11 @@ class GitRatchetOptimizer:
             completion_tokens=self.token_tracker.completion_tokens,
             avg_latency_s=self.token_tracker.avg_latency_s,
             halt_reason=halt_reason,
+            slicing_tier=slicing_tier_str,
+            tuning_size=len(self.tuning_dataset),
+            holdout_size=len(self.holdout_dataset),
+            holdout_score=final_holdout_score,
+            holdout_initial_score=initial_holdout_score,
         )
 
 
