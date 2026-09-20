@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import time
 from collections.abc import AsyncGenerator, Callable, Generator
@@ -13,8 +14,9 @@ from ccba_ai.hooks import PrivacyGuardHook
 from ccba_ai.llm_utils import strip_think_tags
 from ccba_ai.mock_provider import MockProvider
 from ccba_ai.models import ChatResult, ChatUsage
-from ccba_ai.routing import resolve_max_tokens
+from ccba_ai.routing import is_reasoning_model, resolve_max_tokens
 
+logger = logging.getLogger("ccba_ai.client")
 RETRYABLE_EXCEPTIONS = (APIConnectionError, APITimeoutError)
 
 
@@ -102,6 +104,45 @@ def _find_and_load_env() -> None:
         current = current.parent
 
 
+def _sanitize_gateway_url(url: str | None) -> str:
+    """Sanitize gateway URL redirecting legacy port :8045 to centralized port :8090."""
+    raw = (
+        (url.strip() if url and url.strip() else None)
+        or (os.environ.get("AI_GATEWAY_URL") or "").strip()
+        or "http://100.83.192.30:8090/v1"
+    )
+    if ":8045" in raw:
+        logger.warning(
+            "Legacy AI Gateway port :8045 detected in URL (%s). Automatically redirecting to http://100.83.192.30:8090/v1",
+            raw,
+        )
+        return "http://100.83.192.30:8090/v1"
+    return raw
+
+
+def _compute_effective_timeout(
+    model: str,
+    base_timeout: float,
+    effective_max_tokens: int,
+    timeout: float | None = None,
+) -> float:
+    """Compute effective timeout adhering to Adaptive Reasoning Timeout Clamp.
+
+    - If caller explicitly passed timeout: respect float(timeout).
+    - If timeout is None:
+      * If reasoning model: max(base_timeout, 90.0, effective_max_tokens / 50.0).
+      * If non-reasoning but effective_max_tokens > 16384: max(base_timeout, effective_max_tokens / 50.0).
+      * Otherwise: base_timeout.
+    """
+    if timeout is not None:
+        return float(timeout)
+    if is_reasoning_model(model):
+        return max(base_timeout, 90.0, effective_max_tokens / 50.0)
+    if effective_max_tokens > 16384:
+        return max(base_timeout, effective_max_tokens / 50.0)
+    return base_timeout
+
+
 class AIClient:
     """Lightweight AI Gateway client — wraps OpenAI SDK with multi-tier failover and mock support."""
 
@@ -128,9 +169,9 @@ class AIClient:
             self.timeout = float(timeout)
         else:
             try:
-                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
+                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "90.0"))
             except ValueError:
-                self.timeout = 60.0
+                self.timeout = 90.0
 
         self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
         if mock_provider is not None:
@@ -149,12 +190,14 @@ class AIClient:
             mock_mode=self.mock_mode,
         )
 
+        sanitized_base_url = _sanitize_gateway_url(base_url)
+        self.base_url = sanitized_base_url
         self._client = OpenAI(
-            base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
+            base_url=sanitized_base_url,
             api_key=api_key
-            or os.environ.get(
-                "AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "mock-key-for-ci")
-            ),
+            or os.environ.get("AI_GATEWAY_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or "mock-key-for-ci",
             timeout=self.timeout,
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
@@ -198,12 +241,9 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         def _call(client_inst: Any, m: str) -> Any:
             kwargs: dict[str, Any] = {
@@ -271,12 +311,9 @@ class AIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         def _call(client_inst: Any, m: str) -> Any:
             kwargs: dict[str, Any] = {
@@ -326,14 +363,19 @@ class AIClient:
             response_text = content
 
         usage = ChatUsage()
-        if hasattr(response, "usage") and response.usage:
+        resp_usage = getattr(response, "usage", None)
+        if resp_usage:
+            prompt_tok = getattr(resp_usage, "prompt_tokens", 0)
+            comp_tok = getattr(resp_usage, "completion_tokens", 0)
+            tot_tok = getattr(resp_usage, "total_tokens", 0)
             usage = ChatUsage(
-                prompt_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
-                completion_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
-                total_tokens=getattr(response.usage, "total_tokens", 0) or 0,
+                prompt_tokens=prompt_tok if isinstance(prompt_tok, int) else 0,
+                completion_tokens=comp_tok if isinstance(comp_tok, int) else 0,
+                total_tokens=tot_tok if isinstance(tot_tok, int) else 0,
             )
 
-        resolved_model = getattr(response, "model", target_model) or target_model
+        resp_model = getattr(response, "model", None)
+        resolved_model = resp_model if isinstance(resp_model, str) else target_model
 
         return ChatResult(
             content=response_text,
@@ -344,6 +386,28 @@ class AIClient:
             raw_response=response,
         )
 
+    def complete(
+        self,
+        message: str,
+        *,
+        model: str | None = None,
+        system: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        strip_thinking: bool = True,
+        timeout: float | None = None,
+    ) -> str:
+        """Send a completion/chat request (alias for chat())."""
+        return self.chat(
+            message,
+            model=model,
+            system=system,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            strip_thinking=strip_thinking,
+            timeout=timeout,
+        )
+
     def stream(
         self,
         message: str,
@@ -352,6 +416,7 @@ class AIClient:
         system: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        timeout: float | None = None,
     ) -> Generator[str, None, None]:
         """Stream a chat response, yielding text chunks as they arrive.
 
@@ -361,6 +426,7 @@ class AIClient:
             system: Optional system prompt.
             max_tokens: Maximum tokens in the response.
             temperature: Sampling temperature (0.0–2.0).
+            timeout: Optional per-request timeout in seconds.
 
         Yields:
             Text chunks of the assistant response as they stream in.
@@ -375,15 +441,20 @@ class AIClient:
         effective_max_tokens = resolve_max_tokens(
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         def _call(client_inst: Any, m: str) -> Any:
-            return client_inst.chat.completions.create(
-                model=m,
-                messages=messages,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-                stream=True,
-            )
+            kwargs: dict[str, Any] = {
+                "model": m,
+                "messages": messages,
+                "max_tokens": effective_max_tokens,
+                "temperature": temperature,
+                "stream": True,
+                "timeout": effective_timeout,
+            }
+            return client_inst.chat.completions.create(**kwargs)
 
         def _primary_call() -> Any:
             return _retry_sync(
@@ -396,11 +467,13 @@ class AIClient:
         response = self.fallback_router.execute_sync(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
             circuit_breaker=self.circuit_breaker,
             fallback_fn_builder=_call,
         )
         for chunk in response:
+            if not getattr(chunk, "choices", None):
+                continue
             content = chunk.choices[0].delta.content
             if content:
                 self.privacy_guard.check_content(content)
@@ -443,12 +516,9 @@ class AIClient:
             "temperature": temperature,
         }
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         create_kwargs["timeout"] = effective_timeout
 
@@ -675,9 +745,9 @@ class AsyncAIClient:
             self.timeout = float(timeout)
         else:
             try:
-                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "60.0"))
+                self.timeout = float(os.environ.get("AI_GATEWAY_TIMEOUT", "90.0"))
             except ValueError:
-                self.timeout = 60.0
+                self.timeout = 90.0
 
         self.mock_mode = mock_mode if mock_mode is not None else is_mock_mode_enabled()
         if mock_provider is not None:
@@ -696,12 +766,14 @@ class AsyncAIClient:
             mock_mode=self.mock_mode,
         )
 
+        sanitized_base_url = _sanitize_gateway_url(base_url)
+        self.base_url = sanitized_base_url
         self._client = AsyncOpenAI(
-            base_url=base_url or os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
+            base_url=sanitized_base_url,
             api_key=api_key
-            or os.environ.get(
-                "AI_GATEWAY_KEY", os.environ.get("OPENAI_API_KEY", "mock-key-for-ci")
-            ),
+            or os.environ.get("AI_GATEWAY_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or "mock-key-for-ci",
             timeout=self.timeout,
         )
         self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
@@ -745,12 +817,9 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         async def _call(client_inst: Any, m: str) -> Any:
             kwargs: dict[str, Any] = {
@@ -818,12 +887,9 @@ class AsyncAIClient:
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         async def _call(client_inst: Any, m: str) -> Any:
             kwargs: dict[str, Any] = {
@@ -873,14 +939,19 @@ class AsyncAIClient:
             response_text = content
 
         usage = ChatUsage()
-        if hasattr(response, "usage") and response.usage:
+        resp_usage = getattr(response, "usage", None)
+        if resp_usage:
+            prompt_tok = getattr(resp_usage, "prompt_tokens", 0)
+            comp_tok = getattr(resp_usage, "completion_tokens", 0)
+            tot_tok = getattr(resp_usage, "total_tokens", 0)
             usage = ChatUsage(
-                prompt_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
-                completion_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
-                total_tokens=getattr(response.usage, "total_tokens", 0) or 0,
+                prompt_tokens=prompt_tok if isinstance(prompt_tok, int) else 0,
+                completion_tokens=comp_tok if isinstance(comp_tok, int) else 0,
+                total_tokens=tot_tok if isinstance(tot_tok, int) else 0,
             )
 
-        resolved_model = getattr(response, "model", target_model) or target_model
+        resp_model = getattr(response, "model", None)
+        resolved_model = resp_model if isinstance(resp_model, str) else target_model
 
         return ChatResult(
             content=response_text,
@@ -891,6 +962,28 @@ class AsyncAIClient:
             raw_response=response,
         )
 
+    async def complete(
+        self,
+        message: str,
+        *,
+        model: str | None = None,
+        system: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        strip_thinking: bool = True,
+        timeout: float | None = None,
+    ) -> str:
+        """Send an async completion/chat request (alias for chat())."""
+        return await self.chat(
+            message,
+            model=model,
+            system=system,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            strip_thinking=strip_thinking,
+            timeout=timeout,
+        )
+
     async def stream(
         self,
         message: str,
@@ -899,6 +992,7 @@ class AsyncAIClient:
         system: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
+        timeout: float | None = None,
     ) -> AsyncGenerator[str, None]:
         """Stream an async chat response, yielding text chunks as they arrive.
 
@@ -908,6 +1002,7 @@ class AsyncAIClient:
             system: Optional system prompt.
             max_tokens: Maximum tokens in the response.
             temperature: Sampling temperature (0.0–2.0).
+            timeout: Optional per-request timeout in seconds.
 
         Yields:
             Text chunks of the assistant response as they stream in.
@@ -922,6 +1017,9 @@ class AsyncAIClient:
         effective_max_tokens = resolve_max_tokens(
             target_model, max_tokens, baseline_default=1024, reasoning_allocation=16384
         )
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         async def _call(client_inst: Any, m: str) -> Any:
             return await client_inst.chat.completions.create(
@@ -930,6 +1028,7 @@ class AsyncAIClient:
                 max_tokens=effective_max_tokens,
                 temperature=temperature,
                 stream=True,
+                timeout=effective_timeout,
             )
 
         async def _primary_call() -> Any:
@@ -943,11 +1042,13 @@ class AsyncAIClient:
         response = await self.fallback_router.execute_async(
             _primary_call,
             model=target_model,
-            timeout=self.timeout,
+            timeout=effective_timeout,
             circuit_breaker=self.circuit_breaker,
             fallback_coro_builder=_call,
         )
         async for chunk in response:
+            if not getattr(chunk, "choices", None):
+                continue
             content = chunk.choices[0].delta.content
             if content:
                 self.privacy_guard.check_content(content)
@@ -978,12 +1079,9 @@ class AsyncAIClient:
             "temperature": temperature,
         }
 
-        if timeout is not None:
-            effective_timeout = float(timeout)
-        elif effective_max_tokens > 16384:
-            effective_timeout = max(self.timeout, effective_max_tokens / 50.0)
-        else:
-            effective_timeout = self.timeout
+        effective_timeout = _compute_effective_timeout(
+            target_model, self.timeout, effective_max_tokens, timeout
+        )
 
         create_kwargs["timeout"] = effective_timeout
 

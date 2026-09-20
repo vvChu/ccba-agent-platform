@@ -14,6 +14,7 @@ def test_model_archetype_constants() -> None:
     assert ModelArchetype.REASONING_ALT == "claude-sonnet-4-6-thinking"
     assert ModelArchetype.LOCAL == "qwen-local-primary"
     assert ModelArchetype.RAG == "rag-core"
+    assert ModelArchetype.CLAUDE_OPUS_46 == "claude-opus-4-6"
 
 
 def test_choose_model_routing() -> None:
@@ -25,6 +26,8 @@ def test_choose_model_routing() -> None:
     assert choose_model("legal") == ModelArchetype.REASONING
     assert choose_model("private") == ModelArchetype.LOCAL
     assert choose_model("rag") == ModelArchetype.RAG
+    assert choose_model("synthesis") == ModelArchetype.CLAUDE_OPUS_46
+    assert choose_model("deep_reasoning") == ModelArchetype.CLAUDE_OPUS_46
 
 
 def test_choose_model_fallback() -> None:
@@ -39,6 +42,12 @@ def test_is_reasoning_model() -> None:
 
     assert is_reasoning_model("gemini-3.7-flash-high") is True
     assert is_reasoning_model("claude-sonnet-4-6-thinking") is True
+    assert is_reasoning_model("claude-opus-4-6") is True
+    assert is_reasoning_model("claude-opus-4.6") is True
+    assert is_reasoning_model("opus-4.6") is True
+    assert is_reasoning_model("claude-opus-4-6-thinking") is True
+    assert is_reasoning_model("custom-opus-4-6") is True
+    assert is_reasoning_model("custom-opus-4.6") is True
     assert is_reasoning_model("reasoning-gemma") is True
     assert is_reasoning_model("o1-preview") is True
     assert is_reasoning_model("o3-mini") is True
