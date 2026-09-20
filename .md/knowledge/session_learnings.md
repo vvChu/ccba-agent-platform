@@ -80,7 +80,7 @@
 
 ## Miền 5. 💻 Hạ Tầng & Tooling
 
-- **RULE-5.1 [Chromium VIP & CDP]**: Profile `~/.gemini/antigravity/chrome_vip` cổng 9222. `Browser.setDownloadBehavior` qua WebSocket.
+- **RULE-5.1 [Chrome CDP & Browser Automation Invariant]**: Chrome CDP port 9222 (Strict SSOT) BẮT BUỘC cờ `--remote-allow-origins=*` và chỉ lắng nghe `127.0.0.1` (chống WebSocket 403 trên Chrome 111+). Profile chuẩn: `~/.gemini/antigravity-browser-profile` (4.5GB auth cookies dùng chung toàn hệ thống). Khởi chạy tự động dọn stale `LOCK`. Tắt phiên CHỈ diệt PID port 9222/profile AI, cấm diệt Chrome thường. Allowlist: duy trì 64+ domains tại `browserAllowlist.txt` (SharePoint, TVPL, AI, Office 365). MCP: `chrome-devtools-mcp` v1.9.0.
 - **RULE-5.2 [Windows Path Protection]**: Windows: IDE bọc `hooks.json` `"C:\..."` $\rightarrow$ vô hiệu `{}` và khóa `IsReadOnly = $true`.
 - **RULE-5.3 [Query Sanitization]**: Query TVPL: thay `/`, `:`, `-` bằng space (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
 - **RULE-5.4 [Git Upstream Windows]**: Git Win: Mutex `.md/scratch/upstream_sync.lock`; chữa `index.lock`; dọn bằng `safe_remove` (RULE-2.7).

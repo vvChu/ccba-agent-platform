@@ -215,3 +215,34 @@
   4. **Chuẩn hóa Line Endings (LF Invariant):** Mọi repository thuộc hệ sinh thái CCBA bắt buộc có cấu hình `.gitattributes` chuẩn hóa (`* text=auto eol=lf`) để triệt tiêu xung đột CRLF/LF khi làm việc đa nền tảng.
   5. **Cổng Cưỡng Chế Sharded Registry (Hard Completion Gate):** Tại các Spoke tri thức quản lý văn bản pháp lý (có thư mục `legal_docs/`), lệnh kiểm tra tính toàn vẹn `ccba-legal compile-registry --check` (hoặc `validate_registry_sync()`) là điều kiện tiên quyết bắt buộc phải trả về `exit code 0`. Nếu có drift, Agent phải chạy compile trước khi commit.
   6. **Skills Hygiene Linting Rule:** Trong các tài liệu `SKILL.md`, các đoạn mã bash có chứa lệnh gán biến môi trường (`export VAR=...`) bắt buộc phải gắn nhãn ngôn ngữ chứa `linux` hoặc `ubuntu` (ví dụ ````bash (linux)````) để vượt qua bộ lọc chống Windows Bashism của `audit_skills_hygiene.py`.
+
+---
+
+## 15. Chrome DevTools Protocol (CDP) & Browser Agent Automation Invariant (Quy Chuẩn Tự Động Hóa Trình Duyệt & Bảo Mật CDP)
+
+- **Cờ Bắt Buộc Bắt Tay WebSocket (`--remote-allow-origins=*`):**
+  - Kể từ Chrome 111 đến các phiên bản hiện đại (Chrome 153+), bất kỳ câu lệnh khởi chạy Chrome nào sử dụng `--remote-debugging-port` đều **bắt buộc** phải gắn kèm cờ `--remote-allow-origins=*`.
+  - Nghiêm cấm khởi chạy thiếu cờ này vì sẽ dẫn đến lỗi `403 Forbidden` khi client WebSocket (Antigravity `/browser`, CDP, Node.js, Python) bắt tay kết nối tới `http://127.0.0.1:9222`.
+
+- **Khóa Chặt Cổng Lắng Nghe Trên Loopback (`127.0.0.1` Invariant):**
+  - Khi kích hoạt cờ `--remote-allow-origins=*`, Chrome tuyệt đối **chỉ được phép lắng nghe trên địa chỉ loopback nội bộ `127.0.0.1`**.
+  - Nghiêm cấm cấu hình `--remote-debugging-address=0.0.0.0` hoặc gán vào IP card mạng ngoài (LAN/Wi-Fi/WAN) nhằm ngăn chặn triệt để nguy cơ tin tặc cùng mạng nội bộ chiếm quyền điều khiển trình duyệt và đánh cắp auth cookies.
+
+- **Chính Sách Cổng 9222 Cố Định (Strict SSOT & Auto-Healing):**
+  - Cổng `9222` là định danh cổng chuẩn duy nhất (SSOT) cho toàn bộ hệ thống (`mcp_config.json`, `/browser`, `ccba_legal`).
+  - Nghiêm cấm tự ý nhảy cổng động (như 9333) khi cổng 9222 bận, vì sẽ làm gãy cấu hình tĩnh của Chrome DevTools MCP Server. Thay vào đó, launcher phải phát hiện PID đang giữ cổng và hỗ trợ gọi `Stop-Chrome-Debug` để tự chữa lành (Auto-Healing).
+
+- **Tách Biệt Profile Bền Vững Dùng Chung (Unified Persistent Profile Isolation):**
+  - Môi trường tự động hóa trình duyệt chuẩn của Antigravity và CCBA Platform sử dụng chung một profile duy nhất tại: `~/.gemini/antigravity-browser-profile`.
+  - Toàn bộ phiên đăng nhập (SharePoint CCBA `ibstbim.sharepoint.com`, Google Workspace, Thư Viện Pháp Luật...) được bảo toàn vĩnh viễn trên profile này, giúp tất cả các tác vụ kế thừa phiên làm việc mà không cần lặp lại xác thực OTP/2FA.
+  - Các công cụ CLI và crawler phải áp dụng nguyên tắc **"Attach-first via CDP"**: nếu cổng 9222 đang mở thì kết nối trực tiếp vào các tab có sẵn, tránh tự ý spawn tiến trình Chrome mới đè lên profile.
+
+- **Cơ Chế Tự Phục Hồi Khóa Profile (Stale LOCK File Recovery):**
+  - Trước khi khởi động Chrome CDP, launcher bắt buộc phải kiểm tra và tự động dọn dẹp file tồn đọng `~/.gemini/antigravity-browser-profile/LOCK` (nếu cổng 9222 chưa có tiến trình nào chiếm giữ) để ngăn ngừa tình trạng Chrome từ chối mở do sự cố crash trước đó.
+
+- **Quy Tắc Dừng An Toàn Chọn Lọc (Selective Safe Termination Invariant):**
+  - Khi viết hoặc thực thi các lệnh dừng trình duyệt Debug (`Stop-Chrome-Debug`), Agent **chỉ được phép** tắt tiến trình gắn với cổng 9222 hoặc chứa tham số `antigravity-browser-profile`.
+  - Tuyệt đối nghiêm cấm chạy lệnh `taskkill /IM chrome.exe /F` hàng loạt làm tắt các cửa sổ làm việc cá nhân của người dùng.
+
+- **Bảo Trì Danh Sách Tên Miền (`browserAllowlist.txt`):**
+  - Khi bổ sung luồng tự động hóa tới một domain mới, Agent phải kiểm tra và cập nhật `browserAllowlist.txt` đồng thời ở cả hai thư mục `~/.gemini/antigravity/` và `~/.gemini/antigravity-ide/`.
