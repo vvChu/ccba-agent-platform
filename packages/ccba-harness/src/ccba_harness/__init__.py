@@ -37,6 +37,7 @@ from .economy import (
     scan_all_skills_economy,
 )
 from .evals import (
+    DEFAULT_FLAT_INDEX_PATH,
     AntiDebrisScorer,
     AutoItemScorer,
     BaseScorer,
@@ -49,6 +50,7 @@ from .evals import (
     GitRatchetTuner,
     JsonSchemaScorer,
     LeanStructuralScorer,
+    LegalFlatIndex,
     LengthBoundsScorer,
     LLMRubricScorer,
     RatchetConfig,
@@ -56,9 +58,11 @@ from .evals import (
     RatchetTrialResult,
     RegexScorer,
     ScoreResult,
+    StatutoryDocument,
     get_default_domain_scorers,
     get_lean_structural_scorers,
     load_eval_dataset,
+    load_legal_flat_index,
     preserve_yaml_frontmatter,
     run_eval_pipeline,
 )
@@ -187,6 +191,10 @@ __all__ = [
     "get_default_domain_scorers",
     "GitRatchetOptimizer",
     "GitRatchetTuner",
+    "DEFAULT_FLAT_INDEX_PATH",
+    "StatutoryDocument",
+    "LegalFlatIndex",
+    "load_legal_flat_index",
     "TokenEstimator",
     "TranscriptStep",
     "ToolCallRecord",
