@@ -160,6 +160,10 @@ def test_audit_catches_corrupt_or_missing_frontmatter(tmp_path: Path) -> None:
         ("Invoke AskUserQuestion for input.", "Claude Tool (AskUserQuestion)"),
         ("Refer to code-reviewer.md template.", "Missing ClaudeKit Template (code-reviewer.md)"),
         ("Read codebase-summary.md file.", "Missing ClaudeKit File (codebase-summary.md)"),
+        (
+            "<!-- Ratchet Optimization Refinement: iteration 1 -->",
+            "Ratchet Optimization Junk Comment (ADR-0058)",
+        ),
     ],
 )
 def test_audit_catches_dead_wood_remnants(

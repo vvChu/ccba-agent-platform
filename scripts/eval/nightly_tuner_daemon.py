@@ -70,6 +70,12 @@ def main() -> None:
         default="",
         help="Comma-separated skill names to scope optimization (e.g. 'bigbim-risk')",
     )
+    parser.add_argument(
+        "--ref",
+        type=str,
+        default="origin/main",
+        help="Git target ref for baseline comparison (default: origin/main)",
+    )
     args = parser.parse_args()
 
     target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
@@ -82,6 +88,7 @@ def main() -> None:
         model=args.model,
         target_skills=target_skills,
         alert_emitter=send_telegram_alert,
+        target_ref=args.ref,
     )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 

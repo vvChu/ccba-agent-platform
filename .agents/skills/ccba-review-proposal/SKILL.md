@@ -44,10 +44,13 @@ Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm
      ```bash
      gh pr list --state open
      ```
-3. **Phân Tuyến Thích Ứng (Adaptive Review Tier):**
+3. **Phân Tuyến Thích Ứng (Adaptive Review Tier & Progressive Disclosure):**
+   - **Nhánh PR Auto-Tune (`auto-tune/*` hoặc tiêu đề PR chứa `auto-tune`):**
+     - Đọc tài liệu tham chiếu [references/nightly_tuning_review.md](references/nightly_tuning_review.md) và tuân thủ quy trình đối soát Nightly Evolution Matrix, kiểm tra Goodhart gaming / nhồi từ khóa ảo và kích hoạt quy trình Supervised Halt Protocol nếu phát hiện bất thường.
+   - **Spoke PR Thông Thường:** Tiếp tục Bước 1.4 (Khảo sát tệp Proposal và Spoke Leakage Guard).
    - **Tier 1 — Fast Deterministic Review (Mặc định):** Áp dụng cho PR scoped thông thường ($< 400$ LOC, đóng gói trong 1 package). Chạy bộ 3 Deterministic Workers tự động ($< 15$ giây).
    - **Tier 2 — Boost / Multi-Agent Deep Review:** Tự động kích hoạt khi có cờ `--boost` / `--deep` HOẶC PR thay đổi gói core `_core`, sửa đổi $> 400$ LOC. Ủy quyền cho subagents `DeepInvestigator` và `DeepCoder` thực hiện Double-Pass Adversarial Review và kiểm tra Threat Model.
-4. **Khảo sát tệp Proposal:**
+4. **Khảo sát tệp Proposal và Spoke Leakage Guard:**
    - Kiểm tra tệp ghi nhận tại `.agents/proposals/[YYYY-MM-DD]_[name].md`.
    - Đọc YAML frontmatter (`proposal_id`, `type`, `proposed_by_project`, `priority`).
    - Đọc tóm tắt kiến trúc và mục tiêu nghiệp vụ mà Spoke đã giải quyết.
@@ -139,3 +142,14 @@ Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm
    - Thông báo cho Spoke đề xuất kích hoạt `/ccba-update-spoke` để nạp tính năng mới và hoàn tất đóng vòng đóng góp thượng nguồn.
 
 **Tiêu chí hoàn thành:** Proposal cập nhật status merged, compile catalog thành công.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu hoặc thẩm định PR đặc thù, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/nightly_tuning_review.md` | Hướng dẫn đối soát Nightly Evolution Matrix, phát hiện Goodhart gaming và quy trình Supervised Halt Protocol cho PR `auto-tune/*` |
+
