@@ -105,80 +105,79 @@ LLM Agents hoặc debugger tự động (`mock-debugger`) có thể parse trực
 
 ---
 
-## Multi-Endpoint Soft Cooldown & Tier 1 Auto-Downgrade Pattern
+## Centralized Gateway (:8090) & Soft Cooldown Auto-Downgrade Pattern
+
+### Kiến trúc Tập Trung tại Gateway Cổng :8090
+Toàn bộ danh mục mô hình (kể cả Gemini Flash High, Claude Sonnet 4.6 Thinking, Claude Opus 4.6 Thinking và local Qwen) được cung cấp **tập trung tại Gateway duy nhất cổng `:8090`** trên Server Spark (`http://100.83.192.30:8090/v1`). Không còn phân tách endpoint hay proxy phụ trợ trên cổng `:8045`.
 
 ### Bối cảnh & Vấn đề
-Khi một pipeline LLM tích hợp các dịch vụ reasoning chuyên biệt thông qua một Proxy trung gian hoặc Endpoint tài khoản dùng chung (ví dụ: Antigravity Tools Proxy trên Cổng 8045 cung cấp Claude Opus 4.6 Thinking / Sonnet 4.6):
-- Khi pool tài khoản tạm thời cạn kiệt hoặc bị giới hạn tần suất, endpoint trả về lỗi HTTP `503 Service Unavailable` (`All accounts limited. Wait Xs.`) hoặc HTTP `429 Too Many Requests`.
-- Nếu áp dụng Circuit Breaker cứng truyền thống (Hard Trip ngắt toàn bộ pipeline) $\rightarrow$ Tác vụ của người dùng bị dừng khựng (Hard Crash/Abort), gây ức chế và đình trệ quy trình.
+Khi một pipeline LLM gọi các mô hình reasoning chuyên biệt (như `claude-opus-4-6`, `claude-sonnet-4-6-thinking`) qua AI Gateway:
+- Khi upstream provider tạm thời cạn kiệt quota hoặc bị giới hạn tần suất, gateway có thể trả về lỗi HTTP `503 Service Unavailable` hoặc HTTP `429 Too Many Requests`.
+- Nếu áp dụng Circuit Breaker cứng truyền thống (ngắt toàn bộ pipeline) $\rightarrow$ Tác vụ của người dùng bị dừng khựng (Hard Crash/Abort), gây ức chế và đình trệ quy trình.
 
-### Giải pháp: Soft Cooldown Timer & Tier 1 Auto-Downgrade
-Kết hợp cơ chế **Soft Cooldown** tạm thời với **Tự động giáng cấp xuống mô hình Tier 1** tương đương (như `gemini-3.8-flash-high` hoặc `gemini-3.1-pro` trên Cổng chính 8090):
+### Giải pháp: Model-Level Soft Cooldown & Auto-Downgrade
+Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với **Tự động giáng cấp xuống mô hình dự phòng** tương đương (như `gemini-3.7-flash-high` hoặc `gemini-3.8-flash` ngay trên Gateway `:8090`):
 
 ```
-                       Request (model="claude-opus-4-6-thinking")
+                       Request (model="claude-opus-4-6")
                                        │
-                         [Is in Soft Cooldown (30s)?]
-                                 ├── Yes ──► [Auto-Downgrade to Gemini 3.8 Flash High (8090)]
+                         [Is model in Cooldown (30s)?]
+                                 ├── Yes ──► [Auto-Downgrade to Gemini Flash High (:8090)]
                                  │           (was_downgraded = True)
                                  └── No
                                      │
-                             Gửi tới Port 8045
+                             Gửi tới Gateway :8090
                                      ├── HTTP 200 ──► Trả về kết quả (was_downgraded = False)
                                      └── HTTP 503/429
                                              │
-                                             ├── Kích hoạt Cooldown: _proxy_cooldown_until = now + 30s
-                                             └── [Auto-Downgrade to Gemini 3.8 Flash High (8090)]
+                                             ├── Kích hoạt Cooldown: _model_cooldown_until[model] = now + 30s
+                                             └── [Auto-Downgrade to Gemini Flash High (:8090)]
                                                  (was_downgraded = True)
 ```
 
 ### Triển khai Mẫu (Architecture Seam)
 ```python
-_proxy_cooldown_until: float = 0.0
+_model_cooldown_until: dict[str, float] = {}
 
 def call_gateway_with_meta(
     prompt: str,
     *,
-    model: str = "",
-    timeout: int = 60,
+    model: str = "claude-opus-4-6",
+    timeout: int = 90,
 ) -> tuple[str, bool]:
-    """Gọi LLM Gateway có theo dõi metadata giáng cấp (was_downgraded)."""
-    global _proxy_cooldown_until
+    """Gọi LLM Gateway (:8090) có theo dõi metadata giáng cấp (was_downgraded)."""
+    global _model_cooldown_until
 
-    is_proxy = _is_proxy_model(model)
-
-    # 1. Nếu proxy đang trong thời gian Cooldown -> Tự động giáng cấp ngay lập tức
-    if is_proxy and time.time() < _proxy_cooldown_until:
-        remaining = int(_proxy_cooldown_until - time.time())
-        logger.warning(f"Proxy port 8045 in cooldown ({remaining}s left). Auto-downgrading to fallback model...")
+    # 1. Nếu model đang trong thời gian Cooldown -> Tự động giáng cấp ngay lập tức
+    cooldown_until = _model_cooldown_until.get(model, 0.0)
+    if time.time() < cooldown_until:
+        remaining = int(cooldown_until - time.time())
+        logger.warning(f"Model {model} in cooldown ({remaining}s left). Auto-downgrading to fallback model...")
         return _call_fallback_gateway(prompt, timeout=timeout), True
 
-    # 2. Thử gọi Proxy chính
-    if is_proxy:
-        try:
-            content = _call_proxy_endpoint(prompt, model=model, timeout=timeout)
-            return content, False
-        except (GatewayHttp503Error, GatewayHttp429Error) as exc:
-            # 3. Kích hoạt 30s Soft Cooldown và giáng cấp tức thì
-            _proxy_cooldown_until = time.time() + 30.0
-            logger.warning(f"Proxy 8045 limited: {exc}. Cooldown 30s set. Downgrading to Tier 1 fallback...")
-            return _call_fallback_gateway(prompt, timeout=timeout), True
-
-    # 4. Các model thông thường gọi trực tiếp endpoint chuẩn
-    return _call_standard_gateway(prompt, model=model, timeout=timeout), False
+    # 2. Thử gọi mô hình chính trên Gateway :8090
+    try:
+        content = _call_gateway_endpoint(prompt, model=model, timeout=timeout)
+        return content, False
+    except (GatewayHttp503Error, GatewayHttp429Error) as exc:
+        # 3. Kích hoạt 30s Soft Cooldown và giáng cấp tức thì sang model dự phòng trên :8090
+        _model_cooldown_until[model] = time.time() + 30.0
+        logger.warning(f"Model {model} limited: {exc}. Cooldown 30s set. Downgrading to Tier 1 fallback...")
+        return _call_fallback_gateway(prompt, timeout=timeout), True
 ```
 
 ### Transparency UI Callout Invariant
 Khi cờ `was_downgraded == True`, lớp điều phối (Coordinator/UI) BẮT BUỘC chèn một Callout thông báo minh bạch ở đầu bài viết để người dùng nắm rõ lý do mô hình bị thay thế mà không gây gián đoạn luồng làm việc:
 
 ```markdown
-> [!info] ℹ️ Mô hình chính đang trong thời gian hồi phục tài khoản (cooldown), hệ thống đã tự động phản hồi bằng Gemini 3.8 Flash High để bạn không phải chờ đợi.
+> [!info] ℹ️ Mô hình chính đang trong thời gian hồi phục tài khoản (cooldown), hệ thống đã tự động phản hồi bằng Gemini Flash High để bạn không phải chờ đợi.
 ```
 
 ### Ưu điểm Cốt Lõi
 1. **Zero User Interruption**: Người dùng không bao giờ nhận lỗi 503/429 hay màn hình trắng; luôn có phản hồi trong 2-4 giây.
-2. **Self-Healing Loop**: Ngay khi hết 30 giây cooldown, request tiếp theo sẽ tự động thăm dò lại Cổng 8045 mà không cần người dùng khởi động lại daemon.
-3. **Auditability**: Mọi sự kiện giáng cấp đều được ghi log rõ ràng kèm lý do mã lỗi HTTP.
+2. **Self-Healing Loop**: Ngay khi hết 30 giây cooldown, request tiếp theo sẽ tự động thăm dò lại mô hình chính trên Cổng `:8090` mà không cần người dùng can thiệp thủ công.
+3. **Unified Single Gateway**: Toàn bộ lưu lượng đi qua cổng duy nhất `:8090`, loại bỏ hoàn toàn việc phân mảnh proxy hoặc phụ thuộc vào port 8045.
+4. **Auditability**: Mọi sự kiện giáng cấp đều được ghi log rõ ràng kèm lý do mã lỗi HTTP.
 
 ---
 

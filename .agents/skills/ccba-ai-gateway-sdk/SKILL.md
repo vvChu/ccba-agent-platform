@@ -86,16 +86,16 @@ Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến mod
 | :--- | :--- | :--- | :--- |
 | **1. OCR & Vision Ingestion** | `ocr-primary`<br>`ocr-fallback`<br>`ocr-tier4` | Google AI Studio Direct (10 keys) | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
 | **2. Standard General / Coding** | `gemini-3.7-flash`<br>`gemini-3.7-flash-medium`<br>`text-gemma` | Google API + Centralized Proxy | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
-| **3. Deep Reasoning / Complex Audit** | `gemini-3.7-flash-high`<br>`claude-sonnet-4-6-thinking`<br>`reasoning-gemma` | Google API + Centralized Proxy | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
+| **3. Deep Reasoning / Complex Audit** | `gemini-3.7-flash-high`<br>`claude-sonnet-4-6-thinking`<br>`claude-opus-4-6`<br>`reasoning-gemma` | Google API + Centralized Proxy | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
 | **4. Local Private / Zero-Cost** | `rag-core`<br>`qwen-local-primary` | vLLM Qwen 35B Local (GPU DGX) | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
 ---
 
 ## ⚙️ Quy tắc Hợp đồng Tích hợp (Client Contract Rules)
 
-### 1. Quy tắc HTTP Timeout (Bắt buộc: 30s – 60s, Mặc định: 60s)
+### 1. Quy tắc HTTP Timeout (Bắt buộc: 30s – 90s, Mặc định: 90s)
 - **Lý do**: AI Gateway triển khai cơ chế **Fallback Cascade** đa tầng (tự động xoay vòng 10 API keys và giáng cấp model khi upstream gặp lỗi 503/429).
-- **Quy chuẩn**: Phía client **PHẢI** cấu hình `timeout >= 30.0s` (mặc định trong SDK: `60.0s`). Tuyệt đối không cấu hình timeout quá ngắn (<15s) tránh cắt đứt luồng failover ngầm.
+- **Quy chuẩn**: Phía client **PHẢI** cấu hình `timeout >= 30.0s` (mặc định trong SDK: `90.0s`). Tuyệt đối không cấu hình timeout quá ngắn (<15s) tránh cắt đứt luồng failover ngầm.
 
 ### 2. Zero-Config Thinking Parameters
 - Phía client **KHÔNG CẦN** tự tạo cấu trúc Google-specific như `generationConfig.thinking_config` hay `thinking_budget`.
@@ -136,7 +136,7 @@ pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
 ```python
 from ccba_ai import ai, async_ai, ModelArchetype, choose_model, chat_with_metadata
 
-# 1. Chat cơ bản (mặc định timeout=60.0s, strip_thinking=True)
+# 1. Chat cơ bản (mặc định timeout=90.0s, strip_thinking=True)
 response = ai.chat(
     "Tóm tắt các điểm chính trong tài liệu đính kèm...",
     model=ModelArchetype.STANDARD  # gemini-3.7-flash

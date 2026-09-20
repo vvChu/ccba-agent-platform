@@ -43,18 +43,59 @@ def test_async_ai_repr():
 def test_async_client_init_timeout():
     """Test AsyncAIClient timeout initialization."""
     with patch.dict("os.environ", {}, clear=True):
-        client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
-        assert client.timeout == 60.0
-        assert client._client.timeout == 60.0
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
+            assert client.timeout == 90.0
+            assert client._client.timeout == 90.0
 
     with patch.dict("os.environ", {"AI_GATEWAY_TIMEOUT": "45.0"}, clear=False):
-        client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
-        assert client.timeout == 45.0
-        assert client._client.timeout == 45.0
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
+            assert client.timeout == 45.0
+            assert client._client.timeout == 45.0
 
     client_custom = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake", timeout=30.0)
     assert client_custom.timeout == 30.0
     assert client_custom._client.timeout == 30.0
+
+
+def test_async_url_sanitizer_redirects_8045():
+    """Test AsyncAIClient URL sanitizer automatically redirects :8045 to :8090."""
+    client = AsyncAIClient(base_url="http://100.83.192.30:8045/v1")
+    assert "8090" in str(client._client.base_url)
+    assert "8045" not in str(client._client.base_url)
+    assert client.base_url == "http://100.83.192.30:8090/v1"
+
+
+def test_async_url_sanitizer_empty_env_and_whitespace():
+    """Test AsyncAIClient URL sanitizer handles empty env and trims whitespace."""
+    with patch.dict("os.environ", {"AI_GATEWAY_URL": ""}, clear=False):
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AsyncAIClient()
+            assert client.base_url == "http://100.83.192.30:8090/v1"
+
+    client_ws = AsyncAIClient(base_url="  http://100.83.192.30:8045/v1 \n ")
+    assert client_ws.base_url == "http://100.83.192.30:8090/v1"
+
+
+@pytest.mark.asyncio
+async def test_async_complete_alias_calls_chat():
+    """Test AsyncAIClient.complete() acts as an alias for chat()."""
+    client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake")
+    with patch.object(
+        client, "chat", new_callable=AsyncMock, return_value="async complete result"
+    ) as mock_chat:
+        res = await client.complete("Hello async", model="test-model", timeout=20.0)
+        assert res == "async complete result"
+        mock_chat.assert_called_once_with(
+            "Hello async",
+            model="test-model",
+            system=None,
+            max_tokens=1024,
+            temperature=0.7,
+            strip_thinking=True,
+            timeout=20.0,
+        )
 
 
 # ---------------------------------------------------------------------------

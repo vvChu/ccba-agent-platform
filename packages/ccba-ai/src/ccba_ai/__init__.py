@@ -78,6 +78,7 @@ async_ai = AsyncAIClient()
 
 # Convenience function exports
 chat = ai.chat
+complete = ai.complete
 chat_with_metadata = ai.chat_with_metadata
 stream = ai.stream
 chat_multi = ai.chat_multi
@@ -96,6 +97,7 @@ __all__ = [
     "AsyncAIClient",
     # Convenience shorthands (sync)
     "chat",
+    "complete",
     "chat_with_metadata",
     "stream",
     "chat_multi",

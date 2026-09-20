@@ -42,6 +42,7 @@ htmlcov/
 **/mock_local_bundles/**/embeddings.npy
 **/mock_local_bundles/**/embeddings.sha256
 ci_log.txt
+uv.lock
 *.npy
 *.sha256
 
