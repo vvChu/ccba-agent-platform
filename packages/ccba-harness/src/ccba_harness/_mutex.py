@@ -1,6 +1,8 @@
 """Process-aware and expiration-safe file-based mutual exclusion lock.
 
 Prevents write conflicts on shared file resources across concurrent processes.
+Combines OS-level kernel locking (msvcrt on Windows, fcntl on POSIX) with JSON metadata
+to achieve instant stale lock recovery upon process crash without blocking metadata inspection.
 """
 
 from __future__ import annotations
@@ -15,6 +17,10 @@ from typing import Any
 
 _thread_locks: dict[Path, threading.Lock] = {}
 _thread_locks_mutex = threading.Lock()
+
+# 2GB - 1 virtual byte offset for Windows mandatory byte-range locking.
+# Allows reading JSON metadata at offset 0 while guaranteeing strict mutual exclusion.
+_LOCK_BYTE_OFFSET = 0x7FFFFFFF
 
 
 def _is_process_alive(pid: int | None) -> bool:
@@ -55,7 +61,7 @@ def _get_thread_lock(path: Path) -> threading.Lock:
 
 
 class FileMutexLock:
-    """A process-aware and expiration-safe file-based mutual exclusion lock."""
+    """A process-aware and expiration-safe hybrid file-based mutual exclusion lock."""
 
     def __init__(
         self,
@@ -78,11 +84,19 @@ class FileMutexLock:
         self.expire_seconds = expire_seconds
         self.pid = os.getpid()
         self.is_locked = False
+        self._fd: int | None = None
         self._thread_lock = _get_thread_lock(self.lock_path)
         self._thread_lock_acquired = False
 
-    def __enter__(self) -> FileMutexLock:
-        """Acquire the lock, resolving PIDs and expiration dynamically."""
+    def acquire(self) -> FileMutexLock:
+        """Acquire the lock, resolving PIDs and expiration dynamically.
+
+        Returns:
+            Self instance with active lock.
+
+        Raises:
+            TimeoutError: If lock acquisition exceeds configured timeout.
+        """
         start_time = time.time()
 
         # 1. Acquire thread-level lock first
@@ -93,81 +107,200 @@ class FileMutexLock:
             )
         self._thread_lock_acquired = True
 
-        # 2. Acquire process-level file lock
-        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-        while True:
-            try:
-                # Attempt to create the lock file atomically
-                lock_data = {"pid": self.pid, "timestamp": time.time()}
-                with open(self.lock_path, "x", encoding="utf-8") as f:
-                    json.dump(lock_data, f)
-                self.is_locked = True
-                break
-            except (FileExistsError, PermissionError):
-                # Read the existing lock file to check if owner is dead or expired
-                try:
-                    content = self.lock_path.read_text(encoding="utf-8")
-                    data = json.loads(content)
-                    lock_pid = int(data.get("pid")) if data.get("pid") is not None else None
-                    lock_time = float(data.get("timestamp", 0))
-                except Exception:
-                    # Corrupted file, override
-                    lock_pid = None
-                    lock_time = 0.0
-
-                pid_active = _is_process_alive(lock_pid)
-
-                if not pid_active:
-                    try:
-                        self.lock_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    continue
-
-                age = time.time() - lock_time
-                if age >= self.expire_seconds:
-                    try:
-                        self.lock_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    continue
-
-                elapsed = time.time() - start_time
-                if elapsed >= self.timeout:
-                    if self._thread_lock_acquired:
-                        self._thread_lock.release()
-                        self._thread_lock_acquired = False
-                    raise TimeoutError(
-                        f"Timeout waiting to acquire file lock on {self.lock_path} after {self.timeout} seconds."
-                    ) from None
-
-                time.sleep(self.retry_interval)
-            except Exception as e:
-                elapsed = time.time() - start_time
-                if elapsed >= self.timeout:
-                    if self._thread_lock_acquired:
-                        self._thread_lock.release()
-                        self._thread_lock_acquired = False
-                    raise TimeoutError(
-                        f"Failed to acquire file lock on {self.lock_path}: {e}"
-                    ) from e
-                time.sleep(self.retry_interval)
-
-        return self
-
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Release the lock if it belongs to this process."""
         try:
-            if self.is_locked and self.lock_path.exists():
+            # 2. Acquire process-level file lock
+            self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+            flags = os.O_RDWR | os.O_CREAT
+            if hasattr(os, "O_BINARY"):
+                flags |= os.O_BINARY
+
+            while True:
+                fd: int | None = None
                 try:
-                    content = self.lock_path.read_text(encoding="utf-8")
-                    data = json.loads(content)
-                    if data.get("pid") == self.pid:
-                        self.lock_path.unlink()
-                except Exception:
-                    pass
-                self.is_locked = False
-        finally:
+                    fd = os.open(str(self.lock_path), flags, 0o666)
+
+                    # Try acquiring OS-level kernel lock
+                    locked_os = False
+                    if sys.platform.startswith("win"):
+                        import msvcrt
+
+                        try:
+                            os.lseek(fd, _LOCK_BYTE_OFFSET, os.SEEK_SET)
+                            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                            locked_os = True
+                        except (OSError, PermissionError):
+                            locked_os = False
+                    else:
+                        import fcntl
+
+                        try:
+                            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                            locked_os = True
+                            # On POSIX, verify file wasn't unlinked before lock acquisition
+                            try:
+                                stat_fd = os.fstat(fd)
+                                stat_path = os.stat(str(self.lock_path))
+                                if stat_fd.st_ino != stat_path.st_ino:
+                                    locked_os = False
+                            except (FileNotFoundError, OSError):
+                                locked_os = False
+
+                            if not locked_os:
+                                try:
+                                    fcntl.flock(fd, fcntl.LOCK_UN)
+                                except OSError:
+                                    pass
+                        except OSError:
+                            locked_os = False
+
+                    if not locked_os:
+                        os.close(fd)
+                        fd = None
+                        elapsed = time.time() - start_time
+                        if elapsed >= self.timeout:
+                            raise TimeoutError(
+                                f"Timeout waiting to acquire file lock on {self.lock_path} after {self.timeout} seconds."
+                            )
+                        time.sleep(self.retry_interval)
+                        continue
+
+                    # OS lock acquired. Verify existing JSON metadata (e.g. for synthetic lock tests or crash recovery)
+                    try:
+                        os.lseek(fd, 0, os.SEEK_SET)
+                        raw_bytes = os.read(fd, 4096)
+                        content = raw_bytes.decode("utf-8", errors="ignore").strip()
+                        if content:
+                            data = json.loads(content)
+                            existing_pid = (
+                                int(data.get("pid")) if data.get("pid") is not None else None
+                            )
+                            existing_time = float(data.get("timestamp", 0))
+
+                            if existing_pid is not None and _is_process_alive(existing_pid):
+                                age = time.time() - existing_time
+                                if age < self.expire_seconds:
+                                    # Lock is held by an active process or simulated alive test
+                                    if sys.platform.startswith("win"):
+                                        import msvcrt
+
+                                        try:
+                                            os.lseek(fd, _LOCK_BYTE_OFFSET, os.SEEK_SET)
+                                            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                                        except OSError:
+                                            pass
+                                    else:
+                                        import fcntl
+
+                                        try:
+                                            fcntl.flock(fd, fcntl.LOCK_UN)
+                                        except OSError:
+                                            pass
+
+                                    os.close(fd)
+                                    fd = None
+
+                                    elapsed = time.time() - start_time
+                                    if elapsed >= self.timeout:
+                                        raise TimeoutError(
+                                            f"Timeout waiting to acquire file lock on {self.lock_path} after {self.timeout} seconds."
+                                        )
+                                    time.sleep(self.retry_interval)
+                                    continue
+                    except Exception:
+                        # Malformed or unreadable metadata, proceed to overwrite
+                        pass
+
+                    # Write our process metadata safely using truncation to eliminate trailing corrupt data
+                    lock_data = json.dumps({"pid": self.pid, "timestamp": time.time()}).encode(
+                        "utf-8"
+                    )
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    os.ftruncate(fd, 0)
+                    os.write(fd, lock_data)
+                    os.fsync(fd)
+
+                    self._fd = fd
+                    self.is_locked = True
+                    break
+
+                except TimeoutError:
+                    if fd is not None:
+                        try:
+                            os.close(fd)
+                        except OSError:
+                            pass
+                    raise
+                except Exception as e:
+                    if fd is not None:
+                        try:
+                            os.close(fd)
+                        except OSError:
+                            pass
+                    elapsed = time.time() - start_time
+                    if elapsed >= self.timeout:
+                        raise TimeoutError(
+                            f"Failed to acquire file lock on {self.lock_path}: {e}"
+                        ) from e
+                    time.sleep(self.retry_interval)
+
+            return self
+
+        except BaseException:
             if self._thread_lock_acquired:
                 self._thread_lock.release()
                 self._thread_lock_acquired = False
+            raise
+
+    def release(self) -> None:
+        """Release the lock if it belongs to this process and reset instance state."""
+        try:
+            if self.is_locked and self._fd is not None:
+                fd = self._fd
+                if sys.platform.startswith("win"):
+                    import msvcrt
+
+                    # Windows order: Unlock -> Close -> Unlink
+                    try:
+                        os.lseek(fd, _LOCK_BYTE_OFFSET, os.SEEK_SET)
+                        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                    except OSError:
+                        pass
+                    try:
+                        os.close(fd)
+                    except OSError:
+                        pass
+                    try:
+                        self.lock_path.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                else:
+                    import fcntl
+
+                    # POSIX order: Unlink -> Unlock -> Close
+                    try:
+                        self.lock_path.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                    try:
+                        fcntl.flock(fd, fcntl.LOCK_UN)
+                    except OSError:
+                        pass
+                    try:
+                        os.close(fd)
+                    except OSError:
+                        pass
+        finally:
+            # Guarantee instance reusability invariant
+            self._fd = None
+            self.is_locked = False
+            if self._thread_lock_acquired:
+                self._thread_lock.release()
+                self._thread_lock_acquired = False
+
+    def __enter__(self) -> FileMutexLock:
+        """Acquire the lock using context manager."""
+        return self.acquire()
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Release the lock using context manager."""
+        self.release()
