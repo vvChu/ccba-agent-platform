@@ -89,3 +89,44 @@ def test_scan_spoke_cleanliness_clean_project(tmp_path: Path) -> None:
     exit_code, messages = scan_spoke_cleanliness(tmp_path, max_scripts=15, strict=True)
     assert exit_code == 0
     assert any("3/15 tệp hợp lệ" in m for m in messages)
+
+
+def test_check_machine_state_leakage(tmp_path: Path) -> None:
+    """Test detection of hardcoded Windows drive letters and user home directories."""
+    from scripts.spoke.check_spoke_cleanliness import check_machine_state_leakage
+
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+
+    bad_script = scripts_dir / "bad_path.py"
+    bad_script.write_text(
+        'HUB_DIR = "D:\\\\GitHubProjects\\\\ccba-agent-platform"\n'
+        '# This comment with D:\\\\is\\\\ignored\n'
+        'ALLOWED = "C:\\\\dummy"  # ccba:allow-machine-path\n',
+        encoding="utf-8",
+    )
+
+    bad_ctx = tmp_path / "workspace_context.yaml"
+    bad_ctx.write_text(
+        'project:\n  name: test\nhub_path: "D:\\\\GitHubProjects\\\\ccba-agent-platform"\n',
+        encoding="utf-8",
+    )
+
+    clean_script = scripts_dir / "clean.py"
+    clean_script.write_text(
+        'HUB_DIR = os.environ.get("CCBA_HUB_PATH", "../ccba-agent-platform")\n',
+        encoding="utf-8",
+    )
+
+    violations = check_machine_state_leakage([bad_script, bad_ctx, clean_script])
+    assert len(violations) == 2
+    assert violations[0][0] == bad_script
+    assert violations[0][1] == 1  # line 1
+    assert violations[1][0] == bad_ctx
+    assert violations[1][1] == 3  # line 3
+    assert "Hardcoded Windows drive path" in violations[0][2]
+
+    # Full scan should fail with machine-state leakage
+    exit_code, messages = scan_spoke_cleanliness(tmp_path, max_scripts=15)
+    assert exit_code == 1
+    assert any("Vi phạm Machine-State Leakage" in m for m in messages)
