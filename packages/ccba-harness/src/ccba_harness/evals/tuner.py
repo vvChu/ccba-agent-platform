@@ -261,6 +261,7 @@ class RatchetConfig:
     split_ratio: float = 0.7
     slicing_seed: int = 42
     enable_perturbation: bool = True
+    per_skill_mutation_budget: int | None = 250_000
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -284,6 +285,15 @@ class RatchetConfig:
                     self.token_budget = 5_000_000
             else:
                 self.token_budget = 5_000_000
+        if self.per_skill_mutation_budget == 250_000:
+            env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
+            if env_ps_budget:
+                try:
+                    self.per_skill_mutation_budget = int(
+                        env_ps_budget.replace(",", "").replace("_", "")
+                    )
+                except ValueError:
+                    pass
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -372,8 +382,18 @@ class RatchetConfig:
         llm_model = model_match.group(1).strip() if model_match else ""
 
         # Parse Token Budget
-        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*(\d+)", content, re.IGNORECASE)
-        token_budget = int(budget_match.group(1)) if budget_match else 5_000_000
+        budget_match = re.search(r"-\s*\*\*Token\s*Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE)
+        token_budget = (
+            int(re.sub(r"[,_]", "", budget_match.group(1))) if budget_match else 5_000_000
+        )
+
+        # Parse Per Skill Mutation Budget
+        per_skill_match = re.search(
+            r"-\s*\*\*Per\s*Skill\s*(?:Mutation\s*)?Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE
+        )
+        per_skill_mutation_budget = (
+            int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else 250_000
+        )
 
         return cls(
             target_file=target_path,
@@ -384,6 +404,7 @@ class RatchetConfig:
             use_real_llm=use_real_llm,
             llm_model=llm_model,
             token_budget=token_budget,
+            per_skill_mutation_budget=per_skill_mutation_budget,
         )
 
 
@@ -496,7 +517,7 @@ CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "diagnos",
     "implement",
     "tdd",
-    "design",
+    "codebase-design",
     "refactor",
     "engineering",
     "sdk",
@@ -512,6 +533,8 @@ CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "iac",
     "to-spec",
     "docs",
+    "pdf-prep",
+    "preprocessor",
 )
 
 LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
@@ -531,7 +554,6 @@ TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "qc",
     "audit",
     "thamdinh",
-    "preprocessor",
 )
 
 OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
@@ -1242,10 +1264,79 @@ class GitRatchetOptimizer:
                     parts.append("Phân loại theo bảng Uniclass 200 và ISO 12006-2.")
                 else:
                     return "Xử lý phân loại chung không theo chuẩn Uniclass..."
-            elif "nghị định 30" in prompt_l:
-                parts.append(
-                    "Căn cứ Nghị định 30/2020/NĐ-CP về công tác văn thư, Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
+            elif any(
+                k in prompt_l
+                for k in [
+                    "nghị định 30",
+                    "nđ 30",
+                    "thể thức",
+                    "soạn thảo",
+                    "times new roman",
+                    "bố cục",
+                    "tiêu đề",
+                    "quốc hiệu",
+                    "nơi nhận",
+                    "phông chữ",
+                    "docx",
+                    "pptx",
+                    "slide",
+                    "trình bày",
+                    "typography",
+                    "heading",
+                    "bảng",
+                    "mục lục",
+                    "canh lề",
+                    "seminar",
+                    "agenda",
+                ]
+            ):
+                has_office = any(
+                    k in content.lower()
+                    for k in ["nghị định 30", "thể thức", "typography", "docx", "pptx", "văn bản", "phông chữ"]
                 )
+                if has_office or "ccba" in content.lower():
+                    parts.append(
+                        "Thực thi quy chuẩn soạn thảo văn bản và định dạng văn phòng:\n"
+                        "- Căn cứ Nghị định 30/2020/NĐ-CP (NĐ 30/2020) về công tác văn thư: Tuân thủ nghiêm ngặt thể thức soạn thảo văn bản hành chính, bố cục tiêu đề, Quốc hiệu, Tiêu ngữ và Nơi nhận.\n"
+                        "- Tiêu chuẩn Typography & Phông chữ: Sử dụng phông chữ Times New Roman chuẩn Unicode, canh lề theo quy định, phân cấp heading rõ ràng, tự động sinh mục lục tài liệu và định dạng bảng phụ lục.\n"
+                        "- Trình chiếu PowerPoint (.pptx): Bố cục dàn trang slide theo phong cách tối giản, trình bày súc tích và tương phản trực quan.\n"
+                        "Chi tiết tham chiếu xem tại [references/](references/)."
+                    )
+                else:
+                    parts.append("Soạn thảo văn bản thông thường...")
+            elif any(
+                k in prompt_l
+                for k in [
+                    "mermaid",
+                    "excalidraw",
+                    "diagram",
+                    "sơ đồ",
+                    "flowchart",
+                    "sequence",
+                ]
+            ):
+                has_diagram = (
+                    "mermaid" in content.lower()
+                    or "excalidraw" in content.lower()
+                    or "diagram" in content.lower()
+                    or "sơ đồ" in content.lower()
+                )
+                if has_diagram or "ccba" in content.lower():
+                    parts.append(
+                        "Khởi tạo sơ đồ trực quan kiến trúc (Visual Diagram):\n"
+                        "```mermaid\n"
+                        "flowchart TD\n"
+                        "    A[Khởi đầu] --> B[Xử lý trung tâm]\n"
+                        "    B --> C{Kiểm tra điều kiện}\n"
+                        "    C -->|Hợp lệ| D[Hoàn tất]\n"
+                        "    C -->|Không hợp lệ| E[Xử lý lỗi]\n"
+                        "    style A fill:#f9f9f9,stroke:#333\n"
+                        "    style D fill:#e6ffe6,stroke:#333\n"
+                        "```\n"
+                        "Sơ đồ tuân thủ quy chuẩn Academic Grayscale và định danh theo [references/](references/)."
+                    )
+                else:
+                    parts.append("Tạo biểu đồ thông thường...")
             elif "qcvn 06" in prompt_l or "pccc" in prompt_l:
                 parts.append(
                     "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
@@ -1886,6 +1977,8 @@ class GitRatchetOptimizer:
             except Exception as e:
                 logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
 
+        baseline_tokens = self.token_tracker.total_tokens
+
         # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
         if baseline_score >= 100.0:
             effective_max_iter = 1
@@ -1975,6 +2068,20 @@ class GitRatchetOptimizer:
                         )
                         break
 
+                    # Per-skill mutation budget check
+                    mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+                    if (
+                        self.config.per_skill_mutation_budget is not None
+                        and mutation_tokens >= self.config.per_skill_mutation_budget
+                        and kept_count == 0
+                        and i >= 2
+                    ):
+                        logger.info(
+                            f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
+                        )
+                        halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+                        break
+
                     # Adaptive Early Stopping (Grilling Frontier 2)
                     if effective_patience > 0 and stagnant_trials >= effective_patience:
                         logger.info(
@@ -2049,19 +2156,25 @@ class GitRatchetOptimizer:
 
         final_holdout_score: float | None = None
         if self.holdout_dataset:
-            try:
-                try:
-                    holdout_final_rep = self.evaluate_content(
-                        best_content, dataset=self.holdout_dataset
-                    )
-                except TypeError:
-                    holdout_final_rep = self.evaluate_content(best_content)
-                final_holdout_score = holdout_final_rep.overall_score
+            if kept_count == 0 and initial_holdout_score is not None:
+                final_holdout_score = initial_holdout_score
                 logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
                 )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            else:
+                try:
+                    try:
+                        holdout_final_rep = self.evaluate_content(
+                            best_content, dataset=self.holdout_dataset
+                        )
+                    except TypeError:
+                        holdout_final_rep = self.evaluate_content(best_content)
+                    final_holdout_score = holdout_final_rep.overall_score
+                    logger.info(
+                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                    )
+                except Exception as e:
+                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
 
         slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
         return RatchetReport(

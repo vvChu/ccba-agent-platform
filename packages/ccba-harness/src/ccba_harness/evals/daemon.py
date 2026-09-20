@@ -160,16 +160,14 @@ class WeightedPriorityQueue:
 
     @staticmethod
     def rank_skills(skills_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Sorts skills such that lower baseline scores and untested skills are tuned first."""
+        """Sorts skills such that non-cooldown skills and lower baseline scores are tuned first."""
 
-        def priority_key(item: dict[str, Any]) -> tuple[int, float]:
-            score = item.get("baseline_score", 0.0)
-            if score < 90.0:
-                return (0, score)  # Top priority: failing or weak skills
-            elif score < 100.0:
-                return (1, score)  # Medium priority: near-perfect skills
-            else:
-                return (2, score)  # Low priority: 100% perfect (quick smoke test only)
+        def priority_key(item: dict[str, Any]) -> tuple[int, int, float]:
+            in_cooldown = 1 if item.get("in_cooldown") else 0
+            raw_score = item.get("baseline_score")
+            score = float(raw_score) if raw_score is not None else 0.0
+            tier = 0 if score < 90.0 else (1 if score < 100.0 else 2)
+            return (in_cooldown, tier, score)
 
         return sorted(skills_data, key=priority_key)
 
@@ -184,7 +182,8 @@ class NightlyTunerDaemon:
         max_iterations_perfect: int = 1,
         early_stopping_patience: int = 5,
         use_real_llm: bool = False,
-        token_budget: int = 5_000_000,
+        token_budget: int = 6_500_000,
+        per_skill_mutation_budget: int | None = 250_000,
         model: str = "",
         target_skills: list[str] | None = None,
         alert_emitter: Callable[[str], bool] | None = None,
@@ -196,6 +195,7 @@ class NightlyTunerDaemon:
         self.early_stopping_patience = early_stopping_patience
         self.use_real_llm = use_real_llm
         self.token_budget = token_budget
+        self.per_skill_mutation_budget = per_skill_mutation_budget
         self.model = model
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
@@ -219,7 +219,7 @@ class NightlyTunerDaemon:
 
         if "risk" in sname or "conflict" in sname:
             return "eval_bigbim_risk.json"
-        if any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
+        if "ccba-completion-checklist" in sname or any(k in sname for k in LEGAL_ARCHETYPE_KEYWORDS):
             return "eval_legal_intel.json"
         if any(k in sname for k in TECH_QC_ARCHETYPE_KEYWORDS):
             return "eval_pccc_audit.json"
@@ -230,7 +230,7 @@ class NightlyTunerDaemon:
         if any(k in sname for k in OFFICE_ARCHETYPE_KEYWORDS):
             return "eval_copywriting.json"
         if any(k in sname for k in VISUAL_ARCHETYPE_KEYWORDS):
-            return "eval_agent_orchestration.json"
+            return "eval_visual_diagram.json"
         if any(k in sname for k in ["grill", "stresstest", "stress-test"]):
             return "eval_grilling.json"
         if any(k in sname for k in ["adr", "architecture-decision"]):
@@ -242,30 +242,137 @@ class NightlyTunerDaemon:
 
         return "eval_general_domain.json"
 
-    def _load_recent_baseline_scores(self) -> dict[str, float]:
-        """Loads historical scores from recent reports to calibrate priority queue ranking."""
+    def _extract_report_date(self, r_file: Path, content: str) -> datetime.date | None:
+        """Extracts date from report filename or content with fallback to file mtime."""
+        fn_match = re.search(r"nightly_tuner_report_(\d{4})[-_]?(\d{2})[-_]?(\d{2})", r_file.name)
+        if fn_match:
+            try:
+                return datetime.date(
+                    int(fn_match.group(1)), int(fn_match.group(2)), int(fn_match.group(3))
+                )
+            except ValueError:
+                pass
+
+        content_match = re.search(
+            r"\*\*Thời gian(?: thực thi)?:\*\*\s*`?(\d{4})[-_]?(\d{2})[-_]?(\d{2})", content
+        )
+        if content_match:
+            try:
+                return datetime.date(
+                    int(content_match.group(1)),
+                    int(content_match.group(2)),
+                    int(content_match.group(3)),
+                )
+            except ValueError:
+                pass
+
+        try:
+            return datetime.date.fromtimestamp(r_file.stat().st_mtime)
+        except Exception:
+            return None
+
+    def _load_historical_metrics(
+        self, cooldown_days: int = 3
+    ) -> tuple[dict[str, float], set[str]]:
+        """Loads baseline scores across all available reports and identifies cooldown skills.
+
+        Cooldown conditions (ADR-0052):
+        - Report ran within the last `cooldown_days` (r_date >= cutoff_date)
+        - Engine is REAL_LLM
+        - commits == 0
+        - final score < 90.0 or status is UNCHANGED / starts with HALT_
+        """
         reports_dir = self.root / ".md" / "knowledge" / "reports"
         if not reports_dir.exists():
-            return {}
+            return {}, set()
 
-        report_files = sorted(reports_dir.glob("nightly_tuner_report_*.md"), reverse=True)
+        def _report_sort_key(f: Path) -> tuple[datetime.date, float]:
+            try:
+                fn_match = re.search(
+                    r"nightly_tuner_report_(\d{4})[-_]?(\d{2})[-_]?(\d{2})", f.name
+                )
+                if fn_match:
+                    d = datetime.date(
+                        int(fn_match.group(1)),
+                        int(fn_match.group(2)),
+                        int(fn_match.group(3)),
+                    )
+                    return (d, f.stat().st_mtime)
+                content = f.read_text(encoding="utf-8", errors="replace")
+                d = self._extract_report_date(f, content)
+                if d:
+                    return (d, f.stat().st_mtime)
+            except Exception:
+                pass
+            try:
+                return (datetime.date.fromtimestamp(f.stat().st_mtime), f.stat().st_mtime)
+            except Exception:
+                return (datetime.date.min, 0.0)
+
+        report_files = sorted(
+            reports_dir.glob("nightly_tuner_report_*.md"), key=_report_sort_key, reverse=True
+        )
         scores: dict[str, float] = {}
-        pattern = re.compile(
-            r"\|\s*`?([a-zA-Z0-9_-]+)`?\s*\|\s*([0-9.]+)%\s*\|\s*\*\*?([0-9.]+)%\*\*?"
+        cooldown_skills: set[str] = set()
+        evaluated_recent: set[str] = set()
+
+        today = datetime.date.today()
+        cutoff_date = today - datetime.timedelta(days=cooldown_days)
+
+        pattern_7 = re.compile(
+            r"\|\s*`?([a-zA-Z0-9_-]+)`?\s*\|\s*\*?\*?([0-9.]+)%\*?\*?\s*\|\s*\*?\*?([0-9.]+)%\*?\*?\s*\|\s*`?[^|]*`?\s*\|\s*`?(\d+)`?\s*\|\s*[^|]*\|\s*([^|\r\n]+)\|"
+        )
+        pattern_3 = re.compile(
+            r"\|\s*`?([a-zA-Z0-9_-]+)`?\s*\|\s*\*?\*?([0-9.]+)%\*?\*?\s*\|\s*\*?\*?([0-9.]+)%\*?\*?"
         )
 
         for r_file in report_files:
             try:
                 content = r_file.read_text(encoding="utf-8", errors="replace")
-                for match in pattern.finditer(content):
-                    s_name, _, s_final = match.groups()
+                r_date = self._extract_report_date(r_file, content)
+                is_real_llm = bool(
+                    re.search(r"\*\*Engine:\*\*\s*`?REAL_LLM`?", content, re.IGNORECASE)
+                ) or ("Engine: REAL_LLM" in content)
+                is_within_cooldown = r_date is not None and r_date >= cutoff_date
+
+                matched_in_file: set[str] = set()
+
+                for match in pattern_7.finditer(content):
+                    s_name = match.group(1).strip()
+                    s_final = float(match.group(3))
+                    commits = int(match.group(4))
+                    status_str = match.group(5).strip().upper()
+                    matched_in_file.add(s_name)
+
                     if s_name not in scores:
-                        scores[s_name] = float(s_final)
-                if scores:
-                    break
-            except Exception:
+                        scores[s_name] = s_final
+
+                    if is_within_cooldown and is_real_llm:
+                        if s_name not in evaluated_recent:
+                            evaluated_recent.add(s_name)
+                            if commits == 0 and (
+                                s_final < 90.0
+                                or "UNCHANGED" in status_str
+                                or "HALT_" in status_str
+                            ):
+                                cooldown_skills.add(s_name)
+
+                for match in pattern_3.finditer(content):
+                    s_name = match.group(1).strip()
+                    if s_name in matched_in_file:
+                        continue
+                    s_final = float(match.group(3))
+                    if s_name not in scores:
+                        scores[s_name] = s_final
+            except Exception as e:
+                logger.debug(f"Failed parsing report file {r_file}: {e}")
                 continue
 
+        return scores, cooldown_skills
+
+    def _load_recent_baseline_scores(self) -> dict[str, float]:
+        """Loads historical scores from recent reports to calibrate priority queue ranking."""
+        scores, _ = self._load_historical_metrics()
         return scores
 
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
@@ -279,18 +386,21 @@ class NightlyTunerDaemon:
             "bigbim-governance": "eval_bigbim_classification.json",
             "bigbim-risk": "eval_bigbim_risk.json",
             "bigbim-rase": "eval_bigbim_classification.json",
-            "ccba-completion-checklist": "eval_general_domain.json",
+            "ccba-completion-checklist": "eval_legal_intel.json",
             "ccba-legal-document-tracker": "eval_legal_intel.json",
             "ccba-legal-advisor": "eval_legal_intel.json",
             "ccba-legal-ingest": "eval_legal_intel.json",
             "bigbim-vbpl-digest": "eval_legal_intel.json",
             "ccba-tvpl-vip-crawler": "eval_legal_intel.json",
             "ccba-ai-qc": "eval_pccc_audit_redteam.json",
+            "ccba-ai-pdf-preprocessor": "eval_codebase_engineering.json",
+            "ccba-mermaid-diagram": "eval_visual_diagram.json",
+            "ccba-excalidraw-diagram": "eval_visual_diagram.json",
             "ccba-grilling": "eval_grilling.json",
             "ccba-adr-lifecycle": "eval_adr_lifecycle.json",
         }
 
-        recent_scores = self._load_recent_baseline_scores()
+        recent_scores, cooldown_skills = self._load_historical_metrics(cooldown_days=3)
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
@@ -328,6 +438,7 @@ class NightlyTunerDaemon:
                     "dataset_file": full_dataset_path,
                     "eval_dataset_file": full_dataset_path,
                     "baseline_score": recent_scores.get(skill_name, 0.0),
+                    "in_cooldown": skill_name in cooldown_skills,
                 }
             )
 
@@ -382,6 +493,7 @@ class NightlyTunerDaemon:
                 use_real_llm=self.use_real_llm,
                 llm_model=self.model,
                 token_budget=remaining_budget,
+                per_skill_mutation_budget=self.per_skill_mutation_budget,
             )
 
             try:
@@ -426,6 +538,8 @@ class NightlyTunerDaemon:
                 # ADR-0052: Export Plateau Escalation Brief if skill remains stagnant < 90%
                 if not dry_run and result.final_score < 90.0 and result.kept_commits == 0:
                     self._save_plateau_brief(skill_name, target_file, result)
+                elif result.final_score >= 90.0 or result.kept_commits > 0:
+                    self._remove_stale_plateau_brief(skill_name)
 
                 if result.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN"):
                     logger.warning(
@@ -609,6 +723,52 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
         brief_file.write_text(content, encoding="utf-8")
         logger.info(f"📋 Đã xuất Plateau Brief: {brief_file}")
         return brief_file
+
+    def _get_main_repo_root(self) -> Path | None:
+        """If running inside a secondary git worktree, resolves the main repo root."""
+        git_path = self.root / ".git"
+        if git_path.is_file():
+            try:
+                content = git_path.read_text(encoding="utf-8").strip()
+                if content.startswith("gitdir:"):
+                    gitdir = Path(content.split(":", 1)[1].strip())
+                    if not gitdir.is_absolute():
+                        gitdir = (self.root / gitdir).resolve()
+                    if "worktrees" in gitdir.parts:
+                        # gitdir is /path/to/main/.git/worktrees/<name>
+                        return gitdir.parent.parent.parent
+            except Exception:
+                pass
+        return None
+
+    def _remove_stale_plateau_brief(self, skill_name: str) -> bool:
+        """Removes stale plateau escalation brief if skill achieved target score or made progress."""
+        escalations_dir = self.root / ".md" / "knowledge" / "escalations"
+        brief_file = escalations_dir / f"{skill_name}_plateau.md"
+        removed = False
+        if brief_file.exists():
+            try:
+                brief_file.unlink()
+                logger.info(
+                    f"🗑️ Đã xóa stale Plateau Brief do kỹ năng đã cải thiện/đạt mục tiêu: {brief_file.name}"
+                )
+                removed = True
+            except Exception as e:
+                logger.warning(f"Không thể xóa stale plateau brief {brief_file}: {e}")
+
+        # If running inside a git worktree, also delete from main repo root
+        main_root = self._get_main_repo_root()
+        if main_root and main_root != self.root:
+            main_brief = main_root / ".md" / "knowledge" / "escalations" / f"{skill_name}_plateau.md"
+            if main_brief.exists():
+                try:
+                    main_brief.unlink()
+                    logger.info(f"🗑️ Đã xóa stale Plateau Brief ở main repo: {main_brief.name}")
+                    removed = True
+                except Exception as e:
+                    logger.warning(f"Không thể xóa main repo plateau brief {main_brief}: {e}")
+
+        return removed
 
     def _cleanup_old_empty_branches(self, days: int = 7) -> int:
         """Cleans up local and remote auto-tune and doc-refactor branches older than `days` with no unique commits."""
