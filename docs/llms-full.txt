@@ -1815,7 +1815,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-chrome-debug
 ### Thông Số & Huy Hiệu Kỹ Năng
 | Thuộc tính | Chi tiết |
 | :--- | :--- |
-| **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng |
+| **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
@@ -1849,8 +1849,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `kiểm tra kết nối browser`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Quy trình tác nghiệp dự án**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Web testing / Tự động hóa trình duyệt qua CDP**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -1863,18 +1863,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-chrome-debug` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Quy trình tác nghiệp dự án ]
+[ Web testing / Tự động hóa trình duyệt qua CDP ]
           │
           ▼
-    >>> [ ccba-chrome-debug ] <<<  (Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.)
+    >>> [ ccba-chrome-debug ] <<<  (Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.)
           │
           ▼
-[ Bàn giao kết quả phiên làm việc ]
+[ Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Quy trình tác nghiệp dự án`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Web testing / Tự động hóa trình duyệt qua CDP`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Bàn giao kết quả phiên làm việc`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử`.
 
 ---
 
@@ -3057,7 +3057,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-eval-gate/SKILL.md 
 <!-- SKILL 30/74: ccba-excalidraw-diagram -->
 # ccba-excalidraw-diagram
 
-> **Mô tả ngắn**: Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+> **Mô tả ngắn**: Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
 
 ---
 
@@ -3080,14 +3080,14 @@ python scripts/spoke/sync_spoke.py --skills ccba-excalidraw-diagram
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=4.0 | A=1.0 | P=1.0 (GPI: 16.00)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.0 | A=3.0 | P=3.0 (GPI: 19.50)` |
 
 ---
 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -3102,8 +3102,13 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `ccba-show-me`
-- `show-me`
+- `excalidraw`
+- `vẽ sơ đồ`
+- `diagram`
+- `layout engine`
+- `sơ đồ kiến trúc`
+- `vẽ quy trình`
+- `layout router`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Sinh sơ đồ kiến trúc Excalidraw trực quan từ văn bản mô tả.

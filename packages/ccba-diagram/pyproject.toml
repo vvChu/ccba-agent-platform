@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ccba-diagram"
+version = "1.0.0"
+description = "CCBA Diagramming Utilities — 8 deterministic layout engines, visual ergonomics, and Excalidraw 16:9 diagram generation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "networkx>=3.0",
+    "pydantic>=2.0",
+    "grandalf>=0.8",
+]
+
+[project.scripts]
+ccba-diagram = "ccba_diagram.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccba_diagram"]

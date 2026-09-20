@@ -10,10 +10,10 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ## Mục Lục Các Cổng Điều Hướng
 
 - [🚀 Khởi tạo, Điều hướng & Đồng bộ](#init_navigation) (8 skills)
-- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (21 skills)
+- [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (22 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
-- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (28 skills)
+- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (27 skills)
 
 ---
 
@@ -36,7 +36,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="core_engineering"></a>
-## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (21 Kỹ Năng)
+## ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân (22 Kỹ Năng)
 
 *Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng.*
 
@@ -44,13 +44,14 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | :--- | :--- | :--- | :--- | :--- |
 | [ccba-api-circuit-breaker](ccba-api-circuit-breaker.md) | `/ccba-api-circuit-breaker` | `kernel` | `Model` | Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch pipeline... |
 | [ccba-append-only-logger](ccba-append-only-logger.md) | `/ccba-append-only-logger` | `kernel` | `Model` | Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tr... |
+| [ccba-chrome-debug](ccba-chrome-debug.md) | `/ccba-chrome-debug` | `kernel` | `User` | Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Pro... |
 | [ccba-code-review](ccba-code-review.md) | `/ccba-code-review` | `kernel` | `User` | Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smell... |
 | [ccba-codebase-design](ccba-codebase-design.md) | `/ccba-codebase-design` | `kernel` | `User` | Shared vocabulary for designing deep modules (locality, depth, leverage, seam... |
 | [ccba-create-pr](ccba-create-pr.md) | `/ccba-create-pr` | `kernel` | `User` | Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitH... |
 | [ccba-design](ccba-design.md) | `/ccba-design` | `kernel` | `User` | Design brand identity, logos, banners, and visual assets. Use for brand syste... |
 | [ccba-diagnosing-bugs](ccba-diagnosing-bugs.md) | `/ccba-diagnosing-bugs` | `kernel` | `User` | Diagnosis loop for hard bugs and performance regressions. Use when the user s... |
 | [ccba-domain-modeling](ccba-domain-modeling.md) | `/ccba-domain-modeling` | `kernel` | `User` | Build, refine, and maintain the project's domain model, ubiquitous language, ... |
-| [ccba-excalidraw-diagram](ccba-excalidraw-diagram.md) | `/ccba-excalidraw-diagram` | `kernel` | `User` | Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và... |
+| [ccba-excalidraw-diagram](ccba-excalidraw-diagram.md) | `/ccba-excalidraw-diagram` | `kernel` | `User` | Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines v... |
 | [ccba-git-guardrails](ccba-git-guardrails.md) | `/ccba-git-guardrails` | `kernel` | `User` | Guardrails to block or request explicit user permission before executing dang... |
 | [ccba-grilling](ccba-grilling.md) | `/ccba-grilling` | `kernel` | `User` | Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (... |
 | [ccba-implement](ccba-implement.md) | `/ccba-implement` | `orchestrator` | `User` | Implement a piece of work based on a spec or set of tickets. |
@@ -104,7 +105,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="governance_upkeep"></a>
-## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (28 Kỹ Năng)
+## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (27 Kỹ Năng)
 
 *Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.*
 
@@ -116,7 +117,6 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling... |
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
-| [ccba-chrome-debug](ccba-chrome-debug.md) | `/ccba-chrome-debug` | `kernel` | `User` | Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Pro... |
 | [ccba-contribute-to-hub](ccba-contribute-to-hub.md) | `/ccba-contribute-to-hub` | `kernel` | `User` | Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừn... |
 | [ccba-docs-manager](ccba-docs-manager.md) | `/ccba-docs-manager` | `kernel` | `User` | Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform. |
 | [ccba-eval-gate](ccba-eval-gate.md) | `/ccba-eval-gate` | `kernel` | `User` | Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (... |

@@ -19,7 +19,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-chrome-debug
 ### Thông Số & Huy Hiệu Kỹ Năng
 | Thuộc tính | Chi tiết |
 | :--- | :--- |
-| **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng |
+| **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
@@ -53,8 +53,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `kiểm tra kết nối browser`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Quy trình tác nghiệp dự án**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Web testing / Tự động hóa trình duyệt qua CDP**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -67,18 +67,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-chrome-debug` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Quy trình tác nghiệp dự án ]
+[ Web testing / Tự động hóa trình duyệt qua CDP ]
           │
           ▼
-    >>> [ ccba-chrome-debug ] <<<  (Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.)
+    >>> [ ccba-chrome-debug ] <<<  (Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.)
           │
           ▼
-[ Bàn giao kết quả phiên làm việc ]
+[ Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Quy trình tác nghiệp dự án`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Web testing / Tự động hóa trình duyệt qua CDP`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Bàn giao kết quả phiên làm việc`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử`.
 
 ---
 

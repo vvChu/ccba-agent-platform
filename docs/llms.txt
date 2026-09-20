@@ -47,7 +47,7 @@
 - [ccba-docs-manager](skills/ccba-docs-manager.md): /ccba-docs-manager — Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
 - [ccba-domain-modeling](skills/ccba-domain-modeling.md): /ccba-domain-modeling — Build, refine, and maintain the project's domain model, ubiquitous language, and record architectural decisions (ADRs).
 - [ccba-eval-gate](skills/ccba-eval-gate.md): /ccba-eval-gate — Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (Self-Healing Loop).
-- [ccba-excalidraw-diagram](skills/ccba-excalidraw-diagram.md): /ccba-excalidraw-diagram — Công cụ tạo sơ đồ Excalidraw JSON (.excalidraw) chuyên nghiệp cho Obsidian và excalidraw.com.
+- [ccba-excalidraw-diagram](skills/ccba-excalidraw-diagram.md): /ccba-excalidraw-diagram — Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines và Bảng Đặc Tả Ma Trận Markdown chuẩn công thái học.
 - [ccba-file-stability-guard](skills/ccba-file-stability-guard.md): /ccba-file-stability-guard — Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế thay vì time.sleep() — dành cho Google Drive, OneDrive, SharePoint.
 - [ccba-git-guardrails](skills/ccba-git-guardrails.md): /ccba-git-guardrails — Guardrails to block or request explicit user permission before executing dangerous git operations (force push, hard reset, clean, etc.) via terminal.
 - [ccba-graduate-rd](skills/ccba-graduate-rd.md): /ccba-graduate-rd — Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích hợp /boost, /teamwork và mở PR tự động.
