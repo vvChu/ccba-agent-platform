@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from .tuner import (
     ACADEMIC_ARCHETYPE_KEYWORDS,
     BIM_ARCHETYPE_KEYWORDS,
@@ -273,7 +275,7 @@ class NightlyTunerDaemon:
             "ccba-copywriting": "eval_copywriting.json",
             "ccba-legal-intel": "eval_legal_intel_redteam.json",
             "ccba-ai-qc-pccc-audit": "eval_pccc_audit_redteam.json",
-            "bigbim-classification": "eval_bigbim_classification.json",
+            "bigbim-classification": "eval_bigbim_classification_redteam.json",
             "bigbim-governance": "eval_bigbim_classification.json",
             "bigbim-risk": "eval_bigbim_risk.json",
             "bigbim-rase": "eval_bigbim_classification.json",
@@ -292,6 +294,23 @@ class NightlyTunerDaemon:
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
+
+            # Skip skills marked with auto-tune: false unless explicitly targeted
+            if not self.target_skills or skill_name.lower() not in self.target_skills:
+                try:
+                    content = skill_path.read_text(encoding="utf-8", errors="replace")
+                    if content.startswith("---"):
+                        parts = content.split("---", 2)
+                        if len(parts) >= 3:
+                            fm = yaml.safe_load(parts[1])
+                            if isinstance(fm, dict) and fm.get("auto-tune") is False:
+                                logger.info(
+                                    f"⏭️ Bỏ qua {skill_name} do cấu hình auto-tune: false trong frontmatter."
+                                )
+                                continue
+                except Exception as e:
+                    logger.debug(f"Failed to parse frontmatter for {skill_path}: {e}")
+
             if skill_name in skill_dataset_map:
                 dataset_file = skill_dataset_map[skill_name]
             else:
