@@ -28,6 +28,7 @@ triggers:
 - map reduce
 - multi turn memory
 ---
+
 # LLM Pipeline Patterns
 
 Pattern library cho các pipeline LLM multi-stage — đúc rút từ thực tế vận hành **VvC LLM OS** (v5.1 → v8.15, 2026). Mỗi pattern đều có ít nhất 1 incident thực tế chứng minh sự cần thiết.
@@ -484,3 +485,11 @@ def extract_last_exchange(file_content: str, max_chars: int = 4_000) -> dict[str
 | Zero-Broken-Link Fallbacks | `D:\VvC_Notes\scripts\services\diagram_base.py` + workers |
 | Heading-Aware Map-Reduce | `D:\VvC_Notes\scripts\core\text_chunker.py` |
 | Conditional Multi-turn Memory | `D:\VvC_Notes\scripts\services\command\coordinator.py` |
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
