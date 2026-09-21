@@ -156,3 +156,7 @@ Kết quả phân tích RASE phải được trả về dưới dạng bảng Ma
 * **Bẫy Thang Máy Đa Góc Nhìn:** Phân định Mô hình kiến trúc `EF_25_50` vs Hệ thống cơ điện `Ss_70_50_10`.
 * **Bẫy Sơn Chống Cháy & Trạm Kiosk:** Phân định vật tư `Pr_60_60_15` vs Property Set kết cấu, Thực thể quy hoạch `En_50_10` vs Hệ thống `Ss_70_10_10`.
 * **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
+
+## 6. Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3
+* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.
+* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.
