@@ -27,6 +27,7 @@ triggers:
 - che giấu key
 package_path: packages/ccba-maskara
 ---
+
 # Maskara Privacy - Bảo mật thông tin nhạy cảm CCBA
 
 > **Vai trò**: Đây là kỹ năng bảo mật cốt lõi giúp phát hiện và che giấu (redact) các thông tin nhạy cảm (OpenAI API key, Google API key, AWS keys, JWT, Database URLs, Private key...) trong logs và files của dự án trước khi commit hoặc chia sẻ.
@@ -97,3 +98,11 @@ Khi làm việc trong dự án có xử lý credentials, Agent **BẮT BUỘC** 
 
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
