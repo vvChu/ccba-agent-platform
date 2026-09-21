@@ -40,6 +40,10 @@
   - Tệp trong `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng 3 cấp lùi: `../../../packages/<pkg>`.
   - Tệp trong `references/<ref>.md` trỏ về root monorepo dùng 4 cấp lùi: `../../../../`.
   - CẤM TUYỆT ĐỐI commit đường dẫn `file:///` hoặc URI `conversation://` vào kho Git.
+- **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomain Invariant]**:
+  - Khi ánh xạ kỹ năng sang bộ đề thi (`eval_*.json`) và bộ chấm (`get_default_domain_scorers`), BẮT BUỘC dùng `archetypes.py` làm Single Source of Truth (SSOT).
+  - Từ khóa chuyên biệt (`grill`, `adr`, `risk`) bắt buộc tách thành Subdomain độc lập khỏi tuple cha (`orchestration`, `bim`) để triệt tiêu va chạm lệch pha do thứ tự regex.
+  - Khi refactor nội bộ, bảo toàn hợp đồng kiểm thử qua Facade Delegation Wrapper để đạt Zero Breaking Changes.
 
 ---
 
@@ -71,6 +75,9 @@
   - Quy tắc kết hợp cờ chỉ tuyên bố 1 lần duy nhất tại mục `Kết hợp không hợp lệ` trong `MODES.md`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
+- **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
+  - Repo Hub cưỡng chế cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi bắt buộc đi qua feature/docs branch và PR.
+  - Khi thêm/sửa/xóa file trong core directories (`packages/`, `scripts/`), `drift_auditor.py` bắt buộc có cập nhật trong `arch_docs` (`README.md`, `PLATFORM.md`) trong cùng PR để vượt qua CI Documentation Check.
 
 ---
 

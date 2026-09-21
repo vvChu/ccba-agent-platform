@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-21] [synthesize] | Phát Hành Release PR #317: Tối Ưu Hóa Ngân Sách Token, Trần Đột Biến, Phạt Cooldown & Kiến Trúc SSOT Domain Archetypes
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-grilling, /boost, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/`, `packages/ccba-ai/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/eval/`, `README.md`, `PLATFORM.md`, `pyproject.toml`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất phát triển, tích hợp và phát hành Pull Request #317: (1) Socratic Grilling phản biện trần ngân sách token: ấn định 6.000.000 - 6.500.000 tokens cho khung chạy đêm 6h; (2) Thiết lập trần đột biến `per_skill_mutation_budget = 250_000` tokens cho mỗi kỹ năng (tối thiểu 2 trials), tự động dừng sớm nếu không có commit cải thiện và bỏ qua đánh giá holdout re-eval khi `kept_commits == 0`, tiết kiệm 20.000 - 50.000 tokens/lần lặp; (3) Thuật toán phạt Cooldown 3 ngày cho các kỹ năng trì trệ trong `WeightedPriorityQueue`; (4) Bảo tồn Plateau Briefs `*_plateau.md` và báo cáo qua Git worktree; (5) Kiến trúc SSOT Domain Archetypes `archetypes.py` cho 11 domain archetypes loại trừ 100% rủi ro collision; (6) Đồng bộ thuộc tính `mock_mode` trong `AIClient` và đăng ký `ccba-diagram` trong `pyproject.toml`; (7) Đạt 7/7 checks GitHub Actions CI xanh 100%, vượt qua Cleanliness Pre-release Gate và squash-merge vào `main` tại commit `693ae9eb`.
+
+---
+
 ## [2026-09-19] [synthesize] | Phát Hành Release PR #297: Word COM Single-Pass Form Filler Module, Layout Guard & TRIHT Cleanliness Gate (Issue #296)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-ooxml/`, `.agents/skills/ccba-xu-ly-van-phong/`, `README.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/`, `walkthrough.md`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
