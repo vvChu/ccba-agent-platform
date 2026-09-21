@@ -26,6 +26,7 @@ triggers:
 - scan
 package_path: packages/ccba-pdf-prep
 ---
+
 # CCBA AI PDF Preprocessor
 
 Skill này cung cấp các công cụ chuyên dụng để chuẩn bị tài liệu PDF trước khi gửi đến AI Gateway. Giúp giải quyết các lỗi `Payload Too Large`, lỗi trích xuất trên bản scan mờ, và tối ưu hóa chi tiết cho bản vẽ kỹ thuật.
@@ -100,3 +101,11 @@ tiles = VisionOptimizer.tile_page(
 ## Liên kết
 - **Source**: `packages/ccba-pdf-prep/`
 - **Dependencies**: `fitz` (PyMuPDF), `pypdf`.
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
