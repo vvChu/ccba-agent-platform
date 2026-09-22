@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import os
 import re
 import subprocess
 import sys
@@ -513,7 +514,18 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
     except Exception:
         pass
 
-    # 2. Check workspace_context.yaml
+    # 2. Check CCBA_HUB_PATH environment variable
+    env_hub = os.environ.get("CCBA_HUB_PATH")
+    if env_hub:
+        env_cand = Path(env_hub)
+        if not env_cand.is_absolute():
+            env_cand = (root_dir / env_cand).resolve()
+        else:
+            env_cand = env_cand.resolve()
+        if env_cand.exists() and env_cand != root_dir.resolve():
+            return "spoke", env_cand, root_dir
+
+    # 3. Check workspace_context.yaml
     ws_context = root_dir / ".md" / "workspace_context.yaml"
     if ws_context.exists():
         try:
@@ -521,14 +533,22 @@ def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
             if isinstance(cfg, dict):
                 if cfg.get("project", {}).get("name") == "ccba-agent-platform":
                     return "hub", root_dir, None
-                if "hub_path" in cfg:
-                    hub_val = Path(cfg["hub_path"])
-                    if hub_val.resolve() != root_dir.resolve() and hub_val.exists():
-                        return "spoke", hub_val.resolve(), root_dir
+                hub_path_val = cfg.get("hub_path") or cfg.get("project", {}).get("hub_path")
+                if isinstance(hub_path_val, dict):
+                    os_key = "windows" if sys.platform == "win32" else "linux"
+                    hub_path_val = hub_path_val.get(os_key) or hub_path_val.get("posix")
+                if hub_path_val and isinstance(hub_path_val, str):
+                    hub_cand = Path(hub_path_val)
+                    if not hub_cand.is_absolute():
+                        hub_cand = (root_dir / hub_cand).resolve()
+                    else:
+                        hub_cand = hub_cand.resolve()
+                    if hub_cand.exists() and hub_cand != root_dir.resolve():
+                        return "spoke", hub_cand, root_dir
         except Exception:
             pass
 
-    # 3. Check for core hub markers
+    # 4. Check for core hub markers
     if (root_dir / "packages" / "ccba-ai").exists() and (
         root_dir / "scripts" / "sync_spoke.py"
     ).exists():
