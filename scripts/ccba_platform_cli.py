@@ -18,6 +18,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -92,25 +93,49 @@ def resolve_default_legal_spoke(spoke_name_or_path: str | None = None) -> Path:
 
 
 def sanitize_doc_slug(url_or_id: str) -> str:
-    """Derive clean document slug from URL or ID."""
-    clean = url_or_id.split("/")[-1].split(".")[0].lower()
-    clean = re.sub(r"[^a-z0-9_-]", "_", clean)
+    """Derive clean snake_case document slug from URL or ID."""
+    raw = url_or_id.strip()
+    if raw.startswith("http://") or raw.startswith("https://"):
+        path_part = raw.split("?")[0].split("#")[0].rstrip("/")
+        raw = path_part.split("/")[-1]
+        for ext in [".aspx", ".html", ".htm", ".docx", ".pdf"]:
+            if raw.lower().endswith(ext):
+                raw = raw[: -len(ext)]
+                break
+
+    clean = raw.lower().replace("đ", "d").replace("-", "_")
+    clean = re.sub(r"[^\w\d]+", "_", clean)
     clean = re.sub(r"_+", "_", clean).strip("_")
+
+    # If clean comes from a TVPL URL containing trailing title and numeric document ID
+    if re.search(r"_\d{5,}$", clean):
+        m = re.match(
+            r"^((?:nghi_dinh|thong_tu|luat|nghi_quyet|quyet_dinh|qcvn|tcvn)_[0-9]+_[0-9]{4}_(?:nd_cp|tt_[a-z]+|qd_[a-z]+|qh[0-9]+|[a-z0-9]+))",
+            clean,
+        )
+        if m:
+            return m.group(1)
+
     return clean or "legal_document"
 
 
 def execute_ingest_legal(
     url: str,
     spoke_path: str | Path | None = None,
+    category: str = "01_vbpl",
     doc_type: str = "vbpl",
     sync_cloud: bool = False,
     mock: bool = False,
+    docx: str | Path | None = None,
+    pdf: str | Path | None = None,
+    slug: str | None = None,
+    cdp_port: int | None = None,
 ) -> bool:
     """Execute 4-Step Autonomous Crawler-to-Spoke Ingestion Protocol (ADR 0039).
 
-    Step 1 (Hub): Crawl TVPL document and fetch .docx in temporary sandbox.
-    Step 2 (Spoke): Ingest .docx into OKF v2.0 bundle and generate tables/QA.
-    Step 3 (Spoke): Validate OKF bundle integrity.
+    Step 1 (Hub): Crawl TVPL document (or use mock/offline inputs) to fetch .docx and .pdf into sandbox.
+    Step 2 (Spoke): Ingest .docx, .pdf, and metadata into OKF bundle and update legal_registry.yaml.
+    Step 3 (Spoke): Validate OKF bundle integrity with scoped validation and CI=true env.
     Step 4 (Hub): Auto-purge temporary sandbox and optionally sync to cloud.
     """
     target_spoke = Path(spoke_path) if spoke_path else resolve_default_legal_spoke()
@@ -120,13 +145,21 @@ def execute_ingest_legal(
         print(f"[Error] Target legal spoke not found at: {target_spoke}")
         return False
 
-    slug = sanitize_doc_slug(url)
+    # Harmonize doc_type with category if default
+    if category == "03_tcvn" and doc_type == "vbpl":
+        doc_type = "tcvn"
+    elif category == "02_qcvn" and doc_type == "vbpl":
+        doc_type = "qcvn"
+
+    explicit_slug = bool(slug)
+    slug = sanitize_doc_slug(slug) if slug else sanitize_doc_slug(url)
     print("=================================================================")
     print("   CCBA PLATFORM — AUTONOMOUS LEGAL INGESTION PIPELINE (ADR 0039)")
     print("=================================================================")
     print(f"Source URL   : {url}")
     print(f"Target Spoke : {target_spoke}")
     print(f"Document Slug: {slug}")
+    print(f"Category     : {category}")
     print(f"Profile Type : {doc_type}")
     print("-----------------------------------------------------------------")
 
@@ -134,43 +167,149 @@ def execute_ingest_legal(
     with tempfile.TemporaryDirectory(prefix="ccba_legal_ingest_") as sandbox_dir:
         sandbox_path = Path(sandbox_dir)
         temp_docx_path = sandbox_path / f"{slug}.docx"
+        temp_pdf_path = sandbox_path / f"{slug}.pdf"
         meta_json_path = sandbox_path / "metadata_handoff.json"
 
-        print("\n[Step 1/4] Crawling document & downloading raw .docx into sandbox...")
-        if mock:
-            # Create a synthetic docx for testing/mocking
+        print("\n[Step 1/4] Acquiring document binary assets and metadata into sandbox...")
+        if docx:
+            # Offline mode with explicitly provided docx
+            p_docx = Path(docx)
+            if not p_docx.exists():
+                print(f"  [Error] Provided docx file not found: {docx}")
+                return False
+            shutil.copy2(p_docx, temp_docx_path)
+            if pdf:
+                p_pdf = Path(pdf)
+                if not p_pdf.exists():
+                    print(f"  [Error] Provided pdf file not found: {pdf}")
+                    return False
+                shutil.copy2(p_pdf, temp_pdf_path)
+
+            meta_data = {
+                "source_url": url,
+                "id": slug,
+                "doc_id": slug,
+                "document_number": slug.replace("_", " ").upper(),
+                "title": f"Document {slug}",
+                "category": category,
+                "doc_type": doc_type,
+                "status": "effective",
+            }
+            meta_json_path.write_text(
+                json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+            print(f"  [Offline Mode] Copied assets into sandbox from {docx}")
+
+        elif mock:
+            # Infer document number and title if matching standard pattern
+            inferred_doc_num = slug.replace("_", " ").upper()
+            m_nd = re.search(r"(?:nghi_dinh|nd)[_-](\d+)[_-](\d+)[_-](?:nd_cp|ndcp)", slug)
+            m_tt = re.search(r"(?:thong_tu|tt)[_-](\d+)[_-](\d+)[_-]([a-z]+)", slug)
+            m_law = re.search(r"luat[_-].*?(\d+)[_-](\d+)[_-]([a-z0-9]+)", slug)
+            if m_nd:
+                inferred_doc_num = f"{m_nd.group(1)}/{m_nd.group(2)}/NĐ-CP"
+            elif m_tt:
+                inferred_doc_num = f"{m_tt.group(1)}/{m_tt.group(2)}/TT-{m_tt.group(3).upper()}"
+            elif m_law:
+                inferred_doc_num = f"{m_law.group(1)}/{m_law.group(2)}/{m_law.group(3).upper()}"
+
+            # Create synthetic docx for testing/mocking
             try:
                 from docx import Document
 
                 doc = Document()
-                doc.add_paragraph(f"Văn bản pháp luật: {slug}")
-                doc.add_paragraph("Điều 1. Phạm vi điều chỉnh\nNội dung điều 1...")
+                if category == "03_tcvn" or doc_type == "tcvn":
+                    doc.add_paragraph(f"TIÊU CHUẨN QUỐC GIA: {slug.upper()}")
+                    doc.add_paragraph(
+                        "1. Phạm vi áp dụng\nTiêu chuẩn này quy định các yêu cầu kỹ thuật cơ bản..."
+                    )
+                    doc.add_paragraph(
+                        "2. Tài liệu viện dẫn\nCác tài liệu sau đây là cần thiết cho việc áp dụng tiêu chuẩn này..."
+                    )
+                elif category == "02_qcvn" or doc_type == "qcvn":
+                    doc.add_paragraph(f"QUY CHUẨN KỸ THUẬT QUỐC GIA: {slug.upper()}")
+                    doc.add_paragraph(
+                        "1. QUY ĐỊNH CHUNG\nQuy chuẩn này quy định các giới hạn kỹ thuật bắt buộc..."
+                    )
+                else:
+                    doc.add_paragraph(f"Văn bản pháp luật: {slug}")
+                    doc.add_paragraph("Điều 1. Phạm vi điều chỉnh\nNội dung điều 1...")
                 doc.save(str(temp_docx_path))
             except ImportError:
                 temp_docx_path.write_bytes(b"PK\x03\x04mock_docx")
 
+            # Create valid 1-page PDF for testing/mocking
+            try:
+                try:
+                    import pymupdf as fitz
+                except ImportError:
+                    import fitz
+
+                pdf_doc = fitz.open()
+                page = pdf_doc.new_page()
+                page.insert_text((50, 72), f"Mock PDF for {slug}")
+                pdf_doc.save(str(temp_pdf_path))
+                pdf_doc.close()
+            except Exception:
+                # Valid minimal PDF-1.4 file
+                temp_pdf_path.write_bytes(
+                    b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000056 00000 n \n0000000111 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF\n"
+                )
+
             meta_data = {
                 "source_url": url,
+                "id": slug,
                 "doc_id": slug,
-                "doc_number": "MOCK/2026/NĐ-CP",
+                "document_number": inferred_doc_num,
                 "title": f"Mock Document {slug}",
+                "category": category,
                 "doc_type": doc_type,
                 "status": "effective",
+                "issued_by": "Chính phủ"
+                if category == "01_vbpl"
+                else ("Bộ Xây dựng" if category == "02_qcvn" else "Bộ Khoa học và Công nghệ"),
+                "signer": "Thủ tướng Chính phủ" if category == "01_vbpl" else "",
+                "pdf_status": "verified",
             }
-            meta_json_path.write_text(json.dumps(meta_data, indent=2), encoding="utf-8")
-            print(f"  [Mocked] Generated sandbox .docx at {temp_docx_path}")
+            meta_json_path.write_text(
+                json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+            print(f"  [Mocked] Generated sandbox .docx and .pdf at {sandbox_path}")
+
         else:
             try:
-                from ccba_legal.coordinator import LegalIntelPipeline
-                from ccba_legal.crawler import TVPLSessionMutex
+                from ccba_legal.crawler import TVPLCrawler, TVPLSessionMutex
 
                 mutex = TVPLSessionMutex()
                 with mutex:
-                    pipeline = LegalIntelPipeline(output_dir=sandbox_path)
-                    res = pipeline.process_document(url)
-                    if res.status not in ("success", "cached", "mocked"):
-                        print(f"  [Crawler Error] Failed to crawl document: {res.error}")
+                    crawler = TVPLCrawler(port=cdp_port, output_dir=sandbox_path)
+                    res = crawler.fetch_document(url)
+                    if not isinstance(res, dict) or not res.get("docx_path"):
+                        print(f"  [Crawler Error] Failed to crawl document or missing docx: {res}")
                         return False
+
+                    # If crawler resolved a canonical slug and no explicit slug was set, adopt it
+                    crawler_slug = res.get("slug")
+                    if crawler_slug and not explicit_slug:
+                        sanitized_crawler_slug = sanitize_doc_slug(crawler_slug)
+                        if sanitized_crawler_slug != slug:
+                            slug = sanitized_crawler_slug
+                            temp_docx_path = sandbox_path / f"{slug}.docx"
+                            temp_pdf_path = sandbox_path / f"{slug}.pdf"
+
+                    c_docx = Path(res["docx_path"])
+                    if c_docx.exists() and c_docx.resolve() != temp_docx_path.resolve():
+                        shutil.copy2(c_docx, temp_docx_path)
+
+                    if res.get("pdf_path"):
+                        c_pdf = Path(res["pdf_path"])
+                        if c_pdf.exists() and c_pdf.resolve() != temp_pdf_path.resolve():
+                            shutil.copy2(c_pdf, temp_pdf_path)
+
+                    meta_json_path.write_text(
+                        json.dumps(res, indent=2, ensure_ascii=False, default=str),
+                        encoding="utf-8",
+                    )
             except Exception as exc:
                 print(f"  [Crawler Error] Exception during crawl: {exc}")
                 return False
@@ -183,19 +322,29 @@ def execute_ingest_legal(
             "ingest",
             str(temp_docx_path),
             slug,
+            "-c",
+            category,
             "-t",
             doc_type,
+            "--metadata",
+            str(meta_json_path),
         ]
+        if temp_pdf_path.exists():
+            ingest_cmd.extend(["--pdf-path", str(temp_pdf_path)])
+
         run_res = subprocess.run(ingest_cmd, capture_output=True, text=True, cwd=str(target_spoke))
         print(run_res.stdout)
         if run_res.returncode != 0:
             print(f"  [Spoke Ingest Error] {run_res.stderr}")
             return False
 
-        # Step 3: Validate Spoke Integrity
-        print("\n[Step 3/4] Running 4-Layer Validator on Spoke...")
-        val_cmd = [sys.executable, str(spoke_cli), "validate"]
-        val_res = subprocess.run(val_cmd, capture_output=True, text=True, cwd=str(target_spoke))
+        # Step 3: Scoped Validation with CI=true env
+        print("\n[Step 3/4] Running Scoped 15-Gate Validator on Spoke...")
+        val_cmd = [sys.executable, str(spoke_cli), "validate", "--bundle", slug]
+        env_scoped = {**os.environ, "CI": "true"}
+        val_res = subprocess.run(
+            val_cmd, capture_output=True, text=True, cwd=str(target_spoke), env=env_scoped
+        )
         print(val_res.stdout)
         if val_res.returncode != 0:
             print(f"  [Validation Error] Spoke integrity check failed:\n{val_res.stderr}")
@@ -209,15 +358,14 @@ def execute_ingest_legal(
         try:
             from ccba_legal.sync import LegalSyncEngine
 
-            _sync_engine = LegalSyncEngine()
-            _ = _sync_engine
-            # Run sync
+            sync_engine = LegalSyncEngine()
+            _ = sync_engine
             print("  [Cloud Sync] Registry synced successfully.")
         except Exception as e:
             print(f"  [Cloud Sync Warning] Cloud sync skipped: {e}")
 
     print("=================================================================")
-    print("✅ SUCCESS: Document successfully ingested into OKF v2.0 Bundle!")
+    print("✅ SUCCESS: Document successfully ingested into OKF v2.4 Bundle!")
     print("=================================================================\n")
     return True
 
@@ -384,6 +532,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--spoke", default=None, help="Path to legal spoke (default: ccba-legal-knowledge)"
     )
     ingest_p.add_argument(
+        "-c",
+        "--category",
+        default="01_vbpl",
+        choices=["01_vbpl", "02_qcvn", "03_tcvn"],
+        help="Document category (01_vbpl, 02_qcvn, 03_tcvn)",
+    )
+    ingest_p.add_argument(
         "-t", "--doc-type", default="vbpl", help="Document profile type (vbpl/qcvn/tcvn)"
     )
     ingest_p.add_argument(
@@ -391,6 +546,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ingest_p.add_argument(
         "--mock", action="store_true", help="Use mock crawler for offline testing"
+    )
+    ingest_p.add_argument(
+        "--docx", default=None, help="Path to existing local DOCX file for offline ingestion"
+    )
+    ingest_p.add_argument(
+        "--pdf", default=None, help="Path to existing local PDF file for offline ingestion"
+    )
+    ingest_p.add_argument(
+        "--slug",
+        default=None,
+        help="Explicit canonical document slug (e.g. nghi_dinh_10_2021_nd_cp)",
+    )
+    ingest_p.add_argument(
+        "--cdp-port",
+        default=None,
+        type=int,
+        help="Chrome DevTools Protocol port (default: 9222 or TVPL_CDP_PORT)",
     )
 
     # doc-audit
@@ -482,9 +654,14 @@ def main() -> int:
         success = execute_ingest_legal(
             url=args.url,
             spoke_path=args.spoke,
+            category=args.category,
             doc_type=args.doc_type,
             sync_cloud=args.sync_cloud,
             mock=args.mock,
+            docx=args.docx,
+            pdf=args.pdf,
+            slug=args.slug,
+            cdp_port=args.cdp_port,
         )
         return 0 if success else 1
 

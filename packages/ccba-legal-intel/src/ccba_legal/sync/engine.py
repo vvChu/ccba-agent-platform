@@ -18,10 +18,12 @@ from ccba_legal.sync.cdp_discovery import (
     download_via_cdp_or_client,
     search_thuvienphapluat_via_cdp,
 )
-from ccba_legal.sync.drive_uploader import (
+from ccba_legal.sync.drive_client import (
     _import_google_api,
-    clean_google_drive_folder,
     get_drive_service,
+)
+from ccba_legal.sync.drive_uploader import (
+    clean_google_drive_folder,
     upload_to_google_drive,
 )
 from ccba_legal.sync.notebooklm_sync import (

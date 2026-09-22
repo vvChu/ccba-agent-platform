@@ -55,7 +55,7 @@ class TVPLCrawler:
 
     def __init__(
         self,
-        port: int = 9222,
+        port: int | None = None,
         output_dir: Path | None = None,
         provider: LegalDocProvider | None = None,
         rate_limiter: TVPLRateLimiter | None = None,

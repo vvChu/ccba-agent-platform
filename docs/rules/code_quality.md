@@ -85,5 +85,32 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
   - Khi sao chép tệp ghi đè quyền Read-Only, nếu `dst` là thư mục, bắt buộc chuẩn hóa:
     `target_dst = (dst / src.name) if dst.is_dir() else dst`.
 
+---
 
+## 8. Clean Architecture & Decoupled Connection Layer (Inverted Coupling Prevention)
+Khi xây dựng các bộ công cụ tích hợp dịch vụ ngoại vi (Google Drive, Cloud Storage, Database, External APIs):
+1. **Ngưỡng Kích Hoạt (Trigger Threshold - Tuân thủ KISS):**
+   - Chỉ bắt buộc tách riêng tầng kết nối khi tồn tại $\ge 2$ consumers độc lập (ví dụ: vừa Đẩy vừa Kéo dữ liệu) HOẶC dịch vụ yêu cầu xác thực phức tạp (OAuth refresh, credentials migration, session pooling, circuit breaking). Đối với các HTTP call đơn giản 5-10 dòng trong một module duy nhất, ưu tiên giữ gọn tại chỗ (tránh Shallow Modules).
+2. **Phân Tách Rõ Rệt 2 Tầng:**
+   - **Tầng Hạ Tầng Kết Nối (Connection/Client Factory):** Chuyên trách xác thực (OAuth, API tokens), giải quyết đường dẫn credentials (`~/.ccba/credentials/`), quản lý vòng đời client/session và xử lý lỗi mạng cơ sở (ví dụ: `drive_client.py`).
+   - **Tầng Nghiệp Vụ Tiêu Thụ (Domain Consumers):** Các module xử lý luồng dữ liệu chuyên biệt (ví dụ: `drive_uploader.py` cho chiều Đẩy, `drive_ingestor.py` cho chiều Kéo, `notebooklm_sync.py` cho đồng bộ).
+3. **CẤM Phụ Thuộc Ngược (No Inverted Coupling) & Quy Tắc Cây Lá (Leaf Dependency):**
+   - Tuyệt đối KHÔNG để module Chiều Kéo (Ingestor/Reader) phụ thuộc ngược vào module Chiều Đẩy (Uploader/Writer) chỉ vì module đẩy được viết trước và có sẵn hàm kết nối. Cả hai phải là consumers ngang hàng.
+   - Module hạ tầng kết nối (`*_client.py`) phải là **nút lá (leaf dependency)**: tuyệt đối không import ngược bất kỳ logic nghiệp vụ nào từ consumers để loại trừ vĩnh viễn lỗi Circular Import.
+4. **Bảo Toàn Tương Thích Ngược & Tuân Thủ Linter (Zero-Breakage Re-export):**
+   - Khi chuyển hàm kết nối sang module mới, module cũ BẮT BUỘC phải re-export lại và khai báo tường minh trong `__all__`, đảm bảo callers cũ không bị gãy và không vi phạm quy tắc linter `F401 (imported but unused)`.
+5. **Tăng Tính Phát Hiện (Agent Ergonomics & Discoverability):**
+   - Đặt tên module hạ tầng nhất quán (`*_client.py`), giúp AI Agents và kỹ sư định vị chức năng ngay tức thì mà không phải duyệt qua hàng trăm dòng mã nghiệp vụ phức tạp.
 
+---
+
+## 9. Pre-Evaluation Working Tree Fast-Fail & CI Parity cho Tác Tử Tự Hóa (Auto-Tuner Guardrails)
+Khi thiết kế các pipeline tự động tối ưu hóa mã nguồn hoặc kỹ năng (như Nightly Auto-Tuner, GitRatchetOptimizer):
+1. **Chặn Lỗi Trước Khi Đánh Giá (Pre-Evaluation Working Tree Fast-Fail):**
+   - Mọi đột biến nội dung (mutation) sau khi áp dụng vào working tree BẮT BUỘC phải vượt qua kiểm tra vệ sinh tĩnh (`LinkAuditor`, syntax parser) **TRƯỚC KHI** kích hoạt hàm đánh giá tốn kém (`evaluate_content` / gọi LLM).
+   - Bộ lọc kiểm tra tĩnh phải bao quát toàn diện: liên kết Markdown hỏng (`links`), ký hiệu mã giả định (`code_refs`), và biến môi trường chưa đăng ký (`env_vars`).
+   - Nếu phát hiện vi phạm, hệ thống phải ROLLBACK ngay lập tức tệp trên đĩa về `best_content`, hủy bỏ iteration và không tiêu tốn bất kỳ token LLM đánh giá nào.
+2. **Chỉ Dẫn Đột Biến An Toàn (Safe Heuristic Directives):**
+   - Trong các mutator thao tác đơn tệp (single-file mutators như `tuner.py`), gợi ý cấu trúc tuyệt đối KHÔNG được chèn đường dẫn tương đối tĩnh giả định (ví dụ: `references/guide.md`) nếu tệp chưa hiện diện trên đĩa. Chỉ được dẫn link tới các tệp hiện hữu hoặc hướng dẫn qua mục lục text thuần.
+3. **Tuyệt Đối Khớp Nối Công Cụ Kiểm Tra (True CI Parity):**
+   - Các cổng Pre-PR Gate của Daemon và lệnh kiểm định cục bộ (`ccba_harness verify-patch --preset skill`) bắt buộc phải đồng bộ 100% với các bước kiểm tra của CI trên GitHub Actions (bao gồm cả `scripts/validate_docs.py . --src scripts,packages --changed`), đảm bảo mã tự động sinh ra luôn xanh 100% khi mở Pull Request.

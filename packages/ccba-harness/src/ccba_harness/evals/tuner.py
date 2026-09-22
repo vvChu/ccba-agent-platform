@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -1568,7 +1569,7 @@ class GitRatchetOptimizer:
                     "Lean Structural Architecture & Progressive Disclosure",
                     "\n\n## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)\n"
                     "* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.\n"
-                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng đều được dẫn xuất qua liên kết Markdown chuẩn mực: `[Tài liệu tham chiếu](references/guide.md)`.\n"
+                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.\n"
                     "* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.",
                 ),
             ]
@@ -1826,7 +1827,46 @@ class GitRatchetOptimizer:
                     # Apply candidate mutation
                     self.target_file.write_text(mutated_content, encoding="utf-8")
 
-                    # Evaluate
+                    # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
+                    link_issues = []
+                    try:
+                        if str(self.project_root) not in sys.path:
+                            sys.path.insert(0, str(self.project_root))
+                        from scripts.governance.link_auditor import LinkAuditor
+
+                        link_issues = [
+                            i
+                            for i in LinkAuditor(self.project_root).audit(self.target_file)
+                            if i.category in ("links", "okf_links", "okf_conflicts")
+                        ]
+                    except Exception as e:
+                        logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
+
+                    if link_issues:
+                        logger.warning(
+                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
+                        )
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+                        trial = RatchetTrialResult(
+                            iteration=i,
+                            score=best_score,
+                            passed=(best_score >= self.config.target_score),
+                            critical_fails=0,
+                            decision=decision,
+                            summary=summary,
+                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                            latency_s=time.perf_counter() - iter_t0,
+                        )
+                        history.append(trial)
+                        continue
+
+                    # Evaluate (Only executed when working tree passes static validation)
                     report = self.evaluate_content(mutated_content)
                     current_score = report.overall_score
                     crit_fails = sum(1 for r in report.item_results if r.critical_failed)
@@ -1848,7 +1888,11 @@ class GitRatchetOptimizer:
                         reverted_count += 1
                         stagnant_trials += 1
                         decision = "REVERT"
-                        summary = f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%) hoặc dính {crit_fails} Điểm Liệt."
+                        summary = (
+                            f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%)"
+                            if crit_fails == 0
+                            else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
+                        )
 
                     trial = RatchetTrialResult(
                         iteration=i,

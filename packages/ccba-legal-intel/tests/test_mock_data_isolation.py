@@ -42,6 +42,22 @@ def test_workspace_mock_data_isolation_audit() -> None:
         f"Mock Data Isolation Violation (ADR 0050)! Unauthorized mock files found in .md/: {polluted_files}"
     )
 
+    # Check YAML files in .md/data/ for Mock Legal Document Title (ADR-0059)
+    data_dir = dot_md / "data"
+    mock_leaks: list[str] = []
+    if data_dir.exists():
+        for yaml_file in data_dir.glob("*.yaml"):
+            try:
+                content = yaml_file.read_text(encoding="utf-8")
+                if "Mock Legal Document Title" in content:
+                    mock_leaks.append(str(yaml_file))
+            except Exception:
+                pass
+
+    assert not mock_leaks, (
+        f"ADR-0059 Violation! Mock Legal Document Title found in .md/data YAML files: {mock_leaks}"
+    )
+
 
 def test_demo_script_cli_execution() -> None:
     """Verify scripts/legal/demo_vbhn_delta_patch.py runs cleanly via subprocess without polluting .md/."""

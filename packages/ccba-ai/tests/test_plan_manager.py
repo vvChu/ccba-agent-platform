@@ -3,8 +3,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pytest
-
 from ccba_ai.services.plan import (
     FileMutexLock,
     Phase,
@@ -23,10 +21,22 @@ def test_file_lock_basic():
             assert lock1.is_locked
             assert lock_file.exists()
 
-            # Second acquisition should fail / timeout
-            with pytest.raises(TimeoutError):
-                with FileMutexLock(lock_file, timeout=0.2, retry_interval=0.05):
-                    pass
+            # Second acquisition from another thread should fail / timeout
+            thread_error = []
+
+            def acquire_in_other_thread():
+                try:
+                    with FileMutexLock(lock_file, timeout=0.2, retry_interval=0.05):
+                        pass
+                except TimeoutError as exc:
+                    thread_error.append(exc)
+
+            t = threading.Thread(target=acquire_in_other_thread)
+            t.start()
+            t.join()
+
+            assert len(thread_error) == 1
+            assert isinstance(thread_error[0], TimeoutError)
 
         # Lock file should be cleaned up
         assert not lock_file.exists()
