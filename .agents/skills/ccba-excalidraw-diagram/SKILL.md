@@ -100,3 +100,7 @@ Khi thực thi các tác vụ thiết kế và tối ưu sơ đồ chuyên sâu,
 | :--- | :--- |
 | [`references/visual_concepts.md`](references/visual_concepts.md) | Cẩm nang nguyên lý thị giác, bảng màu Academic Grayscale & Pastel, typography 16:9 và bố cục ma trận |
 
+## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
+* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
+* **Tham chiếu liên kết:** Mọi tài liệu mở rộng đều được dẫn xuất qua liên kết Markdown chuẩn mực: [`references/visual_concepts.md`](references/visual_concepts.md).
+* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
