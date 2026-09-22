@@ -24,6 +24,7 @@ dependencies = [
     "rank-bm25",
     "defusedxml",
     "pymupdf>=1.23.0",
+    "Pillow",
 ]
 
 [project.scripts]
