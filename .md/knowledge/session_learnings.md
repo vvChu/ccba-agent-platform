@@ -25,28 +25,23 @@
   - Regex bắt trạng thái ADR bao quát list marker `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` bắt buộc kiểm tra SHA-256 qua `.sha256` sidecar.
-- **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối & Triệt Tiêu Inverted Coupling]**:
-  - *Bối cảnh*: Modules đọc/kéo (`engine.py`, `notebooklm_sync.py`, `drive_ingestor.py`) import `get_drive_service` từ `drive_uploader.py`. Việc module Pull phụ thuộc module Push là inverted coupling, vi phạm Clean Architecture & SRP, làm giảm discoverability.
-  - *Giải pháp*: Tách hạ tầng xác thực (Auth, Service Factory) thành `drive_client.py` độc lập. Giữ tương thích ngược 100% bằng re-export từ `drive_uploader.py`. Mở rộng mô hình để refactor các hạ tầng kết nối khác trong monorepo.
+- **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối]**:
+  - Tách hạ tầng xác thực (Auth, Service Factory) thành `drive_client.py` độc lập, tránh inverted coupling khi module Pull phụ thuộc module Push (`drive_uploader.py`). Giữ tương thích ngược qua re-export.
 
 ---
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Strict Testing)
 
 - **RULE-2.1 [Strict Mypy Type-Safety — Chống Anti-Pattern AP9.1]**:
-  - NGHIÊM CẤM dùng `[[tool.mypy.overrides]] ignore_errors = true` trong `pyproject.toml`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho third-party thiếu stubs.
+  - CẤM dùng `[[tool.mypy.overrides]] ignore_errors = true`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho third-party thiếu stubs.
 - **RULE-2.2 [Spoke CI Gates Verification Pipeline]**:
-  - 5 Cổng Zero-Tolerance bắt buộc trước khi nghiệm thu: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py` (SHA-256 Valid), (5) `verify_cross_links.py`.
+  - 5 Cổng Zero-Tolerance bắt buộc: (1) `lint_visual_parity.py`, (2) `validate_legal_spoke.py`, (3) `test_converter_regression.py`, (4) `verify_all_docs_against_pdf.py`, (5) `verify_cross_links.py`.
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
-  - Unit tests nòng cốt phải đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`. `drift_auditor.py`: Miễn trừ `not filepath.startswith("scripts/tests/")` chống cảnh báo giả.
+  - Unit tests nòng cốt đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`.
 - **RULE-2.4 [Relative Link Resolution Depth]**:
-  - Tệp trong `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng 3 cấp lùi: `../../../packages/<pkg>`.
-  - Tệp trong `references/<ref>.md` trỏ về root monorepo dùng 4 cấp lùi: `../../../../`.
-  - CẤM TUYỆT ĐỐI commit đường dẫn `file:///` hoặc URI `conversation://` vào kho Git.
-- **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomain Invariant]**:
-  - Khi ánh xạ kỹ năng sang bộ đề thi (`eval_*.json`) và bộ chấm (`get_default_domain_scorers`), BẮT BUỘC dùng `archetypes.py` làm Single Source of Truth (SSOT).
-  - Từ khóa chuyên biệt (`grill`, `adr`, `risk`) bắt buộc tách thành Subdomain độc lập khỏi tuple cha (`orchestration`, `bim`) để triệt tiêu va chạm lệch pha do thứ tự regex.
-  - Khi refactor nội bộ, bảo toàn hợp đồng kiểm thử qua Facade Delegation Wrapper để đạt Zero Breaking Changes.
+  - Tệp trong `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng `../../../packages/<pkg>`. CẤM commit URI `file:///` hoặc `conversation://`.
+- **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomains]**:
+  - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT. Từ khóa chuyên biệt (`grill`, `adr`, `risk`) tách thành subdomain độc lập khỏi tuple cha chống va chạm regex.
 
 ---
 
@@ -62,6 +57,9 @@
   - Tier 3 (`part=0`): Gazette Scan PDF (Dự phòng).
 - **RULE-3.3 [Làm Sạch Bảng Biểu & Chú Thích Pháp Lý]**:
   - Footnote: Khử lặp số thứ tự: `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`. Bảng Markdown nhận diện qua cặp dòng tiêu đề và phân cách `| :--- |`.
+- **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
+  - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm pháp luật đa dòng của điều khoản; cấm span 1 dòng chỉ trỏ thẻ `<a id="..."></a>`.
+  - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè vào `.md/data/legal_registry.yaml`. Gate 4 CI Spoke hard-lock khi thiếu `clauses.json`.
 
 ---
 
