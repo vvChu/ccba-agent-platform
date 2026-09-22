@@ -7,7 +7,9 @@ and safe skills synchronization for existing repositories.
 from __future__ import annotations
 
 import datetime
+import os
 import shutil
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -139,20 +141,42 @@ def merge_workspace_context(
     # 3. Additive Merge
     merged_data = dict(existing_data)  # Preserve all original keys
 
+    # Resolve resilient relative POSIX hub path to prevent machine state leakage (ADR 0044)
+    spoke_root = ctx_path.parent.parent if ctx_path.parent.name == ".md" else ctx_path.parent
+    rel_hub_str: str | None = None
+    try:
+        rel_hub = os.path.relpath(hub_path.resolve(), spoke_root.resolve())
+        rel_hub_str = Path(rel_hub).as_posix()
+    except ValueError:
+        # Cross-drive on Windows (e.g. C:\ vs D:\)
+        # Avoid baking in absolute machine drive path to protect multi-device portability
+        rel_hub_str = None
+
     # Additive 'project' block
     current_proj: dict[str, Any] = proj_val if isinstance(proj_val, dict) else {}
+    target_hub_path = rel_hub_str or current_proj.get("hub_path")
+    if target_hub_path and isinstance(target_hub_path, str) and (":" in target_hub_path or target_hub_path.startswith("/")):
+        target_hub_path = rel_hub_str
+
     merged_data["project"] = {
         "name": str(project_name),
         "archetype": current_proj.get("archetype", archetype),
         "type": current_proj.get("type", project_type),
         "mode": current_proj.get("mode", mode),
         "qc_mode": current_proj.get("qc_mode", None),
-        "hub_path": str(hub_path.resolve()),
+        "hub_path": target_hub_path,
         "description": current_proj.get(
             "description",
             existing_data.get("description", f"CCBA Spoke Workspace for {project_name}"),
         ),
     }
+
+    # Normalize top-level hub_path if present
+    if "hub_path" in merged_data:
+        if rel_hub_str:
+            merged_data["hub_path"] = rel_hub_str
+        elif isinstance(merged_data["hub_path"], str) and (":" in merged_data["hub_path"] or merged_data["hub_path"].startswith("/")):
+            del merged_data["hub_path"]
 
     # Additive 'must_read'
     if "must_read" not in merged_data:
@@ -339,6 +363,7 @@ exit 0
         project_type: str | None = None,
         mode: str | None = None,
         archetype: str | None = None,
+        force: bool = False,
     ) -> int:
         """Execute full non-destructive adoption pipeline."""
         hub_path = self._resolve_hub()
@@ -350,8 +375,28 @@ exit 0
         chosen_archetype = archetype or report.suggested_archetype
 
         if dry_run:
+            if report.has_workspace_context:
+                print(
+                    "\n⚠️  [DRY-RUN] Phát hiện Spoke đã có cấu hình workspace_context.yaml!"
+                    "\n    Lệnh thật sẽ bị chặn (exit code 1) để bảo vệ đa máy, trừ khi truyền cờ --force."
+                )
             print("🚀 [DRY-RUN] Không ghi tệp. Đánh giá hoàn tất thành công.")
             return 0
+
+        # Hard Fail-Safe Gate: Protect existing multi-device Spoke against accidental re-adoption
+        if report.has_workspace_context and not force:
+            print(
+                "\n❌ [FAIL-SAFE GATE] Từ chối thực thi: Spoke này ĐÃ TỒN TẠI workspace_context.yaml!\n"
+                f"   Đường dẫn context: {report.context_path}\n\n"
+                "   🛡️  Nguyên tắc Hiến pháp Single-User Multi-Device & Machine-State Decoupling:\n"
+                "   Spoke đã được cấu hình từ máy khác không được phép chạy lại adopt-spoke hay init-spoke.\n"
+                "   👉 Nếu bạn vừa clone Spoke về máy mới, hãy chạy lệnh bootstrap môi trường:\n"
+                "      python scripts/spoke/spoke_bootstrap.py --create-venv\n"
+                "      (hoặc `python scripts/ccba_platform_cli.py bootstrap-spoke --create-venv`)\n\n"
+                "   👉 Nếu bạn THỰC SỰ muốn ghi đè cấu hình, hãy chỉ định rõ ràng cờ `--force`.\n",
+                file=sys.stderr,
+            )
+            return 1
 
         # Step 1: Safe Additive Schema Merge
         md_dir = self.spoke_root / ".md"
@@ -397,7 +442,14 @@ def adopt_project(
     project_type: str | None = None,
     mode: str | None = None,
     archetype: str | None = None,
+    force: bool = False,
 ) -> int:
     """Procedural delegate for adopting a brownfield spoke."""
     adopter = SpokeAdopter(spoke_path)
-    return adopter.adopt(dry_run=dry_run, project_type=project_type, mode=mode, archetype=archetype)
+    return adopter.adopt(
+        dry_run=dry_run,
+        project_type=project_type,
+        mode=mode,
+        archetype=archetype,
+        force=force,
+    )

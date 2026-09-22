@@ -265,6 +265,101 @@ def test_merge_agents_constitution_preserves_custom_sections() -> None:
     assert "- Do not modify production db directly" in merged
 
 
+def test_merge_agents_constitution_multiline_and_idempotency() -> None:
+    """Verifies multiline bullet items, nested sub-bullets, and idempotency in merge_agents_constitution."""
+    from scripts.spoke.sync.coordinator import merge_agents_constitution
+
+    hub_text = """# CCBA Agent Services Platform — Layer 1 Constitution
+
+The CCBA Agent Services Platform.
+
+## Core Invariants
+
+- **Hub vs Spoke**: Identify environment via git remote.
+- **Reuse-First Gate**: Check catalog.yaml before writing new utility.
+- **Automation-First Quality**: Must pass verify-patch.
+
+## Progressive Disclosure
+
+- Execution Guardrails
+"""
+
+    spoke_text = """# CCBA Agent Services Platform — Layer 1 Constitution
+
+The CCBA Agent Services Platform.
+
+## Core Invariants
+
+- **Hub vs Spoke**: Old description that Hub should overwrite.
+- **Mô hình Đường dẫn Nông (Shallow Path)**: Thư mục legal_docs được tổ chức phẳng
+  - Dòng thụt lề 1 giải thích chi tiết
+  - Dòng thụt lề 2 bổ sung ngữ cảnh
+- **Độc lập Mã nguồn**: Không chứa code xử lý trực tiếp.
+  Mọi thuật toán nằm trong Hub packages.
+
+## Progressive Disclosure
+
+- Execution Guardrails
+
+## Agent skills
+
+- custom skill 1
+"""
+
+    merged = merge_agents_constitution(hub_text, spoke_text)
+
+    # 1. Hub's invariants must be canonical
+    assert "Identify environment via git remote." in merged
+    assert "Old description that Hub should overwrite." not in merged
+
+    # 2. Spoke's custom multiline invariants must be preserved intact
+    assert "**Mô hình Đường dẫn Nông (Shallow Path)**" in merged
+    assert "Dòng thụt lề 1 giải thích chi tiết" in merged
+    assert "Dòng thụt lề 2 bổ sung ngữ cảnh" in merged
+    assert "**Độc lập Mã nguồn**" in merged
+    assert "Mọi thuật toán nằm trong Hub packages." in merged
+
+    # 3. Custom sections preserved
+    assert "## Agent skills" in merged
+    assert "- custom skill 1" in merged
+
+    # 4. Strict Idempotency: merge(hub, merge(hub, spoke)) == merge(hub, spoke)
+    second_merge = merge_agents_constitution(hub_text, merged)
+    assert second_merge == merged
+
+
+def test_merge_agents_constitution_colon_inside_bold() -> None:
+    """Verifies that colon inside bold (**Key:**) or numbered items (1. **Key:**) are correctly parsed."""
+    from scripts.spoke.sync.coordinator import merge_agents_constitution
+
+    hub_text = """# Constitution
+
+## Core Invariants
+
+- **Hub vs Spoke**: Environment check
+- **Reuse-First Gate**: Catalog check
+"""
+
+    spoke_text = """# Constitution
+
+## Core Invariants
+
+- **Hub vs Spoke**: Environment check
+1. **Mô hình Đường dẫn Nông (Shallow Path):** Thư mục legal_docs phẳng
+2. **Độc lập Mã nguồn:** Không chứa code
+ * **Nested Rule:** Asterisk format
+"""
+
+    merged = merge_agents_constitution(hub_text, spoke_text)
+    assert "**Mô hình Đường dẫn Nông (Shallow Path):**" in merged
+    assert "**Độc lập Mã nguồn:**" in merged
+    assert "**Nested Rule:**" in merged
+
+    # Re-merge must be strictly idempotent
+    assert merge_agents_constitution(hub_text, merged) == merged
+
+
+
 def test_sync_preserves_spoke_agents_md_custom_sections(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that sync preserves custom sections in spoke's AGENTS.md."""
     spoke_agents_dir = mock_spoke / ".agents"

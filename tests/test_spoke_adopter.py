@@ -123,3 +123,28 @@ def test_adopt_project_installs_maskara_hook(temp_spoke: Path):
     assert hook_file.exists()
     hook_content = hook_file.read_text(encoding="utf-8")
     assert "Maskara" in hook_content
+
+
+def test_adopt_fails_safely_when_context_exists_without_force(temp_spoke: Path):
+    """Fails with exit code 1 when workspace_context.yaml exists and force is False."""
+    md_dir = temp_spoke / ".md"
+    md_dir.mkdir(parents=True, exist_ok=True)
+    (md_dir / "workspace_context.yaml").write_text("project_name: ExistingSpoke\n", encoding="utf-8")
+
+    adopter = SpokeAdopter(temp_spoke)
+    exit_code = adopter.adopt(force=False, dry_run=False)
+    assert exit_code == 1
+
+
+def test_adopt_dry_run_allows_survey_with_warning_when_context_exists(temp_spoke: Path, capsys):
+    """Returns 0 during dry-run even if workspace_context.yaml exists, printing safety warning."""
+    md_dir = temp_spoke / ".md"
+    md_dir.mkdir(parents=True, exist_ok=True)
+    (md_dir / "workspace_context.yaml").write_text("project_name: ExistingSpoke\n", encoding="utf-8")
+
+    adopter = SpokeAdopter(temp_spoke)
+    exit_code = adopter.adopt(force=False, dry_run=True)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "Phát hiện Spoke đã có cấu hình workspace_context.yaml" in captured.out
+

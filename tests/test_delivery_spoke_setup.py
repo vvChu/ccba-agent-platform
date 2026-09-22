@@ -73,6 +73,7 @@ def test_mock_delivery_spoke_adoption_and_sync(tmp_path: Path):
         archetype="project_delivery",
         project_type="Thẩm tra thiết kế",
         mode="consulting",
+        force=True,
     )
     assert status == 0
 

@@ -87,6 +87,7 @@ class HubDiscoverer:
     def discover(self) -> Path:
         """Locate Hub using 5-step smart discovery with multi-OS and env priority."""
         hub_root: Path | None = None
+        resolved_via_env = False
 
         # Step 1: Check CCBA_HUB_PATH / HUB_PATH environment variables (Top Priority)
         for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
@@ -95,6 +96,7 @@ class HubDiscoverer:
                 env_hub = resolve_cross_platform_path(env_val, self.spoke_root)
                 if env_hub and self._is_valid_hub(env_hub):
                     hub_root = env_hub
+                    resolved_via_env = True
                     break
 
         # Step 2: Check workspace_context.yaml
@@ -137,23 +139,31 @@ class HubDiscoverer:
             )
 
         # Auto-save ONLY if workspace_context.yaml was missing hub_path and relative path is feasible
-        # Do not overwrite with machine-specific absolute path if resolved via env or already configured
-        if self.context_file and self.context_file.exists():
+        # Do not overwrite if resolved via env or already configured (preserves Single-User Multi-Device)
+        if self.context_file and self.context_file.exists() and not resolved_via_env:
             current_conf = self.context.get("hub_path")
+            if not current_conf:
+                proj_info = self.context.get("project")
+                if isinstance(proj_info, dict):
+                    current_conf = proj_info.get("hub_path")
+
             if not current_conf:
                 try:
                     rel_to_spoke = os.path.relpath(hub_root, self.spoke_root)
-                    save_path = rel_to_spoke if not rel_to_spoke.startswith("..") else str(hub_root)
+                    rel_posix = Path(rel_to_spoke).as_posix()
+                    # Only save clean relative paths (e.g. ../ccba-agent-platform or ccba-agent-platform)
+                    # Never save absolute paths (starting with / or containing :) to protect multi-device portability
+                    if not rel_posix.startswith("/") and ":" not in rel_posix:
+                        self.context["hub_path"] = rel_posix
+                        try:
+                            with open(self.context_file, "w", encoding="utf-8") as f:
+                                yaml.dump(self.context, f, allow_unicode=True)
+                            print(f"[Sync] Auto-saved discovered Hub path: {rel_posix}")
+                        except Exception as e:
+                            print(
+                                f"[Sync] Warning: Could not save Hub path to context: {e}", file=sys.stderr
+                            )
                 except ValueError:
-                    save_path = str(hub_root)
-                self.context["hub_path"] = save_path
-                try:
-                    with open(self.context_file, "w", encoding="utf-8") as f:
-                        yaml.dump(self.context, f, allow_unicode=True)
-                    print(f"[Sync] Auto-saved discovered Hub path: {save_path}")
-                except Exception as e:
-                    print(
-                        f"[Sync] Warning: Could not save Hub path to context: {e}", file=sys.stderr
-                    )
+                    pass
 
         return hub_root

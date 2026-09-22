@@ -37,13 +37,26 @@ Kỹ năng này tự động hóa việc thiết lập không gian làm việc d
 
 ---
 
-## 🛡️ Bước 0: Rào Chắn An Toàn Dự Án Hiện Hữu (Brownfield Safety Guard)
+## 🛡️ Bước 0: Chốt Chặn Từ Chối Cứng (Hard Refusal Gate & Multi-Device Protection)
 > [!CAUTION]
-> Nếu thư mục hiện tại **đã có sẵn mã nguồn hoặc cấu hình cũ** (có `workspace_context.yaml`, `.md/`, `.agents/`):
-> - **TUYỆT ĐỐI KHÔNG** chạy tiếp `/ccba-init-spoke` để tránh ghi đè dữ liệu!
-> - Hãy chuyển sang lệnh: **`/ccba-spoke-adopter`** để tự động tiếp nhận an toàn và bảo tồn 100% dữ liệu cũ.
+> **Hiến pháp Single-User Multi-Device & Machine-State Decoupling:**
+> 1. Nếu phát hiện tệp tin `workspace_context.yaml` **ĐÃ TỒN TẠI** (trong `.md/` hoặc `.agents/`):
+>    - Agent **BẮT BUỘC DỪNG LẠI NGAY LẬP TỨC**, tuyệt đối không chạy tiếp các bước sau.
+>    - **CẤM TUYỆT ĐỐI** gợi ý chuyển sang `/ccba-spoke-adopter` (vì Spoke này đã được cấu hình từ máy khác).
+>    - Hướng dẫn người dùng chuyển sang lệnh bootstrap môi trường làm việc:
+>      - Trên Linux / macOS / WSL:
+>        ```bash
+>        python3 "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv
+>        ```
+>      - Trên Windows PowerShell:
+>        ```powershell
+>        python "$env:CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv
+>        ```
+> 2. Nếu thư mục **CHƯA CÓ** `workspace_context.yaml` nhưng **ĐÃ CÓ** mã nguồn hoặc cấu trúc dự án (Brownfield):
+>    - Chuyển hướng sang kỹ năng: **`/ccba-spoke-adopter`** để phân tích hiện trạng và tiếp nhận không phá hủy.
+> 3. Chỉ tiếp tục Bước 1 của `/ccba-init-spoke` khi thư mục hoàn toàn mới tinh (Greenfield).
 
-**Tiêu chí hoàn thành:** Kiểm tra thư mục hiện tại không có dữ liệu cũ cần bảo vệ hoặc chuyển hướng sang ccba-spoke-adopter.
+**Tiêu chí hoàn thành:** Dừng lại an toàn và hiển thị lệnh bootstrap nếu đã có context; chuyển hướng sang adopter nếu là brownfield chưa cấu hình; hoặc tiếp tục bước 1 nếu là greenfield mới tinh.
 
 ---
 
