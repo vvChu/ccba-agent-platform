@@ -49,6 +49,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
 │   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
+│   ├── legal/                         ←   Legal ingestion, Google Drive sync & crawling utilities
 │   ├── spoke/                         ←   Hub↔Spoke bootstrap, sync & migration tools (ADR 0044)
 │   ├── tests/                         ←   Unit test suites
 │   ├── doc_auditor.py                 ←   Governance Facade
@@ -92,7 +93,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 |---------|--------|---------|
 | `ccba-ai` | AI Gateway client & SDK (v1.2.0) — Đa mô hình, Drop Params Embedding, Streaming Token Floor & Auto-Timeout Scaling | `pip install -e "packages/ccba-ai"` |
 | `ccba-harness` | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), multi-scorer evaluation engine (SSOT Domain Archetypes `archetypes.py`, Orchestration Scorers, Token Budget Tracker, Real LLM Task Adapter, Auto-Tuner) | `pip install -e "packages/ccba-harness"` |
-| `ccba-legal-intel` | Legal intelligence services, legislative consolidator, OKF v2.4 GoldStandard, Gate 4 & Federated RAG | `pip install -e "packages/ccba-legal-intel"` |
+| `ccba-legal-intel` | Legal intelligence services, legislative consolidator, OKF v2.4 GoldStandard, Gate 4, Federated RAG, Multi-Scope GoogleDriveIngestor & Decoupled drive_client | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
 | `ccba-ooxml` | OOXML document structure integrity & offline schema validator | `pip install -e "packages/ccba-ooxml"` |

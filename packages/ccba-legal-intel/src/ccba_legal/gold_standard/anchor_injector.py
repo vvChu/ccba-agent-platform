@@ -27,8 +27,9 @@ def inject_semantic_anchors(
         dieu_match = profile.dieu_pattern.match(stripped)
         if dieu_match:
             current_dieu = dieu_match.group(2)
+            dieu_clean = re.sub(r"^(?:[#\s_*]+)|(?:[#\s_*]+)$", "", dieu_match.group(1)).strip()
             anchor = f'<a id="dieu-{current_dieu}"></a>'
-            processed_lines.append(f"\n{anchor}\n### {dieu_match.group(1)}")
+            processed_lines.append(f"\n{anchor}\n### {dieu_clean}")
             continue
         sec_match = profile.sec_pattern.match(stripped)
         if sec_match:

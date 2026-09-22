@@ -453,3 +453,21 @@ def test_engine_table_with_pipes(temp_knowledge_setup):
     md_table = engine.get_table("Luat-Xay-dung-2025", "bang_pipes", format="markdown")
     assert md_table is not None
     assert r"TCVN 5574:2018 \| Mác 300" in md_table
+
+
+def test_query_default_exclude_expired(temp_knowledge_setup):
+    """Verify registry.query defaults to include_expired=False and excludes superseded/expired documents."""
+    from ccba_legal.registry import query
+
+    # Default call should only return active documents
+    results = query("Xây dựng", registry_path=temp_knowledge_setup["registry_path"])
+    doc_ids = [r["id"] for r in results]
+    assert "Luat-Xay-dung-2025" in doc_ids
+    assert "Luat-Xay-dung-2014" not in doc_ids
+
+    # With include_expired=True, superseded doc should be returned
+    results_all = query(
+        "Xây dựng", registry_path=temp_knowledge_setup["registry_path"], include_expired=True
+    )
+    doc_ids_all = [r["id"] for r in results_all]
+    assert "Luat-Xay-dung-2014" in doc_ids_all
