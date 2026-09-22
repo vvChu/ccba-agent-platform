@@ -49,72 +49,78 @@ Trước khi hiển thị Ma Trận Điều Phối hoặc thực thi bất kỳ 
    * Nếu kết nối lỗi, cảnh báo và hướng dẫn người dùng kích hoạt Tailscale VPN (`100.83.192.30`) để kết nối vào mạng nội bộ CCBA.
    * **Tiêu chí hoàn thành:** Xác nhận kết nối thành công tới LiteLLM Gateway hoặc hiển thị hướng dẫn kết nối Tailscale VPN rõ ràng.
 
-3. **Kiểm Tra Tính Toàn Vẹn Cấu Trúc Spoke (Spoke Integrity Audit):**
-   * *(Chỉ áp dụng trong Spoke Context)* Kiểm tra sự tồn tại của thư mục tri thức `.\.md\` và tệp tin SSoT `.\.md\workspace_context.yaml`:
-     - Nếu chưa có thư mục `.md/`:
-       - Dự án có mã nguồn hiện hữu $\rightarrow$ Đề xuất chạy ngay `/ccba-spoke-adopter`.
-       - Thư mục hoàn toàn mới $\rightarrow$ Đề xuất chạy `/ccba-init-spoke`.
-     - Nếu đã có `.md/` nhưng thiếu `workspace_context.yaml` $\rightarrow$ Đề xuất cập nhật cấu hình Spoke khai báo `archetype` và `hub_packages`.
-   * **Tiêu chí hoàn thành:** Đảm bảo thư mục `.md/` tồn tại và tệp SSoT `workspace_context.yaml` sẵn sàng.
+3. **Phân Loại Ngữ Cảnh Tô Pô & Động Học 5 Bối Cảnh (Context-Aware Dynamic Dispatch):**
+   Agent bắt buộc xác định chính xác dự án đang thuộc về 1 trong 5 bối cảnh sau đây để lọc thực đơn điều phối:
+   - **Bối cảnh 1: Hub Monorepo Context**
+     - Dấu hiệu: `git remote get-url origin` chứa `ccba-agent-platform`.
+     - Hành vi điều phối: **ẨN TOÀN BỘ** các lệnh khởi tạo/adopt Spoke (`/ccba-init-spoke`, `/ccba-spoke-adopter`, `bootstrap-spoke`). Chỉ hiển thị các kỹ năng phát triển nền tảng (SDLC `_core`, `_software`, Governance, Verify).
+   - **Bối cảnh 2: Greenfield Spoke Context (Thư mục trống / Dự án mới tinh)**
+     - Dấu hiệu: Thư mục chưa có mã nguồn hoặc chưa có `.git`, chưa có `.md/`.
+     - Hành vi điều phối: **CHỈ HIỂN THỊ DUY NHẤT** `/ccba-init-spoke` để khởi tạo cấu trúc chuẩn ban đầu.
+   - **Bối cảnh 3: Brownfield Spoke Context (Codebase hiện hữu chưa cấu hình)**
+     - Dấu hiệu: Đã có mã nguồn dự án nhưng hoàn toàn chưa có `.md/workspace_context.yaml`.
+     - Hành vi điều phối: **CHỈ HIỂN THỊ** `/ccba-spoke-adopter` để phân tích và tiếp nhận không phá hủy.
+   - **Bối cảnh 4: Multi-Device Cloned Spoke Context (Spoke đã đăng ký được clone sang máy mới)**
+     - Dấu hiệu: ĐÃ CÓ `.md/workspace_context.yaml` (hoặc `.agents/workspace_context.yaml`) nhưng chưa có môi trường Python ảo (`.venv`) hoặc chưa liên kết editable packages với Hub.
+     - Hành vi điều phối: **ẨN HOÀN TOÀN** `/ccba-init-spoke` và `/ccba-spoke-adopter` để tuân thủ hiến pháp *Single-User Multi-Device*. Đặt lệnh bootstrap môi trường lên vị trí ưu tiên hàng đầu:
+       - Linux / macOS / WSL:
+         ```bash
+         python3 "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv
+         ```
+       - Windows PowerShell:
+         ```powershell
+         python "$env:CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv
+         ```
+   - **Bối cảnh 5: Healthy Ready Spoke Context (Spoke hoàn chỉnh, môi trường sẵn sàng)**
+     - Dấu hiệu: Đã có `.md/workspace_context.yaml` VÀ `.venv` đã kích hoạt / liên kết đầy đủ.
+     - Hành vi điều phối: Ẩn các lệnh onboarding ban đầu; chỉ hiển thị các kỹ năng nghiệp vụ tương ứng với `archetype` của Spoke (`_qc`, `_consulting`, `_bim`, `_software`) và các lệnh cập nhật (`/ccba-update-spoke`, `verify-patch`).
+   * **Tiêu chí hoàn thành:** Phân loại chính xác bối cảnh 1-5 và lọc thực đơn điều hướng tương ứng.
 
 4. **Kiểm Định Cấu Hình Tô Pô Hệ Điều Hành (OS Topology Audit - HUB-ADR-0049 / HUB-ADR-0051):**
    * Tự động nhận diện hệ điều hành môi trường thực thi (Linux, WSL, Windows, macOS).
-   * Kiểm tra tính tương thích của đường dẫn Hub (`hub_path`) trong `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH`:
-     - **Nếu vận hành trên Linux/WSL/POSIX** nhưng `hub_path` mang format ký tự ổ đĩa Windows (`D:\...`, `C:\...`) và chưa có nhánh đường dẫn POSIX hợp lệ:
-       - **Cảnh báo lỗi tô pô:** Phát hiện nguy cơ lỗi đường dẫn chéo hệ điều hành (`FileNotFoundError` hoặc rò rỉ trạng thái máy).
-       - **Hướng dẫn khắc phục:** Thiết lập biến môi trường hệ thống:
-         - Trên Linux / WSL:
-           ```bash (linux)
-           export CCBA_HUB_PATH="/path/to/ccba-agent-platform"
-           ```
-         - Trên Windows PowerShell:
-           ```powershell
-           $env:CCBA_HUB_PATH = "D:\GitHubProjects\ccba-agent-platform"
-           ```
-         Hoặc khai báo từ điển multi-OS trong `workspace_context.yaml`:
-         ```yaml
-         hub_path:
-           windows: "D:\\GitHubProjects\\ccba-agent-platform"
-           linux: "/home/vvc/ccba/ccba-agent-platform"
-         ```
-   * **Tiêu chí hoàn thành:** Đường dẫn Hub tương thích 100% với hệ điều hành thực tế, không gây crash hoặc gián đoạn các engine đồng bộ và discovery.
+   * Kiểm tra tính tương thích của đường dẫn Hub (`hub_path` hoặc `project.hub_path`) trong `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH`:
+     - Ưu tiên hàng đầu: Sử dụng biến môi trường hệ thống `CCBA_HUB_PATH` để cô lập máy hoàn toàn.
+     - Khi lưu đường dẫn tương đối trong `workspace_context.yaml`: Luôn dùng định dạng POSIX (`../ccba-agent-platform`) để bảo đảm tính khả chuyển.
+   * **Tiêu chí hoàn thành:** Đường dẫn Hub tương thích 100% với hệ điều hành thực tế, không gây crash hoặc rò rỉ đường dẫn tuyệt đối của máy trạm.
 
 ---
 
-## ⚡ Ma Trận Điều Phối Kỹ Năng Toàn Cục (Global Dispatch Matrix)
+## ⚡ Ma Trận Điều Phối Kỹ Năng Động (Dynamic Context-Aware Dispatch Matrix)
 
-Khi người dùng gọi `/ccba-platform` hoặc đưa ra yêu cầu tác vụ, Agent căn cứ vào ma trận dưới đây để đối soát và kích hoạt kỹ năng tương ứng (hỗ trợ nhập số thứ tự, gõ Slash Command hoặc mô tả nghiệp vụ):
+Căn cứ vào kết quả nhận diện 5 bối cảnh ở Pha 1, Agent chủ động lọc và hiển thị danh mục lệnh phù hợp với trạng thái thực tế của dự án:
 
-| # | Nhóm Miền Nghiệp Vụ (Domain Bundle) | Kỹ Năng / Lệnh Kích Hoạt | Vai Trò & Mô Tả Tác Vụ | Đường Dẫn Định Nghĩa |
-| :---: | :--- | :--- | :--- | :--- |
-| `1` | **Quản Lý Spoke (`_core`)** | `/ccba-init-spoke` | Khởi tạo Spoke dự án MỚI TINH (Greenfield) chuẩn cấu trúc `.md/` | `[hub_path]/.agents/skills/ccba-init-spoke/SKILL.md` |
-| `2` | **Quản Lý Spoke (`_core`)** | `/ccba-spoke-adopter` | Đánh giá hiện trạng & Tiếp nhận CODEBASE HIỆN HỮU (Brownfield) | `[hub_path]/.agents/skills/ccba-spoke-adopter/SKILL.md` |
-| `3` | **Quản Lý Spoke (`_core`)** | `/ccba-update-spoke` | Đồng bộ kỹ năng, kiểm tra trạng thái lệch phiên bản (Sync & Drift Audit) | `[hub_path]/.agents/skills/ccba-update-spoke/SKILL.md` |
-| `4` | **Quản Lý Spoke (`_core`)** | `bootstrap-spoke` | Thiết lập liên kết Monorepo packages cho Spoke venv (HUB-ADR-0044) | CLI: `python scripts/ccba_platform_cli.py bootstrap-spoke` |
-| `5` | **Phát Triển SDLC (`_core`/`_software`)** | `/ccba-new-feature` | Khởi tạo feature branch mới & lập kế hoạch Factory Model (RULE-4.1) | `[hub_path]/.agents/skills/ccba-new-feature/SKILL.md` |
-| `6` | **Phát Triển SDLC (`_software`)** | `/ccba-implement` | Hiện thực hóa tính năng theo TDD Red-Green-Refactor & Scoped Testing | `[hub_path]/.agents/skills/ccba-implement/SKILL.md` |
-| `7` | **Phát Triển SDLC (`_software`)** | `/ccba-code-review` | Rà soát chất lượng code song song 2 trục (Standards & Spec) | `[hub_path]/.agents/skills/ccba-code-review/SKILL.md` |
-| `8` | **Phát Triển SDLC (`_core`)** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal và mở PR đóng góp lên Hub | `[hub_path]/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
-| `9` | **Phát Triển SDLC (`_core`)** | `/ccba-release-feature` | Chạy slow integration tests, squash merge PR & đóng issue tự động | `[hub_path]/.agents/skills/ccba-release-feature/SKILL.md` |
-| `10` | **Thẩm Tra Thiết Kế (`_qc`)** | `/ccba-ai-qc` | Thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View, Heat Map) | `[hub_path]/.agents/skills/ccba-ai-qc/SKILL.md` |
-| `11` | **Thẩm Tra Thiết Kế (`_qc`)** | `/ccba-ai-qc-pccc-audit` | Thẩm tra an toàn PCCC, MEP và thoát nạn theo QCVN 06:2022 | `[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |
-| `12` | **Pháp Lý Xây Dựng (`_consulting`)** | `/ccba-legal-advisor` | Phỏng vấn thích ứng & xuất Phiếu Ý kiến Pháp lý chuẩn OKF v2.4 (RULE-4.2) | `[hub_path]/.agents/skills/ccba-legal-advisor/SKILL.md` |
-| `13` | **Pháp Lý Xây Dựng (`_consulting`)** | `/ccba-legal-ingest` | Thu nạp văn bản TVPL tự động vào Spoke tri thức (RULE-4.2) | `[hub_path]/.agents/skills/ccba-legal-ingest/SKILL.md` |
-| `14` | **Pháp Lý Xây Dựng (`_consulting`)** | `/ccba-legal-document-tracker` | Tra cứu hiệu lực, so sánh sửa đổi văn bản quy phạm pháp luật | `[hub_path]/.agents/skills/ccba-legal-document-tracker/SKILL.md` |
-| `15` | **Quản Trị BIGBIM (`_bim`)** | `/bigbim-classification` | Bảng thực thể Uniclass 200, ISO 12006-2 & Room Naming (RULE-4.2) | `[hub_path]/.agents/skills/bigbim-classification/SKILL.md` |
-| `16` | **Quản Trị BIGBIM (`_bim`)** | `/bigbim-governance` | Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ & Unique ID (RULE-4.2) | `[hub_path]/.agents/skills/bigbim-governance/SKILL.md` |
-| `17` | **Thể Chế & Quản Trị (`_core`)** | `/ccba-adr-lifecycle` | Khởi tạo ADR, cascade status, ma trận truy vết sống (HUB-ADR-0037) | `[hub_path]/.agents/skills/ccba-adr-lifecycle/SKILL.md` |
-| `18` | **Thể Chế & Quản Trị (`_core`)** | `/ccba-docs-manager` | Quản trị tài liệu, kiểm toán 5 trục (`doc-audit` / `validate-cross-ref`) | `[hub_path]/.agents/skills/ccba-docs-manager/SKILL.md` |
-| `19` | **Thể Chế & Quản Trị (`_core`)** | `/ccba-markdown-document-processing` | Chuyển đổi Word/PDF sang Markdown chuẩn hóa qua ConversionPipeline | `[hub_path]/.agents/skills/ccba-markdown-document-processing/SKILL.md` |
-| `20` | **Thể Chế & Quản Trị (`_core`)** | `/ccba-session-retrospective` | Tổng kết bài học và cập nhật tri thức cuối phiên làm việc | `[hub_path]/.agents/skills/ccba-session-retrospective/SKILL.md` |
-| `21` | **Chốt Chặn Kiểm Định (`_core`)** | `ccba-harness verify-patch` | Chốt chặn hoàn thành tất định (HUB-ADR-0058 Hard Completion Lock) | CLI: `python -m ccba_harness verify-patch` |
+### 🌟 Bảng Kỹ Năng Phân Nhóm Theo Bối Cảnh
+
+| Nhóm Bối Cảnh | Lệnh / Slash Command | Vai Trò & Mô Tả Tác Vụ | Phương Thức Kích Hoạt |
+| :--- | :--- | :--- | :--- |
+| **Bối cảnh 2 (Greenfield)** | `/ccba-init-spoke` | Khởi tạo Spoke dự án MỚI TINH chuẩn cấu trúc `.md/` | Slash command hoặc `[hub_path]/.agents/skills/ccba-init-spoke/SKILL.md` |
+| **Bối cảnh 3 (Brownfield)** | `/ccba-spoke-adopter` | Đánh giá hiện trạng & Tiếp nhận CODEBASE HIỆN HỮU không phá hủy | Slash command hoặc `scripts/adopt_spoke.py` |
+| **Bối cảnh 4 (Multi-Device)** | `bootstrap-spoke` | Khởi tạo `.venv` và liên kết editable packages cho Spoke đã clone | `python3 "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-update-spoke` | Đồng bộ kỹ năng, kiểm tra trạng thái lệch phiên bản (Drift Audit) | Slash command hoặc `scripts/sync_spoke.py` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-new-feature` | Khởi tạo feature branch mới & lập kế hoạch Factory Model | Slash command hoặc `[hub_path]/.agents/skills/ccba-new-feature/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-implement` | Hiện thực hóa tính năng theo TDD Red-Green-Refactor & Scoped Tests | Slash command hoặc `[hub_path]/.agents/skills/ccba-implement/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-code-review` | Rà soát chất lượng code song song 2 trục (Standards & Spec) | Slash command hoặc `[hub_path]/.agents/skills/ccba-code-review/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal và mở PR đóng góp lên Hub | Slash command hoặc `[hub_path]/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-release-feature` | Chạy slow integration tests, squash merge PR & đóng issue tự động | Slash command hoặc `[hub_path]/.agents/skills/ccba-release-feature/SKILL.md` |
+| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc` | Thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View, Heat Map) | `[hub_path]/.agents/skills/ccba-ai-qc/SKILL.md` |
+| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc-pccc-audit` | Thẩm tra an toàn PCCC, MEP và thoát nạn theo QCVN 06:2022 | `[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-advisor` | Phỏng vấn thích ứng & xuất Phiếu Ý kiến Pháp lý chuẩn OKF v2.4 | `[hub_path]/.agents/skills/ccba-legal-advisor/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-ingest` | Thu nạp văn bản TVPL tự động vào Spoke tri thức chuẩn hoá | `[hub_path]/.agents/skills/ccba-legal-ingest/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-document-tracker` | Tra cứu hiệu lực, so sánh sửa đổi văn bản quy phạm pháp luật | `[hub_path]/.agents/skills/ccba-legal-document-tracker/SKILL.md` |
+| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-classification` | Bảng thực thể Uniclass 200, ISO 12006-2 & Room Naming | `[hub_path]/.agents/skills/bigbim-classification/SKILL.md` |
+| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-governance` | Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ & Unique ID | `[hub_path]/.agents/skills/bigbim-governance/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-adr-lifecycle` | Khởi tạo ADR, cascade status, ma trận truy vết sống | `[hub_path]/.agents/skills/ccba-adr-lifecycle/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-docs-manager` | Quản trị tài liệu, kiểm toán 5 trục (`doc-audit` / `validate-cross-ref`) | `[hub_path]/.agents/skills/ccba-docs-manager/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-markdown-document-processing` | Chuyển đổi Word/PDF sang Markdown chuẩn hóa qua ConversionPipeline | `[hub_path]/.agents/skills/ccba-markdown-document-processing/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-session-retrospective` | Tổng kết bài học và cập nhật tri thức cuối phiên làm việc | `[hub_path]/.agents/skills/ccba-session-retrospective/SKILL.md` |
+| **Chốt Chặn Kiểm Định (`_core`)** | `verify-patch` | Chốt chặn hoàn thành tất định (HUB-ADR-0058 Hard Completion Lock) | CLI: `.venv/bin/python -m ccba_harness verify-patch` |
 
 ---
 
 ## 🔄 Quy Trình Phân Phối & Kiến Trúc Điều Phối (Execution Protocol)
 
 1. **Nhận Diện & Điều Hướng (Dispatch Resolution):**
-   * Ánh xạ yêu cầu của người dùng (số thứ tự `1–21`, từ khóa kích hoạt, hoặc tên lệnh) tới kỹ năng tương ứng trong Ma Trận Điều Phối.
+   * Ánh xạ yêu cầu của người dùng (bối cảnh dự án, từ khóa kích hoạt, hoặc tên lệnh) tới kỹ năng tương ứng trong Ma Trận Điều Phối Động.
    * **Tiêu chí hoàn thành:** Xác định chính xác tên kỹ năng hoặc lệnh CLI cần khởi chạy.
 
 2. **Nạp Kỹ Năng Ưu Tiên Spoke-First (Virtual Hub Fallback Invariant):**

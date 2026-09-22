@@ -806,6 +806,11 @@ def build_parser() -> argparse.ArgumentParser:
     adopt_p.add_argument(
         "--dry-run", action="store_true", help="Display discovery matrix without modifying files"
     )
+    adopt_p.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass fail-safe gate to force re-adoption even if workspace_context.yaml exists",
+    )
 
     # sync-spoke
     sync_p = subparsers.add_parser("sync-spoke", help="Synchronize skills to a spoke")
@@ -960,6 +965,7 @@ def main() -> int:
             project_type=args.project_type,
             mode=args.mode,
             archetype=args.archetype,
+            force=args.force,
         )
 
     elif args.command == "sync-spoke":
