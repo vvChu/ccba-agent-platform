@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-22] [synthesize] | VvC LLM OS YouTube Ingestion Hardening, FFmpeg aarch64 Static Seam & Context-Aware Visual Filter
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-session-retrospective)
+- **Affected Files**: `scripts/services/youtube/transcript.py`, `scripts/services/youtube/visual_extractor.py`, `scripts/daemon.py`, `scripts/tests/test_youtube_transcript.py`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`
+- **Summary**: Gia cố toàn diện luồng YouTube Ingestion và Visual Extractor trên server Linux Spark aarch64: (1) Khắc phục triệt để sự cố livestream 24/7 tải vô tận và parse `live_chat` thành subtitle rác gây sập Map-Reduce; (2) Tích hợp `is_live` check và HTML/DOM regex sanitization; (3) Tái sử dụng static binary `ffmpeg` trên ARM64 (`~/.local/bin/ffmpeg`); (4) Sửa lỗi `daemon.py --restart` tự kill chính process trên Linux; (5) Thử nghiệm và chứng minh thành công cơ chế 2 tầng của AI Visual Judge (pHash dedup 108 -> 3 frames và từ chối lưu ảnh rác podcast; nhận diện 31/34 frames và trích xuất 3 HD WebP frames 1280x720 cho bài giảng kinh doanh); (6) Hấp thụ thành công 2 cuốn sách/bài giảng (Jim Rohn 8 concepts, Tư Duy Ngược 14 concepts), nâng Vector Store index từ 1,942 lên 1,964 nodes; (7) Đóng băng RULE-2.6 vào `session_learnings.md`.
+
+---
+
 ## [2026-09-21] [synthesize] | Phát Hành Release PR #317: Tối Ưu Hóa Ngân Sách Token, Trần Đột Biến, Phạt Cooldown & Kiến Trúc SSOT Domain Archetypes
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-grilling, /boost, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/`, `packages/ccba-ai/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/eval/`, `README.md`, `PLATFORM.md`, `pyproject.toml`, `.md/knowledge/reports/walkthrough.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`

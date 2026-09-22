@@ -21,6 +21,11 @@ fi
 
 SKILL="$1"
 
+if [ ! -f "$PROJECT_ROOT/.agents/skills/$SKILL/SKILL.md" ]; then
+    echo "❌ [LỖI] Kỹ năng '$SKILL' không tồn tại (thiếu .agents/skills/$SKILL/SKILL.md)!" >&2
+    exit 1
+fi
+
 # 2. Process Mutex / Concurrency Lock (ADR-0043 / REC-04)
 # Prevent conflict with Nightly Cron or another concurrent runner
 LOCK_FILE="/tmp/ccba_nightly_runner.lock"
@@ -59,6 +64,9 @@ cleanup_worktree() {
     echo "✅ Đã dọn dẹp hoàn tất."
 }
 trap cleanup_worktree EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
+trap 'exit 129' HUP
 
 echo "================================================================="
 echo "[CCBA Skill Boost Runner] Starting boost for skill '$SKILL' at $(date)"
@@ -114,6 +122,7 @@ python3 scripts/eval/nightly_tuner_daemon.py \
     --token-budget 500000 \
     --per-skill-mutation-budget 250000 \
     --ref "$TARGET_REF" \
+    --no-telegram \
     ${@:2}
 
 echo "================================================================="
