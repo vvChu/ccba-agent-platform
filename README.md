@@ -81,6 +81,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   ├── tests/                         ←   Unit test suites cho Hub tools
 │   ├── validation/                    ←   Release cleanliness & hermetic verification CLI
 │   ├── adopt_spoke.py                 ←   Brownfield Spoke Adoption CLI Delegate
+│   ├── init_spoke.py                  ←   Deterministic Greenfield Spoke Initialization CLI Delegate
 │   ├── validate_cross_references.py   ←   Constitution Cross-Reference Matrix Validator
 │   ├── session_cleanup.py             ←   Workspace & Session Cleanup CLI Delegate
 │   ├── sync_spoke.py                  ←   Spoke Synchronizer CLI Delegate

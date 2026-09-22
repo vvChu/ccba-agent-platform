@@ -215,6 +215,98 @@ def merge_workspace_context(
     return merged_data, backup_path
 
 
+def install_security_guardrails(spoke_root: Path, hub_root: Path) -> bool:
+    """Install Maskara pre-commit security hook if git repo exists."""
+    spoke_path = Path(spoke_root)
+    git_entry = spoke_path / ".git"
+    if not git_entry.exists():
+        return False
+
+    if git_entry.is_file():
+        # Handle git worktree or submodule pointer file (gitdir: ...)
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+            if not content.startswith("gitdir:"):
+                return False
+            raw_path = content.split(":", 1)[1].strip()
+            target_dir = Path(raw_path)
+            if not target_dir.is_absolute():
+                target_dir = (spoke_path / target_dir).resolve()
+
+            commondir_file = target_dir / "commondir"
+            if commondir_file.exists():
+                common_raw = commondir_file.read_text(encoding="utf-8").strip()
+                common_dir = Path(common_raw)
+                if not common_dir.is_absolute():
+                    common_dir = (target_dir / common_dir).resolve()
+                hook_dir = common_dir / "hooks"
+            else:
+                hook_dir = target_dir / "hooks"
+        except Exception:
+            return False
+    elif git_entry.is_dir():
+        hook_dir = git_entry / "hooks"
+    else:
+        return False
+
+    hook_dir.mkdir(parents=True, exist_ok=True)
+    hook_path = hook_dir / "pre-commit"
+
+    hub_posix = Path(hub_root).as_posix()
+    hook_content = f"""#!/bin/sh
+# CCBA Maskara Pre-commit Security Hook
+echo 'Running Maskara staged files scan...'
+
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$staged_files" ]; then
+    echo 'No files staged for commit. Skipping scan.'
+    exit 0
+fi
+
+PYTHON_BIN="python"
+if ! command -v python > /dev/null 2>&1 && command -v python3 > /dev/null 2>&1; then
+    PYTHON_BIN="python3"
+fi
+
+has_leak=0
+for file in $staged_files; do
+    if echo "$file" | grep -qE '\\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
+        continue
+    fi
+    if echo "$file" | grep -qE '^(\\.md/scratch/|\\.venv/|node_modules/)'; then
+        continue
+    fi
+    if [ -f "$file" ]; then
+        $PYTHON_BIN "{hub_posix}/scripts/maskara.py" scan --root "$file" > /dev/null 2>&1
+        status_code=$?
+        if [ $status_code -ne 0 ]; then
+            echo "❌ Leak detected in staged file: $file"
+            $PYTHON_BIN "{hub_posix}/scripts/maskara.py" scan --root "$file"
+            has_leak=1
+        fi
+    fi
+done
+
+if [ $has_leak -ne 0 ]; then
+    echo 'Error: Raw API keys or credentials detected. Commit blocked!'
+    exit 1
+fi
+
+echo '✅ Security check passed.'
+exit 0
+"""
+    with open(hook_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(hook_content)
+
+    try:
+        hook_path.chmod(hook_path.stat().st_mode | 0o111)
+    except OSError:
+        pass
+
+    return True
+
+
 class SpokeAdopter:
     """Orchestrator for discovering and adopting brownfield repositories."""
 
@@ -313,55 +405,7 @@ class SpokeAdopter:
 
     def install_security_guardrails(self) -> bool:
         """Install Maskara pre-commit security hook if git repo exists."""
-        if not (self.spoke_root / ".git").exists():
-            return False
-
-        hook_dir = self.spoke_root / ".git" / "hooks"
-        hook_dir.mkdir(parents=True, exist_ok=True)
-        hook_path = hook_dir / "pre-commit"
-
-        hub_path = self._resolve_hub()
-        hook_content = f"""#!/bin/sh
-# CCBA Maskara Pre-commit Security Hook
-echo 'Running Maskara staged files scan...'
-
-staged_files=$(git diff --cached --name-only --diff-filter=d)
-
-if [ -z "$staged_files" ]; then
-    echo 'No files staged for commit. Skipping scan.'
-    exit 0
-fi
-
-has_leak=0
-for file in $staged_files; do
-    if echo "$file" | grep -qE '\\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
-        continue
-    fi
-    if echo "$file" | grep -qE '^(\\.md/scratch/|\\.venv/|node_modules/)'; then
-        continue
-    fi
-    if [ -f "$file" ]; then
-        python "{hub_path}/scripts/maskara.py" scan --root "$file" > /dev/null 2>&1
-        status_code=$?
-        if [ $status_code -ne 0 ]; then
-            echo "❌ Leak detected in staged file: $file"
-            python "{hub_path}/scripts/maskara.py" scan --root "$file"
-            has_leak=1
-        fi
-    fi
-done
-
-if [ $has_leak -ne 0 ]; then
-    echo 'Error: Raw API keys or credentials detected. Commit blocked!'
-    exit 1
-fi
-
-echo '✅ Security check passed.'
-exit 0
-"""
-        with open(hook_path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(hook_content)
-        return True
+        return install_security_guardrails(self.spoke_root, self._resolve_hub())
 
     def adopt(
         self,

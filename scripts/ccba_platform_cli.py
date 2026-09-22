@@ -2,6 +2,7 @@
 """CCBA Platform Unified CLI Launcher.
 
 Provides a unified command-line entry point for CCBA Platform operations:
+- init-spoke: Initialize deterministic CCBA Spoke workspace.
 - adopt-spoke: Adopt brownfield spoke codebase.
 - sync-spoke: Synchronize platform skills and workflows to spoke.
 - ingest-legal: Autonomous Crawler-to-Spoke Legal Ingestion (ADR 0039).
@@ -789,6 +790,81 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", help="Platform commands")
 
+    # init-spoke
+    init_p = subparsers.add_parser(
+        "init-spoke", help="Initialize a deterministic CCBA Spoke workspace"
+    )
+    init_p.add_argument(
+        "spoke_path",
+        nargs="?",
+        default=None,
+        help="Path to target spoke directory (defaults to current directory)",
+    )
+    init_p.add_argument(
+        "-p",
+        "--path",
+        dest="path_opt",
+        default=None,
+        help="Alternative path to target spoke directory",
+    )
+    init_p.add_argument(
+        "--name",
+        default=None,
+        help="Project name (defaults to target directory name)",
+    )
+    init_p.add_argument(
+        "--archetype",
+        default=None,
+        choices=[
+            "project_delivery",
+            "enterprise_governance",
+            "knowledge_corpus",
+            "specialized_extension",
+        ],
+        help="Explicit CCBA Spoke Archetype (default: project_delivery)",
+    )
+    init_p.add_argument(
+        "--type",
+        dest="project_type",
+        default=None,
+        help="Explicit CCBA project type (e.g. 'Phần mềm', 'Thẩm tra thiết kế', 'Pháp điển', etc.)",
+    )
+    init_p.add_argument(
+        "--mode",
+        default=None,
+        help="Execution mode (e.g. 'software', 'delivery', 'admin', 'consulting', 'hybrid')",
+    )
+    init_p.add_argument(
+        "--sub-type",
+        default=None,
+        help="Sub-type for specialized_extension (defaults to personal_sandbox)",
+    )
+    init_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview initialization steps without modifying files",
+    )
+    init_p.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass fail-safe gate to overwrite existing workspace_context.yaml",
+    )
+    init_p.add_argument(
+        "--sync",
+        action="store_true",
+        help="Synchronize skills immediately after initialization",
+    )
+    init_p.add_argument(
+        "--bootstrap",
+        action="store_true",
+        help="Bootstrap Python virtual environment and link editable Hub packages",
+    )
+    init_p.add_argument(
+        "--init-git",
+        action="store_true",
+        help="Initialize git repository if missing",
+    )
+
     # adopt-spoke
     adopt_p = subparsers.add_parser(
         "adopt-spoke", help="Adopt an existing codebase as a CCBA Spoke"
@@ -956,7 +1032,35 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "adopt-spoke":
+    if args.command == "init-spoke":
+        from scripts.spoke.spoke_initializer import init_project
+
+        if args.path_opt and args.spoke_path:
+            if Path(args.path_opt).resolve() != Path(args.spoke_path).resolve():
+                print(
+                    f"❌ Error: Conflicting spoke paths specified: '{args.spoke_path}' (positional) vs '{args.path_opt}' (-p/--path).\n"
+                    "   Please specify only one destination path.",
+                    file=sys.stderr,
+                )
+                return 1
+
+        target_path = args.path_opt or args.spoke_path or "."
+        return init_project(
+            spoke_path=target_path,
+            hub_path=_ROOT_DIR,
+            name=args.name,
+            archetype=args.archetype,
+            project_type=args.project_type,
+            mode=args.mode,
+            sub_type=args.sub_type,
+            dry_run=args.dry_run,
+            force=args.force,
+            sync=args.sync,
+            bootstrap=args.bootstrap,
+            init_git=args.init_git,
+        )
+
+    elif args.command == "adopt-spoke":
         from scripts.spoke.spoke_adopter import adopt_project
 
         return adopt_project(
