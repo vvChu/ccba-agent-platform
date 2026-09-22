@@ -17,6 +17,8 @@ from typing import Any
 
 _thread_locks: dict[Path, threading.Lock] = {}
 _thread_locks_mutex = threading.Lock()
+_active_locks: dict[Path, dict[str, Any]] = {}
+_active_locks_mutex = threading.Lock()
 
 # 2GB - 1 virtual byte offset for Windows mandatory byte-range locking.
 # Allows reading JSON metadata at offset 0 while guaranteeing strict mutual exclusion.
@@ -84,6 +86,7 @@ class FileMutexLock:
         self.expire_seconds = expire_seconds
         self.pid = os.getpid()
         self.is_locked = False
+        self._reentrant = False
         self._fd: int | None = None
         self._thread_lock = _get_thread_lock(self.lock_path)
         self._thread_lock_acquired = False
@@ -97,6 +100,18 @@ class FileMutexLock:
         Raises:
             TimeoutError: If lock acquisition exceeds configured timeout.
         """
+        resolved_path = self.lock_path.resolve()
+        current_thread_id = threading.get_ident()
+
+        with _active_locks_mutex:
+            if resolved_path in _active_locks:
+                lock_info = _active_locks[resolved_path]
+                if lock_info["thread_id"] == current_thread_id:
+                    lock_info["count"] += 1
+                    self.is_locked = True
+                    self._reentrant = True
+                    return self
+
         start_time = time.time()
 
         # 1. Acquire thread-level lock first
@@ -221,6 +236,11 @@ class FileMutexLock:
 
                     self._fd = fd
                     self.is_locked = True
+                    with _active_locks_mutex:
+                        _active_locks[resolved_path] = {
+                            "thread_id": current_thread_id,
+                            "count": 1,
+                        }
                     break
 
                 except TimeoutError:
@@ -253,6 +273,15 @@ class FileMutexLock:
 
     def release(self) -> None:
         """Release the lock if it belongs to this process and reset instance state."""
+        resolved_path = self.lock_path.resolve()
+        with _active_locks_mutex:
+            if self._reentrant and resolved_path in _active_locks:
+                lock_info = _active_locks[resolved_path]
+                lock_info["count"] -= 1
+                self.is_locked = False
+                self._reentrant = False
+                return
+            _active_locks.pop(resolved_path, None)
         try:
             if self.is_locked and self._fd is not None:
                 fd = self._fd

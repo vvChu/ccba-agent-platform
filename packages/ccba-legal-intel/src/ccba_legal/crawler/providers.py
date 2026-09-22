@@ -168,7 +168,7 @@ def resolve_tvpl_url(cdp: ChromeCDP, query: str) -> str:
 class TVPLVIPDocProvider(LegalDocProvider):
     """Live VIP provider connecting via Chrome CDP to fetch metadata, full text, DOCX, and PDF."""
 
-    def __init__(self, port: int = 9222, output_dir: Path | None = None) -> None:
+    def __init__(self, port: int | None = None, output_dir: Path | None = None) -> None:
         self.port = port
         self.output_dir = output_dir or Path(".md/extracted_docs")
 

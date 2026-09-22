@@ -171,13 +171,21 @@ def _extract_and_export_templates(
 
 
 def _build_pure_normative_body(pure_body_raw: str) -> str:
-    """Strip administrative preamble headers and apply strict bullet indentation formatting."""
+    """Strip administrative preamble headers, trailing footer signatures, and apply strict bullet indentation formatting."""
     pure_body = re.sub(
         r"^(?:[\s\S]*?)(#+\s*__?\s*Chương\s+[IVXLCDM0-9]+|#+\s*__?\s*Điều\s+1\b)",
         r"\1",
         pure_body_raw,
         flags=re.IGNORECASE,
     )
+    # Strip trailing administrative signature blocks / distribution footers
+    sig_split = re.split(
+        r"(?:\n\s*__\*?\s*Nơi nhận\s*:|\n\s*\*+Nơi nhận\s*:|\n\s*Nơi nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
+        pure_body,
+        flags=re.IGNORECASE,
+    )
+    pure_body = sig_split[0].strip()
+
     pure_body = normalize_clause_numbers(pure_body)
     pure_body = re.sub(r"(\n\s*\+\s+[^\n]+)", r"&nbsp;&nbsp;\1", pure_body)
     pure_body = re.sub(r"&nbsp;&nbsp;\n\s*\+\s+", r"\n&nbsp;&nbsp;\\+ ", pure_body)
@@ -205,18 +213,20 @@ def _write_bundle_metadata_and_index(
     pdf_sha256 = doc_meta.get("pdf_sha256", "UNVERIFIED")
 
     metadata_obj = {
-        "id": bundle_dir.name,
+        "id": doc_meta.get("id", bundle_dir.name),
         "document_number": doc_num,
         "type": doc_meta.get("type", "Nghị định"),
         "title": doc_title,
-        "status": "effective",
+        "status": doc_meta.get("status", "effective"),
         "effective_date": effective_date,
         "signer": signer,
         "pdf_path": pdf_path,
         "pdf_sha256": pdf_sha256,
-        "pdf_status": "verified",
+        "pdf_status": doc_meta.get("pdf_status", "verified"),
         "legal_basis": legal_basis,
-        "replaces": doc_meta.get("relations", {}).get("replaces", []),
+        "replaces": doc_meta.get("relations", {}).get("replaces", [])
+        if isinstance(doc_meta.get("relations"), dict)
+        else doc_meta.get("replaces", []),
         "okf_spec": spec_version,
         "converter_version": CURRENT_CONVERTER_VERSION,
         "schema_uri": CURRENT_OKF_SCHEMA_URI,
@@ -247,6 +257,79 @@ def _write_bundle_metadata_and_index(
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
+def _generate_vbpl_frontmatter(doc_meta: dict[str, Any], bundle_dir: Path, target_md_name: str) -> str:
+    """Generate canonical OKF v2.4 YAML frontmatter for VBPL normative document."""
+    doc_id = doc_meta.get("id", bundle_dir.name)
+    doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
+    title = doc_meta.get("title", f"Văn bản quy phạm pháp luật {doc_num}")
+    doc_type = doc_meta.get("type", "Nghị định")
+    issued_by = doc_meta.get("issued_by", "Chính phủ")
+    signer = doc_meta.get("signer", "Thủ tướng Chính phủ")
+    issued_date = doc_meta.get("issued_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    effective_date = doc_meta.get("effective_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    status = doc_meta.get("status", "active")
+    pdf_path = doc_meta.get("pdf_path", f"./sources/{bundle_dir.name}.pdf")
+    pdf_name = Path(pdf_path).name
+    pdf_sha = doc_meta.get("pdf_sha256", "UNVERIFIED")
+    cong_bao = doc_meta.get("cong_bao_number", "Đang cập nhật")
+
+    raw_pdf_anchor = doc_meta.get("pdf_anchor")
+    if isinstance(raw_pdf_anchor, dict):
+        if raw_pdf_anchor.get("path"):
+            pdf_path = raw_pdf_anchor["path"]
+            pdf_name = Path(pdf_path).name
+        if raw_pdf_anchor.get("sha256"):
+            pdf_sha = raw_pdf_anchor["sha256"]
+        if raw_pdf_anchor.get("cong_bao_number"):
+            cong_bao = raw_pdf_anchor["cong_bao_number"]
+
+    replaces = (
+        doc_meta.get("relations", {}).get("replaces", [])
+        if isinstance(doc_meta.get("relations"), dict)
+        else doc_meta.get("replaces", [])
+    )
+    category = "01_vbpl"
+    for part in bundle_dir.parts:
+        if part in ("01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"):
+            category = part
+            break
+
+    fm_dict: dict[str, Any] = {
+        "okf_version": "2.4",
+        "type": "legal_normative_body",
+        "title": title,
+        "description": title,
+        "tags": ["vbpl", re.sub(r"[^\w]+", "_", str(doc_type).lower()).strip("_")],
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00Z"),
+        "resource": f"legal_docs/{category}/{bundle_dir.name}/{target_md_name}",
+        "id": doc_id,
+        "doc_id": doc_id,
+        "document_number": doc_num,
+        "document_type": doc_type,
+        "issued_by": issued_by,
+        "signer": signer,
+        "issued_date": str(issued_date),
+        "effective_date": str(effective_date),
+        "status": status,
+        "pdf_anchor": {
+            "path": f"./sources/{pdf_name}",
+            "sha256": pdf_sha,
+            "cong_bao_number": cong_bao,
+        },
+    }
+    if replaces:
+        fm_dict["relations"] = (
+            [{"target_id": r, "relation_type": "replaces"} for r in replaces]
+            if isinstance(replaces, list)
+            else replaces
+        )
+    return (
+        "---\n"
+        + yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2).strip()
+        + "\n---\n\n"
+    )
+
+
 def process_vbpl_bundle(
     docx_path: Path,
     bundle_dir: Path,
@@ -254,6 +337,7 @@ def process_vbpl_bundle(
     output_filename: str | None = None,
     spec_version: str = CURRENT_OKF_SPEC,
     sanitized_stream: BinaryIO | None = None,
+    doc_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Complete OKF Transformation Pipeline for Decrees, Circulars and Laws."""
     bundle_dir.mkdir(parents=True, exist_ok=True)
@@ -262,7 +346,13 @@ def process_vbpl_bundle(
         shutil.rmtree(templates_dir)
     templates_dir.mkdir(parents=True, exist_ok=True)
 
-    reg_lookup, doc_meta = _load_registry_metadata(registry_file, bundle_dir.name)
+    reg_lookup, loaded_meta = _load_registry_metadata(registry_file, bundle_dir.name)
+    effective_meta = dict(loaded_meta)
+    if doc_meta:
+        effective_meta.update(doc_meta)
+    if effective_meta.get("document_number") and effective_meta.get("id"):
+        reg_lookup[effective_meta["document_number"]] = effective_meta["id"]
+
     input_src: Path | BinaryIO = sanitized_stream if sanitized_stream is not None else docx_path
     cleaned_md = _convert_docx_to_clean_markdown(input_src)
     extracted_tables = classify_and_extract_tables(input_src, bundle_dir)
@@ -282,13 +372,17 @@ def process_vbpl_bundle(
             )
 
     pure_body_raw, created_templates = _extract_and_export_templates(
-        cleaned_md, templates_dir, doc_meta.get("document_number", bundle_dir.name)
+        cleaned_md, templates_dir, effective_meta.get("document_number", bundle_dir.name)
     )
+    if not created_templates and templates_dir.exists():
+        shutil.rmtree(templates_dir, ignore_errors=True)
+
     body_anchored = _build_pure_normative_body(pure_body_raw)
     body_anchored = clean_markdown_tables_and_notes(body_anchored)
 
     target_md_filename = output_filename or f"{bundle_dir.name}.md"
-    (bundle_dir / target_md_filename).write_text(body_anchored, encoding="utf-8")
+    frontmatter = _generate_vbpl_frontmatter(effective_meta, bundle_dir, target_md_filename)
+    (bundle_dir / target_md_filename).write_text(frontmatter + body_anchored, encoding="utf-8")
 
     clauses, qa_benchmark = generate_bundle_ast_and_qa(bundle_dir / target_md_filename, bundle_dir)
     legal_basis_graph = extract_legal_basis_graph(cleaned_md, reg_lookup)
@@ -296,7 +390,7 @@ def process_vbpl_bundle(
     _write_bundle_metadata_and_index(
         bundle_dir=bundle_dir,
         target_md_name=target_md_filename,
-        doc_meta=doc_meta,
+        doc_meta=effective_meta,
         legal_basis=legal_basis_graph,
         clauses_cnt=len(clauses),
         qa_cnt=len(qa_benchmark),

@@ -48,6 +48,7 @@ def convert_docx_to_okf_bundle(
     doc_type: str | None = None,
     registry_file: Path | None = None,
     archetype: str | None = None,
+    doc_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Convert .docx file to Gold Standard OKF v2.2 Markdown bundle with Multi-Archetype Strategy Dispatcher."""
     if not docx_path.exists():
@@ -57,21 +58,24 @@ def convert_docx_to_okf_bundle(
     reg_file = registry_file or (Path.cwd() / "legal_registry.yaml")
 
     # Load registry metadata if available
-    doc_meta: dict[str, Any] = {}
+    effective_meta: dict[str, Any] = {}
     if reg_file.exists():
         with open(reg_file, encoding="utf-8") as f:
-            reg_data = yaml.safe_load(f)
+            reg_data = yaml.safe_load(f) or {}
             all_items = []
             for _k, v in reg_data.items():
                 if isinstance(v, list):
                     all_items.extend(v)
             for item in all_items:
-                if (
+                if isinstance(item, dict) and (
                     item.get("id") == target_bundle_dir.name
                     or item.get("document_number") == target_bundle_dir.name
+                    or (doc_meta and item.get("id") == doc_meta.get("id"))
                 ):
-                    doc_meta = item
+                    effective_meta = dict(item)
                     break
+    if doc_meta:
+        effective_meta.update(doc_meta)
 
     # Phase 1: Canonical OpenXML DOM Pre-Sanitization (ADR 0042)
     sanitizer = DocxCanonicalSanitizer()
@@ -84,8 +88,8 @@ def convert_docx_to_okf_bundle(
     else:
         scanner = FullDocStructuralScanner(
             docx_path=docx_path,
-            doc_num_str=doc_meta.get("document_number", target_bundle_dir.name),
-            doc_type_str=doc_meta.get("type", doc_type or ""),
+            doc_num_str=effective_meta.get("document_number", target_bundle_dir.name),
+            doc_type_str=effective_meta.get("type", doc_type or ""),
         )
         detected_archetype = scanner.scan()
 
@@ -94,7 +98,7 @@ def convert_docx_to_okf_bundle(
             docx_path=docx_path,
             bundle_dir=target_bundle_dir,
             registry_file=reg_file,
-            doc_meta=doc_meta,
+            doc_meta=effective_meta,
             output_filename=output_filename,
             sanitized_stream=sanitized_stream,
         )
@@ -105,4 +109,5 @@ def convert_docx_to_okf_bundle(
             registry_file=reg_file,
             output_filename=output_filename,
             sanitized_stream=sanitized_stream,
+            doc_meta=effective_meta,
         )

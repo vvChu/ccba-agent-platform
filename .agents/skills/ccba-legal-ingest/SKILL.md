@@ -6,7 +6,7 @@ tier: kernel
 command: /ccba-legal-ingest
 layer: _consulting
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -56,19 +56,24 @@ Quy trình tự động hóa thu thập, chuyển đổi sang tiêu chuẩn **OK
 Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện theo quy trình chuẩn:
 
 ```
-[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 1.5: Đối Soát Ground Truth] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: 1-Command Master CI]
- (ingest --upload-drive)          (Zero-LLM Verbatim AST)         (Zero-Prune Invariant)             (Nếu có văn bản sửa đổi)          (validate_legal_spoke.py)
+[Bước 0: Thu thập & Xác thực] ──► [Bước 1: OKF v2.4 Convert] ──► [Bước 1.5: Đối Soát Ground Truth] ──► [Bước 2: VBHN Consolidation] ──► [Bước 3: Scoped Master CI]
+ (ccba-platform ingest-legal)     (Zero-LLM Verbatim AST)         (Zero-Prune Invariant)             (Nếu có văn bản sửa đổi)          (validate --bundle <slug>)
 ```
 
 ---
 
-### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036)
+### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036, ADR 0039)
 
-* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình (Happy Path):**
-  ```powershell
-  python -m ccba_legal ingest "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
+* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
+  ```bash
+  python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud] [--mock]
   ```
-  *(Tự động tải DOCX Gold Source + PDF Công báo số hóa vào `sources/`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và sinh Native Google Docs cho NotebookLM)*.
+  *(Chu trình khép kín tự động: Chiếm `TVPLSessionMutex` ➔ Tải DOCX + PDF vào sandbox tạm ➔ Ghi `metadata_handoff.json` ➔ Chuyển giao sang `spoke_cli.py ingest` ➔ Sao chép đủ 2 tệp nhị phân vào `sources/` ➔ Cập nhật `legal_registry.yaml` bảo toàn `pdf_status` ➔ Chuyển đổi OKF v2.4 Bundle ➔ Kiểm định khoanh vùng Scoped 15-Gate CI `validate --bundle <slug>` với `CI=true` ➔ Tự động giải phóng sandbox SSOT)*.
+
+* **Kịch bản 1b — Nạp offline từ tệp có sẵn (Offline Local Files Ingestion):**
+  ```bash
+  python scripts/ccba_platform_cli.py ingest-legal "<slug_or_id>" --category <01_vbpl|02_qcvn|03_tcvn> --docx <path/to/file.docx> --pdf <path/to/file.pdf>
+  ```
 
 * **Kịch bản 2 — Tiếp nhận thủ công / Fallback khi cào bị lỗi:**
   Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha), Agent giải quyết cục bộ bằng script CDP/thủ công để đưa đúng 2 tệp `.docx` và `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
@@ -155,9 +160,12 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
 
 ### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu Master CI Gate (1-Command Automation)
 
-1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml`.
+1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml` (hoàn toàn tự động khi dùng `spoke_cli.py ingest` hoặc `ccba-platform ingest-legal`).
 2. Chạy bộ kiểm định 15 Cổng Master Spoke CI Validator:
-   ```powershell
+   ```bash
+   # Kiểm định khoanh vùng gói văn bản mới (Khuyến nghị):
+   python scripts/validate_legal_spoke.py --bundle <slug>
+   # Hoặc kiểm định toàn diện repo:
    python scripts/validate_legal_spoke.py
    ```
 3. **Tiêu chuẩn nghiệm thu:** `0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match (Gate 11 >= 98.0%), 100% PDF SHA-256 Match`.
