@@ -155,7 +155,11 @@ def merge_workspace_context(
     # Additive 'project' block
     current_proj: dict[str, Any] = proj_val if isinstance(proj_val, dict) else {}
     target_hub_path = rel_hub_str or current_proj.get("hub_path")
-    if target_hub_path and isinstance(target_hub_path, str) and (":" in target_hub_path or target_hub_path.startswith("/")):
+    if (
+        target_hub_path
+        and isinstance(target_hub_path, str)
+        and (":" in target_hub_path or target_hub_path.startswith("/"))
+    ):
         target_hub_path = rel_hub_str
 
     merged_data["project"] = {
@@ -175,7 +179,9 @@ def merge_workspace_context(
     if "hub_path" in merged_data:
         if rel_hub_str:
             merged_data["hub_path"] = rel_hub_str
-        elif isinstance(merged_data["hub_path"], str) and (":" in merged_data["hub_path"] or merged_data["hub_path"].startswith("/")):
+        elif isinstance(merged_data["hub_path"], str) and (
+            ":" in merged_data["hub_path"] or merged_data["hub_path"].startswith("/")
+        ):
             del merged_data["hub_path"]
 
     # Additive 'must_read'

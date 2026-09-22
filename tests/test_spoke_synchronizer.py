@@ -359,7 +359,6 @@ def test_merge_agents_constitution_colon_inside_bold() -> None:
     assert merge_agents_constitution(hub_text, merged) == merged
 
 
-
 def test_sync_preserves_spoke_agents_md_custom_sections(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that sync preserves custom sections in spoke's AGENTS.md."""
     spoke_agents_dir = mock_spoke / ".agents"

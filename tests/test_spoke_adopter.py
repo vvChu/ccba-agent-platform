@@ -129,7 +129,9 @@ def test_adopt_fails_safely_when_context_exists_without_force(temp_spoke: Path):
     """Fails with exit code 1 when workspace_context.yaml exists and force is False."""
     md_dir = temp_spoke / ".md"
     md_dir.mkdir(parents=True, exist_ok=True)
-    (md_dir / "workspace_context.yaml").write_text("project_name: ExistingSpoke\n", encoding="utf-8")
+    (md_dir / "workspace_context.yaml").write_text(
+        "project_name: ExistingSpoke\n", encoding="utf-8"
+    )
 
     adopter = SpokeAdopter(temp_spoke)
     exit_code = adopter.adopt(force=False, dry_run=False)
@@ -140,7 +142,9 @@ def test_adopt_dry_run_allows_survey_with_warning_when_context_exists(temp_spoke
     """Returns 0 during dry-run even if workspace_context.yaml exists, printing safety warning."""
     md_dir = temp_spoke / ".md"
     md_dir.mkdir(parents=True, exist_ok=True)
-    (md_dir / "workspace_context.yaml").write_text("project_name: ExistingSpoke\n", encoding="utf-8")
+    (md_dir / "workspace_context.yaml").write_text(
+        "project_name: ExistingSpoke\n", encoding="utf-8"
+    )
 
     adopter = SpokeAdopter(temp_spoke)
     exit_code = adopter.adopt(force=False, dry_run=True)
@@ -149,7 +153,9 @@ def test_adopt_dry_run_allows_survey_with_warning_when_context_exists(temp_spoke
     assert "Phát hiện Spoke đã có cấu hình workspace_context.yaml" in captured.out
 
 
-def test_additive_merge_handles_cross_drive_value_error(temp_spoke: Path, monkeypatch: pytest.MonkeyPatch):
+def test_additive_merge_handles_cross_drive_value_error(
+    temp_spoke: Path, monkeypatch: pytest.MonkeyPatch
+):
     """When cross-drive relpath raises ValueError (e.g. Windows C: vs D:), fallback hub_path to None."""
     import os.path
 
@@ -173,5 +179,3 @@ def test_additive_merge_handles_cross_drive_value_error(temp_spoke: Path, monkey
 
     # In cross-drive scenarios, target_hub_path falls back to None, preventing machine drive contamination
     assert merged_data["project"]["hub_path"] is None
-
-

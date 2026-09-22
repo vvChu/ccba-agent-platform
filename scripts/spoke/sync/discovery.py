@@ -161,7 +161,8 @@ class HubDiscoverer:
                             print(f"[Sync] Auto-saved discovered Hub path: {rel_posix}")
                         except Exception as e:
                             print(
-                                f"[Sync] Warning: Could not save Hub path to context: {e}", file=sys.stderr
+                                f"[Sync] Warning: Could not save Hub path to context: {e}",
+                                file=sys.stderr,
                             )
                 except ValueError:
                     pass
