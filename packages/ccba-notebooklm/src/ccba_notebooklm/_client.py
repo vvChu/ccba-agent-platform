@@ -335,7 +335,9 @@ def get_client() -> CCBANotebookLMClient:
         except Exception:
             pass
 
-    profile_state_path = Path.home() / ".notebooklm" / "profiles" / active_profile / "storage_state.json"
+    profile_state_path = (
+        Path.home() / ".notebooklm" / "profiles" / active_profile / "storage_state.json"
+    )
     default_state_path = Path.home() / ".notebooklm" / "profiles" / "default" / "storage_state.json"
 
     resolved_storage_path = cookie_path
@@ -379,7 +381,9 @@ async def check_auth() -> int:
                     email = await raw_client.get_account_email()
                     print(f"[Info] Google Account: {email}")
                 tier = await client.get_account_tier()
-                print(f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
+                print(
+                    f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})"
+                )
             except Exception:
                 pass
             return 0
