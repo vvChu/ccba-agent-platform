@@ -177,3 +177,25 @@ def test_hybrid_mutex_synthetic_alive_timeout(tmp_path: Path) -> None:
     with pytest.raises(TimeoutError):
         with FileMutexLock(lock_file, timeout=0.2, retry_interval=0.03):
             pass
+
+
+def test_hybrid_mutex_reentrancy_same_thread(tmp_path: Path) -> None:
+    """Test that nested acquisitions on the same thread succeed without deadlocking."""
+    lock_file = tmp_path / "test_reentrant.lock"
+
+    with FileMutexLock(lock_file, timeout=1.0) as outer_mutex:
+        assert outer_mutex.is_locked
+        assert lock_file.exists()
+
+        with FileMutexLock(lock_file, timeout=1.0) as inner_mutex:
+            assert inner_mutex.is_locked
+            assert inner_mutex._reentrant
+
+        # Inner released, outer still locked
+        assert outer_mutex.is_locked
+        assert lock_file.exists()
+
+    # Outer released
+    assert not outer_mutex.is_locked
+    assert not lock_file.exists()
+

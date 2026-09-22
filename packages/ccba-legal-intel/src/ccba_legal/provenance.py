@@ -15,7 +15,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import fitz  # PyMuPDF
+try:
+    import pymupdf as fitz  # PyMuPDF
+except ImportError:
+    import fitz  # PyMuPDF
 from docx import Document
 
 from ccba_legal.constants import (
