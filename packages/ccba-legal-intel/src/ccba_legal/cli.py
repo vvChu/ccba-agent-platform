@@ -306,6 +306,12 @@ def build_parser() -> argparse.ArgumentParser:
     query_parser.add_argument(
         "--json", action="store_true", help="Output results in raw JSON format"
     )
+    query_parser.add_argument(
+        "--include-expired",
+        action="store_true",
+        default=False,
+        help="Bao gồm cả các văn bản quy phạm đã hết hiệu lực thi hành hoặc bị thay thế.",
+    )
 
     # 12. Get-Clause Subcommand (Tier-Aware Clause Slicing)
     clause_parser = subparsers.add_parser(
@@ -915,7 +921,8 @@ def handle_query(args: argparse.Namespace) -> int:
 
     corpus = getattr(args, "corpus", None)
     engine = LegalKnowledgeEngine(registry_path=args.registry, corpus_dir=corpus)
-    results = engine.search(args.search_query, top_k=args.top_k)
+    include_expired = getattr(args, "include_expired", False)
+    results = engine.search(args.search_query, top_k=args.top_k, include_expired=include_expired)
 
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))
@@ -926,6 +933,7 @@ def handle_query(args: argparse.Namespace) -> int:
     print("=================================================================")
     print(f"🔍 Query   : '{args.search_query}' (Top {args.top_k})")
     print(f"📁 Registry: {engine.registry_path}")
+    print(f"⚙️ Include Expired: {'YES' if include_expired else 'NO (Default: Current Only)'}")
     print("-----------------------------------------------------------------")
 
     if not results:
@@ -946,8 +954,10 @@ def handle_query(args: argparse.Namespace) -> int:
             print(f"   {doc['lifecycle_warning']}")
         if doc.get("suggested_replacement"):
             rep = doc["suggested_replacement"]
+            rep_short = rep.get("short_name") or "VBPL"
+            rep_num = rep.get("document_number", "")
             print(
-                f"   👉 Thay thế bởi: [{rep.get('short_name', '')} - {rep.get('document_number', '')}]"
+                f"   👉 Thay thế bởi: [{rep_short} - {rep_num}]"
             )
 
     print("\n=================================================================")
