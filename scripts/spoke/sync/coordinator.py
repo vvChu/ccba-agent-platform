@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import difflib
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -307,16 +308,51 @@ def resolve_canonical_project_type(
     return None, None
 
 
+INVARIANT_BULLET_PATTERN = re.compile(
+    r"^[ \t]*(?:[-*]|\d+\.)[ \t]+\*\*([^*:]+)(?::\*\*|\*\*:)[\t ]*(.*)"
+)
+
+
+def parse_invariants_section(content: str) -> tuple[str, list[tuple[str, str]]]:
+    """Parse an Invariants section into preamble and individual bullet items (multiline-aware)."""
+    lines = content.splitlines(keepends=True)
+    preamble_lines: list[str] = []
+    items: list[tuple[str, list[str]]] = []
+    current_key: str | None = None
+    current_item_lines: list[str] = []
+
+    for line in lines:
+        m = INVARIANT_BULLET_PATTERN.match(line)
+        if m:
+            if current_key is not None:
+                items.append((current_key, current_item_lines))
+                current_item_lines = []
+            current_key = m.group(1).strip()
+            current_item_lines.append(line)
+        else:
+            if current_key is None:
+                preamble_lines.append(line)
+            else:
+                current_item_lines.append(line)
+
+    if current_key is not None:
+        items.append((current_key, current_item_lines))
+
+    item_tuples = [(k, "".join(l_lines)) for k, l_lines in items]
+    return "".join(preamble_lines), item_tuples
+
+
 def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
-    """Merge Hub constitution into Spoke AGENTS.md while preserving custom Spoke sections.
+    """Merge Hub constitution into Spoke AGENTS.md while preserving custom Spoke sections and invariants.
 
     Args:
         hub_text: Content of Hub's AGENTS.md (canonical constitution).
         spoke_text: Content of Spoke's existing AGENTS.md.
 
     Returns:
-        Merged content containing Hub's updated constitution and preserving any
-        custom sections (e.g., '## Agent skills', '## Custom Rules') present in Spoke.
+        Merged content containing Hub's updated constitution, merged Core Invariants,
+        and preserving any custom sections (e.g., '## Agent skills', '## Custom Rules')
+        present in Spoke. Strictly idempotent.
     """
     if not spoke_text.strip():
         return hub_text
@@ -347,21 +383,43 @@ def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
     hub_sections = split_into_sections(hub_text)
     spoke_sections = split_into_sections(spoke_text)
 
-    hub_headings = {h for h, _ in hub_sections if h}
+    hub_dict = dict(hub_sections)
+    spoke_dict = dict(spoke_sections)
 
-    # Find custom spoke sections not present in hub
-    custom_spoke_sections: list[str] = []
+    # Smart merge for ## Core Invariants
+    inv_heading = "## Core Invariants"
+    if inv_heading in hub_dict and inv_heading in spoke_dict:
+        hub_inv_content = hub_dict[inv_heading]
+        spoke_inv_content = spoke_dict[inv_heading]
+
+        _, hub_items = parse_invariants_section(hub_inv_content)
+        _, spoke_items = parse_invariants_section(spoke_inv_content)
+
+        hub_keys_norm = {k.strip().lower() for k, _ in hub_items}
+        custom_spoke_items = [
+            item_text for k, item_text in spoke_items if k.strip().lower() not in hub_keys_norm
+        ]
+
+        if custom_spoke_items:
+            clean_hub_inv = hub_inv_content.rstrip()
+            joined_spoke_items = "".join(
+                item if item.endswith("\n") else item + "\n" for item in custom_spoke_items
+            )
+            merged_inv_content = f"{clean_hub_inv}\n{joined_spoke_items}\n"
+            hub_dict[inv_heading] = merged_inv_content
+
+    # Reconstruct hub sections preserving original order
+    merged_sections: list[str] = []
+    for heading, _ in hub_sections:
+        merged_sections.append(hub_dict[heading].rstrip())
+
+    # Append custom spoke sections not present in hub
+    hub_headings = {h for h, _ in hub_sections if h}
     for heading, content in spoke_sections:
         if heading and heading not in hub_headings:
-            custom_spoke_sections.append(content.rstrip())
+            merged_sections.append(content.rstrip())
 
-    # Build merged output
-    base_merged = hub_text.rstrip()
-    if custom_spoke_sections:
-        custom_block = "\n\n".join(custom_spoke_sections)
-        return f"{base_merged}\n\n{custom_block}\n"
-
-    return f"{base_merged}\n"
+    return "\n\n".join(merged_sections).rstrip() + "\n"
 
 
 class SpokeSynchronizer:

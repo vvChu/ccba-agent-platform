@@ -53,6 +53,11 @@ def main() -> None:
         default=None,
         help="Execution mode ('software', 'delivery', 'hybrid').",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass fail-safe gate to force re-adoption even if workspace_context.yaml already exists.",
+    )
     args = parser.parse_args()
     sys.exit(
         adopt_project(
@@ -61,6 +66,7 @@ def main() -> None:
             project_type=args.project_type,
             mode=args.mode,
             archetype=args.archetype,
+            force=args.force,
         )
     )
 

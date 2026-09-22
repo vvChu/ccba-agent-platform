@@ -97,9 +97,20 @@ class SpokeBootstrapper:
             ctx_file = ctx_dir / "workspace_context.yaml"
             if ctx_file.exists():
                 data = _safe_load_yaml(ctx_file)
-                hub_config = data.get("hub", {}).get("path") or data.get("hub_path")
-                if hub_config and Path(hub_config).exists():
-                    return Path(hub_config).resolve()
+                hub_config = (
+                    data.get("hub", {}).get("path")
+                    or data.get("hub_path")
+                    or data.get("project", {}).get("hub_path")
+                )
+                if isinstance(hub_config, dict):
+                    os_key = "windows" if os.name == "nt" else "linux"
+                    hub_config = hub_config.get(os_key) or hub_config.get("posix")
+                if hub_config and isinstance(hub_config, str):
+                    cand = Path(hub_config)
+                    if not cand.is_absolute():
+                        cand = (self.spoke_root / cand).resolve()
+                    if cand.exists() and (cand / "packages" / "ccba-harness").exists():
+                        return cand
 
         # 3. Known relative / standard locations (no hardcoded paths — ADR 0044)
         candidates = [
