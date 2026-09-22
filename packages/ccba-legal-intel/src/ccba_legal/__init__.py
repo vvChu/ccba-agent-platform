@@ -19,7 +19,7 @@ from .ast_parser import (
     DeltaPatch,
     DeltaPatchItem,
 )
-from .cleaners import Cleaners
+from .cleaners import Cleaners, normalize_legal_text
 from .compiler import compile_sharded_registry
 from .consolidator import (
     ConsolidationResult,
@@ -151,6 +151,12 @@ from .modernize import (
     MathEquationConverter,
     TableMatrixBuilder,
 )
+from .normalizers import (
+    NormalizerConfig,
+    TextNormalizer,
+    get_text_normalizer,
+    normalize_chunk_text,
+)
 from .packager import OKFBundlePackager
 from .provenance import (
     check_structure_alignment,
@@ -220,6 +226,11 @@ __all__ = [
     "get_tvpl_metadata",
     "download_three_tier",
     "Cleaners",
+    "TextNormalizer",
+    "NormalizerConfig",
+    "get_text_normalizer",
+    "normalize_chunk_text",
+    "normalize_legal_text",
     "ChromeCDP",
     "MockChromeCDP",
     "ChromeCDPError",
