@@ -90,7 +90,9 @@ class GoogleDriveIngestor:
         self.service = service
         self.output_dir = output_dir or DEFAULT_OUTPUT_DIR
         self.registry_path = registry_path or (
-            DEFAULT_REGISTRY_PATH if output_dir is None else self.output_dir / "gdrive_registry.yaml"
+            DEFAULT_REGISTRY_PATH
+            if output_dir is None
+            else self.output_dir / "gdrive_registry.yaml"
         )
         self.registry: dict[str, Any] = self._load_registry()
 
@@ -118,9 +120,7 @@ class GoogleDriveIngestor:
         """Save registry to YAML file atomically."""
         try:
             self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-            self.registry["last_updated"] = datetime.datetime.now(
-                datetime.timezone.utc
-            ).isoformat()
+            self.registry["last_updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             with open(self.registry_path, "w", encoding="utf-8") as f:
                 yaml.safe_dump(self.registry, f, allow_unicode=True, sort_keys=False)
         except Exception as e:
@@ -200,7 +200,11 @@ class GoogleDriveIngestor:
                             if item.is_folder and item.id not in seen_folders:
                                 seen_folders.add(item.id)
                                 folders_to_scan.append(item.id)
-                            elif item.is_shortcut and item.target_id and item.target_id not in seen_folders:
+                            elif (
+                                item.is_shortcut
+                                and item.target_id
+                                and item.target_id not in seen_folders
+                            ):
                                 shortcut_details = f.get("shortcutDetails", {})
                                 if shortcut_details.get("targetMimeType") == GOOGLE_FOLDER_MIME:
                                     seen_folders.add(item.target_id)
@@ -601,13 +605,15 @@ class GoogleDriveIngestor:
             res_path = self.download_item(item, dest_dir=target_dir, force=force)
             if res_path:
                 stats["downloaded"] += 1
-                stats["items"].append({
-                    "id": item.id,
-                    "name": target_name,
-                    "status": "downloaded",
-                    "sha256": item.sha256,
-                    "path": str(res_path),
-                })
+                stats["items"].append(
+                    {
+                        "id": item.id,
+                        "name": target_name,
+                        "status": "downloaded",
+                        "sha256": item.sha256,
+                        "path": str(res_path),
+                    }
+                )
             else:
                 stats["failed"] += 1
                 stats["items"].append({"id": item.id, "name": target_name, "status": "failed"})

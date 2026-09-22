@@ -61,7 +61,9 @@ class TestDriveItem:
 class TestDriveClientSeams:
     """Test drive_client module infrastructure seams."""
 
-    def test_import_and_credentials_dir(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_import_and_credentials_dir(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         monkeypatch.setenv("CCBA_CREDENTIALS_DIR", str(tmp_path / "creds"))
         cred_dir = get_credentials_dir()
         assert cred_dir == tmp_path / "creds"
@@ -200,9 +202,7 @@ class TestGoogleDriveIngestor:
         assert "nested_doc_2" in ids
         assert all(i.scope == "shared-with-me" for i in items)
 
-    def test_resolve_shortcut(
-        self, ingestor: GoogleDriveIngestor, mock_service: MagicMock
-    ) -> None:
+    def test_resolve_shortcut(self, ingestor: GoogleDriveIngestor, mock_service: MagicMock) -> None:
         shortcut_item = DriveItem(
             id="shortcut_01",
             name="Shortcut to Decree",
@@ -343,7 +343,9 @@ class TestGoogleDriveIngestor:
     def test_sanitize_drive_filename(self) -> None:
         from ccba_legal.sync.drive_ingestor import sanitize_drive_filename
 
-        assert sanitize_drive_filename("Nghi_dinh_15/2021/ND-CP.pdf") == "Nghi_dinh_15_2021_ND-CP.pdf"
+        assert (
+            sanitize_drive_filename("Nghi_dinh_15/2021/ND-CP.pdf") == "Nghi_dinh_15_2021_ND-CP.pdf"
+        )
         assert sanitize_drive_filename('Invalid:<>*?"|name.docx') == "Invalid_______name.docx"
         assert sanitize_drive_filename("   ...   ") == "unnamed_document"
 

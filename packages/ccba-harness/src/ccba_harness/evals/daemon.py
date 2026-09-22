@@ -849,7 +849,9 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
                 )
                 return None
 
-            logger.info("✅ verify-patch và validate_docs thành công! Tiến hành push nhánh và mở PR.")
+            logger.info(
+                "✅ verify-patch và validate_docs thành công! Tiến hành push nhánh và mở PR."
+            )
         except Exception as e:
             logger.warning(f"⚠️ Kiểm định verify-patch/validate_docs gặp lỗi: {e}")
             return None

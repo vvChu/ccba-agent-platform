@@ -471,4 +471,3 @@ def test_query_default_exclude_expired(temp_knowledge_setup):
     )
     doc_ids_all = [r["id"] for r in results_all]
     assert "Luat-Xay-dung-2014" in doc_ids_all
-

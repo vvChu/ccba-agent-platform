@@ -226,9 +226,7 @@ class LegalKnowledgeEngine:
         Returns:
             List of matching document metadata dictionaries sorted by relevance.
         """
-        return self.registry_mgr.search(
-            query=query, top_k=top_k, include_expired=include_expired
-        )
+        return self.registry_mgr.search(query=query, top_k=top_k, include_expired=include_expired)
 
     def get_document(self, identifier: str) -> dict[str, Any] | None:
         """Retrieve a registered document by ID, number, or short name with lifecycle info.

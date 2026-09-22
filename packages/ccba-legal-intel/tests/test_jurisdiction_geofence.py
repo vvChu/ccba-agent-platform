@@ -332,7 +332,9 @@ def test_federated_rag_filters_expired_documents(tmp_path: Path):
             "line_end": 2,
         }
     ]
-    (b_exp / "clauses.json").write_text(json.dumps(clauses_exp, ensure_ascii=False), encoding="utf-8")
+    (b_exp / "clauses.json").write_text(
+        json.dumps(clauses_exp, ensure_ascii=False), encoding="utf-8"
+    )
     (b_exp / "10_2021_nd_cp.md").write_text(
         "Quy định quản lý chi phí đầu tư xây dựng cũ theo Nghị định 10.\n",
         encoding="utf-8",
@@ -358,7 +360,9 @@ def test_federated_rag_filters_expired_documents(tmp_path: Path):
             "line_end": 2,
         }
     ]
-    (b_act / "clauses.json").write_text(json.dumps(clauses_act, ensure_ascii=False), encoding="utf-8")
+    (b_act / "clauses.json").write_text(
+        json.dumps(clauses_act, ensure_ascii=False), encoding="utf-8"
+    )
     (b_act / "nghi_dinh_206_2026_nd_cp.md").write_text(
         "Quy định quản lý chi phí đầu tư xây dựng mới theo Nghị định 206 hiện hành.\n",
         encoding="utf-8",
@@ -396,10 +400,23 @@ def test_federated_rag_point_in_time_as_of_date(tmp_path: Path):
         "category": "cost",
         "territory": "VN",
     }
-    (b_hist / "metadata.yaml").write_text(yaml.dump(meta_hist, allow_unicode=True), encoding="utf-8")
-    clauses_hist = [{"clause_id": "dieu-1", "title": "Điều 1. Chi phí dự án 2021", "line_start": 1, "line_end": 2}]
-    (b_hist / "clauses.json").write_text(json.dumps(clauses_hist, ensure_ascii=False), encoding="utf-8")
-    (b_hist / "10_2021_nd_cp.md").write_text("Chi phí đầu tư xây dựng áp dụng cho hợp đồng 2021.\n", encoding="utf-8")
+    (b_hist / "metadata.yaml").write_text(
+        yaml.dump(meta_hist, allow_unicode=True), encoding="utf-8"
+    )
+    clauses_hist = [
+        {
+            "clause_id": "dieu-1",
+            "title": "Điều 1. Chi phí dự án 2021",
+            "line_start": 1,
+            "line_end": 2,
+        }
+    ]
+    (b_hist / "clauses.json").write_text(
+        json.dumps(clauses_hist, ensure_ascii=False), encoding="utf-8"
+    )
+    (b_hist / "10_2021_nd_cp.md").write_text(
+        "Chi phí đầu tư xây dựng áp dụng cho hợp đồng 2021.\n", encoding="utf-8"
+    )
 
     # 2. Modern document: effective from 2026-07-01 onwards
     b_mod = corpus_root / "01_vbpl" / "nghi_dinh_206_2026_nd_cp"
@@ -414,9 +431,20 @@ def test_federated_rag_point_in_time_as_of_date(tmp_path: Path):
         "territory": "VN",
     }
     (b_mod / "metadata.yaml").write_text(yaml.dump(meta_mod, allow_unicode=True), encoding="utf-8")
-    clauses_mod = [{"clause_id": "dieu-1", "title": "Điều 1. Chi phí dự án 2026", "line_start": 1, "line_end": 2}]
-    (b_mod / "clauses.json").write_text(json.dumps(clauses_mod, ensure_ascii=False), encoding="utf-8")
-    (b_mod / "nghi_dinh_206_2026_nd_cp.md").write_text("Chi phí đầu tư xây dựng mới theo Nghị định 206.\n", encoding="utf-8")
+    clauses_mod = [
+        {
+            "clause_id": "dieu-1",
+            "title": "Điều 1. Chi phí dự án 2026",
+            "line_start": 1,
+            "line_end": 2,
+        }
+    ]
+    (b_mod / "clauses.json").write_text(
+        json.dumps(clauses_mod, ensure_ascii=False), encoding="utf-8"
+    )
+    (b_mod / "nghi_dinh_206_2026_nd_cp.md").write_text(
+        "Chi phí đầu tư xây dựng mới theo Nghị định 206.\n", encoding="utf-8"
+    )
 
     engine = FederatedLegalEngine(corpus_paths=[corpus_root], embedding_enabled=False)
 
