@@ -27,6 +27,9 @@
   - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` bắt buộc kiểm tra SHA-256 qua `.sha256` sidecar.
 - **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối]**:
   - Tách hạ tầng xác thực (Auth, Service Factory) thành `drive_client.py` độc lập, tránh inverted coupling khi module Pull phụ thuộc module Push (`drive_uploader.py`). Giữ tương thích ngược qua re-export.
+- **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Universal Invariant Merge]**:
+  - *Universal Invariant Regex*: Dùng `r"^[ \t]*(?:[-*]|\d+\.)[ \t]+\*\*([^*:]+)(?::\*\*|\*\*:)[\t ]*(.*)"` và Multiline Accumulator bảo tồn 100% điều khoản cục bộ của Spoke khi sync (idempotent 100%).
+  - *Cross-Drive Fallback*: Khi `os.path.relpath` gặp `ValueError` (Windows C: vs D:), fallback `hub_path` về `None`, loại bỏ nguy cơ đóng cứng ký tự ổ đĩa máy đơn vào context.
 
 ---
 
@@ -43,16 +46,15 @@
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomains]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT. Từ khóa chuyên biệt (`grill`, `adr`, `risk`) tách thành subdomain độc lập khỏi tuple cha chống va chạm regex.
 - **RULE-2.6 [YouTube Ingestion & Livestream Garbage Guard]**:
-  - Khi khai thác YouTube captions (`transcript.py`), yt-dlp coi `live_chat` là subtitle hợp lệ. BẮT BUỘC lọc bỏ `live_chat`/`live_chat_replay` và ngắt sớm nếu `is_live: True` (chống tải vô tận). Phải có regex guard phát hiện HTML/DOM rác để abort trước khi đẩy vào Map-Reduce.
+  - yt-dlp coi `live_chat` là subtitle hợp lệ. BẮT BUỘC lọc bỏ `live_chat`/`live_chat_replay` và ngắt sớm nếu `is_live: True` (chống tải vô tận). Phải có regex guard chặn HTML/DOM rác trước Map-Reduce.
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành (Legal & Data Standards)
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - MỌI văn bản pháp luật viện dẫn (kể cả mock fixtures, demo slides) BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT / IN-FORCE).
-  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (Luật số `135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng — thay thế NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì — thay thế NĐ 06/2021), **Nghị định 206/2026/NĐ-CP** (Quản lý Chi phí Đầu tư Xây dựng — thay thế NĐ 10/2021/NĐ-CP).
-  - TUYỆT ĐỐI CẤM dùng NĐ 175/2024, NĐ 15/2021, NĐ 06/2021, NĐ 10/2021/NĐ-CP làm căn cứ pháp lý hiện tại.
+  - MỌI văn bản pháp luật viện dẫn (kể cả mock fixtures) BẮT BUỘC ĐANG CÓ HIỆU LỰC (CURRENT / IN-FORCE).
+  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (thay NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (thay NĐ 06/2021), **Nghị định 206/2026/NĐ-CP** (thay NĐ 10/2021). TUYỆT ĐỐI CẤM dùng văn bản đã hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
   - Tier 1 (`part=-100`): VIP Digital Vector PDF (Mỏ neo Pháp lý Tối thượng).
   - Tier 2 (`part=-1&docx=1`): VIP OpenXML Word Document (Nguồn dữ liệu gốc vàng nạp `docx_converter.py`).
@@ -78,14 +80,15 @@
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
   - Repo Hub cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi bắt buộc qua PR.
   - Sửa file trong `packages/`, `scripts/`, `drift_auditor.py` bắt buộc có cập nhật trong `arch_docs` (`README.md`, `PLATFORM.md`) cùng PR.
+- **RULE-4.6 [PR Shift-Left CI Lint & Format Pre-Check]**:
+  - GitHub Actions CI chạy `ruff format --check` toàn diện và `ruff check` cả `scripts/`. Trước khi mở PR qua `/ccba-create-pr`, Agent BẮT BUỘC chạy `ruff format --check` và `ruff check scripts/` để ngăn chặn rớt CI do formatting.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
 
 - **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**:
-  - Profile độc lập: `~/.gemini/antigravity/chrome_vip` trên cổng `9222`. Lệnh `Browser.setDownloadBehavior` BẮT BUỘC gọi qua Browser Target WebSocket (`http://127.0.0.1:{port}/json/version`).
-  - Toàn bộ DOM Selectors đăng nhập, xác nhận phiên TVPL kế thừa tập trung từ `TVPLSelectors` trong `selectors.py`.
+  - Profile độc lập `~/.gemini/antigravity/chrome_vip` trên cổng `9222`. `Browser.setDownloadBehavior` BẮT BUỘC qua Browser Target WebSocket (`/json/version`). Selectors kế thừa từ `TVPLSelectors`.
 - **RULE-5.2 [Windows Path Quotes & Hook Protection]**:
   - Khi Antigravity IDE trên Windows tự bọc đường dẫn `hooks.json` trong dấu ngoặc kép `"C:\..."`, vô hiệu hóa bằng `{}` và khóa thuộc tính `IsReadOnly = $true` trên PowerShell chống lỗi `Cannot find module`.
   - Thiết lập timeout $\ge 60\text{s}$ cho integration tests có scan metadata trên Windows.
