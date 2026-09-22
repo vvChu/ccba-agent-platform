@@ -192,6 +192,7 @@ class NightlyTunerDaemon:
         target_skills: list[str] | None = None,
         alert_emitter: Callable[[str], bool] | None = None,
         target_ref: str = "origin/main",
+        no_telegram: bool = False,
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low = max_iterations_low
@@ -203,6 +204,7 @@ class NightlyTunerDaemon:
         self.model = model
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
+        self.no_telegram = no_telegram
         # Determine valid target_ref (fallback to main if origin/main cannot be verified)
         if target_ref == "origin/main":
             check_ref = subprocess.run(
@@ -539,10 +541,13 @@ class NightlyTunerDaemon:
         if not dry_run and total_commits > 0:
             pr_url = self._create_pull_request(branch_name, report_md)
             report.pr_url = pr_url
+        elif not dry_run and total_commits == 0:
+            self._cleanup_empty_branch(branch_name)
 
         # 6. Gửi thông báo Telegram Bot
-        telegram_sent = self.send_telegram_notification(report)
-        report.telegram_notified = telegram_sent
+        if not self.no_telegram:
+            telegram_sent = self.send_telegram_notification(report)
+            report.telegram_notified = telegram_sent
 
         return report
 
@@ -848,6 +853,34 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
             logger.info(f"🌿 Đã tạo nhánh Git mới: {branch_name}")
         except subprocess.CalledProcessError as e:
             logger.warning(f"⚠️ Không thể tạo nhánh {branch_name}: {e}")
+
+    def _cleanup_empty_branch(self, branch_name: str) -> None:
+        """Detaches HEAD and deletes empty branch when total_commits == 0."""
+        try:
+            subprocess.run(
+                ["git", "checkout", "--detach"],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
+            )
+            subprocess.run(
+                ["git", "branch", "-D", branch_name],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
+            )
+            is_worktree = bool(self._get_main_repo_root())
+            if not is_worktree:
+                subprocess.run(
+                    ["git", "checkout", self.target_ref],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    check=False,
+                )
+                logger.info(f"🌿 Đã khôi phục HEAD repo chính về: {self.target_ref}")
+            logger.info(f"🧹 Đã xóa nhánh rỗng không có commit: {branch_name}")
+        except Exception as e:
+            logger.warning(f"⚠️ Lỗi dọn dẹp nhánh rỗng {branch_name}: {e}")
 
     def _create_pull_request(self, branch_name: str, report_body: str) -> str | None:
         """Pushes branch and creates a GitHub Pull Request using GitHub CLI (gh) if available."""

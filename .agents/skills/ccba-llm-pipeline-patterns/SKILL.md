@@ -10,7 +10,7 @@ bundle: _core
 tier: kernel
 command: /ccba-llm-pipeline-patterns
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -456,6 +456,48 @@ def extract_last_exchange(file_content: str, max_chars: int = 4_000) -> dict[str
 
 ---
 
+## Pattern 15: Two-Tier Multimodal Noise Defense (Deterministic Pre-Filter & Cognitive Gate)
+
+### Vấn đề
+Khi tự động hóa quá trình nạp dữ liệu đa phương thức (Multimodal Ingestion: Video, Audio, Podcast, Tài liệu Scan/Hình ảnh) vào LLM pipeline:
+1. **Scaffolding & Infinite Stream Bloat**: Các nền tảng đa phương tiện (như YouTube) có thể trả về các luồng phụ đề rác (như `live_chat` chứa hàng nghìn dòng mã JSON/HTML giao diện web) hoặc livestream vô tận (`is_live: True`), gây tràn ngân sách tokens và làm sập bước Map-Reduce.
+2. **Asset Pollution by Decorative Media**: Nhiều tài liệu hoặc podcast sử dụng hình nền tĩnh lặp đi lặp lại (phong cảnh, tán cây, màn hình chờ, chân dung người nói). Nếu trích xuất mù quáng, kho lưu trữ assets sẽ bị ngập trong hàng trăm ảnh rác vô giá trị tri thức.
+
+### Giải pháp: Phân Tầng Phòng Vệ Kép (Deterministic Pre-Filter + Cognitive Gate)
+
+```
+Raw Media Stream ──► [TẦNG 1: BỘ LỌC TẤT ĐỊNH (Zero-Token)]
+                           │
+             ┌─────────────┴─────────────┐
+             ▼ (Rác/Trùng lặp)           ▼ (Hợp lệ & Khác biệt)
+      [Drop / Abort]            [TẦNG 2: CỔNG NHẬN THỨC (Vision/Audio SLM)]
+                                         │
+                           ┌─────────────┴─────────────┐
+                           ▼ (Ảnh trang trí/Podcast)    ▼ (Slide/Sơ đồ/Kiến trúc)
+                   [KEY_FRAMES: []]            [High-Res Seek & WebP Embed]
+                           │                                   │
+                           ▼                                   ▼
+                   (Chỉ nạp văn bản)                   (Nhúng vào Concept Note)
+```
+
+### Triển khai Tham Khảo
+1. **Tầng 1 — Bộ lọc tất định (Zero-Token / Mathematical Pre-Filter)**:
+   - **Stream Validation**: Kiểm tra cờ `is_live` để ngắt sớm các luồng livestream vô tận; lọc bỏ các MIME-type phụ đề không phải thoại (`live_chat`, `live_chat_replay`).
+   - **DOM Sanitization**: Sử dụng Regex quét nhanh thẻ HTML/DOM rác (`<div`, `<span`, `yt-formatted-string`) để tự động hủy fetch trước khi đưa vào pipeline.
+   - **Perceptual Hashing (pHash)**: Tính fingerprint hình ảnh (Average Hash / pHash) và tính khoảng cách Hamming. Loại bỏ các khung hình có khoảng cách Hamming $< 2$ (loại bỏ $\ge 90\%$ ảnh nền tĩnh chỉ trong vài mili-giây).
+
+2. **Tầng 2 — Cổng nhận thức (Cognitive Gate / Context-Aware Visual Judge)**:
+   - Đưa các khung hình độc lập còn lại vào mô hình thị giác nhẹ (như `gemini-3.8-flash-high`) kèm chỉ dẫn phủ định (Negative Constraints).
+   - Nếu hình ảnh chỉ là ảnh phong cảnh, ảnh chân dung người nói $\rightarrow$ Model bắt buộc xuất `KEY_FRAMES: []` (từ chối lưu trữ).
+   - Nếu hình ảnh chứa sơ đồ hệ thống, bảng biểu, công thức hoặc slide bài giảng $\rightarrow$ Model phê duyệt danh sách indices, kích hoạt trích xuất độ phân giải cao (HD 1280x720) và sinh Alt-Text ngữ nghĩa.
+
+### Key Invariants
+1. **Fail-Fast Stream Abort**: Mọi luồng đa phương tiện không có ranh giới kết thúc xác định (`is_live`) phải bị từ chối ngay ở tầng transport.
+2. **Mathematical Dedup Before LLM Tokens**: Không bao giờ gửi hàng trăm khung hình thô lên Vision API; bắt buộc chạy pHash để cô đọng số lượng frames xuống mức tối thiểu ($\le 5-10$ frames).
+3. **Explicit Refusal Protocol**: Cổng nhận thức bắt buộc phải có cơ chế từ chối chủ động (`KEY_FRAMES: []`) để bảo toàn tính nguyên chất của kho tri thức và đồ thị Zettelkasten.
+
+---
+
 ## Quick Reference — Model Routing cho Pipeline Tasks
 
 | Task trong pipeline | Model khuyến nghị | Lý do |
@@ -485,6 +527,7 @@ def extract_last_exchange(file_content: str, max_chars: int = 4_000) -> dict[str
 | Zero-Broken-Link Fallbacks | `D:\VvC_Notes\scripts\services\diagram_base.py` + workers |
 | Heading-Aware Map-Reduce | `D:\VvC_Notes\scripts\core\text_chunker.py` |
 | Conditional Multi-turn Memory | `D:\VvC_Notes\scripts\services\command\coordinator.py` |
+| Two-Tier Multimodal Noise Defense | `D:\VvC_Notes\scripts\services\youtube\transcript.py` + `visual_extractor.py` |
 
 ## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
 * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
