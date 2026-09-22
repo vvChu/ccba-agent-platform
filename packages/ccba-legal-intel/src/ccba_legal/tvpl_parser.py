@@ -281,6 +281,9 @@ def get_tvpl_metadata(
         "signer": _find_field(["Người ký", "Người ký/ Chức danh", "Người ký / Chức danh"]),
         "issued_date": _parse_tvpl_date(_find_field(["Ngày ban hành"])),
         "effective_date": _parse_tvpl_date(_find_field(["Ngày hiệu lực", "Ngày có hiệu lực"])),
+        "expiration_date": _parse_tvpl_date(
+            _find_field(["Ngày hết hiệu lực", "Hết hiệu lực", "Ngày hết hiệu lực:"])
+        ),
         "published_date": _parse_tvpl_date(_find_field(["Ngày đăng", "Ngày đăng công báo"])),
         "status": status_mapped,
         "relations": raw_meta.get("relations", {}),

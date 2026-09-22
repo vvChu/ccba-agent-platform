@@ -890,8 +890,8 @@ class LegalRegistryManager:
                             score += 2
                         if any(term in t for t in topics):
                             score += 3
-                    if term in doc_num or term in doc_id:
-                        score += 4
+                        if term in doc_num or term in doc_id:
+                            score += 4
 
                 if score > 0:
                     # Enrich doc with lifecycle metadata (ADR 0050)
@@ -1144,7 +1144,7 @@ def query(
     search_query: str,
     registry_path: Path | str | None = None,
     top_k: int = 5,
-    include_expired: bool = True,
+    include_expired: bool = False,
 ) -> list[dict[str, Any]]:
     """High-level query API searching legal registry with automatic lifecycle warnings (ADR 0050).
 
@@ -1154,7 +1154,7 @@ def query(
         search_query: Search keywords or document number.
         registry_path: Optional custom path to legal_registry.yaml.
         top_k: Maximum number of top matching documents to return.
-        include_expired: Whether to include superseded/expired documents (defaults to True for lifecycle queries).
+        include_expired: Whether to include superseded/expired documents (defaults to False).
 
     Returns:
         List of enriched document dictionaries.

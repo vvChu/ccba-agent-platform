@@ -110,7 +110,11 @@ def test_search_and_query_enriches_lifecycle() -> None:
         temp_path = Path(f.name)
 
     try:
-        results = query("50/2014", registry_path=temp_path)
+        # Without include_expired, superseded document is excluded by default
+        assert len(query("50/2014", registry_path=temp_path)) == 0
+
+        # With include_expired=True, superseded document is returned and enriched
+        results = query("50/2014", registry_path=temp_path, include_expired=True)
         assert len(results) >= 1
         res = results[0]
         assert res["status"] == LegalDocStatus.SUPERSEDED.value

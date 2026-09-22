@@ -13,7 +13,7 @@ class DocProfile:
     name: str
     dieu_pattern: re.Pattern[str] = field(
         default_factory=lambda: re.compile(
-            r"^#*\s*(?:__|\*\*)?\s*(Điều\s+(\d+)\.?[^\n]*)", re.IGNORECASE
+            r"^#*\s*[\"“]?(?:__|\*\*)?\s*(Điều\s+(\d+[a-zA-ZđĐ]?)\.?[^\n]*)", re.IGNORECASE
         )
     )
     khoan_pattern: re.Pattern[str] = field(
@@ -33,7 +33,9 @@ def get_doc_profile(doc_type: str | None = "vbpl") -> DocProfile:
     if "qcvn" in normalized or "tcvn" in normalized:
         return DocProfile(
             name="qcvn",
-            dieu_pattern=re.compile(r"^#*\s*(?:__|\*\*)?\s*(Điều\s+(\d+)\.?[^\n]*)", re.IGNORECASE),
+            dieu_pattern=re.compile(
+                r"^#*\s*[\"“]?(?:__|\*\*)?\s*(Điều\s+(\d+[a-zA-ZđĐ]?)\.?[^\n]*)", re.IGNORECASE
+            ),
             khoan_pattern=re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)"),
             sec_pattern=re.compile(
                 r"^#*\s*(?:<a[^>]+></a>\s*)?(((?:[A-Z]\.)?\d+(?:\.\d+)*|[A-Z]\.\d+)\s+([^\n]+))"
@@ -42,7 +44,9 @@ def get_doc_profile(doc_type: str | None = "vbpl") -> DocProfile:
         )
     return DocProfile(
         name="vbpl",
-        dieu_pattern=re.compile(r"^#*\s*(?:__|\*\*)?\s*(Điều\s+(\d+)\.?[^\n]*)", re.IGNORECASE),
+        dieu_pattern=re.compile(
+            r"^#*\s*[\"“]?(?:__|\*\*)?\s*(Điều\s+(\d+[a-zA-ZđĐ]?)\.?[^\n]*)", re.IGNORECASE
+        ),
         khoan_pattern=re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)"),
         sec_pattern=re.compile(r"^#*\s*((\d+\.\d+(\.\d+)?)\s+([^\n]+))"),
         section_prefix="muc",
