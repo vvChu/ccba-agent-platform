@@ -13,6 +13,12 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from ccba_ai import parse_llm_json, strip_think_tags
+from ccba_legal.normalizers import (
+    NormalizerConfig,
+    TextNormalizer,
+    fix_common_ocr_typos,
+    normalize_ocr_spacing,
+)
 
 try:
     import docx
@@ -55,8 +61,21 @@ class Cleaners:
 
     @classmethod
     def remove_ocr_artifacts(cls, text: str) -> str:
-        """Remove long uppercase lines commonly created by page headers/footers in OCR."""
+        """Remove long uppercase lines commonly created by page headers/footers in OCR and fix broken spacing."""
+        text = normalize_ocr_spacing(text)
+        text = fix_common_ocr_typos(text)
         return re.sub(r"^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$", "", text, flags=re.MULTILINE).strip()
+
+    @classmethod
+    def normalize_legal_text(
+        cls,
+        text: str,
+        config: NormalizerConfig | None = None,
+        strip_doc_id_prefix: str = "",
+    ) -> str:
+        """Apply full multi-pass legal OCR normalization chain."""
+        normalizer = TextNormalizer(config=config)
+        return normalizer.clean_chunk(text, strip_doc_id_prefix=strip_doc_id_prefix)
 
     @classmethod
     def convert_docx_table_to_markdown(cls, table: Any) -> str:
@@ -250,5 +269,6 @@ convert_markdown_to_docx = Cleaners.convert_markdown_to_docx
 strip_think_tags_clean = Cleaners.strip_think_tags
 extract_json_clean = Cleaners.extract_json
 remove_ocr_artifacts = Cleaners.remove_ocr_artifacts
+normalize_legal_text = Cleaners.normalize_legal_text
 strip_administrative_noise = Cleaners.strip_administrative_noise
 strip_web_artifacts = Cleaners.strip_web_artifacts
