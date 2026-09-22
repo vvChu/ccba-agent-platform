@@ -328,6 +328,7 @@ class FederatedLegalEngine:
         as_of_date: str | None = None,
         top_k: int = 5,
         k_local_min: int | None = None,
+        include_expired: bool = False,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """Query the ground-truth engine with Dual-Pool Partitioned Retrieval and Geofencing (ADR 0050)."""
@@ -338,6 +339,15 @@ class FederatedLegalEngine:
             top_k = int(kwargs["k"])
 
         from ccba_legal.jurisdiction import expand_jurisdiction_queries, normalize_jurisdiction
+
+        def _is_allowed_chunk(chk: dict[str, Any]) -> bool:
+            if not include_expired:
+                chk_status = str(chk.get("status", "")).strip().lower()
+                if chk_status in {"expired", "hết hiệu lực", "superseded", "bị thay thế"}:
+                    return False
+            if domain and chk.get("domain") != domain:
+                return False
+            return True
 
         is_wildcard = jurisdiction in ("*", "ALL", "all")
         target_territories: set[str] = set()
@@ -364,7 +374,7 @@ class FederatedLegalEngine:
             results: list[dict[str, Any]] = []
             for doc_id, score in fused:
                 chunk = self._chunks[doc_id]
-                if domain and chunk.get("domain") != domain:
+                if not _is_allowed_chunk(chunk):
                     continue
                 results.append(self._format_chunk_result(chunk, score))
                 if len(results) >= top_k:
@@ -377,7 +387,7 @@ class FederatedLegalEngine:
             results = []
             for doc_id, score in fused:
                 chunk = self._chunks[doc_id]
-                if domain and chunk.get("domain") != domain:
+                if not _is_allowed_chunk(chunk):
                     continue
                 c_territory = str(chunk.get("territory", "VN"))
                 if c_territory in {"VN", "national", ""}:
@@ -392,7 +402,7 @@ class FederatedLegalEngine:
 
         for doc_id, score in fused:
             chunk = self._chunks[doc_id]
-            if domain and chunk.get("domain") != domain:
+            if not _is_allowed_chunk(chunk):
                 continue
 
             c_territory = str(chunk.get("territory", "VN"))
@@ -425,6 +435,7 @@ def query_ground_truth(
     jurisdiction: str | None = None,
     as_of_date: str | None = None,
     top_k: int = 5,
+    include_expired: bool = False,
 ) -> list[dict[str, Any]]:
     """High-level API for federated legal ground-truth search.
 
@@ -437,6 +448,7 @@ def query_ground_truth(
         jurisdiction: Optional territory code for Geofencing.
         as_of_date: Optional historical evaluation date.
         top_k: Max number of results.
+        include_expired: Whether to include expired/superseded documents. Default False.
 
     Returns:
         List of result dictionaries.
@@ -445,7 +457,12 @@ def query_ground_truth(
     if _cached_engine is None:
         _cached_engine = FederatedLegalEngine(embedding_enabled=False)
     return _cached_engine.query(
-        query, domain=domain, jurisdiction=jurisdiction, as_of_date=as_of_date, top_k=top_k
+        query,
+        domain=domain,
+        jurisdiction=jurisdiction,
+        as_of_date=as_of_date,
+        top_k=top_k,
+        include_expired=include_expired,
     )
 
 

@@ -305,3 +305,75 @@ def test_mock_local_bundle_discovery_and_indexing():
     assert len(results) > 0
     assert results[0]["territory"] == "VN-HN"
     assert "quy hoạch" in results[0]["text"].lower()
+
+
+def test_federated_rag_filters_expired_documents(tmp_path: Path):
+    """Test that FederatedLegalEngine excludes expired documents by default unless include_expired=True."""
+    corpus_root = tmp_path / "legal_docs"
+    corpus_root.mkdir()
+
+    # 1. Expired bundle (e.g. ND 10/2021)
+    b_exp = corpus_root / "01_vbpl" / "10_2021_nd_cp"
+    b_exp.mkdir(parents=True)
+    meta_exp = {
+        "doc_id": "10_2021_nd_cp",
+        "title": "Nghị định 10/2021/NĐ-CP quản lý chi phí đầu tư xây dựng",
+        "doc_number": "10/2021/NĐ-CP",
+        "status": "expired",
+        "category": "cost",
+        "territory": "VN",
+    }
+    (b_exp / "metadata.yaml").write_text(yaml.dump(meta_exp, allow_unicode=True), encoding="utf-8")
+    clauses_exp = [
+        {
+            "clause_id": "dieu-1",
+            "title": "Điều 1. Quản lý chi phí đầu tư xây dựng theo Nghị định 10 cũ",
+            "line_start": 1,
+            "line_end": 2,
+        }
+    ]
+    (b_exp / "clauses.json").write_text(json.dumps(clauses_exp, ensure_ascii=False), encoding="utf-8")
+    (b_exp / "10_2021_nd_cp.md").write_text(
+        "Quy định quản lý chi phí đầu tư xây dựng cũ theo Nghị định 10.\n",
+        encoding="utf-8",
+    )
+
+    # 2. Active bundle (e.g. ND 206/2026)
+    b_act = corpus_root / "01_vbpl" / "nghi_dinh_206_2026_nd_cp"
+    b_act.mkdir(parents=True)
+    meta_act = {
+        "doc_id": "nghi_dinh_206_2026_nd_cp",
+        "title": "Nghị định 206/2026/NĐ-CP quản lý chi phí đầu tư xây dựng",
+        "doc_number": "206/2026/NĐ-CP",
+        "status": "active",
+        "category": "cost",
+        "territory": "VN",
+    }
+    (b_act / "metadata.yaml").write_text(yaml.dump(meta_act, allow_unicode=True), encoding="utf-8")
+    clauses_act = [
+        {
+            "clause_id": "dieu-1",
+            "title": "Điều 1. Quản lý chi phí đầu tư xây dựng theo Nghị định 206 mới",
+            "line_start": 1,
+            "line_end": 2,
+        }
+    ]
+    (b_act / "clauses.json").write_text(json.dumps(clauses_act, ensure_ascii=False), encoding="utf-8")
+    (b_act / "nghi_dinh_206_2026_nd_cp.md").write_text(
+        "Quy định quản lý chi phí đầu tư xây dựng mới theo Nghị định 206 hiện hành.\n",
+        encoding="utf-8",
+    )
+
+    engine = FederatedLegalEngine(corpus_paths=[corpus_root], embedding_enabled=False)
+    assert len(engine._chunks) == 2
+
+    # Query without include_expired: should ONLY find ND 206/2026
+    default_results = engine.query("chi phí đầu tư xây dựng", k=10)
+    assert len(default_results) == 1
+    assert default_results[0]["document_id"] == "nghi_dinh_206_2026_nd_cp"
+
+    # Query with include_expired=True: should find both
+    all_results = engine.query("chi phí đầu tư xây dựng", k=10, include_expired=True)
+    assert len(all_results) == 2
+    doc_ids = {r["document_id"] for r in all_results}
+    assert doc_ids == {"10_2021_nd_cp", "nghi_dinh_206_2026_nd_cp"}
