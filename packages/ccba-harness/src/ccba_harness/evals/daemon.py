@@ -827,9 +827,31 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
                     f"❌ verify-patch thất bại (exit code {verify_res.returncode}), hủy tạo PR."
                 )
                 return None
-            logger.info("✅ verify-patch thành công! Tiến hành push nhánh và mở PR.")
+
+            verify_docs = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/validate_docs.py",
+                    ".",
+                    "--src",
+                    "scripts,packages",
+                    "--changed",
+                ],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if verify_docs.returncode != 0:
+                logger.error(
+                    f"❌ validate_docs thất bại (exit code {verify_docs.returncode}), hủy tạo PR."
+                )
+                return None
+
+            logger.info("✅ verify-patch và validate_docs thành công! Tiến hành push nhánh và mở PR.")
         except Exception as e:
-            logger.warning(f"⚠️ Kiểm định verify-patch gặp lỗi: {e}")
+            logger.warning(f"⚠️ Kiểm định verify-patch/validate_docs gặp lỗi: {e}")
             return None
 
         # 2. Push & Create PR

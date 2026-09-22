@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -1568,7 +1569,7 @@ class GitRatchetOptimizer:
                     "Lean Structural Architecture & Progressive Disclosure",
                     "\n\n## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)\n"
                     "* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.\n"
-                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng đều được dẫn xuất qua liên kết Markdown chuẩn mực: `[Tài liệu tham chiếu](references/guide.md)`.\n"
+                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.\n"
                     "* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.",
                 ),
             ]
@@ -1833,16 +1834,41 @@ class GitRatchetOptimizer:
 
                     # Ratchet decision
                     if current_score > best_score and crit_fails == 0:
-                        diff_str = f"{best_score:.1f}% -> {current_score:.1f}% (+{current_score - best_score:.1f}%)"
-                        committed = self.git_commit_improvement(diff_str)
-                        if committed:
-                            has_committed = True
-                        best_score = current_score
-                        best_content = mutated_content
-                        kept_count += 1
-                        stagnant_trials = 0
-                        decision = "KEEP"
-                        summary = f"Cải thiện điểm số thành công: {diff_str}"
+                        # ADR-0058 Link Hygiene Fast-Fail Guard
+                        link_issues = []
+                        try:
+                            if str(self.project_root) not in sys.path:
+                                sys.path.insert(0, str(self.project_root))
+                            from scripts.governance.link_auditor import LinkAuditor
+
+                            link_issues = [
+                                i
+                                for i in LinkAuditor(self.project_root).audit(self.target_file)
+                                if i.category in ("links", "okf_links")
+                            ]
+                        except Exception as e:
+                            logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
+
+                        if link_issues:
+                            logger.warning(
+                                f"⚠️ Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+                            )
+                            self.git_rollback_target(best_content, has_committed=has_committed)
+                            reverted_count += 1
+                            stagnant_trials += 1
+                            decision = "REVERT"
+                            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+                        else:
+                            diff_str = f"{best_score:.1f}% -> {current_score:.1f}% (+{current_score - best_score:.1f}%)"
+                            committed = self.git_commit_improvement(diff_str)
+                            if committed:
+                                has_committed = True
+                            best_score = current_score
+                            best_content = mutated_content
+                            kept_count += 1
+                            stagnant_trials = 0
+                            decision = "KEEP"
+                            summary = f"Cải thiện điểm số thành công: {diff_str}"
                     else:
                         self.git_rollback_target(best_content, has_committed=has_committed)
                         reverted_count += 1

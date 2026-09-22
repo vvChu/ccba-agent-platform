@@ -3,113 +3,17 @@
 from __future__ import annotations
 
 import json
-import os
-import shutil
 from pathlib import Path
 from typing import Any
 
+from ccba_legal.sync.drive_client import (
+    GOOGLE_API_AVAILABLE,
+    _import_google_api,
+    get_credentials_dir,
+    get_drive_service,
+    migrate_drive_credentials,
+)
 from ccba_legal.sync.utils import calculate_md5
-
-
-def _import_google_api() -> tuple[bool, Any, Any, Any, Any, Any, Any]:
-    """Lazy import Google API client libraries.
-
-    Returns:
-        Tuple of (available, google_auth, Request, Credentials, build, HttpError, MediaFileUpload).
-    """
-    try:
-        import google.auth
-        from google.auth.transport.requests import Request
-        from google.oauth2.credentials import Credentials
-        from googleapiclient.discovery import build
-        from googleapiclient.errors import HttpError
-        from googleapiclient.http import MediaFileUpload
-
-        return True, google.auth, Request, Credentials, build, HttpError, MediaFileUpload
-    except ImportError:
-        return False, None, None, None, None, None, None
-
-
-GOOGLE_API_AVAILABLE, *_ = _import_google_api()
-
-
-def get_credentials_dir() -> Path:
-    """Read credentials directory from environment variable or user home."""
-    env_dir = os.environ.get("CCBA_CREDENTIALS_DIR")
-    if env_dir:
-        return Path(env_dir)
-    return Path.home() / ".ccba" / "credentials"
-
-
-def migrate_drive_credentials(target_dir: Path | None = None) -> None:
-    """Migrate legacy credentials from .md/scratch/ to credentials directory."""
-    dest_dir = target_dir or get_credentials_dir()
-    old_secrets = Path(".md/scratch/client_secrets.json")
-    old_token = Path(".md/scratch/drive_token.json")
-
-    if not (old_secrets.exists() or old_token.exists()):
-        return
-
-    try:
-        dest_dir.mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        print(f"[Drive Warning] Không thể tạo thư mục credentials: {e}")
-        return
-
-    for old_file, target_name in [
-        (old_secrets, "client_secrets.json"),
-        (old_token, "drive_token.json"),
-    ]:
-        if not old_file.exists():
-            continue
-        target_file = dest_dir / target_name
-        if not target_file.exists():
-            try:
-                shutil.move(str(old_file), str(target_file))
-                print(f"[Drive Info] Tự động di trú {target_name} sang: {target_file}")
-            except Exception as e:
-                print(f"[Drive Warning] Lỗi di trú {target_name}: {e}")
-        else:
-            try:
-                old_file.unlink()
-            except Exception:
-                pass
-
-
-def get_drive_service() -> Any:
-    """Initialize Drive API service using personal token or ADC fallback."""
-    available, google_auth, Request, Credentials, build, HttpError, _ = _import_google_api()
-    if not available:
-        raise ImportError(
-            "Thiếu thư viện googleapiclient hoặc google-auth. "
-            "Cài đặt: pip install ccba-legal-intel[cloud]"
-        )
-
-    # 1. Try personal token
-    migrate_drive_credentials()
-    token_path = get_credentials_dir() / "drive_token.json"
-    if not token_path.exists():
-        legacy_token = Path(".md/scratch/drive_token.json")
-        if legacy_token.exists():
-            token_path = legacy_token
-
-    if token_path.exists():
-        try:
-            credentials = Credentials.from_authorized_user_file(
-                str(token_path), scopes=["https://www.googleapis.com/auth/drive"]
-            )
-            if credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
-                with open(token_path, "w", encoding="utf-8") as f:
-                    f.write(credentials.to_json())
-            return build("drive", "v3", credentials=credentials)
-        except Exception as e:
-            print(f"[Drive Warning] Lỗi nạp token cá nhân: {e}")
-            print("[Drive Info] Thử fallback sang kiểm tra ADC mặc định...")
-
-    # 2. Fallback to ADC
-    credentials, _project = google_auth.default(scopes=["https://www.googleapis.com/auth/drive"])
-    return build("drive", "v3", credentials=credentials)
 
 
 def clean_google_drive_folder(folder_id: str) -> None:
@@ -236,3 +140,15 @@ def upload_to_google_drive(file_path: Path, folder_id: str, target_name: str) ->
         else:
             print(f"[Drive Warning] Lỗi tải tệp lên Drive: {e}")
         return None
+
+
+__all__ = [
+    "GOOGLE_API_AVAILABLE",
+    "_import_google_api",
+    "clean_google_drive_folder",
+    "get_credentials_dir",
+    "get_drive_service",
+    "migrate_drive_credentials",
+    "upload_to_google_drive",
+]
+

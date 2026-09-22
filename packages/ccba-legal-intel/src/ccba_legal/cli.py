@@ -262,6 +262,42 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Explicit OKF bundle directory slug (e.g. 'qcvn_09_2017_bxd')",
     )
+
+    # 9. Google Drive Ingestion Subcommand
+    ingest_gdrive_parser = subparsers.add_parser(
+        "ingest-gdrive",
+        help="Scan and ingest knowledge documents from Google Drive (3 zones: My Drive, Shared With Me, Shared Drives)",
+    )
+    ingest_gdrive_parser.add_argument(
+        "--scope",
+        choices=["all", "my-drive", "shared", "drives"],
+        default="all",
+        help="Scanning scope: 'all', 'my-drive', 'shared' (Shared with me), 'drives' (Shared Drives)",
+    )
+    ingest_gdrive_parser.add_argument(
+        "--output-dir",
+        "-o",
+        type=Path,
+        default=Path(".md/extracted_docs/gdrive"),
+        help="Target output directory for ingested assets (default: .md/extracted_docs/gdrive)",
+    )
+    ingest_gdrive_parser.add_argument(
+        "--folder-id",
+        type=str,
+        default=None,
+        help="Optional specific Google Drive folder ID to scan",
+    )
+    ingest_gdrive_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Simulate scanning without downloading files",
+    )
+    ingest_gdrive_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force redownload even if file is present in registry",
+    )
+
     # 10. Clean Images Subcommand (Zero-Orphan Figure Pruner - ADR 0036)
     clean_parser = subparsers.add_parser(
         "clean-images",
@@ -853,6 +889,51 @@ def handle_sync(args: argparse.Namespace) -> int:
         return 1
 
 
+def handle_ingest_gdrive(args: argparse.Namespace) -> int:
+    """Handle Google Drive multi-scope knowledge ingestion."""
+    from ccba_legal.sync.drive_client import GOOGLE_API_AVAILABLE
+    from ccba_legal.sync.drive_ingestor import GoogleDriveIngestor
+
+    if not GOOGLE_API_AVAILABLE:
+        print(
+            "❌ Thiếu thư viện googleapiclient hoặc google-auth. "
+            "Cài đặt: pip install ccba-legal-intel[cloud]"
+        )
+        return 1
+
+    print("=================================================================")
+    print("      CCBA LEGAL INTEL - GOOGLE DRIVE MULTI-SCOPE INGESTOR       ")
+    print("=================================================================")
+    print(f"🌐 Scope: {args.scope}")
+    print(f"📂 Output Directory: {args.output_dir}")
+    if args.folder_id:
+        print(f"📁 Folder ID: {args.folder_id}")
+    if args.dry_run:
+        print("🔎 Mode: DRY-RUN (không tải tệp thực tế)")
+
+    try:
+        ingestor = GoogleDriveIngestor(output_dir=args.output_dir)
+        stats = ingestor.ingest(
+            scope=args.scope,
+            folder_id=args.folder_id,
+            dest_dir=args.output_dir,
+            dry_run=args.dry_run,
+            force=args.force,
+        )
+
+        print("\n------------------ KẾT QUẢ THU THẬP ------------------")
+        print(f"📊 Tổng số tệp đã quét: {stats['total_scanned']}")
+        print(f"🎯 Số tệp phù hợp (.pdf, .docx, Google Docs): {stats['supported_found']}")
+        if not args.dry_run:
+            print(f"⬇️ Đã tải mới: {stats['downloaded']}")
+            print(f"⏭️ Đã bỏ qua (trùng khớp registry): {stats['skipped']}")
+            print(f"❌ Thất bại: {stats['failed']}")
+        return 0
+    except Exception as e:
+        print(f"❌ Lỗi thực thi Ingestion: {e}")
+        return 1
+
+
 def handle_clean_images(args: argparse.Namespace) -> int:
     """Handle clean-images subcommand (ADR 0036)."""
     from ccba_legal.figure_extractor import scan_and_prune_orphan_figures
@@ -1132,6 +1213,8 @@ def main() -> None:
         sys.exit(handle_sync(args))
     elif args.command == "ingest":
         sys.exit(handle_ingest(args))
+    elif args.command == "ingest-gdrive":
+        sys.exit(handle_ingest_gdrive(args))
     elif args.command == "clean-images":
         sys.exit(handle_clean_images(args))
     elif args.command == "query":

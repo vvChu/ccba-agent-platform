@@ -9,22 +9,25 @@
 ## Miền 1. 🏛️ Kiến Trúc, Phân Tầng Kỹ Năng & Quản Trị Seams (Architecture & Governance)
 
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
-  - *Cổng 0 (Determinism)*: Tác vụ thuần giải thuật/I/O $\rightarrow$ chuyển xuống Monorepo Package Deep Seams (`packages/*/src/`). Kỹ năng `SKILL.md` tuyệt đối không chứa code logic nghiệp vụ trần.
-  - *Cổng 1 (Orchestration)*: Tác vụ đa luồng/StateGraph/HITL $\rightarrow$ chuyển lên Tier 3 Composite Orchestrator (short-circuit Cổng 1, không tính GPI).
-  - *Công thức GPI*: $\mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.5)$. Nếu $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/*.md`); Nếu $\text{GPI} \ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). User Rituals (`disable-model-invocation: true`) bắt buộc $A = 1.0$.
+  - *Cổng 0 (Determinism)*: Tác vụ thuần giải thuật/IO $\rightarrow$ Monorepo Package Deep Seams (`packages/*/src/`). `SKILL.md` không chứa code logic nghiệp vụ trần.
+  - *Cổng 1 (Orchestration)*: Tác vụ đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (short-circuit Cổng 1, không tính GPI).
+  - *Công thức GPI*: $\mathbf{GPI} = (S \times 2.5) + (K \times 2.0) + (A \times 2.0) - (P \times 1.5)$. $\text{GPI} < 12.0 \rightarrow$ Tier 2A (`references/*.md`); $\text{GPI} \ge 12.0 \rightarrow$ Tier 2B (`.agents/skills/ccba-<name>/`). User Rituals (`disable-model-invocation: true`) bắt buộc $A = 1.0$.
 - **RULE-1.2 [ADR 0053 — Single-Writer Protocol Cho Orchestrators]**:
-  - Mọi quy trình điều phối đa tác tử (`ccba-teamwork`, swarms) bắt buộc tuân thủ Single-Writer: Lead Orchestrator là thực thể duy nhất ghi mã nguồn và logs. Subagents phân tán chỉ xuất Unified Diff / Structured Patch vào `.system_generated/scratch/`, nghiêm cấm sửa file trực tiếp.
+  - Điều phối đa tác tử (`ccba-teamwork`, swarms) tuân thủ Single-Writer: Lead Orchestrator duy nhất ghi mã và logs. Subagents phân tán chỉ xuất Structured Patch vào `.system_generated/scratch/`, cấm sửa file trực tiếp.
 - **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
-  - Thin Seam: Module/package chỉ bộc lộ `__all__` hoặc `__init__.py`. Tuyệt đối không import private submodule `_*`.
-  - Zero-Exemption: Gỡ bỏ toàn bộ bypass hardcoded theo tên file trong `check_dependency_contracts.py`. Tệp thử nghiệm lịch sử chuyển vào `archive/`.
+  - Thin Seam: Module chỉ bộc lộ `__all__` hoặc `__init__.py`. Cấm import private submodule `_*`.
+  - Zero-Exemption: Gỡ bỏ toàn bộ bypass hardcoded trong `check_dependency_contracts.py`. Tệp thử nghiệm lịch sử chuyển vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]**:
   - Cấu trúc `.\.md\`: Gốc chỉ chứa cấu hình (`workspace_context.yaml`); dữ liệu nạp vào `.\.md\extracted_docs\`; tri thức vào `.\.md\knowledge\`; thử nghiệm vào `.\.md\archive\`.
-  - Spoke Synchronizer (`coordinator.py`): Đổi tên workflows cũ thành `.md.bak` (nhãn `DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục cũ theo `SKILL_DEPRECATION_ALIASES`, không tự sinh thư mục `.agents/workflows/` rỗng.
+  - Spoke Synchronizer (`coordinator.py`): Đổi tên workflows cũ thành `.md.bak` (nhãn DEPRECATED_MIGRATED_TO_SKILL), xóa thư mục cũ theo SKILL_DEPRECATION_ALIASES, không sinh `.agents/workflows/` rỗng.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Two-Tier Traceability Matrix & Status Regex]**:
-  - Tier 1: Platform Constitution (55 Hub ADRs). Tier 2: Spoke Domain Decisions (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua thẻ `<!-- CUSTOM_SECTIONS_START -->` ... `<!-- CUSTOM_SECTIONS_END -->`.
-  - Regex bắt trạng thái ADR phải bao quát tiền tố list marker `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
+  - Tier 1: Hub Constitution (55 ADRs). Tier 2: Spoke Decisions (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua `<!-- CUSTOM_SECTIONS_START -->`...`<!-- CUSTOM_SECTIONS_END -->`.
+  - Regex bắt trạng thái ADR bao quát list marker `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1 dùng `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton cấp module; Cache Embedding `.npy` bắt buộc kiểm tra SHA-256 qua `.sha256` sidecar.
+- **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối & Triệt Tiêu Inverted Coupling]**:
+  - *Bối cảnh*: Modules đọc/kéo (`engine.py`, `notebooklm_sync.py`, `drive_ingestor.py`) import `get_drive_service` từ `drive_uploader.py`. Việc module Pull phụ thuộc module Push là inverted coupling, vi phạm Clean Architecture & SRP, làm giảm discoverability.
+  - *Giải pháp*: Tách hạ tầng xác thực (Auth, Service Factory) thành `drive_client.py` độc lập. Giữ tương thích ngược 100% bằng re-export từ `drive_uploader.py`. Mở rộng mô hình để refactor các hạ tầng kết nối khác trong monorepo.
 
 ---
 
@@ -65,19 +68,16 @@
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent (Workflows, Commands & Review)
 
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
-  - Khi đã xác định Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` làm hành động tiếp theo (bao trọn 8 bước Factory Model).
-  - CẤM TUYỆT ĐỐI nhảy thẳng vào `/ccba-implement`, `/ccba-to-spec`, `/ccba-to-tickets`.
+  - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` làm bước tiếp theo (8 bước Factory Model). Cấm nhảy thẳng vào `/ccba-implement`, `/ccba-to-spec`, `/ccba-to-tickets`.
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
-  - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất bất kỳ lệnh `/command`. Chỉ kỹ năng có `command: /...` mới được gắn tiền tố `/`.
-  - Tài liệu tham chiếu trong `references/*.md` (Tier 2A) CẤM dùng tiền tố `/` (hướng dẫn người dùng gọi Master Skill kèm nạp reference).
+  - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` (Tier 2A) cấm tiền tố `/`.
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
-  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
-  - Quy tắc kết hợp cờ chỉ tuyên bố 1 lần duy nhất tại mục `Kết hợp không hợp lệ` trong `MODES.md`.
+  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Quy tắc kết hợp cờ chỉ tuyên bố 1 lần tại `MODES.md`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
-  - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
+  - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái COMMENTED. Cấm merge nếu chưa sửa/giải trình.
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
-  - Repo Hub cưỡng chế cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi bắt buộc đi qua feature/docs branch và PR.
-  - Khi thêm/sửa/xóa file trong core directories (`packages/`, `scripts/`), `drift_auditor.py` bắt buộc có cập nhật trong `arch_docs` (`README.md`, `PLATFORM.md`) trong cùng PR để vượt qua CI Documentation Check.
+  - Repo Hub cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi bắt buộc qua PR.
+  - Sửa file trong `packages/`, `scripts/`, `drift_auditor.py` bắt buộc có cập nhật trong `arch_docs` (`README.md`, `PLATFORM.md`) cùng PR.
 
 ---
 
