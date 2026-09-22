@@ -42,6 +42,8 @@
   - Tệp trong `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng `../../../packages/<pkg>`. CẤM commit URI `file:///` hoặc `conversation://`.
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomains]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT. Từ khóa chuyên biệt (`grill`, `adr`, `risk`) tách thành subdomain độc lập khỏi tuple cha chống va chạm regex.
+- **RULE-2.6 [YouTube Ingestion & Livestream Garbage Guard]**:
+  - Khi khai thác YouTube captions (`transcript.py`), yt-dlp coi `live_chat` là subtitle hợp lệ. BẮT BUỘC lọc bỏ `live_chat`/`live_chat_replay` và ngắt sớm nếu `is_live: True` (chống tải vô tận). Phải có regex guard phát hiện HTML/DOM rác để abort trước khi đẩy vào Map-Reduce.
 
 ---
 

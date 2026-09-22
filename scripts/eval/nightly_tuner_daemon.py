@@ -84,6 +84,11 @@ def main() -> None:
         default="origin/main",
         help="Git target ref for baseline comparison (default: origin/main)",
     )
+    parser.add_argument(
+        "--no-telegram",
+        action="store_true",
+        help="Disable Telegram notifications (useful for sub-runners like run_boost_worktree.sh)",
+    )
     args = parser.parse_args()
 
     target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
@@ -98,6 +103,7 @@ def main() -> None:
         target_skills=target_skills,
         alert_emitter=send_telegram_alert,
         target_ref=args.ref,
+        no_telegram=args.no_telegram,
     )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 
