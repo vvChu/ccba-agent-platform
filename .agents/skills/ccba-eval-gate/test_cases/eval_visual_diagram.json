@@ -1,0 +1,57 @@
+[
+  {
+    "id": "visual_flow_01",
+    "input_prompt": "Hãy vẽ sơ đồ luồng quy trình thẩm tra hồ sơ thiết kế MEP bằng cú pháp Mermaid flowchart từ bước tiếp nhận hồ sơ, kiểm tra xung đột đến nghiệm thu.",
+    "golden_answer": null,
+    "rubric": "Phải sử dụng cú pháp Mermaid flowchart hợp lệ (flowchart TD hoặc LR, node, edge -->), thể hiện đầy đủ các bước thẩm tra thiết kế MEP.",
+    "metadata": {
+      "diagram_type": "flowchart",
+      "syntax": "mermaid",
+      "target_skill": "ccba-mermaid-diagram"
+    }
+  },
+  {
+    "id": "visual_seq_02",
+    "input_prompt": "Hãy vẽ sơ đồ trình tự tương tác đa tác tử kiểm toán PCCC giữa Lead Orchestrator, QCAuditWorker, và LegalAdvisor bằng cú pháp Mermaid sequenceDiagram.",
+    "golden_answer": null,
+    "rubric": "Phải sử dụng cú pháp Mermaid sequenceDiagram hợp lệ với các participants và thông điệp tương tác tuần tự theo chuẩn Single-Writer.",
+    "metadata": {
+      "diagram_type": "sequenceDiagram",
+      "syntax": "mermaid",
+      "target_skill": "ccba-mermaid-diagram"
+    }
+  },
+  {
+    "id": "visual_state_03",
+    "input_prompt": "Hãy vẽ sơ đồ vòng đời trạng thái tài liệu hồ sơ hoàn thành công trình (từ Soạn thảo, Thẩm định, Ký duyệt, Lưu trữ đến Bãi bỏ) bằng cú pháp Mermaid stateDiagram.",
+    "golden_answer": null,
+    "rubric": "Phải sử dụng cú pháp Mermaid stateDiagram hợp lệ với các trạng thái và chuyển đổi trạng thái [*] --> State.",
+    "metadata": {
+      "diagram_type": "stateDiagram",
+      "syntax": "mermaid",
+      "target_skill": "ccba-mermaid-diagram"
+    }
+  },
+  {
+    "id": "visual_excalidraw_04",
+    "input_prompt": "Hãy thiết kế sơ đồ phân rã khối chức năng công trình tòa nhà phức hợp (Khối đế thương mại, Tháp văn phòng, Tầng hầm kỹ thuật) dưới định dạng Excalidraw schema.",
+    "golden_answer": null,
+    "rubric": "Phải cung cấp cấu trúc sơ đồ Excalidraw hoặc khối hình học trực quan với các nodes, edges hoặc mã nguồn sơ đồ phân rã rõ ràng.",
+    "metadata": {
+      "diagram_type": "excalidraw_schema",
+      "syntax": "excalidraw",
+      "target_skill": "ccba-excalidraw-diagram"
+    }
+  },
+  {
+    "id": "visual_c4_05",
+    "input_prompt": "Hãy mô hình hóa kiến trúc tích hợp hệ thống BigBIM (Context & Container diagram) kết nối CDE, Model Checker, và Legal RAG Engine theo mô hình C4.",
+    "golden_answer": null,
+    "rubric": "Phải sử dụng cú pháp C4 model hoặc flowchart định dạng phân tầng hệ thống rõ ràng giữa các containers và ranh giới hệ thống.",
+    "metadata": {
+      "diagram_type": "c4_model",
+      "syntax": "mermaid",
+      "target_skill": "ccba-mermaid-diagram"
+    }
+  }
+]

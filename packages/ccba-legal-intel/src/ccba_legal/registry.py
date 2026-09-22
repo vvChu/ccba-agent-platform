@@ -819,7 +819,11 @@ class LegalRegistryManager:
         return None
 
     def search(
-        self, query: str, top_k: int = 5, territory: str | None = None
+        self,
+        query: str,
+        top_k: int = 5,
+        territory: str | None = None,
+        include_expired: bool = False,
     ) -> list[dict[str, Any]]:
         """Search legal registry documents matching query terms across titles, topics, and notes (ADR 0050).
 
@@ -827,6 +831,7 @@ class LegalRegistryManager:
             query: Space-separated search query terms.
             top_k: Maximum number of top matching documents to return.
             territory: Optional ISO 3166-2:VN territory code (e.g. 'VN-HN') for geofencing.
+            include_expired: Whether to include expired/superseded documents in results.
 
         Returns:
             List of matching document dictionaries sorted descending by relevance score,
@@ -885,8 +890,8 @@ class LegalRegistryManager:
                             score += 2
                         if any(term in t for t in topics):
                             score += 3
-                    if term in doc_num or term in doc_id:
-                        score += 4
+                        if term in doc_num or term in doc_id:
+                            score += 4
 
                 if score > 0:
                     # Enrich doc with lifecycle metadata (ADR 0050)
@@ -905,6 +910,17 @@ class LegalRegistryManager:
                         doc_copy["lifecycle_warning"] = lifecycle["warning"]
                     if lifecycle.get("suggested_replacement"):
                         doc_copy["suggested_replacement"] = lifecycle["suggested_replacement"]
+
+                    if not include_expired:
+                        stat = str(doc_copy.get("status", "")).strip().lower()
+                        if doc_copy.get("is_superseded") or stat in {
+                            "expired",
+                            "hết hiệu lực",
+                            "superseded",
+                            "bị thay thế",
+                        }:
+                            continue
+
                     matched_docs.append((score, doc_copy))
 
         matched_docs.sort(key=lambda x: x[0], reverse=True)
@@ -1125,7 +1141,10 @@ def get_lifecycle(identifier: str, registry_path: Path | str | None = None) -> d
 
 
 def query(
-    search_query: str, registry_path: Path | str | None = None, top_k: int = 5
+    search_query: str,
+    registry_path: Path | str | None = None,
+    top_k: int = 5,
+    include_expired: bool = False,
 ) -> list[dict[str, Any]]:
     """High-level query API searching legal registry with automatic lifecycle warnings (ADR 0050).
 
@@ -1135,6 +1154,7 @@ def query(
         search_query: Search keywords or document number.
         registry_path: Optional custom path to legal_registry.yaml.
         top_k: Maximum number of top matching documents to return.
+        include_expired: Whether to include superseded/expired documents (defaults to False).
 
     Returns:
         List of enriched document dictionaries.
@@ -1142,7 +1162,7 @@ def query(
     from ccba_legal.engine import LegalKnowledgeEngine
 
     engine = LegalKnowledgeEngine(registry_path=registry_path)
-    return engine.search(query=search_query, top_k=top_k)
+    return engine.search(query=search_query, top_k=top_k, include_expired=include_expired)
 
 
 def get_active_delegation_document(

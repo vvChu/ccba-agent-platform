@@ -2024,3 +2024,53 @@ def test_flagship_redteam_overrides():
     assert len(FLAGSHIP_REDTEAM_DATASET_OVERRIDES) == 4
     for _skill, dataset in FLAGSHIP_REDTEAM_DATASET_OVERRIDES.items():
         assert dataset.endswith("_redteam.json")
+
+
+def test_ratchet_fast_fail_guard_reverts_mutation_on_broken_links(tmp_path: Path):
+    """Test that improved score is REVERTED if mutation introduces broken link (ADR-0058 Fast-Fail Guard)."""
+    target = tmp_path / "SKILL.md"
+    target.write_text("---\nname: my-skill\n---\n# Baseline\n", encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=2)
+    tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
+
+    eval_calls = 0
+
+    def mock_eval(content: str) -> EvalReport:
+        nonlocal eval_calls
+        eval_calls += 1
+        score = 60.0 if eval_calls == 1 else 95.0
+        return EvalReport(
+            total_items=1,
+            passed_items=1 if score >= 90.0 else 0,
+            failed_items=0 if score >= 90.0 else 1,
+            overall_score=score,
+            pass_rate=100.0 if score >= 90.0 else 0.0,
+            item_results=[
+                EvalItemResult(
+                    item_id="c1",
+                    task_output="OK",
+                    scores=[ScoreResult(scorer_name="Test", score=score / 100.0)],
+                    composite_score=score,
+                    passed=(score >= 90.0),
+                    critical_failed=False,
+                )
+            ],
+        )
+
+    tuner.evaluate_content = mock_eval
+
+    # Propose mutation that injects a non-existent relative link
+    def broken_link_mutation(content: str, iteration: int) -> str:
+        return content + "\n\nSee [Broken Doc](references/non_existent_file.md)\n"
+
+    tuner.propose_mutation = broken_link_mutation
+    report = tuner.run()
+
+    # Even though score was 95.0%, it should be REVERTED due to broken link
+    assert len(report.history) >= 1
+    trial = report.history[0]
+    assert trial.decision == "REVERT"
+    assert "Từ chối mutation vì vi phạm liên kết" in trial.summary
+    assert report.final_score == 60.0
+    assert report.kept_commits == 0

@@ -40,7 +40,9 @@ def _check_is_headless() -> bool:
 class ChromeCDP:
     """Helper class to interact with Chrome via DevTools Protocol (CDP)."""
 
-    def __init__(self, port: int = 9222) -> None:
+    def __init__(self, port: int | None = None) -> None:
+        if port is None:
+            port = int(os.environ.get("TVPL_CDP_PORT", "9222"))
         self.port = port
         self.base_url = f"http://127.0.0.1:{port}"
         self.ws: websocket.WebSocket | None = None
@@ -62,6 +64,30 @@ class ChromeCDP:
                     pass
             return pages
         except Exception:
+            # Check if default port 9222 is occupied by an unresponsive/non-CDP process
+            if self.port == 9222 and not os.environ.get("TVPL_CDP_PORT"):
+                import socket
+
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                port_busy = False
+                try:
+                    sock.bind(("127.0.0.1", 9222))
+                    sock.close()
+                except OSError:
+                    port_busy = True
+
+                if port_busy:
+                    self.port = 9223
+                    self.base_url = f"http://127.0.0.1:{self.port}"
+                    try:
+                        resp = requests.get(f"{self.base_url}/json", timeout=3)
+                        resp.raise_for_status()
+                        pages = [t for t in resp.json() if t.get("type") == "page"]
+                        if pages:
+                            return pages
+                    except Exception:
+                        pass
+
             from ccba_legal.session import get_browser_executable_path
 
             browser_path = get_browser_executable_path()
@@ -79,7 +105,8 @@ class ChromeCDP:
                         "--no-first-run",
                         "--no-default-browser-check",
                         "https://thuvienphapluat.vn",
-                    ]
+                    ],
+                    start_new_session=True,
                 )
                 time.sleep(3.0)
                 try:
@@ -182,22 +209,71 @@ class ChromeCDP:
             time.sleep(0.5)
 
     def handle_cloudflare(self, auto_wait_sec: int = 7) -> None:
-        """Check for Cloudflare bot challenge, wait for silent auto-resolution, and bring window to front only if manual action is needed."""
+        """Check for Cloudflare bot challenge, auto-click Turnstile if present, and resolve."""
         check_expr = """
         !!(document.title.includes("Cloudflare") ||
            document.title.includes("Just a moment") ||
            document.querySelector("div.cf-turnstile") ||
            document.querySelector("#challenge-running") ||
-           document.querySelector("#challenge-stage"))
+           document.querySelector("#challenge-stage") ||
+           document.querySelector("input[name=cf-turnstile-response]"))
         """
         is_blocked = self.evaluate_js(check_expr)
         if is_blocked:
             print(
-                "[LegalIntel] Cloudflare verification in progress (auto-verifying in background)..."
+                "[LegalIntel] Cloudflare verification in progress (attempting auto-resolution)..."
             )
             start_time = time.time()
-            # Phase 1: Grace period for Chrome to auto-pass Cloudflare verification silently
+            # Phase 1: Grace period with synthetic Turnstile click attempt
             while time.time() - start_time < auto_wait_sec:
+                turnstile_rect_js = """
+                (() => {
+                    let el = document.querySelector("#challenge-stage") ||
+                             document.querySelector("div.cf-turnstile") ||
+                             document.querySelector("input[name=cf-turnstile-response]")?.parentElement;
+                    if (el) {
+                        let r = el.getBoundingClientRect();
+                        if (r.width > 0 && r.height > 0) {
+                            return {x: r.x, y: r.y, width: r.width, height: r.height};
+                        }
+                    }
+                    return null;
+                })()
+                """
+                try:
+                    rect = self.evaluate_js(turnstile_rect_js)
+                    if rect and isinstance(rect, dict):
+                        click_x = rect.get("x", 0) + 30
+                        click_y = rect.get("y", 0) + min(35, rect.get("height", 70) / 2)
+                        self.send_command(
+                            "Input.dispatchMouseEvent",
+                            {"type": "mouseMoved", "x": click_x, "y": click_y},
+                        )
+                        time.sleep(0.1)
+                        self.send_command(
+                            "Input.dispatchMouseEvent",
+                            {
+                                "type": "mousePressed",
+                                "x": click_x,
+                                "y": click_y,
+                                "button": "left",
+                                "clickCount": 1,
+                            },
+                        )
+                        time.sleep(0.05)
+                        self.send_command(
+                            "Input.dispatchMouseEvent",
+                            {
+                                "type": "mouseReleased",
+                                "x": click_x,
+                                "y": click_y,
+                                "button": "left",
+                                "clickCount": 1,
+                            },
+                        )
+                except Exception:
+                    pass
+
                 sleep_with_jitter(1.0, 0.2, 0.4)
                 try:
                     is_blocked = self.evaluate_js(check_expr)

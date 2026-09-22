@@ -10,6 +10,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -177,16 +178,31 @@ class FederatedLegalEngine:
                 if not raw_territory:
                     raw_territory = "VN-HN" if str(doc_id).startswith("vn_hn_") else "VN"
                 territory = str(raw_territory)
+                effective_date = str(meta.get("effective_date", "")).strip()
+                expiration_date = str(meta.get("expiration_date", "")).strip()
                 hierarchy_level = str(
                     meta.get("hierarchy_level", "provincial" if territory != "VN" else "national")
                 )
 
                 for clause in clauses:
-                    line_start = clause.get("line_start", 1) - 1
-                    line_end = clause.get("line_end", line_start + 1)
+                    raw_start = clause.get("line_start")
+                    raw_end = clause.get("line_end")
+                    line_start = max(
+                        0, (raw_start if isinstance(raw_start, int) and raw_start > 0 else 1) - 1
+                    )
+                    line_end = max(
+                        line_start + 1,
+                        raw_end
+                        if isinstance(raw_end, int) and raw_end > line_start
+                        else line_start + 1,
+                    )
                     text = "".join(md_lines[line_start:line_end]).strip()
-                    if not text:
-                        text = clause.get("title", "")
+                    if (
+                        not text
+                        or (text.startswith("<a id=") and text.endswith("></a>"))
+                        or not re.sub(r"<a\s+[^>]*>.*?</a>", "", text, flags=re.DOTALL).strip()
+                    ):
+                        text = clause.get("title") or clause.get("clause_id", "")
 
                     self._chunks.append(
                         {
@@ -197,6 +213,8 @@ class FederatedLegalEngine:
                             "text": text,
                             "citation_url": citation_url,
                             "status": doc_status,
+                            "effective_date": effective_date,
+                            "expiration_date": expiration_date,
                             "domain": meta.get("category", ""),
                             "territory": territory,
                             "hierarchy_level": hierarchy_level,
@@ -248,8 +266,13 @@ class FederatedLegalEngine:
                     return
 
             client = AIClient(timeout=self._embed_timeout)
-            embeddings = client.embed(texts)
-            self._embedding_matrix = np.array(embeddings)
+            batch_size = 64
+            all_embeddings: list[list[float]] = []
+            for i in range(0, len(texts), batch_size):
+                chunk_batch = texts[i : i + batch_size]
+                emb_batch = client.embed(chunk_batch)
+                all_embeddings.extend(emb_batch)
+            self._embedding_matrix = np.array(all_embeddings)
 
             if cache_path:
                 np.save(str(cache_path), self._embedding_matrix)
@@ -328,6 +351,7 @@ class FederatedLegalEngine:
         as_of_date: str | None = None,
         top_k: int = 5,
         k_local_min: int | None = None,
+        include_expired: bool = False,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """Query the ground-truth engine with Dual-Pool Partitioned Retrieval and Geofencing (ADR 0050)."""
@@ -338,6 +362,24 @@ class FederatedLegalEngine:
             top_k = int(kwargs["k"])
 
         from ccba_legal.jurisdiction import expand_jurisdiction_queries, normalize_jurisdiction
+
+        def _is_allowed_chunk(chk: dict[str, Any]) -> bool:
+            if as_of_date:
+                eff = str(chk.get("effective_date", "")).strip()
+                exp = str(chk.get("expiration_date", "")).strip()
+                # If document has an effective date, it was not yet in force before that date
+                if eff and as_of_date < eff:
+                    return False
+                # If document has an expiration date, it ceased to be in force from that date
+                if exp and as_of_date >= exp:
+                    return False
+            elif not include_expired:
+                chk_status = str(chk.get("status", "")).strip().lower()
+                if chk_status in {"expired", "hết hiệu lực", "superseded", "bị thay thế"}:
+                    return False
+            if domain and chk.get("domain") != domain:
+                return False
+            return True
 
         is_wildcard = jurisdiction in ("*", "ALL", "all")
         target_territories: set[str] = set()
@@ -364,7 +406,7 @@ class FederatedLegalEngine:
             results: list[dict[str, Any]] = []
             for doc_id, score in fused:
                 chunk = self._chunks[doc_id]
-                if domain and chunk.get("domain") != domain:
+                if not _is_allowed_chunk(chunk):
                     continue
                 results.append(self._format_chunk_result(chunk, score))
                 if len(results) >= top_k:
@@ -377,7 +419,7 @@ class FederatedLegalEngine:
             results = []
             for doc_id, score in fused:
                 chunk = self._chunks[doc_id]
-                if domain and chunk.get("domain") != domain:
+                if not _is_allowed_chunk(chunk):
                     continue
                 c_territory = str(chunk.get("territory", "VN"))
                 if c_territory in {"VN", "national", ""}:
@@ -392,7 +434,7 @@ class FederatedLegalEngine:
 
         for doc_id, score in fused:
             chunk = self._chunks[doc_id]
-            if domain and chunk.get("domain") != domain:
+            if not _is_allowed_chunk(chunk):
                 continue
 
             c_territory = str(chunk.get("territory", "VN"))
@@ -425,6 +467,7 @@ def query_ground_truth(
     jurisdiction: str | None = None,
     as_of_date: str | None = None,
     top_k: int = 5,
+    include_expired: bool = False,
 ) -> list[dict[str, Any]]:
     """High-level API for federated legal ground-truth search.
 
@@ -437,6 +480,7 @@ def query_ground_truth(
         jurisdiction: Optional territory code for Geofencing.
         as_of_date: Optional historical evaluation date.
         top_k: Max number of results.
+        include_expired: Whether to include expired/superseded documents. Default False.
 
     Returns:
         List of result dictionaries.
@@ -445,7 +489,12 @@ def query_ground_truth(
     if _cached_engine is None:
         _cached_engine = FederatedLegalEngine(embedding_enabled=False)
     return _cached_engine.query(
-        query, domain=domain, jurisdiction=jurisdiction, as_of_date=as_of_date, top_k=top_k
+        query,
+        domain=domain,
+        jurisdiction=jurisdiction,
+        as_of_date=as_of_date,
+        top_k=top_k,
+        include_expired=include_expired,
     )
 
 

@@ -161,7 +161,9 @@ def test_daemon_create_pull_request_real_git_whitespace(
         cmd: list[str] | str, *args: object, **kwargs: object
     ) -> subprocess.CompletedProcess[str]:
         cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
-        if "verify-patch" in cmd_str:
+        if any(
+            k in cmd_str for k in ("verify-patch", "validate_docs", "test_audit_skills_hygiene")
+        ):
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="PASSED", stderr="")
         return original_run(cmd, *args, **kwargs)
 
@@ -202,7 +204,9 @@ def test_daemon_create_pull_request_real_git_semantic_change(
         cmd: list[str] | str, *args: object, **kwargs: object
     ) -> subprocess.CompletedProcess[str]:
         cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
-        if "verify-patch" in cmd_str:
+        if any(
+            k in cmd_str for k in ("verify-patch", "validate_docs", "test_audit_skills_hygiene")
+        ):
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="PASSED", stderr="")
         if "git" in cmd_str and "push" in cmd_str:
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="pushed", stderr="")

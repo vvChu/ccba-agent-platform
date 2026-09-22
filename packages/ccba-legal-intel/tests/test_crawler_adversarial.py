@@ -22,6 +22,8 @@ from ccba_legal.registry import (
 
 def test_mutex_simultaneous_acquisition(tmp_path: Path) -> None:
     """Test that two concurrent processes cannot acquire the lock simultaneously."""
+    import concurrent.futures
+
     lock_file = tmp_path / "simultaneous.lock"
 
     # Instance 1 and Instance 2
@@ -32,9 +34,14 @@ def test_mutex_simultaneous_acquisition(tmp_path: Path) -> None:
     m1 = mutex1.__enter__()
     assert m1 is mutex1
 
-    # Second instance must fail to acquire the lock and raise TimeoutError
-    with pytest.raises(TimeoutError):
+    def _acquire_mutex2() -> None:
         mutex2.__enter__()
+
+    # Second instance from a concurrent thread must fail to acquire the lock and raise TimeoutError
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_acquire_mutex2)
+        with pytest.raises(TimeoutError):
+            future.result()
 
     # Clean up
     mutex1.__exit__(None, None, None)
