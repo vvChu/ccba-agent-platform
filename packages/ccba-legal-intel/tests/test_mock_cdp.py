@@ -114,3 +114,32 @@ def test_mock_cdp_handling_login_and_popups() -> None:
 
     assert mock_cdp.handle_login() is True
     assert mock_cdp.close_popup() is True
+
+
+def test_tvpl_parser_expiration_date_extraction() -> None:
+    """Verify get_tvpl_metadata extracts and parses expiration_date from aliases."""
+    from ccba_legal.tvpl_parser import get_tvpl_metadata
+
+    mock_cdp = MockChromeCDP()
+    mock_cdp.connect_tab("ws://127.0.0.1:9222/mock")
+
+    # Mock raw JS return from 'Luoc do' page
+    mock_raw_js = {
+        "Số hiệu": "10/2021/NĐ-CP",
+        "Loại văn bản": "Nghị định",
+        "Ngày ban hành": "09/02/2021",
+        "Ngày hiệu lực": "09/02/2021",
+        "Ngày hết hiệu lực": "01/07/2026",
+        "Tình trạng hiệu lực": "Hết hiệu lực",
+        "relations": {},
+    }
+    mock_cdp.set_mock_metadata(mock_raw_js)
+
+    url = "https://thuvienphapluat.vn/van-ban/Xay-dung-Do-thi/Nghi-dinh-10-2021-ND-CP.aspx"
+    meta = get_tvpl_metadata(mock_cdp, url)
+
+    assert meta["document_number"] == "10/2021/NĐ-CP"
+    assert meta["status"] == "Hết hiệu lực"
+    assert meta["effective_date"] == "2021-02-09"
+    assert meta["expiration_date"] == "2026-07-01"
+

@@ -10,6 +10,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -184,11 +185,24 @@ class FederatedLegalEngine:
                 )
 
                 for clause in clauses:
-                    line_start = clause.get("line_start", 1) - 1
-                    line_end = clause.get("line_end", line_start + 1)
+                    raw_start = clause.get("line_start")
+                    raw_end = clause.get("line_end")
+                    line_start = max(
+                        0, (raw_start if isinstance(raw_start, int) and raw_start > 0 else 1) - 1
+                    )
+                    line_end = max(
+                        line_start + 1,
+                        raw_end
+                        if isinstance(raw_end, int) and raw_end > line_start
+                        else line_start + 1,
+                    )
                     text = "".join(md_lines[line_start:line_end]).strip()
-                    if not text:
-                        text = clause.get("title", "")
+                    if (
+                        not text
+                        or (text.startswith("<a id=") and text.endswith("></a>"))
+                        or not re.sub(r"<a\s+[^>]*>.*?</a>", "", text, flags=re.DOTALL).strip()
+                    ):
+                        text = clause.get("title") or clause.get("clause_id", "")
 
                     self._chunks.append(
                         {

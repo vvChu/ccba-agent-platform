@@ -22,6 +22,7 @@ def test_legal_intel_pipeline_process_document_mock(tmp_path: Path) -> None:
     pipeline = LegalIntelPipeline(
         cdp_client=mock_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,  # Bypass lock file during unit test
     )
 
@@ -63,6 +64,7 @@ def test_legal_intel_pipeline_process_document_full_mock(tmp_path: Path) -> None
     pipeline = LegalIntelPipeline(
         cdp_client=mock_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,
     )
 
@@ -88,6 +90,7 @@ def test_legal_intel_pipeline_error_handling(tmp_path: Path) -> None:
     pipeline = LegalIntelPipeline(
         cdp_client=error_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,
     )
 
@@ -108,6 +111,7 @@ def test_legal_intel_pipeline_sha256_delta_caching(tmp_path: Path) -> None:
     pipeline = LegalIntelPipeline(
         cdp_client=mock_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,
     )
 
@@ -132,6 +136,7 @@ def test_legal_intel_pipeline_large_doc_async_offloading(tmp_path: Path) -> None
     pipeline = LegalIntelPipeline(
         cdp_client=mock_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,
     )
 
@@ -152,6 +157,7 @@ def test_legal_intel_pipeline_run_cli(tmp_path: Path) -> None:
     pipeline = LegalIntelPipeline(
         cdp_client=mock_cdp,
         output_dir=tmp_path,
+        registry_path=tmp_path / "legal_registry.yaml",
         use_mutex=False,
     )
 
