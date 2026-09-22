@@ -326,15 +326,32 @@ def get_client() -> CCBANotebookLMClient:
     if not cookie_path and temp_path.exists() and not is_testing:
         cookie_path = str(temp_path.absolute())
 
+    active_profile = "default"
+    config_file = Path.home() / ".notebooklm" / "config.json"
+    if config_file.exists():
+        try:
+            cfg = json.loads(config_file.read_text(encoding="utf-8"))
+            active_profile = cfg.get("default_profile", "default")
+        except Exception:
+            pass
+
+    profile_state_path = Path.home() / ".notebooklm" / "profiles" / active_profile / "storage_state.json"
     default_state_path = Path.home() / ".notebooklm" / "profiles" / "default" / "storage_state.json"
+
+    resolved_storage_path = cookie_path
+    if not resolved_storage_path and not is_testing:
+        if profile_state_path.exists():
+            resolved_storage_path = str(profile_state_path.absolute())
+        elif default_state_path.exists():
+            resolved_storage_path = str(default_state_path.absolute())
+
     use_mock = not (
         env_cookie
         or env_json
-        or (cookie_path and Path(cookie_path).exists() and not is_testing)
-        or (default_state_path.exists() and not is_testing)
+        or (resolved_storage_path and Path(resolved_storage_path).exists() and not is_testing)
     )
 
-    return CCBANotebookLMClient.from_storage(path=cookie_path, use_mock=use_mock)
+    return CCBANotebookLMClient.from_storage(path=resolved_storage_path, use_mock=use_mock)
 
 
 async def check_auth() -> int:
@@ -356,8 +373,15 @@ async def check_auth() -> int:
         async with client_instance as client:
             await client.list_notebooks()
             print("SUCCESS: Kết nối và xác thực thành công với Google NotebookLM Cloud!")
-            tier = await client.get_account_tier()
-            print(f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
+            try:
+                raw_client = client.raw_client
+                if hasattr(raw_client, "get_account_email"):
+                    email = await raw_client.get_account_email()
+                    print(f"[Info] Google Account: {email}")
+                tier = await client.get_account_tier()
+                print(f"[Info] Subscription Tier: {tier.tier} ({tier.plan_name or 'Standard Plan'})")
+            except Exception:
+                pass
             return 0
 
     except Exception as e:
