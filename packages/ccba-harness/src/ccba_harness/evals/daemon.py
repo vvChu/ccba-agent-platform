@@ -630,6 +630,46 @@ class NightlyTunerDaemon:
             for s in stagnant[:3]:
                 message += f"• `{s.skill_name}`: kẹt ở *{s.final_score:.0f}%*\n"
 
+        chatops_secret = os.environ.get("CHATOPS_INTERNAL_SECRET")
+        chatops_url = os.environ.get("CHATOPS_GATEWAY_URL", "http://127.0.0.1:8095")
+
+        if stagnant and chatops_secret:
+            try:
+                actions = [
+                    {
+                        "action_id": f"boost_{s.skill_name}",
+                        "label": f"🚀 /boost {s.skill_name}",
+                        "command": "ccba.skill.boost",
+                        "params": {"skill": s.skill_name},
+                        "ttl_seconds": 86400,
+                        "timeout": 600,
+                    }
+                    for s in stagnant[:3]
+                ]
+                payload = {
+                    "title": "CCBA NIGHTLY AUTO-TUNER REPORT",
+                    "body": message,
+                    "severity": "WARNING",
+                    "actions": actions,
+                }
+                req = urllib.request.Request(
+                    f"{chatops_url.rstrip('/')}/api/v1/notify",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-ChatOps-Secret": chatops_secret,
+                    },
+                )
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    if resp.status == 200:
+                        logger.info(
+                            "✅ Đã gửi báo cáo Nightly Tuner kèm nút /boost qua ChatOps Gateway thành công."
+                        )
+                        return True
+                    logger.warning(f"⚠️ ChatOps Gateway phản hồi mã: {resp.status}")
+            except Exception as e:
+                logger.warning(f"⚠️ ChatOps Gateway dispatch thất bại, fallback: {e}")
+
         if self.alert_emitter is not None:
             return self.alert_emitter(message)
 
