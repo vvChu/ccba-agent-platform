@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 import subprocess
+import urllib.error
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -79,6 +82,142 @@ def test_daemon_send_telegram_alert_mock(monkeypatch: pytest.MonkeyPatch) -> Non
 
     res = send_telegram_alert("Hello test", mock_fallback=True)
     assert res is True
+
+
+def test_daemon_send_telegram_notification_chatops_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify send_telegram_notification dispatches to ChatOps Gateway when secret and stagnant skills exist."""
+    monkeypatch.setenv("CHATOPS_INTERNAL_SECRET", "test_chatops_secret_123")
+    monkeypatch.setenv("CHATOPS_GATEWAY_URL", "http://127.0.0.1:8095")
+
+    captured_requests: list[dict[str, Any]] = []
+
+    class MockHTTPResponse:
+        def __init__(self, status: int = 200) -> None:
+            self.status = status
+
+        def __enter__(self) -> MockHTTPResponse:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+    def mock_urlopen(req: Any, timeout: float = 5.0) -> MockHTTPResponse:
+        captured_requests.append(
+            {
+                "url": req.full_url,
+                "headers": dict(req.headers),
+                "data": json.loads(req.data.decode("utf-8")),
+                "timeout": timeout,
+            }
+        )
+        return MockHTTPResponse(200)
+
+    monkeypatch.setattr("urllib.request.urlopen", mock_urlopen)
+
+    daemon = NightlyTunerDaemon()
+    report = NightlyDaemonReport(
+        timestamp="20260922_150000",
+        branch_name="auto-tune/test",
+        total_skills_scanned=2,
+        skills_optimized=0,
+        total_commits=0,
+        results=[
+            SkillEvolutionSummary(
+                skill_name="stagnant-skill",
+                target_file=Path("SKILL.md"),
+                baseline_score=60.0,
+                final_score=60.0,
+                commits_kept=0,
+                rollbacks=1,
+                status="PLATEAU",
+            ),
+            SkillEvolutionSummary(
+                skill_name="passing-skill",
+                target_file=Path("SKILL.md"),
+                baseline_score=95.0,
+                final_score=95.0,
+                commits_kept=0,
+                rollbacks=0,
+                status="UNCHANGED",
+            ),
+        ],
+    )
+
+    result = daemon.send_telegram_notification(report)
+    assert result is True
+    assert len(captured_requests) == 1
+    req_info = captured_requests[0]
+    assert req_info["url"] == "http://127.0.0.1:8095/api/v1/notify"
+    headers_lower = {k.lower(): v for k, v in req_info["headers"].items()}
+    assert headers_lower.get("x-chatops-secret") == "test_chatops_secret_123"
+
+    payload = req_info["data"]
+    assert payload["title"] == "CCBA NIGHTLY AUTO-TUNER REPORT"
+    assert payload["severity"] == "WARNING"
+    assert len(payload["actions"]) == 1
+    action = payload["actions"][0]
+    assert action["action_id"] == "boost_stagnant-skill"
+    assert action["command"] == "ccba.skill.boost"
+    assert action["params"] == {"skill": "stagnant-skill"}
+    assert action["ttl_seconds"] == 86400
+    assert action["timeout"] == 600
+
+
+def test_daemon_send_telegram_notification_chatops_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify fallback to direct send_telegram_alert when ChatOps Gateway fails or is unreachable."""
+    monkeypatch.setenv("CHATOPS_INTERNAL_SECRET", "test_chatops_secret_123")
+    monkeypatch.setenv("CHATOPS_GATEWAY_URL", "http://127.0.0.1:8095")
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+    # 1. Network exception on urlopen
+    def mock_urlopen_err(req: Any, timeout: float = 5.0) -> Any:
+        raise urllib.error.URLError("Connection refused")
+
+    monkeypatch.setattr("urllib.request.urlopen", mock_urlopen_err)
+
+    daemon = NightlyTunerDaemon()
+    report = NightlyDaemonReport(
+        timestamp="20260922_150000",
+        branch_name="auto-tune/test",
+        total_skills_scanned=1,
+        skills_optimized=0,
+        total_commits=0,
+        results=[
+            SkillEvolutionSummary(
+                skill_name="stagnant-skill",
+                target_file=Path("SKILL.md"),
+                baseline_score=50.0,
+                final_score=50.0,
+                commits_kept=0,
+                rollbacks=2,
+                status="PLATEAU",
+            )
+        ],
+    )
+
+    # When ChatOps throws, fallback sends mock telegram alert successfully
+    res1 = daemon.send_telegram_notification(report)
+    assert res1 is True
+
+    # 2. When Gateway returns HTTP 500
+    class Mock500Response:
+        def __init__(self) -> None:
+            self.status = 500
+
+        def __enter__(self) -> Mock500Response:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=5.0: Mock500Response())
+    res2 = daemon.send_telegram_notification(report)
+    assert res2 is True
 
 
 def test_daemon_target_ref_initialization(monkeypatch: pytest.MonkeyPatch) -> None:
