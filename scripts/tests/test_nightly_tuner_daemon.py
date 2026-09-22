@@ -486,6 +486,7 @@ def test_create_pull_request_cancels_on_whitespace_or_empty_diff(
 def test_nightly_tuner_cli_no_telegram_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify CLI parses --no-telegram and passes it to NightlyTunerDaemon."""
     from typing import Any
+
     import scripts.eval.nightly_tuner_daemon as ntd
 
     daemon_kwargs: dict[str, Any] = {}
@@ -502,4 +503,3 @@ def test_nightly_tuner_cli_no_telegram_flag(monkeypatch: pytest.MonkeyPatch) -> 
 
     ntd.main()
     assert daemon_kwargs.get("no_telegram") is True
-

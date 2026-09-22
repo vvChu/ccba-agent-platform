@@ -42,4 +42,4 @@
    - Bổ sung unit tests cho nhánh rỗng (`test_tuner_daemon.py`).
    - Chạy `verify-patch --preset ci` đạt 100% xanh trước khi mở PR.
 4. **Cập nhật tài liệu**:
-   - Cập nhật [walkthrough.md](file:///home/vvc/.gemini/antigravity/brain/fc58ab89-e6b3-4cdf-bd6c-4c4e31c3a85f/walkthrough.md) và `PLATFORM.md` với các hướng dẫn vận hành chuẩn xác (`systemctl --user`, đường dẫn `.worktrees/`).
+   - Cập nhật `walkthrough.md` và `PLATFORM.md` với các hướng dẫn vận hành chuẩn xác (`systemctl --user`, đường dẫn `.worktrees/`).

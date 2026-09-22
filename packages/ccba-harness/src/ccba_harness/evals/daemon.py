@@ -858,10 +858,16 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
         """Detaches HEAD and deletes empty branch when total_commits == 0."""
         try:
             subprocess.run(
-                ["git", "checkout", "--detach"], cwd=str(self.root), capture_output=True, check=False
+                ["git", "checkout", "--detach"],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
             )
             subprocess.run(
-                ["git", "branch", "-D", branch_name], cwd=str(self.root), capture_output=True, check=False
+                ["git", "branch", "-D", branch_name],
+                cwd=str(self.root),
+                capture_output=True,
+                check=False,
             )
             is_worktree = bool(self._get_main_repo_root())
             if not is_worktree:

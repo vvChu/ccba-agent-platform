@@ -642,4 +642,3 @@ def test_daemon_run_nightly_batch_cleans_empty_branch_when_total_commits_zero(
     assert report.total_commits == 0
     assert len(cleaned_branches) == 1
     assert cleaned_branches[0] == report.branch_name
-
