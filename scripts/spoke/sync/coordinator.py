@@ -383,8 +383,8 @@ def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
     hub_sections = split_into_sections(hub_text)
     spoke_sections = split_into_sections(spoke_text)
 
-    hub_dict = {h: c for h, c in hub_sections}
-    spoke_dict = {h: c for h, c in spoke_sections}
+    hub_dict = dict(hub_sections)
+    spoke_dict = dict(spoke_sections)
 
     # Smart merge for ## Core Invariants
     inv_heading = "## Core Invariants"
