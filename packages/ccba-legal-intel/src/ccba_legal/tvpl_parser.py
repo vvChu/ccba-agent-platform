@@ -163,7 +163,13 @@ METADATA_EXTRACTION_JS_TEMPLATE = r"""
     }
     if (Object.keys(result).length === 0) {
         let cells = Array.from(document.querySelectorAll('td, th, div'));
-        let keys = ['Số hiệu', 'Loại văn bản', 'Lĩnh vực', 'Nơi ban hành', 'Người ký', 'Ngày ban hành', 'Ngày hiệu lực', 'Ngày đăng', 'Tình trạng'];
+        let keys = [
+            'Số hiệu', 'Loại văn bản', 'Lĩnh vực', 'Nơi ban hành', 'Cơ quan ban hành',
+            'Người ký', 'Người ký/ Chức danh', 'Người ký / Chức danh',
+            'Ngày ban hành', 'Ngày hiệu lực', 'Ngày có hiệu lực',
+            'Ngày đăng', 'Ngày đăng công báo',
+            'Tình trạng', 'Tình trạng hiệu lực', 'Hiệu lực'
+        ];
         keys.forEach(k => {
             let matchingCell = cells.find(c => c.innerText && c.innerText.trim().startsWith(k + ':'));
             if (matchingCell) {
@@ -252,15 +258,31 @@ def get_tvpl_metadata(
 
     raw_meta = cdp.evaluate_js(metadata_js) or {}
 
+    def _find_field(aliases: list[str]) -> str:
+        for a in aliases:
+            val = raw_meta.get(a)
+            if val:
+                return str(val).strip()
+        for rk, rv in raw_meta.items():
+            for a in aliases:
+                if a.lower() in rk.lower() and rv:
+                    return str(rv).strip()
+        return ""
+
+    raw_status = _find_field(["Tình trạng", "Tình trạng hiệu lực", "Hiệu lực"])
+    status_mapped = "Còn hiệu lực"
+    if "hết hiệu lực" in raw_status.lower() or "bị thay thế" in raw_status.lower():
+        status_mapped = "Hết hiệu lực"
+
     metadata = {
-        "document_number": raw_meta.get("Số hiệu", ""),
-        "type": raw_meta.get("Loại văn bản", ""),
-        "issued_by": raw_meta.get("Nơi ban hành", ""),
-        "signer": raw_meta.get("Người ký", ""),
-        "issued_date": _parse_tvpl_date(raw_meta.get("Ngày ban hành", "")),
-        "effective_date": _parse_tvpl_date(raw_meta.get("Ngày hiệu lực", "")),
-        "published_date": _parse_tvpl_date(raw_meta.get("Ngày đăng", "")),
-        "status": raw_meta.get("Tình trạng", ""),
+        "document_number": _find_field(["Số hiệu"]),
+        "type": _find_field(["Loại văn bản"]),
+        "issued_by": _find_field(["Nơi ban hành", "Cơ quan ban hành"]),
+        "signer": _find_field(["Người ký", "Người ký/ Chức danh", "Người ký / Chức danh"]),
+        "issued_date": _parse_tvpl_date(_find_field(["Ngày ban hành"])),
+        "effective_date": _parse_tvpl_date(_find_field(["Ngày hiệu lực", "Ngày có hiệu lực"])),
+        "published_date": _parse_tvpl_date(_find_field(["Ngày đăng", "Ngày đăng công báo"])),
+        "status": status_mapped,
         "relations": raw_meta.get("relations", {}),
     }
     return metadata

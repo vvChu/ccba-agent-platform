@@ -213,17 +213,22 @@ class LegalKnowledgeEngine:
 
         return None
 
-    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def search(
+        self, query: str, top_k: int = 5, include_expired: bool = False
+    ) -> list[dict[str, Any]]:
         """Search legal documents with lifecycle status, warnings, and replacements.
 
         Args:
             query: Keyword or document number query string.
             top_k: Maximum number of top matching documents to return.
+            include_expired: Whether to include expired/superseded documents in results.
 
         Returns:
             List of matching document metadata dictionaries sorted by relevance.
         """
-        return self.registry_mgr.search(query=query, top_k=top_k)
+        return self.registry_mgr.search(
+            query=query, top_k=top_k, include_expired=include_expired
+        )
 
     def get_document(self, identifier: str) -> dict[str, Any] | None:
         """Retrieve a registered document by ID, number, or short name with lifecycle info.

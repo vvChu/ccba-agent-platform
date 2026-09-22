@@ -177,6 +177,8 @@ class FederatedLegalEngine:
                 if not raw_territory:
                     raw_territory = "VN-HN" if str(doc_id).startswith("vn_hn_") else "VN"
                 territory = str(raw_territory)
+                effective_date = str(meta.get("effective_date", "")).strip()
+                expiration_date = str(meta.get("expiration_date", "")).strip()
                 hierarchy_level = str(
                     meta.get("hierarchy_level", "provincial" if territory != "VN" else "national")
                 )
@@ -197,6 +199,8 @@ class FederatedLegalEngine:
                             "text": text,
                             "citation_url": citation_url,
                             "status": doc_status,
+                            "effective_date": effective_date,
+                            "expiration_date": expiration_date,
                             "domain": meta.get("category", ""),
                             "territory": territory,
                             "hierarchy_level": hierarchy_level,
@@ -248,8 +252,13 @@ class FederatedLegalEngine:
                     return
 
             client = AIClient(timeout=self._embed_timeout)
-            embeddings = client.embed(texts)
-            self._embedding_matrix = np.array(embeddings)
+            batch_size = 64
+            all_embeddings: list[list[float]] = []
+            for i in range(0, len(texts), batch_size):
+                chunk_batch = texts[i : i + batch_size]
+                emb_batch = client.embed(chunk_batch)
+                all_embeddings.extend(emb_batch)
+            self._embedding_matrix = np.array(all_embeddings)
 
             if cache_path:
                 np.save(str(cache_path), self._embedding_matrix)
@@ -341,7 +350,16 @@ class FederatedLegalEngine:
         from ccba_legal.jurisdiction import expand_jurisdiction_queries, normalize_jurisdiction
 
         def _is_allowed_chunk(chk: dict[str, Any]) -> bool:
-            if not include_expired:
+            if as_of_date:
+                eff = str(chk.get("effective_date", "")).strip()
+                exp = str(chk.get("expiration_date", "")).strip()
+                # If document has an effective date, it was not yet in force before that date
+                if eff and as_of_date < eff:
+                    return False
+                # If document has an expiration date, it ceased to be in force from that date
+                if exp and as_of_date >= exp:
+                    return False
+            elif not include_expired:
                 chk_status = str(chk.get("status", "")).strip().lower()
                 if chk_status in {"expired", "hết hiệu lực", "superseded", "bị thay thế"}:
                     return False
