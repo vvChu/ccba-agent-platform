@@ -481,3 +481,25 @@ def test_create_pull_request_cancels_on_whitespace_or_empty_diff(
 
     assert pr_url is None
     assert "Nhánh không có thay đổi ngữ nghĩa nào ngoài khoảng trắng. Hủy tạo PR." in caplog.text
+
+
+def test_nightly_tuner_cli_no_telegram_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify CLI parses --no-telegram and passes it to NightlyTunerDaemon."""
+    from typing import Any
+    import scripts.eval.nightly_tuner_daemon as ntd
+
+    daemon_kwargs: dict[str, Any] = {}
+
+    class MockDaemon:
+        def __init__(self, **kwargs: Any) -> None:
+            daemon_kwargs.update(kwargs)
+
+        def run_nightly_batch(self, dry_run: bool = False) -> None:
+            pass
+
+    monkeypatch.setattr(ntd, "NightlyTunerDaemon", MockDaemon)
+    monkeypatch.setattr(sys, "argv", ["nightly_tuner_daemon.py", "--no-telegram", "--dry-run"])
+
+    ntd.main()
+    assert daemon_kwargs.get("no_telegram") is True
+

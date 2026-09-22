@@ -563,3 +563,83 @@ def test_remove_stale_plateau_brief_worktree(tmp_path: Path) -> None:
     assert removed is True
     assert not wt_brief.exists()
     assert not main_brief.exists()
+
+
+def test_cleanup_empty_branch_worktree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _cleanup_empty_branch detaches and deletes branch without checking out target_ref in worktree."""
+    daemon = NightlyTunerDaemon(root=tmp_path, target_ref="main")
+    monkeypatch.setattr(daemon, "_get_main_repo_root", lambda: Path("/fake/main/repo"))
+
+    executed_cmds: list[list[str]] = []
+
+    def mock_run(cmd, **kwargs):
+        executed_cmds.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    daemon._cleanup_empty_branch("auto-tune/test-branch")
+
+    assert ["git", "checkout", "--detach"] in executed_cmds
+    assert ["git", "branch", "-D", "auto-tune/test-branch"] in executed_cmds
+    assert ["git", "checkout", "main"] not in executed_cmds
+
+
+def test_cleanup_empty_branch_main_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _cleanup_empty_branch detaches, deletes branch, and checks out target_ref on main repo."""
+    daemon = NightlyTunerDaemon(root=tmp_path, target_ref="main")
+    monkeypatch.setattr(daemon, "_get_main_repo_root", lambda: None)
+
+    executed_cmds: list[list[str]] = []
+
+    def mock_run(cmd, **kwargs):
+        executed_cmds.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    daemon._cleanup_empty_branch("auto-tune/test-branch")
+
+    assert ["git", "checkout", "--detach"] in executed_cmds
+    assert ["git", "branch", "-D", "auto-tune/test-branch"] in executed_cmds
+    assert ["git", "checkout", "main"] in executed_cmds
+
+
+def test_daemon_no_telegram_flag_skips_notification(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify no_telegram=True suppresses telegram notification in run_nightly_batch."""
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+
+    telegram_called = False
+
+    def mock_send(report):
+        nonlocal telegram_called
+        telegram_called = True
+        return True
+
+    monkeypatch.setattr(daemon, "send_telegram_notification", mock_send)
+    monkeypatch.setattr(daemon, "discover_skills_and_datasets", lambda: [])
+
+    report = daemon.run_nightly_batch(dry_run=True)
+    assert not telegram_called
+    assert report.telegram_notified is False
+
+
+def test_daemon_run_nightly_batch_cleans_empty_branch_when_total_commits_zero(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify run_nightly_batch cleans up empty branch when not dry_run and total_commits == 0."""
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+
+    cleaned_branches: list[str] = []
+    monkeypatch.setattr(daemon, "_cleanup_old_empty_branches", lambda days: 0)
+    monkeypatch.setattr(daemon, "_create_git_branch", lambda b: None)
+    monkeypatch.setattr(daemon, "discover_skills_and_datasets", lambda: [])
+    monkeypatch.setattr(daemon, "_cleanup_empty_branch", lambda b: cleaned_branches.append(b))
+
+    report = daemon.run_nightly_batch(dry_run=False)
+    assert report.total_commits == 0
+    assert len(cleaned_branches) == 1
+    assert cleaned_branches[0] == report.branch_name
+
