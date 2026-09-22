@@ -157,7 +157,7 @@ class HubDiscoverer:
                         self.context["hub_path"] = rel_posix
                         try:
                             with open(self.context_file, "w", encoding="utf-8") as f:
-                                yaml.dump(self.context, f, allow_unicode=True)
+                                yaml.dump(self.context, f, allow_unicode=True, sort_keys=False)
                             print(f"[Sync] Auto-saved discovered Hub path: {rel_posix}")
                         except Exception as e:
                             print(

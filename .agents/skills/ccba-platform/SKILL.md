@@ -120,7 +120,7 @@ Căn cứ vào kết quả nhận diện 5 bối cảnh ở Pha 1, Agent chủ �
 ## 🔄 Quy Trình Phân Phối & Kiến Trúc Điều Phối (Execution Protocol)
 
 1. **Nhận Diện & Điều Hướng (Dispatch Resolution):**
-   * Ánh xạ yêu cầu của người dùng (số thứ tự `1–21`, từ khóa kích hoạt, hoặc tên lệnh) tới kỹ năng tương ứng trong Ma Trận Điều Phối.
+   * Ánh xạ yêu cầu của người dùng (bối cảnh dự án, từ khóa kích hoạt, hoặc tên lệnh) tới kỹ năng tương ứng trong Ma Trận Điều Phối Động.
    * **Tiêu chí hoàn thành:** Xác định chính xác tên kỹ năng hoặc lệnh CLI cần khởi chạy.
 
 2. **Nạp Kỹ Năng Ưu Tiên Spoke-First (Virtual Hub Fallback Invariant):**

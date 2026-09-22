@@ -148,3 +148,30 @@ def test_adopt_dry_run_allows_survey_with_warning_when_context_exists(temp_spoke
     captured = capsys.readouterr()
     assert "Phát hiện Spoke đã có cấu hình workspace_context.yaml" in captured.out
 
+
+def test_additive_merge_handles_cross_drive_value_error(temp_spoke: Path, monkeypatch: pytest.MonkeyPatch):
+    """When cross-drive relpath raises ValueError (e.g. Windows C: vs D:), fallback hub_path to None."""
+    import os.path
+
+    md_dir = temp_spoke / ".md"
+    md_dir.mkdir()
+    ctx_path = md_dir / "workspace_context.yaml"
+    ctx_path.write_text(
+        "project:\n  name: CrossDriveSpoke\n  hub_path: 'D:/old/absolute/hub'\n",
+        encoding="utf-8",
+    )
+
+    def mock_relpath(path, start=None):
+        raise ValueError("path is on mount 'D:', start on mount 'C:'")
+
+    monkeypatch.setattr(os.path, "relpath", mock_relpath)
+
+    hub_path = Path("/home/vvc/ccba/ccba-agent-platform")
+    merged_data, _ = merge_workspace_context(
+        ctx_path=ctx_path, hub_path=hub_path, project_type="Phần mềm", mode="hybrid"
+    )
+
+    # In cross-drive scenarios, target_hub_path falls back to None, preventing machine drive contamination
+    assert merged_data["project"]["hub_path"] is None
+
+
