@@ -135,7 +135,9 @@ def _generate_authoritative_fallback(
 
     if "339" in slug and "nd_cp" in slug:
         inferred_doc_num = "339/2026/NĐ-CP"
-        inferred_title = "Nghị định 339/2026/NĐ-CP về xử phạt vi phạm hành chính trong lĩnh vực xây dựng"
+        inferred_title = (
+            "Nghị định 339/2026/NĐ-CP về xử phạt vi phạm hành chính trong lĩnh vực xây dựng"
+        )
         replaces_val = "16/2022/NĐ-CP"
     else:
         m_nd = re.search(r"(?:nghi_dinh|nd)[_-](\d+)[_-](\d+)[_-](?:nd_cp|ndcp)", slug)
@@ -196,7 +198,9 @@ def _generate_authoritative_fallback(
             "3. Trong trường hợp vụ việc do cơ quan tiến hành tố tụng thụ lý, giải quyết nhưng sau đó có quyết định không khởi tố vụ án hình sự thì thời hiệu xử phạt vi phạm hành chính áp dụng theo Luật Xử lý vi phạm hành chính."
         )
         doc.add_paragraph("Chương II\nHÀNH VI VI PHẠM TRONG HOẠT ĐỘNG ĐẦU TƯ XÂY DỰNG")
-        doc.add_paragraph("Điều 6. Vi phạm quy định về lập, thẩm định, phê duyệt quy hoạch xây dựng")
+        doc.add_paragraph(
+            "Điều 6. Vi phạm quy định về lập, thẩm định, phê duyệt quy hoạch xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 30.000.000 đồng đến 50.000.000 đồng đối với hành vi lập nhiệm vụ quy hoạch xây dựng không đúng với yêu cầu phát triển kinh tế - xã hội hoặc không phù hợp định hướng quy hoạch cấp trên.\n"
             "2. Phạt tiền từ 60.000.000 đồng đến 80.000.000 đồng đối với hành vi không tổ chức lấy ý kiến của cơ quan, tổ chức, cá nhân và cộng đồng dân cư có liên quan về đồ án quy hoạch xây dựng.\n"
@@ -210,14 +214,18 @@ def _generate_authoritative_fallback(
             "3. Phạt tiền từ 80.000.000 đồng đến 100.000.000 đồng đối với hành vi không thực hiện công tác giám sát khảo sát xây dựng theo quy định.\n"
             "4. Biện pháp khắc phục hậu quả: Buộc tổ chức khảo sát bổ sung hoặc khảo sát lại theo đúng quy chuẩn, tiêu chuẩn kỹ thuật."
         )
-        doc.add_paragraph("Điều 8. Vi phạm quy định về lập, thẩm định, phê duyệt thiết kế và dự toán xây dựng")
+        doc.add_paragraph(
+            "Điều 8. Vi phạm quy định về lập, thẩm định, phê duyệt thiết kế và dự toán xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi chỉ định sử dụng vật liệu, cấu kiện xây dựng không phù hợp quy chuẩn kỹ thuật hoặc chỉ định nhãn hiệu hàng hóa trong hồ sơ thiết kế.\n"
             "2. Phạt tiền từ 70.000.000 đồng đến 100.000.000 đồng đối với hành vi thiết kế không tuân thủ quy chuẩn kỹ thuật quốc gia về an toàn công trình, an toàn chịu lực hoặc phòng cháy và chữa cháy.\n"
             "3. Phạt tiền từ 120.000.000 đồng đến 150.000.000 đồng đối với hành vi lập dự toán xây dựng công trình tính sai định mức, đơn giá hoặc giá vật tư, nhân công, máy thi công gây thất thoát vốn đầu tư.\n"
             "4. Biện pháp khắc phục hậu quả: Buộc lập lại hồ sơ thiết kế, dự toán theo đúng quy định pháp luật và quy chuẩn kỹ thuật quốc gia."
         )
-        doc.add_paragraph("Điều 9. Vi phạm quy định về cấp giấy phép xây dựng và quản lý trật tự xây dựng")
+        doc.add_paragraph(
+            "Điều 9. Vi phạm quy định về cấp giấy phép xây dựng và quản lý trật tự xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 60.000.000 đồng đến 80.000.000 đồng đối với hành vi khởi công xây dựng công trình mà chưa có giấy phép xây dựng theo quy định đối với công trình thuộc diện phải có giấy phép.\n"
             "2. Phạt tiền từ 80.000.000 đồng đến 120.000.000 đồng đối với hành vi xây dựng công trình sai nội dung giấy phép xây dựng được cấp.\n"
@@ -243,58 +251,76 @@ def _generate_authoritative_fallback(
             "2. Phạt tiền từ 80.000.000 đồng đến 100.000.000 đồng đối với hành vi xác nhận khống khối lượng thi công hoặc xác nhận chất lượng công việc không đúng thực tế.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc kiểm định lại chất lượng công trình và buộc chịu mọi chi phí phát sinh."
         )
-        doc.add_paragraph("Điều 13. Vi phạm quy định về an toàn lao động, vệ sinh môi trường trong thi công xây dựng")
+        doc.add_paragraph(
+            "Điều 13. Vi phạm quy định về an toàn lao động, vệ sinh môi trường trong thi công xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 30.000.000 đồng đến 50.000.000 đồng đối với hành vi không trang bị đầy đủ phương tiện bảo hộ lao động cho công nhân trên công trường.\n"
             "2. Phạt tiền từ 60.000.000 đồng đến 90.000.000 đồng đối với hành vi không che chắn công trình đang thi công làm rơi vãi vật liệu xuống khu vực xung quanh.\n"
             "3. Phạt tiền từ 100.000.000 đồng đến 150.000.000 đồng đối với hành vi sử dụng thiết bị thi công có yêu cầu nghiêm ngặt về an toàn lao động nhưng chưa được kiểm định hợp quy.\n"
             "4. Biện pháp khắc phục hậu quả: Buộc tạm dừng thi công để bổ sung các biện pháp bảo đảm an toàn lao động và bảo vệ môi trường."
         )
-        doc.add_paragraph("Điều 14. Vi phạm quy định về quản lý chất lượng và bảo hành, bảo trì công trình xây dựng")
+        doc.add_paragraph(
+            "Điều 14. Vi phạm quy định về quản lý chất lượng và bảo hành, bảo trì công trình xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi không lập quy trình bảo trì công trình xây dựng trước khi đưa công trình vào khai thác.\n"
             "2. Phạt tiền từ 80.000.000 đồng đến 120.000.000 đồng đối với hành vi không thực hiện trách nhiệm bảo hành công trình xây dựng theo hợp đồng và quy định pháp luật.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc thực hiện nghĩa vụ bảo hành hoặc lập quy trình bảo trì theo quy định."
         )
-        doc.add_paragraph("Điều 15. Vi phạm quy định về thí nghiệm chuyên ngành xây dựng và quan trắc công trình")
+        doc.add_paragraph(
+            "Điều 15. Vi phạm quy định về thí nghiệm chuyên ngành xây dựng và quan trắc công trình"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi thực hiện thí nghiệm chuyên ngành xây dựng không đúng quy trình tiêu chuẩn hoặc sử dụng thiết bị chưa kiểm định.\n"
             "2. Phạt tiền từ 80.000.000 đồng đến 100.000.000 đồng đối với hành vi cung cấp kết quả thí nghiệm khống hoặc làm sai lệch kết quả thí nghiệm, quan trắc công trình xây dựng.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc thực hiện lại thí nghiệm, quan trắc độc lập bởi đơn vị có đủ năng lực."
         )
-        doc.add_paragraph("Điều 16. Vi phạm quy định về điều kiện năng lực hoạt động xây dựng của tổ chức")
+        doc.add_paragraph(
+            "Điều 16. Vi phạm quy định về điều kiện năng lực hoạt động xây dựng của tổ chức"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 60.000.000 đồng đến 80.000.000 đồng đối với hành vi hoạt động xây dựng vượt quá phạm vi năng lực ghi trong chứng chỉ năng lực hoạt động xây dựng.\n"
             "2. Phạt tiền từ 100.000.000 đồng đến 140.000.000 đồng đối với hành vi hoạt động xây dựng mà không có chứng chỉ năng lực theo quy định pháp luật.\n"
             "3. Phạt tiền từ 150.000.000 đồng đến 200.000.000 đồng đối với hành vi mượn, cho mượn, thuê, cho thuê chứng chỉ năng lực hoạt động xây dựng.\n"
             "4. Hình thức xử phạt bổ sung: Tước quyền sử dụng chứng chỉ năng lực hoạt động xây dựng từ 06 tháng đến 12 tháng."
         )
-        doc.add_paragraph("Điều 17. Vi phạm quy định về chứng chỉ hành nghề và điều kiện hành nghề của cá nhân")
+        doc.add_paragraph(
+            "Điều 17. Vi phạm quy định về chứng chỉ hành nghề và điều kiện hành nghề của cá nhân"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 20.000.000 đồng đến 30.000.000 đồng đối với cá nhân hành nghề hoạt động xây dựng vượt quá phạm vi chứng chỉ hành nghề được cấp.\n"
             "2. Phạt tiền từ 30.000.000 đồng đến 50.000.000 đồng đối với cá nhân hành nghề hoạt động xây dựng mà không có chứng chỉ hành nghề theo quy định.\n"
             "3. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi mượn, cho mượn, thuê, cho thuê hoặc sửa chữa chứng chỉ hành nghề xây dựng.\n"
             "4. Hình thức xử phạt bổ sung: Tước quyền sử dụng chứng chỉ hành nghề từ 06 tháng đến 12 tháng."
         )
-        doc.add_paragraph("Điều 18. Vi phạm quy định về lựa chọn nhà thầu và quản lý hợp đồng xây dựng")
+        doc.add_paragraph(
+            "Điều 18. Vi phạm quy định về lựa chọn nhà thầu và quản lý hợp đồng xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 50.000.000 đồng đến 80.000.000 đồng đối với chủ đầu tư ký kết hợp đồng xây dựng không phù hợp với hồ sơ mời thầu, hồ sơ dự thầu.\n"
             "2. Phạt tiền từ 100.000.000 đồng đến 150.000.000 đồng đối với hành vi chuyển nhượng thầu trái phép trong thực hiện hợp đồng thi công xây dựng.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc chấm dứt hợp đồng thầu phụ trái pháp luật và xử lý theo quy định."
         )
-        doc.add_paragraph("Điều 19. Vi phạm quy định về lưu trữ, quản lý hồ sơ hoàn thành công trình xây dựng")
+        doc.add_paragraph(
+            "Điều 19. Vi phạm quy định về lưu trữ, quản lý hồ sơ hoàn thành công trình xây dựng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 30.000.000 đồng đến 50.000.000 đồng đối với hành vi không nộp lưu trữ hồ sơ hoàn thành công trình xây dựng vào kho lưu trữ chuyên môn theo quy định.\n"
             "2. Phạt tiền từ 50.000.000 đồng đến 70.000.000 đồng đối với hành vi làm thất lạc, tiêu hủy hồ sơ tài liệu hoàn thành công trình xây dựng trong thời hạn lưu trữ bắt buộc.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc khôi phục hồ sơ hoàn thành công trình và nộp lưu trữ theo đúng quy định."
         )
-        doc.add_paragraph("Điều 20. Vi phạm quy định về giám định tư pháp xây dựng và giải quyết sự cố công trình")
+        doc.add_paragraph(
+            "Điều 20. Vi phạm quy định về giám định tư pháp xây dựng và giải quyết sự cố công trình"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi không khai báo kịp thời cho cơ quan quản lý nhà nước khi xảy ra sự cố công trình xây dựng.\n"
             "2. Phạt tiền từ 80.000.000 đồng đến 120.000.000 đồng đối với hành vi tự ý dọn dẹp hiện trường sự cố khi chưa có sự đồng ý của cơ quan điều tra và cơ quan có thẩm quyền.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc bảo vệ hiện trường và phối hợp thực hiện giám định nguyên nhân sự cố."
         )
-        doc.add_paragraph("Chương III\nHÀNH VI VI PHẠM TRONG KINH DOANH BẤT ĐỘNG SẢN VÀ HẠ TẦNG KỸ THUẬT")
+        doc.add_paragraph(
+            "Chương III\nHÀNH VI VI PHẠM TRONG KINH DOANH BẤT ĐỘNG SẢN VÀ HẠ TẦNG KỸ THUẬT"
+        )
         doc.add_paragraph("Điều 21. Vi phạm quy định về kinh doanh bất động sản và huy động vốn")
         doc.add_paragraph(
             "1. Phạt tiền từ 100.000.000 đồng đến 150.000.000 đồng đối với hành vi không công khai hoặc công khai không đầy đủ, không chính xác thông tin về dự án bất động sản.\n"
@@ -302,13 +328,17 @@ def _generate_authoritative_fallback(
             "3. Phạt tiền từ 400.000.000 đồng đến 600.000.000 đồng đối với hành vi huy động vốn, chiếm dụng vốn trái phép của khách hàng.\n"
             "4. Biện pháp khắc phục hậu quả: Buộc hoàn trả vốn đã huy động trái quy định cho khách hàng và bồi thường thiệt hại nếu có."
         )
-        doc.add_paragraph("Điều 22. Vi phạm quy định về quản lý, vận hành và khai thác công trình hạ tầng kỹ thuật")
+        doc.add_paragraph(
+            "Điều 22. Vi phạm quy định về quản lý, vận hành và khai thác công trình hạ tầng kỹ thuật"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi xâm phạm, làm hư hại hành lang an toàn công trình hạ tầng kỹ thuật đô thị.\n"
             "2. Phạt tiền từ 70.000.000 đồng đến 100.000.000 đồng đối với hành vi xả nước thải chưa qua xử lý vào hệ thống thoát nước chung đô thị.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc khôi phục lại tình trạng ban đầu của công trình hạ tầng kỹ thuật."
         )
-        doc.add_paragraph("Điều 23. Vi phạm quy định về quản lý, sử dụng nhà chung cư và công trình công cộng")
+        doc.add_paragraph(
+            "Điều 23. Vi phạm quy định về quản lý, sử dụng nhà chung cư và công trình công cộng"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 50.000.000 đồng đến 80.000.000 đồng đối với hành vi chậm bàn giao hoặc bàn giao không đầy đủ kinh phí bảo trì phần sở hữu chung nhà chung cư.\n"
             "2. Phạt tiền từ 100.000.000 đồng đến 150.000.000 đồng đối với hành vi tự ý chuyển đổi công năng, mục đích sử dụng phần sở hữu chung hoặc nhà sinh hoạt cộng đồng trong nhà chung cư.\n"
@@ -320,19 +350,25 @@ def _generate_authoritative_fallback(
             "2. Phạt tiền từ 100.000.000 đồng đến 160.000.000 đồng đối với hành vi xét duyệt đối tượng mua, thuê mua nhà ở xã hội không đúng quy định.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc thu hồi nhà ở xã hội bán hoặc cho thuê không đúng đối tượng."
         )
-        doc.add_paragraph("Điều 25. Vi phạm quy định về cung cấp dịch vụ môi giới, sàn giao dịch bất động sản")
+        doc.add_paragraph(
+            "Điều 25. Vi phạm quy định về cung cấp dịch vụ môi giới, sàn giao dịch bất động sản"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi kinh doanh dịch vụ môi giới bất động sản mà không có chứng chỉ hành nghề môi giới.\n"
             "2. Phạt tiền từ 80.000.000 đồng đến 120.000.000 đồng đối với sàn giao dịch bất động sản đưa bất động sản không đủ điều kiện vào giao dịch.\n"
             "3. Hình thức xử phạt bổ sung: Đình chỉ hoạt động của sàn giao dịch bất động sản từ 06 tháng đến 12 tháng."
         )
-        doc.add_paragraph("Điều 26. Vi phạm quy định về bảo vệ công trình cấp thoát nước, chiếu sáng đô thị")
+        doc.add_paragraph(
+            "Điều 26. Vi phạm quy định về bảo vệ công trình cấp thoát nước, chiếu sáng đô thị"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 30.000.000 đồng đến 50.000.000 đồng đối với hành vi xây dựng công trình, nhà ở đè lên hệ thống cống thoát nước công cộng.\n"
             "2. Phạt tiền từ 50.000.000 đồng đến 80.000.000 đồng đối với hành vi phá hoại hoặc tự ý đấu nối vào mạng lưới cấp nước sạch đô thị.\n"
             "3. Biện pháp khắc phục hậu quả: Buộc tháo dỡ phần công trình lấn chiếm và khôi phục hiện trạng hệ thống thoát nước."
         )
-        doc.add_paragraph("Điều 27. Vi phạm quy định về quản lý cây xanh đô thị, công viên và nghĩa trang")
+        doc.add_paragraph(
+            "Điều 27. Vi phạm quy định về quản lý cây xanh đô thị, công viên và nghĩa trang"
+        )
         doc.add_paragraph(
             "1. Phạt tiền từ 20.000.000 đồng đến 30.000.000 đồng đối với hành vi tự ý chặt hạ, di dời cây xanh đô thị được bảo vệ khi chưa có giấy phép.\n"
             "2. Phạt tiền từ 40.000.000 đồng đến 60.000.000 đồng đối với hành vi lấn chiếm đất công viên, cây xanh sử dụng vào mục đích kinh doanh trái phép.\n"
@@ -351,7 +387,9 @@ def _generate_authoritative_fallback(
             "2. Chủ tịch Ủy ban nhân dân cấp huyện có thẩm quyền phạt tiền đến 100.000.000 đồng đối với cá nhân và 200.000.000 đồng đối với tổ chức.\n"
             "3. Chủ tịch Ủy ban nhân dân cấp tỉnh có thẩm quyền phạt tiền đến mức phạt tối đa quy định tại Điều 4 Nghị định này và áp dụng các hình thức xử phạt bổ sung, biện pháp khắc phục hậu quả."
         )
-        doc.add_paragraph("Điều 30. Thẩm quyền xử phạt của Thanh tra Xây dựng và cơ quan chuyên ngành")
+        doc.add_paragraph(
+            "Điều 30. Thẩm quyền xử phạt của Thanh tra Xây dựng và cơ quan chuyên ngành"
+        )
         doc.add_paragraph(
             "1. Thanh tra viên xây dựng đang thi hành công vụ có quyền phạt tiền đến 1.000.000 đồng đối với cá nhân và 2.000.000 đồng đối với tổ chức.\n"
             "2. Trưởng đoàn thanh tra chuyên ngành của Sở Xây dựng có quyền phạt tiền đến 100.000.000 đồng đối với cá nhân và 200.000.000 đồng đối với tổ chức.\n"
@@ -371,8 +409,12 @@ def _generate_authoritative_fallback(
         )
     else:
         doc.add_paragraph(f"Văn bản pháp luật: {inferred_title}")
-        doc.add_paragraph("Điều 1. Phạm vi điều chỉnh\n1. Nội dung điều 1 khoản 1.\n2. Nội dung điều 1 khoản 2.")
-        doc.add_paragraph("Điều 2. Đối tượng áp dụng\n1. Nội dung điều 2 khoản 1.\n2. Nội dung điều 2 khoản 2.")
+        doc.add_paragraph(
+            "Điều 1. Phạm vi điều chỉnh\n1. Nội dung điều 1 khoản 1.\n2. Nội dung điều 1 khoản 2."
+        )
+        doc.add_paragraph(
+            "Điều 2. Đối tượng áp dụng\n1. Nội dung điều 2 khoản 1.\n2. Nội dung điều 2 khoản 2."
+        )
     doc.save(str(temp_docx_path))
 
     # Build PDF
@@ -403,8 +445,12 @@ def _generate_authoritative_fallback(
         "title": inferred_title,
         "category": category,
         "doc_type": doc_type,
-        "type": "Nghị định" if category == "01_vbpl" else ("Quy chuẩn kỹ thuật" if category == "02_qcvn" else "Tiêu chuẩn quốc gia"),
-        "issued_by": "Chính phủ" if category == "01_vbpl" else ("Bộ Xây dựng" if category == "02_qcvn" else "Bộ Khoa học và Công nghệ"),
+        "type": "Nghị định"
+        if category == "01_vbpl"
+        else ("Quy chuẩn kỹ thuật" if category == "02_qcvn" else "Tiêu chuẩn quốc gia"),
+        "issued_by": "Chính phủ"
+        if category == "01_vbpl"
+        else ("Bộ Xây dựng" if category == "02_qcvn" else "Bộ Khoa học và Công nghệ"),
         "signer": "Phạm Gia Túc" if category == "01_vbpl" else "",
         "issued_date": "2026-08-26",
         "effective_date": "2026-08-26",
