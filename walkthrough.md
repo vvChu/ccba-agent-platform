@@ -1,68 +1,94 @@
-# Walkthrough: PR #301 — Evaluator Architecture Evolution v2 (Generation 2 & 3 Evaluators)
+# Walkthrough: Overhauled C-A-B Roadmap — Legal Ingestion Flywheel & Knowledge Migration
 
-## 1. Tổng Quan PR #301
-- **Branch:** `feat/evaluator-architecture-evolution-v2` $\rightarrow$ `main`
-- **Tiêu đề:** `feat(evals): implement evaluator architecture evolution v2 (TICKET-004 to TICKET-007)`
-- **PR liên quan:** [PR #301](https://github.com/vvChu/ccba-agent-platform/pull/301)
-- **Commit hợp nhất:** `858f9387` (Squash and merge)
-- **Thể chế & Kiến trúc:** ADR-0058 (Hard Completion Lock), ADR-0059 (Legal Provenance Invariant), ADR-0057 (Two-Stage Governance), Wayfinder Map v2.0.0
-- **Bất biến cốt lõi:** *"The Evaluator must be strictly smarter and more rigorous than the Optimizer."*
+## 1. Executive Summary
+
+This walkthrough documents the end-to-end execution of the overhauled **C-A-B roadmap** spanning across the Hub (`ccba-agent-platform`) and Spoke (`ccba-legal-knowledge`):
+
+- **Phase C (Live Pilot Ingestion)**: Executed autonomous 1-command legal ingestion on Hub for **Nghị định 339/2026/NĐ-CP** (replacing 16/2022/NĐ-CP), generating verified sources (`.docx`, `.pdf`), 135 multi-line AST clause spans (`line_start < line_end`), 135 QA benchmark pairs, and updated registry graph.
+- **Phase A (Sub-Gate 5.3 Upgrade & Batch Migration)**:
+  - Upgraded Sub-Gate 5.3 (`_validate_legal_validity_and_in_force`) in `validate_legal_spoke.py` to the **Two-Tier In-Memory Transitive Engine** (multi-key canonical tokenization preserving document types, Tier 1 replacement DAG BFS detecting superseded active documents transitively, and Tier 2 statutory baseline safety floor).
+  - Fixed substring matching precedence in `tvpl_parser.py` (`"hết hiệu lực một phần"` evaluated before `"hết hiệu lực"`).
+  - Auto-loaded `title` and `cong_bao_number` from `metadata.yaml` in `ast_qa_generator.py` when omitted.
+  - Rectified `TCVN-3890-2023` to `status: expired` with `relations.replaced_by: QCVN-10-2025-BCA`, enriched `replaces` relations for active decrees (`217/2026/NĐ-CP`, `207/2026/NĐ-CP`, `105/2025/NĐ-CP`, `QCVN 06:2022/BXD`).
+  - Created `scripts/maintenance/migrate_legacy_spans.py` and batch-migrated all 24 legacy bundles plus `vn_hn_qd_38_2026_qd_ubnd`, achieving 100% multi-line spans across 4,926 clauses in 27 bundles.
+- **Phase B (Remote Push & Pull Request)**:
+  - Ran monorepo harness preset `ccba_harness verify-patch --preset code` (2/2 passed).
+  - Validated Spoke 15-Gate CI (`CI=true python scripts/validate_legal_spoke.py` passed 15/15 with 0 errors).
+  - Verified remote branches and PRs on Hub (PR #323) and Spoke (PR #10).
 
 ---
 
-## 2. Giải Trình & Nghiệm Thu Các Ý Kiến Review Từ Copilot & Maintainer (PR #301)
+## 2. Phase-by-Phase Implementation Details
 
-| ID / Review | Tệp Tin | Vấn Đề Nêu | Trạng Thái & Giải Pháp Khắc Phục |
+### Phase C: Autonomous Legal Ingestion of Nghị định 339/2026/NĐ-CP
+- **CLI Command**:
+  ```bash
+  /home/vvc/ccba/ccba-agent-platform/.venv/bin/python scripts/ccba_platform_cli.py ingest-legal \
+    "https://thuvienphapluat.vn/van-ban/Xay-dung/Nghi-dinh-339-2026-ND-CP-xu-phat-vi-pham-hanh-chinh-trong-linh-vuc-xay-dung-658189.aspx" \
+    --slug "nghi_dinh_339_2026_nd_cp" \
+    --category "01_vbpl" \
+    --type "vbpl"
+  ```
+- **Generated Bundle Artifacts** (`legal_docs/01_vbpl/nghi_dinh_339_2026_nd_cp/`):
+  - `sources/nghi_dinh_339_2026_nd_cp.docx` (41.0 KB)
+  - `sources/nghi_dinh_339_2026_nd_cp.pdf` (968 B)
+  - `nghi_dinh_339_2026_nd_cp.md` (30.5 KB, pure normative body stripped of administrative noise)
+  - `clauses.json` (135 multi-line AST nodes, 0 single-line spans)
+  - `qa_benchmark.json` (135 ground-truth pairs)
+  - `metadata.yaml` & `index.md`
+- **Registry Update** (`legal_registry.yaml`):
+  - Registered entry `nghi_dinh_339_2026_nd_cp` with `relations.replaces: "16/2022/NĐ-CP"`.
+
+---
+
+### Phase A: Sub-Gate 5.3 Upgrade & Knowledge Migration
+
+#### 1. Two-Tier Transitive Engine (`validate_legal_spoke.py`)
+- **Multi-key Canonical Tokenization** (`_canonical_keys`):
+  - Normalizes IDs and document numbers while preserving document types (`nd_cp`, `tt_bxd`, `qd_ubnd`, `tcvn`, `qcvn`).
+  - Supports `:` for standards (`TCVN 3890:2023` $\rightarrow$ `tcvn_3890_2023`, `QCVN 06:2022/BXD` $\rightarrow$ `qcvn_06_2022_bxd`, `06_2022_bxd`).
+- **Tier 1 (Replacement DAG BFS)**:
+  - Traverses forward (`replaces`) and backward (`replaced_by`) edges starting from active documents.
+  - If any document reachable in the replaced subgraph has `status: active`, it is flagged with a hard floor violation.
+- **Tier 2 (Statutory Baseline Safety Floor)**:
+  - Fallback lookup table `STATUTORY_BASELINE_REPEALED` prevents known repealed regulations (`10/2021/NĐ-CP`, `15/2021/NĐ-CP`, `175/2024/NĐ-CP`, `06/2021/NĐ-CP`, `136/2020/NĐ-CP`, `16/2022/NĐ-CP`, `QCVN 06:2020/BXD`) from remaining active.
+
+#### 2. Gold Standard AST & QA Generator Upgrade
+- In `ast_qa_generator.py`: Auto-loads `title` and `cong_bao_number` from `metadata.yaml` if omitted in the caller signature.
+- In `tvpl_parser.py`: Fixed substring precedence so `"hết hiệu lực một phần"` is matched before `"hết hiệu lực"`.
+
+#### 3. Registry & Bundle Rectifications
+- `TCVN-3890-2023`: set to `status: expired`, `relations.replaced_by: QCVN-10-2025-BCA`, and updated `index.md` with explicit warning banner.
+- Added missing `replaces` to active decrees:
+  - `nghi_dinh_217_2026_nd_cp`: `replaces: ["15/2021/NĐ-CP", "175/2024/NĐ-CP"]`
+  - `nghi_dinh_207_2026_nd_cp`: `replaces: "06/2021/NĐ-CP"`
+  - `nghi_dinh_105_2025_nd_cp`: `replaces: "136/2020/NĐ-CP"`
+  - `QCVN-06-2022-BXD`: `replaces: "QCVN 06:2020/BXD"`
+
+#### 4. Batch Migration Tool (`scripts/maintenance/migrate_legacy_spans.py`)
+- Created reusable batch migration script in Spoke.
+- Migrated 24 legacy bundles + `vn_hn_qd_38_2026_qd_ubnd`. Added missing `index.md` to `vn_hn_qd_38_2026_qd_ubnd`.
+- Result: **27 bundles** in `legal_docs/01_vbpl/` with **4,926 clauses** having 100% multi-line spans (`line_start < line_end`, 0 bad spans).
+
+---
+
+## 3. Verification & Compliance Record
+
+| Gate / Test Suite | Scope | Result | Details |
 |---|---|---|---|
-| Review PR #301 | Toàn bộ PR #301 | Rà soát tự động GitHub Copilot | **HOÀN TOÀN SẠCH**: 0 pending review requests, 0 comments. |
-| Audit Script | `audit_pr_comments.py` | Kiểm tra tự động các thay đổi và comments | **[OK]**: All Copilot reviews and comments on PR #301 are clean or resolved. |
-| Ruleset Parity | `ci.yml` | Ràng buộc Ruleset #11593010 yêu cầu check `Deterministic Parity & Schema Audit` | **ĐÃ GIẢI QUYẾT**: Bổ sung job CI chuyên dụng `Deterministic Parity & Schema Audit` chạy `python -m ccba_harness verify-patch --preset ci`, đạt 100% Xanh. |
-| Maintainer Gate | PR #301 | Phê duyệt hợp nhất và kích hoạt quy trình release | **ĐÃ PHÊ DUYỆT & MERGE**: Squash merge thành công vào `main` tại commit `858f9387`. |
+| `ccba_harness verify-patch --preset code` | Hub Monorepo | ✅ PASS | 2/2 commands passed (Ruff check + Pytest tests/ -q) |
+| `pytest tests/integration/test_validate_legal_spoke.py` | Spoke Integration | ✅ PASS | 8/8 tests passed in 0.42s (including DAG BFS integration test) |
+| `CI=true python scripts/validate_legal_spoke.py` | Spoke 15-Gate CI | ✅ PASS | 15/15 Gates passed, 0 errors, 2 expected non-normative warnings |
+| `python scripts/maintenance/migrate_legacy_spans.py --check-only` | Spoke Knowledge Spans | ✅ PASS | 27/27 bundles, 4,926 clauses, 0 bad spans |
+| Scoped Ingestion 15-Gate Check | Hub CLI $\rightarrow$ Spoke Bundle | ✅ PASS | Pilot bundle `nghi_dinh_339_2026_nd_cp` passed scoped validation with 0 errors |
 
 ---
 
-## 3. Các Thay Đổi Cốt Lõi (Core Deliverables)
+## 4. Remote Synchronization & Pull Requests
 
-1. **`[TICKET-004]` Thẩm Định Tham Số Kỹ Thuật & PCCC (`PcccParametricScorer`):**
-   - **Pluggable Two-Tier Architecture**:
-     - *Tier 1 (Deterministic Schema Filter)*: 0 tokens, thực thi <1ms, cưỡng chế Dual Critical Hard Floor (Floor 1: Bẫy đảo ngược kết luận an toàn; Floor 2: Nhầm lẫn khái niệm kỹ thuật red-team).
-     - *Tier 2 (Escalation LLM Judge)*: Kích hoạt khi qua Tier 1 để chấm điểm ngữ nghĩa chuyên sâu với graceful fallback.
-   - **Mở rộng Dataset**: Bộ test case `eval_pccc_audit.json` được mở rộng lên 12 ca kiểm thử thực tế chuẩn QCVN 06:2022/BXD, QCVN 02:2020/BXD, TCVN 3890:2023.
-   - **Routing Tự động**: Tích hợp vào `get_pccc_scorers()` và `TECH_QC_ARCHETYPE_KEYWORDS`.
-
-2. **`[TICKET-006]` Động Cơ Phân Tách Thích Ứng & Nhiễu Động Tham Số (`AdaptiveDataSlicer` & `DynamicPerturbationEngine`):**
-   - Module `ccba_harness.evals.slicing`:
-     - Phân tầng thích ứng: Tier A ($N < 12$), Tier B ($12 \le N < 30$), Tier C ($N \ge 30$).
-     - Động cơ nhiễu động số liệu tất định theo seed (`DynamicPerturbationEngine`) chống overfitting ngữ cảnh.
-     - Phân tách holdout mù (Blinded Holdout Separation): Tách tự động 70% Tuning / 30% Holdout nhằm triệt tiêu hoàn toàn Goodhart's Law.
-   - Tích hợp sâu vào `GitRatchetOptimizer`, `RatchetReport` và `NightlyTunerDaemon`.
-
-3. **`[TICKET-005]` Xác Thực Phân Loại BIM & Tiêu Chuẩn Quốc Tế (`BimClassificationScorer`):**
-   - Chỉ mục phẳng `uniclass_tables_flat.json`: 109 mã Uniclass được xác minh trên 7 bảng (`Co`, `En`, `SL`, `EF`, `Ss`, `Pr`, `PM`) kèm 5 bẫy chống gian lận (Anti-Traps).
-   - Engine tra cứu in-memory <1ms (`uniclass_index.py`), xác thực cú pháp định danh ISO 19650 và IFC Alignment.
-   - Chấm điểm đa chiều trực giao: Hợp lệ mã (0.4), Tầng đối tượng ISO 12006-2 (0.3), Cấu trúc định danh ISO 19650/IFC (0.3).
-
-4. **`[TICKET-007]` Môi Trường Thực Thi Docker Buồng Kín (`DockerSandboxRunner` & `DockerSandboxScorer`):**
-   - Cách ly buồng kín: Chạy kiểm thử mã nguồn trong container Docker tạm thời (`python:3.11-alpine`, `--network none`, RAM 256MB, CPU 1.0, timeout 15s).
-   - Tự động fallback sang subprocess cô lập nếu Docker daemon không khả dụng.
-   - Đánh giá khách quan theo mã thoát (exit code) và assertion của unit tests.
-
-5. **Hoàn Thiện Kiến Trúc CI & Ruleset Parity:**
-   - Bổ sung job `Deterministic Parity & Schema Audit` vào `.github/workflows/ci.yml`.
-   - Toàn bộ 7/7 GitHub Actions checks đạt 100% Xanh.
-
----
-
-## 4. Kết Quả Kiểm Thử Tự Động & Chứng Nhận Hoàn Tất (ADR-0058)
-
-- **Đơn vị kiểm thử (Unit tests)**: 309 passed (6 skipped, 81 deselected) trong `ccba-harness` (0 regressions).
-- **Hermetic Pre-release Gate**: 11/11 package suites passed trong `run_isolated_tests.py --all --stress`.
-- **Harness CI Presets**: 100% PASS cho cả `code`, `eval`, `skill`, `ci`.
-- **GitHub Actions CI (7/7 checks)**:
-  - `CI/Deterministic Parity & Schema Audit`: ✅ SUCCESS (46s)
-  - `CI/Test - Python 3.10`: ✅ SUCCESS (3m56s)
-  - `CI/Test - Python 3.11`: ✅ SUCCESS (3m56s)
-  - `CI/Test - Python 3.12`: ✅ SUCCESS (4m05s)
-  - `CI/Lint Markdown`: ✅ SUCCESS (12s)
-  - `Security & Privacy Scan`: ✅ SUCCESS (13s)
-  - `Documentation Check/validate`: ✅ SUCCESS (28s)
+- **Hub Repository (`ccba-agent-platform`)**:
+  - Branch: `feat/zero-touch-legal-ingestion-flywheel`
+  - PR: [#323](https://github.com/vvChu/ccba-agent-platform/pull/323)
+- **Spoke Repository (`ccba-legal-knowledge`)**:
+  - Branch: `feat/ingest-10-2021-nd-cp`
+  - PR: [#10](https://github.com/vvChu/ccba-legal-knowledge/pull/10)
