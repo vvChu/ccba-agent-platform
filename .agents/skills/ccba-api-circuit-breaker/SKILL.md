@@ -31,6 +31,7 @@ triggers:
 - auto downgrade
 - soft cooldown
 ---
+
 # API Circuit Breaker
 
 Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế cho các pipeline gọi AI Gateway **hàng loạt** (batch QC, wiki healing, domain enrichment) và các kiến trúc Multi-Endpoint tự phục hồi (Self-Healing).
@@ -212,3 +213,16 @@ for item in items:
     └────────── success ─────────────────┘
                          fail → back to OPEN
 ```
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
+
+## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)
+* **Vòng 1 (Code-First Research):** Luôn đọc implementation thực tế và kiểm tra data flow end-to-end trước khi sửa đổi. Không suy đoán hành vi từ tên hàm hay docstring.
+* **Vòng 2 (Self-Adversarial Review):** Tự đặt câu hỏi: *Đề xuất này có thể SAI ở đâu?* Kiểm chứng tối thiểu 3 giả định cốt lõi bằng dữ liệu và kiểm thử thực tế trước khi bàn giao.
+* **Bảo tồn Invariants:** Không bao giờ xóa hoặc nới lỏng (weaken) các bài test hiện có để làm cho bài test vượt qua.

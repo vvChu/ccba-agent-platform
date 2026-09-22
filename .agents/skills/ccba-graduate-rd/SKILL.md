@@ -24,6 +24,7 @@ triggers:
 - chuyển scratch vào production
 - ccba-graduate-rd
 ---
+
 # Workflow: Tốt Nghiệp R&D → Deep Seam Production & Auto-PR (/ccba-graduate-rd)
 
 Quy trình tự động hóa toàn trình 7 bước (Full-Cycle Autonomous Pipeline) chuyển hóa mã nguồn thử nghiệm (scratch script, prototype) thành module Production chuẩn mực trong Hub (`packages/ccba-*/src/`), tự động đóng gói Proposal, tạo Pull Request và tự làm xanh CI (Self-Healing Dual-Gate).
@@ -116,3 +117,7 @@ Thực thi tại thư mục Hub (`hub_path`):
 2. Sẵn sàng cho lệnh `/ccba-contribute-to-hub [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
 - **Tiêu chí hoàn thành:** Báo cáo hoàn tất gửi Maintainer kèm link PR và tóm tắt tính năng sẵn sàng review.
 
+## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
+* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
+* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure).
+* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
