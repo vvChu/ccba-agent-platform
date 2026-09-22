@@ -172,12 +172,12 @@ def _extract_and_export_templates(
 
 def _build_pure_normative_body(pure_body_raw: str) -> str:
     """Strip administrative preamble headers, trailing footer signatures, and apply strict bullet indentation formatting."""
-    pure_body = re.sub(
-        r"^(?:[\s\S]*?)(#+\s*__?\s*Chương\s+[IVXLCDM0-9]+|#+\s*__?\s*Điều\s+1\b)",
-        r"\1",
+    m = re.search(
+        r"(?:^|\n)((?:#+\s*)?(?:__|\*\*)?\s*(?:Chương\s+[IVXLCDM0-9]+|Phần\s+thứ\s+[a-z0-9]+|Điều\s+1\b))",
         pure_body_raw,
         flags=re.IGNORECASE,
     )
+    pure_body = pure_body_raw[m.start(1):] if m else pure_body_raw
     # Strip trailing administrative signature blocks / distribution footers
     sig_split = re.split(
         r"(?:\n\s*__\*?\s*Nơi nhận\s*:|\n\s*\*+Nơi nhận\s*:|\n\s*Nơi nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
