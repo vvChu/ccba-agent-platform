@@ -257,7 +257,9 @@ def _write_bundle_metadata_and_index(
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
-def _generate_vbpl_frontmatter(doc_meta: dict[str, Any], bundle_dir: Path, target_md_name: str) -> str:
+def _generate_vbpl_frontmatter(
+    doc_meta: dict[str, Any], bundle_dir: Path, target_md_name: str
+) -> str:
     """Generate canonical OKF v2.4 YAML frontmatter for VBPL normative document."""
     doc_id = doc_meta.get("id", bundle_dir.name)
     doc_num = doc_meta.get("document_number", bundle_dir.name.upper())

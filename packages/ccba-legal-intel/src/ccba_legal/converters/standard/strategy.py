@@ -398,7 +398,9 @@ def _export_modular_annexes_and_moc(ctx: StandardConversionContext) -> dict[str,
         is_qcvn = "qcvn" in ctx.bundle_dir.name.lower()
         m_data.setdefault("id", doc_id)
         m_data.setdefault("document_number", doc_num)
-        m_data.setdefault("type", "Quy chuẩn kỹ thuật quốc gia" if is_qcvn else "Tiêu chuẩn quốc gia")
+        m_data.setdefault(
+            "type", "Quy chuẩn kỹ thuật quốc gia" if is_qcvn else "Tiêu chuẩn quốc gia"
+        )
         m_data.setdefault("title", f"{doc_num} — {doc_id}")
         m_data.setdefault("status", "active")
         m_data.setdefault("issued_by", "Bộ Xây dựng" if is_qcvn else "Bộ Khoa học và Công nghệ")

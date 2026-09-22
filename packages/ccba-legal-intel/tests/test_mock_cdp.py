@@ -142,4 +142,3 @@ def test_tvpl_parser_expiration_date_extraction() -> None:
     assert meta["status"] == "Hết hiệu lực"
     assert meta["effective_date"] == "2021-02-09"
     assert meta["expiration_date"] == "2026-07-01"
-

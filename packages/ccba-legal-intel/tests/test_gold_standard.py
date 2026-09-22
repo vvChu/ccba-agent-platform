@@ -175,7 +175,9 @@ def test_federated_rag_bare_html_safeguard(tmp_path: Path) -> None:
 Nội dung điều hai.
 """
     (bundle_dir / "doc.md").write_text(md_content, encoding="utf-8")
-    (bundle_dir / "metadata.yaml").write_text("doc_id: test_bare\ntitle: Test Doc\n", encoding="utf-8")
+    (bundle_dir / "metadata.yaml").write_text(
+        "doc_id: test_bare\ntitle: Test Doc\n", encoding="utf-8"
+    )
     clauses = [
         {
             "clause_id": "dieu-1",
@@ -252,7 +254,9 @@ def test_federated_rag_safeguard_extended(tmp_path: Path) -> None:
 Nội dung điều ba.
 """
     (bundle_dir / "doc.md").write_text(md_content, encoding="utf-8")
-    (bundle_dir / "metadata.yaml").write_text("doc_id: test_ext\ntitle: Extended Doc\n", encoding="utf-8")
+    (bundle_dir / "metadata.yaml").write_text(
+        "doc_id: test_ext\ntitle: Extended Doc\n", encoding="utf-8"
+    )
     clauses = [
         {
             "clause_id": "dieu-name",
@@ -284,5 +288,3 @@ Nội dung điều ba.
     assert chunks["dieu-ws"]["text"] == "Điều WS. Tiêu đề khoảng trắng"
     # Corrupted None spans should not crash and should fall back safely
     assert chunks["dieu-corrupted-spans"]["text"] == "Điều Lỗi Spans"
-
-

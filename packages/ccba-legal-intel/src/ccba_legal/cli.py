@@ -1037,9 +1037,7 @@ def handle_query(args: argparse.Namespace) -> int:
             rep = doc["suggested_replacement"]
             rep_short = rep.get("short_name") or "VBPL"
             rep_num = rep.get("document_number", "")
-            print(
-                f"   👉 Thay thế bởi: [{rep_short} - {rep_num}]"
-            )
+            print(f"   👉 Thay thế bởi: [{rep_short} - {rep_num}]")
 
     print("\n=================================================================")
     return 0

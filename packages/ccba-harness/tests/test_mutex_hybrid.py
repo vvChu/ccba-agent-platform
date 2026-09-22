@@ -198,4 +198,3 @@ def test_hybrid_mutex_reentrancy_same_thread(tmp_path: Path) -> None:
     # Outer released
     assert not outer_mutex.is_locked
     assert not lock_file.exists()
-

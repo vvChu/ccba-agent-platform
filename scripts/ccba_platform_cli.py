@@ -195,7 +195,9 @@ def execute_ingest_legal(
                 "doc_type": doc_type,
                 "status": "effective",
             }
-            meta_json_path.write_text(json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8")
+            meta_json_path.write_text(
+                json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
             print(f"  [Offline Mode] Copied assets into sandbox from {docx}")
 
         elif mock:
@@ -218,11 +220,17 @@ def execute_ingest_legal(
                 doc = Document()
                 if category == "03_tcvn" or doc_type == "tcvn":
                     doc.add_paragraph(f"TIÊU CHUẨN QUỐC GIA: {slug.upper()}")
-                    doc.add_paragraph("1. Phạm vi áp dụng\nTiêu chuẩn này quy định các yêu cầu kỹ thuật cơ bản...")
-                    doc.add_paragraph("2. Tài liệu viện dẫn\nCác tài liệu sau đây là cần thiết cho việc áp dụng tiêu chuẩn này...")
+                    doc.add_paragraph(
+                        "1. Phạm vi áp dụng\nTiêu chuẩn này quy định các yêu cầu kỹ thuật cơ bản..."
+                    )
+                    doc.add_paragraph(
+                        "2. Tài liệu viện dẫn\nCác tài liệu sau đây là cần thiết cho việc áp dụng tiêu chuẩn này..."
+                    )
                 elif category == "02_qcvn" or doc_type == "qcvn":
                     doc.add_paragraph(f"QUY CHUẨN KỸ THUẬT QUỐC GIA: {slug.upper()}")
-                    doc.add_paragraph("1. QUY ĐỊNH CHUNG\nQuy chuẩn này quy định các giới hạn kỹ thuật bắt buộc...")
+                    doc.add_paragraph(
+                        "1. QUY ĐỊNH CHUNG\nQuy chuẩn này quy định các giới hạn kỹ thuật bắt buộc..."
+                    )
                 else:
                     doc.add_paragraph(f"Văn bản pháp luật: {slug}")
                     doc.add_paragraph("Điều 1. Phạm vi điều chỉnh\nNội dung điều 1...")
@@ -257,11 +265,15 @@ def execute_ingest_legal(
                 "category": category,
                 "doc_type": doc_type,
                 "status": "effective",
-                "issued_by": "Chính phủ" if category == "01_vbpl" else ("Bộ Xây dựng" if category == "02_qcvn" else "Bộ Khoa học và Công nghệ"),
+                "issued_by": "Chính phủ"
+                if category == "01_vbpl"
+                else ("Bộ Xây dựng" if category == "02_qcvn" else "Bộ Khoa học và Công nghệ"),
                 "signer": "Thủ tướng Chính phủ" if category == "01_vbpl" else "",
                 "pdf_status": "verified",
             }
-            meta_json_path.write_text(json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8")
+            meta_json_path.write_text(
+                json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
             print(f"  [Mocked] Generated sandbox .docx and .pdf at {sandbox_path}")
 
         else:
@@ -542,10 +554,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--pdf", default=None, help="Path to existing local PDF file for offline ingestion"
     )
     ingest_p.add_argument(
-        "--slug", default=None, help="Explicit canonical document slug (e.g. nghi_dinh_10_2021_nd_cp)"
+        "--slug",
+        default=None,
+        help="Explicit canonical document slug (e.g. nghi_dinh_10_2021_nd_cp)",
     )
     ingest_p.add_argument(
-        "--cdp-port", default=None, type=int, help="Chrome DevTools Protocol port (default: 9222 or TVPL_CDP_PORT)"
+        "--cdp-port",
+        default=None,
+        type=int,
+        help="Chrome DevTools Protocol port (default: 9222 or TVPL_CDP_PORT)",
     )
 
     # doc-audit
