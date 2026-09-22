@@ -292,7 +292,13 @@ class ChromeCDP:
             print(
                 "[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground."
             )
+            manual_start = time.time()
+            max_manual_wait = 15.0 if not _check_is_headless() else 5.0
             while is_blocked:
+                if time.time() - manual_start > max_manual_wait:
+                    raise ChromeCDPError(
+                        f"Cloudflare challenge timed out after {max_manual_wait:.0f}s without user interaction."
+                    )
                 sleep_with_jitter(2.0, 0.5, 1.0)
                 try:
                     is_blocked = self.evaluate_js(check_expr)

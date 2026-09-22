@@ -271,7 +271,9 @@ def get_tvpl_metadata(
 
     raw_status = _find_field(["Tình trạng", "Tình trạng hiệu lực", "Hiệu lực"])
     status_mapped = "Còn hiệu lực"
-    if "hết hiệu lực" in raw_status.lower() or "bị thay thế" in raw_status.lower():
+    if "hết hiệu lực một phần" in raw_status.lower():
+        status_mapped = "Hết hiệu lực một phần"
+    elif "hết hiệu lực" in raw_status.lower() or "bị thay thế" in raw_status.lower():
         status_mapped = "Hết hiệu lực"
 
     metadata = {
