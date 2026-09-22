@@ -15,7 +15,7 @@ disable-model-invocation: true
 command: /ccba-init-spoke
 user-invocable: true
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -33,7 +33,7 @@ triggers:
 ---
 
 # Kỹ Năng: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
-Kỹ năng này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules**.
+Kỹ năng này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules** qua cơ chế điều phối mỏng (Thin Orchestrator) tất định 100%.
 
 ---
 
@@ -60,111 +60,57 @@ Kỹ năng này tự động hóa việc thiết lập không gian làm việc d
 
 ---
 
-## 📋 Bước 1: Khảo Sát & Tạo Cấu Hình `workspace_context.yaml`
+## 📋 Bước 1: Khởi Tạo Dự Án Tất Định (Deterministic Spoke Initialization CLI)
 
-1. **Lấy tên dự án:** Lấy tên thư mục hiện tại làm `project.name`.
-2. **Xác định Archetype ([ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md)):**
-   - `project_delivery` (Dự án tư vấn, thiết kế, thẩm tra công trình thực tế)
-   - `enterprise_governance` (Hệ điều hành quản trị nội bộ / IDOP-CCBA-WAY)
-   - `knowledge_corpus` (Kho tri thức pháp điển quốc gia OKF v2.0 / ccba-legal-knowledge)
-   - `specialized_extension` (Khung mở rộng chuyên biệt):
-     * `sub_type: personal_sandbox` (Không gian nghiên cứu, thử nghiệm & làm việc cá nhân theo Quy chế CCBA 2026)
-     * `sub_type: research_lab` (Viện R&D, bài báo khoa học)
-     * `sub_type: tooling_plugin` (Phát triển Add-in CAD/BIM)
-     * `sub_type: client_portal` (Cổng Khách hàng Extranet)
-3. **Xác định Loại dự án (`type` & `mode`):**
-   - `Phần mềm` $\rightarrow$ mode: `software`, qc_mode: `null`
-   - `Thẩm tra thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `third-party`
-   - `Thiết kế` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
-   - `Kiểm định` $\rightarrow$ mode: `delivery`, qc_mode: `assessment`
-   - `BIM` $\rightarrow$ mode: `delivery`, qc_mode: `internal`
-   - `Tác vụ Admin` $\rightarrow$ mode: `admin`, qc_mode: `null`
-   - `Pháp điển` $\rightarrow$ mode: `software`, qc_mode: `legal`
-4. **Khởi tạo tệp `.md/workspace_context.yaml`:**
+Agent **BẮT BUỘC** gọi Deep Seam / CLI tất định thay vì tự sinh chuỗi YAML trong prompt (ADR-0058):
 
-#### Mẫu A: Spoke Dự Án Kỹ Thuật (`project_delivery`)
-```yaml
-project:
-  name: "2026-04-dh-viet-nhat"
-  archetype: "project_delivery"
-  type: "Thẩm tra thiết kế"
-  mode: "delivery"
-  qc_mode: "third-party"
-  hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Dự án Thẩm tra Thiết kế PCCC & MEP Công trình ĐH Việt Nhật"
-must_read:
-  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ chuẩn hóa dự án"}]
-do_not_touch: [.env]
-acknowledgment_required: true
-acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Dự Án '[project_name]'. Sẵn sàng làm việc!"
+### Lệnh thực thi chuẩn:
+```bash
+python scripts/ccba_platform_cli.py init-spoke \
+  --name "<project_name>" \
+  --archetype "<project_delivery|enterprise_governance|knowledge_corpus|specialized_extension>" \
+  --type "<project_type>" \
+  --mode "<software|delivery|admin|consulting|hybrid>"
 ```
+*(hoặc sử dụng wrapper `python scripts/init_spoke.py ...`)*
 
-#### Mẫu B: Spoke Cá Nhân (`specialized_extension` / `personal_sandbox` — Quy chế 2026)
-```yaml
-project:
-  name: "chuvu-sandbox"
-  archetype: "specialized_extension"
-  sub_type: "personal_sandbox"
-  hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Không gian nghiên cứu & làm việc cá nhân theo Quy chế CCBA 2026"
-organizational_identity:
-  owner_name: "Chu Vũ"
-  owner_email: "chuvu@ibst-bim.vn"
-  department: "PHONG_RD_HTQT"
-  seat_role: "IDOP_LEAD"
-qc_governance:
-  authorized_qc_level: "LEVEL_1_TECHNICAL_CHECK"
-  can_sign_off_technical: true
-guardrails:
-  sandbox_mode: true
-  prevent_direct_production_publish: true
-  upstream_proposal_target: "main"
-must_read:
-  always: [{path: d:/idop-ccba-way/.md/governance_constitution/03_ccba_charter_2026.md, why: "Quy chế 2026"}]
-do_not_touch: [.env, "*.pfx", "*.key"]
-```
+### Các tùy chọn khởi tạo theo Archetype:
+1. **`project_delivery`** (Dự án tư vấn, thiết kế, thẩm tra công trình thực tế):
+   ```bash
+   python scripts/ccba_platform_cli.py init-spoke --archetype project_delivery --type "Thẩm tra thiết kế" --mode delivery
+   ```
+2. **`specialized_extension` / `personal_sandbox`** (Không gian nghiên cứu, thử nghiệm cá nhân theo Quy chế CCBA 2026):
+   ```bash
+   python scripts/ccba_platform_cli.py init-spoke --archetype specialized_extension --sub-type personal_sandbox --type "Phần mềm" --mode software
+   ```
+3. **`knowledge_corpus`** (Kho tri thức pháp điển quốc gia OKF v2.4 Universal):
+   ```bash
+   python scripts/ccba_platform_cli.py init-spoke --archetype knowledge_corpus --type "Pháp điển" --mode software
+   ```
+4. **`enterprise_governance`** (Hệ điều hành quản trị nội bộ IDOP):
+   ```bash
+   python scripts/ccba_platform_cli.py init-spoke --archetype enterprise_governance --type "Tác vụ Admin" --mode admin
+   ```
 
-#### Mẫu C: Spoke Kho Tri Thức Pháp Điển (`knowledge_corpus` / `Pháp điển`)
-```yaml
-project:
-  name: "ccba-legal-knowledge"
-  archetype: "knowledge_corpus"
-  type: "Pháp điển"
-  mode: "software"
-  qc_mode: "legal"
-  hub_path: "D:/GitHubProjects/ccba-agent-platform"
-  description: "Kho Tri thức Pháp điển & Quy chuẩn Xây dựng Quốc gia (OKF v2.4 Universal Agent-Centric)"
-hub_packages: [ccba-legal-intel, ccba-notebooklm]
-must_read:
-  always: [{path: .md/GLOSSARY.md, why: "Thuật ngữ pháp lý chuẩn hóa"}]
-do_not_touch: [.env]
-acknowledgment_required: true
-acknowledgment_format: "Tôi đã đọc workspace_context.yaml. Đây là Spoke Kho Tri Thức '[project_name]'. Sẵn sàng làm việc!"
-```
+*Lệnh CLI trên tự động thực thi tất định 100%: tạo khung thư mục `.md/`, sinh `.md/INDEX.md`, tạo `workspace_context.yaml` chuẩn hóa, thiết lập `.gitignore` chống rò rỉ (ADR-0045), cấu hình Virtual Hub Fallback trong `.agents/AGENTS.md`, và cài Git Hook Maskara nếu có Git.*
 
-> [!NOTE]
-> **Quy chuẩn Spoke Tri thức (ADR 0036, ADR 0044 & Issue #215):**
-> 1. **Cấu trúc OKF v2.4 Universal (ADR 0036):** Bắt buộc có ngăn kéo `sources/` (chứa PDF/DOCX gốc) và 4 ngăn chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`). Tuyệt đối cấm để thư mục `templates/` rỗng.
-> 2. **Gate 0 Ingestion Provenance (ADR 0016):** Tự động đối soát cấu trúc và Text Parity giữa DOCX và PDF Công báo qua `ccba_legal.provenance`.
-> 3. **Script Budget & Cleanliness (ADR 0044):** Duy trì $\le 15$ core scripts trong `scripts/`. Tái sử dụng `ccba_legal` và `ccba_ai` từ Hub qua `spoke_bootstrap.py`. Chặn wrapper thừa qua `check_spoke_cleanliness.py`.
+> [!TIP]
+> Bạn có thể kết hợp khởi tạo, đồng bộ kỹ năng và tạo môi trường ảo Python trong một lệnh duy nhất:
+> ```bash
+> python scripts/ccba_platform_cli.py init-spoke --archetype project_delivery --sync --bootstrap
+> ```
 
-**Tiêu chí hoàn thành:** Tệp `.md/workspace_context.yaml` được khởi tạo đúng archetype và cấu hình dự án.
+**Tiêu chí hoàn thành:** Chạy thành công lệnh `init-spoke` qua `ccba_platform_cli.py` (hoặc `init_spoke.py`), tệp `.md/workspace_context.yaml` và cấu trúc thư mục được khởi tạo tất định.
 
 ---
 
 ## 🔄 Bước 2: Đồng Bộ Kỹ Năng & Đăng Ký Spoke (Single-Engine Sync)
 
-Agent chạy Deep Seam `SpokeSynchronizer`:
+Nếu chưa chỉ định cờ `--sync` tại Bước 1, Agent chạy Deep Seam `SpokeSynchronizer`:
 ```powershell
 python "[hub_path]\scripts\sync_spoke.py" --spoke .
 ```
 *Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm kỹ năng, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
-
-> [!TIP]
-> Bạn có thể gộp Bước 2 & Bước 3 với cờ `--bootstrap` (`-b`):
-> ```powershell
-> python "[hub_path]\scripts\sync_spoke.py" --spoke . --apply --bootstrap
-> ```
 
 **Tiêu chí hoàn thành:** Chạy thành công `sync_spoke.py` để đồng bộ kỹ năng và đăng ký Spoke.
 
@@ -172,7 +118,7 @@ python "[hub_path]\scripts\sync_spoke.py" --spoke .
 
 ## 📦 Bước 3: Thiết Lập Python Packages & Spoke Leakage Guard (ADR 0044, ADR 0045)
 
-Đối với dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
+Nếu chưa chỉ định cờ `--bootstrap` tại Bước 1, đối với dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
 ```powershell
 python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 ```
@@ -182,13 +128,13 @@ python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
 
 ---
 
-## 🔒 Bước 4: Cài Đặt Bảo Mật Maskara & Hoàn Tất
+## 🔒 Bước 4: Kiểm Tra Bảo Mật Maskara & Hoàn Tất Onboarding
 
-1. **Cài đặt Git Hook:** Tự động tạo pre-commit hook trong `.git/hooks/` gọi Maskara quét chặn lộ API keys.
+1. **Xác nhận Git Hook:** Lệnh `init-spoke` đã tự động cài pre-commit hook trong `.git/hooks/` (nếu repo có Git).
 2. **Xác nhận Onboarding (Global Rule 4):**
    > *"Tôi đã khởi tạo thành công Spoke `[tên_dự_án]` (Archetype: `[archetype]`, Type: `[type]`). Sẵn sàng làm việc!"*
 
-**Tiêu chí hoàn thành:** Cài đặt git hook quét Maskara và xuất thông báo xác nhận onboarding.
+**Tiêu chí hoàn thành:** Xác nhận Git Hook Maskara hoạt động an toàn và xuất thông báo xác nhận onboarding.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -202,4 +148,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/interactive_wizard.md` | Kịch bản hướng dẫn tương tác từng bước khi khởi tạo dự án Spoke mới |
 | `references/server_deployment.md` | Hướng dẫn triển khai cấu hình server và hạ tầng phục vụ Agent |
-
