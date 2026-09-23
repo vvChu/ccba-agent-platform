@@ -310,10 +310,12 @@ def resolve_preset_commands(
                 (t_path / "tests").as_posix() if (t_path / "tests").exists() else t_path.as_posix()
             )
             cmds.append(f"{python_exec} -m ruff check {t_path.as_posix()}")
+            cmds.append(f"{python_exec} -m ruff format --check {t_path.as_posix()}")
             cmds.append(f"{python_exec} -m mypy {src_str} --follow-imports=silent")
             cmds.append(f"{python_exec} -m pytest {tests_str} -q")
         else:
             cmds.append(f"{python_exec} -m ruff check .")
+            cmds.append(f"{python_exec} -m ruff format --check .")
             cmds.append(f"{python_exec} -m pytest tests/ -q")
         return cmds
 
@@ -358,6 +360,7 @@ def resolve_preset_commands(
     if p == "ci":
         return [
             f"{python_exec} -m ruff check packages/ scripts/governance/ tests/governance/",
+            f"{python_exec} -m ruff format --check packages/ scripts/governance/ tests/governance/",
             f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q",
             f"{python_exec} scripts/validate_skills.py --enforce-gpi",
             f"{python_exec} scripts/governance/compile_catalog.py --check",

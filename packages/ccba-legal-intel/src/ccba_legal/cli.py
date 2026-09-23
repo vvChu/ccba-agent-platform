@@ -263,6 +263,55 @@ def build_parser() -> argparse.ArgumentParser:
         help="Explicit OKF bundle directory slug (e.g. 'qcvn_09_2017_bxd')",
     )
 
+    # 8b. Hydrate Subcommand (Spoke Vault Hydration Engine - ADR 0035 & ADR 0059)
+    hydrate_parser = subparsers.add_parser(
+        "hydrate",
+        help="Hydrate binary assets (PDF/DOCX) from Cloud Vault with cryptographic SHA-256 verification (ADR 0035)",
+    )
+    hydrate_parser.add_argument(
+        "--cohorts",
+        type=str,
+        default=None,
+        help="Comma-separated list of document slugs (e.g. 'qcvn_04_2021_bxd,qcvn_06_2022_bxd')",
+    )
+    hydrate_parser.add_argument(
+        "-c",
+        "--category",
+        choices=["01_vbpl", "02_qcvn", "03_tcvn"],
+        default=None,
+        help="Filter by legal document category",
+    )
+    hydrate_parser.add_argument(
+        "--all",
+        action="store_true",
+        default=False,
+        help="Hydrate all documents across all categories",
+    )
+    hydrate_parser.add_argument(
+        "--verify-only",
+        action="store_true",
+        default=False,
+        help="Only verify SHA-256 integrity of local assets without downloading",
+    )
+    hydrate_parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force re-download even if file already exists locally",
+    )
+    hydrate_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Simulate hydration without writing any files",
+    )
+    hydrate_parser.add_argument(
+        "--spoke-dir",
+        type=Path,
+        default=None,
+        help="Root path of the Spoke repository (defaults to current project root)",
+    )
+
     # 9. Google Drive Ingestion Subcommand
     ingest_gdrive_parser = subparsers.add_parser(
         "ingest-gdrive",
@@ -522,6 +571,61 @@ def handle_consolidate(args: argparse.Namespace) -> int:
     if not res.success or res.errors:
         print(f"Errors: {res.errors}")
         return 1
+    return 0
+
+
+def handle_hydrate(args: argparse.Namespace) -> int:
+    """Handle hydrate subcommand."""
+    print("=================================================================")
+    print("      CCBA SPOKE VAULT HYDRATION ENGINE (ADR 0035 / ADR 0059)     ")
+    print("=================================================================")
+    from ccba_legal.hydrator import SpokeHydrator
+    from ccba_legal.registry import resolve_project_root
+
+    if args.spoke_dir:
+        spoke_root = args.spoke_dir.resolve()
+    elif (Path.cwd() / "legal_docs").exists() or (Path.cwd() / "legal_registry.yaml").exists():
+        spoke_root = Path.cwd().resolve()
+    else:
+        spoke_root = resolve_project_root()
+    cohorts_list = [s.strip() for s in args.cohorts.split(",")] if args.cohorts else None
+
+    print(f"🎯 Target Spoke: {spoke_root}")
+    if cohorts_list:
+        print(f"📦 Cohorts ({len(cohorts_list)}): {', '.join(cohorts_list)}")
+    if args.category:
+        print(f"📁 Category: {args.category}")
+    print(f"⚙️ Mode: {'Verify-Only' if args.verify_only else 'Hydrate'}")
+    if args.force:
+        print("⚡ Force overwrite: True")
+    if args.dry_run:
+        print("🔍 Dry-run: True")
+    print("-----------------------------------------------------------------")
+
+    hydrator = SpokeHydrator(spoke_root=spoke_root)
+    summary = hydrator.hydrate_all(
+        category=args.category,
+        cohorts=cohorts_list,
+        force=args.force,
+        verify_only=args.verify_only,
+        dry_run=args.dry_run,
+    )
+
+    print(f"\n📊 HYDRATION SUMMARY ({summary.total_bundles} bundles inspected):")
+    print(f"   🟢 Fully Hydrated   : {summary.fully_hydrated}")
+    print(f"   🟡 Partially Hydrated: {summary.partially_hydrated}")
+    print(f"   🔴 Unhydrated        : {summary.unhydrated}")
+    print(f"   📄 Assets - Total   : {summary.total_assets}")
+    print(f"   ✅ Up-to-Date       : {summary.up_to_date_assets}")
+    print(f"   📥 Downloaded       : {summary.downloaded_assets}")
+    print(f"   ⚠️ Missing          : {summary.missing_assets}")
+    print(f"   ❌ Failed / Corrupt : {summary.failed_assets}")
+
+    if summary.failed_assets > 0:
+        print("\n❌ Errors encountered during hydration!")
+        return 1
+    if args.verify_only and summary.missing_assets > 0:
+        print("\n⚠️ Note: Some assets are missing from local sources/.")
     return 0
 
 
@@ -1207,6 +1311,8 @@ def main() -> None:
         sys.exit(handle_process(args))
     elif args.command == "consolidate":
         sys.exit(handle_consolidate(args))
+    elif args.command == "hydrate":
+        sys.exit(handle_hydrate(args))
     elif args.command == "lint":
         sys.exit(handle_lint(args))
     elif args.command == "sync":

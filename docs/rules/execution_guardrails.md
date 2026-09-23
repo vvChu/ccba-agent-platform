@@ -204,6 +204,13 @@
    - **Tự động đóng khóa khi merge:** Khi PR được squash merge vào `main`, trạng thái khóa tự động kết thúc.
    - **Chủ động giải phóng khi dừng phiên:** Nếu Agent dừng phiên trước khi PR hoàn tất, bắt buộc đăng comment `<!-- CCBA_PR_CLAIM_RELEASE -->` và gỡ assignee: `gh pr edit <id> --remove-assignee "@me"`.
    - **Stale PR Claim Takeover (Ngưỡng 4 giờ):** Nếu một PR bị khóa nhưng nhánh không có commit mới sau **4 giờ**, Agent ở máy khác được phép kích hoạt Interactive Takeover để tiếp quản việc sửa PR.
+6. **Rào Chắn Không Hợp Nhất Khi CI Đỏ & Đồng Bộ Copilot (Zero-Red-Merge Invariant):**
+   - Tuyệt đối **NGHIÊM CẤM** sử dụng cờ `--admin` để cưỡng chế sáp nhập PR khi CI đang PENDING hoặc FAILED.
+   - **NGHIÊM CẤM** sử dụng cờ `--auto` (chống race condition sáp nhập tự động trước khi bot Copilot hoàn thành review).
+   - **Quy trình sáp nhập chuẩn mực:**
+     1. Khởi chạy giám sát CI: `gh pr checks <PR_NUMBER> --watch` và dừng lượt để nhận Reactive Wakeup khi checks hoàn tất.
+     2. Kiểm tra trạng thái review của bot Copilot: `gh pr view <PR_NUMBER> --json reviewRequests,comments` (đảm bảo `reviewRequests` rỗng).
+     3. Chỉ thực hiện `gh pr merge <id> --squash --delete-branch` khi 100% checks báo xanh và toàn bộ nhận xét của Copilot đã được xử lý/giải trình.
 
 ---
 
@@ -246,3 +253,10 @@
 
 - **Bảo Trì Danh Sách Tên Miền (`browserAllowlist.txt`):**
   - Khi bổ sung luồng tự động hóa tới một domain mới, Agent phải kiểm tra và cập nhật `browserAllowlist.txt` đồng thời ở cả hai thư mục `~/.gemini/antigravity/` và `~/.gemini/antigravity-ide/`.
+
+---
+
+## 16. Ephemeral Worktree & Automated Nightly Cron Invariant (Quy Chuẩn Vận Hành Worktree Tạm Thời)
+- Các daemon chạy đêm (`run_nightly_tuner.sh`) vận hành trên Ephemeral Worktree độc lập được checkout từ nhánh chỉ định (mặc định: `origin/main`). Mọi mã nguồn tối ưu bắt buộc phải hoàn tất toàn bộ chu trình Git (**PR $\rightarrow$ CI Pass $\rightarrow$ Merge $\rightarrow$ Push**) trước 00:00 AM.
+- Khi kiểm thử cục bộ: Nghiêm cấm chạy `run_nightly_tuner.sh` trên working tree đang dirty vì script sẽ tự động kéo `origin/main` gây hiểu lầm kết quả. Để kiểm thử cục bộ mã dở dang, sử dụng trực tiếp: `.venv/bin/python3 scripts/eval/nightly_tuner_daemon.py --dry-run`.
+

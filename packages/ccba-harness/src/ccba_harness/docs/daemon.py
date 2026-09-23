@@ -391,7 +391,6 @@ class DocAutoEvolutionEngine:
             logger.info(
                 "🔍 [Dry-Run] Hoàn tất kiểm tra sức khỏe tài liệu mà không tạo branch hay PR."
             )
-            self.send_telegram_alert(report)
             return report
 
         # Live Execution: Git branch & PR
