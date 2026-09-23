@@ -1,7 +1,10 @@
 """test_hydrator.py - Unit tests for SpokeHydrator and Vault Hydration Engine."""
 
 import hashlib
+import shutil
+import subprocess
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
@@ -15,6 +18,15 @@ from ccba_legal.hydrator import (
 def compute_sha256(content: bytes) -> str:
     """Helper to compute sha256 of bytes."""
     return hashlib.sha256(content).hexdigest()
+
+
+@pytest.fixture(autouse=True)
+def mock_rclone_available(monkeypatch: pytest.MonkeyPatch):
+    """Ensure rclone binary is simulated as available across all test environments including CI."""
+    orig_which = shutil.which
+    monkeypatch.setattr(
+        shutil, "which", lambda cmd: "/usr/bin/rclone" if cmd == "rclone" else orig_which(cmd)
+    )
 
 
 @pytest.fixture
@@ -135,3 +147,153 @@ def test_hydrate_all_verify_only(mock_spoke: Path):
     assert summary.unhydrated == 1  # nd_test_02 has no files
     assert summary.up_to_date_assets == 1
     assert summary.missing_assets == 2
+
+
+def test_hydrate_asset_rclone_success(mock_spoke: Path):
+    """Test successful rclone download with cryptographic verification and atomic promotion."""
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b2_dir = mock_spoke / "legal_docs" / "01_vbpl" / "nd_test_02"
+    assets = hydrator.inspect_bundle_assets(b2_dir)
+    pdf_asset = assets[0]
+
+    content = b"%PDF-1.4 Downloaded Valid Content"
+    valid_sha = compute_sha256(content)
+    pdf_asset.expected_sha256 = valid_sha
+
+    def mock_run(cmd, capture_output=True, timeout=20):
+        # Simulate rclone creating the target .tmp_download file
+        target_path = Path(cmd[-1])
+        target_path.write_bytes(content)
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"", stderr=b"")
+
+    with patch("subprocess.run", side_effect=mock_run):
+        res = hydrator.hydrate_asset(b2_dir, pdf_asset)
+
+    assert res.status == AssetStatus.DOWNLOADED
+    assert (b2_dir / "sources" / "nd_test_02.pdf").exists()
+    assert not (b2_dir / "sources" / "nd_test_02.pdf.tmp_download").exists()
+    assert (b2_dir / "sources" / "nd_test_02.pdf").read_bytes() == content
+
+
+def test_hydrate_asset_rclone_timeout_fallback_to_vault_api(mock_spoke: Path):
+    """Test rclone timing out and cleanly falling back to GoogleDriveVault API."""
+    mock_vault = MagicMock()
+    mock_vault.is_available.return_value = True
+    mock_vault.find_vault_folder.return_value = "folder_mock_id"
+    mock_vault.service = MagicMock()
+
+    content = b"%PDF-1.4 Fallback Drive Content"
+    valid_sha = compute_sha256(content)
+
+    def mock_download_asset(file_id, dest_path):
+        Path(dest_path).write_bytes(content)
+        return True
+
+    mock_vault.download_asset.side_effect = mock_download_asset
+
+    # Mock drive list query returning file
+    mock_files = MagicMock()
+    mock_files.list.return_value.execute.return_value = {"files": [{"id": "file_123"}]}
+    mock_vault.service.files.return_value = mock_files
+
+    hydrator = SpokeHydrator(spoke_root=mock_spoke, vault_client=mock_vault)
+    b2_dir = mock_spoke / "legal_docs" / "01_vbpl" / "nd_test_02"
+    assets = hydrator.inspect_bundle_assets(b2_dir)
+    pdf_asset = assets[0]
+    pdf_asset.expected_sha256 = valid_sha
+
+    # Rclone times out
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="rclone", timeout=20)):
+        res = hydrator.hydrate_asset(b2_dir, pdf_asset)
+
+    assert res.status == AssetStatus.DOWNLOADED
+    assert (b2_dir / "sources" / "nd_test_02.pdf").exists()
+    assert (b2_dir / "sources" / "nd_test_02.pdf").read_bytes() == content
+
+
+def test_hydrate_asset_hash_mismatch_cleans_tmp(mock_spoke: Path):
+    """Test downloaded file with invalid hash gets rejected and cleaned up."""
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b2_dir = mock_spoke / "legal_docs" / "01_vbpl" / "nd_test_02"
+    assets = hydrator.inspect_bundle_assets(b2_dir)
+    pdf_asset = assets[0]
+    pdf_asset.expected_sha256 = "expected_sha256_that_does_not_match"
+
+    def mock_run(cmd, capture_output=True, timeout=20):
+        target_path = Path(cmd[-1])
+        target_path.write_bytes(b"corrupted or wrong file")
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"", stderr=b"")
+
+    with patch("subprocess.run", side_effect=mock_run):
+        res = hydrator.hydrate_asset(b2_dir, pdf_asset)
+
+    assert res.status == AssetStatus.HASH_MISMATCH
+    assert "Integrity Failed" in res.message
+    # Target file should not be promoted
+    assert not (b2_dir / "sources" / "nd_test_02.pdf").exists()
+    # Temp file should be deleted
+    assert not (b2_dir / "sources" / "nd_test_02.pdf.tmp_download").exists()
+
+
+def test_push_asset_success(mock_spoke: Path):
+    """Test pushing verified local asset to Cloud Vault."""
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b1_dir = mock_spoke / "legal_docs" / "02_qcvn" / "qcvn_test_01"
+    assets = hydrator.inspect_bundle_assets(b1_dir)
+    pdf_asset = next(a for a in assets if a.asset_type == "pdf")
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr=""
+        )
+        res = hydrator.push_asset(b1_dir, pdf_asset)
+
+    assert res.status == AssetStatus.UPLOADED
+    assert "Successfully uploaded" in res.message
+    assert mock_run.called
+    cmd_args = mock_run.call_args[0][0]
+    assert cmd_args[0] == "rclone"
+    assert cmd_args[1] == "copyto"
+    assert pdf_asset.vault_path in cmd_args[3]
+
+
+def test_push_asset_dry_run(mock_spoke: Path):
+    """Test push_asset in dry-run mode does not call rclone."""
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b1_dir = mock_spoke / "legal_docs" / "02_qcvn" / "qcvn_test_01"
+    assets = hydrator.inspect_bundle_assets(b1_dir)
+    pdf_asset = next(a for a in assets if a.asset_type == "pdf")
+
+    with patch("subprocess.run") as mock_run:
+        res = hydrator.push_asset(b1_dir, pdf_asset, dry_run=True)
+
+    assert res.status == AssetStatus.UPLOADED
+    assert "Dry-run" in res.message
+    assert not mock_run.called
+
+
+def test_push_asset_missing_file(mock_spoke: Path):
+    """Test pushing missing local asset returns MISSING without calling rclone."""
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b2_dir = mock_spoke / "legal_docs" / "01_vbpl" / "nd_test_02"
+    assets = hydrator.inspect_bundle_assets(b2_dir)
+    pdf_asset = assets[0]
+
+    with patch("subprocess.run") as mock_run:
+        res = hydrator.push_asset(b2_dir, pdf_asset)
+
+    assert res.status == AssetStatus.MISSING
+    assert not mock_run.called
+
+
+def test_push_asset_rclone_not_available(mock_spoke: Path, monkeypatch: pytest.MonkeyPatch):
+    """Test pushing when rclone is not installed returns VAULT_UNAVAILABLE."""
+    monkeypatch.setattr(shutil, "which", lambda cmd: None)
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b1_dir = mock_spoke / "legal_docs" / "02_qcvn" / "qcvn_test_01"
+    assets = hydrator.inspect_bundle_assets(b1_dir)
+    pdf_asset = next(a for a in assets if a.asset_type == "pdf")
+
+    res = hydrator.push_asset(b1_dir, pdf_asset)
+    assert res.status == AssetStatus.ERROR
+    assert "Failed to upload to Cloud Vault" in res.message
