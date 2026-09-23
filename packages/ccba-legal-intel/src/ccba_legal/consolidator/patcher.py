@@ -90,7 +90,9 @@ class LegislativeConsolidator:
                     PatchAction.INSERT_BEFORE,
                     PatchAction.INSERT_RANGE_AFTER,
                 ):
-                    added_count += rec.get("added_count", len(patch.new_anchors) if patch.new_anchors else 1)
+                    added_count += rec.get(
+                        "added_count", len(patch.new_anchors) if patch.new_anchors else 1
+                    )
                 elif patch.action == PatchAction.REPEAL:
                     repealed_count += 1
                 else:
@@ -364,7 +366,9 @@ class LegislativeConsolidator:
 
             clean_title = re.sub(r"<a\s+[^>]*>.*?</a>", "", node.title).strip()
             citation_note = (
-                f" *({node.citation})*" if node.citation and node.citation not in clean_title else ""
+                f" *({node.citation})*"
+                if node.citation and node.citation not in clean_title
+                else ""
             )
             h_line = f'{hashes} <a id="{anchor}" name="{anchor}"></a>{clean_title}{citation_note}'
             lines.append(h_line)
