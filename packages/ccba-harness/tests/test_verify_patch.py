@@ -283,8 +283,14 @@ def test_resolve_preset_commands() -> None:
     """Verify preset command resolution for all supported types."""
     code_cmds = resolve_preset_commands("code", "packages/ccba-qc-core")
     assert any("ruff check" in c for c in code_cmds)
+    assert any("ruff format --check" in c for c in code_cmds)
     assert any("mypy" in c for c in code_cmds)
     assert any("pytest" in c for c in code_cmds)
+
+    code_no_target = resolve_preset_commands("code")
+    assert any("ruff check ." in c for c in code_no_target)
+    assert any("ruff format --check ." in c for c in code_no_target)
+    assert any("pytest tests/ -q" in c for c in code_no_target)
 
     doc_cmds = resolve_preset_commands(
         "doc", "report.md", min_bytes=200, required_headings=["Section A"]
@@ -306,6 +312,7 @@ def test_resolve_preset_commands() -> None:
 
     ci_cmds = resolve_preset_commands("ci")
     assert any("ruff check" in c for c in ci_cmds)
+    assert any("ruff format --check" in c for c in ci_cmds)
     assert any("validate_skills.py" in c for c in ci_cmds)
     assert any("compile_catalog.py" in c for c in ci_cmds)
     assert any("sync_hub_adr_matrix.py" in c for c in ci_cmds)

@@ -214,6 +214,12 @@ class LegislativeConsolidator:
             )
             target_node.content += callout
             target_node.is_amended = True
+            if patch.jurisdiction:
+                target_node.jurisdiction = patch.jurisdiction
+            if patch.grace_period_end:
+                target_node.grace_period_end = patch.grace_period_end
+            if patch.source_pdf_page:
+                target_node.source_pdf_page = patch.source_pdf_page
 
         elif patch.action == PatchAction.REPEAL:
             target_node.content = (

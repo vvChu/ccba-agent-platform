@@ -514,7 +514,7 @@ class NightlyTunerDaemon:
                 # ADR-0052: Export Plateau Escalation Brief if skill remains stagnant < 90%
                 if not dry_run and result.final_score < 90.0 and result.kept_commits == 0:
                     self._save_plateau_brief(skill_name, target_file, result)
-                elif result.final_score >= 90.0 or result.kept_commits > 0:
+                elif not dry_run and (result.final_score >= 90.0 or result.kept_commits > 0):
                     self._remove_stale_plateau_brief(skill_name)
 
                 if result.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN"):

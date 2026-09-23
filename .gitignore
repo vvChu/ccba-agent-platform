@@ -93,6 +93,7 @@ dist/
 *.log
 .md/logs/
 .md/**/nightly_tuner_report_*.md
+.md/**/escalations/
 
 # Temp/debug files in root
 *.docx

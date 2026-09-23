@@ -278,3 +278,45 @@ patches:
     exit_code = handle_consolidate(args)
     assert exit_code == 0
     assert (out_dir / "base.md").exists() or (out_dir / "qcvn_test.md").exists()
+
+
+def test_append_action_preserves_metadata(sample_qcvn_md: str, tmp_path: Path):
+    manifest_yaml = """
+target_doc_id: qcvn_test
+amending_doc_id: sua_doi_test
+doc_mode: qcvn
+title: Test Quy Chuẩn
+official_citation: TT 99/2026/TT-BXD
+effective_date: "2026-12-31"
+patches:
+  - action: APPEND
+    target_anchor: muc-1-1-2
+    citation: Bổ sung bởi TT 99/2026
+    defect_severity: CRITICAL_DEFECT
+    jurisdiction: national
+    grace_period_end: "2027-06-30"
+    source_pdf_page: 42
+    new_content_inline: Nội dung bổ sung thêm
+"""
+    mfile = tmp_path / "manifest.yaml"
+    mfile.write_text(manifest_yaml, encoding="utf-8")
+    base_file = tmp_path / "base.md"
+    base_file.write_text(sample_qcvn_md, encoding="utf-8")
+    out_dir = tmp_path / "out_append"
+
+    manifest = load_manifest(mfile)
+    consolidator = LegislativeConsolidator(manifest)
+    res = consolidator.consolidate(base_file, output_dir=out_dir)
+    assert res.success is True
+
+    # Check clauses.json for amended metadata
+    import json
+
+    clauses_data = json.loads((out_dir / "clauses.json").read_text(encoding="utf-8"))
+    target = next((c for c in clauses_data if c["id"] == "muc-1-1-2"), None)
+    assert target is not None
+    assert target.get("is_amended") is True
+    assert target.get("jurisdiction") == "national"
+    assert target.get("grace_period_end") == "2027-06-30"
+    assert target.get("source_pdf_page") == 42
+    assert "Nội dung bổ sung thêm" in target.get("content", "")
