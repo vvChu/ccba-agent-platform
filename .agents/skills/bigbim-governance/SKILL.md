@@ -155,3 +155,7 @@ Khi thực hiện Audit hồ sơ, Agent phải xuất báo cáo theo mẫu dư�
 * **Bẫy Thang Máy Đa Góc Nhìn:** Phân định Mô hình kiến trúc `EF_25_50` vs Hệ thống cơ điện `Ss_70_50_10`.
 * **Bẫy Sơn Chống Cháy & Trạm Kiosk:** Phân định vật tư `Pr_60_60_15` vs Property Set kết cấu, Thực thể quy hoạch `En_50_10` vs Hệ thống `Ss_70_10_10`.
 * **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
+
+## 5. Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)
+* **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.
+* **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.
