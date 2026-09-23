@@ -2,8 +2,18 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-23] [synthesize] | Phát Hành PR #336, #337, #338: Nghiệm Thu Factory Model, Modular Standard Converter & Planning Guardrails
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-grilling, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-legal-intel/`, `.agents/skills/ccba-new-feature/`, `.agents/skills/ccba-markdown-document-processing/`, `PLATFORM.md`, `.md/data/spoke_registry.yaml`, `.md/knowledge/reports/2026-09-kiem-tra-tinh-nang-moi/walkthrough.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất chuỗi phát triển, kiểm thử dry-run và phát hành 3 Pull Requests quan trọng trên Monorepo Hub:
+  1. **PR #336 (Factory Model Dry-Run Snapshot - ADR-0058)**: Thực thi kiểm thử dry-run toàn trình quy trình `/ccba-new-feature` kết hợp phản biện `/boost`, xác thực 6/6 Hard Completion Lock exit codes, lưu trữ snapshot vào `.md/knowledge/reports/2026-09-kiem-tra-tinh-nang-moi/`, vượt qua 7/7 CI checks và squash-merge vào `main` tại commit `cf78369d`.
+  2. **PR #338 (Spoke Registry, Retrospective & Planning Guardrails)**: Đăng ký spoke `vvC_Test_2` vào `spoke_registry.yaml`, giải phóng an toàn `stash@{0}`, cập nhật 18 dòng retrospective, codify 2-Phase Planning Guardrail vào `ccba-new-feature` (v1.2.0), tài liệu hóa quy tắc an toàn dữ liệu bảng biểu (RULE-3.3, RULE-3.4, ADR 0041, ADR 0044) vào `ccba-markdown-document-processing` (v1.2.0), đồng bộ `TRACEABILITY_MATRIX.md`, vượt qua 7/7 CI checks và squash-merge vào `main` tại commit `874a9f6e`.
+  3. **PR #337 (Modular Technical Standard Converter - OKF v2.4)**: Tách riêng 9 tệp từ phiên song song `6bfa032c`, module hóa pipeline chuyển đổi DOCX sang OKF v2.4 với Dual-Dispatch Orchestrator; chẩn đoán và khắc phục 2 lỗi CI gốc rễ: (a) Sandbox cache_dir permission error do giả định `parents[2]` trỏ về root `/` trên Linux, (b) Architecture Drift check do thêm files mới trong `packages/` mà chưa cập nhật `PLATFORM.md`; vượt qua 7/7 CI checks và squash-merge vào `main` tại commit `0e27feb3`.
+  4. **Kiểm định tất định toàn Monorepo**: 100% 6/6 kiểm tra `ccba-harness verify-patch --preset ci` PASS, 0 linter errors, 704 files formatted, working tree clean 100%.
+
+---
+
 ## [2026-09-23] [synthesize] | Phát Hành PR #331-#334: Tối Ưu Hóa Auto-Tuner Ban Đêm, Zero-Red-Merge Invariant & Spoke Vault Hydrator
-- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /ccba-grilling, /learn, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/`, `packages/ccba-legal-intel/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/governance/`, `PLATFORM.md`, `docs/rules/execution_guardrails.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`, `walkthrough.md`
 - **Summary**: Hoàn tất chuỗi tối ưu hóa và quản trị nền tảng:
   1. **PR #331 (Nightly Auto-Tuner)**: Tự động tối ưu 4 kỹ năng (`ccba-file-stability-guard` 100%, `ccba-ai-qc-pccc-audit` 90%, `ccba-seminar-builder` và `ccba-xu-ly-van-phong` 75%).
