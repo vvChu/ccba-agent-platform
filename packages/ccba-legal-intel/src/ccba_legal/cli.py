@@ -516,8 +516,10 @@ def handle_consolidate(args: argparse.Namespace) -> int:
         output_dir=args.output,
         amending_md_path=args.amending,
     )
-    print(f"Status: {res.status}, Patches Applied: {len(res.patches_applied)}")
-    if res.errors:
+    patches_count = res.modified_clauses + res.added_clauses + res.repealed_clauses
+    status_str = "success" if res.success else "failed"
+    print(f"Status: {status_str}, Patches Applied: {patches_count}")
+    if not res.success or res.errors:
         print(f"Errors: {res.errors}")
         return 1
     return 0

@@ -5,6 +5,17 @@ Provides local-first evaluation runners, code-based scorers, and model-based rub
 
 from __future__ import annotations
 
+from .archetypes import (
+    ACADEMIC_ARCHETYPE_KEYWORDS,
+    BIM_ARCHETYPE_KEYWORDS,
+    CODING_ARCHETYPE_KEYWORDS,
+    LEGAL_ARCHETYPE_KEYWORDS,
+    OFFICE_ARCHETYPE_KEYWORDS,
+    ORCHESTRATION_ARCHETYPE_KEYWORDS,
+    TECH_QC_ARCHETYPE_KEYWORDS,
+    VISUAL_ARCHETYPE_KEYWORDS,
+    get_default_domain_scorers,
+)
 from .daemon import (
     NightlyDaemonReport,
     NightlyTunerDaemon,
@@ -67,14 +78,6 @@ from .slicing import (
     classify_slicing_tier,
 )
 from .tuner import (
-    ACADEMIC_ARCHETYPE_KEYWORDS,
-    BIM_ARCHETYPE_KEYWORDS,
-    CODING_ARCHETYPE_KEYWORDS,
-    LEGAL_ARCHETYPE_KEYWORDS,
-    OFFICE_ARCHETYPE_KEYWORDS,
-    ORCHESTRATION_ARCHETYPE_KEYWORDS,
-    TECH_QC_ARCHETYPE_KEYWORDS,
-    VISUAL_ARCHETYPE_KEYWORDS,
     AdaptiveRateLimiter,
     GitRatchetOptimizer,
     GitRatchetTuner,
@@ -82,7 +85,6 @@ from .tuner import (
     RatchetReport,
     RatchetTrialResult,
     RateLimiter,
-    get_default_domain_scorers,
     mutate_skill,
     preserve_yaml_frontmatter,
 )
