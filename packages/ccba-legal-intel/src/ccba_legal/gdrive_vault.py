@@ -149,6 +149,51 @@ class GoogleDriveVault:
             logger.error(f"Error getting/creating folder '{folder_name}': {e}")
             return None
 
+    def find_folder(self, folder_name: str, parent_id: str | None = None) -> str | None:
+        """Find existing folder ID by name under parent_id in read-only mode."""
+        if not self.service:
+            return None
+
+        query = f"name = '{folder_name}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        if parent_id:
+            query += f" and '{parent_id}' in parents"
+
+        try:
+            response = (
+                self.service.files()
+                .list(
+                    q=query,
+                    spaces="drive",
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
+                )
+                .execute()
+            )
+            files = response.get("files", [])
+            return files[0]["id"] if files else None
+        except Exception as e:
+            logger.debug(f"Error finding folder '{folder_name}': {e}")
+            return None
+
+    def find_vault_folder(self, category: str, doc_slug: str) -> str | None:
+        """Find folder ID for CCBA_Legal_Vault/<category>/<doc_slug>/ in read-only mode."""
+        import os
+
+        if not self.service:
+            return None
+
+        env_root_id = os.environ.get("DRIVE_FOLDER_ID")
+        root_id = env_root_id if env_root_id else self.find_folder(VAULT_ROOT_NAME)
+        if not root_id:
+            return None
+
+        cat_id = self.find_folder(category, parent_id=root_id)
+        if not cat_id:
+            return None
+
+        return self.find_folder(doc_slug, parent_id=cat_id)
+
     def ensure_vault_structure(self, category: str, doc_slug: str) -> str | None:
         """Ensure full directory hierarchy exists: CCBA_Legal_Vault/<category>/<doc_slug>/."""
         import os
