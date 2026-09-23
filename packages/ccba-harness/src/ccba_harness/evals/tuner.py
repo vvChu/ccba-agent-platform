@@ -7,6 +7,7 @@ improvements and instantly rolling back (git checkout / file restore) on regress
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -1471,17 +1472,15 @@ class GitRatchetOptimizer:
                     "* **Type Hints & Docstrings:** Mọi hàm/phương thức public bắt buộc có type annotations đầy đủ và docstrings chuẩn mực.",
                 ),
             ]
-        elif any(
-            k in sname
-            for k in ["platform", "router", "orchestrator", "core", "docs", "adr", "eval"]
-        ) or ("review" in sname and not any(k in sname for k in CODING_ARCHETYPE_KEYWORDS)):
+        elif any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
             strategies = [
                 (
                     "Deterministic Routing & Boundary Invariants",
-                    "\n\n## 5. Bất Biến Ranh Giới Điều Phối & Xác Minh Tất Định\n"
-                    "* **Single-Writer & Sandbox Isolation:** Duy nhất Lead Orchestrator có quyền ghi mã nguồn chính; subagents chỉ xuất dữ liệu vào sandbox scratch.\n"
-                    "* **Virtual Hub Fallback:** Kiểm tra tài nguyên kỹ năng tại Spoke trước, fallback về Hub nếu thiếu.\n"
-                    "* **Hard Completion Lock:** Bắt buộc chạy `python -m ccba_harness verify-patch` trước khi hoàn tất.",
+                    "\n\n## Bất Biến Ranh Giới Điều Phối, Single-Writer & Handoff Protocol\n"
+                    "* **Single-Writer & Isolated Sandbox:** Duy nhất Lead Orchestrator ghi nhận dữ liệu chính thức; subagents chỉ xuất kết quả trung gian vào sandbox `.agents/<agent_name>/scratch/`.\n"
+                    "* **Handoff Protocol & Autonomous Notification:** Chuyển giao ngữ cảnh qua `send_message` gửi parent agent kèm báo cáo bàn giao (handoff report) và kết luận hoàn tất (`verdict`).\n"
+                    "* **Bộc Lộ Dần (Progressive Disclosure):** Tổ chức tài liệu và chỉ dẫn theo [Hiến pháp AGENTS.md](../../AGENTS.md) tuân thủ mô hình bộc lộ dần theo cấp độ.\n"
+                    "* **Hard Completion Lock:** Bắt buộc vượt qua xác minh tất định `python -m ccba_harness verify-patch` trước khi hoàn tất.",
                 ),
             ]
         elif any(k in sname for k in ["pccc", "fire", "phongchay", "qc", "audit", "thamdinh"]):
@@ -1571,6 +1570,12 @@ class GitRatchetOptimizer:
                     "* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.\n"
                     "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.\n"
                     "* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.",
+                ),
+                (
+                    "Operational Clarity & Verification Standard",
+                    "\n\n## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng\n"
+                    "* **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.\n"
+                    "* **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.",
                 ),
             ]
 
@@ -1800,6 +1805,7 @@ class GitRatchetOptimizer:
         kept_count = 0
         reverted_count = 0
         stagnant_trials = 0
+        seen_hashes: set[str] = {hashlib.sha256(initial_content.encode("utf-8")).hexdigest()}
         history: list[RatchetTrialResult] = []
 
         logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
@@ -1823,6 +1829,15 @@ class GitRatchetOptimizer:
                         )
                         halt_reason = "HALT_NO_FURTHER_STRATEGIES"
                         break
+
+                    content_hash = hashlib.sha256(mutated_content.encode("utf-8")).hexdigest()
+                    if content_hash in seen_hashes:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
+                    seen_hashes.add(content_hash)
 
                     # Apply candidate mutation
                     self.target_file.write_text(mutated_content, encoding="utf-8")

@@ -90,7 +90,7 @@ class LegislativeConsolidator:
                     PatchAction.INSERT_BEFORE,
                     PatchAction.INSERT_RANGE_AFTER,
                 ):
-                    added_count += len(patch.new_anchors) if patch.new_anchors else 1
+                    added_count += rec.get("added_count", len(patch.new_anchors) if patch.new_anchors else 1)
                 elif patch.action == PatchAction.REPEAL:
                     repealed_count += 1
                 else:
@@ -102,13 +102,15 @@ class LegislativeConsolidator:
         # 1. Consolidated Markdown
         consolidated_md = self._render_consolidated_markdown(nodes)
 
-        # File naming convention
+        # File naming convention: Ensure bundle root has <doc_slug>.md in OKF v2.4 Universal Agent-Centric
         base_slug = base_path.stem
-        out_md_name = f"{base_slug}_hop_nhat.md"
-        if "qcvn_04_2021" in base_slug:
-            out_md_name = "qcvn_04_2021_bxd_hop_nhat_2026.md"
-        elif "qcvn_06_2022" in base_slug:
-            out_md_name = "qcvn_06_2022_bxd_hop_nhat_2023.md"
+        clean_slug = re.sub(r"(_goc(?:_\d+)?|_base)$", "", base_slug)
+        if (out_dir / f"{out_dir.name}.md").exists() or (out_dir / "metadata.yaml").exists():
+            out_md_name = f"{out_dir.name}.md"
+        elif clean_slug:
+            out_md_name = f"{clean_slug}.md"
+        else:
+            out_md_name = f"{base_slug}.md"
 
         consolidated_md_path = out_dir / out_md_name
         consolidated_md_path.write_text(consolidated_md, encoding="utf-8")
@@ -125,12 +127,14 @@ class LegislativeConsolidator:
         for c in clauses_data:
             num = c.get("clause_number", "")
             title = c.get("title", "")
+            clean_title = re.sub(r"<a\s+[^>]*>.*?</a>", "", title).strip()
+            keywords = [w for w in re.findall(r"\w+", clean_title) if len(w) > 3][:4]
             qa_list.append(
                 {
-                    "question": f"Quy định kỹ thuật tại mục {num} ({title}) của {self.manifest.title} quy định như thế nào?",
+                    "question": f"Quy định kỹ thuật tại mục {num} ({clean_title}) của {self.manifest.title} quy định như thế nào?",
                     "ground_truth_clause": num,
                     "ground_truth_id": c["id"],
-                    "expected_keywords": [w for w in title.split() if len(w) > 3][:4],
+                    "expected_keywords": keywords,
                 }
             )
         qa_benchmark_path = out_dir / "qa_benchmark.json"
@@ -222,62 +226,106 @@ class LegislativeConsolidator:
                 )
                 target_node.is_amended = True
 
-        elif patch.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_BEFORE):
+        elif patch.action in (
+            PatchAction.INSERT_AFTER,
+            PatchAction.INSERT_BEFORE,
+            PatchAction.INSERT_RANGE_AFTER,
+        ):
             idx = nodes.index(target_node)
-            insert_idx = idx + 1 if patch.action == PatchAction.INSERT_AFTER else idx
-            new_anchor = patch.new_anchor or f"{patch.target_anchor}-new"
-
-            # Extract number from new_anchor if available
-            m_num = re.search(r"(\d+(?:\.\d+)*)", new_anchor)
-            cnum = m_num.group(1) if m_num else ""
-
-            # Check if content has heading
-            first_line = new_content.splitlines()[0] if new_content else ""
-            clean_title = f"{cnum} (Bổ sung)"
-            if first_line.startswith("#"):
-                clean_title = re.sub(r"^#+\s*", "", first_line)
-                new_content = "\n".join(new_content.splitlines()[1:]).strip()
-
-            new_node = ASTNode(
-                node_id=new_anchor,
-                node_type=target_node.node_type,
-                title=clean_title,
-                clause_number=cnum,
-                anchor=new_anchor,
-                content=new_content,
-                heading_level=target_node.heading_level,
-                heading_prefix=target_node.heading_prefix,
-                jurisdiction=patch.jurisdiction or target_node.jurisdiction,
-                grace_period_end=patch.grace_period_end,
-                source_pdf_page=patch.source_pdf_page,
-                is_amended=True,
-                citation=patch.citation,
+            insert_idx = (
+                idx + 1
+                if patch.action in (PatchAction.INSERT_AFTER, PatchAction.INSERT_RANGE_AFTER)
+                else idx
             )
-            nodes.insert(insert_idx, new_node)
 
-        elif patch.action == PatchAction.INSERT_RANGE_AFTER:
-            idx = nodes.index(target_node)
-            insert_idx = idx + 1
-            for na in patch.new_anchors:
-                m_num = re.search(r"(\d+(?:\.\d+)*)", na)
-                cnum = m_num.group(1) if m_num else ""
-                child_node = ASTNode(
-                    node_id=na,
-                    node_type=target_node.node_type,
-                    title=f"{cnum} (Bổ sung)",
-                    clause_number=cnum,
-                    anchor=na,
-                    content=new_content,
-                    heading_level=target_node.heading_level,
-                    heading_prefix=target_node.heading_prefix,
-                    jurisdiction=patch.jurisdiction,
-                    grace_period_end=patch.grace_period_end,
-                    source_pdf_page=patch.source_pdf_page,
-                    is_amended=True,
-                    citation=patch.citation,
-                )
-                nodes.insert(insert_idx, child_node)
+            parsed_nodes = [
+                n
+                for n in self.parser.parse(new_content, mode=self.manifest.doc_mode)
+                if n.node_type != "preamble"
+            ]
+
+            nodes_to_insert: list[ASTNode] = []
+            if parsed_nodes:
+                for child_idx, child_node in enumerate(parsed_nodes):
+                    child_node.title = re.sub(r"<a\s+[^>]*>.*?</a>", "", child_node.title).strip()
+                    if not child_node.anchor:
+                        if patch.new_anchors and child_idx < len(patch.new_anchors):
+                            child_node.anchor = patch.new_anchors[child_idx]
+                        elif patch.new_anchor and child_idx == 0:
+                            child_node.anchor = patch.new_anchor
+                        elif child_node.clause_number:
+                            child_node.anchor = f"muc-{child_node.clause_number.replace('.', '-')}"
+                    child_node.node_id = child_node.anchor or child_node.node_id
+                    child_node.heading_prefix = (
+                        child_node.heading_prefix or target_node.heading_prefix or "###"
+                    )
+                    child_node.heading_level = len(child_node.heading_prefix)
+                    child_node.jurisdiction = patch.jurisdiction or target_node.jurisdiction
+                    child_node.grace_period_end = patch.grace_period_end
+                    child_node.source_pdf_page = patch.source_pdf_page
+                    child_node.is_amended = True
+                    child_node.citation = patch.citation
+                    nodes_to_insert.append(child_node)
+            else:
+                if patch.action == PatchAction.INSERT_RANGE_AFTER and patch.new_anchors:
+                    for na in patch.new_anchors:
+                        m_num = re.search(r"(\d+(?:[-.]\d+)*)", na)
+                        cnum = m_num.group(1).replace("-", ".") if m_num else ""
+                        child_node = ASTNode(
+                            node_id=na,
+                            node_type=target_node.node_type,
+                            title=f"{cnum} (Bổ sung)",
+                            clause_number=cnum,
+                            anchor=na,
+                            content=new_content,
+                            heading_level=target_node.heading_level,
+                            heading_prefix=target_node.heading_prefix,
+                            jurisdiction=patch.jurisdiction or target_node.jurisdiction,
+                            grace_period_end=patch.grace_period_end,
+                            source_pdf_page=patch.source_pdf_page,
+                            is_amended=True,
+                            citation=patch.citation,
+                        )
+                        nodes_to_insert.append(child_node)
+                else:
+                    new_anchor = patch.new_anchor or f"{patch.target_anchor}-new"
+                    m_num = re.search(r"(\d+(?:[-.]\d+)*)", new_anchor)
+                    cnum = m_num.group(1).replace("-", ".") if m_num else ""
+
+                    first_line = new_content.splitlines()[0] if new_content else ""
+                    clean_title = f"{cnum} (Bổ sung)" if cnum else "Bổ sung"
+                    content_body = new_content
+                    if first_line.startswith("#"):
+                        first_line_clean = re.sub(r"^#+\s*", "", first_line)
+                        clean_title = re.sub(r"<a\s+[^>]*>.*?</a>", "", first_line_clean).strip()
+                        content_body = "\n".join(new_content.splitlines()[1:]).strip()
+
+                    m_t = re.match(r"^(\d+(?:\.\d+)*)", clean_title)
+                    if m_t:
+                        cnum = m_t.group(1)
+
+                    new_node = ASTNode(
+                        node_id=new_anchor,
+                        node_type=target_node.node_type,
+                        title=clean_title,
+                        clause_number=cnum,
+                        anchor=new_anchor,
+                        content=content_body,
+                        heading_level=target_node.heading_level,
+                        heading_prefix=target_node.heading_prefix,
+                        jurisdiction=patch.jurisdiction or target_node.jurisdiction,
+                        grace_period_end=patch.grace_period_end,
+                        source_pdf_page=patch.source_pdf_page,
+                        is_amended=True,
+                        citation=patch.citation,
+                    )
+                    nodes_to_insert.append(new_node)
+
+            for inserted_node in nodes_to_insert:
+                nodes.insert(insert_idx, inserted_node)
                 insert_idx += 1
+
+            rec["added_count"] = len(nodes_to_insert)
 
         return True, "Success", rec
 
@@ -314,11 +362,11 @@ class LegislativeConsolidator:
             hashes = node.heading_prefix or "###"
             anchor = node.anchor or node.node_id
 
-            # Format header line: #### <a id="muc-1-1-3" name="muc-1-1-3"></a>1.1.3 Tiêu đề
+            clean_title = re.sub(r"<a\s+[^>]*>.*?</a>", "", node.title).strip()
             citation_note = (
-                f" *({node.citation})*" if node.citation and node.citation not in node.title else ""
+                f" *({node.citation})*" if node.citation and node.citation not in clean_title else ""
             )
-            h_line = f'{hashes} <a id="{anchor}" name="{anchor}"></a>{node.title}{citation_note}'
+            h_line = f'{hashes} <a id="{anchor}" name="{anchor}"></a>{clean_title}{citation_note}'
             lines.append(h_line)
             lines.append("")
 
@@ -335,6 +383,14 @@ class LegislativeConsolidator:
             if node.node_type == "preamble":
                 continue
             c_dict = node.to_clause_dict()
+            c_dict["title"] = re.sub(r"<a\s+[^>]*>.*?</a>", "", c_dict.get("title", "")).strip()
+            c_dict["clause_number"] = re.sub(
+                r"<a\s+[^>]*>.*?</a>", "", str(c_dict.get("clause_number", ""))
+            ).strip()
+            if not c_dict.get("clause_number") or c_dict["clause_number"] in ("1", "2"):
+                m_cnum = re.search(r"(\d+(?:[-.]\d+)*)", c_dict.get("anchor", ""))
+                if m_cnum and ("-" in m_cnum.group(1) or "." in m_cnum.group(1)):
+                    c_dict["clause_number"] = m_cnum.group(1).replace("-", ".")
             if not c_dict.get("cong_bao_number"):
                 c_dict["cong_bao_number"] = self.manifest.default_cong_bao_number
             if not c_dict.get("jurisdiction"):

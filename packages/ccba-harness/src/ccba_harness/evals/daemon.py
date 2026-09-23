@@ -157,12 +157,24 @@ class WeightedPriorityQueue:
     def rank_skills(skills_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Sorts skills such that non-cooldown skills and lower baseline scores are tuned first."""
 
-        def priority_key(item: dict[str, Any]) -> tuple[int, int, float]:
+        def priority_key(item: dict[str, Any]) -> tuple[int, datetime.date, int, float]:
             in_cooldown = 1 if item.get("in_cooldown") else 0
+            raw_date = item.get("last_scanned_date")
+            if isinstance(raw_date, datetime.datetime):
+                scanned_date = raw_date.date()
+            elif isinstance(raw_date, datetime.date):
+                scanned_date = raw_date
+            elif isinstance(raw_date, str):
+                try:
+                    scanned_date = datetime.date.fromisoformat(raw_date[:10])
+                except Exception:
+                    scanned_date = datetime.date.min
+            else:
+                scanned_date = datetime.date.min
             raw_score = item.get("baseline_score")
             score = float(raw_score) if raw_score is not None else 0.0
             tier = 0 if score < 90.0 else (1 if score < 100.0 else 2)
-            return (in_cooldown, tier, score)
+            return (in_cooldown, scanned_date, tier, score)
 
         return sorted(skills_data, key=priority_key)
 
@@ -186,7 +198,7 @@ class NightlyTunerDaemon:
         max_iterations_perfect: int = 1,
         early_stopping_patience: int = 5,
         use_real_llm: bool = False,
-        token_budget: int = 6_500_000,
+        token_budget: int = 10_000_000,
         per_skill_mutation_budget: int | None = 250_000,
         model: str = "",
         target_skills: list[str] | None = None,
@@ -252,7 +264,9 @@ class NightlyTunerDaemon:
         except Exception:
             return None
 
-    def _load_historical_metrics(self, cooldown_days: int = 3) -> tuple[dict[str, float], set[str]]:
+    def _load_historical_metrics(
+        self, cooldown_days: int = 3
+    ) -> tuple[dict[str, float], set[str], dict[str, datetime.date]]:
         """Loads baseline scores across all available reports and identifies cooldown skills.
 
         Cooldown conditions (ADR-0052):
@@ -263,7 +277,7 @@ class NightlyTunerDaemon:
         """
         reports_dir = self.root / ".md" / "knowledge" / "reports"
         if not reports_dir.exists():
-            return {}, set()
+            return {}, set(), {}
 
         def _report_sort_key(f: Path) -> tuple[datetime.date, float]:
             try:
@@ -278,9 +292,9 @@ class NightlyTunerDaemon:
                     )
                     return (d, f.stat().st_mtime)
                 content = f.read_text(encoding="utf-8", errors="replace")
-                d = self._extract_report_date(f, content)
-                if d:
-                    return (d, f.stat().st_mtime)
+                extracted_d = self._extract_report_date(f, content)
+                if extracted_d:
+                    return (extracted_d, f.stat().st_mtime)
             except Exception:
                 pass
             try:
@@ -294,6 +308,7 @@ class NightlyTunerDaemon:
         scores: dict[str, float] = {}
         cooldown_skills: set[str] = set()
         evaluated_recent: set[str] = set()
+        last_scanned_dates: dict[str, datetime.date] = {}
 
         today = datetime.date.today()
         cutoff_date = today - datetime.timedelta(days=cooldown_days)
@@ -326,6 +341,9 @@ class NightlyTunerDaemon:
                     if s_name not in scores:
                         scores[s_name] = s_final
 
+                    if r_date is not None and s_name not in last_scanned_dates:
+                        last_scanned_dates[s_name] = r_date
+
                     if is_within_cooldown and is_real_llm:
                         if s_name not in evaluated_recent:
                             evaluated_recent.add(s_name)
@@ -341,20 +359,24 @@ class NightlyTunerDaemon:
                     s_final = float(match.group(3))
                     if s_name not in scores:
                         scores[s_name] = s_final
+                    if r_date is not None and s_name not in last_scanned_dates:
+                        last_scanned_dates[s_name] = r_date
             except Exception as e:
                 logger.debug(f"Failed parsing report file {r_file}: {e}")
                 continue
 
-        return scores, cooldown_skills
+        return scores, cooldown_skills, last_scanned_dates
 
     def _load_recent_baseline_scores(self) -> dict[str, float]:
         """Loads historical scores from recent reports to calibrate priority queue ranking."""
-        scores, _ = self._load_historical_metrics()
+        scores, _, _ = self._load_historical_metrics()
         return scores
 
     def discover_skills_and_datasets(self) -> list[dict[str, Any]]:
         """Maps discovered skills to their optimal evaluation datasets with historical baseline scores."""
-        recent_scores, cooldown_skills = self._load_historical_metrics(cooldown_days=3)
+        recent_scores, cooldown_skills, last_scanned_dates = self._load_historical_metrics(
+            cooldown_days=3
+        )
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
@@ -392,6 +414,7 @@ class NightlyTunerDaemon:
                     "eval_dataset_file": full_dataset_path,
                     "baseline_score": recent_scores.get(skill_name, 0.0),
                     "in_cooldown": skill_name in cooldown_skills,
+                    "last_scanned_date": last_scanned_dates.get(skill_name),
                 }
             )
 
@@ -531,11 +554,14 @@ class NightlyTunerDaemon:
 
         report_md = self.generate_evolution_report_markdown(report)
 
-        reports_dir = self.root / ".md" / "knowledge" / "reports"
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        report_file = reports_dir / f"nightly_tuner_report_{now_str}.md"
-        report_file.write_text(report_md, encoding="utf-8")
-        logger.info(f"📄 Đã lưu báo cáo: {report_file}")
+        if not dry_run:
+            reports_dir = self.root / ".md" / "knowledge" / "reports"
+            reports_dir.mkdir(parents=True, exist_ok=True)
+            report_file = reports_dir / f"nightly_tuner_report_{now_str}.md"
+            report_file.write_text(report_md, encoding="utf-8")
+            logger.info(f"📄 Đã lưu báo cáo: {report_file}")
+        else:
+            logger.info("🧪 [DRY-RUN] Bỏ qua việc lưu báo cáo chính thức vào .md/knowledge/reports/")
 
         # 5. Tự động mở GitHub Pull Request nếu có cải tiến
         if not dry_run and total_commits > 0:
@@ -545,7 +571,7 @@ class NightlyTunerDaemon:
             self._cleanup_empty_branch(branch_name)
 
         # 6. Gửi thông báo Telegram Bot
-        if not self.no_telegram:
+        if not self.no_telegram and not dry_run:
             telegram_sent = self.send_telegram_notification(report)
             report.telegram_notified = telegram_sent
 

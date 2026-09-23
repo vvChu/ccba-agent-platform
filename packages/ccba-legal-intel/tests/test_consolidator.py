@@ -206,3 +206,74 @@ def test_manifest_generator_mock(tmp_path: Path):
     assert manifest.target_doc_id == "qcvn_mock"
     assert len(manifest.patches) == 1
     assert out_yaml.exists()
+
+
+def test_insert_range_multi_node_clean_anchors(sample_qcvn_md: str, tmp_path: Path):
+    manifest = PatchManifest(
+        target_doc_id="qcvn_test",
+        amending_doc_id="tt_31_2026",
+        doc_mode=DocMode.QCVN,
+        patches=[
+            PatchItem(
+                action=PatchAction.INSERT_RANGE_AFTER,
+                target_anchor="muc-1-1-2",
+                new_anchors=["muc-1-1-3", "muc-1-1-4"],
+                citation="Bổ sung bởi Sửa đổi 01:2026",
+                defect_severity=DefectSeverity.CRITICAL_DEFECT,
+                new_content_inline=(
+                    "#### <a id=\"muc-1-1-3\" name=\"muc-1-1-3\"></a>1.1.3  Khoản thứ nhất\n\n"
+                    "Nội dung khoản thứ nhất.\n\n"
+                    "#### <a id=\"muc-1-1-4\" name=\"muc-1-1-4\"></a>1.1.4  Khoản thứ hai\n\n"
+                    "Nội dung khoản thứ hai."
+                ),
+            )
+        ],
+    )
+
+    base_file = tmp_path / "base.md"
+    base_file.write_text(sample_qcvn_md, encoding="utf-8")
+
+    consolidator = LegislativeConsolidator(manifest)
+    res = consolidator.consolidate(base_file, output_dir=tmp_path / "out")
+
+    assert res.success
+    assert res.added_clauses == 2
+    out_md = res.consolidated_md_path.read_text(encoding="utf-8")
+    assert '<a id="muc-1-1-3" name="muc-1-1-3"></a><a id=' not in out_md
+    assert "muc-1-1-3" in out_md
+    assert "muc-1-1-4" in out_md
+
+
+def test_handle_consolidate_cli(sample_qcvn_md: str, tmp_path: Path):
+    from argparse import Namespace
+    from ccba_legal.cli import handle_consolidate
+
+    manifest_yaml = """
+target_doc_id: qcvn_test
+amending_doc_id: sua_doi_test
+doc_mode: qcvn
+title: Test Quy Chuẩn
+official_citation: TT 99/2026/TT-BXD
+effective_date: "2026-12-31"
+patches:
+  - action: REPLACE
+    target_anchor: muc-1-1-2
+    citation: Sửa đổi bởi TT 99/2026
+    defect_severity: CRITICAL_DEFECT
+    new_content_inline: Nội dung sửa đổi mới
+"""
+    mfile = tmp_path / "manifest.yaml"
+    mfile.write_text(manifest_yaml, encoding="utf-8")
+    base_file = tmp_path / "base.md"
+    base_file.write_text(sample_qcvn_md, encoding="utf-8")
+    out_dir = tmp_path / "out_cli"
+
+    args = Namespace(
+        manifest=str(mfile),
+        base=str(base_file),
+        output=str(out_dir),
+        amending=None,
+    )
+    exit_code = handle_consolidate(args)
+    assert exit_code == 0
+    assert (out_dir / "base.md").exists() or (out_dir / "qcvn_test.md").exists()

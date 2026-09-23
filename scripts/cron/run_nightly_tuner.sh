@@ -19,7 +19,7 @@ DRY_RUN_FLAG=""
 MAX_ITER="30"
 TARGET_REF="${TARGET_REF:-origin/main}"
 USE_REAL_LLM_FLAG=""
-TOKEN_BUDGET_FLAG="--token-budget 6500000"
+TOKEN_BUDGET_FLAG="--token-budget 10000000"
 MODEL_FLAG=""
 SKILL_FLAG=""
 
@@ -38,7 +38,7 @@ Tùy chọn:
   --max-iter N         Số vòng lặp tối đa cho mỗi kỹ năng (mặc định: 30)
   --ref TARGET_REF     Git target ref để so khớp baseline (mặc định: origin/main)
   --use-real-llm       Kích hoạt chạy với mô hình LLM thực tế qua AI Gateway LiteLLM
-  --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 6,500,000)
+  --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 10,000,000)
   --model MODEL_NAME   Tên mô hình LLM (mặc định: qwen-local-primary)
   --skill SKILL_NAME   Chỉ định tối ưu một kỹ năng cụ thể (bỏ qua queue toàn bộ catalog)
 
