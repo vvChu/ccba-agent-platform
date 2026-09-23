@@ -181,4 +181,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/docx-js.md` | Hướng dẫn tạo lập, định dạng và xuất bản tài liệu docx bằng thư viện docx (JavaScript) |
 | `references/ooxml.md` | Hướng dẫn phân giải, thao tác trực tiếp với cấu trúc Office Open XML (OOXML) |
 
-
+## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
+* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
+* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.
+* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
