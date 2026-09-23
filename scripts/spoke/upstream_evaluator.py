@@ -1013,18 +1013,21 @@ class UpstreamEvaluator:
 
         for ref in refs_to_try:
             try:
+                env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
                 res = subprocess.run(
                     ["git", "ls-remote", remote_url, ref],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
                     errors="replace",
+                    timeout=15,
+                    env=env,
                     check=True,
                 )
                 output = res.stdout.strip()
                 if output:
                     return output.split()[0]
-            except subprocess.SubprocessError:
+            except (subprocess.SubprocessError, TimeoutError, OSError):
                 pass
         return ""
 
