@@ -221,9 +221,9 @@ def test_insert_range_multi_node_clean_anchors(sample_qcvn_md: str, tmp_path: Pa
                 citation="Bổ sung bởi Sửa đổi 01:2026",
                 defect_severity=DefectSeverity.CRITICAL_DEFECT,
                 new_content_inline=(
-                    "#### <a id=\"muc-1-1-3\" name=\"muc-1-1-3\"></a>1.1.3  Khoản thứ nhất\n\n"
+                    '#### <a id="muc-1-1-3" name="muc-1-1-3"></a>1.1.3  Khoản thứ nhất\n\n'
                     "Nội dung khoản thứ nhất.\n\n"
-                    "#### <a id=\"muc-1-1-4\" name=\"muc-1-1-4\"></a>1.1.4  Khoản thứ hai\n\n"
+                    '#### <a id="muc-1-1-4" name="muc-1-1-4"></a>1.1.4  Khoản thứ hai\n\n'
                     "Nội dung khoản thứ hai."
                 ),
             )
@@ -246,6 +246,7 @@ def test_insert_range_multi_node_clean_anchors(sample_qcvn_md: str, tmp_path: Pa
 
 def test_handle_consolidate_cli(sample_qcvn_md: str, tmp_path: Path):
     from argparse import Namespace
+
     from ccba_legal.cli import handle_consolidate
 
     manifest_yaml = """
