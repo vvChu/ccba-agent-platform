@@ -7,7 +7,7 @@ layer: _core
 bundle: _core
 tier: kernel
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 invocation: model_invoked
 deep_seam: ConversionPipeline
