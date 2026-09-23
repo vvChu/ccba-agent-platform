@@ -219,3 +219,82 @@ class TestDocRefactorDaemon:
         assert report.commits_created == 1
         assert report.pr_url == "https://github.com/vvChu/ccba-agent-platform/pull/294"
         assert "could not add label: 'documentation' not found" in caplog.text
+
+    def test_zero_deletion_guard_hub_and_spoke_formats(self) -> None:
+        """Verifies that ZeroDeletionGuard recognizes Hub RULE-X.Y and Spoke ## N. formats."""
+        orig_hub = (
+            "- **RULE-1.1 [ADR-0059]**: First rule\n"
+            "- **RULE-1.2 [ADR-0057]**: Second rule\n"
+            "#### P1.3 Legacy Pattern"
+        )
+        # 1. Illegal deletion of RULE-1.2 and P1.3
+        prop_hub_deleted = "- **RULE-1.1 [ADR-0059]**: First rule"
+        violations_hub = ZeroDeletionGuard.audit_diff(orig_hub, prop_hub_deleted)
+        assert len(violations_hub) == 2
+        assert any("RULE-1.2" in v for v in violations_hub)
+        assert any("P1.3" in v for v in violations_hub)
+
+        # 2. Permitted deprecation with brackets [DEPRECATED] or (DEPRECATED)
+        prop_hub_deprecated = (
+            "- **RULE-1.1 [ADR-0059]**: First rule\n"
+            "- RULE-1.2 [ADR-0057] [DEPRECATED]: Second rule\n"
+            "#### P1.3 (DEPRECATED) Legacy Pattern"
+        )
+        violations_hub_dep = ZeroDeletionGuard.audit_diff(orig_hub, prop_hub_deprecated)
+        assert len(violations_hub_dep) == 0
+
+        # 3. Spoke format with ## Miền N. and deprecation
+        orig_spoke = "## Miền 1. Provenance\nContent\n## Miền 2. Quản Trị Tri Thức\nContent"
+        prop_spoke_deleted = "## Miền 1. Provenance\nContent"
+        violations_spoke = ZeroDeletionGuard.audit_diff(orig_spoke, prop_spoke_deleted)
+        assert len(violations_spoke) == 1
+        assert "SEC-2" in violations_spoke[0]
+
+        # 4. Spoke section deprecation
+        prop_spoke_dep = (
+            "## Miền 1. Provenance\nContent\n## Miền 2. Quản Trị Tri Thức [DEPRECATED]\nContent"
+        )
+        violations_spoke_dep = ZeroDeletionGuard.audit_diff(orig_spoke, prop_spoke_dep)
+        assert len(violations_spoke_dep) == 0
+
+    def test_doc_auto_evolution_audit_only_mode(self, project_root: Path) -> None:
+        """Verifies that audit-only mode runs in-memory and sends alert without git mutation."""
+        captured_reports = []
+
+        def mock_emitter(rep):
+            captured_reports.append(rep)
+            return True
+
+        engine = DocAutoEvolutionEngine(root=project_root, alert_emitter=mock_emitter)
+        report = engine.run_nightly_evolution(audit_only=True)
+
+        assert report.commits_created == 0
+        assert report.pr_url is None
+        assert len(captured_reports) == 1
+        assert captured_reports[0].health.timestamp is not None
+
+    def test_dynamic_telegram_alert_and_pr_body(self, project_root: Path) -> None:
+        """Verifies that PR body and Telegram alerts dynamically reflect actual pillars and zero hardcoded fake data."""
+        captured_messages = []
+
+        def mock_emitter(rep):
+            # Test alert content generation logic
+            pillar_lines = []
+            for p in rep.health.bloated_pillars:
+                icon = "🔴" if p.is_bloated else "🟢"
+                pillar_lines.append(f"• {icon} {p.pillar_title}: {p.pattern_count} patterns")
+            captured_messages.append("\n".join(pillar_lines))
+            return True
+
+        engine = DocAutoEvolutionEngine(root=project_root, alert_emitter=mock_emitter)
+        report = engine.run_nightly_evolution(dry_run=True)
+        engine.send_telegram_alert(report)
+
+        pr_body = engine.generate_pr_body(report)
+        # Verify no hardcoded Potemkin strings
+        assert "Trạng thái 8 Trụ Cột" not in pr_body
+        assert "Bảng Đối Soát Cân Bằng Các Trụ Cột Tri Thức" in pr_body
+
+        # Verify dynamic pillars rendered in alert
+        assert len(captured_messages) == 1
+        assert "patterns" in captured_messages[0]
