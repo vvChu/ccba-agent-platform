@@ -561,7 +561,9 @@ class NightlyTunerDaemon:
             report_file.write_text(report_md, encoding="utf-8")
             logger.info(f"📄 Đã lưu báo cáo: {report_file}")
         else:
-            logger.info("🧪 [DRY-RUN] Bỏ qua việc lưu báo cáo chính thức vào .md/knowledge/reports/")
+            logger.info(
+                "🧪 [DRY-RUN] Bỏ qua việc lưu báo cáo chính thức vào .md/knowledge/reports/"
+            )
 
         # 5. Tự động mở GitHub Pull Request nếu có cải tiến
         if not dry_run and total_commits > 0:
