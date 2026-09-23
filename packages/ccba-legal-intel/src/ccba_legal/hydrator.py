@@ -491,7 +491,9 @@ class SpokeHydrator:
             elif verify_only:
                 processed_asset = self.verify_asset_local(bundle_dir, asset)
             else:
-                processed_asset = self.hydrate_asset(bundle_dir, asset, force=force, dry_run=dry_run)
+                processed_asset = self.hydrate_asset(
+                    bundle_dir, asset, force=force, dry_run=dry_run
+                )
             result.assets.append(processed_asset)
 
         result.success = result.is_fully_hydrated

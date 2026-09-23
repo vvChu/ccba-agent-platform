@@ -233,7 +233,9 @@ def test_push_asset_success(mock_spoke: Path):
     pdf_asset = next(a for a in assets if a.asset_type == "pdf")
 
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr=""
+        )
         res = hydrator.push_asset(b1_dir, pdf_asset)
 
     assert res.status == AssetStatus.UPLOADED
@@ -272,4 +274,3 @@ def test_push_asset_missing_file(mock_spoke: Path):
 
     assert res.status == AssetStatus.MISSING
     assert not mock_run.called
-
