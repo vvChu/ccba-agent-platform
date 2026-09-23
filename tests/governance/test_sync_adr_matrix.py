@@ -246,8 +246,9 @@ def test_load_adrs_from_dir() -> None:
         assert [a["num"] for a in adrs] == [1, 2]
 
 
-def test_detect_environment() -> None:
+def test_detect_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify environment detection between Hub and Spoke."""
+    monkeypatch.delenv("CCBA_HUB_PATH", raising=False)
     with tempfile.TemporaryDirectory() as tmp_dir:
         root = Path(tmp_dir)
 
