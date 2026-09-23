@@ -103,8 +103,9 @@ def test_hub_discoverer_preserves_existing_config_without_overwriting(tmp_path: 
 
     context = {"hub_path": "../relative_hub"}
     discoverer = HubDiscoverer(spoke_root, context=context, context_file=ctx_file)
-    found = discoverer.discover()
-    assert found.resolve() == valid_hub.resolve()
+    with patch.dict(os.environ, {}, clear=True):
+        found = discoverer.discover()
+        assert found.resolve() == valid_hub.resolve()
 
     # Verify context_file was NOT overwritten with absolute machine path
     content_after = ctx_file.read_text(encoding="utf-8")
