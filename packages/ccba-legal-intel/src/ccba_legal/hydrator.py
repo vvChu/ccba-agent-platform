@@ -25,6 +25,7 @@ class AssetStatus(str, Enum):
 
     UP_TO_DATE = "UP_TO_DATE"
     DOWNLOADED = "DOWNLOADED"
+    UPLOADED = "UPLOADED"
     MISSING = "MISSING"
     HASH_MISMATCH = "HASH_MISMATCH"
     VAULT_UNAVAILABLE = "VAULT_UNAVAILABLE"
@@ -56,11 +57,12 @@ class BundleHydrateResult:
 
     @property
     def is_fully_hydrated(self) -> bool:
-        """True if all assets are UP_TO_DATE or DOWNLOADED with verified SHA-256."""
+        """True if all assets are UP_TO_DATE, DOWNLOADED, or UPLOADED with verified SHA-256."""
         if not self.assets:
             return True
         return all(
-            a.status in (AssetStatus.UP_TO_DATE, AssetStatus.DOWNLOADED) for a in self.assets
+            a.status in (AssetStatus.UP_TO_DATE, AssetStatus.DOWNLOADED, AssetStatus.UPLOADED)
+            for a in self.assets
         )
 
 
@@ -75,6 +77,7 @@ class HydrateSummary:
     total_assets: int = 0
     up_to_date_assets: int = 0
     downloaded_assets: int = 0
+    uploaded_assets: int = 0
     missing_assets: int = 0
     failed_assets: int = 0
     bundle_results: list[BundleHydrateResult] = dataclasses.field(default_factory=list)
@@ -282,21 +285,36 @@ class SpokeHydrator:
         tmp_file = sources_dir / f"{asset.file_name}.tmp_download"
         download_success = False
 
-        try:
-            # --- Tier 2: Cloud Vault Download (rclone or GoogleDriveVault API) ---
-            if self._rclone_available and asset.vault_path:
-                rclone_src = f"{self.rclone_remote}{asset.vault_path}"
-                cmd = ["rclone", "copyto", rclone_src, str(tmp_file)]
-                logger.debug(f"Running rclone: {' '.join(cmd)}")
-                res = subprocess.run(cmd, capture_output=True, timeout=60)
+        # --- Tier 2A: Cloud Vault Download via rclone CLI ---
+        if self._rclone_available and asset.vault_path:
+            rclone_src = f"{self.rclone_remote}{asset.vault_path}"
+            cmd = [
+                "rclone",
+                "copyto",
+                "--non-interactive",
+                "--contimeout",
+                "5s",
+                "--timeout",
+                "15s",
+                rclone_src,
+                str(tmp_file),
+            ]
+            logger.debug(f"Running rclone: {' '.join(cmd)}")
+            try:
+                res = subprocess.run(cmd, capture_output=True, timeout=20)
                 if res.returncode == 0 and tmp_file.exists() and tmp_file.stat().st_size > 0:
                     download_success = True
+            except (subprocess.TimeoutExpired, Exception) as e:
+                logger.warning(f"rclone copyto failed or timed out for {asset.file_name}: {e}")
+                if tmp_file.exists():
+                    tmp_file.unlink(missing_ok=True)
 
-            if not download_success and self.vault_client.is_available():
-                # Try finding file by name in vault structure
+        # --- Tier 2B: Cloud Vault Fallback via GoogleDriveVault API (Read-Only) ---
+        if not download_success and self.vault_client.is_available():
+            try:
                 category = bundle_dir.parent.name
                 doc_slug = bundle_dir.name
-                target_folder_id = self.vault_client.ensure_vault_structure(category, doc_slug)
+                target_folder_id = self.vault_client.find_vault_folder(category, doc_slug)
                 if target_folder_id and self.vault_client.service:
                     q = f"name = '{asset.file_name}' and '{target_folder_id}' in parents and trashed = false"
                     res = (
@@ -309,15 +327,20 @@ class SpokeHydrator:
                         file_id = files[0]["id"]
                         if self.vault_client.download_asset(file_id, tmp_file):
                             download_success = True
-
-            if not download_success:
-                asset.status = AssetStatus.VAULT_UNAVAILABLE
-                asset.message = f"Asset not found in Cloud Vault ({asset.vault_path})"
+            except Exception as e:
+                logger.warning(f"GoogleDriveVault API download failed for {asset.file_name}: {e}")
                 if tmp_file.exists():
                     tmp_file.unlink(missing_ok=True)
-                return asset
 
-            # --- Cryptographic SHA-256 Verification Gate ---
+        if not download_success:
+            asset.status = AssetStatus.VAULT_UNAVAILABLE
+            asset.message = f"Asset not found in Cloud Vault ({asset.vault_path})"
+            if tmp_file.exists():
+                tmp_file.unlink(missing_ok=True)
+            return asset
+
+        # --- Cryptographic SHA-256 Verification Gate ---
+        try:
             downloaded_sha = compute_file_sha256(tmp_file).lower()
             asset.actual_sha256 = downloaded_sha
 
@@ -334,16 +357,102 @@ class SpokeHydrator:
             # Atomic promotion
             shutil.move(str(tmp_file), str(local_file))
             asset.status = AssetStatus.DOWNLOADED
-            asset.message = "Successfully hydrated and SHA-256 verified"
+            if not asset.expected_sha256:
+                asset.message = (
+                    "Successfully hydrated (warning: no expected SHA-256 in metadata.yaml)"
+                )
+            else:
+                asset.message = "Successfully hydrated and SHA-256 verified"
             return asset
 
         except Exception as e:
             if tmp_file.exists():
                 tmp_file.unlink(missing_ok=True)
             asset.status = AssetStatus.ERROR
-            asset.message = f"Hydration exception: {e}"
-            logger.exception(f"Error hydrating {asset.file_name}")
+            asset.message = f"Hydration verification exception: {e}"
+            logger.exception(f"Error verifying {asset.file_name}")
             return asset
+
+    def push_asset(
+        self,
+        bundle_dir: Path,
+        asset: AssetHydrateResult,
+        dry_run: bool = False,
+    ) -> AssetHydrateResult:
+        """Push a local asset to Cloud Vault (rclone with GoogleDriveVault API fallback).
+
+        Args:
+            bundle_dir: Path to the OKF bundle directory.
+            asset: AssetHydrateResult representing the asset to push.
+            dry_run: If True, simulate upload without modifying remote.
+
+        Returns:
+            Updated AssetHydrateResult with upload status.
+        """
+        local_file = bundle_dir / "sources" / asset.file_name
+        if not local_file.exists():
+            asset.status = AssetStatus.MISSING
+            asset.message = f"Local source file not found: {local_file}"
+            return asset
+
+        actual_sha = compute_file_sha256(local_file).lower()
+        asset.actual_sha256 = actual_sha
+
+        if asset.expected_sha256 and actual_sha != asset.expected_sha256:
+            asset.status = AssetStatus.HASH_MISMATCH
+            asset.message = (
+                f"Integrity check failed before push: local={actual_sha[:10]}... "
+                f"!= expected={asset.expected_sha256[:10]}..."
+            )
+            logger.error(f"Cannot push corrupted file {asset.file_name}!")
+            return asset
+
+        if dry_run:
+            asset.status = AssetStatus.UPLOADED
+            asset.message = f"Dry-run: would upload to {asset.vault_path}"
+            return asset
+
+        remote_target = f"{self.rclone_remote}{asset.vault_path}"
+        upload_success = False
+
+        # --- Tier 1: Rclone Fast Copyto ---
+        cmd = [
+            "rclone",
+            "copyto",
+            str(local_file),
+            remote_target,
+            "--non-interactive",
+            "--contimeout",
+            "5s",
+            "--timeout",
+            "30s",
+        ]
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            if res.returncode == 0:
+                upload_success = True
+        except (subprocess.TimeoutExpired, Exception) as e:
+            logger.warning(f"rclone copyto failed for {asset.file_name}: {e}")
+
+        # --- Tier 2: GoogleDriveVault API Fallback ---
+        if not upload_success and self.vault_client.is_available():
+            try:
+                category = bundle_dir.parent.name
+                doc_slug = bundle_dir.name
+                up_res = self.vault_client.upload_asset(local_file, category, doc_slug)
+                if up_res.get("status") == "synced":
+                    upload_success = True
+            except Exception as e:
+                logger.warning(f"GoogleDriveVault API upload failed for {asset.file_name}: {e}")
+
+        if upload_success:
+            asset.status = AssetStatus.UPLOADED
+            asset.message = f"Successfully uploaded to Cloud Vault ({asset.vault_path})"
+        else:
+            asset.status = AssetStatus.ERROR
+            asset.message = f"Failed to upload to Cloud Vault ({asset.vault_path})"
+
+        return asset
 
     def hydrate_bundle(
         self,
@@ -351,14 +460,16 @@ class SpokeHydrator:
         force: bool = False,
         verify_only: bool = False,
         dry_run: bool = False,
+        push: bool = False,
     ) -> BundleHydrateResult:
-        """Hydrate all declared assets for a single bundle.
+        """Hydrate or push all declared assets for a single bundle.
 
         Args:
             bundle_dir: Path to the OKF bundle directory.
             force: Force re-download even if file exists.
             verify_only: Only verify local files without downloading.
-            dry_run: Inspect without downloading.
+            dry_run: Inspect without downloading/uploading.
+            push: If True, push local files to Cloud Vault.
 
         Returns:
             BundleHydrateResult with asset breakdown.
@@ -375,11 +486,13 @@ class SpokeHydrator:
         )
 
         for asset in assets:
-            if verify_only:
-                verified_asset = self.verify_asset_local(bundle_dir, asset)
+            if push:
+                processed_asset = self.push_asset(bundle_dir, asset, dry_run=dry_run)
+            elif verify_only:
+                processed_asset = self.verify_asset_local(bundle_dir, asset)
             else:
-                verified_asset = self.hydrate_asset(bundle_dir, asset, force=force, dry_run=dry_run)
-            result.assets.append(verified_asset)
+                processed_asset = self.hydrate_asset(bundle_dir, asset, force=force, dry_run=dry_run)
+            result.assets.append(processed_asset)
 
         result.success = result.is_fully_hydrated
         return result
@@ -391,15 +504,17 @@ class SpokeHydrator:
         force: bool = False,
         verify_only: bool = False,
         dry_run: bool = False,
+        push: bool = False,
     ) -> HydrateSummary:
-        """Hydrate or verify multiple bundles across the repository.
+        """Hydrate, verify, or push multiple bundles across the repository.
 
         Args:
             category: Optional category filter.
             cohorts: Optional list of doc slugs.
             force: Force re-download.
             verify_only: Only verify local status.
-            dry_run: Dry-run without downloading.
+            dry_run: Dry-run without network writes.
+            push: Push local assets to Cloud Vault.
 
         Returns:
             HydrateSummary with aggregated statistics.
@@ -409,14 +524,15 @@ class SpokeHydrator:
 
         for b_dir in bundle_dirs:
             b_res = self.hydrate_bundle(
-                b_dir, force=force, verify_only=verify_only, dry_run=dry_run
+                b_dir, force=force, verify_only=verify_only, dry_run=dry_run, push=push
             )
             summary.bundle_results.append(b_res)
 
             if b_res.is_fully_hydrated:
                 summary.fully_hydrated += 1
             elif any(
-                a.status in (AssetStatus.UP_TO_DATE, AssetStatus.DOWNLOADED) for a in b_res.assets
+                a.status in (AssetStatus.UP_TO_DATE, AssetStatus.DOWNLOADED, AssetStatus.UPLOADED)
+                for a in b_res.assets
             ):
                 summary.partially_hydrated += 1
             else:
@@ -428,6 +544,8 @@ class SpokeHydrator:
                     summary.up_to_date_assets += 1
                 elif a.status == AssetStatus.DOWNLOADED:
                     summary.downloaded_assets += 1
+                elif a.status == AssetStatus.UPLOADED:
+                    summary.uploaded_assets += 1
                 elif a.status == AssetStatus.MISSING:
                     summary.missing_assets += 1
                 else:
