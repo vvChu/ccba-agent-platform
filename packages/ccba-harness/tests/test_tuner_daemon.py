@@ -721,3 +721,146 @@ def test_daemon_run_nightly_batch_cleans_empty_branch_when_total_commits_zero(
     assert report.total_commits == 0
     assert len(cleaned_branches) == 1
     assert cleaned_branches[0] == report.branch_name
+
+
+def test_daemon_run_nightly_batch_dry_run_preserves_plateau_brief(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify run_nightly_batch does not delete plateau briefs in dry-run mode even if score >= 90%."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+
+    escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
+    escalations_dir.mkdir(parents=True)
+    brief_file = escalations_dir / "test_skill_plateau.md"
+    brief_file.write_text("# Real Plateau Brief", encoding="utf-8")
+    assert brief_file.exists()
+
+    mock_report = RatchetReport(
+        target_file=str(tmp_path / "SKILL.md"),
+        initial_score=80.0,
+        final_score=95.0,
+        total_iterations=5,
+        kept_commits=1,
+        reverted_trials=0,
+    )
+
+    class MockTuner:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def run(self) -> RatchetReport:
+            return mock_report
+
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "test_skill",
+                "target_file": str(tmp_path / "SKILL.md"),
+                "dataset_file": "eval_test.json",
+            }
+        ],
+    )
+    monkeypatch.setattr("ccba_harness.evals.daemon.GitRatchetTuner", MockTuner)
+
+    daemon.run_nightly_batch(dry_run=True)
+    # The plateau brief must still exist because dry_run=True
+    assert brief_file.exists()
+    # Reports must not be written to .md/knowledge/reports/ in dry-run
+    reports_dir = tmp_path / ".md" / "knowledge" / "reports"
+    assert not reports_dir.exists()
+
+
+def test_daemon_run_nightly_batch_dry_run_does_not_create_plateau_brief(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify run_nightly_batch does not generate new plateau briefs when stagnant in dry-run mode."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+
+    mock_stagnant_report = RatchetReport(
+        target_file=str(tmp_path / "SKILL.md"),
+        initial_score=75.0,
+        final_score=75.0,
+        total_iterations=5,
+        kept_commits=0,
+        reverted_trials=5,
+    )
+
+    class MockTuner:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def run(self) -> RatchetReport:
+            return mock_stagnant_report
+
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "stagnant_skill",
+                "target_file": str(tmp_path / "SKILL.md"),
+                "dataset_file": "eval_stagnant.json",
+            }
+        ],
+    )
+    monkeypatch.setattr("ccba_harness.evals.daemon.GitRatchetTuner", MockTuner)
+
+    daemon.run_nightly_batch(dry_run=True)
+    escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
+    brief_file = escalations_dir / "stagnant_skill_plateau.md"
+    assert not brief_file.exists()
+
+
+def test_daemon_run_nightly_batch_live_run_removes_stale_plateau_brief(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify run_nightly_batch removes stale plateau brief in live mode when score >= 90%."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+
+    escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
+    escalations_dir.mkdir(parents=True)
+    brief_file = escalations_dir / "test_skill_plateau.md"
+    brief_file.write_text("# Stale Plateau Brief", encoding="utf-8")
+    assert brief_file.exists()
+
+    mock_report = RatchetReport(
+        target_file=str(tmp_path / "SKILL.md"),
+        initial_score=80.0,
+        final_score=95.0,
+        total_iterations=5,
+        kept_commits=1,
+        reverted_trials=0,
+    )
+
+    class MockTuner:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def run(self) -> RatchetReport:
+            return mock_report
+
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "test_skill",
+                "target_file": str(tmp_path / "SKILL.md"),
+                "dataset_file": "eval_test.json",
+            }
+        ],
+    )
+    monkeypatch.setattr("ccba_harness.evals.daemon.GitRatchetTuner", MockTuner)
+    monkeypatch.setattr(daemon, "_create_git_branch", lambda b: None)
+    monkeypatch.setattr(daemon, "_create_pull_request", lambda b, r: "https://github.com/pull/1")
+
+    daemon.run_nightly_batch(dry_run=False)
+    assert not brief_file.exists()
