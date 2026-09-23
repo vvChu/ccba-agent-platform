@@ -9,6 +9,83 @@ from typing import Any
 from ccba_legal.converters.omml import omml_to_latex
 from ccba_legal.converters.standard.handlers.table_handler import clean_formula_latex
 from ccba_legal.converters.standard.models import HierarchyState
+from ccba_legal.figure_extractor import render_markdown_figure_card
+
+__all__ = [
+    "_emit_figure_or_comment",
+    "extract_math_expression",
+    "handle_empty_paragraph_formula",
+    "handle_formula_block",
+]
+
+
+def _emit_figure_or_comment(ctx: Any, comment_str: str) -> None:
+    """Render figure card from HTML comment if matching FIGURE format, else emit raw comment."""
+    m_fig = re.match(r"^<!--\s*FIGURE:\s*([^|]+)\|(.*)-->$", comment_str.strip())
+    if m_fig:
+        fig_slug = m_fig.group(1).strip()
+        fig_title = m_fig.group(2).strip().rstrip("-").strip()
+        fig_num = fig_slug.replace("hinh_", "").replace("_", ".").upper()
+        fig_entry: dict[str, Any] = {
+            "tag": fig_num,
+            "title": fig_title,
+            "anchor": fig_slug.replace("_", "-"),
+            "image_relpath": f"figures/images/{fig_slug}.png",
+            "geometry_rules": {},
+        }
+        ctx.emit(render_markdown_figure_card(fig_entry))
+    else:
+        ctx.emit(f"\n{comment_str}\n\n")
+
+
+def handle_empty_paragraph_formula(ctx: Any, obj: Any, i: int) -> int:
+    """Check if an empty paragraph contains standalone formula images/drawings (e.g. MathType equations) and emit KaTeX or figure card."""
+    xml = obj._element.xml
+    rids = re.findall(r'r:(?:id|embed)="([^"]+)"', xml)
+    if rids:
+        for rid in rids:
+            if rid in ctx.formula_overrides:
+                val = ctx.formula_overrides[rid]
+                if isinstance(val, tuple):
+                    fid, f_latex = val[0], val[1]
+                elif isinstance(val, dict):
+                    fid = val.get("formula_id", f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}")
+                    f_latex = val.get("latex", "")
+                else:
+                    fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
+                    f_latex = str(val)
+                f_latex = f_latex.strip()
+                if not f_latex:
+                    return i + 1
+                if f_latex.startswith("<!--"):
+                    _emit_figure_or_comment(ctx, f_latex)
+                    ctx.state_mgr.reset()
+                    return i + 1
+                if f_latex.startswith("$$") and f_latex.endswith("$$"):
+                    f_latex = f_latex[2:-2].strip()
+                ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
+                if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+                    ctx.state_mgr.reset()
+                return i + 1
+            elif ctx.rid_to_katex and rid in ctx.rid_to_katex:
+                raw_k = ctx.rid_to_katex[rid].strip()
+                if not raw_k:
+                    return i + 1
+                if raw_k.startswith("<!--"):
+                    _emit_figure_or_comment(ctx, raw_k)
+                    ctx.state_mgr.reset()
+                    return i + 1
+                fid = f"F_{ctx.bundle_dir.name.upper()}_{rid.upper()}"
+                f_latex = (
+                    raw_k[2:-2].strip()
+                    if (raw_k.startswith("$$") and raw_k.endswith("$$"))
+                    else raw_k
+                )
+                ctx.emit(f'\n$${f_latex}$$\n<!-- formula_id: "{fid}" -->\n\n')
+                if ctx.state_mgr.state != HierarchyState.IN_TRONG_DO:
+                    ctx.state_mgr.reset()
+                return i + 1
+    return i + 1
 
 
 def extract_math_expression(obj: Any, ctx: Any, fallback_tag: str) -> tuple[str, str]:
@@ -56,48 +133,8 @@ def handle_formula_block(
     obj: Any,
     rendered_p: str,
 ) -> int | None:
-    """Handle standalone formula headings, inline formula tags, expression-tag pairs, and embedded drawing blocks."""
-    # 1. Blank paragraph with drawings/formulas
-    if not text:
-        p_xml = obj._element.xml
-        has_drawings = "w:drawing" in p_xml or "v:imagedata" in p_xml or "v:shape" in p_xml
-        if has_drawings and rendered_p:
-            if rendered_p.startswith("$$"):
-                has_math_op = any(
-                    op in rendered_p
-                    for op in [
-                        "=",
-                        "\\le",
-                        "\\ge",
-                        "<",
-                        ">",
-                        "\\approx",
-                        "\\sum",
-                        "\\int",
-                        "\\frac",
-                        "\\pm",
-                        "\\times",
-                        "\\cdot",
-                        "\\partial",
-                        "\\sqrt",
-                    ]
-                )
-                if has_math_op:
-                    m_f_tag = re.search(
-                        r"(?:\\tag\{([0-9A-Za-zĐđ\.]+)\}|\\qquad\s*\(([0-9A-Za-zĐđ\.]+)\)|\(([0-9]{1,3}|[A-ZĐđ]\.[0-9]{1,2})\))",
-                        rendered_p,
-                    )
-                    if m_f_tag and not rendered_p.startswith("<a id="):
-                        tag_val = m_f_tag.group(1) or m_f_tag.group(2) or m_f_tag.group(3)
-                        tag_slug = tag_val.lower().replace("đ", "dd").replace(".", "_")
-                        ctx.emit(f'<a id="formula-{tag_slug}"></a>\n{rendered_p}\n\n')
-                    else:
-                        ctx.emit(f"{rendered_p}\n\n")
-            elif rendered_p.startswith(("<a id=", "<p", "![", "**")):
-                ctx.emit(f"{rendered_p}\n\n")
-        return i + 1
-
-    # 2. Inline Formula Tag (e.g. "RA x Ia <= 50 \t(1)", "R <= eq \f(50,Ia) \t(2)")
+    """Handle standalone formula headings, inline formula tags, and expression-tag pairs."""
+    # 1. Inline Formula Tag (e.g. "RA x Ia <= 50 \t(1)", "R <= eq \f(50,Ia) \t(2)")
     m_inline = re.search(r"(?:\t|\s{2,})\(([0-9A-Za-zĐđ\.]+)\)\s*$", text)
     if not m_inline:
         m_inline = re.search(r"(?:\t|\s{2,})\(([0-9A-Za-zĐđ\.]+)\)\s*$", rendered_p)
@@ -152,7 +189,7 @@ def handle_formula_block(
             ctx.state_mgr.reset()
         return i + 1
 
-    # 3. Formula Expression at i followed by Tag (N) at i + 1
+    # 2. Formula Expression at i followed by Tag (N) at i + 1
     # ONLY if block i actually contains math (OMML, OLE/imagedata, or Word EQ fields)
     p_xml = obj._element.xml
     has_math = (
@@ -197,7 +234,7 @@ def handle_formula_block(
                     ctx.state_mgr.reset()
                 return i + 2
 
-    # 4. Standalone Formula Tag (e.g. (1), (2.1), (A.1))
+    # 3. Standalone Formula Tag (e.g. (1), (2.1), (A.1))
     m_f_head = re.match(r"^\(([0-9A-Za-zĐđ\.]+)\)$", text)
     if m_f_head:
         f_tag = m_f_head.group(1)

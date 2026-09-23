@@ -7,6 +7,8 @@ import re
 import unicodedata
 from typing import Any
 
+from ccba_legal.converters.standard.preprocessor import parse_part_number
+
 
 def slugify_vietnamese(text: str) -> str:
     """Convert Vietnamese unicode string into clean semantic ASCII slug."""
@@ -31,6 +33,35 @@ def handle_structural_heading(
         Next block index if handled, or None to continue downstream processing.
     """
     from ccba_legal.converters.standard.strategy import render_paragraph_with_runs
+
+    # 0. Multi-Part Standard Headings (e.g. PHẦN 1, PHẦN 2, or QCVN 07-1, QCVN 07-2) - ADR 0044
+    m_part_phan = re.match(
+        r"^(?:PHẦN|Phần)\s+([0-9]+|[IVXLCDM]+)\b(?:\s*[:–—\-]\s*(.*))?$",
+        text.strip(),
+        re.IGNORECASE,
+    )
+    m_part_qcvn = re.match(
+        r"^(?:QCVN|TCVN)\s+[0-9]+-(\d+):[0-9]+(?:\/[A-Z0-9]+)?$", text.strip(), re.IGNORECASE
+    )
+    if m_part_phan:
+        raw_num = m_part_phan.group(1)
+        part_num = parse_part_number(raw_num)
+        if part_num is not None:
+            ctx.current_part = f"p{part_num:02d}"
+            part_rendered = render_paragraph_with_runs(obj, rid_to_katex=ctx.rid_to_katex)
+            clean_title = re.sub(
+                r"^(?:PHẦN|Phần)\s+(?:[0-9]+|[IVXLCDM]+)\s*[:–—\-]*\s*",
+                "",
+                part_rendered,
+                flags=re.IGNORECASE,
+            ).strip()
+            hdr_text = f"PHẦN {part_num}" + (f" — {clean_title}" if clean_title else "")
+            ctx.emit(f'\n<a id="phan-{ctx.current_part}"></a>\n# {hdr_text.upper()}\n\n')
+            ctx.state_mgr.reset()
+            return i + 1
+    elif m_part_qcvn:
+        part_num = int(m_part_qcvn.group(1))
+        ctx.current_part = f"p{part_num:02d}"
 
     # 1. Table Caption
     m_tbl = re.match(
