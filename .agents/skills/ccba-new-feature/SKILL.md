@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - new feature
@@ -90,11 +90,15 @@ Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối kh
 - **Triage Fast-Path (Smart Skipping):**
   - Nếu Issue đã có sẵn **Agent Brief** chuẩn từ `/ccba-issue-to-hub`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
   - Nếu chưa có Agent Brief: Kích hoạt `/ccba-grilling` để phỏng vấn người dùng và stress-test các giả định.
+- **Rào chắn Phân lập 2 Giai đoạn (2-Phase Planning Guardrail — Tránh Scope Conflation):**
+  Đối với mọi yêu cầu thuộc loại `refactor` có ảnh hưởng đến pipeline chuyển đổi, bộ trích xuất hoặc cấu trúc dữ liệu, bản kế hoạch BẮT BUỘC phải phân tách rạch ròi 2 giai đoạn:
+  * **Giai đoạn 1 (Pure Structural Refactoring):** Tái cấu trúc cấu trúc thuần túy (KISS, dual-dispatch, extraction), cam kết **Zero-Regression (Sai lệch 0.0%)**, 100% byte-for-byte identical, tuyệt đối không thay đổi schema hay định dạng dữ liệu đầu ra.
+  * **Giai đoạn 2 (Feature & Format Mutation Upgrades):** Nâng cấp quy chuẩn quy phạm, thay đổi cấu trúc bảng/công thức (ADR 0041, ADR 0044), có kế hoạch cập nhật baseline snapshot và giải trình sự thay đổi.
 - **Soạn thảo Kế hoạch Triển khai (`implementation_plan.md`):**
-  - Bắt buộc có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)` tra cứu `catalog.yaml` (ADR 0047).
-  - Xác định rõ các Deep Seams (khớp nối) và Scoped Verification Plan.
+  - Bắt buộc có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)` tra cứu `catalog.yaml` (ADR 0047 / ADR 0032).
+  - Xác định rõ các Deep Seams (khớp nối) và Scoped Verification Plan (ưu tiên Dynamic Re-Convert song song với Golden Snapshot tĩnh).
 - **Phê duyệt:** Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
-- **Tiêu chí hoàn thành:** Bản kế hoạch implementation_plan.md được người dùng duyệt chính thức.
+- **Tiêu chí hoàn thành:** Bản kế hoạch implementation_plan.md được người dùng duyệt chính thức, tuân thủ nghiêm ngặt 2-Phase Planning Guardrail.
 
 ### Bước 7: Bàn giao cô lập ngữ cảnh (Factory Model Hand-off & Smart Routing)
 Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ cảnh hội thoại (Context Rot) và giảm OpEx:

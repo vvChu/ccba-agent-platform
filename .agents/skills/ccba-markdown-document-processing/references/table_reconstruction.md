@@ -66,3 +66,21 @@ Khi bảng có cả chú thích theo ô và chú thích giải nghĩa chung (nh�
    * Hàng gộp ngang toàn bộ phân nhóm bắt buộc có nhãn `*(Áp dụng chung)*` (Markdown) / `Áp dụng chung` (CSV/JSON).
 3. **Chuẩn hóa chân mỏ neo Heuristic (`<sup>` Normalization):**
    * Tự động nhận diện các mẫu `+(\d+)`, `++(\d+)`, `Từ(\d+)` để bọc thẻ `<sup>(\d+)</sup>` khi Word/PDF scan bị mất thuộc tính run `superscript`.
+
+---
+
+## 5. Quy Tắc An Toàn Dữ Liệu Bảng Biểu (ADR 0041 & ADR 0044)
+
+Khi bóc tách hoặc tái tạo bảng số liệu, Agent và bộ chuyển đổi bắt buộc phải tuân thủ nghiêm ngặt 3 rào chắn toàn vẹn dữ liệu:
+
+1. **Rào chắn Chống Gộp Hàng Số Liệu Thuần (Numeric Subheader Collision Guard - RULE-3.3):**
+   * *Nguyên nhân:* Khi một hàng có nhiều cột mang cùng giá trị số (ví dụ: `['50', '50']` cho tốc độ 50 km/h và khoảng cách dừng 50 m), thuật toán kiểm tra trùng ô `len(set(non_empty)) == 1` rất dễ nhầm lẫn đây là dòng tiêu đề phân nhóm (category/subheader) và gộp thành `['**50**', '']`, làm mất mát dữ liệu thực tế của các cột sau.
+   * *Quy tắc:* Bắt buộc kiểm tra `not is_numeric` (`not re.match(r"^[0-9\.,\-\+±%\s]+$", cell)`) trước khi thực hiện gộp dòng subheader. Tuyệt đối cấm gộp dòng nếu ô chứa số thuần túy hoặc đơn vị đo.
+
+2. **Khử Trùng Lặp Chú Thích Ô Gộp Ngang (Merged-Cell Footnote Deduplication - RULE-3.4):**
+   * *Nguyên nhân:* Trong OpenXML DOCX, khi một ô bảng bị gộp ngang (`gridSpan`), `row.cells` trả về chuỗi text lặp lại cho từng ô thành phần. Nếu hàng chứa chú thích (`<br>CHÚ THÍCH 2:...`), vòng lặp quét cell sẽ append chú thích nhiều lần, gây trùng lặp trong metadata JSON (`fn_1` và `fn_2` giống hệt nhau).
+   * *Quy tắc:* Bắt buộc kiểm tra `if nl not in footnotes` trước khi nạp vào danh sách chú thích bảng.
+
+3. **Chuẩn Hóa Tiền Tố Bảng Đa Phần (Multipart Table Disambiguation - ADR 0044):**
+   * Đối với các quy chuẩn kỹ thuật có nhiều phần độc lập (như QCVN 07:2023/BXD), bảng biểu bắt buộc phải mang tiền tố phần `bang_pXX_YY.csv` (ví dụ `bang_p04_01.csv` thay vì `bang_01.csv`) và khai báo trường `part_id: "pXX"` trong `tables_catalog.json` để ngăn chặn triệt để tình trạng ghi đè tệp dữ liệu trên đĩa.
+
