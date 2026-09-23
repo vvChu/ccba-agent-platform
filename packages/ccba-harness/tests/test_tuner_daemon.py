@@ -390,6 +390,79 @@ def test_weighted_priority_queue_cooldown() -> None:
     ]
 
 
+def test_weighted_priority_queue_scanned_date_order() -> None:
+    """Verify that unscanned skills (date.min) and older scanned dates are prioritized before recently scanned."""
+    d_old = datetime.date(2026, 9, 18)
+    d_mid = datetime.date(2026, 9, 20)
+    d_recent = datetime.date(2026, 9, 22)
+
+    skills = [
+        {
+            "skill_name": "s_recent",
+            "baseline_score": 60.0,
+            "in_cooldown": False,
+            "last_scanned_date": d_recent,
+        },
+        {
+            "skill_name": "s_unscanned",
+            "baseline_score": 60.0,
+            "in_cooldown": False,
+            "last_scanned_date": None,
+        },
+        {
+            "skill_name": "s_old",
+            "baseline_score": 60.0,
+            "in_cooldown": False,
+            "last_scanned_date": d_old,
+        },
+        {
+            "skill_name": "s_mid",
+            "baseline_score": 60.0,
+            "in_cooldown": False,
+            "last_scanned_date": d_mid,
+        },
+        {
+            "skill_name": "s_cooldown_unscanned",
+            "baseline_score": 50.0,
+            "in_cooldown": True,
+            "last_scanned_date": None,
+        },
+        {
+            "skill_name": "s_cooldown_old",
+            "baseline_score": 50.0,
+            "in_cooldown": True,
+            "last_scanned_date": d_old,
+        },
+    ]
+    ranked = WeightedPriorityQueue.rank_skills(skills)
+    names = [s["skill_name"] for s in ranked]
+    assert names == [
+        "s_unscanned",
+        "s_old",
+        "s_mid",
+        "s_recent",
+        "s_cooldown_unscanned",
+        "s_cooldown_old",
+    ]
+
+
+def test_weighted_priority_queue_handles_datetime_and_string_dates() -> None:
+    """Verify WeightedPriorityQueue normalizes datetime.datetime and str to datetime.date without TypeError."""
+    d_past = datetime.date(2026, 9, 15)
+    dt_recent = datetime.datetime(2026, 9, 22, 10, 30, 0)
+    str_date = "2026-09-20T00:00:00"
+
+    skills = [
+        {"skill_name": "s_dt", "last_scanned_date": dt_recent, "baseline_score": 60.0},
+        {"skill_name": "s_unscanned", "last_scanned_date": None, "baseline_score": 60.0},
+        {"skill_name": "s_str", "last_scanned_date": str_date, "baseline_score": 60.0},
+        {"skill_name": "s_date", "last_scanned_date": d_past, "baseline_score": 60.0},
+    ]
+    ranked = WeightedPriorityQueue.rank_skills(skills)
+    names = [s["skill_name"] for s in ranked]
+    assert names == ["s_unscanned", "s_date", "s_str", "s_dt"]
+
+
 def test_load_historical_metrics_cooldown_and_real_llm_filter(tmp_path: Path) -> None:
     """Verify _load_historical_metrics parses scores and filters cooldown based on REAL_LLM and date."""
     reports_dir = tmp_path / ".md" / "knowledge" / "reports"
@@ -442,7 +515,7 @@ def test_load_historical_metrics_cooldown_and_real_llm_filter(tmp_path: Path) ->
     )
 
     daemon = NightlyTunerDaemon(root=tmp_path)
-    scores, cooldown_skills = daemon._load_historical_metrics(cooldown_days=3)
+    scores, cooldown_skills, last_scanned_dates = daemon._load_historical_metrics(cooldown_days=3)
 
     # Scores loaded across all reports
     assert scores.get("skill_stuck") == 75.0
@@ -450,6 +523,11 @@ def test_load_historical_metrics_cooldown_and_real_llm_filter(tmp_path: Path) ->
     assert scores.get("skill_improved") == 95.0
     assert scores.get("skill_mock") == 60.0
     assert scores.get("skill_old") == 55.0
+
+    # Last scanned dates extracted from reports
+    assert last_scanned_dates.get("skill_stuck") == today
+    assert last_scanned_dates.get("skill_mock") == today - datetime.timedelta(days=1)
+    assert last_scanned_dates.get("skill_old") == today - datetime.timedelta(days=5)
 
     # Cooldown filtered strictly by: REAL_LLM, within 3 days, commits == 0, and score < 90 or UNCHANGED/HALT_
     assert "skill_stuck" in cooldown_skills
@@ -527,11 +605,12 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
     )
 
     daemon = NightlyTunerDaemon(root=tmp_path)
-    scores, cooldown_skills = daemon._load_historical_metrics(cooldown_days=3)
+    scores, cooldown_skills, last_scanned_dates = daemon._load_historical_metrics(cooldown_days=3)
 
     # The newer report (85.0%) should win over the older report (60.0%)
     assert scores.get("skill_mixed") == 85.0
     assert "skill_mixed" in cooldown_skills
+    assert last_scanned_dates.get("skill_mixed") == datetime.date(2026, 9, 21)
 
 
 def test_remove_stale_plateau_brief_worktree(tmp_path: Path) -> None:

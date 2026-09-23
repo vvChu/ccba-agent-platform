@@ -62,7 +62,7 @@ def main() -> None:
         "--use-real-llm", action="store_true", help="Use real LLM inference instead of mock task"
     )
     parser.add_argument(
-        "--token-budget", type=int, default=6500000, help="Total session token budget ceiling"
+        "--token-budget", type=int, default=10000000, help="Total session token budget ceiling"
     )
     parser.add_argument(
         "--per-skill-mutation-budget",
