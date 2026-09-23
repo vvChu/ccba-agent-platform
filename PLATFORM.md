@@ -37,7 +37,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 ├── packages/                          ← Internal service modules (pip installable)
 │   ├── ccba-ai/                       ←   AI Gateway client, SEOAuditor & SDK
 │   ├── ccba-harness/                  ←   Testing harness, Two-Stage Decision Framework & GPI Calculator (ADR 0057)
-│   ├── ccba-legal-intel/              ←   Legal intelligence connectors, Master Discovery & Universal Knowledge Engine
+│   ├── ccba-legal-intel/              ←   Legal intelligence connectors, Spoke Vault Hydrator & Master Discovery
 │   ├── ccba-maskara/                  ←   Secret detection and redaction engine
 │   ├── ccba-notebooklm/               ←   Google NotebookLM wrapper & Mock client
 │   ├── ccba-ooxml/                    ←   OOXML validation and parsing engine

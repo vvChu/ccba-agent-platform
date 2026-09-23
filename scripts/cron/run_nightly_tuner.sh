@@ -136,14 +136,16 @@ cleanup_worktree() {
     echo "🧹 Đang thu hồi tài nguyên Ephemeral Worktree..."
     cd "$PROJECT_ROOT"
     if [ -d "$WORKTREE_DIR" ]; then
-        # Copy newly generated reports and plateau briefs back to main project root
-        if [ -d "$WORKTREE_DIR/.md/knowledge/reports" ]; then
-            mkdir -p "$PROJECT_ROOT/.md/knowledge/reports"
-            find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
-        fi
-        if [ -d "$WORKTREE_DIR/.md/knowledge/escalations" ]; then
-            mkdir -p "$PROJECT_ROOT/.md/knowledge/escalations"
-            find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
+        # Copy newly generated reports and plateau briefs back to main project root (only if not dry run)
+        if [ -z "$DRY_RUN_FLAG" ]; then
+            if [ -d "$WORKTREE_DIR/.md/knowledge/reports" ]; then
+                mkdir -p "$PROJECT_ROOT/.md/knowledge/reports"
+                find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
+            fi
+            if [ -d "$WORKTREE_DIR/.md/knowledge/escalations" ]; then
+                mkdir -p "$PROJECT_ROOT/.md/knowledge/escalations"
+                find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
+            fi
         fi
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
     fi

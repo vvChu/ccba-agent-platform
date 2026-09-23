@@ -187,6 +187,12 @@ class ASTNode:
             res["source_pdf_page"] = self.source_pdf_page
         if self.cong_bao_number:
             res["cong_bao_number"] = self.cong_bao_number
+        if self.is_amended:
+            res["is_amended"] = self.is_amended
+        if self.is_repealed:
+            res["is_repealed"] = self.is_repealed
+        if self.citation:
+            res["citation"] = self.citation
         return res
 
 

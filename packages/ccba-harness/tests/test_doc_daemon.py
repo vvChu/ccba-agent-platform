@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ccba_harness.docs import (
@@ -46,3 +48,43 @@ def test_pillar_balance_auditor_detection() -> None:
     assert len(bloat_info) == 1
     assert bloat_info[0].is_bloated is True
     assert bloat_info[0].pattern_count == 19
+
+
+def test_doc_evolution_dry_run_no_telegram(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Verify DocAutoEvolutionEngine does not send Telegram alerts when dry_run=True."""
+    engine = DocAutoEvolutionEngine(root=tmp_path)
+    monkeypatch.setattr(engine, "audit_all_documents", lambda: [])
+
+    telegram_called = False
+
+    def mock_send(report: object) -> bool:
+        nonlocal telegram_called
+        telegram_called = True
+        return True
+
+    monkeypatch.setattr(engine, "send_telegram_alert", mock_send)
+    report = engine.run_nightly_evolution(dry_run=True)
+    assert report.dry_run is True
+    assert not telegram_called
+
+
+def test_doc_evolution_live_run_sends_telegram(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify DocAutoEvolutionEngine sends Telegram alert when dry_run=False."""
+    engine = DocAutoEvolutionEngine(root=tmp_path)
+    monkeypatch.setattr(engine, "audit_all_documents", lambda: [])
+
+    telegram_called = False
+
+    def mock_send(report: object) -> bool:
+        nonlocal telegram_called
+        telegram_called = True
+        return True
+
+    monkeypatch.setattr(engine, "send_telegram_alert", mock_send)
+    monkeypatch.setattr("subprocess.run", lambda *args, **kwargs: None)
+
+    report = engine.run_nightly_evolution(dry_run=False)
+    assert report.dry_run is False
+    assert telegram_called
