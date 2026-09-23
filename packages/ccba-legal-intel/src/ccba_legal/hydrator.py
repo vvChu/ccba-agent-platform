@@ -104,6 +104,45 @@ class SpokeHydrator:
         self.vault_client = vault_client or GoogleDriveVault()
         self.rclone_remote = rclone_remote
         self._rclone_available = shutil.which("rclone") is not None
+        if self._rclone_available:
+            self._auto_configure_remote()
+
+    def _auto_configure_remote(self) -> None:
+        """Auto-detect if Vault is directly in My Drive or in shared-with-me."""
+        if not self.rclone_remote or self.rclone_remote.endswith(",shared_with_me=true:"):
+            return
+        base_remote = self.rclone_remote
+        check_cmd = [
+            "rclone",
+            "lsd",
+            f"{base_remote}CCBA_Legal_Vault",
+            "--contimeout",
+            "3s",
+            "--timeout",
+            "5s",
+        ]
+        try:
+            res = subprocess.run(check_cmd, capture_output=True, timeout=8)
+            if res.returncode != 0:
+                remote_name = base_remote.rstrip(":")
+                shared_remote = f"{remote_name},shared_with_me=true:"
+                check_shared = [
+                    "rclone",
+                    "lsd",
+                    f"{shared_remote}CCBA_Legal_Vault",
+                    "--contimeout",
+                    "3s",
+                    "--timeout",
+                    "5s",
+                ]
+                res_shared = subprocess.run(check_shared, capture_output=True, timeout=8)
+                if res_shared.returncode == 0:
+                    logger.info(
+                        f"Auto-detected CCBA_Legal_Vault in shared-with-me. Using {shared_remote}"
+                    )
+                    self.rclone_remote = shared_remote
+        except Exception:
+            pass
 
     def find_bundles(
         self,
@@ -291,7 +330,6 @@ class SpokeHydrator:
             cmd = [
                 "rclone",
                 "copyto",
-                "--non-interactive",
                 "--contimeout",
                 "5s",
                 "--timeout",
@@ -308,6 +346,28 @@ class SpokeHydrator:
                 logger.warning(f"rclone copyto failed or timed out for {asset.file_name}: {e}")
                 if tmp_file.exists():
                     tmp_file.unlink(missing_ok=True)
+
+            # Retry with --drive-shared-with-me if file is in shared vault
+            if not download_success:
+                cmd_shared = [
+                    "rclone",
+                    "copyto",
+                    "--drive-shared-with-me",
+                    "--contimeout",
+                    "5s",
+                    "--timeout",
+                    "15s",
+                    rclone_src,
+                    str(tmp_file),
+                ]
+                try:
+                    res = subprocess.run(cmd_shared, capture_output=True, timeout=20)
+                    if res.returncode == 0 and tmp_file.exists() and tmp_file.stat().st_size > 0:
+                        download_success = True
+                except (subprocess.TimeoutExpired, Exception) as e:
+                    logger.warning(f"rclone shared copyto failed for {asset.file_name}: {e}")
+                    if tmp_file.exists():
+                        tmp_file.unlink(missing_ok=True)
 
         # --- Tier 2B: Cloud Vault Fallback via GoogleDriveVault API (Read-Only) ---
         if not download_success and self.vault_client.is_available():
@@ -416,23 +476,23 @@ class SpokeHydrator:
         upload_success = False
 
         # --- Tier 1: Rclone Fast Copyto ---
-        cmd = [
-            "rclone",
-            "copyto",
-            str(local_file),
-            remote_target,
-            "--non-interactive",
-            "--contimeout",
-            "5s",
-            "--timeout",
-            "30s",
-        ]
-        try:
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            if res.returncode == 0:
-                upload_success = True
-        except (subprocess.TimeoutExpired, Exception) as e:
-            logger.warning(f"rclone copyto failed for {asset.file_name}: {e}")
+        if self._rclone_available:
+            cmd = [
+                "rclone",
+                "copyto",
+                str(local_file),
+                remote_target,
+                "--contimeout",
+                "5s",
+                "--timeout",
+                "15s",
+            ]
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+                if res.returncode == 0:
+                    upload_success = True
+            except (subprocess.TimeoutExpired, Exception) as e:
+                logger.warning(f"rclone copyto failed for {asset.file_name}: {e}")
 
         # --- Tier 2: GoogleDriveVault API Fallback ---
         if not upload_success and self.vault_client.is_available():

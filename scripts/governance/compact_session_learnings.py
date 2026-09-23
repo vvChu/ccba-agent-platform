@@ -130,6 +130,96 @@ COMPACTED_WORKING_MEMORY_TEMPLATE = """# 🧠 CCBA Platform Knowledge Base: Acti
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
 """
 
+SPOKE_REQUIRED_INVARIANTS = [
+    "ADR 0021",
+    "ADR 0031",
+    "ADR 0035",
+    "ADR 0037",
+    "ADR 0038",
+    "ADR 0039",
+    "ADR 0040",
+    "ADR 0041",
+    "ADR 0042",
+    "ADR 0043",
+    "ADR 0044",
+    "ADR 0058",
+    "ADR 0059",
+    "135/2025/QH15",
+    "217/2026/NĐ-CP",
+    "207/2026/NĐ-CP",
+]
+
+SPOKE_COMPACTED_TEMPLATE = """# 🧠 CCBA Legal Knowledge Spoke: Active Architectural Invariants (Compacted Working Memory)
+
+> **Phạm vi áp dụng:** Spoke Tri thức Pháp lý (`ccba-legal-knowledge`)
+> **Tiêu chuẩn:** OKF v2.4 Universal Agent-Centric, ADR 0021, 0029, 0030, 0031, 0035, 0036, 0037, 0038, 0039, 0040, 0041, 0042, 0043, 0044, 0058, 0059.
+> **Tra cứu Chi tiết Lịch sử & Đầy đủ 53 Bài Học:** [session_learnings_history.md](archive/session_learnings_history.md) | Ngân sách bộ nhớ: $\\le 10\\text{ KB}$
+
+---
+
+## Miền 1. 🌐 Thu Thập & Xác Thực Nguồn Gốc Pháp Lý (Acquisition, Ingestion & Provenance)
+
+- **RULE-1.1 [TVPL VIP 3-Tier Download Priority — ADR 0031 & ADR 0035]**:
+  - *Tier 1 (`part=-100`)*: VIP Digital Vector PDF (Mỏ neo pháp lý tối thượng, độ nét 100%, zero-OCR).
+  - *Tier 2 (`part=-1&docx=1`)*: VIP OpenXML Word Document (Nguồn dữ liệu gốc vàng nạp vào `docx_converter.py`).
+  - *Tier 3 (`part=0`)*: Gazette Scan PDF (Bản scan Công báo dự phòng).
+- **RULE-1.2 [Giao Thức Một Cửa `tab=7` & Chromium VIP Session — ADR 0031]**:
+  - Sử dụng Chromium CDP trên cổng `9222` độc lập với profile `~/.gemini/antigravity/chrome_vip`. Toàn bộ thao tác tải file DOCX/PDF bắt buộc đi qua giao thức `tab=7` và API tham số hóa TVPL.
+- **RULE-1.3 [Lưu Trữ Song Song Dual-PDF & Vault Drive — ADR 0043]**:
+  - Bản scan mờ lưu thành `sources/<slug>_raw_scan.pdf`. Bản Vector PDF kết xuất từ Word COM lưu thành `sources/<slug>.pdf` kèm cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Đồng bộ cả 2 lên Google Drive Vault `CCBA_Legal_Vault`.
+
+---
+
+## Miền 2. 📐 Bóc Tách Đa Phương Thức & Chuẩn Hóa Toán Học KaTeX (Multimodal & KaTeX Integrity)
+
+- **RULE-2.1 [Bóc Tách Xác Định MTEF MathType & Khử Tệp Đóng Kín — ADR 0040]**:
+  - Bóc tách 100% công thức MathType nhị phân (MTEF v3/v5) từ OLE stream sang KaTeX, không qua OCR hay tốn AI token.
+  - Áp dụng 4-Tier Hybrid Formula Fallback Engine. Vector WMF/EMF bắt buộc chuyển sang Dual-Format (SVG và PNG $\\ge 300\\text{ DPI}$). Nghiêm cấm lưu file `.wmf`/`.emf` nhị phân đóng kín.
+- **RULE-2.2 [Cú Pháp Toán Học KaTeX Đa Dòng & Bảo Toàn Dấu — ADR 0038 & ADR 0044]**:
+  - Trong các môi trường đa dòng (`aligned`, `cases`, `gather`), BẮT BUỘC dùng `\\qquad (X)` ở cuối dòng thay cho `\\tag{...}` để đảm bảo không sinh lỗi bôi đỏ KaTeX.
+  - Bảo tồn tuyệt đối cặp ngoặc `\\left[` / `\\right]`. Tách chú thích hình `<!-- FIGURE: ... -->` ra khỏi khối KaTeX `$$`.
+- **RULE-2.3 [Bảo Tồn Chú Thích Kẹp Giữa Sơ Đồ Đồ Họa — ADR 0039]**:
+  - Bảo tồn 100% các đoạn `CHÚ THÍCH` và `CHÚ DẪN` kẹp giữa ảnh và tiêu đề hình. Xếp dọc đa tầng (Vertical Stack) lề an toàn $\\ge 40\\text{ px}$. Bắt buộc vượt qua Sub-Gate 11.2 Zero-Dropped Regulatory Notes.
+
+---
+
+## Miền 3. 📊 Cấu Trúc Bảng Biểu 2D & Mẫu Biểu Nguyên Tử (Deterministic Tables & Form Templates)
+
+- **RULE-3.1 [Lưới Tọa Độ Ảo 2D & Forward-Fill Có Kiểm Soát — ADR 0041]**:
+  - Thiết lập lưới tọa độ 2D từ `tblGrid`. Áp dụng Hierarchical Forward-Fill có kiểm soát cho ô gộp dọc (`vMerge`) trong CSV/JSON.
+  - Phẳng hóa tiêu đề đa tầng bằng Em-dash ngữ nghĩa (`Tầng 1 — Tầng 2 — Tầng 3`). 100% CSV đạt chuẩn Zero Ragged Rows.
+- **RULE-3.2 [Tách Rời Chú Thích Bảng & Định Tuyến Biểu Mẫu — ADR 0021 & ADR 0041]**:
+  - Bóc tách 100% chú thích chân bảng (`footnotes`) ra khỏi ma trận dữ liệu quan hệ. Thoát an toàn ký tự `|` trong cell và KaTeX (`\\vert `).
+  - Tách các biểu mẫu hành chính nguyên tử sang thư mục `templates/`, cấm để thư mục `templates/` rỗng.
+- **RULE-3.3 [Định Danh Bảng Quy Chuẩn Đa Phần — ADR 0044]**:
+  - Văn bản có nhiều phần (QCVN 07) bắt buộc bảng phải mang tiền tố mã định danh (ví dụ `bang_p01_01.csv`) và khai báo `part_id` trong `tables_catalog.json`.
+
+---
+
+## Miền 4. 🏛️ Chuẩn Hóa OpenXML DOM & Bảo Tồn Nguyên Văn Quy Phạm (OpenXML Sanitizer & Verbatim Parity)
+
+- **RULE-4.1 [Tiền Xử Lý In-Memory DocxCanonicalSanitizer — ADR 0042]**:
+  - Gọt sạch `w:rsid*`, loại bỏ `w:proofErr`, gộp run liền kề đồng nhất, chuẩn hóa Unicode NFC, tiêm `xml:space="preserve"`.
+  - Giải nén borderless layout tables qua Multi-Factor Scoring (mật độ số liệu $\\ge 30\\%$). Bảo tồn tuyệt đối whitelist `<w:object>`, `<m:oMath>`, `<w:drawing>`.
+- **RULE-4.2 [Bảo Tồn Nguyên Văn Quy Phạm 100% — ADR 0037 & ADR 0059]**:
+  - NGHIÊM CẤM mọi hành vi tóm tắt, diễn đạt lại hoặc rút gọn thân văn bản quy phạm. Thân Markdown bắt buộc trích xuất xác định 1:1 từ DOCX và đạt Gate 11 Verbatim Parity $\\ge 98.0\\%$.
+- **RULE-4.3 [Bảo Tồn Ký Tự Gốc & Thoát Ký Tự Gạch Đầu Dòng — ADR 0029 & ADR 0030]**:
+  - Bảo tồn 100% dấu gạch đầu dòng `-` và `+` bằng cơ chế thoát ký tự `\\- ` và `&nbsp;&nbsp;\\+ `. Không dồn cục dòng; vượt qua `lint_visual_parity.py`.
+
+---
+
+## Miền 5. 🛡️ Hệ Thống Kiểm Định CI 12 Cổng & Hiệu Lực Pháp Lý Tuyệt Đối (CI Gates & Legal Governance)
+
+- **RULE-5.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
+  - Mọi văn bản pháp luật viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC.
+  - VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (Luật số `135/2025/QH15`), **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng — thay thế NĐ 175/2024 & NĐ 15/2021), **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì — thay thế NĐ 06/2021).
+- **RULE-5.2 [12 Cổng Kiểm Định Nghiệm Thu Master CI Gate — ADR 0058]**:
+  - Thực thi tự động: `python scripts/validate_legal_spoke.py`.
+  - Tiêu chuẩn nghiệm thu 100%: 0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match, 100% Valid Links, 100% PDF SHA-256 Match, 100% SVG/Cards Integrity.
+- **RULE-5.3 [Single-User Multi-Device & Machine-State Decoupling]**:
+  - Khi clone Spoke về nhiều máy (Windows, Linux, WSL), CẤM commit đường dẫn ổ đĩa tuyệt đối vào `workspace_context.yaml`. Đường dẫn Hub cô lập qua biến môi trường `CCBA_HUB_PATH`.
+"""
+
 
 def estimate_tokens(content: str) -> int:
     """Estimate token count for given text using 4 chars per token heuristic."""
@@ -165,9 +255,10 @@ def get_file_metrics(file_path: Path) -> dict[str, float | int | str | bool]:
     }
 
 
-def verify_invariants(content: str) -> list[str]:
+def verify_invariants(content: str, invariants: list[str] | None = None) -> list[str]:
     """Return a list of missing invariant strings from content."""
-    return [inv for inv in REQUIRED_INVARIANTS if inv not in content]
+    check_list = invariants if invariants is not None else REQUIRED_INVARIANTS
+    return [inv for inv in check_list if inv not in content]
 
 
 def backup_to_archive(source_file: Path, archive_dir: Path) -> tuple[Path, Path]:
@@ -184,7 +275,7 @@ def backup_to_archive(source_file: Path, archive_dir: Path) -> tuple[Path, Path]
     return timestamped_file, master_history_file
 
 
-def run_check(file_path: Path, max_size_kb: float) -> int:
+def run_check(file_path: Path, max_size_kb: float, invariants: list[str] | None = None) -> int:
     """CI check mode: Return 0 if file is within size budget, 1 otherwise."""
     metrics = get_file_metrics(file_path)
     if not metrics["exists"]:
@@ -200,7 +291,7 @@ def run_check(file_path: Path, max_size_kb: float) -> int:
         return 1
 
     content = file_path.read_text(encoding="utf-8")
-    missing = verify_invariants(content)
+    missing = verify_invariants(content, invariants)
     if missing:
         print(f"[FAIL] Missing required architectural invariants: {missing}", file=sys.stderr)
         return 1
@@ -227,11 +318,20 @@ def run_stats(file_path: Path, max_size_kb: float) -> None:
     print(f"Status:           {status}")
 
 
-def run_compact(file_path: Path, archive_dir: Path, max_size_kb: float) -> int:
+def run_compact(
+    file_path: Path,
+    archive_dir: Path,
+    max_size_kb: float,
+    template: str | None = None,
+    invariants: list[str] | None = None,
+) -> int:
     """Execute memory compaction, archive original, and verify invariants."""
     if not file_path.exists():
         print(f"[Error] Source file not found: {file_path}", file=sys.stderr)
         return 1
+
+    target_template = template if template is not None else COMPACTED_WORKING_MEMORY_TEMPLATE
+    target_invariants = invariants if invariants is not None else REQUIRED_INVARIANTS
 
     # Step 1: Backup original
     ts_file, master_file = backup_to_archive(file_path, archive_dir)
@@ -239,14 +339,14 @@ def run_compact(file_path: Path, archive_dir: Path, max_size_kb: float) -> int:
     print(f"[Archive] Master history updated at:        {master_file.name}")
 
     # Step 2: Validate template invariants
-    missing = verify_invariants(COMPACTED_WORKING_MEMORY_TEMPLATE)
+    missing = verify_invariants(target_template, target_invariants)
     if missing:
         print(f"[Error] Compacted template missing invariants: {missing}", file=sys.stderr)
         return 1
 
     # Step 3: Write compacted content
     old_size = file_path.stat().st_size
-    file_path.write_text(COMPACTED_WORKING_MEMORY_TEMPLATE.strip() + "\n", encoding="utf-8")
+    file_path.write_text(target_template.strip() + "\n", encoding="utf-8")
     new_size = file_path.stat().st_size
 
     new_kb = round(new_size / 1024, 2)
@@ -279,15 +379,27 @@ def main() -> int:
         description="Session Learnings Memory Compaction Engine (ADR-0030, ADR-0057)."
     )
     parser.add_argument(
+        "--profile",
+        choices=["hub", "spoke"],
+        default="hub",
+        help="Profile to use (hub or spoke, default: hub).",
+    )
+    parser.add_argument(
+        "--target-dir",
+        type=Path,
+        default=None,
+        help="Custom root directory for profile (e.g. path to ccba-legal-knowledge).",
+    )
+    parser.add_argument(
         "--file",
         type=Path,
-        default=DEFAULT_FILE,
+        default=None,
         help="Path to session_learnings.md file.",
     )
     parser.add_argument(
         "--archive-dir",
         type=Path,
-        default=DEFAULT_ARCHIVE_DIR,
+        default=None,
         help="Directory to store historical archives.",
     )
     parser.add_argument(
@@ -314,18 +426,46 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    # Resolve profile targets
+    if args.profile == "spoke":
+        spoke_root = (
+            args.target_dir.resolve()
+            if args.target_dir
+            else (HUB_ROOT.parent / "ccba-legal-knowledge").resolve()
+        )
+        target_file = (
+            args.file if args.file else (spoke_root / ".md" / "knowledge" / "session_learnings.md")
+        )
+        target_archive = (
+            args.archive_dir if args.archive_dir else (spoke_root / ".md" / "knowledge" / "archive")
+        )
+        target_template = SPOKE_COMPACTED_TEMPLATE
+        target_invariants = SPOKE_REQUIRED_INVARIANTS
+    else:
+        hub_root = args.target_dir.resolve() if args.target_dir else HUB_ROOT
+        target_file = (
+            args.file if args.file else (hub_root / ".md" / "knowledge" / "session_learnings.md")
+        )
+        target_archive = (
+            args.archive_dir if args.archive_dir else (hub_root / ".md" / "knowledge" / "archive")
+        )
+        target_template = COMPACTED_WORKING_MEMORY_TEMPLATE
+        target_invariants = REQUIRED_INVARIANTS
+
     if args.check:
-        return run_check(args.file, args.max_size_kb)
+        return run_check(target_file, args.max_size_kb, target_invariants)
 
     if args.stats:
-        run_stats(args.file, args.max_size_kb)
+        run_stats(target_file, args.max_size_kb)
         return 0
 
     if args.compact:
-        return run_compact(args.file, args.archive_dir, args.max_size_kb)
+        return run_compact(
+            target_file, target_archive, args.max_size_kb, target_template, target_invariants
+        )
 
     # Default action if no flags provided
-    run_stats(args.file, args.max_size_kb)
+    run_stats(target_file, args.max_size_kb)
     return 0
 
 
