@@ -170,13 +170,31 @@ elif [ -d "/home/ccba/ccba/ccba-legal-knowledge" ]; then
 fi
 
 if [ -n "$LEGAL_SPOKE_DIR" ]; then
-    echo "🔄 Updating ccba-legal-knowledge ($LEGAL_SPOKE_DIR)..."
-    (cd "$LEGAL_SPOKE_DIR" && git fetch origin main && git checkout -q main && git pull -q origin main) || echo "⚠️ Warning: Failed to pull ccba-legal-knowledge"
+    echo "🔄 Fetching ccba-legal-knowledge ($LEGAL_SPOKE_DIR)..."
+    (
+        cd "$LEGAL_SPOKE_DIR" && git fetch origin main && {
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            if [ "$CURRENT_BRANCH" = "main" ]; then
+                git pull -q origin main
+            else
+                echo "ℹ️ Spoke is on branch '$CURRENT_BRANCH'. Fetched origin/main without switching branch."
+            fi
+        }
+    ) || echo "⚠️ Warning: Failed to fetch ccba-legal-knowledge"
 fi
 
 if [ -d "$BASE_DIR/IDOP-CCBA-WAY" ]; then
-    echo "🔄 Updating IDOP-CCBA-WAY..."
-    (cd "$BASE_DIR/IDOP-CCBA-WAY" && git fetch origin main && git checkout -q main && git pull -q origin main) || echo "⚠️ Warning: Failed to pull IDOP-CCBA-WAY"
+    echo "🔄 Fetching IDOP-CCBA-WAY..."
+    (
+        cd "$BASE_DIR/IDOP-CCBA-WAY" && git fetch origin main && {
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            if [ "$CURRENT_BRANCH" = "main" ]; then
+                git pull -q origin main
+            else
+                echo "ℹ️ IDOP is on branch '$CURRENT_BRANCH'. Fetched origin/main without switching branch."
+            fi
+        }
+    ) || echo "⚠️ Warning: Failed to fetch IDOP-CCBA-WAY"
 fi
 
 # 7. Setup Isolated Ephemeral Worktree from origin/main
@@ -259,11 +277,19 @@ except Exception as e:
 " "$TELEMETRY_EXIT" 2>/dev/null || true
             fi
             # Auto-commit and push nightly reports if generated
-            if git status --porcelain .md/reports/ 2>/dev/null | grep -q "nightly_"; then
-                echo "📝 Committing and pushing nightly legal telemetry reports..."
-                git add .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
-                git -c user.name="CCBA Nightly Daemon" -c user.email="daemon@ccba-ai.local" commit --no-verify -m "chore(telemetry): record automated nightly legal verification report [skip ci]" || true
-                git push origin main || echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+            SPOKE_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            if [ "$SPOKE_BRANCH" = "main" ]; then
+                if git status --porcelain .md/reports/ 2>/dev/null | grep -q "nightly_"; then
+                    echo "📝 Committing and pushing nightly legal telemetry reports..."
+                    git add .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
+                    git -c user.name="CCBA Nightly Daemon" -c user.email="daemon@ccba-ai.local" commit --no-verify -m "chore(telemetry): record automated nightly legal verification report [skip ci]" || true
+                    git push origin main || echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+                fi
+            else
+                echo "ℹ️ Spoke is on branch '$SPOKE_BRANCH' (not main). Skipping auto-commit/push to protect working branch."
+                if [ $TELEMETRY_EXIT -eq 0 ]; then
+                    rm -f .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
+                fi
             fi
         fi
     )
@@ -271,9 +297,14 @@ else
     echo "⚠️ Warning: ccba-legal-knowledge not found or run_nightly_telemetry.py missing. Skipping Phase 1."
 fi
 
-# 8. Run Document Auto-Evolution Engine (Audit -> AST Grounding -> Zero-Deletion -> PR)
-echo "📚 [2/3] Running Document Auto-Evolution Engine..."
-python3 scripts/eval/doc_refactor_daemon.py ${DRY_RUN_FLAG}
+# 8. Run Document Health Audit Engine (Audit-Only & Dynamic Telemetry)
+echo "📚 [2/3] Running Document Health Audit Engine (--audit-only)..."
+python3 scripts/eval/doc_refactor_daemon.py --audit-only
+
+if [ -n "$LEGAL_SPOKE_DIR" ]; then
+    echo "📚 [2/3] Checking Spoke Document Memory Budget..."
+    python3 scripts/governance/compact_session_learnings.py --profile spoke --target-dir "$LEGAL_SPOKE_DIR" --check || echo "⚠️ Warning: Spoke session learnings exceeded budget."
+fi
 
 # 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
 echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF..."

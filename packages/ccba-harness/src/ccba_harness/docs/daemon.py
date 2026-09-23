@@ -51,6 +51,7 @@ class DocHealthReport:
     is_healthy: bool
     total_docs_scanned: int
     bloated_pillars: list[PillarBloatInfo] = field(default_factory=list)
+    file_bloat_violations: list[str] = field(default_factory=list)
     zero_deletion_violations: list[str] = field(default_factory=list)
     grounding_failures: list[str] = field(default_factory=list)
     details: dict[str, Any] = field(default_factory=dict)
@@ -167,19 +168,45 @@ class ZeroDeletionGuard:
     """Enforces Zero-Deletion and Parse-Protection invariants on Markdown docs."""
 
     @staticmethod
-    def audit_diff(original_text: str, proposed_text: str) -> list[str]:
+    def is_pattern_deprecated(pattern: str, text: str) -> bool:
+        """Checks if a pattern is marked as deprecated in text."""
+        p = pattern.replace("SEC-", "")
+        patterns_to_check = [pattern, p] if p != pattern else [pattern]
+        for target in patterns_to_check:
+            escaped = re.escape(target)
+            regex = (
+                rf"(?m)(?:^|[^\n])*(?:\b{escaped}\b.*?[\[\(]DEPRECATED[\]\)]|"
+                rf"[\[\(]DEPRECATED[\]\)].*?\b{escaped}\b)"
+            )
+            if re.search(regex, text, re.IGNORECASE):
+                return True
+        return False
+
+    @staticmethod
+    def extract_patterns(text: str) -> set[str]:
+        """Extracts pattern identifiers across legacy, Hub, and Spoke formats."""
+        patterns: set[str] = set()
+        for p in re.findall(r"####\s+(P\d+\.\d+)", text):
+            patterns.add(p)
+        for r in re.findall(r"(?m)^\s*-\s+\*\*(RULE-\d+\.\d+).*?\*\*", text):
+            patterns.add(r)
+        for s in re.findall(r"(?m)^##\s+(?:(?:Miền|Trụ Cột)\s+)?(\d+)[\.\:]?\s+", text):
+            patterns.add(f"SEC-{s}")
+        return patterns
+
+    @classmethod
+    def audit_diff(cls, original_text: str, proposed_text: str) -> list[str]:
         """Audits proposed text against original text for illegal deletions."""
         violations: list[str] = []
 
-        # 1. Pattern IDs Check (e.g. P1.1, P7.20)
-        orig_patterns = set(re.findall(r"####\s+(P\d+\.\d+)", original_text))
-        prop_patterns = set(re.findall(r"####\s+(P\d+\.\d+)", proposed_text))
+        orig_patterns = cls.extract_patterns(original_text)
+        prop_patterns = cls.extract_patterns(proposed_text)
 
         missing_patterns = orig_patterns - prop_patterns
         for p in missing_patterns:
-            if f"{p} (DEPRECATED)" not in proposed_text:
+            if not cls.is_pattern_deprecated(p, proposed_text):
                 violations.append(
-                    f"Zero-Deletion Violation: Pattern `{p}` bị xóa bỏ trái phép mà không có tag [DEPRECATED]!"
+                    f"Zero-Deletion Violation: Pattern/Section `{p}` bị xóa bỏ trái phép mà không có tag [DEPRECATED]!"
                 )
 
         # 2. Parse-Protection Blocks Check
@@ -255,13 +282,38 @@ class DocAutoEvolutionEngine:
         """Executes a full health check across core documentation."""
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         bloated_pillars: list[PillarBloatInfo] = []
+        file_bloat_violations: list[str] = []
         zero_del_violations: list[str] = []
         grounding_failures: list[str] = []
 
         # 1. Audit session_learnings.md
         if self.session_learnings_path.exists():
             content = self.session_learnings_path.read_text(encoding="utf-8")
-            bloated_pillars = PillarBalanceAuditor.audit_pillars(content, max_patterns=25)
+            bloated_pillars = PillarBalanceAuditor.audit_pillars(content, max_patterns=15)
+
+            # File-level bloat check (budget: <= 10.0 KB per ADR-0030, ADR-0057)
+            file_size_kb = self.session_learnings_path.stat().st_size / 1024
+            if file_size_kb > 10.0:
+                file_bloat_violations.append(
+                    f"File-level Bloat: session_learnings.md ({file_size_kb:.2f} KB) vượt quá ngân sách 10.0 KB (ADR-0030, ADR-0057)"
+                )
+
+            # Baseline Zero-Deletion check against git HEAD if available
+            try:
+                git_res = subprocess.run(
+                    ["git", "show", "HEAD:.md/knowledge/session_learnings.md"],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                if git_res.returncode == 0 and git_res.stdout.strip():
+                    zero_del_violations.extend(
+                        ZeroDeletionGuard.audit_diff(git_res.stdout, content)
+                    )
+            except Exception:
+                pass
 
         # 2. Audit CONTEXT.md grounding (focus on CamelCase Deep Seams)
         if self.context_doc_path.exists():
@@ -278,6 +330,7 @@ class DocAutoEvolutionEngine:
 
         is_healthy = (
             len([p for p in bloated_pillars if p.is_bloated]) == 0
+            and len(file_bloat_violations) == 0
             and len(zero_del_violations) == 0
             and len(grounding_failures) == 0
         )
@@ -287,32 +340,39 @@ class DocAutoEvolutionEngine:
             is_healthy=is_healthy,
             total_docs_scanned=2,
             bloated_pillars=bloated_pillars,
+            file_bloat_violations=file_bloat_violations,
             zero_deletion_violations=zero_del_violations,
             grounding_failures=grounding_failures,
         )
 
     def generate_pr_body(self, report: DocEvolutionReport) -> str:
-        """Generates a structured GitHub Pull Request body."""
+        """Generates a structured GitHub Pull Request body with dynamic telemetry."""
         lines = [
             f"# 📚 Automated Knowledge Documentation Evolution Report ({report.timestamp})",
             "",
             f"> **🌿 Branch:** `{report.branch_name}`  ",
-            f"> **📊 Health Status:** {'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ REFACTOR SUGGESTIONS'}  ",
+            f"> **📊 Health Status:** {'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ CẦN TINH CHỈNH'}  ",
             "> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`100.83.192.30`)  ",
             "",
             "---",
             "",
-            "### ⚖️ Bảng Đối Soát Cân Bằng 8 Trụ Cột Tri Thức (Pillar Balance)",
+            "### ⚖️ Bảng Đối Soát Cân Bằng Các Trụ Cột Tri Thức (Pillar Balance)",
             "",
             "| Trụ Cột | Tên Miền Nghiệp Vụ | Số Lượng Patterns | Trạng Thái |",
             "| :---: | :--- | :---: | :---: |",
         ]
 
         for p in report.health.bloated_pillars:
-            status = "🔴 BLOATED (>25)" if p.is_bloated else "🟢 BALANCED"
+            status = f"🔴 BLOATED (>{p.threshold})" if p.is_bloated else "🟢 BALANCED"
             lines.append(
                 f"| `{p.pillar_index}` | {p.pillar_title} | **{p.pattern_count}** | {status} |"
             )
+
+        if report.health.file_bloat_violations:
+            lines.append("")
+            lines.append("⚠️ **Cảnh báo vượt ngân sách dung lượng (File Bloat Violations):**")
+            for viol in report.health.file_bloat_violations:
+                lines.append(f"- 🔴 {viol}")
 
         lines.extend(
             [
@@ -320,16 +380,42 @@ class DocAutoEvolutionEngine:
                 "---",
                 "",
                 "### 🔍 Kết Quả Đối Soát Dẫn Chứng Mã Nguồn (AST Code-Grounding Audit)",
-                "- ✅ **Classes & Functions Verified:** 100% các Deep Seams (`DocAutoEvolutionEngine`, `LegalIntelPipeline`, `TableReconstructor`, `ZeroDeletionGuard`) đều tồn tại thực tế trong `packages/` và `scripts/`.",
-                "- ✅ **Architectural ADRs Grounded:** Ánh xạ chính xác 100% các thuật ngữ tới ADR 0041, ADR 0042, ADR 0043.",
-                "- ✅ **Zero Broken Links:** Không phát hiện bất kỳ liên kết nội bộ bị gãy nào.",
+            ]
+        )
+        if report.health.grounding_failures:
+            lines.append("⚠️ **Cảnh báo ký hiệu chưa được xác thực (Unverified Symbols):**")
+            for fail in report.health.grounding_failures:
+                lines.append(f"- 🔴 {fail}")
+        else:
+            lines.append(
+                "- ✅ **Classes, Functions & ADRs Verified:** Không phát hiện ký hiệu mồ côi nào."
+            )
+            lines.append("- ✅ **Zero Broken Links:** Không phát hiện liên kết nội bộ bị gãy.")
+
+        lines.extend(
+            [
                 "",
                 "---",
                 "",
                 "### 🛡️ Chứng Nhận Rào Chắn An Toàn Bất Biến (Safety Certification)",
-                "- [x] **Zero-Deletion:** Bảo tồn 100% tri thức lịch sử; 0 pattern bị xóa bỏ.",
-                "- [x] **Parse-Protection:** Toàn bộ ghi chú viết tay trong `DEVELOPER-NOTES` được bảo toàn nguyên vẹn.",
-                "- [x] **Cross-Platform:** Kiểm định định dạng đường dẫn tương đối (Repo-relative links) tương thích 100% trên GitHub Web UI.",
+            ]
+        )
+        if report.health.zero_deletion_violations:
+            for viol in report.health.zero_deletion_violations:
+                lines.append(f"- 🔴 **Zero-Deletion Violation:** {viol}")
+        else:
+            lines.append(
+                "- [x] **Zero-Deletion:** Bảo tồn 100% tri thức lịch sử; 0 pattern bị xóa bỏ trái phép."
+            )
+        lines.append(
+            "- [x] **Parse-Protection:** Toàn bộ ghi chú viết tay trong `DEVELOPER-NOTES` được bảo toàn nguyên vẹn."
+        )
+        lines.append(
+            "- [x] **Cross-Platform:** Kiểm định định dạng đường dẫn tương đối (Repo-relative links) tương thích 100% trên GitHub Web UI."
+        )
+
+        lines.extend(
+            [
                 "",
                 "---",
                 "",
@@ -351,17 +437,26 @@ class DocAutoEvolutionEngine:
         if self.alert_emitter is not None:
             return self.alert_emitter(report)
 
+        pillar_lines = []
+        for p in report.health.bloated_pillars:
+            icon = "🔴" if p.is_bloated else "🟢"
+            pillar_lines.append(f"• {icon} {p.pillar_title}: {p.pattern_count} patterns")
+        pillar_summary = (
+            "\n".join(pillar_lines) if pillar_lines else "• Không có dữ liệu phân bổ Trụ Cột"
+        )
+
+        file_bloat_status = "✅" if not report.health.file_bloat_violations else "⚠️ VƯỢT NGÂN SÁCH"
+        zero_del_status = "✅" if not report.health.zero_deletion_violations else "❌ VI PHẠM"
+        grounding_status = "✅" if not report.health.grounding_failures else "⚠️ CẢNH BÁO"
+
         message = (
-            f"📚 *CCBA DOC AUTO-EVOLUTION REPORT* 📚\n"
+            f"📚 *CCBA DOC HEALTH & EVOLUTION REPORT* 📚\n"
             f"📅 *Thời gian:* `{report.timestamp}`\n"
             f"🌿 *Nhánh Git:* `{report.branch_name}`\n"
-            f"⚖️ *Sức khỏe tài liệu:* *{'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ REFACTOR PROPOSED'}*\n"
-            f"🛡️ *Rào chắn:* Zero-Deletion ✅ | AST Grounding ✅\n\n"
-            f"📊 *Trạng thái 8 Trụ Cột:*\n"
-            f"• Trụ Cột 1-5: 🟢 Cân đối (3 - 12 patterns)\n"
-            f"• Trụ Cột 6 (Architecture): 🟢 20 patterns\n"
-            f"• Trụ Cột 7 (Spoke Sync): 🟢 15 patterns\n"
-            f"• Trụ Cột 8 (IDOP & IBST): 🟢 8 patterns\n"
+            f"⚖️ *Sức khỏe tài liệu:* *{'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ CẦN TINH CHỈNH'}*\n"
+            f"🛡️ *Rào chắn:* Zero-Deletion {zero_del_status} | Bloat {file_bloat_status} | AST Grounding {grounding_status}\n\n"
+            f"📊 *Phân Bổ Các Trụ Cột / Miền Tri Thức:*\n"
+            f"{pillar_summary}\n"
         )
         if report.pr_url:
             message += f"\n🔗 *Pull Request:* {report.pr_url}\n👉 _Bấm link trên để duyệt và merge 1-chạm._\n"
@@ -372,12 +467,16 @@ class DocAutoEvolutionEngine:
             mock_fallback=True,
         )
 
-    def run_nightly_evolution(self, dry_run: bool = False) -> DocEvolutionReport:
+    def run_nightly_evolution(
+        self, dry_run: bool = False, audit_only: bool = False
+    ) -> DocEvolutionReport:
         """Runs the complete nightly document evolution pipeline."""
         now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        branch_name = f"docs/auto-refactor-{now_str}"
+        branch_name = "docs/auto-refactor-nightly"
 
-        logger.info(f"🚀 Bắt đầu chu trình Doc-Auto-Evolution (dry_run={dry_run})...")
+        logger.info(
+            f"🚀 Bắt đầu chu trình Doc-Auto-Evolution (dry_run={dry_run}, audit_only={audit_only})..."
+        )
         health = self.audit_all_documents()
 
         report = DocEvolutionReport(
@@ -386,6 +485,11 @@ class DocAutoEvolutionEngine:
             health=health,
             dry_run=dry_run,
         )
+
+        if audit_only:
+            logger.info("🔍 [Audit-Only] Hoàn tất kiểm toán tài liệu thuần túy (No Branch, No PR).")
+            self.send_telegram_alert(report)
+            return report
 
         if dry_run:
             logger.info(
