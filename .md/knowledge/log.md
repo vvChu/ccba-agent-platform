@@ -2,6 +2,18 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-23] [synthesize] | Phát Hành PR #331-#334: Tối Ưu Hóa Auto-Tuner Ban Đêm, Zero-Red-Merge Invariant & Spoke Vault Hydrator
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /boost, /ccba-grilling, /learn, /ccba-create-pr, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/`, `packages/ccba-legal-intel/`, `scripts/cron/run_nightly_tuner.sh`, `scripts/governance/`, `PLATFORM.md`, `docs/rules/execution_guardrails.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`, `walkthrough.md`
+- **Summary**: Hoàn tất chuỗi tối ưu hóa và quản trị nền tảng:
+  1. **PR #331 (Nightly Auto-Tuner)**: Tự động tối ưu 4 kỹ năng (`ccba-file-stability-guard` 100%, `ccba-ai-qc-pccc-audit` 90%, `ccba-seminar-builder` và `ccba-xu-ly-van-phong` 75%).
+  2. **PR #332 (Tuner Hardening & Queue Starvation Fix)**: Đánh giá đối kháng (`/boost`) phát hiện và khắc phục lãng phí token do trùng lặp đột biến (tích hợp `seen_hashes` fast-halt tiết kiệm 2.5M-3.2M tokens/đêm); khắc phục lỗi LinkAuditor trên 8 orchestration skills (template 100% điểm trỏ `../../AGENTS.md`); nâng cấp `WeightedPriorityQueue` lên 4-tuple key `(in_cooldown, scanned_date or min, tier, score)` giải cứu 31 kỹ năng bị đói quét; nâng trần ngân sách lên 10.000.000 tokens.
+  3. **PR #333 (Lint & Format Hotfix)**: Sửa lỗi `I001` và định dạng toàn bộ monorepo.
+  4. **PR #334 (Zero-Red-Merge & Dry-Run Complete Isolation)**: Xác lập Hiến pháp Zero-Red-Merge Invariant (Tiểu mục 13.B.6) và Ephemeral Worktree Cron (Mục 16) trong `execution_guardrails.md`; cấm `--admin` và `--auto` để bảo vệ chốt chặn Copilot Reviewer; nâng cấp `ccba_harness.verifier` bổ sung `ruff format --check` vào preset `code` và `ci`; triệt tiêu 3 điểm rò rỉ dry-run (bảo vệ plateau brief, bỏ Telegram alert, bọc `cleanup_worktree`); tích hợp `SpokeHydrator` và bảo toàn metadata legislative consolidator trong `ccba-legal-intel`; đồng bộ kiến trúc `PLATFORM.md`; đạt 100% 7/7 CI checks và squash merge vào `main` tại commit `deeb68cc`.
+  5. **Cloud Vault Read-Only & Wiki Health Linter**: Hỗ trợ `find_vault_folder` read-only và `push_asset` trong `gdrive_vault.py` (commit `c4fca417`); loại trừ thư mục `escalations` trong `wiki_health_linter.py`.
+
+---
+
 ## [2026-09-22] [synthesize] | Phát Hành PR #328 (Issue #326): Điều Phối Động 5 Bối Cảnh, Bảo Vệ Spoke Đa Máy & Universal Invariant Merge
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-create-pr, /ccba-release-feature, /ccba-grilling & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-legal-intel/pyproject.toml`, `scripts/spoke/`, `scripts/sync_hub_adr_matrix.py`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-platform/`, `.agents/skills/ccba-init-spoke/`, `tests/test_spoke_*.py`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`, `walkthrough.md`
