@@ -257,6 +257,6 @@
 ---
 
 ## 16. Ephemeral Worktree & Automated Nightly Cron Invariant (Quy Chuẩn Vận Hành Worktree Tạm Thời)
-- Các daemon chạy đêm (`run_nightly_tuner.sh`) vận hành trên Ephemeral Worktree độc lập được checkout từ `TARGET_REF` (mặc định: `origin/main`). Mọi mã nguồn tối ưu bắt buộc phải hoàn tất toàn bộ chu trình Git (**PR $\rightarrow$ CI Pass $\rightarrow$ Merge $\rightarrow$ Push**) trước 00:00 AM.
+- Các daemon chạy đêm (`run_nightly_tuner.sh`) vận hành trên Ephemeral Worktree độc lập được checkout từ nhánh chỉ định (mặc định: `origin/main`). Mọi mã nguồn tối ưu bắt buộc phải hoàn tất toàn bộ chu trình Git (**PR $\rightarrow$ CI Pass $\rightarrow$ Merge $\rightarrow$ Push**) trước 00:00 AM.
 - Khi kiểm thử cục bộ: Nghiêm cấm chạy `run_nightly_tuner.sh` trên working tree đang dirty vì script sẽ tự động kéo `origin/main` gây hiểu lầm kết quả. Để kiểm thử cục bộ mã dở dang, sử dụng trực tiếp: `.venv/bin/python3 scripts/eval/nightly_tuner_daemon.py --dry-run`.
 
