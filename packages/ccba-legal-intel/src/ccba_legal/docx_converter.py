@@ -70,6 +70,8 @@ def convert_docx_to_okf_bundle(
                 if isinstance(item, dict) and (
                     item.get("id") == target_bundle_dir.name
                     or item.get("document_number") == target_bundle_dir.name
+                    or item.get("slug") == target_bundle_dir.name
+                    or item.get("bundle_path", "").rstrip("/").endswith(target_bundle_dir.name)
                     or (doc_meta and item.get("id") == doc_meta.get("id"))
                 ):
                     effective_meta = dict(item)

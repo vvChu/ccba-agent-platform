@@ -138,6 +138,34 @@ def detect_table_archetype(
     return "FLAT_MATRIX"
 
 
+def is_table_footnote_row(row_rendered: list[str]) -> bool:
+    """Detect whether a table row is an administrative/normative footnote row rather than a data row."""
+    non_empty = [c.strip() for c in row_rendered if c.strip()]
+    if not non_empty:
+        return False
+    if len(set(non_empty)) > 1:
+        return False
+    first_cell = non_empty[0]
+    first_cell_stripped = re.sub(r"^(?:<!--.*?-->|[\s\*_])+", "", first_cell)
+    if re.match(
+        r"^(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn|GHI\s+CHÚ|Ghi\s+chú)",
+        first_cell_stripped,
+        re.IGNORECASE,
+    ):
+        return True
+    if re.match(
+        r"^<sup\b[^>]*>(?:\([0-9a-zA-Z\*\+]+\)|[0-9a-zA-Z\*\+]+\)?|\*+)</sup>",
+        first_cell_stripped,
+        re.IGNORECASE,
+    ):
+        return True
+    if re.match(r"^(?:\([0-9a-zA-Z\*\+]+\)|\[[0-9a-zA-Z\*\+]+\])\s+", first_cell_stripped):
+        return True
+    if "<br>" in first_cell and re.search(r"<br\s*/?>\s*(?:<sup\b[^>]*>)?\s*[1-9]\)", first_cell):
+        return True
+    return False
+
+
 def render_table_markdown(
     table: Any, rid_to_katex: dict[str, str] | None = None
 ) -> tuple[str, list[str], list[list[str]]]:
@@ -181,15 +209,10 @@ def render_table_markdown(
                         if line_part.strip()
                     ]
                     for nl in note_lines:
-                        footnotes.append(nl)
+                        if nl not in footnotes:
+                            footnotes.append(nl)
 
-        first_cell = row_rendered[0].strip()
-        first_cell_clean = re.sub(r"^(?:<!--.*?-->|<[^>]+>|\s)+", "", first_cell)
-        if re.match(
-            r"^(?:\*\*)?(?:CHÚ\s+THÍCH|Chú\s+thích|CHÚ\s+DẪN|Chú\s+dẫn)",
-            first_cell_clean,
-            re.IGNORECASE,
-        ):
+        if is_table_footnote_row(row_rendered):
             # Deduplicate identical merged cells across columns (gridSpan)
             unique_cells: list[str] = []
             for c in row_rendered:
@@ -208,6 +231,7 @@ def render_table_markdown(
                     flags=re.IGNORECASE,
                 ).strip()
                 p_clean = re.sub(r"^\*\*\s*", "", p_clean).strip()
+                p_clean = re.sub(r"\s*\*\*$", "", p_clean).strip()
                 if not p_clean:
                     continue
 
@@ -215,7 +239,10 @@ def render_table_markdown(
                 p_clean = re.sub(r"(\d+)\$\^\{0\}\$\s*C\b", r"\1 °C", p_clean)
 
                 is_bullet = bool(
-                    re.match(r"^(?:[-–—•\+]|\*+|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.])\s*", p_clean)
+                    re.match(
+                        r"^(?:[-–—•\+]|\*+|\(\*+\)|\([0-9a-zA-Z]+\)|[0-9]+[)\.]|<sup\b[^>]*>[0-9a-zA-Z\*\+\)]+</sup>)\s*",
+                        p_clean,
+                    )
                 )
                 if fn_parts and not is_bullet:
                     last_txt = fn_parts[-1].strip()
@@ -235,6 +262,8 @@ def render_table_markdown(
                     re.IGNORECASE,
                 )
                 or re.match(r"^[0-9]+[)\.]\s+", p)
+                or re.search(r"<sup\b[^>]*>([0-9]+)\)?</sup>", p)
+                or re.search(r"^\(?([0-9]+)\)\s+", p_clean)
                 for p in fn_parts
             )
 
@@ -249,6 +278,7 @@ def render_table_markdown(
                         flags=re.IGNORECASE,
                     ).strip()
                     fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                    fn_clean = re.sub(r"\s*\*\*$", "", fn_clean).strip()
                     if not fn_clean:
                         continue
 
@@ -257,6 +287,10 @@ def render_table_markdown(
                         fn_p,
                         flags=re.IGNORECASE,
                     )
+                    if not m_num:
+                        m_num = re.search(r"<sup\b[^>]*>([0-9]+)\)?</sup>", fn_p)
+                    if not m_num:
+                        m_num = re.match(r"^(?:\*\*)?\(?([0-9]+)\)[\.\s]*", fn_p)
                     if not m_num:
                         m_num = re.match(r"^([0-9]+)[)\.]\s*", fn_p)
 
@@ -267,8 +301,15 @@ def render_table_markdown(
                     if is_star_bullet and not m_num:
                         bullet_lines.append(fn_clean)
                     elif m_num and m_num.group(1):
-                        fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
-                        pfx = f"**CHÚ THÍCH {m_num.group(1)}:**"
+                        num_str = m_num.group(1)
+                        fn_clean = re.sub(
+                            rf"^<sup\b[^>]*>{num_str}\)?</sup>\s*", "", fn_clean
+                        ).strip()
+                        fn_clean = re.sub(rf"^\(?{num_str}\)[\.\s]*", "", fn_clean).strip()
+                        fn_clean = re.sub(rf"^{num_str}[)\.]\s*", "", fn_clean).strip()
+                        fn_clean = re.sub(r"^\*\*\s*", "", fn_clean).strip()
+                        fn_clean = re.sub(r"\s*\*\*$", "", fn_clean).strip()
+                        pfx = f"**CHÚ THÍCH {num_str}:**"
                         numbered_lines.append(f"{pfx} {fn_clean}")
                     else:
                         fn_clean = re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()
@@ -344,10 +385,12 @@ def render_table_markdown(
     cleaned_grid: list[list[str]] = []
     for r_idx, r in enumerate(grid):
         non_empty = [c.strip() for c in r if c.strip()]
+        is_numeric = bool(non_empty and re.match(r"^[0-9\.,\-\+±%\s]+$", non_empty[0]))
         if (
             r_idx > 0
             and len(r) > 1
             and non_empty
+            and not is_numeric
             and len(set(non_empty)) == 1
             and len(r) == len(non_empty)
         ):
@@ -534,11 +577,18 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
         ctx.last_table_caption = None
         ctx.last_table_caption_num = None
         ctx.state_mgr.reset()
-        t_slug = (
-            f"bang_{int(t_num):02d}"
-            if t_num.isdigit()
-            else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
-        )
+        if ctx.current_part:
+            t_slug = (
+                f"bang_{ctx.current_part}_{int(t_num):02d}"
+                if t_num.isdigit()
+                else f"bang_{ctx.current_part}_{t_num.lower().replace('.', '_').replace('-', '_')}"
+            )
+        else:
+            t_slug = (
+                f"bang_{int(t_num):02d}"
+                if t_num.isdigit()
+                else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+            )
         tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
         ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
     elif not is_captioned and blocks and i > 0 and blocks[i - 1][0] == "p":
@@ -551,11 +601,18 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
             t_num = m_tbl_ref.group(1)
             t_cap = f"Bảng {t_num}"
             is_captioned = True
-            t_slug = (
-                f"bang_{int(t_num):02d}"
-                if t_num.isdigit()
-                else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
-            )
+            if ctx.current_part:
+                t_slug = (
+                    f"bang_{ctx.current_part}_{int(t_num):02d}"
+                    if t_num.isdigit()
+                    else f"bang_{ctx.current_part}_{t_num.lower().replace('.', '_').replace('-', '_')}"
+                )
+            else:
+                t_slug = (
+                    f"bang_{int(t_num):02d}"
+                    if t_num.isdigit()
+                    else f"bang_{t_num.lower().replace('.', '_').replace('-', '_')}"
+                )
             tbl_anchor = f"bang-{t_slug.replace('_', '-')}"
             ctx.emit(f'\n<a id="{tbl_anchor}"></a>\n### {t_cap}\n\n')
         elif ctx.current_target != "main":
@@ -664,6 +721,17 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
             has_footnotes=bool(tbl_footnotes),
         )
 
+        # Decouple any trailing footnote rows from raw_grid (ADR 0041)
+        cleaned_raw_grid: list[list[str]] = []
+        for r in raw_grid:
+            if is_table_footnote_row(r):
+                fn_txt = "\n".join(c.strip() for c in r if c.strip())
+                if fn_txt not in tbl_footnotes:
+                    tbl_footnotes.append(fn_txt)
+                continue
+            cleaned_raw_grid.append(r)
+        raw_grid = cleaned_raw_grid
+
         with open(csv_dir / f"{t_slug}.csv", "w", encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(raw_grid)
@@ -685,35 +753,49 @@ def handle_table_block(ctx: Any, tbl: Any, i: int, blocks: list[Any] | None = No
 
         parsed_footnotes: dict[str, str] = {}
         for fn in tbl_footnotes:
-            m_sym = re.search(r"(\([0-9\*\+a-zA-Z]+\)|\[[0-9\*\+a-zA-Z]+\])", fn)
+            m_sym = re.search(
+                r"(\([0-9\*\+a-zA-Z]+\)|\[[0-9\*\+a-zA-Z]+\]|<sup\b[^>]*>[0-9\*\+a-zA-Z\)]+</sup>)",
+                fn,
+            )
+            if not m_sym:
+                m_ct = re.search(r"\*\*CHÚ\s+THÍCH\s+([0-9]+):\*\*", fn)
+                if m_ct:
+                    parsed_footnotes[f"{m_ct.group(1)})"] = fn.strip()
+                    continue
             if m_sym:
                 parsed_footnotes[m_sym.group(1)] = fn.strip()
             else:
                 parsed_footnotes[f"fn_{len(parsed_footnotes) + 1}"] = fn.strip()
 
+        table_json_dict: dict[str, Any] = {
+            "table_id": t_slug,
+            "table_number": t_num,
+            "table_title": t_cap,
+            "archetype": archetype,
+            "headers": headers,
+            "rows": json_rows,
+            "footnotes": parsed_footnotes or tbl_footnotes,
+        }
+        if ctx.current_part:
+            table_json_dict["part_id"] = ctx.current_part
+
         with open(json_dir / f"{t_slug}.json", "w", encoding="utf-8") as f:
             json.dump(
-                {
-                    "table_id": t_slug,
-                    "table_number": t_num,
-                    "table_title": t_cap,
-                    "archetype": archetype,
-                    "headers": headers,
-                    "rows": json_rows,
-                    "footnotes": parsed_footnotes or tbl_footnotes,
-                },
+                table_json_dict,
                 f,
                 ensure_ascii=False,
                 indent=2,
             )
 
-        ctx.tables_extracted.append(
-            {
-                "table_id": t_slug,
-                "table_number": t_num,
-                "title": t_cap,
-                "archetype": archetype,
-                "csv_file": f"tables/csv/{t_slug}.csv",
-                "json_file": f"tables/json/{t_slug}.json",
-            }
-        )
+        table_extracted_entry: dict[str, Any] = {
+            "table_id": t_slug,
+            "table_number": t_num,
+            "title": t_cap,
+            "archetype": archetype,
+            "csv_file": f"tables/csv/{t_slug}.csv",
+            "json_file": f"tables/json/{t_slug}.json",
+        }
+        if ctx.current_part:
+            table_extracted_entry["part_id"] = ctx.current_part
+
+        ctx.tables_extracted.append(table_extracted_entry)
