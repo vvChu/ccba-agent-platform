@@ -1,6 +1,7 @@
 """test_hydrator.py - Unit tests for SpokeHydrator and Vault Hydration Engine."""
 
 import hashlib
+import shutil
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -17,6 +18,15 @@ from ccba_legal.hydrator import (
 def compute_sha256(content: bytes) -> str:
     """Helper to compute sha256 of bytes."""
     return hashlib.sha256(content).hexdigest()
+
+
+@pytest.fixture(autouse=True)
+def mock_rclone_available(monkeypatch: pytest.MonkeyPatch):
+    """Ensure rclone binary is simulated as available across all test environments including CI."""
+    orig_which = shutil.which
+    monkeypatch.setattr(
+        shutil, "which", lambda cmd: "/usr/bin/rclone" if cmd == "rclone" else orig_which(cmd)
+    )
 
 
 @pytest.fixture
@@ -274,3 +284,16 @@ def test_push_asset_missing_file(mock_spoke: Path):
 
     assert res.status == AssetStatus.MISSING
     assert not mock_run.called
+
+
+def test_push_asset_rclone_not_available(mock_spoke: Path, monkeypatch: pytest.MonkeyPatch):
+    """Test pushing when rclone is not installed returns VAULT_UNAVAILABLE."""
+    monkeypatch.setattr(shutil, "which", lambda cmd: None)
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b1_dir = mock_spoke / "legal_docs" / "02_qcvn" / "qcvn_test_01"
+    assets = hydrator.inspect_bundle_assets(b1_dir)
+    pdf_asset = next(a for a in assets if a.asset_type == "pdf")
+
+    res = hydrator.push_asset(b1_dir, pdf_asset)
+    assert res.status == AssetStatus.ERROR
+    assert "Failed to upload to Cloud Vault" in res.message
