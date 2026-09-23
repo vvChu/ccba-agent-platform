@@ -15,9 +15,12 @@ from scripts.governance.compact_session_learnings import (
     DEFAULT_FILE,
     DEFAULT_MAX_SIZE_KB,
     REQUIRED_INVARIANTS,
+    SPOKE_COMPACTED_TEMPLATE,
+    SPOKE_REQUIRED_INVARIANTS,
     backup_to_archive,
     get_file_metrics,
     run_check,
+    run_compact,
     verify_invariants,
 )
 
@@ -118,3 +121,36 @@ def test_master_history_exists_and_retains_uncompressed_learnings() -> None:
     assert history_bytes >= 30_000, (
         f"Master history archive ({history_bytes} bytes) is suspiciously small; expected >= 30,000 bytes."
     )
+
+
+def test_spoke_profile_compaction_and_check(tmp_path: Path) -> None:
+    """Verify that Spoke profile compaction and verification operate correctly in isolation."""
+    spoke_file = tmp_path / "session_learnings.md"
+    archive_dir = tmp_path / "archive"
+
+    # 1. Verify that SPOKE_COMPACTED_TEMPLATE contains all SPOKE_REQUIRED_INVARIANTS
+    missing = verify_invariants(SPOKE_COMPACTED_TEMPLATE, SPOKE_REQUIRED_INVARIANTS)
+    assert not missing, f"Spoke template is missing required invariants: {missing}"
+
+    # 2. Seed a mock bloated file and compact using Spoke profile
+    bloated_initial = "# Bloated Spoke Learnings\n" + ("Extra details\n" * 1000)
+    spoke_file.write_text(bloated_initial, encoding="utf-8")
+
+    exit_code = run_compact(
+        file_path=spoke_file,
+        archive_dir=archive_dir,
+        max_size_kb=10.0,
+        template=SPOKE_COMPACTED_TEMPLATE,
+        invariants=SPOKE_REQUIRED_INVARIANTS,
+    )
+    assert exit_code == 0
+    assert spoke_file.stat().st_size <= 10.0 * 1024
+
+    # 3. Verify run_check on compacted Spoke file
+    check_exit = run_check(spoke_file, max_size_kb=10.0, invariants=SPOKE_REQUIRED_INVARIANTS)
+    assert check_exit == 0
+
+    # 4. Verify archive was created and contains original bloated text
+    master_archive = archive_dir / "session_learnings_history.md"
+    assert master_archive.exists()
+    assert master_archive.read_text(encoding="utf-8") == bloated_initial
