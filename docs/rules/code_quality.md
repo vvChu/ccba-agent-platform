@@ -114,3 +114,30 @@ Khi thiết kế các pipeline tự động tối ưu hóa mã nguồn hoặc k�
    - Trong các mutator thao tác đơn tệp (single-file mutators như `tuner.py`), gợi ý cấu trúc tuyệt đối KHÔNG được chèn đường dẫn tương đối tĩnh giả định (ví dụ: `references/guide.md`) nếu tệp chưa hiện diện trên đĩa. Chỉ được dẫn link tới các tệp hiện hữu hoặc hướng dẫn qua mục lục text thuần.
 3. **Tuyệt Đối Khớp Nối Công Cụ Kiểm Tra (True CI Parity):**
    - Các cổng Pre-PR Gate của Daemon và lệnh kiểm định cục bộ (`ccba_harness verify-patch --preset skill`) bắt buộc phải đồng bộ 100% với các bước kiểm tra của CI trên GitHub Actions (bao gồm cả `scripts/validate_docs.py . --src scripts,packages --changed`), đảm bảo mã tự động sinh ra luôn xanh 100% khi mở Pull Request.
+
+---
+
+## 10. Test Integrity & Anti-Potemkin Invariant (Kiểm Thử Thực Chất & Chống Test Giả Lập)
+Khi viết unit tests cho các cơ chế kiểm định phòng vệ (Guardrails, Linters, Deletion Guards, Diff Auditors):
+1. **Bắt buộc kích hoạt vi phạm thực tế (Trigger Before Pardon):**
+   - Bài test kiểm tra ngoại lệ tha bổng (ví dụ: cờ `[DEPRECATED]` hoặc whitelist bypass) **BẮT BUỘC PHẢI THỰC SỰ XÓA BỎ** hoặc làm sai lệch đối tượng kiểm chuẩn trong văn bản đề xuất.
+   - Nghiêm cấm giữ nguyên cấu trúc gốc trong văn bản đề xuất khiến tập hợp vi phạm rỗng (`missing_patterns == set()`), tạo ra các bài test Potemkin giả lập luôn pass mà mã nguồn kiểm tra ngoại lệ bên dưới chưa từng được thực thi.
+2. **Kiểm chứng độc lập nhánh phủ định (Dual Assertion):**
+   - Mọi test suite cho guardrail phải đi kèm cặp kiểm thử đối ứng:
+     - Trường hợp không có thẻ ngoại lệ $\rightarrow$ Phải bắt lỗi thành công (`assert len(violations) > 0`).
+     - Trường hợp có thẻ ngoại lệ hợp lệ $\rightarrow$ Phải tha bổng thành công (`assert len(violations) == 0`).
+3. **Bao phủ toàn diện các ký tự phân cách (Separator Coverage):**
+   - Bộ test cho parser/regex ranh giới bắt buộc phải kiểm thử độc lập cả 3 họ phân cách: phân cấp số thập phân (`.1`), hậu tố gạch nối (`-bis`, `-sub`), và gạch chéo (`/2`).
+
+---
+
+## 11. Hierarchical Regex Boundary Discipline (Kỷ Luật Ranh Giới Regex Cho Mã Phân Cấp)
+Khi xây dựng các biểu thức chính quy (Regex) để trích xuất, đối soát hoặc kiểm tra mã định danh phân cấp (như `RULE-1.1`, `SEC-1`, `P01.01`):
+1. **Cấm dùng bare `\b` đơn lẻ cho các mã có chứa số hoặc dấu nối:**
+   - Trong Python Regex, ranh giới từ `\b` xác định ranh giới giữa `\w` và `\W`. Ký tự dấu chấm `.`, gạch nối `-`, và gạch chéo `/` đều là `\W`.
+   - Do đó, `\b1\b` sẽ khớp với số `1` trong `1.1` hoặc trong `RULE-2.1`. Biểu thức `\bRULE-1.1\b` sẽ khớp với tiền tố của `RULE-1.1-bis`.
+2. **Khuôn mẫu chuẩn mực bắt buộc:**
+   - Đối với phân vùng/chương: Bắt buộc neo tiền tố cấu trúc rõ ràng kết hợp chặn ký tự phân cách:
+     `rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}(?![.\-\/][\w\d])\b"`
+   - Đối với quy tắc có phân cấp: Luôn bọc negative lookahead để loại trừ toàn bộ số phân cấp con hoặc hậu tố chữ/gạch nối/gạch chéo:
+     `rf"\b{escaped}(?![.\-\/][\w\d])\b"`
