@@ -578,11 +578,17 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
     reports_dir = tmp_path / ".md" / "knowledge" / "reports"
     reports_dir.mkdir(parents=True)
 
-    # Older report (2026-09-20) with no hyphens
-    rep_older = reports_dir / "nightly_tuner_report_20260920_010000.md"
+    today = datetime.date.today()
+    older_date = today - datetime.timedelta(days=2)
+    newer_date = today - datetime.timedelta(days=1)
+    older_str = older_date.strftime("%Y%m%d")
+    newer_str = newer_date.strftime("%Y-%m-%d")
+
+    # Older report with no hyphens
+    rep_older = reports_dir / f"nightly_tuner_report_{older_str}_010000.md"
     rep_older.write_text(
-        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
-> **Thời gian thực thi:** `20260920_010000` | **Engine:** `REAL_LLM`
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{older_str}_010000` | **Engine:** `REAL_LLM`
 ### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
 | Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -591,11 +597,11 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    # Newer report (2026-09-21) with hyphens in date AND unbolded final score AND backticks on commits
-    rep_newer = reports_dir / "nightly_tuner_report_2026-09-21_010000.md"
+    # Newer report with hyphens in date AND unbolded final score AND backticks on commits
+    rep_newer = reports_dir / f"nightly_tuner_report_{newer_str}_010000.md"
     rep_newer.write_text(
-        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
-> **Thời gian thực thi:** `2026-09-21_010000` | **Engine:** `REAL_LLM`
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{newer_str}_010000` | **Engine:** `REAL_LLM`
 ### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
 | Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -610,7 +616,7 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
     # The newer report (85.0%) should win over the older report (60.0%)
     assert scores.get("skill_mixed") == 85.0
     assert "skill_mixed" in cooldown_skills
-    assert last_scanned_dates.get("skill_mixed") == datetime.date(2026, 9, 21)
+    assert last_scanned_dates.get("skill_mixed") == newer_date
 
 
 def test_remove_stale_plateau_brief_worktree(tmp_path: Path) -> None:
