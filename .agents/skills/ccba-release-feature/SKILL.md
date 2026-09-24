@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "CCBA Hub"
 triggers:
 - release
@@ -155,6 +155,31 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
    ```bash
    git branch -D [feature_branch_name]
    ```
+
+3b. **Dọn dẹp triệt để Stale Tracking Refs & Nhánh Mồ Côi Remote Đã Merge (ADR-0045 & Git Hygiene):**
+   - Đồng bộ và dọn sạch các nhánh remote đã bị xóa:
+     ```bash
+     git fetch --prune
+     ```
+   - Rà soát các nhánh tạm trên remote có liên quan đến tính năng vừa phát hành:
+     ```bash
+     git ls-remote --heads origin "*[feature_keyword]*"
+     ```
+   - *Quy tắc An Toàn Xóa Nhánh Remote (Safe Remote Deletion Invariant):*
+     Agent **CHỈ ĐƯỢC PHÉP** xóa nhánh remote nếu nhánh đó thỏa mãn một trong hai điều kiện bất biến:
+     1. Là nhánh head chính thức của chính PR vừa được squash-merge thành công (`gh pr view --json headRefName`).
+     2. Hoặc nhánh remote đó đã được tích hợp hoàn toàn vào `origin/main` (kiểm tra `git log origin/main..origin/[branch_name]` trả về rỗng).
+     Tuyệt đối cấm xóa các nhánh chưa merge (có commit mới hơn `origin/main`) để tránh xóa nhầm nhánh đang phát triển dở dang của đồng đội trên thiết bị khác!
+     ```bash
+     # Kiểm tra diff (nếu không có output tức là nhánh đã được merge 100% vào main):
+     git log origin/main..origin/[orphan_branch_name] --oneline
+     # Chỉ thực hiện xóa an toàn khi lệnh trên không trả về commit nào:
+     git push origin --delete [orphan_branch_name]
+     ```
+   - Nếu đang thao tác trên Hub, đồng bộ bản cập nhật kỹ năng sang Spoke:
+     ```bash
+     python scripts/sync_spoke.py --spoke [spoke_path] --sync-item ccba-release-feature --apply
+     ```
 
 4. **Tự động đóng Issue Cục bộ (Offline Knowledge Base Mirror):**
    - Nếu PR giải quyết một issue cụ thể (ví dụ `#228`), kiểm tra tệp tin tương ứng tại `.md/knowledge/issues/issue-XXX.md`.
