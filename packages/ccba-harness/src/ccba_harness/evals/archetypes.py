@@ -6,6 +6,7 @@ and domain scorer factories across CCBA Evals Engine (Tuner, Daemon, Runner).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -63,13 +64,13 @@ OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
 VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("mermaid", "excalidraw", "diagram")
 ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("academic", "khoahoc")
 
-# BIM Domain (Disjoint: "risk" and "conflict" are extracted to RISK_ARCHETYPE_KEYWORDS)
+# BIM Classification Domain (Disjoint: "risk" -> RISK_ARCHETYPE_KEYWORDS, "vbpl" -> LEGAL)
 BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "bim",
     "uniclass",
     "classification",
-    "rase",
-    "governance",
+    "iso12006",
+    "openbim",
     "ifc",
 )
 
@@ -205,8 +206,11 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
             if arch.name == "academic":
                 return arch
 
+    # Strip project/namespace prefix so 'bigbim-*' does not false-positive on 'bim' keyword
+    sname_core = re.sub(r"^(ccba|bigbim)-", "", sname)
+
     for arch in DOMAIN_ARCHETYPES:
-        if any(k in sname for k in arch.keywords):
+        if any(k in sname_core for k in arch.keywords):
             return arch
     return None
 

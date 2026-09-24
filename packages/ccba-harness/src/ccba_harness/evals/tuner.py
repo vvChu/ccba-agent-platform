@@ -1363,19 +1363,21 @@ class GitRatchetOptimizer:
 
     def propose_mutation(self, current_content: str, iteration: int) -> str:
         """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
-        sname = self.config.skill_name.lower()
-        if "academic" in sname:
+        arch = resolve_domain_archetype(self.config.skill_name)
+        arch_name = arch.name if arch else "general"
+
+        if arch_name == "academic":
             strategies = [
                 (
                     "CARS 3-Move Blueprint & Sentence Stems",
-                    "\n\n## 4. Khung Mẫu CARS 3-Move Chi Tiết & Mẫu Câu Học Thuật (Sentence Stems)\n"
+                    "\n\n## Khung Mẫu CARS 3-Move Chi Tiết & Mẫu Câu Học Thuật (Sentence Stems)\n"
                     "* **Move 1 (Establish Territory):** Dùng các mẫu câu: *'Recent advances in... have heightened the need for...', 'A central issue in... is...'*.\n"
                     "* **Move 2 (Find a Niche):** Dùng các mẫu câu: *'However, previous studies have largely overlooked...', 'A critical limitation of current methods is...'*.\n"
                     "* **Move 3 (Occupy Niche):** Dùng các mẫu câu: *'To address this gap, this paper proposes...', 'The principal contribution of this study is threefold...'*",
                 ),
                 (
                     "Yale Academic Style & De-nominalization Invariants",
-                    "\n\n## 5. Quy Chuẩn Văn Phong Khoa Học & Loại Bỏ Danh Từ Hóa (Yale Style Guide)\n"
+                    "\n\n## Quy Chuẩn Văn Phong Khoa Học & Loại Bỏ Danh Từ Hóa (Yale Style Guide)\n"
                     "* **Quy tắc cấm tuyệt đối:** Không sử dụng trạng từ khuếch đại chủ quan (`clearly`, `obviously`, `really`, `very`, `basically`).\n"
                     "* **Khử danh từ hóa (De-nominalization):** Bắt buộc chuyển đổi cụm từ rườm rà thành động từ hành động trực tiếp:\n"
                     "  - `conduct an investigation into` -> `investigate`\n"
@@ -1384,7 +1386,7 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "Discussion Zoom-out Framework & Limitation Disclosure",
-                    "\n\n## 6. Khung Cấu Trúc Thảo Luận Mở Rộng (Discussion Zoom-out) & Thừa Nhận Giới Hạn\n"
+                    "\n\n## Khung Cấu Trúc Thảo Luận Mở Rộng (Discussion Zoom-out) & Thừa Nhận Giới Hạn\n"
                     "* Cấu trúc phần Discussion bắt buộc đi qua 3 tầng phân tích:\n"
                     "  1. **Tầng 1 (Major Findings):** Trả lời trực tiếp câu hỏi nghiên cứu đặt ra ở Mở bài.\n"
                     "  2. **Tầng 2 (Context & Limitations):** So sánh với các nghiên cứu đối chuẩn và **bắt buộc dành tối thiểu 1 đoạn văn nêu rõ các giới hạn phương pháp luận (Methodological Limitations)**.\n"
@@ -1392,14 +1394,14 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "APA 7th Edition & BibTeX Standards Integration",
-                    "\n\n## 7. Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành\n"
+                    "\n\n## Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành\n"
                     "* Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:\n"
                     "  - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).\n"
                     "  - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.",
                 ),
                 (
                     "Peer-Review Self-Assessment Checklist",
-                    "\n\n## 8. Bảng Kiểm Tự Phản Biện Học Thuật (Peer-Review Checklist)\n"
+                    "\n\n## Bảng Kiểm Tự Phản Biện Học Thuật (Peer-Review Checklist)\n"
                     "* Trước khi xuất bản bản thảo, Agent tự đối soát qua 4 tiêu chí phản biện độc lập:\n"
                     "  - [ ] Mục tiêu nghiên cứu ở Introduction có khớp 100% với kết luận ở Discussion không?\n"
                     "  - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?\n"
@@ -1407,13 +1409,11 @@ class GitRatchetOptimizer:
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
                 ),
             ]
-        elif any(
-            k in sname for k in ["bim", "uniclass", "classification", "risk", "rase", "governance"]
-        ):
+        elif arch_name == "bim":
             strategies = [
                 (
                     "BIM Classification Rules & ISO Alignment",
-                    "\n\n## 4. Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
+                    "\n\n## Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
                     "* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).\n"
                     "* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.\n"
                     "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.\n"
@@ -1421,19 +1421,19 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "Digital Memory & Spatial Structure Invariants",
-                    "\n\n## 5. Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)\n"
+                    "\n\n## Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)\n"
                     "* **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.\n"
                     "* **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.",
                 ),
                 (
                     "BIM WBS & IFC Entity Mapping",
-                    "\n\n## 6. Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3\n"
+                    "\n\n## Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3\n"
                     "* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.\n"
                     "* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.",
                 ),
                 (
                     "Red-Team Disambiguation & Slang Normalization Invariants",
-                    "\n\n## 7. Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt\n"
+                    "\n\n## Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt\n"
                     "* **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.\n"
                     "* **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`, `mc D800` -> Móng cọc (`EF_20_10`).\n"
                     "* **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.\n"
@@ -1444,11 +1444,11 @@ class GitRatchetOptimizer:
                     "* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).",
                 ),
             ]
-        elif any(k in sname for k in CODING_ARCHETYPE_KEYWORDS):
+        elif arch_name == "coding":
             strategies = [
                 (
                     "Operational Invariants & Hard Completion Lock",
-                    "\n\n## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)\n"
+                    "\n\n## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất\n"
                     "* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.\n"
                     "* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:\n"
                     "  ```bash\n"
@@ -1472,7 +1472,7 @@ class GitRatchetOptimizer:
                     "* **Type Hints & Docstrings:** Mọi hàm/phương thức public bắt buộc có type annotations đầy đủ và docstrings chuẩn mực.",
                 ),
             ]
-        elif any(k in sname for k in ORCHESTRATION_ARCHETYPE_KEYWORDS):
+        elif arch_name == "orchestration":
             strategies = [
                 (
                     "Deterministic Routing & Boundary Invariants",
@@ -1483,45 +1483,33 @@ class GitRatchetOptimizer:
                     "* **Hard Completion Lock:** Bắt buộc vượt qua xác minh tất định `python -m ccba_harness verify-patch` trước khi hoàn tất.",
                 ),
             ]
-        elif any(k in sname for k in ["pccc", "fire", "phongchay", "qc", "audit", "thamdinh"]):
+        elif arch_name == "tech_qc":
             strategies = [
                 (
                     "QCVN 06:2022/BXD & Map 1 Invariants",
-                    "\n\n## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)\n"
+                    "\n\n## Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)\n"
                     "* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).\n"
                     "* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.\n"
                     "* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.",
                 ),
                 (
                     "Fire Compartment & Structural Protection Hard Floor",
-                    "\n\n## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD\n"
+                    "\n\n## Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD\n"
                     "* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.\n"
                     "* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.",
                 ),
                 (
                     "PCCC Evacuation & Dead-End Corridor Limits",
-                    "\n\n## 7. Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD\n"
+                    "\n\n## Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD\n"
                     "* **Khoảng cách thoát nạn:** Khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động).\n"
                     "* **Cơ quan thẩm tra:** Phân định rõ thẩm quyền: Công an PC07 thẩm duyệt hệ thống PCCC MEP; Cơ quan chuyên môn về xây dựng thẩm tra kiến trúc và thoát nạn.",
                 ),
             ]
-        elif any(
-            k in sname
-            for k in [
-                "legal",
-                "tvpl",
-                "vbpl",
-                "law",
-                "advisor",
-                "ingest",
-                "tracker",
-                "digest",
-            ]
-        ):
+        elif arch_name == "legal":
             strategies = [
                 (
                     "XML Envelopes & Strict Output Schema",
-                    "\n\n## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML\n"
+                    "\n\n## Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML\n"
                     "* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:\n"
                     "  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).\n"
                     "  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.\n"
@@ -1530,7 +1518,7 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "Hard-Floor Legal Guardrails (Cấm Viện Dẫn Văn Bản Hết Hiệu Lực)",
-                    "\n\n## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)\n"
+                    "\n\n## Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)\n"
                     "* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:\n"
                     "  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.\n"
                     "  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.\n"
@@ -1539,7 +1527,7 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "AST Mapping & Flat Index Synchronization",
-                    "\n\n## 6. Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)\n"
+                    "\n\n## Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)\n"
                     "* Khi bóc tách văn bản quy phạm pháp luật, Agent phải đối soát với danh mục `clauses.json`:\n"
                     "  - Cấu trúc cây: Chương -> Mục -> Điều -> Khoản -> Điểm.\n"
                     "  - Đặt ID điều khoản chuẩn hóa (ví dụ: `dieu-1`, `dieu-2`) hỗ trợ liên kết chéo hai chiều (Cross-References).\n"
@@ -1547,7 +1535,7 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "Grounded Authority & Issuing Body Verification",
-                    "\n\n## 7. Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý\n"
+                    "\n\n## Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý\n"
                     "* Mọi kết quả trích dẫn pháp luật phải nêu rõ:\n"
                     "  1. Cơ quan ban hành (Chính phủ, Bộ Xây dựng, Bộ Công an, Quốc hội).\n"
                     "  2. Số/Ký hiệu văn bản, ngày ban hành và ngày có hiệu lực thi hành.\n"
@@ -1555,7 +1543,7 @@ class GitRatchetOptimizer:
                 ),
                 (
                     "Evaluator-Optimizer Self-Correction Loop",
-                    "\n\n## 8. Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)\n"
+                    "\n\n## Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)\n"
                     "* Trước khi hoàn tất câu trả lời, Agent tự kích hoạt checklist 3 bước:\n"
                     "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
                     "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
