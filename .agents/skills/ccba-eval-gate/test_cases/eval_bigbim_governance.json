@@ -1,0 +1,128 @@
+[
+  {
+    "id": "test_bigbim_gov_01",
+    "input_prompt": "Kiểm duyệt Sợi Chỉ Vàng & ISO 19650-5 Cấp ST2 cho AIM tòa nhà 75 năm (PM_80). Đánh giá rủi ro bàn giao Đoạn Đò-3 và nguy cơ LMS vendor lock-in.",
+    "golden_answer": {
+      "security_level": "ST2",
+      "standard": "ISO 19650-5",
+      "lifecycle_horizon": "75 năm (PM_80)",
+      "transfer_milestone": "Đoạn Đò-3",
+      "risk_mitigation": "Bắt buộc tích hợp ICT protocol mở tương thích LMS để triệt tiêu nguy cơ LMS vendor lock-in"
+    },
+    "rubric": "Phải xác định cấp độ an ninh thông tin ST2 theo ISO 19650-5, gắn với vòng đời 75 năm (PM_80), đánh giá điều kiện chuyển giao Đoạn Đò-3 và chống lỗi LMS vendor lock-in.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Golden Thread",
+      "security_level": "ST2",
+      "standard": "ISO 19650-5"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_02",
+    "input_prompt": "Trong hồ sơ nghiệm thu bàn giao pha vận hành C2 của dự án Thư viện Đại học, tài liệu vận hành kỹ thuật được phát hành nhưng không chỉ định danh tính cụ thể hoặc bộ phận tiếp nhận trong sơ đồ tổ chức vận hành. Hãy phân tích và gán mã rủi ro thông tin Sợi Chỉ Đỏ chuẩn hóa.",
+    "golden_answer": {
+      "risk_code": "RK_50_40_35",
+      "risk_name": "No-Risk (Rủi ro vắng mặt)",
+      "phase_origin": "C2 - Vận hành",
+      "trigger_condition": "Tài sản thông tin phát hành hoặc bàn giao tại pha C2 nhưng thiếu định danh cụ thể của cá nhân/bộ phận tiếp nhận hoặc không khớp sơ đồ tổ chức",
+      "proposed_mitigation": "Bổ sung văn bản tiếp nhận chính thức và cập nhật sơ đồ tổ chức FM trước khi ký biên bản bàn giao"
+    },
+    "rubric": "Phải phát hiện đúng mã rủi ro RK_50_40_35 (No-Risk), nêu rõ điều kiện kích hoạt ở pha C2 và yêu cầu biện pháp khắc phục cụ thể.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Red Thread Risk Matrix",
+      "risk_code": "RK_50_40_35",
+      "risk_type": "No-Risk"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_03",
+    "input_prompt": "Dự án chuẩn bị nghiệm thu kỹ thuật tại mốc C1 để sẵn sàng đưa vào sử dụng, tuy nhiên Ban quản trị tòa nhà chưa hoàn tất việc chuẩn bị đội ngũ FM (Facility Management) cũng như chưa ban hành quy trình tự vận hành. Xác định mã rủi ro Sợi Chỉ Đỏ.",
+    "golden_answer": {
+      "risk_code": "RK_10_70_04",
+      "risk_name": "Time-Risk (Rủi ro trễ hạn)",
+      "phase_origin": "C1 - Nghiệm thu kỹ thuật",
+      "trigger_condition": "Dự án chuẩn bị bàn giao hoặc nghiệm thu kỹ thuật C1 nhưng Ban quản trị chưa hoàn tất việc chuẩn bị đội ngũ FM hoặc quy trình tự vận hành",
+      "proposed_mitigation": "Kích hoạt kế hoạch đào tạo chuyển giao khẩn cấp và ban hành quy trình FM tạm thời"
+    },
+    "rubric": "Phải nhận diện đúng mã rủi ro RK_10_70_04 (Time-Risk), chỉ rõ mốc kích hoạt C1 và sự chậm trễ chuẩn bị đội ngũ FM.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Red Thread Risk Matrix",
+      "risk_code": "RK_10_70_04",
+      "risk_type": "Time-Risk"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_04",
+    "input_prompt": "Kiểm tra tài liệu định nghĩa thông tin tài sản bàn giao: phát hiện các trường dữ liệu thuộc tính không tuân thủ cấu trúc phân tầng IFC4X3, thiếu các giao thức kết nối ICT protocol đồng bộ và một số thông số áp lực thiết lập vượt quá ngưỡng tới hạn (critical threshold). Đánh giá tính tuân thủ rào chắn Sợi Chỉ Đỏ.",
+    "golden_answer": {
+      "risk_code": "RK_50_40_45",
+      "risk_name": "Do-Risk (Rủi ro thực thi)",
+      "trigger_condition": "Tài liệu định nghĩa thông tin không tuân thủ cấu trúc dữ liệu IFC, thiếu các ICT protocol đồng bộ hoặc thông số vượt ngoài ngưỡng tới hạn",
+      "proposed_mitigation": "Chuẩn hóa lại schema thuộc tính theo IFC4X3 và bổ sung giao thức ICT protocol đồng bộ"
+    },
+    "rubric": "Phải xác định đúng mã rủi ro RK_50_40_45 (Do-Risk), chỉ ra sai lệch cấu trúc dữ liệu IFC và thiếu ICT protocol đồng bộ.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Red Thread Risk Matrix",
+      "risk_code": "RK_50_40_45",
+      "risk_type": "Do-Risk"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_05",
+    "input_prompt": "Đánh giá hồ sơ hoàn công dự án Thư viện số (En_25_70_47): Đơn vị tư vấn không hoàn thiện Mô hình Thông tin Tài sản (AIM) và thiếu các cơ chế kiểm tra chéo dữ liệu vận hành. Phân tích rủi ro Sợi Chỉ Đỏ đối với Trí Nhớ Số của công trình.",
+    "golden_answer": {
+      "risk_code": "RK_50_60_28",
+      "risk_name": "Use-Risk (Rủi ro vận hành)",
+      "trigger_condition": "Thiếu Mô hình Thông tin Tài sản (AIM) hoàn thiện hoặc thiếu các cơ chế kiểm tra chéo, dẫn đến nguy cơ đứt gãy Trí Nhớ Số của tòa nhà thư viện En_25_70_47",
+      "proposed_mitigation": "Bắt buộc nghiệm thu AIM hoàn thiện và thiết lập cơ chế kiểm tra chéo định kỳ"
+    },
+    "rubric": "Phải xác định đúng mã rủi ro RK_50_60_28 (Use-Risk), nêu rõ nguy cơ đứt gãy Trí Nhớ Số và thiếu Mô hình Thông tin Tài sản (AIM) cho En_25_70_47.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Red Thread Risk Matrix",
+      "risk_code": "RK_50_60_28",
+      "risk_type": "Use-Risk"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_06",
+    "input_prompt": "Thực hiện quy trình đối soát 3 chiều (3-Way Traceability Check) đối với thiết bị điều hòa trung tâm AHU tầng 3: Trên bản vẽ thiết kế ghi mã 'AHU-03-A', trong hệ thống phần mềm quản lý tài sản AIM ghi 'AHU-03-A', nhưng biển hiệu gắn thực tế tại phòng máy lại ghi nhãn 'AHU-L03-01'. Hãy đưa ra kết luận kiểm duyệt và hướng xử lý theo chuẩn BIGBIM.",
+    "golden_answer": {
+      "check_type": "3-Way Traceability Check",
+      "design_drawing_id": "AHU-03-A",
+      "aim_system_id": "AHU-03-A",
+      "physical_label_id": "AHU-L03-01",
+      "verdict": "KHÔNG ĐẠT",
+      "reasoning": "Sai lệch mã định danh giữa biển hiệu thực tế và Bản vẽ/AIM. Bắt buộc đối soát 3 chiều: Bản vẽ == AIM == Biển hiệu thực tế",
+      "proposed_mitigation": "Cấp lại biển hiệu thực tế khớp 100% với mã Unique ID chuẩn 'AHU-03-A'"
+    },
+    "rubric": "Phải thực hiện đối soát 3 chiều Unique ID, phát hiện sai lệch giữa biển hiệu thực tế và bản vẽ/AIM, kết luận Không Đạt và yêu cầu đồng nhất mã định danh.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Unique ID Invariance",
+      "standard": "3-Way Traceability Check"
+    }
+  },
+  {
+    "id": "test_bigbim_gov_07",
+    "input_prompt": "Tại giai đoạn thiết kế sơ bộ BBP-A0, một trạm biến áp được cấp mã Unique ID là 'SUB-ST-001'. Đến giai đoạn đấu thầu BBP-B1, nhà thầu tự ý đổi mã này thành 'TR-SUB-B1-01' trong hồ sơ đề xuất. Phân tích sự cố trôi dạt Unique ID và rào chắn Sợi Chỉ Đỏ.",
+    "golden_answer": {
+      "issue_type": "Unique ID Drift",
+      "original_id": "SUB-ST-001",
+      "altered_id": "TR-SUB-B1-01",
+      "phase_origin": "BBP-A0 -> BBP-B1",
+      "verdict": "VI PHẠM",
+      "reasoning": "Mọi tài sản phải được cấp và khóa Unique ID bất biến ngay từ pha khởi đầu BBP-A0, nghiêm cấm đổi tên ở các pha sau",
+      "proposed_mitigation": "Khôi phục lại mã Unique ID 'SUB-ST-001' và ghi nhận sự kiện vào Change Log của governance-core.md"
+    },
+    "rubric": "Phải nhận diện vi phạm nguyên tắc khóa Unique ID từ pha BBP-A0, chỉ ra hiện tượng Unique ID drift và yêu cầu bảo toàn mã ban đầu.",
+    "metadata": {
+      "discipline": "BIM Governance",
+      "pillar": "Unique ID Invariance",
+      "standard": "BBP Lifecycle Governance"
+    }
+  }
+]

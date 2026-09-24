@@ -514,6 +514,8 @@ from .archetypes import (  # noqa: F401
     ACADEMIC_ARCHETYPE_KEYWORDS,
     ADR_ARCHETYPE_KEYWORDS,
     BIM_ARCHETYPE_KEYWORDS,
+    BIM_GOVERNANCE_ARCHETYPE_KEYWORDS,
+    BIM_RASE_ARCHETYPE_KEYWORDS,
     CODING_ARCHETYPE_KEYWORDS,
     DOMAIN_ARCHETYPES,
     GRILLING_ARCHETYPE_KEYWORDS,
@@ -941,6 +943,117 @@ class GitRatchetOptimizer:
                     )
                 else:
                     parts.append("Xử lý va chạm hình học thông thường...")
+
+            # --- BIGBIM Governance & Golden/Red Thread Audit ---
+            elif "governance" in getattr(self.config, "skill_name", "").lower() or any(
+                k in prompt_l
+                for k in [
+                    "sợi chỉ vàng",
+                    "sợi chỉ đỏ",
+                    "golden thread",
+                    "red thread",
+                    "unique id",
+                    "governance",
+                    "iso 19650-5",
+                    "st2",
+                    "pm_80",
+                    "75 năm",
+                    "rk_50_40_35",
+                    "rk_10_70_04",
+                    "rk_50_40_45",
+                    "rk_50_60_28",
+                    "đoạn đò-3",
+                    "lms vendor lock-in",
+                    "đối soát 3 chiều",
+                    "3-way traceability",
+                ]
+            ):
+                has_gov_grounding = (
+                    "sợi chỉ vàng" in content.lower()
+                    or "golden thread" in content.lower()
+                    or "governance" in content.lower()
+                    or "iso 19650-5" in content.lower()
+                    or "st2" in content.lower()
+                    or "unique id" in content.lower()
+                )
+                if has_gov_grounding or "bigbim" in content.lower():
+                    parts.append(
+                        "Kiểm duyệt Sợi Chỉ Vàng & Rào chắn Sợi Chỉ Đỏ (BIGBIM Governance Core):\n"
+                        "- Trụ cột Sợi Chỉ Vàng (Golden Thread): Quản trị thông tin dài hạn 75 năm (PM_80), phân cấp an ninh thông tin đạt cấp ST2 theo ISO 19650-5, kiểm soát chuyển giao Đoạn Đò-3 triệt tiêu nguy cơ LMS vendor lock-in.\n"
+                        "- Trụ cột Sợi Chỉ Đỏ (Red Thread Risk Matrix): Quét và kích hoạt 4 mã rủi ro chuẩn hóa:\n"
+                        "  + RK_50_40_35 — No-Risk: Bàn giao vận hành pha C2 thiếu người nhận hoặc không khớp sơ đồ tổ chức.\n"
+                        "  + RK_10_70_04 — Time-Risk: Nghiệm thu kỹ thuật C1 thiếu đội ngũ FM hoặc quy trình tự vận hành.\n"
+                        "  + RK_50_40_45 — Do-Risk: Sai lệch cấu trúc dữ liệu IFC hoặc thiếu ICT protocol đồng bộ vượt ngưỡng tới hạn.\n"
+                        "  + RK_50_60_28 — Use-Risk: Thiếu Mô hình Thông tin Tài sản (AIM) hoàn thiện, nguy cơ đứt gãy Trí Nhớ Số En_25_70_47.\n"
+                        "- Cưỡng chế Unique ID Bất biến & Đối soát 3 Chiều: Khóa mã Unique ID từ pha khởi đầu BBP-A0; đối soát 3 chiều (Bản vẽ thiết kế == Hệ thống AIM == Biển hiệu thực tế tại công trình) phát hiện trôi dạt định danh (Unique ID drift).\n"
+                        "```markdown\n"
+                        "### BÁO CÁO KIỂM DUYỆT GOVERNANCE\n"
+                        "1. Sợi Chỉ Vàng: Cấp độ an ninh ST2 (ISO 19650-5), thời hạn 75 năm (PM_80), Đoạn Đò-3 tuân thủ.\n"
+                        "2. Sợi Chỉ Đỏ: Đánh giá RK_50_40_35 (No-Risk), RK_10_70_04 (Time-Risk), RK_50_40_45 (Do-Risk), RK_50_60_28 (Use-Risk).\n"
+                        "3. Đối soát 3 chiều Unique ID: Cưỡng chế BBP-A0, đối soát bản vẽ thiết kế, AIM và biển hiệu thực tế.\n"
+                        "```"
+                    )
+                else:
+                    parts.append("Kiểm tra governance thông thường...")
+
+            # --- BIGBIM RASE & IFC4X3 Property Mapping ---
+            elif "rase" in getattr(self.config, "skill_name", "").lower() or any(
+                k in prompt_l
+                for k in [
+                    "rase",
+                    "bóc tách rase",
+                    "bóc tách quy chuẩn",
+                    "bộ số liệu khối lượng",
+                    "khối lượng sàn",
+                    "pset",
+                    "ifcreldefinesbyproperties",
+                    "ifcpropertyset",
+                    "qto_",
+                    "targettemperature",
+                    "freshairflowrate",
+                    "thermaltransmittance",
+                    "grossvolume",
+                    "basequantities",
+                    "sl_25_30_70",
+                ]
+            ):
+                has_rase_grounding = (
+                    "rase" in content.lower()
+                    or "ifc4x3" in content.lower()
+                    or "ifcreldefinesbyproperties" in content.lower()
+                    or "pset" in content.lower()
+                )
+                if has_rase_grounding or "bigbim" in content.lower():
+                    parts.append(
+                        "Bóc tách RASE và Ánh xạ thuộc tính IFC4X3 (ISO 16739):\n"
+                        "- Phân rã ma trận R-A-S-E (4 tầng logic):\n"
+                        "  + Requirement: Chỉ số kỹ thuật bắt buộc đạt được.\n"
+                        "  + Applicability: Thực thể IFC cụ thể chịu điều chỉnh (IfcSpace, IfcWall, IfcSlab).\n"
+                        "  + Selection: Thuộc tính lựa chọn đóng gói trong IfcPropertySet (Pset_) và gán qua quan hệ IfcRelDefinesByProperties.\n"
+                        "  + Exception: Ngoại lệ loại trừ không áp dụng quy tắc.\n"
+                        "- Cơ chế gán thuộc tính IFC4X3: Cấm gán trực tiếp vào IfcObject; bắt buộc liên kết gián tiếp qua IfcRelDefinesByProperties.\n"
+                        "- Quantity Take-Off (Qto) Integration: Tích hợp BaseQuantities gồm Qto_SpaceBaseQuantities (GrossVolume), Qto_WallBaseQuantities và Qto_SlabBaseQuantities.\n"
+                        "```json\n"
+                        "[\n"
+                        "  {\n"
+                        '    "requirement_code": "RASE-REQ-001",\n'
+                        '    "concept_name": "Phân tích RASE kỹ thuật",\n'
+                        '    "requirement": "TargetTemperature / FreshAirFlowRate / ThermalTransmittance",\n'
+                        '    "applicability": "IfcSpace / IfcWall / IfcSlab",\n'
+                        '    "selection": {\n'
+                        '      "property_set": "Pset_SpaceOccupancyRequirement",\n'
+                        '      "property_name": "TargetTemperature",\n'
+                        '      "data_type": "IfcThermodynamicTemperatureMeasure",\n'
+                        '      "relation": "IfcRelDefinesByProperties"\n'
+                        "    },\n"
+                        '    "qto": "Qto_SpaceBaseQuantities.GrossVolume",\n'
+                        '    "exception": "IfcSpace[SpaceUsage=\'STORAGE\']"\n'
+                        "  }\n"
+                        "]\n"
+                        "```"
+                    )
+                else:
+                    parts.append("Phân tích RASE thông thường...")
 
             elif any(
                 k.lower() in prompt.lower()
@@ -1407,6 +1520,57 @@ class GitRatchetOptimizer:
                     "  - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?\n"
                     "  - [ ] Các hình ảnh, bảng biểu đã có chú thích và đơn vị đo lường đầy đủ chưa?\n"
                     "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
+                ),
+            ]
+        elif arch_name == "bim_governance":
+            strategies = [
+                (
+                    "Golden Thread & Security Classification Invariants",
+                    "\n\n## Kiểm Duyệt Sợi Chỉ Vàng & Phân Cấp An Ninh ISO 19650-5\n"
+                    "* **Sợi Chỉ Vàng (Golden Thread):** Cưỡng chế quản trị dữ liệu tài sản tầm nhìn 75 năm (PM_80), chống đứt gãy thông tin qua các thế hệ chuyển giao.\n"
+                    "* **Phân cấp an ninh ST2:** Toàn bộ thông tin tài sản phải được phân loại và gắn thẻ an ninh đạt cấp độ ST2 theo ISO 19650-5.\n"
+                    "* **Đoạn Đò-3 & LMS Lock-in:** Đảm bảo dữ liệu bàn giao tích hợp đầy đủ ICT protocol tương thích LMS, triệt tiêu rủi ro LMS vendor lock-in.",
+                ),
+                (
+                    "Red Thread Risk Matrix & Operational Verification",
+                    "\n\n## Rào Chắn Sợi Chỉ Đỏ & Ma Trận Rủi Ro Thông Tin Chuẩn Hóa\n"
+                    "* **Bộ 4 mã rủi ro thông tin:** Tuyệt đối không dùng mô tả tự do, bắt buộc nhận diện chính xác:\n"
+                    "  - `RK_50_40_35` (No-Risk): Bàn giao C2 thiếu người nhận hoặc không khớp sơ đồ tổ chức.\n"
+                    "  - `RK_10_70_04` (Time-Risk): Nghiệm thu C1 thiếu đội ngũ FM hoặc quy trình tự vận hành.\n"
+                    "  - `RK_50_40_45` (Do-Risk): Không tuân thủ cấu trúc IFC hoặc thiếu ICT protocol đồng bộ.\n"
+                    "  - `RK_50_60_28` (Use-Risk): Thiếu AIM hoàn thiện dẫn đến đứt gãy Trí Nhớ Số (En_25_70_47).",
+                ),
+                (
+                    "Unique ID Invariance & 3-Way Traceability Guardrails",
+                    "\n\n## Cưỡng Chế Unique ID Bất Biến & Đối Soát 3 Chiều\n"
+                    "* **Khóa Unique ID từ BBP-A0:** Cấp và khóa mã Unique ID bất biến ngay từ pha BBP-A0, nghiêm cấm đổi tên ở các pha sau.\n"
+                    "* **Đối soát 3 chiều (3-Way Traceability):** Kiểm tra đối soát bắt buộc: Bản vẽ thiết kế == Hệ thống AIM == Biển hiệu thực tế tại công trình.\n"
+                    "* **Chống trôi dạt định danh:** Bắt buộc gắn cờ không đạt khi phát hiện bất kỳ sai lệch ký tự nào giữa 3 phương tiện đối soát.",
+                ),
+            ]
+        elif arch_name == "bim_rase":
+            strategies = [
+                (
+                    "RASE Decomposition & 4-Tier Logic Matrix",
+                    "\n\n## Phân Rã Ma Trận RASE & Cấu Trúc 4 Tầng Logic\n"
+                    "* **R - Requirement:** Xác định chỉ số kỹ thuật hoặc ngưỡng tới hạn bắt buộc phải đạt được.\n"
+                    "* **A - Applicability:** Xác định thực thể IFC cụ thể chịu sự điều chỉnh (ví dụ: `IfcSpace`, `IfcWall`).\n"
+                    "* **S - Selection:** Khai báo chính xác thuộc tính IFC4X3 lưu trữ thông số thông qua `IfcRelDefinesByProperties`.\n"
+                    "* **E - Exception:** Xác định điều kiện loại trừ không cần áp dụng quy tắc kiểm soát.",
+                ),
+                (
+                    "IFC4X3 Property Mapping & Indirect Relationship Invariants",
+                    "\n\n## Quy Chuẩn Gán Thuộc Tính IFC4X3 & Quan Hệ Gián Tiếp Bắt Buộc\n"
+                    "* **Cấm gán trực tiếp:** Tuyệt đối không gán thuộc tính trực tiếp vào `IfcObject`.\n"
+                    "* **Quan hệ trung gian:** Mọi thuộc tính phải được đóng gói trong `IfcPropertySet` (Pset_) và liên kết qua `IfcRelDefinesByProperties`.\n"
+                    "* **Đồng bộ ISO 16739-1:** Đảm bảo kiểu dữ liệu thuộc tính khớp chính xác với định nghĩa schema IFC4X3.",
+                ),
+                (
+                    "Quantity Take-Off (Qto) Integration & BaseQuantities Mapping",
+                    "\n\n## Tích Hợp Dữ Liệu Khối Lượng Qto & BaseQuantities\n"
+                    "* **Khối lượng không gian:** Sử dụng `Qto_SpaceBaseQuantities` (GrossVolume, NetFloorArea) cho các chỉ số thông gió và tải trọng.\n"
+                    "* **Khối lượng cấu kiện:** Sử dụng `Qto_WallBaseQuantities`, `Qto_SlabBaseQuantities` cho các chỉ tiêu truyền nhiệt và kết cấu.\n"
+                    "* **Bảo toàn Trí Nhớ Số:** Kết nối ma trận RASE với Unique ID để duy trì tính truy nguyên xuyên suốt vòng đời công trình.",
                 ),
             ]
         elif arch_name == "bim":

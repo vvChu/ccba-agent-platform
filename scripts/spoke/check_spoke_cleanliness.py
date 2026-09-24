@@ -55,7 +55,7 @@ SYS_PATH_HACK_PATTERN = re.compile(
 # Patterns detecting hardcoded machine state leakage (drive letters or home user paths)
 MACHINE_STATE_LEAK_PATTERNS = [
     (
-        re.compile(r"""(?:["']|[=:]\s*)[A-Za-z]:[\\/]+[A-Za-z0-9_.-]+[\\/]+"""),
+        re.compile(r"""(?:[rR]?["']|[=:]\s*)[A-Za-z]:[\\/]+[A-Za-z0-9_.-]+"""),
         "Hardcoded Windows drive path",
     ),
     (

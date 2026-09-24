@@ -1217,6 +1217,20 @@ def test_get_default_domain_scorers_risk_and_orchestration():
         scs = get_default_domain_scorers(name)
         assert any(s.name == "single_writer_invariant" for s in scs)
 
+    # 4. bigbim-governance
+    gov_scorers = get_default_domain_scorers("bigbim-governance")
+    gov_names = [s.name for s in gov_scorers]
+    assert "governance_thread_audit" in gov_names
+    assert "governance_anti_trap_hard_floor" in gov_names
+    assert "governance_risk_matrix_guard" in gov_names
+
+    # 5. bigbim-rase
+    rase_scorers = get_default_domain_scorers("bigbim-rase")
+    rase_names = [s.name for s in rase_scorers]
+    assert "rase_decomposition_audit" in rase_names
+    assert "rase_ifc4x3_pmapping_hard_floor" in rase_names
+    assert "rase_qto_mapping_guard" in rase_names
+
 
 def test_bigbim_risk_eval_dataset_and_scorer(tmp_path: Path):
     """Verify bigbim-risk skill evaluates against eval_bigbim_risk.json with high fidelity score >= 85%."""
@@ -1262,6 +1276,110 @@ Mâu thuẫn thông tin (Information Conflict) tại bước phối hợp V2 - C
     # Score must achieve >= 85.0% without critical failures
     assert report.initial_score >= 85.0
     assert report.final_score >= 85.0
+
+
+def test_bigbim_governance_eval_dataset_and_scorer(tmp_path: Path):
+    """Verify bigbim-governance skill evaluates against eval_bigbim_governance.json with score >= 85%."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        """---
+name: bigbim-governance
+triggers:
+- sợi chỉ vàng
+- sợi chỉ đỏ
+- unique id
+- governance
+- golden thread
+- red thread
+- ST2
+- ISO 19650-5
+---
+# BIGBIM Governance Core Guardrails Skill
+Kiểm duyệt Sợi Chỉ Vàng & Rào chắn Sợi Chỉ Đỏ (BIGBIM Governance Core):
+- Trụ cột Sợi Chỉ Vàng (Golden Thread): Quản trị thông tin dài hạn 75 năm (PM_80), cấp an ninh ST2 theo chuẩn ISO 19650-5, kiểm soát Đoạn Đò-3 chống LMS vendor lock-in.
+- Trụ cột Sợi Chỉ Đỏ (Red Thread Risk Matrix): Quét 4 mã rủi ro RK_50_40_35 (No-Risk), RK_10_70_04 (Time-Risk), RK_50_40_45 (Do-Risk), RK_50_60_28 (Use-Risk En_25_70_47).
+- Cưỡng chế Unique ID Bất biến & Đối soát 3 Chiều: Khóa mã Unique ID từ pha BBP-A0, đối soát bản vẽ thiết kế, AIM và biển hiệu thực tế.
+""",
+        encoding="utf-8",
+    )
+
+    dataset_file = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / ".agents"
+        / "skills"
+        / "ccba-eval-gate"
+        / "test_cases"
+        / "eval_bigbim_governance.json"
+    )
+    assert dataset_file.exists(), f"Dataset file must exist at {dataset_file}"
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        eval_dataset_file=dataset_file,
+        skill_name="bigbim-governance",
+        max_iterations=1,
+    )
+
+    opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=tmp_path)
+    report = opt.run()
+
+    # Score must achieve >= 85.0% without critical failures
+    assert report.initial_score >= 85.0
+    assert report.final_score >= 85.0
+    assert not any(trial.critical_fails > 0 for trial in report.history)
+    eval_rep = opt.evaluate_content(skill_file.read_text(encoding="utf-8"))
+    assert not any(item_res.critical_failed for item_res in eval_rep.item_results)
+
+
+def test_bigbim_rase_eval_dataset_and_scorer(tmp_path: Path):
+    """Verify bigbim-rase skill evaluates against eval_bigbim_rase.json with score >= 85%."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text(
+        """---
+name: bigbim-rase
+triggers:
+- rase
+- phân tích rase
+- pset map
+- IFC4X3
+- IfcPropertySet
+- IfcRelDefinesByProperties
+---
+# BIGBIM RASE Analyzer Skill
+Bóc tách RASE và Ánh xạ thuộc tính IFC4X3 (ISO 16739):
+- Phân rã ma trận R-A-S-E 4 tầng logic: Requirement (Chỉ số kỹ thuật), Applicability (Thực thể IFC), Selection (Thuộc tính IFC), Exception (Ngoại lệ).
+- Quy chuẩn gán thuộc tính IFC4X3: Cấm gán trực tiếp vào IfcObject; bắt buộc đóng gói trong IfcPropertySet (Pset_) và liên kết gián tiếp qua quan hệ IfcRelDefinesByProperties.
+- Tích hợp dữ liệu khối lượng Quantity Take-Off (Qto) BaseQuantities: Qto_SpaceBaseQuantities (GrossVolume), Qto_WallBaseQuantities, Qto_SlabBaseQuantities.
+""",
+        encoding="utf-8",
+    )
+
+    dataset_file = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / ".agents"
+        / "skills"
+        / "ccba-eval-gate"
+        / "test_cases"
+        / "eval_bigbim_rase.json"
+    )
+    assert dataset_file.exists(), f"Dataset file must exist at {dataset_file}"
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        eval_dataset_file=dataset_file,
+        skill_name="bigbim-rase",
+        max_iterations=1,
+    )
+
+    opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=tmp_path)
+    report = opt.run()
+
+    # Score must achieve >= 85.0% without critical failures
+    assert report.initial_score >= 85.0
+    assert report.final_score >= 85.0
+    assert not any(trial.critical_fails > 0 for trial in report.history)
+    eval_rep = opt.evaluate_content(skill_file.read_text(encoding="utf-8"))
+    assert not any(item_res.critical_failed for item_res in eval_rep.item_results)
 
 
 def test_adaptive_rate_limiter_timing_and_backoff():
@@ -1574,6 +1692,8 @@ def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
     assert daemon._resolve_dataset_file("ccba-mermaid-diagram") == "eval_visual_diagram.json"
     assert daemon._resolve_dataset_file("ccba-excalidraw-diagram") == "eval_visual_diagram.json"
     assert daemon._resolve_dataset_file("ccba-pptx") == "eval_copywriting.json"
+    assert daemon._resolve_dataset_file("bigbim-governance") == "eval_bigbim_governance.json"
+    assert daemon._resolve_dataset_file("bigbim-rase") == "eval_bigbim_rase.json"
     assert daemon._resolve_dataset_file("ccba-design") != "eval_codebase_engineering.json"
 
 
@@ -1598,6 +1718,16 @@ def test_get_default_domain_scorers_expanded_archetypes():
     # Visual / Diagram
     visual_names = [s.name for s in get_default_domain_scorers("ccba-mermaid-diagram")]
     assert "diagram_syntax" in visual_names
+
+    # BIM Governance
+    gov_names = [s.name for s in get_default_domain_scorers("bigbim-governance")]
+    assert "governance_thread_audit" in gov_names
+    assert "governance_anti_trap_hard_floor" in gov_names
+
+    # BIM RASE
+    rase_names = [s.name for s in get_default_domain_scorers("bigbim-rase")]
+    assert "rase_decomposition_audit" in rase_names
+    assert "rase_ifc4x3_pmapping_hard_floor" in rase_names
 
 
 # =========================================================================
@@ -1941,7 +2071,7 @@ def test_from_markdown_program_formatted_budgets(tmp_path: Path):
 
 
 def test_archetype_ssot_resolution():
-    """Verify SSOT resolution in archetypes.py correctly maps all 11 domain archetypes."""
+    """Verify SSOT resolution in archetypes.py correctly maps all 13 domain archetypes."""
     from ccba_harness.evals.archetypes import (
         DOMAIN_ARCHETYPES,
         get_default_domain_scorers,
@@ -1949,7 +2079,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 11
+    assert len(DOMAIN_ARCHETYPES) == 13
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -1968,6 +2098,8 @@ def test_archetype_ssot_resolution():
         ("ccba-academic-writing", "eval_academic_writing.json"),
         ("ccba-copywriting", "eval_copywriting.json"),
         ("ccba-mermaid-diagram", "eval_visual_diagram.json"),
+        ("bigbim-governance", "eval_bigbim_governance.json"),
+        ("bigbim-rase", "eval_bigbim_rase.json"),
         ("bigbim-classification", "eval_bigbim_classification.json"),
         ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
         ("platform-loader", "eval_agent_orchestration.json"),
@@ -2000,6 +2132,8 @@ def test_archetype_zero_collision_cross_domain():
         "ccba-bim-van-phong",
         "ccba-bim-mermaid",
         "ccba-academic-bim",
+        "ccba-governance-bim",
+        "ccba-rase-bim",
         "ccba-grill-teamwork",
         "ccba-adr-teamwork",
         "ccba-platform-grill",
