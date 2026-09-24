@@ -8,7 +8,12 @@ legacy log mining fallback, and 5-Pillar document health (ADR-0035, ADR-0043, AD
 from __future__ import annotations
 
 import argparse
-import fcntl
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore[assignment]
+
 import json
 import logging
 import os
@@ -41,6 +46,9 @@ logger = logging.getLogger("ccba.eval.status")
 def check_lock_status(lock_path: Path) -> tuple[bool, str]:
     """Inspects the process mutex lock (/tmp/ccba_nightly_runner.lock) non-blockingly.
 
+    Uses Zero-Lock inspection via kernel /proc/locks on Linux (zero contention risk).
+    Falls back to fcntl.flock if /proc/locks is unavailable, or process scanning.
+
     Args:
         lock_path: Path to the flock lock file.
 
@@ -50,24 +58,51 @@ def check_lock_status(lock_path: Path) -> tuple[bool, str]:
     if not lock_path.exists():
         return False, "LOCK_FILE_ABSENT"
 
-    try:
-        # Try opening to test flock
-        f = open(lock_path)
-    except Exception as e:
-        return True, f"LOCK_FILE_UNREADABLE ({e})"
+    # 1. Zero-Lock Inspection on Linux via kernel /proc/locks
+    proc_locks = Path("/proc/locks")
+    if proc_locks.is_file():
+        try:
+            st = lock_path.stat()
+            target_inode = st.st_ino
+            dev_major = hex(os.major(st.st_dev))[2:]
+            dev_minor = f"{os.minor(st.st_dev):02x}"
+            dev_prefix = f"{dev_major}:{dev_minor}:"
 
-    try:
-        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        # Successfully locked -> nobody else holds it
-        fcntl.flock(f, fcntl.LOCK_UN)
-        f.close()
-        return False, "UNLOCKED"
-    except (BlockingIOError, OSError):
-        f.close()
-        return True, "LOCKED_BY_ACTIVE_PROCESS"
-    except Exception as e:
-        f.close()
-        return True, f"LOCK_CHECK_ERROR ({e})"
+            with open(proc_locks, encoding="ascii", errors="replace") as f:
+                for line in f:
+                    parts = line.split()
+                    if len(parts) >= 6 and parts[1] == "FLOCK":
+                        dev_inode = parts[5]
+                        if (
+                            dev_inode.endswith(f":{target_inode}")
+                            or dev_inode == f"{dev_prefix}{target_inode}"
+                        ):
+                            holder_pid = parts[4] if parts[4].isdigit() else "unknown"
+                            return True, f"LOCKED_BY_ACTIVE_PROCESS (PID: {holder_pid})"
+            return False, "UNLOCKED"
+        except Exception as e:
+            logger.debug(f"Reading /proc/locks failed: {e}")
+
+    # 2. Fallback using fcntl if available
+    if fcntl is not None:
+        try:
+            f = open(lock_path)
+            try:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(f, fcntl.LOCK_UN)
+                f.close()
+                return False, "UNLOCKED"
+            except (BlockingIOError, OSError):
+                f.close()
+                return True, "LOCKED_BY_ACTIVE_PROCESS"
+            except Exception as e:
+                f.close()
+                return True, f"LOCK_CHECK_ERROR ({e})"
+        except Exception as e:
+            return True, f"LOCK_FILE_UNREADABLE ({e})"
+
+    # 3. Fallback on platforms without fcntl (e.g. Windows native)
+    return False, "UNLOCKED_NO_FCNTL_FALLBACK"
 
 
 def detect_nightly_processes() -> list[dict[str, Any]]:
@@ -503,17 +538,34 @@ def build_unified_status(
             }
     elif hb_data:
         hb_status = hb_data.get("status", "UNKNOWN")
+        hb_timestamp_str = hb_data.get("timestamp")
+        is_stale_by_ttl = False
+        if hb_timestamp_str:
+            try:
+                if "_" in str(hb_timestamp_str) and len(str(hb_timestamp_str)) == 15:
+                    hb_dt = datetime.strptime(str(hb_timestamp_str), "%Y%m%d_%H%M%S")
+                else:
+                    hb_dt = datetime.fromisoformat(str(hb_timestamp_str))
+                age_hours = (datetime.now() - hb_dt).total_seconds() / 3600.0
+                if age_hours > 6.0:
+                    is_stale_by_ttl = True
+            except Exception:
+                pass
+
         is_pid_alive = (
             any(p["pid"] == hb_pid for p in active_procs) or _is_pid_alive(hb_pid)
             if hb_pid
             else False
         )
 
-        if hb_status in ("IN_PROGRESS", "STARTED") and not is_pid_alive:
+        if is_stale_by_ttl and hb_status in ("IN_PROGRESS", "STARTED"):
+            hb_data["status"] = "STALE_SESSION_EXPIRED"
+            hb_data["is_active"] = False
+        elif hb_status in ("IN_PROGRESS", "STARTED") and not is_pid_alive:
             hb_data["status"] = "STALE_OR_CRASHED"
             hb_data["is_active"] = False
         else:
-            hb_data["is_active"] = is_pid_alive
+            hb_data["is_active"] = is_pid_alive and not is_stale_by_ttl
 
         tuner_telemetry = hb_data
     else:

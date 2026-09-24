@@ -298,3 +298,18 @@
   - **Quy tắc Bất Biến (Active Lock Protection Invariant):**
     Tuyệt đối nghiêm cấm việc xóa worktree (`git worktree remove --force`) hoặc xóa file lock nếu tiến trình gắn với nó vẫn đang tồn tại trong bảng tiến trình hệ điều hành (trừ trạng thái Zombie `Z`). Chỉ được phép dọn dẹp khi tiến trình đã kết thúc hoàn toàn hoặc khi script tự động thu hồi qua hook `trap cleanup_worktree EXIT`.
 
+### 16.5. Daemon Canonical Root Resolution & Zero-Lock Telemetry (Bảo Toàn Phân Lập Worktree & Telemetry)
+- **Tách biệt Ngữ cảnh Thực thi (Execution Context) và Ngữ cảnh Dữ liệu (Telemetry Context):**
+  - Daemon/Runner chạy trong Ephemeral Worktree BẮT BUỘC giữ nguyên `self.root` là thư mục worktree để mọi thao tác Git (`git checkout`, `git commit`, `git reset`, ratchet mutations) diễn ra cô lập 100%, tuyệt đối không làm ô nhiễm Repo chính (ADR-0035).
+  - Để lưu trữ các tệp trạng thái lâu dài (telemetry, heartbeat, live reports) mà không bị mất khi worktree bị dọn dẹp (`git worktree remove`), Daemon BẮT BUỘC sử dụng hàm `resolve_canonical_root(self.root)` (đọc chuẩn file `.git` tìm commondir/parent worktree) để xác định Repo gốc và lưu vào `canonical_root / ".md/telemetry/..."`.
+  - Cơ chế phòng thủ 3 tầng: (1) Daemon Dual-write vào cả `self.root` và `canonical_root`; (2) Ghi atomic qua file tạm `.tmp` rồi đổi tên; (3) Hàm `cleanup_worktree()` trong shell runner sao chép dự phòng thư mục `.md/telemetry/` từ worktree về Project Root trước khi remove worktree.
+- **Rào chắn Tuần tự hóa Đường dẫn (`PosixPath` Serialization Guard):**
+  - Mọi hàm xuất báo cáo/trạng thái JSON có chứa trường kiểu `Path` BẮT BUỘC phải truyền `default=str` vào `json.dumps(...)` hoặc chuyển đổi tường minh `str(p)` để ngăn chặn lỗi `TypeError: Object of type PosixPath is not JSON serializable`.
+- **Cơ chế Kiểm tra Trạng thái Không Tranh Chấp (Zero-Lock Inspection) Cho Công Cụ Giám Sát CLI:**
+  - Khác với thủ tục dọn dẹp worktree tại Mục 16.4 (Pre-cleanup Inspection được phép dùng `flock -n` khi runner đã kết thúc), các công cụ CLI tra cứu thời gian thực (như `check_nightly_status.py`) TUYỆT ĐỐI KHÔNG thử chiếm giữ khóa qua `fcntl.flock(LOCK_EX)` hay `LOCK_SH`, vì thao tác này có thể khiến lệnh `flock -n 200` của cron runner chính bị từ chối (`EWOULDBLOCK`) và hủy ca chạy đêm.
+  - Trên Linux: Kiểm tra trạng thái khóa bằng cơ chế Zero-Lock đọc bảng nhân kernel `/proc/locks`. Chú ý giải mã đúng tiền tố thiết bị hệ thập lục phân Hex (`hex(major):hex(minor)`) kết hợp với số inode thập phân.
+  - Trên Windows/macOS: Module `fcntl` là Unix-only. BẮT BUỘC bọc `import fcntl` bằng `try...except ImportError: fcntl = None` và kiểm tra tiến trình qua danh sách tiến trình hệ điều hành (PowerShell/CIM hoặc `ps`).
+- **Rào Chắn Nhịp Tim Sống (Live Heartbeat TTL & Process Signature Guard):**
+  - Heartbeat trạng thái (`tuner_heartbeat.json`) có thời gian sống tối đa (TTL) là **6 giờ**. Mọi heartbeat vượt quá ngưỡng này phải được coi là `STALE` bất kể PID có phản hồi tín hiệu `os.kill(pid, 0)` hay không (chống ngộ nhận do PID recycling).
+
+

@@ -31,7 +31,7 @@
   - *Universal Invariant Regex*: Dùng regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
   - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa vào context.
 - **RULE-1.9 [2-Phase Planning Guardrail — The Factory Model]**:
-  - Refactoring bộ trích xuất/chuyển đổi BẮT BUỘC phân lập 2 giai đoạn: Phase 1 (Pure Structural Refactoring — Zero-Regression 0.0%, 100% byte-for-byte identical, dual-dispatch) và Phase 2 (Feature/Schema Mutations). Cấm scope conflation.
+  - Refactoring bộ chuyển đổi BẮT BUỘC phân lập: Phase 1 (Pure Structural Refactor — Zero-Regression 0.0%, 100% byte-identical, dual-dispatch) và Phase 2 (Feature/Schema Mutations). Cấm scope conflation.
 
 ---
 
@@ -52,20 +52,22 @@
 - **RULE-2.7 [Dry-Run Complete Isolation]**:
   - Daemon/runner (`nightly_tuner`, `doc_refactor`, cron worktree) có `--dry-run` BẮT BUỘC cô lập 100%: CẤM ghi báo cáo, CẤM alert Telegram, CẤM xóa stale briefs, CẤM copy tệp về repo gốc.
 - **RULE-2.8 [Cross-Platform Sandbox Root Traversal Invariant]**:
-  - CẤM giả định độ sâu cố định `parents[N]` khi tìm thư mục gốc. Trên Linux runner, `/tmp/dir/sub` có `parents[2]` trỏ về root `/` gây `PermissionError: [Errno 13]`. BẮT BUỘC duyệt ngược tìm `(p / ".md").is_dir()`, fallback local `.cache/`, và bọc `try...except (PermissionError, OSError)`.
+  - CẤM giả định độ sâu `parents[N]`. Trên Linux, `/tmp/dir/sub` có `parents[2]` trỏ `/` gây `PermissionError`. BẮT BUỘC duyệt ngược tìm `(p / ".md").is_dir()`, fallback `.cache/`, bọc `try...except (PermissionError, OSError)`.
+- **RULE-2.9 [ADR-0035 & Guardrails #16 — Daemon Worktree Isolation & Zero-Lock Telemetry]**:
+  - Daemon trong worktree giữ `self.root = worktree` (chống bẩn repo), ghi telemetry về `canonical_root` qua `resolve_canonical_root()` + atomic write (`.tmp`). Bắt buộc `default=str` cho JSON Path. CLI giám sát dùng Zero-Lock `/proc/locks` (chú ý hex device:dec inode), bọc `import fcntl` cho Windows, và áp dụng TTL 6h cho heartbeat.
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành (Legal & Data Standards)
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - MỌI văn bản pháp luật viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC. VĂN BẢN HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP** (thay NĐ 175 & 15), **NĐ 207/2026/NĐ-CP** (thay NĐ 06), **NĐ 206/2026/NĐ-CP** (thay NĐ 10). CẤM dùng văn bản hết hiệu lực.
+  - MỌI văn bản viện dẫn BẮT BUỘC ĐANG CÓ HIỆU LỰC. HIỆN HÀNH: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP** (thay NĐ 175 & 15), **NĐ 207/2026/NĐ-CP** (thay NĐ 06), **NĐ 206/2026/NĐ-CP** (thay NĐ 10). CẤM văn bản hết hiệu lực.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
   - Tier 1 (`part=-100`): VIP Vector PDF (Mỏ neo tối thượng). Tier 2 (`part=-1&docx=1`): VIP Word (Nguồn vàng cho `docx_converter`). Tier 3 (`part=0`): Scan PDF (Dự phòng).
 - **RULE-3.3 [Làm Sạch Bảng Biểu, Footnotes & ADR 0044 Multi-Part Disambiguation]**:
-  - Footnote: Khử lặp số `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`; khử lặp chú thích ô gộp ngang OpenXML (`gridSpan`).
-  - Subheader: Kiểm tra `not is_numeric` trước khi gộp dòng subheader tránh nuốt dữ liệu cột cùng giá trị.
-  - Multi-Part: Quy chuẩn đa phần mang tiền tố `bang_pXX_YY.csv` và trường `part_id: "pXX"` trong `tables_catalog.json`.
+  - Footnote: Khử lặp số `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`; khử lặp ô gộp OpenXML (`gridSpan`).
+  - Subheader: Kiểm tra `not is_numeric` trước khi gộp subheader tránh nuốt dữ liệu cột cùng giá trị.
+  - Multi-Part: Tiền tố `bang_pXX_YY.csv` và `part_id: "pXX"` trong `tables_catalog.json`.
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
   - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm pháp luật đa dòng của điều khoản; cấm span 1 dòng chỉ trỏ thẻ `<a>`.
   - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè vào `.md/data/legal_registry.yaml`. Gate 4 CI Spoke hard-lock khi thiếu `clauses.json`.
@@ -85,7 +87,7 @@
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
   - Repo Hub cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi qua PR. Sửa file trong `packages/`, `scripts/`, `drift_auditor.py` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`) cùng PR.
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
-  - CI chạy `ruff check` và `ruff format --check` toàn monorepo. Chạm $\ge 2$ pkgs, BẮT BUỘC chạy `verify-patch --preset ci`. CẤM dùng `gh pr merge --admin` hoặc `--auto`; dùng Reactive Wakeup `gh pr checks --watch`, chờ Copilot review xong và đạt 100% Green trước khi merge.
+  - CI chạy `ruff check` & `format --check`. Chạm $\ge 2$ pkgs, BẮT BUỘC chạy `verify-patch --preset ci`. CẤM `gh pr merge --admin`/`--auto`; dùng `gh pr checks --watch`, chờ Copilot review và đạt 100% Green trước khi merge.
 
 ---
 

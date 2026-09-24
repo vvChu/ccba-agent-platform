@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import fcntl
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -56,7 +57,7 @@ def test_check_lock_status_locked(tmp_path: Path) -> None:
         try:
             is_locked, reason = check_lock_status(lock_file)
             assert is_locked is True
-            assert reason == "LOCKED_BY_ACTIVE_PROCESS"
+            assert reason.startswith("LOCKED_BY_ACTIVE_PROCESS")
         finally:
             fcntl.flock(lock_holder, fcntl.LOCK_UN)
 
@@ -518,3 +519,33 @@ def test_mine_legacy_log_completed_and_halted(tmp_path: Path) -> None:
     mined_halted = mine_legacy_log(log_file)
     assert mined_halted is not None
     assert mined_halted["status"] == "HALTED"
+
+
+def test_build_unified_status_heartbeat_ttl(tmp_path: Path) -> None:
+    """Verify build_unified_status marks heartbeat older than 6 hours as STALE_SESSION_EXPIRED."""
+    telemetry_dir = tmp_path / ".md" / "telemetry"
+    telemetry_dir.mkdir(parents=True)
+    hb_file = telemetry_dir / "tuner_heartbeat.json"
+    # Heartbeat from 10 hours ago
+    hb_file.write_text(
+        json.dumps(
+            {
+                "status": "IN_PROGRESS",
+                "timestamp": "2026-09-24T00:00:00",
+                "pid": os.getpid(),
+                "current_skill": "old-skill",
+                "current_index": 10,
+                "total_skills": 50,
+            }
+        )
+    )
+    status = build_unified_status(
+        project_root=tmp_path,
+        lock_path=tmp_path / "runner.lock",
+        log_path=tmp_path / "cron.log",
+        quick_mode=True,
+    )
+    tuner_data = status["layer2_3_tuner"]
+    assert tuner_data is not None
+    assert tuner_data["status"] == "STALE_SESSION_EXPIRED"
+    assert tuner_data["is_active"] is False
