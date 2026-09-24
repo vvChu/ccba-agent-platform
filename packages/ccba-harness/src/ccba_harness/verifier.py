@@ -340,6 +340,7 @@ def resolve_preset_commands(
         else:
             cmds.append(f"{python_exec} scripts/validate_skills.py --enforce-gpi")
         cmds.append(f"{python_exec} scripts/governance/compile_catalog.py --check")
+        cmds.append(f"{python_exec} scripts/sync_hub_adr_matrix.py --check")
         return cmds
 
     if p == "adr":

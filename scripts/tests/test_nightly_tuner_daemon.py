@@ -171,6 +171,7 @@ def test_send_telegram_notification_mock() -> None:
     assert result is True
 
 
+@pytest.mark.timeout(90)
 def test_daemon_dry_run_execution() -> None:
     """Verify daemon executes dry run across discovered catalog without exceptions."""
     daemon = NightlyTunerDaemon(root=project_root, max_iterations_low=1)

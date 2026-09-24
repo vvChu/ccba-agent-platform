@@ -78,7 +78,10 @@ def test_ccba_new_feature_workflow_structure() -> None:
     assert "--remove-assignee" in content
     assert "git show-ref" in content
     assert "Untrusted Data Block" in content
-    assert "Thu thập đầy đủ phạm vi yêu cầu từ Issue hoặc phỏng vấn người dùng, hoàn tất Claim Lock hợp lệ nếu chọn từ Backlog." in content
+    assert (
+        "Thu thập đầy đủ phạm vi yêu cầu từ Issue hoặc phỏng vấn người dùng, hoàn tất Claim Lock hợp lệ nếu chọn từ Backlog."
+        in content
+    )
 
 
 def test_catalog_registers_upstream_workflows() -> None:
