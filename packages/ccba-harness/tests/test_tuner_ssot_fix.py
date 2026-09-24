@@ -20,22 +20,24 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_bigbim_skills_ssot_archetype_routing() -> None:
-    """Verify bigbim skills are cleanly partitioned: classification -> bim, governance/rase -> general fallback."""
+    """Verify bigbim skills are cleanly partitioned: classification -> bim, governance -> bim_governance, rase -> bim_rase."""
     # bigbim-classification must route to bim / eval_bigbim_classification.json
     arch_class = resolve_domain_archetype("bigbim-classification")
     assert arch_class is not None
     assert arch_class.name == "bim"
     assert resolve_domain_dataset("bigbim-classification") == "eval_bigbim_classification.json"
 
-    # bigbim-governance must fallback cleanly to general domain (never classification)
+    # bigbim-governance must route to bim_governance / eval_bigbim_governance.json
     arch_gov = resolve_domain_archetype("bigbim-governance")
-    assert arch_gov is None
-    assert resolve_domain_dataset("bigbim-governance") == "eval_general_domain.json"
+    assert arch_gov is not None
+    assert arch_gov.name == "bim_governance"
+    assert resolve_domain_dataset("bigbim-governance") == "eval_bigbim_governance.json"
 
-    # bigbim-rase must fallback cleanly to general domain (never classification)
+    # bigbim-rase must route to bim_rase / eval_bigbim_rase.json
     arch_rase = resolve_domain_archetype("bigbim-rase")
-    assert arch_rase is None
-    assert resolve_domain_dataset("bigbim-rase") == "eval_general_domain.json"
+    assert arch_rase is not None
+    assert arch_rase.name == "bim_rase"
+    assert resolve_domain_dataset("bigbim-rase") == "eval_bigbim_rase.json"
 
     # bigbim-risk must route to risk
     arch_risk = resolve_domain_archetype("bigbim-risk")
@@ -76,6 +78,8 @@ def test_propose_mutation_headings_have_no_hardcoded_numbers(tmp_path: Path) -> 
 
     domains = [
         "ccba-academic-writing",
+        "bigbim-governance",
+        "bigbim-rase",
         "bigbim-classification",
         "ccba-code-review",
         "ccba-ai-qc-pccc-audit",

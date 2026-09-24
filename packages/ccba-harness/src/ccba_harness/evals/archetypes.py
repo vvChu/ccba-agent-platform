@@ -14,6 +14,8 @@ from .scorers import (
     BaseScorer,
     get_academic_scorers,
     get_adr_lifecycle_scorers,
+    get_bigbim_governance_scorers,
+    get_bigbim_rase_scorers,
     get_bigbim_risk_scorers,
     get_bim_classification_scorers,
     get_coding_scorers,
@@ -63,6 +65,17 @@ OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
 )
 VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("mermaid", "excalidraw", "diagram")
 ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("academic", "khoahoc")
+
+# BIM Specialized Subdomains (Separated from general BIM classification)
+BIM_GOVERNANCE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "governance",
+    "soi-chi-vang",
+    "soi-chi-do",
+    "golden-thread",
+    "red-thread",
+    "unique-id",
+)
+BIM_RASE_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("rase", "pset", "qto")
 
 # BIM Classification Domain (Disjoint: "risk" -> RISK_ARCHETYPE_KEYWORDS, "vbpl" -> LEGAL)
 BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
@@ -167,6 +180,18 @@ DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
     ),
     DomainArchetype(
         "visual", VISUAL_ARCHETYPE_KEYWORDS, "eval_visual_diagram.json", get_visual_diagram_scorers
+    ),
+    DomainArchetype(
+        "bim_governance",
+        BIM_GOVERNANCE_ARCHETYPE_KEYWORDS,
+        "eval_bigbim_governance.json",
+        get_bigbim_governance_scorers,
+    ),
+    DomainArchetype(
+        "bim_rase",
+        BIM_RASE_ARCHETYPE_KEYWORDS,
+        "eval_bigbim_rase.json",
+        get_bigbim_rase_scorers,
     ),
     DomainArchetype(
         "bim",

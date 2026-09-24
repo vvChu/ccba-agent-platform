@@ -294,7 +294,9 @@ def resolve_preset_commands(
     p = preset.strip().lower()
     target_str = str(target).strip() if target else ""
 
-    if (not python_exec or python_exec == "python") and shutil.which("python") is None:
+    if (not python_exec or python_exec == "python") and (
+        sys.prefix != getattr(sys, "base_prefix", sys.prefix) or shutil.which("python") is None
+    ):
         python_exec = sys.executable
 
     if p == "code":

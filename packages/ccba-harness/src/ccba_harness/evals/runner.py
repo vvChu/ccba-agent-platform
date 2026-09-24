@@ -320,6 +320,12 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-adr-lifecycle": ["adr_lifecycle", "adr"],
     "adr_lifecycle": ["adr_lifecycle", "adr"],
     "bigbim-risk-redteam": ["bigbim_risk_redteam", "bigbim_risk"],
+    "bigbim-governance": ["bigbim_governance", "governance"],
+    "bigbim_governance": ["bigbim_governance", "governance"],
+    "governance": ["bigbim_governance", "governance"],
+    "bigbim-rase": ["bigbim_rase", "rase"],
+    "bigbim_rase": ["bigbim_rase", "rase"],
+    "rase": ["bigbim_rase", "rase"],
 }
 
 
