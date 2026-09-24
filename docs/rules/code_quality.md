@@ -141,3 +141,12 @@ Khi xây dựng các biểu thức chính quy (Regex) để trích xuất, đố
      `rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}(?![.\-\/][\w\d])\b"`
    - Đối với quy tắc có phân cấp: Luôn bọc negative lookahead để loại trừ toàn bộ số phân cấp con hoặc hậu tố chữ/gạch nối/gạch chéo:
      `rf"\b{escaped}(?![.\-\/][\w\d])\b"`
+
+---
+
+## 12. Standards-to-Code Enforcement Invariant (Kỷ Luật Đồng Bộ Giữa Quy Chuẩn Văn Bản & Mã Nguồn Thực Thi)
+- Khi ban hành hoặc nâng cấp bất kỳ quy chuẩn kỹ thuật nào trong `docs/rules/*.md` (ví dụ: mở rộng regex ranh giới từ `(?!\.\d)` sang `(?![.\-\/][\w\d])`):
+- Agent **BẮT BUỘC** phải:
+  1. Mở ngay patch tương ứng trong mã nguồn tham chiếu chuẩn (`packages/ccba-harness` hoặc core packages).
+  2. Bổ sung các unit test cases kiểm chứng trực tiếp từng trường hợp biên mới quy định vào bộ test suite chính thức (tuân thủ Mục 10.3 Separator Coverage).
+- Nghiêm cấm tuyên bố tính năng đã hoàn thiện trong báo cáo nghiệm thu (`walkthrough.md`) nếu quy chuẩn mới chỉ nằm trên văn bản tài liệu mà mã nguồn chạy thực tế chưa được áp dụng.

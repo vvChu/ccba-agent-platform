@@ -280,11 +280,27 @@ class TestDocRefactorDaemon:
             is False
         )
         assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1-bis [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1/2 [DEPRECATED] -->")
+            is False
+        )
+        assert (
             ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1.1 [DEPRECATED]**")
             is False
         )
         assert (
             ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.10 [DEPRECATED]**")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1-bis** [DEPRECATED]")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1/2** [DEPRECATED]")
             is False
         )
         assert (
