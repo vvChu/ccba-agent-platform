@@ -1,0 +1,142 @@
+[
+  {
+    "id": "test_bigbim_rase_01",
+    "input_prompt": "Phân tích ma trận RASE cho yêu cầu kỹ thuật: 'Nhiệt độ phòng thí nghiệm vi sinh (Laboratory) phải luôn duy trì ở mức 22°C (dung sai ±1°C) trong suốt thời gian vận hành; ngoại trừ các không gian kho lưu trữ phụ trợ'. Hãy ánh xạ các thành phần RASE vào schema IFC4X3 và Property Set tương ứng.",
+    "golden_answer": {
+      "requirement_code": "RASE-REQ-001",
+      "concept_name": "Tiện nghi nhiệt phòng Lab",
+      "requirement": "Nhiệt độ duy trì 22°C (sai số ±1°C)",
+      "applicability": "IfcSpace[SpaceType='LABORATORY']",
+      "selection": {
+        "property_set": "Pset_SpaceOccupancyRequirement",
+        "property_name": "TargetTemperature",
+        "data_type": "IfcThermodynamicTemperatureMeasure",
+        "relation": "IfcRelDefinesByProperties"
+      },
+      "exception": "IfcSpace[SpaceUsage='STORAGE']"
+    },
+    "rubric": "Phải bóc tách đủ 4 thành phần RASE, chỉ ra đúng Pset_SpaceOccupancyRequirement, thuộc tính TargetTemperature, và liên kết qua IfcRelDefinesByProperties.",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "IFC4X3 / ISO 16739",
+      "property_set": "Pset_SpaceOccupancyRequirement"
+    }
+  },
+  {
+    "id": "test_bigbim_rase_02",
+    "input_prompt": "Bóc tách RASE cho yêu cầu chất lượng không khí: 'Hệ thống HVAC phải cấp lưu lượng gió tươi tối thiểu 30 m3/h/người dựa trên thể tích hình học không gian phòng hội thảo; liên kết với bộ số liệu khối lượng thực tế'. Hãy chỉ rõ Property Set và bộ Quantity Take-Off (Qto) liên quan theo chuẩn IFC4X3.",
+    "golden_answer": {
+      "requirement_code": "RASE-REQ-002",
+      "concept_name": "Thông gió tươi phòng hội thảo",
+      "requirement": "Cấp lưu lượng gió tươi tối thiểu 30 m3/h/người",
+      "applicability": "IfcSpace[SpaceType='CONFERENCE']",
+      "selection": {
+        "property_set": "Pset_SpaceAirQualityRequirements",
+        "property_name": "FreshAirFlowRate",
+        "data_type": "IfcVolumetricFlowRateMeasure",
+        "relation": "IfcRelDefinesByProperties"
+      },
+      "qto_mapping": {
+        "qto_set": "Qto_SpaceBaseQuantities",
+        "quantity_name": "GrossVolume"
+      },
+      "exception": "Không áp dụng cho khu vực hành lang và sảnh đón"
+    },
+    "rubric": "Phải chỉ ra quan hệ giữa yêu cầu RASE với Pset chất lượng không khí và bộ dữ liệu khối lượng Qto_SpaceBaseQuantities (GrossVolume).",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "IFC4X3 / Qto",
+      "qto_set": "Qto_SpaceBaseQuantities"
+    }
+  },
+  {
+    "id": "test_bigbim_rase_03",
+    "input_prompt": "Yêu cầu thiết kế vỏ bao che: 'Tường bao ngoài công trình phải đạt hệ số truyền nhiệt tổng U-Value <= 0.55 W/(m2.K), ngoại trừ các mảng vách kính mặt dựng tuân thủ quy chuẩn riêng'. Bóc tách RASE và ánh xạ liên kết IfcRelDefinesByProperties kết hợp bộ dữ liệu khối lượng tường Qto_WallBaseQuantities.",
+    "golden_answer": {
+      "requirement_code": "RASE-REQ-003",
+      "concept_name": "Hệ số truyền nhiệt tường bao ngoài",
+      "requirement": "Hệ số truyền nhiệt tổng U-Value <= 0.55 W/(m2.K)",
+      "applicability": "IfcWall[IsExternal=TRUE]",
+      "selection": {
+        "property_set": "Pset_WallCommon",
+        "property_name": "ThermalTransmittance",
+        "data_type": "IfcThermalTransmittanceMeasure",
+        "relation": "IfcRelDefinesByProperties"
+      },
+      "qto_mapping": {
+        "qto_set": "Qto_WallBaseQuantities",
+        "quantities": ["GrossSideArea", "NetSideArea", "Length", "Height"]
+      },
+      "exception": "IfcCurtainWall (Vách kính mặt dựng tuân thủ quy chuẩn QCVN 09 riêng)"
+    },
+    "rubric": "Phải bóc tách đúng 4 yếu tố RASE cho tường bao ngoài, nêu rõ quan hệ IfcRelDefinesByProperties và viện dẫn bộ Qto_WallBaseQuantities.",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "IFC4X3 / Qto_WallBaseQuantities",
+      "qto_set": "Qto_WallBaseQuantities"
+    }
+  },
+  {
+    "id": "test_bigbim_rase_04",
+    "input_prompt": "Bóc tách quy chuẩn tải trọng kết cấu sàn: 'Sàn tầng làm việc văn phòng phải chịu tải trọng hoạt tải tiêu chuẩn >= 3.0 kN/m2; ngoại lệ là các sàn khu vực phòng kỹ thuật cơ điện phải tính toán theo tải trọng máy thực tế'. Ánh xạ cấu trúc thuộc tính IFC4X3 và bộ số liệu khối lượng sàn.",
+    "golden_answer": {
+      "requirement_code": "RASE-REQ-004",
+      "concept_name": "Hoạt tải sàn tầng văn phòng",
+      "requirement": "Hoạt tải tiêu chuẩn >= 3.0 kN/m2",
+      "applicability": "IfcSlab[PredefinedType='FLOOR']",
+      "selection": {
+        "property_set": "Pset_SlabCommon",
+        "property_name": "DesignLoad",
+        "data_type": "IfcPressureMeasure",
+        "relation": "IfcRelDefinesByProperties"
+      },
+      "qto_mapping": {
+        "qto_set": "Qto_SlabBaseQuantities",
+        "quantities": ["GrossArea", "NetArea", "GrossVolume"]
+      },
+      "exception": "IfcSlab thuộc không gian phòng kỹ thuật MEP (tính theo tải trọng tĩnh và động của thiết bị thực tế)"
+    },
+    "rubric": "Phải bóc tách đủ Requirement, Applicability, Selection, Exception; liên kết IfcSlab, IfcRelDefinesByProperties và Qto_SlabBaseQuantities.",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "IFC4X3 / Qto_SlabBaseQuantities",
+      "qto_set": "Qto_SlabBaseQuantities"
+    }
+  },
+  {
+    "id": "test_bigbim_rase_05",
+    "input_prompt": "Trong quá trình kiểm tra mô hình IFC4X3, phát hiện một add-in xuất dữ liệu gán trực tiếp thuộc tính tùy biến vào thực thể IfcObject thay vì đóng gói qua IfcPropertySet. Phân tích nguyên tắc quan hệ gián tiếp theo chuẩn ISO 16739 và nêu rõ vai trò của quan hệ IfcRelDefinesByProperties.",
+    "golden_answer": {
+      "violation": "Gán thuộc tính trực tiếp vào thực thể IfcObject",
+      "standard": "ISO 16739 (IFC4X3 Schema)",
+      "correct_model": "[IfcPropertySet] --(gán bởi)--> [IfcRelDefinesByProperties] --(trỏ tới)--> [IfcObject]",
+      "explanation": "Schema IFC4X3 nghiêm cấm gắn trực tiếp thuộc tính vào đối tượng vật lý. Mọi thuộc tính phải được nhóm lại trong IfcPropertySet (Pset_) và liên kết gián tiếp thông qua quan hệ IfcRelDefinesByProperties",
+      "verdict": "KHÔNG ĐẠT - Yêu cầu tái cấu trúc xuất thuộc tính qua IfcRelDefinesByProperties"
+    },
+    "rubric": "Phải chỉ ra lỗi gán thuộc tính trực tiếp, giải thích nguyên tắc quan hệ gián tiếp chuẩn IFC4X3 và khẳng định vai trò của IfcRelDefinesByProperties.",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "ISO 16739 / IfcRelDefinesByProperties",
+      "relation": "IfcRelDefinesByProperties"
+    }
+  },
+  {
+    "id": "test_bigbim_rase_06",
+    "input_prompt": "Khi thiết lập bảng RASE cho hệ thống kiểm soát áp suất phòng sạch, chuyên viên phát hiện điều khoản loại trừ đối với không gian đệm ngăn cháy, khoang đệm an toàn (Airlock Buffer). Hãy xác định mã phân loại không gian theo Uniclass và ánh xạ thành phần Exception trong cấu trúc RASE.",
+    "golden_answer": {
+      "requirement_code": "RASE-REQ-006",
+      "concept_name": "Ngoại lệ khoang đệm an toàn áp suất phòng sạch",
+      "uniclass_code": "SL_25_30_70",
+      "uniclass_title": "Không gian đệm an toàn / Air-lock Buffer",
+      "rase_component": "Exception",
+      "ifc_mapping": "IfcSpace[Classification='SL_25_30_70'] liên kết qua IfcRelDefinesByProperties với Pset loại trừ áp suất phòng sạch",
+      "verdict": "Phân loại chính xác SL_25_30_70 và đưa vào trường Exception của ma trận RASE"
+    },
+    "rubric": "Phải xác định thành phần Exception trong RASE, ánh xạ đúng mã phân loại không gian đệm SL_25_30_70 và quan hệ IfcRelDefinesByProperties.",
+    "metadata": {
+      "discipline": "BIM RASE",
+      "standard": "RASE Exception / SL_25_30_70",
+      "uniclass_code": "SL_25_30_70"
+    }
+  }
+]
