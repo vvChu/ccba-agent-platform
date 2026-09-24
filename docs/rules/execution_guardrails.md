@@ -127,8 +127,10 @@
 
 ---
 
-## 12. Safe GitHub CLI File-Based Input Invariant (Quy Chuẩn Nhập Dữ Liệu Qua File cho GitHub CLI)
-- Khi gọi các lệnh GitHub CLI (`gh issue comment`, `gh issue create`, `gh pr create`, `gh pr comment`) có nội dung nhiều dòng, Markdown phức tạp, mã nguồn hoặc ký tự đặc biệt:
+## 12. Safe GitHub CLI Input & Query Parameterization Guardrails (Quy Chuẩn Nhập Liệu & Truy Vấn An Toàn cho GitHub CLI)
+
+### 12.1. Safe File-Based Input Invariant for Mutations (-F / --body-file)
+- Khi gọi các lệnh GitHub CLI tạo hoặc sửa đổi dữ liệu (`gh issue comment`, `gh issue create`, `gh pr create`, `gh pr comment`) có nội dung nhiều dòng, Markdown phức tạp, mã nguồn hoặc ký tự đặc biệt:
   - **Nghiêm cấm:** Truyền trực tiếp chuỗi nội dung qua tham số dòng lệnh `--body "..."` (dễ gây lỗi escape ký tự, vượt quá độ dài dòng lệnh hệ điều hành và bị pre-tool security hook chặn).
   - **Bắt buộc (File-First Pattern):**
     1. Ghi nội dung cần đăng vào tệp tạm thời trong thư mục `.md/scratch/` (ví dụ: `.md/scratch/comment_<id>.md` hoặc `.md/scratch/pr_body.md`).
@@ -138,6 +140,17 @@
        gh pr create --title "..." -F .md/scratch/pr_body.md
        ```
     3. Mẫu này đảm bảo bảo toàn 100% mã hóa UTF-8, định dạng Markdown, bảng biểu và không bao giờ bị bộ lọc an toàn command-line từ chối.
+
+### 12.2. Safe JSON Parameterization for Queries (gh issue/pr view)
+- **GraphQL Deprecation Invariant**: Tuyệt đối không gọi `gh issue view <id>` hoặc `gh pr view <id>` trần không có tham số trường dữ liệu, do GitHub đang ngưng hỗ trợ Projects Classic (`repository.issue.projectCards`) gây lỗi GraphQL Exit Code 1.
+- **Chuẩn thực thi**: Luôn chỉ định tường minh các trường JSON cần thiết qua cờ `--json`:
+  ```bash
+  # Tra cứu Issue:
+  gh issue view <id> --json number,title,state,assignees,labels
+  # Tra cứu Pull Request:
+  gh pr view <id> --json number,title,state,headRefName,baseRefName,mergeable
+  ```
+- **Lợi ích**: Triệt tiêu lỗi deprecation, phản hồi nhanh hơn gấp 3 lần, định dạng JSON chuẩn máy-đọc-được và không bao giờ bị nghẽn bởi Pager (`cat`/`less`).
 
 ---
 
