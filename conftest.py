@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 
 def pytest_addoption(parser: Any) -> None:
     """Đăng ký tùy chọn cho phép chạy unscoped khi thực sự cần thiết (ví dụ: CI)."""
@@ -65,3 +67,10 @@ def pytest_cmdline_main(config: Any) -> int | None:
         return 1
 
     return None
+
+
+@pytest.fixture(autouse=True)
+def isolate_ccba_hub_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cô lập biến môi trường Hub máy trạm khỏi toàn bộ test suites (RULE-2.9)."""
+    monkeypatch.delenv("CCBA_HUB_PATH", raising=False)
+    monkeypatch.delenv("HUB_PATH", raising=False)
