@@ -26,7 +26,7 @@
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton module; Cache Embedding `.npy` kiểm tra SHA-256 sidecar.
 - **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối]**:
-  - Tách hạ tầng xác thực thành `drive_client.py` độc lập, tránh inverted coupling (Pull phụ thuộc Push `drive_uploader.py`).
+  - Tách hạ tầng xác thực thành `drive_client.py`, tránh inverted coupling giữa Pull và Push.
 - **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Universal Invariant Merge]**:
   - *Universal Invariant Regex*: Dùng regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
   - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa vào context.
@@ -48,11 +48,13 @@
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomains]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT. Từ khóa chuyên biệt (`grill`, `adr`, `risk`) tách thành subdomain độc lập chống va chạm regex.
 - **RULE-2.6 [YouTube Ingestion & Livestream Garbage Guard]**:
-  - Lọc bỏ `live_chat`/`live_chat_replay` và ngắt sớm nếu `is_live: True`. Regex guard chặn HTML/DOM rác trước Map-Reduce.
+  - Lọc bỏ `live_chat` và ngắt sớm nếu `is_live: True`. Regex guard chặn HTML rác trước Map-Reduce.
 - **RULE-2.7 [Dry-Run Complete Isolation]**:
-  - Daemon/runner (`nightly_tuner`, `doc_refactor`, cron worktree) có `--dry-run` BẮT BUỘC cô lập 100%: CẤM ghi báo cáo, CẤM alert Telegram, CẤM xóa stale briefs, CẤM copy tệp về repo gốc.
+  - `--dry-run` BẮT BUỘC cô lập 100%: CẤM ghi báo cáo, CẤM alert Telegram, CẤM xóa stale briefs, CẤM copy tệp về repo gốc.
 - **RULE-2.8 [Cross-Platform Sandbox Root Traversal Invariant]**:
   - CẤM giả định độ sâu cố định `parents[N]` khi tìm thư mục gốc. Trên Linux runner, `/tmp/dir/sub` có `parents[2]` trỏ về root `/` gây `PermissionError: [Errno 13]`. BẮT BUỘC duyệt ngược tìm `(p / ".md").is_dir()`, fallback local `.cache/`, và bọc `try...except (PermissionError, OSError)`.
+- **RULE-2.9 [Test Fixture Isolation & Hub Discovery Decoupling]**:
+  - Test fixtures và runners (`run_isolated_tests.py`, root `conftest.py`) BẮT BUỘC cô lập môi trường: xóa `CCBA_HUB_PATH` và `HUB_PATH`. CẤM rò rỉ biến môi trường máy trạm vào test subprocess.
 
 ---
 

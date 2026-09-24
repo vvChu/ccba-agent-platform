@@ -17,11 +17,13 @@ from ccba_notebooklm import (
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
-# Đảm bảo tắt môi trường auth thực tế trong test cases này
+# Đảm bảo tắt môi trường auth thực tế và cô lập registry trong test cases này
 @pytest.fixture(autouse=True)
-def clean_env(monkeypatch):
+def clean_env(monkeypatch, tmp_path):
     monkeypatch.delenv("NOTEBOOKLM_SESSION_COOKIE", raising=False)
     monkeypatch.delenv("NOTEBOOKLM_COOKIES_JSON", raising=False)
+    test_reg = tmp_path / "sources_registry.yaml"
+    monkeypatch.setattr("ccba_notebooklm._registry.REGISTRY_FILE", test_reg)
 
 
 @pytest.mark.asyncio
