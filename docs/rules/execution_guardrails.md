@@ -281,3 +281,20 @@
 - Mọi nhánh auto-refactor do daemon tạo tự động phải mang hậu tố timestamp (`docs/auto-refactor-YYYYMMDD_HHMMSS`), tuyệt đối không dùng tên nhánh tĩnh cố định để tránh crash khi lần chạy trước bị gián đoạn.
 - Khi kiểm thử cục bộ: Nghiêm cấm chạy `run_nightly_tuner.sh` trên working tree đang dirty vì script sẽ tự động kéo `origin/main` gây hiểu lầm kết quả. Để kiểm thử cục bộ mã dở dang, sử dụng trực tiếp: `.venv/bin/python3 scripts/eval/nightly_tuner_daemon.py --dry-run`.
 
+### 16.4. Active Process Pre-Flight Inspection Before Worktree Cleanup
+- Trước khi gỡ bỏ bất kỳ ephemeral worktree nào (`git worktree remove`) hoặc xóa bất kỳ tệp khóa nào (`/tmp/*.lock`):
+  - Agent **BẮT BUỘC PHẢI KIỂM TRA** xem có tiến trình nào đang chiếm dụng thư mục worktree hoặc đang giữ mutex lock hay không:
+    ```bash (linux)
+    # 1. Kiểm tra tiến trình đang mở tệp hoặc có cwd bên trong thư mục worktree:
+    fuser -v "$WORKTREE_DIR" 2>&1
+
+    # 2. Kiểm tra tiến trình giữ khóa độc quyền (Active Mutex Lock):
+    flock -n "$LOCK_FILE" -c "true" || echo "⚠️ Lock đang bị chiếm giữ bởi tiến trình khác"
+    ```
+    ```powershell (windows)
+    # 1. Kiểm tra tiến trình gắn với worktree qua CommandLine:
+    Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*$WORKTREE_DIR*" } | Select-Object ProcessId, CommandLine
+    ```
+  - **Quy tắc Bất Biến (Active Lock Protection Invariant):**
+    Tuyệt đối nghiêm cấm việc xóa worktree (`git worktree remove --force`) hoặc xóa file lock nếu tiến trình gắn với nó vẫn đang tồn tại trong bảng tiến trình hệ điều hành (trừ trạng thái Zombie `Z`). Chỉ được phép dọn dẹp khi tiến trình đã kết thúc hoàn toàn hoặc khi script tự động thu hồi qua hook `trap cleanup_worktree EXIT`.
+
