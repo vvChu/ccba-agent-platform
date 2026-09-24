@@ -172,7 +172,7 @@ class ZeroDeletionGuard:
         """Checks if a pattern is marked as deprecated in text."""
         if pattern.startswith("SEC-"):
             sec_num = re.escape(pattern.split("-", 1)[1])
-            sec_target = rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}(?!\.\d)\b"
+            sec_target = rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}(?![.\-\/][\w\d])\b"
             regex = (
                 rf"(?m)(?:^|[^\n])*(?:{sec_target}.*?[\[\(]DEPRECATED[\]\)]|"
                 rf"[\[\(]DEPRECATED[\]\)].*?{sec_target})"
@@ -181,8 +181,8 @@ class ZeroDeletionGuard:
 
         escaped = re.escape(pattern)
         regex = (
-            rf"(?m)(?:^|[^\n])*(?:\b{escaped}(?!\.\d)\b.*?[\[\(]DEPRECATED[\]\)]|"
-            rf"[\[\(]DEPRECATED[\]\)].*?\b{escaped}(?!\.\d)\b)"
+            rf"(?m)(?:^|[^\n])*(?:\b{escaped}(?![.\-\/][\w\d])\b.*?[\[\(]DEPRECATED[\]\)]|"
+            rf"[\[\(]DEPRECATED[\]\)].*?\b{escaped}(?![.\-\/][\w\d])\b)"
         )
         return bool(re.search(regex, text, re.IGNORECASE))
 
