@@ -131,6 +131,7 @@ trap 'on_error "$LINENO" "$BASH_COMMAND"' ERR
 
 # 5. Worktree Lifecycle & Auto-Cleanup Hook
 WORKTREE_DIR="$PROJECT_ROOT/.worktrees/nightly-runner"
+SPOKE_WORKTREE_DIR=""
 
 cleanup_worktree() {
     echo "🧹 Đang thu hồi tài nguyên Ephemeral Worktree..."
@@ -150,6 +151,26 @@ cleanup_worktree() {
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
     fi
     git worktree prune 2>/dev/null || true
+
+    if [ -n "${LEGAL_SPOKE_DIR:-}" ] && [ -n "${SPOKE_WORKTREE_DIR:-}" ] && [ -d "$SPOKE_WORKTREE_DIR" ]; then
+        echo "🧹 Đang thu hồi tài nguyên Spoke Ephemeral Worktree..."
+        if [ -f "$SPOKE_WORKTREE_DIR/.push_success" ]; then
+            # Remote push succeeded: safely fast-forward Spoke main if clean
+            git -C "$LEGAL_SPOKE_DIR" fetch -q origin main 2>/dev/null || true
+            CURRENT_SPOKE_BRANCH=$(git -C "$LEGAL_SPOKE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            SPOKE_STATUS=$(git -C "$LEGAL_SPOKE_DIR" status --porcelain 2>/dev/null || echo "")
+            if [ "$CURRENT_SPOKE_BRANCH" = "main" ] && [ -z "$SPOKE_STATUS" ]; then
+                echo "🔄 Fast-forwarding local Spoke main to origin/main..."
+                git -C "$LEGAL_SPOKE_DIR" merge --ff-only origin/main 2>/dev/null || true
+            fi
+        elif [ -z "$DRY_RUN_FLAG" ] && [ -d "$SPOKE_WORKTREE_DIR/.md/reports" ]; then
+            # Push failed or was not performed: preserve reports locally so data is not lost
+            mkdir -p "$LEGAL_SPOKE_DIR/.md/reports"
+            find "$SPOKE_WORKTREE_DIR/.md/reports" -maxdepth 1 \( -name "nightly_*.md" -o -name "nightly_*.json" \) -exec cp -f {} "$LEGAL_SPOKE_DIR/.md/reports/" \; 2>/dev/null || true
+        fi
+        git -C "$LEGAL_SPOKE_DIR" worktree remove --force "$SPOKE_WORKTREE_DIR" 2>/dev/null || true
+        git -C "$LEGAL_SPOKE_DIR" worktree prune 2>/dev/null || true
+    fi
     echo "✅ Đã dọn dẹp hoàn tất."
 }
 trap cleanup_worktree EXIT
@@ -170,16 +191,10 @@ elif [ -d "/home/ccba/ccba/ccba-legal-knowledge" ]; then
 fi
 
 if [ -n "$LEGAL_SPOKE_DIR" ]; then
+    SPOKE_WORKTREE_DIR="$LEGAL_SPOKE_DIR/.worktrees/nightly-telemetry"
     echo "🔄 Fetching ccba-legal-knowledge ($LEGAL_SPOKE_DIR)..."
     (
-        cd "$LEGAL_SPOKE_DIR" && git fetch origin main && {
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-            if [ "$CURRENT_BRANCH" = "main" ]; then
-                git pull -q origin main
-            else
-                echo "ℹ️ Spoke is on branch '$CURRENT_BRANCH'. Fetched origin/main without switching branch."
-            fi
-        }
+        cd "$LEGAL_SPOKE_DIR" && git fetch origin main
     ) || echo "⚠️ Warning: Failed to fetch ccba-legal-knowledge"
 fi
 
@@ -245,20 +260,43 @@ export PYTHONPATH="$WORKTREE_DIR/packages/ccba-harness/src:$WORKTREE_DIR/package
 
 # 7.4. Phase 1: Legal Ground Truth Parity & Master CI Telemetry
 echo "⚖️ [1/3] Running Legal Ground Truth Parity & Master CI Telemetry..."
-if [ -n "$LEGAL_SPOKE_DIR" ] && [ -f "$LEGAL_SPOKE_DIR/.md/tools/run_nightly_telemetry.py" ]; then
-    echo "🔍 Executing Nightly Telemetry Runner in $LEGAL_SPOKE_DIR..."
-    TELEMETRY_EXIT=0
-    (
-        cd "$LEGAL_SPOKE_DIR"
-        export CI=1
-        if [ -n "$DRY_RUN_FLAG" ]; then
-            echo "   [DRY-RUN] Executing: python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run"
-            python3 .md/tools/run_nightly_telemetry.py --cohorts all --dry-run
-        else
-            python3 .md/tools/run_nightly_telemetry.py --cohorts all || TELEMETRY_EXIT=$?
-            if [ $TELEMETRY_EXIT -ne 0 ]; then
-                echo "🚨 [TELEMETRY REGRESSION] Legal Parity / Master CI phát hiện lỗi hồi quy (Exit: $TELEMETRY_EXIT)!" >&2
-                python3 -c "
+if [ -n "$LEGAL_SPOKE_DIR" ]; then
+    mkdir -p "$LEGAL_SPOKE_DIR/.worktrees"
+    if [ -d "$SPOKE_WORKTREE_DIR" ]; then
+        git -C "$LEGAL_SPOKE_DIR" worktree remove --force "$SPOKE_WORKTREE_DIR" 2>/dev/null || true
+    fi
+    git -C "$LEGAL_SPOKE_DIR" worktree prune 2>/dev/null || true
+
+    echo "🌿 Khởi tạo Spoke Ephemeral Worktree từ origin/main: $SPOKE_WORKTREE_DIR"
+    git -C "$LEGAL_SPOKE_DIR" worktree add --detach "$SPOKE_WORKTREE_DIR" origin/main
+
+    # Replicate .env if exists in Spoke
+    if [ -f "$LEGAL_SPOKE_DIR/.env" ] && [ ! -f "$SPOKE_WORKTREE_DIR/.env" ]; then
+        cp -n "$LEGAL_SPOKE_DIR/.env" "$SPOKE_WORKTREE_DIR/.env" 2>/dev/null || true
+    fi
+
+    # Determine Python executable for Spoke (prefer Spoke .venv if exists)
+    SPOKE_PYTHON="python3"
+    if [ -x "$LEGAL_SPOKE_DIR/.venv/bin/python3" ]; then
+        SPOKE_PYTHON="$LEGAL_SPOKE_DIR/.venv/bin/python3"
+    elif [ -x "$LEGAL_SPOKE_DIR/.venv/bin/python" ]; then
+        SPOKE_PYTHON="$LEGAL_SPOKE_DIR/.venv/bin/python"
+    fi
+
+    if [ -f "$SPOKE_WORKTREE_DIR/.md/tools/run_nightly_telemetry.py" ]; then
+        echo "🔍 Executing Nightly Telemetry Runner in isolated Spoke worktree..."
+        TELEMETRY_EXIT=0
+        (
+            cd "$SPOKE_WORKTREE_DIR"
+            export CI=1
+            if [ -n "$DRY_RUN_FLAG" ]; then
+                echo "   [DRY-RUN] Executing: $SPOKE_PYTHON .md/tools/run_nightly_telemetry.py --cohorts all --dry-run"
+                "$SPOKE_PYTHON" .md/tools/run_nightly_telemetry.py --cohorts all --dry-run
+            else
+                "$SPOKE_PYTHON" .md/tools/run_nightly_telemetry.py --cohorts all || TELEMETRY_EXIT=$?
+                if [ $TELEMETRY_EXIT -ne 0 ]; then
+                    echo "🚨 [TELEMETRY REGRESSION] Legal Parity / Master CI phát hiện lỗi hồi quy (Exit: $TELEMETRY_EXIT)!" >&2
+                    python3 -c "
 import sys
 sys.path.insert(0, '$PROJECT_ROOT')
 try:
@@ -275,26 +313,26 @@ try:
 except Exception as e:
     print(f'Lỗi khi gửi telegram alert: {e}', file=sys.stderr)
 " "$TELEMETRY_EXIT" 2>/dev/null || true
-            fi
-            # Auto-commit and push nightly reports if generated
-            SPOKE_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-            if [ "$SPOKE_BRANCH" = "main" ]; then
+                fi
+
+                # Auto-commit and push nightly reports from isolated worktree
                 if git status --porcelain .md/reports/ 2>/dev/null | grep -q "nightly_"; then
-                    echo "📝 Committing and pushing nightly legal telemetry reports..."
+                    echo "📝 Committing and pushing nightly legal telemetry reports from isolated worktree..."
                     git add .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
                     git -c user.name="CCBA Nightly Daemon" -c user.email="daemon@ccba-ai.local" commit --no-verify -m "chore(telemetry): record automated nightly legal verification report [skip ci]" || true
-                    git push origin main || echo "⚠️ Warning: Failed to push nightly reports to origin/main"
-                fi
-            else
-                echo "ℹ️ Spoke is on branch '$SPOKE_BRANCH' (not main). Skipping auto-commit/push to protect working branch."
-                if [ $TELEMETRY_EXIT -eq 0 ]; then
-                    rm -f .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
+                    if git push origin HEAD:main; then
+                        touch "$SPOKE_WORKTREE_DIR/.push_success"
+                    else
+                        echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+                    fi
                 fi
             fi
-        fi
-    )
+        )
+    else
+        echo "⚠️ Warning: run_nightly_telemetry.py missing in $SPOKE_WORKTREE_DIR. Skipping Phase 1."
+    fi
 else
-    echo "⚠️ Warning: ccba-legal-knowledge not found or run_nightly_telemetry.py missing. Skipping Phase 1."
+    echo "⚠️ Warning: ccba-legal-knowledge not found. Skipping Phase 1."
 fi
 
 # 8. Run Document Health Audit Engine (Audit-Only & Dynamic Telemetry)
@@ -303,7 +341,11 @@ python3 scripts/eval/doc_refactor_daemon.py --audit-only
 
 if [ -n "$LEGAL_SPOKE_DIR" ]; then
     echo "📚 [2/3] Checking Spoke Document Memory Budget..."
-    python3 scripts/governance/compact_session_learnings.py --profile spoke --target-dir "$LEGAL_SPOKE_DIR" --check || echo "⚠️ Warning: Spoke session learnings exceeded budget."
+    TARGET_SPOKE_AUDIT="$LEGAL_SPOKE_DIR"
+    if [ -n "$SPOKE_WORKTREE_DIR" ] && [ -d "$SPOKE_WORKTREE_DIR" ]; then
+        TARGET_SPOKE_AUDIT="$SPOKE_WORKTREE_DIR"
+    fi
+    python3 scripts/governance/compact_session_learnings.py --profile spoke --target-dir "$TARGET_SPOKE_AUDIT" --check || echo "⚠️ Warning: Spoke session learnings exceeded budget."
 fi
 
 # 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
