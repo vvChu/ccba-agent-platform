@@ -154,7 +154,17 @@ cleanup_worktree() {
 
     if [ -n "${LEGAL_SPOKE_DIR:-}" ] && [ -n "${SPOKE_WORKTREE_DIR:-}" ] && [ -d "$SPOKE_WORKTREE_DIR" ]; then
         echo "🧹 Đang thu hồi tài nguyên Spoke Ephemeral Worktree..."
-        if [ -z "$DRY_RUN_FLAG" ] && [ -d "$SPOKE_WORKTREE_DIR/.md/reports" ]; then
+        if [ -f "$SPOKE_WORKTREE_DIR/.push_success" ]; then
+            # Remote push succeeded: safely fast-forward Spoke main if clean
+            git -C "$LEGAL_SPOKE_DIR" fetch -q origin main 2>/dev/null || true
+            CURRENT_SPOKE_BRANCH=$(git -C "$LEGAL_SPOKE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+            SPOKE_STATUS=$(git -C "$LEGAL_SPOKE_DIR" status --porcelain 2>/dev/null || echo "")
+            if [ "$CURRENT_SPOKE_BRANCH" = "main" ] && [ -z "$SPOKE_STATUS" ]; then
+                echo "🔄 Fast-forwarding local Spoke main to origin/main..."
+                git -C "$LEGAL_SPOKE_DIR" merge --ff-only origin/main 2>/dev/null || true
+            fi
+        elif [ -z "$DRY_RUN_FLAG" ] && [ -d "$SPOKE_WORKTREE_DIR/.md/reports" ]; then
+            # Push failed or was not performed: preserve reports locally so data is not lost
             mkdir -p "$LEGAL_SPOKE_DIR/.md/reports"
             find "$SPOKE_WORKTREE_DIR/.md/reports" -maxdepth 1 \( -name "nightly_*.md" -o -name "nightly_*.json" \) -exec cp -f {} "$LEGAL_SPOKE_DIR/.md/reports/" \; 2>/dev/null || true
         fi
@@ -310,7 +320,11 @@ except Exception as e:
                     echo "📝 Committing and pushing nightly legal telemetry reports from isolated worktree..."
                     git add .md/reports/nightly_*.md .md/reports/nightly_*.json 2>/dev/null || true
                     git -c user.name="CCBA Nightly Daemon" -c user.email="daemon@ccba-ai.local" commit --no-verify -m "chore(telemetry): record automated nightly legal verification report [skip ci]" || true
-                    git push origin HEAD:main || echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+                    if git push origin HEAD:main; then
+                        touch "$SPOKE_WORKTREE_DIR/.push_success"
+                    else
+                        echo "⚠️ Warning: Failed to push nightly reports to origin/main"
+                    fi
                 fi
             fi
         )

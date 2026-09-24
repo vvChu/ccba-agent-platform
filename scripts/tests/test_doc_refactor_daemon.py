@@ -270,11 +270,39 @@ class TestDocRefactorDaemon:
             is False
         )
 
+        # Decimal sub-sections and sub-rules must not falsely deprecate parent patterns
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- Miền 1.1 [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1.1 [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1.1 [DEPRECATED]**")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.10 [DEPRECATED]**")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1 [DEPRECATED]**")
+            is True
+        )
+
         # Valid deprecation forms must be detected
         assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "Miền 1 [DEPRECATED]") is True
         assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "Trụ Cột 1 [DEPRECATED]") is True
         assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "SEC-1 [DEPRECATED]") is True
         assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "[DEPRECATED] SEC-1") is True
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated(
+                "SEC-1", "<!-- Miền 1. Quản trị [DEPRECATED] -->"
+            )
+            is True
+        )
 
         # Audit diff must catch SEC-1 illegal deletion
         violations = ZeroDeletionGuard.audit_diff(orig, prop)
