@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-24] [synthesize] | Phát Hành PR #344 & PR #346: Autonomous Issue Triage (Factory Model v1.3.0) & Hermetic Test Architecture (RULE-2.9)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-release-feature, /learn & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-new-feature/`, `conftest.py`, `scripts/eval/run_isolated_tests.py`, `packages/ccba-notebooklm/tests/test_mock_client.py`, `docs/rules/execution_guardrails.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`, `tests/test_upstream_workflows.py`, `catalog.yaml`, `docs/`
+- **Summary**: Hoàn tất chuỗi phát triển, tích hợp và bảo vệ chất lượng kiến trúc:
+  1. **PR #344 (Issue #342 - Factory Model v1.3.0)**: Nâng cấp `/ccba-new-feature` với quy trình Autonomous Remote Issue Triage: quét Backlog (`gh issue list`), Động cơ xếp hạng P0-P3, cổng HITL `ask_question`, Multi-Client Peer Claim Lock và Active Lease Yield Protocol, Safe Multi-Branch Checkout (`git show-ref`), và Untrusted Remote Data Sanitization; cập nhật test hồi quy `test_upstream_workflows.py` (5/5 PASS); tái biên dịch catalog/docs; squash-merge vào `main` tại commit `3d4f05e8` và tự động đóng Issue #342.
+  2. **PR #346 (Hermetic Test Isolation & CLI Parameterization)**: Đúc kết tri thức `/learn` qua Double-Pass Adversarial Audit (`/boost` bởi DeepInvestigator): (a) Xác lập RULE-2.9 cô lập biến môi trường máy trạm `CCBA_HUB_PATH` / `HUB_PATH` khỏi test fixtures và runners, tích hợp autouse fixture `isolate_ccba_hub_env` trong `conftest.py` và Python-level `clean_env` trong `run_isolated_tests.py`; (b) Vá triệt để điểm ô nhiễm dữ liệu của NotebookLM trong `test_mock_client.py:clean_env` (cô lập `REGISTRY_FILE` vào `tmp_path`); (c) Chuẩn hóa Guardrail 12.1 (Mutations via `-F`) và 12.2 (Queries via `--json` chống lỗi GraphQL deprecation của Classic Projects); (d) Duy trì nghiêm ngặt ngân sách ADR-0030 (9.87 KB $\le 10\text{ KB}$); squash-merge vào `main` tại commit `01a78bf9`.
+  3. **Kiểm định toàn Monorepo**: 100% 12 packages/targets đạt buồng kín tuyệt đối qua `run_isolated_tests.py --all --stress`, 0 tệp registry bị sửa đổi.
+
+---
+
 ## [2026-09-23] [synthesize] | Phát Hành PR #336, #337, #338: Nghiệm Thu Factory Model, Modular Standard Converter & Planning Guardrails
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-grilling, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-legal-intel/`, `.agents/skills/ccba-new-feature/`, `.agents/skills/ccba-markdown-document-processing/`, `PLATFORM.md`, `.md/data/spoke_registry.yaml`, `.md/knowledge/reports/2026-09-kiem-tra-tinh-nang-moi/walkthrough.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`
