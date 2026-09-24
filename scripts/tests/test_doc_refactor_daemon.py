@@ -250,12 +250,80 @@ class TestDocRefactorDaemon:
         assert len(violations_spoke) == 1
         assert "SEC-2" in violations_spoke[0]
 
-        # 4. Spoke section deprecation
+        # 4. Spoke section deprecation (header ## Miền 2. is completely deleted, marked DEPRECATED in text)
         prop_spoke_dep = (
-            "## Miền 1. Provenance\nContent\n## Miền 2. Quản Trị Tri Thức [DEPRECATED]\nContent"
+            "## Miền 1. Provenance\nContent\n<!-- Miền 2 [DEPRECATED]: Đã sáp nhập vào Miền 1 -->\n"
         )
         violations_spoke_dep = ZeroDeletionGuard.audit_diff(orig_spoke, prop_spoke_dep)
         assert len(violations_spoke_dep) == 0
+
+    def test_zero_deletion_guard_no_false_positive_between_rule_and_section(self) -> None:
+        """Verifies that RULE-2.1 [DEPRECATED] does not cause false-positive deprecation for SEC-1."""
+        orig = "## Miền 1. Provenance\nContent\n- **RULE-2.1**: Old rule"
+        # Section 1 header is removed, RULE-2.1 is marked DEPRECATED
+        prop = "- **RULE-2.1 [DEPRECATED]**: Old rule"
+
+        # Explicit check: SEC-1 is NOT deprecated by RULE-2.1 [DEPRECATED]
+        assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", prop) is False
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-2", "- **RULE-1.2 [DEPRECATED]**: Rule")
+            is False
+        )
+
+        # Decimal sub-sections and sub-rules must not falsely deprecate parent patterns
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- Miền 1.1 [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1.1 [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1-bis [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "<!-- SEC-1/2 [DEPRECATED] -->")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1.1 [DEPRECATED]**")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.10 [DEPRECATED]**")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1-bis** [DEPRECATED]")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1/2** [DEPRECATED]")
+            is False
+        )
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated("RULE-1.1", "- **RULE-1.1 [DEPRECATED]**")
+            is True
+        )
+
+        # Valid deprecation forms must be detected
+        assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "Miền 1 [DEPRECATED]") is True
+        assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "Trụ Cột 1 [DEPRECATED]") is True
+        assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "SEC-1 [DEPRECATED]") is True
+        assert ZeroDeletionGuard.is_pattern_deprecated("SEC-1", "[DEPRECATED] SEC-1") is True
+        assert (
+            ZeroDeletionGuard.is_pattern_deprecated(
+                "SEC-1", "<!-- Miền 1. Quản trị [DEPRECATED] -->"
+            )
+            is True
+        )
+
+        # Audit diff must catch SEC-1 illegal deletion
+        violations = ZeroDeletionGuard.audit_diff(orig, prop)
+        assert len(violations) == 1
+        assert "SEC-1" in violations[0]
 
     def test_doc_auto_evolution_audit_only_mode(self, project_root: Path) -> None:
         """Verifies that audit-only mode runs in-memory and sends alert without git mutation."""

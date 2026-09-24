@@ -219,7 +219,11 @@
   1. **Ưu tiên biến môi trường `$CCBA_HUB_PATH`:** Mọi script phân giải vị trí Hub/Spoke bắt buộc phải kiểm tra biến môi trường `$CCBA_HUB_PATH` lên hàng đầu trước khi duyệt file system.
   2. **Bảo vệ đường dẫn ổ đĩa Windows trên POSIX:** Trên môi trường Linux/WSL/POSIX, tuyệt đối không truyền chuỗi đường dẫn mang ký tự ổ đĩa (`D:\...`, `C:\...`) trực tiếp vào `Path()`, phải sử dụng hàm phân giải đường dẫn an toàn (`resolve_cross_platform_path()`).
   3. **Chống rò rỉ trạng thái máy (Zero Machine-State Leakage):** Nghiêm cấm commit các đường dẫn máy cục bộ (`/home/...`, `D:/...`, `C:/...`). Kiểm định bắt buộc bằng lệnh `check_spoke_cleanliness.py`.
-  4. **Chuẩn hóa Line Endings (LF Invariant):** Mọi repository thuộc hệ sinh thái CCBA bắt buộc có cấu hình `.gitattributes` chuẩn hóa (`* text=auto eol=lf`) để triệt tiêu xung đột CRLF/LF khi làm việc đa nền tảng.
+  4. **Chuẩn hóa Line Endings & Ngân Sách Bộ Nhớ In-Memory (LF & UTF-8 Budget Invariant):**
+     - Mọi repository thuộc hệ sinh thái CCBA bắt buộc có cấu hình `.gitattributes` chuẩn hóa (`* text=auto eol=lf` và `*.md text eol=lf`) để triệt tiêu xung đột CRLF/LF khi làm việc đa nền tảng.
+     - Mọi thuật toán kiểm soát ngân sách tệp tài liệu (ví dụ: ngưỡng 10.0 KB của `session_learnings.md` theo ADR-0030/ADR-0057) **BẮT BUỘC** phải tính toán trên chuỗi UTF-8 đã chuẩn hóa dấu xuống dòng in-memory:
+       `file_size_kb = len(content.replace("\r\n", "\n").encode("utf-8")) / 1024`
+       Tuyệt đối không dùng `file_path.stat().st_size` của tệp trên đĩa vật lý để đánh giá tiêu chuẩn nghiệm thu, tránh trường hợp bị đếm đội byte do Windows CRLF.
   5. **Cổng Cưỡng Chế Sharded Registry (Hard Completion Gate):** Tại các Spoke tri thức quản lý văn bản pháp lý (có thư mục `legal_docs/`), lệnh kiểm tra tính toàn vẹn `ccba-legal compile-registry --check` (hoặc `validate_registry_sync()`) là điều kiện tiên quyết bắt buộc phải trả về `exit code 0`. Nếu có drift, Agent phải chạy compile trước khi commit.
   6. **Skills Hygiene Linting Rule:** Trong các tài liệu `SKILL.md`, các đoạn mã bash có chứa lệnh gán biến môi trường (`export VAR=...`) bắt buộc phải gắn nhãn ngôn ngữ chứa `linux` hoặc `ubuntu` (ví dụ ````bash (linux)````) để vượt qua bộ lọc chống Windows Bashism của `audit_skills_hygiene.py`.
 
@@ -257,6 +261,40 @@
 ---
 
 ## 16. Ephemeral Worktree & Automated Nightly Cron Invariant (Quy Chuẩn Vận Hành Worktree Tạm Thời)
-- Các daemon chạy đêm (`run_nightly_tuner.sh`) vận hành trên Ephemeral Worktree độc lập được checkout từ nhánh chỉ định (mặc định: `origin/main`). Mọi mã nguồn tối ưu bắt buộc phải hoàn tất toàn bộ chu trình Git (**PR $\rightarrow$ CI Pass $\rightarrow$ Merge $\rightarrow$ Push**) trước 00:00 AM.
+
+### 16.1. Ephemeral Worktree Isolation & PYTHONPATH Leakage Guard
+- Mọi tác vụ telemetry, ratchet tuning hoặc chỉnh sửa tài liệu tự động BẮT BUỘC phải khởi tạo trong detached ephemeral worktree riêng biệt (ví dụ: `git worktree add --detach "$WORKTREE_DIR" origin/main`).
+- Tuyệt đối nghiêm cấm việc `cd` trực tiếp vào thư mục làm việc cục bộ của kỹ sư để chạy test, mutate file hoặc đo đạc dữ liệu.
+- **Rào chắn chống rò rỉ `PYTHONPATH` (PYTHONPATH Leakage Invariant):** Khi kích hoạt tiến trình trong Ephemeral Worktree, BẮT BUỘC phải thiết lập lại biến môi trường `PYTHONPATH` trỏ ưu tiên vào worktree:
+  ```bash (linux)
+  export PYTHONPATH="$WORKTREE_DIR/packages/ccba-harness/src:$WORKTREE_DIR/packages/ccba-ai/src:$WORKTREE_DIR:${PYTHONPATH:-}"
+  ```
+  Tuyệt đối không để tiến trình con trong worktree kế thừa `PYTHONPATH` trỏ về workspace chính đang dirty của kỹ sư.
+- Thư mục `.worktrees/` bắt buộc phải được khai báo trong `.gitignore` của tất cả kho chứa (Hub và mọi Spoke).
+
+### 16.2. Untracked File Collision & Fast-Forward Guard
+- Khi commit và push thành công báo cáo từ worktree lên `origin/main`:
+  - Nghiêm cấm sao chép tệp đã push ngược vào thư mục làm việc của kỹ sư dưới dạng tệp không theo dõi (`untracked files`), vì hành vi này sẽ làm gãy hoàn toàn lệnh `git pull` hoặc `git merge` kế tiếp của kỹ sư (`error: untracked working tree files would be overwritten by merge`).
+  - Sử dụng cơ chế đánh dấu `.push_success`. Chỉ thực hiện `git merge --ff-only origin/main` nếu thư mục làm việc đang ở nhánh `main` và có working tree hoàn toàn sạch sẽ (`status --porcelain` rỗng). Nếu kỹ sư đang sửa dở hoặc ở nhánh tính năng khác, giữ nguyên không can thiệp.
+
+### 16.3. Dynamic Timestamp Branching
+- Mọi nhánh auto-refactor do daemon tạo tự động phải mang hậu tố timestamp (`docs/auto-refactor-YYYYMMDD_HHMMSS`), tuyệt đối không dùng tên nhánh tĩnh cố định để tránh crash khi lần chạy trước bị gián đoạn.
 - Khi kiểm thử cục bộ: Nghiêm cấm chạy `run_nightly_tuner.sh` trên working tree đang dirty vì script sẽ tự động kéo `origin/main` gây hiểu lầm kết quả. Để kiểm thử cục bộ mã dở dang, sử dụng trực tiếp: `.venv/bin/python3 scripts/eval/nightly_tuner_daemon.py --dry-run`.
+
+### 16.4. Active Process Pre-Flight Inspection Before Worktree Cleanup
+- Trước khi gỡ bỏ bất kỳ ephemeral worktree nào (`git worktree remove`) hoặc xóa bất kỳ tệp khóa nào (`/tmp/*.lock`):
+  - Agent **BẮT BUỘC PHẢI KIỂM TRA** xem có tiến trình nào đang chiếm dụng thư mục worktree hoặc đang giữ mutex lock hay không:
+    ```bash (linux)
+    # 1. Kiểm tra tiến trình đang mở tệp hoặc có cwd bên trong thư mục worktree:
+    fuser -v "$WORKTREE_DIR" 2>&1
+
+    # 2. Kiểm tra tiến trình giữ khóa độc quyền (Active Mutex Lock):
+    flock -n "$LOCK_FILE" -c "true" || echo "⚠️ Lock đang bị chiếm giữ bởi tiến trình khác"
+    ```
+    ```powershell (windows)
+    # 1. Kiểm tra tiến trình gắn với worktree qua CommandLine:
+    Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*$WORKTREE_DIR*" } | Select-Object ProcessId, CommandLine
+    ```
+  - **Quy tắc Bất Biến (Active Lock Protection Invariant):**
+    Tuyệt đối nghiêm cấm việc xóa worktree (`git worktree remove --force`) hoặc xóa file lock nếu tiến trình gắn với nó vẫn đang tồn tại trong bảng tiến trình hệ điều hành (trừ trạng thái Zombie `Z`). Chỉ được phép dọn dẹp khi tiến trình đã kết thúc hoàn toàn hoặc khi script tự động thu hồi qua hook `trap cleanup_worktree EXIT`.
 
