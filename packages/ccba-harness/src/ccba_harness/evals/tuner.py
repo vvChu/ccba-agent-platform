@@ -945,31 +945,28 @@ class GitRatchetOptimizer:
                     parts.append("Xử lý va chạm hình học thông thường...")
 
             # --- BIGBIM Governance & Golden/Red Thread Audit ---
-            elif (
-                "governance" in getattr(self.config, "skill_name", "").lower()
-                or any(
-                    k in prompt_l
-                    for k in [
-                        "sợi chỉ vàng",
-                        "sợi chỉ đỏ",
-                        "golden thread",
-                        "red thread",
-                        "unique id",
-                        "governance",
-                        "iso 19650-5",
-                        "st2",
-                        "pm_80",
-                        "75 năm",
-                        "rk_50_40_35",
-                        "rk_10_70_04",
-                        "rk_50_40_45",
-                        "rk_50_60_28",
-                        "đoạn đò-3",
-                        "lms vendor lock-in",
-                        "đối soát 3 chiều",
-                        "3-way traceability",
-                    ]
-                )
+            elif "governance" in getattr(self.config, "skill_name", "").lower() or any(
+                k in prompt_l
+                for k in [
+                    "sợi chỉ vàng",
+                    "sợi chỉ đỏ",
+                    "golden thread",
+                    "red thread",
+                    "unique id",
+                    "governance",
+                    "iso 19650-5",
+                    "st2",
+                    "pm_80",
+                    "75 năm",
+                    "rk_50_40_35",
+                    "rk_10_70_04",
+                    "rk_50_40_45",
+                    "rk_50_60_28",
+                    "đoạn đò-3",
+                    "lms vendor lock-in",
+                    "đối soát 3 chiều",
+                    "3-way traceability",
+                ]
             ):
                 has_gov_grounding = (
                     "sợi chỉ vàng" in content.lower()
@@ -1000,28 +997,25 @@ class GitRatchetOptimizer:
                     parts.append("Kiểm tra governance thông thường...")
 
             # --- BIGBIM RASE & IFC4X3 Property Mapping ---
-            elif (
-                "rase" in getattr(self.config, "skill_name", "").lower()
-                or any(
-                    k in prompt_l
-                    for k in [
-                        "rase",
-                        "bóc tách rase",
-                        "bóc tách quy chuẩn",
-                        "bộ số liệu khối lượng",
-                        "khối lượng sàn",
-                        "pset",
-                        "ifcreldefinesbyproperties",
-                        "ifcpropertyset",
-                        "qto_",
-                        "targettemperature",
-                        "freshairflowrate",
-                        "thermaltransmittance",
-                        "grossvolume",
-                        "basequantities",
-                        "sl_25_30_70",
-                    ]
-                )
+            elif "rase" in getattr(self.config, "skill_name", "").lower() or any(
+                k in prompt_l
+                for k in [
+                    "rase",
+                    "bóc tách rase",
+                    "bóc tách quy chuẩn",
+                    "bộ số liệu khối lượng",
+                    "khối lượng sàn",
+                    "pset",
+                    "ifcreldefinesbyproperties",
+                    "ifcpropertyset",
+                    "qto_",
+                    "targettemperature",
+                    "freshairflowrate",
+                    "thermaltransmittance",
+                    "grossvolume",
+                    "basequantities",
+                    "sl_25_30_70",
+                ]
             ):
                 has_rase_grounding = (
                     "rase" in content.lower()

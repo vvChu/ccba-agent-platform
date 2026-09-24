@@ -295,8 +295,7 @@ def resolve_preset_commands(
     target_str = str(target).strip() if target else ""
 
     if (not python_exec or python_exec == "python") and (
-        sys.prefix != getattr(sys, "base_prefix", sys.prefix)
-        or shutil.which("python") is None
+        sys.prefix != getattr(sys, "base_prefix", sys.prefix) or shutil.which("python") is None
     ):
         python_exec = sys.executable
 
