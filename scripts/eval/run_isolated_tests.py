@@ -6,6 +6,7 @@ toàn bộ packages trong platform (--all) kèm cờ --stress cho pre-release ga
 """
 
 import argparse
+import os
 import queue
 import subprocess
 import sys
@@ -99,9 +100,14 @@ def run_isolated_test(
     start_time = time.time()
 
     try:
+        clean_env = os.environ.copy()
+        clean_env.pop("CCBA_HUB_PATH", None)
+        clean_env.pop("HUB_PATH", None)
+
         proc = subprocess.Popen(
             cmd,
             cwd=project_root,
+            env=clean_env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
