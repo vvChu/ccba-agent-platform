@@ -59,13 +59,26 @@ def test_ccba_propose_to_hub_alias_structure() -> None:
 
 
 def test_ccba_new_feature_workflow_structure() -> None:
-    """Verify /ccba-new-feature uses correct eval path and gh issue view auto-parsing."""
+    """Verify /ccba-new-feature uses correct eval path, v1.3.0 triage and peer claim locking."""
     skill_path = SKILLS_DIR / "ccba-new-feature" / "SKILL.md"
     assert skill_path.exists(), "ccba-new-feature SKILL.md must exist"
 
     content = skill_path.read_text(encoding="utf-8")
+    assert 'version: "1.3.0"' in content
+    assert "triage" in content
+    assert "backlog" in content
+    assert "claim issue" in content
     assert "scripts/eval/run_harness_evals.py" in content
     assert "gh issue view" in content
+    assert "gh issue list" in content
+    assert "--state open" in content
+    assert "--json number,title,labels,assignees,updatedAt" in content
+    assert "[P0]" in content and "[P1]" in content and "[P2]" in content and "[P3]" in content
+    assert "CCBA_PEER_CLAIM_LOCK" in content
+    assert "--remove-assignee" in content
+    assert "git show-ref" in content
+    assert "Untrusted Data Block" in content
+    assert "Thu thập đầy đủ phạm vi yêu cầu từ Issue hoặc phỏng vấn người dùng, hoàn tất Claim Lock hợp lệ nếu chọn từ Backlog." in content
 
 
 def test_catalog_registers_upstream_workflows() -> None:

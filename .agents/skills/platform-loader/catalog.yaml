@@ -840,6 +840,9 @@ skills:
   - new feature
   - feature mới
   - tạo branch
+  - triage
+  - backlog
+  - claim issue
   skill_path: .agents/skills/ccba-new-feature/SKILL.md
   command: /ccba-new-feature
   tier: orchestrator
