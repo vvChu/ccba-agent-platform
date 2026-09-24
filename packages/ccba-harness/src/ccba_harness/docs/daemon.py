@@ -170,17 +170,21 @@ class ZeroDeletionGuard:
     @staticmethod
     def is_pattern_deprecated(pattern: str, text: str) -> bool:
         """Checks if a pattern is marked as deprecated in text."""
-        p = pattern.replace("SEC-", "")
-        patterns_to_check = [pattern, p] if p != pattern else [pattern]
-        for target in patterns_to_check:
-            escaped = re.escape(target)
+        if pattern.startswith("SEC-"):
+            sec_num = re.escape(pattern.split("-", 1)[1])
+            sec_target = rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}\b"
             regex = (
-                rf"(?m)(?:^|[^\n])*(?:\b{escaped}\b.*?[\[\(]DEPRECATED[\]\)]|"
-                rf"[\[\(]DEPRECATED[\]\)].*?\b{escaped}\b)"
+                rf"(?m)(?:^|[^\n])*(?:{sec_target}.*?[\[\(]DEPRECATED[\]\)]|"
+                rf"[\[\(]DEPRECATED[\]\)].*?{sec_target})"
             )
-            if re.search(regex, text, re.IGNORECASE):
-                return True
-        return False
+            return bool(re.search(regex, text, re.IGNORECASE))
+
+        escaped = re.escape(pattern)
+        regex = (
+            rf"(?m)(?:^|[^\n])*(?:\b{escaped}\b.*?[\[\(]DEPRECATED[\]\)]|"
+            rf"[\[\(]DEPRECATED[\]\)].*?\b{escaped}\b)"
+        )
+        return bool(re.search(regex, text, re.IGNORECASE))
 
     @staticmethod
     def extract_patterns(text: str) -> set[str]:
@@ -292,7 +296,7 @@ class DocAutoEvolutionEngine:
             bloated_pillars = PillarBalanceAuditor.audit_pillars(content, max_patterns=15)
 
             # File-level bloat check (budget: <= 10.0 KB per ADR-0030, ADR-0057)
-            file_size_kb = self.session_learnings_path.stat().st_size / 1024
+            file_size_kb = len(content.replace("\r\n", "\n").encode("utf-8")) / 1024
             if file_size_kb > 10.0:
                 file_bloat_violations.append(
                     f"File-level Bloat: session_learnings.md ({file_size_kb:.2f} KB) vượt quá ngân sách 10.0 KB (ADR-0030, ADR-0057)"
@@ -472,7 +476,7 @@ class DocAutoEvolutionEngine:
     ) -> DocEvolutionReport:
         """Runs the complete nightly document evolution pipeline."""
         now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        branch_name = "docs/auto-refactor-nightly"
+        branch_name = f"docs/auto-refactor-{now_str}"
 
         logger.info(
             f"🚀 Bắt đầu chu trình Doc-Auto-Evolution (dry_run={dry_run}, audit_only={audit_only})..."
