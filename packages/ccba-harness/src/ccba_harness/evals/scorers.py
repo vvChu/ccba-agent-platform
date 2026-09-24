@@ -1551,6 +1551,52 @@ def get_bigbim_risk_scorers() -> list[BaseScorer]:
     ]
 
 
+def get_bigbim_governance_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for BigBIM governance and golden thread audit."""
+    return [
+        RegexScorer(
+            name="governance_thread_audit",
+            pattern=r"(Sợi Chỉ Vàng|Sợi Chỉ Đỏ|golden thread|red thread|PM_80|75 năm|Đoạn Đò-3|LMS vendor lock-in|governance)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="governance_anti_trap_hard_floor",
+            pattern=r"(ST2|ISO\s*19650-5|BBP-A0|Unique\s*ID|3\s*chiều|đối soát|biển hiệu thực tế)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="governance_risk_matrix_guard",
+            pattern=r"(RK_50_40_35|RK_10_70_04|RK_50_40_45|RK_50_60_28|No-Risk|Time-Risk|Do-Risk|Use-Risk)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]
+
+
+def get_bigbim_rase_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for BigBIM RASE decomposition and IFC4X3 property mapping."""
+    return [
+        RegexScorer(
+            name="rase_decomposition_audit",
+            pattern=r"(Requirement|Applicability|Selection|Exception|R-A-S-E|RASE|Bóc tách RASE)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="rase_ifc4x3_pmapping_hard_floor",
+            pattern=r"(IfcRelDefinesByProperties|IfcPropertySet|Pset_|IFC4X3|ISO 16739)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="rase_qto_mapping_guard",
+            pattern=r"(Qto_|Quantity\s*Take-Off|BaseQuantities|GrossVolume|Qto_SpaceBaseQuantities|Qto_WallBaseQuantities|Qto_SlabBaseQuantities)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]
+
+
 def get_grilling_scorers() -> list[BaseScorer]:
     """Returns the standard scorer suite for Socratic grilling, design stress-testing, and prototype review."""
     return [

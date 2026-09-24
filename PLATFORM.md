@@ -93,7 +93,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 | Package | Mô tả | Install |
 |---------|--------|---------|
 | `ccba-ai` | AI Gateway client & SDK (v1.2.0) — Đa mô hình, Drop Params Embedding, Streaming Token Floor & Auto-Timeout Scaling | `pip install -e "packages/ccba-ai"` |
-| `ccba-harness` | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), multi-scorer evaluation engine (SSOT Domain Archetypes `archetypes.py`, Orchestration Scorers, Token Budget Tracker, Real LLM Task Adapter, Auto-Tuner, DGX-ChatOps Interactive Skill Boost Action Buttons) | `pip install -e "packages/ccba-harness"` |
+| `ccba-harness` | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), multi-scorer evaluation engine (SSOT Domain Archetypes `archetypes.py` with dedicated `bim_governance` and `bim_rase` subdomains, Orchestration Scorers, Token Budget Tracker, Real LLM Task Adapter, Auto-Tuner, DGX-ChatOps Interactive Skill Boost Action Buttons) | `pip install -e "packages/ccba-harness"` |
 | `ccba-legal-intel` | Legal intelligence services, legislative consolidator, OKF v2.4 GoldStandard, Modular Standard Converter & Dual-Dispatch Orchestrator, Gate 4, Federated RAG, Multi-Pass Legal OCR Text Normalizers, Multi-Scope GoogleDriveIngestor & Decoupled drive_client | `pip install -e "packages/ccba-legal-intel"` |
 | `ccba-maskara` | Secret detection, redaction and commit privacy engine | `pip install -e "packages/ccba-maskara"` |
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
