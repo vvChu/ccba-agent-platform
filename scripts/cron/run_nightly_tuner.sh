@@ -148,6 +148,10 @@ cleanup_worktree() {
                 find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
             fi
         fi
+        if [ -d "$WORKTREE_DIR/.md/telemetry" ]; then
+            mkdir -p "$PROJECT_ROOT/.md/telemetry"
+            find "$WORKTREE_DIR/.md/telemetry" -maxdepth 1 -name "*.json" -exec cp -f {} "$PROJECT_ROOT/.md/telemetry/" \; 2>/dev/null || true
+        fi
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
     fi
     git worktree prune 2>/dev/null || true

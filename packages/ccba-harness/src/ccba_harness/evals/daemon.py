@@ -15,7 +15,7 @@ import subprocess
 import sys
 import urllib.request
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +44,46 @@ def find_project_root(start_dir: Path | None = None) -> Path:
     if (pkg_ancestor / ".git").exists() or (pkg_ancestor / ".agents").exists():
         return pkg_ancestor
     return current
+
+
+def resolve_canonical_root(root: Path) -> Path:
+    """Resolves the canonical repository root, handling git worktrees.
+
+    If root is inside a git worktree where .git is a file pointing to
+    .git/worktrees/<name>, returns the main repository root.
+    Otherwise returns root.resolve().
+    """
+    resolved = root.resolve()
+    git_path = resolved / ".git"
+    if git_path.is_file():
+        try:
+            content = git_path.read_text(encoding="utf-8").strip()
+            if content.startswith("gitdir:"):
+                gitdir_str = content.split(":", 1)[1].strip()
+                gitdir = Path(gitdir_str)
+                if not gitdir.is_absolute():
+                    gitdir = (resolved / gitdir).resolve()
+                # Git standard: commondir inside gitdir points to the main .git directory
+                commondir_file = gitdir / "commondir"
+                if commondir_file.is_file():
+                    cd_content = commondir_file.read_text(encoding="utf-8").strip()
+                    common_git = (gitdir / cd_content).resolve()
+                    if common_git.parent.exists():
+                        return common_git.parent
+                # Fallback: inspect path parts backwards for .git/worktrees pattern
+                if "worktrees" in gitdir.parts:
+                    parts = list(gitdir.parts)
+                    for i in range(len(parts) - 1, 0, -1):
+                        if parts[i] == "worktrees" and parts[i - 1] == ".git":
+                            canonical = Path(*parts[: i - 1])
+                            if canonical.exists():
+                                return canonical
+                    main_candidate = gitdir.parent.parent.parent
+                    if main_candidate.exists():
+                        return main_candidate
+        except Exception:
+            pass
+    return resolved
 
 
 def send_telegram_alert(
@@ -448,14 +488,39 @@ class NightlyTunerDaemon:
         total_prompt_tokens = 0
         total_completion_tokens = 0
         remaining_budget = self.token_budget
+        total_skills_count = len(ranked_skills)
+
+        # Heartbeat Lifecycle: STARTED
+        self._persist_live_heartbeat(
+            status="STARTED",
+            current_skill=None,
+            current_index=0,
+            total_skills=total_skills_count,
+            summaries=summaries,
+            total_tokens=total_tokens,
+            total_commits=total_commits,
+            branch_name=branch_name,
+        )
 
         # 3. Chạy tối ưu từng kỹ năng theo hàng đợi
-        for item in ranked_skills:
+        for idx, item in enumerate(ranked_skills, 1):
             skill_name = item["skill_name"]
             target_file = item["target_file"]
             dataset_file = item["dataset_file"]
 
             logger.info(f"\n⚡ --- Tối ưu hóa Kỹ năng: {skill_name} ---")
+
+            # Heartbeat Lifecycle: IN_PROGRESS (start of skill)
+            self._persist_live_heartbeat(
+                status="IN_PROGRESS",
+                current_skill=skill_name,
+                current_index=idx,
+                total_skills=total_skills_count,
+                summaries=summaries,
+                total_tokens=total_tokens,
+                total_commits=total_commits,
+                branch_name=branch_name,
+            )
 
             # Cấu hình vòng lặp động
             config = RatchetConfig(
@@ -521,7 +586,30 @@ class NightlyTunerDaemon:
                     logger.warning(
                         f"🛑 [Nightly Tuner Early Halt] Dừng quét toàn bộ hàng đợi kỹ năng do: {result.halt_reason}"
                     )
+                    # Heartbeat Lifecycle: HALTED
+                    self._persist_live_heartbeat(
+                        status=f"HALTED_{result.halt_reason}",
+                        current_skill=skill_name,
+                        current_index=idx,
+                        total_skills=total_skills_count,
+                        summaries=summaries,
+                        total_tokens=total_tokens,
+                        total_commits=total_commits,
+                        branch_name=branch_name,
+                    )
                     break
+
+                # Heartbeat Lifecycle: IN_PROGRESS (end of skill)
+                self._persist_live_heartbeat(
+                    status="IN_PROGRESS",
+                    current_skill=skill_name,
+                    current_index=idx,
+                    total_skills=total_skills_count,
+                    summaries=summaries,
+                    total_tokens=total_tokens,
+                    total_commits=total_commits,
+                    branch_name=branch_name,
+                )
 
             except Exception as e:
                 logger.error(f"❌ Lỗi trong quá trình tối ưu {skill_name}: {e}")
@@ -535,6 +623,16 @@ class NightlyTunerDaemon:
                         rollbacks=0,
                         status=f"ERROR: {e}",
                     )
+                )
+                self._persist_live_heartbeat(
+                    status="IN_PROGRESS",
+                    current_skill=skill_name,
+                    current_index=idx,
+                    total_skills=total_skills_count,
+                    summaries=summaries,
+                    total_tokens=total_tokens,
+                    total_commits=total_commits,
+                    branch_name=branch_name,
                 )
 
         # 4. Tổng hợp Báo Cáo Tiến Hóa (Evolution Report)
@@ -550,6 +648,24 @@ class NightlyTunerDaemon:
             prompt_tokens=total_prompt_tokens,
             completion_tokens=total_completion_tokens,
             engine="REAL_LLM" if self.use_real_llm else "MOCK",
+        )
+
+        # Heartbeat Lifecycle: COMPLETED / HALTED
+        halt_reasons = [
+            s.halt_reason
+            for s in summaries
+            if s.halt_reason in ("TOKEN_BUDGET_EXCEEDED", "CIRCUIT_BREAKER_OPEN")
+        ]
+        completion_status = f"HALTED_{halt_reasons[0]}" if halt_reasons else "COMPLETED"
+        self._persist_live_heartbeat(
+            status=completion_status,
+            current_skill=None,
+            current_index=len(summaries),
+            total_skills=total_skills_count,
+            summaries=summaries,
+            total_tokens=total_tokens,
+            total_commits=total_commits,
+            branch_name=branch_name,
         )
 
         report_md = self.generate_evolution_report_markdown(report)
@@ -748,21 +864,61 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
         logger.info(f"📋 Đã xuất Plateau Brief: {brief_file}")
         return brief_file
 
+    def _persist_live_heartbeat(
+        self,
+        status: str,
+        current_skill: str | None = None,
+        current_index: int = 0,
+        total_skills: int = 0,
+        summaries: list[SkillEvolutionSummary] | None = None,
+        total_tokens: int = 0,
+        total_commits: int = 0,
+        branch_name: str = "",
+    ) -> None:
+        """Atomically persists the in-flight tuner heartbeat to .md/telemetry/tuner_heartbeat.json.
+
+        Writes to both canonical repo root and local worktree root (if different).
+        Uses json.dumps(..., default=str) to safely serialize PosixPath objects.
+        Wrapped in try-except to never interrupt the tuner loop.
+        """
+        try:
+            canonical_root = resolve_canonical_root(self.root)
+            summaries_list = summaries or []
+            data: dict[str, Any] = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "pid": os.getpid(),
+                "status": status,
+                "current_skill": current_skill,
+                "current_index": current_index,
+                "total_skills": total_skills,
+                "total_commits": total_commits,
+                "total_tokens": total_tokens,
+                "branch_name": branch_name,
+                "model": self.model,
+                "use_real_llm": self.use_real_llm,
+                "engine": "REAL_LLM" if self.use_real_llm else "MOCK",
+                "root": str(self.root),
+                "canonical_root": str(canonical_root),
+                "summaries": [asdict(s) for s in summaries_list],
+            }
+            payload = json.dumps(data, indent=2, default=str)
+
+            target_roots = {self.root.resolve(), canonical_root.resolve()}
+            pid = os.getpid()
+            for r in target_roots:
+                target_file = r / ".md" / "telemetry" / "tuner_heartbeat.json"
+                target_file.parent.mkdir(parents=True, exist_ok=True)
+                tmp_file = target_file.parent / f"{target_file.name}.{pid}.tmp"
+                tmp_file.write_text(payload, encoding="utf-8")
+                tmp_file.replace(target_file)
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to persist live heartbeat: {e}")
+
     def _get_main_repo_root(self) -> Path | None:
         """If running inside a secondary git worktree, resolves the main repo root."""
-        git_path = self.root / ".git"
-        if git_path.is_file():
-            try:
-                content = git_path.read_text(encoding="utf-8").strip()
-                if content.startswith("gitdir:"):
-                    gitdir = Path(content.split(":", 1)[1].strip())
-                    if not gitdir.is_absolute():
-                        gitdir = (self.root / gitdir).resolve()
-                    if "worktrees" in gitdir.parts:
-                        # gitdir is /path/to/main/.git/worktrees/<name>
-                        return gitdir.parent.parent.parent
-            except Exception:
-                pass
+        canonical = resolve_canonical_root(self.root)
+        if canonical != self.root.resolve():
+            return canonical
         return None
 
     def _remove_stale_plateau_brief(self, skill_name: str) -> bool:
@@ -1047,6 +1203,7 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
 
 __all__ = [
     "find_project_root",
+    "resolve_canonical_root",
     "send_telegram_alert",
     "SkillEvolutionSummary",
     "NightlyDaemonReport",

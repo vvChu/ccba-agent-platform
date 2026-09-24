@@ -8,15 +8,21 @@ from __future__ import annotations
 
 import ast
 import datetime
+import json
 import logging
+import os
 import re
 import subprocess
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ccba_harness.evals.daemon import find_project_root, send_telegram_alert
+from ccba_harness.evals.daemon import (
+    find_project_root,
+    resolve_canonical_root,
+    send_telegram_alert,
+)
 
 logger = logging.getLogger("ccba.eval.doc_refactor")
 
@@ -471,6 +477,24 @@ class DocAutoEvolutionEngine:
             mock_fallback=True,
         )
 
+    def _persist_health_report(self, report: DocEvolutionReport) -> None:
+        """Persists DocEvolutionReport atomically to .md/telemetry/doc_health_report.json."""
+        try:
+            canonical_root = resolve_canonical_root(self.root)
+            data = asdict(report)
+            payload = json.dumps(data, indent=2, default=str)
+            target_roots = {self.root.resolve(), canonical_root.resolve()}
+            pid = os.getpid()
+            for root_dir in target_roots:
+                target_path = root_dir / ".md" / "telemetry" / "doc_health_report.json"
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                tmp_path = target_path.parent / f"{target_path.name}.{pid}.tmp"
+                tmp_path.write_text(payload, encoding="utf-8")
+                tmp_path.replace(target_path)
+            logger.info("💾 Đã lưu Doc Health Telemetry vào .md/telemetry/doc_health_report.json")
+        except Exception as e:
+            logger.warning(f"⚠️ Không thể lưu Doc Health Telemetry: {e}")
+
     def run_nightly_evolution(
         self, dry_run: bool = False, audit_only: bool = False
     ) -> DocEvolutionReport:
@@ -493,12 +517,14 @@ class DocAutoEvolutionEngine:
         if audit_only:
             logger.info("🔍 [Audit-Only] Hoàn tất kiểm toán tài liệu thuần túy (No Branch, No PR).")
             self.send_telegram_alert(report)
+            self._persist_health_report(report)
             return report
 
         if dry_run:
             logger.info(
                 "🔍 [Dry-Run] Hoàn tất kiểm tra sức khỏe tài liệu mà không tạo branch hay PR."
             )
+            self._persist_health_report(report)
             return report
 
         # Live Execution: Git branch & PR
@@ -665,6 +691,7 @@ class DocAutoEvolutionEngine:
                 pass
 
         self.send_telegram_alert(report)
+        self._persist_health_report(report)
         return report
 
 

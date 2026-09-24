@@ -88,3 +88,28 @@ def test_doc_evolution_live_run_sends_telegram(
     report = engine.run_nightly_evolution(dry_run=False)
     assert report.dry_run is False
     assert telegram_called
+
+
+def test_doc_evolution_persists_telemetry(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Verify run_nightly_evolution persists doc_health_report.json."""
+    import json
+
+    from ccba_harness.docs.daemon import DocHealthReport
+
+    engine = DocAutoEvolutionEngine(root=tmp_path)
+    mock_health = DocHealthReport(
+        timestamp="2026-09-24 00:00:00",
+        is_healthy=True,
+        total_docs_scanned=2,
+    )
+    monkeypatch.setattr(engine, "audit_all_documents", lambda: mock_health)
+    monkeypatch.setattr(engine, "send_telegram_alert", lambda r: True)
+
+    report = engine.run_nightly_evolution(audit_only=True)
+    assert report is not None
+    report_file = tmp_path / ".md" / "telemetry" / "doc_health_report.json"
+    assert report_file.exists()
+
+    data = json.loads(report_file.read_text(encoding="utf-8"))
+    assert data["health"]["is_healthy"] is True
+    assert data["health"]["total_docs_scanned"] == 2

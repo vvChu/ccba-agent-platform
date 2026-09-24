@@ -18,6 +18,7 @@ from ccba_harness.evals.daemon import (
     SkillEvolutionSummary,
     WeightedPriorityQueue,
     find_project_root,
+    resolve_canonical_root,
     send_telegram_alert,
 )
 
@@ -864,3 +865,134 @@ def test_daemon_run_nightly_batch_live_run_removes_stale_plateau_brief(
 
     daemon.run_nightly_batch(dry_run=False)
     assert not brief_file.exists()
+
+
+def test_resolve_canonical_root_normal_repo(tmp_path: Path) -> None:
+    """Verify resolve_canonical_root returns directory itself when .git is a directory."""
+    git_dir = tmp_path / ".git"
+    git_dir.mkdir()
+    assert resolve_canonical_root(tmp_path) == tmp_path.resolve()
+
+
+def test_resolve_canonical_root_worktree(tmp_path: Path) -> None:
+    """Verify resolve_canonical_root resolves canonical root when inside a git worktree."""
+    main_repo = tmp_path / "main_repo"
+    wt_gitdir = main_repo / ".git" / "worktrees" / "nightly-runner"
+    wt_gitdir.mkdir(parents=True)
+
+    wt_dir = tmp_path / "worktree_dir"
+    wt_dir.mkdir()
+    (wt_dir / ".git").write_text(f"gitdir: {wt_gitdir}\n", encoding="utf-8")
+
+    canonical = resolve_canonical_root(wt_dir)
+    assert canonical == main_repo.resolve()
+
+
+def test_resolve_canonical_root_corrupted(tmp_path: Path) -> None:
+    """Verify resolve_canonical_root gracefully falls back to root when .git file is corrupted."""
+    (tmp_path / ".git").write_text("random corrupted data", encoding="utf-8")
+    assert resolve_canonical_root(tmp_path) == tmp_path.resolve()
+
+
+def test_persist_live_heartbeat_atomic_and_path_serialization(tmp_path: Path) -> None:
+    """Verify _persist_live_heartbeat safely serializes Path objects and writes atomically."""
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    summary = SkillEvolutionSummary(
+        skill_name="test-skill",
+        target_file=Path("/path/to/SKILL.md"),
+        baseline_score=40.0,
+        final_score=85.0,
+        commits_kept=1,
+        rollbacks=0,
+        status="IMPROVED",
+    )
+    daemon._persist_live_heartbeat(
+        status="IN_PROGRESS",
+        current_skill="test-skill",
+        current_index=1,
+        total_skills=10,
+        summaries=[summary],
+        total_tokens=1500,
+        total_commits=1,
+        branch_name="auto-tune/test",
+    )
+
+    hb_file = tmp_path / ".md" / "telemetry" / "tuner_heartbeat.json"
+    assert hb_file.exists()
+    assert not (tmp_path / ".md" / "telemetry" / "tuner_heartbeat.tmp").exists()
+
+    data = json.loads(hb_file.read_text(encoding="utf-8"))
+    assert data["status"] == "IN_PROGRESS"
+    assert data["current_skill"] == "test-skill"
+    assert data["current_index"] == 1
+    assert data["total_skills"] == 10
+    assert data["total_commits"] == 1
+    assert data["total_tokens"] == 1500
+    assert len(data["summaries"]) == 1
+    assert data["summaries"][0]["target_file"] == "/path/to/SKILL.md"
+
+
+def test_persist_live_heartbeat_dual_root_for_worktree(tmp_path: Path) -> None:
+    """Verify _persist_live_heartbeat writes to both worktree root and canonical root."""
+    main_repo = tmp_path / "main_repo"
+    wt_gitdir = main_repo / ".git" / "worktrees" / "nightly-runner"
+    wt_gitdir.mkdir(parents=True)
+
+    wt_dir = tmp_path / "worktree_dir"
+    wt_dir.mkdir()
+    (wt_dir / ".git").write_text(f"gitdir: {wt_gitdir}\n", encoding="utf-8")
+
+    daemon = NightlyTunerDaemon(root=wt_dir)
+    daemon._persist_live_heartbeat(
+        status="STARTED",
+        total_skills=5,
+    )
+
+    wt_hb = wt_dir / ".md" / "telemetry" / "tuner_heartbeat.json"
+    main_hb = main_repo / ".md" / "telemetry" / "tuner_heartbeat.json"
+    assert wt_hb.exists()
+    assert main_hb.exists()
+
+
+def test_persist_live_heartbeat_exception_safety(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify _persist_live_heartbeat catches unexpected exceptions without crashing."""
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    monkeypatch.setattr(
+        "json.dumps", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("Disk failure"))
+    )
+
+    # Must not raise
+    daemon._persist_live_heartbeat(status="STARTED")
+
+
+def test_resolve_canonical_root_with_commondir(tmp_path: Path) -> None:
+    """Verify resolve_canonical_root resolves canonical root using standard git commondir file."""
+    main_repo = tmp_path / "main_repo"
+    wt_gitdir = main_repo / ".git" / "worktrees" / "custom-wt"
+    wt_gitdir.mkdir(parents=True)
+    # Standard git writes a relative commondir file pointing to ../..
+    (wt_gitdir / "commondir").write_text("../..\n", encoding="utf-8")
+
+    wt_dir = tmp_path / "custom_worktree_dir"
+    wt_dir.mkdir()
+    (wt_dir / ".git").write_text(f"gitdir: {wt_gitdir}\n", encoding="utf-8")
+
+    canonical = resolve_canonical_root(wt_dir)
+    assert canonical == main_repo.resolve()
+
+
+def test_resolve_canonical_root_nested_worktrees_in_path(tmp_path: Path) -> None:
+    """Verify resolve_canonical_root does not misidentify worktrees when folder name contains worktrees."""
+    # Folder structure: tmp_path / "my_worktrees_project" / "repo"
+    nested_base = tmp_path / "my_worktrees_project" / "repo"
+    wt_gitdir = nested_base / ".git" / "worktrees" / "runner"
+    wt_gitdir.mkdir(parents=True)
+
+    wt_dir = tmp_path / "runner_dir"
+    wt_dir.mkdir()
+    (wt_dir / ".git").write_text(f"gitdir: {wt_gitdir}\n", encoding="utf-8")
+
+    canonical = resolve_canonical_root(wt_dir)
+    assert canonical == nested_base.resolve()
