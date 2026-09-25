@@ -214,7 +214,7 @@ for item in items:
                          fail → back to OPEN
 ```
 
-## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất
 * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
 * **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
   ```bash
