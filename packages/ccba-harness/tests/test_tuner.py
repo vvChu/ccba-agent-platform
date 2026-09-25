@@ -1936,6 +1936,10 @@ def test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer():
         res = asyncio.run(scorer.score(sample_output, item))
         assert isinstance(res.score, float)
         assert res.scorer_name == "pccc_parametric"
+        assert res.score > 0.0, f"Item {item.id} received zero score (điểm liệt): {res.reasoning}"
+        assert res.is_critical_fail is False, (
+            f"Item {item.id} triggered critical failure: {res.reasoning}"
+        )
 
 
 def test_tuner_per_skill_mutation_budget_halt(tmp_path: Path):
