@@ -36,11 +36,14 @@ Sau đợt rà soát phản biện (Double-Pass Adversarial Review), 4 điểm b
 - **Nội dung:**
   - Sửa Item 13 (`test_pccc_jurisdiction_medium_hotel_pc07_and_sxd`): bổ sung căn cứ pháp lý đầy đủ `"legal_basis": "Luật PCCC số 55/2024/QH15 Điều 16, 17 và Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 7"`.
   - Bổ sung trường `"analysis": "Khách sạn 9 tầng thuộc diện thẩm duyệt thiết kế PCCC của PC07 theo Mục 7 Phụ lục III NĐ 105/2025."` vào `golden_answer`.
-  - Kết quả: `PcccParametricScorer` đánh giá cả 16/16 items đạt điểm hợp lệ, không còn item nào bị dính điểm liệt (`score = 0.0`).
+- **Tệp sửa đổi:** `packages/ccba-harness/src/ccba_harness/evals/scorers.py`
+  - Bổ sung fallback kiểm tra `expected_verdict` trong `PcccParametricScorer` khi `verdict_patterns` không khớp để nhận diện chính xác các mã kết luận (`KHONG_DAT`, `BAC_BO`).
+  - Kết quả: `PcccParametricScorer` đánh giá cả 16/16 items đạt điểm hợp lệ (score >= 0.80), không còn item nào bị dính điểm liệt (`score = 0.0`).
 
 ### Bước 2: Cập Nhật Harness Unit Tests
 - **Tệp sửa đổi:** `packages/ccba-harness/tests/test_tuner.py`
   - Cập nhật test `test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer` kiểm tra toàn bộ 16 items: `assert len(items) == 16`.
+  - Bổ sung kiểm tra nghiêm ngặt `assert res.score > 0.0` và `assert res.is_critical_fail is False` cho toàn bộ 16 test cases.
 - **Tệp sửa đổi:** `packages/ccba-harness/tests/test_slicing.py`
   - Cập nhật `test_git_ratchet_optimizer_three_tier_adaptive_slicing_integration` cho tỷ lệ 70/30 trên tập 16 items: `assert report.tuning_size == 11` và `assert report.holdout_size == 5`.
 
@@ -73,6 +76,7 @@ Dưới đây là chuỗi commit chính thức trên nhánh `feat/issue-225-plat
 | `67ac4fed` | `docs(platform)` | Add 5-pillar audit report and close issue 225 |
 | `2894dedb` | `fix(qc-core,legal-intel)` | Harden PCCC enum string resolution, warehouse thresholds, and pptx file validation |
 | `7b92b729` | `fix(qc-core,harness,eval-gate)` | Remediate PCCC investor self-appraisal logic and sync 16-item eval dataset |
+| `32d91730` | `fix(harness)` | Allow expected_verdict fallback and enforce non-zero score across all 16 eval items |
 
 ---
 
