@@ -353,8 +353,8 @@ echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF
 git checkout --detach "$TARGET_REF"
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
-echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER)..."
-python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
+echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER, skip-cooldown: ON)..."
+python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" --skip-cooldown ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
 
 echo "================================================================="
 echo "[CCBA Nightly Daemon] Finished successfully at $(date)"

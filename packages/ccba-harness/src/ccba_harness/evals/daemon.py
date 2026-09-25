@@ -205,6 +205,7 @@ class NightlyTunerDaemon:
         alert_emitter: Callable[[str], bool] | None = None,
         target_ref: str = "origin/main",
         no_telegram: bool = False,
+        skip_cooldown: bool = False,
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low = max_iterations_low
@@ -217,6 +218,7 @@ class NightlyTunerDaemon:
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
         self.no_telegram = no_telegram
+        self.skip_cooldown = skip_cooldown
         # Determine valid target_ref (fallback to main if origin/main cannot be verified)
         if target_ref == "origin/main":
             check_ref = subprocess.run(
@@ -454,6 +456,34 @@ class NightlyTunerDaemon:
             skill_name = item["skill_name"]
             target_file = item["target_file"]
             dataset_file = item["dataset_file"]
+
+            # Bỏ qua kỹ năng nếu đang trong thời gian cooldown và cờ skip_cooldown được kích hoạt
+            if self.skip_cooldown and item.get("in_cooldown"):
+                last_date_str = str(item.get("last_scanned_date") or "gần đây")
+                baseline_val = float(item.get("baseline_score", 0.0))
+                logger.info(
+                    f"⏭️ [SKIP_COOLDOWN] Bỏ qua kỹ năng {skill_name} do đang trong cooldown "
+                    f"(lần quét trước: {last_date_str}, điểm: {baseline_val:.1f}%)."
+                )
+                summary = SkillEvolutionSummary(
+                    skill_name=skill_name,
+                    target_file=target_file,
+                    baseline_score=baseline_val,
+                    final_score=baseline_val,
+                    commits_kept=0,
+                    rollbacks=0,
+                    status="SKIPPED_COOLDOWN",
+                    total_tokens=0,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    halt_reason="COOLDOWN_ACTIVE",
+                    slicing_tier=None,
+                    holdout_score=baseline_val,
+                    tuning_size=0,
+                    holdout_size=0,
+                )
+                summaries.append(summary)
+                continue
 
             logger.info(f"\n⚡ --- Tối ưu hóa Kỹ năng: {skill_name} ---")
 
@@ -715,37 +745,78 @@ class NightlyTunerDaemon:
     def _save_plateau_brief(
         self, skill_name: str, target_file: Path, result: RatchetReport
     ) -> Path:
-        """Saves a Deep Problem Brief for stagnant skills under ADR-0052 for daytime human review."""
+        """Saves a Deep Problem Brief for stagnant skills under ADR-0052 Section 3.B for daytime human review."""
         escalations_dir = self.root / ".md" / "knowledge" / "escalations"
         escalations_dir.mkdir(parents=True, exist_ok=True)
         brief_file = escalations_dir / f"{skill_name}_plateau.md"
 
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        content = f"""# ⚠️ CCBA Plateau Escalation Brief (ADR-0052)
+        dataset_file = self._resolve_dataset_file(skill_name)
+        delta = result.final_score - result.initial_score
+        delta_str = f"+{delta:.1f}%" if delta > 0 else f"{delta:.1f}%"
+        total_tokens_str = f"{result.total_tokens:,}" if result.total_tokens is not None else "0"
+        prompt_tokens_str = f"{result.prompt_tokens:,}" if result.prompt_tokens is not None else "0"
+        completion_tokens_str = (
+            f"{result.completion_tokens:,}" if result.completion_tokens is not None else "0"
+        )
+        holdout_score_str = (
+            f"{result.holdout_score:.1f}%" if result.holdout_score is not None else "N/A"
+        )
+        holdout_size_str = str(result.holdout_size) if result.holdout_size is not None else "0"
+        slicing_tier_str = f"Tier {result.slicing_tier}" if result.slicing_tier else "N/A"
 
-- **Kỹ năng:** `{skill_name}`
-- **Tệp nguồn:** [`{target_file.name}`]({target_file})
-- **Thời gian ghi nhận:** `{now_str}`
-- **Điểm ban đầu:** `{result.initial_score:.1f}%`
-- **Điểm cao nhất đạt được:** `{result.final_score:.1f}%`
-- **Số vòng thử nghiệm:** `{result.total_iterations}` vòng
-- **Số lần rollback:** `{result.reverted_trials}` lần
-- **Trạng thái:** `STAGNANT_PLATEAU` (Cần can thiệp suy luận sâu)
+        content = f"""# ⚠️ CCBA Plateau Escalation Brief (ADR-0052): {skill_name}
+
+> **Mã hồ sơ:** `PLATEAU-{skill_name.upper()}`
+> **Thời gian ghi nhận:** `{now_str}`
+> **Tệp nguồn:** [`{target_file.name}`]({target_file})
+> **Trạng thái:** `STAGNANT_PLATEAU` (Cần can thiệp suy luận sâu)
 
 ---
 
-## 🔍 Khuyến Nghị Hành Động (Actionable Directive)
+## 1. Failure Manifest
+- **Baseline Score:** `{result.initial_score:.1f}%`
+- **Peak Score Achieved:** `{result.final_score:.1f}%` (Chênh lệch: `{delta_str}`)
+- **Vòng lặp đã thử nghiệm:** `{result.total_iterations}` vòng (Ngừng bởi: `{result.halt_reason or "PATIENCE_EXHAUSTED"}`)
+- **Số lần Rollback:** `{result.reverted_trials}` lần
+- **Tổng Token tiêu tốn:** `{total_tokens_str}` tokens (Prompt: `{prompt_tokens_str}` | Completion: `{completion_tokens_str}`)
+
+## 2. Tested Hypotheses & Ineffective Mutations
+- Đã áp dụng các đột biến tri thức (Surgical Section Patching) theo tập chiến lược của archetype nhưng điểm số không vượt qua trần baseline.
+- Toàn bộ các thử nghiệm đột biến đều bị hoàn tác (REVERT) hoặc dừng sớm do:
+  + Dính Điểm Liệt (Critical Failures / Vi phạm điều kiện nghiêm ngặt).
+  + Không cải thiện điểm số vượt qua ngưỡng holdout split.
+  + Đột biến trùng lặp hoặc cạn kiệt chiến lược định sẵn (`HALT_NO_FURTHER_STRATEGIES`).
+
+## 3. Deep Seams & Archetype Involved
+- **Evaluation Dataset:** `{dataset_file}`
+- **Slicing Tier:** `{slicing_tier_str}` (Holdout Score: `{holdout_score_str}`, Holdout Size: `{holdout_size_str}`)
+- **Deep Seams liên quan:** Prompt Instruction Rules trong `SKILL.md`, Bộ quy chuẩn Scorer regex/deterministic parsing, và Test Case Fixtures.
+
+## 4. Error Logs & Failure Excerpts
+```text
+Halt Reason: {result.halt_reason or "EARLY_STOPPING_PATIENCE_EXHAUSTED"}
+Total Iterations: {result.total_iterations}
+Reverted Trials: {result.reverted_trials}/{result.total_iterations}
+Final Holdout Score: {holdout_score_str}
+```
+
+## 5. Actionable Recommendation (/boost Protocol)
 Kỹ năng này đã cạn kiệt ngân sách kiên nhẫn (`patience`) trên mô hình cục bộ mà không vượt qua được điểm nghẽn.
 Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hãy chủ động can thiệp ban ngày:
 
-1. Chạy lệnh interactive boost trên CLI hoặc Antigravity IDE:
+1. **Khởi chạy Interactive Boost trên Worktree cô lập:**
    ```bash
-   python scripts/eval/nightly_tuner_daemon.py --skill {skill_name} --use-real-llm --model gemini-3.8-flash-high --max-iter 2
+   bash scripts/eval/run_boost_worktree.sh {skill_name}
    ```
-2. Rà soát lại bộ tiêu chí chấm điểm và rào chắn `SKILL.md` để phát hiện mâu thuẫn chỉ thị (Instruction Conflict).
+2. **Khởi chạy Daemon với mô hình suy luận cao cấp:**
+   ```bash
+   python scripts/eval/nightly_tuner_daemon.py --skill {skill_name} --use-real-llm --model gemini-3.8-flash-high --max-iter 3
+   ```
+3. **Kích hoạt qua Antigravity Chat:** Gõ `/boost` kèm nội dung brief này để rà soát Instruction Conflicts giữa `SKILL.md` và Scorer.
 """
         brief_file.write_text(content, encoding="utf-8")
-        logger.info(f"📋 Đã xuất Plateau Brief: {brief_file}")
+        logger.info(f"📋 Đã xuất Plateau Brief (ADR-0052 5-Fields): {brief_file}")
         return brief_file
 
     def _get_main_repo_root(self) -> Path | None:
@@ -912,6 +983,46 @@ Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hã
 
     def _create_pull_request(self, branch_name: str, report_body: str) -> str | None:
         """Pushes branch and creates a GitHub Pull Request using GitHub CLI (gh) if available."""
+        # 0. Tự động kiểm tra và đồng bộ Traceability Matrix để phòng ngừa lỗi lệch ma trận tài liệu
+        try:
+            sync_script = self.root / "scripts" / "sync_hub_adr_matrix.py"
+            if sync_script.exists():
+                logger.info("🔄 Đang kiểm tra và tự động đồng bộ Traceability Matrix...")
+                subprocess.run(
+                    [sys.executable, str(sync_script), "--hub-dir", str(self.root)],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    check=False,
+                )
+                matrix_file = self.root / "docs" / "adr" / "TRACEABILITY_MATRIX.md"
+                if matrix_file.exists():
+                    status_res = subprocess.run(
+                        ["git", "status", "--porcelain", "docs/adr/TRACEABILITY_MATRIX.md"],
+                        cwd=str(self.root),
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    if status_res.stdout.strip():
+                        subprocess.run(
+                            ["git", "add", "docs/adr/TRACEABILITY_MATRIX.md"],
+                            cwd=str(self.root),
+                            check=False,
+                        )
+                        subprocess.run(
+                            [
+                                "git",
+                                "commit",
+                                "-m",
+                                "chore(adr): sync traceability matrix before nightly PR creation",
+                            ],
+                            cwd=str(self.root),
+                            check=False,
+                        )
+                        logger.info("✅ Đã tự động commit đồng bộ Traceability Matrix.")
+        except Exception as e:
+            logger.warning(f"⚠️ Tự động đồng bộ Traceability Matrix gặp lỗi: {e}")
+
         # 1. ADR-0058 Hard Completion Lock: Verify branch before pushing
         try:
             logger.info("🛡️ [ADR-0058] Đang thực thi Hard Completion Lock (verify-patch)...")
