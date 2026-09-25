@@ -131,3 +131,16 @@ def test_verify_telegram_alert_cli_without_env(
     captured = capsys.readouterr()
     assert "Chưa cấu hình TELEGRAM_BOT_TOKEN" in captured.out
     assert "BotFather" in captured.out
+
+
+def test_send_telegram_alert_suppressed_in_pytest_when_bot_token_is_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify that send_telegram_alert suppresses real network calls in test mode when bot_token is None."""
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "real_looking_token_12345")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123456789")
+
+    # When PYTEST_CURRENT_TEST is present (standard during pytest runs) and bot_token is None,
+    # it must safely intercept without making actual HTTP requests.
+    result = send_telegram_alert(message="Test message during pytest", bot_token=None)
+    assert result is True
