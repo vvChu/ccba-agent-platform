@@ -23,6 +23,7 @@ from scripts.eval.check_nightly_status import (
     get_worktree_commit_stats,
     inspect_live_daemon,
     inspect_post_run,
+    is_ratchet_commit,
     main,
     render_live_status,
     render_post_run_summary,
@@ -111,16 +112,142 @@ def test_get_worktree_commit_stats_with_base_ref_range(tmp_path: Path) -> None:
         capture_output=True,
     )
 
+    # Commit phụ có chứa chuỗi ratchet(opt): nhưng KHÔNG mang prefix ratchet(opt):
+    non_ratchet_file = tmp_path / "non_ratchet.txt"
+    non_ratchet_file.write_text("non_ratchet", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "non_ratchet.txt"], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "commit",
+            "-m",
+            "chore: fix bug in ratchet(opt): evaluation parser",
+        ],
+        check=True,
+        capture_output=True,
+    )
+
     # 4. Thực thi get_worktree_commit_stats
     total_count, recent_commits = get_worktree_commit_stats(tmp_path)
 
-    # Bất biến: Tổng commits phải là 12 (chính xác số ratchet commits, không bị chặn ở 8)
+    # Bất biến: Tổng commits phải là 12 (chính xác số ratchet commits, không tính chore và không bị chặn ở 8)
     assert total_count == 12
     # Bất biến: Danh sách commits gần nhất hiển thị tối đa 8 mục
     assert len(recent_commits) == 8
     # Bất biến: Commit gần nhất nằm ở đầu danh sách
     assert "skill_11" in recent_commits[0]
     assert "skill_4" in recent_commits[-1]
+
+
+def test_is_ratchet_commit_helper() -> None:
+    """Kiểm tra độ chính xác của hàm nhận diện tiền tố is_ratchet_commit."""
+    assert is_ratchet_commit("5943e248 ratchet(opt): SKILL.md 93.1% -> 95.0% (+1.9%)") is True
+    assert is_ratchet_commit("3c97b532 ratchet(opt): test.md") is True
+    # Non-prefix cases containing ratchet(opt):
+    assert is_ratchet_commit("884d5f34 chore: fix ratchet(opt): bug") is False
+    assert is_ratchet_commit("abcdef01 Merge pull request #316: ratchet(opt): SKILL.md") is False
+    assert is_ratchet_commit("12345678 docs: note about ratchet(opt): pattern") is False
+    # Malformed or edge cases
+    assert is_ratchet_commit("") is False
+    assert is_ratchet_commit("5943e248") is False
+    assert is_ratchet_commit("5943e248   ratchet(opt): with_spaces") is True
+
+
+def test_get_worktree_commit_stats_detached_head(tmp_path: Path) -> None:
+    """Kiểm tra worktree ở trạng thái detached HEAD (do git worktree add --detach)."""
+    _init_git_repo(tmp_path)
+
+    init_file = tmp_path / "init.txt"
+    init_file.write_text("initial", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "init.txt"], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
+
+    # Detach HEAD
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "checkout", "--detach"],
+        check=True,
+        capture_output=True,
+    )
+
+    # Thêm 5 ratchet commits
+    for i in range(5):
+        f = tmp_path / f"det_{i}.txt"
+        f.write_text(str(i), encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp_path), "add", str(f)], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(tmp_path),
+                "commit",
+                "-m",
+                f"ratchet(opt): detached_{i}.md 50% -> 60%",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+    total_count, recent_commits = get_worktree_commit_stats(tmp_path)
+    assert total_count == 5
+    assert len(recent_commits) == 5
+    assert "detached_4" in recent_commits[0]
+
+
+def test_get_worktree_commit_stats_fallback_ignores_non_prefix(tmp_path: Path) -> None:
+    """Kiểm tra fallback lọc chính xác prefix ^ratchet(opt): và bỏ qua commit chứa chuỗi ở vị trí khác."""
+    subprocess.run(
+        ["git", "init", "-b", "isolated-branch", str(tmp_path)], check=True, capture_output=True
+    )
+    subprocess.run(["git", "-C", str(tmp_path), "config", "user.name", "Test Runner"], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.email", "test@ccba.local"], check=True
+    )
+
+    # Commit có chứa chuỗi ratchet(opt): nhưng không ở prefix
+    f1 = tmp_path / "chore.txt"
+    f1.write_text("chore", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", str(f1)], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "commit",
+            "-m",
+            "chore: documentation for ratchet(opt): runner",
+        ],
+        check=True,
+        capture_output=True,
+    )
+
+    # 3 ratchet commits hợp lệ
+    for i in range(3):
+        f = tmp_path / f"t_{i}.txt"
+        f.write_text(str(i), encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp_path), "add", str(f)], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(tmp_path),
+                "commit",
+                "-m",
+                f"ratchet(opt): item_{i}.md 80% -> 90%",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+    total_count, recent_commits = get_worktree_commit_stats(tmp_path)
+    assert total_count == 3
+    assert len(recent_commits) == 3
+    assert all(c.split(maxsplit=1)[1].startswith("ratchet(opt):") for c in recent_commits)
 
 
 def test_get_worktree_commit_stats_fallback_grep(tmp_path: Path) -> None:

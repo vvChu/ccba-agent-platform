@@ -153,14 +153,31 @@ def get_process_uptime(pid: int) -> str:
         return "N/A"
 
 
+def is_ratchet_commit(line: str) -> bool:
+    """Kiểm tra xem commit có mang tiền tố ratchet(opt): chuẩn hay không.
+
+    Định dạng git log --oneline: '<hash> <subject>'.
+    Hàm đảm bảo subject phải bắt đầu bằng 'ratchet(opt):' để tránh nhận nhầm
+    các commit bảo trì hoặc tài liệu chỉ đề cập chuỗi này trong commit message.
+
+    Args:
+        line: Dòng oneline của git log.
+
+    Returns:
+        bool: True nếu là commit ratchet của Auto-Tuner.
+    """
+    parts = line.strip().split(maxsplit=1)
+    return len(parts) >= 2 and parts[1].startswith("ratchet(opt):")
+
+
 def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
     """Đếm chính xác tổng số commits đã tạo trên worktree và trích xuất commits gần nhất.
 
     Cơ chế đếm tuân thủ ADR-0023, ADR-0058:
-    1. Xác định base_ref khả dụng (origin/main -> main -> master).
+    1. Xác định base_ref khả dụng (@{upstream} -> origin/main -> origin/master -> main -> master).
     2. So sánh phạm vi {base_ref}..HEAD để không bị chặn trên bởi giới hạn git log -n.
-    3. Ưu tiên lọc đếm các commits mang nhãn ratchet(opt): của Auto-Tuner.
-    4. Fallback an toàn nếu không xác định được base_ref.
+    3. Ưu tiên lọc đếm các commits mang nhãn ratchet(opt): của Auto-Tuner theo đúng prefix.
+    4. Fallback an toàn nếu không xác định được base_ref với anchored grep ^ratchet(opt):.
 
     Args:
         worktree_dir: Đường dẫn tới thư mục git worktree.
@@ -192,8 +209,8 @@ def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
     except OSError:
         pass
 
-    # 1. Tìm base_ref khả dụng (origin/main -> main -> master)
-    for candidate in ("origin/main", "main", "master"):
+    # 1. Tìm base_ref khả dụng (@{upstream} -> origin/main -> origin/master -> main -> master)
+    for candidate in ("@{upstream}", "origin/main", "origin/master", "main", "master"):
         if candidate == current_branch:
             continue
         try:
@@ -231,7 +248,7 @@ def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
             )
             if log_res.returncode == 0:
                 all_lines = [line.strip() for line in log_res.stdout.splitlines() if line.strip()]
-                ratchet_lines = [line for line in all_lines if "ratchet(opt):" in line]
+                ratchet_lines = [line for line in all_lines if is_ratchet_commit(line)]
 
                 if ratchet_lines:
                     return len(ratchet_lines), ratchet_lines[:8]
@@ -241,7 +258,7 @@ def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
         except OSError:
             pass
 
-    # 2. Fallback: Nếu không xác định được base_ref hoặc range lỗi, lọc trực tiếp theo grep ratchet(opt):
+    # 2. Fallback: Nếu không xác định được base_ref hoặc range lỗi, lọc trực tiếp theo grep ^ratchet(opt):
     try:
         fallback_res = subprocess.run(
             [
@@ -250,10 +267,8 @@ def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
                 str(worktree_dir),
                 "--no-optional-locks",
                 "log",
-                "-n",
-                "500",
                 "--oneline",
-                "--grep=ratchet(opt):",
+                "--grep=^ratchet(opt):",
             ],
             capture_output=True,
             text=True,
@@ -261,7 +276,7 @@ def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
         )
         if fallback_res.returncode == 0:
             ratchet_lines = [
-                line.strip() for line in fallback_res.stdout.splitlines() if "ratchet(opt):" in line
+                line.strip() for line in fallback_res.stdout.splitlines() if is_ratchet_commit(line)
             ]
             return len(ratchet_lines), ratchet_lines[:8]
     except OSError:
