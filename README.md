@@ -45,7 +45,9 @@ ccba-agent-platform/                    ← Hub Repository
 ├── CLAUDE.md                          ← Claude Code Cross-Agent Parity Bridge
 ├── docs/
 │   ├── adr/                           ← Architectural Decision Records (ADRs)
-│   └── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
+│   ├── governance/                    ← Hub-Spoke Governance & Proposal Guides
+│   ├── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
+│   └── sop/                           ← Standard Operating Procedures (Sync, Delivery, Repo Protection)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
 │   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->74<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-18 -->
