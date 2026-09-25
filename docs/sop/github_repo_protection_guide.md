@@ -57,6 +57,13 @@ GitHub Rulesets là cơ chế quản trị nhánh thế hệ mới, thay thế v
 | **Require linear history** | ✅ **Enabled** | Cấm merge commit phân nhánh lộn xộn; bắt buộc dùng Squash & Merge hoặc Rebase & Merge. |
 | **Do not allow bypassing the above settings** | ✅ **Enabled** | Áp dụng rào chắn cho cả Administrators và Repository Owners (chống thao tác lỡ tay). |
 
+> [!NOTE]
+> **Hiện trạng trên GitHub Remote của CCBA Hub (`vvChu/ccba-agent-platform`)**:
+> - Ruleset `Automatic Review with Copilot` (ID: `11593010`) đã kích hoạt: chặn xóa branch, chặn force-push, bắt buộc linear history, và `require_code_owner_review: true`.
+> - Tệp `.github/CODEOWNERS` vật lý đã được commit đồng bộ vào repository để cung cấp danh sách Code Owners cho quy tắc này.
+> - Secret Scanning và Secret Scanning Push Protection đã được kích hoạt sẵn ở cấp độ Repository trên GitHub.
+
+
 ---
 
 ## 3. Cấu Hình Required Status Checks & Bẫy Deadlock do Path Filtering
@@ -73,6 +80,10 @@ Trong mục **Require status checks to pass before merging** của Ruleset, bậ
 | `scan` | `.github/workflows/security_scan.yml` | Quét phát hiện rò rỉ bí mật, API keys, PII qua CCBA Maskara. |
 | `Test - Python 3.12` | `.github/workflows/ci.yml` | Chạy bộ kiểm thử tự động trên phiên bản Python chuẩn của Platform. |
 | `Deterministic Parity & Schema Audit` | `.github/workflows/ci.yml` | Kiểm định tính toàn vẹn khế ước, schema dữ liệu và kiến trúc monorepo. |
+
+> [!TIP]
+> **Lưu ý cấu hình Remote:** Hiện tại trên GitHub Ruleset của Hub đã cấu hình check `Deterministic Parity & Schema Audit`. Maintainer khi cập nhật Ruleset cần đảm bảo chọn đủ cả 3 checks nêu trên (`scan`, `Test - Python 3.12`, `Deterministic Parity & Schema Audit`) để đạt mức bảo vệ toàn diện.
+
 
 ---
 
@@ -245,7 +256,15 @@ protected_branch="refs/heads/main"
 
 # Git passes ref info via standard input: <local_ref> <local_oid> <remote_ref> <remote_oid>
 while read local_ref local_oid remote_ref remote_oid; do
-  # Chặn push trực tiếp vào main
+  # 1. Chặn xóa nhánh main trước (khi local_oid là chuỗi 40 số 0)
+  if [ "$local_oid" = "0000000000000000000000000000000000000000" ] && [ "$remote_ref" = "$protected_branch" ]; then
+    echo "========================================================================"
+    echo "❌ [CCBA Guardrail Error] Deleting the remote 'main' branch is strictly prohibited!"
+    echo "========================================================================"
+    exit 1
+  fi
+
+  # 2. Chặn push trực tiếp vào main
   if [ "$remote_ref" = "$protected_branch" ]; then
     echo "========================================================================"
     echo "❌ [CCBA Guardrail Error] Direct push to 'main' is strictly prohibited!"
@@ -255,12 +274,6 @@ while read local_ref local_oid remote_ref remote_oid; do
     echo "  2. Commit thay đổi và push nhánh: git push origin feat/your-feature-name"
     echo "  3. Tạo Pull Request trên GitHub và đợi CI + Review kiểm định."
     echo "========================================================================"
-    exit 1
-  fi
-
-  # Chặn xóa nhánh main (local_oid là chuỗi số 0)
-  if [ "$local_oid" = "0000000000000000000000000000000000000000" ] && [ "$remote_ref" = "$protected_branch" ]; then
-    echo "❌ [CCBA Guardrail Error] Deleting the remote 'main' branch is strictly prohibited!"
     exit 1
   fi
 done
@@ -277,22 +290,63 @@ Lưu tại đường dẫn: `.githooks/pre-commit` *(Định dạng LF, executab
 #!/bin/sh
 # ==============================================================================
 # CCBA Client-Side Guardrail: Maskara Secret & Privacy Leak Pre-Commit Scan
-# Reference: CCBA-SOP-SEC-001 & ADR-0058
+# Reference: CCBA-SOP-SEC-001, ADR-0047, Session Learning #41
 # ==============================================================================
 
-echo "🔍 [CCBA Guardrail] Running Maskara secret & privacy scanner..."
+echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."
 
-# Kiểm tra xem ccba_maskara có khả dụng trong môi trường Python hiện hành không
-if python -m ccba_maskara.cli --version >/dev/null 2>&1; then
-  python -m ccba_maskara.cli scan --staged
-  status=$?
-  if [ $status -ne 0 ]; then
-    echo "❌ [CCBA Guardrail Error] Sensitive tokens, keys or secrets detected in staged files!"
-    echo "Vui lòng gỡ bỏ thông tin nhạy cảm trước khi commit."
-    exit $status
-  fi
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$staged_files" ]; then
+  exit 0
 fi
 
+python_bin="python"
+if ! command -v python >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  python_bin="python3"
+fi
+
+# Xác định đường dẫn tới scripts/maskara.py
+maskara_script="scripts/maskara.py"
+if [ ! -f "$maskara_script" ] && [ -n "$CCBA_HUB_PATH" ] && [ -f "$CCBA_HUB_PATH/scripts/maskara.py" ]; then
+  maskara_script="$CCBA_HUB_PATH/scripts/maskara.py"
+fi
+
+if [ ! -f "$maskara_script" ]; then
+  echo "⚠️ [CCBA Guardrail] scripts/maskara.py not found, skipping pre-commit scan."
+  exit 0
+fi
+
+has_leak=0
+for file in $staged_files; do
+  # Bỏ qua tệp nhị phân, hình ảnh và tài liệu nén
+  if echo "$file" | grep -qE '\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
+    continue
+  fi
+  # Bỏ qua thư mục nháp tạm và venv
+  if echo "$file" | grep -qE '^(\.md/scratch/|\.venv/|node_modules/)'; then
+    continue
+  fi
+  if [ -f "$file" ]; then
+    $python_bin "$maskara_script" scan --root "$file" >/dev/null 2>&1
+    status_code=$?
+    if [ $status_code -ne 0 ]; then
+      echo "❌ [CCBA Guardrail Error] Sensitive token or secret detected in staged file: $file"
+      $python_bin "$maskara_script" scan --root "$file"
+      has_leak=1
+    fi
+  fi
+done
+
+if [ $has_leak -ne 0 ]; then
+  echo "========================================================================"
+  echo "❌ [CCBA Guardrail Error] Commit blocked due to sensitive data leak!"
+  echo "Vui lòng gỡ bỏ thông tin nhạy cảm khỏi các tệp staged trước khi commit."
+  echo "========================================================================"
+  exit 1
+fi
+
+echo "✅ [CCBA Guardrail] Security check passed."
 exit 0
 ```
 
