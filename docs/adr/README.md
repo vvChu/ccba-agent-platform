@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0059)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0060)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -63,3 +63,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [HUB-ADR 0057](0057-two-stage-granularity-decision-framework-and-gpi.md) | Two-Stage Granularity Decision Framework, Granularity Placement Index (GPI), and 3-Tier Skills Architecture | ✅ ACCEPTED |
 | [HUB-ADR 0058](0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md) | Live Collaboration Artifacts, Workspace Mirroring, and CCBA Charter 11-Seat Review Alignment | ✅ ACCEPTED |
 | [HUB-ADR 0059](0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md) | Legal Verbatim Grounding, Zero-Hallucination Invariant, and Cryptographic Provenance Stamping | ✅ ACCEPTED |
+| [HUB-ADR 0060](0060-4hub-federated-spokes-architecture.md) | 4-Hubs × Federated Spokes Architecture & Distributed Ecosystem Governance | ✅ ACCEPTED |
