@@ -4,7 +4,7 @@
 > **Thời gian thực hiện kiểm toán:** 25/09/2026 (07:30 - 07:45 GMT+7)  
 > **Phương pháp kiểm toán:** Double-Pass Adversarial Review (Rule 8), Tracing Code End-to-End, Đo lường thực nghiệm trực tiếp trên hệ thống và Git Worktree ngầm.  
 > **Quy chuẩn tham chiếu:** ADR-0023 (SkillOpt), ADR-0052 (Plateau Boost), ADR-0058 (Charter & Hard Completion Lock).  
-> **Cấp độ quản trị:** `QC Level 2` — Phê duyệt bởi: `TRUONG_PHONG_RD_HTQT` | Thực thi: `KY_SU_THUC_THI`.
+> **Cấp độ quản trị:** `QC Level 2` — Phê duyệt: Trưởng phòng R&D HTQT (TRUONG_PHONG_RD_HTQT) | Thực thi: Kỹ sư thực thi (KY_SU_THUC_THI).
 
 ---
 
@@ -105,9 +105,9 @@ Tính đến 07:35, Ratchet Tuner đã thẩm định và commit thành công 8 
 
 ### 4.3. Điểm Mù Vòng Đời Ephemeral Worktree
 - File [`scripts/cron/run_nightly_tuner.sh:151`](file:///home/vvc/ccba/ccba-agent-platform/scripts/cron/run_nightly_tuner.sh#L151) chứa hook:
-  `trap cleanup_worktree EXIT` với lệnh `git worktree remove --force "$WORKTREE_DIR"`.
+  `trap cleanup_worktree EXIT` với lệnh dọn dẹp thư mục worktree tạm thời.
 - Thư mục worktree tạm thời chỉ tồn tại khi cron đang chạy và **bị xóa sạch ngay khi kết thúc**.
-- Nếu công cụ kiểm tra trạng thái chỉ nhắm vào worktree, toàn bộ các lượt kiểm tra ban ngày sẽ bị văng `FileNotFoundError`.
+- Nếu công cụ kiểm tra trạng thái chỉ nhắm vào worktree, toàn bộ các lượt kiểm tra ban ngày sẽ bị văng ngoại lệ FileNotFoundError.
 - **Giải pháp:** Đã thiết kế kiến trúc **Dual-Mode Inspection** trong công cụ mới `scripts/eval/check_nightly_status.py`.
 
 ---
