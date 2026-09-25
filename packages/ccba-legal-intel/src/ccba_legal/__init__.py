@@ -55,6 +55,12 @@ from .converters import (
     load_bundle_formula_overrides,
     omml_to_latex,
 )
+from .currency_resolver import (
+    StatutoryDocInfo,
+    StatutoryRole,
+    clear_resolver_cache,
+    resolve_statutory_doc,
+)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -348,4 +354,9 @@ __all__ = [
     "validate_authority_naming",
     "validate_tier_authority",
     "generate_jurisdiction_guardrail_card",
+    # === Dynamic Statutory Resolver (ADR 0035, ADR 0050, ADR 0059) ===
+    "StatutoryRole",
+    "StatutoryDocInfo",
+    "resolve_statutory_doc",
+    "clear_resolver_cache",
 ]

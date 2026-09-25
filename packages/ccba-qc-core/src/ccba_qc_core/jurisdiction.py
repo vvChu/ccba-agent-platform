@@ -14,6 +14,8 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
+from ccba_legal import StatutoryRole, resolve_statutory_doc
+
 PROVENANCE_SHA256_ND105_2025 = "6808c77f7438e0a15d7fc688726be181f476d958cf5f907ebc184afc0dc87262"
 
 
@@ -57,6 +59,7 @@ class PcccProjectSpec:
     capacity_persons: int = 0
     investment_tier: str = "NHOM_B"
     is_renovation: bool = False
+    evaluation_date: str | None = None
 
     def get_canonical_type(self) -> PcccProjectType:
         """Resolve project type into canonical PcccProjectType."""
@@ -282,6 +285,7 @@ class PcccJurisdictionRouter:
             annex_item=annex_item,
             cqcmvxd_required=cqcmvxd_required,
             investor_self_appraisal=investor_self_appraisal,
+            evaluation_date=spec.evaluation_date,
         )
 
         return PcccJurisdictionResult(
@@ -431,23 +435,33 @@ class PcccJurisdictionRouter:
         annex_item: int | None,
         cqcmvxd_required: bool,
         investor_self_appraisal: bool = False,
+        evaluation_date: str | None = None,
     ) -> list[str]:
-        """Assemble formal legal citations for statutory provenance."""
+        """Assemble formal legal citations for statutory provenance via Dynamic Statutory Resolver."""
+        pccc_law = resolve_statutory_doc(StatutoryRole.PCCC_LAW, evaluation_date)
+        pccc_decree = resolve_statutory_doc(StatutoryRole.PCCC_DECREE, evaluation_date)
+        qcvn_fire = resolve_statutory_doc(StatutoryRole.TECHNICAL_FIRE_SAFETY, evaluation_date)
+
         citations = [
-            "Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ số 55/2024/QH15 (Điều 16, Điều 17)",
-            "Nghị định số 105/2025/NĐ-CP (Điều 8, Phụ lục I, II, III)",
-            "QCVN 06:2022/BXD và Sửa đổi 1:2023 (An toàn cháy cho nhà và công trình)",
+            f"{pccc_law.title} (Điều 16, Điều 17)",
+            f"{pccc_decree.title} (Điều 8, Phụ lục I, II, III)",
+            f"{qcvn_fire.title}",
         ]
         if is_annex_iii and annex_item is not None:
             citations.append(
-                f"Phụ lục III Nghị định 105/2025/NĐ-CP (Mục {annex_item}) - Cơ quan Công an thẩm định"
+                f"Phụ lục III {pccc_decree.doc_number} (Mục {annex_item}) - Cơ quan Công an thẩm định"
             )
         if investor_self_appraisal:
             citations.append(
-                "Khoản 1 Điều 8 Nghị định 105/2025/NĐ-CP - Chủ đầu tư tự thẩm định thiết kế PCCC (Mẫu PC13)"
+                f"Khoản 1 Điều 8 {pccc_decree.doc_number} - Chủ đầu tư tự thẩm định thiết kế PCCC (Mẫu PC13)"
             )
         if cqcmvxd_required:
+            const_law = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_LAW, evaluation_date)
+            const_grading = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, evaluation_date)
             citations.append(
-                "Luật Xây dựng số 135/2025/QH15 (Điều 16 Khoản 1 điểm a, b, c, d, đ Luật 55/2024/QH15)"
+                f"{const_law.title} (Điều 16 Khoản 1 điểm a, b, c, d, đ Luật {pccc_law.doc_number})"
+            )
+            citations.append(
+                f"{const_grading.title} ({const_grading.doc_number}) - Phân cấp công trình thẩm định CQCMVXD"
             )
         return citations

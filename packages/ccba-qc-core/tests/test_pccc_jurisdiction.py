@@ -399,3 +399,41 @@ def test_fuzzy_normalization_edge_cases() -> None:
 
 def _normalize_project_type_test(name: str) -> PcccProjectType:
     return PcccProjectSpec(project_type=name).get_canonical_type()
+
+
+def test_dynamic_statutory_resolution_modern_2026() -> None:
+    """Verify that projects evaluated in 2026 dynamically reference Circular 34/2026 and Law 135/2025."""
+    spec = PcccProjectSpec(
+        project_type=PcccProjectType.CHUNG_CU,
+        height_m=80.0,
+        floors=26,
+        investment_tier="NHOM_A",
+        evaluation_date="2026-08-01",
+    )
+    res = PcccJurisdictionRouter.evaluate(spec)
+
+    assert res.cqcmvxd_required is True
+    # Statutory citations must dynamically resolve Circular 34/2026 and Law 135/2025
+    citations_text = " ".join(res.statutory_citations)
+    assert "34/2026/TT-BXD" in citations_text
+    assert "135/2025/QH15" in citations_text
+    assert "55/2024/QH15" in citations_text
+
+
+def test_dynamic_statutory_resolution_historical_2024() -> None:
+    """Verify that projects evaluated in 2024 dynamically reference Circular 06/2021 and Law 50/2014."""
+    spec = PcccProjectSpec(
+        project_type=PcccProjectType.CHUNG_CU,
+        height_m=80.0,
+        floors=26,
+        investment_tier="NHOM_A",
+        evaluation_date="2024-05-01",
+    )
+    res = PcccJurisdictionRouter.evaluate(spec)
+
+    assert res.cqcmvxd_required is True
+    # Statutory citations must dynamically resolve Circular 06/2021 and Law 50/2014
+    citations_text = " ".join(res.statutory_citations)
+    assert "06/2021/TT-BXD" in citations_text
+    assert "50/2014/QH13" in citations_text
+
