@@ -295,50 +295,29 @@ Lưu tại đường dẫn: `.githooks/pre-commit` *(Định dạng LF, executab
 
 echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."
 
-staged_files=$(git diff --cached --name-only --diff-filter=d)
-
-if [ -z "$staged_files" ]; then
-  exit 0
-fi
-
-python_bin="python"
-if ! command -v python >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
-  python_bin="python3"
-fi
-
-# Xác định đường dẫn tới scripts/maskara.py
-maskara_script="scripts/maskara.py"
-if [ ! -f "$maskara_script" ] && [ -n "$CCBA_HUB_PATH" ] && [ -f "$CCBA_HUB_PATH/scripts/maskara.py" ]; then
-  maskara_script="$CCBA_HUB_PATH/scripts/maskara.py"
-fi
-
-if [ ! -f "$maskara_script" ]; then
-  echo "⚠️ [CCBA Guardrail] scripts/maskara.py not found, skipping pre-commit scan."
-  exit 0
-fi
-
-has_leak=0
-for file in $staged_files; do
-  # Bỏ qua tệp nhị phân, hình ảnh và tài liệu nén
-  if echo "$file" | grep -qE '\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
-    continue
-  fi
-  # Bỏ qua thư mục nháp tạm và venv
-  if echo "$file" | grep -qE '^(\.md/scratch/|\.venv/|node_modules/)'; then
-    continue
-  fi
-  if [ -f "$file" ]; then
-    $python_bin "$maskara_script" scan --root "$file" >/dev/null 2>&1
-    status_code=$?
-    if [ $status_code -ne 0 ]; then
-      echo "❌ [CCBA Guardrail Error] Sensitive token or secret detected in staged file: $file"
-      $python_bin "$maskara_script" scan --root "$file"
-      has_leak=1
+if ! git -c core.quotepath=false diff --cached --name-only --diff-filter=d | (
+  has_leak=0
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    case "$file" in
+      *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf|*.zip|*.tar|*.gz|*.exe|*.dll|*.so|*.dylib|*.woff|*.woff2|*.eot|*.ttf|*.mp3|*.mp4|*.wav|*.avi|*.pfx|*.cer)
+        continue
+        ;;
+      .md/scratch/*|.venv/*|node_modules/*)
+        continue
+        ;;
+    esac
+    if [ -f "$file" ]; then
+      $python_bin "$maskara_script" scan --root "$file" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "❌ [CCBA Guardrail Error] Sensitive token or secret detected in staged file: $file"
+        $python_bin "$maskara_script" scan --root "$file"
+        has_leak=1
+      fi
     fi
-  fi
-done
-
-if [ $has_leak -ne 0 ]; then
+  done
+  exit $has_leak
+); then
   echo "========================================================================"
   echo "❌ [CCBA Guardrail Error] Commit blocked due to sensitive data leak!"
   echo "Vui lòng gỡ bỏ thông tin nhạy cảm khỏi các tệp staged trước khi commit."

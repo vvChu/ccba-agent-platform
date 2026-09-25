@@ -146,3 +146,96 @@ def test_spoke_initializer_delegates_guardrails(temp_spoke: Path, temp_hub: Path
     assert (temp_spoke / ".githooks" / "pre-commit").exists()
     assert (temp_spoke / ".github" / "CODEOWNERS").exists()
     assert "* @team" in (temp_spoke / ".github" / "CODEOWNERS").read_text(encoding="utf-8")
+
+
+def test_maskara_hook_handles_filenames_with_spaces_and_unicode(tmp_path: Path):
+    """Verifies that .githooks/pre-commit handles spaces and Unicode characters without word-splitting."""
+    import subprocess
+
+    repo_dir = tmp_path / "test_repo"
+    repo_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Initialize git repo
+    subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Tester"], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.email", "tester@example.com"], cwd=repo_dir, check=True)
+
+    # 2. Setup mock hub with mock maskara
+    hub_dir = tmp_path / "mock_hub"
+    scripts_dir = hub_dir / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    mock_maskara = scripts_dir / "maskara.py"
+    mock_maskara.write_text(
+        "import sys, pathlib\n"
+        "args = sys.argv\n"
+        "root = args[args.index('--root') + 1]\n"
+        "content = pathlib.Path(root).read_text(encoding='utf-8')\n"
+        "if 'LEAK_SECRET' in content:\n"
+        "    print(f'Detected secret in {root}', file=sys.stderr)\n"
+        "    sys.exit(1)\n"
+        "sys.exit(0)\n",
+        encoding="utf-8",
+    )
+
+    # 3. Install guardrails
+    install_security_guardrails(repo_dir, hub_dir, dry_run=False)
+    hook_file = repo_dir / ".githooks" / "pre-commit"
+    assert hook_file.exists()
+
+    env = {**os.environ, "CCBA_HUB_PATH": str(hub_dir)}
+
+    # 4. Stage a file with spaces and accents that is clean
+    docs_dir = repo_dir / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    clean_file = docs_dir / "tài liệu dự án.txt"
+    clean_file.write_text("Dữ liệu an toàn không có khóa bí mật.", encoding="utf-8")
+    subprocess.run(["git", "add", str(clean_file)], cwd=repo_dir, check=True)
+
+    # Run hook directly using sh
+    res_clean = subprocess.run(
+        ["sh", str(hook_file)], cwd=repo_dir, capture_output=True, text=True, env=env
+    )
+    assert res_clean.returncode == 0
+    assert "Security check passed" in res_clean.stdout
+
+    # 5. Stage a file with spaces and accents containing a secret
+    dirty_file = docs_dir / "mật khẩu bảo mật.txt"
+    dirty_file.write_text("LEAK_SECRET_KEY_12345", encoding="utf-8")
+    subprocess.run(["git", "add", str(dirty_file)], cwd=repo_dir, check=True)
+
+    res_dirty = subprocess.run(
+        ["sh", str(hook_file)], cwd=repo_dir, capture_output=True, text=True, env=env
+    )
+    assert res_dirty.returncode == 1
+    assert "Commit blocked due to sensitive data leak" in res_dirty.stdout
+
+
+def test_install_guardrails_worktree_and_submodule_fallback(tmp_path: Path, temp_hub: Path):
+    """Verifies that legacy / worktree .git pointer files install hooks into commondir / hooks with 0o755."""
+    main_repo_dir = tmp_path / "main_repo"
+    common_git_dir = main_repo_dir / ".git"
+    common_hooks_dir = common_git_dir / "hooks"
+    common_hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    worktree_git_dir = common_git_dir / "worktrees" / "wt1"
+    worktree_git_dir.mkdir(parents=True, exist_ok=True)
+    (worktree_git_dir / "commondir").write_text("../..\n", encoding="utf-8")
+
+    spoke_dir = tmp_path / "spoke_wt"
+    spoke_dir.mkdir(parents=True, exist_ok=True)
+    (spoke_dir / ".git").write_text(f"gitdir: {worktree_git_dir}\n", encoding="utf-8")
+
+    installed = install_security_guardrails(spoke_dir, temp_hub, dry_run=False)
+    assert installed is True
+
+    # Check that legacy hooks are written in common_hooks_dir
+    legacy_pre_commit = common_hooks_dir / "pre-commit"
+    legacy_pre_push = common_hooks_dir / "pre-push"
+    assert legacy_pre_commit.exists()
+    assert legacy_pre_push.exists()
+    assert "Maskara" in legacy_pre_commit.read_text(encoding="utf-8")
+    assert "refs/heads/main" in legacy_pre_push.read_text(encoding="utf-8")
+
+    if os.name == "posix":
+        assert legacy_pre_commit.stat().st_mode & 0o111 != 0
+        assert legacy_pre_push.stat().st_mode & 0o111 != 0
