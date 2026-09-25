@@ -48,12 +48,14 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── scripts/                           ← CLI & Lifecycle Hooks
 │   ├── governance/                    ←   Documentation, Skills & Architecture Auditors (Deep Seam)
+│   │   └── protect_repo.py            ←     Deterministic Remote Repository Protection CLI Tool
 │   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
 │   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── legal/                         ←   Legal ingestion, Google Drive sync & crawling utilities
 │   ├── spoke/                         ←   Hub↔Spoke bootstrap, sync & migration tools (ADR 0044)
 │   ├── tests/                         ←   Unit test suites
+│   ├── ccba_platform_cli.py           ←   Unified Platform CLI Launcher (init, adopt, sync, protect-repo)
 │   ├── doc_auditor.py                 ←   Governance Facade
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
