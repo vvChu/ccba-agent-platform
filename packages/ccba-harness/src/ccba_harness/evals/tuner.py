@@ -213,6 +213,8 @@ class LLMTaskAdapter:
 
         if client is not None:
             self.client = client
+        elif async_client is not None:
+            self.client = async_client
         elif AIClient is not None:
             self.client = AIClient(
                 default_model=self.model,
@@ -777,11 +779,12 @@ class GitRatchetOptimizer:
 
         # Real LLM task execution with token governance & circuit breaker
         if self.config.use_real_llm and self.llm_adapter is not None:
-            llm_task = self.llm_adapter.create_eval_task(content)
+            llm_task = self.llm_adapter.create_async_eval_task(content)
             report = self.runner.run_sync(
                 dataset=target_dataset,
                 task=llm_task,
                 scorers=self.scorers,
+                max_concurrency=self.config.max_concurrency,
             )
             for item_res in report.item_results:
                 if item_res.error:

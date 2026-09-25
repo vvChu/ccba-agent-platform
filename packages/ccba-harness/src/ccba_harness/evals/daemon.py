@@ -219,6 +219,13 @@ class NightlyTunerDaemon:
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
         self.use_real_llm = use_real_llm
+        if concurrency == 5:
+            env_c = os.getenv("CCBA_TUNER_CONCURRENCY")
+            if env_c:
+                try:
+                    concurrency = int(env_c)
+                except ValueError:
+                    pass
         self.concurrency = concurrency
         self.token_budget = token_budget
         self.per_skill_mutation_budget = per_skill_mutation_budget

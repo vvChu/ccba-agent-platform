@@ -2330,3 +2330,96 @@ async def test_llm_task_adapter_async_concurrency_batching():
     assert report.passed_items == 10
     assert max_observed_concurrency > 1
     assert max_observed_concurrency <= 4
+
+
+def test_git_ratchet_optimizer_evaluate_content_invokes_async_eval_task(tmp_path: Path):
+    """Verify GitRatchetOptimizer.evaluate_content delegates to create_async_eval_task for continuous batching."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text("---\nname: test-async-skill\n---\n# Content\n", encoding="utf-8")
+
+    mock_client = MagicMock()
+    mock_res = MagicMock()
+    mock_res.content = "Valid output text for test"
+    mock_res.usage = MagicMock(prompt_tokens=15, completion_tokens=25)
+
+    async def async_chat(*args: Any, **kwargs: Any) -> Any:
+        return mock_res
+
+    mock_client.chat_with_metadata = async_chat
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_concurrency=3,
+    )
+    dataset = [EvalItem(id=f"item-{i}", input_prompt=f"Prompt {i}") for i in range(4)]
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        async_client=mock_client,
+        dataset=dataset,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+    assert opt.llm_adapter is not None
+
+    with (
+        patch.object(
+            opt.llm_adapter, "create_async_eval_task", wraps=opt.llm_adapter.create_async_eval_task
+        ) as mock_create_async,
+        patch.object(
+            opt.llm_adapter, "create_eval_task", wraps=opt.llm_adapter.create_eval_task
+        ) as mock_create_sync,
+    ):
+        report = opt.evaluate_content("new prompt content", dataset=dataset)
+        assert mock_create_async.call_count == 1
+        assert mock_create_sync.call_count == 0
+        assert report.total_items == 4
+        assert opt.token_tracker.total_calls == 4
+
+
+@pytest.mark.asyncio
+async def test_llm_task_adapter_async_eval_task_circuit_breaker_open_fail_fast():
+    """Verify create_async_eval_task re-raises CircuitBreakerOpenError without wrapping."""
+    mock_async_client = MagicMock()
+
+    async def async_chat(*args: Any, **kwargs: Any) -> Any:
+        raise CircuitBreakerOpenError("Circuit is OPEN in async test")
+
+    mock_async_client.chat_with_metadata = async_chat
+
+    adapter = LLMTaskAdapter(model="test-model", async_client=mock_async_client)
+    async_task = adapter.create_async_eval_task("test prompt")
+    item = EvalItem(id="item-fail", input_prompt="Hello")
+
+    with pytest.raises(CircuitBreakerOpenError, match="Circuit is OPEN"):
+        await async_task(item)
+
+
+def test_git_ratchet_optimizer_evaluate_content_async_circuit_breaker_halt(tmp_path: Path):
+    """Verify GitRatchetOptimizer.evaluate_content halts immediately on CircuitBreakerOpenError in async mode."""
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text("---\nname: test-cb-skill\n---\n# Content\n", encoding="utf-8")
+
+    mock_client = MagicMock()
+
+    async def async_chat(*args: Any, **kwargs: Any) -> Any:
+        raise CircuitBreakerOpenError("Circuit is OPEN in async mode")
+
+    mock_client.chat_with_metadata = async_chat
+
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        use_real_llm=True,
+        max_concurrency=3,
+    )
+    dataset = [EvalItem(id=f"item-{i}", input_prompt=f"Prompt {i}") for i in range(3)]
+    opt = GitRatchetOptimizer(
+        config=cfg,
+        async_client=mock_client,
+        dataset=dataset,
+        dry_run_git=True,
+        project_root=tmp_path,
+    )
+
+    with pytest.raises(CircuitBreakerOpenError, match="Circuit is OPEN"):
+        opt.evaluate_content("candidate content", dataset=dataset)
