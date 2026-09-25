@@ -14,6 +14,8 @@ def test_trigger_download_discovers_attachments(tmp_path: Path):
     mock_cdp = MagicMock()
 
     def mock_eval(js: str):
+        if "has_docx" in js and "has_pdf" in js:
+            return {"has_docx": True, "has_pdf": True}
         if "hasAttachExt" in js or "attachLinks" in js:
             return [
                 {

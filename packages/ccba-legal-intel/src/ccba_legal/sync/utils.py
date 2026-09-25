@@ -47,18 +47,9 @@ def ensure_chrome_debug_port() -> bool:
     if is_port_open(9222):
         return True
 
-    chrome_paths = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
-    ]
+    from ccba_legal.session import get_browser_executable_path
 
-    chrome_path = None
-    for path in chrome_paths:
-        if os.path.exists(path):
-            chrome_path = path
-            break
-
+    chrome_path = get_browser_executable_path()
     if not chrome_path:
         return False
 
