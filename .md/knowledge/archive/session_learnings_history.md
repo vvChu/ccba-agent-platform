@@ -484,6 +484,30 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
   - **Vấn đề:** Khi repository có kích hoạt ruleset / branch protection policy trên nhánh `main` (yêu cầu approval review hoặc chặn direct merge), lệnh `gh pr merge --squash --delete-branch` thất bại với thông báo `base branch policy prohibits the merge`.
   - **Giải pháp:** Trong quy trình release tự động của maintainer (`/ccba-release-feature`), sau khi 100% checks của CI đã xanh và Copilot review đã được đối soát sạch sẽ qua `audit_pr_comments.py`, bổ sung cờ `--admin` (`gh pr merge <num> --squash --delete-branch --admin`) để hợp nhất an toàn.
 
+---
 
+## 21. Archived Historical Invariants (Di dời từ Active Working Memory theo Đề xuất Học tập v2)
 
+Các quy tắc kiến trúc và vận hành dưới đây đã ổn định trong nền tảng và được di dời từ bộ nhớ làm việc `session_learnings.md` sang lưu trữ lịch sử theo Đề xuất Học tập v2:
 
+- **RULE-1.4 [bullet 2 — Spoke Workflow Migration & Phantom Directory Prevention]:**
+  - Spoke Synchronizer (`coordinator.py`): Đổi tên workflows cũ thành `.md.bak` (`DEPRECATED_MIGRATED_TO_SKILL`), xóa thư mục cũ theo aliases. (Chi tiết đối chiếu: Mục 11.4 và Mục 13.2).
+- **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối]:**
+  - Tách hạ tầng xác thực thành `drive_client.py`, tránh inverted coupling giữa Pull và Push.
+- **RULE-2.2 [Spoke CI Gates Verification Pipeline]:**
+  - 5 Cổng Zero-Tolerance: `lint_visual_parity`, `validate_legal_spoke`, `test_converter_regression`, `verify_all_docs_against_pdf`, `verify_cross_links`. (Chi tiết đối chiếu: Mục 4).
+- **RULE-2.6 [YouTube Ingestion & Livestream Garbage Guard]:**
+  - Lọc bỏ `live_chat`, ngắt sớm nếu `is_live: True`. Chặn HTML rác trước Map-Reduce.
+- **RULE-2.7 [Dry-Run Complete Isolation]:**
+  - `--dry-run` BẮT BUỘC cô lập 100%: CẤM ghi báo cáo, CẤM alert Telegram, CẤM xóa stale briefs, CẤM copy tệp về repo gốc. (Chi tiết đối chiếu: Mục 19.3).
+- **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]:**
+  - Tiêu chí hoàn thành có nhánh kiểm chứng từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Khai báo cờ DRY tại `MODES.md`. (Chi tiết đối chiếu: Mục 17.2).
+- **RULE-4.7 [Spoke CLI Signature & Verbatim Verification Parity]:**
+  - `sync_spoke.py`: cần `--apply` để ghi; `adopt_spoke.py`: dùng `--spoke` (cấm `--apply`, `--spoke-path`); CLI hợp nhất: dùng positional `[spoke_path]` (cấm `--spoke`).
+  - `validate_docs.py`: chỉ nhận 1 thư mục. CẤM dùng `...` trong `--target` kiểm định (gây `Artifact not found`). (Chi tiết đối chiếu: Mục 13.1).
+- **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]:**
+  - Profile `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` BẮT BUỘC qua Browser Target WebSocket (`/json/version`). Selectors kế thừa `TVPLSelectors`. (Chi tiết đối chiếu: Mục 2 và Mục 39).
+- **RULE-5.2 [Windows Path Quotes & Hook Protection]:**
+  - Khi IDE bọc ngoặc kép `"C:\..."` vào `hooks.json`, vô hiệu bằng `{}` và khóa `IsReadOnly = $true`. Timeout $\ge 60\text{s}$ cho tests scan metadata Windows. (Chi tiết đối chiếu: Mục 11.2).
+- **RULE-5.3 [Query Sanitization & Turnstile Bypass]:**
+  - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`. (Chi tiết đối chiếu: Mục 39).

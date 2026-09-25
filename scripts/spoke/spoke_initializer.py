@@ -390,8 +390,10 @@ Cấu trúc tri thức trung tâm và danh mục tài liệu của dự án {sel
 
         return True
 
-    def install_security_guardrails(self, dry_run: bool = False, init_git: bool = False) -> bool:
-        """Install Maskara pre-commit security hook if git repo exists, skipping safely if absent."""
+    def install_security_guardrails(
+        self, dry_run: bool = False, init_git: bool = False, code_owner: str | None = None
+    ) -> bool:
+        """Install version-controlled .githooks and repository guardrails."""
         if init_git and not (self.spoke_root / ".git").exists():
             if not dry_run:
                 try:
@@ -411,15 +413,13 @@ Cấu trúc tri thức trung tâm và danh mục tài liệu của dự án {sel
         has_git = (self.spoke_root / ".git").exists() or (dry_run and init_git)
         if not has_git:
             print(
-                "ℹ️  [INFO] Không phát hiện Git repository. Bỏ qua cấu hình pre-commit hook (OneDrive/SharePoint mode)."
+                "ℹ️  [INFO] Không phát hiện Git repository. Bỏ qua cấu hình bảo vệ Git (OneDrive/SharePoint mode)."
             )
             return False
 
-        if dry_run:
-            print("[Init] [DRY-RUN] Would configure Maskara pre-commit security hook")
-            return True
-
-        return install_security_guardrails(self.spoke_root, self.hub_root)
+        return install_security_guardrails(
+            self.spoke_root, self.hub_root, dry_run=dry_run, code_owner=code_owner
+        )
 
     def init(
         self,

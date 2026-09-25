@@ -208,12 +208,12 @@ def test_maskara_hook_posix_path_and_executable_mode(temp_spoke: Path, temp_hub:
     installed = init.install_security_guardrails(dry_run=False)
     assert installed is True
 
-    hook_file = temp_spoke / ".git" / "hooks" / "pre-commit"
+    hook_file = temp_spoke / ".githooks" / "pre-commit"
     assert hook_file.exists()
     hook_content = hook_file.read_text(encoding="utf-8")
     assert "Maskara" in hook_content
-    # POSIX hub path
-    assert temp_hub.as_posix() in hook_content
+    assert (temp_spoke / ".githooks" / "pre-push").exists()
+    assert (temp_spoke / ".github" / "CODEOWNERS").exists()
 
     # Executable permissions (Linux/POSIX)
     if os.name == "posix":

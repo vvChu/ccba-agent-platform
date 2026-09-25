@@ -19,14 +19,11 @@
   - Zero-Exemption: Gỡ bỏ bypass hardcoded trong `check_dependency_contracts.py`. Tệp thử nghiệm chuyển vào `archive/`.
 - **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]**:
   - Cấu trúc `.\.md\`: Gốc chứa `workspace_context.yaml`; dữ liệu vào `extracted_docs/`; tri thức vào `knowledge/`; thử nghiệm vào `archive/`.
-  - Spoke Synchronizer (`coordinator.py`): Đổi tên workflows cũ thành `.md.bak` (DEPRECATED_MIGRATED_TO_SKILL), xóa thư mục cũ theo aliases.
 - **RULE-1.5 [ADR 0037 & ADR 0051 — Two-Tier Traceability Matrix & Status Regex]**:
   - Tier 1: Hub (53 ADRs). Tier 2: Spoke (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua markers `CUSTOM_SECTIONS`.
   - Regex bắt trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton module; Cache Embedding `.npy` kiểm tra SHA-256 sidecar.
-- **RULE-1.7 [Clean Architecture — Phân Tách Hạ Tầng Kết Nối]**:
-  - Tách hạ tầng xác thực thành `drive_client.py`, tránh inverted coupling giữa Pull và Push.
 - **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Universal Invariant Merge]**:
   - *Universal Invariant Regex*: Regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
   - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa.
@@ -39,22 +36,16 @@
 
 - **RULE-2.1 [Strict Mypy Type-Safety — Chống Anti-Pattern AP9.1]**:
   - CẤM `[[tool.mypy.overrides]] ignore_errors = true`. Ép kiểu tường minh cho binary I/O, fonts, dicts. Chỉ dùng `ignore_missing_imports = true` cho third-party thiếu stubs.
-- **RULE-2.2 [Spoke CI Gates Verification Pipeline]**:
-  - 5 Cổng Zero-Tolerance: lint_visual_parity, validate_legal_spoke, test_converter_regression, verify_all_docs_against_pdf, verify_cross_links.
 - **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
   - Unit tests nòng cốt đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`.
 - **RULE-2.4 [Relative Link Resolution Depth]**:
   - Tệp `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng `../../../packages/<pkg>`. CẤM commit URI `file:///` hoặc `conversation://`.
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing & Disjoint Subdomains]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT. Từ khóa chuyên biệt (`grill`, `adr`, `risk`) tách thành subdomain độc lập chống va chạm regex.
-- **RULE-2.6 [YouTube Ingestion & Livestream Garbage Guard]**:
-  - Lọc bỏ `live_chat`, ngắt sớm nếu `is_live: True`. Chặn HTML rác trước Map-Reduce.
-- **RULE-2.7 [Dry-Run Complete Isolation]**:
-  - `--dry-run` BẮT BUỘC cô lập 100%: CẤM ghi báo cáo, CẤM alert Telegram, CẤM xóa stale briefs, CẤM copy tệp về repo gốc.
 - **RULE-2.8 [Cross-Platform Sandbox Root Traversal Invariant]**:
   - CẤM độ sâu cố định `parents[N]` (tránh `PermissionError` trên Linux `/tmp`). BẮT BUỘC duyệt ngược tìm `(p / ".md").is_dir()`, fallback local `.cache/`, bọc `try...except (PermissionError, OSError)`.
-- **RULE-2.9 [Test Fixture Isolation & Hub Discovery Decoupling]**:
-  - Test fixtures và runners (`run_isolated_tests.py`, root `conftest.py`) BẮT BUỘC cô lập môi trường: xóa `CCBA_HUB_PATH` và `HUB_PATH`. CẤM rò rỉ biến môi trường máy trạm vào test subprocess.
+- **RULE-2.9 [Test Fixture Isolation, Live Lock & Hub Decoupling]**:
+  - *Env & Live Lock Isolation*: Test fixtures/runners (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý hệ điều hành (`is_kernel_runner_locked`, `check_daemon_lock`, `/tmp/*.lock` $\rightarrow$ `False`). CẤM rò rỉ biến môi trường hoặc đọc lock thật, bảo đảm test 100% Green khi máy chủ chạy daemon nền.
 - **RULE-2.10 [Temporal Invariance & Collinear Multi-Key Sort Guard]**:
   - *Temporal Invariance*: Test TTL/window CẤM ngày tĩnh; BẮT BUỘC ngày tương đối (`today - timedelta(...)`).
   - *Collinear Sort*: Test sắp xếp đa khóa BẮT BUỘC fixture nghịch chiều (`os.utime`), chống bẫy pass do cùng chiều.
@@ -83,25 +74,22 @@
   - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model). Cấm nhảy thẳng vào `/ccba-implement`, `/ccba-to-spec`, `/ccba-to-tickets`.
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
   - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` (Tier 2A) cấm tiền tố `/`.
-- **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
-  - Tiêu chí hoàn thành có nhánh kiểm chứng từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Khai báo cờ DRY tại `MODES.md`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
   - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa sửa/giải trình.
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
   - Hub cấm push `main` qua hook `pre-push`; qua PR. Sửa/thêm file (kể cả tệp untracked `??` ngoài `tests/`) trong `packages/`, `scripts/`, `.agents/skills/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; dùng `gh pr checks --watch`, chờ Copilot review, 100% Green trước khi merge.
-- **RULE-4.7 [Spoke CLI Signature & Verbatim Verification Parity]**:
-  - `sync_spoke.py`: cần `--apply` để ghi; `adopt_spoke.py`: dùng `--spoke` (cấm `--apply`, `--spoke-path`); CLI hợp nhất: dùng positional `[spoke_path]` (cấm `--spoke`).
-  - `validate_docs.py`: chỉ nhận 1 thư mục. CẤM dùng `...` trong `--target` kiểm định (gây `Artifact not found`).
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
+*(RULE-5.1 đến 5.3 về Chrome CDP & Windows Hooks đã di dời vào archive/session_learnings_history.md)*
 
-- **RULE-5.1 [Chromium VIP Session Engine & CDP Browser Target]**:
-  - Profile `~/.gemini/antigravity/chrome_vip` cổng `9222`. `Browser.setDownloadBehavior` BẮT BUỘC qua Browser Target WebSocket (`/json/version`). Selectors kế thừa `TVPLSelectors`.
-- **RULE-5.2 [Windows Path Quotes & Hook Protection]**:
-  - Khi IDE bọc ngoặc kép `"C:\..."` vào `hooks.json`, vô hiệu bằng `{}` và khóa `IsReadOnly = $true`. Timeout $\ge 60\text{s}$ cho tests scan metadata Windows.
-- **RULE-5.3 [Query Sanitization & Turnstile Bypass]**:
-  - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`.
+- **RULE-5.4 [Telegram ChatOps: Markdown v1, Subprocess Reaping & Cross-Repo Path]**:
+  - *Markdown v1 Escaping*: Trong Telegram Markdown v1, dấu `_` là cú pháp italic. MỌI biến chuỗi động chứa `_` (file, branch, model, skill) BẮT BUỘC bọc trong inline code backtick (`` `...` ``) kèm `_clean_md` thay ` ` ` thành `'`, chống lỗi `can't parse entities` gây rớt fallback plain text.
+  - *Subprocess Reaping*: Khi dùng `asyncio.wait_for(proc.communicate(), timeout=...)`, trong `TimeoutError` và `CancelledError` BẮT BUỘC: tiến trình đơn gọi `proc.kill()` + `await proc.wait()`; shell runner có trap cleanup worktree BẮT BUỘC dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ chờ 5s $\rightarrow$ `SIGKILL` triệt tiêu zombie và dọn dẹp worktree.
+  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng tham số `cwd=` tường minh trỏ về gốc repo đích (phân giải qua `CCBA_HUB_PATH`), cấm gắn cứng đường dẫn máy trạm `/home/vvc/...` (vi phạm Machine-State Decoupling) hoặc dùng đường dẫn tương đối.
+- **RULE-5.5 [Timezone-Normalized Observability cho Database Gateway UTC]**:
+  - Khi truy vấn sản lượng token/spend trong ngày từ gateway lưu UTC (LiteLLM `LiteLLM_SpendLogs`), CẤM dùng `CURRENT_DATE` trong `WHERE` (mất trắng 00:00-07:00 ICT). BẮT BUỘC lọc theo mốc 00:00:00 ICT chuẩn hóa sang UTC bảo đảm Index Scan:
+    `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
