@@ -35,6 +35,7 @@ class DaemonStatus(NamedTuple):
     total_skills_count: int
     recent_commits: list[str]
     matrix_warning: bool
+    commits_count: int = 0
 
 
 class PostRunSummary(NamedTuple):
@@ -152,6 +153,123 @@ def get_process_uptime(pid: int) -> str:
         return "N/A"
 
 
+def get_worktree_commit_stats(worktree_dir: Path) -> tuple[int, list[str]]:
+    """Đếm chính xác tổng số commits đã tạo trên worktree và trích xuất commits gần nhất.
+
+    Cơ chế đếm tuân thủ ADR-0023, ADR-0058:
+    1. Xác định base_ref khả dụng (origin/main -> main -> master).
+    2. So sánh phạm vi {base_ref}..HEAD để không bị chặn trên bởi giới hạn git log -n.
+    3. Ưu tiên lọc đếm các commits mang nhãn ratchet(opt): của Auto-Tuner.
+    4. Fallback an toàn nếu không xác định được base_ref.
+
+    Args:
+        worktree_dir: Đường dẫn tới thư mục git worktree.
+
+    Returns:
+        tuple[int, list[str]]: (commits_count, recent_commits tối đa 8 mục).
+    """
+    if not worktree_dir.exists():
+        return 0, []
+
+    current_branch = ""
+    try:
+        branch_res = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree_dir),
+                "--no-optional-locks",
+                "rev-parse",
+                "--abbrev-ref",
+                "HEAD",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if branch_res.returncode == 0:
+            current_branch = branch_res.stdout.strip()
+    except OSError:
+        pass
+
+    # 1. Tìm base_ref khả dụng (origin/main -> main -> master)
+    for candidate in ("origin/main", "main", "master"):
+        if candidate == current_branch:
+            continue
+        try:
+            check = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(worktree_dir),
+                    "--no-optional-locks",
+                    "rev-parse",
+                    "--verify",
+                    candidate,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if check.returncode != 0:
+                continue
+
+            # Truy vấn danh sách commits trong phạm vi {candidate}..HEAD
+            log_res = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(worktree_dir),
+                    "--no-optional-locks",
+                    "log",
+                    "--oneline",
+                    f"{candidate}..HEAD",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if log_res.returncode == 0:
+                all_lines = [line.strip() for line in log_res.stdout.splitlines() if line.strip()]
+                ratchet_lines = [line for line in all_lines if "ratchet(opt):" in line]
+
+                if ratchet_lines:
+                    return len(ratchet_lines), ratchet_lines[:8]
+                if all_lines:
+                    return len(all_lines), all_lines[:8]
+                return 0, []
+        except OSError:
+            pass
+
+    # 2. Fallback: Nếu không xác định được base_ref hoặc range lỗi, lọc trực tiếp theo grep ratchet(opt):
+    try:
+        fallback_res = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree_dir),
+                "--no-optional-locks",
+                "log",
+                "-n",
+                "500",
+                "--oneline",
+                "--grep=ratchet(opt):",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if fallback_res.returncode == 0:
+            ratchet_lines = [
+                line.strip() for line in fallback_res.stdout.splitlines() if "ratchet(opt):" in line
+            ]
+            return len(ratchet_lines), ratchet_lines[:8]
+    except OSError:
+        pass
+
+    return 0, []
+
+
 def inspect_live_daemon(root: Path, pid: int | None) -> DaemonStatus:
     """Quét và phân tích trạng thái của Daemon đang chạy trực tiếp.
 
@@ -191,30 +309,11 @@ def inspect_live_daemon(root: Path, pid: int | None) -> DaemonStatus:
 
     # Quét git worktree
     worktree_dir = root / ".worktrees" / "nightly-runner"
-    recent_commits: list[str] = []
+    commits_count, recent_commits = get_worktree_commit_stats(worktree_dir)
     matrix_warning = False
 
     if worktree_dir.exists():
         try:
-            log_res = subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(worktree_dir),
-                    "--no-optional-locks",
-                    "log",
-                    "-n",
-                    "8",
-                    "--oneline",
-                ],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            for line in log_res.stdout.splitlines():
-                if "ratchet(opt):" in line:
-                    recent_commits.append(line.strip())
-
             # Kiểm tra nhanh tính toàn vẹn của TRACEABILITY_MATRIX.md
             check_matrix = subprocess.run(
                 [
@@ -241,6 +340,7 @@ def inspect_live_daemon(root: Path, pid: int | None) -> DaemonStatus:
         total_skills_count=total_skills_count,
         recent_commits=recent_commits,
         matrix_warning=matrix_warning,
+        commits_count=commits_count,
     )
 
 
@@ -323,7 +423,8 @@ def render_live_status(status: DaemonStatus) -> None:
         f"🎯 Kỹ Năng Đang Xử Lý: {status.current_skill} "
         f"({status.completed_skills_count}/{status.total_skills_count} ~ {pct:.1f}%)"
     )
-    print(f"🔨 Số Commits Đã Tạo Đêm Nay: {len(status.recent_commits)} commits")
+    commits_num = status.commits_count if status.commits_count > 0 else len(status.recent_commits)
+    print(f"🔨 Số Commits Đã Tạo Đêm Nay: {commits_num} commits")
     print("-" * 70)
 
     if status.recent_commits:
@@ -396,7 +497,9 @@ def main() -> int:
                 "current_skill": status.current_skill,
                 "completed": status.completed_skills_count,
                 "total": status.total_skills_count,
-                "commits_count": len(status.recent_commits),
+                "commits_count": (
+                    status.commits_count if status.commits_count > 0 else len(status.recent_commits)
+                ),
                 "matrix_warning": status.matrix_warning,
             }
             print(json.dumps(data, indent=2, ensure_ascii=False))
