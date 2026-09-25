@@ -109,7 +109,12 @@ def _wait_for_download(
             return False
 
     while time.time() - start_time < timeout:
-        current_downloads = [f for d in valid_watch_dirs for f in d.glob("*")]
+        current_downloads = []
+        for d in valid_watch_dirs:
+            try:
+                current_downloads.extend(d.glob("*"))
+            except OSError:
+                continue
         new_downloads = [f for f in current_downloads if _is_new_or_updated(f)]
 
         is_downloading = False
@@ -133,6 +138,58 @@ def _wait_for_download(
                     pass
         time.sleep(0.5)
     return None
+
+
+PDF_FINDER_JS = """
+(() => {
+    let all_links = Array.from(document.querySelectorAll('a'));
+    // Pass 1: Tier 1 - VIP Born-Digital Vector Searchable PDF (part=-100 or #filePDFHyperLink)
+    let a_tier1 = all_links.find(lnk => {
+        let id = (lnk.id || '').toLowerCase();
+        let cls = (lnk.className || '').toLowerCase();
+        let h = (lnk.href || '').toLowerCase();
+        return id.includes('filepdfhyperlink') || cls.includes('filepdfhyperlink') || h.includes('part=-100') || h.includes('part%3d-100');
+    });
+    if (a_tier1) {
+        let href_val = (a_tier1.getAttribute('href') || a_tier1.href || '').trim();
+        if (href_val.toLowerCase().startsWith('javascript:')) {
+            try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
+            catch(e) { a_tier1.click(); }
+        } else {
+            a_tier1.click();
+        }
+        return { clicked: true, tier: 1, href: a_tier1.href || a_tier1.innerText };
+    }
+    // Pass 2: Tier 3 - Gazette Scan / Photocopy PDF Fallback (part=0 or #vietnameseHyperLink_Pdf)
+    let a_tier3 = all_links.find(lnk => {
+        let t = (lnk.innerText || '').toLowerCase();
+        let h = (lnk.href || '').toLowerCase();
+        let id = (lnk.id || '').toLowerCase();
+        return id.includes('vietnamesehyperlink_pdf') ||
+               (t.includes('tải') && t.includes('bản pdf')) ||
+               (t.includes('tải') && t.includes('văn bản gốc')) ||
+               h.includes('part=0') ||
+               h.includes('part%3d0');
+    });
+    if (!a_tier3) {
+        a_tier3 = all_links.find(lnk => {
+            let h = (lnk.href || '').toLowerCase();
+            return h.endsWith('.pdf') || h.includes('.pdf?');
+        });
+    }
+    if (a_tier3) {
+        let href_val = (a_tier3.getAttribute('href') || a_tier3.href || '').trim();
+        if (href_val.toLowerCase().startsWith('javascript:')) {
+            try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
+            catch(e) { a_tier3.click(); }
+        } else {
+            a_tier3.click();
+        }
+        return { clicked: true, tier: 3, href: a_tier3.href || a_tier3.innerText };
+    }
+    return { clicked: false, tier: null, href: null };
+})()
+"""
 
 
 def trigger_download(
@@ -242,55 +299,7 @@ def trigger_download(
         return cdp.evaluate_js(js)
 
     def _do_click_pdf() -> dict[str, Any]:
-        js = """
-        (() => {
-            let all_links = Array.from(document.querySelectorAll('a'));
-            // Pass 1: Tier 1 - VIP Born-Digital Vector Searchable PDF (part=-100 or #filePDFHyperLink)
-            let a_tier1 = all_links.find(lnk => {
-                let id = (lnk.id || '').toLowerCase();
-                let h = (lnk.href || '').toLowerCase();
-                return id.includes('filepdfhyperlink') || h.includes('part=-100');
-            });
-            if (a_tier1) {
-                let href_val = (a_tier1.getAttribute('href') || a_tier1.href || '').trim();
-                if (href_val.toLowerCase().startsWith('javascript:')) {
-                    try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
-                    catch(e) { a_tier1.click(); }
-                } else {
-                    a_tier1.click();
-                }
-                return { clicked: true, tier: 1, href: a_tier1.href || a_tier1.innerText };
-            }
-            // Pass 2: Tier 3 - Gazette Scan / Photocopy PDF Fallback (part=0 or #vietnameseHyperLink_Pdf)
-            let a_tier3 = all_links.find(lnk => {
-                let t = (lnk.innerText || '').toLowerCase();
-                let h = (lnk.href || '').toLowerCase();
-                let id = (lnk.id || '').toLowerCase();
-                return id.includes('vietnamesehyperlink_pdf') ||
-                       (t.includes('tải') && t.includes('bản pdf')) ||
-                       (t.includes('tải') && t.includes('văn bản gốc')) ||
-                       h.includes('part=0');
-            });
-            if (!a_tier3) {
-                a_tier3 = all_links.find(lnk => {
-                    let h = (lnk.href || '').toLowerCase();
-                    return h.endsWith('.pdf') || h.includes('.pdf?');
-                });
-            }
-            if (a_tier3) {
-                let href_val = (a_tier3.getAttribute('href') || a_tier3.href || '').trim();
-                if (href_val.toLowerCase().startsWith('javascript:')) {
-                    try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
-                    catch(e) { a_tier3.click(); }
-                } else {
-                    a_tier3.click();
-                }
-                return { clicked: true, tier: 3, href: a_tier3.href || a_tier3.innerText };
-            }
-            return { clicked: false, tier: null, href: null };
-        })()
-        """
-        res = cdp.evaluate_js(js)
+        res = cdp.evaluate_js(PDF_FINDER_JS)
         if isinstance(res, dict):
             return res
         if isinstance(res, str) and res and not res.startswith("No "):
@@ -388,8 +397,9 @@ def trigger_download(
         // Pass 1: Tier 1 - Born-Digital Vector Searchable PDF
         let a_pdf_tier1 = all_links.find(lnk => {
             let id = (lnk.id || '').toLowerCase();
+            let cls = (lnk.className || '').toLowerCase();
             let h = (lnk.href || '').toLowerCase();
-            return id.includes('filepdfhyperlink') || h.includes('part' + '=-100');
+            return id.includes('filepdfhyperlink') || cls.includes('filepdfhyperlink') || h.includes('part=-100') || h.includes('part%3d-100');
         });
         // Pass 2: Tier 3 - Gazette Scan Fallback
         let a_pdf_tier3 = null;
@@ -401,7 +411,8 @@ def trigger_download(
                 return id.includes('vietnamesehyperlink_pdf') ||
                        (t.includes('tải') && t.includes('bản pdf')) ||
                        (t.includes('tải') && t.includes('văn bản gốc')) ||
-                       h.includes('part=0');
+                       h.includes('part=0') ||
+                       h.includes('part%3d0');
             });
             if (!a_pdf_tier3) {
                 a_pdf_tier3 = all_links.find(lnk => {
@@ -480,9 +491,17 @@ def trigger_download(
 
     # Phase 1: Trigger DOCX PostBack & Wait for completion
     if need_docx:
-        existing_before_docx = {
-            str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
-        }
+        existing_before_docx = set()
+        for d in watch_dirs:
+            try:
+                if d.exists():
+                    for f in d.glob("*"):
+                        try:
+                            existing_before_docx.add(str(f.resolve()))
+                        except OSError:
+                            pass
+            except OSError:
+                pass
         docx_start_time = time.time()
         res_docx = _do_click_docx()
         print(f"[LegalIntel] [Phase 1] Trigger DOCX postback: {res_docx}")
@@ -519,9 +538,17 @@ def trigger_download(
     # Phase 3: Trigger PDF PostBack & Wait for completion
     pdf_tier: int | None = preflight_pdf_tier
     if need_pdf:
-        existing_before_pdf = {
-            str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
-        }
+        existing_before_pdf = set()
+        for d in watch_dirs:
+            try:
+                if d.exists():
+                    for f in d.glob("*"):
+                        try:
+                            existing_before_pdf.add(str(f.resolve()))
+                        except OSError:
+                            pass
+            except OSError:
+                pass
         pdf_start_time = time.time()
         res_pdf = _do_click_pdf()
         print(f"[LegalIntel] [Phase 3] Trigger PDF postback: {res_pdf}")
@@ -574,6 +601,9 @@ def trigger_download(
             if f.stat().st_size > 0:
                 pdf_path = str(f.resolve())
                 break
+
+    if not pdf_path:
+        pdf_tier = None
 
     if docx_path or pdf_path:
         return {

@@ -825,14 +825,10 @@ def handle_ingest(args: argparse.Namespace) -> int:
 
     sources_dir = target_bundle / "sources"
     sources_dir.mkdir(parents=True, exist_ok=True)
-    target_docx = sources_dir / (f"{doc_slug}.docx" if args.slug else docx_path.name)
-    target_pdf = sources_dir / (
-        f"{doc_slug}.pdf"
-        if (args.slug and pdf_path)
-        else (pdf_path.name if pdf_path else "doc.pdf")
-    )
+    target_docx = sources_dir / f"{doc_slug}.docx"
+    target_pdf = sources_dir / f"{doc_slug}.pdf"
     raw_scan_target = sources_dir / f"{doc_slug}_raw_scan.pdf"
-    if docx_path.exists():
+    if docx_path.exists() and docx_path.resolve() != target_docx.resolve():
         shutil.copy2(docx_path, target_docx)
 
     pdf_tier = fetch_res.get("pdf_tier") if isinstance(fetch_res, dict) else None
@@ -841,7 +837,7 @@ def handle_ingest(args: argparse.Namespace) -> int:
     # Nếu là bản Scan Tier 3 và có file DOCX: Kích hoạt ADR 0043 Dual-PDF
     if pdf_tier == 3 and target_docx.exists():
         print(f"[LegalIntel] [ADR 0043 Dual-PDF] Detected Tier 3 Gazette Scan.")
-        if pdf_path and pdf_path.exists():
+        if pdf_path and pdf_path.exists() and pdf_path.resolve() != raw_scan_target.resolve():
             shutil.copy2(pdf_path, raw_scan_target)
             print(f"  📦 Preserved official Gazette Scan: {raw_scan_target.name}")
         try:
@@ -853,11 +849,16 @@ def handle_ingest(args: argparse.Namespace) -> int:
             is_vector_rendered = True
         except Exception as e:
             print(f"  ⚠️ Vector PDF conversion failed ({e}), falling back to scan.")
-            if pdf_path and pdf_path.exists():
+            if raw_scan_target.exists():
+                try:
+                    raw_scan_target.unlink()
+                except OSError:
+                    pass
+            if pdf_path and pdf_path.exists() and pdf_path.resolve() != target_pdf.resolve():
                 shutil.copy2(pdf_path, target_pdf)
             is_vector_rendered = False
     else:
-        if pdf_path and pdf_path.exists():
+        if pdf_path and pdf_path.exists() and pdf_path.resolve() != target_pdf.resolve():
             shutil.copy2(pdf_path, target_pdf)
         is_vector_rendered = False
 
@@ -899,17 +900,25 @@ def handle_ingest(args: argparse.Namespace) -> int:
             meta["pdf_origin"] = "docx_vector_rendered"
             if raw_scan_target.exists():
                 meta["raw_scan_pdf"] = f"sources/{raw_scan_target.name}"
-            if "source_assets" in meta and isinstance(meta["source_assets"], dict):
-                if "pdf" in meta["source_assets"] and isinstance(meta["source_assets"]["pdf"], dict):
-                    meta["source_assets"]["pdf"]["origin"] = "docx_vector_rendered"
-                if raw_scan_target.exists() and "raw_scan" not in meta["source_assets"]:
-                    raw_hash = hashlib.sha256(raw_scan_target.read_bytes()).hexdigest()
-                    meta["source_assets"]["raw_scan"] = {
-                        "sha256": raw_hash,
-                        "vault_path": f"CCBA_Legal_Vault/{args.category}/{doc_slug}/{raw_scan_target.name}",
-                        "status": "verified",
-                        "acquisition_method": "official_gazette_scan",
-                    }
+            if "source_assets" not in meta or not isinstance(meta["source_assets"], dict):
+                meta["source_assets"] = {}
+            if target_pdf.exists():
+                pdf_hash = hashlib.sha256(target_pdf.read_bytes()).hexdigest()
+                meta["pdf_sha256"] = pdf_hash
+                meta["source_assets"]["pdf"] = {
+                    "sha256": pdf_hash,
+                    "vault_path": f"CCBA_Legal_Vault/{args.category}/{doc_slug}/{target_pdf.name}",
+                    "status": "verified",
+                    "origin": "docx_vector_rendered",
+                }
+            if raw_scan_target.exists():
+                raw_hash = hashlib.sha256(raw_scan_target.read_bytes()).hexdigest()
+                meta["source_assets"]["raw_scan"] = {
+                    "sha256": raw_hash,
+                    "vault_path": f"CCBA_Legal_Vault/{args.category}/{doc_slug}/{raw_scan_target.name}",
+                    "status": "verified",
+                    "acquisition_method": "official_gazette_scan",
+                }
             with open(meta_path, "w", encoding="utf-8") as f:
                 yaml.dump(meta, f, allow_unicode=True, sort_keys=False)
     except Exception as ce:

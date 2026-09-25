@@ -19,6 +19,8 @@ from ccba_legal.session import get_browser_executable_path
 
 def _eval_js_with_links(links_json: str) -> dict:
     """Helper to evaluate the actual crawler PDF search JS logic in node."""
+    from ccba_legal.crawler.tier_downloader import PDF_FINDER_JS
+
     js_script = f"""
     const links = {links_json}.map(l => ({{
         ...l,
@@ -29,52 +31,7 @@ def _eval_js_with_links(links_json: str) -> dict:
         querySelectorAll: (sel) => sel === 'a' ? links : []
     }};
 
-    const result = (() => {{
-        let all_links = Array.from(document.querySelectorAll('a'));
-        // Pass 1: Tier 1 - VIP Born-Digital Vector Searchable PDF (part=-100 or #filePDFHyperLink)
-        let a_tier1 = all_links.find(lnk => {{
-            let id = (lnk.id || '').toLowerCase();
-            let h = (lnk.href || '').toLowerCase();
-            return id.includes('filepdfhyperlink') || h.includes('part=-100');
-        }});
-        if (a_tier1) {{
-            let href_val = (a_tier1.getAttribute('href') || a_tier1.href || '').trim();
-            if (href_val.toLowerCase().startsWith('javascript:')) {{
-                try {{ eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }}
-                catch(e) {{ a_tier1.click(); }}
-            }} else {{
-                a_tier1.click();
-            }}
-            return {{ clicked: true, tier: 1, href: a_tier1.href || a_tier1.innerText }};
-        }}
-        // Pass 2: Tier 3 - Gazette Scan / Photocopy PDF Fallback (part=0 or #vietnameseHyperLink_Pdf)
-        let a_tier3 = all_links.find(lnk => {{
-            let t = (lnk.innerText || '').toLowerCase();
-            let h = (lnk.href || '').toLowerCase();
-            let id = (lnk.id || '').toLowerCase();
-            return id.includes('vietnamesehyperlink_pdf') ||
-                   (t.includes('tải') && t.includes('bản pdf')) ||
-                   (t.includes('tải') && t.includes('văn bản gốc')) ||
-                   h.includes('part=0');
-        }});
-        if (!a_tier3) {{
-            a_tier3 = all_links.find(lnk => {{
-                let h = (lnk.href || '').toLowerCase();
-                return h.endsWith('.pdf') || h.includes('.pdf?');
-            }});
-        }}
-        if (a_tier3) {{
-            let href_val = (a_tier3.getAttribute('href') || a_tier3.href || '').trim();
-            if (href_val.toLowerCase().startsWith('javascript:')) {{
-                try {{ eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }}
-                catch(e) {{ a_tier3.click(); }}
-            }} else {{
-                a_tier3.click();
-            }}
-            return {{ clicked: true, tier: 3, href: a_tier3.href || a_tier3.innerText }};
-        }}
-        return {{ clicked: false, tier: null, href: null }};
-    }})();
+    const result = {PDF_FINDER_JS.strip()};
 
     console.log(JSON.stringify(result));
     """
@@ -261,8 +218,163 @@ def test_login_finds_cross_platform_browser():
         assert cmd[0] == detected
         assert "--remote-debugging-port=9222" in cmd[1]
 
+    # Test headless warning when DISPLAY is absent on Linux
+    with patch("subprocess.Popen"):
+        with patch.dict(os.environ, {"DISPLAY": "", "WAYLAND_DISPLAY": ""}):
+            with patch("ccba_legal.session.get_browser_executable_path", return_value="/usr/bin/google-chrome"):
+                args = argparse.Namespace(port=9222, url="https://thuvienphapluat.vn")
+                with patch("builtins.print") as mock_print:
+                    rc = handle_login(args)
+                    assert rc == 0
+                    printed_text = " ".join(str(call.args[0]) for call in mock_print.call_args_list if call.args)
+                    assert "headless" in printed_text.lower() or "display" in printed_text.lower()
+
     # Test failure when no browser is found
     with patch("ccba_legal.session.get_browser_executable_path", return_value=None):
         args = argparse.Namespace(port=9222, url="https://thuvienphapluat.vn")
         rc_fail = handle_login(args)
         assert rc_fail == 1
+
+
+def test_handle_ingest_tier3_dual_pdf_workflow(tmp_path: Path):
+    """Test 6: Verify handle_ingest ADR 0043 Dual-PDF workflow on Tier 3 Gazette Scan."""
+    import hashlib
+    import yaml
+    from ccba_legal.cli import handle_ingest
+
+    doc_dir = tmp_path / "downloads"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    mock_docx = doc_dir / "test_doc.docx"
+    mock_docx.write_bytes(b"PK\x03\x04mock docx binary content")
+    mock_scan_pdf = doc_dir / "test_doc_scan.pdf"
+    mock_scan_pdf.write_bytes(b"%PDF-1.4 mock scan pdf content")
+
+    out_bundle_dir = tmp_path / "legal_docs"
+
+    mock_crawler = MagicMock()
+    mock_crawler.fetch_document.return_value = {
+        "docx_path": str(mock_docx),
+        "pdf_path": str(mock_scan_pdf),
+        "pdf_tier": 3,
+        "title": "Nghị định Test",
+        "document_number": "999/2026/NĐ-CP",
+    }
+
+    def fake_convert_docx(docx_path, target_bundle_dir, doc_type=None):
+        target_bundle_dir.mkdir(parents=True, exist_ok=True)
+        meta_content = {
+            "id": target_bundle_dir.name,
+            "document_number": "999/2026/NĐ-CP",
+            "type": "Nghị định",
+            "okf_spec": "v2.4 Universal",
+        }
+        with open(target_bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
+            yaml.dump(meta_content, f)
+        return {"status": "success"}
+
+    def fake_convert_to_pdf(docx_path, pdf_path):
+        Path(pdf_path).write_bytes(b"%PDF-1.4 born-digital vector rendered pdf")
+
+    with patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler), \
+         patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx), \
+         patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_to_pdf), \
+         patch("ccba_legal.cli.GoldStandardProcessor"), \
+         patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}):
+
+        args = argparse.Namespace(
+            target="https://thuvienphapluat.vn/van-ban/test-doc",
+            category="01_vbpl",
+            slug="test_dual_pdf_slug",
+            output_dir=out_bundle_dir,
+            upload_drive=False,
+        )
+        rc = handle_ingest(args)
+        assert rc == 0
+
+    target_bundle = out_bundle_dir / "01_vbpl" / "test_dual_pdf_slug"
+    sources_dir = target_bundle / "sources"
+    raw_scan = sources_dir / "test_dual_pdf_slug_raw_scan.pdf"
+    vector_pdf = sources_dir / "test_dual_pdf_slug.pdf"
+
+    assert raw_scan.exists()
+    assert raw_scan.read_bytes() == b"%PDF-1.4 mock scan pdf content"
+    assert vector_pdf.exists()
+    assert vector_pdf.read_bytes() == b"%PDF-1.4 born-digital vector rendered pdf"
+
+    with open(target_bundle / "metadata.yaml", encoding="utf-8") as f:
+        meta = yaml.safe_load(f)
+
+    assert meta["pdf_origin"] == "docx_vector_rendered"
+    assert meta["raw_scan_pdf"] == "sources/test_dual_pdf_slug_raw_scan.pdf"
+    assert meta["pdf_sha256"] == hashlib.sha256(b"%PDF-1.4 born-digital vector rendered pdf").hexdigest()
+    assert "source_assets" in meta
+    assert meta["source_assets"]["pdf"]["origin"] == "docx_vector_rendered"
+    assert meta["source_assets"]["raw_scan"]["sha256"] == hashlib.sha256(b"%PDF-1.4 mock scan pdf content").hexdigest()
+
+
+def test_handle_ingest_tier3_conversion_failure_fallback(tmp_path: Path):
+    """Test 7: Verify handle_ingest safely falls back to scan PDF when convert_to_pdf fails."""
+    import yaml
+    from ccba_legal.cli import handle_ingest
+
+    doc_dir = tmp_path / "downloads"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    mock_docx = doc_dir / "test_fail.docx"
+    mock_docx.write_bytes(b"PK\x03\x04mock docx")
+    mock_scan_pdf = doc_dir / "test_fail_scan.pdf"
+    mock_scan_pdf.write_bytes(b"%PDF-1.4 scan fallback pdf")
+
+    out_bundle_dir = tmp_path / "legal_docs"
+
+    mock_crawler = MagicMock()
+    mock_crawler.fetch_document.return_value = {
+        "docx_path": str(mock_docx),
+        "pdf_path": str(mock_scan_pdf),
+        "pdf_tier": 3,
+        "title": "Nghị định Fallback",
+        "document_number": "1000/2026/NĐ-CP",
+    }
+
+    def fake_convert_docx(docx_path, target_bundle_dir, doc_type=None):
+        target_bundle_dir.mkdir(parents=True, exist_ok=True)
+        meta_content = {
+            "id": target_bundle_dir.name,
+            "document_number": "1000/2026/NĐ-CP",
+            "type": "Nghị định",
+        }
+        with open(target_bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
+            yaml.dump(meta_content, f)
+        return {"status": "success"}
+
+    def fake_convert_error(docx_path, pdf_path):
+        raise RuntimeError("LibreOffice process crashed")
+
+    with patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler), \
+         patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx), \
+         patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_error), \
+         patch("ccba_legal.cli.GoldStandardProcessor"), \
+         patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}):
+
+        args = argparse.Namespace(
+            target="https://thuvienphapluat.vn/van-ban/test-fail",
+            category="01_vbpl",
+            slug="test_fallback_slug",
+            output_dir=out_bundle_dir,
+            upload_drive=False,
+        )
+        rc = handle_ingest(args)
+        assert rc == 0
+
+    target_bundle = out_bundle_dir / "01_vbpl" / "test_fallback_slug"
+    sources_dir = target_bundle / "sources"
+    raw_scan = sources_dir / "test_fallback_slug_raw_scan.pdf"
+    target_pdf = sources_dir / "test_fallback_slug.pdf"
+
+    # Should fall back to scan PDF and not leave orphaned raw_scan
+    assert not raw_scan.exists()
+    assert target_pdf.exists()
+    assert target_pdf.read_bytes() == b"%PDF-1.4 scan fallback pdf"
+
+    with open(target_bundle / "metadata.yaml", encoding="utf-8") as f:
+        meta = yaml.safe_load(f)
+    assert meta.get("pdf_origin") != "docx_vector_rendered"
