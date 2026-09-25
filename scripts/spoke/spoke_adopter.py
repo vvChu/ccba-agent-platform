@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime
 import os
 import shutil
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -215,94 +216,247 @@ def merge_workspace_context(
     return merged_data, backup_path
 
 
-def install_security_guardrails(spoke_root: Path, hub_root: Path) -> bool:
-    """Install Maskara pre-commit security hook if git repo exists."""
-    spoke_path = Path(spoke_root)
+def install_security_guardrails(
+    spoke_root: Path | str,
+    hub_root: Path | str | None = None,
+    dry_run: bool = False,
+    code_owner: str | None = None,
+) -> bool:
+    """Install version-controlled .githooks (pre-commit, pre-push) and configure git repository guardrails."""
+    spoke_path = Path(spoke_root).resolve()
     git_entry = spoke_path / ".git"
     if not git_entry.exists():
+        print(
+            "ℹ️  [INFO] Không phát hiện Git repository. Bỏ qua cấu hình bảo vệ Git (OneDrive/SharePoint mode)."
+        )
         return False
 
-    if git_entry.is_file():
-        # Handle git worktree or submodule pointer file (gitdir: ...)
+    if dry_run:
+        print(
+            f"[Guardrails] [DRY-RUN] Would configure .githooks/ and repository protection for '{spoke_path.name}'"
+        )
+        return True
+
+    # 1. Create version-controlled .githooks directory
+    githooks_dir = spoke_path / ".githooks"
+    githooks_dir.mkdir(parents=True, exist_ok=True)
+
+    # Resolve relative hub path if resolvable on same filesystem drive
+    hub_rel_check = ""
+    if hub_root:
         try:
-            content = git_entry.read_text(encoding="utf-8").strip()
-            if not content.startswith("gitdir:"):
-                return False
-            raw_path = content.split(":", 1)[1].strip()
-            target_dir = Path(raw_path)
-            if not target_dir.is_absolute():
-                target_dir = (spoke_path / target_dir).resolve()
+            rel_hub = os.path.relpath(Path(hub_root).resolve(), spoke_path.resolve())
+            rel_posix = Path(rel_hub).as_posix()
+            hub_rel_check = (
+                f'if [ ! -f "$maskara_script" ] && [ -f "{rel_posix}/scripts/maskara.py" ]; then\n'
+                f'  maskara_script="{rel_posix}/scripts/maskara.py"\n'
+                "fi\n"
+            )
+        except ValueError:
+            pass
 
-            commondir_file = target_dir / "commondir"
-            if commondir_file.exists():
-                common_raw = commondir_file.read_text(encoding="utf-8").strip()
-                common_dir = Path(common_raw)
-                if not common_dir.is_absolute():
-                    common_dir = (target_dir / common_dir).resolve()
-                hook_dir = common_dir / "hooks"
-            else:
-                hook_dir = target_dir / "hooks"
-        except Exception:
-            return False
-    elif git_entry.is_dir():
-        hook_dir = git_entry / "hooks"
-    else:
-        return False
+    # 2. Generate .githooks/pre-commit (Maskara secret leak scan)
+    pre_commit_content = f"""#!/bin/sh
+# ==============================================================================
+# CCBA Client-Side Guardrail: Maskara Secret & Privacy Leak Pre-Commit Scan
+# Reference: CCBA-SOP-SEC-001, ADR-0047, Session Learning #41
+# ==============================================================================
 
-    hook_dir.mkdir(parents=True, exist_ok=True)
-    hook_path = hook_dir / "pre-commit"
-
-    hub_posix = Path(hub_root).as_posix()
-    hook_content = f"""#!/bin/sh
-# CCBA Maskara Pre-commit Security Hook
-echo 'Running Maskara staged files scan...'
+echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."
 
 staged_files=$(git diff --cached --name-only --diff-filter=d)
 
 if [ -z "$staged_files" ]; then
-    echo 'No files staged for commit. Skipping scan.'
-    exit 0
+  exit 0
 fi
 
-PYTHON_BIN="python"
-if ! command -v python > /dev/null 2>&1 && command -v python3 > /dev/null 2>&1; then
-    PYTHON_BIN="python3"
+python_bin="python"
+if ! command -v python >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  python_bin="python3"
+fi
+
+# Dynamic resolution of scripts/maskara.py
+maskara_script="scripts/maskara.py"
+if [ ! -f "$maskara_script" ] && [ -n "$CCBA_HUB_PATH" ] && [ -f "$CCBA_HUB_PATH/scripts/maskara.py" ]; then
+  maskara_script="$CCBA_HUB_PATH/scripts/maskara.py"
+fi
+{hub_rel_check}
+if [ ! -f "$maskara_script" ]; then
+  echo "⚠️ [CCBA Guardrail] scripts/maskara.py not found, skipping pre-commit scan."
+  exit 0
 fi
 
 has_leak=0
 for file in $staged_files; do
-    if echo "$file" | grep -qE '\\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
-        continue
+  if echo "$file" | grep -qE '\\.(png|jpg|jpeg|gif|ico|pdf|zip|tar|gz|exe|dll|so|dylib|woff|woff2|eot|ttf|mp3|mp4|wav|avi|pfx|cer)$'; then
+    continue
+  fi
+  if echo "$file" | grep -qE '^(\\.md/scratch/|\\.venv/|node_modules/)'; then
+    continue
+  fi
+  if [ -f "$file" ]; then
+    $python_bin "$maskara_script" scan --root "$file" >/dev/null 2>&1
+    status_code=$?
+    if [ $status_code -ne 0 ]; then
+      echo "❌ [CCBA Guardrail Error] Sensitive token or secret detected in staged file: $file"
+      $python_bin "$maskara_script" scan --root "$file"
+      has_leak=1
     fi
-    if echo "$file" | grep -qE '^(\\.md/scratch/|\\.venv/|node_modules/)'; then
-        continue
-    fi
-    if [ -f "$file" ]; then
-        $PYTHON_BIN "{hub_posix}/scripts/maskara.py" scan --root "$file" > /dev/null 2>&1
-        status_code=$?
-        if [ $status_code -ne 0 ]; then
-            echo "❌ Leak detected in staged file: $file"
-            $PYTHON_BIN "{hub_posix}/scripts/maskara.py" scan --root "$file"
-            has_leak=1
-        fi
-    fi
+  fi
 done
 
 if [ $has_leak -ne 0 ]; then
-    echo 'Error: Raw API keys or credentials detected. Commit blocked!'
-    exit 1
+  echo "========================================================================"
+  echo "❌ [CCBA Guardrail Error] Commit blocked due to sensitive data leak!"
+  echo "Vui lòng gỡ bỏ thông tin nhạy cảm khỏi các tệp staged trước khi commit."
+  echo "========================================================================"
+  exit 1
 fi
 
-echo '✅ Security check passed.'
+echo "✅ [CCBA Guardrail] Security check passed."
 exit 0
 """
-    with open(hook_path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(hook_content)
+    pre_commit_file = githooks_dir / "pre-commit"
+    with open(pre_commit_file, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pre_commit_content)
 
+    # 3. Generate .githooks/pre-push (branch protection: main / master)
+    pre_push_content = """#!/bin/sh
+# ==============================================================================
+# CCBA Client-Side Guardrail: Block direct push to protected branches
+# Reference: CCBA-SOP-SEC-001 & ADR-0058
+# ==============================================================================
+
+protected_branches="refs/heads/main refs/heads/master"
+
+while read local_ref local_oid remote_ref remote_oid; do
+  for protected_branch in $protected_branches; do
+    if [ "$remote_ref" = "$protected_branch" ]; then
+      # 1. Chặn xóa nhánh (SHA-1 40-zero hoặc SHA-256 64-zero)
+      case "$local_oid" in
+        0000000000000000000000000000000000000000|0000000000000000000000000000000000000000000000000000000000000000)
+          echo "========================================================================"
+          echo "❌ [CCBA Guardrail Error] Deleting the remote '$protected_branch' branch is strictly prohibited!"
+          echo "========================================================================"
+          exit 1
+          ;;
+      esac
+
+      # 2. Chặn push trực tiếp vào nhánh được bảo vệ
+      echo "========================================================================"
+      echo "❌ [CCBA Guardrail Error] Direct push to '$protected_branch' is strictly prohibited!"
+      echo "========================================================================"
+      echo "Vui lòng tuân thủ quy trình Factory Model:"
+      echo "  1. Tạo nhánh tính năng: git checkout -b feat/your-feature-name"
+      echo "  2. Commit thay đổi và push nhánh: git push origin feat/your-feature-name"
+      echo "  3. Tạo Pull Request trên GitHub và đợi CI + Review kiểm định."
+      echo "========================================================================"
+      exit 1
+    fi
+  done
+done
+
+exit 0
+"""
+    pre_push_file = githooks_dir / "pre-push"
+    with open(pre_push_file, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pre_push_content)
+
+    # 4. Set POSIX execution bits on disk
+    for hook in (pre_commit_file, pre_push_file):
+        try:
+            hook.chmod(hook.stat().st_mode | 0o755)
+        except OSError:
+            pass
+
+    # 5. Register in git index with executable bit (Windows portable)
     try:
-        hook_path.chmod(hook_path.stat().st_mode | 0o111)
-    except OSError:
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(spoke_path),
+                "update-index",
+                "--add",
+                "--chmod=+x",
+                ".githooks/pre-commit",
+                ".githooks/pre-push",
+            ],
+            capture_output=True,
+            check=False,
+        )
+    except Exception:
         pass
+
+    # 6. Configure core.hooksPath -> .githooks
+    try:
+        subprocess.run(
+            ["git", "-C", str(spoke_path), "config", "core.hooksPath", ".githooks"],
+            capture_output=True,
+            check=False,
+        )
+    except Exception:
+        pass
+
+    # 7. Ensure .gitattributes contains LF rule for .githooks/*
+    gitattr_path = spoke_path / ".gitattributes"
+    rule_str = ".githooks/* text eol=lf"
+    if not gitattr_path.exists():
+        gitattr_path.write_text(f"{rule_str}\n", encoding="utf-8")
+    else:
+        existing_attr = gitattr_path.read_text(encoding="utf-8")
+        if rule_str not in existing_attr:
+            gitattr_path.write_text(f"{existing_attr.rstrip()}\n{rule_str}\n", encoding="utf-8")
+
+    # 8. Ensure default .github/CODEOWNERS
+    github_dir = spoke_path / ".github"
+    github_dir.mkdir(parents=True, exist_ok=True)
+    codeowners_path = github_dir / "CODEOWNERS"
+    if not codeowners_path.exists():
+        owner = code_owner or "@vvChu"
+        codeowners_content = (
+            "# ==============================================================================\n"
+            "# CCBA Code Owners Declaration\n"
+            "# Reference: CCBA-SOP-SEC-001 & ADR-0058\n"
+            "# Syntax: <pattern> <owner>...\n"
+            "# ==============================================================================\n"
+            f"* {owner}\n"
+        )
+        codeowners_path.write_text(codeowners_content, encoding="utf-8")
+
+    # 9. Legacy / Worktree fallback: Also write to local .git/hooks if resolvable
+    legacy_hook_dir: Path | None = None
+    if git_entry.is_file():
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+            if content.startswith("gitdir:"):
+                raw_path = content.split(":", 1)[1].strip()
+                target_dir = Path(raw_path)
+                if not target_dir.is_absolute():
+                    target_dir = (spoke_path / target_dir).resolve()
+                commondir_file = target_dir / "commondir"
+                if commondir_file.exists():
+                    common_raw = commondir_file.read_text(encoding="utf-8").strip()
+                    common_dir = Path(common_raw)
+                    if not common_dir.is_absolute():
+                        common_dir = (target_dir / common_dir).resolve()
+                    legacy_hook_dir = common_dir / "hooks"
+                else:
+                    legacy_hook_dir = target_dir / "hooks"
+        except Exception:
+            pass
+    elif git_entry.is_dir():
+        legacy_hook_dir = git_entry / "hooks"
+
+    if legacy_hook_dir:
+        legacy_hook_dir.mkdir(parents=True, exist_ok=True)
+        legacy_pre_commit = legacy_hook_dir / "pre-commit"
+        with open(legacy_pre_commit, "w", encoding="utf-8", newline="\n") as f:
+            f.write(pre_commit_content)
+        try:
+            legacy_pre_commit.chmod(legacy_pre_commit.stat().st_mode | 0o755)
+        except OSError:
+            pass
 
     return True
 
@@ -403,9 +557,13 @@ class SpokeAdopter:
                 print(f"  • {r}")
         print("========================================================\n")
 
-    def install_security_guardrails(self) -> bool:
-        """Install Maskara pre-commit security hook if git repo exists."""
-        return install_security_guardrails(self.spoke_root, self._resolve_hub())
+    def install_security_guardrails(
+        self, dry_run: bool = False, code_owner: str | None = None
+    ) -> bool:
+        """Install version-controlled security guardrails (.githooks, CODEOWNERS, core.hooksPath)."""
+        return install_security_guardrails(
+            self.spoke_root, self._resolve_hub(), dry_run=dry_run, code_owner=code_owner
+        )
 
     def adopt(
         self,
@@ -430,6 +588,8 @@ class SpokeAdopter:
                     "\n⚠️  [DRY-RUN] Phát hiện Spoke đã có cấu hình workspace_context.yaml!"
                     "\n    Lệnh thật sẽ bị chặn (exit code 1) để bảo vệ đa máy, trừ khi truyền cờ --force."
                 )
+            if report.has_git:
+                self.install_security_guardrails(dry_run=True)
             print("🚀 [DRY-RUN] Không ghi tệp. Đánh giá hoàn tất thành công.")
             return 0
 
@@ -466,9 +626,9 @@ class SpokeAdopter:
 
         # Step 2: Install Maskara Security Guardrail
         if report.has_git:
-            print("[Adopt] Installing Maskara pre-commit security hook...")
-            self.install_security_guardrails()
-            print("  - Pre-commit hook installed.")
+            print("[Adopt] Installing Maskara and branch security guardrails...")
+            self.install_security_guardrails(dry_run=dry_run)
+            print("  - Guardrails configured (.githooks/, CODEOWNERS, core.hooksPath).")
 
         # Step 3: Synchronize Skills & Workflows Bundle safely
         print(f"\n[Adopt] Synchronizing skills for '{chosen_type}'...")
