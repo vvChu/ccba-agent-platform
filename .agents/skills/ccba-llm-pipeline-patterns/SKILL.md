@@ -529,7 +529,7 @@ Raw Media Stream ──► [TẦNG 1: BỘ LỌC TẤT ĐỊNH (Zero-Token)]
 | Conditional Multi-turn Memory | `D:\VvC_Notes\scripts\services\command\coordinator.py` |
 | Two-Tier Multimodal Noise Defense | `D:\VvC_Notes\scripts\services\youtube\transcript.py` + `visual_extractor.py` |
 
-## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
 * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
 * **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
   ```bash
