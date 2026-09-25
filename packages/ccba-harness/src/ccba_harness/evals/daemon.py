@@ -754,8 +754,18 @@ class NightlyTunerDaemon:
         dataset_file = self._resolve_dataset_file(skill_name)
         delta = result.final_score - result.initial_score
         delta_str = f"+{delta:.1f}%" if delta > 0 else f"{delta:.1f}%"
+        total_tokens_str = f"{result.total_tokens:,}" if result.total_tokens is not None else "0"
+        prompt_tokens_str = f"{result.prompt_tokens:,}" if result.prompt_tokens is not None else "0"
+        completion_tokens_str = (
+            f"{result.completion_tokens:,}" if result.completion_tokens is not None else "0"
+        )
+        holdout_score_str = (
+            f"{result.holdout_score:.1f}%" if result.holdout_score is not None else "N/A"
+        )
+        holdout_size_str = str(result.holdout_size) if result.holdout_size is not None else "0"
+        slicing_tier_str = f"Tier {result.slicing_tier}" if result.slicing_tier else "N/A"
 
-        content = f"""# 🏔️ Deep Problem Brief: {skill_name} (ADR-0052)
+        content = f"""# ⚠️ CCBA Plateau Escalation Brief (ADR-0052): {skill_name}
 
 > **Mã hồ sơ:** `PLATEAU-{skill_name.upper()}`
 > **Thời gian ghi nhận:** `{now_str}`
@@ -769,7 +779,7 @@ class NightlyTunerDaemon:
 - **Peak Score Achieved:** `{result.final_score:.1f}%` (Chênh lệch: `{delta_str}`)
 - **Vòng lặp đã thử nghiệm:** `{result.total_iterations}` vòng (Ngừng bởi: `{result.halt_reason or "PATIENCE_EXHAUSTED"}`)
 - **Số lần Rollback:** `{result.reverted_trials}` lần
-- **Tổng Token tiêu tốn:** `{result.total_tokens:,}` tokens (Prompt: `{result.prompt_tokens:,}` | Completion: `{result.completion_tokens:,}`)
+- **Tổng Token tiêu tốn:** `{total_tokens_str}` tokens (Prompt: `{prompt_tokens_str}` | Completion: `{completion_tokens_str}`)
 
 ## 2. Tested Hypotheses & Ineffective Mutations
 - Đã áp dụng các đột biến tri thức (Surgical Section Patching) theo tập chiến lược của archetype nhưng điểm số không vượt qua trần baseline.
@@ -780,7 +790,7 @@ class NightlyTunerDaemon:
 
 ## 3. Deep Seams & Archetype Involved
 - **Evaluation Dataset:** `{dataset_file}`
-- **Slicing Tier:** `Tier {result.slicing_tier}` (Holdout Score: `{result.holdout_score:.1f}%`, Holdout Size: `{result.holdout_size}`)
+- **Slicing Tier:** `{slicing_tier_str}` (Holdout Score: `{holdout_score_str}`, Holdout Size: `{holdout_size_str}`)
 - **Deep Seams liên quan:** Prompt Instruction Rules trong `SKILL.md`, Bộ quy chuẩn Scorer regex/deterministic parsing, và Test Case Fixtures.
 
 ## 4. Error Logs & Failure Excerpts
@@ -788,7 +798,7 @@ class NightlyTunerDaemon:
 Halt Reason: {result.halt_reason or "EARLY_STOPPING_PATIENCE_EXHAUSTED"}
 Total Iterations: {result.total_iterations}
 Reverted Trials: {result.reverted_trials}/{result.total_iterations}
-Final Holdout Score: {result.holdout_score:.1f}%
+Final Holdout Score: {holdout_score_str}
 ```
 
 ## 5. Actionable Recommendation (/boost Protocol)
