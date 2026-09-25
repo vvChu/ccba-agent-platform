@@ -13,6 +13,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── docs/                              ← Documentation & Reference
 │   ├── adr/                           ←   Architectural Decision Records (ADRs)
+│   ├── governance/                    ←   Platform Governance & Sync Architecture
+│   ├── sop/                           ←   Standard Operating Procedures (SOP Runbooks)
 │   └── rules/                         ←   Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 │
 ├── .agents/                           ← AI Agent configurations

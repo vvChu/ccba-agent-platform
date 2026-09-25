@@ -1,7 +1,6 @@
 # Hướng Dẫn Quy Trình Đề Bạt Sáng Kiến Từ Spoke Lên Hub Monorepo
 
-**Tài liệu chuẩn hóa:** `SOP-CCBA-SPOKE-TO-HUB-INGESTION-2026`  
-**Căn cứ kiến trúc & pháp lý:** [ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), [ADR-0058](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), Quy chế CCBA Charter 2026.
+**Căn cứ kiến trúc & pháp lý:** [ADR-0045](../adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](../adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), [ADR-0058](../adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [Kiến Trúc Đồng Bộ Hub-Spoke](hub_spoke_synchronization_and_multi_device_governance.md), Quy chế CCBA Charter 2026.
 
 ---
 
