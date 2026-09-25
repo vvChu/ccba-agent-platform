@@ -655,6 +655,7 @@ def handle_batch_fetch(args: argparse.Namespace) -> int:
 def handle_login(args: argparse.Namespace) -> int:
     """Launch interactive Chromium browser for persistent VIP authentication."""
     import subprocess
+
     from ccba_legal.session import get_browser_executable_path
 
     port = args.port
@@ -670,6 +671,7 @@ def handle_login(args: argparse.Namespace) -> int:
 
     # Cảnh báo môi trường headless Linux
     import os
+
     if os.name != "nt" and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
         print("⚠️ Warning: Running on a headless Linux environment without DISPLAY.")
         print("   If browser fails to launch, please run via 'xvfb-run python -m ccba_legal login'")
@@ -836,14 +838,14 @@ def handle_ingest(args: argparse.Namespace) -> int:
 
     # Nếu là bản Scan Tier 3 và có file DOCX: Kích hoạt ADR 0043 Dual-PDF
     if pdf_tier == 3 and target_docx.exists():
-        print(f"[LegalIntel] [ADR 0043 Dual-PDF] Detected Tier 3 Gazette Scan.")
+        print("[LegalIntel] [ADR 0043 Dual-PDF] Detected Tier 3 Gazette Scan.")
         if pdf_path and pdf_path.exists() and pdf_path.resolve() != raw_scan_target.resolve():
             shutil.copy2(pdf_path, raw_scan_target)
             print(f"  📦 Preserved official Gazette Scan: {raw_scan_target.name}")
         try:
             from ccba_ooxml.converter import convert_to_pdf
 
-            print(f"  ⚙️ Rendering Born-Digital Vector PDF via LibreOffice...")
+            print("  ⚙️ Rendering Born-Digital Vector PDF via LibreOffice...")
             convert_to_pdf(target_docx, target_pdf)
             print(f"  ✅ Successfully rendered Vector PDF: {target_pdf.name}")
             is_vector_rendered = True
@@ -892,10 +894,11 @@ def handle_ingest(args: argparse.Namespace) -> int:
         )
         if is_vector_rendered and (target_bundle / "metadata.yaml").exists():
             import hashlib
+
             import yaml
 
             meta_path = target_bundle / "metadata.yaml"
-            with open(meta_path, "r", encoding="utf-8") as f:
+            with open(meta_path, encoding="utf-8") as f:
                 meta = yaml.safe_load(f) or {}
             meta["pdf_origin"] = "docx_vector_rendered"
             if raw_scan_target.exists():

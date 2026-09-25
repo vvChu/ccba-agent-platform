@@ -10,8 +10,6 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from ccba_legal.cli import handle_login
 from ccba_legal.crawler.tier_downloader import _wait_for_download, trigger_download
 from ccba_legal.session import get_browser_executable_path
@@ -44,8 +42,16 @@ def test_pdf_click_prefers_part_minus_100_over_part_zero(mock_sleep, tmp_path: P
     """Test 1: Verify Pass 1 prioritizes Born-Digital Vector PDF (part=-100) even when part=0 comes first."""
     # 1. Verify JS evaluation logic directly in Node
     links = [
-        {"id": "vietnameseHyperLink_Pdf", "href": "https://tvpl.vn/download.aspx?part=0", "innerText": "Tải bản PDF"},
-        {"id": "filePDFHyperLink", "href": "https://tvpl.vn/download.aspx?part=-100", "innerText": "Tải văn bản gốc PDF"}
+        {
+            "id": "vietnameseHyperLink_Pdf",
+            "href": "https://tvpl.vn/download.aspx?part=0",
+            "innerText": "Tải bản PDF",
+        },
+        {
+            "id": "filePDFHyperLink",
+            "href": "https://tvpl.vn/download.aspx?part=-100",
+            "innerText": "Tải văn bản gốc PDF",
+        },
     ]
     res_js = _eval_js_with_links(json.dumps(links))
     assert res_js["clicked"] is True
@@ -82,8 +88,16 @@ def test_pdf_click_falls_back_to_part_zero(mock_sleep, tmp_path: Path):
     """Test 2: Verify Pass 2 successfully falls back to Gazette Scan (part=0) when part=-100 is absent."""
     # 1. Verify JS evaluation logic directly in Node
     links = [
-        {"id": "vietnameseHyperLink_Docx", "href": "https://tvpl.vn/download.aspx?part=1", "innerText": "Tải bản Word"},
-        {"id": "vietnameseHyperLink_Pdf", "href": "https://tvpl.vn/download.aspx?part=0", "innerText": "Tải bản PDF"}
+        {
+            "id": "vietnameseHyperLink_Docx",
+            "href": "https://tvpl.vn/download.aspx?part=1",
+            "innerText": "Tải bản Word",
+        },
+        {
+            "id": "vietnameseHyperLink_Pdf",
+            "href": "https://tvpl.vn/download.aspx?part=0",
+            "innerText": "Tải bản PDF",
+        },
     ]
     res_js = _eval_js_with_links(json.dumps(links))
     assert res_js["clicked"] is True
@@ -221,12 +235,17 @@ def test_login_finds_cross_platform_browser():
     # Test headless warning when DISPLAY is absent on Linux
     with patch("subprocess.Popen"):
         with patch.dict(os.environ, {"DISPLAY": "", "WAYLAND_DISPLAY": ""}):
-            with patch("ccba_legal.session.get_browser_executable_path", return_value="/usr/bin/google-chrome"):
+            with patch(
+                "ccba_legal.session.get_browser_executable_path",
+                return_value="/usr/bin/google-chrome",
+            ):
                 args = argparse.Namespace(port=9222, url="https://thuvienphapluat.vn")
                 with patch("builtins.print") as mock_print:
                     rc = handle_login(args)
                     assert rc == 0
-                    printed_text = " ".join(str(call.args[0]) for call in mock_print.call_args_list if call.args)
+                    printed_text = " ".join(
+                        str(call.args[0]) for call in mock_print.call_args_list if call.args
+                    )
                     assert "headless" in printed_text.lower() or "display" in printed_text.lower()
 
     # Test failure when no browser is found
@@ -239,7 +258,9 @@ def test_login_finds_cross_platform_browser():
 def test_handle_ingest_tier3_dual_pdf_workflow(tmp_path: Path):
     """Test 6: Verify handle_ingest ADR 0043 Dual-PDF workflow on Tier 3 Gazette Scan."""
     import hashlib
+
     import yaml
+
     from ccba_legal.cli import handle_ingest
 
     doc_dir = tmp_path / "downloads"
@@ -275,12 +296,13 @@ def test_handle_ingest_tier3_dual_pdf_workflow(tmp_path: Path):
     def fake_convert_to_pdf(docx_path, pdf_path):
         Path(pdf_path).write_bytes(b"%PDF-1.4 born-digital vector rendered pdf")
 
-    with patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler), \
-         patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx), \
-         patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_to_pdf), \
-         patch("ccba_legal.cli.GoldStandardProcessor"), \
-         patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}):
-
+    with (
+        patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler),
+        patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx),
+        patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_to_pdf),
+        patch("ccba_legal.cli.GoldStandardProcessor"),
+        patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}),
+    ):
         args = argparse.Namespace(
             target="https://thuvienphapluat.vn/van-ban/test-doc",
             category="01_vbpl",
@@ -306,15 +328,22 @@ def test_handle_ingest_tier3_dual_pdf_workflow(tmp_path: Path):
 
     assert meta["pdf_origin"] == "docx_vector_rendered"
     assert meta["raw_scan_pdf"] == "sources/test_dual_pdf_slug_raw_scan.pdf"
-    assert meta["pdf_sha256"] == hashlib.sha256(b"%PDF-1.4 born-digital vector rendered pdf").hexdigest()
+    assert (
+        meta["pdf_sha256"]
+        == hashlib.sha256(b"%PDF-1.4 born-digital vector rendered pdf").hexdigest()
+    )
     assert "source_assets" in meta
     assert meta["source_assets"]["pdf"]["origin"] == "docx_vector_rendered"
-    assert meta["source_assets"]["raw_scan"]["sha256"] == hashlib.sha256(b"%PDF-1.4 mock scan pdf content").hexdigest()
+    assert (
+        meta["source_assets"]["raw_scan"]["sha256"]
+        == hashlib.sha256(b"%PDF-1.4 mock scan pdf content").hexdigest()
+    )
 
 
 def test_handle_ingest_tier3_conversion_failure_fallback(tmp_path: Path):
     """Test 7: Verify handle_ingest safely falls back to scan PDF when convert_to_pdf fails."""
     import yaml
+
     from ccba_legal.cli import handle_ingest
 
     doc_dir = tmp_path / "downloads"
@@ -349,12 +378,13 @@ def test_handle_ingest_tier3_conversion_failure_fallback(tmp_path: Path):
     def fake_convert_error(docx_path, pdf_path):
         raise RuntimeError("LibreOffice process crashed")
 
-    with patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler), \
-         patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx), \
-         patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_error), \
-         patch("ccba_legal.cli.GoldStandardProcessor"), \
-         patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}):
-
+    with (
+        patch("ccba_legal.cli.TVPLCrawler", return_value=mock_crawler),
+        patch("ccba_legal.cli.convert_docx_to_okf_bundle", side_effect=fake_convert_docx),
+        patch("ccba_ooxml.converter.convert_to_pdf", side_effect=fake_convert_error),
+        patch("ccba_legal.cli.GoldStandardProcessor"),
+        patch("ccba_legal.linter.lint_target_path", return_value={"total_errors": 0}),
+    ):
         args = argparse.Namespace(
             target="https://thuvienphapluat.vn/van-ban/test-fail",
             category="01_vbpl",

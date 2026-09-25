@@ -507,7 +507,11 @@ def trigger_download(
         print(f"[LegalIntel] [Phase 1] Trigger DOCX postback: {res_docx}")
         if res_docx and not str(res_docx).startswith("No "):
             downloaded_docx = _wait_for_download(
-                watch_dirs, existing_before_docx, [".docx", ".doc"], timeout=30.0, start_time=docx_start_time
+                watch_dirs,
+                existing_before_docx,
+                [".docx", ".doc"],
+                timeout=30.0,
+                start_time=docx_start_time,
             )
             if downloaded_docx:
                 dest_ext = downloaded_docx.suffix or ".docx"
