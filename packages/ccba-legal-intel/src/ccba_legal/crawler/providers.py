@@ -306,6 +306,7 @@ class TVPLVIPDocProvider(LegalDocProvider):
                 "cong_bao_number": download_res.get("cong_bao_number"),
                 "cong_bao_date": download_res.get("cong_bao_date"),
                 "attachments": download_res.get("attachments", []),
+                "pdf_tier": download_res.get("pdf_tier"),
             }
         finally:
             cdp.close()
