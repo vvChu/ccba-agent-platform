@@ -1023,6 +1023,53 @@ def build_parser() -> argparse.ArgumentParser:
         "--fix", action="store_true", help="Auto-fix heading anchor drifts with fuzzy matching"
     )
 
+    # protect-repo
+    protect_p = subparsers.add_parser(
+        "protect-repo",
+        help="Automated GitHub repository protection (rulesets, Dependabot, secret scanning)",
+    )
+    protect_p.add_argument(
+        "--repo",
+        "-r",
+        default=None,
+        help="Target repository in 'owner/repo' format (auto-detected from origin if omitted)",
+    )
+    protect_p.add_argument(
+        "--branch",
+        "-b",
+        default=None,
+        help="Branch to protect (default: detected default branch, usually 'main')",
+    )
+    protect_p.add_argument(
+        "--checks",
+        "-c",
+        nargs="*",
+        default=None,
+        help="List of required CI status check context names",
+    )
+    protect_p.add_argument(
+        "--approvals",
+        "-a",
+        type=int,
+        default=0,
+        help="Required PR approving reviews count (default: 0)",
+    )
+    protect_p.add_argument(
+        "--ruleset-name",
+        default="Protect Main Branch",
+        help="Display name for the GitHub Ruleset (default: 'Protect Main Branch')",
+    )
+    protect_p.add_argument(
+        "--no-dependabot",
+        action="store_true",
+        help="Skip enabling Dependabot security fixes and vulnerability alerts",
+    )
+    protect_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview planned API calls and ruleset payloads without modifying remote repo",
+    )
+
     return parser
 
 
@@ -1149,6 +1196,19 @@ def main() -> int:
             yaml_path=Path(args.matrix),
             project_root=_ROOT_DIR,
             auto_fix=args.fix,
+        )
+
+    elif args.command == "protect-repo":
+        from scripts.governance.protect_repo import protect_repository
+
+        return protect_repository(
+            repo=args.repo,
+            branch=args.branch,
+            checks=args.checks,
+            approvals=args.approvals,
+            no_dependabot=args.no_dependabot,
+            ruleset_name=args.ruleset_name,
+            dry_run=args.dry_run,
         )
 
     else:

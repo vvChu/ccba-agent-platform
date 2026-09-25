@@ -293,6 +293,28 @@ class SpokeBootstrapper:
             gitignore_path.write_text(new_content, encoding="utf-8")
         return True
 
+    def ensure_githooks_configured(self, dry_run: bool = False) -> bool:
+        """Configures core.hooksPath to .githooks if .githooks directory exists."""
+        githooks_dir = self.spoke_root / ".githooks"
+        git_dir = self.spoke_root / ".git"
+        if not (githooks_dir.exists() and git_dir.exists()):
+            return False
+
+        if dry_run:
+            print("[Bootstrap] [DRY-RUN] Would configure git core.hooksPath -> .githooks")
+            return True
+
+        try:
+            res = subprocess.run(
+                ["git", "config", "core.hooksPath", ".githooks"],
+                cwd=str(self.spoke_root),
+                capture_output=True,
+                text=True,
+            )
+            return res.returncode == 0
+        except Exception:
+            return False
+
     def get_hub_commit_hash(self) -> str:
         """Returns the current HEAD commit hash of the Hub repository."""
         try:
@@ -378,6 +400,9 @@ class SpokeBootstrapper:
 
         # Update .gitignore first to ensure Spoke Leakage Guard & hygiene apply to all spokes
         self.ensure_gitignore_rule(dry_run=dry_run)
+
+        # Configure version-controlled .githooks if present (all spokes including pure-docs/BIM)
+        self.ensure_githooks_configured(dry_run=dry_run)
 
         if not self.is_python_project():
             print(

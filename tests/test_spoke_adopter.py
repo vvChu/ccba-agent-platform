@@ -119,10 +119,12 @@ def test_adopt_project_installs_maskara_hook(temp_spoke: Path):
     adopter = SpokeAdopter(temp_spoke)
     adopter.install_security_guardrails()
 
-    hook_file = temp_spoke / ".git" / "hooks" / "pre-commit"
+    hook_file = temp_spoke / ".githooks" / "pre-commit"
     assert hook_file.exists()
     hook_content = hook_file.read_text(encoding="utf-8")
     assert "Maskara" in hook_content
+    assert (temp_spoke / ".githooks" / "pre-push").exists()
+    assert (temp_spoke / ".github" / "CODEOWNERS").exists()
 
 
 def test_adopt_fails_safely_when_context_exists_without_force(temp_spoke: Path):
