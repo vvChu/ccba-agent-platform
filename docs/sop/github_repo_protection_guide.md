@@ -295,6 +295,22 @@ Lưu tại đường dẫn: `.githooks/pre-commit` *(Định dạng LF, executab
 
 echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."
 
+python_bin="python"
+if ! command -v python >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  python_bin="python3"
+fi
+
+# Xác định đường dẫn tới scripts/maskara.py
+maskara_script="scripts/maskara.py"
+if [ ! -f "$maskara_script" ] && [ -n "$CCBA_HUB_PATH" ] && [ -f "$CCBA_HUB_PATH/scripts/maskara.py" ]; then
+  maskara_script="$CCBA_HUB_PATH/scripts/maskara.py"
+fi
+
+if [ ! -f "$maskara_script" ]; then
+  echo "⚠️ [CCBA Guardrail] scripts/maskara.py not found, skipping pre-commit scan."
+  exit 0
+fi
+
 if ! git -c core.quotepath=false diff --cached --name-only --diff-filter=d | (
   has_leak=0
   while IFS= read -r file; do
