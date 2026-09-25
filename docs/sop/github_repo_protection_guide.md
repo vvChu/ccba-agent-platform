@@ -426,3 +426,48 @@ Maintainer hoặc Lead Engineer sử dụng bảng kiểm tra 10 điểm sau đ�
   1. Tệp hook đang bị lưu với định dạng CRLF (Windows line endings) thay vì LF (Unix line endings).
   2. Chuyển đổi định dạng: `dos2unix .githooks/*` hoặc mở trong VS Code chuyển sang LF và lưu lại.
   3. Đảm bảo file `.gitattributes` có khai báo: `.githooks/* text eol=lf`.
+
+---
+
+## 11. Tự Động Hóa Toàn Trình Bằng Công Cụ Nền Tảng (Automated Protection Tooling)
+
+Nhằm giảm thiểu sai sót thao tác thủ công, nền tảng CCBA cung cấp 2 bộ công cụ tự động hóa 100% các yêu cầu của SOP này:
+
+### 11.1. Tự Động Hóa Client-Side Cho Mọi Dự Án Spoke
+Khi khởi tạo Spoke mới hoặc chuyển đổi dự án brownfield, công cụ Spoke Engine tự động cài đặt trọn bộ rào chắn Client-Side:
+- **Lệnh thực thi:**
+  ```bash
+  # Khởi tạo Spoke mới:
+  python scripts/ccba_platform_cli.py init-spoke [path/to/spoke]
+  # Hoặc áp dụng cho Spoke sẵn có:
+  python scripts/ccba_platform_cli.py adopt-spoke --spoke [path/to/spoke]
+  ```
+- **Kết quả tự động sinh:**
+  1. Thư mục `.githooks/` chứa `pre-commit` (quét bí mật Maskara) và `pre-push` (chặn đẩy/xóa `main`).
+  2. Thiết lập cấu hình Git: `git config core.hooksPath .githooks`.
+  3. Đảm bảo định dạng LF trên mọi nền tảng qua `.gitattributes` (`.githooks/* text eol=lf`).
+  4. Mẫu `.github/CODEOWNERS` mặc định nếu chưa tồn tại (bảo toàn 100% nếu đã có).
+
+### 11.2. Tự Động Hóa Remote GitHub Protection Bằng 1 Dòng Lệnh
+Áp dụng cấu hình GitHub Ruleset, Dependabot, Vulnerability Alerts và Secret Scanning/Push Protection lên bất kỳ repository nào từ xa:
+- **Lệnh thực thi độc lập (Standalone CLI):**
+  ```bash
+  # Mô phỏng kiểm tra (Dry-Run Preview):
+  python scripts/governance/protect_repo.py --repo owner/repo --dry-run
+
+  # Triển khai thực tế với CI checks bắt buộc:
+  python scripts/governance/protect_repo.py \
+    --repo owner/repo \
+    --branch main \
+    --checks "Deterministic Parity & Schema Audit" "scan" "Test - Python 3.12"
+  ```
+- **Lệnh thực thi qua CCBA Unified CLI:**
+  ```bash
+  python scripts/ccba_platform_cli.py protect-repo --repo owner/repo
+  ```
+- **Tính năng vượt trội:**
+  - **Tính Tất Định & Idempotent:** Tự động phát hiện Ruleset đã tồn tại để cập nhật (`PUT`) hoặc tạo mới (`POST`), không ghi đè mất các rules khác.
+  - **Tránh Lỗi HTTP 422:** Tự động loại bỏ rule `required_status_checks` nếu danh sách `--checks` rỗng.
+  - **Chống Khóa Admin:** Mặc định cấp quyền bypass cho vai trò Repository Admin (`bypass_actors`).
+  - **Graceful GHAS Fallback:** Tự động bắt và xử lý cảnh báo nếu repo private không có giấy phép GitHub Advanced Security, không làm gián đoạn pipeline.
+

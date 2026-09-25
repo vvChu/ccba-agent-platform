@@ -273,6 +273,7 @@ Hệ thống chuẩn hóa chu trình đóng góp 2 chiều:
 ## 🛡️ Rào Chắn Quản Trị & Đóng Góp (Governance & Quality Standards)
 
 - **Hiến pháp Tối cao**: Tuân thủ 100% các quy định trong [`.agents/AGENTS.md`](.agents/AGENTS.md).
+- **Bảo Vệ Repository Đa Tầng**: Áp dụng quy chuẩn [`CCBA-SOP-SEC-001`](docs/sop/github_repo_protection_guide.md); tự động cấu hình client hooks qua `init-spoke` / `adopt-spoke` và áp dụng GitHub Ruleset qua `scripts/governance/protect_repo.py` (hoặc `ccba_platform_cli.py protect-repo`).
 - **Nguyên lý KISS (Keep It Simple, Stupid)**: Luôn ưu tiên giải pháp đơn giản, giao diện nhỏ (Small Interface) sau đó mới triển khai sâu (Deep Implementation).
 - **Kỷ Luật Kiểm Thử 2 Tầng (2-Tier Test Discipline)**: Toàn bộ Unit Tests thông thường bắt buộc chạy dưới **2.0 giây**. Các test nặng/mạng phải gắn `@pytest.mark.slow`.
 - **An Toàn Đa Nền Tảng (P2.2)**: Tuyệt đối không can thiệp stream `sys.stdout.reconfigure()` ở root scope module để bảo vệ luồng bắt test của Pytest trên Windows.
