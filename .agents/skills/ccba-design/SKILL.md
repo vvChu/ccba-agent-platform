@@ -39,6 +39,7 @@ triggers:
 - cip mockup
 - mockup
 ---
+
 # Design
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
@@ -378,3 +379,7 @@ Khi thực thi các tác vụ thiết kế chuyên sâu, Agent sử dụng công
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng
+* **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.
+* **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.

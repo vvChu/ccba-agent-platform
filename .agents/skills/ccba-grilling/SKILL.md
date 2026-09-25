@@ -124,3 +124,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/workflow_looping.md` | Kỹ thuật phỏng vấn vòng lặp chuyên sâu nhằm khai thác tường tận yêu cầu quy trình |
 
+## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng
+* **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.
+* **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.
