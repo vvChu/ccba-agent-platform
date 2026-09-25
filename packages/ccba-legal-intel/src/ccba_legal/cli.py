@@ -1374,8 +1374,11 @@ def handle_pptx(args: argparse.Namespace) -> int:
         return 1
 
     input_path: Path = args.input_markdown
-    if not input_path.exists():
-        print(f"❌ Error: Input markdown file does not exist: {input_path}", file=sys.stderr)
+    if not input_path.exists() or not input_path.is_file():
+        print(
+            f"❌ Error: Input markdown file does not exist or is not a file: {input_path}",
+            file=sys.stderr,
+        )
         return 1
 
     output_path: Path = args.output if args.output else input_path.with_suffix(".pptx")

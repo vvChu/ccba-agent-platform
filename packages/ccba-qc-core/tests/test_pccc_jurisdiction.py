@@ -262,6 +262,7 @@ def test_serialization_and_summary() -> None:
         floor_area_m2=12000.0,
     )
     res = PcccJurisdictionRouter.evaluate(spec)
+    assert isinstance(res, PcccJurisdictionResult)
     d = res.to_dict()
 
     assert isinstance(d, dict)
@@ -272,3 +273,94 @@ def test_serialization_and_summary() -> None:
     summary_text = res.summary()
     assert "PHÂN ĐỊNH THẨM QUYỀN THẨM ĐỊNH THIẾT KẾ PCCC" in summary_text
     assert "Mục 1" in summary_text
+
+
+def test_string_enum_resolution() -> None:
+    """Case 11: All canonical PcccProjectType string enum names resolve cleanly."""
+    for member in PcccProjectType:
+        spec = PcccProjectSpec(project_type=member.value)
+        assert spec.get_canonical_type() == member
+
+
+def test_pccc_jurisdiction_industrial_warehouse_category_d_e() -> None:
+    """Case 12: Industrial warehouse category D/E threshold testing (Mục 10 Phụ lục III).
+
+    Threshold for warehouse category D, E: Volume >= 30,000 m3 OR floor area >= 10,000 m2.
+    """
+    # Over threshold (12,000 m2, 108,000 m3) -> Annex III Item 10, PC07
+    spec_large = PcccProjectSpec(
+        project_type="Công trình Nhà kho chứa hàng hóa thông thường (hạng nguy hiểm cháy nổ D/E)",
+        floors=1,
+        floor_area_m2=12000.0,
+        volume_m3=108000.0,
+    )
+    res_large = PcccJurisdictionRouter.evaluate(spec_large)
+    assert res_large.is_annex_iii is True
+    assert res_large.annex_iii_item == 10
+    assert res_large.police_required is True
+    assert res_large.police_tier == "PC07"
+    assert any("Mục 10" in c for c in res_large.statutory_citations)
+
+    # Below threshold for category D/E (5,000 m2, 20,000 m3) -> Outside Annex III
+    spec_small = PcccProjectSpec(
+        project_type="Nhà kho chứa hàng hạng D",
+        floors=1,
+        floor_area_m2=5000.0,
+        volume_m3=20000.0,
+    )
+    res_small = PcccJurisdictionRouter.evaluate(spec_small)
+    assert res_small.is_annex_iii is False
+    assert res_small.annex_iii_item is None
+    assert res_small.police_required is False
+    assert res_small.investor_self_appraisal is True
+    assert "PC13" in res_small.investor_forms
+    assert any("Mẫu PC13" in c for c in res_small.statutory_citations)
+
+
+def test_underground_structure_threshold() -> None:
+    """Case 13: Specialized underground facility threshold (Mục 12 Phụ lục III).
+
+    Threshold: Area >= 500 m2 OR Volume >= 1,000 m3 OR Basements >= 2.
+    """
+    # Small underground structure (50 m2, 150 m3, 1 level) -> Outside Annex III
+    spec_small = PcccProjectSpec(
+        project_type=PcccProjectType.CONG_TRINH_NGAM,
+        floor_area_m2=50.0,
+        volume_m3=150.0,
+        basement_floors=1,
+    )
+    res_small = PcccJurisdictionRouter.evaluate(spec_small)
+    assert res_small.is_annex_iii is False
+    assert res_small.annex_iii_item is None
+
+    # Large underground structure (600 m2, 1 level) -> Annex III Item 12
+    spec_large = PcccProjectSpec(
+        project_type=PcccProjectType.CONG_TRINH_NGAM,
+        floor_area_m2=600.0,
+        volume_m3=2000.0,
+        basement_floors=1,
+    )
+    res_large = PcccJurisdictionRouter.evaluate(spec_large)
+    assert res_large.is_annex_iii is True
+    assert res_large.annex_iii_item == 12
+    assert res_large.police_required is True
+
+
+def test_fuzzy_normalization_edge_cases() -> None:
+    """Case 14: Disambiguation of compound phrases and word boundaries."""
+    # Restaurant Grade 1 must not match CONG_NGHIEP_C via 'hang c'
+    assert _normalize_project_type_test("Nhà hàng cấp 1") == PcccProjectType.THUONG_MAI_DICH_VU
+
+    # Children entertainment center must not match THUONG_MAI_DICH_VU via 'cho' in 'choi'
+    assert _normalize_project_type_test("Khu vui chơi giải trí trẻ em") == PcccProjectType.VUI_CHOI_GIAI_TRI
+
+    # Traditional market matches THUONG_MAI_DICH_VU via word boundary 'cho'
+    assert _normalize_project_type_test("Chợ truyền thống") == PcccProjectType.THUONG_MAI_DICH_VU
+
+    # Category D warehouse matches KHO_HANG_D_E
+    assert _normalize_project_type_test("Nhà kho chứa hàng hạng D") == PcccProjectType.KHO_HANG_D_E
+
+
+def _normalize_project_type_test(name: str) -> PcccProjectType:
+    return PcccProjectSpec(project_type=name).get_canonical_type()
+

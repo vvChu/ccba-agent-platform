@@ -36,6 +36,18 @@ def test_handle_pptx_missing_input_file(tmp_path: Path) -> None:
     assert not out_pptx.exists()
 
 
+def test_handle_pptx_directory_input_rejected(tmp_path: Path) -> None:
+    """Verify handle_pptx returns exit code 1 when input path is a directory."""
+    input_dir = tmp_path / "folder_not_file"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    out_pptx = tmp_path / "output.pptx"
+    args = argparse.Namespace(input_markdown=input_dir, output=out_pptx)
+
+    code = handle_pptx(args)
+    assert code == 1
+    assert not out_pptx.exists()
+
+
 def test_handle_pptx_successful_generation(tmp_path: Path) -> None:
     """Verify handle_pptx generates valid PowerPoint deck from sample markdown."""
     sample_md = tmp_path / "legal_presentation.md"

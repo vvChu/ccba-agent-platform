@@ -8,6 +8,7 @@ Implements statutory jurisdiction routing under:
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -37,6 +38,7 @@ class PcccProjectType(str, Enum):
     CONG_NGHIEP_C = "CONG_NGHIEP_C"
     CONG_NGHIEP_D_E = "CONG_NGHIEP_D_E"
     KHO_HANG = "KHO_HANG"
+    KHO_HANG_D_E = "KHO_HANG_D_E"
     GARA_OTO = "GARA_OTO"
     CONG_TRINH_NGAM = "CONG_TRINH_NGAM"
     XANG_DAU_KHI_DOT = "XANG_DAU_KHI_DOT"
@@ -118,47 +120,103 @@ def _strip_accents(text: str) -> str:
 
 def _normalize_project_type(raw_type: str) -> PcccProjectType:
     """Fuzzy normalize project string into canonical PcccProjectType."""
-    norm = _strip_accents(raw_type)
+    if not raw_type:
+        return PcccProjectType.OTHER
 
+    # 1. Direct match against enum members or enum values (case-insensitive)
+    cleaned = raw_type.strip().upper().replace("-", "_").replace(" ", "_")
+    if cleaned in PcccProjectType.__members__:
+        return PcccProjectType[cleaned]
+    for member in PcccProjectType:
+        if cleaned == member.value.upper():
+            return member
+
+    # 2. Text normalization for Vietnamese phrases
+    norm = _strip_accents(raw_type)
+    norm = re.sub(r"[_\-/,().]+", " ", norm)
+    norm = " ".join(norm.split())
+
+    # 3. Disambiguated matching with priority order and word boundaries
+    # Warehouses
+    if any(k in norm for k in ["kho hang", "kho chua", "warehouse", "nha kho"]):
+        if any(k in norm for k in ["hang d", "hang e", "d/e", "d e", "khong chay"]):
+            return PcccProjectType.KHO_HANG_D_E
+        return PcccProjectType.KHO_HANG
+
+    # Residential
     if any(k in norm for k in ["chung cu", "tap the", "ky tuc xa", "condominium"]):
         return PcccProjectType.CHUNG_CU
-    if any(k in norm for k in ["rieng le", "nha pho", "biet thu"]):
+    if any(k in norm for k in ["rieng le", "nha pho", "biet thu", "nha o gia dinh"]):
         return PcccProjectType.NHA_O_RIENG_LE
+
+    # Education
     if any(k in norm for k in ["mam non", "mau giao", "nha tre"]):
         return PcccProjectType.MAM_NON
-    if any(k in norm for k in ["pho thong", "tieu hoc", "thcs", "thpt", "truong cap"]):
+    if any(k in norm for k in ["pho thong", "tieu hoc", "thcs", "thpt", "truong cap", "truong lien cap"]):
         return PcccProjectType.TRUONG_PHO_THONG
-    if any(k in norm for k in ["dai hoc", "cao dang", "trung cap", "day nghe"]):
+    if any(k in norm for k in ["dai hoc", "cao dang", "trung cap", "day nghe", "hoc vien"]):
         return PcccProjectType.DAI_HOC_CAO_DANG
-    if any(k in norm for k in ["benh vien", "y te", "phong kham", "dieu duong"]):
+
+    # Health
+    if any(k in norm for k in ["benh vien", "y te", "phong kham", "dieu duong", "tram y te"]):
         return PcccProjectType.BENH_VIEN_Y_TE
-    if any(k in norm for k in ["tru so", "uy ban", "co quan", "hanh chinh"]):
+
+    # Administrative
+    if any(k in norm for k in ["tru so", "uy ban", "co quan", "hanh chinh", "toa nha lien co quan"]):
         return PcccProjectType.TRU_SO_CO_QUAN
+
+    # Hospitality & Office
     if any(k in norm for k in ["khach san", "nha nghi", "resort", "hotel"]):
         return PcccProjectType.KHACH_SAN_LUU_TRU
     if any(k in norm for k in ["van phong", "office"]):
         return PcccProjectType.NHA_VAN_PHONG
-    if any(k in norm for k in ["thuong mai", "sieu thi", "trung tam tm", "cho"]):
-        return PcccProjectType.THUONG_MAI_DICH_VU
-    if any(k in norm for k in ["karaoke", "vu truong", "bar", "pub"]):
+
+    # Entertainment / Cultural (checked before commerce to avoid collision of 'vui choi' with 'cho')
+    if any(k in norm for k in ["karaoke", "vu truong", "pub"]) or re.search(r"\bbar\b", norm):
         return PcccProjectType.KARAOKE_BAR
-    if any(k in norm for k in ["rap chieu", "nha hat", "hoi nghi", "thi dau", "giai tri"]):
+    if any(
+        k in norm
+        for k in [
+            "vui choi",
+            "giai tri",
+            "rap chieu",
+            "nha hat",
+            "hoi nghi",
+            "hoi truong",
+            "thi dau",
+            "the thao",
+            "nha van hoa",
+            "rap xiec",
+        ]
+    ):
         return PcccProjectType.VUI_CHOI_GIAI_TRI
-    if any(k in norm for k in ["hang a", "hang b"]):
+
+    # Commerce & Restaurants
+    if any(k in norm for k in ["thuong mai", "sieu thi", "trung tam tm", "nha hang", "an uong", "am thuc", "tiec cuoi"]) or re.search(r"\bcho\b", norm):
+        return PcccProjectType.THUONG_MAI_DICH_VU
+
+    # Industrial manufacturing (word boundaries protect against 'nha hang cap 1', etc.)
+    if re.search(r"\bhang\s*[ab]\b", norm):
         return PcccProjectType.CONG_NGHIEP_A_B
-    if "hang c" in norm:
+    if re.search(r"\bhang\s*c\b", norm):
         return PcccProjectType.CONG_NGHIEP_C
-    if any(k in norm for k in ["hang d", "hang e", "nha xuong", "nha may", "cong nghiep"]):
+    if re.search(r"\bhang\s*[de]\b", norm) or any(
+        k in norm for k in ["nha xuong", "nha may", "cong nghiep", "che bien", "san xuat"]
+    ):
         return PcccProjectType.CONG_NGHIEP_D_E
-    if any(k in norm for k in ["kho", "kho hang", "warehouse"]):
+
+    # General Warehouse fallback for single word 'kho'
+    if re.search(r"\bkho\b", norm):
         return PcccProjectType.KHO_HANG
-    if any(k in norm for k in ["gara", "bai do xe", "nha de xe"]):
+
+    # Parking / Underground / Hazardous / Energy
+    if any(k in norm for k in ["gara", "bai do xe", "nha de xe", "parking"]):
         return PcccProjectType.GARA_OTO
-    if any(k in norm for k in ["ngam", "ham duong bo", "ham duong sat"]):
+    if any(k in norm for k in ["cong trinh ngam", "ham duong bo", "ham duong sat"]) or re.search(r"\bngam\b", norm):
         return PcccProjectType.CONG_TRINH_NGAM
-    if any(k in norm for k in ["xang dau", "khi dot", "gas", "lpg"]):
+    if any(k in norm for k in ["xang dau", "khi dot", "gas", "lpg", "xang"]):
         return PcccProjectType.XANG_DAU_KHI_DOT
-    if any(k in norm for k in ["dien luc", "thuy dien", "nhiet dien", "tram bien ap"]):
+    if any(k in norm for k in ["dien luc", "thuy dien", "nhiet dien", "tram bien ap", "nang luong"]):
         return PcccProjectType.NANG_LUONG
 
     return PcccProjectType.OTHER
@@ -182,7 +240,7 @@ class PcccJurisdictionRouter:
         if police_required:
             police_scope = ["e", "g"]
             police_forms = ["PC12", "PC14"]
-            inv_tier = spec.investment_tier.upper()
+            inv_tier = spec.investment_tier.upper().strip().replace(" ", "_")
             if (
                 inv_tier in {"QUOC_GIA", "NHOM_A"}
                 or spec.height_m >= 100.0
@@ -201,7 +259,12 @@ class PcccJurisdictionRouter:
         investor_forms = ["PC13"] if investor_self_appraisal else []
 
         # 4. Citations Assembly
-        citations = cls._build_citations(is_annex_iii, annex_item, cqcmvxd_required)
+        citations = cls._build_citations(
+            is_annex_iii=is_annex_iii,
+            annex_item=annex_item,
+            cqcmvxd_required=cqcmvxd_required,
+            investor_self_appraisal=investor_self_appraisal,
+        )
 
         return PcccJurisdictionResult(
             cqcmvxd_required=cqcmvxd_required,
@@ -224,10 +287,12 @@ class PcccJurisdictionRouter:
         pt: PcccProjectType, spec: PcccProjectSpec
     ) -> tuple[bool, int | None]:
         """Check verbatim statutory thresholds of Phụ lục III Nghị định 105/2025/NĐ-CP."""
-        # Check specific occupancy thresholds
         matched_item = None
         if pt == PcccProjectType.CHUNG_CU:
             if spec.floors >= 7 or spec.floor_area_m2 >= 3000.0 or spec.volume_m3 >= 10000.0:
+                matched_item = 1
+        elif pt == PcccProjectType.NHA_O_RIENG_LE:
+            if spec.floors >= 7 or spec.floor_area_m2 >= 3000.0:
                 matched_item = 1
         elif pt == PcccProjectType.MAM_NON:
             if spec.capacity_persons >= 150 or spec.floor_area_m2 >= 2000.0 or spec.volume_m3 >= 5000.0:
@@ -275,23 +340,35 @@ class PcccJurisdictionRouter:
         elif pt == PcccProjectType.CONG_NGHIEP_D_E:
             if spec.volume_m3 >= 30000.0 or spec.floor_area_m2 >= 10000.0:
                 matched_item = 9
-        elif pt == PcccProjectType.KHO_HANG:
-            if spec.volume_m3 >= 10000.0 or spec.floor_area_m2 >= 3000.0:
+        elif pt == PcccProjectType.KHO_HANG_D_E:
+            if spec.volume_m3 >= 30000.0 or spec.floor_area_m2 >= 10000.0:
                 matched_item = 10
+        elif pt == PcccProjectType.KHO_HANG:
+            # Check if text specifies category D/E
+            is_de = False
+            if isinstance(spec.project_type, str):
+                raw_norm = _strip_accents(spec.project_type).lower()
+                if any(k in raw_norm for k in ["hang d", "hang e", "d/e", "d e", "khong chay"]):
+                    is_de = True
+            if is_de:
+                if spec.volume_m3 >= 30000.0 or spec.floor_area_m2 >= 10000.0:
+                    matched_item = 10
+            else:
+                if spec.volume_m3 >= 10000.0 or spec.floor_area_m2 >= 3000.0:
+                    matched_item = 10
         elif pt == PcccProjectType.XANG_DAU_KHI_DOT:
             matched_item = 11
         elif pt == PcccProjectType.CONG_TRINH_NGAM:
-            matched_item = 12
+            if spec.floor_area_m2 >= 500.0 or spec.volume_m3 >= 1000.0 or spec.basement_floors >= 2:
+                matched_item = 12
         elif pt == PcccProjectType.NANG_LUONG:
             matched_item = 13
 
         if matched_item is not None:
             return True, matched_item
 
-        # Cross-cutting: Underground structure or >= 2 basements (Mục 12 Phụ lục III)
-        if spec.basement_floors >= 2 or (
-            pt == PcccProjectType.CONG_TRINH_NGAM and spec.floor_area_m2 >= 500.0
-        ):
+        # Cross-cutting: Any project with >= 2 basements (Mục 12 Phụ lục III)
+        if spec.basement_floors >= 2:
             return True, 12
 
         return False, None
@@ -305,7 +382,7 @@ class PcccJurisdictionRouter:
         if pt == PcccProjectType.NHA_O_RIENG_LE and spec.height_m < 28.0 and spec.floors < 7:
             return False, "NONE", []
 
-        inv_tier = spec.investment_tier.upper()
+        inv_tier = spec.investment_tier.upper().strip().replace(" ", "_")
         full_scope = ["a", "b", "c", "d", "dd"]
 
         # Central Ministry of Construction (BXD)
@@ -330,7 +407,10 @@ class PcccJurisdictionRouter:
 
     @staticmethod
     def _build_citations(
-        is_annex_iii: bool, annex_item: int | None, cqcmvxd_required: bool
+        is_annex_iii: bool,
+        annex_item: int | None,
+        cqcmvxd_required: bool,
+        investor_self_appraisal: bool = False,
     ) -> list[str]:
         """Assemble formal legal citations for statutory provenance."""
         citations = [
@@ -342,7 +422,7 @@ class PcccJurisdictionRouter:
             citations.append(
                 f"Phụ lục III Nghị định 105/2025/NĐ-CP (Mục {annex_item}) - Cơ quan Công an thẩm định"
             )
-        else:
+        if investor_self_appraisal:
             citations.append(
                 "Khoản 1 Điều 8 Nghị định 105/2025/NĐ-CP - Chủ đầu tư tự thẩm định thiết kế PCCC (Mẫu PC13)"
             )

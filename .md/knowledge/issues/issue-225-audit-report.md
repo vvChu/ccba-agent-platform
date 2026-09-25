@@ -37,13 +37,14 @@ Sau quá trình rà soát đối chiếu mã nguồn (Code-First Research Audit)
   - Mục 3 (Y tế): Bệnh viện $\ge 5$ tầng HOẶC sàn $\ge 2.000\text{ m}^2$ HOẶC $\ge 50$ giường bệnh.
   - Mục 7 (Khách sạn/Văn phòng): $\ge 7$ tầng HOẶC sàn $\ge 3.000\text{ m}^2$.
   - Mục 9 (Công nghiệp D, E): Khối tích $\ge 30.000\text{ m}^3$ HOẶC sàn $\ge 10.000\text{ m}^2$.
+  - Mục 10 (Kho hàng hóa): Kho hàng hóa thông thường khối tích $\ge 10.000\text{ m}^3$ HOẶC sàn $\ge 3.000\text{ m}^2$; Kho hàng hóa hạng D, E khối tích $\ge 30.000\text{ m}^3$ HOẶC sàn $\ge 10.000\text{ m}^2$.
   - Mục 12 (Công trình ngầm): $\ge 2$ tầng hầm HOẶC diện tích sàn ngầm $\ge 500\text{ m}^2$.
 
 ### 2.2. Legal-to-PPTX Thin Seam (Trụ cột 2)
 - **Endpoint CLI:** `python -m ccba_legal pptx <input_markdown> -o <output_pptx>`
 - **Dynamic Import:** Sử dụng dynamic import `from ccba_ooxml.pptx.deck_builder import build_presentation_from_markdown` để giữ `ccba-legal-intel` nhẹ và linh hoạt, tuân thủ nguyên tắc KISS & ADR-0044.
 - **Thiết kế thương hiệu:** Tự động áp dụng `CCBAPresentationTheme.default()` (Swiss Modernist Design ver 3.4, tỷ lệ 16:9, bảng màu Slate/Navy/BIM Blue/IBST Red).
-- **Kiểm thử:** 5 unit tests tại `packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py` kiểm tra phân tích cú pháp CLI, xử lý lỗi tệp không tồn tại, tạo file PPTX hợp lệ và kiểm tra khả năng phục hồi khi lỗi import.
+- **Kiểm thử:** 6 unit tests tại `packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py` kiểm tra cấu hình parser, từ chối file không tồn tại, từ chối đường dẫn thư mục, tạo file PPTX hợp lệ, đường dẫn mặc định và phục hồi khi lỗi import.
 
 ### 2.3. Cập Nhật Benchmark Eval Gate (Trụ cột 5)
 - Bổ sung 4 test cases vào `.agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json`:
@@ -59,24 +60,24 @@ Sau quá trình rà soát đối chiếu mã nguồn (Code-First Research Audit)
 Tất cả các bài kiểm tra được thực hiện trực tiếp trong môi trường `.venv/bin/`:
 
 ```bash
-# 1. PCCC Jurisdiction Scoped Tests: 10/10 PASSED
+# 1. PCCC Jurisdiction Scoped Tests: 14/14 PASSED
 .venv/bin/pytest packages/ccba-qc-core/tests/test_pccc_jurisdiction.py -v
-=> 10 passed in 0.49s
+=> 14 passed in 0.51s
 
-# 2. Toàn bộ ccba-qc-core Tests: 17/17 PASSED
+# 2. Toàn bộ ccba-qc-core Tests: 21/21 PASSED
 .venv/bin/pytest packages/ccba-qc-core/tests -v
-=> 17 passed in 0.52s
+=> 21 passed in 0.54s
 
-# 3. Legal-to-PPTX Thin Seam Tests: 5/5 PASSED
+# 3. Legal-to-PPTX Thin Seam Tests: 6/6 PASSED
 .venv/bin/pytest packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py -v
-=> 5 passed in 0.61s
+=> 6 passed in 0.59s
 
 # 4. CLI Documentation Parity Tests: 3/3 PASSED
 .venv/bin/pytest packages/ccba-legal-intel/tests/test_cli_doc_parity.py -v
 => 3 passed in 1.03s
 
 # 5. Linter Scoped Check: 0 Errors
-.venv/bin/ruff check packages/ccba-qc-core/src/ccba_qc_core/jurisdiction.py packages/ccba-legal-intel/src/ccba_legal/cli.py
+.venv/bin/ruff check packages/ccba-qc-core/src/ccba_qc_core/jurisdiction.py packages/ccba-legal-intel/src/ccba_legal/cli.py packages/ccba-qc-core/tests/test_pccc_jurisdiction.py packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py
 => All checks passed!
 
 # 6. Static Type Check Scoped: 0 Errors
