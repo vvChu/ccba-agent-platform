@@ -103,6 +103,7 @@ Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự độn
 | `ccba-notebooklm` | Google NotebookLM API wrapper & mock client | `pip install -e "packages/ccba-notebooklm"` |
 | `ccba-ooxml` | OOXML document structure integrity & offline schema validator | `pip install -e "packages/ccba-ooxml"` |
 | `ccba-pdf-prep` | PDF Preprocessing pipeline (tiling, title-block, chunks) | `pip install -e "packages/ccba-pdf-prep"` |
+| `ccba-qc-core` | Core engine thẩm tra chất lượng thiết kế đa bộ môn (QC Audit Pipeline, Quad-View Vision, Semantic Map-Reduce) và Deep Seam `PcccJurisdictionRouter` phân định thẩm quyền thẩm định PCCC tất định (ADR-0035, ADR-0059) | `pip install -e "packages/ccba-qc-core"` |
 | `mdconverter` | Document-to-Markdown converter service | `pip install -e "packages/mdconverter"` |
 
 ## Cách sử dụng

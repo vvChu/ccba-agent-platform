@@ -1913,14 +1913,14 @@ async def test_pccc_parametric_scorer_advisory_escalation_judge_graceful_fallbac
 
 
 def test_pccc_audit_12_items_dataset_evaluates_with_pccc_scorer():
-    """Verify all 12 items in eval_pccc_audit.json load and evaluate cleanly with PcccParametricScorer."""
+    """Verify all 16 items in eval_pccc_audit.json load and evaluate cleanly with PcccParametricScorer."""
     from ccba_harness.evals.runner import load_eval_dataset
     from ccba_harness.evals.scorers import PcccParametricScorer
 
     items = load_eval_dataset(
         dataset_path=Path(".agents/skills/ccba-eval-gate/test_cases/eval_pccc_audit.json")
     )
-    assert len(items) == 12, f"Expected 12 items, found {len(items)}"
+    assert len(items) == 16, f"Expected 16 items, found {len(items)}"
 
     scorer = PcccParametricScorer(weight=0.5, is_critical=True)
     import asyncio

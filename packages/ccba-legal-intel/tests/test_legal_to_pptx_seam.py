@@ -17,9 +17,11 @@ def test_pptx_parser_configuration() -> None:
     """Verify 'pptx' subcommand parser options and arguments."""
     parser = build_parser()
     subparsers_action = next(a for a in parser._actions if a.dest == "command")
+    assert isinstance(subparsers_action.choices, dict)
     assert "pptx" in subparsers_action.choices
 
     pptx_parser = subparsers_action.choices["pptx"]
+    assert isinstance(pptx_parser, argparse.ArgumentParser)
     arg_names = [a.dest for a in pptx_parser._actions]
     assert "input_markdown" in arg_names
     assert "output" in arg_names

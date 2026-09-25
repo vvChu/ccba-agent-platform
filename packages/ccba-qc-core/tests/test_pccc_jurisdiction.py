@@ -85,7 +85,8 @@ def test_small_apartment_outside_annex_iii_investor_self_appraisal() -> None:
     Expectations:
     - Annex III: False.
     - Police: NONE (police_required=False).
-    - Investor self-appraisal: True (Form PC13 under Dieu 8 ND 105/2025).
+    - CQCMVXD: SO_XAY_DUNG (NHOM_C).
+    - Investor self-appraisal: False (SXD evaluates, Điểm đ K1 Đ17 Luật 55/2024).
     """
     spec = PcccProjectSpec(
         project_type=PcccProjectType.CHUNG_CU,
@@ -102,8 +103,10 @@ def test_small_apartment_outside_annex_iii_investor_self_appraisal() -> None:
     assert res.annex_iii_item is None
     assert res.police_required is False
     assert res.police_tier == "NONE"
-    assert res.investor_self_appraisal is True
-    assert "PC13" in res.investor_forms
+    assert res.cqcmvxd_required is True
+    assert res.cqcmvxd_tier == "SO_XAY_DUNG"
+    assert res.investor_self_appraisal is False
+    assert res.investor_forms == []
 
 
 def test_kindergarten_thresholds() -> None:
@@ -130,8 +133,10 @@ def test_kindergarten_thresholds() -> None:
     )
     res_small = PcccJurisdictionRouter.evaluate(spec_small)
     assert res_small.is_annex_iii is False
-    assert res_small.investor_self_appraisal is True
-    assert "PC13" in res_small.investor_forms
+    assert res_small.police_required is False
+    assert res_small.cqcmvxd_required is True
+    assert res_small.investor_self_appraisal is False
+    assert res_small.investor_forms == []
 
 
 def test_hospital_medical_facility_thresholds() -> None:
@@ -158,7 +163,10 @@ def test_hospital_medical_facility_thresholds() -> None:
     )
     res_clinic = PcccJurisdictionRouter.evaluate(spec_clinic)
     assert res_clinic.is_annex_iii is False
-    assert res_clinic.investor_self_appraisal is True
+    assert res_clinic.police_required is False
+    assert res_clinic.cqcmvxd_required is True
+    assert res_clinic.investor_self_appraisal is False
+    assert res_clinic.investor_forms == []
 
 
 def test_hotel_and_office_thresholds() -> None:
@@ -182,7 +190,10 @@ def test_hotel_and_office_thresholds() -> None:
     )
     res_hotel_small = PcccJurisdictionRouter.evaluate(spec_hotel_small)
     assert res_hotel_small.is_annex_iii is False
-    assert res_hotel_small.investor_self_appraisal is True
+    assert res_hotel_small.police_required is False
+    assert res_hotel_small.cqcmvxd_required is True
+    assert res_hotel_small.investor_self_appraisal is False
+    assert res_hotel_small.investor_forms == []
 
 
 def test_industrial_manufacturing_category_d_e() -> None:
@@ -210,7 +221,10 @@ def test_industrial_manufacturing_category_d_e() -> None:
     )
     res_ind_small = PcccJurisdictionRouter.evaluate(spec_ind_small)
     assert res_ind_small.is_annex_iii is False
-    assert res_ind_small.investor_self_appraisal is True
+    assert res_ind_small.police_required is False
+    assert res_ind_small.cqcmvxd_required is True
+    assert res_ind_small.investor_self_appraisal is False
+    assert res_ind_small.investor_forms == []
 
 
 def test_private_residential_dwelling() -> None:
@@ -312,9 +326,28 @@ def test_pccc_jurisdiction_industrial_warehouse_category_d_e() -> None:
     assert res_small.is_annex_iii is False
     assert res_small.annex_iii_item is None
     assert res_small.police_required is False
-    assert res_small.investor_self_appraisal is True
-    assert "PC13" in res_small.investor_forms
-    assert any("Mẫu PC13" in c for c in res_small.statutory_citations)
+    assert res_small.cqcmvxd_required is True
+    assert res_small.investor_self_appraisal is False
+    assert res_small.investor_forms == []
+
+
+def test_private_project_exempt_from_both_police_and_cqcmvxd() -> None:
+    """Verify project exempt from both CQCMVXD and Police triggers CĐT self-appraisal."""
+    spec = PcccProjectSpec(
+        project_type=PcccProjectType.MAM_NON,
+        capacity_persons=70,
+        floors=2,
+        floor_area_m2=600.0,
+        volume_m3=1800.0,
+        investment_tier="NONE",
+    )
+    res = PcccJurisdictionRouter.evaluate(spec)
+    assert res.is_annex_iii is False
+    assert res.police_required is False
+    assert res.cqcmvxd_required is False
+    assert res.investor_self_appraisal is True
+    assert "PC13" in res.investor_forms
+    assert any("Mẫu PC13" in c for c in res.statutory_citations)
 
 
 def test_underground_structure_threshold() -> None:
@@ -352,7 +385,10 @@ def test_fuzzy_normalization_edge_cases() -> None:
     assert _normalize_project_type_test("Nhà hàng cấp 1") == PcccProjectType.THUONG_MAI_DICH_VU
 
     # Children entertainment center must not match THUONG_MAI_DICH_VU via 'cho' in 'choi'
-    assert _normalize_project_type_test("Khu vui chơi giải trí trẻ em") == PcccProjectType.VUI_CHOI_GIAI_TRI
+    assert (
+        _normalize_project_type_test("Khu vui chơi giải trí trẻ em")
+        == PcccProjectType.VUI_CHOI_GIAI_TRI
+    )
 
     # Traditional market matches THUONG_MAI_DICH_VU via word boundary 'cho'
     assert _normalize_project_type_test("Chợ truyền thống") == PcccProjectType.THUONG_MAI_DICH_VU
@@ -363,4 +399,3 @@ def test_fuzzy_normalization_edge_cases() -> None:
 
 def _normalize_project_type_test(name: str) -> PcccProjectType:
     return PcccProjectSpec(project_type=name).get_canonical_type()
-

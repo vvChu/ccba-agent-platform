@@ -782,7 +782,8 @@
       "cqcmvxd_tier": "Sở Xây dựng thẩm định thiết kế xây dựng lồng ghép PCCC (kiến trúc, thoát nạn, giải pháp chống khói)",
       "police_tier": "Phòng Cảnh sát PCCC & CNCH (PC07 Công an địa phương) thẩm định thiết kế hệ thống PCCC theo Phụ lục III Mục 7 NĐ 105/2025 (khách sạn >= 7 tầng hoặc diện tích sàn >= 3.000 m2). Mẫu: PC12 và PC14",
       "investor_self_appraisal": "Không áp dụng mẫu PC13 do thuộc thẩm quyền thẩm định của PC07",
-      "legal_basis": "Luật 55/2024/QH15 Điều 16, 17 và Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 7"
+      "analysis": "Khách sạn 9 tầng thuộc diện thẩm duyệt thiết kế PCCC của PC07 theo Mục 7 Phụ lục III NĐ 105/2025.",
+      "legal_basis": "Luật PCCC số 55/2024/QH15 Điều 16, 17 và Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 7"
     },
     "rubric": "Xác định đúng Sở Xây dựng và PC07 Công an cấp tỉnh/thành phố là 2 cơ quan có thẩm quyền thẩm định song song theo cơ chế phân cấp.",
     "metadata": {

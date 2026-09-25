@@ -14,9 +14,7 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
-PROVENANCE_SHA256_ND105_2025 = (
-    "6808c77f7438e0a15d7fc688726be181f476d958cf5f907ebc184afc0dc87262"
-)
+PROVENANCE_SHA256_ND105_2025 = "6808c77f7438e0a15d7fc688726be181f476d958cf5f907ebc184afc0dc87262"
 
 
 class PcccProjectType(str, Enum):
@@ -152,7 +150,10 @@ def _normalize_project_type(raw_type: str) -> PcccProjectType:
     # Education
     if any(k in norm for k in ["mam non", "mau giao", "nha tre"]):
         return PcccProjectType.MAM_NON
-    if any(k in norm for k in ["pho thong", "tieu hoc", "thcs", "thpt", "truong cap", "truong lien cap"]):
+    if any(
+        k in norm
+        for k in ["pho thong", "tieu hoc", "thcs", "thpt", "truong cap", "truong lien cap"]
+    ):
         return PcccProjectType.TRUONG_PHO_THONG
     if any(k in norm for k in ["dai hoc", "cao dang", "trung cap", "day nghe", "hoc vien"]):
         return PcccProjectType.DAI_HOC_CAO_DANG
@@ -162,7 +163,9 @@ def _normalize_project_type(raw_type: str) -> PcccProjectType:
         return PcccProjectType.BENH_VIEN_Y_TE
 
     # Administrative
-    if any(k in norm for k in ["tru so", "uy ban", "co quan", "hanh chinh", "toa nha lien co quan"]):
+    if any(
+        k in norm for k in ["tru so", "uy ban", "co quan", "hanh chinh", "toa nha lien co quan"]
+    ):
         return PcccProjectType.TRU_SO_CO_QUAN
 
     # Hospitality & Office
@@ -192,7 +195,18 @@ def _normalize_project_type(raw_type: str) -> PcccProjectType:
         return PcccProjectType.VUI_CHOI_GIAI_TRI
 
     # Commerce & Restaurants
-    if any(k in norm for k in ["thuong mai", "sieu thi", "trung tam tm", "nha hang", "an uong", "am thuc", "tiec cuoi"]) or re.search(r"\bcho\b", norm):
+    if any(
+        k in norm
+        for k in [
+            "thuong mai",
+            "sieu thi",
+            "trung tam tm",
+            "nha hang",
+            "an uong",
+            "am thuc",
+            "tiec cuoi",
+        ]
+    ) or re.search(r"\bcho\b", norm):
         return PcccProjectType.THUONG_MAI_DICH_VU
 
     # Industrial manufacturing (word boundaries protect against 'nha hang cap 1', etc.)
@@ -212,11 +226,15 @@ def _normalize_project_type(raw_type: str) -> PcccProjectType:
     # Parking / Underground / Hazardous / Energy
     if any(k in norm for k in ["gara", "bai do xe", "nha de xe", "parking"]):
         return PcccProjectType.GARA_OTO
-    if any(k in norm for k in ["cong trinh ngam", "ham duong bo", "ham duong sat"]) or re.search(r"\bngam\b", norm):
+    if any(k in norm for k in ["cong trinh ngam", "ham duong bo", "ham duong sat"]) or re.search(
+        r"\bngam\b", norm
+    ):
         return PcccProjectType.CONG_TRINH_NGAM
     if any(k in norm for k in ["xang dau", "khi dot", "gas", "lpg", "xang"]):
         return PcccProjectType.XANG_DAU_KHI_DOT
-    if any(k in norm for k in ["dien luc", "thuy dien", "nhiet dien", "tram bien ap", "nang luong"]):
+    if any(
+        k in norm for k in ["dien luc", "thuy dien", "nhiet dien", "tram bien ap", "nang luong"]
+    ):
         return PcccProjectType.NANG_LUONG
 
     return PcccProjectType.OTHER
@@ -254,8 +272,8 @@ class PcccJurisdictionRouter:
         # 2. Construction Specialized Agency Channel (CQCMVXD)
         cqcmvxd_required, cqcmvxd_tier, cqcmvxd_scope = cls._evaluate_cqcmvxd(canonical_type, spec)
 
-        # 3. Investor Self-Appraisal Channel (Điều 8 Nghị định 105/2025)
-        investor_self_appraisal = (not police_required) or (not cqcmvxd_required)
+        # 3. Investor Self-Appraisal Channel (Điểm đ K1 Đ17 Luật 55/2024 & Điều 8 Nghị định 105/2025)
+        investor_self_appraisal = (not police_required) and (not cqcmvxd_required)
         investor_forms = ["PC13"] if investor_self_appraisal else []
 
         # 4. Citations Assembly
@@ -283,9 +301,7 @@ class PcccJurisdictionRouter:
         )
 
     @staticmethod
-    def _check_annex_iii(
-        pt: PcccProjectType, spec: PcccProjectSpec
-    ) -> tuple[bool, int | None]:
+    def _check_annex_iii(pt: PcccProjectType, spec: PcccProjectSpec) -> tuple[bool, int | None]:
         """Check verbatim statutory thresholds of Phụ lục III Nghị định 105/2025/NĐ-CP."""
         matched_item = None
         if pt == PcccProjectType.CHUNG_CU:
@@ -295,7 +311,11 @@ class PcccJurisdictionRouter:
             if spec.floors >= 7 or spec.floor_area_m2 >= 3000.0:
                 matched_item = 1
         elif pt == PcccProjectType.MAM_NON:
-            if spec.capacity_persons >= 150 or spec.floor_area_m2 >= 2000.0 or spec.volume_m3 >= 5000.0:
+            if (
+                spec.capacity_persons >= 150
+                or spec.floor_area_m2 >= 2000.0
+                or spec.volume_m3 >= 5000.0
+            ):
                 matched_item = 2
         elif pt in {PcccProjectType.TRUONG_PHO_THONG, PcccProjectType.DAI_HOC_CAO_DANG}:
             if spec.floors >= 5 or spec.floor_area_m2 >= 3000.0 or spec.volume_m3 >= 10000.0:
