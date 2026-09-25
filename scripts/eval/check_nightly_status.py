@@ -374,7 +374,7 @@ def inspect_post_run(root: Path) -> PostRunSummary | None:
 
     reports = sorted(
         reports_dir.glob("nightly_tuner_report_*.md"),
-        key=lambda p: p.stat().st_mtime,
+        key=lambda p: p.name,
         reverse=True,
     )
     if not reports:

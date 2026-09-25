@@ -22,6 +22,7 @@ from ccba_harness.evals.models import EvalItem, EvalItemResult, EvalReport, Scor
 from ccba_harness.evals.runner import run_eval_pipeline
 from ccba_harness.evals.scorers import LegalVerbatimProvenanceScorer, RegexScorer, get_legal_scorers
 from ccba_harness.evals.tuner import (
+    AdaptiveRateLimiter,
     CircuitBreakerOpenError,
     GitRatchetOptimizer,
     GitRatchetTuner,
@@ -2208,3 +2209,124 @@ def test_ratchet_fast_fail_guard_reverts_mutation_on_broken_links(tmp_path: Path
     assert "Từ chối mutation vì vi phạm liên kết" in trial.summary
     assert report.final_score == 60.0
     assert report.kept_commits == 0
+
+
+def test_ratchet_config_concurrency_resolution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Test resolution of max_concurrency in RatchetConfig from default, explicit, and env."""
+    target = tmp_path / "SKILL.md"
+
+    # 1. Default value is 5
+    cfg = RatchetConfig(target_file=target)
+    assert cfg.max_concurrency == 5
+
+    # 2. Explicit value overrides
+    cfg_explicit = RatchetConfig(target_file=target, max_concurrency=10)
+    assert cfg_explicit.max_concurrency == 10
+
+    # 3. Environment variable resolution
+    monkeypatch.setenv("CCBA_TUNER_CONCURRENCY", "8")
+    cfg_env = RatchetConfig(target_file=target)
+    assert cfg_env.max_concurrency == 8
+
+
+@pytest.mark.asyncio
+async def test_adaptive_rate_limiter_wait_async_normal_and_backoff():
+    """Verify AdaptiveRateLimiter.wait_async does not delay under normal latency but backs off when high."""
+    slept_delays: list[float] = []
+
+    async def mock_async_sleeper(delay: float) -> None:
+        slept_delays.append(delay)
+
+    limiter = AdaptiveRateLimiter(
+        requests_per_minute=60,
+        latency_threshold_s=4.0,
+        min_delay_s=0.5,
+        max_delay_s=10.0,
+        backoff_multiplier=1.5,
+        async_sleeper=mock_async_sleeper,
+    )
+
+    # 1. Normal latency below threshold -> no backoff delay
+    delay = await limiter.wait_async(last_latency_s=2.0)
+    assert delay == 0.0
+    assert len(slept_delays) == 0
+
+    # 2. High latency above threshold -> triggers backoff cooldown
+    delay_high = await limiter.wait_async(last_latency_s=6.0)
+    assert delay_high == pytest.approx(1.0, 0.01)
+    assert len(slept_delays) == 1
+    assert slept_delays[0] == pytest.approx(1.0, 0.01)
+
+
+@pytest.mark.asyncio
+async def test_llm_task_adapter_create_async_eval_task_token_recording():
+    """Verify create_async_eval_task tracks tokens and latency on async client invocations."""
+    mock_async_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.content = "Async output content"
+    mock_resp.usage = MagicMock(prompt_tokens=100, completion_tokens=50)
+
+    async def async_chat(*args: Any, **kwargs: Any) -> Any:
+        return mock_resp
+
+    mock_async_client.chat_with_metadata = async_chat
+
+    tracker = TokenUsageTracker(budget_ceiling=100_000)
+    adapter = LLMTaskAdapter(
+        model="test-model",
+        async_client=mock_async_client,
+        token_tracker=tracker,
+    )
+
+    async_task = adapter.create_async_eval_task("system prompt")
+    item = EvalItem(id="test-1", input_prompt="Hello")
+
+    output = await async_task(item)
+    assert output == "Async output content"
+    assert tracker.total_tokens == 150
+    assert tracker.prompt_tokens == 100
+    assert tracker.completion_tokens == 50
+
+
+@pytest.mark.asyncio
+async def test_llm_task_adapter_async_concurrency_batching():
+    """Verify EvalRunner processes items concurrently with create_async_eval_task."""
+    import asyncio
+
+    from ccba_harness.evals.runner import EvalRunner
+    from ccba_harness.evals.scorers import LengthBoundsScorer
+
+    active_calls = 0
+    max_observed_concurrency = 0
+
+    mock_async_client = MagicMock()
+
+    async def async_chat(*args: Any, **kwargs: Any) -> Any:
+        nonlocal active_calls, max_observed_concurrency
+        active_calls += 1
+        max_observed_concurrency = max(max_observed_concurrency, active_calls)
+        await asyncio.sleep(0.02)
+        active_calls -= 1
+        mock_resp = MagicMock()
+        mock_resp.content = "Valid output text for length bounds"
+        mock_resp.usage = MagicMock(prompt_tokens=10, completion_tokens=10)
+        return mock_resp
+
+    mock_async_client.chat_with_metadata = async_chat
+    adapter = LLMTaskAdapter(model="test-model", async_client=mock_async_client)
+
+    dataset = [EvalItem(id=f"item-{i}", input_prompt=f"Prompt {i}") for i in range(10)]
+    async_task = adapter.create_async_eval_task("test prompt")
+    runner = EvalRunner(max_concurrency=4)
+
+    report = await runner.run(
+        dataset=dataset,
+        task=async_task,
+        scorers=[LengthBoundsScorer(min_length=5)],
+        max_concurrency=4,
+    )
+
+    assert report.total_items == 10
+    assert report.passed_items == 10
+    assert max_observed_concurrency > 1
+    assert max_observed_concurrency <= 4

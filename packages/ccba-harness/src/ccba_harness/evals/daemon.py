@@ -212,12 +212,14 @@ class NightlyTunerDaemon:
         target_ref: str = "origin/main",
         no_telegram: bool = False,
         skip_cooldown: bool = False,
+        concurrency: int = 5,
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low = max_iterations_low
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
         self.use_real_llm = use_real_llm
+        self.concurrency = concurrency
         self.token_budget = token_budget
         self.per_skill_mutation_budget = per_skill_mutation_budget
         self.model = model
@@ -506,6 +508,7 @@ class NightlyTunerDaemon:
                 llm_model=self.model,
                 token_budget=remaining_budget,
                 per_skill_mutation_budget=self.per_skill_mutation_budget,
+                max_concurrency=self.concurrency,
             )
 
             try:

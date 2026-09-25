@@ -7,7 +7,9 @@ improvements and instantly rolling back (git checkout / file restore) on regress
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -15,7 +17,7 @@ import re
 import subprocess
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -32,9 +34,10 @@ from .slicing import (
 
 try:
     from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
-    from ccba_ai.client import AIClient
+    from ccba_ai.client import AIClient, AsyncAIClient
 except ImportError:
     AIClient = None  # type: ignore[assignment, misc]
+    AsyncAIClient = None  # type: ignore[assignment, misc]
     CircuitBreaker = None  # type: ignore[assignment, misc]
 
     class CircuitBreakerOpenError(Exception):  # type: ignore[no-redef]
@@ -123,6 +126,7 @@ class AdaptiveRateLimiter:
         backoff_multiplier: float = 1.5,
         sleeper: Callable[[float], None] = time.sleep,
         time_fn: Callable[[], float] = time.monotonic,
+        async_sleeper: Callable[[float], Awaitable[None]] | None = None,
     ) -> None:
         self.requests_per_minute = max(1.0, requests_per_minute)
         self.min_interval = 60.0 / self.requests_per_minute
@@ -132,6 +136,7 @@ class AdaptiveRateLimiter:
         self.backoff_multiplier = backoff_multiplier
         self.sleeper = sleeper
         self.time_fn = time_fn
+        self.async_sleeper = async_sleeper
         self.last_request_time: float = 0.0
 
     def wait(self, last_latency_s: float = 0.0) -> float:
@@ -158,6 +163,30 @@ class AdaptiveRateLimiter:
         self.last_request_time = self.time_fn()
         return total_delay
 
+    async def wait_async(self, last_latency_s: float = 0.0) -> float:
+        """Non-blocking rate limiter for async continuous batching.
+
+        Avoids sequential bottlenecking between parallel tasks to unlock vLLM continuous
+        batching on Server Spark (:8090). Only applies backoff cooldown when the backend
+        server exhibits latency higher than latency_threshold_s.
+
+        Returns:
+            The backoff delay in seconds waited.
+        """
+        backoff_delay = 0.0
+        if last_latency_s > self.latency_threshold_s:
+            excess = last_latency_s - self.latency_threshold_s
+            backoff_delay = min(excess * (self.backoff_multiplier - 1.0), self.max_delay_s)
+
+        if backoff_delay >= self.min_delay_s:
+            if self.async_sleeper is not None:
+                await self.async_sleeper(backoff_delay)
+            else:
+                await asyncio.sleep(backoff_delay)
+
+        self.last_request_time = self.time_fn()
+        return backoff_delay
+
 
 class LLMTaskAdapter:
     """Connects GitRatchetOptimizer with ccba_ai client for Real LLM evaluations."""
@@ -169,6 +198,7 @@ class LLMTaskAdapter:
         token_tracker: TokenUsageTracker | None = None,
         circuit_breaker: Any | None = None,
         rate_limiter: RateLimiter | None = None,
+        async_client: Any | None = None,
     ) -> None:
         self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
         self.token_tracker = token_tracker or TokenUsageTracker()
@@ -192,6 +222,18 @@ class LLMTaskAdapter:
             raise ImportError(
                 "ccba-ai package is required for real LLM evaluation. Install via: pip install -e packages/ccba-ai"
             )
+
+        if async_client is not None:
+            self.async_client = async_client
+        elif client is not None:
+            self.async_client = client
+        elif AsyncAIClient is not None:
+            self.async_client = AsyncAIClient(
+                default_model=self.model,
+                circuit_breaker=self.circuit_breaker,
+            )
+        else:
+            self.async_client = None
 
     def create_eval_task(self, skill_content: str) -> Callable[[EvalItem], str]:
         """Creates a callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
@@ -231,6 +273,63 @@ class LLMTaskAdapter:
 
         return llm_eval_task
 
+    def create_async_eval_task(self, skill_content: str) -> Callable[[EvalItem], Awaitable[str]]:
+        """Creates an async callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
+
+        async def async_llm_eval_task(item: EvalItem) -> str:
+            if self.token_tracker.is_exhausted:
+                raise TokenBudgetExceededError(
+                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+                )
+
+            if self.rate_limiter is not None:
+                if hasattr(self.rate_limiter, "wait_async"):
+                    await self.rate_limiter.wait_async(last_latency_s=self._last_latency_s)
+                else:
+                    self.rate_limiter.wait(last_latency_s=self._last_latency_s)
+
+            t0 = time.perf_counter()
+            try:
+                active_client = self.async_client if self.async_client is not None else self.client
+                call_fn = active_client.chat_with_metadata
+                if inspect.iscoroutinefunction(call_fn):
+                    res = await call_fn(
+                        message=str(item.input_prompt),
+                        system=skill_content,
+                        model=self.model,
+                        temperature=0.0,
+                    )
+                else:
+                    call_res = call_fn(
+                        message=str(item.input_prompt),
+                        system=skill_content,
+                        model=self.model,
+                        temperature=0.0,
+                    )
+                    if inspect.isawaitable(call_res):
+                        res = await call_res
+                    else:
+                        res = call_res
+
+                latency = time.perf_counter() - t0
+                self._last_latency_s = latency
+                usage = getattr(res, "usage", None)
+                p_tok = getattr(usage, "prompt_tokens", 0) if usage else 0
+                c_tok = getattr(usage, "completion_tokens", 0) if usage else 0
+                self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
+                return str(res.content)
+            except CircuitBreakerOpenError:
+                # Re-raise circuit breaker fast-fail to trigger early stopping
+                raise
+            except Exception as e:
+                if self.circuit_breaker is not None and hasattr(
+                    self.circuit_breaker, "record_failure"
+                ):
+                    self.circuit_breaker.record_failure(e)
+                raise
+
+        return async_llm_eval_task
+
 
 @dataclass
 class RatchetConfig:
@@ -254,6 +353,7 @@ class RatchetConfig:
     slicing_seed: int = 42
     enable_perturbation: bool = True
     per_skill_mutation_budget: int | None = 250_000
+    max_concurrency: int = 5
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -284,6 +384,13 @@ class RatchetConfig:
                     self.per_skill_mutation_budget = int(
                         env_ps_budget.replace(",", "").replace("_", "")
                     )
+                except ValueError:
+                    pass
+        if self.max_concurrency == 5:
+            env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
+            if env_concurrency:
+                try:
+                    self.max_concurrency = int(env_concurrency)
                 except ValueError:
                     pass
 
@@ -547,12 +654,14 @@ class GitRatchetOptimizer:
         client: Any | None = None,
         circuit_breaker: Any | None = None,
         rate_limiter: RateLimiter | None = None,
+        async_client: Any | None = None,
     ) -> None:
         self.config = config
         self.target_file = Path(config.target_file).resolve()
         self.dry_run_git = dry_run_git
         self.custom_task = task
         self.client = client
+        self.async_client = async_client
         self.circuit_breaker = circuit_breaker
         self.rate_limiter = rate_limiter or config.rate_limiter
 
@@ -573,7 +682,10 @@ class GitRatchetOptimizer:
             self.project_root = detected if detected else Path.cwd().resolve()
 
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
-        self.runner = EvalRunner(default_pass_threshold=config.target_score)
+        self.runner = EvalRunner(
+            default_pass_threshold=config.target_score,
+            max_concurrency=config.max_concurrency,
+        )
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
 
         # Three-Tier Adaptive Slicing (TICKET-006 / ADR-0058)
@@ -600,6 +712,7 @@ class GitRatchetOptimizer:
             self.llm_adapter = LLMTaskAdapter(
                 model=config.llm_model,
                 client=client,
+                async_client=async_client,
                 token_tracker=self.token_tracker,
                 circuit_breaker=circuit_breaker,
                 rate_limiter=self.rate_limiter,
