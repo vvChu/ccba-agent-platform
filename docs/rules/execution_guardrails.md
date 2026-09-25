@@ -311,3 +311,25 @@
   - **Quy tắc Bất Biến (Active Lock Protection Invariant):**
     Tuyệt đối nghiêm cấm việc xóa worktree (`git worktree remove --force`) hoặc xóa file lock nếu tiến trình gắn với nó vẫn đang tồn tại trong bảng tiến trình hệ điều hành (trừ trạng thái Zombie `Z`). Chỉ được phép dọn dẹp khi tiến trình đã kết thúc hoàn toàn hoặc khi script tự động thu hồi qua hook `trap cleanup_worktree EXIT`.
 
+---
+
+## 17. Spoke CLI Parameter Symmetry & Safe Invocation Invariant (Quy Chuẩn Chữ Ký Tham Số & An Toàn Thực Thi Spoke CLI)
+
+Khi tự động hóa hoặc hướng dẫn sử dụng bộ công cụ Spoke CLI, Agent BẮT BUỘC tuân thủ đúng chữ ký tham số theo từng chế độ thực thi:
+
+1. **Bộ Script Độc Lập (Standalone Scripts):**
+   - **`scripts/sync_spoke.py` (Safe-by-Default 2-Phase):**
+     - Mặc định trong môi trường non-interactive (CI, Subagent) chỉ chạy xem trước (Preview), không ghi đĩa.
+     - BẮT BUỘC truyền cờ `--apply` (hoặc `-y`) để chính thức áp dụng thay đổi vào Spoke.
+     - Tham số chỉ định đường dẫn Spoke là `--spoke <path>`. TUYỆT ĐỐI CẤM dùng tham số vị trí (positional) hoặc `--spoke-path`.
+   - **`scripts/adopt_spoke.py` (Direct Execution by Default):**
+     - Mặc định là áp dụng thay đổi ngay lập tức lên thư mục đích; BẮT BUỘC truyền cờ `--dry-run` nếu chỉ muốn xem trước ma trận phát hiện.
+     - Tham số chỉ định đường dẫn Spoke là `--spoke <path>`. TUYỆT ĐỐI CẤM dùng tham số vị trí (positional) hoặc `--spoke-path`.
+     - TUYỆT ĐỐI CẤM truyền cờ `--apply` (gây lỗi `argparse: unrecognized arguments: --apply`, Exit Code 2).
+   - **`scripts/init_spoke.py` (Positional First):**
+     - Nhận đường dẫn Spoke dưới dạng tham số vị trí `[spoke_path]` hoặc cờ `-p` / `--path`. TUYỆT ĐỐI CẤM dùng cờ `--spoke`.
+
+2. **Giao Diện Hợp Nhất (`scripts/ccba_platform_cli.py`):**
+   - Cả 3 lệnh con `init-spoke`, `adopt-spoke`, `sync-spoke` đều nhận đường dẫn Spoke dưới dạng **tham số vị trí** `[spoke_path]` (ví dụ: `python scripts/ccba_platform_cli.py sync-spoke /path/to/spoke --apply`).
+   - TUYỆT ĐỐI CẤM truyền cờ `--spoke` vào CLI hợp nhất (gây lỗi `unrecognized arguments: --spoke`, Exit Code 2).
+

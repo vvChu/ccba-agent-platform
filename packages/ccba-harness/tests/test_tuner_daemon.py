@@ -5,7 +5,9 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import os
 import subprocess
+import time
 import urllib.error
 from pathlib import Path
 from typing import Any
@@ -609,6 +611,13 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
 """,
         encoding="utf-8",
     )
+
+    # Đảo ngược mtime: Đặt rep_newer có mtime cũ hơn rep_older 3600 giây
+    # để triệt tiêu hoàn toàn Collinear Test Trap theo Mục 13 Code Quality
+    base_time = time.time()
+    os.utime(rep_older, (base_time, base_time))
+    os.utime(rep_newer, (base_time - 3600.0, base_time - 3600.0))
+    assert rep_newer.stat().st_mtime < rep_older.stat().st_mtime
 
     daemon = NightlyTunerDaemon(root=tmp_path)
     scores, cooldown_skills, last_scanned_dates = daemon._load_historical_metrics(cooldown_days=3)

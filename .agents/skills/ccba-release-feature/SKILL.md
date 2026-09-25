@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.2.1"
+  version: "1.2.2"
   author: "CCBA Hub"
 triggers:
 - release
@@ -31,7 +31,15 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
      ```bash
      python scripts/validation/check_release_cleanliness.py --phase pre
      ```
-   - Nếu phát hiện tệp chưa commit, Agent **phải dừng quy trình ngay lập tức** để commit hoặc stash có chủ đích trước khi tiếp tục.
+   - Nếu phát hiện tệp chưa commit thuộc tác vụ song song khác:
+     1. Thực hiện stash có định danh rõ ràng kèm cả tệp untracked:
+        ```bash
+        git stash push -u -m "wip: concurrent work before release PR #[PR_NUMBER]"
+        ```
+     2. Xác nhận lại nhánh hiện tại trước khi kích hoạt Cổng 0.2:
+        ```bash
+        git branch --show-current
+        ```
 
 2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Tại Hub Platform (`ccba-agent-platform`):**
@@ -195,6 +203,22 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
      ```bash
      git add walkthrough.md .agents/proposals/ && git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix" && git push origin main
      ```
+
+6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
+   - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:
+     ```bash
+     git stash list --grep="wip: concurrent work before release PR #[PR_NUMBER]"
+     ```
+   - Nếu tìm thấy mục stash tương ứng, xác định đúng chỉ mục định danh `stash@{N}` từ kết quả trên và khôi phục có rào chắn bảo vệ:
+     ```bash
+     git stash pop stash@{N}
+     ```
+     *(Lưu ý: Bắt buộc truyền rõ `stash@{N}` để tránh pop nhầm `stash@{0}` nếu danh sách có nhiều bản stash song song).*
+   - *Rào chắn chống xung đột (Conflict Escape Hatch):* Nếu `git stash pop stash@{N}` gặp xung đột merge (conflict), Agent **tuyệt đối không để working tree ở trạng thái unmerged hoặc chứa tệp untracked rò rỉ trên main**. BẮT BUỘC chạy ngay:
+     ```bash
+     git reset --merge && git clean -df
+     ```
+     Lệnh này sẽ dọn sạch cả xung đột file theo dõi và các tệp untracked vừa bung ra, khôi phục nhánh `main` về trạng thái sạch sẽ 100%, trong khi bản stash vẫn được giữ an toàn trong stash list. Sau đó, thông báo rõ ràng cho người dùng: *"Phát hiện xung đột khi pop stash lên main. Đã khôi phục trạng thái sạch của main bằng `git reset --merge && git clean -df`. Bản stash vẫn được bảo toàn; vui lòng tạo nhánh mới và áp dụng bằng `git checkout -b <branch> && git stash apply stash@{N}`"*.
 
 ---
 
