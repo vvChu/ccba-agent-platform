@@ -77,6 +77,7 @@ Dưới đây là chuỗi commit chính thức trên nhánh `feat/issue-225-plat
 | `2894dedb` | `fix(qc-core,legal-intel)` | Harden PCCC enum string resolution, warehouse thresholds, and pptx file validation |
 | `7b92b729` | `fix(qc-core,harness,eval-gate)` | Remediate PCCC investor self-appraisal logic and sync 16-item eval dataset |
 | `32d91730` | `fix(harness)` | Allow expected_verdict fallback and enforce non-zero score across all 16 eval items |
+| `5106f62d` | `docs(walkthrough)` | Update commit SHAs and scorer remediation details |
 
 ---
 
