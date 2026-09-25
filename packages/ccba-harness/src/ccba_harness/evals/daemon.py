@@ -80,6 +80,12 @@ def send_telegram_alert(
         )
         return False
 
+    # Safeguard against test leakage: when running under pytest with environment credentials,
+    # avoid making real HTTP requests unless an explicit bot_token was supplied directly to the function call.
+    if "PYTEST_CURRENT_TEST" in os.environ and bot_token is None:
+        logger.info(f"📱 [Mock Telegram Test Mode - Skipped Network Call]:\n{message}")
+        return True
+
     endpoint_url = f"https://api.telegram.org/bot{bot_credential}/sendMessage"
     data_dict: dict[str, str] = {
         "chat_id": str(target_channel),

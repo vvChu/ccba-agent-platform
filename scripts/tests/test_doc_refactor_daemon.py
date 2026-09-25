@@ -113,7 +113,7 @@ class TestDocRefactorDaemon:
 
     def test_doc_auto_evolution_engine_dry_run(self, project_root: Path) -> None:
         """Verifies that run_nightly_evolution runs cleanly in dry-run mode."""
-        engine = DocAutoEvolutionEngine(root=project_root)
+        engine = DocAutoEvolutionEngine(root=project_root, alert_emitter=lambda rep: True)
         report = engine.run_nightly_evolution(dry_run=True)
 
         assert report.dry_run is True
@@ -152,7 +152,7 @@ class TestDocRefactorDaemon:
 
         monkeypatch.setattr(subprocess, "run", mock_run)
 
-        engine = DocAutoEvolutionEngine(root=project_root)
+        engine = DocAutoEvolutionEngine(root=project_root, alert_emitter=lambda rep: True)
         report = engine.run_nightly_evolution(dry_run=False)
 
         assert report.commits_created == 0
@@ -212,7 +212,7 @@ class TestDocRefactorDaemon:
 
         monkeypatch.setattr(subprocess, "run", mock_run)
 
-        engine = DocAutoEvolutionEngine(root=project_root)
+        engine = DocAutoEvolutionEngine(root=project_root, alert_emitter=lambda rep: True)
         with caplog.at_level(logging.WARNING):
             report = engine.run_nightly_evolution(dry_run=False)
 
