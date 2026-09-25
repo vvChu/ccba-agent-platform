@@ -655,25 +655,24 @@ def handle_batch_fetch(args: argparse.Namespace) -> int:
 def handle_login(args: argparse.Namespace) -> int:
     """Launch interactive Chromium browser for persistent VIP authentication."""
     import subprocess
+    from ccba_legal.session import get_browser_executable_path
 
     port = args.port
     user_data = Path.home() / ".gemini" / "antigravity" / "chrome_vip"
     user_data.mkdir(parents=True, exist_ok=True)
 
-    browser_candidates = [
-        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
-        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
-    ]
-    browser_exe = None
-    for cand in browser_candidates:
-        if cand.exists():
-            browser_exe = cand
-            break
-
-    if not browser_exe:
-        print("[Error] No Chromium browser (Chrome/Edge) found on system.")
+    browser_path = get_browser_executable_path()
+    if not browser_path:
+        print("[Error] No Chromium browser (Chrome/Edge/Chromium/Brave) found on system.")
+        print("        Please set CHROME_PATH environment variable or install Google Chrome.")
         return 1
+    browser_exe = Path(browser_path)
+
+    # Cảnh báo môi trường headless Linux
+    import os
+    if os.name != "nt" and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        print("⚠️ Warning: Running on a headless Linux environment without DISPLAY.")
+        print("   If browser fails to launch, please run via 'xvfb-run python -m ccba_legal login'")
 
     print("=================================================================")
     print("          CCBA LEGAL INTEL - TVPL VIP LOGIN LAUNCHER             ")
@@ -832,10 +831,35 @@ def handle_ingest(args: argparse.Namespace) -> int:
         if (args.slug and pdf_path)
         else (pdf_path.name if pdf_path else "doc.pdf")
     )
+    raw_scan_target = sources_dir / f"{doc_slug}_raw_scan.pdf"
     if docx_path.exists():
         shutil.copy2(docx_path, target_docx)
-    if pdf_path and pdf_path.exists():
-        shutil.copy2(pdf_path, target_pdf)
+
+    pdf_tier = fetch_res.get("pdf_tier") if isinstance(fetch_res, dict) else None
+    is_vector_rendered = False
+
+    # Nếu là bản Scan Tier 3 và có file DOCX: Kích hoạt ADR 0043 Dual-PDF
+    if pdf_tier == 3 and target_docx.exists():
+        print(f"[LegalIntel] [ADR 0043 Dual-PDF] Detected Tier 3 Gazette Scan.")
+        if pdf_path and pdf_path.exists():
+            shutil.copy2(pdf_path, raw_scan_target)
+            print(f"  📦 Preserved official Gazette Scan: {raw_scan_target.name}")
+        try:
+            from ccba_ooxml.converter import convert_to_pdf
+
+            print(f"  ⚙️ Rendering Born-Digital Vector PDF via LibreOffice...")
+            convert_to_pdf(target_docx, target_pdf)
+            print(f"  ✅ Successfully rendered Vector PDF: {target_pdf.name}")
+            is_vector_rendered = True
+        except Exception as e:
+            print(f"  ⚠️ Vector PDF conversion failed ({e}), falling back to scan.")
+            if pdf_path and pdf_path.exists():
+                shutil.copy2(pdf_path, target_pdf)
+            is_vector_rendered = False
+    else:
+        if pdf_path and pdf_path.exists():
+            shutil.copy2(pdf_path, target_pdf)
+        is_vector_rendered = False
 
     # 3. Google Drive Vault Upload (if requested or available)
 
@@ -847,8 +871,10 @@ def handle_ingest(args: argparse.Namespace) -> int:
             vault = GoogleDriveVault()
             if vault.is_available():
                 vault.upload_asset(target_docx, args.category, doc_slug)
-                if pdf_path and pdf_path.exists():
+                if target_pdf.exists():
                     vault.upload_asset(target_pdf, args.category, doc_slug)
+                if raw_scan_target.exists():
+                    vault.upload_asset(raw_scan_target, args.category, doc_slug)
                 print("  ✅ Uploaded to Google Drive Vault successfully.")
             else:
                 print("  ℹ️ Google Drive Vault offline. Proceeding in local mode.")
@@ -863,6 +889,29 @@ def handle_ingest(args: argparse.Namespace) -> int:
             target_bundle_dir=target_bundle,
             doc_type=args.category,
         )
+        if is_vector_rendered and (target_bundle / "metadata.yaml").exists():
+            import hashlib
+            import yaml
+
+            meta_path = target_bundle / "metadata.yaml"
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta = yaml.safe_load(f) or {}
+            meta["pdf_origin"] = "docx_vector_rendered"
+            if raw_scan_target.exists():
+                meta["raw_scan_pdf"] = f"sources/{raw_scan_target.name}"
+            if "source_assets" in meta and isinstance(meta["source_assets"], dict):
+                if "pdf" in meta["source_assets"] and isinstance(meta["source_assets"]["pdf"], dict):
+                    meta["source_assets"]["pdf"]["origin"] = "docx_vector_rendered"
+                if raw_scan_target.exists() and "raw_scan" not in meta["source_assets"]:
+                    raw_hash = hashlib.sha256(raw_scan_target.read_bytes()).hexdigest()
+                    meta["source_assets"]["raw_scan"] = {
+                        "sha256": raw_hash,
+                        "vault_path": f"CCBA_Legal_Vault/{args.category}/{doc_slug}/{raw_scan_target.name}",
+                        "status": "verified",
+                        "acquisition_method": "official_gazette_scan",
+                    }
+            with open(meta_path, "w", encoding="utf-8") as f:
+                yaml.dump(meta, f, allow_unicode=True, sort_keys=False)
     except Exception as ce:
         print(f"❌ Conversion Error: {ce}")
         return 1

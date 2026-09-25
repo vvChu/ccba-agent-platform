@@ -87,24 +87,50 @@ def _wait_for_download(
     existing_downloads: set[str],
     expected_exts: list[str],
     timeout: float = 30.0,
+    start_time: float | None = None,
 ) -> Path | None:
     """Wait for newly downloaded file matching expected_exts with size > 0 and no .crdownload."""
-    start_time = time.time()
+    if start_time is None:
+        start_time = time.time()
+    valid_watch_dirs = []
+    for d in dict.fromkeys(watch_dirs):
+        try:
+            if d.exists():
+                valid_watch_dirs.append(d)
+        except OSError:
+            pass
+
+    def _is_new_or_updated(f: Path) -> bool:
+        try:
+            if str(f.resolve()) not in existing_downloads:
+                return True
+            return f.stat().st_mtime >= (start_time - 1.0)
+        except OSError:
+            return False
+
     while time.time() - start_time < timeout:
-        current_downloads = [f for d in watch_dirs if d.exists() for f in d.glob("*")]
-        new_downloads = [f for f in current_downloads if str(f.resolve()) not in existing_downloads]
-        if new_downloads:
-            # Check if any new file is currently downloading
-            if any(f.suffix == ".crdownload" or f.name.endswith(".tmp") for f in new_downloads):
-                time.sleep(0.5)
+        current_downloads = [f for d in valid_watch_dirs for f in d.glob("*")]
+        new_downloads = [f for f in current_downloads if _is_new_or_updated(f)]
+
+        is_downloading = False
+        for f in new_downloads:
+            try:
+                if f.suffix == ".crdownload" or f.name.endswith(".tmp"):
+                    is_downloading = True
+                    break
+            except OSError:
                 continue
-            for f in new_downloads:
-                if any(f.name.lower().endswith(ext) for ext in expected_exts):
-                    try:
-                        if f.is_file() and f.stat().st_size > 0:
-                            return f
-                    except OSError:
-                        pass
+        if is_downloading:
+            time.sleep(0.5)
+            continue
+
+        for f in new_downloads:
+            if any(f.name.lower().endswith(ext) for ext in expected_exts):
+                try:
+                    if f.is_file() and f.stat().st_size > 0:
+                        return f
+                except OSError:
+                    pass
         time.sleep(0.5)
     return None
 
@@ -120,7 +146,7 @@ def trigger_download(
     """Trigger multi-asset download via Single-Door tab=7 architecture and relocate downloaded files."""
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
-        downloads_path = Path("C:/Users/chuvu/Downloads")
+        downloads_path.mkdir(parents=True, exist_ok=True)
     watch_dirs = [downloads_path, download_dir]
     print(f"[LegalIntel] Monitoring Downloads folders: {[str(d) for d in watch_dirs]}")
 
@@ -130,24 +156,46 @@ def trigger_download(
     except Exception:
         pass
 
-    # 1. Single-Door: Navigate directly to tab=7 (Tải về)
+    # 1. Single-Door: Navigate directly to tab=7 (Tải về) or activate TCVN tab
     target_base = doc_url or cdp.evaluate_js("window.location.href") or ""
     if target_base and "thuvienphapluat.vn" in str(target_base):
         base_url = str(target_base).split("?")[0]
-        tab7_url = f"{base_url}?tab=7"
-        print(f"[LegalIntel] [Single-Door tab=7] Navigating directly to: {tab7_url}")
-        cdp.navigate(tab7_url)
-        cdp.wait_ready()
-        sleep_with_jitter(2.0, 0.5, 1.0)
+        is_tcvn = "/tcvn/" in base_url.lower()
+
+        def _activate_download_view() -> None:
+            if is_tcvn:
+                print("[LegalIntel] [TCVN Mode] Activating client-side download tab #aTabTaiVe...")
+                cdp.evaluate_js("""
+                (() => {
+                    let tabBtn = document.querySelector('#aTabTaiVe') || document.querySelector('a[href="#tab8"]');
+                    if (tabBtn) tabBtn.click();
+                })()
+                """)
+                sleep_with_jitter(1.5, 0.5, 1.0)
+            else:
+                tab7_url = f"{base_url}?tab=7"
+                print(f"[LegalIntel] [Single-Door tab=7] Navigating directly to: {tab7_url}")
+                cdp.navigate(tab7_url)
+                cdp.wait_ready()
+                sleep_with_jitter(2.0, 0.5, 1.0)
+
+        current_href = str(cdp.evaluate_js("window.location.href") or "")
+        if not current_href.startswith(base_url):
+            cdp.navigate(base_url)
+            cdp.wait_ready()
+            sleep_with_jitter(1.0, 0.5, 1.0)
+
+        _activate_download_view()
+
         if hasattr(cdp, "handle_login") and cdp.handle_login():
             cdp.wait_ready()
             sleep_with_jitter(2.0, 0.5, 1.0)
             current_href = str(cdp.evaluate_js("window.location.href") or "")
-            if "tab=7" not in current_href:
-                print(f"[LegalIntel] Re-navigating to tab=7 after login: {tab7_url}")
-                cdp.navigate(tab7_url)
-                cdp.wait_ready()
-                sleep_with_jitter(2.0, 0.5, 1.0)
+            if is_tcvn:
+                print("[LegalIntel] [TCVN Mode] Re-activating client tab #aTabTaiVe after login...")
+                _activate_download_view()
+            elif "tab=7" not in current_href:
+                _activate_download_view()
 
     # Re-apply download behavior on active page after navigation/login
     try:
@@ -193,40 +241,62 @@ def trigger_download(
         """
         return cdp.evaluate_js(js)
 
-    def _do_click_pdf() -> Any:
+    def _do_click_pdf() -> dict[str, Any]:
         js = """
         (() => {
             let all_links = Array.from(document.querySelectorAll('a'));
-            let a = all_links.find(lnk => {
+            // Pass 1: Tier 1 - VIP Born-Digital Vector Searchable PDF (part=-100 or #filePDFHyperLink)
+            let a_tier1 = all_links.find(lnk => {
+                let id = (lnk.id || '').toLowerCase();
+                let h = (lnk.href || '').toLowerCase();
+                return id.includes('filepdfhyperlink') || h.includes('part=-100');
+            });
+            if (a_tier1) {
+                let href_val = (a_tier1.getAttribute('href') || a_tier1.href || '').trim();
+                if (href_val.toLowerCase().startsWith('javascript:')) {
+                    try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
+                    catch(e) { a_tier1.click(); }
+                } else {
+                    a_tier1.click();
+                }
+                return { clicked: true, tier: 1, href: a_tier1.href || a_tier1.innerText };
+            }
+            // Pass 2: Tier 3 - Gazette Scan / Photocopy PDF Fallback (part=0 or #vietnameseHyperLink_Pdf)
+            let a_tier3 = all_links.find(lnk => {
                 let t = (lnk.innerText || '').toLowerCase();
                 let h = (lnk.href || '').toLowerCase();
                 let id = (lnk.id || '').toLowerCase();
-                return id.includes('vietnamesehyperlink_pdf') || (t.includes('tải') && t.includes('bản pdf')) || (t.includes('tải') && t.includes('văn bản gốc')) || h.includes('part=-100') || h.includes('part=0');
+                return id.includes('vietnamesehyperlink_pdf') ||
+                       (t.includes('tải') && t.includes('bản pdf')) ||
+                       (t.includes('tải') && t.includes('văn bản gốc')) ||
+                       h.includes('part=0');
             });
-            if (!a) {
-                a = all_links.find(lnk => {
+            if (!a_tier3) {
+                a_tier3 = all_links.find(lnk => {
                     let h = (lnk.href || '').toLowerCase();
                     return h.endsWith('.pdf') || h.includes('.pdf?');
                 });
             }
-            if (a) {
-                let href_val = (a.getAttribute('href') || a.href || '').trim();
+            if (a_tier3) {
+                let href_val = (a_tier3.getAttribute('href') || a_tier3.href || '').trim();
                 if (href_val.toLowerCase().startsWith('javascript:')) {
-                    let jsCode = decodeURIComponent(href_val.replace(/^javascript:/i, ''));
-                    try {
-                        eval(jsCode);
-                    } catch (e) {
-                        a.click();
-                    }
+                    try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
+                    catch(e) { a_tier3.click(); }
                 } else {
-                    a.click();
+                    a_tier3.click();
                 }
-                return "Clicked PDF: " + (a.innerText || a.href);
+                return { clicked: true, tier: 3, href: a_tier3.href || a_tier3.innerText };
             }
-            return "No PDF link in tab=7";
+            return { clicked: false, tier: null, href: null };
         })()
         """
-        return cdp.evaluate_js(js)
+        res = cdp.evaluate_js(js)
+        if isinstance(res, dict):
+            return res
+        if isinstance(res, str) and res and not res.startswith("No "):
+            tier = 1 if "part=-100" in res or "filepdfhyperlink" in res.lower() else 3
+            return {"clicked": True, "tier": tier, "href": res}
+        return {"clicked": False, "tier": None, "href": None}
 
     def _do_download_all_attachments() -> list[dict[str, str]]:
         excluded_patterns_js = json.dumps(TVPLSelectors.EXCLUDED_ATTACHMENT_PATTERNS)
@@ -315,28 +385,46 @@ def trigger_download(
                 return (t.includes('tiếng việt') || (t.includes('tải') && t.includes('văn bản'))) && (h.includes('download.aspx') || h.includes('part=')) && !t.includes('tiếng anh') && !t.includes('pdf');
             });
         }
-        let a_pdf = all_links.find(lnk => {
-            let t = (lnk.innerText || '').toLowerCase();
-            let h = (lnk.href || '').toLowerCase();
+        // Pass 1: Tier 1 - Born-Digital Vector Searchable PDF
+        let a_pdf_tier1 = all_links.find(lnk => {
             let id = (lnk.id || '').toLowerCase();
-            return id.includes('vietnamesehyperlink_pdf') || (t.includes('tải') && t.includes('bản pdf')) || (t.includes('tải') && t.includes('văn bản gốc')) || h.includes('part' + '=-100') || h.includes('part=0');
+            let h = (lnk.href || '').toLowerCase();
+            return id.includes('filepdfhyperlink') || h.includes('part' + '=-100');
         });
-        if (!a_pdf) {
-            a_pdf = all_links.find(lnk => {
+        // Pass 2: Tier 3 - Gazette Scan Fallback
+        let a_pdf_tier3 = null;
+        if (!a_pdf_tier1) {
+            a_pdf_tier3 = all_links.find(lnk => {
+                let t = (lnk.innerText || '').toLowerCase();
                 let h = (lnk.href || '').toLowerCase();
-                return h.endsWith('.pdf') || h.includes('.pdf?');
+                let id = (lnk.id || '').toLowerCase();
+                return id.includes('vietnamesehyperlink_pdf') ||
+                       (t.includes('tải') && t.includes('bản pdf')) ||
+                       (t.includes('tải') && t.includes('văn bản gốc')) ||
+                       h.includes('part=0');
             });
+            if (!a_pdf_tier3) {
+                a_pdf_tier3 = all_links.find(lnk => {
+                    let h = (lnk.href || '').toLowerCase();
+                    return h.endsWith('.pdf') || h.includes('.pdf?');
+                });
+            }
         }
+        let a_pdf = a_pdf_tier1 || a_pdf_tier3;
+        let pdf_tier = a_pdf_tier1 ? 1 : (a_pdf_tier3 ? 3 : null);
         return {
             has_docx: Boolean(a_docx),
-            has_pdf: Boolean(a_pdf)
+            has_pdf: Boolean(a_pdf),
+            pdf_tier: pdf_tier
         };
     })()
     """
     preflight_res = cdp.evaluate_js(preflight_js)
+    preflight_pdf_tier = None
     if isinstance(preflight_res, dict):
         has_docx = bool(preflight_res.get("has_docx", False))
         has_pdf = bool(preflight_res.get("has_pdf", False))
+        preflight_pdf_tier = preflight_res.get("pdf_tier")
     elif isinstance(preflight_res, str) and preflight_res:
         has_docx = "docx" in preflight_res.lower()
         has_pdf = "pdf" in preflight_res.lower()
@@ -345,7 +433,7 @@ def trigger_download(
         has_pdf = True
 
     print(
-        f"[LegalIntel] [Pre-flight Inspection] Available in tab=7: DOCX={has_docx}, PDF={has_pdf}"
+        f"[LegalIntel] [Pre-flight Inspection] Available in tab=7: DOCX={has_docx}, PDF={has_pdf} (Tier={preflight_pdf_tier})"
     )
 
     # Fast-fail if requested format is not available
@@ -359,6 +447,7 @@ def trigger_download(
             "pdf_path": None,
             "attachments": saved_attachments,
             "error": "DOCX not available in tab=7",
+            "pdf_tier": None,
         }
     if format_type == "pdf" and not has_pdf:
         print(
@@ -370,6 +459,7 @@ def trigger_download(
             "pdf_path": None,
             "attachments": saved_attachments,
             "error": "PDF not available in tab=7",
+            "pdf_tier": None,
         }
     if format_type == "both" and not has_docx and not has_pdf:
         print(f"[LegalIntel] [Fast-Fail] Neither DOCX nor PDF found in tab=7 for '{slug_name}'.")
@@ -379,6 +469,7 @@ def trigger_download(
             "pdf_path": None,
             "attachments": saved_attachments,
             "error": "Neither DOCX nor PDF available in tab=7",
+            "pdf_tier": None,
         }
 
     # Sequential Barrier Downloader
@@ -392,11 +483,12 @@ def trigger_download(
         existing_before_docx = {
             str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
         }
+        docx_start_time = time.time()
         res_docx = _do_click_docx()
         print(f"[LegalIntel] [Phase 1] Trigger DOCX postback: {res_docx}")
         if res_docx and not str(res_docx).startswith("No "):
             downloaded_docx = _wait_for_download(
-                watch_dirs, existing_before_docx, [".docx", ".doc"], timeout=30.0
+                watch_dirs, existing_before_docx, [".docx", ".doc"], timeout=30.0, start_time=docx_start_time
             )
             if downloaded_docx:
                 dest_ext = downloaded_docx.suffix or ".docx"
@@ -425,15 +517,25 @@ def trigger_download(
         time.sleep(2.0)
 
     # Phase 3: Trigger PDF PostBack & Wait for completion
+    pdf_tier: int | None = preflight_pdf_tier
     if need_pdf:
         existing_before_pdf = {
             str(f.resolve()) for d in watch_dirs if d.exists() for f in d.glob("*")
         }
+        pdf_start_time = time.time()
         res_pdf = _do_click_pdf()
         print(f"[LegalIntel] [Phase 3] Trigger PDF postback: {res_pdf}")
-        if res_pdf and not str(res_pdf).startswith("No "):
+        clicked = False
+        if isinstance(res_pdf, dict):
+            clicked = bool(res_pdf.get("clicked", False))
+            if res_pdf.get("tier") is not None:
+                pdf_tier = res_pdf.get("tier")
+        elif res_pdf and not str(res_pdf).startswith("No "):
+            clicked = True
+
+        if clicked:
             downloaded_pdf = _wait_for_download(
-                watch_dirs, existing_before_pdf, [".pdf"], timeout=30.0
+                watch_dirs, existing_before_pdf, [".pdf"], timeout=30.0, start_time=pdf_start_time
             )
             if downloaded_pdf:
                 dest = download_dir / f"{slug_name}.pdf"
@@ -480,6 +582,7 @@ def trigger_download(
             "pdf_path": pdf_path,
             "attachments": saved_attachments,
             "sha256": "VERIFIED",
+            "pdf_tier": pdf_tier,
         }
 
     return {
@@ -487,6 +590,7 @@ def trigger_download(
         "docx_path": docx_path,
         "pdf_path": pdf_path,
         "attachments": saved_attachments,
+        "pdf_tier": pdf_tier,
     }
 
 

@@ -234,12 +234,10 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
         pass
 
     # Attempt to auto-launch Chrome
-    chrome_cmd = (
-        shutil.which("chrome")
-        or shutil.which("google-chrome")
-        or r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    )
-    if os.path.exists(str(chrome_cmd)) or (chrome_cmd and shutil.which(chrome_cmd)):
+    from ccba_legal.session import get_browser_executable_path
+
+    chrome_cmd = get_browser_executable_path()
+    if chrome_cmd and (os.path.exists(str(chrome_cmd)) or shutil.which(str(chrome_cmd))):
         try:
             fallback_temp = "/tmp" if os.name != "nt" else "C:/temp"
             temp_dir = Path(os.environ.get("TEMP", fallback_temp)) / "chrome_dev"
