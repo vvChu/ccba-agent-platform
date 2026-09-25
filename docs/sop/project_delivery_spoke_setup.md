@@ -2,10 +2,7 @@
 
 > **Mã quy trình**: `CCBA-SOP-DELIVERY-001`  
 > **Phiên bản**: Rev 1.0 (2026)  
-> **Áp dụng cho**: Chủ trì hợp đồng (PM), Chủ trì bộ môn, Kỹ sư thẩm tra / kiểm định / BIM  
-> **Tham chiếu**: [ADR 0041](../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0043](../../docs/adr/0043-idop-active-dev-resilience-and-fallback.md), [ADR 0044](../../docs/adr/0044-spoke-hub-package-bootstrap-standard.md)  
-
----
+> **Tham chiếu**: [CCBA-SOP-SYNC-001](hub_spoke_sync_runbook.md), [CCBA-GOV-SYNC-2026](../governance/hub_spoke_synchronization_and_multi_device_governance.md), [ADR 0041](../adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](../adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0043](../adr/0043-idop-active-dev-resilience-and-fallback.md), [ADR 0044](../adr/0044-spoke-hub-package-bootstrap-standard.md)
 
 ## 1. Mục Đích & Phạm Vi Áp Dụng
 
@@ -144,7 +141,7 @@ Khi Hub có thêm các quy trình kiểm tra hoặc tiêu chuẩn mới, PM dự
 
 ```powershell
 cd D:\GitHubProjects\ccba-agent-platform
-python scripts/sync_spoke.py --spoke "D:\OneDrive - IBST BIM\00 Works\2026-04 DH Viet Nhat"
+python scripts/sync_spoke.py --spoke "D:\OneDrive - IBST BIM\00 Works\2026-04 DH Viet Nhat" --apply
 ```
 
 Lệnh cập nhật sẽ giữ nguyên toàn bộ dữ liệu dự án hiện có và chỉ ghi đè các workflows/skills của hệ thống.

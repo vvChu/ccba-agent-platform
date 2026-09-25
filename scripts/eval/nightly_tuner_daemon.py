@@ -89,6 +89,11 @@ def main() -> None:
         action="store_true",
         help="Disable Telegram notifications (useful for sub-runners like run_boost_worktree.sh)",
     )
+    parser.add_argument(
+        "--skip-cooldown",
+        action="store_true",
+        help="Skip skills that are currently in cooldown (tuned recently without progress)",
+    )
     args = parser.parse_args()
 
     target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
@@ -104,6 +109,7 @@ def main() -> None:
         alert_emitter=send_telegram_alert,
         target_ref=args.ref,
         no_telegram=args.no_telegram,
+        skip_cooldown=args.skip_cooldown,
     )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 

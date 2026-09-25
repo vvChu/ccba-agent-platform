@@ -5,7 +5,9 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import os
 import subprocess
+import time
 import urllib.error
 from pathlib import Path
 from typing import Any
@@ -578,11 +580,17 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
     reports_dir = tmp_path / ".md" / "knowledge" / "reports"
     reports_dir.mkdir(parents=True)
 
-    # Older report (2026-09-20) with no hyphens
-    rep_older = reports_dir / "nightly_tuner_report_20260920_010000.md"
+    today = datetime.date.today()
+    older_date = today - datetime.timedelta(days=2)
+    newer_date = today - datetime.timedelta(days=1)
+    older_str = older_date.strftime("%Y%m%d")
+    newer_str = newer_date.strftime("%Y-%m-%d")
+
+    # Older report with no hyphens
+    rep_older = reports_dir / f"nightly_tuner_report_{older_str}_010000.md"
     rep_older.write_text(
-        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
-> **Thời gian thực thi:** `20260920_010000` | **Engine:** `REAL_LLM`
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{older_str}_010000` | **Engine:** `REAL_LLM`
 ### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
 | Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -591,11 +599,11 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    # Newer report (2026-09-21) with hyphens in date AND unbolded final score AND backticks on commits
-    rep_newer = reports_dir / "nightly_tuner_report_2026-09-21_010000.md"
+    # Newer report with hyphens in date AND unbolded final score AND backticks on commits
+    rep_newer = reports_dir / f"nightly_tuner_report_{newer_str}_010000.md"
     rep_newer.write_text(
-        """# 🌙 CCBA Nightly Auto-Tuner Evolution Report
-> **Thời gian thực thi:** `2026-09-21_010000` | **Engine:** `REAL_LLM`
+        f"""# 🌙 CCBA Nightly Auto-Tuner Evolution Report
+> **Thời gian thực thi:** `{newer_str}_010000` | **Engine:** `REAL_LLM`
 ### 📊 Bảng Đối Soát Tiến Hóa Kỹ Năng (Evolution Matrix)
 | Kỹ Năng (Skill Name) | Điểm Ban Đầu | Điểm Sau Tối Ưu | Chênh Lệch (Delta) | Commits | Tokens | Trạng Thái |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -604,13 +612,20 @@ def test_load_historical_metrics_unbolded_scores_and_date_sort(tmp_path: Path) -
         encoding="utf-8",
     )
 
+    # Đảo ngược mtime: Đặt rep_newer có mtime cũ hơn rep_older 3600 giây
+    # để triệt tiêu hoàn toàn Collinear Test Trap theo Mục 13 Code Quality
+    base_time = time.time()
+    os.utime(rep_older, (base_time, base_time))
+    os.utime(rep_newer, (base_time - 3600.0, base_time - 3600.0))
+    assert rep_newer.stat().st_mtime < rep_older.stat().st_mtime
+
     daemon = NightlyTunerDaemon(root=tmp_path)
     scores, cooldown_skills, last_scanned_dates = daemon._load_historical_metrics(cooldown_days=3)
 
     # The newer report (85.0%) should win over the older report (60.0%)
     assert scores.get("skill_mixed") == 85.0
     assert "skill_mixed" in cooldown_skills
-    assert last_scanned_dates.get("skill_mixed") == datetime.date(2026, 9, 21)
+    assert last_scanned_dates.get("skill_mixed") == newer_date
 
 
 def test_remove_stale_plateau_brief_worktree(tmp_path: Path) -> None:
@@ -864,3 +879,144 @@ def test_daemon_run_nightly_batch_live_run_removes_stale_plateau_brief(
 
     daemon.run_nightly_batch(dry_run=False)
     assert not brief_file.exists()
+
+
+def test_daemon_skip_cooldown_skips_in_cooldown_skills(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify that skip_cooldown=True bypasses in_cooldown skills and marks them SKIPPED_COOLDOWN."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, skip_cooldown=True)
+
+    tuned_skills: list[str] = []
+
+    class MockTuner:
+        def __init__(self, config: Any, *args: Any, **kwargs: Any) -> None:
+            self.skill_name = getattr(config, "skill_name", "unknown")
+
+        def run(self) -> RatchetReport:
+            tuned_skills.append(self.skill_name)
+            return RatchetReport(
+                target_file=str(tmp_path / "SKILL.md"),
+                initial_score=75.0,
+                final_score=85.0,
+                total_iterations=2,
+                kept_commits=1,
+                reverted_trials=0,
+            )
+
+    monkeypatch.setattr(
+        daemon,
+        "discover_skills_and_datasets",
+        lambda: [
+            {
+                "skill_name": "skill_normal",
+                "target_file": tmp_path / "normal_SKILL.md",
+                "dataset_file": tmp_path / "eval_normal.json",
+                "baseline_score": 70.0,
+                "in_cooldown": False,
+                "last_scanned_date": None,
+            },
+            {
+                "skill_name": "skill_cooling",
+                "target_file": tmp_path / "cooling_SKILL.md",
+                "dataset_file": tmp_path / "eval_cooling.json",
+                "baseline_score": 60.0,
+                "in_cooldown": True,
+                "last_scanned_date": datetime.date.today(),
+            },
+        ],
+    )
+    monkeypatch.setattr("ccba_harness.evals.daemon.GitRatchetTuner", MockTuner)
+
+    report = daemon.run_nightly_batch(dry_run=True)
+
+    assert "skill_normal" in tuned_skills
+    assert "skill_cooling" not in tuned_skills
+
+    cooling_summary = next(s for s in report.results if s.skill_name == "skill_cooling")
+    assert cooling_summary.status == "SKIPPED_COOLDOWN"
+    assert cooling_summary.halt_reason == "COOLDOWN_ACTIVE"
+    assert cooling_summary.commits_kept == 0
+
+
+def test_daemon_save_plateau_brief_adr0052_five_fields(tmp_path: Path) -> None:
+    """Verify _save_plateau_brief generates a Deep Problem Brief conforming to ADR-0052 Section 3.B."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    mock_report = RatchetReport(
+        target_file=str(tmp_path / "SKILL.md"),
+        initial_score=65.0,
+        final_score=70.0,
+        total_iterations=4,
+        kept_commits=0,
+        reverted_trials=3,
+        total_tokens=150000,
+        prompt_tokens=100000,
+        completion_tokens=50000,
+        halt_reason="HALT_NO_FURTHER_STRATEGIES",
+        slicing_tier="Tier 1",
+        holdout_score=68.0,
+        holdout_size=5,
+    )
+
+    target_file = tmp_path / "SKILL.md"
+    target_file.write_text("# Test Skill", encoding="utf-8")
+
+    brief_path = daemon._save_plateau_brief("ccba-test-stagnant", target_file, mock_report)
+    assert brief_path.exists()
+
+    content = brief_path.read_text(encoding="utf-8")
+    assert "## 1. Failure Manifest" in content
+    assert "## 2. Tested Hypotheses & Ineffective Mutations" in content
+    assert "## 3. Deep Seams & Archetype Involved" in content
+    assert "## 4. Error Logs & Failure Excerpts" in content
+    assert "## 5. Actionable Recommendation (/boost Protocol)" in content
+    assert "HALT_NO_FURTHER_STRATEGIES" in content
+    assert "/boost" in content
+    assert "run_boost_worktree.sh" in content
+
+
+def test_daemon_create_pr_auto_syncs_traceability_matrix_when_script_exists(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify _create_pull_request invokes sync_hub_adr_matrix.py prior to verify-patch."""
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, target_ref="main")
+
+    sync_invoked = False
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir(parents=True)
+    sync_script = scripts_dir / "sync_hub_adr_matrix.py"
+    sync_script.write_text("# Mock sync script", encoding="utf-8")
+
+    adr_dir = tmp_path / "docs" / "adr"
+    adr_dir.mkdir(parents=True)
+    matrix_file = adr_dir / "TRACEABILITY_MATRIX.md"
+    matrix_file.write_text("# Matrix", encoding="utf-8")
+
+    def mock_subprocess_run(
+        cmd: list[str], *args: Any, **kwargs: Any
+    ) -> subprocess.CompletedProcess[str]:
+        nonlocal sync_invoked
+        if len(cmd) >= 2 and "sync_hub_adr_matrix.py" in str(cmd[1]):
+            sync_invoked = True
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+        if "verify-patch" in cmd:
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+        if "validate_docs.py" in cmd:
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+        if "diff" in cmd:
+            return subprocess.CompletedProcess(args=cmd, returncode=1, stdout="", stderr="")
+        if "gh" in cmd:
+            return subprocess.CompletedProcess(
+                args=cmd, returncode=0, stdout="https://github.com/pr/1", stderr=""
+            )
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
+
+    pr_url = daemon._create_pull_request("test-branch", "Test report")
+    assert sync_invoked is True
+    assert pr_url == "https://github.com/pr/1"

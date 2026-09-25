@@ -244,7 +244,6 @@ def verify_tvpl_vip_status(cdp: Any) -> bool:
     (() => {{
         let txt = document.body ? document.body.innerText : '';
         let has_user = txt.includes('Tài khoản :') ||
-                       txt.includes('vuvanchu119') ||
                        {labels_check};
         return has_user ? 'VIP_PRO_ACTIVE' : 'GUEST';
     }})()

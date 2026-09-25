@@ -13,6 +13,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── docs/                              ← Documentation & Reference
 │   ├── adr/                           ←   Architectural Decision Records (ADRs)
+│   ├── governance/                    ←   Platform Governance & Sync Architecture
+│   ├── sop/                           ←   Standard Operating Procedures (SOP Runbooks)
 │   └── rules/                         ←   Progressive Disclosure Rules (Guardrails, Git, Code Quality)
 │
 ├── .agents/                           ← AI Agent configurations
@@ -46,12 +48,14 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── scripts/                           ← CLI & Lifecycle Hooks
 │   ├── governance/                    ←   Documentation, Skills & Architecture Auditors (Deep Seam)
+│   │   └── protect_repo.py            ←     Deterministic Remote Repository Protection CLI Tool
 │   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
 │   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── legal/                         ←   Legal ingestion, Google Drive sync & crawling utilities
 │   ├── spoke/                         ←   Hub↔Spoke bootstrap, sync & migration tools (ADR 0044)
 │   ├── tests/                         ←   Unit test suites
+│   ├── ccba_platform_cli.py           ←   Unified Platform CLI Launcher (init, adopt, sync, protect-repo)
 │   ├── doc_auditor.py                 ←   Governance Facade
 │   ├── hook_runner.py                 ←   Unified Hook Runner CLI
 │   ├── maskara.py                     ←   Maskara Privacy Engine CLI
@@ -82,7 +86,7 @@ Là các kỹ năng nhận lệnh trực tiếp từ người dùng thông qua S
 Là các thư viện bổ trợ, middleware, hoặc các cấu hình tự động kích hoạt bởi model khi thực hiện tác vụ:
 *   **Bootstrap & Kết nối:** `platform-loader` (bootstrap hệ thống), `ccba-ai-gateway-sdk` (giao tiếp AI Gateway).
 *   **Quy chuẩn & Pipeline:** `ccba-llm-pipeline-patterns` (patterns pipeline), `ccba-file-stability-guard` (phát hiện file sync), `ccba-api-circuit-breaker` (middleware rate limit), `ccba-append-only-logger` (thread-safe logger).
-*   **Bảo mật & Kiểm định:** `ccba-maskara` (tự động quét/redact keys), `ccba-docs-validator` (linter tài liệu), `ccba-eval-gate` (kiểm định chất lượng, test cases domain BIGBIM/Legal/QC/Orchestration), `scripts/cron/run_nightly_tuner.sh` (Nightly Auto-Tuner daemon tối ưu hóa prompt qua Git worktree độc lập), `scripts/eval/run_boost_worktree.sh` (Interactive Deep Boost runner qua worktree cô lập `.worktrees/boost-...` điều phối từ `dgx-chatops` user service `systemctl --user`).
+*   **Bảo mật & Kiểm định:** `ccba-maskara` (tự động quét/redact keys), `ccba-docs-validator` (linter tài liệu), `ccba-eval-gate` (kiểm định chất lượng, test cases domain BIGBIM/Legal/QC/Orchestration), `scripts/cron/run_nightly_tuner.sh` (Nightly Auto-Tuner daemon tối ưu hóa prompt qua Git worktree độc lập), `scripts/eval/run_boost_worktree.sh` (Interactive Deep Boost runner qua worktree cô lập `.worktrees/boost-...` điều phối từ `dgx-chatops` user service `systemctl --user`), `scripts/eval/check_nightly_status.py` (Dual-Mode Status Inspector kiểm toán và trực quan hóa tiến trình Auto-Tuner).
 *   **Master Skills với Progressive References:** `ccba-markdown-document-processing` (xử lý tài liệu Markdown), `ccba-ai-qc` (thẩm tra thiết kế đa bộ môn).
 *   **Phát hiện rủi ro (BIGBIM):** `bigbim-rase`, `bigbim-governance`, `bigbim-classification`, `bigbim-risk`, `bigbim-vbpl-digest`.
 *   **Thư viện phân tích file:** `ccba-pdf`, `ccba-pptx`, `ccba-docx` (các parser/manipulator định dạng OOXML/PDF).
