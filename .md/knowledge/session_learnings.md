@@ -56,8 +56,8 @@
 - **RULE-2.9 [Test Fixture Isolation & Hub Discovery Decoupling]**:
   - Test fixtures và runners (`run_isolated_tests.py`, root `conftest.py`) BẮT BUỘC cô lập môi trường: xóa `CCBA_HUB_PATH` và `HUB_PATH`. CẤM rò rỉ biến môi trường máy trạm vào test subprocess.
 - **RULE-2.10 [Temporal Invariance & Collinear Multi-Key Sort Guard]**:
-  - *Temporal Invariance*: Test cooldown/TTL/sliding window CẤM ngày tĩnh cứng (`"YYYY-MM-DD"`); BẮT BUỘC ngày tương đối (`today - timedelta(...)`).
-  - *Collinear Sort Guard*: Test sắp xếp đa khóa (ví dụ: `date` vs `mtime`) BẮT BUỘC fixture nghịch chiều (`os.utime`) cô lập tiêu chí ưu tiên, chống bẫy pass ngẫu nhiên do cùng chiều.
+  - *Temporal Invariance*: Test TTL/window CẤM ngày tĩnh; BẮT BUỘC ngày tương đối (`today - timedelta(...)`).
+  - *Collinear Sort*: Test sắp xếp đa khóa BẮT BUỘC fixture nghịch chiều (`os.utime`), chống bẫy pass do cùng chiều.
 
 ---
 
@@ -72,8 +72,8 @@
   - Subheader: `not is_numeric` trước khi gộp subheader tránh nuốt dữ liệu cùng giá trị.
   - Multi-Part: Đa phần mang tiền tố `bang_pXX_YY.csv` và `part_id: "pXX"` trong `tables_catalog.json`.
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
-  - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm pháp luật đa dòng của điều khoản; cấm span 1 dòng chỉ trỏ thẻ `<a>`.
-  - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè vào `.md/data/legal_registry.yaml`. Gate 4 CI Spoke hard-lock khi thiếu `clauses.json`.
+  - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm đa dòng; cấm span 1 dòng chỉ trỏ `<a>`.
+  - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè file gốc. CI Spoke hard-lock khi thiếu `clauses.json`.
 
 ---
 
@@ -84,13 +84,16 @@
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
   - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` (Tier 2A) cấm tiền tố `/`.
 - **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
-  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Quy tắc kết hợp cờ chỉ tuyên bố 1 lần tại `MODES.md`.
+  - Tiêu chí hoàn thành có nhánh kiểm chứng từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`). Khai báo cờ DRY tại `MODES.md`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
-  - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa sửa/giải trình.
+  - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa sửa/giải trình.
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
-  - Repo Hub cấm push trực tiếp lên `refs/heads/main` qua hook `pre-push`; mọi thay đổi qua PR. Sửa file trong `packages/`, `scripts/`, `drift_auditor.py` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`) cùng PR.
+  - Hub cấm push `main` qua hook `pre-push`; qua PR. Sửa/thêm file (kể cả tệp untracked `??` ngoài `tests/`) trong `packages/`, `scripts/`, `.agents/skills/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; dùng `gh pr checks --watch`, chờ Copilot review, 100% Green trước khi merge.
+- **RULE-4.7 [Spoke CLI Signature & Verbatim Verification Parity]**:
+  - `sync_spoke.py`: cần `--apply` để ghi; `adopt_spoke.py`: dùng `--spoke` (cấm `--apply`, `--spoke-path`); CLI hợp nhất: dùng positional `[spoke_path]` (cấm `--spoke`).
+  - `validate_docs.py`: chỉ nhận 1 thư mục. CẤM dùng `...` trong `--target` kiểm định (gây `Artifact not found`).
 
 ---
 
