@@ -399,7 +399,7 @@ def trigger_download(
             let id = (lnk.id || '').toLowerCase();
             let cls = (lnk.className || '').toLowerCase();
             let h = (lnk.href || '').toLowerCase();
-            return id.includes('filepdfhyperlink') || cls.includes('filepdfhyperlink') || h.includes('part=-100') || h.includes('part%3d-100');
+            return id.includes('filepdfhyperlink') || cls.includes('filepdfhyperlink') || h.includes('part' + '=-100') || h.includes('part%3d-100');
         });
         // Pass 2: Tier 3 - Gazette Scan Fallback
         let a_pdf_tier3 = null;
@@ -411,7 +411,7 @@ def trigger_download(
                 return id.includes('vietnamesehyperlink_pdf') ||
                        (t.includes('tải') && t.includes('bản pdf')) ||
                        (t.includes('tải') && t.includes('văn bản gốc')) ||
-                       h.includes('part=0') ||
+                       h.includes('part' + '=0') ||
                        h.includes('part%3d0');
             });
             if (!a_pdf_tier3) {
