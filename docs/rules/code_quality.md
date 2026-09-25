@@ -150,3 +150,16 @@ Khi xây dựng các biểu thức chính quy (Regex) để trích xuất, đố
   1. Mở ngay patch tương ứng trong mã nguồn tham chiếu chuẩn (`packages/ccba-harness` hoặc core packages).
   2. Bổ sung các unit test cases kiểm chứng trực tiếp từng trường hợp biên mới quy định vào bộ test suite chính thức (tuân thủ Mục 10.3 Separator Coverage).
 - Nghiêm cấm tuyên bố tính năng đã hoàn thiện trong báo cáo nghiệm thu (`walkthrough.md`) nếu quy chuẩn mới chỉ nằm trên văn bản tài liệu mà mã nguồn chạy thực tế chưa được áp dụng.
+
+---
+
+## 13. Temporal Invariance & Collinear Multi-Key Sort Testing (Kiểm Thử Bất Biến Thời Gian & Chống Bẫy Cùng Chiều)
+Khi xây dựng các bài unit test có yếu tố thời gian hoặc kiểm thử độ ưu tiên giữa nhiều tiêu chí sắp xếp:
+1. **Bất biến thời gian tương đối (Temporal Invariance):**
+   - Tuyệt đối KHÔNG hardcode chuỗi ngày tĩnh (`"YYYY-MM-DD"`) trong các test case kiểm tra cơ chế cooldown, TTL, sliding window, hoặc phân loại theo thời gian thực thi gần nhất.
+   - Luôn sử dụng hàm sinh ngày động tương đối dựa trên `datetime.date.today()` hoặc `datetime.datetime.now(datetime.timezone.utc)` (ví dụ: `older_date = today - timedelta(days=2)`, `newer_date = today - timedelta(days=1)`).
+   - Đảm bảo tính bất biến toán học: Khoảng cách giữa các ngày kiểm thử và `cutoff_date` luôn giữ nguyên giá trị logic bất kể bài test được thực thi vào ngày nào trong tương lai.
+2. **Chống bẫy kiểm thử cùng chiều (Collinear Multi-Key Sort Trap):**
+   - Khi một hàm sắp xếp sử dụng khóa phức hợp (ví dụ: `(date, mtime)`), nếu fixture ghi tệp mới hơn sau tệp cũ hơn, thứ tự filesystem `st_mtime` và thứ tự ngày parsed sẽ cùng chiều ($mtime_{new} > mtime_{old}$ đồng thời $date_{new} > date_{old}$). Điều này tạo ra một "bài test pass ảo": ngay cả khi logic sắp xếp theo `date` hỏng hoàn toàn, test vẫn pass nhờ `st_mtime`.
+   - **Quy chuẩn bắt buộc:** Khi kiểm thử thứ tự ưu tiên của khóa chính (`date`), fixture phải cố tình tạo ra xung đột với khóa phụ: thiết lập `os.utime` sao cho tệp có ngày mới hơn lại mang `mtime` cũ hơn (ví dụ lùi lại 3600s). Chỉ khi đó bài test mới thực sự chứng minh được khóa chính có độ ưu tiên cao hơn khóa phụ.
+
