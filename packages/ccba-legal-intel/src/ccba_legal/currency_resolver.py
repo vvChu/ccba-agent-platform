@@ -13,7 +13,6 @@ from __future__ import annotations
 import functools
 import json
 import logging
-import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -21,7 +20,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from ccba_legal.registry import discover_master_registry_path, load_legal_registry, resolve_project_root
+from ccba_legal.registry import (
+    discover_master_registry_path,
+    load_legal_registry,
+    resolve_project_root,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,9 @@ class StatutoryDocInfo:
     status: str = "active"
     superseded_by: str | None = None
     supersedes: list[str] = field(default_factory=list)
-    source_origin: str = "master_registry"  # "master_registry" | "local_registry" | "currency_card" | "fallback"
+    source_origin: str = (
+        "master_registry"  # "master_registry" | "local_registry" | "currency_card" | "fallback"
+    )
     provenance_hash: str | None = None
 
     @property
@@ -148,7 +153,7 @@ def _find_doc_in_registry_data(
 ) -> dict[str, Any] | None:
     """Traverse all document lists in registry dictionary to find by document_number."""
     norm_target = target_doc_number.strip().upper()
-    for key, value in registry_data.items():
+    for _key, value in registry_data.items():
         if isinstance(value, list):
             for item in value:
                 if isinstance(item, dict):
@@ -193,7 +198,8 @@ def _resolve_from_master_registry(
                 return StatutoryDocInfo(
                     role=role,
                     doc_number=item.get("document_number") or target_num,
-                    title=item.get("title") or (spec["active_title"] if is_active else spec["superseded_title"]),
+                    title=item.get("title")
+                    or (spec["active_title"] if is_active else spec["superseded_title"]),
                     effective_date=item.get("effective_date") or spec["effective_date"],
                     status=str(item.get("status") or "active"),
                     superseded_by=item.get("superseded_by"),
@@ -215,7 +221,8 @@ def _resolve_from_master_registry(
                 return StatutoryDocInfo(
                     role=role,
                     doc_number=item.get("document_number") or target_num,
-                    title=item.get("title") or (spec["active_title"] if is_active else spec["superseded_title"]),
+                    title=item.get("title")
+                    or (spec["active_title"] if is_active else spec["superseded_title"]),
                     effective_date=item.get("effective_date") or spec["effective_date"],
                     status=str(item.get("status") or "active"),
                     superseded_by=item.get("superseded_by"),
@@ -248,7 +255,9 @@ def _resolve_from_currency_card(role: StatutoryRole, eval_date: str) -> Statutor
 
         target_domain = spec["domain_key"]
         for entry in card_data.get("statutory_replacements", []):
-            if entry.get("domain") == target_domain or target_domain in str(entry.get("domain", "")):
+            if entry.get("domain") == target_domain or target_domain in str(
+                entry.get("domain", "")
+            ):
                 eff_date = str(entry.get("effective_date") or spec["effective_date"])
                 if eval_date >= eff_date:
                     doc_num = str(entry.get("document_number") or spec["active_doc_number"])
@@ -270,7 +279,9 @@ def _resolve_from_currency_card(role: StatutoryRole, eval_date: str) -> Statutor
                 else:
                     # Superseded historical period
                     supersedes_list = entry.get("supersedes", [])
-                    old_num = supersedes_list[0] if supersedes_list else spec["superseded_doc_number"]
+                    old_num = (
+                        supersedes_list[0] if supersedes_list else spec["superseded_doc_number"]
+                    )
                     return StatutoryDocInfo(
                         role=role,
                         doc_number=old_num,

@@ -55,12 +55,6 @@ from .converters import (
     load_bundle_formula_overrides,
     omml_to_latex,
 )
-from .currency_resolver import (
-    StatutoryDocInfo,
-    StatutoryRole,
-    clear_resolver_cache,
-    resolve_statutory_doc,
-)
 from .coordinator import (
     LegalIntelPipeline,
     LegalProcessor,
@@ -82,6 +76,12 @@ from .crawler import (
     sleep_with_jitter,
     trigger_download,
     verify_tvpl_vip_status,
+)
+from .currency_resolver import (
+    StatutoryDocInfo,
+    StatutoryRole,
+    clear_resolver_cache,
+    resolve_statutory_doc,
 )
 from .docx_converter import (
     classify_and_extract_tables,

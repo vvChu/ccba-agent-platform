@@ -457,7 +457,9 @@ class PcccJurisdictionRouter:
             )
         if cqcmvxd_required:
             const_law = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_LAW, evaluation_date)
-            const_grading = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, evaluation_date)
+            const_grading = resolve_statutory_doc(
+                StatutoryRole.CONSTRUCTION_GRADING, evaluation_date
+            )
             citations.append(
                 f"{const_law.title} (Điều 16 Khoản 1 điểm a, b, c, d, đ Luật {pccc_law.doc_number})"
             )

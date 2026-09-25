@@ -436,4 +436,3 @@ def test_dynamic_statutory_resolution_historical_2024() -> None:
     citations_text = " ".join(res.statutory_citations)
     assert "06/2021/TT-BXD" in citations_text
     assert "50/2014/QH13" in citations_text
-
