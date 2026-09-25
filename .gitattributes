@@ -26,3 +26,7 @@
 *.jpg binary
 *.jpeg binary
 *.ico binary
+
+# Git Hooks (chống lỗi CRLF trên Windows)
+.githooks/* text eol=lf
+

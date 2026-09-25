@@ -1,0 +1,33 @@
+#!/bin/sh
+# ==============================================================================
+# CCBA Client-Side Guardrail: Block direct push to protected branches
+# Reference: CCBA-SOP-SEC-001 & ADR-0058
+# ==============================================================================
+
+protected_branch="refs/heads/main"
+
+# Git passes ref info via standard input: <local_ref> <local_oid> <remote_ref> <remote_oid>
+while read local_ref local_oid remote_ref remote_oid; do
+  # 1. Chặn xóa nhánh main trước (khi local_oid là chuỗi 40 số 0)
+  if [ "$local_oid" = "0000000000000000000000000000000000000000" ] && [ "$remote_ref" = "$protected_branch" ]; then
+    echo "========================================================================"
+    echo "❌ [CCBA Guardrail Error] Deleting the remote 'main' branch is strictly prohibited!"
+    echo "========================================================================"
+    exit 1
+  fi
+
+  # 2. Chặn push trực tiếp vào main
+  if [ "$remote_ref" = "$protected_branch" ]; then
+    echo "========================================================================"
+    echo "❌ [CCBA Guardrail Error] Direct push to 'main' is strictly prohibited!"
+    echo "========================================================================"
+    echo "Vui lòng tuân thủ quy trình Factory Model:"
+    echo "  1. Tạo nhánh tính năng: git checkout -b feat/your-feature-name"
+    echo "  2. Commit thay đổi và push nhánh: git push origin feat/your-feature-name"
+    echo "  3. Tạo Pull Request trên GitHub và đợi CI + Review kiểm định."
+    echo "========================================================================"
+    exit 1
+  fi
+done
+
+exit 0

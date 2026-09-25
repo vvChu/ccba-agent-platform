@@ -1,0 +1,29 @@
+# ==============================================================================
+# CCBA Code Owners Configuration (ADR-0058 Live Governance Alignment)
+# ==============================================================================
+
+# Toàn bộ mã nguồn mặc định thuộc quyền kiểm duyệt chung
+* @vvChu
+
+# 1. Quản trị & Hiến chương Platform (Constitution, Rules, Governance)
+/AGENTS.md                          @vvChu
+/.agents/rules/                     @vvChu
+/docs/governance/                   @vvChu
+/docs/rules/                        @vvChu
+
+# 2. Kiến trúc Monorepo & CI/CD Pipelines
+/.github/workflows/                 @vvChu
+/scripts/governance/                @vvChu
+/pyproject.toml                     @vvChu
+
+# 3. Gói Kỹ Thuật Pháp Điển (ccba-legal-intel & legal knowledge)
+/packages/ccba-legal-intel/         @vvChu
+/.agents/skills/ccba-legal-*        @vvChu
+
+# 4. Gói Đánh Giá & Kiểm Định (ccba-harness & evals)
+/packages/ccba-harness/             @vvChu
+/scripts/eval/                      @vvChu
+
+# 5. Gói Bảo Mật & Che Giấu Thông Tin (ccba-maskara)
+/packages/ccba-maskara/             @vvChu
+/.githooks/                         @vvChu
