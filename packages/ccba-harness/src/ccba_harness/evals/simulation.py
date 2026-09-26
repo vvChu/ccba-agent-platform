@@ -34,7 +34,9 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
         has_legal_grounding = bool(
             re.search(r"\b(Nghị định|Thông tư|VBHN)\b|(?<!Kỷ\s)Luật\s", content)
         )
-        is_non_legal_advisory = any(
+        is_legal_advisory = any(
+            k in skill_name for k in ("legal-advisor", "legal-intel", "vbpl-digest", "legal")
+        ) and not any(
             k in skill_name
             for k in (
                 "copywriting",
@@ -60,7 +62,7 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 "orchestration",
             )
         )
-        has_xml = (not is_non_legal_advisory) and (
+        has_xml = is_legal_advisory and (
             "<legal_" in content or ("XML" in content and has_legal_grounding)
         )
         has_guardrail = "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
@@ -629,82 +631,92 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 )
 
         # --- Office Domain, Copywriting, Document Processing, PPTX & Seminar ---
-        elif skill_name in (
-            "ccba-copywriting",
-            "ccba-markdown-document-processing",
-            "ccba-pptx",
-            "ccba-seminar-builder",
-            "ccba-xu-ly-van-phong",
-            "copywriting",
-            "office",
-        ) or any(
-            k in prompt_l
-            for k in [
-                "nghị định 30",
-                "nđ 30",
-                "thể thức",
-                "soạn thảo",
-                "công văn",
-                "quốc hiệu",
-                "tiêu ngữ",
-                "nơi nhận",
-                "trích yếu",
-                "thẩm quyền ký",
-                "times new roman",
-                "typography",
-                "canh lề",
-                "căn lề",
-                "bảng biểu",
-                "markdown table",
-                "gfm",
-                "ngắt dòng",
-                "pptx",
-                "slide",
-                "thuyết trình",
-                "visual bullet",
-                "callout",
-                "seminar",
-                "agenda",
-                "curriculum",
-                "đề cương",
-                "bài giảng",
-                "handout",
-                "tài liệu phát tay",
+        elif (
+            skill_name
+            in (
+                "ccba-copywriting",
+                "ccba-markdown-document-processing",
+                "ccba-pptx",
+                "ccba-seminar-builder",
+                "ccba-xu-ly-van-phong",
                 "copywriting",
-                "truyền thông",
-                "bài viết",
-                "hook",
-                "call-to-action",
+                "office",
+            )
+            or any(
+                k in prompt_l
+                for k in [
+                    "nghị định 30",
+                    "nđ 30",
+                    "thể thức",
+                    "công văn",
+                    "quốc hiệu",
+                    "tiêu ngữ",
+                    "nơi nhận",
+                    "trích yếu",
+                    "thẩm quyền ký",
+                    "times new roman",
+                    "typography",
+                    "canh lề",
+                    "căn lề",
+                    "bảng biểu",
+                    "markdown table",
+                    "gfm",
+                    "ngắt dòng",
+                    "pptx",
+                    "slide",
+                    "thuyết trình",
+                    "visual bullet",
+                    "callout",
+                    "seminar",
+                    "agenda",
+                    "curriculum",
+                    "đề cương",
+                    "bài giảng",
+                    "handout",
+                    "tài liệu phát tay",
+                    "copywriting",
+                    "truyền thông",
+                    "bài viết",
+                    "hook",
+                    "call-to-action",
+                ]
+            )
+        ) and not any(
+            d in prompt_l
+            for d in [
+                "mermaid",
+                "statediagram",
+                "flowchart",
+                "sequencediagram",
+                "classdiagram",
+                "erdiagram",
+                "excalidraw",
             ]
         ):
-            has_office_grounding = (
-                any(
-                    k in skill_name
-                    for k in (
-                        "copywriting",
-                        "markdown-document",
-                        "pptx",
-                        "seminar",
-                        "van-phong",
-                        "office",
-                    )
+            has_office_grounding = any(
+                k in skill_name
+                for k in (
+                    "copywriting",
+                    "markdown-document",
+                    "pptx",
+                    "seminar",
+                    "van-phong",
+                    "office",
                 )
-                or any(
-                    k in content.lower()
-                    for k in [
-                        "nghị định 30",
-                        "thể thức",
-                        "typography",
-                        "docx",
-                        "pptx",
-                        "văn bản",
-                        "phông chữ",
-                        "seminar",
-                        "copywriting",
-                        "markdown",
-                    ]
-                )
-                or "ccba" in content.lower()
+            ) or any(
+                k in content.lower()
+                for k in [
+                    "nghị định 30",
+                    "thể thức",
+                    "typography",
+                    "docx",
+                    "pptx",
+                    "văn bản",
+                    "phông chữ",
+                    "seminar",
+                    "copywriting",
+                    "markdown",
+                ]
             )
 
             if not has_office_grounding:
