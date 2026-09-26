@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -32,6 +33,7 @@ ALLOWLIST_SCRIPTS = {
     "spoke_bootstrap.ps1",
     "setup_pre_commit.py",
     "sync.py",
+    "hydrate_sources_from_vault.py",
 }
 
 # Prefix patterns indicating one-off or temporary scripts
@@ -63,6 +65,29 @@ MACHINE_STATE_LEAK_PATTERNS = [
         "Hardcoded POSIX user home path",
     ),
 ]
+
+
+def check_staged_binary_files(spoke_root: Path) -> list[str]:
+    """Checks git index for staged binary source files (.pdf, .docx, .doc).
+
+    Uses --diff-filter=ACMR to avoid flagging deletions ('D') during 'git rm --cached'.
+    """
+    cmd = ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"]
+    try:
+        res = subprocess.run(cmd, cwd=spoke_root, capture_output=True, text=True, check=False)
+        if res.returncode != 0:
+            return []
+        offending: list[str] = []
+        for line in res.stdout.splitlines():
+            path_str = line.strip()
+            if not path_str:
+                continue
+            lower_name = path_str.lower()
+            if lower_name.endswith((".pdf", ".docx", ".doc")):
+                offending.append(path_str)
+        return offending
+    except Exception:
+        return []
 
 
 def check_machine_state_leakage(
@@ -252,6 +277,18 @@ def scan_spoke_cleanliness(
             )
         else:
             messages.append("✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.")
+
+        # Scan for staged binary files in git index (ACMR filter)
+        staged_binaries = check_staged_binary_files(spoke_root)
+        if staged_binaries:
+            has_errors = True
+            messages.append(
+                f"❌ [Staged Binary Files Guard] Phát hiện {len(staged_binaries)} tệp nhị phân bị stage vào Git index:\n"
+                + "\n".join(f"   - {f}" for f in staged_binaries)
+                + "\n   💡 Tuyệt đối cấm commit file nhị phân vào Git (ADR 0035 / Invariant #7). Hãy dùng 'git rm --cached <file>' và đưa vào Cloud Vault!"
+            )
+        else:
+            messages.append("✅ [Staged Binaries] Không có file nhị phân (.pdf, .docx, .doc) nào bị stage.")
 
     exit_code = 1 if has_errors or (strict and has_warnings) else 0
     return exit_code, messages
