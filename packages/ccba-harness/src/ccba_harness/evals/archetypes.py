@@ -25,6 +25,7 @@ from .scorers import (
     get_office_scorers,
     get_orchestration_scorers,
     get_pccc_scorers,
+    get_skill_repair_scorers,
     get_visual_diagram_scorers,
 )
 
@@ -35,6 +36,7 @@ from .scorers import (
 GRILLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("grill", "stresstest", "stress-test")
 ADR_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("adr", "architecture-decision")
 RISK_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("risk", "conflict")
+SKILL_REPAIR_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("skill-repair", "repair-skill")
 
 # Statutory and Regulatory Engineering Domains
 LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
@@ -135,7 +137,6 @@ ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "research",
     "notebooklm",
     "youtube",
-    "skill-repair",
     "build-skill",
     "setup-skills",
     "eval-gate",
@@ -167,6 +168,12 @@ DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
     ),
     DomainArchetype(
         "risk", RISK_ARCHETYPE_KEYWORDS, "eval_bigbim_risk.json", get_bigbim_risk_scorers
+    ),
+    DomainArchetype(
+        "skill_repair",
+        SKILL_REPAIR_ARCHETYPE_KEYWORDS,
+        "eval_skill_repair.json",
+        get_skill_repair_scorers,
     ),
     DomainArchetype("legal", LEGAL_ARCHETYPE_KEYWORDS, "eval_legal_intel.json", get_legal_scorers),
     DomainArchetype(

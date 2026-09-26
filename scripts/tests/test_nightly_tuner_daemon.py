@@ -203,6 +203,26 @@ def test_discover_skills_and_datasets_routing() -> None:
         assert mapping["ccba-grilling"] == "eval_grilling.json"
     if "ccba-adr-lifecycle" in mapping:
         assert mapping["ccba-adr-lifecycle"] == "eval_adr_lifecycle.json"
+    if "ccba-skill-repair" in mapping:
+        assert mapping["ccba-skill-repair"] == "eval_skill_repair.json"
+
+
+def test_skill_repair_scorers_and_dataset_integration() -> None:
+    """Verify skill-repair has dedicated scorers and valid dataset items."""
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    scorers = get_default_domain_scorers("ccba-skill-repair")
+    scorer_names = [s.name for s in scorers]
+    assert "skill_repair_gpi_and_frontmatter" in scorer_names
+    assert "skill_repair_anti_trap_hard_floor" in scorer_names
+    assert "skill_repair_debloat_and_verification" in scorer_names
+
+    items = load_eval_dataset(skill_name="ccba-skill-repair")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_skill_repair_yaml_syntax_triage" in item_ids
+    assert "test_skill_repair_mandatory_verification" in item_ids
 
 
 def test_adr_lifecycle_and_risk_redteam_integration() -> None:

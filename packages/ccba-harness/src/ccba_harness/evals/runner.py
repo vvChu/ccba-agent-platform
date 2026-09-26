@@ -329,6 +329,9 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "bigbim-rase": ["bigbim_rase", "rase"],
     "bigbim_rase": ["bigbim_rase", "rase"],
     "rase": ["bigbim_rase", "rase"],
+    "ccba-skill-repair": ["skill_repair", "repair_skill"],
+    "skill_repair": ["skill_repair", "repair_skill"],
+    "repair_skill": ["skill_repair", "repair_skill"],
 }
 
 
