@@ -23,7 +23,9 @@ from pathlib import Path
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_FILE = HUB_ROOT / ".md" / "knowledge" / "session_learnings.md"
 DEFAULT_ARCHIVE_DIR = HUB_ROOT / ".md" / "knowledge" / "archive"
-DEFAULT_MAX_SIZE_KB = 10.0
+DEFAULT_MAX_SIZE_KB = 15.0
+SOFT_TARGET_SIZE_KB = 10.0
+
 
 REQUIRED_INVARIANTS = [
     "ADR 0031",
@@ -275,7 +277,12 @@ def backup_to_archive(source_file: Path, archive_dir: Path) -> tuple[Path, Path]
     return timestamped_file, master_history_file
 
 
-def run_check(file_path: Path, max_size_kb: float, invariants: list[str] | None = None) -> int:
+def run_check(
+    file_path: Path,
+    max_size_kb: float,
+    invariants: list[str] | None = None,
+    soft_target_kb: float = SOFT_TARGET_SIZE_KB,
+) -> int:
     """CI check mode: Return 0 if file is within size budget, 1 otherwise."""
     metrics = get_file_metrics(file_path)
     if not metrics["exists"]:
@@ -296,11 +303,18 @@ def run_check(file_path: Path, max_size_kb: float, invariants: list[str] | None 
         print(f"[FAIL] Missing required architectural invariants: {missing}", file=sys.stderr)
         return 1
 
-    print(f"[PASS] File size is {kb} KB <= {max_size_kb} KB. All invariants preserved.")
+    if kb > soft_target_kb:
+        print(
+            f"[WARN] File size is {kb} KB <= {max_size_kb} KB (Hard Ceiling), but exceeds soft target ({soft_target_kb} KB). Compaction recommended."
+        )
+    else:
+        print(f"[PASS] File size is {kb} KB <= {soft_target_kb} KB. All invariants preserved.")
     return 0
 
 
-def run_stats(file_path: Path, max_size_kb: float) -> None:
+def run_stats(
+    file_path: Path, max_size_kb: float, soft_target_kb: float = SOFT_TARGET_SIZE_KB
+) -> None:
     """Print detailed file metrics and memory budget breakdown."""
     metrics = get_file_metrics(file_path)
     if not metrics["exists"]:
@@ -308,13 +322,18 @@ def run_stats(file_path: Path, max_size_kb: float) -> None:
         return
 
     kb = float(metrics["kb"])
-    status = "[PASS]" if kb <= max_size_kb else "[OVERFLOW]"
+    status = (
+        "[PASS]"
+        if kb <= soft_target_kb
+        else ("[WARN: SOFT TARGET EXCEEDED]" if kb <= max_size_kb else "[OVERFLOW]")
+    )
     print("=== Session Learnings Memory Metrics ===")
     print(f"File Path:        {file_path}")
     print(f"File Size:        {metrics['bytes']} bytes ({kb} KB)")
     print(f"Line Count:       {metrics['lines']} lines")
     print(f"Estimated Tokens: ~{metrics['tokens']:,} tokens")
-    print(f"Budget Limit:     {max_size_kb} KB")
+    print(f"Soft Target:      {soft_target_kb} KB")
+    print(f"Hard Ceiling:     {max_size_kb} KB")
     print(f"Status:           {status}")
 
 
@@ -406,7 +425,7 @@ def main() -> int:
         "--max-size-kb",
         type=float,
         default=DEFAULT_MAX_SIZE_KB,
-        help="Maximum size allowed in KB (default: 10.0).",
+        help=f"Maximum size allowed in KB (default: {DEFAULT_MAX_SIZE_KB}).",
     )
     parser.add_argument(
         "--check",

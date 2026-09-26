@@ -511,3 +511,16 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
   - Khi IDE bọc ngoặc kép `"C:\..."` vào `hooks.json`, vô hiệu bằng `{}` và khóa `IsReadOnly = $true`. Timeout $\ge 60\text{s}$ cho tests scan metadata Windows. (Chi tiết đối chiếu: Mục 11.2).
 - **RULE-5.3 [Query Sanitization & Turnstile Bypass]:**
   - Query TVPL có dấu `/`, `:`, `-` phải thay bằng dấu cách (`quote_plus`) chống lỗi IIS mã hóa `%2F`. (Chi tiết đối chiếu: Mục 39).
+
+---
+
+## 22. Archived Operational Invariants (Di dời từ Active Working Memory theo Chuẩn hóa Platform-Aware KISS)
+
+- **RULE-5.4 [Telegram ChatOps: Markdown v1, Subprocess Reaping & Cross-Repo Path]:**
+  - *Markdown v1 Escaping*: Trong Telegram Markdown v1, dấu `_` là cú pháp italic. MỌI biến chuỗi động chứa `_` (file, branch, model, skill) BẮT BUỘC bọc trong inline code backtick (`` `...` ``) kèm `_clean_md` thay ` ` ` thành `'`, chống lỗi `can't parse entities` gây rớt fallback plain text.
+  - *Subprocess Reaping*: Khi dùng `asyncio.wait_for(proc.communicate(), timeout=...)`, trong `TimeoutError` và `CancelledError` BẮT BUỘC: tiến trình đơn gọi `proc.kill()` + `await proc.wait()`; shell runner có trap cleanup worktree BẮT BUỘC dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ chờ 5s $\rightarrow$ `SIGKILL` triệt tiêu zombie và dọn dẹp worktree.
+  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng tham số `cwd=` tường minh trỏ về gốc repo đích (phân giải qua `CCBA_HUB_PATH`), cấm gắn cứng đường dẫn máy trạm `/home/vvc/...` (vi phạm Machine-State Decoupling) hoặc dùng đường dẫn tương đối.
+- **RULE-5.5 [Timezone-Normalized Observability cho Database Gateway UTC]:**
+  - Khi truy vấn sản lượng token/spend trong ngày từ gateway lưu UTC (LiteLLM `LiteLLM_SpendLogs`), CẤM dùng `CURRENT_DATE` trong `WHERE` (mất trắng 00:00-07:00 ICT). BẮT BUỘC lọc theo mốc 00:00:00 ICT chuẩn hóa sang UTC bảo đảm Index Scan:
+    `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
+

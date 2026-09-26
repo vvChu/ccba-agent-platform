@@ -41,6 +41,11 @@ HIGHER_DOMAIN_PACKAGES = {
     "ccba_qc_core",
 }
 
+# Raw third-party library bypass mapping: module -> (allowed_packages, seam_replacement)
+RAW_BYPASS_RESTRICTIONS: dict[str, tuple[set[str], str]] = {
+    "docx": ({"ccba_ooxml", "ccba_legal", "mdconverter"}, "ccba_ooxml"),
+}
+
 
 @dataclass
 class ImportViolation:
@@ -54,9 +59,15 @@ class ImportViolation:
 class DependencyASTVisitor(ast.NodeVisitor):
     """AST Visitor that inspects import statements for dependency violations."""
 
-    def __init__(self, current_package: str | None, current_file: Path) -> None:
+    def __init__(
+        self,
+        current_package: str | None,
+        current_file: Path,
+        raw_lines: list[str] | None = None,
+    ) -> None:
         self.current_package = current_package
         self.current_file = current_file
+        self.raw_lines = raw_lines
         self.violations: list[ImportViolation] = []
 
     def visit_Import(self, node: ast.Import) -> None:
@@ -90,6 +101,32 @@ class DependencyASTVisitor(ast.NodeVisitor):
     def _check_module_import(self, module_name: str, line_number: int) -> None:
         parts = module_name.split(".")
         root_mod = parts[0]
+
+        # Check 0: Raw Third-Party Bypass (Platform-Aware KISS Guard)
+        if root_mod in RAW_BYPASS_RESTRICTIONS:
+            allowed_pkgs, seam_pkg = RAW_BYPASS_RESTRICTIONS[root_mod]
+            if self.current_package not in allowed_pkgs:
+                # Check for explicit inline exemption comment
+                line_has_exemption = False
+                if self.raw_lines and 1 <= line_number <= len(self.raw_lines):
+                    line_text = self.raw_lines[line_number - 1]
+                    line_has_exemption = (
+                        "ccba:allow-raw-bypass" in line_text or "noqa: raw-bypass" in line_text
+                    )
+
+                if not line_has_exemption:
+                    self.violations.append(
+                        ImportViolation(
+                            file_path=self.current_file,
+                            line_number=line_number,
+                            imported_module=module_name,
+                            rule_name="RawThirdPartyBypassViolation",
+                            message=(
+                                f"File '{self.current_file.name}' cannot directly import raw '{root_mod}'. "
+                                f"Platform-Aware KISS requires using '{seam_pkg}' seam instead."
+                            ),
+                        )
+                    )
 
         if root_mod not in MONOREPO_ROOT_MODULES:
             return
@@ -159,6 +196,7 @@ def scan_file_for_violations(file_path: Path, packages_dir: Path) -> list[Import
     pkg = get_package_for_file(file_path, packages_dir)
     try:
         content = file_path.read_text(encoding="utf-8")
+        raw_lines = content.splitlines()
         tree = ast.parse(content, filename=str(file_path))
     except Exception as exc:
         return [
@@ -171,7 +209,7 @@ def scan_file_for_violations(file_path: Path, packages_dir: Path) -> list[Import
             )
         ]
 
-    visitor = DependencyASTVisitor(current_package=pkg, current_file=file_path)
+    visitor = DependencyASTVisitor(current_package=pkg, current_file=file_path, raw_lines=raw_lines)
     visitor.visit(tree)
     return visitor.violations
 
@@ -222,7 +260,7 @@ def run_import_linter_tool(project_root: Path) -> int:
             if src.is_dir() and str(src) not in sys.path:
                 sys.path.insert(0, str(src))
 
-        from importlinter.cli import lint_imports
+        from importlinter.cli import lint_imports  # type: ignore[import-not-found]
 
         config_file = project_root / ".importlinter"
         if config_file.exists():

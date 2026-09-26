@@ -333,3 +333,33 @@ Khi tự động hóa hoặc hướng dẫn sử dụng bộ công cụ Spoke CL
    - Cả 3 lệnh con `init-spoke`, `adopt-spoke`, `sync-spoke` đều nhận đường dẫn Spoke dưới dạng **tham số vị trí** `[spoke_path]` (ví dụ: `python scripts/ccba_platform_cli.py sync-spoke /path/to/spoke --apply`).
    - TUYỆT ĐỐI CẤM truyền cờ `--spoke` vào CLI hợp nhất (gây lỗi `unrecognized arguments: --spoke`, Exit Code 2).
 
+---
+
+## 18. Pre-Flight Seam Inventory & Fast-Path Policy (Chính Sách Tiền Thẩm Định Kế Hoạch & Miễn Trừ Nhanh)
+
+### 18.1. Pre-Flight Seam Inventory Check & CLI Proof
+Trước khi đề xuất bất kỳ giải pháp kỹ thuật, tính năng mới, hoặc viết script trong kế hoạch thực thi (`implementation_plan.md`), Agent **BẮT BUỘC** phải thực hiện kiểm tra Seam qua CLI:
+```bash
+python scripts/governance/compile_catalog.py --query "<từ_khóa>"
+# Hoặc:
+ccba-platform find-seam "<từ_khóa>"
+```
+- **Audit Receipt Invariant (Bằng Chứng Tra Cứu Tất Định):** Kế hoạch thực thi bắt buộc phải dán trích đoạn output của lệnh tra cứu CLI vào mục `User Review Required / Architectural Alignment`.
+- Nếu CLI trả về Seam khớp $\to$ Kế hoạch bắt buộc phải tuyên bố tái sử dụng Seam đó (`from ccba_<pkg> import <Seam>`).
+- Nếu CLI không trả về Seam $\to$ Agent mới được phép đề xuất viết hàm micro-utility hoặc đóng góp Seam mới.
+
+### 18.2. Ngưỡng Kích Hoạt Bắt Buộc (Mandatory Trigger Thresholds)
+Pre-Flight Seam Inventory là **bắt buộc** đối với các tác vụ:
+1. **File I/O**: Đọc, ghi, chuyển đổi, trích xuất tài liệu (PDF, Word DOCX, Excel XLSX, PPTX, Markdown, OCR).
+2. **Security & Secrets**: Xác thực, PII, mã hóa, xử lý API keys hoặc tokens (bắt buộc dùng `ccba-maskara`).
+3. **Networking & Cloud**: Tải dữ liệu, crawl web, đồng bộ Google Drive / SharePoint (bắt buộc dùng `ccba_legal.sync`, CDP mutex).
+4. **Tạo Script / Utility mới**: Bất kỳ tệp `.py` mới nào được tạo trong `scripts/` hoặc `packages/`.
+5. **Pháp lý & Thẩm định**: Trích dẫn quy chuẩn, phân định thẩm quyền PCCC, tra cứu hiệu lực văn bản (bắt buộc dùng `ccba_legal` Currency Resolver, `ccba_qc_core` PCCC Router).
+
+### 18.3. Fast-Path Miễn Trừ (Exemptions)
+Các tác vụ sau được hưởng cơ chế **Fast-Path** (không bắt buộc dán receipt CLI tra cứu Seam, giảm ma sát tối đa):
+1. **Sửa lỗi bugfix cục bộ**: Vá lỗi trong phạm vi 1 hàm hoặc 1 file hiện có mà không thêm dependency hay thư viện mới.
+2. **Test Fixtures & Harness Evals**: Bổ sung test cases, sửa mock data, cập nhật test datasets (`.agents/skills/ccba-eval-gate/test_cases/`).
+3. **Tài liệu & Markdown**: Cập nhật tài liệu kỹ thuật, báo cáo nghiệm thu, sửa chính tả, cập nhật `walkthrough.md`.
+
+
