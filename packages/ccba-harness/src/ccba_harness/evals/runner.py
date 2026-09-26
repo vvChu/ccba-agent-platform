@@ -46,6 +46,7 @@ class EvalRunner:
         async with semaphore:
             task_output = None
             error_msg = None
+            task_exc: Exception | None = None
             try:
                 if asyncio.iscoroutinefunction(task):
                     task_output = await task(item)
@@ -56,6 +57,7 @@ class EvalRunner:
                     else:
                         task_output = res
             except Exception as e:
+                task_exc = e
                 error_msg = f"Task execution failed: {e}"
                 task_output = None
 
@@ -78,6 +80,7 @@ class EvalRunner:
                     passed=False,
                     critical_failed=any(s.is_critical for s in scorers),
                     error=error_msg,
+                    exception=task_exc,
                 )
 
             # Score output against all scorers concurrently
