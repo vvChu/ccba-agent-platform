@@ -43,6 +43,7 @@ class EvalItemResult:
     passed: bool
     critical_failed: bool = False
     error: str | None = None
+    exception: Exception | None = None
 
 
 @dataclass
