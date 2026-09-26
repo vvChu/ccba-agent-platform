@@ -748,5 +748,104 @@
         "legal_basis": "QCVN 06:2022/BXD.*(?:Điều 3\\.2|3\\.2\\.9|3\\.2\\.10)"
       }
     }
+  },
+  {
+    "id": "test_pccc_jurisdiction_high_rise_condominium_c07_and_bxd",
+    "input_prompt": "Xác định thẩm quyền và quy trình thẩm định thiết kế PCCC cho dự án Tòa tháp chung cư cao cấp Horizon Tower (quy mô 35 tầng nổi, chiều cao 120m, 3 tầng hầm, diện tích sàn 45.000 m2, dự án Nhóm A). Dự án này phải nộp thẩm định tại cơ quan nào và theo cơ chế nào theo Luật PCCC số 55/2024/QH15 và Nghị định số 105/2025/NĐ-CP?",
+    "golden_answer": {
+      "verdict": "DUAL_PATHWAY_C07_AND_BXD",
+      "cqcmvxd_tier": "Bộ Xây dựng (Cơ quan chuyên môn về xây dựng thẩm định thiết kế xây dựng lồng ghép nội dung PCCC quy định tại điểm a, b, c, d, đ khoản 1 Điều 16 Luật 55/2024)",
+      "police_tier": "Cục Cảnh sát PCCC & CNCH (C07 - Bộ Công an) thẩm định thiết kế PCCC phần MEP chủ động quy định tại điểm e, g khoản 1 Điều 16 Luật 55/2024 do công trình cao >= 100m, trên 30 tầng và 3 tầng hầm",
+      "investor_self_appraisal": "Không áp dụng Mẫu PC13 do công trình thuộc thẩm quyền thẩm định cấp Nhà nước của Bộ Xây dựng và C07",
+      "legal_basis": "Luật PCCC số 55/2024/QH15 Điều 16, 17 và Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 1"
+    },
+    "rubric": "Phải xác định rõ cơ chế lồng ghép kép (Dual-Pathway): Bộ Xây dựng thẩm tra kiến trúc/thoát nạn/ngăn cháy lan (điểm a-đ); Cục Cảnh sát PCCC (C07) thẩm duyệt hệ thống PCCC chủ động và cấp điện PCCC (điểm e, g); khẳng định không thuộc diện CĐT tự thẩm định PC13.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "PCCC Statutory Jurisdiction Routing",
+      "standard": "Luật 55/2024/QH15 & NĐ 105/2025 Phụ lục III Mục 1",
+      "difficulty": "hard",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Bộ Xây dựng|C07|Cục Cảnh sát PCCC|Dual-Pathway|lồng ghép|Phụ lục III)",
+          "is_critical": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "test_pccc_jurisdiction_medium_hotel_pc07_and_sxd",
+    "input_prompt": "Dự án Khách sạn du lịch 9 tầng, chiều cao 32m, 1 tầng hầm, diện tích sàn 4.200 m2 tại thành phố Đà Nẵng (Dự án nhóm B do tư nhân đầu tư). Hãy xác định cơ quan có thẩm quyền thẩm định thiết kế PCCC và danh mục mẫu văn bản thực hiện theo Nghị định 105/2025/NĐ-CP.",
+    "golden_answer": {
+      "verdict": "DUAL_PATHWAY_PC07_AND_SXD",
+      "cqcmvxd_tier": "Sở Xây dựng thẩm định thiết kế xây dựng lồng ghép PCCC (kiến trúc, thoát nạn, giải pháp chống khói)",
+      "police_tier": "Phòng Cảnh sát PCCC & CNCH (PC07 Công an địa phương) thẩm định thiết kế hệ thống PCCC theo Phụ lục III Mục 7 NĐ 105/2025 (khách sạn >= 7 tầng hoặc diện tích sàn >= 3.000 m2). Mẫu: PC12 và PC14",
+      "investor_self_appraisal": "Không áp dụng mẫu PC13 do thuộc thẩm quyền thẩm định của PC07",
+      "analysis": "Khách sạn 9 tầng thuộc diện thẩm duyệt thiết kế PCCC của PC07 theo Mục 7 Phụ lục III NĐ 105/2025.",
+      "legal_basis": "Luật PCCC số 55/2024/QH15 Điều 16, 17 và Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 7"
+    },
+    "rubric": "Xác định đúng Sở Xây dựng và PC07 Công an cấp tỉnh/thành phố là 2 cơ quan có thẩm quyền thẩm định song song theo cơ chế phân cấp.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "PCCC Statutory Jurisdiction Routing",
+      "standard": "Nghị định 105/2025/NĐ-CP Phụ lục III Mục 7",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Sở Xây dựng|PC07|Phòng Cảnh sát PCCC|Mục 7|PC12|PC14)",
+          "is_critical": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "test_pccc_jurisdiction_small_kindergarten_investor_self_appraisal",
+    "input_prompt": "Chủ đầu tư xây dựng cơ sở Trường mầm non tư thục quy mô 2 tầng, tổng diện tích sàn 600 m2, tổng khối tích 1.800 m3, quy mô tiếp nhận 70 cháu. Hỏi công trình này có thuộc diện nộp hồ sơ thẩm định PCCC tại Phòng Cảnh sát PCCC (PC07) không, và Chủ đầu tư phải thực hiện thủ tục thẩm định PCCC như thế nào theo Nghị định 105/2025/NĐ-CP?",
+    "golden_answer": {
+      "verdict": "CHU_DAU_TU_TU_THAM_DINH_PC13",
+      "police_required": "Không thuộc Phụ lục III Nghị định 105/2025/NĐ-CP (ngưỡng mầm non phải từ 150 cháu trở lên hoặc sàn >= 2.000 m2 hoặc khối tích >= 5.000 m3), do đó không phải nộp thẩm định tại PC07",
+      "procedure": "Chủ đầu tư có trách nhiệm tự tổ chức thẩm định thiết kế về PCCC theo Điều 8 Nghị định 105/2025/NĐ-CP và điểm đ khoản 1 Điều 17 Luật 55/2024/QH15, ban hành Văn bản kết quả tự thẩm định thiết kế về PCCC theo Mẫu PC13",
+      "legal_basis": "Luật PCCC số 55/2024/QH15 Điều 17 khoản 1 điểm đ, Nghị định 105/2025/NĐ-CP Điều 8 khoản 1 và Mẫu PC13"
+    },
+    "rubric": "Khẳng định không thuộc Phụ lục III vì quy mô 70 cháu < 150 cháu. Khẳng định Chủ đầu tư tự tổ chức thẩm định và lập văn bản theo Mẫu PC13.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "PCCC Statutory Jurisdiction Routing",
+      "standard": "Nghị định 105/2025/NĐ-CP Điều 8 & Phụ lục III Mục 2",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(tự tổ chức thẩm định|tự thẩm định|PC13|Mẫu số PC13|không thuộc Phụ lục III)",
+          "is_critical": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "test_pccc_jurisdiction_industrial_warehouse_category_d_e",
+    "input_prompt": "Công trình Nhà kho chứa hàng hóa thông thường (hạng nguy hiểm cháy nổ D/E), quy mô 1 tầng, diện tích xây dựng 12.000 m2, chiều cao thông thủy 9m (khối tích 108.000 m3). Hãy đối chiếu ngưỡng quy định tại Phụ lục III Nghị định 105/2025/NĐ-CP để xác định công trình có thuộc diện Cơ quan Công an thẩm duyệt PCCC hay không.",
+    "golden_answer": {
+      "verdict": "THUOC_DIEN_THAM_DUYET_CONG_AN",
+      "threshold_check": "Mục 10 Phụ lục III Nghị định 105/2025/NĐ-CP quy định: Kho hàng hóa hạng D, E có khối tích từ 30.000 m3 trở lên HOẶC tổng diện tích sàn từ 10.000 m2 trở lên thuộc diện thẩm định PCCC của cơ quan Công an",
+      "conclusion": "Công trình có diện tích 12.000 m2 (>= 10.000 m2) và khối tích 108.000 m3 (>= 30.000 m3), do đó BẮT BUỘC thuộc diện Cơ quan Cảnh sát PCCC & CNCH (PC07) thẩm định thiết kế PCCC",
+      "legal_basis": "Nghị định số 105/2025/NĐ-CP Phụ lục III Mục 10, Luật PCCC số 55/2024/QH15 Điều 17"
+    },
+    "rubric": "Phải trích dẫn đúng số liệu ngưỡng Mục 10 Phụ lục III (khối tích >= 30.000 m3 hoặc sàn >= 10.000 m2) và kết luận BẮT BUỘC nộp thẩm định PC07.",
+    "metadata": {
+      "target_skill": "ccba-ai-qc-pccc-audit",
+      "discipline": "PCCC Statutory Jurisdiction Routing",
+      "standard": "Nghị định 105/2025/NĐ-CP Phụ lục III Mục 10",
+      "difficulty": "medium",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "(Mục 10|30\\.000|10\\.000|PC07|bắt buộc|thuộc diện)",
+          "is_critical": true
+        }
+      ]
+    }
   }
 ]

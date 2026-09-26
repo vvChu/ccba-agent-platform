@@ -177,3 +177,11 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
    python scripts/validate_legal_spoke.py
    ```
    * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 15 Cổng Master CI Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$, Gate 13 Table Regularity, Gate 14 KaTeX Syntax).
+
+8. **Xuất Bản Trình Chiếu PowerPoint 1-Chạm (Legal-to-PPTX Thin Seam — ADR 0044)**:
+   ```bash
+   python -m ccba_legal pptx <input_markdown> -o <output_pptx>
+   ```
+   Chuyển đổi trực tiếp tài liệu tóm tắt pháp lý (`summary.md` / `concept.md`) sang file trình chiếu PowerPoint `.pptx` chuẩn nhận diện thương hiệu CCBA (Swiss Modernist Design ver 3.4) qua dynamic import `ccba_ooxml`.
+   * **Tiêu chí hoàn thành:** File presentation `.pptx` được tạo thành công với layout chuẩn thương hiệu CCBA và kích thước hợp lệ.
+

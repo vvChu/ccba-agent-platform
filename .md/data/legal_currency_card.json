@@ -5,6 +5,7 @@
   "statutory_replacements": [
     {
       "domain": "Luật Xây dựng",
+      "title": "Luật Xây dựng 2025 (Số 135/2025/QH15)",
       "active_law": "Luật Xây dựng số 135/2025/QH15",
       "document_number": "135/2025/QH15",
       "effective_date": "2026-07-01",
@@ -15,6 +16,7 @@
     },
     {
       "domain": "Quản lý dự án đầu tư xây dựng & Thẩm tra thiết kế",
+      "title": "Nghị định 217/2026/NĐ-CP về Quản lý dự án đầu tư xây dựng",
       "active_decree": "Nghị định số 217/2026/NĐ-CP",
       "document_number": "217/2026/NĐ-CP",
       "effective_date": "2026-07-01",
@@ -26,6 +28,7 @@
     },
     {
       "domain": "Quản lý chất lượng, thi công và bảo trì",
+      "title": "Nghị định 207/2026/NĐ-CP về Quản lý chất lượng, thi công và bảo trì",
       "active_decree": "Nghị định số 207/2026/NĐ-CP",
       "document_number": "207/2026/NĐ-CP",
       "effective_date": "2026-07-01",
@@ -36,6 +39,7 @@
     },
     {
       "domain": "Phân cấp công trình xây dựng (Cấp I)",
+      "title": "Thông tư số 34/2026/TT-BXD quy định chi tiết về cấp công trình xây dựng",
       "active_circular": "Thông tư số 34/2026/TT-BXD",
       "document_number": "34/2026/TT-BXD",
       "effective_date": "2026-07-01",
@@ -56,13 +60,34 @@
     },
     {
       "domain": "PCCC và Cứu nạn, cứu hộ",
-      "active_law": "Luật PCCC&CNCH số 55/2024/QH15 & Nghị định 105/2025/NĐ-CP",
+      "title": "Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 (Số 55/2024/QH15)",
+      "active_law": "Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ số 55/2024/QH15",
       "document_number": "55/2024/QH15",
       "effective_date": "2025-07-01",
       "supersedes": [
         "27/2001/QH10",
         "40/2013/QH13",
         "136/2020/NĐ-CP"
+      ]
+    },
+    {
+      "domain": "Nghị định PCCC",
+      "title": "Nghị định 105/2025/NĐ-CP quy định chi tiết thi hành Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ",
+      "active_decree": "Nghị định số 105/2025/NĐ-CP",
+      "document_number": "105/2025/NĐ-CP",
+      "effective_date": "2025-07-01",
+      "supersedes": [
+        "136/2020/NĐ-CP"
+      ]
+    },
+    {
+      "domain": "An toàn cháy",
+      "title": "QCVN 06:2022/BXD và Sửa đổi 1:2023 (Quy chuẩn kỹ thuật quốc gia về An toàn cháy)",
+      "active_standard": "QCVN 06:2022/BXD và Sửa đổi 1:2023 (An toàn cháy cho nhà và công trình)",
+      "document_number": "QCVN 06:2022/BXD",
+      "effective_date": "2023-01-16",
+      "supersedes": [
+        "QCVN 06:2021/BXD"
       ]
     }
   ],
