@@ -234,6 +234,7 @@ class TestDocumentAuditor(unittest.TestCase):
         for line, expected_num in test_cases:
             m = STEP_LINE_RE.match(line)
             self.assertIsNotNone(m, f"Failed to match: {line}")
+            assert m is not None
             matched_num = m.group(1) or m.group(3)
             self.assertEqual(matched_num, expected_num, f"Wrong step num for {line}")
 
