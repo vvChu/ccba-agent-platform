@@ -1082,6 +1082,88 @@ def get_legal_scorers() -> list[BaseScorer]:
     ]
 
 
+class LegalToolingIntegrityScorer(BaseScorer):
+    """Evaluates Statutory Engineering pipelines: TVPL VIP crawler, OKF v2.4, VBHN diffing, and HSHT completion dossiers."""
+
+    def __init__(
+        self,
+        name: str = "legal_tooling_integrity",
+        weight: float = 0.45,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(tvpl|thư viện pháp luật|vip|session|cookie|captcha|exponential backoff|retry|rate limit|429|"
+            r"okf v2\.4|okf|frontmatter|verbatim|nguyên văn|sha-256|sha256|mã băm|băm mật mã|provenance|"
+            r"vbhn|văn bản hợp nhất|diff|so khớp|sửa đổi|bổ sung|bãi bỏ|thay thế|amendment|"
+            r"hồ sơ hoàn thành|hsht|nghiệm thu|nghị định 06/2021|nđ 06/2021|nghị định 35/2023|bản vẽ hoàn công|cây thư mục|checklist|"
+            r"adr-0059|mandatory acquisition|anti-synthetic|thu thập bắt buộc)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Legal tooling pipeline standard verified (TVPL VIP session, OKF v2.4, SHA-256, VBHN diff, HSHT checklist, ADR-0059)"
+                if matched
+                else "Missing statutory engineering standards (TVPL crawler, OKF v2.4, SHA-256 provenance, VBHN diff, or HSHT checklist)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class Sha256ProvenanceScorer(BaseScorer):
+    """Evaluates cryptographic SHA-256 provenance stamping and verbatim grounding per ADR-0059."""
+
+    def __init__(
+        self,
+        name: str = "sha256_provenance",
+        weight: float = 0.25,
+        is_critical: bool = True,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(sha-256|sha256|[a-f0-9]{64}|mã băm|cryptographic|provenance|verbatim|adr-0059)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Cryptographic SHA-256 provenance / verbatim grounding verified (ADR-0059)"
+                if matched
+                else "Missing cryptographic SHA-256 provenance stamping or verbatim grounding (ADR-0059)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_legal_tooling_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for legal tooling and statutory engineering skills."""
+    return [
+        LegalToolingIntegrityScorer(weight=0.45),
+        Sha256ProvenanceScorer(weight=0.25, is_critical=True),
+        ProgressiveDisclosureScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
+    ]
+
+
 class OfficeStandardScorer(BaseScorer):
     """Evaluates Office document formatting, typography, administrative standards (NĐ 30/2020), presentation slides, seminars, and technical copywriting."""
 
@@ -1098,7 +1180,7 @@ class OfficeStandardScorer(BaseScorer):
             r"bảng|bảng biểu|markdown table|gfm|ngắt dòng|line break|<br\s*/?>|"
             r"docx|pptx|slide|trình bày|thuyết trình|presentation|visual bullet|"
             r"seminar|agenda|curriculum|đề cương|bài giảng|mục tiêu đào tạo|handout|tài liệu phát tay|timeline|"
-            r"copywriting|truyền thông|bài viết|hook|call-to-action|cta|giải pháp)",
+            r"copywriting|truyền thông|bài viết|hook|call-to-action|cta|giải pháp công nghệ|giải pháp kỹ thuật|giải pháp đột phá)",
             re.IGNORECASE,
         )
 

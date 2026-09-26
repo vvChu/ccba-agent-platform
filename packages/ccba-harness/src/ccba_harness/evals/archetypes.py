@@ -22,6 +22,7 @@ from .scorers import (
     get_grilling_scorers,
     get_lean_structural_scorers,
     get_legal_scorers,
+    get_legal_tooling_scorers,
     get_office_scorers,
     get_orchestration_scorers,
     get_pccc_scorers,
@@ -40,16 +41,22 @@ RISK_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("risk", "conflict")
 SKILL_REPAIR_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("skill-repair", "repair-skill")
 
 # Statutory and Regulatory Engineering Domains
+LEGAL_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "crawler",
+    "vip",
+    "ingest",
+    "document-tracker",
+    "tracker",
+    "checklist",
+    "hsht",
+)
 LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "legal",
     "luat",
     "tvpl",
     "vbpl",
     "advisor",
-    "checklist",
-    "hsht",
     "phap-ly",
-    "ingest",
 )
 TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("pccc", "qc", "audit", "thamdinh")
 
@@ -176,6 +183,12 @@ DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
         SKILL_REPAIR_ARCHETYPE_KEYWORDS,
         "eval_skill_repair.json",
         get_skill_repair_scorers,
+    ),
+    DomainArchetype(
+        "legal_tooling",
+        LEGAL_TOOLING_ARCHETYPE_KEYWORDS,
+        "eval_legal_tooling.json",
+        get_legal_tooling_scorers,
     ),
     DomainArchetype("legal", LEGAL_ARCHETYPE_KEYWORDS, "eval_legal_intel.json", get_legal_scorers),
     DomainArchetype(
