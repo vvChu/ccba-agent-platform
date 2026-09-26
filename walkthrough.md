@@ -91,6 +91,7 @@ Toàn bộ các bài kiểm thử và linter đã được thực thi và vượ
 
 ## 4. Các Commit Đã Thực Hiện Trên Branch
 
+- `53a0d2e2`: `fix(legal-intel,qc-core): harden currency resolver path decoupling, date parsing, and doc parity`
 - `228338ef`: `style: format currency resolver and jurisdiction tests with ruff`
 - `126fe3f7`: `feat(qc-core,legal-intel): implement dynamic statutory resolver for PCCC jurisdiction citations`
 - `b1f382e8`: `docs(walkthrough): finalize real commit SHAs`
