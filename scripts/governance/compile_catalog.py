@@ -645,7 +645,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    if args.query:
+    if args.query is not None:
         return query_catalog(HUB_ROOT, args.query)
 
     if args.check:
