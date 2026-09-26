@@ -27,6 +27,7 @@ from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
     BaseScorer,
 )
+from .simulation import build_mock_agent_task
 from .slicing import (
     AdaptiveDataSlicer,
     SlicedDataset,
@@ -440,18 +441,32 @@ class RatchetConfig:
             self.use_real_llm = True
         if not self.llm_model:
             self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
-        if self.token_budget is None:
+        if self.token_budget is not None:
+            if isinstance(self.token_budget, str):
+                try:
+                    self.token_budget = int(self.token_budget.replace(",", "").replace("_", ""))
+                except ValueError:
+                    self.token_budget = 5_000_000
+        else:
             env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
             if env_budget:
                 try:
-                    self.token_budget = int(env_budget)
+                    self.token_budget = int(env_budget.replace(",", "").replace("_", ""))
                 except ValueError:
                     self.token_budget = 5_000_000
             else:
                 self.token_budget = 5_000_000
 
         # Configuration Precedence via Sentinel (Issue #368): User > Env > Default
-        if self.per_skill_mutation_budget is _UNSET:
+        if self.per_skill_mutation_budget is not _UNSET:
+            if isinstance(self.per_skill_mutation_budget, str):
+                try:
+                    self.per_skill_mutation_budget = int(
+                        self.per_skill_mutation_budget.replace(",", "").replace("_", "")
+                    )
+                except ValueError:
+                    self.per_skill_mutation_budget = 250_000
+        else:
             env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
             if env_ps_budget:
                 try:
@@ -463,7 +478,15 @@ class RatchetConfig:
             else:
                 self.per_skill_mutation_budget = 250_000
 
-        if self.hard_max_tokens_per_skill is _UNSET:
+        if self.hard_max_tokens_per_skill is not _UNSET:
+            if isinstance(self.hard_max_tokens_per_skill, str):
+                try:
+                    self.hard_max_tokens_per_skill = int(
+                        self.hard_max_tokens_per_skill.replace(",", "").replace("_", "")
+                    )
+                except ValueError:
+                    self.hard_max_tokens_per_skill = 500_000
+        else:
             env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
             if env_hard_max:
                 try:
@@ -475,7 +498,13 @@ class RatchetConfig:
             else:
                 self.hard_max_tokens_per_skill = 500_000
 
-        if self.max_concurrency is _UNSET:
+        if self.max_concurrency is not _UNSET:
+            if isinstance(self.max_concurrency, str):
+                try:
+                    self.max_concurrency = int(self.max_concurrency)
+                except ValueError:
+                    self.max_concurrency = 5
+        else:
             env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
             if env_concurrency:
                 try:
@@ -741,6 +770,24 @@ from .archetypes import (  # noqa: F401
 )
 
 
+@dataclass
+class _RatchetLoopState:
+    """Encapsulates mutable loop state and trial history for GitRatchetOptimizer."""
+
+    best_score: float
+    best_content: str
+    has_committed: bool = False
+    kept_count: int = 0
+    reverted_count: int = 0
+    stagnant_trials: int = 0
+    seen_hashes: set[str] = field(default_factory=set)
+    history: list[RatchetTrialResult] = field(default_factory=list)
+
+
+# Alias for backward compatibility
+_RatchetSession = _RatchetLoopState
+
+
 class GitRatchetOptimizer:
     """Autonomous Ratchet Optimization Engine using Git commits for state persistence."""
 
@@ -875,791 +922,10 @@ class GitRatchetOptimizer:
         if self.config.use_real_llm and self.llm_adapter is not None:
             return self.llm_adapter.create_async_eval_task(content)
 
-        # Grounded task execution taking into account current prompt content
-        def mock_agent_task(item: EvalItem) -> str:
-            prompt = str(item.input_prompt)
-            prompt_l = prompt.lower()
-
-            # Check if prompt content has legal guidance and hard floor guardrails
-            has_legal_grounding = bool(
-                re.search(r"\b(Nghị định|Thông tư|VBHN)\b|(?<!Kỷ\s)Luật\s", content)
-            )
-            has_xml = "<legal_" in content or "XML" in content
-            has_guardrail = (
-                "105/2025" in content or "Hard Floor" in content or "bị thay thế" in content
-            )
-            has_pccc_guardrail = "QCVN 06" in content and (
-                "Map 1" in content or "Bảng H.1" in content or "Quy trình" in content
-            )
-            has_academic_grounding = "IMRAD" in content or "CARS" in content or "Yale" in content
-            has_academic_bibtex = "BibTeX" in content and "APA" in content
-            has_cars_stems = (
-                "Sentence Stems" in content or "Khung Mẫu CARS 3-Move Chi Tiết" in content
-            )
-            has_progressive_links = bool(
-                re.search(
-                    r"\[([^\]]+)\]\(([^)]+)\)|progressive disclosure|references/|tham chiếu",
-                    content,
-                    re.IGNORECASE,
-                )
-            )
-
-            parts = []
-            if has_xml:
-                parts.append(
-                    "<legal_context>\nPhân tích và đối soát văn bản quy phạm pháp luật theo quy định hiện hành.\n</legal_context>"
-                )
-
-            # 1. Redteam Trap 1: Expired Decree 136/2020
-            if "136/2020" in prompt:
-                if has_guardrail:
-                    parts.append(
-                        "Lưu ý quan trọng: Nghị định 136/2020/NĐ-CP đã hết hiệu lực và được thay thế toàn diện bởi Nghị định 105/2025/NĐ-CP. Căn cứ Nghị định 105/2025/NĐ-CP, quy trình thẩm định thiết kế PCCC được phân định giữa Cơ quan chuyên môn về xây dựng và Cơ quan Công an."
-                    )
-                else:
-                    return (
-                        "Căn cứ Nghị định 136/2020/NĐ-CP hướng dẫn Luật PCCC, danh mục hồ sơ gồm..."
-                    )
-
-            # 2. Redteam Trap 2: Outdated Standard QCVN 06:2020
-            elif "06:2020" in prompt:
-                if has_guardrail:
-                    parts.append(
-                        "Lưu ý quan trọng: QCVN 06:2020/BXD đã hết hiệu lực. Công trình thiết kế bắt buộc áp dụng QCVN 06:2022/BXD cùng Thông tư ban hành Sửa đổi 1:2023 QCVN 06:2022/BXD."
-                    )
-                else:
-                    return "Căn cứ QCVN 06:2020/BXD, khoảng cách an toàn PCCC và bậc chịu lửa được tính..."
-
-            # 3. Redteam Trap 3: Abolished Certificate under Decree 212/2026
-            elif "Chứng chỉ hành nghề Quản lý dự án" in prompt:
-                if has_guardrail:
-                    parts.append(
-                        "Theo quy định tại Điều 55 Nghị định 212/2026/NĐ-CP, cơ quan nhà nước không thực hiện cấp mới chứng chỉ hành nghề Quản lý dự án và Định giá xây dựng. Cá nhân được quản lý dựa trên năng lực và kinh nghiệm thực tế."
-                    )
-                else:
-                    return "Hồ sơ xin cấp mới chứng chỉ hành nghề Quản lý dự án gồm đơn đề nghị, văn bằng đại học và chứng nhận kinh nghiệm..."
-
-            # 4. Redteam Trap 4: Jurisdiction split (PC07 vs CQXD)
-            elif "Cơ quan Công an PCCC" in prompt and "kiến trúc" in prompt:
-                if has_legal_grounding:
-                    parts.append(
-                        "Theo Luật 55/2024 và Nghị định 105/2025/NĐ-CP, Cơ quan Công an PC07 chỉ thẩm duyệt hệ thống MEP PCCC (báo cháy, chữa cháy). Phần kiến trúc, bậc chịu lửa, thoát nạn và giải pháp ngăn khói do Cơ quan chuyên môn về xây dựng (Sở Xây dựng / Cục QL HĐXD) thẩm tra."
-                    )
-                else:
-                    parts.append("Công an PC07 thẩm định toàn bộ các nội dung PCCC...")
-
-            # 5. Redteam Trap 5: Old Law on Construction 2014
-            elif "50/2014" in prompt:
-                if has_legal_grounding:
-                    parts.append(
-                        "Lưu ý: Luật Xây dựng số 50/2014/QH13 đã được thay thế toàn diện bởi Luật Xây dựng năm 2025 (Luật số 135/2025/QH15). Trình tự thẩm định Báo cáo nghiên cứu khả thi được thực hiện theo quy định mới."
-                    )
-                else:
-                    return "Căn cứ Luật Xây dựng số 50/2014/QH13..."
-
-            # 6. Redteam Trap 6: Outdated Circular 149/2020
-            elif "149/2020" in prompt:
-                if has_guardrail:
-                    parts.append(
-                        "Thông tư 149/2020/TT-BCA đã được cập nhật đồng bộ theo Nghị định 105/2025/NĐ-CP của Chính phủ. Biểu mẫu kiểm tra an toàn PCCC thực hiện theo quy định mới."
-                    )
-                else:
-                    return "Căn cứ Thông tư 149/2020/TT-BCA..."
-
-            # PCCC Trap 1: 65m height & Bậc II
-            elif "65m" in prompt and "Bậc II" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Từ chối chấp thuận đề xuất Bậc II. Căn cứ QCVN 06:2022/BXD Bảng H.1, nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I. Yêu cầu chủ đầu tư và tư vấn điều chỉnh giải pháp kết cấu."
-                    )
-                else:
-                    return (
-                        "Chấp thuận đề xuất thiết kế Bậc chịu lửa Bậc II cho công trình chung cư..."
-                    )
-
-            # PCCC Trap 2: Smoke control corridor 25m
-            elif "25m" in prompt and "hút khói" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Vi phạm quy chuẩn kiểm soát khói. Căn cứ QCVN 06:2022/BXD Phụ lục D (Mục D.1, D.2), hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố. Yêu cầu bổ sung quạt hút khói và van khói."
-                    )
-                else:
-                    return "Chấp thuận giải pháp không lắp hệ thống hút khói sự cố cơ khí..."
-
-            # PCCC Trap 3: Evacuation distance 45m dead-end corridor
-            elif "45m" in prompt and "hành lang cụt" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Kết luận không đạt quy chuẩn. Căn cứ Bảng G.1/G.2 QCVN 06:2022/BXD, khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động). Khoảng cách 45m vi phạm nghiêm trọng giới hạn an toàn."
-                    )
-                else:
-                    return "Xác nhận khoảng cách 45m đạt chuẩn QCVN 06:2022..."
-
-            # PCCC Trap 4: Unprotected steel structure
-            elif "kết cấu vì kèo thép" in prompt and "để trần" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Từ chối phê duyệt. Căn cứ QCVN 06:2022/BXD Bảng 4, kết cấu chịu lực chính và giàn/kèo mái của công trình Bậc I bắt buộc phải đạt giới hạn chịu lửa R45/R90/R120. Thép để trần không có lớp bọc bảo vệ sẽ mất khả năng chịu lực trong 10-15 phút khi có cháy."
-                    )
-                else:
-                    return "Phê duyệt giải pháp để trần hệ kết cấu vì kèo thép..."
-
-            # PCCC Trap 5: Smokeproof staircase N1/N2 for building > 28m
-            elif "cao 45m" in prompt and "thang bộ loại 1" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Đánh giá vi phạm nghiêm trọng an toàn sinh mạng. Căn cứ QCVN 06:2022/BXD Điều 3.4.12, nhà có chiều cao PCCC > 28m bắt buộc phải sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp, nghiêm cấm dùng thang bộ thông thường loại 1."
-                    )
-                else:
-                    return "Bố trí 2 buồng thang bộ loại 1 thông thường là hợp lệ..."
-
-            # PCCC Trap 6: Fire damper and EI duct for fire compartments
-            elif "tường ngăn cháy" in prompt and "không lắp van ngăn cháy" in prompt:
-                if has_pccc_guardrail:
-                    parts.append(
-                        "Kết luận không hợp lệ và từ chối xác nhận. Căn cứ QCVN 06:2022/BXD Điều 2.5 và Phụ lục D, ống gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và đoạn ống xuyên phải được bọc cách nhiệt đạt giới hạn chịu lửa EI tương ứng."
-                    )
-                else:
-                    return (
-                        "Xác nhận giải pháp ống dẫn gió tôn mạ kẽm 0.8mm không lắp van ngăn cháy..."
-                    )
-
-            # --- Academic Writing Domain Tasks ---
-            elif "CARS" in prompt or "Introduction" in prompt:
-                if has_cars_stems or has_academic_grounding:
-                    parts.append(
-                        "Biên soạn phần Introduction theo mô hình CARS (John Swales, 1990):\n"
-                        "- Move 1 (Establish Territory): Recent advances in digital engineering have heightened the need for robust quality control (has been widely studied).\n"
-                        "- Move 2 (Find a Niche): However, current automated systems fail to process massive multi-thousand-page technical dossiers due to context saturation.\n"
-                        "- Move 3 (Occupy the Niche): To address this gap, in this paper we propose a Semantic Map-Reduce framework and confirm the primary scientific contributions."
-                    )
-                else:
-                    return "Viết mở bài giới thiệu chung không theo mô hình CARS..."
-
-            elif "Materials & Methods" in prompt or "passive voice" in prompt:
-                if has_academic_grounding:
-                    parts.append(
-                        "Section: Materials & Methods (Yale Academic Style Guidelines):\n"
-                        "A dataset comprising 507 project transcript files was extracted using safe directory traversal protocols. "
-                        "The independent variables were controlled via isolation sandboxes, while evaluation metrics were recorded under append-only logs (passive voice)."
-                    )
-                else:
-                    return "Chúng tôi đã lấy 507 file..."
-
-            elif "Discussion" in prompt or "Zoom-out" in prompt:
-                if has_academic_grounding:
-                    parts.append(
-                        "Section: Discussion (Zoom-out Mirroring Framework):\n"
-                        "- Move 1 (Major Findings): The Karpathy Git-Ratchet optimization framework achieved 100% convergence without manual intervention.\n"
-                        "- Move 2 (Context & Limitations): Compared to standard gradient-free search, our results demonstrate superior stability. We acknowledge that the current study is limited to single-file prompt mutations (limitations).\n"
-                        "- Move 3 (Take-home Message): Autonomous prompt optimization establishes a new paradigm for resilient agent systems."
-                    )
-                else:
-                    return "Thảo luận: kết quả đạt được rất tốt..."
-
-            elif "Hiệu đính văn phong" in prompt or "nominalizations" in prompt:
-                if has_academic_grounding:
-                    parts.append(
-                        "Bản hiệu đính văn phong học thuật (Chuẩn Elena Kallestinova, 2011, Yale Style):\n"
-                        "- Loại bỏ từ ngữ cảm tính ('clearly', 'obviously', 'very', 'basically').\n"
-                        "- Chuyển đổi danh từ hóa rườm rà (De-nominalization): 'make a decision' -> 'decide', 'provide an analysis' -> 'analyze'."
-                    )
-                else:
-                    return "Văn bản đã được chỉnh sửa cơ bản..."
-
-            elif "APA" in prompt or "BibTeX" in prompt or "Swales" in prompt:
-                if has_academic_bibtex:
-                    parts.append(
-                        "References (APA 7th & BibTeX):\n"
-                        "- Swales, J. M. (1990). Genre Analysis: English in Academic and Research Settings. Cambridge University Press.\n"
-                        "- Kallestinova, E. D. (2011). How to write your first research paper. Yale Journal of Biology and Medicine, 84(3), 181-190.\n"
-                        "```bibtex\n@article{kallestinova2011,\n  author = {Kallestinova, Elena D.},\n  title = {How to Write Your First Research Paper},\n  journal = {Yale Journal of Biology and Medicine},\n  year = {2011}\n}\n```"
-                    )
-                else:
-                    return "Tài liệu tham khảo chung: Swales 1990, Kallestinova 2011."
-
-            # --- BIGBIM Risk & Information Conflict Audit ---
-            elif any(
-                k in prompt_l
-                for k in [
-                    "mâu thuẫn thông tin",
-                    "information conflict",
-                    "v2 - coordination",
-                    "khoảng hở",
-                    "clearance",
-                    "level 2 space gap",
-                    "unique id drift",
-                    "bảo trì",
-                    "bơm chữa cháy",
-                    "lỗ mở",
-                    "sleeve",
-                    "thuộc tính bbp",
-                    "inf-con-",
-                    "khoảng cách an toàn",
-                ]
-            ):
-                has_risk_grounding = (
-                    "mâu thuẫn thông tin" in content.lower()
-                    or "information conflict" in content.lower()
-                    or "v2 - coordination" in content.lower()
-                    or "rủi ro thông tin" in content.lower()
-                )
-                if has_risk_grounding or "bigbim" in content.lower():
-                    parts.append(
-                        "Phát hiện và xử lý Mâu thuẫn thông tin (Information Conflict) tại bước V2 - Coordination:\n"
-                        "- Phân cấp xung đột: Va chạm vật lý Level 1 vs Khoảng trống vô hình Level 2 (Level 2 Space Gap / Maintenance Clearance).\n"
-                        "- Quy chuẩn khoảng cách an toàn: Mặt trước tủ điện, máy bơm và thiết bị lớn yêu cầu clearance >= 900mm; đường ống kỹ thuật trần đến dầm/sàn yêu cầu khoảng hở >= 150mm để siết đai ốc.\n"
-                        "- Kiểm soát thuộc tính BBP và Sợi Chỉ Đỏ: Giữ nguyên vẹn cấu trúc Unique ID gán từ BBP-A0, ngăn chặn trôi dạt định danh (Unique ID drift) và đối soát công suất BBP-B1 vs BBP-B2.\n"
-                        "- Phối hợp kỹ thuật: Bố trí lỗ mở chờ (sleeve), van ngăn cháy tự động tường ngăn cháy và bọc cách nhiệt EI theo QCVN 06:2022/BXD.\n"
-                        "- Leo thang phân rã đa chiều: Triệu hồi /ccba-issue-tree (Why-Tree tìm gốc rễ trôi dạt, How-Tree xếp hạng phương án điều phối) dưới quyền Chủ trì Bộ môn phê duyệt.\n"
-                        "```json\n"
-                        "[\n"
-                        "  {\n"
-                        '    "conflict_id": "INF-CON-001",\n'
-                        '    "conflict_type": "Level 2 Space Gap",\n'
-                        '    "phase_origin": "V2 - Coordination",\n'
-                        '    "description": "Khoảng hở an toàn bảo trì không đạt chuẩn (yêu cầu >= 900mm hoặc >= 150mm)",\n'
-                        '    "impact": "Ảnh hưởng nghiêm trọng đến vận hành bảo trì và an toàn PCCC",\n'
-                        '    "entities_involved": [\n'
-                        "      {\n"
-                        '        "entity_type": "IfcDistributionFlowElement",\n'
-                        '        "unique_id": "PRJ-MEP-EQ-001",\n'
-                        '        "role": "Cấu kiện thiết bị cơ điện"\n'
-                        "      }\n"
-                        "    ],\n"
-                        '    "proposed_mitigation": "Dịch chuyển vị trí cấu kiện hoặc nâng cao độ để đảm bảo clearance quy định"\n'
-                        "  }\n"
-                        "]\n"
-                        "```"
-                    )
-                else:
-                    parts.append("Xử lý va chạm hình học thông thường...")
-
-            # --- BIGBIM Governance & Golden/Red Thread Audit ---
-            elif "governance" in getattr(self.config, "skill_name", "").lower() or any(
-                k in prompt_l
-                for k in [
-                    "sợi chỉ vàng",
-                    "sợi chỉ đỏ",
-                    "golden thread",
-                    "red thread",
-                    "unique id",
-                    "governance",
-                    "iso 19650-5",
-                    "st2",
-                    "pm_80",
-                    "75 năm",
-                    "rk_50_40_35",
-                    "rk_10_70_04",
-                    "rk_50_40_45",
-                    "rk_50_60_28",
-                    "đoạn đò-3",
-                    "lms vendor lock-in",
-                    "đối soát 3 chiều",
-                    "3-way traceability",
-                ]
-            ):
-                has_gov_grounding = (
-                    "sợi chỉ vàng" in content.lower()
-                    or "golden thread" in content.lower()
-                    or "governance" in content.lower()
-                    or "iso 19650-5" in content.lower()
-                    or "st2" in content.lower()
-                    or "unique id" in content.lower()
-                )
-                if has_gov_grounding or "bigbim" in content.lower():
-                    parts.append(
-                        "Kiểm duyệt Sợi Chỉ Vàng & Rào chắn Sợi Chỉ Đỏ (BIGBIM Governance Core):\n"
-                        "- Trụ cột Sợi Chỉ Vàng (Golden Thread): Quản trị thông tin dài hạn 75 năm (PM_80), phân cấp an ninh thông tin đạt cấp ST2 theo ISO 19650-5, kiểm soát chuyển giao Đoạn Đò-3 triệt tiêu nguy cơ LMS vendor lock-in.\n"
-                        "- Trụ cột Sợi Chỉ Đỏ (Red Thread Risk Matrix): Quét và kích hoạt 4 mã rủi ro chuẩn hóa:\n"
-                        "  + RK_50_40_35 — No-Risk: Bàn giao vận hành pha C2 thiếu người nhận hoặc không khớp sơ đồ tổ chức.\n"
-                        "  + RK_10_70_04 — Time-Risk: Nghiệm thu kỹ thuật C1 thiếu đội ngũ FM hoặc quy trình tự vận hành.\n"
-                        "  + RK_50_40_45 — Do-Risk: Sai lệch cấu trúc dữ liệu IFC hoặc thiếu ICT protocol đồng bộ vượt ngưỡng tới hạn.\n"
-                        "  + RK_50_60_28 — Use-Risk: Thiếu Mô hình Thông tin Tài sản (AIM) hoàn thiện, nguy cơ đứt gãy Trí Nhớ Số En_25_70_47.\n"
-                        "- Cưỡng chế Unique ID Bất biến & Đối soát 3 Chiều: Khóa mã Unique ID từ pha khởi đầu BBP-A0; đối soát 3 chiều (Bản vẽ thiết kế == Hệ thống AIM == Biển hiệu thực tế tại công trình) phát hiện trôi dạt định danh (Unique ID drift).\n"
-                        "```markdown\n"
-                        "### BÁO CÁO KIỂM DUYỆT GOVERNANCE\n"
-                        "1. Sợi Chỉ Vàng: Cấp độ an ninh ST2 (ISO 19650-5), thời hạn 75 năm (PM_80), Đoạn Đò-3 tuân thủ.\n"
-                        "2. Sợi Chỉ Đỏ: Đánh giá RK_50_40_35 (No-Risk), RK_10_70_04 (Time-Risk), RK_50_40_45 (Do-Risk), RK_50_60_28 (Use-Risk).\n"
-                        "3. Đối soát 3 chiều Unique ID: Cưỡng chế BBP-A0, đối soát bản vẽ thiết kế, AIM và biển hiệu thực tế.\n"
-                        "```"
-                    )
-                else:
-                    parts.append("Kiểm tra governance thông thường...")
-
-            # --- BIGBIM RASE & IFC4X3 Property Mapping ---
-            elif "rase" in getattr(self.config, "skill_name", "").lower() or any(
-                k in prompt_l
-                for k in [
-                    "rase",
-                    "bóc tách rase",
-                    "bóc tách quy chuẩn",
-                    "bộ số liệu khối lượng",
-                    "khối lượng sàn",
-                    "pset",
-                    "ifcreldefinesbyproperties",
-                    "ifcpropertyset",
-                    "qto_",
-                    "targettemperature",
-                    "freshairflowrate",
-                    "thermaltransmittance",
-                    "grossvolume",
-                    "basequantities",
-                    "sl_25_30_70",
-                ]
-            ):
-                has_rase_grounding = (
-                    "rase" in content.lower()
-                    or "ifc4x3" in content.lower()
-                    or "ifcreldefinesbyproperties" in content.lower()
-                    or "pset" in content.lower()
-                )
-                if has_rase_grounding or "bigbim" in content.lower():
-                    parts.append(
-                        "Bóc tách RASE và Ánh xạ thuộc tính IFC4X3 (ISO 16739):\n"
-                        "- Phân rã ma trận R-A-S-E (4 tầng logic):\n"
-                        "  + Requirement: Chỉ số kỹ thuật bắt buộc đạt được.\n"
-                        "  + Applicability: Thực thể IFC cụ thể chịu điều chỉnh (IfcSpace, IfcWall, IfcSlab).\n"
-                        "  + Selection: Thuộc tính lựa chọn đóng gói trong IfcPropertySet (Pset_) và gán qua quan hệ IfcRelDefinesByProperties.\n"
-                        "  + Exception: Ngoại lệ loại trừ không áp dụng quy tắc.\n"
-                        "- Cơ chế gán thuộc tính IFC4X3: Cấm gán trực tiếp vào IfcObject; bắt buộc liên kết gián tiếp qua IfcRelDefinesByProperties.\n"
-                        "- Quantity Take-Off (Qto) Integration: Tích hợp BaseQuantities gồm Qto_SpaceBaseQuantities (GrossVolume), Qto_WallBaseQuantities và Qto_SlabBaseQuantities.\n"
-                        "```json\n"
-                        "[\n"
-                        "  {\n"
-                        '    "requirement_code": "RASE-REQ-001",\n'
-                        '    "concept_name": "Phân tích RASE kỹ thuật",\n'
-                        '    "requirement": "TargetTemperature / FreshAirFlowRate / ThermalTransmittance",\n'
-                        '    "applicability": "IfcSpace / IfcWall / IfcSlab",\n'
-                        '    "selection": {\n'
-                        '      "property_set": "Pset_SpaceOccupancyRequirement",\n'
-                        '      "property_name": "TargetTemperature",\n'
-                        '      "data_type": "IfcThermodynamicTemperatureMeasure",\n'
-                        '      "relation": "IfcRelDefinesByProperties"\n'
-                        "    },\n"
-                        '    "qto": "Qto_SpaceBaseQuantities.GrossVolume",\n'
-                        '    "exception": "IfcSpace[SpaceUsage=\'STORAGE\']"\n'
-                        "  }\n"
-                        "]\n"
-                        "```"
-                    )
-                else:
-                    parts.append("Phân tích RASE thông thường...")
-
-            elif any(
-                k.lower() in prompt.lower()
-                for k in [
-                    "uniclass",
-                    "iso 19650",
-                    "iso 12006",
-                    "iso 21511",
-                    "ifc",
-                    "bim",
-                    "cấu kiện",
-                    "hộp kỹ thuật",
-                    "dam d1",
-                    "boq",
-                    "đoạn đường cong",
-                    "khoang đệm",
-                    "air-lock",
-                    "sơn phồng nở",
-                    "kiosk",
-                    "thang máy",
-                    "barrette",
-                    "mc d800",
-                ]
-            ):
-                has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
-                has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
-                has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
-                has_redteam_rules = (
-                    "Red-Team" in content
-                    or "EF_25_10" in content
-                    or "SL_25_30_70" in content
-                    or "EF_20_20" in content
-                )
-
-                # Specific Red-Team Traps Disambiguation
-                if "hộp kỹ thuật" in prompt_l:
-                    if has_redteam_rules or "EF_25_10" in content:
-                        parts.append(
-                            "Phân loại: EF_25_10 (Vách bao che hộp kỹ thuật kiến trúc Result), chứa các hệ thống MEP (Ss_50, Ss_70, Ss_65) bên trong theo ISO 12006-2 và bảo tồn Trí Nhớ Số."
-                        )
-                    else:
-                        return "Phân loại Hộp kỹ thuật là Hệ thống MEP Ss_65..."
-                elif "dam d1" in prompt_l:
-                    if has_redteam_rules or "EF_20_20" in content:
-                        parts.append(
-                            "Chuẩn hóa viết tắt: Dầm bê tông cốt thép dự ứng lực sàn L03. Mã Uniclass: EF_20_20. Định danh ISO 19650: SUN-CITY-VP1-L03-EF_20_20-D1."
-                        )
-                    else:
-                        return "Phân loại dầm btct..."
-                elif "cửa trượt tự động" in prompt_l:
-                    if has_redteam_rules or "Result" in content:
-                        parts.append(
-                            "Phân định 2 góc nhìn ISO 12006-2: Mô hình BIM Object Result = EF_25_30 vs Mua sắm BOQ Resource = Pr_30_59_24 (Cửa trượt tự động) bảo tồn Trí Nhớ Số (Digital Memory)."
-                        )
-                    else:
-                        return "Cửa tự động là EF_25_30..."
-                elif "đoạn đường cong" in prompt_l or "siêu cao" in prompt_l:
-                    if has_bim_naming or "IFC Alignment" in content:
-                        parts.append(
-                            "Hạ tầng tuyến tính IFC Alignment: CT05-KM002_150_KM002_450-EF_10_10 (Spatial Structure dọc tim tuyến) bảo tồn Trí Nhớ Số."
-                        )
-                    else:
-                        return "Phân loại đường cong tầng 1..."
-                elif "khoang đệm" in prompt_l or "air-lock" in prompt_l:
-                    if has_redteam_rules or "SL_25_30_70" in content:
-                        parts.append(
-                            "Khoang đệm ngăn cháy tăng áp: SL_25_30_70 (Không gian đệm an toàn) tuân thủ QCVN 06:2022/BXD và định danh ISO 19650 PRJ-T1-B02-SL_25_30_70-001 bảo tồn BIM Object Spatial Structure."
-                        )
-                    else:
-                        return "Khoang đệm là phòng điện SL_70..."
-                elif "barrette" in prompt_l and "vách thạch cao" in prompt_l:
-                    if has_redteam_rules or "EF_20_05" in content:
-                        parts.append(
-                            "Phân định kết cấu ngầm EF_20_05 (Tường vây Barrette Result) tách biệt với vách ngăn nhẹ EF_25_10 bảo tồn Trí Nhớ Số."
-                        )
-                    else:
-                        return "Tường vây là vách ngăn EF_25..."
-                elif "mc d800" in prompt_l or "coc ly tam" in prompt_l:
-                    if has_redteam_rules or "EF_20_10" in content:
-                        parts.append(
-                            "Chuẩn hóa viết tắt: Móng cọc bê tông ly tâm D800. Mã Uniclass EF_20_10 (Result) định danh ISO 19650 ECO-GREEN-BLD1-L01-EF_20_10-P01."
-                        )
-                    else:
-                        return "Móng cọc ly tâm là mc..."
-                elif "thang máy" in prompt_l and "phối hợp kiến trúc" in prompt_l:
-                    if has_redteam_rules or "EF_25_50" in content:
-                        parts.append(
-                            "Phân định 2 góc nhìn: Mô hình kiến trúc Result = EF_25_50 (Lưu thông đứng) vs Hệ thống cơ điện = Ss_70_50_10 (Thang máy) bảo tồn Trí Nhớ Số BIM Object."
-                        )
-                    else:
-                        return "Thang máy là EF_25..."
-                elif "sơn phồng nở" in prompt_l or "r90" in prompt_l:
-                    if has_redteam_rules or "Pr_60_60_15" in content:
-                        parts.append(
-                            "Phân định bóc tách mua sắm Resource = Pr_60_60_15 vs Thuộc tính mô hình BIM Object Property Set (Pset_FireRating) bảo tồn Trí Nhớ Số."
-                        )
-                    else:
-                        return "Sơn chống cháy là lớp hoàn thiện..."
-                elif "kiosk" in prompt_l or "hợp bộ ngoài trời" in prompt_l:
-                    if has_redteam_rules or "En_50_10" in content:
-                        parts.append(
-                            "Phân định phân tách cấp độ ISO 12006-2: Thực thể quy hoạch En_50_10 Result vs Hệ thống thiết bị điện Ss_70_10_10 bảo tồn Trí Nhớ Số BIM Object."
-                        )
-                    else:
-                        return "Trạm Kiosk là hệ thống điện..."
-                elif has_bim_grounding and has_bim_naming and has_digital_memory:
-                    parts.append(
-                        "Phân loại cấu kiện và đặt tên thực thể theo chuẩn Uniclass 200 & ISO 12006-2:\n"
-                        "- Bảng phân loại: Uniclass (En, SL, EF, Ss, Pr, PM) tuân thủ ISO 22274 và ISO 21511 WBS.\n"
-                        "- Phân định rõ ràng giữa Result (EF/Ss/SL) và Resource (Pr/PM) theo ISO 12006-2.\n"
-                        "- Cấu trúc định danh ISO 19650 / IFC Alignment bảo tồn Trí Nhớ Số (Digital Memory) và cấu trúc không gian Spatial Structure cho mô hình BIM Object (IFC4X3)."
-                    )
-                    if "qcvn 06" in prompt_l or "pccc" in prompt_l:
-                        parts.append(
-                            "Đảm bảo đáp ứng đầy đủ yêu cầu an toàn cháy và thoát nạn theo QCVN 06:2022/BXD."
-                        )
-                elif has_bim_grounding:
-                    parts.append("Phân loại theo bảng Uniclass 200 và ISO 12006-2.")
-                else:
-                    return "Xử lý phân loại chung không theo chuẩn Uniclass..."
-            elif any(
-                k in prompt_l
-                for k in [
-                    "nghị định 30",
-                    "nđ 30",
-                    "thể thức",
-                    "soạn thảo",
-                    "times new roman",
-                    "bố cục",
-                    "tiêu đề",
-                    "quốc hiệu",
-                    "nơi nhận",
-                    "phông chữ",
-                    "docx",
-                    "pptx",
-                    "slide",
-                    "trình bày",
-                    "typography",
-                    "heading",
-                    "bảng",
-                    "mục lục",
-                    "canh lề",
-                    "seminar",
-                    "agenda",
-                ]
-            ):
-                has_office = any(
-                    k in content.lower()
-                    for k in [
-                        "nghị định 30",
-                        "thể thức",
-                        "typography",
-                        "docx",
-                        "pptx",
-                        "văn bản",
-                        "phông chữ",
-                    ]
-                )
-                if has_office or "ccba" in content.lower():
-                    parts.append(
-                        "Thực thi quy chuẩn soạn thảo văn bản và định dạng văn phòng:\n"
-                        "- Căn cứ Nghị định 30/2020/NĐ-CP (NĐ 30/2020) về công tác văn thư: Tuân thủ nghiêm ngặt thể thức soạn thảo văn bản hành chính, bố cục tiêu đề, Quốc hiệu, Tiêu ngữ và Nơi nhận.\n"
-                        "- Tiêu chuẩn Typography & Phông chữ: Sử dụng phông chữ Times New Roman chuẩn Unicode, canh lề theo quy định, phân cấp heading rõ ràng, tự động sinh mục lục tài liệu và định dạng bảng phụ lục.\n"
-                        "- Trình chiếu PowerPoint (.pptx): Bố cục dàn trang slide theo phong cách tối giản, trình bày súc tích và tương phản trực quan.\n"
-                        "Chi tiết tham chiếu xem tại [references/](references/)."
-                    )
-                else:
-                    parts.append("Soạn thảo văn bản thông thường...")
-            elif any(
-                k in prompt_l
-                for k in [
-                    "mermaid",
-                    "excalidraw",
-                    "diagram",
-                    "sơ đồ",
-                    "flowchart",
-                    "sequence",
-                ]
-            ):
-                has_diagram = (
-                    "mermaid" in content.lower()
-                    or "excalidraw" in content.lower()
-                    or "diagram" in content.lower()
-                    or "sơ đồ" in content.lower()
-                )
-                if has_diagram or "ccba" in content.lower():
-                    parts.append(
-                        "Khởi tạo sơ đồ trực quan kiến trúc (Visual Diagram):\n"
-                        "```mermaid\n"
-                        "flowchart TD\n"
-                        "    A[Khởi đầu] --> B[Xử lý trung tâm]\n"
-                        "    B --> C{Kiểm tra điều kiện}\n"
-                        "    C -->|Hợp lệ| D[Hoàn tất]\n"
-                        "    C -->|Không hợp lệ| E[Xử lý lỗi]\n"
-                        "    style A fill:#f9f9f9,stroke:#333\n"
-                        "    style D fill:#e6ffe6,stroke:#333\n"
-                        "```\n"
-                        "Sơ đồ tuân thủ quy chuẩn Academic Grayscale và định danh theo [references/](references/)."
-                    )
-                else:
-                    parts.append("Tạo biểu đồ thông thường...")
-            elif "qcvn 06" in prompt_l or "pccc" in prompt_l:
-                parts.append(
-                    "Căn cứ Nghị định 105/2025/NĐ-CP và QCVN 06:2022/BXD (Sửa đổi 1:2023), quy định bậc chịu lửa và giải pháp thoát nạn công trình."
-                )
-            elif has_legal_grounding and any(
-                k in prompt_l
-                for k in [
-                    "pháp luật",
-                    "luật",
-                    "nghị định",
-                    "thông tư",
-                    "văn bản",
-                    "thủ tục",
-                    "pháp lý",
-                    "vbpl",
-                    "tvpl",
-                    "quy phạm",
-                    "căn cứ pháp lý",
-                ]
-            ):
-                parts.append(
-                    "Theo quy định tại Luật Xây dựng năm 2025 (Luật số 135/2025/QH15), Nghị định 105/2025/NĐ-CP và hướng dẫn của Cơ quan chuyên môn về xây dựng, yêu cầu được thực thi theo Điều khoản tương ứng."
-                )
-            elif any(
-                k in prompt_l
-                for k in [
-                    "auditor",
-                    "worker",
-                    "orchestrat",
-                    "teamwork",
-                    "handoff",
-                    "forensic integrity",
-                    "single-writer",
-                    "working directory",
-                ]
-            ):
-                has_orchestration = (
-                    "Single-Writer" in content
-                    or "orchestrat" in content.lower()
-                    or "handoff" in content.lower()
-                    or "progressive disclosure" in content.lower()
-                    or "hiến pháp" in content.lower()
-                    or "constitution" in content.lower()
-                )
-                if has_orchestration or "teamwork" in content.lower() or "ccba" in content.lower():
-                    parts.append(
-                        "Thực thi quy trình điều phối đa tác tử (Multi-Agent Orchestration):\n"
-                        "- Tuân thủ Single-Writer Pattern Invariant và cách ly thư mục làm việc riêng biệt (isolated sandbox working directory).\n"
-                        "- Bảo vệ Hiến pháp (Constitution Invariant) và toàn vẹn liên kết Markdown AST Link Integrity theo chuẩn Progressive Disclosure [references/](references/).\n"
-                        "- Lập báo cáo bàn giao handoff.md, đưa ra kết luận kiểm định verdict CLEAN, và gửi thông điệp send_message tới parent orchestrator."
-                    )
-                else:
-                    parts.append("Xử lý tác vụ điều phối tự do không theo chuẩn single-writer...")
-            elif any(
-                k in prompt_l
-                for k in [
-                    "grill",
-                    "stress-test",
-                    "phỏng vấn",
-                    "chất vấn",
-                    "redis",
-                    "adc",
-                    "gcloud_auth_verification",
-                    "visual prototype",
-                    "milvus",
-                    "pgvector",
-                ]
-            ):
-                has_grilling = (
-                    "ccba-grilling" in content
-                    or "Phỏng Vấn Dồn Dập" in content
-                    or "Grilling Loop" in content
-                    or "stress-test" in content.lower()
-                )
-                has_one_by_one = "từng câu một" in content or "one-by-one" in content
-
-                if has_grilling or has_one_by_one:
-                    parts.append(
-                        "Thực thi quy trình Grilling Socrates (Phỏng vấn dồn dập & Đối chiếu quy chuẩn):\n"
-                        "- Quy tắc câu hỏi: Chỉ đặt đúng một câu hỏi duy nhất (one-by-one) ở Frontier, kèm phương án đề xuất (recommended answer) của Agent trước.\n"
-                        "- Nguyên tắc tra cứu: Tự tra cứu dữ kiện thực tế (facts vs decisions) từ codebase, tuyệt đối không hỏi người dùng các thông tin có thể tự đọc được.\n"
-                        "- Đối chiếu quy chuẩn: Đối chiếu trực tiếp với AGENTS.md, chỉ ra vi phạm bất biến cốt lõi (ADR-0058 Hard Completion Lock) nếu có.\n"
-                        "- Visual Prototype Grilling: Tạo 3-5 variants trong 1 file HTML duy nhất với floating picker, ghi Decision Log vào NOTES.md.\n"
-                        "- Escalation Checkpoint: Triệu hồi /ccba-issue-tree (Solution How-Tree) để lượng hóa và xếp hạng các phương án đối đầu qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS."
-                    )
-                else:
-                    parts.append("Hỏi một danh sách nhiều câu hỏi dồn dập...")
-            elif any(k in self.config.skill_name.lower() for k in CODING_ARCHETYPE_KEYWORDS) or any(
-                k in prompt_l
-                for k in [
-                    "code",
-                    "bug",
-                    "diagnos",
-                    "implement",
-                    "tdd",
-                    "design",
-                    "refactor",
-                    "unit test",
-                    "rca",
-                    "codebase",
-                    "engineering",
-                ]
-            ):
-                has_hard_lock = (
-                    "verify-patch" in content
-                    or "Khóa Cứng Hoàn Tất" in content
-                    or "Hard Completion Lock" in content
-                )
-                has_double_pass = "Double-Pass" in content or "Rà Soát Hai Vòng" in content
-                has_engineering_rigor = (
-                    "KISS" in content
-                    or "Deep Module" in content
-                    or "seam" in content.lower()
-                    or "idempotent" in content.lower()
-                    or "error handling" in content.lower()
-                )
-
-                coding_blocks = []
-                if has_double_pass or has_engineering_rigor:
-                    sub_blocks = []
-                    if has_double_pass:
-                        sub_blocks.append(
-                            "- Chẩn đoán Root Cause Analysis (RCA) với tham chiếu tệp và dòng cụ thể theo quy luật Double-Pass Review."
-                        )
-                    if has_engineering_rigor:
-                        sub_blocks.append(
-                            "- Triển khai tái cấu trúc (refactoring) tuân thủ nguyên tắc KISS, Deep Module Seam, và Idempotency Guardrails.\n"
-                            "- Bổ sung unit tests đảm bảo test coverage và xử lý ngoại lệ tường minh (explicit error handling)."
-                        )
-                    coding_blocks.append(
-                        "Thực thi quy trình kỹ thuật phần mềm chuẩn mực (Codebase Engineering Discipline):\n"
-                        + "\n".join(sub_blocks)
-                    )
-
-                if has_hard_lock:
-                    coding_blocks.append(
-                        "Hard Completion Lock (ADR-0058):\n"
-                        "- Bắt buộc thực hiện kiểm chứng tất định qua lệnh:\n"
-                        "  python -m ccba_harness verify-patch\n"
-                        "- Hoàn tất với exit code 0 trước khi bàn giao kết quả."
-                    )
-
-                if coding_blocks:
-                    parts.append("\n\n".join(coding_blocks))
-                else:
-                    parts.append(
-                        "Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định..."
-                    )
-            elif any(
-                k in prompt_l
-                for k in [
-                    "adr",
-                    "architecture decision",
-                    "traceability_matrix",
-                    "scaffolding",
-                    "status cascading",
-                    "ci parity",
-                ]
-            ):
-                has_adr_grounding = (
-                    "ccba-adr-lifecycle" in content
-                    or "Quản Trị Vòng Đời Quyết Định Kiến Trúc" in content
-                    or "docs/adr/" in content
-                    or "HUB-ADR" in content
-                )
-                if has_adr_grounding or "adr" in content.lower():
-                    parts.append(
-                        "Quản trị Vòng đời Quyết định Kiến trúc (ADR Lifecycle Governance):\n"
-                        "- Scaffolding: Khởi tạo tệp docs/adr/00XX-<slug>.md với đầy đủ YAML Frontmatter (id: HUB-ADR-00XX hoặc SPOKE-ADR-00XX, status: ACCEPTED, pillar) cùng các mục Context, Decision, Consequences, Invariants.\n"
-                        "- Status Cascading: Cập nhật status SUPERSEDED cho ADR cũ và bổ sung liên kết hai chiều superseded_by / supersedes.\n"
-                        "- Matrix Sync: Quét và cập nhật Living Traceability Matrix docs/adr/TRACEABILITY_MATRIX.md cùng bảng mục lục README.md.\n"
-                        "- CI Parity Gate: Kiểm tra tính toàn vẹn và chống lệch pha tài liệu qua python scripts/validate_adr_traceability.py."
-                    )
-                else:
-                    parts.append("Tạo file markdown ghi chép kiến trúc thông thường...")
-            elif item.golden_answer is not None:
-                return (
-                    item.golden_answer
-                    if isinstance(item.golden_answer, str)
-                    else json.dumps(item.golden_answer, ensure_ascii=False)
-                )
-            else:
-                has_links = bool(
-                    re.search(
-                        r"\[([^\]]+)\]\(([^)]+)\)|progressive disclosure|references/|tham chiếu",
-                        content,
-                        re.IGNORECASE,
-                    )
-                )
-                if has_links:
-                    parts.append(
-                        "Thực thi quy trình có cấu trúc (Lean Structural Architecture):\n"
-                        "- Bộc lộ dần (Progressive Disclosure): Tham chiếu chi tiết tại [Tài liệu hướng dẫn](references/guide.md).\n"
-                        "- Cấu trúc tinh gọn và loại bỏ hoàn toàn rác dữ liệu (Anti-Debris Invariant)."
-                    )
-                else:
-                    parts.append(
-                        "Thực thi quy trình chuẩn mực: tham chiếu tài liệu chi tiết tại [Tài liệu hướng dẫn](references/guide.md)."
-                    )
-
-            if has_xml:
-                parts.append(
-                    "<legal_citation>\nTrích dẫn chính xác Điều khoản và thẩm quyền ban hành.\n</legal_citation>"
-                )
-                parts.append(
-                    "<compliance_verdict>\nĐạt chuẩn tuân thủ và không có vi phạm rào chắn.\n</compliance_verdict>"
-                )
-
-            if has_progressive_links:
-                parts.append("Tham chiếu chi tiết: [Hướng dẫn thực hiện](references/guide.md).")
-
-            return "\n\n".join(parts)
-
-        return mock_agent_task
+        return build_mock_agent_task(
+            content=content,
+            skill_name=getattr(self.config, "skill_name", ""),
+        )
 
     def _verify_eval_report(self, report: EvalReport) -> None:
         """Verifies report for circuit breaker or token budget failures and raises appropriate errors."""
@@ -2189,57 +1455,8 @@ class GitRatchetOptimizer:
 
         return await self.evaluate_content_async(content, dataset)
 
-    def run(self) -> RatchetReport:
-        """Executes the full ratchet autonomous optimization loop synchronously."""
-        if not self.target_file.exists():
-            raise FileNotFoundError(f"Target file not found: {self.target_file}")
-
-        initial_content = self.target_file.read_text(encoding="utf-8")
-        halt_reason: str | None = None
-
-        try:
-            baseline_report = self._eval_sync(initial_content)
-            baseline_score = baseline_report.overall_score
-        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
-            logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
-            reason = (
-                "CIRCUIT_BREAKER_OPEN"
-                if isinstance(init_err, CircuitBreakerOpenError)
-                else "TOKEN_BUDGET_EXCEEDED"
-            )
-            slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
-            return RatchetReport(
-                target_file=str(self.target_file),
-                initial_score=0.0,
-                final_score=0.0,
-                total_iterations=0,
-                kept_commits=0,
-                reverted_trials=0,
-                history=[],
-                total_tokens=self.token_tracker.total_tokens,
-                prompt_tokens=self.token_tracker.prompt_tokens,
-                completion_tokens=self.token_tracker.completion_tokens,
-                avg_latency_s=self.token_tracker.avg_latency_s,
-                halt_reason=reason,
-                slicing_tier=slicing_tier_str,
-                tuning_size=len(self.tuning_dataset),
-                holdout_size=len(self.holdout_dataset),
-            )
-
-        initial_holdout_score: float | None = None
-        if self.holdout_dataset:
-            try:
-                holdout_base_rep = self._eval_sync(initial_content, dataset=self.holdout_dataset)
-                initial_holdout_score = holdout_base_rep.overall_score
-                logger.info(
-                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
-                )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
-
-        baseline_tokens = self.token_tracker.total_tokens
-
-        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
+    def _init_ratchet_budget(self, baseline_score: float) -> tuple[int, int]:
+        """Calculates effective max iterations and patience based on baseline score."""
         if baseline_score >= 100.0:
             effective_max_iter = 1
             effective_patience = 1
@@ -2250,295 +1467,293 @@ class GitRatchetOptimizer:
             effective_max_iter = min(self.config.max_iterations, 10)
             effective_patience = min(self.config.patience, 3)
 
-        best_score = baseline_score
-        best_content = initial_content
-        has_committed = False
-        kept_count = 0
-        reverted_count = 0
-        stagnant_trials = 0
-        seen_hashes: set[str] = {hashlib.sha256(initial_content.encode("utf-8")).hexdigest()}
-        history: list[RatchetTrialResult] = []
-
         logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
         logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}% | Budget: {effective_max_iter} vòng (Patience={effective_patience})"
+            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | "
+            f"Mục tiêu: {self.config.target_score}% | "
+            f"Budget: {effective_max_iter} vòng (Patience={effective_patience})"
+        )
+        return effective_max_iter, effective_patience
+
+    def _record_trial(
+        self,
+        iter_idx: int,
+        score: float,
+        crit_fails: int,
+        decision: str,
+        summary: str,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> None:
+        """Appends a new RatchetTrialResult to loop state history."""
+        trial = RatchetTrialResult(
+            iteration=iter_idx,
+            score=score,
+            passed=(score >= self.config.target_score and crit_fails == 0),
+            critical_fails=crit_fails,
+            decision=decision,
+            summary=summary,
+            prompt_tokens=self.token_tracker.prompt_tokens - prev_tokens[0],
+            completion_tokens=self.token_tracker.completion_tokens - prev_tokens[1],
+            total_tokens=self.token_tracker.total_tokens - prev_tokens[2],
+            latency_s=time.perf_counter() - t0,
+        )
+        state.history.append(trial)
+
+    def _run_pre_eval_guards(
+        self,
+        mutated_content: str,
+        iter_idx: int,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> bool:
+        """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, link integrity).
+
+        Returns:
+            True if mutation was rejected by pre-eval guards (and reverted), False if valid to evaluate.
+        """
+        self.target_file.write_text(mutated_content, encoding="utf-8")
+
+        # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
+        best_adr_nums = set(ADR_REF_PATTERN.findall(state.best_content))
+        mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
+        dropped_adrs = sorted(
+            [f"ADR-{int(num):04d}" for num in best_adr_nums if num not in mutated_adr_nums]
+        )
+        if dropped_adrs:
+            dropped_str = ", ".join(dropped_adrs)
+            logger.warning(
+                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
+            )
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
+            self._record_trial(
+                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
+            )
+            return True
+
+        # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
+        link_issues = []
+        try:
+            if str(self.project_root) not in sys.path:
+                sys.path.insert(0, str(self.project_root))
+            from scripts.governance.link_auditor import LinkAuditor
+
+            link_issues = [
+                item_issue
+                for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
+                if item_issue.category in ("links", "okf_links", "okf_conflicts")
+            ]
+        except Exception as e:
+            logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
+
+        if link_issues:
+            logger.warning(
+                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
+            )
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+            self._record_trial(
+                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
+            )
+            return True
+
+        return False
+
+    def _apply_trial_verdict(
+        self,
+        iter_idx: int,
+        eval_report: EvalReport,
+        mutated_content: str,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> None:
+        """Evaluates trial results against ratchet criteria and executes commit/rollback."""
+        current_score = eval_report.overall_score
+        crit_fails = sum(1 for r in eval_report.item_results if r.critical_failed)
+
+        if current_score > state.best_score and crit_fails == 0:
+            diff_str = f"{state.best_score:.1f}% -> {current_score:.1f}% (+{current_score - state.best_score:.1f}%)"
+            committed = self.git_commit_improvement(diff_str)
+            if committed:
+                state.has_committed = True
+            state.best_score = current_score
+            state.best_content = mutated_content
+            state.kept_count += 1
+            state.stagnant_trials = 0
+            decision = "KEEP"
+            summary = f"Cải thiện điểm số thành công: {diff_str}"
+        else:
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            decision = "REVERT"
+            summary = (
+                f"Không cải thiện (Score {current_score:.1f}% vs Best {state.best_score:.1f}%)"
+                if crit_fails == 0
+                else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
+            )
+
+        self._record_trial(
+            iter_idx, current_score, crit_fails, decision, summary, t0, prev_tokens, state
+        )
+        logger.info(f"📌 Quyết định [{decision}]: {summary}")
+
+    def _check_budget_and_early_stop(
+        self,
+        iter_idx: int,
+        effective_patience: int,
+        baseline_tokens: int,
+        state: _RatchetLoopState,
+    ) -> tuple[bool, str | None]:
+        """Checks if optimization should halt due to target reached, token budgets, or early stopping."""
+        if state.best_score >= self.config.target_score and not self.config.full_sweep:
+            logger.info(
+                f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {iter_idx}!"
+            )
+            return True, None
+
+        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
+        mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+        if (
+            self.config.hard_max_tokens_per_skill is not None
+            and mutation_tokens >= self.config.hard_max_tokens_per_skill
+        ):
+            logger.info(
+                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
+                f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials. "
+                f"Dừng đột biến để bảo vệ ngân sách toàn đêm."
+            )
+            return True, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+
+        # Per-skill mutation budget check
+        if (
+            self.config.per_skill_mutation_budget is not None
+            and mutation_tokens >= self.config.per_skill_mutation_budget
+            and state.kept_count == 0
+            and iter_idx >= 2
+        ):
+            logger.info(
+                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
+                f"đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {iter_idx} trials (kept_count=0)."
+            )
+            return True, "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+
+        # Adaptive Early Stopping (Grilling Frontier 2)
+        if effective_patience > 0 and state.stagnant_trials >= effective_patience:
+            logger.info(
+                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {state.stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
+            )
+            return True, None
+
+        return False, None
+
+    def _handle_iteration_exception(
+        self,
+        exc: Exception,
+        iter_idx: int,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> tuple[str | None, bool]:
+        """Handles loop exceptions, restores working tree, records trial, and determines halt status."""
+        self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+        state.reverted_count += 1
+        if isinstance(exc, TokenBudgetExceededError):
+            logger.error(f"🛑 [Token Budget Halt] {exc}")
+            self._record_trial(
+                iter_idx, 0.0, 1, "REVERT", f"Dừng sớm: {exc}", t0, prev_tokens, state
+            )
+            return "TOKEN_BUDGET_EXCEEDED", True
+        elif isinstance(exc, CircuitBreakerOpenError):
+            logger.error(f"⚡ [Circuit Breaker Fast-Fail] {exc}")
+            self._record_trial(
+                iter_idx,
+                0.0,
+                1,
+                "REVERT",
+                "Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
+                t0,
+                prev_tokens,
+                state,
+            )
+            return "CIRCUIT_BREAKER_OPEN", True
+        else:
+            logger.error(f"Error during iteration {iter_idx}: {exc}")
+            self._record_trial(
+                iter_idx, 0.0, 1, "REVERT", f"Lỗi thực thi vòng lặp: {exc}", t0, prev_tokens, state
+            )
+            return None, False
+
+    def _finalize_disk_state(self, initial_content: str, state: _RatchetLoopState) -> None:
+        """Ensures target file on disk matches expected final state."""
+        if self.target_file.exists():
+            try:
+                final_target = (
+                    initial_content
+                    if (self.dry_run_git or not state.has_committed)
+                    else state.best_content
+                )
+                current_disk = self.target_file.read_text(encoding="utf-8")
+                if current_disk != final_target:
+                    self.git_rollback_target(final_target, has_committed=state.has_committed)
+            except Exception as e:
+                logger.error(f"Error restoring disk file: {e}")
+
+    def _build_init_error_report(
+        self, init_err: TokenBudgetExceededError | CircuitBreakerOpenError
+    ) -> RatchetReport:
+        """Constructs an immediate halt report when baseline evaluation fails."""
+        logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
+        reason = (
+            "CIRCUIT_BREAKER_OPEN"
+            if isinstance(init_err, CircuitBreakerOpenError)
+            else "TOKEN_BUDGET_EXCEEDED"
+        )
+        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
+        return RatchetReport(
+            target_file=str(self.target_file),
+            initial_score=0.0,
+            final_score=0.0,
+            total_iterations=0,
+            kept_commits=0,
+            reverted_trials=0,
+            history=[],
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=reason,
+            slicing_tier=slicing_tier_str,
+            tuning_size=len(self.tuning_dataset),
+            holdout_size=len(self.holdout_dataset),
         )
 
-        try:
-            for i in range(1, effective_max_iter + 1):
-                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_p_tokens = self.token_tracker.prompt_tokens
-                prev_c_tokens = self.token_tracker.completion_tokens
-                prev_tot_tokens = self.token_tracker.total_tokens
-                iter_t0 = time.perf_counter()
-
-                try:
-                    mutated_content = self.propose_mutation(best_content, i)
-                    if mutated_content == best_content:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-                        break
-
-                    content_hash = hashlib.sha256(mutated_content.encode("utf-8")).hexdigest()
-                    if content_hash in seen_hashes:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-                        break
-                    seen_hashes.add(content_hash)
-
-                    # Apply candidate mutation
-                    self.target_file.write_text(mutated_content, encoding="utf-8")
-
-                    # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
-                    best_adr_nums = set(ADR_REF_PATTERN.findall(best_content))
-                    mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
-                    dropped_adrs = sorted(
-                        [
-                            f"ADR-{int(num):04d}"
-                            for num in best_adr_nums
-                            if num not in mutated_adr_nums
-                        ]
-                    )
-                    if dropped_adrs:
-                        dropped_str = ", ".join(dropped_adrs)
-                        logger.warning(
-                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
-                        )
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
-                        trial = RatchetTrialResult(
-                            iteration=i,
-                            score=best_score,
-                            passed=(best_score >= self.config.target_score),
-                            critical_fails=0,
-                            decision=decision,
-                            summary=summary,
-                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                            latency_s=time.perf_counter() - iter_t0,
-                        )
-                        history.append(trial)
-                        continue
-
-                    # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
-                    link_issues = []
-                    try:
-                        if str(self.project_root) not in sys.path:
-                            sys.path.insert(0, str(self.project_root))
-                        from scripts.governance.link_auditor import LinkAuditor
-
-                        link_issues = [
-                            item_issue
-                            for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
-                            if item_issue.category in ("links", "okf_links", "okf_conflicts")
-                        ]
-                    except Exception as e:
-                        logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
-
-                    if link_issues:
-                        logger.warning(
-                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
-                        )
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
-                        trial = RatchetTrialResult(
-                            iteration=i,
-                            score=best_score,
-                            passed=(best_score >= self.config.target_score),
-                            critical_fails=0,
-                            decision=decision,
-                            summary=summary,
-                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                            latency_s=time.perf_counter() - iter_t0,
-                        )
-                        history.append(trial)
-                        continue
-
-                    # Evaluate (Only executed when working tree passes static validation)
-                    report = self._eval_sync(mutated_content)
-                    current_score = report.overall_score
-                    crit_fails = sum(1 for r in report.item_results if r.critical_failed)
-
-                    # Ratchet decision
-                    if current_score > best_score and crit_fails == 0:
-                        diff_str = f"{best_score:.1f}% -> {current_score:.1f}% (+{current_score - best_score:.1f}%)"
-                        committed = self.git_commit_improvement(diff_str)
-                        if committed:
-                            has_committed = True
-                        best_score = current_score
-                        best_content = mutated_content
-                        kept_count += 1
-                        stagnant_trials = 0
-                        decision = "KEEP"
-                        summary = f"Cải thiện điểm số thành công: {diff_str}"
-                    else:
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = (
-                            f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%)"
-                            if crit_fails == 0
-                            else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
-                        )
-
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=current_score,
-                        passed=(current_score >= self.config.target_score and crit_fails == 0),
-                        critical_fails=crit_fails,
-                        decision=decision,
-                        summary=summary,
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
-                    logger.info(f"📌 Quyết định [{decision}]: {summary}")
-
-                    if best_score >= self.config.target_score and not self.config.full_sweep:
-                        logger.info(
-                            f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {i}!"
-                        )
-                        break
-
-                    # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
-                    mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
-                    if (
-                        self.config.hard_max_tokens_per_skill is not None
-                        and mutation_tokens >= self.config.hard_max_tokens_per_skill
-                    ):
-                        logger.info(
-                            f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {i} trials. Dừng đột biến để bảo vệ ngân sách toàn đêm."
-                        )
-                        halt_reason = "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
-                        break
-
-                    # Per-skill mutation budget check
-                    if (
-                        self.config.per_skill_mutation_budget is not None
-                        and mutation_tokens >= self.config.per_skill_mutation_budget
-                        and kept_count == 0
-                        and i >= 2
-                    ):
-                        logger.info(
-                            f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
-                        )
-                        halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
-                        break
-
-                    # Adaptive Early Stopping (Grilling Frontier 2)
-                    if effective_patience > 0 and stagnant_trials >= effective_patience:
-                        logger.info(
-                            f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
-                        )
-                        break
-                except TokenBudgetExceededError as budget_err:
-                    logger.error(f"🛑 [Token Budget Halt] {budget_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    halt_reason = "TOKEN_BUDGET_EXCEEDED"
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary=f"Dừng sớm: {budget_err}",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
-                    break
-                except CircuitBreakerOpenError as cb_err:
-                    logger.error(f"⚡ [Circuit Breaker Fast-Fail] {cb_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    halt_reason = "CIRCUIT_BREAKER_OPEN"
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary="Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
-                    break
-                except Exception as iter_err:
-                    logger.error(f"Error during iteration {i}: {iter_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary=f"Lỗi thực thi vòng lặp: {iter_err}",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
-        finally:
-            # Final invariant: verify disk content matches best_content (or initial_content in dry-run)
-            if self.target_file.exists():
-                try:
-                    final_target = initial_content if self.dry_run_git else best_content
-                    current_disk = self.target_file.read_text(encoding="utf-8")
-                    if current_disk != final_target:
-                        self.git_rollback_target(final_target, has_committed=has_committed)
-                except Exception as e:
-                    logger.error(f"Error restoring disk file: {e}")
-
-        final_holdout_score: float | None = None
-        if self.holdout_dataset:
-            if kept_count == 0 and initial_holdout_score is not None:
-                final_holdout_score = initial_holdout_score
-                logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
-                )
-            else:
-                try:
-                    holdout_final_rep = self._eval_sync(best_content, dataset=self.holdout_dataset)
-                    final_holdout_score = holdout_final_rep.overall_score
-                    logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
-                    )
-                except Exception as e:
-                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
-
+    def _build_final_report(
+        self,
+        baseline_score: float,
+        initial_holdout_score: float | None,
+        final_holdout_score: float | None,
+        halt_reason: str | None,
+        state: _RatchetLoopState,
+    ) -> RatchetReport:
+        """Synthesizes final RatchetReport from session state and holdout metrics."""
         slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
         return RatchetReport(
             target_file=str(self.target_file),
             initial_score=baseline_score,
-            final_score=best_score,
-            total_iterations=len(history),
-            kept_commits=kept_count,
-            reverted_trials=reverted_count,
-            history=history,
+            final_score=state.best_score,
+            total_iterations=len(state.history),
+            kept_commits=state.kept_count,
+            reverted_trials=state.reverted_count,
+            history=state.history,
             total_tokens=self.token_tracker.total_tokens,
             prompt_tokens=self.token_tracker.prompt_tokens,
             completion_tokens=self.token_tracker.completion_tokens,
@@ -2549,6 +1764,165 @@ class GitRatchetOptimizer:
             holdout_size=len(self.holdout_dataset),
             holdout_score=final_holdout_score,
             holdout_initial_score=initial_holdout_score,
+        )
+
+    def _token_snapshot(self) -> tuple[int, int, int]:
+        """Takes a snapshot of current token counters (prompt, completion, total)."""
+        return (
+            self.token_tracker.prompt_tokens,
+            self.token_tracker.completion_tokens,
+            self.token_tracker.total_tokens,
+        )
+
+    def _propose_candidate(
+        self, iter_idx: int, state: _RatchetLoopState
+    ) -> tuple[str | None, str | None]:
+        """Proposes a mutation candidate and validates uniqueness against seen hashes."""
+        mutated = self.propose_mutation(state.best_content, iter_idx)
+        if mutated == state.best_content:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {iter_idx}."
+            )
+            return None, "HALT_NO_FURTHER_STRATEGIES"
+
+        content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
+        if content_hash in state.seen_hashes:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+            )
+            return None, "HALT_NO_FURTHER_STRATEGIES"
+        state.seen_hashes.add(content_hash)
+        return mutated, None
+
+    def _eval_holdout_base_sync(self, content: str) -> float | None:
+        """Evaluates baseline holdout dataset synchronously if configured."""
+        if not self.holdout_dataset:
+            return None
+        try:
+            report = self._eval_sync(content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(
+                f"🔒 Holdout Baseline Score: {score:.2f}% ({len(self.holdout_dataset)} items)"
+            )
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
+            return None
+
+    def _eval_holdout_final_sync(
+        self, best_content: str, initial_score: float | None, kept_count: int
+    ) -> float | None:
+        """Evaluates final holdout score synchronously, reusing baseline when kept_count == 0."""
+        if not self.holdout_dataset:
+            return None
+        if kept_count == 0 and initial_score is not None:
+            logger.info(
+                f"🎯 Holdout Final Score: {initial_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
+            )
+            return initial_score
+        try:
+            report = self._eval_sync(best_content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(f"🎯 Holdout Final Score: {score:.2f}% (Baseline: {initial_score}%)")
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            return None
+
+    async def _eval_holdout_base_async(self, content: str) -> float | None:
+        """Evaluates baseline holdout dataset asynchronously if configured."""
+        if not self.holdout_dataset:
+            return None
+        try:
+            report = await self._eval_async(content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(
+                f"🔒 Holdout Baseline Score: {score:.2f}% ({len(self.holdout_dataset)} items)"
+            )
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
+            return None
+
+    async def _eval_holdout_final_async(
+        self, best_content: str, initial_score: float | None, kept_count: int
+    ) -> float | None:
+        """Evaluates final holdout score asynchronously, reusing baseline when kept_count == 0."""
+        if not self.holdout_dataset:
+            return None
+        if kept_count == 0 and initial_score is not None:
+            logger.info(
+                f"🎯 Holdout Final Score: {initial_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
+            )
+            return initial_score
+        try:
+            report = await self._eval_async(best_content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(f"🎯 Holdout Final Score: {score:.2f}% (Baseline: {initial_score}%)")
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            return None
+
+    def run(self) -> RatchetReport:
+        """Executes the full ratchet autonomous optimization loop synchronously."""
+        if not self.target_file.exists():
+            raise FileNotFoundError(f"Target file not found: {self.target_file}")
+
+        initial_content = self.target_file.read_text(encoding="utf-8")
+        try:
+            baseline_report = self._eval_sync(initial_content)
+        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
+            return self._build_init_error_report(init_err)
+
+        baseline_score = baseline_report.overall_score
+        baseline_tokens = self.token_tracker.total_tokens
+        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
+        state = _RatchetLoopState(
+            best_score=baseline_score,
+            best_content=initial_content,
+            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
+        )
+        initial_holdout_score = self._eval_holdout_base_sync(initial_content)
+        halt_reason: str | None = None
+
+        try:
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
+                try:
+                    mutated, cand_halt = self._propose_candidate(i, state)
+                    if cand_halt:
+                        halt_reason = cand_halt
+                        break
+                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
+                        continue
+
+                    eval_report = self._eval_sync(mutated)
+                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+                    should_stop, stop_reason = self._check_budget_and_early_stop(
+                        i, effective_patience, baseline_tokens, state
+                    )
+                    if should_stop:
+                        if stop_reason:
+                            halt_reason = stop_reason
+                        break
+                except Exception as exc:
+                    exc_halt, should_break = self._handle_iteration_exception(
+                        exc, i, t0, prev_tokens, state
+                    )
+                    if exc_halt:
+                        halt_reason = exc_halt
+                    if should_break:
+                        break
+        finally:
+            self._finalize_disk_state(initial_content, state)
+
+        final_holdout_score = self._eval_holdout_final_sync(
+            state.best_content, initial_holdout_score, state.kept_count
+        )
+        return self._build_final_report(
+            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
         )
 
     async def run_async(self) -> RatchetReport:
@@ -2560,364 +1934,59 @@ class GitRatchetOptimizer:
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
-        halt_reason: str | None = None
-
         try:
             baseline_report = await self._eval_async(initial_content)
-            baseline_score = baseline_report.overall_score
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
-            logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
-            reason = (
-                "CIRCUIT_BREAKER_OPEN"
-                if isinstance(init_err, CircuitBreakerOpenError)
-                else "TOKEN_BUDGET_EXCEEDED"
-            )
-            slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
-            return RatchetReport(
-                target_file=str(self.target_file),
-                initial_score=0.0,
-                final_score=0.0,
-                total_iterations=0,
-                kept_commits=0,
-                reverted_trials=0,
-                history=[],
-                total_tokens=self.token_tracker.total_tokens,
-                prompt_tokens=self.token_tracker.prompt_tokens,
-                completion_tokens=self.token_tracker.completion_tokens,
-                avg_latency_s=self.token_tracker.avg_latency_s,
-                halt_reason=reason,
-                slicing_tier=slicing_tier_str,
-                tuning_size=len(self.tuning_dataset),
-                holdout_size=len(self.holdout_dataset),
-            )
+            return self._build_init_error_report(init_err)
 
-        initial_holdout_score: float | None = None
-        if self.holdout_dataset:
-            try:
-                holdout_base_rep = await self._eval_async(
-                    initial_content, dataset=self.holdout_dataset
-                )
-                initial_holdout_score = holdout_base_rep.overall_score
-                logger.info(
-                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
-                )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
-
+        baseline_score = baseline_report.overall_score
         baseline_tokens = self.token_tracker.total_tokens
-
-        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
-        if baseline_score >= 100.0:
-            effective_max_iter = 1
-            effective_patience = 1
-        elif baseline_score >= 90.0:
-            effective_max_iter = min(self.config.max_iterations, 5)
-            effective_patience = min(self.config.patience, 2)
-        else:
-            effective_max_iter = min(self.config.max_iterations, 10)
-            effective_patience = min(self.config.patience, 3)
-
-        best_score = baseline_score
-        best_content = initial_content
-        has_committed = False
-        kept_count = 0
-        reverted_count = 0
-        stagnant_trials = 0
-        seen_hashes: set[str] = {hashlib.sha256(initial_content.encode("utf-8")).hexdigest()}
-        history: list[RatchetTrialResult] = []
-
-        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
-        logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}% | Budget: {effective_max_iter} vòng (Patience={effective_patience})"
+        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
+        state = _RatchetLoopState(
+            best_score=baseline_score,
+            best_content=initial_content,
+            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
+        initial_holdout_score = await self._eval_holdout_base_async(initial_content)
+        halt_reason: str | None = None
 
         try:
             for i in range(1, effective_max_iter + 1):
                 logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_p_tokens = self.token_tracker.prompt_tokens
-                prev_c_tokens = self.token_tracker.completion_tokens
-                prev_tot_tokens = self.token_tracker.total_tokens
-                iter_t0 = time.perf_counter()
-
+                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
                 try:
-                    mutated_content = self.propose_mutation(best_content, i)
-                    if mutated_content == best_content:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                    mutated, cand_halt = self._propose_candidate(i, state)
+                    if cand_halt:
+                        halt_reason = cand_halt
                         break
-
-                    content_hash = hashlib.sha256(mutated_content.encode("utf-8")).hexdigest()
-                    if content_hash in seen_hashes:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-                        break
-                    seen_hashes.add(content_hash)
-
-                    # Apply candidate mutation
-                    self.target_file.write_text(mutated_content, encoding="utf-8")
-
-                    # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
-                    best_adr_nums = set(ADR_REF_PATTERN.findall(best_content))
-                    mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
-                    dropped_adrs = sorted(
-                        [
-                            f"ADR-{int(num):04d}"
-                            for num in best_adr_nums
-                            if num not in mutated_adr_nums
-                        ]
-                    )
-                    if dropped_adrs:
-                        dropped_str = ", ".join(dropped_adrs)
-                        logger.warning(
-                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
-                        )
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
-                        trial = RatchetTrialResult(
-                            iteration=i,
-                            score=best_score,
-                            passed=(best_score >= self.config.target_score),
-                            critical_fails=0,
-                            decision=decision,
-                            summary=summary,
-                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                            latency_s=time.perf_counter() - iter_t0,
-                        )
-                        history.append(trial)
+                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                         continue
 
-                    # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
-                    link_issues = []
-                    try:
-                        if str(self.project_root) not in sys.path:
-                            sys.path.insert(0, str(self.project_root))
-                        from scripts.governance.link_auditor import LinkAuditor
-
-                        link_issues = [
-                            item_issue
-                            for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
-                            if item_issue.category in ("links", "okf_links", "okf_conflicts")
-                        ]
-                    except Exception as e:
-                        logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
-
-                    if link_issues:
-                        logger.warning(
-                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
-                        )
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
-                        trial = RatchetTrialResult(
-                            iteration=i,
-                            score=best_score,
-                            passed=(best_score >= self.config.target_score),
-                            critical_fails=0,
-                            decision=decision,
-                            summary=summary,
-                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                            latency_s=time.perf_counter() - iter_t0,
-                        )
-                        history.append(trial)
-                        continue
-
-                    # Evaluate (Only executed when working tree passes static validation)
-                    report = await self._eval_async(mutated_content)
-                    current_score = report.overall_score
-                    crit_fails = sum(1 for r in report.item_results if r.critical_failed)
-
-                    # Ratchet decision
-                    if current_score > best_score and crit_fails == 0:
-                        diff_str = f"{best_score:.1f}% -> {current_score:.1f}% (+{current_score - best_score:.1f}%)"
-                        committed = self.git_commit_improvement(diff_str)
-                        if committed:
-                            has_committed = True
-                        best_score = current_score
-                        best_content = mutated_content
-                        kept_count += 1
-                        stagnant_trials = 0
-                        decision = "KEEP"
-                        summary = f"Cải thiện điểm số thành công: {diff_str}"
-                    else:
-                        self.git_rollback_target(best_content, has_committed=has_committed)
-                        reverted_count += 1
-                        stagnant_trials += 1
-                        decision = "REVERT"
-                        summary = (
-                            f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%)"
-                            if crit_fails == 0
-                            else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
-                        )
-
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=current_score,
-                        passed=(current_score >= self.config.target_score and crit_fails == 0),
-                        critical_fails=crit_fails,
-                        decision=decision,
-                        summary=summary,
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
+                    eval_report = await self._eval_async(mutated)
+                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+                    should_stop, stop_reason = self._check_budget_and_early_stop(
+                        i, effective_patience, baseline_tokens, state
                     )
-                    history.append(trial)
-                    logger.info(f"📌 Quyết định [{decision}]: {summary}")
-
-                    if best_score >= self.config.target_score and not self.config.full_sweep:
-                        logger.info(
-                            f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {i}!"
-                        )
+                    if should_stop:
+                        if stop_reason:
+                            halt_reason = stop_reason
                         break
-
-                    # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
-                    mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
-                    if (
-                        self.config.hard_max_tokens_per_skill is not None
-                        and mutation_tokens >= self.config.hard_max_tokens_per_skill
-                    ):
-                        logger.info(
-                            f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {i} trials. Dừng đột biến để bảo vệ ngân sách toàn đêm."
-                        )
-                        halt_reason = "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
-                        break
-
-                    # Per-skill mutation budget check
-                    if (
-                        self.config.per_skill_mutation_budget is not None
-                        and mutation_tokens >= self.config.per_skill_mutation_budget
-                        and kept_count == 0
-                        and i >= 2
-                    ):
-                        logger.info(
-                            f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
-                        )
-                        halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
-                        break
-
-                    # Adaptive Early Stopping (Grilling Frontier 2)
-                    if effective_patience > 0 and stagnant_trials >= effective_patience:
-                        logger.info(
-                            f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
-                        )
-                        break
-                except TokenBudgetExceededError as budget_err:
-                    logger.error(f"🛑 [Token Budget Halt] {budget_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    halt_reason = "TOKEN_BUDGET_EXCEEDED"
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary=f"Dừng sớm: {budget_err}",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
+                except Exception as exc:
+                    exc_halt, should_break = self._handle_iteration_exception(
+                        exc, i, t0, prev_tokens, state
                     )
-                    history.append(trial)
-                    break
-                except CircuitBreakerOpenError as cb_err:
-                    logger.error(f"⚡ [Circuit Breaker Fast-Fail] {cb_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    halt_reason = "CIRCUIT_BREAKER_OPEN"
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary="Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
-                    break
-                except Exception as iter_err:
-                    logger.error(f"Error during iteration {i}: {iter_err}")
-                    self.git_rollback_target(best_content, has_committed=has_committed)
-                    reverted_count += 1
-                    trial = RatchetTrialResult(
-                        iteration=i,
-                        score=0.0,
-                        passed=False,
-                        critical_fails=1,
-                        decision="REVERT",
-                        summary=f"Lỗi thực thi vòng lặp: {iter_err}",
-                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
-                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
-                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
-                        latency_s=time.perf_counter() - iter_t0,
-                    )
-                    history.append(trial)
+                    if exc_halt:
+                        halt_reason = exc_halt
+                    if should_break:
+                        break
         finally:
-            # Final invariant: verify disk content matches best_content (or initial_content in dry-run)
-            if self.target_file.exists():
-                try:
-                    final_target = initial_content if self.dry_run_git else best_content
-                    current_disk = self.target_file.read_text(encoding="utf-8")
-                    if current_disk != final_target:
-                        self.git_rollback_target(final_target, has_committed=has_committed)
-                except Exception as e:
-                    logger.error(f"Error restoring disk file: {e}")
+            self._finalize_disk_state(initial_content, state)
 
-        final_holdout_score: float | None = None
-        if self.holdout_dataset:
-            if kept_count == 0 and initial_holdout_score is not None:
-                final_holdout_score = initial_holdout_score
-                logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
-                )
-            else:
-                try:
-                    holdout_final_rep = await self._eval_async(
-                        best_content, dataset=self.holdout_dataset
-                    )
-                    final_holdout_score = holdout_final_rep.overall_score
-                    logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
-                    )
-                except Exception as e:
-                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
-
-        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
-        return RatchetReport(
-            target_file=str(self.target_file),
-            initial_score=baseline_score,
-            final_score=best_score,
-            total_iterations=len(history),
-            kept_commits=kept_count,
-            reverted_trials=reverted_count,
-            history=history,
-            total_tokens=self.token_tracker.total_tokens,
-            prompt_tokens=self.token_tracker.prompt_tokens,
-            completion_tokens=self.token_tracker.completion_tokens,
-            avg_latency_s=self.token_tracker.avg_latency_s,
-            halt_reason=halt_reason,
-            slicing_tier=slicing_tier_str,
-            tuning_size=len(self.tuning_dataset),
-            holdout_size=len(self.holdout_dataset),
-            holdout_score=final_holdout_score,
-            holdout_initial_score=initial_holdout_score,
+        final_holdout_score = await self._eval_holdout_final_async(
+            state.best_content, initial_holdout_score, state.kept_count
+        )
+        return self._build_final_report(
+            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
         )
 
 

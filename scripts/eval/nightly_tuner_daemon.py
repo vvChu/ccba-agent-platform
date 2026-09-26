@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add project root and packages to sys.path
 project_root = Path(__file__).resolve().parent.parent.parent
@@ -67,8 +68,14 @@ def main() -> None:
     parser.add_argument(
         "--per-skill-mutation-budget",
         type=int,
-        default=250000,
-        help="Per-skill token budget ceiling for mutations (default: 250,000)",
+        default=None,
+        help="Per-skill token budget ceiling for mutations (default: 250,000 or CCBA_TUNER_PER_SKILL_MUTATION_BUDGET)",
+    )
+    parser.add_argument(
+        "--hard-max-tokens-per-skill",
+        type=int,
+        default=None,
+        help="Absolute hard token ceiling per skill (default: 500,000 or CCBA_TUNER_HARD_MAX_PER_SKILL)",
     )
     parser.add_argument("--model", type=str, default="", help="Model alias for real LLM evaluation")
     parser.add_argument(
@@ -97,27 +104,33 @@ def main() -> None:
     parser.add_argument(
         "--concurrency",
         type=int,
-        default=int(os.environ.get("CCBA_TUNER_CONCURRENCY", "5")),
-        help="Concurrency limit for async batching evaluations (default: 5)",
+        default=None,
+        help="Concurrency limit for async batching evaluations (default: 5 or CCBA_TUNER_CONCURRENCY)",
     )
     args = parser.parse_args()
 
     target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
 
-    daemon = NightlyTunerDaemon(
-        root=project_root,
-        max_iterations_low=args.max_iter,
-        use_real_llm=args.use_real_llm,
-        token_budget=args.token_budget,
-        per_skill_mutation_budget=args.per_skill_mutation_budget,
-        model=args.model,
-        target_skills=target_skills,
-        alert_emitter=send_telegram_alert,
-        target_ref=args.ref,
-        no_telegram=args.no_telegram,
-        skip_cooldown=args.skip_cooldown,
-        concurrency=args.concurrency,
-    )
+    daemon_kwargs: dict[str, Any] = {
+        "root": project_root,
+        "max_iterations_low": args.max_iter,
+        "use_real_llm": args.use_real_llm,
+        "token_budget": args.token_budget,
+        "model": args.model,
+        "target_skills": target_skills,
+        "alert_emitter": send_telegram_alert,
+        "target_ref": args.ref,
+        "no_telegram": args.no_telegram,
+        "skip_cooldown": args.skip_cooldown,
+    }
+    if args.concurrency is not None:
+        daemon_kwargs["concurrency"] = args.concurrency
+    if args.per_skill_mutation_budget is not None:
+        daemon_kwargs["per_skill_mutation_budget"] = args.per_skill_mutation_budget
+    if args.hard_max_tokens_per_skill is not None:
+        daemon_kwargs["hard_max_tokens_per_skill"] = args.hard_max_tokens_per_skill
+
+    daemon = NightlyTunerDaemon(**daemon_kwargs)
     daemon.run_nightly_batch(dry_run=args.dry_run)
 
 
