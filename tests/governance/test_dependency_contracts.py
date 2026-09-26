@@ -116,3 +116,42 @@ def test_scripts_maskara_strict_seam_compliance() -> None:
         f"Expected 0 violations in scripts/maskara.py, but found {len(violations)}:\n"
         + "\n".join(violation_details)
     )
+
+
+def test_ast_visitor_catches_raw_bypass_violation() -> None:
+    """Verify that ad-hoc scripts cannot directly import raw bypass libraries without platform seam."""
+    code = """
+import docx
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package=None,
+        current_file=Path("scripts/adhoc_script.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 1
+    assert visitor.violations[0].rule_name == "RawThirdPartyBypassViolation"
+    assert (
+        "Platform-Aware KISS requires using 'ccba_ooxml' seam instead"
+        in visitor.violations[0].message
+    )
+
+
+def test_ast_visitor_allows_raw_bypass_with_comment() -> None:
+    """Verify that inline comment # ccba:allow-raw-bypass allows exemption."""
+    code = """
+import docx  # ccba:allow-raw-bypass (synthetic mock generator)
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package=None,
+        current_file=Path("scripts/adhoc_script.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 0

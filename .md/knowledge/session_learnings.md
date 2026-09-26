@@ -29,6 +29,11 @@
   - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa.
 - **RULE-1.9 [2-Phase Planning Guardrail — The Factory Model]**:
   - Refactoring bộ trích xuất/chuyển đổi BẮT BUỘC phân lập 2 giai đoạn: Phase 1 (Pure Structural — Zero-Regression 0.0%, dual-dispatch) và Phase 2 (Feature/Schema Mutations). Cấm scope conflation.
+- **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
+  - *Platform-Aware KISS (Entropy Tối Thiểu)*: Tái sử dụng Monorepo Package Seams / Master Skills có sẵn là giải pháp KISS bậc 1. CẤM tạo script chắp vá hoặc ad-hoc data silo cục bộ rồi ngụy biện là KISS.
+  - *Pre-Flight Gate Receipt*: Bắt buộc tra cứu Seam qua CLI (`compile_catalog.py --query <keyword>`) trước khi đề xuất code mới; dán kết quả tra cứu vào `implementation_plan.md`.
+  - *Anti-Phantom Deferral*: CẤM chia "Phase 1 chắp vá tạm bợ" rồi hoãn kiến trúc chuẩn sang "Phase 2" khi hạ tầng nền tảng đã sẵn sàng.
+
 
 ---
 
@@ -84,12 +89,13 @@
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
-*(RULE-5.1 đến 5.3 về Chrome CDP & Windows Hooks đã di dời vào archive/session_learnings_history.md)*
+*(RULE-5.1 đến 5.3 đã di dời vào archive/session_learnings_history.md Mục 21; chi tiết 5.4-5.5 tại Mục 22)*
 
 - **RULE-5.4 [Telegram ChatOps: Markdown v1, Subprocess Reaping & Cross-Repo Path]**:
-  - *Markdown v1 Escaping*: Trong Telegram Markdown v1, dấu `_` là cú pháp italic. MỌI biến chuỗi động chứa `_` (file, branch, model, skill) BẮT BUỘC bọc trong inline code backtick (`` `...` ``) kèm `_clean_md` thay ` ` ` thành `'`, chống lỗi `can't parse entities` gây rớt fallback plain text.
-  - *Subprocess Reaping*: Khi dùng `asyncio.wait_for(proc.communicate(), timeout=...)`, trong `TimeoutError` và `CancelledError` BẮT BUỘC: tiến trình đơn gọi `proc.kill()` + `await proc.wait()`; shell runner có trap cleanup worktree BẮT BUỘC dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ chờ 5s $\rightarrow$ `SIGKILL` triệt tiêu zombie và dọn dẹp worktree.
-  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng tham số `cwd=` tường minh trỏ về gốc repo đích (phân giải qua `CCBA_HUB_PATH`), cấm gắn cứng đường dẫn máy trạm `/home/vvc/...` (vi phạm Machine-State Decoupling) hoặc dùng đường dẫn tương đối.
+  - *Markdown v1*: Biến chuỗi chứa `_` bắt buộc bọc backtick (`` `...` ``) kèm `_clean_md` chống lỗi parsing entities Telegram.
+  - *Subprocess Reaping*: Timeout/Cancel bắt buộc `proc.kill()` + `proc.wait()`; shell runner trap cleanup dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ 5s $\rightarrow$ `SIGKILL`.
+  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng `cwd=` tường minh phân giải qua `CCBA_HUB_PATH`, cấm gắn cứng `/home/vvc/...`.
 - **RULE-5.5 [Timezone-Normalized Observability cho Database Gateway UTC]**:
-  - Khi truy vấn sản lượng token/spend trong ngày từ gateway lưu UTC (LiteLLM `LiteLLM_SpendLogs`), CẤM dùng `CURRENT_DATE` trong `WHERE` (mất trắng 00:00-07:00 ICT). BẮT BUỘC lọc theo mốc 00:00:00 ICT chuẩn hóa sang UTC bảo đảm Index Scan:
+  - Truy vấn token/spend UTC gateway (LiteLLM) CẤM `CURRENT_DATE`. Bắt buộc lọc theo mốc 00:00:00 ICT chuyển đổi sang UTC:
     `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
+

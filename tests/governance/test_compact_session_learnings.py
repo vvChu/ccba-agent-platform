@@ -15,6 +15,7 @@ from scripts.governance.compact_session_learnings import (
     DEFAULT_FILE,
     DEFAULT_MAX_SIZE_KB,
     REQUIRED_INVARIANTS,
+    SOFT_TARGET_SIZE_KB,
     SPOKE_COMPACTED_TEMPLATE,
     SPOKE_REQUIRED_INVARIANTS,
     backup_to_archive,
@@ -62,6 +63,16 @@ def test_check_flag_gate_pass_and_fail(tmp_path: Path) -> None:
     dummy_file.write_text(valid_content, encoding="utf-8")
     assert run_check(dummy_file, 10.0) == 0
 
+    # 5. Dual-tier: Warning when exceeding soft target but within hard ceiling
+    soft_warn_content = ("X" * 11_000) + "\n" + " ".join(REQUIRED_INVARIANTS)
+    dummy_file.write_text(soft_warn_content, encoding="utf-8")
+    assert run_check(dummy_file, max_size_kb=15.0, soft_target_kb=10.0) == 0
+
+    # 6. Dual-tier: Hard failure when exceeding hard ceiling
+    hard_fail_content = ("X" * 16_000) + "\n" + " ".join(REQUIRED_INVARIANTS)
+    dummy_file.write_text(hard_fail_content, encoding="utf-8")
+    assert run_check(dummy_file, max_size_kb=15.0, soft_target_kb=10.0) == 1
+
 
 def test_archive_creation_and_integrity(tmp_path: Path) -> None:
     """Verify backup_to_archive preserves identical byte content."""
@@ -90,12 +101,15 @@ def test_verify_invariants_logic() -> None:
 
 
 def test_active_session_learnings_conforms_to_budget() -> None:
-    """Invariant test: Real session_learnings.md MUST be <= 10 KB."""
+    """Invariant test: Real session_learnings.md MUST conform to Dual-Tier Budget (<= 15 KB Hard, <= 10 KB Soft)."""
     assert DEFAULT_FILE.exists(), f"Missing active session learnings: {DEFAULT_FILE}"
     metrics = get_file_metrics(DEFAULT_FILE)
 
     assert float(metrics["kb"]) <= DEFAULT_MAX_SIZE_KB, (
-        f"Active session learnings ({metrics['kb']} KB) exceeds {DEFAULT_MAX_SIZE_KB} KB budget!"
+        f"Active session learnings ({metrics['kb']} KB) exceeds {DEFAULT_MAX_SIZE_KB} KB hard ceiling!"
+    )
+    assert float(metrics["kb"]) <= SOFT_TARGET_SIZE_KB, (
+        f"Active session learnings ({metrics['kb']} KB) exceeds {SOFT_TARGET_SIZE_KB} KB soft target!"
     )
     assert metrics["valid"] is True
 
