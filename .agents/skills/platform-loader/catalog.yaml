@@ -1230,6 +1230,121 @@ skills:
   command: /ccba-youtube-learn
   tier: kernel
 workflows: []
+seams:
+- package: ccba-ai
+  path: packages/ccba-ai
+  description: Unified client library connecting to the LiteLLM AI Gateway on Server
+    Spark.
+  public_seams:
+  - '`from ccba_ai import ai, AIClient, AsyncAIClient`, `ccba_ai.routing`, `ccba_ai.prompting`
+    (`xml_envelope`, `parse_xml_tags`, `evaluator_optimizer_loop`), `ccba_ai.copilot_provider.CopilotCLIProvider`,
+    `ccba_ai.antigravity_provider.AntigravityCLIProvider`, `ccba_ai.daemon_bridge.PersistentStdioDaemon`.'
+  contracts: All clients MUST configure `timeout >= 30.0s`. Zero-config thinking params
+    (use suffixes `-low`, `-medium`, `-high`). Tier 3 Dual-CLI fallback prioritizes
+    by Model-Family Affinity (OpenAI -> Copilot, Gemini -> Antigravity) with Cross-CLI
+    failover.
+  tests: '`pytest packages/ccba-ai/tests`'
+- package: ccba-diagram
+  path: packages/ccba-diagram
+  description: Deterministic layout engines, topology analysis, and visual ergonomics
+    for Excalidraw diagrams.
+  public_seams:
+  - '`from ccba_diagram import apply_smart_layout, apply_sugiyama_layout, apply_wheel_layout,
+    apply_matrix_layout, apply_tree_layout, apply_radial_layout, apply_concentric_layout,
+    apply_value_chain_layout, apply_cycle_layout, DiagramTheme, generate_markdown_spec_table`.'
+  contracts: All layout operations modify elements in-place and return boolean status.
+    Layouts must strictly adhere to 16:9 canvas dimensions ($W \le 1150\text{px}$)
+    and compute safe arrow endpoints via shape boundary clipping.
+  tests: '`pytest packages/ccba-diagram/tests`'
+- package: ccba-harness
+  path: packages/ccba-harness
+  description: Deterministic evaluation framework for benchmarking AI Agent skills
+    and workflows.
+  public_seams:
+  - '`from ccba_harness import HarnessEngine, HarnessGuard, FileMutexLock, HarnessLocal,
+    HarnessState, DetachedExecutionEngine, EvalRunner, EvalItem, EvalReport, ExactMatchScorer,
+    RegexScorer, JsonSchemaScorer, LengthBoundsScorer, LLMRubricScorer, SkillValidator,
+    SkillAuditIssue, ArchitectureTier, GPIMetrics, DecisionRequest, DecisionResult,
+    calculate_gpi, evaluate_two_stage_decision, GPI_STANDALONE_THRESHOLD`.'
+  contracts: Evaluations must be deterministic and isolated with explicit timeout
+    guards. Two-Stage Granularity Decision Framework and GPI calculation enforce RES-2026-ARCH-001
+    v1.2 architecture rules. Fast unit tests must maintain SLA < 2.0s.
+  tests: '`pytest packages/ccba-harness/tests`'
+- package: ccba-legal-intel
+  path: packages/ccba-legal-intel
+  description: Autonomous Vietnamese construction legal intelligence, TVPL crawl coordination,
+    and AST checklist generation.
+  public_seams:
+  - 'Core Seams: `from ccba_legal import LegalKnowledgeEngine, LegalIntelPipeline,
+    LegalProcessor, LegalSyncEngine, LegalRegistryManager, LegalGroundingGate, OKFBundlePackager,
+    DocxCanonicalSanitizer, DynamicStatutoryResolver, CurrencyCard`.'
+  - 'Cloud Ingestion Seam: `from ccba_legal.sync import GoogleDriveIngestor`.'
+  contracts: '- Chrome CDP crawlers MUST use `TVPLSessionMutex` and `CookieVault`
+    to prevent session conflict and rate limits.   - Google Drive operations MUST
+    initialize API credentials through `ccba_legal.sync.drive_client.get_drive_service`
+    factory, never directly instantiating client libraries.'
+  tests: '`pytest packages/ccba-legal-intel/tests`'
+- package: ccba-maskara
+  path: packages/ccba-maskara
+  description: Security and privacy engine for detecting and redacting sensitive credentials
+    and API keys.
+  public_seams:
+  - '`from ccba_maskara import MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text`.'
+  contracts: Never persist unmasked API keys or secrets in logs, artifacts, or transcripts.
+  tests: '`pytest packages/ccba-maskara/tests`'
+- package: ccba-notebooklm
+  path: packages/ccba-notebooklm
+  description: Unified NotebookLM client and deep service seam for source orchestration,
+    RAG, and artifact retrieval.
+  public_seams:
+  - '`from ccba_notebooklm import CCBANotebookLMClient, NotebookLMClient, get_client,
+    query_rag, handle_artifact_flow, extract_and_summarize`.'
+  contracts: Use flat deep seam API, SHA-256 registry caching for source deduplication,
+    and dynamic notebook ID overrides.
+  tests: '`pytest packages/ccba-notebooklm/tests`'
+- package: ccba-ooxml
+  path: packages/ccba-ooxml
+  description: Deep module for processing, styling, and generating Microsoft Office
+    OpenXML documents (DOCX, PPTX, XLSX).
+  public_seams:
+  - '`from ccba_ooxml import pack_document, unpack_document, validate_document, OOXMLWorkspace,
+    recalc_xlsx, DocxDocument, StructuredTable, TableReconstructor, make_descriptive_table_slug,
+    DeckBuilder, SlideSpec, SlideType, CardItem, CCBAPresentationTheme, build_presentation_from_markdown,
+    WordFormFiller, FormFillConfig, TableRule, TemplateProtectionError`.'
+  contracts: Follow CCBA Brand Identity Guidelines ver 3.4, WCAG 2.1 contrast rules,
+    and Decree 30 administrative document formatting standards.
+  tests: '`pytest packages/ccba-ooxml/tests`'
+- package: ccba-pdf-prep
+  path: packages/ccba-pdf-prep
+  description: High-performance PDF preprocessor for LLMs, vision segmenting, tiling,
+    and title block extraction.
+  public_seams:
+  - '`from ccba_pdf_prep import PDFProcessingPipeline, ProcessingResult, render_page_to_image_stream,
+    extract_pdf_pages_stream` (`pipeline.process(pdf_path, output_dir)`).'
+  contracts: External callers must interact via `PDFProcessingPipeline`. Sub-modules
+    (`PDFAnalyzer`, `VisionOptimizer`, etc.) are internal.
+  tests: '`pytest packages/ccba-pdf-prep/tests`'
+- package: ccba-qc-core
+  path: packages/ccba-qc-core
+  description: Deep module for AI quality control, drawing discovery, Quad-View cross-discipline
+    audit, and technical reporting.
+  public_seams:
+  - '`from ccba_qc_core import QCAuditPipeline, AuditReportSummary, QCBatchOrchestrator,
+    DiscoveryEngine, QuadViewAuditEngine, ReporterEngine, PcccMapReduceEngine, SemanticAuditEngine,
+    PcccJurisdictionRouter, PcccProjectSpec, PcccJurisdictionResult`'
+  contracts: Callers must interact via QCAuditPipeline.run_audit(project_dir) or QCBatchOrchestrator.run_batch(...).
+    Sub-engines adhere to CCBA QC Protocols.
+  tests: pytest packages/ccba-qc-core/tests
+- package: mdconverter
+  path: packages/mdconverter
+  description: High-fidelity document-to-markdown converter supporting multiple OCR/Vision
+    backends with table reconstruction.
+  public_seams:
+  - '`from mdconverter import ConversionPipeline, ConverterRegistry, BaseConverter,
+    ConversionResult, get_settings`.'
+  contracts: Table reconstruction and relative link patching are automatically dispatched
+    on raw markdown outputs.
+  tests: '`pytest packages/mdconverter/tests`'
 rules:
 - name: identity
   description: Brand, voice, phong cách giao tiếp CCBA

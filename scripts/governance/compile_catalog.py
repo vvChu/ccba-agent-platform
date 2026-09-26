@@ -12,6 +12,7 @@ Supports `--check` for CI gate enforcement and `--write` (default) for regenerat
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -130,6 +131,69 @@ def compile_workflows(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
     return compiled
 
 
+def compile_seams(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
+    """Scan all packages/*/AGENTS.md and compile public deep seams list."""
+    pkgs_dir = hub_root / "packages"
+    if not pkgs_dir.exists():
+        return []
+
+    compiled: list[dict[str, Any]] = []
+
+    for pkg_dir in sorted(pkgs_dir.iterdir(), key=lambda p: p.name):
+        if not pkg_dir.is_dir() or pkg_dir.name.startswith("."):
+            continue
+
+        agents_md = pkg_dir / "AGENTS.md"
+        if not agents_md.exists():
+            continue
+
+        text = agents_md.read_text(encoding="utf-8")
+        lines = text.strip().splitlines()
+
+        # Extract description (text between title and first bullet point)
+        desc = ""
+        for line in lines[1:]:
+            line_str = line.strip()
+            if not line_str:
+                continue
+            if line_str.startswith("-"):
+                break
+            desc += " " + line_str if desc else line_str
+
+        # Extract Public Deep Seams
+        seams_m = re.search(
+            r"-\s+\*\*Public Deep Seams\*\*:(.*?)(?=\n-\s+\*\*|\Z)", text, re.DOTALL
+        )
+        public_seams_raw = seams_m.group(1).strip() if seams_m else ""
+        seam_lines = [
+            line.strip().lstrip("-* ").strip()
+            for line in public_seams_raw.splitlines()
+            if line.strip()
+        ]
+
+        # Extract Contracts
+        contracts_m = re.search(r"-\s+\*\*Contracts\*\*:(.*?)(?=\n-\s+\*\*|\Z)", text, re.DOTALL)
+        contracts = contracts_m.group(1).strip().replace("\n", " ") if contracts_m else ""
+
+        # Extract Scoped Tests
+        tests_m = re.search(r"-\s+\*\*Scoped Tests\*\*:(.*?)(?=\n-\s+\*\*|\Z)", text, re.DOTALL)
+        scoped_tests = tests_m.group(1).strip().replace("\n", " ") if tests_m else ""
+
+        rel_path = str(pkg_dir.relative_to(hub_root)).replace("\\", "/")
+
+        entry: dict[str, Any] = {
+            "package": pkg_dir.name,
+            "path": rel_path,
+            "description": desc,
+            "public_seams": seam_lines,
+            "contracts": contracts,
+            "tests": scoped_tests,
+        }
+        compiled.append(entry)
+
+    return compiled
+
+
 def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     """Compile the entire catalog dictionary."""
     base_file = hub_root / ".agents" / "skills" / "platform-loader" / "catalog_base.yaml"
@@ -140,6 +204,7 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
 
     skills = compile_skills(hub_root)
     workflows = compile_workflows(hub_root)
+    seams = compile_seams(hub_root)
 
     catalog: dict[str, Any] = {
         "hub_path": base_data.get("hub_path", "."),
@@ -156,6 +221,7 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
         "bundles": base_data.get("bundles", {}),
         "skills": skills,
         "workflows": workflows,
+        "seams": seams,
         "rules": base_data.get("rules", []),
         "knowledge": base_data.get("knowledge", []),
     }
@@ -253,6 +319,33 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
                     f"  frontmatter:  {val_comp!r}"
                 )
 
+    # Compare seams
+    existing_seams = {s.get("package"): s for s in existing_data.get("seams", [])}
+    compiled_seams = {s.get("package"): s for s in compiled_data.get("seams", [])}
+
+    missing_seams = set(compiled_seams.keys()) - set(existing_seams.keys())
+    if missing_seams:
+        diffs.append(f"Missing seams in catalog.yaml: {sorted(missing_seams)}")
+
+    extra_seams = set(existing_seams.keys()) - set(compiled_seams.keys())
+    if extra_seams:
+        diffs.append(f"Orphaned seams in catalog.yaml: {sorted(extra_seams)}")
+
+    common_seams = sorted(set(compiled_seams.keys()) & set(existing_seams.keys()))
+    for pkg_name in common_seams:
+        cur = existing_seams[pkg_name]
+        comp = compiled_seams[pkg_name]
+        all_fields = sorted(set(cur.keys()) | set(comp.keys()))
+        for field in all_fields:
+            val_cur = cur.get(field)
+            val_comp = comp.get(field)
+            if val_cur != val_comp:
+                diffs.append(
+                    f"Package seam '{pkg_name}' property '{field}' mismatch:\n"
+                    f"  catalog.yaml: {val_cur!r}\n"
+                    f"  compiled:     {val_comp!r}"
+                )
+
     # Deep diff on base configuration (from catalog_base.yaml)
     for base_field in ["hub_path", "hub_repo", "notebook_ids", "bundles", "rules", "knowledge"]:
         cur_val = existing_data.get(base_field)
@@ -269,6 +362,82 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
     return True, "Catalog is 100% in sync"
 
 
+def query_catalog(hub_root: Path = HUB_ROOT, query_term: str = "") -> int:
+    """Fast CLI search across Public Deep Seams and Skills in catalog."""
+    term = query_term.lower().strip()
+    if not term:
+        print("[ERROR] Please provide a non-empty search keyword.", file=sys.stderr)
+        return 1
+
+    catalog = compile_catalog_dict(hub_root)
+
+    matching_seams = []
+    for s in catalog.get("seams", []):
+        pkg = str(s.get("package", ""))
+        desc = str(s.get("description", ""))
+        seam_strs = " ".join(s.get("public_seams", []))
+        contracts = str(s.get("contracts", ""))
+        if (
+            term in pkg.lower()
+            or term in desc.lower()
+            or term in seam_strs.lower()
+            or term in contracts.lower()
+        ):
+            matching_seams.append(s)
+
+    matching_skills = []
+    for sk in catalog.get("skills", []):
+        name = str(sk.get("name", ""))
+        desc = str(sk.get("description", ""))
+        triggers = " ".join(sk.get("triggers", []))
+        cmd = str(sk.get("command", ""))
+        if (
+            term in name.lower()
+            or term in desc.lower()
+            or term in triggers.lower()
+            or term in cmd.lower()
+        ):
+            matching_skills.append(sk)
+
+    print("=" * 80)
+    print(f"🔍 CCBA Platform Catalog Query: '{query_term}'")
+    print(f"   Matches: {len(matching_seams)} Deep Seam(s), {len(matching_skills)} Skill(s)")
+    print("=" * 80)
+
+    if matching_seams:
+        print("\n📦 [Tier 1: Monorepo Package Deep Seams]")
+        for s in matching_seams:
+            print(f"• Package:     {s['package']} ({s['path']})")
+            print(f"  Description: {s['description']}")
+            print("  Public Seams:")
+            for seam in s.get("public_seams", []):
+                print(f"    - {seam}")
+            if s.get("contracts"):
+                print(f"  Contracts:   {s['contracts']}")
+            if s.get("tests"):
+                print(f"  Tests:       {s['tests']}")
+            print("-" * 60)
+
+    if matching_skills:
+        print("\n⚡ [Tier 2/3: Agent Skills & Workflows]")
+        for sk in matching_skills:
+            cmd = sk.get("command") or f"/{sk['name']}"
+            print(f"• Skill:       {sk['name']} ({cmd})")
+            print(f"  Bundle:      {sk.get('bundle', '_core')}")
+            print(f"  Description: {sk.get('description', '')}")
+            triggers = ", ".join(sk.get("triggers", []))
+            if triggers:
+                print(f"  Triggers:    {triggers}")
+            print("-" * 60)
+
+    if not matching_seams and not matching_skills:
+        print(f"\n[INFO] No seams or skills found matching '{query_term}'.")
+        print("Tip: Check spelling or try a broader keyword (e.g. 'pccc', 'pdf', 'docx', 'eval').")
+
+    print("=" * 80)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(description="CCBA Catalog Manifest Compiler (ADR 0047)")
@@ -276,6 +445,13 @@ def main(argv: list[str] | None = None) -> int:
         "--check",
         action="store_true",
         help="Check if catalog.yaml is in sync with frontmatters (returns non-zero if out of sync).",
+    )
+    parser.add_argument(
+        "--query",
+        "-q",
+        type=str,
+        default=None,
+        help="Search Public Deep Seams and Skills in CCBA Catalog.",
     )
     parser.add_argument(
         "--write",
@@ -291,10 +467,15 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
+    if args.query:
+        return query_catalog(HUB_ROOT, args.query)
+
     if args.check:
         in_sync, msg = check_catalog_in_sync(HUB_ROOT)
         if in_sync:
-            print("[OK] [Catalog Compiler] catalog.yaml is 100% in-sync with frontmatters.")
+            print(
+                "[OK] [Catalog Compiler] catalog.yaml is 100% in-sync with frontmatters and packages."
+            )
             return 0
         else:
             print(
@@ -317,8 +498,9 @@ def main(argv: list[str] | None = None) -> int:
     OUTPUT_CATALOG_PATH.write_text(compiled_yaml, encoding="utf-8")
     skills_count = len(compile_skills(HUB_ROOT))
     wfs_count = len(compile_workflows(HUB_ROOT))
+    seams_count = len(compile_seams(HUB_ROOT))
     print(
-        f"[OK] [Catalog Compiler] Compiled catalog.yaml successfully ({skills_count} skills, {wfs_count} workflows)."
+        f"[OK] [Catalog Compiler] Compiled catalog.yaml successfully ({skills_count} skills, {wfs_count} workflows, {seams_count} package seams)."
     )
     return 0
 

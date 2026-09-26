@@ -12,10 +12,25 @@
 
 ---
 
-## 2. Deep Seams & Module Depth (KISS)
+## 2. Deep Seams, Platform-Aware KISS & Anti-Phantom Deferral
+
+### 2.1. Deep Modules & Shallow Module Elimination
 - **Deep Modules**: Thiết kế giao diện công khai phẳng, đơn giản (1-3 public functions/classes) ẩn giấu toàn bộ độ phức tạp nghiệp vụ bên trong (high depth, low surface area).
 - **Tránh Shallow Modules**: Không tạo các class/wrapper mỏng chỉ ủy quyền 1-1 mà không thêm giá trị xử lý.
-- **KISS**: Ưu tiên giải pháp đơn giản nhất. Nếu một vấn đề có thể giải quyết bằng 10-15 dòng code sạch trong file hiện có, hãy làm vậy thay vì tạo abstraction mới.
+
+### 2.2. Platform-Aware KISS (Tối Thiểu Hóa Entropy Toàn Cục)
+- **Bản chất của KISS trên CCBA Platform**: "Đơn giản" không đồng nghĩa với giải pháp chắp vá cục bộ (local patchwork). Nếu nền tảng đã có sẵn một Monorepo Deep Seam hoặc Master Skill, việc **tái sử dụng Seam đó chỉ bằng 1 dòng import và 3-5 dòng gọi hàm** chính là giải pháp KISS **bậc 1** (tối thiểu hóa entropy toàn cục, zero tech debt).
+- **Ngụy biện KISS (False KISS / Anti-Pattern)**: Tự viết một script phụ trần, tự kết nối API thô, tự phân tích văn bản/PDF/DOCX bằng regex cục bộ thay vì gọi Seam của nền tảng là ngụy biện KISS. Hành vi này tạo ra dữ liệu cô lập (Data Silo), phân rã kiến trúc và vi phạm Hiến pháp Nền tảng.
+
+### 2.3. Ba Cấp Độ Đánh Giá KISS (KISS Hierarchy)
+1. **Cấp 1 — Platform Seam Reuse (Ưu tiên tối thượng)**: Tra cứu Catalog/CLI (`compile_catalog.py --query <keyword>` hoặc `ccba-platform find-seam <kw>`). Nếu đã có Seam $\to$ BẮT BUỘC tái sử dụng.
+2. **Cấp 2 — Standard Library / Micro-Utility**: Chỉ áp dụng khi: (a) Đã tra cứu Catalog và xác nhận 100% chưa có Seam; (b) Tác vụ mang tính cục bộ cao và chi phí tạo package mới không đáng kể.
+3. **Cấp 3 — Upstream Seam Contribution**: Nếu một logic giải thuật hoặc I/O lặp lại $\ge 2$ lần $\to$ BẮT BUỘC đóng gói thành Public Deep Seam trong Monorepo package tương ứng.
+
+### 2.4. Nguyên Tắc "Chống Trì Hoãn Ảo" (Anti-Phantom Deferral Invariant)
+- **Nghiêm cấm phân kỳ giai đoạn ảo**: Tuyệt đối không đề xuất phương án: *"Phase 1: Tạo script tạm thời chắp vá cục bộ; Phase 2: Sẽ refactor tích hợp vào kiến trúc chuẩn CCBA sau"* khi nền tảng đã có sẵn hạ tầng Seam!
+- Khi Seam đã có trong Catalog $\to$ BẮT BUỘC phải tích hợp ngay từ Phase 1.
+
 
 ---
 

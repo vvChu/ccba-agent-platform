@@ -48,6 +48,16 @@ except ImportError:
 
 logger = logging.getLogger("ccba.eval.ratchet")
 
+# SSOT Regex patterns for ADR matrix tag detection and preservation
+ADR_HEADER_TAG_REGEX = re.compile(
+    r"\s*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\)",
+    re.IGNORECASE,
+)
+ADR_REF_PATTERN = re.compile(
+    r"\b(?:HUB[-_]ADR|ADR)[-_\s]*0*([0-9]+)\b",
+    re.IGNORECASE,
+)
+
 
 class TokenBudgetExceededError(Exception):
     """Raised when session-wide token budget ceiling is reached."""
@@ -1857,10 +1867,14 @@ class GitRatchetOptimizer:
         # Find first strategy not yet fully present in body (Goodhart's Law Trap Breaker)
         chosen_strategy = None
         base_idx = (iteration - 1) % len(strategies)
+        norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
         for offset in range(len(strategies)):
             idx = (base_idx + offset) % len(strategies)
             s_name, s_enhancement = strategies[idx]
-            if s_enhancement.strip() not in body:
+            norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace(
+                "\r\n", "\n"
+            )
+            if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
                 chosen_strategy = (s_name, s_enhancement)
                 break
 
@@ -1873,11 +1887,24 @@ class GitRatchetOptimizer:
 
         # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
-        header_pattern = re.escape(section_header)
-        section_regex = re.compile(rf"({header_pattern}.*?)(?=\n## |\Z)", re.DOTALL)
+        clean_header = ADR_HEADER_TAG_REGEX.sub("", section_header).strip()
+        header_pattern = re.escape(clean_header)
+        section_regex = re.compile(
+            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
+            r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
+            re.DOTALL | re.IGNORECASE,
+        )
 
-        if section_regex.search(body):
-            mutated_body = section_regex.sub(enhancement.strip() + "\n", body)
+        match = section_regex.search(body)
+        if match:
+            lines = enhancement.strip().split("\n")
+            adr_suffix = match.group("adr_suffix")
+            if adr_suffix:
+                lines[0] = f"{clean_header}{adr_suffix}"
+            effective_enhancement = "\n".join(lines)
+            mutated_body = (
+                body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
+            )
         else:
             mutated_body = body.strip() + "\n\n" + enhancement.strip()
 
@@ -2109,6 +2136,41 @@ class GitRatchetOptimizer:
 
                     # Apply candidate mutation
                     self.target_file.write_text(mutated_content, encoding="utf-8")
+
+                    # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
+                    best_adr_nums = set(ADR_REF_PATTERN.findall(best_content))
+                    mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
+                    dropped_adrs = sorted(
+                        [
+                            f"ADR-{int(num):04d}"
+                            for num in best_adr_nums
+                            if num not in mutated_adr_nums
+                        ]
+                    )
+                    if dropped_adrs:
+                        dropped_str = ", ".join(dropped_adrs)
+                        logger.warning(
+                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
+                        )
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
+                        trial = RatchetTrialResult(
+                            iteration=i,
+                            score=best_score,
+                            passed=(best_score >= self.config.target_score),
+                            critical_fails=0,
+                            decision=decision,
+                            summary=summary,
+                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                            latency_s=time.perf_counter() - iter_t0,
+                        )
+                        history.append(trial)
+                        continue
 
                     # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
                     link_issues = []
