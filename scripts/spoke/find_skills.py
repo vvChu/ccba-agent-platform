@@ -37,7 +37,6 @@ def find_skills(query: str = "") -> None:
     query_lower = query.lower()
     matches: list[dict[str, Any]] = []
 
-
     for skills_dir in SKILLS_DIRS:
         if not skills_dir.exists():
             continue
@@ -95,7 +94,6 @@ def find_skills(query: str = "") -> None:
 
 def main() -> None:
     if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-
         try:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
