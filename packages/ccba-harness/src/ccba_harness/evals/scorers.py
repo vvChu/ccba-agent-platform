@@ -1642,3 +1642,26 @@ def get_adr_lifecycle_scorers() -> list[BaseScorer]:
         ),
         LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
     ]
+
+
+def get_skill_repair_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for SKILL.md linter, GPI, and ADR-0057 governance repair."""
+    return [
+        RegexScorer(
+            name="skill_repair_gpi_and_frontmatter",
+            pattern=r"(gpi|yaml|frontmatter|adr-0057|tier 2b|kernel|res-2026-arch-001|khối gpi)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="skill_repair_anti_trap_hard_floor",
+            pattern=r"(cổng 0|gate 0|determinism|deep seam|packages/|cổng 1|gate 1|composite orchestrator|tiêu chí hoàn thành|completion criterion|validate_skills|evaluate-gpi)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="skill_repair_debloat_and_verification",
+            pattern=r"(script bloat|100 loc|compile_catalog|tương đối|relative|linter|cú pháp yaml|phục hồi)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]

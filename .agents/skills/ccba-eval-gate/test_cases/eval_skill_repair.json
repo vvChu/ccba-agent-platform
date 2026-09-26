@@ -1,0 +1,58 @@
+[
+  {
+    "id": "test_skill_repair_yaml_syntax_triage",
+    "input_prompt": "Tệp tin SKILL.md của tôi bị lỗi khi chạy linter: YAML_PARSE_ERROR: while scanning a block scalar, expected end of line. Hãy hướng dẫn quy trình khảo sát và sửa lỗi cú pháp YAML frontmatter này theo ccba-skill-repair.",
+    "golden_answer": null,
+    "rubric": "Phải hướng dẫn chuẩn hóa cú pháp frontmatter: thụt lề chuẩn 2 spaces, đóng kín cặp ngoặc kép/ngoặc vuông, ngăn cách khối metadata bằng cặp thẻ --- hợp lệ trước khi phân tích nội dung, chạy python scripts/validate_skills.py --file <path> --enforce-gpi.",
+    "metadata": {
+      "phase": "Step 1: Triage & Failure Diagnosis",
+      "rule": "YAML Syntax & Frontmatter Normalization",
+      "target_skill": "ccba-skill-repair"
+    }
+  },
+  {
+    "id": "test_skill_repair_gate0_gate1_classification",
+    "input_prompt": "Tôi muốn tạo một kỹ năng mới để tự động parse danh mục tiêu chuẩn xây dựng từ tệp Excel bằng thuật toán regex và xuất ra JSON. Theo thể chế ADR-0057 và Cổng 0 (Determinism Gate), kỹ năng này có đủ điều kiện tạo Standalone Skill không?",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Cổng 0 (The Determinism Gate): Vì tác vụ là thuật toán tất định thuần túy (regex, parse Excel/JSON, file I/O không cần LLM suy luận), phải từ chối cấp phép tạo Standalone Skill và hướng dẫn chuyển thành Deep Seam trong packages/*/src/ (Tier 1: Package Function) theo thể chế ADR-0057.",
+    "metadata": {
+      "phase": "Step 2: Gate 0 & Gate 1 Classification",
+      "rule": "Gate 0 Determinism & Deep Seam Relegation",
+      "target_skill": "ccba-skill-repair"
+    }
+  },
+
+  {
+    "id": "test_skill_repair_gpi_calculation_and_patching",
+    "input_prompt": "Kỹ năng của tôi bị thiếu khối gpi: trong YAML frontmatter. Kỹ năng này có s=4.0 (bước suy luận nhận thức), k=3.0 (độ phức tạp schema), a=2.0 (mức tự chủ model), p=1.0 (coupling cha thấp). Hãy tính điểm GPI và hướng dẫn vá frontmatter.",
+    "golden_answer": null,
+    "rubric": "Phải tính chính xác công thức GPI: GPI = (4.0 * 2.5) + (3.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5) = 10.0 + 6.0 + 4.0 - 1.5 = 18.5. Do GPI >= 12.0, hợp thức hóa Tier 2B (Standalone Kernel Skill) và hướng dẫn vá khối gpi: {s: 4.0, k: 3.0, a: 2.0, p: 1.0} vào frontmatter của SKILL.md.",
+    "metadata": {
+      "phase": "Step 2: GPI Calculation & Patching",
+      "rule": "GPI Formula & Tier 2B Standalone Certification",
+      "target_skill": "ccba-skill-repair"
+    }
+  },
+  {
+    "id": "test_skill_repair_completion_criteria_and_relative_links",
+    "input_prompt": "Khi audit một kỹ năng, linter báo thiếu tiêu chí hoàn thành ở các bước quy trình và phát hiện liên kết tuyệt đối D:\\GitHubProjects\\... Hãy xử lý các vi phạm này.",
+    "golden_answer": null,
+    "rubric": "Phải bổ sung dòng Tiêu chí hoàn thành: (hoặc Completion Criterion:) cho từng bước quy trình; chuyển đổi toàn bộ đường dẫn tuyệt đối thành đường dẫn tương đối hợp lệ theo chuẩn bộc lộ dần (Progressive Disclosure) trỏ về references/ hoặc tài liệu liên quan.",
+    "metadata": {
+      "phase": "Step 3: Remediation & De-bloat",
+      "rule": "Completion Criteria & Relative Links Normalization",
+      "target_skill": "ccba-skill-repair"
+    }
+  },
+  {
+    "id": "test_skill_repair_mandatory_verification",
+    "input_prompt": "Sau khi sửa chữa xong các lỗi linter của kỹ năng ccba-custom-tool, những lệnh kiểm định bắt buộc nào phải được thực thi để bảo đảm tuân thủ thể chế trước khi hoàn tất?",
+    "golden_answer": null,
+    "rubric": "Phải hướng dẫn chạy lệnh kiểm định kép bắt buộc: python scripts/validate_skills.py --file <path> --enforce-gpi và python -m ccba_harness.cli evaluate-gpi --file <path>. Nếu có sửa đổi namespace/bundle, chạy python scripts/governance/compile_catalog.py. Cả hai lệnh kiểm định bắt buộc phải trả về exit code 0.",
+    "metadata": {
+      "phase": "Step 4: Mandatory Verification",
+      "rule": "Deterministic Verification & Hard Completion Lock",
+      "target_skill": "ccba-skill-repair"
+    }
+  }
+]

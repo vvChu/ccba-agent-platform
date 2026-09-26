@@ -104,3 +104,32 @@ def test_preset_skill_includes_adr_matrix_check() -> None:
     """Verify resolve_preset_commands('skill') includes sync_hub_adr_matrix.py --check for CI parity."""
     cmds = resolve_preset_commands("skill")
     assert any("sync_hub_adr_matrix.py --check" in c for c in cmds)
+
+
+def test_skill_repair_ssot_archetype_routing() -> None:
+    """Verify ccba-skill-repair routes to dedicated skill_repair archetype and eval_skill_repair.json."""
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+
+    arch = resolve_domain_archetype("ccba-skill-repair")
+    assert arch is not None
+    assert arch.name == "skill_repair"
+    assert resolve_domain_dataset("ccba-skill-repair") == "eval_skill_repair.json"
+
+    # Verify scorers
+    scorers = get_default_domain_scorers("ccba-skill-repair")
+    scorer_names = [s.name for s in scorers]
+    assert "skill_repair_gpi_and_frontmatter" in scorer_names
+    assert "skill_repair_anti_trap_hard_floor" in scorer_names
+    assert "skill_repair_debloat_and_verification" in scorer_names
+    assert "depth" in scorer_names
+
+    # Verify dataset loading
+    items = load_eval_dataset(skill_name="ccba-skill-repair")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_skill_repair_yaml_syntax_triage" in item_ids
+    assert "test_skill_repair_gate0_gate1_classification" in item_ids
+    assert "test_skill_repair_gpi_calculation_and_patching" in item_ids
+    assert "test_skill_repair_completion_criteria_and_relative_links" in item_ids
+    assert "test_skill_repair_mandatory_verification" in item_ids
