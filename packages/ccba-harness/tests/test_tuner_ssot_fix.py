@@ -209,3 +209,74 @@ async def test_visual_design_simulation_mock_task_and_scoring() -> None:
             res = await s.score(output, item)
             assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
             assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"
+
+
+def test_office_ssot_archetype_routing() -> None:
+    """Verify all 5 office skills route to office archetype and eval_copywriting.json."""
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+
+    office_skills = [
+        "ccba-copywriting",
+        "ccba-markdown-document-processing",
+        "ccba-pptx",
+        "ccba-seminar-builder",
+        "ccba-xu-ly-van-phong",
+    ]
+    for sname in office_skills:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "office", f"{sname} should resolve to office"
+        assert resolve_domain_dataset(sname) == "eval_copywriting.json"
+
+    # Verify scorers
+    scorers = get_default_domain_scorers("ccba-copywriting")
+    scorer_names = [s.name for s in scorers]
+    assert "office_standard" in scorer_names
+    assert "progressive_disclosure_links" in scorer_names
+    assert "anti_debris" in scorer_names
+    assert "depth" in scorer_names
+
+    # Verify dataset loading
+    items = load_eval_dataset(skill_name="ccba-copywriting")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_office_administrative_document_format_nd30" in item_ids
+    assert "test_office_markdown_table_standardization" in item_ids
+    assert "test_office_presentation_slide_outline_structure" in item_ids
+    assert "test_office_seminar_curriculum_and_agenda" in item_ids
+    assert "test_office_bim_technical_copywriting_and_article" in item_ids
+
+
+@pytest.mark.asyncio
+async def test_office_copywriting_simulation_mock_task_and_scoring() -> None:
+    """Verify build_mock_agent_task generates authentic office responses scoring 100% across all 5 benchmark items."""
+    from pathlib import Path
+
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    skill_path = Path(".agents/skills/ccba-copywriting/SKILL.md")
+    content = (
+        skill_path.read_text(encoding="utf-8")
+        if skill_path.exists()
+        else "ccba-copywriting skill content"
+    )
+    dataset = load_eval_dataset(skill_name="ccba-copywriting")
+    assert len(dataset) == 5
+
+    task = build_mock_agent_task(content, "ccba-copywriting")
+    scorers = get_default_domain_scorers("ccba-copywriting")
+
+    for item in dataset:
+        output = task(item)
+        assert "<legal_context>" not in output, f"Legal context leaked into {item.id}"
+        assert "Uniclass" not in output, f"BIM Uniclass hijacked {item.id}"
+        assert "Quy chuẩn Thiết kế Thị giác" not in output, f"Visual design hijacked {item.id}"
+
+        # Score the output against all 4 domain scorers
+        for s in scorers:
+            res = await s.score(output, item)
+            assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
+            assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"

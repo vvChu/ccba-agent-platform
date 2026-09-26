@@ -1,16 +1,57 @@
 [
   {
-    "id": "test_copywriting_mined_01",
-    "input_prompt": "Làm sao để trong tương lai không phát sinh vấn đề liên quan đến \"Loại bỏ 100% Prompt nhiễu: Không còn các test prompt vô lý (như hỏi quicksort Python trong copywriting hay Fibonnaci trong legal intel).\"?",
+    "id": "test_office_administrative_document_format_nd30",
+    "input_prompt": "Hãy soạn thảo một văn bản hành chính (công văn) gửi Sở Xây dựng về việc báo cáo tiến độ triển khai dự án tư vấn BIM theo đúng quy chuẩn thể thức của Nghị định 30/2020/NĐ-CP. Yêu cầu thể hiện đầy đủ các thành phần thể thức chính: Quốc hiệu, Tiêu ngữ, Tên cơ quan ban hành, Số/ký hiệu văn bản, Địa danh và ngày tháng năm, Trích yếu nội dung, Thẩm quyền ký và Nơi nhận.",
     "golden_answer": null,
-    "rubric": "Must properly process prompt without issuing disclaimer or crashing. Specific constraint: Agent issued a refusal disclaimer on potentially valid domain prompt.",
+    "rubric": "Phải tuân thủ nghiêm ngặt thể thức văn bản hành chính theo Nghị định 30/2020/NĐ-CP: đầy đủ Quốc hiệu, Tiêu ngữ, Tên cơ quan, Số/ký hiệu, Địa danh ngày tháng, Trích yếu nội dung, Thẩm quyền ký và Nơi nhận; định dạng bố cục rõ ràng theo chuẩn văn thư hành chính.",
     "metadata": {
-      "failure_type": "ROUTER_DISCLAIMER",
-      "source_file": "transcript.jsonl",
-      "conversation_id": "de07cc2b-5990-47a3-afa4-e1c7ff2626b6",
-      "step_index": 347,
-      "mined_at": "2026-08-16 13:54:58",
-      "target_skill": "copywriting"
+      "phase": "Step 1: Administrative Document Format",
+      "rule": "Decree 30/2020/ND-CP Administrative Standard",
+      "target_skill": "ccba-xu-ly-van-phong"
+    }
+  },
+  {
+    "id": "test_office_markdown_table_standardization",
+    "input_prompt": "Hãy chuyển đổi và chuẩn hóa cấu trúc dữ liệu bảng biểu kỹ thuật từ tài liệu Word trích xuất sang định dạng Markdown chuẩn GitHub Flavored Markdown (GFM). Bảng dữ liệu quản lý tiến độ và khối lượng cọc khoan nhồi cần được căn lề chuẩn xác (cột số căn phải, cột tên căn trái, cột mã căn giữa), xử lý ngắt dòng bằng thẻ <br/> trong ô bảng và tổ chức cấu trúc heading phân cấp rõ ràng.",
+    "golden_answer": null,
+    "rubric": "Phải chuẩn hóa bảng biểu Markdown GFM: căn lề cột chuẩn xác (:---, :---:, ---:), xử lý ngắt dòng trong ô bảng bằng thẻ <br/> đúng quy chuẩn, cấu trúc phân cấp heading typography rõ ràng, không làm vỡ cấu trúc bảng Markdown.",
+    "metadata": {
+      "phase": "Step 2: Markdown Document & Table Standardization",
+      "rule": "GFM Markdown Table & Typography",
+      "target_skill": "ccba-markdown-document-processing"
+    }
+  },
+  {
+    "id": "test_office_presentation_slide_outline_structure",
+    "input_prompt": "Hãy thiết kế dàn ý bài thuyết trình kỹ thuật (.pptx) báo cáo Hội đồng Nghiệm thu về giải pháp ứng dụng BIM và Chuyển đổi số trong quản lý dự án. Yêu cầu xây dựng cấu trúc từng slide với Slide title súc tích, phân cấp typography hierarchy, hệ thống visual bullet points cô đọng và bố cục callout layout làm nổi bật thông điệp then chốt.",
+    "golden_answer": null,
+    "rubric": "Phải xây dựng dàn ý bài thuyết trình PPTX chuyên nghiệp: Slide title rõ ràng, phân cấp typography hierarchy chặt chẽ, visual bullet points ngắn gọn súc tích, bố cục callout layout nhấn mạnh bài học hoặc chỉ số trọng tâm, bảo đảm tính mạch lạc trong diễn tiến bài trình bày.",
+    "metadata": {
+      "phase": "Step 3: Presentation Slide Outline",
+      "rule": "PPTX Slide Structure & Typography Hierarchy",
+      "target_skill": "ccba-pptx"
+    }
+  },
+  {
+    "id": "test_office_seminar_curriculum_and_agenda",
+    "input_prompt": "Hãy xây dựng đề cương bài giảng và khung chương trình chi tiết cho buổi Seminar kỹ thuật CCBA chủ đề 'Kiểm soát Xung đột Mô hình BIM & Thẩm tra Thiết kế PCCC'. Đề cương phải bao gồm mục tiêu đào tạo, timeline agenda theo mốc thời gian cụ thể, checklist tài liệu chuẩn bị trước buổi đào tạo và danh mục tài liệu phát tay (handout) cho học viên.",
+    "golden_answer": null,
+    "rubric": "Phải thiết kế trọn vẹn chương trình Seminar: mục tiêu đào tạo đo lường được, timeline agenda chi tiết từng phiên theo khung giờ, checklist tài liệu và thiết bị phục vụ đào tạo, danh mục tài liệu phát tay (handouts) đính kèm bài tập thực hành.",
+    "metadata": {
+      "phase": "Step 4: Technical Seminar Curriculum",
+      "rule": "Seminar Curriculum, Agenda & Handout Checklist",
+      "target_skill": "ccba-seminar-builder"
+    }
+  },
+  {
+    "id": "test_office_bim_technical_copywriting_and_article",
+    "input_prompt": "Hãy soạn thảo một bài viết truyền thông chuyên môn kỹ thuật sâu về chủ đề 'Ứng dụng BigBIM và Hệ thống AI Thẩm tra Thiết kế Tự động trong Tư vấn Xây dựng'. Bài viết cần có tiêu đề thu hút, mở đầu bằng hook lôi cuốn nêu bật thách thức ngành, phân tích nội dung giải pháp công nghệ, và kết thúc bằng lời kêu gọi hành động (call-to-action - CTA) chuyên nghiệp.",
+    "golden_answer": null,
+    "rubric": "Phải sáng tạo bài viết truyền thông kỹ thuật chất lượng cao: tiêu đề thu hút, hook dẫn nhập ấn tượng nêu bật nỗi đau thực tế của kỹ sư, phân tích giải pháp kỹ thuật sâu sắc, bố cục mạch lạc với phân cấp heading rõ ràng, và lời kêu gọi hành động (Call-To-Action / CTA) thuyết phục.",
+    "metadata": {
+      "phase": "Step 5: Technical Copywriting & Media",
+      "rule": "Copywriting Hook, Technical Solution & CTA",
+      "target_skill": "ccba-copywriting"
     }
   }
 ]

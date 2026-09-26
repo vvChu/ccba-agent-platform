@@ -29,6 +29,7 @@ Toàn bộ **74 kỹ năng (skills)** trong nền tảng CCBA Agent Services Pla
 | **PR #378 / #379** | [`Dedicated skill_repair Archetype & Dataset`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/archetypes.py) | Tách `skill-repair` khỏi `orchestration`, tạo archetype `skill_repair`, bộ chấm điểm YAML/GPI/Gate 0 và dataset `eval_skill_repair.json` (5 test cases). Điểm baseline nhảy vọt từ 0.0% lên **100.0%**. |
 | **PR #382 / #383** | [`Defense-in-Depth 2-Tier DriftAuditor`](file:///home/vvc/ccba/ccba-agent-platform/scripts/governance/drift_auditor.py) | Khử triệt để False Positive của CI khi bổ sung tệp dữ liệu test case (`eval_*.json`) vào thư mục `test_cases/` của skill. Dọn đường an toàn cho việc mở rộng các bộ test cases mới. |
 | **Issue #384 / WF-01** | [`Dedicated visual_design Archetype & Dataset`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/archetypes.py) | Cô lập `ccba-design` khỏi `eval_general_domain.json`, tạo archetype `visual_design`, bộ chấm điểm Design Tokens/Hex/Brand/Typography và dataset `eval_visual_design.json` (5 test cases). Cứu ~1.000.000 tokens mỗi đêm và phá vỡ plateau 67.6%. |
+| **Issue #388 / WF-04** | [`Office Domain Benchmark Dataset & Scorers Expansion`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/scorers.py) | Mở rộng `eval_copywriting.json` (5 test cases), hoàn thiện `OfficeStandardScorer` bao quát NĐ 30/2020, GFM markdown table, PPTX slide outline, seminar curriculum và BIM technical copywriting; củng cố mock simulation giải phóng 5 skills văn phòng khỏi plateau 30%–75%. |
 
 ---
 
@@ -82,17 +83,19 @@ Toàn bộ **74 kỹ năng (skills)** trong nền tảng CCBA Agent Services Pla
   3. Scorer đánh giá tính trọn vẹn của dữ liệu và rào chắn SHA-256 (ADR-0059).
 - **Đầu ra:** Bản thiết kế Seam và bộ dataset đặc thù.
 
-### 🟢 Ticket WF-04: [Task & Dataset] Bổ Sung Test Cases Cho Nhóm Văn Phòng (`eval_copywriting.json`) [AFK]
-- **Mục tiêu:** Xóa bỏ tình trạng dataset chỉ có 1 câu hỏi vô lý về "prompt nhiễu", giải phóng `ccba-markdown-document-processing`, `ccba-seminar-builder`, `ccba-copywriting` (kẹt 30%–75%).
-- **Hành động:**
-  1. Soạn thảo 5 test cases thực tế:
-     - Case 1: Thể thức công văn hành chính chuẩn NĐ 30/2020.
-     - Case 2: Chuẩn hóa Markdown bảng biểu từ tài liệu Word trích xuất.
-     - Case 3: Dàn ý và slide outline cho buổi seminar kỹ thuật.
-     - Case 4: Soạn thảo thông cáo truyền thông / bài viết chuyên môn BIM.
-     - Case 5: Quy chuẩn Typography và cấu trúc phân cấp đề mục.
-  2. Cập nhật `eval_copywriting.json` và kiểm tra lại điểm baseline.
-- **Đầu ra:** Tệp `eval_copywriting.json` hoàn chỉnh với 5 test cases chuẩn mực.
+### ✅ Ticket WF-04: [DONE] Mở Rộng Dataset Văn Phòng & Bộ Chấm Điểm Office (Issue #388)
+- **Mục tiêu:** Xóa bỏ tình trạng dataset chỉ có 1 câu hỏi vô lý về "prompt nhiễu", giải phóng `ccba-copywriting`, `ccba-markdown-document-processing`, `ccba-pptx`, `ccba-seminar-builder`, `ccba-xu-ly-van-phong` (kẹt 30%–75%).
+- **Hành động & Kết quả:**
+  1. Mở rộng dataset benchmark `eval_copywriting.json` với 5 test cases thực tế chuẩn mực:
+     - Case 1: Thể thức công văn hành chính chuẩn NĐ 30/2020 (`test_office_administrative_document_format_nd30`).
+     - Case 2: Chuẩn hóa Markdown bảng biểu GFM từ Word (`test_office_markdown_table_standardization`).
+     - Case 3: Dàn ý và cấu trúc slide thuyết trình PPTX (`test_office_presentation_slide_outline_structure`).
+     - Case 4: Đề cương bài giảng và khung chương trình Seminar kỹ thuật (`test_office_seminar_curriculum_and_agenda`).
+     - Case 5: Soạn thảo bài viết truyền thông chuyên môn kỹ thuật BIM & CTA (`test_office_bim_technical_copywriting_and_article`).
+  2. Nâng cấp bộ chấm điểm `OfficeStandardScorer` bao quát hài hòa thể thức NĐ 30/2020, typography hierarchy, markdown tables, layout slide PPTX, seminar curriculum và hook/CTA copywriting.
+  3. Củng cố nhánh giả lập `office` trong `simulation.py`, di chuyển lên trước generic BIM để ngăn chặn triệt để prompt hijacking.
+  4. Bổ sung unit và regression tests tại `test_tuner_ssot_fix.py`, xác nhận 100% composite score và 0 critical failure trên cả 5 test cases.
+- **Đầu ra:** Tệp `eval_copywriting.json` hoàn chỉnh với 5 test cases chuẩn mực, PR tích hợp vượt qua ADR-0058 Hard Completion Lock.
 
 ---
 

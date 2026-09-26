@@ -1083,7 +1083,7 @@ def get_legal_scorers() -> list[BaseScorer]:
 
 
 class OfficeStandardScorer(BaseScorer):
-    """Evaluates Office document formatting, typography, and administrative standards (NĐ 30/2020)."""
+    """Evaluates Office document formatting, typography, administrative standards (NĐ 30/2020), presentation slides, seminars, and technical copywriting."""
 
     def __init__(
         self,
@@ -1093,7 +1093,12 @@ class OfficeStandardScorer(BaseScorer):
     ) -> None:
         super().__init__(name=name, weight=weight, is_critical=is_critical)
         self.pattern = re.compile(
-            r"(Nghị định 30/2020|NĐ 30/2020|thể thức|soạn thảo|Times New Roman|bố cục|tiêu đề|Quốc hiệu|Nơi nhận|phông chữ|docx|pptx|slide|trình bày|typography|heading|bảng|mục lục|canh lề)",
+            r"(Nghị định 30/2020|NĐ 30/2020|thể thức|soạn thảo|Quốc hiệu|Tiêu ngữ|Nơi nhận|thẩm quyền|số/ký hiệu|địa danh|trích yếu|công văn|hành chính|"
+            r"Times New Roman|bố cục|tiêu đề|phông chữ|typography|heading|mục lục|canh lề|căn lề|hierarchy|phân cấp|bullet point|callout|"
+            r"bảng|bảng biểu|markdown table|gfm|ngắt dòng|line break|<br\s*/?>|"
+            r"docx|pptx|slide|trình bày|thuyết trình|presentation|visual bullet|"
+            r"seminar|agenda|curriculum|đề cương|bài giảng|mục tiêu đào tạo|handout|tài liệu phát tay|timeline|"
+            r"copywriting|truyền thông|bài viết|hook|call-to-action|cta|giải pháp)",
             re.IGNORECASE,
         )
 
@@ -1108,9 +1113,9 @@ class OfficeStandardScorer(BaseScorer):
             score=score,
             raw_output=matched,
             reasoning=(
-                "Office document standard verified (NĐ 30/2020 / typography / layout guidelines)"
+                "Office document standard verified (NĐ 30/2020 / typography / layout / slide / seminar / copywriting guidelines)"
                 if matched
-                else "Missing office document formatting or typography standards (NĐ 30/2020, layout, or style)"
+                else "Missing office document formatting, typography, slide, seminar, or copywriting standards"
             ),
             is_critical_fail=is_crit_fail,
         )
