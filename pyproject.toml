@@ -96,7 +96,9 @@ mypy_path = [
     "packages/ccba-pdf-prep/src",
     "packages/ccba-qc-core/src",
     "packages/ccba-legal-intel/src",
+    "packages/ccba-maskara/src",
 ]
+
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]

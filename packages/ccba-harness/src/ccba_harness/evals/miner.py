@@ -259,6 +259,9 @@ LEGACY_SKILL_FILE_MAP: dict[str, str] = {
     "ccba-skill-repair": "eval_skill_repair.json",
     "skill-repair": "eval_skill_repair.json",
     "skill_repair": "eval_skill_repair.json",
+    "ccba-design": "eval_visual_design.json",
+    "visual_design": "eval_visual_design.json",
+    "design": "eval_visual_design.json",
     "general_domain": "eval_general_domain.json",
     "general-domain": "eval_general_domain.json",
 }

@@ -205,6 +205,27 @@ def test_discover_skills_and_datasets_routing() -> None:
         assert mapping["ccba-adr-lifecycle"] == "eval_adr_lifecycle.json"
     if "ccba-skill-repair" in mapping:
         assert mapping["ccba-skill-repair"] == "eval_skill_repair.json"
+    if "ccba-design" in mapping:
+        assert mapping["ccba-design"] == "eval_visual_design.json"
+
+
+def test_visual_design_scorers_and_dataset_integration() -> None:
+    """Verify visual-design has dedicated scorers and valid dataset items."""
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.tuner import get_default_domain_scorers
+
+    scorers = get_default_domain_scorers("ccba-design")
+    scorer_names = [s.name for s in scorers]
+    assert "visual_design_tokens_and_colors" in scorer_names
+    assert "visual_design_brand_and_guidelines" in scorer_names
+    assert "visual_design_typography_and_assets" in scorer_names
+    assert "depth" in scorer_names
+
+    items = load_eval_dataset(skill_name="ccba-design")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_visual_design_color_palette_tokens" in item_ids
+    assert "test_visual_design_cip_corporate_identity_program" in item_ids
 
 
 def test_skill_repair_scorers_and_dataset_integration() -> None:

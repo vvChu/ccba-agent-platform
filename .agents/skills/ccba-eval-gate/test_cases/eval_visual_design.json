@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_visual_design_color_palette_tokens",
+    "input_prompt": "Hãy thiết kế bảng màu chuẩn thương hiệu và cấu trúc Design Tokens cho một nền tảng tư vấn xây dựng kỹ thuật số. Yêu cầu định nghĩa đầy đủ các nhóm màu Primary, Secondary, Neutral và Semantic kèm mã màu hex chuẩn.",
+    "golden_answer": null,
+    "rubric": "Phải thiết kế đầy đủ hệ thống màu sắc với các mã hex cụ thể (#hex): Primary color, Secondary color, Neutral palette (background, surface, text), Semantic palette (success, warning, error, info), định nghĩa cấu trúc Design Tokens nhất quán cho giao diện và tài liệu.",
+    "metadata": {
+      "phase": "Step 1: Color System & Tokens",
+      "rule": "Design Tokens & Hex Colors",
+      "target_skill": "ccba-design"
+    }
+  },
+  {
+    "id": "test_visual_design_typography_hierarchy_scale",
+    "input_prompt": "Hãy thiết lập cấu trúc phân cấp Typography và tỷ lệ Font Scale chuẩn mực cho bộ nhận diện và hệ thống xuất bản của CCBA. Yêu cầu chi tiết các cấp độ font size, line-height, font-weight từ H1 đến Caption.",
+    "golden_answer": null,
+    "rubric": "Phải xây dựng cấu trúc phân cấp Typography rõ ràng: tỷ lệ Font Scale (ví dụ: Major Third 1.25 hoặc Perfect Fourth 1.333), định nghĩa chi tiết H1, H2, H3, Body, Caption kèm font-weight, line-height và quy chuẩn sử dụng font chính/phụ (Headings & Body fonts).",
+    "metadata": {
+      "phase": "Step 2: Typography System",
+      "rule": "Font Scale & Hierarchy",
+      "target_skill": "ccba-design"
+    }
+  },
+  {
+    "id": "test_visual_design_logo_guidelines_safe_zone",
+    "input_prompt": "Hãy soạn thảo tài liệu hướng dẫn quy chuẩn sử dụng Logo thương hiệu CCBA: quy định về vùng an toàn (safe zone / clear space), kích thước hiển thị tối thiểu và các trường hợp nghiêm cấm sử dụng (don'ts).",
+    "golden_answer": null,
+    "rubric": "Phải quy định rõ ràng: vùng an toàn (Clear space / Safe zone) dựa trên tỷ lệ phần tử logo (ví dụ khoảng cách x từ chiều cao biểu trưng), kích thước hiển thị tối thiểu trên bản in và kỹ thuật số, nguyên tắc đặt logo trên các nền màu khác nhau, và các quy tắc nghiêm cấm làm sai lệch tỉ lệ/màu sắc.",
+    "metadata": {
+      "phase": "Step 3: Logo Standards",
+      "rule": "Logo Safe Zone & Usage Guidelines",
+      "target_skill": "ccba-design"
+    }
+  },
+  {
+    "id": "test_visual_design_banner_prompt_specifications",
+    "input_prompt": "Hãy thiết lập cấu trúc prompt tạo ảnh minh họa / banner chuyên nghiệp bằng công cụ AI (generate_image specifications) cho sự kiện ra mắt nền tảng tư vấn BIM, bao gồm phong cách mỹ thuật, thông số aspect ratio và vùng an toàn bố cục.",
+    "golden_answer": null,
+    "rubric": "Phải cung cấp cấu trúc prompt chi tiết cho generate_image: phong cách mỹ thuật (art style), bố cục (composition), thông số Aspect Ratio (16:9, 1:1, v.v.), chỉ dẫn ánh sáng, chi tiết chủ thể, và quy định vùng an toàn văn bản (safe zone chiếm 70-80% trung tâm) tránh bị cắt xén trên các nền tảng mạng xã hội.",
+    "metadata": {
+      "phase": "Step 4: Image Prompt & Banner Specs",
+      "rule": "Banner Specs & Prompt Structure",
+      "target_skill": "ccba-design"
+    }
+  },
+  {
+    "id": "test_visual_design_cip_corporate_identity_program",
+    "input_prompt": "Hãy thiết kế đề cương bộ ấn phẩm nhận diện văn phòng thương hiệu (CIP - Corporate Identity Program) toàn diện cho công ty tư vấn xây dựng, liệt kê danh mục ấn phẩm bàn giao và quy chuẩn đồng bộ thương hiệu.",
+    "golden_answer": null,
+    "rubric": "Phải liệt kê danh mục các ấn phẩm CIP trọng tâm: danh thiếp (business card), tiêu đề thư (letterhead), phong bì thư (envelope), bìa kẹp hồ sơ (folder), đồng phục, thẻ nhân viên và quà tặng doanh nghiệp; hướng dẫn đồng bộ hóa logo, mã màu hex và typography trên từng loại ấn phẩm.",
+    "metadata": {
+      "phase": "Step 5: Corporate Identity Program",
+      "rule": "CIP Deliverables & Brand Identity",
+      "target_skill": "ccba-design"
+    }
+  }
+]
