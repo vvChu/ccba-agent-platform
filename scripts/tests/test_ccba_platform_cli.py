@@ -19,6 +19,7 @@ def test_cli_parser_help_and_subcommands() -> None:
     assert "sync-spoke" in choices
     assert "ingest-legal" in choices
     assert "doc-audit" in choices
+    assert "find-seam" in choices
 
 
 def test_execute_ingest_legal_mock_flow() -> None:

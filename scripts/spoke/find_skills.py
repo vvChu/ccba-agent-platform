@@ -101,13 +101,13 @@ def find_skills(query: str = "") -> None:
         print()
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    args = sys.argv[1:]
+    args = sys.argv[1:] if argv is None else argv
     if args and args[0] in ("--seam", "--seams", "-s"):
         keyword = " ".join(args[1:]) if len(args) > 1 else ""
         try:

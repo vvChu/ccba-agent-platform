@@ -97,7 +97,7 @@ def _create_sample_report() -> SwarmSessionTelemetryReport:
     )
 
 
-def test_generate_dashboard_html_structure():
+def test_generate_dashboard_html_structure() -> None:
     """Verify generated HTML contains doctype, allowlisted Tailwind, and semantic variables."""
     report = _create_sample_report()
     html_out = generate_swarm_dashboard_html(report, title="Test Custom Dashboard")
@@ -113,7 +113,7 @@ def test_generate_dashboard_html_structure():
     assert "subagent-beta" in html_out
 
 
-def test_dashboard_embedded_json():
+def test_dashboard_embedded_json() -> None:
     """Verify that the embedded telemetry JSON script tag holds valid and complete data."""
     report = _create_sample_report()
     html_out = generate_swarm_dashboard_html(report)
@@ -135,7 +135,7 @@ def test_dashboard_embedded_json():
     assert parsed["subagents"][0]["conversation_id"] == "subagent-alpha-12345678"
 
 
-def test_dashboard_svg_charts():
+def test_dashboard_svg_charts() -> None:
     """Verify that SVG token chart and Gantt timeline are properly rendered with SVG tags."""
     report = _create_sample_report()
     html_out = generate_swarm_dashboard_html(report)
@@ -149,7 +149,7 @@ def test_dashboard_svg_charts():
     assert "view_file" in html_out
 
 
-def test_dashboard_empty_report():
+def test_dashboard_empty_report() -> None:
     """Verify that an empty report renders cleanly without raising errors."""
     empty_report = SwarmSessionTelemetryReport(
         parent_conversation_id="empty-session",
@@ -167,7 +167,7 @@ def test_dashboard_empty_report():
     assert "No subagent execution timeline data" in html_out
 
 
-def test_dashboard_budget_indicators():
+def test_dashboard_budget_indicators() -> None:
     """Verify budget badges for Compliant, Warning, and Exceeded states."""
     report = _create_sample_report()
 
@@ -186,7 +186,7 @@ def test_dashboard_budget_indicators():
     assert "Budget: Exceeded" in html_exceeded
 
 
-def test_render_swarm_dashboard_to_file(tmp_path: Path):
+def test_render_swarm_dashboard_to_file(tmp_path: Path) -> None:
     """Verify file rendering to disk via render_swarm_dashboard."""
     # Create dummy transcript structure
     logs_dir = tmp_path / ".system_generated" / "logs"
@@ -217,7 +217,7 @@ def test_render_swarm_dashboard_to_file(tmp_path: Path):
     assert "Swarm Telemetry & Token Runtime Dashboard" in content
 
 
-def test_cli_subagent_telemetry_dashboard(tmp_path: Path):
+def test_cli_subagent_telemetry_dashboard(tmp_path: Path) -> None:
     """Verify CLI command `python scripts/governance/subagent_telemetry.py dashboard`."""
     logs_dir = tmp_path / ".system_generated" / "logs"
     logs_dir.mkdir(parents=True)
@@ -253,7 +253,7 @@ def test_cli_subagent_telemetry_dashboard(tmp_path: Path):
     assert "Generated Swarm Telemetry Dashboard at:" in res.stdout
 
 
-def test_cli_ccba_harness_dashboard(tmp_path: Path):
+def test_cli_ccba_harness_dashboard(tmp_path: Path) -> None:
     """Verify CLI command `python -m ccba_harness telemetry dashboard`."""
     logs_dir = tmp_path / ".system_generated" / "logs"
     logs_dir.mkdir(parents=True)

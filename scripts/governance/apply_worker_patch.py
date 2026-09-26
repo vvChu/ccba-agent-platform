@@ -17,6 +17,7 @@ import re
 import sys
 import time
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -196,24 +197,24 @@ def dry_run(patches: list[PatchBlock], base_dir: Path) -> tuple[bool, list[str]]
 def apply_atomic(
     patches: list[PatchBlock],
     base_dir: Path,
-) -> tuple[bool, dict[Path, str], list[str]]:
+) -> tuple[bool, dict[Path, str | None], list[str]]:
     """Atomically apply patches after successful dry run. Returns (success, snapshot, logs)."""
     valid, dry_errors = dry_run(patches, base_dir)
     if not valid:
         return False, {}, dry_errors
 
-    snapshot: dict[Path, str] = {}
+    snapshot: dict[Path, str | None] = {}
     applied_files: set[str] = set()
 
     # Step 1: Create snapshot
     for p in patches:
         target = (base_dir / p.file_path).resolve()
         if target not in snapshot:
-            snapshot[target] = target.read_text(encoding="utf-8")
+            snapshot[target] = target.read_text(encoding="utf-8") if target.exists() else None
 
     # Step 2: Apply sequentially
     try:
-        current_texts: dict[Path, str] = dict(snapshot)
+        current_texts: dict[Path, str] = {k: (v or "") for k, v in snapshot.items()}
         for p in patches:
             target = (base_dir / p.file_path).resolve()
             current_texts[target] = current_texts[target].replace(
@@ -230,11 +231,15 @@ def apply_atomic(
         return False, {}, [f"Atomic apply failed, rolled back: {exc}"]
 
 
-def rollback(snapshot: dict[Path, str]) -> None:
+def rollback(snapshot: Mapping[Path, str | None]) -> None:
     """Rollback all modified files to their original snapshot states."""
     for target, original_content in snapshot.items():
         try:
-            target.write_text(original_content, encoding="utf-8")
+            if original_content is None:
+                if target.exists():
+                    target.unlink()
+            else:
+                target.write_text(original_content, encoding="utf-8")
         except Exception as e:
             print(f"[Error] Failed to rollback {target}: {e}", file=sys.stderr)
 
@@ -389,7 +394,7 @@ def execute_swarm_patches(
             except ImportError:
                 sys.path.insert(0, str(HUB_ROOT / "packages" / "ccba-harness" / "src"))
                 from ccba_harness.verifier import resolve_preset_commands
-            preset_cmds = resolve_preset_commands(preset, target=target, base_dir=base_dir)
+            preset_cmds = resolve_preset_commands(preset, target=target)
             cmds.extend(preset_cmds)
 
         if not cmds:
