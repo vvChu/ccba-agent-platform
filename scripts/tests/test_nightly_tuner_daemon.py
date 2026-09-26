@@ -552,3 +552,65 @@ def test_daemon_explicit_concurrency_and_budgets_not_overwritten_by_env(
     assert daemon.concurrency == 3
     assert daemon.per_skill_mutation_budget == 150_000
     assert daemon.hard_max_tokens_per_skill == 400_000
+
+
+def test_nightly_tuner_cli_no_flags_allows_env_resolution(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify that when no CLI flags are passed, env vars are resolved rather than shadowed by defaults."""
+    from typing import Any
+
+    import scripts.eval.nightly_tuner_daemon as ntd
+
+    daemon_kwargs: dict[str, Any] = {}
+
+    class MockDaemon:
+        def __init__(self, **kwargs: Any) -> None:
+            daemon_kwargs.update(kwargs)
+
+        def run_nightly_batch(self, dry_run: bool = False) -> None:
+            pass
+
+    monkeypatch.setattr(ntd, "NightlyTunerDaemon", MockDaemon)
+    monkeypatch.setattr(sys, "argv", ["nightly_tuner_daemon.py", "--dry-run"])
+
+    ntd.main()
+    # Ensure neither concurrency, per_skill_mutation_budget, nor hard_max_tokens_per_skill are populated in kwargs
+    assert "concurrency" not in daemon_kwargs
+    assert "per_skill_mutation_budget" not in daemon_kwargs
+    assert "hard_max_tokens_per_skill" not in daemon_kwargs
+
+
+def test_nightly_tuner_cli_explicit_flags_override_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify CLI flags override environment variables when explicitly passed."""
+    from typing import Any
+
+    import scripts.eval.nightly_tuner_daemon as ntd
+
+    daemon_kwargs: dict[str, Any] = {}
+
+    class MockDaemon:
+        def __init__(self, **kwargs: Any) -> None:
+            daemon_kwargs.update(kwargs)
+
+        def run_nightly_batch(self, dry_run: bool = False) -> None:
+            pass
+
+    monkeypatch.setattr(ntd, "NightlyTunerDaemon", MockDaemon)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "nightly_tuner_daemon.py",
+            "--concurrency",
+            "7",
+            "--per-skill-mutation-budget",
+            "350000",
+            "--hard-max-tokens-per-skill",
+            "800000",
+            "--dry-run",
+        ],
+    )
+
+    ntd.main()
+    assert daemon_kwargs.get("concurrency") == 7
+    assert daemon_kwargs.get("per_skill_mutation_budget") == 350_000
+    assert daemon_kwargs.get("hard_max_tokens_per_skill") == 800_000
