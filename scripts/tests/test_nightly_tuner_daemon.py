@@ -504,3 +504,32 @@ def test_nightly_tuner_cli_no_telegram_flag(monkeypatch: pytest.MonkeyPatch) -> 
 
     ntd.main()
     assert daemon_kwargs.get("no_telegram") is True
+
+
+def test_nightly_tuner_cli_concurrency_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify CLI parses --concurrency and passes it to NightlyTunerDaemon."""
+    from typing import Any
+
+    import scripts.eval.nightly_tuner_daemon as ntd
+
+    daemon_kwargs: dict[str, Any] = {}
+
+    class MockDaemon:
+        def __init__(self, **kwargs: Any) -> None:
+            daemon_kwargs.update(kwargs)
+
+        def run_nightly_batch(self, dry_run: bool = False) -> None:
+            pass
+
+    monkeypatch.setattr(ntd, "NightlyTunerDaemon", MockDaemon)
+    monkeypatch.setattr(sys, "argv", ["nightly_tuner_daemon.py", "--concurrency", "8", "--dry-run"])
+
+    ntd.main()
+    assert daemon_kwargs.get("concurrency") == 8
+
+
+def test_daemon_concurrency_env_resolution(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify NightlyTunerDaemon resolves CCBA_TUNER_CONCURRENCY when default concurrency=5."""
+    monkeypatch.setenv("CCBA_TUNER_CONCURRENCY", "9")
+    daemon = NightlyTunerDaemon(root=project_root)
+    assert daemon.concurrency == 9
