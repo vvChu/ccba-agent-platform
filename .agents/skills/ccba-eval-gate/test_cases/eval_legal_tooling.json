@@ -1,0 +1,57 @@
+[
+  {
+    "id": "test_legal_tooling_vip_crawler_retry_and_session",
+    "input_prompt": "Hãy mô tả giải pháp kỹ thuật và cơ chế vận hành cho pipeline cào văn bản pháp quy từ hệ thống Thư Viện Pháp Luật (TVPL) phiên VIP. Yêu cầu làm rõ cơ chế quản lý xác thực phiên làm việc (session cookies), kỹ thuật phát hiện và cảnh báo Captcha barrier, chiến lược retry tự động với Exponential Backoff khi gặp mã lỗi HTTP 429 (Rate Limit) hoặc gián đoạn mạng, và cơ chế ghi log kiểm toán an toàn không làm lộ thông tin tài khoản VIP.",
+    "golden_answer": null,
+    "rubric": "Phải thiết kế trọn vẹn giải pháp TVPL VIP crawler: cơ chế quản lý session cookie an toàn, cơ chế phát hiện Captcha barrier, chiến lược retry tự động với Exponential Backoff khi gặp HTTP 429 hoặc lỗi kết nối, và cơ chế audit logging bảo vệ an toàn thông tin phiên đăng nhập.",
+    "metadata": {
+      "phase": "Step 1: VIP Crawler Session & Anti-Throttle",
+      "rule": "TVPL VIP Session Management & Exponential Backoff Retry",
+      "target_skill": "ccba-tvpl-vip-crawler"
+    }
+  },
+  {
+    "id": "test_legal_tooling_okf_v24_and_sha256_provenance",
+    "input_prompt": "Hãy trình bày quy trình chuyển đổi và chuẩn hóa văn bản quy phạm pháp luật trích xuất từ tệp DOCX/PDF công báo sang định dạng tri thức chuẩn OKF v2.4 (Open Knowledge Format). Yêu cầu cấu trúc đầy đủ YAML frontmatter metadata, trích dẫn nội dung điều khoản nguyên văn (verbatim grounding) và cơ chế đóng dấu băm mật mã SHA-256 (SHA-256 cryptographic provenance stamping) theo Hiến pháp Nền tảng ADR-0059.",
+    "golden_answer": null,
+    "rubric": "Phải chuẩn hóa văn bản sang OKF v2.4 chuẩn mực: đầy đủ YAML frontmatter metadata (mã hiệu, ngày ban hành, cơ quan ban hành, hiệu lực), nội dung điều khoản nguyên văn verbatim 100% không suy diễn, và tem băm mật mã SHA-256 (64 ký tự hex) bảo đảm tính toàn vẹn nguồn gốc theo ADR-0059.",
+    "metadata": {
+      "phase": "Step 2: OKF v2.4 Standard & Cryptographic Provenance",
+      "rule": "OKF v2.4 Frontmatter, Verbatim Grounding & SHA-256 Stamp",
+      "target_skill": "ccba-legal-ingest"
+    }
+  },
+  {
+    "id": "test_legal_tooling_diff_engine_and_vbhn_consolidation",
+    "input_prompt": "Hãy phân tích kiến trúc và thuật toán vận hành của VBHN Engine trong việc so khớp sai khác (diffing) và hợp nhất văn bản pháp quy. Làm thế nào để engine tự động bóc tách các điều khoản sửa đổi, bổ sung, bãi bỏ hoặc thay thế giữa văn bản sửa đổi và văn bản gốc, hợp nhất các điều khoản mới vào thân văn bản theo quy chuẩn Văn bản Hợp nhất, và cập nhật bảng ánh xạ lịch sử sửa đổi (amendment history map)?",
+    "golden_answer": null,
+    "rubric": "Phải làm rõ thuật toán VBHN Engine: so khớp diffing ngữ nghĩa điều khoản, bóc tách chính xác các hành động sửa đổi/bổ sung/bãi bỏ/thay thế, hợp nhất chuẩn xác vào văn bản gốc, và duy trì bảng ánh xạ lịch sử sửa đổi cùng trạng thái hiệu lực từng điều khoản.",
+    "metadata": {
+      "phase": "Step 3: Legal Diff Engine & VBHN Consolidation",
+      "rule": "Legal Semantic Diff, Clause Consolidation & Amendment Mapping",
+      "target_skill": "ccba-legal-document-tracker"
+    }
+  },
+  {
+    "id": "test_legal_tooling_completion_checklist_and_tree_structure",
+    "input_prompt": "Hãy thiết kế cấu trúc cây thư mục và danh mục hồ sơ hoàn thành công trình (HSHT) cho dự án đầu tư xây dựng công trình dân dụng cấp I, tuân thủ nghiêm ngặt quy định của Nghị định 06/2021/NĐ-CP và Nghị định 35/2023/NĐ-CP. Danh mục phải phân loại rõ ràng theo từng giai đoạn thực hiện dự án (chuẩn bị đầu tư, thi công xây dựng, nghiệm thu bàn giao), quy định cụ thể thành phần hồ sơ pháp lý, hồ sơ quản lý chất lượng và bản vẽ hoàn công.",
+    "golden_answer": null,
+    "rubric": "Phải xây dựng danh mục và cấu trúc cây thư mục HSHT chuẩn mực: phân cấp thư mục khoa học theo NĐ 06/2021/NĐ-CP và NĐ 35/2023/NĐ-CP qua 3 giai đoạn (chuẩn bị, thi công, nghiệm thu), phân định rõ hồ sơ pháp lý, biên bản nghiệm thu chất lượng, kết quả thí nghiệm và bản vẽ hoàn công, hỗ trợ xuất định dạng Markdown và Word.",
+    "metadata": {
+      "phase": "Step 4: Completion Dossier & Directory Tree",
+      "rule": "Decree 06/2021/ND-CP Completion Checklist & Hierarchy",
+      "target_skill": "ccba-completion-checklist"
+    }
+  },
+  {
+    "id": "test_legal_tooling_verbatim_grounding_and_acquisition_guard",
+    "input_prompt": "Trình bày rào chắn bảo vệ tính chân thực của văn bản pháp lý (Mandatory Acquisition Invariant & Legal Verbatim Grounding) theo ADR-0059. Khi hệ thống phát hiện một văn bản quy phạm pháp luật bị thiếu trong cơ sở dữ liệu tri thức nội bộ, những hành động nào bị NGHIÊM CẤM đối với AI Agent, và quy trình xử lý bắt buộc (kích hoạt crawler hoặc yêu cầu tệp nguồn từ người dùng) phải được thực thi như thế nào?",
+    "golden_answer": null,
+    "rubric": "Phải nêu bật quy chuẩn bất biến của ADR-0059: CẤM TUYỆT ĐỐI việc sinh điều khoản pháp lý giả định (synthetic/mock statutory clauses) hoặc suy đoán nội dung luật; BẮT BUỘC phải dừng quy trình và kích hoạt crawler tự động (TVPLCrawler) hoặc yêu cầu người dùng cung cấp tệp nguồn chính thức; mọi trích dẫn phải được xác thực bằng mã băm SHA-256 từ văn bản gốc.",
+    "metadata": {
+      "phase": "Step 5: Verbatim Grounding & Acquisition Guardrail",
+      "rule": "ADR-0059 Verbatim Grounding & Anti-Synthetic Clause Invariant",
+      "target_skill": "ccba-legal-ingest"
+    }
+  }
+]

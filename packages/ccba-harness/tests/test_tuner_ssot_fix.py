@@ -237,37 +237,144 @@ def test_office_ssot_archetype_routing() -> None:
     assert "anti_debris" in scorer_names
     assert "depth" in scorer_names
 
-    # Verify dataset loading
-    items = load_eval_dataset(skill_name="ccba-copywriting")
-    assert len(items) == 5
-    item_ids = [it.id for it in items]
-    assert "test_office_administrative_document_format_nd30" in item_ids
-    assert "test_office_markdown_table_standardization" in item_ids
-    assert "test_office_presentation_slide_outline_structure" in item_ids
-    assert "test_office_seminar_curriculum_and_agenda" in item_ids
-    assert "test_office_bim_technical_copywriting_and_article" in item_ids
+    # Verify dataset loading across all 5 office skills
+    for sname in office_skills:
+        items = load_eval_dataset(skill_name=sname)
+        assert len(items) == 5, f"Skill {sname} should load 5 items, got {len(items)}"
+        item_ids = [it.id for it in items]
+        assert "test_office_administrative_document_format_nd30" in item_ids
+        assert "test_office_markdown_table_standardization" in item_ids
+        assert "test_office_presentation_slide_outline_structure" in item_ids
+        assert "test_office_seminar_curriculum_and_agenda" in item_ids
+        assert "test_office_bim_technical_copywriting_and_article" in item_ids
 
 
 @pytest.mark.asyncio
 async def test_office_copywriting_simulation_mock_task_and_scoring() -> None:
-    """Verify build_mock_agent_task generates authentic office responses scoring 100% across all 5 benchmark items."""
+    """Verify build_mock_agent_task generates authentic office responses scoring 100% across all 5 skills and 5 benchmark items."""
     from pathlib import Path
 
     from ccba_harness.evals.archetypes import get_default_domain_scorers
     from ccba_harness.evals.runner import load_eval_dataset
     from ccba_harness.evals.simulation import build_mock_agent_task
 
-    skill_path = Path(".agents/skills/ccba-copywriting/SKILL.md")
+    office_skills = [
+        "ccba-copywriting",
+        "ccba-markdown-document-processing",
+        "ccba-pptx",
+        "ccba-seminar-builder",
+        "ccba-xu-ly-van-phong",
+    ]
+
+    for sname in office_skills:
+        skill_path = Path(f".agents/skills/{sname}/SKILL.md")
+        content = (
+            skill_path.read_text(encoding="utf-8")
+            if skill_path.exists()
+            else f"{sname} skill content"
+        )
+        dataset = load_eval_dataset(skill_name=sname)
+        assert len(dataset) == 5, f"Skill {sname} should load 5 items, got {len(dataset)}"
+
+        task = build_mock_agent_task(content, sname)
+        scorers = get_default_domain_scorers(sname)
+
+        for item in dataset:
+            output = task(item)
+            assert "<legal_context>" not in output, (
+                f"Legal context leaked into {item.id} for {sname}"
+            )
+            assert "Uniclass" not in output, f"BIM Uniclass hijacked {item.id} for {sname}"
+            assert "Quy chuẩn Thiết kế Thị giác" not in output, (
+                f"Visual design hijacked {item.id} for {sname}"
+            )
+
+            # Score the output against all 4 domain scorers
+            for s in scorers:
+                res = await s.score(output, item)
+                assert not res.is_critical_fail, (
+                    f"Critical failure on {s.name} for {item.id} ({sname})"
+                )
+                assert res.score == 1.0, (
+                    f"Expected 1.0 on {s.name} for {item.id} ({sname}), got {res.score}"
+                )
+
+
+def test_legal_tooling_ssot_archetype_routing() -> None:
+    """Verify all 4 statutory engineering skills route to legal_tooling archetype and eval_legal_tooling.json."""
+    from ccba_harness.evals.archetypes import (
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+    from ccba_harness.evals.runner import load_eval_dataset
+
+    tooling_skills = [
+        "ccba-tvpl-vip-crawler",
+        "ccba-legal-ingest",
+        "ccba-legal-document-tracker",
+        "ccba-completion-checklist",
+    ]
+    for sname in tooling_skills:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "legal_tooling", f"{sname} should resolve to legal_tooling"
+        assert resolve_domain_dataset(sname) == "eval_legal_tooling.json"
+
+    # Disjoint invariance: Advisory legal skills must strictly remain in legal archetype
+    advisory_skills = [
+        "ccba-legal-advisor",
+        "ccba-legal-intel",
+        "bigbim-vbpl-digest",
+    ]
+    for sname in advisory_skills:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "legal", f"{sname} should resolve to legal"
+        assert resolve_domain_dataset(sname) == "eval_legal_intel.json"
+
+    # Verify scorers
+    scorers = get_default_domain_scorers("ccba-tvpl-vip-crawler")
+    scorer_names = [s.name for s in scorers]
+    assert "legal_tooling_integrity" in scorer_names
+    assert "sha256_provenance" in scorer_names
+    assert "progressive_disclosure_links" in scorer_names
+    assert "depth" in scorer_names
+
+    sha_scorer = next(s for s in scorers if s.name == "sha256_provenance")
+    assert sha_scorer.is_critical is True
+
+    # Verify dataset loading
+    items = load_eval_dataset(skill_name="ccba-tvpl-vip-crawler")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_legal_tooling_vip_crawler_retry_and_session" in item_ids
+    assert "test_legal_tooling_okf_v24_and_sha256_provenance" in item_ids
+    assert "test_legal_tooling_diff_engine_and_vbhn_consolidation" in item_ids
+    assert "test_legal_tooling_completion_checklist_and_tree_structure" in item_ids
+    assert "test_legal_tooling_verbatim_grounding_and_acquisition_guard" in item_ids
+
+
+@pytest.mark.asyncio
+async def test_legal_tooling_simulation_mock_task_and_scoring() -> None:
+    """Verify build_mock_agent_task generates authentic legal_tooling responses scoring 100% across all 5 benchmark items."""
+    from pathlib import Path
+
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    skill_path = Path(".agents/skills/ccba-tvpl-vip-crawler/SKILL.md")
     content = (
         skill_path.read_text(encoding="utf-8")
         if skill_path.exists()
-        else "ccba-copywriting skill content"
+        else "ccba-tvpl-vip-crawler skill content"
     )
-    dataset = load_eval_dataset(skill_name="ccba-copywriting")
+    dataset = load_eval_dataset(skill_name="ccba-tvpl-vip-crawler")
     assert len(dataset) == 5
 
-    task = build_mock_agent_task(content, "ccba-copywriting")
-    scorers = get_default_domain_scorers("ccba-copywriting")
+    task = build_mock_agent_task(content, "ccba-tvpl-vip-crawler")
+    scorers = get_default_domain_scorers("ccba-tvpl-vip-crawler")
 
     for item in dataset:
         output = task(item)
