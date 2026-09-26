@@ -152,6 +152,7 @@ disallow_untyped_decorators = false
 [tool.pytest.ini_options]
 minversion = "7.0"
 pythonpath = [
+    ".",
     "packages/ccba-ai/src",
     "packages/ccba-diagram/src",
     "packages/ccba-harness/src",
