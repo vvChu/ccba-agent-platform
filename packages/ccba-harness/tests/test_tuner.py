@@ -1213,10 +1213,14 @@ def test_get_default_domain_scorers_risk_and_orchestration():
     assert "progressive_disclosure_links" in orch_names
     assert "handoff_protocol" in orch_names
 
-    # 3. platform-loader / ccba-handoff / ccba-issue-tree
-    for name in ["platform-loader", "ccba-handoff", "ccba-issue-tree"]:
+    # 3. platform-loader / ccba-handoff / ccba-platform
+    for name in ["platform-loader", "ccba-handoff", "ccba-platform"]:
         scs = get_default_domain_scorers(name)
         assert any(s.name == "single_writer_invariant" for s in scs)
+
+    # 3b. ccba-issue-tree is routed to platform_tooling
+    pt_scs = get_default_domain_scorers("ccba-issue-tree")
+    assert any(s.name == "platform_tooling_integrity" for s in pt_scs)
 
     # 4. bigbim-governance
     gov_scorers = get_default_domain_scorers("bigbim-governance")
@@ -1696,6 +1700,8 @@ def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
     assert daemon._resolve_dataset_file("bigbim-governance") == "eval_bigbim_governance.json"
     assert daemon._resolve_dataset_file("bigbim-rase") == "eval_bigbim_rase.json"
     assert daemon._resolve_dataset_file("ccba-design") != "eval_codebase_engineering.json"
+    assert daemon._resolve_dataset_file("ccba-create-pr") == "eval_platform_tooling.json"
+    assert daemon._resolve_dataset_file("ccba-teamwork") == "eval_agent_orchestration.json"
 
 
 def test_get_default_domain_scorers_expanded_archetypes():
@@ -1707,6 +1713,11 @@ def test_get_default_domain_scorers_expanded_archetypes():
     assert "hard_completion_lock" in coding_names
     pdf_prep_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
     assert "hard_completion_lock" in pdf_prep_names
+
+    # Platform Tooling / Git & Utilities
+    platform_names = [s.name for s in get_default_domain_scorers("ccba-create-pr")]
+    assert "platform_tooling_integrity" in platform_names
+    assert "execution_guardrail" in platform_names
 
     # Legal Tooling / Checklist
     tooling_names = [s.name for s in get_default_domain_scorers("ccba-completion-checklist")]
@@ -2089,7 +2100,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 16
+    assert len(DOMAIN_ARCHETYPES) == 17
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -2114,6 +2125,7 @@ def test_archetype_ssot_resolution():
         ("bigbim-rase", "eval_bigbim_rase.json"),
         ("bigbim-classification", "eval_bigbim_classification.json"),
         ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
+        ("ccba-create-pr", "eval_platform_tooling.json"),
         ("ccba-skill-repair", "eval_skill_repair.json"),
         ("platform-loader", "eval_agent_orchestration.json"),
     ]

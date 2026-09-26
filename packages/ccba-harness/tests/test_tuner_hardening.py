@@ -180,14 +180,14 @@ def test_tuner_fast_halt_when_mutation_matches_baseline_after_kept_iteration(
 
 
 def test_propose_mutation_orchestration_archetype_keywords(tmp_path: Path) -> None:
-    """Verify ccba-issue-tree and orchestration archetype skills receive the orchestration template."""
+    """Verify ccba-teamwork and orchestration archetype skills receive the orchestration template."""
     target = tmp_path / "SKILL.md"
-    base_content = "---\nname: ccba-issue-tree\ndescription: Test\n---\n# Issue Tree Workflow\n"
+    base_content = "---\nname: ccba-teamwork\ndescription: Test\n---\n# Teamwork Workflow\n"
     target.write_text(base_content, encoding="utf-8")
 
     config = RatchetConfig(
         target_file=str(target),
-        skill_name="ccba-issue-tree",
+        skill_name="ccba-teamwork",
     )
     optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
 
@@ -207,7 +207,7 @@ def test_propose_mutation_orchestration_archetype_keywords(tmp_path: Path) -> No
     )
 
     # Verify other orchestration keywords also receive orchestration template
-    for keyword in ["teamwork", "orchestrat", "platform", "handoff", "wayfinder"]:
+    for keyword in ["teamwork", "orchestrat", "platform", "handoff"]:
         cfg = RatchetConfig(
             target_file=str(target),
             skill_name=f"test-{keyword}-skill",

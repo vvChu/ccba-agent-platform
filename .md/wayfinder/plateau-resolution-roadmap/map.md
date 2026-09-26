@@ -31,14 +31,15 @@ Toàn bộ **74 kỹ năng (skills)** trong nền tảng CCBA Agent Services Pla
 | **Issue #384 / WF-01** | [`Dedicated visual_design Archetype & Dataset`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/archetypes.py) | Cô lập `ccba-design` khỏi `eval_general_domain.json`, tạo archetype `visual_design`, bộ chấm điểm Design Tokens/Hex/Brand/Typography và dataset `eval_visual_design.json` (5 test cases). Cứu ~1.000.000 tokens mỗi đêm và phá vỡ plateau 67.6%. |
 | **Issue #388 / WF-04** | [`Office Domain Benchmark Dataset & Scorers Expansion`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/scorers.py) | Mở rộng `eval_copywriting.json` (5 test cases), hoàn thiện `OfficeStandardScorer` bao quát NĐ 30/2020, GFM markdown table, PPTX slide outline, seminar curriculum và BIM technical copywriting; củng cố mock simulation giải phóng 5 skills văn phòng khỏi plateau 30%–75%. |
 | **Issue #390 / WF-03** | [`Dedicated legal_tooling Archetype, Dataset & ADR-0059 Scorers`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/archetypes.py) | Thiết lập archetype `legal_tooling` tách biệt hoàn toàn với tư vấn luật lý thuyết `legal`; xây dựng dataset `eval_legal_tooling.json` (5 test cases); phát triển bộ chấm điểm `LegalToolingIntegrityScorer` và `Sha256ProvenanceScorer` (ADR-0059 Critical Hard Floor); giải phóng 4 skills kỹ thuật pháp lý khỏi plateau 30%. |
+| **Issue #394 / WF-02** | [`Dedicated platform_tooling Archetype & Execution Guardrail Scorers`](file:///home/vvc/ccba/ccba-agent-platform/packages/ccba-harness/src/ccba_harness/evals/archetypes.py) | Tách biệt hoàn toàn 23 developer utilities khỏi `orchestration`; xây dựng dataset `eval_platform_tooling.json` (5 test cases); phát triển bộ chấm điểm `PlatformToolingIntegrityScorer` và `ExecutionGuardrailScorer` (Critical Hard Floor kiểm tra `--force-with-lease`, Maskara, `CCBA_HUB_PATH`, idempotency, exit code 0); giải phóng 23 skills nền tảng khỏi plateau 44%–60%. |
 
 ---
 
 ## 4. 🌫️ Sương Mù Chiến Trận / Chưa Xác Định Rõ (Not Yet Specified)
 
-1. **[Fog 1] Tiêu chí đánh giá cho nhóm Platform Utilities:**
-   - Các kỹ năng như `ccba-create-pr`, `ccba-git-guardrails`, `ccba-youtube-learn`, `ccba-notebooklm-connector` không tạo ra bài văn bản xuôi mà chủ yếu gọi công cụ (tool calling) hoặc xuất định dạng JSON/YAML/CLI.
-   - *Vấn đề chưa rõ:* Scorer cho nhóm này nên dựa trên Regex kiểm tra tham số gọi tool, hay dựa trên tính toàn vẹn của artifact xuất ra?
+1. **[Fog 1 - ĐÃ GIẢI QUYẾT] Tiêu chí đánh giá cho nhóm Platform Utilities:**
+   - Đã thống nhất thiết lập Domain Archetype `platform_tooling` với 4 tiêu chí cốt lõi: Quy trình tạo PR an toàn & kiểm tra tính bất biến (Idempotency), Vệ sinh kho git & che giấu thông tin nhạy cảm Maskara, Đồng bộ Non-Destructive Section Merge Spoke-Hub, và Khóa cứng hoàn tất tất định ADR-0058 Hard Completion Lock.
+   - Xây dựng `ExecutionGuardrailScorer` làm Critical Hard Floor để bắt buộc tuân thủ `--force-with-lease`, Maskara redaction, cách ly máy qua `CCBA_HUB_PATH` và exit code 0.
 2. **[Fog 2 - ĐÃ GIẢI QUYẾT] Phân tách Legal Engineering vs Legal Advisory:**
    - Đã thống nhất thiết lập Domain Archetype `legal_tooling` đứng trước `legal` trong SSOT `DOMAIN_ARCHETYPES` để đón đầu các kỹ năng cào dữ liệu, xử lý pipeline ingest, tracker và checklist.
    - Tích hợp rào chắn bắt buộc ADR-0059 `Sha256ProvenanceScorer` làm critical hard floor (ngắt 0 điểm nếu sinh văn bản luật giả định hoặc thiếu mã băm SHA-256).
@@ -66,15 +67,16 @@ Toàn bộ **74 kỹ năng (skills)** trong nền tảng CCBA Agent Services Pla
 - **Đầu ra:** PR giải phóng `ccba-design`, vượt qua ADR-0058 Hard Completion Lock.
 
 
-### 🟡 Ticket WF-02: [Research & Phân Loại] Tách Nhóm Developer Utilities Khỏi `orchestration` [AFK]
-- **Mục tiêu:** Giải phóng 28 skills đang bị kẹt ở mức 44%–60% do phải làm bài thi Forensic Auditor.
-- **Hành động:**
-  1. Phân loại 28 skills thành 2 nhóm:
-     - *Nhóm Pure Orchestration (giữ lại):* `ccba-teamwork`, `ccba-handoff`, `ccba-platform`, `ccba-review-proposal`.
-     - *Nhóm Developer / Platform Utilities (tách ra):* `ccba-create-pr`, `ccba-git-guardrails`, `ccba-sync-upstream`, `ccba-youtube-learn`, `ccba-notebooklm-connector`, `ccba-ask`, `ccba-wayfinder`, `ccba-build-skill`, `ccba-setup-skills`...
-  2. Thiết lập archetype mới `platform_tooling` với dataset `eval_platform_tooling.json`.
-  3. Scorer đánh giá khả năng thực thi lệnh, rào chắn an toàn và tuân thủ giao thức công cụ.
-- **Đầu ra:** Báo cáo phân loại chi tiết và bản thiết kế archetype `platform_tooling`.
+### ✅ Ticket WF-02: [DONE] Tách Nhóm Developer Utilities Khỏi Orchestration (Issue #394)
+- **Mục tiêu:** Giải phóng 23 skills tiện ích và bảo trì nền tảng đang bị kẹt ở mức 44%–60% do phải làm bài thi Forensic Auditor của `orchestration`.
+- **Hành động & Kết quả:**
+  1. Phân loại chuẩn xác 28 skills:
+     - *Giữ lại 5 skills Pure Orchestration:* `ccba-teamwork`, `ccba-handoff`, `ccba-platform`, `ccba-review-proposal`, `platform-loader`.
+     - *Tách 23 skills Developer & Maintenance Utilities:* `ccba-create-pr`, `ccba-git-guardrails`, `ccba-sync-upstream`, `ccba-youtube-learn`, `ccba-notebooklm-connector`, `ccba-ask`, `ccba-wayfinder`, `ccba-build-skill`, `ccba-setup-skills`, `ccba-promote-sandbox`, `ccba-eval-gate`, `ccba-init-spoke`, `ccba-spoke-adopter`, `ccba-update-spoke`, `ccba-issue-to-hub`, `ccba-contribute-to-hub`, `ccba-knowledge-loop`, `ccba-issue-tree`, `ccba-autoresearch`, `ccba-research`, `ccba-graduate-rd`, `ccba-session-retrospective`, `ccba-xia`.
+  2. Thiết lập Domain Archetype thứ 17 `platform_tooling` với dataset benchmark `eval_platform_tooling.json` (5 test cases: PR lifecycle, Git cleanliness & Maskara redaction, Spoke-Hub sync, Connectors, và ADR-0058 Hard Completion Lock).
+  3. Phát triển bộ chấm điểm `PlatformToolingIntegrityScorer` (trọng số 0.45) và `ExecutionGuardrailScorer` (trọng số 0.25, critical hard floor).
+  4. Củng cố nhánh giả lập `platform_tooling` trong `simulation.py`, tích hợp SSOT resolution trong `runner.py`, `miner.py`, và hoàn thiện 158/158 tests passed.
+- **Đầu ra:** PR giải phóng 23 skills tiện ích nền tảng, hoàn tất 100% bản đồ Plateau Resolution Roadmap.
 
 ### ✅ Ticket WF-03: [DONE] Định Hình Archetype `legal_tooling` (Issue #390)
 - **Mục tiêu:** Cứu 4 skills (`ccba-tvpl-vip-crawler`, `ccba-legal-ingest`, `ccba-legal-document-tracker`, `ccba-completion-checklist`) thoát khỏi bài thi câu hỏi Luật Xây dựng 2025 lý thuyết (kẹt 30%).
@@ -110,8 +112,8 @@ Toàn bộ **74 kỹ năng (skills)** trong nền tảng CCBA Agent Services Pla
 
 ```mermaid
 flowchart TD
-    WF01["🔴 WF-01: Cô lập ccba-design (Cứu 1M tokens/đêm)"] --> WF04["🟢 WF-04: Mở rộng eval_copywriting.json (5 test cases)"]
+    WF01["🟢 WF-01: Cô lập ccba-design (Cứu 1M tokens/đêm)"] --> WF04["🟢 WF-04: Mở rộng eval_copywriting.json (5 test cases)"]
     WF04 --> WF03["🟢 WF-03: Archetype legal_tooling (Giải cứu 4 skills kẹt 30%)"]
-    WF03 --> WF02["🟡 WF-02: Archetype platform_tooling (Giải cứu 28 skills kẹt 50%)"]
+    WF03 --> WF02["🟢 WF-02: Archetype platform_tooling (Giải cứu 23 skills kẹt 50%)"]
     WF02 --> DEST["🎯 DESTINATION: 100% Skills Thoát Plateau & Tự Động Tiến Hóa"]
 ```

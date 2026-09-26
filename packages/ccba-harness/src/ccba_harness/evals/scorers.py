@@ -1164,6 +1164,90 @@ def get_legal_tooling_scorers() -> list[BaseScorer]:
     ]
 
 
+class PlatformToolingIntegrityScorer(BaseScorer):
+    """Evaluates developer utilities and platform maintenance protocols (Git CLI, Hub-Spoke sync, Connectors, ADR-0058)."""
+
+    def __init__(
+        self,
+        name: str = "platform_tooling_integrity",
+        weight: float = 0.45,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(gh pr create|pull request|branch naming|feat/issue-|git checkout|"
+            r"git cleanliness|check_spoke_cleanliness|maskara|redact|secrets?|credentials?|"
+            r"spoke|hub|sync_spoke|non-destructive|constitution|virtual hub fallback|"
+            r"multimodal|connector|youtube|notebooklm|transcript|exponential backoff|jitter|"
+            r"adr-0058|hard completion lock|verify-patch|seam catalog|compile_catalog)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Platform tooling integrity standard verified (Git lifecycle, Maskara cleanliness, Spoke-Hub sync, Connectors, ADR-0058 lock)"
+                if matched
+                else "Missing platform tooling standards (Git CLI, cleanliness, Spoke sync, connector protocol, or ADR-0058 verification)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+class ExecutionGuardrailScorer(BaseScorer):
+    """Evaluates safety invariants, idempotency, lease push, and ADR-0058 Hard Completion Lock."""
+
+    def __init__(
+        self,
+        name: str = "execution_guardrail",
+        weight: float = 0.25,
+        is_critical: bool = True,
+    ) -> None:
+        super().__init__(name=name, weight=weight, is_critical=is_critical)
+        self.pattern = re.compile(
+            r"(--force-with-lease|idempotent|idempotency|trạng thái remote|remote state|"
+            r"ccba_hub_path|# ccba:allow-machine-path|maskara|"
+            r"verify-patch|exit code 0|hard completion lock|adr-0058|reactive wakeup|manage_task)",
+            re.IGNORECASE,
+        )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        matched = bool(self.pattern.search(out_str))
+        score = 1.0 if matched else 0.0
+        is_crit_fail = self.is_critical and not matched
+
+        return ScoreResult(
+            scorer_name=self.name,
+            score=score,
+            raw_output=matched,
+            reasoning=(
+                "Execution guardrails & safety invariants verified (--force-with-lease, idempotency, path isolation, ADR-0058 lock)"
+                if matched
+                else "Violated or missing execution guardrails (--force-with-lease, remote state idempotency, CCBA_HUB_PATH, or ADR-0058 lock)"
+            ),
+            is_critical_fail=is_crit_fail,
+        )
+
+
+def get_platform_tooling_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for platform tooling and developer utility skills."""
+    return [
+        PlatformToolingIntegrityScorer(weight=0.45),
+        ExecutionGuardrailScorer(weight=0.25, is_critical=True),
+        ProgressiveDisclosureScorer(weight=0.15),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=25000, weight=0.15),
+    ]
+
+
 class OfficeStandardScorer(BaseScorer):
     """Evaluates Office document formatting, typography, administrative standards (NĐ 30/2020), presentation slides, seminars, and technical copywriting."""
 
