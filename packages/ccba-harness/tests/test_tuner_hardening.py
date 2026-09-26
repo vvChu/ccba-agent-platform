@@ -1033,3 +1033,25 @@ async def test_async_event_loop_decoupling_native_coroutines(tmp_path: Path) -> 
     report = await optimizer.run_async()
     assert isinstance(report, RatchetReport)
     assert report.initial_score == 100.0
+
+
+def test_ratchet_config_token_budget_separator_parsing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify RatchetConfig correctly handles commas and underscores in token_budget."""
+    target = tmp_path / "SKILL.md"
+    target.write_text("# Test", encoding="utf-8")
+
+    # 1. Comma formatted string via constructor
+    cfg1 = RatchetConfig(target_file=str(target), token_budget="10,000,000")  # type: ignore[arg-type]
+    assert cfg1.token_budget == 10_000_000
+
+    # 2. Underscore formatted string via env var
+    monkeypatch.setenv("CCBA_TUNER_TOKEN_BUDGET", "5_000_000")
+    cfg2 = RatchetConfig(target_file=str(target))
+    assert cfg2.token_budget == 5_000_000
+
+    # 3. Comma formatted string via env var
+    monkeypatch.setenv("CCBA_TUNER_TOKEN_BUDGET", "25,000,000")
+    cfg3 = RatchetConfig(target_file=str(target))
+    assert cfg3.token_budget == 25_000_000
