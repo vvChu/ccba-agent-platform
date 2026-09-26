@@ -9,6 +9,7 @@ Verifies that:
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -56,7 +57,7 @@ def active_skill_names() -> set[str]:
 
 
 @pytest.fixture(scope="module")
-def portal_skill_names() -> tuple[list[dict], set[str]]:
+def portal_skill_names() -> tuple[list[dict[str, Any]], set[str]]:
     """Extract skills declared across all portals in portals.yaml."""
     assert PORTALS_YAML_PATH.exists(), f"portals.yaml not found at {PORTALS_YAML_PATH}"
     portals = load_portals(PORTALS_YAML_PATH)
@@ -66,7 +67,9 @@ def portal_skill_names() -> tuple[list[dict], set[str]]:
     return portals, set(all_skills)
 
 
-def test_portals_yaml_has_five_standard_portals(portal_skill_names) -> None:
+def test_portals_yaml_has_five_standard_portals(
+    portal_skill_names: tuple[list[dict[str, Any]], set[str]],
+) -> None:
     """Verify portals.yaml defines exactly the 5 agreed portals."""
     portals, _ = portal_skill_names
     portal_ids = {p.get("id") for p in portals}
@@ -81,7 +84,8 @@ def test_portals_yaml_has_five_standard_portals(portal_skill_names) -> None:
 
 
 def test_all_active_skills_in_portals_yaml_exactly_match(
-    active_skill_names, portal_skill_names
+    active_skill_names: set[str],
+    portal_skill_names: tuple[list[dict[str, Any]], set[str]],
 ) -> None:
     """Ensure 100% 1-to-1 match between active skills and portals.yaml."""
     _, portal_skills = portal_skill_names
@@ -95,7 +99,9 @@ def test_all_active_skills_in_portals_yaml_exactly_match(
     )
 
 
-def test_zero_duplicate_skills_across_portals(portal_skill_names) -> None:
+def test_zero_duplicate_skills_across_portals(
+    portal_skill_names: tuple[list[dict[str, Any]], set[str]],
+) -> None:
     """Ensure no skill is declared in multiple portals."""
     portals, _ = portal_skill_names
     seen = set()
@@ -114,7 +120,7 @@ def test_skills_documentation_in_sync_deterministic_gate() -> None:
     assert in_sync, f"Documentation out of sync:\n{msg}"
 
 
-def test_all_markdown_docs_have_five_standard_sections(active_skill_names) -> None:
+def test_all_markdown_docs_have_five_standard_sections(active_skill_names: set[str]) -> None:
     """Verify every skill doc has all 5 required section headings."""
     for name in active_skill_names:
         doc_path = DOCS_SKILLS_DIR / f"{name}.md"
@@ -141,7 +147,7 @@ def test_docs_artifacts_integrity() -> None:
         )
 
 
-def test_all_active_skills_have_pipeline_trail_mapping(active_skill_names) -> None:
+def test_all_active_skills_have_pipeline_trail_mapping(active_skill_names: set[str]) -> None:
     """Verify every active skill has an explicit pipeline trail mapping in compile_skills_docs."""
     missing = active_skill_names - set(PIPELINE_MAP.keys())
     assert not missing, f"Skills missing pipeline trail mapping: {missing}"
