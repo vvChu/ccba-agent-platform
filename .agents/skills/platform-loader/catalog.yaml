@@ -1331,9 +1331,9 @@ seams:
   public_seams:
   - '`from ccba_qc_core import QCAuditPipeline, AuditReportSummary, QCBatchOrchestrator,
     DiscoveryEngine, QuadViewAuditEngine, ReporterEngine, PcccMapReduceEngine, SemanticAuditEngine,
-    PcccJurisdictionRouter, PcccProjectSpec, PcccJurisdictionResult`'
-  contracts: Callers must interact via QCAuditPipeline.run_audit(project_dir) or QCBatchOrchestrator.run_batch(...).
-    Sub-engines adhere to CCBA QC Protocols.
+    PcccJurisdictionRouter, PcccProjectSpec, PcccJurisdictionResult, PcccProjectType`'
+  contracts: Callers must interact via QCAuditPipeline.run_audit(project_dir) or QCBatchOrchestrator.run_batch(...)
+    or PcccJurisdictionRouter.evaluate(spec). Sub-engines adhere to CCBA QC Protocols.
   tests: pytest packages/ccba-qc-core/tests
 - package: mdconverter
   path: packages/mdconverter

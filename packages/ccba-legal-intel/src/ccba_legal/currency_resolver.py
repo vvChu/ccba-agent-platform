@@ -382,3 +382,21 @@ def resolve_statutory_doc(
 def clear_resolver_cache() -> None:
     """Flush LRU cache for registry loaders."""
     _load_cached_registry.cache_clear()
+
+
+class DynamicStatutoryResolver:
+    """Class interface for Dynamic Statutory Resolver adhering to ADR-0035/ADR-0050/ADR-0059."""
+
+    resolve = staticmethod(resolve_statutory_doc)
+    clear_cache = staticmethod(clear_resolver_cache)
+
+    @classmethod
+    def resolve_statutory_doc(
+        cls,
+        role: StatutoryRole | str,
+        evaluation_date: str | date | datetime | None = None,
+    ) -> StatutoryDocInfo:
+        return resolve_statutory_doc(role, evaluation_date)
+
+
+CurrencyCard = StatutoryDocInfo

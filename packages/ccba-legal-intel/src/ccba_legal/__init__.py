@@ -78,6 +78,8 @@ from .crawler import (
     verify_tvpl_vip_status,
 )
 from .currency_resolver import (
+    CurrencyCard,
+    DynamicStatutoryResolver,
     StatutoryDocInfo,
     StatutoryRole,
     clear_resolver_cache,
@@ -359,4 +361,6 @@ __all__ = [
     "StatutoryDocInfo",
     "resolve_statutory_doc",
     "clear_resolver_cache",
+    "DynamicStatutoryResolver",
+    "CurrencyCard",
 ]
