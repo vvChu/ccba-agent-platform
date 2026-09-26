@@ -94,6 +94,12 @@ def main() -> None:
         action="store_true",
         help="Skip skills that are currently in cooldown (tuned recently without progress)",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=int(os.environ.get("CCBA_TUNER_CONCURRENCY", "5")),
+        help="Concurrency limit for async batching evaluations (default: 5)",
+    )
     args = parser.parse_args()
 
     target_skills = [s.strip() for s in args.skill.split(",") if s.strip()] if args.skill else None
@@ -110,6 +116,7 @@ def main() -> None:
         target_ref=args.ref,
         no_telegram=args.no_telegram,
         skip_cooldown=args.skip_cooldown,
+        concurrency=args.concurrency,
     )
     daemon.run_nightly_batch(dry_run=args.dry_run)
 

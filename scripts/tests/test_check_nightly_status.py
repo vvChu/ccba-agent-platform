@@ -9,6 +9,7 @@ Tuân thủ ADR-0023, ADR-0058 và Quy chuẩn Code Quality:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -479,3 +480,36 @@ def test_main_cli_json_live_mode(
     assert payload["is_running"] is True
     assert payload["commits_count"] == 14
     assert payload["current_skill"] == "ccba-legal-advisor"
+
+
+def test_inspect_post_run_deterministic_filename_sorting(tmp_path: Path) -> None:
+    """Kiểm tra inspect_post_run sắp xếp tất định theo tên tệp (p.name descending).
+
+    Ngay cả khi tệp cũ hơn bị thay đổi mtime để trở nên 'mới nhất' theo hệ thống tệp,
+    hàm vẫn phải chọn đúng tệp có timestamp lớn nhất trong tên tệp theo quy tắc ADR-0058 và Rule 5.
+    """
+    rep_dir = tmp_path / ".md" / "knowledge" / "reports"
+    rep_dir.mkdir(parents=True)
+
+    old_report = rep_dir / "nightly_tuner_report_20260920_000000.md"
+    mid_report = rep_dir / "nightly_tuner_report_20260922_120000.md"
+    new_report = rep_dir / "nightly_tuner_report_20260925_000026.md"
+
+    for f in (old_report, mid_report, new_report):
+        f.write_text(
+            f"# Report {f.name}\n\n"
+            f"> **Nhánh Git:** `auto-tune/{f.stem}`  \n"
+            f"> **Tổng kỹ năng quét:** `62` | **Kỹ năng cải thiện:** `5` | **Số Commits:** `5`  \n"
+            f"> **Tổng Token Tiêu Thụ:** `50,000`  \n",
+            encoding="utf-8",
+        )
+
+    # Xáo trộn mtime: đặt old_report có mtime lớn nhất, new_report có mtime cũ nhất
+    os.utime(new_report, (1000000.0, 1000000.0))
+    os.utime(mid_report, (2000000.0, 2000000.0))
+    os.utime(old_report, (3000000.0, 3000000.0))
+
+    summary = inspect_post_run(tmp_path)
+    assert summary is not None
+    assert summary.report_path == new_report
+    assert summary.timestamp == "20260925_000026"
