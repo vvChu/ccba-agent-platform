@@ -4,6 +4,12 @@ Implements statutory jurisdiction routing under:
 - Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ số 55/2024/QH15 (Điều 16, Điều 17).
 - Nghị định số 105/2025/NĐ-CP (Điều 8, Phụ lục I, II, III).
 - SHA-256 Provenance: 6808c77f7438e0a15d7fc688726be181f476d958cf5f907ebc184afc0dc87262.
+
+Architectural Note on Dual-Pathway Scope:
+This engine models the forward-looking Dual-Pathway regime (CQCMVXD + Công an C07/PC07)
+codified under Luật 55/2024 and NĐ 105/2025 (effective 2025-07-01). When an earlier
+evaluation_date (< 2025-07-01) is specified, the Dynamic Statutory Resolver maps
+comparative statutory counterparts (e.g. Luật 50/2014, TT 06/2021) for grounding.
 """
 
 from __future__ import annotations

@@ -43,6 +43,10 @@ def test_statutory_roles_resolution_active_2026() -> None:
     qm_decree = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_QUALITY_MANAGEMENT, eval_date)
     assert qm_decree.doc_number == "207/2026/NĐ-CP"
 
+    fire_safety = resolve_statutory_doc(StatutoryRole.TECHNICAL_FIRE_SAFETY, eval_date)
+    assert fire_safety.doc_number == "QCVN 06:2022/BXD"
+    assert "QCVN 06:2022/BXD" in fire_safety.title
+
 
 def test_statutory_roles_resolution_historical_2024() -> None:
     """Verify historical temporal resolution for older projects (before July 1, 2026)."""
@@ -66,6 +70,9 @@ def test_statutory_roles_resolution_historical_2024() -> None:
 
     qm_decree = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_QUALITY_MANAGEMENT, eval_date)
     assert qm_decree.doc_number == "06/2021/NĐ-CP"
+
+    fire_safety = resolve_statutory_doc(StatutoryRole.TECHNICAL_FIRE_SAFETY, eval_date)
+    assert fire_safety.doc_number == "QCVN 06:2022/BXD"
 
 
 def test_statutory_roles_transitional_period_2025() -> None:
@@ -108,3 +115,24 @@ def test_offline_fallback_isolation() -> None:
             doc_old = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, "2024-01-01")
             assert doc_old.doc_number == "06/2021/TT-BXD"
             assert doc_old.source_origin == "fallback"
+
+
+def test_vietnamese_date_format_and_invalid_date_validation() -> None:
+    """Verify Vietnamese DD/MM/YYYY date parsing and validation errors."""
+    doc = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, "01/05/2024")
+    assert doc.doc_number == "06/2021/TT-BXD"
+
+    doc_modern = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, "15/08/2026")
+    assert doc_modern.doc_number == "34/2026/TT-BXD"
+
+    with pytest.raises(ValueError, match="Invalid evaluation_date format"):
+        resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, "invalid-random-date")
+
+
+def test_currency_card_discovery_outside_repo_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify Tier 2 currency card resolves properly even when working directory is outside repo."""
+    monkeypatch.chdir("/tmp")
+    # Resolve historical doc using currency card
+    doc = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_LAW, "2024-05-01")
+    assert doc.doc_number == "50/2014/QH13"
+    assert doc.source_origin == "currency_card"

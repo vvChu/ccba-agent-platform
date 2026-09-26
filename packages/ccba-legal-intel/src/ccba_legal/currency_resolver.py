@@ -13,6 +13,7 @@ from __future__ import annotations
 import functools
 import json
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -132,7 +133,7 @@ ROLE_SPEC_TABLE: dict[StatutoryRole, dict[str, Any]] = {
 
 
 def _normalize_date_str(d: str | date | datetime | None) -> str:
-    """Normalize input date to YYYY-MM-DD format."""
+    """Normalize input date to YYYY-MM-DD format, supporting YYYY-MM-DD and DD/MM/YYYY."""
     if d is None:
         return datetime.now().strftime("%Y-%m-%d")
     if isinstance(d, datetime):
@@ -141,10 +142,21 @@ def _normalize_date_str(d: str | date | datetime | None) -> str:
         return d.strftime("%Y-%m-%d")
     if isinstance(d, str):
         cleaned = d.strip()
-        match = re.match(r"^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$", cleaned)
-        if match:
-            year, month, day = match.groups()
+        if not cleaned:
+            return datetime.now().strftime("%Y-%m-%d")
+        # Format 1: YYYY-MM-DD or YYYY/MM/DD
+        match_iso = re.match(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$", cleaned)
+        if match_iso:
+            year, month, day = match_iso.groups()
             return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+        # Format 2: DD/MM/YYYY or DD-MM-YYYY (Vietnamese standard)
+        match_vn = re.match(r"^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$", cleaned)
+        if match_vn:
+            day, month, year = match_vn.groups()
+            return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+        raise ValueError(
+            f"Invalid evaluation_date format: '{d}'. Expected 'YYYY-MM-DD' or 'DD/MM/YYYY'."
+        )
     return datetime.now().strftime("%Y-%m-%d")
 
 
@@ -236,18 +248,41 @@ def _resolve_from_master_registry(
     return None
 
 
+def _discover_currency_card_path() -> Path | None:
+    """Discover the canonical legal_currency_card.json across Monorepo root and Spoke cwd."""
+    # 1. Check CCBA_HUB_PATH environment variable
+    hub_env = os.environ.get("CCBA_HUB_PATH")
+    if hub_env:
+        cand = Path(hub_env) / ".md" / "data" / "legal_currency_card.json"
+        if cand.is_file():
+            return cand.resolve()
+
+    # 2. Traverse upwards from current file to locate directory with .md/data/legal_currency_card.json
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        cand = parent / ".md" / "data" / "legal_currency_card.json"
+        if cand.is_file():
+            return cand.resolve()
+
+    # 3. Check current working directory and its parents
+    try:
+        cwd = Path.cwd().resolve()
+        for parent in [cwd, *cwd.parents]:
+            cand = parent / ".md" / "data" / "legal_currency_card.json"
+            if cand.is_file():
+                return cand.resolve()
+    except Exception:
+        pass
+
+    return None
+
+
 def _resolve_from_currency_card(role: StatutoryRole, eval_date: str) -> StatutoryDocInfo | None:
     """Tier 2: Resolve statutory document against Spoke Local Currency Card (.md/data/legal_currency_card.json)."""
     spec = ROLE_SPEC_TABLE[role]
-    proj_root = resolve_project_root()
-    card_path = proj_root / ".md" / "data" / "legal_currency_card.json"
-    if not card_path.is_file():
-        # Fallback search cwd
-        cand = Path.cwd() / ".md" / "data" / "legal_currency_card.json"
-        if cand.is_file():
-            card_path = cand
-        else:
-            return None
+    card_path = _discover_currency_card_path()
+    if not card_path or not card_path.is_file():
+        return None
 
     try:
         with open(card_path, encoding="utf-8") as f:
@@ -265,6 +300,7 @@ def _resolve_from_currency_card(role: StatutoryRole, eval_date: str) -> Statutor
                         entry.get("active_law")
                         or entry.get("active_decree")
                         or entry.get("active_circular")
+                        or entry.get("active_standard")
                         or spec["active_title"]
                     )
                     return StatutoryDocInfo(

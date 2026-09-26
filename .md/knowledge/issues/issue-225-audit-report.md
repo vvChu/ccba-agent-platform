@@ -53,6 +53,17 @@ Sau quá trình rà soát đối chiếu mã nguồn (Code-First Research Audit)
   3. `test_pccc_jurisdiction_small_kindergarten_investor_self_appraisal`: Kiểm tra cơ sở mầm non quy mô nhỏ 70 cháu ngoài Phụ lục III, Chủ đầu tư tự tổ chức thẩm định Mẫu PC13.
   4. `test_pccc_jurisdiction_industrial_warehouse_category_d_e`: Kiểm tra nhà kho công nghiệp hạng D/E quy mô $12.000\text{ m}^2$ bắt buộc nộp PC07 theo Mục 10 Phụ lục III.
 
+### 2.4. Dynamic Statutory Resolver — Hybrid Engine (Trụ cột 6)
+- **Module:** `packages/ccba-legal-intel/src/ccba_legal/currency_resolver.py`
+- **Kiến trúc Hybrid 3 tầng:**
+  - **Tier 1 (Master Registry):** Tra cứu Master Legal Registry (`/home/vvc/ccba/ccba-legal-knowledge/legal_registry.yaml` hoặc Hub path) qua thuật toán 6 tầng của `discover_master_registry_path()`.
+  - **Tier 2 (Spoke Local Cache):** Phân giải qua `.md/data/legal_currency_card.json` hỗ trợ decoupling hoàn toàn với đường dẫn thực thi.
+  - **Tier 3 (In-Memory Invariant):** Bản đồ ánh xạ bất biến bảo đảm 0% crash trong mọi tình huống.
+- **Hồi cứu thời gian thực (Temporal Invariance):**
+  - Mốc trước 01/07/2026: Phân giải tự động `Thông tư 06/2021/TT-BXD` và `Luật Xây dựng 50/2014/QH13`.
+  - Mốc từ 01/07/2026: Phân giải tự động `Thông tư 34/2026/TT-BXD` và `Luật Xây dựng 135/2025/QH15`.
+- **Loại bỏ Hardcode:** Toàn bộ chuỗi văn bản pháp luật trong `PcccJurisdictionRouter` được thay thế bằng lệnh gọi động qua `resolve_statutory_doc(role, evaluation_date)`. Hỗ trợ cả định dạng `YYYY-MM-DD` và định dạng Việt Nam `DD/MM/YYYY`.
+
 ---
 
 ## 3. Nhật Ký Kiểm Thử Tự Động (Deterministic Hard Completion Lock — ADR-0058)
@@ -60,36 +71,32 @@ Sau quá trình rà soát đối chiếu mã nguồn (Code-First Research Audit)
 Tất cả các bài kiểm tra được thực hiện trực tiếp trong môi trường `.venv/bin/`:
 
 ```bash
-# 1. PCCC Jurisdiction Scoped Tests: 14/14 PASSED
+# 1. PCCC Jurisdiction Scoped Tests: 17/17 PASSED
 .venv/bin/pytest packages/ccba-qc-core/tests/test_pccc_jurisdiction.py -v
-=> 14 passed in 0.51s
+=> 17 passed in 0.93s
 
-# 2. Toàn bộ ccba-qc-core Tests: 21/21 PASSED
-.venv/bin/pytest packages/ccba-qc-core/tests -v
-=> 21 passed in 0.54s
+# 2. Dynamic Statutory Resolver Tests: 7/7 PASSED
+.venv/bin/pytest packages/ccba-legal-intel/tests/test_currency_resolver.py -v
+=> 7 passed in 0.73s
 
-# 3. Legal-to-PPTX Thin Seam Tests: 6/6 PASSED
-.venv/bin/pytest packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py -v
-=> 6 passed in 0.59s
+# 3. Toàn bộ ccba-qc-core & ccba-legal-intel Tests: 441/441 PASSED
+.venv/bin/pytest packages/ccba-legal-intel/tests packages/ccba-qc-core/tests -q
+=> 441 passed, 2 skipped in 73.41s
 
-# 4. CLI Documentation Parity Tests: 3/3 PASSED
-.venv/bin/pytest packages/ccba-legal-intel/tests/test_cli_doc_parity.py -v
-=> 3 passed in 1.03s
+# 4. Monorepo Seam & Dependency Contracts: 0 Violations
+.venv/bin/python scripts/governance/check_dependency_contracts.py
+=> Scanned 435 source files: Tất cả các gói Monorepo đều tuân thủ 100% ranh giới phụ thuộc!
 
-# 5. Linter Scoped Check: 0 Errors
-.venv/bin/ruff check packages/ccba-qc-core/src/ccba_qc_core/jurisdiction.py packages/ccba-legal-intel/src/ccba_legal/cli.py packages/ccba-qc-core/tests/test_pccc_jurisdiction.py packages/ccba-legal-intel/tests/test_legal_to_pptx_seam.py
-=> All checks passed!
-
-# 6. Static Type Check Scoped: 0 Errors
-.venv/bin/mypy packages/ccba-qc-core/src/ccba_qc_core/jurisdiction.py packages/ccba-legal-intel/src/ccba_legal/cli.py
-=> Success: no issues found in 2 source files
+# 5. Full CI Preset Gate (ADR-0058): 6/6 PASSED
+.venv/bin/python -m ccba_harness verify-patch --preset ci
+=> ALL 6/6 PASSED (Exit Code = 0)
 ```
 
 ---
 
 ## 4. Kết Luận & Đề Xuất Đóng Issue
 
-Toàn bộ các tiêu chí nghiệm thu của RFC #225 đã được hiện thực hóa đầy đủ, chính xác, có cơ sở pháp lý vững chắc và vượt qua 100% các cổng kiểm tra tự động.
+Toàn bộ các tiêu chí nghiệm thu của RFC #225 và mở rộng Dynamic Statutory Resolver đã được hiện thực hóa đầy đủ, chính xác, có cơ sở pháp lý vững chắc và vượt qua 100% các cổng kiểm tra tự động.
 
 - **Trạng thái đề xuất:** `CLOSED - COMPLETED`
 - **Sẵn sàng:** Đóng Issue #225 và tạo Pull Request hợp nhất vào nhánh `main`.

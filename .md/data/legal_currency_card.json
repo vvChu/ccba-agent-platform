@@ -64,6 +64,24 @@
         "40/2013/QH13",
         "136/2020/NĐ-CP"
       ]
+    },
+    {
+      "domain": "Nghị định PCCC",
+      "active_decree": "Nghị định số 105/2025/NĐ-CP",
+      "document_number": "105/2025/NĐ-CP",
+      "effective_date": "2025-07-01",
+      "supersedes": [
+        "136/2020/NĐ-CP"
+      ]
+    },
+    {
+      "domain": "An toàn cháy",
+      "active_standard": "QCVN 06:2022/BXD và Sửa đổi 1:2023 (An toàn cháy cho nhà và công trình)",
+      "document_number": "QCVN 06:2022/BXD",
+      "effective_date": "2023-01-16",
+      "supersedes": [
+        "QCVN 06:2021/BXD"
+      ]
     }
   ],
   "technical_standards_replacements": [
