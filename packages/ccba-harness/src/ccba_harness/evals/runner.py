@@ -335,6 +335,15 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-design": ["visual_design", "design", "brand"],
     "visual_design": ["visual_design", "design", "brand"],
     "design": ["visual_design", "design", "brand"],
+    "ccba-tvpl-vip-crawler": ["legal_tooling", "crawler", "tvpl_vip_crawler"],
+    "tvpl_vip_crawler": ["legal_tooling", "crawler", "tvpl_vip_crawler"],
+    "ccba-legal-ingest": ["legal_tooling", "legal_ingest", "ingest"],
+    "legal_ingest": ["legal_tooling", "legal_ingest", "ingest"],
+    "ccba-legal-document-tracker": ["legal_tooling", "legal_document_tracker", "tracker"],
+    "legal_document_tracker": ["legal_tooling", "legal_document_tracker", "tracker"],
+    "ccba-completion-checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
+    "completion_checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
+    "legal_tooling": ["legal_tooling"],
 }
 
 
@@ -415,6 +424,16 @@ def load_eval_dataset(
                     candidate_keys.append(alias)
 
             matching_files: list[Path] = []
+
+            # SSOT Resolution via Domain Archetype (ADR-0058)
+            from .archetypes import resolve_domain_dataset
+
+            domain_ds = resolve_domain_dataset(canonical_skill)
+            if domain_ds and domain_ds != "eval_general_domain.json":
+                ds_cand = default_dir / domain_ds
+                if ds_cand.exists() and ds_cand not in matching_files:
+                    matching_files.append(ds_cand)
+
             for k in candidate_keys:
                 exact_f = default_dir / f"eval_{k}.json"
                 if exact_f.exists() and exact_f not in matching_files:

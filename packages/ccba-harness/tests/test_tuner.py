@@ -1685,7 +1685,7 @@ def test_resolve_dataset_file_expanded_archetypes(tmp_path: Path):
 
     daemon = NightlyTunerDaemon(root=tmp_path)
     assert daemon._resolve_dataset_file("ccba-ai-gateway-sdk") == "eval_codebase_engineering.json"
-    assert daemon._resolve_dataset_file("ccba-completion-checklist") == "eval_legal_intel.json"
+    assert daemon._resolve_dataset_file("ccba-completion-checklist") == "eval_legal_tooling.json"
     assert (
         daemon._resolve_dataset_file("ccba-ai-pdf-preprocessor") == "eval_codebase_engineering.json"
     )
@@ -1708,8 +1708,13 @@ def test_get_default_domain_scorers_expanded_archetypes():
     pdf_prep_names = [s.name for s in get_default_domain_scorers("ccba-ai-pdf-preprocessor")]
     assert "hard_completion_lock" in pdf_prep_names
 
-    # Legal / Checklist
-    legal_names = [s.name for s in get_default_domain_scorers("ccba-completion-checklist")]
+    # Legal Tooling / Checklist
+    tooling_names = [s.name for s in get_default_domain_scorers("ccba-completion-checklist")]
+    assert "legal_tooling_integrity" in tooling_names
+    assert "sha256_provenance" in tooling_names
+
+    # Legal Advisory / Intel
+    legal_names = [s.name for s in get_default_domain_scorers("ccba-legal-intel")]
     assert "legal_verbatim_provenance" in legal_names
 
     # Office / Docx
@@ -2084,7 +2089,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 15
+    assert len(DOMAIN_ARCHETYPES) == 16
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -2098,6 +2103,7 @@ def test_archetype_ssot_resolution():
         ("ccba-grilling", "eval_grilling.json"),
         ("ccba-adr-lifecycle", "eval_adr_lifecycle.json"),
         ("bigbim-risk", "eval_bigbim_risk.json"),
+        ("ccba-tvpl-vip-crawler", "eval_legal_tooling.json"),
         ("ccba-legal-intel", "eval_legal_intel.json"),
         ("ccba-ai-qc-pccc-audit", "eval_pccc_audit.json"),
         ("ccba-academic-writing", "eval_academic_writing.json"),
