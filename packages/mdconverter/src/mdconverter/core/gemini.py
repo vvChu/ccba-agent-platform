@@ -290,7 +290,7 @@ class LLMConverter(BaseConverter):
     def _get_pdf_page_count(source_path: Path) -> int | None:
         """Get page count from a PDF file path."""
         try:
-            import fitz
+            import fitz  # ccba:allow-raw-bypass (lightweight page count fallback)
 
             doc = fitz.open(str(source_path))
             count = len(doc)

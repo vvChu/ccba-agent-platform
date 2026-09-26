@@ -422,9 +422,9 @@ def _generate_authoritative_fallback(
     # Build PDF
     try:
         try:
-            import pymupdf as fitz
+            import pymupdf as fitz  # ccba:allow-raw-bypass (synthetic test mock PDF generator)
         except ImportError:
-            import fitz
+            import fitz  # ccba:allow-raw-bypass (synthetic test mock PDF fallback)
 
         pdf_doc = fitz.open()
         page = pdf_doc.new_page()
@@ -587,9 +587,9 @@ def execute_ingest_legal(
             # Create valid 1-page PDF for testing/mocking
             try:
                 try:
-                    import pymupdf as fitz
+                    import pymupdf as fitz  # ccba:allow-raw-bypass (synthetic test mock PDF generator)
                 except ImportError:
-                    import fitz
+                    import fitz  # ccba:allow-raw-bypass (synthetic test mock PDF fallback)
 
                 pdf_doc = fitz.open()
                 page = pdf_doc.new_page()

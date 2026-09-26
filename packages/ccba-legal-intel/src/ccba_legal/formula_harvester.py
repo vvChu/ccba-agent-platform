@@ -706,7 +706,7 @@ def harvest_pdf_formula_images(
         List cac dict {page_num, xref, width_px, height_px, katex}.
     """
     try:
-        import fitz
+        import fitz  # ccba:allow-raw-bypass (low-level PDF image xref extraction for formula harvesting)
     except ImportError:
         logger.warning("PyMuPDF khong duoc cai dat. Bo qua PDF formula harvesting.")
         return []

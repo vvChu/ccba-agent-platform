@@ -78,7 +78,7 @@ class DiscoveryEngine:
 
     def find_index_pages(self, pdf_path: Path, search_limit: int = 15) -> list[int]:
         """Find pages containing a drawing index table."""
-        import fitz
+        import fitz  # ccba:allow-raw-bypass (low-level drawing index text scan)
 
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
@@ -104,7 +104,7 @@ class DiscoveryEngine:
         dpi: int = 200,
     ) -> list[tuple[int, Path]]:
         """Extract title block images from drawing pages."""
-        import fitz
+        import fitz  # ccba:allow-raw-bypass (low-level page count inspection)
 
         doc = fitz.open(str(pdf_path))
         total = len(doc)

@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import fitz  # ccba:allow-raw-bypass (pdf analyzer CLI tool)
 
 
 def analyze_pdf(pdf_path: Path) -> dict:

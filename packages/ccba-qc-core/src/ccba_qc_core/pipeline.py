@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import fitz
+import fitz  # ccba:allow-raw-bypass (in-memory document cache for batch coordination)
 import pandas as pd  # type: ignore[import-untyped]
 from PIL import Image
 
