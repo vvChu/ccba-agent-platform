@@ -28,7 +28,7 @@ def is_structural_path(filepath: str) -> bool:
     Internal skill/package resources (test_cases/, references/, resources/, src/, tests/)
     are ignored.
     """
-    clean_path = filepath.replace("\\", "/").strip().lstrip("/")
+    clean_path = filepath.strip(" \t\n\r\"'").replace("\\", "/").strip().lstrip("/")
     parts = clean_path.split("/")
 
     # 1. Root configuration manifest
@@ -93,20 +93,31 @@ class DriftAuditor(BaseAuditor):
             if res.returncode == 0:
                 for line in res.stdout.splitlines():
                     if len(line) > 3:
-                        filepath = (self.project_root / line[3:].strip()).resolve()
-                        modified.add(filepath)
+                        raw = line[3:].strip()
+                        if " -> " in raw:
+                            raw = raw.split(" -> ")[-1].strip()
+                        raw = raw.strip(" \t\n\r\"'")
+                        if raw:
+                            modified.add((self.project_root / raw).resolve())
 
-            res = subprocess.run(
-                ["git", "diff", "--name-only", "origin/main...HEAD"],
-                cwd=self.project_root,
-                capture_output=True,
-                text=True,
-            )
-            if res.returncode == 0:
-                for line in res.stdout.splitlines():
-                    if line.strip():
-                        filepath = (self.project_root / line.strip()).resolve()
-                        modified.add(filepath)
+            for ref in [
+                "origin/main...HEAD",
+                "main...HEAD",
+                "origin/master...HEAD",
+                "master...HEAD",
+            ]:
+                res_diff = subprocess.run(
+                    ["git", "diff", "--name-only", ref],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                )
+                if res_diff.returncode == 0:
+                    for line in res_diff.stdout.splitlines():
+                        raw = line.strip().strip(" \t\n\r\"'")
+                        if raw:
+                            modified.add((self.project_root / raw).resolve())
+                    break
         except Exception:
             pass
         return modified
@@ -116,16 +127,13 @@ class DriftAuditor(BaseAuditor):
 
         Uses ArchStatsUpdater to compare actual filesystem counts against
         registered HTML invariant markers (<!-- KEY_START -->...<!-- KEY_END -->)
-        in architecture documents (README.md, PLATFORM.md, etc.).
+        in architecture documents (README.md, PLATFORM.md, CONTEXT.md, etc.).
         """
         drift_errors: list[str] = []
         try:
             updater = ArchStatsUpdater(project_root=self.project_root)
             counts = updater.get_counts()
-            target_docs = docs or [
-                self.project_root / "README.md",
-                self.project_root / "PLATFORM.md",
-            ]
+            target_docs = docs or [self.project_root / p for p in ArchStatsUpdater.DEFAULT_DOCS]
 
             for doc_item in target_docs:
                 doc_path = doc_item if isinstance(doc_item, Path) else Path(doc_item)
@@ -161,41 +169,88 @@ class DriftAuditor(BaseAuditor):
     def check_structural_git_drift(self) -> list[str]:
         """Layer 2: Hierarchy-Aware Structural Git Gate.
 
-        Checks if Level-1 structural files were added/deleted/renamed without
+        Checks if Level-1 structural files were added/deleted/renamed/copied without
         updating architecture documentation. Intentionally ignores internal
         sub-resources within skills or packages (e.g. test_cases/, references/,
         resources/, src/, tests/).
         """
         drift_errors: list[str] = []
         try:
-            changes: list[str] = []
-            res = subprocess.run(
-                ["git", "diff", "--name-status", "origin/main...HEAD"],
-                cwd=self.project_root,
-                capture_output=True,
-                text=True,
-            )
-            if res.returncode == 0:
-                changes.extend(res.stdout.splitlines())
-            else:
-                res_alt = subprocess.run(
-                    ["git", "diff", "--name-status", "HEAD~1"],
+            structural_change = False
+            arch_doc_updated = False
+
+            # 1. Collect branch diff changes (handling tabs, renames, and quotes)
+            diff_success = False
+            ref_candidates = [
+                "origin/main...HEAD",
+                "main...HEAD",
+                "origin/master...HEAD",
+                "master...HEAD",
+                "HEAD~1",
+            ]
+            for ref in ref_candidates:
+                res = subprocess.run(
+                    ["git", "diff", "--name-status", ref],
                     cwd=self.project_root,
                     capture_output=True,
                     text=True,
                 )
-                if res_alt.returncode == 0:
-                    changes.extend(res_alt.stdout.splitlines())
-                else:
-                    res_cached = subprocess.run(
-                        ["git", "diff", "--name-status", "--cached"],
-                        cwd=self.project_root,
-                        capture_output=True,
-                        text=True,
-                    )
-                    if res_cached.returncode == 0:
-                        changes.extend(res_cached.stdout.splitlines())
+                if res.returncode == 0:
+                    diff_success = True
+                    for line in res.stdout.splitlines():
+                        line_str = line.strip()
+                        if not line_str:
+                            continue
+                        parts = line_str.split("\t")
+                        if not parts:
+                            continue
+                        status = parts[0].strip()
+                        paths = [p.strip(" \t\n\r\"'") for p in parts[1:] if p.strip(" \t\n\r\"'")]
+                        is_mutation = (
+                            status.startswith("A")
+                            or status.startswith("D")
+                            or status.startswith("R")
+                            or status.startswith("C")
+                        )
+                        for filepath in paths:
+                            norm_path = filepath.replace("\\", "/").lstrip("/")
+                            if norm_path in self.ARCH_DOCS:
+                                arch_doc_updated = True
+                            if is_mutation and self.is_structural_path(norm_path):
+                                structural_change = True
+                    break
 
+            if not diff_success:
+                res_cached = subprocess.run(
+                    ["git", "diff", "--name-status", "--cached"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                )
+                if res_cached.returncode == 0:
+                    for line in res_cached.stdout.splitlines():
+                        line_str = line.strip()
+                        if not line_str:
+                            continue
+                        parts = line_str.split("\t")
+                        if not parts:
+                            continue
+                        status = parts[0].strip()
+                        paths = [p.strip(" \t\n\r\"'") for p in parts[1:] if p.strip(" \t\n\r\"'")]
+                        is_mutation = (
+                            status.startswith("A")
+                            or status.startswith("D")
+                            or status.startswith("R")
+                            or status.startswith("C")
+                        )
+                        for filepath in paths:
+                            norm_path = filepath.replace("\\", "/").lstrip("/")
+                            if norm_path in self.ARCH_DOCS:
+                                arch_doc_updated = True
+                            if is_mutation and self.is_structural_path(norm_path):
+                                structural_change = True
+
+            # 2. Collect porcelain status (uncommitted, unstaged, untracked, composite states)
             res2 = subprocess.run(
                 ["git", "status", "--porcelain", "-uall"],
                 cwd=self.project_root,
@@ -203,56 +258,44 @@ class DriftAuditor(BaseAuditor):
                 text=True,
             )
             if res2.returncode == 0:
-                changes.extend(res2.stdout.splitlines())
-
-            structural_change = False
-            arch_doc_updated = False
-
-            for line in changes:
-                line_str = line.strip()
-                if not line_str:
-                    continue
-                parts = line_str.split()
-                if not parts:
-                    continue
-                status = parts[0]
-                paths = [p for p in parts[1:] if p != "->"]
-
-                for filepath in paths:
-                    norm_path = filepath.replace("\\", "/").strip().lstrip("/")
-
-                    if norm_path in self.ARCH_DOCS:
-                        arch_doc_updated = True
-
-                    if (
-                        status.startswith("A")
-                        or status.startswith("D")
-                        or status.startswith("R")
-                        or status == "??"
-                    ):
-                        if self.is_structural_path(norm_path):
+                for line in res2.stdout.splitlines():
+                    if len(line) < 3:
+                        continue
+                    status = line[:2].strip()
+                    rest = line[3:].strip()
+                    if " -> " in rest:
+                        raw_paths = rest.split(" -> ")
+                    else:
+                        raw_paths = [rest]
+                    paths = [p.strip(" \t\n\r\"'") for p in raw_paths if p.strip(" \t\n\r\"'")]
+                    is_mutation = status == "??" or any(ch in status for ch in ("A", "D", "R", "C"))
+                    for filepath in paths:
+                        norm_path = filepath.replace("\\", "/").lstrip("/")
+                        if norm_path in self.ARCH_DOCS:
+                            arch_doc_updated = True
+                        if is_mutation and self.is_structural_path(norm_path):
                             structural_change = True
 
-            # Check if any commit in current branch history updated arch_docs
-            ref_candidates = [
-                "origin/main..HEAD",
-                "origin/master..HEAD",
-                "main..HEAD",
-                "master..HEAD",
-            ]
-            for ref in ref_candidates:
-                res_log = subprocess.run(
-                    ["git", "log", ref, "--name-only"],
-                    cwd=self.project_root,
-                    capture_output=True,
-                    text=True,
-                )
-                if res_log.returncode == 0:
-                    for log_line in res_log.stdout.splitlines():
-                        clean_log_line = log_line.strip().replace("\\", "/").lstrip("/")
-                        if clean_log_line in self.ARCH_DOCS:
-                            arch_doc_updated = True
-                    break
+            # 3. Check if any commit in current branch history updated arch_docs via name-only diff
+            if not arch_doc_updated:
+                for ref in [
+                    "origin/main...HEAD",
+                    "main...HEAD",
+                    "origin/master...HEAD",
+                    "master...HEAD",
+                ]:
+                    res_diff_names = subprocess.run(
+                        ["git", "diff", "--name-only", ref],
+                        cwd=self.project_root,
+                        capture_output=True,
+                        text=True,
+                    )
+                    if res_diff_names.returncode == 0:
+                        for fname in res_diff_names.stdout.splitlines():
+                            clean_name = fname.strip(" \t\n\r\"'").replace("\\", "/").lstrip("/")
+                            if clean_name in self.ARCH_DOCS:
+                                arch_doc_updated = True
+                        break
 
             if structural_change and not arch_doc_updated:
                 drift_errors.append(

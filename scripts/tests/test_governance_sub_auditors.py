@@ -364,6 +364,11 @@ description: Valid description
         self.assertTrue(is_structural_path(".agents/workflows/deploy.md"))
         self.assertTrue(is_structural_path("scripts/update_arch_stats.py"))
 
+        # Level-1 structural paths with quotes or whitespace
+        self.assertTrue(is_structural_path('"pyproject.toml"'))
+        self.assertTrue(is_structural_path('  ".agents/skills/ccba-test-skill/SKILL.md"  '))
+        self.assertTrue(is_structural_path("  scripts/update_arch_stats.py  "))
+
         # Ignored non-structural or internal paths
         self.assertFalse(is_structural_path(".agents/workflows/deploy.md.bak"))
         self.assertFalse(is_structural_path(".agents/skills/ccba-test-skill/test_cases/case1.py"))
@@ -531,6 +536,87 @@ description: Valid description
         (new_pkg / "pyproject.toml").write_text(
             "[project]\nname = 'ccba-new-package'\n", encoding="utf-8"
         )
+
+        auditor = DriftAuditor(project_root=self.root)
+        drift_errors = auditor.check_structural_git_drift()
+        self.assertTrue(len(drift_errors) > 0)
+        self.assertIn("Structural drift detected", drift_errors[0])
+
+    def test_drift_auditor_detects_default_docs_marker_mismatch(self) -> None:
+        """Test DriftAuditor checking all ArchStatsUpdater DEFAULT_DOCS including CONTEXT.md."""
+        auditor = DriftAuditor(project_root=self.root)
+
+        # Create CONTEXT.md with mismatched count
+        context_md = self.root / "CONTEXT.md"
+        context_md.write_text(
+            "# Context\n<!-- SKILL_COUNT_START -->99<!-- SKILL_COUNT_END -->\n",
+            encoding="utf-8",
+        )
+
+        # Should be checked by default check_marker_drift without passing explicit docs
+        issues = auditor.check_marker_drift()
+        self.assertTrue(any("CONTEXT.md" in err and "SKILL_COUNT is '99'" in err for err in issues))
+
+    def test_drift_auditor_handles_spaces_and_quotes_in_git_paths(self) -> None:
+        """Test DriftAuditor correctly parses git status paths containing spaces or quotes."""
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=self.root, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.root,
+            capture_output=True,
+            check=True,
+        )
+
+        readme = self.root / "README.md"
+        readme.write_text("# Readme\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=self.root, capture_output=True, check=True
+        )
+
+        # Add a Level-1 script with space in name
+        space_script = self.root / "scripts" / "new test script.py"
+        space_script.parent.mkdir(parents=True, exist_ok=True)
+        space_script.write_text("print('test')\n", encoding="utf-8")
+
+        auditor = DriftAuditor(project_root=self.root)
+        drift_errors = auditor.check_structural_git_drift()
+        self.assertTrue(len(drift_errors) > 0)
+        self.assertIn("Structural drift detected", drift_errors[0])
+
+    def test_drift_auditor_detects_structural_deletion_and_rename(self) -> None:
+        """Test DriftAuditor detecting unstaged deletion and rename of Level-1 files."""
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=self.root, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.root,
+            capture_output=True,
+            check=True,
+        )
+
+        readme = self.root / "README.md"
+        readme.write_text("# Readme\n", encoding="utf-8")
+        workflow = self.root / ".agents" / "workflows" / "deploy.md"
+        workflow.parent.mkdir(parents=True, exist_ok=True)
+        workflow.write_text("# Deploy workflow\n", encoding="utf-8")
+
+        subprocess.run(["git", "add", "."], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=self.root, capture_output=True, check=True
+        )
+
+        # Delete workflow file in working tree (unstaged ' D' status)
+        workflow.unlink()
 
         auditor = DriftAuditor(project_root=self.root)
         drift_errors = auditor.check_structural_git_drift()
