@@ -14,6 +14,7 @@ from .archetypes import (
     LEGAL_ARCHETYPE_KEYWORDS,
     OFFICE_ARCHETYPE_KEYWORDS,
     ORCHESTRATION_ARCHETYPE_KEYWORDS,
+    SKILL_REPAIR_ARCHETYPE_KEYWORDS,
     TECH_QC_ARCHETYPE_KEYWORDS,
     VISUAL_ARCHETYPE_KEYWORDS,
     get_default_domain_scorers,
@@ -72,6 +73,7 @@ from .scorers import (
     get_legal_scorers,
     get_office_scorers,
     get_pccc_scorers,
+    get_skill_repair_scorers,
     get_visual_diagram_scorers,
 )
 from .simulation import (
@@ -110,10 +112,12 @@ __all__ = [
     "OFFICE_ARCHETYPE_KEYWORDS",
     "VISUAL_ARCHETYPE_KEYWORDS",
     "ORCHESTRATION_ARCHETYPE_KEYWORDS",
+    "SKILL_REPAIR_ARCHETYPE_KEYWORDS",
     "BIM_ARCHETYPE_KEYWORDS",
     "BIM_GOVERNANCE_ARCHETYPE_KEYWORDS",
     "BIM_RASE_ARCHETYPE_KEYWORDS",
     "ACADEMIC_ARCHETYPE_KEYWORDS",
+    "get_skill_repair_scorers",
     "mutate_skill",
     "EvalItem",
     "ScoreResult",

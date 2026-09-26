@@ -734,6 +734,40 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 parts.append("\n\n".join(coding_blocks))
             else:
                 parts.append("Thực hiện sửa đổi mã nguồn nhanh không qua kiểm chứng tất định...")
+        elif skill_name in ("ccba-skill-repair", "skill-repair", "skill_repair") or any(
+            k in prompt_l
+            for k in [
+                "skill-repair",
+                "yaml_parse_error",
+                "yaml frontmatter",
+                "cổng 0",
+                "gate 0",
+                "gpi",
+                "evaluate-gpi",
+                "validate_skills",
+                "linter",
+                "standalone skill",
+                "tiêu chí hoàn thành",
+                "sửa chữa",
+            ]
+        ):
+            has_repair_grounding = (
+                "ccba-skill-repair" in content
+                or "ADR-0057" in content
+                or "validate_skills.py" in content
+                or "evaluate-gpi" in content
+            )
+            if has_repair_grounding or "skill-repair" in content.lower():
+                parts.append(
+                    "Quy trình Phục hồi và Sửa chữa Kỹ năng (CCBA Skill Repair):\n"
+                    "- Khảo sát & Chuẩn hóa cú pháp YAML frontmatter: ngăn cách khối metadata bằng cặp thẻ ---, chuẩn hóa 2 spaces.\n"
+                    "- Đánh giá Cổng 0 (The Determinism Gate) & Cổng 1 (The Orchestration Gate) theo thể chế ADR-0057 (RES-2026-ARCH-001 v1.2).\n"
+                    "- Tính toán chỉ số GPI và vá khối gpi: {s: 4.0, k: 3.0, a: 2.0, p: 1.0} vào frontmatter hợp thức hóa Tier 2B Standalone Kernel Skill.\n"
+                    "- Bổ sung tiêu chí hoàn thành (Completion Criterion) cho các bước quy trình, chuẩn hóa liên kết tương đối trỏ về references/ và xử lý script bloat (< 100 LOC).\n"
+                    "- Kiểm định bắt buộc: chạy python scripts/validate_skills.py --file <path> --enforce-gpi, python -m ccba_harness.cli evaluate-gpi --file <path> và python scripts/governance/compile_catalog.py bảo đảm pass 100%."
+                )
+            else:
+                parts.append("Sửa lỗi tệp markdown cơ bản...")
         elif any(
             k in prompt_l
             for k in [
@@ -761,6 +795,7 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 )
             else:
                 parts.append("Tạo file markdown ghi chép kiến trúc thông thường...")
+
         elif item.golden_answer is not None:
             return (
                 item.golden_answer

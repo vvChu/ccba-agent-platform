@@ -2084,7 +2084,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 13
+    assert len(DOMAIN_ARCHETYPES) == 14
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -2107,8 +2107,10 @@ def test_archetype_ssot_resolution():
         ("bigbim-rase", "eval_bigbim_rase.json"),
         ("bigbim-classification", "eval_bigbim_classification.json"),
         ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
+        ("ccba-skill-repair", "eval_skill_repair.json"),
         ("platform-loader", "eval_agent_orchestration.json"),
     ]
+
     for skill_name, expected_dataset in test_cases:
         assert resolve_domain_dataset(skill_name) == expected_dataset
         assert resolve_domain_archetype(skill_name) is not None

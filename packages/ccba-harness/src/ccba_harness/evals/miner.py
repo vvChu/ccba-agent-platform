@@ -256,9 +256,13 @@ LEGACY_SKILL_FILE_MAP: dict[str, str] = {
     "copywriting": "eval_copywriting.json",
     "ccba-teamwork": "eval_agent_orchestration.json",
     "agent_orchestration": "eval_agent_orchestration.json",
+    "ccba-skill-repair": "eval_skill_repair.json",
+    "skill-repair": "eval_skill_repair.json",
+    "skill_repair": "eval_skill_repair.json",
     "general_domain": "eval_general_domain.json",
     "general-domain": "eval_general_domain.json",
 }
+
 
 DEFAULT_SCRATCH_DIR = Path(".md/scratch/eval_runs")
 
