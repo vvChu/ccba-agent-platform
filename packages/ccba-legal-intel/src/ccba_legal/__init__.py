@@ -77,6 +77,14 @@ from .crawler import (
     trigger_download,
     verify_tvpl_vip_status,
 )
+from .currency_resolver import (
+    CurrencyCard,
+    DynamicStatutoryResolver,
+    StatutoryDocInfo,
+    StatutoryRole,
+    clear_resolver_cache,
+    resolve_statutory_doc,
+)
 from .docx_converter import (
     classify_and_extract_tables,
     convert_docx_to_okf_bundle,
@@ -348,4 +356,11 @@ __all__ = [
     "validate_authority_naming",
     "validate_tier_authority",
     "generate_jurisdiction_guardrail_card",
+    # === Dynamic Statutory Resolver (ADR 0035, ADR 0050, ADR 0059) ===
+    "StatutoryRole",
+    "StatutoryDocInfo",
+    "resolve_statutory_doc",
+    "clear_resolver_cache",
+    "DynamicStatutoryResolver",
+    "CurrencyCard",
 ]

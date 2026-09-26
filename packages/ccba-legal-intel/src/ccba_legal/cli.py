@@ -489,6 +489,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Dry-run verification mode. Exit 0 if registry matches shards, exit 1 if out of sync",
     )
 
+    # 15. PPTX Subcommand (Legal-to-PPTX Thin Seam - ADR 0044)
+    pptx_parser = subparsers.add_parser(
+        "pptx",
+        help="Convert legal markdown document to branded PowerPoint presentation (.pptx) via ccba-ooxml",
+    )
+    pptx_parser.add_argument(
+        "input_markdown",
+        type=Path,
+        help="Path to input Markdown file (e.g. concept.md, summary.md)",
+    )
+    pptx_parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=None,
+        help="Target output .pptx file path (default: <input_markdown_stem>.pptx)",
+    )
+
     return parser
 
 
@@ -1346,6 +1364,40 @@ def handle_compile_registry(args: argparse.Namespace) -> int:
     return 0
 
 
+def handle_pptx(args: argparse.Namespace) -> int:
+    """Handle pptx subcommand: Convert markdown into CCBA branded PPTX presentation (ADR-0044)."""
+    try:
+        from ccba_ooxml.pptx.deck_builder import build_presentation_from_markdown
+        from ccba_ooxml.pptx.templates import CCBAPresentationTheme
+    except ImportError as e:
+        print(f"❌ Error: ccba_ooxml package is required for PPTX generation: {e}", file=sys.stderr)
+        return 1
+
+    input_path: Path = args.input_markdown
+    if not input_path.exists() or not input_path.is_file():
+        print(
+            f"❌ Error: Input markdown file does not exist or is not a file: {input_path}",
+            file=sys.stderr,
+        )
+        return 1
+
+    output_path: Path = args.output if args.output else input_path.with_suffix(".pptx")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    theme = CCBAPresentationTheme.default()
+
+    try:
+        res_path = build_presentation_from_markdown(
+            markdown_text_or_path=input_path,
+            output_path=output_path,
+            theme=theme,
+        )
+        print(f"🎉 Successfully generated CCBA presentation: {res_path}")
+        return 0
+    except Exception as e:
+        print(f"❌ Error generating presentation: {e}", file=sys.stderr)
+        return 1
+
+
 def main() -> None:
     """Main CLI entrypoint."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -1392,6 +1444,8 @@ def main() -> None:
         sys.exit(handle_get_table(args))
     elif args.command == "compile-registry":
         sys.exit(handle_compile_registry(args))
+    elif args.command == "pptx":
+        sys.exit(handle_pptx(args))
     else:
         parser.print_help()
         sys.exit(1)
