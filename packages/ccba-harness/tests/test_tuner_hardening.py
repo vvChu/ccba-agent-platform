@@ -417,3 +417,134 @@ name: test-skill
     assert optimizer.evaluate_content.call_count == 1
     # Rollback was called to revert the bad mutation
     optimizer.git_rollback_target.assert_called()
+
+
+def test_header_replacement_preserves_multiple_and_complex_adr_tags(tmp_path: Path) -> None:
+    """Verify section replacement regex preserves multiple ADR tags, comma-separated tags, and descriptive suffixes without duplicating sections."""
+    target = tmp_path / "SKILL.md"
+
+    cases = [
+        (
+            "Multiple distinct",
+            "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058) (HUB-ADR-0057)",
+        ),
+        ("Comma separated", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058, HUB-ADR-0057)"),
+        (
+            "Descriptive suffix",
+            "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058 Hard Completion Lock)",
+        ),
+    ]
+
+    for label, header_line in cases:
+        base_content = f"""---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+{header_line}
+* Outdated bullet to be replaced.
+
+## Other Section
+* Keep intact.
+"""
+        target.write_text(base_content, encoding="utf-8")
+        cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+        tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+        mut = tuner.propose_mutation(base_content, 1)
+
+        # Must not duplicate the section
+        assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1, (
+            f"Failed on {label}: duplicated section heading found!"
+        )
+        # Must preserve the exact ADR tags / suffix
+        assert header_line in mut, f"Failed on {label}: heading was not preserved!"
+        # Must replace the body with the strategy content
+        assert "python -m ccba_harness verify-patch" in mut
+        assert "Outdated bullet to be replaced." not in mut
+        assert "## Other Section" in mut
+
+
+def test_semantic_dedup_recognizes_complex_adr_tags(tmp_path: Path) -> None:
+    """Verify semantic dedup normalizes away complex ADR tags (comma-separated, multi-tag) when checking whether strategy is applied."""
+    target = tmp_path / "SKILL.md"
+    base_content = """---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058, HUB-ADR-0057)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
+"""
+    target.write_text(base_content, encoding="utf-8")
+    cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    # Strategy 1 is already applied, so mutation 1 must advance to strategy 2
+    mut = tuner.propose_mutation(base_content, 1)
+    assert "## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)" in mut
+    assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1
+
+
+def test_monotonic_token_guard_padding_and_underscore_invariance(tmp_path: Path) -> None:
+    """Verify monotonic guard does not falsely trigger on zero-padding differences (ADR-58 vs ADR-0058) and correctly tracks HUB_ADR."""
+    target = tmp_path / "SKILL.md"
+    initial_content = """---
+name: test-skill
+---
+# Skill Documentation
+
+## Section A (ADR-0058)
+* Rule per HUB_ADR-0057.
+"""
+    target.write_text(initial_content, encoding="utf-8")
+
+    config = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+        max_iterations=1,
+        target_score=100.0,
+    )
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+
+    baseline_report = EvalReport(
+        total_items=1,
+        passed_items=0,
+        failed_items=1,
+        overall_score=50.0,
+        pass_rate=0.0,
+        item_results=[],
+    )
+    iteration_report = EvalReport(
+        total_items=1,
+        passed_items=1,
+        failed_items=0,
+        overall_score=100.0,
+        pass_rate=1.0,
+        item_results=[],
+    )
+    optimizer.evaluate_content = MagicMock(side_effect=[baseline_report, iteration_report])
+    optimizer.git_rollback_target = MagicMock()
+
+    # Mutation uses unpadded ADR-58 and keeps HUB_ADR-0057
+    valid_mutation = """---
+name: test-skill
+---
+# Skill Documentation
+
+## Section A (ADR-58)
+* Rule per HUB_ADR-0057.
+"""
+    optimizer.propose_mutation = MagicMock(return_value=valid_mutation)
+
+    report = optimizer.run()
+
+    # Should evaluate and KEEP, not fast-fail on padding difference
+    assert len(report.history) >= 1
+    assert report.history[0].decision == "KEEP"
+    assert optimizer.evaluate_content.call_count == 2  # baseline + iteration 1

@@ -45,6 +45,16 @@ except ImportError:
 
 logger = logging.getLogger("ccba.eval.ratchet")
 
+# SSOT Regex patterns for ADR matrix tag detection and preservation
+ADR_HEADER_TAG_REGEX = re.compile(
+    r"\s*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\)",
+    re.IGNORECASE,
+)
+ADR_REF_PATTERN = re.compile(
+    r"\b(?:HUB[-_]ADR|ADR)[-_\s]*0*([0-9]+)\b",
+    re.IGNORECASE,
+)
+
 
 class TokenBudgetExceededError(Exception):
     """Raised when session-wide token budget ceiling is reached."""
@@ -1741,15 +1751,13 @@ class GitRatchetOptimizer:
         # Find first strategy not yet fully present in body (Goodhart's Law Trap Breaker)
         chosen_strategy = None
         base_idx = (iteration - 1) % len(strategies)
-        norm_body = re.sub(r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", body, flags=re.IGNORECASE).replace(
-            "\r\n", "\n"
-        )
+        norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
         for offset in range(len(strategies)):
             idx = (base_idx + offset) % len(strategies)
             s_name, s_enhancement = strategies[idx]
-            norm_enhancement = re.sub(
-                r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", s_enhancement.strip(), flags=re.IGNORECASE
-            ).replace("\r\n", "\n")
+            norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace(
+                "\r\n", "\n"
+            )
             if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
                 chosen_strategy = (s_name, s_enhancement)
                 break
@@ -1763,12 +1771,10 @@ class GitRatchetOptimizer:
 
         # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
-        clean_header = re.sub(
-            r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", section_header, flags=re.IGNORECASE
-        ).strip()
+        clean_header = ADR_HEADER_TAG_REGEX.sub("", section_header).strip()
         header_pattern = re.escape(clean_header)
         section_regex = re.compile(
-            rf"(?m)^[ \t]*{header_pattern}(?:[ \t]+(?P<adr_tag>\((?:HUB-)?ADR-[0-9]+\)))?[ \t]*\r?$\r?\n?"
+            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]+\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
             r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
             re.DOTALL,
         )
@@ -1776,9 +1782,9 @@ class GitRatchetOptimizer:
         match = section_regex.search(body)
         if match:
             lines = enhancement.strip().split("\n")
-            adr_tag = match.group("adr_tag")
-            if adr_tag and adr_tag not in lines[0]:
-                lines[0] = f"{lines[0]} {adr_tag}"
+            adr_suffix = match.group("adr_suffix")
+            if adr_suffix and adr_suffix.strip() not in lines[0]:
+                lines[0] = f"{lines[0]}{adr_suffix}"
             effective_enhancement = "\n".join(lines)
             mutated_body = (
                 body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
@@ -2016,21 +2022,14 @@ class GitRatchetOptimizer:
                     self.target_file.write_text(mutated_content, encoding="utf-8")
 
                     # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
-                    best_adr_tags = set(
-                        re.findall(r"\b(?:HUB-ADR|ADR)-[0-9]+\b", best_content, re.IGNORECASE)
-                    )
-                    mutated_adr_nums = {
-                        m.split("-")[-1]
-                        for m in re.findall(
-                            r"\b(?:HUB-ADR|ADR)-[0-9]+\b", mutated_content, re.IGNORECASE
-                        )
-                    }
+                    best_adr_nums = set(ADR_REF_PATTERN.findall(best_content))
+                    mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
                     dropped_adrs = sorted(
-                        {
-                            t.upper()
-                            for t in best_adr_tags
-                            if t.split("-")[-1] not in mutated_adr_nums
-                        }
+                        [
+                            f"ADR-{int(num):04d}"
+                            for num in best_adr_nums
+                            if num not in mutated_adr_nums
+                        ]
                     )
                     if dropped_adrs:
                         dropped_str = ", ".join(dropped_adrs)
