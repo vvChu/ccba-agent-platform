@@ -1,0 +1,62 @@
+[
+  {
+    "id": "test_platform_tooling_pr_lifecycle_and_branch_guardrails",
+    "domain": "platform_tooling",
+    "input_prompt": "Trình bày quy chuẩn tạo Pull Request, quy tắc đặt tên nhánh git, và rào chắn an toàn khi đẩy mã nguồn lên remote trong nền tảng CCBA. Làm rõ yêu cầu bắt buộc về kiểm tra tính bất biến (idempotency), kiểm tra trạng thái remote trước khi tạo mutation, và cấm bare push force.",
+    "golden_answer": {
+      "topic": "PR Lifecycle & Git Branch Guardrails",
+      "branch_naming": "type/short-description hoặc feat/issue-XXX-slug",
+      "remote_mutation_guardrail": "Kiểm tra remote state trước khi chạy gh pr create / git push để đảm bảo idempotency",
+      "pre_push_lease": "Bắt buộc sử dụng git push --force-with-lease thay vì bare --force",
+      "completion_lock": "Chỉ tạo PR khi đã pass bộ kiểm tra tất định ADR-0058 verify-patch"
+    }
+  },
+  {
+    "id": "test_platform_tooling_git_cleanliness_and_secrets_redaction",
+    "domain": "platform_tooling",
+    "input_prompt": "Hướng dẫn quy trình kiểm tra vệ sinh kho mã nguồn (git cleanliness) và các biện pháp bảo vệ thông tin nhạy cảm (secrets redaction) với công cụ Maskara. Làm rõ quy tắc quét đường dẫn tuyệt đối Windows/Linux và xử lý chú thích miễn trừ # ccba:allow-machine-path.",
+    "golden_answer": {
+      "topic": "Git Cleanliness & Maskara Secrets Redaction",
+      "cleanliness_scanner": "scripts/governance/check_spoke_cleanliness.py phát hiện đường dẫn tuyệt đối, artifacts và file rác",
+      "maskara_guardrail": "Tự động phát hiện và che giấu API keys, secrets, token; cấm hardcode credentials",
+      "machine_path_handling": "Decouple đường dẫn tuyệt đối qua biến môi trường CCBA_HUB_PATH hoặc đánh dấu chú thích # ccba:allow-machine-path",
+      "anti_debris": "Loại bỏ hoàn toàn tệp tạm, session locks .lock và dữ liệu nhị phân không kiểm soát"
+    }
+  },
+  {
+    "id": "test_platform_tooling_spoke_hub_sync_and_constitution_merge",
+    "domain": "platform_tooling",
+    "input_prompt": "Mô tả cơ chế đồng bộ kho con Spoke với Hub trung tâm qua sync_spoke.py. Nêu rõ nguyên tắc Non-Destructive Section Merge để bảo toàn Hiến pháp AGENTS.md tại Spoke và cơ chế Virtual Hub Fallback khi thiếu kỹ năng cục bộ.",
+    "golden_answer": {
+      "topic": "Spoke-Hub Synchronization & Non-Destructive Merge",
+      "constitution_preservation": "Non-Destructive Section Merge bảo tồn toàn bộ custom sections trong Spoke AGENTS.md",
+      "virtual_hub_fallback": "Nếu kỹ năng chưa có tại .agents/skills/ cục bộ, tự động đọc trực tiếp từ Hub path",
+      "machine_state_isolation": "Hub path được cấu hình qua biến môi trường CCBA_HUB_PATH, không commit đường dẫn ổ đĩa tuyệt đối vào workspace_context.yaml",
+      "upstream_contribution": "Tuân thủ upstream contribution loop khi đóng góp tính năng mới từ Spoke về Hub"
+    }
+  },
+  {
+    "id": "test_platform_tooling_multimodal_and_connector_ingestion",
+    "domain": "platform_tooling",
+    "input_prompt": "Trình bày quy trình vận hành bộ kết nối đa phương thức (Multimodal Connectors) như YouTube Learn và Google NotebookLM Connector. Làm rõ cách thức quản lý phiên (session auth), xử lý nghẽn mạng rate limit, và trích xuất tri thức thành tài liệu Markdown chuẩn mực.",
+    "golden_answer": {
+      "topic": "Multimodal Connectors & Knowledge Ingestion",
+      "connector_suite": "ccba-youtube-learn trích xuất phụ đề/audio transcripts; ccba-notebooklm-connector tương tác NotebookLM API",
+      "session_and_auth": "Quản lý cookie/auth token an toàn, lưu trữ tại thư mục cache chuyên dụng có kiểm soát",
+      "backoff_and_retry": "Cơ chế Exponential Backoff & Jitter khi gặp HTTP 429 hoặc timeout; tránh vòng lặp polling vô hạn",
+      "knowledge_synthesis": "Tổng hợp tri thức thành định dạng GFM Markdown lưu vào kho .md/extracted_docs"
+    }
+  },
+  {
+    "id": "test_platform_tooling_execution_guardrails_and_hard_completion_lock",
+    "domain": "platform_tooling",
+    "input_prompt": "Nêu chi tiết các rào chắn thực thi (Execution Guardrails) và cơ chế Khóa cứng Hoàn tất Tất định (ADR-0058 Hard Completion Lock) áp dụng cho các công cụ và tiện ích nền tảng. Làm rõ quy định về quản lý tiến trình nền (Background Tasks) và cấm ngụy biện KISS.",
+    "golden_answer": {
+      "topic": "Execution Guardrails & ADR-0058 Hard Completion Lock",
+      "hard_completion_lock": "Tất cả thay đổi code, skill, artifact bắt buộc phải pass python -m ccba_harness verify-patch với exit code 0",
+      "background_task_handling": "Dựa vào Reactive Wakeup thay vì polling lặp lại bằng sleep; tương tác qua manage_task (status, kill, send_input)",
+      "reuse_first_gate": "Bắt buộc tra cứu Seam Catalog qua compile_catalog.py trước khi viết script mới; cấm tạo data silo cục bộ rồi ngụy biện là KISS",
+      "completion_lock_invariant": "Tuyệt đối cấm tuyên bố hoàn thành task hoặc yêu cầu user nghiệm thu nếu bất kỳ lệnh kiểm chứng nào thất bại"
+    }
+  }
+]

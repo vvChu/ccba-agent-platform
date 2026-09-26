@@ -26,6 +26,7 @@ from .scorers import (
     get_office_scorers,
     get_orchestration_scorers,
     get_pccc_scorers,
+    get_platform_tooling_scorers,
     get_skill_repair_scorers,
     get_visual_design_scorers,
     get_visual_diagram_scorers,
@@ -125,32 +126,42 @@ CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "preprocessor",
 )
 
-# Agent Orchestration Domain (Disjoint: "grill" and "adr" are extracted to specialized subdomains)
-ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "teamwork",
-    "orchestrat",
-    "platform",
-    "handoff",
-    "issue-tree",
-    "ask",
-    "xia",
-    "wayfinder",
-    "spoke",
-    "upstream",
-    "hub",
-    "pr",
+# Platform Tooling & Developer Utilities Domain
+PLATFORM_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "create-pr",
+    "git",
     "guardrails",
-    "proposal",
-    "retrospective",
-    "knowledge",
-    "research",
+    "spoke",
+    "hub",
+    "upstream",
+    "sync",
+    "ask",
+    "wayfinder",
+    "issue-tree",
+    "xia",
     "notebooklm",
     "youtube",
+    "knowledge",
     "build-skill",
     "setup-skills",
     "eval-gate",
-    "rd",
+    "autoresearch",
+    "research",
     "graduate",
+    "retrospective",
+    "rd",
+    "sandbox",
+    "promote",
+)
+
+# Pure Agent Orchestration Domain (Multi-agent coordination, handoffs, and platform orchestration)
+ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
+    "teamwork",
+    "orchestrat",
+    "handoff",
+    "proposal",
+    "platform-loader",
+    "platform",
 )
 
 
@@ -229,6 +240,12 @@ DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
     ),
     DomainArchetype(
         "coding", CODING_ARCHETYPE_KEYWORDS, "eval_codebase_engineering.json", get_coding_scorers
+    ),
+    DomainArchetype(
+        "platform_tooling",
+        PLATFORM_TOOLING_ARCHETYPE_KEYWORDS,
+        "eval_platform_tooling.json",
+        get_platform_tooling_scorers,
     ),
     DomainArchetype(
         "orchestration",

@@ -291,6 +291,8 @@ LEGACY_SKILL_FILE_MAP: dict[str, str] = {
     "ccba-completion-checklist": "eval_legal_tooling.json",
     "completion-checklist": "eval_legal_tooling.json",
     "legal_tooling": "eval_legal_tooling.json",
+    "platform_tooling": "eval_platform_tooling.json",
+    "platform-tooling": "eval_platform_tooling.json",
     "general_domain": "eval_general_domain.json",
     "general-domain": "eval_general_domain.json",
 }
