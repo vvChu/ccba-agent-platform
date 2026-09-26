@@ -1,13 +1,13 @@
 ---
 id: 225
 title: "feat(platform): next-gen enhancements for legal data vault, pptx seam, pccc audit & idop cli"
-state: "ready-for-agent"
+state: "closed"
 labels:
   - "enhancement"
-  - "ready-for-agent"
-assignee: "none"
+  - "verified"
+assignee: "Antigravity"
 created_at: "2026-09-01T02:19:43Z"
-updated_at: "2026-09-01T03:15:00Z"
+updated_at: "2026-09-25T21:20:00Z"
 ---
 
 # 📖 Mô tả (Description)
@@ -27,11 +27,13 @@ Sau khi hoàn tất giai đoạn ổn định hạ tầng kết nối Hub-Spoke,
 - **Bộ Test Cases Chuẩn (`skills-eval`)**: Cung cấp benchmark đánh giá độ chính xác của các skill tư vấn pháp lý.
 
 ### 3. Tiêu chí nghiệm thu (Acceptance Criteria):
-- [ ] Quy chuẩn kênh phân phối dữ liệu OKF v2.4 và hỗ trợ lệnh tải tự động cho Spoke.
-- [ ] Tạo module sinh slide thuyết trình tự động từ cấu trúc văn bản pháp lý.
-- [ ] Bổ sung module chẩn đoán phân định thẩm quyền thẩm duyệt PCCC theo luật mới.
-- [ ] Bổ sung lệnh CLI tương tác Phiếu Giao Việc (PGV) cho Spoke.
-- [ ] Bổ sung bộ đánh giá tự động benchmark cho `legal-advisor` trong `/ccba-skills-eval`.
+- [x] Quy chuẩn kênh phân phối dữ liệu OKF v2.4 và hỗ trợ lệnh tải tự động cho Spoke (`ccba_legal sync --pull-latest`, GDrive Vault, PR #230, #232).
+- [x] Tạo module sinh slide thuyết trình tự động từ cấu trúc văn bản pháp lý (`python -m ccba_legal pptx`, dynamic import `ccba_ooxml`, ADR-0044).
+- [x] Bổ sung module chẩn đoán phân định thẩm quyền thẩm duyệt PCCC theo luật mới (`PcccJurisdictionRouter` tại `ccba_qc_core/jurisdiction.py`, Dual-Pathway, ADR-0035, ADR-0059).
+- [x] Bổ sung lệnh CLI tương tác Phiếu Giao Việc (PGV) cho Spoke (Tách sang Spoke độc lập `IDOP-CCBA-WAY` theo ADR-0018 & ADR-0043, duy trì schema compatibility contract).
+- [x] Bổ sung bộ đánh giá tự động benchmark cho `legal-advisor` trong `/ccba-skills-eval` (Đã bổ sung 4 test cases thẩm quyền PCCC vào `eval_pccc_audit.json`).
+
+> **Báo cáo nghiệm thu chi tiết:** Xem file [issue-225-audit-report.md](./issue-225-audit-report.md).
 
 ---
 *Được đề xuất tự động từ Spoke `vvc_working_space` qua workflow `/ccba-issue-to-hub`.*

@@ -4,6 +4,7 @@ Skill Finder for ClaudeKit skills.
 Searches and lists available skills in claudekit-engineer/claude/skills/.
 """
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -11,7 +12,15 @@ from typing import Any
 
 import yaml
 
-HUB_ROOT = Path(__file__).resolve().parents[2]
+hub_env = os.environ.get("CCBA_HUB_PATH")
+if hub_env and Path(hub_env).exists():
+    HUB_ROOT = Path(hub_env).resolve()
+else:
+    HUB_ROOT = Path(__file__).resolve().parents[2]
+
+if str(HUB_ROOT) not in sys.path:
+    sys.path.insert(0, str(HUB_ROOT))
+
 SKILLS_DIRS = [
     HUB_ROOT / ".agents" / "skills",
     Path(".agents/skills"),
@@ -101,9 +110,41 @@ def main() -> None:
     args = sys.argv[1:]
     if args and args[0] in ("--seam", "--seams", "-s"):
         keyword = " ".join(args[1:]) if len(args) > 1 else ""
-        from scripts.governance.compile_catalog import query_catalog
+        try:
+            from scripts.governance.compile_catalog import query_catalog
 
-        sys.exit(query_catalog(HUB_ROOT, keyword))
+            sys.exit(query_catalog(HUB_ROOT, keyword))
+        except ImportError:
+            catalog_file = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+            if not catalog_file.exists():
+                catalog_file = Path(".agents/skills/platform-loader/catalog.yaml")
+            if not catalog_file.exists():
+                print(f"[ERROR] Catalog file not found at {catalog_file}")
+                sys.exit(1)
+            try:
+                data = yaml.safe_load(catalog_file.read_text(encoding="utf-8")) or {}
+                seams = data.get("seams", [])
+                kw = keyword.lower()
+                matching = []
+                for s in seams:
+                    pkg = s.get("package", "")
+                    desc = s.get("description", "")
+                    public_seams = s.get("public_seams", [])
+                    text = f"{pkg} {desc} {' '.join(public_seams)}".lower()
+                    if kw in text:
+                        matching.append(s)
+                print("=" * 80)
+                print(f"CCBA Seam Catalog Lookup — Query: '{keyword}' (Matches: {len(matching)})")
+                print("=" * 80)
+                for s in matching:
+                    print(f"Package: {s.get('package')} ({s.get('path')})")
+                    for ps in s.get("public_seams", []):
+                        print(f"  - {ps}")
+                    print("-" * 60)
+                sys.exit(0)
+            except Exception as e:
+                print(f"[ERROR] Failed to query catalog: {e}")
+                sys.exit(1)
 
     query = " ".join(args) if args else ""
     find_skills(query)

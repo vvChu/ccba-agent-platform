@@ -21,6 +21,7 @@ from pathlib import Path
 # Monorepo packages and their root package names
 PACKAGE_MAP: dict[str, str] = {
     "ccba-ai": "ccba_ai",
+    "ccba-diagram": "ccba_diagram",
     "ccba-harness": "ccba_harness",
     "ccba-legal-intel": "ccba_legal",
     "ccba-maskara": "ccba_maskara",
@@ -32,7 +33,7 @@ PACKAGE_MAP: dict[str, str] = {
 }
 
 MONOREPO_ROOT_MODULES = set(PACKAGE_MAP.values())
-LEAF_FOUNDATION_PACKAGES = {"ccba_pdf_prep", "ccba_ooxml"}
+LEAF_FOUNDATION_PACKAGES = {"ccba_pdf_prep", "ccba_ooxml", "ccba_diagram"}
 HIGHER_DOMAIN_PACKAGES = {
     "ccba_legal",
     "ccba_notebooklm",

@@ -8,6 +8,12 @@ from ccba_qc_core.discovery import (
     ProjectBackbone,
     SheetEntry,
 )
+from ccba_qc_core.jurisdiction import (
+    PcccJurisdictionResult,
+    PcccJurisdictionRouter,
+    PcccProjectSpec,
+    PcccProjectType,
+)
 from ccba_qc_core.pccc import PcccMapReduceEngine
 from ccba_qc_core.pipeline import QCAuditPipeline, QCBatchOrchestrator
 from ccba_qc_core.quadview import QuadViewAuditEngine
@@ -25,4 +31,8 @@ __all__ = [
     "ReporterEngine",
     "PcccMapReduceEngine",
     "QCBatchOrchestrator",
+    "PcccJurisdictionRouter",
+    "PcccProjectSpec",
+    "PcccJurisdictionResult",
+    "PcccProjectType",
 ]

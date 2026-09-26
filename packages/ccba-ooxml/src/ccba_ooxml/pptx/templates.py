@@ -107,6 +107,11 @@ class CCBAPresentationTheme:
     aspect_ratio: str = "16:9"
     confidentiality: str = "CCBA — Viện KHCN Xây dựng (IBST)"
 
+    @classmethod
+    def default(cls) -> CCBAPresentationTheme:
+        """Return standard CCBA Brand Presentation Theme instance."""
+        return cls()
+
     @property
     def width(self) -> Any:
         return SLIDE_WIDTH_16_9 if self.aspect_ratio == "16:9" else SLIDE_WIDTH_4_3
