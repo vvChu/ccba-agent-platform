@@ -1254,15 +1254,16 @@ class PcccParametricScorer(BaseScorer):
 
         # 3. Check expected verdict
         verdict_patterns = rules.get("verdict_patterns", [])
+        exp = rules.get("expected_verdict", "")
         verdict_matched = False
         if verdict_patterns:
             verdict_matched = any(re.search(p, out_str, re.IGNORECASE) for p in verdict_patterns)
-        else:
-            exp = rules.get("expected_verdict", "")
-            if exp:
+            if not verdict_matched and exp:
                 verdict_matched = bool(re.search(re.escape(exp), out_str, re.IGNORECASE))
-            else:
-                verdict_matched = True
+        elif exp:
+            verdict_matched = bool(re.search(re.escape(exp), out_str, re.IGNORECASE))
+        else:
+            verdict_matched = True
 
         if not verdict_matched:
             return ScoreResult(

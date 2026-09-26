@@ -152,3 +152,6 @@ specs/modules/
 
 # Git Worktrees (Isolated Cron Runners)
 .worktrees/
+
+# Internal AI runtime generated artifacts
+.system_generated/

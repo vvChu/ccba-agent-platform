@@ -165,7 +165,7 @@ def test_git_ratchet_optimizer_three_tier_adaptive_slicing_integration(tmp_path:
         encoding="utf-8",
     )
 
-    # Use actual 12 items dataset
+    # Use actual 16 items dataset
     dataset_file = (
         Path(__file__).resolve().parent.parent.parent.parent
         / ".agents"
@@ -191,8 +191,8 @@ def test_git_ratchet_optimizer_three_tier_adaptive_slicing_integration(tmp_path:
 
     report = opt.run()
     assert report.slicing_tier == "TIER_B"
-    assert report.tuning_size == 8
-    assert report.holdout_size == 4
+    assert report.tuning_size == 11
+    assert report.holdout_size == 5
     assert report.holdout_score is not None
     assert isinstance(report.holdout_score, float)
     assert 0.0 <= report.holdout_score <= 100.0
