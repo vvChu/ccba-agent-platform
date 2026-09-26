@@ -1082,11 +1082,11 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """Main CLI entrypoint."""
     configure_utf8_output()
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.command == "init-spoke":
         from scripts.spoke.spoke_initializer import init_project

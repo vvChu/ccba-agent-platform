@@ -29,7 +29,7 @@ from ccba_harness.fleet import (
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
-def test_scan_spoke_telemetry_valid(tmp_path: Path):
+def test_scan_spoke_telemetry_valid(tmp_path: Path) -> None:
     """Verify scanning a valid online Spoke with pre-compiled summary JSON."""
     spoke_dir = tmp_path / "DH_Viet_Nhat"
     data_dir = spoke_dir / ".md" / "data"
@@ -63,7 +63,7 @@ def test_scan_spoke_telemetry_valid(tmp_path: Path):
     assert summary.budget_status == "Compliant"
 
 
-def test_scan_spoke_telemetry_offline(tmp_path: Path):
+def test_scan_spoke_telemetry_offline(tmp_path: Path) -> None:
     """Verify fault tolerance when a registered Spoke path is offline or unmounted."""
     offline_path = tmp_path / "unmounted_onedrive_folder"
     spoke_dict = {
@@ -80,7 +80,7 @@ def test_scan_spoke_telemetry_offline(tmp_path: Path):
     assert summary.total_tokens == 0
 
 
-def test_data_privacy_sanitization(tmp_path: Path):
+def test_data_privacy_sanitization(tmp_path: Path) -> None:
     """Verify ADR-0046: No confidential prompt text or customer code leaks into summary."""
     spoke_dir = tmp_path / "confidential_project"
     reports_dir = spoke_dir / ".md" / "reports"
@@ -123,7 +123,7 @@ def test_data_privacy_sanitization(tmp_path: Path):
     assert summary.total_cost_usd == 0.08
 
 
-def test_aggregate_fleet_telemetry(tmp_path: Path):
+def test_aggregate_fleet_telemetry(tmp_path: Path) -> None:
     """Verify fleet-wide aggregation across multiple Spokes."""
     spoke_1 = tmp_path / "spoke_1"
     spoke_1.mkdir()
@@ -157,7 +157,7 @@ def test_aggregate_fleet_telemetry(tmp_path: Path):
     assert "Enterprise Fleet Rollup" in md
 
 
-def test_generate_fleet_dashboard_html():
+def test_generate_fleet_dashboard_html() -> None:
     """Verify HTML generation, Tailwind script, pure SVG charts, and embedded JSON."""
     s1 = SpokeTelemetrySummary(
         spoke_id="s1",
@@ -194,7 +194,7 @@ def test_generate_fleet_dashboard_html():
     assert "<svg" in html_out
 
 
-def test_render_fleet_dashboard_file(tmp_path: Path):
+def test_render_fleet_dashboard_file(tmp_path: Path) -> None:
     """Verify writing standalone fleet dashboard HTML to disk."""
     spokes_list = [{"name": "P1", "path": str(tmp_path), "project_type": "Software"}]
 
@@ -213,7 +213,7 @@ def test_render_fleet_dashboard_file(tmp_path: Path):
     assert "Custom Fleet" in content
 
 
-def test_cli_cross_spoke_analytics(tmp_path: Path):
+def test_cli_cross_spoke_analytics(tmp_path: Path) -> None:
     """Verify execution of CLI tools `cross_spoke_analytics.py` and `ccba-harness telemetry fleet`."""
     # 1. Test cross_spoke_analytics.py scan --json
     res_scan = subprocess.run(
@@ -263,7 +263,7 @@ def test_cli_cross_spoke_analytics(tmp_path: Path):
     assert "total_spokes" in parsed_harness
 
 
-def test_top_spoke_innovations_aggregation():
+def test_top_spoke_innovations_aggregation() -> None:
     """Verify extracting, ranking, and classifying Top Spoke Innovations for Hub Ingestion."""
     spoke_a = SpokeTelemetrySummary(
         spoke_id="spoke-a",
@@ -324,7 +324,7 @@ def test_top_spoke_innovations_aggregation():
     assert dwg_item["promotion_status"] == "Spoke Local Innovation"
 
 
-def test_fleet_report_markdown_contains_innovations_section():
+def test_fleet_report_markdown_contains_innovations_section() -> None:
     """Verify fleet report markdown includes Section 4: Top Spoke Innovations."""
     spoke = SpokeTelemetrySummary(
         spoke_id="spoke-1",
@@ -348,7 +348,7 @@ def test_fleet_report_markdown_contains_innovations_section():
     assert "ADR-0045" in md
 
 
-def test_fleet_html_dashboard_contains_innovations(tmp_path: Path):
+def test_fleet_html_dashboard_contains_innovations(tmp_path: Path) -> None:
     """Verify generated HTML dashboard renders the Top Spoke Innovations table."""
     spokes_list = [
         {
@@ -384,7 +384,7 @@ def test_fleet_html_dashboard_contains_innovations(tmp_path: Path):
     assert "revit_element_extractor" in content
 
 
-def test_proposal_template_passes_leakage_audit():
+def test_proposal_template_passes_leakage_audit() -> None:
     """Verify that .agents/proposals/TEMPLATE.md exists and complies with ADR-0045 schema."""
     import yaml
     from scripts.governance.check_spoke_leakage import SpokeLeakageAuditor

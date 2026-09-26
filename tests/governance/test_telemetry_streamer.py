@@ -7,8 +7,9 @@ import json
 import subprocess
 import sys
 import threading
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -28,7 +29,11 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 class _MockTelemetryServer(http.server.HTTPServer):
     """Local mock HTTP server recording incoming telemetry events."""
 
-    def __init__(self, server_address, RequestHandlerClass):
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        RequestHandlerClass: Callable[..., http.server.BaseHTTPRequestHandler],
+    ) -> None:
         super().__init__(server_address, RequestHandlerClass)
         self.received_payloads: list[Any] = []
 
@@ -36,12 +41,12 @@ class _MockTelemetryServer(http.server.HTTPServer):
 class _MockTelemetryHandler(http.server.BaseHTTPRequestHandler):
     """HTTP handler storing POSTed JSON payloads."""
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length).decode("utf-8")
         try:
             data = json.loads(body)
-            self.server.received_payloads.append(data)
+            cast(_MockTelemetryServer, self.server).received_payloads.append(data)
         except Exception:
             pass
         self.send_response(200)
@@ -49,12 +54,12 @@ class _MockTelemetryHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'{"status":"ok"}')
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: Any) -> None:
         pass  # suppress stderr logging
 
 
 @pytest.fixture
-def mock_spark_server():
+def mock_spark_server() -> Generator[tuple[str, _MockTelemetryServer], None, None]:
     """Start an ephemeral localhost HTTP server simulating Server Spark."""
     server = _MockTelemetryServer(("127.0.0.1", 0), _MockTelemetryHandler)
     port = server.server_address[1]
@@ -97,7 +102,7 @@ def sample_transcript_file(tmp_path: Path) -> Path:
     return log_file
 
 
-def test_telemetry_event_serialization():
+def test_telemetry_event_serialization() -> None:
     """Test TelemetryEvent creation, serialization and deserialization."""
     ev = TelemetryEvent(
         event_id="test-id-123",
@@ -122,7 +127,7 @@ def test_telemetry_event_serialization():
     assert restored.payload["completion_tokens"] == 50
 
 
-def test_offline_buffer_manager(tmp_path: Path):
+def test_offline_buffer_manager(tmp_path: Path) -> None:
     """Test OfflineBufferManager appending, counting, reading and clearing."""
     buffer_file = tmp_path / "offline_buffer.jsonl"
     mgr = OfflineBufferManager(buffer_file)
@@ -160,7 +165,7 @@ def test_offline_buffer_manager(tmp_path: Path):
     assert mgr.count_buffered() == 0
 
 
-def test_streamer_bridge_dry_run():
+def test_streamer_bridge_dry_run() -> None:
     """Test TelemetryStreamingBridge in dry-run mode."""
     cfg = StreamingConfig(dry_run=True)
     bridge = TelemetryStreamingBridge(config=cfg)
@@ -179,7 +184,7 @@ def test_streamer_bridge_dry_run():
     assert bridge.test_connection() is True
 
 
-def test_streamer_bridge_offline_fallback(tmp_path: Path):
+def test_streamer_bridge_offline_fallback(tmp_path: Path) -> None:
     """Test graceful degradation to offline buffer when network fails."""
     buffer_file = tmp_path / "fallback_buffer.jsonl"
     # Use an unallocated port to guarantee connection refusal
@@ -211,8 +216,10 @@ def test_streamer_bridge_offline_fallback(tmp_path: Path):
 
 
 def test_stream_transcript_mock_http_server(
-    mock_spark_server, sample_transcript_file: Path, tmp_path: Path
-):
+    mock_spark_server: tuple[str, _MockTelemetryServer],
+    sample_transcript_file: Path,
+    tmp_path: Path,
+) -> None:
     """Test end-to-end streaming from transcript file to local mock server."""
     endpoint, server = mock_spark_server
     buffer_file = tmp_path / "buffer.jsonl"
@@ -239,7 +246,7 @@ def test_stream_transcript_mock_http_server(
     assert flushed == 0
 
 
-def test_cli_telemetry_stream_subcommand(sample_transcript_file: Path):
+def test_cli_telemetry_stream_subcommand(sample_transcript_file: Path) -> None:
     """Test ccba-harness telemetry stream CLI integration."""
     rc = ccba_harness_main(
         ["telemetry", "stream", str(sample_transcript_file), "--dry-run", "--json"]
@@ -247,7 +254,7 @@ def test_cli_telemetry_stream_subcommand(sample_transcript_file: Path):
     assert rc == 0
 
 
-def test_cli_telemetry_streamer_script(sample_transcript_file: Path):
+def test_cli_telemetry_streamer_script(sample_transcript_file: Path) -> None:
     """Test standalone scripts/governance/telemetry_streamer.py execution."""
     script_path = (
         Path(__file__).resolve().parent.parent.parent

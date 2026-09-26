@@ -26,7 +26,7 @@ from ccba_harness.economy import (
 from ccba_harness.telemetry import SubagentSessionMetrics
 
 
-def test_prompt_density_calculation(tmp_path: Path):
+def test_prompt_density_calculation(tmp_path: Path) -> None:
     """Verify calculation of Prompt Density Index (PDI) and directives."""
     # 1. Action-rich compact prompt
     action_skill = tmp_path / "action-skill" / "SKILL.md"
@@ -88,7 +88,7 @@ description: Very long narrative
     assert m_bloated.pdi_score < m_action.pdi_score
 
 
-def test_sentence_hashing_duplication(tmp_path: Path):
+def test_sentence_hashing_duplication(tmp_path: Path) -> None:
     """Verify sentence hashing detects duplicated paragraphs across distinct skills."""
     shared_sentence = "All worker subagents must strictly adhere to the single-writer protocol and never mutate files directly."
 
@@ -106,7 +106,7 @@ def test_sentence_hashing_duplication(tmp_path: Path):
     assert any("single-writer protocol" in msg for msg in dup_map["skill-alpha"])
 
 
-def test_role_aware_token_roi_coder():
+def test_role_aware_token_roi_coder() -> None:
     """Verify Token ROI computation for a coding subagent."""
     metrics = SubagentSessionMetrics(
         conversation_id="conv-coder-1",
@@ -132,7 +132,7 @@ def test_role_aware_token_roi_coder():
     assert roi.efficiency_tier == "Tier A (High Efficiency)"
 
 
-def test_role_aware_token_roi_investigator():
+def test_role_aware_token_roi_investigator() -> None:
     """Verify Token ROI computation for a research/investigation subagent."""
     metrics = SubagentSessionMetrics(
         conversation_id="conv-inv-1",
@@ -157,7 +157,7 @@ def test_role_aware_token_roi_investigator():
     assert roi.efficiency_tier == "Tier A (High Efficiency)"
 
 
-def test_generate_pruning_report_to_file(tmp_path: Path):
+def test_generate_pruning_report_to_file(tmp_path: Path) -> None:
     """Verify Markdown report generation with recommendations."""
     s1 = SkillPromptMetrics(
         skill_name="bloated-one",
@@ -203,7 +203,7 @@ def test_generate_pruning_report_to_file(tmp_path: Path):
     assert "Move reference examples to references/." in md_result
 
 
-def test_cli_token_economy_script(tmp_path: Path):
+def test_cli_token_economy_script(tmp_path: Path) -> None:
     """Verify execution of CLI `token_economy.py`."""
     # 1. Test scan --json
     res_scan = subprocess.run(
@@ -235,7 +235,7 @@ def test_cli_token_economy_script(tmp_path: Path):
     assert rep_file.stat().st_size > 500
 
 
-def test_cli_ccba_harness_economy():
+def test_cli_ccba_harness_economy() -> None:
     """Verify execution of `ccba-harness telemetry economy`."""
     res = subprocess.run(
         [sys.executable, "-m", "ccba_harness", "telemetry", "economy", "--json"],

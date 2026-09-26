@@ -872,11 +872,15 @@ def main(argv: list[str] | None = None) -> int:
         if not args.json:
             print(f"[OK] Markdown report saved to: {report_path}")
 
-    summary_data = {
+    red_count = sum(1 for r in results if r.status == "RED")
+    yellow_count = sum(1 for r in results if r.status == "YELLOW")
+    green_count = sum(1 for r in results if r.status == "GREEN")
+
+    summary_data: dict[str, Any] = {
         "total": len(results),
-        "red_count": sum(1 for r in results if r.status == "RED"),
-        "yellow_count": sum(1 for r in results if r.status == "YELLOW"),
-        "green_count": sum(1 for r in results if r.status == "GREEN"),
+        "red_count": red_count,
+        "yellow_count": yellow_count,
+        "green_count": green_count,
         "status": "PASS" if all(r.status == "GREEN" for r in results) else "FAIL",
         "skills": [asdict(r) for r in results],
     }
@@ -885,11 +889,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(summary_data, indent=2, ensure_ascii=False))
     else:
         print(f"[OK] Audit completed for {len(results)} skill(s).")
-        print(f"     [GREEN]  Fully Compliant: {summary_data['green_count']}")
-        print(f"     [YELLOW] Need Improvement: {summary_data['yellow_count']}")
-        print(f"     [RED]    Critical Upgrades Needed: {summary_data['red_count']}")
+        print(f"     [GREEN]  Fully Compliant: {green_count}")
+        print(f"     [YELLOW] Need Improvement: {yellow_count}")
+        print(f"     [RED]    Critical Upgrades Needed: {red_count}")
 
-        if args.verbose or summary_data["red_count"] > 0 or summary_data["yellow_count"] > 0:
+        if args.verbose or red_count > 0 or yellow_count > 0:
             for r in results:
                 if r.status != "GREEN" or args.verbose:
                     icon = "🟢" if r.status == "GREEN" else ("🟡" if r.status == "YELLOW" else "🔴")

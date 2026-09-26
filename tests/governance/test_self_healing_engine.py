@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from scripts.governance.self_healing import run_self_healing_cli
 
 from ccba_harness.healing import (
@@ -24,7 +25,7 @@ from ccba_harness.verifier import CommandResult, PatchVerificationReport
 class TestSelfHealingEngineDiagnosis:
     """Test diagnosis pattern recognition for various tool failures."""
 
-    def test_diagnose_ruff_format_error(self, tmp_path: Path):
+    def test_diagnose_ruff_format_error(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         mock_res = CommandResult(
             command="python -m ruff format --check .",
@@ -48,7 +49,7 @@ class TestSelfHealingEngineDiagnosis:
         assert issues[0].category == ErrorCategory.FORMAT_STYLE.value
         assert issues[0].file_path == "src/pkg/bad_format.py"
 
-    def test_diagnose_ruff_lint_error(self, tmp_path: Path):
+    def test_diagnose_ruff_lint_error(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         mock_res = CommandResult(
             command="python -m ruff check src/",
@@ -74,7 +75,7 @@ class TestSelfHealingEngineDiagnosis:
         assert issues[0].line_number == 15
         assert issues[0].rule_code == "F401"
 
-    def test_diagnose_catalog_drift(self, tmp_path: Path):
+    def test_diagnose_catalog_drift(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         mock_res = CommandResult(
             command="python scripts/governance/compile_catalog.py --check",
@@ -98,7 +99,7 @@ class TestSelfHealingEngineDiagnosis:
         assert issues[0].category == ErrorCategory.METADATA_DRIFT.value
         assert "catalog" in issues[0].message.lower() and "out of sync" in issues[0].message.lower()
 
-    def test_diagnose_adr_matrix_drift(self, tmp_path: Path):
+    def test_diagnose_adr_matrix_drift(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         mock_res = CommandResult(
             command="python scripts/sync_hub_adr_matrix.py --check",
@@ -122,7 +123,7 @@ class TestSelfHealingEngineDiagnosis:
         assert issues[0].category == ErrorCategory.METADATA_DRIFT.value
         assert "adr matrix is out of sync" in issues[0].message.lower()
 
-    def test_diagnose_pytest_failure(self, tmp_path: Path):
+    def test_diagnose_pytest_failure(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         mock_res = CommandResult(
             command="python -m pytest tests/test_math.py",
@@ -151,7 +152,7 @@ class TestSelfHealingEngineDiagnosis:
 class TestRemediationActions:
     """Test action generation and execution mapping."""
 
-    def test_generate_actions_for_format_and_lint(self, tmp_path: Path):
+    def test_generate_actions_for_format_and_lint(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         issues = [
             DiagnosticIssue(
@@ -188,7 +189,7 @@ class TestRemediationActions:
 class TestClosedLoopHealingExecution:
     """Test end-to-end closed loop healing flow, rollback safety, and limits."""
 
-    def test_healing_already_passed(self, tmp_path: Path):
+    def test_healing_already_passed(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         with patch("ccba_harness.healing.verify_patch_execution") as mock_verify:
             mock_verify.return_value = PatchVerificationReport(
@@ -204,7 +205,7 @@ class TestClosedLoopHealingExecution:
             assert report.final_verification_passed is True
             assert report.rollback_performed is False
 
-    def test_healing_success_on_iteration_1(self, tmp_path: Path):
+    def test_healing_success_on_iteration_1(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path)
         test_file = tmp_path / "sample.py"
         test_file.write_text("x=1\ny=2\n", encoding="utf-8")
@@ -258,7 +259,7 @@ class TestClosedLoopHealingExecution:
                 assert report.rollback_performed is False
                 assert len(report.actions_taken) >= 1
 
-    def test_healing_iteration_limit_and_rollback(self, tmp_path: Path):
+    def test_healing_iteration_limit_and_rollback(self, tmp_path: Path) -> None:
         engine = SelfHealingEngine(base_dir=tmp_path, max_iterations=2)
         test_file = tmp_path / "broken.py"
         original_content = "def invalid_syntax(\n"
@@ -282,12 +283,12 @@ class TestClosedLoopHealingExecution:
         )
 
         # Snapshot provided by caller
-        snapshot = {test_file: original_content}
+        snapshot: dict[Path, str | None] = {test_file: original_content}
 
         with patch("ccba_harness.healing.verify_patch_execution", return_value=failing_report):
             with patch.object(engine, "execute_action") as mock_exec:
 
-                def modify_file(act: HealingAction):
+                def modify_file(act: HealingAction) -> bool:
                     act.executed = True
                     act.success = True
                     test_file.write_text("modified broken content", encoding="utf-8")
@@ -310,7 +311,7 @@ class TestClosedLoopHealingExecution:
 class TestSelfHealingSerializationAndCLI:
     """Test report formatting, CLI parser, and dry-run flag."""
 
-    def test_healing_report_to_dict_and_markdown(self):
+    def test_healing_report_to_dict_and_markdown(self) -> None:
         report = HealingReport(
             success=True,
             iterations_run=1,
@@ -346,7 +347,7 @@ class TestSelfHealingSerializationAndCLI:
         assert "# 🩹 Autonomous Self-Healing Report: ✅ SELF-HEALING SUCCEEDED" in md
         assert "python -m ruff format test.py" in md
 
-    def test_cli_dry_run_mode(self, capsys):
+    def test_cli_dry_run_mode(self, capsys: pytest.CaptureFixture[str]) -> None:
         with patch("scripts.governance.self_healing.verify_patch_execution") as mock_verify:
             mock_verify.return_value = PatchVerificationReport(
                 all_passed=False,
@@ -372,7 +373,7 @@ class TestSelfHealingSerializationAndCLI:
             assert "Self-Healing Dry-Run Diagnostics" in captured.out
             assert "Proposed Actions" in captured.out
 
-    def test_apply_worker_patch_self_heal_success(self, tmp_path: Path):
+    def test_apply_worker_patch_self_heal_success(self, tmp_path: Path) -> None:
         from scripts.governance.apply_worker_patch import PatchBlock, execute_swarm_patches
 
         target_file = tmp_path / "mod.py"
@@ -435,7 +436,7 @@ class TestSelfHealingSerializationAndCLI:
                 assert report.semantic_conflict is False
                 assert report.rollback_performed is False
 
-    def test_cli_verify_patch_with_self_heal(self, capsys):
+    def test_cli_verify_patch_with_self_heal(self, capsys: pytest.CaptureFixture[str]) -> None:
         from ccba_harness.cli import run_verify_patch_cli
 
         with patch("ccba_harness.healing.verify_patch_execution") as mock_verify:
