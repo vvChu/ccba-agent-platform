@@ -7,6 +7,7 @@ Searches and lists available skills in claudekit-engineer/claude/skills/.
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -17,23 +18,25 @@ SKILLS_DIRS = [
 ]
 
 
-def parse_frontmatter(file_path: Path) -> dict:
+def parse_frontmatter(file_path: Path) -> dict[str, Any]:
     """Parse the YAML frontmatter of a SKILL.md file."""
     try:
         content = file_path.read_text(encoding="utf-8")
         match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
         if match:
             yaml_block = match.group(1)
-            return yaml.safe_load(yaml_block)
+            data = yaml.safe_load(yaml_block)
+            return data if isinstance(data, dict) else {}
     except Exception:
         pass
     return {}
 
 
-def find_skills(query: str = ""):
+def find_skills(query: str = "") -> None:
     """Search for skills matching the query in name, description, or keywords."""
     query_lower = query.lower()
-    matches = []
+    matches: list[dict[str, Any]] = []
+
 
     for skills_dir in SKILLS_DIRS:
         if not skills_dir.exists():
@@ -90,15 +93,21 @@ def find_skills(query: str = ""):
         print()
 
 
-def main():
+def main() -> None:
     if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+
         try:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    query = ""
-    if len(sys.argv) > 1:
-        query = " ".join(sys.argv[1:])
+    args = sys.argv[1:]
+    if args and args[0] in ("--seam", "--seams", "-s"):
+        keyword = " ".join(args[1:]) if len(args) > 1 else ""
+        from scripts.governance.compile_catalog import query_catalog
+
+        sys.exit(query_catalog(HUB_ROOT, keyword))
+
+    query = " ".join(args) if args else ""
     find_skills(query)
 
 
