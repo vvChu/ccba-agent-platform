@@ -175,8 +175,16 @@ class DocumentAuditor(BaseAuditor):
         """Get set of modified files in the current git workspace or branch."""
         return self.drift_auditor.get_modified_files()
 
+    def check_marker_drift(self, docs: list[Path] | None = None) -> list[str]:
+        """Check invariant marker drift delegating to DriftAuditor."""
+        return self.drift_auditor.check_marker_drift(docs=docs)
+
+    def check_structural_git_drift(self) -> list[str]:
+        """Check structural git drift delegating to DriftAuditor."""
+        return self.drift_auditor.check_structural_git_drift()
+
     def check_architecture_drift(self) -> list[str]:
-        """Check if structural files were added/deleted without updating architecture docs."""
+        """Check if structural files or markers drifted without updating architecture docs."""
         return self.drift_auditor.check_architecture_drift()
 
     # ---------------------------------------------------------------------------
