@@ -33,7 +33,7 @@ Sau khi hoàn tất giai đoạn ổn định hạ tầng kết nối Hub-Spoke,
 - [x] Bổ sung lệnh CLI tương tác Phiếu Giao Việc (PGV) cho Spoke (Tách sang Spoke độc lập `IDOP-CCBA-WAY` theo ADR-0018 & ADR-0043, duy trì schema compatibility contract).
 - [x] Bổ sung bộ đánh giá tự động benchmark cho `legal-advisor` trong `/ccba-skills-eval` (Đã bổ sung 4 test cases thẩm quyền PCCC vào `eval_pccc_audit.json`).
 
-> **Báo cáo nghiệm thu chi tiết:** Xem file [issue-225-audit-report.md](file:///home/vvc/ccba/ccba-agent-platform/.md/knowledge/issues/issue-225-audit-report.md).
+> **Báo cáo nghiệm thu chi tiết:** Xem file [issue-225-audit-report.md](./issue-225-audit-report.md).
 
 ---
 *Được đề xuất tự động từ Spoke `vvc_working_space` qua workflow `/ccba-issue-to-hub`.*

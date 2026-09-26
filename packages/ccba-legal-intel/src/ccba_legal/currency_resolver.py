@@ -296,13 +296,20 @@ def _resolve_from_currency_card(role: StatutoryRole, eval_date: str) -> Statutor
                 eff_date = str(entry.get("effective_date") or spec["effective_date"])
                 if eval_date >= eff_date:
                     doc_num = str(entry.get("document_number") or spec["active_doc_number"])
-                    title = str(
-                        entry.get("active_law")
-                        or entry.get("active_decree")
-                        or entry.get("active_circular")
-                        or entry.get("active_standard")
-                        or spec["active_title"]
-                    )
+                    card_title = entry.get("title")
+                    if not card_title:
+                        for k in (
+                            "active_law",
+                            "active_decree",
+                            "active_circular",
+                            "active_standard",
+                        ):
+                            val = entry.get(k)
+                            if val:
+                                domain = entry.get("domain") or spec.get("domain_key", "")
+                                card_title = f"{val} - {domain}" if domain else val
+                                break
+                    title = str(card_title or spec["active_title"])
                     return StatutoryDocInfo(
                         role=role,
                         doc_number=doc_num,
