@@ -758,3 +758,278 @@ name: ccba-coding-skill
     assert "python -m ccba_harness verify-patch" in mut
     assert "Outdated body." not in mut
     assert "## Next Section" in mut
+
+
+# ===========================================================================
+# Issue #368: Auto-Tuner Hardening Tests
+# 1. Config Precedence via _UNSET sentinel
+# 2. Concurrency Token Reservation Barrier
+# 3. Hard Max Tokens Per Skill Ceiling
+# 4. Type-Safe Exception Preservation
+# 5. Async Event Loop Decoupling
+# ===========================================================================
+
+import asyncio
+from typing import Any
+
+from ccba_harness.evals.runner import EvalRunner
+from ccba_harness.evals.tuner import (
+    CircuitBreakerOpenError,
+    LLMTaskAdapter,
+    RatchetReport,
+    TokenUsageTracker,
+)
+
+
+def test_ratchet_config_precedence_unset_sentinel_respects_user_values(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Verify RatchetConfig uses _UNSET sentinel so user-supplied CLI/init parameters are never overridden by env vars."""
+    target = tmp_path / "SKILL.md"
+    target.write_text("# Test Skill", encoding="utf-8")
+
+    monkeypatch.setenv("CCBA_TUNER_CONCURRENCY", "10")
+    monkeypatch.setenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET", "100000")
+    monkeypatch.setenv("CCBA_TUNER_HARD_MAX_PER_SKILL", "999999")
+
+    # Case 1: Explicit user parameters must NOT be overridden by environment variables
+    cfg_explicit = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+        max_concurrency=5,
+        per_skill_mutation_budget=250_000,
+        hard_max_tokens_per_skill=500_000,
+    )
+    assert cfg_explicit.max_concurrency == 5
+    assert cfg_explicit.per_skill_mutation_budget == 250_000
+    assert cfg_explicit.hard_max_tokens_per_skill == 500_000
+
+    # Case 2: Unset parameters must resolve from environment variables
+    cfg_from_env = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+    )
+    assert cfg_from_env.max_concurrency == 10
+    assert cfg_from_env.per_skill_mutation_budget == 100_000
+    assert cfg_from_env.hard_max_tokens_per_skill == 999_999
+
+    # Case 3: When env vars are absent, fall back to robust defaults
+    monkeypatch.delenv("CCBA_TUNER_CONCURRENCY", raising=False)
+    monkeypatch.delenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET", raising=False)
+    monkeypatch.delenv("CCBA_TUNER_HARD_MAX_PER_SKILL", raising=False)
+
+    cfg_defaults = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+    )
+    assert cfg_defaults.max_concurrency == 5
+    assert cfg_defaults.per_skill_mutation_budget == 250_000
+    assert cfg_defaults.hard_max_tokens_per_skill == 500_000
+
+
+def test_token_usage_tracker_reservation_barrier() -> None:
+    """Verify TokenUsageTracker reserve() and release_reservation() enforce token barriers."""
+    tracker = TokenUsageTracker(budget_ceiling=1000)
+    assert tracker.available_tokens == 1000
+    assert tracker.reserved_tokens == 0
+    assert not tracker.is_exhausted
+
+    # Reserve 400 tokens
+    assert tracker.reserve(400) is True
+    assert tracker.reserved_tokens == 400
+    assert tracker.available_tokens == 600
+
+    # Reserve another 400 tokens
+    assert tracker.reserve(400) is True
+    assert tracker.reserved_tokens == 800
+    assert tracker.available_tokens == 200
+
+    # Attempting to reserve 300 tokens exceeds 1000 ceiling (800 + 300 = 1100) -> returns False
+    assert tracker.reserve(300) is False
+    assert tracker.reserved_tokens == 800
+    assert tracker.available_tokens == 200
+
+    # Release 400 tokens reservation
+    tracker.release_reservation(400)
+    assert tracker.reserved_tokens == 400
+    assert tracker.available_tokens == 600
+
+    # Record actual usage: 250 prompt, 150 completion = 400 total
+    tracker.record_usage(prompt_tokens=250, completion_tokens=150)
+    assert tracker.total_tokens == 400
+
+    # Release remaining reservation
+    tracker.release_reservation(400)
+    assert tracker.reserved_tokens == 0
+    assert tracker.available_tokens == 600
+
+    # Now usage is 400. Reserving 601 exceeds ceiling -> returns False
+    assert tracker.reserve(601) is False
+
+    # Reserving exactly 600 is permitted
+    assert tracker.reserve(600) is True
+    assert tracker.is_exhausted
+    assert tracker.available_tokens == 0
+
+
+@pytest.mark.asyncio
+async def test_llm_task_adapter_reservation_barrier_and_safe_release() -> None:
+    """Verify LLMTaskAdapter dynamically reserves tokens and reliably releases reservation on error."""
+    tracker = TokenUsageTracker(budget_ceiling=1000)
+
+    class MockFailingClient:
+        async def chat_with_metadata(self, *args, **kwargs) -> Any:
+            await asyncio.sleep(0.01)
+            raise RuntimeError("Simulation failure in LLM API call")
+
+    adapter = LLMTaskAdapter(
+        async_client=MockFailingClient(),
+        token_tracker=tracker,
+        estimated_task_tokens=500,
+    )
+
+    task = adapter.create_async_eval_task("test prompt")
+    item = EvalItem(id="item-fail", input_prompt="input")
+
+    # When task raises, reservation must be safely released in finally block
+    with pytest.raises(RuntimeError, match="Simulation failure"):
+        await task(item)
+
+    assert tracker.reserved_tokens == 0
+    assert tracker.available_tokens == 1000
+
+
+def test_hard_max_tokens_per_skill_halts_even_if_improvements_kept(tmp_path: Path) -> None:
+    """Verify GitRatchetOptimizer halts with HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED when hard ceiling is reached."""
+    target = tmp_path / "SKILL.md"
+    initial_text = "# Initial Skill"
+    target.write_text(initial_text, encoding="utf-8")
+
+    config = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+        max_iterations=5,
+        target_score=100.0,
+        full_sweep=True,
+        per_skill_mutation_budget=None,
+        hard_max_tokens_per_skill=1000,
+    )
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+
+    # Baseline evaluation consumes 0 mutation tokens
+    baseline_rep = EvalReport(
+        total_items=1,
+        passed_items=0,
+        failed_items=1,
+        overall_score=50.0,
+        pass_rate=0.0,
+        item_results=[],
+    )
+    # Iteration 1 improves score to 80.0% (kept)
+    iter1_rep = EvalReport(
+        total_items=1,
+        passed_items=1,
+        failed_items=0,
+        overall_score=80.0,
+        pass_rate=1.0,
+        item_results=[],
+    )
+
+    optimizer.evaluate_content = MagicMock(side_effect=[baseline_rep, iter1_rep])
+    optimizer.propose_mutation = MagicMock(return_value="# Mutated Skill 1")
+    optimizer.git_commit_improvement = MagicMock(return_value=True)
+
+    # Simulate token consumption of 1200 tokens during iteration 1
+    def mock_eval_with_tokens(content: str, dataset=None):
+        if optimizer.evaluate_content.call_count == 2:
+            optimizer.token_tracker.record_usage(prompt_tokens=800, completion_tokens=400)
+            return iter1_rep
+        return baseline_rep
+
+    optimizer.evaluate_content.side_effect = mock_eval_with_tokens
+
+    report = optimizer.run()
+
+    # Even though iteration 1 was kept (kept_commits=1), mutation tokens (1200) >= hard_max (1000)
+    assert report.halt_reason == "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+    assert report.kept_commits == 1
+    assert report.total_iterations == 1
+    assert optimizer.evaluate_content.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_eval_runner_and_item_result_exception_preservation() -> None:
+    """Verify EvalItemResult preserves original Exception instance for type-safe inspection."""
+
+    class CustomDomainError(Exception):
+        pass
+
+    async def throwing_task(item: EvalItem) -> str:
+        if item.id == "error-1":
+            raise CustomDomainError("Domain validation failed for entity X")
+        elif item.id == "cb-1":
+            raise CircuitBreakerOpenError("Circuit breaker tripped: downstream 503")
+        return "valid output"
+
+    dataset = [
+        EvalItem(id="error-1", input_prompt="p1"),
+        EvalItem(id="cb-1", input_prompt="p2"),
+        EvalItem(id="ok-1", input_prompt="p3"),
+    ]
+
+    runner = EvalRunner()
+    report = await runner.run(dataset=dataset, task=throwing_task, scorers=[])
+
+    assert len(report.item_results) == 3
+
+    res1 = report.item_results[0]
+    assert res1.error is not None
+    assert "Domain validation failed" in res1.error
+    assert isinstance(res1.exception, CustomDomainError)
+
+    res2 = report.item_results[1]
+    assert res2.error is not None
+    assert isinstance(res2.exception, CircuitBreakerOpenError)
+
+    res3 = report.item_results[2]
+    assert res3.error is None
+    assert res3.exception is None
+
+
+@pytest.mark.asyncio
+async def test_async_event_loop_decoupling_native_coroutines(tmp_path: Path) -> None:
+    """Verify evaluate_content_async and run_async execute seamlessly inside existing event loops without deadlock."""
+    target = tmp_path / "SKILL.md"
+    initial_text = "# Test Async Skill"
+    target.write_text(initial_text, encoding="utf-8")
+
+    config = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+        max_iterations=2,
+        target_score=100.0,
+    )
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+
+    # 1. Native coroutine evaluation inside event loop
+    eval_rep = await optimizer.evaluate_content_async(initial_text)
+    assert isinstance(eval_rep, EvalReport)
+
+    # 2. Native run_async inside event loop
+    async def mock_async_eval(content: str, dataset=None) -> EvalReport:
+        await asyncio.sleep(0.001)
+        return EvalReport(
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            overall_score=100.0,
+            pass_rate=1.0,
+            item_results=[],
+        )
+
+    optimizer.evaluate_content_async = mock_async_eval
+    optimizer.git_commit_improvement = MagicMock(return_value=True)
+
+    report = await optimizer.run_async()
+    assert isinstance(report, RatchetReport)
+    assert report.initial_score == 100.0

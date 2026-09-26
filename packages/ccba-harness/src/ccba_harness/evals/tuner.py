@@ -20,7 +20,7 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
@@ -65,6 +65,9 @@ class TokenBudgetExceededError(Exception):
     pass
 
 
+_UNSET: Any = object()
+
+
 @dataclass
 class TokenUsageTracker:
     """Session-wide token consumption tracker and circuit breaker observer."""
@@ -77,11 +80,36 @@ class TokenUsageTracker:
     total_latency_s: float = 0.0
     warning_triggered: bool = False
     halt_triggered: bool = False
+    reserved_tokens: int = 0
+
+    def reserve(self, estimated_tokens: int = 2000) -> bool:
+        """Attempts to reserve an estimated number of tokens before dispatching concurrent requests.
+
+        Returns:
+            True if reservation was successful, False if budget would be exceeded.
+        """
+        if (
+            self.halt_triggered
+            or (self.total_tokens + self.reserved_tokens + estimated_tokens) > self.budget_ceiling
+        ):
+            return False
+        self.reserved_tokens += estimated_tokens
+        return True
+
+    def release_reservation(self, estimated_tokens: int = 2000) -> None:
+        """Releases a previously reserved token amount."""
+        self.reserved_tokens = max(0, self.reserved_tokens - estimated_tokens)
 
     def record_usage(
-        self, prompt_tokens: int, completion_tokens: int, latency_s: float = 0.0
+        self,
+        prompt_tokens: int,
+        completion_tokens: int,
+        latency_s: float = 0.0,
+        reserved_tokens: int = 0,
     ) -> None:
-        """Records token usage and latency from a model inference call."""
+        """Records token usage and latency from a model inference call, releasing reservation if held."""
+        if reserved_tokens > 0:
+            self.reserved_tokens = max(0, self.reserved_tokens - reserved_tokens)
         self.prompt_tokens += prompt_tokens
         self.completion_tokens += completion_tokens
         self.total_tokens += prompt_tokens + completion_tokens
@@ -103,9 +131,16 @@ class TokenUsageTracker:
             )
 
     @property
+    def available_tokens(self) -> int:
+        """Returns remaining unreserved and unconsumed tokens under budget ceiling."""
+        return max(0, self.budget_ceiling - (self.total_tokens + self.reserved_tokens))
+
+    @property
     def is_exhausted(self) -> bool:
-        """Checks whether token budget ceiling has been exhausted."""
-        return self.total_tokens >= self.budget_ceiling or self.halt_triggered
+        """Checks whether token budget ceiling has been exhausted or fully reserved."""
+        return (
+            self.total_tokens + self.reserved_tokens
+        ) >= self.budget_ceiling or self.halt_triggered
 
     @property
     def avg_latency_s(self) -> float:
@@ -209,10 +244,12 @@ class LLMTaskAdapter:
         circuit_breaker: Any | None = None,
         rate_limiter: RateLimiter | None = None,
         async_client: Any | None = None,
+        estimated_task_tokens: int = 2000,
     ) -> None:
         self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
         self.token_tracker = token_tracker or TokenUsageTracker()
         self.rate_limiter = rate_limiter
+        self.estimated_task_tokens = estimated_task_tokens
         self._last_latency_s = 0.0
         if circuit_breaker is not None:
             self.circuit_breaker = circuit_breaker
@@ -251,16 +288,21 @@ class LLMTaskAdapter:
         """Creates a callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
 
         def llm_eval_task(item: EvalItem) -> str:
-            if self.token_tracker.is_exhausted:
+            tokens_to_reserve = min(
+                self.estimated_task_tokens,
+                max(1, self.token_tracker.budget_ceiling // 5),
+            )
+            if not self.token_tracker.reserve(tokens_to_reserve):
                 raise TokenBudgetExceededError(
                     f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
                 )
 
-            if self.rate_limiter is not None:
-                self.rate_limiter.wait(last_latency_s=self._last_latency_s)
-
-            t0 = time.perf_counter()
+            reserved = True
             try:
+                if self.rate_limiter is not None:
+                    self.rate_limiter.wait(last_latency_s=self._last_latency_s)
+
+                t0 = time.perf_counter()
                 res = self.client.chat_with_metadata(
                     message=str(item.input_prompt),
                     system=skill_content,
@@ -271,7 +313,10 @@ class LLMTaskAdapter:
                 self._last_latency_s = latency
                 p_tok = res.usage.prompt_tokens if res.usage else 0
                 c_tok = res.usage.completion_tokens if res.usage else 0
-                self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
+                self.token_tracker.record_usage(
+                    p_tok, c_tok, latency_s=latency, reserved_tokens=tokens_to_reserve
+                )
+                reserved = False
                 return str(res.content)
             except CircuitBreakerOpenError:
                 # Re-raise circuit breaker fast-fail to trigger early stopping
@@ -282,6 +327,9 @@ class LLMTaskAdapter:
                 ):
                     self.circuit_breaker.record_failure(e)
                 raise
+            finally:
+                if reserved:
+                    self.token_tracker.release_reservation(tokens_to_reserve)
 
         return llm_eval_task
 
@@ -289,19 +337,24 @@ class LLMTaskAdapter:
         """Creates an async callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
 
         async def async_llm_eval_task(item: EvalItem) -> str:
-            if self.token_tracker.is_exhausted:
+            tokens_to_reserve = min(
+                self.estimated_task_tokens,
+                max(1, self.token_tracker.budget_ceiling // 5),
+            )
+            if not self.token_tracker.reserve(tokens_to_reserve):
                 raise TokenBudgetExceededError(
                     f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
                 )
 
-            if self.rate_limiter is not None:
-                if hasattr(self.rate_limiter, "wait_async"):
-                    await self.rate_limiter.wait_async(last_latency_s=self._last_latency_s)
-                else:
-                    self.rate_limiter.wait(last_latency_s=self._last_latency_s)
-
-            t0 = time.perf_counter()
+            reserved = True
             try:
+                if self.rate_limiter is not None:
+                    if hasattr(self.rate_limiter, "wait_async"):
+                        await self.rate_limiter.wait_async(last_latency_s=self._last_latency_s)
+                    else:
+                        self.rate_limiter.wait(last_latency_s=self._last_latency_s)
+
+                t0 = time.perf_counter()
                 active_client = self.async_client if self.async_client is not None else self.client
                 call_fn = active_client.chat_with_metadata
                 if inspect.iscoroutinefunction(call_fn):
@@ -328,7 +381,10 @@ class LLMTaskAdapter:
                 usage = getattr(res, "usage", None)
                 p_tok = getattr(usage, "prompt_tokens", 0) if usage else 0
                 c_tok = getattr(usage, "completion_tokens", 0) if usage else 0
-                self.token_tracker.record_usage(p_tok, c_tok, latency_s=latency)
+                self.token_tracker.record_usage(
+                    p_tok, c_tok, latency_s=latency, reserved_tokens=tokens_to_reserve
+                )
+                reserved = False
                 return str(res.content)
             except CircuitBreakerOpenError:
                 # Re-raise circuit breaker fast-fail to trigger early stopping
@@ -339,6 +395,9 @@ class LLMTaskAdapter:
                 ):
                     self.circuit_breaker.record_failure(e)
                 raise
+            finally:
+                if reserved:
+                    self.token_tracker.release_reservation(tokens_to_reserve)
 
         return async_llm_eval_task
 
@@ -364,8 +423,9 @@ class RatchetConfig:
     split_ratio: float = 0.7
     slicing_seed: int = 42
     enable_perturbation: bool = True
-    per_skill_mutation_budget: int | None = 250_000
-    max_concurrency: int = 5
+    per_skill_mutation_budget: int | None = cast(Any, _UNSET)
+    hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
+    max_concurrency: int = cast(Any, _UNSET)
 
     def __post_init__(self) -> None:
         if isinstance(self.target_file, str):
@@ -389,7 +449,9 @@ class RatchetConfig:
                     self.token_budget = 5_000_000
             else:
                 self.token_budget = 5_000_000
-        if self.per_skill_mutation_budget == 250_000:
+
+        # Configuration Precedence via Sentinel (Issue #368): User > Env > Default
+        if self.per_skill_mutation_budget is _UNSET:
             env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
             if env_ps_budget:
                 try:
@@ -397,14 +459,31 @@ class RatchetConfig:
                         env_ps_budget.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    pass
-        if self.max_concurrency == 5:
+                    self.per_skill_mutation_budget = 250_000
+            else:
+                self.per_skill_mutation_budget = 250_000
+
+        if self.hard_max_tokens_per_skill is _UNSET:
+            env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
+            if env_hard_max:
+                try:
+                    self.hard_max_tokens_per_skill = int(
+                        env_hard_max.replace(",", "").replace("_", "")
+                    )
+                except ValueError:
+                    self.hard_max_tokens_per_skill = 500_000
+            else:
+                self.hard_max_tokens_per_skill = 500_000
+
+        if self.max_concurrency is _UNSET:
             env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
             if env_concurrency:
                 try:
                     self.max_concurrency = int(env_concurrency)
                 except ValueError:
-                    pass
+                    self.max_concurrency = 5
+            else:
+                self.max_concurrency = 5
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -507,7 +586,17 @@ class RatchetConfig:
             re.IGNORECASE,
         )
         per_skill_mutation_budget = (
-            int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else 250_000
+            int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else _UNSET
+        )
+
+        # Parse Hard Max Tokens Per Skill
+        hard_max_match = re.search(
+            r"-\s*\*\*Hard\s*Max\s*(?:Tokens\s*)?(?:Per\s*Skill)?\*\*:\s*([0-9,_]+)",
+            content,
+            re.IGNORECASE,
+        )
+        hard_max_tokens_per_skill = (
+            int(re.sub(r"[,_]", "", hard_max_match.group(1))) if hard_max_match else _UNSET
         )
 
         return cls(
@@ -520,6 +609,7 @@ class RatchetConfig:
             llm_model=llm_model,
             token_budget=token_budget,
             per_skill_mutation_budget=per_skill_mutation_budget,
+            hard_max_tokens_per_skill=hard_max_tokens_per_skill,
         )
 
 
@@ -777,38 +867,13 @@ class GitRatchetOptimizer:
         """Preserves YAML frontmatter metadata when mutating SKILL.md body."""
         return preserve_yaml_frontmatter(original_content, edited_content)
 
-    def evaluate_content(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
-        """Evaluates given skill prompt content against test dataset (or tuning/holdout subset)."""
-        target_dataset = dataset if dataset is not None else self.tuning_dataset
+    def _build_eval_task(self, content: str) -> Callable[[EvalItem], Any]:
+        """Resolves task callable (custom, real LLM, or domain mock simulation)."""
         if self.custom_task is not None:
-            return self.runner.run_sync(
-                dataset=target_dataset,
-                task=self.custom_task,
-                scorers=self.scorers,
-            )
+            return self.custom_task
 
-        # Real LLM task execution with token governance & circuit breaker
         if self.config.use_real_llm and self.llm_adapter is not None:
-            llm_task = self.llm_adapter.create_async_eval_task(content)
-            report = self.runner.run_sync(
-                dataset=target_dataset,
-                task=llm_task,
-                scorers=self.scorers,
-                max_concurrency=self.config.max_concurrency,
-            )
-            for item_res in report.item_results:
-                if item_res.error:
-                    err_l = item_res.error.lower()
-                    if "circuit" in err_l and ("open" in err_l or "breaker" in err_l):
-                        raise CircuitBreakerOpenError(item_res.error)
-                    if "token budget" in err_l and "exceeded" in err_l:
-                        raise TokenBudgetExceededError(item_res.error)
-
-            if self.token_tracker.is_exhausted:
-                raise TokenBudgetExceededError(
-                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
-                )
-            return report
+            return self.llm_adapter.create_async_eval_task(content)
 
         # Grounded task execution taking into account current prompt content
         def mock_agent_task(item: EvalItem) -> str:
@@ -1594,11 +1659,68 @@ class GitRatchetOptimizer:
 
             return "\n\n".join(parts)
 
-        return self.runner.run_sync(
-            dataset=target_dataset,
-            task=mock_agent_task,
-            scorers=self.scorers,
+        return mock_agent_task
+
+    def _verify_eval_report(self, report: EvalReport) -> None:
+        """Verifies report for circuit breaker or token budget failures and raises appropriate errors."""
+        for item_res in report.item_results:
+            if item_res.exception is not None:
+                if isinstance(item_res.exception, CircuitBreakerOpenError):
+                    raise item_res.exception
+                if isinstance(item_res.exception, TokenBudgetExceededError):
+                    raise item_res.exception
+            if item_res.error:
+                err_l = item_res.error.lower()
+                if "circuit" in err_l and ("open" in err_l or "breaker" in err_l):
+                    raise CircuitBreakerOpenError(item_res.error)
+                if "token budget" in err_l and "exceeded" in err_l:
+                    raise TokenBudgetExceededError(item_res.error)
+
+        if self.token_tracker.is_exhausted:
+            raise TokenBudgetExceededError(
+                f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
+            )
+
+    async def evaluate_content_async(
+        self, content: str, dataset: list[EvalItem] | None = None
+    ) -> EvalReport:
+        """Asynchronously evaluates skill prompt content against test dataset.
+
+        Native coroutine for running within existing asyncio event loops.
+        """
+        target_dataset = dataset if dataset is not None else self.tuning_dataset
+        task = self._build_eval_task(content)
+        concurrency = (
+            self.config.max_concurrency
+            if (self.config.use_real_llm and self.llm_adapter is not None)
+            else None
         )
+        report = await self.runner.run(
+            dataset=target_dataset,
+            task=task,
+            scorers=self.scorers,
+            max_concurrency=concurrency,
+        )
+        self._verify_eval_report(report)
+        return report
+
+    def evaluate_content(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
+        """Synchronously evaluates given skill prompt content against test dataset (or tuning/holdout subset)."""
+        target_dataset = dataset if dataset is not None else self.tuning_dataset
+        task = self._build_eval_task(content)
+        concurrency = (
+            self.config.max_concurrency
+            if (self.config.use_real_llm and self.llm_adapter is not None)
+            else None
+        )
+        report = self.runner.run_sync(
+            dataset=target_dataset,
+            task=task,
+            scorers=self.scorers,
+            max_concurrency=concurrency,
+        )
+        self._verify_eval_report(report)
+        return report
 
     def propose_mutation(self, current_content: str, iteration: int) -> str:
         """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
@@ -2028,8 +2150,47 @@ class GitRatchetOptimizer:
             except Exception:
                 pass
 
+    def _eval_sync(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
+        """Internal synchronous evaluation dispatcher with backward-compatible mock signature handling."""
+        if dataset is not None:
+            try:
+                return self.evaluate_content(content, dataset)
+            except TypeError:
+                return self.evaluate_content(content)
+        return self.evaluate_content(content)
+
+    async def _eval_async(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
+        """Internal asynchronous evaluation dispatcher supporting both sync mocks and native coroutines."""
+        if "evaluate_content_async" in self.__dict__ or hasattr(
+            self.evaluate_content_async, "mock_calls"
+        ):
+            try:
+                res_async = (
+                    self.evaluate_content_async(content, dataset)
+                    if dataset is not None
+                    else self.evaluate_content_async(content)
+                )
+            except TypeError:
+                res_async = self.evaluate_content_async(content)
+            return (
+                await res_async if inspect.isawaitable(res_async) else cast(EvalReport, res_async)
+            )
+
+        if "evaluate_content" in self.__dict__ or hasattr(self.evaluate_content, "mock_calls"):
+            try:
+                res_sync = (
+                    self.evaluate_content(content, dataset)
+                    if dataset is not None
+                    else self.evaluate_content(content)
+                )
+            except TypeError:
+                res_sync = self.evaluate_content(content)
+            return await res_sync if inspect.isawaitable(res_sync) else res_sync
+
+        return await self.evaluate_content_async(content, dataset)
+
     def run(self) -> RatchetReport:
-        """Executes the full ratchet autonomous optimization loop."""
+        """Executes the full ratchet autonomous optimization loop synchronously."""
         if not self.target_file.exists():
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
@@ -2037,7 +2198,7 @@ class GitRatchetOptimizer:
         halt_reason: str | None = None
 
         try:
-            baseline_report = self.evaluate_content(initial_content)
+            baseline_report = self._eval_sync(initial_content)
             baseline_score = baseline_report.overall_score
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
             logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
@@ -2068,12 +2229,7 @@ class GitRatchetOptimizer:
         initial_holdout_score: float | None = None
         if self.holdout_dataset:
             try:
-                try:
-                    holdout_base_rep = self.evaluate_content(
-                        initial_content, dataset=self.holdout_dataset
-                    )
-                except TypeError:
-                    holdout_base_rep = self.evaluate_content(initial_content)
+                holdout_base_rep = self._eval_sync(initial_content, dataset=self.holdout_dataset)
                 initial_holdout_score = holdout_base_rep.overall_score
                 logger.info(
                     f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
@@ -2180,9 +2336,9 @@ class GitRatchetOptimizer:
                         from scripts.governance.link_auditor import LinkAuditor
 
                         link_issues = [
-                            i
-                            for i in LinkAuditor(self.project_root).audit(self.target_file)
-                            if i.category in ("links", "okf_links", "okf_conflicts")
+                            item_issue
+                            for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
+                            if item_issue.category in ("links", "okf_links", "okf_conflicts")
                         ]
                     except Exception as e:
                         logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
@@ -2212,7 +2368,7 @@ class GitRatchetOptimizer:
                         continue
 
                     # Evaluate (Only executed when working tree passes static validation)
-                    report = self.evaluate_content(mutated_content)
+                    report = self._eval_sync(mutated_content)
                     current_score = report.overall_score
                     crit_fails = sum(1 for r in report.item_results if r.critical_failed)
 
@@ -2260,8 +2416,19 @@ class GitRatchetOptimizer:
                         )
                         break
 
-                    # Per-skill mutation budget check
+                    # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
                     mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+                    if (
+                        self.config.hard_max_tokens_per_skill is not None
+                        and mutation_tokens >= self.config.hard_max_tokens_per_skill
+                    ):
+                        logger.info(
+                            f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {i} trials. Dừng đột biến để bảo vệ ngân sách toàn đêm."
+                        )
+                        halt_reason = "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+                        break
+
+                    # Per-skill mutation budget check
                     if (
                         self.config.per_skill_mutation_budget is not None
                         and mutation_tokens >= self.config.per_skill_mutation_budget
@@ -2355,12 +2522,376 @@ class GitRatchetOptimizer:
                 )
             else:
                 try:
-                    try:
-                        holdout_final_rep = self.evaluate_content(
-                            best_content, dataset=self.holdout_dataset
+                    holdout_final_rep = self._eval_sync(best_content, dataset=self.holdout_dataset)
+                    final_holdout_score = holdout_final_rep.overall_score
+                    logger.info(
+                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
+                    )
+                except Exception as e:
+                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+
+        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
+        return RatchetReport(
+            target_file=str(self.target_file),
+            initial_score=baseline_score,
+            final_score=best_score,
+            total_iterations=len(history),
+            kept_commits=kept_count,
+            reverted_trials=reverted_count,
+            history=history,
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=halt_reason,
+            slicing_tier=slicing_tier_str,
+            tuning_size=len(self.tuning_dataset),
+            holdout_size=len(self.holdout_dataset),
+            holdout_score=final_holdout_score,
+            holdout_initial_score=initial_holdout_score,
+        )
+
+    async def run_async(self) -> RatchetReport:
+        """Executes the full ratchet autonomous optimization loop asynchronously.
+
+        Native coroutine for running within existing asyncio event loops.
+        """
+        if not self.target_file.exists():
+            raise FileNotFoundError(f"Target file not found: {self.target_file}")
+
+        initial_content = self.target_file.read_text(encoding="utf-8")
+        halt_reason: str | None = None
+
+        try:
+            baseline_report = await self._eval_async(initial_content)
+            baseline_score = baseline_report.overall_score
+        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
+            logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
+            reason = (
+                "CIRCUIT_BREAKER_OPEN"
+                if isinstance(init_err, CircuitBreakerOpenError)
+                else "TOKEN_BUDGET_EXCEEDED"
+            )
+            slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
+            return RatchetReport(
+                target_file=str(self.target_file),
+                initial_score=0.0,
+                final_score=0.0,
+                total_iterations=0,
+                kept_commits=0,
+                reverted_trials=0,
+                history=[],
+                total_tokens=self.token_tracker.total_tokens,
+                prompt_tokens=self.token_tracker.prompt_tokens,
+                completion_tokens=self.token_tracker.completion_tokens,
+                avg_latency_s=self.token_tracker.avg_latency_s,
+                halt_reason=reason,
+                slicing_tier=slicing_tier_str,
+                tuning_size=len(self.tuning_dataset),
+                holdout_size=len(self.holdout_dataset),
+            )
+
+        initial_holdout_score: float | None = None
+        if self.holdout_dataset:
+            try:
+                holdout_base_rep = await self._eval_async(
+                    initial_content, dataset=self.holdout_dataset
+                )
+                initial_holdout_score = holdout_base_rep.overall_score
+                logger.info(
+                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
+                )
+            except Exception as e:
+                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
+
+        baseline_tokens = self.token_tracker.total_tokens
+
+        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
+        if baseline_score >= 100.0:
+            effective_max_iter = 1
+            effective_patience = 1
+        elif baseline_score >= 90.0:
+            effective_max_iter = min(self.config.max_iterations, 5)
+            effective_patience = min(self.config.patience, 2)
+        else:
+            effective_max_iter = min(self.config.max_iterations, 10)
+            effective_patience = min(self.config.patience, 3)
+
+        best_score = baseline_score
+        best_content = initial_content
+        has_committed = False
+        kept_count = 0
+        reverted_count = 0
+        stagnant_trials = 0
+        seen_hashes: set[str] = {hashlib.sha256(initial_content.encode("utf-8")).hexdigest()}
+        history: list[RatchetTrialResult] = []
+
+        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
+        logger.info(
+            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | Mục tiêu: {self.config.target_score}% | Budget: {effective_max_iter} vòng (Patience={effective_patience})"
+        )
+
+        try:
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_p_tokens = self.token_tracker.prompt_tokens
+                prev_c_tokens = self.token_tracker.completion_tokens
+                prev_tot_tokens = self.token_tracker.total_tokens
+                iter_t0 = time.perf_counter()
+
+                try:
+                    mutated_content = self.propose_mutation(best_content, i)
+                    if mutated_content == best_content:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
                         )
-                    except TypeError:
-                        holdout_final_rep = self.evaluate_content(best_content)
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
+
+                    content_hash = hashlib.sha256(mutated_content.encode("utf-8")).hexdigest()
+                    if content_hash in seen_hashes:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
+                    seen_hashes.add(content_hash)
+
+                    # Apply candidate mutation
+                    self.target_file.write_text(mutated_content, encoding="utf-8")
+
+                    # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
+                    best_adr_nums = set(ADR_REF_PATTERN.findall(best_content))
+                    mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
+                    dropped_adrs = sorted(
+                        [
+                            f"ADR-{int(num):04d}"
+                            for num in best_adr_nums
+                            if num not in mutated_adr_nums
+                        ]
+                    )
+                    if dropped_adrs:
+                        dropped_str = ", ".join(dropped_adrs)
+                        logger.warning(
+                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
+                        )
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
+                        trial = RatchetTrialResult(
+                            iteration=i,
+                            score=best_score,
+                            passed=(best_score >= self.config.target_score),
+                            critical_fails=0,
+                            decision=decision,
+                            summary=summary,
+                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                            latency_s=time.perf_counter() - iter_t0,
+                        )
+                        history.append(trial)
+                        continue
+
+                    # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
+                    link_issues = []
+                    try:
+                        if str(self.project_root) not in sys.path:
+                            sys.path.insert(0, str(self.project_root))
+                        from scripts.governance.link_auditor import LinkAuditor
+
+                        link_issues = [
+                            item_issue
+                            for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
+                            if item_issue.category in ("links", "okf_links", "okf_conflicts")
+                        ]
+                    except Exception as e:
+                        logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
+
+                    if link_issues:
+                        logger.warning(
+                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
+                        )
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+                        trial = RatchetTrialResult(
+                            iteration=i,
+                            score=best_score,
+                            passed=(best_score >= self.config.target_score),
+                            critical_fails=0,
+                            decision=decision,
+                            summary=summary,
+                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                            latency_s=time.perf_counter() - iter_t0,
+                        )
+                        history.append(trial)
+                        continue
+
+                    # Evaluate (Only executed when working tree passes static validation)
+                    report = await self._eval_async(mutated_content)
+                    current_score = report.overall_score
+                    crit_fails = sum(1 for r in report.item_results if r.critical_failed)
+
+                    # Ratchet decision
+                    if current_score > best_score and crit_fails == 0:
+                        diff_str = f"{best_score:.1f}% -> {current_score:.1f}% (+{current_score - best_score:.1f}%)"
+                        committed = self.git_commit_improvement(diff_str)
+                        if committed:
+                            has_committed = True
+                        best_score = current_score
+                        best_content = mutated_content
+                        kept_count += 1
+                        stagnant_trials = 0
+                        decision = "KEEP"
+                        summary = f"Cải thiện điểm số thành công: {diff_str}"
+                    else:
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = (
+                            f"Không cải thiện (Score {current_score:.1f}% vs Best {best_score:.1f}%)"
+                            if crit_fails == 0
+                            else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
+                        )
+
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=current_score,
+                        passed=(current_score >= self.config.target_score and crit_fails == 0),
+                        critical_fails=crit_fails,
+                        decision=decision,
+                        summary=summary,
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    logger.info(f"📌 Quyết định [{decision}]: {summary}")
+
+                    if best_score >= self.config.target_score and not self.config.full_sweep:
+                        logger.info(
+                            f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {i}!"
+                        )
+                        break
+
+                    # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
+                    mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+                    if (
+                        self.config.hard_max_tokens_per_skill is not None
+                        and mutation_tokens >= self.config.hard_max_tokens_per_skill
+                    ):
+                        logger.info(
+                            f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {i} trials. Dừng đột biến để bảo vệ ngân sách toàn đêm."
+                        )
+                        halt_reason = "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+                        break
+
+                    # Per-skill mutation budget check
+                    if (
+                        self.config.per_skill_mutation_budget is not None
+                        and mutation_tokens >= self.config.per_skill_mutation_budget
+                        and kept_count == 0
+                        and i >= 2
+                    ):
+                        logger.info(
+                            f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
+                        )
+                        halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+                        break
+
+                    # Adaptive Early Stopping (Grilling Frontier 2)
+                    if effective_patience > 0 and stagnant_trials >= effective_patience:
+                        logger.info(
+                            f"🛑 [Adaptive Early Stopping] Dừng sớm sau {stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
+                        )
+                        break
+                except TokenBudgetExceededError as budget_err:
+                    logger.error(f"🛑 [Token Budget Halt] {budget_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "TOKEN_BUDGET_EXCEEDED"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary=f"Dừng sớm: {budget_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
+                except CircuitBreakerOpenError as cb_err:
+                    logger.error(f"⚡ [Circuit Breaker Fast-Fail] {cb_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    halt_reason = "CIRCUIT_BREAKER_OPEN"
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary="Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+                    break
+                except Exception as iter_err:
+                    logger.error(f"Error during iteration {i}: {iter_err}")
+                    self.git_rollback_target(best_content, has_committed=has_committed)
+                    reverted_count += 1
+                    trial = RatchetTrialResult(
+                        iteration=i,
+                        score=0.0,
+                        passed=False,
+                        critical_fails=1,
+                        decision="REVERT",
+                        summary=f"Lỗi thực thi vòng lặp: {iter_err}",
+                        prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                        completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                        total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                        latency_s=time.perf_counter() - iter_t0,
+                    )
+                    history.append(trial)
+        finally:
+            # Final invariant: verify disk content matches best_content (or initial_content in dry-run)
+            if self.target_file.exists():
+                try:
+                    final_target = initial_content if self.dry_run_git else best_content
+                    current_disk = self.target_file.read_text(encoding="utf-8")
+                    if current_disk != final_target:
+                        self.git_rollback_target(final_target, has_committed=has_committed)
+                except Exception as e:
+                    logger.error(f"Error restoring disk file: {e}")
+
+        final_holdout_score: float | None = None
+        if self.holdout_dataset:
+            if kept_count == 0 and initial_holdout_score is not None:
+                final_holdout_score = initial_holdout_score
+                logger.info(
+                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
+                )
+            else:
+                try:
+                    holdout_final_rep = await self._eval_async(
+                        best_content, dataset=self.holdout_dataset
+                    )
                     final_holdout_score = holdout_final_rep.overall_score
                     logger.info(
                         f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
