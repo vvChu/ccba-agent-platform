@@ -524,3 +524,15 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
   - Khi truy vấn sản lượng token/spend trong ngày từ gateway lưu UTC (LiteLLM `LiteLLM_SpendLogs`), CẤM dùng `CURRENT_DATE` trong `WHERE` (mất trắng 00:00-07:00 ICT). BẮT BUỘC lọc theo mốc 00:00:00 ICT chuẩn hóa sang UTC bảo đảm Index Scan:
     `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
 
+---
+
+## 23. Archived Architectural Invariants (Di dời từ Active Working Memory theo Đề xuất Học tập Plateau Resolution)
+
+- **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]:**
+  - Cấu trúc `.\.md\`: Gốc chứa `workspace_context.yaml`; dữ liệu vào `extracted_docs/`; tri thức vào `knowledge/`; thử nghiệm vào `archive/`. (Chi tiết đối chiếu: Mục 5).
+- **RULE-1.5 [ADR 0037 & ADR 0051 — Two-Tier Traceability Matrix & Status Regex]:**
+  - Tier 1: Hub (53 ADRs). Tier 2: Spoke (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua markers `CUSTOM_SECTIONS`. Regex bắt trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`). (Chi tiết đối chiếu: Mục 9.1 và 9.2, đã được tự động hóa qua `sync_hub_adr_matrix.py`).
+- **RULE-3.3 [Làm Sạch Bảng Biểu, Footnotes & ADR 0044 Multi-Part Disambiguation]:**
+  - Footnote: Khử lặp số `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`; khử lặp ô gộp OpenXML (`gridSpan`). Subheader: `not is_numeric` trước khi gộp subheader tránh nuốt dữ liệu cùng giá trị. Multi-Part: Đa phần mang tiền tố `bang_pXX_YY.csv` và `part_id: "pXX"` trong `tables_catalog.json`. (Chi tiết đối chiếu: Mục 9.4, đã được đóng gói vào parser của `ccba-markdown-document-processing`).
+
+
