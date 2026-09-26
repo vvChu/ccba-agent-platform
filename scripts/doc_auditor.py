@@ -49,6 +49,7 @@ from governance import (
     RegistryAuditor,
     SkillAuditor,
     is_exclusion_header,
+    is_structural_path,
     run_docs_validation_cli,
     run_skills_validation_cli,
 )
@@ -138,6 +139,18 @@ def check_architecture_drift(project_root: Path) -> list[str]:
     return auditor.check_architecture_drift()  # type: ignore[no-any-return]
 
 
+def check_marker_drift(project_root: Path, docs: list[Path] | None = None) -> list[str]:
+    """Check invariant marker drift (standalone alias)."""
+    auditor = DocumentAuditor(project_root)
+    return auditor.check_marker_drift(docs=docs)  # type: ignore[no-any-return]
+
+
+def check_structural_git_drift(project_root: Path) -> list[str]:
+    """Check structural git drift (standalone alias)."""
+    auditor = DocumentAuditor(project_root)
+    return auditor.check_structural_git_drift()  # type: ignore[no-any-return]
+
+
 __all__ = [
     "AuditIssue",
     "AuditReport",
@@ -145,6 +158,7 @@ __all__ = [
     "BaseAuditor",
     "DocumentAuditor",
     "DriftAuditor",
+    "is_structural_path",
     "EnvAuditor",
     "LinkAuditor",
     "RegistryAuditor",
@@ -163,6 +177,8 @@ __all__ = [
     "validate_markdown_file",
     "get_modified_files",
     "check_architecture_drift",
+    "check_marker_drift",
+    "check_structural_git_drift",
     "FRONTMATTER_RE",
     "CODE_REF_RE",
     "LINK_RE",
