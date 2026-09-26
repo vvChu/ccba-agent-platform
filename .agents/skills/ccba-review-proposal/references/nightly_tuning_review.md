@@ -49,6 +49,7 @@ Theo **Định luật Goodhart (Goodhart's Law)**: *"Khi một thước đo tr�
    - Commit chỉ thay đổi thụt đầu dòng, ngắt dòng hoặc ký tự khoảng trắng mà không sửa đổi ngữ nghĩa (đã có Shift-Left Pre-PR Gate chặn đứng, nhưng cần rà soát lại nếu lọt qua).
 4. **Xóa Bỏ / Biến Dạng Cấu Trúc Đã Chuẩn Hóa:**
    - Làm mất frontmatter YAML, làm hỏng bảng Level 3 Progressive Disclosure, hoặc xóa các ràng buộc bảo mật / governance quan trọng của hệ thống.
+   - *Lưu ý đối soát ADR Tag:* Khi phát hiện section cập nhật bị mất thẻ `(ADR-XXXX)`, Reviewer cần kiểm tra xem lỗi bắt nguồn từ phẫu thuật regex của `tuner.py` hay do model cố tình xóa. Nếu do regex cắt xén, kích hoạt Tùy chọn 2 (Cherry-pick commit sạch) và vá `tuner.py`, tuyệt đối không kích hoạt Scorer Hardening.
 
 ### 2.2. Lệnh Soát Chiếu Thay Đổi Ngữ Nghĩa (Semantic Diff Inspection)
 Agent thực hiện kiểm tra diff thực chất loại trừ khoảng trắng:
@@ -94,6 +95,7 @@ Khi phát hiện PR `auto-tune` có dấu hiệu Goodhart gaming, tăng điểm 
 
 ### 🔵 Tùy Chọn 3: Cập Nhật & Siết Chặt Bộ Đề Thi / Scorer (Scorer Hardening)
 - **Khi nào áp dụng:** Kỹ năng vượt qua bài thi quá dễ dàng do Scorer quá lỏng lẻo (chỉ kiểm tra regex đơn giản mà thiếu ngữ cảnh kiểm chứng).
+- *Ranh giới kiến trúc (RULE-2.11):* Tuyệt đối không dùng Scorer đầu ra để vá lỗi phẫu thuật cắt xén tiêu đề của Tuner. Mọi vi phạm thẻ định danh phải được bảo vệ tại 3 Trụ Cột Phòng Vệ SSOT của tuner.py (RULE-4.9).
 - **Thao tác thực hiện:**
   1. Đóng PR hiện tại.
   2. Nâng cấp bộ đề thi trong `.agents/skills/ccba-eval-gate/test_cases/eval_<domain>.json` bổ sung các trường hợp Red-Team và bẫy logic (Anti-traps).

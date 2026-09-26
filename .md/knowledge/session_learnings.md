@@ -24,9 +24,6 @@
   - Regex bắt trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`).
 - **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]**:
   - Tier 0 import Tier 1: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25 Singleton module; Cache Embedding `.npy` kiểm tra SHA-256 sidecar.
-- **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Universal Invariant Merge]**:
-  - *Universal Invariant Regex*: Regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
-  - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa.
 - **RULE-1.9 [2-Phase Planning Guardrail — The Factory Model]**:
   - Refactoring bộ trích xuất/chuyển đổi BẮT BUỘC phân lập 2 giai đoạn: Phase 1 (Pure Structural — Zero-Regression 0.0%, dual-dispatch) và Phase 2 (Feature/Schema Mutations). Cấm scope conflation.
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
@@ -54,6 +51,9 @@
 - **RULE-2.10 [Temporal Invariance & Collinear Multi-Key Sort Guard]**:
   - *Temporal Invariance*: Test TTL/window CẤM ngày tĩnh; BẮT BUỘC ngày tương đối (`today - timedelta(...)`).
   - *Collinear Sort*: Test sắp xếp đa khóa BẮT BUỘC fixture nghịch chiều (`os.utime`), chống bẫy pass do cùng chiều.
+- **RULE-2.11 [Architectural Boundary: Behavioral Scorers vs Structural Linters]**:
+  - Scorer (như `HardCompletionLockScorer`) chỉ chấm điểm hành vi output của LLM; CẤM dùng Scorer làm thay nhiệm vụ linter cú pháp/AST của tài liệu (`SKILL.md`).
+  - Bất biến cấu trúc và thẻ (`ADR-XXXX`) bắt buộc bảo vệ tại tầng phẫu thuật/AST (Dedup, Anchor Regex, Monotonic Guard) chống bẫy Goodhart khi prompt lặp lại từ khóa.
 
 ---
 
@@ -85,17 +85,17 @@
   - Hub cấm push `main` qua hook `pre-push`; qua PR. Sửa/thêm file (kể cả tệp untracked `??` ngoài `tests/`) trong `packages/`, `scripts/`, `.agents/skills/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; dùng `gh pr checks --watch`, chờ Copilot review, 100% Green trước khi merge.
+- **RULE-4.9 [Tuner SSOT 3-Pillar Mutation Defense & Monotonic ADR Token Guard]**:
+  - *Trụ cột 1 (Semantic Dedup)*: Khử thẻ `ADR_HEADER_TAG_REGEX` khi so khớp chiến lược, chống chèn đè section đã có.
+  - *Trụ cột 2 (Anchor & Preservation Regex)*: Cập nhật section neo dòng `(?m)^[ \t]*...` (`re.IGNORECASE`, `[ \t]*\(`), tự động bảo lưu `adr_suffix` vào `clean_header`, chống lặp thẻ.
+  - *Trụ cột 3 (Monotonic Token Guard)*: Pre-Evaluation Fast-Fail trích xuất `int(num)` qua `ADR_REF_PATTERN` (bất biến đệm `0` và `HUB-ADR`/`HUB_ADR`). CẤM mutation làm suy giảm số lượng/mã thẻ ADR.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
-*(RULE-5.1 đến 5.3 đã di dời vào archive/session_learnings_history.md Mục 21; chi tiết 5.4-5.5 tại Mục 22)*
+*(RULE-5.1 đến 5.3 tại Mục 21; RULE-5.4 đến 5.5 tại Mục 22 trong archive/session_learnings_history.md)*
 
-- **RULE-5.4 [Telegram ChatOps: Markdown v1, Subprocess Reaping & Cross-Repo Path]**:
-  - *Markdown v1*: Biến chuỗi chứa `_` bắt buộc bọc backtick (`` `...` ``) kèm `_clean_md` chống lỗi parsing entities Telegram.
-  - *Subprocess Reaping*: Timeout/Cancel bắt buộc `proc.kill()` + `proc.wait()`; shell runner trap cleanup dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ 5s $\rightarrow$ `SIGKILL`.
-  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng `cwd=` tường minh phân giải qua `CCBA_HUB_PATH`, cấm gắn cứng `/home/vvc/...`.
-- **RULE-5.5 [Timezone-Normalized Observability cho Database Gateway UTC]**:
-  - Truy vấn token/spend UTC gateway (LiteLLM) CẤM `CURRENT_DATE`. Bắt buộc lọc theo mốc 00:00:00 ICT chuyển đổi sang UTC:
-    `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
+- **RULE-5.6 [Hermetic Venv Execution & Zero Cross-Repo Interpreter Pollution]**:
+  - MỌI lệnh chạy script test/governance cục bộ BẮT BUỘC dùng `uv run python <script>` hoặc `uv run pytest` thay vì lệnh trần. Wrapper trong `/home/vvc/.local/bin/` trỏ repo khác sẽ gây ô nhiễm `sys.executable` dẫn tới mất plugin test (`pytest-asyncio`) và lỗi `ModuleNotFoundError` giả trên monorepo.
+
 

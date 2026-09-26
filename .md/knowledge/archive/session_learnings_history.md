@@ -524,3 +524,10 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
   - Khi truy vấn sản lượng token/spend trong ngày từ gateway lưu UTC (LiteLLM `LiteLLM_SpendLogs`), CẤM dùng `CURRENT_DATE` trong `WHERE` (mất trắng 00:00-07:00 ICT). BẮT BUỘC lọc theo mốc 00:00:00 ICT chuẩn hóa sang UTC bảo đảm Index Scan:
     `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
 
+---
+
+## 23. Archived Universal Invariant & Multi-Device Spoke Sync (Di dời từ Active Working Memory theo Đề xuất Học tập PR #367/#370)
+
+- **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Universal Invariant Merge]:**
+  - *Universal Invariant Regex*: Regex multiline bảo tồn 100% điều khoản cục bộ khi sync giữa Hub và Spoke.
+  - *Cross-Drive Fallback*: Khi hàm `relpath` gặp lỗi `ValueError` (khác ổ đĩa logic trên Windows), tự động fallback `hub_path` về `None`, tránh gắn cứng đường dẫn ổ đĩa tuyệt đối vào cấu hình.

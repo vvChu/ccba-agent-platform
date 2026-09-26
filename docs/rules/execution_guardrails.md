@@ -362,4 +362,13 @@ Các tác vụ sau được hưởng cơ chế **Fast-Path** (không bắt buộ
 2. **Test Fixtures & Harness Evals**: Bổ sung test cases, sửa mock data, cập nhật test datasets (`.agents/skills/ccba-eval-gate/test_cases/`).
 3. **Tài liệu & Markdown**: Cập nhật tài liệu kỹ thuật, báo cáo nghiệm thu, sửa chính tả, cập nhật `walkthrough.md`.
 
+---
+
+## 19. Hermetic Virtual Environment & Cross-Repo Interpreter Isolation Invariant
+
+- Khi chạy các script kiểm thử, công cụ quản trị hoặc lệnh xác minh cục bộ (`run_isolated_tests.py`, `verify-patch`, `compact_session_learnings.py`, `pytest`):
+  - **Bắt buộc:** Luôn sử dụng tiền tố `uv run python <lệnh>`, `uv run pytest <lệnh>` hoặc đường dẫn thực thi venv cục bộ (`.venv/bin/python`, `.venv/bin/pytest` trên Linux/macOS; `.venv\Scripts\python.exe` trên Windows).
+  - **Nghiêm cấm:** Gọi trực tiếp lệnh `python`, `python3` hoặc `pytest` trần không qua venv cục bộ. Trên máy trạm đa kho chứa (Polyglot/Multi-repo workstation) có cài đặt wrapper CLI cá nhân (như `/home/vvc/.local/bin/python` hoặc `/home/vvc/.local/bin/pytest`), lệnh gọi trần sẽ kích hoạt môi trường ảo của repository khác, dẫn tới ô nhiễm `sys.executable`, thiếu hụt plugin kiểm thử (`pytest-asyncio`) và phát sinh lỗi `ModuleNotFoundError` giả trên các package monorepo.
+
+
 
