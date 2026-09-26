@@ -367,7 +367,16 @@ def verify_bundle_docx_vs_markdown(bundle_dir: Path) -> dict[str, Any]:
                         ):
                             is_end = True
                         break
-            elif p_upper in ("TIÊU CHUẨN QUỐC GIA", "QUY CHUẨN KỸ THUẬT QUỐC GIA"):
+            elif (
+                p_upper
+                in (
+                    "TIÊU CHUẨN QUỐC GIA",
+                    "QUY CHUẨN KỸ THUẬT QUỐC GIA",
+                    "VĂN BẢN QUY PHẠM PHÁP LUẬT",
+                )
+                or p_upper.startswith("CHƯƠNG ")
+                or re.match(r"^ĐIỀU\s+\d+", p_upper)
+            ):
                 is_end = True
             if is_end:
                 in_toc = False

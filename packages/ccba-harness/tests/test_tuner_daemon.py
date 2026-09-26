@@ -557,10 +557,10 @@ def test_remove_stale_plateau_brief(tmp_path: Path) -> None:
 
 
 def test_resolve_dataset_file_completion_checklist() -> None:
-    """Verify ccba-completion-checklist maps to eval_legal_intel.json."""
+    """Verify ccba-completion-checklist maps to eval_legal_tooling.json."""
     daemon = NightlyTunerDaemon()
     ds = daemon._resolve_dataset_file("ccba-completion-checklist")
-    assert ds == "eval_legal_intel.json"
+    assert ds == "eval_legal_tooling.json"
 
 
 def test_weighted_priority_queue_safe_with_none_score() -> None:
