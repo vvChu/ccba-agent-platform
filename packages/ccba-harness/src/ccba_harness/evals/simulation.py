@@ -768,6 +768,43 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 )
             else:
                 parts.append("Sửa lỗi tệp markdown cơ bản...")
+        elif skill_name in ("ccba-design", "design", "visual_design") or any(
+            k in prompt_l
+            for k in [
+                "design token",
+                "bảng màu",
+                "mã màu hex",
+                "typography",
+                "font scale",
+                "safe zone",
+                "vùng an toàn",
+                "clear space",
+                "generate_image",
+                "banner",
+                "ấn phẩm thương hiệu",
+                "cip",
+                "corporate identity",
+                "nhận diện thương hiệu",
+            ]
+        ):
+            has_design_grounding = (
+                "ccba-design" in content
+                or "design token" in content.lower()
+                or "color" in content.lower()
+                or "brand" in content.lower()
+            )
+            if has_design_grounding or "design" in content.lower():
+                parts.append(
+                    "Quy chuẩn Thiết kế Thị giác & Nhận diện Thương hiệu (CCBA Visual Design):\n"
+                    "- Bảng màu & Design Tokens: Primary (#1E3A8A - Navy Blue), Secondary (#0D9488 - Teal), Neutral Surface (#F8FAFC, #0F172A), Semantic Palette (#10B981 Success, #EF4444 Error, #F59E0B Warning). Định nghĩa biến Design Tokens chuẩn cho hệ thống.\n"
+                    "- Cấu trúc Phân cấp Typography & Tỷ lệ Font Scale: Áp dụng tỷ lệ Perfect Fourth (1.333), H1 (32px/40px Bold), H2 (24px/32px SemiBold), H3 (20px/28px Medium), Body (16px/24px Regular), Caption (12px/16px Regular) với font chính Inter / Montserrat.\n"
+                    "- Quy chuẩn Sử dụng Logo & Vùng an toàn: Thiết lập Safe zone / Clear space tối thiểu bằng chiều cao chữ 'C' của logo (khoảng cách x quanh biểu trưng), kích thước hiển thị tối thiểu 24px (digital) / 15mm (print), nghiêm cấm kéo dãn hoặc đổi màu sai quy chuẩn.\n"
+                    "- Cấu trúc Prompt Sinh Hình ảnh / Banner (generate_image specifications): Thiết lập prompt chuẩn với Art Style hiện đại, tỷ lệ Aspect Ratio (16:9 cho banner web, 1:1 cho social), bố cục đối xứng, ánh sáng studio, bảo đảm vùng an toàn văn bản ở trung tâm 70-80%.\n"
+                    "- Bộ Nhận diện Ấn phẩm Văn phòng (CIP - Corporate Identity Program): Quy chuẩn thiết kế đồng bộ cho Namecard (90x54mm), Letterhead A4, Phong bì thư A4/A5, Folder kẹp tài liệu và quà tặng doanh nghiệp với nhận diện thương hiệu nhất quán."
+                )
+            else:
+                parts.append("Thiết kế hình ảnh và tài sản đồ họa cơ bản...")
+
         elif any(
             k in prompt_l
             for k in [

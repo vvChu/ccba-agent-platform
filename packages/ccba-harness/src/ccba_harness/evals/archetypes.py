@@ -26,6 +26,7 @@ from .scorers import (
     get_orchestration_scorers,
     get_pccc_scorers,
     get_skill_repair_scorers,
+    get_visual_design_scorers,
     get_visual_diagram_scorers,
 )
 
@@ -53,6 +54,7 @@ LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
 TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("pccc", "qc", "audit", "thamdinh")
 
 # Creative, Office, Visual & Academic Domains
+VISUAL_DESIGN_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("design", "brand", "logo", "banner", "cip")
 OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "van-phong",
     "docx",
@@ -186,6 +188,12 @@ DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
         "office", OFFICE_ARCHETYPE_KEYWORDS, "eval_copywriting.json", get_office_scorers
     ),
     DomainArchetype(
+        "visual_design",
+        VISUAL_DESIGN_ARCHETYPE_KEYWORDS,
+        "eval_visual_design.json",
+        get_visual_design_scorers,
+    ),
+    DomainArchetype(
         "visual", VISUAL_ARCHETYPE_KEYWORDS, "eval_visual_diagram.json", get_visual_diagram_scorers
     ),
     DomainArchetype(
@@ -241,7 +249,17 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
     # Strip project/namespace prefix so 'bigbim-*' does not false-positive on 'bim' keyword
     sname_core = re.sub(r"^(ccba|bigbim)-", "", sname)
 
+    # Disjoint routing: Exclude 'codebase-design' from visual_design keyword collision (RULE-2.5)
+    if "codebase-design" in sname_core or "codebase-design" in sname:
+        for arch in DOMAIN_ARCHETYPES:
+            if arch.name == "coding":
+                return arch
+
     for arch in DOMAIN_ARCHETYPES:
+        if arch.name == "visual_design" and (
+            "codebase-design" in sname_core or "codebase-design" in sname
+        ):
+            continue
         if any(k in sname_core for k in arch.keywords):
             return arch
     return None

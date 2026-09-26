@@ -332,6 +332,9 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-skill-repair": ["skill_repair", "repair_skill"],
     "skill_repair": ["skill_repair", "repair_skill"],
     "repair_skill": ["skill_repair", "repair_skill"],
+    "ccba-design": ["visual_design", "design", "brand"],
+    "visual_design": ["visual_design", "design", "brand"],
+    "design": ["visual_design", "design", "brand"],
 }
 
 

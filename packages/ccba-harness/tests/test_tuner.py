@@ -2084,7 +2084,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 14
+    assert len(DOMAIN_ARCHETYPES) == 15
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -2102,6 +2102,7 @@ def test_archetype_ssot_resolution():
         ("ccba-ai-qc-pccc-audit", "eval_pccc_audit.json"),
         ("ccba-academic-writing", "eval_academic_writing.json"),
         ("ccba-copywriting", "eval_copywriting.json"),
+        ("ccba-design", "eval_visual_design.json"),
         ("ccba-mermaid-diagram", "eval_visual_diagram.json"),
         ("bigbim-governance", "eval_bigbim_governance.json"),
         ("bigbim-rase", "eval_bigbim_rase.json"),
@@ -2117,9 +2118,15 @@ def test_archetype_ssot_resolution():
         scorers = get_default_domain_scorers(skill_name)
         assert len(scorers) > 0
 
+    # Disjoint routing check: ccba-codebase-design must route to coding, not visual_design
+    arch_codebase = resolve_domain_archetype("ccba-codebase-design")
+    assert arch_codebase is not None
+    assert arch_codebase.name == "coding"
+    assert resolve_domain_dataset("ccba-codebase-design") == "eval_codebase_engineering.json"
+
     # Fallback case
-    assert resolve_domain_archetype("ccba-design") is None
-    assert resolve_domain_dataset("ccba-design") == "eval_general_domain.json"
+    assert resolve_domain_archetype("ccba-unknown-domain") is None
+    assert resolve_domain_dataset("ccba-unknown-domain") == "eval_general_domain.json"
 
 
 def test_archetype_zero_collision_cross_domain():
