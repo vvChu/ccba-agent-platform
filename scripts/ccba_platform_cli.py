@@ -154,9 +154,10 @@ def _generate_authoritative_fallback(
             inferred_doc_num = f"{m_law.group(1)}/{m_law.group(2)}/{m_law.group(3).upper()}"
             inferred_title = f"Luật số {inferred_doc_num}"
 
-    from docx import Document
+    from docx import Document  # ccba:allow-raw-bypass (synthetic test mock generator)
 
     doc = Document()
+
     if "339" in slug and "nd_cp" in slug:
         doc.add_paragraph("Chương I\nQUY ĐỊNH CHUNG")
         doc.add_paragraph("Điều 1. Phạm vi điều chỉnh")
@@ -559,9 +560,10 @@ def execute_ingest_legal(
 
             # Create synthetic docx for testing/mocking
             try:
-                from docx import Document
+                from docx import Document  # ccba:allow-raw-bypass (synthetic test mock generator)
 
                 doc = Document()
+
                 if category == "03_tcvn" or doc_type == "tcvn":
                     doc.add_paragraph(f"TIÊU CHUẨN QUỐC GIA: {slug.upper()}")
                     doc.add_paragraph(
@@ -1070,6 +1072,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Preview planned API calls and ruleset payloads without modifying remote repo",
     )
 
+    # find-seam
+    find_seam_p = subparsers.add_parser(
+        "find-seam",
+        help="Search Public Deep Seams and Skills in CCBA Catalog (ADR 0047)",
+    )
+    find_seam_p.add_argument("keyword", help="Search keyword (e.g. pccc, pdf, docx, rag, etc.)")
+
     return parser
 
 
@@ -1210,6 +1219,11 @@ def main() -> int:
             ruleset_name=args.ruleset_name,
             dry_run=args.dry_run,
         )
+
+    elif args.command == "find-seam":
+        from scripts.governance.compile_catalog import query_catalog
+
+        return query_catalog(hub_root=_ROOT_DIR, query_term=args.keyword)
 
     else:
         parser.print_help()

@@ -5,7 +5,8 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 ## Core Invariants
 
 - **Hub vs Spoke**: Identify environment via `git remote get-url origin`. If it contains `ccba-agent-platform` $\rightarrow$ **Hub**; otherwise $\rightarrow$ **Spoke** (enforcing upstream contribution loop).
-- **Reuse-First Gate**: Check `catalog.yaml` before writing any new utility. Document reuse decision in implementation plans.
+- **Reuse-First Gate & Platform-Aware KISS**: Trước khi đề xuất giải pháp hoặc viết script/utility mới, Agent BẮT BUỘC tra cứu Seam Catalog qua CLI (`compile_catalog.py --query <keyword>` hoặc `ccba-platform find-seam <kw>`). Nếu nền tảng đã có Seam $\rightarrow$ BẮT BUỘC tái sử dụng; CẤM tạo script chắp vá hoặc ad-hoc data silo cục bộ rồi ngụy biện là KISS. Dán bằng chứng tra cứu (Audit Receipt) vào implementation plans (trừ Fast-Path bugfix cục bộ).
+
 - **Session Learnings Bootstrap**: Read `.md/knowledge/session_learnings.md` at the start of Planning Mode or SDLC Loop to load established patterns.
 - **Automation-First Quality & Deterministic Hard Completion Lock (ADR-0058)**: All code, skill, and artifact changes MUST pass automated deterministic verification via `python -m ccba_harness verify-patch` (or scoped verify presets) before completion. The Agent is strictly forbidden from claiming task completion or requesting user sign-off if any verification command exits with code $\ne 0$.
 - **Virtual Hub Fallback**: In Spoke mode, if a referenced skill is not physically present in `.\.agents\skills\`, the Agent MUST transparently read the skill definition directly from `[hub_path]\.agents\skills\<skill_name>\SKILL.md`.
