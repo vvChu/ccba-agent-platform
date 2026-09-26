@@ -15,8 +15,8 @@ from .archetypes import CODING_ARCHETYPE_KEYWORDS
 from .models import EvalItem
 
 
-def create_domain_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalItem], str]:
-    """Creates a grounded domain mock agent task callable simulating model responses.
+def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalItem], str]:
+    """Constructs a deterministic mock agent task simulator for offline eval testing.
 
     Args:
         content: The current prompt or SKILL.md body under evaluation.
@@ -800,3 +800,8 @@ def create_domain_mock_agent_task(content: str, skill_name: str = "") -> Callabl
         return "\n\n".join(parts)
 
     return mock_agent_task
+
+
+create_domain_mock_agent_task = build_mock_agent_task
+
+__all__ = ["build_mock_agent_task", "create_domain_mock_agent_task"]

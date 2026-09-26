@@ -27,7 +27,7 @@ from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
     BaseScorer,
 )
-from .simulation import create_domain_mock_agent_task
+from .simulation import build_mock_agent_task
 from .slicing import (
     AdaptiveDataSlicer,
     SlicedDataset,
@@ -770,343 +770,22 @@ from .archetypes import (  # noqa: F401
 )
 
 
-class _RatchetSession:
-    """Encapsulates mutable loop state and shared trial transitions for GitRatchetOptimizer."""
+@dataclass
+class _RatchetLoopState:
+    """Encapsulates mutable loop state and trial history for GitRatchetOptimizer."""
 
-    def __init__(self, optimizer: GitRatchetOptimizer) -> None:
-        self.opt = optimizer
-        self.target_file = optimizer.target_file
-        self.initial_content = self.target_file.read_text(encoding="utf-8")
-        self.halt_reason: str | None = None
-        self.best_score: float = 0.0
-        self.best_content: str = self.initial_content
-        self.baseline_score: float = 0.0
-        self.baseline_tokens: int = 0
-        self.effective_max_iter: int = 1
-        self.effective_patience: int = 1
-        self.has_committed: bool = False
-        self.kept_count: int = 0
-        self.reverted_count: int = 0
-        self.stagnant_trials: int = 0
-        self.seen_hashes: set[str] = {
-            hashlib.sha256(self.initial_content.encode("utf-8")).hexdigest()
-        }
-        self.history: list[RatchetTrialResult] = []
-        self.initial_holdout_score: float | None = None
+    best_score: float
+    best_content: str
+    has_committed: bool = False
+    kept_count: int = 0
+    reverted_count: int = 0
+    stagnant_trials: int = 0
+    seen_hashes: set[str] = field(default_factory=set)
+    history: list[RatchetTrialResult] = field(default_factory=list)
 
-    def build_init_error_report(
-        self, init_err: TokenBudgetExceededError | CircuitBreakerOpenError
-    ) -> RatchetReport:
-        logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
-        reason = (
-            "CIRCUIT_BREAKER_OPEN"
-            if isinstance(init_err, CircuitBreakerOpenError)
-            else "TOKEN_BUDGET_EXCEEDED"
-        )
-        slicing_tier_str = self.opt.sliced_data.tier.value if self.opt.sliced_data else None
-        return RatchetReport(
-            target_file=str(self.target_file),
-            initial_score=0.0,
-            final_score=0.0,
-            total_iterations=0,
-            kept_commits=0,
-            reverted_trials=0,
-            history=[],
-            total_tokens=self.opt.token_tracker.total_tokens,
-            prompt_tokens=self.opt.token_tracker.prompt_tokens,
-            completion_tokens=self.opt.token_tracker.completion_tokens,
-            avg_latency_s=self.opt.token_tracker.avg_latency_s,
-            halt_reason=reason,
-            slicing_tier=slicing_tier_str,
-            tuning_size=len(self.opt.tuning_dataset),
-            holdout_size=len(self.opt.holdout_dataset),
-        )
 
-    def init_baseline(self, baseline_report: EvalReport) -> None:
-        self.baseline_score = baseline_report.overall_score
-        self.best_score = self.baseline_score
-        self.baseline_tokens = self.opt.token_tracker.total_tokens
-
-        # Tiered budget & patience based on baseline score (ADR-0023 / Grilling Frontier 2)
-        if self.baseline_score >= 100.0:
-            self.effective_max_iter = 1
-            self.effective_patience = 1
-        elif self.baseline_score >= 90.0:
-            self.effective_max_iter = min(self.opt.config.max_iterations, 5)
-            self.effective_patience = min(self.opt.config.patience, 2)
-        else:
-            self.effective_max_iter = min(self.opt.config.max_iterations, 10)
-            self.effective_patience = min(self.opt.config.patience, 3)
-
-        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
-        logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {self.baseline_score:.2f}% | Mục tiêu: {self.opt.config.target_score}% | Budget: {self.effective_max_iter} vòng (Patience={self.effective_patience})"
-        )
-
-    def prepare_mutation(
-        self, i: int, iter_t0: float, prev_p: int, prev_c: int, prev_tot: int
-    ) -> tuple[str | None, bool]:
-        logger.info(f"🔄 --- Iteration {i}/{self.effective_max_iter} ---")
-        mutated_content = self.opt.propose_mutation(self.best_content, i)
-        if mutated_content == self.best_content:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
-            )
-            self.halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-            return None, False
-
-        content_hash = hashlib.sha256(mutated_content.encode("utf-8")).hexdigest()
-        if content_hash in self.seen_hashes:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-            )
-            self.halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-            return None, False
-        self.seen_hashes.add(content_hash)
-
-        # Apply candidate mutation
-        self.target_file.write_text(mutated_content, encoding="utf-8")
-
-        # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
-        best_adr_nums = set(ADR_REF_PATTERN.findall(self.best_content))
-        mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
-        dropped_adrs = sorted(
-            [f"ADR-{int(num):04d}" for num in best_adr_nums if num not in mutated_adr_nums]
-        )
-        if dropped_adrs:
-            dropped_str = ", ".join(dropped_adrs)
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
-            )
-            self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-            self.reverted_count += 1
-            self.stagnant_trials += 1
-            summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
-            self._record_trial(
-                i, self.best_score, 0, "REVERT", summary, iter_t0, prev_p, prev_c, prev_tot
-            )
-            return None, True
-
-        # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
-        link_issues = []
-        try:
-            if str(self.opt.project_root) not in sys.path:
-                sys.path.insert(0, str(self.opt.project_root))
-            from scripts.governance.link_auditor import LinkAuditor
-
-            link_issues = [
-                item_issue
-                for item_issue in LinkAuditor(self.opt.project_root).audit(self.target_file)
-                if item_issue.category in ("links", "okf_links", "okf_conflicts")
-            ]
-        except Exception as e:
-            logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
-
-        if link_issues:
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
-            )
-            self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-            self.reverted_count += 1
-            self.stagnant_trials += 1
-            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
-            self._record_trial(
-                i, self.best_score, 0, "REVERT", summary, iter_t0, prev_p, prev_c, prev_tot
-            )
-            return None, True
-
-        return mutated_content, True
-
-    def process_eval_report(
-        self,
-        i: int,
-        mutated_content: str,
-        report: EvalReport,
-        iter_t0: float,
-        prev_p: int,
-        prev_c: int,
-        prev_tot: int,
-    ) -> bool:
-        current_score = report.overall_score
-        crit_fails = sum(1 for r in report.item_results if r.critical_failed)
-
-        # Ratchet decision
-        if current_score > self.best_score and crit_fails == 0:
-            diff_str = f"{self.best_score:.1f}% -> {current_score:.1f}% (+{current_score - self.best_score:.1f}%)"
-            committed = self.opt.git_commit_improvement(diff_str)
-            if committed:
-                self.has_committed = True
-            self.best_score = current_score
-            self.best_content = mutated_content
-            self.kept_count += 1
-            self.stagnant_trials = 0
-            decision = "KEEP"
-            summary = f"Cải thiện điểm số thành công: {diff_str}"
-        else:
-            self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-            self.reverted_count += 1
-            self.stagnant_trials += 1
-            decision = "REVERT"
-            summary = (
-                f"Không cải thiện (Score {current_score:.1f}% vs Best {self.best_score:.1f}%)"
-                if crit_fails == 0
-                else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
-            )
-
-        self._record_trial(
-            i, current_score, crit_fails, decision, summary, iter_t0, prev_p, prev_c, prev_tot
-        )
-        logger.info(f"📌 Quyết định [{decision}]: {summary}")
-
-        if self.best_score >= self.opt.config.target_score and not self.opt.config.full_sweep:
-            logger.info(
-                f"🎉 Đã đạt điểm mục tiêu {self.opt.config.target_score}% tại iteration {i}!"
-            )
-            return False
-
-        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
-        mutation_tokens = self.opt.token_tracker.total_tokens - self.baseline_tokens
-        if (
-            self.opt.config.hard_max_tokens_per_skill is not None
-            and mutation_tokens >= self.opt.config.hard_max_tokens_per_skill
-        ):
-            logger.info(
-                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã chạm ngưỡng trần tuyệt đối ({self.opt.config.hard_max_tokens_per_skill:,}) sau {i} trials. Dừng đột biến để bảo vệ ngân sách toàn đêm."
-            )
-            self.halt_reason = "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
-            return False
-
-        # Per-skill mutation budget check
-        if (
-            self.opt.config.per_skill_mutation_budget is not None
-            and mutation_tokens >= self.opt.config.per_skill_mutation_budget
-            and self.kept_count == 0
-            and i >= 2
-        ):
-            logger.info(
-                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) đã vượt trần ngân sách ({self.opt.config.per_skill_mutation_budget:,}) sau {i} trials (kept_count=0)."
-            )
-            self.halt_reason = "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
-            return False
-
-        # Adaptive Early Stopping (Grilling Frontier 2)
-        if self.effective_patience > 0 and self.stagnant_trials >= self.effective_patience:
-            logger.info(
-                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {self.stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={self.effective_patience})."
-            )
-            return False
-
-        return True
-
-    def _record_trial(
-        self,
-        i: int,
-        score: float,
-        crit_fails: int,
-        decision: str,
-        summary: str,
-        iter_t0: float,
-        prev_p: int,
-        prev_c: int,
-        prev_tot: int,
-    ) -> None:
-        trial = RatchetTrialResult(
-            iteration=i,
-            score=score,
-            passed=(score >= self.opt.config.target_score and crit_fails == 0),
-            critical_fails=crit_fails,
-            decision=decision,
-            summary=summary,
-            prompt_tokens=self.opt.token_tracker.prompt_tokens - prev_p,
-            completion_tokens=self.opt.token_tracker.completion_tokens - prev_c,
-            total_tokens=self.opt.token_tracker.total_tokens - prev_tot,
-            latency_s=time.perf_counter() - iter_t0,
-        )
-        self.history.append(trial)
-
-    def handle_budget_error(
-        self,
-        i: int,
-        err: TokenBudgetExceededError,
-        iter_t0: float,
-        prev_p: int,
-        prev_c: int,
-        prev_tot: int,
-    ) -> None:
-        logger.error(f"🛑 [Token Budget Halt] {err}")
-        self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-        self.reverted_count += 1
-        self.halt_reason = "TOKEN_BUDGET_EXCEEDED"
-        self._record_trial(
-            i, 0.0, 1, "REVERT", f"Dừng sớm: {err}", iter_t0, prev_p, prev_c, prev_tot
-        )
-
-    def handle_circuit_breaker_error(
-        self,
-        i: int,
-        err: CircuitBreakerOpenError,
-        iter_t0: float,
-        prev_p: int,
-        prev_c: int,
-        prev_tot: int,
-    ) -> None:
-        logger.error(f"⚡ [Circuit Breaker Fast-Fail] {err}")
-        self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-        self.reverted_count += 1
-        self.halt_reason = "CIRCUIT_BREAKER_OPEN"
-        self._record_trial(
-            i,
-            0.0,
-            1,
-            "REVERT",
-            "Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
-            iter_t0,
-            prev_p,
-            prev_c,
-            prev_tot,
-        )
-
-    def handle_iteration_error(
-        self, i: int, err: Exception, iter_t0: float, prev_p: int, prev_c: int, prev_tot: int
-    ) -> None:
-        logger.error(f"Error during iteration {i}: {err}")
-        self.opt.git_rollback_target(self.best_content, has_committed=self.has_committed)
-        self.reverted_count += 1
-        self._record_trial(
-            i, 0.0, 1, "REVERT", f"Lỗi thực thi vòng lặp: {err}", iter_t0, prev_p, prev_c, prev_tot
-        )
-
-    def finalize_disk(self) -> None:
-        if self.target_file.exists():
-            try:
-                final_target = self.initial_content if self.opt.dry_run_git else self.best_content
-                current_disk = self.target_file.read_text(encoding="utf-8")
-                if current_disk != final_target:
-                    self.opt.git_rollback_target(final_target, has_committed=self.has_committed)
-            except Exception as e:
-                logger.error(f"Error restoring disk file: {e}")
-
-    def build_report(self, final_holdout_score: float | None = None) -> RatchetReport:
-        slicing_tier_str = self.opt.sliced_data.tier.value if self.opt.sliced_data else None
-        return RatchetReport(
-            target_file=str(self.target_file),
-            initial_score=self.baseline_score,
-            final_score=self.best_score,
-            total_iterations=len(self.history),
-            kept_commits=self.kept_count,
-            reverted_trials=self.reverted_count,
-            history=self.history,
-            total_tokens=self.opt.token_tracker.total_tokens,
-            prompt_tokens=self.opt.token_tracker.prompt_tokens,
-            completion_tokens=self.opt.token_tracker.completion_tokens,
-            avg_latency_s=self.opt.token_tracker.avg_latency_s,
-            halt_reason=self.halt_reason,
-            slicing_tier=slicing_tier_str,
-            tuning_size=len(self.opt.tuning_dataset),
-            holdout_size=len(self.opt.holdout_dataset),
-            holdout_score=final_holdout_score,
-            holdout_initial_score=self.initial_holdout_score,
-        )
+# Alias for backward compatibility
+_RatchetSession = _RatchetLoopState
 
 
 class GitRatchetOptimizer:
@@ -1243,7 +922,7 @@ class GitRatchetOptimizer:
         if self.config.use_real_llm and self.llm_adapter is not None:
             return self.llm_adapter.create_async_eval_task(content)
 
-        return create_domain_mock_agent_task(
+        return build_mock_agent_task(
             content=content,
             skill_name=getattr(self.config, "skill_name", ""),
         )
@@ -1776,83 +1455,424 @@ class GitRatchetOptimizer:
 
         return await self.evaluate_content_async(content, dataset)
 
+    def _init_ratchet_budget(self, baseline_score: float) -> tuple[int, int]:
+        """Calculates effective max iterations and patience based on baseline score."""
+        if baseline_score >= 100.0:
+            effective_max_iter = 1
+            effective_patience = 1
+        elif baseline_score >= 90.0:
+            effective_max_iter = min(self.config.max_iterations, 5)
+            effective_patience = min(self.config.patience, 2)
+        else:
+            effective_max_iter = min(self.config.max_iterations, 10)
+            effective_patience = min(self.config.patience, 3)
+
+        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
+        logger.info(
+            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | "
+            f"Mục tiêu: {self.config.target_score}% | "
+            f"Budget: {effective_max_iter} vòng (Patience={effective_patience})"
+        )
+        return effective_max_iter, effective_patience
+
+    def _record_trial(
+        self,
+        iter_idx: int,
+        score: float,
+        crit_fails: int,
+        decision: str,
+        summary: str,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> None:
+        """Appends a new RatchetTrialResult to loop state history."""
+        trial = RatchetTrialResult(
+            iteration=iter_idx,
+            score=score,
+            passed=(score >= self.config.target_score and crit_fails == 0),
+            critical_fails=crit_fails,
+            decision=decision,
+            summary=summary,
+            prompt_tokens=self.token_tracker.prompt_tokens - prev_tokens[0],
+            completion_tokens=self.token_tracker.completion_tokens - prev_tokens[1],
+            total_tokens=self.token_tracker.total_tokens - prev_tokens[2],
+            latency_s=time.perf_counter() - t0,
+        )
+        state.history.append(trial)
+
+    def _run_pre_eval_guards(
+        self,
+        mutated_content: str,
+        iter_idx: int,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> bool:
+        """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, link integrity).
+
+        Returns:
+            True if mutation was rejected by pre-eval guards (and reverted), False if valid to evaluate.
+        """
+        self.target_file.write_text(mutated_content, encoding="utf-8")
+
+        # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
+        best_adr_nums = set(ADR_REF_PATTERN.findall(state.best_content))
+        mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
+        dropped_adrs = sorted(
+            [f"ADR-{int(num):04d}" for num in best_adr_nums if num not in mutated_adr_nums]
+        )
+        if dropped_adrs:
+            dropped_str = ", ".join(dropped_adrs)
+            logger.warning(
+                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
+            )
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
+            self._record_trial(
+                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
+            )
+            return True
+
+        # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
+        link_issues = []
+        try:
+            if str(self.project_root) not in sys.path:
+                sys.path.insert(0, str(self.project_root))
+            from scripts.governance.link_auditor import LinkAuditor
+
+            link_issues = [
+                item_issue
+                for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
+                if item_issue.category in ("links", "okf_links", "okf_conflicts")
+            ]
+        except Exception as e:
+            logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
+
+        if link_issues:
+            logger.warning(
+                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
+            )
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+            self._record_trial(
+                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
+            )
+            return True
+
+        return False
+
+    def _apply_trial_verdict(
+        self,
+        iter_idx: int,
+        eval_report: EvalReport,
+        mutated_content: str,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> None:
+        """Evaluates trial results against ratchet criteria and executes commit/rollback."""
+        current_score = eval_report.overall_score
+        crit_fails = sum(1 for r in eval_report.item_results if r.critical_failed)
+
+        if current_score > state.best_score and crit_fails == 0:
+            diff_str = f"{state.best_score:.1f}% -> {current_score:.1f}% (+{current_score - state.best_score:.1f}%)"
+            committed = self.git_commit_improvement(diff_str)
+            if committed:
+                state.has_committed = True
+            state.best_score = current_score
+            state.best_content = mutated_content
+            state.kept_count += 1
+            state.stagnant_trials = 0
+            decision = "KEEP"
+            summary = f"Cải thiện điểm số thành công: {diff_str}"
+        else:
+            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+            state.reverted_count += 1
+            state.stagnant_trials += 1
+            decision = "REVERT"
+            summary = (
+                f"Không cải thiện (Score {current_score:.1f}% vs Best {state.best_score:.1f}%)"
+                if crit_fails == 0
+                else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
+            )
+
+        self._record_trial(
+            iter_idx, current_score, crit_fails, decision, summary, t0, prev_tokens, state
+        )
+        logger.info(f"📌 Quyết định [{decision}]: {summary}")
+
+    def _check_budget_and_early_stop(
+        self,
+        iter_idx: int,
+        effective_patience: int,
+        baseline_tokens: int,
+        state: _RatchetLoopState,
+    ) -> tuple[bool, str | None]:
+        """Checks if optimization should halt due to target reached, token budgets, or early stopping."""
+        if state.best_score >= self.config.target_score and not self.config.full_sweep:
+            logger.info(
+                f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {iter_idx}!"
+            )
+            return True, None
+
+        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
+        mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+        if (
+            self.config.hard_max_tokens_per_skill is not None
+            and mutation_tokens >= self.config.hard_max_tokens_per_skill
+        ):
+            logger.info(
+                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
+                f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials. "
+                f"Dừng đột biến để bảo vệ ngân sách toàn đêm."
+            )
+            return True, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+
+        # Per-skill mutation budget check
+        if (
+            self.config.per_skill_mutation_budget is not None
+            and mutation_tokens >= self.config.per_skill_mutation_budget
+            and state.kept_count == 0
+            and iter_idx >= 2
+        ):
+            logger.info(
+                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
+                f"đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {iter_idx} trials (kept_count=0)."
+            )
+            return True, "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
+
+        # Adaptive Early Stopping (Grilling Frontier 2)
+        if effective_patience > 0 and state.stagnant_trials >= effective_patience:
+            logger.info(
+                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {state.stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
+            )
+            return True, None
+
+        return False, None
+
+    def _handle_iteration_exception(
+        self,
+        exc: Exception,
+        iter_idx: int,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> tuple[str | None, bool]:
+        """Handles loop exceptions, restores working tree, records trial, and determines halt status."""
+        self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+        state.reverted_count += 1
+        if isinstance(exc, TokenBudgetExceededError):
+            logger.error(f"🛑 [Token Budget Halt] {exc}")
+            self._record_trial(
+                iter_idx, 0.0, 1, "REVERT", f"Dừng sớm: {exc}", t0, prev_tokens, state
+            )
+            return "TOKEN_BUDGET_EXCEEDED", True
+        elif isinstance(exc, CircuitBreakerOpenError):
+            logger.error(f"⚡ [Circuit Breaker Fast-Fail] {exc}")
+            self._record_trial(
+                iter_idx,
+                0.0,
+                1,
+                "REVERT",
+                "Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
+                t0,
+                prev_tokens,
+                state,
+            )
+            return "CIRCUIT_BREAKER_OPEN", True
+        else:
+            logger.error(f"Error during iteration {iter_idx}: {exc}")
+            self._record_trial(
+                iter_idx, 0.0, 1, "REVERT", f"Lỗi thực thi vòng lặp: {exc}", t0, prev_tokens, state
+            )
+            return None, False
+
+    def _finalize_disk_state(self, initial_content: str, state: _RatchetLoopState) -> None:
+        """Ensures target file on disk matches expected final state."""
+        if self.target_file.exists():
+            try:
+                final_target = (
+                    initial_content
+                    if (self.dry_run_git or not state.has_committed)
+                    else state.best_content
+                )
+                current_disk = self.target_file.read_text(encoding="utf-8")
+                if current_disk != final_target:
+                    self.git_rollback_target(final_target, has_committed=state.has_committed)
+            except Exception as e:
+                logger.error(f"Error restoring disk file: {e}")
+
+    def _build_init_error_report(
+        self, init_err: TokenBudgetExceededError | CircuitBreakerOpenError
+    ) -> RatchetReport:
+        """Constructs an immediate halt report when baseline evaluation fails."""
+        logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
+        reason = (
+            "CIRCUIT_BREAKER_OPEN"
+            if isinstance(init_err, CircuitBreakerOpenError)
+            else "TOKEN_BUDGET_EXCEEDED"
+        )
+        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
+        return RatchetReport(
+            target_file=str(self.target_file),
+            initial_score=0.0,
+            final_score=0.0,
+            total_iterations=0,
+            kept_commits=0,
+            reverted_trials=0,
+            history=[],
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=reason,
+            slicing_tier=slicing_tier_str,
+            tuning_size=len(self.tuning_dataset),
+            holdout_size=len(self.holdout_dataset),
+        )
+
+    def _build_final_report(
+        self,
+        baseline_score: float,
+        initial_holdout_score: float | None,
+        final_holdout_score: float | None,
+        halt_reason: str | None,
+        state: _RatchetLoopState,
+    ) -> RatchetReport:
+        """Synthesizes final RatchetReport from session state and holdout metrics."""
+        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
+        return RatchetReport(
+            target_file=str(self.target_file),
+            initial_score=baseline_score,
+            final_score=state.best_score,
+            total_iterations=len(state.history),
+            kept_commits=state.kept_count,
+            reverted_trials=state.reverted_count,
+            history=state.history,
+            total_tokens=self.token_tracker.total_tokens,
+            prompt_tokens=self.token_tracker.prompt_tokens,
+            completion_tokens=self.token_tracker.completion_tokens,
+            avg_latency_s=self.token_tracker.avg_latency_s,
+            halt_reason=halt_reason,
+            slicing_tier=slicing_tier_str,
+            tuning_size=len(self.tuning_dataset),
+            holdout_size=len(self.holdout_dataset),
+            holdout_score=final_holdout_score,
+            holdout_initial_score=initial_holdout_score,
+        )
+
     def run(self) -> RatchetReport:
         """Executes the full ratchet autonomous optimization loop synchronously."""
         if not self.target_file.exists():
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
-        session = _RatchetSession(self)
+        initial_content = self.target_file.read_text(encoding="utf-8")
         try:
-            baseline_report = self._eval_sync(session.initial_content)
+            baseline_report = self._eval_sync(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
-            return session.build_init_error_report(init_err)
+            return self._build_init_error_report(init_err)
 
-        session.init_baseline(baseline_report)
+        baseline_score = baseline_report.overall_score
+        baseline_tokens = self.token_tracker.total_tokens
+        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
 
+        state = _RatchetLoopState(
+            best_score=baseline_score,
+            best_content=initial_content,
+            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
+        )
+
+        initial_holdout_score: float | None = None
         if self.holdout_dataset:
             try:
-                holdout_base = self._eval_sync(
-                    session.initial_content, dataset=self.holdout_dataset
-                )
-                session.initial_holdout_score = holdout_base.overall_score
+                holdout_base = self._eval_sync(initial_content, dataset=self.holdout_dataset)
+                initial_holdout_score = holdout_base.overall_score
                 logger.info(
-                    f"🔒 Holdout Baseline Score: {session.initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
+                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
                 )
             except Exception as e:
                 logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
 
+        halt_reason: str | None = None
         try:
-            for i in range(1, session.effective_max_iter + 1):
-                prev_p = self.token_tracker.prompt_tokens
-                prev_c = self.token_tracker.completion_tokens
-                prev_tot = self.token_tracker.total_tokens
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_tokens = (
+                    self.token_tracker.prompt_tokens,
+                    self.token_tracker.completion_tokens,
+                    self.token_tracker.total_tokens,
+                )
                 t0 = time.perf_counter()
 
                 try:
-                    mutated, can_continue = session.prepare_mutation(
-                        i, t0, prev_p, prev_c, prev_tot
-                    )
-                    if not can_continue:
+                    mutated = self.propose_mutation(state.best_content, i)
+                    if mutated == state.best_content:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
                         break
-                    if mutated is None:
+
+                    content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
+                    if content_hash in state.seen_hashes:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
+                    state.seen_hashes.add(content_hash)
+
+                    if self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                         continue
 
-                    report = self._eval_sync(mutated)
-                    if not session.process_eval_report(
-                        i, mutated, report, t0, prev_p, prev_c, prev_tot
-                    ):
+                    eval_report = self._eval_sync(mutated)
+                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+
+                    should_stop, stop_reason = self._check_budget_and_early_stop(
+                        i, effective_patience, baseline_tokens, state
+                    )
+                    if should_stop:
+                        if stop_reason:
+                            halt_reason = stop_reason
                         break
-                except TokenBudgetExceededError as budget_err:
-                    session.handle_budget_error(i, budget_err, t0, prev_p, prev_c, prev_tot)
-                    break
-                except CircuitBreakerOpenError as cb_err:
-                    session.handle_circuit_breaker_error(i, cb_err, t0, prev_p, prev_c, prev_tot)
-                    break
-                except Exception as iter_err:
-                    session.handle_iteration_error(i, iter_err, t0, prev_p, prev_c, prev_tot)
+                except Exception as exc:
+                    exc_halt, should_break = self._handle_iteration_exception(
+                        exc, i, t0, prev_tokens, state
+                    )
+                    if exc_halt:
+                        halt_reason = exc_halt
+                    if should_break:
+                        break
         finally:
-            session.finalize_disk()
+            self._finalize_disk_state(initial_content, state)
 
         final_holdout_score: float | None = None
         if self.holdout_dataset:
-            if session.kept_count == 0 and session.initial_holdout_score is not None:
-                final_holdout_score = session.initial_holdout_score
+            if state.kept_count == 0 and initial_holdout_score is not None:
+                final_holdout_score = initial_holdout_score
                 logger.info(
                     f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
                 )
             else:
                 try:
                     holdout_final = self._eval_sync(
-                        session.best_content, dataset=self.holdout_dataset
+                        state.best_content, dataset=self.holdout_dataset
                     )
                     final_holdout_score = holdout_final.overall_score
                     logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {session.initial_holdout_score}%)"
+                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
                     )
                 except Exception as e:
                     logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
 
-        return session.build_report(final_holdout_score)
+        return self._build_final_report(
+            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
+        )
 
     async def run_async(self) -> RatchetReport:
         """Executes the full ratchet autonomous optimization loop asynchronously.
@@ -1862,78 +1882,108 @@ class GitRatchetOptimizer:
         if not self.target_file.exists():
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
-        session = _RatchetSession(self)
+        initial_content = self.target_file.read_text(encoding="utf-8")
         try:
-            baseline_report = await self._eval_async(session.initial_content)
+            baseline_report = await self._eval_async(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
-            return session.build_init_error_report(init_err)
+            return self._build_init_error_report(init_err)
 
-        session.init_baseline(baseline_report)
+        baseline_score = baseline_report.overall_score
+        baseline_tokens = self.token_tracker.total_tokens
+        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
 
+        state = _RatchetLoopState(
+            best_score=baseline_score,
+            best_content=initial_content,
+            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
+        )
+
+        initial_holdout_score: float | None = None
         if self.holdout_dataset:
             try:
-                holdout_base = await self._eval_async(
-                    session.initial_content, dataset=self.holdout_dataset
-                )
-                session.initial_holdout_score = holdout_base.overall_score
+                holdout_base = await self._eval_async(initial_content, dataset=self.holdout_dataset)
+                initial_holdout_score = holdout_base.overall_score
                 logger.info(
-                    f"🔒 Holdout Baseline Score: {session.initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
+                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
                 )
             except Exception as e:
                 logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
 
+        halt_reason: str | None = None
         try:
-            for i in range(1, session.effective_max_iter + 1):
-                prev_p = self.token_tracker.prompt_tokens
-                prev_c = self.token_tracker.completion_tokens
-                prev_tot = self.token_tracker.total_tokens
+            for i in range(1, effective_max_iter + 1):
+                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+                prev_tokens = (
+                    self.token_tracker.prompt_tokens,
+                    self.token_tracker.completion_tokens,
+                    self.token_tracker.total_tokens,
+                )
                 t0 = time.perf_counter()
 
                 try:
-                    mutated, can_continue = session.prepare_mutation(
-                        i, t0, prev_p, prev_c, prev_tot
-                    )
-                    if not can_continue:
+                    mutated = self.propose_mutation(state.best_content, i)
+                    if mutated == state.best_content:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
                         break
-                    if mutated is None:
+
+                    content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
+                    if content_hash in state.seen_hashes:
+                        logger.info(
+                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+                        )
+                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                        break
+                    state.seen_hashes.add(content_hash)
+
+                    if self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                         continue
 
-                    report = await self._eval_async(mutated)
-                    if not session.process_eval_report(
-                        i, mutated, report, t0, prev_p, prev_c, prev_tot
-                    ):
+                    eval_report = await self._eval_async(mutated)
+                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+
+                    should_stop, stop_reason = self._check_budget_and_early_stop(
+                        i, effective_patience, baseline_tokens, state
+                    )
+                    if should_stop:
+                        if stop_reason:
+                            halt_reason = stop_reason
                         break
-                except TokenBudgetExceededError as budget_err:
-                    session.handle_budget_error(i, budget_err, t0, prev_p, prev_c, prev_tot)
-                    break
-                except CircuitBreakerOpenError as cb_err:
-                    session.handle_circuit_breaker_error(i, cb_err, t0, prev_p, prev_c, prev_tot)
-                    break
-                except Exception as iter_err:
-                    session.handle_iteration_error(i, iter_err, t0, prev_p, prev_c, prev_tot)
+                except Exception as exc:
+                    exc_halt, should_break = self._handle_iteration_exception(
+                        exc, i, t0, prev_tokens, state
+                    )
+                    if exc_halt:
+                        halt_reason = exc_halt
+                    if should_break:
+                        break
         finally:
-            session.finalize_disk()
+            self._finalize_disk_state(initial_content, state)
 
         final_holdout_score: float | None = None
         if self.holdout_dataset:
-            if session.kept_count == 0 and session.initial_holdout_score is not None:
-                final_holdout_score = session.initial_holdout_score
+            if state.kept_count == 0 and initial_holdout_score is not None:
+                final_holdout_score = initial_holdout_score
                 logger.info(
                     f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
                 )
             else:
                 try:
                     holdout_final = await self._eval_async(
-                        session.best_content, dataset=self.holdout_dataset
+                        state.best_content, dataset=self.holdout_dataset
                     )
                     final_holdout_score = holdout_final.overall_score
                     logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {session.initial_holdout_score}%)"
+                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
                     )
                 except Exception as e:
                     logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
 
-        return session.build_report(final_holdout_score)
+        return self._build_final_report(
+            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
+        )
 
 
 # Public alias for backwards compatibility
