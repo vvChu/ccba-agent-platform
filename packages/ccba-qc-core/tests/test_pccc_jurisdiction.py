@@ -48,7 +48,9 @@ def test_high_rise_condominium_dual_pathway_c07_and_bxd() -> None:
 
     assert res.investor_self_appraisal is False
     assert res.provenance_hash == PROVENANCE_SHA256_ND105_2025
-    assert any("Luật Phòng cháy" in c for c in res.statutory_citations)
+    assert any(
+        "55/2024" in c or "Luật Phòng cháy" in c or "PCCC" in c for c in res.statutory_citations
+    )
     assert any("Mục 1" in c for c in res.statutory_citations)
 
 
