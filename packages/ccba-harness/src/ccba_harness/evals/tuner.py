@@ -1741,10 +1741,16 @@ class GitRatchetOptimizer:
         # Find first strategy not yet fully present in body (Goodhart's Law Trap Breaker)
         chosen_strategy = None
         base_idx = (iteration - 1) % len(strategies)
+        norm_body = re.sub(r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", body, flags=re.IGNORECASE).replace(
+            "\r\n", "\n"
+        )
         for offset in range(len(strategies)):
             idx = (base_idx + offset) % len(strategies)
             s_name, s_enhancement = strategies[idx]
-            if s_enhancement.strip() not in body:
+            norm_enhancement = re.sub(
+                r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", s_enhancement.strip(), flags=re.IGNORECASE
+            ).replace("\r\n", "\n")
+            if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
                 chosen_strategy = (s_name, s_enhancement)
                 break
 
@@ -1757,11 +1763,26 @@ class GitRatchetOptimizer:
 
         # Surgical Section Patching (Frontier 3)
         section_header = enhancement.strip().split("\n")[0]
-        header_pattern = re.escape(section_header)
-        section_regex = re.compile(rf"({header_pattern}.*?)(?=\n## |\Z)", re.DOTALL)
+        clean_header = re.sub(
+            r"\s*\((?:HUB-)?ADR-[0-9]+\)", "", section_header, flags=re.IGNORECASE
+        ).strip()
+        header_pattern = re.escape(clean_header)
+        section_regex = re.compile(
+            rf"(?m)^[ \t]*{header_pattern}(?:[ \t]+(?P<adr_tag>\((?:HUB-)?ADR-[0-9]+\)))?[ \t]*\r?$\r?\n?"
+            r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
+            re.DOTALL,
+        )
 
-        if section_regex.search(body):
-            mutated_body = section_regex.sub(enhancement.strip() + "\n", body)
+        match = section_regex.search(body)
+        if match:
+            lines = enhancement.strip().split("\n")
+            adr_tag = match.group("adr_tag")
+            if adr_tag and adr_tag not in lines[0]:
+                lines[0] = f"{lines[0]} {adr_tag}"
+            effective_enhancement = "\n".join(lines)
+            mutated_body = (
+                body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
+            )
         else:
             mutated_body = body.strip() + "\n\n" + enhancement.strip()
 
@@ -1993,6 +2014,48 @@ class GitRatchetOptimizer:
 
                     # Apply candidate mutation
                     self.target_file.write_text(mutated_content, encoding="utf-8")
+
+                    # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
+                    best_adr_tags = set(
+                        re.findall(r"\b(?:HUB-ADR|ADR)-[0-9]+\b", best_content, re.IGNORECASE)
+                    )
+                    mutated_adr_nums = {
+                        m.split("-")[-1]
+                        for m in re.findall(
+                            r"\b(?:HUB-ADR|ADR)-[0-9]+\b", mutated_content, re.IGNORECASE
+                        )
+                    }
+                    dropped_adrs = sorted(
+                        {
+                            t.upper()
+                            for t in best_adr_tags
+                            if t.split("-")[-1] not in mutated_adr_nums
+                        }
+                    )
+                    if dropped_adrs:
+                        dropped_str = ", ".join(dropped_adrs)
+                        logger.warning(
+                            f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
+                        )
+                        self.git_rollback_target(best_content, has_committed=has_committed)
+                        reverted_count += 1
+                        stagnant_trials += 1
+                        decision = "REVERT"
+                        summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
+                        trial = RatchetTrialResult(
+                            iteration=i,
+                            score=best_score,
+                            passed=(best_score >= self.config.target_score),
+                            critical_fails=0,
+                            decision=decision,
+                            summary=summary,
+                            prompt_tokens=self.token_tracker.prompt_tokens - prev_p_tokens,
+                            completion_tokens=self.token_tracker.completion_tokens - prev_c_tokens,
+                            total_tokens=self.token_tracker.total_tokens - prev_tot_tokens,
+                            latency_s=time.perf_counter() - iter_t0,
+                        )
+                        history.append(trial)
+                        continue
 
                     # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
                     link_issues = []

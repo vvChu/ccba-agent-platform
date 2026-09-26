@@ -295,3 +295,125 @@ description: Skill to test LinkAuditor validity
     ]
 
     assert len(issues) == 0, f"LinkAuditor found issues: {issues}"
+
+
+def test_semantic_dedup_recognizes_headers_with_adr_tags(tmp_path: Path) -> None:
+    """Verify semantic dedup normalizes away ADR tags in headers so existing sections are not duplicated."""
+    target = tmp_path / "SKILL.md"
+    base_content = """---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
+"""
+    target.write_text(base_content, encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    # Strategy 1 (Hard Completion Lock) is already in base_content with (ADR-0058).
+    # Mutation 1 must NOT re-apply strategy 1; it should advance to strategy 2 (Double-Pass Review).
+    mut = tuner.propose_mutation(base_content, 1)
+    assert "## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)" in mut
+    # The original ADR-0058 heading must remain intact
+    assert "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)" in mut
+    # Should not have duplicate Hard Completion Lock headings
+    assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1
+
+
+def test_header_replacement_preserves_existing_adr_tags(tmp_path: Path) -> None:
+    """Verify section replacement regex preserves existing ADR tags and uses line anchors."""
+    target = tmp_path / "SKILL.md"
+    base_content = """---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
+* Old outdated bullet to be updated.
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất Nâng Cao
+* Distinct section that should not be touched.
+"""
+    target.write_text(base_content, encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    # Since the body content of strategy 1 is different, propose_mutation will replace the section
+    mut = tuner.propose_mutation(base_content, 1)
+
+    # Must preserve the ADR-0058 tag on the replaced header
+    assert "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)" in mut
+    # Must update the body of that section
+    assert "python -m ccba_harness verify-patch" in mut
+    assert "Old outdated bullet" not in mut
+    # Must NOT have modified or replaced the distinct partial prefix section
+    assert "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất Nâng Cao" in mut
+    assert "* Distinct section that should not be touched." in mut
+
+
+def test_monotonic_token_guard_rejects_mutations_dropping_adr_tags(tmp_path: Path) -> None:
+    """Verify GitRatchetOptimizer fast-fails and rolls back if a mutation drops existing ADR tokens."""
+    target = tmp_path / "SKILL.md"
+    initial_content = """---
+name: test-skill
+---
+# Skill Documentation
+
+## Section A (ADR-0058)
+* Important rule according to HUB-ADR-0057.
+"""
+    target.write_text(initial_content, encoding="utf-8")
+
+    config = RatchetConfig(
+        target_file=str(target),
+        skill_name="test-skill",
+        max_iterations=3,
+        target_score=100.0,
+    )
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+
+    # Baseline evaluation returns 50.0%
+    baseline_report = EvalReport(
+        total_items=1,
+        passed_items=0,
+        failed_items=1,
+        overall_score=50.0,
+        pass_rate=0.0,
+        item_results=[],
+    )
+    optimizer.evaluate_content = MagicMock(return_value=baseline_report)
+    optimizer.git_rollback_target = MagicMock()
+
+    # Mutation drops ADR-0058 (keeps HUB-ADR-0057)
+    bad_mutation = """---
+name: test-skill
+---
+# Skill Documentation
+
+## Section A
+* Important rule according to HUB-ADR-0057.
+"""
+    optimizer.propose_mutation = MagicMock(return_value=bad_mutation)
+
+    report = optimizer.run()
+
+    # Must have recorded a REVERT decision for iteration 1
+    assert len(report.history) >= 1
+    trial = report.history[0]
+    assert trial.decision == "REVERT"
+    assert "Từ chối mutation vì làm mất thẻ ADR" in trial.summary
+    assert "ADR-0058" in trial.summary
+
+    # evaluate_content was called ONLY for baseline, never for the bad mutation!
+    assert optimizer.evaluate_content.call_count == 1
+    # Rollback was called to revert the bad mutation
+    optimizer.git_rollback_target.assert_called()
