@@ -155,3 +155,88 @@ import docx  # ccba:allow-raw-bypass (synthetic mock generator)
     visitor.visit(tree)
 
     assert len(visitor.violations) == 0
+
+
+def test_ast_visitor_catches_fitz_and_pymupdf_bypass() -> None:
+    """Verify that direct imports of fitz or pymupdf outside ccba_pdf_prep raise violations."""
+    code = """
+import fitz
+import pymupdf
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package="ccba_qc_core",
+        current_file=Path("packages/ccba-qc-core/src/ccba_qc_core/audit.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 2
+    assert all(v.rule_name == "RawThirdPartyBypassViolation" for v in visitor.violations)
+    assert (
+        "Platform-Aware KISS requires using 'ccba_pdf_prep' seam instead"
+        in visitor.violations[0].message
+    )
+    assert (
+        "Platform-Aware KISS requires using 'ccba_pdf_prep' seam instead"
+        in visitor.violations[1].message
+    )
+
+
+def test_ast_visitor_catches_openpyxl_bypass() -> None:
+    """Verify that direct imports of openpyxl outside ccba_ooxml raise violations."""
+    code = """
+from openpyxl import load_workbook
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package="ccba_legal",
+        current_file=Path("packages/ccba-legal-intel/src/ccba_legal/parser.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 1
+    assert visitor.violations[0].rule_name == "RawThirdPartyBypassViolation"
+    assert (
+        "Platform-Aware KISS requires using 'ccba_ooxml' seam instead"
+        in visitor.violations[0].message
+    )
+
+
+def test_ast_visitor_allows_fitz_with_comment() -> None:
+    """Verify that fitz import with ccba:allow-raw-bypass is exempted."""
+    code = """
+import fitz  # ccba:allow-raw-bypass (low-level PDF image xref extraction)
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package="ccba_legal",
+        current_file=Path("packages/ccba-legal-intel/src/ccba_legal/formula_harvester.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 0
+
+
+def test_ast_visitor_allows_multiline_import_with_comment() -> None:
+    """Verify that multiline from import with trailing ccba:allow-raw-bypass is exempted."""
+    code = """from openpyxl import (
+    Workbook,
+    load_workbook,
+)  # ccba:allow-raw-bypass (isolated benchmark tool)
+"""
+    tree = ast.parse(code)
+    raw_lines = code.splitlines()
+    visitor = DependencyASTVisitor(
+        current_package="ccba_ai",
+        current_file=Path("packages/ccba-ai/scripts/bench.py"),
+        raw_lines=raw_lines,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 0

@@ -12,6 +12,7 @@ Supports `--check` for CI gate enforcement and `--write` (default) for regenerat
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import sys
 from pathlib import Path
@@ -24,6 +25,20 @@ BASE_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catal
 OUTPUT_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 WORKFLOWS_DIR = HUB_ROOT / ".agents" / "workflows"
+
+# Monorepo packages and their root package names
+PACKAGE_MAP: dict[str, str] = {
+    "ccba-ai": "ccba_ai",
+    "ccba-diagram": "ccba_diagram",
+    "ccba-harness": "ccba_harness",
+    "ccba-legal-intel": "ccba_legal",
+    "ccba-maskara": "ccba_maskara",
+    "ccba-notebooklm": "ccba_notebooklm",
+    "ccba-ooxml": "ccba_ooxml",
+    "ccba-pdf-prep": "ccba_pdf_prep",
+    "ccba-qc-core": "ccba_qc_core",
+    "mdconverter": "mdconverter",
+}
 
 
 def extract_frontmatter(file_path: Path) -> dict[str, Any]:
@@ -194,6 +209,164 @@ def compile_seams(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
     return compiled
 
 
+def _extract_module_exported_symbols(file_path: Path) -> set[str] | None:
+    """Extract exported symbols from a python file using AST.
+
+    If __all__ is explicitly defined (as a list/tuple of strings), returns that set.
+    Otherwise, returns all top-level public definitions (functions, classes, assignments)
+    and imported names that do not start with '_'.
+    """
+    if not file_path.is_file():
+        return None
+    try:
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+    except Exception:
+        return None
+
+    # First pass: check for explicit __all__
+    exported: set[str] = set()
+    has_all = False
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "__all__":
+                    if isinstance(node.value, (ast.List, ast.Tuple)):
+                        has_all = True
+                        for elt in node.value.elts:
+                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                exported.add(elt.value)
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "__all__":
+                if isinstance(node.value, (ast.List, ast.Tuple)):
+                    has_all = True
+                    for elt in node.value.elts:
+                        if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                            exported.add(elt.value)
+
+    if has_all:
+        return exported
+
+    # Fallback: top-level public names
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if not node.name.startswith("_"):
+                exported.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and not target.id.startswith("_"):
+                    exported.add(target.id)
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                name = alias.asname if alias.asname else alias.name
+                if not name.startswith("_"):
+                    exported.add(name)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                name = alias.asname if alias.asname else alias.name
+                if not name.startswith("_"):
+                    exported.add(name)
+    return exported
+
+
+def validate_seam_exports(hub_root: Path = HUB_ROOT) -> list[str]:
+    """Validate all public deep seams declared in packages/*/AGENTS.md.
+
+    Uses static AST analysis to ensure:
+    1. The imported module belongs to the declaring package (no spoofing).
+    2. The imported module or package exists on disk.
+    3. Every declared symbol exists in __all__ or top-level definitions of that module.
+
+    Returns:
+        List of validation error messages. Empty list if 100% valid.
+    """
+    errors: list[str] = []
+    pkgs_dir = hub_root / "packages"
+    if not pkgs_dir.exists():
+        return errors
+
+    for pkg_dir in sorted(pkgs_dir.iterdir(), key=lambda p: p.name):
+        if not pkg_dir.is_dir() or pkg_dir.name.startswith("."):
+            continue
+
+        agents_md = pkg_dir / "AGENTS.md"
+        if not agents_md.exists():
+            continue
+
+        text = agents_md.read_text(encoding="utf-8")
+        seams_m = re.search(
+            r"-\s+\*\*Public Deep Seams\*\*:(.*?)(?=\n-\s+\*\*|\Z)", text, re.DOTALL
+        )
+        if not seams_m:
+            continue
+
+        raw_seams_block = seams_m.group(1)
+        expected_root_pkg = PACKAGE_MAP.get(pkg_dir.name)
+        if not expected_root_pkg:
+            errors.append(
+                f"Package '{pkg_dir.name}' is not registered in PACKAGE_MAP in compile_catalog.py."
+            )
+            continue
+
+        # Find all `from <mod> import <symbols>` patterns
+        matches = re.findall(r"from\s+([a-zA-Z0-9_\.]+)\s+import\s+([^`\n\(\)]+)", raw_seams_block)
+        for mod_name, symbols_str in matches:
+            mod_parts = mod_name.split(".")
+            root_mod = mod_parts[0]
+
+            # Invariant 1: Package spoofing guard
+            if root_mod != expected_root_pkg:
+                errors.append(
+                    f"Package '{pkg_dir.name}' declares seam for foreign module '{mod_name}'. "
+                    f"Expected root package '{expected_root_pkg}'."
+                )
+                continue
+
+            # Invariant 2: Locate module file on disk
+            root_src = pkg_dir / "src" / expected_root_pkg
+            target_file: Path | None = None
+            if len(mod_parts) == 1:
+                init_file = root_src / "__init__.py"
+                if init_file.is_file():
+                    target_file = init_file
+            else:
+                sub_path = root_src.joinpath(*mod_parts[1:])
+                if sub_path.is_dir() and (sub_path / "__init__.py").is_file():
+                    target_file = sub_path / "__init__.py"
+                elif sub_path.with_suffix(".py").is_file():
+                    target_file = sub_path.with_suffix(".py")
+
+            if target_file is None:
+                errors.append(
+                    f"Package '{pkg_dir.name}' declares seam module '{mod_name}' which does not exist under '{root_src}'."
+                )
+                continue
+
+            # Invariant 3: Validate declared symbols against exported symbols
+            exported_symbols = _extract_module_exported_symbols(target_file)
+            if exported_symbols is None:
+                errors.append(
+                    f"Package '{pkg_dir.name}' seam module '{mod_name}' ({target_file}) could not be parsed."
+                )
+                continue
+
+            # Extract individual symbol names (immunized against trailing punctuation)
+            symbols = [
+                s.strip().rstrip(".,;") for s in symbols_str.split(",") if s.strip().rstrip(".,;")
+            ]
+            for sym in symbols:
+                if sym not in exported_symbols:
+                    try:
+                        rel_target = str(target_file.relative_to(hub_root))
+                    except ValueError:
+                        rel_target = str(target_file)
+                    errors.append(
+                        f"Package '{pkg_dir.name}' declares seam symbol '{sym}' from '{mod_name}', "
+                        f"but '{sym}' is not exported by '{rel_target}'."
+                    )
+
+    return errors
+
+
 def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     """Compile the entire catalog dictionary."""
     base_file = hub_root / ".agents" / "skills" / "platform-loader" / "catalog_base.yaml"
@@ -357,6 +530,11 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
                 f"  catalog_base.yaml: {comp_val!r}"
             )
 
+    # Validate static seam exports (ADR 0047 / Issue #372)
+    seam_errors = validate_seam_exports(hub_root)
+    if seam_errors:
+        diffs.extend([f"Static Seam Export Error: {err}" for err in seam_errors])
+
     if diffs:
         return False, "\n".join(diffs)
     return True, "Catalog is 100% in sync"
@@ -488,6 +666,15 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
+
+    # Static seam symbol validation (ADR 0047 / Issue #372)
+    seam_errors = validate_seam_exports(HUB_ROOT)
+    if seam_errors:
+        print("[ERROR] [Catalog Compiler] Static Seam Validation FAILED:", file=sys.stderr)
+        for err in seam_errors:
+            print(f"  ❌ {err}", file=sys.stderr)
+        print("\nAborting catalog compilation due to phantom seam symbols.", file=sys.stderr)
+        return 1
 
     compiled_yaml = generate_catalog_yaml(HUB_ROOT)
 

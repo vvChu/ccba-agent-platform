@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    import pymupdf as fitz  # PyMuPDF
+    import pymupdf as fitz  # ccba:allow-raw-bypass (cryptographic provenance and verbatim parity hashing)
 except ImportError:
-    import fitz  # PyMuPDF
+    import fitz  # ccba:allow-raw-bypass (cryptographic provenance fallback)
 from docx import Document
 
 from ccba_legal.constants import (
