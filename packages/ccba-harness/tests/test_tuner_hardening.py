@@ -548,3 +548,83 @@ name: test-skill
     assert len(report.history) >= 1
     assert report.history[0].decision == "KEEP"
     assert optimizer.evaluate_content.call_count == 2  # baseline + iteration 1
+
+
+def test_header_replacement_preserves_lowercase_adr_tags(tmp_path: Path) -> None:
+    """Verify section replacement regex preserves lowercase ADR tags (adr-0058, hub-adr-0058) without duplicating sections."""
+    target = tmp_path / "SKILL.md"
+
+    cases = [
+        ("Lowercase adr", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (adr-0058)"),
+        ("Lowercase hub-adr", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (hub-adr-0058)"),
+        ("Mixed case hub-adr", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (Hub-Adr-0058)"),
+    ]
+
+    for label, header_line in cases:
+        base_content = f"""---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+{header_line}
+* Outdated bullet to be replaced.
+
+## Other Section
+* Keep intact.
+"""
+        target.write_text(base_content, encoding="utf-8")
+        cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+        tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+        mut = tuner.propose_mutation(base_content, 1)
+
+        # Must not duplicate the section heading
+        assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1, (
+            f"Failed on {label}: duplicated section heading found!"
+        )
+        # Must preserve the exact case and tag as written in the original document
+        assert header_line in mut, f"Failed on {label}: header was not preserved!"
+        # Must update the body with the strategy content
+        assert "python -m ccba_harness verify-patch" in mut
+        assert "Outdated bullet to be replaced." not in mut
+        assert "## Other Section" in mut
+
+
+def test_header_replacement_preserves_no_whitespace_before_parenthesis(tmp_path: Path) -> None:
+    """Verify section replacement regex handles zero whitespace before '(' (e.g. ## Tiêu Đề(ADR-0058)) and does not duplicate sections."""
+    target = tmp_path / "SKILL.md"
+
+    cases = [
+        ("Zero whitespace standard tag", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(ADR-0058)"),
+        ("Zero whitespace lowercase tag", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)"),
+        ("Zero whitespace hub-adr tag", "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(hub-adr-0058)"),
+    ]
+
+    for label, header_line in cases:
+        base_content = f"""---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+{header_line}
+* Outdated bullet to be replaced.
+
+## Other Section
+* Keep intact.
+"""
+        target.write_text(base_content, encoding="utf-8")
+        cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+        tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+        mut = tuner.propose_mutation(base_content, 1)
+
+        # Must not duplicate the section heading
+        assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1, (
+            f"Failed on {label}: duplicated section heading found!"
+        )
+        # Must preserve the exact zero-whitespace tag
+        assert header_line in mut, f"Failed on {label}: header was not preserved!"
+        # Must update the body with the strategy content
+        assert "python -m ccba_harness verify-patch" in mut
+        assert "Outdated bullet to be replaced." not in mut
+        assert "## Other Section" in mut

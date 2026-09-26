@@ -1774,9 +1774,9 @@ class GitRatchetOptimizer:
         clean_header = ADR_HEADER_TAG_REGEX.sub("", section_header).strip()
         header_pattern = re.escape(clean_header)
         section_regex = re.compile(
-            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]+\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
+            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
             r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
-            re.DOTALL,
+            re.DOTALL | re.IGNORECASE,
         )
 
         match = section_regex.search(body)
