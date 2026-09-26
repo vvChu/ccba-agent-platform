@@ -44,7 +44,7 @@ from .cross_ref_validator import (
     find_closest_heading,
     validate_cross_references,
 )
-from .drift_auditor import DriftAuditor
+from .drift_auditor import DriftAuditor, is_structural_path
 from .duplication_auditor import (
     FORBIDDEN_DIRECTORIES,
     FORBIDDEN_RAW_SCRAPE_PATTERNS,
@@ -64,6 +64,7 @@ __all__ = [
     "BaseAuditor",
     "DocumentAuditor",
     "DriftAuditor",
+    "is_structural_path",
     "DuplicationAuditor",
     "EnvAuditor",
     "LinkAuditor",

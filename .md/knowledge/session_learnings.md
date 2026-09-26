@@ -33,6 +33,11 @@
   - *Platform-Aware KISS (Entropy Tối Thiểu)*: Tái sử dụng Monorepo Package Seams / Master Skills có sẵn là giải pháp KISS bậc 1. CẤM tạo script chắp vá hoặc ad-hoc data silo cục bộ rồi ngụy biện là KISS.
   - *Pre-Flight Gate Receipt*: Bắt buộc tra cứu Seam qua CLI (`compile_catalog.py --query <keyword>`) trước khi đề xuất code mới; dán kết quả tra cứu vào `implementation_plan.md`.
   - *Anti-Phantom Deferral*: CẤM chia "Phase 1 chắp vá tạm bợ" rồi hoãn kiến trúc chuẩn sang "Phase 2" khi hạ tầng nền tảng đã sẵn sàng.
+- **RULE-1.11 [Static Seam Verification, Punctuation Immunity & AST Span Linter]**:
+  - *Static Seam Verification*: `validate_seam_exports()` kiểm tra 3 rào chắn: Package Spoofing Guard, Filesystem Existence, và Symbol Parity với `__all__` (hỗ trợ `ast.AugAssign` `__all__ += [...]`).
+  - *Punctuation Immunity*: Trích xuất symbol từ markdown luôn dùng `s.strip().rstrip(".,;")` chống dấu chấm câu văn xuôi làm ô nhiễm symbol.
+  - *AST Span Linter*: Quét exemption comment trên AST import BẮT BUỘC dùng dải `range(node.lineno - 1, getattr(node, "end_lineno", node.lineno))` bao trọn dòng đóng ngoặc của multiline imports.
+
 
 
 ---
@@ -82,9 +87,9 @@
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
   - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa sửa/giải trình.
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
-  - Hub cấm push `main` qua hook `pre-push`; qua PR. Sửa/thêm file (kể cả tệp untracked `??` ngoài `tests/`) trong `packages/`, `scripts/`, `.agents/skills/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
+  - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
-  - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; dùng `gh pr checks --watch`, chờ Copilot review, 100% Green trước khi merge.
+  - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green trước khi merge.
 
 ---
 
@@ -92,10 +97,7 @@
 *(RULE-5.1 đến 5.3 đã di dời vào archive/session_learnings_history.md Mục 21; chi tiết 5.4-5.5 tại Mục 22)*
 
 - **RULE-5.4 [Telegram ChatOps: Markdown v1, Subprocess Reaping & Cross-Repo Path]**:
-  - *Markdown v1*: Biến chuỗi chứa `_` bắt buộc bọc backtick (`` `...` ``) kèm `_clean_md` chống lỗi parsing entities Telegram.
-  - *Subprocess Reaping*: Timeout/Cancel bắt buộc `proc.kill()` + `proc.wait()`; shell runner trap cleanup dùng `os.killpg` gửi `SIGTERM` $\rightarrow$ 5s $\rightarrow$ `SIGKILL`.
-  - *Cross-Repo Service*: Service systemd gọi chéo repo BẮT BUỘC dùng `cwd=` tường minh phân giải qua `CCBA_HUB_PATH`, cấm gắn cứng `/home/vvc/...`.
+  - *Markdown v1 & Subprocess*: Biến có `_` bọc backtick; Timeout/Cancel bắt buộc `proc.kill()` + `proc.wait()`; shell trap cleanup dùng `os.killpg`. Service systemd gọi chéo repo dùng `cwd` phân giải qua `CCBA_HUB_PATH`.
 - **RULE-5.5 [Timezone-Normalized Observability cho Database Gateway UTC]**:
-  - Truy vấn token/spend UTC gateway (LiteLLM) CẤM `CURRENT_DATE`. Bắt buộc lọc theo mốc 00:00:00 ICT chuyển đổi sang UTC:
-    `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
+  - Truy vấn spend UTC gateway (LiteLLM) CẤM `CURRENT_DATE`. Bắt buộc lọc theo 00:00:00 ICT chuyển sang UTC: `WHERE "startTime" >= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh' AT TIME ZONE 'UTC')`.
 

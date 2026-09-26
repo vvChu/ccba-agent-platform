@@ -16,10 +16,12 @@ from scripts.governance import (
     AuditReport,
     BaseAuditor,
     DocumentAuditor,
+    DriftAuditor,
     EnvAuditor,
     LinkAuditor,
     RegistryAuditor,
     SkillAuditor,
+    is_structural_path,
 )
 
 
@@ -352,6 +354,188 @@ description: Valid description
         self.assertFalse(
             auditor.search_codebase_for_symbol("IsolatedSkillLocalClass", search_dirs=[self.root])
         )
+
+    def test_drift_auditor_structural_path_classification(self) -> None:
+        """Test is_structural_path correctly classifies Level-1 paths vs internal sub-resources."""
+        # Level-1 structural paths
+        self.assertTrue(is_structural_path("pyproject.toml"))
+        self.assertTrue(is_structural_path("packages/ccba-core/pyproject.toml"))
+        self.assertTrue(is_structural_path(".agents/skills/ccba-test-skill/SKILL.md"))
+        self.assertTrue(is_structural_path(".agents/workflows/deploy.md"))
+        self.assertTrue(is_structural_path("scripts/update_arch_stats.py"))
+
+        # Ignored non-structural or internal paths
+        self.assertFalse(is_structural_path(".agents/workflows/deploy.md.bak"))
+        self.assertFalse(is_structural_path(".agents/skills/ccba-test-skill/test_cases/case1.py"))
+        self.assertFalse(is_structural_path(".agents/skills/ccba-test-skill/references/doc.md"))
+        self.assertFalse(is_structural_path(".agents/skills/ccba-test-skill/resources/schema.json"))
+        self.assertFalse(is_structural_path(".agents/skills/ccba-test-skill/scripts/helper.py"))
+        self.assertFalse(is_structural_path("packages/ccba-core/src/ccba_core/main.py"))
+        self.assertFalse(is_structural_path("packages/ccba-core/tests/test_main.py"))
+        self.assertFalse(is_structural_path("packages/ccba-core/test_cases/sample.json"))
+        self.assertFalse(is_structural_path("scripts/governance/drift_auditor.py"))
+        self.assertFalse(is_structural_path("scripts/tests/test_governance_sub_auditors.py"))
+        self.assertFalse(is_structural_path("README.md"))
+
+    def test_drift_auditor_detects_marker_mismatch(self) -> None:
+        """Test DriftAuditor detecting mismatch between filesystem counts and doc markers."""
+        auditor = DriftAuditor(project_root=self.root)
+
+        # Create 1 skill and 0 packages
+        skill_dir = self.root / ".agents" / "skills" / "ccba-test-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text("---\nname: ccba-test-skill\n---\n", encoding="utf-8")
+
+        # Create README.md with outdated marker SKILL_COUNT=10 (actual is 1)
+        readme = self.root / "README.md"
+        readme.write_text(
+            "# Platform\nSkills: <!-- SKILL_COUNT_START -->10<!-- SKILL_COUNT_END -->\n",
+            encoding="utf-8",
+        )
+
+        # Create PLATFORM.md with outdated marker PACKAGE_COUNT=5 (actual is 0)
+        platform_md = self.root / "PLATFORM.md"
+        platform_md.write_text(
+            "# Architecture\nPackages: <!-- PACKAGE_COUNT_START -->5<!-- PACKAGE_COUNT_END -->\n",
+            encoding="utf-8",
+        )
+
+        # 1. Layer 1 check detects mismatch
+        marker_issues = auditor.check_marker_drift(docs=[readme, platform_md])
+        self.assertEqual(len(marker_issues), 2)
+        self.assertTrue(
+            any("SKILL_COUNT is '10', but actual count is '1'" in err for err in marker_issues)
+        )
+        self.assertTrue(
+            any("PACKAGE_COUNT is '5', but actual count is '0'" in err for err in marker_issues)
+        )
+
+        # Combined check also reports marker drift
+        combined_issues = auditor.check_architecture_drift()
+        self.assertTrue(any("SKILL_COUNT is '10'" in err for err in combined_issues))
+
+        # 2. Fix markers -> zero drift
+        readme.write_text(
+            "# Platform\nSkills: <!-- SKILL_COUNT_START -->1<!-- SKILL_COUNT_END -->\n",
+            encoding="utf-8",
+        )
+        platform_md.write_text(
+            "# Architecture\nPackages: <!-- PACKAGE_COUNT_START -->0<!-- PACKAGE_COUNT_END -->\n",
+            encoding="utf-8",
+        )
+        clean_issues = auditor.check_marker_drift(docs=[readme, platform_md])
+        self.assertEqual(len(clean_issues), 0)
+
+    def test_drift_auditor_ignores_intra_skill_test_cases(self) -> None:
+        """Test DriftAuditor ignoring internal sub-resources (test_cases/, references/, src/)."""
+        import subprocess
+
+        # Initialize git repo in self.root
+        subprocess.run(["git", "init"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=self.root, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.root,
+            capture_output=True,
+            check=True,
+        )
+
+        # Create initial baseline commit with README
+        readme = self.root / "README.md"
+        readme.write_text("# Readme\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=self.root, capture_output=True, check=True
+        )
+
+        # Add subdirectories and internal files inside skill
+        skill_dir = self.root / ".agents" / "skills" / "ccba-skill-repair"
+        (skill_dir / "test_cases").mkdir(parents=True)
+        (skill_dir / "references").mkdir(parents=True)
+        (skill_dir / "resources").mkdir(parents=True)
+
+        (skill_dir / "test_cases" / "test_sample.json").write_text("{}", encoding="utf-8")
+        (skill_dir / "references" / "guide.md").write_text("# Guide", encoding="utf-8")
+        (skill_dir / "resources" / "data.csv").write_text("a,b", encoding="utf-8")
+
+        # Also add internal files in an existing package
+        pkg_src = self.root / "packages" / "ccba-test" / "src" / "ccba_test"
+        pkg_src.mkdir(parents=True)
+        (pkg_src / "module.py").write_text("x = 1\n", encoding="utf-8")
+
+        auditor = DriftAuditor(project_root=self.root)
+        structural_errors = auditor.check_structural_git_drift()
+        self.assertEqual(len(structural_errors), 0)
+
+    def test_drift_auditor_detects_new_skill_without_doc_update(self) -> None:
+        """Test DriftAuditor detecting new skill SKILL.md without updating architecture docs."""
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=self.root, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.root,
+            capture_output=True,
+            check=True,
+        )
+
+        readme = self.root / "README.md"
+        readme.write_text("# Readme\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=self.root, capture_output=True, check=True
+        )
+
+        # Add new skill SKILL.md
+        new_skill = self.root / ".agents" / "skills" / "ccba-brand-new-skill"
+        new_skill.mkdir(parents=True)
+        (new_skill / "SKILL.md").write_text(
+            "---\nname: ccba-brand-new-skill\n---\n", encoding="utf-8"
+        )
+
+        auditor = DriftAuditor(project_root=self.root)
+        drift_errors = auditor.check_structural_git_drift()
+        self.assertTrue(len(drift_errors) > 0)
+        self.assertIn("Structural drift detected", drift_errors[0])
+
+    def test_drift_auditor_detects_new_package_without_doc_update(self) -> None:
+        """Test DriftAuditor detecting new package pyproject.toml without updating architecture docs."""
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=self.root, capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=self.root,
+            capture_output=True,
+            check=True,
+        )
+
+        readme = self.root / "README.md"
+        readme.write_text("# Readme\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=self.root, capture_output=True, check=True)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=self.root, capture_output=True, check=True
+        )
+
+        # Add new package pyproject.toml
+        new_pkg = self.root / "packages" / "ccba-new-package"
+        new_pkg.mkdir(parents=True)
+        (new_pkg / "pyproject.toml").write_text(
+            "[project]\nname = 'ccba-new-package'\n", encoding="utf-8"
+        )
+
+        auditor = DriftAuditor(project_root=self.root)
+        drift_errors = auditor.check_structural_git_drift()
+        self.assertTrue(len(drift_errors) > 0)
+        self.assertIn("Structural drift detected", drift_errors[0])
 
 
 if __name__ == "__main__":
