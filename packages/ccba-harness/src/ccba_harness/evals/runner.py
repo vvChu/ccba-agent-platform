@@ -344,6 +344,33 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "ccba-completion-checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
     "completion_checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
     "legal_tooling": ["legal_tooling"],
+    "ccba-copywriting": ["copywriting", "office"],
+    "copywriting": ["copywriting", "office"],
+    "ccba-markdown-document-processing": [
+        "copywriting",
+        "office",
+        "markdown_document_processing",
+        "markdown-document-processing",
+    ],
+    "markdown-document-processing": [
+        "copywriting",
+        "office",
+        "markdown_document_processing",
+    ],
+    "markdown_document_processing": [
+        "copywriting",
+        "office",
+        "markdown_document_processing",
+    ],
+    "ccba-pptx": ["copywriting", "office", "pptx"],
+    "pptx": ["copywriting", "office", "pptx"],
+    "ccba-seminar-builder": ["copywriting", "office", "seminar_builder", "seminar"],
+    "seminar-builder": ["copywriting", "office", "seminar_builder", "seminar"],
+    "seminar_builder": ["copywriting", "office", "seminar_builder", "seminar"],
+    "ccba-xu-ly-van-phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
+    "xu-ly-van-phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
+    "xu_ly_van_phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
+    "office": ["copywriting", "office"],
 }
 
 
