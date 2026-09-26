@@ -387,3 +387,113 @@ async def test_legal_tooling_simulation_mock_task_and_scoring() -> None:
             res = await s.score(output, item)
             assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
             assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"
+
+
+def test_platform_tooling_ssot_archetype_routing() -> None:
+    """Verify all 23 developer utility skills route to platform_tooling archetype and eval_platform_tooling.json."""
+    from ccba_harness.evals.archetypes import (
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+    from ccba_harness.evals.runner import load_eval_dataset
+
+    tooling_skills = [
+        "ccba-ask",
+        "ccba-autoresearch",
+        "ccba-build-skill",
+        "ccba-contribute-to-hub",
+        "ccba-create-pr",
+        "ccba-eval-gate",
+        "ccba-git-guardrails",
+        "ccba-graduate-rd",
+        "ccba-init-spoke",
+        "ccba-issue-to-hub",
+        "ccba-issue-tree",
+        "ccba-knowledge-loop",
+        "ccba-notebooklm-connector",
+        "ccba-promote-sandbox",
+        "ccba-research",
+        "ccba-session-retrospective",
+        "ccba-setup-skills",
+        "ccba-spoke-adopter",
+        "ccba-sync-upstream",
+        "ccba-update-spoke",
+        "ccba-wayfinder",
+        "ccba-xia",
+        "ccba-youtube-learn",
+    ]
+    for sname in tooling_skills:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "platform_tooling", f"{sname} should resolve to platform_tooling"
+        assert resolve_domain_dataset(sname) == "eval_platform_tooling.json"
+
+    # Disjoint invariance: Pure orchestration skills must strictly remain in orchestration archetype
+    orchestration_skills = [
+        "ccba-handoff",
+        "ccba-platform",
+        "ccba-review-proposal",
+        "ccba-teamwork",
+        "platform-loader",
+    ]
+    for sname in orchestration_skills:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "orchestration", f"{sname} should resolve to orchestration"
+        assert resolve_domain_dataset(sname) == "eval_agent_orchestration.json"
+
+    # Verify scorers
+    scorers = get_default_domain_scorers("ccba-create-pr")
+    scorer_names = [s.name for s in scorers]
+    assert "platform_tooling_integrity" in scorer_names
+    assert "execution_guardrail" in scorer_names
+    assert "progressive_disclosure_links" in scorer_names
+    assert "depth" in scorer_names
+
+    guardrail_scorer = next(s for s in scorers if s.name == "execution_guardrail")
+    assert guardrail_scorer.is_critical is True
+
+    # Verify dataset loading
+    items = load_eval_dataset(skill_name="ccba-create-pr")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_platform_tooling_pr_lifecycle_and_branch_guardrails" in item_ids
+    assert "test_platform_tooling_git_cleanliness_and_secrets_redaction" in item_ids
+    assert "test_platform_tooling_spoke_hub_sync_and_constitution_merge" in item_ids
+    assert "test_platform_tooling_multimodal_and_connector_ingestion" in item_ids
+    assert "test_platform_tooling_execution_guardrails_and_hard_completion_lock" in item_ids
+
+
+@pytest.mark.asyncio
+async def test_platform_tooling_simulation_mock_task_and_scoring() -> None:
+    """Verify build_mock_agent_task generates authentic platform_tooling responses scoring 100% across all 5 benchmark items."""
+    from pathlib import Path
+
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    skill_path = Path(".agents/skills/ccba-create-pr/SKILL.md")
+    content = (
+        skill_path.read_text(encoding="utf-8")
+        if skill_path.exists()
+        else "ccba-create-pr skill content"
+    )
+    dataset = load_eval_dataset(skill_name="ccba-create-pr")
+    assert len(dataset) == 5
+
+    task = build_mock_agent_task(content, "ccba-create-pr")
+    scorers = get_default_domain_scorers("ccba-create-pr")
+
+    for item in dataset:
+        output = task(item)
+        assert "<legal_context>" not in output, f"Legal context leaked into {item.id}"
+        assert "Uniclass" not in output, f"BIM Uniclass hijacked {item.id}"
+        assert "Quy chuẩn Thiết kế Thị giác" not in output, f"Visual design hijacked {item.id}"
+
+        # Score the output against all 4 domain scorers
+        for s in scorers:
+            res = await s.score(output, item)
+            assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
+            assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"
