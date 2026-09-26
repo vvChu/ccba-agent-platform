@@ -74,6 +74,10 @@ from .scorers import (
     get_pccc_scorers,
     get_visual_diagram_scorers,
 )
+from .simulation import (
+    build_mock_agent_task,
+    create_domain_mock_agent_task,
+)
 from .slicing import (
     AdaptiveDataSlicer,
     DynamicPerturbationEngine,
@@ -181,4 +185,6 @@ __all__ = [
     "DockerSandboxRunner",
     "DockerSandboxScorer",
     "extract_code_blocks",
+    "build_mock_agent_task",
+    "create_domain_mock_agent_task",
 ]
