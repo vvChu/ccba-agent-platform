@@ -174,3 +174,38 @@ def test_visual_design_ssot_archetype_routing() -> None:
     assert "test_visual_design_logo_guidelines_safe_zone" in item_ids
     assert "test_visual_design_banner_prompt_specifications" in item_ids
     assert "test_visual_design_cip_corporate_identity_program" in item_ids
+
+
+@pytest.mark.asyncio
+async def test_visual_design_simulation_mock_task_and_scoring() -> None:
+    """Verify build_mock_agent_task generates authentic visual_design responses scoring 100% across all 5 benchmark items."""
+    from pathlib import Path
+
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    skill_path = Path(".agents/skills/ccba-design/SKILL.md")
+    content = (
+        skill_path.read_text(encoding="utf-8")
+        if skill_path.exists()
+        else "ccba-design skill content"
+    )
+    dataset = load_eval_dataset(skill_name="ccba-design")
+    assert len(dataset) == 5
+
+    task = build_mock_agent_task(content, "ccba-design")
+    scorers = get_default_domain_scorers("ccba-design")
+
+    for item in dataset:
+        output = task(item)
+        assert "<legal_context>" not in output, f"Legal context leaked into {item.id}"
+        assert "Uniclass" not in output, f"BIM Uniclass hijacked {item.id}"
+        assert "Nghị định 30" not in output, f"Office hijacked {item.id}"
+        assert "Quy chuẩn Thiết kế Thị giác" in output, f"Visual design not matched for {item.id}"
+
+        # Score the output against all 4 domain scorers
+        for s in scorers:
+            res = await s.score(output, item)
+            assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
+            assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"
