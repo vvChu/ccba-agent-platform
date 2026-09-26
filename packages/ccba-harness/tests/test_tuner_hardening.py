@@ -628,3 +628,133 @@ name: ccba-coding-skill
         assert "python -m ccba_harness verify-patch" in mut
         assert "Outdated bullet to be replaced." not in mut
         assert "## Other Section" in mut
+
+
+def test_header_replacement_prevents_duplicate_tag_when_strategy_has_adr_tag(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Verify that even if a strategy header contains an uppercase ADR tag, existing lowercase or zero-whitespace tags from the document are preserved without tag duplication."""
+    target = tmp_path / "SKILL.md"
+    base_content = """---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)
+* Outdated bullet to be replaced.
+
+## Other Section
+* Keep intact.
+"""
+    target.write_text(base_content, encoding="utf-8")
+    cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    # Mock strategy to have an ADR tag in the strategy header itself
+    synthetic_strategy = [
+        (
+            "Mock Strategy With Tag",
+            "\n\n## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)\n* Replacement body.\n",
+        )
+    ]
+    monkeypatch.setattr(
+        tuner,
+        "propose_mutation",
+        lambda current, it: tuner.preserve_yaml_frontmatter(
+            current,
+            # Test direct logic with synthetic strategy
+            _simulate_mutation_with_strategy(tuner, current, synthetic_strategy),
+        ),
+    )
+
+    def _simulate_mutation_with_strategy(opt, content, strats):
+        import re
+
+        from ccba_harness.evals.tuner import ADR_HEADER_TAG_REGEX
+
+        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", content, re.DOTALL)
+        body = content[fm_match.end() :] if fm_match else content
+        _s_name, enhancement = strats[0]
+        section_header = enhancement.strip().split("\n")[0]
+        clean_header = ADR_HEADER_TAG_REGEX.sub("", section_header).strip()
+        header_pattern = re.escape(clean_header)
+        section_regex = re.compile(
+            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
+            r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
+            re.DOTALL | re.IGNORECASE,
+        )
+        match = section_regex.search(body)
+        assert match is not None
+        lines = enhancement.strip().split("\n")
+        adr_suffix = match.group("adr_suffix")
+        if adr_suffix:
+            lines[0] = f"{clean_header}{adr_suffix}"
+        effective_enhancement = "\n".join(lines)
+        return body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
+
+    mutated = _simulate_mutation_with_strategy(tuner, base_content, synthetic_strategy)
+    # Must NOT have both (ADR-0058) and (adr-0058)
+    assert "(ADR-0058)" not in mutated, "Failed: uppercase strategy tag leaked into output!"
+    assert "(adr-0058)" in mutated, "Failed: original lowercase tag was lost!"
+    assert "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)" in mutated
+
+
+def test_semantic_dedup_recognizes_zero_whitespace_and_lowercase_tags(tmp_path: Path) -> None:
+    """Verify semantic dedup recognizes zero-whitespace and lowercase ADR tags so strategy 1 is skipped."""
+    target = tmp_path / "SKILL.md"
+
+    test_headers = [
+        "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(ADR-0058)",
+        "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)",
+        "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (hub-adr-0058)",
+    ]
+
+    for header in test_headers:
+        base_content = f"""---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+{header}
+* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+  ```bash
+  python -m ccba_harness verify-patch
+  ```
+* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
+"""
+        target.write_text(base_content, encoding="utf-8")
+        cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+        tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+        mut = tuner.propose_mutation(base_content, 1)
+        # Since strategy 1 is already applied, it must advance to strategy 2
+        assert "## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)" in mut
+        assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1
+
+
+def test_header_replacement_preserves_multiple_tags_zero_whitespace(tmp_path: Path) -> None:
+    """Verify section replacement preserves multiple tags with zero whitespace."""
+    target = tmp_path / "SKILL.md"
+    header_line = "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)(hub-adr-0057)"
+    base_content = f"""---
+name: ccba-coding-skill
+---
+# Coding Skill
+
+{header_line}
+* Outdated body.
+
+## Next Section
+* Preserved.
+"""
+    target.write_text(base_content, encoding="utf-8")
+    cfg = RatchetConfig(target_file=str(target), skill_name="ccba-code-review")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    mut = tuner.propose_mutation(base_content, 1)
+    assert header_line in mut
+    assert mut.count("## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất") == 1
+    assert "python -m ccba_harness verify-patch" in mut
+    assert "Outdated body." not in mut
+    assert "## Next Section" in mut

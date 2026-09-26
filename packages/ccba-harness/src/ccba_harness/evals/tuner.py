@@ -1783,8 +1783,8 @@ class GitRatchetOptimizer:
         if match:
             lines = enhancement.strip().split("\n")
             adr_suffix = match.group("adr_suffix")
-            if adr_suffix and adr_suffix.strip() not in lines[0]:
-                lines[0] = f"{lines[0]}{adr_suffix}"
+            if adr_suffix:
+                lines[0] = f"{clean_header}{adr_suffix}"
             effective_enhancement = "\n".join(lines)
             mutated_body = (
                 body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
