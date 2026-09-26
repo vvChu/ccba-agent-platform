@@ -1665,3 +1665,26 @@ def get_skill_repair_scorers() -> list[BaseScorer]:
         ),
         LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
     ]
+
+
+def get_visual_design_scorers() -> list[BaseScorer]:
+    """Returns the standard scorer suite for brand identity, design tokens, typography, and CIP."""
+    return [
+        RegexScorer(
+            name="visual_design_tokens_and_colors",
+            pattern=r"(design token|color|palette|primary|secondary|neutral|semantic|#[0-9a-fA-F]{3,8}|hex|mã màu)",
+            weight=0.35,
+        ),
+        RegexScorer(
+            name="visual_design_brand_and_guidelines",
+            pattern=r"(brand|logo|safe zone|clear space|vùng an toàn|cip|corporate identity|ấn phẩm|nhận diện|quy chuẩn)",
+            weight=0.35,
+            is_critical=True,
+        ),
+        RegexScorer(
+            name="visual_design_typography_and_assets",
+            pattern=r"(typography|font|scale|hierarchy|phân cấp|banner|generate_image|prompt|tỷ lệ|aspect ratio)",
+            weight=0.2,
+        ),
+        LengthBoundsScorer(name="depth", min_length=20, max_length=20000, weight=0.1),
+    ]

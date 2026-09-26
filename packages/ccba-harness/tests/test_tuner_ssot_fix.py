@@ -133,3 +133,44 @@ def test_skill_repair_ssot_archetype_routing() -> None:
     assert "test_skill_repair_gpi_calculation_and_patching" in item_ids
     assert "test_skill_repair_completion_criteria_and_relative_links" in item_ids
     assert "test_skill_repair_mandatory_verification" in item_ids
+
+
+def test_visual_design_ssot_archetype_routing() -> None:
+    """Verify ccba-design routes to dedicated visual_design archetype and eval_visual_design.json."""
+    from ccba_harness.evals.archetypes import get_default_domain_scorers
+    from ccba_harness.evals.runner import load_eval_dataset
+
+    # Verify visual design skills route to visual_design
+    for sname in ["ccba-design", "ccba-brand", "ccba-logo", "ccba-banner", "ccba-cip"]:
+        arch = resolve_domain_archetype(sname)
+        assert arch is not None, f"{sname} should resolve to an archetype"
+        assert arch.name == "visual_design", f"{sname} should resolve to visual_design"
+        assert resolve_domain_dataset(sname) == "eval_visual_design.json"
+
+    # Disjoint keyword invariance: ccba-codebase-design must strictly route to coding
+    arch_codebase = resolve_domain_archetype("ccba-codebase-design")
+    assert arch_codebase is not None
+    assert arch_codebase.name == "coding"
+    assert resolve_domain_dataset("ccba-codebase-design") == "eval_codebase_engineering.json"
+
+    # Verify scorers
+    scorers = get_default_domain_scorers("ccba-design")
+    scorer_names = [s.name for s in scorers]
+    assert "visual_design_tokens_and_colors" in scorer_names
+    assert "visual_design_brand_and_guidelines" in scorer_names
+    assert "visual_design_typography_and_assets" in scorer_names
+    assert "depth" in scorer_names
+
+    # Check critical flag
+    brand_scorer = next(s for s in scorers if s.name == "visual_design_brand_and_guidelines")
+    assert brand_scorer.is_critical is True
+
+    # Verify dataset loading
+    items = load_eval_dataset(skill_name="ccba-design")
+    assert len(items) == 5
+    item_ids = [it.id for it in items]
+    assert "test_visual_design_color_palette_tokens" in item_ids
+    assert "test_visual_design_typography_hierarchy_scale" in item_ids
+    assert "test_visual_design_logo_guidelines_safe_zone" in item_ids
+    assert "test_visual_design_banner_prompt_specifications" in item_ids
+    assert "test_visual_design_cip_corporate_identity_program" in item_ids
