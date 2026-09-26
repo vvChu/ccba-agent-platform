@@ -45,6 +45,9 @@ HIGHER_DOMAIN_PACKAGES = {
 # Raw third-party library bypass mapping: module -> (allowed_packages, seam_replacement)
 RAW_BYPASS_RESTRICTIONS: dict[str, tuple[set[str], str]] = {
     "docx": ({"ccba_ooxml", "ccba_legal", "mdconverter"}, "ccba_ooxml"),
+    "fitz": ({"ccba_pdf_prep"}, "ccba_pdf_prep"),
+    "pymupdf": ({"ccba_pdf_prep"}, "ccba_pdf_prep"),
+    "openpyxl": ({"ccba_ooxml"}, "ccba_ooxml"),
 }
 
 
@@ -72,13 +75,15 @@ class DependencyASTVisitor(ast.NodeVisitor):
         self.violations: list[ImportViolation] = []
 
     def visit_Import(self, node: ast.Import) -> None:
+        end_lineno = getattr(node, "end_lineno", node.lineno)
         for alias in node.names:
-            self._check_module_import(alias.name, node.lineno)
+            self._check_module_import(alias.name, node.lineno, end_lineno)
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module:
-            self._check_module_import(node.module, node.lineno)
+            end_lineno = getattr(node, "end_lineno", node.lineno)
+            self._check_module_import(node.module, node.lineno, end_lineno)
             # Also check imported member names for private member/submodule access (e.g., from pkg import _private)
             root_mod = node.module.split(".")[0]
             if root_mod in MONOREPO_ROOT_MODULES and root_mod != self.current_package:
@@ -99,7 +104,9 @@ class DependencyASTVisitor(ast.NodeVisitor):
                         )
         self.generic_visit(node)
 
-    def _check_module_import(self, module_name: str, line_number: int) -> None:
+    def _check_module_import(
+        self, module_name: str, line_number: int, end_line_number: int | None = None
+    ) -> None:
         parts = module_name.split(".")
         root_mod = parts[0]
 
@@ -107,13 +114,17 @@ class DependencyASTVisitor(ast.NodeVisitor):
         if root_mod in RAW_BYPASS_RESTRICTIONS:
             allowed_pkgs, seam_pkg = RAW_BYPASS_RESTRICTIONS[root_mod]
             if self.current_package not in allowed_pkgs:
-                # Check for explicit inline exemption comment
+                # Check for explicit inline exemption comment across statement line range
                 line_has_exemption = False
-                if self.raw_lines and 1 <= line_number <= len(self.raw_lines):
-                    line_text = self.raw_lines[line_number - 1]
-                    line_has_exemption = (
-                        "ccba:allow-raw-bypass" in line_text or "noqa: raw-bypass" in line_text
-                    )
+                if self.raw_lines:
+                    end_line = end_line_number if end_line_number is not None else line_number
+                    start_idx = max(0, line_number - 1)
+                    end_idx = min(len(self.raw_lines), end_line)
+                    for idx in range(start_idx, end_idx):
+                        line_text = self.raw_lines[idx]
+                        if "ccba:allow-raw-bypass" in line_text or "noqa: raw-bypass" in line_text:
+                            line_has_exemption = True
+                            break
 
                 if not line_has_exemption:
                     self.violations.append(
