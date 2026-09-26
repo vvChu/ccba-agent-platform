@@ -145,3 +145,37 @@ def test_check_catalog_in_sync_catches_seam_errors(tmp_path: Path) -> None:
         in_sync, msg = check_catalog_in_sync(tmp_path)
         assert in_sync is False
         assert "Static Seam Export Error: Mock phantom seam error" in msg
+
+
+def test_extract_module_exported_symbols_with_aug_assign(tmp_path: Path) -> None:
+    """Verify that _extract_module_exported_symbols supports __all__ += [...] AugAssign pattern."""
+    module_file = tmp_path / "aug_mod.py"
+    module_file.write_text(
+        '__all__ = ["foo"]\n__all__ += ["bar", "baz"]\n\nfoo = 1\nbar = 2\nbaz = 3\n',
+        encoding="utf-8",
+    )
+
+    symbols = _extract_module_exported_symbols(module_file)
+    assert symbols == {"foo", "bar", "baz"}
+
+
+def test_validate_seam_exports_handles_trailing_punctuation(tmp_path: Path) -> None:
+    """Verify that validate_seam_exports immunizes symbol names against trailing punctuation."""
+    pkg_dir = tmp_path / "packages" / "ccba-pdf-prep"
+    src_dir = pkg_dir / "src" / "ccba_pdf_prep"
+    src_dir.mkdir(parents=True)
+
+    (src_dir / "__init__.py").write_text(
+        '__all__ = ["PDFProcessingPipeline"]\nclass PDFProcessingPipeline: pass\n',
+        encoding="utf-8",
+    )
+
+    agents_md = pkg_dir / "AGENTS.md"
+    agents_md.write_text(
+        "# ccba-pdf-prep Package Guidance\n\n"
+        "- **Public Deep Seams**: `from ccba_pdf_prep import PDFProcessingPipeline.`.\n",
+        encoding="utf-8",
+    )
+
+    errors = validate_seam_exports(tmp_path)
+    assert errors == []

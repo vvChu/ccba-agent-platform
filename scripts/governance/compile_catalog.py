@@ -349,8 +349,10 @@ def validate_seam_exports(hub_root: Path = HUB_ROOT) -> list[str]:
                 )
                 continue
 
-            # Extract individual symbol names
-            symbols = [s.strip() for s in symbols_str.split(",") if s.strip()]
+            # Extract individual symbol names (immunized against trailing punctuation)
+            symbols = [
+                s.strip().rstrip(".,;") for s in symbols_str.split(",") if s.strip().rstrip(".,;")
+            ]
             for sym in symbols:
                 if sym not in exported_symbols:
                     try:
