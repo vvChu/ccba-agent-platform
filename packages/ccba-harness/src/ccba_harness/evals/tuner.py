@@ -1766,6 +1766,104 @@ class GitRatchetOptimizer:
             holdout_initial_score=initial_holdout_score,
         )
 
+    def _token_snapshot(self) -> tuple[int, int, int]:
+        """Takes a snapshot of current token counters (prompt, completion, total)."""
+        return (
+            self.token_tracker.prompt_tokens,
+            self.token_tracker.completion_tokens,
+            self.token_tracker.total_tokens,
+        )
+
+    def _propose_candidate(
+        self, iter_idx: int, state: _RatchetLoopState
+    ) -> tuple[str | None, str | None]:
+        """Proposes a mutation candidate and validates uniqueness against seen hashes."""
+        mutated = self.propose_mutation(state.best_content, iter_idx)
+        if mutated == state.best_content:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {iter_idx}."
+            )
+            return None, "HALT_NO_FURTHER_STRATEGIES"
+
+        content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
+        if content_hash in state.seen_hashes:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
+            )
+            return None, "HALT_NO_FURTHER_STRATEGIES"
+        state.seen_hashes.add(content_hash)
+        return mutated, None
+
+    def _eval_holdout_base_sync(self, content: str) -> float | None:
+        """Evaluates baseline holdout dataset synchronously if configured."""
+        if not self.holdout_dataset:
+            return None
+        try:
+            report = self._eval_sync(content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(
+                f"🔒 Holdout Baseline Score: {score:.2f}% ({len(self.holdout_dataset)} items)"
+            )
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
+            return None
+
+    def _eval_holdout_final_sync(
+        self, best_content: str, initial_score: float | None, kept_count: int
+    ) -> float | None:
+        """Evaluates final holdout score synchronously, reusing baseline when kept_count == 0."""
+        if not self.holdout_dataset:
+            return None
+        if kept_count == 0 and initial_score is not None:
+            logger.info(
+                f"🎯 Holdout Final Score: {initial_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
+            )
+            return initial_score
+        try:
+            report = self._eval_sync(best_content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(f"🎯 Holdout Final Score: {score:.2f}% (Baseline: {initial_score}%)")
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            return None
+
+    async def _eval_holdout_base_async(self, content: str) -> float | None:
+        """Evaluates baseline holdout dataset asynchronously if configured."""
+        if not self.holdout_dataset:
+            return None
+        try:
+            report = await self._eval_async(content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(
+                f"🔒 Holdout Baseline Score: {score:.2f}% ({len(self.holdout_dataset)} items)"
+            )
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
+            return None
+
+    async def _eval_holdout_final_async(
+        self, best_content: str, initial_score: float | None, kept_count: int
+    ) -> float | None:
+        """Evaluates final holdout score asynchronously, reusing baseline when kept_count == 0."""
+        if not self.holdout_dataset:
+            return None
+        if kept_count == 0 and initial_score is not None:
+            logger.info(
+                f"🎯 Holdout Final Score: {initial_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
+            )
+            return initial_score
+        try:
+            report = await self._eval_async(best_content, dataset=self.holdout_dataset)
+            score = report.overall_score
+            logger.info(f"🎯 Holdout Final Score: {score:.2f}% (Baseline: {initial_score}%)")
+            return score
+        except Exception as e:
+            logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
+            return None
+
     def run(self) -> RatchetReport:
         """Executes the full ratchet autonomous optimization loop synchronously."""
         if not self.target_file.exists():
@@ -1780,59 +1878,28 @@ class GitRatchetOptimizer:
         baseline_score = baseline_report.overall_score
         baseline_tokens = self.token_tracker.total_tokens
         effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
-
         state = _RatchetLoopState(
             best_score=baseline_score,
             best_content=initial_content,
             seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
-
-        initial_holdout_score: float | None = None
-        if self.holdout_dataset:
-            try:
-                holdout_base = self._eval_sync(initial_content, dataset=self.holdout_dataset)
-                initial_holdout_score = holdout_base.overall_score
-                logger.info(
-                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
-                )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
-
+        initial_holdout_score = self._eval_holdout_base_sync(initial_content)
         halt_reason: str | None = None
+
         try:
             for i in range(1, effective_max_iter + 1):
                 logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_tokens = (
-                    self.token_tracker.prompt_tokens,
-                    self.token_tracker.completion_tokens,
-                    self.token_tracker.total_tokens,
-                )
-                t0 = time.perf_counter()
-
+                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
                 try:
-                    mutated = self.propose_mutation(state.best_content, i)
-                    if mutated == state.best_content:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                    mutated, cand_halt = self._propose_candidate(i, state)
+                    if cand_halt:
+                        halt_reason = cand_halt
                         break
-
-                    content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
-                    if content_hash in state.seen_hashes:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-                        break
-                    state.seen_hashes.add(content_hash)
-
-                    if self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
+                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                         continue
 
                     eval_report = self._eval_sync(mutated)
                     self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
-
                     should_stop, stop_reason = self._check_budget_and_early_stop(
                         i, effective_patience, baseline_tokens, state
                     )
@@ -1851,25 +1918,9 @@ class GitRatchetOptimizer:
         finally:
             self._finalize_disk_state(initial_content, state)
 
-        final_holdout_score: float | None = None
-        if self.holdout_dataset:
-            if state.kept_count == 0 and initial_holdout_score is not None:
-                final_holdout_score = initial_holdout_score
-                logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
-                )
-            else:
-                try:
-                    holdout_final = self._eval_sync(
-                        state.best_content, dataset=self.holdout_dataset
-                    )
-                    final_holdout_score = holdout_final.overall_score
-                    logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
-                    )
-                except Exception as e:
-                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
-
+        final_holdout_score = self._eval_holdout_final_sync(
+            state.best_content, initial_holdout_score, state.kept_count
+        )
         return self._build_final_report(
             baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
         )
@@ -1891,59 +1942,28 @@ class GitRatchetOptimizer:
         baseline_score = baseline_report.overall_score
         baseline_tokens = self.token_tracker.total_tokens
         effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
-
         state = _RatchetLoopState(
             best_score=baseline_score,
             best_content=initial_content,
             seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
-
-        initial_holdout_score: float | None = None
-        if self.holdout_dataset:
-            try:
-                holdout_base = await self._eval_async(initial_content, dataset=self.holdout_dataset)
-                initial_holdout_score = holdout_base.overall_score
-                logger.info(
-                    f"🔒 Holdout Baseline Score: {initial_holdout_score:.2f}% ({len(self.holdout_dataset)} items)"
-                )
-            except Exception as e:
-                logger.warning(f"Không thể chấm điểm holdout ban đầu: {e}")
-
+        initial_holdout_score = await self._eval_holdout_base_async(initial_content)
         halt_reason: str | None = None
+
         try:
             for i in range(1, effective_max_iter + 1):
                 logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_tokens = (
-                    self.token_tracker.prompt_tokens,
-                    self.token_tracker.completion_tokens,
-                    self.token_tracker.total_tokens,
-                )
-                t0 = time.perf_counter()
-
+                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
                 try:
-                    mutated = self.propose_mutation(state.best_content, i)
-                    if mutated == state.best_content:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {i}."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
+                    mutated, cand_halt = self._propose_candidate(i, state)
+                    if cand_halt:
+                        halt_reason = cand_halt
                         break
-
-                    content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
-                    if content_hash in state.seen_hashes:
-                        logger.info(
-                            f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-                        )
-                        halt_reason = "HALT_NO_FURTHER_STRATEGIES"
-                        break
-                    state.seen_hashes.add(content_hash)
-
-                    if self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
+                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                         continue
 
                     eval_report = await self._eval_async(mutated)
                     self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
-
                     should_stop, stop_reason = self._check_budget_and_early_stop(
                         i, effective_patience, baseline_tokens, state
                     )
@@ -1962,25 +1982,9 @@ class GitRatchetOptimizer:
         finally:
             self._finalize_disk_state(initial_content, state)
 
-        final_holdout_score: float | None = None
-        if self.holdout_dataset:
-            if state.kept_count == 0 and initial_holdout_score is not None:
-                final_holdout_score = initial_holdout_score
-                logger.info(
-                    f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Tái sử dụng Baseline do kept_count == 0, bỏ qua re-eval)"
-                )
-            else:
-                try:
-                    holdout_final = await self._eval_async(
-                        state.best_content, dataset=self.holdout_dataset
-                    )
-                    final_holdout_score = holdout_final.overall_score
-                    logger.info(
-                        f"🎯 Holdout Final Score: {final_holdout_score:.2f}% (Baseline: {initial_holdout_score}%)"
-                    )
-                except Exception as e:
-                    logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
-
+        final_holdout_score = await self._eval_holdout_final_async(
+            state.best_content, initial_holdout_score, state.kept_count
+        )
         return self._build_final_report(
             baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
         )

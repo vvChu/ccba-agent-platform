@@ -1055,3 +1055,144 @@ def test_ratchet_config_token_budget_separator_parsing(
     monkeypatch.setenv("CCBA_TUNER_TOKEN_BUDGET", "25,000,000")
     cfg3 = RatchetConfig(target_file=str(target))
     assert cfg3.token_budget == 25_000_000
+
+
+def test_simulation_build_mock_agent_task_archetypes() -> None:
+    """Verify build_mock_agent_task generates domain responses across archetypes."""
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    # 1. Legal archetype with 105/2025 guardrail
+    legal_task = build_mock_agent_task("Nghị định 105/2025 thay thế 136/2020. Luật số 135/2025.")
+    res_legal = legal_task(
+        EvalItem(id="leg_1", input_prompt="Trích dẫn Nghị định 136/2020 về thẩm duyệt PCCC")
+    )
+    assert "105/2025" in res_legal
+    assert "136/2020" in res_legal
+
+    # 2. Academic archetype with CARS & Yale Style
+    academic_task = build_mock_agent_task("CARS 3-Move Blueprint. Yale Style Guide.")
+    res_acad = academic_task(
+        EvalItem(id="acad_1", input_prompt="Draft academic Introduction discussion")
+    )
+    assert "Move 1" in res_acad or "CARS" in res_acad
+
+    # 3. BIM Uniclass archetype
+    bim_task = build_mock_agent_task("BIM Uniclass 200 ISO 12006-2.")
+    res_bim = bim_task(EvalItem(id="bim_1", input_prompt="Phân loại Uniclass vật tư"))
+    assert "Uniclass" in res_bim or "ISO" in res_bim or "BIM" in res_bim
+
+
+@pytest.mark.asyncio
+async def test_run_async_with_holdout_dataset_re_eval_and_reuse(tmp_path: Path) -> None:
+    """Verify run_async re-evaluates holdout when kept_count > 0 and reuses when kept_count == 0."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    target = tmp_path / "SKILL.md"
+    target.write_text("# Test Holdout Skill", encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=str(target), max_iterations=1, target_score=100.0)
+    opt = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+    opt.holdout_dataset = [EvalItem(id="h1", input_prompt="Holdout prompt")]
+
+    # Case 1: kept_count == 0 -> reuses baseline holdout
+    call_counts: dict[str, int] = {"tuning": 0, "holdout": 0}
+
+    async def mock_async_eval_revert(content: str, dataset=None) -> EvalReport:
+        if dataset is opt.holdout_dataset:
+            call_counts["holdout"] += 1
+            return EvalReport(
+                total_items=1,
+                passed_items=1,
+                failed_items=0,
+                overall_score=85.0,
+                pass_rate=1.0,
+                item_results=[],
+            )
+        call_counts["tuning"] += 1
+        # Baseline = 50.0%, candidate = 40.0% (reverted)
+        score = 50.0 if call_counts["tuning"] == 1 else 40.0
+        return EvalReport(
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            overall_score=score,
+            pass_rate=1.0,
+            item_results=[],
+        )
+
+    opt.evaluate_content_async = mock_async_eval_revert
+    report_revert = await opt.run_async()
+    assert isinstance(report_revert, RatchetReport)
+    assert report_revert.kept_commits == 0
+    assert report_revert.holdout_initial_score == 85.0
+    assert report_revert.holdout_score == 85.0
+    # Holdout was evaluated ONLY once for baseline, skipped for final
+    assert call_counts["holdout"] == 1
+
+    # Case 2: kept_count > 0 -> re-evaluates holdout
+    call_counts = {"tuning": 0, "holdout": 0}
+
+    opt_keep = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+    opt_keep.holdout_dataset = [EvalItem(id="h1", input_prompt="Holdout prompt")]
+
+    async def mock_async_eval_keep(content: str, dataset=None) -> EvalReport:
+        if dataset is opt_keep.holdout_dataset:
+            call_counts["holdout"] += 1
+            score = 80.0 if call_counts["holdout"] == 1 else 95.0
+            return EvalReport(
+                total_items=1,
+                passed_items=1,
+                failed_items=0,
+                overall_score=score,
+                pass_rate=1.0,
+                item_results=[],
+            )
+        call_counts["tuning"] += 1
+        # Baseline = 50.0%, candidate = 90.0% (kept)
+        score = 50.0 if call_counts["tuning"] == 1 else 90.0
+        return EvalReport(
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            overall_score=score,
+            pass_rate=1.0,
+            item_results=[],
+        )
+
+    opt_keep.evaluate_content_async = mock_async_eval_keep
+    opt_keep.git_commit_improvement = MagicMock(return_value=True)
+
+    report_keep = await opt_keep.run_async()
+    assert report_keep.kept_commits == 1
+    assert report_keep.holdout_initial_score == 80.0
+    assert report_keep.holdout_score == 95.0
+    assert call_counts["holdout"] == 2  # baseline + final re-eval
+
+
+@pytest.mark.asyncio
+async def test_run_async_holdout_error_graceful_handling(tmp_path: Path) -> None:
+    """Verify run_async gracefully handles holdout scoring exceptions without crashing."""
+    target = tmp_path / "SKILL.md"
+    target.write_text("# Test Error Skill", encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=str(target), max_iterations=1, target_score=100.0)
+    opt = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+    opt.holdout_dataset = [EvalItem(id="h1", input_prompt="Holdout")]
+
+    async def mock_eval_with_holdout_error(content: str, dataset=None) -> EvalReport:
+        if dataset is opt.holdout_dataset:
+            raise RuntimeError("Simulated holdout error")
+        return EvalReport(
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            overall_score=90.0,
+            pass_rate=1.0,
+            item_results=[],
+        )
+
+    opt.evaluate_content_async = mock_eval_with_holdout_error
+    report = await opt.run_async()
+    assert report.holdout_initial_score is None
+    assert report.holdout_score is None
+    assert report.initial_score == 90.0
