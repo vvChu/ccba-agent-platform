@@ -17,7 +17,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -25,6 +25,7 @@ from .archetypes import (
     resolve_domain_dataset,
 )
 from .tuner import (
+    _UNSET,
     GitRatchetTuner,
     RatchetConfig,
     RatchetReport,
@@ -205,30 +206,55 @@ class NightlyTunerDaemon:
         early_stopping_patience: int = 5,
         use_real_llm: bool = False,
         token_budget: int = 10_000_000,
-        per_skill_mutation_budget: int | None = 250_000,
+        per_skill_mutation_budget: int | None = cast(Any, _UNSET),
         model: str = "",
         target_skills: list[str] | None = None,
         alert_emitter: Callable[[str], bool] | None = None,
         target_ref: str = "origin/main",
         no_telegram: bool = False,
         skip_cooldown: bool = False,
-        concurrency: int = 5,
+        concurrency: int = cast(Any, _UNSET),
+        hard_max_tokens_per_skill: int | None = cast(Any, _UNSET),
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low = max_iterations_low
         self.max_iterations_perfect = max_iterations_perfect
         self.early_stopping_patience = early_stopping_patience
         self.use_real_llm = use_real_llm
-        if concurrency == 5:
+
+        if concurrency is _UNSET:
             env_c = os.getenv("CCBA_TUNER_CONCURRENCY")
             if env_c:
                 try:
                     concurrency = int(env_c)
                 except ValueError:
-                    pass
+                    concurrency = 5
+            else:
+                concurrency = 5
         self.concurrency = concurrency
         self.token_budget = token_budget
+
+        if per_skill_mutation_budget is _UNSET:
+            env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
+            if env_ps_budget:
+                try:
+                    per_skill_mutation_budget = int(env_ps_budget.replace(",", "").replace("_", ""))
+                except ValueError:
+                    per_skill_mutation_budget = 250_000
+            else:
+                per_skill_mutation_budget = 250_000
         self.per_skill_mutation_budget = per_skill_mutation_budget
+
+        if hard_max_tokens_per_skill is _UNSET:
+            env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
+            if env_hard_max:
+                try:
+                    hard_max_tokens_per_skill = int(env_hard_max.replace(",", "").replace("_", ""))
+                except ValueError:
+                    hard_max_tokens_per_skill = 500_000
+            else:
+                hard_max_tokens_per_skill = 500_000
+        self.hard_max_tokens_per_skill = hard_max_tokens_per_skill
         self.model = model
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
@@ -515,6 +541,7 @@ class NightlyTunerDaemon:
                 llm_model=self.model,
                 token_budget=remaining_budget,
                 per_skill_mutation_budget=self.per_skill_mutation_budget,
+                hard_max_tokens_per_skill=self.hard_max_tokens_per_skill,
                 max_concurrency=self.concurrency,
             )
 

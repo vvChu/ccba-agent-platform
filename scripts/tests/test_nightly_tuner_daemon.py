@@ -533,3 +533,22 @@ def test_daemon_concurrency_env_resolution(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setenv("CCBA_TUNER_CONCURRENCY", "9")
     daemon = NightlyTunerDaemon(root=project_root)
     assert daemon.concurrency == 9
+
+
+def test_daemon_explicit_concurrency_and_budgets_not_overwritten_by_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify NightlyTunerDaemon preserves user-explicit params when env vars are present (Issue #368)."""
+    monkeypatch.setenv("CCBA_TUNER_CONCURRENCY", "9")
+    monkeypatch.setenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET", "900000")
+    monkeypatch.setenv("CCBA_TUNER_HARD_MAX_PER_SKILL", "9999999")
+
+    daemon = NightlyTunerDaemon(
+        root=project_root,
+        concurrency=3,
+        per_skill_mutation_budget=150_000,
+        hard_max_tokens_per_skill=400_000,
+    )
+    assert daemon.concurrency == 3
+    assert daemon.per_skill_mutation_budget == 150_000
+    assert daemon.hard_max_tokens_per_skill == 400_000
