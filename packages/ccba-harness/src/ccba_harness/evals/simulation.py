@@ -60,6 +60,7 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 "adr",
                 "grill",
                 "orchestration",
+                "platform",
             )
         )
         has_xml = is_legal_advisory and (
@@ -455,40 +456,67 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 parts.append("Thiết kế hình ảnh và tài sản đồ họa cơ bản...")
 
         # --- Legal Tooling, Crawler, Ingest, Tracker & Completion Checklist ---
-        elif skill_name in (
-            "ccba-tvpl-vip-crawler",
-            "ccba-legal-ingest",
-            "ccba-legal-document-tracker",
-            "ccba-completion-checklist",
-            "legal_tooling",
-            "crawler",
-        ) or any(
-            k in prompt_l
-            for k in [
-                "thư viện pháp luật",
-                "tvpl",
-                "phiên vip",
-                "vip crawler",
-                "session cookie",
-                "exponential backoff",
-                "captcha barrier",
-                "rate limit",
-                "okf v2.4",
-                "okf",
-                "sha-256",
-                "sha256",
-                "provenance stamping",
-                "vbhn engine",
-                "diffing",
-                "hợp nhất văn bản",
-                "hồ sơ hoàn thành",
-                "hsht",
-                "nghị định 06/2021",
-                "cây thư mục",
-                "verbatim grounding",
-                "mandatory acquisition",
-                "anti-synthetic",
-            ]
+        elif (
+            skill_name
+            in (
+                "ccba-tvpl-vip-crawler",
+                "ccba-legal-ingest",
+                "ccba-legal-document-tracker",
+                "ccba-completion-checklist",
+                "legal_tooling",
+                "crawler",
+            )
+            or any(
+                k in prompt_l
+                for k in [
+                    "thư viện pháp luật",
+                    "tvpl",
+                    "phiên vip",
+                    "vip crawler",
+                    "session cookie",
+                    "captcha barrier",
+                    "okf v2.4",
+                    "okf",
+                    "sha-256",
+                    "sha256",
+                    "provenance stamping",
+                    "vbhn engine",
+                    "diffing",
+                    "hợp nhất văn bản",
+                    "hồ sơ hoàn thành",
+                    "hsht",
+                    "nghị định 06/2021",
+                    "cây thư mục",
+                    "verbatim grounding",
+                    "mandatory acquisition",
+                    "anti-synthetic",
+                ]
+            )
+        ) and not any(
+            k in skill_name
+            for k in (
+                "create-pr",
+                "git",
+                "guardrails",
+                "ask",
+                "wayfinder",
+                "youtube",
+                "notebooklm",
+                "platform_tooling",
+                "sync",
+                "spoke",
+                "hub",
+                "build-skill",
+                "setup-skills",
+                "autoresearch",
+                "knowledge",
+                "retrospective",
+                "sandbox",
+                "promote",
+                "xia",
+                "issue-tree",
+                "eval-gate",
+            )
         ):
             has_tooling_grounding = (
                 any(
@@ -627,6 +655,152 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                     "- Quản lý phiên crawler TVPL VIP và cơ chế retry khi nghẽn mạng.\n"
                     "- Chuẩn hóa OKF v2.4 và bảo đảm tính nguyên văn verbatim grounding với mã băm SHA-256 provenance stamping theo ADR-0059: `c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2`.\n"
                     "- So khớp diff văn bản hợp nhất VBHN và quản lý cây thư mục hồ sơ hoàn thành HSHT NĐ 06/2021.\n"
+                    "Chi tiết tham chiếu xem tại [references/](references/).\n"
+                )
+
+        # --- Platform Tooling, Developer Utilities & Git / Connectors ---
+        elif skill_name in (
+            "ccba-ask",
+            "ccba-autoresearch",
+            "ccba-build-skill",
+            "ccba-contribute-to-hub",
+            "ccba-create-pr",
+            "ccba-eval-gate",
+            "ccba-git-guardrails",
+            "ccba-graduate-rd",
+            "ccba-init-spoke",
+            "ccba-issue-to-hub",
+            "ccba-issue-tree",
+            "ccba-knowledge-loop",
+            "ccba-notebooklm-connector",
+            "ccba-promote-sandbox",
+            "ccba-research",
+            "ccba-session-retrospective",
+            "ccba-setup-skills",
+            "ccba-spoke-adopter",
+            "ccba-sync-upstream",
+            "ccba-update-spoke",
+            "ccba-wayfinder",
+            "ccba-xia",
+            "ccba-youtube-learn",
+            "platform_tooling",
+        ) or any(
+            k in prompt_l
+            for k in [
+                "gh pr create",
+                "pull request",
+                "branch naming",
+                "cleanliness",
+                "secrets redaction",
+                "maskara",
+                "check_spoke_cleanliness",
+                "sync_spoke",
+                "non-destructive",
+                "virtual hub fallback",
+                "multimodal connector",
+                "notebooklm",
+                "youtube learn",
+                "hard completion lock",
+                "verify-patch",
+            ]
+        ):
+            if (
+                "pull request" in prompt_l
+                or "pr" in prompt_l
+                or "nhánh" in prompt_l
+                or "remote" in prompt_l
+            ):
+                parts.append(
+                    "QUY TRÌNH QUẢN LÝ PULL REQUEST & RÀO CHẮN NHÁNH GIT (CCBA PLATFORM TOOLING):\n\n"
+                    "1. Quy tắc Đặt tên Nhánh & Kiểm tra Trạng thái Remote (Idempotency Gate):\n"
+                    "- Cú pháp nhánh chuẩn: `feat/issue-XXX-slug` hoặc `fix/issue-XXX-slug`.\n"
+                    "- Trước khi thực hiện bất kỳ lệnh tạo PR (`gh pr create`) hoặc đẩy nhánh, BẮT BUỘC kiểm tra trạng thái remote bằng `gh pr list --head <branch>` hoặc `git ls-remote` để tránh phát sinh tài nguyên trùng lặp (Remote Mutation Idempotency Invariant).\n\n"
+                    "2. Cơ chế Đẩy Nhánh An Toàn (Pre-Push Lease Invariant):\n"
+                    "- CẤM TUYỆT ĐỐI việc sử dụng lệnh bare `git push --force`.\n"
+                    "- BẮT BUỘC sử dụng cờ an toàn: `git push -u origin <branch> --force-with-lease` để bảo vệ các commit của đồng nghiệp.\n\n"
+                    "3. Khóa Cứng Hoàn Tất Trước Khi Mở PR (ADR-0058 Hard Completion Lock):\n"
+                    "- Chỉ mở PR sau khi toàn bộ mã nguồn vượt qua bộ kiểm tra tất định: `python -m ccba_harness verify-patch` với exit code 0.\n\n"
+                    "Chi tiết hướng dẫn quy trình xem tại [references/](references/)."
+                )
+            elif (
+                "vệ sinh" in prompt_l
+                or "cleanliness" in prompt_l
+                or "maskara" in prompt_l
+                or "secret" in prompt_l
+            ):
+                parts.append(
+                    "QUY TRÌNH VỆ SINH KHO MÃ NGUỒN & CHE GIẤU THÔNG TIN NHẠY CẢM (MASKARA REDACTION):\n\n"
+                    "1. Kiểm Tra Vệ Sinh Toàn Diện (Git Cleanliness Scanner):\n"
+                    "- Chạy script kiểm tra: `python scripts/governance/check_spoke_cleanliness.py`.\n"
+                    "- Phát hiện và ngăn chặn triệt để việc commit các tệp rác, artifacts tạm, tệp khóa `.lock` hoặc dữ liệu nhị phân không kiểm soát.\n\n"
+                    "2. Quét Đường Dẫn Tuyệt Đối & Cách Ly Trạng Thái Máy (Machine-State Decoupling):\n"
+                    "- CẤM commit đường dẫn tuyệt đối dạng `C:\\...` hoặc `/home/...` vào cấu hình chung.\n"
+                    "- Mọi đường dẫn Hub trên từng máy bắt buộc phải được cô lập độc lập qua biến môi trường `CCBA_HUB_PATH`.\n"
+                    "- Mọi đường dẫn fallback mặc định trên Windows bắt buộc phải được đánh dấu bằng chú thích `# ccba:allow-machine-path`.\n\n"
+                    "3. Bảo Vệ Secrets & Thông Tin Nhạy Cảm (Maskara Redaction Guardrails):\n"
+                    "- Tự động quét và che giấu (redact) các token, API keys, passwords trong mã nguồn và log trước khi commit.\n\n"
+                    "Chi tiết quy chuẩn xem tại [references/](references/)."
+                )
+            elif (
+                "sync" in prompt_l
+                or "spoke" in prompt_l
+                or "hub" in prompt_l
+                or "hợp nhất" in prompt_l
+            ):
+                parts.append(
+                    "CƠ CHẾ ĐỒNG BỘ SPOKE - HUB & BẢO TOÀN HIẾN PHÁP (NON-DESTRUCTIVE SECTION MERGE):\n\n"
+                    "1. Nguyên Tắc Bảo Toàn Hiến Pháp Spoke (Constitution Preservation):\n"
+                    "- Công cụ đồng bộ `scripts/governance/sync_spoke.py` thực hiện Non-Destructive Section Merge.\n"
+                    "- Bảo toàn 100% các phần tùy biến cục bộ của Spoke trong `AGENTS.md` (như danh sách kỹ năng chuyên ngành, issue trackers, tài liệu dự án).\n\n"
+                    "2. Cơ Chế Dự Phòng Hub Ảo (Virtual Hub Fallback Invariant):\n"
+                    "- Tại chế độ Spoke, nếu một kỹ năng được tham chiếu không hiện diện cục bộ tại `.agents/skills/`, Agent BẮT BUỘC nạp định nghĩa trực tiếp từ `[CCBA_HUB_PATH]/.agents/skills/<skill_name>/SKILL.md`.\n\n"
+                    "3. Vòng Lặp Đóng Góp Ngược Dòng (Upstream Contribution Loop):\n"
+                    "- Các cải tiến hoặc mẫu kỹ năng có tính tổng quát từ Spoke được đóng góp ngược về Hub trung tâm qua nhánh upstream.\n\n"
+                    "Chi tiết giao thức xem tại [references/](references/)."
+                )
+            elif (
+                "connector" in prompt_l
+                or "multimodal" in prompt_l
+                or "youtube" in prompt_l
+                or "notebooklm" in prompt_l
+            ):
+                parts.append(
+                    "QUY TRÌNH TÍCH HỢP BỘ KẾT NỐI ĐA PHƯƠNG THỨC (MULTIMODAL CONNECTORS):\n\n"
+                    "1. Bộ Tiện Ích Kết Nối Nền Tảng:\n"
+                    "- `ccba-youtube-learn`: Tự động trích xuất phụ đề (captions), bảng điểm âm thanh (audio transcripts) và tạo bản tóm tắt tri thức có cấu trúc.\n"
+                    "- `ccba-notebooklm-connector`: Quản lý tài liệu, truy vấn RAG, đồng bộ nguồn nghiên cứu từ Google NotebookLM qua API.\n\n"
+                    "2. Quản Lý Phiên & Bảo Mật Xác Thực (Session Auth & Credentials):\n"
+                    "- Lưu trữ cookie và session tokens tại kho dữ liệu cache an toàn; không hardcode thông tin đăng nhập.\n\n"
+                    "3. Xử Lý Gián Đoạn Mạng & Rào Chắn Idempotency (Exponential Backoff & Reactive Wakeup):\n"
+                    "- Khi gặp lỗi HTTP 429 hoặc timeout, áp dụng thuật toán Exponential Backoff kèm ngẫu nhiên hóa thời gian chờ (jitter).\n"
+                    "- Dựa trên cơ chế Reactive Wakeup thay vì polling vô hạn; bảo đảm tính bất biến (idempotency) khi đồng bộ dữ liệu vào kho `.md/extracted_docs`.\n\n"
+                    "Chi tiết tham chiếu xem tại [references/](references/)."
+                )
+            elif (
+                "guardrail" in prompt_l
+                or "hard completion lock" in prompt_l
+                or "adr-0058" in prompt_l
+                or "lệnh" in prompt_l
+                or "task" in prompt_l
+            ):
+                parts.append(
+                    "HỆ THỐNG RÀO CHẮN THỰC THI & KHÓA CỨNG HOÀN TẤT TẤT ĐỊNH (ADR-0058):\n\n"
+                    "1. Rào Chắn Hoàn Tất Tất Định (Deterministic Hard Completion Lock Invariant):\n"
+                    "- BẮT BUỘC thực thi và vượt qua lệnh kiểm chứng: `python -m ccba_harness verify-patch --preset ci` (hoặc scoped verify presets).\n"
+                    "- CẤM TUYỆT ĐỐI việc tuyên bố hoàn thành task hoặc yêu cầu người dùng nghiệm thu nếu bất kỳ lệnh nào kết thúc với exit code != 0.\n\n"
+                    "2. Quản Lý Tiến Trình Nền (Managing Background Tasks & Reactive Wakeup):\n"
+                    "- Lắng nghe Reactive Wakeup từ hệ thống thay vì chủ động polling `status` trong vòng lặp kín.\n"
+                    "- Sử dụng công cụ `manage_task` với các hành động chuẩn mực (`status`, `kill`, `send_input`).\n\n"
+                    "3. Cổng Tái Sử Dụng Nền Tảng (Reuse-First Gate & Platform-Aware KISS):\n"
+                    "- Tra cứu Seam Catalog qua CLI `python scripts/governance/compile_catalog.py --query <keyword>` trước khi viết bất kỳ tiện ích mới nào; cấm tạo script chắp vá rồi ngụy biện là KISS.\n\n"
+                    "Chi tiết điều lệ xem tại [references/](references/)."
+                )
+            else:
+                parts.append(
+                    "Thực thi quy chuẩn tiện ích nền tảng và công cụ nhà phát triển (CCBA Platform Tooling):\n"
+                    "- Quản lý vòng đời PR, đặt tên nhánh chuẩn, kiểm tra idempotency và đẩy nhánh với `git push --force-with-lease`.\n"
+                    "- Quét sạch sẽ mã nguồn, cách ly đường dẫn máy qua `CCBA_HUB_PATH` và che giấu dữ liệu nhạy cảm bằng Maskara.\n"
+                    "- Đồng bộ Non-Destructive Section Merge và kiểm chứng hoàn tất tất định theo ADR-0058 Hard Completion Lock qua `python -m ccba_harness verify-patch` với exit code 0.\n"
                     "Chi tiết tham chiếu xem tại [references/](references/).\n"
                 )
 

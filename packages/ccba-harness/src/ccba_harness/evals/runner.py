@@ -371,6 +371,8 @@ SKILL_DATASET_ALIASES: dict[str, list[str]] = {
     "xu-ly-van-phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
     "xu_ly_van_phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
     "office": ["copywriting", "office"],
+    "platform_tooling": ["platform_tooling"],
+    "platform-tooling": ["platform_tooling"],
 }
 
 
