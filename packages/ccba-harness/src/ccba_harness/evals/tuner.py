@@ -22,6 +22,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, cast, runtime_checkable
 
+import yaml
+
 from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
@@ -68,12 +70,43 @@ class TokenBudgetExceededError(Exception):
 
 _UNSET: Any = object()
 
+_CACHED_TUNER_CONFIG: dict[str, Any] | None = None
+_TUNER_CONFIG_PATH = Path(__file__).parent / "tuner_config.yaml"
+
+
+def load_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
+    """Loads tuner hyperparameters from declarative YAML with in-memory singleton caching.
+
+    Latency guarantee: O(1) in-memory dict lookup (< 0.05 ms).
+    """
+    global _CACHED_TUNER_CONFIG
+    if config_path is None and _CACHED_TUNER_CONFIG is not None:
+        return _CACHED_TUNER_CONFIG
+
+    path = Path(config_path) if config_path else _TUNER_CONFIG_PATH
+    if not path.is_file():
+        return {}
+
+    with open(path, encoding="utf-8") as f:
+        data: dict[str, Any] = yaml.safe_load(f) or {}
+
+    if config_path is None:
+        _CACHED_TUNER_CONFIG = data
+    return data
+
+
+def reload_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
+    """Forces reloading of the tuner configuration, clearing singleton cache."""
+    global _CACHED_TUNER_CONFIG
+    _CACHED_TUNER_CONFIG = None
+    return load_tuner_config(config_path)
+
 
 @dataclass
 class TokenUsageTracker:
     """Session-wide token consumption tracker and circuit breaker observer."""
 
-    budget_ceiling: int = 5_000_000
+    budget_ceiling: int = cast(Any, _UNSET)
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -82,6 +115,11 @@ class TokenUsageTracker:
     warning_triggered: bool = False
     halt_triggered: bool = False
     reserved_tokens: int = 0
+
+    def __post_init__(self) -> None:
+        if self.budget_ceiling is _UNSET:
+            cfg = load_tuner_config()
+            self.budget_ceiling = int(cfg.get("tokens", {}).get("budget_ceiling", 5_000_000))
 
     def reserve(self, estimated_tokens: int = 2000) -> bool:
         """Attempts to reserve an estimated number of tokens before dispatching concurrent requests.
@@ -168,7 +206,7 @@ class AdaptiveRateLimiter:
         requests_per_minute: float = 60.0,
         min_delay_s: float = 0.01,
         max_delay_s: float = 10.0,
-        latency_threshold_s: float = 4.0,
+        latency_threshold_s: float | None = None,
         backoff_multiplier: float = 1.5,
         sleeper: Callable[[float], None] = time.sleep,
         time_fn: Callable[[], float] = time.monotonic,
@@ -178,7 +216,13 @@ class AdaptiveRateLimiter:
         self.min_interval = 60.0 / self.requests_per_minute
         self.min_delay_s = min_delay_s
         self.max_delay_s = max_delay_s
-        self.latency_threshold_s = latency_threshold_s
+        if latency_threshold_s is None:
+            cfg = load_tuner_config()
+            self.latency_threshold_s = float(
+                cfg.get("execution", {}).get("latency_threshold_s", 4.0)
+            )
+        else:
+            self.latency_threshold_s = latency_threshold_s
         self.backoff_multiplier = backoff_multiplier
         self.sleeper = sleeper
         self.time_fn = time_fn
@@ -247,7 +291,10 @@ class LLMTaskAdapter:
         async_client: Any | None = None,
         estimated_task_tokens: int = 2000,
     ) -> None:
-        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        cfg = load_tuner_config()
+        fallback_model = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+        default_model = str(cfg.get("execution", {}).get("default_model", fallback_model))
+        self.model = model or os.getenv("CCBA_TUNER_MODEL", default_model)
         self.token_tracker = token_tracker or TokenUsageTracker()
         self.rate_limiter = rate_limiter
         self.estimated_task_tokens = estimated_task_tokens
@@ -409,26 +456,31 @@ class RatchetConfig:
 
     target_file: Path
     eval_dataset_file: Path | None = None
-    target_score: float = 90.0
-    max_iterations: int = 10
+    target_score: float = cast(Any, _UNSET)
+    max_iterations: int = cast(Any, _UNSET)
     allowed_files: list[str] = field(default_factory=list)
     prohibited_files: list[str] = field(default_factory=list)
     skill_name: str = ""
-    full_sweep: bool = False
-    patience: int = 3
+    full_sweep: bool = cast(Any, _UNSET)
+    patience: int = cast(Any, _UNSET)
     use_real_llm: bool = False
     llm_model: str = ""
-    token_budget: int | None = None
+    token_budget: int | None = cast(Any, _UNSET)
     rate_limiter: RateLimiter | None = None
-    enable_adaptive_slicing: bool = True
-    split_ratio: float = 0.7
-    slicing_seed: int = 42
-    enable_perturbation: bool = True
+    enable_adaptive_slicing: bool = cast(Any, _UNSET)
+    split_ratio: float = cast(Any, _UNSET)
+    slicing_seed: int = cast(Any, _UNSET)
+    enable_perturbation: bool = cast(Any, _UNSET)
     per_skill_mutation_budget: int | None = cast(Any, _UNSET)
     hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
     max_concurrency: int = cast(Any, _UNSET)
 
     def __post_init__(self) -> None:
+        cfg = load_tuner_config()
+        r_cfg = cfg.get("ratchet", {})
+        tok_cfg = cfg.get("tokens", {})
+        exec_cfg = cfg.get("execution", {})
+
         if isinstance(self.target_file, str):
             self.target_file = Path(self.target_file)
         if self.eval_dataset_file and isinstance(self.eval_dataset_file, str):
@@ -440,24 +492,118 @@ class RatchetConfig:
         if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
             self.use_real_llm = True
         if not self.llm_model:
-            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
-        if self.token_budget is not None:
+            fallback_m = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+            def_m = str(exec_cfg.get("default_model", fallback_m))
+            self.llm_model = os.getenv("CCBA_TUNER_MODEL", def_m)
+
+        # 4-tier Precedence: Explicit User Param > Env Var > Declarative YAML > Code Fallback
+        # target_score
+        if self.target_score is _UNSET:
+            env_ts = os.getenv("CCBA_TUNER_TARGET_SCORE")
+            if env_ts:
+                try:
+                    self.target_score = float(env_ts)
+                except ValueError:
+                    self.target_score = float(r_cfg.get("target_score", 90.0))
+            else:
+                self.target_score = float(r_cfg.get("target_score", 90.0))
+        elif isinstance(self.target_score, str):
+            self.target_score = float(self.target_score)
+
+        # max_iterations
+        if self.max_iterations is _UNSET:
+            env_mi = os.getenv("CCBA_TUNER_MAX_ITERATIONS")
+            if env_mi:
+                try:
+                    self.max_iterations = int(env_mi)
+                except ValueError:
+                    self.max_iterations = int(r_cfg.get("max_iterations", 10))
+            else:
+                self.max_iterations = int(r_cfg.get("max_iterations", 10))
+        elif isinstance(self.max_iterations, str):
+            self.max_iterations = int(self.max_iterations)
+
+        # patience
+        if self.patience is _UNSET:
+            env_pat = os.getenv("CCBA_TUNER_PATIENCE")
+            if env_pat:
+                try:
+                    self.patience = int(env_pat)
+                except ValueError:
+                    self.patience = int(r_cfg.get("patience", 3))
+            else:
+                self.patience = int(r_cfg.get("patience", 3))
+        elif isinstance(self.patience, str):
+            self.patience = int(self.patience)
+
+        # full_sweep
+        if self.full_sweep is _UNSET:
+            env_fs = os.getenv("CCBA_TUNER_FULL_SWEEP")
+            if env_fs is not None:
+                self.full_sweep = env_fs.lower() in ("1", "true", "yes")
+            else:
+                self.full_sweep = bool(r_cfg.get("full_sweep", False))
+
+        # split_ratio
+        if self.split_ratio is _UNSET:
+            env_sr = os.getenv("CCBA_TUNER_SPLIT_RATIO")
+            if env_sr:
+                try:
+                    self.split_ratio = float(env_sr)
+                except ValueError:
+                    self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
+            else:
+                self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
+        elif isinstance(self.split_ratio, str):
+            self.split_ratio = float(self.split_ratio)
+
+        # slicing_seed
+        if self.slicing_seed is _UNSET:
+            env_seed = os.getenv("CCBA_TUNER_SLICING_SEED")
+            if env_seed:
+                try:
+                    self.slicing_seed = int(env_seed)
+                except ValueError:
+                    self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
+            else:
+                self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
+        elif isinstance(self.slicing_seed, str):
+            self.slicing_seed = int(self.slicing_seed)
+
+        # enable_adaptive_slicing
+        if self.enable_adaptive_slicing is _UNSET:
+            env_as = os.getenv("CCBA_TUNER_ADAPTIVE_SLICING")
+            if env_as is not None:
+                self.enable_adaptive_slicing = env_as.lower() in ("1", "true", "yes")
+            else:
+                self.enable_adaptive_slicing = bool(r_cfg.get("enable_adaptive_slicing", True))
+
+        # enable_perturbation
+        if self.enable_perturbation is _UNSET:
+            env_pt = os.getenv("CCBA_TUNER_PERTURBATION")
+            if env_pt is not None:
+                self.enable_perturbation = env_pt.lower() in ("1", "true", "yes")
+            else:
+                self.enable_perturbation = bool(r_cfg.get("enable_perturbation", True))
+
+        # token_budget
+        if self.token_budget is not _UNSET and self.token_budget is not None:
             if isinstance(self.token_budget, str):
                 try:
                     self.token_budget = int(self.token_budget.replace(",", "").replace("_", ""))
                 except ValueError:
-                    self.token_budget = 5_000_000
+                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
         else:
             env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
             if env_budget:
                 try:
                     self.token_budget = int(env_budget.replace(",", "").replace("_", ""))
                 except ValueError:
-                    self.token_budget = 5_000_000
+                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
             else:
-                self.token_budget = 5_000_000
+                self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
 
-        # Configuration Precedence via Sentinel (Issue #368): User > Env > Default
+        # per_skill_mutation_budget
         if self.per_skill_mutation_budget is not _UNSET:
             if isinstance(self.per_skill_mutation_budget, str):
                 try:
@@ -465,7 +611,9 @@ class RatchetConfig:
                         self.per_skill_mutation_budget.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.per_skill_mutation_budget = 250_000
+                    self.per_skill_mutation_budget = int(
+                        tok_cfg.get("per_skill_mutation_budget", 250_000)
+                    )
         else:
             env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
             if env_ps_budget:
@@ -474,10 +622,15 @@ class RatchetConfig:
                         env_ps_budget.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.per_skill_mutation_budget = 250_000
+                    self.per_skill_mutation_budget = int(
+                        tok_cfg.get("per_skill_mutation_budget", 250_000)
+                    )
             else:
-                self.per_skill_mutation_budget = 250_000
+                self.per_skill_mutation_budget = int(
+                    tok_cfg.get("per_skill_mutation_budget", 250_000)
+                )
 
+        # hard_max_tokens_per_skill
         if self.hard_max_tokens_per_skill is not _UNSET:
             if isinstance(self.hard_max_tokens_per_skill, str):
                 try:
@@ -485,7 +638,9 @@ class RatchetConfig:
                         self.hard_max_tokens_per_skill.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.hard_max_tokens_per_skill = 500_000
+                    self.hard_max_tokens_per_skill = int(
+                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                    )
         else:
             env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
             if env_hard_max:
@@ -494,25 +649,30 @@ class RatchetConfig:
                         env_hard_max.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.hard_max_tokens_per_skill = 500_000
+                    self.hard_max_tokens_per_skill = int(
+                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                    )
             else:
-                self.hard_max_tokens_per_skill = 500_000
+                self.hard_max_tokens_per_skill = int(
+                    tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                )
 
+        # max_concurrency
         if self.max_concurrency is not _UNSET:
             if isinstance(self.max_concurrency, str):
                 try:
                     self.max_concurrency = int(self.max_concurrency)
                 except ValueError:
-                    self.max_concurrency = 5
+                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
         else:
             env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
             if env_concurrency:
                 try:
                     self.max_concurrency = int(env_concurrency)
                 except ValueError:
-                    self.max_concurrency = 5
+                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
             else:
-                self.max_concurrency = 5
+                self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -1226,6 +1386,157 @@ class GitRatchetOptimizer:
                     "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
                     "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
                     "  - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.",
+                ),
+            ]
+        elif arch_name == "grilling":
+            strategies = [
+                (
+                    "Socrates One-by-One Frontier Interview Invariant",
+                    "\n\n## Quy Trình Phỏng Vấn Dồn Dập Socrates (Frontier Interview Invariant)\n"
+                    "* **Quy tắc một câu hỏi duy nhất:** Chỉ đặt đúng một câu hỏi (one-by-one) ở Frontier, kèm phương án đề xuất (recommended answer) trước.\n"
+                    "* **Tự tra cứu dữ kiện codebase:** Tự đọc facts vs decisions từ tệp tin cục bộ, tuyệt đối không hỏi người dùng thông tin có thể tự đọc được.\n"
+                    "* **Đối chiếu quy chuẩn AGENTS.md:** Chỉ ra ngay vi phạm bất biến cốt lõi (ADR-0058 Hard Completion Lock) nếu phát hiện lệch pha.",
+                ),
+                (
+                    "Visual Prototype Multi-Variant Single HTML",
+                    "\n\n## Tạo Bản Mẫu Trực Quan Đa Biến Thể (Visual Prototype)\n"
+                    "* **Single HTML file:** Tạo từ 3-5 variants trong duy nhất 1 file HTML kèm floating variant picker để người dùng so sánh.\n"
+                    "* **Decision Log:** Ghi nhận nhật ký quyết định thiết kế vào NOTES.md và triệu hồi /ccba-issue-tree khi cần phân tích đa chiều.",
+                ),
+            ]
+        elif arch_name == "adr":
+            strategies = [
+                (
+                    "ADR Scaffolding & Frontmatter Governance",
+                    "\n\n## Khung Khởi Tạo Quyết Định Kiến Trúc (ADR Scaffolding)\n"
+                    "* **YAML Frontmatter bắt buộc:** Mọi tệp ADR trong docs/adr/00XX-<slug>.md phải có id (HUB-ADR-00XX hoặc SPOKE-ADR-00XX), status (ACCEPTED), pillar.\n"
+                    "* **Cấu trúc 4 phần chuẩn mực:** Context & Problem Statement, Decision Drivers, Considered Options, Invariants & Consequences.",
+                ),
+                (
+                    "Status Cascading & Living Traceability Matrix Sync",
+                    "\n\n## Đồng Bộ Ma Trận Truy Vết & Thác Trạng Thái (Status Cascading)\n"
+                    "* **Cascading status:** Tự động chuyển status SUPERSEDED cho ADR tiền nhiệm và liên kết hai chiều superseded_by / supersedes.\n"
+                    "* **Living Traceability Matrix:** Cập nhật bảng chỉ mục TRACEABILITY_MATRIX.md và bảo đảm CI Parity Gate qua validate_adr_traceability.py.",
+                ),
+            ]
+        elif arch_name == "risk":
+            strategies = [
+                (
+                    "Level 2 Space Gap & Maintenance Clearance Invariants",
+                    "\n\n## Quy Chuẩn Mâu Thuẫn Thông Tin & Khoảng Trống Bảo Trì (Level 2 Space Gap)\n"
+                    "* **Phân cấp xung đột:** Tách biệt va chạm vật lý Level 1 với khoảng trống vô hình Level 2 (Clearance >= 900mm cho thiết bị lớn, >= 150mm cho đai ốc).\n"
+                    "* **Kiểm soát thuộc tính BBP:** Giữ nguyên vẹn Unique ID từ BBP-A0, ngăn chặn trôi dạt định danh và đối soát công suất BBP-B1 vs BBP-B2.",
+                ),
+                (
+                    "INF-CON JSON Schema & Issue-Tree Escalation",
+                    "\n\n## Cấu Trúc Báo Cáo Xung Đột INF-CON & Phân Rã Đa Chiều\n"
+                    "* **Định dạng INF-CON:** Xuất báo cáo xung đột qua schema chuẩn với conflict_id, conflict_type, entities_involved và proposed_mitigation.\n"
+                    "* **Leo thang phân rã:** Kích hoạt /ccba-issue-tree (Why-Tree và How-Tree) xếp hạng phương án điều phối dưới quyền Chủ trì Bộ môn.",
+                ),
+            ]
+        elif arch_name == "skill_repair":
+            strategies = [
+                (
+                    "YAML Frontmatter Two-Space Standardization",
+                    "\n\n## Chuẩn Hóa Cú Pháp YAML Frontmatter & Cổng 0 / Cổng 1 (ADR-0057)\n"
+                    "* **Ngăn cách Frontmatter:** Đóng mở bằng cặp thẻ ---, thụt đầu dòng đúng 2 spaces, không dùng tab, xử lý triệt để yaml_parse_error.\n"
+                    "* **Khung quyết định hai giai đoạn:** Vượt qua Cổng 0 (Determinism) và Cổng 1 (Orchestration), tính toán chỉ số GPI >= 12.0 cho Tier 2B Standalone Skill.",
+                ),
+                (
+                    "Completion Criteria & Script Bloat Remediation",
+                    "\n\n## Tiêu Chí Hoàn Thành Tường Minh & Khắc Phục Script Bloat\n"
+                    "* **Tiêu chí hoàn thành (Completion Criteria):** Mọi bước hành động phải có tiêu chí kiểm chứng đầu ra cụ thể.\n"
+                    "* **Khử phình mã nguồn:** Script tiện ích trong kỹ năng phải < 100 LOC; nếu dài hơn phải chuyển thành Seam trong packages/.\n"
+                    "* **Kiểm định CLI:** Vượt qua validate_skills.py --enforce-gpi và compile_catalog.py trước khi nghiệm thu.",
+                ),
+            ]
+        elif arch_name == "legal_tooling":
+            strategies = [
+                (
+                    "TVPL VIP Crawler Resilience & Backoff Jitter",
+                    "\n\n## Phòng Vệ Thu Thập Văn Bản & Quản Lý Phiên VIP (TVPL Crawler)\n"
+                    "* **Quản lý phiên xác thực:** Lưu trữ cookie phiên VIP qua biến môi trường an toàn, tự động refresh khi hết hạn.\n"
+                    "* **Phát hiện Captcha & Exponential Backoff:** Tự động bắt mã HTTP 429/503 và kích hoạt backoff kèm jitter; cảnh báo khi gặp Captcha.\n"
+                    "* **Audit Logging:** Che giấu token và session ID trong log qua Maskara Redactor, đóng dấu băm SHA-256 gói dữ liệu.",
+                ),
+                (
+                    "OKF v2.4 Verbatim Grounding & SHA-256 Provenance",
+                    "\n\n## Chuẩn Hóa Tri Thức Pháp Lý OKF v2.4 & Tem Băm SHA-256 (ADR-0059)\n"
+                    "* **Trích dẫn nguyên văn (Legal Verbatim Grounding):** Trích xuất nguyên văn verbatim 100% từ công báo chính thống, cấm sáng tác điều khoản giả định.\n"
+                    "* **Tem băm mật mã SHA-256:** Bắt buộc ghi nhận mã băm provenance stamping cho từng tệp nguồn trong kho lưu trữ OKF v2.4.",
+                ),
+                (
+                    "VBHN Diff Engine & HSHT Hierarchy Control",
+                    "\n\n## Bóc Tách Khác Biệt Văn Bản Hợp Nhất & Cây Thư Mục HSHT NĐ 06/2021\n"
+                    "* **VBHN AST Diffing:** Phân loại chính xác 4 hành vi lập pháp (INSERT, REPLACE, REPEAL, APPEND) và hợp nhất vào thân văn bản.\n"
+                    "* **Cây thư mục HSHT:** Chuẩn hóa cấu trúc thư mục hồ sơ hoàn thành 3 giai đoạn (Chuẩn bị, Thi công, Bàn giao) theo NĐ 06/2021/NĐ-CP.",
+                ),
+            ]
+        elif arch_name == "office":
+            strategies = [
+                (
+                    "Decree 30/2020 Administrative Dispatch Format",
+                    "\n\n## Thể Thức SoẠn Thảo Công Văn Hành Chính (Nghị định 30/2020/NĐ-CP)\n"
+                    "* **Bố cục chuẩn mực:** Đầy đủ Quốc hiệu, Tiêu ngữ, Tên cơ quan ban hành, Số/ký hiệu, Trích yếu, Nơi nhận và Thẩm quyền ký.\n"
+                    "* **Quy chuẩn Typography:** Phông chữ Times New Roman Unicode, cỡ chữ 13-14, canh lề trái 30mm, phải 15mm, trên/dưới 20mm.",
+                ),
+                (
+                    "GFM Table Typography & Line Break Standardization",
+                    "\n\n## Chuẩn Hóa Bảng Biểu Kỹ Thuật Markdown GFM\n"
+                    "* **Căn lề cột:** Cột STT/mã căn giữa (:---:), cột nội dung căn trái (:---), cột số lượng căn phải (---:).\n"
+                    "* **Ngắt dòng an toàn:** Sử dụng thẻ `<br/>` thay vì ngắt dòng Enter để bảo vệ toàn vẹn cấu trúc bảng GitHub Flavored Markdown.",
+                ),
+                (
+                    "Presentation Outline & Seminar Agenda Architecture",
+                    "\n\n## Bố Cục Thuyết Trình PPTX & Khung Chương Trình Seminar\n"
+                    "* **Dàn ý slide PPTX:** Thiết lập Slide Title, Header H1/H2, Visual Bullet Points súc tích và Callout Layout nổi bật.\n"
+                    "* **Đề cương Seminar:** Xây dựng mục tiêu đào tạo, timeline agenda chi tiết và checklist tài liệu phát tay (Handouts).",
+                ),
+            ]
+        elif arch_name == "visual_design":
+            strategies = [
+                (
+                    "Design Tokens & Semantic Color Palette",
+                    "\n\n## Hệ Thống Thẻ Thiết Kế (Design Tokens) & Bảng Màu Nhận Diện\n"
+                    "* **Bảng màu chuẩn hóa:** Primary (#1E3A8A - Navy Blue), Secondary (#0D9488 - Teal), Neutral (#F8FAFC), Semantic Palette (#10B981 Success, #EF4444 Error).\n"
+                    "* **Phân cấp Typography:** Tỷ lệ Perfect Fourth (1.333), H1 (32px Bold), H2 (24px SemiBold), H3 (20px Medium), Body (16px Regular).",
+                ),
+                (
+                    "Logo Safe Zone & Corporate Identity Program (CIP)",
+                    "\n\n## Vùng An Toàn Logo & Bộ Nhận Diện Thương Hiệu CIP\n"
+                    "* **Safe Zone / Clear Space:** Thiết lập khoảng cách an toàn x quanh logo tối thiểu bằng chiều cao chữ 'C' của logo.\n"
+                    "* **Đồng bộ ấn phẩm CIP:** Quy chuẩn Namecard (90x54mm), Letterhead A4, Phong bì thư và Folder tài liệu đồng bộ nhận diện.",
+                ),
+            ]
+        elif arch_name == "visual":
+            strategies = [
+                (
+                    "Academic Grayscale Diagram Styling",
+                    "\n\n## Phong Cách Sơ Đồ Trực Quan Grayscale Học Thuật (Mermaid / Excalidraw)\n"
+                    "* **Chuẩn màu Grayscale:** Sử dụng phong cách grayscale tương phản cao, dễ đọc khi in ấn và hiển thị dark/light mode.\n"
+                    "* **Quy chuẩn cú pháp sơ đồ:** Kiểm soát đóng mở node, ký hiệu điều kiện và bảo tồn toàn vẹn liên kết Markdown AST Link Integrity.",
+                ),
+            ]
+        elif arch_name == "platform_tooling":
+            strategies = [
+                (
+                    "Remote Mutation Idempotency & Pre-Push Lease",
+                    "\n\n## Rào Chắn Đẩy Nhánh An Toàn & Quản Lý Pull Request (Platform Tooling)\n"
+                    "* **Idempotency Gate:** Luôn kiểm tra remote (gh pr list / git ls-remote) trước khi tạo PR, ngăn ngừa sinh tài nguyên trùng lặp.\n"
+                    "* **Pre-Push Lease:** CẤM bare git push --force; BẮT BUỘC sử dụng git push -u origin <branch> --force-with-lease.\n"
+                    "* **Hard Completion Lock:** Vượt qua verify-patch với exit code 0 trước khi mở PR hoặc yêu cầu nghiệm thu.",
+                ),
+                (
+                    "Machine-State Decoupling & Cleanliness Scanner",
+                    "\n\n## Vệ Sinh Kho Mã Nguồn & Cách Ly Trạng Thái Máy (CCBA_HUB_PATH)\n"
+                    "* **Cách ly đường dẫn máy:** CẤM commit đường dẫn tuyệt đối; cấu hình Hub path qua biến môi trường CCBA_HUB_PATH.\n"
+                    "* **Che giấu thông tin nhạy cảm:** Tự động kích hoạt Maskara Redactor quét và ẩn sạch sẽ tokens, API keys trước khi commit.",
+                ),
+                (
+                    "Circuit Breaker Resilience & Multimodal Connectors",
+                    "\n\n## Phòng Vệ Hạn Mức API & Kết Nối Đa Phương Thức\n"
+                    "* **Circuit Breaker 3 trạng thái:** Kiểm soát hạn mức gọi AI Gateway (:8090), kích hoạt 30s Soft Cooldown khi gặp lỗi 429/timeout.\n"
+                    "* **Reactive Wakeup:** Dựa vào thông báo tự động từ hệ thống thay vì polling vòng lặp kín status.",
                 ),
             ]
         else:

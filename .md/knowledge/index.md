@@ -30,6 +30,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [../../docs/adr/0060-4hub-federated-spokes-architecture.md](../../docs/adr/0060-4hub-federated-spokes-architecture.md): **[MỚI]** ADR-0060: Kiến trúc Liên bang 4-Hubs × Spokes & Điều phối Hệ sinh thái Tri thức Phi tập trung.
 - [grilling_live_artifacts_and_charter.md](grilling_live_artifacts_and_charter.md): **[MỚI]** Biên Bản Phỏng Vấn Socratic Grilling: Thiết Kế Live State Artifacts & Tích Hợp 11 Ghế CCBA Charter (ADR-0058).
 - [specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md](specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md): Chiến lược đồng bộ hóa Hub-and-Spoke giữa Platform và các dự án vệ tinh.
 - [specs_and_roadmaps/adr_0010_skills_integration.md](specs_and_roadmaps/adr_0010_skills_integration.md): ADR-0010 về tích hợp kỹ năng AI.
@@ -41,6 +42,9 @@
 ---
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
+
+- [research_and_studies/research-cursor-bugbot-adaptations.md](research_and_studies/research-cursor-bugbot-adaptations.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Áp Dụng Mô Hình "2,500 PRs/Month" & Bugbot Review Vào CCBA Agent Platform.
+- [research_and_studies/decision-log-sprint1-improvements.md](research_and_studies/decision-log-sprint1-improvements.md): **[MỚI]** Biên Bản Quyết Định Thiết Kế: Cải Tiến Nền Tảng CCBA Theo Mô Hình Cursor/Bugbot (Sprint 1).
 
 - [research_and_studies/research-ccba-issue-tree-upgrade-proposals.md](research_and_studies/research-ccba-issue-tree-upgrade-proposals.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Phương Hướng Nâng Cấp Kỹ Năng /ccba-issue-tree, Tra Cứu Tri Thức Liên-Spoke 3 Tầng & Cơ Chế Cắt Tỉa Nhánh Tự Động.
 - [research_and_studies/research-ccba-ai-module-architecture.md](research_and_studies/research-ccba-ai-module-architecture.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Kiến trúc Module ccba-ai, Embedding Compatibility, Streaming Tokens & Timeout Scaling (Issue #280).

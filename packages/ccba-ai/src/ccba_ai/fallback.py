@@ -236,8 +236,15 @@ class TieredFallbackRouter:
         """Check whether caught exception triggers fallback to subsequent tier."""
         if isinstance(exc, RETRYABLE_EXCEPTIONS):
             return True
-        if isinstance(exc, APIStatusError) and getattr(exc, "status_code", 0) >= 500:
-            return True
+        if isinstance(exc, APIStatusError):
+            if exc.status_code == 429:
+                return True
+            if exc.status_code == 400 and (
+                "budget" in str(exc).lower() and "exceeded" in str(exc).lower()
+            ):
+                return True
+            if exc.status_code >= 500:
+                return True
         return False
 
     def execute_sync(

@@ -82,6 +82,11 @@ from .simulation import (
     build_mock_agent_task,
     create_domain_mock_agent_task,
 )
+from .simulators import (
+    BaseDomainSimulator,
+    SimulationContext,
+    SimulatorDispatcher,
+)
 from .slicing import (
     AdaptiveDataSlicer,
     DynamicPerturbationEngine,
@@ -97,8 +102,10 @@ from .tuner import (
     RatchetReport,
     RatchetTrialResult,
     RateLimiter,
+    load_tuner_config,
     mutate_skill,
     preserve_yaml_frontmatter,
+    reload_tuner_config,
 )
 from .uniclass_index import (
     DEFAULT_UNICLASS_INDEX_PATH,
@@ -195,4 +202,9 @@ __all__ = [
     "extract_code_blocks",
     "build_mock_agent_task",
     "create_domain_mock_agent_task",
+    "BaseDomainSimulator",
+    "SimulationContext",
+    "SimulatorDispatcher",
+    "load_tuner_config",
+    "reload_tuner_config",
 ]
