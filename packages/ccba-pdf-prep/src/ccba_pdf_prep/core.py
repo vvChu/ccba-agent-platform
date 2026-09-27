@@ -92,9 +92,9 @@ class PDFReport:
             return []
 
         hints = {
-            "text": "qwen-local-primary",
+            "text": "qwen-local-primary",  # ccba:allow-raw-model
             "scan": "ocr-primary",
-            "drawing": "qwen-local-primary",
+            "drawing": "qwen-local-primary",  # ccba:allow-raw-model
         }
         if model_hints:
             hints.update(model_hints)
@@ -263,17 +263,17 @@ class PDFAnalyzer:
         is_oversized = any(p.is_oversized for p in page_details)
 
         model_map = {
-            PDFCategory.TEXT_RICH: "qwen-local-primary",
+            PDFCategory.TEXT_RICH: "qwen-local-primary",  # ccba:allow-raw-model
             PDFCategory.SCANNED: "ocr-primary",
             PDFCategory.HYBRID: "ocr-primary",
             PDFCategory.DRAWING: "",
-            PDFCategory.UNKNOWN: "gemini-3.7-flash",
+            PDFCategory.UNKNOWN: "gemini-3.7-flash",  # ccba:allow-raw-model
         }
 
         return PDFReport(
             file_path=pdf_path,
             category=category,
-            recommended_model=model_map.get(category, "gemini-3.7-flash"),
+            recommended_model=model_map.get(category, "gemini-3.7-flash"),  # ccba:allow-raw-model
             confidence=confidence,
             pages=num_pages,
             text_pages=text_pages,

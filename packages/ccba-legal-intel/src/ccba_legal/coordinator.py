@@ -239,8 +239,9 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
     chrome_cmd = get_browser_executable_path()
     if chrome_cmd and (os.path.exists(str(chrome_cmd)) or shutil.which(str(chrome_cmd))):
         try:
-            fallback_temp = "/tmp" if os.name != "nt" else "C:/temp"
-            temp_dir = Path(os.environ.get("TEMP", fallback_temp)) / "chrome_dev"
+            import tempfile
+
+            temp_dir = Path(os.environ.get("TEMP", tempfile.gettempdir())) / "chrome_dev"
             temp_dir.mkdir(parents=True, exist_ok=True)
             subprocess.Popen(
                 [

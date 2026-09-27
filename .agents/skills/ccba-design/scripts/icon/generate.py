@@ -53,7 +53,7 @@ except ImportError:
 
 # ============ CONFIGURATION ============
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = "gemini-3.1-pro-preview"
+MODEL = "gemini-3.1-pro-preview"  # ccba:allow-raw-model
 
 # Icon styles with SVG-specific instructions
 ICON_STYLES = {

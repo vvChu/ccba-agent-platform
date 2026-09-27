@@ -275,12 +275,12 @@ def get_browser_executable_path() -> str | None:
 
     # 3. Standard Windows locations
     candidates = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",  # ccba:allow-machine-path
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",  # ccba:allow-machine-path
         os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
-        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",  # ccba:allow-machine-path
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",  # ccba:allow-machine-path
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",  # ccba:allow-machine-path
         os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
     ]
 

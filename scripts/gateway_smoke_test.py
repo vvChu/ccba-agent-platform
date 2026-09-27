@@ -22,16 +22,18 @@ from typing import Any
 
 from openai import OpenAI
 
+from ccba_ai.routing import ModelArchetype
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-GATEWAY_URL = os.getenv("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1")
+GATEWAY_URL = os.getenv("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1")  # ccba:allow-raw-ip
 GATEWAY_KEY = os.getenv("AI_GATEWAY_KEY", "ccba-platform")
 TIMEOUT = 60.0
 
 # Models to probe — chọn lightweight để giảm cost
-STANDARD_MODEL = "gemini-3.7-flash"
-REASONING_MODEL = "gemini-3.7-flash-high"
+STANDARD_MODEL = ModelArchetype.STANDARD
+REASONING_MODEL = ModelArchetype.REASONING
 
 # Token budgets to probe
 PROBE_MAX_TOKENS = 16_384  # H1: ta request 16384, gateway có honor không?

@@ -221,8 +221,8 @@ class LegalSyncEngine:
         candidates = [
             self.project_root.parent / "ccba-legal-knowledge",
             self.project_root / ".." / "ccba-legal-knowledge",
-            Path("D:/GitHubProjects/ccba-legal-knowledge"),
-            Path("C:/GitHubProjects/ccba-legal-knowledge"),
+            Path("D:/GitHubProjects/ccba-legal-knowledge"),  # ccba:allow-machine-path
+            Path("C:/GitHubProjects/ccba-legal-knowledge"),  # ccba:allow-machine-path
             Path.home() / "GitHubProjects" / "ccba-legal-knowledge",
             Path.home() / "ccba-legal-knowledge",
         ]

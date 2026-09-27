@@ -153,8 +153,8 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
     if os.name == "nt":
         hub_candidates.extend(
             [
-                Path("D:/GitHubProjects/ccba-agent-platform"),
-                Path("C:/GitHubProjects/ccba-agent-platform"),
+                Path("D:/GitHubProjects/ccba-agent-platform"),  # ccba:allow-machine-path
+                Path("C:/GitHubProjects/ccba-agent-platform"),  # ccba:allow-machine-path
             ]
         )
     else:
@@ -199,8 +199,8 @@ def discover_master_registry_path(custom_path: Path | str | None = None) -> Path
     if os.name == "nt":
         candidates.extend(
             [
-                Path("D:/GitHubProjects/ccba-legal-knowledge"),
-                Path("C:/GitHubProjects/ccba-legal-knowledge"),
+                Path("D:/GitHubProjects/ccba-legal-knowledge"),  # ccba:allow-machine-path
+                Path("C:/GitHubProjects/ccba-legal-knowledge"),  # ccba:allow-machine-path
             ]
         )
     else:

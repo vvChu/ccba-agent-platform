@@ -26,6 +26,8 @@ project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
 
+from ccba_ai.routing import ModelArchetype
+
 # Setup Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -102,7 +104,7 @@ def preserve_yaml_frontmatter(original_prompt: str, edited_prompt: str) -> str:
 def optimizer_edit_prompt(
     original_prompt: str,
     failure_details: list[dict[str, Any]],
-    model_id: str = "gemini-3.1-pro-high",
+    model_id: str = ModelArchetype.REASONING,
 ) -> str:
     """Gọi LLM Optimizer đóng vai trò Prompt Engineer đề xuất chỉnh sửa văn bản SKILL.md."""
     from ccba_ai import ai
@@ -131,7 +133,7 @@ def optimizer_edit_prompt(
 
 
 
-def run_llm_judge(prompt: str, output: str, rubric: str, judge_model: str = "gemini-3.1-pro-high") -> tuple[bool, str]:
+def run_llm_judge(prompt: str, output: str, rubric: str, judge_model: str = ModelArchetype.REASONING) -> tuple[bool, str]:
     """Sử dụng LLM đóng vai trò Judge để chấm điểm đầu ra dựa trên Rubric."""
     from ccba_ai import ai
 
@@ -216,7 +218,7 @@ def evaluate_case(case: dict[str, Any], system_prompt: str, model_id: str, trial
 
             elif assert_type == "llm_judge":
                 rubric = assertion.get("rubric", "")
-                judge_model = assertion.get("model", "gemini-3.1-pro-high")
+                judge_model = assertion.get("model", ModelArchetype.REASONING)
                 passed_judge, reason_judge = run_llm_judge(prompt, output, rubric, judge_model)
                 if not passed_judge:
                     passed_all_asserts = False
@@ -460,7 +462,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="CCBA AI Skills Evaluation Harness Runner.")
     parser.add_argument("--skill", type=str, default=None, help="Tên skill cần kiểm định (ví dụ: copywriting). Mặc định là 'all'.")
     parser.add_argument("--test-cases", type=str, default=None, help="Đường dẫn file JSON test cases. Mặc định tự tìm trong eval-gate/test_cases.")
-    parser.add_argument("--model", type=str, default="gemini-3.1-pro-high", help="Model ID của Agent cần test (mặc định: gemini-3.1-pro-high).")
+    parser.add_argument("--model", type=str, default=ModelArchetype.REASONING, help="Model ID của Agent cần test (mặc định: gemini-3.1-pro-high).")
     parser.add_argument("--trials", type=int, default=3, help="Số lần chạy thử cho mỗi test case (mặc định: 3).")
     parser.add_argument("--auto-tune", action="store_true", help="Bật chế độ tự động tối ưu hóa SKILL.md (SkillOpt loop).")
     parser.add_argument("--max-iterations", type=int, default=3, help="Số vòng lặp auto-tune tối đa (mặc định: 3).")

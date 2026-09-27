@@ -55,6 +55,7 @@ class FormCleaner:
         # Call AI Gateway
         try:
             from ccba_ai import ai
+            from ccba_ai.routing import choose_model
         except ImportError as e:
             raise ImportError(
                 "'ccba-ai' package is not installed. AI-assisted recovery is unavailable."
@@ -72,7 +73,7 @@ Nội dung 20 dòng đầu:
 """
 
         # Query AI Gateway with gemini-3.1-flash-lite (best for metadata extraction)
-        raw_reply = ai.chat(prompt, model="gemini-3.1-flash-lite").strip()
+        raw_reply = ai.chat(prompt, model=choose_model("fast")).strip()
 
         # Clean response and extract only the uppercase Vietnamese title line
         lines_reply = [line.strip() for line in raw_reply.splitlines() if line.strip()]

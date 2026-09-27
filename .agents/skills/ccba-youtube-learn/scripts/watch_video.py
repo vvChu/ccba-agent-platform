@@ -33,6 +33,7 @@ _logger = logging.getLogger("ccba.youtube.orchestrator")
 from transcript import fetch_youtube_transcript  # noqa: E402
 from visual_extractor import extract_video_visuals  # noqa: E402
 
+from ccba_ai.routing import choose_model
 from ccba_pdf_prep.media import extract_youtube_video_id
 from ccba_pdf_prep.media import find_ffmpeg_bin as _find_ffmpeg_bin
 
@@ -54,7 +55,7 @@ def synthesize_concept_notes(
         f"DANH SÁCH HÌNH ẢNH SLIDE ĐÃ TRÍCH XUẤT:\n{filenames}\n\n"
         "Chỉ trả về nội dung Markdown của tài liệu Concept Notes. Không bọc mã nguồn Markdown trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-3.1-pro-high", max_tokens=max_tokens, temperature=0.31)
+    res = ai.chat(prompt, model=choose_model("reasoning"), max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
@@ -83,7 +84,7 @@ def synthesize_worldview_notes(
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
         "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Worldview Notes. Không bọc trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-3.1-pro-high", max_tokens=max_tokens, temperature=0.31)
+    res = ai.chat(prompt, model=choose_model("reasoning"), max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
@@ -105,7 +106,7 @@ def synthesize_speaker_notes(transcript: str, speaker_name: str, max_tokens: int
         f"TRANSCRIPT PHỤ ĐỀ:\n---\n{transcript}\n---\n\n"
         "Chỉ trả về nội dung Markdown hoàn chỉnh của tài liệu Speaker Notes. Yêu cầu viết cực kỳ súc tích, ngắn gọn từng mục để đảm bảo nội dung đầy đủ tất cả các phần của mẫu và không bị cắt cụt ở cuối. Không bọc trong code block lớn."
     )
-    res = ai.chat(prompt, model="gemini-3.1-flash-lite", max_tokens=max_tokens, temperature=0.31)
+    res = ai.chat(prompt, model=choose_model("fast"), max_tokens=max_tokens, temperature=0.31)
     return res.strip()
 
 
@@ -130,7 +131,7 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
         f"ĐOẠN TRÍCH PHỤ ĐỀ:\n---\n{sample}\n---"
     )
     try:
-        res = ai.chat(prompt, model="gemini-3.1-flash-lite", max_tokens=100, temperature=0.1)
+        res = ai.chat(prompt, model=choose_model("fast"), max_tokens=100, temperature=0.1)
         cleaned = res.strip().strip("'\"")
         # If it returned some long sentence instead of a name, fallback
         if (

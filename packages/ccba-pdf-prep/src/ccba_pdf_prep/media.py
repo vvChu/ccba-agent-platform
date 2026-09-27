@@ -257,8 +257,8 @@ def find_ffmpeg_bin() -> str | None:
         return bin_path
 
     fallbacks = [
-        Path(r"C:\ProgramData\chocolatey\bin\ffmpeg.exe"),
-        Path(r"C:\ffmpeg\bin\ffmpeg.exe"),
+        Path(r"C:\ProgramData\chocolatey\bin\ffmpeg.exe"),  # ccba:allow-machine-path
+        Path(r"C:\ffmpeg\bin\ffmpeg.exe"),  # ccba:allow-machine-path
     ]
     for fb in fallbacks:
         if fb.exists():

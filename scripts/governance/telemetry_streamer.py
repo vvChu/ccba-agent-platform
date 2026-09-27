@@ -2,9 +2,9 @@
 """telemetry_streamer.py - Platform CLI for Real-Time Telemetry Streaming to Server Spark.
 
 Usage:
-  python scripts/governance/telemetry_streamer.py ping [--endpoint http://100.83.192.30:8090/telemetry/events]
+  python scripts/governance/telemetry_streamer.py ping [--endpoint $CCBA_TELEMETRY_STREAM_URL]
   python scripts/governance/telemetry_streamer.py stream <conversation_id_or_log> [--dry-run] [--json]
-  python scripts/governance/telemetry_streamer.py flush [--endpoint http://100.83.192.30:8090/telemetry/events]
+  python scripts/governance/telemetry_streamer.py flush [--endpoint $CCBA_TELEMETRY_STREAM_URL]
   python scripts/governance/telemetry_streamer.py status
 """
 

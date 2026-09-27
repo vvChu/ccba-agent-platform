@@ -26,8 +26,8 @@ from core import get_cip_brief, search
 
 # Model options
 MODELS = {
-    "flash": "gemini-3.1-flash-image-preview",  # Nano Banana 2 - fastest, 95% Pro quality (default)
-    "pro": "gemini-3-pro-image-preview",  # Nano Banana Pro - quality, 4K text
+    "flash": "gemini-3.1-flash-image-preview",  # ccba:allow-raw-model  # Nano Banana 2 - fastest, 95% Pro quality (default)
+    "pro": "gemini-3-pro-image-preview",  # ccba:allow-raw-model  # Nano Banana Pro - quality, 4K text
 }
 DEFAULT_MODEL = "flash"
 

@@ -9,6 +9,10 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 from .scorers import (
     BaseScorer,
@@ -32,142 +36,9 @@ from .scorers import (
     get_visual_diagram_scorers,
 )
 
-# ---------------------------------------------------------------------------
-# Disjoint Subdomain & Domain Keyword Tuples (SSOT)
-# ---------------------------------------------------------------------------
-# Specialized Subdomains (Separated from parent domains to prevent collision)
-GRILLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("grill", "stresstest", "stress-test")
-ADR_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("adr", "architecture-decision")
-RISK_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("risk", "conflict")
-SKILL_REPAIR_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("skill-repair", "repair-skill")
-
-# Statutory and Regulatory Engineering Domains
-LEGAL_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "crawler",
-    "vip",
-    "ingest",
-    "document-tracker",
-    "tracker",
-    "checklist",
-    "hsht",
-)
-LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "legal",
-    "luat",
-    "tvpl",
-    "vbpl",
-    "advisor",
-    "phap-ly",
-)
-TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("pccc", "qc", "audit", "thamdinh")
-
-# Creative, Office, Visual & Academic Domains
-VISUAL_DESIGN_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("design", "brand", "logo", "banner", "cip")
-OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "van-phong",
-    "docx",
-    "pptx",
-    "presentation",
-    "markdown-document",
-    "seminar",
-    "typography",
-    "copywriting",
-    "vietbai",
-    "truyenthong",
-)
-VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("mermaid", "excalidraw", "diagram")
-ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("academic", "khoahoc")
-
-# BIM Specialized Subdomains (Separated from general BIM classification)
-BIM_GOVERNANCE_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "governance",
-    "soi-chi-vang",
-    "soi-chi-do",
-    "golden-thread",
-    "red-thread",
-    "unique-id",
-)
-BIM_RASE_ARCHETYPE_KEYWORDS: tuple[str, ...] = ("rase", "pset", "qto")
-
-# BIM Classification Domain (Disjoint: "risk" -> RISK_ARCHETYPE_KEYWORDS, "vbpl" -> LEGAL)
-BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "bim",
-    "uniclass",
-    "classification",
-    "iso12006",
-    "openbim",
-    "ifc",
-)
-
-# Engineering & Codebase Architecture Domains
-CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "code",
-    "bug",
-    "diagnos",
-    "implement",
-    "tdd",
-    "codebase-design",
-    "refactor",
-    "engineering",
-    "sdk",
-    "logger",
-    "stability-guard",
-    "rag",
-    "pipeline-patterns",
-    "maskara",
-    "testing",
-    "modeling",
-    "feature",
-    "iac",
-    "to-spec",
-    "docs",
-    "pdf-prep",
-    "preprocessor",
-)
-
-# Platform Tooling & Developer Utilities Domain
-PLATFORM_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "create-pr",
-    "git",
-    "guardrails",
-    "spoke",
-    "hub",
-    "upstream",
-    "sync",
-    "ask",
-    "wayfinder",
-    "issue-tree",
-    "xia",
-    "notebooklm",
-    "youtube",
-    "knowledge",
-    "build-skill",
-    "setup-skills",
-    "eval-gate",
-    "autoresearch",
-    "research",
-    "graduate",
-    "retrospective",
-    "rd",
-    "sandbox",
-    "promote",
-    "circuit-breaker",
-    "api-circuit-breaker",
-)
-
-# Pure Agent Orchestration Domain (Multi-agent coordination, handoffs, and platform orchestration)
-ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
-    "teamwork",
-    "orchestrat",
-    "handoff",
-    "proposal",
-    "platform-loader",
-    "platform",
-)
-
 
 # ---------------------------------------------------------------------------
-# Declarative Domain Archetype Registry
+# Declarative Domain Archetype Registry Contract
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class DomainArchetype:
@@ -179,82 +50,111 @@ class DomainArchetype:
     scorer_factory: Callable[[], list[BaseScorer]]
 
 
-# Deterministic search order: Specialized subdomains first, general foundations last
-DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = (
-    DomainArchetype(
-        "grilling", GRILLING_ARCHETYPE_KEYWORDS, "eval_grilling.json", get_grilling_scorers
-    ),
-    DomainArchetype(
-        "adr", ADR_ARCHETYPE_KEYWORDS, "eval_adr_lifecycle.json", get_adr_lifecycle_scorers
-    ),
-    DomainArchetype(
-        "risk", RISK_ARCHETYPE_KEYWORDS, "eval_bigbim_risk.json", get_bigbim_risk_scorers
-    ),
-    DomainArchetype(
-        "skill_repair",
-        SKILL_REPAIR_ARCHETYPE_KEYWORDS,
-        "eval_skill_repair.json",
-        get_skill_repair_scorers,
-    ),
-    DomainArchetype(
-        "legal_tooling",
-        LEGAL_TOOLING_ARCHETYPE_KEYWORDS,
-        "eval_legal_tooling.json",
-        get_legal_tooling_scorers,
-    ),
-    DomainArchetype("legal", LEGAL_ARCHETYPE_KEYWORDS, "eval_legal_intel.json", get_legal_scorers),
-    DomainArchetype(
-        "tech_qc", TECH_QC_ARCHETYPE_KEYWORDS, "eval_pccc_audit.json", get_pccc_scorers
-    ),
-    DomainArchetype(
-        "academic", ACADEMIC_ARCHETYPE_KEYWORDS, "eval_academic_writing.json", get_academic_scorers
-    ),
-    DomainArchetype(
-        "office", OFFICE_ARCHETYPE_KEYWORDS, "eval_copywriting.json", get_office_scorers
-    ),
-    DomainArchetype(
-        "visual_design",
-        VISUAL_DESIGN_ARCHETYPE_KEYWORDS,
-        "eval_visual_design.json",
-        get_visual_design_scorers,
-    ),
-    DomainArchetype(
-        "visual", VISUAL_ARCHETYPE_KEYWORDS, "eval_visual_diagram.json", get_visual_diagram_scorers
-    ),
-    DomainArchetype(
-        "bim_governance",
-        BIM_GOVERNANCE_ARCHETYPE_KEYWORDS,
-        "eval_bigbim_governance.json",
-        get_bigbim_governance_scorers,
-    ),
-    DomainArchetype(
-        "bim_rase",
-        BIM_RASE_ARCHETYPE_KEYWORDS,
-        "eval_bigbim_rase.json",
-        get_bigbim_rase_scorers,
-    ),
-    DomainArchetype(
-        "bim",
-        BIM_ARCHETYPE_KEYWORDS,
-        "eval_bigbim_classification.json",
-        get_bim_classification_scorers,
-    ),
-    DomainArchetype(
-        "coding", CODING_ARCHETYPE_KEYWORDS, "eval_codebase_engineering.json", get_coding_scorers
-    ),
-    DomainArchetype(
-        "platform_tooling",
-        PLATFORM_TOOLING_ARCHETYPE_KEYWORDS,
-        "eval_platform_tooling.json",
-        get_platform_tooling_scorers,
-    ),
-    DomainArchetype(
-        "orchestration",
-        ORCHESTRATION_ARCHETYPE_KEYWORDS,
-        "eval_agent_orchestration.json",
-        get_orchestration_scorers,
-    ),
-)
+# Scorer factory mapping registry
+SCORER_FACTORIES: dict[str, Callable[[], list[BaseScorer]]] = {
+    "get_academic_scorers": get_academic_scorers,
+    "get_adr_lifecycle_scorers": get_adr_lifecycle_scorers,
+    "get_bigbim_governance_scorers": get_bigbim_governance_scorers,
+    "get_bigbim_rase_scorers": get_bigbim_rase_scorers,
+    "get_bigbim_risk_scorers": get_bigbim_risk_scorers,
+    "get_bim_classification_scorers": get_bim_classification_scorers,
+    "get_coding_scorers": get_coding_scorers,
+    "get_grilling_scorers": get_grilling_scorers,
+    "get_lean_structural_scorers": get_lean_structural_scorers,
+    "get_legal_scorers": get_legal_scorers,
+    "get_legal_tooling_scorers": get_legal_tooling_scorers,
+    "get_office_scorers": get_office_scorers,
+    "get_orchestration_scorers": get_orchestration_scorers,
+    "get_pccc_scorers": get_pccc_scorers,
+    "get_platform_tooling_scorers": get_platform_tooling_scorers,
+    "get_skill_repair_scorers": get_skill_repair_scorers,
+    "get_visual_design_scorers": get_visual_design_scorers,
+    "get_visual_diagram_scorers": get_visual_diagram_scorers,
+}
+
+DEFAULT_CATALOG_PATH = Path(__file__).resolve().parent / "archetypes_catalog.yaml"
+_CACHED_DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] | None = None
+
+
+def load_archetypes_catalog(
+    catalog_path: Path | str | None = None,
+) -> tuple[DomainArchetype, ...]:
+    """Loads domain archetypes from the declarative YAML catalog.
+
+    Uses an in-memory singleton cache to ensure O(1) subsequent access and < 2ms latency.
+
+    Args:
+        catalog_path: Optional path to the archetypes_catalog.yaml file. If None,
+            uses the default bundled archetypes_catalog.yaml.
+
+    Returns:
+        Immutable tuple of DomainArchetype instances preserving priority ordering.
+    """
+    global _CACHED_DOMAIN_ARCHETYPES
+    if _CACHED_DOMAIN_ARCHETYPES is not None and catalog_path is None:
+        return _CACHED_DOMAIN_ARCHETYPES
+
+    path = Path(catalog_path) if catalog_path else DEFAULT_CATALOG_PATH
+    if not path.is_file():
+        raise FileNotFoundError(f"Archetypes catalog not found at: {path}")
+
+    with open(path, encoding="utf-8") as f:
+        data: dict[str, Any] = yaml.safe_load(f) or {}
+
+    archetypes_list: list[DomainArchetype] = []
+    for item in data.get("archetypes", []):
+        factory_name = item.get("scorer_factory")
+        if factory_name not in SCORER_FACTORIES:
+            raise KeyError(
+                f"Unknown scorer factory '{factory_name}' for archetype '{item.get('name')}'"
+            )
+        archetypes_list.append(
+            DomainArchetype(
+                name=item["name"],
+                keywords=tuple(item["keywords"]),
+                dataset_file=item["dataset_file"],
+                scorer_factory=SCORER_FACTORIES[factory_name],
+            )
+        )
+
+    result = tuple(archetypes_list)
+    if catalog_path is None:
+        _CACHED_DOMAIN_ARCHETYPES = result
+    return result
+
+
+def reload_archetypes_catalog(
+    catalog_path: Path | str | None = None,
+) -> tuple[DomainArchetype, ...]:
+    """Forces reloading of the archetypes catalog, bypassing the in-memory cache."""
+    global _CACHED_DOMAIN_ARCHETYPES
+    _CACHED_DOMAIN_ARCHETYPES = None
+    return load_archetypes_catalog(catalog_path)
+
+
+# ---------------------------------------------------------------------------
+# Declarative SSOT Constants (Exported for Backward Compatibility)
+# ---------------------------------------------------------------------------
+DOMAIN_ARCHETYPES: tuple[DomainArchetype, ...] = load_archetypes_catalog()
+_ARCHETYPE_MAP: dict[str, DomainArchetype] = {arch.name: arch for arch in DOMAIN_ARCHETYPES}
+
+GRILLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["grilling"].keywords
+ADR_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["adr"].keywords
+RISK_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["risk"].keywords
+SKILL_REPAIR_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["skill_repair"].keywords
+LEGAL_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["legal_tooling"].keywords
+LEGAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["legal"].keywords
+TECH_QC_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["tech_qc"].keywords
+ACADEMIC_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["academic"].keywords
+OFFICE_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["office"].keywords
+VISUAL_DESIGN_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["visual_design"].keywords
+VISUAL_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["visual"].keywords
+BIM_GOVERNANCE_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim_governance"].keywords
+BIM_RASE_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim_rase"].keywords
+BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim"].keywords
+CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["coding"].keywords
+PLATFORM_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["platform_tooling"].keywords
+ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["orchestration"].keywords
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,277 @@
+# scorers_config.yaml - Declarative Hyperparameters for Evaluation Suites (TICKET-005)
+# Single Source of Truth for Scorer Weights, Critical Flags, and Length Thresholds.
+
+suites:
+  orchestration:
+    single_writer_invariant:
+      weight: 0.35
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.35
+      is_critical: false
+    handoff_protocol:
+      weight: 0.30
+      is_critical: false
+
+  coding:
+    hard_completion_lock:
+      weight: 0.40
+      is_critical: true
+    engineering_discipline:
+      weight: 0.35
+      is_critical: false
+    depth:
+      weight: 0.25
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  lean_structural:
+    progressive_disclosure:
+      weight: 0.40
+      is_critical: false
+    depth:
+      weight: 0.30
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+    anti_debris:
+      weight: 0.30
+      is_critical: false
+
+  legal:
+    legal_verbatim_provenance:
+      weight: 0.50
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.20
+      is_critical: false
+    anti_debris:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  legal_tooling:
+    legal_tooling_integrity:
+      weight: 0.45
+      is_critical: false
+    sha256_provenance:
+      weight: 0.25
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  platform_tooling:
+    platform_tooling_integrity:
+      weight: 0.45
+      is_critical: false
+    execution_guardrail:
+      weight: 0.25
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  office:
+    office_standard:
+      weight: 0.45
+      is_critical: false
+    progressive_disclosure:
+      weight: 0.25
+      is_critical: false
+    anti_debris:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  visual_diagram:
+    diagram_syntax:
+      weight: 0.45
+      is_critical: false
+    progressive_disclosure:
+      weight: 0.25
+      is_critical: false
+    anti_debris:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  pccc:
+    pccc_parametric:
+      weight: 0.50
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.20
+      is_critical: false
+    anti_debris:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  bim_classification:
+    bim_classification:
+      weight: 0.50
+      is_critical: true
+    progressive_disclosure:
+      weight: 0.20
+      is_critical: false
+    anti_debris:
+      weight: 0.15
+      is_critical: false
+    depth:
+      weight: 0.15
+      min_length: 20
+      max_length: 25000
+      is_critical: false
+
+  academic:
+    academic_structure:
+      weight: 0.50
+      is_critical: false
+    academic_rigor_hard_floor:
+      weight: 0.30
+      is_critical: true
+    depth:
+      weight: 0.20
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  bigbim_risk:
+    risk_conflict_audit:
+      weight: 0.35
+      is_critical: false
+    risk_anti_trap_hard_floor:
+      weight: 0.35
+      is_critical: true
+    risk_mitigation_guard:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  bigbim_governance:
+    governance_thread_audit:
+      weight: 0.35
+      is_critical: false
+    governance_anti_trap_hard_floor:
+      weight: 0.35
+      is_critical: true
+    governance_risk_matrix_guard:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  bigbim_rase:
+    rase_decomposition_audit:
+      weight: 0.35
+      is_critical: false
+    rase_ifc4x3_pmapping_hard_floor:
+      weight: 0.35
+      is_critical: true
+    rase_qto_mapping_guard:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  grilling:
+    grilling_one_by_one_and_recommendation:
+      weight: 0.35
+      is_critical: false
+    grilling_anti_trap_hard_floor:
+      weight: 0.35
+      is_critical: true
+    grilling_escalation_guard:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  adr_lifecycle:
+    adr_scaffolding_and_lifecycle:
+      weight: 0.35
+      is_critical: false
+    adr_anti_trap_hard_floor:
+      weight: 0.35
+      is_critical: true
+    adr_governance_guard:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  skill_repair:
+    skill_repair_gpi_and_frontmatter:
+      weight: 0.35
+      is_critical: false
+    skill_repair_anti_trap_hard_floor:
+      weight: 0.35
+      is_critical: true
+    skill_repair_debloat_and_verification:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false
+
+  visual_design:
+    visual_design_tokens_and_colors:
+      weight: 0.35
+      is_critical: false
+    visual_design_brand_and_guidelines:
+      weight: 0.35
+      is_critical: true
+    visual_design_typography_and_assets:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false

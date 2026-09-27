@@ -28,7 +28,8 @@ from .telemetry import TokenEstimator, resolve_transcript_path
 logger = logging.getLogger(__name__)
 
 DEFAULT_SPARK_TELEMETRY_URL = os.environ.get(
-    "CCBA_TELEMETRY_STREAM_URL", "http://100.83.192.30:8090/telemetry/events"
+    "CCBA_TELEMETRY_STREAM_URL",
+    "http://100.83.192.30:8090/telemetry/events",  # ccba:allow-raw-ip
 )
 DEFAULT_BUFFER_PATH = Path(".md/telemetry/offline_buffer.jsonl")
 
@@ -83,7 +84,7 @@ class TelemetryEvent:
             conversation_id=data.get("conversation_id", "unknown"),
             timestamp=data.get("timestamp", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
             step_index=data.get("step_index", 0),
-            model_name=data.get("model_name", "gemini-pro"),
+            model_name=data.get("model_name", "gemini-pro"),  # ccba:allow-raw-model
             payload=data.get("payload", {}),
         )
 
@@ -271,7 +272,7 @@ class AsyncTranscriptFollower:
                 conversation_id=conv_id,
                 timestamp=created_at,
                 step_index=step_index,
-                model_name="gemini-pro",
+                model_name="gemini-pro",  # ccba:allow-raw-model
                 payload={
                     "turn_index": self._turn_index,
                     "prompt_tokens": prompt_toks,

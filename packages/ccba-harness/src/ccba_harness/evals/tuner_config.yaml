@@ -1,0 +1,27 @@
+# tuner_config.yaml - Declarative Hyperparameters for Prompt & Skill Optimizer (TICKET-006)
+# Single Source of Truth (SSOT) for Tuner, Ratchet Algorithm, Token Ceilings, and Execution Concurrency.
+
+ratchet:
+  target_score: 90.0
+  max_iterations: 10
+  patience: 3
+  full_sweep: false
+  split_ratio: 0.7
+  slicing_seed: 42
+  enable_adaptive_slicing: true
+  enable_perturbation: true
+
+tokens:
+  budget_ceiling: 5000000
+  per_skill_mutation_budget: 250000
+  hard_max_tokens_per_skill: 500000
+  reservation_estimate: 2000
+
+execution:
+  max_concurrency: 5
+  latency_threshold_s: 4.0
+  default_model: "gemini-3.7-flash-high"
+
+daemon:
+  max_iterations_low: 30
+  max_iterations_perfect: 1

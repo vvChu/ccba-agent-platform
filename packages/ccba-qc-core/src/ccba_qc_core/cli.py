@@ -8,6 +8,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from ccba_ai.routing import ModelArchetype
 from ccba_qc_core.discovery import DiscoveryEngine
 from ccba_qc_core.pccc import PcccMapReduceEngine
 from ccba_qc_core.pipeline import QCBatchOrchestrator
@@ -30,7 +31,7 @@ def discover(
     project_name: str = typer.Option("CCBA Project", "--project", "-p", help="Project name"),
     recursive: bool = typer.Option(False, "--recursive", "-r", help="Scan subdirectories"),
     no_ai: bool = typer.Option(False, "--no-ai", help="Skip AI metadata extraction"),
-    ai_model: str = typer.Option("gemini-3.7-flash", "--model", "-m", help="AI Model to use"),
+    ai_model: str = typer.Option(ModelArchetype.STANDARD, "--model", "-m", help="AI Model to use"),
     titleblocks_dir: Path = typer.Option(
         Path("titleblocks"), "--titleblocks-dir", help="Dir for extracted titleblocks"
     ),
@@ -69,7 +70,7 @@ def audit(
     output_dir: Path = typer.Option(
         Path("audit_output"), "--output-dir", "-o", help="Thư mục đầu ra"
     ),
-    ai_model: str = typer.Option("gemini-2.5-flash", "--model", "-m", help="AI Vision Model"),
+    ai_model: str = typer.Option(ModelArchetype.STANDARD, "--model", "-m", help="AI Vision Model"),
 ) -> None:
     """Thực hiện đối soát Quad-View đa bộ môn cho một tầng."""
     engine = QuadViewAuditEngine(output_dir=output_dir, ai_model=ai_model)
@@ -89,7 +90,7 @@ def batch(
     project_dir: Path = typer.Option(..., "--project-dir", "-p", help="Thư mục gốc dự án"),
     matrix_csv: Path = typer.Option(..., "--matrix", "-m", help="File CSV Ma trận Phối hợp"),
     out_dir: Path = typer.Option(..., "--out-dir", "-o", help="Thư mục xuất báo cáo"),
-    ai_model: str = typer.Option("gemini-3.7-flash-high", "--model", help="AI Vision Model"),
+    ai_model: str = typer.Option(ModelArchetype.REASONING, "--model", help="AI Vision Model"),
 ) -> None:
     """Chạy quy trình thẩm tra toàn bộ ma trận phối hợp theo lô (Batch)."""
     orchestrator = QCBatchOrchestrator(project_dir, matrix_csv, out_dir)
@@ -106,7 +107,7 @@ def pccc(
     arch: Path = typer.Option(..., "--arch", help="File Kiến trúc PCCC (Markdown)"),
     mep: Path = typer.Option(..., "--mep", help="File MEP PCCC (Markdown)"),
     gopy: Path = typer.Option(None, "--gopy", help="File góp ý PC07 (nếu có)"),
-    model: str = typer.Option("qwen-local-primary", "--model", "-m", help="Tên model LLM"),
+    model: str = typer.Option(ModelArchetype.LOCAL, "--model", "-m", help="Tên model LLM"),
     out: Path = typer.Option(
         Path("PCCC_MapReduce_Report.md"), "--out", "-o", help="File báo cáo đầu ra"
     ),

@@ -21,11 +21,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ccba_ai.daemon_bridge import kill_process_tree
+from ccba_ai.routing import ModelArchetype
 
 logger = logging.getLogger("ccba_ai.antigravity")
 
 # Default model for Antigravity CLI
-DEFAULT_AGY_MODEL = "gemini-3.7-flash-medium"
+DEFAULT_AGY_MODEL = ModelArchetype.STANDARD_MEDIUM
 
 # Default timeout: 2 minutes to account for ~30-40s agent context loading
 DEFAULT_AGY_TIMEOUT = 120.0

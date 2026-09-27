@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 from ccba_pdf_prep import PDFAnalyzer, VisionOptimizer, render_page_to_image
 from ccba_pdf_prep.composite import CompositeBuilder
 
@@ -51,7 +52,7 @@ class QuadViewAuditEngine:
     def __init__(
         self,
         output_dir: Path | None = None,
-        ai_model: str = "gemini-2.5-flash",
+        ai_model: str = ModelArchetype.STANDARD,
         tile_dpi: int = 150,
         tile_size: int = 1024,
     ) -> None:
