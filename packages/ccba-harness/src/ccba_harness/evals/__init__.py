@@ -82,6 +82,11 @@ from .simulation import (
     build_mock_agent_task,
     create_domain_mock_agent_task,
 )
+from .simulators import (
+    BaseDomainSimulator,
+    SimulationContext,
+    SimulatorDispatcher,
+)
 from .slicing import (
     AdaptiveDataSlicer,
     DynamicPerturbationEngine,
@@ -195,4 +200,7 @@ __all__ = [
     "extract_code_blocks",
     "build_mock_agent_task",
     "create_domain_mock_agent_task",
+    "BaseDomainSimulator",
+    "SimulationContext",
+    "SimulatorDispatcher",
 ]
