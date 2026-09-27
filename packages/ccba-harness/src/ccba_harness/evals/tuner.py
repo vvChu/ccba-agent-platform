@@ -8,6 +8,7 @@ improvements and instantly rolling back (git checkout / file restore) on regress
 from __future__ import annotations
 
 import asyncio
+import fcntl
 import hashlib
 import inspect
 import json
@@ -16,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
@@ -66,6 +68,110 @@ class TokenBudgetExceededError(Exception):
     """Raised when session-wide token budget ceiling is reached."""
 
     pass
+
+
+class GitMutexLock:
+    """POSIX file-based mutex lock for Git mutation operations (fcntl.flock).
+
+    Prevents concurrent Git commits/rollbacks from racing when multiple tuner
+    processes target the same repository.  Implements a context manager and
+    explicit acquire()/release() API.
+
+    Args:
+        lock_path: Path to the lock file.  Defaults to ``<repo>/.git/evals_tuner.lock``.
+        timeout: Maximum seconds to wait before raising TimeoutError (default 30 s).
+        retry_interval: Polling interval in seconds while waiting (default 0.05 s).
+        enabled: When False the lock is a no-op pass-through — use this to bypass
+            all locking in dry-run or CI/test environments.
+    """
+
+    def __init__(
+        self,
+        lock_path: Path | str | None = None,
+        timeout: float = 30.0,
+        retry_interval: float = 0.05,
+        enabled: bool = True,
+    ) -> None:
+        self.lock_path: Path | None = Path(lock_path) if lock_path is not None else None
+        self.timeout = timeout
+        self.retry_interval = retry_interval
+        self.enabled = enabled
+        self._fd: int | None = None
+        self._thread_lock = threading.Lock()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def acquire(self) -> GitMutexLock:
+        """Acquire the file lock.
+
+        Returns:
+            Self for chaining.
+
+        Raises:
+            TimeoutError: If the lock cannot be obtained within ``timeout`` seconds.
+        """
+        if not self.enabled or self.lock_path is None:
+            return self
+
+        self._thread_lock.acquire()
+        try:
+            self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(str(self.lock_path), os.O_CREAT | os.O_WRONLY)
+            deadline = time.monotonic() + self.timeout
+            while True:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    self._fd = fd
+                    return self
+                except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        os.close(fd)
+                        raise TimeoutError(
+                            f"GitMutexLock: could not acquire lock on "
+                            f"'{self.lock_path}' within {self.timeout}s"
+                        ) from None
+                    time.sleep(self.retry_interval)
+        except Exception:
+            self._thread_lock.release()
+            raise
+
+    def release(self) -> None:
+        """Release the file lock if held."""
+        if not self.enabled or self.lock_path is None:
+            return
+
+        try:
+            if self._fd is not None:
+                try:
+                    fcntl.flock(self._fd, fcntl.LOCK_UN)
+                except OSError:
+                    pass
+                try:
+                    os.close(self._fd)
+                except OSError:
+                    pass
+                self._fd = None
+                try:
+                    self.lock_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        finally:
+            try:
+                self._thread_lock.release()
+            except RuntimeError:
+                pass
+
+    # ------------------------------------------------------------------
+    # Context manager
+    # ------------------------------------------------------------------
+
+    def __enter__(self) -> GitMutexLock:
+        return self.acquire()
+
+    def __exit__(self, *_: object) -> None:
+        self.release()
 
 
 _UNSET: Any = object()
@@ -1009,6 +1115,8 @@ class GitRatchetOptimizer:
         circuit_breaker: Any | None = None,
         rate_limiter: RateLimiter | None = None,
         async_client: Any | None = None,
+        git_lock: GitMutexLock | None = None,
+        lock_enabled: bool = True,
     ) -> None:
         self.config = config
         self.target_file = Path(config.target_file).resolve()
@@ -1018,6 +1126,13 @@ class GitRatchetOptimizer:
         self.async_client = async_client
         self.circuit_breaker = circuit_breaker
         self.rate_limiter = rate_limiter or config.rate_limiter
+
+        # RULE-2.9: Dependency Injection — bypass lock in dry-run or when disabled
+        _lock_active = lock_enabled and not dry_run_git
+        if git_lock is not None:
+            self.git_lock = git_lock
+        else:
+            self.git_lock = GitMutexLock(enabled=_lock_active)
 
         effective_root = project_root if project_root is not None else root
         if effective_root is not None:
@@ -1034,6 +1149,10 @@ class GitRatchetOptimizer:
                     detected = p
                     break
             self.project_root = detected if detected else Path.cwd().resolve()
+
+        # Resolve lock path to <project_root>/.git/evals_tuner.lock when not injected
+        if git_lock is None and self.git_lock.lock_path is None and self.git_lock.enabled:
+            self.git_lock.lock_path = self.project_root / ".git" / "evals_tuner.lock"
 
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.runner = EvalRunner(
@@ -1274,6 +1393,11 @@ class GitRatchetOptimizer:
 
     def git_commit_improvement(self, score_diff: str) -> bool:
         """Commits target file change to Git repository."""
+        with self.git_lock:
+            return self._git_commit_improvement_locked(score_diff)
+
+    def _git_commit_improvement_locked(self, score_diff: str) -> bool:
+        """Inner commit logic executed under git_lock."""
         if self.dry_run_git:
             logger.info(
                 f"💾 [DRY-RUN] Git Commit: ratchet(opt): {self.target_file.name} {score_diff}"
@@ -1327,6 +1451,13 @@ class GitRatchetOptimizer:
 
     def git_rollback_target(self, original_content: str, has_committed: bool = False) -> None:
         """Rolls back the target file either via git checkout or file overwrite."""
+        with self.git_lock:
+            self._git_rollback_target_locked(original_content, has_committed)
+
+    def _git_rollback_target_locked(
+        self, original_content: str, has_committed: bool = False
+    ) -> None:
+        """Inner rollback logic executed under git_lock."""
         try:
             self.target_file.write_text(original_content, encoding="utf-8")
         except Exception as e:
