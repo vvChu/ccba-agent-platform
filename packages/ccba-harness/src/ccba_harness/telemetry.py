@@ -124,7 +124,7 @@ class SubagentSessionMetrics:
     total_duration_sec: float
     tool_counts: dict[str, int] = field(default_factory=dict)
     tool_durations_ms: dict[str, float] = field(default_factory=dict)
-    model_name: str = "gemini-pro"
+    model_name: str = "gemini-pro"  # ccba:allow-raw-model
     estimated_cost_usd: float = 0.0
     turns: list[TurnRecord] = field(default_factory=list)
 
@@ -399,7 +399,7 @@ def analyze_subagent_transcript(
         total_duration_sec=total_duration_sec,
         tool_counts=dict(tool_counts),
         tool_durations_ms=dict(tool_durations),
-        model_name="gemini-pro",
+        model_name="gemini-pro",  # ccba:allow-raw-model
         estimated_cost_usd=cost,
         turns=turns,
     )
