@@ -36,6 +36,7 @@ Xây dựng và hoàn thiện **Hệ Thống Quản Trị Tham Số Động & C�
     3. *Lớp 3 (Kiến trúc):* Declarative YAML Catalog cho `ccba-harness/evals` và Enforce `ccba_ai.routing`.
 *   `[TICKET-001] [AST Parameter Linter & CI Gate Integration]`: Đã triển khai `scripts/governance/check_hardcoded_parameters.py` và bộ test suite `tests/governance/test_hardcoded_parameters.py` (10/10 tests PASS). Hỗ trợ phát hiện raw model string (`gemini-*`, `gpt-*`, `claude-*`), raw network IPs, và Windows machine paths với cơ chế chú thích miễn trừ (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`, `# ccba:allow-machine-path`).
 *   `[TICKET-002] [Hiến Pháp Hóa Invariant: Parameter Externalization & Dynamic Scale]`: Đã bổ sung điều khoản bất biến vào `AGENTS.md`, `.agents/AGENTS.md`, `session_learnings.md` (RULE-1.12), và `docs/rules/code_quality.md` §15. Bảo đảm ngân sách working memory `session_learnings.md` $\le 10$ KB (9,948 bytes, 8/8 tests pass, 246/246 governance tests pass).
+*   `[TICKET-003] [Chuẩn Hóa Model Routing Across Skills & Core Packages]`: Đã xóa sổ 100% hardcoded model strings (`gemini-*`, `qwen-*`, `claude-*`), raw network IPs (`100.83.192.30`), và Windows machine paths trên 74 skills và toàn bộ core packages (`ccba-ai`, `ccba-qc-core`, `mdconverter`, `ccba-legal-intel`, `ccba-pdf-prep`, `ccba-ooxml`, `ccba-harness`). Đạt **0 violations toàn sàn**, 544/544 package tests PASS, 439/439 legal tests PASS, 246/246 governance tests PASS (Commit `a404d1c6`).
 
 ---
 
@@ -43,9 +44,9 @@ Xây dựng và hoàn thiện **Hệ Thống Quản Trị Tham Số Động & C�
 
 Các ticket unblocked có thể triển khai ngay:
 
-*   **[TICKET-003] [Chuẩn Hóa Model Routing Across Skills & Core Packages]** `[Task | AFK]`:
-    - *Mô tả:* Sử dụng linter mới `check_hardcoded_parameters.py` để quét và refactor các vị trí vi phạm trong `.agents/skills/` (`ccba-eval-gate`, `ccba-youtube-learn`, `ccba-design`, `ccba-legal-intel`) và core packages sang sử dụng `ccba_ai.routing.choose_model()` hoặc `ModelArchetype`.
-    - *Trạng thái:* `READY TO CLAIM` (Unblocked sau khi TICKET-001 & TICKET-002 hoàn tất)
+*   **[TICKET-004] [Declarative Archetype Catalog & Benchmark Schema Externalization]** `[Task | AFK]`:
+    - *Mô tả:* Tách toàn bộ các bảng từ khóa định tuyến (`CODING_ARCHETYPE_KEYWORDS`, `LEGAL_ARCHETYPE_KEYWORDS`, `PCCC_KEYWORDS`, etc.) trong `packages/ccba-harness/src/ccba_harness/evals/archetypes.py` sang tệp cấu hình khai báo YAML (`packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml`), có caching singleton để đạt tốc độ nạp < 2ms theo [FOG-001].
+    - *Trạng thái:* `READY TO CLAIM` (Unblocked sau khi TICKET-003 hoàn tất)
 
 ---
 
