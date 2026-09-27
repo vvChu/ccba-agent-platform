@@ -395,6 +395,17 @@ def test_is_tier_failover_exception_status_codes():
     )
     assert router.is_tier_failover_exception(exc_400_budget) is True
 
+    # 2b. HTTP 400 raw LiteLLM message (no budget_exceeded type)
+    resp_400_raw_budget = httpx.Response(
+        400,
+        request=req,
+        text='{"error": {"message": "Budget has been exceeded! Current cost: 5.01, Max budget: 5.0"}}',
+    )
+    exc_400_raw_budget = openai.APIStatusError(
+        message="Budget has been exceeded!", response=resp_400_raw_budget, body={}
+    )
+    assert router.is_tier_failover_exception(exc_400_raw_budget) is True
+
     # 3. HTTP 400 normal bad request (should NOT trigger failover)
     resp_400_other = httpx.Response(
         400, request=req, text='{"error": {"message": "Invalid model parameter"}}'

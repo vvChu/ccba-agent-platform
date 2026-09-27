@@ -116,6 +116,7 @@ claudekit-engineer/
 !.agents/rules/
 !.agents/resources/
 !.agents/templates/
+!.agents/teams/
 !.agents/AGENTS.md
 
 # Loại trừ các dữ liệu động, log, credentials bên trong các thư mục chính quy này

@@ -81,7 +81,9 @@ for dir in "${TARGET_DIRS[@]}"; do
         setfacl -R -m "g:${COLLAB_GROUP}:rwX" "${dir}"
         # 2. Cấp default inheritance rwX cho toàn bộ tệp/thư mục tạo mới sau này
         setfacl -R -d -m "g:${COLLAB_GROUP}:rwX" "${dir}"
-        echo -e "${GREEN}[✓] Hoàn tất ACL active & default trên ${dir}.${NC}"
+        # 3. Gán SGID bit (chmod g+s) để mọi thư mục con tạo mới luôn kế thừa group ownership
+        find "${dir}" -type d -exec chmod g+s {} +
+        echo -e "${GREEN}[✓] Hoàn tất ACL active, default & SGID bit (g+s) trên ${dir}.${NC}"
     else
         echo -e "${RED}[!] Thư mục ${dir} không tồn tại. Bỏ qua.${NC}"
     fi

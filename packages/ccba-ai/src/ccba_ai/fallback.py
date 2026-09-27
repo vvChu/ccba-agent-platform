@@ -239,7 +239,9 @@ class TieredFallbackRouter:
         if isinstance(exc, APIStatusError):
             if exc.status_code == 429:
                 return True
-            if exc.status_code == 400 and "budget_exceeded" in str(exc).lower():
+            if exc.status_code == 400 and (
+                "budget" in str(exc).lower() and "exceeded" in str(exc).lower()
+            ):
                 return True
             if exc.status_code >= 500:
                 return True
