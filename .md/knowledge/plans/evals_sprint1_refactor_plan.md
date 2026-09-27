@@ -19,7 +19,8 @@ Triển khai trọn vẹn 3 đề xuất cốt lõi (Đề xuất 2, 4, 3) từ 
 
 ## 📝 Danh Mục Nhiệm Vụ (Task Breakdown & Checklist)
 
-### [ ] Task 1: Khai báo hóa chiến lược đột biến prompt (`mutation_strategies.yaml`)
+### [x] Task 1: Khai báo hóa chiến lược đột biến prompt (`mutation_strategies.yaml`)
+- **Trạng thái:** ✅ HOÀN TẤT (Commit `9acf1bb2`, 167/167 tests passed, 402 dòng code thừa đã được loại bỏ).
 - **Tệp tạo mới:** `packages/ccba-harness/src/ccba_harness/evals/mutation_strategies.yaml`
 - **Tệp sửa đổi:** `packages/ccba-harness/src/ccba_harness/evals/tuner.py`
 - **Yêu cầu kỹ thuật:**
@@ -30,7 +31,8 @@ Triển khai trọn vẹn 3 đề xuất cốt lõi (Đề xuất 2, 4, 3) từ 
   - `pytest packages/ccba-harness/tests/test_tuner*.py` đạt 100% PASS.
   - `propose_mutation` hoạt động chính xác tương đương trước khi refactor.
 
-### [ ] Task 2: Hợp nhất SSOT Dataset Resolution và dọn dẹp `SKILL_DATASET_ALIASES`
+### [x] Task 2: Hợp nhất SSOT Dataset Resolution và dọn dẹp `SKILL_DATASET_ALIASES`
+- **Trạng thái:** ✅ HOÀN TẤT (22/22 tests passed, gỡ bỏ 67 dòng từ điển tĩnh `SKILL_DATASET_ALIASES`, quy về SSOT qua `archetypes.py`).
 - **Tệp sửa đổi:** `packages/ccba-harness/src/ccba_harness/evals/runner.py`
 - **Yêu cầu kỹ thuật:**
   - Gỡ bỏ hoàn toàn từ điển hardcoded `SKILL_DATASET_ALIASES` (dòng 310–376 trong `runner.py`).

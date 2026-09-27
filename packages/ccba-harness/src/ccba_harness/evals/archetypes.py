@@ -186,12 +186,18 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
             if arch.name == "coding":
                 return arch
 
+    sname_norm = sname_core.replace("-", "_")
+    for arch in DOMAIN_ARCHETYPES:
+        if arch.name == sname_norm:
+            return arch
+
+    sname_core_hyphen = sname_core.replace("_", "-")
     for arch in DOMAIN_ARCHETYPES:
         if arch.name == "visual_design" and (
             "codebase-design" in sname_core or "codebase-design" in sname
         ):
             continue
-        if any(k in sname_core for k in arch.keywords):
+        if any(k in sname_core or k in sname_core_hyphen for k in arch.keywords):
             return arch
     return None
 

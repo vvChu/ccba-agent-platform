@@ -421,3 +421,34 @@ def test_orchestration_scorers():
     assert any(s.name == "single_writer_invariant" for s in suite)
     assert any(s.name == "progressive_disclosure_links" for s in suite)
     assert any(s.name == "handoff_protocol" for s in suite)
+
+
+def test_ssot_dataset_resolution_and_no_aliases():
+    """Verify that SKILL_DATASET_ALIASES is removed and dataset resolution relies on SSOT (ADR-0058)."""
+    import ccba_harness.evals.runner as runner_mod
+
+    # 1. Invariant: SKILL_DATASET_ALIASES must not exist in runner
+    assert not hasattr(runner_mod, "SKILL_DATASET_ALIASES")
+
+    # 2. SSOT dataset resolution loads authentic benchmark cases
+    office_items = load_eval_dataset(skill_name="ccba-copywriting")
+    assert len(office_items) >= 5
+
+    legal_items = load_eval_dataset(skill_name="ccba-legal-advisor")
+    assert len(legal_items) >= 5
+
+    qc_items = load_eval_dataset(skill_name="ccba-ai-qc-pccc-audit")
+    assert len(qc_items) >= 5
+
+    risk_items = load_eval_dataset(skill_name="bigbim-risk-redteam")
+    assert len(risk_items) >= 17
+
+    skill_repair_items = load_eval_dataset(skill_name="ccba-skill-repair")
+    assert len(skill_repair_items) >= 5
+
+    # 3. Direct archetype names and normalized aliases
+    office_direct = load_eval_dataset(skill_name="office")
+    assert len(office_direct) >= 5
+
+    platform_items = load_eval_dataset(skill_name="platform_tooling")
+    assert len(platform_items) >= 5

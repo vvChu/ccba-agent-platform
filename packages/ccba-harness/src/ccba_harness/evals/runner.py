@@ -12,6 +12,7 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from .archetypes import resolve_domain_archetype, resolve_domain_dataset
 from .models import EvalItem, EvalItemResult, EvalReport, ScoreResult
 from .scorers import (
     BaseScorer,
@@ -307,75 +308,6 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
     return items
 
 
-SKILL_DATASET_ALIASES: dict[str, list[str]] = {
-    "ccba-ai-qc-pccc-audit": ["pccc_audit", "ai_qc_pccc_audit"],
-    "ai_qc_pccc_audit": ["pccc_audit", "ai_qc_pccc_audit"],
-    "pccc_audit": ["pccc_audit", "ai_qc_pccc_audit"],
-    "ccba-legal-advisor": ["legal_intel", "legal_advisor"],
-    "legal_advisor": ["legal_intel", "legal_advisor"],
-    "ccba-legal-intel": ["legal_intel", "legal_advisor"],
-    "legal_intel": ["legal_intel", "legal_advisor"],
-    "ccba-teamwork": ["agent_orchestration", "teamwork"],
-    "agent_orchestration": ["agent_orchestration", "teamwork"],
-    "ccba-ai-qc": ["ai_qc", "pccc_audit"],
-    "ccba-grilling": ["grilling", "grill"],
-    "grilling": ["grilling", "grill"],
-    "ccba-adr-lifecycle": ["adr_lifecycle", "adr"],
-    "adr_lifecycle": ["adr_lifecycle", "adr"],
-    "bigbim-risk-redteam": ["bigbim_risk_redteam", "bigbim_risk"],
-    "bigbim-governance": ["bigbim_governance", "governance"],
-    "bigbim_governance": ["bigbim_governance", "governance"],
-    "governance": ["bigbim_governance", "governance"],
-    "bigbim-rase": ["bigbim_rase", "rase"],
-    "bigbim_rase": ["bigbim_rase", "rase"],
-    "rase": ["bigbim_rase", "rase"],
-    "ccba-skill-repair": ["skill_repair", "repair_skill"],
-    "skill_repair": ["skill_repair", "repair_skill"],
-    "repair_skill": ["skill_repair", "repair_skill"],
-    "ccba-design": ["visual_design", "design", "brand"],
-    "visual_design": ["visual_design", "design", "brand"],
-    "design": ["visual_design", "design", "brand"],
-    "ccba-tvpl-vip-crawler": ["legal_tooling", "crawler", "tvpl_vip_crawler"],
-    "tvpl_vip_crawler": ["legal_tooling", "crawler", "tvpl_vip_crawler"],
-    "ccba-legal-ingest": ["legal_tooling", "legal_ingest", "ingest"],
-    "legal_ingest": ["legal_tooling", "legal_ingest", "ingest"],
-    "ccba-legal-document-tracker": ["legal_tooling", "legal_document_tracker", "tracker"],
-    "legal_document_tracker": ["legal_tooling", "legal_document_tracker", "tracker"],
-    "ccba-completion-checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
-    "completion_checklist": ["legal_tooling", "completion_checklist", "checklist", "hsht"],
-    "legal_tooling": ["legal_tooling"],
-    "ccba-copywriting": ["copywriting", "office"],
-    "copywriting": ["copywriting", "office"],
-    "ccba-markdown-document-processing": [
-        "copywriting",
-        "office",
-        "markdown_document_processing",
-        "markdown-document-processing",
-    ],
-    "markdown-document-processing": [
-        "copywriting",
-        "office",
-        "markdown_document_processing",
-    ],
-    "markdown_document_processing": [
-        "copywriting",
-        "office",
-        "markdown_document_processing",
-    ],
-    "ccba-pptx": ["copywriting", "office", "pptx"],
-    "pptx": ["copywriting", "office", "pptx"],
-    "ccba-seminar-builder": ["copywriting", "office", "seminar_builder", "seminar"],
-    "seminar-builder": ["copywriting", "office", "seminar_builder", "seminar"],
-    "seminar_builder": ["copywriting", "office", "seminar_builder", "seminar"],
-    "ccba-xu-ly-van-phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
-    "xu-ly-van-phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
-    "xu_ly_van_phong": ["copywriting", "office", "xu_ly_van_phong", "van_phong"],
-    "office": ["copywriting", "office"],
-    "platform_tooling": ["platform_tooling"],
-    "platform-tooling": ["platform_tooling"],
-}
-
-
 def load_eval_dataset(
     dataset_path: Path | str | None = None,
     skill_name: str | None = None,
@@ -443,21 +375,49 @@ def load_eval_dataset(
                 except Exception:
                     continue
         else:
-            clean = canonical_skill.removeprefix("ccba-").replace("-", "_").lower()
-            candidate_keys = [clean]
-            for alias in SKILL_DATASET_ALIASES.get(canonical_skill.lower(), []):
-                if alias not in candidate_keys:
-                    candidate_keys.append(alias)
-            for alias in SKILL_DATASET_ALIASES.get(clean, []):
-                if alias not in candidate_keys:
-                    candidate_keys.append(alias)
+            clean = (
+                canonical_skill.removeprefix("ccba-")
+                .removeprefix("bigbim-")
+                .replace("-", "_")
+                .lower()
+            )
+            canonical_clean = canonical_skill.replace("-", "_").lower()
+
+            # SSOT Resolution via Domain Archetype (ADR-0058)
+            arch = resolve_domain_archetype(canonical_skill)
+            if not arch and clean != canonical_skill:
+                arch = resolve_domain_archetype(clean) or resolve_domain_archetype(
+                    clean.replace("_", "-")
+                )
+
+            domain_ds = arch.dataset_file if arch else resolve_domain_dataset(canonical_skill)
+            if (
+                not domain_ds or domain_ds == "eval_general_domain.json"
+            ) and clean != canonical_skill:
+                cand_ds = resolve_domain_dataset(clean)
+                if cand_ds != "eval_general_domain.json":
+                    domain_ds = cand_ds
+
+            candidate_keys: list[str] = []
+            for k in [clean, canonical_clean]:
+                if k and k not in candidate_keys:
+                    candidate_keys.append(k)
+
+            if arch:
+                if arch.name not in candidate_keys:
+                    candidate_keys.append(arch.name)
+                if arch.dataset_file:
+                    arch_ds_key = arch.dataset_file.removeprefix("eval_").removesuffix(".json")
+                    if arch_ds_key not in candidate_keys:
+                        candidate_keys.append(arch_ds_key)
+
+            if domain_ds and domain_ds != "eval_general_domain.json":
+                ds_key = domain_ds.removeprefix("eval_").removesuffix(".json")
+                if ds_key not in candidate_keys:
+                    candidate_keys.append(ds_key)
 
             matching_files: list[Path] = []
 
-            # SSOT Resolution via Domain Archetype (ADR-0058)
-            from .archetypes import resolve_domain_dataset
-
-            domain_ds = resolve_domain_dataset(canonical_skill)
             if domain_ds and domain_ds != "eval_general_domain.json":
                 ds_cand = default_dir / domain_ds
                 if ds_cand.exists() and ds_cand not in matching_files:
