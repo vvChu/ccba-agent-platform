@@ -179,9 +179,11 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
 
     # Strip project/namespace prefix so 'bigbim-*' does not false-positive on 'bim' keyword
     sname_core = re.sub(r"^(ccba|bigbim)-", "", sname)
+    sname_core_hyphen = sname_core.replace("_", "-")
+    sname_hyphen = sname.replace("_", "-")
 
     # Disjoint routing: Exclude 'codebase-design' from visual_design keyword collision (RULE-2.5)
-    if "codebase-design" in sname_core or "codebase-design" in sname:
+    if "codebase-design" in sname_core_hyphen or "codebase-design" in sname_hyphen:
         for arch in DOMAIN_ARCHETYPES:
             if arch.name == "coding":
                 return arch
@@ -191,10 +193,9 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
         if arch.name == sname_norm:
             return arch
 
-    sname_core_hyphen = sname_core.replace("_", "-")
     for arch in DOMAIN_ARCHETYPES:
         if arch.name == "visual_design" and (
-            "codebase-design" in sname_core or "codebase-design" in sname
+            "codebase-design" in sname_core_hyphen or "codebase-design" in sname_hyphen
         ):
             continue
         if any(k in sname_core or k in sname_core_hyphen for k in arch.keywords):

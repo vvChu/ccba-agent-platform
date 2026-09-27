@@ -24,6 +24,16 @@ from .scorers import (
 )
 
 
+def _is_scorer_effective_critical(scorer: BaseScorer, item: EvalItem) -> bool:
+    """Evaluates whether a scorer is considered critical for the given item."""
+    if hasattr(scorer, "get_effective_is_critical") and callable(scorer.get_effective_is_critical):
+        try:
+            return bool(scorer.get_effective_is_critical(item))
+        except Exception:
+            return getattr(scorer, "is_critical", False)
+    return getattr(scorer, "is_critical", False)
+
+
 async def _safe_score_item(
     scorer: BaseScorer,
     task_output: Any,
@@ -40,14 +50,14 @@ async def _safe_score_item(
             scorer_name=scorer.name,
             score=0.0,
             reasoning=f"Scorer returned invalid type: {type(res).__name__}",
-            is_critical_fail=getattr(scorer, "is_critical", False),
+            is_critical_fail=_is_scorer_effective_critical(scorer, item),
         )
     except Exception as exc:
         return ScoreResult(
             scorer_name=scorer.name,
             score=0.0,
             reasoning=f"Scorer execution failed: {type(exc).__name__}: {exc}",
-            is_critical_fail=getattr(scorer, "is_critical", False),
+            is_critical_fail=_is_scorer_effective_critical(scorer, item),
         )
 
 
@@ -125,7 +135,7 @@ class EvalRunner:
                             scorer_name=s.name,
                             score=0.0,
                             reasoning=f"Scorer execution failed: {type(res).__name__}: {res}",
-                            is_critical_fail=getattr(s, "is_critical", False),
+                            is_critical_fail=_is_scorer_effective_critical(s, item),
                         )
                     )
                 else:

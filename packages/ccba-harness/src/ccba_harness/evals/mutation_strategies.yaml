@@ -139,6 +139,18 @@ strategies:
         * **Handoff Protocol & Autonomous Notification:** Chuyển giao ngữ cảnh qua `send_message` gửi parent agent kèm báo cáo bàn giao (handoff report) và kết luận hoàn tất (`verdict`).
         * **Bộc Lộ Dần (Progressive Disclosure):** Tổ chức tài liệu và chỉ dẫn theo [Hiến pháp AGENTS.md](../../AGENTS.md) tuân thủ mô hình bộc lộ dần theo cấp độ.
         * **Hard Completion Lock:** Bắt buộc vượt qua xác minh tất định `python -m ccba_harness verify-patch` trước khi hoàn tất.
+    - name: "Dynamic Subagent Delegation & Structured Patch Synthesis"
+      content: |
+        ## Điều Phối Subagent Linh Hoạt & Tổng Hợp Bản Vá Có Cấu Trúc
+        * **Phân rã tác vụ (Task Decomposition):** Chia nhỏ luồng công việc phức tạp thành các đơn vị tác vụ độc lập, giao phó cho subagent chuyên biệt với phạm vi truy cập tối thiểu.
+        * **Tổng hợp bản vá (Structured Patch Synthesis):** Subagent chỉ đề xuất thay đổi dưới dạng diff hoặc structured patch, Lead Orchestrator thẩm định và áp dụng tập trung.
+        * **Bảo vệ ngữ cảnh cha (Context Conservation):** Giữ cho context của agent điều phối luôn tinh gọn bằng cách ủy nhiệm các tìm kiếm/đọc tệp nặng cho subagent nghiên cứu.
+    - name: "Single-Writer StateGraph & Multi-Agent Scratchpad"
+      content: |
+        ## Trạng Thái Đơn Bút (Single-Writer) & Giao Thức Nháp Đa Tác Nhân
+        * **Nhật ký nối tiếp (Append-Only Event Ledger):** Truy vết toàn bộ tiến trình trao đổi giữa các agent thông qua nhật ký tuần tự, tránh tranh chấp dữ liệu đồng thời.
+        * **Multi-Agent Scratchpad:** Sử dụng bộ nhớ nháp riêng biệt cho từng subagent trước khi tích hợp kết quả vào không gian làm việc chính thức.
+        * **Fail-Fast & Timeout Recovery:** Tự động kích hoạt cơ chế ngắt mạch và hủy bỏ tác vụ khi một subagent bị treo hoặc vượt ngưỡng thời gian chờ cho phép.
   tech_qc:
     - name: "QCVN 06:2022/BXD & Map 1 Invariants"
       content: |
@@ -290,6 +302,18 @@ strategies:
         ## Phong Cách Sơ Đồ Trực Quan Grayscale Học Thuật (Mermaid / Excalidraw)
         * **Chuẩn màu Grayscale:** Sử dụng phong cách grayscale tương phản cao, dễ đọc khi in ấn và hiển thị dark/light mode.
         * **Quy chuẩn cú pháp sơ đồ:** Kiểm soát đóng mở node, ký hiệu điều kiện và bảo tồn toàn vẹn liên kết Markdown AST Link Integrity.
+    - name: "Mermaid C4 Architecture & Sequence Protocol"
+      content: |
+        ## Sơ Đồ Kiến Trúc C4 & Giao Thức Tuần Tự (Sequence Diagrams)
+        * **Mô hình C4 (Context - Container - Component):** Phân định ranh giới hệ thống, tầng trừu tượng rõ ràng; tránh vẽ sơ đồ khối tùy tiện.
+        * **Luồng tương tác tuần tự:** Minh họa chi tiết luồng tín hiệu (Request - Response - Callback) với nhãn thời gian và điều kiện rẽ nhánh chính xác.
+        * **Tính tương thích render:** Đảm bảo cú pháp Mermaid chuẩn GFM, không dùng các tính năng thể nghiệm chưa được renderer hỗ trợ.
+    - name: "Semantic Information Visualizations & Flow Clarity"
+      content: |
+        ## Trực Quan Hóa Thông Tin Ngữ Nghĩa & Độ Tường Minh Của Luồng
+        * **Tỷ lệ tín hiệu trên nhiễu (Signal-to-Noise Ratio):** Giảm thiểu tối đa các chi tiết trang trí thừa, tập trung vào cấu trúc dữ liệu và điểm quyết định.
+        * **Định hướng luồng nhất quán:** Luôn duy trì hướng luồng từ trên xuống dưới (TD) hoặc từ trái qua phải (LR), không đảo chiều bất ngờ.
+        * **Nhãn kết nối mang nghĩa:** Mọi đường nối (edge) giữa các khối bắt buộc phải có nhãn động từ hoặc danh từ chỉ rõ quan hệ/dữ liệu truyền tải.
   platform_tooling:
     - name: "Remote Mutation Idempotency & Pre-Push Lease"
       content: |

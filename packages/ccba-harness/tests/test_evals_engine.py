@@ -538,3 +538,46 @@ def test_eval_runner_fault_tolerant_on_scorer_crash():
     report_crit = asyncio.run(runner.run(dataset, mock_task, [crit_crasher]))
     assert report_crit.item_results[0].critical_failed
     assert not report_crit.item_results[0].passed
+
+    # Dynamic is_critical via get_effective_is_critical(item)
+    class DynamicCriticalScorer(BaseScorer):
+        def __init__(self, name: str = "dyn_crit") -> None:
+            super().__init__(name=name, weight=1.0, is_critical=False)
+
+        def get_effective_is_critical(self, item: EvalItem) -> bool:
+            return item.id == "crash_case_1"
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise RuntimeError("Dynamic crash")
+
+    report_dyn = asyncio.run(runner.run(dataset, mock_task, [DynamicCriticalScorer()]))
+    assert report_dyn.item_results[0].critical_failed
+    assert not report_dyn.item_results[0].passed
+
+
+def test_archetype_codebase_design_guardrail():
+    from ccba_harness.evals.archetypes import resolve_domain_archetype
+
+    # Ensure codebase_design and codebase-design map to coding, not visual_design
+    arch1 = resolve_domain_archetype("codebase_design")
+    assert arch1 is not None and arch1.name == "coding"
+
+    arch2 = resolve_domain_archetype("ccba-codebase_design")
+    assert arch2 is not None and arch2.name == "coding"
+
+    arch3 = resolve_domain_archetype("codebase-design")
+    assert arch3 is not None and arch3.name == "coding"
+
+    arch4 = resolve_domain_archetype("ccba-codebase-design")
+    assert arch4 is not None and arch4.name == "coding"
+
+
+def test_mutation_strategies_depth():
+    from ccba_harness.evals.tuner import load_mutation_strategies
+
+    strategies = load_mutation_strategies()
+    # Check orchestration and visual have depth >= 3
+    assert len(strategies["orchestration"]) >= 3
+    assert len(strategies["visual"]) >= 3
+    assert any("Dynamic Subagent Delegation" in s[0] for s in strategies["orchestration"])
+    assert any("Mermaid C4 Architecture" in s[0] for s in strategies["visual"])
