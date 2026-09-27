@@ -541,6 +541,25 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
   - *Simulation Anti-Hijacking*: Trong `simulation.py`, keyword nhận diện BẮT BUỘC gắn Positive Domain Anchors; CẤM keyword mạng generic (`rate limit`, `exponential backoff`) đứng độc lập. Phải có explicit exclusion guards giữa các sub-domains có nguy cơ chồng lấn.
   - *Two-Tier Scorer Architecture*: Đánh giá kỹ năng hệ thống/tooling BẮT BUỘC phân lập: Tier 1 (Tooling Integrity) kiểm tra Git CLI/sync/connectors; Tier 2 (Existential Guardrail Floor) kiểm tra an toàn (`--force-with-lease`, remote state idempotency, `CCBA_HUB_PATH`, verify-patch exit code 0). Thiếu toàn bộ $\rightarrow$ `is_critical_fail=True` buộc REVERT trong Auto-Tuner.
 
+---
+
+## 25. Archived Operational Invariants & Evals Engine Post-Mortem (Di dời từ Active Working Memory sau PR #401 & PR #413)
+
+- **RULE-1.6 [ADR 0044 — Federated RAG & Dynamic Import]:**
+  - Tier 0 import Tier 1: `try: from ccba_legal.xxx import yyy; except ImportError: pass`. Cache BM25; Embedding `.npy` kiểm tra SHA-256.
+- **RULE-1.8 [ADR 0044 & Issue #326 — Multi-Device Spoke & Invariant Merge]:**
+  - *Universal Invariant Regex*: Regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
+  - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa.
+- **RULE-2.12 [LiteLLM Budget Error Resilience & Vector Top-K]:**
+  - *Budget Error Resilience*: Bắt lỗi LiteLLM kiểm tra đồng thời: `("budget" in err.lower() and "exceeded" in err.lower())`.
+  - *Vector L2 Normalization*: Embeddings chuẩn hóa L2 trước khi cache; truy vấn dùng dot-product (`@`) và `np.argpartition` $O(n + k \log k)$ cho corpus lớn.
+- **RULE-4.7 [POSIX Traversal ACLs vs SGID Group Inheritance]:**
+  - Máy chủ Linux đa người dùng: Cấp traversal `g:ccba-devs:--x` trên thư mục cha và gán SGID (`chmod -R g+s`) cho các repos kế thừa nhóm sở hữu.
+- **POST-MORTEM [Evals Engine Refactor & Dual-Dispatch Simulation Architecture (PR #401)]**:
+  - *Monolithic Drift Root Cause*: Hàm `simulation.py` đơn khối ban đầu phát triển từ một vài mock đơn giản lên đến 1.426 dòng trong một hàm lồng nhau duy nhất `mock_agent_task()`. Sự phình to này dẫn tới (1) Trôi dạt kiến trúc khỏi `archetypes.py` (chỉ có một số ít domains được mock cẩn thận, còn lại rơi vào fallback); (2) Lỗi Prompt Hijacking khi câu lệnh kiểm thử chứa các từ khóa mạng chung chung (`rate limit`, `backoff`) khiến bộ mô phỏng trả về mock sai miền; (3) Auto-Tuner bị nghẽn do thiếu mutators cho 9/17 archetypes.
+  - *Dual-Dispatch Solution*: Tách thành package `ccba_harness.evals.simulators/` gồm 17 domain simulators độc lập, protocol `BaseDomainSimulator`, và bộ điều phối 4 tầng (`dispatcher.py`). Ưu tiên hàng đầu (Tier 1) là phân giải Archetype từ `skill_name` qua `resolve_domain_archetype()`, giúp triệt tiêu hoàn toàn nguy cơ Prompt Hijacking trong khi vẫn hỗ trợ Tier 2-3 cho metadata và legacy callers. Bổ sung đầy đủ 17/17 mutators trong `tuner.py`, giải phóng toàn bộ năng lực tiến hóa của Auto-Tuner.
+
+
 
 
 
