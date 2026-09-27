@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.3.0
+  version: 1.4.0
 bundle: _core
 tier: kernel
 triggers:
@@ -136,12 +136,14 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
   ```bash
   python scripts/session_cleanup.py --execute
   ```
+- **Bảo tồn Cấu trúc Nhóm Tác tử Canonical (`.agents/teams/`):**
+  Công cụ dọn dẹp `session_cleanup.py` tuyệt đối bảo tồn thư mục canonical `.agents/teams/` (nơi lưu trữ các team sheets `*_team_sheet.md` theo ADR-0053 và ADR-0060), không coi là ephemeral artifacts.
 - **Phân phối tài liệu thô (nếu có):** Di chuyển các file tài liệu đã xử lý từ `input_documents/` sang `.md/extracted_docs/` hoặc vị trí lưu trữ phù hợp theo quy định của dự án.
 - **Vượt cổng `simplify_gate` an toàn (Commit Bypass Protocol — RULE-2.10):**
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
 - **Commit toàn bộ thay đổi:** Tạo commit với message chuẩn `docs(knowledge): session retrospective ...`.
-- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked), và commit thành công tuân thủ rào chắn `simplify_gate`.
+- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked, tài nguyên canonical `.agents/teams/` được bảo toàn), và commit thành công tuân thủ rào chắn `simplify_gate`.
 
 ### Bước 6: Xuất Báo cáo Tóm tắt (Session Retrospective Summary)
 Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
