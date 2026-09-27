@@ -1,0 +1,345 @@
+# mutation_strategies.yaml - Declarative Prompt Mutation Strategies (RULE-1.13, ADR-0058)
+# Single Source of Truth for Domain Prompt Mutation Enhancements across CCBA Tuner
+
+strategies:
+  academic:
+    - name: "CARS 3-Move Blueprint & Sentence Stems"
+      content: |
+        ## Khung Mẫu CARS 3-Move Chi Tiết & Mẫu Câu Học Thuật (Sentence Stems)
+        * **Move 1 (Establish Territory):** Dùng các mẫu câu: *'Recent advances in... have heightened the need for...', 'A central issue in... is...'*.
+        * **Move 2 (Find a Niche):** Dùng các mẫu câu: *'However, previous studies have largely overlooked...', 'A critical limitation of current methods is...'*.
+        * **Move 3 (Occupy Niche):** Dùng các mẫu câu: *'To address this gap, this paper proposes...', 'The principal contribution of this study is threefold...'*
+    - name: "Yale Academic Style & De-nominalization Invariants"
+      content: |
+        ## Quy Chuẩn Văn Phong Khoa Học & Loại Bỏ Danh Từ Hóa (Yale Style Guide)
+        * **Quy tắc cấm tuyệt đối:** Không sử dụng trạng từ khuếch đại chủ quan (`clearly`, `obviously`, `really`, `very`, `basically`).
+        * **Khử danh từ hóa (De-nominalization):** Bắt buộc chuyển đổi cụm từ rườm rà thành động từ hành động trực tiếp:
+          - `conduct an investigation into` -> `investigate`
+          - `reach a conclusion that` -> `conclude that`
+          - `give an explanation of` -> `explain`
+    - name: "Discussion Zoom-out Framework & Limitation Disclosure"
+      content: |
+        ## Khung Cấu Trúc Thảo Luận Mở Rộng (Discussion Zoom-out) & Thừa Nhận Giới Hạn
+        * Cấu trúc phần Discussion bắt buộc đi qua 3 tầng phân tích:
+          1. **Tầng 1 (Major Findings):** Trả lời trực tiếp câu hỏi nghiên cứu đặt ra ở Mở bài.
+          2. **Tầng 2 (Context & Limitations):** So sánh với các nghiên cứu đối chuẩn và **bắt buộc dành tối thiểu 1 đoạn văn nêu rõ các giới hạn phương pháp luận (Methodological Limitations)**.
+          3. **Tầng 3 (Implications & Future Work):** Đề xuất ứng dụng thực tiễn và định hướng mở rộng.
+    - name: "APA 7th Edition & BibTeX Standards Integration"
+      content: |
+        ## Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành
+        * Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:
+          - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).
+          - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.
+    - name: "Peer-Review Self-Assessment Checklist"
+      content: |
+        ## Bảng Kiểm Tự Phản Biện Học Thuật (Peer-Review Checklist)
+        * Trước khi xuất bản bản thảo, Agent tự đối soát qua 4 tiêu chí phản biện độc lập:
+          - [ ] Mục tiêu nghiên cứu ở Introduction có khớp 100% với kết luận ở Discussion không?
+          - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?
+          - [ ] Các hình ảnh, bảng biểu đã có chú thích và đơn vị đo lường đầy đủ chưa?
+          - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.
+  bim_governance:
+    - name: "Golden Thread & Security Classification Invariants"
+      content: |
+        ## Kiểm Duyệt Sợi Chỉ Vàng & Phân Cấp An Ninh ISO 19650-5
+        * **Sợi Chỉ Vàng (Golden Thread):** Cưỡng chế quản trị dữ liệu tài sản tầm nhìn 75 năm (PM_80), chống đứt gãy thông tin qua các thế hệ chuyển giao.
+        * **Phân cấp an ninh ST2:** Toàn bộ thông tin tài sản phải được phân loại và gắn thẻ an ninh đạt cấp độ ST2 theo ISO 19650-5.
+        * **Đoạn Đò-3 & LMS Lock-in:** Đảm bảo dữ liệu bàn giao tích hợp đầy đủ ICT protocol tương thích LMS, triệt tiêu rủi ro LMS vendor lock-in.
+    - name: "Red Thread Risk Matrix & Operational Verification"
+      content: |
+        ## Rào Chắn Sợi Chỉ Đỏ & Ma Trận Rủi Ro Thông Tin Chuẩn Hóa
+        * **Bộ 4 mã rủi ro thông tin:** Tuyệt đối không dùng mô tả tự do, bắt buộc nhận diện chính xác:
+          - `RK_50_40_35` (No-Risk): Bàn giao C2 thiếu người nhận hoặc không khớp sơ đồ tổ chức.
+          - `RK_10_70_04` (Time-Risk): Nghiệm thu C1 thiếu đội ngũ FM hoặc quy trình tự vận hành.
+          - `RK_50_40_45` (Do-Risk): Không tuân thủ cấu trúc IFC hoặc thiếu ICT protocol đồng bộ.
+          - `RK_50_60_28` (Use-Risk): Thiếu AIM hoàn thiện dẫn đến đứt gãy Trí Nhớ Số (En_25_70_47).
+    - name: "Unique ID Invariance & 3-Way Traceability Guardrails"
+      content: |
+        ## Cưỡng Chế Unique ID Bất Biến & Đối Soát 3 Chiều
+        * **Khóa Unique ID từ BBP-A0:** Cấp và khóa mã Unique ID bất biến ngay từ pha BBP-A0, nghiêm cấm đổi tên ở các pha sau.
+        * **Đối soát 3 chiều (3-Way Traceability):** Kiểm tra đối soát bắt buộc: Bản vẽ thiết kế == Hệ thống AIM == Biển hiệu thực tế tại công trình.
+        * **Chống trôi dạt định danh:** Bắt buộc gắn cờ không đạt khi phát hiện bất kỳ sai lệch ký tự nào giữa 3 phương tiện đối soát.
+  bim_rase:
+    - name: "RASE Decomposition & 4-Tier Logic Matrix"
+      content: |
+        ## Phân Rã Ma Trận RASE & Cấu Trúc 4 Tầng Logic
+        * **R - Requirement:** Xác định chỉ số kỹ thuật hoặc ngưỡng tới hạn bắt buộc phải đạt được.
+        * **A - Applicability:** Xác định thực thể IFC cụ thể chịu sự điều chỉnh (ví dụ: `IfcSpace`, `IfcWall`).
+        * **S - Selection:** Khai báo chính xác thuộc tính IFC4X3 lưu trữ thông số thông qua `IfcRelDefinesByProperties`.
+        * **E - Exception:** Xác định điều kiện loại trừ không cần áp dụng quy tắc kiểm soát.
+    - name: "IFC4X3 Property Mapping & Indirect Relationship Invariants"
+      content: |
+        ## Quy Chuẩn Gán Thuộc Tính IFC4X3 & Quan Hệ Gián Tiếp Bắt Buộc
+        * **Cấm gán trực tiếp:** Tuyệt đối không gán thuộc tính trực tiếp vào `IfcObject`.
+        * **Quan hệ trung gian:** Mọi thuộc tính phải được đóng gói trong `IfcPropertySet` (Pset_) và liên kết qua `IfcRelDefinesByProperties`.
+        * **Đồng bộ ISO 16739-1:** Đảm bảo kiểu dữ liệu thuộc tính khớp chính xác với định nghĩa schema IFC4X3.
+    - name: "Quantity Take-Off (Qto) Integration & BaseQuantities Mapping"
+      content: |
+        ## Tích Hợp Dữ Liệu Khối Lượng Qto & BaseQuantities
+        * **Khối lượng không gian:** Sử dụng `Qto_SpaceBaseQuantities` (GrossVolume, NetFloorArea) cho các chỉ số thông gió và tải trọng.
+        * **Khối lượng cấu kiện:** Sử dụng `Qto_WallBaseQuantities`, `Qto_SlabBaseQuantities` cho các chỉ tiêu truyền nhiệt và kết cấu.
+        * **Bảo toàn Trí Nhớ Số:** Kết nối ma trận RASE với Unique ID để duy trì tính truy nguyên xuyên suốt vòng đời công trình.
+  bim:
+    - name: "BIM Classification Rules & ISO Alignment"
+      content: |
+        ## Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng
+        * **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).
+        * **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.
+        * **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.
+        * **Bảo tồn Trí Nhớ Số (Digital Memory):** Đảm bảo tính nhất quán định danh Container và cấu trúc dữ liệu cho mọi BIM Object.
+    - name: "Digital Memory & Spatial Structure Invariants"
+      content: |
+        ## Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)
+        * **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.
+        * **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.
+    - name: "BIM WBS & IFC Entity Mapping"
+      content: |
+        ## Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3
+        * **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.
+        * **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.
+    - name: "Red-Team Disambiguation & Slang Normalization Invariants"
+      content: |
+        ## Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt
+        * **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.
+        * **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`, `mc D800` -> Móng cọc (`EF_20_10`).
+        * **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.
+        * **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).
+        * **Bẫy Tường Vây vs Vách Ngăn:** Phân định kết cấu ngầm `EF_20_05` (Tường vây Barrette) tách biệt với vách thạch cao `EF_25_10`.
+        * **Bẫy Thang Máy Đa Góc Nhìn:** Phân định Mô hình kiến trúc `EF_25_50` vs Hệ thống cơ điện `Ss_70_50_10`.
+        * **Bẫy Sơn Chống Cháy & Trạm Kiosk:** Phân định vật tư `Pr_60_60_15` vs Property Set kết cấu, Thực thể quy hoạch `En_50_10` vs Hệ thống `Ss_70_10_10`.
+        * **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
+  coding:
+    - name: "Operational Invariants & Hard Completion Lock"
+      content: |
+        ## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất
+        * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
+        * **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:
+          ```bash
+          python -m ccba_harness verify-patch
+          ```
+        * **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.
+    - name: "Double-Pass Review Discipline & Verification Invariants"
+      content: |
+        ## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)
+        * **Vòng 1 (Code-First Research):** Luôn đọc implementation thực tế và kiểm tra data flow end-to-end trước khi sửa đổi. Không suy đoán hành vi từ tên hàm hay docstring.
+        * **Vòng 2 (Self-Adversarial Review):** Tự đặt câu hỏi: *Đề xuất này có thể SAI ở đâu?* Kiểm chứng tối thiểu 3 giả định cốt lõi bằng dữ liệu và kiểm thử thực tế trước khi bàn giao.
+        * **Bảo tồn Invariants:** Không bao giờ xóa hoặc nới lỏng (weaken) các bài test hiện có để làm cho bài test vượt qua.
+    - name: "KISS, Idempotency & Explicit Error Handling Guardrails"
+      content: |
+        ## Chuẩn Mực Thiết Kế Mã Nguồn: KISS, Idempotency & Error Handling
+        * **KISS (Keep It Simple, Stupid):** Ưu tiên giải pháp đơn giản nhất; không tạo abstraction/seam giả định khi chưa có ít nhất 2 adapter thực tế.
+        * **Idempotency:** Mọi script thao tác tệp, database hay git worktree phải đảm bảo tính lũy kế an toàn (chạy nhiều lần cho ra cùng một kết quả vững chắc).
+        * **Explicit Error Handling:** Xử lý ngoại lệ cụ thể (Specific Exceptions); nghiêm cấm sử dụng bare `except:` hoặc nuốt lỗi âm thầm.
+        * **Type Hints & Docstrings:** Mọi hàm/phương thức public bắt buộc có type annotations đầy đủ và docstrings chuẩn mực.
+  orchestration:
+    - name: "Deterministic Routing & Boundary Invariants"
+      content: |
+        ## Bất Biến Ranh Giới Điều Phối, Single-Writer & Handoff Protocol
+        * **Single-Writer & Isolated Sandbox:** Duy nhất Lead Orchestrator ghi nhận dữ liệu chính thức; subagents chỉ xuất kết quả trung gian vào sandbox `.agents/<agent_name>/scratch/`.
+        * **Handoff Protocol & Autonomous Notification:** Chuyển giao ngữ cảnh qua `send_message` gửi parent agent kèm báo cáo bàn giao (handoff report) và kết luận hoàn tất (`verdict`).
+        * **Bộc Lộ Dần (Progressive Disclosure):** Tổ chức tài liệu và chỉ dẫn theo [Hiến pháp AGENTS.md](../../AGENTS.md) tuân thủ mô hình bộc lộ dần theo cấp độ.
+        * **Hard Completion Lock:** Bắt buộc vượt qua xác minh tất định `python -m ccba_harness verify-patch` trước khi hoàn tất.
+    - name: "Dynamic Subagent Delegation & Structured Patch Synthesis"
+      content: |
+        ## Điều Phối Subagent Linh Hoạt & Tổng Hợp Bản Vá Có Cấu Trúc
+        * **Phân rã tác vụ (Task Decomposition):** Chia nhỏ luồng công việc phức tạp thành các đơn vị tác vụ độc lập, giao phó cho subagent chuyên biệt với phạm vi truy cập tối thiểu.
+        * **Tổng hợp bản vá (Structured Patch Synthesis):** Subagent chỉ đề xuất thay đổi dưới dạng diff hoặc structured patch, Lead Orchestrator thẩm định và áp dụng tập trung.
+        * **Bảo vệ ngữ cảnh cha (Context Conservation):** Giữ cho context của agent điều phối luôn tinh gọn bằng cách ủy nhiệm các tìm kiếm/đọc tệp nặng cho subagent nghiên cứu.
+    - name: "Single-Writer StateGraph & Multi-Agent Scratchpad"
+      content: |
+        ## Trạng Thái Đơn Bút (Single-Writer) & Giao Thức Nháp Đa Tác Nhân
+        * **Nhật ký nối tiếp (Append-Only Event Ledger):** Truy vết toàn bộ tiến trình trao đổi giữa các agent thông qua nhật ký tuần tự, tránh tranh chấp dữ liệu đồng thời.
+        * **Multi-Agent Scratchpad:** Sử dụng bộ nhớ nháp riêng biệt cho từng subagent trước khi tích hợp kết quả vào không gian làm việc chính thức.
+        * **Fail-Fast & Timeout Recovery:** Tự động kích hoạt cơ chế ngắt mạch và hủy bỏ tác vụ khi một subagent bị treo hoặc vượt ngưỡng thời gian chờ cho phép.
+  tech_qc:
+    - name: "QCVN 06:2022/BXD & Map 1 Invariants"
+      content: |
+        ## Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
+        * **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
+        * **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
+        * **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.
+    - name: "Fire Compartment & Structural Protection Hard Floor"
+      content: |
+        ## Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD
+        * **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.
+        * **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.
+    - name: "PCCC Evacuation & Dead-End Corridor Limits"
+      content: |
+        ## Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD
+        * **Khoảng cách thoát nạn:** Khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động).
+        * **Cơ quan thẩm tra:** Phân định rõ thẩm quyền: Công an PC07 thẩm duyệt hệ thống PCCC MEP; Cơ quan chuyên môn về xây dựng thẩm tra kiến trúc và thoát nạn.
+  legal:
+    - name: "XML Envelopes & Strict Output Schema"
+      content: |
+        ## Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
+        * Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
+          - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
+          - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
+          - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
+        * Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.
+    - name: "Hard-Floor Legal Guardrails (Cấm Viện Dẫn Văn Bản Hết Hiệu Lực)"
+      content: |
+        ## Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+        * **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
+          - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.
+          - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.
+          - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+        * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
+    - name: "AST Mapping & Flat Index Synchronization"
+      content: |
+        ## Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)
+        * Khi bóc tách văn bản quy phạm pháp luật, Agent phải đối soát với danh mục `clauses.json`:
+          - Cấu trúc cây: Chương -> Mục -> Điều -> Khoản -> Điểm.
+          - Đặt ID điều khoản chuẩn hóa (ví dụ: `dieu-1`, `dieu-2`) hỗ trợ liên kết chéo hai chiều (Cross-References).
+          - Bảo tồn 100% các bảng số liệu và phụ lục đính kèm theo định dạng Markdown bảng chuẩn.
+    - name: "Grounded Authority & Issuing Body Verification"
+      content: |
+        ## Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý
+        * Mọi kết quả trích dẫn pháp luật phải nêu rõ:
+          1. Cơ quan ban hành (Chính phủ, Bộ Xây dựng, Bộ Công an, Quốc hội).
+          2. Số/Ký hiệu văn bản, ngày ban hành và ngày có hiệu lực thi hành.
+          3. Mối quan hệ pháp lý (Văn bản hướng dẫn, Sửa đổi bổ sung, hoặc Thay thế) qua 11 nhóm quan hệ TVPL.
+    - name: "Evaluator-Optimizer Self-Correction Loop"
+      content: |
+        ## Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)
+        * Trước khi hoàn tất câu trả lời, Agent tự kích hoạt checklist 3 bước:
+          - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.
+          - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.
+          - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.
+  grilling:
+    - name: "Socrates One-by-One Frontier Interview Invariant"
+      content: |
+        ## Quy Trình Phỏng Vấn Dồn Dập Socrates (Frontier Interview Invariant)
+        * **Quy tắc một câu hỏi duy nhất:** Chỉ đặt đúng một câu hỏi (one-by-one) ở Frontier, kèm phương án đề xuất (recommended answer) trước.
+        * **Tự tra cứu dữ kiện codebase:** Tự đọc facts vs decisions từ tệp tin cục bộ, tuyệt đối không hỏi người dùng thông tin có thể tự đọc được.
+        * **Đối chiếu quy chuẩn AGENTS.md:** Chỉ ra ngay vi phạm bất biến cốt lõi (ADR-0058 Hard Completion Lock) nếu phát hiện lệch pha.
+    - name: "Visual Prototype Multi-Variant Single HTML"
+      content: |
+        ## Tạo Bản Mẫu Trực Quan Đa Biến Thể (Visual Prototype)
+        * **Single HTML file:** Tạo từ 3-5 variants trong duy nhất 1 file HTML kèm floating variant picker để người dùng so sánh.
+        * **Decision Log:** Ghi nhận nhật ký quyết định thiết kế vào NOTES.md và triệu hồi /ccba-issue-tree khi cần phân tích đa chiều.
+  adr:
+    - name: "ADR Scaffolding & Frontmatter Governance"
+      content: |
+        ## Khung Khởi Tạo Quyết Định Kiến Trúc (ADR Scaffolding)
+        * **YAML Frontmatter bắt buộc:** Mọi tệp ADR trong docs/adr/00XX-<slug>.md phải có id (HUB-ADR-00XX hoặc SPOKE-ADR-00XX), status (ACCEPTED), pillar.
+        * **Cấu trúc 4 phần chuẩn mực:** Context & Problem Statement, Decision Drivers, Considered Options, Invariants & Consequences.
+    - name: "Status Cascading & Living Traceability Matrix Sync"
+      content: |
+        ## Đồng Bộ Ma Trận Truy Vết & Thác Trạng Thái (Status Cascading)
+        * **Cascading status:** Tự động chuyển status SUPERSEDED cho ADR tiền nhiệm và liên kết hai chiều superseded_by / supersedes.
+        * **Living Traceability Matrix:** Cập nhật bảng chỉ mục TRACEABILITY_MATRIX.md và bảo đảm CI Parity Gate qua validate_adr_traceability.py.
+  risk:
+    - name: "Level 2 Space Gap & Maintenance Clearance Invariants"
+      content: |
+        ## Quy Chuẩn Mâu Thuẫn Thông Tin & Khoảng Trống Bảo Trì (Level 2 Space Gap)
+        * **Phân cấp xung đột:** Tách biệt va chạm vật lý Level 1 với khoảng trống vô hình Level 2 (Clearance >= 900mm cho thiết bị lớn, >= 150mm cho đai ốc).
+        * **Kiểm soát thuộc tính BBP:** Giữ nguyên vẹn Unique ID từ BBP-A0, ngăn chặn trôi dạt định danh và đối soát công suất BBP-B1 vs BBP-B2.
+    - name: "INF-CON JSON Schema & Issue-Tree Escalation"
+      content: |
+        ## Cấu Trúc Báo Cáo Xung Đột INF-CON & Phân Rã Đa Chiều
+        * **Định dạng INF-CON:** Xuất báo cáo xung đột qua schema chuẩn với conflict_id, conflict_type, entities_involved và proposed_mitigation.
+        * **Leo thang phân rã:** Kích hoạt /ccba-issue-tree (Why-Tree và How-Tree) xếp hạng phương án điều phối dưới quyền Chủ trì Bộ môn.
+  skill_repair:
+    - name: "YAML Frontmatter Two-Space Standardization"
+      content: |
+        ## Chuẩn Hóa Cú Pháp YAML Frontmatter & Cổng 0 / Cổng 1 (ADR-0057)
+        * **Ngăn cách Frontmatter:** Đóng mở bằng cặp thẻ ---, thụt đầu dòng đúng 2 spaces, không dùng tab, xử lý triệt để yaml_parse_error.
+        * **Khung quyết định hai giai đoạn:** Vượt qua Cổng 0 (Determinism) và Cổng 1 (Orchestration), tính toán chỉ số GPI >= 12.0 cho Tier 2B Standalone Skill.
+    - name: "Completion Criteria & Script Bloat Remediation"
+      content: |
+        ## Tiêu Chí Hoàn Thành Tường Minh & Khắc Phục Script Bloat
+        * **Tiêu chí hoàn thành (Completion Criteria):** Mọi bước hành động phải có tiêu chí kiểm chứng đầu ra cụ thể.
+        * **Khử phình mã nguồn:** Script tiện ích trong kỹ năng phải < 100 LOC; nếu dài hơn phải chuyển thành Seam trong packages/.
+        * **Kiểm định CLI:** Vượt qua validate_skills.py --enforce-gpi và compile_catalog.py trước khi nghiệm thu.
+  legal_tooling:
+    - name: "TVPL VIP Crawler Resilience & Backoff Jitter"
+      content: |
+        ## Phòng Vệ Thu Thập Văn Bản & Quản Lý Phiên VIP (TVPL Crawler)
+        * **Quản lý phiên xác thực:** Lưu trữ cookie phiên VIP qua biến môi trường an toàn, tự động refresh khi hết hạn.
+        * **Phát hiện Captcha & Exponential Backoff:** Tự động bắt mã HTTP 429/503 và kích hoạt backoff kèm jitter; cảnh báo khi gặp Captcha.
+        * **Audit Logging:** Che giấu token và session ID trong log qua Maskara Redactor, đóng dấu băm SHA-256 gói dữ liệu.
+    - name: "OKF v2.4 Verbatim Grounding & SHA-256 Provenance"
+      content: |
+        ## Chuẩn Hóa Tri Thức Pháp Lý OKF v2.4 & Tem Băm SHA-256 (ADR-0059)
+        * **Trích dẫn nguyên văn (Legal Verbatim Grounding):** Trích xuất nguyên văn verbatim 100% từ công báo chính thống, cấm sáng tác điều khoản giả định.
+        * **Tem băm mật mã SHA-256:** Bắt buộc ghi nhận mã băm provenance stamping cho từng tệp nguồn trong kho lưu trữ OKF v2.4.
+    - name: "VBHN Diff Engine & HSHT Hierarchy Control"
+      content: |
+        ## Bóc Tách Khác Biệt Văn Bản Hợp Nhất & Cây Thư Mục HSHT NĐ 06/2021
+        * **VBHN AST Diffing:** Phân loại chính xác 4 hành vi lập pháp (INSERT, REPLACE, REPEAL, APPEND) và hợp nhất vào thân văn bản.
+        * **Cây thư mục HSHT:** Chuẩn hóa cấu trúc thư mục hồ sơ hoàn thành 3 giai đoạn (Chuẩn bị, Thi công, Bàn giao) theo NĐ 06/2021/NĐ-CP.
+  office:
+    - name: "Decree 30/2020 Administrative Dispatch Format"
+      content: |
+        ## Thể Thức SoẠn Thảo Công Văn Hành Chính (Nghị định 30/2020/NĐ-CP)
+        * **Bố cục chuẩn mực:** Đầy đủ Quốc hiệu, Tiêu ngữ, Tên cơ quan ban hành, Số/ký hiệu, Trích yếu, Nơi nhận và Thẩm quyền ký.
+        * **Quy chuẩn Typography:** Phông chữ Times New Roman Unicode, cỡ chữ 13-14, canh lề trái 30mm, phải 15mm, trên/dưới 20mm.
+    - name: "GFM Table Typography & Line Break Standardization"
+      content: |
+        ## Chuẩn Hóa Bảng Biểu Kỹ Thuật Markdown GFM
+        * **Căn lề cột:** Cột STT/mã căn giữa (:---:), cột nội dung căn trái (:---), cột số lượng căn phải (---:).
+        * **Ngắt dòng an toàn:** Sử dụng thẻ `<br/>` thay vì ngắt dòng Enter để bảo vệ toàn vẹn cấu trúc bảng GitHub Flavored Markdown.
+    - name: "Presentation Outline & Seminar Agenda Architecture"
+      content: |
+        ## Bố Cục Thuyết Trình PPTX & Khung Chương Trình Seminar
+        * **Dàn ý slide PPTX:** Thiết lập Slide Title, Header H1/H2, Visual Bullet Points súc tích và Callout Layout nổi bật.
+        * **Đề cương Seminar:** Xây dựng mục tiêu đào tạo, timeline agenda chi tiết và checklist tài liệu phát tay (Handouts).
+  visual_design:
+    - name: "Design Tokens & Semantic Color Palette"
+      content: |
+        ## Hệ Thống Thẻ Thiết Kế (Design Tokens) & Bảng Màu Nhận Diện
+        * **Bảng màu chuẩn hóa:** Primary (#1E3A8A - Navy Blue), Secondary (#0D9488 - Teal), Neutral (#F8FAFC), Semantic Palette (#10B981 Success, #EF4444 Error).
+        * **Phân cấp Typography:** Tỷ lệ Perfect Fourth (1.333), H1 (32px Bold), H2 (24px SemiBold), H3 (20px Medium), Body (16px Regular).
+    - name: "Logo Safe Zone & Corporate Identity Program (CIP)"
+      content: |
+        ## Vùng An Toàn Logo & Bộ Nhận Diện Thương Hiệu CIP
+        * **Safe Zone / Clear Space:** Thiết lập khoảng cách an toàn x quanh logo tối thiểu bằng chiều cao chữ 'C' của logo.
+        * **Đồng bộ ấn phẩm CIP:** Quy chuẩn Namecard (90x54mm), Letterhead A4, Phong bì thư và Folder tài liệu đồng bộ nhận diện.
+  visual:
+    - name: "Academic Grayscale Diagram Styling"
+      content: |
+        ## Phong Cách Sơ Đồ Trực Quan Grayscale Học Thuật (Mermaid / Excalidraw)
+        * **Chuẩn màu Grayscale:** Sử dụng phong cách grayscale tương phản cao, dễ đọc khi in ấn và hiển thị dark/light mode.
+        * **Quy chuẩn cú pháp sơ đồ:** Kiểm soát đóng mở node, ký hiệu điều kiện và bảo tồn toàn vẹn liên kết Markdown AST Link Integrity.
+    - name: "Mermaid C4 Architecture & Sequence Protocol"
+      content: |
+        ## Sơ Đồ Kiến Trúc C4 & Giao Thức Tuần Tự (Sequence Diagrams)
+        * **Mô hình C4 (Context - Container - Component):** Phân định ranh giới hệ thống, tầng trừu tượng rõ ràng; tránh vẽ sơ đồ khối tùy tiện.
+        * **Luồng tương tác tuần tự:** Minh họa chi tiết luồng tín hiệu (Request - Response - Callback) với nhãn thời gian và điều kiện rẽ nhánh chính xác.
+        * **Tính tương thích render:** Đảm bảo cú pháp Mermaid chuẩn GFM, không dùng các tính năng thể nghiệm chưa được renderer hỗ trợ.
+    - name: "Semantic Information Visualizations & Flow Clarity"
+      content: |
+        ## Trực Quan Hóa Thông Tin Ngữ Nghĩa & Độ Tường Minh Của Luồng
+        * **Tỷ lệ tín hiệu trên nhiễu (Signal-to-Noise Ratio):** Giảm thiểu tối đa các chi tiết trang trí thừa, tập trung vào cấu trúc dữ liệu và điểm quyết định.
+        * **Định hướng luồng nhất quán:** Luôn duy trì hướng luồng từ trên xuống dưới (TD) hoặc từ trái qua phải (LR), không đảo chiều bất ngờ.
+        * **Nhãn kết nối mang nghĩa:** Mọi đường nối (edge) giữa các khối bắt buộc phải có nhãn động từ hoặc danh từ chỉ rõ quan hệ/dữ liệu truyền tải.
+  platform_tooling:
+    - name: "Remote Mutation Idempotency & Pre-Push Lease"
+      content: |
+        ## Rào Chắn Đẩy Nhánh An Toàn & Quản Lý Pull Request (Platform Tooling)
+        * **Idempotency Gate:** Luôn kiểm tra remote (gh pr list / git ls-remote) trước khi tạo PR, ngăn ngừa sinh tài nguyên trùng lặp.
+        * **Pre-Push Lease:** CẤM bare git push --force; BẮT BUỘC sử dụng git push -u origin <branch> --force-with-lease.
+        * **Hard Completion Lock:** Vượt qua verify-patch với exit code 0 trước khi mở PR hoặc yêu cầu nghiệm thu.
+    - name: "Machine-State Decoupling & Cleanliness Scanner"
+      content: |
+        ## Vệ Sinh Kho Mã Nguồn & Cách Ly Trạng Thái Máy (CCBA_HUB_PATH)
+        * **Cách ly đường dẫn máy:** CẤM commit đường dẫn tuyệt đối; cấu hình Hub path qua biến môi trường CCBA_HUB_PATH.
+        * **Che giấu thông tin nhạy cảm:** Tự động kích hoạt Maskara Redactor quét và ẩn sạch sẽ tokens, API keys trước khi commit.
+    - name: "Circuit Breaker Resilience & Multimodal Connectors"
+      content: |
+        ## Phòng Vệ Hạn Mức API & Kết Nối Đa Phương Thức
+        * **Circuit Breaker 3 trạng thái:** Kiểm soát hạn mức gọi AI Gateway (:8090), kích hoạt 30s Soft Cooldown khi gặp lỗi 429/timeout.
+        * **Reactive Wakeup:** Dựa vào thông báo tự động từ hệ thống thay vì polling vòng lặp kín status.
+  general:
+    - name: "Lean Structural Architecture & Progressive Disclosure"
+      content: |
+        ## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
+        * **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
+        * **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.
+        * **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+    - name: "Operational Clarity & Verification Standard"
+      content: |
+        ## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng
+        * **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.
+        * **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.
