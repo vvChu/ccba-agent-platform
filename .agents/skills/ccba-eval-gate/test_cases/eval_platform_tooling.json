@@ -38,12 +38,12 @@
   {
     "id": "test_platform_tooling_multimodal_and_connector_ingestion",
     "domain": "platform_tooling",
-    "input_prompt": "Trình bày quy trình vận hành bộ kết nối đa phương thức (Multimodal Connectors) như YouTube Learn và Google NotebookLM Connector. Làm rõ cách thức quản lý phiên (session auth), xử lý nghẽn mạng rate limit, và trích xuất tri thức thành tài liệu Markdown chuẩn mực.",
+    "input_prompt": "Trình bày quy trình vận hành bộ kết nối đa phương thức (Multimodal Connectors) và bộ tiện ích phòng vệ API (Circuit Breaker, Rate Limiter). Làm rõ cách thức quản lý phiên (session auth), xử lý nghẽn mạng rate limit (Exponential Backoff, Soft Cooldown), và trích xuất tri thức thành tài liệu Markdown chuẩn mực.",
     "golden_answer": {
-      "topic": "Multimodal Connectors & Knowledge Ingestion",
-      "connector_suite": "ccba-youtube-learn trích xuất phụ đề/audio transcripts; ccba-notebooklm-connector tương tác NotebookLM API",
+      "topic": "Multimodal Connectors & API Resilience Utilities",
+      "connector_suite": "ccba-youtube-learn trích xuất phụ đề/audio transcripts; ccba-notebooklm-connector tương tác NotebookLM API; ccba-api-circuit-breaker bảo vệ AI Gateway",
       "session_and_auth": "Quản lý cookie/auth token an toàn, lưu trữ tại thư mục cache chuyên dụng có kiểm soát",
-      "backoff_and_retry": "Cơ chế Exponential Backoff & Jitter khi gặp HTTP 429 hoặc timeout; tránh vòng lặp polling vô hạn",
+      "backoff_and_retry": "Cơ chế Exponential Backoff & Jitter khi gặp HTTP 429 hoặc timeout; Soft Cooldown tự động giáng cấp mô hình; tránh vòng lặp polling vô hạn",
       "knowledge_synthesis": "Tổng hợp tri thức thành định dạng GFM Markdown lưu vào kho .md/extracted_docs"
     }
   },

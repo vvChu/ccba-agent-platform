@@ -2126,6 +2126,7 @@ def test_archetype_ssot_resolution():
         ("bigbim-classification", "eval_bigbim_classification.json"),
         ("ccba-ai-gateway-sdk", "eval_codebase_engineering.json"),
         ("ccba-create-pr", "eval_platform_tooling.json"),
+        ("ccba-api-circuit-breaker", "eval_platform_tooling.json"),
         ("ccba-skill-repair", "eval_skill_repair.json"),
         ("platform-loader", "eval_agent_orchestration.json"),
     ]
