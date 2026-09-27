@@ -116,8 +116,8 @@ def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
         soffice_cmd = "soffice"
         if platform.system() == "Windows":
             win_paths = [
-                r"C:\Program Files\LibreOffice\program\soffice.exe",
-                r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+                r"C:\Program Files\LibreOffice\program\soffice.exe",  # ccba:allow-machine-path
+                r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",  # ccba:allow-machine-path
             ]
             for p in win_paths:
                 if os.path.exists(p):
