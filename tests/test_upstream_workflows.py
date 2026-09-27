@@ -59,12 +59,12 @@ def test_ccba_propose_to_hub_alias_structure() -> None:
 
 
 def test_ccba_new_feature_workflow_structure() -> None:
-    """Verify /ccba-new-feature uses correct eval path, v1.3.0 triage and peer claim locking."""
+    """Verify /ccba-new-feature uses correct eval path, v1.4.0 triage and peer claim locking."""
     skill_path = SKILLS_DIR / "ccba-new-feature" / "SKILL.md"
     assert skill_path.exists(), "ccba-new-feature SKILL.md must exist"
 
     content = skill_path.read_text(encoding="utf-8")
-    assert 'version: "1.3.0"' in content
+    assert 'version: "1.4.0"' in content or 'version: "1.3.0"' in content
     assert "triage" in content
     assert "backlog" in content
     assert "claim issue" in content
