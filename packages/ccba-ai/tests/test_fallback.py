@@ -378,18 +378,30 @@ def test_is_tier_failover_exception_status_codes():
     req = httpx.Request("POST", "http://localhost:8090/v1/chat/completions")
 
     # 1. HTTP 429 Rate Limit
-    resp_429 = httpx.Response(429, request=req, text='{"error": {"message": "Rate limit exceeded", "type": "rate_limit"}}')
+    resp_429 = httpx.Response(
+        429, request=req, text='{"error": {"message": "Rate limit exceeded", "type": "rate_limit"}}'
+    )
     exc_429 = openai.APIStatusError(message="rate_limit", response=resp_429, body={})
     assert router.is_tier_failover_exception(exc_429) is True
 
     # 2. HTTP 400 budget_exceeded
-    resp_400_budget = httpx.Response(400, request=req, text='{"error": {"message": "Budget has been exceeded!", "type": "budget_exceeded"}}')
-    exc_400_budget = openai.APIStatusError(message="budget_exceeded", response=resp_400_budget, body={})
+    resp_400_budget = httpx.Response(
+        400,
+        request=req,
+        text='{"error": {"message": "Budget has been exceeded!", "type": "budget_exceeded"}}',
+    )
+    exc_400_budget = openai.APIStatusError(
+        message="budget_exceeded", response=resp_400_budget, body={}
+    )
     assert router.is_tier_failover_exception(exc_400_budget) is True
 
     # 3. HTTP 400 normal bad request (should NOT trigger failover)
-    resp_400_other = httpx.Response(400, request=req, text='{"error": {"message": "Invalid model parameter"}}')
-    exc_400_other = openai.APIStatusError(message="invalid_request_error", response=resp_400_other, body={})
+    resp_400_other = httpx.Response(
+        400, request=req, text='{"error": {"message": "Invalid model parameter"}}'
+    )
+    exc_400_other = openai.APIStatusError(
+        message="invalid_request_error", response=resp_400_other, body={}
+    )
     assert router.is_tier_failover_exception(exc_400_other) is False
 
     # 4. HTTP 5xx Server Errors

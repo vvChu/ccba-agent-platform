@@ -103,7 +103,7 @@ SELECT pg_size_pretty(pg_database_size('litellm'));--> 925 MB      [đo thực t
 ```
 
 #### Nguyên nhân Gốc rễ từ Cấu hình `litellm_config.yaml`
-Tại tệp [`services/ai-gateway/litellm_config.yaml`](file:///home/vvc/Codebase/dgx-spark-toolkit/services/ai-gateway/litellm_config.yaml#L1751-L1773):
+Tại tệp `services/ai-gateway/litellm_config.yaml` (dòng 1751-1773):
 - Dòng 1751-1752: `success_callback: ["prometheus", "postgresql"]` và `failure_callback: ["prometheus", "postgresql"]`.
 - Dòng 1772: `store_model_in_db: true`.
 - Cột `messages`, `response`, và `proxy_server_request` trong `LiteLLM_SpendLogs` được định nghĩa kiểu `jsonb`. Khi proxy xử lý các prompt lớn (đặc biệt từ RAG hoặc OCR lên tới hàng chục nghìn tokens), toàn bộ payload được nhân bản vào PostgreSQL.
@@ -232,7 +232,7 @@ Kiểm tra trực tiếp các endpoints của FastAPI RAG Service:
 - **Tổng Swap NVMe**: 31 GiB; Đang dùng: **10.4 GiB**; Trống: **21 GiB** `[đo thực tế]`. Thiết lập `vm.swappiness = 10` đang phát huy hiệu quả bảo vệ hệ thống khỏi tràn bộ nhớ.
 
 #### Cấu hình Speaches Whisper (CPU vs GPU Switch)
-Tại [`docker-compose.yml`](file:///home/vvc/Codebase/dgx-spark-toolkit/docker-compose.yml#L608-L648):
+Tại `docker-compose.yml` (dòng 608-648):
 - Hiện trạng: Chạy **Mode B (GPU Native)**:
   ```yaml
   whisper-local:
@@ -260,7 +260,7 @@ Tại [`docker-compose.yml`](file:///home/vvc/Codebase/dgx-spark-toolkit/docker-
 ### 3.4. Primary Source 4: Tích Hợp Microsoft 365 (IDOP-CCBA-WAY)
 
 #### Khảo sát 59 SharePoint Lists Schema
-Tại thư mục [`/home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/`](file:///home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/), hệ sinh thái dữ liệu được chuẩn hóa thành 59 tệp JSON qua 6 phân vùng:
+Tại thư mục `datamodel/sharepoint/lists/` trong hệ thống `IDOP-CCBA-WAY`, hệ sinh thái dữ liệu được chuẩn hóa thành 59 tệp JSON qua 6 phân vùng:
 1. `process_execution` (13 lists): `cde_documents`, `contracts`, `contract_scopes`, `projects`, `work_packages`, `job_assignments`, `scope_department_allocations`...
 2. `strategy_crm` (9 lists): `opportunities`, `customers`, `contacts`, `leads`, `potential_projects`, `service_catalog`...
 3. `cash_data` (11 lists): `expenses`, `financial_plans`, `input_invoices`, `outgoing_invoices`, `shared_cost_allocations`, `vendors`...
@@ -269,31 +269,31 @@ Tại thư mục [`/home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/`](fi
 6. `system_governance` (9 lists): `system_settings`, `integration_points`, `submissions`, `approval_workflows`...
 
 #### Cấu trúc Chi Tiết Các Danh Sách Trọng Yếu
-- **`CDEDocuments` ([cde_documents.json](file:///home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/process_execution/cde_documents.json))**:
+- **`CDEDocuments`** (`cde_documents.json`):
   - `Title`: Tiêu đề tài liệu
   - `Project`: Lookup -> `Projects.ID`
   - `ProjectCode`: Mã dự án (hỗ trợ phân quyền cấp dòng RLS)
   - `Originator`, `ZoneVolume`, `LevelLocation`, `DocumentCode`: Siêu dữ liệu theo tiêu chuẩn ISO 19650
   - `IsoDocumentName`: Định danh tệp container ISO 19650
   - `DocumentType`: Managed Metadata liên kết `CCBA Taxonomy`.
-- **`Opportunities` ([opportunities.json](file:///home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/strategy_crm/opportunities.json))**:
+- **`Opportunities`** (`opportunities.json`):
   - `OpportunityName`: Tên cơ hội
   - `Customer`: Lookup -> `Customers.ID`
   - `Stage`: Choice (`New`, `Qualification Review`, `Proposal/HSDX`, `Closed - Won`, `Closed - Lost`)
   - `GrossAmount`: Giá trị dự kiến
   - `Probability`: Xác suất thắng thầu (%).
-- **`Contracts` ([contracts.json](file:///home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/process_execution/contracts.json))**:
+- **`Contracts`** (`contracts.json`):
   - `ContractCode`, `ContractName`
   - `CustomerId`: Lookup -> `Customers.ID`
   - `GrossAmount`, `NetAmount`, `VATRate`
   - `PrimaryContractGroup`: Managed Metadata.
-- **`ScopeDepartmentAllocations` ([scope_department_allocations.json](file:///home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/process_execution/scope_department_allocations.json))**:
+- **`ScopeDepartmentAllocations`** (`scope_department_allocations.json`):
   - `ContractScopeId`: Lookup -> `ContractScopes.ID`
   - `Department`: Managed Metadata -> `CCBA_DonViPhongBan`
   - `AllocationShare` (%), `AllocatedAmount` (VND), `DepartmentHead` (User).
 
 #### Cấu hình Xác thực Entra ID App-Only
-Khảo sát tại [`tools/config/environments.psd1`](file:///home/vvc/ccba/IDOP-CCBA-WAY/tools/config/environments.psd1):
+Khảo sát tại `tools/config/environments.psd1` của `IDOP-CCBA-WAY`:
 - `TenantId`: `"d7aa4978-363e-47aa-a77e-7da957b32bf3"` (`ibstbim.onmicrosoft.com`)
 - `ClientId`: `"c055c7a4-9150-4bd5-bf01-445c65467feb"` (Ứng dụng: `IDOP-SPO-Deploy`)
 - Quyền ứng dụng (Application Permissions): `Sites.FullControl.All`, `TermStore.ReadWrite.All`

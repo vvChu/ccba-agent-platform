@@ -103,7 +103,11 @@ class TestAIClientInit:
 
     @patch.dict(
         "os.environ",
-        {"AI_GATEWAY_KEY": "", "CCBA_AI_API_KEY": "ccba-key-123", "OPENAI_API_KEY": "fallback-test-key"},
+        {
+            "AI_GATEWAY_KEY": "",
+            "CCBA_AI_API_KEY": "ccba-key-123",
+            "OPENAI_API_KEY": "fallback-test-key",
+        },
         clear=False,
     )
     def test_api_key_ccba_ai_key_fallback(self) -> None:
@@ -114,7 +118,12 @@ class TestAIClientInit:
 
     @patch.dict(
         "os.environ",
-        {"AI_GATEWAY_KEY": "", "CCBA_AI_API_KEY": "", "LITELLM_API_KEY": "litellm-key-456", "OPENAI_API_KEY": "fallback-test-key"},
+        {
+            "AI_GATEWAY_KEY": "",
+            "CCBA_AI_API_KEY": "",
+            "LITELLM_API_KEY": "litellm-key-456",
+            "OPENAI_API_KEY": "fallback-test-key",
+        },
         clear=False,
     )
     def test_api_key_litellm_key_fallback(self) -> None:
