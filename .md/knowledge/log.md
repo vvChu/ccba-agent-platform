@@ -2,6 +2,19 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-27] [synthesize] | Phát Hành PR #410 (Issue #404): Nâng Cấp Kỹ Năng Cho LiteLLM Budget Resilience, Vector RAG Speedup & Team Sheets Governance
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-api-circuit-breaker/`, `.agents/skills/ccba-ai-gateway-sdk/`, `.agents/skills/ccba-hybrid-rag-search/`, `.agents/skills/ccba-new-feature/`, `.agents/skills/ccba-session-retrospective/`, `scripts/tests/test_skill_circuit_breaker.py`, `scripts/tests/test_spoke_sync_modules.py`, `tests/test_upstream_workflows.py`, `docs/`, `catalog.yaml`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất chuỗi phát triển, thẩm định và phát hành nâng cấp toàn diện kỹ năng trên Hub Monorepo:
+  1. **PR #410 (Issue #404 - Skills Resilience, RAG Speedup & Team Sheets Governance)**: Nâng cấp 5 kỹ năng chính và bộ testsuite kèm theo:
+     - `ccba-api-circuit-breaker` & `ccba-ai-gateway-sdk` (v1.4.0): Bổ sung cơ chế fast-fail khi nhận lỗi `budget.*exceeded` từ LiteLLM Gateway, chuẩn hóa định dạng JSON lỗi chuẩn `CIRCUIT_BREAKER_OPEN`, tài liệu hóa 5 tầng failover và hướng dẫn fallback local; đánh dấu `# ccba:allow-raw-ip`.
+     - `ccba-hybrid-rag-search` (v1.2.0): Áp dụng chuẩn hóa L2 pre-normalization ngay khi cache embedding, chuyển truy vấn vector sang dot-product (`@`), tối ưu hóa Top-K 2 bước bằng `np.argpartition` $O(n + k \log k)$ cho tập dữ liệu lớn; đánh dấu `# ccba:allow-raw-model`.
+     - `ccba-new-feature` & `ccba-session-retrospective` (v1.4.0): Bảo vệ thư mục `.agents/teams/*.md` chuẩn mực, giữ nguyên cấu trúc `- **Tiêu chí hoàn thành:**` khi khởi tạo và đồng bộ spoke.
+  2. **Thẩm Định Đối Kháng & Kiểm Thử (/boost)**: Vượt qua thẩm định kép độc lập của `DeepInvestigator` cho cả Implementation Plan và Walkthrough Report. Bổ sung test suites `test_skill_circuit_breaker.py` (5/5 PASS), `test_spoke_sync_modules.py`, `test_upstream_workflows.py`.
+  3. **Khóa Cứng & Phát Hành (/ccba-release-feature)**: 100% CI checks PASS, squash merge an toàn vào `main` tại commit `03cc30ec`, tự động đóng Issue #404 và xuất bản báo cáo release PR #414.
+
+---
+
 ## [2026-09-27] [synthesize] | Thẩm Định & Phát Hành PR #398: Tối Ưu Hóa Kỹ Năng bigbim-classification & Giao Thức Buồng Kín TRIHT
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/bigbim-classification/SKILL.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/log.md`
