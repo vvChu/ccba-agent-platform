@@ -102,6 +102,51 @@ def reload_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]
     return load_tuner_config(config_path)
 
 
+DEFAULT_MUTATION_STRATEGIES_PATH = Path(__file__).resolve().parent / "mutation_strategies.yaml"
+_CACHED_MUTATION_STRATEGIES: dict[str, list[tuple[str, str]]] | None = None
+
+
+def load_mutation_strategies(
+    path: Path | None = None,
+) -> dict[str, list[tuple[str, str]]]:
+    """Loads prompt mutation strategies from declarative YAML with in-memory singleton caching.
+
+    Latency guarantee: O(1) in-memory dict lookup (< 0.05 ms).
+    """
+    global _CACHED_MUTATION_STRATEGIES
+    if path is None and _CACHED_MUTATION_STRATEGIES is not None:
+        return _CACHED_MUTATION_STRATEGIES
+
+    target_path = Path(path) if path else DEFAULT_MUTATION_STRATEGIES_PATH
+    if not target_path.is_file():
+        return {}
+
+    with open(target_path, encoding="utf-8") as f:
+        data: dict[str, Any] = yaml.safe_load(f) or {}
+
+    loaded: dict[str, list[tuple[str, str]]] = {}
+    for arch_name, items in data.get("strategies", {}).items():
+        if isinstance(items, list):
+            loaded[arch_name] = [
+                (str(item.get("name", "")), str(item.get("content", "")).strip())
+                for item in items
+                if isinstance(item, dict) and "name" in item and "content" in item
+            ]
+
+    if path is None:
+        _CACHED_MUTATION_STRATEGIES = loaded
+    return loaded
+
+
+def reload_mutation_strategies(
+    path: Path | None = None,
+) -> dict[str, list[tuple[str, str]]]:
+    """Forces reloading of mutation strategies, clearing singleton cache."""
+    global _CACHED_MUTATION_STRATEGIES
+    _CACHED_MUTATION_STRATEGIES = None
+    return load_mutation_strategies(path)
+
+
 @dataclass
 class TokenUsageTracker:
     """Session-wide token consumption tracker and circuit breaker observer."""
@@ -1153,408 +1198,11 @@ class GitRatchetOptimizer:
         arch = resolve_domain_archetype(self.config.skill_name)
         arch_name = arch.name if arch else "general"
 
-        if arch_name == "academic":
-            strategies = [
-                (
-                    "CARS 3-Move Blueprint & Sentence Stems",
-                    "\n\n## Khung Mẫu CARS 3-Move Chi Tiết & Mẫu Câu Học Thuật (Sentence Stems)\n"
-                    "* **Move 1 (Establish Territory):** Dùng các mẫu câu: *'Recent advances in... have heightened the need for...', 'A central issue in... is...'*.\n"
-                    "* **Move 2 (Find a Niche):** Dùng các mẫu câu: *'However, previous studies have largely overlooked...', 'A critical limitation of current methods is...'*.\n"
-                    "* **Move 3 (Occupy Niche):** Dùng các mẫu câu: *'To address this gap, this paper proposes...', 'The principal contribution of this study is threefold...'*",
-                ),
-                (
-                    "Yale Academic Style & De-nominalization Invariants",
-                    "\n\n## Quy Chuẩn Văn Phong Khoa Học & Loại Bỏ Danh Từ Hóa (Yale Style Guide)\n"
-                    "* **Quy tắc cấm tuyệt đối:** Không sử dụng trạng từ khuếch đại chủ quan (`clearly`, `obviously`, `really`, `very`, `basically`).\n"
-                    "* **Khử danh từ hóa (De-nominalization):** Bắt buộc chuyển đổi cụm từ rườm rà thành động từ hành động trực tiếp:\n"
-                    "  - `conduct an investigation into` -> `investigate`\n"
-                    "  - `reach a conclusion that` -> `conclude that`\n"
-                    "  - `give an explanation of` -> `explain`",
-                ),
-                (
-                    "Discussion Zoom-out Framework & Limitation Disclosure",
-                    "\n\n## Khung Cấu Trúc Thảo Luận Mở Rộng (Discussion Zoom-out) & Thừa Nhận Giới Hạn\n"
-                    "* Cấu trúc phần Discussion bắt buộc đi qua 3 tầng phân tích:\n"
-                    "  1. **Tầng 1 (Major Findings):** Trả lời trực tiếp câu hỏi nghiên cứu đặt ra ở Mở bài.\n"
-                    "  2. **Tầng 2 (Context & Limitations):** So sánh với các nghiên cứu đối chuẩn và **bắt buộc dành tối thiểu 1 đoạn văn nêu rõ các giới hạn phương pháp luận (Methodological Limitations)**.\n"
-                    "  3. **Tầng 3 (Implications & Future Work):** Đề xuất ứng dụng thực tiễn và định hướng mở rộng.",
-                ),
-                (
-                    "APA 7th Edition & BibTeX Standards Integration",
-                    "\n\n## Chuẩn Hóa Trích Dẫn APA 7th & Khối Mã BibTeX Song Hành\n"
-                    "* Mọi tài liệu tham khảo trong bài báo bắt buộc phải trình bày song hành dưới 2 định dạng:\n"
-                    "  - Định dạng trích dẫn văn bản chuẩn **APA 7th Edition** (Author, Year, Title, Journal, DOI).\n"
-                    "  - Khối mã **BibTeX** chuẩn hóa để các nhà nghiên cứu có thể trích xuất trực tiếp vào LaTeX/Overleaf.",
-                ),
-                (
-                    "Peer-Review Self-Assessment Checklist",
-                    "\n\n## Bảng Kiểm Tự Phản Biện Học Thuật (Peer-Review Checklist)\n"
-                    "* Trước khi xuất bản bản thảo, Agent tự đối soát qua 4 tiêu chí phản biện độc lập:\n"
-                    "  - [ ] Mục tiêu nghiên cứu ở Introduction có khớp 100% với kết luận ở Discussion không?\n"
-                    "  - [ ] Phương pháp thực nghiệm ở Methods có đủ chi tiết để phòng thí nghiệm khác tái lập (reproducibility) không?\n"
-                    "  - [ ] Các hình ảnh, bảng biểu đã có chú thích và đơn vị đo lường đầy đủ chưa?\n"
-                    "  - [ ] Không có bất kỳ câu văn nào mang định kiến cảm xúc cá nhân.",
-                ),
-            ]
-        elif arch_name == "bim_governance":
-            strategies = [
-                (
-                    "Golden Thread & Security Classification Invariants",
-                    "\n\n## Kiểm Duyệt Sợi Chỉ Vàng & Phân Cấp An Ninh ISO 19650-5\n"
-                    "* **Sợi Chỉ Vàng (Golden Thread):** Cưỡng chế quản trị dữ liệu tài sản tầm nhìn 75 năm (PM_80), chống đứt gãy thông tin qua các thế hệ chuyển giao.\n"
-                    "* **Phân cấp an ninh ST2:** Toàn bộ thông tin tài sản phải được phân loại và gắn thẻ an ninh đạt cấp độ ST2 theo ISO 19650-5.\n"
-                    "* **Đoạn Đò-3 & LMS Lock-in:** Đảm bảo dữ liệu bàn giao tích hợp đầy đủ ICT protocol tương thích LMS, triệt tiêu rủi ro LMS vendor lock-in.",
-                ),
-                (
-                    "Red Thread Risk Matrix & Operational Verification",
-                    "\n\n## Rào Chắn Sợi Chỉ Đỏ & Ma Trận Rủi Ro Thông Tin Chuẩn Hóa\n"
-                    "* **Bộ 4 mã rủi ro thông tin:** Tuyệt đối không dùng mô tả tự do, bắt buộc nhận diện chính xác:\n"
-                    "  - `RK_50_40_35` (No-Risk): Bàn giao C2 thiếu người nhận hoặc không khớp sơ đồ tổ chức.\n"
-                    "  - `RK_10_70_04` (Time-Risk): Nghiệm thu C1 thiếu đội ngũ FM hoặc quy trình tự vận hành.\n"
-                    "  - `RK_50_40_45` (Do-Risk): Không tuân thủ cấu trúc IFC hoặc thiếu ICT protocol đồng bộ.\n"
-                    "  - `RK_50_60_28` (Use-Risk): Thiếu AIM hoàn thiện dẫn đến đứt gãy Trí Nhớ Số (En_25_70_47).",
-                ),
-                (
-                    "Unique ID Invariance & 3-Way Traceability Guardrails",
-                    "\n\n## Cưỡng Chế Unique ID Bất Biến & Đối Soát 3 Chiều\n"
-                    "* **Khóa Unique ID từ BBP-A0:** Cấp và khóa mã Unique ID bất biến ngay từ pha BBP-A0, nghiêm cấm đổi tên ở các pha sau.\n"
-                    "* **Đối soát 3 chiều (3-Way Traceability):** Kiểm tra đối soát bắt buộc: Bản vẽ thiết kế == Hệ thống AIM == Biển hiệu thực tế tại công trình.\n"
-                    "* **Chống trôi dạt định danh:** Bắt buộc gắn cờ không đạt khi phát hiện bất kỳ sai lệch ký tự nào giữa 3 phương tiện đối soát.",
-                ),
-            ]
-        elif arch_name == "bim_rase":
-            strategies = [
-                (
-                    "RASE Decomposition & 4-Tier Logic Matrix",
-                    "\n\n## Phân Rã Ma Trận RASE & Cấu Trúc 4 Tầng Logic\n"
-                    "* **R - Requirement:** Xác định chỉ số kỹ thuật hoặc ngưỡng tới hạn bắt buộc phải đạt được.\n"
-                    "* **A - Applicability:** Xác định thực thể IFC cụ thể chịu sự điều chỉnh (ví dụ: `IfcSpace`, `IfcWall`).\n"
-                    "* **S - Selection:** Khai báo chính xác thuộc tính IFC4X3 lưu trữ thông số thông qua `IfcRelDefinesByProperties`.\n"
-                    "* **E - Exception:** Xác định điều kiện loại trừ không cần áp dụng quy tắc kiểm soát.",
-                ),
-                (
-                    "IFC4X3 Property Mapping & Indirect Relationship Invariants",
-                    "\n\n## Quy Chuẩn Gán Thuộc Tính IFC4X3 & Quan Hệ Gián Tiếp Bắt Buộc\n"
-                    "* **Cấm gán trực tiếp:** Tuyệt đối không gán thuộc tính trực tiếp vào `IfcObject`.\n"
-                    "* **Quan hệ trung gian:** Mọi thuộc tính phải được đóng gói trong `IfcPropertySet` (Pset_) và liên kết qua `IfcRelDefinesByProperties`.\n"
-                    "* **Đồng bộ ISO 16739-1:** Đảm bảo kiểu dữ liệu thuộc tính khớp chính xác với định nghĩa schema IFC4X3.",
-                ),
-                (
-                    "Quantity Take-Off (Qto) Integration & BaseQuantities Mapping",
-                    "\n\n## Tích Hợp Dữ Liệu Khối Lượng Qto & BaseQuantities\n"
-                    "* **Khối lượng không gian:** Sử dụng `Qto_SpaceBaseQuantities` (GrossVolume, NetFloorArea) cho các chỉ số thông gió và tải trọng.\n"
-                    "* **Khối lượng cấu kiện:** Sử dụng `Qto_WallBaseQuantities`, `Qto_SlabBaseQuantities` cho các chỉ tiêu truyền nhiệt và kết cấu.\n"
-                    "* **Bảo toàn Trí Nhớ Số:** Kết nối ma trận RASE với Unique ID để duy trì tính truy nguyên xuyên suốt vòng đời công trình.",
-                ),
-            ]
-        elif arch_name == "bim":
-            strategies = [
-                (
-                    "BIM Classification Rules & ISO Alignment",
-                    "\n\n## Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng\n"
-                    "* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).\n"
-                    "* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.\n"
-                    "* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.\n"
-                    "* **Bảo tồn Trí Nhớ Số (Digital Memory):** Đảm bảo tính nhất quán định danh Container và cấu trúc dữ liệu cho mọi BIM Object.",
-                ),
-                (
-                    "Digital Memory & Spatial Structure Invariants",
-                    "\n\n## Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)\n"
-                    "* **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.\n"
-                    "* **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.",
-                ),
-                (
-                    "BIM WBS & IFC Entity Mapping",
-                    "\n\n## Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3\n"
-                    "* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.\n"
-                    "* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.",
-                ),
-                (
-                    "Red-Team Disambiguation & Slang Normalization Invariants",
-                    "\n\n## Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt\n"
-                    "* **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.\n"
-                    "* **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`, `mc D800` -> Móng cọc (`EF_20_10`).\n"
-                    "* **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.\n"
-                    "* **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).\n"
-                    "* **Bẫy Tường Vây vs Vách Ngăn:** Phân định kết cấu ngầm `EF_20_05` (Tường vây Barrette) tách biệt với vách thạch cao `EF_25_10`.\n"
-                    "* **Bẫy Thang Máy Đa Góc Nhìn:** Phân định Mô hình kiến trúc `EF_25_50` vs Hệ thống cơ điện `Ss_70_50_10`.\n"
-                    "* **Bẫy Sơn Chống Cháy & Trạm Kiosk:** Phân định vật tư `Pr_60_60_15` vs Property Set kết cấu, Thực thể quy hoạch `En_50_10` vs Hệ thống `Ss_70_10_10`.\n"
-                    "* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).",
-                ),
-            ]
-        elif arch_name == "coding":
-            strategies = [
-                (
-                    "Operational Invariants & Hard Completion Lock",
-                    "\n\n## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất\n"
-                    "* **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.\n"
-                    "* **Hard Completion Lock:** Nghiêm cấm tuyên bố hoàn thành task hoặc yêu cầu nghiệm thu nếu lệnh xác minh chưa vượt qua:\n"
-                    "  ```bash\n"
-                    "  python -m ccba_harness verify-patch\n"
-                    "  ```\n"
-                    "* **Zero Tolerance Exit Code:** Lệnh kiểm thử phải thoát với mã exit code 0; tuyệt đối không bỏ qua các lỗi linter hay hồi quy.",
-                ),
-                (
-                    "Double-Pass Review Discipline & Verification Invariants",
-                    "\n\n## Kỷ Luật Rà Soát Hai Vòng (Double-Pass Adversarial Review)\n"
-                    "* **Vòng 1 (Code-First Research):** Luôn đọc implementation thực tế và kiểm tra data flow end-to-end trước khi sửa đổi. Không suy đoán hành vi từ tên hàm hay docstring.\n"
-                    "* **Vòng 2 (Self-Adversarial Review):** Tự đặt câu hỏi: *Đề xuất này có thể SAI ở đâu?* Kiểm chứng tối thiểu 3 giả định cốt lõi bằng dữ liệu và kiểm thử thực tế trước khi bàn giao.\n"
-                    "* **Bảo tồn Invariants:** Không bao giờ xóa hoặc nới lỏng (weaken) các bài test hiện có để làm cho bài test vượt qua.",
-                ),
-                (
-                    "KISS, Idempotency & Explicit Error Handling Guardrails",
-                    "\n\n## Chuẩn Mực Thiết Kế Mã Nguồn: KISS, Idempotency & Error Handling\n"
-                    "* **KISS (Keep It Simple, Stupid):** Ưu tiên giải pháp đơn giản nhất; không tạo abstraction/seam giả định khi chưa có ít nhất 2 adapter thực tế.\n"
-                    "* **Idempotency:** Mọi script thao tác tệp, database hay git worktree phải đảm bảo tính lũy kế an toàn (chạy nhiều lần cho ra cùng một kết quả vững chắc).\n"
-                    "* **Explicit Error Handling:** Xử lý ngoại lệ cụ thể (Specific Exceptions); nghiêm cấm sử dụng bare `except:` hoặc nuốt lỗi âm thầm.\n"
-                    "* **Type Hints & Docstrings:** Mọi hàm/phương thức public bắt buộc có type annotations đầy đủ và docstrings chuẩn mực.",
-                ),
-            ]
-        elif arch_name == "orchestration":
-            strategies = [
-                (
-                    "Deterministic Routing & Boundary Invariants",
-                    "\n\n## Bất Biến Ranh Giới Điều Phối, Single-Writer & Handoff Protocol\n"
-                    "* **Single-Writer & Isolated Sandbox:** Duy nhất Lead Orchestrator ghi nhận dữ liệu chính thức; subagents chỉ xuất kết quả trung gian vào sandbox `.agents/<agent_name>/scratch/`.\n"
-                    "* **Handoff Protocol & Autonomous Notification:** Chuyển giao ngữ cảnh qua `send_message` gửi parent agent kèm báo cáo bàn giao (handoff report) và kết luận hoàn tất (`verdict`).\n"
-                    "* **Bộc Lộ Dần (Progressive Disclosure):** Tổ chức tài liệu và chỉ dẫn theo [Hiến pháp AGENTS.md](../../AGENTS.md) tuân thủ mô hình bộc lộ dần theo cấp độ.\n"
-                    "* **Hard Completion Lock:** Bắt buộc vượt qua xác minh tất định `python -m ccba_harness verify-patch` trước khi hoàn tất.",
-                ),
-            ]
-        elif arch_name == "tech_qc":
-            strategies = [
-                (
-                    "QCVN 06:2022/BXD & Map 1 Invariants",
-                    "\n\n## Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)\n"
-                    "* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).\n"
-                    "* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.\n"
-                    "* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.",
-                ),
-                (
-                    "Fire Compartment & Structural Protection Hard Floor",
-                    "\n\n## Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD\n"
-                    "* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.\n"
-                    "* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.",
-                ),
-                (
-                    "PCCC Evacuation & Dead-End Corridor Limits",
-                    "\n\n## Giới Hạn Khoảng Cách Thoát Nạn Hành Lang Cụt QCVN 06:2022/BXD\n"
-                    "* **Khoảng cách thoát nạn:** Khoảng cách thoát nạn từ cửa phòng đến buồng thang bộ ở hành lang cụt tối đa chỉ từ 15m - 20m (hoặc 25m nếu có chữa cháy tự động).\n"
-                    "* **Cơ quan thẩm tra:** Phân định rõ thẩm quyền: Công an PC07 thẩm duyệt hệ thống PCCC MEP; Cơ quan chuyên môn về xây dựng thẩm tra kiến trúc và thoát nạn.",
-                ),
-            ]
-        elif arch_name == "legal":
-            strategies = [
-                (
-                    "XML Envelopes & Strict Output Schema",
-                    "\n\n## Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML\n"
-                    "* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:\n"
-                    "  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).\n"
-                    "  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.\n"
-                    "  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.\n"
-                    "* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.",
-                ),
-                (
-                    "Hard-Floor Legal Guardrails (Cấm Viện Dẫn Văn Bản Hết Hiệu Lực)",
-                    "\n\n## Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)\n"
-                    "* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:\n"
-                    "  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.\n"
-                    "  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.\n"
-                    "  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.\n"
-                    "* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).",
-                ),
-                (
-                    "AST Mapping & Flat Index Synchronization",
-                    "\n\n## Đồng Bộ Cây Cấu Trúc AST & Danh Mục Điều Khoản (clauses.json)\n"
-                    "* Khi bóc tách văn bản quy phạm pháp luật, Agent phải đối soát với danh mục `clauses.json`:\n"
-                    "  - Cấu trúc cây: Chương -> Mục -> Điều -> Khoản -> Điểm.\n"
-                    "  - Đặt ID điều khoản chuẩn hóa (ví dụ: `dieu-1`, `dieu-2`) hỗ trợ liên kết chéo hai chiều (Cross-References).\n"
-                    "  - Bảo tồn 100% các bảng số liệu và phụ lục đính kèm theo định dạng Markdown bảng chuẩn.",
-                ),
-                (
-                    "Grounded Authority & Issuing Body Verification",
-                    "\n\n## Xác Thực Thẩm Quyền Ban Hành & Số Hiệu Pháp Lý\n"
-                    "* Mọi kết quả trích dẫn pháp luật phải nêu rõ:\n"
-                    "  1. Cơ quan ban hành (Chính phủ, Bộ Xây dựng, Bộ Công an, Quốc hội).\n"
-                    "  2. Số/Ký hiệu văn bản, ngày ban hành và ngày có hiệu lực thi hành.\n"
-                    "  3. Mối quan hệ pháp lý (Văn bản hướng dẫn, Sửa đổi bổ sung, hoặc Thay thế) qua 11 nhóm quan hệ TVPL.",
-                ),
-                (
-                    "Evaluator-Optimizer Self-Correction Loop",
-                    "\n\n## Vòng Lặp Tự Kiểm Định & Hiệu Chỉnh Trước Khi Trả Lời (Self-Healing Loop)\n"
-                    "* Trước khi hoàn tất câu trả lời, Agent tự kích hoạt checklist 3 bước:\n"
-                    "  - Bước 1: Kiểm tra xem có trích dẫn đúng số hiệu văn bản đang còn hiệu lực không.\n"
-                    "  - Bước 2: Kiểm tra xem các câu hỏi về thủ tục/thẩm định có viện dẫn đầy đủ căn cứ không.\n"
-                    "  - Bước 3: Đảm bảo độ sâu phân tích đạt yêu cầu và không bỏ sót các điều khoản loại trừ/ngoại lệ.",
-                ),
-            ]
-        elif arch_name == "grilling":
-            strategies = [
-                (
-                    "Socrates One-by-One Frontier Interview Invariant",
-                    "\n\n## Quy Trình Phỏng Vấn Dồn Dập Socrates (Frontier Interview Invariant)\n"
-                    "* **Quy tắc một câu hỏi duy nhất:** Chỉ đặt đúng một câu hỏi (one-by-one) ở Frontier, kèm phương án đề xuất (recommended answer) trước.\n"
-                    "* **Tự tra cứu dữ kiện codebase:** Tự đọc facts vs decisions từ tệp tin cục bộ, tuyệt đối không hỏi người dùng thông tin có thể tự đọc được.\n"
-                    "* **Đối chiếu quy chuẩn AGENTS.md:** Chỉ ra ngay vi phạm bất biến cốt lõi (ADR-0058 Hard Completion Lock) nếu phát hiện lệch pha.",
-                ),
-                (
-                    "Visual Prototype Multi-Variant Single HTML",
-                    "\n\n## Tạo Bản Mẫu Trực Quan Đa Biến Thể (Visual Prototype)\n"
-                    "* **Single HTML file:** Tạo từ 3-5 variants trong duy nhất 1 file HTML kèm floating variant picker để người dùng so sánh.\n"
-                    "* **Decision Log:** Ghi nhận nhật ký quyết định thiết kế vào NOTES.md và triệu hồi /ccba-issue-tree khi cần phân tích đa chiều.",
-                ),
-            ]
-        elif arch_name == "adr":
-            strategies = [
-                (
-                    "ADR Scaffolding & Frontmatter Governance",
-                    "\n\n## Khung Khởi Tạo Quyết Định Kiến Trúc (ADR Scaffolding)\n"
-                    "* **YAML Frontmatter bắt buộc:** Mọi tệp ADR trong docs/adr/00XX-<slug>.md phải có id (HUB-ADR-00XX hoặc SPOKE-ADR-00XX), status (ACCEPTED), pillar.\n"
-                    "* **Cấu trúc 4 phần chuẩn mực:** Context & Problem Statement, Decision Drivers, Considered Options, Invariants & Consequences.",
-                ),
-                (
-                    "Status Cascading & Living Traceability Matrix Sync",
-                    "\n\n## Đồng Bộ Ma Trận Truy Vết & Thác Trạng Thái (Status Cascading)\n"
-                    "* **Cascading status:** Tự động chuyển status SUPERSEDED cho ADR tiền nhiệm và liên kết hai chiều superseded_by / supersedes.\n"
-                    "* **Living Traceability Matrix:** Cập nhật bảng chỉ mục TRACEABILITY_MATRIX.md và bảo đảm CI Parity Gate qua validate_adr_traceability.py.",
-                ),
-            ]
-        elif arch_name == "risk":
-            strategies = [
-                (
-                    "Level 2 Space Gap & Maintenance Clearance Invariants",
-                    "\n\n## Quy Chuẩn Mâu Thuẫn Thông Tin & Khoảng Trống Bảo Trì (Level 2 Space Gap)\n"
-                    "* **Phân cấp xung đột:** Tách biệt va chạm vật lý Level 1 với khoảng trống vô hình Level 2 (Clearance >= 900mm cho thiết bị lớn, >= 150mm cho đai ốc).\n"
-                    "* **Kiểm soát thuộc tính BBP:** Giữ nguyên vẹn Unique ID từ BBP-A0, ngăn chặn trôi dạt định danh và đối soát công suất BBP-B1 vs BBP-B2.",
-                ),
-                (
-                    "INF-CON JSON Schema & Issue-Tree Escalation",
-                    "\n\n## Cấu Trúc Báo Cáo Xung Đột INF-CON & Phân Rã Đa Chiều\n"
-                    "* **Định dạng INF-CON:** Xuất báo cáo xung đột qua schema chuẩn với conflict_id, conflict_type, entities_involved và proposed_mitigation.\n"
-                    "* **Leo thang phân rã:** Kích hoạt /ccba-issue-tree (Why-Tree và How-Tree) xếp hạng phương án điều phối dưới quyền Chủ trì Bộ môn.",
-                ),
-            ]
-        elif arch_name == "skill_repair":
-            strategies = [
-                (
-                    "YAML Frontmatter Two-Space Standardization",
-                    "\n\n## Chuẩn Hóa Cú Pháp YAML Frontmatter & Cổng 0 / Cổng 1 (ADR-0057)\n"
-                    "* **Ngăn cách Frontmatter:** Đóng mở bằng cặp thẻ ---, thụt đầu dòng đúng 2 spaces, không dùng tab, xử lý triệt để yaml_parse_error.\n"
-                    "* **Khung quyết định hai giai đoạn:** Vượt qua Cổng 0 (Determinism) và Cổng 1 (Orchestration), tính toán chỉ số GPI >= 12.0 cho Tier 2B Standalone Skill.",
-                ),
-                (
-                    "Completion Criteria & Script Bloat Remediation",
-                    "\n\n## Tiêu Chí Hoàn Thành Tường Minh & Khắc Phục Script Bloat\n"
-                    "* **Tiêu chí hoàn thành (Completion Criteria):** Mọi bước hành động phải có tiêu chí kiểm chứng đầu ra cụ thể.\n"
-                    "* **Khử phình mã nguồn:** Script tiện ích trong kỹ năng phải < 100 LOC; nếu dài hơn phải chuyển thành Seam trong packages/.\n"
-                    "* **Kiểm định CLI:** Vượt qua validate_skills.py --enforce-gpi và compile_catalog.py trước khi nghiệm thu.",
-                ),
-            ]
-        elif arch_name == "legal_tooling":
-            strategies = [
-                (
-                    "TVPL VIP Crawler Resilience & Backoff Jitter",
-                    "\n\n## Phòng Vệ Thu Thập Văn Bản & Quản Lý Phiên VIP (TVPL Crawler)\n"
-                    "* **Quản lý phiên xác thực:** Lưu trữ cookie phiên VIP qua biến môi trường an toàn, tự động refresh khi hết hạn.\n"
-                    "* **Phát hiện Captcha & Exponential Backoff:** Tự động bắt mã HTTP 429/503 và kích hoạt backoff kèm jitter; cảnh báo khi gặp Captcha.\n"
-                    "* **Audit Logging:** Che giấu token và session ID trong log qua Maskara Redactor, đóng dấu băm SHA-256 gói dữ liệu.",
-                ),
-                (
-                    "OKF v2.4 Verbatim Grounding & SHA-256 Provenance",
-                    "\n\n## Chuẩn Hóa Tri Thức Pháp Lý OKF v2.4 & Tem Băm SHA-256 (ADR-0059)\n"
-                    "* **Trích dẫn nguyên văn (Legal Verbatim Grounding):** Trích xuất nguyên văn verbatim 100% từ công báo chính thống, cấm sáng tác điều khoản giả định.\n"
-                    "* **Tem băm mật mã SHA-256:** Bắt buộc ghi nhận mã băm provenance stamping cho từng tệp nguồn trong kho lưu trữ OKF v2.4.",
-                ),
-                (
-                    "VBHN Diff Engine & HSHT Hierarchy Control",
-                    "\n\n## Bóc Tách Khác Biệt Văn Bản Hợp Nhất & Cây Thư Mục HSHT NĐ 06/2021\n"
-                    "* **VBHN AST Diffing:** Phân loại chính xác 4 hành vi lập pháp (INSERT, REPLACE, REPEAL, APPEND) và hợp nhất vào thân văn bản.\n"
-                    "* **Cây thư mục HSHT:** Chuẩn hóa cấu trúc thư mục hồ sơ hoàn thành 3 giai đoạn (Chuẩn bị, Thi công, Bàn giao) theo NĐ 06/2021/NĐ-CP.",
-                ),
-            ]
-        elif arch_name == "office":
-            strategies = [
-                (
-                    "Decree 30/2020 Administrative Dispatch Format",
-                    "\n\n## Thể Thức SoẠn Thảo Công Văn Hành Chính (Nghị định 30/2020/NĐ-CP)\n"
-                    "* **Bố cục chuẩn mực:** Đầy đủ Quốc hiệu, Tiêu ngữ, Tên cơ quan ban hành, Số/ký hiệu, Trích yếu, Nơi nhận và Thẩm quyền ký.\n"
-                    "* **Quy chuẩn Typography:** Phông chữ Times New Roman Unicode, cỡ chữ 13-14, canh lề trái 30mm, phải 15mm, trên/dưới 20mm.",
-                ),
-                (
-                    "GFM Table Typography & Line Break Standardization",
-                    "\n\n## Chuẩn Hóa Bảng Biểu Kỹ Thuật Markdown GFM\n"
-                    "* **Căn lề cột:** Cột STT/mã căn giữa (:---:), cột nội dung căn trái (:---), cột số lượng căn phải (---:).\n"
-                    "* **Ngắt dòng an toàn:** Sử dụng thẻ `<br/>` thay vì ngắt dòng Enter để bảo vệ toàn vẹn cấu trúc bảng GitHub Flavored Markdown.",
-                ),
-                (
-                    "Presentation Outline & Seminar Agenda Architecture",
-                    "\n\n## Bố Cục Thuyết Trình PPTX & Khung Chương Trình Seminar\n"
-                    "* **Dàn ý slide PPTX:** Thiết lập Slide Title, Header H1/H2, Visual Bullet Points súc tích và Callout Layout nổi bật.\n"
-                    "* **Đề cương Seminar:** Xây dựng mục tiêu đào tạo, timeline agenda chi tiết và checklist tài liệu phát tay (Handouts).",
-                ),
-            ]
-        elif arch_name == "visual_design":
-            strategies = [
-                (
-                    "Design Tokens & Semantic Color Palette",
-                    "\n\n## Hệ Thống Thẻ Thiết Kế (Design Tokens) & Bảng Màu Nhận Diện\n"
-                    "* **Bảng màu chuẩn hóa:** Primary (#1E3A8A - Navy Blue), Secondary (#0D9488 - Teal), Neutral (#F8FAFC), Semantic Palette (#10B981 Success, #EF4444 Error).\n"
-                    "* **Phân cấp Typography:** Tỷ lệ Perfect Fourth (1.333), H1 (32px Bold), H2 (24px SemiBold), H3 (20px Medium), Body (16px Regular).",
-                ),
-                (
-                    "Logo Safe Zone & Corporate Identity Program (CIP)",
-                    "\n\n## Vùng An Toàn Logo & Bộ Nhận Diện Thương Hiệu CIP\n"
-                    "* **Safe Zone / Clear Space:** Thiết lập khoảng cách an toàn x quanh logo tối thiểu bằng chiều cao chữ 'C' của logo.\n"
-                    "* **Đồng bộ ấn phẩm CIP:** Quy chuẩn Namecard (90x54mm), Letterhead A4, Phong bì thư và Folder tài liệu đồng bộ nhận diện.",
-                ),
-            ]
-        elif arch_name == "visual":
-            strategies = [
-                (
-                    "Academic Grayscale Diagram Styling",
-                    "\n\n## Phong Cách Sơ Đồ Trực Quan Grayscale Học Thuật (Mermaid / Excalidraw)\n"
-                    "* **Chuẩn màu Grayscale:** Sử dụng phong cách grayscale tương phản cao, dễ đọc khi in ấn và hiển thị dark/light mode.\n"
-                    "* **Quy chuẩn cú pháp sơ đồ:** Kiểm soát đóng mở node, ký hiệu điều kiện và bảo tồn toàn vẹn liên kết Markdown AST Link Integrity.",
-                ),
-            ]
-        elif arch_name == "platform_tooling":
-            strategies = [
-                (
-                    "Remote Mutation Idempotency & Pre-Push Lease",
-                    "\n\n## Rào Chắn Đẩy Nhánh An Toàn & Quản Lý Pull Request (Platform Tooling)\n"
-                    "* **Idempotency Gate:** Luôn kiểm tra remote (gh pr list / git ls-remote) trước khi tạo PR, ngăn ngừa sinh tài nguyên trùng lặp.\n"
-                    "* **Pre-Push Lease:** CẤM bare git push --force; BẮT BUỘC sử dụng git push -u origin <branch> --force-with-lease.\n"
-                    "* **Hard Completion Lock:** Vượt qua verify-patch với exit code 0 trước khi mở PR hoặc yêu cầu nghiệm thu.",
-                ),
-                (
-                    "Machine-State Decoupling & Cleanliness Scanner",
-                    "\n\n## Vệ Sinh Kho Mã Nguồn & Cách Ly Trạng Thái Máy (CCBA_HUB_PATH)\n"
-                    "* **Cách ly đường dẫn máy:** CẤM commit đường dẫn tuyệt đối; cấu hình Hub path qua biến môi trường CCBA_HUB_PATH.\n"
-                    "* **Che giấu thông tin nhạy cảm:** Tự động kích hoạt Maskara Redactor quét và ẩn sạch sẽ tokens, API keys trước khi commit.",
-                ),
-                (
-                    "Circuit Breaker Resilience & Multimodal Connectors",
-                    "\n\n## Phòng Vệ Hạn Mức API & Kết Nối Đa Phương Thức\n"
-                    "* **Circuit Breaker 3 trạng thái:** Kiểm soát hạn mức gọi AI Gateway (:8090), kích hoạt 30s Soft Cooldown khi gặp lỗi 429/timeout.\n"
-                    "* **Reactive Wakeup:** Dựa vào thông báo tự động từ hệ thống thay vì polling vòng lặp kín status.",
-                ),
-            ]
-        else:
-            strategies = [
-                (
-                    "Lean Structural Architecture & Progressive Disclosure",
-                    "\n\n## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)\n"
-                    "* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.\n"
-                    "* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.\n"
-                    "* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.",
-                ),
-                (
-                    "Operational Clarity & Verification Standard",
-                    "\n\n## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng\n"
-                    "* **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.\n"
-                    "* **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.",
-                ),
-            ]
+        all_strategies = load_mutation_strategies()
+        strategies = all_strategies.get(arch_name) or all_strategies.get("general", [])
+
+        if not strategies:
+            return current_content
 
         # Extract only body to apply mutations, preserving frontmatter untouched
         fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL)

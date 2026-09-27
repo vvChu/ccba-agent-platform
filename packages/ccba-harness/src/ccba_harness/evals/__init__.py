@@ -95,6 +95,7 @@ from .slicing import (
     classify_slicing_tier,
 )
 from .tuner import (
+    DEFAULT_MUTATION_STRATEGIES_PATH,
     AdaptiveRateLimiter,
     GitRatchetOptimizer,
     GitRatchetTuner,
@@ -102,9 +103,11 @@ from .tuner import (
     RatchetReport,
     RatchetTrialResult,
     RateLimiter,
+    load_mutation_strategies,
     load_tuner_config,
     mutate_skill,
     preserve_yaml_frontmatter,
+    reload_mutation_strategies,
     reload_tuner_config,
 )
 from .uniclass_index import (
@@ -183,6 +186,9 @@ __all__ = [
     "parse_transcript_logs",
     "redact_sensitive_info",
     "DEFAULT_FLAT_INDEX_PATH",
+    "DEFAULT_MUTATION_STRATEGIES_PATH",
+    "load_mutation_strategies",
+    "reload_mutation_strategies",
     "StatutoryDocument",
     "LegalFlatIndex",
     "load_legal_flat_index",
