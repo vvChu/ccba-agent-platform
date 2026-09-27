@@ -84,6 +84,51 @@ jobs:
             echo "size_warning=false" >> $GITHUB_OUTPUT
           fi
 
+          # Two-way Door Evaluation (Pure documentation fast path with Defense-in-Depth)
+          IS_TWO_WAY_DOOR="true"
+          if [ -z "$CHANGED_FILES" ]; then
+            IS_TWO_WAY_DOOR="false"
+          fi
+
+          for file in $CHANGED_FILES; do
+            # Denylist: sensitive components, core architecture, workflows, rules and executable code
+            case "$file" in
+              *AGENTS.md|.agents/*|.github/*|docs/adr/*|docs/rules/*|docs/governance/*|packages/*|scripts/*|pyproject.toml|*.py|*.sh|*.yml|*.yaml|*.json|*.toml|*.lock|Dockerfile|Makefile)
+                IS_TWO_WAY_DOOR="false"
+                break
+                ;;
+            esac
+
+            # Allowlist check: must be in .md/, docs/ or standard root documentation files
+            case "$file" in
+              .md/*|docs/*|README.md|WALKTHROUGH.md|walkthrough.md|CONTRIBUTING.md|PLATFORM.md|CONTEXT.md)
+                ;;
+              *)
+                IS_TWO_WAY_DOOR="false"
+                break
+                ;;
+            esac
+          done
+
+          echo "is_two_way_door=$IS_TWO_WAY_DOOR" >> $GITHUB_OUTPUT
+          echo "Two-way Door evaluated as: $IS_TWO_WAY_DOOR"
+
+      - name: Maskara Diff Sanitizer & Security Audit Gate
+        id: maskara
+        run: |
+          BASE_REF="origin/${{ github.base_ref }}"
+          mkdir -p .reports
+          set +e
+          python scripts/governance/sanitize_review_diff.py \
+            --base "$BASE_REF" \
+            --head HEAD \
+            --check \
+            --report-json .reports/maskara_diff_report.json
+          MASKARA_EXIT=$?
+          set -e
+          echo "maskara_exit=$MASKARA_EXIT" >> $GITHUB_OUTPUT
+          echo "Maskara security audit exited with code: $MASKARA_EXIT"
+
       - name: Run Deterministic Verifier (ADR-0058)
         id: verifier
         env:
@@ -118,16 +163,34 @@ jobs:
             const dangerLevel = "${{ steps.triage.outputs.danger_level }}";
             const sizeWarning = "${{ steps.triage.outputs.size_warning }}" === "true";
             const totalLoc = "${{ steps.triage.outputs.total_loc }}";
+            const isTwoWayDoor = "${{ steps.triage.outputs.is_two_way_door }}" === "true";
+            const maskaraExit = parseInt("${{ steps.maskara.outputs.maskara_exit }}", 10);
             const verifyExit = parseInt("${{ steps.verifier.outputs.verify_exit }}", 10);
 
             let commentBody = `### 🛡️ CCBA PR Quality Gate Report\n\n`;
             commentBody += `| Metric | Assessment |\n| :--- | :--- |\n`;
             commentBody += `| **Danger Triage Level** | \`${dangerLevel}\` (${dangerLevel === 'HIGH' ? '🔴 Hard Blocking Gate' : '🟡 Soft Advisory Gate'}) |\n`;
             commentBody += `| **Logic Diff Size** | \`${totalLoc} LOC\` ${sizeWarning ? '⚠️ *(Exceeds 300 LOC micro-PR budget)*' : '✅ *(Within micro-PR budget)*'} |\n`;
+            commentBody += `| **Two-way Door Fast Path** | \`${isTwoWayDoor}\` ${isTwoWayDoor ? '🚀 *(Documentation only - eligible for auto-approval)*' : '🔒 *(Standard review flow)*'} |\n`;
+            commentBody += `| **Maskara Secret Audit** | ${maskaraExit === 0 ? '✅ PASSED (Clean)' : '🔴 FAILED (Secrets detected in diff)'} |\n`;
             commentBody += `| **Verifier Status** | ${verifyExit === 0 ? '✅ PASSED (Exit 0)' : '❌ FAILED (Exit ' + verifyExit + ')'} |\n\n`;
+
+            if (maskaraExit !== 0) {
+              commentBody += `> 🔴 **Security Breach Notice:** Maskara detected sensitive tokens, secrets, or API keys in the review diff. Merging is strictly locked until credentials are fully redacted or revoked.\n\n`;
+            }
 
             if (sizeWarning) {
               commentBody += `> ⚠️ **Micro-PR Notice:** This PR introduces ${totalLoc} lines of logic changes. Per CCBA guidelines, please consider splitting large changes into smaller tracer-bullet vertical slices (≤ 200 LOC per PR) to reduce review fatigue and conflict risk.\n\n`;
+            }
+
+            const maskaraReportPath = '.reports/maskara_diff_report.json';
+            if (fs.existsSync(maskaraReportPath)) {
+              try {
+                const maskaraData = JSON.parse(fs.readFileSync(maskaraReportPath, 'utf8'));
+                if (maskaraData.total_findings > 0) {
+                  commentBody += `<details><summary><b>🔒 View Maskara Detected Findings (${maskaraData.total_findings})</b></summary>\n\n\`\`\`json\n${JSON.stringify(maskaraData.findings, null, 2)}\n\`\`\`\n</details>\n\n`;
+                }
+              } catch (e) {}
             }
 
             const reportPath = '.reports/pr_verification_report.md';
@@ -141,6 +204,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
+              per_page: 100,
             });
             const existingComment = comments.data.find(c => 
               c.user.type === 'Bot' && c.body.includes('### 🛡️ CCBA PR Quality Gate Report')
@@ -161,10 +225,43 @@ jobs:
               });
             }
 
+            // Safe Two-way Door Labeling and Auto-Approval
+            if (isTwoWayDoor && verifyExit === 0 && maskaraExit === 0) {
+              try {
+                await github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['two-way-door']
+                });
+              } catch (err) {
+                core.warning(`Failed to add two-way-door label: ${err.message}`);
+              }
+
+              try {
+                await github.rest.pulls.createReview({
+                  pull_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  event: 'APPROVE',
+                  body: '🤖 **CCBA Bot Auto-Approval**: Pure documentation (Two-way Door) PR with 100% passing quality gates.'
+                });
+              } catch (err) {
+                core.warning(`Auto-approval skipped or not permitted by repo policy: ${err.message}`);
+              }
+            }
+
       - name: Enforce Danger Triage Gate
         run: |
           DANGER_LEVEL="${{ steps.triage.outputs.danger_level }}"
+          MASKARA_EXIT="${{ steps.maskara.outputs.maskara_exit }}"
           VERIFY_EXIT="${{ steps.verifier.outputs.verify_exit }}"
+
+          # Absolute blocking gate: any secret detected blocks merge immediately
+          if [ "$MASKARA_EXIT" -ne 0 ]; then
+            echo "::error title=Secret Leak Detected::Maskara detected sensitive credentials or API keys in PR diff. Merging is strictly locked."
+            exit 1
+          fi
 
           if [ "$VERIFY_EXIT" -ne 0 ]; then
             if [ "$DANGER_LEVEL" = "HIGH" ]; then

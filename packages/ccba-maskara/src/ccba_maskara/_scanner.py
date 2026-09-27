@@ -177,6 +177,8 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
                     continue
 
                 line, col = self.line_and_column(content, start)
+                byte_start = len(content[:start].encode("utf-8"))
+                byte_end = byte_start + len(val.encode("utf-8"))
                 finding = {
                     "rule_id": rule_id,
                     "rule_name": rule_spec["name"],
@@ -187,6 +189,8 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
                     "column": col,
                     "start": start,
                     "end": end,
+                    "byte_start": byte_start,
+                    "byte_end": byte_end,
                     "preview": self.mask_value(val),
                     "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
                     "redaction": f"[MASKARA_REDACTED:{rule_id}]",
@@ -218,9 +222,11 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         if not findings:
             return content
 
-        raw_bytes = content.encode("utf-8")
-        redacted_bytes, _ = self.apply_raw_redactions(raw_bytes, findings)
-        return redacted_bytes.decode("utf-8", errors="ignore")
+        res = content
+        for f in sorted(findings, key=lambda x: x["start"], reverse=True):
+            s, e = f["start"], f["end"]
+            res = res[:s] + f["redaction"] + res[e:]
+        return res
 
     def apply_raw_redactions(
         self, original: bytes, findings: list[dict[str, Any]]

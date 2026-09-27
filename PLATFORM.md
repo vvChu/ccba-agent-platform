@@ -48,7 +48,8 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │
 ├── scripts/                           ← CLI & Lifecycle Hooks
 │   ├── governance/                    ←   Documentation, Skills & Architecture Auditors (Deep Seam)
-│   │   └── protect_repo.py            ←     Deterministic Remote Repository Protection CLI Tool
+│   │   ├── protect_repo.py            ←     Deterministic Remote Repository Protection CLI Tool
+│   │   └── sanitize_review_diff.py    ←     Maskara Review Diff Sanitizer & Pre-merge Audit Gate (Sprint 2)
 │   ├── scaffolding/                   ←   Skill generation & AST scaffolding tools
 │   ├── eval/                          ←   Process safety & evaluation gate runners
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)

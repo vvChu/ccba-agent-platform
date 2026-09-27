@@ -107,3 +107,27 @@ def test_cli_scan_subcommand(scanner: MaskaraScanner) -> None:
 
         exit_code = scanner.run_cli(["scan", "--root", tmpdir])
         assert exit_code == 0
+
+
+def test_redact_text_multibyte_vietnamese_and_emojis(scanner: MaskaraScanner) -> None:
+    prefix = "Xin chào thế giới! 🚀 Khóa bí mật: "
+    secret = f"sk-proj-{'1234567890abcdef' * 2}"
+    suffix = " — hết dữ liệu bảo mật."
+    content = f"{prefix}{secret}{suffix}"
+
+    findings = scanner.scan_text(content)
+    assert len(findings) == 1
+    assert "byte_start" in findings[0]
+    assert findings[0]["byte_start"] == len(prefix.encode("utf-8"))
+
+    redacted = scanner.redact_text(content)
+    assert prefix in redacted
+    assert suffix in redacted
+    assert secret not in redacted
+    assert "[MASKARA_REDACTED:openai-api-key]" in redacted
+
+    # Test byte-level redaction parity with UTF-8 bytes
+    raw_bytes = content.encode("utf-8")
+    rewritten_bytes, count = apply_raw_redactions(raw_bytes, findings)
+    assert count == 1
+    assert rewritten_bytes.decode("utf-8") == redacted
