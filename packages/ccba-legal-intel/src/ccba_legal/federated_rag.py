@@ -255,14 +255,16 @@ class FederatedLegalEngine:
 
         try:
             texts = [c["text"] for c in self._chunks]
-            cache_path = self._corpus_paths[0] / "embeddings.npy" if self._corpus_paths else None
+            cache_dir = Path(os.environ.get("CCBA_RAG_CACHE_DIR", ".rag_cache"))
+            cache_path = cache_dir / "legal_corpus_bge_m3_v1.npy"
 
-            if cache_path and cache_path.exists():
-                matrix = np.load(str(cache_path))
+            if cache_path.exists():
+                matrix = np.load(str(cache_path), allow_pickle=False)
                 hash_path = cache_path.with_suffix(".sha256")
                 cached_hash = hash_path.read_text().strip() if hash_path.exists() else ""
                 if len(matrix) == len(self._chunks) and cached_hash == self._corpus_hash:
-                    self._embedding_matrix = matrix
+                    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+                    self._embedding_matrix = matrix / np.maximum(norms, 1e-10)
                     return
 
             client = AIClient(timeout=self._embed_timeout)
@@ -272,11 +274,14 @@ class FederatedLegalEngine:
                 chunk_batch = texts[i : i + batch_size]
                 emb_batch = client.embed(chunk_batch)
                 all_embeddings.extend(emb_batch)
-            self._embedding_matrix = np.array(all_embeddings)
+            matrix = np.array(all_embeddings, dtype=np.float32)
 
-            if cache_path:
-                np.save(str(cache_path), self._embedding_matrix)
-                cache_path.with_suffix(".sha256").write_text(self._corpus_hash)
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            np.save(str(cache_path), matrix)
+            cache_path.with_suffix(".sha256").write_text(self._corpus_hash)
+
+            norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+            self._embedding_matrix = matrix / np.maximum(norms, 1e-10)
         except Exception as e:
             logger.error("Error building embeddings: %s", e)
             self._embedding_matrix = None
@@ -294,7 +299,7 @@ class FederatedLegalEngine:
 
     def _search_embedding(self, query: str, top_k: int) -> list[tuple[int, float]]:
         """Search using embeddings."""
-        if self._embedding_matrix is None:
+        if self._embedding_matrix is None or len(self._embedding_matrix) == 0 or top_k <= 0:
             return []
 
         try:
@@ -302,13 +307,23 @@ class FederatedLegalEngine:
 
             from ccba_ai import AIClient
 
-            query_emb = np.array(AIClient(timeout=self._embed_timeout).embed([query])[0])
-            norms = np.linalg.norm(self._embedding_matrix, axis=1) * np.linalg.norm(query_emb)
-            norms[norms == 0] = 1e-10
-            scores = np.dot(self._embedding_matrix, query_emb) / norms
+            raw_emb = AIClient(timeout=self._embed_timeout).embed([query])[0]
+            query_emb = np.array(raw_emb, dtype=np.float32)
+            query_emb = query_emb / max(np.linalg.norm(query_emb), 1e-10)
 
-            indexed_scores = [(i, float(s)) for i, s in enumerate(scores)]
-            return sorted(indexed_scores, key=lambda x: x[1], reverse=True)[:top_k]
+            scores = self._embedding_matrix @ query_emb
+            n_scores = len(scores)
+            if n_scores == 0:
+                return []
+
+            k = min(top_k, n_scores)
+            if n_scores <= k:
+                top_indices = np.argsort(-scores)
+            else:
+                top_k_idx = np.argpartition(scores, -k)[-k:]
+                top_indices = top_k_idx[np.argsort(-scores[top_k_idx])]
+
+            return [(int(i), float(scores[i])) for i in top_indices]
         except Exception:
             return []
 
@@ -456,6 +471,29 @@ class FederatedLegalEngine:
             final_results.extend(local_pool[target_local_k : target_local_k + remaining_slots])
 
         return final_results
+
+    def search(
+        self,
+        query_text: str,
+        domain: str | None = None,
+        jurisdiction: str | None = None,
+        as_of_date: str | None = None,
+        top_k: int = 5,
+        k_local_min: int | None = None,
+        include_expired: bool = False,
+        **kwargs: Any,
+    ) -> list[dict[str, Any]]:
+        """Search legal knowledge engine (alias for query)."""
+        return self.query(
+            query_text=query_text,
+            domain=domain,
+            jurisdiction=jurisdiction,
+            as_of_date=as_of_date,
+            top_k=top_k,
+            k_local_min=k_local_min,
+            include_expired=include_expired,
+            **kwargs,
+        )
 
 
 _cached_engine: FederatedLegalEngine | None = None

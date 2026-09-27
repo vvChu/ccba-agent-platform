@@ -101,6 +101,28 @@ class TestAIClientInit:
             client = AIClient(base_url="http://fake:1/v1")
             assert client._client.api_key == "fallback-test-key"
 
+    @patch.dict(
+        "os.environ",
+        {"AI_GATEWAY_KEY": "", "CCBA_AI_API_KEY": "ccba-key-123", "OPENAI_API_KEY": "fallback-test-key"},
+        clear=False,
+    )
+    def test_api_key_ccba_ai_key_fallback(self) -> None:
+        """Test api_key falls back to CCBA_AI_API_KEY when AI_GATEWAY_KEY is empty."""
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient(base_url="http://fake:1/v1")
+            assert client._client.api_key == "ccba-key-123"
+
+    @patch.dict(
+        "os.environ",
+        {"AI_GATEWAY_KEY": "", "CCBA_AI_API_KEY": "", "LITELLM_API_KEY": "litellm-key-456", "OPENAI_API_KEY": "fallback-test-key"},
+        clear=False,
+    )
+    def test_api_key_litellm_key_fallback(self) -> None:
+        """Test api_key falls back to LITELLM_API_KEY when earlier keys are empty."""
+        with patch("ccba_ai.client._find_and_load_env"):
+            client = AIClient(base_url="http://fake:1/v1")
+            assert client._client.api_key == "litellm-key-456"
+
     def test_complete_alias_calls_chat(self) -> None:
         """Test complete() acts as an alias for chat()."""
         client = AIClient(base_url="http://fake:1/v1", api_key="fake")

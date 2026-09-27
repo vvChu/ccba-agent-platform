@@ -367,3 +367,33 @@ async def test_async_fallback_to_tier3_copilot():
                 ):
                     reply = await client.chat("Async copilot test", model="gpt-4o")
                     assert reply == "Async response from Copilot CLI"
+
+
+def test_is_tier_failover_exception_status_codes():
+    """Verify is_tier_failover_exception correctly triggers for 429, 400 budget_exceeded, and >= 500."""
+    import httpx
+    import openai
+
+    router = TieredFallbackRouter()
+    req = httpx.Request("POST", "http://localhost:8090/v1/chat/completions")
+
+    # 1. HTTP 429 Rate Limit
+    resp_429 = httpx.Response(429, request=req, text='{"error": {"message": "Rate limit exceeded", "type": "rate_limit"}}')
+    exc_429 = openai.APIStatusError(message="rate_limit", response=resp_429, body={})
+    assert router.is_tier_failover_exception(exc_429) is True
+
+    # 2. HTTP 400 budget_exceeded
+    resp_400_budget = httpx.Response(400, request=req, text='{"error": {"message": "Budget has been exceeded!", "type": "budget_exceeded"}}')
+    exc_400_budget = openai.APIStatusError(message="budget_exceeded", response=resp_400_budget, body={})
+    assert router.is_tier_failover_exception(exc_400_budget) is True
+
+    # 3. HTTP 400 normal bad request (should NOT trigger failover)
+    resp_400_other = httpx.Response(400, request=req, text='{"error": {"message": "Invalid model parameter"}}')
+    exc_400_other = openai.APIStatusError(message="invalid_request_error", response=resp_400_other, body={})
+    assert router.is_tier_failover_exception(exc_400_other) is False
+
+    # 4. HTTP 5xx Server Errors
+    for code in (500, 502, 503, 504):
+        resp_5xx = httpx.Response(code, request=req, text=f'{{"error": "Server Error {code}"}}')
+        exc_5xx = openai.APIStatusError(message=f"error_{code}", response=resp_5xx, body={})
+        assert router.is_tier_failover_exception(exc_5xx) is True
