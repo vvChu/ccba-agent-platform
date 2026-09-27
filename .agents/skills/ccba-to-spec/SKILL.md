@@ -99,6 +99,24 @@ Any further notes about the feature.
 
 </spec-template>
 
+---
+
+## Atomic Micro-Task Slicing Invariant (Sprint 1 Rule)
+
+To maintain high development velocity and prevent review fatigue (per Cursor 2,500 PRs/month model and Decision Log), every spec decomposed into tickets MUST adhere to the following invariants:
+
+1. **Strict Blast Radius Budget**:
+   - Each individual ticket/micro-task must target a diff budget of **$\le 150-200$ lines of code** (excluding tests and markdown).
+   - If a User Story requires > 200 LOC, it MUST be sliced into multiple sequential tracer-bullet tickets.
+2. **Single Seam Anchor**:
+   - A ticket should touch at most **1 Public Deep Seam** registered in `catalog.yaml`. Never span multiple unrelated seams in one ticket.
+3. **Deterministic Acceptance Command**:
+   - Every ticket description MUST declare an exact verification command that exits with code 0 upon completion (e.g. `pytest packages/<pkg>/tests/test_<feature>.py -v` or `python -m ccba_harness verify-patch --preset code`).
+4. **Context Hygiene & Clean Agent Execution**:
+   - Each ticket is designed to be executed in a brand-new, clean Agent context window (`/ccba-implement` or `/ccba-tdd`) to eliminate hallucination caused by context window bloating.
+
+
+
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
