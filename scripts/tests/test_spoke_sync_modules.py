@@ -998,6 +998,8 @@ def test_session_cleanup_safe_remove(tmp_path: Path):
 
     # Canonical items that must NOT be removed
     (agents_dir / "skills").mkdir()
+    (agents_dir / "teams").mkdir()
+    (agents_dir / "teams" / "team_sheet.md").write_text("# Team Spec", encoding="utf-8")
     (agents_dir / "AGENTS.md").write_text("# Master", encoding="utf-8")
 
     # Stray artifacts that MUST be removed
@@ -1011,6 +1013,8 @@ def test_session_cleanup_safe_remove(tmp_path: Path):
     clean_subagent_artifacts(mock_project, dry_run=False)
 
     assert (agents_dir / "skills").exists()
+    assert (agents_dir / "teams").exists()
+    assert (agents_dir / "teams" / "team_sheet.md").exists()
     assert (agents_dir / "AGENTS.md").exists()
     assert not stray_dir.exists()
     assert not stray_file.exists()

@@ -11,7 +11,7 @@ bundle: _core
 tier: kernel
 command: /ccba-hybrid-rag-search
 metadata:
-  version: "1.0.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -100,29 +100,42 @@ import numpy as np
 from ccba_ai import ai  # AI Gateway SDK
 
 def build_embedding_index(corpus: list[str]) -> np.ndarray:
-    """Build embedding matrix từ corpus. Cache vào .npz file."""
+    """Build embedding matrix từ corpus và chuẩn hóa L2 pre-normalization. Cache vào .npz/.npy file."""
     embeddings = []
     for chunk in corpus:
         # Dùng AI Gateway embedding endpoint
-        vec = ai.embed(chunk, model="gemini-embedding-001")
-        embeddings.append(vec)
-    return np.array(embeddings)  # shape: (n_docs, dim)
+        vec = np.array(ai.embed(chunk, model="gemini-embedding-001"), dtype=np.float32)  # ccba:allow-raw-model
+        norm = np.linalg.norm(vec)
+        embeddings.append(vec / norm if norm > 1e-10 else vec)
+    return np.array(embeddings, dtype=np.float32)  # shape: (n_docs, dim)
 
 def search_embeddings(
     query: str,
     embedding_matrix: np.ndarray,
     top_k: int = 10
 ) -> list[tuple[int, float]]:
-    """Cosine similarity search. Returns: list of (doc_index, score)."""
-    query_vec = np.array(ai.embed(query, model="gemini-embedding-001"))
-    # Cosine similarity
-    norms = np.linalg.norm(embedding_matrix, axis=1) * np.linalg.norm(query_vec)
-    scores = embedding_matrix @ query_vec / (norms + 1e-10)
-    ranked = sorted(enumerate(scores.tolist()), key=lambda x: x[1], reverse=True)
-    return ranked[:top_k]
+    """Dot-product Top-K search với np.argpartition O(n + k log k). Returns: list of (doc_index, score)."""
+    query_vec = np.array(ai.embed(query, model="gemini-embedding-001"), dtype=np.float32)  # ccba:allow-raw-model
+    q_norm = np.linalg.norm(query_vec)
+    if q_norm > 1e-10:
+        query_vec = query_vec / q_norm
+
+    # Ma trận đã chuẩn hóa L2 -> Cosine similarity chuyển thành phép nhân dot-product thuần túy
+    scores = embedding_matrix @ query_vec
+    n_scores = len(scores)
+    k = min(top_k, n_scores)
+
+    if n_scores <= k:
+        top_indices = np.argsort(-scores)
+    else:
+        # np.argpartition O(n) lấy top k phần tử, sau đó sort lại k phần tử O(k log k)
+        top_k_idx = np.argpartition(scores, -k)[-k:]
+        top_indices = top_k_idx[np.argsort(-scores[top_k_idx])]
+
+    return [(int(idx), float(scores[idx])) for idx in top_indices]
 ```
 
-**Tiêu chí hoàn thành:** Vector embeddings được tính toán và hàm `search_embeddings` trả về danh sách xếp hạng theo cosine similarity.
+**Tiêu chí hoàn thành:** Vector embeddings được chuẩn hóa L2 trước khi lưu cache, và hàm `search_embeddings` sử dụng phép nhân dot-product kết hợp `np.argpartition` trả về danh sách xếp hạng Top-K tối ưu $O(n + k \log k)$.
 
 ### Bước 3: RRF Fusion
 

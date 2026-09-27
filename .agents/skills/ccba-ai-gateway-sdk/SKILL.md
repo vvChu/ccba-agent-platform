@@ -11,7 +11,7 @@ bundle: _core
 tier: kernel
 command: /ccba-ai-gateway-sdk
 metadata:
-  version: "1.0.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -120,6 +120,21 @@ graph TD
     OCR1 -->|503/429/Timeout| OCRFB[ocr-fallback: gemini-3.5-flash-lite]
     OCRFB -->|503/429/Timeout| OCT4
 ```
+
+### 🛡️ Cơ chế Kháng Lỗi Ngân sách LiteLLM & 5-Tier Failover Router (RULE-2.12)
+`ccba-ai` tích hợp sẵn bộ định tuyến chuyển vùng dự phòng tự động 5 tầng:
+- **Tier 1 (Gateway)**: LiteLLM trên Server Spark (:8090).
+- **Tier 2 (Cloud Direct)**: Gọi trực tiếp Google AI Studio / Groq / OpenAI qua API keys cục bộ.
+- **Tier 3 (Dual-CLI)**: Trực tiếp qua Antigravity CLI / GitHub Copilot CLI.
+- **Tier 4 (Local Offline)**: Ollama hoặc local vLLM Qwen 35B trên DGX Spark.
+- **Tier 5 (Mock)**: Giả lập kết quả cho testing không tốn token.
+
+**Kháng lỗi Ngân sách (`BudgetExceededError`)**:
+Khi LiteLLM Gateway hết quota hoặc vượt ngưỡng chi phí, lỗi trả về đa dạng (JSON structured hoặc plain text). Router tự động nhận diện mẫu lỗi:
+```python
+is_budget_exceeded = "budget" in str(exc).lower() and "exceeded" in str(exc).lower()
+```
+Khi kích hoạt, hệ thống lập tức chuyển thẳng sang Tier 2 hoặc Tier 4 (Local Ollama/Qwen), ngăn chặn triệt để vòng lặp thử lại vô hạn (infinite retry loop) và bảo đảm tác vụ không bị đình trệ.
 
 ---
 

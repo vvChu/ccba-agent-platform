@@ -39,7 +39,7 @@ class CircuitBreaker:
     _state: CircuitState = field(default=CircuitState.CLOSED, init=False)
     _consecutive_fails: int = field(default=0, init=False)
     _last_failure_time: float = field(default=0.0, init=False)
-    _request_times: list = field(default_factory=list, init=False)
+    _request_times: list[float] = field(default_factory=list, init=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     @property
@@ -94,14 +94,28 @@ class CircuitBreaker:
             return result
 
         except Exception as e:
+            err_str = str(e).lower()
+            is_budget_error = "budget" in err_str and "exceeded" in err_str
+
             with self._lock:
                 self._consecutive_fails += 1
                 self._last_failure_time = time.time()
 
-                if self._consecutive_fails >= self.failure_threshold:
+                if is_budget_error or self._consecutive_fails >= self.failure_threshold:
                     self._state = CircuitState.OPEN
 
-            # In log lỗi JSON chuẩn hóa khi gặp exception
+            if is_budget_error:
+                # Fast-Fail khi cạn ngân sách: Không sleep backoff, xuất lỗi gợi ý chuyển sang local model
+                error_json = format_error_json(
+                    CCBAErrorCode.CIRCUIT_BREAKER_OPEN,
+                    f"LiteLLM Budget Exceeded: {str(e)}",
+                    "Budget limit reached on LiteLLM Gateway. Circuit tripped OPEN immediately. "
+                    "Suggest switching to local fallback model (qwen-local-primary / ollama) or replenishing budget.",
+                )
+                print(error_json, file=sys.stderr)
+                return None
+
+            # In log lỗi JSON chuẩn hóa khi gặp exception thông thường
             error_json = format_error_json(
                 CCBAErrorCode.RATE_LIMIT_HIT,
                 f"LLM API call failed: {str(e)}",

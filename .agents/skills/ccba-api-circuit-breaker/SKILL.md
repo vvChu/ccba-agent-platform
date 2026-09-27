@@ -10,7 +10,7 @@ bundle: _core
 tier: kernel
 command: /ccba-api-circuit-breaker
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 dependencies:
 - ccba-ai-gateway-sdk
@@ -104,12 +104,22 @@ LLM Agents hoặc debugger tự động (`mock-debugger`) có thể parse trực
 1. Đọc trường `recovery_suggestion` để biết cách xử lý tiếp theo.
 2. Tự động chuyển đổi model LLM dự phòng hoặc trì hoãn/tắt luồng an toàn.
 
+### Cơ chế Kháng lỗi Ngân sách LiteLLM & Local Fallback (RULE-2.12)
+LiteLLM Gateway v1.83+ trên Server Spark trả về ngoại lệ ngân sách đa định dạng (cả JSON structured `{"type": "budget_exceeded"}` lẫn chuỗi thô `Budget has been exceeded! ...`). Circuit Breaker nhận diện chuẩn xác thông qua kiểm tra đồng thời:
+```python
+is_budget_error = "budget" in str(e).lower() and "exceeded" in str(e).lower()
+```
+Khi phát hiện lỗi ngân sách:
+- **Fast-Fail tức thì:** Circuit lập tức ngắt sang `CircuitState.OPEN` mà không chờ số lần lỗi đạt `failure_threshold`, đồng thời bỏ qua thời gian `backoff_seconds`.
+- **Cảnh báo chuẩn:** Xuất JSON mã lỗi `CCBAErrorCode.CIRCUIT_BREAKER_OPEN` ra `stderr` khuyến nghị chuyển đổi sang mô hình cục bộ không tốn phí (`qwen-local-primary` / Ollama Qwen 35B).
+- **Chống Retry vô hạn:** Kết hợp `cache_rejected()` để bỏ qua item gây cạn quota ở các vòng lặp tiếp theo.
+
 ---
 
 ## Centralized Gateway (:8090) & Soft Cooldown Auto-Downgrade Pattern
 
 ### Kiến trúc Tập Trung tại Gateway Cổng :8090
-Toàn bộ danh mục mô hình (kể cả Gemini Flash High, Claude Sonnet 4.6 Thinking, Claude Opus 4.6 Thinking và local Qwen) được cung cấp **tập trung tại Gateway duy nhất cổng `:8090`** trên Server Spark (`http://100.83.192.30:8090/v1`). Không còn phân tách endpoint hay proxy phụ trợ trên cổng `:8045`.
+Toàn bộ danh mục mô hình (kể cả Gemini Flash High, Claude Sonnet 4.6 Thinking, Claude Opus 4.6 Thinking và local Qwen) được cung cấp **tập trung tại Gateway duy nhất cổng `:8090`** trên Server Spark (`http://100.83.192.30:8090/v1` <!-- ccba:allow-raw-ip -->). Không còn phân tách endpoint hay proxy phụ trợ trên cổng `:8045`.
 
 ### Bối cảnh & Vấn đề
 Khi một pipeline LLM gọi các mô hình reasoning chuyên biệt (như `claude-opus-4-6`, `claude-sonnet-4-6-thinking`) qua AI Gateway:
