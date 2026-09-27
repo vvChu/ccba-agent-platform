@@ -60,9 +60,9 @@
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành (Legal & Data Standards)
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - Viện dẫn BẮT BUỘC CÒN HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP**. CẤM luật hết hiệu lực.
+  - Viện dẫn BẮT BUỘC CÒN HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP**.
 - **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
-  - Tier 1 (`part=-100`): VIP Vector PDF. Tier 2 (`part=-1&docx=1`): VIP Word (`docx_converter`). Tier 3 (`part=0`): Scan PDF (Dự phòng).
+  - Tier 1 (`part=-100`): VIP Vector PDF. Tier 2 (`part=-1&docx=1`): VIP Word (`docx_converter`). Tier 3 (`part=0`): Scan PDF.
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
   - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm đa dòng; cấm span 1 dòng chỉ trỏ `<a>`.
   - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè file gốc. CI Spoke hard-lock khi thiếu `clauses.json`.
@@ -74,7 +74,7 @@
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent (Workflows, Commands & Review)
 
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
-  - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model). Cấm nhảy thẳng vào implement/spec/tickets.
+  - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model).
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
   - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` (Tier 2A) cấm tiền tố `/`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
@@ -84,9 +84,9 @@
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
 - *(RULE-4.7 tại Mục 25 của archive/session_learnings_history.md)*
-- **RULE-4.8 [Automated Review Danger Triage, Two-way Door Gate & Maskara Diff Sanitizer]**:
-  - *Danger Triage CI Gate*: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate; Pure Docs (`.md/**`, `README.md`, `WALKTHROUGH.md`) qua Defense-in-Depth $\rightarrow$ Two-way Door Fast-Path gán nhãn và Auto-Approve an toàn.
-  - *Maskara Diff Gate*: `sanitize_review_diff.py --check` là Hard Blocker chặn merge PR rò rỉ secret. Deduplicate nhận xét báo cáo PR lũy kế (`per_page: 100`).
+- **RULE-4.8 [Review Danger Triage, Two-way Door & Maskara Diff Gate]**:
+  - *Danger Triage CI Gate*: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate; Pure Docs qua Fast-Path Auto-Approve an toàn.
+  - *Maskara Diff Gate*: `sanitize_review_diff.py --check` là Hard Blocker chặn merge PR rò rỉ secret.
 - **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
   - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
   - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
