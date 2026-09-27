@@ -37,6 +37,7 @@ Chia nhỏ công việc thành các ticket theo nguyên lý **lát cắt dọc (
 
 - Mỗi lát cắt phải đi qua ĐẦY ĐỦ các tầng kiến trúc của hệ thống (Ví dụ: từ schema cơ sở dữ liệu $\rightarrow$ logic xử lý API $\rightarrow$ giao diện UI $\rightarrow$ bộ kiểm thử test case). Tuyệt đối không bẻ ticket cắt ngang (chỉ làm database hoặc chỉ làm UI).
 - Một lát cắt hoàn thành phải có khả năng chạy thử nghiệm và kiểm chứng độc lập (demoable/verifiable).
+- **Ngân sách kích thước (Micro-PR Budget)**: Mỗi ticket phải được thiết kế để diff khi triển khai **$\le 150-200$ dòng code**, neo vào tối đa **1 Public Deep Seam** trong `catalog.yaml`.
 - Quy mô của mỗi ticket phải vừa vặn để giải quyết trọn vẹn trong một phiên làm việc (context window) duy nhất của Agent.
 - Mọi hoạt động tái cấu trúc dọn đường (pre-factoring) phải được tách thành ticket thực hiện trước.
 

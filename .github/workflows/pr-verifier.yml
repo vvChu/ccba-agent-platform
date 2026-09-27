@@ -1,0 +1,178 @@
+name: PR Danger Triage & Verifier Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  triage-and-verify:
+    name: Danger Triage & Deterministic Gate
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv & Core Verification Harness
+        run: |
+          pip install uv
+          uv pip install ruff mypy pytest pytest-cov pytest-timeout pyyaml requests pydantic pydantic-settings psutil --system
+          uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-maskara[dev]" --system
+          uv pip install -e "packages/ccba-qc-core" --system
+          uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+          uv pip install -e "packages/ccba-legal-intel[dev]" --system
+          uv pip install -e "packages/mdconverter[dev]" --system
+
+      - name: Danger Triage & PR Size Inspection
+        id: triage
+        run: |
+          # Compare against base branch
+          BASE_REF="origin/${{ github.base_ref }}"
+          CHANGED_FILES=$(git diff --name-only "$BASE_REF"...HEAD)
+          echo "=== Changed Files ==="
+          echo "$CHANGED_FILES"
+          echo "======================"
+
+          # Check if changes touch core architecture or governance (High Danger)
+          DANGER_LEVEL="LOW"
+          for file in $CHANGED_FILES; do
+            case "$file" in
+              packages/ccba-harness/*|*AGENTS.md|scripts/governance/*|scripts/validate_skills.py|scripts/sync_hub_adr_matrix.py|.github/workflows/*|pyproject.toml)
+                DANGER_LEVEL="HIGH"
+                break
+                ;;
+            esac
+          done
+          echo "danger_level=$DANGER_LEVEL" >> $GITHUB_OUTPUT
+          echo "Danger Level evaluated as: $DANGER_LEVEL"
+
+          # Calculate code diff size using native git diff --shortstat
+          DIFF_STAT=$(git diff --shortstat "$BASE_REF"...HEAD -- . ':(exclude)*.md' ':(exclude)*.lock' ':(exclude)*.json' ':(exclude)tests/fixtures/*' ':(exclude).md/*')
+          ADDED_LINES=0
+          DELETED_LINES=0
+          if [[ "$DIFF_STAT" =~ ([0-9]+)\ insertion ]]; then
+            ADDED_LINES="${BASH_REMATCH[1]}"
+          fi
+          if [[ "$DIFF_STAT" =~ ([0-9]+)\ deletion ]]; then
+            DELETED_LINES="${BASH_REMATCH[1]}"
+          fi
+          TOTAL_LOC=$((ADDED_LINES + DELETED_LINES))
+          echo "total_loc=$TOTAL_LOC" >> $GITHUB_OUTPUT
+          echo "Total Logic LOC diff: $TOTAL_LOC ($DIFF_STAT)"
+
+          # Warning if PR exceeds Micro-PR budget (>300 LOC)
+          if [ "$TOTAL_LOC" -gt 300 ]; then
+            echo "size_warning=true" >> $GITHUB_OUTPUT
+            echo "::warning title=Micro-PR Size Exceeded::PR contains $TOTAL_LOC lines of code diff (>300 LOC budget). Recommend decomposition into atomic slices."
+          else
+            echo "size_warning=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Deterministic Verifier (ADR-0058)
+        id: verifier
+        env:
+          PYTHONPATH: .
+          CCBA_AI_MOCK: "1"
+        run: |
+          mkdir -p .reports
+          REPORT_FILE=".reports/pr_verification_report.md"
+          
+          # Choose preset: 'ci' for high danger, 'code' for low danger
+          if [ "${{ steps.triage.outputs.danger_level }}" = "HIGH" ]; then
+            PRESET="ci"
+          else
+            PRESET="code"
+          fi
+
+          echo "Running ccba-harness verify-patch with preset: $PRESET"
+          set +e
+          python -m ccba_harness verify-patch --preset "$PRESET" --report-file "$REPORT_FILE"
+          VERIFY_EXIT=$?
+          set -e
+
+          echo "verify_exit=$VERIFY_EXIT" >> $GITHUB_OUTPUT
+          echo "Verification exited with code: $VERIFY_EXIT"
+
+      - name: Post PR Comment & Diagnostic Summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const dangerLevel = "${{ steps.triage.outputs.danger_level }}";
+            const sizeWarning = "${{ steps.triage.outputs.size_warning }}" === "true";
+            const totalLoc = "${{ steps.triage.outputs.total_loc }}";
+            const verifyExit = parseInt("${{ steps.verifier.outputs.verify_exit }}", 10);
+
+            let commentBody = `### 🛡️ CCBA PR Quality Gate Report\n\n`;
+            commentBody += `| Metric | Assessment |\n| :--- | :--- |\n`;
+            commentBody += `| **Danger Triage Level** | \`${dangerLevel}\` (${dangerLevel === 'HIGH' ? '🔴 Hard Blocking Gate' : '🟡 Soft Advisory Gate'}) |\n`;
+            commentBody += `| **Logic Diff Size** | \`${totalLoc} LOC\` ${sizeWarning ? '⚠️ *(Exceeds 300 LOC micro-PR budget)*' : '✅ *(Within micro-PR budget)*'} |\n`;
+            commentBody += `| **Verifier Status** | ${verifyExit === 0 ? '✅ PASSED (Exit 0)' : '❌ FAILED (Exit ' + verifyExit + ')'} |\n\n`;
+
+            if (sizeWarning) {
+              commentBody += `> ⚠️ **Micro-PR Notice:** This PR introduces ${totalLoc} lines of logic changes. Per CCBA guidelines, please consider splitting large changes into smaller tracer-bullet vertical slices (≤ 200 LOC per PR) to reduce review fatigue and conflict risk.\n\n`;
+            }
+
+            const reportPath = '.reports/pr_verification_report.md';
+            if (fs.existsSync(reportPath)) {
+              const reportContent = fs.readFileSync(reportPath, 'utf8');
+              commentBody += `<details><summary><b>📋 View Detailed Verification Diagnostics</b></summary>\n\n${reportContent}\n</details>\n`;
+            }
+
+            // Find existing bot comment to update instead of spamming new comments
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const existingComment = comments.data.find(c => 
+              c.user.type === 'Bot' && c.body.includes('### 🛡️ CCBA PR Quality Gate Report')
+            );
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            }
+
+      - name: Enforce Danger Triage Gate
+        run: |
+          DANGER_LEVEL="${{ steps.triage.outputs.danger_level }}"
+          VERIFY_EXIT="${{ steps.verifier.outputs.verify_exit }}"
+
+          if [ "$VERIFY_EXIT" -ne 0 ]; then
+            if [ "$DANGER_LEVEL" = "HIGH" ]; then
+              echo "::error title=Hard Blocking Gate Failed::Verification failed on a HIGH-danger PR touching core/governance. Merging is strictly locked."
+              exit 1
+            else
+              echo "::warning title=Soft Advisory Check Failed::Verification failed on a LOW-danger PR. Diagnostics reported above; please review before merge."
+              exit 0
+            fi
+          fi
+          echo "Quality Gate passed successfully."
