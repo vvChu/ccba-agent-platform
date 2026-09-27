@@ -403,6 +403,7 @@ def clean_subagent_artifacts(root_dir: Path, dry_run: bool) -> None:
         "rules",
         "templates",
         "resources",
+        "teams",
         "AGENTS.md",
         ".gitkeep",
     }
