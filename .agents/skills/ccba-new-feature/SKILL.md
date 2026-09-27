@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 triggers:
 - new feature
@@ -37,7 +37,9 @@ Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch t�
   ```bash
   git checkout main && git pull origin main
   ```
-- **Tiêu chí hoàn thành:** Working tree sạch sẽ và branch `main` được cập nhật code mới nhất từ remote.
+- **Bảo toàn Cấu trúc Nhóm Tác tử Canonical (`.agents/teams/`):**
+  Thư mục `.agents/teams/` lưu trữ các đặc tả nhóm tác tử (`*_team_sheet.md` theo ADR-0053 và ADR-0060) là tài nguyên canonical chính thức của nền tảng. Tuyệt đối không xóa bỏ hay di dời trong các chu kỳ chuẩn bị và dọn dẹp.
+- **Tiêu chí hoàn thành:** Working tree sạch sẽ, branch `main` được cập nhật code mới nhất từ remote, và thư mục canonical `.agents/teams/` được bảo tồn nguyên vẹn.
 
 ### Bước 2: Dọn dẹp các branch cũ đã merge
 Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ trợ cả merge thông thường và dọn dẹp prune):
@@ -184,7 +186,7 @@ Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ 
 - **Định tuyến thực thi (Execution Routing):** Đọc khuyến nghị từ Agent Brief:
   - 🟢 **Standard** (`/ccba-implement`): Mở session chat mới sạch sẽ và gọi `/ccba-implement`.
   - 🟣 **Deep Reasoning** (`/boost`): Kích hoạt điều tra chuyên sâu cho logic thuật toán phức tạp.
-  - 🔵 **Multi-Agent Orchestration** (`/ccba-teamwork` hoặc `invoke_subagent`): Phân rã Seams và chạy đa tác nhân song song.
+  - 🔵 **Multi-Agent Orchestration** (`/ccba-teamwork` hoặc `invoke_subagent`): Phân rã Seams và chạy đa tác nhân song song, lưu trữ và bảo vệ đặc tả phân công tại `.agents/teams/[project]_team_sheet.md`.
 - **Tiêu chí hoàn thành:** Lựa chọn đúng phương thức định tuyến thực thi và chuyển giao ngữ cảnh sạch sẽ.
 
 ### Bước 8: Lập trình, Kiểm chứng & Tự sửa lỗi (Coding & Verification Phase)
