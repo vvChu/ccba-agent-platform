@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-27] [synthesize] | Đóng Gói Nghiên Cứu Mô Hình Cursor/Bugbot & Ban Hành Sprint 1 Decision Log (PR #406)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-research, /ccba-grilling, /boost & /ccba-create-pr)
+- **Affected Files**: `.github/bugbot-rules.md`, `.github/workflows/pr-verifier.yml`, `.agents/skills/ccba-to-spec/SKILL.md`, `.agents/skills/ccba-to-spec/references/spec_decomposition.md`, `.md/knowledge/research_and_studies/decision-log-sprint1-improvements.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất chuỗi nghiên cứu và triển khai cải tiến hạ tầng Sprint 1:
+  1. **Nghiên Cứu Phản Biện Đối Kháng (/ccba-research)**: Phân tích mô hình 2,500 PRs/tháng của Cursor; Subagent A đề xuất 4 giải pháp, Subagent B rà soát 4 rủi ro trọng yếu (Quota storm, Maskara trust boundary, Bot-to-bot collision, KISS).
+  2. **Biên Bản Quyết Định Thiết Kế (/ccba-grilling)**: Thống nhất 3 quyết định kiến trúc: Danger Triage CI Gate, Opt-in Bugbot Review với Maskara sanitize, và Dual Soft Gate cho Atomic Micro-PRs ($\le 200$ LOC).
+  3. **Triển Khai & Kiểm Định Độc Lập (/boost)**: Tạo `.github/bugbot-rules.md` (10 Invariants), xây dựng `.github/workflows/pr-verifier.yml` gác cổng CI tự động, nâng cấp kỹ năng `ccba-to-spec` với Micro-Task Slicing Invariant; mở PR #406 trên GitHub.
+
+---
+
 ## [2026-09-27] [synthesize] | Phát Hành PR #402 (Issue #366): Kiến Trúc Liên Bang 4-Hubs × Spokes & Điều Phối Hệ Sinh Thái Tri Thức (ADR-0060)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /teamwork-preview, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.gitignore`, `docs/adr/ADR-0060-4-hubs-federated-architecture.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `packages/ccba-ai/src/ccba_ai/fallback.py`, `packages/ccba-legal-intel/src/ccba_legal_intel/federated_rag.py`, `tests/`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `walkthrough.md`
