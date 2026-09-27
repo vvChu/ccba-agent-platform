@@ -20,8 +20,8 @@ Hoàn thành trọn vẹn 3 đề xuất còn lại (Đề xuất 6, 1, 5) trong
 
 ## 📝 Danh Mục Nhiệm Vụ (Task Breakdown & Checklist)
 
-### [ ] Task 1: Cơ Chế Phân Giải Dataset 2 Tầng Fallback (ADR-0060)
-- **Trạng thái:** ⏳ ĐANG CHỜ KÍCH HOẠT
+### [x] Task 1: Cơ Chế Phân Giải Dataset 2 Tầng Fallback (ADR-0060)
+- **Trạng thái:** ✅ HOÀN THÀNH
 - **Tệp sửa đổi:** 
   - `packages/ccba-harness/src/ccba_harness/evals/archetypes.py`
   - `packages/ccba-harness/src/ccba_harness/evals/runner.py`
