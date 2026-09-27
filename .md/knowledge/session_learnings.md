@@ -23,13 +23,10 @@
   - *Universal Invariant Regex*: Regex multiline bảo tồn 100% điều khoản cục bộ khi sync.
   - *Cross-Drive Fallback*: Khi `relpath` lỗi `ValueError`, fallback `hub_path` về `None`, tránh gắn cứng ổ đĩa.
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
-  - *Platform-Aware KISS*: Tái sử dụng Monorepo Package Seams / Master Skills có sẵn là KISS bậc 1. CẤM script chắp vá hay ad-hoc data silo.
-  - *Pre-Flight Gate Receipt*: Bắt buộc tra cứu Seam qua CLI (`compile_catalog.py --query <keyword>`) trước khi đề xuất code mới.
-  - *Anti-Phantom Deferral*: CẤM chia "Phase 1 chắp vá" hoãn kiến trúc chuẩn sang "Phase 2" khi hạ tầng đã sẵn sàng.
+  - Tái sử dụng Package Seams / Master Skills có sẵn là KISS bậc 1; CẤM script chắp vá. Tra cứu Seam qua CLI (`compile_catalog.py --query <kw>`). CẤM hoãn kiến trúc chuẩn sang Phase 2.
 - **RULE-1.11 [Static Seam Verification, Punctuation Immunity & AST Span Linter]**:
-  - *Static Seam Verification*: `validate_seam_exports()` kiểm tra 3 rào chắn: Package Spoofing, Filesystem Existence, và Symbol Parity với `__all__`.
-  - *Punctuation Immunity*: Trích xuất symbol từ markdown luôn dùng `s.strip().rstrip(".,;")` chống dấu chấm câu văn xuôi làm ô nhiễm symbol.
-  - *AST Span Linter*: Quét exemption comment trên AST import BẮT BUỘC dùng dải `range(node.lineno - 1, getattr(node, "end_lineno", node.lineno))`.
+  - `validate_seam_exports()` kiểm tra Package Spoofing, Filesystem Existence, và Symbol Parity với `__all__`.
+  - Trích xuất symbol luôn `.rstrip(".,;")`. Quét exemption comment import dùng dải `range(node.lineno - 1, getattr(node, "end_lineno", node.lineno))`.
 - **RULE-1.12 [ADR 0060 — Team Whitelist & 4-Hubs Federated Architecture]**:
   - *Team Whitelist*: BẮT BUỘC unignore `!.agents/teams/` trong `.gitignore` để lưu trữ team specs.
   - *Federated Hubs Alignment*: 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) vận hành Federated Decentralized, tự trị chia sẻ tri thức qua CLI/REST/gRPC.
@@ -95,6 +92,9 @@
 - **RULE-4.8 [Automated Review Danger Triage, Two-way Door Gate & Maskara Diff Sanitizer]**:
   - *Danger Triage CI Gate*: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate; Pure Docs (`.md/**`, `README.md`, `WALKTHROUGH.md`) qua Defense-in-Depth $\rightarrow$ Two-way Door Fast-Path gán nhãn và Auto-Approve an toàn.
   - *Maskara Diff Gate*: `sanitize_review_diff.py --check` là Hard Blocker chặn merge PR rò rỉ secret. Deduplicate nhận xét báo cáo PR lũy kế (`per_page: 100`).
+- **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
+  - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
+  - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
 
 ---
 
