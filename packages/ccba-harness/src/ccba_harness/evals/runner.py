@@ -24,8 +24,37 @@ from .scorers import (
 )
 
 
+async def _safe_score_item(
+    scorer: BaseScorer,
+    task_output: Any,
+    item: EvalItem,
+) -> ScoreResult:
+    """Safely executes a scorer against an item output, capturing runtime exceptions."""
+    try:
+        res = scorer.score(task_output, item)
+        if asyncio.iscoroutine(res):
+            res = await res
+        if isinstance(res, ScoreResult):
+            return res
+        return ScoreResult(
+            scorer_name=scorer.name,
+            score=0.0,
+            reasoning=f"Scorer returned invalid type: {type(res).__name__}",
+            is_critical_fail=getattr(scorer, "is_critical", False),
+        )
+    except Exception as exc:
+        return ScoreResult(
+            scorer_name=scorer.name,
+            score=0.0,
+            reasoning=f"Scorer execution failed: {type(exc).__name__}: {exc}",
+            is_critical_fail=getattr(scorer, "is_critical", False),
+        )
+
+
 class EvalRunner:
     """Orchestrates test execution over evaluation datasets with multi-scorer weighting."""
+
+    _safe_score_item = staticmethod(_safe_score_item)
 
     def __init__(
         self,
@@ -84,9 +113,23 @@ class EvalRunner:
                     exception=task_exc,
                 )
 
-            # Score output against all scorers concurrently
-            score_tasks = [s.score(task_output, item) for s in scorers]
-            scores = await asyncio.gather(*score_tasks)
+            # Score output against all scorers concurrently with fault-tolerance
+            score_tasks = [_safe_score_item(s, task_output, item) for s in scorers]
+            gather_results = await asyncio.gather(*score_tasks, return_exceptions=True)
+
+            scores: list[ScoreResult] = []
+            for s, res in zip(scorers, gather_results, strict=False):
+                if isinstance(res, BaseException):
+                    scores.append(
+                        ScoreResult(
+                            scorer_name=s.name,
+                            score=0.0,
+                            reasoning=f"Scorer execution failed: {type(res).__name__}: {res}",
+                            is_critical_fail=getattr(s, "is_critical", False),
+                        )
+                    )
+                else:
+                    scores.append(res)
 
             # Calculate weighted composite score (0.0 to 100.0)
             total_weight = sum(s.weight for s in scorers)

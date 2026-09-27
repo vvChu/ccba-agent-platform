@@ -43,13 +43,14 @@ Triển khai trọn vẹn 3 đề xuất cốt lõi (Đề xuất 2, 4, 3) từ 
   - `pytest packages/ccba-harness/tests/test_archetypes_catalog.py packages/ccba-harness/tests/test_evals_engine.py` đạt 100% PASS.
   - Không còn tồn tại biến `SKILL_DATASET_ALIASES` trong codebase.
 
-### [ ] Task 3: Tăng cường tính chống chịu lỗi (Fault-Tolerant) cho `EvalRunner`
+### [x] Task 3: Tăng cường tính chống chịu lỗi (Fault-Tolerant) cho `EvalRunner`
+- **Trạng thái:** ✅ HOÀN TẤT (17/17 tests passed, hoàn thiện `_safe_score_item` bọc lỗi scorer và chuyển đổi an toàn các exception trong `asyncio.gather(..., return_exceptions=True)`).
 - **Tệp sửa đổi:** `packages/ccba-harness/src/ccba_harness/evals/runner.py`
 - **Tệp kiểm thử:** `packages/ccba-harness/tests/test_evals_engine.py`
 - **Yêu cầu kỹ thuật:**
-  - Trong `runner.py:87-88`: Xây dựng hàm `_safe_score_item(scorer, task_output, item)` có bọc `try...except Exception as exc`.
+  - Trong `runner.py`: Xây dựng hàm `_safe_score_item(scorer, task_output, item)` có bọc `try...except Exception as exc`.
   - Nếu scorer raise Exception: Trả về `ScoreResult(scorer_name=scorer.name, score=0.0, reasoning=f"Scorer execution failed: {type(exc).__name__}: {exc}")`.
-  - Trong `asyncio.gather(*score_tasks, return_exceptions=True)`: Kiểm tra nếu phần tử trả về là Exception thì chuyển đổi thành `ScoreResult` an toàn với score `0.0`.
+  - Trong `asyncio.gather(*score_tasks, return_exceptions=True)`: Kiểm tra nếu phần tử trả về là Exception/BaseException thì chuyển đổi thành `ScoreResult` an toàn với score `0.0`.
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
   - Bổ sung 1 unit test trong `test_evals_engine.py` kiểm chứng trường hợp một Scorer bị crash (ví dụ cố tình raise `RuntimeError`) thì Runner vẫn hoàn tất với exit code an toàn và ghi nhận điểm 0 cho scorer đó.
   - Toàn bộ suite `pytest packages/ccba-harness/tests` đạt 100% PASS.

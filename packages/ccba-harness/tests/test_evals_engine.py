@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 
 import pytest
 
 from ccba_harness.evals import (
+    BaseScorer,
     EvalItem,
     EvalRunner,
     ExactMatchScorer,
@@ -19,8 +21,9 @@ from ccba_harness.evals import (
     LengthBoundsScorer,
     LLMRubricScorer,
     RegexScorer,
+    ScoreResult,
 )
-from ccba_harness.evals.runner import load_eval_dataset
+from ccba_harness.evals.runner import _safe_score_item, load_eval_dataset
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -452,3 +455,86 @@ def test_ssot_dataset_resolution_and_no_aliases():
 
     platform_items = load_eval_dataset(skill_name="platform_tooling")
     assert len(platform_items) >= 5
+
+
+def test_eval_runner_fault_tolerant_on_scorer_crash():
+    """Verify that a scorer raising an exception does not crash the runner and records score 0.0 with reasoning."""
+
+    class CrashingScorer(BaseScorer):
+        def __init__(
+            self,
+            name: str = "crashing_scorer",
+            weight: float = 1.0,
+            is_critical: bool = False,
+        ) -> None:
+            super().__init__(name=name, weight=weight, is_critical=is_critical)
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise RuntimeError("Database connection timed out during scoring")
+
+    dataset = [
+        EvalItem(id="crash_case_1", input_prompt="Ping", golden_answer="Pong"),
+    ]
+
+    async def mock_task(item: EvalItem) -> str:
+        return item.golden_answer or ""
+
+    scorers = [
+        ExactMatchScorer(name="exact", weight=1.0),
+        CrashingScorer(name="crashing_scorer", weight=1.0),
+    ]
+
+    runner = EvalRunner(default_pass_threshold=40.0)
+    report = asyncio.run(runner.run(dataset, mock_task, scorers))
+
+    # Runner completes successfully without raising
+    assert report.total_items == 1
+    item_res = report.item_results[0]
+    assert len(item_res.scores) == 2
+
+    # Scorer 1 (ExactMatch) succeeded
+    exact_res = next(s for s in item_res.scores if s.scorer_name == "exact")
+    assert exact_res.score == 1.0
+
+    # Scorer 2 (CrashingScorer) failed gracefully with score 0.0 and diagnostic reasoning
+    crashed_res = next(s for s in item_res.scores if s.scorer_name == "crashing_scorer")
+    assert crashed_res.score == 0.0
+    assert (
+        "Scorer execution failed: RuntimeError: Database connection timed out during scoring"
+        in (crashed_res.reasoning or "")
+    )
+
+    # Composite score: (1.0 * 1.0 + 1.0 * 0.0) / 2.0 * 100 = 50.0%
+    assert item_res.composite_score == 50.0
+    assert item_res.passed
+    assert not item_res.critical_failed
+    assert report.summary_by_scorer["crashing_scorer"] == 0.0
+    assert report.summary_by_scorer["exact"] == 100.0
+
+    # Direct helper validation for _safe_score_item
+    item = dataset[0]
+    direct_res = asyncio.run(_safe_score_item(CrashingScorer(name="direct_crasher"), "Pong", item))
+    assert direct_res.score == 0.0
+    assert "Scorer execution failed: RuntimeError" in (direct_res.reasoning or "")
+
+    # BaseException handling in asyncio.gather
+    class BaseExceptionScorer(BaseScorer):
+        def __init__(self, name: str = "base_exc_scorer") -> None:
+            super().__init__(name=name, weight=1.0)
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise BaseException("Unusual low-level failure")
+
+    report_base = asyncio.run(runner.run(dataset, mock_task, [BaseExceptionScorer()]))
+    assert report_base.total_items == 1
+    base_res = report_base.item_results[0].scores[0]
+    assert base_res.score == 0.0
+    assert "Scorer execution failed: BaseException: Unusual low-level failure" in (
+        base_res.reasoning or ""
+    )
+
+    # Critical failing scorer triggers critical_failed on item
+    crit_crasher = CrashingScorer(name="crit_crasher", is_critical=True)
+    report_crit = asyncio.run(runner.run(dataset, mock_task, [crit_crasher]))
+    assert report_crit.item_results[0].critical_failed
+    assert not report_crit.item_results[0].passed
