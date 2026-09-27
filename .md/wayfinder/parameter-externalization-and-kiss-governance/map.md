@@ -39,6 +39,7 @@ Xây dựng và hoàn thiện **Hệ Thống Quản Trị Tham Số Động & C�
 *   `[TICKET-003] [Chuẩn Hóa Model Routing Across Skills & Core Packages]`: Đã xóa sổ 100% hardcoded model strings (`gemini-*`, `qwen-*`, `claude-*`), raw network IPs (`100.83.192.30`), và Windows machine paths trên 74 skills và toàn bộ core packages (`ccba-ai`, `ccba-qc-core`, `mdconverter`, `ccba-legal-intel`, `ccba-pdf-prep`, `ccba-ooxml`, `ccba-harness`). Đạt **0 violations toàn sàn**, 544/544 package tests PASS, 439/439 legal tests PASS, 246/246 governance tests PASS (Commit `a404d1c6`).
 *   `[TICKET-004] [Declarative Archetype Catalog & Benchmark Schema Externalization]`: Đã tách toàn bộ bảng từ khóa định tuyến của 17 domain archetypes sang tệp cấu hình khai báo `archetypes_catalog.yaml` với cơ chế In-Memory Singleton Caching (đo thực tế latency < 0.05ms $\ll$ 2ms, giải quyết dứt điểm [FOG-001]). Bảo đảm 100% backward compatibility cho tất cả caller và unit tests. 404/404 harness tests PASS, 6/6 catalog tests PASS (Commit `f859799b`).
 *   `[TICKET-005] [Scorers Hyperparameter Externalization & Declarative Thresholds]`: Đã khai báo SSOT `scorers_config.yaml` cho toàn bộ 18 scorer suites (weights, is_critical, min_length, max_length). Triển khai `load_scorers_config()`, `reload_scorers_config()`, và hàm phân giải ưu tiên 3 cấp `get_scorer_params()` kết hợp Singleton Caching (latency < 0.001ms $\ll$ 0.05ms, giải quyết dứt điểm [FOG-002]). Bổ sung cơ chế ghi đè linh hoạt động theo từng test item (`BaseScorer.get_effective_weight()`, `get_effective_is_critical()`, `LengthBoundsScorer` item metadata override). Toàn bộ 411/411 harness tests PASS, 7/7 scorers_config tests PASS, linter 0 violations (Commit `ff448de6`).
+*   `[TICKET-006] [Tuner Hyperparameters & Ratchet Thresholds Externalization]`: Đã tách toàn bộ siêu tham số của thuật toán Git-Ratchet Optimizer, Token Usage Ceilings, và Concurrency Rate Limiter sang tệp cấu hình khai báo `tuner_config.yaml`. Triển khai cơ chế phân giải 4 cấp: Explicit Parameter $\succ$ Environment Variable $\succ$ Declarative YAML $\succ$ Code Fallback với Singleton Caching (đo thực tế latency < 0.001ms $\ll$ 0.05ms). Toàn bộ 416/416 harness tests PASS, 5/5 tuner_config tests PASS, linter 0 violations (Commit `03ba8013`).
 
 ---
 
@@ -46,9 +47,9 @@ Xây dựng và hoàn thiện **Hệ Thống Quản Trị Tham Số Động & C�
 
 Các ticket unblocked có thể triển khai ngay:
 
-*   **[TICKET-006] [Tuner Hyperparameters & Ratchet Thresholds Externalization]** `[Task | AFK]`:
-    - *Mô tả:* Tách các tham số thuật toán ratchet/tuner trong `packages/ccba-harness/src/ccba_harness/tuner/` (ví dụ: `default_max_iterations`, `deadband_thresholds`, `patience`, `min_improvement_delta`) thành file cấu hình khai báo YAML hoặc dataclass settings có thể tinh chỉnh độc lập, giữ nguyên giao diện API hiện hành.
-    - *Trạng thái:* `READY TO CLAIM` (Unblocked sau khi TICKET-005 hoàn tất)
+*   **[TICKET-007] [Comprehensive Governance Gate Parity & Final Verification Rollup]** `[Task | AFK]`:
+    - *Mô tả:* Chạy toàn bộ các cổng kiểm định chất lượng nghiêm ngặt của nền tảng (`verify-patch` presets, linter AST `check_hardcoded_parameters.py`, `check_dependency_contracts.py`, `compile_catalog.py --check`), kiểm tra chéo không có side-effects hoặc regressions, và đóng gói báo cáo hoàn tất Wayfinder Map.
+    - *Trạng thái:* `READY TO CLAIM` (Unblocked sau khi TICKET-006 hoàn tất)
 
 ---
 
