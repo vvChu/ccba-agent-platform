@@ -1,0 +1,275 @@
+name: PR Danger Triage & Verifier Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  triage-and-verify:
+    name: Danger Triage & Deterministic Gate
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv & Core Verification Harness
+        run: |
+          pip install uv
+          uv pip install ruff mypy pytest pytest-cov pytest-timeout pyyaml requests pydantic pydantic-settings psutil --system
+          uv pip install -e "packages/ccba-harness" --system
+          uv pip install -e "packages/ccba-maskara[dev]" --system
+          uv pip install -e "packages/ccba-qc-core" --system
+          uv pip install -e "packages/ccba-ai[dev]" --system
+          uv pip install -e "packages/ccba-pdf-prep[dev]" --system
+          uv pip install -e "packages/ccba-legal-intel[dev]" --system
+          uv pip install -e "packages/mdconverter[dev]" --system
+
+      - name: Danger Triage & PR Size Inspection
+        id: triage
+        run: |
+          # Compare against base branch
+          BASE_REF="origin/${{ github.base_ref }}"
+          CHANGED_FILES=$(git diff --name-only "$BASE_REF"...HEAD)
+          echo "=== Changed Files ==="
+          echo "$CHANGED_FILES"
+          echo "======================"
+
+          # Check if changes touch core architecture or governance (High Danger)
+          DANGER_LEVEL="LOW"
+          for file in $CHANGED_FILES; do
+            case "$file" in
+              packages/ccba-harness/*|*AGENTS.md|scripts/governance/*|scripts/validate_skills.py|scripts/sync_hub_adr_matrix.py|.github/workflows/*|pyproject.toml)
+                DANGER_LEVEL="HIGH"
+                break
+                ;;
+            esac
+          done
+          echo "danger_level=$DANGER_LEVEL" >> $GITHUB_OUTPUT
+          echo "Danger Level evaluated as: $DANGER_LEVEL"
+
+          # Calculate code diff size using native git diff --shortstat
+          DIFF_STAT=$(git diff --shortstat "$BASE_REF"...HEAD -- . ':(exclude)*.md' ':(exclude)*.lock' ':(exclude)*.json' ':(exclude)tests/fixtures/*' ':(exclude).md/*')
+          ADDED_LINES=0
+          DELETED_LINES=0
+          if [[ "$DIFF_STAT" =~ ([0-9]+)\ insertion ]]; then
+            ADDED_LINES="${BASH_REMATCH[1]}"
+          fi
+          if [[ "$DIFF_STAT" =~ ([0-9]+)\ deletion ]]; then
+            DELETED_LINES="${BASH_REMATCH[1]}"
+          fi
+          TOTAL_LOC=$((ADDED_LINES + DELETED_LINES))
+          echo "total_loc=$TOTAL_LOC" >> $GITHUB_OUTPUT
+          echo "Total Logic LOC diff: $TOTAL_LOC ($DIFF_STAT)"
+
+          # Warning if PR exceeds Micro-PR budget (>300 LOC)
+          if [ "$TOTAL_LOC" -gt 300 ]; then
+            echo "size_warning=true" >> $GITHUB_OUTPUT
+            echo "::warning title=Micro-PR Size Exceeded::PR contains $TOTAL_LOC lines of code diff (>300 LOC budget). Recommend decomposition into atomic slices."
+          else
+            echo "size_warning=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Two-way Door Evaluation (Pure documentation fast path with Defense-in-Depth)
+          IS_TWO_WAY_DOOR="true"
+          if [ -z "$CHANGED_FILES" ]; then
+            IS_TWO_WAY_DOOR="false"
+          fi
+
+          for file in $CHANGED_FILES; do
+            # Denylist: sensitive components, core architecture, workflows, rules and executable code
+            case "$file" in
+              *AGENTS.md|.agents/*|.github/*|docs/adr/*|docs/rules/*|docs/governance/*|packages/*|scripts/*|pyproject.toml|*.py|*.sh|*.yml|*.yaml|*.json|*.toml|*.lock|Dockerfile|Makefile)
+                IS_TWO_WAY_DOOR="false"
+                break
+                ;;
+            esac
+
+            # Allowlist check: must be in .md/, docs/ or standard root documentation files
+            case "$file" in
+              .md/*|docs/*|README.md|WALKTHROUGH.md|walkthrough.md|CONTRIBUTING.md|PLATFORM.md|CONTEXT.md)
+                ;;
+              *)
+                IS_TWO_WAY_DOOR="false"
+                break
+                ;;
+            esac
+          done
+
+          echo "is_two_way_door=$IS_TWO_WAY_DOOR" >> $GITHUB_OUTPUT
+          echo "Two-way Door evaluated as: $IS_TWO_WAY_DOOR"
+
+      - name: Maskara Diff Sanitizer & Security Audit Gate
+        id: maskara
+        run: |
+          BASE_REF="origin/${{ github.base_ref }}"
+          mkdir -p .reports
+          set +e
+          python scripts/governance/sanitize_review_diff.py \
+            --base "$BASE_REF" \
+            --head HEAD \
+            --check \
+            --report-json .reports/maskara_diff_report.json
+          MASKARA_EXIT=$?
+          set -e
+          echo "maskara_exit=$MASKARA_EXIT" >> $GITHUB_OUTPUT
+          echo "Maskara security audit exited with code: $MASKARA_EXIT"
+
+      - name: Run Deterministic Verifier (ADR-0058)
+        id: verifier
+        env:
+          PYTHONPATH: .
+          CCBA_AI_MOCK: "1"
+        run: |
+          mkdir -p .reports
+          REPORT_FILE=".reports/pr_verification_report.md"
+          
+          # Choose preset: 'ci' for high danger, 'code' for low danger
+          if [ "${{ steps.triage.outputs.danger_level }}" = "HIGH" ]; then
+            PRESET="ci"
+          else
+            PRESET="code"
+          fi
+
+          echo "Running ccba-harness verify-patch with preset: $PRESET"
+          set +e
+          python -m ccba_harness verify-patch --preset "$PRESET" --report-file "$REPORT_FILE"
+          VERIFY_EXIT=$?
+          set -e
+
+          echo "verify_exit=$VERIFY_EXIT" >> $GITHUB_OUTPUT
+          echo "Verification exited with code: $VERIFY_EXIT"
+
+      - name: Post PR Comment & Diagnostic Summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const dangerLevel = "${{ steps.triage.outputs.danger_level }}";
+            const sizeWarning = "${{ steps.triage.outputs.size_warning }}" === "true";
+            const totalLoc = "${{ steps.triage.outputs.total_loc }}";
+            const isTwoWayDoor = "${{ steps.triage.outputs.is_two_way_door }}" === "true";
+            const maskaraExit = parseInt("${{ steps.maskara.outputs.maskara_exit }}", 10);
+            const verifyExit = parseInt("${{ steps.verifier.outputs.verify_exit }}", 10);
+
+            let commentBody = `### 🛡️ CCBA PR Quality Gate Report\n\n`;
+            commentBody += `| Metric | Assessment |\n| :--- | :--- |\n`;
+            commentBody += `| **Danger Triage Level** | \`${dangerLevel}\` (${dangerLevel === 'HIGH' ? '🔴 Hard Blocking Gate' : '🟡 Soft Advisory Gate'}) |\n`;
+            commentBody += `| **Logic Diff Size** | \`${totalLoc} LOC\` ${sizeWarning ? '⚠️ *(Exceeds 300 LOC micro-PR budget)*' : '✅ *(Within micro-PR budget)*'} |\n`;
+            commentBody += `| **Two-way Door Fast Path** | \`${isTwoWayDoor}\` ${isTwoWayDoor ? '🚀 *(Documentation only - eligible for auto-approval)*' : '🔒 *(Standard review flow)*'} |\n`;
+            commentBody += `| **Maskara Secret Audit** | ${maskaraExit === 0 ? '✅ PASSED (Clean)' : '🔴 FAILED (Secrets detected in diff)'} |\n`;
+            commentBody += `| **Verifier Status** | ${verifyExit === 0 ? '✅ PASSED (Exit 0)' : '❌ FAILED (Exit ' + verifyExit + ')'} |\n\n`;
+
+            if (maskaraExit !== 0) {
+              commentBody += `> 🔴 **Security Breach Notice:** Maskara detected sensitive tokens, secrets, or API keys in the review diff. Merging is strictly locked until credentials are fully redacted or revoked.\n\n`;
+            }
+
+            if (sizeWarning) {
+              commentBody += `> ⚠️ **Micro-PR Notice:** This PR introduces ${totalLoc} lines of logic changes. Per CCBA guidelines, please consider splitting large changes into smaller tracer-bullet vertical slices (≤ 200 LOC per PR) to reduce review fatigue and conflict risk.\n\n`;
+            }
+
+            const maskaraReportPath = '.reports/maskara_diff_report.json';
+            if (fs.existsSync(maskaraReportPath)) {
+              try {
+                const maskaraData = JSON.parse(fs.readFileSync(maskaraReportPath, 'utf8'));
+                if (maskaraData.total_findings > 0) {
+                  commentBody += `<details><summary><b>🔒 View Maskara Detected Findings (${maskaraData.total_findings})</b></summary>\n\n\`\`\`json\n${JSON.stringify(maskaraData.findings, null, 2)}\n\`\`\`\n</details>\n\n`;
+                }
+              } catch (e) {}
+            }
+
+            const reportPath = '.reports/pr_verification_report.md';
+            if (fs.existsSync(reportPath)) {
+              const reportContent = fs.readFileSync(reportPath, 'utf8');
+              commentBody += `<details><summary><b>📋 View Detailed Verification Diagnostics</b></summary>\n\n${reportContent}\n</details>\n`;
+            }
+
+            // Find existing bot comment to update instead of spamming new comments
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const existingComment = comments.data.find(c => 
+              c.user.type === 'Bot' && c.body.includes('### 🛡️ CCBA PR Quality Gate Report')
+            );
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            }
+
+            // Safe Two-way Door Labeling and Auto-Approval
+            if (isTwoWayDoor && verifyExit === 0 && maskaraExit === 0) {
+              try {
+                await github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['two-way-door']
+                });
+              } catch (err) {
+                core.warning(`Failed to add two-way-door label: ${err.message}`);
+              }
+
+              try {
+                await github.rest.pulls.createReview({
+                  pull_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  event: 'APPROVE',
+                  body: '🤖 **CCBA Bot Auto-Approval**: Pure documentation (Two-way Door) PR with 100% passing quality gates.'
+                });
+              } catch (err) {
+                core.warning(`Auto-approval skipped or not permitted by repo policy: ${err.message}`);
+              }
+            }
+
+      - name: Enforce Danger Triage Gate
+        run: |
+          DANGER_LEVEL="${{ steps.triage.outputs.danger_level }}"
+          MASKARA_EXIT="${{ steps.maskara.outputs.maskara_exit }}"
+          VERIFY_EXIT="${{ steps.verifier.outputs.verify_exit }}"
+
+          # Absolute blocking gate: any secret detected blocks merge immediately
+          if [ "$MASKARA_EXIT" -ne 0 ]; then
+            echo "::error title=Secret Leak Detected::Maskara detected sensitive credentials or API keys in PR diff. Merging is strictly locked."
+            exit 1
+          fi
+
+          if [ "$VERIFY_EXIT" -ne 0 ]; then
+            if [ "$DANGER_LEVEL" = "HIGH" ]; then
+              echo "::error title=Hard Blocking Gate Failed::Verification failed on a HIGH-danger PR touching core/governance. Merging is strictly locked."
+              exit 1
+            else
+              echo "::warning title=Soft Advisory Check Failed::Verification failed on a LOW-danger PR. Diagnostics reported above; please review before merge."
+              exit 0
+            fi
+          fi
+          echo "Quality Gate passed successfully."

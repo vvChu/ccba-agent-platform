@@ -203,6 +203,6 @@ if __name__ == "__main__":
     target = (
         sys.argv[1]
         if len(sys.argv) > 1
-        else r"D:\OneDrive - IBST BIM\00 CCBA\Thiet ke\2024-04 Ban DD HCM - BV NTP"
+        else r"D:\OneDrive - IBST BIM\00 CCBA\Thiet ke\2024-04 Ban DD HCM - BV NTP"  # ccba:allow-machine-path
     )
     main(target)

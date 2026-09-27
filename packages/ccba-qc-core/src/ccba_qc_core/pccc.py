@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ccba_ai import async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ CHAR_LIMIT = 45000
 class PcccMapReduceEngine:
     """Semantic PCCC Audit Engine chia 4 gói Map-Reduce."""
 
-    def __init__(self, ai_model: str = "qwen-local-primary", timeout: float = 600.0) -> None:
+    def __init__(self, ai_model: str = ModelArchetype.LOCAL, timeout: float = 600.0) -> None:
         self.ai_model = ai_model
         self.timeout = timeout
 

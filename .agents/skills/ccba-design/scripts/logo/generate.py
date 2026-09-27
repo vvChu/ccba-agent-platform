@@ -61,10 +61,10 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # Gemini "Nano Banana" model configurations for image generation
 GEMINI_FLASH = (
-    "gemini-3.1-flash-image-preview"  # Nano Banana 2: fastest, 95% Pro quality, web grounding
+    "gemini-3.1-flash-image-preview"  # ccba:allow-raw-model  # Nano Banana 2: fastest, 95% Pro quality, web grounding
 )
 GEMINI_PRO = (
-    "gemini-3-pro-image-preview"  # Nano Banana Pro: professional quality, advanced reasoning
+    "gemini-3-pro-image-preview"  # ccba:allow-raw-model  # Nano Banana Pro: professional quality, advanced reasoning
 )
 
 # Supported aspect ratios

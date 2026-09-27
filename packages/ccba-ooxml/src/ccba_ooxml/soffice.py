@@ -35,8 +35,8 @@ def find_soffice_bin() -> str | None:
 
     # Windows common fallbacks
     fallbacks = [
-        Path(r"C:\Program Files\LibreOffice\program\soffice.exe"),
-        Path(r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"),
+        Path(r"C:\Program Files\LibreOffice\program\soffice.exe"),  # ccba:allow-machine-path
+        Path(r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"),  # ccba:allow-machine-path
     ]
     for fb in fallbacks:
         if fb.exists():

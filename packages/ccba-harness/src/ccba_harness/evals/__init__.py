@@ -102,8 +102,10 @@ from .tuner import (
     RatchetReport,
     RatchetTrialResult,
     RateLimiter,
+    load_tuner_config,
     mutate_skill,
     preserve_yaml_frontmatter,
+    reload_tuner_config,
 )
 from .uniclass_index import (
     DEFAULT_UNICLASS_INDEX_PATH,
@@ -203,4 +205,6 @@ __all__ = [
     "BaseDomainSimulator",
     "SimulationContext",
     "SimulatorDispatcher",
+    "load_tuner_config",
+    "reload_tuner_config",
 ]

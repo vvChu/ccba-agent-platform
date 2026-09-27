@@ -12,6 +12,7 @@ import pandas as pd  # type: ignore[import-untyped]
 from PIL import Image
 
 from ccba_ai import AuditReport, AuditReportSummary
+from ccba_ai.routing import ModelArchetype
 from ccba_pdf_prep import render_page_to_image
 from ccba_qc_core.discovery import DiscoveryEngine, ProjectBackbone
 from ccba_qc_core.pccc import PcccMapReduceEngine
@@ -110,7 +111,7 @@ class QCBatchOrchestrator:
 
     async def run_batch(
         self,
-        ai_model: str = "gemini-3.7-flash-high",
+        ai_model: str = ModelArchetype.REASONING,
     ) -> list[AuditReport]:
         """Execute full batch audit across all matrix levels."""
         if not self.matrix_csv.exists():
@@ -154,7 +155,7 @@ class QCAuditPipeline:
         audit_engine: QuadViewAuditEngine | None = None,
         reporter_engine: ReporterEngine | None = None,
         pccc_engine: PcccMapReduceEngine | None = None,
-        ai_model: str = "gemini-3.7-flash-high",
+        ai_model: str = ModelArchetype.REASONING,
     ) -> None:
         self.discovery_engine = discovery_engine
         self.audit_engine = audit_engine

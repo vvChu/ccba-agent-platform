@@ -1,0 +1,210 @@
+# archetypes_catalog.yaml - Declarative Domain Archetype Registry
+# Single Source of Truth for Domain Evaluation Mappings & Keyword Routing (ADR-0023, ADR-0057, ADR-0058)
+
+archetypes:
+  # 1. Specialized Subdomains (Separated from parent domains to prevent collision)
+  - name: grilling
+    keywords:
+      - grill
+      - stresstest
+      - stress-test
+    dataset_file: eval_grilling.json
+    scorer_factory: get_grilling_scorers
+
+  - name: adr
+    keywords:
+      - adr
+      - architecture-decision
+    dataset_file: eval_adr_lifecycle.json
+    scorer_factory: get_adr_lifecycle_scorers
+
+  - name: risk
+    keywords:
+      - risk
+      - conflict
+    dataset_file: eval_bigbim_risk.json
+    scorer_factory: get_bigbim_risk_scorers
+
+  - name: skill_repair
+    keywords:
+      - skill-repair
+      - repair-skill
+    dataset_file: eval_skill_repair.json
+    scorer_factory: get_skill_repair_scorers
+
+  # 2. Statutory and Regulatory Engineering Domains
+  - name: legal_tooling
+    keywords:
+      - crawler
+      - vip
+      - ingest
+      - document-tracker
+      - tracker
+      - checklist
+      - hsht
+    dataset_file: eval_legal_tooling.json
+    scorer_factory: get_legal_tooling_scorers
+
+  - name: legal
+    keywords:
+      - legal
+      - luat
+      - tvpl
+      - vbpl
+      - advisor
+      - phap-ly
+    dataset_file: eval_legal_intel.json
+    scorer_factory: get_legal_scorers
+
+  - name: tech_qc
+    keywords:
+      - pccc
+      - qc
+      - audit
+      - thamdinh
+    dataset_file: eval_pccc_audit.json
+    scorer_factory: get_pccc_scorers
+
+  # 3. Creative, Office, Visual & Academic Domains
+  - name: academic
+    keywords:
+      - academic
+      - khoahoc
+    dataset_file: eval_academic_writing.json
+    scorer_factory: get_academic_scorers
+
+  - name: office
+    keywords:
+      - van-phong
+      - docx
+      - pptx
+      - presentation
+      - markdown-document
+      - seminar
+      - typography
+      - copywriting
+      - vietbai
+      - truyenthong
+    dataset_file: eval_copywriting.json
+    scorer_factory: get_office_scorers
+
+  - name: visual_design
+    keywords:
+      - design
+      - brand
+      - logo
+      - banner
+      - cip
+    dataset_file: eval_visual_design.json
+    scorer_factory: get_visual_design_scorers
+
+  - name: visual
+    keywords:
+      - mermaid
+      - excalidraw
+      - diagram
+    dataset_file: eval_visual_diagram.json
+    scorer_factory: get_visual_diagram_scorers
+
+  # 4. BIM Specialized Subdomains & Classification
+  - name: bim_governance
+    keywords:
+      - governance
+      - soi-chi-vang
+      - soi-chi-do
+      - golden-thread
+      - red-thread
+      - unique-id
+    dataset_file: eval_bigbim_governance.json
+    scorer_factory: get_bigbim_governance_scorers
+
+  - name: bim_rase
+    keywords:
+      - rase
+      - pset
+      - qto
+    dataset_file: eval_bigbim_rase.json
+    scorer_factory: get_bigbim_rase_scorers
+
+  - name: bim
+    keywords:
+      - bim
+      - uniclass
+      - classification
+      - iso12006
+      - openbim
+      - ifc
+    dataset_file: eval_bigbim_classification.json
+    scorer_factory: get_bim_classification_scorers
+
+  # 5. Engineering & Codebase Architecture Domains
+  - name: coding
+    keywords:
+      - code
+      - bug
+      - diagnos
+      - implement
+      - tdd
+      - codebase-design
+      - refactor
+      - engineering
+      - sdk
+      - logger
+      - stability-guard
+      - rag
+      - pipeline-patterns
+      - maskara
+      - testing
+      - modeling
+      - feature
+      - iac
+      - to-spec
+      - docs
+      - pdf-prep
+      - preprocessor
+    dataset_file: eval_codebase_engineering.json
+    scorer_factory: get_coding_scorers
+
+  # 6. Platform Tooling & Developer Utilities Domain
+  - name: platform_tooling
+    keywords:
+      - create-pr
+      - git
+      - guardrails
+      - spoke
+      - hub
+      - upstream
+      - sync
+      - ask
+      - wayfinder
+      - issue-tree
+      - xia
+      - notebooklm
+      - youtube
+      - knowledge
+      - build-skill
+      - setup-skills
+      - eval-gate
+      - autoresearch
+      - research
+      - graduate
+      - retrospective
+      - rd
+      - sandbox
+      - promote
+      - circuit-breaker
+      - api-circuit-breaker
+    dataset_file: eval_platform_tooling.json
+    scorer_factory: get_platform_tooling_scorers
+
+  # 7. Pure Agent Orchestration Domain
+  - name: orchestration
+    keywords:
+      - teamwork
+      - orchestrat
+      - handoff
+      - proposal
+      - platform-loader
+      - platform
+    dataset_file: eval_agent_orchestration.json
+    scorer_factory: get_orchestration_scorers
