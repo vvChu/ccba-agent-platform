@@ -24,6 +24,7 @@ from typing import Any
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+from ccba_ai.routing import ModelArchetype
 from ccba_harness.healing import SelfHealingEngine
 from ccba_harness.streamer import (
     DEFAULT_SPARK_TELEMETRY_URL,
@@ -203,7 +204,7 @@ def create_telemetry_event(
         conversation_id=session_id,
         timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         step_index=step_index,
-        model_name="qwen-local-primary",
+        model_name=ModelArchetype.LOCAL,
         payload=payload,
     )
 
@@ -454,8 +455,8 @@ async def main_async() -> int:
     parser.add_argument(
         "--model",
         type=str,
-        default="gemini-3.7-flash",
-        help="Model to use on AI Gateway (default: gemini-3.7-flash)",
+        default=ModelArchetype.STANDARD,
+        help="Model to use on AI Gateway (default: standard archetype)",
     )
     args = parser.parse_args()
 
@@ -483,7 +484,7 @@ async def main_async() -> int:
             0,
             {
                 "scenario": "Theme 1: PCCC Multi-Discipline Dogfooding",
-                "model": "qwen-local-primary",
+                "model": ModelArchetype.LOCAL,
             },
         )
     )

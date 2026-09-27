@@ -453,12 +453,13 @@ class ConversionPipeline:
 
     def _create_drawing_converter(self, file: Path) -> "BaseConverter":
         """Create an LLMConverter specifically for drawing extraction."""
+        from ccba_ai.routing import ModelArchetype
         from mdconverter.config import get_settings
         from mdconverter.core.gemini import LLMConverter
 
         settings = get_settings()
-        # Prioritize qwen-local-primary as the preferred model for engineering drawings
-        preferred = "qwen-local-primary"
+        # Prioritize local archetype as the preferred model for engineering drawings
+        preferred = ModelArchetype.LOCAL
         models = [preferred] + [m for m in settings.models if m != preferred]
 
         converter = LLMConverter(output_dir=self.output_dir, models=models)

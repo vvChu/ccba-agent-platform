@@ -1,3 +1,4 @@
+from ccba_ai.routing import ModelArchetype
 """Flexible LLM Adapter cho các Kỹ năng được port từ ClaudeKit.
 
 Hỗ trợ định tuyến gọi LLM động:
@@ -33,7 +34,7 @@ def get_target_model(default_model: str) -> str:
     return os.environ.get("CCBA_MODEL", default_model)
 
 
-def generate_text(prompt: str, default_model: str = "gemini-3.7-flash") -> str:
+def generate_text(prompt: str, default_model: str = ModelArchetype.STANDARD) -> str:
     """Sinh nội dung văn bản (Text Generation) sử dụng luồng gọi LLM mềm dẻo.
 
     Args:
@@ -123,7 +124,7 @@ def generate_text(prompt: str, default_model: str = "gemini-3.7-flash") -> str:
 
 
 def generate_image(
-    prompt: str, default_model: str = "gemini-3.1-flash-image-preview", aspect_ratio: str = "1:1"
+    prompt: str, default_model: str = "gemini-3.1-flash-image-preview", aspect_ratio: str = "1:1"  # ccba:allow-raw-model
 ) -> bytes:
     """Sinh ảnh (Image Generation) sử dụng luồng gọi LLM mềm dẻo.
 
@@ -177,7 +178,8 @@ def generate_image(
 
         # Thử lấy config gateway từ package ccba-ai
         # LiteLLM endpoint mặc định trên Spark server là http://100.83.192.30:8090/v1/images/generations
-        url = "http://100.83.192.30:8090/v1/images/generations"
+        base_url = os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1")  # ccba:allow-raw-ip
+        url = f"{base_url.rstrip("/v1").rstrip("/")}/v1/images/generations"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {os.environ.get('CCBA_API_KEY', 'none')}",
