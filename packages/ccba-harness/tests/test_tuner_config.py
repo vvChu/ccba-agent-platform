@@ -16,10 +16,14 @@ from pathlib import Path
 import pytest
 
 from ccba_harness.evals.tuner import (
+    DEFAULT_MUTATION_STRATEGIES_PATH,
     AdaptiveRateLimiter,
+    GitRatchetOptimizer,
     RatchetConfig,
     TokenUsageTracker,
+    load_mutation_strategies,
     load_tuner_config,
+    reload_mutation_strategies,
     reload_tuner_config,
 )
 
@@ -118,3 +122,85 @@ def test_ratchet_config_4_tier_precedence(monkeypatch: pytest.MonkeyPatch, tmp_p
     assert cfg_tier3.patience == 3
     assert cfg_tier3.split_ratio == 0.7
     assert cfg_tier3.token_budget == 5_000_000
+
+
+def test_load_mutation_strategies_all_17_archetypes() -> None:
+    """Verifies that mutation_strategies.yaml loads all 17 archetypes plus general fallback."""
+    assert DEFAULT_MUTATION_STRATEGIES_PATH.is_file()
+
+    strategies = reload_mutation_strategies()
+    assert isinstance(strategies, dict)
+
+    expected_archetypes = {
+        "academic",
+        "bim_governance",
+        "bim_rase",
+        "bim",
+        "coding",
+        "orchestration",
+        "tech_qc",
+        "legal",
+        "grilling",
+        "adr",
+        "risk",
+        "skill_repair",
+        "legal_tooling",
+        "office",
+        "visual_design",
+        "visual",
+        "platform_tooling",
+        "general",
+    }
+
+    assert expected_archetypes.issubset(set(strategies.keys()))
+
+    for arch in expected_archetypes:
+        strat_list = strategies[arch]
+        assert len(strat_list) >= 1, f"Archetype {arch} has no strategies"
+        for name, content in strat_list:
+            assert isinstance(name, str) and len(name) > 0
+            assert isinstance(content, str) and len(content) > 0
+            assert content.startswith("## ")
+
+
+def test_load_mutation_strategies_singleton_caching_and_latency() -> None:
+    """Verifies in-memory singleton caching and O(1) latency < 0.05 ms for mutation strategies."""
+    s1 = load_mutation_strategies()
+    s2 = load_mutation_strategies()
+    assert s1 is s2
+
+    iterations = 2000
+    t0 = time.perf_counter()
+    for _ in range(iterations):
+        _ = load_mutation_strategies()
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    avg_latency_ms = elapsed_ms / iterations
+
+    assert avg_latency_ms < 0.05, f"Singleton cache lookup too slow: {avg_latency_ms:.5f}ms"
+
+    reloaded = reload_mutation_strategies()
+    assert isinstance(reloaded, dict)
+    assert reloaded == s1
+
+
+def test_propose_mutation_declarative_and_general_fallback(tmp_path: Path) -> None:
+    """Verifies propose_mutation uses declarative strategies and falls back to general for unmapped skills."""
+    target = tmp_path / "SKILL.md"
+    base_content = "---\nname: unmapped-domain-skill\n---\n# Unmapped Skill\n"
+    target.write_text(base_content, encoding="utf-8")
+
+    cfg = RatchetConfig(target_file=str(target), skill_name="unmapped-domain-skill")
+    tuner = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+
+    # Iteration 1 adds fallback Strategy 1 (Lean Structural Architecture & Progressive Disclosure)
+    mut1 = tuner.propose_mutation(base_content, 1)
+    assert "## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)" in mut1
+
+    # Iteration 2 adds fallback Strategy 2 (Operational Clarity & Verification Standard)
+    mut2 = tuner.propose_mutation(mut1, 2)
+    assert mut2 != mut1
+    assert "## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng" in mut2
+
+    # Iteration 3: All strategies applied -> returns unchanged
+    mut3 = tuner.propose_mutation(mut2, 3)
+    assert mut3 == mut2

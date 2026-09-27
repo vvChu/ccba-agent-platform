@@ -112,3 +112,11 @@ def test_domain_resolution_end_to_end() -> None:
     assert resolve_domain_dataset("bigbim-risk") == "eval_bigbim_risk.json"
     assert resolve_domain_dataset("ccba-ai-qc") == "eval_pccc_audit.json"
     assert resolve_domain_dataset("unknown-skill") == "eval_general_domain.json"
+
+    # Direct archetype name and normalized variants
+    assert resolve_domain_dataset("office") == "eval_copywriting.json"
+    assert resolve_domain_dataset("platform_tooling") == "eval_platform_tooling.json"
+    assert resolve_domain_dataset("platform-tooling") == "eval_platform_tooling.json"
+    assert resolve_domain_dataset("legal_tooling") == "eval_legal_tooling.json"
+    assert resolve_domain_dataset("skill_repair") == "eval_skill_repair.json"
+    assert resolve_domain_dataset("xu_ly_van_phong") == "eval_copywriting.json"

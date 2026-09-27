@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 
 import pytest
 
 from ccba_harness.evals import (
+    BaseScorer,
     EvalItem,
     EvalRunner,
     ExactMatchScorer,
@@ -19,8 +21,9 @@ from ccba_harness.evals import (
     LengthBoundsScorer,
     LLMRubricScorer,
     RegexScorer,
+    ScoreResult,
 )
-from ccba_harness.evals.runner import load_eval_dataset
+from ccba_harness.evals.runner import _safe_score_item, load_eval_dataset
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -421,3 +424,160 @@ def test_orchestration_scorers():
     assert any(s.name == "single_writer_invariant" for s in suite)
     assert any(s.name == "progressive_disclosure_links" for s in suite)
     assert any(s.name == "handoff_protocol" for s in suite)
+
+
+def test_ssot_dataset_resolution_and_no_aliases():
+    """Verify that SKILL_DATASET_ALIASES is removed and dataset resolution relies on SSOT (ADR-0058)."""
+    import ccba_harness.evals.runner as runner_mod
+
+    # 1. Invariant: SKILL_DATASET_ALIASES must not exist in runner
+    assert not hasattr(runner_mod, "SKILL_DATASET_ALIASES")
+
+    # 2. SSOT dataset resolution loads authentic benchmark cases
+    office_items = load_eval_dataset(skill_name="ccba-copywriting")
+    assert len(office_items) >= 5
+
+    legal_items = load_eval_dataset(skill_name="ccba-legal-advisor")
+    assert len(legal_items) >= 5
+
+    qc_items = load_eval_dataset(skill_name="ccba-ai-qc-pccc-audit")
+    assert len(qc_items) >= 5
+
+    risk_items = load_eval_dataset(skill_name="bigbim-risk-redteam")
+    assert len(risk_items) >= 17
+
+    skill_repair_items = load_eval_dataset(skill_name="ccba-skill-repair")
+    assert len(skill_repair_items) >= 5
+
+    # 3. Direct archetype names and normalized aliases
+    office_direct = load_eval_dataset(skill_name="office")
+    assert len(office_direct) >= 5
+
+    platform_items = load_eval_dataset(skill_name="platform_tooling")
+    assert len(platform_items) >= 5
+
+
+def test_eval_runner_fault_tolerant_on_scorer_crash():
+    """Verify that a scorer raising an exception does not crash the runner and records score 0.0 with reasoning."""
+
+    class CrashingScorer(BaseScorer):
+        def __init__(
+            self,
+            name: str = "crashing_scorer",
+            weight: float = 1.0,
+            is_critical: bool = False,
+        ) -> None:
+            super().__init__(name=name, weight=weight, is_critical=is_critical)
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise RuntimeError("Database connection timed out during scoring")
+
+    dataset = [
+        EvalItem(id="crash_case_1", input_prompt="Ping", golden_answer="Pong"),
+    ]
+
+    async def mock_task(item: EvalItem) -> str:
+        return item.golden_answer or ""
+
+    scorers = [
+        ExactMatchScorer(name="exact", weight=1.0),
+        CrashingScorer(name="crashing_scorer", weight=1.0),
+    ]
+
+    runner = EvalRunner(default_pass_threshold=40.0)
+    report = asyncio.run(runner.run(dataset, mock_task, scorers))
+
+    # Runner completes successfully without raising
+    assert report.total_items == 1
+    item_res = report.item_results[0]
+    assert len(item_res.scores) == 2
+
+    # Scorer 1 (ExactMatch) succeeded
+    exact_res = next(s for s in item_res.scores if s.scorer_name == "exact")
+    assert exact_res.score == 1.0
+
+    # Scorer 2 (CrashingScorer) failed gracefully with score 0.0 and diagnostic reasoning
+    crashed_res = next(s for s in item_res.scores if s.scorer_name == "crashing_scorer")
+    assert crashed_res.score == 0.0
+    assert (
+        "Scorer execution failed: RuntimeError: Database connection timed out during scoring"
+        in (crashed_res.reasoning or "")
+    )
+
+    # Composite score: (1.0 * 1.0 + 1.0 * 0.0) / 2.0 * 100 = 50.0%
+    assert item_res.composite_score == 50.0
+    assert item_res.passed
+    assert not item_res.critical_failed
+    assert report.summary_by_scorer["crashing_scorer"] == 0.0
+    assert report.summary_by_scorer["exact"] == 100.0
+
+    # Direct helper validation for _safe_score_item
+    item = dataset[0]
+    direct_res = asyncio.run(_safe_score_item(CrashingScorer(name="direct_crasher"), "Pong", item))
+    assert direct_res.score == 0.0
+    assert "Scorer execution failed: RuntimeError" in (direct_res.reasoning or "")
+
+    # BaseException handling in asyncio.gather
+    class BaseExceptionScorer(BaseScorer):
+        def __init__(self, name: str = "base_exc_scorer") -> None:
+            super().__init__(name=name, weight=1.0)
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise BaseException("Unusual low-level failure")
+
+    report_base = asyncio.run(runner.run(dataset, mock_task, [BaseExceptionScorer()]))
+    assert report_base.total_items == 1
+    base_res = report_base.item_results[0].scores[0]
+    assert base_res.score == 0.0
+    assert "Scorer execution failed: BaseException: Unusual low-level failure" in (
+        base_res.reasoning or ""
+    )
+
+    # Critical failing scorer triggers critical_failed on item
+    crit_crasher = CrashingScorer(name="crit_crasher", is_critical=True)
+    report_crit = asyncio.run(runner.run(dataset, mock_task, [crit_crasher]))
+    assert report_crit.item_results[0].critical_failed
+    assert not report_crit.item_results[0].passed
+
+    # Dynamic is_critical via get_effective_is_critical(item)
+    class DynamicCriticalScorer(BaseScorer):
+        def __init__(self, name: str = "dyn_crit") -> None:
+            super().__init__(name=name, weight=1.0, is_critical=False)
+
+        def get_effective_is_critical(self, item: EvalItem) -> bool:
+            return item.id == "crash_case_1"
+
+        async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+            raise RuntimeError("Dynamic crash")
+
+    report_dyn = asyncio.run(runner.run(dataset, mock_task, [DynamicCriticalScorer()]))
+    assert report_dyn.item_results[0].critical_failed
+    assert not report_dyn.item_results[0].passed
+
+
+def test_archetype_codebase_design_guardrail():
+    from ccba_harness.evals.archetypes import resolve_domain_archetype
+
+    # Ensure codebase_design and codebase-design map to coding, not visual_design
+    arch1 = resolve_domain_archetype("codebase_design")
+    assert arch1 is not None and arch1.name == "coding"
+
+    arch2 = resolve_domain_archetype("ccba-codebase_design")
+    assert arch2 is not None and arch2.name == "coding"
+
+    arch3 = resolve_domain_archetype("codebase-design")
+    assert arch3 is not None and arch3.name == "coding"
+
+    arch4 = resolve_domain_archetype("ccba-codebase-design")
+    assert arch4 is not None and arch4.name == "coding"
+
+
+def test_mutation_strategies_depth():
+    from ccba_harness.evals.tuner import load_mutation_strategies
+
+    strategies = load_mutation_strategies()
+    # Check orchestration and visual have depth >= 3
+    assert len(strategies["orchestration"]) >= 3
+    assert len(strategies["visual"]) >= 3
+    assert any("Dynamic Subagent Delegation" in s[0] for s in strategies["orchestration"])
+    assert any("Mermaid C4 Architecture" in s[0] for s in strategies["visual"])
