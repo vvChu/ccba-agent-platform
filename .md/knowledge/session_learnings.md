@@ -56,6 +56,8 @@
 - **RULE-2.12 [LiteLLM Budget Error Resilience & Vector Top-K]**:
   - *Budget Error Resilience*: Bắt lỗi LiteLLM kiểm tra đồng thời: `("budget" in err.lower() and "exceeded" in err.lower())`.
   - *Vector L2 Normalization*: Embeddings chuẩn hóa L2 trước khi cache; truy vấn dùng dot-product (`@`) và `np.argpartition` $O(n + k \log k)$ cho corpus lớn.
+- **RULE-2.13 [Atomic Micro-PR Slicing & Single-Seam Locality]**:
+  - *Atomic Micro-Task Slicing*: Phân rã task $\le 150-200$ LOC logic, neo vào 1 Deep Seam duy nhất, kèm lệnh kiểm thử tự động xác định. Cắt nhỏ task phức tạp thành chuỗi micro-PRs độc lập giảm thiểu review fatigue và rủi ro merge conflict.
 
 ---
 
@@ -87,6 +89,8 @@
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green trước khi merge.
 - **RULE-4.7 [POSIX Traversal ACLs vs SGID Group Inheritance]**:
   - Máy chủ Linux đa người dùng: Cấp traversal `g:ccba-devs:--x` trên thư mục cha và gán SGID (`chmod -R g+s`) cho các repos kế thừa nhóm sở hữu.
+- **RULE-4.8 [Automated Review Danger Triage & Advisory Gating]**:
+  - *Danger Triage CI Gate*: Phân loại PR: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate (chặn merge khi lỗi); Docs/satellite $\rightarrow$ ADVISORY gate (không chặn build). Deduplicate nhận xét tự động từ Bugbot/Copilot tránh spam PR.
 
 ---
 
