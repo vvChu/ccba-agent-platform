@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from ccba_ai.routing import ModelArchetype
 import logging
 from pathlib import Path
 from typing import Any
@@ -110,7 +111,7 @@ class QCBatchOrchestrator:
 
     async def run_batch(
         self,
-        ai_model: str = "gemini-3.7-flash-high",
+        ai_model: str = ModelArchetype.REASONING,
     ) -> list[AuditReport]:
         """Execute full batch audit across all matrix levels."""
         if not self.matrix_csv.exists():
@@ -154,7 +155,7 @@ class QCAuditPipeline:
         audit_engine: QuadViewAuditEngine | None = None,
         reporter_engine: ReporterEngine | None = None,
         pccc_engine: PcccMapReduceEngine | None = None,
-        ai_model: str = "gemini-3.7-flash-high",
+        ai_model: str = ModelArchetype.REASONING,
     ) -> None:
         self.discovery_engine = discovery_engine
         self.audit_engine = audit_engine

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from ccba_ai.routing import ModelArchetype
 import logging
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,7 @@ CHAR_LIMIT = 45000
 class PcccMapReduceEngine:
     """Semantic PCCC Audit Engine chia 4 gói Map-Reduce."""
 
-    def __init__(self, ai_model: str = "qwen-local-primary", timeout: float = 600.0) -> None:
+    def __init__(self, ai_model: str = ModelArchetype.LOCAL, timeout: float = 600.0) -> None:
         self.ai_model = ai_model
         self.timeout = timeout
 

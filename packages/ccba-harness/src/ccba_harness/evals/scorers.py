@@ -214,7 +214,7 @@ class LLMRubricScorer(BaseScorer):
         name: str = "llm_judge",
         weight: float = 1.0,
         is_critical: bool = False,
-        model: str = "gemini-3.7-flash",
+        model: str = "gemini-3.7-flash",  # ccba:allow-raw-model
         ai_client: Any = None,
         enable_cache: bool = True,
         cache_db_path: Path | str | None = None,

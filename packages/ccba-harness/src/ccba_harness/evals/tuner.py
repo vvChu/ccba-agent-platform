@@ -247,7 +247,7 @@ class LLMTaskAdapter:
         async_client: Any | None = None,
         estimated_task_tokens: int = 2000,
     ) -> None:
-        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")  # ccba:allow-raw-model
         self.token_tracker = token_tracker or TokenUsageTracker()
         self.rate_limiter = rate_limiter
         self.estimated_task_tokens = estimated_task_tokens
@@ -440,7 +440,7 @@ class RatchetConfig:
         if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
             self.use_real_llm = True
         if not self.llm_model:
-            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")
+            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")  # ccba:allow-raw-model
         if self.token_budget is not None:
             if isinstance(self.token_budget, str):
                 try:

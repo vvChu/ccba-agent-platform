@@ -7,6 +7,7 @@ information, RACI checklists, and perform semantic differences between texts.
 from typing import Any
 
 from ccba_ai import ai
+from ccba_ai.routing import ModelArchetype
 
 from .cleaners import Cleaners
 
@@ -14,7 +15,7 @@ from .cleaners import Cleaners
 class LegalAnalysisEngine:
     """Module responsible for calling Spark LiteLLM to analyze law texts."""
 
-    def __init__(self, model: str = "gemini-3.7-flash-high", ai_client: Any = None) -> None:
+    def __init__(self, model: str = ModelArchetype.REASONING, ai_client: Any = None) -> None:
         """Initialize the engine with an LLM model and optional adapter client (seam)."""
         self.model = model
         self.ai_client = ai_client or ai

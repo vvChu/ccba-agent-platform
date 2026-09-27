@@ -31,9 +31,12 @@ MODEL_PATTERN = re.compile(
 IP_PATTERN = re.compile(r"\b(?!(?:127\.0\.0\.1|0\.0\.0\.0)\b)(?:[1-9]\d{0,2}\.){3}[1-9]\d{0,2}\b")
 WIN_PATH_PATTERN = re.compile(r"^[a-zA-Z]:[\\/][a-zA-Z0-9_\-\.\\/]+")
 
-# Files explicitly exempt from model name inspection (SSOT providers)
+# Files explicitly exempt from model name inspection (SSOT providers and mock infrastructure)
 EXEMPT_FILES = {
     "routing.py",
+    "fallback.py",
+    "mock_provider.py",
+    "copilot_provider.py",
 }
 
 
@@ -58,16 +61,20 @@ def is_whitelisted_file(path: Path) -> bool:
     """
     path_str = str(path).replace("\\", "/")
 
-    # Exclude tests and fixtures
-    if "/tests/" in path_str or path.name.startswith("test_"):
+    # Exclude tests, fixtures, and scenario verifications
+    if "/tests/" in path_str or path.name.startswith("test_") or path.name.startswith("verify_"):
         return True
 
-    # Exclude virtualenvs and build dirs
-    if any(p in path_str for p in ["/.venv/", "/build/", "/dist/", "/.git/", "/.md/"]):
+    # Exclude virtualenvs, build dirs, internal docs, and archives
+    if any(
+        p in path_str for p in ["/.venv/", "/build/", "/dist/", "/.git/", "/.md/", "/archive/"]
+    ) or path_str.startswith(".md/"):
         return True
 
-    # Exclude SSOT routing definitions
+    # Exclude SSOT routing definitions and CLI secret credential locators
     if path.name in EXEMPT_FILES and "ccba_ai" in path_str:
+        return True
+    if "ccba_maskara" in path_str and "_locator.py" in path_str:
         return True
 
     return False

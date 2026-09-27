@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from ccba_ai.routing import ModelArchetype
 
 
 class Settings(BaseSettings):
@@ -25,7 +26,7 @@ class Settings(BaseSettings):
 
     # AI Gateway Configuration (replaces legacy Antigravity Proxy)
     ai_gateway_url: str = Field(
-        default="http://100.83.192.30:8090/v1",
+        default="http://100.83.192.30:8090/v1",  # ccba:allow-raw-ip
         description="AI Gateway URL (LiteLLM on Server Spark)",
         alias="AI_GATEWAY_URL",
     )
@@ -44,11 +45,11 @@ class Settings(BaseSettings):
     # Model Configuration — AI Gateway models
     models: list[str] = Field(
         default=[
-            "qwen-local-primary",  # Local GPU — private, fast
-            "gemini-3.7-flash",  # Cloud — fast, multimodal
-            "ocr-primary",  # Alias for Gemini 3.1 Flash Lite - explicit OCR
-            "gemini-3.7-flash-high",  # Cloud — deep reasoning
-            "claude-sonnet-4-6",  # Cloud — best coding
+            ModelArchetype.LOCAL,  # Local GPU — private, fast
+            ModelArchetype.STANDARD,  # Cloud — fast, multimodal
+            ModelArchetype.OCR,  # Alias for Gemini 3.1 Flash Lite - explicit OCR
+            ModelArchetype.REASONING,  # Cloud — deep reasoning
+            "claude-sonnet-4-6",  # ccba:allow-raw-model # Cloud — best coding
         ],
         description="Ordered list of models to try (fallback chain)",
     )

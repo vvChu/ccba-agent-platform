@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from ccba_ai.routing import ModelArchetype
 
 from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
 
@@ -57,7 +58,7 @@ Trả về kết quả dưới dạng chuẩn JSON tuân thủ CHÍNH XÁC cấu
 class SemanticAuditEngine:
     """Đối soát dữ liệu phi hình học giữa các bộ môn (Semantic BIM Conflict)."""
 
-    def __init__(self, ai_model: str = "qwen-local-primary", timeout: float = 300.0) -> None:
+    def __init__(self, ai_model: str = ModelArchetype.LOCAL, timeout: float = 300.0) -> None:
         self.ai_model = ai_model
         self.timeout = timeout
 

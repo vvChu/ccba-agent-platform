@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from ccba_ai.routing import ModelArchetype
 import json
 import logging
 from dataclasses import asdict, dataclass, field
@@ -63,7 +64,7 @@ class DiscoveryEngine:
         self,
         project_name: str = "CCBA Project",
         output_dir: Path | None = None,
-        ai_model: str = "gemini-3.7-flash",
+        ai_model: str = ModelArchetype.STANDARD,
     ) -> None:
         self.project_name = project_name
         self.output_dir = Path(output_dir) if output_dir else Path("discovery_output")

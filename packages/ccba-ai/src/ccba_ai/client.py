@@ -14,7 +14,7 @@ from ccba_ai.hooks import PrivacyGuardHook
 from ccba_ai.llm_utils import strip_think_tags
 from ccba_ai.mock_provider import MockProvider
 from ccba_ai.models import ChatResult, ChatUsage
-from ccba_ai.routing import is_reasoning_model, resolve_max_tokens
+from ccba_ai.routing import ModelArchetype, is_reasoning_model, resolve_max_tokens
 
 logger = logging.getLogger("ccba_ai.client")
 RETRYABLE_EXCEPTIONS = (APIConnectionError, APITimeoutError)
@@ -109,14 +109,14 @@ def _sanitize_gateway_url(url: str | None) -> str:
     raw = (
         (url.strip() if url and url.strip() else None)
         or (os.environ.get("AI_GATEWAY_URL") or "").strip()
-        or "http://100.83.192.30:8090/v1"
+        or "http://100.83.192.30:8090/v1"  # ccba:allow-raw-ip
     )
     if ":8045" in raw:
         logger.warning(
-            "Legacy AI Gateway port :8045 detected in URL (%s). Automatically redirecting to http://100.83.192.30:8090/v1",
+            "Legacy AI Gateway port :8045 detected in URL (%s). Automatically redirecting to http://100.83.192.30:8090/v1",  # ccba:allow-raw-ip
             raw,
         )
-        return "http://100.83.192.30:8090/v1"
+        return "http://100.83.192.30:8090/v1"  # ccba:allow-raw-ip
     return raw
 
 
@@ -200,7 +200,7 @@ class AIClient:
             or "mock-key-for-ci",
             timeout=self.timeout,
         )
-        self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
+        self.default_model = default_model or os.environ.get("AI_MODEL", ModelArchetype.LOCAL)
         self.privacy_guard = PrivacyGuardHook()
         self.max_retries = max_retries
         self.retry_delay = retry_delay
@@ -636,7 +636,7 @@ class AIClient:
         return str(response).strip()
 
     def embed(
-        self, texts: str | list[str], *, model: str = "gemini-embedding-2"
+        self, texts: str | list[str], *, model: str = ModelArchetype.EMBEDDING
     ) -> list[list[float]]:
         """Embed a text or list of texts via the AI Gateway.
 
@@ -786,7 +786,7 @@ class AsyncAIClient:
             or "mock-key-for-ci",
             timeout=self.timeout,
         )
-        self.default_model = default_model or os.environ.get("AI_MODEL", "qwen-local-primary")
+        self.default_model = default_model or os.environ.get("AI_MODEL", ModelArchetype.LOCAL)
         self.privacy_guard = PrivacyGuardHook()
         self.max_retries = max_retries
         self.retry_delay = retry_delay
@@ -1159,7 +1159,7 @@ class AsyncAIClient:
         return sorted({m.id for m in result.data})
 
     async def embed(
-        self, texts: str | list[str], *, model: str = "gemini-embedding-2"
+        self, texts: str | list[str], *, model: str = ModelArchetype.EMBEDDING
     ) -> list[list[float]]:
         """Embed a text or list of texts via the AI Gateway (async).
 

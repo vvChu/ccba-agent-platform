@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from ccba_ai.routing import ModelArchetype
 import base64
 import logging
 import time
@@ -51,7 +52,7 @@ class QuadViewAuditEngine:
     def __init__(
         self,
         output_dir: Path | None = None,
-        ai_model: str = "gemini-2.5-flash",
+        ai_model: str = ModelArchetype.STANDARD,
         tile_dpi: int = 150,
         tile_size: int = 1024,
     ) -> None:

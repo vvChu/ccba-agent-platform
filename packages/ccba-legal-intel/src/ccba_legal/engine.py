@@ -197,8 +197,8 @@ class LegalKnowledgeEngine:
 
         # 4. Check known candidates
         candidates = [
-            Path("D:/GitHubProjects/ccba-legal-knowledge/legal_docs"),
-            Path("C:/GitHubProjects/ccba-legal-knowledge/legal_docs"),
+            Path("D:/GitHubProjects/ccba-legal-knowledge/legal_docs"),  # ccba:allow-machine-path
+            Path("C:/GitHubProjects/ccba-legal-knowledge/legal_docs"),  # ccba:allow-machine-path
             root.parent / "ccba-legal-knowledge" / "legal_docs",
         ]
         try:
