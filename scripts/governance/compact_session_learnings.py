@@ -272,7 +272,8 @@ def backup_to_archive(source_file: Path, archive_dir: Path) -> tuple[Path, Path]
 
     content = source_file.read_text(encoding="utf-8")
     timestamped_file.write_text(content, encoding="utf-8")
-    shutil.copy2(timestamped_file, master_history_file)
+    if not master_history_file.exists():
+        shutil.copy2(timestamped_file, master_history_file)
 
     return timestamped_file, master_history_file
 
