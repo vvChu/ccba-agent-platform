@@ -22,7 +22,7 @@ Xây dựng và hoàn thiện **Hệ Thống Quản Trị Tham Số Động & C�
 
 ## 📝 2. Ghi Chú (Notes)
 - **Kỹ năng liên quan:** `/ccba-implement`, `/ccba-tdd`, `/ccba-review-proposal`, `/ccba-grilling`.
-- **Hiến pháp đối chiếu:** [ADR-0025](../../docs/adr/0025-ai-gateway-client-configuration-standardization.md), [ADR-0047](../../docs/adr/0047-hub-spoke-non-destructive-synchronization-engine.md), [ADR-0058](../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [RULE-1.10 Platform-Aware KISS](../knowledge/session_learnings.md).
+- **Hiến pháp đối chiếu:** [ADR-0025](../../../docs/adr/0025-ai-gateway-client-configuration-standardization.md), [ADR-0047](../../../docs/adr/0047-catalog-manifest-compiler-and-frontmatter-ssot.md), [ADR-0058](../../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [RULE-1.10 Platform-Aware KISS](../../knowledge/session_learnings.md).
 - **Nguyên tắc hành động:** *"Plan, don't do"* — mỗi ticket chỉ tập trung vào một quyết định kiến trúc hoặc một đơn vị thực thi khép kín.
 
 ---

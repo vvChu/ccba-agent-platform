@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from ccba_ai.routing import ModelArchetype
 import logging
 from pathlib import Path
 from typing import Any
@@ -13,6 +12,7 @@ import pandas as pd  # type: ignore[import-untyped]
 from PIL import Image
 
 from ccba_ai import AuditReport, AuditReportSummary
+from ccba_ai.routing import ModelArchetype
 from ccba_pdf_prep import render_page_to_image
 from ccba_qc_core.discovery import DiscoveryEngine, ProjectBackbone
 from ccba_qc_core.pccc import PcccMapReduceEngine

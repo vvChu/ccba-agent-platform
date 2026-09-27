@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-from ccba_ai.routing import ModelArchetype
 
 from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 
 logger = logging.getLogger(__name__)
 

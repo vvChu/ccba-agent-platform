@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from ccba_ai.routing import ModelArchetype
 import json
 import logging
 from dataclasses import asdict, dataclass, field
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from ccba_ai import async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 from ccba_pdf_prep import PDFAnalyzer, PDFCategory, TitleBlockDetector
 
 logger = logging.getLogger(__name__)

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from ccba_ai.routing import ModelArchetype
 from pathlib import Path
 
 import typer
 from rich.console import Console
 
+from ccba_ai.routing import ModelArchetype
 from ccba_qc_core.discovery import DiscoveryEngine
 from ccba_qc_core.pccc import PcccMapReduceEngine
 from ccba_qc_core.pipeline import QCBatchOrchestrator

@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from ccba_ai.routing import ModelArchetype
 
 

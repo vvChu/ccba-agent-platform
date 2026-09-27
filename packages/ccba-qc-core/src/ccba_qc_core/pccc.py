@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from ccba_ai.routing import ModelArchetype
 import logging
 from pathlib import Path
 from typing import Any
 
 from ccba_ai import async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 
 logger = logging.getLogger(__name__)
 

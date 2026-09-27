@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from ccba_ai.routing import ModelArchetype
 import base64
 import logging
 import time
 from pathlib import Path
 
 from ccba_ai import AuditFinding, AuditReport, async_ai, parse_llm_json
+from ccba_ai.routing import ModelArchetype
 from ccba_pdf_prep import PDFAnalyzer, VisionOptimizer, render_page_to_image
 from ccba_pdf_prep.composite import CompositeBuilder
 
