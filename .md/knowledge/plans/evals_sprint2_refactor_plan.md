@@ -38,8 +38,8 @@ Hoàn thành trọn vẹn 3 đề xuất còn lại (Đề xuất 6, 1, 5) trong
 
 ---
 
-### [ ] Task 2: Tái Cấu Trúc & Module Hóa `scorers.py` thành Package `scorers/`
-- **Trạng thái:** ⏳ ĐANG CHỜ KÍCH HOẠT
+### [x] Task 2: Tái Cấu Trúc & Module Hóa `scorers.py` thành Package `scorers/`
+- **Trạng thái:** ✅ HOÀN THÀNH
 - **Tệp tạo mới / Tái cấu trúc:**
   - `packages/ccba-harness/src/ccba_harness/evals/scorers/__init__.py`
   - `packages/ccba-harness/src/ccba_harness/evals/scorers/base.py`
