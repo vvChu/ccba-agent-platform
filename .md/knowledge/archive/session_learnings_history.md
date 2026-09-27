@@ -563,3 +563,22 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 
 
 
+
+---
+
+## 26. Sprint 1 Evals Engine Refactor & Release Post-Mortems (PR #419, PR #420)
+
+### 1. Atomic Knowledge Cataloging & CI Orphan Note Prevention
+- **Root Cause:** Khi tạo kế hoạch Sprint 1 (`.md/knowledge/plans/evals_sprint1_refactor_plan.md`), tệp markdown được commit vào feature branch nhưng chưa được khai báo vào mục lục trung tâm `.md/knowledge/index.md`. Linter `wiki_health_linter.py` trên CI GitHub Actions phát hiện Orphan Knowledge Note và đánh sập toàn bộ matrix kiểm thử trên Python 3.10, 3.11 và 3.12.
+- **Invariant (RULE-2.15):** Mọi tệp tri thức `.md` sinh ra trong `.md/knowledge/` bắt buộc phải được biên mục đồng thời vào `.md/knowledge/index.md` ngay tại commit tạo tệp, không được để commit sau mới vá.
+
+### 2. Hermetic Script Injection Protocol (Bash Subshell Escaping)
+- **Root Cause:** Khi thực thi các lệnh sửa đổi file nhanh qua bash bằng `python -c "..."` có chứa nội dung Markdown/YAML mang ký hiệu backtick (```), bash cố gắng thực thi các đoạn text bên trong backtick như các lệnh subshell (`agent_name`, `send_message`, `verdict`), dẫn đến lỗi `command not found` và làm trôi lệnh cập nhật tệp.
+- **Invariant (RULE-2.15):** Nghiêm cấm dùng inline string có backticks trong double quotes trên bash. Bắt buộc dùng `cat << 'EOF' > /tmp/patch.py` (nháy đơn quanh EOF) hoặc sử dụng file manipulation tools chuyên dụng.
+
+### 3. Concurrent Remote Merge Realignment & Safe Reset Protocol
+- **Root Cause:** Trong quá trình agent chỉnh sửa bản vá phản biện cục bộ, người dùng hoặc remote đã thực hiện merge nhánh `main` vào nhánh PR (`387adca2`). Khi pull nhánh, git phát sinh trạng thái unmerged paths do xung đột với stash cũ và working tree lệch pha.
+- **Invariant (RULE-4.11):** Khi nhánh PR nhận commit merge mới từ `main` trên GitHub, sau khi kiểm tra commit cục bộ đã push an toàn, dùng `git reset --hard origin/<branch>` để căn chỉnh working tree về trạng thái sạch sẽ tuyệt đối của remote, triệt tiêu hoàn toàn unmerged conflict.
+
+### 4. Walkthrough Dedicated PR Workflow
+- **Invariant (RULE-4.11):** Do hook `pre-push` cấm tuyệt đối push trực tiếp vào `main`, tài liệu nghiệm thu `walkthrough.md` sau khi hoàn tất release feature bắt buộc phải được lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và mở PR riêng để CI tự động kiểm định và squash-merge theo Fast-Path Review.

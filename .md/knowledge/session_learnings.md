@@ -58,6 +58,10 @@
 - **RULE-2.14 [Multi-Byte UTF-8 Offset Parity & Dynamic Mock Secrets]**:
   - *UTF-8 Offset Parity*: Chuỗi tiếng Việt/emoji có byte length khác character offset. Cắt lát redaction trên string BẮT BUỘC dùng character index từ cuối lên đầu (`reversed(findings)`); byte redaction BẮT BUỘC dùng `byte_start, byte_end`.
   - *Dynamic Mock Secrets*: Unit tests BẮT BUỘC tạo mock keys ở runtime (`f"sk-proj-{'a'*32}"`) tránh bị CI diff scanner bắt nhầm (false-positive).
+- **RULE-2.15 [Atomic Knowledge Cataloging & Hermetic Script Protocol]**:
+  - *Atomic Knowledge Cataloging*: Mọi tệp tri thức `.md` mới tạo trong `.md/knowledge/` BẮT BUỘC phải được biên mục đồng thời vào `.md/knowledge/index.md` ngay tại commit tạo tệp, ngăn chặn triệt để lỗi CI `wiki_health_linter` (Orphan Notes).
+  - *Hermetic Script Protocol*: Thao tác sửa đổi mã nguồn hoặc YAML đa dòng qua shell CẤM dùng inline string có backticks trong double quotes; BẮT BUỘC dùng `cat << 'EOF' > /tmp/patch.py` (bọc nháy đơn chặt) hoặc dùng công cụ tệp chuyên dụng tránh bị Bash hiểu nhầm thành subshell commands (`agent_name`, `send_message`).
+  - *Ruff B009 Attribute Guard*: Kiểm tra callable động BẮT BUỘC dùng `hasattr(obj, "method") and callable(obj.method)` thay vì lồng `getattr(obj, "constant")`.
 
 ---
 
@@ -95,6 +99,9 @@
 - **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
   - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
   - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
+- **RULE-4.11 [Concurrent Remote Branch Alignment & Safe Reset Protocol]**:
+  - *Remote Merge Realignment*: Khi nhánh PR nhận commit merge mới từ `main` trên GitHub trong lúc đang làm việc cục bộ, BẮT BUỘC kiểm tra commit local đã push an toàn, sau đó dùng `git reset --hard origin/<branch>` để căn chỉnh working tree về trạng thái sạch sẽ tuyệt đối của remote; CẤM để lại trạng thái unmerged files trước khi release.
+  - *Walkthrough Dedicated PR*: Tuân thủ hook `pre-push` cấm push thẳng `main`, tài liệu nghiệm thu `walkthrough.md` BẮT BUỘC lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và Squash-Merge qua Fast-Path Review.
 
 ---
 
