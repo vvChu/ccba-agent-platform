@@ -526,13 +526,21 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 
 ---
 
-## 23. Archived Architectural Invariants (Di dời từ Active Working Memory theo Đề xuất Học tập Plateau Resolution)
+---
 
-- **RULE-1.4 [ADR 0033 & ADR 0056 — Spoke Directory Hygiene & Zombie Prevention]:**
-  - Cấu trúc `.\.md\`: Gốc chứa `workspace_context.yaml`; dữ liệu vào `extracted_docs/`; tri thức vào `knowledge/`; thử nghiệm vào `archive/`. (Chi tiết đối chiếu: Mục 5).
-- **RULE-1.5 [ADR 0037 & ADR 0051 — Two-Tier Traceability Matrix & Status Regex]:**
-  - Tier 1: Hub (53 ADRs). Tier 2: Spoke (`docs/adr/`). Bảo toàn bảng tùy chỉnh qua markers `CUSTOM_SECTIONS`. Regex bắt trạng thái ADR: `(?:\*|-)?\s*\*\*\s*Status:\s*\*\*`. Lọc bỏ file non-ADR (`notes.md`, `template.md`). (Chi tiết đối chiếu: Mục 9.1 và 9.2, đã được tự động hóa qua `sync_hub_adr_matrix.py`).
-- **RULE-3.3 [Làm Sạch Bảng Biểu, Footnotes & ADR 0044 Multi-Part Disambiguation]:**
-  - Footnote: Khử lặp số `re.sub(r"^[0-9]+[)\.]\s*", "", fn_clean).strip()`; khử lặp ô gộp OpenXML (`gridSpan`). Subheader: `not is_numeric` trước khi gộp subheader tránh nuốt dữ liệu cùng giá trị. Multi-Part: Đa phần mang tiền tố `bang_pXX_YY.csv` và `part_id: "pXX"` trong `tables_catalog.json`. (Chi tiết đối chiếu: Mục 9.4, đã được đóng gói vào parser của `ccba-markdown-document-processing`).
+## 24. Archived Operational & Testing Invariants (Di dời từ Active Working Memory sau PR #402 / Issue #366)
+
+- **RULE-1.9 [2-Phase Planning Guardrail — The Factory Model]:**
+  - Refactoring bộ trích xuất/chuyển đổi BẮT BUỘC phân lập 2 giai đoạn: Phase 1 (Pure Structural — Zero-Regression 0.0%, dual-dispatch) và Phase 2 (Feature/Schema Mutations). Cấm scope conflation.
+- **RULE-2.8 [Cross-Platform Sandbox Root Traversal Invariant]:**
+  - CẤM dùng độ sâu cố định `parents[N]` khi tìm gốc workspace (tránh `PermissionError` trên Linux sandbox hoặc `/tmp`). BẮT BUỘC duyệt ngược tìm `(p / ".md").is_dir()`, fallback local `.cache/`, bọc trong `try...except (PermissionError, OSError)`.
+- **RULE-2.10 [Temporal Invariance & Collinear Multi-Key Sort Guard]:**
+  - *Temporal Invariance*: Test TTL/window CẤM ngày tĩnh; BẮT BUỘC dùng ngày tương đối (`today - timedelta(...)`).
+  - *Collinear Sort*: Test sắp xếp đa khóa BẮT BUỘC dùng fixture nghịch chiều (`os.utime`), chống bẫy test pass giả do thứ tự ngẫu nhiên cùng chiều.
+- **RULE-2.11 [ADR 0058 — Multi-Archetype Simulation Immunity & Two-Tier Scorer Architecture]:**
+  - *Simulation Anti-Hijacking*: Trong `simulation.py`, keyword nhận diện BẮT BUỘC gắn Positive Domain Anchors; CẤM keyword mạng generic (`rate limit`, `exponential backoff`) đứng độc lập. Phải có explicit exclusion guards giữa các sub-domains có nguy cơ chồng lấn.
+  - *Two-Tier Scorer Architecture*: Đánh giá kỹ năng hệ thống/tooling BẮT BUỘC phân lập: Tier 1 (Tooling Integrity) kiểm tra Git CLI/sync/connectors; Tier 2 (Existential Guardrail Floor) kiểm tra an toàn (`--force-with-lease`, remote state idempotency, `CCBA_HUB_PATH`, verify-patch exit code 0). Thiếu toàn bộ $\rightarrow$ `is_critical_fail=True` buộc REVERT trong Auto-Tuner.
+
+
 
 
