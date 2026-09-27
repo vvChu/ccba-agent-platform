@@ -14,12 +14,19 @@ BACKUP_DIR = Path(".md/scratch/backups")
 def apply_raw_redactions(original: bytes, findings: list[dict[str, Any]]) -> tuple[bytes, int]:
     """Substitute secrets index ranges with redaction strings in bytearray."""
     rewritten = bytearray(original)
-    findings_sorted = sorted(findings, key=lambda x: x["start"], reverse=True)
+
+    def _get_start(f: dict[str, Any]) -> int:
+        return int(f.get("byte_start", f["start"]))
+
+    def _get_end(f: dict[str, Any]) -> int:
+        return int(f.get("byte_end", f["end"]))
+
+    findings_sorted = sorted(findings, key=_get_start, reverse=True)
     last_start = len(original) + 1
     replaced = 0
 
     for f in findings_sorted:
-        start, end = f["start"], f["end"]
+        start, end = _get_start(f), _get_end(f)
         if start < 0 or end > len(original) or start >= end:
             continue
         if end > last_start:
