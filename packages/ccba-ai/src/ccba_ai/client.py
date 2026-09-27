@@ -196,6 +196,8 @@ class AIClient:
             base_url=sanitized_base_url,
             api_key=api_key
             or os.environ.get("AI_GATEWAY_KEY")
+            or os.environ.get("CCBA_AI_API_KEY")
+            or os.environ.get("LITELLM_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
             or "mock-key-for-ci",
             timeout=self.timeout,
@@ -782,6 +784,8 @@ class AsyncAIClient:
             base_url=sanitized_base_url,
             api_key=api_key
             or os.environ.get("AI_GATEWAY_KEY")
+            or os.environ.get("CCBA_AI_API_KEY")
+            or os.environ.get("LITELLM_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
             or "mock-key-for-ci",
             timeout=self.timeout,
