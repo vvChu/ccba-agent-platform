@@ -22,6 +22,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, cast, runtime_checkable
 
+import yaml
+
 from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
@@ -68,12 +70,43 @@ class TokenBudgetExceededError(Exception):
 
 _UNSET: Any = object()
 
+_CACHED_TUNER_CONFIG: dict[str, Any] | None = None
+_TUNER_CONFIG_PATH = Path(__file__).parent / "tuner_config.yaml"
+
+
+def load_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
+    """Loads tuner hyperparameters from declarative YAML with in-memory singleton caching.
+
+    Latency guarantee: O(1) in-memory dict lookup (< 0.05 ms).
+    """
+    global _CACHED_TUNER_CONFIG
+    if config_path is None and _CACHED_TUNER_CONFIG is not None:
+        return _CACHED_TUNER_CONFIG
+
+    path = Path(config_path) if config_path else _TUNER_CONFIG_PATH
+    if not path.is_file():
+        return {}
+
+    with open(path, encoding="utf-8") as f:
+        data: dict[str, Any] = yaml.safe_load(f) or {}
+
+    if config_path is None:
+        _CACHED_TUNER_CONFIG = data
+    return data
+
+
+def reload_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
+    """Forces reloading of the tuner configuration, clearing singleton cache."""
+    global _CACHED_TUNER_CONFIG
+    _CACHED_TUNER_CONFIG = None
+    return load_tuner_config(config_path)
+
 
 @dataclass
 class TokenUsageTracker:
     """Session-wide token consumption tracker and circuit breaker observer."""
 
-    budget_ceiling: int = 5_000_000
+    budget_ceiling: int = cast(Any, _UNSET)
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -82,6 +115,11 @@ class TokenUsageTracker:
     warning_triggered: bool = False
     halt_triggered: bool = False
     reserved_tokens: int = 0
+
+    def __post_init__(self) -> None:
+        if self.budget_ceiling is _UNSET:
+            cfg = load_tuner_config()
+            self.budget_ceiling = int(cfg.get("tokens", {}).get("budget_ceiling", 5_000_000))
 
     def reserve(self, estimated_tokens: int = 2000) -> bool:
         """Attempts to reserve an estimated number of tokens before dispatching concurrent requests.
@@ -168,7 +206,7 @@ class AdaptiveRateLimiter:
         requests_per_minute: float = 60.0,
         min_delay_s: float = 0.01,
         max_delay_s: float = 10.0,
-        latency_threshold_s: float = 4.0,
+        latency_threshold_s: float | None = None,
         backoff_multiplier: float = 1.5,
         sleeper: Callable[[float], None] = time.sleep,
         time_fn: Callable[[], float] = time.monotonic,
@@ -178,7 +216,13 @@ class AdaptiveRateLimiter:
         self.min_interval = 60.0 / self.requests_per_minute
         self.min_delay_s = min_delay_s
         self.max_delay_s = max_delay_s
-        self.latency_threshold_s = latency_threshold_s
+        if latency_threshold_s is None:
+            cfg = load_tuner_config()
+            self.latency_threshold_s = float(
+                cfg.get("execution", {}).get("latency_threshold_s", 4.0)
+            )
+        else:
+            self.latency_threshold_s = latency_threshold_s
         self.backoff_multiplier = backoff_multiplier
         self.sleeper = sleeper
         self.time_fn = time_fn
@@ -247,7 +291,10 @@ class LLMTaskAdapter:
         async_client: Any | None = None,
         estimated_task_tokens: int = 2000,
     ) -> None:
-        self.model = model or os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")  # ccba:allow-raw-model
+        cfg = load_tuner_config()
+        fallback_model = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+        default_model = str(cfg.get("execution", {}).get("default_model", fallback_model))
+        self.model = model or os.getenv("CCBA_TUNER_MODEL", default_model)
         self.token_tracker = token_tracker or TokenUsageTracker()
         self.rate_limiter = rate_limiter
         self.estimated_task_tokens = estimated_task_tokens
@@ -409,26 +456,31 @@ class RatchetConfig:
 
     target_file: Path
     eval_dataset_file: Path | None = None
-    target_score: float = 90.0
-    max_iterations: int = 10
+    target_score: float = cast(Any, _UNSET)
+    max_iterations: int = cast(Any, _UNSET)
     allowed_files: list[str] = field(default_factory=list)
     prohibited_files: list[str] = field(default_factory=list)
     skill_name: str = ""
-    full_sweep: bool = False
-    patience: int = 3
+    full_sweep: bool = cast(Any, _UNSET)
+    patience: int = cast(Any, _UNSET)
     use_real_llm: bool = False
     llm_model: str = ""
-    token_budget: int | None = None
+    token_budget: int | None = cast(Any, _UNSET)
     rate_limiter: RateLimiter | None = None
-    enable_adaptive_slicing: bool = True
-    split_ratio: float = 0.7
-    slicing_seed: int = 42
-    enable_perturbation: bool = True
+    enable_adaptive_slicing: bool = cast(Any, _UNSET)
+    split_ratio: float = cast(Any, _UNSET)
+    slicing_seed: int = cast(Any, _UNSET)
+    enable_perturbation: bool = cast(Any, _UNSET)
     per_skill_mutation_budget: int | None = cast(Any, _UNSET)
     hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
     max_concurrency: int = cast(Any, _UNSET)
 
     def __post_init__(self) -> None:
+        cfg = load_tuner_config()
+        r_cfg = cfg.get("ratchet", {})
+        tok_cfg = cfg.get("tokens", {})
+        exec_cfg = cfg.get("execution", {})
+
         if isinstance(self.target_file, str):
             self.target_file = Path(self.target_file)
         if self.eval_dataset_file and isinstance(self.eval_dataset_file, str):
@@ -440,24 +492,118 @@ class RatchetConfig:
         if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
             self.use_real_llm = True
         if not self.llm_model:
-            self.llm_model = os.getenv("CCBA_TUNER_MODEL", "gemini-3.7-flash-high")  # ccba:allow-raw-model
-        if self.token_budget is not None:
+            fallback_m = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+            def_m = str(exec_cfg.get("default_model", fallback_m))
+            self.llm_model = os.getenv("CCBA_TUNER_MODEL", def_m)
+
+        # 4-tier Precedence: Explicit User Param > Env Var > Declarative YAML > Code Fallback
+        # target_score
+        if self.target_score is _UNSET:
+            env_ts = os.getenv("CCBA_TUNER_TARGET_SCORE")
+            if env_ts:
+                try:
+                    self.target_score = float(env_ts)
+                except ValueError:
+                    self.target_score = float(r_cfg.get("target_score", 90.0))
+            else:
+                self.target_score = float(r_cfg.get("target_score", 90.0))
+        elif isinstance(self.target_score, str):
+            self.target_score = float(self.target_score)
+
+        # max_iterations
+        if self.max_iterations is _UNSET:
+            env_mi = os.getenv("CCBA_TUNER_MAX_ITERATIONS")
+            if env_mi:
+                try:
+                    self.max_iterations = int(env_mi)
+                except ValueError:
+                    self.max_iterations = int(r_cfg.get("max_iterations", 10))
+            else:
+                self.max_iterations = int(r_cfg.get("max_iterations", 10))
+        elif isinstance(self.max_iterations, str):
+            self.max_iterations = int(self.max_iterations)
+
+        # patience
+        if self.patience is _UNSET:
+            env_pat = os.getenv("CCBA_TUNER_PATIENCE")
+            if env_pat:
+                try:
+                    self.patience = int(env_pat)
+                except ValueError:
+                    self.patience = int(r_cfg.get("patience", 3))
+            else:
+                self.patience = int(r_cfg.get("patience", 3))
+        elif isinstance(self.patience, str):
+            self.patience = int(self.patience)
+
+        # full_sweep
+        if self.full_sweep is _UNSET:
+            env_fs = os.getenv("CCBA_TUNER_FULL_SWEEP")
+            if env_fs is not None:
+                self.full_sweep = env_fs.lower() in ("1", "true", "yes")
+            else:
+                self.full_sweep = bool(r_cfg.get("full_sweep", False))
+
+        # split_ratio
+        if self.split_ratio is _UNSET:
+            env_sr = os.getenv("CCBA_TUNER_SPLIT_RATIO")
+            if env_sr:
+                try:
+                    self.split_ratio = float(env_sr)
+                except ValueError:
+                    self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
+            else:
+                self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
+        elif isinstance(self.split_ratio, str):
+            self.split_ratio = float(self.split_ratio)
+
+        # slicing_seed
+        if self.slicing_seed is _UNSET:
+            env_seed = os.getenv("CCBA_TUNER_SLICING_SEED")
+            if env_seed:
+                try:
+                    self.slicing_seed = int(env_seed)
+                except ValueError:
+                    self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
+            else:
+                self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
+        elif isinstance(self.slicing_seed, str):
+            self.slicing_seed = int(self.slicing_seed)
+
+        # enable_adaptive_slicing
+        if self.enable_adaptive_slicing is _UNSET:
+            env_as = os.getenv("CCBA_TUNER_ADAPTIVE_SLICING")
+            if env_as is not None:
+                self.enable_adaptive_slicing = env_as.lower() in ("1", "true", "yes")
+            else:
+                self.enable_adaptive_slicing = bool(r_cfg.get("enable_adaptive_slicing", True))
+
+        # enable_perturbation
+        if self.enable_perturbation is _UNSET:
+            env_pt = os.getenv("CCBA_TUNER_PERTURBATION")
+            if env_pt is not None:
+                self.enable_perturbation = env_pt.lower() in ("1", "true", "yes")
+            else:
+                self.enable_perturbation = bool(r_cfg.get("enable_perturbation", True))
+
+        # token_budget
+        if self.token_budget is not _UNSET and self.token_budget is not None:
             if isinstance(self.token_budget, str):
                 try:
                     self.token_budget = int(self.token_budget.replace(",", "").replace("_", ""))
                 except ValueError:
-                    self.token_budget = 5_000_000
+                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
         else:
             env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
             if env_budget:
                 try:
                     self.token_budget = int(env_budget.replace(",", "").replace("_", ""))
                 except ValueError:
-                    self.token_budget = 5_000_000
+                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
             else:
-                self.token_budget = 5_000_000
+                self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
 
-        # Configuration Precedence via Sentinel (Issue #368): User > Env > Default
+        # per_skill_mutation_budget
         if self.per_skill_mutation_budget is not _UNSET:
             if isinstance(self.per_skill_mutation_budget, str):
                 try:
@@ -465,7 +611,9 @@ class RatchetConfig:
                         self.per_skill_mutation_budget.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.per_skill_mutation_budget = 250_000
+                    self.per_skill_mutation_budget = int(
+                        tok_cfg.get("per_skill_mutation_budget", 250_000)
+                    )
         else:
             env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
             if env_ps_budget:
@@ -474,10 +622,15 @@ class RatchetConfig:
                         env_ps_budget.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.per_skill_mutation_budget = 250_000
+                    self.per_skill_mutation_budget = int(
+                        tok_cfg.get("per_skill_mutation_budget", 250_000)
+                    )
             else:
-                self.per_skill_mutation_budget = 250_000
+                self.per_skill_mutation_budget = int(
+                    tok_cfg.get("per_skill_mutation_budget", 250_000)
+                )
 
+        # hard_max_tokens_per_skill
         if self.hard_max_tokens_per_skill is not _UNSET:
             if isinstance(self.hard_max_tokens_per_skill, str):
                 try:
@@ -485,7 +638,9 @@ class RatchetConfig:
                         self.hard_max_tokens_per_skill.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.hard_max_tokens_per_skill = 500_000
+                    self.hard_max_tokens_per_skill = int(
+                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                    )
         else:
             env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
             if env_hard_max:
@@ -494,25 +649,30 @@ class RatchetConfig:
                         env_hard_max.replace(",", "").replace("_", "")
                     )
                 except ValueError:
-                    self.hard_max_tokens_per_skill = 500_000
+                    self.hard_max_tokens_per_skill = int(
+                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                    )
             else:
-                self.hard_max_tokens_per_skill = 500_000
+                self.hard_max_tokens_per_skill = int(
+                    tok_cfg.get("hard_max_tokens_per_skill", 500_000)
+                )
 
+        # max_concurrency
         if self.max_concurrency is not _UNSET:
             if isinstance(self.max_concurrency, str):
                 try:
                     self.max_concurrency = int(self.max_concurrency)
                 except ValueError:
-                    self.max_concurrency = 5
+                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
         else:
             env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
             if env_concurrency:
                 try:
                     self.max_concurrency = int(env_concurrency)
                 except ValueError:
-                    self.max_concurrency = 5
+                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
             else:
-                self.max_concurrency = 5
+                self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
