@@ -683,6 +683,9 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
             "ccba-wayfinder",
             "ccba-xia",
             "ccba-youtube-learn",
+            "ccba-api-circuit-breaker",
+            "api-circuit-breaker",
+            "circuit-breaker",
             "platform_tooling",
         ) or any(
             k in prompt_l
@@ -700,8 +703,9 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 "multimodal connector",
                 "notebooklm",
                 "youtube learn",
-                "hard completion lock",
-                "verify-patch",
+                "tiện ích nền tảng",
+                "background tasks",
+                "rào chắn thực thi",
             ]
         ):
             if (
@@ -763,25 +767,30 @@ def build_mock_agent_task(content: str, skill_name: str = "") -> Callable[[EvalI
                 or "multimodal" in prompt_l
                 or "youtube" in prompt_l
                 or "notebooklm" in prompt_l
+                or "circuit" in prompt_l
+                or "rate limit" in prompt_l
+                or "cooldown" in prompt_l
             ):
                 parts.append(
-                    "QUY TRÌNH TÍCH HỢP BỘ KẾT NỐI ĐA PHƯƠNG THỨC (MULTIMODAL CONNECTORS):\n\n"
-                    "1. Bộ Tiện Ích Kết Nối Nền Tảng:\n"
+                    "QUY TRÌNH TÍCH HỢP BỘ KẾT NỐI ĐA PHƯƠNG THỨC & PHÒNG VỆ API (MULTIMODAL & API RESILIENCE):\n\n"
+                    "1. Bộ Tiện Ích Kết Nối & Phòng Vệ Nền Tảng:\n"
                     "- `ccba-youtube-learn`: Tự động trích xuất phụ đề (captions), bảng điểm âm thanh (audio transcripts) và tạo bản tóm tắt tri thức có cấu trúc.\n"
-                    "- `ccba-notebooklm-connector`: Quản lý tài liệu, truy vấn RAG, đồng bộ nguồn nghiên cứu từ Google NotebookLM qua API.\n\n"
+                    "- `ccba-notebooklm-connector`: Quản lý tài liệu, truy vấn RAG, đồng bộ nguồn nghiên cứu từ Google NotebookLM qua API.\n"
+                    "- `ccba-api-circuit-breaker`: Rate limiter + Circuit Breaker 3 trạng thái (CLOSED, OPEN, HALF_OPEN) và cơ chế Soft Cooldown tự động giáng cấp mô hình bảo vệ AI Gateway (:8090).\n\n"
                     "2. Quản Lý Phiên & Bảo Mật Xác Thực (Session Auth & Credentials):\n"
                     "- Lưu trữ cookie và session tokens tại kho dữ liệu cache an toàn; không hardcode thông tin đăng nhập.\n\n"
-                    "3. Xử Lý Gián Đoạn Mạng & Rào Chắn Idempotency (Exponential Backoff & Reactive Wakeup):\n"
+                    "3. Xử Lý Gián Đoạn Mạng, Quota & Rào Chắn Idempotency (Exponential Backoff, Soft Cooldown & Reactive Wakeup):\n"
                     "- Khi gặp lỗi HTTP 429 hoặc timeout, áp dụng thuật toán Exponential Backoff kèm ngẫu nhiên hóa thời gian chờ (jitter).\n"
+                    "- Kích hoạt 30s Soft Cooldown và tự động giáng cấp mô hình (was_downgraded = True) khi đạt hạn mức tài khoản, tránh làm sập pipeline.\n"
                     "- Dựa trên cơ chế Reactive Wakeup thay vì polling vô hạn; bảo đảm tính bất biến (idempotency) khi đồng bộ dữ liệu vào kho `.md/extracted_docs`.\n\n"
                     "Chi tiết tham chiếu xem tại [references/](references/)."
                 )
             elif (
                 "guardrail" in prompt_l
-                or "hard completion lock" in prompt_l
-                or "adr-0058" in prompt_l
-                or "lệnh" in prompt_l
-                or "task" in prompt_l
+                or "rào chắn thực thi" in prompt_l
+                or "tiện ích nền tảng" in prompt_l
+                or "background task" in prompt_l
+                or "tiến trình nền" in prompt_l
             ):
                 parts.append(
                     "HỆ THỐNG RÀO CHẮN THỰC THI & KHÓA CỨNG HOÀN TẤT TẤT ĐỊNH (ADR-0058):\n\n"

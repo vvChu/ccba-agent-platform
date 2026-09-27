@@ -422,6 +422,7 @@ def test_platform_tooling_ssot_archetype_routing() -> None:
         "ccba-wayfinder",
         "ccba-xia",
         "ccba-youtube-learn",
+        "ccba-api-circuit-breaker",
     ]
     for sname in tooling_skills:
         arch = resolve_domain_archetype(sname)
@@ -497,3 +498,40 @@ async def test_platform_tooling_simulation_mock_task_and_scoring() -> None:
             res = await s.score(output, item)
             assert not res.is_critical_fail, f"Critical failure on {s.name} for {item.id}"
             assert res.score == 1.0, f"Expected 1.0 on {s.name} for {item.id}, got {res.score}"
+
+
+@pytest.mark.asyncio
+async def test_circuit_breaker_platform_tooling_calibration_and_simulation() -> None:
+    """Verify ccba-api-circuit-breaker routes to platform_tooling and achieves 100% score (Issue #399)."""
+    from pathlib import Path
+
+    from ccba_harness.evals.archetypes import (
+        get_default_domain_scorers,
+        resolve_domain_archetype,
+        resolve_domain_dataset,
+    )
+    from ccba_harness.evals.runner import EvalRunner, load_eval_dataset
+    from ccba_harness.evals.simulation import build_mock_agent_task
+
+    arch = resolve_domain_archetype("ccba-api-circuit-breaker")
+    assert arch is not None
+    assert arch.name == "platform_tooling"
+    assert resolve_domain_dataset("ccba-api-circuit-breaker") == "eval_platform_tooling.json"
+
+    skill_path = Path(".agents/skills/ccba-api-circuit-breaker/SKILL.md")
+    content = (
+        skill_path.read_text(encoding="utf-8")
+        if skill_path.exists()
+        else "ccba-api-circuit-breaker skill content"
+    )
+    dataset = load_eval_dataset(skill_name="ccba-api-circuit-breaker")
+    assert len(dataset) == 5
+
+    task = build_mock_agent_task(content, "ccba-api-circuit-breaker")
+    scorers = get_default_domain_scorers("ccba-api-circuit-breaker")
+
+    runner = EvalRunner()
+    report = await runner.run(dataset=dataset, task=task, scorers=scorers)
+    assert report.overall_score == 100.0
+    assert report.passed_items == 5
+    assert report.failed_items == 0

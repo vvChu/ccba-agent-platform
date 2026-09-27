@@ -110,7 +110,6 @@ CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "refactor",
     "engineering",
     "sdk",
-    "circuit-breaker",
     "logger",
     "stability-guard",
     "rag",
@@ -152,6 +151,8 @@ PLATFORM_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = (
     "rd",
     "sandbox",
     "promote",
+    "circuit-breaker",
+    "api-circuit-breaker",
 )
 
 # Pure Agent Orchestration Domain (Multi-agent coordination, handoffs, and platform orchestration)

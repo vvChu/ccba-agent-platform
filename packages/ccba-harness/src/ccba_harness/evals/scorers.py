@@ -1178,7 +1178,7 @@ class PlatformToolingIntegrityScorer(BaseScorer):
             r"(gh pr create|pull request|branch naming|feat/issue-|git checkout|"
             r"git cleanliness|check_spoke_cleanliness|maskara|redact|secrets?|credentials?|"
             r"spoke|hub|sync_spoke|non-destructive|constitution|virtual hub fallback|"
-            r"multimodal|connector|youtube|notebooklm|transcript|exponential backoff|jitter|"
+            r"multimodal|connector|youtube|notebooklm|transcript|circuit-?breaker|rate limit|soft cooldown|auto-?downgrade|exponential backoff|jitter|"
             r"adr-0058|hard completion lock|verify-patch|seam catalog|compile_catalog)",
             re.IGNORECASE,
         )
