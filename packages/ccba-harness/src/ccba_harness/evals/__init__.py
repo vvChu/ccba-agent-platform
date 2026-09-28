@@ -30,6 +30,18 @@ from .daemon import (
     save_applied_strategies_hash,
     send_telegram_alert,
 )
+from .failure_mutator import (
+    DEFAULT_LEDGER_DIR,
+    FailureLedger,
+    FailureSignal,
+    calculate_signal_fingerprint,
+    extract_failure_signals,
+    get_unapplied_failure_signals,
+    is_signal_applied,
+    load_failure_ledger,
+    render_failure_patch,
+    save_failure_ledger,
+)
 from .legal_index import (
     DEFAULT_FLAT_INDEX_PATH,
     LegalFlatIndex,
@@ -223,4 +235,14 @@ __all__ = [
     "load_tuner_config",
     "reload_tuner_config",
     "remaining_strategies",
+    "DEFAULT_LEDGER_DIR",
+    "FailureLedger",
+    "FailureSignal",
+    "calculate_signal_fingerprint",
+    "extract_failure_signals",
+    "get_unapplied_failure_signals",
+    "is_signal_applied",
+    "load_failure_ledger",
+    "render_failure_patch",
+    "save_failure_ledger",
 ]
