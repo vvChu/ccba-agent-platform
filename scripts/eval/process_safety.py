@@ -126,6 +126,12 @@ def kill_process_tree(pid: int) -> None:
 
 def get_venv_python(project_root: Path) -> str:
     """Trả về đường dẫn tới python interpreter hiện hành (chứa đầy đủ công cụ linter/tester)."""
+    if sys.platform == "win32":
+        venv_py = project_root / ".venv" / "Scripts" / "python.exe"
+    else:
+        venv_py = project_root / ".venv" / "bin" / "python"
+    if venv_py.exists():
+        return str(venv_py)
     return sys.executable
 
 
