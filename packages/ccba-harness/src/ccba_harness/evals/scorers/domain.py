@@ -754,10 +754,16 @@ class Sha256ProvenanceScorer(BaseScorer):
         score = 1.0 if matched else 0.0
         is_crit_fail = self.is_critical and not matched
 
+        raw_output: dict[str, Any] = {
+            "matched": matched,
+            "citations_found": 1 if matched else 0,
+            "sha256_verified": matched,
+        }
+
         return ScoreResult(
             scorer_name=self.name,
             score=score,
-            raw_output=matched,
+            raw_output=raw_output,
             reasoning=(
                 "Cryptographic SHA-256 provenance / verbatim grounding verified (ADR-0059)"
                 if matched
