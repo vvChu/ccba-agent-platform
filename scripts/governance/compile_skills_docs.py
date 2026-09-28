@@ -329,6 +329,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "Kết quả suy luận từ AI Gateway",
         "role": "Giao diện lập trình chuẩn kết nối AI Gateway đa mô hình trên Server Spark.",
     },
+    "ccba-vllm-manager": {
+        "upstream": "Triển khai hoặc gỡ lỗi container mô hình cục bộ trên DGX Spark",
+        "downstream": "Endpoint suy luận sẵn sàng phục vụ AI Gateway",
+        "role": "Quản trị vLLM container, tối ưu Inductor AOT cache và cấu hình reasoning/tool parsers.",
+    },
     "ccba-ai-pdf-preprocessor": {
         "upstream": "Tệp PDF bản vẽ hoặc hồ sơ dung lượng lớn",
         "downstream": "Ảnh tiled và văn bản phân đoạn cho LLM",
