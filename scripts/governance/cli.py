@@ -83,6 +83,7 @@ def run_docs_validation_cli(auditor: DocumentAuditor, args_list: list[str] | Non
         "scratch",
         ".system_generated",
         "CDE",
+        "peer_exchange",
     }
     md_files = []
 

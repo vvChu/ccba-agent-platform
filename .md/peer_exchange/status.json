@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-28 13:53:35",
+  "peers": {
+    "antigravity": {
+      "name": "Antigravity (Pair Architect & Builder)",
+      "status": "ready",
+      "current_sprint": 3
+    },
+    "grok": {
+      "name": "Grok 4.7 xhigh (Strategic Architect)",
+      "target_session_id": "01a0e338-3f20-7f21-a9c0-b8dba5b9f2d3",
+      "status": "idle"
+    }
+  }
+}

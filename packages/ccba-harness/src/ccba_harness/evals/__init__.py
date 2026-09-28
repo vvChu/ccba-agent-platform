@@ -25,6 +25,9 @@ from .daemon import (
     NightlyTunerDaemon,
     SkillEvolutionSummary,
     WeightedPriorityQueue,
+    get_last_applied_strategies_hash,
+    get_mutation_strategies_hash,
+    save_applied_strategies_hash,
     send_telegram_alert,
 )
 from .legal_index import (
@@ -110,6 +113,7 @@ from .tuner import (
     preserve_yaml_frontmatter,
     reload_mutation_strategies,
     reload_tuner_config,
+    remaining_strategies,
 )
 from .uniclass_index import (
     DEFAULT_UNICLASS_INDEX_PATH,
@@ -180,6 +184,9 @@ __all__ = [
     "NightlyTunerDaemon",
     "SkillEvolutionSummary",
     "WeightedPriorityQueue",
+    "get_last_applied_strategies_hash",
+    "get_mutation_strategies_hash",
+    "save_applied_strategies_hash",
     "send_telegram_alert",
     "classify_target_skill",
     "generate_eval_spec_item",
@@ -215,4 +222,5 @@ __all__ = [
     "SimulatorDispatcher",
     "load_tuner_config",
     "reload_tuner_config",
+    "remaining_strategies",
 ]

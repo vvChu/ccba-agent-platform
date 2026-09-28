@@ -7,6 +7,7 @@ and Git-Ratchet iteration lifecycle into a first-class Deep Seam in ccba_harness
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 import logging
 import os
@@ -26,12 +27,45 @@ from .archetypes import (
 )
 from .tuner import (
     _UNSET,
+    DEFAULT_MUTATION_STRATEGIES_PATH,
     GitRatchetTuner,
     RatchetConfig,
     RatchetReport,
+    remaining_strategies,
 )
 
 logger = logging.getLogger("ccba.eval.nightly")
+
+
+def get_mutation_strategies_hash(path: Path | None = None) -> str:
+    """Computes SHA-256 hash of mutation_strategies.yaml (Sprint 3 / ADR-0058)."""
+    target_path = Path(path) if path else DEFAULT_MUTATION_STRATEGIES_PATH
+    if not target_path.is_file():
+        return ""
+    return hashlib.sha256(target_path.read_bytes()).hexdigest()
+
+
+def get_last_applied_strategies_hash(root: Path) -> str:
+    """Reads the last recorded mutation strategies hash from reports directory."""
+    hash_file = root / ".md" / "knowledge" / "reports" / ".eval_strategies_hash"
+    if hash_file.is_file():
+        try:
+            return hash_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            return ""
+    return ""
+
+
+def save_applied_strategies_hash(root: Path, current_hash: str) -> None:
+    """Persists the current mutation strategies hash to reports directory."""
+    if not current_hash:
+        return
+    hash_file = root / ".md" / "knowledge" / "reports" / ".eval_strategies_hash"
+    try:
+        hash_file.parent.mkdir(parents=True, exist_ok=True)
+        hash_file.write_text(current_hash.strip(), encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not save strategies hash: {e}")
 
 
 def find_project_root(start_dir: Path | None = None) -> Path:
@@ -164,7 +198,10 @@ class WeightedPriorityQueue:
     def rank_skills(skills_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Sorts skills such that non-cooldown skills and lower baseline scores are tuned first."""
 
-        def priority_key(item: dict[str, Any]) -> tuple[int, datetime.date, int, float]:
+        def priority_key(item: dict[str, Any]) -> tuple[int, int, datetime.date, int, float]:
+            is_exhausted = (
+                1 if (item.get("is_exhausted") and item.get("strat_hash_unchanged")) else 0
+            )
             in_cooldown = 1 if item.get("in_cooldown") else 0
             raw_date = item.get("last_scanned_date")
             if isinstance(raw_date, datetime.datetime):
@@ -181,7 +218,7 @@ class WeightedPriorityQueue:
             raw_score = item.get("baseline_score")
             score = float(raw_score) if raw_score is not None else 0.0
             tier = 0 if score < 90.0 else (1 if score < 100.0 else 2)
-            return (in_cooldown, scanned_date, tier, score)
+            return (is_exhausted, in_cooldown, scanned_date, tier, score)
 
         return sorted(skills_data, key=priority_key)
 
@@ -212,7 +249,7 @@ class NightlyTunerDaemon:
         alert_emitter: Callable[[str], bool] | None = None,
         target_ref: str = "origin/main",
         no_telegram: bool = False,
-        skip_cooldown: bool = False,
+        skip_cooldown: bool = True,
         concurrency: int = cast(Any, _UNSET),
         hard_max_tokens_per_skill: int | None = cast(Any, _UNSET),
     ) -> None:
@@ -259,7 +296,11 @@ class NightlyTunerDaemon:
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
         self.alert_emitter = alert_emitter
         self.no_telegram = no_telegram
-        self.skip_cooldown = skip_cooldown
+        env_sc = os.getenv("CCBA_TUNER_SKIP_COOLDOWN")
+        if env_sc is not None:
+            self.skip_cooldown = env_sc.lower() in ("1", "true", "yes")
+        else:
+            self.skip_cooldown = skip_cooldown
         # Determine valid target_ref (fallback to main if origin/main cannot be verified)
         if target_ref == "origin/main":
             check_ref = subprocess.run(
@@ -420,14 +461,20 @@ class NightlyTunerDaemon:
         recent_scores, cooldown_skills, last_scanned_dates = self._load_historical_metrics(
             cooldown_days=3
         )
+        curr_strat_hash = get_mutation_strategies_hash()
+        last_strat_hash = get_last_applied_strategies_hash(self.root)
+        strat_hash_unchanged = bool(curr_strat_hash and curr_strat_hash == last_strat_hash)
+
         discovered: list[dict[str, Any]] = []
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             skill_name = skill_path.parent.name
+            skill_content = ""
 
             # Skip skills marked with auto-tune: false unless explicitly targeted
             if not self.target_skills or skill_name.lower() not in self.target_skills:
                 try:
                     content = skill_path.read_text(encoding="utf-8", errors="replace")
+                    skill_content = content
                     if content.startswith("---"):
                         parts = content.split("---", 2)
                         if len(parts) >= 3:
@@ -439,6 +486,17 @@ class NightlyTunerDaemon:
                                 continue
                 except Exception as e:
                     logger.debug(f"Failed to parse frontmatter for {skill_path}: {e}")
+
+            if not skill_content:
+                try:
+                    skill_content = skill_path.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    pass
+
+            is_exhausted = False
+            if skill_content:
+                unapplied = remaining_strategies(skill_content, skill_name)
+                is_exhausted = len(unapplied) == 0
 
             dataset_file = FLAGSHIP_REDTEAM_DATASET_OVERRIDES.get(
                 skill_name, self._resolve_dataset_file(skill_name)
@@ -458,6 +516,8 @@ class NightlyTunerDaemon:
                     "baseline_score": recent_scores.get(skill_name, 0.0),
                     "in_cooldown": skill_name in cooldown_skills,
                     "last_scanned_date": last_scanned_dates.get(skill_name),
+                    "is_exhausted": is_exhausted,
+                    "strat_hash_unchanged": strat_hash_unchanged,
                 }
             )
 
@@ -518,6 +578,33 @@ class NightlyTunerDaemon:
                     prompt_tokens=0,
                     completion_tokens=0,
                     halt_reason="COOLDOWN_ACTIVE",
+                    slicing_tier=None,
+                    holdout_score=baseline_val,
+                    tuning_size=0,
+                    holdout_size=0,
+                )
+                summaries.append(summary)
+                continue
+
+            # Short-circuit cấp Daemon cho kỹ năng đã bão hòa (EXHAUSTED) khi YAML hash không đổi
+            if item.get("is_exhausted") and item.get("strat_hash_unchanged"):
+                baseline_val = float(item.get("baseline_score", 0.0))
+                logger.info(
+                    f"⏭️ [SKIP_EXHAUSTED] Bỏ qua kỹ năng {skill_name} do đã bão hòa chiến lược đột biến "
+                    f"và mutation_strategies.yaml không đổi. Bảo lưu điểm số ({baseline_val:.1f}%), 0 token."
+                )
+                summary = SkillEvolutionSummary(
+                    skill_name=skill_name,
+                    target_file=target_file,
+                    baseline_score=baseline_val,
+                    final_score=baseline_val,
+                    commits_kept=0,
+                    rollbacks=0,
+                    status="HALT_NO_FURTHER_STRATEGIES",
+                    total_tokens=0,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    halt_reason="HALT_NO_FURTHER_STRATEGIES",
                     slicing_tier=None,
                     holdout_score=baseline_val,
                     tuning_size=0,
@@ -633,6 +720,9 @@ class NightlyTunerDaemon:
             report_file = reports_dir / f"nightly_tuner_report_{now_str}.md"
             report_file.write_text(report_md, encoding="utf-8")
             logger.info(f"📄 Đã lưu báo cáo: {report_file}")
+            curr_strat_hash = get_mutation_strategies_hash()
+            if curr_strat_hash:
+                save_applied_strategies_hash(self.root, curr_strat_hash)
         else:
             logger.info(
                 "🧪 [DRY-RUN] Bỏ qua việc lưu báo cáo chính thức vào .md/knowledge/reports/"
@@ -1206,4 +1296,7 @@ __all__ = [
     "NightlyDaemonReport",
     "WeightedPriorityQueue",
     "NightlyTunerDaemon",
+    "get_mutation_strategies_hash",
+    "get_last_applied_strategies_hash",
+    "save_applied_strategies_hash",
 ]
