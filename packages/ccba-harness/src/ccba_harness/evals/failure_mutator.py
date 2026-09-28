@@ -267,7 +267,9 @@ def extract_failure_signals(
             if score_res.score >= 1.0 and not score_res.is_critical_fail:
                 continue
             raw = score_res.raw_output
-            if not isinstance(raw, dict):
+            if isinstance(raw, bool):
+                raw = {"matched": raw, "citations_found": 1 if raw else 0}
+            elif not isinstance(raw, dict):
                 continue
 
             sig: FailureSignal | None = None

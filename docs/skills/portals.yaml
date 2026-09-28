@@ -88,6 +88,7 @@ portals:
       - ccba-graduate-rd
       - ccba-knowledge-loop
       - ccba-ai-gateway-sdk
+      - ccba-vllm-manager
       - ccba-ai-pdf-preprocessor
       - ccba-hybrid-rag-search
       - ccba-llm-pipeline-patterns

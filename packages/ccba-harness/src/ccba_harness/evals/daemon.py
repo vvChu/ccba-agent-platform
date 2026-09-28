@@ -214,7 +214,15 @@ class WeightedPriorityQueue:
                 )
                 else 0
             )
-            in_cooldown = 1 if item.get("in_cooldown") else 0
+            in_cooldown = (
+                1
+                if (
+                    item.get("in_cooldown")
+                    and not item.get("has_unapplied_signals")
+                    and not item.get("needs_ledger_seed")
+                )
+                else 0
+            )
             raw_date = item.get("last_scanned_date")
             if isinstance(raw_date, datetime.datetime):
                 scanned_date = raw_date.date()
@@ -437,6 +445,9 @@ class NightlyTunerDaemon:
                     if s_name not in scores:
                         scores[s_name] = s_final
 
+                    if "SKIPPED_COOLDOWN" in status_str:
+                        continue
+
                     if r_date is not None and s_name not in last_scanned_dates:
                         last_scanned_dates[s_name] = r_date
 
@@ -590,7 +601,13 @@ class NightlyTunerDaemon:
             dataset_file = item["dataset_file"]
 
             # Bỏ qua kỹ năng nếu đang trong thời gian cooldown và cờ skip_cooldown được kích hoạt
-            if self.skip_cooldown and item.get("in_cooldown"):
+            # Ngoại lệ: Kỹ năng có failure signals chưa áp hoặc cần seed ledger được ưu tiên chạy
+            if (
+                self.skip_cooldown
+                and item.get("in_cooldown")
+                and not item.get("has_unapplied_signals")
+                and not item.get("needs_ledger_seed")
+            ):
                 last_date_str = str(item.get("last_scanned_date") or "gần đây")
                 baseline_val = float(item.get("baseline_score", 0.0))
                 logger.info(

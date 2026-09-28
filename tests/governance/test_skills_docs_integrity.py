@@ -94,8 +94,8 @@ def test_all_active_skills_in_portals_yaml_exactly_match(
 
     assert not missing_in_portals, f"Active skills missing from portals.yaml: {missing_in_portals}"
     assert not orphans_in_portals, f"Skills in portals.yaml not found on disk: {orphans_in_portals}"
-    assert len(active_skill_names) == 74, (
-        f"Expected exactly 74 active skills, found {len(active_skill_names)}"
+    assert len(active_skill_names) == 75, (
+        f"Expected exactly 75 active skills, found {len(active_skill_names)}"
     )
 
 

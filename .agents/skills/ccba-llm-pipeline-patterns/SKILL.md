@@ -10,7 +10,7 @@ bundle: _core
 tier: kernel
 command: /ccba-llm-pipeline-patterns
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -498,6 +498,66 @@ Raw Media Stream ──► [TẦNG 1: BỘ LỌC TẤT ĐỊNH (Zero-Token)]
 
 ---
 
+## Pattern 16: Thinking Token Starvation Defense & Role-Based Reasoning Management
+
+### Vấn đề (The Thinking Token Starvation Incident)
+Khi triển khai các mô hình lý luận (Reasoning LLMs / Hybrid MoE như Qwen 3.6, DeepSeek-R1) với parser nhận thức (`--reasoning-parser qwen3`):
+1. **Thinking Token Starvation**: Mô hình luôn tư duy mặc định và sinh khối `<think>...</think>`. Đối với các prompt yêu cầu đầu ra ngắn, có cấu trúc chặt chẽ như `extract_json()` (`max_tokens: 100-300`), HyDE Generator (`max_tokens: 512`), hay background titling/tagging: mô hình đốt trọn ngân sách tokens vào khối `<think>`, chạm trần `finish_reason: length` trước khi kịp sinh content thực tế $\implies$ trả về `content: None` (hoặc chuỗi rỗng), làm sập toàn bộ pipeline trích xuất.
+2. **Latency Bloat**: Độ trễ bị đội lên $13.5\times$ (từ 0.4s lên 5.6s) do mô hình suy nghĩ lan man cho các tác vụ trích xuất từ khóa đơn giản vốn không đòi hỏi chuỗi suy luận phức tạp.
+3. **Prompt "Don't think" Ineffectiveness**: Việc chỉ chèn câu lệnh *"Answer directly, do not think"* trong prompt thường bị bộ sinh chat template của mô hình reasoning bỏ qua vì cơ chế tư duy được kích hoạt ở cấp độ tokenizer / template.
+
+### Giải pháp: Phân Tầng Điều Phối Tư Duy (Forced Non-Thinking & Role-Based Routing)
+
+```
+                       [INCOMING PIPELINE REQUEST]
+                                   │
+              ┌────────────────────┴────────────────────┐
+              ▼ (max_tokens <= 512, JSON/HyDE)          ▼ (Complex Code, Synthesis)
+      [FAST INSTRUCT PATH]                      [DEEP REASONING PATH]
+              │                                         │
+    chat_template_kwargs:                     chat_template_kwargs:
+   {"enable_thinking": False}                {"enable_thinking": True}
+              │                                         │
+    Model Alias: `local-instruct`              Model Alias: `local-coder` / `rag-core`
+    vLLM: Direct generation                   vLLM: --reasoning-parser qwen3
+    Throughput: 150+ tok/s                    Throughput: Deep CoT
+    Latency: ~0.4s                            Latency: ~5.6s
+```
+
+### Triển khai Mẫu & Quy Tắc RULE-5.8 (Reasoning Model Thinking Token Management)
+
+1. **Forced Non-Thinking Flag trong Python Client**:
+   ```python
+   # Khi gọi API Gateway / vLLM cho các hàm trích xuất JSON hoặc HyDE
+   response = await client.chat.completions.create(
+       model="local-instruct",  # hoặc model vật lý
+       messages=[{"role": "user", "content": prompt}],
+       max_tokens=300,
+       extra_body={
+           "chat_template_kwargs": {"enable_thinking": False}
+       },
+   )
+   ```
+
+2. **Role-Based Aliases tại API Gateway (LiteLLM)**:
+   - **`local-instruct`**: Trỏ về local model nhưng cố định tham số `enable_thinking: false` trong `model_info` hoặc gateway params. Dùng cho: `extract_json()`, HyDE queries, classification, titling, translation.
+   - **`local-coder` / `rag-core`**: Bật đầy đủ `qwen3` reasoning parser và `qwen3_coder` tool parser. Dùng cho: Code generation, complex multi-step planning, audit, verification.
+
+3. **Defensive Pipeline Fallback (Auto-Recovery)**:
+   ```python
+   # Cơ chế tự phục hồi khi gặp lỗi cạn token vì thinking
+   if response.choices[0].finish_reason == "length" and not response.choices[0].message.content:
+       logger.warning("Thinking token starvation detected! Retrying with enable_thinking=False...")
+       return await call_llm(prompt, enable_thinking=False, max_tokens=max_tokens * 2)
+   ```
+
+### Key Invariants
+1. **Never Prompt-Beg**: Tuyệt đối không phụ thuộc vào văn xuôi "không suy nghĩ" trong system prompt. BẮT BUỘC tắt thinking từ tầng chat template (`enable_thinking: False`) hoặc định tuyến qua alias `local-instruct`.
+2. **Strict Extraction Budget**: Mọi hàm bóc tách dữ liệu có cấu trúc có `max_tokens <= 512` phải vô hiệu hóa thinking để bảo toàn trọn vẹn ngân sách token cho payload JSON.
+3. **Decoupled Gateway Contract**: Application code chỉ được gọi thông qua các alias ngữ nghĩa (`local-instruct`, `rag-core`), không hardcode tên checkpoint vật lý.
+
+---
+
 ## Quick Reference — Model Routing cho Pipeline Tasks
 
 | Task trong pipeline | Model khuyến nghị | Lý do |
@@ -508,6 +568,7 @@ Raw Media Stream ──► [TẦNG 1: BỘ LỌC TẤT ĐỊNH (Zero-Token)]
 | Draft synthesis (Pass 1) | `qwen-local-primary` | Fast local GPU, Vietnamese |
 | Quality check (Pass 2) | `reasoning-gemma` / `claude-sonnet-thinking` | Precision verify |
 | Metadata extract | `claude-haiku-4-5` | Clean JSON, no reasoning overhead |
+| Fast extraction / JSON (No thinking) | `local-instruct` / `claude-haiku-4-5` | Bắt buộc `enable_thinking=False`, chống starvation |
 | Large corpus (> 50k tokens) | `gemini-3.1-pro-high` | 1M context window |
 | Cross-reference audit | `qwen-local-primary` | Private data, offline |
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from ccba_harness.evals.daemon import (
     NightlyTunerDaemon,
     WeightedPriorityQueue,
@@ -355,3 +357,108 @@ def test_10_ratchet_loop_avoids_duplicate_fingerprints_in_same_session(tmp_path)
     mutated_2 = optimizer.propose_mutation(initial_content, iteration=2)
     # mutated_2 should NOT have 88/2028/NĐ-CP reapplied from failure patches
     assert mutated_2 != mutated_1
+
+
+def test_11_cooldown_bypassed_when_needs_ledger_seed_or_has_signals():
+    """Case 11: Skills in cooldown but needing seed or having unapplied signals bypass cooldown."""
+    item_in_cooldown = {
+        "skill_name": "skill_cooldown_normal",
+        "in_cooldown": True,
+        "is_exhausted": False,
+        "has_unapplied_signals": False,
+        "needs_ledger_seed": False,
+        "baseline_score": 50.0,
+    }
+    item_cooldown_with_signals = {
+        "skill_name": "skill_cooldown_with_signals",
+        "in_cooldown": True,
+        "is_exhausted": False,
+        "has_unapplied_signals": True,
+        "needs_ledger_seed": False,
+        "baseline_score": 50.0,
+    }
+    item_cooldown_needs_seed = {
+        "skill_name": "skill_cooldown_needs_seed",
+        "in_cooldown": True,
+        "is_exhausted": False,
+        "has_unapplied_signals": False,
+        "needs_ledger_seed": True,
+        "baseline_score": 50.0,
+    }
+
+    ranked = WeightedPriorityQueue.rank_skills(
+        [
+            item_in_cooldown,
+            item_cooldown_with_signals,
+            item_cooldown_needs_seed,
+        ]
+    )
+    # Those with signals or needing seed have in_cooldown=0 in priority key, so they rank BEFORE normal cooldown
+    top_two = [ranked[0]["skill_name"], ranked[1]["skill_name"]]
+    assert "skill_cooldown_with_signals" in top_two
+    assert "skill_cooldown_needs_seed" in top_two
+    assert ranked[2]["skill_name"] == "skill_cooldown_normal"
+
+
+def test_12_skipped_cooldown_report_does_not_refresh_window(tmp_path):
+    """Case 12: Historical report parser ignores SKIPPED_COOLDOWN to prevent infinite cooldown loops."""
+    reports_dir = tmp_path / ".md" / "knowledge" / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    report_content = (
+        "# Nightly Tuner Report\n\n"
+        "**Engine:** `REAL_LLM`\n\n"
+        "| Skill | Baseline | Final | Delta | Commits | Strategies | Status |\n"
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
+        "| `ccba-legal-advisor` | 30.0% | 30.0% | +0.0% | 0 | None | SKIPPED_COOLDOWN |\n"
+    )
+    r_file = reports_dir / "nightly_tuner_report_2026-09-28.md"
+    r_file.write_text(report_content, encoding="utf-8")
+
+    daemon = NightlyTunerDaemon(root=tmp_path)
+    scores, cooldown_skills, last_scanned = daemon._load_historical_metrics(cooldown_days=3)
+
+    # Score should be parsed, but cooldown_skills should NOT add ccba-legal-advisor from SKIPPED_COOLDOWN
+    assert scores.get("ccba-legal-advisor") == 30.0
+    assert "ccba-legal-advisor" not in cooldown_skills
+
+
+@pytest.mark.asyncio
+async def test_13_sha256_provenance_raw_output_dict_compatibility():
+    """Case 13: Sha256ProvenanceScorer produces dict raw_output compatible with extract_failure_signals."""
+    from ccba_harness.evals.failure_mutator import extract_failure_signals
+    from ccba_harness.evals.models import EvalItem, EvalItemResult, EvalReport
+    from ccba_harness.evals.scorers.domain import Sha256ProvenanceScorer
+
+    scorer = Sha256ProvenanceScorer()
+    item = EvalItem(
+        id="test_sha_item",
+        input_prompt="Trích dẫn không có SHA",
+        metadata={"target_law": "50/2014/QH13"},
+    )
+    # Output missing SHA-256
+    score_res = await scorer.score("Nội dung phản hồi hoàn toàn thiếu chứng chỉ quy định", item)
+    assert score_res.score == 0.0
+    assert isinstance(score_res.raw_output, dict)
+    assert score_res.raw_output["citations_found"] == 0
+    assert score_res.raw_output["matched"] is False
+
+    # Extract failure signals from report containing this score
+    item_res = EvalItemResult(
+        item_id="test_sha_item",
+        task_output="Văn bản trích dẫn không có mã băm nào",
+        scores=[score_res],
+        composite_score=0.0,
+        passed=False,
+    )
+    report = EvalReport(
+        total_items=1,
+        passed_items=0,
+        failed_items=1,
+        overall_score=0.0,
+        pass_rate=0.0,
+        item_results=[item_res],
+    )
+    signals = extract_failure_signals(report, items=[item])
+    assert len(signals) >= 1
+    assert signals[0].code == "NO_CITATION"

@@ -1142,6 +1142,20 @@ skills:
   skill_path: .agents/skills/ccba-update-spoke/SKILL.md
   command: /ccba-update-spoke
   tier: kernel
+- name: ccba-vllm-manager
+  bundle: _software
+  description: Quản trị mô hình vLLM trên DGX Spark Blackwell GB10, tối ưu hóa AOT
+    Inductor cache, và cấu hình phân tách reasoning/tool parsers.
+  triggers:
+  - vllm
+  - qwen
+  - reasoning parser
+  - inductor cache
+  - dgx spark
+  - local llm
+  skill_path: .agents/skills/ccba-vllm-manager/SKILL.md
+  command: /ccba-vllm-manager
+  tier: domain
 - name: ccba-wayfinder
   bundle: _core
   description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua

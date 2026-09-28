@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 74 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 75 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 74 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 75 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 74 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 75 skills.
 
-## All Active Skills (74 Skills)
+## All Active Skills (75 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -87,6 +87,7 @@
 - [ccba-to-spec](skills/ccba-to-spec.md): /ccba-to-spec — Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
 - [ccba-tvpl-vip-crawler](skills/ccba-tvpl-vip-crawler.md): /ccba-tvpl-vip-crawler — Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPLCrawler (tự động CookieVault & Mutex).
 - [ccba-update-spoke](skills/ccba-update-spoke.md): /ccba-update-spoke — Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke (đơn lẻ hoặc hàng loạt)
+- [ccba-vllm-manager](skills/ccba-vllm-manager.md): /ccba-vllm-manager — Quản trị mô hình vLLM trên DGX Spark Blackwell GB10, tối ưu hóa AOT Inductor cache, và cấu hình phân tách reasoning/tool parsers.
 - [ccba-wayfinder](skills/ccba-wayfinder.md): /ccba-wayfinder — Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua danh sách các ticket công việc.
 - [ccba-web-testing](skills/ccba-web-testing.md): /ccba-web-testing — Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y testing. Use for test automation, flakiness, Core Web Vitals, and cross-browser.
 - [ccba-xia](skills/ccba-xia.md): /ccba-xia — Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại.
