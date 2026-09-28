@@ -436,20 +436,20 @@ def load_eval_dataset(
             )
             canonical_clean = canonical_skill.replace("-", "_").lower()
 
-            # SSOT Resolution via Domain Archetype (ADR-0058)
+            # SSOT Resolution via 2-tier fallback (ADR-0060 / ADR-0058)
+            # resolve_domain_dataset handles Tier-1 (skill-specific file) and
+            # Tier-2 (archetype fallback) in one call.
+            domain_ds = resolve_domain_dataset(canonical_skill, default_dir)
+            if domain_ds == "eval_general_domain.json" and clean != canonical_skill:
+                cand_ds = resolve_domain_dataset(clean, default_dir)
+                if cand_ds != "eval_general_domain.json":
+                    domain_ds = cand_ds
+
             arch = resolve_domain_archetype(canonical_skill)
             if not arch and clean != canonical_skill:
                 arch = resolve_domain_archetype(clean) or resolve_domain_archetype(
                     clean.replace("_", "-")
                 )
-
-            domain_ds = arch.dataset_file if arch else resolve_domain_dataset(canonical_skill)
-            if (
-                not domain_ds or domain_ds == "eval_general_domain.json"
-            ) and clean != canonical_skill:
-                cand_ds = resolve_domain_dataset(clean)
-                if cand_ds != "eval_general_domain.json":
-                    domain_ds = cand_ds
 
             candidate_keys: list[str] = []
             for k in [clean, canonical_clean]:

@@ -203,17 +203,88 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
     return None
 
 
-def resolve_domain_dataset(skill_name: str) -> str:
-    """Resolves the canonical evaluation dataset filename for a skill.
+def resolve_domain_dataset(
+    skill_name: str,
+    test_cases_dir: Path | str | None = None,
+) -> str:
+    """Resolves the canonical evaluation dataset filename for a skill (ADR-0060: 2-tier fallback).
+
+    Resolution order:
+      Tier 1 (Skill-Specific): If test_cases_dir is provided and a skill-specific dataset file
+        exists (eval_{clean_skill}.json, {clean_skill}.json, or eval_{canonical_skill}.json),
+        that filename is returned with priority.
+      Tier 2 (Archetype Fallback): Falls back to the archetype dataset via
+        resolve_domain_archetype(), or 'eval_general_domain.json' if unmatched.
 
     Args:
-        skill_name: Name of the skill.
+        skill_name: Name of the skill (e.g. 'ccba-legal-intel').
+        test_cases_dir: Optional directory to search for skill-specific dataset files.
 
     Returns:
-        Dataset filename string (e.g. 'eval_visual_diagram.json', 'eval_legal_intel.json').
+        Dataset filename string (e.g. 'eval_legal_intel.json', 'eval_general_domain.json').
     """
+    # Tier 1: Skill-Specific dataset lookup
+    if test_cases_dir is not None:
+        dir_path = Path(test_cases_dir)
+        if dir_path.is_dir():
+            clean_skill = (
+                skill_name.strip()
+                .lower()
+                .removeprefix("ccba-")
+                .removeprefix("bigbim-")
+                .replace("-", "_")
+            )
+            canonical_skill = skill_name.strip().lower().replace("-", "_")
+            for candidate in [
+                f"eval_{clean_skill}.json",
+                f"{clean_skill}.json",
+                f"eval_{canonical_skill}.json",
+            ]:
+                if (dir_path / candidate).is_file():
+                    return candidate
+
+    # Tier 2: Archetype Fallback
     arch = resolve_domain_archetype(skill_name)
     return arch.dataset_file if arch else "eval_general_domain.json"
+
+
+def resolve_domain_dataset_path(
+    skill_name: str,
+    test_cases_dir: Path | str | None = None,
+) -> Path | None:
+    """Resolves the absolute Path of an existing evaluation dataset file for a skill (ADR-0060).
+
+    Resolution order:
+      1. Skill-specific dataset in test_cases_dir (eval_{clean_skill}.json, etc.).
+      2. Archetype dataset file in test_cases_dir.
+      3. eval_general_domain.json in test_cases_dir.
+
+    Args:
+        skill_name: Name of the skill (e.g. 'ccba-legal-intel').
+        test_cases_dir: Directory where dataset files reside.  If None, returns None.
+
+    Returns:
+        Path object pointing to the first existing dataset file, or None if test_cases_dir is not
+        provided or no file is found.
+    """
+    if test_cases_dir is None:
+        return None
+
+    dir_path = Path(test_cases_dir)
+    if not dir_path.is_dir():
+        return None
+
+    filename = resolve_domain_dataset(skill_name, test_cases_dir)
+    candidate = dir_path / filename
+    if candidate.is_file():
+        return candidate.resolve()
+
+    # Final fallback: eval_general_domain.json
+    fallback = dir_path / "eval_general_domain.json"
+    if fallback.is_file():
+        return fallback.resolve()
+
+    return None
 
 
 def get_default_domain_scorers(skill_name: str) -> list[BaseScorer]:
