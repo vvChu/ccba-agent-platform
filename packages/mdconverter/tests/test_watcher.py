@@ -1,8 +1,11 @@
 """Tests for FileWatcher module."""
 
+import errno
 import time
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 from mdconverter.core.watcher import ConversionEventHandler, FileWatcher
 
@@ -100,7 +103,12 @@ class TestFileWatcher:
         callback = MagicMock()
         watcher = FileWatcher(tmp_path, callback)
 
-        watcher.start()
+        try:
+            watcher.start()
+        except OSError as e:
+            if getattr(e, "errno", None) in (errno.EMFILE, errno.ENOSPC):
+                pytest.skip(f"inotify instance limit reached on host system: {e}")
+            raise
         assert watcher.is_running is True
 
         watcher.stop()
