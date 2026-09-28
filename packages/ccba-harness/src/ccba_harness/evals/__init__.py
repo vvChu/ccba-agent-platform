@@ -97,6 +97,7 @@ from .slicing import (
 from .tuner import (
     DEFAULT_MUTATION_STRATEGIES_PATH,
     AdaptiveRateLimiter,
+    GitMutexLock,
     GitRatchetOptimizer,
     GitRatchetTuner,
     RatchetConfig,
@@ -172,6 +173,7 @@ __all__ = [
     "get_default_domain_scorers",
     "GitRatchetOptimizer",
     "GitRatchetTuner",
+    "GitMutexLock",
     "RateLimiter",
     "AdaptiveRateLimiter",
     "NightlyDaemonReport",
