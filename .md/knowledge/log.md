@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-28] [synthesize] | Phát Hành PR #434 (Issue #433): Quản Trị Reasoning Token, vLLM Production Mounting & Vá Vận Hành Evals Daemon
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-llm-pipeline-patterns/`, `.agents/skills/ccba-vllm-manager/`, `packages/ccba-harness/src/ccba_harness/evals/`, `packages/ccba-harness/tests/`, `docs/`, `PLATFORM.md`, `README.md`, `catalog.yaml`
+- **Summary**: Hoàn tất phát triển và phát hành nâng cấp toàn diện kỹ năng và hạ tầng evals:
+  1. **PR #434 (Issue #433)**: Thượng nguồn hóa kỹ năng `ccba-vllm-manager` (v1.1.0) với Inductor AOT cache mounting (`-v ~/.cache/vllm:/root/.cache/vllm`) và cấu hình dual parser (`--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`); nâng cấp `ccba-llm-pipeline-patterns` (v1.4.0) với Pattern 16 (Thinking Token Starvation Defense) và RULE-5.8.
+  2. **Vá Vận Hành Evals Daemon & Failure Mutator**: Bổ sung cơ chế bypass cooldown (`in_cooldown = 0`) cho kỹ năng cần seed ledger (`needs_ledger_seed`) hoặc có lỗi chưa áp (`has_unapplied_signals`); loại trừ bản ghi `SKIPPED_COOLDOWN` khỏi việc kéo dài cửa sổ cooldown; chuẩn hóa dict `raw_output` cho `Sha256ProvenanceScorer`. Bổ sung 23/23 unit tests pass.
+  3. **Khắc phục CI Drift & Squash Merge**: Đồng bộ marker `<!-- STATS:SKILL_COUNT -->` lên 75 trong `README.md` và `PLATFORM.md`, vượt qua 8/8 checks CI GitHub Actions (100% Green), squash-merge vào `main` tại commit `0c0bcf78` và tự động đóng Issue #433.
+
+---
+
 ## [2026-09-27] [synthesize] | Phát Hành PR #410 (Issue #404): Nâng Cấp Kỹ Năng Cho LiteLLM Budget Resilience, Vector RAG Speedup & Team Sheets Governance
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-new-feature, /boost, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/ccba-api-circuit-breaker/`, `.agents/skills/ccba-ai-gateway-sdk/`, `.agents/skills/ccba-hybrid-rag-search/`, `.agents/skills/ccba-new-feature/`, `.agents/skills/ccba-session-retrospective/`, `scripts/tests/test_skill_circuit_breaker.py`, `scripts/tests/test_spoke_sync_modules.py`, `tests/test_upstream_workflows.py`, `docs/`, `catalog.yaml`, `.md/knowledge/log.md`

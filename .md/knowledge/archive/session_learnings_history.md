@@ -582,3 +582,42 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 
 ### 4. Walkthrough Dedicated PR Workflow
 - **Invariant (RULE-4.11):** Do hook `pre-push` cấm tuyệt đối push trực tiếp vào `main`, tài liệu nghiệm thu `walkthrough.md` sau khi hoàn tất release feature bắt buộc phải được lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và mở PR riêng để CI tự động kiểm định và squash-merge theo Fast-Path Review.
+
+---
+
+## 27. Sprint 4 Evals Daemon, Reasoning Token Defense & CI Drift Post-Mortems (PR #434, Issue #433)
+
+### Archived Invariants (Di dời từ Active Working Memory)
+- **RULE-1.2 [ADR 0053 — Single-Writer Protocol Cho Orchestrators]**:
+  - Single-Writer: Lead Orchestrator duy nhất ghi mã/logs. Subagents chỉ xuất Structured Patch vào `.system_generated/scratch/`.
+- **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
+  - Thin Seam: Module chỉ bộc lộ `__all__` hoặc `__init__.py`. Cấm import private `_*`. Zero-Exemption: Gỡ bypass trong linter.
+- **RULE-1.11 [Static Seam Verification & AST Span Linter]**:
+  - `validate_seam_exports()` kiểm tra Package Spoofing, Filesystem Existence, và Symbol Parity với `__all__`.
+  - Trích xuất symbol luôn `.rstrip(".,;")`. Quét exemption comment import dùng dải `range(node.lineno - 1, getattr(node, "end_lineno", node.lineno))`.
+- **RULE-2.1 [Strict Mypy Type-Safety — Chống Anti-Pattern AP9.1]**:
+  - CẤM `[[tool.mypy.overrides]] ignore_errors = true`. Ép kiểu tường minh binary I/O, dicts. Dùng `ignore_missing_imports = true` cho lib thiếu stubs.
+- **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
+  - Unit tests nòng cốt đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`.
+- **RULE-2.4 [Relative Link Resolution Depth]**:
+  - Tệp `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng `../../../packages/<pkg>`. CẤM commit URI `file:///` hoặc `conversation://`.
+- **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
+  - Tier 1 (`part=-100`): VIP Vector PDF. Tier 2 (`part=-1&docx=1`): VIP Word (`docx_converter`). Tier 3 (`part=0`): Scan PDF.
+
+### Post-Mortems & Operational Invariants
+#### 1. Invariant Marker Architecture Drift Prevention
+- **Root Cause:** Khi tạo mới một kỹ năng (như `ccba-vllm-manager`), số lượng kỹ năng tăng từ 74 lên 75. Theo RULE-4.5, các marker `<!-- STATS:SKILL_COUNT -->` trong `README.md` và `PLATFORM.md` bị lệch, khiến linter `DocumentAuditor.audit_architecture_drift()` trên CI chặn đứng toàn bộ ma trận kiểm thử ở cả 4 jobs.
+- **Invariant (RULE-4.12):** Mọi commit thêm/sửa/xóa Level-1 structural files (skills, packages, scripts) BẮT BUỘC phải chạy `python scripts/update_arch_stats.py` và commit đồng thời với tệp mới trước khi mở Pull Request.
+
+#### 2. Thinking Token Starvation Defense in Structured Pipelines
+- **Root Cause:** Các mô hình reasoning tiên tiến (DeepSeek-R1, Qwen-2.5-Coder-Thinking, v.v.) có xu hướng tiêu tốn hàng nghìn tokens trong thẻ suy nghĩ nội tâm (`<think>...</think>`). Nếu pipeline chỉ cấp `max_tokens=500` cho các tác vụ deterministic JSON extraction, HyDE queries, hoặc intent tagging, mô hình sẽ cạn kiệt token ngân sách trước khi kịp sinh ra kết quả hữu ích, gây sập parse JSON hoặc kết quả rỗng.
+- **Invariant (RULE-5.8):** Đối với các tác vụ deterministic/structured output (JSON extraction, HyDE generation, tagging), BẮT BUỘC cấu hình `chat_template_kwargs: {"enable_thinking": False}` hoặc cấp dự phòng `max_tokens` vượt ngưỡng suy nghĩ tối thiểu. Phân tầng định tuyến tách biệt rõ `local-instruct` (không thinking cho structured tasks) và `local-coder`/`rag-core` (bật thinking cho phân tích mã nguồn và tổng hợp pháp lý).
+
+#### 3. vLLM Container Production Mounting & Dual Parser Separation
+- **Root Cause:** Khi triển khai vLLM trên container DGX Spark Blackwell qua Docker, mỗi lần restart container, cache biên dịch kernel AOT của PyTorch TorchInductor bị xóa sạch nếu không được mount ra ổ đĩa host, dẫn tới độ trễ khởi động lần đầu (TTFT) kéo dài hàng phút. Đồng thời, việc trộn lẫn parser suy nghĩ và parser gọi công cụ gây lỗi nhận diện sai tool calls.
+- **Invariant (RULE-5.9):** Khi chạy container vLLM, BẮT BUỘC mount thư mục host `~/.cache/vllm` vào `/root/.cache/vllm`. Cấu hình cờ phân tách rõ ràng `--reasoning-parser` (ví dụ `qwen3`) và `--tool-call-parser` (ví dụ `qwen3_coder`).
+
+#### 4. Evals Daemon Priority Ratchet & Cooldown Bypass
+- **Root Cause:** Trong nightly evals daemon, cơ chế cooldown 3 ngày mặc định chặn các kỹ năng đang trong chu kỳ lặp nếu chỉ dựa trên mốc thời gian chạy gần nhất. Tuy nhiên, các kỹ năng mới chưa có bản ghi ledger cơ sở (`needs_ledger_seed`) hoặc các kỹ năng đang có thẻ lỗi phát hiện bởi Failure Mutator chưa được áp dụng (`has_unapplied_signals`) cần được kiểm thử và tiến hóa ngay lập tức. Nếu bị cooldown chặn, vòng phản hồi tự tối ưu sẽ bị đình trệ. Ngoài ra, việc ghi nhận `SKIPPED_COOLDOWN` vào log lịch sử vô tình kéo dài cửa sổ cooldown vô tận.
+- **Invariant (RULE-2.16):** Trong `WeightedPriorityQueue`, các kỹ năng có `needs_ledger_seed=True` hoặc `has_unapplied_signals=True` BẮT BUỘC bypass cooldown (`in_cooldown = 0`). Hàm đọc metrics lịch sử `_load_historical_metrics()` BẮT BUỘC bỏ qua các bản ghi `SKIPPED_COOLDOWN` để không reset hoặc kéo dài cửa sổ cooldown của kỹ năng.
+
