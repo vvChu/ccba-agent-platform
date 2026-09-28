@@ -20,7 +20,7 @@ tokens:
 execution:
   max_concurrency: 5
   latency_threshold_s: 4.0
-  default_model: "gemini-3.7-flash-high"
+  default_model: "qwen-local-primary"
 
 daemon:
   max_iterations_low: 30
