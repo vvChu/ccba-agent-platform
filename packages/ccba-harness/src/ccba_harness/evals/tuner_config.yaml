@@ -10,6 +10,7 @@ ratchet:
   slicing_seed: 42
   enable_adaptive_slicing: true
   enable_perturbation: true
+  max_failure_patches: 3
 
 tokens:
   budget_ceiling: 5000000
