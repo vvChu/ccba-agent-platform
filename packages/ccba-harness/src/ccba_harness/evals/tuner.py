@@ -26,6 +26,14 @@ from typing import Any, Protocol, cast, runtime_checkable
 
 import yaml
 
+from .failure_mutator import (
+    extract_failure_signals,
+    get_unapplied_failure_signals,
+    load_failure_ledger,
+    render_failure_patch,
+    save_failure_ledger,
+)
+from .legal_index import LegalFlatIndex, load_legal_flat_index
 from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import (
@@ -630,6 +638,7 @@ class RatchetConfig:
     per_skill_mutation_budget: int | None = cast(Any, _UNSET)
     hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
     max_concurrency: int = cast(Any, _UNSET)
+    max_failure_patches: int = cast(Any, _UNSET)
     baseline_score: float | None = None
 
     def __post_init__(self) -> None:
@@ -840,6 +849,23 @@ class RatchetConfig:
                     self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
             else:
                 self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
+
+        # max_failure_patches (Sprint 4 / ADR-0059)
+        if self.max_failure_patches is not _UNSET:
+            if isinstance(self.max_failure_patches, str):
+                try:
+                    self.max_failure_patches = int(self.max_failure_patches)
+                except ValueError:
+                    self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
+        else:
+            env_mfp = os.getenv("CCBA_TUNER_MAX_FAILURE_PATCHES")
+            if env_mfp:
+                try:
+                    self.max_failure_patches = int(env_mfp)
+                except ValueError:
+                    self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
+            else:
+                self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
 
     @classmethod
     def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
@@ -1252,6 +1278,14 @@ class GitRatchetOptimizer:
                 rate_limiter=self.rate_limiter,
             )
 
+        # Failure-Driven Provenance Mutator State (Sprint 4 / ADR-0059)
+        self._applied_failure_patches: int = 0
+        self._applied_fingerprints: set[str] = set()
+        try:
+            self.legal_index: LegalFlatIndex | None = load_legal_flat_index()
+        except Exception:
+            self.legal_index = None
+
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
         items: list[EvalItem] = []
@@ -1377,6 +1411,41 @@ class GitRatchetOptimizer:
         """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
         arch = resolve_domain_archetype(self.config.skill_name)
         arch_name = arch.name if arch else "general"
+
+        # Failure-Driven Provenance Mutation (Sprint 4 / ADR-0059)
+        max_patches = getattr(self.config, "max_failure_patches", 3)
+        if arch_name in {"legal", "legal_tooling"} and self._applied_failure_patches < max_patches:
+            ledger = load_failure_ledger(self.config.skill_name)
+            if ledger and ledger.signals:
+                unapplied_sigs = get_unapplied_failure_signals(
+                    current_content, list(ledger.signals)
+                )
+                candidates = [
+                    s for s in unapplied_sigs if s.fingerprint not in self._applied_fingerprints
+                ]
+                if candidates:
+                    sig = candidates[0]
+                    card = render_failure_patch(sig, self.legal_index)
+                    self._applied_fingerprints.add(sig.fingerprint)
+                    self._applied_failure_patches += 1
+                    logger.info(
+                        f"⚖️ [FAILURE_MUTATION_APPLIED] Chèn thẻ lỗi '{sig.code}' "
+                        f"(fingerprint: {sig.fingerprint[:8]}). ({self._applied_failure_patches}/{max_patches})"
+                    )
+                    fm_match = re.match(
+                        r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL
+                    )
+                    if fm_match:
+                        fm = current_content[: fm_match.end()]
+                        body_c = current_content[fm_match.end() :]
+                    else:
+                        fm = ""
+                        body_c = current_content
+                    mutated_body = body_c.strip() + "\n\n" + card.strip()
+                    lines = mutated_body.splitlines()
+                    if len(lines) > 300:
+                        mutated_body = "\n".join(lines[:300])
+                    return (fm + mutated_body) if fm else mutated_body
 
         all_strategies = load_mutation_strategies()
         strategies = all_strategies.get(arch_name) or all_strategies.get("general", [])
@@ -2024,13 +2093,24 @@ class GitRatchetOptimizer:
 
         initial_content = self.target_file.read_text(encoding="utf-8")
 
-        # Zero-Token Short-Circuit (Sprint 3 / ADR-0058):
-        # If all mutation strategies have already been applied, exit immediately with 0 tokens.
+        # Zero-Token Short-Circuit (Sprint 3 / Sprint 4 / ADR-0058 / ADR-0059):
+        # If all mutation strategies have already been applied AND no unapplied failure signals exist, exit immediately.
         unapplied = remaining_strategies(initial_content, self.config.skill_name)
-        if not unapplied:
+        has_unapplied_signals = False
+        arch = resolve_domain_archetype(self.config.skill_name)
+        arch_name = arch.name if arch else "general"
+        if arch_name in {"legal", "legal_tooling"}:
+            ledger = load_failure_ledger(self.config.skill_name)
+            if ledger and ledger.signals:
+                unapplied_sigs = get_unapplied_failure_signals(
+                    initial_content, list(ledger.signals)
+                )
+                has_unapplied_signals = len(unapplied_sigs) > 0
+
+        if not unapplied and not has_unapplied_signals:
             logger.info(
                 f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
-                f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
+                f"chiến lược đột biến có sẵn và không còn tín hiệu lỗi chưa áp. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
             )
             base_score = (
                 self.config.baseline_score if self.config.baseline_score is not None else 0.0
@@ -2059,6 +2139,20 @@ class GitRatchetOptimizer:
             baseline_report = self._eval_sync(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
             return self._build_init_error_report(init_err)
+
+        # Seed failure signals into ledger for legal skills (Sprint 4 / ADR-0059)
+        if arch_name in {"legal", "legal_tooling"}:
+            try:
+                signals = extract_failure_signals(
+                    baseline_report, self.tuning_dataset, self.legal_index
+                )
+                if signals:
+                    save_failure_ledger(self.config.skill_name, signals, initial_content)
+                    logger.info(
+                        f"⚖️ [LEDGER_SEEDED] Ghi nhận {len(signals)} tín hiệu lỗi vào sổ cái cho '{self.config.skill_name}'."
+                    )
+            except Exception as e:
+                logger.warning(f"Lỗi trích xuất tín hiệu lỗi sau baseline: {e}")
 
         baseline_score = baseline_report.overall_score
         baseline_tokens = self.token_tracker.total_tokens
@@ -2134,13 +2228,24 @@ class GitRatchetOptimizer:
 
         initial_content = self.target_file.read_text(encoding="utf-8")
 
-        # Zero-Token Short-Circuit (Sprint 3 / ADR-0058):
-        # If all mutation strategies have already been applied, exit immediately with 0 tokens.
+        # Zero-Token Short-Circuit (Sprint 3 / Sprint 4 / ADR-0058 / ADR-0059):
+        # If all mutation strategies have already been applied AND no unapplied failure signals exist, exit immediately.
         unapplied = remaining_strategies(initial_content, self.config.skill_name)
-        if not unapplied:
+        has_unapplied_signals = False
+        arch = resolve_domain_archetype(self.config.skill_name)
+        arch_name = arch.name if arch else "general"
+        if arch_name in {"legal", "legal_tooling"}:
+            ledger = load_failure_ledger(self.config.skill_name)
+            if ledger and ledger.signals:
+                unapplied_sigs = get_unapplied_failure_signals(
+                    initial_content, list(ledger.signals)
+                )
+                has_unapplied_signals = len(unapplied_sigs) > 0
+
+        if not unapplied and not has_unapplied_signals:
             logger.info(
                 f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
-                f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
+                f"chiến lược đột biến có sẵn và không còn tín hiệu lỗi chưa áp. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
             )
             base_score = (
                 self.config.baseline_score if self.config.baseline_score is not None else 0.0
@@ -2169,6 +2274,20 @@ class GitRatchetOptimizer:
             baseline_report = await self._eval_async(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
             return self._build_init_error_report(init_err)
+
+        # Seed failure signals into ledger for legal skills (Sprint 4 / ADR-0059)
+        if arch_name in {"legal", "legal_tooling"}:
+            try:
+                signals = extract_failure_signals(
+                    baseline_report, self.tuning_dataset, self.legal_index
+                )
+                if signals:
+                    save_failure_ledger(self.config.skill_name, signals, initial_content)
+                    logger.info(
+                        f"⚖️ [LEDGER_SEEDED] Ghi nhận {len(signals)} tín hiệu lỗi vào sổ cái cho '{self.config.skill_name}'."
+                    )
+            except Exception as e:
+                logger.warning(f"Lỗi trích xuất tín hiệu lỗi sau baseline: {e}")
 
         baseline_score = baseline_report.overall_score
         baseline_tokens = self.token_tracker.total_tokens
