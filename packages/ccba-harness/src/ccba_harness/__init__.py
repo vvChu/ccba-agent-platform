@@ -87,6 +87,7 @@ from .evals import (
     load_legal_flat_index,
     load_uniclass_flat_index,
     preserve_yaml_frontmatter,
+    remaining_strategies,
     run_eval_pipeline,
 )
 from .execution import DetachedExecutionEngine
@@ -228,6 +229,7 @@ __all__ = [
     "get_default_domain_scorers",
     "GitRatchetOptimizer",
     "GitRatchetTuner",
+    "remaining_strategies",
     "DEFAULT_FLAT_INDEX_PATH",
     "StatutoryDocument",
     "LegalFlatIndex",
