@@ -76,6 +76,7 @@
 
 - [blueprints/fleet_skills_3tier_migration_blueprint.md](blueprints/fleet_skills_3tier_migration_blueprint.md): **[MỚI]** Kế hoạch & Bản đồ Di trú Toàn diện 100 Agent Skills (BLUEPRINT-2026-SKILLS-001) theo Kiến trúc 3 Tầng và Khung Quyết Định Hai Giai Đoạn.
 - [plans/evals_sprint1_refactor_plan.md](plans/evals_sprint1_refactor_plan.md): **[MỚI]** Kế hoạch Triển khai Sprint 1: Tái cấu trúc Evals Engine (Declarative Mutation Strategies, SSOT Archetypes & Fault-Tolerant Scoring).
+- [plans/evals_sprint2_refactor_plan.md](plans/evals_sprint2_refactor_plan.md): **[MỚI]** Kế hoạch Triển khai Sprint 2: Hoàn tất Evals Engine Refactor (Dataset Fallback ADR-0060, Scorers Modularization & Tuner Git Mutex).
 - [scripts_migration_manifest.md](scripts_migration_manifest.md): **[MỚI]** Báo Cáo Khảo Sát & Ma Trận Ánh Xạ Di Trú 52 Scripts Monorepo (Ticket 3 Manifest).
 - [specs/spec-structured-diff-protocol.md](specs/spec-structured-diff-protocol.md): **[MỚI]** Đặc tả Giao thức Structured Diff Protocol & Cơ chế Kiểm soát Single-Writer Engine (Ticket 4).
 - [specs_and_roadmaps/agentic_programming_roadmap.md](specs_and_roadmaps/agentic_programming_roadmap.md): Lộ trình phát triển hệ sinh thái lập trình Agentic.
