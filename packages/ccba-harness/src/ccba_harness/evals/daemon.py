@@ -199,7 +199,9 @@ class WeightedPriorityQueue:
         """Sorts skills such that non-cooldown skills and lower baseline scores are tuned first."""
 
         def priority_key(item: dict[str, Any]) -> tuple[int, int, datetime.date, int, float]:
-            is_exhausted = 1 if (item.get("is_exhausted") and item.get("strat_hash_unchanged")) else 0
+            is_exhausted = (
+                1 if (item.get("is_exhausted") and item.get("strat_hash_unchanged")) else 0
+            )
             in_cooldown = 1 if item.get("in_cooldown") else 0
             raw_date = item.get("last_scanned_date")
             if isinstance(raw_date, datetime.datetime):

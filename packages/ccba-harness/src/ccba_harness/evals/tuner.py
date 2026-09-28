@@ -445,6 +445,7 @@ class LLMTaskAdapter:
         cfg = load_tuner_config()
         try:
             from ccba_ai.routing import choose_model
+
             fallback_model = choose_model("local")
         except (ImportError, Exception):
             fallback_model = "qwen-local-primary"
@@ -650,6 +651,7 @@ class RatchetConfig:
         if not self.llm_model:
             try:
                 from ccba_ai.routing import choose_model
+
                 fallback_m = choose_model("local")
             except (ImportError, Exception):
                 fallback_m = "qwen-local-primary"
@@ -1134,9 +1136,7 @@ def remaining_strategies(
     norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
     unapplied: list[tuple[str, str]] = []
     for s_name, s_enhancement in strategies:
-        norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace(
-            "\r\n", "\n"
-        )
+        norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace("\r\n", "\n")
         if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
             unapplied.append((s_name, s_enhancement))
     return unapplied
@@ -2032,7 +2032,9 @@ class GitRatchetOptimizer:
                 f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
                 f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
             )
-            base_score = self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            base_score = (
+                self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            )
             return RatchetReport(
                 target_file=str(self.target_file),
                 initial_score=base_score,
@@ -2140,7 +2142,9 @@ class GitRatchetOptimizer:
                 f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
                 f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
             )
-            base_score = self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            base_score = (
+                self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            )
             return RatchetReport(
                 target_file=str(self.target_file),
                 initial_score=base_score,

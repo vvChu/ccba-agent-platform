@@ -38,7 +38,9 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 def test_remaining_strategies_detection(tmp_path: Path) -> None:
     """Verify remaining_strategies identifies unapplied strategies and returns empty on exhausted skills."""
     # Case 1: Fresh minimal skill content
-    fresh_skill = "---\nname: fresh-skill\ndescription: Test\n---\n# Fresh Skill\n\nInstructions here.\n"
+    fresh_skill = (
+        "---\nname: fresh-skill\ndescription: Test\n---\n# Fresh Skill\n\nInstructions here.\n"
+    )
     unapplied_fresh = remaining_strategies(fresh_skill, "ccba-test-skill")
     assert len(unapplied_fresh) > 0
 
@@ -47,7 +49,9 @@ def test_remaining_strategies_detection(tmp_path: Path) -> None:
     coding_strategies = all_strategies.get("coding", [])
     assert len(coding_strategies) > 0
 
-    exhausted_content = "---\nname: exhausted-skill\ndescription: Fully tuned\n---\n# Instructions\n\n"
+    exhausted_content = (
+        "---\nname: exhausted-skill\ndescription: Fully tuned\n---\n# Instructions\n\n"
+    )
     for _s_name, s_content in coding_strategies:
         exhausted_content += f"\n\n{s_content}\n"
 
