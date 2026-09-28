@@ -148,3 +148,7 @@ Kết quả phân tích mâu thuẫn phải được trả về dưới dạng b
 ## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng
 * **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.
 * **Kiểm chứng độc lập:** Đối soát kết quả với các tiêu chuẩn tham chiếu trước khi nghiệm thu.
+
+## Quy Chuẩn Mâu Thuẫn Thông Tin & Khoảng Trống Bảo Trì (Level 2 Space Gap)
+* **Phân cấp xung đột:** Tách biệt va chạm vật lý Level 1 với khoảng trống vô hình Level 2 (Clearance >= 900mm cho thiết bị lớn, >= 150mm cho đai ốc).
+* **Kiểm soát thuộc tính BBP:** Giữ nguyên vẹn Unique ID từ BBP-A0, ngăn chặn trôi dạt định danh và đối soát công suất BBP-B1 vs BBP-B2.
