@@ -443,7 +443,11 @@ class LLMTaskAdapter:
         estimated_task_tokens: int = 2000,
     ) -> None:
         cfg = load_tuner_config()
-        fallback_model = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+        try:
+            from ccba_ai.routing import choose_model
+            fallback_model = choose_model("local")
+        except (ImportError, Exception):
+            fallback_model = "qwen-local-primary"
         default_model = str(cfg.get("execution", {}).get("default_model", fallback_model))
         self.model = model or os.getenv("CCBA_TUNER_MODEL", default_model)
         self.token_tracker = token_tracker or TokenUsageTracker()
@@ -625,6 +629,7 @@ class RatchetConfig:
     per_skill_mutation_budget: int | None = cast(Any, _UNSET)
     hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
     max_concurrency: int = cast(Any, _UNSET)
+    baseline_score: float | None = None
 
     def __post_init__(self) -> None:
         cfg = load_tuner_config()
@@ -643,9 +648,18 @@ class RatchetConfig:
         if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
             self.use_real_llm = True
         if not self.llm_model:
-            fallback_m = "gemini-3.7-flash-high"  # ccba:allow-raw-model
+            try:
+                from ccba_ai.routing import choose_model
+                fallback_m = choose_model("local")
+            except (ImportError, Exception):
+                fallback_m = "qwen-local-primary"
             def_m = str(exec_cfg.get("default_model", fallback_m))
             self.llm_model = os.getenv("CCBA_TUNER_MODEL", def_m)
+        if self.baseline_score is not None:
+            try:
+                self.baseline_score = float(self.baseline_score)
+            except (ValueError, TypeError):
+                self.baseline_score = None
 
         # 4-tier Precedence: Explicit User Param > Env Var > Declarative YAML > Code Fallback
         # target_score
@@ -939,6 +953,14 @@ class RatchetConfig:
             int(re.sub(r"[,_]", "", hard_max_match.group(1))) if hard_max_match else _UNSET
         )
 
+        # Parse Baseline Score if present
+        baseline_match = re.search(
+            r"-\s*\*\*Baseline(?:\s*Score)?\*\*:\s*([0-9.]+)",
+            content,
+            re.IGNORECASE,
+        )
+        baseline_score = float(baseline_match.group(1)) if baseline_match else None
+
         return cls(
             target_file=target_path,
             eval_dataset_file=dataset_path,
@@ -950,6 +972,7 @@ class RatchetConfig:
             token_budget=token_budget,
             per_skill_mutation_budget=per_skill_mutation_budget,
             hard_max_tokens_per_skill=hard_max_tokens_per_skill,
+            baseline_score=baseline_score,
         )
 
 
@@ -1079,6 +1102,44 @@ from .archetypes import (  # noqa: F401
     resolve_domain_archetype,
     resolve_domain_dataset,
 )
+
+
+def remaining_strategies(
+    content: str,
+    skill_name: str,
+    strategies_path: Path | None = None,
+) -> list[tuple[str, str]]:
+    """Returns unapplied mutation strategies for a skill prompt (Sprint 3 / ADR-0058).
+
+    Args:
+        content: The skill markdown content.
+        skill_name: Name of the skill to look up archetype strategies for.
+        strategies_path: Optional custom path to mutation strategies YAML.
+
+    Returns:
+        List of (strategy_name, strategy_enhancement) pairs that have NOT yet been applied.
+    """
+    arch = resolve_domain_archetype(skill_name)
+    arch_name = arch.name if arch else "general"
+
+    all_strategies = load_mutation_strategies(strategies_path)
+    strategies = all_strategies.get(arch_name) or all_strategies.get("general", [])
+    if not strategies:
+        return []
+
+    # Extract body, preserving frontmatter
+    fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", content, re.DOTALL)
+    body = content[fm_match.end() :] if fm_match else content
+
+    norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
+    unapplied: list[tuple[str, str]] = []
+    for s_name, s_enhancement in strategies:
+        norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace(
+            "\r\n", "\n"
+        )
+        if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
+            unapplied.append((s_name, s_enhancement))
+    return unapplied
 
 
 @dataclass
@@ -1710,18 +1771,20 @@ class GitRatchetOptimizer:
             )
             return True, None
 
-        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368)
-        mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
+        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368, Sprint 3)
+        total_session_tokens = self.token_tracker.total_tokens
         if (
             self.config.hard_max_tokens_per_skill is not None
-            and mutation_tokens >= self.config.hard_max_tokens_per_skill
+            and total_session_tokens >= self.config.hard_max_tokens_per_skill
         ):
             logger.info(
-                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
+                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Tổng session tokens ({total_session_tokens:,}) "
                 f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials. "
                 f"Dừng đột biến để bảo vệ ngân sách toàn đêm."
             )
             return True, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
+
+        mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
 
         # Per-skill mutation budget check
         if (
@@ -1960,6 +2023,36 @@ class GitRatchetOptimizer:
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
+
+        # Zero-Token Short-Circuit (Sprint 3 / ADR-0058):
+        # If all mutation strategies have already been applied, exit immediately with 0 tokens.
+        unapplied = remaining_strategies(initial_content, self.config.skill_name)
+        if not unapplied:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
+                f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
+            )
+            base_score = self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            return RatchetReport(
+                target_file=str(self.target_file),
+                initial_score=base_score,
+                final_score=base_score,
+                total_iterations=0,
+                kept_commits=0,
+                reverted_trials=0,
+                history=[],
+                total_tokens=0,
+                prompt_tokens=0,
+                completion_tokens=0,
+                avg_latency_s=0.0,
+                halt_reason="HALT_NO_FURTHER_STRATEGIES",
+                slicing_tier=self.sliced_data.tier.value if self.sliced_data else None,
+                tuning_size=len(self.tuning_dataset),
+                holdout_size=len(self.holdout_dataset),
+                holdout_score=base_score if base_score > 0 else None,
+                holdout_initial_score=base_score if base_score > 0 else None,
+            )
+
         try:
             baseline_report = self._eval_sync(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
@@ -1973,6 +2066,20 @@ class GitRatchetOptimizer:
             best_content=initial_content,
             seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
+
+        # Baseline Hard Max Check (Sprint 3 / Issue #368)
+        if (
+            self.config.hard_max_tokens_per_skill is not None
+            and self.token_tracker.total_tokens >= self.config.hard_max_tokens_per_skill
+        ):
+            logger.info(
+                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Baseline tokens ({self.token_tracker.total_tokens:,}) "
+                f"đã chạm hoặc vượt trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}). Dừng đột biến."
+            )
+            return self._build_final_report(
+                baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
+            )
+
         initial_holdout_score = self._eval_holdout_base_sync(initial_content)
         halt_reason: str | None = None
 
@@ -2024,6 +2131,36 @@ class GitRatchetOptimizer:
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
+
+        # Zero-Token Short-Circuit (Sprint 3 / ADR-0058):
+        # If all mutation strategies have already been applied, exit immediately with 0 tokens.
+        unapplied = remaining_strategies(initial_content, self.config.skill_name)
+        if not unapplied:
+            logger.info(
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
+                f"chiến lược đột biến có sẵn. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
+            )
+            base_score = self.config.baseline_score if self.config.baseline_score is not None else 0.0
+            return RatchetReport(
+                target_file=str(self.target_file),
+                initial_score=base_score,
+                final_score=base_score,
+                total_iterations=0,
+                kept_commits=0,
+                reverted_trials=0,
+                history=[],
+                total_tokens=0,
+                prompt_tokens=0,
+                completion_tokens=0,
+                avg_latency_s=0.0,
+                halt_reason="HALT_NO_FURTHER_STRATEGIES",
+                slicing_tier=self.sliced_data.tier.value if self.sliced_data else None,
+                tuning_size=len(self.tuning_dataset),
+                holdout_size=len(self.holdout_dataset),
+                holdout_score=base_score if base_score > 0 else None,
+                holdout_initial_score=base_score if base_score > 0 else None,
+            )
+
         try:
             baseline_report = await self._eval_async(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
@@ -2037,6 +2174,20 @@ class GitRatchetOptimizer:
             best_content=initial_content,
             seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
+
+        # Baseline Hard Max Check (Sprint 3 / Issue #368)
+        if (
+            self.config.hard_max_tokens_per_skill is not None
+            and self.token_tracker.total_tokens >= self.config.hard_max_tokens_per_skill
+        ):
+            logger.info(
+                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Baseline tokens ({self.token_tracker.total_tokens:,}) "
+                f"đã chạm hoặc vượt trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}). Dừng đột biến."
+            )
+            return self._build_final_report(
+                baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
+            )
+
         initial_holdout_score = await self._eval_holdout_base_async(initial_content)
         halt_reason: str | None = None
 
