@@ -12,16 +12,9 @@
   - *Cổng 0 (Determinism)*: Thuần giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` không code trần.
   - *Cổng 1 (Orchestration)*: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (bỏ qua GPI).
   - *Chỉ số GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals: $A = 1.0$.
-- **RULE-1.2 [ADR 0053 — Single-Writer Protocol Cho Orchestrators]**:
-  - Single-Writer: Lead Orchestrator duy nhất ghi mã/logs. Subagents chỉ xuất Structured Patch vào `.system_generated/scratch/`.
-- **RULE-1.3 [ADR 0035 — Deep Modules, Seams & Zero-Exemption AST]**:
-  - Thin Seam: Module chỉ bộc lộ `__all__` hoặc `__init__.py`. Cấm import private `_*`. Zero-Exemption: Gỡ bypass trong linter.
-- *(RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23; RULE-1.9 tại Mục 24; RULE-1.6, 1.8 tại Mục 25 của archive/session_learnings_history.md)*
+- *(RULE-1.2 [ADR 0053 — Single-Writer], RULE-1.3 [ADR 0035], RULE-1.11 tại Mục 27; RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23; RULE-1.9 tại Mục 24; RULE-1.6, 1.8 tại Mục 25 của archive/session_learnings_history.md)*
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
   - Tái sử dụng Package Seams / Master Skills có sẵn là KISS bậc 1; CẤM script chắp vá. Tra cứu Seam qua CLI (`compile_catalog.py --query <kw>`). CẤM hoãn kiến trúc chuẩn sang Phase 2.
-- **RULE-1.11 [Static Seam Verification & AST Span Linter]**:
-  - `validate_seam_exports()` kiểm tra Package Spoofing, Filesystem Existence, và Symbol Parity với `__all__`.
-  - Trích xuất symbol luôn `.rstrip(".,;")`. Quét exemption comment import dùng dải `range(node.lineno - 1, getattr(node, "end_lineno", node.lineno))`.
 - **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
   - *Team Whitelist*: BẮT BUỘC unignore `!.agents/teams/` trong `.gitignore` lưu trữ team specs.
   - *Federated Hubs Alignment*: 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị chia sẻ tri thức qua CLI/REST/gRPC.
@@ -33,16 +26,10 @@
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Strict Testing)
 
-- **RULE-2.1 [Strict Mypy Type-Safety — Chống Anti-Pattern AP9.1]**:
-  - CẤM `[[tool.mypy.overrides]] ignore_errors = true`. Ép kiểu tường minh binary I/O, dicts. Dùng `ignore_missing_imports = true` cho lib thiếu stubs.
-- **RULE-2.3 [Fast Feedback Loops (< 2s) & Parity Contract Tests]**:
-  - Unit tests nòng cốt đạt SLA $< 2\text{s}$ (`pytest -m fast`). `test_cli_doc_parity.py`: Khớp nối 100% giữa CLI và `SKILL.md`.
-- **RULE-2.4 [Relative Link Resolution Depth]**:
-  - Tệp `.agents/skills/<skill>/SKILL.md` trỏ về package monorepo dùng `../../../packages/<pkg>`. CẤM commit URI `file:///` hoặc `conversation://`.
+- *(RULE-2.1, 2.3, 2.4 tại Mục 27; RULE-2.8, 2.10, 2.11 tại Mục 24; RULE-2.12 tại Mục 25 của archive/session_learnings_history.md)*
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing, Disjoint Hierarchy & 100% Skill Coverage]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT (17 archetypes).
-  - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (74/74 skills) map chuẩn xác; cấm unmapped (`None`).
-- *(RULE-2.8, 2.10, 2.11 tại Mục 24; RULE-2.12 tại Mục 25 của archive/session_learnings_history.md)*
+  - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (75/75 skills) map chuẩn xác; cấm unmapped (`None`).
 - **RULE-2.9 [Test Fixture Isolation, Live Lock & Hub Decoupling]**:
   - *Env & Live Lock Isolation*: Test fixtures/runners (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý (`is_kernel_runner_locked`, `check_daemon_lock`, `/tmp/*.lock` $\rightarrow$ `False`). CẤM rò rỉ biến môi trường hoặc đọc lock thật.
 - **RULE-2.13 [Atomic Micro-PR Slicing & Single-Seam Locality]**:
@@ -54,6 +41,8 @@
   - *Atomic Knowledge Cataloging*: Mọi tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục đồng thời vào `.md/knowledge/index.md` ngay tại commit tạo tệp, chống sập CI Orphan Notes.
   - *Hermetic Script Protocol*: Sửa mã nguồn/YAML đa dòng qua shell CẤM inline string có backticks; BẮT BUỘC dùng `cat << 'EOF' > /tmp/patch.py` (bọc nháy đơn) hoặc tool tệp chuyên dụng.
   - *Ruff B009 Attribute Guard*: Kiểm tra callable động BẮT BUỘC dùng `hasattr(obj, "method") and callable(obj.method)` thay vì `getattr(obj, "constant")`.
+- **RULE-2.16 [Evals Daemon Priority Ratchet & Cooldown Bypass]**:
+  - Trong `WeightedPriorityQueue`, kỹ năng có `needs_ledger_seed` hoặc `has_unapplied_signals` BẮT BUỘC bypass cooldown (`in_cooldown = 0`) để ưu tiên tối ưu dứt điểm; nhật ký `SKIPPED_COOLDOWN` CẤM kéo dài cửa sổ cooldown. `Sha256ProvenanceScorer.score()` trả về `raw_output` dict chuẩn hóa.
 
 ---
 
@@ -61,8 +50,7 @@
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
   - Viện dẫn BẮT BUỘC CÒN HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP**.
-- **RULE-3.2 [TVPL VIP 3-Tier Download Priority — ADR 0031]**:
-  - Tier 1 (`part=-100`): VIP Vector PDF. Tier 2 (`part=-1&docx=1`): VIP Word (`docx_converter`). Tier 3 (`part=0`): Scan PDF.
+- *(RULE-3.2 [ADR 0031 — TVPL VIP] tại Mục 27 của archive/session_learnings_history.md)*
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
   - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm đa dòng; cấm span 1 dòng chỉ trỏ `<a>`.
   - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè file gốc. CI Spoke hard-lock khi thiếu `clauses.json`.
@@ -93,8 +81,15 @@
 - **RULE-4.11 [Concurrent Branch Alignment & Walkthrough PR Protocol]**:
   - *Remote Merge Realignment*: Khi nhánh PR nhận merge mới từ `main` trên GitHub, BẮT BUỘC kiểm tra commit local đã push, dùng `git reset --hard origin/<branch>` căn chỉnh working tree sạch sẽ; CẤM để unmerged files trước release.
   - *Walkthrough Dedicated PR*: Tuân thủ hook `pre-push` cấm push thẳng `main`, `walkthrough.md` BẮT BUỘC lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và Squash-Merge qua Fast-Path Review.
+- **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
+  - Thêm/xóa/đổi tên Level-1 structural files (kỹ năng mới, package mới, scripts mới) BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker `<!-- STATS:SKILL_COUNT -->` trong `README.md` và `PLATFORM.md`, chống chặn đứng CI drift.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
-*(Xem RULE-5.1-5.5 tại archive/session_learnings_history.md)*
+- *(Xem RULE-5.1-5.5 tại archive/session_learnings_history.md)*
+- **RULE-5.8 [Thinking Token Starvation Defense in Structured Pipelines]**:
+  - Tác vụ deterministic structured output (JSON extraction, HyDE queries, intent tagging) BẮT BUỘC tắt thinking mode (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens` vượt ngưỡng suy nghĩ; phân tầng tách biệt `local-instruct` vs `local-coder`/`rag-core`.
+- **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
+  - Chạy vLLM container DGX Spark BẮT BUỘC volume mount thư mục host `~/.cache/vllm` vào `/root/.cache/vllm` bảo toàn TorchInductor AOT cache; cấu hình phân tách tường minh `--reasoning-parser` và `--tool-call-parser`.
+
