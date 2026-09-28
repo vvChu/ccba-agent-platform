@@ -23,7 +23,12 @@ from typing import Any, cast
 import yaml
 
 from .archetypes import (
+    resolve_domain_archetype,
     resolve_domain_dataset,
+)
+from .failure_mutator import (
+    get_unapplied_failure_signals,
+    load_failure_ledger,
 )
 from .tuner import (
     _UNSET,
@@ -200,7 +205,14 @@ class WeightedPriorityQueue:
 
         def priority_key(item: dict[str, Any]) -> tuple[int, int, datetime.date, int, float]:
             is_exhausted = (
-                1 if (item.get("is_exhausted") and item.get("strat_hash_unchanged")) else 0
+                1
+                if (
+                    item.get("is_exhausted")
+                    and item.get("strat_hash_unchanged")
+                    and not item.get("has_unapplied_signals")
+                    and not item.get("needs_ledger_seed")
+                )
+                else 0
             )
             in_cooldown = 1 if item.get("in_cooldown") else 0
             raw_date = item.get("last_scanned_date")
@@ -494,9 +506,26 @@ class NightlyTunerDaemon:
                     pass
 
             is_exhausted = False
+            has_unapplied_signals = False
+            needs_ledger_seed = False
             if skill_content:
                 unapplied = remaining_strategies(skill_content, skill_name)
                 is_exhausted = len(unapplied) == 0
+
+                arch = resolve_domain_archetype(skill_name)
+                arch_name = arch.name if arch else "general"
+                is_legal = arch_name in {"legal", "legal_tooling"}
+
+                if is_legal:
+                    ledger = load_failure_ledger(skill_name)
+                    content_sha = hashlib.sha256(skill_content.encode("utf-8")).hexdigest()
+                    if ledger is not None and ledger.content_sha256 == content_sha:
+                        unapplied_sigs = get_unapplied_failure_signals(
+                            skill_content, list(ledger.signals)
+                        )
+                        has_unapplied_signals = len(unapplied_sigs) > 0
+                    elif ledger is None:
+                        needs_ledger_seed = True
 
             dataset_file = FLAGSHIP_REDTEAM_DATASET_OVERRIDES.get(
                 skill_name, self._resolve_dataset_file(skill_name)
@@ -518,6 +547,8 @@ class NightlyTunerDaemon:
                     "last_scanned_date": last_scanned_dates.get(skill_name),
                     "is_exhausted": is_exhausted,
                     "strat_hash_unchanged": strat_hash_unchanged,
+                    "has_unapplied_signals": has_unapplied_signals,
+                    "needs_ledger_seed": needs_ledger_seed,
                 }
             )
 
@@ -586,12 +617,17 @@ class NightlyTunerDaemon:
                 summaries.append(summary)
                 continue
 
-            # Short-circuit cấp Daemon cho kỹ năng đã bão hòa (EXHAUSTED) khi YAML hash không đổi
-            if item.get("is_exhausted") and item.get("strat_hash_unchanged"):
+            # Short-circuit cấp Daemon cho kỹ năng đã bão hòa (EXHAUSTED) khi YAML hash không đổi VÀ không còn signal chưa áp VÀ không cần seed ledger
+            if (
+                item.get("is_exhausted")
+                and item.get("strat_hash_unchanged")
+                and not item.get("has_unapplied_signals")
+                and not item.get("needs_ledger_seed")
+            ):
                 baseline_val = float(item.get("baseline_score", 0.0))
                 logger.info(
                     f"⏭️ [SKIP_EXHAUSTED] Bỏ qua kỹ năng {skill_name} do đã bão hòa chiến lược đột biến "
-                    f"và mutation_strategies.yaml không đổi. Bảo lưu điểm số ({baseline_val:.1f}%), 0 token."
+                    f"và không còn tín hiệu lỗi chưa áp. Bảo lưu điểm số ({baseline_val:.1f}%), 0 token."
                 )
                 summary = SkillEvolutionSummary(
                     skill_name=skill_name,
@@ -615,12 +651,13 @@ class NightlyTunerDaemon:
 
             logger.info(f"\n⚡ --- Tối ưu hóa Kỹ năng: {skill_name} ---")
 
-            # Cấu hình vòng lặp động
+            # Cấu hình vòng lặp động (Sprint 4: 1 iteration nếu chỉ cần seed ledger)
+            max_iter = 1 if item.get("needs_ledger_seed") else self.max_iterations_low
             config = RatchetConfig(
                 target_file=target_file,
                 eval_dataset_file=dataset_file,
                 target_score=100.0,
-                max_iterations=self.max_iterations_low,
+                max_iterations=max_iter,
                 skill_name=skill_name,
                 full_sweep=False,
                 patience=self.early_stopping_patience,
