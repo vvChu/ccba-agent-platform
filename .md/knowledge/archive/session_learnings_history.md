@@ -621,3 +621,29 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 - **Root Cause:** Trong nightly evals daemon, cơ chế cooldown 3 ngày mặc định chặn các kỹ năng đang trong chu kỳ lặp nếu chỉ dựa trên mốc thời gian chạy gần nhất. Tuy nhiên, các kỹ năng mới chưa có bản ghi ledger cơ sở (`needs_ledger_seed`) hoặc các kỹ năng đang có thẻ lỗi phát hiện bởi Failure Mutator chưa được áp dụng (`has_unapplied_signals`) cần được kiểm thử và tiến hóa ngay lập tức. Nếu bị cooldown chặn, vòng phản hồi tự tối ưu sẽ bị đình trệ. Ngoài ra, việc ghi nhận `SKIPPED_COOLDOWN` vào log lịch sử vô tình kéo dài cửa sổ cooldown vô tận.
 - **Invariant (RULE-2.16):** Trong `WeightedPriorityQueue`, các kỹ năng có `needs_ledger_seed=True` hoặc `has_unapplied_signals=True` BẮT BUỘC bypass cooldown (`in_cooldown = 0`). Hàm đọc metrics lịch sử `_load_historical_metrics()` BẮT BUỘC bỏ qua các bản ghi `SKIPPED_COOLDOWN` để không reset hoặc kéo dài cửa sổ cooldown của kỹ năng.
 
+---
+
+## 28. Ephemeral Worktree Lock Invariants, Subprocess Failure Transparency & Suspicious Success Post-Mortems (PR #436, PR #437, PR #85)
+
+### Archived Invariants (Di dời từ Active Working Memory)
+- **RULE-2.14 [UTF-8 Offset Parity & Dynamic Mock Secrets]**:
+  - *UTF-8 Offset Parity*: Chuỗi tiếng Việt/emoji byte length khác character offset. Cắt lát redaction string BẮT BUỘC dùng character index đảo ngược (`reversed(findings)`); byte redaction dùng `byte_start, byte_end`.
+  - *Dynamic Mock Secrets*: Unit tests BẮT BUỘC tạo mock keys runtime (`f"sk-proj-{'a'*32}"`) chống CI diff scanner false-positive.
+- **RULE-4.11 [Concurrent Branch Alignment & Walkthrough PR Protocol]**:
+  - *Remote Merge Realignment*: Khi nhánh PR nhận merge mới từ `main` trên GitHub, BẮT BUỘC kiểm tra commit local đã push, dùng `git reset --hard origin/<branch>` căn chỉnh working tree sạch sẽ; CẤM để unmerged files trước release.
+  - *Walkthrough Dedicated PR*: Tuân thủ hook `pre-push` cấm push thẳng `main`, `walkthrough.md` BẮT BUỘC lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và Squash-Merge qua Fast-Path Review.
+
+### Post-Mortems & Operational Invariants
+#### 1. Ephemeral Worktree Pointer vs Directory & Mutex Lock Invariant
+- **Root Cause:** Trong môi trường Git Worktrees (`git worktree add`), tệp `.git` tại thư mục gốc của worktree là một regular text file chứa chuỗi `gitdir: <path>`, không phải một thư mục. Khi `GitMutexLock` khởi tạo với đường dẫn mặc định `project_root / ".git" / "evals_tuner.lock"` và gọi `self.lock_path.parent.mkdir(parents=True, exist_ok=True)`, Python phát hiện `parent` là một tệp đã tồn tại và ném ngoại lệ nghiêm trọng `FileExistsError: [Errno 17] File exists`.
+- **Invariant (RULE-2.17):** Cơ chế khóa `GitMutexLock` BẮT BUỘC phân giải nội dung tệp `.git` khi nó là regular file để lấy đường dẫn `gitdir` thực tế (hỗ trợ cả đường dẫn tuyệt đối lẫn tương đối từ worktree root), và đặt lock bên trong `worktree_gitdir / "evals_tuner.lock"`. Nếu `lock_path.parent` vẫn là một tệp thường sau khi khởi tạo, `acquire()` BẮT BUỘC ném `NotADirectoryError` tường minh thay vì âm thầm dịch chuyển đường dẫn khóa.
+
+#### 2. Multi-Tier Subprocess Failure Transparency & Zero-Regression Report Fidelity
+- **Root Cause:** `daemon.py` bắt ngoại lệ cho từng kỹ năng và ghi log nhưng không truyền lỗi ra CLI caller `nightly_tuner_daemon.py`, khiến tiến trình kết thúc với mã thoát `0`. Đồng thời, do `halt_reason` không được thiết lập thành `"ERROR"`, hàm dựng báo cáo Markdown `generate_evolution_report_markdown()` mặc định gán huy hiệu `⚪ UNCHANGED` và tick `✅ Zero-Regression`, tạo ra cảm giác sai lầm rằng hệ thống vẫn an toàn. Hơn nữa, `_finalize_disk_state()` nuốt ngoại lệ rollback khiến worktree bị dirty mà không báo động.
+- **Invariant (RULE-2.17):** CLI facades BẮT BUỘC quét `report.results` và `sys.exit(1)` nếu bất kỳ kỹ năng nào dính trạng thái `ERROR: ...`. Quá trình hoàn tác đĩa `_finalize_disk_state()` khi gặp lỗi BẮT BUỘC lưu lại `finalize_error` và ném `RuntimeError` trong `run()` và `run_async()`. Báo cáo tiến hóa khi có lỗi ngoại lệ BẮT BUỘC gán `halt_reason="ERROR"`, huy hiệu `❌ ERROR: <status>`, và thay thế hoàn toàn checkmark Zero-Regression/Hard Floor bằng cảnh báo `⚠️ Lưu ý Thất bại`.
+
+#### 3. Suspicious Success Defense-in-Depth in ChatOps Gateway
+- **Root Cause:** ChatOps Gateway (`scripts/chatops_daemon.py`) khi thực thi lệnh shell `execute_shell_job()` trước đây tin tưởng tuyệt đối vào điều kiện `exit_code == 0` để thông báo `[THÀNH CÔNG]`. Khi một tiến trình con nuốt lỗi hoặc vô tình thoát mã 0 trong khi log ngập tràn lỗi ngoại lệ chết người, người quản trị qua Telegram nhận thông báo thành công giả tạo và không nhận ra sự cố.
+- **Invariant (RULE-2.17):** ChatOps Gateway BẮT BUỘC bổ sung chốt chặn phòng vệ đa tầng `is_suspicious_success`: Ngay cả khi `exit_code == 0`, nếu ngõ ra tiến trình chứa các dấu hiệu lỗi nghiêm trọng (`[ERROR] ccba.eval`, `❌ Lỗi trong quá trình`, `Traceback (most recent call last):`), trạng thái thực thi BẮT BUỘC chuyển thành `⚠️ [CẢNH BÁO (CÓ LỖI XUẤT HIỆN TRONG LOG)]`, tự động hủy chế độ tin nhắn rút gọn để đính kèm tệp `.log` đầy đủ lên Telegram, và ghi nhật ký audit trail là `WARNING`.
+
+
