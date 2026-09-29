@@ -295,14 +295,59 @@ def test_optimizer_lock_path_auto_resolved_worktree(
     assert not (gitdir / "evals_tuner.lock").exists()
 
 
-def test_git_mutex_lock_parent_is_file_resilience(tmp_path: Path) -> None:
-    """When lock_path.parent is a file, acquire() safely shifts lock path without FileExistsError."""
+def test_git_mutex_lock_parent_is_file_raises_not_a_directory(tmp_path: Path) -> None:
+    """When lock_path.parent is a file, acquire() explicitly raises NotADirectoryError."""
     parent_file = tmp_path / "fake_file"
     parent_file.write_text("dummy", encoding="utf-8")
     invalid_nested_lock = parent_file / "evals_tuner.lock"
 
     lock = GitMutexLock(lock_path=invalid_nested_lock, timeout=5.0)
-    with lock:
-        assert lock._fd is not None
-        assert not parent_file.is_dir()
-    assert lock._fd is None
+    with pytest.raises(NotADirectoryError, match="is a regular file"):
+        lock.acquire()
+
+
+def test_optimizer_lock_path_auto_resolved_worktree_relative(
+    minimal_config: RatchetConfig, tmp_path: Path
+) -> None:
+    """When .git contains a relative gitdir path, it resolves relative to worktree root."""
+    main_repo = tmp_path / "main_repo"
+    worktree_gitdir = main_repo / ".git" / "worktrees" / "wt1"
+    worktree_gitdir.mkdir(parents=True)
+    worktree_root = tmp_path / "worktrees" / "wt1"
+    worktree_root.mkdir(parents=True)
+
+    rel_gitdir = Path("../../main_repo/.git/worktrees/wt1")
+    git_file = worktree_root / ".git"
+    git_file.write_text(f"gitdir: {rel_gitdir}\n", encoding="utf-8")
+
+    opt = GitRatchetOptimizer(
+        config=minimal_config,
+        dry_run_git=False,
+        project_root=worktree_root,
+        lock_enabled=True,
+    )
+    assert opt.git_lock.lock_path == worktree_gitdir / "evals_tuner.lock"
+    with opt.git_lock:
+        assert (worktree_gitdir / "evals_tuner.lock").exists()
+
+
+def test_optimizer_finalize_disk_failure_raises_runtime_error(
+    minimal_config: RatchetConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When disk restoration in _finalize_disk_state fails, run() raises RuntimeError."""
+    opt = GitRatchetOptimizer(
+        config=minimal_config,
+        dry_run_git=True,
+        project_root=tmp_path,
+        lock_enabled=False,
+    )
+
+    def mock_rollback(*args: object, **kwargs: object) -> None:
+        raise OSError("Permission denied or disk full")
+
+    monkeypatch.setattr(opt, "git_rollback_target", mock_rollback)
+    # Target file differs from initial
+    minimal_config.target_file.write_text("different content", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="Failed to finalize disk state"):
+        opt.run()
