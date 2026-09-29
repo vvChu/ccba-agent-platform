@@ -1020,3 +1020,43 @@ def test_daemon_create_pr_auto_syncs_traceability_matrix_when_script_exists(
     pr_url = daemon._create_pull_request("test-branch", "Test report")
     assert sync_invoked is True
     assert pr_url == "https://github.com/pr/1"
+
+
+def test_evolution_report_markdown_renders_error_badge_and_warning_footer() -> None:
+    """Verify generate_evolution_report_markdown renders ❌ badge and suppresses Zero-Regression check on error."""
+    daemon = NightlyTunerDaemon()
+    report = NightlyDaemonReport(
+        timestamp="20260929_073558",
+        branch_name="worktree-boost-test",
+        total_skills_scanned=2,
+        skills_optimized=0,
+        total_commits=0,
+        results=[
+            SkillEvolutionSummary(
+                skill_name="ccba-skill-repair",
+                target_file=Path("SKILL.md"),
+                baseline_score=85.0,
+                final_score=85.0,
+                commits_kept=0,
+                rollbacks=0,
+                status="ERROR: [Errno 17] File exists",
+                halt_reason="ERROR",
+            ),
+            SkillEvolutionSummary(
+                skill_name="ccba-healthy-skill",
+                target_file=Path("SKILL.md"),
+                baseline_score=90.0,
+                final_score=90.0,
+                commits_kept=0,
+                rollbacks=0,
+                status="UNCHANGED",
+            ),
+        ],
+    )
+
+    md = daemon.generate_evolution_report_markdown(report)
+    assert "❌ ERROR: [Errno 17] File exists" in md
+    assert "⚪ UNCHANGED" in md  # for healthy skill
+    assert "- ⚠️ **Lưu ý Thất bại:** Một hoặc nhiều kỹ năng gặp lỗi ngoại lệ nghiêm trọng" in md
+    assert "✅ **Zero-Regression:**" not in md
+    assert "✅ **Hard Floor Compliance:**" not in md
