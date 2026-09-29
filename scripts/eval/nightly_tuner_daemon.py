@@ -131,7 +131,9 @@ def main() -> None:
         daemon_kwargs["hard_max_tokens_per_skill"] = args.hard_max_tokens_per_skill
 
     daemon = NightlyTunerDaemon(**daemon_kwargs)
-    daemon.run_nightly_batch(dry_run=args.dry_run)
+    report = daemon.run_nightly_batch(dry_run=args.dry_run)
+    if report and any(s.status.startswith("ERROR") for s in report.results):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
