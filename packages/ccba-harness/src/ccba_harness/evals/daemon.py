@@ -748,6 +748,7 @@ class NightlyTunerDaemon:
                         commits_kept=0,
                         rollbacks=0,
                         status=f"ERROR: {e}",
+                        halt_reason="ERROR",
                     )
                 )
 
@@ -821,26 +822,43 @@ class NightlyTunerDaemon:
 
         for s in report.results:
             delta_str = f"+{s.score_delta:.1f}%" if s.score_delta > 0 else f"{s.score_delta:.1f}%"
-            badge = (
-                "🟢 IMPROVED"
-                if s.score_delta > 0
-                else ("⭐ 100% PERFECT" if s.final_score == 100.0 else "⚪ UNCHANGED")
-            )
-            if s.halt_reason and s.score_delta <= 0:
+            if s.status.startswith("ERROR"):
+                badge = f"❌ {s.status}"
+            elif s.score_delta > 0:
+                badge = "🟢 IMPROVED"
+            elif s.final_score == 100.0:
+                badge = "⭐ 100% PERFECT"
+            elif s.halt_reason and s.score_delta <= 0:
                 badge = f"⚠️ {s.status}"
+            else:
+                badge = "⚪ UNCHANGED"
             token_str = f"{s.total_tokens:,}" if s.total_tokens > 0 else "-"
             lines.append(
                 f"| `{s.skill_name}` | {s.baseline_score:.1f}% | **{s.final_score:.1f}%** | `{delta_str}` | {s.commits_kept} | `{token_str}` | {badge} |"
             )
 
+        has_errors = any(s.status.startswith("ERROR") for s in report.results)
         lines.extend(
             [
                 "",
                 "---",
                 "",
                 "### 🛡️ Rào Chắn An Toàn (Safety Hard Floor Invariant)",
-                "- ✅ **Zero-Regression:** 100% các đột biến làm giảm điểm hoặc dính Điểm Liệt đã được `git checkout` hoàn tác sạch.",
-                "- ✅ **Hard Floor Compliance:** Tuyệt đối không chấp thuận các điều luật bãi bỏ hoặc lỗi kỹ thuật nghiêm trọng.",
+            ]
+        )
+        if has_errors:
+            lines.append(
+                "- ⚠️ **Lưu ý Thất bại:** Một hoặc nhiều kỹ năng gặp lỗi ngoại lệ nghiêm trọng và không thể hoàn tất chu trình tối ưu."
+            )
+        else:
+            lines.extend(
+                [
+                    "- ✅ **Zero-Regression:** 100% các đột biến làm giảm điểm hoặc dính Điểm Liệt đã được `git checkout` hoàn tác sạch.",
+                    "- ✅ **Hard Floor Compliance:** Tuyệt đối không chấp thuận các điều luật bãi bỏ hoặc lỗi kỹ thuật nghiêm trọng.",
+                ]
+            )
+        lines.extend(
+            [
                 "",
                 "---",
                 "*Báo cáo được tạo tự động bởi CCBA Nightly Auto-Tuner Daemon trên Server Spark.*",

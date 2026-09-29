@@ -126,9 +126,9 @@ class GitMutexLock:
         self._thread_lock.acquire()
         try:
             if self.lock_path.parent.is_file():
-                self.lock_path = (
-                    self.lock_path.parent.parent
-                    / f"{self.lock_path.parent.name}_{self.lock_path.name}"
+                raise NotADirectoryError(
+                    f"GitMutexLock: lock_path parent '{self.lock_path.parent}' is a regular file. "
+                    f"In worktree environments, resolve lock_path to gitdir."
                 )
             self.lock_path.parent.mkdir(parents=True, exist_ok=True)
             fd = os.open(str(self.lock_path), os.O_CREAT | os.O_WRONLY)
@@ -1185,6 +1185,7 @@ class _RatchetLoopState:
     stagnant_trials: int = 0
     seen_hashes: set[str] = field(default_factory=set)
     history: list[RatchetTrialResult] = field(default_factory=list)
+    finalize_error: str | None = None
 
 
 # Alias for backward compatibility
@@ -1948,6 +1949,7 @@ class GitRatchetOptimizer:
                     self.git_rollback_target(final_target, has_committed=state.has_committed)
             except Exception as e:
                 logger.error(f"Error restoring disk file: {e}")
+                state.finalize_error = str(e)
 
     def _build_init_error_report(
         self, init_err: TokenBudgetExceededError | CircuitBreakerOpenError
@@ -2231,6 +2233,9 @@ class GitRatchetOptimizer:
         finally:
             self._finalize_disk_state(initial_content, state)
 
+        if state.finalize_error:
+            raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
+
         final_holdout_score = self._eval_holdout_final_sync(
             state.best_content, initial_holdout_score, state.kept_count
         )
@@ -2365,6 +2370,9 @@ class GitRatchetOptimizer:
                         break
         finally:
             self._finalize_disk_state(initial_content, state)
+
+        if state.finalize_error:
+            raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
 
         final_holdout_score = await self._eval_holdout_final_async(
             state.best_content, initial_holdout_score, state.kept_count
