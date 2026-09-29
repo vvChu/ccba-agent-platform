@@ -269,3 +269,40 @@ def test_optimizer_git_rollback_uses_lock(minimal_config: RatchetConfig, tmp_pat
     # Content should be restored
     assert minimal_config.target_file.read_text(encoding="utf-8") == original
     assert not lock_path.exists()
+
+
+def test_optimizer_lock_path_auto_resolved_worktree(
+    minimal_config: RatchetConfig, tmp_path: Path
+) -> None:
+    """When .git is a file (git worktree), lock path is resolved inside gitdir without error."""
+    worktree_root = tmp_path / "wt_root"
+    worktree_root.mkdir(parents=True)
+    gitdir = tmp_path / "main_repo" / ".git" / "worktrees" / "wt_root"
+    gitdir.mkdir(parents=True)
+
+    git_file = worktree_root / ".git"
+    git_file.write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
+
+    opt = GitRatchetOptimizer(
+        config=minimal_config,
+        dry_run_git=False,
+        project_root=worktree_root,
+        lock_enabled=True,
+    )
+    assert opt.git_lock.lock_path == gitdir / "evals_tuner.lock"
+    with opt.git_lock:
+        assert (gitdir / "evals_tuner.lock").exists()
+    assert not (gitdir / "evals_tuner.lock").exists()
+
+
+def test_git_mutex_lock_parent_is_file_resilience(tmp_path: Path) -> None:
+    """When lock_path.parent is a file, acquire() safely shifts lock path without FileExistsError."""
+    parent_file = tmp_path / "fake_file"
+    parent_file.write_text("dummy", encoding="utf-8")
+    invalid_nested_lock = parent_file / "evals_tuner.lock"
+
+    lock = GitMutexLock(lock_path=invalid_nested_lock, timeout=5.0)
+    with lock:
+        assert lock._fd is not None
+        assert not parent_file.is_dir()
+    assert lock._fd is None
