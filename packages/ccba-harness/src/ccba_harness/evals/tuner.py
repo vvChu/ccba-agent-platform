@@ -125,6 +125,11 @@ class GitMutexLock:
 
         self._thread_lock.acquire()
         try:
+            if self.lock_path.parent.is_file():
+                self.lock_path = (
+                    self.lock_path.parent.parent
+                    / f"{self.lock_path.parent.name}_{self.lock_path.name}"
+                )
             self.lock_path.parent.mkdir(parents=True, exist_ok=True)
             fd = os.open(str(self.lock_path), os.O_CREAT | os.O_WRONLY)
             deadline = time.monotonic() + self.timeout
@@ -1239,7 +1244,22 @@ class GitRatchetOptimizer:
 
         # Resolve lock path to <project_root>/.git/evals_tuner.lock when not injected
         if git_lock is None and self.git_lock.lock_path is None and self.git_lock.enabled:
-            self.git_lock.lock_path = self.project_root / ".git" / "evals_tuner.lock"
+            git_entry = self.project_root / ".git"
+            if git_entry.is_file():
+                # In git worktrees, .git is a pointer file: gitdir: <path>
+                try:
+                    content = git_entry.read_text(encoding="utf-8").strip()
+                    if content.startswith("gitdir:"):
+                        gitdir = Path(content.split(":", 1)[1].strip())
+                        if not gitdir.is_absolute():
+                            gitdir = (self.project_root / gitdir).resolve()
+                        self.git_lock.lock_path = gitdir / "evals_tuner.lock"
+                    else:
+                        self.git_lock.lock_path = self.project_root / ".evals_tuner.lock"
+                except Exception:
+                    self.git_lock.lock_path = self.project_root / ".evals_tuner.lock"
+            else:
+                self.git_lock.lock_path = git_entry / "evals_tuner.lock"
 
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.runner = EvalRunner(
