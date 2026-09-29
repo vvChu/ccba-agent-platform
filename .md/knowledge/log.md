@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-09-29] [synthesize] | Khắc Phục Lỗi Git Worktree Lock, Minh Bạch Lỗi Subprocess & Phát Hành PR #436, PR #437, PR #85
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện kép Grok 4.7 & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/evals/daemon.py`, `packages/ccba-harness/src/ccba_harness/evals/tuner.py`, `packages/ccba-harness/tests/test_tuner_daemon.py`, `packages/ccba-harness/tests/test_tuner_git_lock.py`, `scripts/chatops_daemon.py`, `tests/test_chatops.py`, `.md/knowledge/`
+- **Summary**: Khắc phục triệt để lỗi ngoại lệ `[Errno 17] File exists` khi chạy `/boost` trong ephemeral Git worktrees và hoàn thiện cơ chế minh bạch lỗi đa tầng:
+  1. **PR #436 & PR #437 (`ccba-agent-platform`)**: Phân giải con trỏ `gitdir` trong tệp `.git` của worktrees; ném `NotADirectoryError` khi parent lock là regular file; gán exit code 1 ở CLI facade khi có lỗi; ném `RuntimeError` khi `_finalize_disk_state` thất bại; gán `halt_reason="ERROR"`, hiển thị huy hiệu `❌ ERROR: <lỗi>`, và triệt tiêu checkmark Zero-Regression giả mạo. Đạt 48/48 unit tests, 8/8 CI checks pass và đã squash-merge vào `main`.
+  2. **PR #85 (`dgx-spark-toolkit`)**: Bổ sung rào chắn `is_suspicious_success` trong `execute_shell_job` cho ChatOps Gateway; tự động chuyển sang `⚠️ CẢNH BÁO (CÓ LỖI XUẤT HIỆN TRONG LOG)`, đính kèm file log và audit `WARNING` khi xuất hiện error markers dù exit code 0. Đạt 57/57 tests pass, flake8 sạch, đã squash-merge vào `master` và khởi động lại `dgx-chatops.service`.
+  3. **Phản biện Kép Grok 4.7 & Đóng Gói Tri Thức**: Thực hiện double-pass review qua Grok CLI (`--always-approve`), hoàn thiện 4 khuyến nghị kỹ thuật từ verdict `REVISE`, cập nhật `RULE-2.17` vào `session_learnings.md` và lưu trữ Section 28 vào `session_learnings_history.md`.
+
+---
+
 ## [2026-09-28] [synthesize] | Phát Hành PR #434 (Issue #433): Quản Trị Reasoning Token, vLLM Production Mounting & Vá Vận Hành Evals Daemon
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-session-retrospective)
 - **Affected Files**: `.agents/skills/ccba-llm-pipeline-patterns/`, `.agents/skills/ccba-vllm-manager/`, `packages/ccba-harness/src/ccba_harness/evals/`, `packages/ccba-harness/tests/`, `docs/`, `PLATFORM.md`, `README.md`, `catalog.yaml`

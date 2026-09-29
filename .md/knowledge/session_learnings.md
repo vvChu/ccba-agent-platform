@@ -26,7 +26,7 @@
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Strict Testing)
 
-- *(RULE-2.1, 2.3, 2.4 tại Mục 27; RULE-2.8, 2.10, 2.11 tại Mục 24; RULE-2.12 tại Mục 25 của archive/session_learnings_history.md)*
+- *(RULE-2.1, 2.3, 2.4 tại Mục 27; RULE-2.8, 2.10, 2.11 tại Mục 24; RULE-2.12 tại Mục 25; RULE-2.14 tại Mục 28 của archive/session_learnings_history.md)*
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing, Disjoint Hierarchy & 100% Skill Coverage]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT (17 archetypes).
   - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (75/75 skills) map chuẩn xác; cấm unmapped (`None`).
@@ -34,15 +34,16 @@
   - *Env & Live Lock Isolation*: Test fixtures/runners (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý (`is_kernel_runner_locked`, `check_daemon_lock`, `/tmp/*.lock` $\rightarrow$ `False`). CẤM rò rỉ biến môi trường hoặc đọc lock thật.
 - **RULE-2.13 [Atomic Micro-PR Slicing & Single-Seam Locality]**:
   - *Micro-Task Slicing*: Phân rã task $\le 150-200$ LOC logic vào 1 Deep Seam duy nhất kèm test tự động; chia nhỏ task phức tạp thành micro-PRs giảm review fatigue và conflict.
-- **RULE-2.14 [UTF-8 Offset Parity & Dynamic Mock Secrets]**:
-  - *UTF-8 Offset Parity*: Chuỗi tiếng Việt/emoji byte length khác character offset. Cắt lát redaction string BẮT BUỘC dùng character index đảo ngược (`reversed(findings)`); byte redaction dùng `byte_start, byte_end`.
-  - *Dynamic Mock Secrets*: Unit tests BẮT BUỘC tạo mock keys runtime (`f"sk-proj-{'a'*32}"`) chống CI diff scanner false-positive.
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
   - *Atomic Knowledge Cataloging*: Mọi tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục đồng thời vào `.md/knowledge/index.md` ngay tại commit tạo tệp, chống sập CI Orphan Notes.
   - *Hermetic Script Protocol*: Sửa mã nguồn/YAML đa dòng qua shell CẤM inline string có backticks; BẮT BUỘC dùng `cat << 'EOF' > /tmp/patch.py` (bọc nháy đơn) hoặc tool tệp chuyên dụng.
   - *Ruff B009 Attribute Guard*: Kiểm tra callable động BẮT BUỘC dùng `hasattr(obj, "method") and callable(obj.method)` thay vì `getattr(obj, "constant")`.
 - **RULE-2.16 [Evals Daemon Priority Ratchet & Cooldown Bypass]**:
   - Trong `WeightedPriorityQueue`, kỹ năng có `needs_ledger_seed` hoặc `has_unapplied_signals` BẮT BUỘC bypass cooldown (`in_cooldown = 0`) để ưu tiên tối ưu dứt điểm; nhật ký `SKIPPED_COOLDOWN` CẤM kéo dài cửa sổ cooldown. `Sha256ProvenanceScorer.score()` trả về `raw_output` dict chuẩn hóa.
+- **RULE-2.17 [Git Worktree Lock Invariant & Subprocess Failure Transparency]**:
+  - *Worktree Pointer vs Directory*: `.git` trong worktree là file văn bản trỏ `gitdir: <path>`. Lock vật lý BẮT BUỘC phân giải `gitdir` (cả absolute & relative path); CẤM gọi `.mkdir()` trên `.git` file. Nếu parent là regular file, ném `NotADirectoryError`.
+  - *Failure Transparency & Suspicious Success*: BẮT BUỘC thoát mã $\ne 0$ (`sys.exit(1)`) khi có lỗi ngoại lệ; CẤM nuốt lỗi rollback đĩa trong `_finalize_disk_state` (ném `RuntimeError`). ChatOps/Orchestrators BẮT BUỘC kiểm tra `is_suspicious_success` (phát hiện error markers khi exit code 0) để đổi sang `⚠️ CẢNH BÁO`, đính kèm file log và audit `WARNING`.
+  - *Report Fidelity*: Báo cáo tiến hóa khi có lỗi ngoại lệ bắt buộc gán `halt_reason="ERROR"`, huy hiệu `❌ ERROR`, và triệt tiêu toàn bộ checkmark Zero-Regression/Hard Floor.
 
 ---
 
@@ -71,16 +72,13 @@
   - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
-- *(RULE-4.7 tại Mục 25 của archive/session_learnings_history.md)*
+- *(RULE-4.7 tại Mục 25; RULE-4.11 tại Mục 28 của archive/session_learnings_history.md)*
 - **RULE-4.8 [Review Danger Triage, Two-way Door & Maskara Diff Gate]**:
   - *Danger Triage CI Gate*: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate; Pure Docs qua Fast-Path Auto-Approve an toàn.
   - *Maskara Diff Gate*: `sanitize_review_diff.py --check` là Hard Blocker chặn merge PR rò rỉ secret.
 - **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
   - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
   - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
-- **RULE-4.11 [Concurrent Branch Alignment & Walkthrough PR Protocol]**:
-  - *Remote Merge Realignment*: Khi nhánh PR nhận merge mới từ `main` trên GitHub, BẮT BUỘC kiểm tra commit local đã push, dùng `git reset --hard origin/<branch>` căn chỉnh working tree sạch sẽ; CẤM để unmerged files trước release.
-  - *Walkthrough Dedicated PR*: Tuân thủ hook `pre-push` cấm push thẳng `main`, `walkthrough.md` BẮT BUỘC lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và Squash-Merge qua Fast-Path Review.
 - **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
   - Thêm/xóa/đổi tên Level-1 structural files (kỹ năng mới, package mới, scripts mới) BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker `<!-- STATS:SKILL_COUNT -->` trong `README.md` và `PLATFORM.md`, chống chặn đứng CI drift.
 
