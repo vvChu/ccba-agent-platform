@@ -15,6 +15,7 @@ import argparse
 import ast
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -421,6 +422,34 @@ def validate_seam_contracts(hub_root: Path = HUB_ROOT) -> list[str]:
                 f"Card '{seam_id}' missing valid capability definition with 'in' and 'out' lists."
             )
 
+        binding = card.get("binding")
+        if not isinstance(binding, dict) or "mode" not in binding:
+            errors.append(
+                f"Card '{seam_id}' missing required 'binding' definition with 'mode' "
+                "(local_import, remote_mcp, skill)."
+            )
+        else:
+            mode = str(binding.get("mode", "")).strip()
+            if mode not in ("local_import", "remote_mcp", "skill"):
+                errors.append(
+                    f"Card '{seam_id}' has invalid binding.mode '{mode}'. "
+                    "Must be local_import, remote_mcp, or skill."
+                )
+            if kind == "package" and mode not in ("local_import", "remote_mcp"):
+                errors.append(
+                    f"Package card '{seam_id}' must use binding.mode 'local_import' or 'remote_mcp' (got '{mode}')."
+                )
+            elif kind == "skill" and mode != "skill":
+                errors.append(
+                    f"Skill card '{seam_id}' must use binding.mode 'skill' (got '{mode}')."
+                )
+            if mode == "remote_mcp":
+                endpoint_env = str(binding.get("endpoint_env", "")).strip()
+                if not endpoint_env:
+                    errors.append(
+                        f"Remote MCP card '{seam_id}' missing required 'endpoint_env' variable name."
+                    )
+
         if kind == "package":
             imp_path = str(card.get("import_path", "")).strip()
             if not imp_path or ":" not in imp_path:
@@ -731,12 +760,45 @@ def query_seam_contracts(
 ) -> tuple[int, dict[str, Any]]:
     """Queries seam capability contracts and catalog.
 
-    Exit codes (ADR-0061):
+    Exit codes (ADR-0061 & ADR-0060):
     - 0: Match found (capability card match or keyword hint found).
     - 2: NO_MATCH (contract capability card does not exist, or keyword not found).
-    - 1: Syntax error / missing inputs.
+    - 1: Syntax error / missing inputs / corrupt snapshot.
+    - 3: BLOCKED (all matching cards are remote_mcp and unreachable/offline).
     """
-    contracts_data, index_sha256 = load_seam_contracts(hub_root)
+    from scripts.spoke.catalog_probe import CatalogProbeRunner
+    from scripts.spoke.catalog_snapshot_client import (
+        CatalogSnapshotMissing,
+        CorruptSnapshotError,
+        resolve_catalog_context,
+    )
+
+    try:
+        contracts_data, index_sha256, catalog_data, source_type = resolve_catalog_context(
+            project_root=hub_root,
+            hub_root_override=hub_root if (hub_root / "seam-contracts.yaml").is_file() else None,
+        )
+    except CorruptSnapshotError as e:
+        msg = f"Catalog snapshot is corrupt: {e}"
+        payload = {"status": "corrupt", "message": msg, "exit_code": 1}
+        if as_json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print(f"❌ [CORRUPT] {msg}", file=sys.stderr)
+        return 1, payload
+    except CatalogSnapshotMissing as e:
+        msg = str(e)
+        payload = {"status": "ERROR", "message": msg, "exit_code": 1}
+        if as_json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print(f"❌ [ERROR] {msg}", file=sys.stderr)
+        return 1, payload
+    except Exception:
+        contracts_data, index_sha256 = load_seam_contracts(hub_root)
+
+    probe_runner = CatalogProbeRunner(hub_root)
+    freshness = probe_runner.evaluate_freshness(current_seam_sha=index_sha256)
     cards = contracts_data.get("cards", [])
 
     has_contract_query = bool(in_types or out_types or hardware)
@@ -747,19 +809,61 @@ def query_seam_contracts(
         if as_json:
             print(
                 json.dumps(
-                    {"status": "ERROR", "message": msg, "index_sha256": index_sha256}, indent=2
+                    {
+                        "status": "ERROR",
+                        "message": msg,
+                        "index_sha256": index_sha256,
+                        "freshness": freshness,
+                    },
+                    indent=2,
                 )
             )
         else:
             print(f"[ERROR] {msg}", file=sys.stderr)
-        return 1, {"status": "ERROR", "message": msg}
+        return 1, {"status": "ERROR", "message": msg, "freshness": freshness}
 
     if has_contract_query:
         matches = match_seam_cards(cards, in_types=in_types, out_types=out_types, hardware=hardware)
         if matches:
+            all_remote_mcp = all(
+                isinstance(c.get("binding"), dict)
+                and c.get("binding", {}).get("mode") == "remote_mcp"
+                for c in matches
+            )
+            if all_remote_mcp:
+                all_blocked = True
+                blocked_seam_id = matches[0].get("seam_id")
+                for c in matches:
+                    b = c.get("binding", {})
+                    env_var = b.get("endpoint_env")
+                    url = os.environ.get(env_var, "") if env_var else b.get("endpoint_url", "")
+                    if url and probe_runner.check_mcp_health(url):
+                        all_blocked = False
+                        break
+                if all_blocked:
+                    payload = {
+                        "status": "BLOCKED",
+                        "index_sha256": index_sha256,
+                        "freshness": freshness,
+                        "count": len(matches),
+                        "cards": matches,
+                        "invoke": "blocked",
+                        "reason": "health_timeout",
+                        "seam_id": blocked_seam_id,
+                    }
+                    if as_json:
+                        print(json.dumps(payload, indent=2, ensure_ascii=False))
+                    else:
+                        print(
+                            f"❌ BLOCKED: Remote MCP unreachable (reason: health_timeout) for seam '{blocked_seam_id}' [index_sha256: {index_sha256}]",
+                            file=sys.stderr,
+                        )
+                    return 3, payload
+
             payload = {
                 "status": "MATCH",
                 "index_sha256": index_sha256,
+                "freshness": freshness,
                 "count": len(matches),
                 "cards": matches,
             }
@@ -769,10 +873,13 @@ def query_seam_contracts(
                 print("=" * 80)
                 print("🎯 CCBA Platform Seam Contracts Query: MATCH")
                 print(f"   Index SHA-256: {index_sha256}")
+                print(f"   Freshness:     {freshness}")
                 print(f"   Matched Cards: {len(matches)}")
                 print("=" * 80)
                 for c in matches:
                     print(f"• Seam ID:     {c.get('seam_id')} (Kind: {c.get('kind')})")
+                    if c.get("binding"):
+                        print(f"  Binding:     {c.get('binding')}")
                     if c.get("import_path"):
                         print(f"  Import Path: {c.get('import_path')}")
                     if c.get("command"):
@@ -789,13 +896,14 @@ def query_seam_contracts(
             payload = {
                 "status": "NO_MATCH",
                 "index_sha256": index_sha256,
+                "freshness": freshness,
                 "count": 0,
                 "cards": [],
             }
             if as_json:
                 print(json.dumps(payload, indent=2, ensure_ascii=False))
             else:
-                print(f"NO_MATCH [index_sha256: {index_sha256}]")
+                print(f"NO_MATCH [index_sha256: {index_sha256}, freshness: {freshness}]")
             return 2, payload
 
     # Keyword only search (KEYWORD_HINT mode)
@@ -843,6 +951,7 @@ def query_seam_contracts(
         payload = {
             "status": "KEYWORD_HINT",
             "index_sha256": index_sha256,
+            "freshness": freshness,
             "keyword": keyword,
             "cards": matching_cards,
             "catalog_seams": matching_seams,
@@ -856,6 +965,7 @@ def query_seam_contracts(
                 f"🔍 CCBA Platform Catalog Query: '{keyword}' (KEYWORD_HINT - NOT A CONTRACT RECEIPT)"
             )
             print(f"   Index SHA-256: {index_sha256}")
+            print(f"   Freshness:     {freshness}")
             print(
                 f"   Matched: {len(matching_cards)} Card(s), {len(matching_seams)} Deep Seam(s), {len(matching_skills)} Skill(s)"
             )
@@ -888,13 +998,14 @@ def query_seam_contracts(
         payload = {
             "status": "NO_MATCH",
             "index_sha256": index_sha256,
+            "freshness": freshness,
             "keyword": keyword,
             "cards": [],
         }
         if as_json:
             print(json.dumps(payload, indent=2, ensure_ascii=False))
         else:
-            print(f"NO_MATCH [index_sha256: {index_sha256}]")
+            print(f"NO_MATCH [index_sha256: {index_sha256}, freshness: {freshness}]")
         return 2, payload
 
 
