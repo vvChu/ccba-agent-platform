@@ -1,9 +1,10 @@
 {
-  "timestamp": "2026-09-30 05:47:00",
+  "timestamp": "2026-09-30 08:22:00",
   "peers": {
     "antigravity": {
-      "status": "plan_updated_with_grok_review",
-      "issue": 439
+      "status": "grok_review_absorbed",
+      "issue": 374,
+      "rfc": "ADR-0060"
     },
     "grok": {
       "status": "review_completed"
