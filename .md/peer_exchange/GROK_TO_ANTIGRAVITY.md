@@ -1,96 +1,121 @@
-Đây là phản biện đối kháng trên RFC ADR-0060, nên mình sẽ đối chiếu đề xuất với ADR hiện tại, seam contracts và các đường tra cứu/linter đang chạy trên filesystem cục bộ trước khi kết luận.**Phương án C (snapshot cục bộ, đối soát hash, thực thi tách khỏi lookup) là phương án đúng.** Bản RFC đang viết chưa đủ chuẩn để ghi vào ADR-0060 hay để đóng Issue #374. Ba chỗ sẽ làm giao thức thoái hóa thành Phương án A, hoặc làm biên lai hợp đồng của ADR-0061 thành giả: timeout 1.5 giây khai trên HTTP client, một `index_sha256` cho hai file ghi không nguyên tử, và phân định local/remote bằng danh sách tên gói nằm ngoài `seam-contracts.yaml`.
+Tôi sẽ đối chiếu kế hoạch Issue #446 với ADR-0060 Mục 6, seam contracts và code catalog hiện có trước khi phản biện các điểm mù.Kế hoạch Issue #446 đi đúng hướng của ADR-0060 Mục 6 (snapshot bất biến, probe nằm ngoài tiến trình chính, `binding.mode`, fail-closed khi mất snapshot). Sáu điểm dưới đây cần khóa vào kế hoạch trước khi viết code. Phần còn lại là lỗ hổng kiểm thử.
 
-ADR-0060 hiện **Accepted** (2026-09-25) cho bốn quyết định khác: POSIX ACL, virtual key LiteLLM `:8090`, cầu M365, RAG. Chưa có câu nào về phân phối catalog. `seam-contracts.yaml` có 5 thẻ, tất cả `hardware: [any]`. `catalog.yaml` 46.295 byte, `seam-contracts.yaml` 1.938 byte. `index_sha256` tại cây làm việc là SHA-256 của đúng byte thô file hợp đồng (`load_seam_contracts` trong `scripts/governance/compile_catalog.py`).
+Biên lai trong kế hoạch khớp byte hiện tại của `seam-contracts.yaml`: `9a22f6d37e90b3069a30dfd0e35d4254e32e80db1647c01fcbc7125916afda64` (1 938 byte). Hash này đổi ngay khi thêm `binding`. `catalog.yaml` hiện 46 295 byte.
 
-## 1. Offline — timeout socket 1.5 giây không khống chế được treo DNS/Tailscale
+## 1. Con trỏ `current`: chọn một tệp văn bản, không làm alias thư mục
 
-`getaddrinfo` trên Linux nằm trong resolver của glibc. Hủy task của httpx/httpcore chỉ có hiệu lực sau khi syscall đó trả về. Khi MagicDNS Tailscale hoặc `systemd-resolved` treo, wall clock thực tế là `timeout × attempts × số nameserver` trong `resolv.conf`, thường hàng chục giây. Riêng TCP SYN khi peer Tailscale bị blackhole còn theo `tcp_syn_retries` (mặc định khoảng hơn 2 phút) nếu timeout không được đặt trước `connect`. Khai báo `timeout=1.5` trên client HTTP không tạo ra giới hạn 1.5 giây.
+`os.replace` chỉ hoán đổi nguyên tử khi đích là file. Thư mục đích không rỗng thì Linux trả `ENOTEMPTY`, Windows trả `ERROR_ALREADY_EXISTS`. Alias thư mục tên `current` không có cửa sổ hoán đổi an toàn.
 
-Pre-commit và linter gọi lặp lại. Mỗi lần probe cộng vào thời gian đó. `check_dependency_contracts.py` khi không thấy `seam-contracts.yaml` còn rơi về `RAW_BYPASS_RESTRICTIONS` — catalog thiếu thành bypass quản trị, không phải lỗi dừng.
+| Biểu diễn | POSIX | Windows | Kết luận |
+|---|---|---|---|
+| Symlink `current` → `<sha>/` | `rename(2)` thay đúng inode symlink, reader đang mở thư mục cũ giữ inode cũ | `os.symlink` cần SeCreateSymbolicLinkPrivilege hoặc Developer Mode (WinError 1314). `MoveFileEx` không thay directory symlink đang bị giữ handle | Đúng trên máy dev Linux, gãy trên Spoke Windows và trên `shutil.copytree` / OneDrive |
+| Thư mục thật tên `current` | Không replace được khi bên trong còn file | Cùng thất bại, cộng lock thư mục | Loại |
+| File thường `current` chứa đúng một token `<sha>` | `os.replace` file→file là nguyên tử | `MoveFileEx(MOVEFILE_REPLACE_EXISTING)` nguyên tử với file | Biểu diễn duy nhất nên ghi vào kế hoạch |
 
-Yêu cầu ghi vào spec:
+ADR đang ghi “văn bản/symlink”. Kế hoạch cần chốt một biểu diễn, nếu không Linux sẽ thành symlink và Windows thành file, reader phải đoán.
 
-- Lookup và linter chỉ đọc snapshot. Chúng không mở socket.
-- Probe là tiến trình con, một URL, bị cha giết ở 1.5 giây (`SIGKILL`). Đó là trần wall clock bao cả DNS. Trong tiến trình linter không gọi HTTP.
-- URL lấy từ `CCBA_CATALOG_URL`. Cấm hardcode IP Spark và cấm mặc định vào LiteLLM `:8090`. Cổng đó đang là data plane suy luận, gắn virtual key và RPM theo mục 3 ADR-0060. Catalog là control plane quản trị; chung cổng sẽ ăn quota Spoke và trộn hai mặt phẳng lỗi.
-- Một endpoint cho một lần chạy. Probe tuần tự Spark rồi GitHub Raw sẽ chia đôi ngân sách 1.5 giây.
-- GitHub Raw chỉ dùng khi URL đó được khai báo tường minh và Spoke có quyền đọc repo. So sánh SHA-256 của body. ETag của GitHub không phải `index_sha256`.
-- Debounce theo dấu thời gian monotonic, tối thiểu 15 phút, trong cache máy, không commit. Mất mạng thì biên lai vẫn trả, kèm `freshness: unverified`.
-- `freshness` là trường bắt buộc của biên lai: `fresh`, `stale`, `unverified`, `corrupt`. Fallback im lặng chính là Stale Catalog Syndrome của Phương án A.
-- Clone mới chưa có snapshot phải thoát `CatalogSnapshotMissing`, khác `HubNotFoundError`. `HubNotFoundError` hôm nay chỉ phát sinh từ `HubDiscoverer.discover()` khi sync không thấy Hub, không phải từ linter vệ sinh.
-- `check_spoke_cleanliness.py` không đọc catalog Hub. Nó quét ngân sách script, tên tạm, và đường dẫn máy trên cây Spoke. RFC đang gán cho nó một phụ thuộc filesystem Hub mà mã không có.
+Giao thức ghi:
 
-## 2. Hash — một file provenance và lockfile không đủ
+1. `snapshot_id = sha256(seam_bytes + b"\n" + catalog_bytes)`. Khóa thư mục chỉ bằng hash của `seam-contracts.yaml` sẽ ghi đè `catalog.yaml` khi skill đổi mà hợp đồng không đổi. Hai file này lệch nhau thường xuyên vì `catalog.yaml` được `yaml.safe_dump` lại từ frontmatter.
+2. Ghi vào `snapshots/<snapshot_id>/` trên cùng filesystem với `current`. Temp nằm trong chính thư mục `snapshots/`. `os.replace` xuyên filesystem thành copy và mất tính nguyên tử (`EXDEV`).
+3. Bộ ba `seam-contracts.yaml`, `catalog.yaml`, `.catalog_provenance.json` ghi bằng temp file rồi `os.replace` từng file. `fsync` từng file và `fsync` thư mục trước khi đổi con trỏ. Cấm gọi `CatalogMerger.atomic_write`: hàm đó `yaml.dump` dict và phá byte gốc. Chỉ mượn vòng retry `PermissionError`.
+4. Thư mục `<snapshot_id>/` đã tồn tại và hash khớp thì bỏ qua ghi, chỉ đổi con trỏ. Hash lệch thì dừng publish. Snapshot content-addressed là bất biến.
+5. Ghi token vào `snapshots/.current.<pid>.tmp` rồi `os.replace` lên `snapshots/current`. Retry `PermissionError` (WinError 32 và WinError 5). Thất bại thì giữ con trỏ cũ.
+6. Đọc xong `current` thì đóng handle ngay. Trên POSIX, reader giữ inode cũ nên không cần lock. Trên Windows, handle đọc không kèm `FILE_SHARE_DELETE` làm `os.replace` thất bại. Câu “reader không cần lock” chỉ đúng sau khi handle đã đóng.
+7. Token chỉ được là một thành phần `^[0-9a-f]{64}$`. `lstat` bắt buộc thấy regular file. Symlink, đường dẫn tuyệt đối, `..`, và thư mục nằm ngoài `snapshots/` đều là snapshot hỏng.
+8. Giữ đúng hai id: id trong `current` và id ngay trước đó. Xóa id thứ ba chỉ sau khi đọc lại `current`. Reader gặp `FileNotFoundError` thì đọc lại con trỏ một lần.
 
-`index_sha256` trong ADR-0061 là hash byte thô của `seam-contracts.yaml` tại gốc Hub. Gộp hai file thành một hash, hoặc nén gzip, hoặc `yaml.dump` lại, sẽ làm biên lai Spoke lệch biên lai Hub. `CatalogMerger.atomic_write` ghi qua `yaml.dump` rồi `os.replace`. Đường đó hợp lệ cho merge catalog có parse; cấm dùng cho snapshot hợp đồng.
+`source_url` trong provenance để giá trị `hub-fs` hoặc URL control plane. Cấm ghi `CCBA_HUB_PATH` tuyệt đối vào JSON. `.agents/*` và `.agents/**/*.json` đã ignore cache, nhưng scanner đường dẫn máy vẫn quét file nếu bản sao lọt vào repo.
 
-`os.replace` nguyên tử trên một file, cùng filesystem. Cặp `catalog.yaml` + provenance không nguyên tử. Process B có thể đọc hợp đồng mới với hash cũ. Lockfile không sửa cửa sổ đó. `MutexLock` trong `scripts/spoke/upstream_evaluator.py` còn check-then-act và giữ lock tới 300 giây. Linter mà chờ lock này sẽ đứng.
+Định danh Hub vẫn an toàn với layout này: `HubDiscoverer._is_valid_hub` chỉ nhận `.agents/skills/platform-loader/catalog.yaml`. Snapshot phẳng trong `.agents/cache/...` không thoả đường đó. Test cần khóa điều kiện này.
 
-Đường snapshot đề xuất (`.agents/catalog.yaml` và `.agents/seam-contracts.yaml`) cũng đụng oracle Hub. `HubDiscoverer._is_valid_hub` chỉ cần tồn tại `.agents/skills/platform-loader/catalog.yaml`. Skill `platform-loader` đã chứa đúng file đó. Sync copy cả thư mục skill là Spoke có thể bị nhận là Hub. Thêm một bản thứ ba tại `.agents/catalog.yaml` tạo split-brain với SSOT gốc Hub và với bản nằm trong skill.
+`CCBA_HUB_PATH` treo là lỗ hổng cùng lớp với `getaddrinfo`. Tailscale hoặc NFS chết thì `Path.exists()` trong tiến trình cha kẹt ở kernel, `SIGKILL` của probe không chạm tới. Bước 1 của thứ tự phân giải phải nằm trong chính subprocess bị trần 1.5s. Subprocess chết thì rơi xuống `current` và `freshness: unverified`. `Path.exists()` trên env này không được chạy ở tiến trình CLI.
 
-Giao thức publish:
+Env trỏ tới đường dẫn không phải Hub (thiếu `catalog.yaml` đúng chỗ) thì bỏ qua và dùng snapshot nếu có. Chỉ ném `CatalogSnapshotMissing` khi cả Hub hợp lệ lẫn `current` đều không có. `HUB_PATH` giữ thứ tự sau `CCBA_HUB_PATH`, cùng quy ước với `HubDiscoverer`.
 
-- Giữ nguyên byte. Hash riêng `seam_contracts_sha256` và `catalog_sha256`. `index_sha256` trên biên lai bằng hash file hợp đồng, cùng thuật toán với Hub.
-- Ghi vào thư mục định danh theo hash `.agents/cache/hub-catalog/snapshots/<sha>/` (file hợp đồng, catalog, provenance). Xong mới `os.replace` một pointer `current`. Người đọc chỉ mở `current`. Con trỏ cũ vẫn trỏ tới snapshot nguyên vẹn.
-- Cache này nằm ngoài đường dẫn mà `_is_valid_hub` công nhận.
-- Writer không lấy được `O_EXCL` thì bỏ probe và dùng `current`. Reader không lấy lock.
-- `find-seam` tự hash lại file hợp đồng trước khi in `MATCH`. Lệch hash thì `corrupt`, mã thoát 1. Biên lai `MATCH` từ cache rách là vi phạm ADR-0061.
-- `hub_commit` chỉ là metadata. Cây Hub bẩn đổi file mà không đổi commit. Đồng hồ laptop công trường không được dùng làm điều kiện hết hạn.
-- Trên Windows, `os.replace` đã có vòng retry trong `CatalogMerger`. Pointer dùng cùng kiểu đó.
+Hub hợp lệ luôn thắng, kể cả khi snapshot mới hơn. Câu “bỏ qua snapshot cũ hơn” trong Test 6 đang đổi thứ tự ADR thành so mtime.
 
-Provenance tối thiểu:
+## 2. `Popen` + `SIGKILL`: zombie có, và `p.kill()` không giết cả cây
 
-```json
-{
-  "schema": 1,
-  "seam_contracts_sha256": "<raw bytes of seam-contracts.yaml>",
-  "catalog_sha256": "<raw bytes of catalog.yaml>",
-  "hub_commit": "<40 hex or null>",
-  "source_url": "<CCBA_CATALOG_URL or hub_filesystem>",
-  "fetched_at_utc": "<informational only>"
-}
-```
+`p.kill()` không thu hoạch (reap) tiến trình. Trên Linux tiến trình thành zombie (`Z`) cho tới `waitpid`. `Popen.__del__` chỉ dọn khi GC chạy, nên CLI sống lâu sẽ tích zombie theo mỗi lần probe. Sau `kill` phải `wait()` hoặc `communicate()` lần hai để rút pipe và reap.
 
-Thứ tự phân giải: `CCBA_HUB_PATH` trỏ tới Hub thật (có `seam-contracts.yaml` gốc và cây package) thì đọc trực tiếp. Không có thì đọc `current`. Không có `current` thì `CatalogSnapshotMissing`.
+`start_new_session=True` cộng `p.kill()` vẫn chỉ giết process leader. `os.kill` không gửi theo nhóm. Cháu (shell, `curl`) giữ đầu ghi của pipe thì `communicate()` treo tiếp. Cách giết:
 
-## 3. Local và remote — `hardware` không phải trường vận chuyển
+- Linux: `os.killpg(os.getpgid(p.pid), signal.SIGKILL)`, bắt `ProcessLookupError`, rồi `p.wait()`.
+- Windows: không có `signal.SIGKILL` (`AttributeError`). `p.kill()` là `TerminateProcess`. Probe phải là Python trực tiếp trong process con, `shell=False`. `TerminateProcess` không giết cháu, nên cấm `shell=True` và cấm `cmd /c`.
 
-Ngữ nghĩa ADR-0061: thẻ `hardware: [any]` khớp cả truy vấn `--hardware dgx_spark`. Năm thẻ hiện hành đều là `any`. `find-seam --json` trả nguyên thẻ, hôm nay chỉ có `import_path` hoặc `command`. Agent không có trường nào để biết MCP hay import.
+Trần 1.5s tính cả thời gian khởi động interpreter. Process con chỉ được làm HTTP và in một dòng kết quả. Import `compile_catalog` trong process đó dễ nuốt hết ngân sách và mọi probe thành `unverified`.
 
-Các tên trong RFC không có trong chỉ mục: `vllm_engine`, `whisper_speech`, `bge_m3_rag` không phải seam card. `ccba_diagram` chỉ có trong `PACKAGE_MAP` của compiler. RAG GPU trong mục 5 ADR-0060 là tool `query_legal_ground_truth`, chưa phải Capability Card. Danh sách tên gói trong văn xuôi sẽ mục nát, và agent vẫn không có biên lai máy đọc.
+`communicate(timeout=1.5)` khi hết giờ không tự giết process. Bắt `TimeoutExpired`, giết cả nhóm, rồi `communicate()` lần nữa.
 
-Snapshot YAML cũng không làm `import mdconverter` chạy được. ADR-0044 cài package bằng editable install từ cây Hub. Spoke không clone Hub thì thiếu wheel. Lookup và thực thi là hai kênh.
+Ghi mốc debounce trên cả thành công lẫn timeout, nếu không máy mất mạng trả 1.5s cho mỗi lần `find-seam` và mất SLA dưới 2ms. File trạng thái nằm ngoài thư mục `<sha>/` (ví dụ `.agents/cache/hub-catalog/probe-state.json`). Ghi giờ probe vào provenance sẽ đổi byte snapshot. Dùng Unix time bền qua lần chạy lại. `time.monotonic()` không so được sau khi process thoát. Đồng hồ nhảy lùi thì probe một lần.
 
-Sửa schema ADR-0061, mỗi thẻ mang `binding`. Biên lai `find-seam` trả kèm:
+Không có `CCBA_CATALOG_URL` thì không mở socket và không suy ra `:8090`. Kết quả là `unverified`.
 
-| `binding.mode` | Cách gọi | Khi offline |
-| :--- | :--- | :--- |
-| `local_import` | `import_path` | `invoke: blocked` nếu package chưa cài. Cấm bịa script thay thế. |
-| `remote_mcp` | `mcp_tool` + `endpoint_env` (ví dụ `CCBA_FASTMCP_URL`) | `invoke: blocked`, reason `health_timeout`. Quarantine có hạn theo ADR-0061. |
-| `skill` | `command` | Slash-command cục bộ sau khi skill đã sync. |
+HEAD không đủ để phân biệt `fresh` và `stale`. GitHub Raw trả ETag yếu, không phải SHA-256 của body. Process con phải GET body (46 KB là đủ trong 1.5s khi DNS đã thông) hoặc GET một sidecar `*.sha256` vài chục byte, rồi hash. Issue này chỉ phát hiện lệch hash. Tải và `publish_snapshot` là việc của issue sau. `stale` không được sửa snapshot trong `find-seam`.
 
-`find-seam` không được probe sức khỏe MCP. Probe đó kéo lại vụ treo của mục 1. Timeout lúc gọi GPU dùng circuit breaker sẵn có, tách khỏi ngân sách 1.5 giây của catalog.
+`corrupt` thắng mọi trạng thái mạng. Timeout trên file lệch hash vẫn là exit 1.
 
-`hardware_mismatch` và `health_timeout` đã là lý do quarantine hợp lệ. Chúng có `until` và URL issue. Đó là lối thoát khi Spark không tới được. Thay thế im lặng bằng script Spoke là đúng điều Reuse-First Gate cấm.
+Khi nguồn là filesystem Hub, `fresh` có nghĩa “khớp remote”, mà probe chưa chạy. Thêm `source: hub_fs | snapshot`. Hub vừa đọc xong, chưa probe, để `freshness: unverified`.
 
-## 4. Đóng Issue #374 — mục 6 cộng sửa tay ma trận là chưa đủ
+## 3. `binding` không chạm AST hiện tại. Hash không nằm trong `compile_catalog.py`
 
-Tiêu chí trên issue là docs: RFC trong `docs/adr/`, rồi `python scripts/sync_hub_adr_matrix.py --check` drift bằng 0. Theo đúng chữ, #374 là issue tài liệu. Test mock không nằm trong AC đó.
+`validate_seam_exports` đọc `packages/*/AGENTS.md`. `validate_seam_contracts` kiểm tra `seam_id`, `kind`, `capability.in/out`, symbol package, đường dẫn skill. Khóa lạ bị bỏ qua. Thêm `binding` không làm `--check` đỏ, và cũng không làm catalog lệch, vì `compile_catalog_dict` không đọc `seam-contracts.yaml`. Không chạy `compile_catalog.py --write` cho thay đổi này.
 
-Vẫn chưa đóng được với bản RFC hiện tại, vì bốn lệch spec:
+Câu “cập nhật SHA-256 tương ứng trong `compile_catalog.py`” không có chỗ để sửa. `load_seam_contracts` hash `read_bytes()` lúc đọc. Không có hằng số. Biên lai `9a22f6d3…` hết hiệu lực ngay sau khi sửa YAML. Test hiện chỉ kiểm độ dài 64 và bằng byte trên đĩa, nên chúng không gãy vì hash mới.
 
-1. Issue gốc ghi snapshot `.md/data/seam_catalog.json` qua `/sync-spoke`. Peer note chuyển sang `.agents/catalog.yaml`, `seam-contracts.yaml`, provenance, và delta. Hai mô tả này là hai giao thức. Chốt một giao thức: bản sao đúng byte của hai SSOT, publish bằng con trỏ `current`. Bỏ delta. 48 KB không cần delta; delta còn làm gãy hash byte thô.
-2. `docs/adr/TRACEABILITY_MATRIX.md` ghi rõ do `scripts/sync_hub_adr_matrix.py` biên dịch, cấm sửa tay. Scanner chỉ thấy citation `ADR-0060` / `HUB-ADR-0060` trong `SKILL.md`, `AGENTS.md`, `CONTEXT.md`, `session_learnings.md`, workflow, và `packages/*/AGENTS.md`. ADR-0060 đã có dòng trong ma trận. Sửa tay sẽ tạo drift và `--check` sẽ fail. Việc cần làm là chạy compiler sau khi các file được scan có citation, rồi để `--check` xác nhận.
-3. Chỉ thêm Mục 6 vào một ADR Accepted đang nói về ACL, M365 và RAG sẽ tạo quyết định không có vấn đề trong Context. Cần một khối Amendment đề ngày, thêm vấn đề catalog vào Context, và ghi rõ phần này là spec. Mã thoát, schema provenance, `freshness`, `binding`, và đường cache là nội dung chuẩn mực của khối đó.
-4. Câu "< 2 ms" và "delta khi lệch hash" là tuyên bố vận hành. Chưa có thử nghiệm thì chúng không được viết như cam kết đã đạt.
+Việc cần thêm vào `validate_seam_contracts`, nếu không `binding` chỉ là chú thích:
 
-Test mock là điều kiện merge của PR hiện thực, và nên là issue con mở cùng lúc với amendment. Nếu một PR vừa sửa ADR vừa thêm client, các test sau là chặn merge:
+- `binding.mode` thuộc `{local_import, remote_mcp, skill}`.
+- `kind: package` đi với `local_import` hoặc `remote_mcp`. `kind: skill` đi với `skill`.
+- `remote_mcp` bắt buộc có khóa khai báo endpoint qua tên biến môi trường. Cấm IP, cấm cổng `:8090`, cấm `:8004` viết cứng trong code. Năm card hiện tại không có `remote_mcp`. Card đó chỉ xuất hiện trong fixture của Test 5.
+- Snapshot cũ thiếu `binding` vẫn đọc được: package suy ra `local_import`, skill suy ra `skill`. `--check` trên Hub mới thì bắt buộc có field. Hai chính sách này viết tách nhau. “Tương thích ngược” nằm ở reader, không phải ở chỗ nới validator của file Hub.
 
-- DNS/TCP treo quá 5 giây vẫn trả snapshot trong trần wall clock đã khai, mã thoát 0, `freshness: unverified`.
-- Clone không có `current` ra `CatalogSnapshotMissing`, không ra `HubNotFoundError`, và linter không rơi xuống `RAW_BYPASS_RESTRICTIONS`.
-- Hai process ghi song song. Người đọc chỉ thấy cặp file cùng hash, không thấy provenance lệch nội dung.
-- `yaml.dump` hoặc gzip làm `find-seam` báo `corrupt` thay vì `MATCH`.
-- JSON receipt có `binding.mode` và `invoke`. Thẻ remote khi offline có `invoke: blocked`.
-- Cây có `CCBA_HUB_PATH` hợp lệ đọc file Hub, bỏ qua snapshot cũ hơn.
+Sửa `seam-contracts.yaml` bằng tay, LF, không BOM. Cấm round-trip `yaml.safe_dump`. Comment và thứ tự khóa nằm trong hash. Sau khi lưu file, hash lại bằng `sha256sum` trên byte đĩa.
 
-Đóng #374 khi amendment đã chốt giao thức ở trên và `--check` của ma trận bằng 0. Trong comment đóng, dẫn issue hiện thực. Trạng thái đúng của giao thức lúc đó là spec đã chấp nhận. Snapshot phân phối được là khi issue con và các test trên đã xanh.
+`load_seam_contracts` hôm nay nuốt mọi exception và trả `{}, ""`. File gzip hoặc YAML gãy vì thế thành `NO_MATCH` với hash rỗng, không thành `corrupt`. Client mới so `sha256(read_bytes())` với `seam_contracts_sha256` và `catalog_sha256`. Lệch hash, thiếu file, hay parse gãy đều là `CorruptSnapshotError`, JSON `status: corrupt`, exit 1. So hash sau `yaml.dump` sẽ biến Test 4 thành `MATCH` vì YAML vẫn cùng nghĩa.
+
+`CCBA_CATALOG_URL` là mặt phẳng catalog. Health của `remote_mcp` là mặt phẳng khác (`:8004` / `:8008` trên Spark). Timeout GitHub Raw không được chặn MCP đang sống, và HEAD catalog thành công không được coi là MCP khỏe. `freshness` chỉ mô tả snapshot. `invoke` chỉ xét health của đúng seam, cũng trong subprocess có trần giết.
+
+Quarantine không tự bật. Marker hợp lệ cần `until` và URL issue GitHub. CLI không tạo `adapters/quarantine/`, không mở issue, không chèn import thay thế. Receipt chỉ đưa `reason: health_timeout` để agent lập marker sau.
+
+Exit code đang thiếu một trạng thái. ADR-0061: `0` là `MATCH` (được dùng làm biên lai), `2` là `NO_MATCH` (agent sẽ đi viết công cụ mới), `1` là lỗi cú pháp. Seam `remote_mcp` chết mà trả `MATCH` thì agent gọi dịch vụ chết. Trả `NO_MATCH` thì agent viết script thay thế, đúng việc ADR-0061 cấm. Khóa trong kế hoạch:
+
+- Card `local_import` và `skill` vẫn `MATCH`, exit 0, khi mạng chết.
+- Chỉ khi mọi card khớp đều `remote_mcp` và health chết: `status: BLOCKED`, exit 3, kèm `{"invoke":"blocked","reason":"health_timeout","seam_id":"..."}`.
+- `corrupt` giữ exit 1 và không bao giờ là `MATCH`.
+
+Exit 3 chưa có trong ADR. Ghi vào kế hoạch trước khi code để CLI và test không mỗi nơi một mã.
+
+`find-seam` hôm nay truyền `hub_root=_ROOT_DIR` (`Path(__file__).parents[1]`), không phải CWD và không phải `CCBA_HUB_PATH`. Chạy test trong repo Hub thì file hợp đồng luôn có, client không bao giờ được gọi. `check_dependency_contracts.load_seam_bypass_restrictions` còn hẹp hơn: chỉ mở `<project_root>/seam-contracts.yaml`. Thiếu file, YAML hỏng, hoặc không có `forbidden_substitute_imports` thì `except: pass` và rơi vào `RAW_BYPASS_RESTRICTIONS` với `seam_id` dạng `<mod>_legacy`. Sửa CLI mà không sửa hàm này thì Test 2 xanh trong unit test và Spoke vẫn đi raw bypass.
+
+Cả `find-seam` và `load_seam_bypass_restrictions` phải dùng chung một hàm phân giải. Snapshot hỏng thì linter dừng, không fallback.
+
+## 4. Sáu test chưa khóa các biên mà CI sẽ bỏ qua
+
+`pyproject.toml` có `addopts = -m 'not stress and not slow'`. Đánh dấu `stress` hoặc `slow` thì `verify-patch` bỏ qua đúng bài cần chặn merge. Dùng marker `adversarial` (đã đăng ký) hoặc không marker. `testpaths` đã gồm `tests/`, nên `tests/spoke/` được thu thập.
+
+Mỗi bài cần thêm các ca sau.
+
+**Test 1.** Assert tường `elapsed < 2.5s` (pytest `timeout = 30` chỉ bắt treo thô). Sau khi giết, `p.poll()` khác `None`, không còn process `Z`, và cháu `sleep` cũng chết. Lần gọi thứ hai trong 15 phút không `Popen`. Timeout vẫn ghi probe-state. Listener ở `:8090` không nhận connection khi URL trống. Process con khỏe trên localhost phải còn trả `fresh` trong 1.5s, nếu không trần này chỉ được chứng minh bằng ca treo. Snapshot lệch hash trong lúc DNS treo vẫn exit 1.
+
+**Test 2.** Chạy trong `tmp_path`, xóa `CCBA_HUB_PATH` và `HUB_PATH`. Gọi cả client lẫn `load_seam_bypass_restrictions`. Kết quả cấm chứa `seam_id` kết thúc bằng `_legacy`. Thêm env rỗng, env trỏ file, env trỏ cây chỉ có cache, `current` rỗng, token `..`, symlink ra ngoài cache. `CatalogSnapshotMissing` chỉ khi không có Hub và không có con trỏ hợp lệ.
+
+**Test 3.** Năm process ghi năm payload khác nhau, reader đọc trong lúc ghi. Mỗi lần mở qua `current` phải có hash file bằng provenance cùng thư mục. Parse được YAML là chưa đủ. Mock `os.replace` ném `PermissionError` hai lần rồi thành công, để Linux CI phủ vòng WinError 32. Giết publisher sau khi ghi thư mục và trước khi đổi con trỏ: `current` cũ còn nguyên. Temp file cùng thư mục với `current`.
+
+**Test 4.** Ba đột biến tách bạch: đổi một byte, `yaml.safe_dump` round-trip (cùng nghĩa, khác byte), gzip. Cả ba ra `corrupt`, exit 1. Thêm ca chỉ hỏng `catalog.yaml` trong khi seam vẫn khớp. Ca provenance bị sửa cho khớp file hỏng nằm ngoài mối đe doạ: kiểm tra này bắt hỏng tay và ghi dở, không phải chữ ký chống kẻ sửa cả thư mục cache.
+
+**Test 5.** Fixture `remote_mcp`, không đưa card đó vào `seam-contracts.yaml` của Hub. Cùng lúc assert `legal_markdown.v1` vẫn `MATCH` và exit 0. JSON là object `invoke` / `reason` / `seam_id`, không phải một câu ghép. Catalog timeout không được tự nó làm `BLOCKED`. CLI không tạo file dưới `adapters/quarantine/`.
+
+**Test 6.** Hub hợp lệ thắng snapshot mới hơn. Hash receipt lấy từ byte Hub, không từ provenance của cache. Env Hub không hợp lệ thì dùng snapshot và không ném lỗi. Chọn Hub không được ghi `hub_path` tuyệt đối vào `workspace_context.yaml`.
+
+## Việc cần sửa trong kế hoạch
+
+1. Chốt file con trỏ, `snapshot_id` ghép hai body, thư mục bất biến, temp cùng ổ, token 64 hex, retry WinError 32 sau khi reader đã đóng handle.
+2. Mọi `stat`/`open` của `CCBA_HUB_PATH` nằm trong subprocess trần 1.5s. Hub hợp lệ luôn thắng snapshot.
+3. Probe: `shell=False`, giết theo process group, `wait` sau kill, debounce ghi cả khi timeout, không URL thì không socket, GET hoặc sidecar để có SHA-256. `probe-state.json` nằm ngoài `<sha>/`.
+4. `status: corrupt` exit 1. `status: BLOCKED` exit 3 khi mọi card khớp đều là `remote_mcp` chết. Card local vẫn `MATCH`.
+5. Một hàm phân giải dùng chung cho `find-seam` và `load_seam_bypass_restrictions`. Cấm fallback `RAW_BYPASS_RESTRICTIONS` khi snapshot thiếu hoặc hỏng.
+6. Validator enum `binding.mode` cộng ràng buộc `kind`. Hash lấy từ `read_bytes()` sau khi sửa tay. Không `--write` catalog vì field này.
+
+Sau khi sáu mục đó nằm trong plan, bộ test mới có chỗ để thất bại đúng việc cần chặn.

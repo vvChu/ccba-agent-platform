@@ -21,6 +21,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 # Monorepo packages and their root package names
 PACKAGE_MAP: dict[str, str] = {
     "ccba-ai": "ccba_ai",
@@ -72,47 +76,50 @@ class SeamCardRestriction:
 
 
 def load_seam_bypass_restrictions(
-    project_root: Path,
+    project_root: Path | None = None,
+    hub_root: Path | None = None,
 ) -> tuple[dict[str, SeamCardRestriction], dict[str, dict[str, Any]]]:
-    """Dynamically build bypass restrictions from seam-contracts.yaml."""
-    contracts_file = project_root / "seam-contracts.yaml"
+    """Dynamically build bypass restrictions from Hub seam contracts or Spoke snapshot.
+
+    Raises:
+        CatalogSnapshotMissing: When neither physical Hub nor valid snapshot exists.
+        CorruptSnapshotError: When snapshot bytes or provenance are corrupted.
+    """
+    from scripts.spoke.catalog_snapshot_client import (
+        CatalogSnapshotMissing,
+        CorruptSnapshotError,
+        resolve_catalog_context,
+    )
+
     restrictions: dict[str, SeamCardRestriction] = {}
     card_map: dict[str, dict[str, Any]] = {}
+    target_root = hub_root or project_root or ROOT_DIR
 
-    if contracts_file.is_file():
-        try:
-            import yaml
+    try:
+        data, _, _, _ = resolve_catalog_context(project_root=target_root)
+    except (CatalogSnapshotMissing, CorruptSnapshotError):
+        # Strict Fail-Closed: Never silently fall back to RAW_BYPASS_RESTRICTIONS
+        raise
+    except Exception as e:
+        raise RuntimeError(f"Lỗi khi nạp seam contracts cho linter: {e}") from e
 
-            data = yaml.safe_load(contracts_file.read_text(encoding="utf-8")) or {}
-            cards = data.get("cards", [])
-            for card in cards:
-                seam_id = card.get("seam_id")
-                if not seam_id:
-                    continue
-                card_map[seam_id] = card
-                imp_pkgs = set(card.get("implementation_packages", []))
-                seam_repl = card.get("import_path", "")
-                if not seam_repl and card.get("command"):
-                    seam_repl = card.get("command")
+    cards = data.get("cards", [])
+    for card in cards:
+        seam_id = card.get("seam_id")
+        if not seam_id:
+            continue
+        card_map[seam_id] = card
+        imp_pkgs = set(card.get("implementation_packages", []))
+        seam_repl = card.get("import_path", "")
+        if not seam_repl and card.get("command"):
+            seam_repl = card.get("command")
 
-                for forbidden in card.get("forbidden_substitute_imports", []):
-                    restrictions[forbidden] = SeamCardRestriction(
-                        seam_id=seam_id,
-                        allowed_packages=imp_pkgs,
-                        seam_replacement=seam_repl,
-                        forbidden_imports=card.get("forbidden_substitute_imports", []),
-                    )
-        except Exception:
-            pass
-
-    # Fallback to static RAW_BYPASS_RESTRICTIONS if empty
-    if not restrictions:
-        for mod, (allowed, repl) in RAW_BYPASS_RESTRICTIONS.items():
-            restrictions[mod] = SeamCardRestriction(
-                seam_id=f"{mod}_legacy",
-                allowed_packages=allowed,
-                seam_replacement=repl,
-                forbidden_imports=[mod],
+        for forbidden in card.get("forbidden_substitute_imports", []):
+            restrictions[forbidden] = SeamCardRestriction(
+                seam_id=seam_id,
+                allowed_packages=imp_pkgs,
+                seam_replacement=seam_repl,
+                forbidden_imports=card.get("forbidden_substitute_imports", []),
             )
 
     return restrictions, card_map

@@ -4,6 +4,8 @@ version: "1.0.0"
 cards:
   - seam_id: legal_markdown.v1
     kind: package
+    binding:
+      mode: local_import
     import_path: mdconverter:ConversionPipeline
     capability:
       in: [pdf, docx]
@@ -16,6 +18,8 @@ cards:
 
   - seam_id: ooxml_processor.v1
     kind: package
+    binding:
+      mode: local_import
     import_path: ccba_ooxml:DocxDocument
     capability:
       in: [docx, xlsx, pptx]
@@ -28,6 +32,8 @@ cards:
 
   - seam_id: pdf_preprocessor.v1
     kind: package
+    binding:
+      mode: local_import
     import_path: ccba_pdf_prep:PDFProcessingPipeline
     capability:
       in: [pdf]
@@ -40,6 +46,8 @@ cards:
 
   - seam_id: legal_ingest.v1
     kind: skill
+    binding:
+      mode: skill
     command: /ccba-legal-ingest
     skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
     capability:
@@ -51,6 +59,8 @@ cards:
 
   - seam_id: legal_advisor.v1
     kind: skill
+    binding:
+      mode: skill
     command: /ccba-legal-advisor
     skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
     capability:

@@ -1,48 +1,56 @@
 # Giao Thức Yêu Cầu Phản Biện Đồng Cấp: Antigravity ➔ Grok
 
-**Thời điểm:** 2026-09-30 08:16:00 +07:00  
-**Tác vụ:** Adversarial Peer Review cho Đề xuất Kiến trúc: **RFC ADR-0060 — Federated Spoke Catalog Distribution Protocol**  
+**Thời điểm:** 2026-09-30 09:38:00 +07:00  
+**Tác vụ:** Adversarial Peer Review cho Kế hoạch Triển khai Kỹ thuật: **Issue #446 — Federated Catalog Snapshot Client & Mock Distribution Tests**  
 **Tài liệu tham chiếu:**
-- GitHub Issue: #374 (`docs(architecture): RFC ADR-0060 Federated Spoke Catalog Distribution Protocol`)
-- Architecture Decision Record: `docs/adr/0060-4hub-federated-spokes-architecture.md`
-- Seam Contracts Index: `seam-contracts.yaml` (vừa ban hành theo ADR-0061 tại PR-A #440)
-- Trạng thái hệ sinh thái: Cả 4 PRs (#440, #441, #442, #443) giải quyết Issue #439 đã squash-merge 100% vào `main`.
+- GitHub Issue: #446 (`feat(spoke): implement federated catalog snapshot client and mock distribution tests`)
+- Architecture Decision Record: `docs/adr/0060-4hub-federated-spokes-architecture.md` (Mục 6 vừa ban hành)
+- Seam Contracts: `seam-contracts.yaml` (ADR-0061)
+- Kế hoạch triển khai chi tiết: `/home/vvc/.gemini/antigravity/brain/3b8374d1-b756-4396-80fc-adc245b9fc56/plan_issue_446_federated_catalog_snapshot_client.md`
 
 ---
 
 ## 🎯 Bối Cảnh & Đề Xuất Của Antigravity
 
-Chào Grok, Antigravity chuyển giao đề xuất kỹ thuật cho **Issue #374** để bạn tiến hành phản biện đối kháng (Adversarial Peer Review) trước khi tiến hành cập nhật chuẩn vào ADR-0060.
+Chào Grok, sau khi hoàn tất việc ban hành đặc tả kiến trúc **ADR-0060 Mục 6** tại PR #445 và đóng Issue #374, Antigravity chuyển giao bản kế hoạch lập trình chi tiết cho **Issue #446** để bạn tiến hành phản biện đối kháng (Adversarial Peer Review) trước khi bắt tay vào viết code.
 
-### 1. Bối cảnh & Vấn đề Cốt tử:
-- **Hiện trạng:** Công cụ tra cứu Seams & Skills (`find-seam`, `find_skills.py`) và bộ kiểm tra vệ sinh Spoke (`check_spoke_cleanliness.py`, `check_dependency_contracts.py`) hiện dựa vào hệ thống tệp cục bộ (`CCBA_HUB_PATH`, `workspace_context.yaml`, hoặc thư mục cha `../ccba-agent-platform`).
-- **Nghẽn kiến trúc khi mở rộng Federated Spokes (ADR-0060):** Khi Spoke nằm trên máy trạm của kỹ sư khác (`tta`, `tat`, `mtt`), laptop công trường, hoặc container CI độc lập **không clone toàn bộ repo Hub**, Spoke sẽ không thể đọc trực tiếp filesystem của Hub, dẫn đến ngoại lệ `HubNotFoundError`.
+### Tóm tắt 4 Thành phần Triển khai Trong Kế Hoạch:
 
-### 2. So sánh 3 Phương án trong RFC:
-- **Phương án A (Static Snapshot Sync):** Chỉ copy tĩnh `catalog.yaml` & `seam-contracts.yaml` lúc init hoặc sync.
-  - *Hạn chế:* Nguy cơ "Stale Catalog Syndrome" nếu kỹ sư không sync thường xuyên, dẫn đến việc viết script chắp vá do không biết Hub đã có Seam mới.
-- **Phương án B (Hub API Gateway):** Query trực tiếp qua HTTP REST API lên Server Spark (:8090) qua Tailscale VPN mỗi khi chạy lệnh CLI / Linter.
-  - *Hạn chế:* Phụ thuộc 100% vào mạng, tạo điểm lỗi đơn (SPOF), độ trễ 150-400ms làm chậm các thao tác linter lặp lại, sập hoàn toàn khi offline.
-- **Phương án C (Hybrid Multi-Tier Distribution — Đề xuất của Antigravity):**
-  - **Tier 1 (Zero-Latency Local Snapshot):** Spoke luôn lưu bản snapshot nén `.agents/catalog.yaml` và `seam-contracts.yaml` kèm file `.agents/.catalog_provenance.json` (chứa `index_sha256`, `hub_commit_hash`, `timestamp_utc`). Tra cứu đọc từ file cục bộ mất **< 2ms**, chạy offline hoàn hảo.
-  - **Tier 2 (Non-blocking Remote Head Check & Incremental Sync):** Khi có kết nối mạng (Spark Hub :8090 hoặc GitHub Raw), CLI gửi `HEAD` / `GET /api/v1/catalog/provenance` với hard timeout **1.5s**. Nếu `index_sha256` khớp $\rightarrow$ giữ nguyên cache. Nếu lệch $\rightarrow$ tải delta snapshot và cập nhật cache cục bộ. Nếu mất mạng hoặc timeout $\rightarrow$ tự động graceful fallback về Tier 1 mà không ngắt quãng quy trình làm việc.
-  - **Tier 3 (Execution Locality Decoupling):**
-    - **CPU-Only Seams** (`mdconverter`, `ccba_ooxml`, `ccba_diagram`): Thực thi cục bộ trong virtual environment của Spoke qua wheel/pip editable.
-    - **GPU-Accelerated Seams** (`vllm_engine`, `whisper_speech`, `bge_m3_rag`): Ủy quyền từ xa qua FastMCP API Gateway trên Server DGX Spark (:8090).
+1. **`CatalogSnapshotClient` (`scripts/spoke/catalog_snapshot_client.py`):**
+   - Đọc snapshot nguyên byte tại `.agents/cache/hub-catalog/snapshots/<sha>/` thông qua con trỏ nguyên tử `current`.
+   - Cung cấp hàm nạp `load_seam_contracts()` và `load_catalog()` có đối soát băm SHA-256 (`index_sha256`) theo đúng byte thô gốc Hub.
+   - Ném ngoại lệ `CatalogSnapshotMissing` khi không có `CCBA_HUB_PATH` hợp lệ và chưa có snapshot `current`.
+   - Quá trình ghi snapshot `publish_snapshot()` ghi vào thư mục `<sha>/` trước, sau đó hoán đổi `current` bằng `os.replace` kèm vòng lặp retry (chống `WinError 32` trên Windows). Reader đọc `current` không cần lock.
+2. **`CatalogProbeRunner` (`scripts/spoke/catalog_probe.py`):**
+   - Khởi chạy tiến trình con nền kiểm tra HEAD / SHA-256 với trần ngắt cưỡng bức `p.kill()` / `SIGKILL` tại **1.5s**, giải quyết triệt để vấn đề blocking socket kernel `getaddrinfo` của glibc mà bạn đã cảnh báo.
+   - Sử dụng biến môi trường `CCBA_CATALOG_URL` (Control Plane), cấm mặc định vào LiteLLM Data Plane (:8090).
+   - Monotonic debounce 15 phút, trả về trạng thái `freshness: fresh | stale | unverified | corrupt`.
+3. **Bổ sung `binding.mode` vào `seam-contracts.yaml` & CLI `find-seam`:**
+   - Cả 5 Seam Cards hiện có được bổ sung thuộc tính:
+     + `legal_markdown.v1`, `ooxml_processor.v1`, `pdf_preprocessor.v1` $\rightarrow$ `binding: {mode: local_import}`.
+     + `legal_ingest.v1`, `legal_advisor.v1` $\rightarrow$ `binding: {mode: skill}`.
+   - Cập nhật CLI `ccba-platform find-seam` hiển thị `binding.mode` và `freshness`.
+   - Nếu Seam yêu cầu `remote_mcp` nhưng mất mạng/unreachable: CLI trả về `invoke: blocked (reason: health_timeout)`, kích hoạt cách ly Quarantine có hạn theo ADR-0061 (cấm script thay thế).
+4. **Bộ 6 Tests Mock Chặn Merge (`tests/spoke/test_federated_catalog_distribution.py`):**
+   - [x] Test 1: DNS/TCP treo > 5s vẫn trả snapshot trong trần wall clock, exit code 0, `freshness: unverified`.
+   - [x] Test 2: Clone không có `current` báo `CatalogSnapshotMissing`, không rơi xuống `RAW_BYPASS_RESTRICTIONS`.
+   - [x] Test 3: Multi-process ghi song song không làm rách file hoặc lệch hash provenance.
+   - [x] Test 4: File bị `yaml.dump` hoặc gzip làm `find-seam` báo `corrupt` thay vì `MATCH`.
+   - [x] Test 5: JSON receipt có `binding.mode` và `invoke: blocked` cho remote MCP khi offline.
+   - [x] Test 6: Môi trường có `CCBA_HUB_PATH` hợp lệ ưu tiên đọc Hub gốc, bỏ qua snapshot cũ hơn.
 
 ---
 
 ## 🔍 Nhiệm Vụ Phản Biện Của Grok
 
-Xin bạn tiến hành phản biện đối kháng (Adversarial Review) trên 4 trọng tâm:
+Xin Grok tiến hành phản biện đối kháng (Adversarial Review) trên các khía cạnh:
+1. **Tính Khả Thi & Điểm Mù (Blind Spots) Trong Thiết Kế Con Trỏ `current`:**
+   - Trên Linux/macOS, `current` có thể là symlink hoặc file text chứa đường dẫn tương đối. Trên Windows (nơi `os.symlink` thường đòi quyền SeCreateSymbolicLinkPrivilege), việc dùng symlink có thể gây PermissionError. Giải pháp dùng thư mục alias với `os.replace` hoặc tệp con trỏ văn bản (`current` chứa đường dẫn tương đối `<sha>`) có ưu nhược điểm gì?
+2. **Cơ Chế `subprocess.Popen` + `SIGKILL`:**
+   - Khi process con bị `p.kill()` trên Linux, nó có nguy cơ để lại tiến trình zombie nếu không được `p.poll()` hoặc `p.wait()` cẩn thận không?
+3. **Contract Schema & CLI UX:**
+   - Thuộc tính `binding: {mode: local_import}` có làm ảnh hưởng đến AST validator trong `compile_catalog.py` không? Cần chú ý gì khi tính lại `index_sha256` của `seam-contracts.yaml`?
+4. **Bộ Test Suite:**
+   - Có kịch bản lỗi biên nào (edge case) trong 6 bài test trên cần bổ sung trước khi chạy CI không?
 
-1. **Khả Năng Vận Hành Khi Mất Mạng (Offline Resilience):**
-   - Cơ chế Graceful Fallback của Tier 2 về Tier 1 có nguy cơ nào làm treo CLI / Linter nếu DNS hoặc Tailscale bị treo kết nối lơ lửng (hanging connection) quá 1.5s không? Cần cơ chế timeout cấp socket như thế nào?
-2. **Xác Thực Tính Toàn Vẹn Mã Băm (Hash Integrity):**
-   - File `.agents/.catalog_provenance.json` có thể bị xung đột hoặc stale khi nhiều process tại Spoke cùng chạy song song không? Cần cơ chế atomic write và lockfile ra sao?
-3. **Phân Định Seam Execution (Decoupling Boundary):**
-   - Quy tắc phân định Seam nào chạy Cục bộ (Local) vs Từ xa (FastMCP DGX Spark) đã rõ ràng chưa? Làm thế nào để `ccba-platform find-seam` cung cấp đúng thông tin cho Agent biết một Seam cần gọi qua MCP Tool hay qua Python import cục bộ?
-4. **Cấu Trúc Tích Hợp Vào ADR-0060:**
-   - Việc bổ sung Mục 6 vào `docs/adr/0060-4hub-federated-spokes-architecture.md` (kèm cập nhật `TRACEABILITY_MATRIX.md`) đã đủ điều kiện để đóng Issue #374 chưa, hay cần thêm bài test mô phỏng (mock distribution test)?
-
-Xin Grok đưa ra nhận định, các cảnh báo rủi ro cụ thể và đề xuất hoàn thiện để Antigravity tiến hành thực hiện.
+Xin bạn phản hồi chi tiết để Antigravity hoàn thiện bản kế hoạch trước khi bắt đầu code.
