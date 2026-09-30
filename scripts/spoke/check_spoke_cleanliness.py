@@ -55,7 +55,7 @@ SYS_PATH_HACK_PATTERN = re.compile(
 # Patterns detecting hardcoded machine state leakage (drive letters or home user paths)
 MACHINE_STATE_LEAK_PATTERNS = [
     (
-        re.compile(r"""(?:[rR]?["']|[=:]\s*)[A-Za-z]:[\\/]+[A-Za-z0-9_.-]+"""),
+        re.compile(r"""(?:[rR]?["']|[=:]\s*)[A-Za-z]:(?:[\\/]+[A-Za-z0-9_.-]*|[\\/]*["'])"""),
         "Hardcoded Windows drive path",
     ),
     (
@@ -63,6 +63,41 @@ MACHINE_STATE_LEAK_PATTERNS = [
         "Hardcoded POSIX user home path",
     ),
 ]
+
+
+def load_cleanliness_config(spoke_root: Path) -> tuple[set[str], set[str]]:
+    """Loads custom script allowlist and role-exempted scripts from workspace_context.yaml."""
+    custom_allowlist: set[str] = set()
+    role_exemptions: set[str] = set()
+
+    for cand in [
+        spoke_root / ".md" / "workspace_context.yaml",
+        spoke_root / "workspace_context.yaml",
+    ]:
+        if cand.is_file():
+            try:
+                import yaml
+
+                data = yaml.safe_load(cand.read_text(encoding="utf-8")) or {}
+                cleanliness = data.get("cleanliness", {})
+                if isinstance(cleanliness, dict):
+                    # 1. Custom allowlist for script budget
+                    for item in cleanliness.get("allowed_scripts", []):
+                        if isinstance(item, str):
+                            custom_allowlist.add(item.strip())
+                    # 2. Roles allowlist
+                    roles = cleanliness.get("roles", {})
+                    if isinstance(roles, dict):
+                        for _, scripts in roles.items():
+                            if isinstance(scripts, list):
+                                for s in scripts:
+                                    if isinstance(s, str):
+                                        role_exemptions.add(s.strip())
+            except Exception:
+                pass
+            break
+
+    return custom_allowlist, role_exemptions
 
 
 def check_machine_state_leakage(
@@ -104,7 +139,11 @@ def check_machine_state_leakage(
     return violations
 
 
-def check_script_count(scripts_dir: Path, max_scripts: int = 15) -> tuple[list[Path], list[Path]]:
+def check_script_count(
+    scripts_dir: Path,
+    max_scripts: int = 15,
+    custom_allowlist: set[str] | None = None,
+) -> tuple[list[Path], list[Path]]:
     """Checks the number of top-level scripts in the scripts/ folder.
 
     Returns:
@@ -116,9 +155,12 @@ def check_script_count(scripts_dir: Path, max_scripts: int = 15) -> tuple[list[P
     all_py_files = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix == ".py"]
     counted: list[Path] = []
     ignored: list[Path] = []
+    effective_allowlist = set(ALLOWLIST_SCRIPTS)
+    if custom_allowlist:
+        effective_allowlist.update(custom_allowlist)
 
     for f in all_py_files:
-        if f.name in ALLOWLIST_SCRIPTS or f.name.startswith("check_"):
+        if f.name in effective_allowlist or f.name.startswith("check_"):
             ignored.append(f)
         else:
             counted.append(f)
@@ -126,10 +168,23 @@ def check_script_count(scripts_dir: Path, max_scripts: int = 15) -> tuple[list[P
     return counted, ignored
 
 
-def check_ephemeral_scripts(scripts: list[Path]) -> list[Path]:
-    """Finds scripts that match ephemeral / one-off naming conventions."""
+def check_ephemeral_scripts(
+    scripts: list[Path],
+    role_allowlist: set[str] | dict[str, list[str]] | None = None,
+) -> list[Path]:
+    """Finds scripts that match ephemeral / one-off naming conventions unless exempted by role."""
+    exempt_names: set[str] = set()
+    if isinstance(role_allowlist, set):
+        exempt_names.update(role_allowlist)
+    elif isinstance(role_allowlist, dict):
+        for script_list in role_allowlist.values():
+            if isinstance(script_list, list):
+                exempt_names.update(str(s) for s in script_list)
+
     ephemeral: list[Path] = []
     for s in scripts:
+        if s.name in exempt_names:
+            continue
         name_lower = s.name.lower()
         if any(name_lower.startswith(prefix) for prefix in EPHEMERAL_PREFIXES):
             ephemeral.append(s)
@@ -161,7 +216,11 @@ def check_hub_duplications(target_files: list[Path]) -> list[tuple[Path, int, st
 
 
 def scan_spoke_cleanliness(
-    spoke_root: Path, max_scripts: int = 15, strict: bool = False
+    spoke_root: Path,
+    max_scripts: int = 15,
+    strict: bool = False,
+    custom_allowlist: set[str] | None = None,
+    role_allowlist: set[str] | None = None,
 ) -> tuple[int, list[str]]:
     """Runs all cleanliness checks against a target Spoke workspace.
 
@@ -172,9 +231,21 @@ def scan_spoke_cleanliness(
     has_errors = False
     has_warnings = False
 
+    # Load configuration from workspace_context.yaml
+    cfg_allowlist, cfg_roles = load_cleanliness_config(spoke_root)
+    effective_allowlist = set(cfg_allowlist)
+    if custom_allowlist:
+        effective_allowlist.update(custom_allowlist)
+
+    effective_roles = set(cfg_roles)
+    if role_allowlist:
+        effective_roles.update(role_allowlist)
+
     scripts_dir = spoke_root / "scripts"
     if scripts_dir.exists():
-        counted_scripts, ignored_scripts = check_script_count(scripts_dir, max_scripts=max_scripts)
+        counted_scripts, ignored_scripts = check_script_count(
+            scripts_dir, max_scripts=max_scripts, custom_allowlist=effective_allowlist
+        )
         count = len(counted_scripts)
 
         if count > max_scripts:
@@ -189,8 +260,8 @@ def scan_spoke_cleanliness(
                 f"✅ [Script Budget] Thư mục 'scripts/' có {count}/{max_scripts} tệp hợp lệ ({len(ignored_scripts)} tệp hệ thống được bỏ qua)."
             )
 
-        # Ephemeral scripts
-        ephemeral = check_ephemeral_scripts(counted_scripts)
+        # Ephemeral scripts (role allowlist beats ephemeral prefix)
+        ephemeral = check_ephemeral_scripts(counted_scripts, role_allowlist=effective_roles)
         if ephemeral:
             has_warnings = True
             messages.append(
@@ -286,6 +357,18 @@ def main() -> int:
         help="Fail (exit code 1) on warnings such as ephemeral script names",
     )
     parser.add_argument(
+        "--allow-script",
+        nargs="+",
+        default=None,
+        help="Additional script names to exclude from the script count budget",
+    )
+    parser.add_argument(
+        "--allow-role",
+        nargs="+",
+        default=None,
+        help="Script names exempted by role from ephemeral warnings (e.g. audits:audit_memory.py)",
+    )
+    parser.add_argument(
         "files",
         nargs="*",
         help="Optional specific files passed by pre-commit",
@@ -293,8 +376,22 @@ def main() -> int:
     args = parser.parse_args()
 
     spoke_root = Path(args.path).resolve()
+
+    custom_allowlist = set(args.allow_script) if args.allow_script else None
+    role_allowlist: set[str] = set()
+    if args.allow_role:
+        for r in args.allow_role:
+            if ":" in r:
+                role_allowlist.add(r.split(":", 1)[1].strip())
+            else:
+                role_allowlist.add(r.strip())
+
     exit_code, messages = scan_spoke_cleanliness(
-        spoke_root=spoke_root, max_scripts=args.max_scripts, strict=args.strict
+        spoke_root=spoke_root,
+        max_scripts=args.max_scripts,
+        strict=args.strict,
+        custom_allowlist=custom_allowlist,
+        role_allowlist=role_allowlist if role_allowlist else None,
     )
 
     print("=" * 80)
