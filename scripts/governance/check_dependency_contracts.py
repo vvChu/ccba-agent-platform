@@ -12,11 +12,14 @@ from __future__ import annotations
 
 import argparse
 import ast
+import re
 import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 # Monorepo packages and their root package names
 PACKAGE_MAP: dict[str, str] = {
@@ -42,13 +45,90 @@ HIGHER_DOMAIN_PACKAGES = {
     "ccba_qc_core",
 }
 
-# Raw third-party library bypass mapping: module -> (allowed_packages, seam_replacement)
+# Raw third-party library bypass mapping (default fallback if seam-contracts.yaml is absent)
 RAW_BYPASS_RESTRICTIONS: dict[str, tuple[set[str], str]] = {
     "docx": ({"ccba_ooxml", "ccba_legal", "mdconverter"}, "ccba_ooxml"),
     "fitz": ({"ccba_pdf_prep"}, "ccba_pdf_prep"),
     "pymupdf": ({"ccba_pdf_prep"}, "ccba_pdf_prep"),
     "openpyxl": ({"ccba_ooxml"}, "ccba_ooxml"),
 }
+
+VALID_QUARANTINE_REASONS = {
+    "hardware_mismatch",
+    "seam_regression",
+    "health_timeout",
+    "version_conflict",
+}
+ISSUE_URL_PATTERN = re.compile(r"^https://github\.com/vvChu/ccba-agent-platform/issues/\d+$")
+QUARANTINE_KV_PATTERN = re.compile(r'(\w+)=(?:"([^"]*)"|\'([^\']*)\'|([^\s#]+))')
+
+
+@dataclass
+class SeamCardRestriction:
+    seam_id: str
+    allowed_packages: set[str]
+    seam_replacement: str
+    forbidden_imports: list[str]
+
+
+def load_seam_bypass_restrictions(
+    project_root: Path,
+) -> tuple[dict[str, SeamCardRestriction], dict[str, dict[str, Any]]]:
+    """Dynamically build bypass restrictions from seam-contracts.yaml."""
+    contracts_file = project_root / "seam-contracts.yaml"
+    restrictions: dict[str, SeamCardRestriction] = {}
+    card_map: dict[str, dict[str, Any]] = {}
+
+    if contracts_file.is_file():
+        try:
+            import yaml
+
+            data = yaml.safe_load(contracts_file.read_text(encoding="utf-8")) or {}
+            cards = data.get("cards", [])
+            for card in cards:
+                seam_id = card.get("seam_id")
+                if not seam_id:
+                    continue
+                card_map[seam_id] = card
+                imp_pkgs = set(card.get("implementation_packages", []))
+                seam_repl = card.get("import_path", "")
+                if not seam_repl and card.get("command"):
+                    seam_repl = card.get("command")
+
+                for forbidden in card.get("forbidden_substitute_imports", []):
+                    restrictions[forbidden] = SeamCardRestriction(
+                        seam_id=seam_id,
+                        allowed_packages=imp_pkgs,
+                        seam_replacement=seam_repl,
+                        forbidden_imports=card.get("forbidden_substitute_imports", []),
+                    )
+        except Exception:
+            pass
+
+    # Fallback to static RAW_BYPASS_RESTRICTIONS if empty
+    if not restrictions:
+        for mod, (allowed, repl) in RAW_BYPASS_RESTRICTIONS.items():
+            restrictions[mod] = SeamCardRestriction(
+                seam_id=f"{mod}_legacy",
+                allowed_packages=allowed,
+                seam_replacement=repl,
+                forbidden_imports=[mod],
+            )
+
+    return restrictions, card_map
+
+
+def parse_quarantine_marker(line_text: str) -> dict[str, str] | None:
+    """Extract key-value parameters from # ccba:quarantine marker."""
+    if "ccba:quarantine" not in line_text:
+        return None
+    part = line_text.split("ccba:quarantine", 1)[1]
+    matches = QUARANTINE_KV_PATTERN.findall(part)
+    params: dict[str, str] = {}
+    for key, v1, v2, v3 in matches:
+        val = v1 or v2 or v3 or ""
+        params[key.strip()] = val.strip()
+    return params
 
 
 @dataclass
@@ -68,11 +148,32 @@ class DependencyASTVisitor(ast.NodeVisitor):
         current_package: str | None,
         current_file: Path,
         raw_lines: list[str] | None = None,
+        bypass_restrictions: dict[str, SeamCardRestriction] | None = None,
+        card_map: dict[str, dict[str, Any]] | None = None,
+        strict_quarantine: bool = False,
+        enforce_quarantine_path: bool = False,
     ) -> None:
         self.current_package = current_package
         self.current_file = current_file
         self.raw_lines = raw_lines
+        if bypass_restrictions is None:
+            self.restrictions = {
+                mod: SeamCardRestriction(
+                    seam_id=f"{mod}_legacy",
+                    allowed_packages=allowed,
+                    seam_replacement=repl,
+                    forbidden_imports=[mod],
+                )
+                for mod, (allowed, repl) in RAW_BYPASS_RESTRICTIONS.items()
+            }
+        else:
+            self.restrictions = bypass_restrictions
+        self.card_map = card_map or {}
+        self.strict_quarantine = strict_quarantine
+        self.enforce_quarantine_path = enforce_quarantine_path
         self.violations: list[ImportViolation] = []
+        self.legacy_bypasses: list[tuple[Path, int, str]] = []
+        self.active_quarantines: list[tuple[Path, int, str, str, str]] = []
 
     def visit_Import(self, node: ast.Import) -> None:
         end_lineno = getattr(node, "end_lineno", node.lineno)
@@ -110,23 +211,200 @@ class DependencyASTVisitor(ast.NodeVisitor):
         parts = module_name.split(".")
         root_mod = parts[0]
 
-        # Check 0: Raw Third-Party Bypass (Platform-Aware KISS Guard)
-        if root_mod in RAW_BYPASS_RESTRICTIONS:
-            allowed_pkgs, seam_pkg = RAW_BYPASS_RESTRICTIONS[root_mod]
-            if self.current_package not in allowed_pkgs:
-                # Check for explicit inline exemption comment across statement line range
-                line_has_exemption = False
-                if self.raw_lines:
-                    end_line = end_line_number if end_line_number is not None else line_number
-                    start_idx = max(0, line_number - 1)
-                    end_idx = min(len(self.raw_lines), end_line)
-                    for idx in range(start_idx, end_idx):
-                        line_text = self.raw_lines[idx]
-                        if "ccba:allow-raw-bypass" in line_text or "noqa: raw-bypass" in line_text:
-                            line_has_exemption = True
-                            break
+        # Check 0: Raw Third-Party Bypass (Platform-Aware KISS Guard & Quarantine Governance)
+        if root_mod in self.restrictions:
+            restriction = self.restrictions[root_mod]
+            allowed_pkgs = restriction.allowed_packages
+            seam_pkg = restriction.seam_replacement
 
-                if not line_has_exemption:
+            if self.current_package not in allowed_pkgs:
+                # Inspect line span for quarantine or legacy exemption comments
+                start_idx = max(0, line_number - 1)
+                end_line = end_line_number if end_line_number is not None else line_number
+                end_idx = min(len(self.raw_lines), end_line) if self.raw_lines else 0
+
+                quarantine_line: str | None = None
+                legacy_line: str | None = None
+                if self.raw_lines:
+                    for idx in range(start_idx, end_idx):
+                        lt = self.raw_lines[idx]
+                        if "ccba:quarantine" in lt:
+                            quarantine_line = lt
+                            break
+                        if "ccba:allow-raw-bypass" in lt or "noqa: raw-bypass" in lt:
+                            legacy_line = lt
+
+                if quarantine_line is not None:
+                    # Validate quarantine marker
+                    params = parse_quarantine_marker(quarantine_line) or {}
+                    seam_id = params.get("seam_id", "")
+                    reason = params.get("reason", "")
+                    until_str = params.get("until", "")
+                    issue = params.get("issue", "")
+
+                    missing_fields = []
+                    for f in ["seam_id", "reason", "until", "issue"]:
+                        if not params.get(f):
+                            missing_fields.append(f)
+
+                    if missing_fields:
+                        self.violations.append(
+                            ImportViolation(
+                                file_path=self.current_file,
+                                line_number=line_number,
+                                imported_module=module_name,
+                                rule_name="QuarantineMarkerViolation",
+                                message=(
+                                    f"Quarantine marker missing required field(s): {', '.join(missing_fields)}. "
+                                    f"Required: seam_id=<id> reason=<reason> until=YYYY-MM-DD issue=<url>"
+                                ),
+                            )
+                        )
+                    else:
+                        # 1. Validate seam_id
+                        if ".." in seam_id or "/" in seam_id or "\\" in seam_id:
+                            self.violations.append(
+                                ImportViolation(
+                                    file_path=self.current_file,
+                                    line_number=line_number,
+                                    imported_module=module_name,
+                                    rule_name="QuarantineMarkerViolation",
+                                    message=f"Quarantine seam_id '{seam_id}' contains invalid path characters.",
+                                )
+                            )
+                        elif self.card_map and seam_id not in self.card_map:
+                            self.violations.append(
+                                ImportViolation(
+                                    file_path=self.current_file,
+                                    line_number=line_number,
+                                    imported_module=module_name,
+                                    rule_name="QuarantineMarkerViolation",
+                                    message=f"Quarantine seam_id '{seam_id}' not found in seam-contracts.yaml.",
+                                )
+                            )
+                        else:
+                            # 2. Validate forbidden import match
+                            card = self.card_map.get(seam_id, {})
+                            forbidden_list = card.get("forbidden_substitute_imports", [])
+                            if forbidden_list and root_mod not in forbidden_list:
+                                self.violations.append(
+                                    ImportViolation(
+                                        file_path=self.current_file,
+                                        line_number=line_number,
+                                        imported_module=module_name,
+                                        rule_name="QuarantineMarkerViolation",
+                                        message=(
+                                            f"Quarantine marker for seam '{seam_id}' does not govern forbidden module '{root_mod}'. "
+                                            f"Card governs: {forbidden_list}."
+                                        ),
+                                    )
+                                )
+
+                        # 3. Validate reason
+                        if reason not in VALID_QUARANTINE_REASONS:
+                            self.violations.append(
+                                ImportViolation(
+                                    file_path=self.current_file,
+                                    line_number=line_number,
+                                    imported_module=module_name,
+                                    rule_name="QuarantineMarkerViolation",
+                                    message=(
+                                        f"Invalid quarantine reason '{reason}'. "
+                                        f"Must be one of: {sorted(VALID_QUARANTINE_REASONS)}."
+                                    ),
+                                )
+                            )
+
+                        # 4. Validate issue URL
+                        if not ISSUE_URL_PATTERN.match(issue):
+                            self.violations.append(
+                                ImportViolation(
+                                    file_path=self.current_file,
+                                    line_number=line_number,
+                                    imported_module=module_name,
+                                    rule_name="QuarantineMarkerViolation",
+                                    message=(
+                                        f"Invalid issue URL '{issue}'. "
+                                        f"Must match format 'https://github.com/vvChu/ccba-agent-platform/issues/<number>'."
+                                    ),
+                                )
+                            )
+
+                        # 5. Validate until date
+                        try:
+                            until_date = datetime.strptime(until_str, "%Y-%m-%d").date()
+                            current_utc_date = datetime.now(timezone.utc).date()
+                            if until_date < current_utc_date:
+                                self.violations.append(
+                                    ImportViolation(
+                                        file_path=self.current_file,
+                                        line_number=line_number,
+                                        imported_module=module_name,
+                                        rule_name="QuarantineExpiredViolation",
+                                        message=(
+                                            f"Quarantine for seam '{seam_id}' expired on {until_str} "
+                                            f"(current UTC date: {current_utc_date}). Issue: {issue}."
+                                        ),
+                                    )
+                                )
+                        except ValueError:
+                            self.violations.append(
+                                ImportViolation(
+                                    file_path=self.current_file,
+                                    line_number=line_number,
+                                    imported_module=module_name,
+                                    rule_name="QuarantineMarkerViolation",
+                                    message=f"Invalid date format in until='{until_str}'. Expected YYYY-MM-DD.",
+                                )
+                            )
+
+                        # 6. Validate quarantine path if enforced
+                        if self.enforce_quarantine_path:
+                            is_quarantine_path = (
+                                "adapters/quarantine" in self.current_file.as_posix()
+                                or "quarantine" in self.current_file.parts
+                            )
+                            if not is_quarantine_path:
+                                self.violations.append(
+                                    ImportViolation(
+                                        file_path=self.current_file,
+                                        line_number=line_number,
+                                        imported_module=module_name,
+                                        rule_name="QuarantinePathViolation",
+                                        message=(
+                                            f"Quarantined import must reside in 'adapters/quarantine/<seam_id>.py'. "
+                                            f"Found in '{self.current_file}'."
+                                        ),
+                                    )
+                                )
+
+                    # If no violations were added for this import, record active quarantine
+                    if not any(
+                        v.line_number == line_number and v.file_path == self.current_file
+                        for v in self.violations
+                    ):
+                        self.active_quarantines.append(
+                            (self.current_file, line_number, root_mod, seam_id, until_str)
+                        )
+
+                elif legacy_line is not None:
+                    if self.strict_quarantine:
+                        self.violations.append(
+                            ImportViolation(
+                                file_path=self.current_file,
+                                line_number=line_number,
+                                imported_module=module_name,
+                                rule_name="LegacyBypassDeprecatedViolation",
+                                message=(
+                                    f"File '{self.current_file.name}' uses legacy bypass '# ccba:allow-raw-bypass'. "
+                                    f"Under strict quarantine, must migrate to '# ccba:quarantine seam_id=... reason=... until=... issue=...' or use Seam."
+                                ),
+                            )
+                        )
+                    else:
+                        self.legacy_bypasses.append((self.current_file, line_number, root_mod))
+
+                else:
                     self.violations.append(
                         ImportViolation(
                             file_path=self.current_file,
@@ -203,7 +481,15 @@ def get_package_for_file(file_path: Path, packages_dir: Path) -> str | None:
         return None
 
 
-def scan_file_for_violations(file_path: Path, packages_dir: Path) -> list[ImportViolation]:
+def scan_file_for_violations(
+    file_path: Path,
+    packages_dir: Path,
+    bypass_restrictions: dict[str, SeamCardRestriction] | None = None,
+    card_map: dict[str, dict[str, Any]] | None = None,
+    strict_quarantine: bool = False,
+    enforce_quarantine_path: bool = False,
+    visitor_collector: list[DependencyASTVisitor] | None = None,
+) -> list[ImportViolation]:
     """Parse and check a single Python file for architectural dependency violations."""
     pkg = get_package_for_file(file_path, packages_dir)
     try:
@@ -221,34 +507,58 @@ def scan_file_for_violations(file_path: Path, packages_dir: Path) -> list[Import
             )
         ]
 
-    visitor = DependencyASTVisitor(current_package=pkg, current_file=file_path, raw_lines=raw_lines)
+    visitor = DependencyASTVisitor(
+        current_package=pkg,
+        current_file=file_path,
+        raw_lines=raw_lines,
+        bypass_restrictions=bypass_restrictions,
+        card_map=card_map,
+        strict_quarantine=strict_quarantine,
+        enforce_quarantine_path=enforce_quarantine_path,
+    )
     visitor.visit(tree)
+    if visitor_collector is not None:
+        visitor_collector.append(visitor)
     return visitor.violations
 
 
 def check_all_contracts(
     project_root: Path,
     include_scripts: bool = True,
+    strict_quarantine: bool = False,
+    enforce_quarantine_path: bool = False,
+    audit_report: dict[str, Any] | None = None,
 ) -> tuple[bool, list[ImportViolation], int]:
     """Scan all Python source files in packages/ and scripts/ for dependency violations."""
     packages_dir = project_root / "packages"
     violations: list[ImportViolation] = []
     files_scanned = 0
 
+    bypass_restrictions, card_map = load_seam_bypass_restrictions(project_root)
+    all_visitors: list[DependencyASTVisitor] = []
+
     # 1. Scan packages/*/src
     if packages_dir.is_dir():
-        for py_file in packages_dir.glob("*/src/**/*.py"):
+        for py_file in sorted(packages_dir.glob("*/src/**/*.py"), key=lambda p: p.as_posix()):
             if "__pycache__" in py_file.parts:
                 continue
             files_scanned += 1
-            file_violations = scan_file_for_violations(py_file, packages_dir)
+            file_violations = scan_file_for_violations(
+                py_file,
+                packages_dir,
+                bypass_restrictions=bypass_restrictions,
+                card_map=card_map,
+                strict_quarantine=strict_quarantine,
+                enforce_quarantine_path=enforce_quarantine_path,
+                visitor_collector=all_visitors,
+            )
             violations.extend(file_violations)
 
     # 2. Optionally scan scripts/
     if include_scripts:
         scripts_dir = project_root / "scripts"
         if scripts_dir.is_dir():
-            for py_file in scripts_dir.glob("**/*.py"):
+            for py_file in sorted(scripts_dir.glob("**/*.py"), key=lambda p: p.as_posix()):
                 if (
                     "__pycache__" in py_file.parts
                     or "tests" in py_file.parts
@@ -256,8 +566,25 @@ def check_all_contracts(
                 ):
                     continue
                 files_scanned += 1
-                file_violations = scan_file_for_violations(py_file, packages_dir)
+                file_violations = scan_file_for_violations(
+                    py_file,
+                    packages_dir,
+                    bypass_restrictions=bypass_restrictions,
+                    card_map=card_map,
+                    strict_quarantine=strict_quarantine,
+                    enforce_quarantine_path=enforce_quarantine_path,
+                    visitor_collector=all_visitors,
+                )
                 violations.extend(file_violations)
+
+    if audit_report is not None:
+        legacy_list: list[tuple[Path, int, str]] = []
+        quarantine_list: list[tuple[Path, int, str, str, str]] = []
+        for v in all_visitors:
+            legacy_list.extend(v.legacy_bypasses)
+            quarantine_list.extend(v.active_quarantines)
+        audit_report["legacy_bypasses"] = legacy_list
+        audit_report["active_quarantines"] = quarantine_list
 
     passed = len(violations) == 0
     return passed, violations, files_scanned
@@ -292,6 +619,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Also execute external import-linter runner (.importlinter)",
     )
     parser.add_argument(
+        "--strict-quarantine",
+        action="store_true",
+        help="Reject legacy '# ccba:allow-raw-bypass' and enforce strict quarantine markers.",
+    )
+    parser.add_argument(
+        "--enforce-quarantine-path",
+        action="store_true",
+        help="Require all quarantined imports to reside in 'adapters/quarantine/'.",
+    )
+    parser.add_argument(
+        "--dry-run-quarantine",
+        action="store_true",
+        help="Audit and display all legacy bypasses and active quarantine markers.",
+    )
+    parser.add_argument(
         "--root",
         type=Path,
         default=Path(__file__).resolve().parent.parent.parent,
@@ -309,10 +651,39 @@ def main(argv: Sequence[str] | None = None) -> int:
     print("🛡️  CCBA DEPENDENCY & SEAM CONTRACT LINTER")
     print("=" * 60)
 
-    passed, violations, files_scanned = check_all_contracts(args.root)
+    audit_report: dict[str, Any] = {}
+    passed, violations, files_scanned = check_all_contracts(
+        args.root,
+        strict_quarantine=args.strict_quarantine,
+        enforce_quarantine_path=args.enforce_quarantine_path,
+        audit_report=audit_report,
+    )
     elapsed = time.time() - start_time
 
     print(f"📁 Scanned {files_scanned} Python source files in {elapsed:.3f}s.")
+
+    if args.dry_run_quarantine:
+        legacy = audit_report.get("legacy_bypasses", [])
+        active_q = audit_report.get("active_quarantines", [])
+        print("\n" + "=" * 60)
+        print("📋 QUARANTINE DRY-RUN AUDIT REPORT")
+        print("=" * 60)
+        print(f"• Active Valid Quarantines: {len(active_q)}")
+        for path, line_no, mod, s_id, until in active_q:
+            try:
+                rel = path.relative_to(args.root)
+            except ValueError:
+                rel = path
+            print(f"  - [QUARANTINE] {rel}:{line_no} -> module='{mod}' seam='{s_id}' until={until}")
+
+        print(f"\n• Legacy Raw Bypasses ('# ccba:allow-raw-bypass'): {len(legacy)}")
+        for path, line_no, mod in legacy:
+            try:
+                rel = path.relative_to(args.root)
+            except ValueError:
+                rel = path
+            print(f"  - [LEGACY] {rel}:{line_no} -> module='{mod}' (pending migration)")
+        print("=" * 60)
 
     if passed:
         print(
@@ -321,7 +692,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         print(f"❌ Phát hiện {len(violations)} lỗi vi phạm hợp đồng kiến trúc:")
         for v in violations:
-            rel_path = v.file_path.relative_to(args.root)
+            try:
+                rel_path = v.file_path.relative_to(args.root)
+            except ValueError:
+                rel_path = v.file_path
             print(f"  - [{v.rule_name}] {rel_path}:{v.line_number} -> {v.message}")
 
     if args.with_import_linter:
