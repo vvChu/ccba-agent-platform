@@ -1075,9 +1075,44 @@ def build_parser() -> argparse.ArgumentParser:
     # find-seam
     find_seam_p = subparsers.add_parser(
         "find-seam",
-        help="Search Public Deep Seams and Skills in CCBA Catalog (ADR 0047)",
+        help="Search Public Deep Seams, Capability Contracts, and Skills in CCBA Platform (ADR-0061)",
     )
-    find_seam_p.add_argument("keyword", help="Search keyword (e.g. pccc, pdf, docx, rag, etc.)")
+    find_seam_p.add_argument(
+        "keyword",
+        nargs="?",
+        default=None,
+        help="Optional search keyword (e.g. pccc, pdf, docx, rag, etc.)",
+    )
+    find_seam_p.add_argument(
+        "--in",
+        dest="in_types",
+        nargs="+",
+        default=None,
+        help="Input capability requirements (e.g. --in pdf docx)",
+    )
+    find_seam_p.add_argument(
+        "--out",
+        dest="out_types",
+        nargs="+",
+        default=None,
+        help="Output capability requirements (e.g. --out markdown)",
+    )
+    find_seam_p.add_argument(
+        "--hardware",
+        type=str,
+        default=None,
+        help="Hardware constraint (e.g. any, dgx_spark, cuda)",
+    )
+    find_seam_p.add_argument(
+        "--json",
+        action="store_true",
+        help="Output machine-readable JSON capability receipt or status",
+    )
+    find_seam_p.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate seam-contracts.yaml schema and AST exports",
+    )
 
     return parser
 
@@ -1221,9 +1256,28 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     elif args.command == "find-seam":
-        from scripts.governance.compile_catalog import query_catalog
+        if getattr(args, "check", False):
+            from scripts.governance.compile_catalog import validate_seam_contracts
 
-        return query_catalog(hub_root=_ROOT_DIR, query_term=args.keyword)
+            errors = validate_seam_contracts(hub_root=_ROOT_DIR)
+            if errors:
+                for err in errors:
+                    print(f"❌ {err}", file=sys.stderr)
+                return 1
+            print("✅ [OK] seam-contracts.yaml is valid.")
+            return 0
+
+        from scripts.governance.compile_catalog import query_seam_contracts
+
+        exit_code, _ = query_seam_contracts(
+            hub_root=_ROOT_DIR,
+            in_types=args.in_types,
+            out_types=args.out_types,
+            hardware=args.hardware,
+            keyword=args.keyword,
+            as_json=args.json,
+        )
+        return exit_code
 
     else:
         parser.print_help()
