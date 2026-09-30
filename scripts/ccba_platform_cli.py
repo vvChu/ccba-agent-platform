@@ -1269,8 +1269,16 @@ def main(argv: list[str] | None = None) -> int:
 
         from scripts.governance.compile_catalog import query_seam_contracts
 
+        cwd_path = Path.cwd()
+        target_root = (
+            cwd_path
+            if (cwd_path / ".agents" / "cache" / "hub-catalog").exists()
+            or (cwd_path / "seam-contracts.yaml").exists()
+            else _ROOT_DIR
+        )
+
         exit_code, _ = query_seam_contracts(
-            hub_root=_ROOT_DIR,
+            hub_root=target_root,
             in_types=args.in_types,
             out_types=args.out_types,
             hardware=args.hardware,
