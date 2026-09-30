@@ -23,6 +23,9 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
 4. **Điểm Nghẽn Độ Trễ RAG 25.4s Do Xung Đột VRAM & Cơ Chế Swap Bộ Nhớ:**
    - Profiling thực nghiệm phát hiện: Bước nhúng câu truy vấn bằng mô hình BGE-M3 trên GPU Blackwell thực tế **chỉ mất 0.283 giây (283ms)**.
    - Tuy nhiên, do container vLLM `qwen36b` chiếm cố định 70.5 GB VRAM (`gpu-memory-utilization 0.85`), PyTorch trong `rag-service` chỉ thấy 1.39 GB free VRAM, buộc hệ thống phải dùng cơ chế `model.to("cuda")` (6.75s) và `model.to("cpu")` + `empty_cache()` (14.92s) liên tục. Chu kỳ swap bộ nhớ này chiếm tới 21.67s (98.7% thời gian nhúng), làm tê liệt trải nghiệm tra cứu quy chuẩn pháp lý.
+5. **Điểm Nghẽn Phân Phối Catalog & Seam Contracts Cho Spokes Độc Lập (Issue #374):**
+   - Cơ chế dò tìm Hub hiện tại (`HubDiscoverer`) giả định Spoke luôn nằm trên cùng hệ thống tệp cục bộ với Hub (qua `CCBA_HUB_PATH` hoặc thư mục lân cận).
+   - Khi triển khai Federated Spokes trên máy trạm cá nhân của kỹ sư (`tta`, `tat`, `mtt`), laptop công trường, hoặc container CI không clone toàn bộ repo Hub, Spoke không thể đọc trực tiếp filesystem của Hub, dẫn đến lỗi `HubNotFoundError`. Các công cụ tra cứu Seam (`find-seam`) và Linter (`check_dependency_contracts.py`) không thể đối soát hợp đồng Seam (ADR-0061).
 
 ---
 
@@ -127,6 +130,54 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
 - **Zero-Bloat Spokes:** Các Spoke không tải bản sao kho dữ liệu 700 MB, thay vào đó gọi FastMCP tool `query_legal_ground_truth` (ADR 0010 / ADR 0044) hoặc tải tệp chỉ mục nén `clauses_compact_index.json` (~8.5 MB).
 - **Cache Bất Biến `.npy`:** Lưu ma trận nhúng vector đi kèm sidecar `embeddings.npy.sha256` đối soát với mã băm nội dung văn bản nguồn, bảo đảm truy xuất tức thì trong 2ms mà vẫn duy trì tính toàn vẹn pháp lý (ADR 0059).
 
+### 6. Giao Thức Phân Phối Catalog Đa Tầng (Federated Spoke Catalog & Seam Distribution Protocol)
+*(Bổ sung theo Amendment 2026-09-30 — Thẩm định đồng cấp bởi Grok 4.7 xhigh tại Issue #374)*
+
+Nhằm giải quyết triệt để vấn đề phân phối tri thức quản trị và hợp đồng Seam (ADR-0061) cho các Federated Spokes không chia sẻ hệ thống tệp vật lý với Hub, nền tảng chuẩn hóa kiến trúc **Hybrid Multi-Tier Distribution**:
+
+#### A. Phân Tầng Giao Thức (Tiered Architecture)
+1. **Tier 1 (Zero-Latency Local Snapshot):**
+   - Mọi Spoke lưu trữ bản snapshot nguyên byte (raw bytes) tại `.agents/cache/hub-catalog/snapshots/<sha>/` gồm:
+     + `seam-contracts.yaml`: Bản sao đúng từng byte từ Hub root.
+     + `catalog.yaml`: Bản sao đúng từng byte từ Hub `.agents/skills/platform-loader/catalog.yaml`.
+     + `.catalog_provenance.json`: Tệp siêu dữ liệu chứng thực nguồn gốc.
+   - Quá trình hoán đổi phiên bản sử dụng thao tác nguyên tử `os.replace` trên con trỏ văn bản/symlink `current` trỏ tới snapshot hợp lệ.
+   - Mọi thao tác đọc (Reader) chỉ mở snapshot thông qua `current`, không sử dụng lock file để tránh xung đột luồng và nghẽn tiến trình.
+   - **Cách ly Định Danh Oracle:** Tuyệt đối không lưu snapshot tại `.agents/catalog.yaml` để tránh làm sai lệch nhận diện `HubDiscoverer._is_valid_hub` (gây hiện tượng nhận diện nhầm Spoke thành Hub).
+2. **Tier 2 (Non-blocking Subprocess Probe & Graceful Fallback):**
+   - **Rào chắn chống treo Socket (DNS/Tailscale Hanging Defense):** Tiến trình Linter và CLI tra cứu tuyệt đối **không mở socket mạng trực tiếp** trong tiến trình chính (do hàm `getaddrinfo` của glibc chạy blocking dưới kernel và không thể ngắt bởi client-side HTTP timeout).
+   - Mọi hoạt động kiểm tra cập nhật (probe) bắt buộc thực thi trong một tiến trình con nền (background subprocess), bị áp trần ngắt cưỡng bức bằng `SIGKILL` tại **1.5 giây**.
+   - **Phân định Mặt phẳng (Plane Separation):** Endpoint cập nhật snapshot lấy từ biến môi trường `CCBA_CATALOG_URL` (Control Plane) hoặc GitHub Raw URL. Nghiêm cấm trỏ vào LiteLLM Gateway (:8090 — Data Plane suy luận gắn hạn mức token/RPM).
+   - **Monotonic Debounce:** Giới hạn tần suất thăm dò tối thiểu 15 phút một lần trong cache máy cục bộ.
+   - **Biên lai Kiểm toán Bắt buộc:** Biên lai `find-seam` bắt buộc chứa trường `freshness`:
+     + `fresh`: Mã băm khớp với bản probe thành công gần nhất (< 15 phút).
+     + `stale`: Mã băm lệch với remote nhưng chưa cập nhật snapshot.
+     + `unverified`: Mất mạng hoặc timeout, sử dụng an toàn snapshot cục bộ.
+     + `corrupt`: Mã băm nội dung thực tế không khớp với `.catalog_provenance.json` (thoát mã lỗi 1).
+3. **Tier 3 (Phân Định Thực Thi Seam qua `binding.mode`):**
+   - Hợp đồng Seam trong `seam-contracts.yaml` bắt buộc phân định cách gọi qua trường `binding.mode`:
+     + `local_import`: Thực thi qua import module Python trong virtualenv của Spoke (yêu cầu cài đặt package qua pip/wheel).
+     + `remote_mcp`: Ủy quyền thực thi qua MCP Tool trên DGX Spark (:8004/:8008). Khi mất mạng, trả về `invoke: blocked`, lý do `health_timeout`, kích hoạt cách ly Quarantine có thời hạn theo ADR-0061; cấm viết script thay thế ad-hoc.
+     + `skill`: Kích hoạt qua slash-command sau khi đồng bộ skill.
+
+#### B. Đặc Tả Siêu Dữ Liệu Chứng Thực (.catalog_provenance.json)
+```json
+{
+  "schema": 1,
+  "seam_contracts_sha256": "<raw_bytes_sha256_of_seam_contracts>",
+  "catalog_sha256": "<raw_bytes_sha256_of_catalog>",
+  "hub_commit": "<40_hex_git_commit_or_null>",
+  "source_url": "<CCBA_CATALOG_URL_or_filesystem_path>",
+  "fetched_at_utc": "<ISO_8601_UTC_timestamp>"
+}
+```
+
+#### C. Quy Định Mã Lỗi & Phân Giải Hub
+- **Thứ tự phân giải:**
+  1. Nếu `CCBA_HUB_PATH` trỏ tới Hub hợp lệ có filesystem: Đọc trực tiếp từ file gốc Hub.
+  2. Nếu không có Hub filesystem: Đọc snapshot từ con trỏ `current` trong cache Spoke.
+  3. Nếu không tìm thấy cả Hub lẫn snapshot `current`: Ném mã lỗi `CatalogSnapshotMissing` (yêu cầu chạy `ccba-init-spoke` hoặc tải snapshot), tuyệt đối không ngụy trang thành `RAW_BYPASS_RESTRICTIONS`.
+
 ---
 
 ## Consequences
@@ -136,7 +187,9 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
 - **An Ninh Cấp Doanh Nghiệp (Multi-User Hardening):** Đóng kín hoàn toàn các lỗ hổng lộ lọt token và dữ liệu riêng tư trên thư mục home, cho phép đội ngũ kỹ sư (`tta`, `tat`, `mtt`) cùng lập trình chung mượt mà không xung đột quyền ghi.
 - **Tự Động Hóa Vận Hành Doanh Nghiệp:** Cầu nối Python M365 Outbound Bridge cho phép đưa dữ liệu kiểm định BIM và tiến độ CDE từ DGX Spark lên trực tiếp 59 danh mục SharePoint mà không cần can thiệp thủ công.
 - **Kiểm Soát Chi Phí Minh Bạch:** Quản trị hạn mức API từng Spoke qua Virtual Keys, ngăn ngừa rủi ro cạn kiệt ngân sách hoặc lỗi cascade failures.
+- **Phân Phối Catalog Đa Tầng Không Xung Đột (ADR-0060 Mục 6):** Cho phép các Spoke hoạt động độc lập và ngoại tuyến 100% với độ trễ < 2ms, đồng thời phát hiện cập nhật tự động khi có mạng mà không bao giờ bị treo bởi blocking DNS/Tailscale.
 
 ### Tiêu Cực & Thách Thức (Trade-offs & Mitigations)
 - **Yêu Cầu Quyền Quản Trị Hệ Thống Cho POSIX ACLs:** Script `setup_ccba_devs_acls.sh` yêu cầu quyền `sudo` để gán nhóm và quyền trên `/home/vvc`. *Biện pháp:* Đóng gói script độc lập có cơ chế kiểm tra an toàn và chạy thẩm định `bash -n` trước khi thực thi.
 - **Giới Hạn Tốc Độ Microsoft Graph API:** Việc giới hạn 5 req/s có thể kéo dài thời gian đồng bộ ban đầu khi nạp hàng ngàn hồ sơ CDE. *Biện pháp:* Kết hợp cơ chế lọc Delta Query và chỉ đồng bộ các tệp có cập nhật mới.
+- **Độ Phức Tạp Quản Lý Snapshot Cache Trên Spoke:** Cần cơ chế dọn dẹp các snapshot cũ hơn để không chiếm dụng dung lượng đĩa. *Biện pháp:* Giữ tối đa 2 snapshot gần nhất (bản `current` và bản trước đó) tại `.agents/cache/hub-catalog/snapshots/`.

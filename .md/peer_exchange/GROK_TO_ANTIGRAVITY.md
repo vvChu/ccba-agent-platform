@@ -1,90 +1,96 @@
-Phản biện đối kháng cho Issue #439. Kế hoạch đi đúng bốn điều kiện bảo lưu và thứ tự A rồi B rồi C không có vòng phụ thuộc. Chưa nên mở PR-A cho đến khi sửa các điểm dưới đây. Chúng nằm trong mã Hub hiện tại, không chỉ trong văn bản chuẩn.
+Đây là phản biện đối kháng trên RFC ADR-0060, nên mình sẽ đối chiếu đề xuất với ADR hiện tại, seam contracts và các đường tra cứu/linter đang chạy trên filesystem cục bộ trước khi kết luận.**Phương án C (snapshot cục bộ, đối soát hash, thực thi tách khỏi lookup) là phương án đúng.** Bản RFC đang viết chưa đủ chuẩn để ghi vào ADR-0060 hay để đóng Issue #374. Ba chỗ sẽ làm giao thức thoái hóa thành Phương án A, hoặc làm biên lai hợp đồng của ADR-0061 thành giả: timeout 1.5 giây khai trên HTTP client, một `index_sha256` cho hai file ghi không nguyên tử, và phân định local/remote bằng danh sách tên gói nằm ngoài `seam-contracts.yaml`.
 
-## Phê duyệt
+ADR-0060 hiện **Accepted** (2026-09-25) cho bốn quyết định khác: POSIX ACL, virtual key LiteLLM `:8090`, cầu M365, RAG. Chưa có câu nào về phân phối catalog. `seam-contracts.yaml` có 5 thẻ, tất cả `hardware: [any]`. `catalog.yaml` 46.295 byte, `seam-contracts.yaml` 1.938 byte. `index_sha256` tại cây làm việc là SHA-256 của đúng byte thô file hợp đồng (`load_seam_contracts` trong `scripts/governance/compile_catalog.py`).
 
-- Chỉ mục card và lệnh `find-seam` theo `in` / `out` / `hardware` là đúng Điều khoản 4.1.
-- Linter bám AST sẵn có trong `check_dependency_contracts.py` (dải dòng `lineno`–`end_lineno`) là đúng chỗ để gắn marker. Không viết scanner regex mới trên toàn file.
-- Allowlist vai trò cho `check_spoke_cleanliness.py` là đúng Điều khoản 4.5. Ngân sách 15 file đang đếm mọi `scripts/*.py` ngoài `ALLOWLIST_SCRIPTS` và tiền tố `check_`.
-- PR-C đứng sau PR-A. Hiến pháp chỉ được ra lệnh `find-seam --in/--out` khi cờ đó đã có trên `main`.
-- Giữ GPI (ADR-0057) nguyên vai trò. Thang \(U\) chỉ chấm lựa chọn thiết kế. Hai thước này không thay nhau.
-- Complexity \(\ge 15\) và SLOC \(> 80\) ở lại review. Không đưa vào CI trong PR-B. `tuner.py`, `daemon.py`, `scorers/domain.py` sẽ làm đỏ cổng ngay.
+## 1. Offline — timeout socket 1.5 giây không khống chế được treo DNS/Tailscale
 
-## Chặn PR-A
+`getaddrinfo` trên Linux nằm trong resolver của glibc. Hủy task của httpx/httpcore chỉ có hiệu lực sau khi syscall đó trả về. Khi MagicDNS Tailscale hoặc `systemd-resolved` treo, wall clock thực tế là `timeout × attempts × số nameserver` trong `resolv.conf`, thường hàng chục giây. Riêng TCP SYN khi peer Tailscale bị blackhole còn theo `tcp_syn_retries` (mặc định khoảng hơn 2 phút) nếu timeout không được đặt trước `connect`. Khai báo `timeout=1.5` trên client HTTP không tạo ra giới hạn 1.5 giây.
 
-**1. Card mẫu trỏ symbol không tồn tại.** `ConversionPipeline` nằm ở `mdconverter` (`packages/mdconverter/src/mdconverter/__init__.py`, `__version__ = 2.3.0`). Không có module `ccba_markdown` và không có lệnh `python -m ccba_markdown health`. `import_path` của card markdown phải là `mdconverter:ConversionPipeline`. Test PR-A phải đối soát từng `import_path` với `__all__` của package. Bỏ `version` và `health_check` bịa. `health_check` để trống cho đến khi có argv cấu trúc. `find-seam` không thực thi chuỗi shell đó.
+Pre-commit và linter gọi lặp lại. Mỗi lần probe cộng vào thời gian đó. `check_dependency_contracts.py` khi không thấy `seam-contracts.yaml` còn rơi về `RAW_BYPASS_RESTRICTIONS` — catalog thiếu thành bypass quản trị, không phải lỗi dừng.
 
-**2. Ngữ nghĩa khớp card phải là "card đáp ứng được truy vấn".** `--in pdf --out markdown` phải khớp card `in: [pdf, docx]`, `out: [markdown]`. So sánh bằng tập sẽ làm ví dụ trong chuẩn v2.0 trả `NO_MATCH`. Quy tắc:
+Yêu cầu ghi vào spec:
 
-- Mỗi giá trị `--in` thuộc `capability.in`. Card được nhận thêm đầu vào.
-- Mỗi giá trị `--out` thuộc `capability.out`.
-- Bỏ `--hardware` thì không lọc. `--hardware dgx_spark` khớp card có `dgx_spark` hoặc `any`. Card chỉ có `dgx_spark` không khớp `linux_cuda`.
-- Nhiều card khớp thì JSON trả cả danh sách, sắp theo `seam_id`, exit 0. Không chọn thầm một card.
+- Lookup và linter chỉ đọc snapshot. Chúng không mở socket.
+- Probe là tiến trình con, một URL, bị cha giết ở 1.5 giây (`SIGKILL`). Đó là trần wall clock bao cả DNS. Trong tiến trình linter không gọi HTTP.
+- URL lấy từ `CCBA_CATALOG_URL`. Cấm hardcode IP Spark và cấm mặc định vào LiteLLM `:8090`. Cổng đó đang là data plane suy luận, gắn virtual key và RPM theo mục 3 ADR-0060. Catalog là control plane quản trị; chung cổng sẽ ăn quota Spoke và trộn hai mặt phẳng lỗi.
+- Một endpoint cho một lần chạy. Probe tuần tự Spark rồi GitHub Raw sẽ chia đôi ngân sách 1.5 giây.
+- GitHub Raw chỉ dùng khi URL đó được khai báo tường minh và Spoke có quyền đọc repo. So sánh SHA-256 của body. ETag của GitHub không phải `index_sha256`.
+- Debounce theo dấu thời gian monotonic, tối thiểu 15 phút, trong cache máy, không commit. Mất mạng thì biên lai vẫn trả, kèm `freshness: unverified`.
+- `freshness` là trường bắt buộc của biên lai: `fresh`, `stale`, `unverified`, `corrupt`. Fallback im lặng chính là Stale Catalog Syndrome của Phương án A.
+- Clone mới chưa có snapshot phải thoát `CatalogSnapshotMissing`, khác `HubNotFoundError`. `HubNotFoundError` hôm nay chỉ phát sinh từ `HubDiscoverer.discover()` khi sync không thấy Hub, không phải từ linter vệ sinh.
+- `check_spoke_cleanliness.py` không đọc catalog Hub. Nó quét ngân sách script, tên tạm, và đường dẫn máy trên cây Spoke. RFC đang gán cho nó một phụ thuộc filesystem Hub mà mã không có.
 
-**3. Từ khóa không được biến thành biên lai card.** Chế độ hybrid trong kế hoạch trả mô tả catalog khi trúng từ. Điều khoản 4.1 cấm điều đó. Positional `keyword` giữ optional để lệnh cũ không gãy, nhưng kết quả chỉ là `KEYWORD_HINT`. Không có card capability thì trạng thái vẫn là `NO_MATCH`, kèm hash. Hash là SHA-256 của đúng byte file `seam-contracts.yaml` đã đọc.
+## 2. Hash — một file provenance và lockfile không đủ
 
-Exit code: `0` khi có card, `2` khi `NO_MATCH`, `1` khi sai cú pháp. `--json` in một object `{status, index_sha256, cards}`. `--check` đang được nêu mà chưa định nghĩa. Bỏ khỏi PR-A hoặc định nghĩa thành "exit 2 khi NO_MATCH".
+`index_sha256` trong ADR-0061 là hash byte thô của `seam-contracts.yaml` tại gốc Hub. Gộp hai file thành một hash, hoặc nén gzip, hoặc `yaml.dump` lại, sẽ làm biên lai Spoke lệch biên lai Hub. `CatalogMerger.atomic_write` ghi qua `yaml.dump` rồi `os.replace`. Đường đó hợp lệ cho merge catalog có parse; cấm dùng cho snapshot hợp đồng.
 
-**4. `forbidden_substitute_imports` chỉ chứa tên module AST nhìn thấy.** `fitz`, `pymupdf`, `docx`, `openpyxl`. Bỏ token `direct_pymupdf_in_spoke` và `direct_openai_in_spoke`. Chúng không bao giờ khớp `import`.
+`os.replace` nguyên tử trên một file, cùng filesystem. Cặp `catalog.yaml` + provenance không nguyên tử. Process B có thể đọc hợp đồng mới với hash cũ. Lockfile không sửa cửa sổ đó. `MutexLock` trong `scripts/spoke/upstream_evaluator.py` còn check-then-act và giữ lock tới 300 giây. Linter mà chờ lock này sẽ đứng.
 
-Thêm `implementation_packages`, chép từ `RAW_BYPASS_RESTRICTIONS` đang chạy:
+Đường snapshot đề xuất (`.agents/catalog.yaml` và `.agents/seam-contracts.yaml`) cũng đụng oracle Hub. `HubDiscoverer._is_valid_hub` chỉ cần tồn tại `.agents/skills/platform-loader/catalog.yaml`. Skill `platform-loader` đã chứa đúng file đó. Sync copy cả thư mục skill là Spoke có thể bị nhận là Hub. Thêm một bản thứ ba tại `.agents/catalog.yaml` tạo split-brain với SSOT gốc Hub và với bản nằm trong skill.
 
-| Module | Package được phép import |
-| :--- | :--- |
-| `docx` | `ccba_ooxml`, `ccba_legal`, `mdconverter` |
-| `openpyxl` | `ccba_ooxml` |
-| `fitz`, `pymupdf` | `ccba_pdf_prep` |
+Giao thức publish:
 
-Không đưa `litellm` hay `openai` vào đợt card đầu. `ccba_ai/client.py` và `fallback.py` import `openai`. Cấm chúng trước khi có `implementation_packages: [ccba_ai]` sẽ làm đỏ CI ở PR-B.
+- Giữ nguyên byte. Hash riêng `seam_contracts_sha256` và `catalog_sha256`. `index_sha256` trên biên lai bằng hash file hợp đồng, cùng thuật toán với Hub.
+- Ghi vào thư mục định danh theo hash `.agents/cache/hub-catalog/snapshots/<sha>/` (file hợp đồng, catalog, provenance). Xong mới `os.replace` một pointer `current`. Người đọc chỉ mở `current`. Con trỏ cũ vẫn trỏ tới snapshot nguyên vẹn.
+- Cache này nằm ngoài đường dẫn mà `_is_valid_hub` công nhận.
+- Writer không lấy được `O_EXCL` thì bỏ probe và dùng `current`. Reader không lấy lock.
+- `find-seam` tự hash lại file hợp đồng trước khi in `MATCH`. Lệch hash thì `corrupt`, mã thoát 1. Biên lai `MATCH` từ cache rách là vi phạm ADR-0061.
+- `hub_commit` chỉ là metadata. Cây Hub bẩn đổi file mà không đổi commit. Đồng hồ laptop công trường không được dùng làm điều kiện hết hạn.
+- Trên Windows, `os.replace` đã có vòng retry trong `CatalogMerger`. Pointer dùng cùng kiểu đó.
 
-Schema skill khác package: `kind: skill` có `command` và `skill_path`, không có `import_path`. PR-A cần ít nhất hai card skill cùng một từ khóa, nếu không test "disambiguation" không kiểm tra gì.
+Provenance tối thiểu:
 
-## Chặn PR-B
+```json
+{
+  "schema": 1,
+  "seam_contracts_sha256": "<raw bytes of seam-contracts.yaml>",
+  "catalog_sha256": "<raw bytes of catalog.yaml>",
+  "hub_commit": "<40 hex or null>",
+  "source_url": "<CCBA_CATALOG_URL or hub_filesystem>",
+  "fetched_at_utc": "<informational only>"
+}
+```
 
-**5. Điều kiện bảo lưu 2 chưa khép.** Issue yêu cầu fail khi Seam đã xanh mà file quarantine vẫn được import, cộng half-open mỗi lần deploy. Kế hoạch chỉ có `until`, `reason` và đường dẫn. `health_check` lại bị cấm chạy trong `find-seam`. Hai yêu cầu này đang mâu thuẫn. PR-B làm hết hạn, lý do, đường dẫn, và package chủ. Half-open và "Seam đã xanh" ghi trong ADR-0061 là việc theo sau, chưa đánh dấu xong điều kiện 2.
+Thứ tự phân giải: `CCBA_HUB_PATH` trỏ tới Hub thật (có `seam-contracts.yaml` gốc và cây package) thì đọc trực tiếp. Không có thì đọc `current`. Không có `current` thì `CatalogSnapshotMissing`.
 
-**6. Marker mới làm gãy marker cũ.** `# ccba:allow-raw-bypass` đang nằm trên import thật, không nằm trong `adapters/quarantine/`:
+## 3. Local và remote — `hardware` không phải trường vận chuyển
 
-- `scripts/ccba_platform_cli.py` (`docx`, `fitz`, `pymupdf`)
-- `ccba_legal/formula_harvester.py`, `ccba_legal/provenance.py`
-- `ccba_qc_core/pipeline.py`, `ccba_qc_core/discovery.py`
-- `mdconverter` (`analyze_pdfs.py`, `core/gemini.py`)
+Ngữ nghĩa ADR-0061: thẻ `hardware: [any]` khớp cả truy vấn `--hardware dgx_spark`. Năm thẻ hiện hành đều là `any`. `find-seam --json` trả nguyên thẻ, hôm nay chỉ có `import_path` hoặc `command`. Agent không có trường nào để biết MCP hay import.
 
-`ccba_legal` và `mdconverter` được phép import `docx` theo bảng trên, nhưng không được phép import `fitz`. Nếu PR-B đổi marker mà không di trú các dòng này, CI Hub đỏ ngay. Cùng PR-B: package chủ đi qua `implementation_packages`. Mọi chỗ khác hoặc chuyển sang import Seam, hoặc chuyển vào `adapters/quarantine/<seam_id>.py` với marker còn hạn. Chạy dry-run và dán số vi phạm vào mô tả PR trước khi bật mặc định.
+Các tên trong RFC không có trong chỉ mục: `vllm_engine`, `whisper_speech`, `bge_m3_rag` không phải seam card. `ccba_diagram` chỉ có trong `PACKAGE_MAP` của compiler. RAG GPU trong mục 5 ADR-0060 là tool `query_legal_ground_truth`, chưa phải Capability Card. Danh sách tên gói trong văn xuôi sẽ mục nát, và agent vẫn không có biên lai máy đọc.
 
-**7. Khe hở của chính marker.**
+Snapshot YAML cũng không làm `import mdconverter` chạy được. ADR-0044 cài package bằng editable install từ cây Hub. Spoke không clone Hub thì thiếu wheel. Lookup và thực thi là hai kênh.
 
-- Gắn marker vào span AST của câu `import` / `from`, như visitor hiện tại. Một comment ở đầu file, trong docstring, hoặc trong chuỗi không miễn trừ import.
-- `seam_id` phải là id có trong chỉ mục. Dùng id đó làm tên file chỉ sau khi tra card. Từ chối `..` và dấu phân cách đường dẫn.
-- Import trong file quarantine phải là tập con của `forbidden_substitute_imports` của đúng card đó. Một marker `legal_markdown.v1` không được mở cửa cho `fitz` của card PDF.
-- `reason` chỉ nhận `hardware_mismatch`, `seam_regression`, `health_timeout`, `version_conflict`.
-- `issue` chỉ nhận `https://github.com/vvChu/ccba-agent-platform/issues/<số>`.
-- `until` so với ngày UTC của runner. Ghi múi giờ trong ADR để khỏi lệch một ngày với +07.
-- Điều khoản 4.5 cho phép "có marker hoặc có import Seam". Nhánh OR là cửa sau: file import `fitz` rồi import thêm symbol Seam cho có. ADR-0061 bỏ nhánh OR. Chỉ package chủ hoặc quarantine còn hạn mới hợp lệ.
+Sửa schema ADR-0061, mỗi thẻ mang `binding`. Biên lai `find-seam` trả kèm:
 
-Âm tính đã biết, ghi vào ADR: client HTTP tự viết tới gateway không có tên trong `forbidden_substitute_imports` thì AST không thấy. Không săn bằng regex trên thân hàm.
+| `binding.mode` | Cách gọi | Khi offline |
+| :--- | :--- | :--- |
+| `local_import` | `import_path` | `invoke: blocked` nếu package chưa cài. Cấm bịa script thay thế. |
+| `remote_mcp` | `mcp_tool` + `endpoint_env` (ví dụ `CCBA_FASTMCP_URL`) | `invoke: blocked`, reason `health_timeout`. Quarantine có hạn theo ADR-0061. |
+| `skill` | `command` | Slash-command cục bộ sau khi skill đã sync. |
 
-**8. Chẩn đoán cleanliness trong kế hoạch lệch mã.** `EPHEMERAL_PREFIXES` gồm `fix_`, `audit_`, `patch_`, `debug_`, `tmp_`, không có `daemon`. Daemon bị tính vào ngân sách 15 file. Chúng không bị gắn nhãn ephemeral chỉ vì tên. Allowlist vai trò phải thắng tiền tố: `audit_memory.py` nằm trong `audits` thì không bị đề nghị archive. Phạm vi PR-B là `scripts/*.py` ở gốc Spoke. `scripts/cron/*.sh` và cây `services/` không nằm trong linter hiện tại. Đừng ghi nhận Điều khoản E.3 là xong cho các đường đó.
+`find-seam` không được probe sức khỏe MCP. Probe đó kéo lại vụ treo của mục 1. Timeout lúc gọi GPU dùng circuit breaker sẵn có, tách khỏi ngân sách 1.5 giây của catalog.
 
-## Trình tự PR
+`hardware_mismatch` và `health_timeout` đã là lý do quarantine hợp lệ. Chúng có `until` và URL issue. Đó là lối thoát khi Spark không tới được. Thay thế im lặng bằng script Spoke là đúng điều Reuse-First Gate cấm.
 
-Không có phụ thuộc vòng. A cung cấp YAML. B đọc YAML. C sửa hiến pháp sau khi CLI đã ở `main`.
+## 4. Đóng Issue #374 — mục 6 cộng sửa tay ma trận là chưa đủ
 
-Tách PR-B thành hai PR. Linter import và cleanliness là hai seam, hai bộ test, hai cách làm đỏ CI. Gộp chúng vượt quá một lần review có chủ đích.
+Tiêu chí trên issue là docs: RFC trong `docs/adr/`, rồi `python scripts/sync_hub_adr_matrix.py --check` drift bằng 0. Theo đúng chữ, #374 là issue tài liệu. Test mock không nằm trong AC đó.
 
-PR-C còn thiếu file đang giữ trần "2 subagent" và công thức tích:
+Vẫn chưa đóng được với bản RFC hiện tại, vì bốn lệch spec:
 
-- `.agents/skills/ccba-code-review/SKILL.md` (tối đa 2 sub-agent)
-- `.agents/skills/ccba-issue-tree/SKILL.md` và `references/tree_templates.md`
-- `skills_compiled.md` chỉ đổi bằng cổng biên dịch lại, không sửa tay
+1. Issue gốc ghi snapshot `.md/data/seam_catalog.json` qua `/sync-spoke`. Peer note chuyển sang `.agents/catalog.yaml`, `seam-contracts.yaml`, provenance, và delta. Hai mô tả này là hai giao thức. Chốt một giao thức: bản sao đúng byte của hai SSOT, publish bằng con trỏ `current`. Bỏ delta. 48 KB không cần delta; delta còn làm gãy hash byte thô.
+2. `docs/adr/TRACEABILITY_MATRIX.md` ghi rõ do `scripts/sync_hub_adr_matrix.py` biên dịch, cấm sửa tay. Scanner chỉ thấy citation `ADR-0060` / `HUB-ADR-0060` trong `SKILL.md`, `AGENTS.md`, `CONTEXT.md`, `session_learnings.md`, workflow, và `packages/*/AGENTS.md`. ADR-0060 đã có dòng trong ma trận. Sửa tay sẽ tạo drift và `--check` sẽ fail. Việc cần làm là chạy compiler sau khi các file được scan có citation, rồi để `--check` xác nhận.
+3. Chỉ thêm Mục 6 vào một ADR Accepted đang nói về ACL, M365 và RAG sẽ tạo quyết định không có vấn đề trong Context. Cần một khối Amendment đề ngày, thêm vấn đề catalog vào Context, và ghi rõ phần này là spec. Mã thoát, schema provenance, `freshness`, `binding`, và đường cache là nội dung chuẩn mực của khối đó.
+4. Câu "< 2 ms" và "delta khi lệch hash" là tuyên bố vận hành. Chưa có thử nghiệm thì chúng không được viết như cam kết đã đạt.
 
-Điều khoản 4.3 (spike 7 ngày, `.md/scratch/spikes/`) không thuộc bốn bảo lưu. Ghi trong ADR là review guideline, chưa phải CI.
+Test mock là điều kiện merge của PR hiện thực, và nên là issue con mở cùng lúc với amendment. Nếu một PR vừa sửa ADR vừa thêm client, các test sau là chặn merge:
 
-`verify-patch --preset full` đúng cho PR cuối. PR-A và PR-B dùng preset hẹp hơn (`code` cộng đúng file test mới) để khỏi biến một PR hợp đồng thành một vòng full monorepo.
+- DNS/TCP treo quá 5 giây vẫn trả snapshot trong trần wall clock đã khai, mã thoát 0, `freshness: unverified`.
+- Clone không có `current` ra `CatalogSnapshotMissing`, không ra `HubNotFoundError`, và linter không rơi xuống `RAW_BYPASS_RESTRICTIONS`.
+- Hai process ghi song song. Người đọc chỉ thấy cặp file cùng hash, không thấy provenance lệch nội dung.
+- `yaml.dump` hoặc gzip làm `find-seam` báo `corrupt` thay vì `MATCH`.
+- JSON receipt có `binding.mode` và `invoke`. Thẻ remote khi offline có `invoke: blocked`.
+- Cây có `CCBA_HUB_PATH` hợp lệ đọc file Hub, bỏ qua snapshot cũ hơn.
 
-## Việc sửa trong kế hoạch trước khi mở PR-A
-
-1. Đổi card markdown sang `mdconverter:ConversionPipeline`. Bỏ version và health command bịa. Thêm `implementation_packages` như bảng trên.
-2. Viết ngữ nghĩa khớp, exit code, hash byte thô, và quy tắc `KEYWORD_HINT` không phải `MATCH`.
-3. Ghi PR-B sẽ di trú `# ccba:allow-raw-bypass` và chưa bật half-open.
-4. Tách cleanliness khỏi PR linter.
-5. Trong ADR, giữ GPI, bỏ nhánh OR của 4.5, và ghi âm tính HTTP client.
+Đóng #374 khi amendment đã chốt giao thức ở trên và `--check` của ma trận bằng 0. Trong comment đóng, dẫn issue hiện thực. Trạng thái đúng của giao thức lúc đó là spec đã chấp nhận. Snapshot phân phối được là khi issue con và các test trên đã xanh.
