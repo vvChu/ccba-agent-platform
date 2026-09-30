@@ -1,0 +1,61 @@
+# seam-contracts.yaml - CCBA Platform Capability Contracts Specification (ADR-0061)
+# Single Source of Truth for Platform-Aware KISS v2.0 Capability Seams.
+version: "1.0.0"
+cards:
+  - seam_id: legal_markdown.v1
+    kind: package
+    import_path: mdconverter:ConversionPipeline
+    capability:
+      in: [pdf, docx]
+      out: [markdown]
+    hardware: [any]
+    failure_modes: [corrupt_pdf, timeout, unsupported_layout]
+    owner: hub-docs
+    implementation_packages: [mdconverter]
+    forbidden_substitute_imports: [fpdf]
+
+  - seam_id: ooxml_processor.v1
+    kind: package
+    import_path: ccba_ooxml:DocxDocument
+    capability:
+      in: [docx, xlsx, pptx]
+      out: [docx, structured_table, markdown]
+    hardware: [any]
+    failure_modes: [corrupted_zip, schema_mismatch]
+    owner: hub-core
+    implementation_packages: [ccba_ooxml, ccba_legal, mdconverter]
+    forbidden_substitute_imports: [openpyxl, docx]
+
+  - seam_id: pdf_preprocessor.v1
+    kind: package
+    import_path: ccba_pdf_prep:PDFProcessingPipeline
+    capability:
+      in: [pdf]
+      out: [tiles, segments, text]
+    hardware: [any]
+    failure_modes: [password_protected, render_error]
+    owner: hub-core
+    implementation_packages: [ccba_pdf_prep]
+    forbidden_substitute_imports: [fitz, pymupdf]
+
+  - seam_id: legal_ingest.v1
+    kind: skill
+    command: /ccba-legal-ingest
+    skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
+    capability:
+      in: [pdf, docx, tvpl_url]
+      out: [okf_bundle, clauses_json]
+    hardware: [any]
+    failure_modes: [tvpl_captcha, invalid_okf_structure]
+    owner: hub-legal
+
+  - seam_id: legal_advisor.v1
+    kind: skill
+    command: /ccba-legal-advisor
+    skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
+    capability:
+      in: [legal_query, project_context]
+      out: [legal_opinion_markdown]
+    hardware: [any]
+    failure_modes: [missing_legal_basis, contradictory_regulations]
+    owner: hub-legal

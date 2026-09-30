@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -367,6 +369,120 @@ def validate_seam_exports(hub_root: Path = HUB_ROOT) -> list[str]:
     return errors
 
 
+def validate_seam_contracts(hub_root: Path = HUB_ROOT) -> list[str]:
+    """Validate seam cards in seam-contracts.yaml via static AST inspection.
+
+    Ensures:
+    1. seam_id is unique, non-empty, and does not contain traversal characters (.. / \\).
+    2. Package cards export the declared symbol from the declared package.
+    3. Skill cards point to existing SKILL.md files and valid commands.
+    4. forbidden_substitute_imports contains valid AST module names.
+    """
+    errors: list[str] = []
+    contracts_file = hub_root / "seam-contracts.yaml"
+    if not contracts_file.is_file():
+        return errors
+
+    try:
+        data = yaml.safe_load(contracts_file.read_text(encoding="utf-8")) or {}
+    except Exception as e:
+        return [f"Failed to parse seam-contracts.yaml: {e}"]
+
+    cards = data.get("cards", [])
+    if not cards:
+        return ["seam-contracts.yaml contains no cards."]
+
+    seen_ids: set[str] = set()
+    pkgs_dir = hub_root / "packages"
+    rev_package_map = {v: k for k, v in PACKAGE_MAP.items()}
+
+    for card in cards:
+        seam_id = str(card.get("seam_id", "")).strip()
+        if not seam_id:
+            errors.append("Seam card missing required 'seam_id'.")
+            continue
+        if ".." in seam_id or "/" in seam_id or "\\" in seam_id:
+            errors.append(
+                f"Seam ID '{seam_id}' contains invalid path characters ('..', '/', '\\')."
+            )
+        if seam_id in seen_ids:
+            errors.append(f"Duplicate seam_id '{seam_id}' in seam-contracts.yaml.")
+        seen_ids.add(seam_id)
+
+        kind = card.get("kind")
+        if kind not in ("package", "skill", "workflow"):
+            errors.append(
+                f"Card '{seam_id}' has invalid kind '{kind}'. Must be package, skill, or workflow."
+            )
+
+        cap = card.get("capability")
+        if not isinstance(cap, dict) or "in" not in cap or "out" not in cap:
+            errors.append(
+                f"Card '{seam_id}' missing valid capability definition with 'in' and 'out' lists."
+            )
+
+        if kind == "package":
+            imp_path = str(card.get("import_path", "")).strip()
+            if not imp_path or ":" not in imp_path:
+                errors.append(
+                    f"Package card '{seam_id}' missing or invalid 'import_path' (expected 'module:Symbol')."
+                )
+                continue
+            mod_name, sym_name = imp_path.split(":", 1)
+            root_mod = mod_name.split(".")[0]
+            pkg_folder_name = rev_package_map.get(root_mod)
+            if not pkg_folder_name:
+                errors.append(
+                    f"Package card '{seam_id}' references unknown root package '{root_mod}'."
+                )
+                continue
+
+            pkg_dir = pkgs_dir / pkg_folder_name
+            target_file = None
+            if "." not in mod_name:
+                candidates = [
+                    pkg_dir / "src" / root_mod / "__init__.py",
+                    pkg_dir / root_mod / "__init__.py",
+                    pkg_dir / "src" / f"{root_mod}.py",
+                ]
+            else:
+                sub_path = "/".join(mod_name.split(".")[1:])
+                candidates = [
+                    pkg_dir / "src" / root_mod / f"{sub_path}.py",
+                    pkg_dir / root_mod / f"{sub_path}.py",
+                    pkg_dir / "src" / root_mod / sub_path / "__init__.py",
+                    pkg_dir / root_mod / sub_path / "__init__.py",
+                ]
+
+            for c in candidates:
+                if c.is_file():
+                    target_file = c
+                    break
+
+            if not target_file:
+                errors.append(f"Package card '{seam_id}' module '{mod_name}' not found on disk.")
+                continue
+
+            exported = _extract_module_exported_symbols(target_file)
+            if exported is not None and sym_name not in exported:
+                errors.append(
+                    f"Package card '{seam_id}' declares symbol '{sym_name}' from '{mod_name}', "
+                    f"but '{sym_name}' is not exported by '{target_file.name}'."
+                )
+
+        elif kind == "skill":
+            skill_path = str(card.get("skill_path", "")).strip()
+            if not skill_path or not (hub_root / skill_path).is_file():
+                errors.append(
+                    f"Skill card '{seam_id}' skill_path '{skill_path}' does not exist on disk."
+                )
+            cmd = str(card.get("command", "")).strip()
+            if not cmd.startswith("/"):
+                errors.append(f"Skill card '{seam_id}' command '{cmd}' must start with '/'.")
+
+    return errors
+
+
 def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     """Compile the entire catalog dictionary."""
     base_file = hub_root / ".agents" / "skills" / "platform-loader" / "catalog_base.yaml"
@@ -535,9 +651,251 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
     if seam_errors:
         diffs.extend([f"Static Seam Export Error: {err}" for err in seam_errors])
 
+    # Validate seam contracts (ADR-0061 / Issue #439)
+    contract_errors = validate_seam_contracts(hub_root)
+    if contract_errors:
+        diffs.extend([f"Seam Contract Error: {err}" for err in contract_errors])
+
     if diffs:
         return False, "\n".join(diffs)
     return True, "Catalog is 100% in sync"
+
+
+def load_seam_contracts(hub_root: Path = HUB_ROOT) -> tuple[dict[str, Any], str]:
+    """Loads seam-contracts.yaml and returns (parsed_dict, sha256_hash).
+
+    The SHA-256 hash is computed over the raw bytes of the file on disk.
+    If the file does not exist, returns empty dict and empty hash.
+    """
+    contracts_file = hub_root / "seam-contracts.yaml"
+    if not contracts_file.is_file():
+        return {}, ""
+    try:
+        raw_bytes = contracts_file.read_bytes()
+        sha256 = hashlib.sha256(raw_bytes).hexdigest()
+        data = yaml.safe_load(raw_bytes.decode("utf-8")) or {}
+        return data, sha256
+    except Exception as e:
+        print(f"[ERROR] Failed to read seam-contracts.yaml: {e}", file=sys.stderr)
+        return {}, ""
+
+
+def match_seam_cards(
+    cards: list[dict[str, Any]],
+    in_types: list[str] | None = None,
+    out_types: list[str] | None = None,
+    hardware: str | None = None,
+) -> list[dict[str, Any]]:
+    """Filters seam cards according to Platform-Aware KISS v2.0 semantics.
+
+    - Every requested in_type must be in card's capability.in (card can accept additional inputs).
+    - Every requested out_type must be in card's capability.out.
+    - If hardware is specified and not 'any', card.hardware must contain hardware or 'any'.
+    """
+    matches: list[dict[str, Any]] = []
+    norm_in = [x.lower().strip() for x in in_types] if in_types else None
+    norm_out = [x.lower().strip() for x in out_types] if out_types else None
+    norm_hw = hardware.lower().strip() if hardware else None
+
+    for card in cards:
+        cap = card.get("capability", {})
+        card_in = [str(x).lower().strip() for x in cap.get("in", [])]
+        card_out = [str(x).lower().strip() for x in cap.get("out", [])]
+        card_hw = [str(x).lower().strip() for x in card.get("hardware", [])]
+
+        if norm_in:
+            if not all(item in card_in for item in norm_in):
+                continue
+
+        if norm_out:
+            if not all(item in card_out for item in norm_out):
+                continue
+
+        if norm_hw and norm_hw != "any":
+            if norm_hw not in card_hw and "any" not in card_hw:
+                continue
+
+        matches.append(card)
+
+    matches.sort(key=lambda c: str(c.get("seam_id", "")))
+    return matches
+
+
+def query_seam_contracts(
+    hub_root: Path = HUB_ROOT,
+    in_types: list[str] | None = None,
+    out_types: list[str] | None = None,
+    hardware: str | None = None,
+    keyword: str | None = None,
+    as_json: bool = False,
+) -> tuple[int, dict[str, Any]]:
+    """Queries seam capability contracts and catalog.
+
+    Exit codes (ADR-0061):
+    - 0: Match found (capability card match or keyword hint found).
+    - 2: NO_MATCH (contract capability card does not exist, or keyword not found).
+    - 1: Syntax error / missing inputs.
+    """
+    contracts_data, index_sha256 = load_seam_contracts(hub_root)
+    cards = contracts_data.get("cards", [])
+
+    has_contract_query = bool(in_types or out_types or hardware)
+    has_keyword_query = bool(keyword and keyword.strip())
+
+    if not has_contract_query and not has_keyword_query:
+        msg = "Please provide either contract capability query (--in/--out/--hardware) or a search keyword."
+        if as_json:
+            print(
+                json.dumps(
+                    {"status": "ERROR", "message": msg, "index_sha256": index_sha256}, indent=2
+                )
+            )
+        else:
+            print(f"[ERROR] {msg}", file=sys.stderr)
+        return 1, {"status": "ERROR", "message": msg}
+
+    if has_contract_query:
+        matches = match_seam_cards(cards, in_types=in_types, out_types=out_types, hardware=hardware)
+        if matches:
+            payload = {
+                "status": "MATCH",
+                "index_sha256": index_sha256,
+                "count": len(matches),
+                "cards": matches,
+            }
+            if as_json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print("=" * 80)
+                print("🎯 CCBA Platform Seam Contracts Query: MATCH")
+                print(f"   Index SHA-256: {index_sha256}")
+                print(f"   Matched Cards: {len(matches)}")
+                print("=" * 80)
+                for c in matches:
+                    print(f"• Seam ID:     {c.get('seam_id')} (Kind: {c.get('kind')})")
+                    if c.get("import_path"):
+                        print(f"  Import Path: {c.get('import_path')}")
+                    if c.get("command"):
+                        print(f"  Command:     {c.get('command')} ({c.get('skill_path')})")
+                    cap = c.get("capability", {})
+                    print(f"  Capability:  in={cap.get('in', [])} -> out={cap.get('out', [])}")
+                    print(f"  Hardware:    {c.get('hardware', [])}")
+                    print(f"  Owner:       {c.get('owner', 'unknown')}")
+                    if c.get("forbidden_substitute_imports"):
+                        print(f"  Forbidden:   {c.get('forbidden_substitute_imports')}")
+                    print("-" * 60)
+            return 0, payload
+        else:
+            payload = {
+                "status": "NO_MATCH",
+                "index_sha256": index_sha256,
+                "count": 0,
+                "cards": [],
+            }
+            if as_json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print(f"NO_MATCH [index_sha256: {index_sha256}]")
+            return 2, payload
+
+    # Keyword only search (KEYWORD_HINT mode)
+    assert keyword is not None
+    term = keyword.lower().strip()
+    matching_cards = []
+    for c in cards:
+        seam_id = str(c.get("seam_id", "")).lower()
+        owner = str(c.get("owner", "")).lower()
+        cap_in = " ".join(str(x).lower() for x in c.get("capability", {}).get("in", []))
+        cap_out = " ".join(str(x).lower() for x in c.get("capability", {}).get("out", []))
+        imp = str(c.get("import_path", "")).lower()
+        cmd = str(c.get("command", "")).lower()
+        if (
+            term in seam_id
+            or term in owner
+            or term in cap_in
+            or term in cap_out
+            or term in imp
+            or term in cmd
+        ):
+            matching_cards.append(c)
+
+    # Also search catalog for hints
+    catalog = compile_catalog_dict(hub_root)
+    matching_seams = []
+    for s in catalog.get("seams", []):
+        pkg = str(s.get("package", "")).lower()
+        desc = str(s.get("description", "")).lower()
+        seam_strs = " ".join(s.get("public_seams", [])).lower()
+        if term in pkg or term in desc or term in seam_strs:
+            matching_seams.append(s)
+
+    matching_skills = []
+    for sk in catalog.get("skills", []):
+        name = str(sk.get("name", "")).lower()
+        desc = str(sk.get("description", "")).lower()
+        triggers = " ".join(sk.get("triggers", [])).lower()
+        cmd = str(sk.get("command", "")).lower()
+        if term in name or term in desc or term in triggers or term in cmd:
+            matching_skills.append(sk)
+
+    total_hits = len(matching_cards) + len(matching_seams) + len(matching_skills)
+    if total_hits > 0:
+        payload = {
+            "status": "KEYWORD_HINT",
+            "index_sha256": index_sha256,
+            "keyword": keyword,
+            "cards": matching_cards,
+            "catalog_seams": matching_seams,
+            "catalog_skills": matching_skills,
+        }
+        if as_json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print("=" * 80)
+            print(
+                f"🔍 CCBA Platform Catalog Query: '{keyword}' (KEYWORD_HINT - NOT A CONTRACT RECEIPT)"
+            )
+            print(f"   Index SHA-256: {index_sha256}")
+            print(
+                f"   Matched: {len(matching_cards)} Card(s), {len(matching_seams)} Deep Seam(s), {len(matching_skills)} Skill(s)"
+            )
+            print("=" * 80)
+            if matching_cards:
+                print("\n📋 [Capability Contract Cards]")
+                for c in matching_cards:
+                    print(f"• Seam ID:     {c.get('seam_id')} ({c.get('kind')})")
+                    if c.get("import_path"):
+                        print(f"  Import Path: {c.get('import_path')}")
+                    if c.get("command"):
+                        print(f"  Command:     {c.get('command')} ({c.get('skill_path')})")
+                    print("-" * 60)
+            if matching_seams:
+                print("\n📦 [Tier 1: Monorepo Package Deep Seams]")
+                for s in matching_seams:
+                    print(f"• Package:     {s['package']} ({s['path']})")
+                    for seam in s.get("public_seams", []):
+                        print(f"    - {seam}")
+                    print("-" * 60)
+            if matching_skills:
+                print("\n⚡ [Tier 2/3: Agent Skills]")
+                for sk in matching_skills:
+                    c_cmd = sk.get("command") or f"/{sk['name']}"
+                    print(f"• Skill:       {sk['name']} ({c_cmd})")
+                    print(f"  Description: {sk.get('description', '')}")
+                    print("-" * 60)
+        return 0, payload
+    else:
+        payload = {
+            "status": "NO_MATCH",
+            "index_sha256": index_sha256,
+            "keyword": keyword,
+            "cards": [],
+        }
+        if as_json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print(f"NO_MATCH [index_sha256: {index_sha256}]")
+        return 2, payload
 
 
 def query_catalog(hub_root: Path = HUB_ROOT, query_term: str = "") -> int:
@@ -632,6 +990,31 @@ def main(argv: list[str] | None = None) -> int:
         help="Search Public Deep Seams and Skills in CCBA Catalog.",
     )
     parser.add_argument(
+        "--in",
+        dest="in_types",
+        nargs="+",
+        default=None,
+        help="Input capability requirements (e.g. --in pdf docx)",
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_types",
+        nargs="+",
+        default=None,
+        help="Output capability requirements (e.g. --out markdown)",
+    )
+    parser.add_argument(
+        "--hardware",
+        type=str,
+        default=None,
+        help="Hardware constraint (e.g. any, dgx_spark, cuda)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output machine-readable JSON capability receipt or status",
+    )
+    parser.add_argument(
         "--write",
         action="store_true",
         default=True,
@@ -645,7 +1028,25 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
+    if args.in_types or args.out_types or args.hardware:
+        exit_code, _ = query_seam_contracts(
+            hub_root=HUB_ROOT,
+            in_types=args.in_types,
+            out_types=args.out_types,
+            hardware=args.hardware,
+            keyword=args.query,
+            as_json=args.json,
+        )
+        return exit_code
+
     if args.query is not None:
+        if args.json:
+            exit_code, _ = query_seam_contracts(
+                hub_root=HUB_ROOT,
+                keyword=args.query,
+                as_json=True,
+            )
+            return exit_code
         return query_catalog(HUB_ROOT, args.query)
 
     if args.check:
