@@ -59,9 +59,9 @@ class CatalogSnapshotClient:
             os.lstat(self.pointer_file)
             if not os.path.isfile(self.pointer_file) or os.path.islink(self.pointer_file):
                 return None
-            token = self.pointer_file.read_text(encoding="utf-8").strip()
-            if _HASH_TOKEN_PATTERN.match(token):
-                return token
+            snapshot_hex = self.pointer_file.read_text(encoding="utf-8").strip()
+            if _HASH_TOKEN_PATTERN.match(snapshot_hex):
+                return snapshot_hex
         except Exception:
             return None
         return None
