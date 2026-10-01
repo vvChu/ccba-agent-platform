@@ -18,9 +18,8 @@
 - **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
   - *Team Whitelist*: BẮT BUỘC unignore `!.agents/teams/` trong `.gitignore` lưu trữ team specs.
   - *Federated Hubs Alignment*: 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị chia sẻ tri thức qua CLI/REST/gRPC.
-- **RULE-1.13 [Parameter Externalization, AST Linter & Declarative Config]**:
-  - *No Raw Models/IPs*: CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP trong code/skills. Dùng `choose_model()` / `ModelArchetype` và biến môi trường (ngoại lệ: `# ccba:allow-raw-model`, `# ccba:allow-raw-ip`).
-  - *AST Linter & Declarative Config*: `check_hardcoded_parameters.py` kiểm soát tĩnh. Trọng số và routing tách thành YAML/JSON theo nguyên tắc OCP.
+- **RULE-1.13 [Parameter Externalization & Declarative Config]**:
+  - CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP. Dùng `choose_model()` / `ModelArchetype` và env vars (ngoại lệ: `# ccba:allow-raw-model`, `# ccba:allow-raw-ip`). `check_hardcoded_parameters.py` kiểm soát tĩnh; tách trọng số/routing thành YAML/JSON theo OCP.
 
 ---
 
@@ -35,9 +34,7 @@
 - **RULE-2.13 [Atomic Micro-PR Slicing & Single-Seam Locality]**:
   - *Micro-Task Slicing*: Phân rã task $\le 150-200$ LOC logic vào 1 Deep Seam duy nhất kèm test tự động; chia nhỏ task phức tạp thành micro-PRs giảm review fatigue và conflict.
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
-  - *Atomic Knowledge Cataloging*: Mọi tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục đồng thời vào `.md/knowledge/index.md` ngay tại commit tạo tệp, chống sập CI Orphan Notes.
-  - *Hermetic Script Protocol*: Sửa mã nguồn/YAML đa dòng qua shell CẤM inline string có backticks; BẮT BUỘC dùng `cat << 'EOF' > /tmp/patch.py` (bọc nháy đơn) hoặc tool tệp chuyên dụng.
-  - *Ruff B009 Attribute Guard*: Kiểm tra callable động BẮT BUỘC dùng `hasattr(obj, "method") and callable(obj.method)` thay vì `getattr(obj, "constant")`.
+  - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống lỗi Orphan Notes. Shell script đa dòng dùng `cat << 'EOF'` chống lỗi nháy. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
 - **RULE-2.16 [Evals Daemon Priority Ratchet & Cooldown Bypass]**:
   - Trong `WeightedPriorityQueue`, kỹ năng có `needs_ledger_seed` hoặc `has_unapplied_signals` BẮT BUỘC bypass cooldown (`in_cooldown = 0`) để ưu tiên tối ưu dứt điểm; nhật ký `SKIPPED_COOLDOWN` CẤM kéo dài cửa sổ cooldown. `Sha256ProvenanceScorer.score()` trả về `raw_output` dict chuẩn hóa.
 - **RULE-2.17 [Git Worktree Lock Invariant & Subprocess Failure Transparency]**:
@@ -72,10 +69,10 @@
   - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
-- *(RULE-4.7 tại Mục 25; RULE-4.11 tại Mục 28 của archive/session_learnings_history.md)*
-- **RULE-4.8 [Review Danger Triage, Two-way Door & Maskara Diff Gate]**:
-  - *Danger Triage CI Gate*: Tệp cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) $\rightarrow$ HARD gate; Pure Docs qua Fast-Path Auto-Approve an toàn.
-  - *Maskara Diff Gate*: `sanitize_review_diff.py --check` là Hard Blocker chặn merge PR rò rỉ secret.
+- *(RULE-4.7 tại Mục 25; RULE-4.11 tại Mục 28; chi tiết RULE-4.8 tại Mục 29 của archive/session_learnings_history.md)*
+- **RULE-4.8 [Review Danger Triage, Read-Only Advisory & 10 Bugbot Invariants]**:
+  - *Read-Only Advisory Guardrail*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát diff theo 10 Invariants tại `.github/bugbot-rules.md`.
+  - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Pure Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text` chống rò rỉ secret và bão quota Gateway.
 - **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
   - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
   - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
