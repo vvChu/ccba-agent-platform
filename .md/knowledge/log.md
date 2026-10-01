@@ -2,6 +2,19 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-01] [synthesize] | Phát Hành PR #449 (Issue #448): Advisory AI Review Guardrails & Pre-Merge Bugbot Rules
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `docs/rules/execution_guardrails.md`, `.github/bugbot-rules.md`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `.md/knowledge/reports/walkthrough.md`
+- **Summary**: Hoàn tất phát triển, tích hợp và phát hành toàn diện rào chắn Advisory AI Review và quy tắc Bugbot tiền hợp nhất:
+  1. **PR #449 (Issue #448 - Advisory AI Review Guardrails & Pre-Merge Bugbot Rules)**:
+     - Enact Mục 19 trong `docs/rules/execution_guardrails.md`: Atomic Micro-PR Pipeline ($\le 200$ LOC diff), Read-Only Advisory AI Review Guardrail, và Pre-Merge Triage Flow (Blockers/False-Positive resolution protocol).
+     - Kết nối Progressive Disclosure links trong `AGENTS.md` và `.agents/AGENTS.md` trỏ đến `execution_guardrails.md` và `.github/bugbot-rules.md`.
+     - Cập nhật checklist và hướng dẫn tác vụ trong `.agents/skills/ccba-create-pr/SKILL.md` và `.agents/skills/ccba-new-feature/SKILL.md`.
+  2. **Kiểm Chuẩn & Khóa Cứng CI**: Vượt qua 8/8 checks CI GitHub Actions (100% Green), xử lý triệt để false-positive của `validate_docs.py` đối với biến môi trường giả lập `"APPROVE"`, squash-merge vào `main` tại commit `6cd0c093` và tự động đóng Issue #448.
+  3. **Đóng Gói Tri Thức**: Bổ sung Mục 29 vào `session_learnings_history.md`, cô đọng và bổ sung `RULE-4.8` trong `session_learnings.md`, bảo đảm trần ngân sách bộ nhớ $9.64\text{ KB} \le 10.0\text{ KB}$ (`compact_session_learnings.py --check` exit code 0).
+
+---
+
 ## [2026-09-29] [synthesize] | Khắc Phục Lỗi Git Worktree Lock, Minh Bạch Lỗi Subprocess & Phát Hành PR #436, PR #437, PR #85
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện kép Grok 4.7 & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/evals/daemon.py`, `packages/ccba-harness/src/ccba_harness/evals/tuner.py`, `packages/ccba-harness/tests/test_tuner_daemon.py`, `packages/ccba-harness/tests/test_tuner_git_lock.py`, `scripts/chatops_daemon.py`, `tests/test_chatops.py`, `.md/knowledge/`

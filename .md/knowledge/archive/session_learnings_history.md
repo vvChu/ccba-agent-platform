@@ -646,4 +646,15 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 - **Root Cause:** ChatOps Gateway (`scripts/chatops_daemon.py`) khi thực thi lệnh shell `execute_shell_job()` trước đây tin tưởng tuyệt đối vào điều kiện `exit_code == 0` để thông báo `[THÀNH CÔNG]`. Khi một tiến trình con nuốt lỗi hoặc vô tình thoát mã 0 trong khi log ngập tràn lỗi ngoại lệ chết người, người quản trị qua Telegram nhận thông báo thành công giả tạo và không nhận ra sự cố.
 - **Invariant (RULE-2.17):** ChatOps Gateway BẮT BUỘC bổ sung chốt chặn phòng vệ đa tầng `is_suspicious_success`: Ngay cả khi `exit_code == 0`, nếu ngõ ra tiến trình chứa các dấu hiệu lỗi nghiêm trọng (`[ERROR] ccba.eval`, `❌ Lỗi trong quá trình`, `Traceback (most recent call last):`), trạng thái thực thi BẮT BUỘC chuyển thành `⚠️ [CẢNH BÁO (CÓ LỖI XUẤT HIỆN TRONG LOG)]`, tự động hủy chế độ tin nhắn rút gọn để đính kèm tệp `.log` đầy đủ lên Telegram, và ghi nhật ký audit trail là `WARNING`.
 
+---
+
+## 29. Bugbot Rules, Read-Only Advisory AI Review & Danger Triage (PR #448 / PR #449)
+
+- **RULE-4.8 [Review Danger Triage, Read-Only Advisory Guardrail & 10 Bugbot Invariants]:**
+  - *Read-Only Advisory Guardrail*: Các công cụ tự động hóa kiểm duyệt (Cursor Bugbot, GitHub Copilot Reviewer) vận hành theo cơ chế Chỉ Đọc & Tư Vấn (Read-Only Advisory). AI Reviewers TUYỆT ĐỐI KHÔNG CÓ QUYỀN GỬI TRẠNG THÁI "APPROVE" và CẤM tự động merge mã nguồn logic nghiệp vụ.
+  - *Danger Triage Matrix*: Tách biệt rõ giữa Deterministic Status Checks (Hard Floor - bắt buộc pass 100%) và Advisory AI Review (Soft Guidance - hỗ trợ con người). PR thay đổi tệp kiến trúc cốt lõi (`AGENTS.md`, `.github/workflows/`, `scripts/`, `packages/`) bắt buộc human review; PR chỉ sửa tài liệu (`.md/`, docstrings) được phép Auto-Approve an toàn sau khi vượt qua verifier.
+  - *10 Bugbot Invariants SSOT*: Đối soát diff tự động theo 10 quy tắc bất biến tại `.github/bugbot-rules.md` (SEAM_REUSE, DECOUPLED_CONNECTION, AST_SPAN_INSPECTION, MULTI_KEY_SORT, INODE_INVARIANCE, POSIX_PERMISSIONS, MACHINE_STATE_DECOUPLING, SECRETS_MASKARA, VERIFIER_TEST_PARITY, ATOMIC_MICRO_PR).
+  - *Opt-in Trigger Guardrail*: AI Review không tự động kích hoạt trên mọi commit; chỉ chạy khi có nhãn `ai-review-requested` hoặc lệnh `/ccba-ai-review`, loại trừ bot PRs, và diff bắt buộc phải đi qua cổng làm sạch bảo mật `ccba_maskara.redact_secrets_in_text()` để tránh rò rỉ secret và bão quota Gateway Spark.
+
+
 
