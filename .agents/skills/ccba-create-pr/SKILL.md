@@ -149,18 +149,19 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
 2. **Theo dõi GitHub Actions CI (Cổng 1):**
    - Chạy kiểm tra: `gh pr checks <PR_NUMBER>`.
    - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, Agent có thể chạy `gh pr checks <PR_NUMBER>` hoặc kết thúc lượt (End Turn) để hệ thống tự động đánh thức khi nhận kết quả. Tuyệt đối **CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
-3. **Theo dõi GitHub Copilot Code Review (Cổng 2):**
+3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
    - Kiểm tra bot review:
      ```bash
      python scripts/validation/audit_pr_comments.py --pr <PR_NUMBER>
      ```
-   - Chờ Copilot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
+   - Chờ Copilot / Bugbot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
+   - **Đối soát Invariants:** Rà soát các góp ý của bot đối chiếu với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).
 4. **Tự chữa lành (Self-Healing Loop):**
     - Nếu CI thất bại: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Vá lỗi $\rightarrow$ Commit & push.
-    - Nếu Copilot góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
+    - Nếu AI Reviewer (Copilot/Bugbot) góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
     - Lặp lại đến khi 100% checks xanh và `audit_pr_comments.py` trả về exit code 0.
 
-- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot được giải quyết triệt để.
+- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot/Bugbot được giải quyết triệt để tuân thủ 10 Invariants.
 
 ---
 
