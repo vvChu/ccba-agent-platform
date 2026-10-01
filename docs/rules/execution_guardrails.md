@@ -362,4 +362,44 @@ Các tác vụ sau được hưởng cơ chế **Fast-Path** (không bắt buộ
 2. **Test Fixtures & Harness Evals**: Bổ sung test cases, sửa mock data, cập nhật test datasets (`.agents/skills/ccba-eval-gate/test_cases/`).
 3. **Tài liệu & Markdown**: Cập nhật tài liệu kỹ thuật, báo cáo nghiệm thu, sửa chính tả, cập nhật `walkthrough.md`.
 
+---
+
+## 19. Atomic Micro-PR Pipeline & Read-Only Advisory AI Review Guardrail (Quy Chuẩn PR Nguyên Tử & Rào Chắn AI Review Chỉ Đọc)
+
+Để tối ưu hóa thông lượng merge, giảm thiểu lỗi hallucination và ngăn chặn rủi ro bão request làm cạn kiệt tài nguyên (đúc kết từ mô hình Cursor 2,500 PRs/tháng và nghiên cứu Bugbot), toàn bộ quy trình phát triển và kiểm duyệt trên Hub và Spoke bắt buộc tuân thủ 4 nguyên lý bất biến:
+
+### 19.1. Giới Hạn Kích Thước PR Nguyên Tử (Atomic Micro-PR Slicing)
+- Mọi Pull Request mã nguồn logic nghiệp vụ bắt buộc phải khống chế phạm vi trong ngân sách **$\le 200$ LOC diff** (không bao gồm test fixtures, test cases, và tài liệu markdown `.md`).
+- Mọi PR chỉ được phép tác động lên **tối đa 1 Public Deep Seam** duy nhất đã đăng ký trong `catalog.yaml`. Cấm gộp nhiều seam không liên quan vào cùng một PR.
+- Nếu một tính năng lớn cần sửa đổi nhiều tầng, Agent bắt buộc phải phân rã thành chuỗi các Micro-PRs tuần tự (Tracer-Bullet pattern).
+
+### 19.2. Rào Chắn AI Review Chỉ Đọc (Read-Only Advisory Guardrail)
+- Các công cụ tự động hóa kiểm duyệt sử dụng mô hình ngôn ngữ lớn (Cursor Bugbot, GitHub Copilot Reviewer, AI Agents) vận hành theo cơ chế **Chỉ Đọc & Tư Vấn (Read-Only Advisory)**.
+- AI Reviewers **TUYỆT ĐỐI KHÔNG CÓ QUYỀN GỬI TRẠNG THÁI "APPROVE"** và **CẤM TỰ ĐỘNG MERGE MÃ NGUỒN LOGIC NGHIỆP VỤ**. Mọi quyết định merge bắt buộc phải do Kỹ sư trưởng hoặc qua cơ chế Merge Danger Triage có sự giám sát của con người.
+- Phân định rõ ràng giữa:
+  1. **Deterministic Status Checks (Hard Floor)**: Bộ kiểm định máy tính tất định (`ccba_harness verify-patch`, CI matrix) bắt buộc phải Exit Code 0 (PASS $100\%$) mới được phép merge.
+  2. **Advisory AI Review (Soft Guidance)**: Đóng góp ý kiến dưới dạng review comments hoặc suggestion blocks để hỗ trợ con người rà soát các Invariants.
+
+### 19.3. Danh Mục 10 Invariants Kiểm Tra Tự Động (`.github/bugbot-rules.md`)
+Khi thực hiện AI Review, các reviewers tự động bắt buộc phải đối chiếu diff với tập luật 10 Invariants được công bố tại [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md):
+- **`[RULE-01] SEAM_REUSE`**: Cấm tạo helper/script chắp vá khi `catalog.yaml` đã có Seam.
+- **`[RULE-02] DECOUPLED_CONNECTION`**: Cấm import ngược từ consumer vào tầng kết nối (`*_client.py`).
+- **`[RULE-03] AST_SPAN_INSPECTION`**: Chú thích miễn trừ `# ccba:quarantine` / `# ccba:allow-*` phải bao trọn AST span của import statement nhiều dòng.
+- **`[RULE-04] MULTI_KEY_SORT`**: Sắp xếp đa tiêu chí hỗn hợp cấm `reverse=True`, bắt buộc dùng negation toán học `-round(x.score, N)`.
+- **`[RULE-05] INODE_INVARIANCE`**: Quét tệp xây dựng lookup map bắt buộc sort theo `stem` để bảo đảm tính tất định trên mọi HĐH.
+- **`[RULE-06] POSIX_PERMISSIONS`**: Bảo toàn execute bit (`stat.S_IXUSR`) khi ghi đè tệp script/CLI.
+- **`[RULE-07] MACHINE_STATE_DECOUPLING`**: Cấm commit đường dẫn ổ đĩa tuyệt đối (Windows `C:\`, Linux `/home/vvc`); bắt buộc phân giải qua `CCBA_HUB_PATH`.
+- **`[RULE-08] SECRETS_MASKARA`**: Cấm tuyệt đối rò rỉ API keys, private keys, passwords trong diff (bắt buộc dùng `ccba-maskara`).
+- **`[RULE-09] VERIFIER_TEST_PARITY`**: Mọi sửa đổi Seam hoặc public API bắt buộc có unit test tương ứng và vượt qua `verify-patch`.
+- **`[RULE-10] ATOMIC_MICRO_PR`**: Khống chế diff $\le 200$ LOC để kiểm soát bán kính rủi ro (blast radius).
+
+### 19.4. Rào Chắn Chống Bão Quota & Nghẽn Gateway (Opt-in Trigger Guardrail)
+- Để bảo vệ hạ tầng máy chủ AI Gateway (Spark `:8090`) và tránh lãng phí token Cloud, AI Review trên PR **không được kích hoạt tự động** trên mọi commit.
+- AI Review chỉ được kích hoạt khi:
+  1. PR được gán nhãn `ai-review-requested`, HOẶC
+  2. Người dùng gõ comment triệu hồi `/ccba-ai-review`.
+  3. Tự động bỏ qua các PR được mở bởi automated bots (Dependabot, Auto-Tuner).
+- Mọi diff gửi cho AI Review bắt buộc phải đi qua cổng làm sạch bảo mật `ccba_maskara.redact_secrets_in_text()` để loại trừ 100% rủi ro rò rỉ bí mật.
+
+
 
