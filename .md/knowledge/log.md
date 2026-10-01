@@ -4,12 +4,12 @@
 
 ## [2026-10-01] [synthesize] | Phát Hành PR #449 (Issue #448): Advisory AI Review Guardrails & Pre-Merge Bugbot Rules
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-release-feature & /ccba-session-retrospective)
-- **Affected Files**: `docs/rules/execution_guardrails.md`, `.github/bugbot-rules.md`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Affected Files**: `docs/rules/execution_guardrails.md`, `.github/bugbot-rules.md`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `.md/knowledge/reports/walkthrough.md`
 - **Summary**: Hoàn tất phát triển, tích hợp và phát hành toàn diện rào chắn Advisory AI Review và quy tắc Bugbot tiền hợp nhất:
   1. **PR #449 (Issue #448 - Advisory AI Review Guardrails & Pre-Merge Bugbot Rules)**:
      - Enact Mục 19 trong `docs/rules/execution_guardrails.md`: Atomic Micro-PR Pipeline ($\le 200$ LOC diff), Read-Only Advisory AI Review Guardrail, và Pre-Merge Triage Flow (Blockers/False-Positive resolution protocol).
      - Kết nối Progressive Disclosure links trong `AGENTS.md` và `.agents/AGENTS.md` trỏ đến `execution_guardrails.md` và `.github/bugbot-rules.md`.
-     - Cập nhật checklist và hướng dẫn tác vụ trong `.agents/skills/ccba-create-pr/SKILL.md` và `.agents/skills/ccba-release-feature/SKILL.md`.
+     - Cập nhật checklist và hướng dẫn tác vụ trong `.agents/skills/ccba-create-pr/SKILL.md` và `.agents/skills/ccba-new-feature/SKILL.md`.
   2. **Kiểm Chuẩn & Khóa Cứng CI**: Vượt qua 8/8 checks CI GitHub Actions (100% Green), xử lý triệt để false-positive của `validate_docs.py` đối với biến môi trường giả lập `"APPROVE"`, squash-merge vào `main` tại commit `6cd0c093` và tự động đóng Issue #448.
   3. **Đóng Gói Tri Thức**: Bổ sung Mục 29 vào `session_learnings_history.md`, cô đọng và bổ sung `RULE-4.8` trong `session_learnings.md`, bảo đảm trần ngân sách bộ nhớ $9.64\text{ KB} \le 10.0\text{ KB}$ (`compact_session_learnings.py --check` exit code 0).
 
