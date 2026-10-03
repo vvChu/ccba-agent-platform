@@ -11,28 +11,29 @@ Provides a unified command-line interface for engineers working inside Spoke wor
 from __future__ import annotations
 
 import argparse
-import datetime
-import hashlib
 import json
 import os
 import sys
 from pathlib import Path
 from typing import Any
 
-from scripts.spoke.spoke_synchronizer import (
-    HubDiscoverer,
-    SpokeSynchronizer,
-    load_yaml,
-)
-
-
-def compute_sha256(file_path: Path) -> str:
-    """Compute SHA-256 hash of a file."""
-    sha = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            sha.update(chunk)
-    return sha.hexdigest()
+try:
+    from scripts.spoke.idop_bridge import IDOPBridge
+    from scripts.spoke.spoke_synchronizer import (
+        HubDiscoverer,
+        SpokeSynchronizer,
+        load_yaml,
+    )
+except ModuleNotFoundError:
+    _repo_root = Path(__file__).resolve().parent.parent.parent
+    if str(_repo_root) not in sys.path:
+        sys.path.insert(0, str(_repo_root))
+    from scripts.spoke.idop_bridge import IDOPBridge
+    from scripts.spoke.spoke_synchronizer import (
+        HubDiscoverer,
+        SpokeSynchronizer,
+        load_yaml,
+    )
 
 
 class PreSubmissionGateError(Exception):
@@ -47,6 +48,7 @@ class SpokeCLI:
     def __init__(self, spoke_root: Path | None = None, hub_root: Path | None = None) -> None:
         self.spoke_root = Path(spoke_root).resolve() if spoke_root else Path.cwd().resolve()
         self.hub_root = Path(hub_root).resolve() if hub_root else self._resolve_hub()
+        self.bridge = IDOPBridge(spoke_root=self.spoke_root)
 
     def _resolve_hub(self) -> Path:
         context_file = self._find_context_file()
@@ -219,45 +221,29 @@ class SpokeCLI:
                 return 1
             print("\n⚠️ Force flag applied. Proceeding with warnings...", file=sys.stderr)
 
-        # Create staging directory
-        staged_dir = self.spoke_root / ".md" / "idop_staged"
-        staged_files_dir = staged_dir / "files"
-        staged_files_dir.mkdir(parents=True, exist_ok=True)
+        # Stage deliverable via IDOPBridge SDK
+        submittal = self.bridge.stage(
+            file_path=target_file,
+            task_id=task_id,
+            title=title or target_file.stem,
+            project_code=proj.get("project_code", "UNKNOWN"),
+            national_project_id=proj.get("national_project_id", ""),
+            contract_id=proj.get("contract_id", ""),
+            author_name=org.get("owner_name", ""),
+            author_email=org.get("owner_email", ""),
+            department=org.get("department", ""),
+            seat_role=org.get("seat_role", ""),
+            notes=notes or "",
+        )
 
-        # Generate receipt
-        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        receipt_id = f"PGV-{timestamp_str}-{task_id}"
-        file_sha256 = compute_sha256(target_file)
-
-        receipt_data: dict[str, Any] = {
-            "receipt_id": receipt_id,
-            "task_id": task_id,
-            "title": title or target_file.stem,
-            "project_code": proj.get("project_code", "UNKNOWN"),
-            "national_project_id": proj.get("national_project_id", ""),
-            "contract_id": proj.get("contract_id", ""),
-            "author_name": org.get("owner_name", ""),
-            "author_email": org.get("owner_email", ""),
-            "department": org.get("department", ""),
-            "seat_role": org.get("seat_role", ""),
-            "source_file": str(target_file),
-            "file_name": target_file.name,
-            "file_size_bytes": target_file.stat().st_size,
-            "sha256": file_sha256,
-            "created_at": datetime.datetime.now().isoformat(),
-            "status": "STAGED_LOCAL",
-            "notes": notes or "",
-        }
-
-        receipt_file = staged_dir / f"{receipt_id}.json"
-        with open(receipt_file, "w", encoding="utf-8") as f:
-            json.dump(receipt_data, f, ensure_ascii=False, indent=2)
+        receipt_file = self.bridge.staged_dir / f"{submittal.receipt_id}.json"
 
         print("================================================================")
         print("✅ [Stage] Hồ sơ đã được tiếp nhận vào Local Staging Queue thành công!")
-        print(f"  • Biên nhận PGV:  {receipt_id}")
-        print(f"  • Tệp nguồn:      {target_file.name} ({target_file.stat().st_size} bytes)")
-        print(f"  • SHA-256:        {file_sha256[:16]}...")
+        print(f"  • Biên nhận PGV:  {submittal.receipt_id}")
+        print(f"  • Khóa hợp nhất:  {submittal.composite_key[:16]}... (Composite Key)")
+        print(f"  • Tệp nguồn:      {target_file.name} ({submittal.file_size_bytes} bytes)")
+        print(f"  • SHA-256:        {submittal.sha256[:16]}...")
         print("  • Trạng thái:     STAGED_LOCAL (Sẵn sàng nộp lên IDOP)")
         print(f"  • Vị trí lưu:     {receipt_file.relative_to(self.spoke_root)}")
         print("================================================================\n")
@@ -267,49 +253,30 @@ class SpokeCLI:
     # 4. COMMAND: FLUSH (Idempotent Replay to IDOP SharePoint)
     # -------------------------------------------------------------------------
     def flush(self, dry_run: bool = False, limit: int = 50) -> int:
-        """Flush and synchronize all STAGED_LOCAL receipts to IDOP."""
-        staged_dir = self.spoke_root / ".md" / "idop_staged"
-        if not staged_dir.exists():
-            print("📁 [Flush] No staging directory found (.md/idop_staged/). Nothing to flush.")
-            return 0
-
-        receipt_files = sorted(staged_dir.glob("PGV-*.json"))
-        pending_receipts: list[Path] = []
-
-        for rf in receipt_files:
-            try:
-                data = json.loads(rf.read_text(encoding="utf-8"))
-                if data.get("status") == "STAGED_LOCAL":
-                    pending_receipts.append(rf)
-            except Exception:
-                pass
-
-        if not pending_receipts:
+        """Flush and synchronize all STAGED_LOCAL receipts to IDOP SharePoint."""
+        flush_res = self.bridge.flush(dry_run=dry_run, limit=limit)
+        total = flush_res["total_pending"]
+        if total == 0:
             print("✨ [Flush] All staged records are already synchronized. Queue is clean!")
             return 0
 
+        print(f"🚀 [Flush] Found {total} record(s) awaiting sync to IDOP SharePoint...")
+        for r in flush_res["results"]:
+            if r["status"] in ("SYNCED_SHAREPOINT", "SYNCED_MOCK_SANDBOX"):
+                icon = "☁️ "
+            elif r["status"] == "SKIPPED_DUPLICATE":
+                icon = "⏭️ "
+            else:
+                icon = "❌"
+            print(f"  {icon} {r['receipt_id']} -> {r['status']} (Key: {r['composite_key'][:12]})")
+
+        synced = flush_res["synced"]
+        skipped = flush_res.get("skipped", 0)
+        processed = flush_res["processed"]
         print(
-            f"🚀 [Flush] Found {len(pending_receipts)} record(s) awaiting sync to IDOP SharePoint..."
+            f"\n🎉 [Flush] Complete: {synced} synced, {skipped} skipped duplicates / {processed} processed (Dry Run: {flush_res['dry_run']})."
         )
-
-        synced_count = 0
-        for rf in pending_receipts[:limit]:
-            try:
-                data = json.loads(rf.read_text(encoding="utf-8"))
-                print(f"  ☁️  Syncing {data.get('receipt_id')} ({data.get('title')})...")
-
-                if not dry_run:
-                    # Mark record as synced (Idempotent replay)
-                    data["status"] = "SYNCED_SHAREPOINT"
-                    data["synced_at"] = datetime.datetime.now().isoformat()
-                    with open(rf, "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False, indent=2)
-                synced_count += 1
-            except Exception as e:
-                print(f"  ❌ Error syncing {rf.name}: {e}", file=sys.stderr)
-
-        print(f"\n🎉 [Flush] Complete: {synced_count}/{len(pending_receipts)} records processed.")
-        return 0
+        return 0 if flush_res["failed"] == 0 else 1
 
 
 # =============================================================================

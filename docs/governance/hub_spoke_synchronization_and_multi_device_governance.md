@@ -1,8 +1,8 @@
 # Kiến Trúc Đồng Bộ Hub-Spoke & Khung Quản Trị Đa Máy Trạm (Multi-Device Platform Governance)
 
 > **Mã tài liệu:** `CCBA-GOV-SYNC-2026`  
-> **Phiên bản:** Rev 1.0 (2026)  
-> **Căn cứ kiến trúc & pháp chuẩn:** [ADR 0009](../adr/0009-hub-spoke-sync-and-partition-strategy.md), [ADR 0036](../adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md), [ADR 0041](../adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](../adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0044](../adr/0044-spoke-hub-package-bootstrap-standard.md), [ADR 0045](../adr/0045-hub-proposal-ingestion-governance.md), [ADR 0051](../adr/0051-hub-spoke-sync-hardening-constitution-preservation-and-virtual-fallback.md), [Session Learnings Rule 1.8](../../.md/knowledge/session_learnings.md), [Guardrails 12 & 13](../rules/execution_guardrails.md).
+> **Phiên bản:** Rev 2.0 (2026-10-03)  
+> **Căn cứ kiến trúc & pháp chuẩn:** [ADR 0009](../adr/0009-hub-spoke-sync-and-partition-strategy.md), [ADR 0036](../adr/0036-brownfield-spoke-adoption-and-non-destructive-onboarding.md), [ADR 0041](../adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0042](../adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), [ADR 0043](../adr/0043-idop-active-dev-resilience-and-fallback.md), [ADR 0044](../adr/0044-spoke-hub-package-bootstrap-standard.md), [ADR 0045](../adr/0045-hub-proposal-ingestion-governance.md), [ADR 0051](../adr/0051-hub-spoke-sync-hardening-constitution-preservation-and-virtual-fallback.md), [ADR 0060](../adr/0060-4hub-federated-spokes-architecture.md), [ADR 0061](../adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md), [Session Learnings Rule 1.8](../../.md/knowledge/session_learnings.md), [Guardrails 12 & 13](../rules/execution_guardrails.md).
 
 ---
 
@@ -271,7 +271,89 @@ Khi thực thi các lệnh làm biến đổi trạng thái từ xa (`gh issue c
 
 ---
 
-## 7. Bảng Ma Trận Bất Biến & Quy Tắc Tuân Thủ (Compliance Matrix)
+## 8. Kiến Trúc Vận Hành Đa Mặt Phẳng Trong Bối Cảnh CCBA WAY (IDOP)
+
+Tiếp thu kết quả từ [ADR-0060](../adr/0060-4hub-federated-spokes-architecture.md), [ADR-0061](../adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md) và phiên thẩm định đồng cấp đối kháng với Grok (2026-10-03), tương tác giữa Spoke dự án tại máy clients (Windows/Linux/laptop công trường) với Central Hubs, Server DGX Spark và Microsoft 365 được phân định thành **3 Mặt Phẳng Tách Biệt (Plane Separation)**:
+
+```mermaid
+flowchart TD
+    subgraph Client ["💻 Client Spoke (Máy kỹ sư / Laptop công trường)"]
+        direction TB
+        Agent["AI Agent / CLI (find-seam, harness)"]
+        Cache["Tier 1: Snapshot Cache (.agents/cache/current)"]
+        Queue["Local Queue (.md/idop_staged/ - STAGED_LOCAL)"]
+        Bridge["Python IDOPBridge SDK"]
+    end
+
+    subgraph ControlPlane ["🏛️ Control Plane: Central Hubs (ccba-agent-platform)"]
+        HubRepo["Git Repos / GitHub Raw"]
+        Seams["Seam Contracts (seam-contracts.yaml)"]
+        Catalog["Skills Catalog (catalog.yaml)"]
+    end
+
+    subgraph DataPlane ["🖥️ Data Plane: Server Spark (NVIDIA DGX Blackwell :8090)"]
+        LiteLLM["LiteLLM AI Gateway (:8090)<br/>Virtual Key Quotas ($30-$50/m)"]
+        LocalLLM["vLLM Qwen 36B (:8004)"]
+        RAGCore["FastMCP Legal RAG (:8008)<br/>BGE-M3 (SLA < 1.2s)"]
+    end
+
+    subgraph OpsPlane ["☁️ Operations Plane: IDOP (Microsoft 365 Enterprise)"]
+        SP59["59 SharePoint Lists<br/>(CDE ISO 19650, CRM, Contracts, WBS)"]
+        OneDrive["5TB Master OneDrive & Power Automate"]
+    end
+
+    Agent -->|"Tra cứu Seam < 2ms (Offline)"| Cache
+    Agent -.->|"Subprocess Probe 1.5s SIGKILL"| HubRepo
+    Agent -->|"Virtual Key Quota (Tailscale VPN)"| LiteLLM
+    LiteLLM --> LocalLLM
+    LiteLLM --> RAGCore
+    Agent -->|"3-Tier Gate: PASS"| Bridge
+    Bridge -->|"Token Bucket (Max 5.0 req/s)"| SP59
+    Bridge -.->|"Mất mạng: Lưu queue"| Queue
+    Queue ==="idop_bridge --flush (Idempotent Replay)"===> SP59
+```
+
+### 8.1. Mặt Phẳng Quản Trị (Control Plane): Phân Phối Catalog & Seam Đa Tầng
+- **Tier 1 (Zero-Latency Local Snapshot)**:
+  - Con trỏ `snapshots/current` là một **file văn bản đơn lẻ (regular file)** chứa duy nhất chuỗi 64-hex hash định danh nội dung snapshot: `snapshot_id = sha256(seam_bytes + b"\n" + catalog_bytes)`.
+  - Nghiêm cấm dùng symlink (tránh lỗi Windows `WinError 1314` đòi quyền Admin) hoặc alias thư mục (tránh `ENOTEMPTY` / `ERROR_ALREADY_EXISTS`).
+  - Reader đọc xong token từ `current` thì đóng ngay file handle để giải phóng khóa NTFS (`FILE_SHARE_DELETE`).
+  - Hoán đổi con trỏ nguyên tử qua file tạm `.current.<pid>.tmp` với `os.replace` và retry 3 lần đối với `PermissionError` (`WinError 32`).
+- **Tier 2 (Non-blocking Subprocess Probe)**:
+  - Tiến trình CLI chính tuyệt đối **không mở socket mạng** khi tra cứu Seam (đạt SLA < 2ms).
+  - Hoạt động thăm dò bản cập nhật (`catalog_probe.py`) chạy ngầm trong tiến trình con với trần ngắt cưỡng chế **1.5 giây** (`SIGKILL` / `TerminateProcess`).
+  - Ghi nhận monotonic debounce 15 phút vào `.agents/cache/hub-catalog/probe-state.json` trên cả ca timeout để máy mất mạng không lặp lại thăm dò.
+- **Tier 3 (Phân định cách gọi qua `binding.mode`)**:
+  - `local_import`: Chạy từ package Python đã cài đặt trong `.venv` của Spoke theo chuẩn [ADR-0044](../adr/0044-spoke-hub-package-bootstrap-standard.md) (`pip install -e`).
+  - `remote_mcp`: Gọi công cụ qua FastMCP Server Spark; nếu mất mạng thì trả về `invoke: blocked (reason: health_timeout)` và kích hoạt cách ly Quarantine có hạn theo [ADR-0061](../adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md).
+  - `skill`: Kích hoạt workflow Agent sau khi sync skill.
+
+### 8.2. Mặt Phẳng Dữ Liệu & Suy Luận (Data Plane): Server Spark & Zero-Bloat RAG
+- **Kết nối an toàn qua Tailscale Mesh VPN (`100.83.192.30`)**: Mã hóa đầu cuối giữa client và server.
+- **Quản trị chi phí qua Virtual Keys**: Cấp Virtual Key độc lập cho từng Spoke/kỹ sư ($30-$50/tháng, 60-120 RPM, Token Bucket Limiter), ngăn ngừa cạn kiệt ngân sách toàn công ty.
+- **Zero-Bloat Legal RAG**: Client không cần tải kho dữ liệu pháp lý nặng về máy; gọi FastMCP `query_legal_ground_truth` với SLA < 1.2s từ mô hình BGE-M3 thường trực trên VRAM chip Blackwell GB10.
+- **An ninh Multi-User POSIX ACLs Pin-Hole Traversal (ADR-0060 Mục 2)**:
+  - Cấm tuyệt đối `chmod o+x /home/vvc`.
+  - Cấp quyền duyệt đường dẫn tối thiểu: `setfacl -m g:ccba-devs:--x /home/vvc`.
+  - Cấp quyền đọc/ghi và kế thừa tự động trên thư mục làm việc chung: `setfacl -R -m g:ccba-devs:rwX -d -m g:ccba-devs:rwX /home/vvc/ccba`.
+  - Thắt chặt Mode 0700 trên `~/.gemini`, `~/.ssh`, `~/.claude`.
+
+### 8.3. Mặt Phẳng Vận Hành (Operations Plane): IDOP Microsoft 365 & Kháng Lỗi Ngoại Tuyến
+- **Headless Python `IDOPBridge` SDK**: Sử dụng `msal` và `httpx` với Entra ID App-Only Certificate (`Sites.FullControl.All`), loại bỏ phụ thuộc PowerShell.
+- **Token Bucket Rate Limiter**: Giới hạn phẳng tốc độ đẩy tối đa **5.0 requests/giây**, tôn trọng header `Retry-After` kèm random jitter để không bao giờ chạm trần HTTP 429 Throttling của SharePoint Online.
+- **Cơ Chế Kháng Lỗi Ngoại Tuyến: Zero-Downtime & Idempotent Replay ([ADR-0043](../adr/0043-idop-active-dev-resilience-and-fallback.md))**:
+  - Khi mất mạng hoặc SharePoint bảo trì: Dữ liệu hồ sơ serialize thành JSON AST lưu tại `.md/idop_staged/` với trạng thái `STAGED_LOCAL`.
+  - Mỗi bản ghi có Khóa Tự Nhiên Hợp Nhất (Composite Key):  
+    `composite_key = sha256(ProjectCode + ContractId + StageId + SubmittalName)`.
+  - Lệnh `ccba-spoke flush` thực hiện Idempotent Replay: khử trùng lặp qua Composite Key trên hàng đợi cục bộ `.md/idop_staged/` (gán trạng thái `SKIPPED_DUPLICATE` cho bản ghi trùng, liên kết với SharePoint Item ID gốc), ngăn ngừa phát sinh bản ghi trùng khi re-flush.
+- **3-Tier AI Pre-Submission Gate ([ADR-0042](../adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md))**:
+  - 🔴 **Tier 1 (Hard-Floor Auto-Block)**: Tự động chặn 100% hồ sơ trích dẫn luật cũ hoặc sai lệch toán học phân bổ dòng tiền 3 cấp.
+  - 🟡 **Tier 2 (Governance Override)**: Ngoại lệ ký hợp đồng khẩn cấp cần Giám đốc (`ROLE_DIRECTOR`) duyệt kèm nhật ký giải trình.
+  - 🟢 **Tier 3 (Advisory Warnings)**: Cảnh báo mềm về định dạng văn bản (Yale/APA style), không chặn quy trình.
+
+---
+
+## 9. Bảng Ma Trận Bất Biến & Quy Tắc Tuân Thủ (Compliance Matrix)
 
 | Mã Bất Biến | Tên Quy Tắc | Phạm Vi Áp Dụng | Cơ Chế Cưỡng Chế | Căn Cứ Pháp Chuẩn |
 | :--- | :--- | :--- | :--- | :--- |
@@ -285,7 +367,12 @@ Khi thực thi các lệnh làm biến đổi trạng thái từ xa (`gh issue c
 | **INV-SYNC-08** | Pre-Push Lease Invariant | Hub & Git Spokes | Bắt buộc `--force-with-lease` | Guardrail 13.B |
 | **INV-SYNC-09** | Remote Mutation Idempotency | Toàn bộ Tác tử | State Inspection Gate trước khi retry | Hiến pháp Layer 1 |
 | **INV-SYNC-10** | Safe-by-Default 2-Phase Sync | Động cơ Sync CLI | Mặc định non-interactive preview; yêu cầu `--apply` | ADR-0051 |
+| **INV-SYNC-11** | Token-File Catalog Snapshot | Federated Spokes | File thường `snapshots/current` (64-hex token) | ADR-0060 Mục 6 |
+| **INV-SYNC-12** | Subprocess Probe Isolation | Spoke Linter & CLI | `communicate(timeout=1.5)` + `os.killpg(SIGKILL)` | ADR-0060 Mục 6 |
+| **INV-SYNC-13** | IDOP Idempotent Replay | Spoke nộp hồ sơ IDOP | Composite Key & `.md/idop_staged/` queue | ADR-0043, ADR-0060 |
+| **INV-SYNC-14** | 3-Tier Pre-Submission Gate | Mọi hồ sơ trình Viện | Auto-Block luật cũ và sai lệch số học dòng tiền | ADR-0042 |
 
 ---
 
 *Tài liệu được chuẩn hóa và quản trị bởi CCBA Core Architecture Team.*
+

@@ -293,7 +293,8 @@ class ChromeCDP:
                 "[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground."
             )
             manual_start = time.time()
-            max_manual_wait = 15.0 if not _check_is_headless() else 5.0
+            default_wait = 60.0 if not _check_is_headless() else 5.0
+            max_manual_wait = float(os.environ.get("TVPL_CLOUDFLARE_WAIT", default_wait))
             while is_blocked:
                 if time.time() - manual_start > max_manual_wait:
                     raise ChromeCDPError(
