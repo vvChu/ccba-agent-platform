@@ -92,7 +92,9 @@ class StagedSubmittal:
     file_size_bytes: int
     sha256: str
     created_at: str
-    status: str  # STAGED_LOCAL, SYNCED_SHAREPOINT, SYNCED_MOCK_SANDBOX, SKIPPED_DUPLICATE, FAILED_DLQ
+    status: (
+        str  # STAGED_LOCAL, SYNCED_SHAREPOINT, SYNCED_MOCK_SANDBOX, SKIPPED_DUPLICATE, FAILED_DLQ
+    )
     notes: str = ""
     iso_doc_name: str = ""
     approval_status: str = "S1"
@@ -261,7 +263,9 @@ class IDOPBridge:
                 item.status = "SKIPPED_DUPLICATE"
                 item.sharepoint_item_id = existing_item_id
                 item.synced_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
-                item.notes = (item.notes + f" [Auto-deduplicated: key matches item {existing_item_id}]").strip()
+                item.notes = (
+                    item.notes + f" [Auto-deduplicated: key matches item {existing_item_id}]"
+                ).strip()
 
                 with open(receipt_file, "w", encoding="utf-8") as f:
                     json.dump(asdict(item), f, ensure_ascii=False, indent=2)

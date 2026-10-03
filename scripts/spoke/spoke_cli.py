@@ -11,7 +11,6 @@ Provides a unified command-line interface for engineers working inside Spoke wor
 from __future__ import annotations
 
 import argparse
-import datetime
 import hashlib
 import json
 import os
@@ -20,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.spoke.idop_bridge import IDOPBridge, compute_composite_key
+    from scripts.spoke.idop_bridge import IDOPBridge
     from scripts.spoke.spoke_synchronizer import (
         HubDiscoverer,
         SpokeSynchronizer,
@@ -30,7 +29,7 @@ except ModuleNotFoundError:
     _repo_root = Path(__file__).resolve().parent.parent.parent
     if str(_repo_root) not in sys.path:
         sys.path.insert(0, str(_repo_root))
-    from scripts.spoke.idop_bridge import IDOPBridge, compute_composite_key
+    from scripts.spoke.idop_bridge import IDOPBridge
     from scripts.spoke.spoke_synchronizer import (
         HubDiscoverer,
         SpokeSynchronizer,
