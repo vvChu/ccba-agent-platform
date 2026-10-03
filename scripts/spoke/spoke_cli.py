@@ -232,57 +232,29 @@ class SpokeCLI:
                 return 1
             print("\n⚠️ Force flag applied. Proceeding with warnings...", file=sys.stderr)
 
-        # Create staging directory
-        staged_dir = self.spoke_root / ".md" / "idop_staged"
-        staged_files_dir = staged_dir / "files"
-        staged_files_dir.mkdir(parents=True, exist_ok=True)
-
-        # Generate receipt with composite key
-        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        receipt_id = f"PGV-{timestamp_str}-{task_id}"
-        file_sha256 = compute_sha256(target_file)
-        submittal_title = title or target_file.stem
-        project_code = proj.get("project_code", "UNKNOWN")
-        contract_id = proj.get("contract_id", "")
-
-        composite_key = compute_composite_key(
-            project_code=project_code,
-            contract_id=contract_id,
-            stage_id=task_id,
-            submittal_name=submittal_title,
+        # Stage deliverable via IDOPBridge SDK
+        submittal = self.bridge.stage(
+            file_path=target_file,
+            task_id=task_id,
+            title=title or target_file.stem,
+            project_code=proj.get("project_code", "UNKNOWN"),
+            national_project_id=proj.get("national_project_id", ""),
+            contract_id=proj.get("contract_id", ""),
+            author_name=org.get("owner_name", ""),
+            author_email=org.get("owner_email", ""),
+            department=org.get("department", ""),
+            seat_role=org.get("seat_role", ""),
+            notes=notes or "",
         )
 
-        receipt_data: dict[str, Any] = {
-            "receipt_id": receipt_id,
-            "composite_key": composite_key,
-            "task_id": task_id,
-            "title": submittal_title,
-            "project_code": project_code,
-            "national_project_id": proj.get("national_project_id", ""),
-            "contract_id": contract_id,
-            "author_name": org.get("owner_name", ""),
-            "author_email": org.get("owner_email", ""),
-            "department": org.get("department", ""),
-            "seat_role": org.get("seat_role", ""),
-            "source_file": str(target_file),
-            "file_name": target_file.name,
-            "file_size_bytes": target_file.stat().st_size,
-            "sha256": file_sha256,
-            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "status": "STAGED_LOCAL",
-            "notes": notes or "",
-        }
-
-        receipt_file = staged_dir / f"{receipt_id}.json"
-        with open(receipt_file, "w", encoding="utf-8") as f:
-            json.dump(receipt_data, f, ensure_ascii=False, indent=2)
+        receipt_file = self.bridge.staged_dir / f"{submittal.receipt_id}.json"
 
         print("================================================================")
         print("✅ [Stage] Hồ sơ đã được tiếp nhận vào Local Staging Queue thành công!")
-        print(f"  • Biên nhận PGV:  {receipt_id}")
-        print(f"  • Khóa hợp nhất:  {composite_key[:16]}... (Composite Key)")
-        print(f"  • Tệp nguồn:      {target_file.name} ({target_file.stat().st_size} bytes)")
-        print(f"  • SHA-256:        {file_sha256[:16]}...")
+        print(f"  • Biên nhận PGV:  {submittal.receipt_id}")
+        print(f"  • Khóa hợp nhất:  {submittal.composite_key[:16]}... (Composite Key)")
+        print(f"  • Tệp nguồn:      {target_file.name} ({submittal.file_size_bytes} bytes)")
+        print(f"  • SHA-256:        {submittal.sha256[:16]}...")
         print("  • Trạng thái:     STAGED_LOCAL (Sẵn sàng nộp lên IDOP)")
         print(f"  • Vị trí lưu:     {receipt_file.relative_to(self.spoke_root)}")
         print("================================================================\n")
@@ -301,13 +273,19 @@ class SpokeCLI:
 
         print(f"🚀 [Flush] Found {total} record(s) awaiting sync to IDOP SharePoint...")
         for r in flush_res["results"]:
-            icon = "☁️ " if r["status"] in ("SYNCED_SHAREPOINT", "SYNCED_MOCK_SANDBOX") else "❌"
+            if r["status"] in ("SYNCED_SHAREPOINT", "SYNCED_MOCK_SANDBOX"):
+                icon = "☁️ "
+            elif r["status"] == "SKIPPED_DUPLICATE":
+                icon = "⏭️ "
+            else:
+                icon = "❌"
             print(f"  {icon} {r['receipt_id']} -> {r['status']} (Key: {r['composite_key'][:12]})")
 
         synced = flush_res["synced"]
+        skipped = flush_res.get("skipped", 0)
         processed = flush_res["processed"]
         print(
-            f"\n🎉 [Flush] Complete: {synced}/{processed} records processed (Dry Run: {flush_res['dry_run']})."
+            f"\n🎉 [Flush] Complete: {synced} synced, {skipped} skipped duplicates / {processed} processed (Dry Run: {flush_res['dry_run']})."
         )
         return 0 if flush_res["failed"] == 0 else 1
 

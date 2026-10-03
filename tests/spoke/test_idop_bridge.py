@@ -142,7 +142,7 @@ def test_idop_bridge_flush_dry_run(tmp_path: Path):
 
 
 def test_idop_bridge_intra_batch_deduplication(tmp_path: Path):
-    """Validates that items with identical composite keys in the same batch are deduplicated."""
+    """Validates that items with identical composite keys are deduplicated and persisted."""
     spoke_root = tmp_path / "spoke_project"
     spoke_root.mkdir()
     f1 = spoke_root / "file1.pdf"
@@ -159,7 +159,52 @@ def test_idop_bridge_intra_batch_deduplication(tmp_path: Path):
 
     res = bridge.flush(dry_run=True)
     assert res["total_pending"] == 2
-    assert res["processed"] == 1, "Duplicate composite key should be skipped to prevent duplication"
+    assert res["synced"] == 1
+    assert res["skipped"] == 1
+    assert res["processed"] == 2
+
+    # Verify on disk that s2 is now SKIPPED_DUPLICATE and NOT STAGED_LOCAL
+    staged = {r.receipt_id: r for r in bridge.list_staged()}
+    assert staged[s1.receipt_id].status == "SYNCED_MOCK_SANDBOX"
+    assert staged[s2.receipt_id].status == "SKIPPED_DUPLICATE"
+
+    # Subsequent flush must find 0 pending records (no duplicate re-sync)
+    res2 = bridge.flush(dry_run=True)
+    assert res2["total_pending"] == 0
+
+    # Cross-batch deduplication: staging another submittal with identical key
+    f3 = spoke_root / "file3.pdf"
+    f3.write_bytes(b"data 3")
+    s3 = bridge.stage(f3, task_id="SAME_TASK", title="Same Title", project_code="DA-1")
+    assert s3.composite_key == s1.composite_key
+
+    res3 = bridge.flush(dry_run=True)
+    assert res3["total_pending"] == 1
+    assert res3["synced"] == 0
+    assert res3["skipped"] == 1
+    assert bridge.list_staged(status="STAGED_LOCAL") == []
+
+
+def test_idop_bridge_iso_doc_and_approval_status(tmp_path: Path):
+    """Validates that custom iso_doc_name and approval_status are preserved in DTO and flush payload."""
+    spoke_root = tmp_path / "spoke_project"
+    spoke_root.mkdir()
+    f1 = spoke_root / "report.pdf"
+    f1.write_bytes(b"pdf data")
+
+    bridge = IDOPBridge(spoke_root=spoke_root)
+    s = bridge.stage(
+        f1,
+        task_id="TK-01",
+        title="Báo cáo thẩm tra",
+        iso_doc_name="CCBA-BC-01.pdf",
+        approval_status="S3",
+    )
+
+    assert s.iso_doc_name == "CCBA-BC-01.pdf"
+    assert s.approval_status == "S3"
+
+    res = bridge.flush(dry_run=True)
     assert res["synced"] == 1
 
 

@@ -92,8 +92,10 @@ class StagedSubmittal:
     file_size_bytes: int
     sha256: str
     created_at: str
-    status: str  # STAGED_LOCAL, SYNCED_SHAREPOINT, FAILED_DLQ
+    status: str  # STAGED_LOCAL, SYNCED_SHAREPOINT, SYNCED_MOCK_SANDBOX, SKIPPED_DUPLICATE, FAILED_DLQ
     notes: str = ""
+    iso_doc_name: str = ""
+    approval_status: str = "S1"
     sharepoint_item_id: str | None = None
     synced_at: str | None = None
     error_message: str | None = None
@@ -173,6 +175,8 @@ class IDOPBridge:
             created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             status="STAGED_LOCAL",
             notes=notes,
+            iso_doc_name=iso_doc_name or submittal_title,
+            approval_status=approval_status or "S1",
         )
 
         receipt_file = self.staged_dir / f"{receipt_id}.json"
@@ -192,12 +196,16 @@ class IDOPBridge:
         if not self.staged_dir.exists():
             return []
 
+        import dataclasses
+
+        valid_fields = {f.name for f in dataclasses.fields(StagedSubmittal)}
         results: list[StagedSubmittal] = []
         for json_file in sorted(self.staged_dir.glob("PGV-*.json")):
             try:
                 with open(json_file, encoding="utf-8") as f:
                     data = json.load(f)
-                submittal = StagedSubmittal(**data)
+                filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+                submittal = StagedSubmittal(**filtered_data)
                 if status is None or submittal.status == status:
                     results.append(submittal)
             except Exception as e:
@@ -223,32 +231,58 @@ class IDOPBridge:
         )
 
         synced_count = 0
+        skipped_count = 0
         failed_count = 0
         results: list[dict[str, Any]] = []
 
+        # Track already synced composite keys across all historical staged records
+        all_records = self.list_staged()
+        synced_keys: dict[str, str] = {
+            r.composite_key: (r.sharepoint_item_id or "ALREADY_SYNCED")
+            for r in all_records
+            if r.status in ("SYNCED_SHAREPOINT", "SYNCED_MOCK_SANDBOX") and r.composite_key
+        }
+
         # Track processed composite keys in this run to guarantee deduplication
-        processed_keys: set[str] = set()
+        processed_keys: dict[str, str] = dict(synced_keys)
 
         for item in pending[:limit]:
             receipt_file = self.staged_dir / f"{item.receipt_id}.json"
 
-            # Check for intra-batch duplicate composite key
+            # Check for existing duplicate composite key (historical or intra-batch)
             if item.composite_key in processed_keys:
+                existing_item_id = processed_keys[item.composite_key]
                 logger.info(
-                    "Skipping duplicate composite key %s for %s",
+                    "Skipping duplicate composite key %s for %s (Mapped to %s)",
                     item.composite_key[:12],
                     item.receipt_id,
+                    existing_item_id,
+                )
+                item.status = "SKIPPED_DUPLICATE"
+                item.sharepoint_item_id = existing_item_id
+                item.synced_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                item.notes = (item.notes + f" [Auto-deduplicated: key matches item {existing_item_id}]").strip()
+
+                with open(receipt_file, "w", encoding="utf-8") as f:
+                    json.dump(asdict(item), f, ensure_ascii=False, indent=2)
+
+                skipped_count += 1
+                results.append(
+                    {
+                        "receipt_id": item.receipt_id,
+                        "composite_key": item.composite_key,
+                        "status": "SKIPPED_DUPLICATE",
+                        "item_id": existing_item_id,
+                    }
                 )
                 continue
-
-            processed_keys.add(item.composite_key)
 
             doc_payload = {
                 "Title": item.title,
                 "ProjectCode": item.project_code,
                 "DocumentCode": item.task_id,
-                "IsoDocumentName": item.title,
-                "ApprovalStatus": "S1",
+                "IsoDocumentName": item.iso_doc_name or item.title,
+                "ApprovalStatus": item.approval_status or "S1",
                 "CompositeKey": item.composite_key,
                 "Originator": "CCBA",
             }
@@ -264,6 +298,7 @@ class IDOPBridge:
                 with open(receipt_file, "w", encoding="utf-8") as f:
                     json.dump(asdict(item), f, ensure_ascii=False, indent=2)
 
+                processed_keys[item.composite_key] = sync_res.item_id or "SYNCED"
                 synced_count += 1
                 results.append(
                     {
@@ -292,6 +327,7 @@ class IDOPBridge:
             "total_pending": len(pending),
             "processed": len(results),
             "synced": synced_count,
+            "skipped": skipped_count,
             "failed": failed_count,
             "dry_run": is_dry,
             "results": results,
