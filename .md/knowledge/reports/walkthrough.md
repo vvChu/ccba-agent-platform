@@ -1,48 +1,71 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Issue #448
-## Feature: `feat(ci): implement advisory AI review guardrails and pre-merge bugbot rules (#448)`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #451
+## Feature: `feat(spoke): implement headless IDOPBridge SDK and multi-device operational architecture (#451)`
 
-> **Mã công việc:** Issue [#448](https://github.com/vvChu/ccba-agent-platform/issues/448)  
-> **Nhánh thực hiện:** `feat/issue-448-advisory-bugbot-rules`  
+> **Mã công việc:** Issue [#446](https://github.com/vvChu/ccba-agent-platform/issues/446)  
+> **Pull Request:** [#451](https://github.com/vvChu/ccba-agent-platform/pull/451)  
+> **Nhánh phát triển:** `feat/hub-spoke-idop-bridge`  
 > **Nhánh đích:** `main`  
-> **Trạng thái:** ✅ **HOÀN TẤT & ĐẠT DETERMINISTIC HARD COMPLETION LOCK (ADR-0058)**
+> **Trạng thái:** ✅ **ALL 8 CI CHECKS GREEN & COPILOT REVIEWS RESOLVED (100%)**
 
 ---
 
-## 1. Tổng Kết Kết Quả Triển Khai (Issue #448)
+## 1. Tổng Kết Hạng Mục Triển Khai
 
-Dựa trên đề xuất nghiên cứu từ tệp `.md/knowledge/research_and_studies/research-cursor-bugbot-adaptations.md`, toàn bộ các rào chắn kiểm duyệt tự động và quy chuẩn PR nguyên tử đã được tích hợp:
-
-| Hạng Mục | Tệp Nguồn / Vị Trí Triển Khai | Chi Tiết Kỹ Thuật Đạt Chuẩn |
+| Module / Tệp | Nội Dung Triển Khai | Căn Cứ Chuẩn Hóa |
 | :--- | :--- | :--- |
-| **1. 10 Bugbot Invariants** | [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md) | Chuẩn hóa 10 quy tắc máy đọc được cho Cursor Bugbot và GitHub Copilot Reviewer (SEAM_REUSE, DECOUPLED_CONNECTION, AST_SPAN_INSPECTION, MULTI_KEY_SORT, INODE_INVARIANCE, POSIX_PERMISSIONS, MACHINE_STATE_DECOUPLING, SECRETS_MASKARA, VERIFIER_TEST_PARITY, ATOMIC_MICRO_PR). |
-| **2. Guardrail 19** | [`docs/rules/execution_guardrails.md`](../../../docs/rules/execution_guardrails.md#19-atomic-micro-pr-pipeline--read-only-advisory-ai-review-guardrail) | Bổ sung Mục 19 xác lập nguyên lý bất biến: Giới hạn diff $\le 200$ LOC, 1 Seam duy nhất; Rào chắn Read-Only Advisory (Cấm bot tự động merge mã nguồn nghiệp vụ); Rào chắn kích hoạt Opt-in chống bão quota và nghẽn AI Gateway. |
-| **3. Progressive Disclosure** | [`AGENTS.md`](../../../AGENTS.md) & [`.agents/AGENTS.md`](../../../.agents/AGENTS.md) | Bổ sung mỏ neo tra cứu quy tắc Bugbot Rules và Guardrail 19 vào phần Progressive Disclosure cấp Hiến pháp Layer 1. |
-| **4. Atomic Task Invariant** | [`.agents/skills/ccba-new-feature/SKILL.md`](../../../.agents/skills/ccba-new-feature/SKILL.md) & [`.agents/skills/ccba-create-pr/SKILL.md`](../../../.agents/skills/ccba-create-pr/SKILL.md) | Bắt buộc đối chiếu 10 Invariants và khống chế diff $\le 200$ LOC trong Bước 6 (Planning) của `/ccba-new-feature`, và mở rộng kiểm chuẩn AI Code Reviewers trong Bước 4 của `/ccba-create-pr`. |
+| `scripts/spoke/idop_bridge.py` | Headless Python IDOPBridge SDK: Khóa hợp nhất Composite Key (`compute_composite_key`), hàng đợi ngoại tuyến `STAGED_LOCAL`, cơ chế Idempotent Replay, khử trùng lặp qua persistence `SKIPPED_DUPLICATE`. | ADR-0042, ADR-0043, ADR-0060 Mục 4, INV-SYNC-13 |
+| `scripts/spoke/ccba_m365_bridge.py` | Cầu nối Pure Python M365 (MSAL App-Only Certificate + HTTPX + TokenBucketLimiter 5.0 req/s + DeadLetterQueueManager). | ADR-0060 Mục 4, ADR-0061 |
+| `scripts/spoke/spoke_cli.py` | Tích hợp lệnh `ccba-spoke stage` ủy nhiệm toàn phần qua `self.bridge.stage()` và `ccba-spoke flush` với báo cáo tiến trình trực quan. | ADR-0042, ADR-0043 |
+| `docs/governance/hub_spoke_synchronization_and_multi_device_governance.md` | Nâng cấp Rev 2.0: Bổ sung Mục 8 (Mô Hình 3 Mặt Phẳng: Control, Data, Operations Plane) và 4 Bất Biến mới (`INV-SYNC-11` đến `INV-SYNC-14`). | ADR-0060, ADR-0061 |
+| `tests/spoke/test_idop_bridge.py` | Bộ test tự động 10 unit tests bao phủ composite key, staging, flush dry-run, deduplication persistence, token bucket limiter, dead letter queue. | ADR-0058 Deterministic Lock |
 
 ---
 
-## 2. Kết Quả Kiểm Chứng Đa Tầng (Multi-Tier Verification)
+## 2. Giải Quyết Triệt Để Các Góp Ý Đánh Giá Từ Copilot (Review Resolutions)
 
-Toàn bộ 6 cổng kiểm định tự động bắt buộc của CCBA Monorepo đều đạt Exit Code 0 (PASS 100%):
+Tất cả các khuyến nghị và góp ý đánh giá từ GitHub Copilot trên PR #451 đã được khắc phục hoàn toàn:
 
-```text
-# 🛡️ Deterministic Patch Verification Report: ✅ ALL PASSED
+1. **Inline Issue `4172142043` (`scripts/spoke/idop_bridge.py`):**
+   - **Vấn đề:** Cơ chế intra-batch deduplication ban đầu chỉ `continue` trong vòng lặp mà không cập nhật trạng thái trên đĩa, khiến bản ghi giữ nguyên `STAGED_LOCAL` và bị sync trùng lặp ở lần flush tiếp theo.
+   - **Khắc phục:** Đã xây dựng bảng băm `synced_keys` từ toàn bộ bản ghi lịch sử, kết hợp với `processed_keys` trong batch hiện tại. Khi phát hiện trùng lặp composite key, cập nhật trạng thái bản ghi thành `SKIPPED_DUPLICATE`, liên kết `sharepoint_item_id` của bản ghi gốc, và ghi đè JSON receipt xuống đĩa. Các lần flush sau không bao giờ quét lại bản ghi này.
 
-- Overall Status: PASS
-- Commands Executed: 6/6 passed
+2. **Inline Issue `4172142057` (`scripts/spoke/idop_bridge.py`):**
+   - **Vấn đề:** Tham số `iso_doc_name` và `approval_status` trong `stage()` không được lưu trữ trong DTO `StagedSubmittal` hay đưa vào payload của SharePoint list.
+   - **Khắc phục:** Đã bổ sung 2 trường `iso_doc_name: str = ""` và `approval_status: str = "S1"` vào dataclass `StagedSubmittal`, nạp giá trị trong `stage()`, lọc field an toàn trong `list_staged()`, và truyền đầy đủ vào `doc_payload` khi `flush()`.
 
-1. ruff check packages/ scripts/governance/ tests/governance/    -> PASS (0)
-2. ruff format --check packages/ scripts/governance/ tests/       -> PASS (0)
-3. pytest test_telemetry.py test_verify_patch.py tests/gov/ -q    -> PASS (0) [263 passed, 1 skipped]
-4. python scripts/validate_skills.py --enforce-gpi                -> PASS (0) [75/75 skills valid]
-5. python scripts/governance/compile_catalog.py --check           -> PASS (0) [100% in-sync]
-6. python scripts/sync_hub_adr_matrix.py --check                  -> PASS (0) [55 ADRs in sync]
-```
+3. **Inline Issue `4172142080` (`docs/governance/hub_spoke_synchronization_and_multi_device_governance.md`):**
+   - **Vấn đề:** Hai liên kết ADR chứa URL tuyệt đối `file:///home/vvc/...` mang tính máy cục bộ.
+   - **Khắc phục:** Đã thay thế toàn bộ bằng liên kết tương đối chuẩn mực `../adr/0042-...` và `../adr/0043-...`.
 
-- **Tài liệu & Liên kết:** `python scripts/validate_docs.py --changed` $\to$ Exit Code 0 (0 broken links).
+4. **Inline Issue `4172162721` (`scripts/spoke/spoke_cli.py`):**
+   - **Vấn đề:** `SpokeCLI.stage()` tự xây dựng receipt data thủ công bằng tay thay vì ủy nhiệm qua SDK `self.bridge.stage()`, gây nguy cơ lệch schema và sử dụng local time thay vì UTC.
+   - **Khắc phục:** Tái cấu trúc `SpokeCLI.stage()` để ủy nhiệm hoàn toàn việc tạo và lưu trữ submittal cho `self.bridge.stage(...)`, bảo đảm single source of truth cho receipt schema và thống nhất dùng UTC ISO format.
+
+5. **Inline Issue `4172210819` (`docs/governance/hub_spoke_synchronization_and_multi_device_governance.md`):**
+   - **Vấn đề:** Tài liệu mô tả cơ chế kiểm tra Delta Query trên SharePoint List trước khi POST/PATCH và gọi lệnh `idop_bridge --flush` không khớp với implementation.
+   - **Khắc phục:** Cập nhật văn bản tài liệu chính xác: cơ chế Idempotent Replay thực hiện khử trùng lặp qua Composite Key trên hàng đợi cục bộ `.md/idop_staged/` và lệnh vận hành chuẩn là `ccba-spoke flush`.
+
+6. **Inline Issue `4172210828` (`scripts/spoke/spoke_cli.py`):**
+   - **Vấn đề:** Các import chết `compute_composite_key`, `datetime`, `hashlib` và hàm helper `compute_sha256` không còn được sử dụng sau khi refactor.
+   - **Khắc phục:** Đã dọn dẹp sạch sẽ toàn bộ các import và helper không dùng, định dạng chuẩn PEP 8 bằng Ruff.
 
 ---
 
-## 3. Các Bước Tiếp Theo (Next Steps)
-- Mở Pull Request lên Hub repository qua lệnh `/ccba-create-pr`.
-- Theo dõi CI checks và nghiệm thu qua `/ccba-release-feature`.
+## 3. Kết Quả Kiểm Định CI & Local Verification
+
+- **Local Verification:**
+  - `pytest tests/spoke/`: ✅ **16/16 passed 100%**.
+  - `ruff check`: ✅ **All checks passed (0 errors)**.
+  - `ruff format`: ✅ **100% formatted**.
+  - `python3 scripts/governance/sanitize_review_diff.py`: ✅ **Clean (0 secrets)**.
+  - `python3 scripts/validate_docs.py`: ✅ **Exit code 0**.
+
+- **GitHub Actions CI Matrix (Commit `1e9c5ee8`):**
+  - `PR Danger Triage & Verifier Gate`: ✅ **PASSED**
+  - `CI/Deterministic Parity & Schema Audit`: ✅ **PASSED**
+  - `CI/Lint Markdown`: ✅ **PASSED**
+  - `CI/Test - Python 3.10`: ✅ **PASSED**
+  - `CI/Test - Python 3.11`: ✅ **PASSED**
+  - `CI/Test - Python 3.12`: ✅ **PASSED**
+  - `Security & Privacy Scan/scan`: ✅ **PASSED**
+  - `Documentation Check/validate`: ✅ **PASSED**
