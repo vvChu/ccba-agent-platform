@@ -1,11 +1,11 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #451
-## Feature: `feat(spoke): implement headless IDOPBridge SDK and multi-device operational architecture (#451)`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #453
+## Feature: `feat(legal-intel): harden Chrome CDP bridge and deterministic asset downloader (#453)`
 
-> **Mã công việc:** Issue [#446](https://github.com/vvChu/ccba-agent-platform/issues/446)  
-> **Pull Request:** [#451](https://github.com/vvChu/ccba-agent-platform/pull/451)  
-> **Nhánh phát triển:** `feat/hub-spoke-idop-bridge`  
+> **Mã công việc:** Chrome CDP Bridge & Deterministic Downloader Hardening  
+> **Pull Request:** [#453](https://github.com/vvChu/ccba-agent-platform/pull/453)  
+> **Nhánh phát triển:** `feat/legal-intel-harden-chrome-cdp`  
 > **Nhánh đích:** `main`  
-> **Trạng thái:** ✅ **ALL 8 CI CHECKS GREEN & COPILOT REVIEWS RESOLVED (100%)**
+> **Trạng thái:** ✅ **SQUASH MERGED (Commit `e3fb213f`) — ALL 8 CI CHECKS GREEN & COPILOT REVIEWS RESOLVED (100%)**
 
 ---
 
@@ -13,59 +13,38 @@
 
 | Module / Tệp | Nội Dung Triển Khai | Căn Cứ Chuẩn Hóa |
 | :--- | :--- | :--- |
-| `scripts/spoke/idop_bridge.py` | Headless Python IDOPBridge SDK: Khóa hợp nhất Composite Key (`compute_composite_key`), hàng đợi ngoại tuyến `STAGED_LOCAL`, cơ chế Idempotent Replay, khử trùng lặp qua persistence `SKIPPED_DUPLICATE`. | ADR-0042, ADR-0043, ADR-0060 Mục 4, INV-SYNC-13 |
-| `scripts/spoke/ccba_m365_bridge.py` | Cầu nối Pure Python M365 (MSAL App-Only Certificate + HTTPX + TokenBucketLimiter 5.0 req/s + DeadLetterQueueManager). | ADR-0060 Mục 4, ADR-0061 |
-| `scripts/spoke/spoke_cli.py` | Tích hợp lệnh `ccba-spoke stage` ủy nhiệm toàn phần qua `self.bridge.stage()` và `ccba-spoke flush` với báo cáo tiến trình trực quan. | ADR-0042, ADR-0043 |
-| `docs/governance/hub_spoke_synchronization_and_multi_device_governance.md` | Nâng cấp Rev 2.0: Bổ sung Mục 8 (Mô Hình 3 Mặt Phẳng: Control, Data, Operations Plane) và 4 Bất Biến mới (`INV-SYNC-11` đến `INV-SYNC-14`). | ADR-0060, ADR-0061 |
-| `tests/spoke/test_idop_bridge.py` | Bộ test tự động 10 unit tests bao phủ composite key, staging, flush dry-run, deduplication persistence, token bucket limiter, dead letter queue. | ADR-0058 Deterministic Lock |
+| `packages/ccba-legal-intel/src/ccba_legal/cdp.py` | Hàm `cleanup_zombie_locks()` dọn dẹp an toàn các file khóa mồ côi (`SingletonLock`, `SingletonCookie`, `SingletonSocket`) trong profile `chrome_vip` qua kiểm tra `os.kill(pid, 0)`. Tuyệt đối không dùng lệnh kill diện rộng để bảo vệ trình duyệt cá nhân. Thêm `wait_for_download_completion()` kết hợp lắng nghe WebSocket `Browser.downloadProgress` và đối soát ổn định kích thước tệp `_check_file_stability()`. Bổ sung Hard Timeout 90s cho Cloudflare. | ADR-0031, ADR-0043, Peer Review Vòng 3 |
+| `packages/ccba-legal-intel/src/ccba_legal/crawler/tier_downloader.py` | Tích hợp `TVPLRateLimiter.check_and_throttle()` trước Phase 1 (DOCX) và Phase 3 (PDF). Nâng cấp `_wait_for_download()` ủy quyền sang CDP completion watcher. Bọc `shutil.move()` trong vòng lặp retry 3 lần nguyên tử kèm backoff lũy thừa (`0.5s` $\to$ `1.0s`) chống khóa file của Windows Defender. | ADR-0031, ADR-0058, Peer Review Vòng 3 |
+| `packages/ccba-legal-intel/tests/test_deterministic_downloader.py` | Bộ test tự động 6 unit tests bao phủ dọn dẹp lock mồ côi, kiểm tra ổn định dung lượng file tải về, ủy quyền CDP watcher, thực thi rate limiting, và retry khi gặp `PermissionError: [WinError 32]`. | ADR-0058 Hard Completion Lock |
 
 ---
 
-## 2. Giải Quyết Triệt Để Các Góp Ý Đánh Giá Từ Copilot (Review Resolutions)
+## 2. Giải Quyết Triệt Để Tự Chữa Lành CI (Self-Healing Loop)
 
-Tất cả các khuyến nghị và góp ý đánh giá từ GitHub Copilot trên PR #451 đã được khắc phục hoàn toàn:
-
-1. **Inline Issue `4172142043` (`scripts/spoke/idop_bridge.py`):**
-   - **Vấn đề:** Cơ chế intra-batch deduplication ban đầu chỉ `continue` trong vòng lặp mà không cập nhật trạng thái trên đĩa, khiến bản ghi giữ nguyên `STAGED_LOCAL` và bị sync trùng lặp ở lần flush tiếp theo.
-   - **Khắc phục:** Đã xây dựng bảng băm `synced_keys` từ toàn bộ bản ghi lịch sử, kết hợp với `processed_keys` trong batch hiện tại. Khi phát hiện trùng lặp composite key, cập nhật trạng thái bản ghi thành `SKIPPED_DUPLICATE`, liên kết `sharepoint_item_id` của bản ghi gốc, và ghi đè JSON receipt xuống đĩa. Các lần flush sau không bao giờ quét lại bản ghi này.
-
-2. **Inline Issue `4172142057` (`scripts/spoke/idop_bridge.py`):**
-   - **Vấn đề:** Tham số `iso_doc_name` và `approval_status` trong `stage()` không được lưu trữ trong DTO `StagedSubmittal` hay đưa vào payload của SharePoint list.
-   - **Khắc phục:** Đã bổ sung 2 trường `iso_doc_name: str = ""` và `approval_status: str = "S1"` vào dataclass `StagedSubmittal`, nạp giá trị trong `stage()`, lọc field an toàn trong `list_staged()`, và truyền đầy đủ vào `doc_payload` khi `flush()`.
-
-3. **Inline Issue `4172142080` (`docs/governance/hub_spoke_synchronization_and_multi_device_governance.md`):**
-   - **Vấn đề:** Hai liên kết ADR chứa URL tuyệt đối `file:///home/vvc/...` mang tính máy cục bộ.
-   - **Khắc phục:** Đã thay thế toàn bộ bằng liên kết tương đối chuẩn mực `../adr/0042-...` và `../adr/0043-...`.
-
-4. **Inline Issue `4172162721` (`scripts/spoke/spoke_cli.py`):**
-   - **Vấn đề:** `SpokeCLI.stage()` tự xây dựng receipt data thủ công bằng tay thay vì ủy nhiệm qua SDK `self.bridge.stage()`, gây nguy cơ lệch schema và sử dụng local time thay vì UTC.
-   - **Khắc phục:** Tái cấu trúc `SpokeCLI.stage()` để ủy nhiệm hoàn toàn việc tạo và lưu trữ submittal cho `self.bridge.stage(...)`, bảo đảm single source of truth cho receipt schema và thống nhất dùng UTC ISO format.
-
-5. **Inline Issue `4172210819` (`docs/governance/hub_spoke_synchronization_and_multi_device_governance.md`):**
-   - **Vấn đề:** Tài liệu mô tả cơ chế kiểm tra Delta Query trên SharePoint List trước khi POST/PATCH và gọi lệnh `idop_bridge --flush` không khớp với implementation.
-   - **Khắc phục:** Cập nhật văn bản tài liệu chính xác: cơ chế Idempotent Replay thực hiện khử trùng lặp qua Composite Key trên hàng đợi cục bộ `.md/idop_staged/` và lệnh vận hành chuẩn là `ccba-spoke flush`.
-
-6. **Inline Issue `4172210828` (`scripts/spoke/spoke_cli.py`):**
-   - **Vấn đề:** Các import chết `compute_composite_key`, `datetime`, `hashlib` và hàm helper `compute_sha256` không còn được sử dụng sau khi refactor.
-   - **Khắc phục:** Đã dọn dẹp sạch sẽ toàn bộ các import và helper không dùng, định dạng chuẩn PEP 8 bằng Ruff.
+Trong quá trình chạy GitHub Actions CI, hệ thống phát hiện test case `test_wait_for_download_detects_mtime_update_with_oserror_handling` trong `test_crawler_tier_priority.py` bị trượt:
+- **Nguyên nhân gốc:** Logic `_check_file_stability()` và `_wait_for_download()` ban đầu bỏ qua toàn bộ các tệp đã có trong danh sách `existing_files` mà không đối soát xem `st_mtime` của tệp có vừa được cập nhật mới sau `start_time` hay không.
+- **Biện pháp khắc phục (Commit `cb996f5b`):** Cập nhật điều kiện kết hợp: chỉ bỏ qua tệp nếu tệp đã tồn tại trong `existing_files` VÀ `st_mtime` cũ hơn `start_time - 1.0`. Nếu tệp vừa được ghi đè/cập nhật mtime mới, hệ thống vẫn nhận diện và xử lý bình thường.
+- **Kết quả:** Vượt qua toàn bộ $100\%$ các bài test trên cả 3 môi trường Python (3.10, 3.11, 3.12).
 
 ---
 
 ## 3. Kết Quả Kiểm Định CI & Local Verification
 
 - **Local Verification:**
-  - `pytest tests/spoke/`: ✅ **16/16 passed 100%**.
+  - `pytest packages/ccba-legal-intel/tests/test_deterministic_downloader.py`: ✅ **6/6 passed 100%**.
+  - `pytest packages/ccba-legal-intel/tests/test_mock_cdp.py`: ✅ **6/6 passed 100%**.
+  - `pytest packages/ccba-legal-intel/tests/test_crawler_rate_limiting.py`: ✅ **5/5 passed 100%**.
+  - `run_isolated_tests.py -p ccba-legal-intel`: ✅ **443 passed 100%**.
   - `ruff check`: ✅ **All checks passed (0 errors)**.
   - `ruff format`: ✅ **100% formatted**.
-  - `python3 scripts/governance/sanitize_review_diff.py`: ✅ **Clean (0 secrets)**.
-  - `python3 scripts/validate_docs.py`: ✅ **Exit code 0**.
-
-- **GitHub Actions CI Matrix (Commit `1e9c5ee8`):**
-  - `PR Danger Triage & Verifier Gate`: ✅ **PASSED**
-  - `CI/Deterministic Parity & Schema Audit`: ✅ **PASSED**
-  - `CI/Lint Markdown`: ✅ **PASSED**
-  - `CI/Test - Python 3.10`: ✅ **PASSED**
-  - `CI/Test - Python 3.11`: ✅ **PASSED**
-  - `CI/Test - Python 3.12`: ✅ **PASSED**
-  - `Security & Privacy Scan/scan`: ✅ **PASSED**
-  - `Documentation Check/validate`: ✅ **PASSED**
+  - `mypy`: ✅ **Success: no issues found in 2 source files**.
+- **GitHub Actions Dual-Gate CI (PR #453):**
+  - PR Danger Triage & Verification Gate: ✅ **PASS** (1m 03s)
+  - CI/Deterministic Parity Verification: ✅ **PASS** (58s)
+  - CI/Lint Markdown: ✅ **PASS** (9s)
+  - CI/Test - Python 3.10: ✅ **PASS** (5m 53s)
+  - CI/Test - Python 3.11: ✅ **PASS** (5m 21s)
+  - CI/Test - Python 3.12: ✅ **PASS** (5m 50s)
+  - Security & Privacy Scan: ✅ **PASS** (8s)
+  - Documentation Check: ✅ **PASS** (28s)
+  - Copilot / Bugbot Code Review: ✅ **CLEAN & RESOLVED (100%)**
