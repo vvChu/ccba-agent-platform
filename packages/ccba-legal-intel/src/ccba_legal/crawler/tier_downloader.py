@@ -14,7 +14,7 @@ from ccba_legal.cdp import ChromeCDP, HeadlessEnvironmentError, _check_is_headle
 from ccba_legal.crawler.selectors import TVPLSelectors
 from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 from ccba_legal.registry import resolve_project_root
-from ccba_legal.session import sleep_with_jitter
+from ccba_legal.session import TVPLRateLimiter, sleep_with_jitter
 from ccba_legal.storage import (
     _check_aws_s3,
     _check_google_drive,
@@ -88,6 +88,7 @@ def _wait_for_download(
     expected_exts: list[str],
     timeout: float = 30.0,
     start_time: float | None = None,
+    cdp: ChromeCDP | None = None,
 ) -> Path | None:
     """Wait for newly downloaded file matching expected_exts with size > 0 and no .crdownload."""
     if start_time is None:
@@ -100,42 +101,40 @@ def _wait_for_download(
         except OSError:
             pass
 
-    def _is_new_or_updated(f: Path) -> bool:
-        try:
-            if str(f.resolve()) not in existing_downloads:
-                return True
-            return f.stat().st_mtime >= (start_time - 1.0)
-        except OSError:
-            return False
+    # Delegate to CDP wait_for_download_completion if available
+    if cdp is not None and hasattr(cdp, "wait_for_download_completion"):
+        found = cdp.wait_for_download_completion(
+            valid_watch_dirs,
+            expected_exts,
+            existing_downloads,
+            timeout=timeout,
+            start_time=start_time,
+        )
+        if found:
+            return found
 
+    # Fallback to local File Stability Guard loop
     while time.time() - start_time < timeout:
-        current_downloads = []
         for d in valid_watch_dirs:
             try:
-                current_downloads.extend(d.glob("*"))
+                for f in d.glob("*"):
+                    if not f.is_file() or not any(
+                        f.name.lower().endswith(ext) for ext in expected_exts
+                    ):
+                        continue
+                    if str(f.resolve()) in existing_downloads:
+                        continue
+                    if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
+                        continue
+                    st = f.stat()
+                    if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
+                        sz1 = st.st_size
+                        time.sleep(0.5)
+                        sz2 = f.stat().st_size
+                        if sz1 == sz2 and sz1 > 0:
+                            return f
             except OSError:
                 continue
-        new_downloads = [f for f in current_downloads if _is_new_or_updated(f)]
-
-        is_downloading = False
-        for f in new_downloads:
-            try:
-                if f.suffix == ".crdownload" or f.name.endswith(".tmp"):
-                    is_downloading = True
-                    break
-            except OSError:
-                continue
-        if is_downloading:
-            time.sleep(0.5)
-            continue
-
-        for f in new_downloads:
-            if any(f.name.lower().endswith(ext) for ext in expected_exts):
-                try:
-                    if f.is_file() and f.stat().st_size > 0:
-                        return f
-                except OSError:
-                    pass
         time.sleep(0.5)
     return None
 
@@ -483,7 +482,8 @@ def trigger_download(
             "pdf_tier": None,
         }
 
-    # Sequential Barrier Downloader
+    # Sequential Barrier Downloader with Rate Limiting & Resilience
+    rate_limiter = TVPLRateLimiter()
     need_docx = format_type in ("docx", "both") and has_docx
     need_pdf = format_type in ("pdf", "both") and has_pdf
     docx_path: str | None = None
@@ -491,6 +491,7 @@ def trigger_download(
 
     # Phase 1: Trigger DOCX PostBack & Wait for completion
     if need_docx:
+        rate_limiter.check_and_throttle()
         existing_before_docx = set()
         for d in watch_dirs:
             try:
@@ -512,6 +513,7 @@ def trigger_download(
                 [".docx", ".doc"],
                 timeout=30.0,
                 start_time=docx_start_time,
+                cdp=cdp,
             )
             if downloaded_docx:
                 dest_ext = downloaded_docx.suffix or ".docx"
@@ -522,6 +524,15 @@ def trigger_download(
                             shutil.move(str(downloaded_docx), str(dest))
                         docx_path = str(dest.resolve())
                         break
+                    except PermissionError as pe:
+                        if _attempt < 2:
+                            wait_sec = 0.5 * (2**_attempt)
+                            time.sleep(wait_sec)
+                            continue
+                        print(
+                            f"[LegalIntel] PermissionError moving DOCX (Windows Defender lock): {pe}"
+                        )
+                        docx_path = str(downloaded_docx.resolve())
                     except Exception as e:
                         if _attempt < 2:
                             time.sleep(0.5)
@@ -542,6 +553,7 @@ def trigger_download(
     # Phase 3: Trigger PDF PostBack & Wait for completion
     pdf_tier: int | None = preflight_pdf_tier
     if need_pdf:
+        rate_limiter.check_and_throttle()
         existing_before_pdf = set()
         for d in watch_dirs:
             try:
@@ -566,7 +578,12 @@ def trigger_download(
 
         if clicked:
             downloaded_pdf = _wait_for_download(
-                watch_dirs, existing_before_pdf, [".pdf"], timeout=30.0, start_time=pdf_start_time
+                watch_dirs,
+                existing_before_pdf,
+                [".pdf"],
+                timeout=30.0,
+                start_time=pdf_start_time,
+                cdp=cdp,
             )
             if downloaded_pdf:
                 dest = download_dir / f"{slug_name}.pdf"
@@ -576,6 +593,15 @@ def trigger_download(
                             shutil.move(str(downloaded_pdf), str(dest))
                         pdf_path = str(dest.resolve())
                         break
+                    except PermissionError as pe:
+                        if _attempt < 2:
+                            wait_sec = 0.5 * (2**_attempt)
+                            time.sleep(wait_sec)
+                            continue
+                        print(
+                            f"[LegalIntel] PermissionError moving PDF (Windows Defender lock): {pe}"
+                        )
+                        pdf_path = str(downloaded_pdf.resolve())
                     except Exception as e:
                         if _attempt < 2:
                             time.sleep(0.5)

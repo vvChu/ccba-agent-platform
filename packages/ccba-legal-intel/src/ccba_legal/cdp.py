@@ -37,6 +37,45 @@ def _check_is_headless() -> bool:
     return False
 
 
+def cleanup_zombie_locks(user_data_path: Path) -> None:
+    """Safely remove orphaned Chrome lock files without killing foreign Chrome processes."""
+    if not user_data_path.exists():
+        return
+
+    lock_file = user_data_path / "SingletonLock"
+    if lock_file.exists() or lock_file.is_symlink():
+        try:
+            if lock_file.is_symlink():
+                target = os.readlink(lock_file)
+                # Formats: host-PID
+                parts = target.split("-")
+                is_dead = True
+                if len(parts) >= 2 and parts[-1].isdigit():
+                    pid = int(parts[-1])
+                    try:
+                        os.kill(pid, 0)
+                        is_dead = False
+                    except (ProcessLookupError, OSError):
+                        is_dead = True
+                if is_dead:
+                    lock_file.unlink(missing_ok=True)
+            else:
+                try:
+                    lock_file.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        except Exception:
+            pass
+
+    for extra_lock in ["SingletonCookie", "SingletonSocket"]:
+        p = user_data_path / extra_lock
+        if p.is_symlink() or p.exists():
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
 class ChromeCDP:
     """Helper class to interact with Chrome via DevTools Protocol (CDP)."""
 
@@ -49,6 +88,10 @@ class ChromeCDP:
 
     def get_pages(self) -> list[dict[str, Any]]:
         """List all open page targets in Chrome, auto-launching instance or creating new tab if needed."""
+        user_data = os.path.expanduser("~/.gemini/antigravity/chrome_vip")
+        user_data_path = Path(user_data)
+        cleanup_zombie_locks(user_data_path)
+
         try:
             resp = requests.get(f"{self.base_url}/json", timeout=3)
             resp.raise_for_status()
@@ -77,10 +120,20 @@ class ChromeCDP:
                     port_busy = True
 
                 if port_busy:
+                    # Check if port 9222 actually has responsive Chrome instance
+                    try:
+                        resp = requests.get(f"{self.base_url}/json", timeout=2)
+                        if resp.ok:
+                            pages = [t for t in resp.json() if t.get("type") == "page"]
+                            if pages:
+                                return pages
+                    except Exception:
+                        pass
+
                     self.port = 9223
                     self.base_url = f"http://127.0.0.1:{self.port}"
                     try:
-                        resp = requests.get(f"{self.base_url}/json", timeout=3)
+                        resp = requests.get(f"{self.base_url}/json", timeout=2)
                         resp.raise_for_status()
                         pages = [t for t in resp.json() if t.get("type") == "page"]
                         if pages:
@@ -92,8 +145,8 @@ class ChromeCDP:
 
             browser_path = get_browser_executable_path()
             if browser_path and os.path.exists(browser_path):
-                user_data = os.path.expanduser("~/.gemini/antigravity/chrome_vip")
                 os.makedirs(user_data, exist_ok=True)
+                cleanup_zombie_locks(user_data_path)
                 import subprocess
 
                 subprocess.Popen(
@@ -293,8 +346,11 @@ class ChromeCDP:
                 "[LegalIntel] Cloudflare requires manual confirmation. Chrome window brought to foreground."
             )
             manual_start = time.time()
-            default_wait = 60.0 if not _check_is_headless() else 5.0
+            default_wait = 90.0 if not _check_is_headless() else 5.0
             max_manual_wait = float(os.environ.get("TVPL_CLOUDFLARE_WAIT", default_wait))
+            print(
+                f"[LegalIntel] Waiting for Cloudflare verification (hard timeout: {max_manual_wait:.0f}s)..."
+            )
             while is_blocked:
                 if time.time() - manual_start > max_manual_wait:
                     raise ChromeCDPError(
@@ -356,6 +412,95 @@ class ChromeCDP:
             pass
 
         return False
+
+    def _check_file_stability(
+        self,
+        watch_dirs: list[Path],
+        expected_exts: list[str],
+        start_time: float,
+        existing_files: set[str],
+    ) -> Path | None:
+        """Check whether a downloaded file in watch_dirs has finished writing and stabilized."""
+        for d in watch_dirs:
+            if not d.exists():
+                continue
+            try:
+                candidates = [
+                    f
+                    for f in d.glob("*")
+                    if f.is_file() and any(f.name.lower().endswith(ext) for ext in expected_exts)
+                ]
+            except OSError:
+                continue
+
+            for f in candidates:
+                try:
+                    resolved_str = str(f.resolve())
+                    if resolved_str in existing_files:
+                        continue
+                    if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
+                        continue
+                    st = f.stat()
+                    if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
+                        sz1 = st.st_size
+                        time.sleep(0.5)
+                        sz2 = f.stat().st_size
+                        if sz1 == sz2 and sz1 > 0:
+                            return f
+                except OSError:
+                    continue
+        return None
+
+    def wait_for_download_completion(
+        self,
+        watch_dirs: list[Path],
+        expected_exts: list[str],
+        existing_files: set[str],
+        timeout: float = 30.0,
+        start_time: float | None = None,
+    ) -> Path | None:
+        """Deterministic two-tier download watcher: Layer-1 WebSocket events with Layer-2 File Stability Guard."""
+        if start_time is None:
+            start_time = time.time()
+
+        ws = self.ws
+        while time.time() - start_time < timeout:
+            # Layer 1: WebSocket event inspection if active
+            if ws:
+                remaining = max(0.5, timeout - (time.time() - start_time))
+                try:
+                    ws.settimeout(min(2.0, remaining))
+                    raw = ws.recv()
+                    if raw:
+                        msg = json.loads(raw)
+                        method = msg.get("method", "")
+                        params = msg.get("params", {})
+                        if method == "Browser.downloadProgress":
+                            state = params.get("state")
+                            if state == "completed":
+                                # Immediate file stability check upon event
+                                found = self._check_file_stability(
+                                    watch_dirs, expected_exts, start_time, existing_files
+                                )
+                                if found:
+                                    return found
+                            elif state == "canceled":
+                                return None
+                except (websocket.WebSocketTimeoutException, TimeoutError):
+                    pass
+                except Exception:
+                    pass
+
+            # Layer 2: File Stability Guard fallback
+            found = self._check_file_stability(
+                watch_dirs, expected_exts, start_time, existing_files
+            )
+            if found:
+                return found
+
+            time.sleep(0.5)
+
+        return None
 
     def handle_login(self) -> bool:
         """Detect login popup, fill in credentials, submit, handle multi-session warning, and return True if login was attempted."""
@@ -555,7 +700,7 @@ class MockChromeCDP(ChromeCDP):
     def wait_ready(self, timeout_sec: int = 30) -> None:
         pass
 
-    def handle_cloudflare(self) -> None:
+    def handle_cloudflare(self, auto_wait_sec: int = 7) -> None:
         pass
 
     def handle_login(self) -> bool:
@@ -563,6 +708,23 @@ class MockChromeCDP(ChromeCDP):
 
     def close_popup(self) -> bool:
         return self.mock_popup_closed
+
+    def wait_for_download_completion(
+        self,
+        watch_dirs: list[Path],
+        expected_exts: list[str],
+        existing_files: set[str],
+        timeout: float = 30.0,
+        start_time: float | None = None,
+    ) -> Path | None:
+        for d in watch_dirs:
+            if not d.exists():
+                continue
+            for f in d.glob("*"):
+                if f.is_file() and any(f.name.lower().endswith(ext) for ext in expected_exts):
+                    if str(f.resolve()) not in existing_files:
+                        return f
+        return None
 
     def close(self) -> None:
         self.connected = False
