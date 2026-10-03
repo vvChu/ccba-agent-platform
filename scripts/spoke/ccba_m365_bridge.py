@@ -59,7 +59,7 @@ class BridgeConfig:
 
     tenant_id: str = "d7aa4978-363e-47aa-a77e-7da957b32bf3"
     client_id: str = "c055c7a4-9150-4bd5-bf01-445c65467feb"
-    client_secret: str | None = None
+    client_credential: str | None = None
     cert_path: str | None = None
     cert_thumbprint: str | None = None
     cert_password: str | None = None
@@ -74,6 +74,11 @@ class BridgeConfig:
     backoff_factor: float = 1.5
     dlq_dir: Path = field(default_factory=lambda: Path(".system_generated/dlq"))
     timeout_seconds: float = 30.0
+
+    @property
+    def client_secret(self) -> str | None:
+        """Backward-compatible alias for client_credential."""
+        return self.client_credential
 
     @classmethod
     def from_env(cls) -> BridgeConfig:
@@ -90,7 +95,7 @@ class BridgeConfig:
                 "IDOP_SP_CLIENT_ID",
                 os.getenv("AZURE_CLIENT_ID", "c055c7a4-9150-4bd5-bf01-445c65467feb"),
             ),
-            client_secret=os.getenv("IDOP_SP_CLIENT_SECRET", os.getenv("AZURE_CLIENT_SECRET")),
+            client_credential=os.getenv("IDOP_SP_CLIENT_SECRET", os.getenv("AZURE_CLIENT_SECRET")),
             cert_path=os.getenv("IDOP_SP_CERT_PATH", os.getenv("AZURE_CLIENT_CERTIFICATE_PATH")),
             cert_thumbprint=os.getenv("IDOP_PNP_CERT_THUMBPRINT"),
             cert_password=os.getenv("IDOP_SP_CERT_PASSWORD"),
@@ -281,7 +286,7 @@ class M365AuthManager:
                 return access_token
 
             error_desc = result.get("error_description", result.get("error", "Unknown MSAL error"))
-            raise RuntimeError(f"Failed to acquire M365 App-Only token: {error_desc}")
+            raise RuntimeError(f"Failed to acquire M365 App-Only auth response - {error_desc}")
 
 
 # ==============================================================================
@@ -512,9 +517,9 @@ class SharePointClient:
             return True, mock_id, None
 
         endpoint = f"{site_url.rstrip('/')}/_api/web/lists/getbytitle('{list_name}')/items"
-        token = self.auth.get_token()
+        bearer_jwt = self.auth.get_token()
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {bearer_jwt}",
             "Accept": "application/json;odata=nometadata",
             "Content-Type": "application/json",
         }
