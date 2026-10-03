@@ -436,11 +436,11 @@ class ChromeCDP:
             for f in candidates:
                 try:
                     resolved_str = str(f.resolve())
-                    if resolved_str in existing_files:
-                        continue
                     if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
                         continue
                     st = f.stat()
+                    if resolved_str in existing_files and st.st_mtime < (start_time - 1.0):
+                        continue
                     if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
                         sz1 = st.st_size
                         time.sleep(0.5)
@@ -722,8 +722,15 @@ class MockChromeCDP(ChromeCDP):
                 continue
             for f in d.glob("*"):
                 if f.is_file() and any(f.name.lower().endswith(ext) for ext in expected_exts):
-                    if str(f.resolve()) not in existing_files:
+                    try:
+                        st = f.stat()
+                        if str(f.resolve()) in existing_files and st.st_mtime < (
+                            (start_time or 0) - 1.0
+                        ):
+                            continue
                         return f
+                    except OSError:
+                        continue
         return None
 
     def close(self) -> None:

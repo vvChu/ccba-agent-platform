@@ -122,11 +122,11 @@ def _wait_for_download(
                         f.name.lower().endswith(ext) for ext in expected_exts
                     ):
                         continue
-                    if str(f.resolve()) in existing_downloads:
-                        continue
                     if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
                         continue
                     st = f.stat()
+                    if str(f.resolve()) in existing_downloads and st.st_mtime < (start_time - 1.0):
+                        continue
                     if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
                         sz1 = st.st_size
                         time.sleep(0.5)
