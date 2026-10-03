@@ -11,7 +11,6 @@ Provides a unified command-line interface for engineers working inside Spoke wor
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -35,15 +34,6 @@ except ModuleNotFoundError:
         SpokeSynchronizer,
         load_yaml,
     )
-
-
-def compute_sha256(file_path: Path) -> str:
-    """Compute SHA-256 hash of a file."""
-    sha = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            sha.update(chunk)
-    return sha.hexdigest()
 
 
 class PreSubmissionGateError(Exception):

@@ -345,7 +345,7 @@ flowchart TD
   - Khi mất mạng hoặc SharePoint bảo trì: Dữ liệu hồ sơ serialize thành JSON AST lưu tại `.md/idop_staged/` với trạng thái `STAGED_LOCAL`.
   - Mỗi bản ghi có Khóa Tự Nhiên Hợp Nhất (Composite Key):  
     `composite_key = sha256(ProjectCode + ContractId + StageId + SubmittalName)`.
-  - Lệnh `idop_bridge --flush` thực hiện Idempotent Replay: kiểm tra Delta Query trên SharePoint List trước khi quyết định POST hay PATCH, chống trùng lặp tuyệt đối 100%.
+  - Lệnh `ccba-spoke flush` thực hiện Idempotent Replay: khử trùng lặp qua Composite Key trên hàng đợi cục bộ `.md/idop_staged/` (gán trạng thái `SKIPPED_DUPLICATE` cho bản ghi trùng, liên kết với SharePoint Item ID gốc), ngăn ngừa phát sinh bản ghi trùng khi re-flush.
 - **3-Tier AI Pre-Submission Gate ([ADR-0042](../adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md))**:
   - 🔴 **Tier 1 (Hard-Floor Auto-Block)**: Tự động chặn 100% hồ sơ trích dẫn luật cũ hoặc sai lệch toán học phân bổ dòng tiền 3 cấp.
   - 🟡 **Tier 2 (Governance Override)**: Ngoại lệ ký hợp đồng khẩn cấp cần Giám đốc (`ROLE_DIRECTOR`) duyệt kèm nhật ký giải trình.
