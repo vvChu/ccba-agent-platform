@@ -179,12 +179,23 @@ def _build_pure_normative_body(pure_body_raw: str) -> str:
     )
     pure_body = pure_body_raw[m.start(1) :] if m else pure_body_raw
     # Strip trailing administrative signature blocks / distribution footers
-    sig_split = re.split(
+    sig_pattern = re.compile(
         r"(?:\n\s*__\*?\s*Nơi nhận\s*:|\n\s*\*+Nơi nhận\s*:|\n\s*Nơi nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
-        pure_body,
-        flags=re.IGNORECASE,
+        re.IGNORECASE,
     )
-    pure_body = sig_split[0].strip()
+    sig_matches = list(sig_pattern.finditer(pure_body))
+    for sm in reversed(sig_matches):
+        rest = pure_body[sm.end() :]
+        has_more_articles = bool(
+            re.search(
+                r"(?:Điều\s+\d+|QUY ĐỊNH|QUY CHẾ|ĐIỀU LỆ|Chương\s+[IVXLCDM0-9]+)",
+                rest,
+                re.IGNORECASE,
+            )
+        )
+        if not has_more_articles:
+            pure_body = pure_body[: sm.start()].strip()
+            break
 
     pure_body = normalize_clause_numbers(pure_body)
     pure_body = re.sub(r"(\n\s*\+\s+[^\n]+)", r"&nbsp;&nbsp;\1", pure_body)
