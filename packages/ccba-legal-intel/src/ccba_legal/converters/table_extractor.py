@@ -273,7 +273,6 @@ def classify_and_extract_tables(
         if b_type != "tbl":
             continue
         table = obj
-        table_counter += 1
         rows_cnt, cols_cnt = len(table.rows), len(table.columns)
         cells = [c for row in table.rows for c in row.cells]
         num_density = 0.0
@@ -309,7 +308,12 @@ def classify_and_extract_tables(
                 grid_span = int(span_nodes[0]) if span_nodes and span_nodes[0].isdigit() else 1
 
                 vmerge_nodes = tc.xpath("./w:tcPr/w:vMerge")
-                cell_text = "".join(tc.itertext()).strip().replace("\n", " ")
+                p_texts = []
+                for p in tc.xpath(".//w:p"):
+                    pt = "".join(t.text for t in p.xpath(".//w:t") if t.text).strip()
+                    if pt:
+                        p_texts.append(pt)
+                cell_text = " ".join(p_texts).strip()
 
                 if vmerge_nodes:
                     v_val = vmerge_nodes[0].get(f"{{{W_NS}}}val", "")
@@ -342,6 +346,7 @@ def classify_and_extract_tables(
         if not grid:
             continue
 
+        table_counter += 1
         norm_grid, headers = resolve_hierarchical_headers(grid)
         clean_cap = caption_num.strip(".- \t") if caption_num else None
         table_slug = (
