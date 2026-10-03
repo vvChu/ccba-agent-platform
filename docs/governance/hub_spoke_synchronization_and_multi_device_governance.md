@@ -273,7 +273,7 @@ Khi thực thi các lệnh làm biến đổi trạng thái từ xa (`gh issue c
 
 ## 8. Kiến Trúc Vận Hành Đa Mặt Phẳng Trong Bối Cảnh CCBA WAY (IDOP)
 
-Tiếp thu kết quả từ [ADR-0060](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/0060-4hub-federated-spokes-architecture.md), [ADR-0061](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md) và phiên thẩm định đồng cấp đối kháng với Grok (2026-10-03), tương tác giữa Spoke dự án tại máy clients (Windows/Linux/laptop công trường) với Central Hubs, Server DGX Spark và Microsoft 365 được phân định thành **3 Mặt Phẳng Tách Biệt (Plane Separation)**:
+Tiếp thu kết quả từ [ADR-0060](../adr/0060-4hub-federated-spokes-architecture.md), [ADR-0061](../adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md) và phiên thẩm định đồng cấp đối kháng với Grok (2026-10-03), tương tác giữa Spoke dự án tại máy clients (Windows/Linux/laptop công trường) với Central Hubs, Server DGX Spark và Microsoft 365 được phân định thành **3 Mặt Phẳng Tách Biệt (Plane Separation)**:
 
 ```mermaid
 flowchart TD
