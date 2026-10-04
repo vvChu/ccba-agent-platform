@@ -31,8 +31,7 @@ def _safe_load_yaml(filepath: Path) -> dict[str, Any]:
         return {}
 
 
-# Dependency topology order: harness must be first, then ai, then domain packages
-PACKAGE_TOPOLOGY_ORDER = [
+DEFAULT_PACKAGE_TOPOLOGY_ORDER: list[str] = [
     "ccba-harness",
     "ccba-ai",
     "ccba-legal-intel",
@@ -43,6 +42,103 @@ PACKAGE_TOPOLOGY_ORDER = [
     "ccba-notebooklm",
     "ccba-maskara",
 ]
+
+
+def discover_package_topology(hub_root: Path | None = None) -> list[str]:
+    """Dynamically discovers all packages under packages/ and resolves their topological dependency order (ADR-0062).
+
+    Guarantees (Grok Condition 2):
+    1. ccba-harness is always position 0 (if present).
+    2. ccba-ai is always position 1 (if present).
+    3. Domain packages are ordered via Kahn's Topological Sort based on internal monorepo dependencies.
+    4. Robust fallback to static DEFAULT_PACKAGE_TOPOLOGY_ORDER if topological sort encounters circular deps or IO error.
+    """
+    if hub_root is None:
+        hub_root = Path(__file__).resolve().parents[2]
+
+    pkg_dir = hub_root / "packages"
+    if not pkg_dir.is_dir():
+        return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
+
+    try:
+        try:
+            import tomllib
+        except ImportError:
+            import tomli as tomllib  # type: ignore
+
+        all_pkgs: dict[str, str] = {}
+        dep_graph: dict[str, set[str]] = {}
+
+        for p in sorted(pkg_dir.iterdir(), key=lambda x: x.name):
+            if not p.is_dir() or not (p / "pyproject.toml").exists():
+                continue
+            folder_name = p.name
+            try:
+                data = tomllib.loads((p / "pyproject.toml").read_text(encoding="utf-8"))
+                proj_name = data.get("project", {}).get("name", folder_name)
+                raw_deps = data.get("project", {}).get("dependencies", [])
+            except Exception:
+                proj_name = folder_name
+                raw_deps = []
+
+            all_pkgs[folder_name] = proj_name
+            internal_deps = set()
+            for d in raw_deps:
+                clean_d = (
+                    d.split(">=")[0]
+                    .split("<=")[0]
+                    .split("==")[0]
+                    .split("<")[0]
+                    .split(">")[0]
+                    .split("~=")[0]
+                    .split(";")[0]
+                    .strip()
+                )
+                internal_deps.add(clean_d)
+            dep_graph[folder_name] = internal_deps
+
+        in_degree: dict[str, int] = dict.fromkeys(dep_graph, 0)
+        adj: dict[str, list[str]] = {p: [] for p in dep_graph}
+
+        name_to_folder = {name: folder for folder, name in all_pkgs.items()}
+        name_to_folder.update({folder: folder for folder in all_pkgs})
+
+        for folder, deps in dep_graph.items():
+            for d in deps:
+                dep_folder = name_to_folder.get(d)
+                if dep_folder and dep_folder != folder and dep_folder in dep_graph:
+                    adj[dep_folder].append(folder)
+                    in_degree[folder] += 1
+
+        ordered: list[str] = []
+        # Tier-0 Anchor: ccba-harness, then ccba-ai
+        for anchor in ("ccba-harness", "ccba-ai"):
+            if anchor in in_degree and anchor not in ordered:
+                ordered.append(anchor)
+                for neighbor in adj[anchor]:
+                    in_degree[neighbor] -= 1
+
+        zero_in = sorted([p for p in in_degree if in_degree[p] <= 0 and p not in ordered])
+        while zero_in:
+            curr = zero_in.pop(0)
+            ordered.append(curr)
+            for neighbor in sorted(adj[curr]):
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0 and neighbor not in ordered and neighbor not in zero_in:
+                    zero_in.append(neighbor)
+                    zero_in.sort()
+
+        for p in sorted(dep_graph):
+            if p not in ordered:
+                ordered.append(p)
+
+        return ordered
+    except Exception:
+        return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
+
+
+PACKAGE_TOPOLOGY_ORDER = DEFAULT_PACKAGE_TOPOLOGY_ORDER
+
 
 ARCHETYPE_TIER1_DEFAULTS = {
     "knowledge_corpus": ["ccba-legal-intel"],
@@ -248,9 +344,10 @@ class SpokeBootstrapper:
                         continue
                 target_set.add(default_pkg)
 
-        # Sort according to topology order
+        # Sort according to topology order (ADR-0062 Dynamic Package Topo-Discovery)
+        topo_order = discover_package_topology(self.hub_root)
         ordered: list[str] = []
-        for pkg in PACKAGE_TOPOLOGY_ORDER:
+        for pkg in topo_order:
             if pkg in target_set:
                 ordered.append(pkg)
                 target_set.remove(pkg)

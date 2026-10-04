@@ -523,6 +523,7 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     skills = compile_skills(hub_root)
     workflows = compile_workflows(hub_root)
     seams = compile_seams(hub_root)
+    guardrails = compile_guardrails(hub_root, base_data)
 
     catalog: dict[str, Any] = {
         "hub_path": base_data.get("hub_path", "."),
@@ -542,8 +543,26 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
         "seams": seams,
         "rules": base_data.get("rules", []),
         "knowledge": base_data.get("knowledge", []),
+        "guardrails": guardrails,
     }
     return catalog
+
+
+def compile_guardrails(hub_root: Path, base_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Compile and validate guardrails list from catalog_base.yaml (ADR-0062)."""
+    raw_guards = base_data.get("guardrails", [])
+    valid_guards = []
+    for g in raw_guards:
+        src_rel = g.get("src")
+        if src_rel:
+            src_path = hub_root / src_rel
+            if not src_path.exists():
+                print(
+                    f"⚠️ [Catalog Compiler] Warning: Guardrail src '{src_rel}' not found on Hub: {src_path}",
+                    file=sys.stderr,
+                )
+        valid_guards.append(g)
+    return valid_guards
 
 
 def generate_catalog_yaml(hub_root: Path = HUB_ROOT) -> str:

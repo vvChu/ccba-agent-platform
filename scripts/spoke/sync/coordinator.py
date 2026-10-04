@@ -1185,6 +1185,23 @@ class SpokeSynchronizer:
             print(f"[Sync] Error: Could not find catalog.yaml at {catalog_file}", file=sys.stderr)
             return 1
 
+        # Catalog Freshness Check (ADR-0062 / Grok Condition 3: Non-blocking warning)
+        try:
+            from scripts.governance.compile_catalog import check_catalog_in_sync
+
+            is_in_sync, _ = check_catalog_in_sync(hub_root)
+            if not is_in_sync:
+                print(
+                    "[Sync] ⚠️  CẢNH BÁO: Phát hiện catalog.yaml chưa được đồng bộ với kỹ năng/guardrails mới nhất trên Hub.",
+                    file=sys.stderr,
+                )
+                print(
+                    "  💡 Gợi ý (Hub Maintainer): Chạy 'python scripts/governance/compile_catalog.py --write' để làm mới catalog.",
+                    file=sys.stderr,
+                )
+        except Exception:
+            pass
+
         catalog = load_yaml(catalog_file)
 
         target_item = sync_item or only
