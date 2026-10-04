@@ -191,6 +191,27 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
     return pending_antigravity, pending_grok
 
 
+def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    """Extracts the most recent Grok verdict details from registry."""
+    latest_grok_resp = [
+        item
+        for item in registry.values()
+        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
+    ]
+    if not latest_grok_resp:
+        return None
+    latest_grok_resp.sort(key=lambda x: x["mtime"], reverse=True)
+    top = latest_grok_resp[0]
+    v = top["verdict"]
+    return {
+        "request_id": v.request_id,
+        "verdict": v.verdict,
+        "blocking_conditions": len([c for c in v.conditions if c.blocking]),
+        "output_path": top["path"].name,
+        "summary": v.summary,
+    }
+
+
 def update_status_json(
     registry: dict[str, dict[str, Any]], pending_anti: list[str], pending_grok: list[str]
 ) -> None:
@@ -198,24 +219,7 @@ def update_status_json(
     now_iso = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
-
-    latest_verdict: dict[str, Any] | None = None
-    latest_grok_resp = [
-        item
-        for item in registry.values()
-        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
-    ]
-    if latest_grok_resp:
-        latest_grok_resp.sort(key=lambda x: x["mtime"], reverse=True)
-        top = latest_grok_resp[0]
-        v = top["verdict"]
-        latest_verdict = {
-            "request_id": v.request_id,
-            "verdict": v.verdict,
-            "blocking_conditions": len([c for c in v.conditions if c.blocking]),
-            "output_path": top["path"].name,
-            "summary": v.summary,
-        }
+    latest_verdict = _build_latest_verdict(registry)
 
     status_data = {
         "timestamp": now_iso,
