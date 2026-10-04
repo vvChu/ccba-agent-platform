@@ -46,6 +46,34 @@ DEFAULT_IGNORE_DIRS: frozenset[str] = frozenset(
 )
 
 
+def is_safe_or_template(val: str, key_hint: str = "") -> bool:
+    """Check if value is a known safe string, template expression, or non-sensitive numeric value."""
+    if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
+        return True
+    stripped = val.strip()
+    # Ignore template variable interpolations: ${VAR}, $(VAR), {{ .Values.X }}, <% ... %>
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#")):
+        return True
+    # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
+    # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
+    if stripped.isdigit():
+        key_lower = key_hint.lower()
+        sensitive_terms = ("password", "passwd", "pwd", "secret", "credential", "pin")
+        if any(term in key_lower for term in sensitive_terms):
+            return False  # Keep alert for numeric passwords
+        return True
+    # Ignore common obvious placeholder patterns
+    lower = stripped.lower()
+    if (
+        lower.startswith(("your_", "your-", "dummy", "sample", "example", "mock"))
+        or lower.endswith(("_placeholder", "-placeholder", "_here", "-here"))
+        or "change_me" in lower
+        or "placeholder" in lower
+    ):
+        return True
+    return False
+
+
 class MaskaraScanner:
     """Deep module hiding secret regex matching, file scanning, redaction, and reporting.
 
@@ -177,6 +205,8 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
                 if rule_id == "env-secret":
                     val = match.group(1)
                     start, end = match.start(1), match.end(1)
+                    if is_safe_or_template(val, key_hint=match.group(0)):
+                        continue
                 else:
                     val = match.group(0)
                     start, end = match.start(), match.end()

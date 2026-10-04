@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ccba-maskara"
-version = "1.0.0"
+version = "1.2.0"
 description = "CCBA Maskara — Unified Security Scanning & PII Redaction Deep Module"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -92,5 +92,11 @@ SAFE_STRINGS: set[str] = {
     "mock-safe-test-key",
     "your-api-key",
     "your_key_here",
+    "your-api-key-here",
+    "CHANGE_ME_IN_PRODUCTION",
+    "placeholder_password",
+    "placeholder_key",
+    "[REDACTED]",
+    "***REMOVED***",
     "sk-proj-YOUR_API_KEY",
 }
