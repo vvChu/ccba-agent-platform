@@ -2,7 +2,10 @@
 proposal_id: "2026-10-04_maskara-v120-hardening"
 type: "packages"
 name: "maskara-v120-hardening"
-status: "proposed"
+status: "merged"
+merged_pr: "#455"
+merged_commit: "bfa69f75"
+merged_date: "2026-10-04"
 priority: "Cao"
 proposed_by_project: "ccba-agent-platform"
 proposed_by_archetype: "platform_tooling"
@@ -17,7 +20,7 @@ applies_to:
 
 - **Tác giả đề xuất:** Platform Architect / Security Lead
 - **Ngày lập:** 2026-10-04
-- **Trạng thái:** Đang đề xuất (Proposed)
+- **Trạng thái:** Đã hợp nhất (Merged) — PR #455 (Commit `bfa69f75`)
 - **Căn cứ pháp lý nền tảng:** [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0042](../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), Session Learning #41.
 
 ---
