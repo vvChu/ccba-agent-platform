@@ -80,7 +80,7 @@ class MaskaraScanner:
         return resolve_targets(agent_name, custom_root)
 
     def looks_like_session_text(self, path: Path) -> bool:
-        """Determine if filename pattern looks like session/logs text."""
+        """Determine if filename pattern looks like session/logs text or config/secret file."""
         name = path.name.lower()
         ext = path.suffix.lower()
         if ext in [
@@ -94,11 +94,19 @@ class MaskaraScanner:
             ".toml",
             ".env",
             ".xml",
+            ".bak",
+            ".conf",
+            ".ini",
+            ".cfg",
+            ".properties",
+            ".sh",
+            ".bash",
+            ".zsh",
         ]:
             return True
-        if name.startswith(".env"):
+        if name.startswith(".env") or ".env." in name or name.endswith(".env"):
             return True
-        keywords = ["session", "conversation", "transcript", "history"]
+        keywords = ["session", "conversation", "transcript", "history", "secret", "credential"]
         return any(kw in name for kw in keywords)
 
     def is_binary(self, filepath: Path) -> bool:
