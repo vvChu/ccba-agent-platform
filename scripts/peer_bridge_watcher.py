@@ -30,12 +30,24 @@ def build_parser() -> argparse.ArgumentParser:
         Configured ArgumentParser instance.
     """
     parser = argparse.ArgumentParser(description="Peer Agent Bridge Watcher (Delta SHA-256).")
-    parser.add_argument("--once", action="store_true", help="Run a single delta sync cycle and exit.")
-    parser.add_argument("--watch", action="store_true", help="Run continuously watching for changes.")
-    parser.add_argument("--interval", type=int, default=5, help="Polling interval in seconds (default: 5).")
-    parser.add_argument("--auto-gate", action="store_true", help="Trigger peer implementation gate on code.")
-    parser.add_argument("--auto-grok", action="store_true", help="Automatically invoke Grok CLI on new prompts.")
-    parser.add_argument("--dir", type=str, default=str(DEFAULT_PEER_DIR), help="Target peer exchange directory.")
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single delta sync cycle and exit."
+    )
+    parser.add_argument(
+        "--watch", action="store_true", help="Run continuously watching for changes."
+    )
+    parser.add_argument(
+        "--interval", type=int, default=5, help="Polling interval in seconds (default: 5)."
+    )
+    parser.add_argument(
+        "--auto-gate", action="store_true", help="Trigger peer implementation gate on code."
+    )
+    parser.add_argument(
+        "--auto-grok", action="store_true", help="Automatically invoke Grok CLI on new prompts."
+    )
+    parser.add_argument(
+        "--dir", type=str, default=str(DEFAULT_PEER_DIR), help="Target peer exchange directory."
+    )
     return parser
 
 
