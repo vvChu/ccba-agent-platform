@@ -18,7 +18,7 @@ applies_to:
 - **Tác giả đề xuất:** Platform Architect / Security Lead
 - **Ngày lập:** 2026-10-04
 - **Trạng thái:** Đang đề xuất (Proposed)
-- **Căn cứ pháp lý nền tảng:** [ADR-0045](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0047](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/0047-client-side-privacy-and-secret-hygiene-guardrails.md), Session Learning #41.
+- **Căn cứ pháp lý nền tảng:** [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0042](../../docs/adr/0042-tiered-ai-pre-submission-gate-and-tri-repo-sync.md), Session Learning #41.
 
 ---
 

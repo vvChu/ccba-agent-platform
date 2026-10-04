@@ -9,8 +9,16 @@ if command -v maskara >/dev/null 2>&1; then
   maskara scan --staged
 elif [ -x ".venv/bin/python" ] && .venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then
   .venv/bin/python -m ccba_maskara.cli scan --staged
+elif [ -x "scripts/.venv/bin/python" ] && scripts/.venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then
+  scripts/.venv/bin/python -m ccba_maskara.cli scan --staged
+elif [ -x ".venv/Scripts/python.exe" ] && .venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then
+  .venv/Scripts/python.exe -m ccba_maskara.cli scan --staged
+elif [ -x "scripts/.venv/Scripts/python.exe" ] && scripts/.venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then
+  scripts/.venv/Scripts/python.exe -m ccba_maskara.cli scan --staged
 elif command -v python3 >/dev/null 2>&1 && python3 -c "import ccba_maskara" >/dev/null 2>&1; then
   python3 -m ccba_maskara.cli scan --staged
+elif command -v python >/dev/null 2>&1 && python -c "import ccba_maskara" >/dev/null 2>&1; then
+  python -m ccba_maskara.cli scan --staged
 else
   echo "❌ [CCBA Guardrail Error] ccba-maskara CLI not found. Please install: pip install ccba-maskara" >&2
   echo "💡 [Bypass khẩn cấp]: git commit --no-verify" >&2

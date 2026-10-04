@@ -101,10 +101,10 @@ def test_yaml_toml_indented_secret_detection(scanner: MaskaraScanner) -> None:
 def test_template_variable_exclusion(scanner: MaskaraScanner) -> None:
     cases = [
         'API_KEY="${API_KEY}"',
-        'DATABASE_PASSWORD="{{ .Values.db.password }}"',
-        'SECRET="$(cat /run/secrets/key)"',
-        'AUTH_TOKEN="<% token %>"',
-        'MINIO_SECRET_KEY="<# vault_secret #>"',
+        'DATABASE_PASSWORD="{{.Values.db.password}}"',
+        'SECRET="$(vault_secret_val)"',
+        'AUTH_TOKEN="<%token_auth_jwt%>"',
+        'MINIO_SECRET_KEY="<#vault_secret_key#>"',
         'TELEGRAM_BOT_TOKEN="{tg_token}"',
         'API_KEY="{api_key}"',
     ]

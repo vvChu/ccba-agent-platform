@@ -119,18 +119,19 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
 
                 try:
                     res = subprocess.run(
-                        ["git", "diff", "--cached", "--name-only", "--diff-filter=d"],
+                        ["git", "diff", "--cached", "--name-only", "--diff-filter=d", "-z"],
                         capture_output=True,
-                        text=True,
                         timeout=10,
                     )
                     if res.returncode != 0:
+                        err_msg = res.stderr.decode("utf-8", errors="replace").strip()
                         print(
-                            f"[Maskara Error] 'git diff' failed with exit code {res.returncode}. Not inside a Git repository?",
+                            f"[Maskara Error] 'git diff' failed with exit code {res.returncode}. Not inside a Git repository? {err_msg}",
                             file=sys.stderr,
                         )
                         return 2
-                    staged_files = [f.strip() for f in res.stdout.splitlines() if f.strip()]
+                    raw_paths = [p for p in res.stdout.split(b"\x00") if p]
+                    staged_files = [p.decode("utf-8", errors="replace") for p in raw_paths]
                 except FileNotFoundError:
                     print("[Maskara Error] 'git' command not found. Fail-closed.", file=sys.stderr)
                     return 2
@@ -199,7 +200,9 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
             return (
-                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
+                1
+                if any(f["severity"] in ("critical", "high", "medium") for f in result["findings"])
+                else 0
             )
 
         elif cmd == "init-hooks":
@@ -209,16 +212,16 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 res = subprocess.run(
                     ["git", "rev-parse", "--show-toplevel"],
                     capture_output=True,
-                    text=True,
                     timeout=5,
                 )
                 if res.returncode != 0:
+                    err_msg = res.stderr.decode("utf-8", errors="replace").strip()
                     print(
-                        "[Maskara Error] Not inside a Git repository. Cannot initialize hooks.",
+                        f"[Maskara Error] Not inside a Git repository. Cannot initialize hooks: {err_msg}",
                         file=sys.stderr,
                     )
                     return 2
-                git_root = Path(res.stdout.strip())
+                git_root = Path(res.stdout.decode("utf-8", errors="replace").strip())
             except FileNotFoundError:
                 print("[Maskara Error] 'git' command not found. Fail-closed.", file=sys.stderr)
                 return 2
@@ -227,10 +230,9 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
             cfg_check = subprocess.run(
                 ["git", "config", "core.hooksPath"],
                 capture_output=True,
-                text=True,
                 cwd=str(git_root),
             )
-            existing_hookspath = cfg_check.stdout.strip()
+            existing_hookspath = cfg_check.stdout.decode("utf-8", errors="replace").strip()
             if (
                 existing_hookspath
                 and existing_hookspath != ".githooks"
