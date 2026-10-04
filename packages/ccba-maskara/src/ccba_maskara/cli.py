@@ -199,10 +199,10 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 print(
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
+            # Full directory scan gates on critical/high to allow documentation/config examples
+            # (unlike --staged / --files pre-commit paths which strictly block medium env-secrets)
             return (
-                1
-                if any(f["severity"] in ("critical", "high", "medium") for f in result["findings"])
-                else 0
+                1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
             )
 
         elif cmd == "init-hooks":
