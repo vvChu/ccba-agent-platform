@@ -422,6 +422,22 @@ def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
     return "\n\n".join(merged_sections).rstrip() + "\n"
 
 
+def ensure_peer_exchange_scaffold(spoke_root: Path, hub_root: Path, dry_run: bool = False) -> None:
+    """Ensures .md/peer_exchange directory and starter handshake files exist in Spoke workspace."""
+    peer_dir = spoke_root / ".md" / "peer_exchange"
+    if not dry_run:
+        peer_dir.mkdir(parents=True, exist_ok=True)
+        handshake_file = peer_dir / "PEER_HANDSHAKE.md"
+        hub_handshake = hub_root / ".md" / "peer_exchange" / "PEER_HANDSHAKE.md"
+        if not handshake_file.exists() and hub_handshake.exists():
+            handshake_file.write_text(hub_handshake.read_text(encoding="utf-8"), encoding="utf-8")
+
+        readme_file = peer_dir / "README.md"
+        hub_readme = hub_root / ".md" / "peer_exchange" / "README.md"
+        if not readme_file.exists() and hub_readme.exists():
+            readme_file.write_text(hub_readme.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 class SpokeSynchronizer:
     """Deep Engine managing Spoke workspace synchronization with non-destructive selective merge."""
 
@@ -874,6 +890,9 @@ class SpokeSynchronizer:
             dry_run=dry_run, force=force
         )
         actions.extend(guardrail_actions)
+
+        # 4b. Peer exchange scaffolding (ADR-0007 / Issue #458)
+        ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=dry_run)
 
         # 5. Spoke telemetry refresh & registration (ADR-0046)
         if not dry_run:

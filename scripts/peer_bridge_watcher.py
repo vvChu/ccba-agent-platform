@@ -1,270 +1,361 @@
 #!/usr/bin/env python3
-"""peer_bridge_watcher.py - Peer Agent Bridge: Antigravity <-> Grok.
+"""scripts/peer_bridge_watcher.py - Event-driven Peer Agent Bridge Watcher (ADR-0007 / Issue #458).
 
-Coordinates automated, non-interactive handshakes and data exchange between
-Antigravity and Grok on the ccba-agent-platform workspace.
+Coordinates bidirectional state, delta detection via SHA-256 caching, front-matter parsing,
+and automated gate triggering between Antigravity and Grok.
 """
 
 from __future__ import annotations
 
 import argparse
-import fcntl
+import datetime
+import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
+
+try:
+    from ccba_harness.peer import (
+        PeerPromptEnvelope,
+        PeerVerdictBlock,
+        parse_envelope_from_md,
+        parse_verdict_from_md,
+    )
+except ImportError:
+    try:
+        from scripts.peer_protocol import (
+            PeerPromptEnvelope,
+            PeerVerdictBlock,
+            parse_envelope_from_md,
+            parse_verdict_from_md,
+        )
+    except ImportError:
+        from peer_protocol import (
+            PeerPromptEnvelope,
+            PeerVerdictBlock,
+            parse_envelope_from_md,
+            parse_verdict_from_md,
+        )
 
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 PEER_EXCHANGE_DIR = WORKSPACE_DIR / ".md" / "peer_exchange"
-GROK_BINARY = Path("/home/vvc/.local/bin/grok")
-GROK_SESSIONS_DIR = Path("/home/vvc/.grok/sessions/%2Fhome%2Fvvc%2Fccba%2Fccba-agent-platform")
+CACHE_FILE = PEER_EXCHANGE_DIR / ".bridge_cache.json"
 STATUS_FILE = PEER_EXCHANGE_DIR / "status.json"
-ANTIGRAVITY_TO_GROK_FILE = PEER_EXCHANGE_DIR / "ANTIGRAVITY_TO_GROK.md"
-GROK_TO_ANTIGRAVITY_FILE = PEER_EXCHANGE_DIR / "GROK_TO_ANTIGRAVITY.md"
+SUMMARY_FILE = PEER_EXCHANGE_DIR / "grok_live_summary.md"
+HANDSHAKE_FILE = PEER_EXCHANGE_DIR / "PEER_HANDSHAKE.md"
 
 
-def load_status() -> dict[str, Any]:
-    """Reads peer status metadata from status.json."""
-    if not STATUS_FILE.is_file():
+class FileChange(NamedTuple):
+    path: Path
+    role: str
+    sha256: str
+    envelope: PeerPromptEnvelope | None = None
+    verdict: PeerVerdictBlock | None = None
+
+
+def atomic_write_text(target: Path, content: str) -> None:
+    """Writes text content to target file atomically using a temporary file (Grok C2)."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temp_file = target.with_suffix(f"{target.suffix}.tmp_{os.getpid()}_{time.time_ns()}")
+    try:
+        temp_file.write_text(content, encoding="utf-8")
+        temp_file.replace(target)
+    except Exception:
+        if temp_file.exists():
+            temp_file.unlink(missing_ok=True)
+        raise
+
+
+def safe_read_and_hash(path: Path, max_retries: int = 3) -> tuple[str | None, str | None]:
+    """Safely reads file content and computes SHA-256 with retry against partial writes (Grok C2)."""
+    for attempt in range(max_retries):
+        try:
+            content = path.read_text(encoding="utf-8")
+            digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            return content, digest
+        except (OSError, UnicodeDecodeError):
+            if attempt < max_retries - 1:
+                time.sleep(0.05)
+    return None, None
+
+
+def classify_file_role(path: Path) -> str:
+    """Classifies the role of a peer exchange file based on its naming convention."""
+    name = path.name
+    if name in (
+        "grok_live_summary.md",
+        "status.json",
+        "PEER_HANDSHAKE.md",
+        "README.md",
+    ) or name.startswith("."):
+        return "AUXILIARY"
+    if name.startswith("grok_request_antigravity_"):
+        return "GROK_REQUEST"
+    if name.startswith("antigravity_response_"):
+        return "ANTIGRAVITY_RESPONSE"
+    if name.startswith("prompt_grok_") or name.startswith("prompt_"):
+        return "PROMPT_TO_GROK"
+    if name.startswith("grok_implementation_") or name.startswith("grok_implement_"):
+        return "GROK_IMPLEMENTATION"
+    if name.startswith("grok_"):
+        return "GROK_RESPONSE"
+    return "AUXILIARY"
+
+
+def load_cache() -> dict[str, str]:
+    """Loads SHA-256 hash cache from disk."""
+    if not CACHE_FILE.exists():
         return {}
     try:
-        with open(STATUS_FILE, encoding="utf-8") as f:
-            return json.load(f)
+        data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
 
-def update_status(updates: dict[str, Any]) -> None:
-    """Updates peer status metadata in status.json."""
-    data = load_status()
-    data["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S")
-    for k, v in updates.items():
-        if isinstance(v, dict) and isinstance(data.get(k), dict):
-            data[k].update(v)
-        else:
-            data[k] = v
-
-    PEER_EXCHANGE_DIR.mkdir(parents=True, exist_ok=True)
-    with open(STATUS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+def save_cache(cache: dict[str, str]) -> None:
+    """Saves SHA-256 hash cache to disk atomically."""
+    atomic_write_text(CACHE_FILE, json.dumps(cache, indent=2))
 
 
-def get_target_session_dir() -> Path | None:
-    """Resolves the pinned target session directory for Grok."""
-    status = load_status()
-    session_id = status.get("peers", {}).get("grok", {}).get("target_session_id")
-    if session_id and (GROK_SESSIONS_DIR / session_id).is_dir():
-        return GROK_SESSIONS_DIR / session_id
+def scan_peer_exchange(
+    cache: dict[str, str],
+) -> tuple[list[FileChange], dict[str, str], dict[str, Any]]:
+    """Scans peer_exchange directory, detects delta changes, and extracts active metadata."""
+    if not PEER_EXCHANGE_DIR.exists():
+        return [], cache, {}
 
-    # Fallback to the latest modified directory
-    if GROK_SESSIONS_DIR.is_dir():
-        candidates = [
-            d for d in GROK_SESSIONS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")
-        ]
-        if candidates:
-            candidates.sort(key=lambda d: d.stat().st_mtime, reverse=True)
-            return candidates[0]
-    return None
+    new_cache = dict(cache)
+    changes: list[FileChange] = []
+    registry: dict[str, dict[str, Any]] = {}
 
+    for entry in sorted(os.scandir(PEER_EXCHANGE_DIR), key=lambda e: e.name):
+        if not entry.is_file() or not entry.name.endswith(".md"):
+            continue
+        path = Path(entry.path)
+        role = classify_file_role(path)
+        if role == "AUXILIARY":
+            continue
 
-def is_session_locked(session_dir: Path) -> bool:
-    """Checks whether the Grok session is actively locked by another process.
+        content, digest = safe_read_and_hash(path)
+        if not content or not digest:
+            continue
 
-    Uses POSIX non-blocking advisory file locking (fcntl.flock) instead of
-    file existence check, because empty lock files remain on disk indefinitely.
-    """
-    lock_file = session_dir / "chat_history.jsonl.lock"
-    if not lock_file.exists():
-        return False
-    try:
-        with open(lock_file, "a") as f:
-            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.flock(f, fcntl.LOCK_UN)
-            return False
-    except (BlockingIOError, OSError):
-        return True
+        prev_hash = cache.get(entry.name)
+        envelope = parse_envelope_from_md(content)
+        verdict = parse_verdict_from_md(content)
 
-
-def extract_latest_grok_response(session_dir: Path) -> str:
-    """Extracts the latest assistant completion text from chat_history.jsonl."""
-    chat_file = session_dir / "chat_history.jsonl"
-    if not chat_file.is_file():
-        return ""
-
-    latest_text = ""
-    try:
-        with open(chat_file, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    record = json.loads(line)
-                    # Detect assistant messages
-                    role = record.get("role")
-                    content = record.get("content", "")
-                    if role in ("assistant", "model", None) and content:
-                        latest_text = content
-                except Exception:
-                    continue
-    except Exception as e:
-        return f"Error reading chat history: {e}"
-
-    return latest_text
-
-
-def trigger_grok_headless(
-    prompt_file: Path,
-    session_uuid: str | None = None,
-    timeout_s: int = 180,
-    max_retries: int = 2,
-) -> tuple[int, str]:
-    """Invokes Grok CLI headlessly using non-interactive flags."""
-    if not GROK_BINARY.is_file():
-        return 127, f"Grok binary not found at: {GROK_BINARY}"
-
-    if not prompt_file.is_file():
-        return 1, f"Prompt file not found: {prompt_file}"
-
-    target_uuid = session_uuid
-    if not target_uuid:
-        target_dir = get_target_session_dir()
-        if target_dir:
-            target_uuid = target_dir.name
-
-    cmd = [
-        str(GROK_BINARY),
-        "--output-format",
-        "plain",
-        "--always-approve",
-        "--no-alt-screen",
-        "--prompt-file",
-        str(prompt_file),
-    ]
-    if target_uuid:
-        cmd.extend(["--resume", target_uuid])
-
-    last_error = ""
-    for attempt in range(1, max_retries + 1):
-        try:
-            update_status(
-                {
-                    "peers": {
-                        "grok": {"status": f"running_attempt_{attempt}"},
-                        "antigravity": {"status": "waiting_grok"},
-                    }
-                }
-            )
-            result = subprocess.run(
-                cmd,
-                cwd=WORKSPACE_DIR,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=timeout_s,
-                check=False,
-            )
-            if result.returncode == 0:
-                output_content = result.stdout.strip()
-                GROK_TO_ANTIGRAVITY_FILE.parent.mkdir(parents=True, exist_ok=True)
-                GROK_TO_ANTIGRAVITY_FILE.write_text(output_content, encoding="utf-8")
-                update_status(
-                    {
-                        "peers": {
-                            "grok": {"status": "idle_response_ready"},
-                            "antigravity": {"status": "processing_grok_response"},
-                        }
-                    }
-                )
-                return 0, output_content
-
-            last_error = result.stderr.strip() or result.stdout.strip()
-            time.sleep(2)
-        except subprocess.TimeoutExpired:
-            last_error = f"Execution timed out after {timeout_s}s"
-            time.sleep(2)
-        except Exception as ex:
-            last_error = str(ex)
-
-    update_status(
-        {
-            "peers": {
-                "grok": {"status": f"error: {last_error}"},
-                "antigravity": {"status": "error_handling"},
-            }
+        registry[entry.name] = {
+            "role": role,
+            "path": path,
+            "mtime": entry.stat().st_mtime,
+            "envelope": envelope,
+            "verdict": verdict,
+            "sha256": digest,
         }
+
+        if prev_hash != digest:
+            changes.append(
+                FileChange(path=path, role=role, sha256=digest, envelope=envelope, verdict=verdict)
+            )
+            new_cache[entry.name] = digest
+
+    return changes, new_cache, registry
+
+
+def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[str], list[str]]:
+    """Matches request_ids to identify unanswered prompts for Antigravity and Grok."""
+    answered_ids: set[str] = set()
+
+    for item in registry.values():
+        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]:
+            answered_ids.add(item["verdict"].request_id)
+        elif item["role"] == "ANTIGRAVITY_RESPONSE" and item["verdict"]:
+            answered_ids.add(item["verdict"].request_id)
+
+    pending_grok: list[str] = []
+    pending_antigravity: list[str] = []
+
+    for name, item in registry.items():
+        if item["role"] == "PROMPT_TO_GROK" and item["envelope"]:
+            if item["envelope"].request_id not in answered_ids:
+                pending_grok.append(name)
+        elif item["role"] == "GROK_REQUEST" and item["envelope"]:
+            if item["envelope"].request_id not in answered_ids:
+                pending_antigravity.append(name)
+
+    return pending_antigravity, pending_grok
+
+
+def update_status_json(
+    registry: dict[str, dict[str, Any]], pending_anti: list[str], pending_grok: list[str]
+) -> None:
+    """Updates status.json with latest state and verdicts."""
+    now_iso = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime(
+        "%Y-%m-%d %H:%M:%S"
     )
-    return 1, f"Failed after {max_retries} attempts. Last error: {last_error}"
+
+    latest_verdict: dict[str, Any] | None = None
+    latest_grok_resp = [
+        item
+        for item in registry.values()
+        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
+    ]
+    if latest_grok_resp:
+        latest_grok_resp.sort(key=lambda x: x["mtime"], reverse=True)
+        top = latest_grok_resp[0]
+        v = top["verdict"]
+        latest_verdict = {
+            "request_id": v.request_id,
+            "verdict": v.verdict,
+            "blocking_conditions": len([c for c in v.conditions if c.blocking]),
+            "output_path": top["path"].name,
+            "summary": v.summary,
+        }
+
+    status_data = {
+        "timestamp": now_iso,
+        "peers": {
+            "antigravity": {
+                "name": "Antigravity (Pair Architect & Builder)",
+                "status": "waiting_for_grok" if pending_grok else "idle",
+                "pending_requests": len(pending_anti),
+                "latest_request": pending_grok[-1] if pending_grok else None,
+            },
+            "grok": {
+                "name": "Grok 4.7 xhigh (Auditor & Gatekeeper)",
+                "status": "in_progress" if pending_grok else "idle",
+                "pending_requests": len(pending_grok),
+                "latest_verdict": latest_verdict,
+            },
+        },
+        "exchange_stats": {
+            "total_prompts": len([i for i in registry.values() if i["role"] == "PROMPT_TO_GROK"]),
+            "total_responses": len(
+                [
+                    i
+                    for i in registry.values()
+                    if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
+                ]
+            ),
+            "pending_antigravity": pending_anti,
+            "pending_grok": pending_grok,
+        },
+    }
+    atomic_write_text(STATUS_FILE, json.dumps(status_data, indent=2, ensure_ascii=False))
+
+
+def update_live_summary(
+    registry: dict[str, dict[str, Any]], pending_anti: list[str], pending_grok: list[str]
+) -> None:
+    """Renders a concise, lightweight summary (< 5 KB) to grok_live_summary.md."""
+    now_iso = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    recent_responses = [
+        item
+        for item in registry.values()
+        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
+    ]
+    recent_responses.sort(key=lambda x: x["mtime"], reverse=True)
+
+    summary_lines = [
+        "# ⚡ Grok & Antigravity Live Peer Summary\n",
+        f"> **Thời điểm cập nhật**: `{now_iso}` | **Cơ chế**: Delta SHA-256 Bridge (ADR-0007)\n\n",
+        "## 1. Trạng Thái Vận Hành\n",
+        f"- **Antigravity**: `{'waiting_for_grok' if pending_grok else 'idle'}` (Đang chờ Grok: {len(pending_grok)} requests)",
+        f"- **Grok**: `{'in_progress' if pending_grok else 'idle'}` (Đang chờ Antigravity: {len(pending_anti)} requests)\n\n",
+        "## 2. Hàng Đợi Đang Chờ (Pending Queue)\n",
+    ]
+
+    if pending_grok:
+        summary_lines.append("### ⏳ Grok cần xử lý:")
+        for p in pending_grok[:5]:
+            summary_lines.append(f"- `{p}`")
+    else:
+        summary_lines.append("### ✅ Grok: Không có yêu cầu tồn đọng.")
+
+    if pending_anti:
+        summary_lines.append("\n### ⏳ Antigravity cần xử lý:")
+        for p in pending_anti[:5]:
+            summary_lines.append(f"- `{p}`")
+
+    summary_lines.append("\n## 3. Phán Quyết Gần Nhất (Recent Verdicts)\n")
+    summary_lines.append("| Tệp Phản Hồi | Phán Quyết (Verdict) | Điều Kiện | Tóm Tắt |")
+    summary_lines.append("|---|:---:|:---:|---|")
+
+    for item in recent_responses[:8]:
+        v = item["verdict"]
+        c_count = len(v.conditions)
+        summary_lines.append(
+            f"| `{item['path'].name}` | **`{v.verdict}`** | {c_count} | {v.summary[:50]}... |"
+        )
+
+    content = "\n".join(summary_lines) + "\n"
+    atomic_write_text(SUMMARY_FILE, content)
+
+
+def run_cycle(auto_gate: bool = False) -> list[FileChange]:
+    """Executes a single observation and synchronization cycle."""
+    cache = load_cache()
+    changes, new_cache, registry = scan_peer_exchange(cache)
+
+    if changes or not STATUS_FILE.exists() or not SUMMARY_FILE.exists():
+        pending_anti, pending_grok = compute_pending_queues(registry)
+        update_status_json(registry, pending_anti, pending_grok)
+        update_live_summary(registry, pending_anti, pending_grok)
+        save_cache(new_cache)
+
+        for change in changes:
+            print(f"[{change.role}] Detected change in: {change.path.name}")
+            if auto_gate and change.role == "GROK_IMPLEMENTATION":
+                print(f"⚡ Auto-gate triggered for {change.path.name}...")
+                gate_script = WORKSPACE_DIR / "scripts" / "peer_implementation_gate.py"
+                if gate_script.exists():
+                    subprocess.run(
+                        [sys.executable, str(gate_script), "--output-verdict"], check=False
+                    )
+
+    return changes
 
 
 def main() -> int:
-    """CLI entrypoint."""
-    parser = argparse.ArgumentParser(
-        description="Peer Bridge Watcher: Antigravity <-> Grok automated coordination."
-    )
-    parser.add_argument("--check-status", action="store_true", help="Print current peer status.")
-    parser.add_argument("--check-lock", action="store_true", help="Check session file lock status.")
+    parser = argparse.ArgumentParser(description="Peer Agent Bridge Watcher (Delta SHA-256).")
     parser.add_argument(
-        "--sync", action="store_true", help="Extract latest Grok message to exchange file."
+        "--once", action="store_true", help="Run a single delta sync cycle and exit."
     )
     parser.add_argument(
-        "--trigger-grok",
+        "--watch", action="store_true", help="Run continuously watching for changes."
+    )
+    parser.add_argument(
+        "--interval", type=int, default=5, help="Polling interval in seconds (default: 5)."
+    )
+    parser.add_argument(
+        "--auto-gate",
         action="store_true",
-        help="Trigger Grok headless execution with ANTIGRAVITY_TO_GROK.md prompt file.",
+        help="Trigger peer_implementation_gate on new implementation.",
     )
     args = parser.parse_args()
 
-    session_dir = get_target_session_dir()
-
-    if args.check_lock:
-        if not session_dir:
-            print("❌ No target session directory found.")
-            return 1
-        locked = is_session_locked(session_dir)
-        print(f"Session Dir: {session_dir}")
-        print(f"Lock Status: {'🔒 LOCKED' if locked else '🟢 UNLOCKED (Ready)'}")
+    if args.once or not args.watch:
+        changes = run_cycle(auto_gate=args.auto_gate)
+        print(f"[OK] Bridge sync completed. Detected {len(changes)} change(s).")
         return 0
 
-    if args.sync:
-        if not session_dir:
-            print("❌ No target session directory found.")
-            return 1
-        resp = extract_latest_grok_response(session_dir)
-        if resp:
-            GROK_TO_ANTIGRAVITY_FILE.parent.mkdir(parents=True, exist_ok=True)
-            GROK_TO_ANTIGRAVITY_FILE.write_text(resp, encoding="utf-8")
-            print(
-                f"✅ Extracted latest Grok response ({len(resp)} chars) to {GROK_TO_ANTIGRAVITY_FILE}"
-            )
-            return 0
-        print("⚠️ No assistant response found in session.")
-        return 1
-
-    if args.trigger_grok:
-        retcode, out = trigger_grok_headless(ANTIGRAVITY_TO_GROK_FILE)
-        if retcode == 0:
-            print(f"✅ Grok headless completed successfully ({len(out)} chars output).")
-            return 0
-        print(f"❌ Grok headless failed: {out}")
-        return retcode
-
-    # Default: --check-status
-    status = load_status()
-    print("=================================================================")
-    print("      PEER BRIDGE STATUS: ANTIGRAVITY <-> GROK                   ")
-    print("=================================================================")
-    print(f"Workspace Dir       : {WORKSPACE_DIR}")
-    print(f"Session Dir Target  : {session_dir}")
-    print(f"Grok Binary Exists  : {GROK_BINARY.is_file()}")
-    if session_dir:
-        print(
-            f"Session Lock Status : {'🔒 LOCKED' if is_session_locked(session_dir) else '🟢 UNLOCKED (Ready)'}"
-        )
-    print(f"Exchange Status     :\n{json.dumps(status, indent=2)}")
-    print("=================================================================")
+    print(
+        f"🚀 Starting Peer Bridge Watcher (interval={args.interval}s, auto_gate={args.auto_gate})... Press Ctrl+C to stop."
+    )
+    try:
+        while True:
+            run_cycle(auto_gate=args.auto_gate)
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        print("\nWatcher stopped.")
     return 0
 
 
