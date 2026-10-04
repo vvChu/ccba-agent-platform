@@ -6,12 +6,12 @@ import logging
 import os
 import re
 import shutil
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
 import yaml
-
-logger = logging.getLogger(__name__)
 
 from ccba_legal.registry import LegalRegistryManager, load_legal_registry
 from ccba_legal.sync.cdp_discovery import (
@@ -39,7 +39,50 @@ from ccba_legal.sync.utils import (
     safe_remove,
 )
 
+logger = logging.getLogger(__name__)  # ccba:allow-long-functions
+
 DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
+RAW_GITHUB_BASE = os.environ.get(
+    "CCBA_LEGAL_CDN_URL", "https://raw.githubusercontent.com/vvChu/ccba-legal-knowledge/main"
+)
+DEFAULT_NETWORK_TIMEOUT = 5.0
+DEFAULT_USER_AGENT = "CCBA-Legal-ThinClient/1.0"
+CORE_BUNDLE_FILES = ("document_normative.md", "clauses.json", "metadata.yaml")
+
+
+def _fetch_remote_file_atomic(
+    url: str,
+    dest_path: Path,
+    timeout: float = DEFAULT_NETWORK_TIMEOUT,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> bool:
+    """Download a remote file atomically via temporary file and replace (Grok C1/C2).
+
+    Args:
+        url: Remote HTTP/HTTPS URL.
+        dest_path: Destination local file path.
+        timeout: Network timeout in seconds.
+        user_agent: Custom User-Agent header.
+
+    Returns:
+        True if successfully downloaded and placed, False otherwise.
+    """
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = dest_path.with_suffix(f"{dest_path.suffix}.tmp_{os.getpid()}")
+    req = urllib.request.Request(url, headers={"User-Agent": user_agent})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            if getattr(resp, "status", 200) != 200:
+                return False
+            data = resp.read()
+        tmp_path.write_bytes(data)
+        tmp_path.replace(dest_path)
+        return True
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        logger.debug("Failed to stream %s to %s: %s", url, dest_path, e)
+        if tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
+        return False
 
 
 class LegalSyncEngine:
@@ -384,17 +427,146 @@ class LegalSyncEngine:
                 "registry_merge": registry_merge_summary,
             }
         else:
-            # Tier 2: Cloud Vault Fallback
+            return self._sync_from_remote_cdn(
+                dest_root=dest_root,
+                doc_ids=doc_ids,
+                update_registry=update_registry,
+                pull_assets=pull_assets,
+            )
+
+    def _fetch_remote_registry(
+        self, update_registry: bool
+    ) -> tuple[dict[str, Any], dict[str, int]]:
+        """Fetch remote master registry from CDN and merge if requested."""
+        remote_reg_url = f"{RAW_GITHUB_BASE}/.md/data/legal_registry.yaml"
+        tmp_remote_reg = self.project_root / ".md" / "data" / ".remote_registry.tmp.yaml"
+        reg_downloaded = _fetch_remote_file_atomic(remote_reg_url, tmp_remote_reg)
+        if not reg_downloaded:
+            remote_reg_url = f"{RAW_GITHUB_BASE}/legal_registry.yaml"
+            reg_downloaded = _fetch_remote_file_atomic(remote_reg_url, tmp_remote_reg)
+
+        if not reg_downloaded:
+            raise urllib.error.URLError("Unable to fetch canonical legal_registry.yaml from remote CDN")
+
+        master_data = load_legal_registry(tmp_remote_reg)
+        tmp_remote_reg.unlink(missing_ok=True)
+
+        merge_summary = {"updated": 0, "added": 0, "preserved": 0}
+        if update_registry:
+            local_mgr = LegalRegistryManager(self.project_root / ".md" / "data" / "legal_registry.yaml")
+            merge_summary = local_mgr.merge_with_master_registry(master_data, backup=True)
+        return master_data, merge_summary
+
+    def _resolve_remote_sync_items(
+        self, master_data: dict[str, Any], doc_ids: list[str] | None
+    ) -> list[dict[str, str]]:
+        """Resolve and filter document items from registry according to doc_ids."""
+        items: list[dict[str, str]] = []
+        categories_map = {
+            "laws": "01_vbpl",
+            "decrees": "01_vbpl",
+            "circulars": "01_vbpl",
+            "decisions": "01_vbpl",
+            "qcvn": "02_qcvn",
+            "tcvn": "03_tcvn",
+            "standards": "03_tcvn",
+            "appendices": "04_appendices",
+            "documents": "01_vbpl",
+        }
+        norm_ids = [re.sub(r"[\s\-_/.]+", "", d.lower()) for d in (doc_ids or [])]
+
+        for sec, cat in categories_map.items():
+            docs = master_data.get(sec, [])
+            if not isinstance(docs, list):
+                continue
+            for d in docs:
+                if not isinstance(d, dict):
+                    continue
+                slug = str(d.get("slug") or d.get("id") or "").strip().lower()
+                doc_num = str(d.get("document_number") or "").strip().lower()
+                if not slug:
+                    continue
+                if norm_ids:
+                    clean_slug = re.sub(r"[\s\-_/.]+", "", slug)
+                    clean_num = re.sub(r"[\s\-_/.]+", "", doc_num)
+                    if not any(nid in clean_slug or (clean_num and nid in clean_num) for nid in norm_ids):
+                        continue
+                items.append({"category": cat, "slug": slug})
+
+        items.sort(key=lambda x: (x["category"], x["slug"]))
+        return items
+
+    def _stream_single_bundle(self, cat: str, slug: str, dest_root: Path, pull_assets: bool) -> bool:
+        """Stream a single OKF bundle from remote CDN with cache checking."""
+        target_bundle = dest_root / cat / slug
+        if (target_bundle / "metadata.yaml").is_file() and (target_bundle / "clauses.json").is_file():
+            return True
+
+        if not pull_assets:
+            return False
+
+        target_bundle.mkdir(parents=True, exist_ok=True)
+        all_core_ok = True
+        for fname in CORE_BUNDLE_FILES:
+            file_url = f"{RAW_GITHUB_BASE}/legal_docs/{cat}/{slug}/{fname}"
+            ok = _fetch_remote_file_atomic(file_url, target_bundle / fname)
+            if not ok and fname in ("document_normative.md", "metadata.yaml"):
+                all_core_ok = False
+
+        meta_path = target_bundle / "metadata.yaml"
+        if meta_path.is_file():
+            try:
+                with open(meta_path, encoding="utf-8") as mf:
+                    mdata = yaml.safe_load(mf) or {}
+                for tbl in mdata.get("tables", []):
+                    if isinstance(tbl, str) and tbl.endswith(".md"):
+                        tbl_url = f"{RAW_GITHUB_BASE}/legal_docs/{cat}/{slug}/tables/{tbl}"
+                        _fetch_remote_file_atomic(tbl_url, target_bundle / "tables" / tbl)
+            except Exception:
+                pass
+        return all_core_ok
+
+    def _sync_from_remote_cdn(
+        self,
+        dest_root: Path,
+        doc_ids: list[str] | None = None,
+        update_registry: bool = True,
+        pull_assets: bool = True,
+    ) -> dict[str, Any]:
+        """Tier 2: Remote Streaming Sync for Thin Clients via GitHub Raw CDN (ADR-0026 / ADR-0050)."""
+        synced_bundles: list[str] = []
+        try:
+            master_data, reg_summary = self._fetch_remote_registry(update_registry)
+            items = self._resolve_remote_sync_items(master_data, doc_ids)
+
+            for item in items:
+                cat, slug = item["category"], item["slug"]
+                if self._stream_single_bundle(cat, slug, dest_root, pull_assets):
+                    synced_bundles.append(f"{cat}/{slug}")
+
             return {
-                "status": "fallback_cloud_vault",
-                "tier": "tier_2_cloud_vault",
+                "status": "success",
+                "tier": "tier_2_remote_streaming",
+                "source": RAW_GITHUB_BASE,
+                "target": str(dest_root),
+                "bundles_synced": synced_bundles,
+                "registry_merge": reg_summary,
+            }
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            logger.warning("Không thể kết nối đến kho tri thức từ xa: %s", e)
+            return {
+                "status": "degraded_offline",
+                "tier": "tier_3_cloud_rag_fallback",
+                "error_reason": "network_unreachable_or_timeout",
                 "message": (
-                    "Thư mục tri thức 'ccba-legal-knowledge' cục bộ chưa được tìm thấy. "
-                    f"Có thể tải bản phát hành đóng gói từ Google Drive Legal Vault (Folder ID: {DEFAULT_DRIVE_FOLDER})."
+                    "💡 Không tìm thấy kho tri thức cục bộ và không thể tải qua Remote Streaming.\n"
+                    "👉 Hướng dẫn khắc phục:\n"
+                    '   1. Thiết lập biến môi trường trạm: export CCBA_LEGAL_KNOWLEDGE_PATH="/path/to/ccba-legal-knowledge"\n'
+                    "   2. Hoặc sử dụng Cloud RAG (NotebookLM): ccba-legal query --cloud --notebook-id <id>"
                 ),
                 "target": str(dest_root),
                 "bundles_synced": [],
-                "registry_merge": registry_merge_summary,
+                "registry_merge": {"updated": 0, "added": 0, "preserved": 0},
             }
 
 
