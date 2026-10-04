@@ -40,7 +40,7 @@ HUB_PACKAGE_PREFIXES = (
 )
 
 TAILSCALE_IP_REGEX = re.compile(r"\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b")
-RAW_API_KEY_REGEX = re.compile(r"\b(?:AIzaSy[A-Za-z0-9_-]{33}|" + "s" + r"k-[A-Za-z0-9]{32,})\b")
+LEAK_DETECTOR_REGEX = re.compile(r"\b(?:AIzaSy[A-Za-z0-9_-]{33}|sk-[A-Za-z0-9]{32,})\b")
 
 
 class GateCheck(BaseModel):
@@ -304,7 +304,7 @@ def check_secret_ip_cleanliness(target_files: list[Path]) -> GateCheck:
                         f"{py_file.name}:{idx} raw Tailscale IP detected without allowlist comment."
                     )
                 if (
-                    RAW_API_KEY_REGEX.search(line)
+                    LEAK_DETECTOR_REGEX.search(line)
                     and "dummy" not in line.lower()
                     and "mock" not in line.lower()
                 ):
