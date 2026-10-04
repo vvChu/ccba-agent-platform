@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -1379,6 +1380,91 @@ def run_explain_why_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+def find_workspace_root(start_dir: Path | None = None) -> Path:
+    """Finds workspace root by walking upwards looking for .git, workspace_context.yaml, or AGENTS.md."""
+    current = (start_dir or Path.cwd()).resolve()
+    for parent in [current, *current.parents]:
+        if (
+            (parent / ".git").exists()
+            or (parent / "workspace_context.yaml").exists()
+            or (parent / ".md" / "workspace_context.yaml").exists()
+            or (parent / "AGENTS.md").exists()
+        ):
+            return parent
+    return current
+
+
+def resolve_peer_exchange_dir(
+    dir_arg: str | None = None,
+    root_arg: str | None = None,
+) -> Path:
+    """Resolves target peer_exchange directory with upward discovery (ADR-0007 / ADR-0061)."""
+    if dir_arg:
+        target = Path(dir_arg).resolve()
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+    root = Path(root_arg).resolve() if root_arg else find_workspace_root()
+    target = root / ".md" / "peer_exchange"
+    target.mkdir(parents=True, exist_ok=True)
+    return target
+
+
+def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for peer exchange watcher (`ccba-harness peer-watch`)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness peer-watch",
+        description="Peer Agent Bridge Watcher and delta synchronizer (ADR-0007 / ADR-0009 / Issue #467).",
+    )
+    parser.add_argument(
+        "--once", action="store_true", help="Run a single delta sync cycle and exit (default)."
+    )
+    parser.add_argument(
+        "-w", "--watch", action="store_true", help="Run continuous polling watch loop."
+    )
+    parser.add_argument(
+        "-i", "--interval", type=int, default=5, help="Polling interval in seconds (default: 5)."
+    )
+    parser.add_argument(
+        "--auto-gate", action="store_true", help="Trigger peer implementation gate on new code."
+    )
+    parser.add_argument(
+        "--auto-grok", action="store_true", help="Automatically invoke Grok CLI on new prompts."
+    )
+    parser.add_argument(
+        "--dir",
+        type=str,
+        default=None,
+        help="Target peer exchange directory (default: ./.md/peer_exchange/).",
+    )
+    parser.add_argument("--root", type=str, default=None, help="Project workspace root directory.")
+
+    args = parser.parse_args(args_list)
+    peer_dir = resolve_peer_exchange_dir(args.dir, args.root)
+
+    from .peer import flush_pending_peer_triggers, run_sync_cycle
+
+    if args.once or not args.watch:
+        changes = run_sync_cycle(peer_dir, auto_gate=args.auto_gate, auto_grok=args.auto_grok)
+        for c in changes:
+            print(f"[{c.role}] Detected change in: {c.path.name}")
+        print(f"[OK] Bridge sync completed. Detected {len(changes)} change(s).")
+        return 0
+
+    print(
+        f"🚀 Starting Peer Bridge Watcher on {peer_dir} (interval={args.interval}s)... Press Ctrl+C to stop."
+    )
+    try:
+        while True:
+            changes = run_sync_cycle(peer_dir, auto_gate=args.auto_gate, auto_grok=args.auto_grok)
+            for c in changes:
+                print(f"[{c.role}] Detected change in: {c.path.name}")
+            time.sleep(args.interval)
+    except (KeyboardInterrupt, SystemExit):
+        flush_pending_peer_triggers(timeout=2.0)
+        print("\n[OK] Peer watcher stopped cleanly.")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -1695,6 +1781,36 @@ def main(argv: Sequence[str] | None = None) -> int:
     why_parser.add_argument("--root", type=str, default=None, help="Workspace root directory")
     why_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
+    # Subcommand: peer-watch
+    watch_parser = subparsers.add_parser(
+        "peer-watch",
+        help="Peer Agent Bridge Watcher and delta synchronizer (ADR-0007 / ADR-0009 / Issue #467).",
+    )
+    watch_parser.add_argument(
+        "--once", action="store_true", help="Run a single delta sync cycle and exit (default)."
+    )
+    watch_parser.add_argument(
+        "-w", "--watch", action="store_true", help="Run continuous polling watch loop."
+    )
+    watch_parser.add_argument(
+        "-i", "--interval", type=int, default=5, help="Polling interval in seconds (default: 5)."
+    )
+    watch_parser.add_argument(
+        "--auto-gate", action="store_true", help="Trigger peer implementation gate on new code."
+    )
+    watch_parser.add_argument(
+        "--auto-grok", action="store_true", help="Automatically invoke Grok CLI on new prompts."
+    )
+    watch_parser.add_argument(
+        "--dir",
+        type=str,
+        default=None,
+        help="Target peer exchange directory (default: ./.md/peer_exchange/).",
+    )
+    watch_parser.add_argument(
+        "--root", type=str, default=None, help="Project workspace root directory."
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -1714,6 +1830,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_telemetry_cli(argv[1:])
     if argv[0] in ("peer-gate", "gate"):
         return run_peer_gate_cli(argv[1:])
+    if argv[0] in ("peer-watch", "watch-peer"):
+        return run_peer_watch_cli(argv[1:])
     if argv[0] == "blast-radius":
         return run_blast_radius_cli(argv[1:])
     if argv[0] in ("why", "explain-why"):
@@ -1735,6 +1853,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_telemetry_cli(argv[1:])
     if parsed.subcommand in ("peer-gate", "gate"):
         return run_peer_gate_cli(argv[1:])
+    if parsed.subcommand in ("peer-watch", "watch-peer"):
+        return run_peer_watch_cli(argv[1:])
     if parsed.subcommand == "blast-radius":
         return run_blast_radius_cli(argv[1:])
     if parsed.subcommand in ("why", "explain-why"):
