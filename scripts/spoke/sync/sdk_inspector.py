@@ -142,10 +142,9 @@ class TestGuardrailCopier:
             if name in ("pre-commit", "pre-push"):
                 has_githooks = True
 
-        githooks_present = (
-            (self.spoke_root / ".githooks" / "pre-commit").exists()
-            or (self.spoke_root / ".githooks" / "pre-push").exists()
-        )
+        githooks_present = (self.spoke_root / ".githooks" / "pre-commit").exists() or (
+            self.spoke_root / ".githooks" / "pre-push"
+        ).exists()
         if has_githooks or githooks_present:
             self._ensure_git_hook_activated(dry_run=dry_run, force=force)
 

@@ -1328,9 +1328,7 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     (spoke_root / ".githooks" / "pre-commit").write_bytes(
         b"#!/bin/sh\r\necho 'pre-commit hook'\r\n"
     )
-    (spoke_root / ".githooks" / "pre-push").write_bytes(
-        b"#!/bin/sh\r\necho 'pre-push hook'\r\n"
-    )
+    (spoke_root / ".githooks" / "pre-push").write_bytes(b"#!/bin/sh\r\necho 'pre-push hook'\r\n")
     actions_crlf = copier.copy_if_needed(dry_run=False)
     assert any(a["name"] == "pre-commit" and a["status"] == "UNCHANGED" for a in actions_crlf)
     assert any(a["name"] == "pre-push" and a["status"] == "UNCHANGED" for a in actions_crlf)
