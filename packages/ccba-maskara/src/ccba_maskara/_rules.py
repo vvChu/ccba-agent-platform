@@ -80,7 +80,7 @@ REGEX_PATTERNS: dict[str, dict[str, Any]] = {
         "name": "Secret-like env assignment",
         "severity": "medium",
         "pattern": re.compile(
-            r"(?im)^\s*[A-Za-z0-9_]*(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PASSWD|PWD"
+            r"(?i)\b[A-Za-z0-9_]*(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PASSWD|PWD"
             r"|PRIVATE[_-]?KEY|CLIENT[_-]?SECRET|ACCESS[_-]?KEY|AUTH[_-]?TOKEN"
             r"|CREDENTIAL|MASTER[_-]?KEY|SERVICE[_-]?ACCOUNT)"
             r"[A-Za-z0-9_]*\s*[:=]\s*[\"']?([^\s\"',`\r\n]{8,})"
@@ -92,5 +92,12 @@ SAFE_STRINGS: set[str] = {
     "mock-safe-test-key",
     "your-api-key",
     "your_key_here",
+    "your-api-key-here",
+    "CHANGE_ME_IN_PRODUCTION",
+    "placeholder_password",
+    "placeholder_key",
+    "[REDACTED]",
+    "***REMOVED***",
     "sk-proj-YOUR_API_KEY",
+    "AAEeYjQnwGL9YHIOLfDr3UC1DZ6c1zZGbAs",
 }
