@@ -1,4 +1,5 @@
 """cli.py - Standalone Command-Line Interface for ccba-harness.
+# ccba:allow-long-functions
 
 Provides offline & air-gapped governance tools for Spoke and Hub environments:
   ccba-harness validate-skill [paths...] [--file FILE] [--root ROOT] [--strict]
@@ -9,6 +10,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -1264,6 +1266,119 @@ def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
+def run_peer_gate_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for automated 6-stage implementation gate (`ccba-harness peer-gate`)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness peer-gate",
+        description="Automated 6-stage post-implementation gate verification (ADR-0007 / ADR-0009).",
+    )
+    parser.add_argument(
+        "--branch", type=str, default=None, help="Target git branch to diff against"
+    )
+    parser.add_argument(
+        "--file", action="append", default=None, help="Specific files to gate-check"
+    )
+    parser.add_argument("--root", type=str, default=None, help="Project workspace root directory")
+    parser.add_argument(
+        "--output-verdict",
+        action="store_true",
+        help="Write YAML frontmatter verdict to .md/peer_exchange/",
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Output full gate result in JSON format"
+    )
+
+    args = parser.parse_args(args_list)
+    root_p = Path(args.root).resolve() if args.root else Path.cwd().resolve()
+    from .peer_gate import print_summary_table, run_full_gate, write_verdict_file
+
+    result = run_full_gate(workspace_dir=root_p, branch=args.branch, changed_files=args.file)
+
+    if args.output_verdict:
+        peer_dir = root_p / ".md" / "peer_exchange"
+        out_file = write_verdict_file(result, peer_dir)
+        print(f"Saved gate verdict to: {out_file.name}")
+
+    if args.json:
+        print(json.dumps(result.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        print_summary_table(result)
+
+    return 0 if result.gate == "PASS" else 1
+
+
+def run_blast_radius_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for cross-boundary blast radius scanner (`ccba-harness blast-radius`)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness blast-radius",
+        description="Analyze cross-boundary blast radius and impacted test suites (ADR-0009).",
+    )
+    parser.add_argument("targets", nargs="+", help="Module, skill, or symbol names changed")
+    parser.add_argument("--root", type=str, default=None, help="Workspace root directory to scan")
+    parser.add_argument("--json", action="store_true", help="Output report in JSON format")
+
+    args = parser.parse_args(args_list)
+    root_p = Path(args.root).resolve() if args.root else Path.cwd().resolve()
+    from .blast_radius import analyze_blast_radius
+
+    report = analyze_blast_radius(set(args.targets), root_p)
+
+    if args.json:
+        print(json.dumps(report.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        print("\n" + "=" * 65)
+        print(f"💥 BLAST RADIUS REPORT — Risk Level: [{report.risk_level}]")
+        print("=" * 65)
+        print(f"Targets Analyzed : {', '.join(report.targets)}")
+        print(f"Affected Files   : {report.affected_file_count}")
+        for f in report.affected_files[:10]:
+            print(f"  - {f}")
+        if len(report.affected_files) > 10:
+            print(f"  ... and {len(report.affected_files) - 10} more files.")
+        print(f"Recommended Tests: {len(report.recommended_tests)}")
+        for t in report.recommended_tests:
+            print(f"  - pytest {t}")
+        print("=" * 65 + "\n")
+
+    return 0 if report.risk_level != "CRITICAL" else 1
+
+
+def run_explain_why_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for architecture why explainer (`ccba-harness why`)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness why",
+        description="Query architectural rationale from ADRs, git logs & peer exchanges (ADR-0009).",
+    )
+    parser.add_argument("query", type=str, help="Architectural question or topic keyword")
+    parser.add_argument("--root", type=str, default=None, help="Workspace root directory")
+    parser.add_argument("--json", action="store_true", help="Output result in JSON format")
+
+    args = parser.parse_args(args_list)
+    root_p = Path(args.root).resolve() if args.root else Path.cwd().resolve()
+    from .architecture import explain_architecture_why
+
+    explanation = explain_architecture_why(args.query, root_dir=root_p)
+
+    if args.json:
+        print(json.dumps(explanation.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        print("\n" + "=" * 65)
+        print(f"🏛️ ARCHITECTURE WHY: '{explanation.query}'")
+        print("=" * 65)
+        print(f"Synthesis:\n{explanation.synthesis}\n")
+        if explanation.adr_matches:
+            print("Matched ADRs:")
+            for m in explanation.adr_matches:
+                print(f"  - ADR-{m.adr_id} ({m.title}) [{m.status}]: {m.decision_summary}")
+        if explanation.git_commits:
+            print("\nRelated Git Commits:")
+            for c in explanation.git_commits:
+                print(f"  - {c.get('hash')}: {c.get('message')}")
+        print("=" * 65 + "\n")
+
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -1539,6 +1654,47 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Subagent runtime telemetry and token monitoring.",
     )
 
+    # Subcommand: peer-gate
+    gate_parser = subparsers.add_parser(
+        "peer-gate",
+        help="Automated 6-stage post-implementation gate verification (ADR-0007 / ADR-0009).",
+    )
+    gate_parser.add_argument(
+        "--branch", type=str, default=None, help="Target git branch to diff against"
+    )
+    gate_parser.add_argument(
+        "--file", action="append", default=None, help="Specific files to gate-check"
+    )
+    gate_parser.add_argument(
+        "--root", type=str, default=None, help="Project workspace root directory"
+    )
+    gate_parser.add_argument(
+        "--output-verdict", action="store_true", help="Write YAML frontmatter verdict"
+    )
+    gate_parser.add_argument(
+        "--json", action="store_true", help="Output full gate result in JSON format"
+    )
+
+    # Subcommand: blast-radius
+    blast_parser = subparsers.add_parser(
+        "blast-radius",
+        help="Cross-boundary blast radius scanner (ADR-0009).",
+    )
+    blast_parser.add_argument("targets", nargs="+", help="Module, skill, or symbol names changed")
+    blast_parser.add_argument(
+        "--root", type=str, default=None, help="Workspace root directory to scan"
+    )
+    blast_parser.add_argument("--json", action="store_true", help="Output report in JSON format")
+
+    # Subcommand: why
+    why_parser = subparsers.add_parser(
+        "why",
+        help="Query architectural rationale from ADRs and git history (ADR-0009).",
+    )
+    why_parser.add_argument("query", type=str, help="Architectural question or topic keyword")
+    why_parser.add_argument("--root", type=str, default=None, help="Workspace root directory")
+    why_parser.add_argument("--json", action="store_true", help="Output result in JSON format")
+
     if not argv:
         parser.print_help()
         return 0
@@ -1556,6 +1712,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_verify_doc_cli(argv[1:])
     if argv[0] == "telemetry":
         return run_telemetry_cli(argv[1:])
+    if argv[0] in ("peer-gate", "gate"):
+        return run_peer_gate_cli(argv[1:])
+    if argv[0] == "blast-radius":
+        return run_blast_radius_cli(argv[1:])
+    if argv[0] in ("why", "explain-why"):
+        return run_explain_why_cli(argv[1:])
 
     # Fallback to general parsing
     parsed = parser.parse_args(argv)
@@ -1571,6 +1733,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_verify_doc_cli(argv[1:])
     if parsed.subcommand == "telemetry":
         return run_telemetry_cli(argv[1:])
+    if parsed.subcommand in ("peer-gate", "gate"):
+        return run_peer_gate_cli(argv[1:])
+    if parsed.subcommand == "blast-radius":
+        return run_blast_radius_cli(argv[1:])
+    if parsed.subcommand in ("why", "explain-why"):
+        return run_explain_why_cli(argv[1:])
 
     parser.print_help()
     return 0
