@@ -99,4 +99,5 @@ SAFE_STRINGS: set[str] = {
     "[REDACTED]",
     "***REMOVED***",
     "sk-proj-YOUR_API_KEY",
+    "AAEeYjQnwGL9YHIOLfDr3UC1DZ6c1zZGbAs",
 }

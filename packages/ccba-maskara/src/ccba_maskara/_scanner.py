@@ -51,8 +51,10 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
     if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
         return True
     stripped = val.strip()
-    # Ignore template variable interpolations: ${VAR}, $(VAR), {{ .Values.X }}, <% ... %>
-    if stripped.startswith(("${", "$(", "{{", "<%", "<#")):
+    # Ignore template variable interpolations: ${VAR}, $(VAR), {{ .Values.X }}, <% ... %>, {VAR}
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#")) or (
+        stripped.startswith("{") and stripped.endswith("}")
+    ):
         return True
     # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
     # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
