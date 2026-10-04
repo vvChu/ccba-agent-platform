@@ -50,7 +50,10 @@ except ImportError:
         },
         "env-secret": {
             "pattern": re.compile(
-                r"(?i)\b(?:api[_-]?key|secret|token|password|passwd|pwd|private[_-]?key|client[_-]?secret)\b\s*[:=]\s*[\"']?([^\s\"',`]{8,})"
+                r"(?i)\b[A-Za-z0-9_]*(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PASSWD|PWD"
+                r"|PRIVATE[_-]?KEY|CLIENT[_-]?SECRET|ACCESS[_-]?KEY|AUTH[_-]?TOKEN"
+                r"|CREDENTIAL|MASTER[_-]?KEY|SERVICE[_-]?ACCOUNT)"
+                r"[A-Za-z0-9_]*\s*[:=]\s*[\"']?([^\s\"',`\r\n]{8,})"
             )
         },
     }

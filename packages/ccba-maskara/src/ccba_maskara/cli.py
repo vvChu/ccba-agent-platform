@@ -29,7 +29,22 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
     )
     scan_parser.add_argument("-r", "--root", help="Explicit root folder path to scan")
     scan_parser.add_argument(
+        "--staged", action="store_true", help="Scan staged files in current git repository"
+    )
+    scan_parser.add_argument(
+        "--files", nargs="*", default=None, help="Explicit list of files to scan"
+    )
+    scan_parser.add_argument(
         "--llm", action="store_true", help="Use AI Gateway to double-verify findings"
+    )
+
+    hooks_parser = subparsers.add_parser(
+        "init-hooks", help="Install tracked pre-commit hook and configure git core.hooksPath"
+    )
+    hooks_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force overwrite hook even if custom core.hooksPath exists",
     )
 
     report_parser = subparsers.add_parser("report", help="Scan and write Markdown or JSON report")
@@ -71,7 +86,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
     args = parser.parse_args(args_list)
 
     if args.version:
-        print("Maskara v1.0.0 (Python Edition)")
+        print("Maskara v1.2.0 (Python Edition)")
         return 0
 
     cmd = args.subcommand
@@ -99,6 +114,79 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
 
     try:
         if cmd == "scan":
+            if getattr(args, "staged", False):
+                import subprocess
+
+                try:
+                    res = subprocess.run(
+                        ["git", "diff", "--cached", "--name-only", "--diff-filter=d", "-z"],
+                        capture_output=True,
+                        timeout=10,
+                    )
+                    if res.returncode != 0:
+                        err_msg = res.stderr.decode("utf-8", errors="replace").strip()
+                        print(
+                            f"[Maskara Error] 'git diff' failed with exit code {res.returncode}. Not inside a Git repository? {err_msg}",
+                            file=sys.stderr,
+                        )
+                        return 2
+                    raw_paths = [p for p in res.stdout.split(b"\x00") if p]
+                    staged_files = [p.decode("utf-8", errors="replace") for p in raw_paths]
+                except FileNotFoundError:
+                    print("[Maskara Error] 'git' command not found. Fail-closed.", file=sys.stderr)
+                    return 2
+
+                if not staged_files:
+                    print("[Maskara] No staged files to scan.")
+                    return 0
+
+                findings = []
+                for fpath_str in staged_files:
+                    p = Path(fpath_str)
+                    if not p.is_file() or scanner.is_binary(p):
+                        continue
+                    file_findings, _, _ = scanner.scan_file("git-staged", p, args.llm)
+                    findings.extend(file_findings)
+
+                if not findings:
+                    print(f"[Maskara] {len(staged_files)} staged file(s) checked. 100% clean.")
+                    return 0
+
+                print(f"[Maskara] Found {len(findings)} sensitive value(s) in staged files:")
+                for f in findings:
+                    print(
+                        f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
+                    )
+                return (
+                    1
+                    if any(f["severity"] in ("critical", "high", "medium") for f in findings)
+                    else 0
+                )
+
+            elif getattr(args, "files", None):
+                findings = []
+                for fpath_str in args.files:
+                    p = Path(fpath_str)
+                    if not p.is_file() or scanner.is_binary(p):
+                        continue
+                    file_findings, _, _ = scanner.scan_file("batch-file", p, args.llm)
+                    findings.extend(file_findings)
+
+                if not findings:
+                    print(f"[Maskara] {len(args.files)} file(s) checked. 100% clean.")
+                    return 0
+
+                print(f"[Maskara] Found {len(findings)} sensitive value(s):")
+                for f in findings:
+                    print(
+                        f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
+                    )
+                return (
+                    1
+                    if any(f["severity"] in ("critical", "high", "medium") for f in findings)
+                    else 0
+                )
+
             targets = scanner.resolve_targets(args.agent, args.root)
             result = scanner.perform_scan(targets, args.llm)
 
@@ -111,9 +199,117 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 print(
                     f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                 )
+            # Full directory scan gates on critical/high to allow documentation/config examples
+            # (unlike --staged / --files pre-commit paths which strictly block medium env-secrets)
             return (
                 1 if any(f["severity"] in ("critical", "high") for f in result["findings"]) else 0
             )
+
+        elif cmd == "init-hooks":
+            import subprocess
+
+            try:
+                res = subprocess.run(
+                    ["git", "rev-parse", "--show-toplevel"],
+                    capture_output=True,
+                    timeout=5,
+                )
+                if res.returncode != 0:
+                    err_msg = res.stderr.decode("utf-8", errors="replace").strip()
+                    print(
+                        f"[Maskara Error] Not inside a Git repository. Cannot initialize hooks: {err_msg}",
+                        file=sys.stderr,
+                    )
+                    return 2
+                git_root = Path(res.stdout.decode("utf-8", errors="replace").strip())
+            except FileNotFoundError:
+                print("[Maskara Error] 'git' command not found. Fail-closed.", file=sys.stderr)
+                return 2
+
+            # Check existing core.hooksPath
+            cfg_check = subprocess.run(
+                ["git", "config", "core.hooksPath"],
+                capture_output=True,
+                cwd=str(git_root),
+            )
+            existing_hookspath = cfg_check.stdout.decode("utf-8", errors="replace").strip()
+            if (
+                existing_hookspath
+                and existing_hookspath != ".githooks"
+                and not getattr(args, "force", False)
+            ):
+                print(
+                    f"⚠️ [Maskara Warning] Existing core.hooksPath detected: '{existing_hookspath}'\n"
+                    "Use --force to overwrite with '.githooks'.",
+                    file=sys.stderr,
+                )
+                return 1
+
+            hooks_dir = git_root / ".githooks"
+            hooks_dir.mkdir(parents=True, exist_ok=True)
+            pre_commit_path = hooks_dir / "pre-commit"
+
+            hook_content = (
+                "#!/bin/sh\n"
+                "# ==============================================================================\n"
+                "# CCBA Client-Side Guardrail: Maskara Secret & Privacy Leak Pre-Commit Scan\n"
+                "# Reference: CCBA-SOP-SEC-001, ADR-0047, Session Learning #41\n"
+                "# ==============================================================================\n"
+                'echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."\n\n'
+                "if command -v maskara >/dev/null 2>&1; then\n"
+                "  maskara scan --staged\n"
+                'elif [ -x ".venv/bin/python" ] && .venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  .venv/bin/python -m ccba_maskara.cli scan --staged\n"
+                'elif [ -x "scripts/.venv/bin/python" ] && scripts/.venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  scripts/.venv/bin/python -m ccba_maskara.cli scan --staged\n"
+                'elif [ -x ".venv/Scripts/python.exe" ] && .venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  .venv/Scripts/python.exe -m ccba_maskara.cli scan --staged\n"
+                'elif [ -x "scripts/.venv/Scripts/python.exe" ] && scripts/.venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  scripts/.venv/Scripts/python.exe -m ccba_maskara.cli scan --staged\n"
+                'elif command -v python3 >/dev/null 2>&1 && python3 -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  python3 -m ccba_maskara.cli scan --staged\n"
+                'elif command -v python >/dev/null 2>&1 && python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  python -m ccba_maskara.cli scan --staged\n"
+                "else\n"
+                '  echo "❌ [CCBA Guardrail Error] ccba-maskara CLI not found. Please install: pip install ccba-maskara" >&2\n'
+                '  echo "💡 [Bypass khẩn cấp]: git commit --no-verify" >&2\n'
+                "  exit 1\n"
+                "fi\n"
+            )
+
+            pre_commit_path.write_bytes(hook_content.encode("utf-8"))
+            try:
+                pre_commit_path.chmod(0o755)
+            except Exception:
+                pass
+
+            subprocess.run(
+                ["git", "update-index", "--chmod=+x", ".githooks/pre-commit"],
+                cwd=str(git_root),
+                capture_output=True,
+            )
+
+            # Ensure .gitattributes has .githooks/* text eol=lf (idempotent)
+            gitattributes_path = git_root / ".gitattributes"
+            attr_line = ".githooks/* text eol=lf\n"
+            existing_attrs = ""
+            if gitattributes_path.is_file():
+                existing_attrs = gitattributes_path.read_text(encoding="utf-8")
+            if ".githooks/* text eol=lf" not in existing_attrs:
+                with gitattributes_path.open("a", encoding="utf-8") as attr_file:
+                    if existing_attrs and not existing_attrs.endswith("\n"):
+                        attr_file.write("\n")
+                    attr_file.write(attr_line)
+
+            subprocess.run(
+                ["git", "config", "core.hooksPath", ".githooks"],
+                cwd=str(git_root),
+                check=True,
+            )
+            print(
+                "✅ [Maskara] Successfully installed .githooks/pre-commit and configured core.hooksPath=.githooks"
+            )
+            return 0
 
         elif cmd == "redact":
             targets = scanner.resolve_targets(args.agent, args.root)

@@ -25,7 +25,7 @@ from ._redactor import (
 from ._rules import REGEX_PATTERNS
 from ._scanner import MaskaraScanner
 
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 
 _default_scanner = MaskaraScanner()
 
