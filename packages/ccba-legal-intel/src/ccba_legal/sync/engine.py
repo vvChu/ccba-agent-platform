@@ -446,14 +446,18 @@ class LegalSyncEngine:
             reg_downloaded = _fetch_remote_file_atomic(remote_reg_url, tmp_remote_reg)
 
         if not reg_downloaded:
-            raise urllib.error.URLError("Unable to fetch canonical legal_registry.yaml from remote CDN")
+            raise urllib.error.URLError(
+                "Unable to fetch canonical legal_registry.yaml from remote CDN"
+            )
 
         master_data = load_legal_registry(tmp_remote_reg)
         tmp_remote_reg.unlink(missing_ok=True)
 
         merge_summary = {"updated": 0, "added": 0, "preserved": 0}
         if update_registry:
-            local_mgr = LegalRegistryManager(self.project_root / ".md" / "data" / "legal_registry.yaml")
+            local_mgr = LegalRegistryManager(
+                self.project_root / ".md" / "data" / "legal_registry.yaml"
+            )
             merge_summary = local_mgr.merge_with_master_registry(master_data, backup=True)
         return master_data, merge_summary
 
@@ -489,17 +493,23 @@ class LegalSyncEngine:
                 if norm_ids:
                     clean_slug = re.sub(r"[\s\-_/.]+", "", slug)
                     clean_num = re.sub(r"[\s\-_/.]+", "", doc_num)
-                    if not any(nid in clean_slug or (clean_num and nid in clean_num) for nid in norm_ids):
+                    if not any(
+                        nid in clean_slug or (clean_num and nid in clean_num) for nid in norm_ids
+                    ):
                         continue
                 items.append({"category": cat, "slug": slug})
 
         items.sort(key=lambda x: (x["category"], x["slug"]))
         return items
 
-    def _stream_single_bundle(self, cat: str, slug: str, dest_root: Path, pull_assets: bool) -> bool:
+    def _stream_single_bundle(
+        self, cat: str, slug: str, dest_root: Path, pull_assets: bool
+    ) -> bool:
         """Stream a single OKF bundle from remote CDN with cache checking."""
         target_bundle = dest_root / cat / slug
-        if (target_bundle / "metadata.yaml").is_file() and (target_bundle / "clauses.json").is_file():
+        if (target_bundle / "metadata.yaml").is_file() and (
+            target_bundle / "clauses.json"
+        ).is_file():
             return True
 
         if not pull_assets:
