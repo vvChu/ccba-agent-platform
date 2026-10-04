@@ -148,7 +148,7 @@ team_list:
 
 ### Vòng 2 — Tự Phản Biện 3 Giả Định Cốt Lõi:
 1. **Giả định 1: Có gây phiền toái cho Kỹ sư khi phải xin Virtual Key không?**
-   - *Phản biện*: Khi chạy lệnh `/ccba-init-spoke` hoặc `/ccba-adopt-spoke`, script tự động sinh Virtual Key mặc định theo email của Kỹ sư (`sk-sandbox-chuvu-2026`). Kỹ sư không phải thao tác đăng ký thủ công.
+   - *Phản biện*: Khi chạy lệnh `/ccba-init-spoke` hoặc `/ccba-adopt-spoke`, script tự động sinh Virtual Key mặc định theo email của Kỹ sư (`KEY_SANDBOX_CHUVU_2026`). Kỹ sư không phải thao tác đăng ký thủ công.
 2. **Giả định 2: Khi Kỹ sư Sandbox hết quota Cloud, pipeline có bị đứt gãy giữa chừng không?**
    - *Phản biện*: Nếu trả về lỗi HTTP 429 Hard-Stop, Kỹ sư sẽ bị ức chế. Do đó, quy tắc **Graceful Auto-Fallback** bắt buộc LiteLLM Router tự động điều hướng sang `qwen-local-primary` kèm header cảnh báo `X-CCBA-Fallback: QuotaExceeded-LocalOnly`.
 3. **Giả định 3: Chi phí Cloud có rủi ro bùng nổ do Nightly Auto-Tuner không?**
