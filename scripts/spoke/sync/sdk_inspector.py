@@ -96,9 +96,15 @@ class TestGuardrailCopier:
                 "pre-commit",
                 ".githooks/pre-commit",
             ),
+            (
+                self.hub_root / ".githooks" / "pre-push",
+                self.spoke_root / ".githooks" / "pre-push",
+                "pre-push",
+                ".githooks/pre-push",
+            ),
         ]
 
-        has_pre_commit = False
+        has_githooks = False
         for src, dest, name, rel_path in items_to_copy:
             if not src.exists() or src.resolve() == dest.resolve():
                 continue
@@ -122,7 +128,7 @@ class TestGuardrailCopier:
             if not dry_run and status in ("NEW", "UPDATED"):
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dest)
-                if name == "pre-commit":
+                if name in ("pre-commit", "pre-push"):
                     try:
                         dest.chmod(0o755)
                     except Exception:
@@ -133,13 +139,14 @@ class TestGuardrailCopier:
                 action_text = "Would copy" if status == "NEW" else "Would update"
                 print(f"  - [DRY-RUN] {action_text} guardrail: {rel_path}")
 
-            if name == "pre-commit":
-                has_pre_commit = True
+            if name in ("pre-commit", "pre-push"):
+                has_githooks = True
 
-        pre_commit_src = self.hub_root / ".githooks" / "pre-commit"
-        if has_pre_commit or (
-            pre_commit_src.exists() and (self.spoke_root / ".githooks" / "pre-commit").exists()
-        ):
+        githooks_present = (
+            (self.spoke_root / ".githooks" / "pre-commit").exists()
+            or (self.spoke_root / ".githooks" / "pre-push").exists()
+        )
+        if has_githooks or githooks_present:
             self._ensure_git_hook_activated(dry_run=dry_run, force=force)
 
         return actions
@@ -219,24 +226,26 @@ class TestGuardrailCopier:
                     print(f"  - ⚠️ Could not set git core.hooksPath: {e}", file=sys.stderr)
 
         # 3. Add to git index with executable bit if not dry_run (Grok Condition 3)
-        pre_commit_dest = self.spoke_root / ".githooks" / "pre-commit"
-        if not dry_run and pre_commit_dest.exists():
-            try:
-                subprocess.run(
-                    [
-                        "git",
-                        "-C",
-                        str(self.spoke_root),
-                        "update-index",
-                        "--add",
-                        "--chmod=+x",
-                        ".githooks/pre-commit",
-                    ],
-                    capture_output=True,
-                    timeout=5,
-                )
-            except Exception:
-                pass
+        if not dry_run:
+            for hook_rel in (".githooks/pre-commit", ".githooks/pre-push"):
+                hook_dest = self.spoke_root / hook_rel
+                if hook_dest.exists():
+                    try:
+                        subprocess.run(
+                            [
+                                "git",
+                                "-C",
+                                str(self.spoke_root),
+                                "update-index",
+                                "--add",
+                                "--chmod=+x",
+                                hook_rel,
+                            ],
+                            capture_output=True,
+                            timeout=5,
+                        )
+                    except Exception:
+                        pass
 
 
 LEGAL_PROJECT_TYPES = {

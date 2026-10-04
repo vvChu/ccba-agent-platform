@@ -1282,6 +1282,8 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     (hub_root / ".githooks").mkdir()
     hub_hook = hub_root / ".githooks" / "pre-commit"
     hub_hook.write_text("#!/bin/sh\necho 'pre-commit hook'\n", encoding="utf-8")
+    hub_push_hook = hub_root / ".githooks" / "pre-push"
+    hub_push_hook.write_text("#!/bin/sh\necho 'pre-push hook'\n", encoding="utf-8")
 
     spoke_root = tmp_path / "spoke_git"
     spoke_root.mkdir()
@@ -1295,7 +1297,9 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     # 1. Dry run: should report NEW, but not create file or configure git
     actions_dry = copier.copy_if_needed(dry_run=True)
     assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_dry)
+    assert any(a["name"] == "pre-push" and a["status"] == "NEW" for a in actions_dry)
     assert not (spoke_root / ".githooks" / "pre-commit").exists()
+    assert not (spoke_root / ".githooks" / "pre-push").exists()
     cfg_dry = subprocess.run(
         ["git", "-C", str(spoke_root), "config", "core.hooksPath"], capture_output=True, text=True
     )
@@ -1304,7 +1308,9 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     # 2. Apply: should copy file, set chmod, update .gitattributes, and set core.hooksPath
     actions_apply = copier.copy_if_needed(dry_run=False)
     assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_apply)
+    assert any(a["name"] == "pre-push" and a["status"] == "NEW" for a in actions_apply)
     assert (spoke_root / ".githooks" / "pre-commit").exists()
+    assert (spoke_root / ".githooks" / "pre-push").exists()
     assert (spoke_root / ".gitattributes").exists()
     assert ".githooks/* text eol=lf" in (spoke_root / ".gitattributes").read_text(encoding="utf-8")
 
@@ -1316,13 +1322,18 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     # 3. Idempotent run: should report UNCHANGED
     actions_idempotent = copier.copy_if_needed(dry_run=False)
     assert any(a["name"] == "pre-commit" and a["status"] == "UNCHANGED" for a in actions_idempotent)
+    assert any(a["name"] == "pre-push" and a["status"] == "UNCHANGED" for a in actions_idempotent)
 
     # 4. CRLF resilience: simulate Windows editor saving hook with CRLF
     (spoke_root / ".githooks" / "pre-commit").write_bytes(
         b"#!/bin/sh\r\necho 'pre-commit hook'\r\n"
     )
+    (spoke_root / ".githooks" / "pre-push").write_bytes(
+        b"#!/bin/sh\r\necho 'pre-push hook'\r\n"
+    )
     actions_crlf = copier.copy_if_needed(dry_run=False)
     assert any(a["name"] == "pre-commit" and a["status"] == "UNCHANGED" for a in actions_crlf)
+    assert any(a["name"] == "pre-push" and a["status"] == "UNCHANGED" for a in actions_crlf)
 
     # 5. Non-destructive conflict: custom core.hooksPath without force should NOT overwrite
     subprocess.run(
