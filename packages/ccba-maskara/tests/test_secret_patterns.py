@@ -67,7 +67,7 @@ def test_prefixed_env_secrets_detection(scanner: MaskaraScanner) -> None:
 
 
 def test_safe_strings_not_detected(scanner: MaskaraScanner) -> None:
-    safe_content = "AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]\nAPI_KEY=your_key_here"
+    safe_content = "AI_GATEWAY_KEY=mock-safe-test-key\nAPI_KEY=your_key_here"
     findings = scanner.scan_text(safe_content)
     assert len(findings) == 0
 

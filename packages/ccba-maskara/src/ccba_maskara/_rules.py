@@ -89,8 +89,7 @@ REGEX_PATTERNS: dict[str, dict[str, Any]] = {
 }
 
 SAFE_STRINGS: set[str] = {
-    "[REDACTED_LITELLM_KEY]",
-    "sk-spark-secure-key",
+    "mock-safe-test-key",
     "your-api-key",
     "your_key_here",
     "sk-proj-YOUR_API_KEY",

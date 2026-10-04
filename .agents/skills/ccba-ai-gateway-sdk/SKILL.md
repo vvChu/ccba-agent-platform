@@ -72,7 +72,7 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 | SSH Tunnel | `localhost` | `ssh -N -L 8090:localhost:8090 vvc@<IP>` |
 
 - **Gateway URL**: `http://<SERVER_IP>:8090/v1`
-- **API Key**: `[REDACTED_LITELLM_KEY]`
+- **API Key**: `<YOUR_AI_GATEWAY_KEY>`
 
 ---
 
@@ -261,7 +261,7 @@ Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
 
 ```env
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
-AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]
+AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_MODEL=qwen-local-primary
 ```
 
@@ -290,7 +290,7 @@ def choose_model(task_type: str) -> str:
 ```bash
 # Verify gateway reachable
 curl http://100.83.192.30:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]"
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 
 # Health check
 curl http://100.83.192.30:8090/health

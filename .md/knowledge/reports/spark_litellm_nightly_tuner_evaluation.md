@@ -40,8 +40,8 @@ Hệ thống AI Gateway LiteLLM trên Server Spark (`100.83.192.30:8090/v1`) ph�
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
 
 # Key xác thực AI Gateway (Khai báo cả 2 để tương thích SDK và môi trường)
-AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]
-AI_GATEWAY_API_KEY=[REDACTED_LITELLM_KEY]
+AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
+AI_GATEWAY_API_KEY=<YOUR_AI_GATEWAY_KEY>
 
 # Model dùng cho Nightly Auto-Tuner
 CCBA_TUNER_MODEL=qwen-local-primary

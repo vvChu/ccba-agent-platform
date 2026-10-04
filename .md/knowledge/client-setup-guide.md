@@ -51,7 +51,7 @@ Dùng OpenAI SDK chuẩn, thay đổi model name là xong.
 # Test kết nối
 ping 100.83.192.30
 curl http://100.83.192.30:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]"
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 ```
 
 **Ưu điểm**: Không cần cấu hình firewall, hoạt động từ mọi nơi có internet.
@@ -68,7 +68,7 @@ ip -4 addr show | grep -v '127.0.0.1\|tailscale' | grep 'inet '
 
 # Test từ client:
 curl http://<LAN_IP>:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]"
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 ```
 
 ---
@@ -83,7 +83,7 @@ ssh -N -L 8090:localhost:8090 -L 8004:localhost:8004 vvc@<SERVER_IP>
 
 # Sau đó dùng localhost:
 curl http://localhost:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]"
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 
 # Ghi chú: Port 8004 là direct vLLM primary (qwen-local-primary). Port 8003 (vLLM fallback) hiện đang inactive/offline.
 ```
@@ -104,15 +104,15 @@ Copy file `.env.ai-gateway` (đã cung cấp sẵn) vào project, hoặc thêm c
 #   Tailscale:  100.83.192.30
 #   LAN:        <LAN_IP>
 #   SSH Tunnel: localhost
-# Ghi chú: `[REDACTED_LITELLM_KEY]` là master key mặc định cho $LITELLM_MASTER_KEY / $AI_GATEWAY_KEY
+# Ghi chú: `<YOUR_AI_GATEWAY_KEY>` là master key mặc định cho $LITELLM_MASTER_KEY / $AI_GATEWAY_KEY
 
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
-AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]
+AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_GATEWAY_TIMEOUT=60.0
 
 # Nếu project dùng OpenAI SDK convention:
 OPENAI_API_BASE=http://100.83.192.30:8090/v1
-OPENAI_API_KEY=[REDACTED_LITELLM_KEY]
+OPENAI_API_KEY=<YOUR_AI_GATEWAY_KEY>
 
 # Model mặc định (4 Archetypes chuẩn)
 AI_MODEL=gemini-3.7-flash
@@ -169,7 +169,7 @@ load_dotenv()
 
 client = OpenAI(
     base_url=os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
-    api_key=os.environ.get("AI_GATEWAY_KEY", "[REDACTED_LITELLM_KEY]"),
+    api_key=os.environ.get("AI_GATEWAY_KEY", "<YOUR_AI_GATEWAY_KEY>"),
     timeout=60.0,  # Bắt buộc: >= 30s - 60s
 )
 
@@ -259,7 +259,7 @@ using OpenAI.Chat;
 
 var client = new ChatClient(
     model: "qwen-local-primary",
-    credential: new ApiKeyCredential("[REDACTED_LITELLM_KEY]"),
+    credential: new ApiKeyCredential("<YOUR_AI_GATEWAY_KEY>"),
     options: new OpenAIClientOptions
     {
         Endpoint = new Uri("http://100.83.192.30:8090/v1")
@@ -275,11 +275,11 @@ Console.WriteLine(completion.Content[0].Text);
 ```bash
 # Kiểm tra gateway hoạt động
 curl http://100.83.192.30:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]"
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 
 # Chat với Qwen 35B local
 curl http://100.83.192.30:8090/v1/chat/completions \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]" \
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-local-primary",
@@ -289,7 +289,7 @@ curl http://100.83.192.30:8090/v1/chat/completions \
 
 # Streaming
 curl http://100.83.192.30:8090/v1/chat/completions \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]" \
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-local-primary",
@@ -317,15 +317,15 @@ Hoặc tự test:
 
 ```bash
 # 1. Test connectivity & health (LiteLLM yêu cầu Bearer key khi master key active)
-curl -s http://100.83.192.30:8090/health -H "Authorization: Bearer [REDACTED_LITELLM_KEY]" | python3 -m json.tool
+curl -s http://100.83.192.30:8090/health -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" | python3 -m json.tool
 
 # 2. List models
 curl -s http://100.83.192.30:8090/v1/models \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]" | python3 -m json.tool
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" | python3 -m json.tool
 
 # 3. Test Qwen 35B local
 curl -s http://100.83.192.30:8090/v1/chat/completions \
-  -H "Authorization: Bearer [REDACTED_LITELLM_KEY]" \
+  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"model":"qwen-local-primary","messages":[{"role":"user","content":"Say hello in Vietnamese"}],"max_tokens":50}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['choices'][0]['message']['content'])"

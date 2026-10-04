@@ -97,7 +97,7 @@ pytest packages/ccba-ai/tests
 ```env
 # Tier 1 (Server Spark)
 AI_GATEWAY_URL=http://100.83.192.30:8090/v1
-AI_GATEWAY_KEY=[REDACTED_LITELLM_KEY]
+AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_MODEL=qwen-local-primary
 AI_GATEWAY_TIMEOUT=90.0
 
