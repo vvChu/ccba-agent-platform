@@ -44,6 +44,18 @@ def are_files_identical(file1: Path, file2: Path) -> bool:
         return False
 
 
+def are_text_files_identical(file1: Path, file2: Path) -> bool:
+    """Compare two text files normalizing newline differences (CRLF vs LF)."""
+    if not file1.exists() or not file2.exists():
+        return False
+    try:
+        content1 = file1.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        content2 = file2.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+        return content1 == content2
+    except Exception:
+        return False
+
+
 def are_dirs_identical(dir1: Path, dir2: Path) -> bool:
     """Recursively compare two directories by file contents."""
     if not dir1.exists() or not dir2.exists():
