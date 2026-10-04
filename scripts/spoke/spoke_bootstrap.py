@@ -266,6 +266,7 @@ class SpokeBootstrapper:
             "requirements-hub.txt",
             ".md/teach/",
             ".md/scratch/",
+            ".md/peer_exchange/.bridge_cache.json",
             ".md/data/telemetry_summary.json",
             ".md/data/*.json",
             ".tmp/",

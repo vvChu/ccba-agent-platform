@@ -134,6 +134,20 @@ from .healing import (
     SelfHealingEngine,
 )
 from .orchestrator import EvalOrchestrator
+from .peer import (
+    AgentIdentity,
+    EffortType,
+    PeerCondition,
+    PeerPromptEnvelope,
+    PeerVerdictBlock,
+    RequestType,
+    VerdictType,
+    extract_frontmatter,
+    parse_envelope_from_md,
+    parse_verdict_from_md,
+    render_prompt_header,
+    render_verdict_header,
+)
 from .skill_validator import SkillAuditIssue, SkillValidator
 from .streamer import (
     AsyncTranscriptFollower,
@@ -307,4 +321,17 @@ __all__ = [
     "SelfHealingEngine",
     # Detached Process Execution Engine (ADR 0028 & Issue #255)
     "DetachedExecutionEngine",
+    # Structured Peer Exchange Protocol (ADR-0007 / Issue #458)
+    "AgentIdentity",
+    "EffortType",
+    "PeerCondition",
+    "PeerPromptEnvelope",
+    "PeerVerdictBlock",
+    "RequestType",
+    "VerdictType",
+    "extract_frontmatter",
+    "parse_envelope_from_md",
+    "parse_verdict_from_md",
+    "render_prompt_header",
+    "render_verdict_header",
 ]
