@@ -58,6 +58,16 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
         "--dry-run", action="store_true", help="Log planned actions without writing"
     )
 
+    hist_parser = subparsers.add_parser(
+        "scan-history", help="Scan Git history across commits for leaked secrets"
+    )
+    hist_parser.add_argument(
+        "--all-branches", action="store_true", default=True, help="Scan all branches"
+    )
+    hist_parser.add_argument(
+        "-n", "--max-count", type=int, default=None, help="Limit number of commits to scan"
+    )
+
     args = parser.parse_args(args_list)
 
     if args.version:
@@ -150,6 +160,72 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     f"  - [{c['action'].upper()}] {c['path']} (Backup: {c['backup_path'] or 'none'})"
                 )
             return 0
+
+        elif cmd == "scan-history":
+            import subprocess
+
+            cmd_args = ["git", "log", "-p", "-U0", "--full-history"]
+            if args.all_branches:
+                cmd_args.append("--all")
+            if args.max_count:
+                cmd_args.extend(["-n", str(args.max_count)])
+
+            print("[Maskara] Scanning Git history diffs...")
+            proc = subprocess.Popen(
+                cmd_args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                errors="replace",
+            )
+
+            current_commit = ""
+            current_file = ""
+            history_findings = []
+
+            if proc.stdout:
+                for line in proc.stdout:
+                    if line.startswith("commit "):
+                        current_commit = line.strip().split()[1]
+                    elif line.startswith("diff --git "):
+                        parts = line.strip().split()
+                        current_file = parts[-1].lstrip("b/") if len(parts) >= 4 else ""
+                    elif line.startswith("+") and not line.startswith("+++"):
+                        if any(
+                            t in current_file
+                            for t in ("/tests/", "test_", "/test_cases/", "_rules.py", "maskara.py")
+                        ):
+                            continue
+                        added = line[1:].strip()
+                        findings = scanner.scan_text(added)
+                        for f in findings:
+                            if f["severity"] in ("critical", "high"):
+                                history_findings.append(
+                                    {
+                                        "commit": current_commit,
+                                        "file": current_file,
+                                        "rule_name": f["rule_name"],
+                                        "severity": f["severity"],
+                                        "preview": f["preview"],
+                                    }
+                                )
+
+            proc.wait()
+
+            if not history_findings:
+                print("[Maskara] Git history is 100% clean. No secrets found.")
+                return 0
+
+            print(
+                f"[Maskara] Found {len(history_findings)} sensitive value(s) in non-test Git history:"
+            )
+            for hf in history_findings[:20]:
+                print(
+                    f"  - Commit {hf['commit'][:8]} | {hf['file']} | {hf['rule_name']} ({hf['severity']}) | {hf['preview']}"
+                )
+            if len(history_findings) > 20:
+                print(f"  ... and {len(history_findings) - 20} more.")
+            return 1
 
     except Exception as e:
         print(f"[Error] Runtime error: {e}", file=sys.stderr)
