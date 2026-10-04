@@ -871,7 +871,7 @@ class SpokeSynchronizer:
 
         # 4. Test guardrails
         guardrail_actions = TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(
-            dry_run=dry_run
+            dry_run=dry_run, force=force
         )
         actions.extend(guardrail_actions)
 

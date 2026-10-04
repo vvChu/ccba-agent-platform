@@ -25,6 +25,7 @@ from scripts.spoke.sync import (
     TestGuardrailCopier,
     are_dirs_identical,
     are_files_identical,
+    are_text_files_identical,
     list_project_backups,
     load_yaml,
     resolve_canonical_project_type,
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
 def test_base_utilities(tmp_path: Path):
-    """Test load_yaml, are_files_identical, are_dirs_identical, and safe_remove."""
+    """Test load_yaml, are_files_identical, are_text_files_identical, are_dirs_identical, and safe_remove."""
     f1 = tmp_path / "test1.yaml"
     f2 = tmp_path / "test2.yaml"
     f1.write_text("key: value\n", encoding="utf-8")
@@ -45,9 +46,17 @@ def test_base_utilities(tmp_path: Path):
     data = load_yaml(f1)
     assert data == {"key": "value"}
     assert are_files_identical(f1, f2)
+    assert are_text_files_identical(f1, f2)
+
+    # CRLF vs LF test
+    f1.write_bytes(b"key: value\n")
+    f2.write_bytes(b"key: value\r\n")
+    assert not are_files_identical(f1, f2)
+    assert are_text_files_identical(f1, f2)
 
     f2.write_text("key: different\n", encoding="utf-8")
     assert not are_files_identical(f1, f2)
+    assert not are_text_files_identical(f1, f2)
 
     d1 = tmp_path / "dir1"
     d2 = tmp_path / "dir2"
@@ -1262,3 +1271,81 @@ def test_registry_static_hash_and_heartbeat_decoupling(tmp_path: Path) -> None:
         assert spokes[0]["last_sync"] != "", "last_sync must be merged from heartbeats!"
     finally:
         shutil.rmtree(short_temp, ignore_errors=True)
+
+
+def test_test_guardrail_copier_git_hooks(tmp_path: Path):
+    """Test TestGuardrailCopier distributing and activating .githooks/pre-commit with Git."""
+    import subprocess
+
+    hub_root = tmp_path / "hub"
+    hub_root.mkdir()
+    (hub_root / ".githooks").mkdir()
+    hub_hook = hub_root / ".githooks" / "pre-commit"
+    hub_hook.write_text("#!/bin/sh\necho 'pre-commit hook'\n", encoding="utf-8")
+
+    spoke_root = tmp_path / "spoke_git"
+    spoke_root.mkdir()
+    (spoke_root / "pyproject.toml").write_text("[project]\nname='test'\n", encoding="utf-8")
+
+    # Initialize a fresh git repository (unborn branch HEAD)
+    subprocess.run(["git", "init"], cwd=str(spoke_root), check=True, capture_output=True)
+
+    copier = TestGuardrailCopier(spoke_root, hub_root, "Phần mềm")
+
+    # 1. Dry run: should report NEW, but not create file or configure git
+    actions_dry = copier.copy_if_needed(dry_run=True)
+    assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_dry)
+    assert not (spoke_root / ".githooks" / "pre-commit").exists()
+    cfg_dry = subprocess.run(
+        ["git", "-C", str(spoke_root), "config", "core.hooksPath"], capture_output=True, text=True
+    )
+    assert cfg_dry.stdout.strip() != ".githooks"
+
+    # 2. Apply: should copy file, set chmod, update .gitattributes, and set core.hooksPath
+    actions_apply = copier.copy_if_needed(dry_run=False)
+    assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_apply)
+    assert (spoke_root / ".githooks" / "pre-commit").exists()
+    assert (spoke_root / ".gitattributes").exists()
+    assert ".githooks/* text eol=lf" in (spoke_root / ".gitattributes").read_text(encoding="utf-8")
+
+    cfg_apply = subprocess.run(
+        ["git", "-C", str(spoke_root), "config", "core.hooksPath"], capture_output=True, text=True
+    )
+    assert cfg_apply.stdout.strip() == ".githooks"
+
+    # 3. Idempotent run: should report UNCHANGED
+    actions_idempotent = copier.copy_if_needed(dry_run=False)
+    assert any(a["name"] == "pre-commit" and a["status"] == "UNCHANGED" for a in actions_idempotent)
+
+    # 4. CRLF resilience: simulate Windows editor saving hook with CRLF
+    (spoke_root / ".githooks" / "pre-commit").write_bytes(
+        b"#!/bin/sh\r\necho 'pre-commit hook'\r\n"
+    )
+    actions_crlf = copier.copy_if_needed(dry_run=False)
+    assert any(a["name"] == "pre-commit" and a["status"] == "UNCHANGED" for a in actions_crlf)
+
+    # 5. Non-destructive conflict: custom core.hooksPath without force should NOT overwrite
+    subprocess.run(
+        ["git", "-C", str(spoke_root), "config", "core.hooksPath", "custom/hooks"], check=True
+    )
+    copier.copy_if_needed(dry_run=False, force=False)
+    cfg_conflict = subprocess.run(
+        ["git", "-C", str(spoke_root), "config", "core.hooksPath"], capture_output=True, text=True
+    )
+    assert cfg_conflict.stdout.strip() == "custom/hooks"
+
+    # 6. Force override: custom core.hooksPath with force=True SHOULD overwrite to .githooks
+    copier.copy_if_needed(dry_run=False, force=True)
+    cfg_forced = subprocess.run(
+        ["git", "-C", str(spoke_root), "config", "core.hooksPath"], capture_output=True, text=True
+    )
+    assert cfg_forced.stdout.strip() == ".githooks"
+
+    # 7. Non-git spoke: should copy file without crashing on missing .git
+    spoke_nongit = tmp_path / "spoke_nongit"
+    spoke_nongit.mkdir()
+    (spoke_nongit / "pyproject.toml").write_text("[project]\nname='nongit'\n", encoding="utf-8")
+    copier_nongit = TestGuardrailCopier(spoke_nongit, hub_root, "Phần mềm")
+    actions_nongit = copier_nongit.copy_if_needed(dry_run=False)
+    assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_nongit)
+    assert (spoke_nongit / ".githooks" / "pre-commit").exists()
