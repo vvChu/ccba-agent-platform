@@ -42,7 +42,9 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
         "init-hooks", help="Install tracked pre-commit hook and configure git core.hooksPath"
     )
     hooks_parser.add_argument(
-        "--force", action="store_true", help="Force overwrite hook even if custom core.hooksPath exists"
+        "--force",
+        action="store_true",
+        help="Force overwrite hook even if custom core.hooksPath exists",
     )
 
     report_parser = subparsers.add_parser("report", help="Scan and write Markdown or JSON report")
@@ -84,7 +86,7 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
     args = parser.parse_args(args_list)
 
     if args.version:
-        print("Maskara v1.0.0 (Python Edition)")
+        print("Maskara v1.2.0 (Python Edition)")
         return 0
 
     cmd = args.subcommand
@@ -142,9 +144,8 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     p = Path(fpath_str)
                     if not p.is_file() or scanner.is_binary(p):
                         continue
-                    if not scanner.looks_like_session_text(p):
-                        continue
-                    findings.extend(scanner.scan_file("git-staged", p, args.llm))
+                    file_findings, _, _ = scanner.scan_file("git-staged", p, args.llm)
+                    findings.extend(file_findings)
 
                 if not findings:
                     print(f"[Maskara] {len(staged_files)} staged file(s) checked. 100% clean.")
@@ -156,7 +157,9 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                         f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                     )
                 return (
-                    1 if any(f["severity"] in ("critical", "high", "medium") for f in findings) else 0
+                    1
+                    if any(f["severity"] in ("critical", "high", "medium") for f in findings)
+                    else 0
                 )
 
             elif getattr(args, "files", None):
@@ -165,7 +168,8 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     p = Path(fpath_str)
                     if not p.is_file() or scanner.is_binary(p):
                         continue
-                    findings.extend(scanner.scan_file("batch-file", p, args.llm))
+                    file_findings, _, _ = scanner.scan_file("batch-file", p, args.llm)
+                    findings.extend(file_findings)
 
                 if not findings:
                     print(f"[Maskara] {len(args.files)} file(s) checked. 100% clean.")
@@ -177,7 +181,9 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                         f"  - {f['file']}:{f['line']} | {f['rule_name']} ({f['severity']}) | Preview: {f['preview']}"
                     )
                 return (
-                    1 if any(f["severity"] in ("critical", "high", "medium") for f in findings) else 0
+                    1
+                    if any(f["severity"] in ("critical", "high", "medium") for f in findings)
+                    else 0
                 )
 
             targets = scanner.resolve_targets(args.agent, args.root)
@@ -207,7 +213,10 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                     timeout=5,
                 )
                 if res.returncode != 0:
-                    print("[Maskara Error] Not inside a Git repository. Cannot initialize hooks.", file=sys.stderr)
+                    print(
+                        "[Maskara Error] Not inside a Git repository. Cannot initialize hooks.",
+                        file=sys.stderr,
+                    )
                     return 2
                 git_root = Path(res.stdout.strip())
             except FileNotFoundError:
@@ -222,7 +231,11 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 cwd=str(git_root),
             )
             existing_hookspath = cfg_check.stdout.strip()
-            if existing_hookspath and existing_hookspath != ".githooks" and not getattr(args, "force", False):
+            if (
+                existing_hookspath
+                and existing_hookspath != ".githooks"
+                and not getattr(args, "force", False)
+            ):
                 print(
                     f"⚠️ [Maskara Warning] Existing core.hooksPath detected: '{existing_hookspath}'\n"
                     "Use --force to overwrite with '.githooks'.",
@@ -240,16 +253,24 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
                 "# CCBA Client-Side Guardrail: Maskara Secret & Privacy Leak Pre-Commit Scan\n"
                 "# Reference: CCBA-SOP-SEC-001, ADR-0047, Session Learning #41\n"
                 "# ==============================================================================\n"
-                "echo \"🔍 [CCBA Guardrail] Running Maskara staged files scanner...\"\n\n"
+                'echo "🔍 [CCBA Guardrail] Running Maskara staged files scanner..."\n\n'
                 "if command -v maskara >/dev/null 2>&1; then\n"
                 "  maskara scan --staged\n"
-                "elif [ -x \".venv/bin/python\" ] && .venv/bin/python -c \"import ccba_maskara\" >/dev/null 2>&1; then\n"
+                'elif [ -x ".venv/bin/python" ] && .venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
                 "  .venv/bin/python -m ccba_maskara.cli scan --staged\n"
-                "elif command -v python3 >/dev/null 2>&1 && python3 -c \"import ccba_maskara\" >/dev/null 2>&1; then\n"
+                'elif [ -x "scripts/.venv/bin/python" ] && scripts/.venv/bin/python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  scripts/.venv/bin/python -m ccba_maskara.cli scan --staged\n"
+                'elif [ -x ".venv/Scripts/python.exe" ] && .venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  .venv/Scripts/python.exe -m ccba_maskara.cli scan --staged\n"
+                'elif [ -x "scripts/.venv/Scripts/python.exe" ] && scripts/.venv/Scripts/python.exe -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  scripts/.venv/Scripts/python.exe -m ccba_maskara.cli scan --staged\n"
+                'elif command -v python3 >/dev/null 2>&1 && python3 -c "import ccba_maskara" >/dev/null 2>&1; then\n'
                 "  python3 -m ccba_maskara.cli scan --staged\n"
+                'elif command -v python >/dev/null 2>&1 && python -c "import ccba_maskara" >/dev/null 2>&1; then\n'
+                "  python -m ccba_maskara.cli scan --staged\n"
                 "else\n"
-                "  echo \"❌ [CCBA Guardrail Error] ccba-maskara CLI not found. Please install: pip install ccba-maskara\" >&2\n"
-                "  echo \"💡 [Bypass khẩn cấp]: git commit --no-verify\" >&2\n"
+                '  echo "❌ [CCBA Guardrail Error] ccba-maskara CLI not found. Please install: pip install ccba-maskara" >&2\n'
+                '  echo "💡 [Bypass khẩn cấp]: git commit --no-verify" >&2\n'
                 "  exit 1\n"
                 "fi\n"
             )
@@ -273,17 +294,19 @@ def run_cli(args_list: list[str] | None = None, scanner: MaskaraScanner | None =
             if gitattributes_path.is_file():
                 existing_attrs = gitattributes_path.read_text(encoding="utf-8")
             if ".githooks/* text eol=lf" not in existing_attrs:
-                with gitattributes_path.open("a", encoding="utf-8") as f:
+                with gitattributes_path.open("a", encoding="utf-8") as attr_file:
                     if existing_attrs and not existing_attrs.endswith("\n"):
-                        f.write("\n")
-                    f.write(attr_line)
+                        attr_file.write("\n")
+                    attr_file.write(attr_line)
 
             subprocess.run(
                 ["git", "config", "core.hooksPath", ".githooks"],
                 cwd=str(git_root),
                 check=True,
             )
-            print("✅ [Maskara] Successfully installed .githooks/pre-commit and configured core.hooksPath=.githooks")
+            print(
+                "✅ [Maskara] Successfully installed .githooks/pre-commit and configured core.hooksPath=.githooks"
+            )
             return 0
 
         elif cmd == "redact":

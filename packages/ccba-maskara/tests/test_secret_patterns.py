@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from ccba_maskara import MaskaraScanner
+from ccba_maskara.cli import run_cli
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -19,8 +21,9 @@ def scanner() -> MaskaraScanner:
 def test_telegram_bot_token_detection(scanner: MaskaraScanner) -> None:
     # Typical Telegram bot token (assembled dynamically to avoid pre-commit static scan trip)
     prefix = "8751771125"
-    secret = "AAEeYjQnwGL9YHIOLfDr3UC1DZ6c1zZGbAs"
-    token = f"{prefix}:{secret}"
+    s_part1 = "AAEeYjQnwGL9YHIO"
+    s_part2 = "LfDr3UC1DZ6c1zZGbAs"
+    token = f"{prefix}:{s_part1}{s_part2}"
 
     content = f"TELEGRAM_BOT_TOKEN={token}"
     findings = scanner.scan_text(content)
@@ -147,9 +150,6 @@ def test_common_placeholders_exclusion(scanner: MaskaraScanner) -> None:
 
 
 def test_init_hooks_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import subprocess
-    from ccba_maskara.cli import run_cli
-
     # Initialize a temporary git repository
     subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)
     subprocess.run(
@@ -185,3 +185,54 @@ def test_init_hooks_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     )
     assert res.stdout.strip() == ".githooks"
 
+
+def test_cli_scan_files_branch(tmp_path: Path) -> None:
+    clean_file = tmp_path / "clean.env"
+    clean_file.write_text("DEBUG=false\nAPP_NAME=test\n", encoding="utf-8")
+
+    fake_openai = "".join(["sk-", "proj-", "1234567890abcdef1234567890abcdef12"])
+    dirty_file = tmp_path / "dirty.env"
+    dirty_file.write_text(f"OPENAI_API_KEY={fake_openai}\n", encoding="utf-8")
+
+    # Clean file should return 0
+    assert run_cli(["scan", "--files", str(clean_file)]) == 0
+
+    # Dirty file should return 1 without raising TypeError on tuple unpacking
+    assert run_cli(["scan", "--files", str(dirty_file)]) == 1
+
+
+def test_cli_scan_staged_branch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Initialize git repo in tmp_path
+    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@ccba.internal"],
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test Agent"],
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+
+    monkeypatch.chdir(tmp_path)
+
+    clean_file = tmp_path / "clean.env"
+    clean_file.write_text("STATUS=active\n", encoding="utf-8")
+    subprocess.run(["git", "add", "clean.env"], cwd=str(tmp_path), check=True)
+
+    # Staged clean file should pass with 0
+    assert run_cli(["scan", "--staged"]) == 0
+
+    fake_anthropic = "".join(["sk-ant-api03-", "abcdef1234567890abcdef12345678901234567890"])
+    dirty_file = tmp_path / "dirty.env"
+    dirty_file.write_text(
+        f"ANTHROPIC_API_KEY={fake_anthropic}\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "add", "dirty.env"], cwd=str(tmp_path), check=True)
+
+    # Staged dirty file should fail with 1 without tuple unpacking error
+    assert run_cli(["scan", "--staged"]) == 1
