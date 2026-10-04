@@ -157,3 +157,5 @@ specs/modules/
 # Internal AI runtime generated artifacts & execution traces
 .system_generated/
 .md/cache/eval_failure_ledger/
+.md/peer_exchange/.bridge_cache.json
+.md/peer_exchange/*.lock

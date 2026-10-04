@@ -85,3 +85,37 @@ knowledge:
   qcvn_root: '[legal_knowledge_path]/legal_docs/02_qcvn/'
   tcvn_root: '[legal_knowledge_path]/legal_docs/03_tcvn/'
   appendices_root: '[legal_knowledge_path]/legal_docs/04_appendices/'
+
+guardrails:
+  - name: "conftest.py"
+    src: "conftest.py"
+    dest: "conftest.py"
+    applies_to: ["python"]
+  - name: "safe_pytest.py"
+    src: "scripts/safe_pytest.py"
+    dest: "scripts/safe_pytest.py"
+    applies_to: ["python"]
+  - name: "safe_runner.py"
+    src: "scripts/safe_runner.py"
+    dest: "scripts/safe_runner.py"
+    applies_to: ["python"]
+  - name: "check_hub_import_depth.py"
+    src: "scripts/spoke/check_hub_import_depth.py"
+    dest: "scripts/check_hub_import_depth.py"
+    applies_to: ["python"]
+  - name: "check_spoke_cleanliness.py"
+    src: "scripts/spoke/check_spoke_cleanliness.py"
+    dest: "scripts/check_spoke_cleanliness.py"
+    applies_to: ["python"]
+  - name: "pre-commit"
+    src: ".githooks/pre-commit"
+    dest: ".githooks/pre-commit"
+    chmod: "0o755"
+    git_index: true
+    applies_to: ["all"]
+  - name: "pre-push"
+    src: ".githooks/pre-push"
+    dest: ".githooks/pre-push"
+    chmod: "0o755"
+    git_index: true
+    applies_to: ["all"]

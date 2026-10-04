@@ -57,55 +57,85 @@ class TestGuardrailCopier:
         if not is_python:
             return actions
 
-        spoke_scripts_dir = self.spoke_root / "scripts"
+        # Load guardrails from catalog.yaml (Declarative Synchronization Registry ADR-0062)
+        guardrails_cfg = []
+        catalog_path = self.hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+        if catalog_path.is_file():
+            try:
+                cat_data = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
+                guardrails_cfg = cat_data.get("guardrails", [])
+            except Exception:
+                guardrails_cfg = []
 
-        items_to_copy = [
-            (
-                self.hub_root / "conftest.py",
-                self.spoke_root / "conftest.py",
-                "conftest.py",
-                "conftest.py",
-            ),
-            (
-                self.hub_root / "scripts" / "safe_pytest.py",
-                spoke_scripts_dir / "safe_pytest.py",
-                "safe_pytest.py",
-                "scripts/safe_pytest.py",
-            ),
-            (
-                self.hub_root / "scripts" / "safe_runner.py",
-                spoke_scripts_dir / "safe_runner.py",
-                "safe_runner.py",
-                "scripts/safe_runner.py",
-            ),
-            (
-                self.hub_root / "scripts" / "spoke" / "check_hub_import_depth.py",
-                spoke_scripts_dir / "check_hub_import_depth.py",
-                "check_hub_import_depth.py",
-                "scripts/check_hub_import_depth.py",
-            ),
-            (
-                self.hub_root / "scripts" / "spoke" / "check_spoke_cleanliness.py",
-                spoke_scripts_dir / "check_spoke_cleanliness.py",
-                "check_spoke_cleanliness.py",
-                "scripts/check_spoke_cleanliness.py",
-            ),
-            (
-                self.hub_root / ".githooks" / "pre-commit",
-                self.spoke_root / ".githooks" / "pre-commit",
-                "pre-commit",
-                ".githooks/pre-commit",
-            ),
-            (
-                self.hub_root / ".githooks" / "pre-push",
-                self.spoke_root / ".githooks" / "pre-push",
-                "pre-push",
-                ".githooks/pre-push",
-            ),
-        ]
+        # Fallback list if catalog.yaml doesn't declare guardrails
+        if not guardrails_cfg:
+            guardrails_cfg = [
+                {
+                    "name": "conftest.py",
+                    "src": "conftest.py",
+                    "dest": "conftest.py",
+                    "applies_to": ["python"],
+                },
+                {
+                    "name": "safe_pytest.py",
+                    "src": "scripts/safe_pytest.py",
+                    "dest": "scripts/safe_pytest.py",
+                    "applies_to": ["python"],
+                },
+                {
+                    "name": "safe_runner.py",
+                    "src": "scripts/safe_runner.py",
+                    "dest": "scripts/safe_runner.py",
+                    "applies_to": ["python"],
+                },
+                {
+                    "name": "check_hub_import_depth.py",
+                    "src": "scripts/spoke/check_hub_import_depth.py",
+                    "dest": "scripts/check_hub_import_depth.py",
+                    "applies_to": ["python"],
+                },
+                {
+                    "name": "check_spoke_cleanliness.py",
+                    "src": "scripts/spoke/check_spoke_cleanliness.py",
+                    "dest": "scripts/check_spoke_cleanliness.py",
+                    "applies_to": ["python"],
+                },
+                {
+                    "name": "pre-commit",
+                    "src": ".githooks/pre-commit",
+                    "dest": ".githooks/pre-commit",
+                    "chmod": "0o755",
+                    "git_index": True,
+                    "applies_to": ["all"],
+                },
+                {
+                    "name": "pre-push",
+                    "src": ".githooks/pre-push",
+                    "dest": ".githooks/pre-push",
+                    "chmod": "0o755",
+                    "git_index": True,
+                    "applies_to": ["all"],
+                },
+            ]
+
+        items_to_copy = []
+        for g in guardrails_cfg:
+            applies = g.get("applies_to", ["python"])
+            if "python" not in applies and "all" not in applies:
+                continue
+            src_rel = g.get("src")
+            dest_rel = g.get("dest")
+            name = g.get("name")
+            if not src_rel or not dest_rel or not name:
+                continue
+            src_path = self.hub_root / src_rel
+            dest_path = self.spoke_root / dest_rel
+            items_to_copy.append(
+                (src_path, dest_path, name, dest_rel, g.get("chmod"), g.get("git_index"))
+            )
 
         has_githooks = False
-        for src, dest, name, rel_path in items_to_copy:
+        for src, dest, name, rel_path, chmod_str, _git_idx in items_to_copy:
             if not src.exists() or src.resolve() == dest.resolve():
                 continue
 
@@ -128,9 +158,11 @@ class TestGuardrailCopier:
             if not dry_run and status in ("NEW", "UPDATED"):
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dest)
-                if name in ("pre-commit", "pre-push"):
+                if chmod_str:
                     try:
-                        dest.chmod(0o755)
+                        dest.chmod(
+                            int(chmod_str, 8) if chmod_str.startswith("0o") else int(chmod_str)
+                        )
                     except Exception:
                         pass
                 action_text = "Copied" if status == "NEW" else "Updated"
@@ -226,25 +258,28 @@ class TestGuardrailCopier:
 
         # 3. Add to git index with executable bit if not dry_run (Grok Condition 3)
         if not dry_run:
-            for hook_rel in (".githooks/pre-commit", ".githooks/pre-push"):
-                hook_dest = self.spoke_root / hook_rel
-                if hook_dest.exists():
-                    try:
-                        subprocess.run(
-                            [
-                                "git",
-                                "-C",
-                                str(self.spoke_root),
-                                "update-index",
-                                "--add",
-                                "--chmod=+x",
-                                hook_rel,
-                            ],
-                            capture_output=True,
-                            timeout=5,
-                        )
-                    except Exception:
-                        pass
+            githooks_dir = self.spoke_root / ".githooks"
+            if githooks_dir.is_dir():
+                for hook_file in sorted(githooks_dir.iterdir()):
+                    if hook_file.is_file() and not hook_file.name.endswith(
+                        (".sample", ".bak", ".tmp")
+                    ):
+                        try:
+                            subprocess.run(
+                                [
+                                    "git",
+                                    "-C",
+                                    str(self.spoke_root),
+                                    "update-index",
+                                    "--add",
+                                    "--chmod=+x",
+                                    f".githooks/{hook_file.name}",
+                                ],
+                                capture_output=True,
+                                timeout=5,
+                            )
+                        except Exception:
+                            pass
 
 
 LEGAL_PROJECT_TYPES = {
