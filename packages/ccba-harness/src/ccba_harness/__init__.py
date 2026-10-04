@@ -14,13 +14,25 @@ import directly from the sub-module (e.g. from ccba_harness._engine import _loca
 # ruff: noqa: F401
 from __future__ import annotations
 
-import subprocess  # needed as patch target for tests
+import subprocess  # noqa: F401  # needed as patch target for tests
 
 # Public API re-exports
 from ._engine import HarnessEngine
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
+from .architecture import (
+    ADRMatch,
+    WhyExplanation,
+    explain_architecture_why,
+)
+from .blast_radius import (
+    BlastRadiusReport,
+    analyze_blast_radius,
+    calculate_risk,
+    extract_ast_references,
+    recommend_tests,
+)
 from .dashboard import (
     generate_swarm_dashboard_html,
     render_swarm_dashboard,
@@ -147,6 +159,16 @@ from .peer import (
     parse_verdict_from_md,
     render_prompt_header,
     render_verdict_header,
+)
+from .peer_gate import (
+    GateCheck,
+    GateResult,
+    check_ast_function_length,
+    check_hub_import_depth,
+    check_secret_ip_cleanliness,
+    print_summary_table,
+    run_full_gate,
+    write_verdict_file,
 )
 from .skill_validator import SkillAuditIssue, SkillValidator
 from .streamer import (
@@ -334,4 +356,21 @@ __all__ = [
     "parse_verdict_from_md",
     "render_prompt_header",
     "render_verdict_header",
+    # Pstack Disciplines (ADR-0009 / Issue #461)
+    "ADRMatch",
+    "WhyExplanation",
+    "explain_architecture_why",
+    "BlastRadiusReport",
+    "analyze_blast_radius",
+    "calculate_risk",
+    "extract_ast_references",
+    "recommend_tests",
+    "GateCheck",
+    "GateResult",
+    "check_ast_function_length",
+    "check_hub_import_depth",
+    "check_secret_ip_cleanliness",
+    "print_summary_table",
+    "run_full_gate",
+    "write_verdict_file",
 ]
