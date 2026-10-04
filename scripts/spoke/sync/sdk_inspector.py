@@ -6,12 +6,13 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from .base import are_files_identical
+from .base import are_text_files_identical
 
 
 def is_python_spoke(spoke_root: Path, project_type: str = "") -> bool:
@@ -43,7 +44,7 @@ class TestGuardrailCopier:
         self.hub_root = hub_root
         self.project_type = project_type
 
-    def copy_if_needed(self, dry_run: bool = False) -> list[dict[str, Any]]:
+    def copy_if_needed(self, dry_run: bool = False, force: bool = False) -> list[dict[str, Any]]:
         """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project.
 
         Returns:
@@ -89,15 +90,22 @@ class TestGuardrailCopier:
                 "check_spoke_cleanliness.py",
                 "scripts/check_spoke_cleanliness.py",
             ),
+            (
+                self.hub_root / ".githooks" / "pre-commit",
+                self.spoke_root / ".githooks" / "pre-commit",
+                "pre-commit",
+                ".githooks/pre-commit",
+            ),
         ]
 
+        has_pre_commit = False
         for src, dest, name, rel_path in items_to_copy:
             if not src.exists() or src.resolve() == dest.resolve():
                 continue
 
             if not dest.exists():
                 status = "NEW"
-            elif are_files_identical(src, dest):
+            elif are_text_files_identical(src, dest):
                 status = "UNCHANGED"
             else:
                 status = "UPDATED"
@@ -114,13 +122,121 @@ class TestGuardrailCopier:
             if not dry_run and status in ("NEW", "UPDATED"):
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dest)
+                if name == "pre-commit":
+                    try:
+                        dest.chmod(0o755)
+                    except Exception:
+                        pass
                 action_text = "Copied" if status == "NEW" else "Updated"
                 print(f"  - {action_text} guardrail: {rel_path}")
             elif dry_run and status in ("NEW", "UPDATED"):
                 action_text = "Would copy" if status == "NEW" else "Would update"
                 print(f"  - [DRY-RUN] {action_text} guardrail: {rel_path}")
 
+            if name == "pre-commit":
+                has_pre_commit = True
+
+        pre_commit_src = self.hub_root / ".githooks" / "pre-commit"
+        if has_pre_commit or (
+            pre_commit_src.exists() and (self.spoke_root / ".githooks" / "pre-commit").exists()
+        ):
+            self._ensure_git_hook_activated(dry_run=dry_run, force=force)
+
         return actions
+
+    def _ensure_git_hook_activated(self, dry_run: bool = False, force: bool = False) -> None:
+        """Configures core.hooksPath and .gitattributes for Spoke if inside a git repository."""
+        import subprocess
+
+        # Check if Spoke is a git repository
+        git_dir = self.spoke_root / ".git"
+        if not git_dir.exists():
+            return
+
+        # 1. Ensure .gitattributes has .githooks/* text eol=lf (idempotent, cross-platform)
+        gitattributes_path = self.spoke_root / ".gitattributes"
+        attr_line = ".githooks/* text eol=lf\n"
+        if not dry_run:
+            existing_attrs = ""
+            if gitattributes_path.is_file():
+                try:
+                    existing_attrs = gitattributes_path.read_text(encoding="utf-8")
+                except Exception:
+                    existing_attrs = ""
+            if ".githooks/* text eol=lf" not in existing_attrs:
+                try:
+                    with gitattributes_path.open("a", encoding="utf-8") as attr_file:
+                        if existing_attrs and not existing_attrs.endswith("\n"):
+                            attr_file.write("\n")
+                        attr_file.write(attr_line)
+                except Exception:
+                    pass
+
+        # 2. Check existing core.hooksPath
+        existing_hookspath = ""
+        try:
+            cfg_check = subprocess.run(
+                ["git", "-C", str(self.spoke_root), "config", "core.hooksPath"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
+            )
+            if cfg_check.returncode == 0:
+                existing_hookspath = cfg_check.stdout.strip()
+        except Exception:
+            existing_hookspath = ""
+
+        if existing_hookspath and existing_hookspath != ".githooks" and not force:
+            print(
+                f"  - ⚠️ [Warning] Existing git core.hooksPath detected: '{existing_hookspath}'. "
+                "Skipped overwriting (use --force to override).",
+                file=sys.stderr,
+            )
+            return
+
+        if existing_hookspath != ".githooks":
+            if dry_run:
+                print("  - [DRY-RUN] Would configure git core.hooksPath=.githooks")
+            else:
+                try:
+                    subprocess.run(
+                        [
+                            "git",
+                            "-C",
+                            str(self.spoke_root),
+                            "config",
+                            "core.hooksPath",
+                            ".githooks",
+                        ],
+                        check=True,
+                        capture_output=True,
+                        timeout=5,
+                    )
+                    print("  - Configured git core.hooksPath=.githooks")
+                except Exception as e:
+                    print(f"  - ⚠️ Could not set git core.hooksPath: {e}", file=sys.stderr)
+
+        # 3. Add to git index with executable bit if not dry_run (Grok Condition 3)
+        pre_commit_dest = self.spoke_root / ".githooks" / "pre-commit"
+        if not dry_run and pre_commit_dest.exists():
+            try:
+                subprocess.run(
+                    [
+                        "git",
+                        "-C",
+                        str(self.spoke_root),
+                        "update-index",
+                        "--add",
+                        "--chmod=+x",
+                        ".githooks/pre-commit",
+                    ],
+                    capture_output=True,
+                    timeout=5,
+                )
+            except Exception:
+                pass
 
 
 LEGAL_PROJECT_TYPES = {

@@ -21,6 +21,7 @@ from .base import (
     HubNotFoundError,
     are_dirs_identical,
     are_files_identical,
+    are_text_files_identical,
     load_yaml,
     safe_remove,
 )
@@ -69,6 +70,7 @@ __all__ = [
     "run_spoke_sync_cli",
     "load_yaml",
     "are_files_identical",
+    "are_text_files_identical",
     "are_dirs_identical",
     "safe_remove",
     "HAS_CRYPTOGRAPHY",
