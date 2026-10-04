@@ -14,8 +14,9 @@ import re
 import subprocess
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -122,7 +123,7 @@ def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
     if not match:
         return None, md_content
     yaml_text = match.group(1)
-    body = md_content[match.end():]
+    body = md_content[match.end() :]
     try:
         data = yaml.safe_load(yaml_text)
         if isinstance(data, dict):
@@ -457,7 +458,11 @@ def update_status_json(
         "exchange_stats": {
             "total_prompts": len([i for i in registry.values() if i["role"] == "PROMPT_TO_GROK"]),
             "total_responses": len(
-                [i for i in registry.values() if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION")]
+                [
+                    i
+                    for i in registry.values()
+                    if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
+                ]
             ),
             "pending_antigravity": pending_anti,
             "pending_grok": pending_grok,
@@ -485,7 +490,8 @@ def update_live_summary(
     tz = datetime.timezone(datetime.timedelta(hours=7))
     now_iso = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     resps = [
-        i for i in registry.values()
+        i
+        for i in registry.values()
         if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and i["verdict"]
     ]
     resps.sort(key=lambda x: x["mtime"], reverse=True)
@@ -498,7 +504,9 @@ def update_live_summary(
         f"- **Grok**: `{'in_progress' if pending_grok else 'idle'}` (Đang chờ Antigravity: {len(pending_anti)} requests)\n\n",
         "## 2. Hàng Đợi Đang Chờ (Pending Queue)\n",
     ]
-    lines.append("### ⏳ Grok cần xử lý:" if pending_grok else "### ✅ Grok: Không có yêu cầu tồn đọng.")
+    lines.append(
+        "### ⏳ Grok cần xử lý:" if pending_grok else "### ✅ Grok: Không có yêu cầu tồn đọng."
+    )
     for p in pending_grok[:5]:
         lines.append(f"- `{p}`")
     if pending_anti:
@@ -506,14 +514,18 @@ def update_live_summary(
         for p in pending_anti[:5]:
             lines.append(f"- `{p}`")
 
-    lines.extend([
-        "\n## 3. Phán Quyết Gần Nhất (Recent Verdicts)\n",
-        "| Tệp Phản Hồi | Phán Quyết (Verdict) | Điều Kiện | Tóm Tắt |",
-        "|---|:---:|:---:|---|",
-    ])
+    lines.extend(
+        [
+            "\n## 3. Phán Quyết Gần Nhất (Recent Verdicts)\n",
+            "| Tệp Phản Hồi | Phán Quyết (Verdict) | Điều Kiện | Tóm Tắt |",
+            "|---|:---:|:---:|---|",
+        ]
+    )
     for item in resps[:8]:
         v = item["verdict"]
-        lines.append(f"| `{item['path'].name}` | **`{v.verdict}`** | {len(v.conditions)} | {v.summary[:50]}... |")
+        lines.append(
+            f"| `{item['path'].name}` | **`{v.verdict}`** | {len(v.conditions)} | {v.summary[:50]}... |"
+        )
 
     atomic_write_text(summary_file, "\n".join(lines) + "\n")
 
@@ -552,6 +564,7 @@ def run_sync_cycle(
                     invoke_grok_cli(change.path)
                 elif auto_gate and change.role == "GROK_IMPLEMENTATION":
                     from .peer_gate import run_full_gate, write_verdict_file
+
                     result = run_full_gate(peer_exchange_dir.parent.parent)
                     write_verdict_file(result, peer_exchange_dir)
 
@@ -651,15 +664,29 @@ def invoke_grok_cli(
     target_model = model or os.getenv("CCBA_GROK_MODEL")
     if target_model:
         cmd = [
-            "grok", "-m", target_model, "--always-approve", "--no-subagents",
-            "--reasoning-effort", "high", "--prompt-file", str(prompt_path),
+            "grok",
+            "-m",
+            target_model,
+            "--always-approve",
+            "--no-subagents",
+            "--reasoning-effort",
+            "high",
+            "--prompt-file",
+            str(prompt_path),
         ]
         return _run_single_grok_attempt(cmd, prompt_path, output_file, timeout)
 
     for candidate in (DEFAULT_PRIMARY_AUDITOR_MODEL, DEFAULT_FALLBACK_AUDITOR_MODEL):
         cmd = [
-            "grok", "-m", candidate, "--always-approve", "--no-subagents",
-            "--reasoning-effort", "high", "--prompt-file", str(prompt_path),
+            "grok",
+            "-m",
+            candidate,
+            "--always-approve",
+            "--no-subagents",
+            "--reasoning-effort",
+            "high",
+            "--prompt-file",
+            str(prompt_path),
         ]
         if _run_single_grok_attempt(cmd, prompt_path, output_file, timeout):
             return True

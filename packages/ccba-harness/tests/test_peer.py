@@ -176,9 +176,11 @@ def test_auto_grok_safe_invocation(tmp_path, monkeypatch):
         )
         stdout = render_verdict_header(verdict) + "Review complete."
         import subprocess
+
         return subprocess.CompletedProcess(cmd, returncode=0, stdout=stdout, stderr="")
 
     import subprocess
+
     monkeypatch.setattr(subprocess, "run", mock_run)
     success = invoke_grok_cli(prompt_file, model="gemini-38-flash")
     assert success is True
@@ -212,9 +214,11 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
         )
         stdout = render_verdict_header(verdict) + "Async review content."
         import subprocess
+
         return subprocess.CompletedProcess(cmd, returncode=0, stdout=stdout, stderr="")
 
     import subprocess
+
     monkeypatch.setattr(subprocess, "run", mock_run)
 
     publish_peer_message(
@@ -230,6 +234,7 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
     status_file = tmp_path / "status.json"
     assert status_file.exists()
     import json
+
     data = json.loads(status_file.read_text(encoding="utf-8"))
     assert data["peers"]["grok"]["pending_requests"] == 0
     assert data["peers"]["grok"]["status"] == "idle"
@@ -240,6 +245,7 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
 def test_layering_purity():
     import ast
     from pathlib import Path
+
     peer_py = Path(__file__).resolve().parent.parent / "src" / "ccba_harness" / "peer.py"
     tree = ast.parse(peer_py.read_text(encoding="utf-8"), filename=str(peer_py))
     for node in ast.walk(tree):
@@ -249,4 +255,3 @@ def test_layering_purity():
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 assert not node.module.startswith("scripts"), f"Forbidden import: {node.module}"
-
