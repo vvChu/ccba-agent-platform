@@ -102,13 +102,13 @@ Phân tích 36,530 bản ghi trong `LiteLLM_SpendLogs` theo khóa `api_key`:
 ```
                              api_key                              | count |         sum          
 ------------------------------------------------------------------+-------+----------------------
- 2d27572b3c6672a5464d66097de3a1d88c1b5d82e0b6da4ffda0a3a6da25aac0 | 29169 |    7.049686125000059  <-- MASTER KEY HASH!
+ [REDACTED_KEY_HASH]                                            | 29169 |    7.049686125000059  <-- MASTER KEY HASH!
  mock-key-for-ci                                                  |  4440 |                    0
  litellm-internal-health-check                                    |  2241 | 0.007681699999999955
  5e7f1f8c8b853824a0d447cc8087e6369c5d2023798fd68a2772d72de5e25b82 |   600 |                    0
  ccba-platform                                                    |     4 |                    0
 ```
-- Mã băm SHA-256 `2d27572b3c6672a5464d66097de3a1d88c1b5d82e0b6da4ffda0a3a6da25aac0` tương ứng 100% với Master Key `[REDACTED_LITELLM_KEY]` (`echo -n "[REDACTED_LITELLM_KEY]" | sha256sum`) `[đo thực tế]`.
+- Mã băm SHA-256 của Master Key tương ứng 100% với LiteLLM Master Key `[đo thực tế]`.
 - **79.8% tổng số requests** dùng chung Master Key tĩnh. 100% Virtual Keys đã cấp đều có `spend: 0.0` `[đo thực tế]`. Cơ chế cô lập ngân sách per-spoke hoàn toàn bị vô hiệu hóa trong thực tế.
 
 #### 3. Thực Nghiệm Kiểm Chứng Lỗi Quota & Rate Limit (`[đo thực tế]`)

@@ -61,7 +61,7 @@ def test_standalone_convenience_functions() -> None:
 
 
 def test_safe_strings_ignored(scanner: MaskaraScanner) -> None:
-    content = "Using mock key your_key_here or [REDACTED_LITELLM_KEY]."
+    content = "Using mock key your_key_here or mock-safe-test-key."
     findings = scanner.scan_text(content)
     assert len(findings) == 0
 

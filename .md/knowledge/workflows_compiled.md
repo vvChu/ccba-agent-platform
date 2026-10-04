@@ -1,6 +1,6 @@
 # CCBA Workflows Registry (ADR-0056 Unified into Skills)
 
-> **Notice**: As per ADR-0056, all 69 legacy workflows have been upgraded to modern Agent Skills in `.agents/skills/ccba-*/SKILL.md`.
+> **Notice**: As per ADR-0056, all 68 legacy workflows have been upgraded to modern Agent Skills in `.agents/skills/ccba-*/SKILL.md`.
 > Active slash commands are registered directly in skill YAML frontmatters.
 
 ---
@@ -3090,33 +3090,6 @@ triggers:
 # Workflow: Tạo Script Setup Wizard (/ccba-wizard)
 
 Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `wizard` tại [SKILL.md](../skills/ccba-wizard/SKILL.md) để bắt đầu scope và sinh script setup wizard.
-
-
----
-
-# Archived Workflow: ccba-xia
-
----
-description: Trích xuất, so sánh, port hoặc thích ứng một tính năng từ một repository
-  GitHub hoặc đường dẫn thư mục cục bộ vào dự án hiện tại
-applies_to:
-- Phần mềm
-- Thẩm tra thiết kế
-- Thiết kế
-- Kiểm định
-bundle: _core
-disable-model-invocation: true
-command: /ccba-xia
-triggers:
-- xia
-- port from
-- copy from repo
-- clone feature
-- adapt from
----
-# Workflow: Port tính năng (xỉa code) từ repository ngoài (/ccba-xia)
-
-Khi người dùng kích hoạt lệnh này, Agent hãy nạp và thực thi kỹ năng `ccba-xia` tại [SKILL.md](../skills/ccba-xia/SKILL.md) để bắt đầu quy trình trích xuất và chuyển dịch mã nguồn.
 
 
 ---

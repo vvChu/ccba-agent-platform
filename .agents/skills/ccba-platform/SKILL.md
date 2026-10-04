@@ -45,7 +45,7 @@ Trước khi hiển thị Ma Trận Điều Phối hoặc thực thi bất kỳ 
    * **Tiêu chí hoàn thành:** Xác định chính xác vai trò ngữ cảnh đang vận hành (Hub hay Spoke).
 
 2. **Kiểm Tra Kết Nối AI Gateway (RULE-4.5):**
-   * Kiểm tra kết nối tới LiteLLM Gateway ở Server Spark: `http://100.83.192.30:8090/v1` (hoặc biến `AI_GATEWAY_URL`) kèm token Bearer: `Authorization: Bearer [REDACTED_LITELLM_KEY]`.
+   * Kiểm tra kết nối tới LiteLLM Gateway ở Server Spark: `http://100.83.192.30:8090/v1` (hoặc biến `AI_GATEWAY_URL`) kèm token Bearer: `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`.
    * Nếu kết nối lỗi, cảnh báo và hướng dẫn người dùng kích hoạt Tailscale VPN (`100.83.192.30`) để kết nối vào mạng nội bộ CCBA.
    * **Tiêu chí hoàn thành:** Xác nhận kết nối thành công tới LiteLLM Gateway hoặc hiển thị hướng dẫn kết nối Tailscale VPN rõ ràng.
 

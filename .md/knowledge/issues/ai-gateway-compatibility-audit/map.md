@@ -26,7 +26,7 @@ Toàn bộ hệ sinh thái **CCBA Platform** (bao gồm core package `ccba-ai`, 
 
 ## 📍 Quyết định đã chốt (Decisions so far)
 
-- [x] `[Quyết định Hợp đồng Client]` Thống nhất sử dụng Tailscale VPN `http://100.83.192.30:8090/v1` và Auth Bearer `[REDACTED_LITELLM_KEY]` làm chuẩn kết nối liên Hub/Spoke.
+- [x] `[Quyết định Hợp đồng Client]` Thống nhất sử dụng Tailscale VPN `http://100.83.192.30:8090/v1` và Auth Bearer `<YOUR_AI_GATEWAY_KEY>` làm chuẩn kết nối liên Hub/Spoke.
 - [x] `[Quyết định 4 Archetypes]` Phân định rõ 4 nhóm mô hình: (1) OCR & Vision Ingestion, (2) Standard General / Coding, (3) Deep Reasoning / Complex Audit, (4) Local Private / Zero-Cost.
 - [x] `[TICKET-01: Audit Inventory]` [ticket-01-audit-codebase-skills.md](ticket-01-audit-codebase-skills.md) — Rà soát toàn bộ codebase.
 - [x] `[TICKET-02: Core SDK]` [ticket-02-standardize-ccba-ai-sdk.md](ticket-02-standardize-ccba-ai-sdk.md) — Hỗ trợ `timeout=60.0` và `routing.py`.

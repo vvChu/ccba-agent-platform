@@ -11,7 +11,7 @@ Tài liệu này hướng dẫn cách kết nối từ máy cá nhân tới các
 | **AI Gateway** | port `8090` — 44 models |
 | **Direct vLLM Primary** | port `8004` — Qwen 35B (active) |
 | **Direct vLLM Fallback** | port `8003` — (currently inactive/offline) |
-| **API Key** | `$LITELLM_MASTER_KEY` (mặc định: `[REDACTED_LITELLM_KEY]`) |
+| **API Key** | `$LITELLM_MASTER_KEY` (xem trong file `.env`) |
 
 ---
 

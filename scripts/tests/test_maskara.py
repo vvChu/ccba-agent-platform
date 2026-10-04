@@ -32,7 +32,7 @@ class TestMaskaraScanner(unittest.TestCase):
         self.assertIn("[MASKARA_REDACTED:github-token]", redacted)
 
     def test_scan_safe_strings_ignored(self) -> None:
-        content = "Using mock key your_key_here or [REDACTED_LITELLM_KEY]."
+        content = "Using mock key your_key_here or mock-safe-test-key."
         findings = self.scanner.scan_text(content)
         self.assertEqual(len(findings), 0)
 

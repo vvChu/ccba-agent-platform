@@ -2,6 +2,7 @@
 
 > **Scope:** Hub (`ccba-agent-platform`) & Spokes (`ccba-legal-knowledge`, etc.)
 > **Standard:** OKF v2.2, ADR 0016, ADR 0021, ADR 0031, ADR 0032.
+> ⚠️ **Lưu ý:** Các mã băm commit SHA trước ngày 04/10/2026 trong tài liệu này có thể đã bị thay đổi do đợt tẩy rửa an toàn thông tin lịch sử (Security History Rewriting).
 
 ---
 
@@ -298,7 +299,7 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 
 - **Core Pattern P18.4 — AI Gateway Spark Server Auth & Fast-Inference Model Gating:**
   - **Vấn đề:** Khi chạy Swarm Map-Reduce với nhiều workers song song, việc gọi trực tiếp các mô hình cục bộ nặng có thể dẫn đến thời gian chờ warmup lâu (60-120s), gây nghẽn hàng đợi kiểm định.
-  - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`) với header xác thực `Authorization: Bearer [REDACTED_LITELLM_KEY]`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
+  - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`) với header xác thực `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
 ---
 
 ## 19. Spoke Synchronization Hardening, Decoupled Telemetry Heartbeat & Spoke Leakage Guard (Issue #268, PR #269)

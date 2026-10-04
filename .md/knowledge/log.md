@@ -1,6 +1,7 @@
 # 📜 CCBA Knowledge Base Mutation Log (Append-Only Log)
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
+> ⚠️ **Lưu ý:** Các mã băm commit SHA trước ngày 04/10/2026 trong tài liệu này có thể đã bị thay đổi do đợt tẩy rửa an toàn thông tin lịch sử (Security History Rewriting).
 
 ## [2026-10-01] [synthesize] | Phát Hành PR #449 (Issue #448): Advisory AI Review Guardrails & Pre-Merge Bugbot Rules
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-release-feature & /ccba-session-retrospective)
