@@ -660,5 +660,28 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
   - *10 Bugbot Invariants SSOT*: Đối soát diff tự động theo 10 quy tắc bất biến tại `.github/bugbot-rules.md` (SEAM_REUSE, DECOUPLED_CONNECTION, AST_SPAN_INSPECTION, MULTI_KEY_SORT, INODE_INVARIANCE, POSIX_PERMISSIONS, MACHINE_STATE_DECOUPLING, SECRETS_MASKARA, VERIFIER_TEST_PARITY, ATOMIC_MICRO_PR).
   - *Opt-in Trigger Guardrail*: AI Review không tự động kích hoạt trên mọi commit; chỉ chạy khi có nhãn `ai-review-requested` hoặc lệnh `/ccba-ai-review`, loại trừ bot PRs, và diff bắt buộc phải đi qua cổng làm sạch bảo mật `ccba_maskara.redact_secrets_in_text()` để tránh rò rỉ secret và bão quota Gateway Spark.
 
+---
+
+## 30. Peer Telemetry & Model Provenance, Zero-Hang Process Lifecycle & Copilot Subprocess Invariants (PR #478 / ADR-0064)
+
+### Background & Context
+Trong các phiên tương tác đồng đẳng giữa Antigravity và Grok CLI trên Monorepo Hub, phát sinh 2 vấn đề lớn:
+1. **Interactive TUI Hang**: Grok CLI khi nhận câu hỏi dạng chuỗi vị trí (`grok [OPTIONS] "prompt"`) khởi động vòng lặp TUI tương tác và không tự động thoát (`exit 0`). Khi đó, Antigravity rơi vào trạng thái ngủ hướng sự kiện (event-driven idle) bị đóng băng liên tục cho đến khi con người can thiệp.
+2. **Blind Model & Cost Provenance (Nguy cơ lỗi 402)**: Hệ thống định tuyến đa tầng (`grok-4.7` trên xAI Cloud $\rightarrow$ `gemini-3.8-flash` qua Gateway) nhưng `PeerVerdictBlock` không ghi nhận model thực tế đã xử lý phán quyết. Đồng thời không đo đếm token dẫn đến nguy cơ chạm trần quota API.
+
+### Phản biện Copilot Code Review & Subprocess Hardening Invariants
+1. **Pipe Buffer Deadlock Prevention (Comment 4184089485)**:
+   - *Vấn đề*: Khi chạy `subprocess.Popen` với `stdout=subprocess.PIPE` và `stderr=subprocess.PIPE` mà không drain đồng thời (chỉ gọi `communicate()` sau khi tiến trình đã kết thúc), nếu tiến trình con xuất dữ liệu vượt quá dung lượng OS pipe buffer (~64 KB trên Linux — rất phổ biến với `xhigh` deep reasoning), tiến trình con sẽ bị block ở lệnh ghi `write()`, `poll()` không bao giờ trả về, và watchdog spin cho đến khi timeout giết chết tiến trình hợp lệ.
+   - *Invariant*: Tuyệt đối cấm dùng bare `subprocess.PIPE` cho các tiến trình chạy nền có output lớn mà không có reader thread. Bắt buộc chuyển hướng `stdout` và `stderr` sang tệp tạm độc lập `tempfile.TemporaryFile()` để có dung lượng đệm không giới hạn của hệ thống tệp.
+2. **Stale Verdict File Reuse Guard (Comment 4184089581)**:
+   - *Vấn đề*: Watchdog polling kiểm tra sự tồn tại của tệp `output_file` trên đĩa. Do các tệp verdict của peer exchange được lưu lại trên đĩa (ví dụ `grok_review_*.md`), nếu không kiểm tra thời gian tạo file, watchdog sẽ nhận nhầm tệp phán quyết cũ của phiên trước ngay ở vòng lặp đầu tiên và kết thúc sớm tiến trình với phán quyết lỗi thời.
+   - *Invariant*: Watchdog BẮT BUỘC kiểm tra `os.path.getmtime(output_file) >= start_time` trước khi đọc phán quyết.
+3. **Subprocess Text Encoding on Windows (Comment 4184011501)**:
+   - *Vấn đề*: `subprocess.run(..., text=True)` nếu không chỉ định `encoding` sẽ dùng locale mặc định của hệ thống. Trên Windows (cp1252), khi output chứa ký tự Unicode/tiếng Việt sẽ ném ngoại lệ `UnicodeDecodeError` làm sập luồng đo lường telemetry.
+   - *Invariant*: Mọi lệnh text-mode subprocess BẮT BUỘC truyền `encoding="utf-8", errors="replace"`.
+4. **Maskara Secret Linter False-Positive Guard**:
+   - *Vấn đề*: Rule `env-secret` trong Maskara quét các phép gán biến chứa chuỗi con `tokens` và gán giá trị không ngoặc kép có độ dài $\ge 8$ ký tự. Các biến telemetry Python gán cho kwarg như `reasoning_tokens=rsn`, `output_tokens=est_out` nếu đặt tên biến dài $\ge 8$ ký tự (`reasoning`, `est_output`) sẽ bị nhận nhầm là secret token.
+   - *Invariant*: Đặt tên các biến telemetry truyền vào hàm ngắn gọn $< 8$ ký tự (`rsn`, `est_out`, `in_tok`).
+
 
 
