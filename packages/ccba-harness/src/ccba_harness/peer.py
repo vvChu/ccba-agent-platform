@@ -23,12 +23,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ._mutex import FileMutexLock
 
-# ccba:allow-raw-model
-DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"
-# ccba:allow-raw-model
-DEFAULT_FALLBACK_AUDITOR_MODEL = "gemini-38-flash"
-
 AgentIdentity = Literal["antigravity", "grok"]
+PeerExecutionProfile = Literal["audit_plan", "agentic_code", "patch_fast"]
+ModelTier = Literal["local", "gateway", "cloud"]
 RequestType = Literal[
     "review",
     "implement",
@@ -53,6 +50,62 @@ VerdictType = Literal[
 ]
 EffortType = Literal["XS", "S", "M", "L", "XL"]
 
+# ccba:allow-raw-model
+DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"
+# ccba:allow-raw-model
+DEFAULT_FALLBACK_AUDITOR_MODEL = "gemini-38-flash"
+
+# ccba:allow-raw-model
+TIER_DEFAULT_MODELS: dict[str, str] = {
+    "local": "qwen-local",
+    "gateway": "gemini-38-flash",
+    "cloud": "grok-4.7",
+}
+
+# ccba:allow-raw-model
+PROFILE_SPECS: dict[str, dict[str, Any]] = {
+    "audit_plan": {
+        "model": "grok-4.7",
+        "fallback_model": "gemini-38-flash",
+        "max_turns": 12,
+        "tools": ["read_file", "grep", "list_dir"],
+        "disallowed_tools": [
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ],
+        "reasoning_effort": "high",
+        "timeout": 900.0,
+    },
+    "agentic_code": {
+        "model": "grok-4.7-build-fast",
+        "fallback_model": "claude-sonnet-4-6",
+        "max_turns": 8,
+        "tools": None,
+        "disallowed_tools": ["spawn_subagent"],
+        "reasoning_effort": None,
+        "timeout": 600.0,
+    },
+    "patch_fast": {
+        "model": "qwen-local",
+        "fallback_model": "grok-4.7-build-fast",
+        "max_turns": 1,
+        "tools": None,
+        "disallowed_tools": [
+            "read_file",
+            "grep",
+            "list_dir",
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ],
+        "reasoning_effort": None,
+        "timeout": 120.0,
+    },
+}
+
 FRONTMATTER_PATTERN = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 
 _SYNC_MUTEX = threading.Lock()
@@ -69,6 +122,33 @@ class FileChange(NamedTuple):
     verdict: PeerVerdictBlock | None = None
 
 
+class PatchReplacement(BaseModel):
+    """Represents a single verbatim string replacement in a file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    old: str
+    new: str
+
+
+class FilePatch(BaseModel):
+    """Represents an atomic patch target with SHA-256 pre-condition."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+    blob_sha256: str
+    replacements: list[PatchReplacement]
+
+
+class AnchorPatchPayload(BaseModel):
+    """Root container for Level-2 anchor-based code patches."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    files: list[FilePatch]
+
+
 class PeerPromptEnvelope(BaseModel):
     """Envelopes a prompt request sent from one peer agent to another."""
 
@@ -83,6 +163,9 @@ class PeerPromptEnvelope(BaseModel):
     source_documents: list[str] = Field(default_factory=list)
     output_path: str
     context: str | None = None
+    profile: PeerExecutionProfile | None = None
+    max_turns: int | None = None
+    target_files: list[str] = Field(default_factory=list)
 
 
 class PeerCondition(BaseModel):
@@ -613,6 +696,113 @@ def publish_peer_message(
     return target_path
 
 
+def apply_anchor_patch(
+    root: Path,
+    payload: AnchorPatchPayload | dict[str, Any],
+) -> list[Path]:
+    """Applies a Level-2 anchor patch payload atomically with SHA-256 pre-verification (ADR-0063).
+
+    Args:
+        root: Workspace root directory.
+        payload: AnchorPatchPayload instance or equivalent dictionary.
+
+    Returns:
+        List of Path instances successfully modified.
+
+    Raises:
+        ValueError: If SHA-256 mismatch occurs or anchor string is not unique.
+    """
+    if isinstance(payload, dict):
+        patch = AnchorPatchPayload.model_validate(payload)
+    else:
+        patch = payload
+
+    root_resolved = root.resolve()
+    prepared_writes: list[tuple[Path, str]] = []
+
+    # Phase 1: Pre-validation of all files and content preparation (Fail-Fast)
+    for file_patch in patch.files:
+        target_file = (root_resolved / file_patch.path).resolve()
+        # Security invariant: prevent path traversal outside workspace root
+        if not target_file.is_relative_to(root_resolved):
+            raise ValueError(f"Path traversal detected in patch: {file_patch.path}")
+        if not target_file.exists():
+            raise ValueError(f"Target patch file does not exist: {file_patch.path}")
+
+        raw_bytes = target_file.read_bytes()
+        actual_sha256 = hashlib.sha256(raw_bytes).hexdigest()
+        if actual_sha256.lower() != file_patch.blob_sha256.lower():
+            raise ValueError(
+                f"Anchor patch SHA-256 mismatch for {file_patch.path}: "
+                f"expected {file_patch.blob_sha256}, got {actual_sha256}"
+            )
+
+        text = raw_bytes.decode("utf-8")
+        for rep in file_patch.replacements:
+            count = text.count(rep.old)
+            if count == 0:
+                raise ValueError(
+                    f"Target old anchor text not found in {file_patch.path}: '{rep.old[:50]}...'"
+                )
+            if count > 1:
+                raise ValueError(
+                    f"Target old anchor text is not unique in {file_patch.path} (found {count} matches): '{rep.old[:50]}...'"
+                )
+            text = text.replace(rep.old, rep.new, 1)
+
+        prepared_writes.append((target_file, text))
+
+    # Phase 2: Atomic commit of all prepared changes
+    modified_paths: list[Path] = []
+    for target_file, new_content in prepared_writes:
+        atomic_write_text(target_file, new_content)
+        modified_paths.append(target_file)
+
+    return modified_paths
+
+
+def build_grok_cmd(
+    prompt_path: Path,
+    model: str,
+    max_turns: int | None = None,
+    tools: list[str] | None = None,
+    disallowed_tools: list[str] | None = None,
+    reasoning_effort: str | None = None,
+    output_format: str | None = None,
+    worktree: bool = False,
+) -> list[str]:
+    """Constructs canonical grok CLI command list for headless execution (ADR-0063).
+
+    Args:
+        prompt_path: Path to prompt file containing PeerPromptEnvelope.
+        model: Model slug as defined in ~/.grok/config.toml.
+        max_turns: Optional hard cap on agent turns.
+        tools: Optional explicit allowlist of tools.
+        disallowed_tools: Optional explicit denylist of tools.
+        reasoning_effort: Optional reasoning effort ('low', 'medium', 'high').
+        output_format: Output format ('plain', 'json', etc.).
+        worktree: Whether to execute in an isolated git worktree.
+
+    Returns:
+        Command arguments list.
+    """
+    cmd = ["grok", "-m", model, "--always-approve", "--no-subagents"]
+    if reasoning_effort:
+        cmd.extend(["--reasoning-effort", reasoning_effort])
+    if max_turns is not None:
+        cmd.extend(["--max-turns", str(max_turns)])
+    if tools:
+        cmd.extend(["--tools", ",".join(tools)])
+    if disallowed_tools:
+        cmd.extend(["--disallowed-tools", ",".join(disallowed_tools)])
+    if output_format and output_format != "plain":
+        cmd.extend(["--output-format", output_format])
+    if worktree:
+        cmd.append("--worktree")
+    cmd.extend(["--prompt-file", str(prompt_path)])
+    return cmd
+
+
 def _run_single_grok_attempt(
     cmd: list[str], prompt_path: Path, output_file: Path, timeout: float
 ) -> bool:
@@ -641,14 +831,22 @@ def _run_single_grok_attempt(
 def invoke_grok_cli(
     prompt_path: Path,
     model: str | None = None,
-    timeout: float = 180.0,
+    profile: PeerExecutionProfile | str | None = None,
+    tier: ModelTier | str | None = None,
+    max_turns: int | None = None,
+    timeout: float | None = None,
+    worktree: bool = False,
 ) -> bool:
-    """Invokes Grok CLI with adaptive multi-tier fallback and high reasoning effort.
+    """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063).
 
     Args:
         prompt_path: Path to prompt file containing PeerPromptEnvelope.
         model: Optional explicit model override.
+        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast').
+        tier: Model tier ('local', 'gateway', 'cloud').
+        max_turns: Optional turns override.
         timeout: Subprocess execution timeout in seconds.
+        worktree: Whether to run inside a detached git worktree.
 
     Returns:
         True if response was successfully generated and verified, False otherwise.
@@ -661,33 +859,57 @@ def invoke_grok_cli(
     out_name = Path(envelope.output_path).name
     output_file = prompt_path.parent / out_name
 
-    target_model = model or os.getenv("CCBA_GROK_MODEL")
-    if target_model:
-        cmd = [
-            "grok",
-            "-m",
-            target_model,
-            "--always-approve",
-            "--no-subagents",
-            "--reasoning-effort",
-            "high",
-            "--prompt-file",
-            str(prompt_path),
-        ]
-        return _run_single_grok_attempt(cmd, prompt_path, output_file, timeout)
+    active_profile = profile or (envelope.profile if envelope else None)
+    spec: dict[str, Any] = PROFILE_SPECS.get(
+        str(active_profile),
+        {
+            "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
+            "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
+            "max_turns": 12,
+            "tools": None,
+            "disallowed_tools": ["spawn_subagent"],
+            "reasoning_effort": "high",
+            "timeout": 180.0,
+        },
+    )
 
-    for candidate in (DEFAULT_PRIMARY_AUDITOR_MODEL, DEFAULT_FALLBACK_AUDITOR_MODEL):
-        cmd = [
-            "grok",
-            "-m",
-            candidate,
-            "--always-approve",
-            "--no-subagents",
-            "--reasoning-effort",
-            "high",
-            "--prompt-file",
-            str(prompt_path),
-        ]
-        if _run_single_grok_attempt(cmd, prompt_path, output_file, timeout):
+    spec_max_turns = (
+        max_turns
+        if max_turns is not None
+        else (
+            envelope.max_turns
+            if envelope and envelope.max_turns is not None
+            else spec.get("max_turns")
+        )
+    )
+    tools = spec.get("tools")
+    disallowed_tools = spec.get("disallowed_tools")
+    reasoning_effort = spec.get("reasoning_effort")
+    spec_timeout = timeout if timeout is not None else spec.get("timeout", 180.0)
+
+    target_models: list[str] = []
+    if model:
+        target_models.append(model)
+    elif tier and str(tier) in TIER_DEFAULT_MODELS:
+        target_models.append(TIER_DEFAULT_MODELS[str(tier)])
+    elif os.getenv("CCBA_GROK_MODEL"):
+        target_models.append(os.environ["CCBA_GROK_MODEL"])
+    else:
+        target_models.append(spec["model"])
+        fallback = spec.get("fallback_model")
+        if fallback and fallback not in target_models:
+            target_models.append(fallback)
+
+    for candidate in target_models:
+        cmd = build_grok_cmd(
+            prompt_path=prompt_path,
+            model=candidate,
+            max_turns=spec_max_turns,
+            tools=tools,
+            disallowed_tools=disallowed_tools,
+            reasoning_effort=reasoning_effort,
+            worktree=worktree,
+        )
+        if _run_single_grok_attempt(cmd, prompt_path, output_file, spec_timeout):
             return True
     return False

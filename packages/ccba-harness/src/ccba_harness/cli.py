@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from collections.abc import Sequence
@@ -1465,6 +1466,148 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for peer prompt dispatch (`ccba-harness peer-dispatch` - ADR-0063)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness peer-dispatch",
+        description="Level-2 Peer Agent Dispatcher and budget guardrail (ADR-0063).",
+    )
+    parser.add_argument(
+        "--prompt-file",
+        type=str,
+        required=True,
+        help="Path to markdown prompt file containing PeerPromptEnvelope.",
+    )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        choices=["audit_plan", "agentic_code", "patch_fast"],
+        default=None,
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast').",
+    )
+    parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["local", "gateway", "cloud"],
+        default=None,
+        help="Model infrastructure tier ('local' DGX, 'gateway' Spark, 'cloud' xAI).",
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        default=None,
+        help="Explicit model slug override (e.g. qwen-local, grok-4.7).",
+    )
+    parser.add_argument(
+        "--max-turns",
+        type=int,
+        default=None,
+        help="Hard cap on agent turns (overrides profile defaults).",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=None,
+        help="Execution timeout in seconds.",
+    )
+    parser.add_argument(
+        "--worktree",
+        action="store_true",
+        help="Execute agent in an isolated git worktree.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print constructed command and parameters without executing.",
+    )
+
+    args = parser.parse_args(args_list)
+    prompt_path = Path(args.prompt_file).resolve()
+    if not prompt_path.exists():
+        print(f"[FAIL] Prompt file not found: {prompt_path}", file=sys.stderr)
+        return 1
+
+    from .peer import (
+        DEFAULT_FALLBACK_AUDITOR_MODEL,
+        DEFAULT_PRIMARY_AUDITOR_MODEL,
+        PROFILE_SPECS,
+        TIER_DEFAULT_MODELS,
+        build_grok_cmd,
+        invoke_grok_cli,
+        parse_envelope_from_md,
+        safe_read_and_hash,
+    )
+
+    if args.dry_run:
+        content, _ = safe_read_and_hash(prompt_path)
+        envelope = parse_envelope_from_md(content or "")
+        active_profile = args.profile or (envelope.profile if envelope else None)
+        spec = PROFILE_SPECS.get(
+            str(active_profile),
+            {
+                "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
+                "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
+                "max_turns": 12,
+                "tools": None,
+                "disallowed_tools": ["spawn_subagent"],
+                "reasoning_effort": "high",
+                "timeout": 180.0,
+            },
+        )
+        model = args.model
+        if not model:
+            if args.tier and str(args.tier) in TIER_DEFAULT_MODELS:
+                model = TIER_DEFAULT_MODELS[str(args.tier)]
+            elif os.getenv("CCBA_GROK_MODEL"):
+                model = os.environ["CCBA_GROK_MODEL"]
+            else:
+                model = spec["model"]
+
+        max_turns = (
+            args.max_turns
+            if args.max_turns is not None
+            else (
+                envelope.max_turns
+                if envelope and envelope.max_turns is not None
+                else spec.get("max_turns")
+            )
+        )
+        cmd = build_grok_cmd(
+            prompt_path=prompt_path,
+            model=model,
+            max_turns=max_turns,
+            tools=spec.get("tools"),
+            disallowed_tools=spec.get("disallowed_tools"),
+            reasoning_effort=spec.get("reasoning_effort"),
+            worktree=args.worktree,
+        )
+        out_name = (
+            Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"
+        )
+        print(f"[DRY-RUN] Profile: {active_profile}")
+        print(f"[DRY-RUN] Model: {model}")
+        print(f"[DRY-RUN] Max Turns: {max_turns}")
+        print(f"[DRY-RUN] Expected Output: {prompt_path.parent / out_name}")
+        print(f"[DRY-RUN] Command: {' '.join(cmd)}")
+        return 0
+
+    success = invoke_grok_cli(
+        prompt_path=prompt_path,
+        model=args.model,
+        profile=args.profile,
+        tier=args.tier,
+        max_turns=args.max_turns,
+        timeout=args.timeout,
+        worktree=args.worktree,
+    )
+    if success:
+        print("[OK] Peer dispatch completed successfully with valid verdict.")
+        return 0
+    print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
+    return 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Main CLI entry point for ccba-harness."""
     if argv is None:
@@ -1811,6 +1954,61 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--root", type=str, default=None, help="Project workspace root directory."
     )
 
+    # Subcommand: peer-dispatch
+    dispatch_parser = subparsers.add_parser(
+        "peer-dispatch",
+        help="Level-2 Peer Agent Dispatcher and budget guardrail (ADR-0063).",
+    )
+    dispatch_parser.add_argument(
+        "--prompt-file",
+        type=str,
+        required=True,
+        help="Path to markdown prompt file containing PeerPromptEnvelope.",
+    )
+    dispatch_parser.add_argument(
+        "--profile",
+        type=str,
+        choices=["audit_plan", "agentic_code", "patch_fast"],
+        default=None,
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast').",
+    )
+    dispatch_parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["local", "gateway", "cloud"],
+        default=None,
+        help="Model infrastructure tier ('local' DGX, 'gateway' Spark, 'cloud' xAI).",
+    )
+    dispatch_parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        default=None,
+        help="Explicit model slug override.",
+    )
+    dispatch_parser.add_argument(
+        "--max-turns",
+        type=int,
+        default=None,
+        help="Hard cap on agent turns.",
+    )
+    dispatch_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=None,
+        help="Execution timeout in seconds.",
+    )
+    dispatch_parser.add_argument(
+        "--worktree",
+        action="store_true",
+        help="Execute agent in an isolated git worktree.",
+    )
+    dispatch_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print constructed command without executing.",
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -1832,6 +2030,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_peer_gate_cli(argv[1:])
     if argv[0] in ("peer-watch", "watch-peer"):
         return run_peer_watch_cli(argv[1:])
+    if argv[0] in ("peer-dispatch", "dispatch-peer"):
+        return run_peer_dispatch_cli(argv[1:])
     if argv[0] == "blast-radius":
         return run_blast_radius_cli(argv[1:])
     if argv[0] in ("why", "explain-why"):
