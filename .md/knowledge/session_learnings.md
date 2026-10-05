@@ -81,6 +81,10 @@
   - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
 - **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
   - Thêm/xóa/đổi tên Level-1 structural files (kỹ năng mới, package mới, scripts mới) BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker `<!-- STATS:SKILL_COUNT -->` trong `README.md` và `PLATFORM.md`, chống chặn đứng CI drift.
+- **RULE-4.13 [ADR 0063 — Level-2 Peer Agent Delegation & Cost-Turn Guardrails]**:
+  - *Turn Budget Cap*: CẤM triệu hồi Grok CLI vô trần turns; bắt buộc qua `invoke_grok_cli` / `peer-dispatch`: `AUDIT_PLAN` $\le 12$ turns (read-only tools), `AGENTIC_CODE` $\le 8$ turns (chu trình 2 vòng sửa + 2 vòng test), `PATCH_FAST` đúng 1 turn (`--max-turns 1`).
+  - *Anchor Replacement & Two-Phase Commit*: Task $\le 100$ LOC bắt buộc dùng Hợp đồng Neo `{path, blob_sha256, replacements: [{old, new}]}`. `apply_anchor_patch` kiểm tra containment `target.is_relative_to(root)` và pre-validation SHA-256 toàn bộ trước khi ghi đĩa; cấm raw diff do LLM đếm dòng sai.
+  - *Tier Routing*: `qwen-local` (0 USD trên DGX Spark GB10) cho patch 1-turn; `gemini-38-flash` / `claude-sonnet-4-6` cho Gateway; chỉ leo thang `grok-4.7` / `claude-opus-4-6` cho audit sâu.
 
 ---
 
