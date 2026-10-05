@@ -360,6 +360,56 @@ LEGAL_PROJECT_TYPES = {
 }
 
 
+def _coerce_str_list(raw: Any) -> list[str]:
+    """Normalize a workspace string or list into stripped names."""
+    if isinstance(raw, str):
+        text = raw.strip()
+        return [text] if text else []
+    if isinstance(raw, list):
+        return [item.strip() for item in raw if isinstance(item, str) and item.strip()]
+    return []
+
+
+def _categories_from_catalog(hub_root: Path) -> dict[str, list[str]] | None:
+    """Read package_bindings.categories. None means the caller keeps the legacy map."""
+    catalog_path = hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    if not catalog_path.is_file():
+        return None
+    try:
+        data = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    bindings = data.get("package_bindings")
+    if not isinstance(bindings, dict):
+        return None
+    raw_categories = bindings.get("categories")
+    if not isinstance(raw_categories, list) or not raw_categories:
+        return None
+    categories: dict[str, list[str]] = {}
+    for entry in raw_categories:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        packages = entry.get("packages")
+        if not isinstance(name, str) or not name.strip() or not isinstance(packages, list):
+            continue
+        names = [pkg.strip() for pkg in packages if isinstance(pkg, str) and pkg.strip()]
+        if names:
+            categories[name.strip()] = names
+    return categories or None
+
+
+_LEGACY_SDK_CATEGORIES: dict[str, list[str]] = {
+    "AI Gateway SDKs": ["ccba-harness", "ccba-ai"],
+    "Engineering QC SDKs": ["ccba-qc-core"],
+    "Office & Document Processing SDKs": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
+    "Legal Intelligence SDKs": ["ccba-legal-intel"],
+    "Extension SDKs": ["ccba-notebooklm", "ccba-maskara"],
+}
+
+
 def is_legal_related_spoke(spoke_root: Path, project_type: str = "") -> bool:
     """Determines if the target Spoke requires legal knowledge bundle synchronization."""
     if project_type in LEGAL_PROJECT_TYPES:
@@ -421,11 +471,9 @@ class SharedSdkInspector:
 
     def resolve_packages_to_check(self) -> list[str]:
         """Resolves the list of Hub packages to inspect for the Spoke according to ADR-0044 tiers."""
-        # Tier 0: Core mandatory packages
-        packages = ["ccba-harness", "ccba-ai"]
-
         arch = self.archetype
         declared: list[str] = []
+        additional_bundles: list[str] = []
 
         # Read workspace_context.yaml if available
         for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
@@ -448,6 +496,11 @@ class SharedSdkInspector:
                         ) or data.get("archetype")
                         if isinstance(raw_arch, str):
                             arch = raw_arch
+                    project = data.get("project")
+                    raw_add = data.get("additional_bundles")
+                    if not raw_add and isinstance(project, dict):
+                        raw_add = project.get("additional_bundles")
+                    additional_bundles.extend(_coerce_str_list(raw_add))
                 except Exception:
                     pass
 
@@ -457,6 +510,25 @@ class SharedSdkInspector:
 
             raw_type = str(self.project_type).strip().lower()
             arch = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type) or ""
+
+        from scripts.spoke.spoke_bootstrap import resolve_install_set
+
+        bound = resolve_install_set(
+            self.hub_root,
+            archetype=arch or "",
+            project_type=self.project_type or "",
+            additional_bundles=tuple(additional_bundles),
+            declared_packages=tuple(declared),
+            legal_related=(
+                is_legal_related_spoke(self.spoke_root, self.project_type)
+                or self.spoke_root.name.lower() == "ccba-legal-knowledge"
+            ),
+        )
+        if bound is not None:
+            return bound
+
+        # Tier 0: Core mandatory packages
+        packages = ["ccba-harness", "ccba-ai"]
 
         # Tier 1: Archetype Defaults
         if arch == "knowledge_corpus":
@@ -536,13 +608,9 @@ class SharedSdkInspector:
         if not missing:
             return {}
 
-        categories: dict[str, list[str]] = {
-            "AI Gateway SDKs": ["ccba-harness", "ccba-ai"],
-            "Engineering QC SDKs": ["ccba-qc-core"],
-            "Office & Document Processing SDKs": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
-            "Legal Intelligence SDKs": ["ccba-legal-intel"],
-            "Extension SDKs": ["ccba-notebooklm", "ccba-maskara"],
-        }
+        categories = _categories_from_catalog(self.hub_root)
+        if categories is None:
+            categories = dict(_LEGACY_SDK_CATEGORIES)
 
         categorized_recs: dict[str, list[str]] = {}
         for cat_name, cat_pkgs in categories.items():
