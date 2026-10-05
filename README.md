@@ -50,7 +50,7 @@ ccba-agent-platform/                    ← Hub Repository
 │   └── sop/                           ← Standard Operating Procedures (Sync, Delivery, Repo Protection)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->75<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-18 -->
+│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->76<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-18 -->
 │   │   ├── ccba-ai-gateway-sdk/       ←   Kết nối AI Gateway (50+ models)
 │   │   ├── ccba-spoke-adopter/        ←   Tiếp nhận Brownfield Spoke an toàn
 │   │   ├── ccba-sharepoint-iac/       ←   SharePoint Lists Schema & IaC

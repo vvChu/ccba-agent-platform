@@ -106,3 +106,4 @@ portals:
       - ccba-xia
       - ccba-docs-manager
       - ccba-sync-upstream
+      - ccba-create-verification-skill

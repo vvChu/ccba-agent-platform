@@ -419,6 +419,11 @@ PIPELINE_MAP: dict[str, dict[str, str]] = {
         "downstream": "ccba-xia / Khuyến nghị porting",
         "role": "Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar).",
     },
+    "ccba-create-verification-skill": {
+        "upstream": "Ứng dụng hoặc Spoke mới cần bộ kiểm định tự động / ADR-0009",
+        "downstream": "Kỹ năng verify-<app> và bộ harness cô lập",
+        "role": "Khởi tạo bộ kỹ năng kiểm định tự động verify-<app> cô lập cho ứng dụng hoặc spoke.",
+    },
 }
 
 
