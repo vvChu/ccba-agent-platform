@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0063)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0064)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -67,3 +67,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [HUB-ADR 0061](0061-platform-aware-kiss-v2-and-quarantine-governance.md) | Platform-Aware KISS v2.0 & Capability Quarantine Governance | ✅ ACCEPTED |
 | [HUB-ADR 0062](0062-declarative-synchronization-registry-and-auto-discovery.md) | Declarative Synchronization Registry, Fail-Closed Catalog Freshness Gate, and Topological Package Discovery | ✅ ACCEPTED |
 | [HUB-ADR 0063](0063-level-2-peer-delegation-protocol-and-cost-guardrails.md) | Level-2 Peer Agent Delegation Protocol and Cost Guardrails (Grok ↔ Antigravity) | ✅ ACCEPTED |
+| [HUB-ADR 0064](0064-peer-exchange-telemetry-and-model-provenance.md) | Peer Exchange Model Provenance, Token Usage Telemetry, and Zero-Hang Execution Lifecycle | ✅ ACCEPTED |
