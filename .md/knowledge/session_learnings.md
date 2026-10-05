@@ -19,7 +19,10 @@
   - *Team Whitelist*: BẮT BUỘC unignore `!.agents/teams/` trong `.gitignore` lưu trữ team specs.
   - *Federated Hubs Alignment*: 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị chia sẻ tri thức qua CLI/REST/gRPC.
 - **RULE-1.13 [Parameter Externalization & Declarative Config]**:
-  - CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP. Dùng `choose_model()` / `ModelArchetype` và env vars (ngoại lệ: `# ccba:allow-raw-model`, `# ccba:allow-raw-ip`). `check_hardcoded_parameters.py` kiểm soát tĩnh; tách trọng số/routing thành YAML/JSON theo OCP.
+  - CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP. Dùng `choose_model()` / `ModelArchetype` và env vars (ngoại lệ: `# ccba:allow-raw-model`, `# ccba:allow-raw-ip`). Tách config theo OCP.
+- **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
+  - *Fail-Closed Gate*: `assess_catalog_freshness` chặn đứng `--apply` (exit 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
+  - *Declarative Registry & Topo*: Khai báo guardrails và package bindings trong `catalog_base.yaml`; `spoke_bootstrap.py` phân giải install set theo Kahn's topo sort.
 
 ---
 
