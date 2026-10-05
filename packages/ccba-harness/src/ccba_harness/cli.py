@@ -1579,8 +1579,10 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             max_turns=max_turns,
             tools=spec.get("tools"),
             disallowed_tools=spec.get("disallowed_tools"),
+            deny=spec.get("deny"),
             reasoning_effort=spec.get("reasoning_effort"),
             worktree=args.worktree,
+            system_prompt=spec.get("system_prompt"),
         )
         out_name = (
             Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"

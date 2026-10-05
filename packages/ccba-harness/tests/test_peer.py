@@ -420,6 +420,19 @@ def test_build_grok_cmd_mapping(tmp_path):
         str(prompt),
     ]
 
+    cmd_with_sys = build_grok_cmd(
+        prompt_path=prompt,
+        model="qwen-local",
+        system_prompt="Custom system prompt override",
+        deny=["*"],
+    )
+    assert "--system-prompt-override" in cmd_with_sys
+    idx = cmd_with_sys.index("--system-prompt-override")
+    assert cmd_with_sys[idx + 1] == "Custom system prompt override"
+    assert "--deny" in cmd_with_sys
+    deny_idx = cmd_with_sys.index("--deny")
+    assert cmd_with_sys[deny_idx + 1] == "*"
+
 
 def test_apply_anchor_patch_success(tmp_path):
     import hashlib
@@ -601,15 +614,42 @@ def test_invoke_grok_cli_profile_and_tier_resolution(tmp_path, monkeypatch):
 
     monkeypatch.setattr(subprocess, "Popen", MockPopenTier)
 
-    # 1. Profile patch_fast defaults to model qwen-local and max_turns=1
+    # 1. Profile patch_fast defaults to model qwen-local and deny *
     ok = invoke_grok_cli(prompt, profile="patch_fast")
     assert ok is True
     assert "-m" in captured_cmds[0]
     assert captured_cmds[0][captured_cmds[0].index("-m") + 1] == "qwen-local"
-    assert "--max-turns" in captured_cmds[0]
-    assert captured_cmds[0][captured_cmds[0].index("--max-turns") + 1] == "1"
+    assert "--deny" in captured_cmds[0]
+    assert captured_cmds[0][captured_cmds[0].index("--deny") + 1] == "*"
 
     # 2. Tier 'gateway' maps to gemini-38-flash
     ok = invoke_grok_cli(prompt, tier="gateway")
     assert ok is True
     assert captured_cmds[1][captured_cmds[1].index("-m") + 1] == "gemini-38-flash"
+
+
+def test_extract_anchor_payload():
+    from ccba_harness.peer import extract_anchor_payload
+
+    # Valid payload in markdown code block
+    md = """Here is the patch:
+```json
+{
+  "files": [
+    {
+      "path": "src/foo.py",
+      "blob_sha256": "abcdef123456",
+      "replacements": [{"old": "x", "new": "y"}]
+    }
+  ]
+}
+```
+"""
+    payload = extract_anchor_payload(md)
+    assert payload is not None
+    assert len(payload.files) == 1
+    assert payload.files[0].path == "src/foo.py"
+
+    # Invalid / empty
+    assert extract_anchor_payload("") is None
+    assert extract_anchor_payload("not json") is None
