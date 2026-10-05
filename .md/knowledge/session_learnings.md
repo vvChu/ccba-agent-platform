@@ -41,11 +41,7 @@
   - *Micro-Task Slicing*: Phân rã task $\le 150-200$ LOC logic vào 1 Deep Seam duy nhất kèm test tự động; chia nhỏ task phức tạp thành micro-PRs giảm review fatigue và conflict.
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
   - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống lỗi Orphan Notes. Shell script đa dòng dùng `cat << 'EOF'` chống lỗi nháy. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
-- **RULE-2.16 [Evals Daemon Priority Ratchet & Cooldown Bypass]**:
-  - `needs_ledger_seed`/`has_unapplied_signals` bypass cooldown (`in_cooldown=0`). `Sha256ProvenanceScorer.score()` trả `raw_output` dict.
-- **RULE-2.17 [Git Worktree Lock & Failure Transparency]**:
-  - `.git` trong worktree là file text trỏ `gitdir`. Lock vật lý bắt buộc phân giải `gitdir`; cấm `.mkdir()` trên file.
-  - Lỗi ngoại lệ bắt buộc exit 1; cấm nuốt lỗi rollback. ChatOps bắt buộc check `is_suspicious_success` để đổi sang `⚠️ CẢNH BÁO` và `❌ ERROR`.
+- *(RULE-2.16, 2.17 tại Mục 28, 30 của archive/session_learnings_history.md)*
 
 ---
 
@@ -67,13 +63,7 @@
   - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model).
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
   - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`.
-- **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
-  - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa giải trình.
-- **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
-  - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
-- **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
-  - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
-- *(RULE-4.7 Mục 25; RULE-4.10, 4.11 Mục 28; chi tiết RULE-4.8 Mục 29 của archive/session_learnings_history.md)*
+- *(RULE-4.4, 4.5, 4.6 tại Mục 29; RULE-4.7 Mục 25; RULE-4.10, 4.11 Mục 28; chi tiết RULE-4.8 Mục 29 của archive/session_learnings_history.md)*
 - **RULE-4.8 [Review Danger Triage, Read-Only Advisory & 10 Bugbot Invariants]**:
   - *Read-Only Advisory*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát theo 10 Invariants tại `.github/bugbot-rules.md`.
   - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text`.
@@ -87,7 +77,10 @@
   - *Zero-Hang Lifecycle*: CẤM positional prompt (gây treo TUI). BẮT BUỘC `--prompt-file`, `--output-format plain`, `subprocess.Popen` kèm watchdog terminate ngay khi file có verdict hợp lệ.
   - *Telemetry & Cost*: Khối verdict bổ sung `telemetry`; trích xuất qua `grok usage <session_id>` (retry 2 lần) + fallback `TokenEstimator`. Phân định `cost_mode: exact | estimated | unknown`.
   - *Auditor Model*: `AUDIT_PLAN` mặc định `grok-4.7` với `reasoning_effort: xhigh`.
-  - *Subprocess & Watchdog*: Dùng `tempfile.TemporaryFile` buffer (CẤM bare `PIPE` gây deadlock), `encoding="utf-8", errors="replace"`, và `os.path.getmtime(out) >= start_time` chống stale verdict.
+- **RULE-4.15 [Multi-Turn Review Budgeting, Resilient Parsing & POSIX Atomicity]**:
+  - *Turn Budgeting & Sandboxing*: Headless 1-turn (`patch_fast`) dùng `--deny "*"`, cấm `run_terminal_command`. Review profile có tools (`code_review`, `arch_audit`) BẮT BUỘC $\ge 10-14$ turns chống cạn lượt khi chạy `grep`/`read_file`.
+  - *Resilient Parsing*: `PeerVerdictBlock` bắt buộc `extra="ignore"` và validator chuẩn hóa `list[str]` $\to$ `PeerCondition`. Khi stdout phân mảnh do tool calls, tự động quét assistant message trong `~/.grok/sessions/**/{session_id}/chat_history.jsonl`.
+  - *Transactional Rollback & Mode Preservation*: `apply_anchor_patch` Phase 1 kiểm tra `target_file.is_file()`; Phase 2 hoàn nguyên qua `written_backups` và thu thập `rollback_errors` (cấm bare `pass`). `atomic_write_text` bảo tồn `stat.st_mode` của tệp đích.
 
 ---
 
