@@ -11,7 +11,9 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -55,6 +57,7 @@ VerdictType = Literal[
     "FINAL_ACCEPT",
     "GATE_PASS",
     "GATE_FAIL",
+    "HANDOFF",
 ]
 EffortType = Literal["XS", "S", "M", "L", "XL"]
 
@@ -86,15 +89,15 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "model": "grok-4.7-build-fast",  # ccba:allow-raw-model
         "fallback_model": "claude-sonnet-4-6",  # ccba:allow-raw-model
         "max_turns": 8,
-        "tools": None,
-        "disallowed_tools": ["spawn_subagent"],
-        "reasoning_effort": None,
+        "tools": ["read_file", "search_replace", "list_dir"],
+        "disallowed_tools": ["spawn_subagent", "run_terminal_command"],
+        "reasoning_effort": "high",
         "timeout": 600.0,
     },
     "patch_fast": {
         "model": "qwen-local",  # ccba:allow-raw-model
         "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": None,
+        "max_turns": 1,
         "tools": None,
         "disallowed_tools": [
             "read_file",
@@ -133,7 +136,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "arch_audit": {
         "model": "grok-4.7",  # ccba:allow-raw-model
         "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 8,
+        "max_turns": 14,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
             "run_terminal_command",
@@ -248,7 +251,7 @@ class PeerVerdictBlock(BaseModel):
     request_id: str
     verdict: VerdictType
     conditions: list[PeerCondition] = Field(default_factory=list)
-    risk_score: int | None = None
+    risk_score: int | None = Field(default=None, ge=1, le=5)
     effort: EffortType | None = None
     summary: str = ""
     telemetry: PeerVerdictTelemetry | None = None
@@ -384,12 +387,13 @@ def flush_pending_peer_triggers(timeout: float = 5.0) -> None:
     _PENDING_THREADS.clear()
 
 
-def atomic_write_text(target: Path, content: str) -> None:
-    """Writes text content to target file atomically using a temporary file (Grok C2).
+def atomic_write_text(target: Path, content: str, max_retries: int = 3) -> None:
+    """Writes text content to target file atomically using a temporary file with retry (ADR-0063 / ADR-0065).
 
     Args:
         target: Destination file path.
         content: Text string content to persist.
+        max_retries: Retry attempts on transient OS lock errors (e.g. Windows file locking).
     """
     target.parent.mkdir(parents=True, exist_ok=True)
     temp_file = target.with_suffix(f"{target.suffix}.tmp_{os.getpid()}_{time.time_ns()}")
@@ -406,7 +410,14 @@ def atomic_write_text(target: Path, content: str) -> None:
                 os.chmod(temp_file, mode)
             except OSError:
                 pass
-        temp_file.replace(target)
+        for attempt in range(max_retries):
+            try:
+                temp_file.replace(target)
+                break
+            except (PermissionError, OSError):
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(0.05 * (attempt + 1))
     except Exception:
         if temp_file.exists():
             temp_file.unlink(missing_ok=True)
@@ -685,8 +696,7 @@ def update_live_summary(
         pending_anti: List of file names pending for Antigravity.
         pending_grok: List of file names pending for Grok.
     """
-    tz = datetime.timezone(datetime.timedelta(hours=7))
-    now_iso = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     resps = [
         i
         for i in registry.values()
@@ -696,7 +706,7 @@ def update_live_summary(
 
     lines = [
         "# ⚡ Grok & Antigravity Live Peer Summary\n",
-        f"> **Thời điểm cập nhật**: `{now_iso}` | **Cơ chế**: Delta SHA-256 Bridge (ADR-0007)\n\n",
+        f"> **Thời điểm cập nhật**: `{now_iso}` | **Cơ chế**: Delta SHA-256 Bridge (ADR-0063)\n\n",
         "## 1. Trạng Thái Vận Hành\n",
         f"- **Antigravity**: `{'waiting_for_grok' if pending_grok else 'idle'}` (Đang chờ Grok: {len(pending_grok)} requests)",
         f"- **Grok**: `{'in_progress' if pending_grok else 'idle'}` (Đang chờ Antigravity: {len(pending_anti)} requests)\n\n",
@@ -709,8 +719,8 @@ def update_live_summary(
         lines.append(f"- `{p}`")
     if pending_anti:
         lines.append("\n### ⏳ Antigravity cần xử lý:")
-        for p in pending_anti[:5]:
-            lines.append(f"- `{p}`")
+    for p in pending_anti[:5]:
+        lines.append(f"- `{p}`")
 
     lines.extend(
         [
@@ -725,7 +735,9 @@ def update_live_summary(
             f"| `{item['path'].name}` | **`{v.verdict}`** | {len(v.conditions)} | {v.summary[:50]}... |"
         )
 
-    atomic_write_text(summary_file, "\n".join(lines) + "\n")
+    lock_path = summary_file.with_name(f"{summary_file.name}.lock")
+    with FileMutexLock(lock_path, timeout=5.0):
+        atomic_write_text(summary_file, "\n".join(lines) + "\n")
 
 
 def run_sync_cycle(
@@ -743,6 +755,10 @@ def run_sync_cycle(
     Returns:
         List of detected file changes in this cycle.
     """
+    actions_to_run: list[tuple[str, Path]] = []
+    changes: list[FileChange] = []
+
+    # COND-01: Narrow _SYNC_MUTEX to the critical section (cache, status, summary updates)
     with _SYNC_MUTEX:
         cache_file = peer_exchange_dir / ".bridge_cache.json"
         status_file = peer_exchange_dir / "status.json"
@@ -759,14 +775,21 @@ def run_sync_cycle(
 
             for change in changes:
                 if auto_grok and change.role == "PROMPT_TO_GROK":
-                    invoke_grok_cli(change.path)
+                    actions_to_run.append(("grok", change.path))
                 elif auto_gate and change.role == "GROK_IMPLEMENTATION":
-                    from .peer_gate import run_full_gate, write_verdict_file
+                    actions_to_run.append(("gate", change.path))
 
-                    result = run_full_gate(peer_exchange_dir.parent.parent)
-                    write_verdict_file(result, peer_exchange_dir)
+    # Long-running subprocesses execute OUTSIDE _SYNC_MUTEX (COND-01 / ADR-0065)
+    for action_type, path in actions_to_run:
+        if action_type == "grok":
+            invoke_grok_cli(path)
+        elif action_type == "gate":
+            from .peer_gate import run_full_gate, write_verdict_file
 
-        return changes
+            result = run_full_gate(peer_exchange_dir.parent.parent)
+            write_verdict_file(result, peer_exchange_dir)
+
+    return changes
 
 
 def publish_peer_message(
@@ -1107,6 +1130,34 @@ def build_grok_cmd(
     return cmd
 
 
+def _terminate_proc_tree(proc: subprocess.Popen[Any]) -> None:
+    """Terminates a process and its child process group safely (COND-03 / ADR-0065)."""
+    pid = proc.pid
+    try:
+        if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+            try:
+                pgid = os.getpgid(pid)
+                os.killpg(pgid, signal.SIGTERM)
+            except OSError:
+                proc.terminate()
+        else:
+            proc.terminate()
+        proc.wait(timeout=2.0)
+    except Exception:
+        try:
+            if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+                try:
+                    pgid = os.getpgid(pid)
+                    os.killpg(pgid, signal.SIGKILL)
+                except OSError:
+                    proc.kill()
+            else:
+                proc.kill()
+            proc.wait(timeout=2.0)
+        except Exception:
+            pass
+
+
 def _run_single_grok_attempt(
     cmd: list[str],
     prompt_path: Path,
@@ -1115,7 +1166,7 @@ def _run_single_grok_attempt(
     session_id: str | None = None,
     candidate_model: str = "unknown",
 ) -> bool:
-    """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064).
+    """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064 / ADR-0065).
 
     Args:
         cmd: Command arguments list to execute.
@@ -1134,15 +1185,17 @@ def _run_single_grok_attempt(
             tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_out,
             tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_err,
         ):
-            proc = subprocess.Popen(
-                cmd,
-                stdout=temp_out,
-                stderr=temp_err,
-                stdin=subprocess.DEVNULL,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
+            popen_kwargs: dict[str, Any] = {
+                "stdout": temp_out,
+                "stderr": temp_err,
+                "stdin": subprocess.DEVNULL,
+                "text": True,
+                "encoding": "utf-8",
+                "errors": "replace",
+            }
+            if sys.platform != "win32":
+                popen_kwargs["start_new_session"] = True
+            proc = subprocess.Popen(cmd, **popen_kwargs)
             deadline = start_time + timeout
             stdout_text = ""
             while time.time() < deadline:
@@ -1163,28 +1216,27 @@ def _run_single_grok_attempt(
                         parse_verdict_from_md(content) or extract_anchor_payload(content)
                     ):
                         stdout_text = content
-                        try:
-                            proc.terminate()
-                            proc.wait(timeout=2.0)
-                        except Exception:
-                            proc.kill()
+                        _terminate_proc_tree(proc)
                         break
 
                 time.sleep(1.0)
             else:
-                try:
-                    proc.terminate()
-                    proc.wait(timeout=2.0)
-                except Exception:
-                    proc.kill()
+                _terminate_proc_tree(proc)
                 return False
 
         if (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None) and session_id:
             try:
                 session_root = Path.home() / ".grok" / "sessions"
+                max_bytes = 2 * 1024 * 1024
                 for p in session_root.glob(f"**/{session_id}/chat_history.jsonl"):
                     if p.exists():
-                        for line in reversed(p.read_text(encoding="utf-8").splitlines()):
+                        file_size = p.stat().st_size
+                        with p.open("r", encoding="utf-8", errors="replace") as f:
+                            if file_size > max_bytes:
+                                f.seek(file_size - max_bytes)
+                                f.readline()
+                            lines = f.readlines()
+                        for line in reversed(lines):
                             if line.strip():
                                 d = json.loads(line)
                                 if d.get("type") == "assistant" and d.get("content"):
@@ -1208,10 +1260,11 @@ def _run_single_grok_attempt(
                 prompt_content, _ = safe_read_and_hash(prompt_path)
                 envelope = parse_envelope_from_md(prompt_content or "")
                 req_id = envelope.request_id if envelope else "req-auto"
+                # COND-02: Never fabricate synthetic APPROVE from anchor patch alone
                 verdict = PeerVerdictBlock(
                     request_id=req_id,
-                    verdict="APPROVE",
-                    summary="Fast-path anchor patch generated successfully.",
+                    verdict="HANDOFF",
+                    summary="Fast-path anchor patch generated; pending orchestrator apply and verification.",
                 )
                 stdout_text = render_verdict_header(verdict) + "\n" + stdout_text.lstrip()
             else:
@@ -1313,8 +1366,8 @@ def invoke_grok_cli(
         if fallback and fallback not in target_models:
             target_models.append(fallback)
 
-    session_id = str(uuid.uuid4())
     for candidate in target_models:
+        candidate_session_id = str(uuid.uuid4())
         cmd = build_grok_cmd(
             prompt_path=prompt_path,
             model=candidate,
@@ -1324,7 +1377,7 @@ def invoke_grok_cli(
             deny=deny,
             reasoning_effort=reasoning_effort,
             worktree=worktree,
-            session_id=session_id,
+            session_id=candidate_session_id,
             system_prompt=system_prompt,
         )
         if _run_single_grok_attempt(
@@ -1332,7 +1385,7 @@ def invoke_grok_cli(
             prompt_path,
             output_file,
             spec_timeout,
-            session_id=session_id,
+            session_id=candidate_session_id,
             candidate_model=candidate,
         ):
             return True
