@@ -12,6 +12,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import threading
 import time
 import uuid
@@ -832,6 +833,8 @@ def extract_grok_session_telemetry(
                 cmd,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=remaining,
                 check=False,
                 stdin=subprocess.DEVNULL,
@@ -982,41 +985,52 @@ def _run_single_grok_attempt(
     """
     start_time = time.time()
     try:
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            text=True,
-        )
-        deadline = start_time + timeout
-        stdout_text = ""
-        while time.time() < deadline:
-            ret = proc.poll()
-            if ret is not None:
-                stdout_text, _ = proc.communicate()
-                break
-
-            # cond-3-verdict-atomic-validation: Watchdog checks if output file is already written
-            if output_file.exists():
-                content, _ = safe_read_and_hash(output_file)
-                if content and parse_verdict_from_md(content):
-                    stdout_text = content
-                    try:
-                        proc.terminate()
-                        proc.wait(timeout=2.0)
-                    except Exception:
-                        proc.kill()
+        with (
+            tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_out,
+            tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_err,
+        ):
+            proc = subprocess.Popen(
+                cmd,
+                stdout=temp_out,
+                stderr=temp_err,
+                stdin=subprocess.DEVNULL,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            deadline = start_time + timeout
+            stdout_text = ""
+            while time.time() < deadline:
+                ret = proc.poll()
+                if ret is not None:
+                    temp_out.seek(0)
+                    stdout_text = temp_out.read()
+                    if not stdout_text and hasattr(proc, "communicate"):
+                        comm_out, _ = proc.communicate()
+                        if comm_out:
+                            stdout_text = comm_out
                     break
 
-            time.sleep(1.0)
-        else:
-            try:
-                proc.terminate()
-                proc.wait(timeout=2.0)
-            except Exception:
-                proc.kill()
-            return False
+                # cond-3-verdict-atomic-validation: Watchdog checks if output file was generated during this run
+                if output_file.exists() and output_file.stat().st_mtime >= start_time:
+                    content, _ = safe_read_and_hash(output_file)
+                    if content and parse_verdict_from_md(content):
+                        stdout_text = content
+                        try:
+                            proc.terminate()
+                            proc.wait(timeout=2.0)
+                        except Exception:
+                            proc.kill()
+                        break
+
+                time.sleep(1.0)
+            else:
+                try:
+                    proc.terminate()
+                    proc.wait(timeout=2.0)
+                except Exception:
+                    proc.kill()
+                return False
 
         if not stdout_text.strip():
             return False

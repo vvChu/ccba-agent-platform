@@ -279,6 +279,79 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
     assert len(data["exchange_stats"]["pending_grok"]) == 0
 
 
+def test_watchdog_ignores_stale_pre_existing_output_file(tmp_path, monkeypatch):
+    import os
+    import time
+
+    from ccba_harness.peer import safe_read_and_hash
+
+    envelope = PeerPromptEnvelope(
+        request_id="req-fresh",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Stale File Watchdog Test",
+        timestamp="2026-10-05T20:00:00+07:00",
+        output_path="grok_stale_test.md",
+    )
+    prompt_file = tmp_path / "prompt_stale.md"
+    atomic_write_text(prompt_file, render_prompt_header(envelope) + "Check fresh.")
+
+    out_file = tmp_path / "grok_stale_test.md"
+    stale_verdict = PeerVerdictBlock(
+        request_id="req-stale-old",
+        verdict="REVISE_PLAN",
+        summary="Old stale verdict.",
+    )
+    atomic_write_text(out_file, render_verdict_header(stale_verdict) + "Old content.")
+    old_time = time.time() - 3600
+    os.utime(out_file, (old_time, old_time))
+
+    class MockPopenFresh:
+        def __init__(self, cmd, **kwargs):
+            fresh_verdict = PeerVerdictBlock(
+                request_id="req-fresh",
+                verdict="APPROVE",
+                summary="Fresh run verdict.",
+            )
+            self._stdout = render_verdict_header(fresh_verdict) + "Fresh content."
+            self.returncode = 0
+            self.pid = 77777
+
+        def poll(self):
+            return 0
+
+        def communicate(self, timeout=None):
+            return self._stdout, ""
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    import subprocess
+
+    monkeypatch.setattr(subprocess, "Popen", MockPopenFresh)
+
+    ok = invoke_grok_cli(prompt_file, model="gemini-38-flash")
+    assert ok is True
+    fresh_content, _ = safe_read_and_hash(out_file)
+    parsed = parse_verdict_from_md(fresh_content)
+    assert parsed is not None
+    assert parsed.request_id == "req-fresh"
+    assert parsed.verdict == "APPROVE"
+
+
 def test_layering_purity():
     import ast
     from pathlib import Path
