@@ -11,6 +11,7 @@ import argparse
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -132,6 +133,9 @@ def discover_package_topology(hub_root: Path | None = None) -> list[str]:
             if p not in ordered:
                 ordered.append(p)
 
+        if not ordered:
+            return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
+
         return ordered
     except Exception:
         return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
@@ -145,6 +149,147 @@ ARCHETYPE_TIER1_DEFAULTS = {
     "project_delivery": ["ccba-qc-core", "ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
     "enterprise_governance": ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"],
 }
+
+
+def _binding_names(raw: Any) -> list[str]:
+    """Read package names from a tier or bundle list. Mappings use the ``name`` field."""
+    if isinstance(raw, str):
+        text = raw.strip()
+        return [text] if text else []
+    if not isinstance(raw, list):
+        return []
+    names: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            names.append(item.strip())
+        elif isinstance(item, dict):
+            name = item.get("name")
+            if isinstance(name, str) and name.strip():
+                names.append(name.strip())
+    return names
+
+
+def _names_passing_when(raw: Any, *, legal_related: bool) -> list[str]:
+    """Keep archetype packages whose ``when`` clause matches the spoke."""
+    if isinstance(raw, str):
+        raw = [raw]
+    if not isinstance(raw, list):
+        return []
+    names: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            names.append(item.strip())
+            continue
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+        when = item.get("when") or "always"
+        if not isinstance(when, str) or not when.strip():
+            when = "always"
+        when = when.strip()
+        if when == "legal_related" and not legal_related:
+            continue
+        if when not in {"always", "legal_related"}:
+            continue
+        names.append(name.strip())
+    return names
+
+
+def _resolved_bundle_names(
+    catalog: dict[str, Any],
+    project_type: str,
+    additional_bundles: Sequence[str],
+) -> list[str]:
+    """Bundle ids for a project type, plus caller extras. Values are bundle ids, not packages."""
+    names: list[str] = []
+    bundles = catalog.get("bundles")
+    raw = bundles.get(project_type) if isinstance(bundles, dict) else None
+    if isinstance(raw, str):
+        raw = [raw]
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, str) and item.strip():
+                names.append(item.strip())
+    for extra in additional_bundles:
+        if isinstance(extra, str) and extra.strip():
+            text = extra.strip()
+            if text not in names:
+                names.append(text)
+    return names
+
+
+def _order_by_topology(selected: set[str], topo_order: Sequence[str]) -> list[str]:
+    """Sort a chosen install set. Topology decides order; it does not choose members."""
+    ordered: list[str] = []
+    remaining = set(selected)
+    for pkg in topo_order:
+        if pkg in remaining:
+            ordered.append(pkg)
+            remaining.remove(pkg)
+    ordered.extend(sorted(remaining))
+    return ordered
+
+
+def _coerce_name_sequence(raw: Any) -> tuple[str, ...]:
+    """Normalize a string or list of strings into a tuple of stripped names."""
+    if isinstance(raw, str):
+        text = raw.strip()
+        return (text,) if text else ()
+    if isinstance(raw, (list, tuple)):
+        return tuple(item.strip() for item in raw if isinstance(item, str) and item.strip())
+    return ()
+
+
+def _context_additional_bundles(context: dict[str, Any], proj: dict[str, Any]) -> tuple[str, ...]:
+    """Read additional bundle ids from workspace context."""
+    raw = context.get("additional_bundles")
+    if not raw:
+        raw = proj.get("additional_bundles")
+    return _coerce_name_sequence(raw)
+
+
+def resolve_install_set(
+    hub_root: Path,
+    *,
+    archetype: str,
+    project_type: str,
+    additional_bundles: Sequence[str] = (),
+    declared_packages: Sequence[str] = (),
+    legal_related: bool = False,
+) -> list[str] | None:
+    """Resolve the Spoke install set from catalog package_bindings (ADR-0062).
+
+    Returns None when catalog.yaml has no package_bindings mapping, so callers
+    keep their legacy hardcoded defaults. Declared hub_packages replace archetype
+    and bundle defaults. Tier 0 stays. Order follows discover_package_topology.
+    """
+    catalog_path = hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    if not catalog_path.is_file():
+        return None
+    data = _safe_load_yaml(catalog_path)
+    bindings = data.get("package_bindings")
+    if not isinstance(bindings, dict):
+        return None
+
+    selected: set[str] = set(_binding_names(bindings.get("tier0")))
+    declared = [pkg.strip() for pkg in declared_packages if isinstance(pkg, str) and pkg.strip()]
+    if declared:
+        selected.update(declared)
+    else:
+        arch_map = bindings.get("archetypes") or {}
+        if isinstance(arch_map, dict):
+            selected.update(
+                _names_passing_when(arch_map.get(archetype), legal_related=legal_related)
+            )
+        bundle_map = bindings.get("bundles") or {}
+        if isinstance(bundle_map, dict):
+            for bundle_name in _resolved_bundle_names(data, project_type, additional_bundles):
+                selected.update(_binding_names(bundle_map.get(bundle_name)))
+
+    return _order_by_topology(selected, discover_package_topology(hub_root))
+
 
 PROJECT_TYPE_TO_ARCHETYPE: dict[str, str] = {
     "pháp điển": "knowledge_corpus",
@@ -311,6 +456,38 @@ class SpokeBootstrapper:
 
         Returns ordered list matching topological dependency order.
         """
+        context = self.read_workspace_context()
+        proj = context.get("project", {})
+        if not isinstance(proj, dict):
+            proj = {}
+        archetype = proj.get("archetype", "")
+        if not archetype:
+            raw_type = str(proj.get("type", "")).strip().lower()
+            archetype = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type, "")
+
+        declared_raw = context.get("hub_packages", [])
+        declared_list: list[str] = []
+        if isinstance(declared_raw, list):
+            declared_list = [
+                pkg.strip() for pkg in declared_raw if isinstance(pkg, str) and pkg.strip()
+            ]
+        elif isinstance(declared_raw, str) and declared_raw.strip():
+            declared_list = [declared_raw.strip()]
+
+        raw_proj_type = str(proj.get("type", "") or context.get("project_type", "")).strip()
+        from scripts.spoke.sync.sdk_inspector import is_legal_related_spoke
+
+        bound = resolve_install_set(
+            self.hub_root,
+            archetype=str(archetype or ""),
+            project_type=raw_proj_type,
+            additional_bundles=_context_additional_bundles(context, proj),
+            declared_packages=tuple(declared_list),
+            legal_related=is_legal_related_spoke(self.spoke_root, raw_proj_type),
+        )
+        if bound is not None:
+            return bound
+
         target_set: set[str] = set()
 
         # Tier 0: Core platform packages (always required for Python projects)

@@ -39,6 +39,7 @@ _BASE_FIELDS: tuple[str, ...] = (
     "rules",
     "knowledge",
     "guardrails",
+    "package_bindings",
 )
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 WORKFLOWS_DIR = HUB_ROOT / ".agents" / "workflows"
@@ -538,6 +539,7 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     workflows = compile_workflows(hub_root)
     seams = compile_seams(hub_root)
     guardrails = compile_guardrails(hub_root, base_data)
+    package_bindings = compile_package_bindings(hub_root, base_data)
 
     catalog: dict[str, Any] = {
         "hub_path": base_data.get("hub_path", "."),
@@ -558,6 +560,7 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
         "rules": base_data.get("rules", []),
         "knowledge": base_data.get("knowledge", []),
         "guardrails": guardrails,
+        "package_bindings": package_bindings,
     }
     return catalog
 
@@ -568,7 +571,216 @@ _DEST_RE = re.compile(r"^(?:scripts/[A-Za-z0-9_.-]+\.py|\.githooks/[A-Za-z0-9_.-
 
 
 class CatalogCompileError(ValueError):
-    """Guardrail registry failed catalog compilation (ADR-0062)."""
+    """Guardrail or package-binding registry failed catalog compilation (ADR-0062)."""
+
+
+_PKG_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_BINDING_WHEN = frozenset({"always", "legal_related"})
+_BINDING_ARCHETYPES = frozenset(
+    {
+        "knowledge_corpus",
+        "project_delivery",
+        "enterprise_governance",
+        "research_lab",
+        "tooling_plugin",
+        "client_portal",
+    }
+)
+
+
+def _declared_bundle_ids(bundles: Any) -> set[str]:
+    """Collect bundle ids such as ``_bim`` from the project-type map."""
+    found: set[str] = set()
+    if not isinstance(bundles, dict):
+        return found
+    for value in bundles.values():
+        items = [value] if isinstance(value, str) else value
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if isinstance(item, str) and item.strip():
+                found.add(item.strip())
+    return found
+
+
+def _compile_plain_package_names(items: list[Any], where: str) -> list[str]:
+    """Validate a list of package folder names. Duplicates in one list are rejected."""
+    names: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if not isinstance(item, str) or not item.strip():
+            raise CatalogCompileError(f"{where} entries must be package name strings")
+        name = item.strip()
+        if not _PKG_NAME_RE.fullmatch(name):
+            raise CatalogCompileError(f"package '{name}' is not a valid package name")
+        if name in seen:
+            raise CatalogCompileError(f"duplicate package '{name}' in {where}")
+        seen.add(name)
+        names.append(name)
+    return names
+
+
+def _compile_conditional_entries(items: list[Any], where: str) -> list[Any]:
+    """Normalize archetype entries. A bare string means ``when: always``."""
+    compiled: list[Any] = []
+    seen: set[str] = set()
+    for item in items:
+        if isinstance(item, str):
+            name = item.strip()
+            when = "always"
+            stored: Any = name
+        elif isinstance(item, dict):
+            raw_name = item.get("name")
+            name = raw_name.strip() if isinstance(raw_name, str) else ""
+            raw_when = item.get("when") or "always"
+            when = raw_when.strip() if isinstance(raw_when, str) and raw_when.strip() else "always"
+            stored = {"name": name, "when": when}
+        else:
+            raise CatalogCompileError(f"{where} entries must be a name or a mapping")
+        if not name or not _PKG_NAME_RE.fullmatch(name):
+            raise CatalogCompileError(f"package '{name}' is not a valid package name")
+        if when not in _BINDING_WHEN:
+            raise CatalogCompileError(f"package '{name}' when '{when}' is not allowed")
+        if name in seen:
+            raise CatalogCompileError(f"duplicate package '{name}' in {where}")
+        seen.add(name)
+        compiled.append(stored)
+    return compiled
+
+
+def _iter_binding_package_names(bindings: dict[str, Any]) -> list[str]:
+    """Walk every package name declared in a normalized bindings mapping."""
+    names: list[str] = []
+    tier0 = bindings.get("tier0")
+    if isinstance(tier0, list):
+        names.extend(item for item in tier0 if isinstance(item, str))
+    archetypes = bindings.get("archetypes")
+    if isinstance(archetypes, dict):
+        for entries in archetypes.values():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if isinstance(entry, str):
+                    names.append(entry)
+                elif isinstance(entry, dict) and isinstance(entry.get("name"), str):
+                    names.append(entry["name"])
+    bundles = bindings.get("bundles")
+    if isinstance(bundles, dict):
+        for entries in bundles.values():
+            if isinstance(entries, list):
+                names.extend(item for item in entries if isinstance(item, str))
+    categories = bindings.get("categories")
+    if isinstance(categories, list):
+        for entry in categories:
+            packages = entry.get("packages") if isinstance(entry, dict) else None
+            if isinstance(packages, list):
+                names.extend(item for item in packages if isinstance(item, str))
+    return names
+
+
+def compile_package_bindings(hub_root: Path, base_data: dict[str, Any]) -> dict[str, Any]:
+    """Validate declarative package bindings from catalog_base.yaml (ADR-0062).
+
+    Returns ``{}`` when the key is absent so older bases still compile. A present
+    mapping must keep Tier 0 anchors and every named package must exist on disk.
+    The compiler does not invent packages from ``packages/*``.
+    """
+    raw = base_data.get("package_bindings")
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise CatalogCompileError("package_bindings must be a mapping")
+
+    schema = raw.get("schema_version", 1)
+    if schema != 1:
+        raise CatalogCompileError("package_bindings.schema_version must be 1")
+
+    tier0_raw = raw.get("tier0")
+    if not isinstance(tier0_raw, list):
+        raise CatalogCompileError("package_bindings.tier0 must be a list")
+    tier0 = _compile_plain_package_names(tier0_raw, "package_bindings.tier0")
+    if "ccba-harness" not in tier0 or "ccba-ai" not in tier0:
+        raise CatalogCompileError(
+            "package_bindings.tier0 must contain 'ccba-harness' and 'ccba-ai'"
+        )
+
+    normalized: dict[str, Any] = {"schema_version": 1, "tier0": tier0}
+
+    if "archetypes" in raw:
+        arch_raw = raw.get("archetypes") or {}
+        if not isinstance(arch_raw, dict):
+            raise CatalogCompileError("package_bindings.archetypes must be a mapping")
+        archetypes: dict[str, list[Any]] = {}
+        for arch, entries in arch_raw.items():
+            if arch not in _BINDING_ARCHETYPES:
+                raise CatalogCompileError(f"unknown package_bindings archetype '{arch}'")
+            if not isinstance(entries, list):
+                raise CatalogCompileError(f"package_bindings.archetypes.{arch} must be a list")
+            archetypes[str(arch)] = _compile_conditional_entries(
+                entries, f"package_bindings.archetypes.{arch}"
+            )
+        normalized["archetypes"] = archetypes
+
+    if "bundles" in raw:
+        bundle_raw = raw.get("bundles") or {}
+        if not isinstance(bundle_raw, dict):
+            raise CatalogCompileError("package_bindings.bundles must be a mapping")
+        known_bundles = _declared_bundle_ids(base_data.get("bundles"))
+        bundles: dict[str, list[str]] = {}
+        for bundle_name, entries in bundle_raw.items():
+            bundle_id = str(bundle_name).strip()
+            if bundle_id not in known_bundles:
+                raise CatalogCompileError(
+                    f"package_bindings bundle '{bundle_id}' is not declared in bundles"
+                )
+            if not isinstance(entries, list):
+                raise CatalogCompileError(f"package_bindings.bundles.{bundle_id} must be a list")
+            bundles[bundle_id] = _compile_plain_package_names(
+                entries, f"package_bindings.bundles.{bundle_id}"
+            )
+        normalized["bundles"] = bundles
+
+    if "categories" in raw:
+        cat_raw = raw.get("categories") or []
+        if not isinstance(cat_raw, list):
+            raise CatalogCompileError("package_bindings.categories must be a list")
+        categories: list[dict[str, Any]] = []
+        seen_categories: set[str] = set()
+        for entry in cat_raw:
+            if not isinstance(entry, dict):
+                raise CatalogCompileError("package_bindings.categories entries must be mappings")
+            cat_name = entry.get("name")
+            if not isinstance(cat_name, str) or not cat_name.strip():
+                raise CatalogCompileError("package_bindings.categories entry requires a name")
+            label = cat_name.strip()
+            if label in seen_categories:
+                raise CatalogCompileError(f"duplicate category '{label}'")
+            seen_categories.add(label)
+            packages = entry.get("packages")
+            if not isinstance(packages, list):
+                raise CatalogCompileError(f"category '{label}' packages must be a list")
+            categories.append(
+                {
+                    "name": label,
+                    "packages": _compile_plain_package_names(packages, f"category '{label}'"),
+                }
+            )
+        normalized["categories"] = categories
+
+    missing: list[str] = []
+    checked: set[str] = set()
+    for pkg_name in _iter_binding_package_names(normalized):
+        if pkg_name in checked:
+            continue
+        checked.add(pkg_name)
+        pyproject = hub_root / "packages" / pkg_name / "pyproject.toml"
+        if not pyproject.is_file():
+            missing.append(pkg_name)
+    if missing:
+        raise CatalogCompileError(
+            "; ".join(f"package '{pkg_name}' pyproject.toml missing" for pkg_name in missing)
+        )
+    return normalized
 
 
 def compile_guardrails(hub_root: Path, base_data: dict[str, Any]) -> list[dict[str, Any]]:

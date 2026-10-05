@@ -119,3 +119,38 @@ guardrails:
     chmod: "0o755"
     git_index: true
     applies_to: ["all"]
+
+package_bindings:
+  schema_version: 1
+  tier0:
+    - ccba-harness
+    - ccba-ai
+  archetypes:
+    knowledge_corpus:
+      - name: ccba-legal-intel
+        when: legal_related
+    project_delivery:
+      - ccba-qc-core
+      - ccba-ooxml
+      - ccba-pdf-prep
+      - mdconverter
+    enterprise_governance:
+      - ccba-ooxml
+      - ccba-pdf-prep
+      - mdconverter
+  bundles:
+    _bim:
+      - ccba-diagram
+  categories:
+    - name: AI Gateway SDKs
+      packages: [ccba-harness, ccba-ai]
+    - name: Engineering QC SDKs
+      packages: [ccba-qc-core]
+    - name: Office & Document Processing SDKs
+      packages: [ccba-ooxml, ccba-pdf-prep, mdconverter]
+    - name: Legal Intelligence SDKs
+      packages: [ccba-legal-intel]
+    - name: Diagram SDKs
+      packages: [ccba-diagram]
+    - name: Extension SDKs
+      packages: [ccba-notebooklm, ccba-maskara]
