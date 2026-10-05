@@ -3,6 +3,36 @@
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 > ⚠️ **Lưu ý:** Các mã băm commit SHA trước ngày 04/10/2026 trong tài liệu này có thể đã bị thay đổi do đợt tẩy rửa an toàn thông tin lịch sử (Security History Rewriting).
 
+## [2026-10-05] [synthesize] | Phát Hành PR #475 & PR #476: Triển Khai Giao Thức Peer Delegation Level-2 & Cost Guardrails (HUB-ADR 0063)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Tham vấn Grok CLI, /boost & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/src/ccba_harness/cli.py`, `scripts/peer_dispatch.py`, `docs/adr/0063-level-2-peer-delegation-protocol-and-cost-guardrails.md`, `docs/rules/execution_guardrails.md`, `PLATFORM.md`, `packages/ccba-harness/tests/test_peer.py`, `test_peer_dispatch_cli.py`, `.md/knowledge/session_learnings.md`
+- **Summary**: Hoàn tất phát triển, thẩm định đối kháng kép và tích hợp toàn diện giao thức ủy quyền tác tử ngang hàng Level-2:
+  1. **HUB-ADR 0063 & Execution Guardrails (Mục 20)**: Ban hành chuẩn mực tương tác Antigravity ↔ Grok CLI với 3 Execution Profiles (`AUDIT_PLAN` $\le 12$ turns, `AGENTIC_CODE` $\le 8$ turns, `PATCH_FAST` = 1 turn), phân tầng Model Tier (`local` 0 USD, `gateway`, `cloud`) và trần ngân sách cứng.
+  2. **Hợp Đồng Neo & Two-Phase Commit**: Xây dựng `apply_anchor_patch()` với kiểm chứng SHA-256 trước khi ghi đĩa (Fail-Fast All-or-Nothing) và kiểm tra biên giới đường dẫn `is_relative_to(root)` chống Path Traversal; CLI subcommand `peer-dispatch`.
+  3. **Khóa Cứng CI & Đóng Gói Tri Thức**: Đạt 29/29 unit tests, 8/8 CI checks GitHub Actions, squash-merge PR #475 (`e2282df2`) và PR #476 (`784202b7`), bổ sung `RULE-4.13` vào `session_learnings.md` ($9.8\text{ KB} \le 10.0\text{ KB}$).
+
+---
+
+## [2026-10-05] [synthesize] | Phát Hành PR #473 & PR #474: Triển Khai Declarative Sync Registry & Spoke Cleanliness Allowlist (HUB-ADR 0062)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-review-proposal, /boost & /ccba-release-feature)
+- **Affected Files**: `.agents/skills/platform-loader/catalog_base.yaml`, `scripts/governance/compile_catalog.py`, `scripts/spoke/spoke_bootstrap.py`, `scripts/spoke/sync/coordinator.py`, `scripts/spoke/sync/sdk_inspector.py`, `scripts/spoke/check_spoke_cleanliness.py`, `docs/adr/0062-declarative-sync-registry-and-spoke-cleanliness-allowlist.md`, `.md/knowledge/session_learnings.md`
+- **Summary**: Hoàn tất chuẩn hóa hạ tầng đồng bộ Hub ➔ Spoke theo khuyến nghị từ Grok Adversarial Audit:
+  1. **HUB-ADR 0062 & Fail-Closed Gate**: Nâng cấp `coordinator.py` với rào chắn `assess_catalog_freshness` chặn đứng `--apply` (exit code 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
+  2. **Khai Báo Guardrails & Phân Giải Topo**: Đưa danh mục guardrails vào `catalog_base.yaml`, loại bỏ hardcode trong `sdk_inspector.py`; cấu hình `package_bindings` cho phép tự động phân giải install set theo thuật toán Kahn.
+  3. **Allowlist Spoke Cleanliness & Tri Thức**: Bổ sung cơ chế dynamic allowlist nạp từ catalog cục bộ trong `check_spoke_cleanliness.py`, squash-merge PR #473 (`30fe705f`) và PR #474 (`aa66da48`), ghi nhận `RULE-1.14`.
+
+---
+
+## [2026-10-05] [synthesize] | Upstream Sync, Grok Review & Tích Hợp Kỹ Năng Retro vào ccba-session-retrospective v1.5.0
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-sync-upstream, Tham vấn Grok, /plan & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-session-retrospective/SKILL.md`, `.agents/skills/ccba-session-retrospective/references/agent_environment_diagnostics.md`, `.md/knowledge/port_recommendations.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
+- **Summary**: Hoàn tất đợt đồng bộ thượng nguồn `mattpocock-skills` (SHA: `24fe0ef7`), phản biện kiến trúc qua Grok CLI và nâng cấp kỹ năng đóng phiên:
+  1. **Upstream Radar & Constitutional Porting (ADR-0057)**: Quét 37 tài nguyên thượng nguồn, cập nhật `port_recommendations.md`, từ chối tạo standalone skill `/retro` ($GPI = 5.00 < 12.0$, Tier 2A).
+  2. **Tích Hợp Phương Án C (Hybrid)**: Tạo tài liệu tham chiếu `references/agent_environment_diagnostics.md` (7 tiêu chuẩn Matt Pocock); nâng cấp `ccba-session-retrospective` lên v1.5.0 với Conditional Trigger và Level 3 Reference Index; bổ sung nguyên tắc "Ưu tiên Kiểm tra Tất định hơn viết Prompt Rule".
+  3. **Đóng Gói Tri Thức & Kiểm Định**: Bổ sung `RULE-1.15` vào `session_learnings.md` ($9.8\text{ KB} \le 10.0\text{ KB}$), lưu trữ `RULE-4.10` vào `session_learnings_history.md`, vượt qua 100% `ccba-harness verify-patch --preset skill`.
+
+---
+
 ## [2026-10-01] [synthesize] | Phát Hành PR #449 (Issue #448): Advisory AI Review Guardrails & Pre-Merge Bugbot Rules
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `docs/rules/execution_guardrails.md`, `.github/bugbot-rules.md`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `.md/knowledge/reports/walkthrough.md`

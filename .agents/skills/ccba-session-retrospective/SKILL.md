@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 bundle: _core
 tier: kernel
 triggers:
@@ -63,6 +63,10 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Vấn đề & Điểm nghẽn:** Những giả định sai lầm, hiểu lầm về SDK/Transport, hoặc các vòng lặp phản biện/sửa lỗi kéo dài.
   * **Giải pháp & Deep Seams:** Các mẫu thiết kế thành công giúp đơn giản hóa hệ thống (High Leverage & Locality).
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
+- **Chẩn đoán Môi trường & Rào chắn (Agent Environment Diagnostics):**
+  * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
+    Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
+  * Các phát hiện về công cụ và môi trường được phân loại chuẩn vào **Miền 5 (Windows & Tooling)** hoặc **Miền 2 (Code Quality & Testing)** trong `session_learnings.md`.
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Miền Kiến Trúc, tuân thủ nghiêm ngặt Tiered Memory Model.
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
@@ -87,6 +91,9 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).
 - **Rào chắn Phạm vi (Scope Creep Guard):** Agent **KHÔNG** tự ý sửa tất cả các SKILL.md phát hiện có khiếm khuyết. Thay vào đó, Agent phải **đề xuất danh sách các Skill cần sửa** kèm lý do cụ thể (1-2 dòng mỗi Skill) rồi **chờ người dùng quyết định** Skill nào sẽ được sửa trong phiên hiện tại.
+- **Nguyên tắc "Ưu tiên Kiểm tra Tất định hơn viết Prompt Rule":**
+  * Khi phát hiện sai sót lặp lại, Agent **ưu tiên tạo mã kiểm tra tự động** (linter, AST visitor, pre-commit hook hoặc kiểm tra quản trị trong `ccba-harness verify-patch`) trước khi đề xuất viết thêm quy tắc văn bản vào `AGENTS.md`.
+  * Chỉ ghi nhận quy tắc văn bản cho các trường hợp đòi hỏi phán đoán ngữ cảnh phức tạp (genuine judgement calls) nhằm bảo vệ ngân sách bộ nhớ ADR-0030 và triệt tiêu hiện tượng Attention Dilution của LLM.
 - **Rào Chắn Tái Biên Dịch Bắt Buộc (Recompilation Gate):**
   Ngay sau khi tạo mới hoặc sửa đổi bất kỳ tệp `SKILL.md` nào, Agent **bắt buộc** phải kích hoạt quy trình tái biên dịch kép để đồng bộ hóa Service Catalog và Web Documentation Portal:
   ```bash
@@ -152,6 +159,16 @@ Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
 - **Trạng thái Kiểm định Quản trị & ADR-0058:** Kết quả chạy bộ 4 Governance Gate và `ccba-harness verify-patch`.
 - **Mã Commit & Bypass:** Hash commit cuối cùng của phiên (kèm ghi chú `# APPROVED:` nếu áp dụng).
 - **Tiêu chí hoàn thành:** Báo cáo tổng kết hiển thị đầy đủ 4 mục trên trong cửa sổ chat, kèm liên kết Markdown dẫn đến các tệp tri thức vừa cập nhật.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu hoặc gặp ma sát công cụ, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/agent_environment_diagnostics.md` | Hướng dẫn 7 tiêu chí chẩn đoán và tối ưu hóa môi trường làm việc của Agent (Navigation, Guardrails, Context Pressure, Tool Economy) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

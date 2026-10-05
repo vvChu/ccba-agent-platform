@@ -630,6 +630,9 @@ Các quy tắc kiến trúc và vận hành dưới đây đã ổn định tron
 - **RULE-2.14 [UTF-8 Offset Parity & Dynamic Mock Secrets]**:
   - *UTF-8 Offset Parity*: Chuỗi tiếng Việt/emoji byte length khác character offset. Cắt lát redaction string BẮT BUỘC dùng character index đảo ngược (`reversed(findings)`); byte redaction dùng `byte_start, byte_end`.
   - *Dynamic Mock Secrets*: Unit tests BẮT BUỘC tạo mock keys runtime (`f"sk-proj-{'a'*32}"`) chống CI diff scanner false-positive.
+- **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
+  - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart, 100% Skills Hygiene Pass.
+  - *TRIHT Release*: Release PR qua 3 cổng: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown.
 - **RULE-4.11 [Concurrent Branch Alignment & Walkthrough PR Protocol]**:
   - *Remote Merge Realignment*: Khi nhánh PR nhận merge mới từ `main` trên GitHub, BẮT BUỘC kiểm tra commit local đã push, dùng `git reset --hard origin/<branch>` căn chỉnh working tree sạch sẽ; CẤM để unmerged files trước release.
   - *Walkthrough Dedicated PR*: Tuân thủ hook `pre-push` cấm push thẳng `main`, `walkthrough.md` BẮT BUỘC lưu trữ qua nhánh riêng `docs/walkthrough-pr-<id>` và Squash-Merge qua Fast-Path Review.

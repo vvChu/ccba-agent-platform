@@ -23,6 +23,9 @@
 - **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
   - *Fail-Closed Gate*: `assess_catalog_freshness` chặn đứng `--apply` (exit 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
   - *Declarative Registry & Topo*: Khai báo guardrails và package bindings trong `catalog_base.yaml`; `spoke_bootstrap.py` phân giải install set theo Kahn's topo sort.
+- **RULE-1.15 [ADR 0057 — Upstream Retro Diagnostics & Deterministic Checks Invariant]**:
+  - *Retro Diagnostics & Level 3 Index*: Khi có ma sát công cụ / lặp lỗi, đọc `references/agent_environment_diagnostics.md`. Kỹ năng có `references/` BẮT BUỘC khai báo Level 3 Reference Index trong `SKILL.md`.
+  - *Deterministic Checks over Rules*: Lỗi cơ học BẮT BUỘC tạo automated linter/CI check (`verify-patch`, pre-commit); CẤM thêm prompt rules vào `AGENTS.md` gây Attention Dilution (ADR-0030).
 
 ---
 
@@ -70,13 +73,10 @@
   - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
-- *(RULE-4.7 tại Mục 25; RULE-4.11 tại Mục 28; chi tiết RULE-4.8 tại Mục 29 của archive/session_learnings_history.md)*
+- *(RULE-4.7 tại Mục 25; RULE-4.10, 4.11 tại Mục 28; chi tiết RULE-4.8 tại Mục 29 của archive/session_learnings_history.md)*
 - **RULE-4.8 [Review Danger Triage, Read-Only Advisory & 10 Bugbot Invariants]**:
   - *Read-Only Advisory*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát theo 10 Invariants tại `.github/bugbot-rules.md`.
   - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text`.
-- **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
-  - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart, 100% Skills Hygiene Pass.
-  - *TRIHT Release*: Release PR qua 3 cổng: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown.
 - **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
   - Thêm/xóa/đổi tên Level-1 structural files BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker trong `README.md` và `PLATFORM.md`.
 - **RULE-4.13 [ADR 0063 — Level-2 Peer Agent Delegation & Cost-Turn Guardrails]**:
