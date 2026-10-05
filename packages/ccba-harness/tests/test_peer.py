@@ -653,3 +653,299 @@ def test_extract_anchor_payload():
     # Invalid / empty
     assert extract_anchor_payload("") is None
     assert extract_anchor_payload("not json") is None
+
+
+def test_extract_frontmatter_with_markdown_code_fence():
+    md = """```markdown
+---
+request_id: test-fence-001
+verdict: APPROVE
+summary: "Wrapped frontmatter"
+---
+Body text here.
+```
+"""
+    fm, body = extract_frontmatter(md)
+    assert fm is not None
+    assert fm["request_id"] == "test-fence-001"
+    assert fm["verdict"] == "APPROVE"
+    assert "Body text here." in body
+
+
+def test_apply_anchor_patch_dry_run(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    f = tmp_path / "target.py"
+    content = "x = 1\ny = 2\n"
+    f.write_text(content, encoding="utf-8")
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "target.py",
+                "blob_sha256": sha,
+                "replacements": [{"old": "x = 1", "new": "x = 99"}],
+            }
+        ]
+    }
+
+    # dry_run returns modified paths but does not touch disk
+    modified = apply_anchor_patch(tmp_path, payload, dry_run=True)
+    assert len(modified) == 1
+    assert modified[0] == f
+    assert f.read_text(encoding="utf-8") == content  # unchanged on disk
+
+
+def test_apply_anchor_patch_duplicate_target_file(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    f = tmp_path / "target.py"
+    content = "x = 1\ny = 2\n"
+    f.write_text(content, encoding="utf-8")
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "target.py",
+                "blob_sha256": sha,
+                "replacements": [{"old": "x = 1", "new": "x = 10"}],
+            },
+            {
+                "path": "target.py",
+                "blob_sha256": sha,
+                "replacements": [{"old": "y = 2", "new": "y = 20"}],
+            },
+        ]
+    }
+
+    with pytest.raises(ValueError, match="duplicate target file"):
+        apply_anchor_patch(tmp_path, payload)
+
+
+def test_apply_anchor_patch_crlf_normalization(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    f = tmp_path / "crlf_file.py"
+    # Write file with CRLF
+    content = "def hello():\r\n    return 'world'\r\n"
+    f.write_bytes(content.encode("utf-8"))
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    # Replacement payload with LF
+    payload = {
+        "files": [
+            {
+                "path": "crlf_file.py",
+                "blob_sha256": sha,
+                "replacements": [
+                    {
+                        "old": "def hello():\n    return 'world'",
+                        "new": "def hello():\n    return 'vietnam'",
+                    }
+                ],
+            }
+        ]
+    }
+
+    apply_anchor_patch(tmp_path, payload)
+    new_content = f.read_text(encoding="utf-8")
+    assert "vietnam" in new_content
+
+
+def test_apply_anchor_patch_transactional_rollback(tmp_path, monkeypatch):
+    import hashlib
+
+    import ccba_harness.peer
+    from ccba_harness.peer import apply_anchor_patch
+
+    f1 = tmp_path / "file1.txt"
+    f2 = tmp_path / "file2.txt"
+
+    c1 = "alpha = 10\n"
+    c2 = "beta = 20\n"
+    f1.write_text(c1, encoding="utf-8")
+    f2.write_text(c2, encoding="utf-8")
+
+    sha1 = hashlib.sha256(c1.encode("utf-8")).hexdigest()
+    sha2 = hashlib.sha256(c2.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "file1.txt",
+                "blob_sha256": sha1,
+                "replacements": [{"old": "alpha = 10", "new": "alpha = 999"}],
+            },
+            {
+                "path": "file2.txt",
+                "blob_sha256": sha2,
+                "replacements": [{"old": "beta = 20", "new": "beta = 888"}],
+            },
+        ]
+    }
+
+    original_atomic_write = ccba_harness.peer.atomic_write_text
+
+    def mock_atomic_write(path, text):
+        if str(path).endswith("file2.txt"):
+            raise OSError("Disk write failed unexpectedly on file2")
+        return original_atomic_write(path, text)
+
+    monkeypatch.setattr(ccba_harness.peer, "atomic_write_text", mock_atomic_write)
+
+    with pytest.raises(ValueError, match="Transaction aborted during write phase"):
+        apply_anchor_patch(tmp_path, payload)
+
+    # Rollback must restore file1 to original content
+    assert f1.read_text(encoding="utf-8") == c1
+    assert f2.read_text(encoding="utf-8") == c2
+
+
+def test_apply_anchor_patch_backup(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    f = tmp_path / "config.ini"
+    content = "mode = test\n"
+    f.write_text(content, encoding="utf-8")
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "config.ini",
+                "blob_sha256": sha,
+                "replacements": [{"old": "mode = test", "new": "mode = prod"}],
+            }
+        ]
+    }
+
+    apply_anchor_patch(tmp_path, payload, backup=True)
+    assert f.read_text(encoding="utf-8") == "mode = prod\n"
+
+    bak = tmp_path / "config.ini.bak"
+    assert bak.exists()
+    assert bak.read_text(encoding="utf-8") == content
+
+
+def test_run_apply_anchor_patch_cli_flows(tmp_path, capsys, monkeypatch):
+    import hashlib
+    import io
+    import json
+
+    from ccba_harness.cli import run_apply_anchor_patch_cli
+
+    f = tmp_path / "app.py"
+    content = "status = 'starting'\n"
+    f.write_text(content, encoding="utf-8")
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    patch_dict = {
+        "files": [
+            {
+                "path": "app.py",
+                "blob_sha256": sha,
+                "replacements": [{"old": "status = 'starting'", "new": "status = 'running'"}],
+            }
+        ]
+    }
+    patch_file = tmp_path / "patch.json"
+    patch_file.write_text(json.dumps(patch_dict), encoding="utf-8")
+
+    # 1. Test dry-run with json output
+    exit_code = run_apply_anchor_patch_cli(
+        [
+            "--patch-file",
+            str(patch_file),
+            "--root",
+            str(tmp_path),
+            "--dry-run",
+            "--json",
+        ]
+    )
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    res = json.loads(captured.out)
+    assert res["status"] == "DRY_RUN_OK"
+    assert res["files"] == ["app.py"]
+    assert f.read_text(encoding="utf-8") == content  # unchanged
+
+    # 2. Test apply with backup and quiet
+    exit_code = run_apply_anchor_patch_cli(
+        [
+            "-f",
+            str(patch_file),
+            "-r",
+            str(tmp_path),
+            "--backup",
+            "-q",
+        ]
+    )
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert captured.out == ""  # quiet mode
+    assert f.read_text(encoding="utf-8") == "status = 'running'\n"
+    assert (tmp_path / "app.py.bak").exists()
+
+    # 3. Test reading from stdin (-)
+    f2 = tmp_path / "server.py"
+    c2 = "port = 8080\n"
+    f2.write_text(c2, encoding="utf-8")
+    sha2 = hashlib.sha256(c2.encode("utf-8")).hexdigest()
+    stdin_patch = json.dumps(
+        {
+            "files": [
+                {
+                    "path": "server.py",
+                    "blob_sha256": sha2,
+                    "replacements": [{"old": "port = 8080", "new": "port = 9090"}],
+                }
+            ]
+        }
+    )
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(stdin_patch))
+    exit_code = run_apply_anchor_patch_cli(
+        [
+            "-f",
+            "-",
+            "-r",
+            str(tmp_path),
+        ]
+    )
+    assert exit_code == 0
+    assert f2.read_text(encoding="utf-8") == "port = 9090\n"
+    capsys.readouterr()
+
+    # 4. Error path: file not found
+    exit_code = run_apply_anchor_patch_cli(["-f", "non_existent.json", "--json"])
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    res = json.loads(captured.out)
+    assert res["status"] == "ERROR"
+
+
+def test_new_peer_profiles_specs():
+    from ccba_harness.peer import PROFILE_SPECS
+
+    assert "code_review" in PROFILE_SPECS
+    cr = PROFILE_SPECS["code_review"]
+    assert cr["max_turns"] == 6
+    assert cr["reasoning_effort"] == "high"
+    assert "write_file" in cr["disallowed_tools"]
+    assert "read_file" in cr["tools"]
+
+    assert "arch_audit" in PROFILE_SPECS
+    aa = PROFILE_SPECS["arch_audit"]
+    assert aa["max_turns"] == 8
+    assert aa["reasoning_effort"] == "xhigh"
+    assert "write_file" in aa["disallowed_tools"]
