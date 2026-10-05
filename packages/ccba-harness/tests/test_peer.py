@@ -939,7 +939,7 @@ def test_new_peer_profiles_specs():
 
     assert "code_review" in PROFILE_SPECS
     cr = PROFILE_SPECS["code_review"]
-    assert cr["max_turns"] == 6
+    assert cr["max_turns"] == 10
     assert cr["reasoning_effort"] == "high"
     assert "write_file" in cr["disallowed_tools"]
     assert "read_file" in cr["tools"]
@@ -949,3 +949,109 @@ def test_new_peer_profiles_specs():
     assert aa["max_turns"] == 8
     assert aa["reasoning_effort"] == "xhigh"
     assert "write_file" in aa["disallowed_tools"]
+
+
+def test_parse_verdict_with_string_conditions_and_extra_fields():
+    md = """---
+request_id: "req-test-conds-001"
+verdict: APPROVE_WITH_CONDITIONS
+conditions:
+  - "Condition string item 1"
+  - "Condition string item 2"
+findings_count:
+  critical: 0
+  major: 1
+reviewer: "grok"
+summary: "Approved with string conditions"
+---
+Review body text.
+"""
+    vb = parse_verdict_from_md(md)
+    assert vb is not None
+    assert vb.verdict == "APPROVE_WITH_CONDITIONS"
+    assert len(vb.conditions) == 2
+    assert vb.conditions[0].id == "COND-01"
+    assert vb.conditions[0].description == "Condition string item 1"
+    assert vb.conditions[1].id == "COND-02"
+    assert vb.conditions[1].description == "Condition string item 2"
+    assert vb.summary == "Approved with string conditions"
+
+
+def test_apply_anchor_patch_directory_rejection(tmp_path):
+    from ccba_harness.peer import apply_anchor_patch
+
+    sub_dir = tmp_path / "somedir"
+    sub_dir.mkdir()
+
+    payload = {
+        "files": [
+            {
+                "path": "somedir",
+                "blob_sha256": "dummy",
+                "replacements": [],
+            }
+        ]
+    }
+    with pytest.raises(ValueError, match="Target patch path is not a regular file"):
+        apply_anchor_patch(tmp_path, payload)
+
+
+def test_atomic_write_text_preserves_executable_mode(tmp_path):
+    from ccba_harness.peer import atomic_write_text
+
+    script_file = tmp_path / "script.sh"
+    script_file.write_text("#!/bin/bash\necho 1", encoding="utf-8")
+    script_file.chmod(0o755)
+
+    atomic_write_text(script_file, "#!/bin/bash\necho 2")
+    current_mode = script_file.stat().st_mode & 0o777
+    assert current_mode == 0o755
+    assert script_file.read_text(encoding="utf-8") == "#!/bin/bash\necho 2"
+
+
+def test_apply_anchor_patch_rollback_errors_collected(tmp_path, monkeypatch):
+    import hashlib
+
+    import ccba_harness.peer as peer_mod
+    from ccba_harness.peer import apply_anchor_patch
+
+    file1 = tmp_path / "f1.txt"
+    file2 = tmp_path / "f2.txt"
+    file1.write_text("file1 initial", encoding="utf-8")
+    file2.write_text("file2 initial", encoding="utf-8")
+
+    payload = {
+        "files": [
+            {
+                "path": "f1.txt",
+                "blob_sha256": hashlib.sha256(b"file1 initial").hexdigest(),
+                "replacements": [{"old": "initial", "new": "updated"}],
+            },
+            {
+                "path": "f2.txt",
+                "blob_sha256": hashlib.sha256(b"file2 initial").hexdigest(),
+                "replacements": [{"old": "initial", "new": "updated"}],
+            },
+        ]
+    }
+
+    real_atomic_write = peer_mod.atomic_write_text
+    call_count = 0
+
+    def mock_atomic_write(target, content):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 2:
+            # Fail writing file 2 during forward commit
+            raise OSError("Simulated disk error on forward write")
+        if call_count == 3:
+            # Fail during rollback of file 1
+            raise OSError("Simulated disk error on rollback")
+        return real_atomic_write(target, content)
+
+    monkeypatch.setattr(peer_mod, "atomic_write_text", mock_atomic_write)
+
+    with pytest.raises(
+        ValueError, match=r"Rollback errors: f1\.txt: Simulated disk error on rollback"
+    ):
+        apply_anchor_patch(tmp_path, payload)
