@@ -66,4 +66,4 @@
 | [HUB-ADR 0060](0060-4hub-federated-spokes-architecture.md) | **4-Hubs × Federated Spokes Architecture & Distributed Ecosystem Governance** | ✅ ACCEPTED | `.agents/skills/ccba-new-feature/SKILL.md`<br>`.agents/skills/ccba-session-retrospective/SKILL.md`<br>`.md/knowledge/session_learnings.md` |
 | [HUB-ADR 0061](0061-platform-aware-kiss-v2-and-quarantine-governance.md) | **Platform-Aware KISS v2.0 & Capability Quarantine Governance** | ✅ ACCEPTED | `AGENTS.md`<br>`.agents/AGENTS.md` |
 | [HUB-ADR 0062](0062-declarative-synchronization-registry-and-auto-discovery.md) | **Declarative Synchronization Registry, Fail-Closed Catalog Freshness Gate, and Topological Package Discovery** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
-| [HUB-ADR 0063](0063-level-2-peer-delegation-protocol-and-cost-guardrails.md) | **Level-2 Peer Agent Delegation Protocol and Cost Guardrails (Grok ↔ Antigravity)** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
+| [HUB-ADR 0063](0063-level-2-peer-delegation-protocol-and-cost-guardrails.md) | **Level-2 Peer Agent Delegation Protocol and Cost Guardrails (Grok ↔ Antigravity)** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
