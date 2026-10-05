@@ -14,6 +14,7 @@ import re
 import subprocess
 import threading
 import time
+import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal, NamedTuple
@@ -50,23 +51,19 @@ VerdictType = Literal[
 ]
 EffortType = Literal["XS", "S", "M", "L", "XL"]
 
-# ccba:allow-raw-model
-DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"
-# ccba:allow-raw-model
-DEFAULT_FALLBACK_AUDITOR_MODEL = "gemini-38-flash"
+DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"  # ccba:allow-raw-model
+DEFAULT_FALLBACK_AUDITOR_MODEL = "gemini-38-flash"  # ccba:allow-raw-model
 
-# ccba:allow-raw-model
 TIER_DEFAULT_MODELS: dict[str, str] = {
-    "local": "qwen-local",
-    "gateway": "gemini-38-flash",
-    "cloud": "grok-4.7",
+    "local": "qwen-local",  # ccba:allow-raw-model
+    "gateway": "gemini-38-flash",  # ccba:allow-raw-model
+    "cloud": "grok-4.7",  # ccba:allow-raw-model
 }
 
-# ccba:allow-raw-model
 PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "audit_plan": {
-        "model": "grok-4.7",
-        "fallback_model": "gemini-38-flash",
+        "model": "grok-4.7",  # ccba:allow-raw-model
+        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
         "max_turns": 12,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
@@ -75,12 +72,12 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
             "write_file",
             "spawn_subagent",
         ],
-        "reasoning_effort": "high",
+        "reasoning_effort": "xhigh",
         "timeout": 900.0,
     },
     "agentic_code": {
-        "model": "grok-4.7-build-fast",
-        "fallback_model": "claude-sonnet-4-6",
+        "model": "grok-4.7-build-fast",  # ccba:allow-raw-model
+        "fallback_model": "claude-sonnet-4-6",  # ccba:allow-raw-model
         "max_turns": 8,
         "tools": None,
         "disallowed_tools": ["spawn_subagent"],
@@ -88,8 +85,8 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "timeout": 600.0,
     },
     "patch_fast": {
-        "model": "qwen-local",
-        "fallback_model": "grok-4.7-build-fast",
+        "model": "qwen-local",  # ccba:allow-raw-model
+        "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
         "max_turns": 1,
         "tools": None,
         "disallowed_tools": [
@@ -178,6 +175,28 @@ class PeerCondition(BaseModel):
     blocking: bool = True
 
 
+CostMode = Literal["exact", "estimated", "unknown"]
+
+
+class PeerVerdictTelemetry(BaseModel):
+    """Execution telemetry and token provenance for peer interactions (ADR-0064)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+    primary_model: str
+    input_tokens: int
+    output_tokens: int
+    reasoning_tokens: int = 0
+    cached_read_tokens: int = 0
+    total_tokens: int
+    model_calls: int = 1
+    turn_count: int = 1
+    cost_usd: float = 0.0
+    cost_mode: CostMode = "estimated"
+    duration_seconds: float = 0.0
+
+
 class PeerVerdictBlock(BaseModel):
     """Structured verdict issued by a peer agent in response to a prompt."""
 
@@ -189,6 +208,7 @@ class PeerVerdictBlock(BaseModel):
     risk_score: int | None = None
     effort: EffortType | None = None
     summary: str = ""
+    telemetry: PeerVerdictTelemetry | None = None
 
 
 def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
@@ -494,7 +514,7 @@ def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any]
     ]
     if not grok_resps:
         return None
-    grok_resps.sort(key=lambda x: x["mtime"], reverse=True)
+    grok_resps.sort(key=lambda x: x.get("mtime", 0.0), reverse=True)
     top = grok_resps[0]
     verdict = top["verdict"]
     return {
@@ -522,6 +542,22 @@ def update_status_json(
     """
     tz = datetime.timezone(datetime.timedelta(hours=7))
     now_iso = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    total_tokens = 0
+    total_cost_usd = 0.0
+    by_model: dict[str, dict[str, Any]] = {}
+    for item in registry.values():
+        v = item.get("verdict")
+        if v and getattr(v, "telemetry", None):
+            t = v.telemetry
+            total_tokens += t.total_tokens
+            total_cost_usd += t.cost_usd
+            m = t.primary_model
+            if m not in by_model:
+                by_model[m] = {"calls": 0, "tokens": 0, "cost_usd": 0.0}
+            by_model[m]["calls"] += 1
+            by_model[m]["tokens"] += t.total_tokens
+            by_model[m]["cost_usd"] = round(by_model[m]["cost_usd"] + t.cost_usd, 4)
+
     status_data = {
         "timestamp": now_iso,
         "peers": {
@@ -547,6 +583,9 @@ def update_status_json(
                     if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
                 ]
             ),
+            "total_tokens": total_tokens,
+            "total_cost_usd": round(total_cost_usd, 4),
+            "by_model": by_model,
             "pending_antigravity": pending_anti,
             "pending_grok": pending_grok,
         },
@@ -761,6 +800,119 @@ def apply_anchor_patch(
     return modified_paths
 
 
+def extract_grok_session_telemetry(
+    session_id: str,
+    timeout: float = 3.0,
+    fallback_prompt_text: str | None = None,
+    fallback_resp_text: str | None = None,
+    duration_seconds: float = 0.0,
+    fallback_model: str = "unknown",
+) -> PeerVerdictTelemetry | None:
+    """Safely extracts telemetry metrics from grok usage CLI with bounded retry & graceful degradation (ADR-0064).
+
+    Args:
+        session_id: UUID string of the session.
+        timeout: Subprocess timeout in seconds (default: 3.0s).
+        fallback_prompt_text: Prompt text for heuristic fallback estimation.
+        fallback_resp_text: Response text for heuristic fallback estimation.
+        duration_seconds: Execution wall-clock duration in seconds.
+        fallback_model: Target model name if usage command fails.
+
+    Returns:
+        PeerVerdictTelemetry instance, or None if extraction and fallback both fail.
+    """
+    cmd = ["grok", "usage", session_id]
+    deadline = time.time() + timeout
+
+    # Bounded retry loop (up to 2 retries, 100ms interval) within overall timeout budget
+    for attempt in range(3):
+        remaining = max(0.2, deadline - time.time())
+        try:
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=remaining,
+                check=False,
+                stdin=subprocess.DEVNULL,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                data = json.loads(proc.stdout)
+                session_data = data.get("session", {})
+                primary_model = session_data.get("primaryModelId") or fallback_model
+                inp = int(session_data.get("inputTokens", 0))
+                outp = int(session_data.get("outputTokens", 0))
+                reasoning = int(session_data.get("reasoningTokens", 0))
+                cached = int(session_data.get("cachedReadTokens", 0))
+                total = int(session_data.get("totalTokens", inp + outp))
+                calls = int(session_data.get("modelCalls", 1))
+                turns = int(session_data.get("turnCount", 1))
+
+                # COND-2: Cost provenance distinction
+                cost_mode: CostMode = "estimated"
+                cost_usd = 0.0
+                if "costUsdTicks" in session_data:
+                    cost_usd = round(float(session_data["costUsdTicks"]) / 10000.0, 4)
+                    cost_mode = "exact"
+                else:
+                    # Estimate based on rate card in ccba_harness.telemetry
+                    from .telemetry import PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT
+
+                    cost_usd = round(
+                        (inp / 1_000_000 * PRICE_PER_M_INPUT)
+                        + (outp / 1_000_000 * PRICE_PER_M_OUTPUT),
+                        4,
+                    )
+                    cost_mode = "estimated"
+
+                return PeerVerdictTelemetry(
+                    session_id=session_id,
+                    primary_model=primary_model,
+                    input_tokens=inp,
+                    output_tokens=outp,
+                    reasoning_tokens=reasoning,
+                    cached_read_tokens=cached,
+                    total_tokens=total,
+                    model_calls=calls,
+                    turn_count=turns,
+                    cost_usd=cost_usd,
+                    cost_mode=cost_mode,
+                    duration_seconds=round(duration_seconds, 2),
+                )
+        except Exception:
+            pass
+
+        if attempt < 2 and time.time() < deadline:
+            time.sleep(0.1)
+
+    # COND-1: Graceful degradation fallback using TokenEstimator
+    try:
+        from .telemetry import PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT, TokenEstimator
+
+        est_inp = TokenEstimator.estimate_text(fallback_prompt_text or "")
+        est_outp = TokenEstimator.estimate_text(fallback_resp_text or "")
+        est_cost = round(
+            (est_inp / 1_000_000 * PRICE_PER_M_INPUT) + (est_outp / 1_000_000 * PRICE_PER_M_OUTPUT),
+            4,
+        )
+        return PeerVerdictTelemetry(
+            session_id=session_id,
+            primary_model=fallback_model,
+            input_tokens=est_inp,
+            output_tokens=est_outp,
+            reasoning_tokens=0,
+            cached_read_tokens=0,
+            total_tokens=est_inp + est_outp,
+            model_calls=1,
+            turn_count=1,
+            cost_usd=est_cost,
+            cost_mode="estimated",
+            duration_seconds=round(duration_seconds, 2),
+        )
+    except Exception:
+        return None
+
+
 def build_grok_cmd(
     prompt_path: Path,
     model: str,
@@ -768,10 +920,11 @@ def build_grok_cmd(
     tools: list[str] | None = None,
     disallowed_tools: list[str] | None = None,
     reasoning_effort: str | None = None,
-    output_format: str | None = None,
+    output_format: str | None = "plain",
     worktree: bool = False,
+    session_id: str | None = None,
 ) -> list[str]:
-    """Constructs canonical grok CLI command list for headless execution (ADR-0063).
+    """Constructs canonical grok CLI command list for headless execution (ADR-0063 / ADR-0064).
 
     Args:
         prompt_path: Path to prompt file containing PeerPromptEnvelope.
@@ -779,14 +932,17 @@ def build_grok_cmd(
         max_turns: Optional hard cap on agent turns.
         tools: Optional explicit allowlist of tools.
         disallowed_tools: Optional explicit denylist of tools.
-        reasoning_effort: Optional reasoning effort ('low', 'medium', 'high').
-        output_format: Output format ('plain', 'json', etc.).
+        reasoning_effort: Optional reasoning effort ('low', 'medium', 'high', 'xhigh').
+        output_format: Output format ('plain', 'json', etc. Default: 'plain').
         worktree: Whether to execute in an isolated git worktree.
+        session_id: Optional session UUID string.
 
     Returns:
         Command arguments list.
     """
     cmd = ["grok", "-m", model, "--always-approve", "--no-subagents"]
+    if session_id:
+        cmd.extend(["--session-id", session_id])
     if reasoning_effort:
         cmd.extend(["--reasoning-effort", reasoning_effort])
     if max_turns is not None:
@@ -795,7 +951,7 @@ def build_grok_cmd(
         cmd.extend(["--tools", ",".join(tools)])
     if disallowed_tools:
         cmd.extend(["--disallowed-tools", ",".join(disallowed_tools)])
-    if output_format and output_format != "plain":
+    if output_format:
         cmd.extend(["--output-format", output_format])
     if worktree:
         cmd.append("--worktree")
@@ -804,26 +960,90 @@ def build_grok_cmd(
 
 
 def _run_single_grok_attempt(
-    cmd: list[str], prompt_path: Path, output_file: Path, timeout: float
+    cmd: list[str],
+    prompt_path: Path,
+    output_file: Path,
+    timeout: float,
+    session_id: str | None = None,
+    candidate_model: str = "unknown",
 ) -> bool:
-    """Executes a single invocation of grok CLI and verifies output verdict.
+    """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064).
 
     Args:
         cmd: Command arguments list to execute.
         prompt_path: Source prompt file path.
         output_file: Target output file path to write result.
         timeout: Subprocess timeout in seconds.
+        session_id: Optional session UUID for telemetry extraction.
+        candidate_model: Target model name for telemetry fallback.
 
     Returns:
         True if output contains a valid PeerVerdictBlock, False otherwise.
     """
+    start_time = time.time()
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
-        if proc.returncode != 0 or not proc.stdout.strip():
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+            text=True,
+        )
+        deadline = start_time + timeout
+        stdout_text = ""
+        while time.time() < deadline:
+            ret = proc.poll()
+            if ret is not None:
+                stdout_text, _ = proc.communicate()
+                break
+
+            # cond-3-verdict-atomic-validation: Watchdog checks if output file is already written
+            if output_file.exists():
+                content, _ = safe_read_and_hash(output_file)
+                if content and parse_verdict_from_md(content):
+                    stdout_text = content
+                    try:
+                        proc.terminate()
+                        proc.wait(timeout=2.0)
+                    except Exception:
+                        proc.kill()
+                    break
+
+            time.sleep(1.0)
+        else:
+            try:
+                proc.terminate()
+                proc.wait(timeout=2.0)
+            except Exception:
+                proc.kill()
             return False
-        atomic_write_text(output_file, proc.stdout)
-        verdict = parse_verdict_from_md(proc.stdout)
-        return verdict is not None
+
+        if not stdout_text.strip():
+            return False
+
+        duration = time.time() - start_time
+        verdict = parse_verdict_from_md(stdout_text)
+        if verdict is None:
+            return False
+
+        if session_id:
+            prompt_content, _ = safe_read_and_hash(prompt_path)
+            telemetry = extract_grok_session_telemetry(
+                session_id=session_id,
+                timeout=3.0,
+                fallback_prompt_text=prompt_content,
+                fallback_resp_text=stdout_text,
+                duration_seconds=duration,
+                fallback_model=candidate_model,
+            )
+            if telemetry:
+                verdict.telemetry = telemetry
+                _, body = extract_frontmatter(stdout_text)
+                rendered_fm = render_verdict_header(verdict)
+                stdout_text = rendered_fm + body.lstrip()
+
+        atomic_write_text(output_file, stdout_text)
+        return True
     except Exception:
         return False
 
@@ -837,7 +1057,7 @@ def invoke_grok_cli(
     timeout: float | None = None,
     worktree: bool = False,
 ) -> bool:
-    """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063).
+    """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064).
 
     Args:
         prompt_path: Path to prompt file containing PeerPromptEnvelope.
@@ -868,7 +1088,7 @@ def invoke_grok_cli(
             "max_turns": 12,
             "tools": None,
             "disallowed_tools": ["spawn_subagent"],
-            "reasoning_effort": "high",
+            "reasoning_effort": "xhigh",
             "timeout": 180.0,
         },
     )
@@ -900,6 +1120,7 @@ def invoke_grok_cli(
         if fallback and fallback not in target_models:
             target_models.append(fallback)
 
+    session_id = str(uuid.uuid4())
     for candidate in target_models:
         cmd = build_grok_cmd(
             prompt_path=prompt_path,
@@ -909,7 +1130,15 @@ def invoke_grok_cli(
             disallowed_tools=disallowed_tools,
             reasoning_effort=reasoning_effort,
             worktree=worktree,
+            session_id=session_id,
         )
-        if _run_single_grok_attempt(cmd, prompt_path, output_file, spec_timeout):
+        if _run_single_grok_attempt(
+            cmd,
+            prompt_path,
+            output_file,
+            spec_timeout,
+            session_id=session_id,
+            candidate_model=candidate,
+        ):
             return True
     return False
