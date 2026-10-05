@@ -33,6 +33,10 @@ from .blast_radius import (
     extract_ast_references,
     recommend_tests,
 )
+from .cli import (
+    run_apply_anchor_patch_cli,
+    run_peer_dispatch_cli,
+)
 from .dashboard import (
     generate_swarm_dashboard_html,
     render_swarm_dashboard,
@@ -419,4 +423,6 @@ __all__ = [
     "print_summary_table",
     "run_full_gate",
     "write_verdict_file",
+    "run_apply_anchor_patch_cli",
+    "run_peer_dispatch_cli",
 ]

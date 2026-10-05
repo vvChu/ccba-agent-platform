@@ -1481,9 +1481,9 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--profile",
         type=str,
-        choices=["audit_plan", "agentic_code", "patch_fast"],
+        choices=["audit_plan", "agentic_code", "patch_fast", "code_review", "arch_audit"],
         default=None,
-        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast').",
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit').",
     )
     parser.add_argument(
         "--tier",
@@ -1608,6 +1608,115 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         return 0
     print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
     return 1
+
+
+def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for applying anchor patches (`ccba-harness apply-anchor-patch` - ADR-0063)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness apply-anchor-patch",
+        description="Apply Level-2 anchor patches with two-phase commit and transactional rollback (ADR-0063).",
+    )
+    parser.add_argument(
+        "--patch-file",
+        "-f",
+        type=str,
+        required=True,
+        help="Path to patch markdown/JSON file, or '-' to read from standard input.",
+    )
+    parser.add_argument(
+        "--root",
+        "-r",
+        type=str,
+        default=None,
+        help="Project workspace root directory (default: current working directory).",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate patch integrity and check target anchors without writing changes to disk.",
+    )
+    parser.add_argument(
+        "--backup",
+        action="store_true",
+        help="Create .bak backups before overwriting target files.",
+    )
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Suppress informational stdout output (only errors will be emitted).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output structured JSON results instead of human-readable text.",
+    )
+
+    args = parser.parse_args(args_list)
+
+    if args.patch_file == "-":
+        raw_content = sys.stdin.read()
+    else:
+        patch_path = Path(args.patch_file).resolve()
+        if not patch_path.exists():
+            err_msg = f"Patch file not found: {patch_path}"
+            if args.json:
+                print(json.dumps({"status": "ERROR", "error": err_msg}))
+            else:
+                print(f"[FAIL] {err_msg}", file=sys.stderr)
+            return 1
+        raw_content = patch_path.read_text(encoding="utf-8")
+
+    from .peer import apply_anchor_patch, extract_anchor_payload
+
+    payload = extract_anchor_payload(raw_content)
+    if payload is None:
+        err_msg = "No valid AnchorPatchPayload found in input"
+        if args.json:
+            print(json.dumps({"status": "ERROR", "error": err_msg}))
+        else:
+            print(f"[FAIL] {err_msg}", file=sys.stderr)
+        return 1
+
+    root_path = Path(args.root).resolve() if args.root else Path.cwd()
+    try:
+        modified_paths = apply_anchor_patch(
+            root=root_path,
+            payload=payload,
+            dry_run=args.dry_run,
+            backup=args.backup,
+        )
+    except Exception as exc:
+        if args.json:
+            print(json.dumps({"status": "ERROR", "error": str(exc)}))
+        else:
+            print(f"[FAIL] Failed to apply anchor patch: {exc}", file=sys.stderr)
+        return 1
+
+    rel_paths = [
+        str(p.relative_to(root_path)) if p.is_relative_to(root_path) else str(p)
+        for p in modified_paths
+    ]
+    status_label = "DRY_RUN_OK" if args.dry_run else "APPLIED"
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "status": status_label,
+                    "count": len(rel_paths),
+                    "files": rel_paths,
+                    "dry_run": args.dry_run,
+                }
+            )
+        )
+    elif not args.quiet:
+        action_verb = "Validated" if args.dry_run else "Successfully applied"
+        print(f"[OK] {action_verb} {len(rel_paths)} file(s):")
+        for f in rel_paths:
+            print(f"  - {f}")
+
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1970,9 +2079,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     dispatch_parser.add_argument(
         "--profile",
         type=str,
-        choices=["audit_plan", "agentic_code", "patch_fast"],
+        choices=["audit_plan", "agentic_code", "patch_fast", "code_review", "arch_audit"],
         default=None,
-        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast').",
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit').",
     )
     dispatch_parser.add_argument(
         "--tier",
@@ -2011,6 +2120,48 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Print constructed command without executing.",
     )
 
+    # Subcommand: apply-anchor-patch
+    apply_patch_parser = subparsers.add_parser(
+        "apply-anchor-patch",
+        aliases=["peer-apply", "apply-patch"],
+        help="Apply Level-2 anchor patches with two-phase commit and transactional rollback (ADR-0063).",
+    )
+    apply_patch_parser.add_argument(
+        "--patch-file",
+        "-f",
+        type=str,
+        required=True,
+        help="Path to patch markdown/JSON file, or '-' to read from standard input.",
+    )
+    apply_patch_parser.add_argument(
+        "--root",
+        "-r",
+        type=str,
+        default=None,
+        help="Project workspace root directory (default: current working directory).",
+    )
+    apply_patch_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate patch integrity and check target anchors without writing changes to disk.",
+    )
+    apply_patch_parser.add_argument(
+        "--backup",
+        action="store_true",
+        help="Create .bak backups before overwriting target files.",
+    )
+    apply_patch_parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Suppress informational stdout output (only errors will be emitted).",
+    )
+    apply_patch_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output structured JSON results instead of human-readable text.",
+    )
+
     if not argv:
         parser.print_help()
         return 0
@@ -2034,6 +2185,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_peer_watch_cli(argv[1:])
     if argv[0] in ("peer-dispatch", "dispatch-peer"):
         return run_peer_dispatch_cli(argv[1:])
+    if argv[0] in ("apply-anchor-patch", "peer-apply", "apply-patch"):
+        return run_apply_anchor_patch_cli(argv[1:])
     if argv[0] == "blast-radius":
         return run_blast_radius_cli(argv[1:])
     if argv[0] in ("why", "explain-why"):
@@ -2057,6 +2210,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_peer_gate_cli(argv[1:])
     if parsed.subcommand in ("peer-watch", "watch-peer"):
         return run_peer_watch_cli(argv[1:])
+    if parsed.subcommand in ("peer-dispatch", "dispatch-peer"):
+        return run_peer_dispatch_cli(argv[1:])
+    if parsed.subcommand in ("apply-anchor-patch", "peer-apply", "apply-patch"):
+        return run_apply_anchor_patch_cli(argv[1:])
     if parsed.subcommand == "blast-radius":
         return run_blast_radius_cli(argv[1:])
     if parsed.subcommand in ("why", "explain-why"):
