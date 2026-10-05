@@ -683,5 +683,29 @@ Trong các phiên tương tác đồng đẳng giữa Antigravity và Grok CLI t
    - *Vấn đề*: Rule `env-secret` trong Maskara quét các phép gán biến chứa chuỗi con `tokens` và gán giá trị không ngoặc kép có độ dài $\ge 8$ ký tự. Các biến telemetry Python gán cho kwarg như `reasoning_tokens=rsn`, `output_tokens=est_out` nếu đặt tên biến dài $\ge 8$ ký tự (`reasoning`, `est_output`) sẽ bị nhận nhầm là secret token.
    - *Invariant*: Đặt tên các biến telemetry truyền vào hàm ngắn gọn $< 8$ ký tự (`rsn`, `est_out`, `in_tok`).
 
+---
+
+## 31. Level-2 Peer Agent Delegation Protocol Dogfooding, Tool Sandboxing, Resilient Parsing & Transactional Rollback (PR #481, #482, #483, #484)
+
+### Context & Implementation Summary
+Phiên làm việc triển khai và dogfooding thực tế hệ sinh thái Level-2 Peer Agent Delegation Protocol (ADR-0063 / ADR-0064) qua 4 Pull Requests liên hoàn:
+- **PR #481**: Gia cố rào chắn headless `qwen-local` (0 USD) với cờ `--deny "*"` và bóc tách tự động `extract_anchor_payload`.
+- **PR #482**: Tích hợp CLI `ccba-harness apply-anchor-patch` với Two-Phase Commit, transactional rollback (`written_backups`), chuẩn hóa CRLF/LF, và mở rộng profiles `code_review`, `arch_audit`.
+- **PR #483**: Triển khai 3 điều kiện thẩm định từ Grok Review (`COND-01` báo cáo rollback errors, `COND-02` `is_file()` guard, `COND-03` bảo tồn POSIX `st_mode`), cùng Pydantic condition coercion và session fallback.
+- **PR #484**: Dogfooding thực tế profile `arch_audit` (Grok-4.7 xhigh, 19.3k reasoning tokens, 740k total tokens, $0.2545) thẩm định chuỗi 5 ADR (ADR-0060 $\to$ ADR-0064).
+
+### Key Architectural Invariants & Learned Patterns
+1. **Tool-Enabled Review Turn Budgeting & Tool Sandboxing**:
+   - *Grok 1.0.46 Turn 0 Off-by-one*: Khi chạy headless 1-turn (`patch_fast`), không thể dựa vào `--max-turns 1` do Grok đếm prompt ban đầu là lượt 0 và ngắt sớm. Khóa triệt để quyền chạy lệnh terminal và tools bằng `--deny "*"` là giải pháp tối ưu.
+   - *Multi-turn Turn Budget*: Profile có công cụ tra cứu (`code_review`, `arch_audit`) BẮT BUỘC thiết lập tối thiểu 10–14 turns. Thiết lập trần hẹp $\le 8$ turns khiến mô hình cạn lượt khi đang tra cứu `grep`/`read_file` trước khi kịp tổng hợp phán quyết cuối cùng.
+2. **Resilient Pydantic Output Parsing & Session History Fallback**:
+   - *Pydantic Coercion*: LLM thường xuyên xuất `conditions` dưới dạng danh sách chuỗi (`list[str]`) thay vì danh sách dicts, hoặc thêm các trường telemetry phụ. Thiết lập `extra="ignore"` và `@field_validator("conditions", mode="before")` tự động chuẩn hóa chuỗi thành `PeerCondition(id="COND-xx", description=...)` là điều kiện tiên quyết cho production zero-touch.
+   - *Session History Fallback*: Khi các lệnh gọi tool của Grok CLI làm phân mảnh ngõ ra stdout, harness tự động đọc tin nhắn assistant cuối cùng trong `~/.grok/sessions/**/{session_id}/chat_history.jsonl` có giới hạn trần kích thước.
+3. **ACID Two-Phase Commit with POSIX Mode Preservation & Error Reporting**:
+   - *Fail-Fast Phase 1*: Kiểm tra `target_file.is_file()` ngay tại Phase 1 để loại trừ thư mục trước khi đọc bytes băm SHA-256.
+   - *Rollback Transparency*: Khối `except` hoàn nguyên không được dùng `pass` âm thầm; toàn bộ lỗi hoàn nguyên tệp được gom vào `rollback_errors` trong thông điệp `ValueError`.
+   - *POSIX Permission Preservation*: `atomic_write_text` đọc và khôi phục `stat.st_mode` của tệp đích khi ghi đè, chống mất quyền thực thi script (`+x`).
+
+
 
 

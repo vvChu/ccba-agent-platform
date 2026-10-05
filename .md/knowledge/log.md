@@ -1,7 +1,17 @@
 # 📜 CCBA Knowledge Base Mutation Log (Append-Only Log)
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
-> ⚠️ **Lưu ý:** Các mã băm commit SHA trước ngày 04/10/2026 trong tài liệu này có thể đã bị thay đổi do đợt tẩy rửa an toàn thông tin lịch sử (Security History Rewriting).
+## [2026-10-05] [synthesize] | Phát Hành PR #481-#484: Dogfooding Level-2 Peer Delegation, ACID Patch Engine & Architectural Audit
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/src/ccba_harness/cli.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/tests/test_peer.py`, `packages/ccba-harness/AGENTS.md`, `.agents/skills/platform-loader/catalog.yaml`, `.md/peer_exchange/`, `.md/knowledge/session_learnings.md`, `walkthrough.md`
+- **Summary**: Hoàn tất phát triển, kiểm thử thực địa khép kín và phát hành toàn diện chuỗi 4 PRs liên hoàn trong hệ sinh thái Level-2 Peer Delegation (HUB-ADR 0063 / HUB-ADR 0064):
+  1. **PR #481 (`cb7b18e9`)**: Gia cố rào chắn headless `qwen-local` (0 USD) với cờ `--deny "*"` và bóc tách tự động `extract_anchor_payload` bọc `PeerVerdictBlock`.
+  2. **PR #482 (`0cb52b3d`)**: Tích hợp Subcommand CLI `ccba-harness apply-anchor-patch` (aliases `peer-apply`, `apply-patch`) với hỗ trợ `-f -` (stdin piping), `--dry-run`, `--backup` (`.bak`), `--quiet`, `--json`; triển khai Two-Phase Commit với transactional rollback (`written_backups`) và chuẩn hóa CRLF/LF; mở rộng profiles `code_review` và `arch_audit`.
+  3. **PR #483 (`687839db`)**: Tiếp thu toàn diện 3 điều kiện thẩm định từ Grok Review (`COND-01` báo cáo rollback errors, `COND-02` `is_file()` guard, `COND-03` bảo tồn POSIX `st_mode`), cùng cơ chế Pydantic condition coercion (`extra="ignore"`) và session log fallback (`chat_history.jsonl`). Đạt 32/32 unit tests pass.
+  4. **PR #484 (`f024640e`)**: Dogfooding thực tế profile `arch_audit` với `grok-4.7-build` (`xhigh` reasoning, 19.3k reasoning tokens, 740k tokens, $0.2545) thẩm định kiến trúc chuỗi 5 ADR (ADR-0060 $\to$ ADR-0064), xuất báo cáo `grok_arch_audit_adrs.md` và xác lập lộ trình rõ ràng cho ADR-0065.
+  5. **Đóng Gói Tri Thức**: Bổ sung Section 31 vào `session_learnings_history.md`, cập nhật `RULE-4.15` trong `session_learnings.md` ($9.58\text{ KB} \le 10.0\text{ KB}$), 100% CI checks green trên mọi PRs.
+
+---
 
 ## [2026-10-05] [synthesize] | Phát Hành PR #478 & PR #479: Model Provenance, Token Telemetry & Zero-Hang Lifecycle (HUB-ADR 0064)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Thẩm định đối kháng Grok 4.7 xhigh, /ccba-release-feature & /ccba-session-retrospective)
