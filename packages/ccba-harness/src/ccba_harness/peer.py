@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Literal, NamedTuple
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._mutex import FileMutexLock
 
@@ -119,7 +119,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "code_review": {
         "model": "gemini-38-flash",  # ccba:allow-raw-model
         "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": 6,
+        "max_turns": 10,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
             "run_terminal_command",
@@ -211,7 +211,7 @@ class PeerPromptEnvelope(BaseModel):
 class PeerCondition(BaseModel):
     """A requirement or condition attached to a verdict."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     id: str
     description: str
@@ -243,7 +243,7 @@ class PeerVerdictTelemetry(BaseModel):
 class PeerVerdictBlock(BaseModel):
     """Structured verdict issued by a peer agent in response to a prompt."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     request_id: str
     verdict: VerdictType
@@ -252,6 +252,21 @@ class PeerVerdictBlock(BaseModel):
     effort: EffortType | None = None
     summary: str = ""
     telemetry: PeerVerdictTelemetry | None = None
+
+    @field_validator("conditions", mode="before")
+    @classmethod
+    def _normalize_conditions(cls, v: Any) -> list[Any]:
+        if not isinstance(v, (list, tuple)):
+            return []
+        normalized: list[Any] = []
+        for i, item in enumerate(v):
+            if isinstance(item, str):
+                normalized.append(
+                    {"id": f"COND-{i + 1:02d}", "description": item, "blocking": True}
+                )
+            else:
+                normalized.append(item)
+        return normalized
 
 
 def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
@@ -378,8 +393,19 @@ def atomic_write_text(target: Path, content: str) -> None:
     """
     target.parent.mkdir(parents=True, exist_ok=True)
     temp_file = target.with_suffix(f"{target.suffix}.tmp_{os.getpid()}_{time.time_ns()}")
+    mode = None
+    if target.exists():
+        try:
+            mode = target.stat().st_mode
+        except OSError:
+            pass
     try:
         temp_file.write_text(content, encoding="utf-8")
+        if mode is not None:
+            try:
+                os.chmod(temp_file, mode)
+            except OSError:
+                pass
         temp_file.replace(target)
     except Exception:
         if temp_file.exists():
@@ -849,6 +875,8 @@ def apply_anchor_patch(
 
         if not target_file.exists():
             raise ValueError(f"Target patch file does not exist: {file_patch.path}")
+        if not target_file.is_file():
+            raise ValueError(f"Target patch path is not a regular file: {file_patch.path}")
 
         raw_bytes = target_file.read_bytes()
         actual_sha256 = hashlib.sha256(raw_bytes).hexdigest()
@@ -894,12 +922,16 @@ def apply_anchor_patch(
             modified_paths.append(target_file)
         return modified_paths
     except Exception as exc:
+        rollback_errors: list[str] = []
         for failed_file, old_content in written_backups.items():
             try:
                 atomic_write_text(failed_file, old_content)
-            except Exception:
-                pass
-        raise ValueError(f"Transaction aborted during write phase: {exc}") from exc
+            except Exception as r_err:
+                rollback_errors.append(f"{failed_file.name}: {r_err}")
+        err_msg = f"Transaction aborted during write phase: {exc}"
+        if rollback_errors:
+            err_msg += f" (Rollback errors: {'; '.join(rollback_errors)})"
+        raise ValueError(err_msg) from exc
 
 
 def extract_grok_session_telemetry(
@@ -1146,6 +1178,24 @@ def _run_single_grok_attempt(
                 except Exception:
                     proc.kill()
                 return False
+
+        if (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None) and session_id:
+            try:
+                session_root = Path.home() / ".grok" / "sessions"
+                for p in session_root.glob(f"**/{session_id}/chat_history.jsonl"):
+                    if p.exists():
+                        for line in reversed(p.read_text(encoding="utf-8").splitlines()):
+                            if line.strip():
+                                d = json.loads(line)
+                                if d.get("type") == "assistant" and d.get("content"):
+                                    cand = d["content"]
+                                    if parse_verdict_from_md(cand) is not None:
+                                        stdout_text = cand
+                                        break
+                        if stdout_text and parse_verdict_from_md(stdout_text) is not None:
+                            break
+            except Exception:
+                pass
 
         if not stdout_text.strip():
             return False
