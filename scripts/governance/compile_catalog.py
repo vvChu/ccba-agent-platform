@@ -562,21 +562,60 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
     return catalog
 
 
+_GUARDRAIL_APPLIES = frozenset({"python", "all"})
+_CHMOD_RE = re.compile(r"^0o[0-7]{3,4}$")
+_DEST_RE = re.compile(r"^(?:scripts/[A-Za-z0-9_.-]+\.py|\.githooks/[A-Za-z0-9_.-]+|conftest\.py)$")
+
+
+class CatalogCompileError(ValueError):
+    """Guardrail registry failed catalog compilation (ADR-0062)."""
+
+
 def compile_guardrails(hub_root: Path, base_data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Compile and validate guardrails list from catalog_base.yaml (ADR-0062)."""
+    """Compile and validate guardrails from catalog_base.yaml (ADR-0062).
+
+    Returns the validated list. Raises CatalogCompileError instead of writing a
+    registry whose src is missing, whose dest escapes the allowlist, or whose
+    name/dest is duplicated.
+    """
     raw_guards = base_data.get("guardrails", [])
-    valid_guards = []
+    if not isinstance(raw_guards, list):
+        raise CatalogCompileError("guardrails must be a list")
+
+    seen_names: set[str] = set()
+    seen_dests: set[str] = set()
+    valid: list[dict[str, Any]] = []
     for g in raw_guards:
-        src_rel = g.get("src")
-        if src_rel:
-            src_path = hub_root / src_rel
-            if not src_path.exists():
-                print(
-                    f"⚠️ [Catalog Compiler] Warning: Guardrail src '{src_rel}' not found on Hub: {src_path}",
-                    file=sys.stderr,
-                )
-        valid_guards.append(g)
-    return valid_guards
+        if not isinstance(g, dict):
+            raise CatalogCompileError("guardrail entry must be a mapping")
+        name = str(g.get("name") or "").strip()
+        src_rel = str(g.get("src") or "").strip().replace("\\", "/")
+        dest_rel = str(g.get("dest") or "").strip().replace("\\", "/")
+        applies = g.get("applies_to") or []
+        if not name or not src_rel or not dest_rel:
+            raise CatalogCompileError(f"guardrail {name!r} requires name, src, dest")
+        if name in seen_names or dest_rel in seen_dests:
+            raise CatalogCompileError(f"duplicate guardrail name or dest: {name}")
+        if ".." in Path(src_rel).parts or ".." in Path(dest_rel).parts:
+            raise CatalogCompileError(f"guardrail path traversal: {src_rel} -> {dest_rel}")
+        if Path(src_rel).is_absolute() or Path(dest_rel).is_absolute():
+            raise CatalogCompileError(f"guardrail path must be relative: {dest_rel}")
+        if not _DEST_RE.fullmatch(dest_rel):
+            raise CatalogCompileError(f"guardrail dest not allowed: {dest_rel}")
+        if not isinstance(applies, list) or not applies:
+            raise CatalogCompileError(f"guardrail {name} applies_to must be a non-empty list")
+        if any(str(item) not in _GUARDRAIL_APPLIES for item in applies):
+            raise CatalogCompileError(f"guardrail {name} has unknown applies_to")
+        chmod = g.get("chmod")
+        if chmod is not None and not (isinstance(chmod, str) and _CHMOD_RE.fullmatch(chmod)):
+            raise CatalogCompileError(f"guardrail {name} chmod must look like '0o755'")
+        src_path = hub_root / src_rel
+        if not src_path.is_file():
+            raise CatalogCompileError(f"guardrail src missing: {src_rel}")
+        seen_names.add(name)
+        seen_dests.add(dest_rel)
+        valid.append(g)
+    return valid
 
 
 def generate_catalog_yaml(hub_root: Path = HUB_ROOT) -> str:
@@ -1119,7 +1158,16 @@ def query_catalog(hub_root: Path = HUB_ROOT, query_term: str = "") -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint."""
+    """CLI entrypoint. CatalogCompileError is printed to stderr and returns 1."""
+    try:
+        return _main_unlocked(argv)
+    except CatalogCompileError as exc:
+        print(f"[ERROR] [Catalog Compiler] {exc}", file=sys.stderr)
+        return 1
+
+
+def _main_unlocked(argv: list[str] | None = None) -> int:
+    """CLI body. CatalogCompileError propagates to main() before any catalog write."""
     parser = argparse.ArgumentParser(description="CCBA Catalog Manifest Compiler (ADR 0047)")
     parser.add_argument(
         "--check",

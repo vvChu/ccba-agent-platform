@@ -39,109 +39,130 @@ class TestGuardrailCopier:
 
     __test__ = False
 
+    # Used only when the catalog has no guardrails key (ADR-0062).
+    # An explicit empty list must not fall back to this constant.
+    TIER0_GUARDRAIL_FALLBACK: list[dict[str, Any]] = [
+        {
+            "name": "conftest.py",
+            "src": "conftest.py",
+            "dest": "conftest.py",
+            "applies_to": ["python"],
+        },
+        {
+            "name": "safe_pytest.py",
+            "src": "scripts/safe_pytest.py",
+            "dest": "scripts/safe_pytest.py",
+            "applies_to": ["python"],
+        },
+        {
+            "name": "safe_runner.py",
+            "src": "scripts/safe_runner.py",
+            "dest": "scripts/safe_runner.py",
+            "applies_to": ["python"],
+        },
+        {
+            "name": "check_hub_import_depth.py",
+            "src": "scripts/spoke/check_hub_import_depth.py",
+            "dest": "scripts/check_hub_import_depth.py",
+            "applies_to": ["python"],
+        },
+        {
+            "name": "check_spoke_cleanliness.py",
+            "src": "scripts/spoke/check_spoke_cleanliness.py",
+            "dest": "scripts/check_spoke_cleanliness.py",
+            "applies_to": ["python"],
+        },
+        {
+            "name": "pre-commit",
+            "src": ".githooks/pre-commit",
+            "dest": ".githooks/pre-commit",
+            "chmod": "0o755",
+            "git_index": True,
+            "applies_to": ["all"],
+        },
+        {
+            "name": "pre-push",
+            "src": ".githooks/pre-push",
+            "dest": ".githooks/pre-push",
+            "chmod": "0o755",
+            "git_index": True,
+            "applies_to": ["all"],
+        },
+    ]
+
     def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:
         self.spoke_root = spoke_root
         self.hub_root = hub_root
         self.project_type = project_type
 
-    def copy_if_needed(self, dry_run: bool = False, force: bool = False) -> list[dict[str, Any]]:
-        """Copy conftest.py, safe_pytest.py, and pre-commit guardrails if Spoke is a Python project.
+    def copy_if_needed(
+        self,
+        dry_run: bool = False,
+        force: bool = False,
+        catalog: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Copy declared guardrails when the Spoke is a Python project.
+
+        ``catalog=None`` reads Hub ``catalog.yaml``. A missing ``guardrails`` key
+        uses ``TIER0_GUARDRAIL_FALLBACK``. An explicit empty list copies nothing.
 
         Returns:
-            List of action records with format:
-            {"type": "Guardrail", "name": str, "status": "NEW" | "UPDATED" | "UNCHANGED", "path": str}
+            Action records:
+            {"type": "Guardrail", "name": str,
+             "status": "NEW" | "UPDATED" | "UNCHANGED" | "MISSING_SRC", "path": str}
         """
         actions: list[dict[str, Any]] = []
-        is_python = is_python_spoke(self.spoke_root, self.project_type)
-
-        if not is_python:
+        if not is_python_spoke(self.spoke_root, self.project_type):
             return actions
 
-        # Load guardrails from catalog.yaml (Declarative Synchronization Registry ADR-0062)
-        guardrails_cfg = []
-        catalog_path = self.hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
-        if catalog_path.is_file():
-            try:
-                cat_data = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
-                guardrails_cfg = cat_data.get("guardrails", [])
-            except Exception:
-                guardrails_cfg = []
+        guardrails_cfg = self._resolve_guardrails_config(catalog)
+        using_fallback = guardrails_cfg is None
+        if using_fallback:
+            guardrails_cfg = self.TIER0_GUARDRAIL_FALLBACK
+        elif guardrails_cfg == []:
+            return []
 
-        # Fallback list if catalog.yaml doesn't declare guardrails
-        if not guardrails_cfg:
-            guardrails_cfg = [
-                {
-                    "name": "conftest.py",
-                    "src": "conftest.py",
-                    "dest": "conftest.py",
-                    "applies_to": ["python"],
-                },
-                {
-                    "name": "safe_pytest.py",
-                    "src": "scripts/safe_pytest.py",
-                    "dest": "scripts/safe_pytest.py",
-                    "applies_to": ["python"],
-                },
-                {
-                    "name": "safe_runner.py",
-                    "src": "scripts/safe_runner.py",
-                    "dest": "scripts/safe_runner.py",
-                    "applies_to": ["python"],
-                },
-                {
-                    "name": "check_hub_import_depth.py",
-                    "src": "scripts/spoke/check_hub_import_depth.py",
-                    "dest": "scripts/check_hub_import_depth.py",
-                    "applies_to": ["python"],
-                },
-                {
-                    "name": "check_spoke_cleanliness.py",
-                    "src": "scripts/spoke/check_spoke_cleanliness.py",
-                    "dest": "scripts/check_spoke_cleanliness.py",
-                    "applies_to": ["python"],
-                },
-                {
-                    "name": "pre-commit",
-                    "src": ".githooks/pre-commit",
-                    "dest": ".githooks/pre-commit",
-                    "chmod": "0o755",
-                    "git_index": True,
-                    "applies_to": ["all"],
-                },
-                {
-                    "name": "pre-push",
-                    "src": ".githooks/pre-push",
-                    "dest": ".githooks/pre-push",
-                    "chmod": "0o755",
-                    "git_index": True,
-                    "applies_to": ["all"],
-                },
-            ]
-
-        items_to_copy = []
+        has_githooks = False
         for g in guardrails_cfg:
+            if not isinstance(g, dict):
+                continue
             applies = g.get("applies_to", ["python"])
+            if not isinstance(applies, list):
+                applies = ["python"]
             if "python" not in applies and "all" not in applies:
                 continue
             src_rel = g.get("src")
             dest_rel = g.get("dest")
             name = g.get("name")
-            if not src_rel or not dest_rel or not name:
+            if not isinstance(src_rel, str) or not isinstance(dest_rel, str) or not name:
                 continue
             src_path = self.hub_root / src_rel
             dest_path = self.spoke_root / dest_rel
-            items_to_copy.append(
-                (src_path, dest_path, name, dest_rel, g.get("chmod"), g.get("git_index"))
-            )
 
-        has_githooks = False
-        for src, dest, name, rel_path, chmod_str, _git_idx in items_to_copy:
-            if not src.exists() or src.resolve() == dest.resolve():
+            if not src_path.is_file():
+                # Fallback keeps the historical "copy what exists" behavior so
+                # Spokes without a guardrails key do not gain MISSING_SRC noise.
+                if not using_fallback:
+                    actions.append(
+                        {
+                            "type": "Guardrail",
+                            "name": name,
+                            "status": "MISSING_SRC",
+                            "path": dest_rel,
+                        }
+                    )
                 continue
 
-            if not dest.exists():
+            try:
+                same_path = src_path.resolve() == dest_path.resolve()
+            except OSError:
+                same_path = False
+            if same_path:
+                continue
+
+            if not dest_path.exists():
                 status = "NEW"
-            elif are_text_files_identical(src, dest):
+            elif are_text_files_identical(src_path, dest_path):
                 status = "UNCHANGED"
             else:
                 status = "UPDATED"
@@ -151,28 +172,48 @@ class TestGuardrailCopier:
                     "type": "Guardrail",
                     "name": name,
                     "status": status,
-                    "path": rel_path,
+                    "path": dest_rel,
                 }
             )
 
+            chmod_str = g.get("chmod")
             if not dry_run and status in ("NEW", "UPDATED"):
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, dest)
-                if chmod_str:
+                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_path, dest_path)
+                if isinstance(chmod_str, str) and chmod_str:
                     try:
-                        dest.chmod(
-                            int(chmod_str, 8) if chmod_str.startswith("0o") else int(chmod_str)
-                        )
-                    except Exception:
+                        mode = int(chmod_str, 8) if chmod_str.startswith("0o") else int(chmod_str)
+                        dest_path.chmod(mode)
+                    except (OSError, ValueError):
                         pass
                 action_text = "Copied" if status == "NEW" else "Updated"
-                print(f"  - {action_text} guardrail: {rel_path}")
+                print(f"  - {action_text} guardrail: {dest_rel}")
             elif dry_run and status in ("NEW", "UPDATED"):
                 action_text = "Would copy" if status == "NEW" else "Would update"
-                print(f"  - [DRY-RUN] {action_text} guardrail: {rel_path}")
+                print(f"  - [DRY-RUN] {action_text} guardrail: {dest_rel}")
 
-            if name in ("pre-commit", "pre-push"):
+            if dest_rel.startswith(".githooks/"):
                 has_githooks = True
+
+            if g.get("git_index") is True and not dry_run:
+                import subprocess
+
+                try:
+                    subprocess.run(
+                        [
+                            "git",
+                            "-C",
+                            str(self.spoke_root),
+                            "update-index",
+                            "--add",
+                            "--chmod=+x",
+                            dest_rel,
+                        ],
+                        capture_output=True,
+                        timeout=5,
+                    )
+                except (OSError, subprocess.SubprocessError):
+                    pass
 
         githooks_present = (self.spoke_root / ".githooks" / "pre-commit").exists() or (
             self.spoke_root / ".githooks" / "pre-push"
@@ -181,6 +222,33 @@ class TestGuardrailCopier:
             self._ensure_git_hook_activated(dry_run=dry_run, force=force)
 
         return actions
+
+    def _resolve_guardrails_config(self, catalog: dict[str, Any] | None) -> list[Any] | None:
+        """Return guardrail entries.
+
+        None means the key is absent, the file is missing, or YAML is unreadable
+        (caller uses Tier-0 fallback). A list, including ``[]``, is explicit.
+        """
+        loaded: dict[str, Any] | None = catalog
+        if loaded is None:
+            catalog_path = self.hub_root / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+            if not catalog_path.is_file():
+                return None
+            try:
+                parsed = yaml.safe_load(catalog_path.read_text(encoding="utf-8")) or {}
+            except Exception:
+                return None
+            if not isinstance(parsed, dict):
+                return None
+            loaded = parsed
+        if "guardrails" not in loaded:
+            return None
+        raw = loaded.get("guardrails")
+        if raw is None:
+            return None
+        if isinstance(raw, list):
+            return raw
+        return []
 
     def _ensure_git_hook_activated(self, dry_run: bool = False, force: bool = False) -> None:
         """Configures core.hooksPath and .gitattributes for Spoke if inside a git repository."""
