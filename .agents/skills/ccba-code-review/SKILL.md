@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -34,6 +34,9 @@ triggers:
 - check code
 - review commit
 - review pr
+- unslop
+- anti-slop
+- zero-noise
 ---
 # Quy trình Rà soát Chất lượng Code (Code Review)
 
@@ -122,6 +125,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/codebase-scan-workflow.md` | Quy trình quét toàn diện kiến trúc codebase với 2 subagents hỗ trợ |
 | `references/code-review-reception.md` | Kỷ luật tiếp nhận phản hồi review: kiểm chứng kỹ thuật trước khi chỉnh sửa |
 | `references/verification-before-completion.md` | Khóa cứng kỷ luật nghiệm thu: bằng chứng chạy thực tế trước khi tuyên bố hoàn thành |
+| `references/unslop_checklist.md` | Kỷ luật Zero-Noise & Anti-Slop (ADR-0009): Loại bỏ comment dịch tên, dead code, LLM slop |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

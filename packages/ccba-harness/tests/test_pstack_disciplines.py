@@ -19,7 +19,10 @@ from ccba_harness.peer_gate import (
     GateResult,
     check_ast_function_length,
     check_hub_import_depth,
+    check_redundant_comments,
     check_secret_ip_cleanliness,
+    run_full_gate,
+    run_implementation_gate,
     write_verdict_file,
 )
 
@@ -174,3 +177,77 @@ def test_cli_dispatch_pstack():
         # Test blast-radius
         rc_blast = run_blast_radius_cli(["ccba_ai", "--root", str(root), "--json"])
         assert rc_blast == 0
+
+
+def test_redundant_comments_passes_clean_code():
+    """Verify clean code, allowlisted comments, and valid prose pass the gate."""
+    clean_code = (
+        "# ccba:allow-machine-path\n"
+        "# noqa: E501\n"
+        "# type: ignore[attr-defined]\n"
+        "# pragma: no cover\n"
+        "# Theo Điều 15 NĐ 175/2024: Quy định về điều kiện khởi công\n"
+        "# ------------------------------------------------------------\n"
+        "# Return cached model if available to minimize network latency\n"
+        "# return early if cache hit\n"
+        "def fetch_model():\n"
+        "    return 'model_v1'\n"
+    )
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tf:
+        tf.write(clean_code)
+        clean_file = Path(tf.name)
+
+    try:
+        res = check_redundant_comments([clean_file])
+        assert res.passed is True
+        assert res.exit_code == 0
+        assert "clean" in res.stdout_tail.lower()
+    finally:
+        clean_file.unlink(missing_ok=True)
+
+
+def test_redundant_comments_flags_dead_code():
+    """Verify commented-out dead code (def, class, import, return) is flagged."""
+    dead_code_samples = [
+        "# def old_calculate_sum(a, b): return a + b\n",
+        "# class LegacyParser:\n#     pass\n",
+        "# import legacy_service\n",
+        "# from math import sin, cos\n",
+        "# return False\n",
+    ]
+    for sample in dead_code_samples:
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tf:
+            tf.write(sample)
+            fpath = Path(tf.name)
+        try:
+            res = check_redundant_comments([fpath])
+            assert res.passed is False, f"Failed to flag dead code in: {sample}"
+            assert res.exit_code == 1
+            assert "commented-out dead code" in res.stdout_tail
+        finally:
+            fpath.unlink(missing_ok=True)
+
+
+def test_redundant_comments_flags_duplicate_name_restatement():
+    """Verify redundant comments merely restating function/class name are flagged."""
+    dup_samples = [
+        "# get project by id\ndef get_project_by_id():\n    pass\n",
+        "# run full gate\n@some_decorator\ndef run_full_gate():\n    pass\n",
+        "# Base Handler\nclass BaseHandler:\n    pass\n",
+    ]
+    for sample in dup_samples:
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tf:
+            tf.write(sample)
+            fpath = Path(tf.name)
+        try:
+            res = check_redundant_comments([fpath])
+            assert res.passed is False, f"Failed to flag duplicate restatement in: {sample}"
+            assert res.exit_code == 1
+            assert "duplicate comment restating" in res.stdout_tail
+        finally:
+            fpath.unlink(missing_ok=True)
+
+
+def test_run_implementation_gate_alias():
+    """Verify run_implementation_gate is canonical alias of run_full_gate."""
+    assert run_implementation_gate is run_full_gate

@@ -1,6 +1,6 @@
-# ccba-code-review
+# ccba-create-verification-skill
 
-> **Mô tả ngắn**: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
+> **Mô tả ngắn**: Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 
 ---
 
@@ -8,29 +8,29 @@
 
 ### Cú pháp Lệnh (Slash Command)
 ```bash
-/ccba-code-review
+/ccba-create-verification-skill
 ```
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-code-review
+python scripts/spoke/sync_spoke.py --skills ccba-create-verification-skill
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
 | Thuộc tính | Chi tiết |
 | :--- | :--- |
-| **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
+| **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_software` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.5 | K=3.5 | A=2.0 | P=1.0 (GPI: 20.75)` |
 
 ---
 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
+Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,22 +45,15 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `review`
-- `quality`
-- `verification`
-- `reliability`
-- `ccba-code-review`
-- `rà soát code`
-- `check code`
-- `review commit`
-- `review pr`
-- `unslop`
-- `anti-slop`
-- `zero-noise`
+- `ccba-create-verification-skill`
+- `create-verification-skill`
+- `tạo verification skill`
+- `thiết lập harness`
+- `verify harness`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Đánh giá phản biện mã nguồn, rà soát lỗ hổng và tuân thủ chuẩn mực.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **ccba-implement / PR chuẩn bị merge**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Khởi tạo bộ kỹ năng kiểm định tự động verify-<app> cô lập cho ứng dụng hoặc spoke.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Ứng dụng hoặc Spoke mới cần bộ kiểm định tự động / ADR-0009**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -70,21 +63,21 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ## 4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)
 
-Kỹ năng `ccba-code-review` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
+Kỹ năng `ccba-create-verification-skill` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ ccba-implement / PR chuẩn bị merge ]
+[ Ứng dụng hoặc Spoke mới cần bộ kiểm định tự động / ADR-0009 ]
           │
           ▼
-    >>> [ ccba-code-review ] <<<  (Đánh giá phản biện mã nguồn, rà soát lỗ hổng và tuân thủ chuẩn mực.)
+    >>> [ ccba-create-verification-skill ] <<<  (Khởi tạo bộ kỹ năng kiểm định tự động verify-<app> cô lập cho ứng dụng hoặc spoke.)
           │
           ▼
-[ Sửa lỗi / ccba-release-feature ]
+[ Kỹ năng verify-<app> và bộ harness cô lập ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `ccba-implement / PR chuẩn bị merge`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Ứng dụng hoặc Spoke mới cần bộ kiểm định tự động / ADR-0009`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Sửa lỗi / ccba-release-feature`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Kỹ năng verify-<app> và bộ harness cô lập`.
 
 ---
 
@@ -94,7 +87,7 @@ Kỹ năng `ccba-code-review` giữ vị trí then chốt trong chuỗi giá tr�
 Mọi thay đổi liên quan đến kỹ năng này bắt buộc phải vượt qua toàn bộ các kiểm thử tự động sau:
 ```bash
 python -m ccba_harness verify-patch --preset skill
-python scripts/validate_skills.py --file .agents/skills/ccba-code-review/SKILL.md --enforce-gpi
+python scripts/validate_skills.py --file .agents/skills/ccba-create-verification-skill/SKILL.md --enforce-gpi
 ```
 
 ### Danh Mục Kiểm Thức Hoàn Thành (Definition of Done - DoD)
