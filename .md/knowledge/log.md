@@ -3,6 +3,16 @@
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 > ⚠️ **Lưu ý:** Các mã băm commit SHA trước ngày 04/10/2026 trong tài liệu này có thể đã bị thay đổi do đợt tẩy rửa an toàn thông tin lịch sử (Security History Rewriting).
 
+## [2026-10-05] [synthesize] | Upstream Sync, Grok Review & Tích Hợp Kỹ Năng Retro vào ccba-session-retrospective v1.5.0
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /ccba-sync-upstream, Tham vấn Grok, /plan & /ccba-session-retrospective)
+- **Affected Files**: `.agents/skills/ccba-session-retrospective/SKILL.md`, `.agents/skills/ccba-session-retrospective/references/agent_environment_diagnostics.md`, `.md/knowledge/port_recommendations.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`
+- **Summary**: Hoàn tất đợt đồng bộ thượng nguồn `mattpocock-skills` (SHA: `24fe0ef7`), phản biện kiến trúc qua Grok CLI và nâng cấp kỹ năng đóng phiên:
+  1. **Upstream Radar & Constitutional Porting (ADR-0057)**: Quét 37 tài nguyên thượng nguồn, cập nhật `port_recommendations.md`, từ chối tạo standalone skill `/retro` ($GPI = 5.00 < 12.0$, Tier 2A).
+  2. **Tích Hợp Phương Án C (Hybrid)**: Tạo tài liệu tham chiếu `references/agent_environment_diagnostics.md` (7 tiêu chuẩn Matt Pocock); nâng cấp `ccba-session-retrospective` lên v1.5.0 với Conditional Trigger và Level 3 Reference Index; bổ sung nguyên tắc "Ưu tiên Kiểm tra Tất định hơn viết Prompt Rule".
+  3. **Đóng Gói Tri Thức & Kiểm Định**: Bổ sung `RULE-1.15` vào `session_learnings.md` ($9.8\text{ KB} \le 10.0\text{ KB}$), lưu trữ `RULE-4.10` vào `session_learnings_history.md`, vượt qua 100% `ccba-harness verify-patch --preset skill`.
+
+---
+
 ## [2026-10-01] [synthesize] | Phát Hành PR #449 (Issue #448): Advisory AI Review Guardrails & Pre-Merge Bugbot Rules
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, /boost, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `docs/rules/execution_guardrails.md`, `.github/bugbot-rules.md`, `AGENTS.md`, `.agents/AGENTS.md`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `.md/knowledge/reports/walkthrough.md`
