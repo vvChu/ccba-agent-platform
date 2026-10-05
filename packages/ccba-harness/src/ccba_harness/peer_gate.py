@@ -284,9 +284,9 @@ def check_redundant_comments(target_files: list[Path]) -> GateCheck:
                 continue
 
             lines = content.splitlines(keepends=True)
-            tokens = list(tokenize.generate_tokens(io.StringIO(content).readline))
+            lex_items = list(tokenize.generate_tokens(io.StringIO(content).readline))
 
-            for tok in tokens:
+            for tok in lex_items:
                 if tok.type != tokenize.COMMENT:
                     continue
 
@@ -354,11 +354,11 @@ def check_redundant_comments(target_files: list[Path]) -> GateCheck:
                     comment_content = text.lstrip("#").strip()
                     words = re.findall(r"[a-zA-Z0-9]+", comment_content.lower())
                     if words and len(words) <= 5:
-                        name_tokens_list = re.findall(
+                        name_parts_list = re.findall(
                             r"[A-Z]?[a-z0-9]+|[A-Z]+(?=[A-Z][a-z0-9]|\b)", target_name
                         )
-                        name_tokens = {t.lower() for t in name_tokens_list if t}
-                        if set(words).issubset(name_tokens):
+                        name_parts = {p.lower() for p in name_parts_list if p}
+                        if set(words).issubset(name_parts):
                             violations.append(
                                 f"{py_file.name}:{start_line} duplicate comment restating '{target_name}': '{text[:60]}'"
                             )
