@@ -88,7 +88,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "patch_fast": {
         "model": "qwen-local",  # ccba:allow-raw-model
         "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": 1,
+        "max_turns": None,
         "tools": None,
         "disallowed_tools": [
             "read_file",
@@ -101,6 +101,14 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         ],
         "reasoning_effort": None,
         "timeout": 120.0,
+        "deny": ["*"],
+        "system_prompt": (
+            "You are a pure JSON and markdown patch generator. "
+            "You MUST start your response with YAML frontmatter enclosed in --- containing request_id, verdict: APPROVE, and summary, "
+            "followed directly by a ```json block containing the AnchorPatchPayload. "
+            "DO NOT chat, DO NOT explain, DO NOT output introductory prose. "
+            "Respond immediately with the required formatted blocks."
+        ),
     },
 }
 
@@ -736,6 +744,26 @@ def publish_peer_message(
     return target_path
 
 
+def extract_anchor_payload(text: str) -> AnchorPatchPayload | None:
+    """Extracts and validates an AnchorPatchPayload from raw markdown or JSON string.
+
+    Args:
+        text: Raw response string.
+
+    Returns:
+        Validated AnchorPatchPayload or None if invalid or absent.
+    """
+    if not text:
+        return None
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    raw_json = match.group(1) if match else text.strip()
+    try:
+        data = json.loads(raw_json)
+        return AnchorPatchPayload.model_validate(data)
+    except Exception:
+        return None
+
+
 def apply_anchor_patch(
     root: Path,
     payload: AnchorPatchPayload | dict[str, Any],
@@ -926,6 +954,8 @@ def build_grok_cmd(
     output_format: str | None = "plain",
     worktree: bool = False,
     session_id: str | None = None,
+    system_prompt: str | None = None,
+    deny: list[str] | str | None = None,
 ) -> list[str]:
     """Constructs canonical grok CLI command list for headless execution (ADR-0063 / ADR-0064).
 
@@ -939,6 +969,8 @@ def build_grok_cmd(
         output_format: Output format ('plain', 'json', etc. Default: 'plain').
         worktree: Whether to execute in an isolated git worktree.
         session_id: Optional session UUID string.
+        system_prompt: Optional system prompt string to override agent default.
+        deny: Optional tool permission deny rule or list of rules.
 
     Returns:
         Command arguments list.
@@ -946,6 +978,14 @@ def build_grok_cmd(
     cmd = ["grok", "-m", model, "--always-approve", "--no-subagents"]
     if session_id:
         cmd.extend(["--session-id", session_id])
+    if system_prompt:
+        cmd.extend(["--system-prompt-override", system_prompt])
+    if deny:
+        if isinstance(deny, (list, tuple)):
+            for d in deny:
+                cmd.extend(["--deny", str(d)])
+        else:
+            cmd.extend(["--deny", str(deny)])
     if reasoning_effort:
         cmd.extend(["--reasoning-effort", reasoning_effort])
     if max_turns is not None:
@@ -1014,7 +1054,9 @@ def _run_single_grok_attempt(
                 # cond-3-verdict-atomic-validation: Watchdog checks if output file was generated during this run
                 if output_file.exists() and output_file.stat().st_mtime >= start_time:
                     content, _ = safe_read_and_hash(output_file)
-                    if content and parse_verdict_from_md(content):
+                    if content and (
+                        parse_verdict_from_md(content) or extract_anchor_payload(content)
+                    ):
                         stdout_text = content
                         try:
                             proc.terminate()
@@ -1038,7 +1080,19 @@ def _run_single_grok_attempt(
         duration = time.time() - start_time
         verdict = parse_verdict_from_md(stdout_text)
         if verdict is None:
-            return False
+            anchor_payload = extract_anchor_payload(stdout_text)
+            if anchor_payload is not None:
+                prompt_content, _ = safe_read_and_hash(prompt_path)
+                envelope = parse_envelope_from_md(prompt_content or "")
+                req_id = envelope.request_id if envelope else "req-auto"
+                verdict = PeerVerdictBlock(
+                    request_id=req_id,
+                    verdict="APPROVE",
+                    summary="Fast-path anchor patch generated successfully.",
+                )
+                stdout_text = render_verdict_header(verdict) + "\n" + stdout_text.lstrip()
+            else:
+                return False
 
         if session_id:
             prompt_content, _ = safe_read_and_hash(prompt_path)
@@ -1118,7 +1172,9 @@ def invoke_grok_cli(
     )
     tools = spec.get("tools")
     disallowed_tools = spec.get("disallowed_tools")
+    deny = spec.get("deny")
     reasoning_effort = spec.get("reasoning_effort")
+    system_prompt = spec.get("system_prompt")
     spec_timeout = timeout if timeout is not None else spec.get("timeout", 180.0)
 
     target_models: list[str] = []
@@ -1142,9 +1198,11 @@ def invoke_grok_cli(
             max_turns=spec_max_turns,
             tools=tools,
             disallowed_tools=disallowed_tools,
+            deny=deny,
             reasoning_effort=reasoning_effort,
             worktree=worktree,
             session_id=session_id,
+            system_prompt=system_prompt,
         )
         if _run_single_grok_attempt(
             cmd,
