@@ -438,6 +438,100 @@ def ensure_peer_exchange_scaffold(spoke_root: Path, hub_root: Path, dry_run: boo
             readme_file.write_text(hub_readme.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def _format_freshness_detail(detail: object) -> str:
+    """Render a freshness diff (string or sequence) for stderr."""
+    if isinstance(detail, (list, tuple)):
+        return "\n".join(str(item) for item in detail)
+    return str(detail)
+
+
+def assess_catalog_freshness(
+    hub_root: Path,
+    spoke_root: Path,
+    dry_run: bool = False,
+    allow_stale_catalog: bool = False,
+) -> str | None:
+    """Return ``catalog_stale`` when ``--apply`` must stop (ADR-0062 fail-closed gate).
+
+    Dry-run prints a warning and returns None. ``allow_stale_catalog`` prints an
+    audit line and returns None for both a stale catalog and a check exception.
+    The ``except`` branch checks ``allow_stale_catalog`` before any other decision.
+    """
+    from scripts.governance.compile_catalog import (
+        CATALOG_RECOMPILE_COMMAND,
+        check_catalog_in_sync,
+    )
+
+    try:
+        is_in_sync, detail = check_catalog_in_sync(hub_root)
+    except Exception as exc:
+        if allow_stale_catalog:
+            print(
+                "[Sync] AUDIT: CATALOG_STALE_BYPASS "
+                f"flag=--allow-stale-catalog reason=check_failed "
+                f"error={type(exc).__name__}: {exc} spoke={spoke_root}",
+                file=sys.stderr,
+            )
+            return None
+        if not dry_run:
+            print(
+                "[Sync] ERROR: Cannot apply sync because Hub catalog.yaml is out of sync "
+                f"(freshness check failed: {type(exc).__name__}: {exc}).",
+                file=sys.stderr,
+            )
+            print(
+                f"  Remediation (run in the Hub root): {CATALOG_RECOMPILE_COMMAND}",
+                file=sys.stderr,
+            )
+            return "catalog_stale"
+        print(
+            "[Sync] WARNING: Hub catalog.yaml is out of sync "
+            f"(freshness check failed: {type(exc).__name__}: {exc}).",
+            file=sys.stderr,
+        )
+        return None
+
+    if is_in_sync:
+        return None
+
+    detail_text = _format_freshness_detail(detail)
+    if allow_stale_catalog:
+        print(
+            f"[Sync] AUDIT: CATALOG_STALE_BYPASS flag=--allow-stale-catalog spoke={spoke_root}",
+            file=sys.stderr,
+        )
+        if detail_text:
+            print(detail_text, file=sys.stderr)
+        return None
+
+    if dry_run:
+        print(
+            "[Sync] WARNING: Hub catalog.yaml is out of sync. "
+            "This preview uses the stale catalog. "
+            "--apply will exit 1 until the Hub catalog is recompiled.",
+            file=sys.stderr,
+        )
+        if detail_text:
+            print(detail_text, file=sys.stderr)
+        print(
+            f"  Remediation (run in the Hub root): {CATALOG_RECOMPILE_COMMAND}",
+            file=sys.stderr,
+        )
+        return None
+
+    print(
+        "[Sync] ERROR: Cannot apply sync because Hub catalog.yaml is out of sync.",
+        file=sys.stderr,
+    )
+    if detail_text:
+        print(detail_text, file=sys.stderr)
+    print(
+        f"  Remediation (run in the Hub root): {CATALOG_RECOMPILE_COMMAND}",
+        file=sys.stderr,
+    )
+    return "catalog_stale"
+
+
 class SpokeSynchronizer:
     """Deep Engine managing Spoke workspace synchronization with non-destructive selective merge."""
 
@@ -1008,6 +1102,7 @@ class SpokeSynchronizer:
         verify: bool = False,
         pull_hub: bool = True,
         pull_assets: bool = False,
+        allow_stale_catalog: bool = False,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         mode_str = " [DRY-RUN]" if dry_run else ""
@@ -1185,22 +1280,18 @@ class SpokeSynchronizer:
             print(f"[Sync] Error: Could not find catalog.yaml at {catalog_file}", file=sys.stderr)
             return 1
 
-        # Catalog Freshness Check (ADR-0062 / Grok Condition 3: Non-blocking warning)
-        try:
-            from scripts.governance.compile_catalog import check_catalog_in_sync
-
-            is_in_sync, _ = check_catalog_in_sync(hub_root)
-            if not is_in_sync:
-                print(
-                    "[Sync] ⚠️  CẢNH BÁO: Phát hiện catalog.yaml chưa được đồng bộ với kỹ năng/guardrails mới nhất trên Hub.",
-                    file=sys.stderr,
-                )
-                print(
-                    "  💡 Gợi ý (Hub Maintainer): Chạy 'python scripts/governance/compile_catalog.py --write' để làm mới catalog.",
-                    file=sys.stderr,
-                )
-        except Exception:
-            pass
+        # Catalog Freshness Hard Gate (ADR-0062). Fail closed on --apply.
+        # Sits before _sync_full_bundle and _sync_single_item so both paths stop.
+        self._halt_reason = ""
+        halt = assess_catalog_freshness(
+            hub_root,
+            self.spoke_root,
+            dry_run=dry_run,
+            allow_stale_catalog=allow_stale_catalog,
+        )
+        if halt == "catalog_stale":
+            self._halt_reason = halt
+            return 1
 
         catalog = load_yaml(catalog_file)
 
@@ -1348,6 +1439,7 @@ class SpokeSynchronizer:
         verify: bool = False,
         pull_hub: bool = True,
         pull_assets: bool = False,
+        allow_stale_catalog: bool = False,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1361,6 +1453,7 @@ class SpokeSynchronizer:
             verify=verify,
             pull_hub=pull_hub,
             pull_assets=pull_assets,
+            allow_stale_catalog=allow_stale_catalog,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1397,6 +1490,7 @@ def sync_project(
     verify: bool = False,
     pull_hub: bool = True,
     pull_assets: bool = False,
+    allow_stale_catalog: bool = False,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1410,6 +1504,7 @@ def sync_project(
         verify=verify,
         pull_hub=pull_hub,
         pull_assets=pull_assets,
+        allow_stale_catalog=allow_stale_catalog,
     )
 
 
@@ -1439,6 +1534,7 @@ def sync_all_spokes(
     bootstrap: bool = False,
     verify: bool = False,
     pull_assets: bool = False,
+    allow_stale_catalog: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -1487,11 +1583,19 @@ def sync_all_spokes(
                 verify=verify,
                 pull_hub=(idx == 1),
                 pull_assets=pull_assets,
+                allow_stale_catalog=allow_stale_catalog,
             )
             status = "SUCCESS" if res == 0 else "FAILED"
             results.append({"name": sp_name, "path": sp_path, "status": status, "code": res})
             if res != 0:
                 total_exit_code = 1
+                if getattr(engine, "_halt_reason", "") == "catalog_stale":
+                    print(
+                        "[BatchSync] Stopping: Hub catalog.yaml is stale. "
+                        "Remaining Spokes were not synced.",
+                        file=sys.stderr,
+                    )
+                    break
         except Exception as e:
             print(f"  ❌ Lỗi khi đồng bộ Spoke '{sp_name}': {e}", file=sys.stderr)
             results.append({"name": sp_name, "path": sp_path, "status": f"ERROR: {e}", "code": 1})

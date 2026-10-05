@@ -9,6 +9,29 @@ from scripts.ccba_platform_cli import display_spoke_health_dashboard
 from scripts.spoke.spoke_synchronizer import sync_all_spokes
 
 
+@pytest.fixture(autouse=True)
+def _handwritten_catalog_skips_freshness_gate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fixture catalogs are handwritten. Apply-mode tests use the audited bypass."""
+    import scripts.spoke.sync.coordinator as coordinator
+
+    real = coordinator.assess_catalog_freshness
+
+    def _bypass(
+        hub_root: Path,
+        spoke_root: Path,
+        dry_run: bool = False,
+        allow_stale_catalog: bool = False,
+    ) -> str | None:
+        return real(
+            hub_root,
+            spoke_root,
+            dry_run=dry_run,
+            allow_stale_catalog=True,
+        )
+
+    monkeypatch.setattr(coordinator, "assess_catalog_freshness", _bypass)
+
+
 @pytest.fixture
 def mock_hub_with_spokes(tmp_path: Path) -> tuple[Path, list[Path]]:
     """Fixture creating a mock Hub with multiple registered Spokes in decrypted cache."""

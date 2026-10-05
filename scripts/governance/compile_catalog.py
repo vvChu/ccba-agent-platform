@@ -26,6 +26,20 @@ import yaml
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 BASE_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog_base.yaml"
 OUTPUT_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+
+# Single remediation string for the catalog freshness hard gate (ADR-0062).
+CATALOG_RECOMPILE_COMMAND = "python scripts/governance/compile_catalog.py --write"
+
+# Base keys compared as parsed data. Order drift is real drift and requires --write.
+_BASE_FIELDS: tuple[str, ...] = (
+    "hub_path",
+    "hub_repo",
+    "notebook_ids",
+    "bundles",
+    "rules",
+    "knowledge",
+    "guardrails",
+)
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 WORKFLOWS_DIR = HUB_ROOT / ".agents" / "workflows"
 
@@ -683,8 +697,8 @@ def check_catalog_in_sync(hub_root: Path = HUB_ROOT) -> tuple[bool, str]:
                     f"  compiled:     {val_comp!r}"
                 )
 
-    # Deep diff on base configuration (from catalog_base.yaml)
-    for base_field in ["hub_path", "hub_repo", "notebook_ids", "bundles", "rules", "knowledge"]:
+    # Deep diff on base configuration (from catalog_base.yaml), including guardrails (ADR-0062).
+    for base_field in _BASE_FIELDS:
         cur_val = existing_data.get(base_field)
         comp_val = compiled_data.get(base_field)
         if cur_val != comp_val:
@@ -1193,7 +1207,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"  {msg}", file=sys.stderr)
             print(
-                "\n[INFO] Run 'python scripts/governance/compile_catalog.py' to regenerate catalog.yaml.",
+                f"\n[INFO] Run '{CATALOG_RECOMPILE_COMMAND}' to regenerate catalog.yaml.",
                 file=sys.stderr,
             )
             return 1
