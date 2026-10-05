@@ -66,6 +66,7 @@ ccba-agent-platform/                   ← Hub (Git-backed)
 │   ├── validate_docs.py               ←   Documentation Accuracy Validator
 │   ├── verify_telegram_alert.py       ←   Telegram Alert Verifier & Live Ping CLI
 │   ├── peer_bridge_watcher.py         ←   Antigravity ↔ Grok Peer Bridge Watcher CLI
+│   ├── peer_dispatch.py               ←   Level-2 Peer Agent Dispatcher & Budget Guardrail CLI (ADR-0063)
 │   └── eval/run_boost_worktree.sh     ←   DGX-ChatOps Interactive Skill Boost Worktree Runner
 │
 └── pyproject.toml                     ← Root workspace config (uv)
