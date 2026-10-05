@@ -15,7 +15,7 @@ Sau đợt thẩm định kiến trúc chuyên sâu toàn diện trên chuỗi 5
 1. **Lệch cấu hình Sandbox & Profile (`COND-01`)**:
    - Profile `patch_fast` trong `PROFILE_SPECS` thiếu giới hạn cứng `max_turns: 1` theo đặc tả ADR-0063.
    - Profile `agentic_code` chưa hạn chế đúng bộ công cụ đã cam kết (`read_file`, `search_replace`, `list_dir`), chưa đặt `reasoning_effort: "high"`.
-   - Profile `arch_audit` đang chạy trong mã nguồn (`max_turns: 14`, `timeout: 600s`, `reasoning_effort: xhigh`) nhưng chưa được văn bản hóa chính thức trong bảng profile.
+   - Profile `arch_audit` đang chạy trong mã nguồn (`max_turns: 8`, `timeout: 600s`, `reasoning_effort: xhigh`) nhưng chưa được văn bản hóa chính thức trong bảng profile.
    - `PeerVerdictBlock` cần chuẩn hóa ràng buộc `risk_score` trong thang điểm 1–5 và quy định rõ cơ chế thích ứng `extra="ignore"` cho khả năng tiến hóa lược đồ giữa các tác nhân.
 
 2. **Nguy cơ phán quyết chấp thuận giả lập từ Anchor Patch (`COND-02`)**:
@@ -42,7 +42,7 @@ ADR-0065 thiết lập 4 quy chuẩn cương xương kỹ thuật nhằm giải 
 - Chuẩn hóa cứng `PROFILE_SPECS` trong `ccba_harness.peer`:
   - `patch_fast`: Cưỡng chế `max_turns: 1`, `deny: ["*"]`, `timeout: 120.0`.
   - `agentic_code`: Allowlist chính xác `["read_file", "search_replace", "list_dir"]`, cấm `spawn_subagent` và `run_terminal_command`, cấu hình `reasoning_effort: "high"`, `timeout: 600.0`.
-  - `arch_audit`: Chính thức bổ sung vào bảng tiêu chuẩn với `max_turns: 14`, `timeout: 600.0`, `reasoning_effort: "xhigh"`, công cụ `["read_file", "grep", "list_dir"]`.
+  - `arch_audit`: Chính thức bổ sung vào bảng tiêu chuẩn với `max_turns: 8`, `timeout: 600.0`, `reasoning_effort: "xhigh"`, công cụ `["read_file", "grep", "list_dir"]`.
 - `PeerVerdictBlock`: Thêm kiểm tra biên độ `risk_score: int | None = Field(default=None, ge=1, le=5)`. Giữ `extra="ignore"` và bộ chuyển đổi `_normalize_conditions` như một lớp tương thích ngược có kiểm soát (Compatibility Shim), bảo đảm các tác nhân thế hệ sau có thể bổ sung trường mở rộng mà không làm gãy parser của tác nhân hiện tại.
 
 ### 2.2. Xóa Bỏ APPROVE Giả Lập — Áp Đặt HANDOFF Cho Tệp Vá Neo (COND-02)

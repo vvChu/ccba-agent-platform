@@ -136,7 +136,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "arch_audit": {
         "model": "grok-4.7",  # ccba:allow-raw-model
         "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 14,
+        "max_turns": 8,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
             "run_terminal_command",

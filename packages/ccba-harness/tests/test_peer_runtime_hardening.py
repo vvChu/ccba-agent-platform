@@ -47,7 +47,7 @@ def test_peer_profile_specs_hardened() -> None:
 
     # arch_audit
     arch_audit = PROFILE_SPECS["arch_audit"]
-    assert arch_audit["max_turns"] == 14
+    assert arch_audit["max_turns"] == 8
     assert arch_audit["reasoning_effort"] == "xhigh"
     assert arch_audit["timeout"] == 600.0
     assert "read_file" in arch_audit["tools"]
