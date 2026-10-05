@@ -99,4 +99,4 @@ Bộ áp dụng `apply_anchor_patch()` thực hiện kiểm chứng nghiêm ng�
   - `packages/ccba-harness/tests/test_peer.py`: 100% test coverage cho `PeerExecutionProfile`, `build_grok_cmd`, và `apply_anchor_patch`.
   - `packages/ccba-harness/tests/test_peer_dispatch_cli.py`: Kiểm thử CLI `peer-dispatch` và cờ `--dry-run`.
 - **Quality Gate**:
-  - `python -m ccba_harness verify-patch --scope packages/ccba-harness` exit code 0.
+  - `python -m ccba_harness verify-patch --preset code` exit code 0.

@@ -399,6 +399,40 @@ def test_apply_anchor_patch_path_traversal_prevention(tmp_path):
         apply_anchor_patch(tmp_path, payload)
 
 
+def test_apply_anchor_patch_multi_file_atomicity(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    file1 = tmp_path / "file1.py"
+    file2 = tmp_path / "file2.py"
+    file1.write_text("var1 = 10\n", encoding="utf-8")
+    file2.write_text("var2 = 20\n", encoding="utf-8")
+    sha1 = hashlib.sha256(b"var1 = 10\n").hexdigest()
+
+    # file 1 is valid, but file 2 has sha mismatch
+    payload = {
+        "files": [
+            {
+                "path": "file1.py",
+                "blob_sha256": sha1,
+                "replacements": [{"old": "var1 = 10", "new": "var1 = 99"}],
+            },
+            {
+                "path": "file2.py",
+                "blob_sha256": "wrong_sha256_hash_value_here",
+                "replacements": [{"old": "var2 = 20", "new": "var2 = 99"}],
+            },
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Anchor patch SHA-256 mismatch"):
+        apply_anchor_patch(tmp_path, payload)
+
+    # Invariant: file1 must remain unchanged because file2 failed in Phase 1
+    assert file1.read_text(encoding="utf-8") == "var1 = 10\n"
+
+
 def test_invoke_grok_cli_profile_and_tier_resolution(tmp_path, monkeypatch):
     from ccba_harness.peer import invoke_grok_cli
 

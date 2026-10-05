@@ -718,12 +718,13 @@ def apply_anchor_patch(
         patch = payload
 
     root_resolved = root.resolve()
-    modified_paths: list[Path] = []
+    prepared_writes: list[tuple[Path, str]] = []
 
+    # Phase 1: Pre-validation of all files and content preparation (Fail-Fast)
     for file_patch in patch.files:
-        target_file = (root / file_patch.path).resolve()
+        target_file = (root_resolved / file_patch.path).resolve()
         # Security invariant: prevent path traversal outside workspace root
-        if not str(target_file).startswith(str(root_resolved)):
+        if not target_file.is_relative_to(root_resolved):
             raise ValueError(f"Path traversal detected in patch: {file_patch.path}")
         if not target_file.exists():
             raise ValueError(f"Target patch file does not exist: {file_patch.path}")
@@ -749,7 +750,12 @@ def apply_anchor_patch(
                 )
             text = text.replace(rep.old, rep.new, 1)
 
-        atomic_write_text(target_file, text)
+        prepared_writes.append((target_file, text))
+
+    # Phase 2: Atomic commit of all prepared changes
+    modified_paths: list[Path] = []
+    for target_file, new_content in prepared_writes:
+        atomic_write_text(target_file, new_content)
         modified_paths.append(target_file)
 
     return modified_paths
