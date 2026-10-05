@@ -12,7 +12,7 @@
   - *Cổng 0 (Determinism)*: Thuần giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` không code trần.
   - *Cổng 1 (Orchestration)*: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (bỏ qua GPI).
   - *Chỉ số GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals: $A = 1.0$.
-- *(RULE-1.2 [ADR 0053 — Single-Writer], RULE-1.3 [ADR 0035], RULE-1.11 tại Mục 27; RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23; RULE-1.9 tại Mục 24; RULE-1.6, 1.8 tại Mục 25 của archive/session_learnings_history.md)*
+- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23, 27; RULE-1.9 Mục 24; RULE-1.6, 1.8 Mục 25 của archive/session_learnings_history.md)*
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
   - Tái sử dụng Package Seams / Master Skills có sẵn là KISS bậc 1; CẤM script chắp vá. Tra cứu Seam qua CLI (`compile_catalog.py --query <kw>`). CẤM hoãn kiến trúc chuẩn sang Phase 2.
 - **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
@@ -31,7 +31,7 @@
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI (Code Quality & Strict Testing)
 
-- *(RULE-2.1, 2.3, 2.4 tại Mục 27; RULE-2.8, 2.10, 2.11 tại Mục 24; RULE-2.12 tại Mục 25; RULE-2.14 tại Mục 28 của archive/session_learnings_history.md)*
+- *(RULE-2.1, 2.3, 2.4 Mục 27; RULE-2.8, 2.10, 2.11 Mục 24; RULE-2.12 Mục 25; RULE-2.14 Mục 28 của archive/session_learnings_history.md)*
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing, Disjoint Hierarchy & 100% Skill Coverage]**:
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT (17 archetypes).
   - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (75/75 skills) map chuẩn xác; cấm unmapped (`None`).
@@ -73,7 +73,7 @@
   - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
-- *(RULE-4.7 tại Mục 25; RULE-4.10, 4.11 tại Mục 28; chi tiết RULE-4.8 tại Mục 29 của archive/session_learnings_history.md)*
+- *(RULE-4.7 Mục 25; RULE-4.10, 4.11 Mục 28; chi tiết RULE-4.8 Mục 29 của archive/session_learnings_history.md)*
 - **RULE-4.8 [Review Danger Triage, Read-Only Advisory & 10 Bugbot Invariants]**:
   - *Read-Only Advisory*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát theo 10 Invariants tại `.github/bugbot-rules.md`.
   - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text`.
@@ -84,9 +84,10 @@
   - *Anchor Replacement*: Task $\le 100$ LOC dùng Hợp đồng Neo `{path, blob_sha256, replacements}`. `apply_anchor_patch` validate `is_relative_to(root)` và SHA-256; cấm raw diff.
   - *Tier Routing*: `qwen-local` (0 USD) cho 1-turn; `gemini-38-flash` cho Gateway; `grok-4.7` cho deep audit.
 - **RULE-4.14 [ADR 0064 — Peer Provenance, Telemetry & Zero-Hang Lifecycle]**:
-  - *Zero-Hang Lifecycle*: CẤM positional prompt string (gây treo TUI). BẮT BUỘC `--prompt-file`, `--output-format plain`, `subprocess.Popen` kèm watchdog terminate ngay khi file có verdict hợp lệ.
+  - *Zero-Hang Lifecycle*: CẤM positional prompt (gây treo TUI). BẮT BUỘC `--prompt-file`, `--output-format plain`, `subprocess.Popen` kèm watchdog terminate ngay khi file có verdict hợp lệ.
   - *Telemetry & Cost*: Khối verdict bổ sung `telemetry`; trích xuất qua `grok usage <session_id>` (retry 2 lần) + fallback `TokenEstimator`. Phân định `cost_mode: exact | estimated | unknown`.
   - *Auditor Model*: `AUDIT_PLAN` mặc định `grok-4.7` với `reasoning_effort: xhigh`.
+  - *Subprocess & Watchdog*: Dùng `tempfile.TemporaryFile` buffer (CẤM bare `PIPE` gây deadlock), `encoding="utf-8", errors="replace"`, và `os.path.getmtime(out) >= start_time` chống stale verdict.
 
 ---
 
