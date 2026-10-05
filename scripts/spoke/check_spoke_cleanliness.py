@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -139,10 +140,134 @@ def check_machine_state_leakage(
     return violations
 
 
+def guardrail_script_basename(dest: str) -> str | None:
+    """Return the basename of a top-level ``scripts/*.py`` dest, else None.
+
+    Rejects path traversal, absolute paths, and anything that is not exactly
+    one file under ``scripts/``. Hook paths such as ``.githooks/pre-commit``
+    are not part of the 15-script budget.
+    """
+    if not isinstance(dest, str):
+        return None
+    normalized = dest.replace("\\", "/").strip()
+    if not normalized:
+        return None
+    if normalized.startswith("/") or (len(normalized) >= 2 and normalized[1] == ":"):
+        return None
+    parts = [part for part in normalized.split("/") if part not in ("", ".")]
+    if ".." in parts:
+        return None
+    if len(parts) == 2 and parts[0] == "scripts" and parts[1].endswith(".py"):
+        return parts[1]
+    return None
+
+
+def _hub_catalog_from_raw(raw: str, spoke_root: Path) -> Path | None:
+    """Resolve one hub_path string to a catalog.yaml file, or None. Read-only."""
+    text = raw.strip().strip("'\"")
+    if not text:
+        return None
+    if os.name != "nt" and len(text) >= 2 and text[0].isalpha() and text[1] == ":":
+        return None
+    candidate = Path(text)
+    if not candidate.is_absolute():
+        candidate = (spoke_root / candidate).resolve()
+    else:
+        candidate = candidate.resolve()
+    catalog = candidate / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    if catalog.is_file():
+        return catalog
+    return None
+
+
+def _resolve_hub_catalog_readonly(spoke_root: Path) -> Path | None:
+    """Locate Hub catalog.yaml without writing workspace context.
+
+    Mirrors HubDiscoverer env and OS-map lookup, then sibling, cwd, and the
+    spoke itself. Never calls discover() and never saves hub_path.
+    """
+    for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+        env_val = os.environ.get(env_key)
+        if not env_val:
+            continue
+        found = _hub_catalog_from_raw(env_val, spoke_root)
+        if found is not None:
+            return found
+
+    for ctx in (
+        spoke_root / ".agents" / "workspace_context.yaml",
+        spoke_root / ".md" / "workspace_context.yaml",
+        spoke_root / "workspace_context.yaml",
+    ):
+        if not ctx.is_file():
+            continue
+        try:
+            import yaml
+
+            data = yaml.safe_load(ctx.read_text(encoding="utf-8")) or {}
+        except Exception:
+            break
+        if not isinstance(data, dict):
+            break
+        hub_path_val = data.get("hub_path")
+        if not hub_path_val:
+            project = data.get("project")
+            if isinstance(project, dict):
+                hub_path_val = project.get("hub_path")
+        raw_str = ""
+        if isinstance(hub_path_val, dict):
+            os_key = "windows" if os.name == "nt" else "linux"
+            raw = hub_path_val.get(os_key) or hub_path_val.get("posix") or ""
+            raw_str = raw if isinstance(raw, str) else ""
+        elif isinstance(hub_path_val, str):
+            raw_str = hub_path_val
+        if raw_str:
+            found = _hub_catalog_from_raw(raw_str, spoke_root)
+            if found is not None:
+                return found
+        break
+
+    for candidate in (
+        (spoke_root.parent / "ccba-agent-platform").resolve(),
+        Path.cwd().resolve(),
+        spoke_root.resolve(),
+    ):
+        catalog = candidate / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+        if catalog.is_file():
+            return catalog
+    return None
+
+
+def load_catalog_guardrail_script_names(spoke_root: Path) -> set[str]:
+    """Basenames of catalog guardrail scripts. Empty set when the Hub cannot be read."""
+    catalog = _resolve_hub_catalog_readonly(spoke_root)
+    if catalog is None:
+        return set()
+    try:
+        import yaml
+
+        data = yaml.safe_load(catalog.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return set()
+    if not isinstance(data, dict):
+        return set()
+    names: set[str] = set()
+    for entry in data.get("guardrails") or []:
+        if not isinstance(entry, dict):
+            continue
+        dest = entry.get("dest")
+        if isinstance(dest, str):
+            base = guardrail_script_basename(dest)
+            if base:
+                names.add(base)
+    return names
+
+
 def check_script_count(
     scripts_dir: Path,
     max_scripts: int = 15,
     custom_allowlist: set[str] | None = None,
+    catalog_allowlist: set[str] | None = None,
 ) -> tuple[list[Path], list[Path]]:
     """Checks the number of top-level scripts in the scripts/ folder.
 
@@ -158,6 +283,8 @@ def check_script_count(
     effective_allowlist = set(ALLOWLIST_SCRIPTS)
     if custom_allowlist:
         effective_allowlist.update(custom_allowlist)
+    if catalog_allowlist:
+        effective_allowlist.update(catalog_allowlist)
 
     for f in all_py_files:
         if f.name in effective_allowlist or f.name.startswith("check_"):
@@ -243,8 +370,12 @@ def scan_spoke_cleanliness(
 
     scripts_dir = spoke_root / "scripts"
     if scripts_dir.exists():
+        catalog_allowlist = load_catalog_guardrail_script_names(spoke_root)
         counted_scripts, ignored_scripts = check_script_count(
-            scripts_dir, max_scripts=max_scripts, custom_allowlist=effective_allowlist
+            scripts_dir,
+            max_scripts=max_scripts,
+            custom_allowlist=effective_allowlist,
+            catalog_allowlist=catalog_allowlist,
         )
         count = len(counted_scripts)
 
