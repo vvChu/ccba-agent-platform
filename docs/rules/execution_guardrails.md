@@ -401,5 +401,29 @@ Khi thực hiện AI Review, các reviewers tự động bắt buộc phải đ�
   3. Tự động bỏ qua các PR được mở bởi automated bots (Dependabot, Auto-Tuner).
 - Mọi diff gửi cho AI Review bắt buộc phải đi qua cổng làm sạch bảo mật `ccba_maskara.redact_secrets_in_text()` để loại trừ 100% rủi ro rò rỉ bí mật.
 
+---
+
+## 20. Level-2 Peer Agent Delegation Protocol (Grok ↔ Antigravity Cost & Turn Guardrails - ADR-0063)
+
+Nhằm tối ưu hóa hiệu quả chi phí, kiểm soát ngân sách token và ngăn chặn rủi ro bão vòng lặp ReAct vô hạn khi ủy quyền nhiệm vụ giữa Antigravity và Grok CLI, toàn bộ tiến trình tương tác bắt buộc tuân thủ 4 quy chuẩn sau:
+
+### 20.1. Rào Chắn Trần Vòng Lặp Bắt Buộc (Mandatory Turn Budget Cap)
+- **Nghiêm cấm** triệu hồi Grok CLI ở chế độ vô trần (`--max-turns` không giới hạn) cho các tác vụ viết mã logic hay lập kế hoạch.
+- Mọi lệnh gọi Grok CLI bắt buộc phải đi qua Seam `ccba_harness.peer.invoke_grok_cli` hoặc CLI `ccba-harness peer-dispatch` với trần turns được cấu hình:
+  1. **`AUDIT_PLAN`**: Trần tối đa **$\le 12$ turns** (chỉ cho phép các tool đọc: `read_file`, `grep`, `list_dir`; nghiêm cấm sửa file, terminal, và `spawn_subagent`).
+  2. **`AGENTIC_CODE`**: Trần tối đa **$\le 8$ turns** (chu trình 2 vòng sửa + 2 vòng test; nếu sau 8 turns chưa pass test $\rightarrow$ kích hoạt cơ chế dừng sớm HANDOFF để Antigravity xử lý, cấm commit mã vỡ).
+  3. **`PATCH_FAST`**: Trần **đúng 1 turn** (`--max-turns 1`, không dùng tool) sinh bản ghi neo để Antigravity áp dụng.
+
+### 20.2. Quy Chuẩn Bản Ghi Neo Cho Thay Đổi Cục Bộ (Anchor Replacement Invariant)
+- Với các thay đổi nhỏ ($\le 100$ LOC) trong phạm vi 1 seam, ưu tiên tuyệt đối chế độ `PATCH_FAST`.
+- Cấm yêu cầu LLM tự sinh `git diff` thô vì rủi ro lệch dòng (offset drift) do đếm sai số dòng.
+- Bắt buộc sử dụng Hợp đồng Bản ghi Neo (`{path, blob_sha256, replacements: [{old, new}]}`). Bộ áp dụng `apply_anchor_patch` bắt buộc xác thực mã SHA-256 của file trước khi sửa và đảm bảo chuỗi `old` xuất hiện duy nhất 1 lần trong file.
+
+### 20.3. Định Tuyến Mô Hình Tối Ưu Chi Phí (Multi-Tier Infrastructure Routing)
+- **Tier 1 (Local 0 USD)**: Sử dụng slug `qwen-local` (chạy trên GPU DGX Spark GB10) cho các tác vụ `PATCH_FAST` có ngữ cảnh span đã được cắt tỉa $\le 20$k tokens.
+- **Tier 2 (Gateway Cost-Effective)**: Sử dụng slug `gemini-38-flash` hoặc `claude-sonnet-4-6` qua AI Gateway (Server Spark `:8090`) khi cần khả năng viết mã phức tạp với chi phí thấp.
+- **Tier 3 (Cloud Frontier Reasoning)**: Chỉ sử dụng `grok-4.7` (xAI) hoặc `claude-opus-4-6` khi thẩm định kiến trúc sâu, rà soát pháp lý đa chiều, hoặc giải quyết các sự cố nghiêm trọng.
+
+
 
 

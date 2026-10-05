@@ -255,3 +255,228 @@ def test_layering_purity():
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 assert not node.module.startswith("scripts"), f"Forbidden import: {node.module}"
+
+
+def test_envelope_with_level2_profiles_and_max_turns():
+    envelope = PeerPromptEnvelope(
+        request_id="req-profile-001",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="implement",
+        subject="Implement feature with Level-2 profile",
+        timestamp="2026-10-05T15:00:00+07:00",
+        output_path="resp.md",
+        profile="agentic_code",
+        max_turns=8,
+        target_files=["packages/foo/src/bar.py"],
+    )
+    rendered = render_prompt_header(envelope)
+    parsed = parse_envelope_from_md(rendered + "Body")
+    assert parsed is not None
+    assert parsed.profile == "agentic_code"
+    assert parsed.max_turns == 8
+    assert parsed.target_files == ["packages/foo/src/bar.py"]
+
+
+def test_build_grok_cmd_mapping(tmp_path):
+    from ccba_harness.peer import build_grok_cmd
+
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text("Hello", encoding="utf-8")
+
+    cmd = build_grok_cmd(
+        prompt_path=prompt,
+        model="qwen-local",
+        max_turns=1,
+        tools=None,
+        disallowed_tools=["read_file", "search_replace"],
+        reasoning_effort=None,
+        worktree=True,
+    )
+    assert cmd == [
+        "grok",
+        "-m",
+        "qwen-local",
+        "--always-approve",
+        "--no-subagents",
+        "--max-turns",
+        "1",
+        "--disallowed-tools",
+        "read_file,search_replace",
+        "--worktree",
+        "--prompt-file",
+        str(prompt),
+    ]
+
+
+def test_apply_anchor_patch_success(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    target_file = tmp_path / "sample.py"
+    initial_content = "def hello():\n    return 'world'\n"
+    target_file.write_text(initial_content, encoding="utf-8")
+    initial_sha = hashlib.sha256(initial_content.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "sample.py",
+                "blob_sha256": initial_sha,
+                "replacements": [
+                    {
+                        "old": "    return 'world'",
+                        "new": "    return 'antigravity'",
+                    }
+                ],
+            }
+        ]
+    }
+
+    modified = apply_anchor_patch(tmp_path, payload)
+    assert len(modified) == 1
+    assert target_file.read_text(encoding="utf-8") == "def hello():\n    return 'antigravity'\n"
+
+
+def test_apply_anchor_patch_sha256_mismatch(tmp_path):
+    from ccba_harness.peer import apply_anchor_patch
+
+    target_file = tmp_path / "sample.py"
+    target_file.write_text("def hello(): pass\n", encoding="utf-8")
+
+    payload = {
+        "files": [
+            {
+                "path": "sample.py",
+                "blob_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "replacements": [{"old": "pass", "new": "return 1"}],
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Anchor patch SHA-256 mismatch"):
+        apply_anchor_patch(tmp_path, payload)
+
+
+def test_apply_anchor_patch_duplicate_old_string(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    target_file = tmp_path / "sample.py"
+    content = "item = 1\nitem = 1\n"
+    target_file.write_text(content, encoding="utf-8")
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    payload = {
+        "files": [
+            {
+                "path": "sample.py",
+                "blob_sha256": sha,
+                "replacements": [{"old": "item = 1", "new": "item = 2"}],
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Target old anchor text is not unique"):
+        apply_anchor_patch(tmp_path, payload)
+
+
+def test_apply_anchor_patch_path_traversal_prevention(tmp_path):
+    from ccba_harness.peer import apply_anchor_patch
+
+    payload = {
+        "files": [
+            {
+                "path": "../../etc/passwd",
+                "blob_sha256": "abcdef",
+                "replacements": [{"old": "root", "new": "hacked"}],
+            }
+        ]
+    }
+    with pytest.raises(ValueError, match="Path traversal detected in patch"):
+        apply_anchor_patch(tmp_path, payload)
+
+
+def test_apply_anchor_patch_multi_file_atomicity(tmp_path):
+    import hashlib
+
+    from ccba_harness.peer import apply_anchor_patch
+
+    file1 = tmp_path / "file1.py"
+    file2 = tmp_path / "file2.py"
+    file1.write_text("var1 = 10\n", encoding="utf-8")
+    file2.write_text("var2 = 20\n", encoding="utf-8")
+    sha1 = hashlib.sha256(b"var1 = 10\n").hexdigest()
+
+    # file 1 is valid, but file 2 has sha mismatch
+    payload = {
+        "files": [
+            {
+                "path": "file1.py",
+                "blob_sha256": sha1,
+                "replacements": [{"old": "var1 = 10", "new": "var1 = 99"}],
+            },
+            {
+                "path": "file2.py",
+                "blob_sha256": "wrong_sha256_hash_value_here",
+                "replacements": [{"old": "var2 = 20", "new": "var2 = 99"}],
+            },
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Anchor patch SHA-256 mismatch"):
+        apply_anchor_patch(tmp_path, payload)
+
+    # Invariant: file1 must remain unchanged because file2 failed in Phase 1
+    assert file1.read_text(encoding="utf-8") == "var1 = 10\n"
+
+
+def test_invoke_grok_cli_profile_and_tier_resolution(tmp_path, monkeypatch):
+    from ccba_harness.peer import invoke_grok_cli
+
+    prompt = tmp_path / "prompt.md"
+    envelope = PeerPromptEnvelope(
+        request_id="req-tier-test",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Tier Resolution Test",
+        timestamp="2026-10-05T15:00:00+07:00",
+        output_path="resp.md",
+        profile="patch_fast",
+    )
+    prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
+
+    captured_cmds = []
+
+    def mock_run(cmd, **kwargs):
+        captured_cmds.append(cmd)
+        verdict = PeerVerdictBlock(
+            request_id="req-tier-test",
+            verdict="GATE_PASS",
+            summary="Pass",
+        )
+        import subprocess
+
+        return subprocess.CompletedProcess(
+            cmd, returncode=0, stdout=render_verdict_header(verdict) + "OK", stderr=""
+        )
+
+    import subprocess
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    # 1. Profile patch_fast defaults to model qwen-local and max_turns=1
+    ok = invoke_grok_cli(prompt, profile="patch_fast")
+    assert ok is True
+    assert "-m" in captured_cmds[0]
+    assert captured_cmds[0][captured_cmds[0].index("-m") + 1] == "qwen-local"
+    assert "--max-turns" in captured_cmds[0]
+    assert captured_cmds[0][captured_cmds[0].index("--max-turns") + 1] == "1"
+
+    # 2. Tier 'gateway' maps to gemini-38-flash
+    ok = invoke_grok_cli(prompt, tier="gateway")
+    assert ok is True
+    assert captured_cmds[1][captured_cmds[1].index("-m") + 1] == "gemini-38-flash"
