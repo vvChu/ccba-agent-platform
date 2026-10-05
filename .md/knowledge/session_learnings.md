@@ -39,11 +39,10 @@
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
   - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống lỗi Orphan Notes. Shell script đa dòng dùng `cat << 'EOF'` chống lỗi nháy. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
 - **RULE-2.16 [Evals Daemon Priority Ratchet & Cooldown Bypass]**:
-  - Trong `WeightedPriorityQueue`, kỹ năng có `needs_ledger_seed` hoặc `has_unapplied_signals` BẮT BUỘC bypass cooldown (`in_cooldown = 0`) để ưu tiên tối ưu dứt điểm; nhật ký `SKIPPED_COOLDOWN` CẤM kéo dài cửa sổ cooldown. `Sha256ProvenanceScorer.score()` trả về `raw_output` dict chuẩn hóa.
-- **RULE-2.17 [Git Worktree Lock Invariant & Subprocess Failure Transparency]**:
-  - *Worktree Pointer vs Directory*: `.git` trong worktree là file văn bản trỏ `gitdir: <path>`. Lock vật lý BẮT BUỘC phân giải `gitdir` (cả absolute & relative path); CẤM gọi `.mkdir()` trên `.git` file. Nếu parent là regular file, ném `NotADirectoryError`.
-  - *Failure Transparency & Suspicious Success*: BẮT BUỘC thoát mã $\ne 0$ (`sys.exit(1)`) khi có lỗi ngoại lệ; CẤM nuốt lỗi rollback đĩa trong `_finalize_disk_state` (ném `RuntimeError`). ChatOps/Orchestrators BẮT BUỘC kiểm tra `is_suspicious_success` (phát hiện error markers khi exit code 0) để đổi sang `⚠️ CẢNH BÁO`, đính kèm file log và audit `WARNING`.
-  - *Report Fidelity*: Báo cáo tiến hóa khi có lỗi ngoại lệ bắt buộc gán `halt_reason="ERROR"`, huy hiệu `❌ ERROR`, và triệt tiêu toàn bộ checkmark Zero-Regression/Hard Floor.
+  - `needs_ledger_seed`/`has_unapplied_signals` bypass cooldown (`in_cooldown=0`). `Sha256ProvenanceScorer.score()` trả `raw_output` dict.
+- **RULE-2.17 [Git Worktree Lock & Failure Transparency]**:
+  - `.git` trong worktree là file text trỏ `gitdir`. Lock vật lý bắt buộc phân giải `gitdir`; cấm `.mkdir()` trên file.
+  - Lỗi ngoại lệ bắt buộc exit 1; cấm nuốt lỗi rollback. ChatOps bắt buộc check `is_suspicious_success` để đổi sang `⚠️ CẢNH BÁO` và `❌ ERROR`.
 
 ---
 
@@ -53,8 +52,7 @@
   - Viện dẫn BẮT BUỘC CÒN HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP**.
 - *(RULE-3.2 [ADR 0031 — TVPL VIP] tại Mục 27 của archive/session_learnings_history.md)*
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
-  - `clauses.json` span (`line_start`/`line_end`) bắt buộc bao trọn toàn văn quy phạm đa dòng; cấm span 1 dòng chỉ trỏ `<a>`.
-  - Test suites bắt buộc dùng `tmp_path / "legal_registry.yaml"`, cấm ghi đè file gốc. CI Spoke hard-lock khi thiếu `clauses.json`.
+  - `clauses.json` span bắt buộc bao trọn toàn văn quy phạm; cấm span 1 dòng chỉ trỏ `<a>`. Tests dùng `tmp_path / "legal_registry.yaml"`.
 - **RULE-3.5 [Documentation Link Scheme Portability Invariant]**:
   - `validate_docs.py` cấm URL tuyệt đối `file:///home/...` hoặc `file:///C:/...`. BẮT BUỘC dùng relative paths hoặc repo-relative links.
 
@@ -65,22 +63,26 @@
 - **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
   - Có Issue ID: LUÔN đề xuất `/ccba-new-feature #<id>` (8 bước Factory Model).
 - **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
-  - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`. Tài liệu `references/*.md` (Tier 2A) cấm tiền tố `/`.
+  - Đối chiếu `catalog.yaml` trước khi đề xuất `/command`. Chỉ kỹ năng có `command: /...` mới gắn tiền tố `/`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
-  - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa sửa/giải trình.
+  - Quét `author.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và `body` Copilot kể cả khi COMMENTED. Cấm merge nếu chưa giải trình.
 - **RULE-4.5 [Git Governance Pre-Push Lock & Architecture Drift Invariant]**:
   - Hub cấm push `main` qua hook `pre-push`; chỉ qua PR. Thêm/sửa tệp ngoài `tests/` bắt buộc cập nhật `arch_docs` (`README.md`, `PLATFORM.md`).
 - **RULE-4.6 [PR Shift-Left CI & Zero-Red-Merge]**:
   - Chạm $\ge 2$ pkgs: BẮT BUỘC `verify-patch --preset ci`. CẤM `--admin`/`--auto`; 100% Green.
 - *(RULE-4.7 tại Mục 25; RULE-4.11 tại Mục 28; chi tiết RULE-4.8 tại Mục 29 của archive/session_learnings_history.md)*
 - **RULE-4.8 [Review Danger Triage, Read-Only Advisory & 10 Bugbot Invariants]**:
-  - *Read-Only Advisory Guardrail*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát diff theo 10 Invariants tại `.github/bugbot-rules.md`.
-  - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Pure Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text` chống rò rỉ secret và bão quota Gateway.
+  - *Read-Only Advisory*: AI Reviewers (Bugbot, Copilot) chỉ đọc/tư vấn, CẤM gửi "APPROVE", cấm auto-merge code logic. Đối soát theo 10 Invariants tại `.github/bugbot-rules.md`.
+  - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text`.
 - **RULE-4.10 [Nightly Auto-Tune & TRIHT Release Gate (ADR-0045, ADR-0058)]**:
-  - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart (cấm comment rác Ratchet, cấm nhồi từ khóa), 100% Skills Hygiene Pass.
-  - *TRIHT Release*: Release PR qua 3 cổng buồng kín: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown trước khi Squash Merge.
+  - *Nightly Tuner*: PR `auto-tune/*` bắt buộc đối soát Evolution Matrix, kiểm tra Goodhart, 100% Skills Hygiene Pass.
+  - *TRIHT Release*: Release PR qua 3 cổng: Pre-Flight Cleanliness, Slow Hermetic Integration Tests, Post-Test Teardown.
 - **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
-  - Thêm/xóa/đổi tên Level-1 structural files (kỹ năng mới, package mới, scripts mới) BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker `<!-- STATS:SKILL_COUNT -->` trong `README.md` và `PLATFORM.md`, chống chặn đứng CI drift.
+  - Thêm/xóa/đổi tên Level-1 structural files BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker trong `README.md` và `PLATFORM.md`.
+- **RULE-4.13 [ADR 0063 — Level-2 Peer Agent Delegation & Cost-Turn Guardrails]**:
+  - *Turn Budget Cap*: CẤM triệu hồi Grok CLI vô trần turns; bắt buộc qua `invoke_grok_cli` / `peer-dispatch`: `AUDIT_PLAN` $\le 12$ turns (read-only tools), `AGENTIC_CODE` $\le 8$ turns (chu trình 2 vòng sửa + 2 vòng test), `PATCH_FAST` đúng 1 turn (`--max-turns 1`).
+  - *Anchor Replacement & Two-Phase Commit*: Task $\le 100$ LOC bắt buộc dùng Hợp đồng Neo `{path, blob_sha256, replacements: [{old, new}]}`. `apply_anchor_patch` kiểm tra containment `target.is_relative_to(root)` và pre-validation SHA-256 toàn bộ trước khi ghi đĩa; cấm raw diff do LLM đếm dòng sai.
+  - *Tier Routing*: `qwen-local` (0 USD trên DGX Spark GB10) cho patch 1-turn; `gemini-38-flash` / `claude-sonnet-4-6` cho Gateway; chỉ leo thang `grok-4.7` / `claude-opus-4-6` cho audit sâu.
 
 ---
 
