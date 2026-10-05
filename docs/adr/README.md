@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0061)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0062)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
@@ -65,3 +65,4 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 | [HUB-ADR 0059](0059-legal-verbatim-grounding-and-mandatory-acquisition-invariant.md) | Legal Verbatim Grounding, Zero-Hallucination Invariant, and Cryptographic Provenance Stamping | ✅ ACCEPTED |
 | [HUB-ADR 0060](0060-4hub-federated-spokes-architecture.md) | 4-Hubs × Federated Spokes Architecture & Distributed Ecosystem Governance | ✅ ACCEPTED |
 | [HUB-ADR 0061](0061-platform-aware-kiss-v2-and-quarantine-governance.md) | Platform-Aware KISS v2.0 & Capability Quarantine Governance | ✅ ACCEPTED |
+| [HUB-ADR 0062](0062-declarative-synchronization-registry-and-auto-discovery.md) | Declarative Synchronization Registry, Fail-Closed Catalog Freshness Gate, and Topological Package Discovery | ✅ ACCEPTED |

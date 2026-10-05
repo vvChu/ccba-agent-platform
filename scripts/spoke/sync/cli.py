@@ -12,20 +12,8 @@ from datetime import datetime
 from .coordinator import list_project_backups, rollback_project, sync_all_spokes, sync_project
 
 
-def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
-    """CLI entrypoint with safe stream reconfigure and 2-Phase Confirmation."""
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            try:
-                sys.stdout.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-        if hasattr(sys.stderr, "reconfigure"):
-            try:
-                sys.stderr.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-
+def build_parser() -> argparse.ArgumentParser:
+    """Build the Spoke synchronizer CLI parser."""
     parser = argparse.ArgumentParser(description="CCBA Spoke Synchronizer (Safe-by-Default)")
     parser.add_argument(
         "--spoke",
@@ -99,6 +87,33 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
         default=False,
         help="Physically copy OKF legal document bundles into Spoke (default: False, Reference-Only Zero-Bloat).",
     )
+    parser.add_argument(
+        "--allow-stale-catalog",
+        action="store_true",
+        default=False,
+        help=(
+            "Emergency override: proceed with --apply even when catalog.yaml is stale. "
+            "Prints an audit line. Does not skip the dirty-tree guard. Default: refuse --apply."
+        ),
+    )
+    return parser
+
+
+def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
+    """CLI entrypoint with safe stream reconfigure and 2-Phase Confirmation."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure"):
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+    parser = build_parser()
     args = parser.parse_args(args_list)
 
     if args.list_backups:
@@ -127,6 +142,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=args.bootstrap,
                 verify=args.verify,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
         elif args.apply:
             return sync_all_spokes(
@@ -138,6 +154,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=args.bootstrap,
                 verify=args.verify,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
         else:
             print(
@@ -152,6 +169,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=False,
                 verify=False,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
             if preview_code != 0:
                 return preview_code
@@ -171,6 +189,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             bootstrap=args.bootstrap,
                             verify=args.verify,
                             pull_assets=args.pull_assets,
+                            allow_stale_catalog=args.allow_stale_catalog,
                         )
                     else:
                         print(
@@ -198,6 +217,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=args.bootstrap,
                 verify=args.verify,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
         elif args.apply:
             return sync_project(
@@ -209,6 +229,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=args.bootstrap,
                 verify=args.verify,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
         else:
             # Phase 1: Preview simulation
@@ -222,6 +243,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 bootstrap=False,
                 verify=False,
                 pull_assets=args.pull_assets,
+                allow_stale_catalog=args.allow_stale_catalog,
             )
             if preview_code != 0:
                 return preview_code
@@ -242,6 +264,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             bootstrap=args.bootstrap,
                             verify=args.verify,
                             pull_assets=args.pull_assets,
+                            allow_stale_catalog=args.allow_stale_catalog,
                         )
                     else:
                         print(

@@ -36,6 +36,33 @@ from scripts.spoke.sync import (
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
+@pytest.fixture(autouse=True)
+def _handwritten_catalog_skips_freshness_gate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Handwritten fixture catalogs are not compiler output.
+
+    Apply-mode tests in this module exercise merge and CLI wiring. They opt into
+    the audited ADR-0062 bypass so a stale fixture catalog does not fail the run.
+    """
+    import scripts.spoke.sync.coordinator as coordinator
+
+    real = coordinator.assess_catalog_freshness
+
+    def _bypass(
+        hub_root: Path,
+        spoke_root: Path,
+        dry_run: bool = False,
+        allow_stale_catalog: bool = False,
+    ) -> str | None:
+        return real(
+            hub_root,
+            spoke_root,
+            dry_run=dry_run,
+            allow_stale_catalog=True,
+        )
+
+    monkeypatch.setattr(coordinator, "assess_catalog_freshness", _bypass)
+
+
 def test_base_utilities(tmp_path: Path):
     """Test load_yaml, are_files_identical, are_text_files_identical, are_dirs_identical, and safe_remove."""
     f1 = tmp_path / "test1.yaml"
@@ -458,6 +485,7 @@ def test_run_spoke_sync_cli_with_bootstrap(tmp_path: Path):
             bootstrap=True,
             verify=False,
             pull_assets=False,
+            allow_stale_catalog=False,
         )
 
 
@@ -476,6 +504,7 @@ def test_run_spoke_sync_cli_with_verify(tmp_path: Path):
             bootstrap=False,
             verify=True,
             pull_assets=False,
+            allow_stale_catalog=False,
         )
 
 
@@ -494,6 +523,7 @@ def test_run_spoke_sync_cli_with_pull_assets(tmp_path: Path):
             bootstrap=False,
             verify=False,
             pull_assets=True,
+            allow_stale_catalog=False,
         )
 
 
