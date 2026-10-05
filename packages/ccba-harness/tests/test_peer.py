@@ -167,21 +167,43 @@ def test_auto_grok_safe_invocation(tmp_path, monkeypatch):
 
     captured_cmds = []
 
-    def mock_run(cmd, **kwargs):
-        captured_cmds.append(cmd)
-        verdict = PeerVerdictBlock(
-            request_id="req-auto-1",
-            verdict="APPROVE",
-            summary="Auto-grok test passed.",
-        )
-        stdout = render_verdict_header(verdict) + "Review complete."
-        import subprocess
+    class MockPopen:
+        def __init__(self, cmd, **kwargs):
+            if not (len(cmd) > 1 and cmd[1] == "usage"):
+                captured_cmds.append(cmd)
+            verdict = PeerVerdictBlock(
+                request_id="req-auto-1",
+                verdict="APPROVE",
+                summary="Auto-grok test passed.",
+            )
+            self._stdout = render_verdict_header(verdict) + "Review complete."
+            self.returncode = 0
+            self.pid = 12345
 
-        return subprocess.CompletedProcess(cmd, returncode=0, stdout=stdout, stderr="")
+        def poll(self):
+            return 0
+
+        def communicate(self, timeout=None):
+            return self._stdout, ""
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
 
     import subprocess
 
-    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(subprocess, "Popen", MockPopen)
     success = invoke_grok_cli(prompt_file, model="gemini-38-flash")
     assert success is True
     assert len(captured_cmds) == 1
@@ -189,7 +211,7 @@ def test_auto_grok_safe_invocation(tmp_path, monkeypatch):
     assert "--always-approve" in cmd
     assert "--no-subagents" in cmd
     assert "--reasoning-effort" in cmd
-    assert "high" in cmd
+    assert "xhigh" in cmd
     out_file = tmp_path / "grok_auto_resp.md"
     assert out_file.exists()
 
@@ -206,20 +228,35 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
     )
     prompt_file = tmp_path / "prompt_grok_async.md"
 
-    def mock_run(cmd, **kwargs):
-        verdict = PeerVerdictBlock(
-            request_id="req-live-auto",
-            verdict="APPROVE",
-            summary="Async auto-grok completed successfully.",
-        )
-        stdout = render_verdict_header(verdict) + "Async review content."
-        import subprocess
+    class MockPopenAsync:
+        def __init__(self, cmd, **kwargs):
+            verdict = PeerVerdictBlock(
+                request_id="req-live-auto",
+                verdict="APPROVE",
+                summary="Async auto-grok completed successfully.",
+            )
+            self._stdout = render_verdict_header(verdict) + "Async review content."
+            self.returncode = 0
+            self.pid = 54321
 
-        return subprocess.CompletedProcess(cmd, returncode=0, stdout=stdout, stderr="")
+        def poll(self):
+            return 0
+
+        def communicate(self, timeout=None):
+            return self._stdout, ""
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
 
     import subprocess
 
-    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(subprocess, "Popen", MockPopenAsync)
 
     publish_peer_message(
         envelope,
@@ -240,6 +277,79 @@ def test_publish_peer_message_auto_grok(tmp_path, monkeypatch):
     assert data["peers"]["grok"]["status"] == "idle"
     assert data["peers"]["antigravity"]["status"] == "idle"
     assert len(data["exchange_stats"]["pending_grok"]) == 0
+
+
+def test_watchdog_ignores_stale_pre_existing_output_file(tmp_path, monkeypatch):
+    import os
+    import time
+
+    from ccba_harness.peer import safe_read_and_hash
+
+    envelope = PeerPromptEnvelope(
+        request_id="req-fresh",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Stale File Watchdog Test",
+        timestamp="2026-10-05T20:00:00+07:00",
+        output_path="grok_stale_test.md",
+    )
+    prompt_file = tmp_path / "prompt_stale.md"
+    atomic_write_text(prompt_file, render_prompt_header(envelope) + "Check fresh.")
+
+    out_file = tmp_path / "grok_stale_test.md"
+    stale_verdict = PeerVerdictBlock(
+        request_id="req-stale-old",
+        verdict="REVISE_PLAN",
+        summary="Old stale verdict.",
+    )
+    atomic_write_text(out_file, render_verdict_header(stale_verdict) + "Old content.")
+    old_time = time.time() - 3600
+    os.utime(out_file, (old_time, old_time))
+
+    class MockPopenFresh:
+        def __init__(self, cmd, **kwargs):
+            fresh_verdict = PeerVerdictBlock(
+                request_id="req-fresh",
+                verdict="APPROVE",
+                summary="Fresh run verdict.",
+            )
+            self._stdout = render_verdict_header(fresh_verdict) + "Fresh content."
+            self.returncode = 0
+            self.pid = 77777
+
+        def poll(self):
+            return 0
+
+        def communicate(self, timeout=None):
+            return self._stdout, ""
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    import subprocess
+
+    monkeypatch.setattr(subprocess, "Popen", MockPopenFresh)
+
+    ok = invoke_grok_cli(prompt_file, model="gemini-38-flash")
+    assert ok is True
+    fresh_content, _ = safe_read_and_hash(out_file)
+    parsed = parse_verdict_from_md(fresh_content)
+    assert parsed is not None
+    assert parsed.request_id == "req-fresh"
+    assert parsed.verdict == "APPROVE"
 
 
 def test_layering_purity():
@@ -303,6 +413,8 @@ def test_build_grok_cmd_mapping(tmp_path):
         "1",
         "--disallowed-tools",
         "read_file,search_replace",
+        "--output-format",
+        "plain",
         "--worktree",
         "--prompt-file",
         str(prompt),
@@ -451,22 +563,43 @@ def test_invoke_grok_cli_profile_and_tier_resolution(tmp_path, monkeypatch):
 
     captured_cmds = []
 
-    def mock_run(cmd, **kwargs):
-        captured_cmds.append(cmd)
-        verdict = PeerVerdictBlock(
-            request_id="req-tier-test",
-            verdict="GATE_PASS",
-            summary="Pass",
-        )
-        import subprocess
+    class MockPopenTier:
+        def __init__(self, cmd, **kwargs):
+            if not (len(cmd) > 1 and cmd[1] == "usage"):
+                captured_cmds.append(cmd)
+            verdict = PeerVerdictBlock(
+                request_id="req-tier-test",
+                verdict="GATE_PASS",
+                summary="Pass",
+            )
+            self._stdout = render_verdict_header(verdict) + "OK"
+            self.returncode = 0
+            self.pid = 999
 
-        return subprocess.CompletedProcess(
-            cmd, returncode=0, stdout=render_verdict_header(verdict) + "OK", stderr=""
-        )
+        def poll(self):
+            return 0
+
+        def communicate(self, timeout=None):
+            return self._stdout, ""
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
 
     import subprocess
 
-    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(subprocess, "Popen", MockPopenTier)
 
     # 1. Profile patch_fast defaults to model qwen-local and max_turns=1
     ok = invoke_grok_cli(prompt, profile="patch_fast")

@@ -79,17 +79,21 @@
   - *Danger Triage & Maskara*: Tệp cốt lõi $\rightarrow$ HARD human gate; Docs qua Fast-Path. Kích hoạt Opt-in (`ai-review-requested` / `/ccba-ai-review`) kèm `redact_secrets_in_text`.
 - **RULE-4.12 [Structural File Addition & Architecture Drift Pre-Commit Invariant]**:
   - Thêm/xóa/đổi tên Level-1 structural files BẮT BUỘC chạy `python scripts/update_arch_stats.py` trước khi commit mở PR để đồng bộ marker trong `README.md` và `PLATFORM.md`.
-- **RULE-4.13 [ADR 0063 — Level-2 Peer Agent Delegation & Cost-Turn Guardrails]**:
-  - *Turn Budget Cap*: CẤM triệu hồi Grok CLI vô trần turns; bắt buộc qua `invoke_grok_cli` / `peer-dispatch`: `AUDIT_PLAN` $\le 12$ turns (read-only tools), `AGENTIC_CODE` $\le 8$ turns (chu trình 2 vòng sửa + 2 vòng test), `PATCH_FAST` đúng 1 turn (`--max-turns 1`).
-  - *Anchor Replacement & Two-Phase Commit*: Task $\le 100$ LOC bắt buộc dùng Hợp đồng Neo `{path, blob_sha256, replacements: [{old, new}]}`. `apply_anchor_patch` kiểm tra containment `target.is_relative_to(root)` và pre-validation SHA-256 toàn bộ trước khi ghi đĩa; cấm raw diff do LLM đếm dòng sai.
-  - *Tier Routing*: `qwen-local` (0 USD trên DGX Spark GB10) cho patch 1-turn; `gemini-38-flash` / `claude-sonnet-4-6` cho Gateway; chỉ leo thang `grok-4.7` / `claude-opus-4-6` cho audit sâu.
+- **RULE-4.13 [ADR 0063 — Peer Delegation & Cost-Turn Guardrails]**:
+  - *Turn Caps*: Bắt buộc qua `invoke_grok_cli`: `AUDIT_PLAN` $\le 12$ turns (read-only), `AGENTIC_CODE` $\le 8$ turns, `PATCH_FAST` 1 turn (`--max-turns 1`).
+  - *Anchor Replacement*: Task $\le 100$ LOC dùng Hợp đồng Neo `{path, blob_sha256, replacements}`. `apply_anchor_patch` validate `is_relative_to(root)` và SHA-256; cấm raw diff.
+  - *Tier Routing*: `qwen-local` (0 USD) cho 1-turn; `gemini-38-flash` cho Gateway; `grok-4.7` cho deep audit.
+- **RULE-4.14 [ADR 0064 — Peer Provenance, Telemetry & Zero-Hang Lifecycle]**:
+  - *Zero-Hang Lifecycle*: CẤM positional prompt string (gây treo TUI). BẮT BUỘC `--prompt-file`, `--output-format plain`, `subprocess.Popen` kèm watchdog terminate ngay khi file có verdict hợp lệ.
+  - *Telemetry & Cost*: Khối verdict bổ sung `telemetry`; trích xuất qua `grok usage <session_id>` (retry 2 lần) + fallback `TokenEstimator`. Phân định `cost_mode: exact | estimated | unknown`.
+  - *Auditor Model*: `AUDIT_PLAN` mặc định `grok-4.7` với `reasoning_effort: xhigh`.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm (Windows, Chrome CDP & Tooling)
 - *(Xem RULE-5.1-5.5 tại archive/session_learnings_history.md)*
 - **RULE-5.8 [Thinking Token Starvation Defense in Structured Pipelines]**:
-  - Tác vụ deterministic structured output (JSON extraction, HyDE queries, intent tagging) BẮT BUỘC tắt thinking mode (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens` vượt ngưỡng suy nghĩ; phân tầng tách biệt `local-instruct` vs `local-coder`/`rag-core`.
+  - Structured output BẮT BUỘC tắt thinking mode (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens` vượt ngưỡng suy nghĩ; phân tầng `local-instruct` vs `local-coder`.
 - **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
-  - Chạy vLLM container DGX Spark BẮT BUỘC volume mount thư mục host `~/.cache/vllm` vào `/root/.cache/vllm` bảo toàn TorchInductor AOT cache; cấu hình phân tách tường minh `--reasoning-parser` và `--tool-call-parser`.
+  - DGX Spark Blackwell volume mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; cấu hình tách biệt `--reasoning-parser` và `--tool-call-parser`.
 
