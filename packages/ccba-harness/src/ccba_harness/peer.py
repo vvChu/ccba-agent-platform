@@ -842,7 +842,7 @@ def extract_grok_session_telemetry(
                 primary_model = session_data.get("primaryModelId") or fallback_model
                 inp = int(session_data.get("inputTokens", 0))
                 outp = int(session_data.get("outputTokens", 0))
-                reasoning = int(session_data.get("reasoningTokens", 0))
+                rsn = int(session_data.get("reasoningTokens", 0))
                 cached = int(session_data.get("cachedReadTokens", 0))
                 total = int(session_data.get("totalTokens", inp + outp))
                 calls = int(session_data.get("modelCalls", 1))
@@ -870,7 +870,7 @@ def extract_grok_session_telemetry(
                     primary_model=primary_model,
                     input_tokens=inp,
                     output_tokens=outp,
-                    reasoning_tokens=reasoning,
+                    reasoning_tokens=rsn,
                     cached_read_tokens=cached,
                     total_tokens=total,
                     model_calls=calls,
@@ -890,19 +890,19 @@ def extract_grok_session_telemetry(
         from .telemetry import PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT, TokenEstimator
 
         est_inp = TokenEstimator.estimate_text(fallback_prompt_text or "")
-        est_outp = TokenEstimator.estimate_text(fallback_resp_text or "")
+        est_out = TokenEstimator.estimate_text(fallback_resp_text or "")
         est_cost = round(
-            (est_inp / 1_000_000 * PRICE_PER_M_INPUT) + (est_outp / 1_000_000 * PRICE_PER_M_OUTPUT),
+            (est_inp / 1_000_000 * PRICE_PER_M_INPUT) + (est_out / 1_000_000 * PRICE_PER_M_OUTPUT),
             4,
         )
         return PeerVerdictTelemetry(
             session_id=session_id,
             primary_model=fallback_model,
             input_tokens=est_inp,
-            output_tokens=est_outp,
+            output_tokens=est_out,
             reasoning_tokens=0,
             cached_read_tokens=0,
-            total_tokens=est_inp + est_outp,
+            total_tokens=est_inp + est_out,
             model_calls=1,
             turn_count=1,
             cost_usd=est_cost,

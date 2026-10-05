@@ -6,7 +6,7 @@ Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) 
 
 ---
 
-## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0063)
+## 📑 Danh Mục Quyết Định Kiến Trúc (0001 — 0064)
 
 | Mã ADR | Tiêu đề | Trạng thái |
 | :--- | :--- | :---: |
