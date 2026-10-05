@@ -54,6 +54,9 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `check code`
 - `review commit`
 - `review pr`
+- `unslop`
+- `anti-slop`
+- `zero-noise`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Đánh giá phản biện mã nguồn, rà soát lỗ hổng và tuân thủ chuẩn mực.

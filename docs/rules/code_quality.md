@@ -199,3 +199,22 @@ Khi chạy kiểm định tài liệu hoặc chuẩn bị báo cáo nghiệm thu
 3. **Cấm Hardcode Machine Drive Paths:** Tuyệt đối KHÔNG nhúng đường dẫn ổ đĩa tuyệt đối cục bộ (`C:\...`, `D:\...`, `/home/vvc/...`). BẮT BUỘC dùng `Path` tương đối hoặc biến môi trường `CCBA_HUB_PATH`. Trong trường hợp fallback bắt buộc trên Windows, phải chú thích `# ccba:allow-machine-path`.
 4. **Phân tách Cấu hình Khai báo (Declarative Config):** Các siêu tham số, trọng số đánh giá và từ khóa routing của harness phải được tách thành cấu hình khai báo (YAML/JSON/dataclass/Pydantic) thay vì gán cứng trong logic xử lý Python, tuân thủ nguyên tắc Open-Closed Principle (OCP).
 
+---
+
+## 16. Anti-Slop & Zero-Noise Code Discipline (ADR-0009 Upstream Pstack Disciplines)
+
+Kỷ luật viết code tinh gọn, chống ô nhiễm context và triệt tiêu mã giả/nhiễu rác từ các mô hình sinh mã tự động (LLM slop):
+
+1. **Zero-Noise Comments & Clean Identifier Rule:**
+   - Không viết các comment thừa thãi chỉ đơn thuần dịch tên hàm/lớp/biến sang ngôn ngữ tự nhiên (ví dụ: `# get project by id` ngay trên `def get_project_by_id():`). Tên định danh phải tự tường minh (self-documenting).
+   - Comment chỉ được phép tồn tại khi giải thích **LÝ DO (WHY)**, quyết định kiến trúc, giả định kỹ thuật hoặc trích dẫn pháp lý (Legal Verbatim Citations theo ADR-0059).
+2. **Commented-Out Dead Code Prohibition:**
+   - Tuyệt đối CẤM commit các khối mã bị vô hiệu hóa bằng dấu comment (`# def old_fn(): ...`, `# import legacy_module`, `# return False`). Mọi lịch sử mã nguồn đã có Git bảo vệ; dead code trong source tree làm ô nhiễm context window của LLM và gây nhiễu AST parser.
+3. **No Over-Engineering & Speculative Code:**
+   - Chỉ giải quyết vấn đề trước mắt theo yêu cầu (`Fast-Path / KISS`). Không viết code phỏng đoán tương lai ("có thể mai sau cần"), không tạo factories, layers of abstraction, generic wrappers khi chỉ có duy nhất một implementation đơn giản.
+4. **Token-Pruned Prompt Economy:**
+   - Prompt và System Instructions trong các skills và agents phải tuân thủ kỷ luật Token ROI: loại bỏ các cụm từ sáo rỗng, biểu cảm thừa thãi, các đoạn văn lặp lại nội dung đã có trong hiến pháp nền tảng.
+5. **AST Comment Sanitation Gate Enforcement:**
+   - Mọi thay đổi mã nguồn Python phải vượt qua `check_redundant_comments()` tích hợp trong 7-Stage Peer Implementation Gate (`run_full_gate` / `run_implementation_gate`).
+   - Các ngoại lệ hợp lệ được allowlist tự động: Chỉ thị công cụ (`# ccba:*`, `# noqa`, `# type: ignore`, `# pragma: no cover`, `# flake8:`, `# mypy:`), ranh giới phân tách trực quan (`# ---`), chú thích văn bản quy phạm pháp luật (`# Theo Điều...`, `# Luật Xây dựng`, `# NĐ...`, `# QCVN...`, `# TCVN...`).
+

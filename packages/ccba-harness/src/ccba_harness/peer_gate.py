@@ -1,23 +1,26 @@
-"""ccba_harness.peer_gate - Reusable 6-Stage Automated Implementation Gate (ADR-0007 & ADR-0009).
+"""ccba_harness.peer_gate - Reusable 7-Stage Automated Implementation Gate (ADR-0007 & ADR-0009).
 
-Provides cross-repository 6-stage quality gate verification:
+Provides cross-repository 7-stage quality gate verification:
 1. Scoped Pytest -> 100% pass
 2. Flake8 / Linter Check -> exit code 0
 3. AST Function Length Check (KISS <= 50 lines) -> 0 violations
-4. Clean Module Import & Circular Dependency Check -> exit code 0
-5. Hub Import Depth Check (depth <= 2) -> 0 violations
-6. Secret & Raw IP Cleanliness Check (ADR-0060 / RULE-1.21) -> 0 violations
+4. Redundant Comment & Dead Code Sanitation (ADR-0009 / Pstack Upstream) -> 0 violations
+5. Clean Module Import & Circular Dependency Check -> exit code 0
+6. Hub Import Depth Check (depth <= 2) -> 0 violations
+7. Secret & Raw IP Cleanliness Check (ADR-0060 / RULE-1.21) -> 0 violations
 """
 
 from __future__ import annotations
 
 import ast
 import datetime
+import io
 import re
 import shutil
 import subprocess
 import sys
 import time
+import tokenize
 import uuid
 from pathlib import Path
 from typing import Literal
@@ -41,6 +44,35 @@ HUB_PACKAGE_PREFIXES = (
 
 TAILSCALE_IP_REGEX = re.compile(r"\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b")
 LEAK_DETECTOR_REGEX = re.compile(r"\b(?:AIzaSy[A-Za-z0-9_-]{33}|sk-[A-Za-z0-9]{32,})\b")
+
+ALLOWLIST_PATTERNS = re.compile(
+    r"^\s*#\s*("
+    r"ccba:"
+    r"|noqa"
+    r"|type:\s*ignore"
+    r"|pragma:\s*no cover"
+    r"|flake8:"
+    r"|mypy:"
+    r"|pylint:"
+    r"|isort:"
+    r"|nosec"
+    r"|TODO\b"
+    r"|FIXME\b"
+    r"|!\s*/"
+    r"|coding[:=]"
+    r"|---+"
+    r"|===+"
+    r"|___+"
+    r"|Theo Điều\b"
+    r"|Luật Xây dựng\b"
+    r"|NĐ\s*\d+"
+    r"|QCVN\b"
+    r"|TCVN\b"
+    r")",
+    re.IGNORECASE,
+)
+
+DEAD_CODE_KEYWORDS = ("def ", "class ", "import ", "from ", "return ")
 
 
 class GateCheck(BaseModel):
@@ -225,6 +257,130 @@ def check_ast_function_length(target_files: list[Path], max_lines: int = 50) -> 
     )
 
 
+def check_redundant_comments(target_files: list[Path]) -> GateCheck:
+    """Enforces Anti-Slop Discipline (ADR-0009 / Pstack Upstream): Blocks redundant comments & dead code.
+
+    Scans Python source files for:
+    1. Commented-out dead code (standalone comments containing def, class, import, return).
+    2. Redundant comments immediately preceding def/class that merely restate the identifier name (<= 5 words).
+
+    Args:
+        target_files: List of Python file paths to inspect.
+
+    Returns:
+        GateCheck summary.
+    """
+    t0 = time.time()
+    violations: list[str] = []
+
+    for py_file in target_files:
+        if any(
+            part in py_file.parts for part in ("tests", ".venv", "__pycache__", "site-packages")
+        ):
+            continue
+        try:
+            content = py_file.read_text(encoding="utf-8")
+            if "# ccba:allow-redundant-comments" in content:
+                continue
+
+            lines = content.splitlines(keepends=True)
+            lex_items = list(tokenize.generate_tokens(io.StringIO(content).readline))
+
+            for tok in lex_items:
+                if tok.type != tokenize.COMMENT:
+                    continue
+
+                text = tok.string
+                start_line, start_col = tok.start
+
+                if ALLOWLIST_PATTERNS.search(text):
+                    continue
+
+                curr_line_str = lines[start_line - 1] if start_line <= len(lines) else ""
+                is_standalone = start_col == (len(curr_line_str) - len(curr_line_str.lstrip()))
+
+                # Sub-check A: Dead code detection
+                if is_standalone:
+                    stripped_comment = text.lstrip("#").strip()
+                    if any(stripped_comment.startswith(kw) for kw in DEAD_CODE_KEYWORDS):
+                        is_dead_code = False
+                        try:
+                            if stripped_comment.startswith("return "):
+                                code_to_parse = f"def _dummy():\n    {stripped_comment}"
+                            elif stripped_comment.endswith(":"):
+                                code_to_parse = f"{stripped_comment}\n    pass"
+                            else:
+                                code_to_parse = stripped_comment
+                            tree = ast.parse(code_to_parse)
+                            if tree.body:
+                                stmt = tree.body[0]
+                                if isinstance(
+                                    stmt,
+                                    (
+                                        ast.FunctionDef,
+                                        ast.AsyncFunctionDef,
+                                        ast.ClassDef,
+                                        ast.Import,
+                                        ast.ImportFrom,
+                                        ast.Return,
+                                    ),
+                                ):
+                                    is_dead_code = True
+                        except (SyntaxError, IndentationError):
+                            is_dead_code = False
+
+                        if is_dead_code:
+                            violations.append(
+                                f"{py_file.name}:{start_line} commented-out dead code: '{text[:60]}'"
+                            )
+                            continue
+
+                # Sub-check B: Duplicate name restatement
+                curr_idx = start_line
+                target_name = None
+                while curr_idx < len(lines):
+                    nxt_line = lines[curr_idx].strip()
+                    if not nxt_line or nxt_line.startswith("#") or nxt_line.startswith("@"):
+                        curr_idx += 1
+                        continue
+                    m = re.match(r"^(?:async\s+)?def\s+([a-zA-Z0-9_]+)\b", nxt_line)
+                    if not m:
+                        m = re.match(r"^class\s+([a-zA-Z0-9_]+)\b", nxt_line)
+                    if m:
+                        target_name = m.group(1)
+                    break
+
+                if target_name:
+                    comment_content = text.lstrip("#").strip()
+                    words = re.findall(r"[a-zA-Z0-9]+", comment_content.lower())
+                    if words and len(words) <= 5:
+                        name_parts_list = re.findall(
+                            r"[A-Z]?[a-z0-9]+|[A-Z]+(?=[A-Z][a-z0-9]|\b)", target_name
+                        )
+                        name_parts = {p.lower() for p in name_parts_list if p}
+                        if set(words).issubset(name_parts):
+                            violations.append(
+                                f"{py_file.name}:{start_line} duplicate comment restating '{target_name}': '{text[:60]}'"
+                            )
+        except Exception:
+            continue
+
+    duration_ms = int((time.time() - t0) * 1000)
+    passed = len(violations) == 0
+    tail = (
+        "\n".join(violations[:10])
+        if violations
+        else "Comment sanitation clean: no commented-out code or redundant restatements."
+    )
+    return GateCheck(
+        name="redundant_comment_sanitation",
+        passed=passed,
+        exit_code=0 if passed else 1,
+        stdout_tail=tail,
+        duration_ms=duration_ms,
+    )
+
+
 def check_hub_import_depth(
     target_files: list[Path], max_depth: int = 2, is_hub: bool = False
 ) -> GateCheck:
@@ -368,6 +524,7 @@ def run_full_gate(
         ),
         _build_linter_check(target_files, ws),
         check_ast_function_length(target_files, max_lines=50),
+        check_redundant_comments(target_files),
         run_command_check("import_cycle_check", import_cmd, cwd=ws),
         check_hub_import_depth(target_files, is_hub=is_hub_workspace(ws)),
         check_secret_ip_cleanliness(target_files),
@@ -377,6 +534,10 @@ def run_full_gate(
     return GateResult(
         gate="PASS" if all_passed else "FAIL", timestamp=now_iso, branch=branch, checks=checks
     )
+
+
+# Canonical alias conforming to ADR-0007 / ADR-0009 specifications
+run_implementation_gate = run_full_gate
 
 
 def write_verdict_file(result: GateResult, peer_exchange_dir: Path) -> Path:

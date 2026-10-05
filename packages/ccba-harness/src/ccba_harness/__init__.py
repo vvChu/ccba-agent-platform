@@ -192,9 +192,11 @@ from .peer_gate import (
     GateResult,
     check_ast_function_length,
     check_hub_import_depth,
+    check_redundant_comments,
     check_secret_ip_cleanliness,
     print_summary_table,
     run_full_gate,
+    run_implementation_gate,
     write_verdict_file,
 )
 from .skill_validator import SkillAuditIssue, SkillValidator
@@ -419,9 +421,11 @@ __all__ = [
     "GateResult",
     "check_ast_function_length",
     "check_hub_import_depth",
+    "check_redundant_comments",
     "check_secret_ip_cleanliness",
     "print_summary_table",
     "run_full_gate",
+    "run_implementation_gate",
     "write_verdict_file",
     "run_apply_anchor_patch_cli",
     "run_peer_dispatch_cli",
