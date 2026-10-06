@@ -1610,6 +1610,135 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     return 1
 
 
+def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for parallel multi-agent co-review orchestration (`ccba-harness peer-co-review` - ADR-0065)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness peer-co-review",
+        description="Parallel Multi-Agent Co-Review Orchestration and Consensus Engine (Level-2.5 / ADR-0065).",
+    )
+    parser.add_argument(
+        "--prompt-file",
+        type=str,
+        required=True,
+        help="Path to markdown prompt file containing PeerPromptEnvelope.",
+    )
+    parser.add_argument(
+        "--profiles",
+        type=str,
+        nargs="+",
+        default=["code_review", "arch_audit"],
+        help="Profiles to dispatch in parallel (default: code_review arch_audit).",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        default=None,
+        help="Path for saving the consolidated consensus markdown report.",
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=None,
+        help="Hard cap on parallel worker threads.",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=None,
+        help="Execution timeout override per profile in seconds.",
+    )
+    parser.add_argument(
+        "--worktree",
+        action="store_true",
+        help="Execute agents in isolated git worktrees.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned co-review dispatch plan and exit without executing.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output consensus report as JSON to stdout.",
+    )
+
+    args = parser.parse_args(args_list)
+    prompt_path = Path(args.prompt_file).resolve()
+    if not prompt_path.exists():
+        print(f"[FAIL] Prompt file not found: {prompt_path}", file=sys.stderr)
+        return 1
+
+    from .peer import (
+        PROFILE_SPECS,
+        orchestrate_peer_co_review,
+        parse_envelope_from_md,
+        safe_read_and_hash,
+    )
+
+    if args.dry_run:
+        content, _ = safe_read_and_hash(prompt_path)
+        envelope = parse_envelope_from_md(content or "")
+        req_id = envelope.request_id if envelope else "unknown"
+        print(f"[DRY-RUN] Request ID: {req_id}")
+        print(f"[DRY-RUN] Profiles: {', '.join(args.profiles)}")
+        for p in args.profiles:
+            spec = PROFILE_SPECS.get(p, {})
+            model = spec.get("model", "unknown")
+            timeout = args.timeout if args.timeout is not None else spec.get("timeout", 180.0)
+            print(f"  - Profile: {p:12s} | Model: {model:20s} | Timeout: {timeout}s")
+        out_target = (
+            Path(args.output_file)
+            if args.output_file
+            else prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
+        )
+        print(f"[DRY-RUN] Consensus Output: {out_target}")
+        return 0
+
+    output_path = Path(args.output_file).resolve() if args.output_file else None
+    report = orchestrate_peer_co_review(
+        prompt_path=prompt_path,
+        profiles=args.profiles,
+        output_file=output_path,
+        max_workers=args.max_workers,
+        timeout=args.timeout,
+        worktree=args.worktree,
+    )
+
+    if report is None:
+        print(
+            "[FAIL] Failed to orchestrate peer co-review: prompt is unreadable.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if args.json:
+        print(report.model_dump_json(indent=2))
+    else:
+        print(f"[OK] Consensus Verdict: {report.verdict} (Risk: {report.risk_score}/5)")
+        print(
+            f"Quorum: {len(report.completed_profiles)}/{len(report.expected_profiles)} completed."
+        )
+        if report.conditions:
+            print(f"Conditions ({len(report.conditions)}):")
+            for c in report.conditions:
+                tag = "[BLOCKING]" if c.blocking else "[ADVISORY]"
+                print(f"  - {c.id} {tag}: {c.description}")
+
+    if report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"):
+        return 0
+    if report.verdict in ("APPROVE_WITH_CONDITIONS", "APPROVE_WITH_RESERVATIONS"):
+        return 2
+    if report.verdict == "REVISE_PLAN":
+        return 3
+    if report.verdict in ("REJECT", "REJECT_PLAN", "GATE_FAIL"):
+        return 4
+    if report.verdict == "HANDOFF":
+        return 5
+    return 1
+
+
 def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for applying anchor patches (`ccba-harness apply-anchor-patch` - ADR-0063)."""
     parser = argparse.ArgumentParser(
@@ -2185,6 +2314,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_peer_watch_cli(argv[1:])
     if argv[0] in ("peer-dispatch", "dispatch-peer"):
         return run_peer_dispatch_cli(argv[1:])
+    if argv[0] in ("peer-co-review", "co-review"):
+        return run_peer_co_review_cli(argv[1:])
     if argv[0] in ("apply-anchor-patch", "peer-apply", "apply-patch"):
         return run_apply_anchor_patch_cli(argv[1:])
     if argv[0] == "blast-radius":
@@ -2212,6 +2343,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_peer_watch_cli(argv[1:])
     if parsed.subcommand in ("peer-dispatch", "dispatch-peer"):
         return run_peer_dispatch_cli(argv[1:])
+    if parsed.subcommand in ("peer-co-review", "co-review"):
+        return run_peer_co_review_cli(argv[1:])
     if parsed.subcommand in ("apply-anchor-patch", "peer-apply", "apply-patch"):
         return run_apply_anchor_patch_cli(argv[1:])
     if parsed.subcommand == "blast-radius":

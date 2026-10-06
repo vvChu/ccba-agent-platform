@@ -73,6 +73,21 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
         or "placeholder" in lower
     ):
         return True
+
+    # Ignore Python expressions, type annotations, collections, and LLM token counter metrics
+    key_lower = key_hint.lower()
+    if any(tok in key_lower for tok in ("token", "tokens")) and not any(
+        cred in key_lower
+        for cred in ("api_key", "secret", "password", "passwd", "auth", "credential", "private")
+    ):
+        if (
+            stripped.startswith(("set[", "set(", "list[", "list(", "dict[", "dict(", "[", "(", "{"))
+            or "." in stripped
+            or stripped.endswith(("tokens", "token", "tokens}", "tokens]"))
+            or stripped.isidentifier()
+        ):
+            return True
+
     return False
 
 
