@@ -51,10 +51,11 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
     if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
         return True
     stripped = val.strip()
-    # Ignore template variable interpolations: ${VAR}, $(VAR), {{ .Values.X }}, <% ... %>, {VAR}
-    if stripped.startswith(("${", "$(", "{{", "<%", "<#")) or (
-        stripped.startswith("{") and stripped.endswith("}")
-    ):
+    # Ignore template variable interpolations and f-strings: ${VAR}, $(VAR), {{ ... }}, {VAR...
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#", "{")):
+        return True
+    # Ignore variable / attribute references in code: args.xxx, self.xxx, etc.
+    if stripped.startswith(("args.", "self.", "params.", "config.", "model.", "spec.")):
         return True
     # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
     # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
@@ -74,16 +75,21 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
     ):
         return True
 
-    # COND-MASKARA-TOKEN: Ignore exact LLM token counter metrics and Python type annotations
+    # COND-MASKARA-TOKEN: Ignore LLM token counter metrics and Python type annotations
     key_clean = key_hint.split("=")[0].split(":")[0].strip().lower()
     key_stem = key_clean.split(".")[-1].strip()
-    if key_stem in {
-        "input_tokens",
-        "output_tokens",
-        "reasoning_tokens",
-        "cached_read_tokens",
-        "total_tokens",
-    }:
+    if (
+        key_stem.endswith("tokens")
+        or key_clean.endswith("tokens")
+        or key_stem
+        in {
+            "input_tokens",
+            "output_tokens",
+            "reasoning_tokens",
+            "cached_read_tokens",
+            "total_tokens",
+        }
+    ):
         return True
 
     if stripped.startswith(("set[", "set(", "list[", "list(", "dict[", "dict(", "tuple[")):
