@@ -1,6 +1,18 @@
 # 📜 CCBA Knowledge Base Mutation Log (Append-Only Log)
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
+## [2026-10-06] [synthesize] | Phát Hành PR #486: Upstream Pstack Disciplines (Anti-Slop, Zero-Noise Comments & Verification Skill Harness)
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer_gate.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/AGENTS.md`, `packages/ccba-harness/tests/test_pstack_disciplines.py`, `docs/rules/code_quality.md`, `.agents/skills/ccba-code-review/`, `.agents/skills/ccba-create-verification-skill/`, `PLATFORM.md`, `README.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `walkthrough.md`
+- **Summary**: Hoàn tất tiếp thu và nội địa hóa toàn diện bộ kỷ luật kỹ thuật từ Cursor `pstack` vào CCBA Agent Services Platform sau khi hoàn thành phản biện đối kháng cùng Grok CLI (Verdict: `REVISE & PROCEED` với 5 điểm tinh chỉnh):
+  1. **AST Comment Sanitation (Deep Seam `peer_gate.py`)**: Xây dựng `check_redundant_comments()` tích hợp vào 7-Stage Implementation Gate (`run_full_gate` / `run_implementation_gate`). Tự động phát hiện mã chết bị comment out độc lập (`def `, `class `, `import `, `from `, `return `) qua `ast.parse` bọc hàm/block header, bảo toàn văn xuôi hợp lệ và allowlist chỉ thị/pháp lý. Phát hiện comment dịch tên định danh $\le 5$ từ đứng trước `def/class`.
+  2. **Quy Chuẩn Chống Mã Rác (`docs/rules/code_quality.md`)**: Ban hành Mục 16 quy định về Zero-Noise Comments, Triệt tiêu Dead Code, No Over-Engineering, Token Economy, và Cưỡng chế AST Gate.
+  3. **Checklist Rà Soát (`ccba-code-review`)**: Thiết lập `references/unslop_checklist.md`, nâng cấp `ccba-code-review` lên v1.5.0 và tích hợp vào chỉ mục Level 3.
+  4. **Standalone Kernel Skill (`ccba-create-verification-skill`)**: Tạo kỹ năng Tier 2B (GPI: 22.75) tự động sinh bộ harness kiểm định `verify-<app>` (5 khối chức năng, POSIX `setsid` / Windows process group, health barrier, evidence runner, graceful cleanup). Bảo vệ vệ sinh Spoke (ADR-0044) bằng thư mục con `harness/` và cẩm nang `features/INDEX.md`.
+  5. **Bản Vá & Kiểm Chuẩn CI**: Khắc phục lỗi drift đếm số lượng skill (75 $\to$ 76) qua `update_arch_stats.py`; khử false positive `[env-secret]` của Maskara bằng cách đổi tên biến tokenizer sang `lex_items` / `name_parts`. Đạt 100% (8/8 checks) CI passed, squash-merge PR #486 (`ab88e013`), bổ sung Section 32 vào `session_learnings_history.md`, cập nhật `RULE-1.16` và `RULE-2.18` vào `session_learnings.md` ($8.96\text{ KB} \le 10.0\text{ KB}$).
+
+---
+
 ## [2026-10-05] [synthesize] | Phát Hành PR #481-#484: Dogfooding Level-2 Peer Delegation, ACID Patch Engine & Architectural Audit
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/src/ccba_harness/cli.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/tests/test_peer.py`, `packages/ccba-harness/AGENTS.md`, `.agents/skills/platform-loader/catalog.yaml`, `.md/peer_exchange/`, `.md/knowledge/session_learnings.md`, `walkthrough.md`
