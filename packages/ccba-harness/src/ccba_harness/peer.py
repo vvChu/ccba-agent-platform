@@ -18,7 +18,8 @@ import tempfile
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Literal, NamedTuple
 
@@ -59,6 +60,26 @@ VerdictType = Literal[
     "GATE_FAIL",
     "HANDOFF",
 ]
+
+VERDICT_LATTICE_RANK: dict[VerdictType, int] = {
+    # Blocker tokens (highest rank)
+    "REJECT": 100,
+    "REJECT_PLAN": 95,
+    "GATE_FAIL": 90,
+    # Revision required
+    "REVISE_PLAN": 80,
+    # Incomplete review / Handoff
+    "HANDOFF": 70,
+    # Conditional pass
+    "APPROVE_WITH_CONDITIONS": 60,
+    "APPROVE_WITH_RESERVATIONS": 55,
+    # Clean pass tokens
+    "APPROVE_PLAN": 40,
+    "FINAL_ACCEPT": 35,
+    "GATE_PASS": 30,
+    "APPROVE": 20,
+}
+
 EffortType = Literal["XS", "S", "M", "L", "XL"]
 
 DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"  # ccba:allow-raw-model
@@ -219,6 +240,8 @@ class PeerCondition(BaseModel):
     id: str
     description: str
     blocking: bool = True
+    source_profile: str | None = None
+    source_profiles: list[str] = Field(default_factory=list)
 
 
 CostMode = Literal["exact", "estimated", "unknown"]
@@ -270,6 +293,58 @@ class PeerVerdictBlock(BaseModel):
             else:
                 normalized.append(item)
         return normalized
+
+
+class ProfileTelemetryItem(BaseModel):
+    """Telemetry breakdown item for a single peer agent profile (ADR-0065)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    cached_read_tokens: int = 0
+    total_tokens: int = 0
+    cost_usd: float = 0.0
+    duration_seconds: float = 0.0
+
+
+class CombinedTelemetry(BaseModel):
+    """Consolidated telemetry aggregated across multi-agent executions (ADR-0065)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    total_tokens: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    cached_read_tokens: int = 0
+    cost_usd: float = 0.0
+    wall_seconds: float = 0.0
+    sum_agent_seconds: float = 0.0
+    cost_mode: CostMode = "exact"
+    profile_breakdown: dict[str, ProfileTelemetryItem] = Field(default_factory=dict)
+
+
+class PeerConsensusReport(BaseModel):
+    """Aggregated consensus report synthesized from multi-agent peer reviews (ADR-0065)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    request_id: str
+    verdict: VerdictType
+    risk_score: int = Field(default=1, ge=1, le=5)
+    summary: str
+    expected_profiles: list[str]
+    completed_profiles: list[str]
+    failed_profiles: list[str] = Field(default_factory=list)
+    individual_verdicts: dict[str, PeerVerdictBlock] = Field(default_factory=dict)
+    conditions: list[PeerCondition] = Field(default_factory=list)
+    combined_telemetry: CombinedTelemetry | None = None
+    created_at: str = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
 
 
 def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
@@ -1390,3 +1465,346 @@ def invoke_grok_cli(
         ):
             return True
     return False
+
+
+def synthesize_verdicts(
+    request_id: str,
+    verdicts: dict[str, PeerVerdictBlock],
+    expected_profiles: Sequence[str] | None = None,
+    duration_seconds: float = 0.0,
+) -> PeerConsensusReport:
+    """Synthesizes multiple peer verdicts into a unified deterministic consensus report (ADR-0065).
+
+    Args:
+        request_id: Request identifier matching the prompt.
+        verdicts: Mapping of profile name to PeerVerdictBlock.
+        expected_profiles: Optional expected profiles list for quorum enforcement.
+        duration_seconds: Execution wall-clock duration in seconds.
+
+    Returns:
+        PeerConsensusReport with synthesized verdict, conditions, and telemetry.
+    """
+    if not verdicts and not expected_profiles:
+        raise ValueError(
+            "Cannot synthesize consensus from empty verdicts and empty expected profiles."
+        )
+
+    exp_profiles = (
+        list(expected_profiles) if expected_profiles is not None else list(verdicts.keys())
+    )
+    comp_profiles = [p for p in exp_profiles if p in verdicts]
+    failed_profiles = [p for p in exp_profiles if p not in verdicts]
+
+    blocker_verdicts: set[VerdictType] = {"REJECT", "REJECT_PLAN", "GATE_FAIL"}
+    pass_verdicts: set[VerdictType] = {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"}
+
+    # 1. Determine baseline consensus verdict by strict lattice rank
+    if failed_profiles:
+        comp_blockers = [
+            verdicts[p].verdict for p in comp_profiles if verdicts[p].verdict in blocker_verdicts
+        ]
+        if comp_blockers:
+            consensus_verdict: VerdictType = max(
+                comp_blockers, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0)
+            )
+        else:
+            consensus_verdict = "HANDOFF"
+    else:
+        completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
+        if not completed_verdicts:
+            consensus_verdict = "HANDOFF"
+        elif len(set(completed_verdicts)) == 1:
+            consensus_verdict = completed_verdicts[0]
+        else:
+            consensus_verdict = max(
+                completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0)
+            )
+
+    # 2. Consolidate conditions with deterministic ordering & OR-merge on blocking
+    consolidated_conds: list[PeerCondition] = []
+    seen_cond_descs: dict[str, PeerCondition] = {}
+
+    for prof in comp_profiles:
+        vb = verdicts[prof]
+        for cond in vb.conditions:
+            key = cond.description.strip().lower()
+            if key in seen_cond_descs:
+                existing = seen_cond_descs[key]
+                existing.blocking = existing.blocking or cond.blocking
+                if prof not in existing.source_profiles:
+                    existing.source_profiles.append(prof)
+            else:
+                new_cond = PeerCondition(
+                    id=cond.id,
+                    description=cond.description,
+                    blocking=cond.blocking,
+                    source_profile=prof,
+                    source_profiles=[prof],
+                )
+                seen_cond_descs[key] = new_cond
+                consolidated_conds.append(new_cond)
+
+    if failed_profiles:
+        fail_cond = PeerCondition(
+            id="COND-QUORUM-FAIL",
+            description=f"Missing peer review from profiles: {', '.join(failed_profiles)}",
+            blocking=True,
+            source_profile="orchestrator",
+            source_profiles=["orchestrator"],
+        )
+        consolidated_conds.append(fail_cond)
+
+    # 3. Dynamic escalation: blocking conditions or risk_score >= 4 upgrade PASS to APPROVE_WITH_CONDITIONS
+    has_blocking = any(c.blocking for c in consolidated_conds)
+    if consensus_verdict in pass_verdicts and has_blocking:
+        consensus_verdict = "APPROVE_WITH_CONDITIONS"
+
+    valid_risks = [
+        verdicts[p].risk_score for p in comp_profiles if verdicts[p].risk_score is not None
+    ]
+    consensus_risk = max(valid_risks) if valid_risks else 1
+    if consensus_verdict in pass_verdicts and consensus_risk >= 4:
+        consensus_verdict = "APPROVE_WITH_CONDITIONS"
+
+    # 4. Consolidate telemetry breakdown
+    agg_total = 0
+    agg_input = 0
+    agg_output = 0
+    agg_reasoning = 0
+    agg_cached = 0
+    cost_usd = 0.0
+    sum_agent_seconds = 0.0
+    all_exact = True
+    has_any_telemetry = False
+    profile_breakdown: dict[str, ProfileTelemetryItem] = {}
+
+    for prof in comp_profiles:
+        vb = verdicts[prof]
+        tel = vb.telemetry
+        if tel:
+            has_any_telemetry = True
+            agg_total += tel.total_tokens or 0
+            agg_input += tel.input_tokens or 0
+            agg_output += tel.output_tokens or 0
+            agg_reasoning += tel.reasoning_tokens or 0
+            agg_cached += tel.cached_read_tokens or 0
+            cost_usd += tel.cost_usd or 0.0
+            sum_agent_seconds += tel.duration_seconds or 0.0
+            if tel.cost_mode != "exact":
+                all_exact = False
+            item_payload = {
+                "model": tel.primary_model,
+                "input_tokens": tel.input_tokens or 0,
+                "output_tokens": tel.output_tokens or 0,
+                "reasoning_tokens": tel.reasoning_tokens or 0,
+                "cached_read_tokens": tel.cached_read_tokens or 0,
+                "total_tokens": tel.total_tokens or 0,
+                "cost_usd": round(tel.cost_usd or 0.0, 4),
+                "duration_seconds": round(tel.duration_seconds or 0.0, 2),
+            }
+            profile_breakdown[prof] = ProfileTelemetryItem.model_validate(item_payload)
+        else:
+            all_exact = False
+
+    combined_telemetry: CombinedTelemetry | None = None
+    if has_any_telemetry:
+        comb_payload = {
+            "total_tokens": agg_total,
+            "input_tokens": agg_input,
+            "output_tokens": agg_output,
+            "reasoning_tokens": agg_reasoning,
+            "cached_read_tokens": agg_cached,
+            "cost_usd": round(cost_usd, 4),
+            "wall_seconds": round(duration_seconds, 2),
+            "sum_agent_seconds": round(sum_agent_seconds, 2),
+            "cost_mode": "exact" if all_exact else "estimated",
+            "profile_breakdown": profile_breakdown,
+        }
+        combined_telemetry = CombinedTelemetry.model_validate(comb_payload)
+
+    # 5. Build consolidated summary
+    summary_lines = [
+        f"Consensus Verdict: **{consensus_verdict}** (Risk Score: {consensus_risk}/5).",
+        f"Quorum: {len(comp_profiles)}/{len(exp_profiles)} completed.",
+    ]
+    if failed_profiles:
+        summary_lines.append(f"Failed Profiles: {', '.join(failed_profiles)}.")
+    for prof in comp_profiles:
+        vb = verdicts[prof]
+        summary_lines.append(f"- **{prof}** ({vb.verdict}): {vb.summary}")
+    unified_summary = "\n".join(summary_lines)
+
+    return PeerConsensusReport(
+        request_id=request_id,
+        verdict=consensus_verdict,
+        risk_score=consensus_risk,
+        summary=unified_summary,
+        expected_profiles=exp_profiles,
+        completed_profiles=comp_profiles,
+        failed_profiles=failed_profiles,
+        individual_verdicts=verdicts,
+        conditions=consolidated_conds,
+        combined_telemetry=combined_telemetry,
+    )
+
+
+def render_consensus_report_markdown(report: PeerConsensusReport) -> str:
+    """Renders a complete markdown document for a consensus report with standard frontmatter."""
+    fm_payload: dict[str, Any] = {
+        "request_id": report.request_id,
+        "verdict": report.verdict,
+        "risk_score": report.risk_score,
+        "summary": report.summary,
+        "profiles": report.completed_profiles,
+        "expected_profiles": report.expected_profiles,
+        "failed_profiles": report.failed_profiles,
+        "conditions": [c.model_dump(exclude_none=True) for c in report.conditions],
+    }
+    if report.combined_telemetry:
+        fm_payload["telemetry"] = report.combined_telemetry.model_dump(exclude_none=True)
+
+    yaml_str = yaml.dump(fm_payload, sort_keys=False, allow_unicode=True)
+    header = f"---\n{yaml_str}---\n"
+
+    body_lines = [
+        f"# 🤝 Multi-Agent Peer Consensus Report: `{report.request_id}`\n",
+        f"- **Consensus Verdict**: `{report.verdict}`",
+        f"- **Consolidated Risk Score**: `{report.risk_score}/5`",
+        f"- **Quorum**: `{len(report.completed_profiles)}/{len(report.expected_profiles)}` profiles completed\n",
+        "## 1. Executive Summary\n",
+        report.summary,
+        "\n## 2. Consolidated Conditions\n",
+    ]
+    if report.conditions:
+        for c in report.conditions:
+            blocking_tag = "🔴 [BLOCKING]" if c.blocking else "🟡 [ADVISORY]"
+            sources = (
+                ", ".join(c.source_profiles)
+                if c.source_profiles
+                else (c.source_profile or "unknown")
+            )
+            body_lines.append(f"- **{c.id}** {blocking_tag} ({sources}): {c.description}")
+    else:
+        body_lines.append("*(No conditions attached)*")
+
+    body_lines.append("\n## 3. Individual Profile Verdicts\n")
+    for prof, vb in report.individual_verdicts.items():
+        body_lines.append(f"### Profile: `{prof}`")
+        body_lines.append(f"- **Verdict**: `{vb.verdict}` (Risk: `{vb.risk_score or 'N/A'}`)")
+        body_lines.append(f"- **Summary**: {vb.summary}\n")
+
+    if report.combined_telemetry:
+        tel = report.combined_telemetry
+        body_lines.append("## 4. Telemetry & Cost Provenance\n")
+        body_lines.append(
+            f"- **Total Tokens**: {tel.total_tokens:,} (Input: {tel.input_tokens:,}, Output: {tel.output_tokens:,}, Reasoning: {tel.reasoning_tokens:,})"
+        )
+        body_lines.append(f"- **Total Cost**: ${tel.cost_usd:.4f} (mode: `{tel.cost_mode}`)")
+        body_lines.append(
+            f"- **Duration**: Wall clock `{tel.wall_seconds}s` | Sum agent time `{tel.sum_agent_seconds}s`\n"
+        )
+
+    return header + "\n".join(body_lines) + "\n"
+
+
+def orchestrate_peer_co_review(
+    prompt_path: Path,
+    profiles: Sequence[str] = ("code_review", "arch_audit"),
+    output_file: Path | None = None,
+    max_workers: int | None = None,
+    timeout: float | None = None,
+    worktree: bool = False,
+) -> PeerConsensusReport | None:
+    """Orchestrates multi-agent co-review execution in parallel threads with isolated outputs (ADR-0065).
+
+    Args:
+        prompt_path: Path to markdown prompt file containing PeerPromptEnvelope.
+        profiles: Sequence of peer profile names to dispatch.
+        output_file: Path to final consensus markdown file.
+        max_workers: ThreadPoolExecutor worker count cap.
+        timeout: Optional timeout override for agent executions.
+        worktree: Whether to execute agents inside a git worktree.
+
+    Returns:
+        PeerConsensusReport on success, or None if prompt is unreadable.
+    """
+    for prof in profiles:
+        if not re.match(r"^[a-z0-9_]{1,32}$", prof):
+            raise ValueError(f"Invalid profile name '{prof}': must match ^[a-z0-9_]{{1,32}}$")
+
+    content, _ = safe_read_and_hash(prompt_path)
+    envelope = parse_envelope_from_md(content or "")
+    if not envelope:
+        return None
+
+    request_id = envelope.request_id
+
+    # COND-04: Isolated TemporaryDirectory with 0700 permissions outside peer_exchange
+    temp_dir_obj = tempfile.TemporaryDirectory(prefix=f"peer_co_review_{request_id[:8]}_")
+    temp_dir = Path(temp_dir_obj.name)
+    try:
+        try:
+            os.chmod(temp_dir, 0o700)
+        except Exception:
+            pass
+
+        start_time = time.time()
+        tasks: list[tuple[str, Path, Path]] = []
+
+        for prof in profiles:
+            prof_prompt = temp_dir / f"prompt_{prof}.md"
+            prof_out_name = f"grok_{prof}.md"
+            prof_env = envelope.model_copy()
+            prof_env.profile = prof  # type: ignore[assignment]
+            prof_env.output_path = prof_out_name
+            rendered = render_prompt_header(prof_env)
+            _, body = extract_frontmatter(content or "")
+            atomic_write_text(prof_prompt, rendered + body.lstrip())
+            tasks.append((prof, prof_prompt, temp_dir / prof_out_name))
+
+        def _worker(item: tuple[str, Path, Path]) -> tuple[str, PeerVerdictBlock | None]:
+            p_name, p_prompt, p_out = item
+            spec = PROFILE_SPECS.get(p_name, {})
+            p_model = spec.get("model")
+            p_timeout = timeout if timeout is not None else spec.get("timeout")
+            ok = invoke_grok_cli(
+                prompt_path=p_prompt,
+                model=p_model,
+                profile=p_name,
+                timeout=p_timeout,
+                worktree=worktree,
+            )
+            if not ok or not p_out.exists():
+                return p_name, None
+            out_str, _ = safe_read_and_hash(p_out)
+            vb = parse_verdict_from_md(out_str or "")
+            return p_name, vb
+
+        workers_count = max_workers if max_workers is not None else min(len(profiles), 4)
+        verdicts: dict[str, PeerVerdictBlock] = {}
+
+        with ThreadPoolExecutor(max_workers=max(1, workers_count)) as pool:
+            futures = [pool.submit(_worker, t) for t in tasks]
+            for fut in futures:
+                p_name, vb = fut.result()
+                if vb is not None:
+                    verdicts[p_name] = vb
+
+        elapsed = time.time() - start_time
+        report = synthesize_verdicts(
+            request_id=request_id,
+            verdicts=verdicts,
+            expected_profiles=profiles,
+            duration_seconds=elapsed,
+        )
+
+        final_out = output_file
+        if not final_out:
+            stem = prompt_path.stem.replace("prompt_", "")
+            final_out = prompt_path.parent / f"grok_consensus_{stem}.md"
+
+        report_md = render_consensus_report_markdown(report)
+        atomic_write_text(final_out, report_md)
+        return report
+    finally:
+        temp_dir_obj.cleanup()

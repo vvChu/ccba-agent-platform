@@ -151,6 +151,20 @@ def test_common_placeholders_exclusion(scanner: MaskaraScanner) -> None:
         assert len(findings) == 0, f"Placeholder should not trigger alert: {case}"
 
 
+def test_llm_token_metrics_exclusion(scanner: MaskaraScanner) -> None:
+    cases = [
+        "blocker_tokens: set[VerdictType] = set()",
+        "total_tokens = tel.total_tokens or 0",
+        "input_tokens = input_tokens",
+        "all_tokens = set(get_args(VerdictType))",
+    ]
+    for case in cases:
+        findings = scanner.scan_text(case)
+        assert len(findings) == 0, (
+            f"Token metric expression should not trigger secret alert: {case}"
+        )
+
+
 def test_init_hooks_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Initialize a temporary git repository
     subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)
