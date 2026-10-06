@@ -32,6 +32,12 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (catalog và định tuyến toàn sàn). Skill đóng vai trò điểm khởi đầu bootstrap và discovery catalog toàn diện cho Platform, phân biệt rạch ròi giữa `catalog.yaml` (routing & triggers) với biên lai hợp đồng kiểm toán `--in/--out` (`seam-contracts.yaml`), không đóng gói pipeline chuyển đổi dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 ## Service Catalog & Seam Indexes (Source of Truth)
 
 Để định tuyến chính xác và không bị nhầm lẫn giữa kỹ năng (Skills) và mã nguồn thư viện (Python Deep Seams), Agent cần phân biệt rạch ròi giữa **3 chỉ mục hệ thống**:
