@@ -164,6 +164,17 @@ def test_llm_token_metrics_exclusion(scanner: MaskaraScanner) -> None:
             f"Token metric expression should not trigger secret alert: {case}"
         )
 
+    # COND-MASKARA-TOKEN: Real access/github tokens MUST still be detected
+    jwt_val = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" + ".e30.t-ID"
+    gh_val = "ghp_" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
+    leak_cases = [
+        "access_" + f"token = '{jwt_val}'",
+        "github_" + f"token = '{gh_val}'",
+    ]
+    for leak in leak_cases:
+        findings = scanner.scan_text(leak)
+        assert len(findings) >= 1, f"Real token leak MUST be detected: {leak}"
+
 
 def test_init_hooks_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Initialize a temporary git repository

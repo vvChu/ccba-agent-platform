@@ -42,7 +42,7 @@
 - [ccba-contribute-to-hub](skills/ccba-contribute-to-hub.md): /ccba-contribute-to-hub — Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừng chờ CI & Copilot Review (Self-Healing Gate)
 - [ccba-copywriting](skills/ccba-copywriting.md): /ccba-copywriting — Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụng các công thức viết thuyết phục (AIDA, PAS).
 - [ccba-create-pr](skills/ccba-create-pr.md): /ccba-create-pr — Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitHub Pull Request kèm rào chắn Dual-Gate CI & Copilot Review
-- [ccba-create-verification-skill](skills/ccba-create-verification-skill.md): /ccba-create-verification-skill — Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+- [ccba-create-verification-skill](skills/ccba-create-verification-skill.md): /ccba-create-verification-skill — Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 - [ccba-design](skills/ccba-design.md): /ccba-design — Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
 - [ccba-diagnosing-bugs](skills/ccba-diagnosing-bugs.md): /ccba-diagnosing-bugs — Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
 - [ccba-docs-manager](skills/ccba-docs-manager.md): /ccba-docs-manager — Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
