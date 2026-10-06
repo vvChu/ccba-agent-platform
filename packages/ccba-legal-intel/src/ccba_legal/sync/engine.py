@@ -39,7 +39,7 @@ from ccba_legal.sync.utils import (
     safe_remove,
 )
 
-logger = logging.getLogger(__name__)  # ccba:allow-long-functions
+logger = logging.getLogger(__name__)
 
 DEFAULT_DRIVE_FOLDER = "1b9vm_1KQ8Fg8Crr1Q-i2xmE62UIHy-_2"
 RAW_GITHUB_BASE = os.environ.get(
@@ -160,6 +160,7 @@ class LegalSyncEngine:
             clean_drive=clean_drive,
         )
 
+    # ccba:quarantine seam_id=legal_sync.find_corpus reason=legacy_sync_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/439
     def find_local_knowledge_corpus(self, explicit_path: Path | None = None) -> Path | None:
         """Discover the canonical Knowledge Corpus Spoke (ccba-legal-knowledge) on local machine (ADR 0050)."""
         if explicit_path and explicit_path.exists():
@@ -287,6 +288,7 @@ class LegalSyncEngine:
 
         return None
 
+    # ccba:quarantine seam_id=legal_sync.pull_bundles reason=legacy_sync_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/439
     def pull_latest_okf_bundles(
         self,
         target_dir: Path | str | None = None,

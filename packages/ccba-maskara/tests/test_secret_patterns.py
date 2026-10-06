@@ -170,6 +170,7 @@ def test_llm_token_metrics_exclusion(scanner: MaskaraScanner) -> None:
     leak_cases = [
         "access_" + f"token = '{jwt_val}'",
         "github_" + f"token = '{gh_val}'",
+        "USER_" + f"AUTH_TOKEN = '{gh_val}'",
     ]
     for leak in leak_cases:
         findings = scanner.scan_text(leak)

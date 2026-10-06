@@ -1,0 +1,19 @@
+{
+  "packages/ccba-ai/src/ccba_ai/client.py": 1216,
+  "packages/ccba-harness/src/ccba_harness/_file_monitor.py": 1127,
+  "packages/ccba-harness/src/ccba_harness/_process_monitor.py": 1185,
+  "packages/ccba-harness/src/ccba_harness/evals/daemon.py": 1374,
+  "packages/ccba-harness/src/ccba_harness/evals/miner.py": 1099,
+  "packages/ccba-harness/src/ccba_harness/evals/scorers/domain.py": 1918,
+  "packages/ccba-harness/src/ccba_harness/evals/tuner.py": 2395,
+  "packages/ccba-harness/src/ccba_harness/fleet.py": 1024,
+  "packages/ccba-harness/src/ccba_harness/peer.py": 2175,
+  "packages/ccba-harness/src/ccba_harness/skill_validator.py": 1539,
+  "packages/ccba-legal-intel/src/ccba_legal/cli.py": 1455,
+  "packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/table_handler.py": 801,
+  "packages/ccba-legal-intel/src/ccba_legal/engine.py": 821,
+  "packages/ccba-legal-intel/src/ccba_legal/registry.py": 1260,
+  "packages/ccba-ooxml/src/ccba_ooxml/pptx/deck_builder.py": 1586,
+  "packages/ccba-ooxml/src/ccba_ooxml/pptx/inventory.py": 1033,
+  "packages/ccba-ooxml/src/ccba_ooxml/validation/base.py": 949
+}
