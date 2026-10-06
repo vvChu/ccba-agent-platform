@@ -69,60 +69,127 @@ Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution),
 ## 🛠️ Các Chế Độ Thực Hiện:
 
 ### 📊 Chế độ 1: Kiểm Tra Trạng Thái Sức Khỏe & Độ Lệch Phiên Bản (Tại Hub)
-```powershell
+```bash
+# POSIX (Linux / macOS / WSL):
+python scripts/ccba_platform_cli.py spoke-status
+
+# PowerShell (Windows):
 python scripts\ccba_platform_cli.py spoke-status
 ```
 
 ### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
-```powershell
+```bash
 # 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
-python scripts\sync_spoke.py --all --dry-run
-python scripts\sync_spoke.py --all --apply
+python scripts/sync_spoke.py --all --dry-run
+python scripts/sync_spoke.py --all --apply
+
 # 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
-python scripts\sync_spoke.py --all --apply --include-sandboxes
+python scripts/sync_spoke.py --all --apply --include-sandboxes
+
+# 4. Đồng bộ kèm xác thực tự động (ADR-0058 Hard Completion Lock):
+python scripts/sync_spoke.py --all --apply --verify
 ```
 
 ### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
-```powershell
+> [!TIP]
+> Sử dụng biến môi trường `$CCBA_HUB_PATH` (POSIX) hoặc `$env:CCBA_HUB_PATH` (PowerShell) để đảm bảo tính độc lập trạng thái máy (Machine-State Decoupling — ADR-0061).
+
+```bash
+# POSIX (Linux / macOS / WSL):
 # Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
-python [hub_path]\scripts\sync_spoke.py --spoke .
-# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
-# Đồng bộ nạp sẵn (Preload bootstrap skills & packages):
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --bootstrap
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted (--force hoặc --ignore-dirty):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links tới packages Hub — ADR-0044) và kiểm thử Spoke (--verify):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --bootstrap --verify
 ```
 
-### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand)
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
+# PowerShell (Windows):
+# Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links) và kiểm thử Spoke:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --bootstrap --verify
+```
+
+### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand / Lazy Loading)
+> [!NOTE]
+> Khi sử dụng `--sync-item`, hệ thống chỉ sao chép duy nhất mục kỹ năng được chỉ định và thực hiện Non-Destructive Merge cho `AGENTS.md`, giữ nguyên các kỹ năng khác.
+
+```bash
+# POSIX:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
+
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
 ```
 
 ### ⏪ Chế độ 5: Hoàn Tác & Quản Lý Snapshot Sao Lưu (Rollback & Undo)
+```bash
+# POSIX:
+# Liệt kê danh sách sao lưu snapshot:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --list-backups
+
+# Hoàn tác về snapshot gần nhất (--rollback hoặc --undo):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --rollback
+```
+
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --list-backups
-python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --list-backups
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 ```
 
 ### ⚖️ Chế độ 6: Đồng Bộ Tri Thức Pháp Lý Chuẩn OKF v2.4 (Two-Tier Legal Sync — ADR 0050)
-- **🟢 Tự động đồng bộ cho Spoke liên quan (Pháp điển, Thẩm tra, Kiểm định, PCCC):** Quét và sao chép gói OKF v2.4 từ Tier 1 (Offline) hoặc Tier 2 (Cloud Drive Vault), thực hiện Non-Destructive Additive Registry Merge. Lệnh độc lập: `python -m ccba_legal sync --pull-latest`.
-- **💡 Zero-Bloat cho Spoke còn lại (Phần mềm, BIM, Admin):** Mặc định bỏ qua để giữ repo tinh gọn. Khi cần tra cứu tải lẻ: `python -m ccba_legal sync --doc <doc_id>` hoặc truy vấn RAG qua `ccba-ai` trên LiteLLM Spark.
+- **💡 Mặc định Zero-Bloat (Reference-Only):** Mặc định Spoke không bị phình to dữ liệu (không copy các gói tệp văn bản lớn). Spoke tra cứu pháp điển trực tiếp từ Hub hoặc gọi RAG qua `ccba-ai` trên LiteLLM Spark.
+- **📦 Kéo gói pháp lý vật lý (`--pull-assets`):** Dành riêng cho các Spoke chuyên trách pháp điển cần dữ liệu tĩnh ngoại tuyến:
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+- **Lệnh đồng bộ pháp lý độc lập:** `python -m ccba_legal sync --pull-latest` hoặc tải lẻ: `python -m ccba_legal sync --doc <doc_id>`.
+
+---
+
+## ⚙️ Các Cờ Dòng Lệnh & Biến Môi Trường Chi Tiết
+
+| Cờ CLI / Biến | Tên đầy đủ / Bí danh | Ý nghĩa & Hành vi |
+| :--- | :--- | :--- |
+| `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
+| `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
+| `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
+| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest` (nếu có test suite; nếu không có test sẽ trả về 0 an toàn). |
+| `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
+| `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
+| `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
+| `CCBA_SKIP_GIT_PULL` | Env var (`=1`) | Bỏ qua bước tự động gọi `git pull` trên repo Hub khi thực thi đồng bộ (chỉ nhận đúng giá trị `"1"`; gán khác `"1"` như `"true"` vẫn sẽ kích hoạt pull). |
 
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ.
+2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ (nếu bật `--pull-assets`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
    * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
      - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
      - `scripts/safe_pytest.py` (Test runner an toàn)
      - `scripts/check_hub_import_depth.py` (Kiểm soát độ sâu import)
      - `scripts/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
-   * *(Không yêu cầu chạy cấu hình thủ công `init-hooks` hay sao chép bằng PowerShell).*
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
-5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
-6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/check_spoke_cleanliness.py`.
+5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts/ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
 
 
 ## Progressive Disclosure & Reference Index (Level 3)
@@ -131,5 +198,5 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/upstream_sync_guide.md` | Tài liệu đặc tả kỹ thuật tham chiếu Upstream Radar (Phase 2 ADR-0057). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
+| `references/upstream_sync_guide.md` | Tài liệu chỉ dẫn chuyển tiếp (Pointer Guide). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
 

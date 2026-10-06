@@ -602,24 +602,27 @@ def test_ccba_skills_eval_phase2_spec_contract() -> None:
 
 
 def test_ccba_sync_upstream_phase2_spec_contract() -> None:
-    """Verify upstream_sync_guide.md contains all Phase 2 ADR-0057 contractual requirements."""
+    """Verify ccba-sync-upstream SKILL.md contains all ADR-0057 contractual requirements.
+    
+    Note: Previously asserted against a legacy guide in ccba-update-spoke/references/.
+    Canonical specification is now anchored at ccba-sync-upstream/SKILL.md.
+    """
     file_path = (
         PROJECT_ROOT
         / ".agents"
         / "skills"
-        / "ccba-update-spoke"
-        / "references"
-        / "upstream_sync_guide.md"
+        / "ccba-sync-upstream"
+        / "SKILL.md"
     )
     assert file_path.exists()
     raw_text = file_path.read_text(encoding="utf-8")
 
     assert "ADR-0057 & RES-2026-ARCH-001 v1.2" in raw_text
-    assert "100 skills" in raw_text
     assert "Tier 1: Package Function" in raw_text
     assert "Tier 2A: Progressive Reference" in raw_text
     assert "Tier 2B: Standalone Kernel Skill" in raw_text
     assert "Tier 3: Composite Orchestrator" in raw_text
+    assert "check_claudekit_updates.py" in raw_text
 
 
 # =====================================================================

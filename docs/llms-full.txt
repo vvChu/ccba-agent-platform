@@ -21,7 +21,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills platform-loader
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item platform-loader --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -122,7 +122,7 @@ python scripts/validate_skills.py --file .agents/skills/platform-loader/SKILL.md
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-classification
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-classification --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -232,7 +232,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-classification/SK
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-governance
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-governance --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -341,7 +341,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-governance/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-rase
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-rase --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -445,7 +445,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-rase/SKILL.md --e
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-risk
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-risk --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -551,7 +551,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-risk/SKILL.md --e
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-vbpl-digest
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-vbpl-digest --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -657,7 +657,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-vbpl-digest/SKILL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-academic-writing
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-academic-writing --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -756,7 +756,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-academic-writing/SK
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-adr-lifecycle
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-adr-lifecycle --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -861,7 +861,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-adr-lifecycle/SKILL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ai-gateway-sdk
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-gateway-sdk --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -969,7 +969,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-gateway-sdk/SKIL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ai-pdf-preprocessor
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-pdf-preprocessor --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1072,7 +1072,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-pdf-preprocessor
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ai-qc
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1179,7 +1179,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-qc/SKILL.md --en
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ai-qc-pccc-audit
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc-pccc-audit --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1287,7 +1287,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-qc-pccc-audit/SK
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-api-circuit-breaker
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-api-circuit-breaker --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1394,7 +1394,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-api-circuit-breaker
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-append-only-logger
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-append-only-logger --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1498,7 +1498,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-append-only-logger/
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ask
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ask --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1604,7 +1604,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ask/SKILL.md --enfo
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-autoresearch
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-autoresearch --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1708,7 +1708,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-autoresearch/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-build-skill
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-build-skill --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1809,7 +1809,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-build-skill/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-chrome-debug
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-chrome-debug --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1912,7 +1912,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-chrome-debug/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-code-review
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-code-review --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2021,7 +2021,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-code-review/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-codebase-design
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-codebase-design --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2131,7 +2131,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-codebase-design/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-completion-checklist
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-completion-checklist --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2235,7 +2235,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-completion-checklis
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-contribute-to-hub
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-contribute-to-hub --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2342,7 +2342,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-contribute-to-hub/S
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-copywriting
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-copywriting --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2448,7 +2448,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-copywriting/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-create-pr
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-create-pr --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2551,7 +2551,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-create-pr/SKILL.md 
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-create-verification-skill
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-create-verification-skill --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2658,7 +2658,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-create-verification
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-design
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-design --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2766,7 +2766,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-design/SKILL.md --e
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-diagnosing-bugs
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-diagnosing-bugs --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2870,7 +2870,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-diagnosing-bugs/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-docs-manager
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-docs-manager --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -2973,7 +2973,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-docs-manager/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-domain-modeling
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-domain-modeling --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3075,7 +3075,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-domain-modeling/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-eval-gate
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-eval-gate --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3180,7 +3180,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-eval-gate/SKILL.md 
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-excalidraw-diagram
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-excalidraw-diagram --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3284,7 +3284,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-excalidraw-diagram/
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-file-stability-guard --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3388,7 +3388,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-file-stability-guar
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-git-guardrails
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-git-guardrails --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3492,7 +3492,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-git-guardrails/SKIL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-graduate-rd
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-graduate-rd --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3595,7 +3595,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-graduate-rd/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-grilling
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-grilling --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3707,7 +3707,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-grilling/SKILL.md -
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-handoff
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-handoff --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3808,7 +3808,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-handoff/SKILL.md --
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-hybrid-rag-search
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-hybrid-rag-search --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -3913,7 +3913,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-hybrid-rag-search/S
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-implement
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-implement --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4016,7 +4016,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-implement/SKILL.md 
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-init-spoke
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-init-spoke --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4120,7 +4120,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-init-spoke/SKILL.md
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-issue-to-hub
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-issue-to-hub --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4225,7 +4225,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-issue-to-hub/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-issue-tree
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-issue-tree --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4334,7 +4334,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-issue-tree/SKILL.md
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-knowledge-loop
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-knowledge-loop --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4433,7 +4433,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-knowledge-loop/SKIL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-legal-advisor
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-advisor --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4540,7 +4540,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-advisor/SKILL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-legal-document-tracker
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-document-tracker --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4647,7 +4647,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-document-trac
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-legal-ingest
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-ingest --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4755,7 +4755,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-ingest/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-legal-intel
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-intel --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4858,7 +4858,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-intel/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-llm-pipeline-patterns
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-llm-pipeline-patterns --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -4964,7 +4964,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-llm-pipeline-patter
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-markdown-document-processing
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-markdown-document-processing --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5065,7 +5065,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-markdown-document-p
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-maskara
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-maskara --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5168,7 +5168,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-maskara/SKILL.md --
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-mermaid-diagram
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-mermaid-diagram --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5270,7 +5270,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-mermaid-diagram/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-new-feature
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-new-feature --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5372,7 +5372,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-new-feature/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-notebooklm-connector
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-notebooklm-connector --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5480,7 +5480,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-notebooklm-connecto
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-platform
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-platform --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5582,7 +5582,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-platform/SKILL.md -
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-pptx
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-pptx --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5687,7 +5687,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-pptx/SKILL.md --enf
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-promote-sandbox
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-promote-sandbox --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5789,7 +5789,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-promote-sandbox/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-release-feature
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-release-feature --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5888,7 +5888,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-release-feature/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-research
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-research --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -5994,7 +5994,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-research/SKILL.md -
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-review-proposal
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-review-proposal --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6096,7 +6096,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-review-proposal/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-seminar-builder
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-seminar-builder --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6201,7 +6201,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-seminar-builder/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-session-retrospective
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-session-retrospective --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6306,7 +6306,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-session-retrospecti
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-setup-skills
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-setup-skills --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6413,7 +6413,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-setup-skills/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-sharepoint-iac
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-sharepoint-iac --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6516,7 +6516,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-sharepoint-iac/SKIL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-skill-repair
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-skill-repair --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6618,7 +6618,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-skill-repair/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-spoke-adopter
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-spoke-adopter --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6726,7 +6726,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-spoke-adopter/SKILL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-sync-upstream
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-sync-upstream --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6830,7 +6830,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-sync-upstream/SKILL
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-tdd
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-tdd --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -6931,7 +6931,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-tdd/SKILL.md --enfo
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-teamwork
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-teamwork --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7033,7 +7033,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-teamwork/SKILL.md -
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-to-spec
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-to-spec --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7139,7 +7139,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-to-spec/SKILL.md --
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-tvpl-vip-crawler
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-tvpl-vip-crawler --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7241,7 +7241,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-tvpl-vip-crawler/SK
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-update-spoke
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-update-spoke --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7347,7 +7347,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-update-spoke/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-vllm-manager
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-vllm-manager --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7450,7 +7450,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-vllm-manager/SKILL.
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-wayfinder
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-wayfinder --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7552,7 +7552,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-wayfinder/SKILL.md 
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-web-testing
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-web-testing --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7660,7 +7660,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-web-testing/SKILL.m
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-xia
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-xia --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7767,7 +7767,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-xia/SKILL.md --enfo
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-xu-ly-van-phong
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-xu-ly-van-phong --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -7878,7 +7878,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-xu-ly-van-phong/SKI
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-youtube-learn
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-youtube-learn --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng

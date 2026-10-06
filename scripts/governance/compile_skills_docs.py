@@ -619,7 +619,7 @@ def generate_skill_markdown(skill: dict[str, Any]) -> str:
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills {name}
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item {name} --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -1529,7 +1529,7 @@ def generate_index_html(portals: list[dict[str, Any]], skills: list[dict[str, An
           </div>
           <div class="card-actions">
             <button class="btn" data-clipboard="${{escapeHtml(s.command)}}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')">📋 ${{escapeHtml(s.command)}}</button>
-            <button class="btn" data-clipboard="python scripts/spoke/sync_spoke.py --skills ${{escapeHtml(s.name)}}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Lệnh Sync')">🔄 Sync</button>
+            <button class="btn" data-clipboard='python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${{escapeHtml(s.name)}} --apply' onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Lệnh Sync')">🔄 Sync</button>
             <button class="btn btn-primary" data-skill="${{escapeHtml(s.name)}}" onclick="openModal(this.getAttribute('data-skill'))">Chi Tiết</button>
           </div>
         `;
@@ -1557,7 +1557,7 @@ def generate_index_html(portals: list[dict[str, Any]], skills: list[dict[str, An
         <div class="modal-section">
           <h3>1. Action Header & Kích Hoạt Nhanh</h3>
           <p><strong>Slash Command:</strong> <code>${{escapeHtml(s.command)}}</code></p>
-          <p><strong>Lệnh Đồng Bộ Spoke:</strong> <code>python scripts/spoke/sync_spoke.py --skills ${{escapeHtml(s.name)}}</code></p>
+          <p><strong>Lệnh Đồng Bộ Spoke:</strong> <code>python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${{escapeHtml(s.name)}} --apply</code></p>
           ${{gpiHtml}}
         </div>
 

@@ -136,6 +136,8 @@ Hiển thị cho người dùng xem bản nháp của:
 **Bước B: Cập nhật `workspace_context.yaml`**:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
 - Bổ sung chiều thiết lập "Skills Governance" và tự động ghi cấu hình `skills_governance: {architecture: "3-tier", enforce_gpi: true}` vào `.md/workspace_context.yaml`.
+- **Rào chắn Khử Khớp Trạng Thái Máy (ADR-0061 Machine-State Decoupling):**
+  Tuyệt đối **CẤM** ghi trường `hub_path` mang đường dẫn ổ đĩa máy tuyệt đối (như `D:\...` hoặc `/home/user/...`) vào `.md/workspace_context.yaml`. Đường dẫn Hub phải được phân giải hoàn toàn độc lập qua biến môi trường hệ thống `$CCBA_HUB_PATH` (hoặc fallback thư mục tương đối anh em), ngăn chặn triệt để nguy cơ xung đột khi repository được clone trên nhiều máy tính khác nhau (Linux/Windows/macOS).
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
 Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:

@@ -931,6 +931,7 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
 bundle: _governance
 tier: kernel
 layer: _governance
+scope: hub
 user-invocable: true
 command: /ccba-adr-lifecycle
 gpi:
@@ -2721,7 +2722,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -2735,6 +2736,9 @@ triggers:
 - check code
 - review commit
 - review pr
+- unslop
+- anti-slop
+- zero-noise
 ---
 # Quy trình Rà soát Chất lượng Code (Code Review)
 
@@ -2823,6 +2827,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/codebase-scan-workflow.md` | Quy trình quét toàn diện kiến trúc codebase với 2 subagents hỗ trợ |
 | `references/code-review-reception.md` | Kỷ luật tiếp nhận phản hồi review: kiểm chứng kỹ thuật trước khi chỉnh sửa |
 | `references/verification-before-completion.md` | Khóa cứng kỷ luật nghiệm thu: bằng chứng chạy thực tế trước khi tuyên bố hoàn thành |
+| `references/unslop_checklist.md` | Kỷ luật Zero-Noise & Anti-Slop (ADR-0009): Loại bỏ comment dịch tên, dead code, LLM slop |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -3630,6 +3635,185 @@ Sau khi PR đã sẵn sàng (CI xanh, Copilot sạch):
    > *"Pull Request đã vượt qua 100% CI Checks và kiểm chuẩn Copilot. Hãy gọi lệnh `/ccba-release-feature` để đối soát, squash merge và tự động đóng issue."*
 
 - **Tiêu chí hoàn thành:** Báo cáo nghiệm thu hoàn tất bàn giao cho quy trình release.
+
+
+---
+
+# Skill: ccba-create-verification-skill
+
+---
+name: ccba-create-verification-skill
+description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+user-invocable: true
+command: /ccba-create-verification-skill
+when_to_use: Dùng khi người dùng muốn thiết lập mới hoặc bảo trì, sửa lỗi sai lệch (drift repair) cho bộ kỹ năng kiểm định tự động (verification harness) của một ứng dụng hoặc spoke.
+category: governance
+gpi:
+  s: 4.5
+  k: 3.5
+  a: 2.0
+  p: 1.0
+keywords:
+- verification
+- harness
+- test
+- quality
+- pstack
+- verify
+- drift
+- maintain
+argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
+metadata:
+  author: CCBA
+  version: 1.1.0
+disable-model-invocation: true
+bundle: _core
+tier: kernel
+triggers:
+- ccba-create-verification-skill
+- create-verification-skill
+- tạo verification skill
+- thiết lập harness
+- verify harness
+- maintain-verification-skill
+- bảo trì verification skill
+- sửa verification skill
+- repair verification skill
+- harness drift
+---
+
+# Kỹ Năng Khởi Tạo & Bảo Trì Bộ Kiểm Định Ứng Dụng (ccba-create-verification-skill)
+
+Kỹ năng này tự động thiết lập bộ kỹ năng kiểm định tự động chuyên biệt `verify-<app>` cho bất kỳ ứng dụng nào trong hệ sinh thái CCBA (Web, REST API, CLI, Worker, hoặc Spoke repository).
+
+Được kế thừa và nâng cấp từ triết lý `create-verification-skill` của Cursor `pstack`, bộ kiểm định này tuân thủ nghiêm ngặt nguyên tắc **Vệ Sinh Spoke (ADR-0044)**: toàn bộ mã kiểm thử và kịch bản thực thi được cô lập bên trong `.agents/skills/verify-<app>/harness/`, tuyệt đối không làm phình thư mục `scripts/` vượt quá giới hạn 15 kịch bản.
+
+---
+
+## 5 Khối Chức Năng Cốt Lõi Trong Kỹ Năng Kiểm Định `verify-<app>`
+
+Mỗi kỹ năng `verify-<app>` được tạo ra phải bao gồm đầy đủ 5 khối cấu trúc sau:
+
+```mermaid
+flowchart TD
+    B1["1. Clean-Slate Pre-flight\n(Kiểm tra xung đột port, diệt tiến trình mồ côi)"] --> B2["2. Dual-Mode Server Lifecycle\n(POSIX setsid / Windows Process Group)"]
+    B2 --> B3["3. Deterministic Health Barrier\n(Readiness Probe với polling & timeout)"]
+    B3 --> B4["4. Evidence-Capture Test Suite\n(Chạy Pytest/Playwright, chụp log/kết quả)"]
+    B4 --> B5["5. Guaranteed Graceful Cleanup\n(Finally block dọn sạch tiến trình con)"]
+```
+
+### 1. Clean-Slate Pre-flight (Tiền Kiểm Sạch Sẽ)
+- Kiểm tra xem cổng dịch vụ (port) mục tiêu có đang bị chiếm dụng bởi tiến trình khác hay không.
+- Nếu có tiến trình chiếm dụng ngoài ý muốn, cảnh báo hoặc thực hiện ngắt kết nối an toàn.
+
+### 2. Dual-Mode Server Lifecycle (Quản Trị Vòng Đời Tiến Trình Đa Nền Tảng)
+- Khởi động server trong một nhóm tiến trình riêng biệt (Process Group) để đảm bảo có thể dừng toàn bộ cây tiến trình con một cách triệt để khi kết thúc bài test.
+- **Quy chuẩn đa hệ điều hành bắt buộc**:
+  ```python
+  import os
+  import subprocess
+  import sys
+
+  is_win = sys.platform == "win32"
+  kwargs = {}
+  if is_win:
+      # Windows: Khởi tạo Process Group mới
+      kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+  else:
+      # Linux / macOS (POSIX): Sử dụng setsid
+      kwargs["preexec_fn"] = os.setsid
+
+  proc = subprocess.Popen(server_cmd, **kwargs)
+  ```
+
+### 3. Deterministic Health Barrier (Rào Chắn Sẵn Sàng Xác Định)
+- Tuyệt đối CẤM dùng `time.sleep(N)` tùy tiện để chờ server khởi động.
+- BẮT BUỘC sử dụng vòng lặp kiểm tra HTTP endpoint (ví dụ: gửi request thăm dò readiness probe) với timeout xác định (ví dụ tối đa 15s, thăm dò mỗi 200ms).
+
+### 4. Evidence-Capture Test Suite (Thực Thi Kiểm Thử & Thu Thập Bằng Chứng)
+- Chạy toàn bộ các kịch bản kiểm thử (API, UI, hoặc integration tests).
+- Lưu giữ kết quả có cấu trúc (JUnit XML, JSON log, hoặc test artifacts) để phục vụ CI/CD và báo cáo nghiệm thu.
+
+### 5. Guaranteed Graceful Cleanup (Dọn Dẹp Đảm Bảo Tuyệt Đối)
+- Quá trình dừng server BẮT BUỘC nằm trong khối `finally:` để đảm bảo không để lại tiến trình mồ côi (zombie processes) ngay cả khi bài test thất bại:
+  ```python
+  try:
+      # Chạy test suite...
+      pass
+  finally:
+      if is_win:
+          subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], check=False)
+      else:
+          import signal
+          try:
+              os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+          except ProcessLookupError:
+              pass
+  ```
+
+---
+
+## Chế Độ Hoạt Động Kép (Dual-Mode Operation) & Tự Động Nhận Diện
+
+Kỹ năng tự động xác định chế độ vận hành dựa trên hiện trạng hệ thống tệp:
+- **Nếu chưa tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 1: Khởi Tạo Mới (`scaffold`)**.
+- **Nếu đã tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 2: Bảo Trì & Sửa Sai Lệch (`maintain`)**.
+
+---
+
+## Quy Trình Triển Khai Cho AI Agent
+
+### Mode 1 — Khởi Tạo Mới (`scaffold`)
+1. **Khảo Sát Ứng Dụng (App Discovery):**
+   - Xác định loại ứng dụng: Web (FastAPI, Flask, Next.js), CLI, Worker, hoặc Thư viện.
+   - Xác định lệnh khởi động server (nếu có), cổng mặc định, và probe kiểm tra sức khỏe (readiness check hoặc command ping).
+   - **Tiêu chí hoàn thành:** Xác định đầy đủ loại ứng dụng, lệnh khởi chạy, cổng lắng nghe, và cơ chế probe sẵn sàng.
+2. **Khởi Tạo Cấu Trúc Thư Mục Cục Bộ:**
+   - Tạo thư mục `.agents/skills/verify-<app>/`.
+   - Tạo thư mục con `.agents/skills/verify-<app>/harness/` chứa các kịch bản thực thi.
+   - **Tiêu chí hoàn thành:** Thư mục `.agents/skills/verify-<app>/harness/` được tạo thành công trên hệ thống tệp.
+3. **Sinh Tệp Định Nghĩa Kỹ Năng (`verify-<app>/SKILL.md`):**
+   - Định nghĩa frontmatter chuẩn (`name: verify-<app>`, `category: verification`, v.v.).
+   - Hướng dẫn các bước chạy kiểm định và đối chiếu trạng thái theo 5 khối cấu trúc.
+   - **Tiêu chí hoàn thành:** Tệp `.agents/skills/verify-<app>/SKILL.md` được sinh ra với đầy đủ frontmatter và quy trình 5 khối.
+4. **Khởi Tạo Features Map (`features/INDEX.md`):**
+   - Lập danh mục các tính năng hiện có của ứng dụng theo chuẩn `features_map_guide.md`.
+   - **Tiêu chí hoàn thành:** Tệp `features/INDEX.md` được khởi tạo với bảng ánh xạ các tính năng chính và bài kiểm thử tương ứng.
+5. **Chạy Thử Nghiệm Xác Minh (Dry-Run Verification):**
+   - Thực thi thử kịch bản harness để xác nhận hệ thống có thể khởi động, chạy probe, và dọn dẹp sạch sẽ với exit code 0.
+   - **Tiêu chí hoàn thành:** Kịch bản harness thực thi dry-run thành công và thoát với mã exit code 0.
+
+### Mode 2 — Bảo Trì & Sửa Sai Lệch Drift (`maintain`)
+1. **Kiểm Tra Nguồn Gốc Thay Đổi (Pre-Remediation Provenance Check - COND-01):**
+   - Đối chiếu commit history hoặc tài liệu API: nếu thay đổi là chủ đích thiết kế (đổi route, port, schema) $\rightarrow$ sửa `harness/`; nếu là lỗi hồi quy ngoài ý muốn (regression) $\rightarrow$ **CẤM SỬA `harness/`**, giữ nguyên bài test và yêu cầu sửa mã nguồn ứng dụng.
+   - **Tiêu chí hoàn thành:** Phân loại chính xác nguyên nhân lỗi thuộc diện Lệch Hợp Đồng (Contract Drift) hay Lỗi Hồi Quy (Regression).
+2. **Đối Chiếu Bề Mặt Tính Năng (Surface Diff):**
+   - So sánh các route/command hiện hành với tài liệu `features/INDEX.md` để khoanh vùng điểm lệch.
+   - **Tiêu chí hoàn thành:** Xác định danh sách các điểm trôi lệch giữa code và tài liệu.
+3. **Thực Thi Quan Sát Thực Tế (Observed Live Pass):**
+   - Chạy 1 pass harness đại diện để ghi nhận log lỗi thực tế thay vì suy đoán cảm tính.
+   - **Tiêu chí hoàn thành:** Thu thập toàn văn stack trace và log lỗi thực tế từ lần chạy kiểm định.
+4. **Khắc Phục Tận Gốc Trong Thư Mục `harness/`:**
+   - Cập nhật lệnh CLI, port, timeout, probe URL hoặc schema assertions bên trong `.agents/skills/verify-<app>/harness/`. Tuyệt đối không tạo file rác tại thư mục gốc `scripts/` (ADR-0044).
+   - **Tiêu chí hoàn thành:** Kịch bản trong `harness/` và `features/INDEX.md` được cập nhật đồng bộ.
+5. **Xác Minh Thoát Sạch Tuyệt Đối (Clean Exit Verification):**
+   - Chạy lại bài kiểm định, bảo đảm đạt exit code 0 và tiêu diệt sạch toàn bộ cây tiến trình con.
+   - **Tiêu chí hoàn thành:** Toàn bộ harness chạy thành công với exit code 0, không còn tiến trình zombie.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/features_map_guide.md` | Hướng dẫn thiết lập và duy trì Features Map (`features/INDEX.md`) cho ứng dụng |
+| `references/maintain_drift_guide.md` | Hướng dẫn phát hiện & khắc phục 4 dạng drift kiểm định, chống test tampering và bảo vệ Spoke cleanliness |
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này tuân thủ Hiến pháp Nền tảng CCBA (ADR-0009 & ADR-0044).*
 
 
 ---
@@ -9525,6 +9709,7 @@ applies_to:
 bundle: _governance
 tier: kernel
 disable-model-invocation: true
+scope: hub
 command: /ccba-review-proposal
 user-invocable: true
 metadata:
@@ -9840,7 +10025,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 bundle: _core
 tier: kernel
 triggers:
@@ -9881,6 +10066,10 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Vấn đề & Điểm nghẽn:** Những giả định sai lầm, hiểu lầm về SDK/Transport, hoặc các vòng lặp phản biện/sửa lỗi kéo dài.
   * **Giải pháp & Deep Seams:** Các mẫu thiết kế thành công giúp đơn giản hóa hệ thống (High Leverage & Locality).
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
+- **Chẩn đoán Môi trường & Rào chắn (Agent Environment Diagnostics):**
+  * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
+    Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
+  * Các phát hiện về công cụ và môi trường được phân loại chuẩn vào **Miền 5 (Windows & Tooling)** hoặc **Miền 2 (Code Quality & Testing)** trong `session_learnings.md`.
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Miền Kiến Trúc, tuân thủ nghiêm ngặt Tiered Memory Model.
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
@@ -9905,6 +10094,9 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).
 - **Rào chắn Phạm vi (Scope Creep Guard):** Agent **KHÔNG** tự ý sửa tất cả các SKILL.md phát hiện có khiếm khuyết. Thay vào đó, Agent phải **đề xuất danh sách các Skill cần sửa** kèm lý do cụ thể (1-2 dòng mỗi Skill) rồi **chờ người dùng quyết định** Skill nào sẽ được sửa trong phiên hiện tại.
+- **Nguyên tắc "Ưu tiên Kiểm tra Tất định hơn viết Prompt Rule":**
+  * Khi phát hiện sai sót lặp lại, Agent **ưu tiên tạo mã kiểm tra tự động** (linter, AST visitor, pre-commit hook hoặc kiểm tra quản trị trong `ccba-harness verify-patch`) trước khi đề xuất viết thêm quy tắc văn bản vào `AGENTS.md`.
+  * Chỉ ghi nhận quy tắc văn bản cho các trường hợp đòi hỏi phán đoán ngữ cảnh phức tạp (genuine judgement calls) nhằm bảo vệ ngân sách bộ nhớ ADR-0030 và triệt tiêu hiện tượng Attention Dilution của LLM.
 - **Rào Chắn Tái Biên Dịch Bắt Buộc (Recompilation Gate):**
   Ngay sau khi tạo mới hoặc sửa đổi bất kỳ tệp `SKILL.md` nào, Agent **bắt buộc** phải kích hoạt quy trình tái biên dịch kép để đồng bộ hóa Service Catalog và Web Documentation Portal:
   ```bash
@@ -9970,6 +10162,16 @@ Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
 - **Trạng thái Kiểm định Quản trị & ADR-0058:** Kết quả chạy bộ 4 Governance Gate và `ccba-harness verify-patch`.
 - **Mã Commit & Bypass:** Hash commit cuối cùng của phiên (kèm ghi chú `# APPROVED:` nếu áp dụng).
 - **Tiêu chí hoàn thành:** Báo cáo tổng kết hiển thị đầy đủ 4 mục trên trong cửa sổ chat, kèm liên kết Markdown dẫn đến các tệp tri thức vừa cập nhật.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu hoặc gặp ma sát công cụ, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/agent_environment_diagnostics.md` | Hướng dẫn 7 tiêu chí chẩn đoán và tối ưu hóa môi trường làm việc của Agent (Navigation, Guardrails, Context Pressure, Tool Economy) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -10119,6 +10321,8 @@ Hiển thị cho người dùng xem bản nháp của:
 **Bước B: Cập nhật `workspace_context.yaml`**:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
 - Bổ sung chiều thiết lập "Skills Governance" và tự động ghi cấu hình `skills_governance: {architecture: "3-tier", enforce_gpi: true}` vào `.md/workspace_context.yaml`.
+- **Rào chắn Khử Khớp Trạng Thái Máy (ADR-0061 Machine-State Decoupling):**
+  Tuyệt đối **CẤM** ghi trường `hub_path` mang đường dẫn ổ đĩa máy tuyệt đối (như `D:\...` hoặc `/home/user/...`) vào `.md/workspace_context.yaml`. Đường dẫn Hub phải được phân giải hoàn toàn độc lập qua biến môi trường hệ thống `$CCBA_HUB_PATH` (hoặc fallback thư mục tương đối anh em), ngăn chặn triệt để nguy cơ xung đột khi repository được clone trên nhiều máy tính khác nhau (Linux/Windows/macOS).
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
 Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:
@@ -10536,6 +10740,10 @@ triggers:
 
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
+> [!IMPORTANT]
+> **Phạm vi vận hành (Hub-Only Scope):**
+> Kỹ năng Radar này **chỉ vận hành tại Hub**. Tại Hub, hệ thống giám sát các kho chứa thượng nguồn, kiểm tra bản quyền, thẩm tra tính năng và hỗ trợ chuyển giao sang `/ccba-xia`. Các dự án Spoke không chạy radar này mà nhận các tính năng đã chuẩn hóa thông qua lệnh `/ccba-update-spoke`.
+
 Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
 
 ---
@@ -10602,12 +10810,17 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
 
 ### Nhịp 3: Chuyển giao Kiểm soát sang `/ccba-xia` (1-Click Port Handshake)
 - Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.
-- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị, ví dụ:
-  ```text
-  /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
-  ```
-- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 chống hallucination).
-- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting rõ ràng.
+- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị:
+  * **Chế độ Viết lại / Port chuẩn mực (Mặc định):**
+    ```text
+    /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
+    ```
+  * **Chế độ So sánh Kiến trúc (Side-by-Side Architectural Evaluation):**
+    ```text
+    /ccba-xia .md/scratch/repos/mattpocock-skills grill-me --compare
+    ```
+- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 phản biện Socratic Grilling).
+- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting hoặc Compare rõ ràng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -11202,59 +11415,127 @@ Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution),
 ## 🛠️ Các Chế Độ Thực Hiện:
 
 ### 📊 Chế độ 1: Kiểm Tra Trạng Thái Sức Khỏe & Độ Lệch Phiên Bản (Tại Hub)
-```powershell
+```bash
+# POSIX (Linux / macOS / WSL):
+python scripts/ccba_platform_cli.py spoke-status
+
+# PowerShell (Windows):
 python scripts\ccba_platform_cli.py spoke-status
 ```
 
 ### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
-```powershell
+```bash
 # 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
-python scripts\sync_spoke.py --all --dry-run
-python scripts\sync_spoke.py --all --apply
+python scripts/sync_spoke.py --all --dry-run
+python scripts/sync_spoke.py --all --apply
+
 # 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
-python scripts\sync_spoke.py --all --apply --include-sandboxes
+python scripts/sync_spoke.py --all --apply --include-sandboxes
+
+# 4. Đồng bộ kèm xác thực tự động (ADR-0058 Hard Completion Lock):
+python scripts/sync_spoke.py --all --apply --verify
 ```
 
 ### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
-```powershell
+> [!TIP]
+> Sử dụng biến môi trường `$CCBA_HUB_PATH` (POSIX) hoặc `$env:CCBA_HUB_PATH` (PowerShell) để đảm bảo tính độc lập trạng thái máy (Machine-State Decoupling — ADR-0061).
+
+```bash
+# POSIX (Linux / macOS / WSL):
 # Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
-python [hub_path]\scripts\sync_spoke.py --spoke .
-# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
-# Đồng bộ nạp sẵn (Preload bootstrap skills & packages):
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --bootstrap
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted (--force hoặc --ignore-dirty):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links tới packages Hub — ADR-0044) và kiểm thử Spoke (--verify):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --bootstrap --verify
 ```
 
-### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand)
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
+# PowerShell (Windows):
+# Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links) và kiểm thử Spoke:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --bootstrap --verify
+```
+
+### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand / Lazy Loading)
+> [!NOTE]
+> Khi sử dụng `--sync-item`, hệ thống chỉ sao chép duy nhất mục kỹ năng được chỉ định và thực hiện Non-Destructive Merge cho `AGENTS.md`, giữ nguyên các kỹ năng khác.
+
+```bash
+# POSIX:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
+
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
 ```
 
 ### ⏪ Chế độ 5: Hoàn Tác & Quản Lý Snapshot Sao Lưu (Rollback & Undo)
+```bash
+# POSIX:
+# Liệt kê danh sách sao lưu snapshot:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --list-backups
+
+# Hoàn tác về snapshot gần nhất (--rollback hoặc --undo):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --rollback
+```
+
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --list-backups
-python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --list-backups
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 ```
 
 ### ⚖️ Chế độ 6: Đồng Bộ Tri Thức Pháp Lý Chuẩn OKF v2.4 (Two-Tier Legal Sync — ADR 0050)
-- **🟢 Tự động đồng bộ cho Spoke liên quan (Pháp điển, Thẩm tra, Kiểm định, PCCC):** Quét và sao chép gói OKF v2.4 từ Tier 1 (Offline) hoặc Tier 2 (Cloud Drive Vault), thực hiện Non-Destructive Additive Registry Merge. Lệnh độc lập: `python -m ccba_legal sync --pull-latest`.
-- **💡 Zero-Bloat cho Spoke còn lại (Phần mềm, BIM, Admin):** Mặc định bỏ qua để giữ repo tinh gọn. Khi cần tra cứu tải lẻ: `python -m ccba_legal sync --doc <doc_id>` hoặc truy vấn RAG qua `ccba-ai` trên LiteLLM Spark.
+- **💡 Mặc định Zero-Bloat (Reference-Only):** Mặc định Spoke không bị phình to dữ liệu (không copy các gói tệp văn bản lớn). Spoke tra cứu pháp điển trực tiếp từ Hub hoặc gọi RAG qua `ccba-ai` trên LiteLLM Spark.
+- **📦 Kéo gói pháp lý vật lý (`--pull-assets`):** Dành riêng cho các Spoke chuyên trách pháp điển cần dữ liệu tĩnh ngoại tuyến:
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+- **Lệnh đồng bộ pháp lý độc lập:** `python -m ccba_legal sync --pull-latest` hoặc tải lẻ: `python -m ccba_legal sync --doc <doc_id>`.
+
+---
+
+## ⚙️ Các Cờ Dòng Lệnh & Biến Môi Trường Chi Tiết
+
+| Cờ CLI / Biến | Tên đầy đủ / Bí danh | Ý nghĩa & Hành vi |
+| :--- | :--- | :--- |
+| `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
+| `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
+| `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
+| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest` (nếu có test suite; nếu không có test sẽ trả về 0 an toàn). |
+| `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
+| `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
+| `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
+| `CCBA_SKIP_GIT_PULL` | Env var (`=1`) | Bỏ qua bước tự động gọi `git pull` trên repo Hub khi thực thi đồng bộ (chỉ nhận đúng giá trị `"1"`; gán khác `"1"` như `"true"` vẫn sẽ kích hoạt pull). |
 
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ.
+2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ (nếu bật `--pull-assets`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
-   * Lệnh `sync_spoke.py --apply` tự động đồng bộ và cập nhật các kịch bản kiểm định guardrails vào thư mục `scripts/` tại Spoke:
+   * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
+     - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
      - `scripts/safe_pytest.py` (Test runner an toàn)
      - `scripts/check_hub_import_depth.py` (Kiểm soát độ sâu import)
      - `scripts/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
-   * *(Không yêu cầu sao chép thủ công bằng PowerShell).*
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
-5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
-6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/check_spoke_cleanliness.py`.
+5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts/ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
 
 
 ## Progressive Disclosure & Reference Index (Level 3)
@@ -11263,7 +11544,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/upstream_sync_guide.md` | Tài liệu đặc tả kỹ thuật tham chiếu Upstream Radar (Phase 2 ADR-0057). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
+| `references/upstream_sync_guide.md` | Tài liệu chỉ dẫn chuyển tiếp (Pointer Guide). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
 
 
 
@@ -12200,39 +12481,59 @@ triggers:
 
 ---
 
-## Service Catalog (Source of Truth)
+## Service Catalog & Seam Indexes (Source of Truth)
 
-Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills được định nghĩa duy nhất tại:
-```text
-.agents/skills/platform-loader/catalog.yaml
-```
-Agent bắt buộc phải đọc trực tiếp tệp `catalog.yaml` để lấy cấu hình mới nhất, không tự suy đoán hoặc sử dụng danh sách cũ.
+Để định tuyến chính xác và không bị nhầm lẫn giữa kỹ năng (Skills) và mã nguồn thư viện (Python Deep Seams), Agent cần phân biệt rạch ròi giữa **3 chỉ mục hệ thống**:
+
+| Câu hỏi của Agent | Chỉ mục tra cứu | Công cụ / Lệnh | Bản chất kết quả |
+| :--- | :--- | :--- | :--- |
+| **"Người dùng muốn thực hiện lệnh/nghiệp vụ nào, cần nạp skill nào?"** | `catalog.yaml` (mục `skills`, `workflows`, `bundles`) | Đọc file hoặc khớp `triggers` | Định tuyến kỹ năng và lọc danh mục đồng bộ Spoke. |
+| **"Package nội bộ nào đã công bố symbol gì trong `packages/*/AGENTS.md`?"** | `catalog.yaml` (mục `seams`) | `ccba-platform find-seam <từ-khóa>` (truy vấn vị trí) | Chỉ là **manh mối tìm kiếm (`status: KEYWORD_HINT`)**. CẤM dùng mã băm SHA của KEYWORD_HINT làm biên lai hợp đồng kiểm toán. |
+| **"Đã có hợp đồng biến đổi dữ liệu `in → out` chưa, có cấm thư viện thay thế nào?"** | `seam-contracts.yaml` (ADR-0061) | `ccba-platform find-seam --in <types> --out <types> [--json]` | Chỉ kết quả `status: MATCH` kèm `index_sha256` mới là **Biên lai Kiểm toán Hợp đồng (Audit Receipt)**. |
 
 ---
 
 ## Routing Instructions
 
-Khi nhận yêu cầu từ người dùng, Agent thực hiện theo logic sau:
+Khi nhận yêu cầu từ người dùng, Agent thực hiện định tuyến theo thứ tự ưu tiên:
 
-### 1. Phân tích Trigger Keywords
-Đọc `catalog.yaml`. Đối chiếu request của người dùng với các `triggers` trong catalog:
-- Khớp skill $\rightarrow$ Đọc `skill_path` (`SKILL.md`) tương ứng để nạp kỹ năng.
-- Nếu skill chưa có ở Spoke $\rightarrow$ Xem mục 3 (Lazy Loading Sync) hoặc áp dụng Virtual Hub Fallback.
+### 1. Phân định Bản chất Yêu cầu
+- **Yêu cầu nghiệp vụ hoặc tác vụ AI** ("đồng bộ spoke", "so sánh kiến trúc", "thẩm tra PCCC", "soạn thảo hồ sơ hoàn thành") $\rightarrow$ Tra cứu `catalog.yaml` theo `triggers` để nạp `SKILL.md` tương ứng.
+- **Yêu cầu viết mã nguồn xử lý dữ liệu mới** ("viết script chuyển PDF sang Markdown", "đọc file docx", "gọi LLM") $\rightarrow$ BẮT BUỘC tra cứu Seam Contracts qua CLI: `ccba-platform find-seam --in <types> --out <types>`. Nếu có Seam sẵn $\rightarrow$ Tái sử dụng; cấm viết script chắp vá cục bộ.
 
 ### 2. Tự động áp dụng Rules
 - Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `.agents/rules/ccba_identity.md`.
 - Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `.agents/rules/legal_compliance.md`.
 - Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `.agents/rules/naming_conventions.md`.
 
-### 3. Đồng bộ bổ sung kỹ năng (Lazy Loading Sync)
-Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
-1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
-2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
-3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
-    ```bash
-    python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill> --apply
-    ```
-4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
+### 3. Khai thác Kỹ năng tại Spoke: Fallback vs Đồng bộ Vật lý
+Khi Agent đang hoạt động tại Spoke và phát hiện kỹ năng cần dùng chưa có sẵn trong thư mục cục bộ `.agents/skills/`:
+- **Pha 1 — Virtual Hub Fallback (Đọc tri thức tức thì):**
+  Agent đọc trực tiếp nội dung định nghĩa kỹ năng từ kho Hub thông qua biến môi trường `$CCBA_HUB_PATH`:
+  `view_file "$CCBA_HUB_PATH/.agents/skills/<tên-kỹ-năng>/SKILL.md"`
+  *(Bước này giúp Agent nắm ngay quy trình nghiệp vụ mà không cần làm bẩn git working tree của Spoke).*
+- **Pha 2 — Đồng bộ Vật lý Kỹ năng (Lazy Loading Sync qua `--sync-item`):**
+  Khi cần sao chép tệp kỹ năng vật lý về Spoke:
+  1. Xin phép người dùng: *"Tôi cần tải bổ sung kỹ năng [tên-kỹ-năng] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
+  2. Thực thi lệnh đồng bộ an toàn:
+     ```bash
+     # POSIX (Linux / macOS / WSL):
+     python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item <tên-kỹ-năng> --apply
+
+     # PowerShell (Windows):
+     python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --sync-item <tên-kỹ-năng> --apply
+     ```
+  3. *Lưu ý quan trọng:* Cờ `--sync-item` **chỉ sao chép duy nhất mục kỹ năng được chỉ định và cập nhật hiến pháp `AGENTS.md`**, hoàn toàn **KHÔNG cài đặt git hooks (Maskara pre-commit) hay guardrails bảo vệ**.
+- **Pha 3 — Đồng bộ Toàn diện & Cài đặt Rào chắn Bảo vệ (Full Bundle Sync):**
+  Nếu Spoke cần kích hoạt toàn bộ pre-commit hooks bảo mật, linter gates và rào chắn test, bắt buộc phải chạy lệnh đồng bộ đầy đủ:
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
+  ```
 
 ### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
 Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:
