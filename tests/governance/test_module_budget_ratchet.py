@@ -94,3 +94,32 @@ def test_ast_function_length_fail_closed_on_syntax_error(tmp_path: Path) -> None
     assert not res.passed
     assert res.exit_code == 1
     assert "Syntax/Read error" in res.stdout_tail
+
+
+def test_ast_function_length_post_parse_cli_rule(tmp_path: Path) -> None:
+    """Ensures CLI handlers with post-parse body > 40 lines are caught."""
+    py_file = tmp_path / "cli_handler.py"
+    content = (
+        "import argparse\n"
+        "def run_heavy_cli(argv=None):\n"
+        "    parser = argparse.ArgumentParser()\n"
+        "    args = parser.parse_args(argv)\n"
+        + "".join([f"    x{i} = {i}\n" for i in range(45)])
+        + "    return 0\n"
+    )
+    py_file.write_text(content, encoding="utf-8")
+
+    res = check_ast_function_length([py_file], max_lines=50)
+    assert not res.passed
+    assert res.exit_code == 1
+    assert "post-parse body" in res.stdout_tail
+    assert "lines > 40" in res.stdout_tail
+
+
+def test_cli_package_functions_satisfy_gate() -> None:
+    """Verifies that all functions in the ccba_harness.cli package satisfy the length gate."""
+    cli_dir = Path("packages/ccba-harness/src/ccba_harness/cli")
+    files = list(cli_dir.rglob("*.py"))
+    res = check_ast_function_length(files)
+    assert res.passed, f"CLI package function length violations found:\n{res.stdout_tail}"
+    assert res.exit_code == 0

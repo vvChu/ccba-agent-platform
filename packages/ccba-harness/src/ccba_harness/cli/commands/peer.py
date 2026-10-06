@@ -138,6 +138,7 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+# ccba:quarantine seam_id=cli.peer_dispatch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for peer prompt dispatch (`ccba-harness peer-dispatch` - ADR-0063)."""
     parser = argparse.ArgumentParser(
@@ -315,6 +316,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+# ccba:quarantine seam_id=cli.peer_dispatch_auto_apply reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def _handle_peer_dispatch_auto_apply(
     prompt_path: Path,
     root: str | None,
@@ -430,6 +432,7 @@ def _record_auto_apply_gate_result(
     return 1
 
 
+# ccba:quarantine seam_id=cli.peer_co_review reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for parallel multi-agent co-review orchestration (`ccba-harness peer-co-review` - ADR-0065)."""
     parser = argparse.ArgumentParser(
@@ -611,6 +614,7 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
     return 1
 
 
+# ccba:quarantine seam_id=cli.peer_co_review_auto_apply reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def _handle_peer_co_review_auto_apply(
     prompt_path: Path,
     output_path: Path | None,
@@ -683,6 +687,7 @@ def _handle_peer_co_review_auto_apply(
     )
 
 
+# ccba:quarantine seam_id=cli.apply_anchor_patch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for applying anchor patches (`ccba-harness apply-anchor-patch` - ADR-0063)."""
     parser = argparse.ArgumentParser(

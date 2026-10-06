@@ -12,6 +12,7 @@ from typing import Any
 from ccba_harness.skill_validator import SkillAuditIssue, SkillValidator
 
 
+# ccba:quarantine seam_id=cli.skill_validation reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_skill_validation_cli(
     args_list: Sequence[str] | None = None,
     validator: SkillValidator | None = None,
@@ -261,6 +262,7 @@ def _print_gpi_result(result: Any, as_json: bool = False) -> None:
     print("=" * 60)
 
 
+# ccba:quarantine seam_id=cli.evaluate_gpi reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for GPI evaluation (`ccba-harness evaluate-gpi`)."""
     if sys.platform == "win32":
@@ -394,6 +396,7 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+# ccba:quarantine seam_id=cli.eval reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for skill evaluation benchmarks (`ccba-harness eval`)."""
     if sys.platform == "win32":

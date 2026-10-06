@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 
+# ccba:quarantine seam_id=cli.telemetry reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_telemetry_cli(argv: Sequence[str] | None = None) -> int:
     """CLI entry point for subagent runtime telemetry (`ccba-harness telemetry`)."""
     if sys.platform == "win32":

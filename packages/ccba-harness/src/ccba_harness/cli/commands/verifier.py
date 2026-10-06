@@ -99,6 +99,7 @@ def run_verify_doc_cli(args_list: Sequence[str] | None = None) -> int:
         return 1
 
 
+# ccba:quarantine seam_id=cli.verify_patch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
 def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for deterministic patch verification (`ccba-harness verify-patch`)."""
     if sys.platform == "win32":
