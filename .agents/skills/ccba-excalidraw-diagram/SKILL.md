@@ -72,15 +72,29 @@ Thư viện lõi `ccba-diagram` (`from ccba_diagram import apply_smart_layout`) 
 
 ---
 
-## 💻 Cách Vận Hành Qua Python API & CLI
+## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
+
+Skill này thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`diagram_layout.v1`** của gói `ccba-diagram`:
+
+1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
+   Trước khi triển khai bố cục sơ đồ mới, Agent thực hiện xác thực Seam qua CLI:
+   ```bash
+   python scripts/ccba_platform_cli.py find-seam --in diagram --out layout --json
+   ```
+   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_diagram:apply_smart_layout`). Khi làm việc trong phiên, ghi nhận `seam_id`, `status` vào plan của phiên (không commit `index_sha256` tĩnh vào file kỹ năng).
+
+2. **Rào Chắn Cấm Tính Toạ Độ Thủ Công (Determinism Invariant):**
+   Tuyệt đối **CẤM** Agent tự suy diễn toạ độ số học (x, y) hay xê dịch thủ công các elements Excalidraw qua prompting. Toàn bộ việc tính toán toạ độ, phân tầng DAG Sugiyama, toả tròn Radial, và cắt tỉa mũi tên theo hình khối phải ủy quyền 100% cho Seam `apply_smart_layout` hoặc CLI `ccba-diagram layout`.
+
+3. **Cách Vận Hành Qua Python API & CLI:**
 
 ```python
 from ccba_diagram import apply_smart_layout, generate_markdown_spec_table
 
-# 1. Tối ưu hoá toạ độ elements in-place
+# 1. Tối ưu hoá toạ độ elements in-place qua Seam
 engine_used = apply_smart_layout(elements)
 
-# 2. Sinh bảng Markdown
+# 2. Sinh bảng Markdown chuẩn công thái học
 spec_table = generate_markdown_spec_table(elements)
 ```
 

@@ -80,53 +80,43 @@ flowchart LR
 - Đảm bảo thư mục đầu ra `.md/extracts/audit_batch/` sẵn sàng.
 - **Tiêu chí hoàn thành:** Xác định duy nhất một thư mục dự án đích hợp lệ và kiểm tra thư mục này tồn tại cục bộ.
 
-### Bước 2: Kích Hoạt Deep Seam `QCAuditPipeline`
-- Thực thi toàn trình qua Python API của package `ccba_qc_core`:
-  ```python
-  from ccba_qc_core import QCAuditPipeline
+---
 
-  pipeline = QCAuditPipeline()
-  summary = pipeline.run_audit_sync(
-      project_dir="[target_project]",
-      output_dir="[target_project]/.md/extracts/audit_batch"
-  )
-  print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
-  ```
-- Hoặc thực thi qua CLI:
-  ```powershell
-  python -m ccba_ai.cli run-qc --project "[target_project]" --out-dir "[target_project]/.md/extracts/audit_batch"
-  ```
-- **Tiêu chí hoàn thành:** Pipeline chạy hoàn tất không có lỗi hệ thống, sinh ra tệp `Coordination_Matrix.csv` và báo cáo `BATCH_QC_Report_Auto.md` tại thư mục đầu ra.
+## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
 
-### Bước 3: Đối Soát & Trình Bày Báo Cáo
-- Mở và đọc nội dung báo cáo tại `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`.
-- Trích xuất bảng Heat Map rủi ro và các lỗi nghiêm trọng (High Risk) hiển thị trực tiếp cho Kỹ sư duyệt.
-- **Tiêu chí hoàn thành:** Bảng Heat Map và danh sách điểm nghẽn kỹ thuật được hiển thị rõ ràng trên giao diện chat cho người dùng kiểm tra.
+Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`qc_pipeline.v1`** của gói `ccba-qc-core`:
+
+1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
+   Trước khi triển khai thẩm tra bản vẽ, Agent thực hiện tra cứu Seam qua CLI:
+   ```bash
+   python scripts/ccba_platform_cli.py find-seam --in drawing_set project_dir --out audit_report --json
+   ```
+   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_qc_core:QCAuditPipeline`). Ghi nhận `seam_id`, `status` vào plan của phiên làm việc.
+
+2. **Khởi Chạy Toàn Trình Qua Seam:**
+   Thực thi toàn bộ 3 pha (Discovery, Quad-View Vision, Reporter) qua Python API của Seam:
+   ```python
+   from ccba_qc_core import QCAuditPipeline
+
+   pipeline = QCAuditPipeline()
+   summary = pipeline.run_audit_sync(
+       project_dir="[target_project]",
+       output_dir="[target_project]/.md/extracts/audit_batch"
+   )
+   print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
+   ```
+   *Lưu ý:* Tuyệt đối CẤM Agent tự viết script ad-hoc để bóc tách PDF hoặc ghép collage ảnh khi Seam `QCAuditPipeline` đã giải quyết khép kín từ đầu đến cuối.
 
 ---
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
-* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
-  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
-  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
-  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
-* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.
-
-## Progressive Disclosure & Reference Index (Level 3)
+## 📚 Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/discovery.md` | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
-| `references/integrated_audit.md` | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
-| `references/reporter.md` | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
-| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+| [`references/discovery.md`](references/discovery.md) | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
+| [`references/integrated_audit.md`](references/integrated_audit.md) | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
+| [`references/reporter.md`](references/reporter.md) | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
+| [`references/batch_orchestrator.md`](references/batch_orchestrator.md) | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
 
-## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
-* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
-* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
-* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.

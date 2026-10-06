@@ -16,7 +16,7 @@ gpi:
   s: 2.0
   k: 2.0
   a: 4.0
-  p: 1.0
+  p: 3.0
 triggers:
 - pccc audit
 - semantic map-reduce
@@ -34,6 +34,14 @@ triggers:
 # CCBA AI QC PCCC Audit
 
 Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine đã có trong nền tảng:
+* **Hạ Tầng Lõi:** Ủy quyền toàn bộ thuật toán Map-Reduce cho module `ccba_qc_core.pccc` (class `PcccMapReduceEngine`) thay vì viết mã xử lý phân tán ad-hoc.
+* **Định Tuyến Mô Hình Động:** Mọi tương tác AI trong pipeline thẩm tra tự động giải quyết qua Seam `ccba_ai.routing.choose_model("audit")`. Tuyệt đối CẤM truyền chuỗi model thô cứng.
 
 ---
 
@@ -64,19 +72,21 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 ### 1. Điều kiện tiền quyết
 Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
 
-### 2. Lệnh chạy script:
-Xác định đường dẫn Hub (`hub_path`) và chạy lệnh:
+### 2. Lệnh thực thi qua Package CLI (`ccba-qc`):
+*   **Định tuyến mô hình:** Tham số `--model` nhận giá trị trả về từ Seam `choose_model("audit")` (`ModelArchetype.REASONING`), thay vì để trống khiến hệ thống rơi vào model local mặc định.
+
 ```bash
-python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py" \
+ccba-qc pccc \
+    --model "<kết_quả_từ_choose_model_audit>" \
     --tm "đường/dẫn/đến/thuyet_minh.md" \
     --arch "đường/dẫn/đến/kien_truc.md" \
     --mep "đường/dẫn/đến/mep.md" \
     --gopy "đường/dẫn/đến/pc07.md" \
-    --model "qwen-local-primary" \
     --out "Bao_Cao_Tham_Dinh_PCCC.md"
 ```
-*(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
+*(Nếu không có văn bản góp ý của PC07, bỏ hoàn toàn tùy chọn `--gopy`)*
 
+---
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -84,15 +94,16 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/sop_cdt_tu_tham_dinh.md` | Danh mục SOP tự thẩm tra hồ sơ thiết kế PCCC cho Chủ đầu tư |
-| `references/sop_tham_dinh_congan.md` | Danh mục SOP thẩm duyệt thiết kế PCCC với Cơ quan Công an PCCC |
-| `references/sop_tham_tra_cqxd.md` | Danh mục SOP thẩm tra quy chuẩn xây dựng và an toàn cháy với Sở Xây dựng |
+| [`references/sop_cdt_tu_tham_dinh.md`](references/sop_cdt_tu_tham_dinh.md) | Danh mục SOP tự thẩm tra hồ sơ thiết kế PCCC cho Chủ đầu tư |
+| [`references/sop_tham_dinh_congan.md`](references/sop_tham_dinh_congan.md) | Danh mục SOP thẩm duyệt thiết kế PCCC với Cơ quan Công an PCCC |
+| [`references/sop_tham_tra_cqxd.md`](references/sop_tham_tra_cqxd.md) | Danh mục SOP thẩm tra quy chuẩn xây dựng và an toàn cháy với Sở Xây dựng |
 
-## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
-* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
-* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
-* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.
+---
 
-## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD
-* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.
-* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.
+## 🏛️ Tra Cứu Quy Chuẩn PCCC Nguyên Văn (ADR-0059 Legal Verbatim Grounding)
+Mọi thông số kỹ thuật quy chuẩn PCCC (Bậc chịu lửa, chiều cao PCCC F1.3, hành lang hút khói, buồng thang N1/N2/N3, giới hạn chịu lửa kết cấu R/EI) bắt buộc phải được đối soát nguyên văn từ bundle quy chuẩn chính thức qua Seam CLI:
+```bash
+python -m ccba_legal get-clause --doc qcvn_06_2022_bxd --clause <clause_id>
+```
+Tuyệt đối **CẤM** Agent tự nhớ số liệu hoặc diễn giải lại điều khoản quy phạm ngoài văn bản chính thức.
+

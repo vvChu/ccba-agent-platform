@@ -36,37 +36,24 @@ conforms_to:
 - "ADR-0042"
 - "ADR-0050"
 ---
-# Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
+# Skill: CCBA Legal Intelligence Engine (`ccba-legal-intel`)
 
-Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào dữ liệu từ Thư viện Pháp luật (TVPL) qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)), phân tích đóng gói thành cấu trúc OKF Bundle lồng nhau, phân rã phụ lục, vá liên kết tương đối và đăng ký văn bản mới vào cơ sở tri thức cục bộ.
+Kỹ năng này hướng dẫn Agent phân tích đồ thị quan hệ pháp luật qua Deep Seam **`LegalKnowledgeEngine`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)), tra cứu điều khoản, bóc tách bảng ma trận số liệu, thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, tập trung vào phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản và trích xuất tri thức:
+* **Thu Thập & Ingestion:** Ủy quyền 100% việc nạp văn bản mới cho Skill Seam [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md) (`legal_ingest.v1`). Tuyệt đối không duy trì sổ tay thu thập trùng lặp.
+* **Tra Cứu & Trích Xuất Tri Thức:** Khai thác các Seam hiện có của `ccba_legal` (`LegalKnowledgeEngine`, `get-clause`, `get-table`).
 
 ---
 
 ## 1. Quy chuẩn & Rào cản Kỹ thuật (Technical Guardrails)
 
-### 1.1. Rào cản Bảo mật & Quản lý Thông tin xác thực
-*   **Không hardcode credentials**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env` (`TVPL_USERNAME`, `TVPL_PASSWORD`). Báo lỗi nếu thiếu.
-*   **Persistent Chromium VIP Profile (ADR 0031)**: Sử dụng hồ sơ trình duyệt chuyên dụng độc lập tại `~/.gemini/antigravity/chrome_vip`. Khi bắt đầu phiên làm việc hoặc khi session hết hạn, chạy lệnh tương tác:
-    ```bash
-    python -m ccba_legal login
-    ```
-    Đăng nhập tài khoản TVPL Pro 1 lần duy nhất để lưu cookie phiên bền vững cho toàn bộ các lệnh cào tự động sau đó.
-
-### 1.2. Ma Trận Ưu Tiên Tải Dữ Liệu TVPL VIP (ADR 0031)
-1. **Tier 1 — VIP Digital Vector Searchable PDF (`part=-100` / `#ctl00_Content_ThongTinVB_filePDFHyperLink`)**: Mỏ neo Pháp lý Tối thượng Cấp 1 (100% thân văn bản + toàn bộ phụ lục số hóa & bảng tra cứu).
-2. **Tier 2 — VIP OpenXML Word Document (`part=-1&docx=1` / `#ctl00_Content_ThongTinVB_vietnameseHyperLink_Docx`)**: Nguồn Dữ Liệu Gốc Vàng (Gold Source Input) để nạp vào `docx_converter.py` chuyển đổi sang OKF v2.2.
-3. **Tier 3 — Gazette Scan PDF (`part=0` / `#ctl00_Content_ThongTinVB_pdfHyperLink`)**: Fallback dự phòng khi văn bản chưa có bản PDF số hóa riêng.
-
-### 1.3. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
-*   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên Windows, hàm `sanitize_slug` **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
-
-### 1.4. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
-*   **Luật gốc (Parent Law)**: Lưu tại `legal_docs/01_vbpl/<law_slug>/`
-*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
-*   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
-
-### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037, ADR 0041, ADR 0042)
-Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
+### 1.1. Cấu Trúc Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037, ADR 0041, ADR 0042)
+Mỗi văn bản quy phạm pháp luật khi được bóc tách và tra cứu bắt buộc phải đọc từ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
 ```text
 legal_docs/<category_prefix>/<document_slug>/
 ├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và source_assets)
@@ -86,6 +73,10 @@ legal_docs/<category_prefix>/<document_slug>/
 ```
 * **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`, khối `source_assets`.
 * **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`packages/ccba-legal-intel`) và Spoke (`legal_registry.yaml`).
+
+### 1.2. Rào Cản Bảo Mật & Giới Hạn Đường Dẫn
+*   **Bảo vệ hai tầng chống Path Traversal (CWE-22)**: Khi truy xuất điều khoản hoặc bảng biểu qua CLI/API, hệ thống luôn xác thực đường dẫn tài liệu nằm trong thư mục gốc được phép.
+*   **Giới hạn độ dài Slug (Windows MAX_PATH Prevention)**: Độ dài định danh slug tối đa 60 ký tự để bảo đảm an toàn khi đồng bộ liên hệ điều hành.
 
 ---
 
@@ -107,81 +98,57 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
 
 ---
 
-## 3. Hướng dẫn Vận hành Quy trình Chuẩn Hóa Văn Bản
+## 3. Hướng dẫn Khai Thác & Ứng Dụng Tri Thức Pháp Lý
 
-1. **Khởi Tạo Phiên TVPL VIP (Persistent Session - ADR 0031)**:
-   ```bash
-   python -m ccba_legal login
-   ```
-   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên tại `~/.gemini/antigravity/chrome_vip`.
-   * **Tiêu chí hoàn thành:** Chrome DevTools Protocol khởi chạy thành công và lưu cookie phiên xác thực hợp lệ.
+> [!NOTE]
+> **Phân định ranh giới trách nhiệm (ADR-0059, ADR-0061)**: Toàn bộ quy trình nạp gốc văn bản mới (đăng nhập TVPL VIP, cào tài liệu, chuyển đổi Word sang OKF v2.4 Bundle, hợp nhất VBHN và kiểm định 15 Cổng Master CI) được quản trị tập trung tại [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md). Kỹ năng `ccba-legal-intel` tập trung vào khai thác đồ thị quan hệ, tra cứu điều khoản/bảng biểu, thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
 
-2. **Nạp Tự Động 1 Lệnh Toàn Trình (Happy Path - ADR 0035)**:
-   ```bash
-   python -m ccba_legal ingest "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
-   ```
-   Tự động tải bản PDF số hóa VIP (`part=-100`) và bản Word `.docx`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và Google NotebookLM.
-   * **Tiêu chí hoàn thành:** Bundle OKF v2.4 được sinh tự động và đồng bộ lên Google Drive Vault cùng NotebookLM.
+### 1. Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)
+```bash
+python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
+```
+Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+* **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
 
-   *Hoặc tải riêng lẻ từng văn bản:*
-   ```bash
-   python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
-   ```
+### 2. Tra Cứu & Trích Xuất Tri Thức Pháp Lý (LegalKnowledgeEngine CLI & API — ADR 0035, ADR 0050)
+* **Tra cứu văn bản và cảnh báo vòng đời:**
+  ```bash
+  python -m ccba_legal query "Luật Xây dựng"
+  ```
+* **Trích xuất nguyên vẹn Điều/Khoản với Tier-Aware Semantic Slicing & Alias Parser:**
+  ```bash
+  python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d1
+  python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d15k2
+  ```
+* **Trích xuất bảng ma trận số liệu chuẩn Markdown/CSV:**
+  ```bash
+  python -m ccba_legal get-table --doc qcvn_06_2022_bxd --table bang_01 --format markdown
+  ```
+* **Lập trình Python Facade qua `LegalKnowledgeEngine`:**
+  ```python
+  from ccba_legal import LegalKnowledgeEngine, query
+  engine = LegalKnowledgeEngine()
+  docs = engine.search("nghị định 105")
+  clause = engine.get_clause("Luat-Xay-dung-2025-135-2025-QH15", "d1")
+  table = engine.get_table("qcvn_06_2022_bxd", "bang_01", format="markdown")
+  ```
+* **Tiêu chí hoàn thành:** Truy xuất thành công dữ liệu điều khoản/bảng biểu kèm cảnh báo pháp lý và bảo vệ hai tầng chống CWE-22 Path Traversal.
 
-3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (DocxCanonicalSanitizer & Zero-LLM Deterministic AST — ADR 0042)**:
-   ```bash
-   python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
-   ```
-   *(Thực thi tiền xử lý chuẩn hóa DOM in-memory qua `DocxCanonicalSanitizer`: gọt thuộc tính `w:rsid*`, gộp run phân mảnh Unicode NFC, tiêm `xml:space="preserve"`, unwrap bảng layout và thăng cấp heading trước khi bóc tách AST đa phương thức)*.
-   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`), `clauses.json` và `metadata.yaml`.
+### 3. Phân Tích Đồ Thị Lược Đồ Quan Hệ & Kiểm Soát Vòng Đời (Graph Intelligence)
+Khai thác 11 mối quan hệ lược đồ tại Mục 2 để xây dựng ma trận căn cứ pháp lý:
+* Nhận diện văn bản bị thay thế (`replaced_by_docs`) để cảnh báo rủi ro điểm liệt (Hard Floor Invariant).
+* Lập bản đồ văn bản hướng dẫn (`guiding_docs`) từ Luật gốc xuống Nghị định và Thông tư thi hành.
+* Đối chiếu văn bản hợp nhất (`consolidations`) để bảo đảm tính đồng bộ quy phạm.
 
-4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
-   ```bash
-   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" -o "legal_docs/<category>/<doc_slug>"
-   ```
-   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md`.
+### 4. Thiết Lập Checklist Tuân Thủ Dự Án (Compliance Checklist)
+* Bóc tách các yêu cầu bắt buộc (mandates) từ các điều khoản đã trích xuất.
+* Gắn mã định danh quy phạm (`doc_id` + `clause_id`) vào từng đầu mục kiểm tra.
+* Cập nhật trạng thái tuân thủ dự án và liên kết trực tiếp tới file nguồn OKF v2.4 trên Spoke.
 
-5. **Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)**:
-   ```bash
-   python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
-   ```
-   Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
-   * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
-
-6. **Tra Cứu & Trích Xuất Tri Thức Pháp Lý (LegalKnowledgeEngine CLI & API — ADR 0035, ADR 0050)**:
-   * **Tra cứu văn bản và cảnh báo vòng đời:**
-     ```bash
-     python -m ccba_legal query "Luật Xây dựng"
-     ```
-   * **Trích xuất nguyên vẹn Điều/Khoản với Tier-Aware Semantic Slicing & Alias Parser:**
-     ```bash
-     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d1
-     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d15k2
-     ```
-   * **Trích xuất bảng ma trận số liệu chuẩn Markdown/CSV:**
-     ```bash
-     python -m ccba_legal get-table --doc qcvn_06_2022_bxd --table bang_01 --format markdown
-     ```
-   * **Lập trình Python Facade qua `LegalKnowledgeEngine`:**
-     ```python
-     from ccba_legal import LegalKnowledgeEngine, query
-     engine = LegalKnowledgeEngine()
-     docs = engine.search("nghị định 105")
-     clause = engine.get_clause("Luat-Xay-dung-2025-135-2025-QH15", "d1")
-     table = engine.get_table("qcvn_06_2022_bxd", "bang_01", format="markdown")
-     ```
-   * **Tiêu chí hoàn thành:** Truy xuất thành công dữ liệu điều khoản/bảng biểu kèm cảnh báo pháp lý và bảo vệ hai tầng chống CWE-22 Path Traversal.
-
-7. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
-   ```powershell
-   python scripts/validate_legal_spoke.py
-   ```
-   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 15 Cổng Master CI Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$, Gate 13 Table Regularity, Gate 14 KaTeX Syntax).
-
-8. **Xuất Bản Trình Chiếu PowerPoint 1-Chạm (Legal-to-PPTX Thin Seam — ADR 0044)**:
-   ```bash
-   python -m ccba_legal pptx <input_markdown> -o <output_pptx>
-   ```
-   Chuyển đổi trực tiếp tài liệu tóm tắt pháp lý (`summary.md` / `concept.md`) sang file trình chiếu PowerPoint `.pptx` chuẩn nhận diện thương hiệu CCBA (Swiss Modernist Design ver 3.4) qua dynamic import `ccba_ooxml`.
-   * **Tiêu chí hoàn thành:** File presentation `.pptx` được tạo thành công với layout chuẩn thương hiệu CCBA và kích thước hợp lệ.
+### 5. Xuất Bản Trình Chiếu PowerPoint 1-Chạm (Legal-to-PPTX Thin Seam — ADR 0044)
+```bash
+python -m ccba_legal pptx <input_markdown> -o <output_pptx>
+```
+Chuyển đổi trực tiếp tài liệu tóm tắt pháp lý (`summary.md` / `concept.md`) sang file trình chiếu PowerPoint `.pptx` chuẩn nhận diện thương hiệu CCBA (Swiss Modernist Design ver 3.4) qua dynamic import `ccba_ooxml`.
+* **Tiêu chí hoàn thành:** File presentation `.pptx` được tạo thành công với layout chuẩn thương hiệu CCBA và kích thước hợp lệ.
 
