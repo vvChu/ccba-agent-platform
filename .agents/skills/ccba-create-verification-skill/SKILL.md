@@ -24,7 +24,7 @@ metadata:
   author: CCBA
   version: 1.1.0
 disable-model-invocation: true
-bundle: _governance
+bundle: _core
 tier: kernel
 triggers:
 - ccba-create-verification-skill
