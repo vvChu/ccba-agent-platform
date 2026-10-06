@@ -34,7 +34,21 @@ package_path: packages/ccba-ai
 ---
 # AI Gateway SDK
 
-Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình (50+ models/aliases thời gian thực qua `ai.models()`) — từ Qwen 35B chạy local GPU đến Claude 4.6, Gemini 3.7 Flash trên cloud.
+Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình thời gian thực qua `ai.models()` — từ Qwen 35B chạy local GPU đến Claude, Gemini trên cloud.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào gói monorepo `packages/ccba-ai` cung cấp 4 Capability Seams nền tảng:
+- **`ai_chat.v1`**: Đàm thoại và sinh văn bản (`from ccba_ai import ai`).
+- **`ai_embedding.v1`**: Trích xuất vector ngữ nghĩa (`from ccba_ai import embed`).
+- **`ai_transcribe.v1`**: Chuyển giọng nói thành văn bản (`from ccba_ai import transcribe`).
+- **`model_routing.v1`**: Định tuyến mô hình theo tác vụ chuẩn (`from ccba_ai import choose_model, ModelArchetype`).
+
+Mọi tương tác LLM từ client (Hub/Spoke/CLI) BẮT BUỘC định tuyến qua Seam `model_routing.v1` bằng các khóa tác vụ chuẩn (`general`, `reasoning`, `coding`, `ocr`, `rag`, `private`). Tuyệt đối không hardcode API key, không nhúng chuỗi model thô của nhà cung cấp vào mã nguồn.
+
+---
 
 ## Kiến trúc
 
@@ -43,7 +57,7 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 │  MÁY CLIENT (PC/Laptop/Server khác)                         │
 │                                                              │
 │  from ccba_ai import ai                                      │
-│  ai.chat("...")  ──► http://<SERVER_IP>:8090/v1              │
+│  ai.chat("...")  ──► http://${CCBA_AI_GATEWAY_HOST}:8090/v1   │
 │                         ▲                                    │
 │                    .env (API_KEY)                             │
 └────────────────────┬─────────────────────────────────────────┘
@@ -54,8 +68,8 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 │  :8090 ─► AI Gateway (LiteLLM)                               │
 │              ├── qwen-local-primary    ← vLLM, local GPU    │
 │              ├── reasoning-gemma       ← vLLM, fallback     │
-│              ├── Claude 4.5/4.6        ← Anthropic API      │
-│              ├── Gemini 3.1 Pro/Flash  ← Google API         │
+│              ├── Claude Reasoning      ← Anthropic API      │
+│              ├── Gemini Standard/Flash ← Google API         │
 │              ├── ocr-primary / tier3   ← Vision APIs        │
 │              └── Auto-fallback + Redis cache                 │
 └──────────────────────────────────────────────────────────────┘
@@ -65,29 +79,27 @@ Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoin
 
 ## Kết nối
 
-| Phương thức | Server IP | Ghi chú |
+| Phương thức | Server Host | Ghi chú |
 |---|---|---|
-| **Tailscale VPN** ⭐ | `100.83.192.30` | Khuyến nghị — an toàn, xuyên NAT |
+| **Tailscale VPN** ⭐ | `${CCBA_AI_GATEWAY_HOST}` | Khuyến nghị — an toàn, xuyên NAT |
 | LAN (cùng mạng) | `<LAN_IP>` | Hỏi admin |
 | SSH Tunnel | `localhost` | `ssh -N -L 8090:localhost:8090 vvc@<IP>` |
 
-- **Gateway URL**: `http://<SERVER_IP>:8090/v1`
+- **Gateway URL**: `http://${CCBA_AI_GATEWAY_HOST}:8090/v1`
 - **API Key**: `<YOUR_AI_GATEWAY_KEY>`
-
----
 
 ---
 
 ## 🏛️ 4 Model Archetypes (Vai trò Nghiệp vụ Chuẩn)
 
-Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến model theo đúng 4 Archetypes chuẩn:
+Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến model theo đúng 4 Archetypes chuẩn qua Seam `model_routing.v1`:
 
-| Archetype | Model Aliases | Target Backend | Khi nào sử dụng? |
+| Archetype | Task Key (`choose_model`) | Enum Archetype | Khi nào sử dụng? |
 | :--- | :--- | :--- | :--- |
-| **1. OCR & Vision Ingestion** | `ocr-primary`<br>`ocr-fallback`<br>`ocr-tier4` | Google AI Studio Direct (10 keys) | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
-| **2. Standard General / Coding** | `gemini-3.7-flash`<br>`gemini-3.7-flash-medium`<br>`text-gemma` | Google API + Centralized Proxy | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
-| **3. Deep Reasoning / Complex Audit** | `gemini-3.7-flash-high`<br>`claude-sonnet-4-6-thinking`<br>`claude-opus-4-6`<br>`reasoning-gemma` | Google API + Centralized Proxy | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
-| **4. Local Private / Zero-Cost** | `rag-core`<br>`qwen-local-primary` | vLLM Qwen 35B Local (GPU DGX) | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
+| **1. OCR & Vision** | `"ocr"` | `ModelArchetype.VISION_OCR` | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
+| **2. Standard / Coding** | `"general"`, `"coding"` | `ModelArchetype.STANDARD`, `ModelArchetype.FAST_CODE` | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
+| **3. Deep Reasoning** | `"reasoning"`, `"audit"` | `ModelArchetype.REASONING` | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
+| **4. Local Private** | `"private"`, `"rag"` | `ModelArchetype.LOCAL`, `ModelArchetype.RAG` | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
 ---
 
@@ -107,18 +119,16 @@ Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến mod
 
 ```mermaid
 graph TD
-    User([Client Request]) --> ModelChoice{Model Requested}
+    User([Client Request]) --> ModelChoice{Task Routing}
 
-    ModelChoice -->|gemini-3.7-flash-high| G37H[gemini-3.7-flash-high]
-    G37H -->|503/429/Timeout| G37M[gemini-3.7-flash-medium]
-    G37M -->|503/429/Timeout| G36H[gemini-3.6-flash-high]
-    G36H -->|503/429/Timeout| G35H[gemini-3.5-flash-high]
-    G35H -->|503/429/Timeout| OCT4[ocr-tier4: gemini-2.5-flash]
-    OCT4 -->|503/429/Timeout| RAGC[rag-core: Local Qwen 35B GPU]
+    ModelChoice -->|reasoning| R1[Reasoning Tier 1]
+    R1 -->|503/429/Timeout| R2[Reasoning Tier 2]
+    R2 -->|503/429/Timeout| R3[Standard Fallback]
+    R3 -->|503/429/Timeout| R4[Local MoE GPU]
 
-    ModelChoice -->|ocr-primary| OCR1[ocr-primary: gemini-3.1-flash-lite]
-    OCR1 -->|503/429/Timeout| OCRFB[ocr-fallback: gemini-3.5-flash-lite]
-    OCRFB -->|503/429/Timeout| OCT4
+    ModelChoice -->|ocr| O1[Vision OCR Primary]
+    O1 -->|503/429/Timeout| O2[Vision OCR Fallback]
+    O2 -->|503/429/Timeout| R4
 ```
 
 ### 🛡️ Cơ chế Kháng Lỗi Ngân sách LiteLLM & 5-Tier Failover Router (RULE-2.12)
@@ -143,9 +153,9 @@ Khi kích hoạt, hệ thống lập tức chuyển thẳng sang Tier 2 hoặc T
 ### Option A — `ccba-ai` Package (Khuyến nghị cho Hub/Spoke)
 
 ```bash
-pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-ai"
+pip install -e "$CCBA_HUB_PATH/packages/ccba-ai"
 # Tùy chọn: cài đặt thêm ccba-harness nếu cần FileMutexLock cấp cao cho Plan/Team:
-# pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-harness"
+# pip install -e "$CCBA_HUB_PATH/packages/ccba-harness"
 ```
 
 ```python
@@ -154,14 +164,14 @@ from ccba_ai import ai, async_ai, ModelArchetype, choose_model, chat_with_metada
 # 1. Chat cơ bản (mặc định timeout=90.0s, strip_thinking=True)
 response = ai.chat(
     "Tóm tắt các điểm chính trong tài liệu đính kèm...",
-    model=ModelArchetype.STANDARD  # gemini-3.7-flash
+    model=ModelArchetype.STANDARD  # Khóa tác vụ general
 )
 print(response)
 
 # 2. Deep reasoning (Tự động cấp phát max_tokens=16384 và tự làm sạch thẻ <think>)
 deep_res = ai.chat(
     "Phân tích xung đột giữa Điều 12 và Điều 18 của dự thảo...",
-    model=ModelArchetype.REASONING  # gemini-3.7-flash-high
+    model=ModelArchetype.REASONING  # Khóa tác vụ reasoning
 )
 print(deep_res)
 
@@ -173,7 +183,7 @@ print(f"Tokens: prompt={res.usage.prompt_tokens}, completion={res.usage.completi
 print(f"Latency: {res.latency_ms} ms")
 
 # 4. Định tuyến tự động theo task
-model_name = choose_model("ocr")  # ocr-primary
+model_name = choose_model("ocr")  # Seam model_routing.v1
 ```
 
 ---
@@ -260,27 +270,21 @@ Một số model trên Gateway (như `gemini-3.7-flash-high`, `claude-sonnet-4-6
 Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
 
 ```env
-AI_GATEWAY_URL=http://100.83.192.30:8090/v1
+AI_GATEWAY_URL=http://${CCBA_AI_GATEWAY_HOST}:8090/v1
 AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
-AI_MODEL=qwen-local-primary
+AI_MODEL=general
 ```
 
 ---
 
-## Model Routing Logic
+## Model Routing Logic per ADR-0061
 
 ```python
-def choose_model(task_type: str) -> str:
-    routing = {
-        "coding":     "claude-sonnet-4-6",          # Best coding
-        "reasoning":  "claude-sonnet-4-6-thinking", # Cloud logic
-        "research":   "gemini-3.1-pro-high",        # Large context
-        "fast":       "claude-haiku-4-5",           # Speed
-        "private":    "qwen-local-primary",         # Offline/private logic
-        "ocr":        "ocr-primary",                # For parsing PDFs/Images
-        "vietnamese": "qwen-local-primary",         # Vietnamese text
-    }
-    return routing.get(task_type, "qwen-local-primary")
+from ccba_ai.routing import choose_model, ModelArchetype
+
+# Định tuyến chuẩn theo tác vụ qua Seam model_routing.v1
+# SSOT mapping được quản trị tập trung tại packages/ccba-ai/src/ccba_ai/routing.py
+model_alias = choose_model("reasoning")
 ```
 
 ---
@@ -289,11 +293,11 @@ def choose_model(task_type: str) -> str:
 
 ```bash
 # Verify gateway reachable
-curl http://100.83.192.30:8090/v1/models \
+curl http://${CCBA_AI_GATEWAY_HOST}:8090/v1/models \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 
 # Health check
-curl http://100.83.192.30:8090/health
+curl http://${CCBA_AI_GATEWAY_HOST}:8090/health
 ```
 
 ---
@@ -417,3 +421,10 @@ def remove_ocr_artifacts(text: str) -> str:
 - **Package**: `packages/ccba-ai/` — pip install để dùng `from ccba_ai import ai`
 - **Env template**: `.agents/skills/ccba-ai-gateway-sdk/.env.ai-gateway`
 - **Server docs**: Xem thêm tại `AI_Gateway/playbooks/` (archived)
+
+---
+
+## Tiêu chí hoàn thành
+
+- [ ] **Completion Criterion:** Đã kết nối và xác thực thành công các Capability Seams (`ai_chat.v1`, `ai_embedding.v1`, `ai_transcribe.v1`, `model_routing.v1`) qua package `ccba_ai`, tuân thủ định tuyến mô hình chuẩn qua `choose_model()`.
+
