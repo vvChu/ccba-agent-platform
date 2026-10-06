@@ -35,6 +35,12 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (Radar thượng nguồn Hub-only). Script `upstream_evaluator.py` đã import `ccba_harness.gpi` và `ccba_ai.ai` và gọi AI Gateway ở nhịp thẩm tra (trục A=3.0); skill trỏ và điều phối script trinh sát `scripts/spoke/check_claudekit_updates.py`, không tự thân trở thành một seam GPI hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 ## 🚀 Các Cờ CLI Hỗ Trợ (Command Line Flags)
 
 Hệ thống cung cấp các cờ dòng lệnh linh hoạt phục vụ cả tự động hóa lẫn trinh sát thủ công:
