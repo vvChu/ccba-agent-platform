@@ -36,6 +36,14 @@ Kỹ năng này điều phối toàn bộ quy trình chuyển đổi, làm sạc
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào Public Deep Seam **`legal_markdown.v1`** của gói monorepo `packages/mdconverter` (`from mdconverter import ConversionPipeline`).
+
+Toàn bộ quy trình chuyển đổi, làm sạch bảng biểu và tái cấu trúc liên kết phụ lục bắt buộc sử dụng trực tiếp Seam `ConversionPipeline`. Tuyệt đối CẤM Agent tự viết script phân mảnh hoặc parser ad-hoc tại Spoke.
+
+---
+
 ## Kiến trúc Deep Seam & Hậu xử lý Tự động
 
 `ConversionPipeline` đóng gói trọn gói quá trình chuyển đổi thô và 3 giai đoạn hậu xử lý tự động trong một lệnh duy nhất:
