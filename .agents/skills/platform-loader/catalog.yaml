@@ -444,7 +444,7 @@ skills:
   command: /ccba-create-pr
   tier: kernel
 - name: ccba-create-verification-skill
-  bundle: _governance
+  bundle: _core
   description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke
     (ADR-0009 / Upstream Pstack Disciplines).
   triggers:
