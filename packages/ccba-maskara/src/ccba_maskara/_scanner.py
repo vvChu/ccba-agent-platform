@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -52,10 +53,15 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
         return True
     stripped = val.strip()
     # Ignore template variable interpolations and f-strings: ${VAR}, $(VAR), {{ ... }}, {VAR...}
-    if stripped.startswith(("${", "$(", "{{", "<%", "<#")) or (
-        stripped.startswith("{") and stripped.endswith("}")
-    ):
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#")):
         return True
+    if stripped.startswith("{"):
+        if stripped.startswith(('{"', "{'")):
+            pass  # Possible JSON secret literal, do NOT suppress
+        elif stripped.endswith("}"):
+            return True
+        elif re.match(r"^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]", stripped):
+            return True
     # Ignore variable / attribute references in code: args.xxx, self.xxx, params.xxx
     if stripped.startswith(("args.", "self.", "params.")):
         return True
