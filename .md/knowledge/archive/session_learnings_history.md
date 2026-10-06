@@ -702,9 +702,33 @@ Phiên làm việc triển khai và dogfooding thực tế hệ sinh thái Level
    - *Pydantic Coercion*: LLM thường xuyên xuất `conditions` dưới dạng danh sách chuỗi (`list[str]`) thay vì danh sách dicts, hoặc thêm các trường telemetry phụ. Thiết lập `extra="ignore"` và `@field_validator("conditions", mode="before")` tự động chuẩn hóa chuỗi thành `PeerCondition(id="COND-xx", description=...)` là điều kiện tiên quyết cho production zero-touch.
    - *Session History Fallback*: Khi các lệnh gọi tool của Grok CLI làm phân mảnh ngõ ra stdout, harness tự động đọc tin nhắn assistant cuối cùng trong `~/.grok/sessions/**/{session_id}/chat_history.jsonl` có giới hạn trần kích thước.
 3. **ACID Two-Phase Commit with POSIX Mode Preservation & Error Reporting**:
-   - *Fail-Fast Phase 1*: Kiểm tra `target_file.is_file()` ngay tại Phase 1 để loại trừ thư mục trước khi đọc bytes băm SHA-256.
-   - *Rollback Transparency*: Khối `except` hoàn nguyên không được dùng `pass` âm thầm; toàn bộ lỗi hoàn nguyên tệp được gom vào `rollback_errors` trong thông điệp `ValueError`.
-   - *POSIX Permission Preservation*: `atomic_write_text` đọc và khôi phục `stat.st_mode` của tệp đích khi ghi đè, chống mất quyền thực thi script (`+x`).
+---
+
+## 32. Upstream Pstack Disciplines: AST Comment Sanitation, Dual-Mode Verification Harness & False-Positive Decoupling (PR #486)
+
+### Context & Implementation Summary
+Phiên làm việc tiếp thu và nội địa hóa toàn diện các chuẩn mực kỹ thuật từ Cursor `pstack` vào nền tảng CCBA Agent Services Platform sau khi hoàn thành phản biện đối kháng cùng Grok CLI (Verdict: `REVISE & PROCEED` với 5 điểm tinh chỉnh giải thuật):
+- **Component 1 (Deep Seam `peer_gate.py`)**: Xây dựng `check_redundant_comments()` tích hợp vào 7-Stage Implementation Gate (`run_full_gate` / `run_implementation_gate`), tự động phát hiện mã chết bị comment out và comment lặp lại tên định danh $\le 5$ từ đứng trước hàm/lớp.
+- **Component 2 (Quy chuẩn Nền tảng `docs/rules/code_quality.md`)**: Ban hành Mục 16 "Anti-Slop & Zero-Noise Code Discipline" (5 nguyên tắc cốt lõi).
+- **Component 3 (Checklist Rà soát `ccba-code-review`)**: Thiết lập `references/unslop_checklist.md`, bump `ccba-code-review` lên v1.5.0.
+- **Component 4 (Standalone Kernel Skill `ccba-create-verification-skill`)**: Tạo kỹ năng Tier 2B (GPI: 22.75) sinh bộ harness kiểm định `verify-<app>` và cẩm nang `features/INDEX.md`.
+- **Bản vá CI (Commit `7e543378`)**: Sửa lỗi drift đếm skill `update_arch_stats.py` và khử false positive `[env-secret]` của Maskara. Đạt 100% (8/8 checks) CI passed và squash-merge vào `main` (`ab88e013`).
+
+### Key Architectural Invariants & Learned Patterns
+1. **AST Tokenized Comment Sanitation with Block Header Wrapping**:
+   - `ast.parse()` tự động lược bỏ comments; do đó BẮT BUỘC dùng `tokenize.generate_tokens()` để định vị các token `tokenize.COMMENT`.
+   - Đối với mã chết độc lập (def, class, import, return): Thử nghiệm `ast.parse()` trực tiếp sẽ ném `SyntaxError: unexpected EOF` với các block header (`def foo():`, `class Bar:`) hoặc `SyntaxError: return outside function`.
+   - *Quy chuẩn bọc mã*: Nếu comment kết thúc bằng `:`, append thêm `\n    pass`; nếu bắt đầu bằng `return `, bọc trong `def _dummy():\n    {code}`. Chỉ khi AST module sinh ra node hợp lệ mới xác nhận là dead code. Mọi câu văn xuôi chứa từ khóa (như `# return early if cache hit`) sẽ gây `SyntaxError` khi parse và được giữ lại nguyên vẹn.
+2. **Lexical Analysis Naming & Maskara False-Positive Decoupling**:
+   - Bộ quét bí mật `ccba-maskara` có quy tắc `env-secret` nhận diện chuỗi regex `(?i)\b[A-Za-z0-9_]*TOKEN[A-Za-z0-9_]*\s*[:=]`.
+   - Trong mã nguồn phân tích từ vựng (AST / Tokenizer), nếu đặt tên biến là `tokens = ...`, `name_tokens = ...`, Maskara sẽ ném vi phạm bảo mật giả `[SECURITY VIOLATION] [env-secret]` do chứa cụm từ `TOKEN` đi kèm phép gán biểu thức $\ge 8$ ký tự.
+   - *Invariant*: Tuyệt đối không dùng danh từ chứa chuỗi con `token` cho các biến nhận kết quả gán trong code tokenizer. BẮT BUỘC dùng các định danh trung tính: `lex_items`, `lexemes`, `name_parts`, `name_vocab`.
+3. **Embedded Verification Harness Directory Pattern (ADR-0044 Guardrail)**:
+   - Khi tự động sinh kỹ năng kiểm định `verify-<app>` cho các Spoke repositories, toàn bộ mã kiểm thử và kịch bản thực thi BẮT BUỘC nằm gọn trong `.agents/skills/verify-<app>/harness/`.
+   - Tuyệt đối không rải các kịch bản kiểm thử ra thư mục `scripts/` của Spoke, bảo vệ nghiêm ngặt ngân sách tối đa 15 scripts theo Hiến pháp Spoke Cleanliness (ADR-0044).
+4. **Architecture Stats Synchronization Before Documentation Validation Gate**:
+   - Khi tạo mới Standalone Kernel Skill (tăng tổng số kỹ năng từ 75 lên 76), các thẻ neo `<!-- SKILL_COUNT_START -->` trong `README.md` và `PLATFORM.md` BẮT BUỘC phải được cập nhật qua `python scripts/update_arch_stats.py` trước khi chạy `validate_docs.py` và tạo commit, ngăn chặn triệt để lỗi chặn cứng CI `Invariant marker drift`.
+
 
 
 
