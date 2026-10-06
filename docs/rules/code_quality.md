@@ -218,3 +218,27 @@ Kỷ luật viết code tinh gọn, chống ô nhiễm context và triệt tiêu
    - Mọi thay đổi mã nguồn Python phải vượt qua `check_redundant_comments()` tích hợp trong 7-Stage Peer Implementation Gate (`run_full_gate` / `run_implementation_gate`).
    - Các ngoại lệ hợp lệ được allowlist tự động: Chỉ thị công cụ (`# ccba:*`, `# noqa`, `# type: ignore`, `# pragma: no cover`, `# flake8:`, `# mypy:`), ranh giới phân tách trực quan (`# ---`), chú thích văn bản quy phạm pháp luật (`# Theo Điều...`, `# Luật Xây dựng`, `# NĐ...`, `# QCVN...`, `# TCVN...`).
 
+---
+
+## 17. Hypothesis-Driven Forensic & Ambiguity Resolution (Figure-It-Out Discipline)
+
+Quy chuẩn xử lý bài toán kỹ thuật phức tạp, di chuyển kiến trúc quy mô lớn, hoặc chẩn đoán các lỗi ẩn không rõ nguyên nhân (ambiguous anomalies):
+
+1. **Completion Predicate & Non-Goals (Xác Lập Điều Kiện Tiên Quyết):**
+   - Trước khi sửa bất kỳ dòng mã nào, Agent bắt buộc phải tuyên bố bằng văn bản:
+     - **Completion Predicate:** Tiêu chí hoàn thành cụ thể, đo lường được bằng lệnh thực thi tự động (exit code 0, benchmark vượt ngưỡng, test pass).
+     - **Non-Goals:** Những hạng mục nằm ngoài phạm vi tác vụ nhằm chống trượt mục tiêu (scope creep) và tối ưu hóa ngân sách token.
+2. **4-Part Uncertainty Partitioning (Phân Tách Vùng Mù 4 Nhóm):**
+   - Khi đối mặt với sự mơ hồ, Agent bắt buộc chia tách bài toán thành 4 nhóm độc lập:
+     - **Factual Questions (Câu hỏi sự thật):** Tìm kiếm câu trả lời bằng công cụ nội tại (`grep`, `view_file`, AST parsing, git log). TUYỆT ĐỐI CẤM hỏi con người những gì máy tính và mã nguồn có thể tự trả lời.
+     - **Empirical Forks (Nhánh giả thuyết thực nghiệm):** Khi có $\ge 2$ hướng giải quyết khả thi, bắt buộc tạo spike/prototype độc lập hoặc bài test nhỏ để đo đạc định lượng thay vì suy diễn lý thuyết. **Giới hạn ngắt mạch (COND-02):** Mỗi nhánh thực nghiệm chỉ được thử-sai tối đa 3 lần (*Max 3 Empirical Iterations*); nếu vượt quá 3 lần mà chưa hội tụ kết quả, bắt buộc dừng lại để nâng cấp thành thảo luận kiến trúc (ADR).
+     - **Product Preferences (Sở thích sản phẩm):** Chỉ phỏng vấn người dùng khi liên quan trực tiếp đến trải nghiệm người dùng cuối hoặc quy định kinh doanh nghiệp vụ. **Ứng xử khi chạy headless/CI (COND-03):** Nếu không có người dùng tương tác trực tiếp, Agent tự động chọn phương án bảo thủ nhất (*least-privilege*), duy trì tính tương thích ngược tối đa và ghi nhận rõ lý do trong PR description.
+     - **Irreversible Decisions (Quyết định một chiều - One-way door):** Thay đổi schema dữ liệu, xóa API công khai, thay đổi giao thức nền tảng bắt buộc phải lập bản đề xuất kiến trúc (ADR) và có sign-off chính thức trước khi commit.
+3. **Falsifiable Hypotheses & Minimal Reproducer Codification (Tái Lập & Khắc Sâu Bài Test - COND-04):**
+   - Mọi giả định nguyên nhân lỗi bắt buộc phải phát biểu dưới dạng giả thuyết có thể bác bỏ (Falsifiable Hypothesis).
+   - Thiết lập kịch bản tái lập lỗi nhỏ nhất (Minimal Reproducer) và chứng minh lỗi xuất hiện TRƯỚC KHI viết mã sửa lỗi.
+   - **Bắt buộc lưu vết thường trực (Reproducer Codification):** Mọi Minimal Reproducer sau khi chứng minh và sửa lỗi thành công BẮT BUỘC phải được chuẩn hóa thành test case chính thức trong `tests/` hoặc bài kiểm tra trong `harness/`, tuyệt đối không xóa bỏ dưới dạng script rác tạm thời.
+4. **Runtime Evidence over Proxy Assumptions (Bằng Chứng Thực Tế Thay Vì Giả Định Ảo):**
+   - Tuyệt đối CẤM kết luận "code nhìn có vẻ đúng" hoặc "lý thuyết đã khớp". Mọi nghiệm thu bắt buộc phải kèm theo bằng chứng runtime thực tế (kết quả chạy lệnh, stdout/stderr, mã thoát 0 từ `ccba-harness verify-patch`).
+
+

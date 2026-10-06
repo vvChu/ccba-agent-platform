@@ -37,3 +37,13 @@ Tài liệu này cung cấp checklist chuyên biệt để nhận diện và lo�
   python -c "from ccba_harness import check_redundant_comments; print(check_redundant_comments(['<target_file>']))"
   ```
 - [ ] Đảm bảo 0 vi phạm về redundant comments hoặc dead code trước khi hoàn tất review.
+
+---
+
+## 6. Hypothesis-Driven Forensic Checklist (Figure-It-Out Discipline)
+- [ ] **Xác lập Completion Predicate & Non-Goals**: Nhiệm vụ phức tạp/mơ hồ có định nghĩa rõ tiêu chí hoàn thành đo lường được và danh sách non-goals không?
+- [ ] **Phân tách vùng mù 4 nhóm**: Đã tự giải quyết Factual Questions bằng công cụ khảo sát codebase trước khi hỏi người dùng?
+- [ ] **Giới hạn thử nghiệm (COND-02)**: Các nhánh giả thuyết thực nghiệm (Empirical Forks) có tuân thủ giới hạn tối đa 3 lần thử-sai không?
+- [ ] **Khắc sâu bài test thường trực (COND-04)**: Minimal Reproducer đã được chuẩn hóa thành test case chính thức trong `tests/` hoặc `harness/` thay vì bị xóa bỏ không?
+- [ ] **Bằng chứng runtime thực tế**: Mọi khẳng định hoàn thành đều có bằng chứng lệnh thực thi (exit code 0), không dựa trên giả định phỏng đoán.
+

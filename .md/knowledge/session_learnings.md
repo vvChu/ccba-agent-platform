@@ -28,6 +28,10 @@
   - *Deterministic Checks over Rules*: Lỗi cơ học BẮT BUỘC tạo automated linter/CI check (`verify-patch`, pre-commit); CẤM thêm prompt rules vào `AGENTS.md` gây Attention Dilution (ADR-0030).
 - **RULE-1.16 [Lexical Analysis Naming & Maskara False-Positive Decoupling]**:
   - Trong code tokenizer/AST, CẤM đặt tên biến gán chứa chuỗi con `token` (`tokens = ...`, `name_tokens = ...`) với biểu thức $\ge 8$ ký tự tránh kích hoạt nhầm rule `env-secret` của Maskara trên PR diff. BẮT BUỘC dùng danh từ trung tính: `lex_items`, `lexemes`, `name_parts`, `name_vocab`.
+- **RULE-1.17 [Verification Harness Drift Maintenance & Pre-Remediation Provenance Check]**:
+  - *Provenance Check (COND-01)*: Phân định rõ contract drift chủ đích vs unintended regression trước khi sửa test; CẤM hạ assert tạo test pass giả mạo.
+  - *Drift Isolation*: Mọi sửa đổi test/harness cô lập trong `.agents/skills/verify-<app>/harness/` (ADR-0044). Phân loại chuẩn 4 hình thái drift (API, Environmental, Process/PID, Structural).
+
 
 ---
 
@@ -45,6 +49,9 @@
   - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống lỗi Orphan Notes. Shell script đa dòng dùng `cat << 'EOF'` chống lỗi nháy. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
 - **RULE-2.18 [AST Comment Sanitation & Anti-Slop Discipline]**:
   - Mọi code Python qua 7-Stage Gate `check_redundant_comments`. Dùng `tokenize` bảo toàn comments, bọc hàm/block header phát hiện dead code (`def`, `class`, `import`, `return`), và cấm comment $\le 5$ từ dịch tên định danh. Giữ nguyên allowlist chỉ thị và trích dẫn pháp lý.
+- **RULE-2.19 [Hypothesis-Driven Forensic & Ambiguity Resolution]**:
+  - *Phân vùng bất định 4 miền*: Phân tách triệt để Unknown Unknowns (thử nghiệm $\le 3$ vòng COND-02), Product Preferences (headless fallback COND-03), Technical Forks (trade-off matrix) và Bugs.
+  - *Minimal Reproducer (COND-04)*: Mọi bug forensic BẮT BUỘC đóng băng test tối thiểu tái hiện lỗi vào `tests/` hoặc `harness/` trước khi sửa.
 - *(RULE-2.16, 2.17 tại Mục 28, 30 của archive/session_learnings_history.md)*
 
 ---

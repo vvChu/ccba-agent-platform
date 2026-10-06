@@ -1,6 +1,6 @@
 # ccba-create-verification-skill
 
-> **Mô tả ngắn**: Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+> **Mô tả ngắn**: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 
 ---
 
@@ -30,7 +30,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-create-verification-skill
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -50,6 +50,11 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `tạo verification skill`
 - `thiết lập harness`
 - `verify harness`
+- `maintain-verification-skill`
+- `bảo trì verification skill`
+- `sửa verification skill`
+- `repair verification skill`
+- `harness drift`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Khởi tạo bộ kỹ năng kiểm định tự động verify-<app> cô lập cho ứng dụng hoặc spoke.

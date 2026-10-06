@@ -1,6 +1,42 @@
 # 📜 CCBA Knowledge Base Mutation Log (Append-Only Log)
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
+
+## [2026-10-06] [synthesize] | Phát Hành Pstack Phase 2: Verification Drift Maintenance & Hypothesis-Driven Forensic
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI `APPROVE_PLAN` COND-01 $\to$ COND-05)
+- **Affected Files**: `.agents/skills/ccba-create-verification-skill/`, `docs/rules/code_quality.md`, `.agents/skills/ccba-code-review/references/unslop_checklist.md`, `.md/knowledge/`
+- **Summary**: Hoàn tất tiếp thu 2 năng lực tinh túy còn lại từ Cursor `pstack` (v0.15.0+) mà không làm phình số lượng skills (Zero Skill Bloat):
+  1. **Dual-Mode Verification Skill (`ccba-create-verification-skill` v1.1.0)**: Tích hợp chế độ kép `scaffold` (khởi tạo mới 5 khối) và `maintain` (bảo trì & sửa lỗi drift); tự động nhận diện mode theo hiện trạng `harness/`. Biên soạn cẩm nang `references/maintain_drift_guide.md` với rào chắn Pre-Remediation Provenance Check (COND-01: phân định lỗi hồi quy ứng dụng vs lệch hợp đồng chủ đích, chống Test Tampering / False Green).
+  2. **Quy Chuẩn Thẩm Định Giả Thuyết (Mục 17 `docs/rules/code_quality.md`)**: Chuẩn hóa mô hình phân tách vùng mù 4 nhóm (*Factual questions*, *Empirical forks*, *Product preferences*, *Irreversible decisions*); thiết lập bộ ngắt mạch $\le 3$ lần thử-sai (COND-02); cơ chế ứng xử bảo thủ least-privilege khi chạy headless/CI (COND-03); bắt buộc khắc sâu Minimal Reproducer thành bài test thường trực trong `tests/` hoặc `harness/` (COND-04). Tích hợp checklist rà soát vào `unslop_checklist.md`.
+  3. **Đồng Bộ Tri Thức**: Bổ sung `RULE-1.17` và `RULE-2.19` vào `session_learnings.md` ($\le 10,240$ bytes theo COND-05).
+
+---
+
+## [2026-10-06] [synthesize] | Phát Hành PR #489: Level-2.5 Multi-Agent Co-Review Orchestration & Deterministic Consensus Engine
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Tiếp thu 6 điều kiện đối kháng từ Grok-4.7 COND-01 $\to$ COND-06, /ccba-release-feature)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/src/ccba_harness/cli.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/tests/test_peer_co_review.py`, `packages/ccba-harness/AGENTS.md`, `.agents/skills/platform-loader/catalog.yaml`
+- **Summary**: Triển khai hạ tầng đồng thẩm tra đa tác nhân song song và động cơ tổng hợp phán quyết đồng thuận tất định:
+  1. **Total Precedence Lattice (COND-01)**: Thiết lập `VERDICT_LATTICE_RANK` bao phủ trọn vẹn 11 token của `VerdictType`. Cấm nhánh fallback bịa `APPROVE`.
+  2. **Quorum Contract & Fail-Closed (COND-02)**: Nhận diện profile lỗi/timeout $\to$ hạ verdict xuống `HANDOFF` (trừ khi có blocker `REJECT`). Cách ly cấu hình model và timeout từ `PROFILE_SPECS`.
+  3. **Duyệt Tất Định & Gộp Conditions (COND-03)**: Duyệt theo thứ tự profiles đầu vào; gộp cờ blocking bằng phép OR (`c1.blocking or c2.blocking`); bảo toàn `source_profiles`. Rào chắn PASS với `risk_score >= 4` tự động hạ thành `APPROVE_WITH_CONDITIONS`.
+  4. **Cách Ly Thư Mục Chạy (COND-04)**: Thực thi trong `tempfile.TemporaryDirectory(mode=0700)` ngoài cây `.md/peer_exchange`, chống hiện tượng background watcher quét nhầm file nháp gây lặp vô tận. Chỉ publish 1 file kết quả qua `atomic_write_text`.
+  5. **CombinedTelemetry & Frontmatter Chuẩn (COND-05)**: Thiết kế `CombinedTelemetry` tách biệt `wall_seconds` và `sum_agent_seconds`, bóc tách breakdown theo profile; xuất trường `conditions:` chuẩn hóa.
+  6. **CLI Subcommand & Deep Seams (COND-06)**: Cung cấp lệnh `ccba-harness peer-co-review` với `--dry-run`, mã thoát phân tầng (0: PASS, 1: Error, 2: CONDITIONS, 3: REVISE, 4: REJECT, 5: HANDOFF); đăng ký 4 Deep Seams mới vào `AGENTS.md` và `__all__`.
+  7. **Khử False Positive Maskara**: Khắc phục lỗi `[env-secret]` do Maskara quét trúng các biến telemetry/token theo `RULE-1.16`. Đạt 10/10 tests pass, 8/8 CI checks pass, squash-merge PR #489 (`9d6c2b7a`).
+
+---
+
+## [2026-10-06] [adr] | Phát Hành PR #487: HUB-ADR 0065 Cương Xương Vận Hành Tác Nhân Ngang Hàng & Khóa Topo Fail-Closed
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Thẩm định kiến trúc Grok 4.7 xhigh, PR #484)
+- **Affected Files**: `docs/adr/0065-peer-runtime-hardening-and-topological-fail-closed.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/tests/test_peer_runtime_hardening.py`, `scripts/spoke/spoke_bootstrap.py`
+- **Summary**: Ban hành và áp dụng HUB-ADR 0065 giải quyết dứt điểm 4 điều kiện chặn từ Grok Architectural Audit:
+  1. **Cương Xương Profiles (COND-01)**: Khóa cứng `patch_fast` (1 turn), `agentic_code` (`["read_file", "search_replace", "list_dir"]`), chuẩn hóa `arch_audit` (8 turns, 600s, reasoning xhigh). Thêm ràng buộc `risk_score` 1-5 trong `PeerVerdictBlock`.
+  2. **Triệt Tiêu APPROVE Giả Lập Từ Anchor Patch (COND-02)**: Bản vá neo thiếu verdict block bắt buộc gán `HANDOFF`; chỉ nghiệm thu sau khi `verify-patch` thoát mã 0.
+  3. **Thu Hẹp Mutex, Tiêu Diệt Process Group & Tránh Rò Bộ Nhớ (COND-03)**: Thu hẹp `_SYNC_MUTEX`; khởi tạo subprocess với `start_new_session=True` và hàm dọn `_terminate_proc_tree(proc)` diệt sạch cây tiến trình (SIGTERM $\to$ SIGKILL); cách ly `session_id` từng model; giới hạn 2MB đọc `chat_history.jsonl`.
+  4. **Thuật Toán Topo Fail-Closed (COND-04)**: Khi Kahn phát hiện chu trình phụ thuộc $\to$ lập tức hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER`, cấm nối đuôi nút kẹt. Thêm retry backoff chống khóa tệp trên Windows. Đạt 100% CI checks, squash-merge PR #487 (`dc38c2be`).
+
+---
+
 ## [2026-10-06] [synthesize] | Phát Hành PR #486: Upstream Pstack Disciplines (Anti-Slop, Zero-Noise Comments & Verification Skill Harness)
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/peer_gate.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/AGENTS.md`, `packages/ccba-harness/tests/test_pstack_disciplines.py`, `docs/rules/code_quality.md`, `.agents/skills/ccba-code-review/`, `.agents/skills/ccba-create-verification-skill/`, `PLATFORM.md`, `README.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `walkthrough.md`

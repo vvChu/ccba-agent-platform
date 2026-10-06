@@ -445,14 +445,19 @@ skills:
   tier: kernel
 - name: ccba-create-verification-skill
   bundle: _governance
-  description: Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009
-    / Upstream Pstack Disciplines).
+  description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke
+    (ADR-0009 / Upstream Pstack Disciplines).
   triggers:
   - ccba-create-verification-skill
   - create-verification-skill
   - tạo verification skill
   - thiết lập harness
   - verify harness
+  - maintain-verification-skill
+  - bảo trì verification skill
+  - sửa verification skill
+  - repair verification skill
+  - harness drift
   skill_path: .agents/skills/ccba-create-verification-skill/SKILL.md
   command: /ccba-create-verification-skill
   tier: kernel

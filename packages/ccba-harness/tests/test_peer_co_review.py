@@ -400,3 +400,71 @@ def test_render_consensus_report_markdown() -> None:
     assert md.startswith("---\n")
     assert "verdict: APPROVE" in md
     assert "- **Consensus Verdict**: `APPROVE`" in md
+
+
+def test_synthesize_verdicts_quorum_failure_monotonic_lattice() -> None:
+    """Verifies that quorum failure preserves completed verdicts >= HANDOFF rank (COND-LATTICE-QUORUM)."""
+    # 1. Completed REVISE_PLAN (rank 80) >= HANDOFF (rank 70): must remain REVISE_PLAN
+    verdicts_revise = {
+        "code_review": PeerVerdictBlock(
+            request_id="req-mono-01",
+            verdict="REVISE_PLAN",
+            summary="Needs revision",
+        )
+    }
+    rep_revise = synthesize_verdicts(
+        request_id="req-mono-01",
+        verdicts=verdicts_revise,
+        expected_profiles=["code_review", "arch_audit"],
+    )
+    assert rep_revise.verdict == "REVISE_PLAN"
+    assert "arch_audit" in rep_revise.failed_profiles
+    assert any(c.id == "COND-QUORUM-FAIL" for c in rep_revise.conditions)
+
+    # 2. Completed APPROVE (rank 20) < HANDOFF (rank 70): quorum failure falls back to HANDOFF
+    verdicts_approve = {
+        "code_review": PeerVerdictBlock(
+            request_id="req-mono-02",
+            verdict="APPROVE",
+            summary="Approved by code review alone",
+        )
+    }
+    rep_approve = synthesize_verdicts(
+        request_id="req-mono-02",
+        verdicts=verdicts_approve,
+        expected_profiles=["code_review", "arch_audit"],
+    )
+    assert rep_approve.verdict == "HANDOFF"
+    assert "arch_audit" in rep_approve.failed_profiles
+
+
+def test_synthesize_verdicts_escalates_approve_with_reservations() -> None:
+    """Verifies APPROVE_WITH_RESERVATIONS escalates to APPROVE_WITH_CONDITIONS if blocking condition exists (COND-02)."""
+    verdicts = {
+        "code_review": PeerVerdictBlock(
+            request_id="req-res-01",
+            verdict="APPROVE_WITH_RESERVATIONS",
+            conditions=[
+                PeerCondition(id="C1", description="Must fix blocking issue", blocking=True)
+            ],
+            summary="Reservations",
+        )
+    }
+    rep = synthesize_verdicts("req-res-01", verdicts=verdicts, expected_profiles=["code_review"])
+    assert rep.verdict == "APPROVE_WITH_CONDITIONS"
+
+
+def test_orchestrate_peer_co_review_unknown_profile_rejected(tmp_path: Path) -> None:
+    """Verifies that orchestrate_peer_co_review rejects profiles not in PROFILE_SPECS (COND-PROFILE-SANDBOX)."""
+    from ccba_harness.peer import orchestrate_peer_co_review
+
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(
+        "---\nrequest_id: 'req-01'\nfrom_agent: 'anti'\nto_agent: 'grok'\noutput_path: 'out.md'\n---\nPrompt",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Unknown execution profile 'invalid_prof_xyz'"):
+        orchestrate_peer_co_review(
+            prompt_path=prompt_file,
+            profiles=["invalid_prof_xyz"],
+        )

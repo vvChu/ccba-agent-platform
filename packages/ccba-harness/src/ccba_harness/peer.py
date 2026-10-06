@@ -134,7 +134,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "deny": ["*"],
         "system_prompt": (
             "You are a pure JSON and markdown patch generator. "
-            "You MUST start your response with YAML frontmatter enclosed in --- containing request_id, verdict: APPROVE, and summary, "
+            "You MUST start your response with YAML frontmatter enclosed in --- containing request_id, verdict: HANDOFF, and summary, "
             "followed directly by a ```json block containing the AnchorPatchPayload. "
             "DO NOT chat, DO NOT explain, DO NOT output introductory prose. "
             "Respond immediately with the required formatted blocks."
@@ -152,6 +152,11 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
             "spawn_subagent",
         ],
         "reasoning_effort": "high",
+        "system_prompt": (
+            "You are an expert peer code reviewer. You MUST start your response immediately with "
+            "YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, conditions, "
+            "and summary, followed by your structured code review findings."
+        ),
         "timeout": 300.0,
     },
     "arch_audit": {
@@ -166,6 +171,11 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
             "spawn_subagent",
         ],
         "reasoning_effort": "xhigh",
+        "system_prompt": (
+            "You are an expert software and system architecture auditor. You MUST start your response "
+            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, "
+            "conditions, and summary, followed by your architectural audit findings."
+        ),
         "timeout": 600.0,
     },
 }
@@ -1209,7 +1219,14 @@ def _terminate_proc_tree(proc: subprocess.Popen[Any]) -> None:
     """Terminates a process and its child process group safely (COND-03 / ADR-0065)."""
     pid = proc.pid
     try:
-        if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(pid)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        elif hasattr(os, "killpg") and hasattr(os, "getpgid"):
             try:
                 pgid = os.getpgid(pid)
                 os.killpg(pgid, signal.SIGTERM)
@@ -1220,7 +1237,7 @@ def _terminate_proc_tree(proc: subprocess.Popen[Any]) -> None:
         proc.wait(timeout=2.0)
     except Exception:
         try:
-            if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+            if sys.platform != "win32" and hasattr(os, "killpg") and hasattr(os, "getpgid"):
                 try:
                     pgid = os.getpgid(pid)
                     os.killpg(pgid, signal.SIGKILL)
@@ -1495,30 +1512,30 @@ def synthesize_verdicts(
     comp_profiles = [p for p in exp_profiles if p in verdicts]
     failed_profiles = [p for p in exp_profiles if p not in verdicts]
 
-    blocker_verdicts: set[VerdictType] = {"REJECT", "REJECT_PLAN", "GATE_FAIL"}
-    pass_verdicts: set[VerdictType] = {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"}
+    pass_verdicts: set[VerdictType] = {
+        "APPROVE",
+        "APPROVE_PLAN",
+        "FINAL_ACCEPT",
+        "GATE_PASS",
+        "APPROVE_WITH_RESERVATIONS",
+    }
 
-    # 1. Determine baseline consensus verdict by strict lattice rank
-    if failed_profiles:
-        comp_blockers = [
-            verdicts[p].verdict for p in comp_profiles if verdicts[p].verdict in blocker_verdicts
-        ]
-        if comp_blockers:
-            consensus_verdict: VerdictType = max(
-                comp_blockers, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0)
-            )
-        else:
-            consensus_verdict = "HANDOFF"
+    # 1. Determine baseline consensus verdict by strict lattice rank (COND-LATTICE-QUORUM)
+    completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
+    if not completed_verdicts:
+        consensus_verdict: VerdictType = "HANDOFF"
     else:
-        completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
-        if not completed_verdicts:
-            consensus_verdict = "HANDOFF"
-        elif len(set(completed_verdicts)) == 1:
-            consensus_verdict = completed_verdicts[0]
+        completed_max = max(completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0))
+        if failed_profiles:
+            # Monotonic quorum join: if highest completed verdict is at or above HANDOFF (e.g. REVISE_PLAN, REJECT),
+            # preserve it. Otherwise (e.g. APPROVE, APPROVE_WITH_CONDITIONS), quorum failure falls back to HANDOFF.
+            handoff_rank = VERDICT_LATTICE_RANK.get("HANDOFF", 70)
+            if VERDICT_LATTICE_RANK.get(completed_max, 0) >= handoff_rank:
+                consensus_verdict = completed_max
+            else:
+                consensus_verdict = "HANDOFF"
         else:
-            consensus_verdict = max(
-                completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0)
-            )
+            consensus_verdict = completed_max
 
     # 2. Consolidate conditions with deterministic ordering & OR-merge on blocking
     consolidated_conds: list[PeerCondition] = []
@@ -1566,61 +1583,64 @@ def synthesize_verdicts(
     if consensus_verdict in pass_verdicts and consensus_risk >= 4:
         consensus_verdict = "APPROVE_WITH_CONDITIONS"
 
-    # 4. Consolidate telemetry breakdown
-    agg_total = 0
-    agg_input = 0
-    agg_output = 0
-    agg_reasoning = 0
-    agg_cached = 0
-    cost_usd = 0.0
-    sum_agent_seconds = 0.0
-    all_exact = True
-    has_any_telemetry = False
-    profile_breakdown: dict[str, ProfileTelemetryItem] = {}
-
-    for prof in comp_profiles:
-        vb = verdicts[prof]
-        tel = vb.telemetry
-        if tel:
-            has_any_telemetry = True
-            agg_total += tel.total_tokens or 0
-            agg_input += tel.input_tokens or 0
-            agg_output += tel.output_tokens or 0
-            agg_reasoning += tel.reasoning_tokens or 0
-            agg_cached += tel.cached_read_tokens or 0
-            cost_usd += tel.cost_usd or 0.0
-            sum_agent_seconds += tel.duration_seconds or 0.0
-            if tel.cost_mode != "exact":
-                all_exact = False
-            item_payload = {
-                "model": tel.primary_model,
-                "input_tokens": tel.input_tokens or 0,
-                "output_tokens": tel.output_tokens or 0,
-                "reasoning_tokens": tel.reasoning_tokens or 0,
-                "cached_read_tokens": tel.cached_read_tokens or 0,
-                "total_tokens": tel.total_tokens or 0,
-                "cost_usd": round(tel.cost_usd or 0.0, 4),
-                "duration_seconds": round(tel.duration_seconds or 0.0, 2),
-            }
-            profile_breakdown[prof] = ProfileTelemetryItem.model_validate(item_payload)
-        else:
-            all_exact = False
-
+    # 4. Consolidate telemetry breakdown (isolated to protect consensus report - COND-LEVEL3-GATE)
     combined_telemetry: CombinedTelemetry | None = None
-    if has_any_telemetry:
-        comb_payload = {
-            "total_tokens": agg_total,
-            "input_tokens": agg_input,
-            "output_tokens": agg_output,
-            "reasoning_tokens": agg_reasoning,
-            "cached_read_tokens": agg_cached,
-            "cost_usd": round(cost_usd, 4),
-            "wall_seconds": round(duration_seconds, 2),
-            "sum_agent_seconds": round(sum_agent_seconds, 2),
-            "cost_mode": "exact" if all_exact else "estimated",
-            "profile_breakdown": profile_breakdown,
-        }
-        combined_telemetry = CombinedTelemetry.model_validate(comb_payload)
+    try:
+        agg_total = 0
+        agg_input = 0
+        agg_output = 0
+        agg_reasoning = 0
+        agg_cached = 0
+        cost_usd = 0.0
+        sum_agent_seconds = 0.0
+        all_exact = True
+        has_any_telemetry = False
+        profile_breakdown: dict[str, ProfileTelemetryItem] = {}
+
+        for prof in comp_profiles:
+            vb = verdicts[prof]
+            tel = vb.telemetry
+            if tel:
+                has_any_telemetry = True
+                agg_total += tel.total_tokens or 0
+                agg_input += tel.input_tokens or 0
+                agg_output += tel.output_tokens or 0
+                agg_reasoning += tel.reasoning_tokens or 0
+                agg_cached += tel.cached_read_tokens or 0
+                cost_usd += tel.cost_usd or 0.0
+                sum_agent_seconds += tel.duration_seconds or 0.0
+                if tel.cost_mode != "exact":
+                    all_exact = False
+                item_payload = {
+                    "model": tel.primary_model,
+                    "input_tokens": tel.input_tokens or 0,
+                    "output_tokens": tel.output_tokens or 0,
+                    "reasoning_tokens": tel.reasoning_tokens or 0,
+                    "cached_read_tokens": tel.cached_read_tokens or 0,
+                    "total_tokens": tel.total_tokens or 0,
+                    "cost_usd": round(tel.cost_usd or 0.0, 4),
+                    "duration_seconds": round(tel.duration_seconds or 0.0, 2),
+                }
+                profile_breakdown[prof] = ProfileTelemetryItem.model_validate(item_payload)
+            else:
+                all_exact = False
+
+        if has_any_telemetry:
+            comb_payload = {
+                "total_tokens": agg_total,
+                "input_tokens": agg_input,
+                "output_tokens": agg_output,
+                "reasoning_tokens": agg_reasoning,
+                "cached_read_tokens": agg_cached,
+                "cost_usd": round(cost_usd, 4),
+                "wall_seconds": round(duration_seconds, 2),
+                "sum_agent_seconds": round(sum_agent_seconds, 2),
+                "cost_mode": "exact" if all_exact else "estimated",
+                "profile_breakdown": profile_breakdown,
+            }
+            combined_telemetry = CombinedTelemetry.model_validate(comb_payload)
+    except Exception:
+        combined_telemetry = None
 
     # 5. Build consolidated summary
     summary_lines = [
@@ -1731,6 +1751,10 @@ def orchestrate_peer_co_review(
     for prof in profiles:
         if not re.match(r"^[a-z0-9_]{1,32}$", prof):
             raise ValueError(f"Invalid profile name '{prof}': must match ^[a-z0-9_]{{1,32}}$")
+        if prof not in PROFILE_SPECS:
+            raise ValueError(
+                f"Unknown execution profile '{prof}': must be one of {sorted(PROFILE_SPECS.keys())}"
+            )
 
     content, _ = safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(content or "")
@@ -1786,9 +1810,12 @@ def orchestrate_peer_co_review(
         with ThreadPoolExecutor(max_workers=max(1, workers_count)) as pool:
             futures = [pool.submit(_worker, t) for t in tasks]
             for fut in futures:
-                p_name, vb = fut.result()
-                if vb is not None:
-                    verdicts[p_name] = vb
+                try:
+                    p_name, vb = fut.result()
+                    if vb is not None:
+                        verdicts[p_name] = vb
+                except Exception:
+                    pass
 
         elapsed = time.time() - start_time
         report = synthesize_verdicts(
