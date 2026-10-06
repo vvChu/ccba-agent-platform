@@ -1,9 +1,9 @@
 ---
 name: ccba-create-verification-skill
-description: Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
 user-invocable: true
 command: /ccba-create-verification-skill
-when_to_use: Dùng khi người dùng muốn thiết lập hoặc cấu hình bộ kỹ năng kiểm định tự động (deterministic verification harness) cho một ứng dụng hoặc spoke mới.
+when_to_use: Dùng khi người dùng muốn thiết lập mới hoặc bảo trì, sửa lỗi sai lệch (drift repair) cho bộ kỹ năng kiểm định tự động (verification harness) của một ứng dụng hoặc spoke.
 category: governance
 gpi:
   s: 4.5
@@ -17,10 +17,12 @@ keywords:
 - quality
 - pstack
 - verify
-argument-hint: '[--app APP_NAME | --type {web,api,cli,worker}]'
+- drift
+- maintain
+argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
 metadata:
   author: CCBA
-  version: 1.0.0
+  version: 1.1.0
 disable-model-invocation: true
 bundle: _governance
 tier: kernel
@@ -30,9 +32,14 @@ triggers:
 - tạo verification skill
 - thiết lập harness
 - verify harness
+- maintain-verification-skill
+- bảo trì verification skill
+- sửa verification skill
+- repair verification skill
+- harness drift
 ---
 
-# Kỹ Năng Khởi Tạo Bộ Kiểm Định Ứng Dụng (ccba-create-verification-skill)
+# Kỹ Năng Khởi Tạo & Bảo Trì Bộ Kiểm Định Ứng Dụng (ccba-create-verification-skill)
 
 Kỹ năng này tự động thiết lập bộ kỹ năng kiểm định tự động chuyên biệt `verify-<app>` cho bất kỳ ứng dụng nào trong hệ sinh thái CCBA (Web, REST API, CLI, Worker, hoặc Spoke repository).
 
@@ -103,10 +110,17 @@ flowchart TD
 
 ---
 
+## Chế Độ Hoạt Động Kép (Dual-Mode Operation) & Tự Động Nhận Diện
+
+Kỹ năng tự động xác định chế độ vận hành dựa trên hiện trạng hệ thống tệp:
+- **Nếu chưa tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 1: Khởi Tạo Mới (`scaffold`)**.
+- **Nếu đã tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 2: Bảo Trì & Sửa Sai Lệch (`maintain`)**.
+
+---
+
 ## Quy Trình Triển Khai Cho AI Agent
 
-Khi người dùng yêu cầu `/ccba-create-verification-skill`:
-
+### Mode 1 — Khởi Tạo Mới (`scaffold`)
 1. **Khảo Sát Ứng Dụng (App Discovery):**
    - Xác định loại ứng dụng: Web (FastAPI, Flask, Next.js), CLI, Worker, hoặc Thư viện.
    - Xác định lệnh khởi động server (nếu có), cổng mặc định, và probe kiểm tra sức khỏe (readiness check hoặc command ping).
@@ -117,7 +131,7 @@ Khi người dùng yêu cầu `/ccba-create-verification-skill`:
    - **Tiêu chí hoàn thành:** Thư mục `.agents/skills/verify-<app>/harness/` được tạo thành công trên hệ thống tệp.
 3. **Sinh Tệp Định Nghĩa Kỹ Năng (`verify-<app>/SKILL.md`):**
    - Định nghĩa frontmatter chuẩn (`name: verify-<app>`, `category: verification`, v.v.).
-   - Hướng dẫn các bước chạy kiểm định và đối chiếu trạng thái.
+   - Hướng dẫn các bước chạy kiểm định và đối chiếu trạng thái theo 5 khối cấu trúc.
    - **Tiêu chí hoàn thành:** Tệp `.agents/skills/verify-<app>/SKILL.md` được sinh ra với đầy đủ frontmatter và quy trình 5 khối.
 4. **Khởi Tạo Features Map (`features/INDEX.md`):**
    - Lập danh mục các tính năng hiện có của ứng dụng theo chuẩn `features_map_guide.md`.
@@ -126,6 +140,23 @@ Khi người dùng yêu cầu `/ccba-create-verification-skill`:
    - Thực thi thử kịch bản harness để xác nhận hệ thống có thể khởi động, chạy probe, và dọn dẹp sạch sẽ với exit code 0.
    - **Tiêu chí hoàn thành:** Kịch bản harness thực thi dry-run thành công và thoát với mã exit code 0.
 
+### Mode 2 — Bảo Trì & Sửa Sai Lệch Drift (`maintain`)
+1. **Kiểm Tra Nguồn Gốc Thay Đổi (Pre-Remediation Provenance Check - COND-01):**
+   - Đối chiếu commit history hoặc tài liệu API: nếu thay đổi là chủ đích thiết kế (đổi route, port, schema) $\rightarrow$ sửa `harness/`; nếu là lỗi hồi quy ngoài ý muốn (regression) $\rightarrow$ **CẤM SỬA `harness/`**, giữ nguyên bài test và yêu cầu sửa mã nguồn ứng dụng.
+   - **Tiêu chí hoàn thành:** Phân loại chính xác nguyên nhân lỗi thuộc diện Lệch Hợp Đồng (Contract Drift) hay Lỗi Hồi Quy (Regression).
+2. **Đối Chiếu Bề Mặt Tính Năng (Surface Diff):**
+   - So sánh các route/command hiện hành với tài liệu `features/INDEX.md` để khoanh vùng điểm lệch.
+   - **Tiêu chí hoàn thành:** Xác định danh sách các điểm trôi lệch giữa code và tài liệu.
+3. **Thực Thi Quan Sát Thực Tế (Observed Live Pass):**
+   - Chạy 1 pass harness đại diện để ghi nhận log lỗi thực tế thay vì suy đoán cảm tính.
+   - **Tiêu chí hoàn thành:** Thu thập toàn văn stack trace và log lỗi thực tế từ lần chạy kiểm định.
+4. **Khắc Phục Tận Gốc Trong Thư Mục `harness/`:**
+   - Cập nhật lệnh CLI, port, timeout, probe URL hoặc schema assertions bên trong `.agents/skills/verify-<app>/harness/`. Tuyệt đối không tạo file rác tại thư mục gốc `scripts/` (ADR-0044).
+   - **Tiêu chí hoàn thành:** Kịch bản trong `harness/` và `features/INDEX.md` được cập nhật đồng bộ.
+5. **Xác Minh Thoát Sạch Tuyệt Đối (Clean Exit Verification):**
+   - Chạy lại bài kiểm định, bảo đảm đạt exit code 0 và tiêu diệt sạch toàn bộ cây tiến trình con.
+   - **Tiêu chí hoàn thành:** Toàn bộ harness chạy thành công với exit code 0, không còn tiến trình zombie.
+
 ---
 
 ## Progressive Disclosure & Reference Index (Level 3)
@@ -133,6 +164,7 @@ Khi người dùng yêu cầu `/ccba-create-verification-skill`:
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/features_map_guide.md` | Hướng dẫn thiết lập và duy trì Features Map (`features/INDEX.md`) cho ứng dụng |
+| `references/maintain_drift_guide.md` | Hướng dẫn phát hiện & khắc phục 4 dạng drift kiểm định, chống test tampering và bảo vệ Spoke cleanliness |
 
 ---
 

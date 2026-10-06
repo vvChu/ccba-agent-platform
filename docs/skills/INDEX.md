@@ -118,7 +118,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
 | [ccba-contribute-to-hub](ccba-contribute-to-hub.md) | `/ccba-contribute-to-hub` | `kernel` | `User` | Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừn... |
-| [ccba-create-verification-skill](ccba-create-verification-skill.md) | `/ccba-create-verification-skill` | `kernel` | `User` | Khởi tạo kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / U... |
+| [ccba-create-verification-skill](ccba-create-verification-skill.md) | `/ccba-create-verification-skill` | `kernel` | `User` | Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (A... |
 | [ccba-docs-manager](ccba-docs-manager.md) | `/ccba-docs-manager` | `kernel` | `User` | Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform. |
 | [ccba-eval-gate](ccba-eval-gate.md) | `/ccba-eval-gate` | `kernel` | `User` | Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động sửa lỗi (... |
 | [ccba-file-stability-guard](ccba-file-stability-guard.md) | `/ccba-file-stability-guard` | `kernel` | `Model` | Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế... |
