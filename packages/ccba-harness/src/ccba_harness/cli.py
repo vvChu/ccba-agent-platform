@@ -1643,7 +1643,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             )
             return 1
 
-        out_name = envelope.output_path if (envelope and envelope.output_path) else None
+        out_name = Path(envelope.output_path).name if (envelope and envelope.output_path) else None
         if not out_name:
             print(
                 "[FAIL] --auto-apply requested but envelope does not specify output_path.",

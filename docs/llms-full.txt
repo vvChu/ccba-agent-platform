@@ -2559,7 +2559,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-create-verification-skill
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_governance` |
+| **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.5 | K=3.5 | A=2.0 | P=1.0 (GPI: 20.75)` |
 
