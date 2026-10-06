@@ -105,7 +105,7 @@ Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bo
    )
    print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
    ```
-   *Lưu ý:* Tuyệt đối CẤM Agent tự viết script ad-hoc để bóc tách PDF hoặc ghép collage ảnh khi Seam `QCAuditPipeline` đã giải quyết khép kín từ đầu đến cuối.
+   *Lưu ý:* Tuyệt đối CẤM Agent tự viết script ad-hoc để bóc tách PDF hoặc ghép collage ảnh khi Seam `QCAuditPipeline` đã giải quyết khép kín từ đầu đến cuối. Mọi nhu cầu tiền xử lý hoặc bóc tách khối văn bản từ bản vẽ PDF bắt buộc định tuyến qua Seam `pdf_preprocessor.v1` (`from ccba_pdf_prep import PDFProcessingPipeline`).
 
 ---
 
