@@ -127,7 +127,7 @@ Khi một pipeline LLM gọi các mô hình reasoning chuyên biệt (như các 
 - Nếu áp dụng Circuit Breaker cứng truyền thống (ngắt toàn bộ pipeline) $\rightarrow$ Tác vụ của người dùng bị dừng khựng (Hard Crash/Abort), gây ức chế và đình trệ quy trình.
 
 ### Giải pháp: Model-Level Soft Cooldown & Auto-Downgrade
-Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với **Tự động giáng cấp xuống mô hình dự phòng** tương đương (như task `general` hoặc `ModelArchetype.GENERAL` ngay trên Gateway `:8090`):
+Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với **Tự động giáng cấp xuống mô hình dự phòng** tương đương (như task `general` hoặc `ModelArchetype.STANDARD` ngay trên Gateway `:8090`):
 
 ```
                        Request (task="reasoning")

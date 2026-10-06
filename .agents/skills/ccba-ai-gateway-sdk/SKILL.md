@@ -96,8 +96,8 @@ Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến mod
 
 | Archetype | Task Key (`choose_model`) | Enum Archetype | Khi nào sử dụng? |
 | :--- | :--- | :--- | :--- |
-| **1. OCR & Vision** | `"ocr"` | `ModelArchetype.VISION_OCR` | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
-| **2. Standard / Coding** | `"general"`, `"coding"` | `ModelArchetype.STANDARD`, `ModelArchetype.FAST_CODE` | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
+| **1. OCR & Vision** | `"ocr"` | `ModelArchetype.OCR` | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
+| **2. Standard / Coding** | `"general"`, `"coding"` | `ModelArchetype.STANDARD` | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
 | **3. Deep Reasoning** | `"reasoning"`, `"audit"` | `ModelArchetype.REASONING` | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
 | **4. Local Private** | `"private"`, `"rag"` | `ModelArchetype.LOCAL`, `ModelArchetype.RAG` | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
@@ -196,7 +196,7 @@ SDK `ccba-ai` cung cấp sẵn các module hỗ trợ kỹ thuật Prompting nâ
 Đóng gói tài liệu, chỉ thị và ngữ cảnh vào các thẻ XML để phân định ranh giới ngữ cảnh rõ ràng và triệt tiêu prompt injection:
 
 ```python
-from ccba_ai import ai, xml_envelope, parse_xml_tags
+from ccba_ai import ai, choose_model, parse_xml_tags, xml_envelope
 
 # Bọc có cấu trúc
 envelope_prompt = xml_envelope({
@@ -205,7 +205,7 @@ envelope_prompt = xml_envelope({
     "documents": ["Nội dung thuyết minh thiết kế công trình..."],
 })
 
-response = ai.chat(envelope_prompt, model="claude-sonnet-4-6")
+response = ai.chat(envelope_prompt, model=choose_model("reasoning"))
 tags = parse_xml_tags(response)
 print(tags.get("answer", response))
 ```

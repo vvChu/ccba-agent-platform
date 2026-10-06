@@ -18,9 +18,12 @@ $ArchPath = Join-Path $WorkspacePath "kien_truc.md"
 $MepPath = Join-Path $WorkspacePath "mep.md"
 $Pc07Path = Join-Path $WorkspacePath "GopY_PC07.md"
 
-Write-Host "Bắt đầu chạy Semantic PCCC Audit..." -ForegroundColor Cyan
+$AuditModel = if ($env:CCBA_QC_MODEL) { $env:CCBA_QC_MODEL } else { python -c "from ccba_ai import choose_model; print(choose_model('audit'))" }
+
+Write-Host "Bắt đầu chạy Semantic PCCC Audit với model $AuditModel..." -ForegroundColor Cyan
 
 python $EngineScript `
+    --model "$AuditModel" `
     --tm "$TmPath" `
     --arch "$ArchPath" `
     --mep "$MepPath" `
