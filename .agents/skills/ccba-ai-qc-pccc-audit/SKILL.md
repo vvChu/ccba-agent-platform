@@ -73,11 +73,10 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
 
 ### 2. Lệnh thực thi qua Package CLI (`ccba-qc`):
-*   **Định tuyến mô hình:** Tham số `--model` nhận giá trị trả về từ Seam `choose_model("audit")` (`ModelArchetype.REASONING`), thay vì để trống khiến hệ thống rơi vào model local mặc định.
+*   **Định tuyến mô hình:** Lệnh CLI của package tự động giải quyết mô hình qua Seam `choose_model("audit")` (`ModelArchetype.REASONING`), đảm bảo không hardcode chuỗi mô hình thô.
 
 ```bash
 ccba-qc pccc \
-    --model "<kết_quả_từ_choose_model_audit>" \
     --tm "đường/dẫn/đến/thuyet_minh.md" \
     --arch "đường/dẫn/đến/kien_truc.md" \
     --mep "đường/dẫn/đến/mep.md" \
