@@ -23,7 +23,7 @@
 - [bigbim-governance](skills/bigbim-governance.md): /bigbim-governance — Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ và quy chuẩn định danh Unique ID từ giai đoạn A0.
 - [bigbim-rase](skills/bigbim-rase.md): /bigbim-rase — Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho dự án BIM dựa trên sơ đồ dữ liệu IFC4X3 và bộ Quantity Take-Off (Qto_xxx).
 - [bigbim-risk](skills/bigbim-risk.md): /bigbim-risk — Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước phối hợp thông tin V2 - Coordination, vượt ngoài giới hạn Clash Detection truyền thống.
-- [bigbim-vbpl-digest](skills/bigbim-vbpl-digest.md): /bigbim-vbpl-digest — Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
+- [bigbim-vbpl-digest](skills/bigbim-vbpl-digest.md): /bigbim-vbpl-digest — Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 - [ccba-academic-writing](skills/ccba-academic-writing.md): /ccba-academic-writing — Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo chuẩn quốc tế (IMRAD, CARS model).
 - [ccba-adr-lifecycle](skills/ccba-adr-lifecycle.md): /ccba-adr-lifecycle — Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI parity validation.
 - [ccba-ai-gateway-sdk](skills/ccba-ai-gateway-sdk.md): /ccba-ai-gateway-sdk — Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.

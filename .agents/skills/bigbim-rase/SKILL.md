@@ -34,17 +34,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ phân tích RASE (RASE Analyzer) hay parser IDS (Information Delivery Specification) của buildingSMART. Thao tác phân tích RASE là quy trình logic suy luận cấu trúc dữ liệu IFC4X3.
+* **Cưỡng chế Grounding (Grounding Invariant):** Mọi trích xuất RASE bắt buộc dựa trên tài liệu yêu cầu kỹ thuật và schema ISO 16739-1:2024 (IFC4X3) có thực trên đĩa. Trường hợp thiếu tài liệu quy chuẩn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán hoặc tự bịa đặt thuộc tính Pset ngoài schema IFC chuẩn.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[air-guide.md](https://example.com/bigbim-rase/air-guide.md)` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
-| `[oir-guide.md](https://example.com/bigbim-rase/oir-guide.md)` | OIR framework, 12 objectives, OIR→AIR traceability |
-| `[ifc-pset-map.md](https://example.com/bigbim-rase/ifc-pset-map.md)` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
-| `[ids-validation.md](https://example.com/bigbim-rase/ids-validation.md)` | IDS buildingSMART, validation workflow, template |
-| `[chunks/ISO_19650_VN/](https://example.com/chunks/ISO_19650_VN/)` | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `air-guide.md` | `knowledge/bigbim-rase/air-guide.md` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
+| `oir-guide.md` | `knowledge/bigbim-rase/oir-guide.md` | OIR framework, 12 objectives, OIR→AIR traceability |
+| `ifc-pset-map.md` | `knowledge/bigbim-rase/ifc-pset-map.md` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
+| `ids-validation.md` | `knowledge/bigbim-rase/ids-validation.md` | IDS buildingSMART, validation workflow, template |
+| `Tra cứu quy phạm ISO/BIM` | Kỹ năng `bigbim-vbpl-digest` | Tra cứu điều khoản quy chuẩn & tiêu chuẩn ISO 19650-1/2/3 |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`

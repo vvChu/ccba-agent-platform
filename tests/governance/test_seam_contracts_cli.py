@@ -385,4 +385,3 @@ def test_seam_contracts_no_forbidden_import_collisions() -> None:
     assert not collisions, "Collision(s) detected in forbidden_substitute_imports:\n" + "\n".join(
         f"  ❌ {c}" for c in collisions
     )
-

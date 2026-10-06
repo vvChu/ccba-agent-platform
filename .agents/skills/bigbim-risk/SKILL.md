@@ -37,6 +37,14 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ kiểm duyệt mâu thuẫn thông tin phi hình học (Information Conflict Audit) hay quy trình phối hợp V2 Coordination. Thao tác rà soát xung đột thông tin vận hành dựa trên bộ quy tắc chuyên môn và rào chắn kiểm toán dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rà soát mâu thuẫn logic thuộc tính và khoảng cách thao tác bắt buộc đối soát trực tiếp từ mô hình phối hợp và Risk Register trên đĩa (`[bigbim_method_path]/.md/`). Nếu thiếu hồ sơ dự án, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán tọa độ va chạm hoặc tự bịa đặt ID lỗi.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:

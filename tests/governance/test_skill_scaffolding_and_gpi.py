@@ -603,17 +603,11 @@ def test_ccba_skills_eval_phase2_spec_contract() -> None:
 
 def test_ccba_sync_upstream_phase2_spec_contract() -> None:
     """Verify ccba-sync-upstream SKILL.md contains all ADR-0057 contractual requirements.
-    
+
     Note: Previously asserted against a legacy guide in ccba-update-spoke/references/.
     Canonical specification is now anchored at ccba-sync-upstream/SKILL.md.
     """
-    file_path = (
-        PROJECT_ROOT
-        / ".agents"
-        / "skills"
-        / "ccba-sync-upstream"
-        / "SKILL.md"
-    )
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-sync-upstream" / "SKILL.md"
     assert file_path.exists()
     raw_text = file_path.read_text(encoding="utf-8")
 

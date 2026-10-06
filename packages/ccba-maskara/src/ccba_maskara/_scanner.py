@@ -105,7 +105,11 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
         "token_budget",
         "max_output_tokens",
     }
-    if key_stem in known_token_metrics or key_clean in known_token_metrics or key_stem.endswith("tokens"):
+    if (
+        key_stem in known_token_metrics
+        or key_clean in known_token_metrics
+        or key_stem.endswith("tokens")
+    ):
         return True
 
     if stripped.startswith(("[", "set[", "set(", "list[", "list(", "dict[", "dict(", "tuple[")):

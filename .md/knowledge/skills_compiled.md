@@ -42,6 +42,15 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho IFC, Uniclass hay hệ thống phân loại BIM. Các thư viện như `ifcopenshell` là công cụ chuyên ngành bên thứ ba, không phải Deep Seam trực thuộc monorepo CCBA.
+* **Định tuyến AI:** Khi thực hiện nhánh phân loại ngữ nghĩa bằng AI (Semantic Auto-Classification), các tác vụ nhúng vector và LLM bắt buộc đi qua Seam `ai_embedding.v1` hoặc `model_routing.v1` (`ccba_ai.routing:choose_model`), cấm gọi API mô hình độc lập.
+* **Rào chắn Tri thức Cục bộ (Self-Contained & Grounding Invariant):** Căn cứ phân loại bắt buộc đọc trực tiếp từ tài liệu phương pháp luận BIGBIM trên đĩa. Trường hợp thiếu tài liệu hoặc không có file đối soát, Agent bắt buộc dừng lại và thông báo cho người dùng; tuyệt đối CẤM suy đoán hoặc tự bịa đặt mã Uniclass / điều khoản ISO để điền vào chỗ trống.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
@@ -222,17 +231,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho quản trị thông tin BIM (BIM Information Governance) hay ma trận EIR/AIR/MIDP. Skill vận hành như một bộ guardrails kiểm duyệt quy chuẩn và chính sách thông tin dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rào chắn Golden Thread và Red Thread bắt buộc đối soát trực tiếp từ tài liệu quản trị dự án trên đĩa (thư mục `[bigbim_method_path]/.md/`). Nếu thiếu tài liệu nguồn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM sinh giả lập mã rủi ro RK hoặc tiêu chí cổng V-Gates.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
-| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
-| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
-| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
-| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `bbp-lifecycle.md` | `knowledge/bigbim-governance/bbp-lifecycle.md` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
+| `v-gates.md` | `knowledge/bigbim-governance/v-gates.md` | 7 Verification Gates — tiêu chí go/no-go, checklist |
+| `cde-workflow.md` | `knowledge/bigbim-governance/cde-workflow.md` | CDE 4 states, naming convention, access control |
+| `unique-id.md` | `knowledge/bigbim-governance/unique-id.md` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
+| `midp-guide.md` | `knowledge/bigbim-governance/midp-guide.md` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
@@ -366,17 +383,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ phân tích RASE (RASE Analyzer) hay parser IDS (Information Delivery Specification) của buildingSMART. Thao tác phân tích RASE là quy trình logic suy luận cấu trúc dữ liệu IFC4X3.
+* **Cưỡng chế Grounding (Grounding Invariant):** Mọi trích xuất RASE bắt buộc dựa trên tài liệu yêu cầu kỹ thuật và schema ISO 16739-1:2024 (IFC4X3) có thực trên đĩa. Trường hợp thiếu tài liệu quy chuẩn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán hoặc tự bịa đặt thuộc tính Pset ngoài schema IFC chuẩn.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[air-guide.md](https://example.com/bigbim-rase/air-guide.md)` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
-| `[oir-guide.md](https://example.com/bigbim-rase/oir-guide.md)` | OIR framework, 12 objectives, OIR→AIR traceability |
-| `[ifc-pset-map.md](https://example.com/bigbim-rase/ifc-pset-map.md)` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
-| `[ids-validation.md](https://example.com/bigbim-rase/ids-validation.md)` | IDS buildingSMART, validation workflow, template |
-| `[chunks/ISO_19650_VN/](https://example.com/chunks/ISO_19650_VN/)` | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `air-guide.md` | `knowledge/bigbim-rase/air-guide.md` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
+| `oir-guide.md` | `knowledge/bigbim-rase/oir-guide.md` | OIR framework, 12 objectives, OIR→AIR traceability |
+| `ifc-pset-map.md` | `knowledge/bigbim-rase/ifc-pset-map.md` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
+| `ids-validation.md` | `knowledge/bigbim-rase/ids-validation.md` | IDS buildingSMART, validation workflow, template |
+| `Tra cứu quy phạm ISO/BIM` | Kỹ năng `bigbim-vbpl-digest` | Tra cứu điều khoản quy chuẩn & tiêu chuẩn ISO 19650-1/2/3 |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
@@ -537,6 +562,14 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ kiểm duyệt mâu thuẫn thông tin phi hình học (Information Conflict Audit) hay quy trình phối hợp V2 Coordination. Thao tác rà soát xung đột thông tin vận hành dựa trên bộ quy tắc chuyên môn và rào chắn kiểm toán dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rà soát mâu thuẫn logic thuộc tính và khoảng cách thao tác bắt buộc đối soát trực tiếp từ mô hình phối hợp và Risk Register trên đĩa (`[bigbim_method_path]/.md/`). Nếu thiếu hồ sơ dự án, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán tọa độ va chạm hoặc tự bịa đặt ID lỗi.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
@@ -660,8 +693,8 @@ Kết quả phân tích mâu thuẫn phải được trả về dưới dạng b
 
 ---
 name: bigbim-vbpl-digest
-description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
-  ISO 19650-1/2/3/5, QCVN liên quan.
+description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các
+  tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 applies_to:
 - BIM
 - Pháp điển
@@ -679,9 +712,7 @@ gpi:
   a: 4.0
   p: 1.0
 triggers:
-- NĐ 175
 - nghị định BIM
-- Nghị định 175
 - điều khoản BIM
 - ISO 19650
 - luật xây dựng BIM
@@ -692,28 +723,35 @@ triggers:
 # BIGBIM VBPL Digest Skill
 
 > **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.
-> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có trích dẫn.
+> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có căn cứ trích dẫn chuẩn xác.
 
 ---
 
-## 📚 BIGBIM Method KB — Nguồn dữ liệu
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
-> Skill này **TRA CỨU TRỰC TIẾP** từ chunks của tài liệu gốc:
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các công cụ tra cứu tri thức pháp lý của nền tảng:
+* **Tra Cứu & Trích Xuất Pháp Lý:** Sử dụng CLI `python -m ccba_legal query` và `get-clause` (Deep Seam `LegalKnowledgeEngine`). Các chunk tài liệu cũ tại Spoke chỉ đóng vai trò tham khảo kỹ thuật, không có giá trị bảo chứng hiệu lực.
+* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực và quan hệ thay thế bắt buộc đối soát theo nguyên tắc kiểm định SSOT tại Mục 5; tuyệt đối không sử dụng văn bản đã hết hiệu lực thi hành.
 
-| Nguồn | Layer | Path |
-|:------|:------|:-----|
-| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
-| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
-| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
-| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
-| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
-| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
+---
+
+## 📚 Nguồn Dữ Liệu & Công Cụ Tra Cứu
+
+> **Quy định SSOT:** Tra cứu điều khoản quy phạm pháp luật bắt buộc thực thi qua Deep Seam `ccba_legal query` và `get-clause`. Các chunk tiêu chuẩn ISO đóng vai trò tài liệu kỹ thuật phụ trợ:
+
+| Nguồn | Loại | Công cụ / Đường dẫn |
+|:------|:------|:-------------------|
+| Quy phạm pháp luật BIM | Pháp lý SSOT | CLI `python -m ccba_legal query` và `get-clause` |
+| ISO 19650-1 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
+| ISO 19650-2 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
+| ISO 19650-3 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
+| ISO 19650-5 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
+| Chunk Master Index | Kỹ thuật | `[bigbim_method_path]/.md/chunks/INDEX.md` |
 
 **Workflow tra cứu:**
-1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
-2. Đọc `00_CHUNK_INDEX.md` trong folder nguồn để locate chunk
-3. Đọc chunk cụ thể → trích dẫn điều khoản chính xác
-4. Cross-reference với KB articles Layer 3 nếu cần synthesis
+1. Tra cứu VBPL quy phạm: gọi `python -m ccba_legal query --q "..."` và `python -m ccba_legal get-clause ...`
+2. Tra cứu tiêu chuẩn kỹ thuật ISO: định vị chunk trong `chunks/ISO_19650_VN/`
+3. Trích dẫn nguyên văn điều khoản chính xác kèm trạng thái hiệu lực chuẩn hóa ACTIVE
 
 ---
 
@@ -729,27 +767,26 @@ triggers:
 ### Bước 1 — Phân tích câu hỏi
 
 Xác định:
-- **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
+- **Nguồn**: Quy chuẩn/Nghị định quy phạm hay Tiêu chuẩn kỹ thuật ISO 19650?
 - **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
 - **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
 - **Tiêu chí hoàn thành:** Xác định rõ ràng nguồn văn bản, loại truy vấn và định dạng đầu ra mong muốn.
 
-### Bước 2 — Locate chunk
+### Bước 2 — Tra cứu dữ liệu
 
-```
-Nếu NĐ 175:
-  → chunks/VBPL_BIM_VN/175_2024_ND-CP_.../00_CHUNK_INDEX.md
-  → Tìm chunk theo keyword trong heading column
+```bash
+# 1. Nếu là văn bản quy phạm pháp luật (VBPL):
+python -m ccba_legal query --q "<từ khóa>" --status ACTIVE
+python -m ccba_legal get-clause --doc "<doc_id>" --clause "<số điều>"
 
-Nếu ISO 19650:
-  → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
-  → Tìm theo section number (VD: "5.6 Tiến trình")
+# 2. Nếu là tiêu chuẩn kỹ thuật ISO 19650:
+# Đọc chunks phụ trợ: chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
 ```
-- **Tiêu chí hoàn thành:** Định vị chính xác đường dẫn chunk chứa điều khoản hoặc nội dung liên quan.
+- **Tiêu chí hoàn thành:** Định vị chính xác điều khoản quy phạm qua Seam hoặc đường dẫn chunk tiêu chuẩn kỹ thuật liên quan.
 
 ### Bước 3 — Đọc và tổng hợp
 
-- Đọc chunk liên quan (1-3 chunks tối đa)
+- Đọc điều khoản trích xuất từ Seam hoặc chunk liên quan
 - Trích dẫn nguyên văn có số điều/khoản
 - Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
 - **Tiêu chí hoàn thành:** Đọc hiểu và trích xuất đúng điều khoản nguyên văn kèm đối tượng và phạm vi áp dụng.
@@ -759,7 +796,7 @@ Nếu ISO 19650:
 ```markdown
 ## Câu trả lời
 
-**Nguồn**: NĐ 175/2024-NĐ-CP, Điều X, Khoản Y
+**Nguồn**: [Mã văn bản đã đối soát SSOT], Điều X, Khoản Y
 **Nguyên văn**: "..."
 
 **Tóm tắt**: [2-3 câu]
@@ -773,15 +810,22 @@ Nếu ISO 19650:
 
 ## 📋 Mapping Chủ đề → Nguồn
 
-| Chủ đề | Nguồn chính | Chunks tham khảo |
-|:-------|:-----------|:----------------|
-| BIM bắt buộc từ khi nào | NĐ 175 Điều 8 | chunk_01–05 |
-| Yêu cầu nộp mô hình BIM | NĐ 175 Chương III | chunk_20–35 |
-| CDE, EIR, AIR | ISO 19650-2 Section 4-5 | chunk_04–09 |
-| Vận hành AIM | ISO 19650-3 Section 5 | chunk_06–12 |
-| Phân loại bảo mật thông tin | ISO 19650-5 Section 4-7 | chunk_06–10 |
-| Giấy phép xây dựng + BIM | NĐ 175 Chương VI | chunk_50–65 |
-| Nghiệm thu, hoàn công + BIM | NĐ 175 Chương VIII | chunk_80–95 |
+| Chủ đề | Nguồn chính (Seam SSOT) | Chunks kỹ thuật tham khảo |
+|:-------|:------------------------|:-------------------------|
+| BIM bắt buộc từ khi nào | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Yêu cầu nộp mô hình BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| CDE, EIR, AIR | Tiêu chuẩn ISO 19650-2 Section 4-5 | chunk_04–09 |
+| Vận hành AIM | Tiêu chuẩn ISO 19650-3 Section 5 | chunk_06–12 |
+| Phân loại bảo mật thông tin | Tiêu chuẩn ISO 19650-5 Section 4-7 | chunk_06–10 |
+| Giấy phép xây dựng + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Nghiệm thu, hoàn công + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
 ---
@@ -3095,6 +3139,16 @@ triggers:
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị nền tảng:
+* **Căn Cứ Pháp Lý & Tra Cứu:** Trích xuất và đối soát căn cứ nghiệm thu qua Deep Seam `LegalKnowledgeEngine` (CLI `python -m ccba_legal query`). Tệp `resources/checklist_master.yaml` giữ vai trò khung hạng mục phân loại, mọi căn cứ quy phạm trích dẫn bắt buộc phải kiểm định qua predicate SSOT tại Mục 5.
+* **Xuất Bản Văn Bản (.docx):** Bắt buộc sử dụng Seam `ooxml_processor.v1` (`from ccba_ooxml import DocxDocument`). Tuyệt đối cấm sử dụng trực tiếp thư viện `python-docx` không qua Seam cách ly. Trường hợp Seam chưa hỗ trợ mẫu checklist phức tạp, Agent xuất định dạng Markdown chuẩn và dừng lại.
+
+---
+
 ## When to Use
 
 - Cần **tạo checklist hồ sơ hoàn thành** cho một dự án/công trình cụ thể
@@ -3107,7 +3161,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 | File | Mô tả |
 |------|--------|
-| `resources/checklist_master.yaml` | Danh mục hồ sơ master theo NĐ 207/2026/NĐ-CP (thay thế NĐ 06/2021) |
+| `resources/checklist_master.yaml` | Danh mục hồ sơ master — Khung hạng mục hồ sơ hoàn thành |
 | `resources/checklist_by_project.md` | Template checklist theo loại công trình |
 | `resources/training_handout.md` | Template tài liệu tập huấn cho kỹ sư giám sát |
 
@@ -3115,7 +3169,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 1. Tạo Checklist cho dự án cụ thể
 
-1. Đọc `resources/checklist_master.yaml` để nắm cấu trúc master
+1. Đọc `resources/checklist_master.yaml` để nắm khung cấu trúc master
 2. Hỏi user các thông tin dự án:
    - Tên dự án / công trình
    - Loại công trình (dân dụng / công nghiệp / hạ tầng kỹ thuật)
@@ -3123,8 +3177,8 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
    - Chủ đầu tư
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
-5. Xuất ra Markdown và Word (.docx)
-   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án, xuất đủ 2 định dạng (.md và .docx) và vượt qua cổng kiểm định máy tính:
+5. Xuất ra Markdown (và Docx khi phát hành qua `ccba_ooxml:DocxDocument`)
+   - **Tiêu chí hoàn thành:** Đã tạo tệp checklist Markdown đầy đủ theo thông tin dự án và vượt qua cổng kiểm định máy tính:
      ```bash
      python -m ccba_harness verify-patch --preset doc --target <tệp_markdown_checklist> --min-bytes 500
      ```
@@ -3132,9 +3186,9 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 2. Cập nhật khi VBPL thay đổi
 
-1. Kiểm tra `legal_registry.yaml` (skill `legal-document-tracker`) xem có văn bản nào liên quan đến nghiệm thu hoàn công thay đổi trạng thái sang `superseded` (hết hiệu lực) và có văn bản thay thế mới (`current`).
-   - Nếu không có thay đổi: Dùng trực tiếp static templates (`checklist_master.yaml`) để tiết kiệm token và thời gian.
-   - Nếu có thay đổi: Đề xuất người dùng sử dụng `/ccba-research` để spawn subagent nghiên cứu sâu cấu trúc phụ lục nghiệm thu mới và tự động cập nhật lại master checklist.
+1. Tra cứu đối soát qua Seam `python -m ccba_legal query` và `ccba_legal.registry` theo đúng nguyên tắc kiểm định SSOT tại Mục 5.
+   - Nếu không có văn bản thay thế mới: Sử dụng khung hạng mục tĩnh (`checklist_master.yaml`) kết hợp đối chiếu căn cứ pháp lý hiện hành.
+   - Nếu có văn bản thay thế đạt trạng thái `ACTIVE`: Cập nhật lại khung master theo quy định mới nhất.
 2. So sánh nội dung Phụ lục hồ sơ hoàn thành cũ vs mới
 3. Cập nhật `checklist_master.yaml`:
    - Thêm mục mới
@@ -3148,32 +3202,30 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 1. Đọc template `resources/training_handout.md`
 2. Điền nội dung dựa trên checklist master
 3. Thêm ví dụ thực tế và lưu ý từ kinh nghiệm CCBA
-4. Xuất ra Word (.docx) cho phát tay trong buổi seminar
-   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Word (.docx) sẵn sàng phát hành.
+4. Xuất ra Markdown hoặc Word (.docx qua `ccba_ooxml:DocxDocument`) cho phát tay trong buổi seminar
+   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Markdown/Word sẵn sàng phát hành.
 
-## Legal Basis
+## Legal Basis & Verification
 
-Checklist master được phân định căn cứ pháp lý theo mốc thời gian nghiệm thu công trình:
-
-### 1. Áp dụng chính thức hiện hành (Công trình nghiệm thu từ 01/07/2026 trở đi):
-- **Nghị định 207/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý chất lượng thi công xây dựng và bảo trì công trình (**Chính thức thay thế Nghị định 06/2021/NĐ-CP**). Trích dẫn Danh mục hồ sơ hoàn thành công trình theo Phụ lục tương ứng của NĐ 207/2026/NĐ-CP.
-- **Luật Xây dựng 2025 (135/2025/QH15)** (Có hiệu lực từ 01/07/2026) — Quy định chung về công tác quản lý chất lượng và nghiệm thu công trình.
-- **Nghị định 217/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý hoạt động xây dựng.
-- **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
-
-### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
-- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (kế thừa Nghị định 105/2025/NĐ-CP).
+Mọi căn cứ pháp lý của checklist bắt buộc phải được đối soát động qua Seam `python -m ccba_legal query` hoặc `ccba_legal.registry` theo đúng nguyên tắc SSOT tại Mục 5 (trạng thái `ACTIVE`, không bị thay thế). Tuyệt đối không suy đoán hiệu lực từ danh mục tĩnh.
 
 ## Output Formats
 
 - **Markdown** (.md) — Cho review và lưu trữ trong knowledge base.
-- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng thư viện `python-docx` để xuất bản tự động.
+- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng Deep Seam `ooxml_processor.v1` (`DocxDocument`).
 
 ## Dependencies
 
-- `python-docx` (cho xuất Word)
+- Seam `ooxml_processor.v1` (`packages/ccba-ooxml`)
 - `pyyaml` (cho đọc YAML)
-- Skill `legal-document-tracker` (cho cập nhật theo VBPL)
+- Skill `ccba-legal-document-tracker` / CLI `ccba_legal query` (cho cập nhật theo VBPL)
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
 ---
@@ -3867,6 +3919,16 @@ triggers:
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam AI của nền tảng:
+* **Định Tuyến & Sinh Nội Dung:** Mọi tương tác văn bản và sáng tạo thiết kế bắt buộc định tuyến qua Seam `model_routing.v1` (`from ccba_ai import choose_model`) và `ai_chat.v1` (`from ccba_ai import ai`). Tuyệt đối không hardcode API key, không nhúng model slug trực tiếp.
+* **Hạ Tầng AI Gateway:** Sử dụng gateway tập trung trên máy chủ Spark (:8090) qua package `ccba-ai`. Khi gateway gặp sự cố, hệ thống dừng lại báo lỗi (Fail-Fast), không tự ý fallback vào các CLI cá nhân không kiểm soát.
+
+---
+
 ## When to Use
 
 - Brand identity, voice, assets
@@ -3894,76 +3956,74 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 
 ## Logo Design (Built-in)
 
-55+ styles, 30 color palettes, 25 industry guides. Gemini Nano Banana models.
+55+ styles, 30 color palettes, 25 industry guides.
 
 ### Logo: Generate Design Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Logo: Search Styles/Colors/Industries
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Logo: Generate with AI
 
-**ALWAYS** generate output logo images with white background.
+*(Lưu ý: Lối sinh tệp PNG hiện dừng Fail-Fast tại adapter để chờ chuẩn hóa Seam Card sinh ảnh trong Đợt 4B. Tiêu chí hoàn thành hiện tại tập trung vào design brief, SVG icons và design tokens; tiêu chí sinh tệp ảnh PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt).*
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
-**IMPORTANT:** When scripts fail, try to fix them directly.
-
-After generation, **ALWAYS** ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
+After generation, ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
 
 ## CIP Design (Built-in)
 
-50+ deliverables, 20 styles, 20 industries. Gemini Nano Banana (Flash/Pro).
+50+ deliverables, 20 styles, 20 industries. Fast and pro generation modes.
 
 ### CIP: Generate Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### CIP: Search Domains
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### CIP: Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model (4K text)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Without logo
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
-Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
+Models: `flash` (default, fast generation), `pro` (high-quality generation)
 
 ### CIP: Render HTML Presentation
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
 ```
 
 **Tip:** If no logo exists, use Logo Design section above first.
@@ -4038,26 +4098,26 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 
 ## Icon Design (Built-in)
 
-15 styles, 12 categories. Gemini 3.1 Pro Preview generates SVG text output.
+15 styles, 12 categories. SVG text output generation via reasoning model routing.
 
 ### Icon: Generate Single Icon
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Icon: Generate Batch Variations
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
 ```
 
 ### Icon: Multi-size Export
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### Icon: Top Styles
@@ -4072,7 +4132,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "
 | flat | Material design, Google-style |
 | gradient | Modern brands, SaaS |
 
-**Model:** `gemini-3.1-pro-preview` — text-only output (SVG is XML text). No image generation API needed.
+**Model:** Định tuyến qua `model_routing.v1` (`ModelArchetype.REASONING`) — text-only output (SVG is XML text). No image generation API needed.
 
 ## Social Photos (Built-in)
 
@@ -4112,10 +4172,10 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Complete Brand Package
 
-1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
-   - **Completion Criterion:** Logo variants generated and saved in the output directory.
-2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
-   - **Completion Criterion:** CIP mockups generated using the selected logo variant.
+1. **Logo** → `scripts/logo/generate.py` → Generate logo brief / concept
+   - **Completion Criterion:** Đã xác lập design brief và concept định hướng; tiêu chí sinh file PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
+2. **CIP** → `scripts/cip/generate.py` → Create deliverable specifications
+   - **Completion Criterion:** Đã lập danh mục đặc tả CIP deliverables; tiêu chí sinh ảnh mockup PNG sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
 3. **Presentation** → Load `references/slides-create.md` → Build pitch deck
    - **Completion Criterion:** Presentation pitch deck created adhering to the brand guidelines.
 
@@ -4155,20 +4215,21 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Script | Purpose |
 |--------|---------|
 | `scripts/logo/search.py` | Search logo styles, colors, industries |
-| `scripts/logo/generate.py` | Generate logos with Gemini AI |
+| `scripts/logo/generate.py` | Generate logos with AI |
 | `scripts/logo/core.py` | BM25 search engine for logo data |
 | `scripts/cip/search.py` | Search CIP deliverables, styles, industries |
-| `scripts/cip/generate.py` | Generate CIP mockups with Gemini |
+| `scripts/cip/generate.py` | Generate CIP mockups with AI |
 | `scripts/cip/render-html.py` | Render HTML presentation from CIP mockups |
 | `scripts/cip/core.py` | BM25 search engine for CIP data |
-| `scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro |
+| `scripts/icon/generate.py` | Generate SVG icons with AI |
 
 ## Setup
 
-```powershell
-$env:GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
-pip install google-genai pillow
+Tất cả các script trong skill sử dụng trực tiếp SDK nền tảng CCBA:
+```bash
+pip install -e packages/ccba-ai
 ```
+Định tuyến mô hình bắt buộc thông qua Seam `ccba_ai.routing.choose_model()`.
 
 ## Tích hợp hệ thống & Vị trí trong Luồng công việc (Workflow Position)
 
@@ -9899,7 +9960,15 @@ triggers:
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
 
-## When to Use
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ Deep Seam `ooxml_processor.v1` (`packages/ccba-ooxml`):
+* **Biên Dịch Trình Chiếu (.pptx):** Sử dụng trực tiếp `from ccba_ooxml import build_presentation_from_markdown` hoặc lệnh CLI `python -m ccba_ooxml build-deck`. Tuyệt đối không tự viết logic sinh XML presentation ad-hoc.
+* **Lưu Trữ Tri Thức (Archive):** Các tài liệu seminar hoàn thành được lưu trữ tập trung tại `.md/seminars/` của Spoke; tuyệt đối không ghi dữ liệu seminar vào `legal_registry.yaml` (vốn là SSOT dành riêng cho văn bản quy phạm pháp luật).
+
+---
 
 - Cần **chuẩn bị nội dung** cho buổi seminar sắp tới
 - Cần **tổng hợp recap** các buổi thảo luận trong tháng
@@ -9912,15 +9981,16 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 
 | File | Mô tả |
 |------|--------|
-| `templates/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
-| `templates/agenda.md` | Template chương trình/agenda seminar |
-| `templates/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
+| `resources/agenda.md` | Template chương trình/agenda seminar |
+| `resources/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/seminar_template.md` | Khung tài liệu seminar tổng quan |
 
 ## Quy trình Thực hiện (Process)
 
 ### Bước 1: Tạo Agenda & Outline Seminar
 1. Hỏi user các thông tin cơ bản: Ngày giờ tổ chức, chủ đề chính, thời lượng dự kiến, người trình bày.
-2. Đọc tệp template `templates/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
+2. Đọc tệp template `resources/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
 3. Thiết lập cấu trúc tri thức theo nguyên tắc **Neo giữ Khái niệm (Concept Grounding)**:
    - Xác định rõ phần **Khái niệm tiền đề (Prerequisites)**: Kiến thức/tiêu chuẩn người nghe cần biết trước.
    - Sắp xếp Outline chương trình sao cho các **Khái niệm giới thiệu mới (Introduced Concepts)** được trình bày tuần tự từ cơ bản đến nâng cao. Chủ đề nâng cao chỉ được thảo luận sau khi các chủ đề nền móng đã được neo giữ.
@@ -9957,11 +10027,11 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
 ### Bước 3: Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
-3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
+3. Tổng hợp theo template `resources/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
 4. **Tiêu chí hoàn thành:** Hoàn thiện bản tóm tắt tháng lưu trữ dạng Markdown tại thư mục quy định.
 
 ### Bước 4: Thông báo thay đổi lịch
-1. Đọc template `templates/notification.md`.
+1. Đọc template `resources/notification.md`.
 2. Điền thông tin thay đổi (lịch cũ → mới, lý do).
 3. **Tiêu chí hoàn thành:** Xuất thông báo dạng văn bản hành chính hoàn chỉnh để gửi qua Zalo/Email.
 
@@ -9974,7 +10044,7 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
        CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
    ```
 2. Đảm bảo naming convention: `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.ext`.
-3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/data/legal_registry.yaml](../../../.md/data/legal_registry.yaml).
+3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại `.md/seminars/` và hoàn tất ghi nhận nhật ký lưu trữ.
 
 ## Source Documents
 

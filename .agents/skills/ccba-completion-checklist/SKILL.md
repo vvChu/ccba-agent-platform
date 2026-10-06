@@ -29,6 +29,16 @@ triggers:
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị nền tảng:
+* **Căn Cứ Pháp Lý & Tra Cứu:** Trích xuất và đối soát căn cứ nghiệm thu qua Deep Seam `LegalKnowledgeEngine` (CLI `python -m ccba_legal query`). Tệp `resources/checklist_master.yaml` giữ vai trò khung hạng mục phân loại, mọi căn cứ quy phạm trích dẫn bắt buộc phải kiểm định qua predicate SSOT tại Mục 5.
+* **Xuất Bản Văn Bản (.docx):** Bắt buộc sử dụng Seam `ooxml_processor.v1` (`from ccba_ooxml import DocxDocument`). Tuyệt đối cấm sử dụng trực tiếp thư viện `python-docx` không qua Seam cách ly. Trường hợp Seam chưa hỗ trợ mẫu checklist phức tạp, Agent xuất định dạng Markdown chuẩn và dừng lại.
+
+---
+
 ## When to Use
 
 - Cần **tạo checklist hồ sơ hoàn thành** cho một dự án/công trình cụ thể
@@ -41,7 +51,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 | File | Mô tả |
 |------|--------|
-| `resources/checklist_master.yaml` | Danh mục hồ sơ master theo NĐ 207/2026/NĐ-CP (thay thế NĐ 06/2021) |
+| `resources/checklist_master.yaml` | Danh mục hồ sơ master — Khung hạng mục hồ sơ hoàn thành |
 | `resources/checklist_by_project.md` | Template checklist theo loại công trình |
 | `resources/training_handout.md` | Template tài liệu tập huấn cho kỹ sư giám sát |
 
@@ -49,7 +59,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 1. Tạo Checklist cho dự án cụ thể
 
-1. Đọc `resources/checklist_master.yaml` để nắm cấu trúc master
+1. Đọc `resources/checklist_master.yaml` để nắm khung cấu trúc master
 2. Hỏi user các thông tin dự án:
    - Tên dự án / công trình
    - Loại công trình (dân dụng / công nghiệp / hạ tầng kỹ thuật)
@@ -57,8 +67,8 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
    - Chủ đầu tư
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
-5. Xuất ra Markdown và Word (.docx)
-   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án, xuất đủ 2 định dạng (.md và .docx) và vượt qua cổng kiểm định máy tính:
+5. Xuất ra Markdown (và Docx khi phát hành qua `ccba_ooxml:DocxDocument`)
+   - **Tiêu chí hoàn thành:** Đã tạo tệp checklist Markdown đầy đủ theo thông tin dự án và vượt qua cổng kiểm định máy tính:
      ```bash
      python -m ccba_harness verify-patch --preset doc --target <tệp_markdown_checklist> --min-bytes 500
      ```
@@ -66,9 +76,9 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 2. Cập nhật khi VBPL thay đổi
 
-1. Kiểm tra `legal_registry.yaml` (skill `legal-document-tracker`) xem có văn bản nào liên quan đến nghiệm thu hoàn công thay đổi trạng thái sang `superseded` (hết hiệu lực) và có văn bản thay thế mới (`current`).
-   - Nếu không có thay đổi: Dùng trực tiếp static templates (`checklist_master.yaml`) để tiết kiệm token và thời gian.
-   - Nếu có thay đổi: Đề xuất người dùng sử dụng `/ccba-research` để spawn subagent nghiên cứu sâu cấu trúc phụ lục nghiệm thu mới và tự động cập nhật lại master checklist.
+1. Tra cứu đối soát qua Seam `python -m ccba_legal query` và `ccba_legal.registry` theo đúng nguyên tắc kiểm định SSOT tại Mục 5.
+   - Nếu không có văn bản thay thế mới: Sử dụng khung hạng mục tĩnh (`checklist_master.yaml`) kết hợp đối chiếu căn cứ pháp lý hiện hành.
+   - Nếu có văn bản thay thế đạt trạng thái `ACTIVE`: Cập nhật lại khung master theo quy định mới nhất.
 2. So sánh nội dung Phụ lục hồ sơ hoàn thành cũ vs mới
 3. Cập nhật `checklist_master.yaml`:
    - Thêm mục mới
@@ -82,29 +92,27 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 1. Đọc template `resources/training_handout.md`
 2. Điền nội dung dựa trên checklist master
 3. Thêm ví dụ thực tế và lưu ý từ kinh nghiệm CCBA
-4. Xuất ra Word (.docx) cho phát tay trong buổi seminar
-   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Word (.docx) sẵn sàng phát hành.
+4. Xuất ra Markdown hoặc Word (.docx qua `ccba_ooxml:DocxDocument`) cho phát tay trong buổi seminar
+   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Markdown/Word sẵn sàng phát hành.
 
-## Legal Basis
+## Legal Basis & Verification
 
-Checklist master được phân định căn cứ pháp lý theo mốc thời gian nghiệm thu công trình:
-
-### 1. Áp dụng chính thức hiện hành (Công trình nghiệm thu từ 01/07/2026 trở đi):
-- **Nghị định 207/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý chất lượng thi công xây dựng và bảo trì công trình (**Chính thức thay thế Nghị định 06/2021/NĐ-CP**). Trích dẫn Danh mục hồ sơ hoàn thành công trình theo Phụ lục tương ứng của NĐ 207/2026/NĐ-CP.
-- **Luật Xây dựng 2025 (135/2025/QH15)** (Có hiệu lực từ 01/07/2026) — Quy định chung về công tác quản lý chất lượng và nghiệm thu công trình.
-- **Nghị định 217/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý hoạt động xây dựng.
-- **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
-
-### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
-- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (kế thừa Nghị định 105/2025/NĐ-CP).
+Mọi căn cứ pháp lý của checklist bắt buộc phải được đối soát động qua Seam `python -m ccba_legal query` hoặc `ccba_legal.registry` theo đúng nguyên tắc SSOT tại Mục 5 (trạng thái `ACTIVE`, không bị thay thế). Tuyệt đối không suy đoán hiệu lực từ danh mục tĩnh.
 
 ## Output Formats
 
 - **Markdown** (.md) — Cho review và lưu trữ trong knowledge base.
-- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng thư viện `python-docx` để xuất bản tự động.
+- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng Deep Seam `ooxml_processor.v1` (`DocxDocument`).
 
 ## Dependencies
 
-- `python-docx` (cho xuất Word)
+- Seam `ooxml_processor.v1` (`packages/ccba-ooxml`)
 - `pyyaml` (cho đọc YAML)
-- Skill `legal-document-tracker` (cho cập nhật theo VBPL)
+- Skill `ccba-legal-document-tracker` / CLI `ccba_legal query` (cho cập nhật theo VBPL)
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
