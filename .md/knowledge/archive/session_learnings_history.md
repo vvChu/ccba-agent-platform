@@ -779,3 +779,28 @@ Phiên thảo luận kiến trúc và tiếp thu phản biện đối kháng t�
 - **RULE-1.15 [ADR 0057 — Upstream Retro Diagnostics & Deterministic Checks Invariant]**:
   - *Retro Diagnostics & Level 3 Index*: Khi có ma sát công cụ / lặp lỗi, đọc `references/agent_environment_diagnostics.md`. Kỹ năng có `references/` BẮT BUỘC khai báo Level 3 Reference Index trong `SKILL.md`.
   - *Deterministic Checks over Rules*: Lỗi cơ học BẮT BUỘC tạo automated linter/CI check (`verify-patch`, pre-commit); CẤM thêm prompt rules vào `AGENTS.md` gây Attention Dilution (ADR-0030).
+
+---
+
+## 35. CLI God Module Modularization, Static Module Budget Enforcement & Template Sanitizer Precision (PR #494)
+
+### Context & Implementation Summary
+Phiên làm việc refactor và giải phóng "God Module" `cli.py` (từ 1,514 dòng monofile xuống mỏng < 40 dòng thin dispatch shell), thiết lập dynamic command registry và cơ chế static module budget ratchet:
+- **PR #494**: Xóa sổ monofile `cli.py`, tách nhỏ thành `ccba_harness.cli` (`main.py`, `registry.py`, `commands/evals.py`, `commands/peer.py`, `commands/telemetry.py`, `commands/verifier.py`, `commands/architecture.py`, `commands/skills.py`).
+- **Static Module Size Budget Ratchet**: Thiết lập `check_ast_module_length` (giới hạn cứng $\le 500$ LOC cho tệp Python monorepo) và `check_ast_function_length` (post-parse body $\le 40$ LOC cho CLI command handlers), hỗ trợ `# ccba:quarantine` có kỳ hạn và issue URL.
+- **Fail-Closed Dynamic Package Topology**: Bổ sung rào chắn an toàn khi `dep_graph` rỗng trong `spoke_bootstrap.py` $\to$ hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER` bảo toàn bất biến vị trí của `ccba-harness` và `ccba-ai`.
+- **Security Scanner Template Sanitizer Precision**: Siết chặt kiểm tra cú pháp f-string template interpolation trong `ccba-maskara` để phân biệt chính xác biến nội suy Python có format specifier (`{var.total_tokens:,}`) với JSON strings chứa secret thật (`{"token": "..."}`).
+
+### Key Architectural Invariants & Learned Patterns
+1. **Explicit Registry & Thin Shell Pattern (KISS & High Locality)**:
+   - Command dispatch shell (`main.py`) chỉ chứa logic phân giải đối số ban đầu và ủy quyền thực thi; cấm nhồi nhét xử lý nghiệp vụ hay định nghĩa hàng chục subparser trong cùng một monofile.
+   - Các subcommand handlers độc lập được đặt trong `commands/` với interface thống nhất `register_subparser(subparsers)` và `run_cli(args)`.
+2. **Post-Parse Function Length Gate & Legacy Quarantine**:
+   - CLI command handlers thường có phần khai báo `argparse` dài nhưng phần logic sau khi `parse_args` phải được giữ mỏng ($\le 40$ LOC).
+   - Các hàm thừa hưởng từ monofile cũ chưa kịp phân rã nhỏ phải được đánh dấu cách ly có kỳ hạn `# ccba:quarantine` kèm URL issue, cấm bỏ qua lén lút không có thời hạn.
+3. **Empty Graph Fail-Closed in Dependency Topological Sort**:
+   - Khi cây thư mục package không có `pyproject.toml` hoặc đồ thị phụ thuộc rỗng, thuật toán Kahn tuyệt đối không được trả về danh sách rỗng để tránh kích hoạt fallback sắp xếp theo từ điển alphabet (làm đảo lộn trật tự Tier-0 Anchor `ccba-harness` và `ccba-ai`). Bắt buộc trả về trật tự tĩnh mặc định `DEFAULT_PACKAGE_TOPOLOGY_ORDER`.
+4. **Template Sanitizer Precision over Broad Wildcards**:
+   - Rào chắn quét bí mật không được nới lỏng allowlist bằng `startswith("{")` đơn thuần (nguy cơ bỏ sót chuỗi JSON nhạy cảm).
+   - Bắt buộc thẩm định cấu trúc: nếu bắt đầu bằng `{"` hoặc `{'` $\to$ coi là JSON/dict literal (không suppress); nếu bắt đầu bằng `{` theo sau là identifier hợp lệ và format specifier (`^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]`) hoặc kết thúc bằng `}` $\to$ an toàn; các biến token metrics phải nằm trong tập định danh đo lường tường minh (`known_token_metrics`).
+

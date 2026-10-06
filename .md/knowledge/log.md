@@ -2,6 +2,18 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-06] [update] | Phát Hành PR #494: Modularize cli.py Monofile, Enforce Static Module Size Budget & Template Sanitizer Precision
+- **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-release-feature & /ccba-session-retrospective)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/cli/`, `packages/ccba-harness/src/ccba_harness/peer_gate.py`, `tests/governance/test_module_budget_ratchet.py`, `scripts/spoke/spoke_bootstrap.py`, `packages/ccba-maskara/src/ccba_maskara/_scanner.py`, `packages/ccba-maskara/tests/test_secret_patterns.py`, `.md/knowledge/`
+- **Summary**: Hoàn tất phân rã "God Module" `cli.py`, thiết lập cơ chế kiểm soát ngân sách dòng mã tĩnh và tinh chỉnh rào chắn an toàn thông tin:
+  1. **Modularize cli.py (PR #494)**: Xóa sổ monofile 1,514 dòng `cli.py`, tách thành thin dispatch shell `main.py` (< 40 LOC), Dynamic Command Registry `registry.py` và modular commands sub-package (`commands/`).
+  2. **Static Module Size Budget Ratchet**: Thiết lập `check_ast_module_length` (giới hạn cứng $\le 500$ LOC cho tệp Python monorepo) và `check_ast_function_length` (post-parse body $\le 40$ LOC cho CLI command handlers), hỗ trợ cơ chế cách ly `# ccba:quarantine` có kỳ hạn và issue URL.
+  3. **Fail-Closed Package Topology**: Bổ sung rào chắn an toàn khi `dep_graph` rỗng trong `spoke_bootstrap.py` $\to$ hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER` bảo toàn bất biến vị trí của Tier-0 Anchor (`ccba-harness` và `ccba-ai`).
+  4. **Template Sanitizer Precision (ccba-maskara)**: Siết chặt kiểm tra cú pháp f-string template interpolation để phân biệt chính xác biến nội suy Python có format specifier (`{var.total_tokens:,}`) với JSON strings chứa secret thật (`{"token": "..."}`), hạn chế allowlist metric token tường minh qua `known_token_metrics`.
+  5. **Bằng Chứng & Nghiệm Thu**: 12/12 monorepo isolated test targets PASS (522/522 tests), 8/8 GitHub Actions CI checks green, squash-merge PR #494 (`522c0ff1`), bổ sung Section 35 vào `session_learnings_history.md`, bổ sung `RULE-1.19` và `RULE-2.20` vào `session_learnings.md` ($9.81\text{ KB} \le 10.0\text{ KB}$).
+
+---
+
 ## [2026-10-06] [synthesize] | Phát Hành Pstack Phase 2: Verification Drift Maintenance & Hypothesis-Driven Forensic
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI `APPROVE_PLAN` COND-01 $\to$ COND-05)
 - **Affected Files**: `.agents/skills/ccba-create-verification-skill/`, `docs/rules/code_quality.md`, `.agents/skills/ccba-code-review/references/unslop_checklist.md`, `.md/knowledge/`
