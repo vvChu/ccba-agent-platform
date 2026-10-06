@@ -856,3 +856,78 @@ def test_skill_repair_and_validator_handles_corrupted_yaml_edge_case(tmp_path: P
     issues = auditor.audit_skill(corrupted_skill, enforce_gpi=True)
     error_categories = [i.category for i in issues]
     assert "YAML_PARSE_ERROR" in error_categories
+
+
+def test_hysteresis_deadband_preserves_existing_kernel_skill(tmp_path: Path) -> None:
+    """Verify that existing kernel skill with GPI in deadband [11.5, 12.5) is preserved as Tier 2B (PR 4B0 / COND-10)."""
+    auditor = SkillAuditor(PROJECT_ROOT)
+
+    # 1. tier: kernel with GPI = 11.50 (s=2, k=3, a=1, p=1) -> preserved as Tier 2B per ADR-0057 Hysteresis
+    logger_skill = tmp_path / "SKILL_preserved.md"
+    logger_skill.write_text(
+        "---\n"
+        "name: ccba-test-hysteresis-preserved\n"
+        "description: Testing hysteresis deadband preservation for existing kernel skill.\n"
+        "bundle: _core\n"
+        "tier: kernel\n"
+        "gpi:\n"
+        "  s: 2.0\n"
+        "  k: 3.0\n"
+        "  a: 1.0\n"
+        "  p: 1.0\n"
+        "---\n"
+        "# Preserved Kernel Skill\n"
+        "**Tiêu chí hoàn thành:** Hoàn thành xác thực.\n" + ("Line\n" * 40),
+        encoding="utf-8",
+    )
+    issues = auditor.audit_skill(logger_skill, enforce_gpi=True)
+    gpi_issues = [
+        i for i in issues if i.category in ("INSUFFICIENT_GPI_SCORE", "MISMATCHED_GPI_SCORE")
+    ]
+    assert not gpi_issues, f"Expected no GPI issues, got: {gpi_issues}"
+
+    # 2. Same GPI = 11.50 without prior kernel tier (e.g. tier: domain) -> INSUFFICIENT_GPI_SCORE
+    domain_skill = tmp_path / "SKILL_domain.md"
+    domain_skill.write_text(
+        "---\n"
+        "name: ccba-test-hysteresis-no-kernel\n"
+        "description: Testing hysteresis rejection when skill is not existing kernel.\n"
+        "bundle: _core\n"
+        "tier: domain\n"
+        "gpi:\n"
+        "  s: 2.0\n"
+        "  k: 3.0\n"
+        "  a: 1.0\n"
+        "  p: 1.0\n"
+        "---\n"
+        "# Domain Skill\n"
+        "**Tiêu chí hoàn thành:** Hoàn thành xác thực.\n" + ("Line\n" * 40),
+        encoding="utf-8",
+    )
+    issues_domain = auditor.audit_skill(domain_skill, enforce_gpi=True)
+    gpi_errors = [i for i in issues_domain if i.category == "INSUFFICIENT_GPI_SCORE"]
+    assert gpi_errors, "Expected INSUFFICIENT_GPI_SCORE when tier is not kernel"
+
+    # 3. tier: kernel with GPI strictly below deadband (< 11.50, e.g. s=2, k=2, a=1, p=1 -> GPI = 9.50) -> INSUFFICIENT_GPI_SCORE
+    sub_deadband_skill = tmp_path / "SKILL_sub_deadband.md"
+    sub_deadband_skill.write_text(
+        "---\n"
+        "name: ccba-test-hysteresis-sub-deadband\n"
+        "description: Testing hysteresis rejection when score is strictly below 11.50.\n"
+        "bundle: _core\n"
+        "tier: kernel\n"
+        "gpi:\n"
+        "  s: 2.0\n"
+        "  k: 2.0\n"
+        "  a: 1.0\n"
+        "  p: 1.0\n"
+        "---\n"
+        "# Sub Deadband Skill\n"
+        "**Tiêu chí hoàn thành:** Hoàn thành xác thực.\n" + ("Line\n" * 40),
+        encoding="utf-8",
+    )
+    issues_sub = auditor.audit_skill(sub_deadband_skill, enforce_gpi=True)
+    gpi_sub_errors = [i for i in issues_sub if i.category == "INSUFFICIENT_GPI_SCORE"]
+    assert gpi_sub_errors, (
+        "Expected INSUFFICIENT_GPI_SCORE when score is below deadband [11.5, 12.5)"
+    )
