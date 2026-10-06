@@ -7,6 +7,7 @@ applies_to:
 bundle: _governance
 tier: kernel
 disable-model-invocation: true
+scope: hub
 command: /ccba-review-proposal
 user-invocable: true
 metadata:

@@ -12,7 +12,7 @@
   - *Cổng 0 (Determinism)*: Thuần giải thuật/IO $\rightarrow$ Deep Seams (`packages/*/src/`). `SKILL.md` không code trần.
   - *Cổng 1 (Orchestration)*: Đa luồng/StateGraph/HITL $\rightarrow$ Tier 3 Composite Orchestrator (bỏ qua GPI).
   - *Chỉ số GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \rightarrow$ Tier 2A; $\ge 12.0 \rightarrow$ Tier 2B. Rituals: $A = 1.0$.
-- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23, 27; RULE-1.9 Mục 24; RULE-1.6, 1.8 Mục 25 của archive/session_learnings_history.md)*
+- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23, 27; RULE-1.9 Mục 24; RULE-1.6, 1.8 Mục 25; RULE-1.15 Mục 34 của archive/session_learnings_history.md)*
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
   - Tái sử dụng Package Seams / Master Skills có sẵn là KISS bậc 1; CẤM script chắp vá. Tra cứu Seam qua CLI (`compile_catalog.py --query <kw>`). CẤM hoãn kiến trúc chuẩn sang Phase 2.
 - **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
@@ -23,9 +23,9 @@
 - **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
   - *Fail-Closed Gate*: `assess_catalog_freshness` chặn đứng `--apply` (exit 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
   - *Declarative Registry & Topo*: Khai báo guardrails và package bindings trong `catalog_base.yaml`; `spoke_bootstrap.py` phân giải install set theo Kahn's topo sort.
-- **RULE-1.15 [ADR 0057 — Upstream Retro Diagnostics & Deterministic Checks Invariant]**:
-  - *Retro Diagnostics & Level 3 Index*: Khi có ma sát công cụ / lặp lỗi, đọc `references/agent_environment_diagnostics.md`. Kỹ năng có `references/` BẮT BUỘC khai báo Level 3 Reference Index trong `SKILL.md`.
-  - *Deterministic Checks over Rules*: Lỗi cơ học BẮT BUỘC tạo automated linter/CI check (`verify-patch`, pre-commit); CẤM thêm prompt rules vào `AGENTS.md` gây Attention Dilution (ADR-0030).
+- **RULE-1.18 [ADR 0066 — Skills Taxonomy, Scope Declaration & Multi-Environment Distribution Matrix]**:
+  - *Platform Operations vs Domain*: `bundle: _core` chỉ chứa công cụ SDLC loop của Agent (sync, verify, review, PR); `_software` chứa nghiệp vụ code chuyên sâu.
+  - *Metadata Scope & Linter*: Frontmatter khai báo `scope: hub | spoke | universal`. Linter tự động chặn `command: /...` thuộc `_governance` nếu thiếu `scope: hub` (ADR-0066). Tự động đối soát điểm GPI toán học (COND-01).
 - **RULE-1.16 [Lexical Analysis Naming & Maskara False-Positive Decoupling]**:
   - Trong code tokenizer/AST, CẤM đặt tên biến gán chứa chuỗi con `token` (`tokens = ...`, `name_tokens = ...`) với biểu thức $\ge 8$ ký tự tránh kích hoạt nhầm rule `env-secret` của Maskara trên PR diff. BẮT BUỘC dùng danh từ trung tính: `lex_items`, `lexemes`, `name_parts`, `name_vocab`.
 - **RULE-1.17 [Verification Harness Drift Maintenance & Pre-Remediation Provenance Check]**:

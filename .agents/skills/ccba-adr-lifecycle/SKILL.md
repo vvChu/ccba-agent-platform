@@ -6,6 +6,7 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
 bundle: _governance
 tier: kernel
 layer: _governance
+scope: hub
 user-invocable: true
 command: /ccba-adr-lifecycle
 gpi:

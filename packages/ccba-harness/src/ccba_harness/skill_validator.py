@@ -754,6 +754,28 @@ class SkillValidator:
                     )
                 )
 
+        # ADR-0066: Slash Command Distribution Guardrail
+        bundle = meta.get("bundle")
+        user_invocable = meta.get("user-invocable", meta.get("user_invocable", False))
+        if isinstance(user_invocable, str):
+            user_invocable = user_invocable.strip().lower() in ("true", "1", "yes")
+
+        if command and user_invocable and bundle == "_governance":
+            scope = str(meta.get("scope", "")).strip().lower()
+            has_bypass = "# ccba:allow-hub-only-command" in content
+            if scope != "hub" and not has_bypass:
+                issues.append(
+                    SkillAuditIssue(
+                        1,
+                        str(file_path),
+                        f"Skill '{name}' declares interactive command '{command}' with 'bundle: _governance' "
+                        f"without 'scope: hub' (ADR-0066). Spoke developers will not get IDE slash command "
+                        f"autocomplete. Either promote to 'bundle: _core' or declare 'scope: hub' if Hub-only.",
+                        category="INVALID_COMMAND_DISTRIBUTION",
+                        file_path=str(file_path),
+                    )
+                )
+
         # Stage 1 and Stage 2: Two-Stage Granularity Decision & GPI validation
         issues.extend(self._audit_granularity_and_gpi(file_path, name, meta, enforce_gpi))
 
@@ -939,6 +961,29 @@ class SkillValidator:
                             parent_skill=parent_skill,
                         )
                         decision = evaluate_two_stage_decision(req)
+                        declared_score = normalized_gpi.get(
+                            "score",
+                            normalized_gpi.get("total", normalized_gpi.get("gpi_score")),
+                        )
+                        if declared_score is not None:
+                            try:
+                                dec_val = float(declared_score)
+                                expected_score = round(decision.gpi_score or 0.0, 2)
+                                if abs(dec_val - expected_score) > 0.05:
+                                    issues.append(
+                                        SkillAuditIssue(
+                                            1,
+                                            str(file_path),
+                                            f"Skill '{skill_name}' declared GPI score {dec_val} does not match "
+                                            f"mathematical formula 2.5*S + 2.0*K + 2.0*A - 1.5*P = {expected_score} "
+                                            f"(ADR-0066 / COND-01).",
+                                            category="MISMATCHED_GPI_SCORE",
+                                            file_path=str(file_path),
+                                        )
+                                    )
+                            except (TypeError, ValueError):
+                                pass
+
                         if (
                             enforce_gpi
                             and decision.tier == ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
