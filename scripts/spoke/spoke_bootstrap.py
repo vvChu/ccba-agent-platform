@@ -127,8 +127,8 @@ def discover_package_topology(hub_root: Path | None = None) -> list[str]:
                 in_degree[neighbor] -= 1
                 if in_degree[neighbor] == 0 and neighbor not in ordered and neighbor not in zero_in:
                     zero_in.append(neighbor)
-        if len(ordered) < len(dep_graph):
-            # Circular dependency detected! Fail-closed to static default order (ADR-0062 / ADR-0065 COND-04)
+        if not dep_graph or len(ordered) < len(dep_graph):
+            # Circular dependency detected or no packages found! Fail-closed to static default order (ADR-0062 / ADR-0065 COND-04)
             return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
 
         return ordered
