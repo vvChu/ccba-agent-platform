@@ -35,6 +35,7 @@ from .blast_radius import (
 )
 from .cli import (
     run_apply_anchor_patch_cli,
+    run_peer_co_review_cli,
     run_peer_dispatch_cli,
 )
 from .dashboard import (
@@ -153,8 +154,10 @@ from .orchestrator import EvalOrchestrator
 from .peer import (
     PROFILE_SPECS,
     TIER_DEFAULT_MODELS,
+    VERDICT_LATTICE_RANK,
     AgentIdentity,
     AnchorPatchPayload,
+    CombinedTelemetry,
     CostMode,
     EffortType,
     FileChange,
@@ -162,10 +165,12 @@ from .peer import (
     ModelTier,
     PatchReplacement,
     PeerCondition,
+    PeerConsensusReport,
     PeerExecutionProfile,
     PeerPromptEnvelope,
     PeerVerdictBlock,
     PeerVerdictTelemetry,
+    ProfileTelemetryItem,
     RequestType,
     VerdictType,
     apply_anchor_patch,
@@ -178,14 +183,17 @@ from .peer import (
     extract_grok_session_telemetry,
     flush_pending_peer_triggers,
     invoke_grok_cli,
+    orchestrate_peer_co_review,
     parse_envelope_from_md,
     parse_verdict_from_md,
     publish_peer_message,
+    render_consensus_report_markdown,
     render_prompt_header,
     render_verdict_header,
     run_sync_cycle,
     safe_read_and_hash,
     scan_peer_exchange,
+    synthesize_verdicts,
 )
 from .peer_gate import (
     GateCheck,
@@ -428,5 +436,13 @@ __all__ = [
     "run_implementation_gate",
     "write_verdict_file",
     "run_apply_anchor_patch_cli",
+    "run_peer_co_review_cli",
     "run_peer_dispatch_cli",
+    "CombinedTelemetry",
+    "PeerConsensusReport",
+    "ProfileTelemetryItem",
+    "VERDICT_LATTICE_RANK",
+    "orchestrate_peer_co_review",
+    "render_consensus_report_markdown",
+    "synthesize_verdicts",
 ]
