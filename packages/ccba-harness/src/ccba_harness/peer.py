@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -27,6 +28,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._mutex import FileMutexLock
+from .verifier import resolve_preset_commands, verify_patch_execution
 
 AgentIdentity = Literal["antigravity", "grok"]
 PeerExecutionProfile = Literal[
@@ -355,6 +357,21 @@ class PeerConsensusReport(BaseModel):
     created_at: str = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat()
     )
+
+
+class AutoApplyResult(BaseModel):
+    """Result of Level-3 autonomous loopback patch application and verification (ADR-0065)."""
+
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+
+    success: bool
+    gate_verdict: VerdictType
+    rollback_proven: bool
+    preimage_sha256: dict[str, str] = Field(default_factory=dict)
+    report: Any = None
+    summary: str = ""
+    transaction_id: str = ""
+    modified_files: list[str] = Field(default_factory=list)
 
 
 def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
@@ -1040,6 +1057,327 @@ def apply_anchor_patch(
         if rollback_errors:
             err_msg += f" (Rollback errors: {'; '.join(rollback_errors)})"
         raise ValueError(err_msg) from exc
+
+
+def get_git_toplevel(cwd: Path | str | None = None) -> Path | None:
+    """Resolves the git repository top-level root directory (COND-LEVEL3-ROOT).
+
+    Args:
+        cwd: Directory or path to execute git rev-parse from. Defaults to current directory.
+
+    Returns:
+        Resolved Path to git top-level root directory, or None if outside git repository.
+    """
+    try:
+        res = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=str(cwd) if cwd else None,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        top = res.stdout.strip()
+        if top:
+            return Path(top).resolve()
+    except Exception:
+        pass
+    return None
+
+
+def recover_pending_anchor_transactions(
+    backup_dir: Path | None = None,
+    root: Path | None = None,
+) -> list[str]:
+    """Scans and recovers interrupted anchor transactions from disk pre-images (COND-LEVEL3-TXN).
+
+    Any transaction directory under .md/backups/anchor-txn/ that has a journal.json but lacks
+    a commit.marker or aborted.marker indicates a process crash/interruption during patch
+    application or verification. This function restores the target files from raw pre-image
+    bytes and stamps an aborted.marker to ensure workspace hygiene.
+
+    Args:
+        backup_dir: Optional explicit path to anchor-txn directory.
+        root: Optional workspace root directory to resolve backup directory against.
+
+    Returns:
+        List of transaction IDs recovered.
+    """
+    if backup_dir is None:
+        effective_root = root or get_git_toplevel() or Path.cwd()
+        backup_dir = effective_root / ".md" / "backups" / "anchor-txn"
+
+    if not backup_dir.exists() or not backup_dir.is_dir():
+        return []
+
+    recovered_txns: list[str] = []
+    # Deterministic sorting per user rule
+    for txn_path in sorted(backup_dir.iterdir(), key=lambda p: p.name):
+        if not txn_path.is_dir() or txn_path.name.startswith("."):
+            continue
+        journal_file = txn_path / "journal.json"
+        commit_marker = txn_path / "commit.marker"
+        aborted_marker = txn_path / "aborted.marker"
+
+        if journal_file.exists() and not commit_marker.exists() and not aborted_marker.exists():
+            try:
+                journal_data = json.loads(journal_file.read_text(encoding="utf-8"))
+                target_root = Path(
+                    journal_data.get("root", str(backup_dir.parent.parent.parent))
+                ).resolve()
+                files_entries = journal_data.get("files", [])
+                for f_entry in files_entries:
+                    rel_p = f_entry.get("path")
+                    backup_fname = f_entry.get("backup_filename")
+                    if not rel_p or not backup_fname:
+                        continue
+                    backup_file = txn_path / backup_fname
+                    if not backup_file.exists():
+                        continue
+                    target_file = (target_root / rel_p).resolve()
+                    # Restore verbatim raw bytes (preserves CRLF/exact bytes)
+                    target_file.write_bytes(backup_file.read_bytes())
+                aborted_marker.write_text(
+                    f"Recovered at {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
+                    encoding="utf-8",
+                )
+                recovered_txns.append(txn_path.name)
+            except Exception:
+                pass
+
+    return recovered_txns
+
+
+def auto_apply_and_verify_patch(
+    root: Path | str | None,
+    patch_payload: AnchorPatchPayload | dict[str, Any],
+    verify_preset: str = "ci",
+    timeout: float = 180.0,
+    keep_backups: bool = False,
+    extra_commands: Sequence[str] | None = None,
+) -> AutoApplyResult:
+    """Atomically applies anchor patch with pre-image byte journaling, closed-loop verification, and auto-rollback (Level-3 / ADR-0065).
+
+    Args:
+        root: Workspace repository root directory. If None, resolves via git rev-parse --show-toplevel.
+        patch_payload: AnchorPatchPayload instance or equivalent dictionary.
+        verify_preset: Verification preset to execute ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
+        timeout: Execution timeout in seconds per verification command.
+        keep_backups: Whether to preserve transaction backup directory on verification pass.
+        extra_commands: Additional verification shell commands to execute.
+
+    Returns:
+        AutoApplyResult containing execution status, gate verdict, and rollback proof.
+
+    Raises:
+        ValueError: If root is outside a git repository, preset is invalid, or payload fails validation.
+    """
+
+    # 1. Resolve root directory (COND-LEVEL3-ROOT)
+    if root is None:
+        effective_root = get_git_toplevel()
+        if effective_root is None:
+            raise ValueError(
+                "Root directory resolution failed: current working directory is not inside a git repository."
+            )
+    else:
+        effective_root = Path(root).resolve()
+        git_top = get_git_toplevel(effective_root)
+        if git_top is None:
+            raise ValueError(f"Specified root is not inside a git repository: {effective_root}")
+
+    # 2. Validate payload
+    if isinstance(patch_payload, dict):
+        patch = AnchorPatchPayload.model_validate(patch_payload)
+    else:
+        patch = patch_payload
+
+    if not patch.files:
+        raise ValueError("Anchor patch payload contains no files to patch.")
+
+    # 3. Validate verify preset (COND-LEVEL3-SCOPE)
+    resolve_preset_commands(preset=verify_preset)
+
+    # 4. Recover any prior interrupted transactions (COND-LEVEL3-TXN)
+    recover_pending_anchor_transactions(root=effective_root)
+
+    # 5. Initialize isolated transaction backup directory (COND-LEVEL3-BACKUP)
+    backup_base = effective_root / ".md" / "backups" / "anchor-txn"
+    backup_base.mkdir(parents=True, exist_ok=True)
+    txn_id = f"txn_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+    txn_dir = backup_base / txn_id
+
+    if txn_dir.exists():
+        raise ValueError(f"Transaction backup directory already exists: {txn_dir}")
+
+    # Verify no target in payload collides with txn_dir
+    for fp in patch.files:
+        t_path = (effective_root / fp.path).resolve()
+        if t_path == txn_dir.resolve() or txn_dir.resolve().is_relative_to(t_path):
+            raise ValueError(f"Payload target collides with transaction directory: {fp.path}")
+
+    lock_file = backup_base / ".lock"
+    preimage_sha256: dict[str, str] = {}
+    journal_files: list[dict[str, Any]] = []
+
+    with FileMutexLock(lock_file):
+        # Phase 1: Pre-validation & Pre-image byte journaling (Fail-Fast)
+        txn_dir.mkdir(parents=True, exist_ok=False)
+        try:
+            # Validate patch structure, anchors, and target integrity
+            apply_anchor_patch(root=effective_root, payload=patch, dry_run=True, backup=False)
+
+            # Record pre-image raw bytes
+            for idx, file_patch in enumerate(patch.files):
+                target_file = (effective_root / file_patch.path).resolve()
+                raw_bytes = target_file.read_bytes()
+                current_sha = hashlib.sha256(raw_bytes).hexdigest()
+                preimage_sha256[file_patch.path] = current_sha
+
+                backup_filename = f"file_{idx}.bin"
+                backup_file = txn_dir / backup_filename
+                backup_file.write_bytes(raw_bytes)
+
+                journal_files.append(
+                    {
+                        "index": idx,
+                        "path": file_patch.path,
+                        "blob_sha256": current_sha,
+                        "backup_filename": backup_filename,
+                    }
+                )
+
+            journal_data = {
+                "txn_id": txn_id,
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "root": str(effective_root),
+                "files": journal_files,
+            }
+            atomic_write_text(txn_dir / "journal.json", json.dumps(journal_data, indent=2))
+        except Exception as exc:
+            shutil.rmtree(txn_dir, ignore_errors=True)
+            raise ValueError(f"Pre-apply validation failed: {exc}") from exc
+
+        # Phase 2: Atomic commit to disk
+        modified_paths: list[Path] = []
+        try:
+            modified_paths = apply_anchor_patch(
+                root=effective_root, payload=patch, dry_run=False, backup=False
+            )
+        except Exception as exc:
+            # Emergency rollback
+            rollback_ok = True
+            for f_entry in journal_files:
+                try:
+                    t_file = (effective_root / f_entry["path"]).resolve()
+                    b_file = txn_dir / f_entry["backup_filename"]
+                    t_file.write_bytes(b_file.read_bytes())
+                except Exception:
+                    rollback_ok = False
+            if rollback_ok and not keep_backups:
+                shutil.rmtree(txn_dir, ignore_errors=True)
+            return AutoApplyResult(
+                success=False,
+                gate_verdict="GATE_FAIL",
+                rollback_proven=rollback_ok,
+                preimage_sha256=preimage_sha256,
+                summary=f"Disk commit aborted: {exc}. Workspace rolled back {'cleanly' if rollback_ok else 'WITH ERRORS'}.",
+                transaction_id=txn_id,
+            )
+
+        # Phase 3: Closed-Loop Verification Gate (ADR-0058 / COND-LEVEL3-SCOPE)
+        commands_to_run: list[str] = list(extra_commands or [])
+        if verify_preset == "ci":
+            commands_to_run.append(
+                f"{sys.executable} -m pytest packages/ccba-harness/tests/test_peer*.py -q"
+            )
+
+        verification_report = None
+        try:
+            verification_report = verify_patch_execution(
+                preset=verify_preset,
+                cwd=effective_root,
+                timeout=timeout,
+                commands=commands_to_run if commands_to_run else None,
+            )
+        except Exception as v_err:
+            rollback_ok = True
+            for f_entry in journal_files:
+                try:
+                    t_file = (effective_root / f_entry["path"]).resolve()
+                    b_file = txn_dir / f_entry["backup_filename"]
+                    t_file.write_bytes(b_file.read_bytes())
+                    restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
+                    if restored_sha.lower() != f_entry["blob_sha256"].lower():
+                        rollback_ok = False
+                except Exception:
+                    rollback_ok = False
+            return AutoApplyResult(
+                success=False,
+                gate_verdict="GATE_FAIL",
+                rollback_proven=rollback_ok,
+                preimage_sha256=preimage_sha256,
+                summary=f"Verification execution crashed: {v_err}. Workspace rolled back {'cleanly' if rollback_ok else 'WITH ERRORS'}.",
+                transaction_id=txn_id,
+            )
+
+        # Phase 4: Decision & Automatic Byte Rollback (COND-LEVEL3-TXN & COND-LEVEL3-EXIT)
+        rel_modified = [
+            str(p.relative_to(effective_root)) if p.is_relative_to(effective_root) else str(p)
+            for p in modified_paths
+        ]
+
+        if verification_report.all_passed:
+            (txn_dir / "commit.marker").write_text("committed", encoding="utf-8")
+            if not keep_backups:
+                shutil.rmtree(txn_dir, ignore_errors=True)
+            return AutoApplyResult(
+                success=True,
+                gate_verdict="GATE_PASS",
+                rollback_proven=False,
+                preimage_sha256=preimage_sha256,
+                report=verification_report,
+                summary=f"Patch successfully applied and verified with preset '{verify_preset}'.",
+                transaction_id=txn_id,
+                modified_files=rel_modified,
+            )
+
+        # Verification failed -> Automatic Byte Rollback with SHA-256 verification
+        rollback_proven = True
+        for f_entry in journal_files:
+            try:
+                t_file = (effective_root / f_entry["path"]).resolve()
+                b_file = txn_dir / f_entry["backup_filename"]
+                t_file.write_bytes(b_file.read_bytes())
+                restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
+                if restored_sha.lower() != f_entry["blob_sha256"].lower():
+                    rollback_proven = False
+            except Exception:
+                rollback_proven = False
+
+        if rollback_proven:
+            (txn_dir / "rollback.marker").write_text("clean", encoding="utf-8")
+            if not keep_backups:
+                shutil.rmtree(txn_dir, ignore_errors=True)
+            summary_msg = (
+                f"Verification failed ({verification_report.failed_count}/{verification_report.total_commands} "
+                f"commands failed). Workspace rolled back cleanly."
+            )
+        else:
+            summary_msg = (
+                f"Verification failed ({verification_report.failed_count}/{verification_report.total_commands} "
+                f"commands failed) AND byte rollback verification mismatch! Transaction preserved at {txn_dir}."
+            )
+
+        return AutoApplyResult(
+            success=False,
+            gate_verdict="GATE_FAIL",
+            rollback_proven=rollback_proven,
+            preimage_sha256=preimage_sha256,
+            report=verification_report,
+            summary=summary_msg,
+            transaction_id=txn_id,
+            modified_files=rel_modified,
+        )
 
 
 def extract_grok_session_telemetry(
