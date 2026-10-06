@@ -1302,8 +1302,9 @@ seams:
     calculate_gpi, evaluate_two_stage_decision, GPI_STANDALONE_THRESHOLD, GateCheck,
     GateResult, check_redundant_comments, run_full_gate, run_implementation_gate,
     BlastRadiusReport, analyze_blast_radius, ADRMatch, WhyExplanation, explain_architecture_why,
-    apply_anchor_patch, extract_anchor_payload, run_apply_anchor_patch_cli, run_peer_dispatch_cli,
-    orchestrate_peer_co_review, synthesize_verdicts, PeerConsensusReport, run_peer_co_review_cli`.'
+    apply_anchor_patch, extract_anchor_payload, AutoApplyResult, auto_apply_and_verify_patch,
+    run_apply_anchor_patch_cli, run_peer_dispatch_cli, orchestrate_peer_co_review,
+    synthesize_verdicts, PeerConsensusReport, run_peer_co_review_cli`.'
   contracts: Evaluations must be deterministic and isolated with explicit timeout
     guards. Two-Stage Granularity Decision Framework and GPI calculation enforce RES-2026-ARCH-001
     v1.2 architecture rules. Fast unit tests must maintain SLA < 2.0s.

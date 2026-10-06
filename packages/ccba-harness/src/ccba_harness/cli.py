@@ -1521,6 +1521,29 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Print constructed command and parameters without executing.",
     )
+    parser.add_argument(
+        "--auto-apply",
+        action="store_true",
+        help="Automatically apply and verify patch if output contains valid AnchorPatchPayload (Level-3 / ADR-0065).",
+    )
+    parser.add_argument(
+        "--verify-preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        default="ci",
+        help="Verification preset to run upon auto-apply (default: ci).",
+    )
+    parser.add_argument(
+        "--keep-backups",
+        action="store_true",
+        help="Preserve transaction backup directories under .md/backups/anchor-txn/.",
+    )
+    parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory for workspace (default: git rev-parse --show-toplevel).",
+    )
 
     args = parser.parse_args(args_list)
     prompt_path = Path(args.prompt_file).resolve()
@@ -1536,6 +1559,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         build_grok_cmd,
         invoke_grok_cli,
         parse_envelope_from_md,
+        parse_verdict_from_md,
         safe_read_and_hash,
     )
 
@@ -1603,11 +1627,101 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         timeout=args.timeout,
         worktree=args.worktree,
     )
-    if success:
-        print("[OK] Peer dispatch completed successfully with valid verdict.")
-        return 0
-    print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
-    return 1
+    if not success:
+        print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
+        return 1
+
+    if args.auto_apply:
+        content, _ = safe_read_and_hash(prompt_path)
+        envelope = parse_envelope_from_md(content or "")
+        active_profile = args.profile or (envelope.profile if envelope else None)
+
+        if active_profile != "patch_fast":
+            print(
+                f"[FAIL] --auto-apply is strictly restricted to 'patch_fast' profile, got '{active_profile}' (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return 1
+
+        out_name = envelope.output_path if (envelope and envelope.output_path) else None
+        if not out_name:
+            print(
+                "[FAIL] --auto-apply requested but envelope does not specify output_path.",
+                file=sys.stderr,
+            )
+            return 1
+
+        output_path = (prompt_path.parent / out_name).resolve()
+        if not output_path.exists():
+            print(f"[FAIL] Output file not found for auto-apply: {output_path}", file=sys.stderr)
+            return 1
+
+        out_content, _ = safe_read_and_hash(output_path)
+        out_verdict_block = parse_verdict_from_md(out_content or "")
+        worker_verdict = out_verdict_block.verdict if out_verdict_block else None
+
+        if worker_verdict != "HANDOFF":
+            print(
+                f"[FAIL] --auto-apply rejected worker verdict '{worker_verdict}': only HANDOFF is accepted (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return 1
+
+        from .peer import (
+            atomic_write_text,
+            auto_apply_and_verify_patch,
+            extract_anchor_payload,
+        )
+
+        payload = extract_anchor_payload(out_content or "")
+        if payload is None:
+            print(
+                "[FAIL] --auto-apply requested but output contains no AnchorPatchPayload.",
+                file=sys.stderr,
+            )
+            return 1
+
+        auto_res = auto_apply_and_verify_patch(
+            root=args.root,
+            patch_payload=payload,
+            verify_preset=args.verify_preset or "ci",
+            keep_backups=args.keep_backups,
+        )
+
+        gate_file = output_path.with_suffix(".gate.md")
+        gate_body = (
+            f"---\n"
+            f"gate_verdict: {auto_res.gate_verdict}\n"
+            f"success: {str(auto_res.success).lower()}\n"
+            f"rollback_proven: {str(auto_res.rollback_proven).lower()}\n"
+            f"preset: {args.verify_preset or 'ci'}\n"
+            f"transaction_id: {auto_res.transaction_id}\n"
+            f"---\n\n"
+            f"# 🛡️ Level-3 Orchestrator Gate Result\n\n"
+            f"- **Verdict:** `{auto_res.gate_verdict}`\n"
+            f"- **Success:** `{auto_res.success}`\n"
+            f"- **Rollback Proven:** `{auto_res.rollback_proven}`\n"
+            f"- **Summary:** {auto_res.summary}\n"
+        )
+        atomic_write_text(gate_file, gate_body)
+
+        if auto_res.success:
+            print(f"[OK] Level-3 Auto-Apply passed: {auto_res.summary}")
+            return 0
+        if auto_res.rollback_proven:
+            print(
+                f"[GATE_FAIL] Level-3 Auto-Apply verification failed and workspace rolled back cleanly: {auto_res.summary}",
+                file=sys.stderr,
+            )
+            return 4
+        print(
+            f"[ERROR] Level-3 Auto-Apply rollback verification mismatch or failure: {auto_res.summary}",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("[OK] Peer dispatch completed successfully with valid verdict.")
+    return 0
 
 
 def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
@@ -1663,6 +1777,35 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Output consensus report as JSON to stdout.",
     )
+    parser.add_argument(
+        "--auto-apply",
+        action="store_true",
+        help="Automatically apply and verify patch if consensus is APPROVE and --patch-file is provided (Level-3 / ADR-0065).",
+    )
+    parser.add_argument(
+        "--patch-file",
+        type=str,
+        default=None,
+        help="Explicit path to patch file containing AnchorPatchPayload (COND-LEVEL3-TRUST).",
+    )
+    parser.add_argument(
+        "--verify-preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        default="ci",
+        help="Verification preset to run upon auto-apply (default: ci).",
+    )
+    parser.add_argument(
+        "--keep-backups",
+        action="store_true",
+        help="Preserve transaction backup directories under .md/backups/anchor-txn/.",
+    )
+    parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory for workspace (default: git rev-parse --show-toplevel).",
+    )
 
     args = parser.parse_args(args_list)
     prompt_path = Path(args.prompt_file).resolve()
@@ -1676,6 +1819,18 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
         parse_envelope_from_md,
         safe_read_and_hash,
     )
+
+    if args.auto_apply:
+        if not args.patch_file:
+            print(
+                "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return 1
+        patch_path = Path(args.patch_file).resolve()
+        if not patch_path.exists():
+            print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
+            return 1
 
     if args.dry_run:
         content, _ = safe_read_and_hash(prompt_path)
@@ -1725,6 +1880,89 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
             for c in report.conditions:
                 tag = "[BLOCKING]" if c.blocking else "[ADVISORY]"
                 print(f"  - {c.id} {tag}: {c.description}")
+
+    if args.auto_apply:
+        if not args.patch_file:
+            print(
+                "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return 1
+
+        blocking_conditions = [c for c in report.conditions if c.blocking]
+        is_clean_approval = (
+            report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT")
+            and report.risk_score <= 3
+            and len(blocking_conditions) == 0
+        )
+
+        if not is_clean_approval:
+            print(
+                f"[FAIL] Consensus conditions not met for --auto-apply (verdict: {report.verdict}, "
+                f"risk: {report.risk_score}/5, blocking conditions: {len(blocking_conditions)}) (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return 2 if report.verdict.startswith("APPROVE") else 4
+
+        patch_path = Path(args.patch_file).resolve()
+        if not patch_path.exists():
+            print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
+            return 1
+
+        patch_content, _ = safe_read_and_hash(patch_path)
+        from .peer import atomic_write_text, auto_apply_and_verify_patch, extract_anchor_payload
+
+        payload = extract_anchor_payload(patch_content or "")
+        if payload is None:
+            print(
+                f"[FAIL] No valid AnchorPatchPayload found in patch file: {patch_path}",
+                file=sys.stderr,
+            )
+            return 1
+
+        auto_res = auto_apply_and_verify_patch(
+            root=args.root,
+            patch_payload=payload,
+            verify_preset=args.verify_preset or "ci",
+            keep_backups=args.keep_backups,
+        )
+
+        gate_target = (
+            output_path
+            if output_path
+            else prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
+        )
+        gate_file = gate_target.with_suffix(".gate.md")
+        gate_body = (
+            f"---\n"
+            f"gate_verdict: {auto_res.gate_verdict}\n"
+            f"success: {str(auto_res.success).lower()}\n"
+            f"rollback_proven: {str(auto_res.rollback_proven).lower()}\n"
+            f"preset: {args.verify_preset or 'ci'}\n"
+            f"transaction_id: {auto_res.transaction_id}\n"
+            f"---\n\n"
+            f"# 🛡️ Level-3 Consensus Orchestrator Gate Result\n\n"
+            f"- **Verdict:** `{auto_res.gate_verdict}`\n"
+            f"- **Success:** `{auto_res.success}`\n"
+            f"- **Rollback Proven:** `{auto_res.rollback_proven}`\n"
+            f"- **Summary:** {auto_res.summary}\n"
+        )
+        atomic_write_text(gate_file, gate_body)
+
+        if auto_res.success:
+            print(f"[OK] Level-3 Co-Review Auto-Apply passed: {auto_res.summary}")
+            return 0
+        if auto_res.rollback_proven:
+            print(
+                f"[GATE_FAIL] Level-3 Co-Review Auto-Apply verification failed and workspace rolled back cleanly: {auto_res.summary}",
+                file=sys.stderr,
+            )
+            return 4
+        print(
+            f"[ERROR] Level-3 Co-Review Auto-Apply rollback verification mismatch or failure: {auto_res.summary}",
+            file=sys.stderr,
+        )
+        return 1
 
     if report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"):
         return 0
@@ -2247,6 +2485,112 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--dry-run",
         action="store_true",
         help="Print constructed command without executing.",
+    )
+    dispatch_parser.add_argument(
+        "--auto-apply",
+        action="store_true",
+        help="Automatically apply and verify patch if output contains valid AnchorPatchPayload (Level-3 / ADR-0065).",
+    )
+    dispatch_parser.add_argument(
+        "--verify-preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        default="ci",
+        help="Verification preset to run upon auto-apply (default: ci).",
+    )
+    dispatch_parser.add_argument(
+        "--keep-backups",
+        action="store_true",
+        help="Preserve transaction backup directories under .md/backups/anchor-txn/.",
+    )
+    dispatch_parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory for workspace (default: git rev-parse --show-toplevel).",
+    )
+
+    # Subcommand: peer-co-review
+    co_review_parser = subparsers.add_parser(
+        "peer-co-review",
+        aliases=["co-review"],
+        help="Parallel Multi-Agent Co-Review Orchestration and Consensus Engine (Level-2.5 / ADR-0065).",
+    )
+    co_review_parser.add_argument(
+        "--prompt-file",
+        type=str,
+        required=True,
+        help="Path to markdown prompt file containing PeerPromptEnvelope.",
+    )
+    co_review_parser.add_argument(
+        "--profiles",
+        type=str,
+        nargs="+",
+        default=["code_review", "arch_audit"],
+        help="Profiles to dispatch in parallel (default: code_review arch_audit).",
+    )
+    co_review_parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        default=None,
+        help="Path for saving the consolidated consensus markdown report.",
+    )
+    co_review_parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=None,
+        help="Hard cap on parallel worker threads.",
+    )
+    co_review_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=None,
+        help="Execution timeout override per profile in seconds.",
+    )
+    co_review_parser.add_argument(
+        "--worktree",
+        action="store_true",
+        help="Execute agents in isolated git worktrees.",
+    )
+    co_review_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned co-review dispatch plan and exit without executing.",
+    )
+    co_review_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output consensus report as JSON to stdout.",
+    )
+    co_review_parser.add_argument(
+        "--auto-apply",
+        action="store_true",
+        help="Automatically apply and verify patch if consensus is APPROVE and --patch-file is provided (Level-3 / ADR-0065).",
+    )
+    co_review_parser.add_argument(
+        "--patch-file",
+        type=str,
+        default=None,
+        help="Explicit path to patch file containing AnchorPatchPayload (COND-LEVEL3-TRUST).",
+    )
+    co_review_parser.add_argument(
+        "--verify-preset",
+        type=str,
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        default="ci",
+        help="Verification preset to run upon auto-apply (default: ci).",
+    )
+    co_review_parser.add_argument(
+        "--keep-backups",
+        action="store_true",
+        help="Preserve transaction backup directories under .md/backups/anchor-txn/.",
+    )
+    co_review_parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory for workspace (default: git rev-parse --show-toplevel).",
     )
 
     # Subcommand: apply-anchor-patch
