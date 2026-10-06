@@ -51,11 +51,13 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
     if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
         return True
     stripped = val.strip()
-    # Ignore template variable interpolations and f-strings: ${VAR}, $(VAR), {{ ... }}, {VAR...
-    if stripped.startswith(("${", "$(", "{{", "<%", "<#", "{")):
+    # Ignore template variable interpolations and f-strings: ${VAR}, $(VAR), {{ ... }}, {VAR...}
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#")) or (
+        stripped.startswith("{") and stripped.endswith("}")
+    ):
         return True
-    # Ignore variable / attribute references in code: args.xxx, self.xxx, etc.
-    if stripped.startswith(("args.", "self.", "params.", "config.", "model.", "spec.")):
+    # Ignore variable / attribute references in code: args.xxx, self.xxx, params.xxx
+    if stripped.startswith(("args.", "self.", "params.")):
         return True
     # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
     # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
@@ -75,21 +77,28 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
     ):
         return True
 
-    # COND-MASKARA-TOKEN: Ignore LLM token counter metrics and Python type annotations
+    # COND-MASKARA-TOKEN: Ignore explicit LLM token counter metrics and Python type annotations
     key_clean = key_hint.split("=")[0].split(":")[0].strip().lower()
     key_stem = key_clean.split(".")[-1].strip()
-    if (
-        key_stem.endswith("tokens")
-        or key_clean.endswith("tokens")
-        or key_stem
-        in {
-            "input_tokens",
-            "output_tokens",
-            "reasoning_tokens",
-            "cached_read_tokens",
-            "total_tokens",
-        }
-    ):
+    known_token_metrics = {
+        "input_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "cached_read_tokens",
+        "total_tokens",
+        "total_fleet_tokens",
+        "fleet_tokens",
+        "max_tokens",
+        "prompt_tokens",
+        "completion_tokens",
+        "blocker_tokens",
+        "all_tokens",
+        "token_count",
+        "token_limit",
+        "token_budget",
+        "max_output_tokens",
+    }
+    if key_stem in known_token_metrics or key_clean in known_token_metrics:
         return True
 
     if stripped.startswith(("set[", "set(", "list[", "list(", "dict[", "dict(", "tuple[")):
