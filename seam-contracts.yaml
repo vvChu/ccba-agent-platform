@@ -69,3 +69,148 @@ cards:
     hardware: [any]
     failure_modes: [missing_legal_basis, contradictory_regulations]
     owner: hub-legal
+
+  - seam_id: ai_chat.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_ai:ai
+    capability:
+      in: [prompt, messages]
+      out: [chat_completion]
+    hardware: [any]
+    failure_modes: [gateway_timeout, auth_error, quota_exhausted]
+    owner: hub-ai
+    implementation_packages: [ccba_ai]
+
+  - seam_id: ai_embedding.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_ai:embed
+    capability:
+      in: [text]
+      out: [embedding]
+    hardware: [any]
+    failure_modes: [gateway_timeout, input_too_long]
+    owner: hub-ai
+    implementation_packages: [ccba_ai]
+
+  - seam_id: ai_transcribe.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_ai:transcribe
+    capability:
+      in: [audio]
+      out: [transcript]
+    hardware: [any]
+    failure_modes: [gateway_timeout, unsupported_audio_format]
+    owner: hub-ai
+    implementation_packages: [ccba_ai]
+
+  - seam_id: model_routing.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_ai:choose_model
+    capability:
+      in: [task_type]
+      out: [model_alias]
+    hardware: [any]
+    failure_modes: [unknown_archetype]
+    owner: hub-ai
+    implementation_packages: [ccba_ai]
+
+  - seam_id: maskara_scanner.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_maskara:MaskaraScanner
+    capability:
+      in: [text, file_path]
+      out: [findings, redacted_text]
+    hardware: [any]
+    failure_modes: [regex_timeout, permission_denied]
+    owner: hub-security
+    implementation_packages: [ccba_maskara]
+
+  - seam_id: diagram_layout.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_diagram:apply_smart_layout
+    capability:
+      in: [diagram, excalidraw_elements]
+      out: [layout]
+    hardware: [any]
+    failure_modes: [cycle_detected, invalid_elements]
+    owner: hub-core
+    implementation_packages: [ccba_diagram]
+    forbidden_substitute_imports: [graphviz]
+
+  - seam_id: qc_pipeline.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_qc_core:QCAuditPipeline
+    capability:
+      in: [drawing_set, project_dir]
+      out: [audit_report]
+    hardware: [any]
+    failure_modes: [missing_drawings, pipeline_error]
+    owner: hub-qc
+    implementation_packages: [ccba_qc_core]
+
+  - seam_id: harness_verify.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_harness:auto_apply_and_verify_patch
+    capability:
+      in: [anchor_patch, verify_preset]
+      out: [verification_report]
+    hardware: [any]
+    failure_modes: [patch_conflict, verification_failed]
+    owner: hub-governance
+    implementation_packages: [ccba_harness]
+
+  - seam_id: harness_eval.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_harness:EvalRunner
+    capability:
+      in: [eval_items]
+      out: [eval_report]
+    hardware: [any]
+    failure_modes: [eval_timeout, runner_crash]
+    owner: hub-governance
+    implementation_packages: [ccba_harness]
+
+  - seam_id: peer_dispatch.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_harness:run_peer_dispatch_cli
+    capability:
+      in: [peer_prompt]
+      out: [peer_verdict]
+    hardware: [any]
+    failure_modes: [peer_unavailable, dispatch_error]
+    owner: hub-governance
+    implementation_packages: [ccba_harness]
+
+  - seam_id: notebooklm_rag.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_notebooklm:CCBANotebookLMClient
+    capability:
+      in: [notebook_query, source_path]
+      out: [rag_answer]
+    hardware: [any]
+    failure_modes: [auth_expired, source_upload_failed, quota_exceeded]
+    owner: hub-core
+    implementation_packages: [ccba_notebooklm]
+
