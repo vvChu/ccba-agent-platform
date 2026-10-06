@@ -324,7 +324,6 @@ def _handle_peer_dispatch_auto_apply(
 ) -> int:
     """Handles Level-3 auto-apply verification gate for peer-dispatch (ADR-0065)."""
     from ccba_harness.peer import (
-        atomic_write_text,
         auto_apply_and_verify_patch,
         extract_anchor_payload,
         parse_envelope_from_md,
@@ -382,16 +381,32 @@ def _handle_peer_dispatch_auto_apply(
         keep_backups=keep_backups,
     )
 
-    gate_file = output_path.with_suffix(".gate.md")
+    return _record_auto_apply_gate_result(
+        gate_file=output_path.with_suffix(".gate.md"),
+        auto_res=auto_res,
+        preset=verify_preset or "ci",
+        title="Level-3 Orchestrator Gate Result",
+    )
+
+
+def _record_auto_apply_gate_result(
+    gate_file: Path,
+    auto_res: Any,
+    preset: str,
+    title: str,
+) -> int:
+    """Writes gate result markdown and outputs formatted CLI status message."""
+    from ccba_harness.peer import atomic_write_text
+
     gate_body = (
         f"---\n"
         f"gate_verdict: {auto_res.gate_verdict}\n"
         f"success: {str(auto_res.success).lower()}\n"
         f"rollback_proven: {str(auto_res.rollback_proven).lower()}\n"
-        f"preset: {verify_preset or 'ci'}\n"
+        f"preset: {preset}\n"
         f"transaction_id: {auto_res.transaction_id}\n"
         f"---\n\n"
-        f"# 🛡️ Level-3 Orchestrator Gate Result\n\n"
+        f"# 🛡️ {title}\n\n"
         f"- **Verdict:** `{auto_res.gate_verdict}`\n"
         f"- **Success:** `{auto_res.success}`\n"
         f"- **Rollback Proven:** `{auto_res.rollback_proven}`\n"
@@ -400,16 +415,16 @@ def _handle_peer_dispatch_auto_apply(
     atomic_write_text(gate_file, gate_body)
 
     if auto_res.success:
-        print(f"[OK] Level-3 Auto-Apply passed: {auto_res.summary}")
+        print(f"[OK] {title} passed: {auto_res.summary}")
         return 0
     if auto_res.rollback_proven:
         print(
-            f"[GATE_FAIL] Level-3 Auto-Apply verification failed and workspace rolled back cleanly: {auto_res.summary}",
+            f"[GATE_FAIL] {title} verification failed and workspace rolled back cleanly: {auto_res.summary}",
             file=sys.stderr,
         )
         return 4
     print(
-        f"[ERROR] Level-3 Auto-Apply rollback verification mismatch or failure: {auto_res.summary}",
+        f"[ERROR] {title} rollback verification mismatch or failure: {auto_res.summary}",
         file=sys.stderr,
     )
     return 1
@@ -607,7 +622,6 @@ def _handle_peer_co_review_auto_apply(
 ) -> int:
     """Handles Level-3 auto-apply verification gate for peer-co-review (ADR-0065)."""
     from ccba_harness.peer import (
-        atomic_write_text,
         auto_apply_and_verify_patch,
         extract_anchor_payload,
         safe_read_and_hash,
@@ -661,37 +675,12 @@ def _handle_peer_co_review_auto_apply(
         if output_path
         else prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
     )
-    gate_file = gate_target.with_suffix(".gate.md")
-    gate_body = (
-        f"---\n"
-        f"gate_verdict: {auto_res.gate_verdict}\n"
-        f"success: {str(auto_res.success).lower()}\n"
-        f"rollback_proven: {str(auto_res.rollback_proven).lower()}\n"
-        f"preset: {verify_preset or 'ci'}\n"
-        f"transaction_id: {auto_res.transaction_id}\n"
-        f"---\n\n"
-        f"# 🛡️ Level-3 Consensus Orchestrator Gate Result\n\n"
-        f"- **Verdict:** `{auto_res.gate_verdict}`\n"
-        f"- **Success:** `{auto_res.success}`\n"
-        f"- **Rollback Proven:** `{auto_res.rollback_proven}`\n"
-        f"- **Summary:** {auto_res.summary}\n"
+    return _record_auto_apply_gate_result(
+        gate_file=gate_target.with_suffix(".gate.md"),
+        auto_res=auto_res,
+        preset=verify_preset or "ci",
+        title="Level-3 Consensus Orchestrator Gate Result",
     )
-    atomic_write_text(gate_file, gate_body)
-
-    if auto_res.success:
-        print(f"[OK] Level-3 Co-Review Auto-Apply passed: {auto_res.summary}")
-        return 0
-    if auto_res.rollback_proven:
-        print(
-            f"[GATE_FAIL] Level-3 Co-Review Auto-Apply verification failed and workspace rolled back cleanly: {auto_res.summary}",
-            file=sys.stderr,
-        )
-        return 4
-    print(
-        f"[ERROR] Level-3 Co-Review Auto-Apply rollback verification mismatch or failure: {auto_res.summary}",
-        file=sys.stderr,
-    )
-    return 1
 
 
 def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
