@@ -27,9 +27,11 @@ from ccba_harness.peer import (
 
 def test_verdict_lattice_coverage_and_invariants() -> None:
     """Verifies that VERDICT_LATTICE_RANK strictly covers 100% of VerdictType tokens (COND-01)."""
-    all_tokens = set(get_args(VerdictType))
-    lattice_tokens = set(VERDICT_LATTICE_RANK.keys())
-    assert lattice_tokens == all_tokens, f"Lattice missing tokens: {all_tokens - lattice_tokens}"
+    expected_verdicts = set(get_args(VerdictType))
+    lattice_keys = set(VERDICT_LATTICE_RANK.keys())
+    assert lattice_keys == expected_verdicts, (
+        f"Lattice missing items: {expected_verdicts - lattice_keys}"
+    )
 
     # Blocker tokens must have higher rank than revision/handoff/conditional/pass
     assert VERDICT_LATTICE_RANK["REJECT"] > VERDICT_LATTICE_RANK["REVISE_PLAN"]

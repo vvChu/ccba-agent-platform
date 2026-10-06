@@ -1495,13 +1495,13 @@ def synthesize_verdicts(
     comp_profiles = [p for p in exp_profiles if p in verdicts]
     failed_profiles = [p for p in exp_profiles if p not in verdicts]
 
-    blocker_tokens: set[VerdictType] = {"REJECT", "REJECT_PLAN", "GATE_FAIL"}
-    pass_tokens: set[VerdictType] = {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"}
+    blocker_verdicts: set[VerdictType] = {"REJECT", "REJECT_PLAN", "GATE_FAIL"}
+    pass_verdicts: set[VerdictType] = {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"}
 
     # 1. Determine baseline consensus verdict by strict lattice rank
     if failed_profiles:
         comp_blockers = [
-            verdicts[p].verdict for p in comp_profiles if verdicts[p].verdict in blocker_tokens
+            verdicts[p].verdict for p in comp_profiles if verdicts[p].verdict in blocker_verdicts
         ]
         if comp_blockers:
             consensus_verdict: VerdictType = max(
@@ -1510,13 +1510,15 @@ def synthesize_verdicts(
         else:
             consensus_verdict = "HANDOFF"
     else:
-        completed_tokens = [verdicts[p].verdict for p in comp_profiles]
-        if not completed_tokens:
+        completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
+        if not completed_verdicts:
             consensus_verdict = "HANDOFF"
-        elif len(set(completed_tokens)) == 1:
-            consensus_verdict = completed_tokens[0]
+        elif len(set(completed_verdicts)) == 1:
+            consensus_verdict = completed_verdicts[0]
         else:
-            consensus_verdict = max(completed_tokens, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0))
+            consensus_verdict = max(
+                completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0)
+            )
 
     # 2. Consolidate conditions with deterministic ordering & OR-merge on blocking
     consolidated_conds: list[PeerCondition] = []
@@ -1554,22 +1556,22 @@ def synthesize_verdicts(
 
     # 3. Dynamic escalation: blocking conditions or risk_score >= 4 upgrade PASS to APPROVE_WITH_CONDITIONS
     has_blocking = any(c.blocking for c in consolidated_conds)
-    if consensus_verdict in pass_tokens and has_blocking:
+    if consensus_verdict in pass_verdicts and has_blocking:
         consensus_verdict = "APPROVE_WITH_CONDITIONS"
 
     valid_risks = [
         verdicts[p].risk_score for p in comp_profiles if verdicts[p].risk_score is not None
     ]
     consensus_risk = max(valid_risks) if valid_risks else 1
-    if consensus_verdict in pass_tokens and consensus_risk >= 4:
+    if consensus_verdict in pass_verdicts and consensus_risk >= 4:
         consensus_verdict = "APPROVE_WITH_CONDITIONS"
 
     # 4. Consolidate telemetry breakdown
-    total_tokens = 0
-    input_tokens = 0
-    output_tokens = 0
-    reasoning_tokens = 0
-    cached_read_tokens = 0
+    agg_total = 0
+    agg_input = 0
+    agg_output = 0
+    agg_reasoning = 0
+    agg_cached = 0
     cost_usd = 0.0
     sum_agent_seconds = 0.0
     all_exact = True
@@ -1581,42 +1583,44 @@ def synthesize_verdicts(
         tel = vb.telemetry
         if tel:
             has_any_telemetry = True
-            total_tokens += tel.total_tokens or 0
-            input_tokens += tel.input_tokens or 0
-            output_tokens += tel.output_tokens or 0
-            reasoning_tokens += tel.reasoning_tokens or 0
-            cached_read_tokens += tel.cached_read_tokens or 0
+            agg_total += tel.total_tokens or 0
+            agg_input += tel.input_tokens or 0
+            agg_output += tel.output_tokens or 0
+            agg_reasoning += tel.reasoning_tokens or 0
+            agg_cached += tel.cached_read_tokens or 0
             cost_usd += tel.cost_usd or 0.0
             sum_agent_seconds += tel.duration_seconds or 0.0
             if tel.cost_mode != "exact":
                 all_exact = False
-            profile_breakdown[prof] = ProfileTelemetryItem(
-                model=tel.primary_model,
-                input_tokens=tel.input_tokens or 0,
-                output_tokens=tel.output_tokens or 0,
-                reasoning_tokens=tel.reasoning_tokens or 0,
-                cached_read_tokens=tel.cached_read_tokens or 0,
-                total_tokens=tel.total_tokens or 0,
-                cost_usd=round(tel.cost_usd or 0.0, 4),
-                duration_seconds=round(tel.duration_seconds or 0.0, 2),
-            )
+            item_payload = {
+                "model": tel.primary_model,
+                "input_tokens": tel.input_tokens or 0,
+                "output_tokens": tel.output_tokens or 0,
+                "reasoning_tokens": tel.reasoning_tokens or 0,
+                "cached_read_tokens": tel.cached_read_tokens or 0,
+                "total_tokens": tel.total_tokens or 0,
+                "cost_usd": round(tel.cost_usd or 0.0, 4),
+                "duration_seconds": round(tel.duration_seconds or 0.0, 2),
+            }
+            profile_breakdown[prof] = ProfileTelemetryItem.model_validate(item_payload)
         else:
             all_exact = False
 
     combined_telemetry: CombinedTelemetry | None = None
     if has_any_telemetry:
-        combined_telemetry = CombinedTelemetry(
-            total_tokens=total_tokens,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            reasoning_tokens=reasoning_tokens,
-            cached_read_tokens=cached_read_tokens,
-            cost_usd=round(cost_usd, 4),
-            wall_seconds=round(duration_seconds, 2),
-            sum_agent_seconds=round(sum_agent_seconds, 2),
-            cost_mode="exact" if all_exact else "estimated",
-            profile_breakdown=profile_breakdown,
-        )
+        comb_payload = {
+            "total_tokens": agg_total,
+            "input_tokens": agg_input,
+            "output_tokens": agg_output,
+            "reasoning_tokens": agg_reasoning,
+            "cached_read_tokens": agg_cached,
+            "cost_usd": round(cost_usd, 4),
+            "wall_seconds": round(duration_seconds, 2),
+            "sum_agent_seconds": round(sum_agent_seconds, 2),
+            "cost_mode": "exact" if all_exact else "estimated",
+            "profile_breakdown": profile_breakdown,
+        }
+        combined_telemetry = CombinedTelemetry.model_validate(comb_payload)
 
     # 5. Build consolidated summary
     summary_lines = [
