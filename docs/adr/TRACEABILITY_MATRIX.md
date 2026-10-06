@@ -69,3 +69,4 @@
 | [HUB-ADR 0063](0063-level-2-peer-delegation-protocol-and-cost-guardrails.md) | **Level-2 Peer Agent Delegation Protocol and Cost Guardrails (Grok ↔ Antigravity)** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
 | [HUB-ADR 0064](0064-peer-exchange-telemetry-and-model-provenance.md) | **Peer Exchange Model Provenance, Token Usage Telemetry, and Zero-Hang Execution Lifecycle** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
 | [HUB-ADR 0065](0065-peer-runtime-hardening-and-topological-fail-closed.md) | **Cương Xương Vận Hành Tác Nhân Ngang Hàng, Khóa Topo Fail-Closed và Chuẩn Hóa Phán Quyết** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
+| [HUB-ADR 0066](0066-skills-taxonomy-and-multi-environment-distribution-matrix.md) | **Skills Taxonomy, Multi-Environment Distribution Matrix, and Slash Command Governance** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
