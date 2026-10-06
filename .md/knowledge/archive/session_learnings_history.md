@@ -762,3 +762,20 @@ Chuỗi phiên làm việc hoàn thiện tầng Level-2.5 Multi-Agent Peer Co-Re
 
 
 
+
+---
+
+## 34. Skills Taxonomy, Scope Declaration & Multi-Environment Distribution Matrix (HUB-ADR 0066)
+
+### Context & Implementation Summary
+Phiên thảo luận kiến trúc và tiếp thu phản biện đối kháng từ Grok-4.7 (`APPROVE_PLAN`, risk_score 1/5) nhằm giải quyết dứt điểm khoảng trống kiến trúc phân phối lệnh Slash Command giữa Hub và Spoke:
+- **HUB-ADR 0066**: Chuẩn hóa ma trận phân nhóm kỹ năng, kế thừa ADR-0057 (Two-Stage Decision & GPI).
+- **Platform Operations Invariant**: Phân định rạch ròi giữa `bundle: _core` (vận hành vòng lặp SDLC của Agent ở mọi Spoke, tự động sync 100%) và `bundle: _software` (nghiệp vụ kỹ thuật phần mềm chuyên sâu, chỉ sync theo `project_type: software`).
+- **Metadata Scope Declaration**: Thêm trường `scope: hub | spoke | universal` vào frontmatter `SKILL.md`.
+- **Slash Command Distribution Guardrail**: Cập nhật `SkillValidator` và `validate_skills.py` chặn đứng các kỹ năng có `command: /...` thuộc `bundle: _governance` nhưng thiếu `scope: hub`, bảo đảm lập trình viên tại Spoke luôn nhận được gợi ý Slash Command trên IDE autocomplete popup.
+- **Deterministic GPI Formula Check (COND-01)**: Tự động đối soát điểm GPI toán học $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$.
+
+### Archived Invariants (Di dời từ Active Working Memory)
+- **RULE-1.15 [ADR 0057 — Upstream Retro Diagnostics & Deterministic Checks Invariant]**:
+  - *Retro Diagnostics & Level 3 Index*: Khi có ma sát công cụ / lặp lỗi, đọc `references/agent_environment_diagnostics.md`. Kỹ năng có `references/` BẮT BUỘC khai báo Level 3 Reference Index trong `SKILL.md`.
+  - *Deterministic Checks over Rules*: Lỗi cơ học BẮT BUỘC tạo automated linter/CI check (`verify-patch`, pre-commit); CẤM thêm prompt rules vào `AGENTS.md` gây Attention Dilution (ADR-0030).
