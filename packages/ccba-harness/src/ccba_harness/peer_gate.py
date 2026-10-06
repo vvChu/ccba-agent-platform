@@ -15,6 +15,7 @@ from __future__ import annotations
 import ast
 import datetime
 import io
+import json
 import re
 import shutil
 import subprocess
@@ -22,12 +23,17 @@ import sys
 import time
 import tokenize
 import uuid
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .peer import PeerVerdictBlock, render_verdict_header
+
+QUARANTINE_PATTERN = re.compile(
+    r"#\s*ccba:quarantine\s+seam_id=(?P<seam>[^\s]+)\s+reason=(?P<reason>[^\s]+)\s+until=(?P<until>\d{4}-\d{2}-\d{2})\s+issue=(?P<issue>[^\s]+)"
+)
 
 HUB_PACKAGE_PREFIXES = (
     "ccba_ai",
@@ -209,12 +215,42 @@ def get_target_files(
     return sorted({f for f in files if f.exists()})
 
 
+def _find_parse_args_line(node: ast.AST) -> int | None:
+    """Finds the line number of parse_args/parse_known_args call within an AST node."""
+    for child in ast.walk(node):
+        if isinstance(child, ast.Call) and isinstance(child.func, ast.Attribute):
+            if child.func.attr in ("parse_args", "parse_known_args"):
+                return getattr(child, "lineno", None)
+    return None
+
+
+def _has_active_quarantine(lines: Sequence[str], start_line: int, end_line: int) -> bool:
+    """Checks whether function span or immediate preceding lines have an unexpired quarantine annotation."""
+    today = datetime.datetime.now(datetime.timezone.utc).date()
+    start_idx = max(0, start_line - 3)
+    end_idx = min(len(lines), end_line)
+    for idx in range(start_idx, end_idx):
+        match = QUARANTINE_PATTERN.search(lines[idx])
+        if match:
+            try:
+                until_date = datetime.date.fromisoformat(match.group("until"))
+                if until_date >= today:
+                    return True
+            except ValueError:
+                pass
+    return False
+
+
 def check_ast_function_length(target_files: list[Path], max_lines: int = 50) -> GateCheck:
     """Scans target Python files to ensure no function/method definition exceeds max_lines.
 
+    Enforces thin shell invariant: CLI handlers with parse_args are measured post-parse (<= 40 lines),
+    while domain functions are capped at max_lines (default 50). Quarantined sections are exempted
+    until expiry. Fail-closed on parse/read errors (ADR-0058 / ADR-0061 / ADR-0065).
+
     Args:
         target_files: List of Python file paths to inspect.
-        max_lines: Maximum allowed line span per function.
+        max_lines: Maximum allowed line span per domain function.
 
     Returns:
         GateCheck summary.
@@ -227,29 +263,129 @@ def check_ast_function_length(target_files: list[Path], max_lines: int = 50) -> 
             continue
         try:
             content = py_file.read_text(encoding="utf-8")
-            if "# ccba:allow-long-functions" in content:
-                continue
+            lines = content.splitlines()
             tree = ast.parse(content, filename=str(py_file))
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     end_lineno = getattr(node, "end_lineno", node.lineno)
-                    length = end_lineno - node.lineno + 1
-                    if length > max_lines:
-                        violations.append(
-                            f"{py_file.name}:{node.lineno} {node.name}() [{length} lines > {max_lines}]"
-                        )
-        except Exception:
-            continue
+                    if _has_active_quarantine(lines, node.lineno, end_lineno):
+                        continue
+
+                    parse_line = _find_parse_args_line(node)
+                    if parse_line is not None:
+                        body_length = end_lineno - parse_line + 1
+                        if body_length > 40:
+                            violations.append(
+                                f"{py_file.name}:{node.lineno} {node.name}() [post-parse body {body_length} lines > 40]"
+                            )
+                    else:
+                        length = end_lineno - node.lineno + 1
+                        if length > max_lines:
+                            violations.append(
+                                f"{py_file.name}:{node.lineno} {node.name}() [{length} lines > {max_lines}]"
+                            )
+        except (SyntaxError, UnicodeDecodeError, OSError) as exc:
+            violations.append(f"{py_file.name}: Syntax/Read error: {exc}")
+        except Exception as exc:
+            violations.append(f"{py_file.name}: Unexpected inspection error: {exc}")
 
     duration_ms = int((time.time() - t0) * 1000)
     passed = len(violations) == 0
     tail = (
         "\n".join(violations[:10])
         if violations
-        else f"All analyzed functions satisfy KISS rule (<= {max_lines} lines)."
+        else f"All analyzed functions satisfy KISS rule (<= {max_lines} lines / post-parse <= 40)."
     )
     return GateCheck(
         name="ast_function_length",
+        passed=passed,
+        exit_code=0 if passed else 1,
+        stdout_tail=tail,
+        duration_ms=duration_ms,
+    )
+
+
+def check_module_size_budget(
+    workspace_dir: Path | None = None,
+    baseline_path: Path | None = None,
+    warn_lines: int = 500,
+    hard_lines: int = 800,
+) -> GateCheck:
+    """Enforces static module line budget and anti-god-module ratchet (ADR-0061 / ADR-0066).
+
+    Args:
+        workspace_dir: Project root directory. Defaults to CWD.
+        baseline_path: Path to baseline JSON file for legacy oversized modules.
+        warn_lines: Warning threshold for module size in lines.
+        hard_lines: Hard failure ceiling for new or unexempted modules.
+
+    Returns:
+        GateCheck summary.
+    """
+    t0 = time.time()
+    ws = workspace_dir.resolve() if workspace_dir else Path.cwd().resolve()
+    base_file = (
+        baseline_path.resolve()
+        if baseline_path
+        else Path(__file__).parent / "module_budget_baseline.json"
+    )
+
+    baseline: dict[str, int] = {}
+    if base_file.exists():
+        try:
+            baseline = json.loads(base_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return GateCheck(
+                name="module_size_budget",
+                passed=False,
+                exit_code=1,
+                stdout_tail=f"Failed to parse module budget baseline JSON: {exc}",
+                duration_ms=int((time.time() - t0) * 1000),
+            )
+
+    packages_dir = ws / "packages"
+    if not packages_dir.exists():
+        return GateCheck(
+            name="module_size_budget",
+            passed=True,
+            exit_code=0,
+            stdout_tail="No packages directory found in workspace.",
+            duration_ms=int((time.time() - t0) * 1000),
+        )
+
+    violations: list[str] = []
+    # Filesystem Inode Ordering Invariance (RULE 5)
+    py_files = sorted(packages_dir.glob("*/src/**/*.py"), key=lambda p: p.as_posix())
+
+    for py_file in py_files:
+        rel_posix = py_file.relative_to(ws).as_posix()
+        try:
+            line_count = len(py_file.read_text(encoding="utf-8").splitlines())
+        except Exception as exc:
+            violations.append(f"{rel_posix}: cannot read file: {exc}")
+            continue
+
+        if rel_posix in baseline:
+            allowed_baseline = baseline[rel_posix]
+            if line_count > allowed_baseline:
+                violations.append(
+                    f"{rel_posix}: ratchet violation ({line_count} lines > committed baseline {allowed_baseline})"
+                )
+        else:
+            if line_count > hard_lines:
+                violations.append(
+                    f"{rel_posix}: hard cap exceeded ({line_count} lines > {hard_lines} LOC limit)"
+                )
+
+    duration_ms = int((time.time() - t0) * 1000)
+    passed = len(violations) == 0
+    tail = (
+        "\n".join(violations[:10])
+        if violations
+        else f"All analyzed modules ({len(py_files)} files) satisfy module size budget (<= {hard_lines} LOC / ratchet)."
+    )
+    return GateCheck(
+        name="module_size_budget",
         passed=passed,
         exit_code=0 if passed else 1,
         stdout_tail=tail,
@@ -528,6 +664,7 @@ def run_full_gate(
         run_command_check("import_cycle_check", import_cmd, cwd=ws),
         check_hub_import_depth(target_files, is_hub=is_hub_workspace(ws)),
         check_secret_ip_cleanliness(target_files),
+        check_module_size_budget(workspace_dir=ws),
     ]
 
     all_passed = all(c.passed for c in checks)
