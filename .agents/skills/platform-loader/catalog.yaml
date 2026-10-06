@@ -1174,7 +1174,7 @@ skills:
   - local llm
   skill_path: .agents/skills/ccba-vllm-manager/SKILL.md
   command: /ccba-vllm-manager
-  tier: domain
+  tier: kernel
 - name: ccba-wayfinder
   bundle: _core
   description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua

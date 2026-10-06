@@ -5,7 +5,7 @@ applies_to:
 - Phần mềm
 - Tác vụ Admin
 bundle: _software
-tier: domain
+tier: kernel
 command: /ccba-vllm-manager
 metadata:
   version: "1.1.0"
@@ -39,6 +39,12 @@ Kỹ năng này cung cấp cho Agents và Kỹ sư hạ tầng toàn bộ tri th
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (hạ tầng & vận hành container model serving cấp OS/Docker). Không kết nối trực tiếp với Seam Contract ứng dụng mà đóng vai trò hướng dẫn quản trị runtime cho cụm máy chủ suy luận vLLM trên DGX Spark.
+
+---
+
 ## 1. Tối Ưu Hóa Hạ Tầng: AOT Inductor Cache Volume Mount
 
 Dòng mô hình hybrid attention + MoE thế hệ mới (như Qwen 3.6) sử dụng `torch.compile` / Inductor graph để tăng tốc độ inference. Mỗi lần container vLLM khởi động lại, quá trình biên dịch đồ thị AOT mất từ **35 - 45 giây**.
@@ -53,8 +59,8 @@ services:
     image: vllm/vllm-openai:latest
     container_name: qwen36b
     volumes:
-      - /home/vvc/.cache/vllm:/root/.cache/vllm  # Persistent AOT Inductor Cache
-      - /home/vvc/.cache/huggingface:/root/.cache/huggingface
+      - ${VLLM_CACHE_DIR}:/root/.cache/vllm  # Persistent AOT Inductor Cache
+      - ${HF_HOME}:/root/.cache/huggingface
     ipc: host
     deploy:
       resources:
@@ -66,7 +72,7 @@ services:
 ```
 
 > [!IMPORTANT]
-> Việc mount `/home/vvc/.cache/vllm:/root/.cache/vllm` giúp vLLM nạp lại đồ thị đã biên dịch ngay lập tức khi container khởi động lại, triệt tiêu thời gian chờ 40s.
+> Việc mount `${VLLM_CACHE_DIR}:/root/.cache/vllm` giúp vLLM nạp lại đồ thị đã biên dịch ngay lập tức khi container khởi động lại, triệt tiêu thời gian chờ 40s.
 
 ---
 
