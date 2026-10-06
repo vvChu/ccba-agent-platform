@@ -42,6 +42,12 @@ Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution),
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP downstream đồng bộ Hub sang Spoke). Skill hướng dẫn quy trình đồng bộ hóa kỹ năng, hiến pháp và rào chắn vệ sinh hai pha Safe-by-Default; hai parser đồng bộ (`scripts/ccba_platform_cli.py sync-spoke` cho các cờ cơ bản và wrapper `scripts/sync_spoke.py` cho rollback/backup/dirty) vận hành song song trên cùng engine `scripts/spoke/sync_project.py`. Không phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 ## 🛡️ Nguyên Tắc Safe-by-Default (Mặc định An toàn):
 1. **Pha 1 (Xem trước Preview):** Lệnh mặc định luôn chạy mô phỏng trước, phân loại và in bảng kiểm tra 4 trạng thái tệp:
    - `🟢 NEW`: Kỹ năng mới từ Hub chưa có tại Spoke.
