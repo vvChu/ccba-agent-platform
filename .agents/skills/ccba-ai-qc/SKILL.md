@@ -82,9 +82,9 @@ flowchart LR
 
 ---
 
-## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
+## 🏛️ Platform-Aware Architecture Posture
 
-Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`qc_pipeline.v1`** của gói `ccba-qc-core`:
+Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bound`** theo ADR-0061, gắn kết chặt chẽ với Public Deep Seam **`qc_pipeline.v1`** của gói `ccba-qc-core`:
 
 1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
    Trước khi triển khai thẩm tra bản vẽ, Agent thực hiện tra cứu Seam qua CLI:
