@@ -28,7 +28,7 @@ Khi nhận được lệnh này từ người dùng, Agent sẽ tự động n�
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP orchestrator khởi chạy công cụ Git-Ratchet Auto-Tuner (`scripts/eval/git_ratchet_tuner.py`) tối ưu hóa kỹ năng AI tự động với các tham số `--program program.md`, `--dry-run-git`, `--target`, `--max-trials` và `--target-score`. Quy trình đọc mẫu từ `ccba-eval-gate/references/program_template.md` và vận hành độc lập với 16 card Seam chuẩn hóa.
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP orchestrator khởi chạy công cụ Git-Ratchet Auto-Tuner (`scripts/eval/git_ratchet_tuner.py`) tối ưu hóa kỹ năng AI tự động với các tham số `--program program.md`, `--dry-run-git`, `--target`, `--max-trials` và `--target-score`. Quy trình đọc mẫu từ `.agents/skills/ccba-eval-gate/references/program_template.md` và vận hành độc lập với 16 card Seam chuẩn hóa.
 - **Governance Compliance**: Giữ vững phân tầng Tier 3 Composite Orchestrator (`tier: orchestrator`, `is-orchestrated: true`), short-circuit qua Cổng 1 Stage 2. Kỹ năng chưa có thư mục `references/` phụ trợ.
 
 ---
