@@ -50,7 +50,7 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 
 - **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
 - **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel sáu bước nhằm thu thập và chắt lọc bài học kinh nghiệm vào `session_learnings.md` (giới hạn $\le 10.0\text{ KB}$), tiến hóa kỹ năng trực tiếp qua cổng phê duyệt người dùng, đồng bộ ma trận ADR và biên dịch catalog/docs portal (`compile_catalog.py`, `compile_skills_docs.py`), kích hoạt Governance & Architecture Drift Gate, dọn dẹp workspace (`session_cleanup.py`) và xuất báo cáo tổng kết phiên. Toàn bộ chuỗi vận hành là sự phối hợp giữa các kịch bản nền tảng và tương tác tệp tin, không phụ thuộc Seam đóng gói Python độc lập.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 $\ge$ 12.0 (vượt qua deadband [11.5, 12.5) hysteresis). Duy trì 1 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/agent_environment_diagnostics.md`).
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 $\ge$ 12.0 (đi nhánh Tier 2B và nằm trong deadband [11.5, 12.5) được bảo toàn qua hysteresis). Duy trì 1 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/agent_environment_diagnostics.md`).
 
 ---
 
