@@ -2,6 +2,18 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-07] [synthesize] | Chuẩn Hóa Runtime Thông Số Hạ Tầng DGX Spark (PR #499, #500) & Nghiên Cứu Tái Phân Tầng Fallback Gateway (#95)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Thẩm định kép độc lập bởi Claude Opus 4.6, Claude Sonnet 4.6 và kiểm chứng Telemetry)
+- **Affected Files**: `.agents/skills/ccba-vllm-manager/`, `.agents/skills/ccba-llm-pipeline-patterns/`, `.agents/skills/ccba-ai-gateway-sdk/`, `.md/knowledge/`, `docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`
+- **Summary**: Hoàn tất chuẩn hóa thông số máy chủ hạ tầng DGX Spark Blackwell GB10 128GB Unified Memory và giải mã sự cố hạ cấp âm thầm của LiteLLM Gateway:
+  1. **PR #499 & PR #92**: Chuẩn hóa `ccba-vllm-manager` (served model name `qwen-local-primary`, context 98304, RAM util 0.60 ~75.4 GB GB10 unified memory, flashinfer, prefix caching, on-demand profile `vllm-light` cho Qwen 3.5 9B AWQ, LiteLLM Gateway routing table COND-03). Thẩm định bởi Claude Opus 4.6 (`APPROVE_PLAN`, Risk 2). Đồng bộ sang Spoke `vvChu/dgx-spark-toolkit#92`.
+  2. **PR #500**: Chuẩn hóa `ccba-llm-pipeline-patterns` (Pattern 16: tách `rag-core` sang nhánh Non-Thinking `enable_thinking: false`, chỉ giữ `local-coder` cho Thinking CoT) và `ccba-ai-gateway-sdk` (đính chính `reasoning-gemma` chạy qua Google API Cloud thay vì local vLLM; sửa `rag-light` thành 9B AWQ thay vì 4B).
+  3. **Giải Mã & Truy Vết Sự Cố Hạ Cấp Âm Thầm (Silent Degradation Forensic)**: Phát hiện và làm rõ hiện tượng proxy `:8045` bị 503/429 khiến LiteLLM Gateway kích hoạt fallback chain từ `claude-sonnet-4-6` rơi thẳng xuống `ocr-tier4` (`gemini-2.5-flash`), dẫn đến việc Grok telemetry ghi nhận Sonnet nhưng thực tế do Flash sinh ra.
+  4. **Ban Hành RFC Phân Tầng Năng Lực Gateway (Issue #95)**: Tạo Issue #95 trên Spoke `vvChu/dgx-spark-toolkit` đề xuất tái cấu trúc toàn diện `services/ai-gateway/litellm_config.yaml`: thiết lập ranh giới Class A (Frontier Reasoning), cấm fallback sang Class C (OCR), chuyển chốt chặn local sang `local-coder` và áp dụng chính sách Fail-Fast.
+  5. **Đóng Băng Bất Biến Kiến Trúc**: Cập nhật `RULE-1.21` (Reasoning Tiering Parity & Anti-Silent-Degradation) và `RULE-5.10` (Layer Anchoring Invariant) vào `session_learnings.md` ($9.66\text{ KB} \le 10.0\text{ KB}$), ghi nhận Section 37 vào `session_learnings_history.md`.
+
+---
+
 ## [2026-10-07] [guideline] | Chuẩn Hóa Toàn Diện 76/76 Skills Nền Tảng Theo ADR-0061 (Platform-Aware Architecture Posture)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phối hợp thẩm định song phương với Lead Reviewer Grok 4.7 qua 11 đợt)
 - **Affected Files**: `.agents/skills/*/SKILL.md` (76 skills), `.md/peer_exchange/`, `.md/knowledge/`

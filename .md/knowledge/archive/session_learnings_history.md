@@ -822,3 +822,27 @@ Chiến dịch chuẩn hóa toàn bộ 76 skills của CCBA Agent Platform qua 1
 3. **Reasoning Turn & Timeout Budgeting**: Khi peer agent sử dụng xhigh reasoning để đọc sâu hàng chục tệp trên đĩa, ngân sách thời gian phải $\ge 900$s và max turns $\ge 30-40$.
 4. **Local Sub-Second Verification**: Sử dụng `--preset skill --target <path>` kiểm tra nhanh giúp phát hiện sai lệch cú pháp ngay lập tức trước khi chạy toàn sàn CI.
 
+---
+
+## 37. Quản Trị Phân Tầng Năng Lực AI Gateway (Reasoning Tiering Parity) & Định Vị Tầng Hệ Thống (Layer Anchoring)
+
+### Context & Incident Root Cause (Sự cố ngày 2026-10-07)
+Trong phiên rà soát và thẩm định kỹ năng, Grok CLI gọi `claude-sonnet-4-6` qua LiteLLM Gateway (`:8090`). Proxy thượng nguồn (`antigravity-tools` :8045) trả về lỗi HTTP 503 / 429 trên các model Claude.
+LiteLLM tự động kích hoạt chuỗi fallback:
+$$\text{claude-sonnet-4-6} \longrightarrow \text{claude-sonnet-4-5} \longrightarrow \text{claude-haiku-4} \longrightarrow \mathbf{ocr\text{-}tier4\ (gemini\text{-}2.5\text{-}flash)}$$
+Model `gemini-2.5-flash` nhận request và trả về 200 OK. Do LiteLLM fallback trong suốt (*transparent fallback*), client Grok ghi nhận token tiêu thụ dưới tên `claude-sonnet-4-6`.
+Hệ quả: Bài toán thẩm định kiến trúc/code review bị âm thầm hạ cấp (*silent degradation*) xuống một model cấp thấp chuyên dụng cho OCR tài liệu (non-thinking), tạo ra **ảo giác an toàn (False Sense of Security)** cực kỳ nguy hiểm.
+
+### Key Architectural Invariants & Learned Rules
+1. **Reasoning-Class Parity & Anti-Silent-Degradation (RULE-1.21)**:
+   - Các tác vụ suy luận (Frontier Reasoning / Architecture Review / Code Audit) BẮT BUỘC duy trì tính đồng đẳng phân tầng (Class A).
+   - CẤM các model Class A fallback về Class C (`ocr-tier4`, `ocr-fallback`).
+   - Khi toàn bộ model suy luận cạn kiệt quota, Gateway BẮT BUỘC áp dụng chính sách **Fail-Fast** (trả về lỗi HTTP 503) thay vì âm thầm trả về kết quả hời hợt từ model OCR.
+2. **Layer Anchoring Invariant (vLLM Backend vs Gateway Routing) (RULE-5.10)**:
+   - *Tầng 1 (vLLM Engine / Hardware)*: Quản lý mô hình vật lý trên GPU GB10 (`--served-model-name qwen-local-primary`).
+   - *Tầng 2 (LiteLLM Gateway / Routing)*: Quản lý bảng định tuyến, fallback và các Virtual Deployments (`local-coder` bật thinking vs `rag-core` tắt thinking).
+   - Cú pháp mảng fallback tĩnh của LiteLLM `fallbacks: [{"model_a": ["model_b"]}]` chỉ chấp nhận chuỗi định danh `model_name`, CẤM đưa tham số động dạng `qwen-local-primary (enable_thinking=true)` vào cấu hình tĩnh.
+   - Khi cấu hình fallback cho task suy luận trên DGX Spark, BẮT BUỘC dùng virtual deployment **`local-coder`** (đã đóng gói sẵn `chat_template_kwargs: {enable_thinking: true}`, `max_tokens: 16384`) thay vì `rag-core` hay tên engine vật lý.
+3. **Traceability Action**:
+   - Đã tạo RFC Issue [#95 trên vvChu/dgx-spark-toolkit](https://github.com/vvChu/dgx-spark-toolkit/issues/95) để tái cấu trúc toàn diện chuỗi fallback của `services/ai-gateway/litellm_config.yaml`.
+

@@ -23,15 +23,13 @@
 - **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
   - *Fail-Closed Gate*: `assess_catalog_freshness` chặn đứng `--apply` (exit 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
   - *Declarative Registry & Topo*: Khai báo guardrails và package bindings trong `catalog_base.yaml`; `spoke_bootstrap.py` phân giải install set theo Kahn's topo sort.
-- **RULE-1.18 [ADR 0066 — Skills Taxonomy, Scope Declaration & Multi-Environment Distribution Matrix]**:
-  - *Platform Operations vs Domain*: `bundle: _core` chỉ chứa công cụ SDLC loop của Agent (sync, verify, review, PR); `_software` chứa nghiệp vụ code chuyên sâu.
-  - *Metadata Scope & Linter*: Frontmatter khai báo `scope: hub | spoke | universal`. Linter tự động chặn `command: /...` thuộc `_governance` nếu thiếu `scope: hub` (ADR-0066). Tự động đối soát điểm GPI toán học (COND-01).
-- *(RULE-1.17 tại Mục 34 của archive/session_learnings_history.md)*
-- **RULE-1.19 [Dynamic Topo Sort Fail-Closed & Tier-0 Anchor Preservation]**:
-  - Khi Kahn's topo sort động (`discover_package_topology`) gặp `dep_graph` rỗng hoặc chu trình, BẮT BUỘC Fail-Closed hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER`, bảo toàn vị trí 0 (`ccba-harness`) và 1 (`ccba-ai`).
+- *(RULE-1.17, 1.18, 1.19 tại Mục 34-35 của archive/session_learnings_history.md)*
 - **RULE-1.20 [ADR 0061 — Posture Title Invariant, Parity Radar Isolation & Contract Inflation Prevention]**:
   - *Header Invariant*: BẮT BUỘC dùng đúng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR trong header). CẤM token ADR trong posture của skill không tạo ADR mới, bảo vệ ma trận parity `sync_hub_adr_matrix.py`.
   - *Contract Inflation Defense*: Chỉ đúng 16 Public Deep Seams có package Python backend mới nhận `package-bound`; 60 skills dạng SOP/pattern/CLI nhận `seam-exempt`. CẤM mở seam contract giả mạo.
+- **RULE-1.21 [Reasoning Tiering Parity & Anti-Silent-Degradation in Gateway Fallback]**:
+  - Tác vụ suy luận (Reasoning/Review/Audit) BẮT BUỘC duy trì tính đồng đẳng phân tầng (Class A). CẤM fallback về Class C (`ocr-tier4`, `ocr-fallback`).
+  - Khi cạn kiệt tài nguyên Class A, Gateway BẮT BUỘC áp dụng chính sách **Fail-Fast** (HTTP 503) thay vì âm thầm trả về kết quả hời hợt từ model OCR gây ảo giác an toàn. (Xem Mục 37 history).
 
 
 ---
@@ -93,4 +91,7 @@
   - Structured output BẮT BUỘC tắt thinking mode (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens` vượt ngưỡng suy nghĩ; phân tầng `local-instruct` vs `local-coder`.
 - **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
   - DGX Spark Blackwell volume mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; cấu hình tách biệt `--reasoning-parser` và `--tool-call-parser`.
+- **RULE-5.10 [Layer Anchoring Invariant: vLLM Backend vs Gateway Routing]**:
+  - Tầng Gateway (`fallbacks:` trong `litellm_config.yaml`) chỉ chấp nhận `model_name` tĩnh, CẤM đưa cờ động runtime dạng `qwen-local-primary (enable_thinking=true)` vào cấu hình.
+  - Tác vụ suy luận BẮT BUỘC fallback về virtual deployment `local-coder` (đã đóng gói `enable_thinking: true`) thay vì `rag-core` (đã tắt thinking) hoặc tên engine vật lý.
 
