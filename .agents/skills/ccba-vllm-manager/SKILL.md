@@ -30,9 +30,9 @@ Kỹ năng này cung cấp cho Agents và Kỹ sư hạ tầng toàn bộ tri th
 
 | Model vật lý | Functional Alias | Port vLLM | Container | VRAM / RAM | Đặc tính kỹ thuật |
 |---|---|---|---|---|---|
-| Qwen3.6-35B-A3B-FP8 | `rag-core` / `local-coder` | 8004 | `qwen36b` | ~35GB (50G cap) | ✅ MoE + FlashInfer + Dual Parser (`qwen3` / `qwen3_coder`) |
+| Qwen3.6-35B-A3B-FP8 | `rag-core` / `local-coder` | 8004 (`qwen-local-primary`) | `qwen36b` | ~75.4GB (60% pool GB10) | ✅ MoE + FlashInfer + Dual Parser (`qwen3` / `qwen3_coder`) + 96K Context (`98,304`) |
 | Qwen3.6-35B (Instruct) | `local-instruct` | 8090 (Gateway) | Via `qwen36b` | — | ✅ Forced `enable_thinking: False`, siêu tốc độ ~0.4s |
-| Qwen2.5-Coder-7B AWQ | `rag-light` | 8003 | `qwen3-9b` | ~10GB | ✅ Fast Fallback (AWQ 4-bit) |
+| Qwen3.5-9B-AWQ-4bit | `rag-light` | 8000 (Internal) | `qwen3-9b` (`vllm-light`) | ~10GB | ⚠️ On-demand Fallback (`http://vllm-4b:8000/v1`), mặc định TẮT chống OOM |
 
 > [!TIP]
 > **Quy tắc Bất Biến Routing**: LUÔN sử dụng functional aliases (`local-instruct`, `rag-core`, `local-coder`) thay vì nhúng tên mô hình vật lý trực tiếp vào mã nguồn.
@@ -80,18 +80,32 @@ services:
 
 Khi sử dụng Qwen 3.6 với cả khả năng suy luận (Reasoning CoT) và gọi công cụ (Tool / Function Calling), cấu hình parser phải tuân thủ nghiêm ngặt nguyên tắc phân định vai trò:
 
-### Cấu hình phía vLLM Container
-Khởi động container với các cờ parser chuyên dụng:
+### Cấu hình phía vLLM Container (Thực tế trên DGX Spark GB10)
+Khởi động container với các cờ tối ưu hóa và parser chuyên dụng:
 ```bash
 python3 -m vllm.entrypoints.openai.api_server \
-  --model /models/Qwen3.6-35B-A3B-FP8 \
-  --served-model-name qwen3.6-35b \
+  --model /models/model \
+  --served-model-name qwen-local-primary \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --limit-mm-per-prompt '{"image": 1}' \
+  --gpu-memory-utilization 0.60 \
+  --max-model-len 98304 \
+  --max-num-batched-tokens 16384 \
+  --max-num-seqs 64 \
+  --enable-prefix-caching \
+  --enable-chunked-prefill \
+  --enable-auto-tool-choice \
   --reasoning-parser qwen3 \
   --tool-call-parser qwen3_coder \
-  --max-model-len 24576 \
-  --gpu-memory-utilization 0.50 \
-  --kv-cache-dtype fp8
+  --trust-remote-code
 ```
+- **`--served-model-name qwen-local-primary`**: Định danh đăng ký chính thức của mô hình trong vLLM, đồng bộ 100% với LiteLLM Gateway và tránh lỗi 404 Model Not Found.
+- **`--max-model-len 98304`**: Kích hoạt toàn bộ cửa sổ ngữ cảnh 96K tokens của Qwen 3.6 trên bộ nhớ lớn của DGX Spark.
+- **`--gpu-memory-utilization 0.60`**: Cấp phát 60% tổng pool 128GB LPDDR5x Unified Memory (~75.4 GB cho `VLLM::EngineCore`).
+- **`--enable-prefix-caching`**: Tự động tái sử dụng KV cache prompt tiền tố, giảm 80-90% độ trễ TTFT trong pipeline RAG multi-turn.
+- **`--enable-chunked-prefill` & `--limit-mm-per-prompt '{"image": 1}'`**: Chống block luồng decode khi prefill ngữ cảnh dài và hỗ trợ xử lý đa phương thức (Vision).
+- **Môi trường hạ tầng**: `ATTENTION_BACKEND=flashinfer`, `VLLM_TEST_FORCE_FP8_MARLIN=1`.
 
 ### Rào Chắn Tránh Xung Đột Double-Parser tại LiteLLM Gateway
 - Khi vLLM đã bật `--tool-call-parser qwen3_coder`, vLLM sẽ tự động bóc tách cú pháp gọi hàm `xml/hermes` và xuất ra JSON function calls chuẩn OpenAI.
@@ -99,10 +113,19 @@ python3 -m vllm.entrypoints.openai.api_server \
 
 ---
 
-## 3. Quản Lý Thinking Token & Fast Extraction
+## 3. Quản Lý Thinking Token, Fast Extraction & AI Gateway Routing (COND-03)
 
-Theo chuẩn mực **RULE-5.8**:
-- Khi cần trích xuất JSON hoặc sinh HyDE queries (`max_tokens <= 512`), BẮT BUỘC gọi qua alias `local-instruct` hoặc gửi:
+### Cấu Hình Định Tuyến Functional Aliases Tại LiteLLM Gateway (Port 8090)
+LiteLLM Gateway định tuyến linh hoạt tới endpoint vLLM cục bộ (`qwen-local-primary`) với các hành vi được kiểm soát chặt chẽ theo **RULE-5.8** và **RULE-1.13**:
+
+| Functional Alias | Mục Đích Sử Dụng | `chat_template_kwargs` | Tham Số Điều Khiển | Timeout |
+|---|---|---|---|---|
+| `rag-core` | Xương sống RAG, tìm kiếm, trích xuất văn bản tiêu chuẩn | `enable_thinking: false` | Mặc định không suy nghĩ CoT | 900s |
+| `local-instruct` | Tác vụ nhanh, trích xuất JSON schema, tóm tắt nền | `enable_thinking: false` | `temperature: 0.7`, `presence_penalty: 1.5`, `top_k: 20` | 900s |
+| `local-coder` | Viết mã nguồn, gọi công cụ phức tạp (Tool Calling), DevOps | `enable_thinking: true` | `temperature: 0.6`, `top_p: 0.95`, `max_tokens: 16384` | 600s |
+
+### Thinking Token Starvation Defense (RULE-5.8)
+- Khi cần trích xuất JSON hoặc sinh HyDE queries (`max_tokens <= 512`), BẮT BUỘC gọi qua alias `local-instruct` (hoặc `rag-core`) hoặc gửi:
   ```json
   {
     "chat_template_kwargs": {
@@ -120,14 +143,18 @@ Theo chuẩn mực **RULE-5.8**:
 # 1. Kiểm tra nhanh trạng thái các containers
 docker ps -a --filter "name=qwen" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-# 2. Kiểm tra endpoint readiness
+# 2. Kiểm tra endpoint readiness trực tiếp từ vLLM (trả về model id 'qwen-local-primary')
 curl -s http://localhost:8004/v1/models | jq
 
-# 3. Kiểm tra qua AI Gateway (Functional Alias)
+# 3. Kiểm tra qua AI Gateway (Trả về các Functional Aliases: rag-core, local-instruct, local-coder)
 curl -s http://localhost:8090/v1/models -H "Authorization: Bearer $LITELLM_MASTER_KEY" | jq
 
 # 4. Kiểm tra metrics hiệu năng vLLM (Prometheus endpoint)
 curl -s http://localhost:8004/metrics
+
+# 5. Khởi động model dự phòng rag-light (On-demand profile vllm-light khi cần)
+# Chú ý: Chỉ bật khi máy trạm đủ RAM trống để tránh xung đột OOM
+docker compose --profile vllm-light up -d vllm-4b
 ```
 
 ### Các chỉ số Prometheus trọng yếu
