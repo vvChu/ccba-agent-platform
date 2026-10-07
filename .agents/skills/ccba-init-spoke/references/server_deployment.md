@@ -12,7 +12,7 @@ Quy trình tự động hóa triển khai, cấu hình và giám sát sức kh�
 Tài liệu tham chiếu chi tiết: [server_spark_agent_instructions.md](../../../../docs/playbooks/server_spark_agent_instructions.md).
 
 ## Yêu cầu tiên quyết (Prerequisites)
-- Quyền truy cập SSH vào Server Spark thông qua Tailscale VPN (`100.83.192.30`).
+- Quyền truy cập SSH vào Server Spark thông qua Tailscale VPN (${AI_GATEWAY_URL} hoặc ${CCBA_AI_GATEWAY_HOST}).
 - Môi trường Python runtime tối thiểu `>= 3.10` và Git client.
 - Dịch vụ LiteLLM Gateway đang hoạt động tại cổng `:8090`.
 

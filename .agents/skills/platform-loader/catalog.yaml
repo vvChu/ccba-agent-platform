@@ -128,12 +128,10 @@ skills:
   tier: kernel
 - name: bigbim-vbpl-digest
   bundle: _bim
-  description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
-    ISO 19650-1/2/3/5, QCVN liên quan.
+  description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các
+    tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
   triggers:
-  - NĐ 175
   - nghị định BIM
-  - Nghị định 175
   - điều khoản BIM
   - ISO 19650
   - luật xây dựng BIM
@@ -1176,7 +1174,7 @@ skills:
   - local llm
   skill_path: .agents/skills/ccba-vllm-manager/SKILL.md
   command: /ccba-vllm-manager
-  tier: domain
+  tier: kernel
 - name: ccba-wayfinder
   bundle: _core
   description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua

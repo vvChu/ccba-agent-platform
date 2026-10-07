@@ -14,7 +14,7 @@ metadata:
 gpi:
   s: 2.0
   k: 3.0
-  a: 4.0
+  a: 1.0
   p: 1.0
 triggers:
 - file stability
@@ -32,6 +32,12 @@ Pattern phát hiện **file đã sync xong** trước khi pipeline xử lý. Gi�
 
 > [!IMPORTANT]
 > Áp dụng bất kỳ pipeline nào xử lý file đến từ: Google Drive Desktop, OneDrive, SharePoint Sync, hay bất kỳ cloud junction nào. **Bắt buộc** khi có `watchdog` / `FileSystemWatcher`.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (mẫu thiết kế tiện ích IO/đồng bộ file cấp hệ thống). Không kết nối trực tiếp với Seam Contract ứng dụng mà cung cấp thuật toán kiểm tra tính ổn định của tệp trước khi nạp vào các pipeline xử lý batch/watchdog.
 
 ---
 
@@ -154,13 +160,13 @@ class PipelineHandler(FileSystemEventHandler):
 
 ## Reference Implementation
 
-Full production code (bao gồm logging, threading, retry backoff):
+Full production reference pattern (bao gồm logging, threading, retry backoff):
 
-```
-D:\VvC_Notes\scripts\daemon.py  →  hàm _is_file_stable()
+```bash
+$CCBA_HUB_PATH/scripts/daemon.py  # hàm _is_file_stable()
 ```
 
-Đây là implementation đã vận hành ổn định 6+ tháng với Google Drive Desktop Junction trên Windows 11.
+Đây là pattern đã vận hành ổn định 6+ tháng với Google Drive Desktop Junction trên Windows 11.
 
 ## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
 * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.

@@ -39,17 +39,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho quản trị thông tin BIM (BIM Information Governance) hay ma trận EIR/AIR/MIDP. Skill vận hành như một bộ guardrails kiểm duyệt quy chuẩn và chính sách thông tin dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rào chắn Golden Thread và Red Thread bắt buộc đối soát trực tiếp từ tài liệu quản trị dự án trên đĩa (thư mục `[bigbim_method_path]/.md/`). Nếu thiếu tài liệu nguồn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM sinh giả lập mã rủi ro RK hoặc tiêu chí cổng V-Gates.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
-| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
-| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
-| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
-| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `bbp-lifecycle.md` | `knowledge/bigbim-governance/bbp-lifecycle.md` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
+| `v-gates.md` | `knowledge/bigbim-governance/v-gates.md` | 7 Verification Gates — tiêu chí go/no-go, checklist |
+| `cde-workflow.md` | `knowledge/bigbim-governance/cde-workflow.md` | CDE 4 states, naming convention, access control |
+| `unique-id.md` | `knowledge/bigbim-governance/unique-id.md` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
+| `midp-guide.md` | `knowledge/bigbim-governance/midp-guide.md` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`

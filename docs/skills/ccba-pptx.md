@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-pptx
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-pptx --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng

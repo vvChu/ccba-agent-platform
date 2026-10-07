@@ -1,13 +1,13 @@
 # CIP Design Reference
 
-Corporate Identity Program design with 50+ deliverables, 20 styles, 20 industries. Generate mockups with Gemini Nano Banana (Flash/Pro).
+Corporate Identity Program design with 50+ deliverables, 20 styles, 20 industries. Generate mockups with fast and pro image generation modes.
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
 | `../scripts/cip/search.py` | Search deliverables, styles, industries; generate CIP briefs |
-| `../scripts/cip/generate.py` | Generate CIP mockups with Gemini (Flash/Pro) |
+| `../scripts/cip/generate.py` | Generate CIP mockups with AI |
 | `../scripts/cip/render-html.py` | Render HTML presentation from CIP mockups |
 | `../scripts/cip/core.py` | BM25 search engine for CIP data |
 
@@ -16,55 +16,55 @@ Corporate Identity Program design with 50+ deliverables, 20 styles, 20 industrie
 ### CIP Brief (Start Here)
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### Search Domains
 
 ```bash
 # Deliverables
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
 
 # Design styles
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
 
 # Industry guidelines
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
 
 # Mockup contexts
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED - uses image editing)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set with logo
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model for 4K text rendering
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Custom deliverables with aspect ratio
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "GreenLeaf" --logo logo.png --industry "organic food" --deliverables "letterhead,packaging,vehicle" --ratio 16:9
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "GreenLeaf" --logo logo.png --industry "organic food" --deliverables "letterhead,packaging,vehicle" --ratio 16:9
 
 # Without logo (AI generates interpretation)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
 ### Render HTML Presentation
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images ./topgroup-cip --output presentation.html
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images ./topgroup-cip --output presentation.html
 ```
 
 ## Models
-
-- `flash` (default): `gemini-2.5-flash-image` - Fast, cost-effective
-- `pro`: `gemini-3-pro-image-preview` - Quality, 4K text rendering
+ 
+- `flash` (default): Fast, cost-effective image generation
+- `pro`: High-quality, advanced detail & text rendering
 
 ## Deliverable Categories
 
@@ -114,8 +114,9 @@ python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand 
 - `cip-prompt-engineering.md` - AI generation prompts
 
 ## Setup
-
-```powershell
-$env:GEMINI_API_KEY="your-key"
-pip install google-genai pillow
-```
+ 
+ Phụ thuộc được quản lý tập trung qua nền tảng CCBA:
+ ```bash
+ pip install -e packages/ccba-ai
+ pip install pillow
+ ```

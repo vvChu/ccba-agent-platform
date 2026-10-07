@@ -27,6 +27,13 @@ triggers:
 
 Kỹ năng này điều phối quy trình thu thập, đăng nhập tài khoản VIP Thư viện Pháp luật, tự động quản lý cookie qua `CookieVault`, bảo vệ phiên làm việc bằng `TVPLSessionMutex`, vượt các rào chắn kiểm tra Cloudflare/Popups và đóng gói văn bản pháp lý thành bộ chuẩn **OKF (Open Knowledge Format) Bundle** thông qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Phân loại**: Kỹ năng điều phối thu thập văn bản (seam-exempt kernel skill).
+- **Lý do miễn trừ seam**: SOP điều phối quy trình thu thập và đóng gói văn bản pháp lý VIP, vận hành qua crawler của package ccba-legal-intel (trong đó seam legal_ingest.v1 đã được đăng ký quản trị cho skill /ccba-legal-ingest), đóng vai trò cẩm nang hướng dẫn thao tác CLI.
+- **Đặc tính quản trị**: Cưỡng chế quy trình nạp văn bản 3 tầng, bảo vệ phiên qua TVPLSessionMutex/CookieVault và tuân thủ định dạng chuẩn OKF v2.4 bảo toàn nguyên văn 100%.
+- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=2.0, a=1.0, p=1.0) -> GPI = 12.0 (Tier 2B kernel), đáp ứng tiêu chuẩn kiểm định và kỷ luật thu thập dữ liệu pháp lý.
+
 ---
 
 ## 🛠️ Hướng Dẫn Vận Hành & Luồng Thực Thi

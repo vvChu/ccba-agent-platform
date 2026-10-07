@@ -27,6 +27,13 @@ triggers:
 
 Kỹ năng này chịu trách nhiệm phân tích sâu các video bài giảng, hội thảo (YouTube hoặc tệp video ngoài) để bóc tách toàn bộ phụ đề và các khung hình chứa slide tri thức học thuật độc nhất (không giới hạn số lượng), từ đó tổng hợp kiến thức bài học và "khảo cổ" thế giới quan, giả định ngầm của diễn giả.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Phân loại**: Kỹ năng hạt nhân phân tích tri thức đa phương tiện (seam-exempt kernel skill).
+- **Lý do miễn trừ seam**: SOP quy trình bóc tách video, phụ đề, ảnh slide học thuật và khảo cổ học niềm tin (Belief Archaeology), không ràng buộc trực tiếp mã nguồn package Python runtime.
+- **Đặc tính quản trị**: Cưỡng chế cấu trúc lưu trữ Cohesive Topic Folder, khử trùng lặp ảnh, lọc talking head và chuẩn hóa hồ sơ diễn giả/thế giới quan theo biểu mẫu chuẩn.
+- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=2.0, a=1.0, p=1.0) -> GPI = 12.0 (Tier 2B kernel), tuân thủ phân lớp governance và năng lực tự động hóa tri thức.
+
 ---
 
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)

@@ -20,6 +20,16 @@ Kỹ năng này chịu trách nhiệm biến mọi câu hỏi pháp lý ban đ�
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`skill-bound`**, đóng vai trò điểm vào chính quy cho Seam Card **`legal_advisor.v1`** (`command: /ccba-legal-advisor`):
+* **Hợp Đồng Năng Lực:** Đầu vào `in: [legal_query, project_context]`, đầu ra `out: [legal_opinion_markdown]`.
+* **Cưỡng Chế Hiến Pháp ADR-0059 (Verbatim Grounding & Provenance Stamping):**
+  - Mọi căn cứ pháp lý và bảng tra cứu bắt buộc phải trích xuất nguyên văn từ kho OKF v2.4 đã qua thẩm duyệt mã băm `pdf_sha256`.
+  - **Ranh Giới Giả Định:** Giả định chỉ được phép áp dụng cho tham số công trình (ví dụ: giả định chiều cao công trình, diện tích sàn) khi người dùng chưa có số liệu và **BẮT BUỘC gắn nhãn rõ `[GIẢ ĐỊNH DỰ ÁN]`**. Tuyệt đối **CẤM giả định điều khoản pháp luật**.
+
+---
+
 ## 🧭 Quy Trình Vận Hành 4 Bước (Process)
 
 ### Bước 1: Tiếp Nhận & Phân Loại Độ Phức Tạp (Intake & Ambiguity Classification)
@@ -35,7 +45,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 ### Bước 2: Phỏng Vấn Làm Rõ Thích Ứng (Adaptive Diagnostic Interviewing)
 * **Nguyên tắc linh hoạt (Không giới hạn cứng):** Số lượng câu hỏi làm rõ phụ thuộc vào độ phức tạp của bài toán, nhưng **mỗi lượt hỏi tối đa 1–2 câu** để tránh làm người dùng mệt mỏi.
 * **Luôn kèm phương án chọn nhanh (A/B/C):** Đưa ra các gợi ý cụ thể để người dùng chỉ cần chọn hoặc gõ 1 chữ cái.
-* **Lối thoát giả định:** Ở mỗi lượt hỏi, luôn cung cấp phương án *"Nếu chưa có số liệu, hãy trả lời theo 2 kịch bản giả định phổ biến nhất"*.
+* **Lối thoát giả định tham số công trình:** Ở mỗi lượt hỏi, nếu người dùng chưa có số liệu dự án, cho phép đưa ra tối đa 2 kịch bản giả định thông số (phải gắn nhãn `[GIẢ ĐỊNH DỰ ÁN]`).
 * **Gợi ý 4 Khung Mẫu Tương Tác Động (Dynamic Interaction Archetypes):**
   1. *[Mẫu 1 — Thẩm định tham số]:* Kiểm tra thông số kỹ thuật cụ thể của công trình (Bậc chịu lửa, số thang, tải trọng...).
   2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
@@ -62,14 +72,14 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 > 
 > Thứ tự phân giải đường dẫn 3 tầng tự động:
 > 1. **Tầng 1 (Virtual-First / Cục bộ Spoke):** Trích xuất qua Deep Seam CLI hoặc quét thư mục `.\.md\legal_docs\` tại Spoke. Khi cần cô lập ngoại tuyến, kéo chọn lọc đúng văn bản dự án: `python -m ccba_legal sync --pull-latest --doc <doc_id>`.
-> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua con trỏ `hub_path` trong `.md/workspace_context.yaml` (tra cứu tự động qua Hub registry) hoặc biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH`.
-> 3. **Tầng 3 (Danh mục SSOT):** Kiểm tra `legal_registry.yaml` và `metadata.yaml` của từng gói để xác nhận trường `relations.replaces` nhằm loại bỏ triệt để văn bản/quy chuẩn đã hết hiệu lực.
+> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH` hoặc Registry Hub.
+> 3. **Tầng 3 (Danh mục SSOT):** Tra cứu qua `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đối soát trạng thái hiệu lực chuẩn hóa `ACTIVE` và các quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) nhằm loại bỏ triệt để văn bản đã hết hiệu lực hoặc bị thay thế.
 
 * Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của các gói văn bản.
 * Đọc các bảng tra cứu kỹ thuật 2D trong `tables/csv/*.csv` và các biểu mẫu nguyên tử trong `templates/`.
 * Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
-* Mọi điều khoản, quy chuẩn, tiêu chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm liên kết kiểm chứng `file:///...`** trỏ thẳng đến tệp `metadata.yaml` hoặc `clauses.json` nguồn.
-- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF kèm link dẫn chứng.
+* Mọi điều khoản, quy chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm vết truy xuất nguồn gốc (Provenance Stamping)**: Ghi rõ document slug, mã băm `pdf_sha256` và đường dẫn tương đối trong repo tri thức (tuyệt đối không dùng link `file:///` tuyệt đối).
+- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF kèm vết provenance xác thực.
 
 ---
 
@@ -89,10 +99,10 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - Thẩm quyền giải quyết (Sở Xây dựng / Cảnh sát PCCC / Chủ đầu tư tự duyệt).
 
 ## 3. 🔍 Căn Cứ Pháp Lý & Ma Trận Đối Chiếu Chi Tiết
-| STT | Phân Hệ / Tiêu Chí | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Nguồn Kiểm Chứng Thực Tế | Đánh Giá Áp Dụng |
+| STT | Phân Hệ / Tiêu Chí | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Vết Xác Thực Nguồn Gốc (Provenance) | Đánh Giá Áp Dụng |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | [metadata.yaml](file:///...) | 🟢 Đạt / 🔴 Chưa đạt |
-| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | [clauses.json](file:///...) | ... |
+| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../metadata.yaml`) | 🟢 Đạt / 🔴 Chưa đạt |
+| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../clauses.json`) | ... |
 
 ## 4. ⚠️ Khuyến Nghị Kỹ Thuật & Cảnh Báo Rủi Ro (Actionable Advice)
 - **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
@@ -115,11 +125,6 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - [x] Vượt qua cổng `ccba-harness verify-patch --preset doc` với Exit Code 0 trước khi bàn giao cho người dùng.
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 10/2021/NĐ-CP -> Bắt buộc sử dụng **Nghị định 206/2026/NĐ-CP** (Quản lý Chi phí).
-  - Nghị định 15/2021/NĐ-CP & Nghị định 175/2024/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng).
-  - Nghị định 06/2021/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì).
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP** (PCCC & CNCH).
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023** (An toàn cháy cho nhà và công trình).
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).

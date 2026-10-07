@@ -40,6 +40,11 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 
 Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel phỏng vấn một lần: cấu hình issue tracker, nhãn triage, domain docs, thể chế skills governance, ghi nhận vào `AGENTS.md` và `.md/workspace_context.yaml`. 16 card trong `seam-contracts.yaml` không quản lý quy trình thiết lập repository, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.5, K: 2.0, A: 2.0, P: 1.0) = 15.25 >= 12.0. Hai dòng Level 3 (`references/pre_commit_setup.md`, `references/ts_deep_modules.md`) cùng cây tài nguyên phụ trợ `resources/` và `templates/` được bảo tồn nguyên vẹn.
+
 ---
 
 ## Quy trình thực hiện (Process)
@@ -136,6 +141,8 @@ Hiển thị cho người dùng xem bản nháp của:
 **Bước B: Cập nhật `workspace_context.yaml`**:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
 - Bổ sung chiều thiết lập "Skills Governance" và tự động ghi cấu hình `skills_governance: {architecture: "3-tier", enforce_gpi: true}` vào `.md/workspace_context.yaml`.
+- **Rào chắn Khử Khớp Trạng Thái Máy (ADR-0061 Machine-State Decoupling):**
+  Tuyệt đối **CẤM** ghi trường `hub_path` mang đường dẫn ổ đĩa máy tuyệt đối (như `D:\...` hoặc `/home/user/...`) vào `.md/workspace_context.yaml`. Đường dẫn Hub phải được phân giải hoàn toàn độc lập qua biến môi trường hệ thống `$CCBA_HUB_PATH` (hoặc fallback thư mục tương đối anh em), ngăn chặn triệt để nguy cơ xung đột khi repository được clone trên nhiều máy tính khác nhau (Linux/Windows/macOS).
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
 Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:

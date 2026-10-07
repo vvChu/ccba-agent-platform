@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-markdown-document-processing
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-markdown-document-processing --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng

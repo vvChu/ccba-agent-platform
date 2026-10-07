@@ -49,6 +49,14 @@ Mặc định mọi văn bản xuất ra đen trắng. Khi cần trình bày đ�
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `package-bound`
+- **Ràng buộc Public Deep Seam (Seam Capability Binding):** Gắn kết chặt chẽ với Public Deep Seam **`ooxml_processor.v1`** thuộc gói `packages/ccba-ooxml` (`from ccba_ooxml import DocxDocument`). Master skill điều phối toàn diện file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30, trực tiếp sở hữu `package_path: packages/ccba-ooxml` và quản lý 2 sub-skills trực thuộc: `ccba-pptx` và `ccba-markdown-document-processing`. Hợp đồng năng lực cấm tuyệt đối các thư viện import thay thế `docx` và `openpyxl`. Mọi thao tác xử lý cấu trúc XML, đóng/mở gói và điền form phải sử dụng các API/CLI chính thống của nền tảng (`ccba-ooxml`).
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill`, `package_path: packages/ccba-ooxml` và 4 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/office_standards_overview.md`, `references/docx_engine_guide.md`, `references/docx-js.md`, `references/ooxml.md`).
+
+---
+
 ## Tầng 1 — Kỹ năng phổ quát (`resources/`)
 
 Cách dùng tool, thư viện, quy trình kỹ thuật. Đọc file phù hợp với loại file cần xử lý:
