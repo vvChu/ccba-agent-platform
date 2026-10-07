@@ -28,6 +28,11 @@ triggers:
 
 Kỹ năng này giúp thiết lập và vận hành **Bản đồ định hướng (Wayfinding Map)** để chia nhỏ một ý tưởng lớn, mơ hồ thành các ticket điều tra cụ thể, giải quyết từng vấn đề một theo cơ chế *Sương mù chiến trận (Fog of War)* cho đến khi lộ trình đến đích hoàn toàn rõ ràng.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel lập bản đồ định hướng (Wayfinding Map) giải quyết bài toán lớn, mơ hồ theo cơ chế Sương mù chiến trận (Fog of War) và phân rã thành các ticket con độc lập qua 4 loại ticket: Research, Prototype, Grilling, Task. Quy trình vận hành phương pháp luận định hướng dự án độc lập với 16 card Seam chuẩn hóa của Platform.
+- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 >= 12.0. Kỹ năng hiện chưa có thư mục `references/` phụ trợ.
+
 ---
 
 ## 🧭 Phân Định Ranh Giới: `/ccba-grilling` vs `/ccba-wayfinder`
