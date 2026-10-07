@@ -31,6 +31,16 @@ This skill takes the current conversation context and codebase understanding and
 
 The issue tracker and triage label vocabulary should have been provided to you — run `/ccba-setup-skills` if not.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel tổng hợp bối cảnh hội thoại và hiện trạng codebase thành tài liệu đặc tả kỹ thuật (Technical Specification / PRD), gán nhãn `ready-for-agent` và lưu trữ tại `.md/knowledge/specs/spec-{feature_slug}.md`. Khái niệm "seams" trong văn bản là phương pháp phân rã kiến trúc phần mềm và ranh giới kiểm thử tích hợp (testing seams), không sở hữu Seam đóng gói dữ liệu Python độc lập. Toàn bộ quy trình tuân thủ các nguyên tắc thiết kế tinh gọn và phân rã nhiệm vụ tất định.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 $\ge$ 12.0. Duy trì 2 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/spec_decomposition.md`, `references/interactive_questionnaire.md`).
+
+---
+
 ## Process
 
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
