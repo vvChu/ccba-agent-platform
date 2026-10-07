@@ -1,67 +1,74 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #478
-## Feature: `feat(harness): model provenance, token usage telemetry, and zero-hang execution lifecycle (ADR-0064)`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #497
+## Feature: `feat(skills): implement ADR-0061 platform-aware architecture posture for 76 skills`
 
-> **Mã công việc:** Model Provenance, Token Usage Telemetry & Zero-Hang Lifecycle (ADR-0064)  
-> **Pull Request:** [#478](https://github.com/vvChu/ccba-agent-platform/pull/478)  
-> **Branch:** `feat/peer-telemetry-provenance`  
+> **Mã công việc:** Chuẩn hóa thế năng kiến trúc Platform-Aware Architecture Posture (ADR-0061) cho 76 skills toàn nền tảng  
+> **Pull Request:** [#497](https://github.com/vvChu/ccba-agent-platform/pull/497)  
+> **Branch:** `feat/adr-0061-posture-76-skills` (Merged into `main` via commit `f3760bae`)  
 > **Trạng thái:** ✅ **ALL 8/8 CI CHECKS PASSED — 100% HERMETIC LOCAL TEST & COPILOT REVIEWS RESOLVED (100%)**
 
 ---
 
-## 1. Tổng Kết Hạng Mục Triển Khai
+## 1. Tổng Kết Hạng Mục Triển Khai (11 Đợt — 76 Skills)
 
-| Module / Tệp | Nội Dung Triển Khai | Căn Cứ Chuẩn Hóa |
-| :--- | :--- | :--- |
-| `packages/ccba-harness/src/ccba_harness/peer.py` | Bổ sung Pydantic schema `PeerVerdictTelemetry` (`extra="forbid"`) và nhúng trường `telemetry` vào `PeerVerdictBlock`. Triển khai cơ chế out-of-band telemetry extraction qua `grok usage <session_id>` kèm bounded retry. Bổ sung fallback suy thoái `TokenEstimator` (`cost_mode: exact \| estimated \| unknown`). Chuyển đổi Grok invocation sang non-blocking `subprocess.Popen` kèm watchdog polling triệt tiêu treo TUI, cấm chuỗi đối số vị trí trần, và cấu hình `xhigh` cho `AUDIT_PLAN`. | ADR-0064, ADR-0007, ADR-0058, ADR-0061 |
-| `packages/ccba-harness/src/ccba_harness/peer.py` (Copilot fixes) | Khắc phục pipe buffer deadlock bằng bộ đệm `tempfile.TemporaryFile`; kiểm soát chống tái sử dụng file phán quyết cũ qua `st_mtime >= start_time`; cưỡng chế `encoding="utf-8", errors="replace"` trên mọi lệnh text-mode subprocess. | Copilot Review #478 |
-| `packages/ccba-harness/tests/test_peer_telemetry.py` | Bổ sung 26 unit tests độc lập bao phủ toàn diện: schema validation, 100% backward compatibility, mock `grok usage` (exact vs estimated), fallback graceful degradation, và tích lũy telemetry vào `status.json`. | ADR-0058 Hard Completion Lock |
-| `packages/ccba-harness/tests/test_peer.py` | Bổ sung test cases bao phủ watchdog Popen, triệt tiêu deadlock và kiểm thử thực tế `st_mtime` polling detection. | Copilot Review #478 |
-| `docs/adr/0064-*.md`, `TRACEABILITY_MATRIX.md`, `docs/adr/README.md` | Biên soạn kiến trúc HUB-ADR 0064 và đồng bộ ma trận truy xuất nguồn gốc SSoT. | ADR Governance |
+| Đợt Triển Khai | Phạm Vi Kỹ Năng / Nghiệp Vụ | Số Lượng Skills | Phân Loại Posture | Phán Quyết Grok 4.7 |
+| :--- | :--- | :---: | :--- | :---: |
+| **Đợt 1–2** | Nền tảng, Đồng bộ Spoke & Core Contracts | 8 skills | 8 package-bound | `APPROVE` |
+| **Đợt 3** | Kỹ năng hạt nhân cốt lõi (Core Skills) | 6 skills | 2 package-bound, 4 seam-exempt | `APPROVE` |
+| **Đợt 4A** | BigBIM & Tư vấn pháp lý xây dựng | 6 skills | 6 seam-exempt | `APPROVE` |
+| **Đợt 4B** | AI QC, Thị giác & Pipeline LLM | 6 skills | 2 package-bound, 4 seam-exempt | `APPROVE` |
+| **Đợt 5** | Quản trị Spoke-Hub & Hạ tầng tác tử | 7 skills | 7 seam-exempt | `APPROVE` |
+| **Đợt 6** | Vòng đời SDLC, Kiểm định tự động & TDD | 6 skills | 6 seam-exempt | `APPROVE` |
+| **Đợt 7** | Kỹ thuật phần mềm, Kiểm thử & Trinh sát Web | 8 skills | 8 seam-exempt | `APPROVE` |
+| **Đợt 8** | Quản trị kiến trúc, Vòng đời ADR & Tác tạo Skill | 8 skills | 8 seam-exempt | `APPROVE` |
+| **Đợt 9** | Điều phối đa tác tử, Quản trị phiên & Kiến trúc | 8 skills | 8 seam-exempt | `APPROVE` |
+| **Đợt 10** | Nội dung kỹ thuật, Xử lý văn phòng & Biểu đồ | 7 skills | 2 package-bound, 5 seam-exempt | `APPROVE` |
+| **Đợt 11** | Đa phương tiện, Bảo mật secrets & Đám mây M365 | 7 skills | 2 package-bound, 5 seam-exempt | `APPROVE` |
+| **TỔNG** | **Toàn Bộ Danh Mục CCBA Platform** | **76 skills** | **16 package-bound, 60 seam-exempt** | **100% APPROVE** |
 
 ---
 
-## 2. Giải Trình & Đối Soát Toàn Diện Đánh Giá Copilot Code Review
+## 2. Giải Trình & Đối Soát Đánh Giá Copilot Code Review & CI Hardening
 
-Toàn bộ 4 khuyến nghị của GitHub Copilot trên PR #478 đã được rà soát, khắc phục triệt để trong commit `1ad06543`:
+Toàn bộ kiểm định tự động và review bot trên PR #497 đã được giải quyết sạch sẽ:
 
-| Comment ID / Mã Kiểm Tra | Vị Trí Tệp & Dòng | Nội Dung Góp Ý Của Copilot | Biện Pháp Khắc Phục Triệt Để | Trạng Thái |
+| Vấn Đề Phát Hiện | Vị Trí Tệp | Nguyên Nhân & Rủi Ro | Biện Pháp Khắc Phục Triệt Để | Trạng Thái |
 | :--- | :--- | :--- | :--- | :--- |
-| **`4184011501`** | `packages/ccba-harness/src/ccba_harness/peer.py`: 841, 985, 994, 1001 | Lệnh `subprocess.run(..., text=True)` thiếu `encoding="utf-8", errors="replace"`. Trên môi trường Windows, locale mặc định có thể gây lỗi `UnicodeDecodeError` khi Grok trả về chuỗi Unicode. | Đã bổ sung tường minh tham số `encoding="utf-8", errors="replace"` cho toàn bộ các lệnh gọi `subprocess.run` chế độ text trong `peer.py`. | ✅ **RESOLVED** (Commit `1ad06543`) |
-| **`4184089485`** | `packages/ccba-harness/src/ccba_harness/peer.py`: Popen watchdog loop | Việc sử dụng `subprocess.PIPE` mà không drain đồng thời qua reader thread có thể gây đầy pipe buffer của OS (~64 KB trên Linux), khiến Grok bị block khi xuất output lớn ở mức suy luận `xhigh`. | Thay thế hoàn toàn `subprocess.PIPE` bằng bộ đệm tệp tạm không giới hạn dung lượng `tempfile.TemporaryFile()` cho cả `stdout` và `stderr`, chống tuyệt đối nguy cơ đầy OS pipe buffer. | ✅ **RESOLVED** (Commit `1ad06543`) |
-| **`4184089581`** | `packages/ccba-harness/src/ccba_harness/peer.py`: Watchdog output file check | Watchdog chấp nhận file phán quyết có sẵn từ trước mà không xóa/so sánh thời gian, dẫn đến nguy cơ nhận nhầm tệp phán quyết cũ (stale verdict) ngay ở chu kỳ poll đầu tiên. | Bổ sung rào chắn thời gian thực: chỉ chấp nhận file phán quyết nếu `os.path.getmtime(output_file) >= start_time`, ngăn chặn hoàn toàn việc nhận nhầm verdict của các phiên chạy trước. | ✅ **RESOLVED** (Commit `1ad06543`) |
-| **`4184164510`** | `packages/ccba-harness/tests/test_peer.py`: 322 | Test case giả lập watchdog trả về `poll() == 0` ngay từ lần gọi đầu tiên khiến luồng test rẽ nhánh sang đọc stdout thay vì đi qua nhánh mtime watchdog. | Cập nhật `MockPopen` trả về `poll() == None` trong các lần gọi đầu để tiến trình đi qua đầy đủ chu trình watchdog polling và mtime detection trước khi hoàn tất. | ✅ **RESOLVED** (Commit `1ad06543`) |
+| **Test ModuleNotFoundError** | `scripts/tests/test_skill_circuit_breaker.py` | Test mồ côi cũ import `from resources.circuit_breaker` không tồn tại do module đã chuyển vào `packages/ccba-ai`. | Gỡ bỏ file test mồ côi bằng `git rm`. Module `ccba-ai` đã có test suite riêng tại `packages/ccba-ai/tests/test_circuit_breaker.py`. | ✅ **RESOLVED** (Commit `627e9310`) |
+| **Maskara Diff False Positive** | `scripts/governance/sanitize_review_diff.py` | Quét text thô của unified diff bắt nhầm các dòng secret bị xóa (`-`) khi refactor code cũ, coi xóa secret là rò rỉ. | Phân tích cấu trúc diff (`added`, `deleted`, `context`). Chỉ chặn secrets trong dòng `added`; bỏ qua dòng `deleted` (credential removal). Bổ sung test hồi quy. | ✅ **RESOLVED** (Commit `627e9310`) |
+| **Contract Doc Parity Drift** | `.agents/skills/ccba-legal-intel/SKILL.md` | Thiếu backtick cho các lệnh `login`, `fetch`, `convert`, `consolidate` trong ghi chú phân định ranh giới trách nhiệm. | Bổ sung định danh backtick cho các subcommands để thỏa mãn 100% contract test `test_cli_doc_parity.py`. | ✅ **RESOLVED** (Commit `627e9310`) |
+| **Copilot Review Audit** | PR #497 review thread | Copilot hoàn tất phân tích toàn bộ 61 commits và không phát hiện vi phạm kiến trúc. | Script `audit_pr_comments.py` xác nhận 100% clean. | ✅ **RESOLVED** |
 
 ---
 
-## 3. Kết Quả Thẩm Định Đối Kháng Cùng Grok (Grok 4.7 xhigh)
+## 3. Kết Quả Thẩm Định Đối Kháng Grok 4.7 (Two-Pass Peer Review)
 
-- **Tệp yêu cầu:** `.md/peer_exchange/prompt_grok_review_plan_telemetry_provenance.md`
-- **Tệp phán quyết:** `.md/peer_exchange/grok_review_plan_telemetry_provenance.md`
-- **Phán quyết:** **`APPROVE_PLAN`** (Risk: 1, Effort: XS)
-- **Tiếp thu 4 điều kiện cốt lõi:**
-  1. *COND-1*: Fallback TokenEstimator khi Grok CLI không trả về session usage hoặc timeout $\ge 3.0$s.
-  2. *COND-2*: Phân định nguồn gốc chi phí qua `cost_mode: exact | estimated | unknown`.
-  3. *COND-3*: Tự động thu hồi tiến trình mồ côi (Zero-Hang Popen Watchdog).
-  4. *COND-4*: Tương thích ngược 100% với các verdict lịch sử (`telemetry: PeerVerdictTelemetry | None = None`).
+Toàn bộ 11 đợt đều vượt qua quy trình thẩm định hai lượt nghiêm ngặt:
+- **Pass 1 (Discuss Plan)**: Đóng băng kế hoạch (COND-01 đến COND-05, Seam Contracts, GPI scores, Level 3 tables, ADR tokens) $\to$ Đạt **`APPROVE_PLAN`**.
+- **Pass 2 (Audit Code)**: Triển khai các PR nguyên tử, đối soát reflog trên đĩa $\to$ Đạt **`APPROVE`** (`conditions: []`, `risk_score: 1`).
+- Các tệp hồ sơ lưu trữ hoàn chỉnh tại `.md/peer_exchange/*wave1*` đến `*wave11*`.
 
 ---
 
-## 4. Kết Quả Kiểm Định CI & Local Verification
+## 4. Kết Quả Kiểm Định CI & Local Verification (Giao thức TRIHT)
 
 - **Local Verification (Giao thức TRIHT - 100% Hermetic):**
   - Cổng 0.1 (Pre-Flight Cleanliness): ✅ **PASS** (100% Clean)
-  - Cổng 0.2 (Slow Integration Tests): ✅ **12/12 packages PASS** (511 passed, 1 skipped, 10 deselected)
-    - `ccba-harness`: ✅ **36/36 peer & telemetry tests PASS**
-    - `run_isolated_tests.py --all --stress`: ✅ **PASS**
+  - Cổng 0.2 (Slow Integration Tests): ✅ **12/12 packages PASS** (525 passed, 1 skipped, 10 deselected)
+    - `run_isolated_tests.py --all --stress`: ✅ **PASS (32.51s)**
   - Cổng 0.3 (Post-Test Teardown): ✅ **PASS** (100% Hermetic buồng kín)
-  - `python -m ccba_harness verify-patch --preset code`: ✅ **3/3 passed** (ruff check, ruff format, 511 tests passed)
-  - `python scripts/governance/compile_catalog.py --check`: ✅ **PASS**
-- **GitHub Actions CI (PR #478 - 8/8 Green):**
-  - PR Danger Triage & Verifier Gate: ✅ **PASS** (1m0s)
-  - CI / Deterministic Parity Verification: ✅ **PASS** (59s)
-  - CI / Lint Markdown: ✅ **PASS** (11s)
-  - CI / Test - Python 3.10: ✅ **PASS** (6m6s)
-  - CI / Test - Python 3.11: ✅ **PASS** (5m35s)
-  - CI / Test - Python 3.12: ✅ **PASS** (4m14s)
-  - Security & Privacy Scan (Maskara): ✅ **PASS** (12s - 0 secrets)
-  - Documentation Check: ✅ **PASS** (28s)
+  - `python scripts/eval/run_harness_evals.py --all`: ✅ **8/8 CI Eval Gates PASS** (Lint, Format, Mypy, Pytest, Docs, Skills, ADR Matrix, Telemetry)
+- **GitHub Actions CI (PR #497 - 8/8 Green):**
+  - `PR Danger Triage & Verifier Gate`: ✅ **PASS (50s)**
+  - `CI/Deterministic Parity Verification`: ✅ **PASS (57s)**
+  - `CI/Lint Markdown`: ✅ **PASS (13s)**
+  - `CI/Test - Python 3.10`: ✅ **PASS (6m14s)**
+  - `CI/Test - Python 3.11`: ✅ **PASS (5m45s)**
+  - `CI/Test - Python 3.12`: ✅ **PASS (4m3s)**
+  - `Security & Privacy Scan (Maskara)`: ✅ **PASS (20s)**
+  - `Documentation Check & Link Validator`: ✅ **PASS (1m40s)**
+
+---
+
+## 5. Kết Luận & Tích Hợp
+- PR #497 đã được squash-merge thành công vào nhánh `main` ([commit `f3760bae`](https://github.com/vvChu/ccba-agent-platform/commit/f3760bae)).
+- Toàn bộ 76 skills của CCBA Agent Platform chính thức đạt chuẩn **Platform-Aware Architecture Posture (ADR-0061)**.
