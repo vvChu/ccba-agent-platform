@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-file-stability-guard --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -23,7 +23,7 @@ python scripts/spoke/sync_spoke.py --skills ccba-file-stability-guard
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
 | **Gói Bundle** | `_core` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
-| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 17.50)` |
+| **Điểm Đánh Giá GPI (ADR-0057)** | `S=2.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 11.50)` |
 
 ---
 

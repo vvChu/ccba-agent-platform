@@ -34,6 +34,11 @@ Khi người dùng kích hoạt lệnh này dưới dạng:
 
 Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi tác vụ sau:
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: quét bảo mật qua `scripts/maskara.py`, nạp nguồn tài liệu qua `python -m ccba_notebooklm`, áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI, sinh `SKILL.md`, biên dịch `compile_catalog.py` và kiểm thử `verify-patch --preset skill`. Kỹ năng đóng vai trò caller của `maskara_scanner.v1` và `notebooklm_rag.v1`, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 3 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
 ---
 
 ## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn

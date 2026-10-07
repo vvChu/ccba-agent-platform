@@ -70,6 +70,20 @@ def sanitize_diff(diff_text: str) -> tuple[str, list[dict[str, Any]]]:
     if not findings:
         return diff_text, []
 
+    diff_lines = diff_text.splitlines()
+    for f in findings:
+        line_num = f.get("line")
+        if isinstance(line_num, int) and 1 <= line_num <= len(diff_lines):
+            line_str = diff_lines[line_num - 1]
+            if line_str.startswith("-") and not line_str.startswith("---"):
+                f["line_type"] = "deleted"
+            elif line_str.startswith("+") and not line_str.startswith("+++"):
+                f["line_type"] = "added"
+            else:
+                f["line_type"] = "context"
+        else:
+            f["line_type"] = "unknown"
+
     sanitized = redact_secrets_in_text(diff_text)
     return sanitized, findings
 
@@ -95,15 +109,19 @@ def generate_report(findings: list[dict[str, Any]]) -> dict[str, Any]:
             "severity": f.get("severity"),
             "line": f.get("line"),
             "column": f.get("column"),
+            "line_type": f.get("line_type", "unknown"),
             "preview": f.get("preview"),
             "sha256": f.get("sha256"),
         }
         for f in findings
     ]
 
+    blocking_findings = [f for f in findings if f.get("line_type") != "deleted"]
+
     return {
         "secrets_detected": len(findings) > 0,
         "total_findings": len(findings),
+        "blocking_findings": len(blocking_findings),
         "rule_counts": rule_counts,
         "findings": findings_summary,
     }
@@ -229,11 +247,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stdout.write(sanitized_diff)
 
     if args.check:
-        if findings:
+        blocking_findings = [f for f in findings if f.get("line_type") != "deleted"]
+        deleted_findings = [f for f in findings if f.get("line_type") == "deleted"]
+
+        if deleted_findings and not args.quiet:
             sys.stderr.write(
-                f"[SECURITY VIOLATION] Found {len(findings)} secret(s) in review diff:\n"
+                f"[INFO] Ignored {len(deleted_findings)} secret finding(s) in deleted lines (credential removal).\n"
             )
-            for f in findings:
+
+        if blocking_findings:
+            sys.stderr.write(
+                f"[SECURITY VIOLATION] Found {len(blocking_findings)} secret(s) in review diff:\n"
+            )
+            for f in blocking_findings:
                 sys.stderr.write(
                     f"  - Line {f.get('line')}, Col {f.get('column')}: "
                     f"[{f.get('rule_id')}] {f.get('preview')}\n"

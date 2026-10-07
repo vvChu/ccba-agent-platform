@@ -37,6 +37,12 @@ Kỹ năng này tự động hóa việc thiết lập không gian làm việc d
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP greenfield khởi tạo Spoke). Skill hướng dẫn quy trình khởi tạo dự án mới chuẩn cấu trúc CCBA; engine thực thi nằm ở `scripts/spoke/` và CLI unified `scripts/ccba_platform_cli.py init-spoke`. Không phụ thuộc Seam Contract ứng dụng hay card trong `seam-contracts.yaml`.
+
+---
+
 ## 🛡️ Bước 0: Chốt Chặn Từ Chối Cứng (Hard Refusal Gate & Multi-Device Protection)
 > [!CAUTION]
 > **Hiến pháp Single-User Multi-Device & Machine-State Decoupling:**
@@ -106,9 +112,13 @@ python scripts/ccba_platform_cli.py init-spoke \
 
 ## 🔄 Bước 2: Đồng Bộ Kỹ Năng & Đăng Ký Spoke (Single-Engine Sync)
 
-Nếu chưa chỉ định cờ `--sync` tại Bước 1, Agent chạy Deep Seam `SpokeSynchronizer`:
-```powershell
-python "[hub_path]\scripts\sync_spoke.py" --spoke .
+Nếu chưa chỉ định cờ `--sync` tại Bước 1, Agent chạy script đồng bộ:
+```bash
+# POSIX (Linux / macOS / WSL):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+
+# PowerShell (Windows):
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
 ```
 *Tự động: tạo `.md/`, chọn bundle từ `catalog.yaml`, bơm kỹ năng, đồng bộ `AGENTS.md`, đăng ký RSA 2048-bit vào Hub Registry.*
 
@@ -119,8 +129,12 @@ python "[hub_path]\scripts\sync_spoke.py" --spoke .
 ## 📦 Bước 3: Thiết Lập Python Packages & Spoke Leakage Guard (ADR 0044, ADR 0045)
 
 Nếu chưa chỉ định cờ `--bootstrap` tại Bước 1, đối với dự án có Python (`is_python_project = True`), khởi tạo môi trường liên kết:
-```powershell
-python "[hub_path]\scripts\spoke\spoke_bootstrap.py" --spoke .
+```bash
+# POSIX:
+python3 "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv
+
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\ccba_platform_cli.py" bootstrap-spoke --create-venv
 ```
 *Tự động: sinh `requirements-hub.txt` kết nối editable packages (`ccba-ai`, `ccba-harness`...), cấu hình `.gitignore` cách ly.*
 

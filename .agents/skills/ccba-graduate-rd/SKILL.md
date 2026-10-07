@@ -29,6 +29,14 @@ triggers:
 
 Quy trình tự động hóa toàn trình 7 bước (Full-Cycle Autonomous Pipeline) chuyển hóa mã nguồn thử nghiệm (scratch script, prototype) thành module Production chuẩn mực trong Hub (`packages/ccba-*/src/`), tự động đóng gói Proposal, tạo Pull Request và tự làm xanh CI (Self-Healing Dual-Gate).
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator tốt nghiệp scratch script vào package có sẵn ở một phiên sau). Đợt 6 giữ nguyên `packages/` và 16 card seam; không đóng gói pipeline chuyển đổi dữ liệu độc lập hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: orchestrator`.
+
+---
+
 > [!CAUTION]
 > **3 Bất Biến Tuyệt Đối (Core Invariants):**
 > 1. **Không để script vá tồn tại qua phiên:** Mọi scratch script nằm trong `brain/*/scratch/` hoặc `.md/scratch/`, cấm commit vào `scripts/` Spoke.
@@ -83,10 +91,15 @@ Quét và phân loại toàn bộ files trong `brain/*/scratch/`, `.md/scratch/`
 ---
 
 ## 📦 Bước 5: Đóng Gói Proposal & Khởi Tạo Branch
-Thực thi tại thư mục Hub (`hub_path`):
+Thực thi tại thư mục Hub (`$CCBA_HUB_PATH`, PowerShell: `$env:CCBA_HUB_PATH`):
 1. **Khởi tạo branch đề xuất (ADR 0045):**
    ```bash
-   BRANCH_NAME="proposal/${ISSUE_ID:+issue-${ISSUE_ID}-}${PROPOSAL_NAME}"
+   # Trường hợp có liên kết Issue:
+   BRANCH_NAME="proposal/issue-${ISSUE_ID}-${PROPOSAL_NAME}"
+
+   # Trường hợp không có liên kết Issue:
+   BRANCH_NAME="proposal/${PROPOSAL_NAME}"
+
    git checkout main && git pull origin main && git checkout -b "$BRANCH_NAME"
    ```
 2. **Định dạng & Cập nhật Thống kê Kiến trúc:**
@@ -102,7 +115,11 @@ Thực thi tại thư mục Hub (`hub_path`):
 ## 🚀 Bước 6: Mở GitHub Pull Request & Vòng Lặp Self-Healing CI Dual-Gate
 1. **Mở Pull Request qua GitHub CLI:**
    ```bash
-   gh pr create --title "feat([scope]): [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+   # Trường hợp có liên kết Issue:
+   gh pr create --title "feat([scope]): [tên-đề-xuất]" --body "Graduate R&D implementation from Spoke. Closes #[ISSUE_ID]" --base main --head "$BRANCH_NAME"
+
+   # Trường hợp không liên kết Issue:
+   gh pr create --title "feat([scope]): [tên-đề-xuất]" --body "Graduate R&D implementation from Spoke." --base main --head "$BRANCH_NAME"
    ```
 2. **Vòng lặp Dừng chờ & Tự làm xanh CI (Teamwork Autonomous CI Guard):**
    - Lắng nghe trạng thái qua `gh pr checks <PR_NUMBER>`.
@@ -117,7 +134,8 @@ Thực thi tại thư mục Hub (`hub_path`):
 2. Sẵn sàng cho lệnh `/ccba-contribute-to-hub [PR_NUMBER]` hoặc đồng bộ downstream khi PR được merge.
 - **Tiêu chí hoàn thành:** Báo cáo hoàn tất gửi Maintainer kèm link PR và tóm tắt tính năng sẵn sàng review.
 
+---
+
 ## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
-* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
-* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure).
-* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+* Kỹ năng này hiện vận hành độc lập theo quy trình chuẩn mực trên đĩa và chưa có thư mục tài liệu tham chiếu phụ trợ `references/`.
+* Bảng chỉ mục Level 3 sẽ xuất hiện đồng thời khi bổ sung các hướng dẫn chuyên sâu mở rộng theo đúng chuẩn Progressive Disclosure.

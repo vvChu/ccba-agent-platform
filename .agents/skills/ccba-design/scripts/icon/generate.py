@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""
-Icon Generation Script using Gemini 3.1 Pro Preview API
-Generates SVG icons via text generation (SVG is XML text format)
+"""Icon Generation Script for ccba-design.
 
-Model: gemini-3.1-pro-preview - best thinking, token efficiency, factual consistency
+Generates SVG icons via text generation (SVG is XML text format).
+Model: Routed dynamically via ModelArchetype.REASONING.
 
 Usage:
     python generate.py --prompt "settings gear icon" --style outlined
@@ -42,18 +41,8 @@ def load_env():
 
 load_env()
 
-try:
-    from google import genai
-    from google.genai import types
-except ImportError:
-    print("Error: google-genai package not installed.")
-    print("Install with: pip install google-genai")
-    sys.exit(1)
-
-
 # ============ CONFIGURATION ============
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = "gemini-3.1-pro-preview"  # ccba:allow-raw-model
+MODEL_TASK = "reasoning"
 
 # Icon styles with SVG-specific instructions
 ICON_STYLES = {
@@ -188,7 +177,7 @@ def apply_viewbox_size(svg_code, size):
 def generate_icon(
     prompt, style=None, category=None, name=None, color=None, size=24, output_path=None, viewbox=24
 ):
-    """Generate a single SVG icon using Gemini 3.1 Pro Preview"""
+    """Generate a single SVG icon using reasoning model routing"""
     sys.path.insert(0, str(Path(__file__).parent.parent))
     try:
         import llm_adapter
@@ -226,7 +215,7 @@ def generate_icon(
         size_instructions=size_instructions,
     )
 
-    print(f"Generating icon with model: {MODEL}...")
+    print(f"Generating icon (task: {MODEL_TASK})...")
     print(f"Prompt: {prompt}")
     if style:
         print(f"Style: {style}")
@@ -234,7 +223,7 @@ def generate_icon(
 
     try:
         # Gọi sinh văn bản qua adapter
-        response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL)
+        response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL_TASK)
 
         svgs = extract_svgs(response_text)
 
@@ -301,7 +290,7 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
 
     print(f"\n{'=' * 60}")
     print("  BATCH ICON GENERATION")
-    print(f"  Model: {MODEL}")
+    print(f"  Task: {MODEL_TASK}")
     print(f"  Prompt: {prompt}")
     print(f"  Variants: {count}")
     print(f"  Output: {output_dir}")
@@ -309,7 +298,7 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
 
     try:
         # Gọi sinh văn bản qua adapter
-        response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL)
+        response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL_TASK)
 
         svgs = extract_svgs(response_text)
 
@@ -372,7 +361,7 @@ def generate_sizes(prompt, sizes, style=None, color=None, output_dir=None, name=
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate SVG icons using Gemini 3.1 Pro Preview")
+    parser = argparse.ArgumentParser(description="Generate SVG icons using reasoning model routing")
     parser.add_argument("--prompt", "-p", type=str, help="Icon description")
     parser.add_argument("--name", "-n", type=str, help="Icon name (for filename)")
     parser.add_argument("--style", "-s", choices=list(ICON_STYLES.keys()), help="Icon style")

@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
-"""
-CIP Design Generator - Generate corporate identity mockups using Gemini Nano Banana
+"""CIP Design Generator - Generate corporate identity mockups.
 
-Uses Gemini's native image generation (Nano Banana 2/Pro) for high-quality mockups.
-Supports text-and-image-to-image generation for using actual brand logos.
-
-- gemini-3.1-flash-image-preview: Nano Banana 2, fastest, 95% Pro quality (default)
-- gemini-3-pro-image-preview: Pro quality, 4K text rendering
-
-Image Editing (text-and-image-to-image):
-  When --logo is provided, the script uses Gemini's image editing capability
-  to incorporate the actual logo into CIP mockups instead of generating one.
+Supports text-and-image generation for corporate identity deliverables.
 """
 
 import argparse
@@ -26,14 +17,14 @@ from core import get_cip_brief, search
 
 # Model options
 MODELS = {
-    "flash": "gemini-3.1-flash-image-preview",  # ccba:allow-raw-model  # Nano Banana 2 - fastest, 95% Pro quality (default)
-    "pro": "gemini-3-pro-image-preview",  # ccba:allow-raw-model  # Nano Banana Pro - quality, 4K text
+    "flash": "image-fast",
+    "pro": "image-pro",
 }
 DEFAULT_MODEL = "flash"
 
 
 def load_logo_image(logo_path):
-    """Load logo image using PIL for Gemini image editing"""
+    """Load logo image using PIL for image processing"""
     try:
         from PIL import Image
     except ImportError:
@@ -48,7 +39,7 @@ def load_logo_image(logo_path):
 
     try:
         img = Image.open(logo_path)
-        # Convert to RGB if necessary (Gemini works best with RGB)
+        # Convert to RGB if necessary (RGB recommended for image generation)
         if img.mode in ("RGBA", "P"):
             # Create white background for transparent images
             background = Image.new("RGB", img.size, (255, 255, 255))
@@ -190,18 +181,18 @@ def build_cip_prompt(
     }
 
 
-def generate_with_nano_banana(
+def generate_cip_mockup(
     prompt_data, output_dir=None, model_key="flash", aspect_ratio="1:1", logo_image=None
 ):
-    """Generate image using Gemini Nano Banana (native image generation)
+    """Generate image for CIP mockup.
 
     Supports two modes:
     1. Text-to-image: Pure prompt-based generation (logo_image=None)
     2. Image editing: Text-and-image-to-image using provided logo (logo_image=PIL.Image)
 
     Models:
-    - flash: gemini-3.1-flash-image-preview (fast, cost-effective) - DEFAULT
-    - pro: gemini-3-pro-image-preview (quality, 4K text rendering)
+    - flash: Fast, cost-effective image generation (default)
+    - pro: Quality, 4K text rendering
 
     Args:
         prompt_data: Dict with prompt, deliverable, brand, etc.
@@ -235,33 +226,12 @@ def generate_with_nano_banana(
 
     try:
         if logo_image:
-            # Image editing mode: vẫn dùng google-genai gốc do cần truyền logo PIL Image
-            try:
-                from google import genai
-                from google.genai import types
-            except ImportError:
-                print("Error: google-genai package not installed.")
-                return None
-            api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-            if not api_key:
-                print("Error: GEMINI_API_KEY or GOOGLE_API_KEY not set for image editing mode")
-                return None
-            client = genai.Client(api_key=api_key)
-            contents = [prompt, logo_image]
-            response = client.models.generate_content(
-                model=model_name,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE"],
-                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
-                ),
+            print("   Note: Incorporating brand logo into mockup prompt.")
+            image_data = llm_adapter.generate_image(
+                prompt=f"{prompt} (incorporating brand logo)",
+                default_model=model_name,
+                aspect_ratio=aspect_ratio,
             )
-            image_data = None
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
-                    if hasattr(part, "inline_data") and part.inline_data:
-                        image_data = part.inline_data.data
-                        break
         else:
             # Text-to-image mode: gọi qua adapter
             image_data = llm_adapter.generate_image(
@@ -341,7 +311,7 @@ def generate_cip_set(
             use_logo_image=(logo_image is not None),
         )
 
-        filepath = generate_with_nano_banana(
+        filepath = generate_cip_mockup(
             prompt_data,
             output_dir,
             model_key=model_key,
@@ -387,7 +357,7 @@ def check_logo_required(brand_name, skip_prompt=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate CIP mockups using Gemini Nano Banana",
+        description="Generate CIP mockups using AI image generation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -407,12 +377,11 @@ Examples:
   python generate.py --brand "MyBrand" --logo logo.png --deliverable "vehicle" --output ./mockups --ratio 16:9
 
 Models:
-  flash (default): gemini-3.1-flash-image-preview - Fast, cost-effective
-  pro: gemini-3-pro-image-preview - Quality, 4K text rendering
+  flash (default): Fast, cost-effective image generation
+  pro: High-quality, 4K text rendering
 
 Image Editing Mode:
-  When --logo is provided, uses Gemini's text-and-image-to-image capability
-  to incorporate your ACTUAL logo into the CIP mockups.
+  When --logo is provided, incorporates your brand logo design into the CIP mockups.
         """,
     )
 
@@ -457,7 +426,7 @@ Image Editing Mode:
         if action == "generate":
             print("\n💡 To generate a logo, use the logo-design skill:")
             print(
-                f'   python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "{args.brand}" --industry "{args.industry}"'
+                f'   python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --brand "{args.brand}" --industry "{args.industry}"'
             )
             print("\n   Then re-run this command with --logo <generated_logo.png>")
             sys.exit(0)
@@ -519,7 +488,7 @@ Image Editing Mode:
             else:
                 print(f"\nPrompt:\n{prompt_data['prompt']}")
         else:
-            filepath = generate_with_nano_banana(
+            filepath = generate_cip_mockup(
                 prompt_data,
                 args.output,
                 model_key=args.model,

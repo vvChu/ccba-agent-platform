@@ -41,6 +41,16 @@ triggers:
 
 A user may ask you to create, edit, or analyze the contents of a .pptx file. A .pptx file is essentially a ZIP archive containing XML files and other resources that you can read or edit. You have different tools and workflows available for different tasks.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò sub-skill chuyên biệt trực thuộc `master_skill: xu-ly-van-phong` (`role: sub_skill`), hướng dẫn quy trình tạo lập, chỉnh sửa và phân tích file trình chiếu PowerPoint (.pptx) bằng HTML conversion (`html2pptx` qua `pptxgenjs` và `playwright`) hoặc thao tác trực tiếp cấu trúc XML nội bộ slide qua các lệnh CLI nền tảng `python -m ccba_ooxml unpack`, `validate`, `pack`. Kỹ năng là caller của gói `ccba-ooxml`, không sở hữu Seam đóng gói Python độc lập và không nhận `package_path`.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 $\ge$ 12.0 (đi nhánh Tier 2B và nằm trong deadband [11.5, 12.5) được bảo toàn qua hysteresis). Duy trì vai trò `role: sub_skill`, `master_skill: xu-ly-van-phong` và 2 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/html2pptx.md`, `references/ooxml.md`).
+
+---
+
 ## Reading and analyzing content
 
 ### Text extraction

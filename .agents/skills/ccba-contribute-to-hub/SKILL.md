@@ -39,6 +39,12 @@ Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở 
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP Git/PR chuẩn mực đóng góp từ Spoke lên Hub). Skill hướng dẫn quy trình 7 bước đóng gói mã nguồn, kiểm soát rò rỉ, mở Pull Request và vòng lặp tự làm xanh CI; không đóng gói pipeline chuyển đổi dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 ## 📋 Bước 1: Thu thập Thông tin, Liên Kết Issue & Cổng Kiểm Lọc R&D
 Ghi nhận đầy đủ thông tin cốt lõi:
 1. **Liên kết Issue & Cổng Tự Động Phân Loại Scope (Smart Scope-Aware Issue Gate):**
@@ -58,15 +64,15 @@ Ghi nhận đầy đủ thông tin cốt lõi:
 
 ## 🔍 Bước 2: Kiểm tra Trùng lặp (Duplicate Detection)
 Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
-1. Đọc `.md/workspace_context.yaml` để lấy `hub_path`.
-2. Đọc `<hub_path>/.agents/skills/platform-loader/catalog.yaml`, `packages/`, `<hub_path>/.agents/AGENTS.md`, `PLATFORM.md`.
+1. Xác định đường dẫn Hub qua biến môi trường `$CCBA_HUB_PATH` (PowerShell: `$env:CCBA_HUB_PATH`).
+2. Đọc `$CCBA_HUB_PATH/.agents/skills/platform-loader/catalog.yaml`, `packages/`, `$CCBA_HUB_PATH/.agents/AGENTS.md`, `PLATFORM.md`.
 *Nếu phát hiện đã tồn tại thành phần tương tự:* Đề xuất nâng cấp/mở rộng thay vì tạo mới trùng lặp.
 - **Tiêu chí hoàn thành:** Xác nhận không trùng lặp chức năng với các skill, tool hiện hữu trong `catalog.yaml` và `PLATFORM.md`.
 
 ---
 
 ## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trên Branch Mới
-Thực thi tại thư mục Hub (`hub_path`):
+Thực thi tại thư mục Hub (`$CCBA_HUB_PATH`):
 1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
    ```bash
    git checkout main && git pull origin main
@@ -107,10 +113,13 @@ Thực thi tại thư mục Hub (`hub_path`):
 
 ## 🚀 Bước 4: Mở GitHub Pull Request (Kế thừa chuẩn /ccba-create-pr)
 Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm nội dung chuyên biệt cho đề xuất Spoke $\rightarrow$ Hub:
-- **Tự động qua GitHub CLI (Tự động gắn mã Closes #[ISSUE_ID]):**
+- **Tự động qua GitHub CLI:**
   ```bash
-  PR_BODY="Automated proposal submission from Spoke [tên-spoke].${ISSUE_ID:+ Closes #${ISSUE_ID}}"
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+  # Trường hợp có liên kết Issue:
+  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]. Closes #[ISSUE_ID]" --base main --head "$BRANCH_NAME"
+
+  # Trường hợp không liên kết Issue (Minor Scope):
+  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]." --base main --head "$BRANCH_NAME"
   ```
 - **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
 - **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub liên kết đúng branch và Issue ID.
@@ -143,8 +152,14 @@ Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, 
 ## 🔄 Bước 7: Vòng Khép Kín Hậu Hợp Nhất (Closed-Loop Spoke Sync Gate)
 Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bước đóng vòng tại Spoke:
 1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state'` (phải là `MERGED`).
-2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc `python [hub_path]\scripts\sync_spoke.py --spoke . --apply`.
-3. **Tái cài đặt Editable Package:** `pip install -e "[hub_path]\packages\[package-name]"` (nếu là `tool`).
+2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc:
+   ```bash
+   python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+   ```
+3. **Tái cài đặt Editable Package:**
+   ```bash
+   pip install -e "$CCBA_HUB_PATH/packages/[package-name]"
+   ```
 4. **Hồi quy & Dọn dẹp:** Chạy kiểm thử Spoke (`python scripts\validate_legal_spoke.py`), xóa branch `git branch -D proposal/[tên-đề-xuất]`, và ghi log vào `.md/knowledge/session_learnings.md`.
 - **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ thành công và `session_learnings.md` được cập nhật.
 

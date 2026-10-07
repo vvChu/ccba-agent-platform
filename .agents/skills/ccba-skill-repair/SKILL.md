@@ -21,6 +21,11 @@ triggers:
 
 Kỹ năng này tự động hóa quy trình khảo sát, chẩn đoán và sửa chữa các lỗi linter, cấu trúc, liên kết và vi phạm thể chế kiến trúc 3 tầng (ADR-0057 & RES-2026-ARCH-001 v1.2) cho các tệp `SKILL.md` trong hệ thống CCBA Agent Services Platform.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel phục hồi và sửa chữa kỹ năng qua bốn bước: `validate_skills.py --enforce-gpi`, `evaluate-gpi`, vá YAML và khối `gpi`, sửa liên kết tương đối và xử lý rào chắn script bloat. 16 card trong `seam-contracts.yaml` không quản lý quy trình sửa chữa tệp kỹ năng, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 >= 12.0 (đi nhánh Tier 2B và nằm trong deadband [11.5, 12.5) được bảo toàn qua hysteresis). Khối `gpi` một dòng được giữ nguyên và kỹ năng hiện chưa có thư mục `references/` phụ trợ.
+
 ---
 
 ## Quy trình Thực hiện (Process)

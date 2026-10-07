@@ -37,6 +37,12 @@ Quy trình tự động hóa bóc tách ngữ cảnh thảo luận tại dự á
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP tạo GitHub Issue chuẩn từ Spoke lên Hub). Skill hướng dẫn quy trình 5 bước trích xuất ngữ cảnh, kiểm tra trùng lặp và mở RFC Issue trên kho Hub; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 ## 🎯 Mục Đích & Vai Trò
 - **Giai đoạn Ý tưởng (Idea & RFC Phase):** Khi phát hiện bài toán mới, nhu cầu cải tiến công cụ, chuẩn hóa quy trình hoặc phát hiện lỗi ở cấp nền tảng nhưng chưa cần đóng gói mã nguồn ngay.
 - **Tính đối xứng:** Là bước đi trước của `/ccba-contribute-to-hub` (đóng gói code & mở PR) trong chu trình đóng góp ngược (Upstream Contribution Loop).
@@ -62,7 +68,7 @@ Trước khi tạo Issue mới, Agent chủ động kiểm tra xem vấn đề �
    gh issue list --repo vvChu/ccba-agent-platform --limit 30
    ```
 2. **Kiểm tra Catalog Hub:**
-   Đọc tệp `catalog.yaml` (qua đường dẫn `hub_path` trong `.md/workspace_context.yaml` nếu có) để xác nhận kỹ năng/công cụ tương tự chưa tồn tại.
+   Đọc tệp `catalog.yaml` qua biến môi trường `$CCBA_HUB_PATH/.agents/skills/platform-loader/catalog.yaml` (PowerShell: `$env:CCBA_HUB_PATH`) để xác nhận kỹ năng/công cụ tương tự chưa tồn tại.
 
 *Nếu phát hiện đã có Issue tương tự:* Gợi ý người dùng bổ sung thảo luận vào Issue cũ thay vì tạo mới.
 - **Tiêu chí hoàn thành:** Xác nhận tính độc nhất của đề xuất, không trùng lặp với các Issue hoặc tính năng đã có trên Hub.

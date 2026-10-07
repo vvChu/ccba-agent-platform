@@ -37,6 +37,14 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị văn bản đã có trong nền tảng:
+* **Hạ Tầng Hợp Nhất Văn Bản:** Sử dụng `LegislativeConsolidator` hoặc `VBHNEngine.merge_documents` của gói `ccba-legal-intel` (CLI `python -m ccba_legal consolidate`). Tuyệt đối không tự viết logic merge văn bản ad-hoc.
+* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực chuẩn hóa và quan hệ thay thế đối soát qua lệnh `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry` (công nhận status chuẩn hóa `ACTIVE`, cùng các trường thay thế `supersedes`, `replaces`, `replaced_docs`, `relations.*`); tuyệt đối không dán cứng danh sách văn bản thay thế vào thân skill.
+
+---
+
 ## When to Use
 
 - Cần **cập nhật danh mục VBPL** đang theo dõi (thêm mới, thay đổi trạng thái)
@@ -64,34 +72,31 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 Đọc file `legal_registry.yaml` tại Root Spoke để nắm danh mục hiện tại. Khi cần cập nhật:
 1. **Thêm VBPL/QCVN/TCVN mới**: Thêm entry mới vào nhóm tương ứng (`laws:`, `standards:`) với đầy đủ `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets`.
-2. **Thay đổi trạng thái**: Cập nhật `status` (`draft` $\rightarrow$ `active` $\rightarrow$ `superseded` $\rightarrow$ `expired`).
+2. **Thay đổi trạng thái**: Cập nhật `status` (`DRAFT` $\rightarrow$ `PENDING_EFFECTIVE` $\rightarrow$ `ACTIVE` $\rightarrow$ `SUPERSEDED` / `PARTIALLY_AMENDED` theo enum `LegalDocStatus`).
 3. **Đánh dấu thay thế / hướng dẫn**: Khai báo rõ ràng trong `relations:` (`replaces:`, `guided_by:`).
 
-### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI)
+### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI & API)
 
 Khi có văn bản sửa đổi bổ sung:
 
 1. Thực thi lệnh hợp nhất AST và sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` (ADR 0036):
-   ```powershell
-   python -m ccba_legal consolidate `
-     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
-     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
+   ```bash
+   python -m ccba_legal consolidate \
+     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" \
+     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" \
      --output "legal_docs/<category>/<doc_slug>"
    ```
-   * **Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:**
+   * **Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator` / `VBHNEngine`:**
    ```python
-   from ccba_legal import LegislativeConsolidator
+   from ccba_legal import LegislativeConsolidator, VBHNEngine
 
+   # Khởi tạo qua patch manifest đã được biên tập
    consolidator = LegislativeConsolidator.from_manifest_file("patch_manifest.yaml")
    res = consolidator.consolidate("base.md", "output_dir")
 
-   # Hoặc sử dụng VBHNEngine để tạo báo cáo diff:
-   # diff_report = engine.generate_diff(
-   #     base_doc_path="path/to/old_doc.md",
-   #     amending_doc_path="path/to/new_doc.md"
-   # )
-   # Hoặc hợp nhất văn bản thành VBHN hoàn chỉnh:
-   # vbhn_result = engine.consolidate(base_ast, [patch1, patch2])
+   # Hoặc sử dụng VBHNEngine để hợp nhất tài liệu
+   engine = VBHNEngine()
+   vbhn_doc = engine.merge_documents(base_doc="base.md", amending_doc="patch1.md")
    ```
 2. Đọc kết quả diff được chuẩn hóa theo từng chương/điều/khoản (tự động so khớp `D1` $\leftrightarrow$ `dieu-1`).
 3. Điền các đánh giá chuyên môn vào template `resources/comparison_table.md`.
@@ -129,8 +134,6 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/registry_sync_guide.md` | Quy trình đồng bộ định kỳ legal registry và cập nhật cơ sở dữ liệu văn bản pháp lý |
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).

@@ -62,11 +62,23 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`skill-bound`**, đóng vai trò điểm vào chính quy cho Seam Card **`legal_ingest.v1`** (`command: /ccba-legal-ingest`):
+* **Hợp Đồng Năng Lực:** Đầu vào `in: [pdf, docx, tvpl_url]`, đầu ra `out: [okf_bundle, clauses_json]`.
+* **Package Seams Phụ Trợ Được Phép Gọi Tiếp:**
+  - `ooxml_processor.v1` (`ccba_ooxml:DocxDocument`): Tiền xử lý DOM, chuẩn hóa bảng biểu và XML sanitization.
+  - `pdf_preprocessor.v1` (`ccba_pdf_prep:PDFProcessingPipeline`): Bóc tách vector PDF, hashing provenance.
+  - `legal_markdown.v1` (`mdconverter:ConversionPipeline`): Chuyển đổi định dạng trung gian Markdown.
+* **Cưỡng Chế Hiến Pháp ADR-0059 (Mandatory Acquisition & Verbatim Grounding):** Tuyệt đối CẤM sinh điều khoản giả lập (synthetic clauses) hoặc coi `--mock` là lối hoàn thành tác vụ. Nếu thiếu tệp nhị phân gốc (DOCX/PDF), Agent bắt buộc phải chiếm phiên TVPL chính thức hoặc yêu cầu người dùng nạp tệp trực tiếp trước khi tiếp tục.
+
+---
+
 ### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036, ADR 0039)
 
-* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
+* **Kịch bản 1 — Nạp tự động toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
   ```bash
-  python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud] [--mock]
+  python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud]
   ```
   *(Chu trình khép kín tự động: Chiếm `TVPLSessionMutex` ➔ Tải DOCX + PDF vào sandbox tạm ➔ Ghi `metadata_handoff.json` ➔ Chuyển giao sang `spoke_cli.py ingest` ➔ Sao chép đủ 2 tệp nhị phân vào `sources/` ➔ Cập nhật `legal_registry.yaml` bảo toàn `pdf_status` ➔ Chuyển đổi OKF v2.4 Bundle ➔ Kiểm định khoanh vùng Scoped 15-Gate CI `validate --bundle <slug>` với `CI=true` ➔ Tự động giải phóng sandbox SSOT)*.
 
@@ -75,8 +87,8 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   python scripts/ccba_platform_cli.py ingest-legal "<slug_or_id>" --category <01_vbpl|02_qcvn|03_tcvn> --docx <path/to/file.docx> --pdf <path/to/file.pdf>
   ```
 
-* **Kịch bản 2 — Tiếp nhận thủ công / Fallback khi cào bị lỗi:**
-  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha), Agent giải quyết cục bộ bằng script CDP/thủ công để đưa đúng 2 tệp `.docx` và `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
+* **Kịch bản 2 — Xử lý khi cào tự động bị chặn (ADR-0059 Acquisition Barrier):**
+  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha không thể vượt qua), Agent **BẮT BUỘC DỪNG LẠI** và thông báo yêu cầu người dùng cung cấp 2 tệp nguồn `.docx` và `.pdf` chính quy để đưa vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
 
 * **Kịch bản 3 — Làm mới / Thay thế file scan mờ bằng bản nét (Force Refresh):**
   Chạy lệnh tải đè bản đẹp vào `sources/` rồi chuyển sang Bước 1:
@@ -87,15 +99,10 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 * **Kịch bản 4 — Lưu trữ kép khi PDF TVPL scan mờ / lỗi phông chữ (Dual-PDF Archive & Provenance Protocol - ADR 0049):**
   Đối với các tiêu chuẩn cũ (như TCVN 4474:1987, TCVN 4513:1988, TCVN 9362:2012, TCVN 10304:2014) mà tệp PDF từ TVPL là bản photocopy scan mờ hoặc lỗi phông mã hóa chữ TCVN3/VNI:
   - Lưu giữ nguyên vẹn bản scan gốc dưới tên `sources/<doc_slug>_raw_scan.pdf` để bảo toàn vết truy xuất nguồn gốc pháp lý.
-  - Sử dụng API xuất Vector PDF đa nền tảng `from ccba_ooxml import convert_to_pdf` (tự động ưu tiên Word COM trên Windows nếu có, hoặc headless LibreOffice `soffice` trên Linux/WSL/CI) xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
+  - Sử dụng API xuất Vector PDF đa nền tảng `from ccba_ooxml import convert_to_pdf` xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
 
-* **Kịch bản 5 — Tự động giải phóng xung đột phiên TVPL & Định tuyến Tab TCVN (Session Takeover & Safe Landing):**
-  - **Chiếm lại phiên TVPL Pro (Eviction):** Khi gặp hộp thoại cảnh báo đăng nhập đa phiên `#logintfrom_w`, tự động bấm `'Đồng ý'` (hoặc gọi CheckFullLogin / gửi `action=Login` tới `ajaxcontroler.aspx`) để hủy phiên từ xa và chiếm lại đặc quyền Pro cho tác vụ nạp.
-  - **Định tuyến Tab Tiêu chuẩn TCVN:** Tiêu chuẩn TCVN sử dụng chuyển tab JavaScript phía client (`#aTabTaiVe` $\rightarrow$ `#tab8`). Tránh reload URL tham số `?tab=7` (gây redirect loop), thay vào đó click `#aTabTaiVe` và trích xuất liên kết endpoint trực tiếp:
-    * File Word: `/documents/download.aspx?id=...&part=-1&docx=1`
-    * File PDF: `/documents/download.aspx?id=...&part=0&docx=`
-  - **Mô hình Safe Landing Download:** Không bao giờ trỏ download path trực tiếp vào `sources/`. Luôn tải qua thư mục đệm ngoài workspace (như `Downloads/`), quan sát đến khi tệp `stat().st_size > 0` và sạch đuôi `.crdownload`, sau đó mới dùng `shutil.move()` chuyển vào `sources/<doc_slug>.<ext>`. Quy tắc này bảo vệ tuyệt đối Gate 11 không bị crash bởi tệp rác 0-byte.
-- **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/`.
+* **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/` kèm mã băm SHA-256 xác thực.
+
 
 ---
 
@@ -192,11 +199,6 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
 - **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 10/2021/NĐ-CP -> Bắt buộc sử dụng **Nghị định 206/2026/NĐ-CP** (Quản lý Chi phí).
-  - Nghị định 15/2021/NĐ-CP & Nghị định 175/2024/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng).
-  - Nghị định 06/2021/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì).
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP** (PCCC & CNCH).
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023** (An toàn cháy cho nhà và công trình).
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).

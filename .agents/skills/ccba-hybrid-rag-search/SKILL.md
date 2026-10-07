@@ -36,6 +36,14 @@ Tìm kiếm ngữ nghĩa kết hợp **BM25 (keyword precision)** + **Embedding 
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, kết hợp giữa thuật toán xếp hạng từ khóa cục bộ BM25/RRF với Public Deep Seam **`ai_embedding.v1`** (`ccba_ai:embed`).
+
+Toàn bộ các tác vụ vector embedding bắt buộc định tuyến qua API chuẩn hóa `ai.embed(text, model=choose_model("embedding"))` của package `ccba_ai`. Tuyệt đối CẤM hardcode tên mô hình embedding thô hoặc bypass qua các endpoint ad-hoc.
+
+---
+
 ## Kiến trúc
 
 ```
@@ -97,14 +105,15 @@ def search_bm25(
 
 ```python
 import numpy as np
-from ccba_ai import ai  # AI Gateway SDK
+from ccba_ai import ai, choose_model
 
 def build_embedding_index(corpus: list[str]) -> np.ndarray:
     """Build embedding matrix từ corpus và chuẩn hóa L2 pre-normalization. Cache vào .npz/.npy file."""
     embeddings = []
+    model_name = choose_model("embedding")
     for chunk in corpus:
         # Dùng AI Gateway embedding endpoint
-        vec = np.array(ai.embed(chunk, model="gemini-embedding-001"), dtype=np.float32)  # ccba:allow-raw-model
+        vec = np.array(ai.embed(chunk, model=model_name), dtype=np.float32)
         norm = np.linalg.norm(vec)
         embeddings.append(vec / norm if norm > 1e-10 else vec)
     return np.array(embeddings, dtype=np.float32)  # shape: (n_docs, dim)
@@ -115,7 +124,7 @@ def search_embeddings(
     top_k: int = 10
 ) -> list[tuple[int, float]]:
     """Dot-product Top-K search với np.argpartition O(n + k log k). Returns: list of (doc_index, score)."""
-    query_vec = np.array(ai.embed(query, model="gemini-embedding-001"), dtype=np.float32)  # ccba:allow-raw-model
+    query_vec = np.array(ai.embed(query, model=choose_model("embedding")), dtype=np.float32)
     q_norm = np.linalg.norm(query_vec)
     if q_norm > 1e-10:
         query_vec = query_vec / q_norm
@@ -275,10 +284,10 @@ def _hash_corpus(corpus: list[str]) -> str:
 
 ## Reference Implementation
 
-Full production code (hybrid RAG + BM25 + Gemini embeddings + RRF):
+Full production reference pattern (hybrid RAG + BM25 + Vector Embeddings + RRF):
 
-```
-D:\VvC_Notes\scripts\services\rag_search.py
+```bash
+$CCBA_HUB_PATH/scripts/services/rag_search.py
 ```
 
 Đã vận hành trong production pipeline kể từ VvC v6.2 (2026).

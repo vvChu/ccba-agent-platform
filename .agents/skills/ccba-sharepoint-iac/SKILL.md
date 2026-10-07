@@ -28,6 +28,13 @@ triggers:
 
 Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định và triển khai hạ tầng dữ liệu trên SharePoint Online (Microsoft 365) bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Phân loại**: Kỹ năng quản trị hạ tầng dạng mã nguồn (seam-exempt kernel skill).
+- **Lý do miễn trừ seam**: SOP hướng dẫn thiết kế JSON schema, kiểm định quan hệ Lookups/Taxonomy và vận hành kịch bản PnP PowerShell cho hạ tầng đám mây M365, không trực tiếp ràng buộc gói Python runtime.
+- **Đặc tính quản trị**: Cưỡng chế kiến trúc Metadata-First (<5GB list quota), quy ước đặt tên PascalCase/DisplayName và ràng buộc toàn vẹn dữ liệu tham chiếu theo quy chuẩn nền tảng.
+- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=2.0, a=1.0, p=1.0) -> GPI = 12.0 (Tier 2B kernel), tuân thủ phân lớp governance và năng lực tự động hóa hạ tầng.
+
 ---
 
 ## 🎯 1. Nguyên Tắc Thiết Kế Cốt Lõi (Core Principles)

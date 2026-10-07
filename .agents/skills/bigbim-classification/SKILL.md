@@ -40,6 +40,15 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho IFC, Uniclass hay hệ thống phân loại BIM. Các thư viện như `ifcopenshell` là công cụ chuyên ngành bên thứ ba, không phải Deep Seam trực thuộc monorepo CCBA.
+* **Định tuyến AI:** Khi thực hiện nhánh phân loại ngữ nghĩa bằng AI (Semantic Auto-Classification), các tác vụ nhúng vector và LLM bắt buộc đi qua Seam `ai_embedding.v1` hoặc `model_routing.v1` (`ccba_ai.routing:choose_model`), cấm gọi API mô hình độc lập.
+* **Rào chắn Tri thức Cục bộ (Self-Contained & Grounding Invariant):** Căn cứ phân loại bắt buộc đọc trực tiếp từ tài liệu phương pháp luận BIGBIM trên đĩa. Trường hợp thiếu tài liệu hoặc không có file đối soát, Agent bắt buộc dừng lại và thông báo cho người dùng; tuyệt đối CẤM suy đoán hoặc tự bịa đặt mã Uniclass / điều khoản ISO để điền vào chỗ trống.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:

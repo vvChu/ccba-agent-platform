@@ -1,7 +1,7 @@
 ---
 name: bigbim-vbpl-digest
-description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
-  ISO 19650-1/2/3/5, QCVN liên quan.
+description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các
+  tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 applies_to:
 - BIM
 - Pháp điển
@@ -19,9 +19,7 @@ gpi:
   a: 4.0
   p: 1.0
 triggers:
-- NĐ 175
 - nghị định BIM
-- Nghị định 175
 - điều khoản BIM
 - ISO 19650
 - luật xây dựng BIM
@@ -32,28 +30,35 @@ triggers:
 # BIGBIM VBPL Digest Skill
 
 > **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.
-> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có trích dẫn.
+> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có căn cứ trích dẫn chuẩn xác.
 
 ---
 
-## 📚 BIGBIM Method KB — Nguồn dữ liệu
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
-> Skill này **TRA CỨU TRỰC TIẾP** từ chunks của tài liệu gốc:
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các công cụ tra cứu tri thức pháp lý của nền tảng:
+* **Tra Cứu & Trích Xuất Pháp Lý:** Sử dụng CLI `python -m ccba_legal query` và `get-clause` (Deep Seam `LegalKnowledgeEngine`). Các chunk tài liệu cũ tại Spoke chỉ đóng vai trò tham khảo kỹ thuật, không có giá trị bảo chứng hiệu lực.
+* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực và quan hệ thay thế bắt buộc đối soát theo nguyên tắc kiểm định SSOT tại Mục 5; tuyệt đối không sử dụng văn bản đã hết hiệu lực thi hành.
 
-| Nguồn | Layer | Path |
-|:------|:------|:-----|
-| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
-| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
-| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
-| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
-| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
-| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
+---
+
+## 📚 Nguồn Dữ Liệu & Công Cụ Tra Cứu
+
+> **Quy định SSOT:** Tra cứu điều khoản quy phạm pháp luật bắt buộc thực thi qua Deep Seam `ccba_legal query` và `get-clause`. Các chunk tiêu chuẩn ISO đóng vai trò tài liệu kỹ thuật phụ trợ:
+
+| Nguồn | Loại | Công cụ / Đường dẫn |
+|:------|:------|:-------------------|
+| Quy phạm pháp luật BIM | Pháp lý SSOT | CLI `python -m ccba_legal query` và `get-clause` |
+| ISO 19650-1 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
+| ISO 19650-2 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
+| ISO 19650-3 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
+| ISO 19650-5 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
+| Chunk Master Index | Kỹ thuật | `[bigbim_method_path]/.md/chunks/INDEX.md` |
 
 **Workflow tra cứu:**
-1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
-2. Đọc `00_CHUNK_INDEX.md` trong folder nguồn để locate chunk
-3. Đọc chunk cụ thể → trích dẫn điều khoản chính xác
-4. Cross-reference với KB articles Layer 3 nếu cần synthesis
+1. Tra cứu VBPL quy phạm: gọi `python -m ccba_legal query --q "..."` và `python -m ccba_legal get-clause ...`
+2. Tra cứu tiêu chuẩn kỹ thuật ISO: định vị chunk trong `chunks/ISO_19650_VN/`
+3. Trích dẫn nguyên văn điều khoản chính xác kèm trạng thái hiệu lực chuẩn hóa ACTIVE
 
 ---
 
@@ -69,27 +74,26 @@ triggers:
 ### Bước 1 — Phân tích câu hỏi
 
 Xác định:
-- **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
+- **Nguồn**: Quy chuẩn/Nghị định quy phạm hay Tiêu chuẩn kỹ thuật ISO 19650?
 - **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
 - **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
 - **Tiêu chí hoàn thành:** Xác định rõ ràng nguồn văn bản, loại truy vấn và định dạng đầu ra mong muốn.
 
-### Bước 2 — Locate chunk
+### Bước 2 — Tra cứu dữ liệu
 
-```
-Nếu NĐ 175:
-  → chunks/VBPL_BIM_VN/175_2024_ND-CP_.../00_CHUNK_INDEX.md
-  → Tìm chunk theo keyword trong heading column
+```bash
+# 1. Nếu là văn bản quy phạm pháp luật (VBPL):
+python -m ccba_legal query --q "<từ khóa>" --status ACTIVE
+python -m ccba_legal get-clause --doc "<doc_id>" --clause "<số điều>"
 
-Nếu ISO 19650:
-  → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
-  → Tìm theo section number (VD: "5.6 Tiến trình")
+# 2. Nếu là tiêu chuẩn kỹ thuật ISO 19650:
+# Đọc chunks phụ trợ: chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
 ```
-- **Tiêu chí hoàn thành:** Định vị chính xác đường dẫn chunk chứa điều khoản hoặc nội dung liên quan.
+- **Tiêu chí hoàn thành:** Định vị chính xác điều khoản quy phạm qua Seam hoặc đường dẫn chunk tiêu chuẩn kỹ thuật liên quan.
 
 ### Bước 3 — Đọc và tổng hợp
 
-- Đọc chunk liên quan (1-3 chunks tối đa)
+- Đọc điều khoản trích xuất từ Seam hoặc chunk liên quan
 - Trích dẫn nguyên văn có số điều/khoản
 - Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
 - **Tiêu chí hoàn thành:** Đọc hiểu và trích xuất đúng điều khoản nguyên văn kèm đối tượng và phạm vi áp dụng.
@@ -99,7 +103,7 @@ Nếu ISO 19650:
 ```markdown
 ## Câu trả lời
 
-**Nguồn**: NĐ 175/2024-NĐ-CP, Điều X, Khoản Y
+**Nguồn**: [Mã văn bản đã đối soát SSOT], Điều X, Khoản Y
 **Nguyên văn**: "..."
 
 **Tóm tắt**: [2-3 câu]
@@ -113,12 +117,19 @@ Nếu ISO 19650:
 
 ## 📋 Mapping Chủ đề → Nguồn
 
-| Chủ đề | Nguồn chính | Chunks tham khảo |
-|:-------|:-----------|:----------------|
-| BIM bắt buộc từ khi nào | NĐ 175 Điều 8 | chunk_01–05 |
-| Yêu cầu nộp mô hình BIM | NĐ 175 Chương III | chunk_20–35 |
-| CDE, EIR, AIR | ISO 19650-2 Section 4-5 | chunk_04–09 |
-| Vận hành AIM | ISO 19650-3 Section 5 | chunk_06–12 |
-| Phân loại bảo mật thông tin | ISO 19650-5 Section 4-7 | chunk_06–10 |
-| Giấy phép xây dựng + BIM | NĐ 175 Chương VI | chunk_50–65 |
-| Nghiệm thu, hoàn công + BIM | NĐ 175 Chương VIII | chunk_80–95 |
+| Chủ đề | Nguồn chính (Seam SSOT) | Chunks kỹ thuật tham khảo |
+|:-------|:------------------------|:-------------------------|
+| BIM bắt buộc từ khi nào | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Yêu cầu nộp mô hình BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| CDE, EIR, AIR | Tiêu chuẩn ISO 19650-2 Section 4-5 | chunk_04–09 |
+| Vận hành AIM | Tiêu chuẩn ISO 19650-3 Section 5 | chunk_06–12 |
+| Phân loại bảo mật thông tin | Tiêu chuẩn ISO 19650-5 Section 4-7 | chunk_06–10 |
+| Giấy phép xây dựng + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Nghiệm thu, hoàn công + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).

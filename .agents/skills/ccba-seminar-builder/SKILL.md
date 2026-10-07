@@ -33,7 +33,15 @@ triggers:
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
 
-## When to Use
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ Deep Seam `ooxml_processor.v1` (`packages/ccba-ooxml`):
+* **Biên Dịch Trình Chiếu (.pptx):** Sử dụng trực tiếp `from ccba_ooxml import build_presentation_from_markdown` hoặc lệnh CLI `python -m ccba_ooxml build-deck`. Tuyệt đối không tự viết logic sinh XML presentation ad-hoc.
+* **Lưu Trữ Tri Thức (Archive):** Các tài liệu seminar hoàn thành được lưu trữ tập trung tại `.md/seminars/` của Spoke; tuyệt đối không ghi dữ liệu seminar vào `legal_registry.yaml` (vốn là SSOT dành riêng cho văn bản quy phạm pháp luật).
+
+---
 
 - Cần **chuẩn bị nội dung** cho buổi seminar sắp tới
 - Cần **tổng hợp recap** các buổi thảo luận trong tháng
@@ -46,15 +54,16 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 
 | File | Mô tả |
 |------|--------|
-| `templates/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
-| `templates/agenda.md` | Template chương trình/agenda seminar |
-| `templates/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
+| `resources/agenda.md` | Template chương trình/agenda seminar |
+| `resources/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/seminar_template.md` | Khung tài liệu seminar tổng quan |
 
 ## Quy trình Thực hiện (Process)
 
 ### Bước 1: Tạo Agenda & Outline Seminar
 1. Hỏi user các thông tin cơ bản: Ngày giờ tổ chức, chủ đề chính, thời lượng dự kiến, người trình bày.
-2. Đọc tệp template `templates/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
+2. Đọc tệp template `resources/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
 3. Thiết lập cấu trúc tri thức theo nguyên tắc **Neo giữ Khái niệm (Concept Grounding)**:
    - Xác định rõ phần **Khái niệm tiền đề (Prerequisites)**: Kiến thức/tiêu chuẩn người nghe cần biết trước.
    - Sắp xếp Outline chương trình sao cho các **Khái niệm giới thiệu mới (Introduced Concepts)** được trình bày tuần tự từ cơ bản đến nâng cao. Chủ đề nâng cao chỉ được thảo luận sau khi các chủ đề nền móng đã được neo giữ.
@@ -91,11 +100,11 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
 ### Bước 3: Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
-3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
+3. Tổng hợp theo template `resources/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
 4. **Tiêu chí hoàn thành:** Hoàn thiện bản tóm tắt tháng lưu trữ dạng Markdown tại thư mục quy định.
 
 ### Bước 4: Thông báo thay đổi lịch
-1. Đọc template `templates/notification.md`.
+1. Đọc template `resources/notification.md`.
 2. Điền thông tin thay đổi (lịch cũ → mới, lý do).
 3. **Tiêu chí hoàn thành:** Xuất thông báo dạng văn bản hành chính hoàn chỉnh để gửi qua Zalo/Email.
 
@@ -108,7 +117,7 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
        CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
    ```
 2. Đảm bảo naming convention: `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.ext`.
-3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/data/legal_registry.yaml](../../../.md/data/legal_registry.yaml).
+3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại `.md/seminars/` và hoàn tất ghi nhận nhật ký lưu trữ.
 
 ## Source Documents
 

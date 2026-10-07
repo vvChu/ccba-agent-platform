@@ -30,6 +30,11 @@ triggers:
 
 Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm quyền QC Level 5 theo Điều 13 CCBA Charter 2026) để thẩm định, làm sạch, tự sửa lỗi có kiểm soát và hợp nhất an toàn các đề xuất (Pull Requests) từ các dự án Spoke vào Hub Monorepo với cơ chế **Phân Cấp Thích Ứng (Adaptive Tiered Review)**.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel thẩm định PR Spoke lên Hub qua các bước: đồng bộ `main`, Adaptive Tiered Review, nhánh `auto-tune/*` đọc `references/nightly_tuning_review.md`, Spoke Leakage Guard qua `scripts/governance/check_spoke_leakage.py`, ba worker kiểm định, Copilot race guard, supervised self-healing, squash merge, và hậu merge chạy `compile_catalog.py`. 16 card trong `seam-contracts.yaml` không quản lý domain thẩm định và merge proposals, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 4.0, A: 1.0, P: 1.0) = 18.5 >= 12.0. Tệp tài liệu chuyên sâu `references/nightly_tuning_review.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
 ---
 
 ## 📋 Bước 1: Tiếp Nhận, Phân Tuyến & Khởi Tạo (Pre-flight Sync & Tier Selection)

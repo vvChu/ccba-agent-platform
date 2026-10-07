@@ -52,7 +52,7 @@ Các kỹ năng mang tính điều phối chiến lược (như `ccba-ask`, `ccb
 ### Q7: Làm thế nào để cài đặt hoặc cập nhật một kỹ năng mới vào Spoke?
 Từ thư mục gốc của Spoke, chạy lệnh:
 ```bash
-python [hub_path]/scripts/spoke/sync_spoke.py --skills <tên_kỹ_năng>
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item <tên_kỹ_năng> --apply
 ```
 Hoặc triệu hồi Slash Command `/ccba-update-spoke` trong IDE Chat.
 

@@ -20,6 +20,11 @@ triggers:
 
 Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-ask/references/brainstorm_templates.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP orchestrator điều phối vòng lặp tri thức toàn trình qua 4 pha liên kết: `/ccba-youtube-learn` (trinh sát video), `/ccba-research` (nghiên cứu ngầm), `/ccba-ask` (hội chẩn brainstorm) và `/ccba-wayfinder` (lập lộ trình bản đồ). Toàn bộ luồng dữ liệu tuân thủ nghiêm ngặt Single-Writer Protocol, lưu trữ bản đồ tại `.md/knowledge/issues/<feature>/map.md` và xuất nháp vào scratch. 16 card Seam chuẩn hóa đứng yên, kỹ năng giữ vai trò điều phối tri thức độc lập.
+- **Governance Compliance**: Giữ vững phân tầng Tier 3 Composite Orchestrator (`tier: orchestrator`, `is-orchestrated: true`), short-circuit qua Cổng 1 Stage 2. Kỹ năng chưa có thư mục `references/` phụ trợ.
+
 ---
 
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)

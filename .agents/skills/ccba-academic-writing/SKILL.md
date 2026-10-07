@@ -39,6 +39,14 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) master hướng dẫn phương pháp luận biên soạn bài báo khoa học và báo cáo học thuật chuẩn quốc tế (IEEE, Elsevier, Springer) theo cấu trúc IMRAD, mô hình CARS (3-Move Introduction), chuẩn trích dẫn APA 7th / BibTeX và bốn bước thực thi. Các kịch bản phụ trợ `scripts/microstructure_audit.py`, `export_paper_to_docx.py`, `scaffold_manuscript.py` đóng vai trò adapter hỗ trợ định dạng, không phụ thuộc Seam đóng gói Python độc lập và không nhận `package_path`.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 3 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/long_form_chunking.md`, `references/academic_phrasebank.md`, `references/audit_report_format.md`).
+
+---
+
 ## 🛠️ Tri thức Kỹ thuật Lõi (Core Academic Guidelines)
 
 Kỹ năng này tuân thủ nghiêm ngặt cẩm nang xuất bản của Đại học Yale (Elena D. Kallestinova, 2011) kết hợp với mô hình không gian nghiên cứu CARS (Swales & Feak):

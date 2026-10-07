@@ -44,6 +44,14 @@ Kỹ năng này thực hiện quy trình đánh giá chất lượng mã nguồn
 
 Để tránh ô nhiễm ngữ cảnh (context pollution), hai trục này sẽ được thực thi song song bởi hai sub-agents độc lập trước khi tổng hợp kết quả theo **Single-Writer Protocol**.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP kernel hai trục Standards và Spec). Hai sub-agent đọc-only, báo cáo tổng hợp theo Single-Writer đã viết ở bước 4; GPI đạt (4.0, 3.0, 1.0, 1.0) = 16.5; lệnh verify-patch đóng vai trò caller kiểm định của `harness_verify.v1`. Không đóng gói pipeline chuyển đổi dữ liệu độc lập hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: kernel`.
+
+---
+
 ## Quy trình Thực hiện (Process)
 
 ### 1. Xác định điểm mốc đối chiếu & Rào chắn Độ phức tạp Diff (Pin fixed point & Simplify Gate)

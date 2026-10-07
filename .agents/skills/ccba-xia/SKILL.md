@@ -35,6 +35,11 @@ Triết lý cốt lõi: hiểu rõ trước khi sao chép | phản biện trư�
 
 Tham khảo cú pháp, các chế độ chạy (`--compare`, `--port`, v.v.) và cách nhận diện ý định tại [references/modes.md](references/modes.md).
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách trích xuất, so sánh, phân tích và lập kế hoạch chuyển dịch (port/adapt) tính năng từ repository bên ngoài hoặc thư mục cục bộ vào dự án qua 6 pha (Recon, Map, Analyze, Challenge, Plan, Deliver). Đầu ra cuối cùng là kế hoạch triển khai `implementation_plan.md` hoặc báo cáo kiến trúc. Kỹ năng vận hành độc lập với 16 card Seam dữ liệu của Platform và chủ động cưỡng chế Cổng 0 / Hub Catalog Check trước khi port, do đó nhận posture `seam-exempt`.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Khối gpi inline trong frontmatter `{s: 4.0, k: 3.0, a: 1.0, p: 1.0}` và tệp tài liệu chuyên sâu `references/modes.md` tại Level 3 được bảo tồn nguyên vẹn.
+
 ## Phạm vi trách nhiệm (Scope)
 
 Skill này **chỉ thực hiện phân tích, phản biện và lập kế hoạch**. Đầu ra cuối cùng là file `implementation_plan.md` chứa kế hoạch triển khai chi tiết (hoặc báo cáo so sánh kiến trúc ở chế độ `--compare`). Việc triển khai mã nguồn thực tế thuộc trách nhiệm của `/ccba-implement` hoặc `/ccba-tdd`.

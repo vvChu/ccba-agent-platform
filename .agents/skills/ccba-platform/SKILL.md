@@ -31,6 +31,12 @@ metadata:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (cổng điều phối toàn cục và ma trận slash-command). Skill điều hướng các kỹ năng nghiệp vụ và thực thi kiểm tra môi trường tô-pô 5 bối cảnh. Dòng `python -m ccba_harness verify-patch` được bảo lưu như lệnh kiểm định hoàn tất (Hard Completion Lock); toàn bộ skill không nhận `package-bound` trên card `harness_verify.v1` vì import thực tế của card đó là `ccba_harness:auto_apply_and_verify_patch`.
+
+---
+
 ## 🛡️ Pha 1: Kiểm Định Môi Trường & Nhận Diện Ngữ Cảnh (Topology & Health Audit)
 
 Trước khi hiển thị Ma Trận Điều Phối hoặc thực thi bất kỳ kỹ năng nào, Agent **bắt buộc** phải tự động chạy kiểm định môi trường dự án:
@@ -45,8 +51,8 @@ Trước khi hiển thị Ma Trận Điều Phối hoặc thực thi bất kỳ 
    * **Tiêu chí hoàn thành:** Xác định chính xác vai trò ngữ cảnh đang vận hành (Hub hay Spoke).
 
 2. **Kiểm Tra Kết Nối AI Gateway (RULE-4.5):**
-   * Kiểm tra kết nối tới LiteLLM Gateway ở Server Spark: `http://100.83.192.30:8090/v1` (hoặc biến `AI_GATEWAY_URL`) kèm token Bearer: `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`.
-   * Nếu kết nối lỗi, cảnh báo và hướng dẫn người dùng kích hoạt Tailscale VPN (`100.83.192.30`) để kết nối vào mạng nội bộ CCBA.
+   * Kiểm tra kết nối tới LiteLLM Gateway ở Server Spark qua biến `${AI_GATEWAY_URL}` (mặc định cổng 8090) kèm token Bearer: `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`.
+   * Nếu kết nối lỗi, cảnh báo và hướng dẫn người dùng kích hoạt Tailscale VPN hoặc kiểm tra cấu hình host `${CCBA_AI_GATEWAY_HOST}` để kết nối vào mạng nội bộ CCBA.
    * **Tiêu chí hoàn thành:** Xác nhận kết nối thành công tới LiteLLM Gateway hoặc hiển thị hướng dẫn kết nối Tailscale VPN rõ ràng.
 
 3. **Phân Loại Ngữ Cảnh Tô Pô & Động Học 5 Bối Cảnh (Context-Aware Dynamic Dispatch):**
@@ -93,26 +99,26 @@ Căn cứ vào kết quả nhận diện 5 bối cảnh ở Pha 1, Agent chủ �
 
 | Nhóm Bối Cảnh | Lệnh / Slash Command | Vai Trò & Mô Tả Tác Vụ | Phương Thức Kích Hoạt |
 | :--- | :--- | :--- | :--- |
-| **Bối cảnh 2 (Greenfield)** | `/ccba-init-spoke` | Khởi tạo Spoke dự án MỚI TINH chuẩn cấu trúc `.md/` | Slash command hoặc `[hub_path]/.agents/skills/ccba-init-spoke/SKILL.md` |
+| **Bối cảnh 2 (Greenfield)** | `/ccba-init-spoke` | Khởi tạo Spoke dự án MỚI TINH chuẩn cấu trúc `.md/` | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-init-spoke/SKILL.md` |
 | **Bối cảnh 3 (Brownfield)** | `/ccba-spoke-adopter` | Đánh giá hiện trạng & Tiếp nhận CODEBASE HIỆN HỮU không phá hủy | Slash command hoặc `scripts/adopt_spoke.py` |
 | **Bối cảnh 4 (Multi-Device)** | `bootstrap-spoke` | Khởi tạo `.venv` và liên kết editable packages cho Spoke đã clone | `python3 "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" bootstrap-spoke --create-venv` |
 | **Bối cảnh 5 & Hub Monorepo** | `/ccba-update-spoke` | Đồng bộ kỹ năng, kiểm tra trạng thái lệch phiên bản (Drift Audit) | Slash command hoặc `scripts/sync_spoke.py` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-new-feature` | Khởi tạo feature branch mới & lập kế hoạch Factory Model | Slash command hoặc `[hub_path]/.agents/skills/ccba-new-feature/SKILL.md` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-implement` | Hiện thực hóa tính năng theo TDD Red-Green-Refactor & Scoped Tests | Slash command hoặc `[hub_path]/.agents/skills/ccba-implement/SKILL.md` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-code-review` | Rà soát chất lượng code song song 2 trục (Standards & Spec) | Slash command hoặc `[hub_path]/.agents/skills/ccba-code-review/SKILL.md` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal và mở PR đóng góp lên Hub | Slash command hoặc `[hub_path]/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-release-feature` | Chạy slow integration tests, squash merge PR & đóng issue tự động | Slash command hoặc `[hub_path]/.agents/skills/ccba-release-feature/SKILL.md` |
-| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc` | Thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View, Heat Map) | `[hub_path]/.agents/skills/ccba-ai-qc/SKILL.md` |
-| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc-pccc-audit` | Thẩm tra an toàn PCCC, MEP và thoát nạn theo QCVN 06:2022 | `[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |
-| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-advisor` | Phỏng vấn thích ứng & xuất Phiếu Ý kiến Pháp lý chuẩn OKF v2.4 | `[hub_path]/.agents/skills/ccba-legal-advisor/SKILL.md` |
-| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-ingest` | Thu nạp văn bản TVPL tự động vào Spoke tri thức chuẩn hoá | `[hub_path]/.agents/skills/ccba-legal-ingest/SKILL.md` |
-| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-document-tracker` | Tra cứu hiệu lực, so sánh sửa đổi văn bản quy phạm pháp luật | `[hub_path]/.agents/skills/ccba-legal-document-tracker/SKILL.md` |
-| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-classification` | Bảng thực thể Uniclass 200, ISO 12006-2 & Room Naming | `[hub_path]/.agents/skills/bigbim-classification/SKILL.md` |
-| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-governance` | Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ & Unique ID | `[hub_path]/.agents/skills/bigbim-governance/SKILL.md` |
-| **Thể Chế & Quản Trị (`_core`)** | `/ccba-adr-lifecycle` | Khởi tạo ADR, cascade status, ma trận truy vết sống | `[hub_path]/.agents/skills/ccba-adr-lifecycle/SKILL.md` |
-| **Thể Chế & Quản Trị (`_core`)** | `/ccba-docs-manager` | Quản trị tài liệu, kiểm toán 5 trục (`doc-audit` / `validate-cross-ref`) | `[hub_path]/.agents/skills/ccba-docs-manager/SKILL.md` |
-| **Thể Chế & Quản Trị (`_core`)** | `/ccba-markdown-document-processing` | Chuyển đổi Word/PDF sang Markdown chuẩn hóa qua ConversionPipeline | `[hub_path]/.agents/skills/ccba-markdown-document-processing/SKILL.md` |
-| **Thể Chế & Quản Trị (`_core`)** | `/ccba-session-retrospective` | Tổng kết bài học và cập nhật tri thức cuối phiên làm việc | `[hub_path]/.agents/skills/ccba-session-retrospective/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-new-feature` | Khởi tạo feature branch mới & lập kế hoạch Factory Model | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-new-feature/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-implement` | Hiện thực hóa tính năng theo TDD Red-Green-Refactor & Scoped Tests | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-implement/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-code-review` | Rà soát chất lượng code song song 2 trục (Standards & Spec) | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-code-review/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal và mở PR đóng góp lên Hub | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-release-feature` | Chạy slow integration tests, squash merge PR & đóng issue tự động | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-release-feature/SKILL.md` |
+| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc` | Thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View, Heat Map) | `$CCBA_HUB_PATH/.agents/skills/ccba-ai-qc/SKILL.md` |
+| **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc-pccc-audit` | Thẩm tra an toàn PCCC, MEP và thoát nạn theo QCVN 06:2022 | `$CCBA_HUB_PATH/.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-advisor` | Phỏng vấn thích ứng & xuất Phiếu Ý kiến Pháp lý chuẩn OKF v2.4 | `$CCBA_HUB_PATH/.agents/skills/ccba-legal-advisor/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-ingest` | Thu nạp văn bản TVPL tự động vào Spoke tri thức chuẩn hoá | `$CCBA_HUB_PATH/.agents/skills/ccba-legal-ingest/SKILL.md` |
+| **Nghiệp Vụ Pháp Lý (`_consulting`)** | `/ccba-legal-document-tracker` | Tra cứu hiệu lực, so sánh sửa đổi văn bản quy phạm pháp luật | `$CCBA_HUB_PATH/.agents/skills/ccba-legal-document-tracker/SKILL.md` |
+| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-classification` | Bảng thực thể Uniclass 200, ISO 12006-2 & Room Naming | `$CCBA_HUB_PATH/.agents/skills/bigbim-classification/SKILL.md` |
+| **Quản Trị BIGBIM (`_bim`)** | `/bigbim-governance` | Hiến pháp Sợi Chỉ Vàng, rào chắn Sợi Chỉ Đỏ & Unique ID | `$CCBA_HUB_PATH/.agents/skills/bigbim-governance/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-adr-lifecycle` | Khởi tạo ADR, cascade status, ma trận truy vết sống | `$CCBA_HUB_PATH/.agents/skills/ccba-adr-lifecycle/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-docs-manager` | Quản trị tài liệu, kiểm toán 5 trục (`doc-audit` / `validate-cross-ref`) | `$CCBA_HUB_PATH/.agents/skills/ccba-docs-manager/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-markdown-document-processing` | Chuyển đổi Word/PDF sang Markdown chuẩn hóa qua ConversionPipeline | `$CCBA_HUB_PATH/.agents/skills/ccba-markdown-document-processing/SKILL.md` |
+| **Thể Chế & Quản Trị (`_core`)** | `/ccba-session-retrospective` | Tổng kết bài học và cập nhật tri thức cuối phiên làm việc | `$CCBA_HUB_PATH/.agents/skills/ccba-session-retrospective/SKILL.md` |
 | **Chốt Chặn Kiểm Định (`_core`)** | `verify-patch` | Chốt chặn hoàn thành tất định (HUB-ADR-0058 Hard Completion Lock) | CLI: `.venv/bin/python -m ccba_harness verify-patch` |
 
 ---
@@ -125,7 +131,7 @@ Căn cứ vào kết quả nhận diện 5 bối cảnh ở Pha 1, Agent chủ �
 
 2. **Nạp Kỹ Năng Ưu Tiên Spoke-First (Virtual Hub Fallback Invariant):**
    * Agent **bắt buộc** kiểm tra tệp tin kỹ năng cục bộ tại Spoke trước: `.\.agents\skills\<tên-kỹ-năng>\SKILL.md`.
-   * Nếu Spoke chưa cài đặt kỹ năng này $\rightarrow$ Tự động nạp qua cơ chế **Virtual Hub Fallback** từ `[hub_path]/.agents/skills/<tên-kỹ-năng>/SKILL.md` bằng công cụ `view_file`.
+   * Nếu Spoke chưa cài đặt kỹ năng này $\rightarrow$ Tự động nạp qua cơ chế **Virtual Hub Fallback** từ `$CCBA_HUB_PATH/.agents/skills/<tên-kỹ-năng>/SKILL.md` (Windows: `$env:CCBA_HUB_PATH`) bằng công cụ `view_file`.
    * **Tiêu chí hoàn thành:** Nạp đầy đủ chỉ dẫn vận hành của kỹ năng mục tiêu vào ngữ cảnh làm việc.
 
 3. **Phân Quyền Ghi Đĩa (Single-Writer Protocol — HUB-ADR-0053):**

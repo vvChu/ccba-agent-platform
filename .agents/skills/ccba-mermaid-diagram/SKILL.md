@@ -180,7 +180,17 @@ sequenceDiagram
     CLI-->>User: Phản hồi tức thì không nghẽn luồng
 ```
 
-## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
-* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
-* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure).
-* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (Miễn trừ Seam Platform):
+* **Lý do miễn trừ:** Sơ đồ Mermaid là dạng "Diagrams-as-Code" khai báo thuần túy (declarative Markdown), được phân tích cú pháp và kết xuất trực tiếp ở phía client (GitHub Markdown, Obsidian, IDE previews, trình duyệt). Nền tảng CCBA không sở hữu hay duy trì engine tính toán layout độc quyền cho Mermaid trong Monorepo packages.
+* **Quy chuẩn vận hành:** Agent không thực hiện tra cứu `find-seam` cho Mermaid, không tạo script Python backend để sinh layout Mermaid.
+* **Quy ước Escape Cú Pháp Phân Biệt:** Nhãn node Mermaid bắt buộc escape ký tự đặc biệt theo quy chuẩn web: `#40;` / `#41;` cho ngoặc đơn, `#124;` cho dấu gạch đứng, `#quot;` cho ngoặc kép (phân biệt tuyệt đối với Excalidraw Spec Table vốn cấm các entity này và yêu cầu dùng ngoặc tròn thật `()`).
+
+---
+
+## 📐 Cấu Trúc Tinh Gọn & Tự Thân (Self-Contained Invariant)
+Toàn bộ quy chuẩn cú pháp, bảng màu Academic Grayscale, các rào chắn kỹ thuật (subgraph isolation, directive theme) và mẫu thực hành chuẩn của Mermaid đã được đóng gói đầy đủ, tự thân trong tài liệu này; không phân mảnh hay dẫn xuất sang các tài liệu tham chiếu rỗng ngoài đĩa.
+

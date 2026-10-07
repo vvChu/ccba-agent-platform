@@ -27,7 +27,17 @@ triggers:
 
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
+> [!IMPORTANT]
+> **Phạm vi vận hành (Hub-Only Scope):**
+> Kỹ năng Radar này **chỉ vận hành tại Hub**. Tại Hub, hệ thống giám sát các kho chứa thượng nguồn, kiểm tra bản quyền, thẩm tra tính năng và hỗ trợ chuyển giao sang `/ccba-xia`. Các dự án Spoke không chạy radar này mà nhận các tính năng đã chuẩn hóa thông qua lệnh `/ccba-update-spoke`.
+
 Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (Radar thượng nguồn Hub-only). Script `upstream_evaluator.py` đã import `ccba_harness.gpi` và `ccba_ai.ai` và gọi AI Gateway ở nhịp thẩm tra (trục A=3.0); skill trỏ và điều phối script trinh sát `scripts/spoke/check_claudekit_updates.py`, không tự thân trở thành một seam GPI hay phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 
@@ -93,12 +103,17 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
 
 ### Nhịp 3: Chuyển giao Kiểm soát sang `/ccba-xia` (1-Click Port Handshake)
 - Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.
-- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị, ví dụ:
-  ```text
-  /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
-  ```
-- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 chống hallucination).
-- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting rõ ràng.
+- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị:
+  * **Chế độ Viết lại / Port chuẩn mực (Mặc định):**
+    ```text
+    /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
+    ```
+  * **Chế độ So sánh Kiến trúc (Side-by-Side Architectural Evaluation):**
+    ```text
+    /ccba-xia .md/scratch/repos/mattpocock-skills grill-me --compare
+    ```
+- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 phản biện Socratic Grilling).
+- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting hoặc Compare rõ ràng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

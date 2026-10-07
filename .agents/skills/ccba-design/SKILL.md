@@ -44,6 +44,16 @@ triggers:
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam AI của nền tảng:
+* **Định Tuyến & Sinh Nội Dung:** Mọi tương tác văn bản và sáng tạo thiết kế bắt buộc định tuyến qua Seam `model_routing.v1` (`from ccba_ai import choose_model`) và `ai_chat.v1` (`from ccba_ai import ai`). Tuyệt đối không hardcode API key, không nhúng model slug trực tiếp.
+* **Hạ Tầng AI Gateway:** Sử dụng gateway tập trung trên máy chủ Spark (:8090) qua package `ccba-ai`. Khi gateway gặp sự cố, hệ thống dừng lại báo lỗi (Fail-Fast), không tự ý fallback vào các CLI cá nhân không kiểm soát.
+
+---
+
 ## When to Use
 
 - Brand identity, voice, assets
@@ -71,76 +81,74 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 
 ## Logo Design (Built-in)
 
-55+ styles, 30 color palettes, 25 industry guides. Gemini Nano Banana models.
+55+ styles, 30 color palettes, 25 industry guides.
 
 ### Logo: Generate Design Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Logo: Search Styles/Colors/Industries
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Logo: Generate with AI
 
-**ALWAYS** generate output logo images with white background.
+*(Lưu ý: Lối sinh tệp PNG hiện dừng Fail-Fast tại adapter để chờ chuẩn hóa Seam Card sinh ảnh trong Đợt 4B. Tiêu chí hoàn thành hiện tại tập trung vào design brief, SVG icons và design tokens; tiêu chí sinh tệp ảnh PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt).*
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
-**IMPORTANT:** When scripts fail, try to fix them directly.
-
-After generation, **ALWAYS** ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
+After generation, ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
 
 ## CIP Design (Built-in)
 
-50+ deliverables, 20 styles, 20 industries. Gemini Nano Banana (Flash/Pro).
+50+ deliverables, 20 styles, 20 industries. Fast and pro generation modes.
 
 ### CIP: Generate Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### CIP: Search Domains
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### CIP: Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model (4K text)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Without logo
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
-Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
+Models: `flash` (default, fast generation), `pro` (high-quality generation)
 
 ### CIP: Render HTML Presentation
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
 ```
 
 **Tip:** If no logo exists, use Logo Design section above first.
@@ -215,26 +223,26 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 
 ## Icon Design (Built-in)
 
-15 styles, 12 categories. Gemini 3.1 Pro Preview generates SVG text output.
+15 styles, 12 categories. SVG text output generation via reasoning model routing.
 
 ### Icon: Generate Single Icon
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Icon: Generate Batch Variations
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
 ```
 
 ### Icon: Multi-size Export
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### Icon: Top Styles
@@ -249,7 +257,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "
 | flat | Material design, Google-style |
 | gradient | Modern brands, SaaS |
 
-**Model:** `gemini-3.1-pro-preview` — text-only output (SVG is XML text). No image generation API needed.
+**Model:** Định tuyến qua `model_routing.v1` (`ModelArchetype.REASONING`) — text-only output (SVG is XML text). No image generation API needed.
 
 ## Social Photos (Built-in)
 
@@ -289,10 +297,10 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Complete Brand Package
 
-1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
-   - **Completion Criterion:** Logo variants generated and saved in the output directory.
-2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
-   - **Completion Criterion:** CIP mockups generated using the selected logo variant.
+1. **Logo** → `scripts/logo/generate.py` → Generate logo brief / concept
+   - **Completion Criterion:** Đã xác lập design brief và concept định hướng; tiêu chí sinh file PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
+2. **CIP** → `scripts/cip/generate.py` → Create deliverable specifications
+   - **Completion Criterion:** Đã lập danh mục đặc tả CIP deliverables; tiêu chí sinh ảnh mockup PNG sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
 3. **Presentation** → Load `references/slides-create.md` → Build pitch deck
    - **Completion Criterion:** Presentation pitch deck created adhering to the brand guidelines.
 
@@ -332,20 +340,21 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Script | Purpose |
 |--------|---------|
 | `scripts/logo/search.py` | Search logo styles, colors, industries |
-| `scripts/logo/generate.py` | Generate logos with Gemini AI |
+| `scripts/logo/generate.py` | Generate logos with AI |
 | `scripts/logo/core.py` | BM25 search engine for logo data |
 | `scripts/cip/search.py` | Search CIP deliverables, styles, industries |
-| `scripts/cip/generate.py` | Generate CIP mockups with Gemini |
+| `scripts/cip/generate.py` | Generate CIP mockups with AI |
 | `scripts/cip/render-html.py` | Render HTML presentation from CIP mockups |
 | `scripts/cip/core.py` | BM25 search engine for CIP data |
-| `scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro |
+| `scripts/icon/generate.py` | Generate SVG icons with AI |
 
 ## Setup
 
-```powershell
-$env:GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
-pip install google-genai pillow
+Tất cả các script trong skill sử dụng trực tiếp SDK nền tảng CCBA:
+```bash
+pip install -e packages/ccba-ai
 ```
+Định tuyến mô hình bắt buộc thông qua Seam `ccba_ai.routing.choose_model()`.
 
 ## Tích hợp hệ thống & Vị trí trong Luồng công việc (Workflow Position)
 

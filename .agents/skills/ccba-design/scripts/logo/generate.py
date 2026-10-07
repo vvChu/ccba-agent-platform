@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""
-Logo Generation Script using Gemini Nano Banana API
-Uses Gemini 3.1 Flash Image Preview and Gemini 3 Pro Image Preview models
+"""Logo Generation Script for ccba-design.
+
+Generates professional logo variants via AI image generation.
 
 Models:
-- Nano Banana 2 (default): gemini-3.1-flash-image-preview - fastest, 95% Pro quality, web grounding
-- Nano Banana Pro (--pro): gemini-3-pro-image-preview - professional quality, advanced reasoning
+- Fast image model (default): fastest, cost-effective
+- Pro image model (--pro): professional quality, advanced detail
 
 Usage:
     python generate.py --prompt "tech startup logo minimalist blue"
     python generate.py --prompt "coffee shop vintage badge" --style vintage --output logo.png
     python generate.py --brand "TechFlow" --industry tech --style minimalist
-    python generate.py --brand "TechFlow" --pro  # Use Nano Banana Pro model
+    python generate.py --brand "TechFlow" --pro  # Use Pro image model
 
 Batch mode (generates multiple variants):
     python generate.py --brand "Unikorn" --batch 9 --output-dir ./logos --pro
@@ -47,25 +47,9 @@ def load_env():
 
 load_env()
 
-try:
-    from google import genai
-    from google.genai import types
-except ImportError:
-    print("Error: google-genai package not installed.")
-    print("Install with: pip install google-genai")
-    sys.exit(1)
-
-
 # ============ CONFIGURATION ============
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
-# Gemini "Nano Banana" model configurations for image generation
-GEMINI_FLASH = (
-    "gemini-3.1-flash-image-preview"  # ccba:allow-raw-model  # Nano Banana 2: fastest, 95% Pro quality, web grounding
-)
-GEMINI_PRO = (
-    "gemini-3-pro-image-preview"  # ccba:allow-raw-model  # Nano Banana Pro: professional quality, advanced reasoning
-)
+MODEL_FAST = "image-fast"
+MODEL_PRO = "image-pro"
 
 # Supported aspect ratios
 ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4"]
@@ -147,7 +131,7 @@ def generate_logo(
     use_pro=False,
     aspect_ratio=None,
 ):
-    """Generate a logo using Gemini models with image generation
+    """Generate a logo using AI image generation
 
     Args:
         aspect_ratio: Image aspect ratio. Options: "1:1", "16:9", "9:16", "4:3", "3:4"
@@ -165,7 +149,7 @@ def generate_logo(
     full_prompt = enhance_prompt(prompt, style, industry, brand_name)
 
     # Select model
-    model = GEMINI_PRO if use_pro else GEMINI_FLASH
+    model = MODEL_PRO if use_pro else MODEL_FAST
 
     # Set aspect ratio (default to 1:1 for logos)
     ratio = aspect_ratio if aspect_ratio in ASPECT_RATIOS else DEFAULT_ASPECT_RATIO
@@ -225,7 +209,7 @@ def generate_batch(
 
     print(f"\n{'=' * 60}")
     print(f"  BATCH LOGO GENERATION: {brand_name}")
-    print(f"  Model: Nano Banana {model_label}")
+    print(f"  Model: AI Image ({model_label})")
     print(f"  Aspect Ratio: {ratio}")
     print(f"  Variants: {count}")
     print(f"  Output: {output_dir}")
@@ -273,7 +257,7 @@ def generate_batch(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate logos using Gemini Nano Banana models")
+    parser = argparse.ArgumentParser(description="Generate logos using AI image generation")
     parser.add_argument("--prompt", "-p", type=str, help="Logo description prompt")
     parser.add_argument("--brand", "-b", type=str, help="Brand name")
     parser.add_argument("--style", "-s", choices=list(STYLE_MODIFIERS.keys()), help="Logo style")
@@ -289,7 +273,7 @@ def main():
     parser.add_argument(
         "--pro",
         action="store_true",
-        help="Use Nano Banana Pro (gemini-3-pro-image-preview) for professional quality",
+        help="Use Pro image model for professional quality",
     )
     parser.add_argument(
         "--aspect-ratio",

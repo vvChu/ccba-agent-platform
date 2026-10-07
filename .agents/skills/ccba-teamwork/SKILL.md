@@ -32,6 +32,11 @@ Kỹ năng này hướng dẫn Agent đóng vai trò **Project Orchestrator** đ
 
 Khung làm việc này đảm bảo loại bỏ triệt để hiện tượng xung đột mã nguồn (merge conflicts), bảo vệ ngân sách ngữ cảnh (context budget) và duy trì sự phân tách rõ ràng giữa thẩm quyền con người (Accountability) và năng lực AI (Worker Assignments).
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP orchestrator bốn giai đoạn và ba vai trò (Orchestrator, Workers, Auditor) với Worker Cap 3. Khái niệm seam trong kỹ năng này là Exclusive Seam Ownership theo phân vùng tệp; Single-Writer hợp nhất thay đổi qua `scripts/governance/apply_worker_patch.py`; lệnh `verify-patch --preset code` là caller của `harness_verify.v1`, và bước auditor gọi `scripts/governance/check_spoke_leakage.py`. 16 card Seam chuẩn hóa đứng yên, kỹ năng giữ vai trò điều phối đa tác nhân độc lập.
+- **Governance Compliance**: Giữ vững phân tầng Tier 3 Composite Orchestrator (`tier: orchestrator`, `is-orchestrated: true`), short-circuit qua Cổng 1 Stage 2. Kỹ năng chưa có thư mục `references/` phụ trợ và đã được trang bị tài nguyên mẫu tại `resources/team_sheet_template.md`.
+
 ---
 
 ## 🏛️ Mô Hình 3 Vai Trò Tối Giản (KISS Hierarchy)

@@ -24,6 +24,14 @@ triggers:
 
 Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ thuật (spec) hoặc danh sách công việc (tickets), kết hợp phương pháp Test-Driven Development (TDD) và kiểm soát nghiêm ngặt ngân sách ngữ cảnh (Context Budget).
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green-Refactor và scoped test). Lệnh `python -m ccba_harness verify-patch --preset code` đóng vai trò caller kiểm định của `harness_verify.v1`; chữ "seam" trong skill là ranh giới module kiểm thử, không đóng gói pipeline chuyển đổi dữ liệu độc lập. Giữ nguyên `tier: orchestrator`.
+
+---
+
 ## Quản trị ngân sách ngữ cảnh & Bậc thang leo thang (Context Budget & Escalation)
 1. **Chỉ chạy Scoped Tests:** Luôn chạy pytest trên từng tệp kiểm thử riêng lẻ (`python scripts/safe_pytest.py -f tests/test_specific.py`), không chạy toàn bộ thư mục trong chu kỳ phát triển.
 2. **Hạn mức chu kỳ (Loop Budget):** Tối đa 5 chu kỳ chỉnh sửa $\rightarrow$ kiểm thử cho mỗi seam.

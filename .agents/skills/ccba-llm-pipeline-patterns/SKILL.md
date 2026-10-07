@@ -36,6 +36,13 @@ Pattern library cho các pipeline LLM multi-stage — đúc rút từ thực t�
 > [!IMPORTANT]
 > Đây là **documentation skill** — không có code cần install. Load file này khi thiết kế bất kỳ pipeline LLM nào trong CCBA.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Phân loại**: Kỹ năng tham chiếu cẩm nang thiết kế (seam-exempt reference skill).
+- **Lý do miễn trừ seam**: Tài liệu kiến trúc đóng vai trò cẩm nang mẫu (pattern library) cho các pipeline LLM đa tầng, không ràng buộc trực tiếp gói mã nguồn Python thực thi runtime.
+- **Đặc tính quản trị**: Cung cấp nguyên tắc thiết kế, phòng ngừa anti-patterns, chuẩn hóa cơ chế 2-pass, ground truth và bộ nhớ đa lượt theo kinh nghiệm thực tiễn nền tảng.
+- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=2.0, a=4.0, p=1.0) -> GPI = 18.0 (Tier 2B kernel), đảm bảo tiêu chuẩn tài liệu tham chiếu chất lượng cao.
+
 ---
 
 ## Pattern 1: 2-Pass Architecture (Quality vs Speed)

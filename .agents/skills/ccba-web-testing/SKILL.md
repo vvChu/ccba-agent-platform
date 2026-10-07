@@ -42,6 +42,11 @@ triggers:
 
 Comprehensive web testing: unit, integration, E2E, load, security, visual regression, accessibility.
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách bộ khung kiểm thử web toàn diện (Unit, Integration, E2E với Playwright, Load testing với k6, Accessibility WCAG và Visual Regression). Danh mục 16 card Seam chuẩn hóa của Platform không bao quát domain test runner frontend, do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để phục vụ quy trình QA & Testing độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Toàn bộ 24 tệp tài liệu chuyên sâu thuộc `references/` được bảo tồn nguyên vẹn và dẫn xuất qua chỉ mục Progressive Disclosure (Level 3).
+
 ## Quick Start
 
 ```bash

@@ -26,6 +26,11 @@ metadata:
 
 Actively build and sharpen the project's domain model as you design. This is the *active* discipline — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise. (Merely *reading* `CONTEXT.md` for vocabulary is not this skill — that's a one-line habit any skill can do. This skill is for when you're changing the model, not just consuming it.)
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách xây dựng, chuẩn hóa mô hình nghiệp vụ (Domain Model), ngôn ngữ chung (Ubiquitous Language trong `CONTEXT.md`) và ghi nhận Architecture Decision Records (`docs/adr/`) khi thỏa mãn 3 điều kiện (khó đảo ngược, gây bất ngờ nếu thiếu ngữ cảnh, là kết quả của đánh đổi thực tế). 16 card Seam chuẩn hóa của Platform không bao quát logic mô hình hóa domain trừu tượng, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Cả 2 tệp tài liệu chuyên sâu (`references/context_format.md`, `references/adr_format.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
 ## File structure
 
 Most repos have a single context:

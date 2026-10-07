@@ -25,6 +25,14 @@ triggers:
 
 Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch tính năng mới và cưỡng chế áp dụng mô hình Nhà máy (**The Factory Model**) tách biệt giữa **Planning** và **Coding** để tối ưu hóa chi phí Token (OpEx) và ngăn ngừa lỗi mã nguồn.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho feature branch, claim lock và Factory Model: planning, bàn giao session, coding). Tra cứu `catalog.yaml` theo nguyên tắc reuse-first; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: orchestrator`.
+
+---
+
 ## Hướng Dẫn Thực Hiện:
 
 ### Bước 1: Chuẩn bị môi trường & Pre-Flight Check

@@ -86,37 +86,12 @@ DEFAULT_VALID_BUNDLES: set[str] = {
 SHALLOW_SKILL_MIN_LINES = 35
 MAX_MODEL_INVOKED_PER_BUNDLE = 10
 
-COMMON_PATH_SEGMENTS: set[str] = {
-    "bin",
-    "usr",
-    "etc",
-    "dev",
-    "tmp",
-    "var",
-    "proc",
-    "sys",
-    "mnt",
-    "opt",
-    "src",
-    "packages",
-    "scripts",
-    "tests",
-    "docs",
-    "references",
-    "templates",
-    "standards",
-    "examples",
-    "appendices",
-    "output",
-    "scratch",
-    "legal_docs",
-    "sources",
-    "lib",
-    "build",
-    "dist",
-    "node_modules",
-    "artifacts",
-}
+COMMON_PATH_SEGMENTS: set[str] = set(
+    "bin usr etc dev tmp var proc sys mnt opt src packages scripts tests docs references "
+    "templates standards examples appendices output scratch legal_docs sources lib build "
+    "dist node_modules artifacts".split()
+)
+
 
 ALLOWED_HOST_COMMANDS: set[str] = {
     "/boost",
@@ -938,13 +913,9 @@ class SkillValidator:
                     )
                 else:
                     try:
-                        # Reject explicit booleans
                         for m_key in ("s", "k", "a", "p"):
-                            raw_val = normalized_gpi[m_key]
-                            if isinstance(raw_val, bool):
-                                raise TypeError(
-                                    f"Metric '{m_key}' must be numeric (int or float), got bool"
-                                )
+                            if isinstance(normalized_gpi[m_key], bool):
+                                raise TypeError(f"Metric '{m_key}' must be numeric, got bool")
 
                         metrics = GPIMetrics(
                             s=float(normalized_gpi["s"]),
@@ -953,17 +924,45 @@ class SkillValidator:
                             p=float(normalized_gpi["p"]),
                         )
                         parent_skill = meta.get("parent-skill", meta.get("parent_skill"))
-                        req = DecisionRequest(
-                            name=skill_name,
-                            is_deterministic=False,
-                            is_orchestrated=False,
-                            gpi_metrics=metrics,
-                            parent_skill=parent_skill,
+                        raw_tier = (
+                            str(
+                                meta.get("existing-tier")
+                                or meta.get("existing_tier")
+                                or meta.get("tier")
+                                or ""
+                            )
+                            .strip()
+                            .lower()
                         )
-                        decision = evaluate_two_stage_decision(req)
-                        declared_score = normalized_gpi.get(
-                            "score",
-                            normalized_gpi.get("total", normalized_gpi.get("gpi_score")),
+                        existing_tier = (
+                            ArchitectureTier.TIER_2B_STANDALONE_KERNEL_SKILL
+                            if raw_tier in ("kernel", "tier-2b", "tier_2b", "tier 2b")
+                            else ArchitectureTier.TIER_2A_PROGRESSIVE_REFERENCE
+                            if raw_tier
+                            in (
+                                "reference",
+                                "progressive-reference",
+                                "progressive_reference",
+                                "tier-2a",
+                                "tier_2a",
+                                "tier 2a",
+                            )
+                            else None
+                        )
+                        decision = evaluate_two_stage_decision(
+                            DecisionRequest(
+                                name=skill_name,
+                                is_deterministic=False,
+                                is_orchestrated=False,
+                                gpi_metrics=metrics,
+                                parent_skill=parent_skill,
+                                existing_tier=existing_tier,
+                            )
+                        )
+                        declared_score = (
+                            normalized_gpi.get("score")
+                            or normalized_gpi.get("total")
+                            or normalized_gpi.get("gpi_score")
                         )
                         if declared_score is not None:
                             try:

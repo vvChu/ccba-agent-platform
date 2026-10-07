@@ -148,3 +148,21 @@ def test_cli_stdin_pipe(
     assert exit_code == 1
     captured = capsys.readouterr()
     assert "[SECURITY VIOLATION]" in captured.err
+
+
+def test_cli_check_passes_on_deleted_secrets(capsys: pytest.CaptureFixture[str]) -> None:
+    deleted_secrets_diff = f"""--- a/config.py
++++ b/config.py
+@@ -10,3 +10,1 @@ DEBUG = True
+-OPENAI_API_KEY = "{_MOCK_OPENAI}"
++DEBUG_MODE = False
+"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        diff_file = Path(tmpdir) / "deleted_secret.diff"
+        diff_file.write_text(deleted_secrets_diff, encoding="utf-8")
+
+        exit_code = main(["--input", str(diff_file), "--check"])
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "[INFO] Ignored 1 secret finding(s) in deleted lines" in captured.err
+        assert "[PASS] No secrets detected in review diff." in captured.err

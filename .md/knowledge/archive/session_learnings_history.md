@@ -804,3 +804,21 @@ Phiên làm việc refactor và giải phóng "God Module" `cli.py` (từ 1,514 
    - Rào chắn quét bí mật không được nới lỏng allowlist bằng `startswith("{")` đơn thuần (nguy cơ bỏ sót chuỗi JSON nhạy cảm).
    - Bắt buộc thẩm định cấu trúc: nếu bắt đầu bằng `{"` hoặc `{'` $\to$ coi là JSON/dict literal (không suppress); nếu bắt đầu bằng `{` theo sau là identifier hợp lệ và format specifier (`^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]`) hoặc kết thúc bằng `}` $\to$ an toàn; các biến token metrics phải nằm trong tập định danh đo lường tường minh (`known_token_metrics`).
 
+---
+
+## 36. Toàn Diện 76 Skills Chuẩn Hóa Platform-Aware Architecture Posture (ADR-0061, ADR-0057, ADR-0058)
+
+### Context & Implementation Summary
+Chiến dịch chuẩn hóa toàn bộ 76 skills của CCBA Agent Platform qua 11 đợt phối hợp thẩm định song phương với Grok 4.7 (Lead Reviewer) và Gemini Antigravity (Executor), đạt 100% phán quyết `APPROVE` (`conditions: []`, `risk_score: 1`):
+- **Phân loại Seam chính xác**: Rạch ròi 16 Public Deep Seams (package-bound) và 60 skills dạng quy trình thao tác chuẩn (seam-exempt). Giữ nguyên 16 card trong `seam-contracts.yaml`, cấm lạm phát seam contract.
+- **Tiêu đề Posture Thống Nhất**: Bắt buộc dùng đúng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR trong header). Cấm token ADR trong mục posture của các skill không tạo ADR mới để bảo vệ radar ma trận parity `sync_hub_adr_matrix.py`.
+- **Two-Pass Peer Review Protocol**: Khóa trước kế hoạch (Pass 1 - `APPROVE_PLAN`) rồi mới triển khai mã nguồn và đối soát reflog nghiệm thu (Pass 2 - `APPROVE`). Thiết lập timeout `peer_dispatch` $\ge 900$s cho mô hình reasoning `xhigh`.
+- **Atomic Micro-PR Slicing**: Phân rã mỗi đợt 7-8 skills thành 4 micro-PRs (1A-1D), khóa cục bộ bằng bộ 3 lệnh (< 1s) trước khi merge.
+- **Deterministic Hard Completion Lock (ADR-0058)**: Cưỡng chế 6/6 cổng CI tự động toàn sàn (`python -m ccba_harness verify-patch --preset ci`) với Exit Code 0.
+
+### Key Architectural Invariants & Learned Patterns
+1. **Contract Inflation Prevention**: Kỹ năng SOP, pattern library, caller CLI không sở hữu package Python độc lập bắt buộc nhận `seam-exempt` kèm giải trình rõ ràng; không mở card Seam tùy tiện.
+2. **Header Invariant & Parity Radar Isolation**: Regex quét ADR trong CI rất nhạy cảm với tiêu đề; việc cách ly hoàn toàn token ADR khỏi mục posture đảm bảo tính tất định 100% khi chạy `--check`.
+3. **Reasoning Turn & Timeout Budgeting**: Khi peer agent sử dụng xhigh reasoning để đọc sâu hàng chục tệp trên đĩa, ngân sách thời gian phải $\ge 900$s và max turns $\ge 30-40$.
+4. **Local Sub-Second Verification**: Sử dụng `--preset skill --target <path>` kiểm tra nhanh giúp phát hiện sai lệch cú pháp ngay lập tức trước khi chạy toàn sàn CI.
+

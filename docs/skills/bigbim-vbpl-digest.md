@@ -1,6 +1,6 @@
 # bigbim-vbpl-digest
 
-> **Mô tả ngắn**: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
+> **Mô tả ngắn**: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-vbpl-digest
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-vbpl-digest --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng
@@ -30,7 +30,7 @@ python scripts/spoke/sync_spoke.py --skills bigbim-vbpl-digest
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO 19650-1/2/3/5, QCVN liên quan.
+Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,9 +45,7 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `NĐ 175`
 - `nghị định BIM`
-- `Nghị định 175`
 - `điều khoản BIM`
 - `ISO 19650`
 - `luật xây dựng BIM`
