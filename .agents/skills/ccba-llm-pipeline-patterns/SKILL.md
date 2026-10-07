@@ -519,13 +519,13 @@ Khi triển khai các mô hình lý luận (Reasoning LLMs / Hybrid MoE như Qwe
                        [INCOMING PIPELINE REQUEST]
                                    │
               ┌────────────────────┴────────────────────┐
-              ▼ (max_tokens <= 512, JSON/HyDE)          ▼ (Complex Code, Synthesis)
-      [FAST INSTRUCT PATH]                      [DEEP REASONING PATH]
+              ▼ (max_tokens <= 512, JSON/HyDE, RAG)     ▼ (Complex Code, Audit, Synthesis)
+      [FAST INSTRUCT / RAG PATH]                [DEEP REASONING PATH]
               │                                         │
     chat_template_kwargs:                     chat_template_kwargs:
    {"enable_thinking": False}                {"enable_thinking": True}
               │                                         │
-    Model Alias: `local-instruct`              Model Alias: `local-coder` / `rag-core`
+    Model Alias: `local-instruct` / `rag-core`  Model Alias: `local-coder`
     vLLM: Direct generation                   vLLM: --reasoning-parser qwen3
     Throughput: 150+ tok/s                    Throughput: Deep CoT
     Latency: ~0.4s                            Latency: ~5.6s
@@ -537,7 +537,7 @@ Khi triển khai các mô hình lý luận (Reasoning LLMs / Hybrid MoE như Qwe
    ```python
    # Khi gọi API Gateway / vLLM cho các hàm trích xuất JSON hoặc HyDE
    response = await client.chat.completions.create(
-       model="local-instruct",  # hoặc model vật lý
+       model="local-instruct",  # hoặc rag-core / model vật lý
        messages=[{"role": "user", "content": prompt}],
        max_tokens=300,
        extra_body={
@@ -547,8 +547,8 @@ Khi triển khai các mô hình lý luận (Reasoning LLMs / Hybrid MoE như Qwe
    ```
 
 2. **Role-Based Aliases tại API Gateway (LiteLLM)**:
-   - **`local-instruct`**: Trỏ về local model nhưng cố định tham số `enable_thinking: false` trong `model_info` hoặc gateway params. Dùng cho: `extract_json()`, HyDE queries, classification, titling, translation.
-   - **`local-coder` / `rag-core`**: Bật đầy đủ `qwen3` reasoning parser và `qwen3_coder` tool parser. Dùng cho: Code generation, complex multi-step planning, audit, verification.
+   - **`local-instruct` / `rag-core`**: Trỏ về local model nhưng cố định tham số `enable_thinking: false` trong `model_info` hoặc gateway params. `rag-core` đóng vai trò xương sống RAG truy xuất tài liệu tốc độ cao (không CoT); `local-instruct` dùng cho: `extract_json()`, HyDE queries, classification, titling, translation.
+   - **`local-coder`**: Bật đầy đủ `qwen3` reasoning parser và `qwen3_coder` tool parser với `enable_thinking: true`. Dùng cho: Code generation, complex multi-step planning, audit, verification.
 
 3. **Defensive Pipeline Fallback (Auto-Recovery)**:
    ```python
