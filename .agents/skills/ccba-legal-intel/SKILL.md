@@ -101,7 +101,7 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
 ## 3. Hướng dẫn Khai Thác & Ứng Dụng Tri Thức Pháp Lý
 
 > [!NOTE]
-> **Phân định ranh giới trách nhiệm (ADR-0059, ADR-0061)**: Toàn bộ quy trình nạp gốc văn bản mới (đăng nhập TVPL VIP, cào tài liệu, chuyển đổi Word sang OKF v2.4 Bundle, hợp nhất VBHN và kiểm định 15 Cổng Master CI) được quản trị tập trung tại [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md). Kỹ năng `ccba-legal-intel` tập trung vào khai thác đồ thị quan hệ, tra cứu điều khoản/bảng biểu, thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
+> **Phân định ranh giới trách nhiệm (ADR-0059, ADR-0061)**: Toàn bộ quy trình nạp gốc văn bản mới gồm đăng nhập TVPL VIP (`login`), thu thập văn bản (`fetch`), chuyển đổi Word sang OKF v2.4 Bundle (`convert`), hợp nhất VBHN (`consolidate`) và kiểm định 15 Cổng Master CI được quản trị tập trung tại [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md). Kỹ năng `ccba-legal-intel` tập trung vào khai thác đồ thị quan hệ, tra cứu điều khoản/bảng biểu (`query`, `get-clause`, `get-table`), đồng bộ Spoke (`sync`), thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
 
 ### 1. Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)
 ```bash
