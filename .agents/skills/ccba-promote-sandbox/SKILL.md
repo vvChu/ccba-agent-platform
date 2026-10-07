@@ -33,6 +33,11 @@ triggers:
 
 Workflow này hướng dẫn kỹ sư thực hiện quy trình thăng cấp bàn giao 3 bước để chuyển giao sản phẩm nghiên cứu, bản tính hoặc báo cáo từ **Spoke Cá Nhân (`personal_sandbox`)** sang **Spoke Dự Án chính thức (`project_delivery`)** hoặc đề xuất lên Hub theo **ADR 0046** và **Quy chế CCBA 2026**.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel bàn giao `personal_sandbox`: xác thực sandbox, chọn tệp, Spoke đích và mã PGV, gọi `scripts/promote_sandbox.py` ba pha Cleanse, Target Ingestion, PGV Sign-off Staging, rồi in hướng dẫn nghiệm thu. 16 card trong `seam-contracts.yaml` không quản lý domain bàn giao sandbox, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 >= 12.0. Kỹ năng hiện chưa có thư mục `references/` phụ trợ.
+
 ---
 
 ## 🛡️ Bước 1: Khảo Sát & Xác Thực Môi Trường Nguồn
@@ -54,7 +59,7 @@ Agent hỗ trợ kỹ sư xác định các tham số bàn giao:
 1. **Danh sách tệp bàn giao (`--files`):**
    - Quét các tệp hoàn thiện trong `output/`, `specs/`, `scripts/` (ví dụ: `output/pccc_audit_report.md`).
 2. **Đường dẫn Spoke Dự Án đích (`--target`):**
-   - Đường dẫn thư mục của Spoke Dự Án thụ hưởng (ví dụ: `D:/GitHubProjects/2026-04-dh-viet-nhat`).
+   - Đường dẫn thư mục của Spoke Dự Án thụ hưởng (ví dụ: `$env:PROJECTS_ROOT/2026-04-dh-viet-nhat`).
    - *Nếu là công cụ/script dùng chung:* Hướng dẫn kỹ sư sử dụng lệnh `/ccba-contribute-to-hub` thay thế.
 3. **Mã Phiếu Giao Việc (`--pgv`):**
    - Mã PGV được phân công trên IDOP (ví dụ: `PGV-2026-08-014`).
@@ -65,10 +70,10 @@ Agent hỗ trợ kỹ sư xác định các tham số bàn giao:
 
 ## ⚙️ Bước 3: Thực Thi Thăng Cấp 3 Bước (Single-Command Promotion)
 
-Agent xác định đường dẫn Hub (`hub_path`) và thực thi lệnh thăng cấp:
+Agent phân giải đường dẫn Hub qua `$env:CCBA_HUB_PATH` và thực thi lệnh thăng cấp:
 
 ```powershell
-python "[hub_path]\scripts\promote_sandbox.py" --target "[duong_dan_spoke_dich]" --files [danh_sach_tep] --pgv "[ma_pgv]"
+python "$env:CCBA_HUB_PATH/scripts/promote_sandbox.py" --target "$env:PROJECTS_ROOT/2026-04-dh-viet-nhat" --files <files> --pgv "<pgv>"
 ```
 
 *Động cơ `SandboxPromoter` sẽ tự động thực hiện tuần tự:*
