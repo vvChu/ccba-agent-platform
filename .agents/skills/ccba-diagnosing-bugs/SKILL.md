@@ -29,6 +29,14 @@ triggers:
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP kernel chẩn đoán và khắc phục lỗi mã nguồn theo 6 pha trên đĩa: feedback loop, reproduce, hypothesise, instrument, fix, cleanup). GPI đạt (4.0, 2.0, 1.0, 1.0) = 14.5, vượt xa ngưỡng độc lập Tier 2B; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 When exploring the codebase, read `CONTEXT.md` (if it exists) to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
 
 ## Phase 1 — Build a feedback loop

@@ -28,6 +28,14 @@ tier: kernel
 
 TDD là chu kỳ lặp Red → Green → Refactor. Kỹ năng này cung cấp quy trình và tiêu chuẩn để chu kỳ đó tạo ra những bộ test chất lượng cao, dễ bảo trì và bám sát ngôn ngữ nghiệp vụ của dự án.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP kernel thực hành Test-Driven Development Red-Green-Refactor). GPI đạt (3.0, 2.0, 1.0, 1.0) = 12.0, đạt chuẩn Standalone Kernel Tier 2B và được bảo lưu vững chắc qua deadband [11.5, 12.5); không đóng gói pipeline chuyển đổi dữ liệu độc lập hay phụ thuộc Seam Contract ứng dụng cụ thể.
+
+---
+
 Khi khám phá codebase, đọc `CONTEXT.md` (nếu có) để tên test và từ vựng giao diện đồng bộ với ngôn ngữ nghiệp vụ của dự án, và tuân thủ các ADRs trong khu vực bạn đang can thiệp.
 
 ## Quy trình Thực hiện (Process)

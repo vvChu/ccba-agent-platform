@@ -37,7 +37,7 @@ Tập hợp toàn bộ Thuyết minh tính toán, Bản vẽ Kiến trúc PCCC v
 *   Gói 3 (MEP Alarm vs Arch): Mặt bằng Kiến trúc + Báo cháy + Điện PCCC.
 
 **Bước 3: Chạy Engine Đánh Giá (Reduce)**
-*   Sử dụng Local LLM (qwen-local-primary) chạy tuần tự qua các Gói dữ liệu để so sánh chéo, phát hiện xung đột và lỗi sai thông số.
+*   Sử dụng mô hình chỉ định qua Seam `choose_model("audit")` (Archetype Reasoning / Audit) chạy tuần tự qua các Gói dữ liệu để so sánh chéo, phát hiện xung đột và lỗi sai thông số.
 *   Cross-check tự động với cơ sở dữ liệu TCVN 3890:2023, TCVN 5738:2021, TCVN 7336:2021 và QCVN 06:2022/BXD.
 
 **Bước 4: Trích xuất Báo cáo Thẩm định (PC13)**

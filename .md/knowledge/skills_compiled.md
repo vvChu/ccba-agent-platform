@@ -42,6 +42,15 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho IFC, Uniclass hay hệ thống phân loại BIM. Các thư viện như `ifcopenshell` là công cụ chuyên ngành bên thứ ba, không phải Deep Seam trực thuộc monorepo CCBA.
+* **Định tuyến AI:** Khi thực hiện nhánh phân loại ngữ nghĩa bằng AI (Semantic Auto-Classification), các tác vụ nhúng vector và LLM bắt buộc đi qua Seam `ai_embedding.v1` hoặc `model_routing.v1` (`ccba_ai.routing:choose_model`), cấm gọi API mô hình độc lập.
+* **Rào chắn Tri thức Cục bộ (Self-Contained & Grounding Invariant):** Căn cứ phân loại bắt buộc đọc trực tiếp từ tài liệu phương pháp luận BIGBIM trên đĩa. Trường hợp thiếu tài liệu hoặc không có file đối soát, Agent bắt buộc dừng lại và thông báo cho người dùng; tuyệt đối CẤM suy đoán hoặc tự bịa đặt mã Uniclass / điều khoản ISO để điền vào chỗ trống.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
@@ -222,17 +231,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho quản trị thông tin BIM (BIM Information Governance) hay ma trận EIR/AIR/MIDP. Skill vận hành như một bộ guardrails kiểm duyệt quy chuẩn và chính sách thông tin dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rào chắn Golden Thread và Red Thread bắt buộc đối soát trực tiếp từ tài liệu quản trị dự án trên đĩa (thư mục `[bigbim_method_path]/.md/`). Nếu thiếu tài liệu nguồn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM sinh giả lập mã rủi ro RK hoặc tiêu chí cổng V-Gates.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[bbp-lifecycle.md](https://example.com/bigbim-governance/bbp-lifecycle.md)` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
-| `[v-gates.md](https://example.com/bigbim-governance/v-gates.md)` | 7 Verification Gates — tiêu chí go/no-go, checklist |
-| `[cde-workflow.md](https://example.com/bigbim-governance/cde-workflow.md)` | CDE 4 states, naming convention, access control |
-| `[unique-id.md](https://example.com/bigbim-governance/unique-id.md)` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
-| `[midp-guide.md](https://example.com/bigbim-governance/midp-guide.md)` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `bbp-lifecycle.md` | `knowledge/bigbim-governance/bbp-lifecycle.md` | BBP A0→C2, RIBA mapping, deliverables từng giai đoạn |
+| `v-gates.md` | `knowledge/bigbim-governance/v-gates.md` | 7 Verification Gates — tiêu chí go/no-go, checklist |
+| `cde-workflow.md` | `knowledge/bigbim-governance/cde-workflow.md` | CDE 4 states, naming convention, access control |
+| `unique-id.md` | `knowledge/bigbim-governance/unique-id.md` | Sợi Chỉ Đỏ — UniqueID syntax, RK codes, 4 RKs |
+| `midp-guide.md` | `knowledge/bigbim-governance/midp-guide.md` | MIDP structure, thời điểm nộp, TIDP vs MIDP |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
@@ -366,17 +383,25 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ phân tích RASE (RASE Analyzer) hay parser IDS (Information Delivery Specification) của buildingSMART. Thao tác phân tích RASE là quy trình logic suy luận cấu trúc dữ liệu IFC4X3.
+* **Cưỡng chế Grounding (Grounding Invariant):** Mọi trích xuất RASE bắt buộc dựa trên tài liệu yêu cầu kỹ thuật và schema ISO 16739-1:2024 (IFC4X3) có thực trên đĩa. Trường hợp thiếu tài liệu quy chuẩn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán hoặc tự bịa đặt thuộc tính Pset ngoài schema IFC chuẩn.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
 
-| Article | Nội dung cốt lõi |
-|:--------|:----------------|
-| `[air-guide.md](https://example.com/bigbim-rase/air-guide.md)` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
-| `[oir-guide.md](https://example.com/bigbim-rase/oir-guide.md)` | OIR framework, 12 objectives, OIR→AIR traceability |
-| `[ifc-pset-map.md](https://example.com/bigbim-rase/ifc-pset-map.md)` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
-| `[ids-validation.md](https://example.com/bigbim-rase/ids-validation.md)` | IDS buildingSMART, validation workflow, template |
-| `[chunks/ISO_19650_VN/](https://example.com/chunks/ISO_19650_VN/)` | ISO 19650-1/2/3 chunks — tra điều khoản cụ thể |
+| Article | Đường dẫn tham chiếu (dưới `[bigbim_method_path]/.md/`) | Nội dung cốt lõi |
+|:--------|:---------------------------------------------------------|:----------------|
+| `air-guide.md` | `knowledge/bigbim-rase/air-guide.md` | AIR structure, 20 requirements, mapping AIR→IFC Psets |
+| `oir-guide.md` | `knowledge/bigbim-rase/oir-guide.md` | OIR framework, 12 objectives, OIR→AIR traceability |
+| `ifc-pset-map.md` | `knowledge/bigbim-rase/ifc-pset-map.md` | Bảng ánh xạ IFC4X3 Psets đầy đủ theo AIR categories |
+| `ids-validation.md` | `knowledge/bigbim-rase/ids-validation.md` | IDS buildingSMART, validation workflow, template |
+| `Tra cứu quy phạm ISO/BIM` | Kỹ năng `bigbim-vbpl-digest` | Tra cứu điều khoản quy chuẩn & tiêu chuẩn ISO 19650-1/2/3 |
 
 **KB Root:** `[bigbim_method_path]/.md/`  
 **Master Index:** `[bigbim_method_path]/.md/knowledge/INDEX.md`
@@ -537,6 +562,14 @@ triggers:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`**:
+* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ kiểm duyệt mâu thuẫn thông tin phi hình học (Information Conflict Audit) hay quy trình phối hợp V2 Coordination. Thao tác rà soát xung đột thông tin vận hành dựa trên bộ quy tắc chuyên môn và rào chắn kiểm toán dự án.
+* **Cưỡng chế Grounding (Grounding Invariant):** Rà soát mâu thuẫn logic thuộc tính và khoảng cách thao tác bắt buộc đối soát trực tiếp từ mô hình phối hợp và Risk Register trên đĩa (`[bigbim_method_path]/.md/`). Nếu thiếu hồ sơ dự án, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán tọa độ va chạm hoặc tự bịa đặt ID lỗi.
+
+---
+
 ## 📚 BIGBIM Method KB — Tài liệu tham chiếu
 
 > Trước khi thực thi, Agent **PHẢI** đọc các articles sau trong BIGBIM Method KB:
@@ -660,8 +693,8 @@ Kết quả phân tích mâu thuẫn phải được trả về dưới dạng b
 
 ---
 name: bigbim-vbpl-digest
-description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024,
-  ISO 19650-1/2/3/5, QCVN liên quan.
+description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các
+  tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
 applies_to:
 - BIM
 - Pháp điển
@@ -679,9 +712,7 @@ gpi:
   a: 4.0
   p: 1.0
 triggers:
-- NĐ 175
 - nghị định BIM
-- Nghị định 175
 - điều khoản BIM
 - ISO 19650
 - luật xây dựng BIM
@@ -692,28 +723,35 @@ triggers:
 # BIGBIM VBPL Digest Skill
 
 > **Vai trò**: Chuyên gia Pháp lý BIM — tra cứu điều khoản, tóm tắt yêu cầu, giải thích nghĩa vụ theo VBPL hiện hành.
-> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có trích dẫn.
+> **Sứ mệnh**: Trả lời câu hỏi "quy định nào yêu cầu X?" và "điều Y của NĐ/ISO nói gì?" một cách chính xác, có căn cứ trích dẫn chuẩn xác.
 
 ---
 
-## 📚 BIGBIM Method KB — Nguồn dữ liệu
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
-> Skill này **TRA CỨU TRỰC TIẾP** từ chunks của tài liệu gốc:
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các công cụ tra cứu tri thức pháp lý của nền tảng:
+* **Tra Cứu & Trích Xuất Pháp Lý:** Sử dụng CLI `python -m ccba_legal query` và `get-clause` (Deep Seam `LegalKnowledgeEngine`). Các chunk tài liệu cũ tại Spoke chỉ đóng vai trò tham khảo kỹ thuật, không có giá trị bảo chứng hiệu lực.
+* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực và quan hệ thay thế bắt buộc đối soát theo nguyên tắc kiểm định SSOT tại Mục 5; tuyệt đối không sử dụng văn bản đã hết hiệu lực thi hành.
 
-| Nguồn | Layer | Path |
-|:------|:------|:-----|
-| NĐ 175/2024 — 111 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/VBPL_BIM_VN/175_2024_ND-CP_*/` |
-| ISO 19650-1 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
-| ISO 19650-2 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
-| ISO 19650-3 — 12 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
-| ISO 19650-5 — 15 chunks | Layer 2 | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
-| Chunk Master Index | Layer 2 | `[bigbim_method_path]/.md/chunks/INDEX.md` |
+---
+
+## 📚 Nguồn Dữ Liệu & Công Cụ Tra Cứu
+
+> **Quy định SSOT:** Tra cứu điều khoản quy phạm pháp luật bắt buộc thực thi qua Deep Seam `ccba_legal query` và `get-clause`. Các chunk tiêu chuẩn ISO đóng vai trò tài liệu kỹ thuật phụ trợ:
+
+| Nguồn | Loại | Công cụ / Đường dẫn |
+|:------|:------|:-------------------|
+| Quy phạm pháp luật BIM | Pháp lý SSOT | CLI `python -m ccba_legal query` và `get-clause` |
+| ISO 19650-1 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/1-AP01-*/` |
+| ISO 19650-2 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/2-AP01-*/` |
+| ISO 19650-3 — 12 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/3-AP01-*/` |
+| ISO 19650-5 — 15 chunks | Kỹ thuật | `[bigbim_method_path]/.md/chunks/ISO_19650_VN/5-AP01-*/` |
+| Chunk Master Index | Kỹ thuật | `[bigbim_method_path]/.md/chunks/INDEX.md` |
 
 **Workflow tra cứu:**
-1. Đọc `chunks/INDEX.md` để xác định nguồn phù hợp
-2. Đọc `00_CHUNK_INDEX.md` trong folder nguồn để locate chunk
-3. Đọc chunk cụ thể → trích dẫn điều khoản chính xác
-4. Cross-reference với KB articles Layer 3 nếu cần synthesis
+1. Tra cứu VBPL quy phạm: gọi `python -m ccba_legal query --q "..."` và `python -m ccba_legal get-clause ...`
+2. Tra cứu tiêu chuẩn kỹ thuật ISO: định vị chunk trong `chunks/ISO_19650_VN/`
+3. Trích dẫn nguyên văn điều khoản chính xác kèm trạng thái hiệu lực chuẩn hóa ACTIVE
 
 ---
 
@@ -729,27 +767,26 @@ triggers:
 ### Bước 1 — Phân tích câu hỏi
 
 Xác định:
-- **Nguồn**: NĐ 175 hay ISO 19650-1/2/3/5?
+- **Nguồn**: Quy chuẩn/Nghị định quy phạm hay Tiêu chuẩn kỹ thuật ISO 19650?
 - **Loại query**: Tra điều khoản cụ thể (số điều/khoản) hay tìm theo chủ đề?
 - **Output format**: Trích dẫn nguyên văn, tóm tắt, hay so sánh?
 - **Tiêu chí hoàn thành:** Xác định rõ ràng nguồn văn bản, loại truy vấn và định dạng đầu ra mong muốn.
 
-### Bước 2 — Locate chunk
+### Bước 2 — Tra cứu dữ liệu
 
-```
-Nếu NĐ 175:
-  → chunks/VBPL_BIM_VN/175_2024_ND-CP_.../00_CHUNK_INDEX.md
-  → Tìm chunk theo keyword trong heading column
+```bash
+# 1. Nếu là văn bản quy phạm pháp luật (VBPL):
+python -m ccba_legal query --q "<từ khóa>" --status ACTIVE
+python -m ccba_legal get-clause --doc "<doc_id>" --clause "<số điều>"
 
-Nếu ISO 19650:
-  → chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
-  → Tìm theo section number (VD: "5.6 Tiến trình")
+# 2. Nếu là tiêu chuẩn kỹ thuật ISO 19650:
+# Đọc chunks phụ trợ: chunks/ISO_19650_VN/<phần>/00_CHUNK_INDEX.md
 ```
-- **Tiêu chí hoàn thành:** Định vị chính xác đường dẫn chunk chứa điều khoản hoặc nội dung liên quan.
+- **Tiêu chí hoàn thành:** Định vị chính xác điều khoản quy phạm qua Seam hoặc đường dẫn chunk tiêu chuẩn kỹ thuật liên quan.
 
 ### Bước 3 — Đọc và tổng hợp
 
-- Đọc chunk liên quan (1-3 chunks tối đa)
+- Đọc điều khoản trích xuất từ Seam hoặc chunk liên quan
 - Trích dẫn nguyên văn có số điều/khoản
 - Nêu rõ nghĩa vụ áp dụng cho ai, khi nào
 - **Tiêu chí hoàn thành:** Đọc hiểu và trích xuất đúng điều khoản nguyên văn kèm đối tượng và phạm vi áp dụng.
@@ -759,7 +796,7 @@ Nếu ISO 19650:
 ```markdown
 ## Câu trả lời
 
-**Nguồn**: NĐ 175/2024-NĐ-CP, Điều X, Khoản Y
+**Nguồn**: [Mã văn bản đã đối soát SSOT], Điều X, Khoản Y
 **Nguyên văn**: "..."
 
 **Tóm tắt**: [2-3 câu]
@@ -773,15 +810,22 @@ Nếu ISO 19650:
 
 ## 📋 Mapping Chủ đề → Nguồn
 
-| Chủ đề | Nguồn chính | Chunks tham khảo |
-|:-------|:-----------|:----------------|
-| BIM bắt buộc từ khi nào | NĐ 175 Điều 8 | chunk_01–05 |
-| Yêu cầu nộp mô hình BIM | NĐ 175 Chương III | chunk_20–35 |
-| CDE, EIR, AIR | ISO 19650-2 Section 4-5 | chunk_04–09 |
-| Vận hành AIM | ISO 19650-3 Section 5 | chunk_06–12 |
-| Phân loại bảo mật thông tin | ISO 19650-5 Section 4-7 | chunk_06–10 |
-| Giấy phép xây dựng + BIM | NĐ 175 Chương VI | chunk_50–65 |
-| Nghiệm thu, hoàn công + BIM | NĐ 175 Chương VIII | chunk_80–95 |
+| Chủ đề | Nguồn chính (Seam SSOT) | Chunks kỹ thuật tham khảo |
+|:-------|:------------------------|:-------------------------|
+| BIM bắt buộc từ khi nào | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Yêu cầu nộp mô hình BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| CDE, EIR, AIR | Tiêu chuẩn ISO 19650-2 Section 4-5 | chunk_04–09 |
+| Vận hành AIM | Tiêu chuẩn ISO 19650-3 Section 5 | chunk_06–12 |
+| Phân loại bảo mật thông tin | Tiêu chuẩn ISO 19650-5 Section 4-7 | chunk_06–10 |
+| Giấy phép xây dựng + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+| Nghiệm thu, hoàn công + BIM | Tra cứu VBPL qua `python -m ccba_legal query` & `get-clause` | Tài liệu kỹ thuật phụ trợ |
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
 ---
@@ -931,6 +975,7 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
 bundle: _governance
 tier: kernel
 layer: _governance
+scope: hub
 user-invocable: true
 command: /ccba-adr-lifecycle
 gpi:
@@ -1705,56 +1750,46 @@ flowchart LR
 - Đảm bảo thư mục đầu ra `.md/extracts/audit_batch/` sẵn sàng.
 - **Tiêu chí hoàn thành:** Xác định duy nhất một thư mục dự án đích hợp lệ và kiểm tra thư mục này tồn tại cục bộ.
 
-### Bước 2: Kích Hoạt Deep Seam `QCAuditPipeline`
-- Thực thi toàn trình qua Python API của package `ccba_qc_core`:
-  ```python
-  from ccba_qc_core import QCAuditPipeline
+---
 
-  pipeline = QCAuditPipeline()
-  summary = pipeline.run_audit_sync(
-      project_dir="[target_project]",
-      output_dir="[target_project]/.md/extracts/audit_batch"
-  )
-  print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
-  ```
-- Hoặc thực thi qua CLI:
-  ```powershell
-  python -m ccba_ai.cli run-qc --project "[target_project]" --out-dir "[target_project]/.md/extracts/audit_batch"
-  ```
-- **Tiêu chí hoàn thành:** Pipeline chạy hoàn tất không có lỗi hệ thống, sinh ra tệp `Coordination_Matrix.csv` và báo cáo `BATCH_QC_Report_Auto.md` tại thư mục đầu ra.
+## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
 
-### Bước 3: Đối Soát & Trình Bày Báo Cáo
-- Mở và đọc nội dung báo cáo tại `[target_project]/.md/extracts/audit_batch/BATCH_QC_Report_Auto.md`.
-- Trích xuất bảng Heat Map rủi ro và các lỗi nghiêm trọng (High Risk) hiển thị trực tiếp cho Kỹ sư duyệt.
-- **Tiêu chí hoàn thành:** Bảng Heat Map và danh sách điểm nghẽn kỹ thuật được hiển thị rõ ràng trên giao diện chat cho người dùng kiểm tra.
+Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`qc_pipeline.v1`** của gói `ccba-qc-core`:
+
+1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
+   Trước khi triển khai thẩm tra bản vẽ, Agent thực hiện tra cứu Seam qua CLI:
+   ```bash
+   python scripts/ccba_platform_cli.py find-seam --in drawing_set project_dir --out audit_report --json
+   ```
+   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_qc_core:QCAuditPipeline`). Ghi nhận `seam_id`, `status` vào plan của phiên làm việc.
+
+2. **Khởi Chạy Toàn Trình Qua Seam:**
+   Thực thi toàn bộ 3 pha (Discovery, Quad-View Vision, Reporter) qua Python API của Seam:
+   ```python
+   from ccba_qc_core import QCAuditPipeline
+
+   pipeline = QCAuditPipeline()
+   summary = pipeline.run_audit_sync(
+       project_dir="[target_project]",
+       output_dir="[target_project]/.md/extracts/audit_batch"
+   )
+   print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
+   ```
+   *Lưu ý:* Tuyệt đối CẤM Agent tự viết script ad-hoc để bóc tách PDF hoặc ghép collage ảnh khi Seam `QCAuditPipeline` đã giải quyết khép kín từ đầu đến cuối.
 
 ---
-*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-*Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
-## 4. Quy Chuẩn Đóng Gói Phản Hồi & Thẻ Cấu Trúc XML
-* Mọi kết quả tra cứu và phân tích pháp lý bắt buộc phải được đóng gói qua cấu trúc thẻ:
-  - `<legal_context>`: Tóm tắt bối cảnh và văn bản quy phạm pháp luật áp dụng (Luật, Nghị định, Thông tư).
-  - `<legal_citation>`: Viện dẫn chính xác Điều, Khoản, Điểm kèm trích dẫn nguyên văn.
-  - `<compliance_verdict>`: Kết luận tuân thủ pháp luật và khuyến nghị chuyên môn.
-* Đảm bảo không phát sinh disclaimer từ chối đối với các yêu cầu hợp lệ trong lĩnh vực xây dựng.
-
-## Progressive Disclosure & Reference Index (Level 3)
+## 📚 Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/discovery.md` | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
-| `references/integrated_audit.md` | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
-| `references/reporter.md` | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
-| `references/batch_orchestrator.md` | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
+| [`references/discovery.md`](references/discovery.md) | Pha 1: Khảo sát tự động bản vẽ, danh mục tầng và hồ sơ thiết kế công trình |
+| [`references/integrated_audit.md`](references/integrated_audit.md) | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
+| [`references/reporter.md`](references/reporter.md) | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
+| [`references/batch_orchestrator.md`](references/batch_orchestrator.md) | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
 
-## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
-* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
-* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
-* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.
 
 
 ---
@@ -1779,7 +1814,7 @@ gpi:
   s: 2.0
   k: 2.0
   a: 4.0
-  p: 1.0
+  p: 3.0
 triggers:
 - pccc audit
 - semantic map-reduce
@@ -1797,6 +1832,14 @@ triggers:
 # CCBA AI QC PCCC Audit
 
 Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine đã có trong nền tảng:
+* **Hạ Tầng Lõi:** Ủy quyền toàn bộ thuật toán Map-Reduce cho module `ccba_qc_core.pccc` (class `PcccMapReduceEngine`) thay vì viết mã xử lý phân tán ad-hoc.
+* **Định Tuyến Mô Hình Động:** Mọi tương tác AI trong pipeline thẩm tra tự động giải quyết qua Seam `ccba_ai.routing.choose_model("audit")`. Tuyệt đối CẤM truyền chuỗi model thô cứng.
 
 ---
 
@@ -1827,19 +1870,21 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 ### 1. Điều kiện tiền quyết
 Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
 
-### 2. Lệnh chạy script:
-Xác định đường dẫn Hub (`hub_path`) và chạy lệnh:
+### 2. Lệnh thực thi qua Package CLI (`ccba-qc`):
+*   **Định tuyến mô hình:** Tham số `--model` nhận giá trị trả về từ Seam `choose_model("audit")` (`ModelArchetype.REASONING`), thay vì để trống khiến hệ thống rơi vào model local mặc định.
+
 ```bash
-python "[hub_path]/.agents/skills/ccba-ai-qc-pccc-audit/scripts/audit_engine.py" \
+ccba-qc pccc \
+    --model "<kết_quả_từ_choose_model_audit>" \
     --tm "đường/dẫn/đến/thuyet_minh.md" \
     --arch "đường/dẫn/đến/kien_truc.md" \
     --mep "đường/dẫn/đến/mep.md" \
     --gopy "đường/dẫn/đến/pc07.md" \
-    --model "qwen-local-primary" \
     --out "Bao_Cao_Tham_Dinh_PCCC.md"
 ```
-*(Nếu không có văn bản góp ý của PC07, truyền một chuỗi rỗng `--gopy ""`)*
+*(Nếu không có văn bản góp ý của PC07, bỏ hoàn toàn tùy chọn `--gopy`)*
 
+---
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -1847,18 +1892,19 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/sop_cdt_tu_tham_dinh.md` | Danh mục SOP tự thẩm tra hồ sơ thiết kế PCCC cho Chủ đầu tư |
-| `references/sop_tham_dinh_congan.md` | Danh mục SOP thẩm duyệt thiết kế PCCC với Cơ quan Công an PCCC |
-| `references/sop_tham_tra_cqxd.md` | Danh mục SOP thẩm tra quy chuẩn xây dựng và an toàn cháy với Sở Xây dựng |
+| [`references/sop_cdt_tu_tham_dinh.md`](references/sop_cdt_tu_tham_dinh.md) | Danh mục SOP tự thẩm tra hồ sơ thiết kế PCCC cho Chủ đầu tư |
+| [`references/sop_tham_dinh_congan.md`](references/sop_tham_dinh_congan.md) | Danh mục SOP thẩm duyệt thiết kế PCCC với Cơ quan Công an PCCC |
+| [`references/sop_tham_tra_cqxd.md`](references/sop_tham_tra_cqxd.md) | Danh mục SOP thẩm tra quy chuẩn xây dựng và an toàn cháy với Sở Xây dựng |
 
-## 5. Quy Chuẩn Kỹ Thuật PCCC QCVN 06:2022/BXD & Bảng Đối Soát Bậc H.1 (Map 1)
-* **Bậc chịu lửa & Chiều cao:** Nhà nhóm F1.3 có chiều cao PCCC > 50m bắt buộc phải thiết kế Bậc chịu lửa Bậc I (Bảng H.1).
-* **Kiểm soát khói:** Hành lang dài > 15m không có thông gió tự nhiên bắt buộc phải trang bị hệ thống hút khói cơ khí sự cố và van ngăn khói.
-* **Thang bộ thoát nạn:** Nhà có chiều cao PCCC > 28m bắt buộc sử dụng buồng thang bộ không nhiễm khói loại N1 hoặc N2/N3 có hệ thống tăng áp.
+---
 
-## 6. Rào Chắn Chống Cháy Lan & Giới Hạn Chịu Lửa Kết Cấu QCVN 06:2022/BXD
-* **Kết cấu chịu lực chính:** Kết cấu chịu lực chính và giàn mái công trình Bậc I bắt buộc đạt giới hạn chịu lửa R45/R90/R120; nghiêm cấm để thép trần.
-* **Ngăn cháy lan qua tường:** Ống dẫn gió xuyên qua tường ngăn cháy bắt buộc phải lắp van ngăn cháy tự động và bọc cách nhiệt đạt EI tương ứng.
+## 🏛️ Tra Cứu Quy Chuẩn PCCC Nguyên Văn (ADR-0059 Legal Verbatim Grounding)
+Mọi thông số kỹ thuật quy chuẩn PCCC (Bậc chịu lửa, chiều cao PCCC F1.3, hành lang hút khói, buồng thang N1/N2/N3, giới hạn chịu lửa kết cấu R/EI) bắt buộc phải được đối soát nguyên văn từ bundle quy chuẩn chính thức qua Seam CLI:
+```bash
+python -m ccba_legal get-clause --doc qcvn_06_2022_bxd --clause <clause_id>
+```
+Tuyệt đối **CẤM** Agent tự nhớ số liệu hoặc diễn giải lại điều khoản quy phạm ngoài văn bản chính thức.
+
 
 
 ---
@@ -2721,7 +2767,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -2735,6 +2781,9 @@ triggers:
 - check code
 - review commit
 - review pr
+- unslop
+- anti-slop
+- zero-noise
 ---
 # Quy trình Rà soát Chất lượng Code (Code Review)
 
@@ -2823,6 +2872,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/codebase-scan-workflow.md` | Quy trình quét toàn diện kiến trúc codebase với 2 subagents hỗ trợ |
 | `references/code-review-reception.md` | Kỷ luật tiếp nhận phản hồi review: kiểm chứng kỹ thuật trước khi chỉnh sửa |
 | `references/verification-before-completion.md` | Khóa cứng kỷ luật nghiệm thu: bằng chứng chạy thực tế trước khi tuyên bố hoàn thành |
+| `references/unslop_checklist.md` | Kỷ luật Zero-Noise & Anti-Slop (ADR-0009): Loại bỏ comment dịch tên, dead code, LLM slop |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -3089,6 +3139,16 @@ triggers:
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị nền tảng:
+* **Căn Cứ Pháp Lý & Tra Cứu:** Trích xuất và đối soát căn cứ nghiệm thu qua Deep Seam `LegalKnowledgeEngine` (CLI `python -m ccba_legal query`). Tệp `resources/checklist_master.yaml` giữ vai trò khung hạng mục phân loại, mọi căn cứ quy phạm trích dẫn bắt buộc phải kiểm định qua predicate SSOT tại Mục 5.
+* **Xuất Bản Văn Bản (.docx):** Bắt buộc sử dụng Seam `ooxml_processor.v1` (`from ccba_ooxml import DocxDocument`). Tuyệt đối cấm sử dụng trực tiếp thư viện `python-docx` không qua Seam cách ly. Trường hợp Seam chưa hỗ trợ mẫu checklist phức tạp, Agent xuất định dạng Markdown chuẩn và dừng lại.
+
+---
+
 ## When to Use
 
 - Cần **tạo checklist hồ sơ hoàn thành** cho một dự án/công trình cụ thể
@@ -3101,7 +3161,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 | File | Mô tả |
 |------|--------|
-| `resources/checklist_master.yaml` | Danh mục hồ sơ master theo NĐ 207/2026/NĐ-CP (thay thế NĐ 06/2021) |
+| `resources/checklist_master.yaml` | Danh mục hồ sơ master — Khung hạng mục hồ sơ hoàn thành |
 | `resources/checklist_by_project.md` | Template checklist theo loại công trình |
 | `resources/training_handout.md` | Template tài liệu tập huấn cho kỹ sư giám sát |
 
@@ -3109,7 +3169,7 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 1. Tạo Checklist cho dự án cụ thể
 
-1. Đọc `resources/checklist_master.yaml` để nắm cấu trúc master
+1. Đọc `resources/checklist_master.yaml` để nắm khung cấu trúc master
 2. Hỏi user các thông tin dự án:
    - Tên dự án / công trình
    - Loại công trình (dân dụng / công nghiệp / hạ tầng kỹ thuật)
@@ -3117,8 +3177,8 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
    - Chủ đầu tư
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
-5. Xuất ra Markdown và Word (.docx)
-   - **Tiêu chí hoàn thành:** Đã tạo checklist đầy đủ theo thông tin dự án, xuất đủ 2 định dạng (.md và .docx) và vượt qua cổng kiểm định máy tính:
+5. Xuất ra Markdown (và Docx khi phát hành qua `ccba_ooxml:DocxDocument`)
+   - **Tiêu chí hoàn thành:** Đã tạo tệp checklist Markdown đầy đủ theo thông tin dự án và vượt qua cổng kiểm định máy tính:
      ```bash
      python -m ccba_harness verify-patch --preset doc --target <tệp_markdown_checklist> --min-bytes 500
      ```
@@ -3126,9 +3186,9 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 
 ### 2. Cập nhật khi VBPL thay đổi
 
-1. Kiểm tra `legal_registry.yaml` (skill `legal-document-tracker`) xem có văn bản nào liên quan đến nghiệm thu hoàn công thay đổi trạng thái sang `superseded` (hết hiệu lực) và có văn bản thay thế mới (`current`).
-   - Nếu không có thay đổi: Dùng trực tiếp static templates (`checklist_master.yaml`) để tiết kiệm token và thời gian.
-   - Nếu có thay đổi: Đề xuất người dùng sử dụng `/ccba-research` để spawn subagent nghiên cứu sâu cấu trúc phụ lục nghiệm thu mới và tự động cập nhật lại master checklist.
+1. Tra cứu đối soát qua Seam `python -m ccba_legal query` và `ccba_legal.registry` theo đúng nguyên tắc kiểm định SSOT tại Mục 5.
+   - Nếu không có văn bản thay thế mới: Sử dụng khung hạng mục tĩnh (`checklist_master.yaml`) kết hợp đối chiếu căn cứ pháp lý hiện hành.
+   - Nếu có văn bản thay thế đạt trạng thái `ACTIVE`: Cập nhật lại khung master theo quy định mới nhất.
 2. So sánh nội dung Phụ lục hồ sơ hoàn thành cũ vs mới
 3. Cập nhật `checklist_master.yaml`:
    - Thêm mục mới
@@ -3142,32 +3202,30 @@ Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Tr�
 1. Đọc template `resources/training_handout.md`
 2. Điền nội dung dựa trên checklist master
 3. Thêm ví dụ thực tế và lưu ý từ kinh nghiệm CCBA
-4. Xuất ra Word (.docx) cho phát tay trong buổi seminar
-   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Word (.docx) sẵn sàng phát hành.
+4. Xuất ra Markdown hoặc Word (.docx qua `ccba_ooxml:DocxDocument`) cho phát tay trong buổi seminar
+   - **Tiêu chí hoàn thành:** Đã tạo tài liệu tập huấn hoàn chỉnh dạng Markdown/Word sẵn sàng phát hành.
 
-## Legal Basis
+## Legal Basis & Verification
 
-Checklist master được phân định căn cứ pháp lý theo mốc thời gian nghiệm thu công trình:
-
-### 1. Áp dụng chính thức hiện hành (Công trình nghiệm thu từ 01/07/2026 trở đi):
-- **Nghị định 207/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý chất lượng thi công xây dựng và bảo trì công trình (**Chính thức thay thế Nghị định 06/2021/NĐ-CP**). Trích dẫn Danh mục hồ sơ hoàn thành công trình theo Phụ lục tương ứng của NĐ 207/2026/NĐ-CP.
-- **Luật Xây dựng 2025 (135/2025/QH15)** (Có hiệu lực từ 01/07/2026) — Quy định chung về công tác quản lý chất lượng và nghiệm thu công trình.
-- **Nghị định 217/2026/NĐ-CP** (Có hiệu lực từ 01/07/2026) — Quản lý hoạt động xây dựng.
-- **Thông tư 34/2026/TT-BXD** (Có hiệu lực từ 01/07/2026) — Quy định về phân cấp công trình xây dựng.
-
-### 2. Áp dụng tra cứu chuyển tiếp (Công trình hoàn thành / nghiệm thu trước 01/07/2026):
-- **Văn bản hợp nhất 19/VBHN-BXD (25/03/2026)** — Phụ lục VIb: Danh mục hồ sơ hoàn thành công trình (kế thừa Nghị định 105/2025/NĐ-CP).
+Mọi căn cứ pháp lý của checklist bắt buộc phải được đối soát động qua Seam `python -m ccba_legal query` hoặc `ccba_legal.registry` theo đúng nguyên tắc SSOT tại Mục 5 (trạng thái `ACTIVE`, không bị thay thế). Tuyệt đối không suy đoán hiệu lực từ danh mục tĩnh.
 
 ## Output Formats
 
 - **Markdown** (.md) — Cho review và lưu trữ trong knowledge base.
-- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng thư viện `python-docx` để xuất bản tự động.
+- **Word** (.docx) — Cho in ấn và phát hành chính thức, sử dụng Deep Seam `ooxml_processor.v1` (`DocxDocument`).
 
 ## Dependencies
 
-- `python-docx` (cho xuất Word)
+- Seam `ooxml_processor.v1` (`packages/ccba-ooxml`)
 - `pyyaml` (cho đọc YAML)
-- Skill `legal-document-tracker` (cho cập nhật theo VBPL)
+- Skill `ccba-legal-document-tracker` / CLI `ccba_legal query` (cho cập nhật theo VBPL)
+
+---
+
+## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
+* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
 ---
@@ -3634,6 +3692,185 @@ Sau khi PR đã sẵn sàng (CI xanh, Copilot sạch):
 
 ---
 
+# Skill: ccba-create-verification-skill
+
+---
+name: ccba-create-verification-skill
+description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (ADR-0009 / Upstream Pstack Disciplines).
+user-invocable: true
+command: /ccba-create-verification-skill
+when_to_use: Dùng khi người dùng muốn thiết lập mới hoặc bảo trì, sửa lỗi sai lệch (drift repair) cho bộ kỹ năng kiểm định tự động (verification harness) của một ứng dụng hoặc spoke.
+category: governance
+gpi:
+  s: 4.5
+  k: 3.5
+  a: 2.0
+  p: 1.0
+keywords:
+- verification
+- harness
+- test
+- quality
+- pstack
+- verify
+- drift
+- maintain
+argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
+metadata:
+  author: CCBA
+  version: 1.1.0
+disable-model-invocation: true
+bundle: _core
+tier: kernel
+triggers:
+- ccba-create-verification-skill
+- create-verification-skill
+- tạo verification skill
+- thiết lập harness
+- verify harness
+- maintain-verification-skill
+- bảo trì verification skill
+- sửa verification skill
+- repair verification skill
+- harness drift
+---
+
+# Kỹ Năng Khởi Tạo & Bảo Trì Bộ Kiểm Định Ứng Dụng (ccba-create-verification-skill)
+
+Kỹ năng này tự động thiết lập bộ kỹ năng kiểm định tự động chuyên biệt `verify-<app>` cho bất kỳ ứng dụng nào trong hệ sinh thái CCBA (Web, REST API, CLI, Worker, hoặc Spoke repository).
+
+Được kế thừa và nâng cấp từ triết lý `create-verification-skill` của Cursor `pstack`, bộ kiểm định này tuân thủ nghiêm ngặt nguyên tắc **Vệ Sinh Spoke (ADR-0044)**: toàn bộ mã kiểm thử và kịch bản thực thi được cô lập bên trong `.agents/skills/verify-<app>/harness/`, tuyệt đối không làm phình thư mục `scripts/` vượt quá giới hạn 15 kịch bản.
+
+---
+
+## 5 Khối Chức Năng Cốt Lõi Trong Kỹ Năng Kiểm Định `verify-<app>`
+
+Mỗi kỹ năng `verify-<app>` được tạo ra phải bao gồm đầy đủ 5 khối cấu trúc sau:
+
+```mermaid
+flowchart TD
+    B1["1. Clean-Slate Pre-flight\n(Kiểm tra xung đột port, diệt tiến trình mồ côi)"] --> B2["2. Dual-Mode Server Lifecycle\n(POSIX setsid / Windows Process Group)"]
+    B2 --> B3["3. Deterministic Health Barrier\n(Readiness Probe với polling & timeout)"]
+    B3 --> B4["4. Evidence-Capture Test Suite\n(Chạy Pytest/Playwright, chụp log/kết quả)"]
+    B4 --> B5["5. Guaranteed Graceful Cleanup\n(Finally block dọn sạch tiến trình con)"]
+```
+
+### 1. Clean-Slate Pre-flight (Tiền Kiểm Sạch Sẽ)
+- Kiểm tra xem cổng dịch vụ (port) mục tiêu có đang bị chiếm dụng bởi tiến trình khác hay không.
+- Nếu có tiến trình chiếm dụng ngoài ý muốn, cảnh báo hoặc thực hiện ngắt kết nối an toàn.
+
+### 2. Dual-Mode Server Lifecycle (Quản Trị Vòng Đời Tiến Trình Đa Nền Tảng)
+- Khởi động server trong một nhóm tiến trình riêng biệt (Process Group) để đảm bảo có thể dừng toàn bộ cây tiến trình con một cách triệt để khi kết thúc bài test.
+- **Quy chuẩn đa hệ điều hành bắt buộc**:
+  ```python
+  import os
+  import subprocess
+  import sys
+
+  is_win = sys.platform == "win32"
+  kwargs = {}
+  if is_win:
+      # Windows: Khởi tạo Process Group mới
+      kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+  else:
+      # Linux / macOS (POSIX): Sử dụng setsid
+      kwargs["preexec_fn"] = os.setsid
+
+  proc = subprocess.Popen(server_cmd, **kwargs)
+  ```
+
+### 3. Deterministic Health Barrier (Rào Chắn Sẵn Sàng Xác Định)
+- Tuyệt đối CẤM dùng `time.sleep(N)` tùy tiện để chờ server khởi động.
+- BẮT BUỘC sử dụng vòng lặp kiểm tra HTTP endpoint (ví dụ: gửi request thăm dò readiness probe) với timeout xác định (ví dụ tối đa 15s, thăm dò mỗi 200ms).
+
+### 4. Evidence-Capture Test Suite (Thực Thi Kiểm Thử & Thu Thập Bằng Chứng)
+- Chạy toàn bộ các kịch bản kiểm thử (API, UI, hoặc integration tests).
+- Lưu giữ kết quả có cấu trúc (JUnit XML, JSON log, hoặc test artifacts) để phục vụ CI/CD và báo cáo nghiệm thu.
+
+### 5. Guaranteed Graceful Cleanup (Dọn Dẹp Đảm Bảo Tuyệt Đối)
+- Quá trình dừng server BẮT BUỘC nằm trong khối `finally:` để đảm bảo không để lại tiến trình mồ côi (zombie processes) ngay cả khi bài test thất bại:
+  ```python
+  try:
+      # Chạy test suite...
+      pass
+  finally:
+      if is_win:
+          subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], check=False)
+      else:
+          import signal
+          try:
+              os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+          except ProcessLookupError:
+              pass
+  ```
+
+---
+
+## Chế Độ Hoạt Động Kép (Dual-Mode Operation) & Tự Động Nhận Diện
+
+Kỹ năng tự động xác định chế độ vận hành dựa trên hiện trạng hệ thống tệp:
+- **Nếu chưa tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 1: Khởi Tạo Mới (`scaffold`)**.
+- **Nếu đã tồn tại `.agents/skills/verify-<app>/harness/`** $\rightarrow$ Kích hoạt **Mode 2: Bảo Trì & Sửa Sai Lệch (`maintain`)**.
+
+---
+
+## Quy Trình Triển Khai Cho AI Agent
+
+### Mode 1 — Khởi Tạo Mới (`scaffold`)
+1. **Khảo Sát Ứng Dụng (App Discovery):**
+   - Xác định loại ứng dụng: Web (FastAPI, Flask, Next.js), CLI, Worker, hoặc Thư viện.
+   - Xác định lệnh khởi động server (nếu có), cổng mặc định, và probe kiểm tra sức khỏe (readiness check hoặc command ping).
+   - **Tiêu chí hoàn thành:** Xác định đầy đủ loại ứng dụng, lệnh khởi chạy, cổng lắng nghe, và cơ chế probe sẵn sàng.
+2. **Khởi Tạo Cấu Trúc Thư Mục Cục Bộ:**
+   - Tạo thư mục `.agents/skills/verify-<app>/`.
+   - Tạo thư mục con `.agents/skills/verify-<app>/harness/` chứa các kịch bản thực thi.
+   - **Tiêu chí hoàn thành:** Thư mục `.agents/skills/verify-<app>/harness/` được tạo thành công trên hệ thống tệp.
+3. **Sinh Tệp Định Nghĩa Kỹ Năng (`verify-<app>/SKILL.md`):**
+   - Định nghĩa frontmatter chuẩn (`name: verify-<app>`, `category: verification`, v.v.).
+   - Hướng dẫn các bước chạy kiểm định và đối chiếu trạng thái theo 5 khối cấu trúc.
+   - **Tiêu chí hoàn thành:** Tệp `.agents/skills/verify-<app>/SKILL.md` được sinh ra với đầy đủ frontmatter và quy trình 5 khối.
+4. **Khởi Tạo Features Map (`features/INDEX.md`):**
+   - Lập danh mục các tính năng hiện có của ứng dụng theo chuẩn `features_map_guide.md`.
+   - **Tiêu chí hoàn thành:** Tệp `features/INDEX.md` được khởi tạo với bảng ánh xạ các tính năng chính và bài kiểm thử tương ứng.
+5. **Chạy Thử Nghiệm Xác Minh (Dry-Run Verification):**
+   - Thực thi thử kịch bản harness để xác nhận hệ thống có thể khởi động, chạy probe, và dọn dẹp sạch sẽ với exit code 0.
+   - **Tiêu chí hoàn thành:** Kịch bản harness thực thi dry-run thành công và thoát với mã exit code 0.
+
+### Mode 2 — Bảo Trì & Sửa Sai Lệch Drift (`maintain`)
+1. **Kiểm Tra Nguồn Gốc Thay Đổi (Pre-Remediation Provenance Check - COND-01):**
+   - Đối chiếu commit history hoặc tài liệu API: nếu thay đổi là chủ đích thiết kế (đổi route, port, schema) $\rightarrow$ sửa `harness/`; nếu là lỗi hồi quy ngoài ý muốn (regression) $\rightarrow$ **CẤM SỬA `harness/`**, giữ nguyên bài test và yêu cầu sửa mã nguồn ứng dụng.
+   - **Tiêu chí hoàn thành:** Phân loại chính xác nguyên nhân lỗi thuộc diện Lệch Hợp Đồng (Contract Drift) hay Lỗi Hồi Quy (Regression).
+2. **Đối Chiếu Bề Mặt Tính Năng (Surface Diff):**
+   - So sánh các route/command hiện hành với tài liệu `features/INDEX.md` để khoanh vùng điểm lệch.
+   - **Tiêu chí hoàn thành:** Xác định danh sách các điểm trôi lệch giữa code và tài liệu.
+3. **Thực Thi Quan Sát Thực Tế (Observed Live Pass):**
+   - Chạy 1 pass harness đại diện để ghi nhận log lỗi thực tế thay vì suy đoán cảm tính.
+   - **Tiêu chí hoàn thành:** Thu thập toàn văn stack trace và log lỗi thực tế từ lần chạy kiểm định.
+4. **Khắc Phục Tận Gốc Trong Thư Mục `harness/`:**
+   - Cập nhật lệnh CLI, port, timeout, probe URL hoặc schema assertions bên trong `.agents/skills/verify-<app>/harness/`. Tuyệt đối không tạo file rác tại thư mục gốc `scripts/` (ADR-0044).
+   - **Tiêu chí hoàn thành:** Kịch bản trong `harness/` và `features/INDEX.md` được cập nhật đồng bộ.
+5. **Xác Minh Thoát Sạch Tuyệt Đối (Clean Exit Verification):**
+   - Chạy lại bài kiểm định, bảo đảm đạt exit code 0 và tiêu diệt sạch toàn bộ cây tiến trình con.
+   - **Tiêu chí hoàn thành:** Toàn bộ harness chạy thành công với exit code 0, không còn tiến trình zombie.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/features_map_guide.md` | Hướng dẫn thiết lập và duy trì Features Map (`features/INDEX.md`) cho ứng dụng |
+| `references/maintain_drift_guide.md` | Hướng dẫn phát hiện & khắc phục 4 dạng drift kiểm định, chống test tampering và bảo vệ Spoke cleanliness |
+
+---
+
+*Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
+
+*Nội dung này tuân thủ Hiến pháp Nền tảng CCBA (ADR-0009 & ADR-0044).*
+
+
+---
+
 # Skill: ccba-design
 
 ---
@@ -3682,6 +3919,16 @@ triggers:
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam AI của nền tảng:
+* **Định Tuyến & Sinh Nội Dung:** Mọi tương tác văn bản và sáng tạo thiết kế bắt buộc định tuyến qua Seam `model_routing.v1` (`from ccba_ai import choose_model`) và `ai_chat.v1` (`from ccba_ai import ai`). Tuyệt đối không hardcode API key, không nhúng model slug trực tiếp.
+* **Hạ Tầng AI Gateway:** Sử dụng gateway tập trung trên máy chủ Spark (:8090) qua package `ccba-ai`. Khi gateway gặp sự cố, hệ thống dừng lại báo lỗi (Fail-Fast), không tự ý fallback vào các CLI cá nhân không kiểm soát.
+
+---
+
 ## When to Use
 
 - Brand identity, voice, assets
@@ -3709,76 +3956,74 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 
 ## Logo Design (Built-in)
 
-55+ styles, 30 color palettes, 25 industry guides. Gemini Nano Banana models.
+55+ styles, 30 color palettes, 25 industry guides.
 
 ### Logo: Generate Design Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Logo: Search Styles/Colors/Industries
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Logo: Generate with AI
 
-**ALWAYS** generate output logo images with white background.
+*(Lưu ý: Lối sinh tệp PNG hiện dừng Fail-Fast tại adapter để chờ chuẩn hóa Seam Card sinh ảnh trong Đợt 4B. Tiêu chí hoàn thành hiện tại tập trung vào design brief, SVG icons và design tokens; tiêu chí sinh tệp ảnh PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt).*
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
-**IMPORTANT:** When scripts fail, try to fix them directly.
-
-After generation, **ALWAYS** ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
+After generation, ask user about HTML preview via `ask_question`. If yes, generate an interactive HTML preview gallery.
 
 ## CIP Design (Built-in)
 
-50+ deliverables, 20 styles, 20 industries. Gemini Nano Banana (Flash/Pro).
+50+ deliverables, 20 styles, 20 industries. Fast and pro generation modes.
 
 ### CIP: Generate Brief
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### CIP: Search Domains
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "luxury premium elegant" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "hospitality hotel" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### CIP: Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model (4K text)
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Without logo
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
-Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
+Models: `flash` (default, fast generation), `pro` (high-quality generation)
 
 ### CIP: Render HTML Presentation
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
 ```
 
 **Tip:** If no logo exists, use Logo Design section above first.
@@ -3853,26 +4098,26 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 
 ## Icon Design (Built-in)
 
-15 styles, 12 categories. Gemini 3.1 Pro Preview generates SVG text output.
+15 styles, 12 categories. SVG text output generation via reasoning model routing.
 
 ### Icon: Generate Single Icon
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Icon: Generate Batch Variations
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
 ```
 
 ### Icon: Multi-size Export
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### Icon: Top Styles
@@ -3887,7 +4132,7 @@ python [hub_path]/.agents/skills/ccba-design/scripts/icon/generate.py --prompt "
 | flat | Material design, Google-style |
 | gradient | Modern brands, SaaS |
 
-**Model:** `gemini-3.1-pro-preview` — text-only output (SVG is XML text). No image generation API needed.
+**Model:** Định tuyến qua `model_routing.v1` (`ModelArchetype.REASONING`) — text-only output (SVG is XML text). No image generation API needed.
 
 ## Social Photos (Built-in)
 
@@ -3927,10 +4172,10 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Complete Brand Package
 
-1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
-   - **Completion Criterion:** Logo variants generated and saved in the output directory.
-2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
-   - **Completion Criterion:** CIP mockups generated using the selected logo variant.
+1. **Logo** → `scripts/logo/generate.py` → Generate logo brief / concept
+   - **Completion Criterion:** Đã xác lập design brief và concept định hướng; tiêu chí sinh file PNG tự động sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
+2. **CIP** → `scripts/cip/generate.py` → Create deliverable specifications
+   - **Completion Criterion:** Đã lập danh mục đặc tả CIP deliverables; tiêu chí sinh ảnh mockup PNG sẽ kích hoạt khi Seam ảnh Đợt 4B có mặt (hiện tại dừng Fail-Fast tại adapter).
 3. **Presentation** → Load `references/slides-create.md` → Build pitch deck
    - **Completion Criterion:** Presentation pitch deck created adhering to the brand guidelines.
 
@@ -3970,20 +4215,21 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Script | Purpose |
 |--------|---------|
 | `scripts/logo/search.py` | Search logo styles, colors, industries |
-| `scripts/logo/generate.py` | Generate logos with Gemini AI |
+| `scripts/logo/generate.py` | Generate logos with AI |
 | `scripts/logo/core.py` | BM25 search engine for logo data |
 | `scripts/cip/search.py` | Search CIP deliverables, styles, industries |
-| `scripts/cip/generate.py` | Generate CIP mockups with Gemini |
+| `scripts/cip/generate.py` | Generate CIP mockups with AI |
 | `scripts/cip/render-html.py` | Render HTML presentation from CIP mockups |
 | `scripts/cip/core.py` | BM25 search engine for CIP data |
-| `scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro |
+| `scripts/icon/generate.py` | Generate SVG icons with AI |
 
 ## Setup
 
-```powershell
-$env:GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
-pip install google-genai pillow
+Tất cả các script trong skill sử dụng trực tiếp SDK nền tảng CCBA:
+```bash
+pip install -e packages/ccba-ai
 ```
+Định tuyến mô hình bắt buộc thông qua Seam `ccba_ai.routing.choose_model()`.
 
 ## Tích hợp hệ thống & Vị trí trong Luồng công việc (Workflow Position)
 
@@ -4591,15 +4837,29 @@ Thư viện lõi `ccba-diagram` (`from ccba_diagram import apply_smart_layout`) 
 
 ---
 
-## 💻 Cách Vận Hành Qua Python API & CLI
+## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
+
+Skill này thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`diagram_layout.v1`** của gói `ccba-diagram`:
+
+1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
+   Trước khi triển khai bố cục sơ đồ mới, Agent thực hiện xác thực Seam qua CLI:
+   ```bash
+   python scripts/ccba_platform_cli.py find-seam --in diagram --out layout --json
+   ```
+   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_diagram:apply_smart_layout`). Khi làm việc trong phiên, ghi nhận `seam_id`, `status` vào plan của phiên (không commit `index_sha256` tĩnh vào file kỹ năng).
+
+2. **Rào Chắn Cấm Tính Toạ Độ Thủ Công (Determinism Invariant):**
+   Tuyệt đối **CẤM** Agent tự suy diễn toạ độ số học (x, y) hay xê dịch thủ công các elements Excalidraw qua prompting. Toàn bộ việc tính toán toạ độ, phân tầng DAG Sugiyama, toả tròn Radial, và cắt tỉa mũi tên theo hình khối phải ủy quyền 100% cho Seam `apply_smart_layout` hoặc CLI `ccba-diagram layout`.
+
+3. **Cách Vận Hành Qua Python API & CLI:**
 
 ```python
 from ccba_diagram import apply_smart_layout, generate_markdown_spec_table
 
-# 1. Tối ưu hoá toạ độ elements in-place
+# 1. Tối ưu hoá toạ độ elements in-place qua Seam
 engine_used = apply_smart_layout(elements)
 
-# 2. Sinh bảng Markdown
+# 2. Sinh bảng Markdown chuẩn công thái học
 spec_table = generate_markdown_spec_table(elements)
 ```
 
@@ -6223,6 +6483,16 @@ Kỹ năng này chịu trách nhiệm biến mọi câu hỏi pháp lý ban đ�
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`skill-bound`**, đóng vai trò điểm vào chính quy cho Seam Card **`legal_advisor.v1`** (`command: /ccba-legal-advisor`):
+* **Hợp Đồng Năng Lực:** Đầu vào `in: [legal_query, project_context]`, đầu ra `out: [legal_opinion_markdown]`.
+* **Cưỡng Chế Hiến Pháp ADR-0059 (Verbatim Grounding & Provenance Stamping):**
+  - Mọi căn cứ pháp lý và bảng tra cứu bắt buộc phải trích xuất nguyên văn từ kho OKF v2.4 đã qua thẩm duyệt mã băm `pdf_sha256`.
+  - **Ranh Giới Giả Định:** Giả định chỉ được phép áp dụng cho tham số công trình (ví dụ: giả định chiều cao công trình, diện tích sàn) khi người dùng chưa có số liệu và **BẮT BUỘC gắn nhãn rõ `[GIẢ ĐỊNH DỰ ÁN]`**. Tuyệt đối **CẤM giả định điều khoản pháp luật**.
+
+---
+
 ## 🧭 Quy Trình Vận Hành 4 Bước (Process)
 
 ### Bước 1: Tiếp Nhận & Phân Loại Độ Phức Tạp (Intake & Ambiguity Classification)
@@ -6238,7 +6508,7 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 ### Bước 2: Phỏng Vấn Làm Rõ Thích Ứng (Adaptive Diagnostic Interviewing)
 * **Nguyên tắc linh hoạt (Không giới hạn cứng):** Số lượng câu hỏi làm rõ phụ thuộc vào độ phức tạp của bài toán, nhưng **mỗi lượt hỏi tối đa 1–2 câu** để tránh làm người dùng mệt mỏi.
 * **Luôn kèm phương án chọn nhanh (A/B/C):** Đưa ra các gợi ý cụ thể để người dùng chỉ cần chọn hoặc gõ 1 chữ cái.
-* **Lối thoát giả định:** Ở mỗi lượt hỏi, luôn cung cấp phương án *"Nếu chưa có số liệu, hãy trả lời theo 2 kịch bản giả định phổ biến nhất"*.
+* **Lối thoát giả định tham số công trình:** Ở mỗi lượt hỏi, nếu người dùng chưa có số liệu dự án, cho phép đưa ra tối đa 2 kịch bản giả định thông số (phải gắn nhãn `[GIẢ ĐỊNH DỰ ÁN]`).
 * **Gợi ý 4 Khung Mẫu Tương Tác Động (Dynamic Interaction Archetypes):**
   1. *[Mẫu 1 — Thẩm định tham số]:* Kiểm tra thông số kỹ thuật cụ thể của công trình (Bậc chịu lửa, số thang, tải trọng...).
   2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
@@ -6265,14 +6535,14 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 > 
 > Thứ tự phân giải đường dẫn 3 tầng tự động:
 > 1. **Tầng 1 (Virtual-First / Cục bộ Spoke):** Trích xuất qua Deep Seam CLI hoặc quét thư mục `.\.md\legal_docs\` tại Spoke. Khi cần cô lập ngoại tuyến, kéo chọn lọc đúng văn bản dự án: `python -m ccba_legal sync --pull-latest --doc <doc_id>`.
-> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua con trỏ `hub_path` trong `.md/workspace_context.yaml` (tra cứu tự động qua Hub registry) hoặc biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH`.
-> 3. **Tầng 3 (Danh mục SSOT):** Kiểm tra `legal_registry.yaml` và `metadata.yaml` của từng gói để xác nhận trường `relations.replaces` nhằm loại bỏ triệt để văn bản/quy chuẩn đã hết hiệu lực.
+> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH` hoặc Registry Hub.
+> 3. **Tầng 3 (Danh mục SSOT):** Tra cứu qua `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đối soát trạng thái hiệu lực chuẩn hóa `ACTIVE` và các quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) nhằm loại bỏ triệt để văn bản đã hết hiệu lực hoặc bị thay thế.
 
 * Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của các gói văn bản.
 * Đọc các bảng tra cứu kỹ thuật 2D trong `tables/csv/*.csv` và các biểu mẫu nguyên tử trong `templates/`.
 * Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
-* Mọi điều khoản, quy chuẩn, tiêu chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm liên kết kiểm chứng `file:///...`** trỏ thẳng đến tệp `metadata.yaml` hoặc `clauses.json` nguồn.
-- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF kèm link dẫn chứng.
+* Mọi điều khoản, quy chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm vết truy xuất nguồn gốc (Provenance Stamping)**: Ghi rõ document slug, mã băm `pdf_sha256` và đường dẫn tương đối trong repo tri thức (tuyệt đối không dùng link `file:///` tuyệt đối).
+- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF kèm vết provenance xác thực.
 
 ---
 
@@ -6292,10 +6562,10 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - Thẩm quyền giải quyết (Sở Xây dựng / Cảnh sát PCCC / Chủ đầu tư tự duyệt).
 
 ## 3. 🔍 Căn Cứ Pháp Lý & Ma Trận Đối Chiếu Chi Tiết
-| STT | Phân Hệ / Tiêu Chí | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Nguồn Kiểm Chứng Thực Tế | Đánh Giá Áp Dụng |
+| STT | Phân Hệ / Tiêu Chí | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Vết Xác Thực Nguồn Gốc (Provenance) | Đánh Giá Áp Dụng |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | [metadata.yaml](file:///...) | 🟢 Đạt / 🔴 Chưa đạt |
-| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | [clauses.json](file:///...) | ... |
+| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../metadata.yaml`) | 🟢 Đạt / 🔴 Chưa đạt |
+| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../clauses.json`) | ... |
 
 ## 4. ⚠️ Khuyến Nghị Kỹ Thuật & Cảnh Báo Rủi Ro (Actionable Advice)
 - **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
@@ -6318,13 +6588,8 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 - [x] Vượt qua cổng `ccba-harness verify-patch --preset doc` với Exit Code 0 trước khi bàn giao cho người dùng.
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 10/2021/NĐ-CP -> Bắt buộc sử dụng **Nghị định 206/2026/NĐ-CP** (Quản lý Chi phí).
-  - Nghị định 15/2021/NĐ-CP & Nghị định 175/2024/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng).
-  - Nghị định 06/2021/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì).
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP** (PCCC & CNCH).
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023** (An toàn cháy cho nhà và công trình).
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
@@ -6371,6 +6636,14 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị văn bản đã có trong nền tảng:
+* **Hạ Tầng Hợp Nhất Văn Bản:** Sử dụng `LegislativeConsolidator` hoặc `VBHNEngine.merge_documents` của gói `ccba-legal-intel` (CLI `python -m ccba_legal consolidate`). Tuyệt đối không tự viết logic merge văn bản ad-hoc.
+* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực chuẩn hóa và quan hệ thay thế đối soát qua lệnh `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry` (công nhận status chuẩn hóa `ACTIVE`, cùng các trường thay thế `supersedes`, `replaces`, `replaced_docs`, `relations.*`); tuyệt đối không dán cứng danh sách văn bản thay thế vào thân skill.
+
+---
+
 ## When to Use
 
 - Cần **cập nhật danh mục VBPL** đang theo dõi (thêm mới, thay đổi trạng thái)
@@ -6398,34 +6671,31 @@ Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luậ
 
 Đọc file `legal_registry.yaml` tại Root Spoke để nắm danh mục hiện tại. Khi cần cập nhật:
 1. **Thêm VBPL/QCVN/TCVN mới**: Thêm entry mới vào nhóm tương ứng (`laws:`, `standards:`) với đầy đủ `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets`.
-2. **Thay đổi trạng thái**: Cập nhật `status` (`draft` $\rightarrow$ `active` $\rightarrow$ `superseded` $\rightarrow$ `expired`).
+2. **Thay đổi trạng thái**: Cập nhật `status` (`DRAFT` $\rightarrow$ `PENDING_EFFECTIVE` $\rightarrow$ `ACTIVE` $\rightarrow$ `SUPERSEDED` / `PARTIALLY_AMENDED` theo enum `LegalDocStatus`).
 3. **Đánh dấu thay thế / hướng dẫn**: Khai báo rõ ràng trong `relations:` (`replaces:`, `guided_by:`).
 
-### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI)
+### 2. Tạo Bảng So Sánh & Hợp Nhất VBPL (`VBHNEngine` CLI & API)
 
 Khi có văn bản sửa đổi bổ sung:
 
 1. Thực thi lệnh hợp nhất AST và sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` (ADR 0036):
-   ```powershell
-   python -m ccba_legal consolidate `
-     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
-     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
+   ```bash
+   python -m ccba_legal consolidate \
+     --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" \
+     --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" \
      --output "legal_docs/<category>/<doc_slug>"
    ```
-   * **Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator`:**
+   * **Hoặc sử dụng Python API qua Deep Seam `LegislativeConsolidator` / `VBHNEngine`:**
    ```python
-   from ccba_legal import LegislativeConsolidator
+   from ccba_legal import LegislativeConsolidator, VBHNEngine
 
+   # Khởi tạo qua patch manifest đã được biên tập
    consolidator = LegislativeConsolidator.from_manifest_file("patch_manifest.yaml")
    res = consolidator.consolidate("base.md", "output_dir")
 
-   # Hoặc sử dụng VBHNEngine để tạo báo cáo diff:
-   # diff_report = engine.generate_diff(
-   #     base_doc_path="path/to/old_doc.md",
-   #     amending_doc_path="path/to/new_doc.md"
-   # )
-   # Hoặc hợp nhất văn bản thành VBHN hoàn chỉnh:
-   # vbhn_result = engine.consolidate(base_ast, [patch1, patch2])
+   # Hoặc sử dụng VBHNEngine để hợp nhất tài liệu
+   engine = VBHNEngine()
+   vbhn_doc = engine.merge_documents(base_doc="base.md", amending_doc="patch1.md")
    ```
 2. Đọc kết quả diff được chuẩn hóa theo từng chương/điều/khoản (tự động so khớp `D1` $\leftrightarrow$ `dieu-1`).
 3. Điền các đánh giá chuyên môn vào template `resources/comparison_table.md`.
@@ -6463,10 +6733,8 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/registry_sync_guide.md` | Quy trình đồng bộ định kỳ legal registry và cập nhật cơ sở dữ liệu văn bản pháp lý |
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP**.
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023**.
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
@@ -6538,11 +6806,23 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`skill-bound`**, đóng vai trò điểm vào chính quy cho Seam Card **`legal_ingest.v1`** (`command: /ccba-legal-ingest`):
+* **Hợp Đồng Năng Lực:** Đầu vào `in: [pdf, docx, tvpl_url]`, đầu ra `out: [okf_bundle, clauses_json]`.
+* **Package Seams Phụ Trợ Được Phép Gọi Tiếp:**
+  - `ooxml_processor.v1` (`ccba_ooxml:DocxDocument`): Tiền xử lý DOM, chuẩn hóa bảng biểu và XML sanitization.
+  - `pdf_preprocessor.v1` (`ccba_pdf_prep:PDFProcessingPipeline`): Bóc tách vector PDF, hashing provenance.
+  - `legal_markdown.v1` (`mdconverter:ConversionPipeline`): Chuyển đổi định dạng trung gian Markdown.
+* **Cưỡng Chế Hiến Pháp ADR-0059 (Mandatory Acquisition & Verbatim Grounding):** Tuyệt đối CẤM sinh điều khoản giả lập (synthetic clauses) hoặc coi `--mock` là lối hoàn thành tác vụ. Nếu thiếu tệp nhị phân gốc (DOCX/PDF), Agent bắt buộc phải chiếm phiên TVPL chính thức hoặc yêu cầu người dùng nạp tệp trực tiếp trước khi tiếp tục.
+
+---
+
 ### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036, ADR 0039)
 
-* **Kịch bản 1 — Nạp tự động 1 lệnh toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
+* **Kịch bản 1 — Nạp tự động toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
   ```bash
-  python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud] [--mock]
+  python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud]
   ```
   *(Chu trình khép kín tự động: Chiếm `TVPLSessionMutex` ➔ Tải DOCX + PDF vào sandbox tạm ➔ Ghi `metadata_handoff.json` ➔ Chuyển giao sang `spoke_cli.py ingest` ➔ Sao chép đủ 2 tệp nhị phân vào `sources/` ➔ Cập nhật `legal_registry.yaml` bảo toàn `pdf_status` ➔ Chuyển đổi OKF v2.4 Bundle ➔ Kiểm định khoanh vùng Scoped 15-Gate CI `validate --bundle <slug>` với `CI=true` ➔ Tự động giải phóng sandbox SSOT)*.
 
@@ -6551,8 +6831,8 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   python scripts/ccba_platform_cli.py ingest-legal "<slug_or_id>" --category <01_vbpl|02_qcvn|03_tcvn> --docx <path/to/file.docx> --pdf <path/to/file.pdf>
   ```
 
-* **Kịch bản 2 — Tiếp nhận thủ công / Fallback khi cào bị lỗi:**
-  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha), Agent giải quyết cục bộ bằng script CDP/thủ công để đưa đúng 2 tệp `.docx` và `.pdf` vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
+* **Kịch bản 2 — Xử lý khi cào tự động bị chặn (ADR-0059 Acquisition Barrier):**
+  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha không thể vượt qua), Agent **BẮT BUỘC DỪNG LẠI** và thông báo yêu cầu người dùng cung cấp 2 tệp nguồn `.docx` và `.pdf` chính quy để đưa vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
 
 * **Kịch bản 3 — Làm mới / Thay thế file scan mờ bằng bản nét (Force Refresh):**
   Chạy lệnh tải đè bản đẹp vào `sources/` rồi chuyển sang Bước 1:
@@ -6563,15 +6843,10 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 * **Kịch bản 4 — Lưu trữ kép khi PDF TVPL scan mờ / lỗi phông chữ (Dual-PDF Archive & Provenance Protocol - ADR 0049):**
   Đối với các tiêu chuẩn cũ (như TCVN 4474:1987, TCVN 4513:1988, TCVN 9362:2012, TCVN 10304:2014) mà tệp PDF từ TVPL là bản photocopy scan mờ hoặc lỗi phông mã hóa chữ TCVN3/VNI:
   - Lưu giữ nguyên vẹn bản scan gốc dưới tên `sources/<doc_slug>_raw_scan.pdf` để bảo toàn vết truy xuất nguồn gốc pháp lý.
-  - Sử dụng API xuất Vector PDF đa nền tảng `from ccba_ooxml import convert_to_pdf` (tự động ưu tiên Word COM trên Windows nếu có, hoặc headless LibreOffice `soffice` trên Linux/WSL/CI) xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
+  - Sử dụng API xuất Vector PDF đa nền tảng `from ccba_ooxml import convert_to_pdf` xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
 
-* **Kịch bản 5 — Tự động giải phóng xung đột phiên TVPL & Định tuyến Tab TCVN (Session Takeover & Safe Landing):**
-  - **Chiếm lại phiên TVPL Pro (Eviction):** Khi gặp hộp thoại cảnh báo đăng nhập đa phiên `#logintfrom_w`, tự động bấm `'Đồng ý'` (hoặc gọi CheckFullLogin / gửi `action=Login` tới `ajaxcontroler.aspx`) để hủy phiên từ xa và chiếm lại đặc quyền Pro cho tác vụ nạp.
-  - **Định tuyến Tab Tiêu chuẩn TCVN:** Tiêu chuẩn TCVN sử dụng chuyển tab JavaScript phía client (`#aTabTaiVe` $\rightarrow$ `#tab8`). Tránh reload URL tham số `?tab=7` (gây redirect loop), thay vào đó click `#aTabTaiVe` và trích xuất liên kết endpoint trực tiếp:
-    * File Word: `/documents/download.aspx?id=...&part=-1&docx=1`
-    * File PDF: `/documents/download.aspx?id=...&part=0&docx=`
-  - **Mô hình Safe Landing Download:** Không bao giờ trỏ download path trực tiếp vào `sources/`. Luôn tải qua thư mục đệm ngoài workspace (như `Downloads/`), quan sát đến khi tệp `stat().st_size > 0` và sạch đuôi `.crdownload`, sau đó mới dùng `shutil.move()` chuyển vào `sources/<doc_slug>.<ext>`. Quy tắc này bảo vệ tuyệt đối Gate 11 không bị crash bởi tệp rác 0-byte.
-- **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/`.
+* **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/` kèm mã băm SHA-256 xác thực.
+
 
 ---
 
@@ -6668,13 +6943,8 @@ Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thà
 - **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế:
-  - Nghị định 10/2021/NĐ-CP -> Bắt buộc sử dụng **Nghị định 206/2026/NĐ-CP** (Quản lý Chi phí).
-  - Nghị định 15/2021/NĐ-CP & Nghị định 175/2024/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 217/2026/NĐ-CP** (Quản lý Hoạt động Xây dựng).
-  - Nghị định 06/2021/NĐ-CP (đã bị thay thế) -> Bắt buộc sử dụng **Nghị định 207/2026/NĐ-CP** (Quản lý Chất lượng & Bảo trì).
-  - Nghị định 136/2020/NĐ-CP -> Bắt buộc sử dụng **Nghị định 105/2025/NĐ-CP** (PCCC & CNCH).
-  - QCVN 06:2020/BXD -> Bắt buộc sử dụng **QCVN 06:2022/BXD & Sửa đổi 1:2023** (An toàn cháy cho nhà và công trình).
-  - Thông tư 149/2020/TT-BCA -> Bắt buộc tra cứu văn bản cập nhật mới nhất.
+* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
+* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
 
 
@@ -6720,37 +6990,24 @@ conforms_to:
 - "ADR-0042"
 - "ADR-0050"
 ---
-# Skill: CCBA Legal Intelligence Crawler & Packager (`ccba-legal-intel`)
+# Skill: CCBA Legal Intelligence Engine (`ccba-legal-intel`)
 
-Kỹ năng này hướng dẫn Agent tự động thực hiện quy trình cào dữ liệu từ Thư viện Pháp luật (TVPL) qua Deep Seam **`TVPLCrawler`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)), phân tích đóng gói thành cấu trúc OKF Bundle lồng nhau, phân rã phụ lục, vá liên kết tương đối và đăng ký văn bản mới vào cơ sở tri thức cục bộ.
+Kỹ năng này hướng dẫn Agent phân tích đồ thị quan hệ pháp luật qua Deep Seam **`LegalKnowledgeEngine`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)), tra cứu điều khoản, bóc tách bảng ma trận số liệu, thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, tập trung vào phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản và trích xuất tri thức:
+* **Thu Thập & Ingestion:** Ủy quyền 100% việc nạp văn bản mới cho Skill Seam [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md) (`legal_ingest.v1`). Tuyệt đối không duy trì sổ tay thu thập trùng lặp.
+* **Tra Cứu & Trích Xuất Tri Thức:** Khai thác các Seam hiện có của `ccba_legal` (`LegalKnowledgeEngine`, `get-clause`, `get-table`).
 
 ---
 
 ## 1. Quy chuẩn & Rào cản Kỹ thuật (Technical Guardrails)
 
-### 1.1. Rào cản Bảo mật & Quản lý Thông tin xác thực
-*   **Không hardcode credentials**: Đọc thông tin tài khoản TVPL thông qua biến môi trường hệ thống hoặc file `.env` (`TVPL_USERNAME`, `TVPL_PASSWORD`). Báo lỗi nếu thiếu.
-*   **Persistent Chromium VIP Profile (ADR 0031)**: Sử dụng hồ sơ trình duyệt chuyên dụng độc lập tại `~/.gemini/antigravity/chrome_vip`. Khi bắt đầu phiên làm việc hoặc khi session hết hạn, chạy lệnh tương tác:
-    ```bash
-    python -m ccba_legal login
-    ```
-    Đăng nhập tài khoản TVPL Pro 1 lần duy nhất để lưu cookie phiên bền vững cho toàn bộ các lệnh cào tự động sau đó.
-
-### 1.2. Ma Trận Ưu Tiên Tải Dữ Liệu TVPL VIP (ADR 0031)
-1. **Tier 1 — VIP Digital Vector Searchable PDF (`part=-100` / `#ctl00_Content_ThongTinVB_filePDFHyperLink`)**: Mỏ neo Pháp lý Tối thượng Cấp 1 (100% thân văn bản + toàn bộ phụ lục số hóa & bảng tra cứu).
-2. **Tier 2 — VIP OpenXML Word Document (`part=-1&docx=1` / `#ctl00_Content_ThongTinVB_vietnameseHyperLink_Docx`)**: Nguồn Dữ Liệu Gốc Vàng (Gold Source Input) để nạp vào `docx_converter.py` chuyển đổi sang OKF v2.2.
-3. **Tier 3 — Gazette Scan PDF (`part=0` / `#ctl00_Content_ThongTinVB_pdfHyperLink`)**: Fallback dự phòng khi văn bản chưa có bản PDF số hóa riêng.
-
-### 1.3. Rào cản Đường dẫn Hệ thống (Windows MAX_PATH Prevention)
-*   **Giới hạn độ dài Slug**: Để tránh lỗi `FileNotFoundError` khi ghi các tệp phụ lục nằm sâu trên Windows, hàm `sanitize_slug` **bắt buộc** phải giới hạn độ dài slug tối đa là **60 ký tự**.
-
-### 1.4. Quy chuẩn Tích hợp OKF Bundle Lồng nhau (Parent-Child Flat Architecture)
-*   **Luật gốc (Parent Law)**: Lưu tại `legal_docs/01_vbpl/<law_slug>/`
-*   **Văn bản hướng dẫn (Guiding Decrees/Circulars)**: Lưu phẳng bên trong `legal_docs/01_vbpl/<doc_slug>/`
-*   **Đăng ký Registry**: Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256` và `sha256` trong `legal_registry.yaml`.
-
-### 1.5. Đặc Tả Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037, ADR 0041, ADR 0042)
-Mỗi văn bản quy phạm pháp luật khi đóng gói thành công **bắt buộc** phải tuân thủ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
+### 1.1. Cấu Trúc Gói Tri Thức Hợp Nhất OKF Bundle v2.4 Universal (ADR 0021, ADR 0034, ADR 0036, ADR 0037, ADR 0041, ADR 0042)
+Mỗi văn bản quy phạm pháp luật khi được bóc tách và tra cứu bắt buộc phải đọc từ cấu trúc bundle độc lập với 4 ngăn kéo và Universal `sources/`:
 ```text
 legal_docs/<category_prefix>/<document_slug>/
 ├── metadata.yaml               # Metadata độc lập (SSOT cấp bundle, lưu pdf_sha256 và source_assets)
@@ -6770,6 +7027,10 @@ legal_docs/<category_prefix>/<document_slug>/
 ```
 * **Quy chuẩn `metadata.yaml`:** Chứa `id`, `document_number`, `type`, `issued_date`, `effective_date`, `pdf_sha256`, `pdf_status: verified`, khối `source_assets`.
 * **Cơ chế Khớp nối Hub-Spoke:** Tương thích 100% hai chiều giữa Hub (`packages/ccba-legal-intel`) và Spoke (`legal_registry.yaml`).
+
+### 1.2. Rào Cản Bảo Mật & Giới Hạn Đường Dẫn
+*   **Bảo vệ hai tầng chống Path Traversal (CWE-22)**: Khi truy xuất điều khoản hoặc bảng biểu qua CLI/API, hệ thống luôn xác thực đường dẫn tài liệu nằm trong thư mục gốc được phép.
+*   **Giới hạn độ dài Slug (Windows MAX_PATH Prevention)**: Độ dài định danh slug tối đa 60 ký tự để bảo đảm an toàn khi đồng bộ liên hệ điều hành.
 
 ---
 
@@ -6791,83 +7052,59 @@ Khi cào trang Lược đồ (`Tab=LuocDo`), so khớp các tiêu đề mối qu
 
 ---
 
-## 3. Hướng dẫn Vận hành Quy trình Chuẩn Hóa Văn Bản
+## 3. Hướng dẫn Khai Thác & Ứng Dụng Tri Thức Pháp Lý
 
-1. **Khởi Tạo Phiên TVPL VIP (Persistent Session - ADR 0031)**:
-   ```bash
-   python -m ccba_legal login
-   ```
-   Đăng nhập tài khoản VIP 1 lần duy nhất để lưu cookie phiên tại `~/.gemini/antigravity/chrome_vip`.
-   * **Tiêu chí hoàn thành:** Chrome DevTools Protocol khởi chạy thành công và lưu cookie phiên xác thực hợp lệ.
+> [!NOTE]
+> **Phân định ranh giới trách nhiệm (ADR-0059, ADR-0061)**: Toàn bộ quy trình nạp gốc văn bản mới (đăng nhập TVPL VIP, cào tài liệu, chuyển đổi Word sang OKF v2.4 Bundle, hợp nhất VBHN và kiểm định 15 Cổng Master CI) được quản trị tập trung tại [`/ccba-legal-ingest`](../ccba-legal-ingest/SKILL.md). Kỹ năng `ccba-legal-intel` tập trung vào khai thác đồ thị quan hệ, tra cứu điều khoản/bảng biểu, thiết lập checklist tuân thủ và xuất bản tài liệu trình chiếu.
 
-2. **Nạp Tự Động 1 Lệnh Toàn Trình (Happy Path - ADR 0035)**:
-   ```bash
-   python -m ccba_legal ingest "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn> --upload-drive
-   ```
-   Tự động tải bản PDF số hóa VIP (`part=-100`) và bản Word `.docx`, chuyển đổi sang OKF v2.4 Bundle, đồng bộ lên Google Drive Vault `CCBA_Legal_Vault` và Google NotebookLM.
-   * **Tiêu chí hoàn thành:** Bundle OKF v2.4 được sinh tự động và đồng bộ lên Google Drive Vault cùng NotebookLM.
+### 1. Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)
+```bash
+python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
+```
+Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
+* **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
 
-   *Hoặc tải riêng lẻ từng văn bản:*
-   ```bash
-   python -m ccba_legal fetch "<TVPL_URL>" --category <01_vbpl|02_qcvn|03_tcvn>
-   ```
+### 2. Tra Cứu & Trích Xuất Tri Thức Pháp Lý (LegalKnowledgeEngine CLI & API — ADR 0035, ADR 0050)
+* **Tra cứu văn bản và cảnh báo vòng đời:**
+  ```bash
+  python -m ccba_legal query "Luật Xây dựng"
+  ```
+* **Trích xuất nguyên vẹn Điều/Khoản với Tier-Aware Semantic Slicing & Alias Parser:**
+  ```bash
+  python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d1
+  python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d15k2
+  ```
+* **Trích xuất bảng ma trận số liệu chuẩn Markdown/CSV:**
+  ```bash
+  python -m ccba_legal get-table --doc qcvn_06_2022_bxd --table bang_01 --format markdown
+  ```
+* **Lập trình Python Facade qua `LegalKnowledgeEngine`:**
+  ```python
+  from ccba_legal import LegalKnowledgeEngine, query
+  engine = LegalKnowledgeEngine()
+  docs = engine.search("nghị định 105")
+  clause = engine.get_clause("Luat-Xay-dung-2025-135-2025-QH15", "d1")
+  table = engine.get_table("qcvn_06_2022_bxd", "bang_01", format="markdown")
+  ```
+* **Tiêu chí hoàn thành:** Truy xuất thành công dữ liệu điều khoản/bảng biểu kèm cảnh báo pháp lý và bảo vệ hai tầng chống CWE-22 Path Traversal.
 
-3. **Chuyển đổi Thủ công sang OKF v2.4 Bundle (DocxCanonicalSanitizer & Zero-LLM Deterministic AST — ADR 0042)**:
-   ```bash
-   python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
-   ```
-   *(Thực thi tiền xử lý chuẩn hóa DOM in-memory qua `DocxCanonicalSanitizer`: gọt thuộc tính `w:rsid*`, gộp run phân mảnh Unicode NFC, tiêm `xml:space="preserve"`, unwrap bảng layout và thăng cấp heading trước khi bóc tách AST đa phương thức)*.
-   * **Tiêu chí hoàn thành:** Tạo thành công thân văn bản `.md`, 4 ngăn kéo chuyên biệt (`tables/`, `figures/`, `annexes/`, `templates/`), `clauses.json` và `metadata.yaml`.
+### 3. Phân Tích Đồ Thị Lược Đồ Quan Hệ & Kiểm Soát Vòng Đời (Graph Intelligence)
+Khai thác 11 mối quan hệ lược đồ tại Mục 2 để xây dựng ma trận căn cứ pháp lý:
+* Nhận diện văn bản bị thay thế (`replaced_by_docs`) để cảnh báo rủi ro điểm liệt (Hard Floor Invariant).
+* Lập bản đồ văn bản hướng dẫn (`guiding_docs`) từ Luật gốc xuống Nghị định và Thông tư thi hành.
+* Đối chiếu văn bản hợp nhất (`consolidations`) để bảo đảm tính đồng bộ quy phạm.
 
-4. **Hợp nhất Văn bản Sửa đổi (VBHN Engine - nếu có)**:
-   ```bash
-   python -m ccba_legal consolidate -m "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" -b "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" -o "legal_docs/<category>/<doc_slug>"
-   ```
-   * **Tiêu chí hoàn thành:** Sinh tệp văn bản hợp nhất và ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md`.
+### 4. Thiết Lập Checklist Tuân Thủ Dự Án (Compliance Checklist)
+* Bóc tách các yêu cầu bắt buộc (mandates) từ các điều khoản đã trích xuất.
+* Gắn mã định danh quy phạm (`doc_id` + `clause_id`) vào từng đầu mục kiểm tra.
+* Cập nhật trạng thái tuân thủ dự án và liên kết trực tiếp tới file nguồn OKF v2.4 trên Spoke.
 
-5. **Đồng Bộ Dữ Liệu Pháp Lý Về Spoke (1-Click Legal Sync - ADR 0050)**:
-   ```bash
-   python -m ccba_legal sync --pull-latest [-o legal_docs] [--doc <doc_id>]
-   ```
-   Tự động kéo các OKF v2.4 bundles đạt chuẩn từ kho tri thức gốc `ccba-legal-knowledge` (hoặc Cloud Legal Vault) và thực hiện Non-Destructive Additive Merge cho `legal_registry.yaml` tại Spoke.
-   * **Tiêu chí hoàn thành:** Toàn bộ gói văn bản OKF v2.4 chuẩn được sao chép về Spoke và `legal_registry.yaml` được cập nhật bảo toàn.
-
-6. **Tra Cứu & Trích Xuất Tri Thức Pháp Lý (LegalKnowledgeEngine CLI & API — ADR 0035, ADR 0050)**:
-   * **Tra cứu văn bản và cảnh báo vòng đời:**
-     ```bash
-     python -m ccba_legal query "Luật Xây dựng"
-     ```
-   * **Trích xuất nguyên vẹn Điều/Khoản với Tier-Aware Semantic Slicing & Alias Parser:**
-     ```bash
-     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d1
-     python -m ccba_legal get-clause --doc Luat-Xay-dung-2025-135-2025-QH15 --clause d15k2
-     ```
-   * **Trích xuất bảng ma trận số liệu chuẩn Markdown/CSV:**
-     ```bash
-     python -m ccba_legal get-table --doc qcvn_06_2022_bxd --table bang_01 --format markdown
-     ```
-   * **Lập trình Python Facade qua `LegalKnowledgeEngine`:**
-     ```python
-     from ccba_legal import LegalKnowledgeEngine, query
-     engine = LegalKnowledgeEngine()
-     docs = engine.search("nghị định 105")
-     clause = engine.get_clause("Luat-Xay-dung-2025-135-2025-QH15", "d1")
-     table = engine.get_table("qcvn_06_2022_bxd", "bang_01", format="markdown")
-     ```
-   * **Tiêu chí hoàn thành:** Truy xuất thành công dữ liệu điều khoản/bảng biểu kèm cảnh báo pháp lý và bảo vệ hai tầng chống CWE-22 Path Traversal.
-
-7. **Kiểm Định Master CI Gates Spoke (1-Command Automation)**:
-   ```powershell
-   python scripts/validate_legal_spoke.py
-   ```
-   * **Tiêu chí hoàn thành:** Vượt qua toàn bộ 15 Cổng Master CI Validator với 0 Errors và 0 Warnings (Gate 11 Verbatim Parity $\ge 98.0\%$, Gate 13 Table Regularity, Gate 14 KaTeX Syntax).
-
-8. **Xuất Bản Trình Chiếu PowerPoint 1-Chạm (Legal-to-PPTX Thin Seam — ADR 0044)**:
-   ```bash
-   python -m ccba_legal pptx <input_markdown> -o <output_pptx>
-   ```
-   Chuyển đổi trực tiếp tài liệu tóm tắt pháp lý (`summary.md` / `concept.md`) sang file trình chiếu PowerPoint `.pptx` chuẩn nhận diện thương hiệu CCBA (Swiss Modernist Design ver 3.4) qua dynamic import `ccba_ooxml`.
-   * **Tiêu chí hoàn thành:** File presentation `.pptx` được tạo thành công với layout chuẩn thương hiệu CCBA và kích thước hợp lệ.
+### 5. Xuất Bản Trình Chiếu PowerPoint 1-Chạm (Legal-to-PPTX Thin Seam — ADR 0044)
+```bash
+python -m ccba_legal pptx <input_markdown> -o <output_pptx>
+```
+Chuyển đổi trực tiếp tài liệu tóm tắt pháp lý (`summary.md` / `concept.md`) sang file trình chiếu PowerPoint `.pptx` chuẩn nhận diện thương hiệu CCBA (Swiss Modernist Design ver 3.4) qua dynamic import `ccba_ooxml`.
+* **Tiêu chí hoàn thành:** File presentation `.pptx` được tạo thành công với layout chuẩn thương hiệu CCBA và kích thước hợp lệ.
 
 
 
@@ -7941,10 +8178,20 @@ sequenceDiagram
     CLI-->>User: Phản hồi tức thì không nghẽn luồng
 ```
 
-## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
-* **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
-* **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure).
-* **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (Miễn trừ Seam Platform):
+* **Lý do miễn trừ:** Sơ đồ Mermaid là dạng "Diagrams-as-Code" khai báo thuần túy (declarative Markdown), được phân tích cú pháp và kết xuất trực tiếp ở phía client (GitHub Markdown, Obsidian, IDE previews, trình duyệt). Nền tảng CCBA không sở hữu hay duy trì engine tính toán layout độc quyền cho Mermaid trong Monorepo packages.
+* **Quy chuẩn vận hành:** Agent không thực hiện tra cứu `find-seam` cho Mermaid, không tạo script Python backend để sinh layout Mermaid.
+* **Quy ước Escape Cú Pháp Phân Biệt:** Nhãn node Mermaid bắt buộc escape ký tự đặc biệt theo quy chuẩn web: `#40;` / `#41;` cho ngoặc đơn, `#124;` cho dấu gạch đứng, `#quot;` cho ngoặc kép (phân biệt tuyệt đối với Excalidraw Spec Table vốn cấm các entity này và yêu cầu dùng ngoặc tròn thật `()`).
+
+---
+
+## 📐 Cấu Trúc Tinh Gọn & Tự Thân (Self-Contained Invariant)
+Toàn bộ quy chuẩn cú pháp, bảng màu Academic Grayscale, các rào chắn kỹ thuật (subgraph isolation, directive theme) và mẫu thực hành chuẩn của Mermaid đã được đóng gói đầy đủ, tự thân trong tài liệu này; không phân mảnh hay dẫn xuất sang các tài liệu tham chiếu rỗng ngoài đĩa.
+
 
 
 ---
@@ -9525,6 +9772,7 @@ applies_to:
 bundle: _governance
 tier: kernel
 disable-model-invocation: true
+scope: hub
 command: /ccba-review-proposal
 user-invocable: true
 metadata:
@@ -9712,7 +9960,15 @@ triggers:
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
 
-## When to Use
+---
+
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`compose-existing`**, hợp thành từ Deep Seam `ooxml_processor.v1` (`packages/ccba-ooxml`):
+* **Biên Dịch Trình Chiếu (.pptx):** Sử dụng trực tiếp `from ccba_ooxml import build_presentation_from_markdown` hoặc lệnh CLI `python -m ccba_ooxml build-deck`. Tuyệt đối không tự viết logic sinh XML presentation ad-hoc.
+* **Lưu Trữ Tri Thức (Archive):** Các tài liệu seminar hoàn thành được lưu trữ tập trung tại `.md/seminars/` của Spoke; tuyệt đối không ghi dữ liệu seminar vào `legal_registry.yaml` (vốn là SSOT dành riêng cho văn bản quy phạm pháp luật).
+
+---
 
 - Cần **chuẩn bị nội dung** cho buổi seminar sắp tới
 - Cần **tổng hợp recap** các buổi thảo luận trong tháng
@@ -9725,15 +9981,16 @@ Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/T
 
 | File | Mô tả |
 |------|--------|
-| `templates/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
-| `templates/agenda.md` | Template chương trình/agenda seminar |
-| `templates/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/monthly_recap.md` | Template tổng hợp nội dung các buổi trong tháng |
+| `resources/agenda.md` | Template chương trình/agenda seminar |
+| `resources/notification.md` | Template thông báo lịch/thay đổi lịch |
+| `resources/seminar_template.md` | Khung tài liệu seminar tổng quan |
 
 ## Quy trình Thực hiện (Process)
 
 ### Bước 1: Tạo Agenda & Outline Seminar
 1. Hỏi user các thông tin cơ bản: Ngày giờ tổ chức, chủ đề chính, thời lượng dự kiến, người trình bày.
-2. Đọc tệp template `templates/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
+2. Đọc tệp template `resources/agenda.md` để đảm bảo áp dụng đúng khung cấu trúc chuẩn của CCBA.
 3. Thiết lập cấu trúc tri thức theo nguyên tắc **Neo giữ Khái niệm (Concept Grounding)**:
    - Xác định rõ phần **Khái niệm tiền đề (Prerequisites)**: Kiến thức/tiêu chuẩn người nghe cần biết trước.
    - Sắp xếp Outline chương trình sao cho các **Khái niệm giới thiệu mới (Introduced Concepts)** được trình bày tuần tự từ cơ bản đến nâng cao. Chủ đề nâng cao chỉ được thảo luận sau khi các chủ đề nền móng đã được neo giữ.
@@ -9770,11 +10027,11 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
 ### Bước 3: Tạo Monthly Recap
 1. Hỏi user đường dẫn đến tài liệu các buổi seminar trong tháng.
 2. Đọc các file seminar (PDF, PPTX).
-3. Tổng hợp theo template `templates/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
+3. Tổng hợp theo template `resources/monthly_recap.md` để ghi nhận các Key takeaways, Action items và các chủ đề cần follow-up.
 4. **Tiêu chí hoàn thành:** Hoàn thiện bản tóm tắt tháng lưu trữ dạng Markdown tại thư mục quy định.
 
 ### Bước 4: Thông báo thay đổi lịch
-1. Đọc template `templates/notification.md`.
+1. Đọc template `resources/notification.md`.
 2. Điền thông tin thay đổi (lịch cũ → mới, lý do).
 3. **Tiêu chí hoàn thành:** Xuất thông báo dạng văn bản hành chính hoàn chỉnh để gửi qua Zalo/Email.
 
@@ -9787,7 +10044,7 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
        CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.pptx
    ```
 2. Đảm bảo naming convention: `CCBA_RD_SEMINAR_NNN_RevXX-DD.MM.YY-Title.ext`.
-3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại và được cập nhật/đăng ký vào danh mục các buổi thảo luận (trường `seminars:`) tại tệp tin registry [.md/data/legal_registry.yaml](../../../.md/data/legal_registry.yaml).
+3. **Tiêu chí hoàn thành:** Tệp tài liệu được lưu trữ chính xác vào đúng thư mục phân loại `.md/seminars/` và hoàn tất ghi nhận nhật ký lưu trữ.
 
 ## Source Documents
 
@@ -9840,7 +10097,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.5.0
 bundle: _core
 tier: kernel
 triggers:
@@ -9881,6 +10138,10 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Vấn đề & Điểm nghẽn:** Những giả định sai lầm, hiểu lầm về SDK/Transport, hoặc các vòng lặp phản biện/sửa lỗi kéo dài.
   * **Giải pháp & Deep Seams:** Các mẫu thiết kế thành công giúp đơn giản hóa hệ thống (High Leverage & Locality).
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
+- **Chẩn đoán Môi trường & Rào chắn (Agent Environment Diagnostics):**
+  * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
+    Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
+  * Các phát hiện về công cụ và môi trường được phân loại chuẩn vào **Miền 5 (Windows & Tooling)** hoặc **Miền 2 (Code Quality & Testing)** trong `session_learnings.md`.
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Miền Kiến Trúc, tuân thủ nghiêm ngặt Tiered Memory Model.
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
@@ -9905,6 +10166,9 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).
 - **Rào chắn Phạm vi (Scope Creep Guard):** Agent **KHÔNG** tự ý sửa tất cả các SKILL.md phát hiện có khiếm khuyết. Thay vào đó, Agent phải **đề xuất danh sách các Skill cần sửa** kèm lý do cụ thể (1-2 dòng mỗi Skill) rồi **chờ người dùng quyết định** Skill nào sẽ được sửa trong phiên hiện tại.
+- **Nguyên tắc "Ưu tiên Kiểm tra Tất định hơn viết Prompt Rule":**
+  * Khi phát hiện sai sót lặp lại, Agent **ưu tiên tạo mã kiểm tra tự động** (linter, AST visitor, pre-commit hook hoặc kiểm tra quản trị trong `ccba-harness verify-patch`) trước khi đề xuất viết thêm quy tắc văn bản vào `AGENTS.md`.
+  * Chỉ ghi nhận quy tắc văn bản cho các trường hợp đòi hỏi phán đoán ngữ cảnh phức tạp (genuine judgement calls) nhằm bảo vệ ngân sách bộ nhớ ADR-0030 và triệt tiêu hiện tượng Attention Dilution của LLM.
 - **Rào Chắn Tái Biên Dịch Bắt Buộc (Recompilation Gate):**
   Ngay sau khi tạo mới hoặc sửa đổi bất kỳ tệp `SKILL.md` nào, Agent **bắt buộc** phải kích hoạt quy trình tái biên dịch kép để đồng bộ hóa Service Catalog và Web Documentation Portal:
   ```bash
@@ -9970,6 +10234,16 @@ Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
 - **Trạng thái Kiểm định Quản trị & ADR-0058:** Kết quả chạy bộ 4 Governance Gate và `ccba-harness verify-patch`.
 - **Mã Commit & Bypass:** Hash commit cuối cùng của phiên (kèm ghi chú `# APPROVED:` nếu áp dụng).
 - **Tiêu chí hoàn thành:** Báo cáo tổng kết hiển thị đầy đủ 4 mục trên trong cửa sổ chat, kèm liên kết Markdown dẫn đến các tệp tri thức vừa cập nhật.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu hoặc gặp ma sát công cụ, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/agent_environment_diagnostics.md` | Hướng dẫn 7 tiêu chí chẩn đoán và tối ưu hóa môi trường làm việc của Agent (Navigation, Guardrails, Context Pressure, Tool Economy) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -10119,6 +10393,8 @@ Hiển thị cho người dùng xem bản nháp của:
 **Bước B: Cập nhật `workspace_context.yaml`**:
 - Ghi nhận hoặc cập nhật trường `project.issue_tracker` trong file `.md/workspace_context.yaml` (ví dụ: `github`, `gitlab` hoặc `local_markdown`).
 - Bổ sung chiều thiết lập "Skills Governance" và tự động ghi cấu hình `skills_governance: {architecture: "3-tier", enforce_gpi: true}` vào `.md/workspace_context.yaml`.
+- **Rào chắn Khử Khớp Trạng Thái Máy (ADR-0061 Machine-State Decoupling):**
+  Tuyệt đối **CẤM** ghi trường `hub_path` mang đường dẫn ổ đĩa máy tuyệt đối (như `D:\...` hoặc `/home/user/...`) vào `.md/workspace_context.yaml`. Đường dẫn Hub phải được phân giải hoàn toàn độc lập qua biến môi trường hệ thống `$CCBA_HUB_PATH` (hoặc fallback thư mục tương đối anh em), ngăn chặn triệt để nguy cơ xung đột khi repository được clone trên nhiều máy tính khác nhau (Linux/Windows/macOS).
 
 **Bước C: Tạo các file chỉ dẫn chi tiết**:
 Tạo thư mục `.md/knowledge/agents/` (nếu chưa có) và ghi các file cấu hình chi tiết:
@@ -10536,6 +10812,10 @@ triggers:
 
 # Kỹ năng: Radar Thượng Nguồn & Cầu Nối Porting (Upstream Radar & Handshake)
 
+> [!IMPORTANT]
+> **Phạm vi vận hành (Hub-Only Scope):**
+> Kỹ năng Radar này **chỉ vận hành tại Hub**. Tại Hub, hệ thống giám sát các kho chứa thượng nguồn, kiểm tra bản quyền, thẩm tra tính năng và hỗ trợ chuyển giao sang `/ccba-xia`. Các dự án Spoke không chạy radar này mà nhận các tính năng đã chuẩn hóa thông qua lệnh `/ccba-update-spoke`.
+
 Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
 
 ---
@@ -10602,12 +10882,17 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
 
 ### Nhịp 3: Chuyển giao Kiểm soát sang `/ccba-xia` (1-Click Port Handshake)
 - Đọc nội dung cập nhật tại `port_recommendations.md` và trình bày tóm tắt cho người dùng.
-- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị, ví dụ:
-  ```text
-  /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
-  ```
-- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 chống hallucination).
-- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting rõ ràng.
+- Hiển thị cú pháp gọi lệnh `/ccba-xia` trỏ trực tiếp đường dẫn cục bộ tương ứng với từng kỹ năng được khuyến nghị:
+  * **Chế độ Viết lại / Port chuẩn mực (Mặc định):**
+    ```text
+    /ccba-xia .md/scratch/repos/claudekit-marketing document-skills/docx --port
+    ```
+  * **Chế độ So sánh Kiến trúc (Side-by-Side Architectural Evaluation):**
+    ```text
+    /ccba-xia .md/scratch/repos/mattpocock-skills grill-me --compare
+    ```
+- Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 phản biện Socratic Grilling).
+- **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting hoặc Compare rõ ràng.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -11202,59 +11487,127 @@ Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution),
 ## 🛠️ Các Chế Độ Thực Hiện:
 
 ### 📊 Chế độ 1: Kiểm Tra Trạng Thái Sức Khỏe & Độ Lệch Phiên Bản (Tại Hub)
-```powershell
+```bash
+# POSIX (Linux / macOS / WSL):
+python scripts/ccba_platform_cli.py spoke-status
+
+# PowerShell (Windows):
 python scripts\ccba_platform_cli.py spoke-status
 ```
 
 ### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
-```powershell
+```bash
 # 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
-python scripts\sync_spoke.py --all --dry-run
-python scripts\sync_spoke.py --all --apply
+python scripts/sync_spoke.py --all --dry-run
+python scripts/sync_spoke.py --all --apply
+
 # 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
-python scripts\sync_spoke.py --all --apply --include-sandboxes
+python scripts/sync_spoke.py --all --apply --include-sandboxes
+
+# 4. Đồng bộ kèm xác thực tự động (ADR-0058 Hard Completion Lock):
+python scripts/sync_spoke.py --all --apply --verify
 ```
 
 ### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
-```powershell
+> [!TIP]
+> Sử dụng biến môi trường `$CCBA_HUB_PATH` (POSIX) hoặc `$env:CCBA_HUB_PATH` (PowerShell) để đảm bảo tính độc lập trạng thái máy (Machine-State Decoupling — ADR-0061).
+
+```bash
+# POSIX (Linux / macOS / WSL):
 # Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
-python [hub_path]\scripts\sync_spoke.py --spoke .
-# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --force
-# Đồng bộ nạp sẵn (Preload bootstrap skills & packages):
-python [hub_path]\scripts\sync_spoke.py --spoke . --apply --bootstrap
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted (--force hoặc --ignore-dirty):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links tới packages Hub — ADR-0044) và kiểm thử Spoke (--verify):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --bootstrap --verify
 ```
 
-### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand)
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --sync-item [tên-kỹ-năng] --apply
+# PowerShell (Windows):
+# Safe-by-Default (Hiện Preview -> Hỏi xác nhận [y/N]):
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke .
+
+# Áp dụng ngay (Non-interactive / CI) hoặc Bỏ qua cảnh báo uncommitted:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --force
+
+# Đồng bộ nạp sẵn (Bootstrap editable links) và kiểm thử Spoke:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --bootstrap --verify
+```
+
+### ⚡ Chế độ 4: Tải Bổ Sung Kỹ Năng Cụ Thể (On-Demand / Lazy Loading)
+> [!NOTE]
+> Khi sử dụng `--sync-item`, hệ thống chỉ sao chép duy nhất mục kỹ năng được chỉ định và thực hiện Non-Destructive Merge cho `AGENTS.md`, giữ nguyên các kỹ năng khác.
+
+```bash
+# POSIX:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
+
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --sync-item [tên-kỹ-năng] --apply
 ```
 
 ### ⏪ Chế độ 5: Hoàn Tác & Quản Lý Snapshot Sao Lưu (Rollback & Undo)
+```bash
+# POSIX:
+# Liệt kê danh sách sao lưu snapshot:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --list-backups
+
+# Hoàn tác về snapshot gần nhất (--rollback hoặc --undo):
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --rollback
+```
+
 ```powershell
-python [hub_path]\scripts\sync_spoke.py --spoke . --list-backups
-python [hub_path]\scripts\sync_spoke.py --spoke . --rollback
+# PowerShell:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --list-backups
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 ```
 
 ### ⚖️ Chế độ 6: Đồng Bộ Tri Thức Pháp Lý Chuẩn OKF v2.4 (Two-Tier Legal Sync — ADR 0050)
-- **🟢 Tự động đồng bộ cho Spoke liên quan (Pháp điển, Thẩm tra, Kiểm định, PCCC):** Quét và sao chép gói OKF v2.4 từ Tier 1 (Offline) hoặc Tier 2 (Cloud Drive Vault), thực hiện Non-Destructive Additive Registry Merge. Lệnh độc lập: `python -m ccba_legal sync --pull-latest`.
-- **💡 Zero-Bloat cho Spoke còn lại (Phần mềm, BIM, Admin):** Mặc định bỏ qua để giữ repo tinh gọn. Khi cần tra cứu tải lẻ: `python -m ccba_legal sync --doc <doc_id>` hoặc truy vấn RAG qua `ccba-ai` trên LiteLLM Spark.
+- **💡 Mặc định Zero-Bloat (Reference-Only):** Mặc định Spoke không bị phình to dữ liệu (không copy các gói tệp văn bản lớn). Spoke tra cứu pháp điển trực tiếp từ Hub hoặc gọi RAG qua `ccba-ai` trên LiteLLM Spark.
+- **📦 Kéo gói pháp lý vật lý (`--pull-assets`):** Dành riêng cho các Spoke chuyên trách pháp điển cần dữ liệu tĩnh ngoại tuyến:
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --pull-assets
+  ```
+- **Lệnh đồng bộ pháp lý độc lập:** `python -m ccba_legal sync --pull-latest` hoặc tải lẻ: `python -m ccba_legal sync --doc <doc_id>`.
+
+---
+
+## ⚙️ Các Cờ Dòng Lệnh & Biến Môi Trường Chi Tiết
+
+| Cờ CLI / Biến | Tên đầy đủ / Bí danh | Ý nghĩa & Hành vi |
+| :--- | :--- | :--- |
+| `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
+| `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
+| `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
+| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest` (nếu có test suite; nếu không có test sẽ trả về 0 an toàn). |
+| `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
+| `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
+| `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
+| `CCBA_SKIP_GIT_PULL` | Env var (`=1`) | Bỏ qua bước tự động gọi `git pull` trên repo Hub khi thực thi đồng bộ (chỉ nhận đúng giá trị `"1"`; gán khác `"1"` như `"true"` vẫn sẽ kích hoạt pull). |
 
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ.
+2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ (nếu bật `--pull-assets`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
-   * Lệnh `sync_spoke.py --apply` tự động đồng bộ và cập nhật các kịch bản kiểm định guardrails vào thư mục `scripts/` tại Spoke:
+   * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
+     - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
      - `scripts/safe_pytest.py` (Test runner an toàn)
      - `scripts/check_hub_import_depth.py` (Kiểm soát độ sâu import)
      - `scripts/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
-   * *(Không yêu cầu sao chép thủ công bằng PowerShell).*
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python .\scripts\check_spoke_cleanliness.py`.
-5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "[hub_path]\packages\[pkg]"` và chạy test cục bộ (ví dụ: `pytest` hoặc `python scripts\validate_legal_spoke.py` đối với Spoke Pháp điển).
-6. **Kiểm tra sức khỏe tổng thể:** Chạy `ccba-spoke status` (hoặc `python "[hub_path]\scripts\ccba_platform_cli.py" spoke-status`) xác nhận trạng thái xanh.
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/check_spoke_cleanliness.py`.
+5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts/ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
 
 
 ## Progressive Disclosure & Reference Index (Level 3)
@@ -11263,7 +11616,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/upstream_sync_guide.md` | Tài liệu đặc tả kỹ thuật tham chiếu Upstream Radar (Phase 2 ADR-0057). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
+| `references/upstream_sync_guide.md` | Tài liệu chỉ dẫn chuyển tiếp (Pointer Guide). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
 
 
 
@@ -12200,39 +12553,59 @@ triggers:
 
 ---
 
-## Service Catalog (Source of Truth)
+## Service Catalog & Seam Indexes (Source of Truth)
 
-Toàn bộ thông tin về trigger keywords, đường dẫn (paths) và phân loại nghiệp vụ của Skills được định nghĩa duy nhất tại:
-```text
-.agents/skills/platform-loader/catalog.yaml
-```
-Agent bắt buộc phải đọc trực tiếp tệp `catalog.yaml` để lấy cấu hình mới nhất, không tự suy đoán hoặc sử dụng danh sách cũ.
+Để định tuyến chính xác và không bị nhầm lẫn giữa kỹ năng (Skills) và mã nguồn thư viện (Python Deep Seams), Agent cần phân biệt rạch ròi giữa **3 chỉ mục hệ thống**:
+
+| Câu hỏi của Agent | Chỉ mục tra cứu | Công cụ / Lệnh | Bản chất kết quả |
+| :--- | :--- | :--- | :--- |
+| **"Người dùng muốn thực hiện lệnh/nghiệp vụ nào, cần nạp skill nào?"** | `catalog.yaml` (mục `skills`, `workflows`, `bundles`) | Đọc file hoặc khớp `triggers` | Định tuyến kỹ năng và lọc danh mục đồng bộ Spoke. |
+| **"Package nội bộ nào đã công bố symbol gì trong `packages/*/AGENTS.md`?"** | `catalog.yaml` (mục `seams`) | `ccba-platform find-seam <từ-khóa>` (truy vấn vị trí) | Chỉ là **manh mối tìm kiếm (`status: KEYWORD_HINT`)**. CẤM dùng mã băm SHA của KEYWORD_HINT làm biên lai hợp đồng kiểm toán. |
+| **"Đã có hợp đồng biến đổi dữ liệu `in → out` chưa, có cấm thư viện thay thế nào?"** | `seam-contracts.yaml` (ADR-0061) | `ccba-platform find-seam --in <types> --out <types> [--json]` | Chỉ kết quả `status: MATCH` kèm `index_sha256` mới là **Biên lai Kiểm toán Hợp đồng (Audit Receipt)**. |
 
 ---
 
 ## Routing Instructions
 
-Khi nhận yêu cầu từ người dùng, Agent thực hiện theo logic sau:
+Khi nhận yêu cầu từ người dùng, Agent thực hiện định tuyến theo thứ tự ưu tiên:
 
-### 1. Phân tích Trigger Keywords
-Đọc `catalog.yaml`. Đối chiếu request của người dùng với các `triggers` trong catalog:
-- Khớp skill $\rightarrow$ Đọc `skill_path` (`SKILL.md`) tương ứng để nạp kỹ năng.
-- Nếu skill chưa có ở Spoke $\rightarrow$ Xem mục 3 (Lazy Loading Sync) hoặc áp dụng Virtual Hub Fallback.
+### 1. Phân định Bản chất Yêu cầu
+- **Yêu cầu nghiệp vụ hoặc tác vụ AI** ("đồng bộ spoke", "so sánh kiến trúc", "thẩm tra PCCC", "soạn thảo hồ sơ hoàn thành") $\rightarrow$ Tra cứu `catalog.yaml` theo `triggers` để nạp `SKILL.md` tương ứng.
+- **Yêu cầu viết mã nguồn xử lý dữ liệu mới** ("viết script chuyển PDF sang Markdown", "đọc file docx", "gọi LLM") $\rightarrow$ BẮT BUỘC tra cứu Seam Contracts qua CLI: `ccba-platform find-seam --in <types> --out <types>`. Nếu có Seam sẵn $\rightarrow$ Tái sử dụng; cấm viết script chắp vá cục bộ.
 
 ### 2. Tự động áp dụng Rules
 - Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `.agents/rules/ccba_identity.md`.
 - Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `.agents/rules/legal_compliance.md`.
 - Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `.agents/rules/naming_conventions.md`.
 
-### 3. Đồng bộ bổ sung kỹ năng (Lazy Loading Sync)
-Khi Agent đang hoạt động tại Spoke và phát hiện yêu cầu cần sử dụng một skill có sẵn trên Hub nhưng chưa được đồng bộ cục bộ về Spoke:
-1. Tra cứu `catalog.yaml` để tìm tên skill cần thiết.
-2. Xin phép người dùng cài đặt bổ sung: *"Tôi cần tải bổ sung kỹ năng [tên-skill] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
-3. Sau khi được đồng ý, xác định đường dẫn Hub (`hub_path`) từ `workspace_context.yaml` hoặc biến môi trường `CCBA_HUB_PATH` (mặc định sử dụng repository chung) và thực thi lệnh đồng bộ:
-    ```bash
-    python [hub_path]/scripts/sync_spoke.py --spoke . --sync-item <tên-skill> --apply
-    ```
-4. Sau khi đồng bộ thành công, Agent tự động nạp kỹ năng mới qua cơ chế Auto-Discovery và tiếp tục thực hiện công việc.
+### 3. Khai thác Kỹ năng tại Spoke: Fallback vs Đồng bộ Vật lý
+Khi Agent đang hoạt động tại Spoke và phát hiện kỹ năng cần dùng chưa có sẵn trong thư mục cục bộ `.agents/skills/`:
+- **Pha 1 — Virtual Hub Fallback (Đọc tri thức tức thì):**
+  Agent đọc trực tiếp nội dung định nghĩa kỹ năng từ kho Hub thông qua biến môi trường `$CCBA_HUB_PATH`:
+  `view_file "$CCBA_HUB_PATH/.agents/skills/<tên-kỹ-năng>/SKILL.md"`
+  *(Bước này giúp Agent nắm ngay quy trình nghiệp vụ mà không cần làm bẩn git working tree của Spoke).*
+- **Pha 2 — Đồng bộ Vật lý Kỹ năng (Lazy Loading Sync qua `--sync-item`):**
+  Khi cần sao chép tệp kỹ năng vật lý về Spoke:
+  1. Xin phép người dùng: *"Tôi cần tải bổ sung kỹ năng [tên-kỹ-năng] từ Hub về Spoke để xử lý, bạn có đồng ý không?"*
+  2. Thực thi lệnh đồng bộ an toàn:
+     ```bash
+     # POSIX (Linux / macOS / WSL):
+     python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item <tên-kỹ-năng> --apply
+
+     # PowerShell (Windows):
+     python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --sync-item <tên-kỹ-năng> --apply
+     ```
+  3. *Lưu ý quan trọng:* Cờ `--sync-item` **chỉ sao chép duy nhất mục kỹ năng được chỉ định và cập nhật hiến pháp `AGENTS.md`**, hoàn toàn **KHÔNG cài đặt git hooks (Maskara pre-commit) hay guardrails bảo vệ**.
+- **Pha 3 — Đồng bộ Toàn diện & Cài đặt Rào chắn Bảo vệ (Full Bundle Sync):**
+  Nếu Spoke cần kích hoạt toàn bộ pre-commit hooks bảo mật, linter gates và rào chắn test, bắt buộc phải chạy lệnh đồng bộ đầy đủ:
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply
+  ```
 
 ### 4. Quy tắc Định tuyến Xử lý Văn bản (Master vs Sub-Skill Routing)
 Đối với các yêu cầu xử lý văn bản, tài liệu, hoặc file văn phòng:

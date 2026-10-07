@@ -78,7 +78,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [bigbim-governance](bigbim-governance.md) | `/bigbim-governance` | `kernel` | `Model` | Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Và... |
 | [bigbim-rase](bigbim-rase.md) | `/bigbim-rase` | `kernel` | `Model` | Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho... |
 | [bigbim-risk](bigbim-risk.md) | `/bigbim-risk` | `kernel` | `Model` | Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước ... |
-| [bigbim-vbpl-digest](bigbim-vbpl-digest.md) | `/bigbim-vbpl-digest` | `kernel` | `Model` | Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam — NĐ 175/2024, ISO ... |
+| [bigbim-vbpl-digest](bigbim-vbpl-digest.md) | `/bigbim-vbpl-digest` | `kernel` | `Model` | Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu ch... |
 | [ccba-ai-qc](ccba-ai-qc.md) | `/ccba-ai-qc` | `orchestrator` | `Both` | Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn... |
 | [ccba-ai-qc-pccc-audit](ccba-ai-qc-pccc-audit.md) | `/ccba-ai-qc-pccc-audit` | `kernel` | `Both` | Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ ... |
 

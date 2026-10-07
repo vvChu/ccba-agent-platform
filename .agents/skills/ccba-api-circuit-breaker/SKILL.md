@@ -40,40 +40,40 @@ Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế c
 
 ---
 
-## Kiến trúc & Triển khai
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
-Mã nguồn triển khai chi tiết của lớp `CircuitBreaker` được tách biệt hoàn toàn ra tệp tin mô-đun:
-👉 **Mã nguồn:** [circuit_breaker.py](resources/circuit_breaker.py)
+Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào lớp `CircuitBreaker` đã được triển khai, kiểm thử và tích hợp sẵn trong package monorepo `packages/ccba-ai` (`from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState`).
 
-Kỹ sư hoặc Agent tại dự án Spoke có thể dễ dàng import và sử dụng trực tiếp:
-```python
-from resources.circuit_breaker import CircuitBreaker, CircuitState
-```
+Mọi quy trình xử lý theo lô (batch processing pipelines) bắt buộc tái sử dụng trực tiếp lớp `CircuitBreaker` từ package `ccba_ai`, không duy trì script ad-hoc cục bộ tại Spoke hay thư mục `resources/`. Mọi tương tác gọi LLM bên trong hàm lambda được bảo vệ bắt buộc định tuyến qua `choose_model()` hoặc `ModelArchetype`.
 
 ---
 
 ## Cách sử dụng trong CCBA Batch Pipeline
 
 ```python
-from ccba_ai import ai
-from resources.circuit_breaker import CircuitBreaker
+from ccba_ai import ai, choose_model
+from ccba_ai.circuit_breaker import CircuitBreaker
 
 # Khởi tạo 1 lần duy nhất dùng chung cho toàn bộ luồng lặp
 breaker = CircuitBreaker(
-    rpm_limit=20,           # Giới hạn 20 Requests Per Minute
-    backoff_seconds=3.0,    # Chờ 3s sau mỗi lỗi
     failure_threshold=3,    # 3 lỗi liên tiếp -> OPEN circuit
     recovery_timeout=30.0   # Chuyển HALF_OPEN sau 30s
 )
 
 def audit_drawing(drawing_text: str) -> dict | None:
     """Audit 1 bản vẽ — có circuit breaker bảo vệ."""
-    return breaker.call(
-        lambda: ai.chat(
+    if not breaker.allow_request():
+        return None
+    try:
+        result = ai.chat(
             f"Audit bản vẽ sau: {drawing_text}",
-            model="qwen-local-primary"
+            model=choose_model("general")
         )
-    )
+        breaker.record_success()
+        return result
+    except Exception as exc:
+        breaker.record_failure(exc)
+        return None
 
 # Batch processing loop
 results = []
@@ -110,8 +110,8 @@ LiteLLM Gateway v1.83+ trên Server Spark trả về ngoại lệ ngân sách đ
 is_budget_error = "budget" in str(e).lower() and "exceeded" in str(e).lower()
 ```
 Khi phát hiện lỗi ngân sách:
-- **Fast-Fail tức thì:** Circuit lập tức ngắt sang `CircuitState.OPEN` mà không chờ số lần lỗi đạt `failure_threshold`, đồng thời bỏ qua thời gian `backoff_seconds`.
-- **Cảnh báo chuẩn:** Xuất JSON mã lỗi `CCBAErrorCode.CIRCUIT_BREAKER_OPEN` ra `stderr` khuyến nghị chuyển đổi sang mô hình cục bộ không tốn phí (`qwen-local-primary` / Ollama Qwen 35B).
+- **Fast-Fail tức thì:** Circuit lập tức ngắt sang `CircuitState.OPEN` mà không chờ số lần lỗi đạt `failure_threshold`.
+- **Cảnh báo chuẩn:** Xuất JSON mã lỗi `CCBAErrorCode.CIRCUIT_BREAKER_OPEN` ra `stderr` khuyến nghị chuyển đổi sang mô hình cục bộ không tốn phí (local fallback model / `choose_model("local")`).
 - **Chống Retry vô hạn:** Kết hợp `cache_rejected()` để bỏ qua item gây cạn quota ở các vòng lặp tiếp theo.
 
 ---
@@ -119,21 +119,21 @@ Khi phát hiện lỗi ngân sách:
 ## Centralized Gateway (:8090) & Soft Cooldown Auto-Downgrade Pattern
 
 ### Kiến trúc Tập Trung tại Gateway Cổng :8090
-Toàn bộ danh mục mô hình (kể cả Gemini Flash High, Claude Sonnet 4.6 Thinking, Claude Opus 4.6 Thinking và local Qwen) được cung cấp **tập trung tại Gateway duy nhất cổng `:8090`** trên Server Spark (`http://100.83.192.30:8090/v1` <!-- ccba:allow-raw-ip -->). Không còn phân tách endpoint hay proxy phụ trợ trên cổng `:8045`.
+Toàn bộ danh mục mô hình (kể cả các archetypes reasoning, coding, general và local Qwen) được cung cấp **tập trung tại Gateway duy nhất cổng `:8090`** trên Server Spark (`http://${CCBA_AI_GATEWAY_HOST}:8090/v1`). Không còn phân tách endpoint hay proxy phụ trợ trên cổng `:8045`.
 
 ### Bối cảnh & Vấn đề
-Khi một pipeline LLM gọi các mô hình reasoning chuyên biệt (như `claude-opus-4-6`, `claude-sonnet-4-6-thinking`) qua AI Gateway:
+Khi một pipeline LLM gọi các mô hình reasoning chuyên biệt (như các mô hình thuộc task `reasoning` hoặc `ModelArchetype.REASONING`) qua AI Gateway:
 - Khi upstream provider tạm thời cạn kiệt quota hoặc bị giới hạn tần suất, gateway có thể trả về lỗi HTTP `503 Service Unavailable` hoặc HTTP `429 Too Many Requests`.
 - Nếu áp dụng Circuit Breaker cứng truyền thống (ngắt toàn bộ pipeline) $\rightarrow$ Tác vụ của người dùng bị dừng khựng (Hard Crash/Abort), gây ức chế và đình trệ quy trình.
 
 ### Giải pháp: Model-Level Soft Cooldown & Auto-Downgrade
-Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với **Tự động giáng cấp xuống mô hình dự phòng** tương đương (như `gemini-3.7-flash-high` hoặc `gemini-3.8-flash` ngay trên Gateway `:8090`):
+Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với **Tự động giáng cấp xuống mô hình dự phòng** tương đương (như task `general` hoặc `ModelArchetype.STANDARD` ngay trên Gateway `:8090`):
 
 ```
-                       Request (model="claude-opus-4-6")
+                       Request (task="reasoning")
                                        │
                          [Is model in Cooldown (30s)?]
-                                 ├── Yes ──► [Auto-Downgrade to Gemini Flash High (:8090)]
+                                 ├── Yes ──► [Auto-Downgrade to Fallback General (:8090)]
                                  │           (was_downgraded = True)
                                  └── No
                                      │
@@ -141,39 +141,42 @@ Kết hợp cơ chế **Soft Cooldown** tạm thời cho từng mô hình với 
                                      ├── HTTP 200 ──► Trả về kết quả (was_downgraded = False)
                                      └── HTTP 503/429
                                              │
-                                             ├── Kích hoạt Cooldown: _model_cooldown_until[model] = now + 30s
-                                             └── [Auto-Downgrade to Gemini Flash High (:8090)]
+                                             ├── Kích hoạt Cooldown: _model_cooldown_until[task] = now + 30s
+                                             └── [Auto-Downgrade to Fallback General (:8090)]
                                                  (was_downgraded = True)
 ```
 
 ### Triển khai Mẫu (Architecture Seam)
 ```python
+from ccba_ai import choose_model
+
 _model_cooldown_until: dict[str, float] = {}
 
 def call_gateway_with_meta(
     prompt: str,
     *,
-    model: str = "claude-opus-4-6",
+    task_or_model: str = "reasoning",
     timeout: int = 90,
 ) -> tuple[str, bool]:
     """Gọi LLM Gateway (:8090) có theo dõi metadata giáng cấp (was_downgraded)."""
     global _model_cooldown_until
 
-    # 1. Nếu model đang trong thời gian Cooldown -> Tự động giáng cấp ngay lập tức
-    cooldown_until = _model_cooldown_until.get(model, 0.0)
+    # 1. Nếu model/task đang trong thời gian Cooldown -> Tự động giáng cấp ngay lập tức
+    cooldown_until = _model_cooldown_until.get(task_or_model, 0.0)
     if time.time() < cooldown_until:
         remaining = int(cooldown_until - time.time())
-        logger.warning(f"Model {model} in cooldown ({remaining}s left). Auto-downgrading to fallback model...")
+        logger.warning(f"Task/Model {task_or_model} in cooldown ({remaining}s left). Auto-downgrading to fallback model...")
         return _call_fallback_gateway(prompt, timeout=timeout), True
 
     # 2. Thử gọi mô hình chính trên Gateway :8090
     try:
-        content = _call_gateway_endpoint(prompt, model=model, timeout=timeout)
+        resolved_model = choose_model(task_or_model)
+        content = _call_gateway_endpoint(prompt, model=resolved_model, timeout=timeout)
         return content, False
     except (GatewayHttp503Error, GatewayHttp429Error) as exc:
         # 3. Kích hoạt 30s Soft Cooldown và giáng cấp tức thì sang model dự phòng trên :8090
-        _model_cooldown_until[model] = time.time() + 30.0
-        logger.warning(f"Model {model} limited: {exc}. Cooldown 30s set. Downgrading to Tier 1 fallback...")
+        _model_cooldown_until[task_or_model] = time.time() + 30.0
+        logger.warning(f"Task/Model {task_or_model} limited: {exc}. Cooldown 30s set. Downgrading to fallback...")
         return _call_fallback_gateway(prompt, timeout=timeout), True
 ```
 
@@ -181,7 +184,7 @@ def call_gateway_with_meta(
 Khi cờ `was_downgraded == True`, lớp điều phối (Coordinator/UI) BẮT BUỘC chèn một Callout thông báo minh bạch ở đầu bài viết để người dùng nắm rõ lý do mô hình bị thay thế mà không gây gián đoạn luồng làm việc:
 
 ```markdown
-> [!info] ℹ️ Mô hình chính đang trong thời gian hồi phục tài khoản (cooldown), hệ thống đã tự động phản hồi bằng Gemini Flash High để bạn không phải chờ đợi.
+> [!info] ℹ️ Mô hình chính đang trong thời gian hồi phục tài khoản (cooldown), hệ thống đã tự động phản hồi bằng mô hình dự phòng (General/Fast) để bạn không phải chờ đợi.
 ```
 
 ### Ưu điểm Cốt Lõi
@@ -196,17 +199,45 @@ Khi cờ `was_downgraded == True`, lớp điều phối (Coordinator/UI) BẮT B
 
 Tránh việc retry vô tận ở các lượt chạy sau bằng cơ chế cache lại các item bị lỗi:
 ```python
-from resources.circuit_breaker import CircuitBreaker, load_rejected_cache, cache_rejected
+import json
+from pathlib import Path
+from ccba_ai.circuit_breaker import CircuitBreaker
 
-breaker = CircuitBreaker()
+REJECTED_CACHE = Path(".rejected_items.json")
+
+def load_rejected_cache() -> set[str]:
+    """Tải danh sách các item bị reject."""
+    if REJECTED_CACHE.exists():
+        try:
+            return set(json.loads(REJECTED_CACHE.read_text(encoding="utf-8")))
+        except Exception:
+            return set()
+    return set()
+
+def cache_rejected(item_id: str) -> None:
+    """Cache lại item_id bị reject để phòng tránh infinite retry loop."""
+    rejected = load_rejected_cache()
+    rejected.add(item_id)
+    try:
+        REJECTED_CACHE.write_text(json.dumps(list(rejected)), encoding="utf-8")
+    except Exception as e:
+        print(f"[Warning] Failed to write rejected cache: {e}", file=sys.stderr)
+
+breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=30.0)
 rejected_cache = load_rejected_cache()
 
 for item in items:
     if item.id in rejected_cache:
         continue  # Skip không gọi API nữa
         
-    result = breaker.call(lambda: process(item))
-    if result is None:
+    if not breaker.allow_request():
+        continue
+
+    try:
+        result = process(item)
+        breaker.record_success()
+    except Exception as exc:
+        breaker.record_failure(exc)
         cache_rejected(item.id) # Ghi nhận vào file cache tạm
 ```
 

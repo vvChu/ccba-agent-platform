@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills bigbim-risk
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-risk --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng

@@ -48,6 +48,11 @@ triggers:
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là Reference Skill cung cấp bộ từ vựng chuẩn mực về thiết kế module sâu (Deep Modules: Module, Interface, Implementation, Depth, Seam theo định nghĩa của Michael Feathers, Adapter, Leverage, Locality) kèm Quy Tắc Dừng Cứng (Hard Stopping Rule). Khái niệm "seam" trong kỹ năng này đề cập đến vị trí thiết kế và điểm nối mã nguồn trong kiến trúc phần mềm, hoàn toàn độc lập với 16 card Seam dữ liệu của Platform Monorepo, do đó nhận posture `seam-exempt`.
+- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Toàn bộ 4 tệp tài liệu chuyên sâu (`references/codebase_refactor_guide.md`, `references/deepening.md`, `references/design_it_twice.md`, `references/html_report_template.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
 ## Glossary
 
 Use these terms exactly — don't substitute "component," "service," "API," or "boundary." Consistent language is the whole point.

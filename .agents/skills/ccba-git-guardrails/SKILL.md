@@ -39,6 +39,13 @@ Các câu lệnh sau bắt buộc phải có sự chấp thuận tường minh t
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách thiết lập rào chắn an toàn trong thời gian chạy (Runtime Guardrails) nhằm chặn hoặc yêu cầu phê duyệt tường minh từ người dùng trước khi thực thi các lệnh Git có tính chất hủy diệt (`push`, `reset --hard`, `clean`, `branch -D`, `checkout .`, `restore .`). Không có Seam card nào trong `seam-contracts.yaml` đảm nhiệm logic tương tác shell an toàn, do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 >= 12.0 (nằm trong vùng deadband [11.5, 12.5), duy trì Tier 2B theo nguyên tắc hysteresis). Tệp tham chiếu chuyên sâu duy nhất `references/merge_conflict_resolution.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
+---
+
 ## Các bước thực hiện
 
 ### Bước 1: Nhận diện và đánh chặn câu lệnh nguy hiểm (Command Interception)

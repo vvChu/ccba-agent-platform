@@ -357,3 +357,31 @@ def test_compile_catalog_cli_capability_flags(capsys: pytest.CaptureFixture[str]
     captured = capsys.readouterr()
     data = json.loads(captured.out)
     assert data["status"] == "MATCH"
+
+
+def test_seam_contracts_no_forbidden_import_collisions() -> None:
+    """Verify that forbidden_substitute_imports across all seam cards have zero collisions.
+
+    If two cards declare the same forbidden import, check_dependency_contracts.py's
+    dictionary lookup would overwrite restrictions and silently bypass linter enforcement.
+    """
+    data, _ = load_seam_contracts(HUB_ROOT)
+    cards = data.get("cards", [])
+
+    seen_imports: dict[str, str] = {}
+    collisions: list[str] = []
+
+    for card in cards:
+        seam_id = card.get("seam_id", "unknown")
+        forbidden_list = card.get("forbidden_substitute_imports", [])
+        for mod in forbidden_list:
+            if mod in seen_imports:
+                collisions.append(
+                    f"Forbidden import '{mod}' in '{seam_id}' collides with prior declaration in '{seen_imports[mod]}'."
+                )
+            else:
+                seen_imports[mod] = seam_id
+
+    assert not collisions, "Collision(s) detected in forbidden_substitute_imports:\n" + "\n".join(
+        f"  ❌ {c}" for c in collisions
+    )

@@ -1,13 +1,13 @@
 # Logo Design Reference
 
-AI-powered logo design with 55+ styles, 30 color palettes, 25 industry guides. Uses Gemini Nano Banana models.
+AI-powered logo design with 55+ styles, 30 color palettes, 25 industry guides.
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
 | `../scripts/logo/search.py` | Search styles, colors, industries; generate design briefs |
-| `../scripts/logo/generate.py` | Generate logos with Gemini Nano Banana |
+| `../scripts/logo/generate.py` | Generate logos with AI |
 | `../scripts/logo/core.py` | BM25 search engine for logo data |
 
 ## Commands
@@ -15,20 +15,20 @@ AI-powered logo design with 55+ styles, 30 color palettes, 25 industry guides. U
 ### Design Brief (Start Here)
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Search Domains
 
 ```bash
 # Styles
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "minimalist clean" --domain style
 
 # Color palettes
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "tech professional" --domain color
 
 # Industry guidelines
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Generate Logo
@@ -36,8 +36,8 @@ python [hub_path]/.agents/skills/ccba-design/scripts/logo/search.py "healthcare 
 **ALWAYS** use white background for output logos.
 
 ```bash
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python [hub_path]/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
 Options: `--style`, `--industry`, `--prompt`
@@ -85,8 +85,8 @@ Options: `--style`, `--industry`, `--prompt`
 - `logo-prompt-engineering.md` - AI generation prompts
 
 ## Setup
-
-```powershell
-$env:GEMINI_API_KEY="your-key"
-pip install google-genai
-```
+ 
+ Phụ thuộc được quản lý tập trung qua nền tảng CCBA:
+ ```bash
+ pip install -e packages/ccba-ai
+ ```

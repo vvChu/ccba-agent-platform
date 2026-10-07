@@ -13,7 +13,7 @@
 
 ### Đồng bộ sang Phân vùng Spoke
 ```bash
-python scripts/spoke/sync_spoke.py --skills ccba-ai-pdf-preprocessor
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-pdf-preprocessor --apply
 ```
 
 ### Thông Số & Huy Hiệu Kỹ Năng

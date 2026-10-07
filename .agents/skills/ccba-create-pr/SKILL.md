@@ -34,6 +34,12 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`seam-exempt`** (SOP kernel mở Pull Request trong repo hiện tại). GPI đạt (3.0, 3.0, 1.0, 1.0) = 14.0; kỹ năng `ccba-contribute-to-hub` đã kế thừa quy chuẩn này cho chiều đóng góp từ Spoke sang Hub. Không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: kernel`.
+
+---
+
 ## 🛡️ Bước 0: Main Branch Guard (Tự động phát hiện & bảo vệ nhánh chính)
 
 1. **Lấy tên branch hiện hành & xác định nhánh chính (Default Branch):**

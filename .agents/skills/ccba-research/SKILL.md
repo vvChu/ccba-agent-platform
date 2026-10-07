@@ -42,6 +42,13 @@ Kỹ năng này hướng dẫn Agent cách khởi chạy **background subagents*
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối quy trình nghiên cứu chuyên sâu đa tác nhân (Three-Phase Reasoning Hierarchy) gồm 3 pha: Pha 1 (Goal & Strategy Formulation), Pha 2 (Parallel Multi-Agent Execution với subagent đơn hoặc Dual-Agent Adversarial Pattern), và Pha 3 (Synthesis & Delivery tạo báo cáo Markdown 5 phần chuẩn hóa). 16 card Seam chuẩn hóa của Platform không bao quát logic điều phối subagent nghiên cứu tổng quát, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Toàn bộ 3 tệp tài liệu chuyên sâu thuộc `references/` (`sequential_thinking_method.md`, `sequential_core-patterns.md`, `sequential_advanced-techniques.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+
+---
+
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)
 
 Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:

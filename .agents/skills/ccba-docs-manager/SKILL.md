@@ -33,6 +33,14 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel năm pha quản trị tài liệu kỹ thuật: đóng gói codebase (`repomix_pack.py`), che giấu thông tin nhạy cảm qua caller script nền tảng `scripts/maskara.py redact`, sao lưu an toàn vào `.md/scratch/backups/`, đồng bộ tài liệu và kiểm tra Architecture Drift qua `scripts/validate_docs.py`, vá liên kết qua `ccba-relative-link-patcher`, và dọn dẹp artifacts. Quy trình phối hợp các script quản trị và công cụ tệp tin, không phụ thuộc Seam đóng gói Python độc lập.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì 1 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/markdown_hallucination_check.md`).
+
+---
+
 ## 🛠️ Quy trình thực thi 5 pha
 
 ### Pha 1: Đóng gói Codebase (Scouting & Pack)

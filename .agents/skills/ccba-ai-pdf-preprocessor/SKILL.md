@@ -36,9 +36,17 @@ Skill này cung cấp các công cụ chuyên dụng để chuẩn bị tài li�
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào Public Deep Seam **`pdf_preprocessor.v1`** của gói monorepo `packages/ccba-pdf-prep` (`from ccba_pdf_prep import PDFProcessingPipeline, PDFAnalyzer`).
+
+Mọi quy trình chuẩn bị và trích xuất PDF phức tạp, phân mảnh trang bản vẽ kỹ thuật bắt buộc tái sử dụng trực tiếp các lớp và pipeline từ package `ccba_pdf_prep`, tuyệt đối CẤM tự ý viết script ad-hoc cài đặt độc lập thư viện `fitz`/`pymupdf` vi phạm quy ước cô lập phụ thuộc.
+
+---
+
 ## Cài đặt
 ```bash
-pip install -e "D:\GitHubProjects\ccba-agent-platform\packages\ccba-pdf-prep"
+pip install -e "$CCBA_HUB_PATH/packages/ccba-pdf-prep"
 ```
 
 ---
@@ -93,14 +101,14 @@ tiles = VisionOptimizer.tile_page(
 
 ## Khi nào nên dùng?
 - **File > 30 trang**: Dùng `get_blind_chunks` để xử lý song song.
-- **Hybrid PDF (Text + Scan)**: Dùng `get_segments` để chọn model Qwen cho text và Gemini OCR cho scan.
+- **Hybrid PDF (Text + Scan)**: Dùng `get_segments` để định tuyến task `general` cho text và task `ocr` cho scan qua `choose_model()`.
 - **Bản vẽ kỹ thuật**: Dùng `VisionOptimizer` để bóc tách thông tin QC bản vẽ.
 
 ---
 
 ## Liên kết
 - **Source**: `packages/ccba-pdf-prep/`
-- **Dependencies**: `fitz` (PyMuPDF), `pypdf`.
+- **Package Seam**: `pdf_preprocessor.v1` (`PDFProcessingPipeline`, `PDFAnalyzer`)
 
 ## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất (ADR-0058)
 * **Tiêu chí hoàn thành tất định:** Mọi thay đổi mã nguồn, kỹ năng hoặc tài liệu bắt buộc phải vượt qua bộ kiểm thử tự động.
