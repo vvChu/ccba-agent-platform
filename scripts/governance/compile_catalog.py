@@ -567,7 +567,9 @@ def compile_catalog_dict(hub_root: Path = HUB_ROOT) -> dict[str, Any]:
 
 _GUARDRAIL_APPLIES = frozenset({"python", "all"})
 _CHMOD_RE = re.compile(r"^0o[0-7]{3,4}$")
-_DEST_RE = re.compile(r"^(?:scripts/[A-Za-z0-9_.-]+\.py|\.githooks/[A-Za-z0-9_.-]+|conftest\.py)$")
+_DEST_RE = re.compile(
+    r"^(?:scripts/(?:_guardrails/)?[A-Za-z0-9_.-]+\.py|\.githooks/[A-Za-z0-9_.-]+|conftest\.py)$"
+)
 
 
 class CatalogCompileError(ValueError):

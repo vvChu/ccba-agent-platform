@@ -93,19 +93,19 @@ guardrails:
     applies_to: ["python"]
   - name: "safe_pytest.py"
     src: "scripts/safe_pytest.py"
-    dest: "scripts/safe_pytest.py"
+    dest: "scripts/_guardrails/safe_pytest.py"
     applies_to: ["python"]
   - name: "safe_runner.py"
     src: "scripts/safe_runner.py"
-    dest: "scripts/safe_runner.py"
+    dest: "scripts/_guardrails/safe_runner.py"
     applies_to: ["python"]
   - name: "check_hub_import_depth.py"
     src: "scripts/spoke/check_hub_import_depth.py"
-    dest: "scripts/check_hub_import_depth.py"
+    dest: "scripts/_guardrails/check_hub_import_depth.py"
     applies_to: ["python"]
   - name: "check_spoke_cleanliness.py"
     src: "scripts/spoke/check_spoke_cleanliness.py"
-    dest: "scripts/check_spoke_cleanliness.py"
+    dest: "scripts/_guardrails/check_spoke_cleanliness.py"
     applies_to: ["python"]
   - name: "pre-commit"
     src: ".githooks/pre-commit"

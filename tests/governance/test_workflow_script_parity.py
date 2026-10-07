@@ -30,6 +30,10 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/sync_notebooklm_knowledge.py",
     "scripts/check_spoke_cleanliness.py",
     "scripts/check_hub_import_depth.py",
+    "scripts/_guardrails/check_spoke_cleanliness.py",
+    "scripts/_guardrails/check_hub_import_depth.py",
+    "scripts/_guardrails/safe_pytest.py",
+    "scripts/_guardrails/safe_runner.py",
     "scripts/spoke_bootstrap.py",
 }
 

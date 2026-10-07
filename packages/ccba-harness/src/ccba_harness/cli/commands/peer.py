@@ -154,9 +154,21 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--profile",
         type=str,
-        choices=["audit_plan", "agentic_code", "patch_fast", "code_review", "arch_audit"],
+        choices=[
+            "audit_plan",
+            "agentic_code",
+            "patch_fast",
+            "code_review",
+            "arch_audit",
+            "audit_direct",
+        ],
         default=None,
-        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit').",
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit', 'audit_direct').",
+    )
+    parser.add_argument(
+        "--no-tools",
+        action="store_true",
+        help="Force direct reasoning response by disallowing all tools.",
     )
     parser.add_argument(
         "--tier",
@@ -269,13 +281,31 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
                 else spec.get("max_turns")
             )
         )
+        tools = spec.get("tools")
+        disallowed_tools = spec.get("disallowed_tools")
+        deny = spec.get("deny")
+        if args.no_tools:
+            tools = None
+            disallowed_tools = [
+                "read_file",
+                "grep",
+                "list_dir",
+                "run_terminal_command",
+                "search_replace",
+                "write_file",
+                "spawn_subagent",
+            ]
+            deny = ["*"]
+            if args.max_turns is None and (max_turns is None or max_turns > 3):
+                max_turns = 3
+
         cmd = build_grok_cmd(
             prompt_path=prompt_path,
             model=model,
             max_turns=max_turns,
-            tools=spec.get("tools"),
-            disallowed_tools=spec.get("disallowed_tools"),
-            deny=spec.get("deny"),
+            tools=tools,
+            disallowed_tools=disallowed_tools,
+            deny=deny,
             reasoning_effort=spec.get("reasoning_effort"),
             worktree=args.worktree,
             system_prompt=spec.get("system_prompt"),
@@ -298,6 +328,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         max_turns=args.max_turns,
         timeout=args.timeout,
         worktree=args.worktree,
+        no_tools=args.no_tools,
     )
     if not success:
         print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)

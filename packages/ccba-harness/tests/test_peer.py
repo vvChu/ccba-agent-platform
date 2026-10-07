@@ -950,6 +950,13 @@ def test_new_peer_profiles_specs():
     assert aa["reasoning_effort"] == "xhigh"
     assert "write_file" in aa["disallowed_tools"]
 
+    assert "audit_direct" in PROFILE_SPECS
+    ad = PROFILE_SPECS["audit_direct"]
+    assert ad["max_turns"] == 3
+    assert ad["tools"] is None
+    assert "read_file" in ad["disallowed_tools"]
+    assert ad["deny"] == ["*"]
+
 
 def test_parse_verdict_with_string_conditions_and_extra_fields():
     md = """---

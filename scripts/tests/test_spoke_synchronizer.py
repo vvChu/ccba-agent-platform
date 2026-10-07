@@ -90,8 +90,8 @@ class TestSpokeSynchronizer(unittest.TestCase):
         copier.copy_if_needed()
 
         self.assertTrue((spoke_dir / "conftest.py").exists())
-        self.assertTrue((spoke_dir / "scripts" / "safe_pytest.py").exists())
-        self.assertTrue((spoke_dir / "scripts" / "safe_runner.py").exists())
+        self.assertTrue((spoke_dir / "scripts" / "_guardrails" / "safe_pytest.py").exists())
+        self.assertTrue((spoke_dir / "scripts" / "_guardrails" / "safe_runner.py").exists())
 
     def test_git_working_tree_guard_non_git(self):
         """Test GitWorkingTreeGuard returns clean on non-git directory."""
