@@ -72,9 +72,9 @@ Thư viện lõi `ccba-diagram` (`from ccba_diagram import apply_smart_layout`) 
 
 ---
 
-## 🏛️ Platform-Aware Reuse Gate & Seam Binding (ADR-0061)
+## 🏛️ Platform-Aware Architecture Posture
 
-Skill này thuộc thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`diagram_layout.v1`** của gói `ccba-diagram`:
+Skill này tuân thủ chuẩn hóa kiến trúc ADR-0061 theo thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`diagram_layout.v1`** của gói `ccba-diagram`:
 
 1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
    Trước khi triển khai bố cục sơ đồ mới, Agent thực hiện xác thực Seam qua CLI:
