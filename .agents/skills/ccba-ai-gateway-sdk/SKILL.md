@@ -67,7 +67,7 @@ Mọi tương tác LLM từ client (Hub/Spoke/CLI) BẮT BUỘC định tuyến 
 │                                                              │
 │  :8090 ─► AI Gateway (LiteLLM)                               │
 │              ├── qwen-local-primary    ← vLLM, local GPU    │
-│              ├── reasoning-gemma       ← vLLM, fallback     │
+│              ├── reasoning-gemma       ← Google API, fallback│
 │              ├── Claude Reasoning      ← Anthropic API      │
 │              ├── Gemini Standard/Flash ← Google API         │
 │              ├── ocr-primary / tier3   ← Vision APIs        │
@@ -310,7 +310,7 @@ curl http://${CCBA_AI_GATEWAY_HOST}:8090/health
 | `401 Unauthorized` | Sai API key — kiểm tra `AI_GATEWAY_KEY` |
 | `Model not found` | Kiểm tra tên model bằng `/v1/models` |
 | `504 Gateway Timeout` | Model đang load, chờ 2-3 phút rồi thử lại |
-| Qwen 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (4B) |
+| Qwen 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (9B AWQ, on-demand profile `vllm-light`) |
 
 ## 🧹 Output Processing — Làm Sạch LLM Output
 
