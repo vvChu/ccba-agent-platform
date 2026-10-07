@@ -56,9 +56,16 @@ Kỹ năng này chuẩn hóa hạ tầng điều khiển và tương tác trình
 
 ---
 
+## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, profile cục bộ và allowlist domain của Antigravity & CCBA Platform. Không có Seam card nào trong `seam-contracts.yaml` (16 card Seam chuẩn hóa tập trung vào Document Conversion, RAG Search, QC Vision và Legal/VBHN Pipeline), do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập hạ tầng trình duyệt devtools.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 2.0, P: 1.0) = 18.5 >= 12.0. Không có thư mục `references/` phụ trợ.
+
+---
+
 ## 🛠️ Bộ Công Cụ & Hướng Dẫn Vận Hành 1-Click
 
-Bộ script tiện ích được lưu trữ tập trung tại `C:\Users\chuvu\.gemini\antigravity\bin\`:
+Bộ script tiện ích được lưu trữ tập trung tại `$env:USERPROFILE\.gemini\antigravity\bin\`:
 
 | Tiện ích | Định dạng | Mục đích sử dụng |
 | :--- | :---: | :--- |
@@ -71,13 +78,13 @@ Bộ script tiện ích được lưu trữ tập trung tại `C:\Users\chuvu\.g
 
 ```powershell
 # Khởi chạy phiên Chrome Debug:
-pwsh -File "C:\Users\chuvu\.gemini\antigravity\bin\Launch-Chrome-Debug.ps1"
+pwsh -File "$env:USERPROFILE\.gemini\antigravity\bin\Launch-Chrome-Debug.ps1"
 
 # Kiểm tra sức khỏe kết nối:
-pwsh -File "C:\Users\chuvu\.gemini\antigravity\bin\Test-Chrome-Debug.ps1"
+pwsh -File "$env:USERPROFILE\.gemini\antigravity\bin\Test-Chrome-Debug.ps1"
 
 # Dừng an toàn phiên làm việc:
-pwsh -File "C:\Users\chuvu\.gemini\antigravity\bin\Stop-Chrome-Debug.ps1"
+pwsh -File "$env:USERPROFILE\.gemini\antigravity\bin\Stop-Chrome-Debug.ps1"
 ```
 
 ---
@@ -88,9 +95,9 @@ Hệ thống đã được tích hợp gói chính thức `chrome-devtools-mcp` 
 
 ```json
 "chrome-devtools": {
-  "command": "node",
+  "command": "npx",
   "args": [
-    "C:\\Users\\chuvu\\AppData\\Roaming\\npm\\node_modules\\chrome-devtools-mcp\\build\\src\\bin\\chrome-devtools-mcp.js",
+    "chrome-devtools-mcp",
     "--browserUrl",
     "http://127.0.0.1:9222",
     "--no-usage-statistics"
