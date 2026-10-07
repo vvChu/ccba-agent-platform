@@ -2,6 +2,18 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-07] [guideline] | Chuẩn Hóa Toàn Diện 76/76 Skills Nền Tảng Theo ADR-0061 (Platform-Aware Architecture Posture)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phối hợp thẩm định song phương với Lead Reviewer Grok 4.7 qua 11 đợt)
+- **Affected Files**: `.agents/skills/*/SKILL.md` (76 skills), `.md/peer_exchange/`, `.md/knowledge/`
+- **Summary**: Hoàn tất 100% chiến dịch chuẩn hóa kiến trúc thế năng nền tảng Platform-Aware Architecture Posture (ADR-0061) cho toàn bộ 76 skills của CCBA Agent Platform:
+  1. **Hiến Pháp Posture**: Cả 76 skills được bổ sung mục duy nhất `## 🏛️ Platform-Aware Architecture Posture` (tiêu đề không chứa số ADR), định vị sau mở đầu và trước H2 đầu tiên.
+  2. **Quản Trị Seams Không Dung Thứ**: Đúng 16 Public Deep Seams được gán `package-bound` trên `seam-contracts.yaml`; 60 skills còn lại nhận `seam-exempt` với lý do kiến trúc chuẩn xác (SOP, cẩm nang, CLI callers), ngăn chặn triệt để lạm phát hợp đồng.
+  3. **Bảo Tồn Phân Tầng Tier & Điểm GPI**: Giữ vững `tier: kernel`, công thức GPI toán học `(2.5S + 2.0K + 2.0A - 1.5P)` và hysteresis deadband `[11.5, 12.5)`.
+  4. **Bảo Tồn Progressive Disclosure Level 3 & ADR Parity**: 100% dòng tham chiếu trong bảng Level 3 và tập số token ADR trên từng file được bảo tồn nguyên vẹn, đảm bảo tính tất định trên ma trận parity.
+  5. **Bằng Chứng & Nghiệm Thu**: 11/11 đợt đạt phán quyết đồng thuận chính thức `APPROVE` (`conditions: []`, `risk_score: 1`) từ Grok 4.7; vượt qua 6/6 kiểm tra sàn CI tự động (`python -m ccba_harness verify-patch --preset ci`, 327 tests) với Exit Code 0.
+
+---
+
 ## [2026-10-06] [update] | Phát Hành PR #494: Modularize cli.py Monofile, Enforce Static Module Size Budget & Template Sanitizer Precision
 - **Author / Agent**: Kỹ sư trưởng & AI Lead Agent (Phiên /plan, Phản biện đối kháng Grok CLI, /ccba-release-feature & /ccba-session-retrospective)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/cli/`, `packages/ccba-harness/src/ccba_harness/peer_gate.py`, `tests/governance/test_module_budget_ratchet.py`, `scripts/spoke/spoke_bootstrap.py`, `packages/ccba-maskara/src/ccba_maskara/_scanner.py`, `packages/ccba-maskara/tests/test_secret_patterns.py`, `.md/knowledge/`

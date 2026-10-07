@@ -26,11 +26,12 @@
 - **RULE-1.18 [ADR 0066 — Skills Taxonomy, Scope Declaration & Multi-Environment Distribution Matrix]**:
   - *Platform Operations vs Domain*: `bundle: _core` chỉ chứa công cụ SDLC loop của Agent (sync, verify, review, PR); `_software` chứa nghiệp vụ code chuyên sâu.
   - *Metadata Scope & Linter*: Frontmatter khai báo `scope: hub | spoke | universal`. Linter tự động chặn `command: /...` thuộc `_governance` nếu thiếu `scope: hub` (ADR-0066). Tự động đối soát điểm GPI toán học (COND-01).
-- **RULE-1.17 [Verification Harness Drift Maintenance & Pre-Remediation Provenance Check]**:
-  - *Provenance Check (COND-01)*: Phân định rõ contract drift chủ đích vs unintended regression trước khi sửa test; CẤM hạ assert tạo test pass giả mạo.
-  - *Drift Isolation*: Mọi sửa đổi test/harness cô lập trong `.agents/skills/verify-<app>/harness/` (ADR-0044). Phân loại chuẩn 4 hình thái drift (API, Environmental, Process/PID, Structural).
+- *(RULE-1.17 tại Mục 34 của archive/session_learnings_history.md)*
 - **RULE-1.19 [Dynamic Topo Sort Fail-Closed & Tier-0 Anchor Preservation]**:
-  - Khi Kahn's topo sort động (`discover_package_topology`) gặp `dep_graph` rỗng (thiếu `pyproject.toml`) hoặc phát hiện chu trình, BẮT BUỘC Fail-Closed hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER`, bảo toàn bất biến vị trí 0 (`ccba-harness`) và 1 (`ccba-ai`).
+  - Khi Kahn's topo sort động (`discover_package_topology`) gặp `dep_graph` rỗng hoặc chu trình, BẮT BUỘC Fail-Closed hoàn nguyên về `DEFAULT_PACKAGE_TOPOLOGY_ORDER`, bảo toàn vị trí 0 (`ccba-harness`) và 1 (`ccba-ai`).
+- **RULE-1.20 [ADR 0061 — Posture Title Invariant, Parity Radar Isolation & Contract Inflation Prevention]**:
+  - *Header Invariant*: BẮT BUỘC dùng đúng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR trong header). CẤM token ADR trong posture của skill không tạo ADR mới, bảo vệ ma trận parity `sync_hub_adr_matrix.py`.
+  - *Contract Inflation Defense*: Chỉ đúng 16 Public Deep Seams có package Python backend mới nhận `package-bound`; 60 skills dạng SOP/pattern/CLI nhận `seam-exempt`. CẤM mở seam contract giả mạo.
 
 
 ---
@@ -42,17 +43,12 @@
   - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT (17 archetypes).
   - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (75/75 skills) map chuẩn xác; cấm unmapped (`None`).
 - **RULE-2.9 [Test Fixture Isolation, Live Lock & Hub Decoupling]**:
-  - *Env & Live Lock Isolation*: Test fixtures/runners (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý (`is_kernel_runner_locked`, `check_daemon_lock`, `/tmp/*.lock` $\rightarrow$ `False`). CẤM rò rỉ biến môi trường hoặc đọc lock thật.
-- **RULE-2.13 [Atomic Micro-PR Slicing & Single-Seam Locality]**:
-  - *Micro-Task Slicing*: Phân rã task $\le 150-200$ LOC logic vào 1 Deep Seam duy nhất kèm test tự động; chia nhỏ task phức tạp thành micro-PRs giảm review fatigue và conflict.
+  - Test fixtures (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý (`is_kernel_runner_locked`, `check_daemon_lock` $\rightarrow$ `False`). CẤM rò rỉ env var hoặc đọc lock thật.
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
-  - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống lỗi Orphan Notes. Shell script đa dòng dùng `cat << 'EOF'` chống lỗi nháy. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
-- **RULE-2.19 [Hypothesis-Driven Forensic & Ambiguity Resolution]**:
-  - *Phân vùng bất định 4 miền*: Phân tách triệt để Unknown Unknowns (thử nghiệm $\le 3$ vòng COND-02), Product Preferences (headless fallback COND-03), Technical Forks (trade-off matrix) và Bugs.
-  - *Minimal Reproducer (COND-04)*: Mọi bug forensic BẮT BUỘC đóng băng test tối thiểu tái hiện lỗi vào `tests/` hoặc `harness/` trước khi sửa.
+  - Tệp `.md` mới trong `.md/knowledge/` BẮT BUỘC biên mục vào `index.md` ngay commit tạo tệp chống Orphan Notes. Shell script dùng `cat << 'EOF'`. Callable động dùng `hasattr(obj, "m") and callable(obj.m)`.
+- *(RULE-2.13, 2.19 tại Mục 35 của archive/session_learnings_history.md)*
 - **RULE-2.20 [Static Module Size Budget & Template Sanitizer Precision]**:
-  - *Module Budget*: CẤM monofile $> 500$ LOC và CLI handler post-parse body $> 40$ LOC; ngoại lệ tạm thời bắt buộc gắn `# ccba:quarantine` có kỳ hạn và issue URL.
-  - *Template Sanitizer Precision*: Scanner quét bí mật CẤM suppress wildcard `startswith("{")` đơn thuần; BẮT BUỘC phân định f-string cú pháp biến (`^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]`) với JSON literal `{"`, và allowlist metric đo lường tường minh.
+  - *Module Budget*: CẤM monofile $> 500$ LOC và CLI post-parse body $> 40$ LOC (quarantine có hạn). Scanner quét secret BẮT BUỘC phân định f-string cú pháp biến (`^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]`) với JSON literal `{"`.
 
 ---
 
@@ -85,7 +81,9 @@
   - *Zero-Hang*: Dùng `--prompt-file`, `--output-format plain`, `subprocess.Popen` kèm watchdog. Khối verdict bổ sung `telemetry` (exact/estimated). `AUDIT_PLAN` chạy `grok-4.7` với `xhigh`.
 - **RULE-4.15 [Multi-Turn Review Budgeting, Resilient Parsing & POSIX Atomicity]**:
   - Turn budget tools review $\ge 10-14$ turns. `PeerVerdictBlock` hỗ trợ `extra="ignore"`, Pydantic conditions coercion và session history fallback. `apply_anchor_patch` kiểm tra `is_file()`, rollback gom lỗi, và bảo tồn `stat.st_mode`.
-
+- **RULE-4.16 [Two-Pass Peer Review Protocol & Atomic Micro-PR Slicing]**:
+  - *Two-Pass Consensus*: Pass 1 (`APPROVE_PLAN`) đóng băng ranh giới thiết kế; Pass 2 (`APPROVE`) đối soát commit reflog. Mô hình reasoning `xhigh` ngân sách timeout $\ge 900$s.
+  - *Atomic Micro-PR*: Phân rã 7-8 skills thành 4 micro-PRs, khóa cục bộ bằng bộ 3 lệnh (< 1s) trước khi merge toàn sàn CI (`verify-patch --preset ci`).
 
 ---
 
