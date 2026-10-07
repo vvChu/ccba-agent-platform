@@ -194,3 +194,44 @@ def test_git_index_flag_runs_update_index(tmp_path: Path) -> None:
             if "update-index" in call[0][0] and "--chmod=+x" in call[0][0]
         ]
         assert len(update_calls) >= 1
+
+
+def test_guardrail_migration_cleans_legacy_top_level_scripts(tmp_path: Path) -> None:
+    """When a guardrail moves to scripts/_guardrails/, stale scripts/<name> on Spoke is unlinked."""
+    from scripts.spoke.sync.sdk_inspector import TestGuardrailCopier
+
+    hub = tmp_path / "hub"
+    spoke = tmp_path / "spoke"
+    hub.mkdir()
+    spoke.mkdir()
+
+    # Hub has safe_pytest.py under scripts/
+    hub_scripts = hub / "scripts"
+    hub_scripts.mkdir()
+    (hub_scripts / "safe_pytest.py").write_text("# hub safe_pytest", encoding="utf-8")
+
+    # Spoke already has legacy top-level scripts/safe_pytest.py
+    spoke_scripts = spoke / "scripts"
+    spoke_scripts.mkdir()
+    legacy_file = spoke_scripts / "safe_pytest.py"
+    legacy_file.write_text("# legacy spoke safe_pytest", encoding="utf-8")
+
+    copier = TestGuardrailCopier(spoke_root=spoke, hub_root=hub, project_type="Phần mềm")
+    catalog_data = {
+        "guardrails": [
+            {
+                "name": "safe_pytest.py",
+                "src": "scripts/safe_pytest.py",
+                "dest": "scripts/_guardrails/safe_pytest.py",
+                "applies_to": ["python"],
+            }
+        ]
+    }
+
+    copier.copy_if_needed(catalog=catalog_data, dry_run=False)
+
+    # 1. New location exists
+    assert (spoke / "scripts" / "_guardrails" / "safe_pytest.py").is_file()
+    # 2. Legacy top-level file was removed
+    assert not legacy_file.exists()
+

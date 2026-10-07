@@ -111,3 +111,51 @@ def test_scripts_peer_dispatch_delegation(tmp_path, capsys):
     assert ret == 0
     out = capsys.readouterr().out
     assert "[DRY-RUN] Command:" in out
+
+
+def test_peer_dispatch_dry_run_with_audit_direct_and_no_tools(tmp_path, capsys):
+    prompt = tmp_path / "prompt_direct.md"
+    envelope = PeerPromptEnvelope(
+        request_id="req-dry-005",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Audit Direct Test",
+        timestamp="2026-10-07T21:00:00+07:00",
+        output_path="out.md",
+    )
+    prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
+
+    # 1. Profile audit_direct
+    ret = run_peer_dispatch_cli(
+        [
+            "--prompt-file",
+            str(prompt),
+            "--profile",
+            "audit_direct",
+            "--dry-run",
+        ]
+    )
+    assert ret == 0
+    out = capsys.readouterr().out
+    assert "[DRY-RUN] Profile: audit_direct" in out
+    assert "[DRY-RUN] Max Turns: 3" in out
+    assert "--deny *" in out
+
+    # 2. Flag --no-tools with arch_audit (should override tools and cap max-turns to 3)
+    ret = run_peer_dispatch_cli(
+        [
+            "--prompt-file",
+            str(prompt),
+            "--profile",
+            "arch_audit",
+            "--no-tools",
+            "--dry-run",
+        ]
+    )
+    assert ret == 0
+    out = capsys.readouterr().out
+    assert "[DRY-RUN] Profile: arch_audit" in out
+    assert "[DRY-RUN] Max Turns: 3" in out
+    assert "--deny *" in out
+
