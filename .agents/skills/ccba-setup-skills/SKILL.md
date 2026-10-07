@@ -40,6 +40,11 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 
 Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
 
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel phỏng vấn một lần: cấu hình issue tracker, nhãn triage, domain docs, thể chế skills governance, ghi nhận vào `AGENTS.md` và `.md/workspace_context.yaml`. 16 card trong `seam-contracts.yaml` không quản lý quy trình thiết lập repository, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.5, K: 2.0, A: 2.0, P: 1.0) = 15.25 >= 12.0. Hai dòng Level 3 (`references/pre_commit_setup.md`, `references/ts_deep_modules.md`) cùng cây tài nguyên phụ trợ `resources/` và `templates/` được bảo tồn nguyên vẹn.
+
 ---
 
 ## Quy trình thực hiện (Process)
