@@ -51,25 +51,25 @@ class TestGuardrailCopier:
         {
             "name": "safe_pytest.py",
             "src": "scripts/safe_pytest.py",
-            "dest": "scripts/safe_pytest.py",
+            "dest": "scripts/_guardrails/safe_pytest.py",
             "applies_to": ["python"],
         },
         {
             "name": "safe_runner.py",
             "src": "scripts/safe_runner.py",
-            "dest": "scripts/safe_runner.py",
+            "dest": "scripts/_guardrails/safe_runner.py",
             "applies_to": ["python"],
         },
         {
             "name": "check_hub_import_depth.py",
             "src": "scripts/spoke/check_hub_import_depth.py",
-            "dest": "scripts/check_hub_import_depth.py",
+            "dest": "scripts/_guardrails/check_hub_import_depth.py",
             "applies_to": ["python"],
         },
         {
             "name": "check_spoke_cleanliness.py",
             "src": "scripts/spoke/check_spoke_cleanliness.py",
-            "dest": "scripts/check_spoke_cleanliness.py",
+            "dest": "scripts/_guardrails/check_spoke_cleanliness.py",
             "applies_to": ["python"],
         },
         {
@@ -191,6 +191,21 @@ class TestGuardrailCopier:
             elif dry_run and status in ("NEW", "UPDATED"):
                 action_text = "Would copy" if status == "NEW" else "Would update"
                 print(f"  - [DRY-RUN] {action_text} guardrail: {dest_rel}")
+
+            # Automatic migration: if a guardrail moved to scripts/_guardrails/,
+            # clean up obsolete top-level scripts/<name> in the Spoke (Issue #502).
+            dest_parts = Path(dest_rel).parts
+            if len(dest_parts) == 3 and dest_parts[0] == "scripts" and dest_parts[1] == "_guardrails":
+                legacy_file = self.spoke_root / "scripts" / dest_parts[2]
+                if legacy_file.is_file():
+                    if dry_run:
+                        print(f"  - [DRY-RUN] Would remove legacy guardrail: scripts/{dest_parts[2]}")
+                    else:
+                        try:
+                            legacy_file.unlink()
+                            print(f"  - Removed legacy guardrail: scripts/{dest_parts[2]}")
+                        except OSError as e:
+                            print(f"  - Warning: could not remove legacy guardrail scripts/{dest_parts[2]}: {e}")
 
             if dest_rel.startswith(".githooks/"):
                 has_githooks = True

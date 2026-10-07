@@ -159,6 +159,8 @@ def guardrail_script_basename(dest: str) -> str | None:
         return None
     if len(parts) == 2 and parts[0] == "scripts" and parts[1].endswith(".py"):
         return parts[1]
+    if len(parts) == 3 and parts[0] == "scripts" and parts[1] == "_guardrails" and parts[2].endswith(".py"):
+        return parts[2]
     return None
 
 

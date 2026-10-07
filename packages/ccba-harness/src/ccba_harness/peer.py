@@ -37,6 +37,7 @@ PeerExecutionProfile = Literal[
     "patch_fast",
     "code_review",
     "arch_audit",
+    "audit_direct",
 ]
 ModelTier = Literal["local", "gateway", "cloud"]
 RequestType = Literal[
@@ -179,6 +180,30 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
             "conditions, and summary, followed by your architectural audit findings."
         ),
         "timeout": 600.0,
+    },
+    "audit_direct": {
+        "model": "grok-4.7",  # ccba:allow-raw-model
+        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
+        "max_turns": 3,
+        "tools": None,
+        "disallowed_tools": [
+            "read_file",
+            "grep",
+            "list_dir",
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ],
+        "deny": ["*"],
+        "reasoning_effort": "high",
+        "system_prompt": (
+            "You are an expert software and system architecture auditor. You MUST start your response "
+            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, "
+            "conditions, and summary, followed by your architectural audit findings. "
+            "Respond directly without invoking external tools."
+        ),
+        "timeout": 120.0,
     },
 }
 
@@ -1730,17 +1755,19 @@ def invoke_grok_cli(
     max_turns: int | None = None,
     timeout: float | None = None,
     worktree: bool = False,
+    no_tools: bool = False,
 ) -> bool:
     """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064).
 
     Args:
         prompt_path: Path to prompt file containing PeerPromptEnvelope.
         model: Optional explicit model override.
-        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast').
+        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'audit_direct').
         tier: Model tier ('local', 'gateway', 'cloud').
         max_turns: Optional turns override.
         timeout: Subprocess execution timeout in seconds.
         worktree: Whether to run inside a detached git worktree.
+        no_tools: Whether to strictly disallow all tools and force direct reasoning.
 
     Returns:
         True if response was successfully generated and verified, False otherwise.
@@ -1779,6 +1806,20 @@ def invoke_grok_cli(
     tools = spec.get("tools")
     disallowed_tools = spec.get("disallowed_tools")
     deny = spec.get("deny")
+    if no_tools:
+        tools = None
+        disallowed_tools = [
+            "read_file",
+            "grep",
+            "list_dir",
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ]
+        deny = ["*"]
+        if max_turns is None and (spec_max_turns is None or spec_max_turns > 3):
+            spec_max_turns = 3
     reasoning_effort = spec.get("reasoning_effort")
     system_prompt = spec.get("system_prompt")
     spec_timeout = timeout if timeout is not None else spec.get("timeout", 180.0)
