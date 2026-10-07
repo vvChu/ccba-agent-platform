@@ -37,6 +37,16 @@ triggers:
 
 Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/`).
 
+---
+
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) master soạn thảo hồ sơ thầu, quyết định, công văn, hợp đồng từ biểu mẫu chuẩn hóa (`ccba-xu-ly-van-phong/templates/`), kết hợp công thức viết thuyết phục (`references/copy-formulas.md`), định hình phong cách viết (`references/writing-styles.md`) và quản lý hai kỹ năng trực thuộc: `form-template-cleaner` và `ccba-viet-chuyen-nghiep`. Quy trình hoạt động thuần nhận thức ngôn ngữ và sáng tạo nội dung văn bản, không phụ thuộc Seam đóng gói Python độc lập và không nhận `package_path`.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 10 dòng tài liệu tham chiếu chuyên sâu tại tầng Level 3 (bao gồm 9 tệp markdown và router index `references/viet_chuyen_nghiep/INDEX.md`).
+
+---
+
 ## Khi nào sử dụng
 
 - Soạn thảo hồ sơ đề xuất thầu, hồ sơ năng lực, quyết định hành chính, tờ trình, công văn, hợp đồng từ biểu mẫu chuẩn hóa.
