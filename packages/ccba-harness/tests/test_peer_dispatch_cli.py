@@ -158,4 +158,3 @@ def test_peer_dispatch_dry_run_with_audit_direct_and_no_tools(tmp_path, capsys):
     assert "[DRY-RUN] Profile: arch_audit" in out
     assert "[DRY-RUN] Max Turns: 3" in out
     assert "--deny *" in out
-
