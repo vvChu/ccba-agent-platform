@@ -195,17 +195,25 @@ class TestGuardrailCopier:
             # Automatic migration: if a guardrail moved to scripts/_guardrails/,
             # clean up obsolete top-level scripts/<name> in the Spoke (Issue #502).
             dest_parts = Path(dest_rel).parts
-            if len(dest_parts) == 3 and dest_parts[0] == "scripts" and dest_parts[1] == "_guardrails":
+            if (
+                len(dest_parts) == 3
+                and dest_parts[0] == "scripts"
+                and dest_parts[1] == "_guardrails"
+            ):
                 legacy_file = self.spoke_root / "scripts" / dest_parts[2]
                 if legacy_file.is_file():
                     if dry_run:
-                        print(f"  - [DRY-RUN] Would remove legacy guardrail: scripts/{dest_parts[2]}")
+                        print(
+                            f"  - [DRY-RUN] Would remove legacy guardrail: scripts/{dest_parts[2]}"
+                        )
                     else:
                         try:
                             legacy_file.unlink()
                             print(f"  - Removed legacy guardrail: scripts/{dest_parts[2]}")
                         except OSError as e:
-                            print(f"  - Warning: could not remove legacy guardrail scripts/{dest_parts[2]}: {e}")
+                            print(
+                                f"  - Warning: could not remove legacy guardrail scripts/{dest_parts[2]}: {e}"
+                            )
 
             if dest_rel.startswith(".githooks/"):
                 has_githooks = True
