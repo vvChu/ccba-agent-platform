@@ -63,7 +63,9 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
         elif re.match(r"^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]", stripped):
             return True
     # Ignore variable / attribute references in code: args.xxx, self.xxx, params.xxx, os.environ/...
-    if stripped.startswith(("args.", "self.", "params.", "os.environ/", "os.environ.", "os.getenv", "env/")):
+    if stripped.startswith(
+        ("args.", "self.", "params.", "os.environ/", "os.environ.", "os.getenv", "env/")
+    ):
         return True
     # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
     # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
