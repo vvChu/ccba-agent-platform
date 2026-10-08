@@ -234,4 +234,3 @@ def test_guardrail_migration_cleans_legacy_top_level_scripts(tmp_path: Path) -> 
     assert (spoke / "scripts" / "_guardrails" / "safe_pytest.py").is_file()
     # 2. Legacy top-level file was removed
     assert not legacy_file.exists()
-
