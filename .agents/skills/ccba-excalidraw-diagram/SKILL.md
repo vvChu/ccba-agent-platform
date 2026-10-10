@@ -118,3 +118,8 @@ Khi thực thi các tác vụ thiết kế và tối ưu sơ đồ chuyên sâu,
 * **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
 * **Tham chiếu liên kết:** Mọi tài liệu mở rộng đều được dẫn xuất qua liên kết Markdown chuẩn mực: [`references/visual_concepts.md`](references/visual_concepts.md).
 * **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+
+## Trực Quan Hóa Thông Tin Ngữ Nghĩa & Độ Tường Minh Của Luồng
+* **Tỷ lệ tín hiệu trên nhiễu (Signal-to-Noise Ratio):** Giảm thiểu tối đa các chi tiết trang trí thừa, tập trung vào cấu trúc dữ liệu và điểm quyết định.
+* **Định hướng luồng nhất quán:** Luôn duy trì hướng luồng từ trên xuống dưới (TD) hoặc từ trái qua phải (LR), không đảo chiều bất ngờ.
+* **Nhãn kết nối mang nghĩa:** Mọi đường nối (edge) giữa các khối bắt buộc phải có nhãn động từ hoặc danh từ chỉ rõ quan hệ/dữ liệu truyền tải.
