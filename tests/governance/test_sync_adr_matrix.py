@@ -540,4 +540,3 @@ def test_scan_skill_radar_filters_untracked_files() -> None:
         files = [item["file"] for item in matrix["0010"]]
         assert ".agents/skills/tracked-skill/SKILL.md" in files
         assert ".agents/skills/untracked-skill/SKILL.md" not in files
-
