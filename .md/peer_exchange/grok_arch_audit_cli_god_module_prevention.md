@@ -3,46 +3,27 @@ request_id: req-arch-audit-cli-god-module-001
 verdict: REVISE_PLAN
 conditions:
 - id: COND-ARCH-01
-  description: Command registry là tuple tĩnh COMMANDS. importlib.import_module chỉ
-    chạy sau khi argv[0] khớp tên lệnh. cli/__init__.py re-export bằng PEP 562 __getattr__.
-    Import domain giữ lazy bên trong handler. Cấm pkgutil.iter_modules và cấm import
-    domain ở đầu command module.
+  description: Command registry là tuple tĩnh COMMANDS. importlib.import_module chỉ chạy sau khi argv[0] khớp tên lệnh. cli/__init__.py re-export bằng PEP 562 __getattr__. Import domain giữ lazy bên trong handler. Cấm pkgutil.iter_modules và cấm import domain ở đầu command module.
   blocking: true
   source_profiles: []
 - id: COND-ARCH-02
-  description: 'Mở rộng seam ccba_harness.peer_gate.check_ast_function_length rồi
-    gắn vào verify-patch preset ci và preset code. Thêm file-size ratchet có baseline.
-    Marker miễn trừ dùng token mới, until theo UTC, issue là URL GitHub đầy đủ. Cấm
-    tái sử dụng # ccba:quarantine khi không có seam_id. Parse AST lỗi thì fail-closed.
-    Gỡ bypass cả file # ccba:allow-long-functions.'
+  description: 'Mở rộng seam ccba_harness.peer_gate.check_ast_function_length rồi gắn vào verify-patch preset ci và preset code. Thêm file-size ratchet có baseline. Marker miễn trừ dùng token mới, until theo UTC, issue là URL GitHub đầy đủ. Cấm tái sử dụng # ccba:quarantine khi không có seam_id. Parse AST lỗi thì fail-closed. Gỡ bypass cả file # ccba:allow-long-functions.'
   blocking: true
   source_profiles: []
 - id: COND-ARCH-03
-  description: Tách làm ba pha PR. Pha 0 là test đặc tả cho alias và ba entry point.
-    Pha 1 chỉ di chuyển cơ học và xóa shadow parser trong main(). Pha 2 rút policy
-    Level-3 khỏi handler vào seam peer. Hard cap bật sau khi handler mới đã dưới trần.
-    Cấm quarantine nguyên hàm vừa được di chuyển. Hồi quy bằng pytest packages/ccba-harness/tests
-    và tests/governance.
+  description: Tách làm ba pha PR. Pha 0 là test đặc tả cho alias và ba entry point. Pha 1 chỉ di chuyển cơ học và xóa shadow parser trong main(). Pha 2 rút policy Level-3 khỏi handler vào seam peer. Hard cap bật sau khi handler mới đã dưới trần. Cấm quarantine nguyên hàm vừa được di chuyển. Hồi quy bằng pytest packages/ccba-harness/tests và tests/governance.
   blocking: true
   source_profiles: []
 - id: COND-ARCH-04
-  description: 'Khóa đủ tên lệnh đang sống trong fast-path: gate, watch-peer, dispatch-peer,
-    explain-why, cùng alias argparse co-review, peer-apply, apply-patch. Giữ ba entry
-    point ccba_harness.cli:main, python -m ccba_harness, và python -m ccba_harness.cli.'
+  description: 'Khóa đủ tên lệnh đang sống trong fast-path: gate, watch-peer, dispatch-peer, explain-why, cùng alias argparse co-review, peer-apply, apply-patch. Giữ ba entry point ccba_harness.cli:main, python -m ccba_harness, và python -m ccba_harness.cli.'
   blocking: true
   source_profiles: []
 - id: COND-ARCH-05
-  description: 'Ngưỡng chuẩn: file soft 500 / hard 800 kèm ratchet cho tệp hiện hữu;
-    hàm domain giữ hard 50 như peer-gate; phần thân sau parse_args của handler CLI
-    hard 40 dòng và cấm write_text, mkdir, subprocess trong package cli. Hard 80 là
-    nới lỏng so với cổng hiện có, không được thành chuẩn mới.'
+  description: 'Ngưỡng chuẩn: file soft 500 / hard 800 kèm ratchet cho tệp hiện hữu; hàm domain giữ hard 50 như peer-gate; phần thân sau parse_args của handler CLI hard 40 dòng và cấm write_text, mkdir, subprocess trong package cli. Hard 80 là nới lỏng so với cổng hiện có, không được thành chuẩn mới.'
   blocking: false
   source_profiles: []
 risk_score: 4
-summary: Chẩn đoán God Module là đúng và hướng tách CLI được chấp nhận. Kế hoạch 4
-  trụ cột, nếu code đúng như viết, mâu thuẫn với ngân sách dòng, làm yếu cổng 50 dòng
-  đang có, và đánh mất lazy import. Sửa registry, marker, và trình tự PR trước khi
-  đụng cli.py.
+summary: Chẩn đoán God Module là đúng và hướng tách CLI được chấp nhận. Kế hoạch 4 trụ cột, nếu code đúng như viết, mâu thuẫn với ngân sách dòng, làm yếu cổng 50 dòng đang có, và đánh mất lazy import. Sửa registry, marker, và trình tự PR trước khi đụng cli.py.
 telemetry:
   session_id: 6905c48d-4791-477c-bb66-1c6e4f4885d3
   primary_model: grok-4.7-build
@@ -53,7 +34,7 @@ telemetry:
   total_tokens: 771392
   model_calls: 14
   turn_count: 1
-  cost_usd: 223805.68
+  cost_usd: 0.2238
   cost_mode: exact
   duration_seconds: 415.1
 ---

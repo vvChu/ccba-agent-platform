@@ -4,9 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: Nghiệm thu chính thức hoàn tất Đợt 4B. COND-4B-R1 khớp thành viên ModelArchetype
-  trong routing.py. COND-4B-R2 kết thúc ở alias của choose_model("audit"), tức ModelArchetype.REASONING
-  (gemini-3.7-flash-high).
+summary: Nghiệm thu chính thức hoàn tất Đợt 4B. COND-4B-R1 khớp thành viên ModelArchetype trong routing.py. COND-4B-R2 kết thúc ở alias của choose_model("audit"), tức ModelArchetype.REASONING (gemini-3.7-flash-high).
 telemetry:
   session_id: 4df97bfb-5e37-48f0-a41c-558c73fb89bf
   primary_model: grok-4.7-build
@@ -17,7 +15,7 @@ telemetry:
   total_tokens: 372349
   model_calls: 9
   turn_count: 1
-  cost_usd: 128658.04
+  cost_usd: 0.1287
   cost_mode: exact
   duration_seconds: 247.07
 ---

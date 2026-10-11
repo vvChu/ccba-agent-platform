@@ -4,9 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: Nghiệm thu Đợt 5. Tám skill giữ seam-exempt, GPI và tier đã khóa. Sổ lệnh
-  khớp parser trên đĩa. Octet và placeholder hub_path đã rời khỏi tám skill. Sáu commit
-  5A–5E đứng trên main.
+summary: Nghiệm thu Đợt 5. Tám skill giữ seam-exempt, GPI và tier đã khóa. Sổ lệnh khớp parser trên đĩa. Octet và placeholder hub_path đã rời khỏi tám skill. Sáu commit 5A–5E đứng trên main.
 telemetry:
   session_id: a9ddeb18-c6ac-4d3e-8fd5-e4a6c07e7044
   primary_model: grok-4.7-build
@@ -17,7 +15,7 @@ telemetry:
   total_tokens: 2531562
   model_calls: 30
   turn_count: 1
-  cost_usd: 570768.88
+  cost_usd: 0.5708
   cost_mode: exact
   duration_seconds: 334.07
 ---

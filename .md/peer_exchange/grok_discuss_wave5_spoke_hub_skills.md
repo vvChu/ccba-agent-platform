@@ -3,49 +3,33 @@ request_id: req-discuss-wave5-spoke-hub-skills-002
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: Đã khóa. Tám skill, mỗi skill một đoạn seam-exempt với lý do riêng
-    trên đĩa. seam-contracts.yaml giữ 16 card. packages/ đứng ngoài đợt.
+  description: Đã khóa. Tám skill, mỗi skill một đoạn seam-exempt với lý do riêng trên đĩa. seam-contracts.yaml giữ 16 card. packages/ đứng ngoài đợt.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: Đã khóa. Giữ nguyên frontmatter GPI và tier. platform-loader 17.5,
-    init-spoke 14.5, update-spoke 14.0, sync-upstream 20.5, contribute-to-hub và issue-to-hub
-    14.0. ccba-spoke-adopter và ccba-platform giữ tier orchestrator, không thêm khối
-    gpi.
+  description: Đã khóa. Giữ nguyên frontmatter GPI và tier. platform-loader 17.5, init-spoke 14.5, update-spoke 14.0, sync-upstream 20.5, contribute-to-hub và issue-to-hub 14.0. ccba-spoke-adopter và ccba-platform giữ tier orchestrator, không thêm khối gpi.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: Đã khóa. Greenfield dùng init-spoke. Máy mới đã có workspace_context.yaml
-    dùng bootstrap-spoke --create-venv. Brownfield dùng adopt-spoke với tham số vị
-    trí. sync-spoke chỉ nhận cờ parser unified. rollback, list-backups, --undo, --spoke,
-    --ignore-dirty ở lại scripts/sync_spoke.py. Radar ở lại scripts/spoke/check_claudekit_updates.py,
-    phạm vi Hub.
+  description: Đã khóa. Greenfield dùng init-spoke. Máy mới đã có workspace_context.yaml dùng bootstrap-spoke --create-venv. Brownfield dùng adopt-spoke với tham số vị trí. sync-spoke chỉ nhận cờ parser unified. rollback, list-backups, --undo, --spoke, --ignore-dirty ở lại scripts/sync_spoke.py. Radar ở lại scripts/spoke/check_claudekit_updates.py, phạm vi Hub.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: Đã khóa. Đường Hub qua $CCBA_HUB_PATH và $env:CCBA_HUB_PATH. Gateway
-    qua biến AI_GATEWAY_URL đang có trong .env.example. Gỡ octet 100.83.192.30 và
-    mọi placeholder hub_path trong tám skill, kể cả <hub_path> và câu hub_path trong
-    workspace_context.yaml.
+  description: Đã khóa. Đường Hub qua $CCBA_HUB_PATH và $env:CCBA_HUB_PATH. Gateway qua biến AI_GATEWAY_URL đang có trong .env.example. Gỡ octet 100.83.192.30 và mọi placeholder hub_path trong tám skill, kể cả <hub_path> và câu hub_path trong workspace_context.yaml.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: Đã khóa. Năm PR song song 5A–5E. Mỗi SKILL.md khóa bằng validate_skills.py
-    --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset
-    skill --target. scripts/template.sh, scripts/ccba_platform_cli.py, upstream_evaluator.py,
-    catalog.yaml và các skill git lân cận đứng ngoài đợt.
+  description: Đã khóa. Năm PR song song 5A–5E. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. scripts/template.sh, scripts/ccba_platform_cli.py, upstream_evaluator.py, catalog.yaml và các skill git lân cận đứng ngoài đợt.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Pass 2 khớp parser, 16 card seam và hệ số GPI trên đĩa. Tám skill
-  nhận seam-exempt. Năm PR song song được phép bắt đầu, mỗi SKILL.md khóa bằng ba
-  lệnh.
+summary: Kế hoạch Pass 2 khớp parser, 16 card seam và hệ số GPI trên đĩa. Tám skill nhận seam-exempt. Năm PR song song được phép bắt đầu, mỗi SKILL.md khóa bằng ba lệnh.
 telemetry:
   session_id: fcd85f4a-83cc-41a8-8c25-3a39877687b2
   primary_model: grok-4.7-build
@@ -56,7 +40,7 @@ telemetry:
   total_tokens: 2132334
   model_calls: 26
   turn_count: 1
-  cost_usd: 528744.88
+  cost_usd: 0.5287
   cost_mode: exact
   duration_seconds: 466.11
 ---

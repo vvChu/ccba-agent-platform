@@ -64,15 +64,16 @@ def extract_grok_session_telemetry(
                 cost_mode: CostMode = "estimated"
                 cost_usd = 0.0
                 if "costUsdTicks" in session_data:
-                    cost_usd = round(float(session_data["costUsdTicks"]) / 10000.0, 4)
+                    # xAI native convention: 10^10 ticks = $1.00 USD
+                    cost_usd = round(float(session_data["costUsdTicks"]) / 10_000_000_000.0, 4)
                     cost_mode = "exact"
                 else:
                     # Estimate based on rate card in ccba_harness.telemetry
-                    from .telemetry import PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT
+                    from .telemetry import resolve_model_token_rates
 
+                    rate_in, rate_out = resolve_model_token_rates(primary_model)
                     cost_usd = round(
-                        (inp / 1_000_000 * PRICE_PER_M_INPUT)
-                        + (outp / 1_000_000 * PRICE_PER_M_OUTPUT),
+                        (inp / 1_000_000 * rate_in) + (outp / 1_000_000 * rate_out),
                         4,
                     )
                     cost_mode = "estimated"
@@ -99,12 +100,13 @@ def extract_grok_session_telemetry(
 
     # COND-1: Graceful degradation fallback using TokenEstimator
     try:
-        from .telemetry import PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT, TokenEstimator
+        from .telemetry import TokenEstimator, resolve_model_token_rates
 
         est_inp = TokenEstimator.estimate_text(fallback_prompt_text or "")
         est_out = TokenEstimator.estimate_text(fallback_resp_text or "")
+        rate_in, rate_out = resolve_model_token_rates(fallback_model)
         est_cost = round(
-            (est_inp / 1_000_000 * PRICE_PER_M_INPUT) + (est_out / 1_000_000 * PRICE_PER_M_OUTPUT),
+            (est_inp / 1_000_000 * rate_in) + (est_out / 1_000_000 * rate_out),
             4,
         )
         return PeerVerdictTelemetry(

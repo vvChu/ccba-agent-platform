@@ -4,8 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: S
-summary: COND-03 đóng trên advisor, ingest và tracker. Ba lệch hiệu lực, chiều cạnh
-  thay thế và enum LegalDocStatus đã khớp chữ ký registry. Đợt 3 được nghiệm thu.
+summary: COND-03 đóng trên advisor, ingest và tracker. Ba lệch hiệu lực, chiều cạnh thay thế và enum LegalDocStatus đã khớp chữ ký registry. Đợt 3 được nghiệm thu.
 telemetry:
   session_id: b8a1a062-f43f-4583-9f1c-b59946962f44
   primary_model: grok-4.7-build
@@ -16,7 +15,7 @@ telemetry:
   total_tokens: 426534
   model_calls: 12
   turn_count: 1
-  cost_usd: 127668.64
+  cost_usd: 0.1277
   cost_mode: exact
   duration_seconds: 193.04
 ---

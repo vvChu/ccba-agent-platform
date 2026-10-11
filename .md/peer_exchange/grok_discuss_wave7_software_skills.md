@@ -3,59 +3,35 @@ request_id: req-discuss-wave7-software-skills-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: 'Đã khóa. Tám skill, mỗi skill một mục "## 🏛️ Platform-Aware Architecture
-    Posture (ADR-0061)" với lý do đúng thân bài trên đĩa. seam-exempt cho cả tám.
-    seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. ccba-eval-gate là
-    caller của harness_eval.v1 (ccba_harness:EvalRunner) và scripts/eval/run_harness_evals.py.
-    ccba-xia giữ sáu pha và đầu ra implementation_plan.md. ccba-research giữ ba pha.
+  description: 'Đã khóa. Tám skill, mỗi skill một mục "## 🏛️ Platform-Aware Architecture Posture (ADR-0061)" với lý do đúng thân bài trên đĩa. seam-exempt cho cả tám. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. ccba-eval-gate là caller của harness_eval.v1 (ccba_harness:EvalRunner) và scripts/eval/run_harness_evals.py. ccba-xia giữ sáu pha và đầu ra implementation_plan.md. ccba-research giữ ba pha.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: 'Đã khóa. Frontmatter name, tier, bundle, command, triggers, description,
-    metadata, disable-model-invocation và khối gpi đứng yên. Tám skill giữ tier kernel.
-    Điểm giữ nguyên: chrome-debug 18.5, web-testing 16.5, git-guardrails 12.0, eval-gate
-    14.0, domain-modeling 16.5, grilling 14.5, research 16.5, xia 16.5. git-guardrails
-    đạt ngưỡng >= 12.0 và nằm trong deadband [11.5, 12.5). Validator đọc tier kernel
-    làm existing tier. ccba-eval-gate giữ package_path packages/ccba-harness. Khối
-    gpi một dòng của ccba-xia giữ nguyên dạng inline.
+  description: 'Đã khóa. Frontmatter name, tier, bundle, command, triggers, description, metadata, disable-model-invocation và khối gpi đứng yên. Tám skill giữ tier kernel. Điểm giữ nguyên: chrome-debug 18.5, web-testing 16.5, git-guardrails 12.0, eval-gate 14.0, domain-modeling 16.5, grilling 14.5, research 16.5, xia 16.5. git-guardrails đạt ngưỡng >= 12.0 và nằm trong deadband [11.5, 12.5). Validator đọc tier kernel làm existing tier. ccba-eval-gate giữ package_path packages/ccba-harness. Khối gpi một dòng của ccba-xia giữ nguyên dạng inline.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: 'Đã khóa. Bảng Level 3 đứng nguyên trên đĩa với tên tệp thật. web-testing
-    24 dòng. git-guardrails 1 dòng merge_conflict_resolution.md. eval-gate 2 dòng
-    evaluations_guide.md và program_template.md. domain-modeling 2 dòng context_format.md
-    và adr_format.md. grilling 1 dòng workflow_looping.md. research 3 dòng sequential_thinking_method.md,
-    sequential_core-patterns.md, sequential_advanced-techniques.md. xia 1 dòng modes.md.
-    ccba-chrome-debug không có references/. references/, scripts/, test_cases/ và
-    tests/ đứng ngoài diff của cả bốn PR.
+  description: 'Đã khóa. Bảng Level 3 đứng nguyên trên đĩa với tên tệp thật. web-testing 24 dòng. git-guardrails 1 dòng merge_conflict_resolution.md. eval-gate 2 dòng evaluations_guide.md và program_template.md. domain-modeling 2 dòng context_format.md và adr_format.md. grilling 1 dòng workflow_looping.md. research 3 dòng sequential_thinking_method.md, sequential_core-patterns.md, sequential_advanced-techniques.md. xia 1 dòng modes.md. ccba-chrome-debug không có references/. references/, scripts/, test_cases/ và tests/ đứng ngoài diff của cả bốn PR.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: 'Đã khóa. PR 7A gỡ bốn đường dẫn ổ đĩa gắn tên người dùng trong ccba-chrome-debug/SKILL.md.
-    Thư mục bin dùng $env:USERPROFILE\.gemini\antigravity\bin\. Ba lệnh pwsh -File
-    dùng cùng tiền tố. Khối JSON chrome-devtools dùng command npx, args chrome-devtools-mcp,
-    --browserUrl, http://127.0.0.1:9222, --no-usage-statistics. Câu văn giữ pin v1.9.0.
-    Giữ loopback 127.0.0.1, cổng 9222 và các đường ~/.gemini/. Không thêm ccba:allow-machine-path.
+  description: 'Đã khóa. PR 7A gỡ bốn đường dẫn ổ đĩa gắn tên người dùng trong ccba-chrome-debug/SKILL.md. Thư mục bin dùng $env:USERPROFILE\.gemini\antigravity\bin\. Ba lệnh pwsh -File dùng cùng tiền tố. Khối JSON chrome-devtools dùng command npx, args chrome-devtools-mcp, --browserUrl, http://127.0.0.1:9222, --no-usage-statistics. Câu văn giữ pin v1.9.0. Giữ loopback 127.0.0.1, cổng 9222 và các đường ~/.gemini/. Không thêm ccba:allow-machine-path.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: 'Đã khóa. Bốn PR song song 7A–7D, bốn cặp thư mục tách biệt. Mỗi SKILL.md
-    khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file,
-    và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch
-    --preset ci. Đoạn posture viết điểm dạng (S, K, A, P) = số. catalog.yaml đứng
-    ngoài bốn PR.
+  description: 'Đã khóa. Bốn PR song song 7A–7D, bốn cặp thư mục tách biệt. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci. Đoạn posture viết điểm dạng (S, K, A, P) = số. catalog.yaml đứng ngoài bốn PR.
 
     '
   blocking: false
@@ -63,9 +39,7 @@ conditions:
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 7 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và
-  16 card seam đứng yên. Bốn PR song song. Lý do và bảng Level 3 khóa theo tệp đang
-  có trên đĩa. PR 7A gỡ đường dẫn Windows gắn tên người dùng trong ccba-chrome-debug.
+summary: Kế hoạch Đợt 7 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và 16 card seam đứng yên. Bốn PR song song. Lý do và bảng Level 3 khóa theo tệp đang có trên đĩa. PR 7A gỡ đường dẫn Windows gắn tên người dùng trong ccba-chrome-debug.
 telemetry:
   session_id: 69cab501-1a78-4248-956a-5d4ca0538156
   primary_model: grok-4.7-build
@@ -76,7 +50,7 @@ telemetry:
   total_tokens: 778859
   model_calls: 14
   turn_count: 1
-  cost_usd: 228842.44
+  cost_usd: 0.2288
   cost_mode: exact
   duration_seconds: 331.08
 ---

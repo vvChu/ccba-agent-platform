@@ -4,9 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: Nghiệm thu Đợt 6. Tám skill giữ seam-exempt, GPI và tier đã khóa. Bảng Level
-  3 đứng nguyên. graduate-rd dùng CCBA_HUB_PATH và hai nhánh tường minh. Bốn commit
-  6A–6D đứng trên main.
+summary: Nghiệm thu Đợt 6. Tám skill giữ seam-exempt, GPI và tier đã khóa. Bảng Level 3 đứng nguyên. graduate-rd dùng CCBA_HUB_PATH và hai nhánh tường minh. Bốn commit 6A–6D đứng trên main.
 telemetry:
   session_id: 8c8c3456-098d-4f3a-a05a-b900aa3bd342
   primary_model: grok-4.7-build
@@ -17,7 +15,7 @@ telemetry:
   total_tokens: 2010108
   model_calls: 28
   turn_count: 1
-  cost_usd: 443082.56
+  cost_usd: 0.4431
   cost_mode: exact
   duration_seconds: 306.08
 ---

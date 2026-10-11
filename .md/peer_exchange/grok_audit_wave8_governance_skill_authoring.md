@@ -4,9 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: Nghiệm thu Đợt 8. Tám skill giữ seam-exempt, GPI và tier kernel đã khóa.
-  Bảng Level 3 đứng nguyên. Hai fence PowerShell dùng CCBA_HUB_PATH. Bốn commit 8A–8D
-  đứng trên main.
+summary: Nghiệm thu Đợt 8. Tám skill giữ seam-exempt, GPI và tier kernel đã khóa. Bảng Level 3 đứng nguyên. Hai fence PowerShell dùng CCBA_HUB_PATH. Bốn commit 8A–8D đứng trên main.
 telemetry:
   session_id: 3cd685b3-80cf-4aec-a482-061fcde43889
   primary_model: grok-4.7-build
@@ -17,7 +15,7 @@ telemetry:
   total_tokens: 2449145
   model_calls: 30
   turn_count: 1
-  cost_usd: 605056.52
+  cost_usd: 0.6051
   cost_mode: exact
   duration_seconds: 458.11
 ---

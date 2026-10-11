@@ -3,66 +3,35 @@ request_id: req-discuss-wave11-multimedia-security-cloud-skills-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: 'Đã khóa. Mỗi file nhận đúng một mục `## 🏛️ Platform-Aware Architecture
-    Posture`, tiêu đề không chứa số ADR, đặt sau khối mở đầu và trước H2 đầu tiên
-    đang có. ccba-maskara giữ package-bound trên maskara_scanner.v1 (ccba_maskara:MaskaraScanner);
-    ccba-notebooklm-connector giữ package-bound trên notebooklm_rag.v1 (ccba_notebooklm:CCBANotebookLMClient).
-    Năm skill còn lại nhận seam-exempt với lý do chép từ thân bài. ccba-tvpl-vip-crawler
-    là caller của TVPLCrawler trong packages/ccba-legal-intel; legal_ingest.v1 tiếp
-    tục là card kind skill của /ccba-legal-ingest. seam-contracts.yaml giữ 16 seam_id.
-    packages/ đứng ngoài đợt.
+  description: 'Đã khóa. Mỗi file nhận đúng một mục `## 🏛️ Platform-Aware Architecture Posture`, tiêu đề không chứa số ADR, đặt sau khối mở đầu và trước H2 đầu tiên đang có. ccba-maskara giữ package-bound trên maskara_scanner.v1 (ccba_maskara:MaskaraScanner); ccba-notebooklm-connector giữ package-bound trên notebooklm_rag.v1 (ccba_notebooklm:CCBANotebookLMClient). Năm skill còn lại nhận seam-exempt với lý do chép từ thân bài. ccba-tvpl-vip-crawler là caller của TVPLCrawler trong packages/ccba-legal-intel; legal_ingest.v1 tiếp tục là card kind skill của /ccba-legal-ingest. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: 'Đã khóa. Frontmatter bảy file đứng nguyên từng khóa đang có. Cả bảy
-    giữ tier kernel. Khối gpi giữ nguyên hệ số: maskara (3.0, 3.0, 4.0, 1.0) = 20.0;
-    notebooklm-connector (3.0, 3.0, 4.0, 1.0) = 20.0; llm-pipeline-patterns (3.0,
-    2.0, 4.0, 1.0) = 18.0; ask (3.0, 3.0, 1.0, 1.0) = 14.0; sharepoint-iac, tvpl-vip-crawler
-    và youtube-learn cùng (3.0, 2.0, 1.0, 1.0) = 12.0. Điểm 12.0 đã là Tier 2B vì
-    ngưỡng >= 12.0 và đồng thời nằm trong deadband [11.5, 12.5); existing tier kernel
-    kích hoạt nhánh hysteresis và kết quả vẫn là Tier 2B. Cờ is-deterministic, is-orchestrated,
-    existing-tier và khóa score tiếp tục vắng. package_path chỉ có trên ccba-maskara
-    và ccba-notebooklm-connector.
+  description: 'Đã khóa. Frontmatter bảy file đứng nguyên từng khóa đang có. Cả bảy giữ tier kernel. Khối gpi giữ nguyên hệ số: maskara (3.0, 3.0, 4.0, 1.0) = 20.0; notebooklm-connector (3.0, 3.0, 4.0, 1.0) = 20.0; llm-pipeline-patterns (3.0, 2.0, 4.0, 1.0) = 18.0; ask (3.0, 3.0, 1.0, 1.0) = 14.0; sharepoint-iac, tvpl-vip-crawler và youtube-learn cùng (3.0, 2.0, 1.0, 1.0) = 12.0. Điểm 12.0 đã là Tier 2B vì ngưỡng >= 12.0 và đồng thời nằm trong deadband [11.5, 12.5); existing tier kernel kích hoạt nhánh hysteresis và kết quả vẫn là Tier 2B. Cờ is-deterministic, is-orchestrated, existing-tier và khóa score tiếp tục vắng. package_path chỉ có trên ccba-maskara và ccba-notebooklm-connector.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự trên đĩa.
-    ccba-ask 5 dòng: references/phase_boundaries.md, references/clarification_patterns.md,
-    references/brainstorm_templates.md, references/brainstorm_techniques.md, resources/brainstorm_topics.yaml.
-    ccba-youtube-learn 2 dòng: references/speaker_profile_template.md, references/worldview_template.md.
-    Năm skill còn lại tiếp tục không có thư mục references/. references/, resources/
-    và scripts/ của bảy thư mục skill đứng ngoài diff của cả bốn PR.
+  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự trên đĩa. ccba-ask 5 dòng: references/phase_boundaries.md, references/clarification_patterns.md, references/brainstorm_templates.md, references/brainstorm_techniques.md, resources/brainstorm_topics.yaml. ccba-youtube-learn 2 dòng: references/speaker_profile_template.md, references/worldview_template.md. Năm skill còn lại tiếp tục không có thư mục references/. references/, resources/ và scripts/ của bảy thư mục skill đứng ngoài diff của cả bốn PR.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: 'Đã khóa. Tập số ADR của từng SKILL.md đứng yên. ccba-ask rỗng; ccba-llm-pipeline-patterns
-    và ccba-maskara giữ {0058}; ccba-notebooklm-connector giữ {0023, 0035}; ccba-sharepoint-iac
-    và ccba-youtube-learn rỗng; ccba-tvpl-vip-crawler giữ {0031, 0035, 0036, 0037}.
-    Mục posture của cả bảy file chứa 0 token khớp radar ADR. Câu GPI trong posture
-    viết bằng ngoặc thường. Mẫu $( đứng ngoài bảy SKILL.md. Các công thức $...$ và
-    đường dẫn tham chiếu đang có trong thân ccba-llm-pipeline-patterns đứng nguyên.
-    docs/adr/, catalog.yaml, seam-contracts.yaml và packages/ đứng ngoài bốn PR.
+  description: 'Đã khóa. Tập số ADR của từng SKILL.md đứng yên. ccba-ask rỗng; ccba-llm-pipeline-patterns và ccba-maskara giữ {0058}; ccba-notebooklm-connector giữ {0023, 0035}; ccba-sharepoint-iac và ccba-youtube-learn rỗng; ccba-tvpl-vip-crawler giữ {0031, 0035, 0036, 0037}. Mục posture của cả bảy file chứa 0 token khớp radar ADR. Câu GPI trong posture viết bằng ngoặc thường. Mẫu $( đứng ngoài bảy SKILL.md. Các công thức $...$ và đường dẫn tham chiếu đang có trong thân ccba-llm-pipeline-patterns đứng nguyên. docs/adr/, catalog.yaml, seam-contracts.yaml và packages/ đứng ngoài bốn PR.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: 'Đã khóa. Bốn PR 11A-11D sửa đúng SKILL.md của cặp hoặc file được giao,
-    bốn tập đường dẫn tách biệt, được phép chạy song song. Mỗi SKILL.md khóa bằng
-    validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch
-    --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset
-    ci và lấy exit code 0 của sáu lệnh preset. Sàn này là exit code, không phải một
-    hằng số lượng test.
+  description: 'Đã khóa. Bốn PR 11A-11D sửa đúng SKILL.md của cặp hoặc file được giao, bốn tập đường dẫn tách biệt, được phép chạy song song. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci và lấy exit code 0 của sáu lệnh preset. Sàn này là exit code, không phải một hằng số lượng test.
 
     '
   blocking: false
@@ -70,11 +39,7 @@ conditions:
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 11 được phép bắt đầu. ccba-maskara và ccba-notebooklm-connector
-  giữ package-bound trên đúng card đã đăng ký. Năm skill còn lại nhận seam-exempt.
-  GPI, tier kernel và 16 card seam đứng yên. Bốn PR không chung tệp nên chạy song
-  song. Lý do posture khóa theo thân bài trên đĩa. Mục posture chứa 0 token ADR để
-  sync_hub_adr_matrix.py --check giữ xanh.
+summary: Kế hoạch Đợt 11 được phép bắt đầu. ccba-maskara và ccba-notebooklm-connector giữ package-bound trên đúng card đã đăng ký. Năm skill còn lại nhận seam-exempt. GPI, tier kernel và 16 card seam đứng yên. Bốn PR không chung tệp nên chạy song song. Lý do posture khóa theo thân bài trên đĩa. Mục posture chứa 0 token ADR để sync_hub_adr_matrix.py --check giữ xanh.
 telemetry:
   session_id: 52e311c1-7f67-41b8-8458-1dfc00d03ee1
   primary_model: grok-4.7-build
@@ -85,7 +50,7 @@ telemetry:
   total_tokens: 1620785
   model_calls: 22
   turn_count: 1
-  cost_usd: 393373.88
+  cost_usd: 0.3934
   cost_mode: exact
   duration_seconds: 593.14
 ---

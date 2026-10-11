@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 import time
+
+logger = logging.getLogger(__name__)
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -113,7 +116,17 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
     args = parser.parse_args(args_list)
     peer_dir = resolve_peer_exchange_dir(args.dir, args.root)
 
-    from ccba_harness.peer import flush_pending_peer_triggers, run_sync_cycle
+    from ccba_harness.peer import (
+        flush_pending_peer_triggers,
+        recover_pending_anchor_transactions,
+        run_sync_cycle,
+    )
+
+    # Recover any orphaned transactions from prior abnormal exits (ADR-0065)
+    try:
+        recover_pending_anchor_transactions(root=args.root)
+    except Exception as exc:
+        logger.debug("Failed startup transaction recovery: %s", exc)
 
     if args.once or not args.watch:
         changes = run_sync_cycle(peer_dir, auto_gate=args.auto_gate, auto_grok=args.auto_grok)

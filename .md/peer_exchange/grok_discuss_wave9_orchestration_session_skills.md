@@ -3,66 +3,33 @@ request_id: req-discuss-wave9-orchestration-session-skills-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: Đã khóa. Bảy skill nhận đúng một mục `## 🏛️ Platform-Aware Architecture
-    Posture`, không có số ADR trong tiêu đề, đặt sau đoạn mở đầu và trước H2 hiện
-    có. ccba-ai-qc giữ một mục duy nhất, thế năng package-bound với qc_pipeline.v1
-    (import ccba_qc_core:QCAuditPipeline) và lời gọi pdf_preprocessor.v1 (import ccba_pdf_prep:PDFProcessingPipeline).
-    Token ADR-0061 đứng trong mục đó. Không thêm mục posture thứ hai. seam-contracts.yaml
-    giữ 16 seam_id. packages/ đứng ngoài đợt. Lý do posture lấy từ thân bài trên đĩa.
+  description: Đã khóa. Bảy skill nhận đúng một mục `## 🏛️ Platform-Aware Architecture Posture`, không có số ADR trong tiêu đề, đặt sau đoạn mở đầu và trước H2 hiện có. ccba-ai-qc giữ một mục duy nhất, thế năng package-bound với qc_pipeline.v1 (import ccba_qc_core:QCAuditPipeline) và lời gọi pdf_preprocessor.v1 (import ccba_pdf_prep:PDFProcessingPipeline). Token ADR-0061 đứng trong mục đó. Không thêm mục posture thứ hai. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. Lý do posture lấy từ thân bài trên đĩa.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: 'Đã khóa. Frontmatter tám file đứng nguyên từng khóa: name, tier, bundle,
-    command, triggers, description, metadata, gpi, package_path, is-orchestrated,
-    disable-model-invocation, applies_to, category, keywords, argument-hint, role.
-    Cờ is-deterministic tiếp tục vắng. Bốn orchestrator giữ tier orchestrator và is-orchestrated
-    true, khối gpi tiếp tục vắng, validator trả về sau Cổng 1. Bốn kernel giữ điểm:
-    wayfinder 14.5, handoff 12.0, session-retrospective 12.0, issue-tree 14.5. Điểm
-    12.0 đi nhánh Tier 2B vì ngưỡng >= 12.0 và đồng thời nằm trong deadband [11.5,
-    12.5). Khóa existing-tier tiếp tục vắng. tier kernel là existing tier. Điểm 14.5
-    nằm phía trên cận 12.5.'
+  description: 'Đã khóa. Frontmatter tám file đứng nguyên từng khóa: name, tier, bundle, command, triggers, description, metadata, gpi, package_path, is-orchestrated, disable-model-invocation, applies_to, category, keywords, argument-hint, role. Cờ is-deterministic tiếp tục vắng. Bốn orchestrator giữ tier orchestrator và is-orchestrated true, khối gpi tiếp tục vắng, validator trả về sau Cổng 1. Bốn kernel giữ điểm: wayfinder 14.5, handoff 12.0, session-retrospective 12.0, issue-tree 14.5. Điểm 12.0 đi nhánh Tier 2B vì ngưỡng >= 12.0 và đồng thời nằm trong deadband [11.5, 12.5). Khóa existing-tier tiếp tục vắng. tier kernel là existing tier. Điểm 14.5 nằm phía trên cận 12.5.'
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự. ccba-ai-qc
-    4 dòng discovery.md, integrated_audit.md, reporter.md, batch_orchestrator.md.
-    ccba-session-retrospective 1 dòng references/agent_environment_diagnostics.md.
-    ccba-issue-tree 2 dòng references/tree_templates.md, references/governed_lifecycle_guide.md.
-    Năm skill chưa có references/: teamwork, autoresearch, knowledge-loop, wayfinder,
-    handoff. ccba-teamwork giữ resources/team_sheet_template.md. ccba-ai-qc giữ năm
-    tệp scripts/. references/, resources/, scripts/ đứng ngoài diff của cả bốn PR.'
+  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự. ccba-ai-qc 4 dòng discovery.md, integrated_audit.md, reporter.md, batch_orchestrator.md. ccba-session-retrospective 1 dòng references/agent_environment_diagnostics.md. ccba-issue-tree 2 dòng references/tree_templates.md, references/governed_lifecycle_guide.md. Năm skill chưa có references/: teamwork, autoresearch, knowledge-loop, wayfinder, handoff. ccba-teamwork giữ resources/team_sheet_template.md. ccba-ai-qc giữ năm tệp scripts/. references/, resources/, scripts/ đứng ngoài diff của cả bốn PR.'
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: Đã khóa. Tập số ADR của từng SKILL.md đứng yên. Mục posture của bảy
-    skill mới chứa 0 token ADR. ccba-ai-qc giữ ADR-0061. teamwork giữ 0053 và 0058.
-    knowledge-loop giữ 0053. session-retrospective giữ 0030, 0053, 0057, 0058, 0060.
-    issue-tree giữ 0059. autoresearch, wayfinder, handoff giữ tập rỗng. Mẫu $(...)
-    đứng ngoài tám SKILL.md. docs/adr/, catalog.yaml, seam-contracts.yaml, packages/
-    đứng ngoài bốn PR.
+  description: Đã khóa. Tập số ADR của từng SKILL.md đứng yên. Mục posture của bảy skill mới chứa 0 token ADR. ccba-ai-qc giữ ADR-0061. teamwork giữ 0053 và 0058. knowledge-loop giữ 0053. session-retrospective giữ 0030, 0053, 0057, 0058, 0060. issue-tree giữ 0059. autoresearch, wayfinder, handoff giữ tập rỗng. Mẫu $(...) đứng ngoài tám SKILL.md. docs/adr/, catalog.yaml, seam-contracts.yaml, packages/ đứng ngoài bốn PR.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: Đã khóa. Bốn PR song song 9A-9D, bốn cặp thư mục tách biệt, mỗi PR
-    chỉ sửa SKILL.md của cặp đó. Mỗi SKILL.md khóa bằng validate_skills.py --file
-    --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill
-    --target. Preset skill đã gọi compile_catalog.py --check và sync_hub_adr_matrix.py
-    --check. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci. Điểm trong
-    đoạn posture viết dạng (S, K, A, P) = số.
+  description: Đã khóa. Bốn PR song song 9A-9D, bốn cặp thư mục tách biệt, mỗi PR chỉ sửa SKILL.md của cặp đó. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Preset skill đã gọi compile_catalog.py --check và sync_hub_adr_matrix.py --check. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci. Điểm trong đoạn posture viết dạng (S, K, A, P) = số.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 9 được phép bắt đầu. Bảy skill nhận seam-exempt. ccba-ai-qc
-  giữ package-bound trên qc_pipeline.v1. GPI, tier và 16 card seam đứng yên. Bốn PR
-  song song. Lý do posture và bảng Level 3 khóa theo tệp đang có trên đĩa. Tập token
-  ADR từng file đứng yên để preset skill và preset ci giữ sync_hub_adr_matrix.py --check
-  xanh.
+summary: Kế hoạch Đợt 9 được phép bắt đầu. Bảy skill nhận seam-exempt. ccba-ai-qc giữ package-bound trên qc_pipeline.v1. GPI, tier và 16 card seam đứng yên. Bốn PR song song. Lý do posture và bảng Level 3 khóa theo tệp đang có trên đĩa. Tập token ADR từng file đứng yên để preset skill và preset ci giữ sync_hub_adr_matrix.py --check xanh.
 telemetry:
   session_id: adcfde13-4e97-49fb-9b38-37726f1ff1ad
   primary_model: grok-4.7-build
@@ -73,7 +40,7 @@ telemetry:
   total_tokens: 1115714
   model_calls: 17
   turn_count: 1
-  cost_usd: 290195.44
+  cost_usd: 0.2902
   cost_mode: exact
   duration_seconds: 347.08
 ---

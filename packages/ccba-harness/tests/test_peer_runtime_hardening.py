@@ -24,7 +24,9 @@ from ccba_harness.peer import (
     PeerVerdictBlock,
     _run_single_grok_attempt,
     _terminate_proc_tree,
+    atomic_write_bytes,
     atomic_write_text,
+    run_sync_cycle,
 )
 
 
@@ -201,3 +203,57 @@ def json_dumps(obj: Any) -> str:
     import json
 
     return json.dumps(obj)
+
+
+def test_atomic_write_bytes_preserves_binary_and_mode(tmp_path: Path) -> None:
+    """Verifies that atomic_write_bytes preserves raw binary bytes, CRLF, and mode."""
+    target = tmp_path / "binary_test.bin"
+    raw_data = b"\x00\x01\xff\xfe\r\n\xde\xad\xbe\xef"
+    atomic_write_bytes(target, raw_data)
+
+    assert target.exists()
+    assert target.read_bytes() == raw_data
+
+    # Overwrite works and preserves st_mode
+    import stat
+
+    target.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+    orig_mode = target.stat().st_mode
+
+    new_data = b"\xca\xfe\xba\xbe\r\n\r\n\x00"
+    atomic_write_bytes(target, new_data)
+
+    assert target.read_bytes() == new_data
+    assert target.stat().st_mode == orig_mode
+
+
+def test_atomic_write_bytes_retries_on_permission_error(tmp_path: Path) -> None:
+    """Verifies that atomic_write_bytes retries up to max_retries on transient OSError."""
+    target = tmp_path / "retry_test.bin"
+    attempts = 0
+    orig_replace = Path.replace
+
+    def flaky_replace(self, dst):
+        nonlocal attempts
+        attempts += 1
+        if attempts < 2:
+            raise PermissionError("Simulated Windows file lock")
+        return orig_replace(self, dst)
+
+    with patch.object(Path, "replace", flaky_replace):
+        atomic_write_bytes(target, b"retry data", max_retries=3)
+
+    assert attempts == 2
+    assert target.read_bytes() == b"retry data"
+
+
+def test_run_sync_cycle_cross_process_file_lock(tmp_path: Path) -> None:
+    """Verifies that run_sync_cycle executes with .sync.lock in place."""
+    peer_dir = tmp_path / "peer_exchange"
+    peer_dir.mkdir(parents=True)
+
+    changes = run_sync_cycle(peer_dir)
+    assert changes == []
+    # .bridge_cache.json and status.json are created
+    assert (peer_dir / ".bridge_cache.json").exists()
+    assert (peer_dir / "status.json").exists()

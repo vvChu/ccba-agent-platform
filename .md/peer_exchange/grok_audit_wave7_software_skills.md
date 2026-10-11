@@ -4,9 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: Nghiệm thu Đợt 7. Tám skill giữ seam-exempt, GPI và tier kernel đã khóa.
-  Bảng Level 3 đứng nguyên. ccba-chrome-debug dùng USERPROFILE và loopback 9222. Bốn
-  commit 7A–7D đứng trên main.
+summary: Nghiệm thu Đợt 7. Tám skill giữ seam-exempt, GPI và tier kernel đã khóa. Bảng Level 3 đứng nguyên. ccba-chrome-debug dùng USERPROFILE và loopback 9222. Bốn commit 7A–7D đứng trên main.
 telemetry:
   session_id: d6507a5d-626c-47d2-b330-8ebdf56a29bb
   primary_model: grok-4.7-build
@@ -17,7 +15,7 @@ telemetry:
   total_tokens: 2285421
   model_calls: 30
   turn_count: 1
-  cost_usd: 499176.44
+  cost_usd: 0.4992
   cost_mode: exact
   duration_seconds: 385.11
 ---
