@@ -130,7 +130,7 @@ def test_extract_grok_session_telemetry_exact_cost(monkeypatch):
             "totalTokens": 3300,
             "modelCalls": 1,
             "turnCount": 2,
-            "costUsdTicks": 150,  # 150 / 10000 = $0.0150
+            "costUsdTicks": 150_000_000,  # 150_000_000 / 10^10 = $0.0150
         }
     }
 
@@ -164,6 +164,46 @@ def test_extract_grok_session_telemetry_exact_cost(monkeypatch):
     assert telemetry.cost_mode == "exact"
     assert telemetry.duration_seconds == 5.5
     assert mock_run.call_count == 1
+
+
+def test_extract_grok_session_telemetry_estimated_cost_qwen_local(monkeypatch):
+    """Validates that qwen-local (offline DGX GB10 GPU) estimates $0.00 cost."""
+    fake_session_output = {
+        "session": {
+            "primaryModelId": "qwen-local",
+            "inputTokens": 500_000,
+            "outputTokens": 50_000,
+            "reasoningTokens": 0,
+            "cachedReadTokens": 0,
+            "totalTokens": 550_000,
+            "modelCalls": 1,
+            "turnCount": 1,
+        }
+    }
+
+    mock_run = MagicMock(
+        return_value=subprocess.CompletedProcess(
+            args=["grok", "usage", "sess-test-qwen"],
+            returncode=0,
+            stdout=json.dumps(fake_session_output),
+            stderr="",
+        )
+    )
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    telemetry = extract_grok_session_telemetry(
+        session_id="sess-test-qwen",
+        timeout=2.0,
+        fallback_prompt_text="Short prompt",
+        fallback_resp_text="Short response",
+        duration_seconds=1.5,
+        fallback_model="qwen-local",
+    )
+
+    assert telemetry.session_id == "sess-test-qwen"
+    assert telemetry.primary_model == "qwen-local"
+    assert telemetry.cost_mode == "estimated"
+    assert telemetry.cost_usd == 0.0
 
 
 def test_extract_grok_session_telemetry_estimated_cost_gateway(monkeypatch):

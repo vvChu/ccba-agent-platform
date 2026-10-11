@@ -4,10 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: 'Nghiệm thu Đợt 11 chính thức APPROVE. Tip main e56cd743 khóa đúng một mục
-  posture cho bảy skill: maskara và notebooklm-connector giữ package-bound trên maskara_scanner.v1
-  và notebooklm_rag.v1; năm skill còn lại là seam-exempt. GPI, tier kernel, 16 seam_id
-  và tập ADR từng file đứng yên. Mẫu $(...) vắng trên bảy SKILL.md.'
+summary: 'Nghiệm thu Đợt 11 chính thức APPROVE. Tip main e56cd743 khóa đúng một mục posture cho bảy skill: maskara và notebooklm-connector giữ package-bound trên maskara_scanner.v1 và notebooklm_rag.v1; năm skill còn lại là seam-exempt. GPI, tier kernel, 16 seam_id và tập ADR từng file đứng yên. Mẫu $(...) vắng trên bảy SKILL.md.'
 telemetry:
   session_id: 25cc1ec5-0d0f-46bf-a827-a9c1ee98a242
   primary_model: grok-4.7-build
@@ -18,7 +15,7 @@ telemetry:
   total_tokens: 2741816
   model_calls: 29
   turn_count: 1
-  cost_usd: 629269.28
+  cost_usd: 0.6293
   cost_mode: exact
   duration_seconds: 463.12
 ---

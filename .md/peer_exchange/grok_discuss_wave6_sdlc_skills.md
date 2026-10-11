@@ -3,50 +3,33 @@ request_id: req-discuss-wave6-sdlc-skills-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: Đã khóa. Tám skill, mỗi skill một mục Markdown "## 🏛️ Platform-Aware
-    Architecture Posture (ADR-0061)" với lý do riêng. seam-contracts.yaml giữ 16 seam_id.
-    packages/ đứng ngoài đợt. harness_verify.v1 giữ import_path ccba_harness:auto_apply_and_verify_patch.
-    Skill gọi verify-patch với vai caller.
+  description: Đã khóa. Tám skill, mỗi skill một mục Markdown "## 🏛️ Platform-Aware Architecture Posture (ADR-0061)" với lý do riêng. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. harness_verify.v1 giữ import_path ccba_harness:auto_apply_and_verify_patch. Skill gọi verify-patch với vai caller.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: Đã khóa. Frontmatter name, tier, command, triggers, description, bundle,
-    is-orchestrated và khối gpi đứng yên. Bốn orchestrator tiếp tục kết thúc ở Cổng
-    1, khối gpi vẫn vắng. Kernel giữ code-review 16.5, diagnosing-bugs 14.5, create-pr
-    14.0, tdd 12.0. tdd đạt ngưỡng >= 12.0 và nằm trong deadband [11.5, 12.5). Validator
-    đọc tier kernel làm existing tier. ccba-code-review giữ tier kernel.
+  description: Đã khóa. Frontmatter name, tier, command, triggers, description, bundle, is-orchestrated và khối gpi đứng yên. Bốn orchestrator tiếp tục kết thúc ở Cổng 1, khối gpi vẫn vắng. Kernel giữ code-review 16.5, diagnosing-bugs 14.5, create-pr 14.0, tdd 12.0. tdd đạt ngưỡng >= 12.0 và nằm trong deadband [11.5, 12.5). Validator đọc tier kernel làm existing tier. ccba-code-review giữ tier kernel.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: Đã khóa. Bảng Level 3 đứng nguyên trên đĩa. implement 4 dòng, tdd 2
-    dòng, diagnosing-bugs 1 dòng, code-review 14 dòng (10 tệp gốc references/ và 4
-    checklist). Thư mục references/ đứng ngoài diff của cả bốn PR.
+  description: Đã khóa. Bảng Level 3 đứng nguyên trên đĩa. implement 4 dòng, tdd 2 dòng, diagnosing-bugs 1 dòng, code-review 14 dòng (10 tệp gốc references/ và 4 checklist). Thư mục references/ đứng ngoài diff của cả bốn PR.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: Đã khóa. ccba-graduate-rd dùng $CCBA_HUB_PATH và $env:CCBA_HUB_PATH.
-    BRANCH_NAME thành hai lệnh gán tường minh. Bước 6 thành hai lệnh gh pr create.
-    Đoạn cuối ghi nhận skill chưa có thư mục references/.
+  description: Đã khóa. ccba-graduate-rd dùng $CCBA_HUB_PATH và $env:CCBA_HUB_PATH. BRANCH_NAME thành hai lệnh gán tường minh. Bước 6 thành hai lệnh gh pr create. Đoạn cuối ghi nhận skill chưa có thư mục references/.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: Đã khóa. Bốn PR song song 6A–6D, bốn cặp thư mục tách biệt. Mỗi SKILL.md
-    khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file,
-    và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch
-    --preset ci.
+  description: Đã khóa. Bốn PR song song 6A–6D, bốn cặp thư mục tách biệt. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 6 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và
-  16 card seam đứng yên. Bốn PR song song. Lý do trên đĩa theo sáu pha của diagnosing-bugs
-  và 14 dòng Level 3 của code-review. graduate-rd viết hai nhánh và hai lệnh gh pr
-  create.
+summary: Kế hoạch Đợt 6 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và 16 card seam đứng yên. Bốn PR song song. Lý do trên đĩa theo sáu pha của diagnosing-bugs và 14 dòng Level 3 của code-review. graduate-rd viết hai nhánh và hai lệnh gh pr create.
 telemetry:
   session_id: b4212484-b6dd-408e-8e32-91702b45833b
   primary_model: grok-4.7-build
@@ -57,7 +40,7 @@ telemetry:
   total_tokens: 987942
   model_calls: 15
   turn_count: 1
-  cost_usd: 266757.2
+  cost_usd: 0.2668
   cost_mode: exact
   duration_seconds: 338.09
 ---

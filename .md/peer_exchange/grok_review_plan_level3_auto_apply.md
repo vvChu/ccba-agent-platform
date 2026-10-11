@@ -3,90 +3,43 @@ request_id: req-plan-level3-auto-apply-001
 verdict: REVISE_PLAN
 conditions:
 - id: COND-LEVEL3-TXN
-  description: Hoàn nguyên phải dùng đúng pre-image bytes đã băm thành blob_sha256,
-    giữ trong transaction của apply_anchor_patch (written_backups, peer.py) cho tới
-    khi verify trả về hoặc ném lỗi, trong try/finally. Cấm đọc sidecar .bak làm nguồn
-    phục hồi và cấm writer thứ hai. Trước khi sửa target, ghi journal cộng bản sao
-    byte vào .md/backups/anchor-txn/<uuid>/ (thư mục đã gitignore) và giữ FileMutexLock
-    riêng. Cấm giữ _SYNC_MUTEX suốt verify (ADR-0065 COND-03). Sau rollback, SHA-256
-    từng file phải khớp pre-image thì mới được ghi rolled back cleanly. Phục hồi bằng
-    write_bytes hoặc newline rỗng, vì atomic_write_text gọi write_text với newline=None
-    và trên Windows sẽ đổi CRLF. Payload files rỗng bị từ chối. Lần gọi sau phải recover
-    journal chưa có commit marker.
+  description: Hoàn nguyên phải dùng đúng pre-image bytes đã băm thành blob_sha256, giữ trong transaction của apply_anchor_patch (written_backups, peer.py) cho tới khi verify trả về hoặc ném lỗi, trong try/finally. Cấm đọc sidecar .bak làm nguồn phục hồi và cấm writer thứ hai. Trước khi sửa target, ghi journal cộng bản sao byte vào .md/backups/anchor-txn/<uuid>/ (thư mục đã gitignore) và giữ FileMutexLock riêng. Cấm giữ _SYNC_MUTEX suốt verify (ADR-0065 COND-03). Sau rollback, SHA-256 từng file phải khớp pre-image thì mới được ghi rolled back cleanly. Phục hồi bằng write_bytes hoặc newline rỗng, vì atomic_write_text gọi write_text với newline=None và trên Windows sẽ đổi CRLF. Payload files rỗng bị từ chối. Lần gọi sau phải recover journal chưa có commit marker.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-ROOT
-  description: root mặc định là git rev-parse --show-toplevel tính từ cwd, ghi đè
-    bằng --root. Cấm Path.cwd() trần và cấm prompt_path.parent.parent.parent. Fail-closed
-    khi không phải git repo, khi prompt nằm ngoài root, hoặc khi --worktree được bật
-    mà chưa có đường dẫn worktree để ghim làm root. Cấm áp patch vào main checkout
-    trong trường hợp đó. Root lúc áp phải trùng root đã dùng để đóng dấu blob_sha256.
+  description: root mặc định là git rev-parse --show-toplevel tính từ cwd, ghi đè bằng --root. Cấm Path.cwd() trần và cấm prompt_path.parent.parent.parent. Fail-closed khi không phải git repo, khi prompt nằm ngoài root, hoặc khi --worktree được bật mà chưa có đường dẫn worktree để ghim làm root. Cấm áp patch vào main checkout trong trường hợp đó. Root lúc áp phải trùng root đã dùng để đóng dấu blob_sha256.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-BACKUP
-  description: Cấm sidecar Path.with_suffix(suffix + '.bak') cạnh source. with_suffix
-    chỉ thay suffix cuối, nên foo.py thành foo.py.bak và đè archive .bak sẵn có dù
-    .gitignore có *.bak*. Đuôi .bak.<timestamp> hoặc UUID cạnh source vẫn đua khi
-    chạy song song và không phải nguồn hoàn nguyên. --keep-backups chỉ giữ thư mục
-    txn dưới .md/backups/. Phase 1 từ chối nếu đường dẫn backup đã tồn tại hoặc trùng
-    một target của payload.
+  description: Cấm sidecar Path.with_suffix(suffix + '.bak') cạnh source. with_suffix chỉ thay suffix cuối, nên foo.py thành foo.py.bak và đè archive .bak sẵn có dù .gitignore có *.bak*. Đuôi .bak.<timestamp> hoặc UUID cạnh source vẫn đua khi chạy song song và không phải nguồn hoàn nguyên. --keep-backups chỉ giữ thư mục txn dưới .md/backups/. Phase 1 từ chối nếu đường dẫn backup đã tồn tại hoặc trùng một target của payload.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-EXIT
-  description: Verify fail và rollback đã chứng minh đúng byte thì exit 4 và verdict
-    GATE_FAIL. Cấm exit 5 cho nhánh này. HANDOFF và exit 5 chỉ có nghĩa payload còn
-    chờ orchestrator áp dụng (ADR-0065 mục 2.2). Rollback lệch byte hoặc ném lỗi thì
-    exit 1 và cấm câu rolled back cleanly. peer-dispatch không có --auto-apply giữ
-    nguyên exit 0/1. Có --auto-apply chỉ chạy sau khi invoke_grok_cli trả True. Co-review
-    từ chối auto-apply thì giữ mã thoát consensus hiện có (APPROVE_WITH_CONDITIONS
-    và APPROVE_WITH_RESERVATIONS = 2, REVISE_PLAN = 3, REJECT, REJECT_PLAN và GATE_FAIL
-    = 4, HANDOFF = 5). Cấm dồn mọi từ chối về exit 2. Thành công chỉ được GATE_PASS
-    và exit 0. Cấm thăng FINAL_ACCEPT. Cấm sửa YAML worker hoặc consensus tại chỗ.
-    Ghi Orchestrator Gate riêng, giữ telemetry ADR-0064 và SHA-256 của bản output
-    gốc.
+  description: Verify fail và rollback đã chứng minh đúng byte thì exit 4 và verdict GATE_FAIL. Cấm exit 5 cho nhánh này. HANDOFF và exit 5 chỉ có nghĩa payload còn chờ orchestrator áp dụng (ADR-0065 mục 2.2). Rollback lệch byte hoặc ném lỗi thì exit 1 và cấm câu rolled back cleanly. peer-dispatch không có --auto-apply giữ nguyên exit 0/1. Có --auto-apply chỉ chạy sau khi invoke_grok_cli trả True. Co-review từ chối auto-apply thì giữ mã thoát consensus hiện có (APPROVE_WITH_CONDITIONS và APPROVE_WITH_RESERVATIONS = 2, REVISE_PLAN = 3, REJECT, REJECT_PLAN và GATE_FAIL = 4, HANDOFF = 5). Cấm dồn mọi từ chối về exit 2. Thành công chỉ được GATE_PASS và exit 0. Cấm thăng FINAL_ACCEPT. Cấm sửa YAML worker hoặc consensus tại chỗ. Ghi Orchestrator Gate riêng, giữ telemetry ADR-0064 và SHA-256 của bản output gốc.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-TRUST
-  description: peer-dispatch --auto-apply chỉ khi profile đang chạy là patch_fast
-    và verdict worker là HANDOFF, kể cả HANDOFF do nhánh COND-02 tổng hợp khi chỉ
-    có AnchorPatchPayload. Verdict APPROVE, FINAL_ACCEPT hoặc GATE_PASS do worker
-    tự ghi không phải giấy phép áp patch. Verdict REJECT, REJECT_PLAN hoặc REVISE_PLAN
-    thì không áp. peer-co-review cấm gọi extract_anchor_payload trên markdown consensus.
-    Chỉ áp một --patch-file đã ghim SHA-256 khi verdict thuộc APPROVE, APPROVE_PLAN
-    hoặc FINAL_ACCEPT, risk_score nhỏ hơn hoặc bằng 3, và không có condition blocking
-    true. Report thiếu hoặc không parse được thì không áp.
+  description: peer-dispatch --auto-apply chỉ khi profile đang chạy là patch_fast và verdict worker là HANDOFF, kể cả HANDOFF do nhánh COND-02 tổng hợp khi chỉ có AnchorPatchPayload. Verdict APPROVE, FINAL_ACCEPT hoặc GATE_PASS do worker tự ghi không phải giấy phép áp patch. Verdict REJECT, REJECT_PLAN hoặc REVISE_PLAN thì không áp. peer-co-review cấm gọi extract_anchor_payload trên markdown consensus. Chỉ áp một --patch-file đã ghim SHA-256 khi verdict thuộc APPROVE, APPROVE_PLAN hoặc FINAL_ACCEPT, risk_score nhỏ hơn hoặc bằng 3, và không có condition blocking true. Report thiếu hoặc không parse được thì không áp.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-SCOPE
-  description: Preset ci không chạy packages/ccba-harness/tests/test_peer*.py. Lệnh
-    pytest của ci chỉ gồm test_telemetry.py, test_verify_patch.py và tests/governance.
-    GATE_PASS của vòng Level-3 phải chạy thêm các test peer đó cùng preset ci. --verify-preset
-    là choices của các preset đã biết và chỉ được đưa vào resolve_preset_commands.
-    Cấm nội suy chuỗi preset vào shell vì _execute_single_command dùng shell=True.
-    Test rollback dùng tmp_path thật, được mock verify_patch_execution, và cấm mock
-    apply_anchor_patch. Test CLI phải mock invoke_grok_cli.
+  description: Preset ci không chạy packages/ccba-harness/tests/test_peer*.py. Lệnh pytest của ci chỉ gồm test_telemetry.py, test_verify_patch.py và tests/governance. GATE_PASS của vòng Level-3 phải chạy thêm các test peer đó cùng preset ci. --verify-preset là choices của các preset đã biết và chỉ được đưa vào resolve_preset_commands. Cấm nội suy chuỗi preset vào shell vì _execute_single_command dùng shell=True. Test rollback dùng tmp_path thật, được mock verify_patch_execution, và cấm mock apply_anchor_patch. Test CLI phải mock invoke_grok_cli.
   blocking: true
   source_profile: audit_plan
   source_profiles: []
 - id: COND-LEVEL3-RESULT
-  description: Nên trả một Pydantic model extra forbid thay cho tuple (success, report,
-    summary), gồm gate_verdict, rollback_proven và preimage_sha256, để CLI --json
-    và parser dùng chung một hợp đồng. Seam mới phải có mặt trong __all__ của ccba_harness
-    và trong Deep Seam của packages/ccba-harness/AGENTS.md.
+  description: Nên trả một Pydantic model extra forbid thay cho tuple (success, report, summary), gồm gate_verdict, rollback_proven và preimage_sha256, để CLI --json và parser dùng chung một hợp đồng. Seam mới phải có mặt trong __all__ của ccba_harness và trong Deep Seam của packages/ccba-harness/AGENTS.md.
   blocking: false
   source_profile: audit_plan
   source_profiles: []
 risk_score: 4
 effort: L
-summary: Hướng Level-3 đúng ADR-0058 và ADR-0065 (dry-run trước, cấm APPROVE giả,
-  verify xong mới GATE_PASS) nhưng chưa được viết code. Hoàn nguyên đang đọc .bak
-  cạnh source, root suy từ ba cấp cha, và exit 5 sẽ nuốt một gate đã thất bại. Phải
-  khóa transaction đúng byte, root git toplevel, và exit 4 trước khi triển khai.
+summary: Hướng Level-3 đúng ADR-0058 và ADR-0065 (dry-run trước, cấm APPROVE giả, verify xong mới GATE_PASS) nhưng chưa được viết code. Hoàn nguyên đang đọc .bak cạnh source, root suy từ ba cấp cha, và exit 5 sẽ nuốt một gate đã thất bại. Phải khóa transaction đúng byte, root git toplevel, và exit 4 trước khi triển khai.
 telemetry:
   session_id: 9193c4fb-5afa-473c-933f-10bbea4cc2a6
   primary_model: grok-4.7-build
@@ -97,7 +50,7 @@ telemetry:
   total_tokens: 470680
   model_calls: 11
   turn_count: 1
-  cost_usd: 194175.36
+  cost_usd: 0.1942
   cost_mode: exact
   duration_seconds: 413.09
 ---

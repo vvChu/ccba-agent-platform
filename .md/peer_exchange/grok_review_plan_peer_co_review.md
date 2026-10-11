@@ -3,74 +3,26 @@ request_id: req-plan-peer-co-review-001
 verdict: REVISE_PLAN
 conditions:
 - id: COND-01
-  description: Lập bậc ưu tiên tổng trên mọi thành viên VerdictType trong peer.py,
-    gồm APPROVE, APPROVE_WITH_CONDITIONS, APPROVE_WITH_RESERVATIONS, APPROVE_PLAN,
-    REVISE_PLAN, REJECT_PLAN, REJECT, FINAL_ACCEPT, GATE_PASS, GATE_FAIL và HANDOFF.
-    Lớp chặn gồm REJECT, REJECT_PLAN và GATE_FAIL. Cấm nhánh else gán APPROVE. Test
-    bắt buộc set(precedence) bằng set(get_args(VerdictType)). Nếu mọi tác nhân cùng
-    một token thì consensus giữ nguyên token đó. HANDOFF của profile bắt buộc thắng
-    APPROVE và APPROVE_WITH_CONDITIONS. Chỉ điều kiện blocking true mới được nâng
-    lớp PASS lên APPROVE_WITH_CONDITIONS. APPROVE_WITH_RESERVATIONS không được đổi
-    thành APPROVE.
+  description: Lập bậc ưu tiên tổng trên mọi thành viên VerdictType trong peer.py, gồm APPROVE, APPROVE_WITH_CONDITIONS, APPROVE_WITH_RESERVATIONS, APPROVE_PLAN, REVISE_PLAN, REJECT_PLAN, REJECT, FINAL_ACCEPT, GATE_PASS, GATE_FAIL và HANDOFF. Lớp chặn gồm REJECT, REJECT_PLAN và GATE_FAIL. Cấm nhánh else gán APPROVE. Test bắt buộc set(precedence) bằng set(get_args(VerdictType)). Nếu mọi tác nhân cùng một token thì consensus giữ nguyên token đó. HANDOFF của profile bắt buộc thắng APPROVE và APPROVE_WITH_CONDITIONS. Chỉ điều kiện blocking true mới được nâng lớp PASS lên APPROVE_WITH_CONDITIONS. APPROVE_WITH_RESERVATIONS không được đổi thành APPROVE.
   blocking: true
 - id: COND-02
-  description: Hợp đồng quorum gồm expected_profiles, completed_profiles và failed_profiles.
-    invoke_grok_cli chỉ trả bool. False, timeout, hoặc parse_verdict_from_md bằng
-    None là profile thất bại và không được tổng hợp thành lớp PASS. Orchestrator không
-    trả None khi lỗi. Trước mỗi lần gọi, bản sao envelope phải ghi đè profile và output_path,
-    vì file kết quả luôn là thư mục của prompt cộng basename của envelope.output_path,
-    và session id đã được tạo bên trong invoke. Giữ nguyên chữ ký invoke_grok_cli.
-    Khi CCBA_GROK_MODEL có giá trị, truyền model lấy từ PROFILE_SPECS của đúng profile.
-    Timeout mặc định lấy từ spec của profile, code_review 300 giây và arch_audit 600
-    giây. Một cờ timeout trên CLI chỉ là override có chủ đích.
+  description: Hợp đồng quorum gồm expected_profiles, completed_profiles và failed_profiles. invoke_grok_cli chỉ trả bool. False, timeout, hoặc parse_verdict_from_md bằng None là profile thất bại và không được tổng hợp thành lớp PASS. Orchestrator không trả None khi lỗi. Trước mỗi lần gọi, bản sao envelope phải ghi đè profile và output_path, vì file kết quả luôn là thư mục của prompt cộng basename của envelope.output_path, và session id đã được tạo bên trong invoke. Giữ nguyên chữ ký invoke_grok_cli. Khi CCBA_GROK_MODEL có giá trị, truyền model lấy từ PROFILE_SPECS của đúng profile. Timeout mặc định lấy từ spec của profile, code_review 300 giây và arch_audit 600 giây. Một cờ timeout trên CLI chỉ là override có chủ đích.
   blocking: true
 - id: COND-03
-  description: synthesize_verdicts duyệt đúng thứ tự profiles đầu vào, không theo
-    thứ tự future hoàn thành. Khóa chống trùng mô tả phải gộp blocking bằng phép OR
-    và giữ đủ source_profile. Thêm trường tùy chọn PeerCondition.source_profile vì
-    extra ignore sẽ bỏ trường lạ khi parse lại. Không nhét prefix hồ sơ vào id hoặc
-    description. risk_score hợp nhất là max các điểm hợp lệ từ 1 đến 5. Verdict lớp
-    PASS đi kèm risk từ 4 trở lên phải thành APPROVE_WITH_CONDITIONS hoặc REVISE_PLAN.
+  description: synthesize_verdicts duyệt đúng thứ tự profiles đầu vào, không theo thứ tự future hoàn thành. Khóa chống trùng mô tả phải gộp blocking bằng phép OR và giữ đủ source_profile. Thêm trường tùy chọn PeerCondition.source_profile vì extra ignore sẽ bỏ trường lạ khi parse lại. Không nhét prefix hồ sơ vào id hoặc description. risk_score hợp nhất là max các điểm hợp lệ từ 1 đến 5. Verdict lớp PASS đi kèm risk từ 4 trở lên phải thành APPROVE_WITH_CONDITIONS hoặc REVISE_PLAN.
   blocking: true
 - id: COND-04
-  description: File trung gian đặt trong TemporaryDirectory chế độ 0700, ngoài cây
-    peer_exchange. Profile chỉ được khớp mẫu chữ thường, chữ số và gạch dưới, dài
-    1 đến 32 ký tự. Không ghi stem.profile.tmp.md cạnh prompt. scan_peer_exchange
-    đọc mọi file kết thúc bằng .md, và classify_file_role gắn tiền tố prompt_ thành
-    PROMPT_TO_GROK, nên auto_grok sẽ gọi thêm grok trên bản sao. Chỉ publish một file
-    phản hồi grok_*.md bằng atomic_write_text sẵn có. Giữ verdict từng profile ngoài
-    thư mục scan, nếu không status.json cộng trùng token và latest_verdict đổi theo
-    mtime. Trên Windows invoke không đặt start_new_session, nên timeout phải hủy cả
-    cây tiến trình con. Dọn thư mục run trong finally. Hai lần chạy đồng thời không
-    được dùng chung một đường dẫn output.
+  description: File trung gian đặt trong TemporaryDirectory chế độ 0700, ngoài cây peer_exchange. Profile chỉ được khớp mẫu chữ thường, chữ số và gạch dưới, dài 1 đến 32 ký tự. Không ghi stem.profile.tmp.md cạnh prompt. scan_peer_exchange đọc mọi file kết thúc bằng .md, và classify_file_role gắn tiền tố prompt_ thành PROMPT_TO_GROK, nên auto_grok sẽ gọi thêm grok trên bản sao. Chỉ publish một file phản hồi grok_*.md bằng atomic_write_text sẵn có. Giữ verdict từng profile ngoài thư mục scan, nếu không status.json cộng trùng token và latest_verdict đổi theo mtime. Trên Windows invoke không đặt start_new_session, nên timeout phải hủy cả cây tiến trình con. Dọn thư mục run trong finally. Hai lần chạy đồng thời không được dùng chung một đường dẫn output.
   blocking: true
 - id: COND-05
-  description: Constructor PeerVerdictTelemetry trong kế hoạch thiếu session_id và
-    primary_model, trong khi model đang extra forbid và cost_mode chỉ nhận exact,
-    estimated hoặc unknown, nên bước hợp nhất sẽ ném ValidationError. Tạo model CombinedTelemetry
-    riêng, có breakdown theo profile gồm model, input, output, reasoning_tokens, cached_read_tokens,
-    cost và duration, cộng wall_seconds tách khỏi sum_agent_seconds. cost_mode exact
-    chỉ khi mọi thành phần là exact. Khối frontmatter công bố ra cầu nối phải có khóa
-    conditions bằng danh sách đã gộp. Tên consolidated_conditions bị parse_verdict_from_md
-    bỏ qua, và số điều kiện chặn trên status sẽ bằng 0.
+  description: Constructor PeerVerdictTelemetry trong kế hoạch thiếu session_id và primary_model, trong khi model đang extra forbid và cost_mode chỉ nhận exact, estimated hoặc unknown, nên bước hợp nhất sẽ ném ValidationError. Tạo model CombinedTelemetry riêng, có breakdown theo profile gồm model, input, output, reasoning_tokens, cached_read_tokens, cost và duration, cộng wall_seconds tách khỏi sum_agent_seconds. cost_mode exact chỉ khi mọi thành phần là exact. Khối frontmatter công bố ra cầu nối phải có khóa conditions bằng danh sách đã gộp. Tên consolidated_conditions bị parse_verdict_from_md bỏ qua, và số điều kiện chặn trên status sẽ bằng 0.
   blocking: true
 - id: COND-06
-  description: Không thêm majority vote. Không gắn veto tuyệt đối cứng cho arch_audit.
-    Bảng precedence và danh sách profile bắt buộc là cấu hình khai báo. Tái sử dụng
-    PROFILE_SPECS và atomic_write_text. max_workers mặc định bằng số profile và có
-    trần nhỏ, không dùng mặc định ThreadPoolExecutor. Dry-run in kế hoạch dispatch
-    và không gọi model. Mã thoát CLI tách PASS, CONDITIONS, REVISE, REJECT, INCOMPLETE
-    và lỗi usage. Đăng ký orchestrate_peer_co_review, synthesize_verdicts, PeerConsensusReport
-    và run_peer_co_review_cli trong AGENTS.md của package cùng __all__ của ccba_harness.
-    Kế hoạch phải kèm test cho lattice đầy đủ, quorum, dedup OR, thứ tự tất định,
-    cách ly watcher, telemetry hai model, và CLI, trước khi mở nhánh mã.
+  description: Không thêm majority vote. Không gắn veto tuyệt đối cứng cho arch_audit. Bảng precedence và danh sách profile bắt buộc là cấu hình khai báo. Tái sử dụng PROFILE_SPECS và atomic_write_text. max_workers mặc định bằng số profile và có trần nhỏ, không dùng mặc định ThreadPoolExecutor. Dry-run in kế hoạch dispatch và không gọi model. Mã thoát CLI tách PASS, CONDITIONS, REVISE, REJECT, INCOMPLETE và lỗi usage. Đăng ký orchestrate_peer_co_review, synthesize_verdicts, PeerConsensusReport và run_peer_co_review_cli trong AGENTS.md của package cùng __all__ của ccba_harness. Kế hoạch phải kèm test cho lattice đầy đủ, quorum, dedup OR, thứ tự tất định, cách ly watcher, telemetry hai model, và CLI, trước khi mở nhánh mã.
   blocking: true
 risk_score: 4
 effort: L
-summary: REVISE_PLAN. Hướng pessimistic merge phù hợp ADR-0065, nhưng bậc ưu tiên
-  hiện tại biến REJECT_PLAN và GATE_FAIL thành APPROVE, constructor telemetry không
-  khớp PeerVerdictTelemetry, và file tạm *.tmp.md trong peer_exchange bị watcher dispatch
-  lại. Chưa viết mã cho đến khi COND-01 đến COND-06 nằm trong kế hoạch.
+summary: REVISE_PLAN. Hướng pessimistic merge phù hợp ADR-0065, nhưng bậc ưu tiên hiện tại biến REJECT_PLAN và GATE_FAIL thành APPROVE, constructor telemetry không khớp PeerVerdictTelemetry, và file tạm *.tmp.md trong peer_exchange bị watcher dispatch lại. Chưa viết mã cho đến khi COND-01 đến COND-06 nằm trong kế hoạch.
 telemetry:
   session_id: cfe9e556-7389-49b8-a0ed-f71723f3757c
   primary_model: grok-4.7-build
@@ -81,7 +33,7 @@ telemetry:
   total_tokens: 558170
   model_calls: 12
   turn_count: 1
-  cost_usd: 200753.68
+  cost_usd: 0.2008
   cost_mode: exact
   duration_seconds: 636.15
 ---

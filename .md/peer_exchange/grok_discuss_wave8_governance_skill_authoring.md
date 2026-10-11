@@ -3,68 +3,33 @@ request_id: req-discuss-wave8-governance-skill-authoring-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: Đã khóa. Tám skill, mỗi skill một mục "## 🏛️ Platform-Aware Architecture
-    Posture" đặt một lần ngay sau H1. Tiêu đề mục không kèm số ADR. seam-exempt cho
-    cả tám. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. Lý do posture
-    lấy từ thân bài trên đĩa, theo bảng mục 2. ccba-build-skill là caller của maskara_scanner.v1
-    và notebooklm_rag.v1. Seam trong ccba-codebase-design là từ vựng Michael Feathers.
-    Tập token ADR của từng SKILL.md đứng yên, gồm mẫu HUB-ADR-0010 trong scaffold
-    của ccba-adr-lifecycle.
+  description: Đã khóa. Tám skill, mỗi skill một mục "## 🏛️ Platform-Aware Architecture Posture" đặt một lần ngay sau H1. Tiêu đề mục không kèm số ADR. seam-exempt cho cả tám. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. Lý do posture lấy từ thân bài trên đĩa, theo bảng mục 2. ccba-build-skill là caller của maskara_scanner.v1 và notebooklm_rag.v1. Seam trong ccba-codebase-design là từ vựng Michael Feathers. Tập token ADR của từng SKILL.md đứng yên, gồm mẫu HUB-ADR-0010 trong scaffold của ccba-adr-lifecycle.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: 'Đã khóa. Frontmatter tám file đứng nguyên từng byte: name, tier, bundle,
-    command, triggers, description, metadata, gpi, cờ disable-model-invocation, applies_to,
-    conforms_to, layer, scope. Tám skill giữ tier kernel. Điểm giữ nguyên: adr-lifecycle
-    22.5, review-proposal 18.5, build-skill 14.0, skill-repair 12.0, setup-skills
-    15.25, create-verification-skill 20.75, promote-sandbox 14.0, codebase-design
-    16.5. skill-repair giữ khối gpi một dòng. Điểm 12.0 đi nhánh Tier 2B và nằm trong
-    deadband [11.5, 12.5). Cờ is-deterministic và is-orchestrated tiếp tục vắng.'
+  description: 'Đã khóa. Frontmatter tám file đứng nguyên từng byte: name, tier, bundle, command, triggers, description, metadata, gpi, cờ disable-model-invocation, applies_to, conforms_to, layer, scope. Tám skill giữ tier kernel. Điểm giữ nguyên: adr-lifecycle 22.5, review-proposal 18.5, build-skill 14.0, skill-repair 12.0, setup-skills 15.25, create-verification-skill 20.75, promote-sandbox 14.0, codebase-design 16.5. skill-repair giữ khối gpi một dòng. Điểm 12.0 đi nhánh Tier 2B và nằm trong deadband [11.5, 12.5). Cờ is-deterministic và is-orchestrated tiếp tục vắng.'
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: Đã khóa. Bảng Level 3 đứng nguyên với đúng tên tệp và đúng thứ tự trên
-    đĩa. adr-lifecycle 1 dòng architecture_sync_guide.md. review-proposal 1 dòng nightly_tuning_review.md.
-    build-skill 3 dòng skill_authoring_guide.md, skill_review_checklist.md, skill_glossary.md.
-    setup-skills 2 dòng pre_commit_setup.md, ts_deep_modules.md. create-verification-skill
-    2 dòng features_map_guide.md, maintain_drift_guide.md. codebase-design 4 dòng
-    codebase_refactor_guide.md, deepening.md, design_it_twice.md, html_report_template.md.
-    skill-repair và promote-sandbox chưa có references/. references/, resources/,
-    templates/ đứng ngoài diff. Câu cấm hub_path của setup-skills tại dòng 139-140
-    đứng nguyên.
+  description: Đã khóa. Bảng Level 3 đứng nguyên với đúng tên tệp và đúng thứ tự trên đĩa. adr-lifecycle 1 dòng architecture_sync_guide.md. review-proposal 1 dòng nightly_tuning_review.md. build-skill 3 dòng skill_authoring_guide.md, skill_review_checklist.md, skill_glossary.md. setup-skills 2 dòng pre_commit_setup.md, ts_deep_modules.md. create-verification-skill 2 dòng features_map_guide.md, maintain_drift_guide.md. codebase-design 4 dòng codebase_refactor_guide.md, deepening.md, design_it_twice.md, html_report_template.md. skill-repair và promote-sandbox chưa có references/. references/, resources/, templates/ đứng ngoài diff. Câu cấm hub_path của setup-skills tại dòng 139-140 đứng nguyên.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: 'Đã khóa. Fence powershell của ccba-adr-lifecycle dùng python "$env:CCBA_HUB_PATH/scripts/sync_hub_adr_matrix.py"
-    --spoke-dir . Lệnh Hub tương đối python scripts/sync_hub_adr_matrix.py đứng nguyên.
-    ccba-promote-sandbox: ví dụ đích là $env:PROJECTS_ROOT/2026-04-dh-viet-nhat. Fence
-    powershell dùng python "$env:CCBA_HUB_PATH/scripts/promote_sandbox.py" --target
-    "$env:PROJECTS_ROOT/2026-04-dh-viet-nhat" --files <files> --pgv "<pgv>". Câu mở
-    đầu bước 3 phân giải Hub qua $env:CCBA_HUB_PATH. Mẫu $(...) đứng ngoài tám SKILL.md.
-    Chú thích ccba:allow-machine-path đứng ngoài markdown.'
+  description: 'Đã khóa. Fence powershell của ccba-adr-lifecycle dùng python "$env:CCBA_HUB_PATH/scripts/sync_hub_adr_matrix.py" --spoke-dir . Lệnh Hub tương đối python scripts/sync_hub_adr_matrix.py đứng nguyên. ccba-promote-sandbox: ví dụ đích là $env:PROJECTS_ROOT/2026-04-dh-viet-nhat. Fence powershell dùng python "$env:CCBA_HUB_PATH/scripts/promote_sandbox.py" --target "$env:PROJECTS_ROOT/2026-04-dh-viet-nhat" --files <files> --pgv "<pgv>". Câu mở đầu bước 3 phân giải Hub qua $env:CCBA_HUB_PATH. Mẫu $(...) đứng ngoài tám SKILL.md. Chú thích ccba:allow-machine-path đứng ngoài markdown.'
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: Đã khóa. Bốn PR song song 8A-8D, bốn cặp thư mục tách biệt, mỗi PR
-    chỉ sửa SKILL.md của cặp đó. Mỗi SKILL.md khóa bằng validate_skills.py --file
-    --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill
-    --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci. catalog.yaml,
-    seam-contracts.yaml, packages/ và docs/adr/ đứng ngoài bốn PR. Điểm trong đoạn
-    posture viết dạng (S, K, A, P) = số.
+  description: Đã khóa. Bốn PR song song 8A-8D, bốn cặp thư mục tách biệt, mỗi PR chỉ sửa SKILL.md của cặp đó. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci. catalog.yaml, seam-contracts.yaml, packages/ và docs/adr/ đứng ngoài bốn PR. Điểm trong đoạn posture viết dạng (S, K, A, P) = số.
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 8 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và
-  16 card seam đứng yên. Bốn PR song song. Lý do posture và bảng Level 3 khóa theo
-  tệp đang có trên đĩa. Hai fence PowerShell dùng $env:CCBA_HUB_PATH. Tập token ADR
-  của từng SKILL.md đứng yên để preset skill và preset ci giữ sync_hub_adr_matrix.py
-  --check xanh.
+summary: Kế hoạch Đợt 8 được phép bắt đầu. Tám skill nhận seam-exempt. GPI, tier và 16 card seam đứng yên. Bốn PR song song. Lý do posture và bảng Level 3 khóa theo tệp đang có trên đĩa. Hai fence PowerShell dùng $env:CCBA_HUB_PATH. Tập token ADR của từng SKILL.md đứng yên để preset skill và preset ci giữ sync_hub_adr_matrix.py --check xanh.
 telemetry:
   session_id: 50995bc7-e562-4622-994c-f10463203485
   primary_model: grok-4.7-build
@@ -75,7 +40,7 @@ telemetry:
   total_tokens: 1174805
   model_calls: 19
   turn_count: 1
-  cost_usd: 304712.76
+  cost_usd: 0.3047
   cost_mode: exact
   duration_seconds: 405.1
 ---

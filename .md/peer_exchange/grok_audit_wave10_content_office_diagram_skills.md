@@ -4,11 +4,7 @@ verdict: APPROVE
 conditions: []
 risk_score: 1
 effort: XS
-summary: 'Nghiệm thu Đợt 10 chính thức APPROVE. Tip main 9a3408a0 khóa đúng một mục
-  posture cho bảy skill: excalidraw-diagram và xu-ly-van-phong giữ package-bound trên
-  diagram_layout.v1 và ooxml_processor.v1; năm skill còn lại là seam-exempt. GPI,
-  tier kernel, 16 seam_id và tập ADR {0061} của excalidraw đứng yên. Mẫu $(...) vắng
-  trên bảy SKILL.md.'
+summary: 'Nghiệm thu Đợt 10 chính thức APPROVE. Tip main 9a3408a0 khóa đúng một mục posture cho bảy skill: excalidraw-diagram và xu-ly-van-phong giữ package-bound trên diagram_layout.v1 và ooxml_processor.v1; năm skill còn lại là seam-exempt. GPI, tier kernel, 16 seam_id và tập ADR {0061} của excalidraw đứng yên. Mẫu $(...) vắng trên bảy SKILL.md.'
 telemetry:
   session_id: faaaa614-d2ee-446e-8f95-d4a538cd8ce1
   primary_model: grok-4.7-build
@@ -19,7 +15,7 @@ telemetry:
   total_tokens: 1214253
   model_calls: 18
   turn_count: 1
-  cost_usd: 361834.12
+  cost_usd: 0.3618
   cost_mode: exact
   duration_seconds: 500.11
 ---

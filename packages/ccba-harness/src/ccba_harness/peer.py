@@ -551,6 +551,43 @@ def atomic_write_text(target: Path, content: str, max_retries: int = 3) -> None:
         raise
 
 
+def atomic_write_bytes(target: Path, data: bytes, max_retries: int = 3) -> None:
+    """Writes binary data to target file atomically using a temporary file with retry (ADR-0065).
+
+    Args:
+        target: Destination file path.
+        data: Binary bytes content to persist verbatim.
+        max_retries: Retry attempts on transient OS lock errors (e.g. Windows file locking).
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temp_file = target.with_suffix(f"{target.suffix}.tmp_{os.getpid()}_{time.time_ns()}")
+    mode = None
+    if target.exists():
+        try:
+            mode = target.stat().st_mode
+        except OSError:
+            pass
+    try:
+        temp_file.write_bytes(data)
+        if mode is not None:
+            try:
+                os.chmod(temp_file, mode)
+            except OSError:
+                pass
+        for attempt in range(max_retries):
+            try:
+                temp_file.replace(target)
+                break
+            except (PermissionError, OSError):
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(0.05 * (attempt + 1))
+    except Exception:
+        if temp_file.exists():
+            temp_file.unlink(missing_ok=True)
+        raise
+
+
 def safe_read_and_hash(path: Path, max_retries: int = 3) -> tuple[str | None, str | None]:
     """Safely reads file content and computes SHA-256 with retry against partial writes.
 
@@ -885,8 +922,9 @@ def run_sync_cycle(
     actions_to_run: list[tuple[str, Path]] = []
     changes: list[FileChange] = []
 
-    # COND-01: Narrow _SYNC_MUTEX to the critical section (cache, status, summary updates)
-    with _SYNC_MUTEX:
+    # COND-01 / ADR-0065: Narrow _SYNC_MUTEX & cross-process FileMutexLock to critical section
+    sync_lock = peer_exchange_dir / ".sync.lock"
+    with _SYNC_MUTEX, FileMutexLock(sync_lock, timeout=10.0):
         cache_file = peer_exchange_dir / ".bridge_cache.json"
         status_file = peer_exchange_dir / "status.json"
         summary_file = peer_exchange_dir / "grok_live_summary.md"
@@ -1160,7 +1198,7 @@ def recover_pending_anchor_transactions(
                         continue
                     target_file = (target_root / rel_p).resolve()
                     # Restore verbatim raw bytes (preserves CRLF/exact bytes)
-                    target_file.write_bytes(backup_file.read_bytes())
+                    atomic_write_bytes(target_file, backup_file.read_bytes())
                 aborted_marker.write_text(
                     f"Recovered at {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
                     encoding="utf-8",
@@ -1295,7 +1333,7 @@ def auto_apply_and_verify_patch(
                 try:
                     t_file = (effective_root / f_entry["path"]).resolve()
                     b_file = txn_dir / f_entry["backup_filename"]
-                    t_file.write_bytes(b_file.read_bytes())
+                    atomic_write_bytes(t_file, b_file.read_bytes())
                 except Exception:
                     rollback_ok = False
             if rollback_ok and not keep_backups:
@@ -1330,7 +1368,7 @@ def auto_apply_and_verify_patch(
                 try:
                     t_file = (effective_root / f_entry["path"]).resolve()
                     b_file = txn_dir / f_entry["backup_filename"]
-                    t_file.write_bytes(b_file.read_bytes())
+                    atomic_write_bytes(t_file, b_file.read_bytes())
                     restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
                     if restored_sha.lower() != f_entry["blob_sha256"].lower():
                         rollback_ok = False
@@ -1372,7 +1410,7 @@ def auto_apply_and_verify_patch(
             try:
                 t_file = (effective_root / f_entry["path"]).resolve()
                 b_file = txn_dir / f_entry["backup_filename"]
-                t_file.write_bytes(b_file.read_bytes())
+                atomic_write_bytes(t_file, b_file.read_bytes())
                 restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
                 if restored_sha.lower() != f_entry["blob_sha256"].lower():
                     rollback_proven = False
