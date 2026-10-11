@@ -324,3 +324,15 @@ def test_swarm_telemetry_audit_and_cli(tmp_path: Path, capsys: pytest.CaptureFix
     assert code_fail == 1
     err = capsys.readouterr().err
     assert "[FAIL] Swarm budget violation" in err
+
+
+def test_resolve_model_token_rates_edge_cases():
+    """Verifies that empty string or None safely falls back to default rates."""
+    from ccba_harness.telemetry import (
+        PRICE_PER_M_INPUT,
+        PRICE_PER_M_OUTPUT,
+        resolve_model_token_rates,
+    )
+
+    assert resolve_model_token_rates("") == (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
+    assert resolve_model_token_rates(None) == (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)

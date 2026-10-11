@@ -3,62 +3,35 @@ request_id: req-discuss-wave10-content-office-diagram-skills-001
 verdict: APPROVE_PLAN
 conditions:
 - id: COND-01
-  description: 'Đã khóa. Đúng một mục `## 🏛️ Platform-Aware Architecture Posture`
-    trên mỗi file, tiêu đề không chứa số ADR. ccba-excalidraw-diagram đổi tiêu đề
-    mục dòng 75 tại chỗ và giữ package-bound trên diagram_layout.v1 (ccba_diagram:apply_smart_layout),
-    fence `find-seam --in diagram --out layout --json`, và Determinism Invariant.
-    ccba-xu-ly-van-phong nhận package-bound trên ooxml_processor.v1 (ccba_ooxml:DocxDocument);
-    card cấm import thay thế docx và openpyxl. Năm skill còn lại nhận seam-exempt,
-    vai trò caller khi thân bài đã gọi script hoặc CLI. seam-contracts.yaml giữ 16
-    seam_id. packages/ đứng ngoài đợt. Lý do posture lấy từ thân bài trên đĩa.
+  description: 'Đã khóa. Đúng một mục `## 🏛️ Platform-Aware Architecture Posture` trên mỗi file, tiêu đề không chứa số ADR. ccba-excalidraw-diagram đổi tiêu đề mục dòng 75 tại chỗ và giữ package-bound trên diagram_layout.v1 (ccba_diagram:apply_smart_layout), fence `find-seam --in diagram --out layout --json`, và Determinism Invariant. ccba-xu-ly-van-phong nhận package-bound trên ooxml_processor.v1 (ccba_ooxml:DocxDocument); card cấm import thay thế docx và openpyxl. Năm skill còn lại nhận seam-exempt, vai trò caller khi thân bài đã gọi script hoặc CLI. seam-contracts.yaml giữ 16 seam_id. packages/ đứng ngoài đợt. Lý do posture lấy từ thân bài trên đĩa.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: 'Đã khóa. Frontmatter bảy file đứng nguyên từng khóa đang có. Cả bảy
-    giữ tier kernel. Khối gpi giữ nguyên hệ số: excalidraw (4.0, 4.0, 3.0, 3.0) =
-    19.5; xu-ly-van-phong (3.0, 3.0, 1.0, 1.0) = 14.0; pptx (3.0, 2.0, 1.0, 1.0) =
-    12.0; docs-manager (3.0, 3.0, 1.0, 1.0) = 14.0; academic-writing (4.0, 3.0, 1.0,
-    1.0) = 16.5; copywriting (3.0, 3.0, 1.0, 1.0) = 14.0; to-spec (4.0, 2.0, 1.0,
-    1.0) = 14.5. Điểm 12.0 đã là Tier 2B vì ngưỡng >= 12.0 và đồng thời nằm trong
-    deadband [11.5, 12.5). Cờ is-deterministic, is-orchestrated, existing-tier và
-    khóa score tiếp tục vắng. package_path chỉ có trên ccba-xu-ly-van-phong.
+  description: 'Đã khóa. Frontmatter bảy file đứng nguyên từng khóa đang có. Cả bảy giữ tier kernel. Khối gpi giữ nguyên hệ số: excalidraw (4.0, 4.0, 3.0, 3.0) = 19.5; xu-ly-van-phong (3.0, 3.0, 1.0, 1.0) = 14.0; pptx (3.0, 2.0, 1.0, 1.0) = 12.0; docs-manager (3.0, 3.0, 1.0, 1.0) = 14.0; academic-writing (4.0, 3.0, 1.0, 1.0) = 16.5; copywriting (3.0, 3.0, 1.0, 1.0) = 14.0; to-spec (4.0, 2.0, 1.0, 1.0) = 14.5. Điểm 12.0 đã là Tier 2B vì ngưỡng >= 12.0 và đồng thời nằm trong deadband [11.5, 12.5). Cờ is-deterministic, is-orchestrated, existing-tier và khóa score tiếp tục vắng. package_path chỉ có trên ccba-xu-ly-van-phong.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự trên đĩa.
-    academic-writing 3 dòng, copywriting 10 dòng, docs-manager 1 dòng, excalidraw-diagram
-    1 dòng, pptx 2 dòng, to-spec 2 dòng, xu-ly-van-phong 4 dòng. references/, resources/,
-    standards/, scripts/, templates/, examples/ của bảy thư mục skill đứng ngoài diff
-    của cả bốn PR.
+  description: 'Đã khóa. Bảng Level 3 đứng nguyên đúng tên và đúng thứ tự trên đĩa. academic-writing 3 dòng, copywriting 10 dòng, docs-manager 1 dòng, excalidraw-diagram 1 dòng, pptx 2 dòng, to-spec 2 dòng, xu-ly-van-phong 4 dòng. references/, resources/, standards/, scripts/, templates/, examples/ của bảy thư mục skill đứng ngoài diff của cả bốn PR.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: 'Đã khóa. Tập số ADR của từng SKILL.md đứng yên. ccba-excalidraw-diagram
-    giữ đúng một token ADR-0061, chuyển từ tiêu đề cũ vào câu đầu của cùng mục posture.
-    Sáu skill còn lại giữ tập rỗng. Mẫu $(...) đứng ngoài bảy SKILL.md. Đoạn posture
-    viết điểm dạng (S, K, A, P) = số. docs/adr/, catalog.yaml, seam-contracts.yaml
-    và packages/ đứng ngoài bốn PR.
+  description: 'Đã khóa. Tập số ADR của từng SKILL.md đứng yên. ccba-excalidraw-diagram giữ đúng một token ADR-0061, chuyển từ tiêu đề cũ vào câu đầu của cùng mục posture. Sáu skill còn lại giữ tập rỗng. Mẫu $(...) đứng ngoài bảy SKILL.md. Đoạn posture viết điểm dạng (S, K, A, P) = số. docs/adr/, catalog.yaml, seam-contracts.yaml và packages/ đứng ngoài bốn PR.
 
     '
   blocking: false
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: 'Đã khóa. Bốn PR 10A-10D sửa đúng SKILL.md của cặp hoặc file được giao,
-    bốn tập đường dẫn tách biệt, được phép chạy song song. Mỗi SKILL.md khóa bằng
-    validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch
-    --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset
-    ci và lấy exit code 0 của sáu lệnh preset. Sàn này là exit code, không phải một
-    hằng số lượng test.
+  description: 'Đã khóa. Bốn PR 10A-10D sửa đúng SKILL.md của cặp hoặc file được giao, bốn tập đường dẫn tách biệt, được phép chạy song song. Mỗi SKILL.md khóa bằng validate_skills.py --file --enforce-gpi, audit_skills_hygiene.py --file, và verify-patch --preset skill --target. Sau khi cả bốn PR có trên đĩa, chạy verify-patch --preset ci và lấy exit code 0 của sáu lệnh preset. Sàn này là exit code, không phải một hằng số lượng test.
 
     '
   blocking: false
@@ -66,11 +39,7 @@ conditions:
   source_profiles: []
 risk_score: 2
 effort: M
-summary: Kế hoạch Đợt 10 được phép bắt đầu. ccba-excalidraw-diagram và ccba-xu-ly-van-phong
-  giữ package-bound. Năm skill còn lại nhận seam-exempt. GPI, tier kernel và 16 card
-  seam đứng yên. Bốn PR không chung tệp nên chạy song song. Lý do posture khóa theo
-  thân bài trên đĩa. Token ADR-0061 của excalidraw phải còn trong thân bài sau khi
-  tiêu đề bỏ số ADR, để sync_hub_adr_matrix.py --check giữ xanh.
+summary: Kế hoạch Đợt 10 được phép bắt đầu. ccba-excalidraw-diagram và ccba-xu-ly-van-phong giữ package-bound. Năm skill còn lại nhận seam-exempt. GPI, tier kernel và 16 card seam đứng yên. Bốn PR không chung tệp nên chạy song song. Lý do posture khóa theo thân bài trên đĩa. Token ADR-0061 của excalidraw phải còn trong thân bài sau khi tiêu đề bỏ số ADR, để sync_hub_adr_matrix.py --check giữ xanh.
 telemetry:
   session_id: 74e0f77a-954c-47e3-b438-cb3c1c1a097c
   primary_model: grok-4.7-build
@@ -81,7 +50,7 @@ telemetry:
   total_tokens: 1318636
   model_calls: 19
   turn_count: 1
-  cost_usd: 352611.28
+  cost_usd: 0.3526
   cost_mode: exact
   duration_seconds: 385.09
 ---

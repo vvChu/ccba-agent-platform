@@ -155,6 +155,25 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
     }
 
 
+def get_tracked_files(root: Path) -> set[Path] | None:
+    """Retrieve the set of git-tracked files in root if inside a git repository.
+
+    Returns:
+        Set of resolved Paths for tracked files, or None if git is unavailable or not a repo.
+    """
+    try:
+        res = subprocess.run(
+            ["git", "ls-files"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return {(root / line.strip()).resolve() for line in res.stdout.splitlines() if line.strip()}
+    except Exception:
+        return None
+
+
 def scan_skill_radar(
     adr_list: list[dict[str, Any]],
     search_root: Path,
@@ -183,16 +202,21 @@ def scan_skill_radar(
     for r in all_roots:
         if not r.exists():
             continue
+        tracked_files = get_tracked_files(r)
 
         # 1. Skills
         skills_dir = r / ".agents" / "skills"
         if skills_dir.exists():
-            target_paths.extend(sorted(skills_dir.glob("**/SKILL.md")))
+            for p in sorted(skills_dir.glob("**/SKILL.md")):
+                if tracked_files is None or p.resolve() in tracked_files:
+                    target_paths.append(p)
 
         # 2. Workflows
         wf_dir = r / ".agents" / "workflows"
         if wf_dir.exists():
-            target_paths.extend(sorted(wf_dir.glob("*.md")))
+            for p in sorted(wf_dir.glob("*.md")):
+                if tracked_files is None or p.resolve() in tracked_files:
+                    target_paths.append(p)
 
         # 3. Core markdown files
         for core_f in [
@@ -203,12 +227,15 @@ def scan_skill_radar(
         ]:
             p = r / core_f
             if p.exists() and p not in target_paths:
-                target_paths.append(p)
+                if tracked_files is None or p.resolve() in tracked_files:
+                    target_paths.append(p)
 
         # 4. Monorepo packages AGENTS.md
         packages_dir = r / "packages"
         if packages_dir.exists():
-            target_paths.extend(sorted(packages_dir.glob("*/AGENTS.md")))
+            for p in sorted(packages_dir.glob("*/AGENTS.md")):
+                if tracked_files is None or p.resolve() in tracked_files:
+                    target_paths.append(p)
 
     # Regex to match ADR references
     if not is_hub:

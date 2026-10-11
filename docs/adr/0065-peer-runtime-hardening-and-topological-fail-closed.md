@@ -67,17 +67,42 @@ ADR-0065 thiết lập 4 quy chuẩn cương xương kỹ thuật nhằm giải 
 - **Khắc phục khóa tệp trên Windows**:
   - Trong `atomic_write_text`: Bổ sung cơ chế thử lại 3 lần với khoảng chờ lũy tiến (50ms) khi gặp `PermissionError` trên Windows trong bước `temp_file.replace(target)`.
 
+### 2.5. Ghi Nhị Phân Nguyên Tử & Khôi Phục Hoàn Nguyên Tệp Không Rò Rỉ Trạng Thái
+- Triển khai hàm `atomic_write_bytes(target: Path, data: bytes, max_retries: int = 3)`:
+  - Tạo tệp tạm thời `.tmp_{pid}_{nanoseconds}` tại cùng thư mục đích (`target.parent`), bảo đảm thao tác `os.replace` nguyên tử trên cùng hệ thống tệp/inode.
+  - Bảo tồn nguyên vẹn thuộc tính quyền POSIX (`stat().st_mode`) từ tệp đích sang tệp tạm trước khi thay thế.
+  - Tự động dọn dẹp tệp tạm thời khi gặp ngoại lệ (`temp_file.unlink(missing_ok=True)`).
+  - Tích hợp cơ chế thử lại lũy tiến 3 lần với khoảng chờ `0.05 * (attempt + 1)` để triệt tiêu lỗi khóa tệp tạm thời (`PermissionError`) trên môi trường Windows.
+- Thay thế triệt để 100% các điểm gọi `t_file.write_bytes()` thô trong `recover_pending_anchor_transactions` và `auto_apply_and_verify_patch` (các điểm rollback hoàn nguyên trạng thái giao dịch), bảo đảm toàn bộ chu trình hoàn nguyên ACID nhị phân không để lại trạng thái dở dang hay tệp rác.
+
+### 2.6. Khóa Đồng Bộ Kép Chéo Tiến Trình & Tự Động Phục Hồi Giao Dịch Mồ Côi Khi Khởi Động
+- **Khóa kép vùng trọng yếu**: Thu hẹp và bao bọc toàn bộ khối cập nhật cache (`.bridge_cache.json`), sổ cái (`status.json`), và bản tin trực tiếp (`grok_live_summary.md`) trong `run_sync_cycle` bằng cơ chế khóa kép `with _SYNC_MUTEX, FileMutexLock(peer_exchange_dir / ".sync.lock", timeout=10.0)`. Cơ chế này loại trừ nguy cơ xung đột ghi giữa nhiều watcher hoặc CLI chạy song song, đồng thời giới hạn timeout 10.0s bảo đảm nguyên tắc Zero-Hang.
+- **Tự động phục hồi giao dịch mồ côi khi khởi động**: Lệnh `run_peer_watch_cli` tự động kích hoạt `recover_pending_anchor_transactions(root=args.root)` ngay khi khởi động daemon, dọn sạch và hoàn nguyên mọi giao dịch anchor bị gián đoạn từ các phiên chạy trước (do crash, SIGINT, SIGTERM), kèm ghi log debug hỗ trợ truy vết theo khuyến nghị của Grok.
+
+### 2.7. Chuẩn Hóa Thang Đo Ticks Telemetry ($10^{10}$) & Biểu Phí Động Phân Tầng
+- **Sửa lỗi hệ số chia ticks**: Thay đổi ước số tính toán `cost_usd` từ `costUsdTicks` của xAI CLI từ `10_000.0` sang hằng số chuẩn `10_000_000_000.0` ($10^{10}$ ticks = $1.00 USD), khắc phục triệt để hiện tượng chi phí hiển thị bị phóng đại $10^6$ lần.
+- **Biểu phí động phân tầng (`resolve_model_token_rates`)**:
+  - Gán biểu phí `(0.0, 0.0)` ($0.00 USD) cho các mô hình chạy GPU cục bộ trên máy chủ DGX Spark Blackwell GB10 (`qwen-local-*`, `local-*`).
+  - Fallback an toàn về biểu phí nền tảng ($1.25 input / $5.00 output cho 1M tokens) đối với các mô hình định tuyến qua Cloud/Gateway.
+- **Chuẩn hóa sổ cái lịch sử**: Kịch bản `scripts/governance/normalize_peer_telemetry_costs.py` tự động di trú 21 tệp trao đổi lịch sử trong `.md/peer_exchange/`, đưa tổng chi phí thực tế toàn sàn về con số chính xác $7.5809 USD.
+
 ---
 
 ## 3. Hệ Quả & Lợi Ích (Consequences)
 
 ### Lợi Ích (Positive)
-1. **Hoàn toàn thỏa mãn 4 điều kiện chặn của Grok Audit (PR #484)**, mở đường vững chắc để kích hoạt Level-3 Autonomous Loopback (`peer-dispatch --auto-apply`).
+1. **Hoàn toàn thỏa mãn 4 điều kiện chặn của Grok Audit (PR #484) và nghiệm thu chính thức Pass 2 Code Audit (req-review-opt2-hardening-001)** với phán quyết `APPROVE`, risk score 1, 0 blocking conditions.
 2. **Loại bỏ triệt để hiện tượng Deadlock/Freeze**: Tiến trình quan sát nền (watcher) không còn bị kẹt hàng trăm giây khi Grok đang suy luận chuyên sâu.
 3. **Bảo toàn tính toàn vẹn của cổng chất lượng**: Không còn phán quyết `APPROVE` giả mạo khi chưa vượt qua kiểm thử thực tế.
 4. **An toàn hệ thống cao**: Loại bỏ hoàn toàn tiến trình con mồ côi (zombie processes) ngốn tài nguyên CPU/GPU khi xảy ra sự cố timeout.
+5. **ACID Binary Rollback & Concurrency Safe**: 100% các điểm hoàn nguyên sử dụng `atomic_write_bytes` và khóa kép `.sync.lock` bảo vệ an toàn trên cả Linux lẫn Windows.
+6. **Telemetry & FinOps Chuẩn Xác**: Minh bạch hóa toàn bộ chi phí thực thi giữa GPU nội bộ miễn phí và API Cloud thương mại.
+7. **Đồng Thuận Chiến Lược Lộ Trình**: Grok và Antigravity đã hoàn tất phiên thảo luận `req-discuss-whats-next-001` thống nhất chiến lược thực thi 3 giai đoạn `(A + D) -> B -> C`.
 
 ### Tác Động Đến Mã Nguồn Hiện Tại
-- `packages/ccba-harness/src/ccba_harness/peer.py`: Cập nhật `PROFILE_SPECS`, `PeerVerdictBlock`, `_run_single_grok_attempt`, `_terminate_proc_tree`, `run_sync_cycle`, `update_live_summary`, và `atomic_write_text`.
-- `scripts/spoke/spoke_bootstrap.py`: Tinh chỉnh `discover_package_topology` thành fail-closed khi phát hiện chu trình.
-- Bổ sung bộ kiểm thử đơn vị hồi quy chuyên biệt trong `packages/ccba-harness/tests/test_peer_runtime_hardening.py`.
+- `packages/ccba-harness/src/ccba_harness/peer.py`: Triển khai `atomic_write_bytes`, `PROFILE_SPECS`, `PeerVerdictBlock`, `_run_single_grok_attempt`, `_terminate_proc_tree`, khóa kép `.sync.lock` trong `run_sync_cycle`, `update_live_summary`.
+- `packages/ccba-harness/src/ccba_harness/telemetry.py`: Bổ sung `resolve_model_token_rates`.
+- `packages/ccba-harness/src/ccba_harness/_peer_telemetry.py`: Chuẩn hóa ước số $10^{10}$ ticks và tích hợp biểu phí động.
+- `packages/ccba-harness/src/ccba_harness/cli/commands/peer.py`: Tích hợp phục hồi khởi động mồ côi kèm logging debug.
+- `scripts/governance/normalize_peer_telemetry_costs.py`: Kịch bản di trú và chuẩn hóa dữ liệu lịch sử.
+- `packages/ccba-harness/tests/`: Bổ sung test suites toàn diện trong `test_peer_runtime_hardening.py` và `test_peer_telemetry.py` (87/87 tests passed).

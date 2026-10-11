@@ -26,6 +26,20 @@ PRICE_PER_M_INPUT = 1.25  # $1.25 / 1M input tokens
 PRICE_PER_M_OUTPUT = 5.00  # $5.00 / 1M output tokens
 
 
+def resolve_model_token_rates(model_id: str | None = None) -> tuple[float, float]:
+    """Resolves input and output price per 1M tokens for a given model ID (ADR-0063/ADR-0064)."""
+    if not model_id:
+        return (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
+
+    m_lower = model_id.lower()
+    # Local GPU models running on DGX Spark Blackwell GB10 are 100% free of token costs
+    if "qwen-local" in m_lower or "local" in m_lower:
+        return (0.0, 0.0)
+
+    # Default platform fallback constants ($1.25 / $5.00)
+    return (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
+
+
 @dataclass
 class TokenEstimator:
     """Heuristic Token Estimator for bilingual (EN/VI) and code contexts."""

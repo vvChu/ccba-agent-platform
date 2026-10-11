@@ -3,72 +3,38 @@ request_id: req-discuss-wave4a-bigbim-consulting-001
 verdict: REVISE_PLAN
 conditions:
 - id: COND-01
-  description: Bốn skill BIM (classification, governance, rase, risk) nhận đúng một
-    posture seam-exempt. Catalog không có card IFC, Uniclass, RASE hay governance.
-    ifcopenshell không phải seam nền tảng. Mỗi mục posture ghi lý do riêng của skill
-    đó, cấm find-seam bằng từ khóa, cấm thêm script, cấm dán index_sha256. Nhánh embedding
-    hoặc chat, khi được chạy, đi ai_embedding.v1 và model_routing.v1. Gỡ URL https://example.com.
-    Thiếu file KB ngoài repo thì dừng; cấm viết bảng Uniclass hoặc điều ISO để lấp
-    chỗ trống.
+  description: Bốn skill BIM (classification, governance, rase, risk) nhận đúng một posture seam-exempt. Catalog không có card IFC, Uniclass, RASE hay governance. ifcopenshell không phải seam nền tảng. Mỗi mục posture ghi lý do riêng của skill đó, cấm find-seam bằng từ khóa, cấm thêm script, cấm dán index_sha256. Nhánh embedding hoặc chat, khi được chạy, đi ai_embedding.v1 và model_routing.v1. Gỡ URL https://example.com. Thiếu file KB ngoài repo thì dừng; cấm viết bảng Uniclass hoặc điều ISO để lấp chỗ trống.
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 - id: COND-02
-  description: Kế hoạch thực thi dùng GPI = 2.5*S + 2*K + 2*A - 1.5*P. classification,
-    governance và risk = 22.5. rase = 24.5. vbpl-digest, completion-checklist và seminar-builder
-    = 18.0. ccba-design = 16.5. Giữ nguyên khối gpi trong frontmatter. Cả tám skill
-    vẫn tier kernel vì mọi điểm đều >= 12.
+  description: Kế hoạch thực thi dùng GPI = 2.5*S + 2*K + 2*A - 1.5*P. classification, governance và risk = 22.5. rase = 24.5. vbpl-digest, completion-checklist và seminar-builder = 18.0. ccba-design = 16.5. Giữ nguyên khối gpi trong frontmatter. Cả tám skill vẫn tier kernel vì mọi điểm đều >= 12.
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 - id: COND-03
-  description: bigbim-vbpl-digest và ccba-completion-checklist nhận compose-existing.
-    Trích dẫn VBPL đi qua python -m ccba_legal query và get-clause. Dán nguyên văn
-    predicate hiệu lực Mục 5 đã chốt ở Đợt 3. Gỡ sổ số hiệu trong description và mục
-    Legal Basis. Chunk NĐ 175 dưới bigbim_method_path hết vai trò nguồn hiệu lực.
-    checklist_master.yaml giữ vai trò khung hạng mục; mỗi lần trích căn cứ phải qua
-    predicate. Xuất docx đi ooxml_processor.v1 (ccba_ooxml:DocxDocument). Card chưa
-    có thao tác checklist thì xuất Markdown và dừng. Cấm python-docx.
+  description: bigbim-vbpl-digest và ccba-completion-checklist nhận compose-existing. Trích dẫn VBPL đi qua python -m ccba_legal query và get-clause. Dán nguyên văn predicate hiệu lực Mục 5 đã chốt ở Đợt 3. Gỡ sổ số hiệu trong description và mục Legal Basis. Chunk NĐ 175 dưới bigbim_method_path hết vai trò nguồn hiệu lực. checklist_master.yaml giữ vai trò khung hạng mục; mỗi lần trích căn cứ phải qua predicate. Xuất docx đi ooxml_processor.v1 (ccba_ooxml:DocxDocument). Card chưa có thao tác checklist thì xuất Markdown và dừng. Cấm python-docx.
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: ccba-seminar-builder nhận compose-existing trên ooxml_processor.v1,
-    gọi build_presentation_from_markdown và python -m ccba_ooxml build-deck. Sửa đường
-    dẫn template sang resources/. Archive nằm ở .md/seminars/. Bỏ bước ghi seminars
-    vào legal_registry.yaml. PR này không sửa seam-contracts.yaml.
+  description: ccba-seminar-builder nhận compose-existing trên ooxml_processor.v1, gọi build_presentation_from_markdown và python -m ccba_ooxml build-deck. Sửa đường dẫn template sang resources/. Archive nằm ở .md/seminars/. Bỏ bước ghi seminars vào legal_registry.yaml. PR này không sửa seam-contracts.yaml.
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 - id: COND-05
-  description: 'ccba-design là PR riêng, posture compose-existing trên ai_chat.v1
-    (ccba_ai:ai) và model_routing.v1 (ccba_ai:choose_model). Gỡ khối Setup GEMINI_API_KEY,
-    lệnh pip install google-genai, và mọi chuỗi gemini-* trong SKILL.md cùng references/logo-design.md,
-    references/cip-design.md, references/icon-design.md. llm_adapter.py hết fallback
-    Google GenAI và CLI cục bộ trên lối chữ; lỗi gateway thì dừng. Lối sinh ảnh trong
-    scripts/logo/generate.py, scripts/icon/generate.py và scripts/cip/generate.py
-    chưa có card: cách ly có hạn với seam_id=ai_chat.v1, reason, until và issue, hoặc
-    tắt lối đó. Cấm sửa packages/. Cấm chú thích allow-raw-model trong Markdown để
-    giữ chuỗi model.'
+  description: 'ccba-design là PR riêng, posture compose-existing trên ai_chat.v1 (ccba_ai:ai) và model_routing.v1 (ccba_ai:choose_model). Gỡ khối Setup GEMINI_API_KEY, lệnh pip install google-genai, và mọi chuỗi gemini-* trong SKILL.md cùng references/logo-design.md, references/cip-design.md, references/icon-design.md. llm_adapter.py hết fallback Google GenAI và CLI cục bộ trên lối chữ; lỗi gateway thì dừng. Lối sinh ảnh trong scripts/logo/generate.py, scripts/icon/generate.py và scripts/cip/generate.py chưa có card: cách ly có hạn với seam_id=ai_chat.v1, reason, until và issue, hoặc tắt lối đó. Cấm sửa packages/. Cấm chú thích allow-raw-model trong Markdown để giữ chuỗi model.'
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 - id: COND-06
-  description: 'Chia 4 PR: 4A1 bốn skill BIM, 4A2 hai skill pháp lý, 4A3 seminar-builder,
-    4A4 ccba-design. Bốn PR không chung file nên chạy song song sau khi kế hoạch ghi
-    đủ COND-01 đến COND-06. Mỗi PR kết thúc bằng python scripts/validate_skills.py
-    --file <SKILL.md> --enforce-gpi và python -m ccba_harness verify-patch. Mã thoát
-    khác 0 thì chưa xong. Catalog đã commit thì regenerate bằng lệnh có sẵn của repo;
-    cấm sửa tay .md/knowledge/skills_compiled.md.'
+  description: 'Chia 4 PR: 4A1 bốn skill BIM, 4A2 hai skill pháp lý, 4A3 seminar-builder, 4A4 ccba-design. Bốn PR không chung file nên chạy song song sau khi kế hoạch ghi đủ COND-01 đến COND-06. Mỗi PR kết thúc bằng python scripts/validate_skills.py --file <SKILL.md> --enforce-gpi và python -m ccba_harness verify-patch. Mã thoát khác 0 thì chưa xong. Catalog đã commit thì regenerate bằng lệnh có sẵn của repo; cấm sửa tay .md/knowledge/skills_compiled.md.'
   blocking: true
   source_profile: arch_audit
   source_profiles: []
 risk_score: 3
 effort: L
-summary: Bốn skill BIM nhận seam-exempt vì catalog không có card IFC/Uniclass. Hai
-  skill pháp lý giữ compose-existing với predicate Mục 5 và bỏ sổ hiệu lực viết tay.
-  Seminar gắn ooxml_processor.v1. ccba-design tách PR riêng để cắt lối google-genai.
-  Kế hoạch 3 PR cần thành 4.
+summary: Bốn skill BIM nhận seam-exempt vì catalog không có card IFC/Uniclass. Hai skill pháp lý giữ compose-existing với predicate Mục 5 và bỏ sổ hiệu lực viết tay. Seminar gắn ooxml_processor.v1. ccba-design tách PR riêng để cắt lối google-genai. Kế hoạch 3 PR cần thành 4.
 telemetry:
   session_id: 9da556e4-a2af-4930-85c0-40f9d4a6040f
   primary_model: grok-4.7-build
@@ -79,7 +45,7 @@ telemetry:
   total_tokens: 283385
   model_calls: 7
   turn_count: 1
-  cost_usd: 125228.12
+  cost_usd: 0.1252
   cost_mode: exact
   duration_seconds: 331.08
 ---

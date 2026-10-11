@@ -133,7 +133,7 @@ def test_greenfield_spoke_init_and_sync_software(tmp_path: Path, mock_hub: Path)
 
     # 3. Test guardrails copied for software project
     assert (spoke_dir / "conftest.py").exists()
-    assert (spoke_dir / "scripts" / "safe_pytest.py").exists()
+    assert (spoke_dir / "scripts" / "_guardrails" / "safe_pytest.py").exists()
 
 
 def test_greenfield_spoke_init_and_sync_consulting(tmp_path: Path, mock_hub: Path):
@@ -167,4 +167,4 @@ def test_greenfield_spoke_init_and_sync_consulting(tmp_path: Path, mock_hub: Pat
 
     # 2. Test guardrails not needed for delivery consulting spoke
     assert not (spoke_dir / "conftest.py").exists()
-    assert not (spoke_dir / "scripts" / "safe_pytest.py").exists()
+    assert not (spoke_dir / "scripts" / "_guardrails" / "safe_pytest.py").exists()
