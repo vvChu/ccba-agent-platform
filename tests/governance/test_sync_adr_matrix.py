@@ -505,3 +505,39 @@ def test_compiled_readme_and_matrix_use_hub_adr_labels() -> None:
 
         matrix_content = compile_hub_traceability_matrix(adr_list, matrix, matrix_file)
         assert "[HUB-ADR 0058]" in matrix_content
+
+
+def test_scan_skill_radar_filters_untracked_files() -> None:
+    """Verify that untracked WIP files in a git repo are excluded from the radar."""
+    import subprocess
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        root = Path(tmp_dir)
+        subprocess.run(["git", "init"], cwd=root, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=root, check=True)
+
+        skills_dir = root / ".agents" / "skills"
+        tracked_skill = skills_dir / "tracked-skill"
+        tracked_skill.mkdir(parents=True)
+        (tracked_skill / "SKILL.md").write_text("# Tracked\nReferences ADR-0010.", encoding="utf-8")
+
+        untracked_skill = skills_dir / "untracked-skill"
+        untracked_skill.mkdir(parents=True)
+        (untracked_skill / "SKILL.md").write_text(
+            "# Untracked WIP\nReferences ADR-0010.", encoding="utf-8"
+        )
+
+        # Stage and commit only tracked_skill
+        subprocess.run(
+            ["git", "add", ".agents/skills/tracked-skill/SKILL.md"], cwd=root, check=True
+        )
+        subprocess.run(["git", "commit", "-m", "add tracked skill"], cwd=root, check=True)
+
+        adr_list = [{"num": 10, "num_str": "0010", "filename": "0010.md", "title": "Ten"}]
+        matrix = scan_skill_radar(adr_list, root, is_hub=True)
+
+        files = [item["file"] for item in matrix["0010"]]
+        assert ".agents/skills/tracked-skill/SKILL.md" in files
+        assert ".agents/skills/untracked-skill/SKILL.md" not in files
+
