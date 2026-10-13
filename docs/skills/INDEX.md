@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 77 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 76 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -13,7 +13,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 - [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (22 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
-- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (30 skills)
+- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (29 skills)
 
 ---
 
@@ -105,7 +105,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="governance_upkeep"></a>
-## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (30 Kỹ Năng)
+## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (29 Kỹ Năng)
 
 *Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.*
 
@@ -124,7 +124,6 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-file-stability-guard](ccba-file-stability-guard.md) | `/ccba-file-stability-guard` | `kernel` | `Model` | Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước thực tế... |
 | [ccba-graduate-rd](ccba-graduate-rd.md) | `/ccba-graduate-rd` | `orchestrator` | `User` | Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production, tích ... |
 | [ccba-hybrid-rag-search](ccba-hybrid-rag-search.md) | `/ccba-hybrid-rag-search` | `kernel` | `Model` | Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion... |
-| [ccba-infrastructure-manager](ccba-infrastructure-manager.md) | `/ccba-infrastructure-manager` | `kernel` | `Model` | Quản trị hạ tầng máy chủ DGX Spark (Blackwell GB10), ChatOps Daemon, Smart Wa... |
 | [ccba-issue-to-hub](ccba-issue-to-hub.md) | `/ccba-issue-to-hub` | `kernel` | `User` | Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lê... |
 | [ccba-knowledge-loop](ccba-knowledge-loop.md) | `/ccba-knowledge-loop` | `orchestrator` | `User` | Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Way... |
 | [ccba-llm-pipeline-patterns](ccba-llm-pipeline-patterns.md) | `/ccba-llm-pipeline-patterns` | `kernel` | `Model` | Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đ... |
