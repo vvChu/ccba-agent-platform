@@ -218,6 +218,20 @@ def scope_corpus_by_chapter(
 def scope_corpus_by_domain(full_corpus, domain: str) -> list[str]:
     return [doc["text"] for doc in full_corpus
             if doc.get("domain") == domain]
+
+# Lọc corpus theo Vành đai Quan hệ Pháp lý (5-Ring Legal Graph Pruning)
+def scope_corpus_by_legal_ring(
+    full_corpus: list[dict],
+    allowed_doc_ids: set[str]
+) -> list[str]:
+    """Lọc các đoạn trích chỉ thuộc các văn bản nằm trong vành đai quan hệ mục tiêu.
+    Danh sách allowed_doc_ids được truy xuất từ:
+    python scripts/spoke_cli.py graph --doc <doc_id> --json
+    """
+    return [
+        doc["text"] for doc in full_corpus
+        if doc.get("doc_id") in allowed_doc_ids
+    ]
 ```
 
 ---

@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 76 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 77 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 76 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 77 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 76 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 77 skills.
 
-## All Active Skills (76 Skills)
+## All Active Skills (77 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -56,6 +56,7 @@
 - [ccba-handoff](skills/ccba-handoff.md): /ccba-handoff — Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn mực để Agent tiếp theo tiếp quản liền mạch.
 - [ccba-hybrid-rag-search](skills/ccba-hybrid-rag-search.md): /ccba-hybrid-rag-search — Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion. Đúc rút từ VvC Ground Truth pipeline — độ chính xác cao hơn pure BM25 đơn thuần 20x.
 - [ccba-implement](skills/ccba-implement.md): /ccba-implement — Implement a piece of work based on a spec or set of tickets.
+- [ccba-infrastructure-manager](skills/ccba-infrastructure-manager.md): /ccba-infrastructure-manager — Quản trị hạ tầng máy chủ DGX Spark (Blackwell GB10), ChatOps Daemon, Smart Watchdog Healer, Redis DB 5 và dịch vụ Antigravity-Tools.
 - [ccba-init-spoke](skills/ccba-init-spoke.md): /ccba-init-spoke — Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
 - [ccba-issue-to-hub](skills/ccba-issue-to-hub.md): /ccba-issue-to-hub — Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lên Hub dưới dạng GitHub Issue
 - [ccba-issue-tree](skills/ccba-issue-tree.md): /ccba-issue-tree — Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
