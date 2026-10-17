@@ -70,4 +70,4 @@
 | [HUB-ADR 0064](0064-peer-exchange-telemetry-and-model-provenance.md) | **Peer Exchange Model Provenance, Token Usage Telemetry, and Zero-Hang Execution Lifecycle** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0065](0065-peer-runtime-hardening-and-topological-fail-closed.md) | **Cương Xương Vận Hành Tác Nhân Ngang Hàng, Khóa Topo Fail-Closed và Chuẩn Hóa Phán Quyết** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
 | [HUB-ADR 0066](0066-skills-taxonomy-and-multi-environment-distribution-matrix.md) | **Skills Taxonomy, Multi-Environment Distribution Matrix, and Slash Command Governance** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
-| [HUB-ADR 0067](0067-one-way-door-manifest-and-backpressure-circuit-breaker.md) | **One-Way Door Manifest, Cumulative Escalation, and Backpressure Circuit-Breaker** | ✅ ACCEPTED | *Chưa có liên kết trực tiếp* |
+| [HUB-ADR 0067](0067-one-way-door-manifest-and-backpressure-circuit-breaker.md) | **One-Way Door Manifest, Cumulative Escalation, and Backpressure Circuit-Breaker** | ✅ ACCEPTED | `.md/knowledge/session_learnings.md` |
