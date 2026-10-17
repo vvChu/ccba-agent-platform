@@ -126,117 +126,13 @@ class TestGuardrailCopier:
         for g in guardrails_cfg:
             if not isinstance(g, dict):
                 continue
-            applies = g.get("applies_to", ["python"])
-            if not isinstance(applies, list):
-                applies = ["python"]
-            if "python" not in applies and "all" not in applies:
-                continue
-            src_rel = g.get("src")
-            dest_rel = g.get("dest")
-            name = g.get("name")
-            if not isinstance(src_rel, str) or not isinstance(dest_rel, str) or not name:
-                continue
-            src_path = self.hub_root / src_rel
-            dest_path = self.spoke_root / dest_rel
-
-            if not src_path.is_file():
-                # Fallback keeps the historical "copy what exists" behavior so
-                # Spokes without a guardrails key do not gain MISSING_SRC noise.
-                if not using_fallback:
-                    actions.append(
-                        {
-                            "type": "Guardrail",
-                            "name": name,
-                            "status": "MISSING_SRC",
-                            "path": dest_rel,
-                        }
-                    )
-                continue
-
-            try:
-                same_path = src_path.resolve() == dest_path.resolve()
-            except OSError:
-                same_path = False
-            if same_path:
-                continue
-
-            if not dest_path.exists():
-                status = "NEW"
-            elif are_text_files_identical(src_path, dest_path):
-                status = "UNCHANGED"
-            else:
-                status = "UPDATED"
-
-            actions.append(
-                {
-                    "type": "Guardrail",
-                    "name": name,
-                    "status": status,
-                    "path": dest_rel,
-                }
+            action_record, is_githook = self._process_single_guardrail_entry(
+                g, using_fallback=using_fallback, dry_run=dry_run
             )
-
-            chmod_str = g.get("chmod")
-            if not dry_run and status in ("NEW", "UPDATED"):
-                dest_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src_path, dest_path)
-                if isinstance(chmod_str, str) and chmod_str:
-                    try:
-                        mode = int(chmod_str, 8) if chmod_str.startswith("0o") else int(chmod_str)
-                        dest_path.chmod(mode)
-                    except (OSError, ValueError):
-                        pass
-                action_text = "Copied" if status == "NEW" else "Updated"
-                print(f"  - {action_text} guardrail: {dest_rel}")
-            elif dry_run and status in ("NEW", "UPDATED"):
-                action_text = "Would copy" if status == "NEW" else "Would update"
-                print(f"  - [DRY-RUN] {action_text} guardrail: {dest_rel}")
-
-            # Automatic migration: if a guardrail moved to scripts/_guardrails/,
-            # clean up obsolete top-level scripts/<name> in the Spoke (Issue #502).
-            dest_parts = Path(dest_rel).parts
-            if (
-                len(dest_parts) == 3
-                and dest_parts[0] == "scripts"
-                and dest_parts[1] == "_guardrails"
-            ):
-                legacy_file = self.spoke_root / "scripts" / dest_parts[2]
-                if legacy_file.is_file():
-                    if dry_run:
-                        print(
-                            f"  - [DRY-RUN] Would remove legacy guardrail: scripts/{dest_parts[2]}"
-                        )
-                    else:
-                        try:
-                            legacy_file.unlink()
-                            print(f"  - Removed legacy guardrail: scripts/{dest_parts[2]}")
-                        except OSError as e:
-                            print(
-                                f"  - Warning: could not remove legacy guardrail scripts/{dest_parts[2]}: {e}"
-                            )
-
-            if dest_rel.startswith(".githooks/"):
+            if action_record is not None:
+                actions.append(action_record)
+            if is_githook:
                 has_githooks = True
-
-            if g.get("git_index") is True and not dry_run:
-                import subprocess
-
-                try:
-                    subprocess.run(
-                        [
-                            "git",
-                            "-C",
-                            str(self.spoke_root),
-                            "update-index",
-                            "--add",
-                            "--chmod=+x",
-                            dest_rel,
-                        ],
-                        capture_output=True,
-                        timeout=5,
-                    )
-                except (OSError, subprocess.SubprocessError):
-                    pass
 
         githooks_present = (self.spoke_root / ".githooks" / "pre-commit").exists() or (
             self.spoke_root / ".githooks" / "pre-push"
@@ -245,6 +141,134 @@ class TestGuardrailCopier:
             self._ensure_git_hook_activated(dry_run=dry_run, force=force)
 
         return actions
+
+    def _process_single_guardrail_entry(
+        self, g: dict[str, Any], using_fallback: bool, dry_run: bool
+    ) -> tuple[dict[str, Any] | None, bool]:
+        """Validate and process a single guardrail entry from catalog or fallback."""
+        applies = g.get("applies_to", ["python"])
+        if not isinstance(applies, list):
+            applies = ["python"]
+        if "python" not in applies and "all" not in applies:
+            return None, False
+
+        src_rel, dest_rel, name = g.get("src"), g.get("dest"), g.get("name")
+        if not isinstance(src_rel, str) or not isinstance(dest_rel, str) or not name:
+            return None, False
+
+        src_path = self.hub_root / src_rel
+        dest_path = self.spoke_root / dest_rel
+        if not src_path.is_file():
+            if not using_fallback:
+                return {
+                    "type": "Guardrail",
+                    "name": name,
+                    "status": "MISSING_SRC",
+                    "path": dest_rel,
+                }, False
+            return None, False
+
+        if self._are_paths_identical(src_path, dest_path):
+            return None, False
+
+        status = self._determine_guardrail_status(src_path, dest_path)
+        self._copy_or_update_guardrail_file(
+            src_path, dest_path, dest_rel, status, g.get("chmod"), dry_run
+        )
+        self._cleanup_legacy_guardrail(dest_rel, dry_run)
+        if g.get("git_index") is True and not dry_run:
+            self._mark_guardrail_executable_in_git(dest_rel)
+
+        return {
+            "type": "Guardrail",
+            "name": name,
+            "status": status,
+            "path": dest_rel,
+        }, dest_rel.startswith(".githooks/")
+
+    @staticmethod
+    def _are_paths_identical(src_path: Path, dest_path: Path) -> bool:
+        """Check whether source and destination resolve to the exact same filesystem path."""
+        try:
+            return src_path.resolve() == dest_path.resolve()
+        except OSError:
+            return False
+
+    @staticmethod
+    def _determine_guardrail_status(src_path: Path, dest_path: Path) -> str:
+        """Determine whether the target guardrail file is NEW, UNCHANGED, or UPDATED."""
+        if not dest_path.exists():
+            return "NEW"
+        if are_text_files_identical(src_path, dest_path):
+            return "UNCHANGED"
+        return "UPDATED"
+
+    @staticmethod
+    def _copy_or_update_guardrail_file(
+        src_path: Path,
+        dest_path: Path,
+        dest_rel: str,
+        status: str,
+        chmod_str: Any,
+        dry_run: bool,
+    ) -> None:
+        """Copy or update a guardrail file and apply optional octal chmod permissions."""
+        if status not in ("NEW", "UPDATED"):
+            return
+        if dry_run:
+            action_text = "Would copy" if status == "NEW" else "Would update"
+            print(f"  - [DRY-RUN] {action_text} guardrail: {dest_rel}")
+            return
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_path, dest_path)
+        if isinstance(chmod_str, str) and chmod_str:
+            try:
+                mode = int(chmod_str, 8) if chmod_str.startswith("0o") else int(chmod_str)
+                dest_path.chmod(mode)
+            except (OSError, ValueError):
+                pass
+        action_text = "Copied" if status == "NEW" else "Updated"
+        print(f"  - {action_text} guardrail: {dest_rel}")
+
+    def _cleanup_legacy_guardrail(self, dest_rel: str, dry_run: bool) -> None:
+        """Remove obsolete top-level scripts/<name> when guardrail moved to scripts/_guardrails/."""
+        dest_parts = Path(dest_rel).parts
+        if not (
+            len(dest_parts) == 3 and dest_parts[0] == "scripts" and dest_parts[1] == "_guardrails"
+        ):
+            return
+        legacy_file = self.spoke_root / "scripts" / dest_parts[2]
+        if not legacy_file.is_file():
+            return
+        if dry_run:
+            print(f"  - [DRY-RUN] Would remove legacy guardrail: scripts/{dest_parts[2]}")
+            return
+        try:
+            legacy_file.unlink()
+            print(f"  - Removed legacy guardrail: scripts/{dest_parts[2]}")
+        except OSError as e:
+            print(f"  - Warning: could not remove legacy guardrail scripts/{dest_parts[2]}: {e}")
+
+    def _mark_guardrail_executable_in_git(self, dest_rel: str) -> None:
+        """Register executable bit (+x) in Spoke git index for a guardrail file."""
+        import subprocess
+
+        try:
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(self.spoke_root),
+                    "update-index",
+                    "--add",
+                    "--chmod=+x",
+                    dest_rel,
+                ],
+                capture_output=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
 
     def _resolve_guardrails_config(self, catalog: dict[str, Any] | None) -> list[Any] | None:
         """Return guardrail entries.
@@ -275,33 +299,43 @@ class TestGuardrailCopier:
 
     def _ensure_git_hook_activated(self, dry_run: bool = False, force: bool = False) -> None:
         """Configures core.hooksPath and .gitattributes for Spoke if inside a git repository."""
-        import subprocess
-
-        # Check if Spoke is a git repository
         git_dir = self.spoke_root / ".git"
         if not git_dir.exists():
             return
 
-        # 1. Ensure .gitattributes has .githooks/* text eol=lf (idempotent, cross-platform)
+        if not dry_run:
+            self._ensure_gitattributes_githooks_lf()
+
+        if not self._configure_git_hooks_path(dry_run=dry_run, force=force):
+            return
+
+        if not dry_run:
+            self._index_githooks_executable_bits()
+
+    def _ensure_gitattributes_githooks_lf(self) -> None:
+        """Ensure .gitattributes enforces LF line endings for .githooks/*."""
         gitattributes_path = self.spoke_root / ".gitattributes"
         attr_line = ".githooks/* text eol=lf\n"
-        if not dry_run:
-            existing_attrs = ""
-            if gitattributes_path.is_file():
-                try:
-                    existing_attrs = gitattributes_path.read_text(encoding="utf-8")
-                except Exception:
-                    existing_attrs = ""
-            if ".githooks/* text eol=lf" not in existing_attrs:
-                try:
-                    with gitattributes_path.open("a", encoding="utf-8") as attr_file:
-                        if existing_attrs and not existing_attrs.endswith("\n"):
-                            attr_file.write("\n")
-                        attr_file.write(attr_line)
-                except Exception:
-                    pass
+        existing_attrs = ""
+        if gitattributes_path.is_file():
+            try:
+                existing_attrs = gitattributes_path.read_text(encoding="utf-8")
+            except Exception:
+                existing_attrs = ""
+        if ".githooks/* text eol=lf" in existing_attrs:
+            return
+        try:
+            with gitattributes_path.open("a", encoding="utf-8") as attr_file:
+                if existing_attrs and not existing_attrs.endswith("\n"):
+                    attr_file.write("\n")
+                attr_file.write(attr_line)
+        except Exception:
+            pass
 
-        # 2. Check existing core.hooksPath
+    def _configure_git_hooks_path(self, dry_run: bool, force: bool) -> bool:
+        """Check and configure git core.hooksPath=.githooks. Returns False if skipped."""
+        import subprocess
+
         existing_hookspath = ""
         try:
             cfg_check = subprocess.run(
@@ -323,54 +357,38 @@ class TestGuardrailCopier:
                 "Skipped overwriting (use --force to override).",
                 file=sys.stderr,
             )
-            return
+            return False
 
         if existing_hookspath != ".githooks":
             if dry_run:
                 print("  - [DRY-RUN] Would configure git core.hooksPath=.githooks")
             else:
-                try:
-                    subprocess.run(
-                        [
-                            "git",
-                            "-C",
-                            str(self.spoke_root),
-                            "config",
-                            "core.hooksPath",
-                            ".githooks",
-                        ],
-                        check=True,
-                        capture_output=True,
-                        timeout=5,
-                    )
-                    print("  - Configured git core.hooksPath=.githooks")
-                except Exception as e:
-                    print(f"  - ⚠️ Could not set git core.hooksPath: {e}", file=sys.stderr)
+                self._apply_git_hooks_path_config()
+        return True
 
-        # 3. Add to git index with executable bit if not dry_run (Grok Condition 3)
-        if not dry_run:
-            githooks_dir = self.spoke_root / ".githooks"
-            if githooks_dir.is_dir():
-                for hook_file in sorted(githooks_dir.iterdir()):
-                    if hook_file.is_file() and not hook_file.name.endswith(
-                        (".sample", ".bak", ".tmp")
-                    ):
-                        try:
-                            subprocess.run(
-                                [
-                                    "git",
-                                    "-C",
-                                    str(self.spoke_root),
-                                    "update-index",
-                                    "--add",
-                                    "--chmod=+x",
-                                    f".githooks/{hook_file.name}",
-                                ],
-                                capture_output=True,
-                                timeout=5,
-                            )
-                        except Exception:
-                            pass
+    def _apply_git_hooks_path_config(self) -> None:
+        """Run git config core.hooksPath .githooks on the Spoke repository."""
+        import subprocess
+
+        try:
+            subprocess.run(
+                ["git", "-C", str(self.spoke_root), "config", "core.hooksPath", ".githooks"],
+                check=True,
+                capture_output=True,
+                timeout=5,
+            )
+            print("  - Configured git core.hooksPath=.githooks")
+        except Exception as e:
+            print(f"  - ⚠️ Could not set git core.hooksPath: {e}", file=sys.stderr)
+
+    def _index_githooks_executable_bits(self) -> None:
+        """Add all active hook files in .githooks/ to git index with +x permission."""
+        githooks_dir = self.spoke_root / ".githooks"
+        if not githooks_dir.is_dir():
+            return
+        for hook_file in sorted(githooks_dir.iterdir()):
+            if hook_file.is_file() and not hook_file.name.endswith((".sample", ".bak", ".tmp")):
+                self._mark_guardrail_executable_in_git(f".githooks/{hook_file.name}")
 
 
 LEGAL_PROJECT_TYPES = {
@@ -494,40 +512,8 @@ class SharedSdkInspector:
 
     def resolve_packages_to_check(self) -> list[str]:
         """Resolves the list of Hub packages to inspect for the Spoke according to ADR-0044 tiers."""
-        arch = self.archetype
-        declared: list[str] = []
-        additional_bundles: list[str] = []
+        arch, declared, additional_bundles = self._read_workspace_package_context()
 
-        # Read workspace_context.yaml if available
-        for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
-            ctx_file = ctx_dir / "workspace_context.yaml"
-            if ctx_file.exists():
-                try:
-                    data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
-                    raw_declared = data.get("hub_packages", [])
-                    if isinstance(raw_declared, list):
-                        declared.extend(
-                            [p.strip() for p in raw_declared if isinstance(p, str) and p.strip()]
-                        )
-                    elif isinstance(raw_declared, str) and raw_declared.strip():
-                        declared.append(raw_declared.strip())
-                    if not arch:
-                        raw_arch = (
-                            data.get("project", {}).get("archetype")
-                            if isinstance(data.get("project"), dict)
-                            else None
-                        ) or data.get("archetype")
-                        if isinstance(raw_arch, str):
-                            arch = raw_arch
-                    project = data.get("project")
-                    raw_add = data.get("additional_bundles")
-                    if not raw_add and isinstance(project, dict):
-                        raw_add = project.get("additional_bundles")
-                    additional_bundles.extend(_coerce_str_list(raw_add))
-                except Exception:
-                    pass
-
-        # Fallback to infer archetype from project_type if still empty
         if not arch and self.project_type:
             from scripts.spoke.spoke_bootstrap import PROJECT_TYPE_TO_ARCHETYPE
 
@@ -550,41 +536,64 @@ class SharedSdkInspector:
         if bound is not None:
             return bound
 
-        # Tier 0: Core mandatory packages
-        packages = ["ccba-harness", "ccba-ai"]
+        return self._resolve_fallback_tier_packages(arch, declared)
 
-        # Tier 1: Archetype Defaults
+    def _read_workspace_package_context(self) -> tuple[str, list[str], list[str]]:
+        """Read archetype, declared hub_packages, and additional_bundles from workspace_context.yaml."""
+        arch = self.archetype
+        declared: list[str] = []
+        additional_bundles: list[str] = []
+
+        for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
+            ctx_file = ctx_dir / "workspace_context.yaml"
+            if not ctx_file.exists():
+                continue
+            try:
+                data = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
+                declared.extend(_coerce_str_list(data.get("hub_packages", [])))
+                project = data.get("project") if isinstance(data.get("project"), dict) else {}
+                if not arch:
+                    raw_arch = project.get("archetype") or data.get("archetype")
+                    if isinstance(raw_arch, str):
+                        arch = raw_arch
+                raw_add = data.get("additional_bundles") or project.get("additional_bundles")
+                additional_bundles.extend(_coerce_str_list(raw_add))
+            except Exception:
+                pass
+
+        return arch, declared, additional_bundles
+
+    def _resolve_fallback_tier_packages(self, arch: str, declared: list[str]) -> list[str]:
+        """Compute legacy Tier 0/1/2 package list when catalog package_bindings are absent."""
+        packages = ["ccba-harness", "ccba-ai"]
+        office_pkgs = ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]
+
         if arch == "knowledge_corpus":
             if (
                 is_legal_related_spoke(self.spoke_root, self.project_type)
                 or self.spoke_root.name.lower() == "ccba-legal-knowledge"
-            ):
-                if "ccba-legal-intel" not in packages:
-                    packages.append("ccba-legal-intel")
+            ) and "ccba-legal-intel" not in packages:
+                packages.append("ccba-legal-intel")
         elif arch in ("project_delivery", "enterprise_governance"):
-            for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
+            for p in office_pkgs:
                 if p not in packages:
                     packages.append(p)
             if arch == "project_delivery" and "ccba-qc-core" not in packages:
                 packages.append("ccba-qc-core")
-        else:
-            # Fallback for unspecified archetypes (e.g. standalone python apps)
-            if self.project_type in ("Phần mềm", "Thiết kế", "Thẩm tra thiết kế", "Kiểm định"):
-                for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
-                    if p not in packages:
-                        packages.append(p)
-                if self.project_type != "Phần mềm" and "ccba-qc-core" not in packages:
-                    packages.append("ccba-qc-core")
-            elif self.project_type in ("Tác vụ Admin", "Hành chính"):
-                for p in ["ccba-ooxml", "ccba-pdf-prep", "mdconverter"]:
-                    if p not in packages:
-                        packages.append(p)
+        elif self.project_type in ("Phần mềm", "Thiết kế", "Thẩm tra thiết kế", "Kiểm định"):
+            for p in office_pkgs:
+                if p not in packages:
+                    packages.append(p)
+            if self.project_type != "Phần mềm" and "ccba-qc-core" not in packages:
+                packages.append("ccba-qc-core")
+        elif self.project_type in ("Tác vụ Admin", "Hành chính"):
+            for p in office_pkgs:
+                if p not in packages:
+                    packages.append(p)
 
-        # Tier 2: Declared packages in workspace_context.yaml
         for p in declared:
             if p and p not in packages:
                 packages.append(p)
-
         return packages
 
     def inspect(self) -> dict[str, bool]:
@@ -728,22 +737,12 @@ class LegalKnowledgeSyncOrchestrator:
 
     def is_legal_related_spoke(self) -> bool:
         """Determines if the target Spoke requires legal knowledge bundle synchronization."""
-        if self.project_type in self.LEGAL_PROJECT_TYPES:
-            return True
-        if (self.spoke_root / "legal_registry.yaml").exists():
-            return True
-        if (self.spoke_root / ".md" / "data" / "legal_registry.yaml").exists():
-            return True
-        if (self.spoke_root / "legal_docs").exists():
-            return True
-        return False
+        return self.project_type in self.LEGAL_PROJECT_TYPES or is_legal_related_spoke(
+            self.spoke_root, self.project_type
+        )
 
     def sync_or_advise(self, dry_run: bool = False, pull_assets: bool = False) -> dict[str, Any]:
-        """Executes automatic Two-Tier Legal Sync for legal Spokes or emits zero-bloat advisory.
-
-        Returns:
-            Dict containing action taken and status report.
-        """
+        """Executes automatic Two-Tier Legal Sync for legal Spokes or emits zero-bloat advisory."""
         if self.is_master_legal_corpus():
             print(
                 "\n📚 [Legal Sync] Spoke hiện tại là Master Legal Corpus ('ccba-legal-knowledge')."
@@ -759,61 +758,63 @@ class LegalKnowledgeSyncOrchestrator:
             }
 
         if self.is_legal_related_spoke():
-            print("\n📚 [Legal Sync] Tự động đồng bộ Tri thức Pháp lý (ADR 0050):")
-            if dry_run:
-                if pull_assets:
-                    print(
-                        "   - [DRY-RUN] [Full Assets] Sẽ kiểm tra và kéo gói OKF v2.4 chuẩn cùng sáp nhập legal_registry.yaml"
-                    )
-                else:
-                    print(
-                        "   - [DRY-RUN] [Zero-Bloat Reference] Sẽ sáp nhập legal_registry.yaml (Reference-Only, không sao chép legal_docs/)"
-                    )
-                return {"is_legal": True, "dry_run": True, "status": "simulated"}
+            return self._execute_legal_spoke_sync(dry_run=dry_run, pull_assets=pull_assets)
 
-            try:
-                # Add packages/ccba-legal-intel/src to sys.path if not present
-                import sys
+        display_type = self.archetype or self.project_type or "Chung"
+        print("\n💡 [Khuyến nghị Tri thức Pháp lý (Zero-Bloat)]:")
+        print(
+            f"   Spoke hiện tại thuộc phân hệ '{display_type}', không bắt buộc tải trước toàn bộ kho văn bản OKF v2.4 (tiết kiệm dung lượng đĩa)."
+        )
+        print(
+            "   Khi cần tra cứu văn bản cụ thể, hãy dùng lệnh On-Demand: 'python -m ccba_legal sync --doc <doc_id>' hoặc tra cứu RAG qua AI Gateway."
+        )
+        return {"is_legal": False, "dry_run": dry_run, "status": "advised_zero_bloat"}
 
-                legal_pkg_path = self.hub_root / "packages" / "ccba-legal-intel" / "src"
-                if legal_pkg_path.exists() and str(legal_pkg_path) not in sys.path:
-                    sys.path.insert(0, str(legal_pkg_path))
-
-                from ccba_legal.sync import sync_legal_assets
-
-                res = sync_legal_assets(
-                    target_dir=self.spoke_root / ".md" / "legal_docs",
-                    project_root=self.spoke_root,
-                    pull_assets=pull_assets,
+    def _execute_legal_spoke_sync(self, dry_run: bool, pull_assets: bool) -> dict[str, Any]:
+        """Run or simulate Two-Tier Legal Sync for a legal-related Spoke."""
+        print("\n📚 [Legal Sync] Tự động đồng bộ Tri thức Pháp lý (ADR 0050):")
+        if dry_run:
+            if pull_assets:
+                print(
+                    "   - [DRY-RUN] [Full Assets] Sẽ kiểm tra và kéo gói OKF v2.4 chuẩn cùng sáp nhập legal_registry.yaml"
                 )
-                if res.get("status") == "success":
-                    copied = len(res.get("bundles_synced", []))
-                    if pull_assets:
-                        msg = res.get("message", "Đồng bộ thành công")
-                        print(f"   ✅ {msg} ({copied} gói văn bản đã đồng bộ).")
-                    else:
-                        reg_summary = res.get("registry_merge", {})
-                        reg_info = f"updated={reg_summary.get('updated', 0)}, added={reg_summary.get('added', 0)}"
-                        print(
-                            f"   ✅ [Zero-Bloat Reference] Sáp nhập legal_registry.yaml thành công ({reg_info})."
-                        )
-                        print(
-                            "      💡 Bật cờ '--pull-assets' nếu Spoke thực sự cần sao chép vật lý legal_docs/."
-                        )
-                else:
-                    print(f"   ℹ️ {res.get('message', 'Không có dữ liệu mới.')}")
-                return {"is_legal": True, "dry_run": False, "result": res}
-            except Exception as e:
-                print(f"   ⚠️ Không thể nạp trực tiếp module sync: {e}")
-                print("   Khuyến nghị chạy: python -m ccba_legal sync --pull-latest")
-                return {"is_legal": True, "dry_run": False, "error": str(e)}
-        else:
-            display_type = self.archetype or self.project_type or "Chung"
-            print("\n💡 [Khuyến nghị Tri thức Pháp lý (Zero-Bloat)]:")
-            print(
-                f"   Spoke hiện tại thuộc phân hệ '{display_type}', không bắt buộc tải trước toàn bộ kho văn bản OKF v2.4 (tiết kiệm dung lượng đĩa)."
+            else:
+                print(
+                    "   - [DRY-RUN] [Zero-Bloat Reference] Sẽ sáp nhập legal_registry.yaml (Reference-Only, không sao chép legal_docs/)"
+                )
+            return {"is_legal": True, "dry_run": True, "status": "simulated"}
+
+        try:
+            legal_pkg_path = self.hub_root / "packages" / "ccba-legal-intel" / "src"
+            if legal_pkg_path.exists() and str(legal_pkg_path) not in sys.path:
+                sys.path.insert(0, str(legal_pkg_path))
+
+            from ccba_legal.sync import sync_legal_assets
+
+            res = sync_legal_assets(
+                target_dir=self.spoke_root / ".md" / "legal_docs",
+                project_root=self.spoke_root,
+                pull_assets=pull_assets,
             )
-            print(
-                "   Khi cần tra cứu văn bản cụ thể, hãy dùng lệnh On-Demand: 'python -m ccba_legal sync --doc <doc_id>' hoặc tra cứu RAG qua AI Gateway."
-            )
-            return {"is_legal": False, "dry_run": dry_run, "status": "advised_zero_bloat"}
+            self._report_legal_sync_result(res, pull_assets=pull_assets)
+            return {"is_legal": True, "dry_run": False, "result": res}
+        except Exception as e:
+            print(f"   ⚠️ Không thể nạp trực tiếp module sync: {e}")
+            print("   Khuyến nghị chạy: python -m ccba_legal sync --pull-latest")
+            return {"is_legal": True, "dry_run": False, "error": str(e)}
+
+    @staticmethod
+    def _report_legal_sync_result(res: dict[str, Any], pull_assets: bool) -> None:
+        """Print status summary for sync_legal_assets execution."""
+        if res.get("status") != "success":
+            print(f"   ℹ️ {res.get('message', 'Không có dữ liệu mới.')}")
+            return
+        if pull_assets:
+            copied = len(res.get("bundles_synced", []))
+            msg = res.get("message", "Đồng bộ thành công")
+            print(f"   ✅ {msg} ({copied} gói văn bản đã đồng bộ).")
+            return
+        reg_summary = res.get("registry_merge", {})
+        reg_info = f"updated={reg_summary.get('updated', 0)}, added={reg_summary.get('added', 0)}"
+        print(f"   ✅ [Zero-Bloat Reference] Sáp nhập legal_registry.yaml thành công ({reg_info}).")
+        print("      💡 Bật cờ '--pull-assets' nếu Spoke thực sự cần sao chép vật lý legal_docs/.")
