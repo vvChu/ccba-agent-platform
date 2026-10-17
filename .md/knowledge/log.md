@@ -2,6 +2,17 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-17] [update] | Phát Hành PR #521, PR #527 & PR #528: Closed-Loop Graduation Supersession, Layer-2 Link Parity & Spoke Sync AST Budget Refactoring
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phiên `/ccba-new-feature` #520, Thảo luận phản biện 2 vòng với Grok 4.7, và `/ccba-session-retrospective`)
+- **Affected Files**: `scripts/spoke/sync/graduation.py`, `scripts/spoke/sync/coordinator.py`, `scripts/spoke/sync/sdk_inspector.py`, `scripts/spoke/sync/constitution.py`, `scripts/spoke/sync/__init__.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/`
+- **Summary**: Hoàn tất chu trình khép kín đồng bộ Spoke (Issue #520) và cải tạo chuẩn KISS ($\le 50$ LOC AST budget) cho các module điều phối của `scripts/spoke/sync/`:
+  1. **Closed-Loop Graduation Supersession & Link Parity (PR #521 — `25f15eda`)**: Xây dựng `supersede_graduated_spoke_docs` và `audit_spoke_markdown_links` trong `graduation.py`, tự động thu hồi bản nháp tri thức tại Spoke đã thành Hub ADR, bảo tồn ghi chú cục bộ phát sinh bằng nhánh lưu trữ `.local-<sha8>.md` (COND-02), đồng bộ tài liệu tham chiếu ngang cấp (`CONTEXT.md`) trong `sync_layer2_rules`, và tự động chuẩn hóa liên kết `file://` hoặc tiền tố lặp `.md/` trong `.md/INDEX.md` trên cả 3 Spokes.
+  2. **Adversarial Peer Rebuttal & Coordinator AST Decomposition (PR #527 — `652eb997`)**: Qua 2 vòng phản biện với Grok (`req-discuss-refactor-coordinator-001` & `002`), bác bỏ 4 suy diễn thiếu ngữ cảnh mã nguồn của `audit_direct` (`self.stats`, `self.logger`, `_BundleSyncState`, `GateCheck.findings`), bảo toàn 100% monkeypatch seams (`assess_catalog_freshness`, `_get_synchronizer_cls()`) và phân rã toàn bộ 6 hàm lớn trong `coordinator.py` về $\le 50$ LOC (tối đa 48 LOC).
+  3. **SDK Inspector AST Decomposition & Ratchet Enforcement (PR #528 — `6f198176`)**: Phân rã toàn bộ 4 phương thức vượt ngưỡng 50 dòng trong `sdk_inspector.py` (`copy_if_needed`: $150 \to 46$, `_ensure_git_hook_activated`: $98 \to 14$, `resolve_packages_to_check`: $94 \to 27$, `sync_or_advise`: $79 \to 28$ LOC), khử trùng lặp `is_legal_related_spoke`, và khóa cứng bằng ratchet test `test_coordinator_ast_function_length_compliance`.
+  4. **Đóng Gói Tri Thức**: Bổ sung Section 37 vào `session_learnings_history.md`, cập nhật `RULE-1.21` và `RULE-4.17` vào `session_learnings.md` ($\le 10.0\text{ KB}$), đạt 100% CI checks green trên cả 3 PRs.
+
+---
+
 ## [2026-10-07] [guideline] | Chuẩn Hóa Toàn Diện 76/76 Skills Nền Tảng Theo ADR-0061 (Platform-Aware Architecture Posture)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phối hợp thẩm định song phương với Lead Reviewer Grok 4.7 qua 11 đợt)
 - **Affected Files**: `.agents/skills/*/SKILL.md` (76 skills), `.md/peer_exchange/`, `.md/knowledge/`
