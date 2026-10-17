@@ -2,6 +2,35 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-18] [update] | Nâng Cấp Quy Trình Phối Hợp Antigravity ↔ Grok CLI: Liveness-Aware Watchdog, Multi-Turn Resume Telemetry, Degraded-Reasoning Gate & Tool Lockdown (`RULE-4.19`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phân tích lịch sử 602/603 phiên `~/.grok/sessions/`, `/plan`, `/boost` review & triển khai toàn diện)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `packages/ccba-harness/src/ccba_harness/_peer_telemetry.py`, `packages/ccba-harness/src/ccba_harness/peer.py`, `packages/ccba-harness/src/ccba_harness/cli/commands/peer.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/src/ccba_harness/module_budget_baseline.json`, `packages/ccba-harness/AGENTS.md`, `.agents/skills/platform-loader/catalog.yaml`, `scripts/governance/normalize_peer_telemetry_costs.py`, `.md/peer_exchange/`, `.md/knowledge/`
+- **Summary**: Hoàn tất nghiên cứu thực chứng dữ liệu lịch sử phối hợp Antigravity $\leftrightarrow$ Grok CLI (`602` phiên `~/.grok/sessions/` và `123` tệp `.md/peer_exchange/`) và triển khai đồng bộ 5 cải tiến kiến trúc trong `ccba-harness`:
+  1. **Liveness-Aware Subprocess Watchdog (`_peer_watchdog.py`)**: Xây dựng `inspect_session_liveness()` và `_poll_grok_process_with_watchdog()` theo dõi trực tiếp `events.jsonl` (cấp `+45s` grace window khi đang `streaming_text`/`streaming_reasoning`, bảo toàn `temp_out.read()` khi ngắt sau `turn_ended:* > 5s`, fail-fast `90s` tại `mcp_init_completed:` và cứu hộ qua `_recover_verdict_from_chat_history()`). Tách module giúp giảm kích thước `peer.py` từ `2,168` xuống `1,855` LOC (ratchet trần `module_budget_baseline.json` từ `2,175` xuống `1,880` LOC, 100% hàm $\le 50$ LOC).
+  2. **Headless Optimization & 15 Built-in Tools Lockdown**: Bật `disable_web_search: True` và `verbatim: True` cho toàn bộ 8 profiles trong `PROFILE_SPECS`, khóa đầy đủ 15 built-in tools của Grok CLI (`NO_TOOLS_DISALLOW_LIST` và `READ_ONLY_DISALLOW_LIST`, bao gồm tool ghi tệp `write`).
+  3. **Multi-Turn Resume Telemetry (`_peer_telemetry.py`)**: Cập nhật `_build_telemetry_from_usage_json()` ưu tiên đọc `turns[-1]` khi phiên `--resume` có nhiều lượt, và tích lũy đồng nhất cả `PeerVerdictTelemetry` lẫn `CombinedTelemetry` qua `_accumulate_verdict_telemetry()`.
+  4. **Degraded-Reasoning Gate (`COND-DEGRADED-REASONING`)**: Bổ sung `degraded_reasoning: bool` vào `PeerVerdictTelemetry` và tự động chèn `COND-DEGRADED-REASONING` (`blocking=True`) vào `_consolidate_peer_conditions()` / `synthesize_verdicts()` khi profile `high`/`xhigh` trả về `0` reasoning tokens.
+  5. **Làm Sạch `.md/peer_exchange/` & Đóng Gói Tri Thức**: Loại trừ `.gate.md` (`AUXILIARY`), chuẩn hóa dữ liệu lịch sử qua `normalize_peer_telemetry_costs.py` (`pending_grok: 9 -> 0`), bổ sung `RULE-4.19` vào `session_learnings.md` ($\le 10.0\text{ KB}$) và Mục 43 vào `session_learnings_history.md`.
+
+---
+
+## [2026-10-17] [guideline] | Tổng Rà Soát & Phản Biện Toàn Diện Backlog Đa Repo (`#507`–`#514`, `#519`, `#522`, `#523`, `#530` & `IDOP-CCBA-WAY` `#10`–`#12`) — Chống Thiên Lệch Tuân Thủ (`RULE-1.24`, `RULE-4.18`, `RULE-5.11`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phiên `/ccba-review-proposal`, Double-Pass Adversarial Review & `/ccba-session-retrospective`)
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất phân loại, phản biện kiến trúc 2 vòng (Rule 5 KISS & Rule 8) và làm sạch 100% backlog trên cả hai kho mã nguồn `vvChu/ccba-agent-platform` (`85/85` items `Done` trên Project `#3`) và `vvChu/idop-ccba-way`:
+  1. **Nghiệm thu Đợt 1 (`#513`, `#530`, `#519`)**: Đóng gói và merge thành công 3 PR mang giá trị thực chất (`PR #533` kiểm tra liên kết đồ thị `catalog.yaml`, `PR #534` quét AST raw model & IP trong `check_spoke_cleanliness.py`, `PR #535/#536` ban hành `HUB-ADR 0067` One-Way Door & Backpressure).
+  2. **Bác bỏ Over-Engineering & Bảo vệ Ranh giới Liên bang (`RULE-1.24`, `RULE-4.18`)**: Đóng `not_planned` 5 issues (`#511` RRF trên $N=76$ skills, `#512` Context Push-Injection xung đột `ADR-0040`, `#514` Dynamic GPI làm gãy cổng CI tất định `ADR-0057`/`ADR-0058`, `#522` & `#523` nhập khẩu chu trình ERP 5 pha / 15 `ROLE_ID` của `IDOP-CCBA-WAY` gây Dual-SSOT với `ADR-0046` & `idop_bridge.py`) cùng 4 issues trùng lặp (`#507`–`#510`).
+  3. **Đối chiếu Lộ trình Thực tế `P3.0` $\to$ `P5.4` trên `IDOP-CCBA-WAY` (`#10`, `#11`, `#12`)**: Đóng `completed` cả 3 ticket Wayfinder cũ do đã hoàn thành qua `SpDiffHelpers.psm1` + Live Tenant Audit 59/59 Lists (`#10`), `approval_rollup.py` + Gate 4 `verify_cde_documents_reached_a1` (`#11`), và Gate 1 `bidding_package_creator.py` + Gate 2 `contract_package_creator.py` (`#12`).
+
+---
+
+## [2026-10-17] [update] | Phát Hành PR #534 (Issue #530): Tích Hợp Kiểm Tra AST Raw Model & IP Leakage Vào SSOT `check_spoke_cleanliness.py`
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phiên `/ccba-new-feature` #530, `/ccba-release-feature` & `/ccba-session-retrospective`)
+- **Affected Files**: `scripts/spoke/check_spoke_cleanliness.py`, `scripts/tests/test_spoke_cleanliness.py`, `.md/knowledge/`
+- **Summary**: Thượng nguồn hóa và nối dây trực tiếp `check_raw_model_leakage` (AST) và `check_raw_ip_leakage` (`ipaddress.IPv4Address`, bảo toàn `was_in_docstring` cho docstring 1 dòng theo `COND-02`) vào `scan_spoke_cleanliness()` (`c9313552`), tách hàm đảm bảo 100% AST $\le 50$ LOC (`peer-gate` 8/8 PASS, 25/25 cleanliness tests PASS).
+
+---
+
 ## [2026-10-17] [adr] | Triển Khai Issue #519 & Ban Hành HUB-ADR 0067: Danh Mục Cửa Một Chiều (One-Way Door Manifest) và Cơ Chế Áp Lực Ngược (Backpressure Circuit-Breaker)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phiên `/ccba-new-feature` #519, Thẩm định kế hoạch qua Grok 4.7 `APPROVE_WITH_CONDITIONS`, Phản biện kép hiệu chỉnh KISS, và `/ccba-session-retrospective`)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/door_policy.py`, `packages/ccba-harness/src/ccba_harness/backpressure.py`, `packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py`, `packages/ccba-harness/src/ccba_harness/cli/core.py`, `packages/ccba-harness/src/ccba_harness/__init__.py`, `packages/ccba-harness/AGENTS.md`, `packages/ccba-harness/tests/test_door_policy.py`, `packages/ccba-harness/tests/test_backpressure.py`, `packages/ccba-harness/tests/test_cli_contract_parity.py`, `.github/workflows/pr-verifier.yml`, `.github/pull_request_template.md`, `docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md`, `docs/adr/README.md`, `docs/adr/TRACEABILITY_MATRIX.md`, `.md/knowledge/`

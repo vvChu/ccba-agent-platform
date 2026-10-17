@@ -2,21 +2,21 @@
 request_id: req-20261004-final-implementation-plan
 verdict: REVISE_PLAN
 conditions:
-  - id: COND-PLAN-01
-    description: "Ranh giới phân tầng kiến trúc: Chuyển logic đồng bộ lõi vào bên trong ccba_harness hoặc thiết lập cơ chế đăng ký callback hook trong publish_peer_message. Đảm bảo ccba_harness.peer hoạt động hoàn toàn độc lập với thư mục scripts."
-    blocking: true
-  - id: COND-PLAN-02
-    description: "Tái sử dụng Seam FileMutexLock (ADR-0061): Sử dụng trực tiếp ccba_harness._mutex.FileMutexLock cho các thao tác khóa tệp đọc ghi trạng thái peer exchange."
-    blocking: true
-  - id: COND-PLAN-03
-    description: "Thực thi an toàn và cô lập lỗi cho Auto-Grok: Gọi grok CLI qua subprocess.run với danh sách tham số đầy đủ, cấu hình timeout, bổ sung cờ --always-approve và --no-subagents, trích xuất output_path từ YAML front-matter của prompt, và xác thực front-matter trước khi cập nhật trạng thái."
-    blocking: true
-  - id: COND-PLAN-04
-    description: "Đảm bảo vòng đời luồng ngầm và chống tranh chấp: Thiết lập lock tuần tự hóa các lượt gọi run_cycle trong tiến trình và cung cấp hàm flush_pending_peer_triggers để chờ các tác vụ ngầm hoàn tất trước khi tiến trình CLI thoát."
-    blocking: true
-risk_score: 28
+- id: COND-PLAN-01
+  description: 'Ranh giới phân tầng kiến trúc: Chuyển logic đồng bộ lõi vào bên trong ccba_harness hoặc thiết lập cơ chế đăng ký callback hook trong publish_peer_message. Đảm bảo ccba_harness.peer hoạt động hoàn toàn độc lập với thư mục scripts.'
+  blocking: true
+- id: COND-PLAN-02
+  description: 'Tái sử dụng Seam FileMutexLock (ADR-0061): Sử dụng trực tiếp ccba_harness._mutex.FileMutexLock cho các thao tác khóa tệp đọc ghi trạng thái peer exchange.'
+  blocking: true
+- id: COND-PLAN-03
+  description: 'Thực thi an toàn và cô lập lỗi cho Auto-Grok: Gọi grok CLI qua subprocess.run với danh sách tham số đầy đủ, cấu hình timeout, bổ sung cờ --always-approve và --no-subagents, trích xuất output_path từ YAML front-matter của prompt, và xác thực front-matter trước khi cập nhật trạng thái.'
+  blocking: true
+- id: COND-PLAN-04
+  description: 'Đảm bảo vòng đời luồng ngầm và chống tranh chấp: Thiết lập lock tuần tự hóa các lượt gọi run_cycle trong tiến trình và cung cấp hàm flush_pending_peer_triggers để chờ các tác vụ ngầm hoàn tất trước khi tiến trình CLI thoát.'
+  blocking: true
+risk_score: 1
 effort: S
-summary: "Yêu cầu hoàn thiện kế hoạch: Chuẩn hóa ranh giới gói thư viện lõi, tái sử dụng FileMutexLock có sẵn theo ADR-0061, gia cố an toàn tiến trình con Auto-Grok và bảo vệ vòng đời luồng ngầm."
+summary: 'Yêu cầu hoàn thiện kế hoạch: Chuẩn hóa ranh giới gói thư viện lõi, tái sử dụng FileMutexLock có sẵn theo ADR-0061, gia cố an toàn tiến trình con Auto-Grok và bảo vệ vòng đời luồng ngầm.'
 ---
 
 # Báo Cáo Thẩm Định Đối Kháng Kế Hoạch Triển Khai Cuối Cùng

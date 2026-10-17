@@ -3,7 +3,7 @@
   "packages/ccba-harness/src/ccba_harness/_file_monitor.py": 1127,
   "packages/ccba-harness/src/ccba_harness/_process_monitor.py": 1185,
   "packages/ccba-harness/src/ccba_harness/fleet.py": 1024,
-  "packages/ccba-harness/src/ccba_harness/peer.py": 2175,
+  "packages/ccba-harness/src/ccba_harness/peer.py": 1880,
   "packages/ccba-harness/src/ccba_harness/skill_validator.py": 1539,
   "packages/ccba-legal-intel/src/ccba_legal/cli.py": 1455,
   "packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/table_handler.py": 801,

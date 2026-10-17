@@ -13,7 +13,7 @@ disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -62,12 +62,16 @@ Ghi nhận đầy đủ thông tin cốt lõi:
 
 ---
 
-## 🔍 Bước 2: Kiểm tra Trùng lặp (Duplicate Detection)
+## 🔍 Bước 2: Kiểm tra Trùng lặp, Quy mô Thực tế & Biên giới Kiến trúc (Duplicate, Scale & OBE Gate)
 Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 1. Xác định đường dẫn Hub qua biến môi trường `$CCBA_HUB_PATH` (PowerShell: `$env:CCBA_HUB_PATH`).
 2. Đọc `$CCBA_HUB_PATH/.agents/skills/platform-loader/catalog.yaml`, `packages/`, `$CCBA_HUB_PATH/.agents/AGENTS.md`, `PLATFORM.md`.
-*Nếu phát hiện đã tồn tại thành phần tương tự:* Đề xuất nâng cấp/mở rộng thay vì tạo mới trùng lặp.
-- **Tiêu chí hoàn thành:** Xác nhận không trùng lặp chức năng với các skill, tool hiện hữu trong `catalog.yaml` và `PLATFORM.md`.
+3. **Cổng Thẩm định Tính Hợp Lý, Quy Mô & Hiệu Lực (Problem-Validity, Scale & OBE Gate — Rule 5 KISS & Rule 8):**
+   - **Chống Dịch Cơ Học & Trùng lặp Seam:** Không đóng góp các lớp trừu tượng dịch cơ học từ khái niệm quản trị (như EOS GWC hay multi-tier dynamic routing) nếu trùng lặp 100% với Seams hiện có (`choose_model`, `MaskaraScanner`, `SandboxPromoter`, `verify-patch`).
+   - **Kiểm toán Quy mô Thực tế (Empirical Scale Check):** Đo đếm quy mô dữ liệu thật ($N$ dòng/entries). Nếu $N \le 20$ và giải quyết trọn vẹn bằng grep/dict/JSONL phẳng (< 50ms) $\rightarrow$ từ chối tạo thêm CLI parser, SQLite daemon hoặc AST validator mới.
+   - **Ranh giới Liên bang & Hiệu lực Lịch sử (OBE Check):** Không nhập khẩu schema nội bộ của repo liên bang khác (như bảng 15 `ROLE_ID` SharePoint Entra ID của `IDOP-CCBA-WAY`) làm lệch cấu hình `seat_role` / `qc_governance` hiện hữu; kiểm tra `git log` để tránh triển khai lại yêu cầu đã được giải quyết ở các PR/Phase sau.
+*Nếu phát hiện đã tồn tại thành phần tương tự hoặc vi phạm cổng KISS/OBE:* Đề xuất tái sử dụng Seam hiện có, nâng cấp/mở rộng thay vì tạo mới trùng lặp, hoặc đóng Issue kèm biên bản phản biện thực chứng.
+- **Tiêu chí hoàn thành:** Xác nhận không trùng lặp chức năng với các skill, tool hiện hữu trong `catalog.yaml` và `PLATFORM.md`, vượt qua cổng kiểm toán quy mô thực tế ($N > 20$ hoặc cần Seam mới) và đúng biên giới kiến trúc Liên bang.
 
 ---
 

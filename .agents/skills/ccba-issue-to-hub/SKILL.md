@@ -13,7 +13,7 @@ disable-model-invocation: true
 command: /ccba-issue-to-hub
 user-invocable: true
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -61,17 +61,21 @@ Agent thu thập thông tin từ ngữ cảnh hội thoại hiện tại hoặc 
 
 ---
 
-### Bước 2: Kiểm tra Trùng lặp trên Hub
-Trước khi tạo Issue mới, Agent chủ động kiểm tra xem vấn đề đã được ghi nhận hoặc giải quyết trên Hub hay chưa:
+### Bước 2: Kiểm tra Trùng lặp, Quy mô Thực tế & Biên giới Liên bang trên Hub
+Trước khi tạo Issue mới, Agent chủ động kiểm tra xem vấn đề đã được ghi nhận, giải quyết hoặc thuộc phạm vi của repo khác hay chưa:
 1. **Kiểm tra Issues hiện có:**
    ```bash
    gh issue list --repo vvChu/ccba-agent-platform --limit 30
    ```
-2. **Kiểm tra Catalog Hub:**
-   Đọc tệp `catalog.yaml` qua biến môi trường `$CCBA_HUB_PATH/.agents/skills/platform-loader/catalog.yaml` (PowerShell: `$env:CCBA_HUB_PATH`) để xác nhận kỹ năng/công cụ tương tự chưa tồn tại.
+2. **Kiểm tra Catalog Hub & Seam Contracts:**
+   Đọc tệp `catalog.yaml` qua biến môi trường `$CCBA_HUB_PATH/.agents/skills/platform-loader/catalog.yaml` (PowerShell: `$env:CCBA_HUB_PATH`) và chạy `python scripts/governance/compile_catalog.py --in <types> --out <types> --json` để xác nhận kỹ năng/seam tương tự chưa tồn tại.
+3. **Kiểm tra Biên giới Liên bang, Quy mô Thực tế & Chống Dual-SSOT (Federated Boundary, Scale & Anti-Dual-SSOT Guard):**
+   - Đối chiếu xem đề xuất có thuộc phạm vi nội bộ của repo liên bang khác (như bảng 15 `ROLE_ID` phân quyền SharePoint Entra ID của `IDOP-CCBA-WAY` hay kho văn bản pháp quy của `ccba-legal-knowledge`) gây chồng chéo với cấu hình `seat_role` / `qc_governance` hiện hữu trên Hub hay không.
+   - Không đề xuất dịch cơ học các khái niệm quản trị nhân sự con người (như khung tuyển dụng *GWC: Get it - Want it - Capacity*) thành class phần mềm trùng lặp với các Seams đã có (`MaskaraScanner`, `choose_model`, `SandboxPromoter`) hoặc yêu cầu tiêm tĩnh metadata vào System Prompt của mọi phiên làm việc.
+   - Không đề xuất xây dựng CLI parser/SQLite/AST validator cho dữ liệu cấu hình tĩnh quy mô nhỏ ($N \le 20$ dòng) khi đã giải quyết trọn vẹn bằng grep/dict/JSONL phẳng (< 50ms).
 
-*Nếu phát hiện đã có Issue tương tự:* Gợi ý người dùng bổ sung thảo luận vào Issue cũ thay vì tạo mới.
-- **Tiêu chí hoàn thành:** Xác nhận tính độc nhất của đề xuất, không trùng lặp với các Issue hoặc tính năng đã có trên Hub.
+*Nếu phát hiện đã có Issue/Seam tương tự, lệch biên giới Repo hoặc dư thừa quy mô ($N \le 20$):* Gợi ý người dùng tái sử dụng Seam sẵn có, mở Issue ở đúng Repo đích, hoặc bổ sung thảo luận vào Issue cũ thay vì tạo mới.
+- **Tiêu chí hoàn thành:** Xác nhận tính độc nhất, đúng quy mô thực tế và đúng biên giới kiến trúc của đề xuất, không trùng lặp với các Issue/Seams đã có trên Hub và không tạo Dual-SSOT.
 
 ---
 

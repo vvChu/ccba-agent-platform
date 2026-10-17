@@ -348,3 +348,128 @@ def test_update_status_json_telemetry_accumulation(tmp_path):
     assert stats2["by_model"]["grok-4.7"]["tokens"] == 1500
     assert stats2["by_model"]["gemini-38-flash"]["tokens"] == 3000
     assert stats2["by_model"]["gemini-38-flash"]["cost_usd"] == 0.005
+
+
+def test_update_status_json_combined_telemetry_accumulation(tmp_path):
+    """Validates CombinedTelemetry parsing in PeerVerdictBlock and status.json breakdown accumulation."""
+    from ccba_harness.peer import CombinedTelemetry, ProfileTelemetryItem, parse_verdict_from_md
+
+    consensus_md = (
+        "---\n"
+        "request_id: req-consensus-01\n"
+        "verdict: APPROVE_WITH_CONDITIONS\n"
+        "risk_score: 2\n"
+        "summary: Consensus report\n"
+        "telemetry:\n"
+        "  total_tokens: 15000\n"
+        "  input_tokens: 12000\n"
+        "  output_tokens: 3000\n"
+        "  reasoning_tokens: 1000\n"
+        "  cached_read_tokens: 8000\n"
+        "  cost_usd: 0.045\n"
+        "  wall_seconds: 25.0\n"
+        "  sum_agent_seconds: 40.0\n"
+        "  cost_mode: exact\n"
+        "  profile_breakdown:\n"
+        "    code_review:\n"
+        "      model: gemini-3.8-flash-high\n"
+        "      total_tokens: 5000\n"
+        "      cost_usd: 0.015\n"
+        "    arch_audit:\n"
+        "      model: grok-4.7-build\n"
+        "      total_tokens: 10000\n"
+        "      cost_usd: 0.030\n"
+        "---\n"
+        "# Consensus\n"
+    )
+    vb = parse_verdict_from_md(consensus_md)
+    assert vb is not None
+    assert isinstance(vb.telemetry, CombinedTelemetry)
+    assert isinstance(vb.telemetry.profile_breakdown["code_review"], ProfileTelemetryItem)
+
+    status_file = tmp_path / "status.json"
+    registry = {
+        "grok_consensus_01.md": {
+            "path": tmp_path / "grok_consensus_01.md",
+            "role": "GROK_RESPONSE",
+            "mtime": 100.0,
+            "sha256": "def456",
+            "verdict": vb,
+        }
+    }
+    update_status_json(status_file, registry, pending_anti=[], pending_grok=[])
+    stats = json.loads(status_file.read_text(encoding="utf-8"))["exchange_stats"]
+    assert stats["total_tokens"] == 15000
+    assert stats["total_cost_usd"] == 0.045
+    assert stats["by_model"]["gemini-3.8-flash-high"]["tokens"] == 5000
+    assert stats["by_model"]["grok-4.7-build"]["tokens"] == 10000
+
+
+def test_extract_grok_session_telemetry_multi_turn_resume_and_degraded_reasoning(monkeypatch):
+    """Verifies turns[-1] selection on resumed sessions and degraded_reasoning flag when reasoningTokens==0."""
+    from ccba_harness.peer import synthesize_verdicts
+
+    usage_payload = {
+        "sessionId": "sess-resumed",
+        "session": {
+            "primaryModelId": "grok-4.7",
+            "inputTokens": 100000,
+            "outputTokens": 2000,
+            "reasoningTokens": 5000,
+            "cachedReadTokens": 20000,
+            "totalTokens": 102000,
+            "modelCalls": 4,
+            "turnCount": 2,
+        },
+        "turns": [
+            {
+                "turnNumber": 1,
+                "inputTokens": 100000,
+                "outputTokens": 2000,
+                "reasoningTokens": 5000,
+                "cachedReadTokens": 20000,
+                "totalTokens": 102000,
+                "modelCalls": 4,
+            },
+            {
+                "turnNumber": 2,
+                "inputTokens": 110000,
+                "outputTokens": 1500,
+                "reasoningTokens": 0,
+                "cachedReadTokens": 98000,
+                "totalTokens": 111500,
+                "modelCalls": 2,
+                "costUsdTicks": 250000000,
+            },
+        ],
+    }
+
+    def mock_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args[0], returncode=0, stdout=json.dumps(usage_payload), stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    tel = extract_grok_session_telemetry(
+        session_id="sess-resumed",
+        duration_seconds=12.3,
+        fallback_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+    )
+    assert tel is not None
+    assert tel.input_tokens == 110000
+    assert tel.cached_read_tokens == 98000
+    assert tel.reasoning_tokens == 0
+    assert tel.degraded_reasoning is True
+
+    vb = PeerVerdictBlock(
+        request_id="req-deg-1",
+        verdict="APPROVE",
+        risk_score=1,
+        summary="Looks clean",
+        telemetry=tel,
+    )
+    report = synthesize_verdicts("req-deg-1", {"arch_audit": vb})
+    assert report.verdict == "APPROVE_WITH_CONDITIONS"
+    assert any(c.id == "COND-DEGRADED-REASONING" and c.blocking for c in report.conditions)

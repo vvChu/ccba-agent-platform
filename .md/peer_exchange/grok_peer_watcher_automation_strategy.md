@@ -2,18 +2,18 @@
 request_id: req-20261004-peer-watcher-automation-strategy
 verdict: APPROVE_WITH_CONDITIONS
 conditions:
-  - id: COND-01
-    description: "Atomic Inode/Hash Guard for Recursive Suppression: Mọi file watcher hoặc bộ kích hoạt sự kiện bắt buộc phải kiểm tra SHA-256 hash snapshot của nội dung peer exchange trước khi kích hoạt cycle, ngăn chặn triệt để vòng lặp ghi đè vô tận."
-    blocking: true
-  - id: COND-02
-    description: "Asynchronous Thread Offloading for SDK Hooks: SDK Hook (Phương án 1) bắt buộc chạy `run_cycle()` qua background daemon thread non-blocking hoặc queue riêng để không làm nghẽn luồng xử lý chính của Agent khi ghi file."
-    blocking: true
-  - id: COND-03
-    description: "Cross-Platform File Locking Concurrency: Cơ chế đọc/ghi trạng thái phải tích hợp mutex file-lock (`ccba_harness._mutex` hoặc portalocker) để tránh race condition khi Antigravity và Grok cập nhật đồng thời."
-    blocking: true
-risk_score: 18
+- id: COND-01
+  description: 'Atomic Inode/Hash Guard for Recursive Suppression: Mọi file watcher hoặc bộ kích hoạt sự kiện bắt buộc phải kiểm tra SHA-256 hash snapshot của nội dung peer exchange trước khi kích hoạt cycle, ngăn chặn triệt để vòng lặp ghi đè vô tận.'
+  blocking: true
+- id: COND-02
+  description: 'Asynchronous Thread Offloading for SDK Hooks: SDK Hook (Phương án 1) bắt buộc chạy `run_cycle()` qua background daemon thread non-blocking hoặc queue riêng để không làm nghẽn luồng xử lý chính của Agent khi ghi file.'
+  blocking: true
+- id: COND-03
+  description: 'Cross-Platform File Locking Concurrency: Cơ chế đọc/ghi trạng thái phải tích hợp mutex file-lock (`ccba_harness._mutex` hoặc portalocker) để tránh race condition khi Antigravity và Grok cập nhật đồng thời.'
+  blocking: true
+risk_score: 1
 effort: S
-summary: "Phê duyệt có điều kiện phương án Kiến trúc Lai kết hợp SDK Hook phi đồng bộ (Asynchronous SDK Hook) và bộ phát hiện thay đổi nội dung thông minh, loại bỏ hoàn toàn rủi ro vòng lặp CPU 100% của File Watcher truyền thống."
+summary: Phê duyệt có điều kiện phương án Kiến trúc Lai kết hợp SDK Hook phi đồng bộ (Asynchronous SDK Hook) và bộ phát hiện thay đổi nội dung thông minh, loại bỏ hoàn toàn rủi ro vòng lặp CPU 100% của File Watcher truyền thống.
 ---
 
 # 🛡️ BÁO CÁO THẨM ĐỊNH ĐỐI KHÁNG & HƯỚNG DẪN KIẾN TRÚC

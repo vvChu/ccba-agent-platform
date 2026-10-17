@@ -2,24 +2,24 @@
 request_id: req-20261005-spoke-sync-audit
 verdict: APPROVE_WITH_RESERVATIONS
 conditions:
-  - id: COND-AUDIT-01
-    description: "Rút khẳng định đảm bảo 100%. /ccba-update-spoke chỉ đồng bộ một mặt cắt đã khai báo (skill/workflow có mặt trong catalog.yaml và thuộc bundle của project_type hoặc _core, cộng danh sách guardrail tĩnh). Lệnh mặc định không cài package mới."
-    blocking: true
-  - id: COND-AUDIT-02
-    description: "Cấm coi discover_package_topology() là bộ chọn package. Hàm chỉ sắp thứ tự. Tập cài đặt là tập đóng trong resolve_target_packages() và SharedSdkInspector.resolve_packages_to_check(). Package mới, ví dụ packages/ccba-diagram, không được cài cho đến khi Spoke khai báo hub_packages."
-    blocking: true
-  - id: COND-AUDIT-03
-    description: "Catalog stale phải thất bại đóng, hoặc --apply phải từ chối khi check_catalog_in_sync() trả về false. Hiện cảnh báo ghi stderr và sync vẫn thoát 0 bằng catalog cũ."
-    blocking: false
-  - id: COND-AUDIT-04
-    description: "Trước khi hứa hiệu lực tức thì của editable install, đối soát ba điều kiện: .pth/direct_url trỏ đúng hub_root vừa pull, thay đổi là mã Python thuần trên entry point đã đăng ký, và không thêm dependency, extra, script console mới, hay extension biên dịch."
-    blocking: false
-  - id: COND-AUDIT-05
-    description: "Zero-clone thin client và container không mount Hub nằm ngoài hợp đồng hiện tại. Chưa có .github/workflows/package-wheels.yml. pip install -e và Virtual Hub Fallback đều cần cây nguồn Hub trên cùng máy."
-    blocking: false
-risk_score: 6
+- id: COND-AUDIT-01
+  description: Rút khẳng định đảm bảo 100%. /ccba-update-spoke chỉ đồng bộ một mặt cắt đã khai báo (skill/workflow có mặt trong catalog.yaml và thuộc bundle của project_type hoặc _core, cộng danh sách guardrail tĩnh). Lệnh mặc định không cài package mới.
+  blocking: true
+- id: COND-AUDIT-02
+  description: Cấm coi discover_package_topology() là bộ chọn package. Hàm chỉ sắp thứ tự. Tập cài đặt là tập đóng trong resolve_target_packages() và SharedSdkInspector.resolve_packages_to_check(). Package mới, ví dụ packages/ccba-diagram, không được cài cho đến khi Spoke khai báo hub_packages.
+  blocking: true
+- id: COND-AUDIT-03
+  description: Catalog stale phải thất bại đóng, hoặc --apply phải từ chối khi check_catalog_in_sync() trả về false. Hiện cảnh báo ghi stderr và sync vẫn thoát 0 bằng catalog cũ.
+  blocking: false
+- id: COND-AUDIT-04
+  description: 'Trước khi hứa hiệu lực tức thì của editable install, đối soát ba điều kiện: .pth/direct_url trỏ đúng hub_root vừa pull, thay đổi là mã Python thuần trên entry point đã đăng ký, và không thêm dependency, extra, script console mới, hay extension biên dịch.'
+  blocking: false
+- id: COND-AUDIT-05
+  description: Zero-clone thin client và container không mount Hub nằm ngoài hợp đồng hiện tại. Chưa có .github/workflows/package-wheels.yml. pip install -e và Virtual Hub Fallback đều cần cây nguồn Hub trên cùng máy.
+  blocking: false
+risk_score: 1
 effort: M
-summary: "Động cơ sync có hợp đồng thật cho skill đã biên dịch và mã Python thuần trên package editable sẵn, nhưng không đảm bảo mọi tính năng harness tương lai sẽ được nhận diện khi chạy /ccba-update-spoke."
+summary: Động cơ sync có hợp đồng thật cho skill đã biên dịch và mã Python thuần trên package editable sẵn, nhưng không đảm bảo mọi tính năng harness tương lai sẽ được nhận diện khi chạy /ccba-update-spoke.
 ---
 
 # Phán quyết đối kháng — Bảo đảm đồng bộ Hub → Spoke của `/ccba-update-spoke`

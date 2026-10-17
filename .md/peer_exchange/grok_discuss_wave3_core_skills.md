@@ -5,13 +5,6 @@ conditions:
   - id: COND-01
     description: "Cấm nhân bản một mục Platform-Aware Reuse Gate vào cả 8 SKILL.md. Mỗi skill nhận đúng một posture: package-bound, skill-bound, compose-existing, hoặc seam-exempt. Biên lai chỉ hợp lệ khi find-seam trả MATCH; KEYWORD_HINT không phải hợp đồng. Không commit index_sha256 tĩnh vào SKILL.md."
     blocking: true
-    source_p---
-request_id: "req-discuss-wave3-core-skills-001"
-verdict: REVISE_PLAN
-conditions:
-  - id: COND-01
-    description: "Cấm nhân bản một mục Platform-Aware Reuse Gate vào cả 8 SKILL.md. Mỗi skill nhận đúng một posture: package-bound, skill-bound, compose-existing, hoặc seam-exempt. Biên lai chỉ hợp lệ khi find-seam trả MATCH; KEYWORD_HINT không phải hợp đồng. Không commit index_sha256 tĩnh vào SKILL.md."
-    blocking: true
     source_profile: arch_audit
   - id: COND-02
     description: "PR skill không được thêm seam_id mới và không được sửa packages/. Bốn skill chưa có card (tracker, intel, pccc, mermaid) chỉ compose seam đang có hoặc ghi miễn trừ. API đang bị comment sai trên tracker (generate_diff, consolidate(base_ast)) phải được gỡ; symbol thật là VBHNEngine.merge_documents và LegislativeConsolidator."
