@@ -1183,7 +1183,6 @@ def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
     captured_cmds: list[str] = []
 
     def mock_verify_execution(commands, cwd, fail_fast=True):
-        nonlocal captured_cmds
         captured_cmds.extend(commands)
         from ccba_harness.verifier import CommandResult, PatchVerificationReport
 
@@ -1388,3 +1387,206 @@ def test_test_guardrail_copier_git_hooks(tmp_path: Path):
     actions_nongit = copier_nongit.copy_if_needed(dry_run=False)
     assert any(a["name"] == "pre-commit" and a["status"] == "NEW" for a in actions_nongit)
     assert (spoke_nongit / ".githooks" / "pre-commit").exists()
+
+
+def test_closed_loop_graduation_supersession_and_archive_branching(tmp_path: Path) -> None:
+    """Verify supersede_graduated_spoke_docs archives drafts, writes stubs, and branches on edits (Issue #520 / COND-02)."""
+    from scripts.spoke.sync import (
+        GRADUATED_STUB_MARKER,
+        load_graduated_spoke_docs,
+        supersede_graduated_spoke_docs,
+    )
+
+    hub_root = tmp_path / "hub"
+    proposals_dir = hub_root / ".agents" / "proposals"
+    proposals_dir.mkdir(parents=True)
+
+    # Proposal with dynamic supersedes_spoke_docs
+    (proposals_dir / "2026-10-17_custom-grad.md").write_text(
+        "---\n"
+        'proposal_id: "2026-10-17_custom-grad"\n'
+        'type: "rules"\n'
+        'name: "custom-grad"\n'
+        'status: "merged"\n'
+        'graduated_to: "docs/adr/0099-custom.md"\n'
+        "supersedes_spoke_docs:\n"
+        '  - ".md/knowledge/custom_draft.md"\n'
+        "---\n# Custom Proposal\n",
+        encoding="utf-8",
+    )
+
+    grad_map = load_graduated_spoke_docs(hub_root)
+    assert ".md/knowledge/platform_aware_kiss_standard.md" in grad_map
+    assert ".md/knowledge/custom_draft.md" in grad_map
+
+    spoke_root = tmp_path / "spoke"
+    knowledge_dir = spoke_root / ".md" / "knowledge"
+    knowledge_dir.mkdir(parents=True)
+
+    draft_file = knowledge_dir / "platform_aware_kiss_standard.md"
+    original_draft = "# Draft KISS v1\nUses legacy `# ccba:seam-escape` syntax.\n"
+    draft_file.write_text(original_draft, encoding="utf-8")
+
+    # 1. Dry-run must not modify file or create archive
+    dry_actions = supersede_graduated_spoke_docs(spoke_root, hub_root, dry_run=True)
+    assert len(dry_actions) == 1
+    assert dry_actions[0]["status"] == "DEPRECATED_REPLACED"
+    assert draft_file.read_text(encoding="utf-8") == original_draft
+    assert not (knowledge_dir / "archive").exists()
+
+    # 2. Apply mode archives original and writes stub
+    apply_actions = supersede_graduated_spoke_docs(spoke_root, hub_root, dry_run=False)
+    assert len(apply_actions) == 1
+    assert apply_actions[0]["status"] == "DEPRECATED_REPLACED"
+    archive_file = knowledge_dir / "archive" / "platform_aware_kiss_standard.md"
+    assert archive_file.is_file()
+    assert archive_file.read_text(encoding="utf-8") == original_draft
+    stub_text = draft_file.read_text(encoding="utf-8")
+    assert GRADUATED_STUB_MARKER in stub_text
+    assert "# ccba:quarantine" in stub_text
+
+    # 3. Idempotent re-run reports UNCHANGED
+    idem_actions = supersede_graduated_spoke_docs(spoke_root, hub_root, dry_run=False)
+    assert len(idem_actions) == 1
+    assert idem_actions[0]["status"] == "UNCHANGED"
+
+    # 4. COND-02: If Spoke developer wrote new notes to draft_file while archive already exists,
+    # re-running supersession preserves both canonical archive AND creates a SHA-8 branched archive!
+    modified_draft = "# Draft KISS v1 + Local Spoke Notes\r\nExtra note on DGX.\r\n"
+    draft_file.write_bytes(modified_draft.encode("utf-8"))
+    branch_actions = supersede_graduated_spoke_docs(spoke_root, hub_root, dry_run=False)
+    assert branch_actions[0]["status"] == "DEPRECATED_REPLACED"
+    assert archive_file.read_text(encoding="utf-8") == original_draft
+    branched_files = list((knowledge_dir / "archive").glob("platform_aware_kiss_standard.*.md"))
+    assert len(branched_files) == 1
+    assert "Extra note on DGX." in branched_files[0].read_text(encoding="utf-8")
+
+
+def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: Path) -> None:
+    """Verify sync_layer2_rules and merge_agents_constitution normalize links and deduplicate invariants (COND-01)."""
+    from scripts.spoke.sync import (
+        audit_spoke_markdown_links,
+        merge_agents_constitution,
+        sync_layer2_rules,
+    )
+
+    hub_root = tmp_path / "hub"
+    (hub_root / "docs" / "rules").mkdir(parents=True)
+    (hub_root / ".github").mkdir(parents=True)
+    for r_name in ("execution_guardrails.md", "git_conventions.md", "code_quality.md"):
+        (hub_root / "docs" / "rules" / r_name).write_text(f"# {r_name}\n", encoding="utf-8")
+    (hub_root / ".github" / "bugbot-rules.md").write_text("# Bugbot Rules\n", encoding="utf-8")
+
+    spoke_root = tmp_path / "spoke"
+    spoke_rules = spoke_root / ".agents" / "rules"
+    spoke_rules.mkdir(parents=True)
+    custom_rule = spoke_rules / "custom_spoke_rule.md"
+    custom_rule.write_text("# Custom Spoke Rule\n", encoding="utf-8")
+
+    # 1. Sync Layer 2 rules
+    actions_1 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
+    assert len(actions_1) == 4
+    assert all(a["status"] == "NEW" for a in actions_1)
+    assert (spoke_rules / "execution_guardrails.md").is_file()
+    assert (spoke_rules / "bugbot-rules.md").is_file()
+    assert custom_rule.is_file()
+
+    # Second run is UNCHANGED
+    actions_2 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
+    assert all(a["status"] == "UNCHANGED" for a in actions_2)
+
+    # 2. Merge AGENTS.md with evolved invariant keys and Hub-relative Progressive Disclosure links
+    hub_agents = (
+        "# CCBA Constitution\n\n"
+        "## Core Invariants\n\n"
+        "- **Reuse-First Gate & Platform-Aware KISS v2.0 (ADR-0061)**: Use seam contracts.\n"
+        "- **Machine-State Path Scanner Robustness (ADR-0061)**: Scan raw strings.\n\n"
+        "## Progressive Disclosure\n\n"
+        "- Guardrails: [`docs/rules/execution_guardrails.md`](../docs/rules/execution_guardrails.md)\n"
+        "- Bugbot: [`.github/bugbot-rules.md`](../.github/bugbot-rules.md) and "
+        "[`docs/rules/execution_guardrails.md`](../docs/rules/execution_guardrails.md#19-atomic)\n"
+        "- Domain: [`CONTEXT.md`](../CONTEXT.md) and [`docs/adr/`](../docs/adr/)\n"
+    )
+    spoke_agents = (
+        "# CCBA Constitution\n\n"
+        "## Core Invariants\n\n"
+        "- **Reuse-First Gate**: Old draft rule.\n"
+        "- **Reuse-First Gate & Platform-Aware KISS**: Intermediate rule.\n"
+        "- **Machine-State Path Scanner Robustness**: Old scanner rule.\n"
+        "- **Spoke Custom Invariant**: Keep this custom bullet.\n\n"
+        "## Progressive Disclosure\n\n"
+        "- Old link\n\n"
+        "## Agent skills\n\n"
+        "- Custom Spoke Section\n"
+    )
+
+    merged_1 = merge_agents_constitution(hub_agents, spoke_agents, spoke_root=spoke_root)
+    assert merged_1.count("Reuse-First Gate") == 1
+    assert "Old draft rule." not in merged_1
+    assert "Intermediate rule." not in merged_1
+    assert merged_1.count("Machine-State Path Scanner Robustness") == 1
+    assert "**Spoke Custom Invariant**: Keep this custom bullet." in merged_1
+    assert "](rules/execution_guardrails.md)" in merged_1
+    assert "](rules/execution_guardrails.md#19-atomic)" in merged_1
+    assert "](rules/bugbot-rules.md)" in merged_1
+    assert "`CONTEXT.md`" in merged_1
+    assert "(../CONTEXT.md)" not in merged_1
+    assert "`docs/adr/`" in merged_1
+
+    # Strict byte-for-byte idempotency on second merge (COND-01)
+    merged_2 = merge_agents_constitution(hub_agents, merged_1, spoke_root=spoke_root)
+    assert merged_2 == merged_1
+
+    # Write to disk and run LinkAuditor gate (COND-04)
+    spoke_agents_file = spoke_root / ".agents" / "AGENTS.md"
+    spoke_agents_file.write_text(merged_1, encoding="utf-8")
+    assert audit_spoke_markdown_links(spoke_root, apply_fixes=False) == []
+
+
+def test_audit_spoke_markdown_links_and_verify_spoke_gate(tmp_path: Path) -> None:
+    """Verify audit_spoke_markdown_links auto-fixes file:// links in INDEX.md and verify_spoke gates broken links (COND-04)."""
+    from scripts.spoke.sync import SpokeSynchronizer, audit_spoke_markdown_links
+
+    spoke_root = tmp_path / "dgx-spark-toolkit"
+    md_dir = spoke_root / ".md"
+    (md_dir / "knowledge").mkdir(parents=True)
+    (spoke_root / "CONTEXT.md").write_text("# Context\n", encoding="utf-8")
+    (md_dir / "knowledge" / "session_learnings.md").write_text("# Learnings\n", encoding="utf-8")
+
+    index_file = md_dir / "INDEX.md"
+    index_file.write_text(
+        "# Index\n"
+        f"- [CONTEXT.md](file://{(spoke_root / 'CONTEXT.md').as_posix()})\n"
+        "- [Learnings](.md/knowledge/session_learnings.md)\n",
+        encoding="utf-8",
+    )
+
+    # 1. Without apply_fixes, detects non-portable file:// and redundant .md/ link
+    errors_before = audit_spoke_markdown_links(spoke_root, apply_fixes=False)
+    assert len(errors_before) == 2
+
+    # 2. With apply_fixes=True, fixes both links in-place and returns 0 errors
+    errors_after = audit_spoke_markdown_links(spoke_root, apply_fixes=True)
+    assert errors_after == []
+    fixed_index = index_file.read_text(encoding="utf-8")
+    assert "file://" not in fixed_index
+    assert "](../CONTEXT.md)" in fixed_index
+    assert "](knowledge/session_learnings.md)" in fixed_index
+
+    index_file.write_text("# Index\n- [Broken](missing_target.md)\n", encoding="utf-8")
+    sync = SpokeSynchronizer(spoke_root, tmp_path)
+    assert sync.verify_spoke(hub_root=tmp_path) == 1
+
+
+def test_coordinator_ast_function_length_compliance() -> None:
+    """Ratchet test ensuring 100% of functions in coordinator.py, graduation.py, and sdk_inspector.py satisfy <= 50 LOC."""
+    from ccba_harness.peer_gate import check_ast_function_length
+
+    sync_dir = Path(__file__).resolve().parents[1] / "spoke" / "sync"
+    targets = [
+        sync_dir / "coordinator.py",
+        sync_dir / "graduation.py",
+        sync_dir / "sdk_inspector.py",
+    ]
+    result = check_ast_function_length(targets, max_lines=50)
+    assert result.passed, f"AST function length violation (> 50 LOC):\n{result.stdout_tail}"

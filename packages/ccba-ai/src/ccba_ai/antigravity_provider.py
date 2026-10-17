@@ -270,6 +270,28 @@ def is_unrecognized_model_error(stderr: str) -> bool:
     )
 
 
+_BARE_GEMINI_CLI_PATTERN = re.compile(r"^gemini-\d+(?:\.\d+)*-(?:flash|argon)$", re.IGNORECASE)
+
+
+def normalize_gemini_cli_model(model: str, default_effort: str = "high") -> str:
+    """Normalize bare Gemini Flash/Argon CLI model names by appending default effort suffix.
+
+    Passing bare 'gemini-3.8-flash' or 'gemini-4-argon' to ``agy --model`` causes
+    the CLI subprocess to hang until TimeoutExpired.
+
+    Args:
+        model: Raw or canonical model name.
+        default_effort: Effort suffix to append when missing ('high', 'medium', 'low').
+
+    Returns:
+        Model slug safe for ``agy --model``.
+    """
+    slug = canonicalize_model_name(model) if " " in model or "(" in model else model.strip()
+    if _BARE_GEMINI_CLI_PATTERN.match(slug):
+        return f"{slug.lower()}-{default_effort}"
+    return slug
+
+
 def canonicalize_model_name(name: str) -> str:
     """Normalize human-readable model name to canonical CLI model slug.
 
@@ -641,14 +663,15 @@ class AntigravityCLIProvider:
         - ``--output-format stream-json``: NDJSON output for reliable parsing
         - ``--disable-slash-commands``: No slash command expansion
         - ``--sandbox``: Restrict terminal/filesystem access
-        - ``--model``: Force specific model
+        - ``--model``: Force specific model (normalized against bare suffix hang)
         """
+        safe_model = normalize_gemini_cli_model(model)
         return [
             self._binary_path,
             "-p",
             prompt,
             "--model",
-            model,
+            safe_model,
             "--output-format",
             "stream-json",
             "--disable-slash-commands",
