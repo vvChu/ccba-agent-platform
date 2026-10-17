@@ -1,74 +1,47 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #497
-## Feature: `feat(skills): implement ADR-0061 platform-aware architecture posture for 76 skills`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #535
+## Feature: `feat(harness,ci): add 3-tier one-way door manifest, backpressure circuit-breaker, and ADR-0067 (#519)`
 
-> **Mã công việc:** Chuẩn hóa thế năng kiến trúc Platform-Aware Architecture Posture (ADR-0061) cho 76 skills toàn nền tảng  
-> **Pull Request:** [#497](https://github.com/vvChu/ccba-agent-platform/pull/497)  
-> **Branch:** `feat/adr-0061-posture-76-skills` (Merged into `main` via commit `f3760bae`)  
-> **Trạng thái:** ✅ **ALL 8/8 CI CHECKS PASSED — 100% HERMETIC LOCAL TEST & COPILOT REVIEWS RESOLVED (100%)**
-
----
-
-## 1. Tổng Kết Hạng Mục Triển Khai (11 Đợt — 76 Skills)
-
-| Đợt Triển Khai | Phạm Vi Kỹ Năng / Nghiệp Vụ | Số Lượng Skills | Phân Loại Posture | Phán Quyết Grok 4.7 |
-| :--- | :--- | :---: | :--- | :---: |
-| **Đợt 1–2** | Nền tảng, Đồng bộ Spoke & Core Contracts | 8 skills | 8 package-bound | `APPROVE` |
-| **Đợt 3** | Kỹ năng hạt nhân cốt lõi (Core Skills) | 6 skills | 2 package-bound, 4 seam-exempt | `APPROVE` |
-| **Đợt 4A** | BigBIM & Tư vấn pháp lý xây dựng | 6 skills | 6 seam-exempt | `APPROVE` |
-| **Đợt 4B** | AI QC, Thị giác & Pipeline LLM | 6 skills | 2 package-bound, 4 seam-exempt | `APPROVE` |
-| **Đợt 5** | Quản trị Spoke-Hub & Hạ tầng tác tử | 7 skills | 7 seam-exempt | `APPROVE` |
-| **Đợt 6** | Vòng đời SDLC, Kiểm định tự động & TDD | 6 skills | 6 seam-exempt | `APPROVE` |
-| **Đợt 7** | Kỹ thuật phần mềm, Kiểm thử & Trinh sát Web | 8 skills | 8 seam-exempt | `APPROVE` |
-| **Đợt 8** | Quản trị kiến trúc, Vòng đời ADR & Tác tạo Skill | 8 skills | 8 seam-exempt | `APPROVE` |
-| **Đợt 9** | Điều phối đa tác tử, Quản trị phiên & Kiến trúc | 8 skills | 8 seam-exempt | `APPROVE` |
-| **Đợt 10** | Nội dung kỹ thuật, Xử lý văn phòng & Biểu đồ | 7 skills | 2 package-bound, 5 seam-exempt | `APPROVE` |
-| **Đợt 11** | Đa phương tiện, Bảo mật secrets & Đám mây M365 | 7 skills | 2 package-bound, 5 seam-exempt | `APPROVE` |
-| **TỔNG** | **Toàn Bộ Danh Mục CCBA Platform** | **76 skills** | **16 package-bound, 60 seam-exempt** | **100% APPROVE** |
+> **Mã công việc:** Issue [#519](https://github.com/vvChu/ccba-agent-platform/issues/519) — Đặc tả Danh mục Cửa Một Chiều (One-Way Door Manifest) và Cơ chế Áp lực ngược (Backpressure Circuit-Breaker) cho Agent Harness  
+> **Pull Request:** [#535](https://github.com/vvChu/ccba-agent-platform/pull/535)  
+> **Branch:** `feat/issue-519-one-way-door-backpressure` (Merged into `main` via commit `8797d91b`)  
+> **Trạng thái:** ✅ **ALL 8/8 CI CHECKS PASSED — 12/12 HERMETIC PACKAGES PASS & COPILOT REVIEWS CLEAN (100%)**
 
 ---
 
-## 2. Giải Trình & Đối Soát Đánh Giá Copilot Code Review & CI Hardening
+## 1. Tổng Kết Hạng Mục Triển Khai (3 Slices + Session Retrospective)
 
-Toàn bộ kiểm định tự động và review bot trên PR #497 đã được giải quyết sạch sẽ:
-
-| Vấn Đề Phát Hiện | Vị Trí Tệp | Nguyên Nhân & Rủi Ro | Biện Pháp Khắc Phục Triệt Để | Trạng Thái |
-| :--- | :--- | :--- | :--- | :--- |
-| **Test ModuleNotFoundError** | `scripts/tests/test_skill_circuit_breaker.py` | Test mồ côi cũ import `from resources.circuit_breaker` không tồn tại do module đã chuyển vào `packages/ccba-ai`. | Gỡ bỏ file test mồ côi bằng `git rm`. Module `ccba-ai` đã có test suite riêng tại `packages/ccba-ai/tests/test_circuit_breaker.py`. | ✅ **RESOLVED** (Commit `627e9310`) |
-| **Maskara Diff False Positive** | `scripts/governance/sanitize_review_diff.py` | Quét text thô của unified diff bắt nhầm các dòng secret bị xóa (`-`) khi refactor code cũ, coi xóa secret là rò rỉ. | Phân tích cấu trúc diff (`added`, `deleted`, `context`). Chỉ chặn secrets trong dòng `added`; bỏ qua dòng `deleted` (credential removal). Bổ sung test hồi quy. | ✅ **RESOLVED** (Commit `627e9310`) |
-| **Contract Doc Parity Drift** | `.agents/skills/ccba-legal-intel/SKILL.md` | Thiếu backtick cho các lệnh `login`, `fetch`, `convert`, `consolidate` trong ghi chú phân định ranh giới trách nhiệm. | Bổ sung định danh backtick cho các subcommands để thỏa mãn 100% contract test `test_cli_doc_parity.py`. | ✅ **RESOLVED** (Commit `627e9310`) |
-| **Copilot Review Audit** | PR #497 review thread | Copilot hoàn tất phân tích toàn bộ 61 commits và không phát hiện vi phạm kiến trúc. | Script `audit_pr_comments.py` xác nhận 100% clean. | ✅ **RESOLVED** |
+| Hạng Mục / Slice | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Commit |
+| :--- | :--- | :--- | :---: |
+| **Slice 1: 3-Tier One-Way Door Manifest & Cumulative Escalation** | `packages/ccba-harness/src/ccba_harness/door_policy.py`, `packages/ccba-harness/tests/test_door_policy.py` | Định nghĩa 7 nhóm `OneWayDoorCategory` trong `ONE_WAY_DOOR_MANIFEST`; phân tầng `TWO_WAY_DOOR`, `PAVED_ROAD`, `ONE_WAY_DOOR` qua `classify_pr_door()`; tính chuỗi tích lũy $K \ge 3$ PRs/72h qua `compute_cumulative_streak()` ở cấp `packages/<pkg_name>` (`extract_canonical_module()`); lấy mẫu 10% SHA-256 `is_sampled_for_audit()`. | `02221540` |
+| **Slice 2: Backpressure Circuit-Breaker & Tradeoff Card Validator** | `packages/ccba-harness/src/ccba_harness/backpressure.py`, `packages/ccba-harness/tests/test_backpressure.py` | Triển khai `evaluate_backpressure_queue()` ngắt mạch khi hàng đợi $> 5$ PRs hoặc tuổi $> 24.0\text{h}$ (kèm bypass chống deadlock cho hotfix và cập nhật PR hiện hữu); kiểm định `TradeoffCard` (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` $\le 30$ dòng) qua `validate_tradeoff_card()`. | `e7abffbf` |
+| **Slice 3: CLI `door-triage`, CI Gate & HUB-ADR 0067** | `packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py`, `.github/workflows/pr-verifier.yml`, `.github/pull_request_template.md`, `docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md` | Đăng ký subcommand `ccba-harness door-triage` (`run_door_triage_cli`); tích hợp vào `pr-verifier.yml`; chuẩn hóa mẫu `Tradeoff Card` trong PR template; ban hành `HUB-ADR 0067` và đồng bộ `TRACEABILITY_MATRIX.md`. | `55c8754e` |
+| **Session Retrospective & Knowledge Sync** | `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `.md/knowledge/index.md` | Bổ sung `RULE-1.23`, cập nhật `RULE-4.17` ($9.84\text{ KB} \le 10.0\text{ KB}$), lưu trữ Mục 40 trong `session_learnings_history.md`. | `212adad4` |
 
 ---
 
-## 3. Kết Quả Thẩm Định Đối Kháng Grok 4.7 (Two-Pass Peer Review)
+## 2. Kết Quả Thẩm Định Kế Hoạch & Hiệu Chỉnh Đối Kháng (Grok 4.7 Review)
 
-Toàn bộ 11 đợt đều vượt qua quy trình thẩm định hai lượt nghiêm ngặt:
-- **Pass 1 (Discuss Plan)**: Đóng băng kế hoạch (COND-01 đến COND-05, Seam Contracts, GPI scores, Level 3 tables, ADR tokens) $\to$ Đạt **`APPROVE_PLAN`**.
-- **Pass 2 (Audit Code)**: Triển khai các PR nguyên tử, đối soát reflog trên đĩa $\to$ Đạt **`APPROVE`** (`conditions: []`, `risk_score: 1`).
-- Các tệp hồ sơ lưu trữ hoàn chỉnh tại `.md/peer_exchange/*wave1*` đến `*wave11*`.
-
----
-
-## 4. Kết Quả Kiểm Định CI & Local Verification (Giao thức TRIHT)
-
-- **Local Verification (Giao thức TRIHT - 100% Hermetic):**
-  - Cổng 0.1 (Pre-Flight Cleanliness): ✅ **PASS** (100% Clean)
-  - Cổng 0.2 (Slow Integration Tests): ✅ **12/12 packages PASS** (525 passed, 1 skipped, 10 deselected)
-    - `run_isolated_tests.py --all --stress`: ✅ **PASS (32.51s)**
-  - Cổng 0.3 (Post-Test Teardown): ✅ **PASS** (100% Hermetic buồng kín)
-  - `python scripts/eval/run_harness_evals.py --all`: ✅ **8/8 CI Eval Gates PASS** (Lint, Format, Mypy, Pytest, Docs, Skills, ADR Matrix, Telemetry)
-- **GitHub Actions CI (PR #497 - 8/8 Green):**
-  - `PR Danger Triage & Verifier Gate`: ✅ **PASS (50s)**
-  - `CI/Deterministic Parity Verification`: ✅ **PASS (57s)**
-  - `CI/Lint Markdown`: ✅ **PASS (13s)**
-  - `CI/Test - Python 3.10`: ✅ **PASS (6m14s)**
-  - `CI/Test - Python 3.11`: ✅ **PASS (5m45s)**
-  - `CI/Test - Python 3.12`: ✅ **PASS (4m3s)**
-  - `Security & Privacy Scan (Maskara)`: ✅ **PASS (20s)**
-  - `Documentation Check & Link Validator`: ✅ **PASS (1m40s)**
+- **Request ID:** `issue-519-plan-review-pass1` (`--profile audit_direct --no-tools`, `verdict: APPROVE_WITH_CONDITIONS`, `risk_score: 2`).
+- **Đối soát & Hiệu chỉnh 4 điều kiện (`COND-519-01` $\to$ `COND-519-04`):**
+  1. `COND-519-01` (*Git History Lookup*): Giữ nguyên thiết kế đọc `git log` cục bộ trong `load_recent_merges_from_git()` vì `.github/workflows/pr-verifier.yml` đã cấu hình `fetch-depth: 0`, tuân thủ KISS và không phát sinh phụ thuộc mạng/API rate-limit.
+  2. `COND-519-02` (*Anti-Deadlock Bypass*): Tích hợp đầy đủ cờ `is_existing_pr_update` và `is_hotfix` vào `evaluate_backpressure_queue()`.
+  3. `COND-519-03` (*Canonical Module Granularity*): Chuẩn hóa ở cấp `packages/<pkg_name>` trong `extract_canonical_module()` thay vì `<submodule>` để khóa triệt để lỗ hổng *Salami Slicing*.
+  4. `COND-519-04` (*Tradeoff Card Validation*): Lọc bỏ HTML comments (`<!-- ... -->`), từ chối các giá trị giữ chỗ (`TBD`, `TODO`, `N/A`) và kiểm tra độ dài dải dòng `#L<a>-L<b>` $\le 30$ dòng trong `_validate_git_hunk()`.
 
 ---
 
-## 5. Kết Luận & Tích Hợp
-- PR #497 đã được squash-merge thành công vào nhánh `main` ([commit `f3760bae`](https://github.com/vvChu/ccba-agent-platform/commit/f3760bae)).
-- Toàn bộ 76 skills của CCBA Agent Platform chính thức đạt chuẩn **Platform-Aware Architecture Posture (ADR-0061)**.
+## 3. Kết Quả Kiểm Định CI, Copilot Review & Giao Thức Buồng Kín TRIHT
+
+- **Local Verification (Giao thức TRIHT — 100% Hermetic):**
+  - Cổng 0.1 (`check_release_cleanliness.py --phase pre`): ✅ **PASS** (100% Clean)
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): ✅ **12/12 test targets PASS** (`ccba-ai`, `ccba-diagram`, `ccba-harness` 648 passed, `ccba-legal-intel` 432 passed, `ccba-maskara`, `ccba-notebooklm`, `ccba-ooxml`, `ccba-pdf-prep`, `ccba-qc-core`, `mdconverter`, `scripts`, `root-tests` 526 passed)
+  - Cổng 0.3 (`check_release_cleanliness.py --phase post`): ✅ **PASS** (100% Hermetic buồng kín)
+- **GitHub Actions CI trên PR [#535](https://github.com/vvChu/ccba-agent-platform/pull/535) (8/8 Green):**
+  - `PR Danger Triage & Verifier Gate` (kèm dogfooding `ccba-harness door-triage`): ✅ **PASS** (`1m03s`)
+  - `CI / Deterministic Parity Gate`: ✅ **PASS** (`1m01s`)
+  - `CI / Lint Markdown`: ✅ **PASS** (`14s`)
+  - `CI / Test - Python 3.10, 3.11, 3.12`: ✅ **PASS** (`5m37s`, `5m46s`, `6m13s`)
+  - `Security & Privacy Scan`: ✅ **PASS** (`10s`)
+  - `Documentation Check / validate_docs`: ✅ **PASS** (`1m06s`)
+- **AI Code Review (`audit_pr_comments.py --pr 535`):**
+  - `[OK] All Copilot reviews and comments on PR #535 are clean or resolved.` (Exit Code `0`).
