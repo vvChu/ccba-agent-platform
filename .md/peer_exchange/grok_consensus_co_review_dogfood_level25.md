@@ -89,7 +89,7 @@ telemetry:
   output_tokens: 36594
   reasoning_tokens: 47557
   cached_read_tokens: 570671
-  cost_usd: 0.1865
+  cost_usd: 0.4579
   wall_seconds: 468.13
   sum_agent_seconds: 553.12
   cost_mode: estimated
