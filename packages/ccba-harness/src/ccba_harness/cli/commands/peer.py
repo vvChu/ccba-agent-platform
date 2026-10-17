@@ -173,9 +173,24 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             "code_review",
             "arch_audit",
             "audit_direct",
+            "deep_spec_audit",
+            "signoff_diff",
         ],
         default=None,
-        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit', 'audit_direct').",
+        help="Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'code_review', 'arch_audit', 'audit_direct', 'deep_spec_audit', 'signoff_diff').",
+    )
+    parser.add_argument(
+        "--resume",
+        dest="resume_session_id",
+        type=str,
+        default=None,
+        help="Prior Grok session UUID to resume for KV-cache inheritance (Stage 3 sign-off).",
+    )
+    parser.add_argument(
+        "--fork-session",
+        action="store_true",
+        default=None,
+        help="Fork into a new session ID when resuming so original Stage 1 session remains intact.",
     )
     parser.add_argument(
         "--no-tools",
@@ -311,6 +326,18 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             if args.max_turns is None and (max_turns is None or max_turns > 3):
                 max_turns = 3
 
+        effective_resume = args.resume_session_id or (
+            envelope.resume_session_id if envelope else None
+        )
+        effective_fork = (
+            args.fork_session
+            if args.fork_session is not None
+            else (
+                envelope.fork_session
+                if envelope and envelope.fork_session is not None
+                else bool(spec.get("fork_session", bool(effective_resume)))
+            )
+        )
         cmd = build_grok_cmd(
             prompt_path=prompt_path,
             model=model,
@@ -319,8 +346,13 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             disallowed_tools=disallowed_tools,
             deny=deny,
             reasoning_effort=spec.get("reasoning_effort"),
+            output_format=str(spec.get("output_format") or "plain"),
             worktree=args.worktree,
             system_prompt=spec.get("system_prompt"),
+            resume_session_id=effective_resume,
+            fork_session=effective_fork,
+            verbatim=bool(spec.get("verbatim", False)),
+            disable_web_search=bool(spec.get("disable_web_search", False)),
         )
         out_name = (
             Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"
@@ -341,6 +373,8 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         timeout=args.timeout,
         worktree=args.worktree,
         no_tools=args.no_tools,
+        resume_session_id=args.resume_session_id,
+        fork_session=args.fork_session,
     )
     if not success:
         print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
