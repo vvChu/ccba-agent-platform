@@ -158,3 +158,41 @@ def test_peer_dispatch_dry_run_with_audit_direct_and_no_tools(tmp_path, capsys):
     assert "[DRY-RUN] Profile: arch_audit" in out
     assert "[DRY-RUN] Max Turns: 3" in out
     assert "--deny *" in out
+
+
+def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(
+    tmp_path: Path, capsys
+):
+    prompt = tmp_path / "prompt_signoff.md"
+    envelope = PeerPromptEnvelope(
+        request_id="req-cli-005",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Signoff Diff Test",
+        timestamp="2026-10-17T20:00:00+07:00",
+        output_path="out.md",
+    )
+    prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
+
+    ret = run_peer_dispatch_cli(
+        [
+            "--prompt-file",
+            str(prompt),
+            "--profile",
+            "signoff_diff",
+            "--resume",
+            "01a148d0-ac92-7ef2-a970-efb8c8fe1aed",
+            "--fork-session",
+            "--dry-run",
+        ]
+    )
+    assert ret == 0
+    out = capsys.readouterr().out
+    assert "[DRY-RUN] Profile: signoff_diff" in out
+    assert "[DRY-RUN] Max Turns: 15" in out
+    assert "--output-format json" in out
+    assert "--resume 01a148d0-ac92-7ef2-a970-efb8c8fe1aed --fork-session" in out
+    assert "--verbatim" in out
+    assert "--disable-web-search" in out
+
