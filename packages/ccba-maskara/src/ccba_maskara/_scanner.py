@@ -47,48 +47,8 @@ DEFAULT_IGNORE_DIRS: frozenset[str] = frozenset(
 )
 
 
-def is_safe_or_template(val: str, key_hint: str = "") -> bool:
-    """Check if value is a known safe string, template expression, or non-sensitive numeric value."""
-    if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
-        return True
-    stripped = val.strip()
-    # Ignore template variable interpolations and f-strings: ${VAR}, $(VAR), {{ ... }}, {VAR...}
-    if stripped.startswith(("${", "$(", "{{", "<%", "<#")):
-        return True
-    if stripped.startswith("{"):
-        if stripped.startswith(('{"', "{'")):
-            pass  # Possible JSON secret literal, do NOT suppress
-        elif stripped.endswith("}"):
-            return True
-        elif re.match(r"^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]", stripped):
-            return True
-    # Ignore variable / attribute references in code: args.xxx, self.xxx, params.xxx, os.environ/...
-    if stripped.startswith(
-        ("args.", "self.", "params.", "os.environ/", "os.environ.", "os.getenv", "env/")
-    ):
-        return True
-    # Ignore pure numeric values (e.g. timeout / port / timestamps / TTLs)
-    # UNLESS key_hint explicitly contains password / passwd / pwd / secret / credential / pin
-    if stripped.isdigit():
-        key_lower = key_hint.lower()
-        sensitive_terms = ("password", "passwd", "pwd", "secret", "credential", "pin")
-        if any(term in key_lower for term in sensitive_terms):
-            return False  # Keep alert for numeric passwords
-        return True
-    # Ignore common obvious placeholder patterns
-    lower = stripped.lower()
-    if (
-        lower.startswith(("your_", "your-", "dummy", "sample", "example", "mock"))
-        or lower.endswith(("_placeholder", "-placeholder", "_here", "-here"))
-        or "change_me" in lower
-        or "placeholder" in lower
-    ):
-        return True
-
-    # COND-MASKARA-TOKEN: Ignore explicit LLM token counter metrics and Python type annotations
-    key_clean = key_hint.split("=")[0].split(":")[0].strip().lower()
-    key_stem = key_clean.split(".")[-1].strip()
-    known_token_metrics = {
+_KNOWN_TOKEN_METRICS: frozenset[str] = frozenset(
+    {
         "tokens",
         "input_tokens",
         "output_tokens",
@@ -105,19 +65,63 @@ def is_safe_or_template(val: str, key_hint: str = "") -> bool:
         "token_count",
         "token_limit",
         "token_budget",
+        "token_tracker",
         "max_output_tokens",
     }
-    if (
-        key_stem in known_token_metrics
-        or key_clean in known_token_metrics
-        or key_stem.endswith("tokens")
+)
+
+
+_COLLECTION_PREFIXES: tuple[str, ...] = (
+    "[",
+    "set[",
+    "set(",
+    "frozenset[",
+    "frozenset(",
+    "list[",
+    "list(",
+    "dict[",
+    "dict(",
+    "tuple[",
+)
+
+
+def is_safe_or_template(val: str, key_hint: str = "") -> bool:
+    """Check if value is a known safe string, template expression, or non-sensitive numeric value."""
+    if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
+        return True
+    stripped = val.strip()
+    if stripped.startswith(("${", "$(", "{{", "<%", "<#")):
+        return True
+    if stripped.startswith("{") and not stripped.startswith(('{"', "{'")):
+        if stripped.endswith("}") or re.match(r"^\{[A-Za-z_][A-Za-z0-9_.]*[:,\s]", stripped):
+            return True
+    if stripped.startswith(
+        ("args.", "self.", "params.", "os.environ/", "os.environ.", "os.getenv", "env/")
     ):
         return True
-
-    if stripped.startswith(("[", "set[", "set(", "list[", "list(", "dict[", "dict(", "tuple[")):
+    if stripped.isdigit():
+        key_lower = key_hint.lower()
+        sensitive_terms = ("password", "passwd", "pwd", "secret", "credential", "pin")
+        return not any(term in key_lower for term in sensitive_terms)
+    lower = stripped.lower()
+    if (
+        lower.startswith(("your_", "your-", "dummy", "sample", "example", "mock"))
+        or lower.endswith(("_placeholder", "-placeholder", "_here", "-here"))
+        or "change_me" in lower
+        or "placeholder" in lower
+    ):
         return True
-
-    return False
+    # COND-MASKARA-TOKEN: Ignore explicit LLM token counter metrics and Python type annotations
+    key_clean = key_hint.split("=")[0].split(":")[0].strip().lower()
+    key_stem = key_clean.split(".")[-1].strip()
+    if (
+        key_stem in _KNOWN_TOKEN_METRICS
+        or key_clean in _KNOWN_TOKEN_METRICS
+        or key_stem.endswith("tokens")
+        or "_tokens_" in key_stem
+    ):
+        return True
+    return stripped.startswith(_COLLECTION_PREFIXES)
 
 
 class MaskaraScanner:
@@ -239,65 +243,70 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         middle = content[start_offset:end_offset]
         return "\n".join(before + [middle] + after)
 
+    def _build_finding_record(
+        self,
+        content: str,
+        rule_id: str,
+        rule_spec: dict[str, Any],
+        val: str,
+        start: int,
+        end: int,
+        filepath: str,
+        agent: str,
+    ) -> dict[str, Any]:
+        """Construct a structured finding dictionary for a matched secret."""
+        line, col = self.line_and_column(content, start)
+        byte_start = len(content[:start].encode("utf-8"))
+        byte_end = byte_start + len(val.encode("utf-8"))
+        return {
+            "rule_id": rule_id,
+            "rule_name": rule_spec["name"],
+            "severity": rule_spec["severity"],
+            "agent": agent,
+            "file": filepath,
+            "line": line,
+            "column": col,
+            "start": start,
+            "end": end,
+            "byte_start": byte_start,
+            "byte_end": byte_end,
+            "preview": self.mask_value(val),
+            "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
+            "redaction": f"[MASKARA_REDACTED:{rule_id}]",
+        }
+
     def scan_text(
         self, content: str, filepath: str = "", agent: str = "", use_llm: bool = False
     ) -> list[dict[str, Any]]:
         """Scan string content with regex pattern suite."""
         findings: list[dict[str, Any]] = []
-
         for rule_id, rule_spec in REGEX_PATTERNS.items():
-            pattern = rule_spec["pattern"]
-            for match in pattern.finditer(content):
+            for match in rule_spec["pattern"].finditer(content):
                 if rule_id == "env-secret":
-                    val = match.group(1)
-                    start, end = match.start(1), match.end(1)
+                    val, start, end = match.group(1), match.start(1), match.end(1)
                     if is_safe_or_template(val, key_hint=match.group(0)):
                         continue
                 else:
-                    val = match.group(0)
-                    start, end = match.start(), match.end()
-
+                    val, start, end = match.group(0), match.start(), match.end()
                 if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
                     continue
-
-                line, col = self.line_and_column(content, start)
-                byte_start = len(content[:start].encode("utf-8"))
-                byte_end = byte_start + len(val.encode("utf-8"))
-                finding = {
-                    "rule_id": rule_id,
-                    "rule_name": rule_spec["name"],
-                    "severity": rule_spec["severity"],
-                    "agent": agent,
-                    "file": filepath,
-                    "line": line,
-                    "column": col,
-                    "start": start,
-                    "end": end,
-                    "byte_start": byte_start,
-                    "byte_end": byte_end,
-                    "preview": self.mask_value(val),
-                    "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
-                    "redaction": f"[MASKARA_REDACTED:{rule_id}]",
-                }
-
-                if use_llm:
-                    context_str = self.extract_context(content, start, end)
-                    if not self.ask_llm_gateway(finding, context_str):
-                        continue
-
+                finding = self._build_finding_record(
+                    content, rule_id, rule_spec, val, start, end, filepath, agent
+                )
+                if use_llm and not self.ask_llm_gateway(
+                    finding, self.extract_context(content, start, end)
+                ):
+                    continue
                 findings.append(finding)
 
         findings.sort(key=lambda x: (x["file"], x["start"]))
         filtered: list[dict[str, Any]] = []
         for f in findings:
-            overlap = False
-            for k in filtered:
-                if f["file"] == k["file"] and f["start"] < k["end"] and k["start"] < f["end"]:
-                    overlap = True
-                    break
-            if not overlap:
+            if not any(
+                f["file"] == k["file"] and f["start"] < k["end"] and k["start"] < f["end"]
+                for k in filtered
+            ):
                 filtered.append(f)
-
         return filtered
 
     def redact_text(self, content: str, agent: str = "text") -> str:
@@ -386,6 +395,46 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
             "files_skipped": skipped_count,
         }
 
+    @staticmethod
+    def _append_findings_markdown(
+        lines: list[str], findings: list[dict[str, Any]], redact_summary: dict[str, Any]
+    ) -> None:
+        """Append rule summary, findings table, and backup details to Markdown report lines."""
+        rule_counts: dict[str, int] = {}
+        for f in findings:
+            rule_counts[f["rule_name"]] = rule_counts.get(f["rule_name"], 0) + 1
+        sorted_rules = sorted(rule_counts.items(), key=lambda x: (-x[1], x[0]))
+        lines.extend(["## Summary By Rule\n", "| Rule | Count |", "|---|---:|"])
+        for name, cnt in sorted_rules:
+            lines.append(f"| {name} | {cnt} |")
+        lines.extend(
+            [
+                "",
+                "## Findings\n",
+                "| Agent | File | Line | Rule | Severity | Masked Preview | SHA-256 |",
+                "|---|---|---:|---|---|---|---|",
+            ]
+        )
+        for f in findings:
+            clean_file = f["file"].replace("|", "\\|")
+            clean_rule = f["rule_name"].replace("|", "\\|")
+            lines.append(
+                f"| `{f['agent']}` | `{clean_file}` | {f['line']} | "
+                f"{clean_rule} | `{f['severity']}` | `{f['preview']}` | `{f['sha256'][:12]}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Rotation Guidance\n",
+                "Rotate every credential listed above. Redaction removes local copies from agent logs, "
+                "but it cannot revoke credentials already shared with a provider or remote service.\n",
+            ]
+        )
+        if files := redact_summary.get("files"):
+            lines.append("## Redaction Backups\n")
+            for f in files:
+                lines.append(f"- `{f['path']}` -> backup `{f['backup_path']}`")
+
     def generate_markdown(self, result: dict[str, Any], redact_summary: dict[str, Any]) -> str:
         """Generate Markdown report contents."""
         lines = [
@@ -396,147 +445,93 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
             f"- Findings: `{len(result['findings'])}`",
             f"- Redacted: `{redact_summary['replaced']}`\n",
         ]
-
         if targets := result.get("targets"):
-            lines.append("## Scan Targets\n")
-            lines.append("| Agent | Root |")
-            lines.append("|---|---|")
+            lines.extend(["## Scan Targets\n", "| Agent | Root |", "|---|---|"])
             for t in targets:
                 clean_root = t["root"].replace("|", "\\|")
                 lines.append(f"| `{t['agent']}` | `{clean_root}` |")
             lines.append("")
-
         if warnings := result.get("warnings"):
             lines.append("## Warnings\n")
             for w in warnings:
                 lines.append(f"- {w}")
             lines.append("")
-
         if not result["findings"]:
             lines.append("## Findings\n\nNo sensitive values detected.")
             return "\n".join(lines)
-
-        rule_counts: dict[str, int] = {}
-        for f in result["findings"]:
-            rule_counts[f["rule_name"]] = rule_counts.get(f["rule_name"], 0) + 1
-        sorted_rules = sorted(rule_counts.items(), key=lambda x: (-x[1], x[0]))
-
-        lines.append("## Summary By Rule\n")
-        lines.append("| Rule | Count |")
-        lines.append("|---|---:|")
-        for name, cnt in sorted_rules:
-            lines.append(f"| {name} | {cnt} |")
-        lines.append("")
-
-        lines.append("## Findings\n")
-        lines.append("| Agent | File | Line | Rule | Severity | Masked Preview | SHA-256 |")
-        lines.append("|---|---|---:|---|---|---|---|")
-        for f in result["findings"]:
-            clean_file = f["file"].replace("|", "\\|")
-            clean_rule = f["rule_name"].replace("|", "\\|")
-            lines.append(
-                f"| `{f['agent']}` | `{clean_file}` | {f['line']} | "
-                f"{clean_rule} | `{f['severity']}` | `{f['preview']}` | `{f['sha256'][:12]}` |"
-            )
-        lines.append("")
-        lines.append("## Rotation Guidance\n")
-        lines.append(
-            "Rotate every credential listed above. Redaction removes local copies from agent logs, "
-            "but it cannot revoke credentials already shared with a provider or remote service.\n"
-        )
-
-        if files := redact_summary.get("files"):
-            lines.append("## Redaction Backups\n")
-            for f in files:
-                lines.append(f"- `{f['path']}` -> backup `{f['backup_path']}`")
-
+        self._append_findings_markdown(lines, result["findings"], redact_summary)
         return "\n".join(lines)
+
+    def _resolve_guardrail_agents(self, agent_name: str) -> list[str]:
+        """Resolve list of target agent identifiers for guardrail installation."""
+        norm = self.normalize_agent_name(agent_name)
+        if norm in ["auto", "all"]:
+            target_agents: list[str] = []
+            for candidate, spec in AGENT_SPECS.items():
+                if any(
+                    p.is_dir()
+                    for p in self.get_default_roots(
+                        spec["dot_dir"], spec["app_name"], spec["xdg_name"]
+                    )
+                ):
+                    target_agents.append(candidate)
+            return target_agents or ["claude", "codex"]
+        if norm not in AGENT_SPECS:
+            raise ValueError(f"Unsupported guardrails agent: {agent_name}")
+        return [norm]
+
+    @staticmethod
+    def _build_guardrail_plans(agent: str, primary_root: Path) -> list[dict[str, Any]]:
+        """Construct guardrail file write/append plans for a single agent root."""
+        guardrail_content = (
+            "# Maskara Privacy Guardrails\n\n"
+            "Never print, quote, summarize, or store raw secrets from `.env` files, shell\n"
+            "history, cloud CLIs, keychains, password managers, session logs, or agent logs.\n"
+        )
+        skill_content = (
+            "---\nname: maskara-privacy\n"
+            "description: Prevent accidental disclosure of secrets in coding-agent sessions and route cleanup through maskara.\n"
+            "---\n# Maskara Privacy Skill\n"
+        )
+        hook_content = (
+            '$payload = if ($args.Count -gt 0) { $args -join " " } else { [Console]::In.ReadToEnd() }\n'
+            "$lower = $payload.ToLowerInvariant()\n"
+            '$blocked = @(".env", "printenv", "authorization:", "bearer ", "private key", "secret")\n'
+            "foreach ($term in $blocked) {\n"
+            '  if ($lower.Contains($term)) { Write-Error "maskara guardrails: command may expose secrets."; exit 2 }\n'
+            "}\nexit 0\n"
+        )
+        doc_name = "CLAUDE.md" if agent == "claude" else "maskara-guardrails.md"
+        plans: list[dict[str, Any]] = [
+            {"path": primary_root / doc_name, "action": "append", "content": guardrail_content},
+            {
+                "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
+                "action": "write",
+                "content": hook_content,
+            },
+        ]
+        if agent == "claude":
+            plans.insert(
+                1,
+                {
+                    "path": primary_root / "skills" / "maskara-privacy" / "SKILL.md",
+                    "action": "write",
+                    "content": skill_content,
+                },
+            )
+        return plans
 
     def install_guardrails(self, agent_name: str, dry_run: bool = False) -> list[dict[str, str]]:
         """Install guardrail instructions and hooks for target agent."""
         import shutil
 
         changes: list[dict[str, str]] = []
-        norm = self.normalize_agent_name(agent_name)
-        if norm in ["auto", "all"]:
-            target_agents = []
-            for candidate in AGENT_SPECS:
-                spec = AGENT_SPECS[candidate]
-                for path in self.get_default_roots(
-                    spec["dot_dir"], spec["app_name"], spec["xdg_name"]
-                ):
-                    if path.is_dir():
-                        target_agents.append(candidate)
-                        break
-            if not target_agents:
-                target_agents = ["claude", "codex"]
-        else:
-            if norm not in AGENT_SPECS:
-                raise ValueError(f"Unsupported guardrails agent: {agent_name}")
-            target_agents = [norm]
-
-        guardrail_content = """# Maskara Privacy Guardrails
-
-Never print, quote, summarize, or store raw secrets from `.env` files, shell
-history, cloud CLIs, keychains, password managers, session logs, or agent logs.
-"""
-        skill_content = """---
-name: maskara-privacy
-description: Prevent accidental disclosure of secrets in coding-agent sessions and route cleanup through maskara.
----
-# Maskara Privacy Skill
-"""
-        hook_content = """$payload = if ($args.Count -gt 0) { $args -join " " } else { [Console]::In.ReadToEnd() }
-$lower = $payload.ToLowerInvariant()
-$blocked = @(".env", "printenv", "authorization:", "bearer ", "private key", "secret")
-foreach ($term in $blocked) {
-  if ($lower.Contains($term)) {
-    Write-Error "maskara guardrails: command may expose secrets."
-    exit 2
-  }
-}
-exit 0
-"""
-        for agent in target_agents:
+        for agent in self._resolve_guardrail_agents(agent_name):
             spec = AGENT_SPECS[agent]
             roots = self.get_default_roots(spec["dot_dir"], spec["app_name"], spec["xdg_name"])
             if not roots:
                 continue
-            primary_root = roots[0]
-
-            if agent == "claude":
-                plans = [
-                    {
-                        "path": primary_root / "CLAUDE.md",
-                        "action": "append",
-                        "content": guardrail_content,
-                    },
-                    {
-                        "path": primary_root / "skills" / "maskara-privacy" / "SKILL.md",
-                        "action": "write",
-                        "content": skill_content,
-                    },
-                    {
-                        "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
-                        "action": "write",
-                        "content": hook_content,
-                    },
-                ]
-            else:
-                plans = [
-                    {
-                        "path": primary_root / "maskara-guardrails.md",
-                        "action": "append",
-                        "content": guardrail_content,
-                    },
-                    {
-                        "path": primary_root / "hooks" / "maskara-privacy-hook.ps1",
-                        "action": "write",
-                        "content": hook_content,
-                    },
-                ]
-
-            for plan in plans:
+            for plan in self._build_guardrail_plans(agent, roots[0]):
                 path = Path(str(plan["path"]))
                 action = str(plan["action"])
                 content = str(plan["content"])
@@ -557,9 +552,7 @@ exit 0
                             shutil.copy2(path, bp)
                             backup_path = str(bp)
                         path.write_text(content, encoding="utf-8")
-
                 changes.append({"path": str(path), "action": action, "backup_path": backup_path})
-
         return changes
 
     def run_cli(self, args_list: list[str] | None = None) -> int:

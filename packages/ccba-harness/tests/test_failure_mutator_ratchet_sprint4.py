@@ -7,6 +7,7 @@ and ledger seeding after baseline evaluations.
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -462,3 +463,114 @@ async def test_13_sha256_provenance_raw_output_dict_compatibility():
     signals = extract_failure_signals(report, items=[item])
     assert len(signals) >= 1
     assert signals[0].code == "NO_CITATION"
+
+
+def test_14_targeted_boost_does_not_cap_max_iter_to_1_on_needs_ledger_seed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Case 14: Targeted /boost (--skill) keeps full max_iterations_low even when needs_ledger_seed is True."""
+    from ccba_harness.evals.tuner import RatchetReport
+
+    captured_max_iters: list[int] = []
+
+    class DummyTuner:
+        def __init__(self, config, dry_run_git=False):
+            captured_max_iters.append(config.max_iterations)
+
+        def run(self) -> RatchetReport:
+            return RatchetReport(
+                target_file=str(tmp_path / "SKILL.md"),
+                initial_score=20.0,
+                final_score=20.0,
+                total_iterations=1,
+                kept_commits=0,
+                reverted_trials=1,
+            )
+
+    monkeypatch.setattr("ccba_harness.evals.daemon.GitRatchetTuner", DummyTuner)
+
+    def _fake_discover():
+        return [
+            {
+                "skill_name": "ccba-legal-advisor",
+                "target_file": tmp_path / "SKILL.md",
+                "dataset_file": tmp_path / "eval.json",
+                "baseline_score": 20.0,
+                "in_cooldown": False,
+                "is_exhausted": False,
+                "strat_hash_unchanged": True,
+                "has_unapplied_signals": False,
+                "needs_ledger_seed": True,
+            }
+        ]
+
+    # 1. Untargeted nightly batch sweep -> caps max_iter to 1
+    daemon_batch = NightlyTunerDaemon(root=tmp_path, max_iterations_low=3, no_telegram=True)
+    monkeypatch.setattr(daemon_batch, "discover_skills_and_datasets", _fake_discover)
+    daemon_batch.run_nightly_batch(dry_run=True)
+    assert captured_max_iters[-1] == 1
+
+    # 2. Targeted /boost (--skill ccba-legal-advisor) -> preserves max_iterations_low (3)
+    daemon_boost = NightlyTunerDaemon(
+        root=tmp_path,
+        max_iterations_low=3,
+        target_skills=["ccba-legal-advisor"],
+        no_telegram=True,
+    )
+    monkeypatch.setattr(daemon_boost, "discover_skills_and_datasets", _fake_discover)
+    daemon_boost.run_nightly_batch(dry_run=True)
+    assert captured_max_iters[-1] == 3
+
+
+def test_15_run_real_llm_single_event_loop_and_aclose(tmp_path: Path):
+    """Case 15: GitRatchetOptimizer.run() with use_real_llm runs baseline and iterations in a single event loop and closes async_client."""
+    import asyncio
+    from types import SimpleNamespace
+
+    from ccba_harness.evals.models import EvalItem
+
+    skill_file = tmp_path / "SKILL.md"
+    skill_file.write_text("---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n", encoding="utf-8")
+
+    observed_loops: list[int] = []
+    aclose_called = False
+
+    class FakeAsyncClient:
+        async def chat_with_metadata(self, **kwargs):
+            loop = asyncio.get_running_loop()
+            observed_loops.append(id(loop))
+            return SimpleNamespace(
+                content="Căn cứ Điều 5 Luật Xây dựng 50/2014/QH13.",
+                usage=SimpleNamespace(prompt_tokens=10, completion_tokens=10),
+            )
+
+        async def aclose(self) -> None:
+            nonlocal aclose_called
+            loop = asyncio.get_running_loop()
+            assert not loop.is_closed()
+            aclose_called = True
+
+    config = RatchetConfig(
+        target_file=skill_file,
+        skill_name="ccba-legal-advisor",
+        use_real_llm=True,
+        max_iterations=2,
+        enable_adaptive_slicing=False,
+    )
+    dataset = [EvalItem(id="item_1", input_prompt="Test prompt", rubric="Test rubric")]
+    optimizer = GitRatchetOptimizer(
+        config=config,
+        dataset=dataset,
+        dry_run_git=True,
+        client=FakeAsyncClient(),
+    )
+    # Simulate auto-owned async_client on llm_adapter
+    assert optimizer.llm_adapter is not None
+    optimizer.async_client = None
+    optimizer.llm_adapter.async_client = FakeAsyncClient()
+
+    report = optimizer.run()
+    assert report.total_iterations >= 1
+    assert len(observed_loops) >= 2  # baseline + at least 1 iteration
+    assert len(set(observed_loops)) == 1  # All calls shared the exact same event loop!
+    assert aclose_called is True
