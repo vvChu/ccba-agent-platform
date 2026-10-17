@@ -42,22 +42,14 @@ class BimClassificationDomainSimulator(BaseDomainSimulator):
             ]
         )
 
-    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
-        prompt = str(item.input_prompt)
-        prompt_l = prompt.lower()
-        content = ctx.content
-
-        has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
-        has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
-        has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
-        has_redteam_rules = (
-            "Red-Team" in content
-            or "EF_25_10" in content
-            or "SL_25_30_70" in content
-            or "EF_20_20" in content
-        )
-
-        # Specific Red-Team Traps Disambiguation
+    @staticmethod
+    def _simulate_structural_trap(
+        prompt_l: str,
+        content: str,
+        has_redteam_rules: bool,
+        has_bim_naming: bool,
+        ctx: SimulationContext,
+    ) -> str | None:
         if "hộp kỹ thuật" in prompt_l:
             if has_redteam_rules or "EF_25_10" in content:
                 return ctx.wrap_response(
@@ -92,7 +84,15 @@ class BimClassificationDomainSimulator(BaseDomainSimulator):
                     "Khoang đệm ngăn cháy tăng áp: SL_25_30_70 (Không gian đệm an toàn) tuân thủ QCVN 06:2022/BXD và định danh ISO 19650 PRJ-T1-B02-SL_25_30_70-001 bảo tồn BIM Object Spatial Structure."
                 )
             return "Khoang đệm là phòng điện SL_70..."
+        return None
 
+    @staticmethod
+    def _simulate_mep_and_resource_trap(
+        prompt_l: str,
+        content: str,
+        has_redteam_rules: bool,
+        ctx: SimulationContext,
+    ) -> str | None:
         if "barrette" in prompt_l and "vách thạch cao" in prompt_l:
             if has_redteam_rules or "EF_20_05" in content:
                 return ctx.wrap_response(
@@ -127,6 +127,31 @@ class BimClassificationDomainSimulator(BaseDomainSimulator):
                     "Phân định phân tách cấp độ ISO 12006-2: Thực thể quy hoạch En_50_10 Result vs Hệ thống thiết bị điện Ss_70_10_10 bảo tồn Trí Nhớ Số BIM Object."
                 )
             return "Trạm Kiosk là hệ thống điện..."
+        return None
+
+    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
+        prompt_l = str(item.input_prompt).lower()
+        content = ctx.content
+
+        has_bim_grounding = "Uniclass" in content or "ISO 12006-2" in content
+        has_bim_naming = "ISO 19650" in content or "IFC Alignment" in content
+        has_digital_memory = "Trí Nhớ Số" in content or "Digital Memory" in content
+        has_redteam_rules = (
+            "Red-Team" in content
+            or "EF_25_10" in content
+            or "SL_25_30_70" in content
+            or "EF_20_20" in content
+        )
+
+        trap_res = self._simulate_structural_trap(
+            prompt_l, content, has_redteam_rules, has_bim_naming, ctx
+        )
+        if trap_res is not None:
+            return trap_res
+
+        mep_res = self._simulate_mep_and_resource_trap(prompt_l, content, has_redteam_rules, ctx)
+        if mep_res is not None:
+            return mep_res
 
         if has_bim_grounding and has_bim_naming and has_digital_memory:
             bim_resp = (

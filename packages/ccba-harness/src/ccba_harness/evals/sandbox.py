@@ -131,6 +131,42 @@ class DockerSandboxRunner:
 
         return self._execute_docker(code, test_code, custom_command)
 
+    def _build_docker_cmd(self, tmp_path: Path, custom_command: str | None) -> list[str]:
+        run_cmd = custom_command or "python3 -m unittest test_solution.py"
+        docker_cmd = [
+            "docker",
+            "run",
+            "--rm",
+            f"--memory={self.config.memory_limit}",
+            f"--cpus={self.config.cpus}",
+            "-v",
+            f"{tmp_path.resolve()}:/workspace:ro",
+            "-w",
+            "/workspace",
+        ]
+        if self.config.network_disabled:
+            docker_cmd.extend(["--network", "none"])
+        docker_cmd.extend([self.config.image, "sh", "-c", run_cmd])
+        return docker_cmd
+
+    def _build_timeout_result(
+        self,
+        exc: subprocess.TimeoutExpired,
+        start_time: float,
+        is_fallback: bool,
+    ) -> SandboxExecutionResult:
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
+        label = "Fallback" if is_fallback else "Container"
+        return SandboxExecutionResult(
+            exit_code=-1,
+            stdout=exc.stdout or "" if isinstance(exc.stdout, str) else "",
+            stderr=exc.stderr or "" if isinstance(exc.stderr, str) else "",
+            duration_ms=duration_ms,
+            timeout_triggered=True,
+            is_fallback=is_fallback,
+            error_message=f"{label} execution timed out after {self.config.timeout_seconds}s",
+        )
+
     def _execute_docker(
         self,
         code: str,
@@ -143,26 +179,7 @@ class DockerSandboxRunner:
             tmp_path = Path(tmpdir)
             (tmp_path / "solution.py").write_text(code, encoding="utf-8")
             (tmp_path / "test_solution.py").write_text(test_code, encoding="utf-8")
-
-            # Determine execution command
-            run_cmd = custom_command or "python3 -m unittest test_solution.py"
-            docker_cmd = [
-                "docker",
-                "run",
-                "--rm",
-                f"--memory={self.config.memory_limit}",
-                f"--cpus={self.config.cpus}",
-                "-v",
-                f"{tmp_path.resolve()}:/workspace:ro",
-                "-w",
-                "/workspace",
-            ]
-
-            if self.config.network_disabled:
-                docker_cmd.extend(["--network", "none"])
-
-            docker_cmd.extend([self.config.image, "sh", "-c", run_cmd])
-
+            docker_cmd = self._build_docker_cmd(tmp_path, custom_command)
             try:
                 proc = subprocess.run(
                     docker_cmd,
@@ -181,16 +198,7 @@ class DockerSandboxRunner:
                     is_fallback=False,
                 )
             except subprocess.TimeoutExpired as exc:
-                duration_ms = (time.perf_counter() - start_time) * 1000.0
-                return SandboxExecutionResult(
-                    exit_code=-1,
-                    stdout=exc.stdout or "" if isinstance(exc.stdout, str) else "",
-                    stderr=exc.stderr or "" if isinstance(exc.stderr, str) else "",
-                    duration_ms=duration_ms,
-                    timeout_triggered=True,
-                    is_fallback=False,
-                    error_message=f"Container execution timed out after {self.config.timeout_seconds}s",
-                )
+                return self._build_timeout_result(exc, start_time, is_fallback=False)
             except Exception as e:
                 logger.warning(f"Docker sandbox run error ({e}); attempting fallback...")
                 if self.config.allow_fallback:
@@ -216,12 +224,11 @@ class DockerSandboxRunner:
             tmp_path = Path(tmpdir)
             (tmp_path / "solution.py").write_text(code, encoding="utf-8")
             (tmp_path / "test_solution.py").write_text(test_code, encoding="utf-8")
-
-            if custom_command:
-                cmd = custom_command.split()
-            else:
-                cmd = [sys.executable, "-m", "unittest", "test_solution.py"]
-
+            cmd = (
+                custom_command.split()
+                if custom_command
+                else [sys.executable, "-m", "unittest", "test_solution.py"]
+            )
             try:
                 proc = subprocess.run(
                     cmd,
@@ -241,16 +248,7 @@ class DockerSandboxRunner:
                     is_fallback=True,
                 )
             except subprocess.TimeoutExpired as exc:
-                duration_ms = (time.perf_counter() - start_time) * 1000.0
-                return SandboxExecutionResult(
-                    exit_code=-1,
-                    stdout=exc.stdout or "" if isinstance(exc.stdout, str) else "",
-                    stderr=exc.stderr or "" if isinstance(exc.stderr, str) else "",
-                    duration_ms=duration_ms,
-                    timeout_triggered=True,
-                    is_fallback=True,
-                    error_message=f"Fallback execution timed out after {self.config.timeout_seconds}s",
-                )
+                return self._build_timeout_result(exc, start_time, is_fallback=True)
             except Exception as e:
                 duration_ms = (time.perf_counter() - start_time) * 1000.0
                 return SandboxExecutionResult(
@@ -278,13 +276,10 @@ class DockerSandboxScorer(BaseScorer):
         self.runner = runner or DockerSandboxRunner()
         self.custom_command = custom_command
 
-    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
-        out_str = str(output) if output is not None else ""
-
-        # 1. Resolve test code from item
+    @staticmethod
+    def _resolve_test_code(item: EvalItem) -> str | None:
         meta = item.metadata if isinstance(item.metadata, dict) else {}
         ga = item.golden_answer if isinstance(item.golden_answer, dict) else {}
-
         test_code = (
             meta.get("test_code")
             or meta.get("test_suite")
@@ -292,38 +287,9 @@ class DockerSandboxScorer(BaseScorer):
             or ga.get("test_code")
             or ga.get("test_suite")
         )
+        return test_code if isinstance(test_code, str) and test_code else None
 
-        if not test_code or not isinstance(test_code, str):
-            # No executable test suite defined for this item -> neutral pass
-            return ScoreResult(
-                scorer_name=self.name,
-                score=1.0,
-                raw_output={"status": "skipped", "reason": "no_test_suite_defined"},
-                reasoning="Sandbox Evaluation Skipped: Item has no executable test suite defined in metadata.",
-                is_critical_fail=False,
-            )
-
-        # 2. Extract candidate Python code from output
-        code_blocks = extract_code_blocks(out_str, language="python")
-        if not code_blocks:
-            return ScoreResult(
-                scorer_name=self.name,
-                score=0.0,
-                raw_output={"status": "missing_code"},
-                reasoning="Critical Hard Floor Failure: Output contains no executable Python code blocks (```python).",
-                is_critical_fail=self.is_critical,
-            )
-
-        # Combine extracted code blocks as candidate solution
-        full_code = "\n\n".join(code_blocks)
-
-        # 3. Execute in Docker sandbox
-        result = self.runner.execute(
-            code=full_code,
-            test_code=test_code,
-            custom_command=self.custom_command,
-        )
-
+    def _format_sandbox_result(self, result: SandboxExecutionResult) -> ScoreResult:
         if result.passed:
             exec_env = (
                 "Fallback Local Sandbox" if result.is_fallback else "Docker Hermetic Container"
@@ -344,10 +310,8 @@ class DockerSandboxScorer(BaseScorer):
                 is_critical_fail=False,
             )
 
-        # Test failed or timed out
         reason = result.error_message or (result.stderr.strip() or result.stdout.strip())
         short_reason = reason.splitlines()[-1] if reason else f"Exit code {result.exit_code}"
-
         return ScoreResult(
             scorer_name=self.name,
             score=0.0,
@@ -363,3 +327,32 @@ class DockerSandboxScorer(BaseScorer):
             reasoning=f"Executable Sandbox FAIL (exit code {result.exit_code}): {short_reason}",
             is_critical_fail=self.is_critical,
         )
+
+    async def score(self, output: Any, item: EvalItem) -> ScoreResult:
+        out_str = str(output) if output is not None else ""
+        test_code = self._resolve_test_code(item)
+        if not test_code:
+            return ScoreResult(
+                scorer_name=self.name,
+                score=1.0,
+                raw_output={"status": "skipped", "reason": "no_test_suite_defined"},
+                reasoning="Sandbox Evaluation Skipped: Item has no executable test suite defined in metadata.",
+                is_critical_fail=False,
+            )
+
+        code_blocks = extract_code_blocks(out_str, language="python")
+        if not code_blocks:
+            return ScoreResult(
+                scorer_name=self.name,
+                score=0.0,
+                raw_output={"status": "missing_code"},
+                reasoning="Critical Hard Floor Failure: Output contains no executable Python code blocks (```python).",
+                is_critical_fail=self.is_critical,
+            )
+
+        result = self.runner.execute(
+            code="\n\n".join(code_blocks),
+            test_code=test_code,
+            custom_command=self.custom_command,
+        )
+        return self._format_sandbox_result(result)

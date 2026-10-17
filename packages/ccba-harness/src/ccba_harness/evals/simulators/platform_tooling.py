@@ -10,6 +10,57 @@ from __future__ import annotations
 from ..models import EvalItem
 from .base import BaseDomainSimulator, SimulationContext
 
+_PLATFORM_TOOLING_SKILLS: frozenset[str] = frozenset(
+    {
+        "ccba-ask",
+        "ccba-autoresearch",
+        "ccba-build-skill",
+        "ccba-contribute-to-hub",
+        "ccba-create-pr",
+        "ccba-eval-gate",
+        "ccba-git-guardrails",
+        "ccba-graduate-rd",
+        "ccba-init-spoke",
+        "ccba-issue-to-hub",
+        "ccba-issue-tree",
+        "ccba-knowledge-loop",
+        "ccba-notebooklm-connector",
+        "ccba-promote-sandbox",
+        "ccba-research",
+        "ccba-session-retrospective",
+        "ccba-setup-skills",
+        "ccba-spoke-adopter",
+        "ccba-sync-upstream",
+        "ccba-update-spoke",
+        "ccba-wayfinder",
+        "ccba-xia",
+        "ccba-youtube-learn",
+        "ccba-api-circuit-breaker",
+        "api-circuit-breaker",
+        "circuit-breaker",
+        "platform_tooling",
+    }
+)
+
+_PLATFORM_PROMPT_KEYWORDS: tuple[str, ...] = (
+    "gh pr create",
+    "pull request",
+    "branch naming",
+    "cleanliness",
+    "secrets redaction",
+    "maskara",
+    "check_spoke_cleanliness",
+    "sync_spoke",
+    "non-destructive",
+    "virtual hub fallback",
+    "multimodal connector",
+    "notebooklm",
+    "youtube learn",
+    "tiện ích nền tảng",
+    "background tasks",
+    "rào chắn thực thi",
+)
+
 
 class PlatformToolingDomainSimulator(BaseDomainSimulator):
     """Simulator for platform tooling, developer workflows, and system resilience."""
@@ -18,61 +69,12 @@ class PlatformToolingDomainSimulator(BaseDomainSimulator):
 
     def can_handle(self, item: EvalItem, ctx: SimulationContext) -> bool:
         prompt_l = str(item.input_prompt).lower()
-        if ctx.skill_name in (
-            "ccba-ask",
-            "ccba-autoresearch",
-            "ccba-build-skill",
-            "ccba-contribute-to-hub",
-            "ccba-create-pr",
-            "ccba-eval-gate",
-            "ccba-git-guardrails",
-            "ccba-graduate-rd",
-            "ccba-init-spoke",
-            "ccba-issue-to-hub",
-            "ccba-issue-tree",
-            "ccba-knowledge-loop",
-            "ccba-notebooklm-connector",
-            "ccba-promote-sandbox",
-            "ccba-research",
-            "ccba-session-retrospective",
-            "ccba-setup-skills",
-            "ccba-spoke-adopter",
-            "ccba-sync-upstream",
-            "ccba-update-spoke",
-            "ccba-wayfinder",
-            "ccba-xia",
-            "ccba-youtube-learn",
-            "ccba-api-circuit-breaker",
-            "api-circuit-breaker",
-            "circuit-breaker",
-            "platform_tooling",
-        ):
+        if ctx.skill_name in _PLATFORM_TOOLING_SKILLS:
             return True
-        return any(
-            k in prompt_l
-            for k in [
-                "gh pr create",
-                "pull request",
-                "branch naming",
-                "cleanliness",
-                "secrets redaction",
-                "maskara",
-                "check_spoke_cleanliness",
-                "sync_spoke",
-                "non-destructive",
-                "virtual hub fallback",
-                "multimodal connector",
-                "notebooklm",
-                "youtube learn",
-                "tiện ích nền tảng",
-                "background tasks",
-                "rào chắn thực thi",
-            ]
-        )
+        return any(k in prompt_l for k in _PLATFORM_PROMPT_KEYWORDS)
 
-    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
-        prompt_l = str(item.input_prompt).lower()
-
+    @staticmethod
+    def _simulate_git_and_cleanliness(prompt_l: str, ctx: SimulationContext) -> str | None:
         if (
             "pull request" in prompt_l
             or "pr" in prompt_l
@@ -111,7 +113,10 @@ class PlatformToolingDomainSimulator(BaseDomainSimulator):
                 "- Tự động quét và che giấu (redact) các token, API keys, passwords trong mã nguồn và log trước khi commit.\n\n"
                 "Chi tiết quy chuẩn xem tại [references/](references/)."
             )
+        return None
 
+    @staticmethod
+    def _simulate_sync_and_connectors(prompt_l: str, ctx: SimulationContext) -> str | None:
         if "sync" in prompt_l or "spoke" in prompt_l or "hub" in prompt_l or "hợp nhất" in prompt_l:
             return ctx.wrap_response(
                 "CƠ CHẾ ĐỒNG BỘ SPOKE - HUB & BẢO TOÀN HIẾN PHÁP (NON-DESTRUCTIVE SECTION MERGE):\n\n"
@@ -148,6 +153,18 @@ class PlatformToolingDomainSimulator(BaseDomainSimulator):
                 "- Dựa trên cơ chế Reactive Wakeup thay vì polling vô hạn; bảo đảm tính bất biến (idempotency) khi đồng bộ dữ liệu vào kho `.md/extracted_docs`.\n\n"
                 "Chi tiết tham chiếu xem tại [references/](references/)."
             )
+        return None
+
+    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
+        prompt_l = str(item.input_prompt).lower()
+
+        res = self._simulate_git_and_cleanliness(prompt_l, ctx)
+        if res is not None:
+            return res
+
+        res = self._simulate_sync_and_connectors(prompt_l, ctx)
+        if res is not None:
+            return res
 
         if (
             "guardrail" in prompt_l
