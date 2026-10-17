@@ -39,6 +39,17 @@ from .coordinator import (
     sync_project,
 )
 from .discovery import HubDiscoverer
+from .graduation import (
+    CORE_LAYER2_RULES,
+    DEFAULT_GRADUATED_SPOKE_DOCS,
+    GRADUATED_STUB_MARKER,
+    audit_spoke_markdown_links,
+    load_graduated_spoke_docs,
+    normalize_invariant_key,
+    normalize_spoke_agents_links,
+    supersede_graduated_spoke_docs,
+    sync_layer2_rules,
+)
 from .registry import SpokeRegistrar
 from .sdk_inspector import (
     LegalKnowledgeSyncOrchestrator,
@@ -61,8 +72,17 @@ __all__ = [
     "SpokeBackupManager",
     "HubNotFoundError",
     "PROJECT_TYPE_ALIASES",
+    "CORE_LAYER2_RULES",
+    "DEFAULT_GRADUATED_SPOKE_DOCS",
+    "GRADUATED_STUB_MARKER",
     "resolve_canonical_project_type",
     "merge_agents_constitution",
+    "normalize_invariant_key",
+    "normalize_spoke_agents_links",
+    "sync_layer2_rules",
+    "load_graduated_spoke_docs",
+    "supersede_graduated_spoke_docs",
+    "audit_spoke_markdown_links",
     "sync_project",
     "sync_all_spokes",
     "rollback_project",
