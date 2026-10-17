@@ -8,1114 +8,51 @@ improvements and instantly rolling back (git checkout / file restore) on regress
 from __future__ import annotations
 
 import asyncio
-import fcntl
-import hashlib
 import inspect
 import json
 import logging
-import os
-import re
-import subprocess
-import sys
-import threading
 import time
-from collections.abc import Awaitable, Callable
-from dataclasses import asdict, dataclass, field
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Protocol, cast, runtime_checkable
+from typing import Any, cast
 
-import yaml
-
-from .failure_mutator import (
-    extract_failure_signals,
-    get_unapplied_failure_signals,
-    load_failure_ledger,
-    render_failure_patch,
-    save_failure_ledger,
+from ._tuner_llm import (
+    AdaptiveRateLimiter,
+    AIClient,
+    AsyncAIClient,
+    CircuitBreaker,
+    CircuitBreakerOpenError,
+    LLMTaskAdapter,
+    TokenUsageTracker,
 )
-from .legal_index import LegalFlatIndex, load_legal_flat_index
-from .models import EvalItem, EvalReport
-from .runner import EvalRunner, load_eval_dataset
-from .scorers import (
-    BaseScorer,
+from ._tuner_models import (
+    _UNSET,
+    ADR_HEADER_TAG_REGEX,
+    ADR_REF_PATTERN,
+    DEFAULT_MUTATION_STRATEGIES_PATH,
+    GitMutexLock,
+    RatchetConfig,
+    RatchetReport,
+    RatchetTrialResult,
+    RateLimiter,
+    TokenBudgetExceededError,
+    _detect_program_root,
+    _RatchetLoopState,
+    _RatchetSession,
+    _resolve_cfg_bool,
+    _resolve_cfg_float,
+    _resolve_cfg_int,
+    load_mutation_strategies,
+    load_tuner_config,
+    reload_mutation_strategies,
+    reload_tuner_config,
 )
-from .simulation import build_mock_agent_task
-from .slicing import (
-    AdaptiveDataSlicer,
-    SlicedDataset,
+from ._tuner_mutator import (
+    _RatchetMutationGitMixin,
+    preserve_yaml_frontmatter,
+    remaining_strategies,
 )
-
-try:
-    from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
-    from ccba_ai.client import AIClient, AsyncAIClient
-except ImportError:
-    AIClient = None  # type: ignore[assignment, misc]
-    AsyncAIClient = None  # type: ignore[assignment, misc]
-    CircuitBreaker = None  # type: ignore[assignment, misc]
-
-    class CircuitBreakerOpenError(Exception):  # type: ignore[no-redef]
-        """Fallback CircuitBreakerOpenError when ccba-ai is not installed."""
-
-        pass
-
-
-logger = logging.getLogger("ccba.eval.ratchet")
-
-# SSOT Regex patterns for ADR matrix tag detection and preservation
-ADR_HEADER_TAG_REGEX = re.compile(
-    r"\s*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\)",
-    re.IGNORECASE,
-)
-ADR_REF_PATTERN = re.compile(
-    r"\b(?:HUB[-_]ADR|ADR)[-_\s]*0*([0-9]+)\b",
-    re.IGNORECASE,
-)
-
-
-class TokenBudgetExceededError(Exception):
-    """Raised when session-wide token budget ceiling is reached."""
-
-    pass
-
-
-class GitMutexLock:
-    """POSIX file-based mutex lock for Git mutation operations (fcntl.flock).
-
-    Prevents concurrent Git commits/rollbacks from racing when multiple tuner
-    processes target the same repository.  Implements a context manager and
-    explicit acquire()/release() API.
-
-    Args:
-        lock_path: Path to the lock file.  Defaults to ``<repo>/.git/evals_tuner.lock``.
-        timeout: Maximum seconds to wait before raising TimeoutError (default 30 s).
-        retry_interval: Polling interval in seconds while waiting (default 0.05 s).
-        enabled: When False the lock is a no-op pass-through — use this to bypass
-            all locking in dry-run or CI/test environments.
-    """
-
-    def __init__(
-        self,
-        lock_path: Path | str | None = None,
-        timeout: float = 30.0,
-        retry_interval: float = 0.05,
-        enabled: bool = True,
-    ) -> None:
-        self.lock_path: Path | None = Path(lock_path) if lock_path is not None else None
-        self.timeout = timeout
-        self.retry_interval = retry_interval
-        self.enabled = enabled
-        self._fd: int | None = None
-        self._thread_lock = threading.Lock()
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def acquire(self) -> GitMutexLock:
-        """Acquire the file lock.
-
-        Returns:
-            Self for chaining.
-
-        Raises:
-            TimeoutError: If the lock cannot be obtained within ``timeout`` seconds.
-        """
-        if not self.enabled or self.lock_path is None:
-            return self
-
-        self._thread_lock.acquire()
-        try:
-            if self.lock_path.parent.is_file():
-                raise NotADirectoryError(
-                    f"GitMutexLock: lock_path parent '{self.lock_path.parent}' is a regular file. "
-                    f"In worktree environments, resolve lock_path to gitdir."
-                )
-            self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-            fd = os.open(str(self.lock_path), os.O_CREAT | os.O_WRONLY)
-            deadline = time.monotonic() + self.timeout
-            while True:
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    self._fd = fd
-                    return self
-                except BlockingIOError:
-                    if time.monotonic() >= deadline:
-                        os.close(fd)
-                        raise TimeoutError(
-                            f"GitMutexLock: could not acquire lock on "
-                            f"'{self.lock_path}' within {self.timeout}s"
-                        ) from None
-                    time.sleep(self.retry_interval)
-        except Exception:
-            self._thread_lock.release()
-            raise
-
-    def release(self) -> None:
-        """Release the file lock if held."""
-        if not self.enabled or self.lock_path is None:
-            return
-
-        try:
-            if self._fd is not None:
-                try:
-                    fcntl.flock(self._fd, fcntl.LOCK_UN)
-                except OSError:
-                    pass
-                try:
-                    os.close(self._fd)
-                except OSError:
-                    pass
-                self._fd = None
-                try:
-                    self.lock_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
-        finally:
-            try:
-                self._thread_lock.release()
-            except RuntimeError:
-                pass
-
-    # ------------------------------------------------------------------
-    # Context manager
-    # ------------------------------------------------------------------
-
-    def __enter__(self) -> GitMutexLock:
-        return self.acquire()
-
-    def __exit__(self, *_: object) -> None:
-        self.release()
-
-
-_UNSET: Any = object()
-
-_CACHED_TUNER_CONFIG: dict[str, Any] | None = None
-_TUNER_CONFIG_PATH = Path(__file__).parent / "tuner_config.yaml"
-
-
-def load_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
-    """Loads tuner hyperparameters from declarative YAML with in-memory singleton caching.
-
-    Latency guarantee: O(1) in-memory dict lookup (< 0.05 ms).
-    """
-    global _CACHED_TUNER_CONFIG
-    if config_path is None and _CACHED_TUNER_CONFIG is not None:
-        return _CACHED_TUNER_CONFIG
-
-    path = Path(config_path) if config_path else _TUNER_CONFIG_PATH
-    if not path.is_file():
-        return {}
-
-    with open(path, encoding="utf-8") as f:
-        data: dict[str, Any] = yaml.safe_load(f) or {}
-
-    if config_path is None:
-        _CACHED_TUNER_CONFIG = data
-    return data
-
-
-def reload_tuner_config(config_path: Path | str | None = None) -> dict[str, Any]:
-    """Forces reloading of the tuner configuration, clearing singleton cache."""
-    global _CACHED_TUNER_CONFIG
-    _CACHED_TUNER_CONFIG = None
-    return load_tuner_config(config_path)
-
-
-DEFAULT_MUTATION_STRATEGIES_PATH = Path(__file__).resolve().parent / "mutation_strategies.yaml"
-_CACHED_MUTATION_STRATEGIES: dict[str, list[tuple[str, str]]] | None = None
-
-
-def load_mutation_strategies(
-    path: Path | None = None,
-) -> dict[str, list[tuple[str, str]]]:
-    """Loads prompt mutation strategies from declarative YAML with in-memory singleton caching.
-
-    Latency guarantee: O(1) in-memory dict lookup (< 0.05 ms).
-    """
-    global _CACHED_MUTATION_STRATEGIES
-    if path is None and _CACHED_MUTATION_STRATEGIES is not None:
-        return _CACHED_MUTATION_STRATEGIES
-
-    target_path = Path(path) if path else DEFAULT_MUTATION_STRATEGIES_PATH
-    if not target_path.is_file():
-        return {}
-
-    with open(target_path, encoding="utf-8") as f:
-        data: dict[str, Any] = yaml.safe_load(f) or {}
-
-    loaded: dict[str, list[tuple[str, str]]] = {}
-    for arch_name, items in data.get("strategies", {}).items():
-        if isinstance(items, list):
-            loaded[arch_name] = [
-                (str(item.get("name", "")), str(item.get("content", "")).strip())
-                for item in items
-                if isinstance(item, dict) and "name" in item and "content" in item
-            ]
-
-    if path is None:
-        _CACHED_MUTATION_STRATEGIES = loaded
-    return loaded
-
-
-def reload_mutation_strategies(
-    path: Path | None = None,
-) -> dict[str, list[tuple[str, str]]]:
-    """Forces reloading of mutation strategies, clearing singleton cache."""
-    global _CACHED_MUTATION_STRATEGIES
-    _CACHED_MUTATION_STRATEGIES = None
-    return load_mutation_strategies(path)
-
-
-@dataclass
-class TokenUsageTracker:
-    """Session-wide token consumption tracker and circuit breaker observer."""
-
-    budget_ceiling: int = cast(Any, _UNSET)
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-    total_calls: int = 0
-    total_latency_s: float = 0.0
-    warning_triggered: bool = False
-    halt_triggered: bool = False
-    reserved_tokens: int = 0
-
-    def __post_init__(self) -> None:
-        if self.budget_ceiling is _UNSET:
-            cfg = load_tuner_config()
-            self.budget_ceiling = int(cfg.get("tokens", {}).get("budget_ceiling", 5_000_000))
-
-    def reserve(self, estimated_tokens: int = 2000) -> bool:
-        """Attempts to reserve an estimated number of tokens before dispatching concurrent requests.
-
-        Returns:
-            True if reservation was successful, False if budget would be exceeded.
-        """
-        if (
-            self.halt_triggered
-            or (self.total_tokens + self.reserved_tokens + estimated_tokens) > self.budget_ceiling
-        ):
-            return False
-        self.reserved_tokens += estimated_tokens
-        return True
-
-    def release_reservation(self, estimated_tokens: int = 2000) -> None:
-        """Releases a previously reserved token amount."""
-        self.reserved_tokens = max(0, self.reserved_tokens - estimated_tokens)
-
-    def record_usage(
-        self,
-        prompt_tokens: int,
-        completion_tokens: int,
-        latency_s: float = 0.0,
-        reserved_tokens: int = 0,
-    ) -> None:
-        """Records token usage and latency from a model inference call, releasing reservation if held."""
-        if reserved_tokens > 0:
-            self.reserved_tokens = max(0, self.reserved_tokens - reserved_tokens)
-        self.prompt_tokens += prompt_tokens
-        self.completion_tokens += completion_tokens
-        self.total_tokens += prompt_tokens + completion_tokens
-        self.total_calls += 1
-        self.total_latency_s += latency_s
-
-        # 90% warning threshold (REC-08)
-        if not self.warning_triggered and self.total_tokens >= 0.9 * self.budget_ceiling:
-            self.warning_triggered = True
-            logger.warning(
-                f"⚠️ [Token Budget Warning] Tổng token ({self.total_tokens:,}) đã chạm ngưỡng 90% ngân sách ({self.budget_ceiling:,})!"
-            )
-
-        # 100% hard ceiling halt
-        if self.total_tokens >= self.budget_ceiling:
-            self.halt_triggered = True
-            logger.error(
-                f"🛑 [Token Budget Halt] Tổng token ({self.total_tokens:,}) đã vượt trần ngân sách ({self.budget_ceiling:,})! Kích hoạt dừng khẩn cấp."
-            )
-
-    @property
-    def available_tokens(self) -> int:
-        """Returns remaining unreserved and unconsumed tokens under budget ceiling."""
-        return max(0, self.budget_ceiling - (self.total_tokens + self.reserved_tokens))
-
-    @property
-    def is_exhausted(self) -> bool:
-        """Checks whether token budget ceiling has been exhausted or fully reserved."""
-        return (
-            self.total_tokens + self.reserved_tokens
-        ) >= self.budget_ceiling or self.halt_triggered
-
-    @property
-    def avg_latency_s(self) -> float:
-        """Returns average latency per call in seconds."""
-        return self.total_latency_s / self.total_calls if self.total_calls > 0 else 0.0
-
-
-@runtime_checkable
-class RateLimiter(Protocol):
-    """Protocol for request throughput rate limiting in batch LLM evaluations."""
-
-    def wait(self, last_latency_s: float = 0.0) -> float: ...
-
-
-class AdaptiveRateLimiter:
-    """Token-Bucket / Leaky-Bucket Rate Limiter with adaptive latency backoff.
-
-    Protects LLM gateways (such as LiteLLM on Server Spark) from queue congestion
-    and rate limit exhaustion during bulk overnight evaluation sweeps.
-    """
-
-    def __init__(
-        self,
-        requests_per_minute: float = 60.0,
-        min_delay_s: float = 0.01,
-        max_delay_s: float = 10.0,
-        latency_threshold_s: float | None = None,
-        backoff_multiplier: float = 1.5,
-        sleeper: Callable[[float], None] = time.sleep,
-        time_fn: Callable[[], float] = time.monotonic,
-        async_sleeper: Callable[[float], Awaitable[None]] | None = None,
-    ) -> None:
-        self.requests_per_minute = max(1.0, requests_per_minute)
-        self.min_interval = 60.0 / self.requests_per_minute
-        self.min_delay_s = min_delay_s
-        self.max_delay_s = max_delay_s
-        if latency_threshold_s is None:
-            cfg = load_tuner_config()
-            self.latency_threshold_s = float(
-                cfg.get("execution", {}).get("latency_threshold_s", 4.0)
-            )
-        else:
-            self.latency_threshold_s = latency_threshold_s
-        self.backoff_multiplier = backoff_multiplier
-        self.sleeper = sleeper
-        self.time_fn = time_fn
-        self.async_sleeper = async_sleeper
-        self.last_request_time: float = 0.0
-
-    def wait(self, last_latency_s: float = 0.0) -> float:
-        """Enforces rate limit interval and applies adaptive backoff if latency is high.
-
-        Returns:
-            The total delay in seconds waited.
-        """
-        now = self.time_fn()
-        elapsed = (
-            now - self.last_request_time if self.last_request_time > 0.0 else self.min_interval
-        )
-        base_delay = max(0.0, self.min_interval - elapsed)
-
-        backoff_delay = 0.0
-        if last_latency_s > self.latency_threshold_s:
-            excess = last_latency_s - self.latency_threshold_s
-            backoff_delay = min(excess * (self.backoff_multiplier - 1.0), self.max_delay_s)
-
-        total_delay = min(base_delay + backoff_delay, self.max_delay_s)
-        if total_delay >= self.min_delay_s:
-            self.sleeper(total_delay)
-
-        self.last_request_time = self.time_fn()
-        return total_delay
-
-    async def wait_async(self, last_latency_s: float = 0.0) -> float:
-        """Non-blocking rate limiter for async continuous batching.
-
-        Avoids sequential bottlenecking between parallel tasks to unlock vLLM continuous
-        batching on Server Spark (:8090). Only applies backoff cooldown when the backend
-        server exhibits latency higher than latency_threshold_s.
-
-        Returns:
-            The backoff delay in seconds waited.
-        """
-        backoff_delay = 0.0
-        if last_latency_s > self.latency_threshold_s:
-            excess = last_latency_s - self.latency_threshold_s
-            backoff_delay = min(excess * (self.backoff_multiplier - 1.0), self.max_delay_s)
-
-        if backoff_delay >= self.min_delay_s:
-            if self.async_sleeper is not None:
-                await self.async_sleeper(backoff_delay)
-            else:
-                await asyncio.sleep(backoff_delay)
-
-        self.last_request_time = self.time_fn()
-        return backoff_delay
-
-
-class LLMTaskAdapter:
-    """Connects GitRatchetOptimizer with ccba_ai client for Real LLM evaluations."""
-
-    def __init__(
-        self,
-        model: str | None = None,
-        client: Any | None = None,
-        token_tracker: TokenUsageTracker | None = None,
-        circuit_breaker: Any | None = None,
-        rate_limiter: RateLimiter | None = None,
-        async_client: Any | None = None,
-        estimated_task_tokens: int = 2000,
-    ) -> None:
-        cfg = load_tuner_config()
-        try:
-            from ccba_ai.routing import choose_model
-
-            fallback_model = choose_model("local")
-        except (ImportError, Exception):
-            fallback_model = "qwen-local-primary"
-        default_model = str(cfg.get("execution", {}).get("default_model", fallback_model))
-        self.model = model or os.getenv("CCBA_TUNER_MODEL", default_model)
-        self.token_tracker = token_tracker or TokenUsageTracker()
-        self.rate_limiter = rate_limiter
-        self.estimated_task_tokens = estimated_task_tokens
-        self._last_latency_s = 0.0
-        if circuit_breaker is not None:
-            self.circuit_breaker = circuit_breaker
-        elif CircuitBreaker is not None:
-            self.circuit_breaker = CircuitBreaker()
-        else:
-            self.circuit_breaker = None
-
-        if client is not None:
-            self.client = client
-        elif async_client is not None:
-            self.client = async_client
-        elif AIClient is not None:
-            self.client = AIClient(
-                default_model=self.model,
-                circuit_breaker=self.circuit_breaker,
-            )
-        else:
-            raise ImportError(
-                "ccba-ai package is required for real LLM evaluation. Install via: pip install -e packages/ccba-ai"
-            )
-
-        if async_client is not None:
-            self.async_client = async_client
-        elif client is not None:
-            self.async_client = client
-        elif AsyncAIClient is not None:
-            self.async_client = AsyncAIClient(
-                default_model=self.model,
-                circuit_breaker=self.circuit_breaker,
-            )
-        else:
-            self.async_client = None
-
-    def create_eval_task(self, skill_content: str) -> Callable[[EvalItem], str]:
-        """Creates a callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
-
-        def llm_eval_task(item: EvalItem) -> str:
-            tokens_to_reserve = min(
-                self.estimated_task_tokens,
-                max(1, self.token_tracker.budget_ceiling // 5),
-            )
-            if not self.token_tracker.reserve(tokens_to_reserve):
-                raise TokenBudgetExceededError(
-                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
-                )
-
-            reserved = True
-            try:
-                if self.rate_limiter is not None:
-                    self.rate_limiter.wait(last_latency_s=self._last_latency_s)
-
-                t0 = time.perf_counter()
-                res = self.client.chat_with_metadata(
-                    message=str(item.input_prompt),
-                    system=skill_content,
-                    model=self.model,
-                    temperature=0.0,
-                )
-                latency = time.perf_counter() - t0
-                self._last_latency_s = latency
-                p_tok = res.usage.prompt_tokens if res.usage else 0
-                c_tok = res.usage.completion_tokens if res.usage else 0
-                self.token_tracker.record_usage(
-                    p_tok, c_tok, latency_s=latency, reserved_tokens=tokens_to_reserve
-                )
-                reserved = False
-                return str(res.content)
-            except CircuitBreakerOpenError:
-                # Re-raise circuit breaker fast-fail to trigger early stopping
-                raise
-            except Exception as e:
-                if self.circuit_breaker is not None and hasattr(
-                    self.circuit_breaker, "record_failure"
-                ):
-                    self.circuit_breaker.record_failure(e)
-                raise
-            finally:
-                if reserved:
-                    self.token_tracker.release_reservation(tokens_to_reserve)
-
-        return llm_eval_task
-
-    def create_async_eval_task(self, skill_content: str) -> Callable[[EvalItem], Awaitable[str]]:
-        """Creates an async callable task for EvalRunner that evaluates candidate skill content via Real LLM."""
-
-        async def async_llm_eval_task(item: EvalItem) -> str:
-            tokens_to_reserve = min(
-                self.estimated_task_tokens,
-                max(1, self.token_tracker.budget_ceiling // 5),
-            )
-            if not self.token_tracker.reserve(tokens_to_reserve):
-                raise TokenBudgetExceededError(
-                    f"Token budget ceiling ({self.token_tracker.budget_ceiling:,} tokens) exceeded."
-                )
-
-            reserved = True
-            try:
-                if self.rate_limiter is not None:
-                    if hasattr(self.rate_limiter, "wait_async"):
-                        await self.rate_limiter.wait_async(last_latency_s=self._last_latency_s)
-                    else:
-                        self.rate_limiter.wait(last_latency_s=self._last_latency_s)
-
-                t0 = time.perf_counter()
-                active_client = self.async_client if self.async_client is not None else self.client
-                call_fn = active_client.chat_with_metadata
-                if inspect.iscoroutinefunction(call_fn):
-                    res = await call_fn(
-                        message=str(item.input_prompt),
-                        system=skill_content,
-                        model=self.model,
-                        temperature=0.0,
-                    )
-                else:
-                    call_res = call_fn(
-                        message=str(item.input_prompt),
-                        system=skill_content,
-                        model=self.model,
-                        temperature=0.0,
-                    )
-                    if inspect.isawaitable(call_res):
-                        res = await call_res
-                    else:
-                        res = call_res
-
-                latency = time.perf_counter() - t0
-                self._last_latency_s = latency
-                usage = getattr(res, "usage", None)
-                p_tok = getattr(usage, "prompt_tokens", 0) if usage else 0
-                c_tok = getattr(usage, "completion_tokens", 0) if usage else 0
-                self.token_tracker.record_usage(
-                    p_tok, c_tok, latency_s=latency, reserved_tokens=tokens_to_reserve
-                )
-                reserved = False
-                return str(res.content)
-            except CircuitBreakerOpenError:
-                # Re-raise circuit breaker fast-fail to trigger early stopping
-                raise
-            except Exception as e:
-                if self.circuit_breaker is not None and hasattr(
-                    self.circuit_breaker, "record_failure"
-                ):
-                    self.circuit_breaker.record_failure(e)
-                raise
-            finally:
-                if reserved:
-                    self.token_tracker.release_reservation(tokens_to_reserve)
-
-        return async_llm_eval_task
-
-
-@dataclass
-class RatchetConfig:
-    """Configuration parsed from program.md or CLI flags."""
-
-    target_file: Path
-    eval_dataset_file: Path | None = None
-    target_score: float = cast(Any, _UNSET)
-    max_iterations: int = cast(Any, _UNSET)
-    allowed_files: list[str] = field(default_factory=list)
-    prohibited_files: list[str] = field(default_factory=list)
-    skill_name: str = ""
-    full_sweep: bool = cast(Any, _UNSET)
-    patience: int = cast(Any, _UNSET)
-    use_real_llm: bool = False
-    llm_model: str = ""
-    token_budget: int | None = cast(Any, _UNSET)
-    rate_limiter: RateLimiter | None = None
-    enable_adaptive_slicing: bool = cast(Any, _UNSET)
-    split_ratio: float = cast(Any, _UNSET)
-    slicing_seed: int = cast(Any, _UNSET)
-    enable_perturbation: bool = cast(Any, _UNSET)
-    per_skill_mutation_budget: int | None = cast(Any, _UNSET)
-    hard_max_tokens_per_skill: int | None = cast(Any, _UNSET)
-    max_concurrency: int = cast(Any, _UNSET)
-    max_failure_patches: int = cast(Any, _UNSET)
-    baseline_score: float | None = None
-
-    def __post_init__(self) -> None:
-        cfg = load_tuner_config()
-        r_cfg = cfg.get("ratchet", {})
-        tok_cfg = cfg.get("tokens", {})
-        exec_cfg = cfg.get("execution", {})
-
-        if isinstance(self.target_file, str):
-            self.target_file = Path(self.target_file)
-        if self.eval_dataset_file and isinstance(self.eval_dataset_file, str):
-            self.eval_dataset_file = Path(self.eval_dataset_file)
-        if not self.skill_name and self.target_file:
-            tf = self.target_file
-            if "skills" in tf.parts or "skills" in str(tf):
-                self.skill_name = tf.parent.name if tf.name.lower() == "skill.md" else tf.name
-        if not self.use_real_llm and os.getenv("CCBA_TUNER_ENGINE") == "REAL_LLM":
-            self.use_real_llm = True
-        if not self.llm_model:
-            try:
-                from ccba_ai.routing import choose_model
-
-                fallback_m = choose_model("local")
-            except (ImportError, Exception):
-                fallback_m = "qwen-local-primary"
-            def_m = str(exec_cfg.get("default_model", fallback_m))
-            self.llm_model = os.getenv("CCBA_TUNER_MODEL", def_m)
-        if self.baseline_score is not None:
-            try:
-                self.baseline_score = float(self.baseline_score)
-            except (ValueError, TypeError):
-                self.baseline_score = None
-
-        # 4-tier Precedence: Explicit User Param > Env Var > Declarative YAML > Code Fallback
-        # target_score
-        if self.target_score is _UNSET:
-            env_ts = os.getenv("CCBA_TUNER_TARGET_SCORE")
-            if env_ts:
-                try:
-                    self.target_score = float(env_ts)
-                except ValueError:
-                    self.target_score = float(r_cfg.get("target_score", 90.0))
-            else:
-                self.target_score = float(r_cfg.get("target_score", 90.0))
-        elif isinstance(self.target_score, str):
-            self.target_score = float(self.target_score)
-
-        # max_iterations
-        if self.max_iterations is _UNSET:
-            env_mi = os.getenv("CCBA_TUNER_MAX_ITERATIONS")
-            if env_mi:
-                try:
-                    self.max_iterations = int(env_mi)
-                except ValueError:
-                    self.max_iterations = int(r_cfg.get("max_iterations", 10))
-            else:
-                self.max_iterations = int(r_cfg.get("max_iterations", 10))
-        elif isinstance(self.max_iterations, str):
-            self.max_iterations = int(self.max_iterations)
-
-        # patience
-        if self.patience is _UNSET:
-            env_pat = os.getenv("CCBA_TUNER_PATIENCE")
-            if env_pat:
-                try:
-                    self.patience = int(env_pat)
-                except ValueError:
-                    self.patience = int(r_cfg.get("patience", 3))
-            else:
-                self.patience = int(r_cfg.get("patience", 3))
-        elif isinstance(self.patience, str):
-            self.patience = int(self.patience)
-
-        # full_sweep
-        if self.full_sweep is _UNSET:
-            env_fs = os.getenv("CCBA_TUNER_FULL_SWEEP")
-            if env_fs is not None:
-                self.full_sweep = env_fs.lower() in ("1", "true", "yes")
-            else:
-                self.full_sweep = bool(r_cfg.get("full_sweep", False))
-
-        # split_ratio
-        if self.split_ratio is _UNSET:
-            env_sr = os.getenv("CCBA_TUNER_SPLIT_RATIO")
-            if env_sr:
-                try:
-                    self.split_ratio = float(env_sr)
-                except ValueError:
-                    self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
-            else:
-                self.split_ratio = float(r_cfg.get("split_ratio", 0.7))
-        elif isinstance(self.split_ratio, str):
-            self.split_ratio = float(self.split_ratio)
-
-        # slicing_seed
-        if self.slicing_seed is _UNSET:
-            env_seed = os.getenv("CCBA_TUNER_SLICING_SEED")
-            if env_seed:
-                try:
-                    self.slicing_seed = int(env_seed)
-                except ValueError:
-                    self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
-            else:
-                self.slicing_seed = int(r_cfg.get("slicing_seed", 42))
-        elif isinstance(self.slicing_seed, str):
-            self.slicing_seed = int(self.slicing_seed)
-
-        # enable_adaptive_slicing
-        if self.enable_adaptive_slicing is _UNSET:
-            env_as = os.getenv("CCBA_TUNER_ADAPTIVE_SLICING")
-            if env_as is not None:
-                self.enable_adaptive_slicing = env_as.lower() in ("1", "true", "yes")
-            else:
-                self.enable_adaptive_slicing = bool(r_cfg.get("enable_adaptive_slicing", True))
-
-        # enable_perturbation
-        if self.enable_perturbation is _UNSET:
-            env_pt = os.getenv("CCBA_TUNER_PERTURBATION")
-            if env_pt is not None:
-                self.enable_perturbation = env_pt.lower() in ("1", "true", "yes")
-            else:
-                self.enable_perturbation = bool(r_cfg.get("enable_perturbation", True))
-
-        # token_budget
-        if self.token_budget is not _UNSET and self.token_budget is not None:
-            if isinstance(self.token_budget, str):
-                try:
-                    self.token_budget = int(self.token_budget.replace(",", "").replace("_", ""))
-                except ValueError:
-                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
-        else:
-            env_budget = os.getenv("CCBA_TUNER_TOKEN_BUDGET")
-            if env_budget:
-                try:
-                    self.token_budget = int(env_budget.replace(",", "").replace("_", ""))
-                except ValueError:
-                    self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
-            else:
-                self.token_budget = int(tok_cfg.get("budget_ceiling", 5_000_000))
-
-        # per_skill_mutation_budget
-        if self.per_skill_mutation_budget is not _UNSET:
-            if isinstance(self.per_skill_mutation_budget, str):
-                try:
-                    self.per_skill_mutation_budget = int(
-                        self.per_skill_mutation_budget.replace(",", "").replace("_", "")
-                    )
-                except ValueError:
-                    self.per_skill_mutation_budget = int(
-                        tok_cfg.get("per_skill_mutation_budget", 250_000)
-                    )
-        else:
-            env_ps_budget = os.getenv("CCBA_TUNER_PER_SKILL_MUTATION_BUDGET")
-            if env_ps_budget:
-                try:
-                    self.per_skill_mutation_budget = int(
-                        env_ps_budget.replace(",", "").replace("_", "")
-                    )
-                except ValueError:
-                    self.per_skill_mutation_budget = int(
-                        tok_cfg.get("per_skill_mutation_budget", 250_000)
-                    )
-            else:
-                self.per_skill_mutation_budget = int(
-                    tok_cfg.get("per_skill_mutation_budget", 250_000)
-                )
-
-        # hard_max_tokens_per_skill
-        if self.hard_max_tokens_per_skill is not _UNSET:
-            if isinstance(self.hard_max_tokens_per_skill, str):
-                try:
-                    self.hard_max_tokens_per_skill = int(
-                        self.hard_max_tokens_per_skill.replace(",", "").replace("_", "")
-                    )
-                except ValueError:
-                    self.hard_max_tokens_per_skill = int(
-                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
-                    )
-        else:
-            env_hard_max = os.getenv("CCBA_TUNER_HARD_MAX_PER_SKILL")
-            if env_hard_max:
-                try:
-                    self.hard_max_tokens_per_skill = int(
-                        env_hard_max.replace(",", "").replace("_", "")
-                    )
-                except ValueError:
-                    self.hard_max_tokens_per_skill = int(
-                        tok_cfg.get("hard_max_tokens_per_skill", 500_000)
-                    )
-            else:
-                self.hard_max_tokens_per_skill = int(
-                    tok_cfg.get("hard_max_tokens_per_skill", 500_000)
-                )
-
-        # max_concurrency
-        if self.max_concurrency is not _UNSET:
-            if isinstance(self.max_concurrency, str):
-                try:
-                    self.max_concurrency = int(self.max_concurrency)
-                except ValueError:
-                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
-        else:
-            env_concurrency = os.getenv("CCBA_TUNER_CONCURRENCY")
-            if env_concurrency:
-                try:
-                    self.max_concurrency = int(env_concurrency)
-                except ValueError:
-                    self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
-            else:
-                self.max_concurrency = int(exec_cfg.get("max_concurrency", 5))
-
-        # max_failure_patches (Sprint 4 / ADR-0059)
-        if self.max_failure_patches is not _UNSET:
-            if isinstance(self.max_failure_patches, str):
-                try:
-                    self.max_failure_patches = int(self.max_failure_patches)
-                except ValueError:
-                    self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
-        else:
-            env_mfp = os.getenv("CCBA_TUNER_MAX_FAILURE_PATCHES")
-            if env_mfp:
-                try:
-                    self.max_failure_patches = int(env_mfp)
-                except ValueError:
-                    self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
-            else:
-                self.max_failure_patches = int(r_cfg.get("max_failure_patches", 3))
-
-    @classmethod
-    def from_markdown_program(cls, program_path: Path, root: Path | None = None) -> RatchetConfig:
-        """Parses a program.md specification file.
-
-        Args:
-            program_path: Path to the markdown program specification file.
-            root: Optional root directory for relative path resolution.
-
-        Returns:
-            RatchetConfig parsed from the markdown file.
-
-        Raises:
-            FileNotFoundError: If program_path does not exist.
-            ValueError: If target file cannot be found in the specification.
-        """
-        if not program_path.exists():
-            raise FileNotFoundError(f"Program spec file not found: {program_path}")
-
-        if root is None:
-            cur = program_path.resolve().parent
-            for p in [cur, *cur.parents]:
-                if (
-                    (p / ".agents").exists()
-                    or (p / "pyproject.toml").exists()
-                    or (p / ".git").exists()
-                ):
-                    root = p
-                    break
-            if root is None:
-                root = cur
-
-        content = program_path.read_text(encoding="utf-8")
-
-        # Parse target file
-        target_match = re.search(
-            r"-\s*\*\*Target(?:\s*File)?\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE
-        )
-        if not target_match:
-            target_match = re.search(r"-\s*Target:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
-        if not target_match:
-            raise ValueError(
-                f"Missing required 'Target File' specification in program file: {program_path}"
-            )
-        target_str = target_match.group(1).strip()
-        target_path = (
-            (root / target_str).resolve()
-            if not Path(target_str).is_absolute()
-            else Path(target_str).resolve()
-        )
-
-        # Parse target score
-        score_match = re.search(
-            r"-\s*\*\*Target\s*Score\*\*:\s*(\d+(?:\.\d+)?)%?", content, re.IGNORECASE
-        )
-        target_score = float(score_match.group(1)) if score_match else 90.0
-
-        # Parse max iterations
-        iter_match = re.search(r"-\s*\*\*Max\s*Iterations\*\*:\s*(\d+)", content, re.IGNORECASE)
-        max_iterations = int(iter_match.group(1)) if iter_match else 10
-
-        # Parse eval dataset
-        dataset_match = re.search(
-            r"-\s*\*\*Dataset(?:\s*File)?\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE
-        )
-        dataset_path = None
-        if dataset_match:
-            ds_str = dataset_match.group(1).strip()
-            dataset_path = (
-                (root / ds_str).resolve()
-                if not Path(ds_str).is_absolute()
-                else Path(ds_str).resolve()
-            )
-
-        # Extract skill name from target file if possible
-        skill_name = target_path.parent.name if "skills" in str(target_path) else "custom_skill"
-
-        # Parse Engine (Real LLM or Mock)
-        engine_match = re.search(r"-\s*\*\*Engine\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
-        use_real_llm = False
-        if engine_match:
-            use_real_llm = "real" in engine_match.group(1).lower()
-
-        # Parse Model
-        model_match = re.search(r"-\s*\*\*Model\*\*:\s*`?([^`\r\n]+)`?", content, re.IGNORECASE)
-        llm_model = model_match.group(1).strip() if model_match else ""
-
-        # Parse Token Budget
-        budget_match = re.search(
-            r"-\s*\*\*Token\s*Budget\*\*:\s*([0-9,_]+)", content, re.IGNORECASE
-        )
-        token_budget = (
-            int(re.sub(r"[,_]", "", budget_match.group(1))) if budget_match else 5_000_000
-        )
-
-        # Parse Per Skill Mutation Budget
-        per_skill_match = re.search(
-            r"-\s*\*\*Per\s*Skill\s*(?:Mutation\s*)?Budget\*\*:\s*([0-9,_]+)",
-            content,
-            re.IGNORECASE,
-        )
-        per_skill_mutation_budget = (
-            int(re.sub(r"[,_]", "", per_skill_match.group(1))) if per_skill_match else _UNSET
-        )
-
-        # Parse Hard Max Tokens Per Skill
-        hard_max_match = re.search(
-            r"-\s*\*\*Hard\s*Max\s*(?:Tokens\s*)?(?:Per\s*Skill)?\*\*:\s*([0-9,_]+)",
-            content,
-            re.IGNORECASE,
-        )
-        hard_max_tokens_per_skill = (
-            int(re.sub(r"[,_]", "", hard_max_match.group(1))) if hard_max_match else _UNSET
-        )
-
-        # Parse Baseline Score if present
-        baseline_match = re.search(
-            r"-\s*\*\*Baseline(?:\s*Score)?\*\*:\s*([0-9.]+)",
-            content,
-            re.IGNORECASE,
-        )
-        baseline_score = float(baseline_match.group(1)) if baseline_match else None
-
-        return cls(
-            target_file=target_path,
-            eval_dataset_file=dataset_path,
-            target_score=target_score,
-            max_iterations=max_iterations,
-            skill_name=skill_name,
-            use_real_llm=use_real_llm,
-            llm_model=llm_model,
-            token_budget=token_budget,
-            per_skill_mutation_budget=per_skill_mutation_budget,
-            hard_max_tokens_per_skill=hard_max_tokens_per_skill,
-            baseline_score=baseline_score,
-        )
-
-
-@dataclass
-class RatchetTrialResult:
-    """Record of a single ratchet experiment iteration."""
-
-    iteration: int
-    score: float
-    passed: bool
-    critical_fails: int
-    decision: str  # 'KEEP' | 'REVERT'
-    summary: str
-    diff_snippet: str = ""
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-    latency_s: float = 0.0
-
-    def to_dict(self) -> dict[str, Any]:
-        """Converts result to JSON-serializable dictionary."""
-        return asdict(self)
-
-
-@dataclass
-class RatchetReport:
-    """Full execution summary of a Git-Ratchet optimization run."""
-
-    target_file: str
-    initial_score: float
-    final_score: float
-    total_iterations: int
-    kept_commits: int
-    reverted_trials: int
-    history: list[RatchetTrialResult] = field(default_factory=list)
-    total_tokens: int = 0
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    avg_latency_s: float = 0.0
-    halt_reason: str | None = None
-    slicing_tier: str | None = None
-    tuning_size: int = 0
-    holdout_size: int = 0
-    holdout_score: float | None = None
-    holdout_initial_score: float | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Converts report to JSON-serializable dictionary."""
-        return {
-            "target_file": self.target_file,
-            "initial_score": self.initial_score,
-            "final_score": self.final_score,
-            "total_iterations": self.total_iterations,
-            "kept_commits": self.kept_commits,
-            "reverted_trials": self.reverted_trials,
-            "history": [t.to_dict() for t in self.history],
-            "total_tokens": self.total_tokens,
-            "prompt_tokens": self.prompt_tokens,
-            "completion_tokens": self.completion_tokens,
-            "avg_latency_s": self.avg_latency_s,
-            "halt_reason": self.halt_reason,
-            "slicing_tier": self.slicing_tier,
-            "tuning_size": self.tuning_size,
-            "holdout_size": self.holdout_size,
-            "holdout_score": self.holdout_score,
-            "holdout_initial_score": self.holdout_initial_score,
-        }
-
-
-def preserve_yaml_frontmatter(original_content: str, edited_content: str) -> str:
-    """Preserves YAML frontmatter metadata when mutating SKILL.md body.
-
-    Ensures mutations only modify the instruction body in SKILL.md,
-    strictly preserving frontmatter fields byte-for-byte.
-
-    Args:
-        original_content: The unmutated SKILL.md content with frontmatter.
-        edited_content: The newly proposed body content or full text.
-
-    Returns:
-        The combined text containing original frontmatter and new body.
-    """
-    # Match YAML frontmatter at the beginning of original_content
-    fm_match = re.match(r"^---\r?\n(.*?)\r?\n---\r?\n?", original_content, re.DOTALL)
-    if not fm_match:
-        # Check if original_content has leading whitespace before frontmatter
-        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", original_content, re.DOTALL)
-        if not fm_match:
-            return edited_content
-
-    frontmatter_block = fm_match.group(0).strip()
-
-    # If edited_content also contains frontmatter, strip it to avoid duplication
-    edited_fm_match = re.match(r"^\s*---\r?\n.*?\r?\n---\r?\n?(.*)$", edited_content, re.DOTALL)
-    if edited_fm_match:
-        body = edited_fm_match.group(1)
-    else:
-        body = edited_content
-
-    clean_body = body.strip()
-    nl = "\r\n" if "\r\n" in original_content else "\n"
-    if clean_body:
-        return f"{frontmatter_block}{nl}{nl}{clean_body}{nl}"
-    return f"{frontmatter_block}{nl}"
-
-
-# ---------------------------------------------------------------------------
-# Domain Archetypes (Re-exported from SSOT archetypes.py)
-# ---------------------------------------------------------------------------
-from .archetypes import (  # noqa: F401
+from .archetypes import (
     ACADEMIC_ARCHETYPE_KEYWORDS,
     ADR_ARCHETYPE_KEYWORDS,
     BIM_ARCHETYPE_KEYWORDS,
@@ -1135,64 +72,17 @@ from .archetypes import (  # noqa: F401
     resolve_domain_archetype,
     resolve_domain_dataset,
 )
+from .legal_index import LegalFlatIndex, load_legal_flat_index
+from .models import EvalItem, EvalReport
+from .runner import EvalRunner, load_eval_dataset
+from .scorers import BaseScorer
+from .simulation import build_mock_agent_task
+from .slicing import AdaptiveDataSlicer, SlicedDataset
+
+logger = logging.getLogger("ccba.eval.ratchet")
 
 
-def remaining_strategies(
-    content: str,
-    skill_name: str,
-    strategies_path: Path | None = None,
-) -> list[tuple[str, str]]:
-    """Returns unapplied mutation strategies for a skill prompt (Sprint 3 / ADR-0058).
-
-    Args:
-        content: The skill markdown content.
-        skill_name: Name of the skill to look up archetype strategies for.
-        strategies_path: Optional custom path to mutation strategies YAML.
-
-    Returns:
-        List of (strategy_name, strategy_enhancement) pairs that have NOT yet been applied.
-    """
-    arch = resolve_domain_archetype(skill_name)
-    arch_name = arch.name if arch else "general"
-
-    all_strategies = load_mutation_strategies(strategies_path)
-    strategies = all_strategies.get(arch_name) or all_strategies.get("general", [])
-    if not strategies:
-        return []
-
-    # Extract body, preserving frontmatter
-    fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", content, re.DOTALL)
-    body = content[fm_match.end() :] if fm_match else content
-
-    norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
-    unapplied: list[tuple[str, str]] = []
-    for s_name, s_enhancement in strategies:
-        norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace("\r\n", "\n")
-        if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
-            unapplied.append((s_name, s_enhancement))
-    return unapplied
-
-
-@dataclass
-class _RatchetLoopState:
-    """Encapsulates mutable loop state and trial history for GitRatchetOptimizer."""
-
-    best_score: float
-    best_content: str
-    has_committed: bool = False
-    kept_count: int = 0
-    reverted_count: int = 0
-    stagnant_trials: int = 0
-    seen_hashes: set[str] = field(default_factory=set)
-    history: list[RatchetTrialResult] = field(default_factory=list)
-    finalize_error: str | None = None
-
-
-# Alias for backward compatibility
-_RatchetSession = _RatchetLoopState
-
-
-class GitRatchetOptimizer:
+class GitRatchetOptimizer(_RatchetMutationGitMixin):
     """Autonomous Ratchet Optimization Engine using Git commits for state persistence."""
 
     def __init__(
@@ -1220,56 +110,55 @@ class GitRatchetOptimizer:
         self.circuit_breaker = circuit_breaker
         self.rate_limiter = rate_limiter or config.rate_limiter
 
-        # RULE-2.9: Dependency Injection — bypass lock in dry-run or when disabled
         _lock_active = lock_enabled and not dry_run_git
-        if git_lock is not None:
-            self.git_lock = git_lock
-        else:
-            self.git_lock = GitMutexLock(enabled=_lock_active)
-
-        effective_root = project_root if project_root is not None else root
-        if effective_root is not None:
-            self.project_root = Path(effective_root).resolve()
-        else:
-            cur = self.target_file.parent
-            detected = None
-            for p in [cur, *cur.parents]:
-                if (
-                    (p / ".git").exists()
-                    or (p / ".agents").exists()
-                    or (p / "pyproject.toml").exists()
-                ):
-                    detected = p
-                    break
-            self.project_root = detected if detected else Path.cwd().resolve()
-
-        # Resolve lock path to <project_root>/.git/evals_tuner.lock when not injected
+        self.git_lock = git_lock if git_lock is not None else GitMutexLock(enabled=_lock_active)
+        self.project_root = self._resolve_project_root(
+            project_root if project_root is not None else root
+        )
         if git_lock is None and self.git_lock.lock_path is None and self.git_lock.enabled:
-            git_entry = self.project_root / ".git"
-            if git_entry.is_file():
-                # In git worktrees, .git is a pointer file: gitdir: <path>
-                try:
-                    content = git_entry.read_text(encoding="utf-8").strip()
-                    if content.startswith("gitdir:"):
-                        gitdir = Path(content.split(":", 1)[1].strip())
-                        if not gitdir.is_absolute():
-                            gitdir = (self.project_root / gitdir).resolve()
-                        self.git_lock.lock_path = gitdir / "evals_tuner.lock"
-                    else:
-                        self.git_lock.lock_path = self.project_root / ".evals_tuner.lock"
-                except Exception:
-                    self.git_lock.lock_path = self.project_root / ".evals_tuner.lock"
-            else:
-                self.git_lock.lock_path = git_entry / "evals_tuner.lock"
+            self.git_lock.lock_path = self._resolve_default_lock_path()
 
         self.scorers = scorers or get_default_domain_scorers(config.skill_name)
         self.runner = EvalRunner(
-            default_pass_threshold=config.target_score,
-            max_concurrency=config.max_concurrency,
+            default_pass_threshold=config.target_score, max_concurrency=config.max_concurrency
         )
         self.dataset: list[EvalItem] = dataset if dataset is not None else self._load_dataset()
+        self._init_slicing_and_llm(config, client, async_client, circuit_breaker)
 
-        # Three-Tier Adaptive Slicing (TICKET-006 / ADR-0058)
+    def _resolve_project_root(self, effective_root: Path | None) -> Path:
+        """Resolves repository root from explicit argument or target_file ancestors."""
+        if effective_root is not None:
+            return Path(effective_root).resolve()
+        cur = self.target_file.parent
+        for p in [cur, *cur.parents]:
+            if (p / ".git").exists() or (p / ".agents").exists() or (p / "pyproject.toml").exists():
+                return p
+        return Path.cwd().resolve()
+
+    def _resolve_default_lock_path(self) -> Path:
+        """Resolves default Git mutex lock path supporting both standard repos and git worktrees."""
+        git_entry = self.project_root / ".git"
+        if git_entry.is_file():
+            try:
+                content = git_entry.read_text(encoding="utf-8").strip()
+                if content.startswith("gitdir:"):
+                    gitdir = Path(content.split(":", 1)[1].strip())
+                    if not gitdir.is_absolute():
+                        gitdir = (self.project_root / gitdir).resolve()
+                    return gitdir / "evals_tuner.lock"
+            except Exception:
+                pass
+            return self.project_root / ".evals_tuner.lock"
+        return git_entry / "evals_tuner.lock"
+
+    def _init_slicing_and_llm(
+        self,
+        config: RatchetConfig,
+        client: Any | None,
+        async_client: Any | None,
+        circuit_breaker: Any | None,
+    ) -> None:
+        """Initializes dataset slicing, token tracker, LLMTaskAdapter, and failure mutator state."""
         if config.enable_adaptive_slicing and self.dataset:
             self.slicer = AdaptiveDataSlicer()
             self.sliced_data: SlicedDataset | None = self.slicer.slice(
@@ -1285,7 +174,6 @@ class GitRatchetOptimizer:
             self.tuning_dataset = list(self.dataset)
             self.holdout_dataset = []
 
-        # Token budget governance & Real LLM adapter (REC-08 / Ticket 03)
         budget = config.token_budget if config.token_budget is not None else 5_000_000
         self.token_tracker = TokenUsageTracker(budget_ceiling=budget)
         self.llm_adapter: LLMTaskAdapter | None = None
@@ -1299,7 +187,6 @@ class GitRatchetOptimizer:
                 rate_limiter=self.rate_limiter,
             )
 
-        # Failure-Driven Provenance Mutator State (Sprint 4 / ADR-0059)
         self._applied_failure_patches: int = 0
         self._applied_fingerprints: set[str] = set()
         try:
@@ -1335,7 +222,6 @@ class GitRatchetOptimizer:
                     logger.error(f"Lỗi đọc raw JSON dataset: {e}")
 
         if not items:
-            # Fallback default test items
             items = [
                 EvalItem(
                     id="default_01",
@@ -1349,10 +235,6 @@ class GitRatchetOptimizer:
                 ),
             ]
         return items
-
-    def preserve_yaml_frontmatter(self, original_content: str, edited_content: str) -> str:
-        """Preserves YAML frontmatter metadata when mutating SKILL.md body."""
-        return preserve_yaml_frontmatter(original_content, edited_content)
 
     def _build_eval_task(self, content: str) -> Callable[[EvalItem], Any]:
         """Resolves task callable (custom, real LLM, or domain mock simulation)."""
@@ -1390,10 +272,7 @@ class GitRatchetOptimizer:
     async def evaluate_content_async(
         self, content: str, dataset: list[EvalItem] | None = None
     ) -> EvalReport:
-        """Asynchronously evaluates skill prompt content against test dataset.
-
-        Native coroutine for running within existing asyncio event loops.
-        """
+        """Asynchronously evaluates skill prompt content against test dataset."""
         target_dataset = dataset if dataset is not None else self.tuning_dataset
         task = self._build_eval_task(content)
         concurrency = (
@@ -1428,235 +307,6 @@ class GitRatchetOptimizer:
         self._verify_eval_report(report)
         return report
 
-    def propose_mutation(self, current_content: str, iteration: int) -> str:
-        """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
-        arch = resolve_domain_archetype(self.config.skill_name)
-        arch_name = arch.name if arch else "general"
-
-        # Failure-Driven Provenance Mutation (Sprint 4 / ADR-0059)
-        max_patches = getattr(self.config, "max_failure_patches", 3)
-        if arch_name in {"legal", "legal_tooling"} and self._applied_failure_patches < max_patches:
-            ledger = load_failure_ledger(self.config.skill_name)
-            if ledger and ledger.signals:
-                unapplied_sigs = get_unapplied_failure_signals(
-                    current_content, list(ledger.signals)
-                )
-                candidates = [
-                    s for s in unapplied_sigs if s.fingerprint not in self._applied_fingerprints
-                ]
-                if candidates:
-                    sig = candidates[0]
-                    card = render_failure_patch(sig, self.legal_index)
-                    self._applied_fingerprints.add(sig.fingerprint)
-                    self._applied_failure_patches += 1
-                    logger.info(
-                        f"⚖️ [FAILURE_MUTATION_APPLIED] Chèn thẻ lỗi '{sig.code}' "
-                        f"(fingerprint: {sig.fingerprint[:8]}). ({self._applied_failure_patches}/{max_patches})"
-                    )
-                    fm_match = re.match(
-                        r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL
-                    )
-                    if fm_match:
-                        fm = current_content[: fm_match.end()]
-                        body_c = current_content[fm_match.end() :]
-                    else:
-                        fm = ""
-                        body_c = current_content
-                    mutated_body = body_c.strip() + "\n\n" + card.strip()
-                    lines = mutated_body.splitlines()
-                    if len(lines) > 300:
-                        mutated_body = "\n".join(lines[:300])
-                    return (fm + mutated_body) if fm else mutated_body
-
-        all_strategies = load_mutation_strategies()
-        strategies = all_strategies.get(arch_name) or all_strategies.get("general", [])
-
-        if not strategies:
-            return current_content
-
-        # Extract only body to apply mutations, preserving frontmatter untouched
-        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL)
-        if fm_match:
-            body = current_content[fm_match.end() :]
-        else:
-            body = current_content
-
-        # Find first strategy not yet fully present in body (Goodhart's Law Trap Breaker)
-        chosen_strategy = None
-        base_idx = (iteration - 1) % len(strategies)
-        norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
-        for offset in range(len(strategies)):
-            idx = (base_idx + offset) % len(strategies)
-            s_name, s_enhancement = strategies[idx]
-            norm_enhancement = ADR_HEADER_TAG_REGEX.sub("", s_enhancement.strip()).replace(
-                "\r\n", "\n"
-            )
-            if s_enhancement.strip() not in body and norm_enhancement not in norm_body:
-                chosen_strategy = (s_name, s_enhancement)
-                break
-
-        # If all strategies are already applied, return current content untouched
-        # (Cleanly triggers HALT_NO_FURTHER_STRATEGIES in optimization loop without junk comments)
-        if chosen_strategy is None:
-            return current_content
-
-        _name, enhancement = chosen_strategy
-
-        # Surgical Section Patching (Frontier 3)
-        section_header = enhancement.strip().split("\n")[0]
-        clean_header = ADR_HEADER_TAG_REGEX.sub("", section_header).strip()
-        header_pattern = re.escape(clean_header)
-        section_regex = re.compile(
-            rf"(?m)^[ \t]*{header_pattern}(?P<adr_suffix>(?:[ \t]*\([^)\n\r]*(?:HUB[-_]ADR|ADR)[-_\s]*[0-9]+[^)\n\r]*\))+)?(?:[ \t]*\r?$)\r?\n?"
-            r"(?P<section_body>.*?)(?=(?:\r?\n## |\Z))",
-            re.DOTALL | re.IGNORECASE,
-        )
-
-        match = section_regex.search(body)
-        if match:
-            lines = enhancement.strip().split("\n")
-            adr_suffix = match.group("adr_suffix")
-            if adr_suffix:
-                lines[0] = f"{clean_header}{adr_suffix}"
-            effective_enhancement = "\n".join(lines)
-            mutated_body = (
-                body[: match.start()] + effective_enhancement.strip() + "\n" + body[match.end() :]
-            )
-        else:
-            mutated_body = body.strip() + "\n\n" + enhancement.strip()
-
-        # Compaction guard: prevent prompt bloat beyond ~300 lines
-        lines = mutated_body.splitlines()
-        if len(lines) > 300:
-            cleaned_lines = [
-                line
-                for line in lines
-                if not line.startswith("<!-- Ratchet Optimization Refinement")
-                and not line.startswith("- Cập nhật quy chuẩn rà soát vòng")
-            ]
-            mutated_body = "\n".join(cleaned_lines)
-
-        return self.preserve_yaml_frontmatter(current_content, mutated_body)
-
-    def mutate_skill(self, current_content: str, iteration: int) -> str:
-        """Mutates skill content by applying unapplied optimization strategies without junk comments."""
-        return self.propose_mutation(current_content, iteration)
-
-    def git_commit_improvement(self, score_diff: str) -> bool:
-        """Commits target file change to Git repository."""
-        with self.git_lock:
-            return self._git_commit_improvement_locked(score_diff)
-
-    def _git_commit_improvement_locked(self, score_diff: str) -> bool:
-        """Inner commit logic executed under git_lock."""
-        if self.dry_run_git:
-            logger.info(
-                f"💾 [DRY-RUN] Git Commit: ratchet(opt): {self.target_file.name} {score_diff}"
-            )
-            return True
-
-        try:
-            rel_path = self.target_file.relative_to(self.project_root)
-        except ValueError:
-            rel_path = self.target_file
-
-        rel_path_str = str(rel_path.as_posix())
-
-        try:
-            subprocess.run(
-                ["git", "add", rel_path_str],
-                cwd=str(self.project_root),
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            msg = f"ratchet(opt): {self.target_file.name} {score_diff}"
-            subprocess.run(
-                ["git", "commit", "-m", msg, "--", rel_path_str],
-                cwd=str(self.project_root),
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            logger.info(f"✅ Git Commit thành công: '{msg}'")
-            return True
-        except Exception as e:
-            logger.warning(f"⚠️ Git commit thất bại: {e}")
-            try:
-                subprocess.run(
-                    ["git", "restore", "--staged", rel_path_str],
-                    cwd=str(self.project_root),
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                )
-            except Exception:
-                pass
-            return False
-
-    def git_rollback_target(self, original_content: str, has_committed: bool = False) -> None:
-        """Rolls back the target file either via git checkout or file overwrite."""
-        with self.git_lock:
-            self._git_rollback_target_locked(original_content, has_committed)
-
-    def _git_rollback_target_locked(
-        self, original_content: str, has_committed: bool = False
-    ) -> None:
-        """Inner rollback logic executed under git_lock."""
-        try:
-            self.target_file.write_text(original_content, encoding="utf-8")
-        except Exception as e:
-            logger.error(f"Failed to restore file content: {e}")
-
-        try:
-            rel_path = self.target_file.relative_to(self.project_root)
-        except ValueError:
-            rel_path = self.target_file
-
-        rel_path_str = str(rel_path.as_posix())
-
-        if not has_committed:
-            try:
-                subprocess.run(
-                    ["git", "restore", "--staged", rel_path_str],
-                    cwd=str(self.project_root),
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                )
-            except Exception:
-                pass
-
-        if self.dry_run_git or not has_committed:
-            if self.dry_run_git:
-                logger.info(f"⏪ [DRY-RUN] Git Rollback: {self.target_file.name}")
-            return
-
-        try:
-            subprocess.run(
-                ["git", "checkout", "--", rel_path_str],
-                cwd=str(self.project_root),
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            logger.info(f"⏪ Đã khôi phục file qua 'git checkout -- {rel_path_str}'")
-        except Exception:
-            try:
-                self.target_file.write_text(original_content, encoding="utf-8")
-            except Exception:
-                pass
-
     def _eval_sync(self, content: str, dataset: list[EvalItem] | None = None) -> EvalReport:
         """Internal synchronous evaluation dispatcher with backward-compatible mock signature handling."""
         if dataset is not None:
@@ -1683,6 +333,21 @@ class GitRatchetOptimizer:
                 await res_async if inspect.isawaitable(res_async) else cast(EvalReport, res_async)
             )
 
+        if "_eval_sync" in self.__dict__ or hasattr(self._eval_sync, "mock_calls"):
+            try:
+                res_sync_override = (
+                    self._eval_sync(content, dataset)
+                    if dataset is not None
+                    else self._eval_sync(content)
+                )
+            except TypeError:
+                res_sync_override = self._eval_sync(content)
+            return (
+                await res_sync_override
+                if inspect.isawaitable(res_sync_override)
+                else res_sync_override
+            )
+
         if "evaluate_content" in self.__dict__ or hasattr(self.evaluate_content, "mock_calls"):
             try:
                 res_sync = (
@@ -1696,347 +361,22 @@ class GitRatchetOptimizer:
 
         return await self.evaluate_content_async(content, dataset)
 
-    def _init_ratchet_budget(self, baseline_score: float) -> tuple[int, int]:
-        """Calculates effective max iterations and patience based on baseline score."""
-        if baseline_score >= 100.0:
-            effective_max_iter = 1
-            effective_patience = 1
-        elif baseline_score >= 90.0:
-            effective_max_iter = min(self.config.max_iterations, 5)
-            effective_patience = min(self.config.patience, 2)
-        else:
-            effective_max_iter = min(self.config.max_iterations, 10)
-            effective_patience = min(self.config.patience, 3)
-
-        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
-        logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | "
-            f"Mục tiêu: {self.config.target_score}% | "
-            f"Budget: {effective_max_iter} vòng (Patience={effective_patience})"
-        )
-        return effective_max_iter, effective_patience
-
-    def _record_trial(
-        self,
-        iter_idx: int,
-        score: float,
-        crit_fails: int,
-        decision: str,
-        summary: str,
-        t0: float,
-        prev_tokens: tuple[int, int, int],
-        state: _RatchetLoopState,
-    ) -> None:
-        """Appends a new RatchetTrialResult to loop state history."""
-        trial = RatchetTrialResult(
-            iteration=iter_idx,
-            score=score,
-            passed=(score >= self.config.target_score and crit_fails == 0),
-            critical_fails=crit_fails,
-            decision=decision,
-            summary=summary,
-            prompt_tokens=self.token_tracker.prompt_tokens - prev_tokens[0],
-            completion_tokens=self.token_tracker.completion_tokens - prev_tokens[1],
-            total_tokens=self.token_tracker.total_tokens - prev_tokens[2],
-            latency_s=time.perf_counter() - t0,
-        )
-        state.history.append(trial)
-
-    def _run_pre_eval_guards(
-        self,
-        mutated_content: str,
-        iter_idx: int,
-        t0: float,
-        prev_tokens: tuple[int, int, int],
-        state: _RatchetLoopState,
-    ) -> bool:
-        """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, link integrity).
-
-        Returns:
-            True if mutation was rejected by pre-eval guards (and reverted), False if valid to evaluate.
-        """
-        self.target_file.write_text(mutated_content, encoding="utf-8")
-
-        # Pillar 3: ADR Monotonic Token Guard (ADR-0058)
-        best_adr_nums = set(ADR_REF_PATTERN.findall(state.best_content))
-        mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
-        dropped_adrs = sorted(
-            [f"ADR-{int(num):04d}" for num in best_adr_nums if num not in mutated_adr_nums]
-        )
-        if dropped_adrs:
-            dropped_str = ", ".join(dropped_adrs)
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
-            )
-            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
-            summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
-            self._record_trial(
-                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
-            )
-            return True
-
-        # ADR-0058 Pre-Evaluation Working Tree Fast-Fail Guard
-        link_issues = []
-        try:
-            if str(self.project_root) not in sys.path:
-                sys.path.insert(0, str(self.project_root))
-            from scripts.governance.link_auditor import LinkAuditor
-
-            link_issues = [
-                item_issue
-                for item_issue in LinkAuditor(self.project_root).audit(self.target_file)
-                if item_issue.category in ("links", "okf_links", "okf_conflicts")
-            ]
-        except Exception as e:
-            logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
-
-        if link_issues:
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
-            )
-            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
-            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
-            self._record_trial(
-                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
-            )
-            return True
-
-        return False
-
-    def _apply_trial_verdict(
-        self,
-        iter_idx: int,
-        eval_report: EvalReport,
-        mutated_content: str,
-        t0: float,
-        prev_tokens: tuple[int, int, int],
-        state: _RatchetLoopState,
-    ) -> None:
-        """Evaluates trial results against ratchet criteria and executes commit/rollback."""
-        current_score = eval_report.overall_score
-        crit_fails = sum(1 for r in eval_report.item_results if r.critical_failed)
-
-        if current_score > state.best_score and crit_fails == 0:
-            diff_str = f"{state.best_score:.1f}% -> {current_score:.1f}% (+{current_score - state.best_score:.1f}%)"
-            committed = self.git_commit_improvement(diff_str)
-            if committed:
-                state.has_committed = True
-            state.best_score = current_score
-            state.best_content = mutated_content
-            state.kept_count += 1
-            state.stagnant_trials = 0
-            decision = "KEEP"
-            summary = f"Cải thiện điểm số thành công: {diff_str}"
-        else:
-            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
-            decision = "REVERT"
-            summary = (
-                f"Không cải thiện (Score {current_score:.1f}% vs Best {state.best_score:.1f}%)"
-                if crit_fails == 0
-                else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
-            )
-
-        self._record_trial(
-            iter_idx, current_score, crit_fails, decision, summary, t0, prev_tokens, state
-        )
-        logger.info(f"📌 Quyết định [{decision}]: {summary}")
-
-    def _check_budget_and_early_stop(
-        self,
-        iter_idx: int,
-        effective_patience: int,
-        baseline_tokens: int,
-        state: _RatchetLoopState,
-    ) -> tuple[bool, str | None]:
-        """Checks if optimization should halt due to target reached, token budgets, or early stopping."""
-        if state.best_score >= self.config.target_score and not self.config.full_sweep:
-            logger.info(
-                f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {iter_idx}!"
-            )
-            return True, None
-
-        # Hard max tokens per skill ceiling (regardless of kept_count) (Issue #368, Sprint 3)
-        total_session_tokens = self.token_tracker.total_tokens
+    async def _close_async_resources(self) -> None:
+        """Closes owned AsyncAIClient HTTP transport before the event loop terminates."""
+        if self.async_client is not None:
+            return
         if (
-            self.config.hard_max_tokens_per_skill is not None
-            and total_session_tokens >= self.config.hard_max_tokens_per_skill
+            self.llm_adapter is not None
+            and getattr(self.llm_adapter, "async_client", None) is not None
         ):
-            logger.info(
-                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Tổng session tokens ({total_session_tokens:,}) "
-                f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials. "
-                f"Dừng đột biến để bảo vệ ngân sách toàn đêm."
-            )
-            return True, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
-
-        mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
-
-        # Per-skill mutation budget check
-        if (
-            self.config.per_skill_mutation_budget is not None
-            and mutation_tokens >= self.config.per_skill_mutation_budget
-            and state.kept_count == 0
-            and iter_idx >= 2
-        ):
-            logger.info(
-                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
-                f"đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {iter_idx} trials (kept_count=0)."
-            )
-            return True, "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
-
-        # Adaptive Early Stopping (Grilling Frontier 2)
-        if effective_patience > 0 and state.stagnant_trials >= effective_patience:
-            logger.info(
-                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {state.stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
-            )
-            return True, None
-
-        return False, None
-
-    def _handle_iteration_exception(
-        self,
-        exc: Exception,
-        iter_idx: int,
-        t0: float,
-        prev_tokens: tuple[int, int, int],
-        state: _RatchetLoopState,
-    ) -> tuple[str | None, bool]:
-        """Handles loop exceptions, restores working tree, records trial, and determines halt status."""
-        self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-        state.reverted_count += 1
-        if isinstance(exc, TokenBudgetExceededError):
-            logger.error(f"🛑 [Token Budget Halt] {exc}")
-            self._record_trial(
-                iter_idx, 0.0, 1, "REVERT", f"Dừng sớm: {exc}", t0, prev_tokens, state
-            )
-            return "TOKEN_BUDGET_EXCEEDED", True
-        elif isinstance(exc, CircuitBreakerOpenError):
-            logger.error(f"⚡ [Circuit Breaker Fast-Fail] {exc}")
-            self._record_trial(
-                iter_idx,
-                0.0,
-                1,
-                "REVERT",
-                "Dừng sớm: Circuit Breaker ngắt kết nối AI Gateway (Fast-fail).",
-                t0,
-                prev_tokens,
-                state,
-            )
-            return "CIRCUIT_BREAKER_OPEN", True
-        else:
-            logger.error(f"Error during iteration {iter_idx}: {exc}")
-            self._record_trial(
-                iter_idx, 0.0, 1, "REVERT", f"Lỗi thực thi vòng lặp: {exc}", t0, prev_tokens, state
-            )
-            return None, False
-
-    def _finalize_disk_state(self, initial_content: str, state: _RatchetLoopState) -> None:
-        """Ensures target file on disk matches expected final state."""
-        if self.target_file.exists():
-            try:
-                final_target = (
-                    initial_content
-                    if (self.dry_run_git or not state.has_committed)
-                    else state.best_content
-                )
-                current_disk = self.target_file.read_text(encoding="utf-8")
-                if current_disk != final_target:
-                    self.git_rollback_target(final_target, has_committed=state.has_committed)
-            except Exception as e:
-                logger.error(f"Error restoring disk file: {e}")
-                state.finalize_error = str(e)
-
-    def _build_init_error_report(
-        self, init_err: TokenBudgetExceededError | CircuitBreakerOpenError
-    ) -> RatchetReport:
-        """Constructs an immediate halt report when baseline evaluation fails."""
-        logger.error(f"Lỗi trong quá trình chấm điểm ban đầu: {init_err}")
-        reason = (
-            "CIRCUIT_BREAKER_OPEN"
-            if isinstance(init_err, CircuitBreakerOpenError)
-            else "TOKEN_BUDGET_EXCEEDED"
-        )
-        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
-        return RatchetReport(
-            target_file=str(self.target_file),
-            initial_score=0.0,
-            final_score=0.0,
-            total_iterations=0,
-            kept_commits=0,
-            reverted_trials=0,
-            history=[],
-            total_tokens=self.token_tracker.total_tokens,
-            prompt_tokens=self.token_tracker.prompt_tokens,
-            completion_tokens=self.token_tracker.completion_tokens,
-            avg_latency_s=self.token_tracker.avg_latency_s,
-            halt_reason=reason,
-            slicing_tier=slicing_tier_str,
-            tuning_size=len(self.tuning_dataset),
-            holdout_size=len(self.holdout_dataset),
-        )
-
-    def _build_final_report(
-        self,
-        baseline_score: float,
-        initial_holdout_score: float | None,
-        final_holdout_score: float | None,
-        halt_reason: str | None,
-        state: _RatchetLoopState,
-    ) -> RatchetReport:
-        """Synthesizes final RatchetReport from session state and holdout metrics."""
-        slicing_tier_str = self.sliced_data.tier.value if self.sliced_data else None
-        return RatchetReport(
-            target_file=str(self.target_file),
-            initial_score=baseline_score,
-            final_score=state.best_score,
-            total_iterations=len(state.history),
-            kept_commits=state.kept_count,
-            reverted_trials=state.reverted_count,
-            history=state.history,
-            total_tokens=self.token_tracker.total_tokens,
-            prompt_tokens=self.token_tracker.prompt_tokens,
-            completion_tokens=self.token_tracker.completion_tokens,
-            avg_latency_s=self.token_tracker.avg_latency_s,
-            halt_reason=halt_reason,
-            slicing_tier=slicing_tier_str,
-            tuning_size=len(self.tuning_dataset),
-            holdout_size=len(self.holdout_dataset),
-            holdout_score=final_holdout_score,
-            holdout_initial_score=initial_holdout_score,
-        )
-
-    def _token_snapshot(self) -> tuple[int, int, int]:
-        """Takes a snapshot of current token counters (prompt, completion, total)."""
-        return (
-            self.token_tracker.prompt_tokens,
-            self.token_tracker.completion_tokens,
-            self.token_tracker.total_tokens,
-        )
-
-    def _propose_candidate(
-        self, iter_idx: int, state: _RatchetLoopState
-    ) -> tuple[str | None, str | None]:
-        """Proposes a mutation candidate and validates uniqueness against seen hashes."""
-        mutated = self.propose_mutation(state.best_content, iter_idx)
-        if mutated == state.best_content:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Không còn chiến lược mới nào chưa áp dụng. Dừng sạch tại iteration {iter_idx}."
-            )
-            return None, "HALT_NO_FURTHER_STRATEGIES"
-
-        content_hash = hashlib.sha256(mutated.encode("utf-8")).hexdigest()
-        if content_hash in state.seen_hashes:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Đột biến trùng lặp ({content_hash[:8]}). Dừng sớm."
-            )
-            return None, "HALT_NO_FURTHER_STRATEGIES"
-        state.seen_hashes.add(content_hash)
-        return mutated, None
+            aclose_fn = getattr(self.llm_adapter.async_client, "aclose", None)
+            if callable(aclose_fn):
+                try:
+                    res = aclose_fn()
+                    if inspect.isawaitable(res):
+                        await res
+                except Exception:
+                    pass
 
     def _eval_holdout_base_sync(self, content: str) -> float | None:
         """Evaluates baseline holdout dataset synchronously if configured."""
@@ -2108,128 +448,128 @@ class GitRatchetOptimizer:
             logger.warning(f"Không thể chấm điểm holdout cuối: {e}")
             return None
 
+    def _has_sync_eval_override(self) -> bool:
+        """Returns True if any synchronous evaluation method was overridden on this instance."""
+        for attr in (
+            "_eval_sync",
+            "evaluate_content",
+            "_eval_holdout_base_sync",
+            "_eval_holdout_final_sync",
+        ):
+            if attr in self.__dict__ or hasattr(getattr(self, attr, None), "mock_calls"):
+                return True
+        return False
+
+    def _run_sync_iterations(
+        self,
+        effective_max_iter: int,
+        effective_patience: int,
+        baseline_tokens: int,
+        state: _RatchetLoopState,
+    ) -> str | None:
+        """Executes synchronous ratchet optimization iterations and returns optional halt_reason."""
+        halt_reason: str | None = None
+        for i in range(1, effective_max_iter + 1):
+            logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+            prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
+            try:
+                mutated, cand_halt = self._propose_candidate(i, state)
+                if cand_halt:
+                    return cand_halt
+                if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
+                    continue
+                eval_report = self._eval_sync(mutated)
+                self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+                should_stop, stop_reason = self._check_budget_and_early_stop(
+                    i, effective_patience, baseline_tokens, state
+                )
+                if should_stop:
+                    return stop_reason or halt_reason
+            except Exception as exc:
+                exc_halt, should_break = self._handle_iteration_exception(
+                    exc, i, t0, prev_tokens, state
+                )
+                if exc_halt:
+                    halt_reason = exc_halt
+                if should_break:
+                    break
+        return halt_reason
+
+    async def _run_async_iterations(
+        self,
+        effective_max_iter: int,
+        effective_patience: int,
+        baseline_tokens: int,
+        state: _RatchetLoopState,
+    ) -> str | None:
+        """Executes asynchronous ratchet optimization iterations and returns optional halt_reason."""
+        halt_reason: str | None = None
+        for i in range(1, effective_max_iter + 1):
+            logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
+            prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
+            try:
+                mutated, cand_halt = self._propose_candidate(i, state)
+                if cand_halt:
+                    return cand_halt
+                if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
+                    continue
+                eval_report = await self._eval_async(mutated)
+                self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+                should_stop, stop_reason = self._check_budget_and_early_stop(
+                    i, effective_patience, baseline_tokens, state
+                )
+                if should_stop:
+                    return stop_reason or halt_reason
+            except Exception as exc:
+                exc_halt, should_break = self._handle_iteration_exception(
+                    exc, i, t0, prev_tokens, state
+                )
+                if exc_halt:
+                    halt_reason = exc_halt
+                if should_break:
+                    break
+        return halt_reason
+
+    def _should_delegate_sync_to_async(self) -> bool:
+        """Returns True when synchronous run() should delegate to run_async() on a single loop."""
+        if not (
+            self.config.use_real_llm
+            and self.llm_adapter is not None
+            and not self._has_sync_eval_override()
+        ):
+            return False
+        try:
+            asyncio.get_running_loop()
+            return False
+        except RuntimeError:
+            return True
+
     def run(self) -> RatchetReport:
         """Executes the full ratchet autonomous optimization loop synchronously."""
+        if self._should_delegate_sync_to_async():
+            return asyncio.run(self.run_async())
         if not self.target_file.exists():
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
-
-        # Zero-Token Short-Circuit (Sprint 3 / Sprint 4 / ADR-0058 / ADR-0059):
-        # If all mutation strategies have already been applied AND no unapplied failure signals exist, exit immediately.
-        unapplied = remaining_strategies(initial_content, self.config.skill_name)
-        has_unapplied_signals = False
-        arch = resolve_domain_archetype(self.config.skill_name)
-        arch_name = arch.name if arch else "general"
-        if arch_name in {"legal", "legal_tooling"}:
-            ledger = load_failure_ledger(self.config.skill_name)
-            if ledger and ledger.signals:
-                unapplied_sigs = get_unapplied_failure_signals(
-                    initial_content, list(ledger.signals)
-                )
-                has_unapplied_signals = len(unapplied_sigs) > 0
-
-        if not unapplied and not has_unapplied_signals:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
-                f"chiến lược đột biến có sẵn và không còn tín hiệu lỗi chưa áp. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
-            )
-            base_score = (
-                self.config.baseline_score if self.config.baseline_score is not None else 0.0
-            )
-            return RatchetReport(
-                target_file=str(self.target_file),
-                initial_score=base_score,
-                final_score=base_score,
-                total_iterations=0,
-                kept_commits=0,
-                reverted_trials=0,
-                history=[],
-                total_tokens=0,
-                prompt_tokens=0,
-                completion_tokens=0,
-                avg_latency_s=0.0,
-                halt_reason="HALT_NO_FURTHER_STRATEGIES",
-                slicing_tier=self.sliced_data.tier.value if self.sliced_data else None,
-                tuning_size=len(self.tuning_dataset),
-                holdout_size=len(self.holdout_dataset),
-                holdout_score=base_score if base_score > 0 else None,
-                holdout_initial_score=base_score if base_score > 0 else None,
-            )
+        arch_name, sc_report = self._check_zero_token_short_circuit(initial_content)
+        if sc_report is not None:
+            return sc_report
 
         try:
             baseline_report = self._eval_sync(initial_content)
         except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
             return self._build_init_error_report(init_err)
 
-        # Seed failure signals into ledger for legal skills (Sprint 4 / ADR-0059)
-        if arch_name in {"legal", "legal_tooling"}:
-            try:
-                signals = extract_failure_signals(
-                    baseline_report, self.tuning_dataset, self.legal_index
-                )
-                if signals:
-                    save_failure_ledger(self.config.skill_name, signals, initial_content)
-                    logger.info(
-                        f"⚖️ [LEDGER_SEEDED] Ghi nhận {len(signals)} tín hiệu lỗi vào sổ cái cho '{self.config.skill_name}'."
-                    )
-            except Exception as e:
-                logger.warning(f"Lỗi trích xuất tín hiệu lỗi sau baseline: {e}")
-
-        baseline_score = baseline_report.overall_score
-        baseline_tokens = self.token_tracker.total_tokens
-        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
-        state = _RatchetLoopState(
-            best_score=baseline_score,
-            best_content=initial_content,
-            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
+        base_sc, base_tok, max_it, pat, state, early_rep = self._prepare_post_baseline_state(
+            arch_name, baseline_report, initial_content
         )
-
-        # Baseline Hard Max Check (Sprint 3 / Issue #368)
-        if (
-            self.config.hard_max_tokens_per_skill is not None
-            and self.token_tracker.total_tokens >= self.config.hard_max_tokens_per_skill
-        ):
-            logger.info(
-                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Baseline tokens ({self.token_tracker.total_tokens:,}) "
-                f"đã chạm hoặc vượt trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}). Dừng đột biến."
-            )
-            return self._build_final_report(
-                baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
-            )
+        if early_rep is not None:
+            return early_rep
 
         initial_holdout_score = self._eval_holdout_base_sync(initial_content)
-        halt_reason: str | None = None
-
         try:
-            for i in range(1, effective_max_iter + 1):
-                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
-                try:
-                    mutated, cand_halt = self._propose_candidate(i, state)
-                    if cand_halt:
-                        halt_reason = cand_halt
-                        break
-                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
-                        continue
-
-                    eval_report = self._eval_sync(mutated)
-                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
-                    should_stop, stop_reason = self._check_budget_and_early_stop(
-                        i, effective_patience, baseline_tokens, state
-                    )
-                    if should_stop:
-                        if stop_reason:
-                            halt_reason = stop_reason
-                        break
-                except Exception as exc:
-                    exc_halt, should_break = self._handle_iteration_exception(
-                        exc, i, t0, prev_tokens, state
-                    )
-                    if exc_halt:
-                        halt_reason = exc_halt
-                    if should_break:
-                        break
+            halt_reason = self._run_sync_iterations(max_it, pat, base_tok, state)
         finally:
             self._finalize_disk_state(initial_content, state)
 
@@ -2240,156 +580,109 @@ class GitRatchetOptimizer:
             state.best_content, initial_holdout_score, state.kept_count
         )
         return self._build_final_report(
-            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
+            base_sc, initial_holdout_score, final_holdout_score, halt_reason, state
         )
 
     async def run_async(self) -> RatchetReport:
-        """Executes the full ratchet autonomous optimization loop asynchronously.
-
-        Native coroutine for running within existing asyncio event loops.
-        """
+        """Executes the full ratchet autonomous optimization loop asynchronously."""
         if not self.target_file.exists():
             raise FileNotFoundError(f"Target file not found: {self.target_file}")
 
         initial_content = self.target_file.read_text(encoding="utf-8")
-
-        # Zero-Token Short-Circuit (Sprint 3 / Sprint 4 / ADR-0058 / ADR-0059):
-        # If all mutation strategies have already been applied AND no unapplied failure signals exist, exit immediately.
-        unapplied = remaining_strategies(initial_content, self.config.skill_name)
-        has_unapplied_signals = False
-        arch = resolve_domain_archetype(self.config.skill_name)
-        arch_name = arch.name if arch else "general"
-        if arch_name in {"legal", "legal_tooling"}:
-            ledger = load_failure_ledger(self.config.skill_name)
-            if ledger and ledger.signals:
-                unapplied_sigs = get_unapplied_failure_signals(
-                    initial_content, list(ledger.signals)
-                )
-                has_unapplied_signals = len(unapplied_sigs) > 0
-
-        if not unapplied and not has_unapplied_signals:
-            logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
-                f"chiến lược đột biến có sẵn và không còn tín hiệu lỗi chưa áp. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
-            )
-            base_score = (
-                self.config.baseline_score if self.config.baseline_score is not None else 0.0
-            )
-            return RatchetReport(
-                target_file=str(self.target_file),
-                initial_score=base_score,
-                final_score=base_score,
-                total_iterations=0,
-                kept_commits=0,
-                reverted_trials=0,
-                history=[],
-                total_tokens=0,
-                prompt_tokens=0,
-                completion_tokens=0,
-                avg_latency_s=0.0,
-                halt_reason="HALT_NO_FURTHER_STRATEGIES",
-                slicing_tier=self.sliced_data.tier.value if self.sliced_data else None,
-                tuning_size=len(self.tuning_dataset),
-                holdout_size=len(self.holdout_dataset),
-                holdout_score=base_score if base_score > 0 else None,
-                holdout_initial_score=base_score if base_score > 0 else None,
-            )
+        arch_name, sc_report = self._check_zero_token_short_circuit(initial_content)
+        if sc_report is not None:
+            return sc_report
 
         try:
-            baseline_report = await self._eval_async(initial_content)
-        except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
-            return self._build_init_error_report(init_err)
-
-        # Seed failure signals into ledger for legal skills (Sprint 4 / ADR-0059)
-        if arch_name in {"legal", "legal_tooling"}:
             try:
-                signals = extract_failure_signals(
-                    baseline_report, self.tuning_dataset, self.legal_index
-                )
-                if signals:
-                    save_failure_ledger(self.config.skill_name, signals, initial_content)
-                    logger.info(
-                        f"⚖️ [LEDGER_SEEDED] Ghi nhận {len(signals)} tín hiệu lỗi vào sổ cái cho '{self.config.skill_name}'."
-                    )
-            except Exception as e:
-                logger.warning(f"Lỗi trích xuất tín hiệu lỗi sau baseline: {e}")
+                baseline_report = await self._eval_async(initial_content)
+            except (TokenBudgetExceededError, CircuitBreakerOpenError) as init_err:
+                return self._build_init_error_report(init_err)
 
-        baseline_score = baseline_report.overall_score
-        baseline_tokens = self.token_tracker.total_tokens
-        effective_max_iter, effective_patience = self._init_ratchet_budget(baseline_score)
-        state = _RatchetLoopState(
-            best_score=baseline_score,
-            best_content=initial_content,
-            seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
-        )
+            base_sc, base_tok, max_it, pat, state, early_rep = self._prepare_post_baseline_state(
+                arch_name, baseline_report, initial_content
+            )
+            if early_rep is not None:
+                return early_rep
 
-        # Baseline Hard Max Check (Sprint 3 / Issue #368)
-        if (
-            self.config.hard_max_tokens_per_skill is not None
-            and self.token_tracker.total_tokens >= self.config.hard_max_tokens_per_skill
-        ):
-            logger.info(
-                f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Baseline tokens ({self.token_tracker.total_tokens:,}) "
-                f"đã chạm hoặc vượt trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}). Dừng đột biến."
+            initial_holdout_score = await self._eval_holdout_base_async(initial_content)
+            try:
+                halt_reason = await self._run_async_iterations(max_it, pat, base_tok, state)
+            finally:
+                self._finalize_disk_state(initial_content, state)
+
+            if state.finalize_error:
+                raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
+
+            final_holdout_score = await self._eval_holdout_final_async(
+                state.best_content, initial_holdout_score, state.kept_count
             )
             return self._build_final_report(
-                baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
+                base_sc, initial_holdout_score, final_holdout_score, halt_reason, state
             )
-
-        initial_holdout_score = await self._eval_holdout_base_async(initial_content)
-        halt_reason: str | None = None
-
-        try:
-            for i in range(1, effective_max_iter + 1):
-                logger.info(f"🔄 --- Iteration {i}/{effective_max_iter} ---")
-                prev_tokens, t0 = self._token_snapshot(), time.perf_counter()
-                try:
-                    mutated, cand_halt = self._propose_candidate(i, state)
-                    if cand_halt:
-                        halt_reason = cand_halt
-                        break
-                    if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
-                        continue
-
-                    eval_report = await self._eval_async(mutated)
-                    self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
-                    should_stop, stop_reason = self._check_budget_and_early_stop(
-                        i, effective_patience, baseline_tokens, state
-                    )
-                    if should_stop:
-                        if stop_reason:
-                            halt_reason = stop_reason
-                        break
-                except Exception as exc:
-                    exc_halt, should_break = self._handle_iteration_exception(
-                        exc, i, t0, prev_tokens, state
-                    )
-                    if exc_halt:
-                        halt_reason = exc_halt
-                    if should_break:
-                        break
         finally:
-            self._finalize_disk_state(initial_content, state)
-
-        if state.finalize_error:
-            raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
-
-        final_holdout_score = await self._eval_holdout_final_async(
-            state.best_content, initial_holdout_score, state.kept_count
-        )
-        return self._build_final_report(
-            baseline_score, initial_holdout_score, final_holdout_score, halt_reason, state
-        )
+            await self._close_async_resources()
 
 
-# Public alias for backwards compatibility
 GitRatchetTuner = GitRatchetOptimizer
 
 
 def mutate_skill(content: str, iteration: int, skill_name: str = "generic") -> str:
     """Mutates skill content by applying unapplied optimization strategies without junk comments."""
-    from pathlib import Path
-
     cfg = RatchetConfig(target_file=Path("SKILL.md"), skill_name=skill_name)
     optimizer = GitRatchetOptimizer(cfg, dry_run_git=True)
     return optimizer.propose_mutation(content, iteration)
+
+
+__all__ = [
+    "ACADEMIC_ARCHETYPE_KEYWORDS",
+    "ADR_ARCHETYPE_KEYWORDS",
+    "ADR_HEADER_TAG_REGEX",
+    "ADR_REF_PATTERN",
+    "AIClient",
+    "AdaptiveRateLimiter",
+    "AsyncAIClient",
+    "BIM_ARCHETYPE_KEYWORDS",
+    "BIM_GOVERNANCE_ARCHETYPE_KEYWORDS",
+    "BIM_RASE_ARCHETYPE_KEYWORDS",
+    "CODING_ARCHETYPE_KEYWORDS",
+    "CircuitBreaker",
+    "CircuitBreakerOpenError",
+    "DEFAULT_MUTATION_STRATEGIES_PATH",
+    "DOMAIN_ARCHETYPES",
+    "DomainArchetype",
+    "GRILLING_ARCHETYPE_KEYWORDS",
+    "GitMutexLock",
+    "GitRatchetOptimizer",
+    "GitRatchetTuner",
+    "LEGAL_ARCHETYPE_KEYWORDS",
+    "LLMTaskAdapter",
+    "OFFICE_ARCHETYPE_KEYWORDS",
+    "ORCHESTRATION_ARCHETYPE_KEYWORDS",
+    "RISK_ARCHETYPE_KEYWORDS",
+    "RatchetConfig",
+    "RatchetReport",
+    "RatchetTrialResult",
+    "RateLimiter",
+    "TECH_QC_ARCHETYPE_KEYWORDS",
+    "TokenBudgetExceededError",
+    "TokenUsageTracker",
+    "VISUAL_ARCHETYPE_KEYWORDS",
+    "_RatchetLoopState",
+    "_RatchetSession",
+    "_UNSET",
+    "_detect_program_root",
+    "_resolve_cfg_bool",
+    "_resolve_cfg_float",
+    "_resolve_cfg_int",
+    "get_default_domain_scorers",
+    "load_mutation_strategies",
+    "load_tuner_config",
+    "mutate_skill",
+    "preserve_yaml_frontmatter",
+    "reload_mutation_strategies",
+    "reload_tuner_config",
+    "remaining_strategies",
+    "resolve_domain_archetype",
+    "resolve_domain_dataset",
+]

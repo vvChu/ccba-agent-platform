@@ -19,7 +19,7 @@ DRY_RUN_FLAG=""
 MAX_ITER="30"
 TARGET_REF="${TARGET_REF:-origin/main}"
 USE_REAL_LLM_FLAG=""
-TOKEN_BUDGET_FLAG="--token-budget 10000000"
+BUDGET_LIMIT_FLAG="--token-budget 10000000"
 MODEL_FLAG=""
 SKILL_FLAG=""
 
@@ -65,7 +65,7 @@ EOF
             shift
             ;;
         --token-budget)
-            TOKEN_BUDGET_FLAG="--token-budget $2"
+            BUDGET_LIMIT_FLAG="--token-budget $2"
             shift 2
             ;;
         --model)
@@ -141,11 +141,11 @@ cleanup_worktree() {
         if [ -z "$DRY_RUN_FLAG" ]; then
             if [ -d "$WORKTREE_DIR/.md/knowledge/reports" ]; then
                 mkdir -p "$PROJECT_ROOT/.md/knowledge/reports"
-                find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
+                find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 \( -name "nightly_tuner_report_*.md" -o -name ".eval_strategies_hash" \) -exec cp -pf {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
             fi
             if [ -d "$WORKTREE_DIR/.md/knowledge/escalations" ]; then
                 mkdir -p "$PROJECT_ROOT/.md/knowledge/escalations"
-                find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
+                find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 \( -name "*_plateau.md" -o -name "*_failures.json" \) -exec cp -pf {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
             fi
         fi
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
@@ -166,7 +166,7 @@ cleanup_worktree() {
         elif [ -z "$DRY_RUN_FLAG" ] && [ -d "$SPOKE_WORKTREE_DIR/.md/reports" ]; then
             # Push failed or was not performed: preserve reports locally so data is not lost
             mkdir -p "$LEGAL_SPOKE_DIR/.md/reports"
-            find "$SPOKE_WORKTREE_DIR/.md/reports" -maxdepth 1 \( -name "nightly_*.md" -o -name "nightly_*.json" \) -exec cp -f {} "$LEGAL_SPOKE_DIR/.md/reports/" \; 2>/dev/null || true
+            find "$SPOKE_WORKTREE_DIR/.md/reports" -maxdepth 1 \( -name "nightly_*.md" -o -name "nightly_*.json" \) -exec cp -pf {} "$LEGAL_SPOKE_DIR/.md/reports/" \; 2>/dev/null || true
         fi
         git -C "$LEGAL_SPOKE_DIR" worktree remove --force "$SPOKE_WORKTREE_DIR" 2>/dev/null || true
         git -C "$LEGAL_SPOKE_DIR" worktree prune 2>/dev/null || true
@@ -240,11 +240,11 @@ fi
 # Replicate historical reports and plateau briefs to ephemeral worktree to eliminate Blind Worktree vulnerability
 if [ -d "$PROJECT_ROOT/.md/knowledge/reports" ]; then
     mkdir -p "$WORKTREE_DIR/.md/knowledge/reports"
-    find "$PROJECT_ROOT/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/reports/" \; 2>/dev/null || true
+    find "$PROJECT_ROOT/.md/knowledge/reports" -maxdepth 1 \( -name "nightly_tuner_report_*.md" -o -name ".eval_strategies_hash" \) -exec cp -pf {} "$WORKTREE_DIR/.md/knowledge/reports/" \; 2>/dev/null || true
 fi
 if [ -d "$PROJECT_ROOT/.md/knowledge/escalations" ]; then
     mkdir -p "$WORKTREE_DIR/.md/knowledge/escalations"
-    find "$PROJECT_ROOT/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/escalations/" \; 2>/dev/null || true
+    find "$PROJECT_ROOT/.md/knowledge/escalations" -maxdepth 1 \( -name "*_plateau.md" -o -name "*_failures.json" \) -exec cp -pf {} "$WORKTREE_DIR/.md/knowledge/escalations/" \; 2>/dev/null || true
 fi
 
 # Activate python virtualenv if exists
@@ -354,7 +354,7 @@ git checkout --detach "$TARGET_REF"
 
 # 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
 echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER, skip-cooldown: ON)..."
-python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" --skip-cooldown ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${TOKEN_BUDGET_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
+python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" --skip-cooldown ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${BUDGET_LIMIT_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
 
 echo "================================================================="
 echo "[CCBA Nightly Daemon] Finished successfully at $(date)"

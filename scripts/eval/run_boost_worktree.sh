@@ -49,14 +49,14 @@ cleanup_worktree() {
     echo "🧹 Đang thu hồi tài nguyên Ephemeral Worktree ($WORKTREE_DIR)..."
     cd "$PROJECT_ROOT"
     if [ -d "$WORKTREE_DIR" ]; then
-        # Copy newly generated reports and plateau briefs back to main project root
+        # Copy newly generated reports and plateau briefs back to main project root (preserving mtime)
         if [ -d "$WORKTREE_DIR/.md/knowledge/reports" ]; then
             mkdir -p "$PROJECT_ROOT/.md/knowledge/reports"
-            find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
+            find "$WORKTREE_DIR/.md/knowledge/reports" -maxdepth 1 \( -name "nightly_tuner_report_*.md" -o -name ".eval_strategies_hash" \) -exec cp -pf {} "$PROJECT_ROOT/.md/knowledge/reports/" \; 2>/dev/null || true
         fi
         if [ -d "$WORKTREE_DIR/.md/knowledge/escalations" ]; then
             mkdir -p "$PROJECT_ROOT/.md/knowledge/escalations"
-            find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
+            find "$WORKTREE_DIR/.md/knowledge/escalations" -maxdepth 1 \( -name "*_plateau.md" -o -name "*_failures.json" \) -exec cp -pf {} "$PROJECT_ROOT/.md/knowledge/escalations/" \; 2>/dev/null || true
         fi
         git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
     fi
@@ -92,14 +92,14 @@ if [ -f "$PROJECT_ROOT/.env" ] && [ ! -f "$WORKTREE_DIR/.env" ]; then
     cp -n "$PROJECT_ROOT/.env" "$WORKTREE_DIR/.env" 2>/dev/null || true
 fi
 
-# Replicate historical reports and plateau briefs to ephemeral worktree
+# Replicate historical reports and plateau briefs to ephemeral worktree (preserving mtime)
 if [ -d "$PROJECT_ROOT/.md/knowledge/reports" ]; then
     mkdir -p "$WORKTREE_DIR/.md/knowledge/reports"
-    find "$PROJECT_ROOT/.md/knowledge/reports" -maxdepth 1 -name "nightly_tuner_report_*.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/reports/" \; 2>/dev/null || true
+    find "$PROJECT_ROOT/.md/knowledge/reports" -maxdepth 1 \( -name "nightly_tuner_report_*.md" -o -name ".eval_strategies_hash" \) -exec cp -pf {} "$WORKTREE_DIR/.md/knowledge/reports/" \; 2>/dev/null || true
 fi
 if [ -d "$PROJECT_ROOT/.md/knowledge/escalations" ]; then
     mkdir -p "$WORKTREE_DIR/.md/knowledge/escalations"
-    find "$PROJECT_ROOT/.md/knowledge/escalations" -maxdepth 1 -name "*_plateau.md" -exec cp -f {} "$WORKTREE_DIR/.md/knowledge/escalations/" \; 2>/dev/null || true
+    find "$PROJECT_ROOT/.md/knowledge/escalations" -maxdepth 1 \( -name "*_plateau.md" -o -name "*_failures.json" \) -exec cp -pf {} "$WORKTREE_DIR/.md/knowledge/escalations/" \; 2>/dev/null || true
 fi
 
 # Activate python virtualenv if exists
