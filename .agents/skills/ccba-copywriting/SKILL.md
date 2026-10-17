@@ -3,9 +3,6 @@ name: ccba-copywriting
 description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
   và áp dụng các công thức viết thuyết phục (AIDA, PAS).
 role: master_skill
-sub_skills:
-- form-template-cleaner
-- ccba-viet-chuyen-nghiep
 argument-hint: '[loại-văn-bản-theo-mẫu] [ngữ-cảnh]'
 license: MIT
 metadata:
@@ -35,7 +32,7 @@ triggers:
 
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
 
-Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `xu-ly-van-phong` (thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/`).
+Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, quyết định, công văn, hợp đồng, tờ trình...) theo biểu mẫu chuẩn lưu tại kỹ năng `ccba-xu-ly-van-phong` (thư mục `/.agents/skills/ccba-xu-ly-van-phong/templates/`).
 
 ---
 

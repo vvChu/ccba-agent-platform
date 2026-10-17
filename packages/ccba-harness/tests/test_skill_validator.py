@@ -253,6 +253,14 @@ def test_workspace_gates_duplicate_and_context_budget() -> None:
         gate_issues = validator.audit_workspace_gates(skills_dir)
         assert any(i.category == "ZERO_DUPLICATE_GATE_VIOLATION" for i in gate_issues)
 
+        # Dangling skill relation reference (dependencies / sub_skills / master_skill)
+        skill3_dir = skills_dir / "ccba-dangling"
+        skill3_dir.mkdir(parents=True)
+        dangling_content = "---\nname: ccba-dangling\ndescription: Desc.\nbundle: _core\nmaster_skill: non-existent-skill\n---\n# Dangling\n"
+        (skill3_dir / "SKILL.md").write_text(dangling_content, encoding="utf-8")
+        gate_issues_dangling = validator.audit_workspace_gates(skills_dir)
+        assert any(i.category == "DANGLING_SKILL_DEPENDENCY" for i in gate_issues_dangling)
+
 
 def test_workflow_audit() -> None:
     """Test workflow validation constraints."""

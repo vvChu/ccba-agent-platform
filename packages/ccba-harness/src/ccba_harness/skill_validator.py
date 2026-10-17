@@ -43,45 +43,18 @@ STEP_LINE_RE = re.compile(
     re.IGNORECASE,
 )
 
-WORKFLOW_HEADERS: set[str] = {
-    "workflow",
-    "quy trình",
-    "các bước",
-    "steps",
-    "hành động",
-    "chuyển đổi",
-    "tiến hành",
-    "thực hiện",
-}
+WORKFLOW_HEADERS: set[str] = set(
+    "workflow|quy trình|các bước|steps|hành động|chuyển đổi|tiến hành|thực hiện".split("|")
+)
 
-EXCLUSION_HEADERS: set[str] = {
-    "lưu ý",
-    "chú ý",
-    "notes",
-    "yêu cầu",
-    "rules",
-    "quy tắc",
-    "tham chiếu",
-    "reference",
-    "giới thiệu",
-    "introduction",
-    "tổng quan",
-    "overview",
-    "chuẩn bị",
-    "setup",
-    "tiêu chí hoàn thành",
-    "completion criteria",
-    "definition of done",
-}
+EXCLUSION_HEADERS: set[str] = set(
+    "lưu ý|chú ý|notes|yêu cầu|rules|quy tắc|tham chiếu|reference|giới thiệu|introduction|"
+    "tổng quan|overview|chuẩn bị|setup|tiêu chí hoàn thành|completion criteria|definition of done".split(
+        "|"
+    )
+)
 
-DEFAULT_VALID_BUNDLES: set[str] = {
-    "_core",
-    "_software",
-    "_qc",
-    "_consulting",
-    "_bim",
-    "_governance",
-}
+DEFAULT_VALID_BUNDLES: set[str] = set("_core _software _qc _consulting _bim _governance".split())
 
 SHALLOW_SKILL_MIN_LINES = 35
 MAX_MODEL_INVOKED_PER_BUNDLE = 10
@@ -92,32 +65,13 @@ COMMON_PATH_SEGMENTS: set[str] = set(
     "dist node_modules artifacts".split()
 )
 
+ALLOWED_HOST_COMMANDS: set[str] = set(
+    "/boost /browser /clear /compact /goal /grill-me /init /learn /schedule /ship /skill-repair /teamwork-preview /ui-ux-pro-max".split()
+)
 
-ALLOWED_HOST_COMMANDS: set[str] = {
-    "/boost",
-    "/browser",
-    "/clear",
-    "/compact",
-    "/goal",
-    "/grill-me",
-    "/init",
-    "/learn",
-    "/schedule",
-    "/ship",
-    "/skill-repair",
-    "/teamwork-preview",
-    "/ui-ux-pro-max",
-}
-
-GITLAB_QUICK_ACTIONS: set[str] = {
-    "/blocked_by",
-    "/close",
-    "/reopen",
-    "/assign",
-    "/milestone",
-    "/label",
-    "/cc",
-}
+GITLAB_QUICK_ACTIONS: set[str] = set(
+    "/blocked_by /close /reopen /assign /milestone /label /cc".split()
+)
 
 
 LINK_EXTRACT_RE = re.compile(r"\[.*?\]\(([^)]+)\)")
@@ -1429,23 +1383,35 @@ class SkillValidator:
         if not skills_dir.exists():
             return issues
 
-        skill_files = list(skills_dir.rglob("SKILL.md"))
+        skill_files = sorted(skills_dir.rglob("SKILL.md"), key=lambda p: p.as_posix())
         seen_names: dict[str, list[Path]] = defaultdict(list)
         bundle_model_invoked_counts: dict[str, int] = defaultdict(int)
+        skill_relations: list[tuple[str, Path, str, str]] = []
 
         for sf in skill_files:
             try:
                 content = sf.read_text(encoding="utf-8")
-                # Shallow skill check across workspace
                 issues.extend(self.check_shallow_skill(sf, content))
 
                 match = FRONTMATTER_RE.match(content)
                 if match and yaml is not None:
                     meta = yaml.safe_load(match.group(1))
                     if isinstance(meta, dict):
-                        name = meta.get("name")
+                        name = str(meta.get("name") or "").strip()
                         if name:
-                            seen_names[str(name).strip().lower()].append(sf)
+                            seen_names[name.lower()].append(sf)
+                        for rel_field in ("dependencies", "sub_skills", "master_skill"):
+                            raw_rel = meta.get(rel_field)
+                            rel_items = (
+                                [raw_rel]
+                                if isinstance(raw_rel, str)
+                                else (raw_rel if isinstance(raw_rel, list) else [])
+                            )
+                            for item in rel_items:
+                                if isinstance(item, str) and item.strip():
+                                    skill_relations.append(
+                                        (name or sf.parent.name, sf, rel_field, item.strip())
+                                    )
 
                         disable_model_inv = meta.get("disable-model-invocation", False)
                         if isinstance(disable_model_inv, str):
@@ -1471,8 +1437,7 @@ class SkillValidator:
                     SkillAuditIssue(
                         1,
                         skill_name,
-                        f"Duplicate skill name '{skill_name}' found across multiple locations: "
-                        f"{', '.join(rel_paths)}",
+                        f"Duplicate skill name '{skill_name}' found across multiple locations: {', '.join(rel_paths)}",
                         category="ZERO_DUPLICATE_GATE_VIOLATION",
                         file_path=str(paths[0]),
                     )
@@ -1493,41 +1458,41 @@ class SkillValidator:
                     )
                 )
 
-        # 3. Relative Link Integrity Gate across all skill markdown files
-        all_md_files = sorted(skills_dir.rglob("*.md"))
-        for md_file in all_md_files:
-            for link_issue in self.validate_markdown_links(md_file):
-                if hasattr(link_issue, "to_audit_issue"):
-                    issues.append(link_issue.to_audit_issue())
-                else:
-                    issues.append(
-                        SkillAuditIssue(
-                            1,
-                            str(md_file),
-                            str(link_issue),
-                            category="BROKEN_MARKDOWN_LINK",
-                            file_path=str(md_file),
-                        )
+        # 3. Skill Relation Reference Integrity Gate (dependencies, sub_skills, master_skill)
+        for src_skill, sf, rel_field, target_skill in skill_relations:
+            if target_skill.lower() not in seen_names:
+                issues.append(
+                    SkillAuditIssue(
+                        1,
+                        src_skill,
+                        f"Skill '{src_skill}' declares {rel_field} reference to unknown skill '{target_skill}'.",
+                        category="DANGLING_SKILL_DEPENDENCY",
+                        file_path=str(sf),
                     )
+                )
 
-        # 4. Slash Command Registry Parity Gate across all skill markdown files
+        # 4. Relative Link Integrity & Slash Command Registry Parity Gates
+        all_md_files = sorted(skills_dir.rglob("*.md"), key=lambda p: p.as_posix())
         registered_cmds = self.get_registered_commands()
         for md_file in all_md_files:
+            for link_issue in self.validate_markdown_links(md_file):
+                issues.append(
+                    link_issue.to_audit_issue()
+                    if hasattr(link_issue, "to_audit_issue")
+                    else SkillAuditIssue(
+                        1, str(md_file), str(link_issue), "BROKEN_MARKDOWN_LINK", str(md_file)
+                    )
+                )
             for cmd_issue in self.audit_slash_commands(
                 md_file, registered_commands=registered_cmds
             ):
-                if hasattr(cmd_issue, "to_audit_issue"):
-                    issues.append(cmd_issue.to_audit_issue())
-                else:
-                    issues.append(
-                        SkillAuditIssue(
-                            1,
-                            str(md_file),
-                            str(cmd_issue),
-                            category="UNREGISTERED_SLASH_COMMAND",
-                            file_path=str(md_file),
-                        )
+                issues.append(
+                    cmd_issue.to_audit_issue()
+                    if hasattr(cmd_issue, "to_audit_issue")
+                    else SkillAuditIssue(
+                        1, str(md_file), str(cmd_issue), "UNREGISTERED_SLASH_COMMAND", str(md_file)
                     )
+                )
 
         return issues
 
@@ -1535,4 +1500,4 @@ class SkillValidator:
         """Run CLI validation on target paths."""
         from .cli import run_skill_validation_cli
 
-        return run_skill_validation_cli(args_list, validator=self)
+        return int(run_skill_validation_cli(args_list, validator=self))
