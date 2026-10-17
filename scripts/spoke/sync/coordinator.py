@@ -17,6 +17,14 @@ from typing import Any
 from .backup import GitWorkingTreeGuard, SpokeBackupManager
 from .base import HubNotFoundError, are_dirs_identical, are_files_identical, load_yaml, safe_remove
 from .discovery import HubDiscoverer
+from .graduation import (
+    audit_spoke_markdown_links,
+    merge_core_invariants_block,
+    normalize_spoke_agents_links,
+    split_markdown_sections,
+    supersede_graduated_spoke_docs,
+    sync_layer2_rules,
+)
 from .registry import SpokeRegistrar
 from .sdk_inspector import (
     LegalKnowledgeSyncOrchestrator,
@@ -342,84 +350,46 @@ def parse_invariants_section(content: str) -> tuple[str, list[tuple[str, str]]]:
     return "".join(preamble_lines), item_tuples
 
 
-def merge_agents_constitution(hub_text: str, spoke_text: str) -> str:
+def merge_agents_constitution(
+    hub_text: str,
+    spoke_text: str,
+    spoke_root: Path | None = None,
+) -> str:
     """Merge Hub constitution into Spoke AGENTS.md while preserving custom Spoke sections and invariants.
 
     Args:
         hub_text: Content of Hub's AGENTS.md (canonical constitution).
         spoke_text: Content of Spoke's existing AGENTS.md.
+        spoke_root: Optional Spoke root directory for conditional link normalization.
 
     Returns:
         Merged content containing Hub's updated constitution, merged Core Invariants,
-        and preserving any custom sections (e.g., '## Agent skills', '## Custom Rules')
-        present in Spoke. Strictly idempotent.
+        normalized Layer 2 rule links, and preserving any custom sections present in Spoke.
     """
-    if not spoke_text.strip():
-        return hub_text
     if not hub_text.strip():
         return spoke_text
+    if not spoke_text.strip():
+        return normalize_spoke_agents_links(hub_text, spoke_root=spoke_root)
 
-    def split_into_sections(text: str) -> list[tuple[str, str]]:
-        lines = text.splitlines(keepends=True)
-        sections: list[tuple[str, str]] = []
-        current_heading = ""
-        current_lines: list[str] = []
-
-        for line in lines:
-            if line.startswith("## "):
-                if current_lines or current_heading:
-                    sections.append((current_heading, "".join(current_lines)))
-                    current_lines = []
-                current_heading = line.strip()
-                current_lines.append(line)
-            else:
-                current_lines.append(line)
-
-        if current_lines or current_heading:
-            sections.append((current_heading, "".join(current_lines)))
-
-        return sections
-
-    hub_sections = split_into_sections(hub_text)
-    spoke_sections = split_into_sections(spoke_text)
-
+    hub_sections = split_markdown_sections(hub_text)
+    spoke_sections = split_markdown_sections(spoke_text)
     hub_dict = dict(hub_sections)
     spoke_dict = dict(spoke_sections)
 
-    # Smart merge for ## Core Invariants
     inv_heading = "## Core Invariants"
     if inv_heading in hub_dict and inv_heading in spoke_dict:
-        hub_inv_content = hub_dict[inv_heading]
-        spoke_inv_content = spoke_dict[inv_heading]
+        hub_dict[inv_heading] = merge_core_invariants_block(
+            hub_dict[inv_heading], spoke_dict[inv_heading], parse_invariants_section
+        )
 
-        _, hub_items = parse_invariants_section(hub_inv_content)
-        _, spoke_items = parse_invariants_section(spoke_inv_content)
-
-        hub_keys_norm = {k.strip().lower() for k, _ in hub_items}
-        custom_spoke_items = [
-            item_text for k, item_text in spoke_items if k.strip().lower() not in hub_keys_norm
-        ]
-
-        if custom_spoke_items:
-            clean_hub_inv = hub_inv_content.rstrip()
-            joined_spoke_items = "".join(
-                item if item.endswith("\n") else item + "\n" for item in custom_spoke_items
-            )
-            merged_inv_content = f"{clean_hub_inv}\n{joined_spoke_items}\n"
-            hub_dict[inv_heading] = merged_inv_content
-
-    # Reconstruct hub sections preserving original order
-    merged_sections: list[str] = []
-    for heading, _ in hub_sections:
-        merged_sections.append(hub_dict[heading].rstrip())
-
-    # Append custom spoke sections not present in hub
+    merged_sections = [hub_dict[heading].rstrip() for heading, _ in hub_sections]
     hub_headings = {h for h, _ in hub_sections if h}
     for heading, content in spoke_sections:
         if heading and heading not in hub_headings:
             merged_sections.append(content.rstrip())
 
-    return "\n\n".join(merged_sections).rstrip() + "\n"
+    merged = "\n\n".join(merged_sections).rstrip() + "\n"
+    return normalize_spoke_agents_links(merged, spoke_root=spoke_root)
 
 
 def ensure_peer_exchange_scaffold(spoke_root: Path, hub_root: Path, dry_run: bool = False) -> None:
@@ -636,16 +606,18 @@ class SpokeSynchronizer:
             )
             return 1
 
-        # Merge constitution AGENTS.md
+        # Merge constitution AGENTS.md & Layer 2 rules (COND-01)
+        sync_layer2_rules(spoke_root, hub_root, dry_run=dry_run)
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists() and hub_agents_md.resolve() != spoke_agents_md.resolve():
             hub_content = hub_agents_md.read_text(encoding="utf-8")
-            if spoke_agents_md.exists():
-                spoke_content = spoke_agents_md.read_text(encoding="utf-8")
-                merged_content = merge_agents_constitution(hub_content, spoke_content)
-            else:
-                merged_content = hub_content
+            spoke_content = (
+                spoke_agents_md.read_text(encoding="utf-8") if spoke_agents_md.exists() else ""
+            )
+            merged_content = merge_agents_constitution(
+                hub_content, spoke_content, spoke_root=spoke_root
+            )
 
             if dry_run:
                 print(
@@ -653,7 +625,7 @@ class SpokeSynchronizer:
                 )
             else:
                 spoke_agents_dir.mkdir(parents=True, exist_ok=True)
-                spoke_agents_md.write_text(merged_content, encoding="utf-8")
+                spoke_agents_md.write_text(merged_content, encoding="utf-8", newline="\n")
 
         if dry_run:
             print("\n=== [DRY-RUN] On-Demand Sync Simulation Completed ===")
@@ -951,18 +923,20 @@ class SpokeSynchronizer:
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(src, dest)
 
-        # 3. Non-Destructive Merge AGENTS.md
+        # 3. Non-Destructive Merge AGENTS.md & Layer 2 Rules (COND-01 & COND-02)
         hub_agents_md = hub_root / ".agents" / "AGENTS.md"
         spoke_agents_md = spoke_agents_dir / "AGENTS.md"
         if hub_agents_md.exists() and hub_agents_md.resolve() != spoke_agents_md.resolve():
             hub_content = hub_agents_md.read_text(encoding="utf-8")
             if not spoke_agents_md.exists():
                 rule_status = "NEW"
-                merged_content = hub_content
+                merged_content = merge_agents_constitution(hub_content, "", spoke_root=spoke_root)
             else:
                 spoke_content = spoke_agents_md.read_text(encoding="utf-8")
-                merged_content = merge_agents_constitution(hub_content, spoke_content)
-                if merged_content == spoke_content:
+                merged_content = merge_agents_constitution(
+                    hub_content, spoke_content, spoke_root=spoke_root
+                )
+                if merged_content == spoke_content.replace("\r\n", "\n"):
                     rule_status = "UNCHANGED"
                 else:
                     rule_status = "UPDATED"
@@ -977,7 +951,12 @@ class SpokeSynchronizer:
             )
             if not dry_run and rule_status in ("NEW", "UPDATED"):
                 spoke_agents_dir.mkdir(parents=True, exist_ok=True)
-                spoke_agents_md.write_text(merged_content, encoding="utf-8")
+                spoke_agents_md.write_text(merged_content, encoding="utf-8", newline="\n")
+
+        actions.extend(sync_layer2_rules(spoke_root, hub_root, dry_run=dry_run))
+        actions.extend(supersede_graduated_spoke_docs(spoke_root, hub_root, dry_run=dry_run))
+        if not dry_run:
+            audit_spoke_markdown_links(spoke_root, apply_fixes=True)
 
         # 4. Test guardrails
         guardrail_actions = TestGuardrailCopier(spoke_root, hub_root, project_type).copy_if_needed(
@@ -1335,6 +1314,16 @@ class SpokeSynchronizer:
         print(" 🛡️  CCBA SPOKE DETERMINISTIC POST-SYNC VERIFICATION (ADR-0058)")
         print(f" Target Spoke: {self.spoke_root}")
         print("=" * 85)
+
+        link_errors = audit_spoke_markdown_links(self.spoke_root, apply_fixes=False)
+        if link_errors:
+            print(
+                "❌ FAILED: Spoke markdown link parity audit detected broken links:",
+                file=sys.stderr,
+            )
+            for err in link_errors:
+                print(f"  - {err}", file=sys.stderr)
+            return 1
 
         cmds: list[str] = []
         if cleanliness_script.exists():

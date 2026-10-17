@@ -11,6 +11,8 @@ applies_to:
   - "Phần mềm"
   - "Thẩm tra thiết kế"
   - "Tất cả Spokes"
+graduated_to: "" # Optional: docs/adr/XXXX-short-name.md when status == "merged"
+supersedes_spoke_docs: [] # Optional: list of Spoke draft paths (e.g., [".md/knowledge/draft_name.md"]) to archive & stub
 ---
 
 # RFC Proposal: [Tiêu Đề Đề Bạt Sáng Kiến Spoke Lên Hub]
@@ -18,7 +20,7 @@ applies_to:
 - **Tác giả đề xuất:** Kỹ sư / Agent đại diện Spoke (`[spoke_id]`)
 - **Ngày lập:** YYYY-MM-DD
 - **Trạng thái:** Đang đề xuất (Proposed)
-- **Căn cứ pháp lý nền tảng:** [ADR-0045](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), Quy chế Tổ chức CCBA 2026.
+- **Căn cứ pháp lý nền tảng:** [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0046](../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), Quy chế Tổ chức CCBA 2026.
 
 ---
 
