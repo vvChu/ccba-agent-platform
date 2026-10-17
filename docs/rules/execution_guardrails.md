@@ -403,27 +403,40 @@ Khi thực hiện AI Review, các reviewers tự động bắt buộc phải đ�
 
 ---
 
-## 20. Level-2 Peer Agent Delegation Protocol (Grok ↔ Antigravity Cost & Turn Guardrails - ADR-0063)
+## 20. Level-2 Peer Agent Delegation Protocol (Grok ↔ Antigravity Cost, Turn & Liveness Guardrails - ADR-0063..0065)
 
-Nhằm tối ưu hóa hiệu quả chi phí, kiểm soát ngân sách token và ngăn chặn rủi ro bão vòng lặp ReAct vô hạn khi ủy quyền nhiệm vụ giữa Antigravity và Grok CLI, toàn bộ tiến trình tương tác bắt buộc tuân thủ 4 quy chuẩn sau:
+Nhằm tối ưu hóa hiệu quả chi phí, kiểm soát ngân sách token, kế thừa KV-Cache liên giai đoạn và ngăn chặn rủi ro treo tiến trình hoặc suy thoái suy luận âm thầm khi ủy quyền nhiệm vụ giữa Antigravity và Grok CLI, toàn bộ tiến trình tương tác bắt buộc tuân thủ 5 quy chuẩn sau:
 
-### 20.1. Rào Chắn Trần Vòng Lặp Bắt Buộc (Mandatory Turn Budget Cap)
-- **Nghiêm cấm** triệu hồi Grok CLI ở chế độ vô trần (`--max-turns` không giới hạn) cho các tác vụ viết mã logic hay lập kế hoạch.
-- Mọi lệnh gọi Grok CLI bắt buộc phải đi qua Seam `ccba_harness.peer.invoke_grok_cli` hoặc CLI `ccba-harness peer-dispatch` với trần turns được cấu hình:
-  1. **`AUDIT_PLAN`**: Trần tối đa **$\le 12$ turns** (chỉ cho phép các tool đọc: `read_file`, `grep`, `list_dir`; nghiêm cấm sửa file, terminal, và `spawn_subagent`).
-  2. **`AGENTIC_CODE`**: Trần tối đa **$\le 8$ turns** (chu trình 2 vòng sửa + 2 vòng test; nếu sau 8 turns chưa pass test $\rightarrow$ kích hoạt cơ chế dừng sớm HANDOFF để Antigravity xử lý, cấm commit mã vỡ).
-  3. **`PATCH_FAST`**: Trần **đúng 1 turn** (`--max-turns 1`, không dùng tool) sinh bản ghi neo để Antigravity áp dụng.
+### 20.1. Ma Trận 8 Execution Profiles & Trần Vòng Lặp Bắt Buộc (`PROFILE_SPECS`)
+- **Nghiêm cấm** triệu hồi Grok CLI ở chế độ vô trần (`--max-turns` không giới hạn) hoặc bỏ qua cờ `--verbatim --disable-web-search`.
+- Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc CLI `ccba-harness peer-dispatch` theo 8 profiles chuẩn hóa trong `PROFILE_SPECS`:
+  1. **`deep_spec_audit` (Stage 1 Pre-Code Deep Audit)**: Trần **$\le 25$ turns**, `reasoning_effort: xhigh`, `output_format: json`, `timeout: 900s`, chỉ cho phép công cụ đọc (`read_file`, `grep`, `list_dir`).
+  2. **`audit_plan`**: Trần **$\le 12$ turns**, `reasoning_effort: xhigh`, `timeout: 900s`, chỉ đọc (`READ_ONLY_DISALLOW_LIST`).
+  3. **`signoff_diff` (Stage 3 Post-Code Sign-off)**: Trần **$\le 15$ turns**, `reasoning_effort: high`, `output_format: json`, `fork_session: True`, `timeout: 600s`; hỗ trợ `--resume <session_id> --fork-session` kế thừa KV-Cache từ Stage 1 (hoặc kèm `--no-tools` khi đã nhúng đủ diff trong prompt).
+  4. **`arch_audit`**: Trần **$\le 8$ turns**, `reasoning_effort: xhigh`, `timeout: 600s`, chỉ đọc.
+  5. **`code_review`**: Trần **$\le 10$ turns**, `reasoning_effort: high`, `timeout: 300s`, chỉ đọc.
+  6. **`audit_direct`**: Trần **$\le 3$ turns**, `reasoning_effort: high`, `timeout: 120s`, khóa toàn bộ 15 built-in tools (`NO_TOOLS_DISALLOW_LIST`, `--deny "*"`).
+  7. **`agentic_code`**: Trần **$\le 8$ turns**, `reasoning_effort: high`, `timeout: 600s`, cho phép `read_file`, `search_replace`, `list_dir`.
+  8. **`patch_fast`**: Trần **đúng 1 turn** (`--max-turns 1`), `timeout: 120s`, khóa toàn bộ 15 built-in tools (`NO_TOOLS_DISALLOW_LIST`, `--deny "*"`), sinh bản ghi neo để Antigravity áp dụng.
 
-### 20.2. Quy Chuẩn Bản Ghi Neo Cho Thay Đổi Cục Bộ (Anchor Replacement Invariant)
-- Với các thay đổi nhỏ ($\le 100$ LOC) trong phạm vi 1 seam, ưu tiên tuyệt đối chế độ `PATCH_FAST`.
-- Cấm yêu cầu LLM tự sinh `git diff` thô vì rủi ro lệch dòng (offset drift) do đếm sai số dòng.
-- Bắt buộc sử dụng Hợp đồng Bản ghi Neo (`{path, blob_sha256, replacements: [{old, new}]}`). Bộ áp dụng `apply_anchor_patch` bắt buộc xác thực mã SHA-256 của file trước khi sửa và đảm bảo chuỗi `old` xuất hiện duy nhất 1 lần trong file.
+### 20.2. Khóa Cứng 15 Built-in Tools & Tối Ưu Headless (`NO_TOOLS_DISALLOW_LIST` & `READ_ONLY_DISALLOW_LIST`)
+- Toàn bộ 8 profiles bắt buộc bật `verbatim: True` và `disable_web_search: True` để loại bỏ độ trễ khởi tạo MCP Web-Search.
+- Khi chạy chế độ không công cụ (`patch_fast`, `audit_direct`, hoặc cờ `--no-tools`), bắt buộc áp dụng `NO_TOOLS_DISALLOW_LIST` khóa toàn bộ 15 built-in tools của Grok CLI (bao gồm cả tool ghi tệp `write`, `todo_write`, `monitor`, `search_tool`, `use_tool`, `workflow`, `enter_plan_mode`, `exit_plan_mode`, `ask_user_question`, `send_feedback`, `web_fetch`).
+- Các profile chỉ đọc bắt buộc áp dụng `READ_ONLY_DISALLOW_LIST` (chặn `write`, `write_file`, `search_replace`, `run_terminal_command`, `spawn_subagent`, `search_tool`, `use_tool`).
 
-### 20.3. Định Tuyến Mô Hình Tối Ưu Chi Phí (Multi-Tier Infrastructure Routing)
-- **Tier 1 (Local 0 USD)**: Sử dụng slug `qwen-local` (chạy trên GPU DGX Spark GB10) cho các tác vụ `PATCH_FAST` có ngữ cảnh span đã được cắt tỉa $\le 20$k tokens.
-- **Tier 2 (Gateway Cost-Effective)**: Sử dụng slug `gemini-38-flash` hoặc `claude-sonnet-4-6` qua AI Gateway (Server Spark `:8090`) khi cần khả năng viết mã phức tạp với chi phí thấp.
-- **Tier 3 (Cloud Frontier Reasoning)**: Chỉ sử dụng `grok-4.7` (xAI) hoặc `claude-opus-4-6` khi thẩm định kiến trúc sâu, rà soát pháp lý đa chiều, hoặc giải quyết các sự cố nghiêm trọng.
+### 20.3. Liveness-Aware Watchdog & Cứu Hộ Lịch Sử Phiên (`inspect_session_liveness`)
+- Tiến trình con Grok CLI được giám sát qua `inspect_session_liveness` đọc sự kiện cuối trong `~/.grok/sessions/**/<session_id>/events.jsonl`:
+  - **Fail-Fast An Toàn**: Ngắt tiến trình ngay khi gặp `turn_ended:error`, `turn_ended:cancelled`, hoặc kẹt tại `mcp_init_completed:` quá `90.0s`. Tuyệt đối **không** ngắt sớm ở trạng thái `phase_changed:waiting_for_model` để bảo vệ các phiên suy luận sâu hợp lệ.
+  - **Turn-Ended Drain**: Khi tiến trình treo sau khi đã phát `turn_ended:*` quá `5.0s`, đọc toàn bộ bộ đệm `temp_out` trước khi thu hồi process group (`_terminate_proc_tree`).
+  - **Streaming Grace Window**: Khi chạm `deadline` nhưng tiến trình đang tích cực phát văn bản (`phase_changed:streaming_text` hoặc `phase_changed:streaming_reasoning` có tuổi sự kiện `< 5.0s`), cấp thêm **1 lần gia hạn `+45.0s`** để hoàn tất phản hồi.
+  - **Cứu hộ `chat_history.jsonl`**: Khi JSON stdout bị cắt do chạm trần lượt (`stopReason != "end_turn"`), gọi `_recover_verdict_from_chat_history` để cứu hộ phán quyết hợp lệ đã sinh ra trong phiên.
 
+### 20.4. Telemetry Đa Lượt (`--resume`) & Rào Chắn Suy Thoái Suy Luận (`COND-DEGRADED-REASONING`)
+- Khi nối tiếp phiên qua `--resume`, `extract_grok_session_telemetry` ưu tiên lấy số liệu của lượt cuối cùng (`turns[-1]`) thay vì tổng phiên lượt đầu, đồng thời cộng dồn chính xác `CombinedTelemetry` vào `status.json`.
+- Nếu một profile yêu cầu suy luận mức cao (`high` hoặc `xhigh`) nhưng telemetry thực tế ghi nhận `reasoning_tokens == 0`, cờ `degraded_reasoning` sẽ được bật và `synthesize_verdicts` tự động chèn điều kiện chặn `COND-DEGRADED-REASONING` (`blocking=True`), hạ cấp đồng thuận từ `APPROVE` xuống `APPROVE_WITH_CONDITIONS`.
 
-
-
+### 20.5. Quy Chuẩn Bản Ghi Neo & Định Tuyến Mô Hình 3 Tầng (`apply_anchor_patch`)
+- Với các thay đổi nhỏ ($\le 100$ LOC) trong phạm vi 1 seam, ưu tiên sử dụng Hợp đồng Bản ghi Neo qua `apply_anchor_patch` (xác thực SHA-256 trước khi ghi và đảm bảo chuỗi `old` duy nhất).
+- **Tier 1 (`local` — 0 USD)**: `qwen-local` trên DGX Spark GB10 cho `patch_fast`.
+- **Tier 2 (`gateway` — Cost-Effective)**: `gemini-38-flash` hoặc `claude-sonnet-4-6` qua AI Gateway (`:8090`).
+- **Tier 3 (`cloud` — Frontier Reasoning)**: `grok-4.7` (xAI) cho `deep_spec_audit`, `audit_plan`, `arch_audit`, và `signoff_diff`.
