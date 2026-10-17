@@ -46,58 +46,67 @@ def is_mock_mode_enabled() -> bool:
     return val in ("1", "true", "yes", "on")
 
 
+TIER_FALLBACK_MATRIX: dict[str, dict[str, str]] = {
+    "gemini-4-argon-high": {
+        TierType.TIER1_GATEWAY.value: "gemini-3.8-flash-high",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-pro",
+        TierType.TIER3_COPILOT.value: "gpt-5.4",
+    },
+    "gemini-4-argon-medium": {
+        TierType.TIER1_GATEWAY.value: "gemini-3.8-flash-high",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-flash",
+        TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
+    },
+    "gemini-4-argon-low": {
+        TierType.TIER1_GATEWAY.value: "gemini-3.1-flash-lite",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-flash",
+        TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
+    },
+}
+
+
+def _is_high_effort_request(req: str) -> bool:
+    """Check if model string requests high reasoning effort."""
+    return any(k in req for k in ("high", "reasoning", "pro", "o1", "o3"))
+
+
 def map_model_for_tier(requested_model: str, tier: TierType, provider_type: str = "gemini") -> str:
-    """Map standard model archetype alias to appropriate model name for target tier.
-
-    Args:
-        requested_model: The original requested model alias (e.g. 'gemini-3.7-flash').
-        tier: Target failover tier.
-        provider_type: Provider backend type for Tier 2 ('gemini', 'groq', 'openai').
-
-    Returns:
-        Mapped model name suitable for the target provider.
-    """
+    """Map standard model archetype alias to appropriate model name for target tier."""
     if tier == TierType.TIER5_MOCK:
         return requested_model or "mock-model"
-
     if tier == TierType.TIER4_OLLAMA:
         return os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
+    req = (requested_model or "").lower().strip()
+    if req in TIER_FALLBACK_MATRIX and tier.value in TIER_FALLBACK_MATRIX[req]:
+        if tier != TierType.TIER2_CLOUD or provider_type == "gemini":
+            return TIER_FALLBACK_MATRIX[req][tier.value]
+
+    is_high = _is_high_effort_request(req)
     if tier in (TierType.TIER3_COPILOT, TierType.TIER3_CLI) and any(
-        k in (requested_model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
+        k in req for k in ("gpt", "o1", "o3", "codex", "copilot")
     ):
-        req = (requested_model or "").lower().strip()
-        if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
-            return "gpt-5.4"
-        return "gpt-5.4-mini"
+        return "gpt-5.4" if is_high else "gpt-5.4-mini"
 
     if tier in (TierType.TIER3_ANTIGRAVITY, TierType.TIER3_CLI):
-        # Map to agy model names; pass through if already an agy model name
-        req = (requested_model or "").lower().strip()
-        if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
-            return "gemini-3.7-flash-high"
-        return "gemini-3.7-flash-medium"
+        if req.endswith(("-high", "-medium", "-low", "-thinking")):
+            return req
+        return "gemini-3.7-flash-high" if is_high else "gemini-3.7-flash-medium"
 
     if tier == TierType.TIER3_COPILOT:
-        req = (requested_model or "").lower().strip()
-        if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
-            return "gpt-5.4"
-        return "gpt-5.4-mini"
+        return "gpt-5.4" if is_high else "gpt-5.4-mini"
 
     if tier == TierType.TIER2_CLOUD:
-        req = (requested_model or "").lower().strip()
         if provider_type == "gemini":
-            if any(k in req for k in ("high", "reasoning", "pro", "o1", "o3")):
-                return "gemini-2.5-pro"
-            return "gemini-2.5-flash"
-        elif provider_type == "groq":
-            if any(k in req for k in ("high", "reasoning", "deepseek")):
-                return "deepseek-r1-distill-llama-70b"
-            return "llama-3.3-70b-versatile"
-        elif provider_type == "openai":
-            if any(k in req for k in ("high", "reasoning", "o1", "o3")):
-                return "o3-mini"
-            return "gpt-4o-mini"
+            return "gemini-2.5-pro" if is_high else "gemini-2.5-flash"
+        if provider_type == "groq":
+            return (
+                "deepseek-r1-distill-llama-70b"
+                if (is_high or "deepseek" in req)
+                else "llama-3.3-70b-versatile"
+            )
+        if provider_type == "openai":
+            return "o3-mini" if is_high else "gpt-4o-mini"
 
     return requested_model
 

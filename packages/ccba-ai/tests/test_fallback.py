@@ -58,6 +58,17 @@ def test_map_model_for_tier():
         map_model_for_tier("gemini-3.7-flash-high", TierType.TIER3_ANTIGRAVITY)
         == "gemini-3.7-flash-high"
     )
+    assert (
+        map_model_for_tier("gemini-4-argon-medium", TierType.TIER3_ANTIGRAVITY)
+        == "gemini-4-argon-medium"
+    )
+    assert (
+        map_model_for_tier("gemini-4-argon-high", TierType.TIER1_GATEWAY) == "gemini-3.8-flash-high"
+    )
+    assert map_model_for_tier("gemini-4-argon-medium", TierType.TIER3_COPILOT) == "gpt-5.4-mini"
+    assert (
+        map_model_for_tier("gemini-4-argon-low", TierType.TIER1_GATEWAY) == "gemini-3.1-flash-lite"
+    )
 
 
 def test_fallback_to_tier2_cloud_sync():

@@ -796,7 +796,7 @@ skills:
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
+    Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
   triggers:
   - llm pipeline
   - pipeline patterns

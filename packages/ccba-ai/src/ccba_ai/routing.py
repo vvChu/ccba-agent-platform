@@ -20,12 +20,15 @@ class ModelArchetype:
     STANDARD_MEDIUM = "gemini-3.7-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
     GEMINI_38_FLASH = "gemini-3.8-flash"
+    GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"
+    GEMINI_4_ARGON_LOW = "gemini-4-argon-low"
 
     # Archetype 3: Deep Reasoning / Complex Audit (Google API + Centralized Proxy)
     REASONING = "gemini-3.7-flash-high"
     REASONING_ALT = "claude-sonnet-4-6-thinking"
     REASONING_GEMMA = "reasoning-gemma"
     GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
+    GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"
     CLAUDE_OPUS_46 = "claude-opus-4-6"
 
     # Archetype 4: Local Private / Zero-Cost (vLLM Qwen 35B Local GPU DGX)
@@ -84,6 +87,7 @@ def is_reasoning_model(model_name: str) -> bool:
         for kw in (
             "-high",
             "-thinking",
+            "argon-medium",
             "reasoning",
             "o1",
             "o3",
@@ -92,6 +96,7 @@ def is_reasoning_model(model_name: str) -> bool:
             ModelArchetype.REASONING.lower(),
             ModelArchetype.REASONING_ALT.lower(),
             ModelArchetype.REASONING_GEMMA.lower(),
+            ModelArchetype.GEMINI_4_ARGON_HIGH.lower(),
             ModelArchetype.CLAUDE_OPUS_46.lower(),
         )
     )

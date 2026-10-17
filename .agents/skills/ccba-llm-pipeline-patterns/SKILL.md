@@ -1,7 +1,7 @@
 ---
 name: ccba-llm-pipeline-patterns
 description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-  Đúc rút từ VvC LLM OS (v5.1→v8.15, 2026).
+  Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -10,7 +10,7 @@ bundle: _core
 tier: kernel
 command: /ccba-llm-pipeline-patterns
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -565,12 +565,39 @@ Khi triển khai các mô hình lý luận (Reasoning LLMs / Hybrid MoE như Qwe
 
 ---
 
+## Pattern 17: Tier-Aware Fallback Translation & Mandatory CLI Suffix Guard
+
+### Vấn đề (The CLI-Exclusive Model Cascade Outage & Bare-Model Freeze)
+Khi tích hợp các mô hình thế hệ mới chỉ mới khả dụng trên công cụ CLI cục bộ (như `gemini-4-argon-high/medium/low` trên Antigravity CLI `agy`) vào kiến trúc định tuyến 4 tầng:
+1. **Cascade 404 Outage**: Nếu truyền thẳng `explicit_model="gemini-4-argon-high"` xuống tất cả các tầng dự phòng (`gateway`, `copilot`, `gemini-api`), khi Tier 1 CLI gặp sự cố tạm thời, cả 3 tầng sau đồng loạt trả về `404 ModelNotFoundError`, làm tê liệt hoàn toàn lưới phòng thủ đa tầng.
+2. **Bare-Model CLI Freeze**: Nếu truyền định danh trần `"gemini-4-argon"` (thiếu hậu tố `-high`/`-medium`/`-low`), binary `agy` bị treo cứng cho đến khi chạm ngưỡng `TimeoutExpired (15s)`.
+
+### Giải pháp: Ma Trận Chuyển Ngữ Theo Tầng (`TIER_FALLBACK_MATRIX`) & Chuẩn Hóa Hậu Tố
+```python
+_BARE_GEMINI_CLI_PATTERN = re.compile(r"^gemini-\d+(?:\.\d+)*-(?:flash|argon)$", re.IGNORECASE)
+
+TIER_FALLBACK_MATRIX: dict[str, dict[str, str]] = {
+    "gemini-4-argon-high": {"gateway": "gemini-3.8-flash-high", "copilot": "claude-sonnet-4.6", "gemini": "gemini-3.1-flash-lite-preview"},
+    "gemini-4-argon-medium": {"gateway": "gemini-3.8-flash-high", "copilot": "gpt-5-mini", "gemini": "gemini-3.1-flash-lite-preview"},
+    "gemini-4-argon-low": {"gateway": "gemini-3.1-flash-lite", "copilot": "gpt-5-mini", "gemini": "gemini-3.1-flash-lite-preview"},
+}
+```
+
+### Key Invariants
+1. **Decouple Logical Intent from Physical Tier IDs**: Không bao giờ gán mù quáng `resolved_model` cho mọi tầng. Mỗi tầng dự phòng phải được ánh xạ qua `resolve_tier_fallback(model, tier, default)`.
+2. **Pre-Subprocess Suffix Normalization**: Mọi chuỗi `gemini-*-flash` hoặc `gemini-*-argon` thiếu hậu tố phân tầng phải được chuẩn hóa tự động sang `-high` trước khi gọi `subprocess.run`.
+3. **Token-Efficient Synthesis Tiering**: Ưu tiên biến thể `medium` (`gemini-4-argon-medium` — `~48` thinking tokens) cho Concept Synthesis và `low` (`gemini-4-argon-low` — `0` thinking tokens) cho Self-Correction để tiết kiệm ~80% output tokens mà vẫn đảm bảo tuân thủ 100% YAML Schema.
+
+---
+
 ## Quick Reference — Model Routing cho Pipeline Tasks
 
 | Task trong pipeline | Model khuyến nghị | Lý do |
 |---|---|---|
-| Deep reasoning & synthesis | `claude-opus-4-6-thinking` | Port 8090 / Spark, deep academic reasoning, Map-Reduce Reduce phase |
-| Fast JIT Map / Interactive | `gemini-3.8-flash-high` | Port 8090, ~2s ultra-fast response, JIT URL Map phase, auto-downgrade fallback |
+| Deep reasoning & Topic Essay | `claude-opus-4-6-thinking` / `gemini-4-argon-high` | Tier 1 CLI (`agy`), deep academic reasoning (`opus` & `argon` prefixes) |
+| Concept Synthesis (Book / Brain Dump) | `gemini-4-argon-medium` (Tier 1) → `gemini-3.8-flash-high` (Tier 2) | Tiết kiệm 79.6% output tokens, tuân thủ 100% Schema v8.16.0 (`origin`) |
+| Deterministic Self-Correction / GT | `gemini-4-argon-low` (`0` thinking tokens) | Kiểm chứng trích dẫn tất định, không suy diễn tự do |
+| Fast JIT Map / Interactive | `gemini-3.8-flash-high` | Port 8090, ~2s ultra-fast response, auto-downgrade fallback |
 | OCR / Vision extract | `ocr-primary` (Gemini Flash) | Fast, cheap, multimodal |
 | Draft synthesis (Pass 1) | `qwen-local-primary` | Fast local GPU, Vietnamese |
 | Quality check (Pass 2) | `reasoning-gemma` / `claude-sonnet-thinking` | Precision verify |
