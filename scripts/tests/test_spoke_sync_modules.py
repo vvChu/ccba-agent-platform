@@ -1183,7 +1183,6 @@ def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
     captured_cmds: list[str] = []
 
     def mock_verify_execution(commands, cwd, fail_fast=True):
-        nonlocal captured_cmds
         captured_cmds.extend(commands)
         from ccba_harness.verifier import CommandResult, PatchVerificationReport
 
@@ -1574,7 +1573,16 @@ def test_audit_spoke_markdown_links_and_verify_spoke_gate(tmp_path: Path) -> Non
     assert "](../CONTEXT.md)" in fixed_index
     assert "](knowledge/session_learnings.md)" in fixed_index
 
-    # 3. Inject a broken link and confirm verify_spoke returns non-zero (1)
     index_file.write_text("# Index\n- [Broken](missing_target.md)\n", encoding="utf-8")
     sync = SpokeSynchronizer(spoke_root, tmp_path)
     assert sync.verify_spoke(hub_root=tmp_path) == 1
+
+
+def test_coordinator_ast_function_length_compliance() -> None:
+    """Ratchet test ensuring 100% of functions in coordinator.py and graduation.py satisfy <= 50 LOC (COND-04)."""
+    from ccba_harness.peer_gate import check_ast_function_length
+
+    sync_dir = Path(__file__).resolve().parents[1] / "spoke" / "sync"
+    targets = [sync_dir / "coordinator.py", sync_dir / "graduation.py"]
+    result = check_ast_function_length(targets, max_lines=50)
+    assert result.passed, f"AST function length violation (> 50 LOC):\n{result.stdout_tail}"
