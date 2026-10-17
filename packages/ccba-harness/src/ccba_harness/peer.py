@@ -12,7 +12,6 @@ import json
 import os
 import re
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -22,255 +21,77 @@ import uuid
 from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
+from typing import Any, NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._mutex import FileMutexLock
+from ._peer_telemetry import (
+    _accumulate_verdict_telemetry,
+)
+from ._peer_telemetry import (
+    extract_grok_session_telemetry as extract_grok_session_telemetry,
+)
+from ._peer_watchdog import (
+    _VERDICT_ALIASES as _VERDICT_ALIASES,
+)
+from ._peer_watchdog import (
+    DEFAULT_FALLBACK_AUDITOR_MODEL as DEFAULT_FALLBACK_AUDITOR_MODEL,
+)
+from ._peer_watchdog import (
+    DEFAULT_PRIMARY_AUDITOR_MODEL as DEFAULT_PRIMARY_AUDITOR_MODEL,
+)
+from ._peer_watchdog import (
+    NO_TOOLS_DISALLOW_LIST as NO_TOOLS_DISALLOW_LIST,
+)
+from ._peer_watchdog import (
+    PROFILE_SPECS as PROFILE_SPECS,
+)
+from ._peer_watchdog import (  # noqa: F401
+    READ_ONLY_DISALLOW_LIST as READ_ONLY_DISALLOW_LIST,
+)
+from ._peer_watchdog import (
+    TIER_DEFAULT_MODELS as TIER_DEFAULT_MODELS,
+)
+from ._peer_watchdog import (
+    VERDICT_LATTICE_RANK as VERDICT_LATTICE_RANK,
+)
+from ._peer_watchdog import (
+    AgentIdentity as AgentIdentity,
+)
+from ._peer_watchdog import (
+    CostMode as CostMode,
+)
+from ._peer_watchdog import (
+    EffortType as EffortType,
+)
+from ._peer_watchdog import (
+    ModelTier as ModelTier,
+)
+from ._peer_watchdog import (
+    PeerExecutionProfile as PeerExecutionProfile,
+)
+from ._peer_watchdog import (
+    RequestType as RequestType,
+)
+from ._peer_watchdog import (
+    VerdictType as VerdictType,
+)
+from ._peer_watchdog import (
+    _poll_grok_process_with_watchdog,
+    _recover_verdict_from_chat_history,
+)
+from ._peer_watchdog import (  # noqa: F401
+    _terminate_proc_tree as _terminate_proc_tree,
+)
+from ._peer_watchdog import (
+    _unwrap_grok_json_stdout as _unwrap_grok_json_stdout,
+)
+from ._peer_watchdog import (  # noqa: F401
+    inspect_session_liveness as inspect_session_liveness,
+)
 from .verifier import resolve_preset_commands, verify_patch_execution
-
-AgentIdentity = Literal["antigravity", "grok"]
-PeerExecutionProfile = Literal[
-    "audit_plan",
-    "agentic_code",
-    "patch_fast",
-    "code_review",
-    "arch_audit",
-    "audit_direct",
-    "deep_spec_audit",
-    "signoff_diff",
-]
-ModelTier = Literal["local", "gateway", "cloud"]
-RequestType = Literal[
-    "review",
-    "implement",
-    "verify",
-    "consult",
-    "research",
-    "audit",
-    "incident",
-    "discuss",
-]
-VerdictType = Literal[
-    "APPROVE",
-    "APPROVE_WITH_CONDITIONS",
-    "APPROVE_WITH_RESERVATIONS",
-    "APPROVE_PLAN",
-    "REVISE_PLAN",
-    "REJECT_PLAN",
-    "REJECT",
-    "FINAL_ACCEPT",
-    "GATE_PASS",
-    "GATE_FAIL",
-    "HANDOFF",
-]
-
-VERDICT_LATTICE_RANK: dict[VerdictType, int] = {
-    # Blocker tokens (highest rank)
-    "REJECT": 100,
-    "REJECT_PLAN": 95,
-    "GATE_FAIL": 90,
-    # Revision required
-    "REVISE_PLAN": 80,
-    # Incomplete review / Handoff
-    "HANDOFF": 70,
-    # Conditional pass
-    "APPROVE_WITH_CONDITIONS": 60,
-    "APPROVE_WITH_RESERVATIONS": 55,
-    # Clean pass tokens
-    "APPROVE_PLAN": 40,
-    "FINAL_ACCEPT": 35,
-    "GATE_PASS": 30,
-    "APPROVE": 20,
-}
-
-EffortType = Literal["XS", "S", "M", "L", "XL"]
-
-DEFAULT_PRIMARY_AUDITOR_MODEL = "grok-4.7"  # ccba:allow-raw-model
-DEFAULT_FALLBACK_AUDITOR_MODEL = "gemini-38-flash"  # ccba:allow-raw-model
-
-TIER_DEFAULT_MODELS: dict[str, str] = {
-    "local": "qwen-local",  # ccba:allow-raw-model
-    "gateway": "gemini-38-flash",  # ccba:allow-raw-model
-    "cloud": "grok-4.7",  # ccba:allow-raw-model
-}
-
-PROFILE_SPECS: dict[str, dict[str, Any]] = {
-    "audit_plan": {
-        "model": "grok-4.7",  # ccba:allow-raw-model
-        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 12,
-        "tools": ["read_file", "grep", "list_dir"],
-        "disallowed_tools": [
-            "Agent",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["Bash", "Write", "Edit", "WebFetch"],
-        "disable_web_search": True,
-        "verbatim": True,
-        "reasoning_effort": "xhigh",
-        "timeout": 900.0,
-    },
-    "agentic_code": {
-        "model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "fallback_model": "claude-sonnet-4-6",  # ccba:allow-raw-model
-        "max_turns": 8,
-        "tools": ["read_file", "search_replace", "list_dir"],
-        "disallowed_tools": ["spawn_subagent", "run_terminal_command"],
-        "reasoning_effort": "high",
-        "timeout": 600.0,
-    },
-    "patch_fast": {
-        "model": "qwen-local",  # ccba:allow-raw-model
-        "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": 1,
-        "tools": None,
-        "disallowed_tools": [
-            "read_file",
-            "grep",
-            "list_dir",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "reasoning_effort": None,
-        "timeout": 120.0,
-        "deny": ["*"],
-        "system_prompt": (
-            "You are a pure JSON and markdown patch generator. "
-            "You MUST start your response with YAML frontmatter enclosed in --- containing request_id, verdict: HANDOFF, and summary, "
-            "followed directly by a ```json block containing the AnchorPatchPayload. "
-            "DO NOT chat, DO NOT explain, DO NOT output introductory prose. "
-            "Respond immediately with the required formatted blocks."
-        ),
-    },
-    "code_review": {
-        "model": "gemini-38-flash",  # ccba:allow-raw-model
-        "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": 10,
-        "tools": ["read_file", "grep", "list_dir"],
-        "disallowed_tools": [
-            "Agent",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["Bash", "Write", "Edit", "WebFetch"],
-        "disable_web_search": True,
-        "verbatim": True,
-        "reasoning_effort": "high",
-        "system_prompt": (
-            "You are an expert peer code reviewer. You MUST start your response immediately with "
-            "YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, conditions, "
-            "and summary, followed by your structured code review findings."
-        ),
-        "timeout": 300.0,
-    },
-    "arch_audit": {
-        "model": "grok-4.7",  # ccba:allow-raw-model
-        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 8,
-        "tools": ["read_file", "grep", "list_dir"],
-        "disallowed_tools": [
-            "Agent",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["Bash", "Write", "Edit", "WebFetch"],
-        "disable_web_search": True,
-        "verbatim": True,
-        "reasoning_effort": "xhigh",
-        "system_prompt": (
-            "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
-            "conditions, and summary, followed by your architectural audit findings."
-        ),
-        "timeout": 600.0,
-    },
-    "audit_direct": {
-        "model": "grok-4.7",  # ccba:allow-raw-model
-        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 3,
-        "tools": None,
-        "disallowed_tools": [
-            "read_file",
-            "grep",
-            "list_dir",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["*"],
-        "reasoning_effort": "high",
-        "system_prompt": (
-            "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
-            "conditions, and summary, followed by your architectural audit findings. "
-            "Respond directly without invoking external tools."
-        ),
-        "timeout": 120.0,
-    },
-    "deep_spec_audit": {
-        "model": "grok-4.7",  # ccba:allow-raw-model
-        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 25,
-        "tools": ["read_file", "grep", "list_dir"],
-        "disallowed_tools": [
-            "Agent",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["Bash", "Write", "Edit", "WebFetch"],
-        "disable_web_search": True,
-        "verbatim": True,
-        "output_format": "json",
-        "reasoning_effort": "xhigh",
-        "system_prompt": (
-            "You are a Stage 1 Pre-Code Deep Architectural & Line-Level Specification Auditor. "
-            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
-            "request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT), "
-            "risk_score, conditions, and summary, followed by your full line-level audit."
-        ),
-        "timeout": 900.0,
-    },
-    "signoff_diff": {
-        "model": "grok-4.7",  # ccba:allow-raw-model
-        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 15,
-        "tools": ["read_file", "grep", "list_dir"],
-        "disallowed_tools": [
-            "Agent",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ],
-        "deny": ["Bash", "Write", "Edit", "WebFetch"],
-        "disable_web_search": True,
-        "verbatim": True,
-        "fork_session": True,
-        "output_format": "json",
-        "reasoning_effort": "high",
-        "system_prompt": (
-            "You are a Stage 3 Post-Code Diff Sign-off Auditor resuming a prior Stage 1 session. "
-            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
-            "request_id, verdict (FINAL_ACCEPT | APPROVE | APPROVE_WITH_CONDITIONS | REJECT), "
-            "risk_score, conditions, and summary, followed by your delta verification table."
-        ),
-        "timeout": 600.0,
-    },
-}
 
 FRONTMATTER_PATTERN = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 
@@ -348,9 +169,6 @@ class PeerCondition(BaseModel):
     source_profiles: list[str] = Field(default_factory=list)
 
 
-CostMode = Literal["exact", "estimated", "unknown"]
-
-
 class PeerVerdictTelemetry(BaseModel):
     """Execution telemetry and token provenance for peer interactions (ADR-0064)."""
 
@@ -368,23 +186,39 @@ class PeerVerdictTelemetry(BaseModel):
     cost_usd: float = 0.0
     cost_mode: CostMode = "estimated"
     duration_seconds: float = 0.0
+    degraded_reasoning: bool = False
 
 
-_VERDICT_ALIASES: dict[str, str] = {
-    "CONDITIONAL_APPROVAL": "APPROVE_WITH_CONDITIONS",
-    "CONDITIONAL_APPROVE": "APPROVE_WITH_CONDITIONS",
-    "APPROVE_CONDITIONAL": "APPROVE_WITH_CONDITIONS",
-    "APPROVED_WITH_CONDITIONS": "APPROVE_WITH_CONDITIONS",
-    "APPROVED_WITH_RESERVATIONS": "APPROVE_WITH_RESERVATIONS",
-    "APPROVED": "APPROVE",
-    "APPROVED_PLAN": "APPROVE_PLAN",
-    "REJECTED": "REJECT",
-    "REJECTED_PLAN": "REJECT_PLAN",
-    "REVISE": "REVISE_PLAN",
-    "NEEDS_REVISION": "REVISE_PLAN",
-    "PASS": "GATE_PASS",
-    "FAIL": "GATE_FAIL",
-}
+class ProfileTelemetryItem(BaseModel):
+    """Telemetry breakdown item for a single peer agent profile (ADR-0065)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    cached_read_tokens: int = 0
+    total_tokens: int = 0
+    cost_usd: float = 0.0
+    duration_seconds: float = 0.0
+
+
+class CombinedTelemetry(BaseModel):
+    """Consolidated telemetry aggregated across multi-agent executions (ADR-0065)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    total_tokens: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    cached_read_tokens: int = 0
+    cost_usd: float = 0.0
+    wall_seconds: float = 0.0
+    sum_agent_seconds: float = 0.0
+    cost_mode: CostMode = "exact"
+    profile_breakdown: dict[str, ProfileTelemetryItem] = Field(default_factory=dict)
 
 
 class PeerVerdictBlock(BaseModel):
@@ -398,7 +232,7 @@ class PeerVerdictBlock(BaseModel):
     risk_score: int | None = Field(default=None, ge=1, le=5)
     effort: EffortType | None = None
     summary: str = ""
-    telemetry: PeerVerdictTelemetry | None = None
+    telemetry: PeerVerdictTelemetry | CombinedTelemetry | None = None
 
     @field_validator("risk_score", mode="before")
     @classmethod
@@ -432,38 +266,6 @@ class PeerVerdictBlock(BaseModel):
             else:
                 normalized.append(item)
         return normalized
-
-
-class ProfileTelemetryItem(BaseModel):
-    """Telemetry breakdown item for a single peer agent profile (ADR-0065)."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    model: str
-    input_tokens: int = 0
-    output_tokens: int = 0
-    reasoning_tokens: int = 0
-    cached_read_tokens: int = 0
-    total_tokens: int = 0
-    cost_usd: float = 0.0
-    duration_seconds: float = 0.0
-
-
-class CombinedTelemetry(BaseModel):
-    """Consolidated telemetry aggregated across multi-agent executions (ADR-0065)."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    total_tokens: int = 0
-    input_tokens: int = 0
-    output_tokens: int = 0
-    reasoning_tokens: int = 0
-    cached_read_tokens: int = 0
-    cost_usd: float = 0.0
-    wall_seconds: float = 0.0
-    sum_agent_seconds: float = 0.0
-    cost_mode: CostMode = "exact"
-    profile_breakdown: dict[str, ProfileTelemetryItem] = Field(default_factory=dict)
 
 
 class PeerConsensusReport(BaseModel):
@@ -523,7 +325,8 @@ def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
     if not match:
         return None, md_content
     yaml_text = match.group(1)
-    body = content[match.end() :]
+    end_pos = match.end()
+    body = content[end_pos:]
     try:
         data = yaml.safe_load(yaml_text)
         if isinstance(data, dict):
@@ -724,6 +527,7 @@ def classify_file_role(path: Path) -> str:
     if (
         name in ("grok_live_summary.md", "status.json", "PEER_HANDSHAKE.md", "README.md")
         or name.endswith(".lock")
+        or name.endswith(".gate.md")
         or name.startswith(".")
     ):
         return "AUXILIARY"
@@ -879,38 +683,33 @@ def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any]
     }
 
 
-def update_status_json(
-    status_file: Path,
+def _aggregate_registry_telemetry(
     registry: dict[str, dict[str, Any]],
-    pending_anti: list[str],
-    pending_grok: list[str],
-) -> None:
-    """Updates status.json with latest state and verdicts protected by FileMutexLock.
-
-    Args:
-        status_file: Target status.json Path.
-        registry: Metadata registry of scanned files.
-        pending_anti: List of file names pending for Antigravity.
-        pending_grok: List of file names pending for Grok.
-    """
-    tz = datetime.timezone(datetime.timedelta(hours=7))
-    now_iso = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+) -> tuple[int, float, dict[str, dict[str, Any]]]:
+    """Aggregates token and cost telemetry across all registry verdict entries."""
     total_tokens = 0
     total_cost_usd = 0.0
     by_model: dict[str, dict[str, Any]] = {}
     for item in registry.values():
         v = item.get("verdict")
         if v and getattr(v, "telemetry", None):
-            t = v.telemetry
-            total_tokens += t.total_tokens
-            total_cost_usd += t.cost_usd
-            m = t.primary_model
-            if m not in by_model:
-                by_model[m] = {"calls": 0, "tokens": 0, "cost_usd": 0.0}
-            by_model[m]["calls"] += 1
-            by_model[m]["tokens"] += t.total_tokens
-            by_model[m]["cost_usd"] = round(by_model[m]["cost_usd"] + t.cost_usd, 4)
+            tok_delta, cost_delta = _accumulate_verdict_telemetry(v.telemetry, by_model)
+            total_tokens += tok_delta
+            total_cost_usd += cost_delta
+    return total_tokens, total_cost_usd, by_model
 
+
+def update_status_json(
+    status_file: Path,
+    registry: dict[str, dict[str, Any]],
+    pending_anti: list[str],
+    pending_grok: list[str],
+) -> None:
+    """Updates status.json with latest state and verdicts protected by FileMutexLock."""
+    tz = datetime.timezone(datetime.timedelta(hours=7))
+    now_iso = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    total_tokens, total_cost_usd, by_model = _aggregate_registry_telemetry(registry)
+    resp_roles = ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
     status_data = {
         "timestamp": now_iso,
         "peers": {
@@ -928,14 +727,8 @@ def update_status_json(
             },
         },
         "exchange_stats": {
-            "total_prompts": len([i for i in registry.values() if i["role"] == "PROMPT_TO_GROK"]),
-            "total_responses": len(
-                [
-                    i
-                    for i in registry.values()
-                    if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
-                ]
-            ),
+            "total_prompts": sum(1 for i in registry.values() if i["role"] == "PROMPT_TO_GROK"),
+            "total_responses": sum(1 for i in registry.values() if i["role"] in resp_roles),
             "total_tokens": total_tokens,
             "total_cost_usd": round(total_cost_usd, 4),
             "by_model": by_model,
@@ -954,20 +747,10 @@ def update_live_summary(
     pending_anti: list[str],
     pending_grok: list[str],
 ) -> None:
-    """Renders a concise, lightweight summary (< 5 KB) to grok_live_summary.md.
-
-    Args:
-        summary_file: Target grok_live_summary.md Path.
-        registry: Metadata registry of scanned files.
-        pending_anti: List of file names pending for Antigravity.
-        pending_grok: List of file names pending for Grok.
-    """
+    """Renders a concise, lightweight summary (< 5 KB) to grok_live_summary.md."""
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-    resps = [
-        i
-        for i in registry.values()
-        if i["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and i["verdict"]
-    ]
+    resp_roles = ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
+    resps = [i for i in registry.values() if i["role"] in resp_roles and i["verdict"]]
     resps.sort(key=lambda x: x["mtime"], reverse=True)
 
     lines = [
@@ -977,17 +760,12 @@ def update_live_summary(
         f"- **Antigravity**: `{'waiting_for_grok' if pending_grok else 'idle'}` (Đang chờ Grok: {len(pending_grok)} requests)",
         f"- **Grok**: `{'in_progress' if pending_grok else 'idle'}` (Đang chờ Antigravity: {len(pending_anti)} requests)\n\n",
         "## 2. Hàng Đợi Đang Chờ (Pending Queue)\n",
+        "### ⏳ Grok cần xử lý:" if pending_grok else "### ✅ Grok: Không có yêu cầu tồn đọng.",
     ]
-    lines.append(
-        "### ⏳ Grok cần xử lý:" if pending_grok else "### ✅ Grok: Không có yêu cầu tồn đọng."
-    )
-    for p in pending_grok[:5]:
-        lines.append(f"- `{p}`")
+    lines.extend(f"- `{p}`" for p in pending_grok[:5])
     if pending_anti:
         lines.append("\n### ⏳ Antigravity cần xử lý:")
-    for p in pending_anti[:5]:
-        lines.append(f"- `{p}`")
-
+        lines.extend(f"- `{p}`" for p in pending_anti[:5])
     lines.extend(
         [
             "\n## 3. Phán Quyết Gần Nhất (Recent Verdicts)\n",
@@ -1000,7 +778,6 @@ def update_live_summary(
         lines.append(
             f"| `{item['path'].name}` | **`{v.verdict}`** | {len(v.conditions)} | {v.summary[:50]}... |"
         )
-
     lock_path = summary_file.with_name(f"{summary_file.name}.lock")
     with FileMutexLock(lock_path, timeout=5.0):
         atomic_write_text(summary_file, "\n".join(lines) + "\n")
@@ -1011,42 +788,28 @@ def run_sync_cycle(
     auto_gate: bool = False,
     auto_grok: bool = False,
 ) -> list[FileChange]:
-    """Executes a single serialized observation and synchronization cycle.
-
-    Args:
-        peer_exchange_dir: Directory where peer exchange files reside.
-        auto_gate: Whether to trigger peer implementation gate on new code.
-        auto_grok: Whether to automatically invoke Grok CLI on new prompts.
-
-    Returns:
-        List of detected file changes in this cycle.
-    """
+    """Executes a single serialized observation and synchronization cycle."""
     actions_to_run: list[tuple[str, Path]] = []
     changes: list[FileChange] = []
 
-    # COND-01 / ADR-0065: Narrow _SYNC_MUTEX & cross-process FileMutexLock to critical section
     sync_lock = peer_exchange_dir / ".sync.lock"
     with _SYNC_MUTEX, FileMutexLock(sync_lock, timeout=10.0):
         cache_file = peer_exchange_dir / ".bridge_cache.json"
         status_file = peer_exchange_dir / "status.json"
         summary_file = peer_exchange_dir / "grok_live_summary.md"
-
         cache = load_cache(cache_file)
         changes, new_cache, registry = scan_peer_exchange(peer_exchange_dir, cache)
-
-        if changes or not status_file.exists() or not summary_file.exists():
-            pending_anti, pending_grok = compute_pending_queues(registry)
-            update_status_json(status_file, registry, pending_anti, pending_grok)
-            update_live_summary(summary_file, registry, pending_anti, pending_grok)
+        pending_anti, pending_grok = compute_pending_queues(registry)
+        update_status_json(status_file, registry, pending_anti, pending_grok)
+        update_live_summary(summary_file, registry, pending_anti, pending_grok)
+        if changes or new_cache != cache or not cache_file.exists():
             save_cache(cache_file, new_cache)
+        for change in changes:
+            if auto_grok and change.role == "PROMPT_TO_GROK":
+                actions_to_run.append(("grok", change.path))
+            elif auto_gate and change.role == "GROK_IMPLEMENTATION":
+                actions_to_run.append(("gate", change.path))
 
-            for change in changes:
-                if auto_grok and change.role == "PROMPT_TO_GROK":
-                    actions_to_run.append(("grok", change.path))
-                elif auto_gate and change.role == "GROK_IMPLEMENTATION":
-                    actions_to_run.append(("gate", change.path))
-
-    # Long-running subprocesses execute OUTSIDE _SYNC_MUTEX (COND-01 / ADR-0065)
     for action_type, path in actions_to_run:
         if action_type == "grok":
             invoke_grok_cli(path)
@@ -1055,7 +818,6 @@ def run_sync_cycle(
 
             result = run_full_gate(peer_exchange_dir.parent.parent)
             write_verdict_file(result, peer_exchange_dir)
-
     return changes
 
 
@@ -1066,18 +828,7 @@ def publish_peer_message(
     on_publish_hook: Callable[[Path], None] | None = None,
     auto_grok: bool = False,
 ) -> Path:
-    """Atomically publishes a peer exchange envelope and asynchronously syncs state.
-
-    Args:
-        envelope: PeerPromptEnvelope instance to serialize.
-        body_text: Markdown body string following the front-matter.
-        target_path: Destination file Path to write.
-        on_publish_hook: Optional callback invoked immediately with target_path.
-        auto_grok: Whether to automatically invoke Grok CLI on new prompts.
-
-    Returns:
-        Path to the written target file.
-    """
+    """Atomically publishes a peer exchange envelope and asynchronously syncs state."""
     frontmatter = render_prompt_header(envelope)
     full_content = frontmatter + body_text.lstrip()
     atomic_write_text(target_path, full_content)
@@ -1102,14 +853,7 @@ def publish_peer_message(
 
 
 def extract_anchor_payload(text: str) -> AnchorPatchPayload | None:
-    """Extracts and validates an AnchorPatchPayload from raw markdown or JSON string.
-
-    Args:
-        text: Raw response string.
-
-    Returns:
-        Validated AnchorPatchPayload or None if invalid or absent.
-    """
+    """Extracts and validates an AnchorPatchPayload from raw markdown or JSON string."""
     if not text:
         return None
     match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
@@ -1121,85 +865,54 @@ def extract_anchor_payload(text: str) -> AnchorPatchPayload | None:
         return None
 
 
-def apply_anchor_patch(
-    root: Path,
-    payload: AnchorPatchPayload | dict[str, Any],
-    dry_run: bool = False,
-    backup: bool = False,
-) -> list[Path]:
-    """Applies a Level-2 anchor patch payload atomically with SHA-256 pre-verification and rollback (ADR-0063).
+def _prepare_single_file_patch(
+    root_resolved: Path,
+    file_patch: Any,
+    target_files_seen: set[Path],
+) -> tuple[Path, str, str]:
+    """Validates a single file patch and returns (target_file, original_text, new_text)."""
+    target_file = (root_resolved / file_patch.path).resolve()
+    if not target_file.is_relative_to(root_resolved):
+        raise ValueError(f"Path traversal detected in patch: {file_patch.path}")
+    if target_file in target_files_seen:
+        raise ValueError(f"Payload contains duplicate target file: {file_patch.path}")
+    target_files_seen.add(target_file)
+    if not target_file.exists():
+        raise ValueError(f"Target patch file does not exist: {file_patch.path}")
+    if not target_file.is_file():
+        raise ValueError(f"Target patch path is not a regular file: {file_patch.path}")
 
-    Args:
-        root: Workspace root directory.
-        payload: AnchorPatchPayload instance or equivalent dictionary.
-        dry_run: If True, validates integrity and returns target files without modifying disk.
-        backup: If True, creates .bak copies before writing modified content.
+    raw_bytes = target_file.read_bytes()
+    actual_sha256 = hashlib.sha256(raw_bytes).hexdigest()
+    if actual_sha256.lower() != file_patch.blob_sha256.lower():
+        raise ValueError(
+            f"Anchor patch SHA-256 mismatch for {file_patch.path}: "
+            f"expected {file_patch.blob_sha256}, got {actual_sha256}"
+        )
 
-    Returns:
-        List of Path instances successfully modified (or validated if dry_run=True).
-
-    Raises:
-        ValueError: If SHA-256 mismatch occurs, duplicate target files exist, anchor string is not unique,
-            or write transaction aborts.
-    """
-    if isinstance(payload, dict):
-        patch = AnchorPatchPayload.model_validate(payload)
-    else:
-        patch = payload
-
-    root_resolved = root.resolve()
-    target_files_seen: set[Path] = set()
-    prepared_writes: list[
-        tuple[Path, str, str]
-    ] = []  # (target_file, original_content, new_content)
-
-    # Phase 1: Pre-validation of all files and content preparation (Fail-Fast)
-    for file_patch in patch.files:
-        target_file = (root_resolved / file_patch.path).resolve()
-        # Security invariant: prevent path traversal outside workspace root
-        if not target_file.is_relative_to(root_resolved):
-            raise ValueError(f"Path traversal detected in patch: {file_patch.path}")
-        if target_file in target_files_seen:
-            raise ValueError(f"Payload contains duplicate target file: {file_patch.path}")
-        target_files_seen.add(target_file)
-
-        if not target_file.exists():
-            raise ValueError(f"Target patch file does not exist: {file_patch.path}")
-        if not target_file.is_file():
-            raise ValueError(f"Target patch path is not a regular file: {file_patch.path}")
-
-        raw_bytes = target_file.read_bytes()
-        actual_sha256 = hashlib.sha256(raw_bytes).hexdigest()
-        if actual_sha256.lower() != file_patch.blob_sha256.lower():
+    text = raw_bytes.decode("utf-8")
+    new_text = text.replace("\r\n", "\n")
+    for rep in file_patch.replacements:
+        old_norm = rep.old.replace("\r\n", "\n")
+        new_norm = rep.new.replace("\r\n", "\n")
+        count = new_text.count(old_norm)
+        if count == 0:
             raise ValueError(
-                f"Anchor patch SHA-256 mismatch for {file_patch.path}: "
-                f"expected {file_patch.blob_sha256}, got {actual_sha256}"
+                f"Target old anchor text not found in {file_patch.path}: '{old_norm[:50]}...'"
             )
+        if count > 1:
+            raise ValueError(
+                f"Target old anchor text is not unique in {file_patch.path} (found {count} matches): '{old_norm[:50]}...'"
+            )
+        new_text = new_text.replace(old_norm, new_norm, 1)
+    return target_file, text, new_text
 
-        text = raw_bytes.decode("utf-8")
-        # Line ending normalization (\r\n -> \n) for cross-OS resilience
-        text_normalized = text.replace("\r\n", "\n")
-        new_text = text_normalized
-        for rep in file_patch.replacements:
-            old_normalized = rep.old.replace("\r\n", "\n")
-            new_normalized = rep.new.replace("\r\n", "\n")
-            count = new_text.count(old_normalized)
-            if count == 0:
-                raise ValueError(
-                    f"Target old anchor text not found in {file_patch.path}: '{old_normalized[:50]}...'"
-                )
-            if count > 1:
-                raise ValueError(
-                    f"Target old anchor text is not unique in {file_patch.path} (found {count} matches): '{old_normalized[:50]}...'"
-                )
-            new_text = new_text.replace(old_normalized, new_normalized, 1)
 
-        prepared_writes.append((target_file, text, new_text))
-
-    if dry_run:
-        return [target_file for target_file, _, _ in prepared_writes]
-
-    # Phase 2: Atomic commit with automatic rollback on error
+def _commit_anchor_patch_writes(
+    prepared_writes: list[tuple[Path, str, str]],
+    backup: bool,
+) -> list[Path]:
+    """Commits prepared anchor patch writes atomically with rollback on write failure."""
     written_backups: dict[Path, str] = {}
     modified_paths: list[Path] = []
     try:
@@ -1224,15 +937,26 @@ def apply_anchor_patch(
         raise ValueError(err_msg) from exc
 
 
+def apply_anchor_patch(
+    root: Path,
+    payload: AnchorPatchPayload | dict[str, Any],
+    dry_run: bool = False,
+    backup: bool = False,
+) -> list[Path]:
+    """Applies a Level-2 anchor patch payload atomically with SHA-256 pre-verification and rollback (ADR-0063)."""
+    patch = AnchorPatchPayload.model_validate(payload) if isinstance(payload, dict) else payload
+    root_resolved = root.resolve()
+    target_files_seen: set[Path] = set()
+    prepared_writes = [
+        _prepare_single_file_patch(root_resolved, fp, target_files_seen) for fp in patch.files
+    ]
+    if dry_run:
+        return [target_file for target_file, _, _ in prepared_writes]
+    return _commit_anchor_patch_writes(prepared_writes, backup)
+
+
 def get_git_toplevel(cwd: Path | str | None = None) -> Path | None:
-    """Resolves the git repository top-level root directory (COND-LEVEL3-ROOT).
-
-    Args:
-        cwd: Directory or path to execute git rev-parse from. Defaults to current directory.
-
-    Returns:
-        Resolved Path to git top-level root directory, or None if outside git repository.
-    """
+    """Resolves the git repository top-level root directory (COND-LEVEL3-ROOT)."""
     try:
         res = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
@@ -1249,67 +973,224 @@ def get_git_toplevel(cwd: Path | str | None = None) -> Path | None:
     return None
 
 
+def _recover_single_anchor_txn(txn_path: Path, backup_dir: Path) -> bool:
+    """Restores a single interrupted anchor transaction directory if uncommitted."""
+    journal_file = txn_path / "journal.json"
+    commit_marker = txn_path / "commit.marker"
+    aborted_marker = txn_path / "aborted.marker"
+    if not (journal_file.exists() and not commit_marker.exists() and not aborted_marker.exists()):
+        return False
+    try:
+        journal_data = json.loads(journal_file.read_text(encoding="utf-8"))
+        target_root = Path(journal_data.get("root", str(backup_dir.parent.parent.parent))).resolve()
+        for f_entry in journal_data.get("files", []):
+            rel_p = f_entry.get("path")
+            backup_fname = f_entry.get("backup_filename")
+            if not rel_p or not backup_fname:
+                continue
+            backup_file = txn_path / backup_fname
+            if backup_file.exists():
+                atomic_write_bytes((target_root / rel_p).resolve(), backup_file.read_bytes())
+        aborted_marker.write_text(
+            f"Recovered at {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
+            encoding="utf-8",
+        )
+        return True
+    except Exception:
+        return False
+
+
 def recover_pending_anchor_transactions(
     backup_dir: Path | None = None,
     root: Path | None = None,
 ) -> list[str]:
-    """Scans and recovers interrupted anchor transactions from disk pre-images (COND-LEVEL3-TXN).
-
-    Any transaction directory under .md/backups/anchor-txn/ that has a journal.json but lacks
-    a commit.marker or aborted.marker indicates a process crash/interruption during patch
-    application or verification. This function restores the target files from raw pre-image
-    bytes and stamps an aborted.marker to ensure workspace hygiene.
-
-    Args:
-        backup_dir: Optional explicit path to anchor-txn directory.
-        root: Optional workspace root directory to resolve backup directory against.
-
-    Returns:
-        List of transaction IDs recovered.
-    """
+    """Scans and recovers interrupted anchor transactions from disk pre-images (COND-LEVEL3-TXN)."""
     if backup_dir is None:
         effective_root = root or get_git_toplevel() or Path.cwd()
         backup_dir = effective_root / ".md" / "backups" / "anchor-txn"
-
     if not backup_dir.exists() or not backup_dir.is_dir():
         return []
-
     recovered_txns: list[str] = []
-    # Deterministic sorting per user rule
     for txn_path in sorted(backup_dir.iterdir(), key=lambda p: p.name):
         if not txn_path.is_dir() or txn_path.name.startswith("."):
             continue
-        journal_file = txn_path / "journal.json"
-        commit_marker = txn_path / "commit.marker"
-        aborted_marker = txn_path / "aborted.marker"
-
-        if journal_file.exists() and not commit_marker.exists() and not aborted_marker.exists():
-            try:
-                journal_data = json.loads(journal_file.read_text(encoding="utf-8"))
-                target_root = Path(
-                    journal_data.get("root", str(backup_dir.parent.parent.parent))
-                ).resolve()
-                files_entries = journal_data.get("files", [])
-                for f_entry in files_entries:
-                    rel_p = f_entry.get("path")
-                    backup_fname = f_entry.get("backup_filename")
-                    if not rel_p or not backup_fname:
-                        continue
-                    backup_file = txn_path / backup_fname
-                    if not backup_file.exists():
-                        continue
-                    target_file = (target_root / rel_p).resolve()
-                    # Restore verbatim raw bytes (preserves CRLF/exact bytes)
-                    atomic_write_bytes(target_file, backup_file.read_bytes())
-                aborted_marker.write_text(
-                    f"Recovered at {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
-                    encoding="utf-8",
-                )
-                recovered_txns.append(txn_path.name)
-            except Exception:
-                pass
-
+        if _recover_single_anchor_txn(txn_path, backup_dir):
+            recovered_txns.append(txn_path.name)
     return recovered_txns
+
+
+def _resolve_auto_apply_root(root: Path | str | None) -> Path:
+    """Resolves and validates workspace git root for auto_apply_and_verify_patch."""
+    if root is None:
+        effective_root = get_git_toplevel()
+        if effective_root is None:
+            raise ValueError(
+                "Root directory resolution failed: current working directory is not inside a git repository."
+            )
+        return effective_root
+    effective_root = Path(root).resolve()
+    if get_git_toplevel(effective_root) is None:
+        raise ValueError(f"Specified root is not inside a git repository: {effective_root}")
+    return effective_root
+
+
+def _journal_anchor_preimages(
+    effective_root: Path,
+    patch: AnchorPatchPayload,
+    txn_dir: Path,
+    txn_id: str,
+) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    """Validates patch in dry_run mode and records pre-image raw bytes into txn_dir."""
+    preimage_sha256: dict[str, str] = {}
+    journal_files: list[dict[str, Any]] = []
+    txn_dir.mkdir(parents=True, exist_ok=False)
+    try:
+        apply_anchor_patch(root=effective_root, payload=patch, dry_run=True, backup=False)
+        for idx, file_patch in enumerate(patch.files):
+            target_file = (effective_root / file_patch.path).resolve()
+            raw_bytes = target_file.read_bytes()
+            current_sha = hashlib.sha256(raw_bytes).hexdigest()
+            preimage_sha256[file_patch.path] = current_sha
+            backup_filename = f"file_{idx}.bin"
+            (txn_dir / backup_filename).write_bytes(raw_bytes)
+            journal_files.append(
+                {
+                    "index": idx,
+                    "path": file_patch.path,
+                    "blob_sha256": current_sha,
+                    "backup_filename": backup_filename,
+                }
+            )
+        journal_data = {
+            "txn_id": txn_id,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "root": str(effective_root),
+            "files": journal_files,
+        }
+        atomic_write_text(txn_dir / "journal.json", json.dumps(journal_data, indent=2))
+        return preimage_sha256, journal_files
+    except Exception as exc:
+        shutil.rmtree(txn_dir, ignore_errors=True)
+        raise ValueError(f"Pre-apply validation failed: {exc}") from exc
+
+
+def _rollback_from_journal(
+    effective_root: Path,
+    txn_dir: Path,
+    journal_files: list[dict[str, Any]],
+    verify_sha: bool = True,
+) -> bool:
+    """Restores pre-image raw bytes from txn_dir journal and optionally verifies SHA-256."""
+    rollback_ok = True
+    for f_entry in journal_files:
+        try:
+            t_file = (effective_root / f_entry["path"]).resolve()
+            b_file = txn_dir / f_entry["backup_filename"]
+            atomic_write_bytes(t_file, b_file.read_bytes())
+            if verify_sha:
+                restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
+                if restored_sha.lower() != f_entry["blob_sha256"].lower():
+                    rollback_ok = False
+        except Exception:
+            rollback_ok = False
+    return rollback_ok
+
+
+def _finalize_auto_apply_decision(
+    root: Path,
+    txn_dir: Path,
+    txn_id: str,
+    preset: str,
+    keep_backups: bool,
+    mod_paths: list[Path],
+    preimage_sha: dict[str, str],
+    j_files: list[dict[str, Any]],
+    v_rep: Any,
+) -> AutoApplyResult:
+    """Finalizes commit marker or executes verified byte rollback after verification gate."""
+    rel_mod = [str(p.relative_to(root)) if p.is_relative_to(root) else str(p) for p in mod_paths]
+    common = {
+        "preimage_sha256": preimage_sha,
+        "report": v_rep,
+        "transaction_id": txn_id,
+        "modified_files": rel_mod,
+    }
+    if v_rep.all_passed:
+        (txn_dir / "commit.marker").write_text("committed", encoding="utf-8")
+        if not keep_backups:
+            shutil.rmtree(txn_dir, ignore_errors=True)
+        msg = f"Patch successfully applied and verified with preset '{preset}'."
+        return AutoApplyResult(
+            success=True, gate_verdict="GATE_PASS", rollback_proven=False, summary=msg, **common
+        )
+
+    rb_ok = _rollback_from_journal(root, txn_dir, j_files, True)
+    if rb_ok:
+        (txn_dir / "rollback.marker").write_text("clean", encoding="utf-8")
+        if not keep_backups:
+            shutil.rmtree(txn_dir, ignore_errors=True)
+    tail = (
+        "Workspace rolled back cleanly."
+        if rb_ok
+        else f"AND byte rollback verification mismatch! Transaction preserved at {txn_dir}."
+    )
+    msg = (
+        f"Verification failed ({v_rep.failed_count}/{v_rep.total_commands} commands failed). {tail}"
+    )
+    return AutoApplyResult(
+        success=False, gate_verdict="GATE_FAIL", rollback_proven=rb_ok, summary=msg, **common
+    )
+
+
+def _execute_locked_patch_transaction(
+    root: Path,
+    patch: AnchorPatchPayload,
+    txn_dir: Path,
+    txn_id: str,
+    preset: str,
+    timeout: float,
+    keep_backups: bool,
+    extra_commands: Sequence[str] | None,
+) -> AutoApplyResult:
+    """Executes journaled patch commit, verification gate, and rollback under FileMutexLock."""
+    preimage_sha, j_files = _journal_anchor_preimages(root, patch, txn_dir, txn_id)
+    try:
+        mod_paths = apply_anchor_patch(root=root, payload=patch, dry_run=False, backup=False)
+    except Exception as exc:
+        rb_ok = _rollback_from_journal(root, txn_dir, j_files, False)
+        if rb_ok and not keep_backups:
+            shutil.rmtree(txn_dir, ignore_errors=True)
+        msg = f"Disk commit aborted: {exc}. Workspace rolled back {'cleanly' if rb_ok else 'WITH ERRORS'}."
+        return AutoApplyResult(
+            success=False,
+            gate_verdict="GATE_FAIL",
+            rollback_proven=rb_ok,
+            preimage_sha256=preimage_sha,
+            summary=msg,
+            transaction_id=txn_id,
+        )
+
+    cmds = list(extra_commands or [])
+    if preset == "ci":
+        cmds.append(f"{sys.executable} -m pytest packages/ccba-harness/tests/test_peer*.py -q")
+    try:
+        v_rep = verify_patch_execution(
+            preset=preset, cwd=root, timeout=timeout, commands=cmds or None
+        )
+    except Exception as v_err:
+        rb_ok = _rollback_from_journal(root, txn_dir, j_files, True)
+        msg = f"Verification execution crashed: {v_err}. Workspace rolled back {'cleanly' if rb_ok else 'WITH ERRORS'}."
+        return AutoApplyResult(
+            success=False,
+            gate_verdict="GATE_FAIL",
+            rollback_proven=rb_ok,
+            preimage_sha256=preimage_sha,
+            summary=msg,
+            transaction_id=txn_id,
+        )
+    return _finalize_auto_apply_decision(
+        root, txn_dir, txn_id, preset, keep_backups, mod_paths, preimage_sha, j_files, v_rep
+    )
 
 
 def auto_apply_and_verify_patch(
@@ -1320,232 +1201,40 @@ def auto_apply_and_verify_patch(
     keep_backups: bool = False,
     extra_commands: Sequence[str] | None = None,
 ) -> AutoApplyResult:
-    """Atomically applies anchor patch with pre-image byte journaling, closed-loop verification, and auto-rollback (Level-3 / ADR-0065).
-
-    Args:
-        root: Workspace repository root directory. If None, resolves via git rev-parse --show-toplevel.
-        patch_payload: AnchorPatchPayload instance or equivalent dictionary.
-        verify_preset: Verification preset to execute ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
-        timeout: Execution timeout in seconds per verification command.
-        keep_backups: Whether to preserve transaction backup directory on verification pass.
-        extra_commands: Additional verification shell commands to execute.
-
-    Returns:
-        AutoApplyResult containing execution status, gate verdict, and rollback proof.
-
-    Raises:
-        ValueError: If root is outside a git repository, preset is invalid, or payload fails validation.
-    """
-
-    # 1. Resolve root directory (COND-LEVEL3-ROOT)
-    if root is None:
-        effective_root = get_git_toplevel()
-        if effective_root is None:
-            raise ValueError(
-                "Root directory resolution failed: current working directory is not inside a git repository."
-            )
-    else:
-        effective_root = Path(root).resolve()
-        git_top = get_git_toplevel(effective_root)
-        if git_top is None:
-            raise ValueError(f"Specified root is not inside a git repository: {effective_root}")
-
-    # 2. Validate payload
-    if isinstance(patch_payload, dict):
-        patch = AnchorPatchPayload.model_validate(patch_payload)
-    else:
-        patch = patch_payload
-
+    """Atomically applies anchor patch with pre-image byte journaling, verification, and rollback (ADR-0065)."""
+    effective_root = _resolve_auto_apply_root(root)
+    patch = (
+        AnchorPatchPayload.model_validate(patch_payload)
+        if isinstance(patch_payload, dict)
+        else patch_payload
+    )
     if not patch.files:
         raise ValueError("Anchor patch payload contains no files to patch.")
-
-    # 3. Validate verify preset (COND-LEVEL3-SCOPE)
     resolve_preset_commands(preset=verify_preset)
-
-    # 4. Recover any prior interrupted transactions (COND-LEVEL3-TXN)
     recover_pending_anchor_transactions(root=effective_root)
 
-    # 5. Initialize isolated transaction backup directory (COND-LEVEL3-BACKUP)
     backup_base = effective_root / ".md" / "backups" / "anchor-txn"
     backup_base.mkdir(parents=True, exist_ok=True)
     txn_id = f"txn_{int(time.time())}_{uuid.uuid4().hex[:8]}"
     txn_dir = backup_base / txn_id
-
     if txn_dir.exists():
         raise ValueError(f"Transaction backup directory already exists: {txn_dir}")
-
-    # Verify no target in payload collides with txn_dir
     for fp in patch.files:
         t_path = (effective_root / fp.path).resolve()
         if t_path == txn_dir.resolve() or txn_dir.resolve().is_relative_to(t_path):
             raise ValueError(f"Payload target collides with transaction directory: {fp.path}")
 
-    lock_file = backup_base / ".lock"
-    preimage_sha256: dict[str, str] = {}
-    journal_files: list[dict[str, Any]] = []
-
-    with FileMutexLock(lock_file):
-        # Phase 1: Pre-validation & Pre-image byte journaling (Fail-Fast)
-        txn_dir.mkdir(parents=True, exist_ok=False)
-        try:
-            # Validate patch structure, anchors, and target integrity
-            apply_anchor_patch(root=effective_root, payload=patch, dry_run=True, backup=False)
-
-            # Record pre-image raw bytes
-            for idx, file_patch in enumerate(patch.files):
-                target_file = (effective_root / file_patch.path).resolve()
-                raw_bytes = target_file.read_bytes()
-                current_sha = hashlib.sha256(raw_bytes).hexdigest()
-                preimage_sha256[file_patch.path] = current_sha
-
-                backup_filename = f"file_{idx}.bin"
-                backup_file = txn_dir / backup_filename
-                backup_file.write_bytes(raw_bytes)
-
-                journal_files.append(
-                    {
-                        "index": idx,
-                        "path": file_patch.path,
-                        "blob_sha256": current_sha,
-                        "backup_filename": backup_filename,
-                    }
-                )
-
-            journal_data = {
-                "txn_id": txn_id,
-                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "root": str(effective_root),
-                "files": journal_files,
-            }
-            atomic_write_text(txn_dir / "journal.json", json.dumps(journal_data, indent=2))
-        except Exception as exc:
-            shutil.rmtree(txn_dir, ignore_errors=True)
-            raise ValueError(f"Pre-apply validation failed: {exc}") from exc
-
-        # Phase 2: Atomic commit to disk
-        modified_paths: list[Path] = []
-        try:
-            modified_paths = apply_anchor_patch(
-                root=effective_root, payload=patch, dry_run=False, backup=False
-            )
-        except Exception as exc:
-            # Emergency rollback
-            rollback_ok = True
-            for f_entry in journal_files:
-                try:
-                    t_file = (effective_root / f_entry["path"]).resolve()
-                    b_file = txn_dir / f_entry["backup_filename"]
-                    atomic_write_bytes(t_file, b_file.read_bytes())
-                except Exception:
-                    rollback_ok = False
-            if rollback_ok and not keep_backups:
-                shutil.rmtree(txn_dir, ignore_errors=True)
-            return AutoApplyResult(
-                success=False,
-                gate_verdict="GATE_FAIL",
-                rollback_proven=rollback_ok,
-                preimage_sha256=preimage_sha256,
-                summary=f"Disk commit aborted: {exc}. Workspace rolled back {'cleanly' if rollback_ok else 'WITH ERRORS'}.",
-                transaction_id=txn_id,
-            )
-
-        # Phase 3: Closed-Loop Verification Gate (ADR-0058 / COND-LEVEL3-SCOPE)
-        commands_to_run: list[str] = list(extra_commands or [])
-        if verify_preset == "ci":
-            commands_to_run.append(
-                f"{sys.executable} -m pytest packages/ccba-harness/tests/test_peer*.py -q"
-            )
-
-        verification_report = None
-        try:
-            verification_report = verify_patch_execution(
-                preset=verify_preset,
-                cwd=effective_root,
-                timeout=timeout,
-                commands=commands_to_run if commands_to_run else None,
-            )
-        except Exception as v_err:
-            rollback_ok = True
-            for f_entry in journal_files:
-                try:
-                    t_file = (effective_root / f_entry["path"]).resolve()
-                    b_file = txn_dir / f_entry["backup_filename"]
-                    atomic_write_bytes(t_file, b_file.read_bytes())
-                    restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
-                    if restored_sha.lower() != f_entry["blob_sha256"].lower():
-                        rollback_ok = False
-                except Exception:
-                    rollback_ok = False
-            return AutoApplyResult(
-                success=False,
-                gate_verdict="GATE_FAIL",
-                rollback_proven=rollback_ok,
-                preimage_sha256=preimage_sha256,
-                summary=f"Verification execution crashed: {v_err}. Workspace rolled back {'cleanly' if rollback_ok else 'WITH ERRORS'}.",
-                transaction_id=txn_id,
-            )
-
-        # Phase 4: Decision & Automatic Byte Rollback (COND-LEVEL3-TXN & COND-LEVEL3-EXIT)
-        rel_modified = [
-            str(p.relative_to(effective_root)) if p.is_relative_to(effective_root) else str(p)
-            for p in modified_paths
-        ]
-
-        if verification_report.all_passed:
-            (txn_dir / "commit.marker").write_text("committed", encoding="utf-8")
-            if not keep_backups:
-                shutil.rmtree(txn_dir, ignore_errors=True)
-            return AutoApplyResult(
-                success=True,
-                gate_verdict="GATE_PASS",
-                rollback_proven=False,
-                preimage_sha256=preimage_sha256,
-                report=verification_report,
-                summary=f"Patch successfully applied and verified with preset '{verify_preset}'.",
-                transaction_id=txn_id,
-                modified_files=rel_modified,
-            )
-
-        # Verification failed -> Automatic Byte Rollback with SHA-256 verification
-        rollback_proven = True
-        for f_entry in journal_files:
-            try:
-                t_file = (effective_root / f_entry["path"]).resolve()
-                b_file = txn_dir / f_entry["backup_filename"]
-                atomic_write_bytes(t_file, b_file.read_bytes())
-                restored_sha = hashlib.sha256(t_file.read_bytes()).hexdigest()
-                if restored_sha.lower() != f_entry["blob_sha256"].lower():
-                    rollback_proven = False
-            except Exception:
-                rollback_proven = False
-
-        if rollback_proven:
-            (txn_dir / "rollback.marker").write_text("clean", encoding="utf-8")
-            if not keep_backups:
-                shutil.rmtree(txn_dir, ignore_errors=True)
-            summary_msg = (
-                f"Verification failed ({verification_report.failed_count}/{verification_report.total_commands} "
-                f"commands failed). Workspace rolled back cleanly."
-            )
-        else:
-            summary_msg = (
-                f"Verification failed ({verification_report.failed_count}/{verification_report.total_commands} "
-                f"commands failed) AND byte rollback verification mismatch! Transaction preserved at {txn_dir}."
-            )
-
-        return AutoApplyResult(
-            success=False,
-            gate_verdict="GATE_FAIL",
-            rollback_proven=rollback_proven,
-            preimage_sha256=preimage_sha256,
-            report=verification_report,
-            summary=summary_msg,
-            transaction_id=txn_id,
-            modified_files=rel_modified,
+    with FileMutexLock(backup_base / ".lock"):
+        return _execute_locked_patch_transaction(
+            effective_root,
+            patch,
+            txn_dir,
+            txn_id,
+            verify_preset,
+            timeout,
+            keep_backups,
+            extra_commands,
         )
-
-
-from ._peer_telemetry import extract_grok_session_telemetry
 
 
 def build_grok_cmd(
@@ -1565,28 +1254,7 @@ def build_grok_cmd(
     verbatim: bool = False,
     disable_web_search: bool = False,
 ) -> list[str]:
-    """Constructs canonical grok CLI command list for headless execution (ADR-0063 / ADR-0064).
-
-    Args:
-        prompt_path: Path to prompt file containing PeerPromptEnvelope.
-        model: Model slug as defined in ~/.grok/config.toml.
-        max_turns: Optional hard cap on agent turns.
-        tools: Optional explicit allowlist of tools.
-        disallowed_tools: Optional explicit denylist of tools.
-        reasoning_effort: Optional reasoning effort ('low', 'medium', 'high', 'xhigh').
-        output_format: Output format ('plain', 'json', etc. Default: 'plain').
-        worktree: Whether to execute in an isolated git worktree.
-        session_id: Optional session UUID string.
-        system_prompt: Optional system prompt string to override agent default.
-        deny: Optional tool permission deny rule or list of rules.
-        resume_session_id: Optional prior session UUID to resume for KV-cache reuse.
-        fork_session: When resuming, fork into a new session ID instead of mutating the original.
-        verbatim: Whether to pass --verbatim to prevent auto-truncation of prompts >96KB.
-        disable_web_search: Whether to pass --disable-web-search for offline/repo-only audits.
-
-    Returns:
-        Command arguments list.
-    """
+    """Constructs canonical grok CLI command list for headless execution (ADR-0063 / ADR-0064)."""
     cmd = ["grok", "-m", model, "--always-approve", "--no-subagents"]
     if resume_session_id:
         cmd.extend(["--resume", resume_session_id])
@@ -1596,92 +1264,112 @@ def build_grok_cmd(
                 cmd.extend(["--session-id", session_id])
     elif session_id:
         cmd.extend(["--session-id", session_id])
-    if verbatim:
-        cmd.append("--verbatim")
-    if disable_web_search:
-        cmd.append("--disable-web-search")
+    for flag, enabled in (("--verbatim", verbatim), ("--disable-web-search", disable_web_search)):
+        if enabled:
+            cmd.append(flag)
     if system_prompt:
         cmd.extend(["--system-prompt-override", system_prompt])
     if deny:
-        if isinstance(deny, (list, tuple)):
-            for d in deny:
-                cmd.extend(["--deny", str(d)])
-        else:
-            cmd.extend(["--deny", str(deny)])
-    if reasoning_effort:
-        cmd.extend(["--reasoning-effort", reasoning_effort])
-    if max_turns is not None:
-        cmd.extend(["--max-turns", str(max_turns)])
-    if tools:
-        cmd.extend(["--tools", ",".join(tools)])
-    if disallowed_tools:
-        cmd.extend(["--disallowed-tools", ",".join(disallowed_tools)])
-    if output_format:
-        cmd.extend(["--output-format", output_format])
+        for d in deny if isinstance(deny, (list, tuple)) else [deny]:
+            cmd.extend(["--deny", str(d)])
+    for flag, val in (
+        ("--reasoning-effort", reasoning_effort),
+        ("--max-turns", str(max_turns) if max_turns is not None else None),
+        ("--tools", ",".join(tools) if tools else None),
+        ("--disallowed-tools", ",".join(disallowed_tools) if disallowed_tools else None),
+        ("--output-format", output_format),
+    ):
+        if val:
+            cmd.extend([flag, val])
     if worktree:
         cmd.append("--worktree")
     cmd.extend(["--prompt-file", str(prompt_path)])
     return cmd
 
 
-def _unwrap_grok_json_stdout(stdout_text: str) -> tuple[str, str | None, bool]:
-    """Unwraps `--output-format json` stdout from Grok CLI and enforces `stopReason == 'end_turn'`.
-
-    Args:
-        stdout_text: Raw stdout captured from Grok CLI.
-
-    Returns:
-        Tuple of (extracted_markdown_text, session_id_from_json, is_aborted_json).
-    """
-    stripped = stdout_text.strip()
-    if not stripped.startswith("{"):
-        return stdout_text, None, False
-    try:
-        payload = json.loads(stripped)
-    except Exception:
-        return stdout_text, None, False
-    if not isinstance(payload, dict) or ("text" not in payload and "stopReason" not in payload):
-        return stdout_text, None, False
-    stop_reason = payload.get("stopReason")
-    sid = str(payload["sessionId"]) if isinstance(payload.get("sessionId"), str) else None
-    if stop_reason is not None and stop_reason != "end_turn":
-        return "", sid, True
-    return str(payload.get("text") or ""), sid, False
+def _check_valid_output_file(output_file: Path) -> str | None:
+    """Checks if output_file contains a valid PeerVerdictBlock or AnchorPatchPayload."""
+    content, _ = safe_read_and_hash(output_file)
+    if content and (parse_verdict_from_md(content) or extract_anchor_payload(content)):
+        return content
+    return None
 
 
-def _terminate_proc_tree(proc: subprocess.Popen[Any]) -> None:
-    """Terminates a process and its child process group safely (COND-03 / ADR-0065)."""
-    pid = proc.pid
-    try:
-        if sys.platform == "win32":
-            subprocess.run(
-                ["taskkill", "/F", "/T", "/PID", str(pid)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-            )
-        elif hasattr(os, "killpg") and hasattr(os, "getpgid"):
-            try:
-                pgid = os.getpgid(pid)
-                os.killpg(pgid, signal.SIGTERM)
-            except OSError:
-                proc.terminate()
-        else:
-            proc.terminate()
-        proc.wait(timeout=2.0)
-    except Exception:
-        try:
-            if sys.platform != "win32" and hasattr(os, "killpg") and hasattr(os, "getpgid"):
-                try:
-                    pgid = os.getpgid(pid)
-                    os.killpg(pgid, signal.SIGKILL)
-                except OSError:
-                    proc.kill()
-            else:
-                proc.kill()
-            proc.wait(timeout=2.0)
-        except Exception:
-            pass
+def _finalize_grok_verdict_and_telemetry(
+    stdout_text: str,
+    prompt_path: Path,
+    output_file: Path,
+    duration: float,
+    session_id: str | None,
+    candidate_model: str,
+    expected_reasoning_effort: str | None,
+) -> bool:
+    """Validates parsed verdict or anchor patch, attaches session telemetry, and writes output_file."""
+    verdict = parse_verdict_from_md(stdout_text)
+    if verdict is None:
+        if extract_anchor_payload(stdout_text) is None:
+            return False
+        prompt_content, _ = safe_read_and_hash(prompt_path)
+        envelope = parse_envelope_from_md(prompt_content or "")
+        verdict = PeerVerdictBlock(
+            request_id=envelope.request_id if envelope else "req-auto",
+            verdict="HANDOFF",
+            summary="Fast-path anchor patch generated; pending orchestrator apply and verification.",
+        )
+        stdout_text = render_verdict_header(verdict) + "\n" + stdout_text.lstrip()
+
+    if session_id:
+        prompt_content, _ = safe_read_and_hash(prompt_path)
+        telemetry = extract_grok_session_telemetry(
+            session_id=session_id,
+            timeout=3.0,
+            fallback_prompt_text=prompt_content,
+            fallback_resp_text=stdout_text,
+            duration_seconds=duration,
+            fallback_model=candidate_model,
+            expected_reasoning_effort=expected_reasoning_effort,
+        )
+        if telemetry:
+            verdict.telemetry = telemetry
+            _, body = extract_frontmatter(stdout_text)
+            stdout_text = render_verdict_header(verdict) + body.lstrip()
+
+    atomic_write_text(output_file, stdout_text)
+    return True
+
+
+def _spawn_and_poll_grok(
+    cmd: list[str],
+    output_file: Path,
+    start_time: float,
+    timeout: float,
+    session_id: str | None,
+) -> tuple[str, bool]:
+    """Spawns grok subprocess with temp stdout/stderr and runs watchdog poll loop."""
+    with (
+        tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_out,
+        tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_err,
+    ):
+        popen_kw: dict[str, Any] = {
+            "stdout": temp_out,
+            "stderr": temp_err,
+            "stdin": subprocess.DEVNULL,
+            "text": True,
+            "encoding": "utf-8",
+            "errors": "replace",
+        }
+        if sys.platform != "win32":
+            popen_kw["start_new_session"] = True
+        proc = subprocess.Popen(cmd, **popen_kw)
+        return _poll_grok_process_with_watchdog(
+            proc,
+            temp_out,
+            output_file,
+            start_time,
+            timeout,
+            session_id,
+            _check_valid_output_file,
+        )
 
 
 def _run_single_grok_attempt(
@@ -1691,137 +1379,140 @@ def _run_single_grok_attempt(
     timeout: float,
     session_id: str | None = None,
     candidate_model: str = "unknown",
+    expected_reasoning_effort: str | None = None,
 ) -> bool:
-    """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064 / ADR-0065).
-
-    Args:
-        cmd: Command arguments list to execute.
-        prompt_path: Source prompt file path.
-        output_file: Target output file path to write result.
-        timeout: Subprocess timeout in seconds.
-        session_id: Optional session UUID for telemetry extraction.
-        candidate_model: Target model name for telemetry fallback.
-
-    Returns:
-        True if output contains a valid PeerVerdictBlock, False otherwise.
-    """
+    """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064 / ADR-0065)."""
     start_time = time.time()
     try:
-        with (
-            tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_out,
-            tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as temp_err,
-        ):
-            popen_kwargs: dict[str, Any] = {
-                "stdout": temp_out,
-                "stderr": temp_err,
-                "stdin": subprocess.DEVNULL,
-                "text": True,
-                "encoding": "utf-8",
-                "errors": "replace",
-            }
-            if sys.platform != "win32":
-                popen_kwargs["start_new_session"] = True
-            proc = subprocess.Popen(cmd, **popen_kwargs)
-            deadline = start_time + timeout
-            stdout_text = ""
-            while time.time() < deadline:
-                ret = proc.poll()
-                if ret is not None:
-                    temp_out.seek(0)
-                    stdout_text = temp_out.read()
-                    if not stdout_text and hasattr(proc, "communicate"):
-                        comm_out, _ = proc.communicate()
-                        if comm_out:
-                            stdout_text = comm_out
-                    break
-
-                # cond-3-verdict-atomic-validation: Watchdog checks if output file was generated during this run
-                if output_file.exists() and output_file.stat().st_mtime >= start_time:
-                    content, _ = safe_read_and_hash(output_file)
-                    if content and (
-                        parse_verdict_from_md(content) or extract_anchor_payload(content)
-                    ):
-                        stdout_text = content
-                        _terminate_proc_tree(proc)
-                        break
-
-                time.sleep(1.0)
-            else:
-                _terminate_proc_tree(proc)
-                return False
-
-        stdout_text, json_session_id, is_aborted_json = _unwrap_grok_json_stdout(stdout_text)
-        if json_session_id and not session_id:
-            session_id = json_session_id
-        if is_aborted_json:
+        stdout_text, ok = _spawn_and_poll_grok(cmd, output_file, start_time, timeout, session_id)
+        if not ok:
             return False
-
+        stdout_text, json_sid, _ = _unwrap_grok_json_stdout(stdout_text)
+        session_id = session_id or json_sid
         if (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None) and session_id:
-            try:
-                session_root = Path.home() / ".grok" / "sessions"
-                max_bytes = 2 * 1024 * 1024
-                for p in session_root.glob(f"**/{session_id}/chat_history.jsonl"):
-                    if p.exists():
-                        file_size = p.stat().st_size
-                        with p.open("r", encoding="utf-8", errors="replace") as f:
-                            if file_size > max_bytes:
-                                f.seek(file_size - max_bytes)
-                                f.readline()
-                            lines = f.readlines()
-                        for line in reversed(lines):
-                            if line.strip():
-                                d = json.loads(line)
-                                if d.get("type") == "assistant" and d.get("content"):
-                                    cand = d["content"]
-                                    if parse_verdict_from_md(cand) is not None:
-                                        stdout_text = cand
-                                        break
-                        if stdout_text and parse_verdict_from_md(stdout_text) is not None:
-                            break
-            except Exception:
-                pass
-
+            stdout_text = (
+                _recover_verdict_from_chat_history(session_id, parse_verdict_from_md) or stdout_text
+            )
         if not stdout_text.strip():
             return False
-
-        duration = time.time() - start_time
-        verdict = parse_verdict_from_md(stdout_text)
-        if verdict is None:
-            anchor_payload = extract_anchor_payload(stdout_text)
-            if anchor_payload is not None:
-                prompt_content, _ = safe_read_and_hash(prompt_path)
-                envelope = parse_envelope_from_md(prompt_content or "")
-                req_id = envelope.request_id if envelope else "req-auto"
-                # COND-02: Never fabricate synthetic APPROVE from anchor patch alone
-                verdict = PeerVerdictBlock(
-                    request_id=req_id,
-                    verdict="HANDOFF",
-                    summary="Fast-path anchor patch generated; pending orchestrator apply and verification.",
-                )
-                stdout_text = render_verdict_header(verdict) + "\n" + stdout_text.lstrip()
-            else:
-                return False
-
-        if session_id:
-            prompt_content, _ = safe_read_and_hash(prompt_path)
-            telemetry = extract_grok_session_telemetry(
-                session_id=session_id,
-                timeout=3.0,
-                fallback_prompt_text=prompt_content,
-                fallback_resp_text=stdout_text,
-                duration_seconds=duration,
-                fallback_model=candidate_model,
-            )
-            if telemetry:
-                verdict.telemetry = telemetry
-                _, body = extract_frontmatter(stdout_text)
-                rendered_fm = render_verdict_header(verdict)
-                stdout_text = rendered_fm + body.lstrip()
-
-        atomic_write_text(output_file, stdout_text)
-        return True
+        return _finalize_grok_verdict_and_telemetry(
+            stdout_text,
+            prompt_path,
+            output_file,
+            time.time() - start_time,
+            session_id,
+            candidate_model,
+            expected_reasoning_effort,
+        )
     except Exception:
         return False
+
+
+def _resolve_target_models(
+    model: str | None,
+    tier: ModelTier | str | None,
+    spec: dict[str, Any],
+) -> list[str]:
+    """Resolves ordered list of candidate Grok models (primary + fallback)."""
+    if model:
+        return [model]
+    if tier and str(tier) in TIER_DEFAULT_MODELS:
+        return [TIER_DEFAULT_MODELS[str(tier)]]
+    if os.getenv("CCBA_GROK_MODEL"):
+        return [os.environ["CCBA_GROK_MODEL"]]
+    targets = [spec["model"]]
+    fallback = spec.get("fallback_model")
+    if fallback and fallback not in targets:
+        targets.append(fallback)
+    return targets
+
+
+def _resolve_grok_profile_options(
+    spec: dict[str, Any],
+    envelope: PeerPromptEnvelope,
+    max_turns: int | None,
+    timeout: float | None,
+    no_tools: bool,
+    resume_session_id: str | None,
+    fork_session: bool | None,
+) -> dict[str, Any]:
+    """Resolves effective CLI options from profile spec, prompt envelope, and caller overrides."""
+    eff_turns = (
+        max_turns
+        if max_turns is not None
+        else (envelope.max_turns if envelope.max_turns is not None else spec.get("max_turns"))
+    )
+    tools, disallowed, deny = spec.get("tools"), spec.get("disallowed_tools"), spec.get("deny")
+    if no_tools:
+        tools, disallowed, deny = None, list(NO_TOOLS_DISALLOW_LIST), ["*"]
+        if max_turns is None and (eff_turns is None or eff_turns > 3):
+            eff_turns = 3
+    eff_resume = resume_session_id or envelope.resume_session_id
+    eff_fork = (
+        fork_session
+        if fork_session is not None
+        else (
+            envelope.fork_session
+            if envelope.fork_session is not None
+            else bool(spec.get("fork_session", bool(eff_resume)))
+        )
+    )
+    return {
+        "max_turns": eff_turns,
+        "tools": tools,
+        "disallowed_tools": disallowed,
+        "deny": deny,
+        "reasoning_effort": spec.get("reasoning_effort"),
+        "system_prompt": spec.get("system_prompt"),
+        "timeout": timeout if timeout is not None else spec.get("timeout", 180.0),
+        "resume_session_id": eff_resume,
+        "fork_session": eff_fork,
+        "verbatim": bool(spec.get("verbatim", False)),
+        "disable_web_search": bool(spec.get("disable_web_search", False)),
+        "output_format": str(spec.get("output_format") or "plain"),
+    }
+
+
+def _dispatch_grok_candidate(
+    prompt_path: Path,
+    output_file: Path,
+    candidate: str,
+    opts: dict[str, Any],
+    worktree: bool,
+) -> bool:
+    """Builds CLI command for a single candidate model and executes _run_single_grok_attempt."""
+    cand_sid = str(uuid.uuid4())
+    cmd = build_grok_cmd(
+        prompt_path=prompt_path,
+        model=candidate,
+        max_turns=opts["max_turns"],
+        tools=opts["tools"],
+        disallowed_tools=opts["disallowed_tools"],
+        deny=opts["deny"],
+        reasoning_effort=opts["reasoning_effort"],
+        output_format=opts["output_format"],
+        worktree=worktree,
+        session_id=cand_sid,
+        system_prompt=opts["system_prompt"],
+        resume_session_id=opts["resume_session_id"],
+        fork_session=opts["fork_session"],
+        verbatim=opts["verbatim"],
+        disable_web_search=opts["disable_web_search"],
+    )
+    eff_sid = (
+        cand_sid
+        if (not opts["resume_session_id"] or opts["fork_session"])
+        else opts["resume_session_id"]
+    )
+    return _run_single_grok_attempt(
+        cmd,
+        prompt_path,
+        output_file,
+        opts["timeout"],
+        session_id=eff_sid,
+        candidate_model=candidate,
+        expected_reasoning_effort=opts["reasoning_effort"],
+    )
 
 
 def invoke_grok_cli(
@@ -1836,130 +1527,163 @@ def invoke_grok_cli(
     resume_session_id: str | None = None,
     fork_session: bool | None = None,
 ) -> bool:
-    """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064).
-
-    Args:
-        prompt_path: Path to prompt file containing PeerPromptEnvelope.
-        model: Optional explicit model override.
-        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'audit_direct', 'deep_spec_audit', 'signoff_diff').
-        tier: Model tier ('local', 'gateway', 'cloud').
-        max_turns: Optional turns override.
-        timeout: Subprocess execution timeout in seconds.
-        worktree: Whether to run inside a detached git worktree.
-        no_tools: Whether to strictly disallow all tools and force direct reasoning.
-        resume_session_id: Optional prior session UUID to resume for KV-cache reuse.
-        fork_session: Optional override for --fork-session when resuming.
-
-    Returns:
-        True if response was successfully generated and verified, False otherwise.
-    """
+    """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064)."""
     content, _ = safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(content or "")
     if not envelope or not envelope.output_path:
         return False
 
-    out_name = Path(envelope.output_path).name
-    output_file = prompt_path.parent / out_name
-
-    active_profile = profile or (envelope.profile if envelope else None)
-    spec: dict[str, Any] = PROFILE_SPECS.get(
-        str(active_profile),
-        {
-            "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
-            "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
-            "max_turns": 12,
-            "tools": None,
-            "disallowed_tools": ["spawn_subagent"],
-            "reasoning_effort": "xhigh",
-            "timeout": 180.0,
-        },
+    output_file = prompt_path.parent / Path(envelope.output_path).name
+    default_spec: dict[str, Any] = {
+        "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
+        "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
+        "max_turns": 12,
+        "tools": None,
+        "disallowed_tools": ["spawn_subagent"],
+        "reasoning_effort": "xhigh",
+        "timeout": 180.0,
+    }
+    spec = PROFILE_SPECS.get(str(profile or envelope.profile), default_spec)
+    opts = _resolve_grok_profile_options(
+        spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session
+    )
+    return any(
+        _dispatch_grok_candidate(prompt_path, output_file, cand, opts, worktree)
+        for cand in _resolve_target_models(model, tier, spec)
     )
 
-    spec_max_turns = (
-        max_turns
-        if max_turns is not None
-        else (
-            envelope.max_turns
-            if envelope and envelope.max_turns is not None
-            else spec.get("max_turns")
-        )
-    )
-    tools = spec.get("tools")
-    disallowed_tools = spec.get("disallowed_tools")
-    deny = spec.get("deny")
-    if no_tools:
-        tools = None
-        disallowed_tools = [
-            "read_file",
-            "grep",
-            "list_dir",
-            "run_terminal_command",
-            "search_replace",
-            "write_file",
-            "spawn_subagent",
-        ]
-        deny = ["*"]
-        if max_turns is None and (spec_max_turns is None or spec_max_turns > 3):
-            spec_max_turns = 3
-    reasoning_effort = spec.get("reasoning_effort")
-    system_prompt = spec.get("system_prompt")
-    spec_timeout = timeout if timeout is not None else spec.get("timeout", 180.0)
-    effective_resume = resume_session_id or (envelope.resume_session_id if envelope else None)
-    effective_fork = (
-        fork_session
-        if fork_session is not None
-        else (
-            envelope.fork_session
-            if envelope and envelope.fork_session is not None
-            else bool(spec.get("fork_session", bool(effective_resume)))
-        )
-    )
-    effective_verbatim = bool(spec.get("verbatim", False))
-    effective_disable_web = bool(spec.get("disable_web_search", False))
-    effective_output_format = str(spec.get("output_format") or "plain")
 
-    target_models: list[str] = []
-    if model:
-        target_models.append(model)
-    elif tier and str(tier) in TIER_DEFAULT_MODELS:
-        target_models.append(TIER_DEFAULT_MODELS[str(tier)])
-    elif os.getenv("CCBA_GROK_MODEL"):
-        target_models.append(os.environ["CCBA_GROK_MODEL"])
-    else:
-        target_models.append(spec["model"])
-        fallback = spec.get("fallback_model")
-        if fallback and fallback not in target_models:
-            target_models.append(fallback)
+def _merge_profile_conditions(
+    comp_profiles: list[str],
+    verdicts: dict[str, PeerVerdictBlock],
+) -> list[PeerCondition]:
+    """Deduplicates and OR-merges blocking conditions across completed profiles."""
+    consolidated: list[PeerCondition] = []
+    seen_descs: dict[str, PeerCondition] = {}
+    for prof in comp_profiles:
+        for cond in verdicts[prof].conditions:
+            key = cond.description.strip().lower()
+            if key in seen_descs:
+                seen_descs[key].blocking = seen_descs[key].blocking or cond.blocking
+                if prof not in seen_descs[key].source_profiles:
+                    seen_descs[key].source_profiles.append(prof)
+            else:
+                new_c = PeerCondition(
+                    id=cond.id,
+                    description=cond.description,
+                    blocking=cond.blocking,
+                    source_profile=prof,
+                    source_profiles=[prof],
+                )
+                seen_descs[key] = new_c
+                consolidated.append(new_c)
+    return consolidated
 
-    for candidate in target_models:
-        candidate_session_id = str(uuid.uuid4())
-        cmd = build_grok_cmd(
-            prompt_path=prompt_path,
-            model=candidate,
-            max_turns=spec_max_turns,
-            tools=tools,
-            disallowed_tools=disallowed_tools,
-            deny=deny,
-            reasoning_effort=reasoning_effort,
-            output_format=effective_output_format,
-            worktree=worktree,
-            session_id=candidate_session_id,
-            system_prompt=system_prompt,
-            resume_session_id=effective_resume,
-            fork_session=effective_fork,
-            verbatim=effective_verbatim,
-            disable_web_search=effective_disable_web,
+
+def _consolidate_peer_conditions(
+    comp_profiles: list[str],
+    failed_profiles: list[str],
+    verdicts: dict[str, PeerVerdictBlock],
+) -> list[PeerCondition]:
+    """Consolidates conditions with deterministic ordering, quorum failure, and degraded-reasoning checks."""
+    consolidated = _merge_profile_conditions(comp_profiles, verdicts)
+    if failed_profiles:
+        msg = f"Missing peer review from profiles: {', '.join(failed_profiles)}"
+        consolidated.append(
+            PeerCondition(
+                id="COND-QUORUM-FAIL",
+                description=msg,
+                blocking=True,
+                source_profile="orchestrator",
+                source_profiles=["orchestrator"],
+            )
         )
-        if _run_single_grok_attempt(
-            cmd,
-            prompt_path,
-            output_file,
-            spec_timeout,
-            session_id=candidate_session_id if (not effective_resume or effective_fork) else effective_resume,
-            candidate_model=candidate,
-        ):
-            return True
-    return False
+    degraded = [
+        p
+        for p in comp_profiles
+        if isinstance(verdicts[p].telemetry, PeerVerdictTelemetry)
+        and verdicts[p].telemetry.degraded_reasoning  # type: ignore[union-attr]
+    ]
+    if degraded:
+        msg = f"High/xhigh reasoning profile returned 0 reasoning_tokens (silent reasoning degradation in: {', '.join(degraded)})."
+        consolidated.append(
+            PeerCondition(
+                id="COND-DEGRADED-REASONING",
+                description=msg,
+                blocking=True,
+                source_profile="telemetry",
+                source_profiles=degraded,
+            )
+        )
+    return consolidated
+
+
+def _consolidate_peer_telemetry(
+    comp_profiles: list[str],
+    verdicts: dict[str, PeerVerdictBlock],
+    duration_seconds: float,
+) -> CombinedTelemetry | None:
+    """Consolidates profile telemetry into CombinedTelemetry without failing consensus synthesis."""
+    try:
+        agg = {"total": 0, "inp": 0, "out": 0, "rsn": 0, "cached": 0}
+        cost_usd, sum_secs, all_exact, has_any = 0.0, 0.0, True, False
+        breakdown: dict[str, ProfileTelemetryItem] = {}
+        for prof in comp_profiles:
+            tel = verdicts[prof].telemetry
+            if isinstance(tel, PeerVerdictTelemetry):
+                has_any = True
+                agg["total"] += tel.total_tokens or 0
+                agg["inp"] += tel.input_tokens or 0
+                agg["out"] += tel.output_tokens or 0
+                agg["rsn"] += tel.reasoning_tokens or 0
+                agg["cached"] += tel.cached_read_tokens or 0
+                cost_usd += tel.cost_usd or 0.0
+                sum_secs += tel.duration_seconds or 0.0
+                all_exact = all_exact and (tel.cost_mode == "exact")
+                breakdown[prof] = ProfileTelemetryItem(
+                    model=tel.primary_model,
+                    input_tokens=tel.input_tokens or 0,
+                    output_tokens=tel.output_tokens or 0,
+                    reasoning_tokens=tel.reasoning_tokens or 0,
+                    cached_read_tokens=tel.cached_read_tokens or 0,
+                    total_tokens=tel.total_tokens or 0,
+                    cost_usd=round(tel.cost_usd or 0.0, 4),
+                    duration_seconds=round(tel.duration_seconds or 0.0, 2),
+                )
+            else:
+                all_exact = False
+        if not has_any:
+            return None
+        return CombinedTelemetry(
+            total_tokens=agg["total"],
+            input_tokens=agg["inp"],
+            output_tokens=agg["out"],
+            reasoning_tokens=agg["rsn"],
+            cached_read_tokens=agg["cached"],
+            cost_usd=round(cost_usd, 4),
+            wall_seconds=round(duration_seconds, 2),
+            sum_agent_seconds=round(sum_secs, 2),
+            cost_mode="exact" if all_exact else "estimated",
+            profile_breakdown=breakdown,
+        )
+    except Exception:
+        return None
+
+
+def _resolve_baseline_consensus_verdict(
+    comp_profiles: list[str],
+    failed_profiles: list[str],
+    verdicts: dict[str, PeerVerdictBlock],
+) -> VerdictType:
+    """Computes baseline consensus verdict using strict lattice rank and quorum rules."""
+    completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
+    if not completed_verdicts:
+        return "HANDOFF"
+    completed_max = max(completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0))
+    handoff_rank = VERDICT_LATTICE_RANK.get("HANDOFF", 70)
+    if failed_profiles and VERDICT_LATTICE_RANK.get(completed_max, 0) < handoff_rank:
+        return "HANDOFF"
+    return completed_max
 
 
 def synthesize_verdicts(
@@ -1968,181 +1692,41 @@ def synthesize_verdicts(
     expected_profiles: Sequence[str] | None = None,
     duration_seconds: float = 0.0,
 ) -> PeerConsensusReport:
-    """Synthesizes multiple peer verdicts into a unified deterministic consensus report (ADR-0065).
-
-    Args:
-        request_id: Request identifier matching the prompt.
-        verdicts: Mapping of profile name to PeerVerdictBlock.
-        expected_profiles: Optional expected profiles list for quorum enforcement.
-        duration_seconds: Execution wall-clock duration in seconds.
-
-    Returns:
-        PeerConsensusReport with synthesized verdict, conditions, and telemetry.
-    """
+    """Synthesizes multiple peer verdicts into a unified deterministic consensus report (ADR-0065)."""
     if not verdicts and not expected_profiles:
         raise ValueError(
             "Cannot synthesize consensus from empty verdicts and empty expected profiles."
         )
+    exp = list(expected_profiles) if expected_profiles is not None else list(verdicts.keys())
+    comp = [p for p in exp if p in verdicts]
+    failed = [p for p in exp if p not in verdicts]
+    pass_set = {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS", "APPROVE_WITH_RESERVATIONS"}
 
-    exp_profiles = (
-        list(expected_profiles) if expected_profiles is not None else list(verdicts.keys())
-    )
-    comp_profiles = [p for p in exp_profiles if p in verdicts]
-    failed_profiles = [p for p in exp_profiles if p not in verdicts]
+    c_verdict = _resolve_baseline_consensus_verdict(comp, failed, verdicts)
+    conds = _consolidate_peer_conditions(comp, failed, verdicts)
+    valid_risks = [r for p in comp if (r := verdicts[p].risk_score) is not None]
+    c_risk = max(valid_risks) if valid_risks else 1
+    if c_verdict in pass_set and (any(c.blocking for c in conds) or c_risk >= 4):
+        c_verdict = "APPROVE_WITH_CONDITIONS"
 
-    pass_verdicts: set[VerdictType] = {
-        "APPROVE",
-        "APPROVE_PLAN",
-        "FINAL_ACCEPT",
-        "GATE_PASS",
-        "APPROVE_WITH_RESERVATIONS",
-    }
-
-    # 1. Determine baseline consensus verdict by strict lattice rank (COND-LATTICE-QUORUM)
-    completed_verdicts = [verdicts[p].verdict for p in comp_profiles]
-    if not completed_verdicts:
-        consensus_verdict: VerdictType = "HANDOFF"
-    else:
-        completed_max = max(completed_verdicts, key=lambda t: VERDICT_LATTICE_RANK.get(t, 0))
-        if failed_profiles:
-            # Monotonic quorum join: if highest completed verdict is at or above HANDOFF (e.g. REVISE_PLAN, REJECT),
-            # preserve it. Otherwise (e.g. APPROVE, APPROVE_WITH_CONDITIONS), quorum failure falls back to HANDOFF.
-            handoff_rank = VERDICT_LATTICE_RANK.get("HANDOFF", 70)
-            if VERDICT_LATTICE_RANK.get(completed_max, 0) >= handoff_rank:
-                consensus_verdict = completed_max
-            else:
-                consensus_verdict = "HANDOFF"
-        else:
-            consensus_verdict = completed_max
-
-    # 2. Consolidate conditions with deterministic ordering & OR-merge on blocking
-    consolidated_conds: list[PeerCondition] = []
-    seen_cond_descs: dict[str, PeerCondition] = {}
-
-    for prof in comp_profiles:
-        vb = verdicts[prof]
-        for cond in vb.conditions:
-            key = cond.description.strip().lower()
-            if key in seen_cond_descs:
-                existing = seen_cond_descs[key]
-                existing.blocking = existing.blocking or cond.blocking
-                if prof not in existing.source_profiles:
-                    existing.source_profiles.append(prof)
-            else:
-                new_cond = PeerCondition(
-                    id=cond.id,
-                    description=cond.description,
-                    blocking=cond.blocking,
-                    source_profile=prof,
-                    source_profiles=[prof],
-                )
-                seen_cond_descs[key] = new_cond
-                consolidated_conds.append(new_cond)
-
-    if failed_profiles:
-        fail_cond = PeerCondition(
-            id="COND-QUORUM-FAIL",
-            description=f"Missing peer review from profiles: {', '.join(failed_profiles)}",
-            blocking=True,
-            source_profile="orchestrator",
-            source_profiles=["orchestrator"],
-        )
-        consolidated_conds.append(fail_cond)
-
-    # 3. Dynamic escalation: blocking conditions or risk_score >= 4 upgrade PASS to APPROVE_WITH_CONDITIONS
-    has_blocking = any(c.blocking for c in consolidated_conds)
-    if consensus_verdict in pass_verdicts and has_blocking:
-        consensus_verdict = "APPROVE_WITH_CONDITIONS"
-
-    valid_risks = [
-        verdicts[p].risk_score for p in comp_profiles if verdicts[p].risk_score is not None
+    lines = [
+        f"Consensus Verdict: **{c_verdict}** (Risk Score: {c_risk}/5).",
+        f"Quorum: {len(comp)}/{len(exp)} completed.",
     ]
-    consensus_risk = max(valid_risks) if valid_risks else 1
-    if consensus_verdict in pass_verdicts and consensus_risk >= 4:
-        consensus_verdict = "APPROVE_WITH_CONDITIONS"
-
-    # 4. Consolidate telemetry breakdown (isolated to protect consensus report - COND-LEVEL3-GATE)
-    combined_telemetry: CombinedTelemetry | None = None
-    try:
-        agg_total = 0
-        agg_input = 0
-        agg_output = 0
-        agg_reasoning = 0
-        agg_cached = 0
-        cost_usd = 0.0
-        sum_agent_seconds = 0.0
-        all_exact = True
-        has_any_telemetry = False
-        profile_breakdown: dict[str, ProfileTelemetryItem] = {}
-
-        for prof in comp_profiles:
-            vb = verdicts[prof]
-            tel = vb.telemetry
-            if tel:
-                has_any_telemetry = True
-                agg_total += tel.total_tokens or 0
-                agg_input += tel.input_tokens or 0
-                agg_output += tel.output_tokens or 0
-                agg_reasoning += tel.reasoning_tokens or 0
-                agg_cached += tel.cached_read_tokens or 0
-                cost_usd += tel.cost_usd or 0.0
-                sum_agent_seconds += tel.duration_seconds or 0.0
-                if tel.cost_mode != "exact":
-                    all_exact = False
-                item_payload = {
-                    "model": tel.primary_model,
-                    "input_tokens": tel.input_tokens or 0,
-                    "output_tokens": tel.output_tokens or 0,
-                    "reasoning_tokens": tel.reasoning_tokens or 0,
-                    "cached_read_tokens": tel.cached_read_tokens or 0,
-                    "total_tokens": tel.total_tokens or 0,
-                    "cost_usd": round(tel.cost_usd or 0.0, 4),
-                    "duration_seconds": round(tel.duration_seconds or 0.0, 2),
-                }
-                profile_breakdown[prof] = ProfileTelemetryItem.model_validate(item_payload)
-            else:
-                all_exact = False
-
-        if has_any_telemetry:
-            comb_payload = {
-                "total_tokens": agg_total,
-                "input_tokens": agg_input,
-                "output_tokens": agg_output,
-                "reasoning_tokens": agg_reasoning,
-                "cached_read_tokens": agg_cached,
-                "cost_usd": round(cost_usd, 4),
-                "wall_seconds": round(duration_seconds, 2),
-                "sum_agent_seconds": round(sum_agent_seconds, 2),
-                "cost_mode": "exact" if all_exact else "estimated",
-                "profile_breakdown": profile_breakdown,
-            }
-            combined_telemetry = CombinedTelemetry.model_validate(comb_payload)
-    except Exception:
-        combined_telemetry = None
-
-    # 5. Build consolidated summary
-    summary_lines = [
-        f"Consensus Verdict: **{consensus_verdict}** (Risk Score: {consensus_risk}/5).",
-        f"Quorum: {len(comp_profiles)}/{len(exp_profiles)} completed.",
-    ]
-    if failed_profiles:
-        summary_lines.append(f"Failed Profiles: {', '.join(failed_profiles)}.")
-    for prof in comp_profiles:
-        vb = verdicts[prof]
-        summary_lines.append(f"- **{prof}** ({vb.verdict}): {vb.summary}")
-    unified_summary = "\n".join(summary_lines)
-
+    if failed:
+        lines.append(f"Failed Profiles: {', '.join(failed)}.")
+    lines.extend(f"- **{p}** ({verdicts[p].verdict}): {verdicts[p].summary}" for p in comp)
     return PeerConsensusReport(
         request_id=request_id,
-        verdict=consensus_verdict,
-        risk_score=consensus_risk,
-        summary=unified_summary,
-        expected_profiles=exp_profiles,
-        completed_profiles=comp_profiles,
-        failed_profiles=failed_profiles,
+        verdict=c_verdict,
+        risk_score=c_risk,
+        summary="\n".join(lines),
+        expected_profiles=exp,
+        completed_profiles=comp,
+        failed_profiles=failed,
         individual_verdicts=verdicts,
-        conditions=consolidated_conds,
-        combined_telemetry=combined_telemetry,
+        conditions=conds,
+        combined_telemetry=_consolidate_peer_telemetry(comp, verdicts, duration_seconds),
     )
 
 
@@ -2160,11 +1744,9 @@ def render_consensus_report_markdown(report: PeerConsensusReport) -> str:
     }
     if report.combined_telemetry:
         fm_payload["telemetry"] = report.combined_telemetry.model_dump(exclude_none=True)
+    header = f"---\n{yaml.dump(fm_payload, sort_keys=False, allow_unicode=True)}---\n"
 
-    yaml_str = yaml.dump(fm_payload, sort_keys=False, allow_unicode=True)
-    header = f"---\n{yaml_str}---\n"
-
-    body_lines = [
+    body = [
         f"# 🤝 Multi-Agent Peer Consensus Report: `{report.request_id}`\n",
         f"- **Consensus Verdict**: `{report.verdict}`",
         f"- **Consolidated Risk Score**: `{report.risk_score}/5`",
@@ -2173,36 +1755,80 @@ def render_consensus_report_markdown(report: PeerConsensusReport) -> str:
         report.summary,
         "\n## 2. Consolidated Conditions\n",
     ]
-    if report.conditions:
-        for c in report.conditions:
-            blocking_tag = "🔴 [BLOCKING]" if c.blocking else "🟡 [ADVISORY]"
-            sources = (
-                ", ".join(c.source_profiles)
-                if c.source_profiles
-                else (c.source_profile or "unknown")
-            )
-            body_lines.append(f"- **{c.id}** {blocking_tag} ({sources}): {c.description}")
-    else:
-        body_lines.append("*(No conditions attached)*")
-
-    body_lines.append("\n## 3. Individual Profile Verdicts\n")
+    for c in report.conditions or []:
+        tag = "🔴 [BLOCKING]" if c.blocking else "🟡 [ADVISORY]"
+        srcs = (
+            ", ".join(c.source_profiles) if c.source_profiles else (c.source_profile or "unknown")
+        )
+        body.append(f"- **{c.id}** {tag} ({srcs}): {c.description}")
+    if not report.conditions:
+        body.append("*(No conditions attached)*")
+    body.append("\n## 3. Individual Profile Verdicts\n")
     for prof, vb in report.individual_verdicts.items():
-        body_lines.append(f"### Profile: `{prof}`")
-        body_lines.append(f"- **Verdict**: `{vb.verdict}` (Risk: `{vb.risk_score or 'N/A'}`)")
-        body_lines.append(f"- **Summary**: {vb.summary}\n")
-
+        body.append(
+            f"### Profile: `{prof}`\n- **Verdict**: `{vb.verdict}` (Risk: `{vb.risk_score or 'N/A'}`)\n- **Summary**: {vb.summary}\n"
+        )
     if report.combined_telemetry:
-        tel = report.combined_telemetry
-        body_lines.append("## 4. Telemetry & Cost Provenance\n")
-        body_lines.append(
-            f"- **Total Tokens**: {tel.total_tokens:,} (Input: {tel.input_tokens:,}, Output: {tel.output_tokens:,}, Reasoning: {tel.reasoning_tokens:,})"
+        t = report.combined_telemetry
+        body.append(
+            f"## 4. Telemetry & Cost Provenance\n\n- **Total Tokens**: {t.total_tokens:,} (Input: {t.input_tokens:,}, Output: {t.output_tokens:,}, Reasoning: {t.reasoning_tokens:,})\n- **Total Cost**: ${t.cost_usd:.4f} (mode: `{t.cost_mode}`)\n- **Duration**: Wall clock `{t.wall_seconds}s` | Sum agent time `{t.sum_agent_seconds}s`\n"
         )
-        body_lines.append(f"- **Total Cost**: ${tel.cost_usd:.4f} (mode: `{tel.cost_mode}`)")
-        body_lines.append(
-            f"- **Duration**: Wall clock `{tel.wall_seconds}s` | Sum agent time `{tel.sum_agent_seconds}s`\n"
-        )
+    return header + "\n".join(body) + "\n"
 
-    return header + "\n".join(body_lines) + "\n"
+
+def _run_co_review_workers(
+    tasks: list[tuple[str, Path, Path]],
+    max_workers: int,
+    timeout: float | None,
+    worktree: bool,
+) -> dict[str, PeerVerdictBlock]:
+    """Dispatches co-review profile tasks in parallel via ThreadPoolExecutor."""
+
+    def _worker(item: tuple[str, Path, Path]) -> tuple[str, PeerVerdictBlock | None]:
+        p_name, p_prompt, p_out = item
+        spec = PROFILE_SPECS.get(p_name, {})
+        ok = invoke_grok_cli(
+            prompt_path=p_prompt,
+            model=spec.get("model"),
+            profile=p_name,
+            timeout=timeout if timeout is not None else spec.get("timeout"),
+            worktree=worktree,
+        )
+        if not ok or not p_out.exists():
+            return p_name, None
+        out_str, _ = safe_read_and_hash(p_out)
+        return p_name, parse_verdict_from_md(out_str or "")
+
+    verdicts: dict[str, PeerVerdictBlock] = {}
+    with ThreadPoolExecutor(max_workers=max(1, max_workers)) as pool:
+        for fut in [pool.submit(_worker, t) for t in tasks]:
+            try:
+                p_name, vb = fut.result()
+                if vb is not None:
+                    verdicts[p_name] = vb
+            except Exception:
+                pass
+    return verdicts
+
+
+def _prepare_co_review_tasks(
+    profiles: Sequence[str],
+    envelope: PeerPromptEnvelope,
+    content: str,
+    temp_dir: Path,
+) -> list[tuple[str, Path, Path]]:
+    """Writes isolated per-profile prompt files inside temp_dir and returns worker task tuples."""
+    tasks: list[tuple[str, Path, Path]] = []
+    _, body = extract_frontmatter(content)
+    for prof in profiles:
+        prof_prompt = temp_dir / f"prompt_{prof}.md"
+        prof_out_name = f"grok_{prof}.md"
+        prof_env = envelope.model_copy()
+        prof_env.profile = prof  # type: ignore[assignment]
+        prof_env.output_path = prof_out_name
+        atomic_write_text(prof_prompt, render_prompt_header(prof_env) + body.lstrip())
+        tasks.append((prof, prof_prompt, temp_dir / prof_out_name))
+    return tasks
 
 
 def orchestrate_peer_co_review(
@@ -2213,19 +1839,7 @@ def orchestrate_peer_co_review(
     timeout: float | None = None,
     worktree: bool = False,
 ) -> PeerConsensusReport | None:
-    """Orchestrates multi-agent co-review execution in parallel threads with isolated outputs (ADR-0065).
-
-    Args:
-        prompt_path: Path to markdown prompt file containing PeerPromptEnvelope.
-        profiles: Sequence of peer profile names to dispatch.
-        output_file: Path to final consensus markdown file.
-        max_workers: ThreadPoolExecutor worker count cap.
-        timeout: Optional timeout override for agent executions.
-        worktree: Whether to execute agents inside a git worktree.
-
-    Returns:
-        PeerConsensusReport on success, or None if prompt is unreadable.
-    """
+    """Orchestrates multi-agent co-review execution in parallel threads with isolated outputs (ADR-0065)."""
     for prof in profiles:
         if not re.match(r"^[a-z0-9_]{1,32}$", prof):
             raise ValueError(f"Invalid profile name '{prof}': must match ^[a-z0-9_]{{1,32}}$")
@@ -2239,77 +1853,27 @@ def orchestrate_peer_co_review(
     if not envelope:
         return None
 
-    request_id = envelope.request_id
-
-    # COND-04: Isolated TemporaryDirectory with 0700 permissions outside peer_exchange
-    temp_dir_obj = tempfile.TemporaryDirectory(prefix=f"peer_co_review_{request_id[:8]}_")
+    temp_dir_obj = tempfile.TemporaryDirectory(prefix=f"peer_co_review_{envelope.request_id[:8]}_")
     temp_dir = Path(temp_dir_obj.name)
     try:
         try:
             os.chmod(temp_dir, 0o700)
         except Exception:
             pass
-
         start_time = time.time()
-        tasks: list[tuple[str, Path, Path]] = []
-
-        for prof in profiles:
-            prof_prompt = temp_dir / f"prompt_{prof}.md"
-            prof_out_name = f"grok_{prof}.md"
-            prof_env = envelope.model_copy()
-            prof_env.profile = prof  # type: ignore[assignment]
-            prof_env.output_path = prof_out_name
-            rendered = render_prompt_header(prof_env)
-            _, body = extract_frontmatter(content or "")
-            atomic_write_text(prof_prompt, rendered + body.lstrip())
-            tasks.append((prof, prof_prompt, temp_dir / prof_out_name))
-
-        def _worker(item: tuple[str, Path, Path]) -> tuple[str, PeerVerdictBlock | None]:
-            p_name, p_prompt, p_out = item
-            spec = PROFILE_SPECS.get(p_name, {})
-            p_model = spec.get("model")
-            p_timeout = timeout if timeout is not None else spec.get("timeout")
-            ok = invoke_grok_cli(
-                prompt_path=p_prompt,
-                model=p_model,
-                profile=p_name,
-                timeout=p_timeout,
-                worktree=worktree,
-            )
-            if not ok or not p_out.exists():
-                return p_name, None
-            out_str, _ = safe_read_and_hash(p_out)
-            vb = parse_verdict_from_md(out_str or "")
-            return p_name, vb
-
+        tasks = _prepare_co_review_tasks(profiles, envelope, content or "", temp_dir)
         workers_count = max_workers if max_workers is not None else min(len(profiles), 4)
-        verdicts: dict[str, PeerVerdictBlock] = {}
-
-        with ThreadPoolExecutor(max_workers=max(1, workers_count)) as pool:
-            futures = [pool.submit(_worker, t) for t in tasks]
-            for fut in futures:
-                try:
-                    p_name, vb = fut.result()
-                    if vb is not None:
-                        verdicts[p_name] = vb
-                except Exception:
-                    pass
-
-        elapsed = time.time() - start_time
+        verdicts = _run_co_review_workers(tasks, workers_count, timeout, worktree)
         report = synthesize_verdicts(
-            request_id=request_id,
+            request_id=envelope.request_id,
             verdicts=verdicts,
             expected_profiles=profiles,
-            duration_seconds=elapsed,
+            duration_seconds=time.time() - start_time,
         )
-
-        final_out = output_file
-        if not final_out:
-            stem = prompt_path.stem.replace("prompt_", "")
-            final_out = prompt_path.parent / f"grok_consensus_{stem}.md"
-
-        report_md = render_consensus_report_markdown(report)
-        atomic_write_text(final_out, report_md)
+        final_out = output_file or (
+            prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
+        )
+        atomic_write_text(final_out, render_consensus_report_markdown(report))
         return report
     finally:
         temp_dir_obj.cleanup()
