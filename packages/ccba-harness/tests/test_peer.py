@@ -1062,3 +1062,40 @@ def test_apply_anchor_patch_rollback_errors_collected(tmp_path, monkeypatch):
         ValueError, match=r"Rollback errors: f1\.txt: Simulated disk error on rollback"
     ):
         apply_anchor_patch(tmp_path, payload)
+
+
+def test_verdict_synonym_normalization():
+    """Verify PeerVerdictBlock normalizes LLM verdict synonyms like CONDITIONAL_APPROVAL."""
+    md_cond = (
+        "---\n"
+        "request_id: req-argon-001\n"
+        "verdict: CONDITIONAL_APPROVAL\n"
+        "risk_score: 3\n"
+        "conditions:\n"
+        "  - Add TIER_FALLBACK_MATRIX\n"
+        "summary: Conditional pass with 1 condition.\n"
+        "---\n"
+        "# Review Body\n"
+    )
+    parsed = parse_verdict_from_md(md_cond)
+    assert parsed is not None
+    assert parsed.verdict == "APPROVE_WITH_CONDITIONS"
+    assert len(parsed.conditions) == 1
+    assert parsed.conditions[0].id == "COND-01"
+
+    assert (
+        PeerVerdictBlock(request_id="r1", verdict="CONDITIONAL_APPROVE").verdict  # type: ignore[arg-type]
+        == "APPROVE_WITH_CONDITIONS"
+    )
+    assert (
+        PeerVerdictBlock(request_id="r2", verdict="APPROVED").verdict  # type: ignore[arg-type]
+        == "APPROVE"
+    )
+    assert (
+        PeerVerdictBlock(request_id="r3", verdict="REJECTED").verdict  # type: ignore[arg-type]
+        == "REJECT"
+    )
+    assert (
+        PeerVerdictBlock(request_id="r4", verdict="NEEDS_REVISION").verdict  # type: ignore[arg-type]
+        == "REVISE_PLAN"
+    )
