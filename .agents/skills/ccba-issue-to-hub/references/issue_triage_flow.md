@@ -37,10 +37,11 @@ Kỹ năng này giúp điều phối và sàng lọc các sự cố hoặc yêu 
    - Truy vấn danh sách sự cố từ Issue Tracker hoặc thư mục cục bộ `.md/knowledge/issues/` (nếu chạy offline, đảm bảo tự động tạo thư mục này nếu chưa tồn tại). Hiển thị các sự cố chưa được phân loại, đang ở trạng thái `needs-triage` hoặc `needs-info` đã có phản hồi mới từ người báo cáo.
    - **Tiêu chí hoàn thành:** In ra danh sách sự cố phân nhóm rõ ràng kèm tiêu đề và mã định danh tương ứng.
 
-2. **Khảo sát ngữ cảnh của Sự cố/PR cụ thể:**
-   - Đọc chi tiết nội dung sự cố, lịch sử thảo luận và mã nguồn liên quan. 
-   - Đối chiếu với cơ sở tri thức `.out-of-scope/` (hoặc thư mục tri thức tương đương cục bộ của dự án tại `.md/knowledge/out-of-scope/` nếu chạy offline, đảm bảo tạo thư mục này nếu chưa có) để phát hiện trùng lặp với các yêu cầu đã bị từ chối trong quá trình lịch sử. Khảo sát codebase để đảm bảo tính năng chưa từng được triển khai.
-   - **Tiêu chí hoàn thành:** Đưa ra khuyến nghị phân loại (category) và trạng thái (state) đề xuất kèm theo lý do kỹ thuật chi tiết.
+2. **Khảo sát ngữ cảnh & Kiểm toán Biên giới Kiến trúc của Sự cố/PR cụ thể:**
+   - Đọc chi tiết nội dung sự cố, lịch sử thảo luận và mã nguồn liên quan.
+   - Đối chiếu với cơ sở tri thức `.out-of-scope/` (hoặc thư mục tri thức tương đương cục bộ của dự án tại `.md/knowledge/out-of-scope/` nếu chạy offline, đảm bảo tạo thư mục này nếu chưa có) để phát hiện trùng lặp với các yêu cầu đã bị từ chối trong quá trình lịch sử. Khảo sát codebase và `seam-contracts.yaml` để đảm bảo tính năng chưa từng được triển khai.
+   - **Cổng Kiểm toán Biên giới Liên bang, Quy mô Thực tế & Hiệu lực Lịch sử (Federated Boundary, Scale & OBE Check):** Nếu Issue đề xuất nhập khẩu schema thuộc phạm vi nội bộ của repo liên bang khác (ví dụ: bảng 15 `ROLE_ID` phân quyền SharePoint Entra ID của `IDOP-CCBA-WAY` gây chồng chéo với `seat_role` / `qc_governance` hiện hữu và làm mất ghế kỹ thuật `CHU_TRI_BO_MON`), dịch cơ học khái niệm quản trị nhân sự (như EOS GWC) trùng lặp 100% với Seams hiện có (`MaskaraScanner`, `choose_model`, `SandboxPromoter`), xây dựng CLI/SQLite/AST validator cho dữ liệu nhỏ ($N \le 20$ dòng), tiêm tĩnh metadata vào System Prompt của mọi phiên làm việc, hoặc đã được giải quyết ở các PR/Phase sau (OBE) $\rightarrow$ phân loại ngay sang `wontfix` (`not planned`) hoặc đóng `completed` kèm đối chiếu PR thay vì gắn `ready-for-agent`.
+   - **Tiêu chí hoàn thành:** Đưa ra khuyến nghị phân loại (category) và trạng thái (state) đề xuất kèm theo lý do kỹ thuật và đối soát biên giới kiến trúc chi tiết.
 
 3. **Xác thực và Tái lập lỗi (Verification):**
    - Đối với lỗi (`bug`): Tái lập lỗi dựa trên mô tả của người báo cáo. Đối với PR: Checkout mã nguồn của PR và chạy các bộ kiểm thử tương ứng.

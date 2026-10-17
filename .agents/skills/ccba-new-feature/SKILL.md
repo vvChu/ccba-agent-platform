@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   author: "CCBA Hub"
 triggers:
 - new feature
@@ -174,10 +174,17 @@ fi
 ```
 - **Tiêu chí hoàn thành:** Nhánh tính năng mới được tạo hoặc chuyển nhánh an toàn và working tree chuyển sang nhánh đó.
 
-### Bước 6: Lập kế hoạch thiết kế (Planning Phase — Triage Fast-Path & Socrates Grill)
+### Bước 6: Lập kế hoạch thiết kế (Planning Phase — Problem-Validity Audit, Triage Fast-Path & Socrates Grill)
 Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối không được viết code ở bước này:
+- **Cổng Thẩm định Tính Hợp Lý, Quy Mô Thực Tế & Biên Giới Repo (Pre-Plan Problem-Validity, Scale & Repo-Boundary Audit — Chống Compliant Execution Bias):**
+  Ngay cả khi Issue đã có sẵn **Agent Brief** (`ready-for-agent` hoặc biên nhận từ bot tự động), trước khi soạn thảo `implementation_plan.md`, Agent **bắt buộc** tự kiểm chứng 4 câu hỏi phản biện:
+  1. **Ranh giới Liên bang & Chống Dual-SSOT:** Đề xuất có đang nhập khẩu schema thuộc phạm vi nội bộ của repo khác (như bảng 15 `ROLE_ID` phân quyền SharePoint Entra ID của `IDOP-CCBA-WAY`) gây chồng chéo (Dual-SSOT) hoặc làm mất vai trò kỹ thuật hiện hữu (như `CHU_TRI_BO_MON` trong mô hình `seat_role` + `qc_governance` hiện tại) hay không?
+  2. **Chống Dịch Cơ Học & Trùng lặp Seam:** Đề xuất có đang dịch cơ học một khái niệm quản trị nhân sự/sách vở (ví dụ khung tuyển dụng *GWC: Get it - Want it - Capacity* hay multi-tier dynamic routing) thành class phần mềm trùng lặp 100% với các Seams đã có (`MaskaraScanner`, `choose_model`, `check_dependency_contracts`, `SandboxPromoter`, `verify-patch`) hay không?
+  3. **Kiểm toán Quy mô Thực tế & Hiệu lực Lịch sử (Scale & OBE Check):** Dữ liệu cấu hình có quy mô nhỏ ($N \le 20$ dòng, giải quyết trọn vẹn bằng grep/dict/JSONL phẳng < 50ms) hay yêu cầu của Issue đã được hoàn thành ở các PR/Phase kiến trúc sau (Overtaken By Events — OBE) hay không?
+  4. **Bảo vệ Ngân sách System Prompt:** Đề xuất có yêu cầu tiêm tĩnh metadata vào System Prompt của mọi phiên làm việc làm lãng phí token ngữ cảnh hay không?
+  - *Hành động khi phát hiện vi phạm:* Agent **dừng lập kế hoạch viết code**, trình bày bảng ma trận **Giá trị × Độ phức tạp × Rủi ro × KISS** và khuyến nghị người dùng đóng Issue (`gh issue close <id> --reason "not planned"` hoặc `"completed"` nếu đã giải quyết ở PR khác) kèm biên bản phản biện thực chứng.
 - **Triage Fast-Path (Smart Skipping):**
-  - Nếu Issue đã có sẵn **Agent Brief** chuẩn từ `/ccba-issue-to-hub`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
+  - Nếu Issue đã vượt qua Cổng Thẩm định Tính Hợp Lý và có sẵn **Agent Brief** chuẩn từ `/ccba-issue-to-hub`: Agent tự động nạp yêu cầu, bỏ qua các câu hỏi phỏng vấn cơ bản và chỉ chất vấn 1-2 câu kiến trúc cốt lõi nếu thực sự cần thiết.
   - Nếu chưa có Agent Brief: Kích hoạt `/ccba-grilling` để phỏng vấn người dùng và stress-test các giả định.
 - **Rào chắn Phân lập 2 Giai đoạn (2-Phase Planning Guardrail — Tránh Scope Conflation):**
   Đối với mọi yêu cầu thuộc loại `refactor` có ảnh hưởng đến pipeline chuyển đổi, bộ trích xuất hoặc cấu trúc dữ liệu, bản kế hoạch BẮT BUỘC phải phân tách rạch ròi 2 giai đoạn:
@@ -191,7 +198,7 @@ Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối kh
   - Đối chiếu diff dự kiến với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).
   - Xác định rõ các Deep Seams (khớp nối) và Scoped Verification Plan (ưu tiên Dynamic Re-Convert song song với Golden Snapshot tĩnh).
 - **Phê duyệt:** Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
-- **Tiêu chí hoàn thành:** Bản kế hoạch implementation_plan.md được người dùng duyệt chính thức, tuân thủ nghiêm ngặt 2-Phase Planning Guardrail và Atomic Micro-PR Slicing.
+- **Tiêu chí hoàn thành:** Đề xuất vượt qua Cổng Thẩm định Tính Hợp Lý, Quy Mô Thực Tế & Biên Giới Repo (hoặc được đóng an toàn `not planned` / `completed` kèm ma trận KISS nếu vi phạm), và bản kế hoạch implementation_plan.md được người dùng duyệt chính thức, tuân thủ nghiêm ngặt 2-Phase Planning Guardrail và Atomic Micro-PR Slicing.
 
 ### Bước 7: Bàn giao cô lập ngữ cảnh (Factory Model Hand-off & Smart Routing)
 Sau khi bản kế hoạch được duyệt, để ngăn ngừa phình to ngữ cảnh hội thoại (Context Rot) và giảm OpEx:
