@@ -100,6 +100,12 @@ COMMANDS: tuple[CommandSpec, ...] = (
         attr="run_explain_why_cli",
         help="Query architectural rationale from ADRs, git logs & peer exchanges.",
     ),
+    CommandSpec(
+        names=("door-triage",),
+        module="ccba_harness.cli.commands.architecture",
+        attr="run_door_triage_cli",
+        help="Classify PR into TWO_WAY_DOOR, PAVED_ROAD, or ONE_WAY_DOOR.",
+    ),
 )
 
 COMMAND_MAP: dict[str, CommandSpec] = {name: spec for spec in COMMANDS for name in spec.names}

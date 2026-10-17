@@ -16,10 +16,11 @@
 
 ## Merge Danger Assessment
 
-<!-- Phân loại rủi ro khi merge để tối ưu hóa thời gian review của con người -->
+<!-- Phân loại rủi ro khi merge để tối ưu hóa thời gian review của con người (ADR-0067 / Issue #519) -->
 - **Door**:
-  - [ ] **Two-way door** (Dễ revert, thay đổi cô lập/nội bộ, không ảnh hưởng behavior/contract dùng chung)
-  - [ ] **One-way door** (Khó đảo ngược, breaking change, thay đổi schema/contract hoặc migration tốn kém)
+  - [ ] **Two-way door** (Thuần tài liệu, dễ revert, không ảnh hưởng mã nguồn hay quy chuẩn)
+  - [ ] **Paved Road** (Thay đổi mã nguồn cô lập $\le 200$ LOC, nằm ngoài 7 nhóm One-Way Door, 100% `verify-patch` xanh)
+  - [ ] **One-way door** (Khó đảo ngược, chạm vào 1 trong 7 nhóm danh mục Cửa Một Chiều hoặc vượt ngân sách 200 LOC / chuỗi tích lũy $K \ge 3$)
   - *Lý do*: <!-- Giải thích ngắn gọn tại sao dễ đảo ngược hoặc khó đảo ngược -->
 - **Blast Radius**:
   - [ ] **Localized** (Cục bộ 1 file hoặc hàm nội bộ, không đổi API public)
@@ -27,6 +28,13 @@
   - [ ] **Monorepo-wide** (Chạm vào tooling dùng chung, scripts/, CI, hoặc cross-package)
   - [ ] **Spoke-affecting** (Thay đổi contract/interface mà các Spoke downstream đang phụ thuộc)
   - *Tác động tiềm tàng*: <!-- Điều gì có thể bị gãy nếu có sự cố xảy ra? -->
+
+### Tradeoff Card (Required for One-Way Door PRs)
+
+<!-- Bắt buộc điền đầy đủ 3 trường dưới đây khi PR thuộc nhóm One-way door (cấm điền TBD/N/A) -->
+- **Core Invariant**: <!-- Bất biến kiến trúc cốt lõi cần bảo vệ là gì? -->
+- **Invalidation Condition**: <!-- Điều kiện thực tế nào chứng minh thiết kế này sai hoặc cần rollback? -->
+- **Git Hunk Reference**: <!-- Đường dẫn tệp + dải dòng <= 30 dòng (ví dụ: packages/ccba-harness/src/ccba_harness/door_policy.py#L35-L60) để Taste-Holder kiểm định trong 30s -->
 
 ---
 
