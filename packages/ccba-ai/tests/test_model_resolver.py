@@ -12,6 +12,7 @@ from ccba_ai.antigravity_provider import (
     canonicalize_model_name,
     extract_available_models_from_stderr,
     is_unrecognized_model_error,
+    normalize_gemini_cli_model,
     resolve_latest_compatible_model,
 )
 from ccba_ai.eval_runner import run_eval_benchmark, validate_case_output
@@ -45,6 +46,13 @@ class TestCanonicalizeModelName:
     def test_empty(self) -> None:
         assert canonicalize_model_name("") == ""
         assert canonicalize_model_name("   ") == ""
+
+    def test_normalize_bare_gemini_cli_models(self) -> None:
+        assert normalize_gemini_cli_model("gemini-4-argon") == "gemini-4-argon-high"
+        assert normalize_gemini_cli_model("gemini-3.8-flash") == "gemini-3.8-flash-high"
+        assert normalize_gemini_cli_model("gemini-4-argon-medium") == "gemini-4-argon-medium"
+        assert normalize_gemini_cli_model("gemini-4-argon-low") == "gemini-4-argon-low"
+        assert normalize_gemini_cli_model("claude-opus-4-6-thinking") == "claude-opus-4-6-thinking"
 
 
 class TestExtractAvailableModels:

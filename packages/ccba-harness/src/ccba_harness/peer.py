@@ -157,7 +157,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "high",
         "system_prompt": (
             "You are an expert peer code reviewer. You MUST start your response immediately with "
-            "YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, conditions, "
+            "YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, conditions, "
             "and summary, followed by your structured code review findings."
         ),
         "timeout": 300.0,
@@ -176,7 +176,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "xhigh",
         "system_prompt": (
             "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, "
+            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
             "conditions, and summary, followed by your architectural audit findings."
         ),
         "timeout": 600.0,
@@ -199,7 +199,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "high",
         "system_prompt": (
             "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict, risk_score, "
+            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
             "conditions, and summary, followed by your architectural audit findings. "
             "Respond directly without invoking external tools."
         ),
@@ -303,6 +303,23 @@ class PeerVerdictTelemetry(BaseModel):
     duration_seconds: float = 0.0
 
 
+_VERDICT_ALIASES: dict[str, str] = {
+    "CONDITIONAL_APPROVAL": "APPROVE_WITH_CONDITIONS",
+    "CONDITIONAL_APPROVE": "APPROVE_WITH_CONDITIONS",
+    "APPROVE_CONDITIONAL": "APPROVE_WITH_CONDITIONS",
+    "APPROVED_WITH_CONDITIONS": "APPROVE_WITH_CONDITIONS",
+    "APPROVED_WITH_RESERVATIONS": "APPROVE_WITH_RESERVATIONS",
+    "APPROVED": "APPROVE",
+    "APPROVED_PLAN": "APPROVE_PLAN",
+    "REJECTED": "REJECT",
+    "REJECTED_PLAN": "REJECT_PLAN",
+    "REVISE": "REVISE_PLAN",
+    "NEEDS_REVISION": "REVISE_PLAN",
+    "PASS": "GATE_PASS",
+    "FAIL": "GATE_FAIL",
+}
+
+
 class PeerVerdictBlock(BaseModel):
     """Structured verdict issued by a peer agent in response to a prompt."""
 
@@ -315,6 +332,14 @@ class PeerVerdictBlock(BaseModel):
     effort: EffortType | None = None
     summary: str = ""
     telemetry: PeerVerdictTelemetry | None = None
+
+    @field_validator("verdict", mode="before")
+    @classmethod
+    def _normalize_verdict(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            cleaned = v.strip().upper().replace(" ", "_").replace("-", "_")
+            return _VERDICT_ALIASES.get(cleaned, cleaned)
+        return v
 
     @field_validator("conditions", mode="before")
     @classmethod
