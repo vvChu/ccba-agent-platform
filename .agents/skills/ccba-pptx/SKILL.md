@@ -3,7 +3,7 @@ name: ccba-pptx
 description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
   bằng HTML conversion hoặc OOXML.
 role: sub_skill
-master_skill: xu-ly-van-phong
+master_skill: ccba-xu-ly-van-phong
 disable-model-invocation: true
 user-invocable: true
 command: /ccba-pptx
