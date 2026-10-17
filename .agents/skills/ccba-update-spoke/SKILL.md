@@ -176,7 +176,7 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 | `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
 | `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
 | `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
-| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest` (nếu có test suite; nếu không có test sẽ trả về 0 an toàn). |
+| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: kiểm định liên kết Markdown in-process (`LinkAuditor` trên `.agents/AGENTS.md` và `.md/INDEX.md`), `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest`. |
 | `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
 | `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
 | `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
@@ -185,8 +185,10 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
-1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`.
-2. **Tổng kết tri thức pháp lý (ADR 0050):** Hiển thị số lượng gói OKF v2.4 đã đồng bộ (nếu bật `--pull-assets`).
+1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`, `🗑️ DEPRECATED`.
+2. **Đồng bộ Layer 2 Rules & Thu hồi Bản thảo Tốt nghiệp (Issue #520):**
+   * Tự động đồng bộ các quy tắc Layer 2 (`execution_guardrails.md`, `git_conventions.md`, `code_quality.md`, `bugbot-rules.md`) xuống `.agents/rules/` và chuẩn hóa liên kết trong `.agents/AGENTS.md` (cùng `.md/INDEX.md`).
+   * Tự động lưu trữ các bản thảo `.md/knowledge/*` đã tốt nghiệp lên Hub vào `.md/knowledge/archive/` (hỗ trợ phân nhánh mã băm SHA-256 nếu có chỉnh sửa mới) và ghi đè **Canonical Pointer Stub** (`<!-- CCBA_GRADUATED_STUB -->`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
    * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
      - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
