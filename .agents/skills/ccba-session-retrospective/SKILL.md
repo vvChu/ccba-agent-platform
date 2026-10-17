@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.5.0
+  version: 1.5.1
 bundle: _core
 tier: kernel
 triggers:
@@ -71,6 +71,7 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * **Vấn đề & Điểm nghẽn:** Những giả định sai lầm, hiểu lầm về SDK/Transport, hoặc các vòng lặp phản biện/sửa lỗi kéo dài.
   * **Giải pháp & Deep Seams:** Các mẫu thiết kế thành công giúp đơn giản hóa hệ thống (High Leverage & Locality).
   * **Độ Chuẩn xác Định danh (Naming Precision):** Đặt tên Core Patterns / Anti-Patterns phản ánh đúng bản chất kỹ thuật (ví dụ: *Embedded Domain Logic* thay vì *Undocumented Domain Logic*).
+  * **Kiểm toán Phản biện Đánh giá Đồng đẳng (Adversarial Audit of Peer Reviewer Claims):** Khi trích xuất bài học hoặc nhận điều kiện `CONDITIONAL_ACCEPT`/`REJECT` từ Peer Reviewer (Grok, Codex, Copilot), **bắt buộc** đối chiếu ngược với mã nguồn thực thi và lịch sử trong `session_learnings_history.md` trước khi kết tinh thành quy tắc; tuyệt đối không mù quáng luật hóa các yêu cầu sai ngữ cảnh của Reviewer.
 - **Chẩn đoán Môi trường & Rào chắn (Agent Environment Diagnostics):**
   * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
     Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
@@ -79,11 +80,12 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
 - Ghi nhận các quy tắc cô đọng `RULE-X.Y` mới vào [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) dưới đúng Miền Kiến Trúc tương ứng.
-- **Kiểm tra Kích thước Bộ nhớ Làm việc:**
+- **Kiểm tra Kích thước Bộ nhớ Làm việc & Chống Nén Mất Ngữ Cảnh (Anti-Lossy-Compression Guardrail):**
   ```bash
   python scripts/governance/compact_session_learnings.py --stats
   ```
-  Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes), thực hiện nén và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
+  Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes) hoặc trần 115 dòng (tại Spoke), thực hiện nén và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
+  * **Bất biến Bảo toàn Điều kiện Biên (Scope Qualifier Preservation):** Khi rút gọn một `RULE-X.Y`, **bắt buộc** giữ nguyên phạm vi áp dụng cụ thể (tên cờ CLI như `--deny`, tên module, hoặc hệ điều hành) và đối chiếu chéo với bản ghi gốc trong `session_learnings_history.md`. Tuyệt đối không lược bỏ phạm vi hẹp khiến quy tắc bị khái quát hóa quá mức (over-generalization) và xung đột với các ADR nền tảng (như ADR-0060).
 - Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
 - **Tự động đồng bộ Living Traceability Matrix cho ADRs:**
@@ -91,7 +93,7 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   python scripts/sync_hub_adr_matrix.py
   ```
 - Giữ nguyên cấu trúc phân loại theo 5 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
-- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
+- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$ mà không làm mất điều kiện biên của các `RULE-X.Y`, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
 
 ### Bước 3: Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop) & Recompilation Gate
 - **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `ccba-improve-codebase-architecture`, `ccba-code-review`, `ccba-tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
