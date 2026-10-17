@@ -38,6 +38,7 @@ ALL_SUBCOMMAND_INVOCATIONS = [
     ["apply-anchor-patch", "--help"],
     ["blast-radius", "--help"],
     ["why", "--help"],
+    ["door-triage", "--help"],
     # Fast-path and argparse aliases
     ["gate", "--help"],
     ["watch-peer", "--help"],
@@ -108,6 +109,7 @@ def test_all_expected_symbols_exported() -> None:
         "run_peer_gate_cli",
         "run_blast_radius_cli",
         "run_explain_why_cli",
+        "run_door_triage_cli",
         "run_peer_watch_cli",
         "run_peer_dispatch_cli",
         "run_peer_co_review_cli",

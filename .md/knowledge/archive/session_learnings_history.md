@@ -867,3 +867,29 @@ Hệ quả: Bài toán thẩm định kiến trúc/code review bị âm thầm h
 3. **Traceability Action**:
    - Đã tạo RFC Issue [#95 trên vvChu/dgx-spark-toolkit](https://github.com/vvChu/dgx-spark-toolkit/issues/95) để tái cấu trúc toàn diện chuỗi fallback của `services/ai-gateway/litellm_config.yaml`.
 
+---
+
+## 40. One-Way Door 3-Tier Manifest, Backpressure Circuit-Breaker & Tool-Starvation Calibration in Plan Audits (Issue #519 / HUB-ADR 0067)
+
+### Context & Implementation Summary
+Phiên triển khai đặc tả Danh mục Cửa Một Chiều (One-Way Door Manifest) và Cơ chế Áp lực ngược (Backpressure Circuit-Breaker) cho Agent Harness theo Issue #519 và chuẩn hóa thành **HUB-ADR 0067**:
+- **Slice 1 (`02221540` — `door_policy.py`)**: Thiết lập 7 danh mục Cửa Một Chiều trong `ONE_WAY_DOOR_MANIFEST` (`SCHEMA_MIGRATION`, `AUTHZ_SECURITY`, `CROSS_SPOKE_CONTRACT`, `PUBLIC_API_SEAM`, `PII_FINANCE_QUOTA`, `DEPENDENCY_LICENSE`, `HUB_CONSTITUTION`) phân tầng 3 mức (`TWO_WAY_DOOR`, `PAVED_ROAD`, `ONE_WAY_DOOR`) qua `classify_pr_door()`. Tích hợp bộ đếm tích lũy `compute_cumulative_streak()` tự động nâng cấp lên `ONE_WAY_DOOR` khi chạm chuỗi $K \ge 3$ PRs `PAVED_ROAD` liên tiếp trên cùng canonical module (`packages/<pkg_name>`) trong 72h hoặc vượt ngân sách $> 200$ logic LOC, kèm `is_sampled_for_audit()` lấy mẫu 10% SHA-256 tất định.
+- **Slice 2 (`e7abffbf` — `backpressure.py`)**: Triển khai `evaluate_backpressure_queue()` và `validate_tradeoff_card()`:
+  1. `evaluate_backpressure_queue`: Kích hoạt ngắt mạch hàng đợi khi số PR `ONE_WAY_DOOR` đang chờ $> 5$ hoặc tuổi PR lâu nhất $> 24.0\text{h}$, kèm cơ chế chống deadlock (`bypass_active=True` cho `is_existing_pr_update` và `is_hotfix`).
+  2. `validate_tradeoff_card`: Cưỡng chế 3 trường bắt buộc trong `TradeoffCard` (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` có neo dòng `#L<a>-L<b>` hoặc diff block $\le 30$ dòng, sau khi lọc HTML comments và placeholders) cho mọi PR thuộc `ONE_WAY_DOOR`.
+- **Slice 3 (`55c8754e` — CLI, CI & HUB-ADR 0067)**: Đăng ký subcommand `ccba-harness door-triage` (`run_door_triage_cli` với `--logic-loc`, `--pr-number`, `--repo`, `--pr-body-file`, `--enforce-tradeoff-card`, `--json`) vào `cli/commands/architecture.py` và `.github/workflows/pr-verifier.yml`; cập nhật `.github/pull_request_template.md` và ban hành `docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md`.
+
+### Key Architectural Invariants & Learned Patterns
+1. **Package-Level Canonical Module Normalization against Salami Slicing (`COND-519-03` Calibration)**:
+   - Nếu chuẩn hóa module ở cấp tệp lẻ hoặc `<submodule>`, tác nhân AI có thể chia nhỏ 1 đợt refactor lớn thành nhiều PR sửa các file khác nhau trong cùng một package để né ngưỡng `streak_threshold = 3`.
+   - Bắt buộc gom nhóm ở cấp độ `packages/<pkg_name>` (hoặc `scripts/<subdir>`, `.agents/skills/<skill_name>`) trong `extract_canonical_module()` để khóa chặt hành vi Salami Slicing.
+2. **Zero-Network Local Git Log over Redundant GitHub API Calls (`COND-519-01` KISS Calibration)**:
+   - Khi GitHub Actions workflow (`pr-verifier.yml`) đã checkout với `fetch-depth: 0`, việc xây dựng thêm HTTP client gọi GitHub REST/GraphQL API để lấy lịch sử merge 72h là vi phạm KISS và tạo điểm lỗi mạng/rate-limit không cần thiết.
+   - Sử dụng `git log --since=... --name-only` trong `load_recent_merges_from_git()` đảm bảo tính tất định 100% ở cả môi trường CI lẫn chạy offline cục bộ.
+3. **Plan Audit Tool-Starvation Defense (`audit_plan` vs `audit_direct --no-tools`)**:
+   - Profile `audit_plan` trong `peer.py` bật công cụ đọc đĩa (`read_file`, `list_dir`) nhưng không có `system_prompt` giới hạn số bước khảo sát, khiến Grok CLI dễ rơi vào vòng lặp đọc 30–40 tệp liên tiếp đến khi cạn kiệt `max_turns=12` mà chưa kịp sinh khối YAML `PeerVerdictBlock`.
+   - Khi thẩm định `implementation_plan.md` đã đính kèm đầy đủ ngữ cảnh và chữ ký hàm, ưu tiên sử dụng `--profile audit_direct --no-tools` để nhận phán quyết tất định trong 1 turn ($\sim 35\text{s}$).
+4. **CLI Subcommand Registration Parity Contract (`test_cli_contract_parity.py`)**:
+   - Mọi subcommand mới đăng ký vào `ccba-harness` (như `door-triage`) bắt buộc phải được khai báo đồng bộ vào `ALL_SUBCOMMAND_INVOCATIONS` và `expected_symbols` trong `packages/ccba-harness/tests/test_cli_contract_parity.py` để vượt qua cổng kiểm tra tính tương đương hợp đồng CLI.
+
+

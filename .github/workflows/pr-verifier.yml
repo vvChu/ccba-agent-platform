@@ -113,6 +113,19 @@ jobs:
           echo "is_two_way_door=$IS_TWO_WAY_DOOR" >> $GITHUB_OUTPUT
           echo "Two-way Door evaluated as: $IS_TWO_WAY_DOOR"
 
+          # 3-Tier Door Policy, Cumulative Escalation & 10% Sample Audit (ADR-0067 / Issue #519)
+          mkdir -p .reports
+          python -m ccba_harness door-triage $CHANGED_FILES \
+            --logic-loc "$TOTAL_LOC" \
+            --pr-number "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --json > .reports/door_triage.json
+          DOOR_TYPE=$(python -c "import json; print(json.load(open('.reports/door_triage.json'))['door_type'])")
+          SAMPLED_AUDIT=$(python -c "import json; print(str(json.load(open('.reports/door_triage.json'))['sampled_for_audit']).lower())")
+          echo "door_type=$DOOR_TYPE" >> $GITHUB_OUTPUT
+          echo "sampled_for_audit=$SAMPLED_AUDIT" >> $GITHUB_OUTPUT
+          echo "Door Classification evaluated as: $DOOR_TYPE (Sampled for Audit: $SAMPLED_AUDIT)"
+
       - name: Maskara Diff Sanitizer & Security Audit Gate
         id: maskara
         run: |
@@ -164,12 +177,15 @@ jobs:
             const sizeWarning = "${{ steps.triage.outputs.size_warning }}" === "true";
             const totalLoc = "${{ steps.triage.outputs.total_loc }}";
             const isTwoWayDoor = "${{ steps.triage.outputs.is_two_way_door }}" === "true";
+            const doorType = "${{ steps.triage.outputs.door_type }}" || (isTwoWayDoor ? "TWO_WAY_DOOR" : "ONE_WAY_DOOR");
+            const sampledForAudit = "${{ steps.triage.outputs.sampled_for_audit }}" === "true";
             const maskaraExit = parseInt("${{ steps.maskara.outputs.maskara_exit }}", 10);
             const verifyExit = parseInt("${{ steps.verifier.outputs.verify_exit }}", 10);
 
             let commentBody = `### 🛡️ CCBA PR Quality Gate Report\n\n`;
             commentBody += `| Metric | Assessment |\n| :--- | :--- |\n`;
             commentBody += `| **Danger Triage Level** | \`${dangerLevel}\` (${dangerLevel === 'HIGH' ? '🔴 Hard Blocking Gate' : '🟡 Soft Advisory Gate'}) |\n`;
+            commentBody += `| **Door Classification** | \`${doorType}\` ${sampledForAudit ? '🎯 *(Selected for 10% Deterministic Sample Audit)*' : ''} |\n`;
             commentBody += `| **Logic Diff Size** | \`${totalLoc} LOC\` ${sizeWarning ? '⚠️ *(Exceeds 300 LOC micro-PR budget)*' : '✅ *(Within micro-PR budget)*'} |\n`;
             commentBody += `| **Two-way Door Fast Path** | \`${isTwoWayDoor}\` ${isTwoWayDoor ? '🚀 *(Documentation only - eligible for auto-approval)*' : '🔒 *(Standard review flow)*'} |\n`;
             commentBody += `| **Maskara Secret Audit** | ${maskaraExit === 0 ? '✅ PASSED (Clean)' : '🔴 FAILED (Secrets detected in diff)'} |\n`;
