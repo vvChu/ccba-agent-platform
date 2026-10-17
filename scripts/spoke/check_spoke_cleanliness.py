@@ -15,10 +15,60 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
+import ipaddress
 import os
 import re
 import sys
 from pathlib import Path
+
+APPROVED_MODEL_ALIASES = frozenset(
+    {
+        "ocr-primary",
+        "ocr-fallback",
+        "ocr-tier3",
+        "ocr-tier4",
+        "rag-core",
+        "rag-light",
+        "fast-realtime",
+        "text-auto",
+        "text-gemma",
+        "text-gemma-12b",
+        "text-gemma-4b",
+        "text-light-auto",
+        "reasoning-gemma",
+        "qwen-local-primary",
+        "gemini-flash-latest",
+        "gemini-reasoning-latest",
+        "embedding-default",
+    }
+)
+
+RAW_MODEL_PREFIXES = (
+    "gemini-",
+    "claude-",
+    "gpt-",
+    "deepseek-",
+    "gemma-",
+    "qwen-",
+    "grok-",
+    "mistral-",
+    "openai/",
+    "anthropic/",
+    "gemini/",
+)
+
+FILE_LEVEL_MODEL_EXEMPT_NAMES = frozenset(
+    {
+        "litellm_config.yaml",
+        "custom_callbacks.py",
+        "check_spoke_cleanliness.py",
+    }
+)
+
+STANDARD_PUBLIC_DNS = frozenset({"8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"})
+
+IPV4_CANDIDATE_PATTERN = re.compile(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b")
 
 # System and Guardrail scripts that do NOT count towards the 15-file limit
 ALLOWLIST_SCRIPTS = {
@@ -187,20 +237,8 @@ def _hub_catalog_from_raw(raw: str, spoke_root: Path) -> Path | None:
     return None
 
 
-def _resolve_hub_catalog_readonly(spoke_root: Path) -> Path | None:
-    """Locate Hub catalog.yaml without writing workspace context.
-
-    Mirrors HubDiscoverer env and OS-map lookup, then sibling, cwd, and the
-    spoke itself. Never calls discover() and never saves hub_path.
-    """
-    for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
-        env_val = os.environ.get(env_key)
-        if not env_val:
-            continue
-        found = _hub_catalog_from_raw(env_val, spoke_root)
-        if found is not None:
-            return found
-
+def _hub_catalog_from_workspace_ctx(spoke_root: Path) -> Path | None:
+    """Resolve Hub catalog.yaml from workspace_context.yaml if present."""
     for ctx in (
         spoke_root / ".agents" / "workspace_context.yaml",
         spoke_root / ".md" / "workspace_context.yaml",
@@ -233,6 +271,26 @@ def _resolve_hub_catalog_readonly(spoke_root: Path) -> Path | None:
             if found is not None:
                 return found
         break
+    return None
+
+
+def _resolve_hub_catalog_readonly(spoke_root: Path) -> Path | None:
+    """Locate Hub catalog.yaml without writing workspace context.
+
+    Mirrors HubDiscoverer env and OS-map lookup, then sibling, cwd, and the
+    spoke itself. Never calls discover() and never saves hub_path.
+    """
+    for env_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+        env_val = os.environ.get(env_key)
+        if not env_val:
+            continue
+        found = _hub_catalog_from_raw(env_val, spoke_root)
+        if found is not None:
+            return found
+
+    found_ctx = _hub_catalog_from_workspace_ctx(spoke_root)
+    if found_ctx is not None:
+        return found_ctx
 
     for candidate in (
         (spoke_root.parent / "ccba-agent-platform").resolve(),
@@ -349,6 +407,199 @@ def check_hub_duplications(target_files: list[Path]) -> list[tuple[Path, int, st
     return violations
 
 
+def _collect_docstring_lines(tree: ast.AST) -> set[int]:
+    """Collects 1-indexed line numbers belonging to module, class, or function docstrings."""
+    docstring_linenos: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Module)):
+            if (
+                node.body
+                and isinstance(node.body[0], ast.Expr)
+                and isinstance(node.body[0].value, ast.Constant)
+                and isinstance(node.body[0].value.value, str)
+            ):
+                start_ln = getattr(node.body[0], "lineno", 0)
+                end_ln = getattr(node.body[0], "end_lineno", start_ln)
+                docstring_linenos.update(range(start_ln, end_ln + 1))
+    return docstring_linenos
+
+
+def check_raw_model_leakage(
+    target_files: list[Path],
+) -> list[tuple[Path, int, str]]:
+    """Checks for hardcoded raw model identifiers (e.g. gemini-*, claude-*, gpt-*, openai/*)."""
+    violations: list[tuple[Path, int, str]] = []
+    for filepath in target_files:
+        if filepath.name in FILE_LEVEL_MODEL_EXEMPT_NAMES:
+            continue
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        lines = content.splitlines()
+        if any("ccba:allow-raw-model-file" in line for line in lines[:5]):
+            continue
+        try:
+            tree = ast.parse(content, filename=str(filepath))
+        except SyntaxError:
+            continue
+        docstring_linenos = _collect_docstring_lines(tree)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                val = node.value.strip().lower()
+                lineno = getattr(node, "lineno", 0)
+                if lineno in docstring_linenos or lineno <= 0 or lineno > len(lines):
+                    continue
+                if "ccba:allow-raw-model" in lines[lineno - 1] or val in APPROVED_MODEL_ALIASES:
+                    continue
+                if (
+                    any(val.startswith(pfx) for pfx in RAW_MODEL_PREFIXES)
+                    and len(val) < 60
+                    and " " not in val
+                ):
+                    violations.append(
+                        (
+                            filepath,
+                            lineno,
+                            f"Raw model string '{node.value}' detected. "
+                            "Use capability alias or annotate with '# ccba:allow-raw-model'.",
+                        )
+                    )
+    return violations
+
+
+def check_raw_ip_leakage(
+    target_files: list[Path],
+) -> list[tuple[Path, int, str]]:
+    """Checks for hardcoded non-local IPv4 addresses in code, scripts, and configs."""
+    violations: list[tuple[Path, int, str]] = []
+    for filepath in target_files:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        in_docstring = False
+        for line_num, line in enumerate(content.splitlines(), start=1):
+            stripped = line.strip()
+            was_in_docstring = in_docstring
+            if stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1:
+                in_docstring = not in_docstring
+            if (
+                was_in_docstring
+                or in_docstring
+                or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
+                or "ccba:allow-raw-ip" in stripped
+            ):
+                continue
+            for match in IPV4_CANDIDATE_PATTERN.finditer(line):
+                ip_str = match.group(1)
+                try:
+                    ip = ipaddress.IPv4Address(ip_str)
+                except ValueError:
+                    continue
+                if (
+                    ip.is_loopback
+                    or ip.is_unspecified
+                    or ip.is_multicast
+                    or ip_str == "255.255.255.255"
+                    or ip_str in STANDARD_PUBLIC_DNS
+                ):
+                    continue
+                violations.append(
+                    (
+                        filepath,
+                        line_num,
+                        f"Hardcoded IP address '{ip_str}' detected. "
+                        "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate with '# ccba:allow-raw-ip'.",
+                    )
+                )
+                break
+    return violations
+
+
+def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
+    """Collects Python source files under scripts/ and src/ excluding test/venv/archive folders."""
+    excluded_parts = (".venv", "venv", "__pycache__", "tests", "archive", "legacy_scripts")
+    py_files: list[Path] = []
+    for d in (scripts_dir, spoke_root / "src"):
+        if d.exists():
+            py_files.extend(
+                f for f in d.rglob("*.py") if not any(p in excluded_parts for p in f.parts)
+            )
+    return py_files
+
+
+def _append_code_violations(
+    spoke_root: Path, py_files_to_scan: list[Path], messages: list[str]
+) -> bool:
+    """Runs sys.path duplication and AST raw model checks, appending formatted findings."""
+    has_errors = False
+    dup_violations = check_hub_duplications(py_files_to_scan)
+    if dup_violations:
+        has_errors = True
+        messages.append(
+            f"❌ [Vi phạm Hub Duplication / sys.path] Phát hiện {len(dup_violations)} vị trí vi phạm:\n"
+            + "\n".join(
+                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in dup_violations
+            )
+        )
+
+    model_violations = check_raw_model_leakage(py_files_to_scan)
+    if model_violations:
+        has_errors = True
+        messages.append(
+            f"❌ [Vi phạm Raw Model Leakage] Phát hiện {len(model_violations)} vị trí chứa model thô:\n"
+            + "\n".join(
+                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in model_violations
+            )
+            + "\n   💡 Dùng alias hoặc chú thích '# ccba:allow-raw-model'."
+        )
+    else:
+        messages.append(
+            "✅ [Model Externalization] Không phát hiện chuỗi model thô chưa chuẩn hoá."
+        )
+    return has_errors
+
+
+def _append_machine_and_ip_violations(
+    spoke_root: Path, py_files_to_scan: list[Path], messages: list[str]
+) -> bool:
+    """Runs raw IPv4 and machine-state path checks across Python and workspace config files."""
+    has_errors = False
+    files_to_check: list[Path] = list(py_files_to_scan)
+    for ctx_name in (".md/workspace_context.yaml", "workspace_context.yaml"):
+        ctx_cand = spoke_root / ctx_name
+        if ctx_cand.is_file():
+            files_to_check.append(ctx_cand)
+
+    ip_violations = check_raw_ip_leakage(files_to_check)
+    if ip_violations:
+        has_errors = True
+        messages.append(
+            f"❌ [Vi phạm Raw IP Leakage] Phát hiện {len(ip_violations)} vị trí chứa địa chỉ IPv4 thô:\n"
+            + "\n".join(
+                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in ip_violations
+            )
+            + "\n   💡 Dùng biến môi trường hoặc chú thích '# ccba:allow-raw-ip'."
+        )
+    else:
+        messages.append("✅ [IP Externalization] Không phát hiện hardcoded IPv4 trong code/config.")
+
+    machine_violations = check_machine_state_leakage(files_to_check)
+    if machine_violations:
+        has_errors = True
+        messages.append(
+            f"❌ [Vi phạm Machine-State Leakage] Phát hiện {len(machine_violations)} vị trí chứa đường dẫn máy tuyệt đối:\n"
+            + "\n".join(
+                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in machine_violations
+            )
+            + "\n   💡 Hãy dùng biến môi trường (CCBA_HUB_PATH) hoặc đường dẫn tương đối để tránh xung đột đa máy."
+        )
+    else:
+        messages.append("✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.")
+    return has_errors
+
+
 def scan_spoke_cleanliness(
     spoke_root: Path,
     max_scripts: int = 15,
@@ -356,114 +607,44 @@ def scan_spoke_cleanliness(
     custom_allowlist: set[str] | None = None,
     role_allowlist: set[str] | None = None,
 ) -> tuple[int, list[str]]:
-    """Runs all cleanliness checks against a target Spoke workspace.
-
-    Returns:
-        (exit_code, messages)
-    """
+    """Runs all cleanliness checks against a target Spoke workspace."""
     messages: list[str] = []
     has_errors = False
     has_warnings = False
-
-    # Load configuration from workspace_context.yaml
     cfg_allowlist, cfg_roles = load_cleanliness_config(spoke_root)
-    effective_allowlist = set(cfg_allowlist)
-    if custom_allowlist:
-        effective_allowlist.update(custom_allowlist)
-
-    effective_roles = set(cfg_roles)
-    if role_allowlist:
-        effective_roles.update(role_allowlist)
-
+    effective_allowlist = set(cfg_allowlist) | (custom_allowlist or set())
+    effective_roles = set(cfg_roles) | (role_allowlist or set())
     scripts_dir = spoke_root / "scripts"
     if scripts_dir.exists():
         catalog_allowlist = load_catalog_guardrail_script_names(spoke_root)
         counted_scripts, ignored_scripts = check_script_count(
-            scripts_dir,
-            max_scripts=max_scripts,
-            custom_allowlist=effective_allowlist,
-            catalog_allowlist=catalog_allowlist,
+            scripts_dir, max_scripts, effective_allowlist, catalog_allowlist
         )
         count = len(counted_scripts)
-
         if count > max_scripts:
             has_errors = True
+            names_csv = ", ".join(sorted(f.name for f in counted_scripts))
             messages.append(
                 f"❌ [Script Budget Vượt Ngưỡng] Thư mục 'scripts/' có {count} tệp (tối đa cho phép: {max_scripts}).\n"
-                f"   Các file đang đếm ({count}): {', '.join(sorted(f.name for f in counted_scripts))}\n"
-                f"   💡 Giải pháp: Di chuyển các script one-off/fix/audit cũ vào '.md/archive/legacy_scripts/' hoặc '.md/scratch/'."
+                f"   Các file đang đếm ({count}): {names_csv}\n"
+                "   💡 Giải pháp: Di chuyển các script one-off/fix/audit cũ vào '.md/archive/legacy_scripts/' hoặc '.md/scratch/'."
             )
         else:
             messages.append(
                 f"✅ [Script Budget] Thư mục 'scripts/' có {count}/{max_scripts} tệp hợp lệ ({len(ignored_scripts)} tệp hệ thống được bỏ qua)."
             )
-
-        # Ephemeral scripts (role allowlist beats ephemeral prefix)
         ephemeral = check_ephemeral_scripts(counted_scripts, role_allowlist=effective_roles)
         if ephemeral:
             has_warnings = True
+            eph_lines = "\n".join(f"   - {f.name}" for f in ephemeral)
             messages.append(
                 f"⚠️  [Script Tạm Thời] Phát hiện {len(ephemeral)} script có tiền tố tạm thời (fix_*, audit_*, patch_*, tmp_*):\n"
-                + "\n".join(f"   - {f.name}" for f in ephemeral)
-                + "\n   💡 Hãy chuyển các script này vào '.md/archive/legacy_scripts/' sau khi chạy xong."
+                f"{eph_lines}\n   💡 Hãy chuyển các script này vào '.md/archive/legacy_scripts/' sau khi chạy xong."
             )
-
-        # Scan for sys.path hacks across scripts/ and src/ (excluding tests)
-        py_files_to_scan: list[Path] = []
-        for d in [scripts_dir, spoke_root / "src"]:
-            if d.exists():
-                py_files_to_scan.extend(
-                    [
-                        f
-                        for f in d.rglob("*.py")
-                        if not any(
-                            p
-                            in (
-                                ".venv",
-                                "venv",
-                                "__pycache__",
-                                "tests",
-                                "archive",
-                                "legacy_scripts",
-                            )
-                            for p in f.parts
-                        )
-                    ]
-                )
-
-        dup_violations = check_hub_duplications(py_files_to_scan)
-        if dup_violations:
-            has_errors = True
-            messages.append(
-                f"❌ [Vi phạm Hub Duplication / sys.path] Phát hiện {len(dup_violations)} vị trí vi phạm:\n"
-                + "\n".join(
-                    f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in dup_violations
-                )
-            )
-
-        # Scan for machine-state leakage (scripts/, src/, workspace_context.yaml)
-        files_to_check_machine: list[Path] = list(py_files_to_scan)
-        for ctx_name in [".md/workspace_context.yaml", "workspace_context.yaml"]:
-            ctx_cand = spoke_root / ctx_name
-            if ctx_cand.is_file():
-                files_to_check_machine.append(ctx_cand)
-
-        machine_violations = check_machine_state_leakage(files_to_check_machine)
-        if machine_violations:
-            has_errors = True
-            messages.append(
-                f"❌ [Vi phạm Machine-State Leakage] Phát hiện {len(machine_violations)} vị trí chứa đường dẫn máy tuyệt đối:\n"
-                + "\n".join(
-                    f"   - {f.relative_to(spoke_root)}:{ln}: {msg}"
-                    for f, ln, msg in machine_violations
-                )
-                + "\n   💡 Hãy dùng biến môi trường (CCBA_HUB_PATH) hoặc đường dẫn tương đối để tránh xung đột đa máy."
-            )
-        else:
-            messages.append("✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.")
-
-    exit_code = 1 if has_errors or (strict and has_warnings) else 0
-    return exit_code, messages
+        py_files = _collect_py_files_to_scan(spoke_root, scripts_dir)
+        has_errors = _append_code_violations(spoke_root, py_files, messages) or has_errors
+        has_errors = _append_machine_and_ip_violations(spoke_root, py_files, messages) or has_errors
+    return (1 if has_errors or (strict and has_warnings) else 0), messages
 
 
 def main() -> int:
