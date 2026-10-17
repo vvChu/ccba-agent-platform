@@ -2,6 +2,29 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-17] [update] | Phát Hành PR #521, PR #527 & PR #528: Closed-Loop Graduation Supersession, Layer-2 Link Parity & Spoke Sync AST Budget Refactoring
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phiên `/ccba-new-feature` #520, Thảo luận phản biện 2 vòng với Grok 4.7, và `/ccba-session-retrospective`)
+- **Affected Files**: `scripts/spoke/sync/graduation.py`, `scripts/spoke/sync/coordinator.py`, `scripts/spoke/sync/sdk_inspector.py`, `scripts/spoke/sync/constitution.py`, `scripts/spoke/sync/__init__.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/`
+- **Summary**: Hoàn tất chu trình khép kín đồng bộ Spoke (Issue #520) và cải tạo chuẩn KISS ($\le 50$ LOC AST budget) cho các module điều phối của `scripts/spoke/sync/`:
+  1. **Closed-Loop Graduation Supersession & Link Parity (PR #521 — `25f15eda`)**: Xây dựng `supersede_graduated_spoke_docs` và `audit_spoke_markdown_links` trong `graduation.py`, tự động thu hồi bản nháp tri thức tại Spoke đã thành Hub ADR, bảo tồn ghi chú cục bộ phát sinh bằng nhánh lưu trữ `.local-<sha8>.md` (COND-02), đồng bộ tài liệu tham chiếu ngang cấp (`CONTEXT.md`) trong `sync_layer2_rules`, và tự động chuẩn hóa liên kết `file://` hoặc tiền tố lặp `.md/` trong `.md/INDEX.md` trên cả 3 Spokes.
+  2. **Adversarial Peer Rebuttal & Coordinator AST Decomposition (PR #527 — `652eb997`)**: Qua 2 vòng phản biện với Grok (`req-discuss-refactor-coordinator-001` & `002`), bác bỏ 4 suy diễn thiếu ngữ cảnh mã nguồn của `audit_direct` (`self.stats`, `self.logger`, `_BundleSyncState`, `GateCheck.findings`), bảo toàn 100% monkeypatch seams (`assess_catalog_freshness`, `_get_synchronizer_cls()`) và phân rã toàn bộ 6 hàm lớn trong `coordinator.py` về $\le 50$ LOC (tối đa 48 LOC).
+  3. **SDK Inspector AST Decomposition & Ratchet Enforcement (PR #528 — `6f198176`)**: Phân rã toàn bộ 4 phương thức vượt ngưỡng 50 dòng trong `sdk_inspector.py` (`copy_if_needed`: $150 \to 46$, `_ensure_git_hook_activated`: $98 \to 14$, `resolve_packages_to_check`: $94 \to 27$, `sync_or_advise`: $79 \to 28$ LOC), khử trùng lặp `is_legal_related_spoke`, và khóa cứng bằng ratchet test `test_coordinator_ast_function_length_compliance`.
+  4. **Đóng Gói Tri Thức**: Bổ sung Section 37 vào `session_learnings_history.md`, cập nhật `RULE-1.21` và `RULE-4.17` vào `session_learnings.md` ($\le 10.0\text{ KB}$), đạt 100% CI checks green trên cả 3 PRs.
+
+---
+
+## [2026-10-07] [synthesize] | Chuẩn Hóa Runtime Thông Số Hạ Tầng DGX Spark (PR #499, #500) & Nghiên Cứu Tái Phân Tầng Fallback Gateway (#95)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Thẩm định kép độc lập bởi Claude Opus 4.6, Claude Sonnet 4.6 và kiểm chứng Telemetry)
+- **Affected Files**: `.agents/skills/ccba-vllm-manager/`, `.agents/skills/ccba-llm-pipeline-patterns/`, `.agents/skills/ccba-ai-gateway-sdk/`, `.md/knowledge/`
+- **Summary**: Hoàn tất chuẩn hóa thông số máy chủ hạ tầng DGX Spark Blackwell GB10 128GB Unified Memory và giải mã sự cố hạ cấp âm thầm của LiteLLM Gateway:
+  1. **PR #499 & PR #92**: Chuẩn hóa `ccba-vllm-manager` (served model name `qwen-local-primary`, context 98304, RAM util 0.60 ~75.4 GB GB10 unified memory, flashinfer, prefix caching, on-demand profile `vllm-light` cho Qwen 3.5 9B AWQ, LiteLLM Gateway routing table COND-03). Thẩm định bởi Claude Opus 4.6 (`APPROVE_PLAN`, Risk 2). Đồng bộ sang Spoke `vvChu/dgx-spark-toolkit#92`.
+  2. **PR #500**: Chuẩn hóa `ccba-llm-pipeline-patterns` (Pattern 16: tách `rag-core` sang nhánh Non-Thinking `enable_thinking: false`, chỉ giữ `local-coder` cho Thinking CoT) và `ccba-ai-gateway-sdk` (đính chính `reasoning-gemma` chạy qua Google API Cloud thay vì local vLLM; sửa `rag-light` thành 9B AWQ thay vì 4B).
+  3. **Giải Mã & Truy Vết Sự Cố Hạ Cấp Âm Thầm (Silent Degradation Forensic)**: Phát hiện và làm rõ hiện tượng proxy `:8045` bị 503/429 khiến LiteLLM Gateway kích hoạt fallback chain từ `claude-sonnet-4-6` rơi thẳng xuống `ocr-tier4` (`gemini-2.5-flash`), dẫn đến việc Grok telemetry ghi nhận Sonnet nhưng thực tế do Flash sinh ra.
+  4. **Ban Hành RFC Phân Tầng Năng Lực Gateway (Issue #95)**: Tạo Issue #95 trên Spoke `vvChu/dgx-spark-toolkit` đề xuất tái cấu trúc toàn diện `services/ai-gateway/litellm_config.yaml`: thiết lập ranh giới Class A (Frontier Reasoning), cấm fallback sang Class C (OCR), chuyển chốt chặn local sang `local-coder` và áp dụng chính sách Fail-Fast.
+  5. **Đóng Băng Bất Biến Kiến Trúc**: Cập nhật `RULE-1.22` (Reasoning Tiering Parity & Anti-Silent-Degradation) và `RULE-5.10` (Layer Anchoring Invariant) vào `session_learnings.md` ($\le 10.0\text{ KB}$), ghi nhận Section 38 vào `session_learnings_history.md`.
+
+---
+
 ## [2026-10-07] [guideline] | Chuẩn Hóa Toàn Diện 76/76 Skills Nền Tảng Theo ADR-0061 (Platform-Aware Architecture Posture)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Phối hợp thẩm định song phương với Lead Reviewer Grok 4.7 qua 11 đợt)
 - **Affected Files**: `.agents/skills/*/SKILL.md` (76 skills), `.md/peer_exchange/`, `.md/knowledge/`

@@ -822,3 +822,48 @@ Chiến dịch chuẩn hóa toàn bộ 76 skills của CCBA Agent Platform qua 1
 3. **Reasoning Turn & Timeout Budgeting**: Khi peer agent sử dụng xhigh reasoning để đọc sâu hàng chục tệp trên đĩa, ngân sách thời gian phải $\ge 900$s và max turns $\ge 30-40$.
 4. **Local Sub-Second Verification**: Sử dụng `--preset skill --target <path>` kiểm tra nhanh giúp phát hiện sai lệch cú pháp ngay lập tức trước khi chạy toàn sàn CI.
 
+---
+
+## 37. Closed-Loop Graduation Supersession, Spoke Markdown Link Sanitizer & Empirical Peer Claim Verification (PR #521, PR #527, PR #528)
+
+### Context & Implementation Summary
+Phiên phát triển và hoàn thiện cơ chế đồng bộ Spoke khép kín cùng cải tạo ngân sách AST ($\le 50$ LOC) cho phân hệ `scripts/spoke/sync/`:
+- **PR #521 (`25f15eda`, Issue #520)**: Xây dựng module `scripts/spoke/sync/graduation.py` (`supersede_graduated_spoke_docs`, `audit_spoke_markdown_links`) và nâng cấp `sync_layer2_rules` để tự động thu hồi các bản nháp tri thức tại Spoke đã được chuẩn hóa thành Hub ADR (thay bằng stub định hướng `GRADUATED_STUB_MARKER`), bảo tồn lịch sử ghi chú cục bộ bằng nhánh SHA-8 (`COND-02`), đồng bộ tài liệu tham chiếu liên kết tầng 2 và tự động khử liên kết `file://` không khả chuyển hoặc tiền tố dư thừa `.md/` trong `.md/INDEX.md`.
+- **PR #527 (`652eb997`)**: Phân rã 6 hàm/phương thức vượt trần 50 dòng trong `scripts/spoke/sync/coordinator.py` (`assess_catalog_freshness`: $85 \to 29$, `_sync_single_item`: $117 \to 38$, `_sync_full_bundle`: $435 \to 48$, `sync_spoke_bundle`: $234 \to 41$, `verify_spoke`: $111 \to 37$, `sync_all_spokes`: $93 \to 43$ LOC) sau 2 vòng thảo luận đối kháng với Grok (`req-discuss-refactor-coordinator-001` & `002`).
+- **PR #528 (`6f198176`)**: Phân rã toàn bộ 4 phương thức vượt trần 50 dòng trong `scripts/spoke/sync/sdk_inspector.py` (`copy_if_needed`: $150 \to 46$, `_ensure_git_hook_activated`: $98 \to 14$, `resolve_packages_to_check`: $94 \to 27$, `sync_or_advise`: $79 \to 28$ LOC) và khử trùng lặp `is_legal_related_spoke`, đồng thời khóa cứng ratchet test `test_coordinator_ast_function_length_compliance` cho cả 3 module (`coordinator.py`, `graduation.py`, `sdk_inspector.py`).
+
+### Key Architectural Invariants & Learned Patterns
+1. **Branched SHA-8 Archive Preservation on Divergent Spoke Drafts (`graduation.py`, COND-02)**:
+   - Khi thu hồi bản nháp tri thức tại `.md/knowledge/<name>.md` đã được chuẩn hóa thành Hub ADR, nếu tệp lưu trữ `.md/knowledge/archive/<name>.md` đã tồn tại nhưng bản nháp hiện hành lại có phát sinh ghi chú mới từ kỹ sư Spoke (khác nội dung sau khi chuẩn hóa CRLF/LF), hệ thống bắt buộc giữ nguyên bản lưu trữ gốc VÀ ghi thêm bản nhánh `<stem>.local-<sha8>.md` trước khi ghi đè stub `GRADUATED_STUB_MARKER`.
+2. **Spoke Markdown Link Portability & Redundant Prefix Sanitization (`audit_spoke_markdown_links`)**:
+   - Các tệp chỉ mục `.md/INDEX.md` tại Spoke thường bị nhiễm liên kết tuyệt đối `file:///...` hoặc tiền tố lặp `.md/knowledge/...` (dẫn tới đường dẫn ảo `.md/.md/knowledge/...`). Bộ kiểm toán `audit_spoke_markdown_links(spoke_root, apply_fixes=True)` tự động chuẩn hóa về đường dẫn tương đối khả chuyển trong pha `--sync-spoke` và kiểm tra nghiêm ngặt trong pha `--verify`.
+3. **Empirical Rebuttal of Un-Grounded Peer Reviewer Claims (`audit_direct` vs Verbatim Code)**:
+   - Khi sử dụng profile `audit_direct` (`max_turns=1`, không bật công cụ đọc đĩa), Peer Reviewer (Grok) có thể suy diễn sai các thuộc tính không tồn tại trong mã nguồn thực tế (ví dụ: giả định `SpokeSynchronizer` có `self.stats` và `self.logger`, đề xuất tạo dataclass `_BundleSyncState`, hoặc giả định `GateCheck` có thuộc tính `.findings` thay vì `.stdout_tail`).
+   - Agent bắt buộc thực hiện Kiểm toán Phản biện (Bước 1 `/ccba-session-retrospective` & Rule #8): đối chiếu từng điều kiện `COND-xx` với AST thực tế, gửi vòng phản biện thứ 2 (`rebuttal`) kèm trích xuất nguyên văn mã nguồn để xác lập đồng thuận thực chứng, tuyệt đối không mù quáng thực thi các yêu cầu làm vỡ `capsys` hoặc monkeypatch seams.
+4. **Module-Level Monkeypatch Seam & AST Function Length Ratchet (`coordinator.py`, `sdk_inspector.py`)**:
+   - Khi phân rã các hàm điều phối lớn để thỏa mãn trần KISS ($\le 50$ LOC), các điểm neo cấp module đang được test suite monkeypatch (`coordinator.assess_catalog_freshness`, `_get_synchronizer_cls()`) phải được giữ nguyên ở cấp module và được gọi trực tiếp từ helper method, kết hợp khóa cứng bằng ratchet test `check_ast_function_length(targets, max_lines=50)`.
+
+---
+
+## 38. Quản Trị Phân Tầng Năng Lực AI Gateway (Reasoning Tiering Parity) & Định Vị Tầng Hệ Thống (Layer Anchoring)
+
+### Context & Incident Root Cause (Sự cố ngày 2026-10-07)
+Trong phiên rà soát và thẩm định kỹ năng, Grok CLI gọi `claude-sonnet-4-6` qua LiteLLM Gateway (`:8090`). Proxy thượng nguồn (`antigravity-tools` :8045) trả về lỗi HTTP 503 / 429 trên các model Claude.
+LiteLLM tự động kích hoạt chuỗi fallback:
+$$\text{claude-sonnet-4-6} \longrightarrow \text{claude-sonnet-4-5} \longrightarrow \text{claude-haiku-4} \longrightarrow \mathbf{ocr\text{-}tier4\ (gemini\text{-}2.5\text{-}flash)}$$
+Model `gemini-2.5-flash` nhận request và trả về 200 OK. Do LiteLLM fallback trong suốt (*transparent fallback*), client Grok ghi nhận token tiêu thụ dưới tên `claude-sonnet-4-6`.
+Hệ quả: Bài toán thẩm định kiến trúc/code review bị âm thầm hạ cấp (*silent degradation*) xuống một model cấp thấp chuyên dụng cho OCR tài liệu (non-thinking), tạo ra **ảo giác an toàn (False Sense of Security)** cực kỳ nguy hiểm.
+
+### Key Architectural Invariants & Learned Rules
+1. **Reasoning-Class Parity & Anti-Silent-Degradation (RULE-1.22)**:
+   - Các tác vụ suy luận (Frontier Reasoning / Architecture Review / Code Audit) BẮT BUỘC duy trì tính đồng đẳng phân tầng (Class A).
+   - CẤM các model Class A fallback về Class C (`ocr-tier4`, `ocr-fallback`).
+   - Khi toàn bộ model suy luận cạn kiệt quota, Gateway BẮT BUỘC áp dụng chính sách **Fail-Fast** (trả về lỗi HTTP 503) thay vì âm thầm trả về kết quả hời hợt từ model OCR.
+2. **Layer Anchoring Invariant (vLLM Backend vs Gateway Routing) (RULE-5.10)**:
+   - *Tầng 1 (vLLM Engine / Hardware)*: Quản lý mô hình vật lý trên GPU GB10 (`--served-model-name qwen-local-primary`).
+   - *Tầng 2 (LiteLLM Gateway / Routing)*: Quản lý bảng định tuyến, fallback và các Virtual Deployments (`local-coder` bật thinking vs `rag-core` tắt thinking).
+   - Cú pháp mảng fallback tĩnh của LiteLLM `fallbacks: [{"model_a": ["model_b"]}]` chỉ chấp nhận chuỗi định danh `model_name`, CẤM đưa tham số động dạng `qwen-local-primary (enable_thinking=true)` vào cấu hình tĩnh.
+   - Khi cấu hình fallback cho task suy luận trên DGX Spark, BẮT BUỘC dùng virtual deployment **`local-coder`** (đã đóng gói sẵn `chat_template_kwargs: {enable_thinking: true}`, `max_tokens: 16384`) thay vì `rag-core` hay tên engine vật lý.
+3. **Traceability Action**:
+   - Đã tạo RFC Issue [#95 trên vvChu/dgx-spark-toolkit](https://github.com/vvChu/dgx-spark-toolkit/issues/95) để tái cấu trúc toàn diện chuỗi fallback của `services/ai-gateway/litellm_config.yaml`.
+
