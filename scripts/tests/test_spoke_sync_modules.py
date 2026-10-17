@@ -1579,10 +1579,14 @@ def test_audit_spoke_markdown_links_and_verify_spoke_gate(tmp_path: Path) -> Non
 
 
 def test_coordinator_ast_function_length_compliance() -> None:
-    """Ratchet test ensuring 100% of functions in coordinator.py and graduation.py satisfy <= 50 LOC (COND-04)."""
+    """Ratchet test ensuring 100% of functions in coordinator.py, graduation.py, and sdk_inspector.py satisfy <= 50 LOC."""
     from ccba_harness.peer_gate import check_ast_function_length
 
     sync_dir = Path(__file__).resolve().parents[1] / "spoke" / "sync"
-    targets = [sync_dir / "coordinator.py", sync_dir / "graduation.py"]
+    targets = [
+        sync_dir / "coordinator.py",
+        sync_dir / "graduation.py",
+        sync_dir / "sdk_inspector.py",
+    ]
     result = check_ast_function_length(targets, max_lines=50)
     assert result.passed, f"AST function length violation (> 50 LOC):\n{result.stdout_tail}"
