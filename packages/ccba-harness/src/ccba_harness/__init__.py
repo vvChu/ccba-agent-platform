@@ -21,10 +21,14 @@ from ._engine import HarnessEngine
 from ._guard import HarnessGuard
 from ._mutex import FileMutexLock
 from ._state import HarnessLocal, HarnessState
-from .architecture import (
-    ADRMatch,
-    WhyExplanation,
-    explain_architecture_why,
+from .architecture import ADRMatch, WhyExplanation, explain_architecture_why
+from .backpressure import (
+    BackpressureStatus,
+    PendingReviewItem,
+    TradeoffCard,
+    evaluate_backpressure_queue,
+    parse_tradeoff_card,
+    validate_tradeoff_card,
 )
 from .blast_radius import (
     BlastRadiusReport,
@@ -35,12 +39,24 @@ from .blast_radius import (
 )
 from .cli import (
     run_apply_anchor_patch_cli,
+    run_door_triage_cli,
     run_peer_co_review_cli,
     run_peer_dispatch_cli,
 )
-from .dashboard import (
-    generate_swarm_dashboard_html,
-    render_swarm_dashboard,
+from .dashboard import generate_swarm_dashboard_html, render_swarm_dashboard
+from .door_policy import (
+    ONE_WAY_DOOR_MANIFEST,
+    DoorClassificationResult,
+    DoorType,
+    OneWayDoorCategory,
+    RecentMergeRecord,
+    classify_pr_door,
+    compute_cumulative_streak,
+    extract_canonical_module,
+    is_sampled_for_audit,
+    is_two_way_door_only,
+    load_recent_merges_from_git,
+    match_one_way_categories,
 )
 from .economy import (
     EconomyAuditReport,
@@ -455,4 +471,23 @@ __all__ = [
     "orchestrate_peer_co_review",
     "render_consensus_report_markdown",
     "synthesize_verdicts",
+    "ONE_WAY_DOOR_MANIFEST",
+    "DoorClassificationResult",
+    "DoorType",
+    "OneWayDoorCategory",
+    "RecentMergeRecord",
+    "classify_pr_door",
+    "compute_cumulative_streak",
+    "extract_canonical_module",
+    "is_sampled_for_audit",
+    "is_two_way_door_only",
+    "load_recent_merges_from_git",
+    "match_one_way_categories",
+    "BackpressureStatus",
+    "PendingReviewItem",
+    "TradeoffCard",
+    "evaluate_backpressure_queue",
+    "parse_tradeoff_card",
+    "validate_tradeoff_card",
+    "run_door_triage_cli",
 ]

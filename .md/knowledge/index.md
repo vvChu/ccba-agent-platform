@@ -30,6 +30,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md](../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md): **[MỚI]** ADR-0067: Danh mục Cửa Một Chiều 3 Tầng (One-Way Door Manifest) và Cơ chế Áp lực ngược (Backpressure Circuit-Breaker).
 - [../../docs/adr/0060-4hub-federated-spokes-architecture.md](../../docs/adr/0060-4hub-federated-spokes-architecture.md): **[MỚI]** ADR-0060: Kiến trúc Liên bang 4-Hubs × Spokes & Điều phối Hệ sinh thái Tri thức Phi tập trung.
 - [grilling_live_artifacts_and_charter.md](grilling_live_artifacts_and_charter.md): **[MỚI]** Biên Bản Phỏng Vấn Socratic Grilling: Thiết Kế Live State Artifacts & Tích Hợp 11 Ghế CCBA Charter (ADR-0058).
 - [specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md](specs_and_roadmaps/Arch_Proposal_Hub_Spoke_Sync_Strategy.md): Chiến lược đồng bộ hóa Hub-and-Spoke giữa Platform và các dự án vệ tinh.
