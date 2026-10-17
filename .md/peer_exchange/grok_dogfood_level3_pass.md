@@ -13,7 +13,7 @@ telemetry:
   total_tokens: 18035
   model_calls: 1
   turn_count: 1
-  cost_usd: 0.0235
+  cost_usd: 0.0
   cost_mode: estimated
   duration_seconds: 12.01
 ---

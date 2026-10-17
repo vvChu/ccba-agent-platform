@@ -58,13 +58,17 @@ Quy trình chuẩn hóa toàn trình dành cho Hub Maintainer để thẩm đị
      ```
    - *Tiêu chí:* $100\%$ Passed, 0 errors, 0 warnings.
 
-3. **Worker 3 — Proposal Lifecycle & Catalog Governance (ADR 0047):**
+3. **Worker 3 — Proposal Lifecycle, Catalog Governance & Problem-Validity Gate (ADR 0047, Rule 5 KISS & Rule 8):**
    - Soát chiếu metadata frontmatter của skill/workflow mới đề xuất.
    - Kiểm tra tính tương thích của `catalog.yaml` và Traceability Matrix.
+   - **Kiểm toán Tính Hợp Lý, Quy Mô Thực Tế & Hiệu Lực (Problem-Validity, Scale & OBE Check):**
+     * Đối chiếu `seam-contracts.yaml` để chặn các lớp trừu tượng trùng lặp 100% với Seams hiện có (`choose_model`, `MaskaraScanner`, `SandboxPromoter`, `verify-patch`).
+     * Đo đếm quy mô dữ liệu thật ($N$ entries/rows); từ chối đề xuất xây dựng CLI parser/SQLite/AST validator mới nếu $N \le 20$ và giải quyết trọn vẹn bằng grep/dict/JSONL phẳng (< 50ms).
+     * Kiểm tra ranh giới Liên bang (chống Dual-SSOT với `IDOP-CCBA-WAY` / `ccba-legal-knowledge`) và đối chiếu `git log` để phát hiện đề xuất đã lỗi thời hoặc đã hoàn thành ở pha sau (Overtaken By Events — OBE).
 
 ---
 
-**Tiêu chí hoàn thành:** Cả 3 worker hoàn thành kiểm tra với 100% checks đạt chuẩn.
+**Tiêu chí hoàn thành:** Cả 3 worker hoàn thành kiểm tra với 100% checks đạt chuẩn và vượt qua cổng thẩm định KISS/Scale/OBE.
 
 ---
 

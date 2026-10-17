@@ -160,9 +160,7 @@ def test_peer_dispatch_dry_run_with_audit_direct_and_no_tools(tmp_path, capsys):
     assert "--deny *" in out
 
 
-def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(
-    tmp_path: Path, capsys
-):
+def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(tmp_path, capsys):
     prompt = tmp_path / "prompt_signoff.md"
     envelope = PeerPromptEnvelope(
         request_id="req-cli-005",
@@ -195,4 +193,3 @@ def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(
     assert "--resume 01a148d0-ac92-7ef2-a970-efb8c8fe1aed --fork-session" in out
     assert "--verbatim" in out
     assert "--disable-web-search" in out
-

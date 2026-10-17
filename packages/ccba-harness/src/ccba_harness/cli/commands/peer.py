@@ -8,10 +8,10 @@ import logging
 import os
 import sys
 import time
-
-logger = logging.getLogger(__name__)
 from collections.abc import Sequence
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def find_workspace_root(start_dir: Path | None = None) -> Path:
@@ -266,6 +266,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     from ccba_harness.peer import (
         DEFAULT_FALLBACK_AUDITOR_MODEL,
         DEFAULT_PRIMARY_AUDITOR_MODEL,
+        NO_TOOLS_DISALLOW_LIST,
         PROFILE_SPECS,
         TIER_DEFAULT_MODELS,
         build_grok_cmd,
@@ -313,15 +314,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         deny = spec.get("deny")
         if args.no_tools:
             tools = None
-            disallowed_tools = [
-                "read_file",
-                "grep",
-                "list_dir",
-                "run_terminal_command",
-                "search_replace",
-                "write_file",
-                "spawn_subagent",
-            ]
+            disallowed_tools = list(NO_TOOLS_DISALLOW_LIST)
             deny = ["*"]
             if args.max_turns is None and (max_turns is None or max_turns > 3):
                 max_turns = 3

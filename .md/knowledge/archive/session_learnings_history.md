@@ -892,4 +892,67 @@ Phiên triển khai đặc tả Danh mục Cửa Một Chiều (One-Way Door Man
 4. **CLI Subcommand Registration Parity Contract (`test_cli_contract_parity.py`)**:
    - Mọi subcommand mới đăng ký vào `ccba-harness` (như `door-triage`) bắt buộc phải được khai báo đồng bộ vào `ALL_SUBCOMMAND_INVOCATIONS` và `expected_symbols` trong `packages/ccba-harness/tests/test_cli_contract_parity.py` để vượt qua cổng kiểm tra tính tương đương hợp đồng CLI.
 
+---
+
+## 41. Thượng Nguồn Hóa Kiểm Tra AST Raw Model & IP Leakage Vào `check_spoke_cleanliness.py` (Issue #530 / PR #534)
+
+### Context & Implementation Summary
+Phiên xử lý Issue #530 (PR #534 — `c9313552`) tích hợp bộ kiểm tra chuỗi model thô và địa chỉ IPv4 cố định vào kịch bản vệ sinh trung tâm `scripts/spoke/check_spoke_cleanliness.py`:
+- **Active Guardrail Wiring over Dead Helpers (Phương án A2)**: Tại Spoke `dgx-spark-toolkit`, hai hàm `check_raw_model_leakage` và `check_raw_ip_leakage` trước đó chỉ được định nghĩa độc lập để phục vụ unit test mà chưa được nối vào `scan_spoke_cleanliness()`, đồng thời có nguy cơ bị ghi đè mỗi khi chạy `sync_spoke.py --apply` (do `TestGuardrailCopier` trong `sdk_inspector.py` chép đè từ `scripts/spoke/check_spoke_cleanliness.py`). PR #534 tích hợp cả hai hàm vào Hub SSOT và nối trực tiếp vào `scan_spoke_cleanliness()` (`_append_code_violations`, `_append_machine_and_ip_violations`), cưỡng chế `Parameter Externalization & Dynamic Scale Invariant` (Layer 1 Constitution) trên toàn bộ Spokes.
+- **Single-Line Docstring State Preservation (`COND-02`)**: Trong `check_raw_ip_leakage`, trạng thái `was_in_docstring = in_docstring` được ghi nhận trước khi đảo cờ `"""` / `'''` kết hợp kiểm tra `triple_q in stripped`, đảm bảo các docstring 1 dòng (`"""Example IP: 100.83.192.30"""`) được bỏ qua chính xác thay vì chỉ bỏ qua docstring nhiều dòng.
+- **AST Function Length Decomposition ($\le 50$ LOC)**: Tách `_hub_catalog_from_workspace_ctx`, `_append_code_violations`, và `_append_machine_and_ip_violations` để toàn bộ hàm trong `check_spoke_cleanliness.py` đạt $\le 50$ LOC (`peer-gate` 8/8 PASS).
+
+### Key Architectural Invariants & Learned Patterns
+1. **Guardrail SSOT & Active Pipeline Wiring Invariant (`RULE-1.13`)**:
+   - Mọi hàm kiểm tra vệ sinh trong `scripts/spoke/check_spoke_cleanliness.py` (`check_raw_model_leakage`, `check_raw_ip_leakage`) bắt buộc phải được gọi trực tiếp trong `scan_spoke_cleanliness()`, cấm để ở trạng thái helper mồ côi chỉ gọi từ unit test (*Dead Guardrail Helper Anti-Pattern*).
+   - `check_raw_ip_leakage` bắt buộc bảo toàn trạng thái `was_in_docstring` cho docstring 1 dòng (`"""..."""`), loại trừ loopback, `0.0.0.0`, multicast, broadcast, `STANDARD_PUBLIC_DNS` (`8.8.8.8`, `8.8.4.4`, `1.1.1.1`, `1.0.0.1`) và dòng có `# ccba:allow-raw-ip`.
+2. **Secondary Worktree Release Cleanup (`--detach origin/main`)**:
+   - Khi nhánh `main` đang được checkout tại worktree chính (`/home/vvc/ccba/ccba-agent-platform`), lệnh `gh pr merge --delete-branch` hoặc `git checkout main` tại worktree phụ sẽ báo lỗi `fatal: 'main' is already used by worktree`. Quy trình dọn dẹp chuẩn tại worktree phụ là `git fetch --prune origin && git checkout --detach origin/main && git branch -D <branch>` kết hợp `git -C <primary_worktree> pull origin main`.
+
+---
+
+## 42. Phản Biện Toàn Diện Backlog Đa Repo (`#511`, `#512`, `#514`, `#522`, `#523` & `IDOP-CCBA-WAY` `#10`–`#12`): Chống Thiên Lệch Tuân Thủ (`RULE-1.24`, `RULE-4.18`, `RULE-5.11`)
+
+### Context & Incident Root Cause (Sự cố ngày 2026-10-17)
+Trong phiên tổng rà soát backlog trên `vvChu/ccba-agent-platform` (12 issues: `#507`–`#514`, `#519`, `#522`, `#523`, `#530`) và `vvChu/idop-ccba-way` (3 issues: `#10`, `#11`, `#12`), các yêu cầu từ Hermes Agent / Wayfinder cũ chứa nhiều đề xuất lý thuyết sinh tự động từ tài liệu thiết kế tổng quát.
+Ở vòng viết `Agent Brief` hàng loạt ban đầu, Agent đã rơi vào bẫy **Compliant Execution Bias** (cố gắng thu hẹp phạm vi để tạo ra một đặc tả kỹ thuật thực thi được cho mọi issue thay vì bác bỏ các đề xuất sai kiến trúc ngay từ đầu). Khi thực hiện kiểm toán phản biện 2 vòng (Double-Pass Adversarial Review — Rule 5 KISS & Rule 8) trên mã nguồn thực tế, chỉ có **3/12 issues** trên Hub (`#513` PR `#533`, `#530` PR `#534`, `#519` PR `#535`/`#536`) mang lại giá trị thực chất; **5 issues** (`#511`, `#512`, `#514`, `#522`, `#523`) bị đóng `not_planned`, **4 issues** (`#507`–`#510`) bị đóng `duplicate`, và **3 issues** trên `idop-ccba-way` (`#10`, `#11`, `#12`) được đóng `completed` do đã hoàn thành qua lộ trình `P3.0` $\to$ `P5.4` (PR `#28` $\to$ `#41`).
+
+### Key Architectural Invariants & Learned Rules
+1. **Federated Role & ERP Lifecycle Boundary Guard (`RULE-1.24`, ADR-0046, ADR-0060)**:
+   - Bảng 15 `ROLE_ID` (`ROLE_DIRECTOR` $\to$ `ROLE_EXTERNAL_CLIENT` trong `06_ccba_org_role_matrix.md`) và chu trình nghiệp vụ 5 pha (`OPPORTUNITY (CRM)` $\to$ `CONTRACT (HĐKT)` $\to$ `WORK_ORDER (PGV)` $\to$ `EXECUTION` $\to$ `SETTLEMENT (Quyết toán P&L 3 tầng)`) thuộc độc quyền domain SharePoint ERP của Operations Hub **`IDOP-CCBA-WAY`** (`#522`, `#523`).
+   - Tại **`ccba-agent-platform`**, SSOT định danh là **ADR-0046** (`seat_role` + 5 cấp `qc_governance`, bảo toàn vai trò kỹ thuật `CHU_TRI_BO_MON`), cầu nối bàn giao CDE là `scripts/spoke/idop_bridge.py` (`StagedSubmittal`), và kiểm soát hạn ngạch chi phí là **LiteLLM Virtual Keys** (`ADR-0060`) + `telemetry.py` / `fleet.py` (model local GPU `$0.00`). CẤM dựng Dual-SSOT hoặc chặn cứng tác tử R&D/Sandbox khi không có `pgv_code == APPROVED`.
+2. **Pre-Brief / Pre-Plan Problem-Validity, Scale & Seam-Parity Gate (`RULE-4.18`)**:
+   - Trước khi viết `Agent Brief` (`/ccba-contribute-to-hub`, `/ccba-issue-to-hub`) hoặc lập `implementation_plan.md` (`/ccba-new-feature`), Agent BẮT BUỘC thẩm định 4 chiều chống *Compliant Execution Bias*:
+     1. *Scale Reality*: CẤM áp hạ tầng tìm kiếm phức tạp (Vector 40% + BM25 30% + Graph 30% RRF `#511`) lên tập dữ liệu tĩnh quy mô nhỏ (`catalog.yaml` $N=76$ skills, đọc `2ms` theo `ADR-0047`, đã có `find_seams` theo hợp đồng kiểu `in/out` `ADR-0061` và `score_skill_match` trong `_miner_catalog.py`).
+     2. *ADR Invariant Parity*: CẤM đề xuất Push-Injection / `dynamic truncation` (`#512`) làm vỡ kiến trúc Pull-based Progressive Disclosure (`ADR-0040`) và cắt mất phần Guardrails ở cuối `SKILL.md`; CẤM trộn lẫn Runtime Telemetry vào chỉ số tĩnh Design-Time GPI (`#514`) làm gãy cổng CI tất định `validate_skills.py --enforce-gpi` (`ADR-0057`, `ADR-0058`).
+     3. *Seam & Federated Boundary*: CẤM dịch cơ học khái niệm quản trị nhân sự (EOS GWC `#523`) hoặc quy trình kế toán ERP (`#522`) thành module trùng lặp với Seams sẵn có (`SandboxPromoter`, `MaskaraScanner`, `choose_model`, `evals/daemon.py`, `SKILL_DEPRECATION_ALIASES`).
+     4. *Overcome-by-Events (OBE) Cross-Check*: Đối chiếu lịch sử commit/PR thực tế (`P3.0` $\to$ `P5.4` trên `IDOP-CCBA-WAY` `#10`–`#12`) để đóng `completed` các ticket đã được giải quyết ở các lát cắt kiến trúc sau.
+3. **GitHub Classic Projects GraphQL Deprecation & Project V2 Field Discovery (`RULE-5.11`)**:
+   - Lệnh `gh issue view <id>` (không truyền `--json`) thất bại với exit code 1 (`GraphQL: Projects (classic) is being deprecated`) do `gh` CLI mặc định truy vấn trường `projectCards` cũ. BẮT BUỘC luôn truyền `--json number,title,state,body,labels,comments` hoặc gọi `gh api repos/<owner>/<repo>/issues/<id>`.
+   - Khi đồng bộ trạng thái trên GitHub Project V2 (`gh project item-edit`), luôn truy vấn `gh project field-list <num> --owner <owner> --format json` để lấy chính xác `PVTSSF_...` Field ID hiện hành và kiểm tra `--limit 100` trên `gh project item-list`.
+
+---
+
+## 43. Liveness-Aware Grok Watchdog, Multi-Turn Resume Telemetry & Degraded-Reasoning Gate (`RULE-4.19`, HUB-ADR 0063, HUB-ADR 0064)
+
+### Context & Historical Forensics (Phân tích 602/603 phiên `~/.grok/sessions/` & 123 tệp `.md/peer_exchange/`)
+Qua phân tích thực chứng trên **602/603 sessions** trong `~/.grok/sessions/` (`453.12M` tổng tokens, `6,510` model calls, `93` phiên bị hủy giữa chừng) và **123 tệp** trong `.md/peer_exchange/`, phát hiện 5 điểm nghẽn vận hành cốt lõi:
+1. **Rò rỉ `.bridge_cache.json` & Lệch Schema [`status.json`](../../.md/peer_exchange/status.json)**: Mâu thuẫn kiểu giữa `CombinedTelemetry` và `PeerVerdictTelemetry` trong `PeerVerdictBlock`, tệp `.gate.md` bị phân loại nhầm thành `GROK_RESPONSE`, và 3 tệp lịch sử có `risk_score > 5` (`6, 18, 28`) khiến `pending_grok` bị kẹt ảo `9` yêu cầu.
+2. **Độ trễ MCP Web-Search & Rò rỉ 15 Built-in Tools**: Grok CLI nạp `claude-api-web-search-mcp` (`275ms–490ms`) và tự động bật 15 built-in tools (tên tool ghi tệp thực tế là `write` thay vì `write_file`).
+3. **Lệch Telemetry khi Resume đa lượt (`--resume` & `--fork-session`)**: Khi dùng `--resume`, `grok usage <session_id>` trả về `data["session"]` của Lượt 1 thay vì số liệu lượt hiện tại trong `data["turns"][-1]`.
+4. **Hủy nhầm phiên đang Streaming hoặc Mất dữ liệu `temp_out` khi treo sau `turn_ended:*`**: `93/602` phiên bị hủy giữa chừng do chạm `deadline` cứng khi đang `streaming_text` hoặc treo sau `turn_ended:*`.
+5. **Silent Reasoning Degradation (`reasoning_tokens == 0`)**: Phiên yêu cầu `high`/`xhigh` nhưng trả về `0` reasoning tokens mà không có cảnh báo chặn ở bước tổng hợp đồng thuận.
+
+### Key Architectural Invariants & Learned Rules (`RULE-4.19`)
+1. **Liveness-Aware Subprocess Watchdog (`_peer_watchdog.py` — `inspect_session_liveness`)**:
+   - Đọc sự kiện cuối trong `~/.grok/sessions/**/<session_id>/events.jsonl` (`f"{etype}:{detail}"` và `age_seconds`):
+     - **Fail-Fast An Toàn (`90s` chỉ cho `mcp_init_completed:`)**: Ngắt tiến trình ngay khi `last_state in ("turn_ended:error", "turn_ended:cancelled")` hoặc kẹt tại `mcp_init_completed:` quá `90.0s`. Tuyệt đối **không** ngắt sớm ở `phase_changed:waiting_for_model` (bảo vệ các phiên suy luận sâu hợp lệ kéo dài `90s–1,213s`).
+     - **Turn-Ended Drain (`5s`) & Bảo toàn `temp_out`**: Khi tiến trình treo sau `turn_ended:*` (`age_s > 5.0s`), bắt buộc gọi `temp_out.seek(0); stdout_text = temp_out.read()` trước khi `_terminate_proc_tree(proc)`.
+     - **Streaming Grace Window (`+45s`, tối đa 1 lần)**: Khi chạm `deadline` nhưng `last_state in ("phase_changed:streaming_text", "phase_changed:streaming_reasoning")` với `age_s < 5.0s`, cấp thêm `+45.0s` để hoàn tất xuất văn bản.
+     - **Cứu hộ `chat_history.jsonl`**: Khi `_unwrap_grok_json_stdout` ghi nhận `stopReason != "end_turn"` hoặc thiếu frontmatter, gọi `_recover_verdict_from_chat_history()` để cứu hộ `PeerVerdictBlock` hợp lệ đã sinh ra trước khi chạm `max_turns`.
+2. **Headless Tool Lockdown (`NO_TOOLS_DISALLOW_LIST` & `READ_ONLY_DISALLOW_LIST`)**:
+   - Bật `disable_web_search: True` và `verbatim: True` cho toàn bộ 8 profiles trong `PROFILE_SPECS`; khóa đầy đủ 15 built-in tools của Grok CLI (bao gồm `"write"`, `"todo_write"`, `"monitor"`, `"search_tool"`, `"use_tool"`, `"workflow"`, `"enter_plan_mode"`, `"exit_plan_mode"`, `"ask_user_question"`, `"send_feedback"`, `"web_fetch"`).
+3. **Multi-Turn Resume Telemetry & Degraded-Reasoning Gate (`_peer_telemetry.py` & `peer.py`)**:
+   - Trong `_build_telemetry_from_usage_json()`, ưu tiên hợp nhất `turns[-1]` khi `len(turns) > 1` để lấy đúng token/cost của lượt `--resume`.
+   - Khi `expected_reasoning_effort in ("high", "xhigh")` nhưng `reasoning_tokens <= 0`, bật `degraded_reasoning = True` trên `PeerVerdictTelemetry` và tự động chèn `PeerCondition(id="COND-DEGRADED-REASONING", blocking=True)` trong `_consolidate_peer_conditions()` / `synthesize_verdicts()` để hạ cấp `APPROVE` $\to$ `APPROVE_WITH_CONDITIONS`.
 

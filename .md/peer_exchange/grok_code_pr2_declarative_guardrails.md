@@ -10,7 +10,9 @@ effort: S
 summary: "PR-2 đã vào 3 tệp mục tiêu. compile_guardrails từ chối registry hỏng. guardrails: [] không copy. Khóa vắng dùng fallback 7 mục. Cleanliness cộng basename scripts/*.py từ catalog. Test TDD 6/6 PASS, 81 test liên quan PASS, catalog --check vẫn in-sync."
 tests:
   - command: python -m pytest scripts/tests/test_guardrail_cleanliness_allowlist.py -q
-   PR-2 đã vào ba tệp mục tiêu. `scripts/tests/test_guardrail_cleanliness_allowlist.py` đạt **6/6 PASS**. Phán quyết trong `.md/peer_exchange/grok_code_pr2_declarative_guardrails.md` là `IMPLEMENTATION_READY`.
+---
+
+PR-2 đã vào ba tệp mục tiêu. `scripts/tests/test_guardrail_cleanliness_allowlist.py` đạt **6/6 PASS**. Phán quyết trong `.md/peer_exchange/grok_code_pr2_declarative_guardrails.md` là `IMPLEMENTATION_READY`.
 
 - `compile_guardrails` nâng `CatalogCompileError` khi registry thiếu trường, trùng tên, lệch dest, có path traversal, hoặc src không phải file. `main()` in lỗi ra stderr và trả 1, trước khi ghi `catalog.yaml`.
 - `guardrails: []` không copy gì. Khóa vắng mặt thì `TestGuardrailCopier` dùng `TIER0_GUARDRAIL_FALLBACK` (7 mục). Catalog khai báo src mất thì action là `MISSING_SRC`. `git_index: true` chạy `git update-index --chmod=+x`, và dest dưới `.githooks/` kích hoạt hook.

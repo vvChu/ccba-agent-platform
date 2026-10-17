@@ -1104,6 +1104,7 @@ def test_verdict_synonym_normalization():
 def test_3stage_protocol_profiles_and_session_resume(tmp_path):
     """Verify deep_spec_audit, signoff_diff profiles, session resume/fork, and JSON stdout unwrap."""
     import json
+
     from ccba_harness.peer import (
         PROFILE_SPECS,
         _unwrap_grok_json_stdout,
@@ -1185,3 +1186,72 @@ def test_3stage_protocol_profiles_and_session_resume(tmp_path):
     assert sid2 == "01a149dc-deae-7fa2-a32b-8f8584043687"
     assert is_aborted2 is True
 
+
+def test_classify_file_role_gate_exclusion_and_verdict_aliases(tmp_path):
+    """Verify .gate.md is classified as AUXILIARY and new verdict/request_type aliases parse cleanly."""
+    from ccba_harness.peer import classify_file_role
+
+    assert classify_file_role(tmp_path / "grok_implement_issue458.gate.md") == "AUXILIARY"
+    assert classify_file_role(tmp_path / "grok_implement_issue458.md") == "GROK_IMPLEMENTATION"
+
+    vb_ready = PeerVerdictBlock(request_id="r-ready", verdict="IMPLEMENTATION_READY")  # type: ignore[arg-type]
+    assert vb_ready.verdict == "APPROVE"
+    vb_plan = PeerVerdictBlock(request_id="r-plan", verdict="PLAN_SUBMITTED")  # type: ignore[arg-type]
+    assert vb_plan.verdict == "APPROVE_PLAN"
+
+    env = PeerPromptEnvelope(
+        request_id="r-plan-req",
+        from_agent="grok",
+        to_agent="antigravity",
+        request_type="plan",
+        subject="Test plan type",
+        timestamp="2026-10-17T00:00:00Z",
+        output_path="out.md",
+    )
+    assert env.request_type == "plan"
+
+
+def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
+    """Verify inspect_session_liveness on events.jsonl and _recover_verdict_from_chat_history."""
+    import json
+
+    from ccba_harness._peer_watchdog import (
+        _recover_verdict_from_chat_history,
+        inspect_session_liveness,
+    )
+    from ccba_harness.peer import NO_TOOLS_DISALLOW_LIST, PROFILE_SPECS
+
+    for prof_name, spec in PROFILE_SPECS.items():
+        assert spec.get("disable_web_search") is True, f"{prof_name} missing disable_web_search"
+        assert spec.get("verbatim") is True, f"{prof_name} missing verbatim"
+
+    for tool_name in ("write", "todo_write", "monitor", "search_tool", "use_tool", "web_fetch"):
+        assert tool_name in NO_TOOLS_DISALLOW_LIST
+        assert tool_name in PROFILE_SPECS["patch_fast"]["disallowed_tools"]
+
+    sid = "11111111-2222-3333-4444-555555555555"
+    sess_dir = tmp_path / "proj" / sid
+    sess_dir.mkdir(parents=True)
+    events_file = sess_dir / "events.jsonl"
+    events_file.write_text(
+        json.dumps(
+            {"ts": "2026-10-17T00:00:00Z", "type": "phase_changed", "phase": "streaming_text"}
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    state, age = inspect_session_liveness(sid, session_root=tmp_path)
+    assert state == "phase_changed:streaming_text"
+    assert age is not None and age >= 0.0
+
+    chat_file = sess_dir / "chat_history.jsonl"
+    valid_md = "---\nrequest_id: req-rec-01\nverdict: APPROVE\nrisk_score: 2\nsummary: Rescued\n---\n# Body\n"
+    chat_file.write_text(
+        json.dumps({"type": "assistant", "content": valid_md}) + "\n",
+        encoding="utf-8",
+    )
+    recovered = _recover_verdict_from_chat_history(
+        sid, parse_verdict_from_md, session_root=tmp_path
+    )
+    assert "verdict: APPROVE" in recovered
+    assert parse_verdict_from_md(recovered) is not None
