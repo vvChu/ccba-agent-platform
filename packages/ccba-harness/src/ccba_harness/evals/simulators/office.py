@@ -10,6 +10,65 @@ from __future__ import annotations
 from ..models import EvalItem
 from .base import BaseDomainSimulator, SimulationContext
 
+_OFFICE_SKILLS: frozenset[str] = frozenset(
+    {
+        "ccba-copywriting",
+        "ccba-markdown-document-processing",
+        "ccba-pptx",
+        "ccba-seminar-builder",
+        "ccba-xu-ly-van-phong",
+        "copywriting",
+        "office",
+    }
+)
+
+_DIAGRAM_EXCLUSIONS: tuple[str, ...] = (
+    "mermaid",
+    "statediagram",
+    "flowchart",
+    "sequencediagram",
+    "classdiagram",
+    "erdiagram",
+    "excalidraw",
+)
+
+_OFFICE_PROMPT_KEYWORDS: tuple[str, ...] = (
+    "nghị định 30",
+    "nđ 30",
+    "thể thức",
+    "công văn",
+    "quốc hiệu",
+    "tiêu ngữ",
+    "nơi nhận",
+    "trích yếu",
+    "thẩm quyền ký",
+    "times new roman",
+    "typography",
+    "canh lề",
+    "căn lề",
+    "bảng biểu",
+    "markdown table",
+    "gfm",
+    "ngắt dòng",
+    "pptx",
+    "slide",
+    "thuyết trình",
+    "visual bullet",
+    "callout",
+    "seminar",
+    "agenda",
+    "curriculum",
+    "đề cương",
+    "bài giảng",
+    "handout",
+    "tài liệu phát tay",
+    "copywriting",
+    "truyền thông",
+    "bài viết",
+    "hook",
+    "call-to-action",
+)
+
 
 class OfficeDomainSimulator(BaseDomainSimulator):
     """Simulator for office document drafting, typography, presentation, and copywriting."""
@@ -18,75 +77,16 @@ class OfficeDomainSimulator(BaseDomainSimulator):
 
     def can_handle(self, item: EvalItem, ctx: SimulationContext) -> bool:
         prompt_l = str(item.input_prompt).lower()
-        if ctx.skill_name in (
-            "ccba-copywriting",
-            "ccba-markdown-document-processing",
-            "ccba-pptx",
-            "ccba-seminar-builder",
-            "ccba-xu-ly-van-phong",
-            "copywriting",
-            "office",
-        ):
+        if ctx.skill_name in _OFFICE_SKILLS:
             return True
-        if any(
-            d in prompt_l
-            for d in [
-                "mermaid",
-                "statediagram",
-                "flowchart",
-                "sequencediagram",
-                "classdiagram",
-                "erdiagram",
-                "excalidraw",
-            ]
-        ):
+        if any(d in prompt_l for d in _DIAGRAM_EXCLUSIONS):
             return False
+        return any(k in prompt_l for k in _OFFICE_PROMPT_KEYWORDS)
+
+    @staticmethod
+    def _has_office_grounding(content: str, skill_name: str) -> bool:
+        content_l = content.lower()
         return any(
-            k in prompt_l
-            for k in [
-                "nghị định 30",
-                "nđ 30",
-                "thể thức",
-                "công văn",
-                "quốc hiệu",
-                "tiêu ngữ",
-                "nơi nhận",
-                "trích yếu",
-                "thẩm quyền ký",
-                "times new roman",
-                "typography",
-                "canh lề",
-                "căn lề",
-                "bảng biểu",
-                "markdown table",
-                "gfm",
-                "ngắt dòng",
-                "pptx",
-                "slide",
-                "thuyết trình",
-                "visual bullet",
-                "callout",
-                "seminar",
-                "agenda",
-                "curriculum",
-                "đề cương",
-                "bài giảng",
-                "handout",
-                "tài liệu phát tay",
-                "copywriting",
-                "truyền thông",
-                "bài viết",
-                "hook",
-                "call-to-action",
-            ]
-        )
-
-    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
-        prompt_l = str(item.input_prompt).lower()
-        content = ctx.content
-        skill_name = ctx.skill_name
-
-        has_office_grounding = any(
             k in skill_name
             for k in (
                 "copywriting",
@@ -97,8 +97,8 @@ class OfficeDomainSimulator(BaseDomainSimulator):
                 "office",
             )
         ) or any(
-            k in content.lower()
-            for k in [
+            k in content_l
+            for k in (
                 "nghị định 30",
                 "thể thức",
                 "typography",
@@ -109,12 +109,11 @@ class OfficeDomainSimulator(BaseDomainSimulator):
                 "seminar",
                 "copywriting",
                 "markdown",
-            ]
+            )
         )
 
-        if not has_office_grounding:
-            return ctx.wrap_response("Soạn thảo văn bản thông thường...")
-
+    @staticmethod
+    def _simulate_doc_and_table(prompt_l: str, ctx: SimulationContext) -> str | None:
         if (
             "công văn" in prompt_l
             or "nghị định 30" in prompt_l
@@ -163,7 +162,10 @@ class OfficeDomainSimulator(BaseDomainSimulator):
                 "- Cấu trúc heading phân cấp rõ ràng (`#`, `##`, `###`), bảo đảm tính tương thích khi render tài liệu kỹ thuật.\n\n"
                 "Chi tiết bảng dữ liệu và tài liệu tham chiếu xem tại [references/](references/)."
             )
+        return None
 
+    @staticmethod
+    def _simulate_slide_and_seminar(prompt_l: str, ctx: SimulationContext) -> str | None:
         if "slide" in prompt_l or "pptx" in prompt_l or "thuyết trình" in prompt_l:
             return ctx.wrap_response(
                 "THIẾT KẾ DÀN Ý BÀI THUYẾT TRÌNH KỸ THUẬT PPTX (PRESENTATION OUTLINE):\n\n"
@@ -208,6 +210,20 @@ class OfficeDomainSimulator(BaseDomainSimulator):
                 "- [x] Bộ dữ liệu IFC mẫu và checklist thẩm tra nghiệm thu.\n\n"
                 "Chi tiết tài liệu đào tạo xem tại [references/](references/)."
             )
+        return None
+
+    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
+        prompt_l = str(item.input_prompt).lower()
+        if not self._has_office_grounding(ctx.content, ctx.skill_name):
+            return ctx.wrap_response("Soạn thảo văn bản thông thường...")
+
+        res = self._simulate_doc_and_table(prompt_l, ctx)
+        if res is not None:
+            return res
+
+        res = self._simulate_slide_and_seminar(prompt_l, ctx)
+        if res is not None:
+            return res
 
         if (
             "copywriting" in prompt_l

@@ -54,26 +54,17 @@ class LegalToolingDomainSimulator(BaseDomainSimulator):
             ]
         )
 
-    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
-        prompt_l = str(item.input_prompt).lower()
-        content = ctx.content
-        skill_name = ctx.skill_name
-
-        has_tooling_grounding = (
+    @staticmethod
+    def _has_tooling_grounding(content: str, skill_name: str) -> bool:
+        content_l = content.lower()
+        return (
             any(
                 k in skill_name
-                for k in (
-                    "crawler",
-                    "ingest",
-                    "tracker",
-                    "checklist",
-                    "hsht",
-                    "legal_tooling",
-                )
+                for k in ("crawler", "ingest", "tracker", "checklist", "hsht", "legal_tooling")
             )
             or any(
-                k in content.lower()
-                for k in [
+                k in content_l
+                for k in (
                     "tvpl",
                     "crawler",
                     "ingest",
@@ -82,14 +73,13 @@ class LegalToolingDomainSimulator(BaseDomainSimulator):
                     "vbhn",
                     "hsht",
                     "checklist",
-                ]
+                )
             )
-            or "ccba" in content.lower()
+            or "ccba" in content_l
         )
 
-        if not has_tooling_grounding:
-            return ctx.wrap_response("Thực thi công cụ kỹ thuật pháp lý cơ bản...")
-
+    @staticmethod
+    def _simulate_crawler_and_okf(prompt_l: str, ctx: SimulationContext) -> str | None:
         if (
             "crawler" in prompt_l
             or "thư viện pháp luật" in prompt_l
@@ -136,7 +126,10 @@ class LegalToolingDomainSimulator(BaseDomainSimulator):
                 "- Tem băm mật mã SHA-256 đối soát: `4a3f12b69c7e8d0a5f1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f` bảo chứng tính toàn vẹn tuyệt đối theo Hiến pháp ADR-0059.\n\n"
                 "Chi tiết cấu trúc tri thức pháp lý xem tại [references/](references/)."
             )
+        return None
 
+    @staticmethod
+    def _simulate_vbhn_and_hsht(prompt_l: str, ctx: SimulationContext) -> str | None:
         if "vbhn" in prompt_l or "diff" in prompt_l or "hợp nhất" in prompt_l:
             return ctx.wrap_response(
                 "KIẾN TRÚC & THUẬT TOÁN VẬN HÀNH VBHN DIFF ENGINE:\n\n"
@@ -176,6 +169,20 @@ class LegalToolingDomainSimulator(BaseDomainSimulator):
                 "- [x] Mã băm SHA-256 kiểm toán toàn bộ kho lưu trữ hồ sơ: `7f8e9d0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e`.\n\n"
                 "Chi tiết danh mục hồ sơ xem tại [references/](references/)."
             )
+        return None
+
+    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
+        prompt_l = str(item.input_prompt).lower()
+        if not self._has_tooling_grounding(ctx.content, ctx.skill_name):
+            return ctx.wrap_response("Thực thi công cụ kỹ thuật pháp lý cơ bản...")
+
+        res = self._simulate_crawler_and_okf(prompt_l, ctx)
+        if res is not None:
+            return res
+
+        res = self._simulate_vbhn_and_hsht(prompt_l, ctx)
+        if res is not None:
+            return res
 
         if (
             "verbatim" in prompt_l

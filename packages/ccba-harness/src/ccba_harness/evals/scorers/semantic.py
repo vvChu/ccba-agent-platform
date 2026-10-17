@@ -234,6 +234,28 @@ Evaluation Instructions:
 
 Also output either 'correct' (if score >= 3) or 'incorrect' (if score < 3) inside <correctness></correctness> tags."""
 
+    def _parse_judge_reply(self, reply_str: str) -> ScoreResult:
+        """Parse Likert score, correctness tag, and thinking block from LLM judge reply."""
+        thinking_match = re.search(r"<thinking>(.*?)</thinking>", reply_str, re.DOTALL)
+        reasoning = thinking_match.group(1).strip() if thinking_match else reply_str
+
+        score_match = re.search(r"<score>([1-5])</score>", reply_str)
+        if score_match:
+            likert = int(score_match.group(1))
+        else:
+            corr_match = re.search(r"<correctness>(.*?)</correctness>", reply_str, re.IGNORECASE)
+            likert = 4 if (corr_match and "correct" in corr_match.group(1).lower()) else 1
+
+        norm_score = max(0.0, min(1.0, (likert - 1) / 4.0))
+        return ScoreResult(
+            scorer_name=self.name,
+            score=norm_score,
+            raw_output=likert,
+            reasoning=reasoning,
+            is_critical_fail=self.is_critical and (likert == 1),
+            metadata={"likert_scale": likert},
+        )
+
     async def score(self, output: Any, item: EvalItem) -> ScoreResult:
         prompt = self._build_judge_prompt(output, item)
         cache_key = self._compute_cache_key(prompt)
@@ -257,9 +279,7 @@ Also output either 'correct' (if score >= 3) or 'incorrect' (if score < 3) insid
                 )
 
         try:
-            # Execute chat completion
             if hasattr(client, "chat") and callable(client.chat):
-                # Check if async or sync
                 import asyncio
 
                 if asyncio.iscoroutinefunction(client.chat):
@@ -269,41 +289,9 @@ Also output either 'correct' (if score >= 3) or 'incorrect' (if score < 3) insid
             else:
                 raw_reply = str(client(prompt))
 
-            reply_str = str(raw_reply)
-
-            # Extract thinking
-            thinking_match = re.search(r"<thinking>(.*?)</thinking>", reply_str, re.DOTALL)
-            reasoning = thinking_match.group(1).strip() if thinking_match else reply_str
-
-            # Extract score
-            score_match = re.search(r"<score>([1-5])</score>", reply_str)
-            if score_match:
-                likert = int(score_match.group(1))
-            else:
-                # Fallback to correctness
-                corr_match = re.search(
-                    r"<correctness>(.*?)</correctness>", reply_str, re.IGNORECASE
-                )
-                if corr_match and "correct" in corr_match.group(1).lower():
-                    likert = 4
-                else:
-                    likert = 1
-
-            # Normalize Likert 1-5 -> 0.0 - 1.0
-            norm_score = max(0.0, min(1.0, (likert - 1) / 4.0))
-            is_crit_fail = self.is_critical and (likert == 1)
-
-            result = ScoreResult(
-                scorer_name=self.name,
-                score=norm_score,
-                raw_output=likert,
-                reasoning=reasoning,
-                is_critical_fail=is_crit_fail,
-                metadata={"likert_scale": likert},
-            )
+            result = self._parse_judge_reply(str(raw_reply))
             self._store_cache(cache_key, prompt, result)
             return result
-
         except Exception as e:
             return ScoreResult(
                 scorer_name=self.name,

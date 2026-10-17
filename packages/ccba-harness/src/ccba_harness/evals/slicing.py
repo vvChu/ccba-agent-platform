@@ -184,6 +184,40 @@ class AdaptiveDataSlicer:
             return item.golden_answer.strip()[:24]
         return "general"
 
+    def _slice_tier_b(self, items: list[EvalItem], split_ratio: float, seed: int) -> SlicedDataset:
+        """Partition Tier B (12 <= N < 30) dataset using deterministic stratified sampling."""
+        rng = random.Random(seed)
+        strata: dict[str, list[EvalItem]] = {}
+        for it in items:
+            strata.setdefault(self._extract_stratum(it), []).append(it)
+
+        tuning_items: list[EvalItem] = []
+        holdout_items: list[EvalItem] = []
+        total_holdout_target = max(1, round(len(items) * (1.0 - split_ratio)))
+
+        for k in sorted(strata.keys()):
+            group = sorted(strata[k], key=lambda x: str(x.id))
+            rng.shuffle(group)
+            g_len = len(group)
+            g_holdout = max(1, round(g_len * (1.0 - split_ratio))) if g_len > 1 else 0
+            holdout_items.extend(group[:g_holdout])
+            tuning_items.extend(group[g_holdout:])
+
+        while len(holdout_items) > total_holdout_target and len(holdout_items) > 1:
+            tuning_items.append(holdout_items.pop())
+        while len(holdout_items) < total_holdout_target and len(tuning_items) > 1:
+            holdout_items.append(tuning_items.pop())
+
+        tuning_items.sort(key=lambda x: str(x.id))
+        holdout_items.sort(key=lambda x: str(x.id))
+        return SlicedDataset(
+            tier=SlicingTier.TIER_B,
+            tuning_items=tuning_items,
+            holdout_items=holdout_items,
+            is_perturbed=False,
+            seed=seed,
+        )
+
     def slice(
         self,
         items: list[EvalItem],
@@ -194,84 +228,23 @@ class AdaptiveDataSlicer:
         """Partitions items into tuning and holdout sets according to sample size N."""
         n = len(items)
         tier = classify_slicing_tier(n)
-
-        # ---------------------------------------------------------------------
-        # Tier A (N < 12): 100% Evaluation + Dynamic Parameter Perturbation
-        # ---------------------------------------------------------------------
         if tier == SlicingTier.TIER_A:
-            tuning_items = list(items)
-            holdout_items: list[EvalItem] = []
             return SlicedDataset(
                 tier=tier,
-                tuning_items=tuning_items,
-                holdout_items=holdout_items,
+                tuning_items=list(items),
+                holdout_items=[],
                 is_perturbed=enable_perturbation,
                 seed=seed,
             )
-
-        # ---------------------------------------------------------------------
-        # Tier B (12 <= N < 30): Stratified 70% Tuning / 30% Holdout
-        # ---------------------------------------------------------------------
         if tier == SlicingTier.TIER_B:
-            rng = random.Random(seed)
-            # Group items by stratum
-            strata: dict[str, list[EvalItem]] = {}
-            for it in items:
-                k = self._extract_stratum(it)
-                strata.setdefault(k, []).append(it)
+            return self._slice_tier_b(items, split_ratio, seed)
 
-            tuning_items = []
-            holdout_items = []
-
-            # Compute total target holdout items
-            total_holdout_target = max(1, round(n * (1.0 - split_ratio)))
-
-            # Distribute stratified items
-            all_strata_keys = sorted(strata.keys())
-            for k in all_strata_keys:
-                group = list(strata[k])
-                # Deterministic shuffle within stratum
-                group.sort(key=lambda x: str(x.id))
-                rng.shuffle(group)
-
-                # Desired holdout for this group
-                g_len = len(group)
-                g_holdout = max(1, round(g_len * (1.0 - split_ratio))) if g_len > 1 else 0
-
-                holdout_items.extend(group[:g_holdout])
-                tuning_items.extend(group[g_holdout:])
-
-            # Adjust if rounding caused slight deviation from total_holdout_target
-            # (Ensuring both sets remain non-empty and well-balanced)
-            while len(holdout_items) > total_holdout_target and len(holdout_items) > 1:
-                tuning_items.append(holdout_items.pop())
-            while len(holdout_items) < total_holdout_target and len(tuning_items) > 1:
-                holdout_items.append(tuning_items.pop())
-
-            # Sort deterministically by id
-            tuning_items.sort(key=lambda x: str(x.id))
-            holdout_items.sort(key=lambda x: str(x.id))
-
-            return SlicedDataset(
-                tier=tier,
-                tuning_items=tuning_items,
-                holdout_items=holdout_items,
-                is_perturbed=False,
-                seed=seed,
-            )
-
-        # ---------------------------------------------------------------------
-        # Tier C (N >= 30): Blinded Multi-Seed Split
-        # ---------------------------------------------------------------------
         rng = random.Random(seed)
-        shuffled = list(items)
-        shuffled.sort(key=lambda x: str(x.id))
+        shuffled = sorted(items, key=lambda x: str(x.id))
         rng.shuffle(shuffled)
-
         holdout_count = max(1, round(n * (1.0 - split_ratio)))
         holdout_items = sorted(shuffled[:holdout_count], key=lambda x: str(x.id))
         tuning_items = sorted(shuffled[holdout_count:], key=lambda x: str(x.id))
-
         return SlicedDataset(
             tier=tier,
             tuning_items=tuning_items,
