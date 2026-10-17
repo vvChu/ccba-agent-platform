@@ -38,6 +38,8 @@ PeerExecutionProfile = Literal[
     "code_review",
     "arch_audit",
     "audit_direct",
+    "deep_spec_audit",
+    "signoff_diff",
 ]
 ModelTier = Literal["local", "gateway", "cloud"]
 RequestType = Literal[
@@ -101,11 +103,15 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "max_turns": 12,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
+            "Agent",
             "run_terminal_command",
             "search_replace",
             "write_file",
             "spawn_subagent",
         ],
+        "deny": ["Bash", "Write", "Edit", "WebFetch"],
+        "disable_web_search": True,
+        "verbatim": True,
         "reasoning_effort": "xhigh",
         "timeout": 900.0,
     },
@@ -149,11 +155,15 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "max_turns": 10,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
+            "Agent",
             "run_terminal_command",
             "search_replace",
             "write_file",
             "spawn_subagent",
         ],
+        "deny": ["Bash", "Write", "Edit", "WebFetch"],
+        "disable_web_search": True,
+        "verbatim": True,
         "reasoning_effort": "high",
         "system_prompt": (
             "You are an expert peer code reviewer. You MUST start your response immediately with "
@@ -168,11 +178,15 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "max_turns": 8,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": [
+            "Agent",
             "run_terminal_command",
             "search_replace",
             "write_file",
             "spawn_subagent",
         ],
+        "deny": ["Bash", "Write", "Edit", "WebFetch"],
+        "disable_web_search": True,
+        "verbatim": True,
         "reasoning_effort": "xhigh",
         "system_prompt": (
             "You are an expert software and system architecture auditor. You MUST start your response "
@@ -204,6 +218,57 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
             "Respond directly without invoking external tools."
         ),
         "timeout": 120.0,
+    },
+    "deep_spec_audit": {
+        "model": "grok-4.7",  # ccba:allow-raw-model
+        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
+        "max_turns": 25,
+        "tools": ["read_file", "grep", "list_dir"],
+        "disallowed_tools": [
+            "Agent",
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ],
+        "deny": ["Bash", "Write", "Edit", "WebFetch"],
+        "disable_web_search": True,
+        "verbatim": True,
+        "output_format": "json",
+        "reasoning_effort": "xhigh",
+        "system_prompt": (
+            "You are a Stage 1 Pre-Code Deep Architectural & Line-Level Specification Auditor. "
+            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
+            "request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT), "
+            "risk_score, conditions, and summary, followed by your full line-level audit."
+        ),
+        "timeout": 900.0,
+    },
+    "signoff_diff": {
+        "model": "grok-4.7",  # ccba:allow-raw-model
+        "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
+        "max_turns": 15,
+        "tools": ["read_file", "grep", "list_dir"],
+        "disallowed_tools": [
+            "Agent",
+            "run_terminal_command",
+            "search_replace",
+            "write_file",
+            "spawn_subagent",
+        ],
+        "deny": ["Bash", "Write", "Edit", "WebFetch"],
+        "disable_web_search": True,
+        "verbatim": True,
+        "fork_session": True,
+        "output_format": "json",
+        "reasoning_effort": "high",
+        "system_prompt": (
+            "You are a Stage 3 Post-Code Diff Sign-off Auditor resuming a prior Stage 1 session. "
+            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
+            "request_id, verdict (FINAL_ACCEPT | APPROVE | APPROVE_WITH_CONDITIONS | REJECT), "
+            "risk_score, conditions, and summary, followed by your delta verification table."
+        ),
+        "timeout": 600.0,
     },
 }
 
@@ -267,6 +332,8 @@ class PeerPromptEnvelope(BaseModel):
     profile: PeerExecutionProfile | None = None
     max_turns: int | None = None
     target_files: list[str] = Field(default_factory=list)
+    resume_session_id: str | None = None
+    fork_session: bool | None = None
 
 
 class PeerCondition(BaseModel):
@@ -332,6 +399,16 @@ class PeerVerdictBlock(BaseModel):
     effort: EffortType | None = None
     summary: str = ""
     telemetry: PeerVerdictTelemetry | None = None
+
+    @field_validator("risk_score", mode="before")
+    @classmethod
+    def _normalize_risk_score(cls, v: Any) -> Any:
+        if isinstance(v, float):
+            if 0.0 <= v < 1.0:
+                return max(1, min(5, int(round(v * 5)) or 1))
+            if 1.0 <= v <= 5.0:
+                return int(round(v))
+        return v
 
     @field_validator("verdict", mode="before")
     @classmethod
@@ -1483,6 +1560,10 @@ def build_grok_cmd(
     session_id: str | None = None,
     system_prompt: str | None = None,
     deny: list[str] | str | None = None,
+    resume_session_id: str | None = None,
+    fork_session: bool = False,
+    verbatim: bool = False,
+    disable_web_search: bool = False,
 ) -> list[str]:
     """Constructs canonical grok CLI command list for headless execution (ADR-0063 / ADR-0064).
 
@@ -1498,13 +1579,27 @@ def build_grok_cmd(
         session_id: Optional session UUID string.
         system_prompt: Optional system prompt string to override agent default.
         deny: Optional tool permission deny rule or list of rules.
+        resume_session_id: Optional prior session UUID to resume for KV-cache reuse.
+        fork_session: When resuming, fork into a new session ID instead of mutating the original.
+        verbatim: Whether to pass --verbatim to prevent auto-truncation of prompts >96KB.
+        disable_web_search: Whether to pass --disable-web-search for offline/repo-only audits.
 
     Returns:
         Command arguments list.
     """
     cmd = ["grok", "-m", model, "--always-approve", "--no-subagents"]
-    if session_id:
+    if resume_session_id:
+        cmd.extend(["--resume", resume_session_id])
+        if fork_session:
+            cmd.append("--fork-session")
+            if session_id:
+                cmd.extend(["--session-id", session_id])
+    elif session_id:
         cmd.extend(["--session-id", session_id])
+    if verbatim:
+        cmd.append("--verbatim")
+    if disable_web_search:
+        cmd.append("--disable-web-search")
     if system_prompt:
         cmd.extend(["--system-prompt-override", system_prompt])
     if deny:
@@ -1527,6 +1622,31 @@ def build_grok_cmd(
         cmd.append("--worktree")
     cmd.extend(["--prompt-file", str(prompt_path)])
     return cmd
+
+
+def _unwrap_grok_json_stdout(stdout_text: str) -> tuple[str, str | None, bool]:
+    """Unwraps `--output-format json` stdout from Grok CLI and enforces `stopReason == 'end_turn'`.
+
+    Args:
+        stdout_text: Raw stdout captured from Grok CLI.
+
+    Returns:
+        Tuple of (extracted_markdown_text, session_id_from_json, is_aborted_json).
+    """
+    stripped = stdout_text.strip()
+    if not stripped.startswith("{"):
+        return stdout_text, None, False
+    try:
+        payload = json.loads(stripped)
+    except Exception:
+        return stdout_text, None, False
+    if not isinstance(payload, dict) or ("text" not in payload and "stopReason" not in payload):
+        return stdout_text, None, False
+    stop_reason = payload.get("stopReason")
+    sid = str(payload["sessionId"]) if isinstance(payload.get("sessionId"), str) else None
+    if stop_reason is not None and stop_reason != "end_turn":
+        return "", sid, True
+    return str(payload.get("text") or ""), sid, False
 
 
 def _terminate_proc_tree(proc: subprocess.Popen[Any]) -> None:
@@ -1630,6 +1750,12 @@ def _run_single_grok_attempt(
                 _terminate_proc_tree(proc)
                 return False
 
+        stdout_text, json_session_id, is_aborted_json = _unwrap_grok_json_stdout(stdout_text)
+        if json_session_id and not session_id:
+            session_id = json_session_id
+        if is_aborted_json:
+            return False
+
         if (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None) and session_id:
             try:
                 session_root = Path.home() / ".grok" / "sessions"
@@ -1707,18 +1833,22 @@ def invoke_grok_cli(
     timeout: float | None = None,
     worktree: bool = False,
     no_tools: bool = False,
+    resume_session_id: str | None = None,
+    fork_session: bool | None = None,
 ) -> bool:
     """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064).
 
     Args:
         prompt_path: Path to prompt file containing PeerPromptEnvelope.
         model: Optional explicit model override.
-        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'audit_direct').
+        profile: Execution profile ('audit_plan', 'agentic_code', 'patch_fast', 'audit_direct', 'deep_spec_audit', 'signoff_diff').
         tier: Model tier ('local', 'gateway', 'cloud').
         max_turns: Optional turns override.
         timeout: Subprocess execution timeout in seconds.
         worktree: Whether to run inside a detached git worktree.
         no_tools: Whether to strictly disallow all tools and force direct reasoning.
+        resume_session_id: Optional prior session UUID to resume for KV-cache reuse.
+        fork_session: Optional override for --fork-session when resuming.
 
     Returns:
         True if response was successfully generated and verified, False otherwise.
@@ -1774,6 +1904,19 @@ def invoke_grok_cli(
     reasoning_effort = spec.get("reasoning_effort")
     system_prompt = spec.get("system_prompt")
     spec_timeout = timeout if timeout is not None else spec.get("timeout", 180.0)
+    effective_resume = resume_session_id or (envelope.resume_session_id if envelope else None)
+    effective_fork = (
+        fork_session
+        if fork_session is not None
+        else (
+            envelope.fork_session
+            if envelope and envelope.fork_session is not None
+            else bool(spec.get("fork_session", bool(effective_resume)))
+        )
+    )
+    effective_verbatim = bool(spec.get("verbatim", False))
+    effective_disable_web = bool(spec.get("disable_web_search", False))
+    effective_output_format = str(spec.get("output_format") or "plain")
 
     target_models: list[str] = []
     if model:
@@ -1798,16 +1941,21 @@ def invoke_grok_cli(
             disallowed_tools=disallowed_tools,
             deny=deny,
             reasoning_effort=reasoning_effort,
+            output_format=effective_output_format,
             worktree=worktree,
             session_id=candidate_session_id,
             system_prompt=system_prompt,
+            resume_session_id=effective_resume,
+            fork_session=effective_fork,
+            verbatim=effective_verbatim,
+            disable_web_search=effective_disable_web,
         )
         if _run_single_grok_attempt(
             cmd,
             prompt_path,
             output_file,
             spec_timeout,
-            session_id=candidate_session_id,
+            session_id=candidate_session_id if (not effective_resume or effective_fork) else effective_resume,
             candidate_model=candidate,
         ):
             return True
