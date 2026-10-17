@@ -822,3 +822,23 @@ Chiến dịch chuẩn hóa toàn bộ 76 skills của CCBA Agent Platform qua 1
 3. **Reasoning Turn & Timeout Budgeting**: Khi peer agent sử dụng xhigh reasoning để đọc sâu hàng chục tệp trên đĩa, ngân sách thời gian phải $\ge 900$s và max turns $\ge 30-40$.
 4. **Local Sub-Second Verification**: Sử dụng `--preset skill --target <path>` kiểm tra nhanh giúp phát hiện sai lệch cú pháp ngay lập tức trước khi chạy toàn sàn CI.
 
+---
+
+## 37. Closed-Loop Graduation Supersession, Spoke Markdown Link Sanitizer & Empirical Peer Claim Verification (PR #521, PR #527, PR #528)
+
+### Context & Implementation Summary
+Phiên phát triển và hoàn thiện cơ chế đồng bộ Spoke khép kín cùng cải tạo ngân sách AST ($\le 50$ LOC) cho phân hệ `scripts/spoke/sync/`:
+- **PR #521 (`25f15eda`, Issue #520)**: Xây dựng module `scripts/spoke/sync/graduation.py` (`supersede_graduated_spoke_docs`, `audit_spoke_markdown_links`) và nâng cấp `sync_layer2_rules` để tự động thu hồi các bản nháp tri thức tại Spoke đã được chuẩn hóa thành Hub ADR (thay bằng stub định hướng `GRADUATED_STUB_MARKER`), bảo tồn lịch sử ghi chú cục bộ bằng nhánh SHA-8 (`COND-02`), đồng bộ tài liệu tham chiếu liên kết tầng 2 và tự động khử liên kết `file://` không khả chuyển hoặc tiền tố dư thừa `.md/` trong `.md/INDEX.md`.
+- **PR #527 (`652eb997`)**: Phân rã 6 hàm/phương thức vượt trần 50 dòng trong `scripts/spoke/sync/coordinator.py` (`assess_catalog_freshness`: $85 \to 29$, `_sync_single_item`: $117 \to 38$, `_sync_full_bundle`: $435 \to 48$, `sync_spoke_bundle`: $234 \to 41$, `verify_spoke`: $111 \to 37$, `sync_all_spokes`: $93 \to 43$ LOC) sau 2 vòng thảo luận đối kháng với Grok (`req-discuss-refactor-coordinator-001` & `002`).
+- **PR #528 (`6f198176`)**: Phân rã toàn bộ 4 phương thức vượt trần 50 dòng trong `scripts/spoke/sync/sdk_inspector.py` (`copy_if_needed`: $150 \to 46$, `_ensure_git_hook_activated`: $98 \to 14$, `resolve_packages_to_check`: $94 \to 27$, `sync_or_advise`: $79 \to 28$ LOC) và khử trùng lặp `is_legal_related_spoke`, đồng thời khóa cứng ratchet test `test_coordinator_ast_function_length_compliance` cho cả 3 module (`coordinator.py`, `graduation.py`, `sdk_inspector.py`).
+
+### Key Architectural Invariants & Learned Patterns
+1. **Branched SHA-8 Archive Preservation on Divergent Spoke Drafts (`graduation.py`, COND-02)**:
+   - Khi thu hồi bản nháp tri thức tại `.md/knowledge/<name>.md` đã được chuẩn hóa thành Hub ADR, nếu tệp lưu trữ `.md/knowledge/archive/<name>.md` đã tồn tại nhưng bản nháp hiện hành lại có phát sinh ghi chú mới từ kỹ sư Spoke (khác nội dung sau khi chuẩn hóa CRLF/LF), hệ thống bắt buộc giữ nguyên bản lưu trữ gốc VÀ ghi thêm bản nhánh `<stem>.local-<sha8>.md` trước khi ghi đè stub `GRADUATED_STUB_MARKER`.
+2. **Spoke Markdown Link Portability & Redundant Prefix Sanitization (`audit_spoke_markdown_links`)**:
+   - Các tệp chỉ mục `.md/INDEX.md` tại Spoke thường bị nhiễm liên kết tuyệt đối `file:///...` hoặc tiền tố lặp `.md/knowledge/...` (dẫn tới đường dẫn ảo `.md/.md/knowledge/...`). Bộ kiểm toán `audit_spoke_markdown_links(spoke_root, apply_fixes=True)` tự động chuẩn hóa về đường dẫn tương đối khả chuyển trong pha `--sync-spoke` và kiểm tra nghiêm ngặt trong pha `--verify`.
+3. **Empirical Rebuttal of Un-Grounded Peer Reviewer Claims (`audit_direct` vs Verbatim Code)**:
+   - Khi sử dụng profile `audit_direct` (`max_turns=1`, không bật công cụ đọc đĩa), Peer Reviewer (Grok) có thể suy diễn sai các thuộc tính không tồn tại trong mã nguồn thực tế (ví dụ: giả định `SpokeSynchronizer` có `self.stats` và `self.logger`, đề xuất tạo dataclass `_BundleSyncState`, hoặc giả định `GateCheck` có thuộc tính `.findings` thay vì `.stdout_tail`).
+   - Agent bắt buộc thực hiện Kiểm toán Phản biện (Bước 1 `/ccba-session-retrospective` & Rule #8): đối chiếu từng điều kiện `COND-xx` với AST thực tế, gửi vòng phản biện thứ 2 (`rebuttal`) kèm trích xuất nguyên văn mã nguồn để xác lập đồng thuận thực chứng, tuyệt đối không mù quáng thực thi các yêu cầu làm vỡ `capsys` hoặc monkeypatch seams.
+4. **Module-Level Monkeypatch Seam & AST Function Length Ratchet (`coordinator.py`, `sdk_inspector.py`)**:
+   - Khi phân rã các hàm điều phối lớn để thỏa mãn trần KISS ($\le 50$ LOC), các điểm neo cấp module đang được test suite monkeypatch (`coordinator.assess_catalog_freshness`, `_get_synchronizer_cls()`) phải được giữ nguyên ở cấp module và được gọi trực tiếp từ helper method, kết hợp khóa cứng bằng ratchet test `check_ast_function_length(targets, max_lines=50)`.
