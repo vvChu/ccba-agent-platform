@@ -32,10 +32,8 @@ class AcademicDomainSimulator(BaseDomainSimulator):
             or "Swales" in prompt
         )
 
-    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
-        prompt = str(item.input_prompt)
-
-        # 1. CARS / Introduction
+    @staticmethod
+    def _simulate_imrad_section(prompt: str, ctx: SimulationContext) -> str | None:
         if "CARS" in prompt or "Introduction" in prompt:
             if ctx.has_cars_stems or ctx.has_academic_grounding:
                 return ctx.wrap_response(
@@ -46,7 +44,6 @@ class AcademicDomainSimulator(BaseDomainSimulator):
                 )
             return "Viết mở bài giới thiệu chung không theo mô hình CARS..."
 
-        # 2. Materials & Methods / passive voice
         if "Materials & Methods" in prompt or "passive voice" in prompt:
             if ctx.has_academic_grounding:
                 return ctx.wrap_response(
@@ -56,7 +53,6 @@ class AcademicDomainSimulator(BaseDomainSimulator):
                 )
             return "Chúng tôi đã lấy 507 file..."
 
-        # 3. Discussion / Zoom-out
         if "Discussion" in prompt or "Zoom-out" in prompt:
             if ctx.has_academic_grounding:
                 return ctx.wrap_response(
@@ -66,8 +62,14 @@ class AcademicDomainSimulator(BaseDomainSimulator):
                     "- Move 3 (Take-home Message): Autonomous prompt optimization establishes a new paradigm for resilient agent systems."
                 )
             return "Thảo luận: kết quả đạt được rất tốt..."
+        return None
 
-        # 4. Hiệu đính văn phong / nominalizations
+    def simulate(self, item: EvalItem, ctx: SimulationContext) -> str | None:
+        prompt = str(item.input_prompt)
+        imrad_res = self._simulate_imrad_section(prompt, ctx)
+        if imrad_res is not None:
+            return imrad_res
+
         if "Hiệu đính văn phong" in prompt or "nominalizations" in prompt:
             if ctx.has_academic_grounding:
                 return ctx.wrap_response(
@@ -77,7 +79,6 @@ class AcademicDomainSimulator(BaseDomainSimulator):
                 )
             return "Văn bản đã được chỉnh sửa cơ bản..."
 
-        # 5. APA / BibTeX / Swales
         if "APA" in prompt or "BibTeX" in prompt or "Swales" in prompt:
             if ctx.has_academic_bibtex:
                 return ctx.wrap_response(

@@ -293,17 +293,8 @@ def extract_failure_signals(
     return signals
 
 
-def render_failure_patch(
-    signal: FailureSignal,
-    index: LegalFlatIndex | None = None,
-) -> str:
-    """Renders a zero-token markdown patch card for a failure signal (ADR-0059).
-
-    Strictly obeys the Legal Verbatim Grounding Invariant: generates metadata
-    citation cards only, without hallucinating statutory text.
-    """
-    fp_tag = f"<!-- failure_signal: {signal.fingerprint} -->"
-
+def _render_citation_or_trap_patch(signal: FailureSignal, fp_tag: str) -> str | None:
+    """Render NO_CITATION, EXPIRED_UNACKNOWLEDGED, or WRONG_TARGET patch card."""
     if signal.code == "NO_CITATION":
         law = signal.fields.get("target_law") or "Văn bản quy phạm pháp luật"
         cb = signal.fields.get("cong_bao_number") or "N/A"
@@ -331,6 +322,29 @@ def render_failure_patch(
         )
         return header + body
 
+    if signal.code == "WRONG_TARGET":
+        tgt = signal.fields.get("effective_target") or signal.fields.get("target_law") or "Văn bản"
+        cb = signal.fields.get("cong_bao_number") or "N/A"
+        sha = signal.fields.get("pdf_sha256") or "N/A"
+        header = f"### ⚖️ Statutory Alignment (ADR-0059) — {tgt}\n{fp_tag}\n"
+        body = (
+            f"Bắt buộc viện dẫn chính xác văn bản mục tiêu `{tgt}` theo phạm vi điều chỉnh nghiệp vụ.\n"
+            f"- **Công báo**: `{cb}`\n"
+            f"- **Mã băm kiểm chuẩn (SHA-256)**: `{sha}`\n"
+        )
+        return header + body
+    return None
+
+
+def render_failure_patch(
+    signal: FailureSignal,
+    index: LegalFlatIndex | None = None,
+) -> str:
+    """Renders a zero-token markdown patch card for a failure signal (ADR-0059)."""
+    fp_tag = f"<!-- failure_signal: {signal.fingerprint} -->"
+    if (card := _render_citation_or_trap_patch(signal, fp_tag)) is not None:
+        return card
+
     if signal.code == "UNKNOWN_DOCUMENT":
         unk = signal.fields.get("unknown_doc") or "Không xác định"
         header = f"### ⚖️ Zero-Hallucination Guardrail (ADR-0059) — {unk}\n{fp_tag}\n"
@@ -350,18 +364,6 @@ def render_failure_patch(
         body = (
             f"Điều khoản/Mục `{fake}` không tồn tại trong `{doc}`. "
             f"Chỉ được viện dẫn các điều khoản/khóa hợp lệ của văn bản này (ví dụ: {keys_str}).\n"
-        )
-        return header + body
-
-    if signal.code == "WRONG_TARGET":
-        tgt = signal.fields.get("effective_target") or signal.fields.get("target_law") or "Văn bản"
-        cb = signal.fields.get("cong_bao_number") or "N/A"
-        sha = signal.fields.get("pdf_sha256") or "N/A"
-        header = f"### ⚖️ Statutory Alignment (ADR-0059) — {tgt}\n{fp_tag}\n"
-        body = (
-            f"Bắt buộc viện dẫn chính xác văn bản mục tiêu `{tgt}` theo phạm vi điều chỉnh nghiệp vụ.\n"
-            f"- **Công báo**: `{cb}`\n"
-            f"- **Mã băm kiểm chuẩn (SHA-256)**: `{sha}`\n"
         )
         return header + body
 

@@ -74,6 +74,63 @@ class EvalRunner:
         self.default_pass_threshold = default_pass_threshold
         self.max_concurrency = max_concurrency
 
+    @staticmethod
+    async def _execute_item_task(
+        item: EvalItem,
+        task: Callable[[EvalItem], Awaitable[Any] | Any],
+    ) -> tuple[Any, str | None, Exception | None]:
+        try:
+            if asyncio.iscoroutinefunction(task):
+                return await task(item), None, None
+            res = task(item)
+            if asyncio.iscoroutine(res):
+                return await res, None, None
+            return res, None, None
+        except Exception as e:
+            return None, f"Task execution failed: {e}", e
+
+    @staticmethod
+    def _aggregate_item_scores(
+        item: EvalItem,
+        task_output: Any,
+        scorers: list[BaseScorer],
+        gather_results: list[ScoreResult | BaseException],
+        pass_threshold: float,
+    ) -> EvalItemResult:
+        scores: list[ScoreResult] = []
+        for s, res in zip(scorers, gather_results, strict=False):
+            if isinstance(res, BaseException):
+                scores.append(
+                    ScoreResult(
+                        scorer_name=s.name,
+                        score=0.0,
+                        reasoning=f"Scorer execution failed: {type(res).__name__}: {res}",
+                        is_critical_fail=_is_scorer_effective_critical(s, item),
+                    )
+                )
+            else:
+                scores.append(res)
+
+        total_weight = sum(s.weight for s in scorers)
+        if total_weight > 0:
+            weighted_sum = sum(
+                s.weight * res.score for s, res in zip(scorers, scores, strict=False)
+            )
+            composite_score = round((weighted_sum / total_weight) * 100.0, 2)
+        else:
+            composite_score = 0.0
+
+        has_critical_fail = any(res.is_critical_fail for res in scores)
+        passed = (composite_score >= pass_threshold) and not has_critical_fail
+        return EvalItemResult(
+            item_id=item.id,
+            task_output=task_output,
+            scores=scores,
+            composite_score=composite_score,
+            passed=passed,
+            critical_failed=has_critical_fail,
+        )
+
     async def _evaluate_single_item(
         self,
         item: EvalItem,
@@ -84,25 +141,8 @@ class EvalRunner:
     ) -> EvalItemResult:
         """Evaluates a single item through the task and all attached scorers."""
         async with semaphore:
-            task_output = None
-            error_msg = None
-            task_exc: Exception | None = None
-            try:
-                if asyncio.iscoroutinefunction(task):
-                    task_output = await task(item)
-                else:
-                    res = task(item)
-                    if asyncio.iscoroutine(res):
-                        task_output = await res
-                    else:
-                        task_output = res
-            except Exception as e:
-                task_exc = e
-                error_msg = f"Task execution failed: {e}"
-                task_output = None
-
+            task_output, error_msg, task_exc = await self._execute_item_task(item, task)
             if error_msg is not None:
-                # Automatic failure across all scorers
                 scores = [
                     ScoreResult(
                         scorer_name=s.name,
@@ -123,45 +163,30 @@ class EvalRunner:
                     exception=task_exc,
                 )
 
-            # Score output against all scorers concurrently with fault-tolerance
             score_tasks = [_safe_score_item(s, task_output, item) for s in scorers]
             gather_results = await asyncio.gather(*score_tasks, return_exceptions=True)
-
-            scores: list[ScoreResult] = []
-            for s, res in zip(scorers, gather_results, strict=False):
-                if isinstance(res, BaseException):
-                    scores.append(
-                        ScoreResult(
-                            scorer_name=s.name,
-                            score=0.0,
-                            reasoning=f"Scorer execution failed: {type(res).__name__}: {res}",
-                            is_critical_fail=_is_scorer_effective_critical(s, item),
-                        )
-                    )
-                else:
-                    scores.append(res)
-
-            # Calculate weighted composite score (0.0 to 100.0)
-            total_weight = sum(s.weight for s in scorers)
-            if total_weight > 0:
-                weighted_sum = sum(
-                    s.weight * res.score for s, res in zip(scorers, scores, strict=False)
-                )
-                composite_score = round((weighted_sum / total_weight) * 100.0, 2)
-            else:
-                composite_score = 0.0
-
-            has_critical_fail = any(res.is_critical_fail for res in scores)
-            passed = (composite_score >= pass_threshold) and not has_critical_fail
-
-            return EvalItemResult(
-                item_id=item.id,
-                task_output=task_output,
-                scores=scores,
-                composite_score=composite_score,
-                passed=passed,
-                critical_failed=has_critical_fail,
+            return self._aggregate_item_scores(
+                item, task_output, scorers, gather_results, pass_threshold
             )
+
+    @staticmethod
+    def _summarize_by_scorer(
+        scorers: list[BaseScorer],
+        results: list[EvalItemResult],
+    ) -> dict[str, float]:
+        summary_by_scorer: dict[str, float] = {}
+        for s in scorers:
+            scorer_scores = [
+                score_res.score
+                for r in results
+                for score_res in r.scores
+                if score_res.scorer_name == s.name
+            ]
+            if scorer_scores:
+                summary_by_scorer[s.name] = round(
+                    (sum(scorer_scores) / len(scorer_scores)) * 100.0, 2
+                )
+        return summary_by_scorer
 
     async def run(
         self,
@@ -171,18 +196,7 @@ class EvalRunner:
         pass_threshold: float | None = None,
         max_concurrency: int | None = None,
     ) -> EvalReport:
-        """Asynchronously executes evaluation across dataset with concurrent workers.
-
-        Args:
-            dataset: List of EvalItem test cases.
-            task: Async/sync callable accepting EvalItem and returning model output.
-            scorers: List of BaseScorer instances.
-            pass_threshold: Composite percentage required to pass (default: 85.0).
-            max_concurrency: Max parallel task workers (default: 5).
-
-        Returns:
-            EvalReport containing summary metrics and per-item results.
-        """
+        """Asynchronously executes evaluation across dataset with concurrent workers."""
         threshold = pass_threshold if pass_threshold is not None else self.default_pass_threshold
         concurrency = max_concurrency if max_concurrency is not None else self.max_concurrency
         semaphore = asyncio.Semaphore(concurrency)
@@ -210,19 +224,6 @@ class EvalRunner:
         overall_score = round(sum(r.composite_score for r in results) / total_items, 2)
         pass_rate = round((passed_items / total_items) * 100.0, 2)
 
-        # Summarize average score per scorer
-        summary_by_scorer: dict[str, float] = {}
-        for s in scorers:
-            scorer_scores = []
-            for r in results:
-                for score_res in r.scores:
-                    if score_res.scorer_name == s.name:
-                        scorer_scores.append(score_res.score)
-            if scorer_scores:
-                summary_by_scorer[s.name] = round(
-                    (sum(scorer_scores) / len(scorer_scores)) * 100.0, 2
-                )
-
         return EvalReport(
             total_items=total_items,
             passed_items=passed_items,
@@ -230,7 +231,7 @@ class EvalRunner:
             overall_score=overall_score,
             pass_rate=pass_rate,
             item_results=results,
-            summary_by_scorer=summary_by_scorer,
+            summary_by_scorer=self._summarize_by_scorer(scorers, results),
         )
 
     def run_sync(
@@ -272,6 +273,33 @@ class AutoItemScorer(BaseScorer):
         self._exact_scorer = ExactMatchScorer()
         self._fallback_length = LengthBoundsScorer(min_length=1)
 
+    @staticmethod
+    async def _score_assertion(
+        ass: dict[str, Any],
+        output: Any,
+        item: EvalItem,
+    ) -> ScoreResult | None:
+        ass_type = ass.get("type", "regex")
+        is_crit = bool(ass.get("is_critical", False))
+        if ass_type == "regex" and "pattern" in ass:
+            r_scorer = RegexScorer(pattern=ass["pattern"], is_critical=is_crit)
+            return await r_scorer.score(output, item)
+        if ass_type == "length":
+            min_len = int(ass.get("min_length", 0)) if ass.get("min_length") is not None else 0
+            max_len = (
+                int(ass.get("max_length", 100_000))
+                if ass.get("max_length") is not None
+                else 100_000
+            )
+            l_scorer = LengthBoundsScorer(
+                min_length=min_len, max_length=max_len, is_critical=is_crit
+            )
+            return await l_scorer.score(output, item)
+        if ass_type == "schema":
+            s_scorer = JsonSchemaScorer(required_keys=ass.get("required_keys"), is_critical=is_crit)
+            return await s_scorer.score(output, item)
+        return None
+
     async def score(self, output: Any, item: EvalItem) -> ScoreResult:
         if item.golden_answer is not None:
             return await self._exact_scorer.score(output, item)
@@ -283,40 +311,9 @@ class AutoItemScorer(BaseScorer):
             for ass in assertions:
                 if not isinstance(ass, dict):
                     continue
-                ass_type = ass.get("type", "regex")
-                if ass_type == "regex" and "pattern" in ass:
-                    r_scorer = RegexScorer(
-                        pattern=ass["pattern"],
-                        is_critical=bool(ass.get("is_critical", False)),
-                    )
-                    res = await r_scorer.score(output, item)
-                    if res.score == 0.0 or res.is_critical_fail:
-                        return res
-                elif ass_type == "length":
-                    min_len = (
-                        int(ass.get("min_length", 0)) if ass.get("min_length") is not None else 0
-                    )
-                    max_len = (
-                        int(ass.get("max_length", 100_000))
-                        if ass.get("max_length") is not None
-                        else 100_000
-                    )
-                    l_scorer = LengthBoundsScorer(
-                        min_length=min_len,
-                        max_length=max_len,
-                        is_critical=bool(ass.get("is_critical", False)),
-                    )
-                    res = await l_scorer.score(output, item)
-                    if res.score == 0.0 or res.is_critical_fail:
-                        return res
-                elif ass_type == "schema":
-                    s_scorer = JsonSchemaScorer(
-                        required_keys=ass.get("required_keys"),
-                        is_critical=bool(ass.get("is_critical", False)),
-                    )
-                    res = await s_scorer.score(output, item)
-                    if res.score == 0.0 or res.is_critical_fail:
-                        return res
+                res = await self._score_assertion(ass, output, item)
+                if res is not None and (res.score == 0.0 or res.is_critical_fail):
+                    return res
             return ScoreResult(
                 scorer_name=self.name,
                 score=1.0,
@@ -361,6 +358,145 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
     return items
 
 
+def _resolve_project_root(project_root: Path | None) -> Path:
+    if project_root is not None:
+        return project_root
+    cur = Path.cwd().resolve()
+    for p in [cur, *cur.parents]:
+        if (p / ".agents").exists() or (p / "pyproject.toml").exists():
+            return p
+    return cur
+
+
+def _load_items_from_path(target: Path) -> list[EvalItem]:
+    if not target.exists():
+        return []
+    if target.is_file():
+        try:
+            with open(target, encoding="utf-8") as f:
+                return _parse_raw_eval_items(json.load(f))
+        except Exception:
+            return []
+    raw_items: list[EvalItem] = []
+    if target.is_dir():
+        for jf in sorted(target.glob("*.json")):
+            try:
+                with open(jf, encoding="utf-8") as f:
+                    raw_items.extend(_parse_raw_eval_items(json.load(f)))
+            except Exception:
+                continue
+    return raw_items
+
+
+def _normalize_skill_name(skill_name: str | None) -> str:
+    if not skill_name:
+        return ""
+    canonical_skill = skill_name.strip()
+    if "/" in canonical_skill or "\\" in canonical_skill or canonical_skill.endswith(".md"):
+        p_cand = Path(canonical_skill)
+        if p_cand.name.lower() == "skill.md" or p_cand.suffix == ".md":
+            return p_cand.parent.name
+        return p_cand.name
+    return canonical_skill
+
+
+def _build_skill_candidate_keys(
+    canonical_skill: str,
+    clean: str,
+    default_dir: Path,
+) -> tuple[str | None, list[str]]:
+    canonical_clean = canonical_skill.replace("-", "_").lower()
+    domain_ds = resolve_domain_dataset(canonical_skill, default_dir)
+    if domain_ds == "eval_general_domain.json" and clean != canonical_skill:
+        cand_ds = resolve_domain_dataset(clean, default_dir)
+        if cand_ds != "eval_general_domain.json":
+            domain_ds = cand_ds
+
+    arch = resolve_domain_archetype(canonical_skill)
+    if not arch and clean != canonical_skill:
+        arch = resolve_domain_archetype(clean) or resolve_domain_archetype(clean.replace("_", "-"))
+
+    candidate_keys: list[str] = []
+    for k in [clean, canonical_clean]:
+        if k and k not in candidate_keys:
+            candidate_keys.append(k)
+
+    if arch:
+        if arch.name not in candidate_keys:
+            candidate_keys.append(arch.name)
+        if arch.dataset_file:
+            arch_ds_key = arch.dataset_file.removeprefix("eval_").removesuffix(".json")
+            if arch_ds_key not in candidate_keys:
+                candidate_keys.append(arch_ds_key)
+
+    if domain_ds and domain_ds != "eval_general_domain.json":
+        ds_key = domain_ds.removeprefix("eval_").removesuffix(".json")
+        if ds_key not in candidate_keys:
+            candidate_keys.append(ds_key)
+
+    return domain_ds, candidate_keys
+
+
+def _find_matching_dataset_files(
+    default_dir: Path,
+    domain_ds: str | None,
+    candidate_keys: list[str],
+) -> list[Path]:
+    matching_files: list[Path] = []
+    if domain_ds and domain_ds != "eval_general_domain.json":
+        ds_cand = default_dir / domain_ds
+        if ds_cand.exists() and ds_cand not in matching_files:
+            matching_files.append(ds_cand)
+
+    for k in candidate_keys:
+        exact_f = default_dir / f"eval_{k}.json"
+        if exact_f.exists() and exact_f not in matching_files:
+            matching_files.append(exact_f)
+
+    for pattern_tpl in ("eval_{k}*.json", "*{k}*.json"):
+        if matching_files:
+            break
+        for k in candidate_keys:
+            for matched_p in sorted(default_dir.glob(pattern_tpl.format(k=k))):
+                if matched_p not in matching_files:
+                    matching_files.append(matched_p)
+    return matching_files
+
+
+def _load_items_for_skill(default_dir: Path, canonical_skill: str) -> list[EvalItem]:
+    clean = canonical_skill.removeprefix("ccba-").removeprefix("bigbim-").replace("-", "_").lower()
+    domain_ds, candidate_keys = _build_skill_candidate_keys(canonical_skill, clean, default_dir)
+    matching_files = _find_matching_dataset_files(default_dir, domain_ds, candidate_keys)
+
+    raw_items: list[EvalItem] = []
+    if matching_files:
+        for mf in sorted(matching_files):
+            try:
+                with open(mf, encoding="utf-8") as f:
+                    raw_items.extend(_parse_raw_eval_items(json.load(f)))
+            except Exception:
+                continue
+        return raw_items
+
+    for jf in sorted(default_dir.glob("*.json")):
+        try:
+            with open(jf, encoding="utf-8") as f:
+                parsed = _parse_raw_eval_items(json.load(f))
+            for it in parsed:
+                tgt = (
+                    str(it.metadata.get("target_skill", ""))
+                    .strip()
+                    .removeprefix("ccba-")
+                    .replace("-", "_")
+                    .lower()
+                )
+                if tgt in candidate_keys or tgt == clean or tgt == canonical_skill.lower():
+                    raw_items.append(it)
+        except Exception:
+            continue
+    return raw_items
+
+
 def load_eval_dataset(
     dataset_path: Path | str | None = None,
     skill_name: str | None = None,
@@ -369,214 +505,61 @@ def load_eval_dataset(
     limit: int | None = None,
 ) -> list[EvalItem]:
     """Load evaluation dataset from explicit path or default test cases directory."""
-    if project_root is None:
-        cur = Path.cwd().resolve()
-        for p in [cur, *cur.parents]:
-            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
-                project_root = p
-                break
-        if project_root is None:
-            project_root = cur
-
-    raw_items: list[EvalItem] = []
+    root = _resolve_project_root(project_root)
 
     if dataset_path:
         target = Path(dataset_path)
         if not target.is_absolute():
-            target = project_root / target
-
-        if not target.exists():
-            return []
-
-        if target.is_file():
-            try:
-                with open(target, encoding="utf-8") as f:
-                    raw_items = _parse_raw_eval_items(json.load(f))
-            except Exception:
-                return []
-
-        elif target.is_dir():
-            for jf in sorted(target.glob("*.json")):
-                try:
-                    with open(jf, encoding="utf-8") as f:
-                        raw_items.extend(_parse_raw_eval_items(json.load(f)))
-                except Exception:
-                    continue
-
+            target = root / target
+        items = _load_items_from_path(target)
     else:
-        # Default fallback: .agents/skills/ccba-eval-gate/test_cases/
-        default_dir = project_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
+        default_dir = root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         if not default_dir.exists():
             return []
-
-        if not skill_name:
-            canonical_skill = ""
-        else:
-            canonical_skill = skill_name.strip()
-            if "/" in canonical_skill or "\\" in canonical_skill or canonical_skill.endswith(".md"):
-                p_cand = Path(canonical_skill)
-                if p_cand.name.lower() == "skill.md" or p_cand.suffix == ".md":
-                    canonical_skill = p_cand.parent.name
-                else:
-                    canonical_skill = p_cand.name
-
+        canonical_skill = _normalize_skill_name(skill_name)
         if not canonical_skill or canonical_skill.lower() in ("all", "*"):
-            for jf in sorted(default_dir.glob("*.json")):
-                try:
-                    with open(jf, encoding="utf-8") as f:
-                        raw_items.extend(_parse_raw_eval_items(json.load(f)))
-                except Exception:
-                    continue
+            items = _load_items_from_path(default_dir)
         else:
-            clean = (
-                canonical_skill.removeprefix("ccba-")
-                .removeprefix("bigbim-")
-                .replace("-", "_")
-                .lower()
-            )
-            canonical_clean = canonical_skill.replace("-", "_").lower()
+            items = _load_items_for_skill(default_dir, canonical_skill)
 
-            # SSOT Resolution via 2-tier fallback (ADR-0060 / ADR-0058)
-            # resolve_domain_dataset handles Tier-1 (skill-specific file) and
-            # Tier-2 (archetype fallback) in one call.
-            domain_ds = resolve_domain_dataset(canonical_skill, default_dir)
-            if domain_ds == "eval_general_domain.json" and clean != canonical_skill:
-                cand_ds = resolve_domain_dataset(clean, default_dir)
-                if cand_ds != "eval_general_domain.json":
-                    domain_ds = cand_ds
-
-            arch = resolve_domain_archetype(canonical_skill)
-            if not arch and clean != canonical_skill:
-                arch = resolve_domain_archetype(clean) or resolve_domain_archetype(
-                    clean.replace("_", "-")
-                )
-
-            candidate_keys: list[str] = []
-            for k in [clean, canonical_clean]:
-                if k and k not in candidate_keys:
-                    candidate_keys.append(k)
-
-            if arch:
-                if arch.name not in candidate_keys:
-                    candidate_keys.append(arch.name)
-                if arch.dataset_file:
-                    arch_ds_key = arch.dataset_file.removeprefix("eval_").removesuffix(".json")
-                    if arch_ds_key not in candidate_keys:
-                        candidate_keys.append(arch_ds_key)
-
-            if domain_ds and domain_ds != "eval_general_domain.json":
-                ds_key = domain_ds.removeprefix("eval_").removesuffix(".json")
-                if ds_key not in candidate_keys:
-                    candidate_keys.append(ds_key)
-
-            matching_files: list[Path] = []
-
-            if domain_ds and domain_ds != "eval_general_domain.json":
-                ds_cand = default_dir / domain_ds
-                if ds_cand.exists() and ds_cand not in matching_files:
-                    matching_files.append(ds_cand)
-
-            for k in candidate_keys:
-                exact_f = default_dir / f"eval_{k}.json"
-                if exact_f.exists() and exact_f not in matching_files:
-                    matching_files.append(exact_f)
-
-            if not matching_files:
-                for k in candidate_keys:
-                    for matched_p in sorted(default_dir.glob(f"eval_{k}*.json")):
-                        if matched_p not in matching_files:
-                            matching_files.append(matched_p)
-            if not matching_files:
-                for k in candidate_keys:
-                    for matched_p in sorted(default_dir.glob(f"*{k}*.json")):
-                        if matched_p not in matching_files:
-                            matching_files.append(matched_p)
-
-            if matching_files:
-                for mf in sorted(matching_files):
-                    try:
-                        with open(mf, encoding="utf-8") as f:
-                            raw_items.extend(_parse_raw_eval_items(json.load(f)))
-                    except Exception:
-                        continue
-            else:
-                # Fallback to scanning metadata target_skill
-                for jf in sorted(default_dir.glob("*.json")):
-                    try:
-                        with open(jf, encoding="utf-8") as f:
-                            parsed = _parse_raw_eval_items(json.load(f))
-                            for it in parsed:
-                                tgt = (
-                                    str(it.metadata.get("target_skill", ""))
-                                    .strip()
-                                    .removeprefix("ccba-")
-                                    .replace("-", "_")
-                                    .lower()
-                                )
-                                if (
-                                    tgt in candidate_keys
-                                    or tgt == clean
-                                    or tgt == canonical_skill.lower()
-                                ):
-                                    raw_items.append(it)
-                    except Exception:
-                        continue
-
-    items = raw_items
     if difficulty:
         d_clean = difficulty.strip().lower()
         items = [
             it for it in items if str(it.metadata.get("difficulty", "")).strip().lower() == d_clean
         ]
-
     if limit is not None:
         items = items[: max(0, limit)]
-
     return items
 
 
 def resolve_target_skill_file(skill: str | None, project_root: Path) -> Path | None:
-    """Resolves target SKILL.md file from skill name, path, or workspace.
-
-    Args:
-        skill: Skill name, directory path, or SKILL.md file path.
-        project_root: Workspace root directory.
-
-    Returns:
-        Resolved Path to SKILL.md, or None if not found.
-    """
+    """Resolves target SKILL.md file from skill name, path, or workspace."""
     if skill:
         clean = skill.strip()
         p_cand = Path(clean)
-        candidates: list[Path] = []
-        if p_cand.is_absolute():
-            candidates.append(p_cand if p_cand.name.lower() == "skill.md" else p_cand / "SKILL.md")
-        else:
-            full_p = project_root / p_cand
-            candidates.append(full_p if full_p.name.lower() == "skill.md" else full_p / "SKILL.md")
-
+        base_p = p_cand if p_cand.is_absolute() else (project_root / p_cand)
+        candidates: list[Path] = [
+            base_p if base_p.name.lower() == "skill.md" else base_p / "SKILL.md"
+        ]
         if "/" in clean or "\\" in clean or clean.endswith(".md"):
             c_name = p_cand.parent.name if p_cand.name.lower() == "skill.md" else p_cand.name
         else:
             c_name = clean
 
-        candidates.extend(
-            [
-                project_root / ".agents" / "skills" / c_name / "SKILL.md",
-                project_root / ".agents" / "skills" / f"ccba-{c_name}" / "SKILL.md",
-                project_root / ".agents" / "skills" / f"bigbim-{c_name}" / "SKILL.md",
-                project_root / ".agents" / "skills" / c_name.removeprefix("ccba-") / "SKILL.md",
-                project_root / ".agents" / "skills" / c_name.removeprefix("bigbim-") / "SKILL.md",
-                project_root / "skills" / c_name / "SKILL.md",
-                project_root / "skills" / f"ccba-{c_name}" / "SKILL.md",
-                project_root / "skills" / f"bigbim-{c_name}" / "SKILL.md",
-            ]
-        )
+        for rel_dir in (project_root / ".agents" / "skills", project_root / "skills"):
+            for folder in (
+                c_name,
+                f"ccba-{c_name}",
+                f"bigbim-{c_name}",
+                c_name.removeprefix("ccba-"),
+                c_name.removeprefix("bigbim-"),
+            ):
+                candidates.append(rel_dir / folder / "SKILL.md")
+
         for cand in candidates:
             if cand.exists() and cand.is_file() and cand.name.lower() == "skill.md":
                 return cand.resolve()
 
-    # Fallback to program.md if available
     prog = project_root / "program.md"
     if prog.exists() and prog.is_file():
         try:
@@ -587,7 +570,6 @@ def resolve_target_skill_file(skill: str | None, project_root: Path) -> Path | N
                 return cfg.target_file.resolve()
         except Exception:
             pass
-
     return None
 
 
@@ -629,12 +611,90 @@ def _create_default_eval_task(
         except Exception:
             pass
 
-        # Offline / Mock Fallback
         if item.golden_answer is not None:
             return item.golden_answer
         return f"[Simulated Output for {item.id}]"
 
     return _task
+
+
+def _run_auto_tune_pipeline(
+    base_meta: dict[str, Any],
+    root: Path,
+    task: Callable[[EvalItem], Any],
+    scorers: list[BaseScorer],
+    items: list[EvalItem],
+    opts: tuple[str | Path | None, float, bool],
+) -> EvalReport:
+    dataset, pass_threshold, dry_run_git = opts
+    skill = base_meta.get("skill")
+    target_file = resolve_target_skill_file(skill, root)
+    if target_file is None or not target_file.exists():
+        raise FileNotFoundError(
+            f"Target skill file could not be resolved for auto-tuning (skill={skill!r})"
+        )
+
+    from .tuner import GitRatchetOptimizer, RatchetConfig
+
+    tuner_config = RatchetConfig(
+        target_file=target_file,
+        eval_dataset_file=Path(dataset) if dataset and Path(dataset).is_file() else None,
+        target_score=pass_threshold,
+        max_iterations=int(base_meta.get("trials", 3)),
+        skill_name=skill or target_file.parent.name,
+        full_sweep=bool(base_meta.get("full_sweep", False)),
+    )
+    tuner = GitRatchetOptimizer(
+        config=tuner_config,
+        scorers=scorers,
+        dry_run_git=dry_run_git,
+        project_root=root,
+        task=task,
+        dataset=items,
+    )
+    ratchet_report = tuner.run()
+    best_content = target_file.read_text(encoding="utf-8")
+    final_report = tuner.evaluate_content(best_content)
+    final_report.metadata.update(
+        {
+            **base_meta,
+            "auto_tune_status": "optimized" if ratchet_report.kept_commits > 0 else "clean",
+            "ratchet_report": ratchet_report.to_dict(),
+        }
+    )
+    return final_report
+
+
+def _merge_trial_reports(
+    trial_reports: list[EvalReport],
+    meta: dict[str, Any],
+) -> EvalReport:
+    if len(trial_reports) == 1:
+        final_report = trial_reports[0]
+        final_report.metadata.update(meta)
+        return final_report
+
+    avg_score = round(sum(r.overall_score for r in trial_reports) / len(trial_reports), 2)
+    avg_pass_rate = round(sum(r.pass_rate for r in trial_reports) / len(trial_reports), 2)
+    merged_scorers: dict[str, list[float]] = {}
+    for r in trial_reports:
+        for sc_name, sc_val in r.summary_by_scorer.items():
+            merged_scorers.setdefault(sc_name, []).append(sc_val)
+    summary_by_scorer = {k: round(sum(v) / len(v), 2) for k, v in merged_scorers.items()}
+    base_rep = trial_reports[-1]
+    return EvalReport(
+        total_items=base_rep.total_items,
+        passed_items=base_rep.passed_items,
+        failed_items=base_rep.failed_items,
+        overall_score=avg_score,
+        pass_rate=avg_pass_rate,
+        item_results=base_rep.item_results,
+        summary_by_scorer=summary_by_scorer,
+        metadata={
+            **meta,
+            "trial_scores": [r.overall_score for r in trial_reports],
+        },
+    )
 
 
 def run_eval_pipeline(
@@ -653,139 +713,30 @@ def run_eval_pipeline(
     full_sweep: bool = False,
 ) -> EvalReport:
     """Executes evaluation pipeline across dataset test cases with multi-trial support."""
-    if project_root is None:
-        cur = Path.cwd().resolve()
-        for p in [cur, *cur.parents]:
-            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
-                project_root = p
-                break
-        if project_root is None:
-            project_root = cur
-
-    items = load_eval_dataset(
-        dataset_path=dataset,
-        skill_name=skill,
-        project_root=project_root,
-        difficulty=difficulty,
-        limit=limit,
-    )
+    root = _resolve_project_root(project_root)
+    items = load_eval_dataset(dataset, skill, root, difficulty, limit)
+    base_meta = {
+        "skill": skill,
+        "trials": trials,
+        "auto_tune": auto_tune,
+        "full_sweep": full_sweep,
+        "difficulty": difficulty,
+        "limit": limit,
+    }
     if not items:
-        return EvalReport(
-            total_items=0,
-            passed_items=0,
-            failed_items=0,
-            overall_score=0.0,
-            pass_rate=0.0,
-            item_results=[],
-            summary_by_scorer={},
-            metadata={
-                "skill": skill,
-                "trials": trials,
-                "auto_tune": auto_tune,
-                "full_sweep": full_sweep,
-                "difficulty": difficulty,
-                "limit": limit,
-            },
-        )
+        return EvalReport(0, 0, 0, 0.0, 0.0, [], {}, base_meta)
 
     active_scorers = scorers or [AutoItemScorer()]
-    active_task = task or _create_default_eval_task(skill, project_root)
-
-    # If auto_tune is requested and target skill file is found, execute GitRatchetOptimizer
+    active_task = task or _create_default_eval_task(skill, root)
     if auto_tune:
-        target_file = resolve_target_skill_file(skill, project_root)
-        if target_file is None or not target_file.exists():
-            raise FileNotFoundError(
-                f"Target skill file could not be resolved for auto-tuning (skill={skill!r})"
-            )
-
-        from .tuner import GitRatchetOptimizer, RatchetConfig
-
-        tuner_config = RatchetConfig(
-            target_file=target_file,
-            eval_dataset_file=Path(dataset) if dataset and Path(dataset).is_file() else None,
-            target_score=pass_threshold,
-            max_iterations=trials,
-            skill_name=skill or target_file.parent.name,
-            full_sweep=full_sweep,
-        )
-        tuner = GitRatchetOptimizer(
-            config=tuner_config,
-            scorers=active_scorers,
-            dry_run_git=dry_run_git,
-            project_root=project_root,
-            task=active_task,
-            dataset=items,
-        )
-        ratchet_report = tuner.run()
-
-        # Final evaluation on the optimized content
-        best_content = target_file.read_text(encoding="utf-8")
-        final_report = tuner.evaluate_content(best_content)
-        final_report.metadata.update(
-            {
-                "skill": skill,
-                "trials": trials,
-                "auto_tune": auto_tune,
-                "full_sweep": full_sweep,
-                "difficulty": difficulty,
-                "limit": limit,
-                "auto_tune_status": "optimized" if ratchet_report.kept_commits > 0 else "clean",
-                "ratchet_report": ratchet_report.to_dict(),
-            }
-        )
-        return final_report
+        opts = (dataset, pass_threshold, dry_run_git)
+        return _run_auto_tune_pipeline(base_meta, root, active_task, active_scorers, items, opts)
 
     runner = EvalRunner(default_pass_threshold=pass_threshold, max_concurrency=max_concurrency)
-    num_trials = max(1, trials)
-    trial_reports: list[EvalReport] = []
-
-    for _ in range(num_trials):
-        rep = runner.run_sync(
-            dataset=items,
-            task=active_task,
-            scorers=active_scorers,
-            pass_threshold=pass_threshold,
-            max_concurrency=max_concurrency,
-        )
-        trial_reports.append(rep)
-
-    if len(trial_reports) == 1:
-        final_report = trial_reports[0]
-        final_report.metadata.update(
-            {
-                "skill": skill,
-                "trials": trials,
-                "auto_tune": auto_tune,
-                "difficulty": difficulty,
-                "limit": limit,
-            }
-        )
-    else:
-        avg_score = round(sum(r.overall_score for r in trial_reports) / len(trial_reports), 2)
-        avg_pass_rate = round(sum(r.pass_rate for r in trial_reports) / len(trial_reports), 2)
-        merged_scorers: dict[str, list[float]] = {}
-        for r in trial_reports:
-            for sc_name, sc_val in r.summary_by_scorer.items():
-                merged_scorers.setdefault(sc_name, []).append(sc_val)
-        summary_by_scorer = {k: round(sum(v) / len(v), 2) for k, v in merged_scorers.items()}
-        base_rep = trial_reports[-1]
-        final_report = EvalReport(
-            total_items=base_rep.total_items,
-            passed_items=base_rep.passed_items,
-            failed_items=base_rep.failed_items,
-            overall_score=avg_score,
-            pass_rate=avg_pass_rate,
-            item_results=base_rep.item_results,
-            summary_by_scorer=summary_by_scorer,
-            metadata={
-                "skill": skill,
-                "trials": trials,
-                "auto_tune": auto_tune,
-                "difficulty": difficulty,
-                "limit": limit,
-                "trial_scores": [r.overall_score for r in trial_reports],
-            },
-        )
-
-    return final_report
+    trial_reports = [
+        runner.run_sync(items, active_task, active_scorers, pass_threshold, max_concurrency)
+        for _ in range(max(1, trials))
+    ]
+    return _merge_trial_reports(
+        trial_reports, {k: v for k, v in base_meta.items() if k != "full_sweep"}
+    )

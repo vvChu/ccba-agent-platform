@@ -11,6 +11,31 @@ from typing import Protocol, runtime_checkable
 
 from ..models import EvalItem
 
+_NON_LEGAL_ADVISORY_KEYWORDS: tuple[str, ...] = (
+    "copywriting",
+    "markdown",
+    "pptx",
+    "seminar",
+    "van-phong",
+    "office",
+    "design",
+    "crawler",
+    "vip",
+    "ingest",
+    "tracker",
+    "checklist",
+    "hsht",
+    "bigbim",
+    "coding",
+    "gateway",
+    "pdf-preprocessor",
+    "repair",
+    "adr",
+    "grill",
+    "orchestration",
+    "platform",
+)
+
 
 @dataclass(frozen=True)
 class SimulationContext:
@@ -36,33 +61,7 @@ class SimulationContext:
         )
         is_legal_advisory = any(
             k in skill_name for k in ("legal-advisor", "legal-intel", "vbpl-digest", "legal")
-        ) and not any(
-            k in skill_name
-            for k in (
-                "copywriting",
-                "markdown",
-                "pptx",
-                "seminar",
-                "van-phong",
-                "office",
-                "design",
-                "crawler",
-                "vip",
-                "ingest",
-                "tracker",
-                "checklist",
-                "hsht",
-                "bigbim",
-                "coding",
-                "gateway",
-                "pdf-preprocessor",
-                "repair",
-                "adr",
-                "grill",
-                "orchestration",
-                "platform",
-            )
-        )
+        ) and not any(k in skill_name for k in _NON_LEGAL_ADVISORY_KEYWORDS)
         has_xml = is_legal_advisory and (
             "<legal_" in content or ("XML" in content and has_legal_grounding)
         )
