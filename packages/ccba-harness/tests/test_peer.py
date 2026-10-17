@@ -1099,3 +1099,89 @@ def test_verdict_synonym_normalization():
         PeerVerdictBlock(request_id="r4", verdict="NEEDS_REVISION").verdict  # type: ignore[arg-type]
         == "REVISE_PLAN"
     )
+
+
+def test_3stage_protocol_profiles_and_session_resume(tmp_path):
+    """Verify deep_spec_audit, signoff_diff profiles, session resume/fork, and JSON stdout unwrap."""
+    import json
+    from ccba_harness.peer import (
+        PROFILE_SPECS,
+        _unwrap_grok_json_stdout,
+        build_grok_cmd,
+    )
+
+    assert "deep_spec_audit" in PROFILE_SPECS
+    dsa = PROFILE_SPECS["deep_spec_audit"]
+    assert dsa["max_turns"] == 25
+    assert dsa["reasoning_effort"] == "xhigh"
+    assert dsa["output_format"] == "json"
+    assert dsa["verbatim"] is True
+    assert dsa["disable_web_search"] is True
+    assert dsa["deny"] == ["Bash", "Write", "Edit", "WebFetch"]
+
+    assert "signoff_diff" in PROFILE_SPECS
+    sd = PROFILE_SPECS["signoff_diff"]
+    assert sd["max_turns"] == 15
+    assert sd["reasoning_effort"] == "high"
+    assert sd["output_format"] == "json"
+    assert sd["fork_session"] is True
+
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text("---\nrequest_id: r1\n---\nBody", encoding="utf-8")
+
+    cmd = build_grok_cmd(
+        prompt_path=prompt_file,
+        model="grok-4.7",
+        max_turns=15,
+        tools=["read_file", "grep", "list_dir"],
+        disallowed_tools=["Agent"],
+        deny=["Bash", "Write", "Edit", "WebFetch"],
+        reasoning_effort="high",
+        output_format="json",
+        verbatim=True,
+        disable_web_search=True,
+        resume_session_id="01a148d0-ac92-7ef2-a970-efb8c8fe1aed",
+        fork_session=True,
+    )
+    assert "--resume" in cmd
+    resume_idx = cmd.index("--resume")
+    assert cmd[resume_idx + 1] == "01a148d0-ac92-7ef2-a970-efb8c8fe1aed"
+    assert "--fork-session" in cmd
+    assert "--verbatim" in cmd
+    assert "--disable-web-search" in cmd
+    assert "--output-format" in cmd
+    assert cmd[cmd.index("--output-format") + 1] == "json"
+
+    # Verify _unwrap_grok_json_stdout when stopReason == "end_turn"
+    valid_json_stdout = json.dumps(
+        {
+            "sessionId": "01a149dc-deae-7fa2-a32b-8f8584043687",
+            "stopReason": "end_turn",
+            "text": "---\nrequest_id: req-01\nverdict: APPROVE\nrisk_score: 1.5\n---\n# Signoff\n",
+            "usage": {"inputTokens": 100, "cachedTokens": 90},
+        }
+    )
+    text, sid, is_aborted = _unwrap_grok_json_stdout(valid_json_stdout)
+    assert is_aborted is False
+    assert sid == "01a149dc-deae-7fa2-a32b-8f8584043687"
+    assert "verdict: APPROVE" in text
+
+    # Verify float risk_score normalization in PeerVerdictBlock
+    vb = parse_verdict_from_md(text)
+    assert vb is not None
+    assert vb.verdict == "APPROVE"
+    assert vb.risk_score == 2
+
+    # Verify _unwrap_grok_json_stdout fails closed when stopReason != "end_turn"
+    max_turns_stdout = json.dumps(
+        {
+            "sessionId": "01a149dc-deae-7fa2-a32b-8f8584043687",
+            "stopReason": "max_turns",
+            "text": "Partial cut-off response",
+        }
+    )
+    text2, sid2, is_aborted2 = _unwrap_grok_json_stdout(max_turns_stdout)
+    assert text2 == ""
+    assert sid2 == "01a149dc-deae-7fa2-a32b-8f8584043687"
+    assert is_aborted2 is True
+
