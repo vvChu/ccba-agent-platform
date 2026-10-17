@@ -21,18 +21,16 @@
 - **RULE-1.13 [Parameter Externalization & Declarative Config]**:
   - CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP. Dùng `choose_model()` / `ModelArchetype` và env vars (ngoại lệ: `# ccba:allow-raw-model`, `# ccba:allow-raw-ip`). Tách config theo OCP.
 - **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
-  - *Fail-Closed Gate*: `assess_catalog_freshness` chặn đứng `--apply` (exit 1) khi `catalog.yaml` stale. Cờ `--allow-stale-catalog` ghi audit log bypass.
-  - *Declarative Registry & Topo*: Khai báo guardrails và package bindings trong `catalog_base.yaml`; `spoke_bootstrap.py` phân giải install set theo Kahn's topo sort.
-- **RULE-1.18 [ADR 0066 — Skills Taxonomy, Scope Declaration & Multi-Environment Distribution Matrix]**:
-  - *Platform Operations vs Domain*: `bundle: _core` chỉ chứa công cụ SDLC loop của Agent (sync, verify, review, PR); `_software` chứa nghiệp vụ code chuyên sâu.
-  - *Metadata Scope & Linter*: Frontmatter khai báo `scope: hub | spoke | universal`. Linter tự động chặn `command: /...` thuộc `_governance` nếu thiếu `scope: hub` (ADR-0066). Tự động đối soát điểm GPI toán học (COND-01).
+  - `assess_catalog_freshness` chặn `--apply` (exit 1) khi `catalog.yaml` stale (`--allow-stale-catalog` ghi audit log). Khai báo bindings tại `catalog_base.yaml`; `spoke_bootstrap.py` phân giải theo Kahn's topo sort.
+- **RULE-1.18 [ADR 0066 — Skills Taxonomy & Scope Declaration]**:
+  - `bundle: _core` chỉ chứa SDLC loop (sync, verify, review, PR); `_software` chứa nghiệp vụ code. Frontmatter khai báo `scope: hub | spoke | universal`; linter chặn `command: /...` ở `_governance` thiếu `scope: hub` (ADR-0066) và đối soát GPI (COND-01).
 - *(RULE-1.17, 1.19 tại Mục 34-35 của archive/session_learnings_history.md)*
-- **RULE-1.20 [ADR 0061 — Posture Title Invariant, Parity Radar Isolation & Contract Inflation Prevention]**:
-  - *Header Invariant*: BẮT BUỘC dùng đúng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR trong header). CẤM token ADR trong posture của skill không tạo ADR mới, bảo vệ ma trận parity `sync_hub_adr_matrix.py`.
-  - *Contract Inflation Defense*: Chỉ đúng 16 Public Deep Seams có package Python backend mới nhận `package-bound`; 60 skills dạng SOP/pattern/CLI nhận `seam-exempt`. CẤM mở seam contract giả mạo.
+- **RULE-1.20 [ADR 0061 — Posture Title, Parity Radar & Contract Inflation]**:
+  - Dùng đúng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR trong header); CẤM token ADR trong posture không tạo ADR mới (`sync_hub_adr_matrix.py`). Đúng 16 Public Deep Seams nhận `package-bound`; 60 skills SOP/CLI nhận `seam-exempt`.
 - **RULE-1.21 [Spoke Graduation Supersession, SHA-8 Divergent Archive & Link Parity]**:
-  - *Supersession & SHA-8 Branching*: Khi `supersede_graduated_spoke_docs` (`graduation.py`) thu hồi bản nháp Spoke đã thành Hub ADR, nếu `archive/<name>.md` đã có nhưng bản nháp khác nội dung (sau chuẩn hóa CRLF/LF), BẮT BUỘC giữ nguyên bản gốc và lưu thêm `<stem>.local-<sha8>.md` trước khi ghi stub `GRADUATED_STUB_MARKER`.
-  - *Link Parity*: `sync_layer2_rules` và `audit_spoke_markdown_links` tự động khử link `file://` và tiền tố `.md/` dư thừa trong `.md/INDEX.md`.
+  - Khi `supersede_graduated_spoke_docs` (`graduation.py`) thu hồi bản nháp Spoke đã thành Hub ADR, nếu `archive/<name>.md` đã có nhưng khác nội dung (sau chuẩn hóa CRLF/LF), giữ bản gốc và lưu thêm `<stem>.local-<sha8>.md` trước khi ghi `GRADUATED_STUB_MARKER`. `sync_layer2_rules` / `audit_spoke_markdown_links` khử link `file://` và tiền tố `.md/` dư trong `.md/INDEX.md`.
+- **RULE-1.22 [Reasoning Tiering Parity & Anti-Silent-Degradation in Gateway Fallback]**:
+  - Tác vụ suy luận (Reasoning/Review/Audit) BẮT BUỘC duy trì phân tầng Class A; CẤM fallback về Class C (`ocr-tier4`, `ocr-fallback`). Khi cạn quota Class A, Gateway BẮT BUỘC **Fail-Fast** (HTTP 503) thay vì hạ cấp âm thầm (Mục 38 history).
 
 
 ---
@@ -41,8 +39,7 @@
 
 - *(RULE-2.1, 2.3, 2.4, 2.8, 2.10-2.12, 2.14, 2.16-2.18 tại Mục 24-25, 27-28, 30, 32 của archive/session_learnings_history.md)*
 - **RULE-2.5 [ADR 0058 — SSOT Archetype Routing, Disjoint Hierarchy & 100% Skill Coverage]**:
-  - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) BẮT BUỘC dùng `archetypes.py` làm SSOT (17 archetypes).
-  - *Disjoint Hierarchy*: Archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước archetype khái quát (`orchestration`, `legal`, `visual`). 100% kỹ năng (75/75 skills) map chuẩn xác; cấm unmapped (`None`).
+  - Ánh xạ kỹ năng sang đề thi (`eval_*.json`) dùng `archetypes.py` (17 archetypes); archetype chuyên biệt (`platform_tooling`, `legal_tooling`, `visual_design`) đứng trước khái quát (`orchestration`, `legal`, `visual`); 100% skills map chuẩn, cấm `None`.
 - **RULE-2.9 [Test Fixture Isolation, Live Lock & Hub Decoupling]**:
   - Test fixtures (`conftest.py`) BẮT BUỘC xóa `CCBA_HUB_PATH`, `HUB_PATH` và mock triệt để lock vật lý (`is_kernel_runner_locked`, `check_daemon_lock` $\rightarrow$ `False`). CẤM rò rỉ env var hoặc đọc lock thật.
 - **RULE-2.15 [Atomic Knowledge Cataloging, Hermetic Scripts & Ruff Guard]**:
@@ -79,10 +76,9 @@
 - **RULE-4.15 [Multi-Turn Review Budgeting, Resilient Parsing & POSIX Atomicity]**:
   - Turn budget tools review $\ge 10-14$ turns. `PeerVerdictBlock` hỗ trợ `extra="ignore"`, Pydantic conditions coercion và session history fallback. `apply_anchor_patch` kiểm tra `is_file()`, rollback gom lỗi, và bảo tồn `stat.st_mode`.
 - **RULE-4.16 [Two-Pass Peer Review Protocol & Atomic Micro-PR Slicing]**:
-  - *Two-Pass Consensus*: Pass 1 (`APPROVE_PLAN`) đóng băng ranh giới thiết kế; Pass 2 (`APPROVE`) đối soát commit reflog. Mô hình reasoning `xhigh` ngân sách timeout $\ge 900$s.
-  - *Atomic Micro-PR*: Phân rã 7-8 skills thành 4 micro-PRs, khóa cục bộ bằng bộ 3 lệnh (< 1s) trước khi merge toàn sàn CI (`verify-patch --preset ci`).
+  - Pass 1 (`APPROVE_PLAN`) đóng băng thiết kế; Pass 2 (`APPROVE`) đối soát reflog (`xhigh` timeout $\ge 900$s). Phân rã 7-8 skills thành 4 micro-PRs, khóa cục bộ bằng bộ 3 lệnh (< 1s) trước khi chạy `verify-patch --preset ci`.
 - **RULE-4.17 [Adversarial Rebuttal on `audit_direct` Hallucinations & Monkeypatch Seam Ratchet]**:
-  - *Empirical Rebuttal*: Khi `audit_direct` (`max_turns=1`, không đọc đĩa) suy diễn sai thuộc tính (`self.stats`, `self.logger`, `GateCheck.findings`), BẮT BUỘC đối chiếu code thực tế và gửi vòng 2 kèm trích xuất nguyên văn mã nguồn; CẤM sửa mù quáng làm vỡ `capsys` / monkeypatch seams (`assess_catalog_freshness`, `_get_synchronizer_cls()`). Khóa AST $\le 50$ LOC bằng ratchet test `check_ast_function_length`.
+  - Khi `audit_direct` (`max_turns=1`, không đọc đĩa) suy diễn sai thuộc tính (`self.stats`, `self.logger`, `GateCheck.findings`), BẮT BUỘC đối chiếu code thực tế và gửi vòng 2 kèm trích xuất nguyên văn mã nguồn; CẤM sửa mù quáng làm vỡ `capsys` / monkeypatch seams (`assess_catalog_freshness`, `_get_synchronizer_cls()`). Khóa AST $\le 50$ LOC bằng `check_ast_function_length`.
 
 ---
 
@@ -92,4 +88,6 @@
   - Structured output BẮT BUỘC tắt thinking mode (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens` vượt ngưỡng suy nghĩ; phân tầng `local-instruct` vs `local-coder`.
 - **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
   - DGX Spark Blackwell volume mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; cấu hình tách biệt `--reasoning-parser` và `--tool-call-parser`.
+- **RULE-5.10 [Layer Anchoring Invariant: vLLM Backend vs Gateway Routing]**:
+  - Tầng Gateway (`fallbacks:` trong `litellm_config.yaml`) chỉ nhận `model_name` tĩnh, CẤM nhúng cờ động `qwen-local-primary (enable_thinking=true)`. Tác vụ suy luận BẮT BUỘC fallback về virtual deployment `local-coder` (`enable_thinking: true`) thay vì `rag-core` hoặc tên engine vật lý.
 
