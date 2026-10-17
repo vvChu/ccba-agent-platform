@@ -35,6 +35,7 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/_guardrails/safe_pytest.py",
     "scripts/_guardrails/safe_runner.py",
     "scripts/spoke_bootstrap.py",
+    "scripts/spoke_cli.py",
 }
 
 

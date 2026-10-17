@@ -75,11 +75,21 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 > 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH` hoặc Registry Hub.
 > 3. **Tầng 3 (Danh mục SSOT):** Tra cứu qua `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đối soát trạng thái hiệu lực chuẩn hóa `ACTIVE` và các quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) nhằm loại bỏ triệt để văn bản đã hết hiệu lực hoặc bị thay thế.
 
-* Truy xuất cây điều khoản AST `clauses.json` và văn bản thuần khiết `<slug>.md` của các gói văn bản.
-* Đọc các bảng tra cứu kỹ thuật 2D trong `tables/csv/*.csv` và các biểu mẫu nguyên tử trong `templates/`.
+* **Cơ chế Điều hướng Ngữ nghĩa Hai Giai đoạn (Two-Stage Semantic Routing):**
+  1. **Giai đoạn 1 — Khoanh vùng Văn bản & Vành đai (Document & Ring Pruning):** Khi xử lý vấn đề liên quan đến văn bản hạt nhân (ví dụ: Luật Xây dựng 2025 số 135/2025/QH15), Agent gọi Seam CLI:
+     ```bash
+     python scripts/spoke_cli.py graph --doc <doc_id> [--json]
+     ```
+     để thu hẹp không gian tìm kiếm về đúng Vành đai tương ứng:
+     - *Vành đai 1 (Thi hành - `enacted_by`):* Nghị định chi tiết & hướng dẫn thi hành (cấp phép, quản lý dự án).
+     - *Vành đai 2 (Chế tài - `sanctioned_by`):* Nghị định xử phạt vi phạm hành chính (ví dụ: NĐ 339/2026/NĐ-CP).
+     - *Vành đai 3 (Liên đới - `interlocks_with`):* Luật/Nghị định chuyên ngành liên đới ngang (PCCC NĐ 105/2025/NĐ-CP, Môi trường, Đất đai).
+     - *Vành đai 4 (Quy chuẩn - `mandatory_codes`):* Quy chuẩn kỹ thuật quốc gia bắt buộc (QCVN 06:2022/BXD, QCVN 07:2023/BXD...).
+     - *Vành đai 5 (Ủy quyền địa phương - `local_delegations`):* Quyết định UBND phân cấp thẩm quyền (QĐ 38/2026/QĐ-UBND...).
+  2. **Giai đoạn 2 — Truy xuất Điều khoản & Dữ liệu Nguyên tử (Clause & Chunk Retrieval):** Sau khi xác định văn bản đích từ đồ thị, thực thi trích xuất chính xác cây điều khoản AST `clauses.json`, văn bản thuần khiết `<slug>.md`, bảng số liệu 2D `tables/csv/*.csv` hoặc biểu mẫu `templates/` của văn bản đó qua `get-clause` hoặc `query`.
 * Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
 * Mọi điều khoản, quy chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm vết truy xuất nguồn gốc (Provenance Stamping)**: Ghi rõ document slug, mã băm `pdf_sha256` và đường dẫn tương đối trong repo tri thức (tuyệt đối không dùng link `file:///` tuyệt đối).
-- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF kèm vết provenance xác thực.
+- **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF qua cơ chế Two-Stage Routing kèm vết provenance xác thực.
 
 ---
 
