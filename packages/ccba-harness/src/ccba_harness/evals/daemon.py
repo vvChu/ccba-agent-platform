@@ -60,10 +60,10 @@ def send_telegram_alert(
     mock_fallback: bool = False,
 ) -> bool:
     """Sends a notification message to Telegram Bot API or logs a mock fallback."""
-    bot_credential = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
     target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
 
-    if not bot_credential or not target_channel:
+    if not tg_bot_auth or not target_channel:
         if mock_fallback:
             logger.info(f"📱 [Mock Telegram Notification Sent]:\n{message}")
             return True
@@ -76,7 +76,7 @@ def send_telegram_alert(
         logger.info(f"📱 [Mock Telegram Test Mode - Skipped Network Call]:\n{message}")
         return True
 
-    endpoint_url = f"https://api.telegram.org/bot{bot_credential}/sendMessage"
+    endpoint_url = f"https://api.telegram.org/bot{tg_bot_auth}/sendMessage"
     data_dict: dict[str, str] = {"chat_id": str(target_channel), "text": message}
     if parse_mode:
         data_dict["parse_mode"] = parse_mode
