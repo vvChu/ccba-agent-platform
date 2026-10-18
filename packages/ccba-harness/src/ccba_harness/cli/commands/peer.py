@@ -342,7 +342,31 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             active_profile=args.profile,
         )
     print("[OK] Peer dispatch completed successfully with valid verdict.")
+    _print_dispatch_verdict_summary(prompt_path)
     return 0
+
+
+def _print_dispatch_verdict_summary(prompt_path: Path) -> None:
+    """Prints a concise one-line summary of verdict, risk, conditions, and session ID to stdout."""
+    from ccba_harness.peer import parse_envelope_from_md, parse_verdict_from_md, safe_read_and_hash
+
+    prompt_content, _ = safe_read_and_hash(prompt_path)
+    envelope = parse_envelope_from_md(prompt_content or "")
+    if not envelope or not envelope.output_path:
+        return
+    out_file = prompt_path.parent / Path(envelope.output_path).name
+    if not out_file.exists():
+        return
+    text, _ = safe_read_and_hash(out_file)
+    verdict = parse_verdict_from_md(text or "")
+    if not verdict:
+        return
+    blocking_count = sum(1 for c in verdict.conditions if c.blocking)
+    sess_id = getattr(verdict.telemetry, "session_id", "none") if verdict.telemetry else "none"
+    print(
+        f"[PEER-SUMMARY] Verdict: {verdict.verdict} | Risk: {verdict.risk_score} | "
+        f"Blocking Conditions: {blocking_count} | Session ID: {sess_id}"
+    )
 
 
 def _print_co_review_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:

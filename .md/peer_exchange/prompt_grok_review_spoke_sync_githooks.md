@@ -1,3 +1,13 @@
+---
+request_id: "req-review-spoke-sync-githooks-001"
+from_agent: "antigravity"
+to_agent: "grok"
+request_type: "review"
+subject: "Tự động hóa cài đặt và kích hoạt Git Pre-Commit Hook (Maskara Secret Scanner) vào quy trình đồng bộ Spoke"
+timestamp: "2026-10-04T16:40:00+07:00"
+output_path: "grok_review_spoke_sync_githooks.md"
+---
+
 # YÊU CẦU THẨM ĐỊNH KỸ THUẬT & PHẢN BIỆN ĐỒNG CẤP (PEER REVIEW)
 ## KẾ HOẠCH TỰ ĐỘNG KÍCH HOẠT GIT PRE-COMMIT HOOK QUA `/ccba-update-spoke`
 

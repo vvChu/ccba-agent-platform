@@ -993,3 +993,21 @@ Khi người dùng gọi `/ccba-ask` để hỏi về kỹ năng thực hiện B
 2. **Canonical Skill-Reference Parity trong `resources/*.yaml` (`RULE-1.18`)**:
    - Mọi danh sách kỹ năng trong tệp cấu hình tài nguyên của skill (`required_skills` trong `.agents/skills/*/resources/*.yaml`) bắt buộc phải khớp 100% với tên thư mục canonical trong `.agents/skills/` (có đầy đủ tiền tố namespace `ccba-` / `bigbim-` và không chứa tên skill đã bị gộp như `ccba-prototype`, `docx`, `pdf`).
 
+---
+
+## 46. Hậu Kiểm Đơn Luồng Grok Peer Exchange, Tái Kết Xuất YAML Frontmatter Bất Biến (`COND-RE-RENDER-ON-MUTATION`) & Sắp Xếp Đa Khóa Tất Định (`RULE-4.19`)
+
+### Context & Incident Root Cause (Kiểm toán dữ liệu thực nghiệm 127 tệp `.md/peer_exchange/` & Thảo luận Peer `req-20261018-discuss-peer-coordination-refinements-001`)
+Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/` (`58` prompts, `61` responses, `28.86M` tokens, `\$8.43` USD) và đối thoại phản biện trực tiếp với Grok CLI (`grok_discuss_peer_coordination_refinements.md`), phát hiện 5 lỗ hổng kỹ thuật trong luồng đơn (`peer-dispatch` không bật `--co-review`):
+1. **Rò rỉ `APPROVE` khi suy luận suy giảm hoặc có điều kiện chặn ở luồng đơn (`Single-Verdict Guardrail Gap`)**: Logic chèn `COND-DEGRADED-REASONING` (`reasoning_tokens == 0` trên `high`/`xhigh`) và hạ cấp `APPROVE` $\to$ `APPROVE_WITH_CONDITIONS` khi có `blocking=True` hoặc `risk_score >= 4` trước đây chỉ nằm trong `synthesize_verdicts()` của `_peer_co_review.py` (chế độ 2-seat). Ở chế độ 1-seat mặc định (`59/61` lượt chạy thực tế), `_finalize_grok_verdict_and_telemetry()` chỉ gán `verdict.telemetry = telemetry` mà không hậu kiểm `verdict.verdict` hay `verdict.conditions`.
+2. **Đứt gãy đồng bộ trên đĩa nếu không tái kết xuất YAML frontmatter (`COND-RE-RENDER-ON-MUTATION`)**: Do `grok usage` chỉ được gọi trong `_finalize_grok_verdict_and_telemetry()` *sau khi* Grok CLI thoát, mọi thay đổi trên `verdict` (`telemetry`, `conditions`, hoặc hạ cấp `verdict`) bắt buộc phải được kết xuất lại vô điều kiện qua `render_verdict_header(verdict) + "\n" + body.lstrip()` trước khi `atomic_write_text()`.
+3. **Thứ tự thời gian `latest_verdict` và `update_live_summary` bị trôi theo bảng chữ cái**: `_build_latest_verdict()` lấy `responses[-1]` từ danh sách sắp xếp theo tên file (`sorted(p.iterdir(), key=lambda x: x.name)`), khiến phán quyết mới nhất theo thời gian thực (`mtime`) bị che khuất bởi tệp có tên đứng cuối bảng chữ cái (`prompt_grok_triage_all_open_issues_pr_plan.md`).
+4. **Hồ sơ dự phòng `DEFAULT_GROK_SPEC` thiếu khóa công cụ ghi (`Write-Tool Exposure`)**: Khác với `PROFILE_SPECS["default"]` đã khóa `READ_ONLY_DISALLOW_LIST`, hằng số fallback `DEFAULT_GROK_SPEC` có `tools: None` và `disallowed_tools: []`.
+
+### Key Architectural Invariants & Learned Rules (`RULE-4.19`, Global Rule #5)
+1. **Single-Verdict Post-Validation & Unconditional Re-Render (`RULE-4.19` / `COND-RE-RENDER-ON-MUTATION`)**:
+   - Hàm `_enforce_single_verdict_guardrails(verdict)` trong `_peer_telemetry.py` bắt buộc thực thi ở cuối `_finalize_grok_verdict_and_telemetry()`: tự động bơm `COND-DEGRADED-REASONING` (`blocking=True`) khi `telemetry.degraded_reasoning` bật, và hạ cấp `APPROVE`/`APPROVE_PLAN` xuống `APPROVE_WITH_CONDITIONS` nếu tồn tại điều kiện `blocking=True` hoặc `risk_score >= 4`.
+   - Ngay sau hậu kiểm, `_finalize_grok_verdict_and_telemetry()` bắt buộc gọi `render_verdict_header(verdict)` vô điều kiện để đồng bộ YAML frontmatter xuống đĩa (`output_path`), đồng thời chỉ đọc `prompt_path` tối đa 1 lần trong bộ nhớ.
+   - Khi `grok usage` thất bại và rơi về nhánh ước lượng văn bản `_build_fallback_telemetry()`, bắt buộc đặt `degraded_reasoning=False` để tránh dương tính giả (vì `TokenEstimator` không quan sát được `reasoningTokens`).
+2. **Multi-Key Deterministic Chronological Sorting (`COND-CHRONOLOGICAL-TIE-BREAKER` / Global Rule #5)**:
+   - Khi sắp xếp các tệp phán quyết trong `_build_latest_verdict()` và `update_live_summary()`, bắt buộc dùng khóa đa tiêu chí `key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name)` (không dùng `reverse=True` bao trùm): ưu tiên `mtime` mới nhất giảm dần, và khi `mtime` trùng nhau trong cửa sổ `100us` (như sau `git checkout`/`clone`) thì phân xử tất định từ A $\to$ Z theo tên file.

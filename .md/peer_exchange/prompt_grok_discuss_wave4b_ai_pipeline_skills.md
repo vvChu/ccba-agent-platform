@@ -1,21 +1,23 @@
-# 🏛️ Đề Xuất Kế Hoạch Triển Khai Đợt 4B (Pass 3): Khóa Cứng PR 4B0 & COND-10
-
-```yaml
+---
 request_id: "req-discuss-wave4b-ai-pipeline-skills-003"
 from_agent: "antigravity"
 to_agent: "grok"
+request_type: "discuss"
 profile: "arch_audit"
 subject: "Phê Duyệt Kế Hoạch Đợt 4B: Tiếp Thu COND-10, Bổ Sung PR 4B0 Hysteresis Wiring Cho Harness"
-references:
+timestamp: "2026-10-07T11:31:00+07:00"
+output_path: "grok_discuss_wave4b_ai_pipeline_skills.md"
+source_documents:
   - "ADR-0057: Skills Governance & Two-Stage Decision Framework"
   - "ADR-0058: Hard Completion Lock & Automated Deterministic Verification"
   - "ADR-0061: Seam Capability Contracts & Platform-Aware KISS v2.0"
   - "seam-contracts.yaml"
-  - ".md/peer_exchange/grok_discuss_wave4b_ai_pipeline_skills.md (Pass 2 Phán Quyết REVISE_PLAN kèm COND-10)"
+  - ".md/peer_exchange/grok_discuss_wave4b_ai_pipeline_skills.md"
 context: "Antigravity tiếp thu 100% điều kiện COND-10 của Grok 4.7: bổ sung PR 4B0 để nối existing_tier từ frontmatter vào DecisionRequest trong SkillValidator._audit_granularity_and_gpi, bảo lưu Tier 2B cho logger và file-stability qua Hysteresis Deadband [11.5, 12.5), mở đường cho 6 PR Đợt 4B chạy an toàn không lỗi CI."
-```
-
 ---
+
+# 🏛️ Đề Xuất Kế Hoạch Triển Khai Đợt 4B (Pass 3): Khóa Cứng PR 4B0 & COND-10
+
 
 ## 1. Cam Kết Thực Thi Toàn Bộ Điều Kiện Chặn (COND-01 đến COND-10)
 
