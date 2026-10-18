@@ -162,22 +162,8 @@ def is_hub_workspace(workspace_dir: Path) -> bool:
         return False
 
 
-def get_target_files(
-    workspace_dir: Path, changed_files: list[str] | None = None, branch: str | None = None
-) -> list[Path]:
-    """Resolves target python files to analyze for AST function length and hygiene.
-
-    Args:
-        workspace_dir: Root directory of the repository.
-        changed_files: Explicit list of modified file paths.
-        branch: Target branch to diff against if changed_files is omitted.
-
-    Returns:
-        Deterministic sorted list of python file paths.
-    """
-    if changed_files:
-        return sorted([workspace_dir / f for f in changed_files if f.endswith(".py")])
-
+def _git_changed_py_files(workspace_dir: Path, branch: str | None) -> list[Path]:
+    """Queries git diff or git status for modified Python files in workspace_dir."""
     files: list[Path] = []
     if branch:
         try:
@@ -188,27 +174,38 @@ def get_target_files(
                 text=True,
                 check=False,
             )
-            for line in res.stdout.splitlines():
-                if line.endswith(".py"):
-                    files.append(workspace_dir / line)
-        except Exception:
-            pass
-    else:
-        try:
-            res = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=workspace_dir,
-                capture_output=True,
-                text=True,
-                check=False,
+            files.extend(
+                workspace_dir / line for line in res.stdout.splitlines() if line.endswith(".py")
             )
-            for line in res.stdout.splitlines():
-                parts = line.strip().split()
-                if len(parts) >= 2 and parts[-1].endswith(".py"):
-                    files.append(workspace_dir / parts[-1])
         except Exception:
             pass
+        return files
 
+    try:
+        res = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=workspace_dir,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        for line in res.stdout.splitlines():
+            parts = line.strip().split()
+            if len(parts) >= 2 and parts[-1].endswith(".py"):
+                files.append(workspace_dir / parts[-1])
+    except Exception:
+        pass
+    return files
+
+
+def get_target_files(
+    workspace_dir: Path, changed_files: list[str] | None = None, branch: str | None = None
+) -> list[Path]:
+    """Resolves target python files to analyze for AST function length and hygiene."""
+    if changed_files:
+        return sorted([workspace_dir / f for f in changed_files if f.endswith(".py")])
+
+    files = _git_changed_py_files(workspace_dir, branch)
     if not files:
         for pattern in ("scripts/peer_*.py", "scripts/check_*.py"):
             files.extend(list(workspace_dir.glob(pattern)))
@@ -241,53 +238,52 @@ def _has_active_quarantine(lines: Sequence[str], start_line: int, end_line: int)
     return False
 
 
+def _inspect_file_function_lengths(py_file: Path, max_lines: int) -> list[str]:
+    """Inspects AST function spans in a single Python file."""
+    violations: list[str] = []
+    try:
+        content = py_file.read_text(encoding="utf-8")
+        lines = content.splitlines()
+        tree = ast.parse(content, filename=str(py_file))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            end_lineno = getattr(node, "end_lineno", node.lineno)
+            if _has_active_quarantine(lines, node.lineno, end_lineno):
+                continue
+            parse_line = _find_parse_args_line(node)
+            if parse_line is not None:
+                body_length = end_lineno - parse_line + 1
+                if body_length > 40:
+                    violations.append(
+                        f"{py_file.name}:{node.lineno} {node.name}() [post-parse body {body_length} lines > 40]"
+                    )
+            else:
+                length = end_lineno - node.lineno + 1
+                if length > max_lines:
+                    violations.append(
+                        f"{py_file.name}:{node.lineno} {node.name}() [{length} lines > {max_lines}]"
+                    )
+    except (SyntaxError, UnicodeDecodeError, OSError) as exc:
+        violations.append(f"{py_file.name}: Syntax/Read error: {exc}")
+    except Exception as exc:
+        violations.append(f"{py_file.name}: Unexpected inspection error: {exc}")
+    return violations
+
+
 def check_ast_function_length(target_files: list[Path], max_lines: int = 50) -> GateCheck:
     """Scans target Python files to ensure no function/method definition exceeds max_lines.
 
     Enforces thin shell invariant: CLI handlers with parse_args are measured post-parse (<= 40 lines),
     while domain functions are capped at max_lines (default 50). Quarantined sections are exempted
     until expiry. Fail-closed on parse/read errors (ADR-0058 / ADR-0061 / ADR-0065).
-
-    Args:
-        target_files: List of Python file paths to inspect.
-        max_lines: Maximum allowed line span per domain function.
-
-    Returns:
-        GateCheck summary.
     """
     t0 = time.time()
     violations: list[str] = []
-
     for py_file in target_files:
         if "__pycache__" in str(py_file) or ".venv" in str(py_file) or "tests" in str(py_file):
             continue
-        try:
-            content = py_file.read_text(encoding="utf-8")
-            lines = content.splitlines()
-            tree = ast.parse(content, filename=str(py_file))
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    end_lineno = getattr(node, "end_lineno", node.lineno)
-                    if _has_active_quarantine(lines, node.lineno, end_lineno):
-                        continue
-
-                    parse_line = _find_parse_args_line(node)
-                    if parse_line is not None:
-                        body_length = end_lineno - parse_line + 1
-                        if body_length > 40:
-                            violations.append(
-                                f"{py_file.name}:{node.lineno} {node.name}() [post-parse body {body_length} lines > 40]"
-                            )
-                    else:
-                        length = end_lineno - node.lineno + 1
-                        if length > max_lines:
-                            violations.append(
-                                f"{py_file.name}:{node.lineno} {node.name}() [{length} lines > {max_lines}]"
-                            )
-        except (SyntaxError, UnicodeDecodeError, OSError) as exc:
-            violations.append(f"{py_file.name}: Syntax/Read error: {exc}")
-        except Exception as exc:
-            violations.append(f"{py_file.name}: Unexpected inspection error: {exc}")
+        violations.extend(_inspect_file_function_lengths(py_file, max_lines))
 
     duration_ms = int((time.time() - t0) * 1000)
     passed = len(violations) == 0
@@ -305,58 +301,11 @@ def check_ast_function_length(target_files: list[Path], max_lines: int = 50) -> 
     )
 
 
-def check_module_size_budget(
-    workspace_dir: Path | None = None,
-    baseline_path: Path | None = None,
-    warn_lines: int = 500,
-    hard_lines: int = 800,
-) -> GateCheck:
-    """Enforces static module line budget and anti-god-module ratchet (ADR-0061 / ADR-0066).
-
-    Args:
-        workspace_dir: Project root directory. Defaults to CWD.
-        baseline_path: Path to baseline JSON file for legacy oversized modules.
-        warn_lines: Warning threshold for module size in lines.
-        hard_lines: Hard failure ceiling for new or unexempted modules.
-
-    Returns:
-        GateCheck summary.
-    """
-    t0 = time.time()
-    ws = workspace_dir.resolve() if workspace_dir else Path.cwd().resolve()
-    base_file = (
-        baseline_path.resolve()
-        if baseline_path
-        else Path(__file__).parent / "module_budget_baseline.json"
-    )
-
-    baseline: dict[str, int] = {}
-    if base_file.exists():
-        try:
-            baseline = json.loads(base_file.read_text(encoding="utf-8"))
-        except Exception as exc:
-            return GateCheck(
-                name="module_size_budget",
-                passed=False,
-                exit_code=1,
-                stdout_tail=f"Failed to parse module budget baseline JSON: {exc}",
-                duration_ms=int((time.time() - t0) * 1000),
-            )
-
-    packages_dir = ws / "packages"
-    if not packages_dir.exists():
-        return GateCheck(
-            name="module_size_budget",
-            passed=True,
-            exit_code=0,
-            stdout_tail="No packages directory found in workspace.",
-            duration_ms=int((time.time() - t0) * 1000),
-        )
-
+def _evaluate_module_line_budgets(
+    ws: Path, py_files: list[Path], baseline: dict[str, int], hard_lines: int
+) -> list[str]:
+    """Evaluates line counts of package modules against baseline ratchet or hard limit."""
     violations: list[str] = []
-    # Filesystem Inode Ordering Invariance (RULE 5)
-    py_files = sorted(packages_dir.glob("*/src/**/*.py"), key=lambda p: p.as_posix())
-
     for py_file in py_files:
         rel_posix = py_file.relative_to(ws).as_posix()
         try:
@@ -371,135 +320,166 @@ def check_module_size_budget(
                 violations.append(
                     f"{rel_posix}: ratchet violation ({line_count} lines > committed baseline {allowed_baseline})"
                 )
-        else:
-            if line_count > hard_lines:
-                violations.append(
-                    f"{rel_posix}: hard cap exceeded ({line_count} lines > {hard_lines} LOC limit)"
-                )
+        elif line_count > hard_lines:
+            violations.append(
+                f"{rel_posix}: hard cap exceeded ({line_count} lines > {hard_lines} LOC limit)"
+            )
+    return violations
 
-    duration_ms = int((time.time() - t0) * 1000)
-    passed = len(violations) == 0
-    tail = (
-        "\n".join(violations[:10])
-        if violations
-        else f"All analyzed modules ({len(py_files)} files) satisfy module size budget (<= {hard_lines} LOC / ratchet)."
+
+def check_module_size_budget(
+    workspace_dir: Path | None = None,
+    baseline_path: Path | None = None,
+    warn_lines: int = 500,
+    hard_lines: int = 800,
+) -> GateCheck:
+    """Enforces static module line budget and anti-god-module ratchet (ADR-0061 / ADR-0066)."""
+    t0 = time.time()
+    ws = workspace_dir.resolve() if workspace_dir else Path.cwd().resolve()
+    base_file = (
+        baseline_path.resolve()
+        if baseline_path
+        else Path(__file__).parent / "module_budget_baseline.json"
     )
+    baseline: dict[str, int] = {}
+    if base_file.exists():
+        try:
+            baseline = json.loads(base_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            err_msg = f"Failed to parse module budget baseline JSON: {exc}"
+            return GateCheck(
+                name="module_size_budget",
+                passed=False,
+                exit_code=1,
+                stdout_tail=err_msg,
+                duration_ms=int((time.time() - t0) * 1000),
+            )
+
+    packages_dir = ws / "packages"
+    if not packages_dir.exists():
+        return GateCheck(
+            name="module_size_budget",
+            passed=True,
+            exit_code=0,
+            stdout_tail="No packages directory found in workspace.",
+            duration_ms=int((time.time() - t0) * 1000),
+        )
+
+    py_files = sorted(packages_dir.glob("*/src/**/*.py"), key=lambda p: p.as_posix())
+    violations = _evaluate_module_line_budgets(ws, py_files, baseline, hard_lines)
+    passed = len(violations) == 0
+    ok_msg = f"All analyzed modules ({len(py_files)} files) satisfy module size budget (<= {hard_lines} LOC / ratchet)."
+    tail = "\n".join(violations[:10]) if violations else ok_msg
     return GateCheck(
         name="module_size_budget",
         passed=passed,
         exit_code=0 if passed else 1,
         stdout_tail=tail,
-        duration_ms=duration_ms,
+        duration_ms=int((time.time() - t0) * 1000),
     )
 
 
+def _is_commented_dead_code(text: str, is_standalone: bool) -> bool:
+    """Returns True if a standalone comment parses as a Python def/class/import/return statement."""
+    if not is_standalone:
+        return False
+    stripped_comment = text.lstrip("#").strip()
+    if not any(stripped_comment.startswith(kw) for kw in DEAD_CODE_KEYWORDS):
+        return False
+    try:
+        if stripped_comment.startswith("return "):
+            code_to_parse = f"def _dummy():\n    {stripped_comment}"
+        elif stripped_comment.endswith(":"):
+            code_to_parse = f"{stripped_comment}\n    pass"
+        else:
+            code_to_parse = stripped_comment
+        tree = ast.parse(code_to_parse)
+        if tree.body:
+            stmt = tree.body[0]
+            return isinstance(
+                stmt,
+                (
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef,
+                    ast.ClassDef,
+                    ast.Import,
+                    ast.ImportFrom,
+                    ast.Return,
+                ),
+            )
+    except (SyntaxError, IndentationError):
+        return False
+    return False
+
+
+def _find_restated_symbol_name(lines: list[str], start_line: int, text: str) -> str | None:
+    """Returns the def/class symbol name if a short comment merely restates its identifier words."""
+    curr_idx = start_line
+    target_name = None
+    while curr_idx < len(lines):
+        nxt_line = lines[curr_idx].strip()
+        if not nxt_line or nxt_line.startswith("#") or nxt_line.startswith("@"):
+            curr_idx += 1
+            continue
+        m = re.match(r"^(?:async\s+)?def\s+([a-zA-Z0-9_]+)\b", nxt_line) or re.match(
+            r"^class\s+([a-zA-Z0-9_]+)\b", nxt_line
+        )
+        if m:
+            target_name = m.group(1)
+        break
+
+    if not target_name:
+        return None
+    words = re.findall(r"[a-zA-Z0-9]+", text.lstrip("#").strip().lower())
+    if words and len(words) <= 5:
+        name_parts_list = re.findall(r"[A-Z]?[a-z0-9]+|[A-Z]+(?=[A-Z][a-z0-9]|\b)", target_name)
+        name_parts = {p.lower() for p in name_parts_list if p}
+        if set(words).issubset(name_parts):
+            return target_name
+    return None
+
+
+def _inspect_file_comments(py_file: Path) -> list[str]:
+    """Scans a single Python file for commented-out dead code or redundant name restatements."""
+    violations: list[str] = []
+    try:
+        content = py_file.read_text(encoding="utf-8")
+        if "# ccba:allow-redundant-comments" in content:
+            return violations
+        lines = content.splitlines(keepends=True)
+        lex_items = list(tokenize.generate_tokens(io.StringIO(content).readline))
+        for tok in lex_items:
+            if tok.type != tokenize.COMMENT or ALLOWLIST_PATTERNS.search(tok.string):
+                continue
+            text = tok.string
+            start_line, start_col = tok.start
+            curr_line_str = lines[start_line - 1] if start_line <= len(lines) else ""
+            is_standalone = start_col == (len(curr_line_str) - len(curr_line_str.lstrip()))
+            if _is_commented_dead_code(text, is_standalone):
+                violations.append(
+                    f"{py_file.name}:{start_line} commented-out dead code: '{text[:60]}'"
+                )
+                continue
+            restated = _find_restated_symbol_name(lines, start_line, text)
+            if restated:
+                violations.append(
+                    f"{py_file.name}:{start_line} duplicate comment restating '{restated}': '{text[:60]}'"
+                )
+    except Exception:
+        return violations
+    return violations
+
+
 def check_redundant_comments(target_files: list[Path]) -> GateCheck:
-    """Enforces Anti-Slop Discipline (ADR-0009 / Pstack Upstream): Blocks redundant comments & dead code.
-
-    Scans Python source files for:
-    1. Commented-out dead code (standalone comments containing def, class, import, return).
-    2. Redundant comments immediately preceding def/class that merely restate the identifier name (<= 5 words).
-
-    Args:
-        target_files: List of Python file paths to inspect.
-
-    Returns:
-        GateCheck summary.
-    """
+    """Enforces Anti-Slop Discipline (ADR-0009 / Pstack Upstream): Blocks redundant comments & dead code."""
     t0 = time.time()
     violations: list[str] = []
-
     for py_file in target_files:
         if any(
             part in py_file.parts for part in ("tests", ".venv", "__pycache__", "site-packages")
         ):
             continue
-        try:
-            content = py_file.read_text(encoding="utf-8")
-            if "# ccba:allow-redundant-comments" in content:
-                continue
-
-            lines = content.splitlines(keepends=True)
-            lex_items = list(tokenize.generate_tokens(io.StringIO(content).readline))
-
-            for tok in lex_items:
-                if tok.type != tokenize.COMMENT:
-                    continue
-
-                text = tok.string
-                start_line, start_col = tok.start
-
-                if ALLOWLIST_PATTERNS.search(text):
-                    continue
-
-                curr_line_str = lines[start_line - 1] if start_line <= len(lines) else ""
-                is_standalone = start_col == (len(curr_line_str) - len(curr_line_str.lstrip()))
-
-                # Sub-check A: Dead code detection
-                if is_standalone:
-                    stripped_comment = text.lstrip("#").strip()
-                    if any(stripped_comment.startswith(kw) for kw in DEAD_CODE_KEYWORDS):
-                        is_dead_code = False
-                        try:
-                            if stripped_comment.startswith("return "):
-                                code_to_parse = f"def _dummy():\n    {stripped_comment}"
-                            elif stripped_comment.endswith(":"):
-                                code_to_parse = f"{stripped_comment}\n    pass"
-                            else:
-                                code_to_parse = stripped_comment
-                            tree = ast.parse(code_to_parse)
-                            if tree.body:
-                                stmt = tree.body[0]
-                                if isinstance(
-                                    stmt,
-                                    (
-                                        ast.FunctionDef,
-                                        ast.AsyncFunctionDef,
-                                        ast.ClassDef,
-                                        ast.Import,
-                                        ast.ImportFrom,
-                                        ast.Return,
-                                    ),
-                                ):
-                                    is_dead_code = True
-                        except (SyntaxError, IndentationError):
-                            is_dead_code = False
-
-                        if is_dead_code:
-                            violations.append(
-                                f"{py_file.name}:{start_line} commented-out dead code: '{text[:60]}'"
-                            )
-                            continue
-
-                # Sub-check B: Duplicate name restatement
-                curr_idx = start_line
-                target_name = None
-                while curr_idx < len(lines):
-                    nxt_line = lines[curr_idx].strip()
-                    if not nxt_line or nxt_line.startswith("#") or nxt_line.startswith("@"):
-                        curr_idx += 1
-                        continue
-                    m = re.match(r"^(?:async\s+)?def\s+([a-zA-Z0-9_]+)\b", nxt_line)
-                    if not m:
-                        m = re.match(r"^class\s+([a-zA-Z0-9_]+)\b", nxt_line)
-                    if m:
-                        target_name = m.group(1)
-                    break
-
-                if target_name:
-                    comment_content = text.lstrip("#").strip()
-                    words = re.findall(r"[a-zA-Z0-9]+", comment_content.lower())
-                    if words and len(words) <= 5:
-                        name_parts_list = re.findall(
-                            r"[A-Z]?[a-z0-9]+|[A-Z]+(?=[A-Z][a-z0-9]|\b)", target_name
-                        )
-                        name_parts = {p.lower() for p in name_parts_list if p}
-                        if set(words).issubset(name_parts):
-                            violations.append(
-                                f"{py_file.name}:{start_line} duplicate comment restating '{target_name}': '{text[:60]}'"
-                            )
-        except Exception:
-            continue
+        violations.extend(_inspect_file_comments(py_file))
 
     duration_ms = int((time.time() - t0) * 1000)
     passed = len(violations) == 0
@@ -520,16 +500,7 @@ def check_redundant_comments(target_files: list[Path]) -> GateCheck:
 def check_hub_import_depth(
     target_files: list[Path], max_depth: int = 2, is_hub: bool = False
 ) -> GateCheck:
-    """Enforces ADR 0044: Blocks deep module imports into Hub packages from Spoke files.
-
-    Args:
-        target_files: List of Python file paths to scan.
-        max_depth: Maximum package path segments permitted.
-        is_hub: Whether the current workspace is the central Hub repository.
-
-    Returns:
-        GateCheck summary.
-    """
+    """Enforces ADR 0044: Blocks deep module imports into Hub packages from Spoke files."""
     if is_hub:
         return GateCheck(
             name="hub_import_depth",
@@ -541,7 +512,6 @@ def check_hub_import_depth(
 
     t0 = time.time()
     violations: list[str] = []
-
     for py_file in target_files:
         try:
             tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
