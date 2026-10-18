@@ -31,20 +31,20 @@ def _parse_commands_from_file(file_path: Path) -> list[str]:
     return commands
 
 
+def _configure_win32_utf8_stdio() -> None:
+    """Ensure UTF-8 stdout/stderr encoding on Windows terminals."""
+    if sys.platform == "win32":
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                try:
+                    stream.reconfigure(encoding="utf-8")
+                except Exception:
+                    pass
+
+
 def run_verify_doc_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for deterministic document artifact verification."""
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            try:
-                sys.stdout.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-        if hasattr(sys.stderr, "reconfigure"):
-            try:
-                sys.stderr.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-
+    _configure_win32_utf8_stdio()
     parser = argparse.ArgumentParser(
         prog="ccba-harness verify-doc",
         description="Verify a document artifact's presence, size, and headings contract.",
@@ -95,9 +95,8 @@ def run_verify_doc_cli(args_list: Sequence[str] | None = None) -> int:
         if result.stdout:
             print(result.stdout)
         return 0
-    else:
-        print(f"ERROR: {result.error_message}", file=sys.stderr)
-        return 1
+    print(f"ERROR: {result.error_message}", file=sys.stderr)
+    return 1
 
 
 def _resolve_patch_commands(args: argparse.Namespace) -> list[str] | None:
@@ -145,18 +144,7 @@ def _emit_verify_patch_output(
 
 def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for deterministic patch verification (`ccba-harness verify-patch`)."""
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            try:
-                sys.stdout.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-        if hasattr(sys.stderr, "reconfigure"):
-            try:
-                sys.stderr.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-
+    _configure_win32_utf8_stdio()
     parser = argparse.ArgumentParser(
         prog="ccba-harness verify-patch",
         description="Verify patches & code changes deterministically via CLI exit codes.",
@@ -259,16 +247,21 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         if args.required_headings
         else None
     )
-    report = verify_patch_execution(
-        commands=commands_to_run,
-        preset=args.preset,
-        target=args.target,
-        min_bytes=args.min_bytes,
-        required_headings=headings,
-        cwd=Path(args.cwd).resolve() if args.cwd else None,
-        timeout=args.timeout,
-        fail_fast=args.fail_fast,
-    )
+    try:
+        report = verify_patch_execution(
+            commands=commands_to_run,
+            preset=args.preset,
+            target=args.target,
+            min_bytes=args.min_bytes,
+            required_headings=headings,
+            cwd=Path(args.cwd).resolve() if args.cwd else None,
+            timeout=args.timeout,
+            fail_fast=args.fail_fast,
+        )
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
     healing_report = None
     if not report.all_passed and args.self_heal:
         from ccba_harness.healing import SelfHealingEngine
