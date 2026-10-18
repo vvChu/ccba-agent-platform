@@ -7,6 +7,9 @@ import subprocess
 import time
 from typing import Any
 
+from ._peer_models import PeerVerdictTelemetry
+from ._peer_watchdog import CostMode
+
 
 def _is_degraded_reasoning(expected_effort: str | None, reasoning_tokens: int) -> bool:
     """Checks whether a high/xhigh reasoning profile silently returned 0 reasoning tokens."""
@@ -15,7 +18,7 @@ def _is_degraded_reasoning(expected_effort: str | None, reasoning_tokens: int) -
 
 def _compute_session_cost(
     s_data: dict[str, Any], primary_model: str, inp: int, outp: int
-) -> tuple[float, Any]:
+) -> tuple[float, CostMode]:
     """Computes normalized USD cost and cost mode from session usage dictionary."""
     from .telemetry import resolve_model_token_rates
 
@@ -36,10 +39,8 @@ def _build_telemetry_from_usage_json(
     duration_seconds: float,
     fallback_model: str,
     expected_reasoning_effort: str | None = None,
-) -> Any:
+) -> PeerVerdictTelemetry:
     """Constructs PeerVerdictTelemetry from parsed `grok usage <session_id>` JSON output."""
-    from .peer import PeerVerdictTelemetry
-
     s_data = dict(data.get("session") or {})
     turns_list = data.get("turns")
     if isinstance(turns_list, list) and len(turns_list) > 1 and isinstance(turns_list[-1], dict):
@@ -79,10 +80,9 @@ def _build_fallback_telemetry(
     duration_seconds: float,
     fallback_model: str,
     expected_reasoning_effort: str | None = None,
-) -> Any | None:
+) -> PeerVerdictTelemetry | None:
     """Constructs heuristic fallback PeerVerdictTelemetry when `grok usage` fails."""
     try:
-        from .peer import PeerVerdictTelemetry
         from .telemetry import TokenEstimator, resolve_model_token_rates
 
         est_inp = TokenEstimator.estimate_text(fallback_prompt_text or "")
@@ -116,7 +116,7 @@ def extract_grok_session_telemetry(
     duration_seconds: float = 0.0,
     fallback_model: str = "unknown",
     expected_reasoning_effort: str | None = None,
-) -> Any | None:
+) -> PeerVerdictTelemetry | None:
     """Safely extracts telemetry metrics from grok usage CLI with bounded retry & fallback (ADR-0064)."""
     cmd = ["grok", "usage", session_id]
     deadline = time.time() + timeout

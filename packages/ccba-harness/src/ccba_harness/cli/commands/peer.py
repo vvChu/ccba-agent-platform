@@ -5,11 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +122,6 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
         run_sync_cycle,
     )
 
-    # Recover any orphaned transactions from prior abnormal exits (ADR-0065)
     try:
         recover_pending_anchor_transactions(root=args.root)
     except Exception as exc:
@@ -150,7 +149,57 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
-# ccba:quarantine seam_id=cli.peer_dispatch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _print_dispatch_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:
+    """Resolves profile options via shared peer helpers and prints dry-run summary."""
+    from ccba_harness.peer import (
+        DEFAULT_GROK_SPEC,
+        PROFILE_SPECS,
+        _resolve_grok_profile_options,
+        _resolve_target_models,
+        build_grok_cmd,
+        parse_envelope_from_md,
+        safe_read_and_hash,
+    )
+
+    content, _ = safe_read_and_hash(prompt_path)
+    envelope = parse_envelope_from_md(content or "")
+    active_profile = args.profile or (envelope.profile if envelope else None)
+    spec = PROFILE_SPECS.get(str(active_profile), DEFAULT_GROK_SPEC)
+    model = _resolve_target_models(args.model, args.tier, spec)[0]
+    opts = _resolve_grok_profile_options(
+        spec,
+        envelope,
+        args.max_turns,
+        args.timeout,
+        args.no_tools,
+        args.resume_session_id,
+        args.fork_session,
+    )
+    cmd = build_grok_cmd(
+        prompt_path=prompt_path,
+        model=model,
+        max_turns=opts["max_turns"],
+        tools=opts["tools"],
+        disallowed_tools=opts["disallowed_tools"],
+        deny=opts["deny"],
+        reasoning_effort=opts["reasoning_effort"],
+        output_format=opts["output_format"],
+        worktree=args.worktree,
+        system_prompt=opts["system_prompt"],
+        resume_session_id=opts["resume_session_id"],
+        fork_session=opts["fork_session"],
+        verbatim=opts["verbatim"],
+        disable_web_search=opts["disable_web_search"],
+    )
+    out_name = Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"
+    print(f"[DRY-RUN] Profile: {active_profile}")
+    print(f"[DRY-RUN] Model: {model}")
+    print(f"[DRY-RUN] Max Turns: {opts['max_turns']}")
+    print(f"[DRY-RUN] Expected Output: {prompt_path.parent / out_name}")
+    print(f"[DRY-RUN] Command: {' '.join(cmd)}")
+    return 0
+
+
 def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for peer prompt dispatch (`ccba-harness peer-dispatch` - ADR-0063)."""
     parser = argparse.ArgumentParser(
@@ -262,102 +311,12 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     if not prompt_path.exists():
         print(f"[FAIL] Prompt file not found: {prompt_path}", file=sys.stderr)
         return 1
-
-    from ccba_harness.peer import (
-        DEFAULT_FALLBACK_AUDITOR_MODEL,
-        DEFAULT_PRIMARY_AUDITOR_MODEL,
-        NO_TOOLS_DISALLOW_LIST,
-        PROFILE_SPECS,
-        TIER_DEFAULT_MODELS,
-        build_grok_cmd,
-        invoke_grok_cli,
-        parse_envelope_from_md,
-        safe_read_and_hash,
-    )
-
     if args.dry_run:
-        content, _ = safe_read_and_hash(prompt_path)
-        envelope = parse_envelope_from_md(content or "")
-        active_profile = args.profile or (envelope.profile if envelope else None)
-        spec = PROFILE_SPECS.get(
-            str(active_profile),
-            {
-                "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
-                "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
-                "max_turns": 12,
-                "tools": None,
-                "disallowed_tools": ["spawn_subagent"],
-                "reasoning_effort": "high",
-                "timeout": 180.0,
-            },
-        )
-        model = args.model
-        if not model:
-            if args.tier and str(args.tier) in TIER_DEFAULT_MODELS:
-                model = TIER_DEFAULT_MODELS[str(args.tier)]
-            elif os.getenv("CCBA_GROK_MODEL"):
-                model = os.environ["CCBA_GROK_MODEL"]
-            else:
-                model = spec["model"]
+        return _print_dispatch_dry_run(prompt_path, args)
 
-        max_turns = (
-            args.max_turns
-            if args.max_turns is not None
-            else (
-                envelope.max_turns
-                if envelope and envelope.max_turns is not None
-                else spec.get("max_turns")
-            )
-        )
-        tools = spec.get("tools")
-        disallowed_tools = spec.get("disallowed_tools")
-        deny = spec.get("deny")
-        if args.no_tools:
-            tools = None
-            disallowed_tools = list(NO_TOOLS_DISALLOW_LIST)
-            deny = ["*"]
-            if args.max_turns is None and (max_turns is None or max_turns > 3):
-                max_turns = 3
+    from ccba_harness.peer import invoke_grok_cli
 
-        effective_resume = args.resume_session_id or (
-            envelope.resume_session_id if envelope else None
-        )
-        effective_fork = (
-            args.fork_session
-            if args.fork_session is not None
-            else (
-                envelope.fork_session
-                if envelope and envelope.fork_session is not None
-                else bool(spec.get("fork_session", bool(effective_resume)))
-            )
-        )
-        cmd = build_grok_cmd(
-            prompt_path=prompt_path,
-            model=model,
-            max_turns=max_turns,
-            tools=tools,
-            disallowed_tools=disallowed_tools,
-            deny=deny,
-            reasoning_effort=spec.get("reasoning_effort"),
-            output_format=str(spec.get("output_format") or "plain"),
-            worktree=args.worktree,
-            system_prompt=spec.get("system_prompt"),
-            resume_session_id=effective_resume,
-            fork_session=effective_fork,
-            verbatim=bool(spec.get("verbatim", False)),
-            disable_web_search=bool(spec.get("disable_web_search", False)),
-        )
-        out_name = (
-            Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"
-        )
-        print(f"[DRY-RUN] Profile: {active_profile}")
-        print(f"[DRY-RUN] Model: {model}")
-        print(f"[DRY-RUN] Max Turns: {max_turns}")
-        print(f"[DRY-RUN] Expected Output: {prompt_path.parent / out_name}")
-        print(f"[DRY-RUN] Command: {' '.join(cmd)}")
-        return 0
-
-    success = invoke_grok_cli(
+    ok = invoke_grok_cli(
         prompt_path=prompt_path,
         model=args.model,
         profile=args.profile,
@@ -369,10 +328,9 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         resume_session_id=args.resume_session_id,
         fork_session=args.fork_session,
     )
-    if not success:
+    if not ok:
         print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
         return 1
-
     if args.auto_apply:
         from ._peer_auto_apply import handle_peer_dispatch_auto_apply
 
@@ -383,12 +341,80 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
             keep_backups=args.keep_backups,
             active_profile=args.profile,
         )
-
     print("[OK] Peer dispatch completed successfully with valid verdict.")
     return 0
 
 
-# ccba:quarantine seam_id=cli.peer_co_review reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _print_co_review_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:
+    """Prints planned co-review execution summary for --dry-run."""
+    from ccba_harness.peer import PROFILE_SPECS, parse_envelope_from_md, safe_read_and_hash
+
+    content, _ = safe_read_and_hash(prompt_path)
+    envelope = parse_envelope_from_md(content or "")
+    req_id = envelope.request_id if envelope else "unknown"
+    print(f"[DRY-RUN] Request ID: {req_id}")
+    print(f"[DRY-RUN] Profiles: {', '.join(args.profiles)}")
+    for p in args.profiles:
+        spec = PROFILE_SPECS.get(p, {})
+        model = spec.get("model", "unknown")
+        timeout = args.timeout if args.timeout is not None else spec.get("timeout", 180.0)
+        print(f"  - Profile: {p:12s} | Model: {model:20s} | Timeout: {timeout}s")
+    out_target = (
+        Path(args.output_file)
+        if args.output_file
+        else prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
+    )
+    print(f"[DRY-RUN] Consensus Output: {out_target}")
+    return 0
+
+
+def _render_co_review_cli_result(report: Any, as_json: bool) -> int:
+    """Prints co-review consensus summary and maps verdict to canonical exit code."""
+    if as_json:
+        print(report.model_dump_json(indent=2))
+    else:
+        print(f"[OK] Consensus Verdict: {report.verdict} (Risk: {report.risk_score}/5)")
+        print(
+            f"Quorum: {len(report.completed_profiles)}/{len(report.expected_profiles)} completed."
+        )
+        if report.conditions:
+            print(f"Conditions ({len(report.conditions)}):")
+            for c in report.conditions:
+                tag = "[BLOCKING]" if c.blocking else "[ADVISORY]"
+                print(f"  - {c.id} {tag}: {c.description}")
+
+    if report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"):
+        return 0
+    if report.verdict in ("APPROVE_WITH_CONDITIONS", "APPROVE_WITH_RESERVATIONS"):
+        return 2
+    if report.verdict == "REVISE_PLAN":
+        return 3
+    if report.verdict in ("REJECT", "REJECT_PLAN", "GATE_FAIL"):
+        return 4
+    if report.verdict == "HANDOFF":
+        return 5
+    return 1
+
+
+def _validate_co_review_preconditions(prompt_path: Path, args: argparse.Namespace) -> bool:
+    """Validates prompt existence and --auto-apply patch-file requirement before co-review."""
+    if not prompt_path.exists():
+        print(f"[FAIL] Prompt file not found: {prompt_path}", file=sys.stderr)
+        return False
+    if args.auto_apply:
+        if not args.patch_file:
+            print(
+                "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
+                file=sys.stderr,
+            )
+            return False
+        patch_path = Path(args.patch_file).resolve()
+        if not patch_path.exists():
+            print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
+            return False
+    return True
+
+
 def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for parallel multi-agent co-review orchestration (`ccba-harness peer-co-review` - ADR-0065)."""
     parser = argparse.ArgumentParser(
@@ -474,47 +500,12 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(args_list)
     prompt_path = Path(args.prompt_file).resolve()
-    if not prompt_path.exists():
-        print(f"[FAIL] Prompt file not found: {prompt_path}", file=sys.stderr)
+    if not _validate_co_review_preconditions(prompt_path, args):
         return 1
-
-    from ccba_harness.peer import (
-        PROFILE_SPECS,
-        orchestrate_peer_co_review,
-        parse_envelope_from_md,
-        safe_read_and_hash,
-    )
-
-    if args.auto_apply:
-        if not args.patch_file:
-            print(
-                "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
-                file=sys.stderr,
-            )
-            return 1
-        patch_path = Path(args.patch_file).resolve()
-        if not patch_path.exists():
-            print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
-            return 1
-
     if args.dry_run:
-        content, _ = safe_read_and_hash(prompt_path)
-        envelope = parse_envelope_from_md(content or "")
-        req_id = envelope.request_id if envelope else "unknown"
-        print(f"[DRY-RUN] Request ID: {req_id}")
-        print(f"[DRY-RUN] Profiles: {', '.join(args.profiles)}")
-        for p in args.profiles:
-            spec = PROFILE_SPECS.get(p, {})
-            model = spec.get("model", "unknown")
-            timeout = args.timeout if args.timeout is not None else spec.get("timeout", 180.0)
-            print(f"  - Profile: {p:12s} | Model: {model:20s} | Timeout: {timeout}s")
-        out_target = (
-            Path(args.output_file)
-            if args.output_file
-            else prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
-        )
-        print(f"[DRY-RUN] Consensus Output: {out_target}")
-        return 0
+        return _print_co_review_dry_run(prompt_path, args)
+
+    from ccba_harness.peer import orchestrate_peer_co_review
 
     output_path = Path(args.output_file).resolve() if args.output_file else None
     report = orchestrate_peer_co_review(
@@ -525,7 +516,6 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
         timeout=args.timeout,
         worktree=args.worktree,
     )
-
     if report is None:
         print(
             "[FAIL] Failed to orchestrate peer co-review: prompt is unreadable.",
@@ -533,19 +523,7 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
         )
         return 1
 
-    if args.json:
-        print(report.model_dump_json(indent=2))
-    else:
-        print(f"[OK] Consensus Verdict: {report.verdict} (Risk: {report.risk_score}/5)")
-        print(
-            f"Quorum: {len(report.completed_profiles)}/{len(report.expected_profiles)} completed."
-        )
-        if report.conditions:
-            print(f"Conditions ({len(report.conditions)}):")
-            for c in report.conditions:
-                tag = "[BLOCKING]" if c.blocking else "[ADVISORY]"
-                print(f"  - {c.id} {tag}: {c.description}")
-
+    exit_code = _render_co_review_cli_result(report, args.json)
     if args.auto_apply:
         from ._peer_auto_apply import handle_peer_co_review_auto_apply
 
@@ -558,21 +536,49 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
             verify_preset=args.verify_preset,
             keep_backups=args.keep_backups,
         )
+    return exit_code
 
-    if report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS"):
-        return 0
-    if report.verdict in ("APPROVE_WITH_CONDITIONS", "APPROVE_WITH_RESERVATIONS"):
-        return 2
-    if report.verdict == "REVISE_PLAN":
-        return 3
-    if report.verdict in ("REJECT", "REJECT_PLAN", "GATE_FAIL"):
-        return 4
-    if report.verdict == "HANDOFF":
-        return 5
+
+def _emit_patch_cli_error(err_msg: str, as_json: bool) -> int:
+    """Outputs a formatted error message for apply-anchor-patch CLI and returns 1."""
+    if as_json:
+        print(json.dumps({"status": "ERROR", "error": err_msg}))
+    else:
+        print(f"[FAIL] {err_msg}", file=sys.stderr)
     return 1
 
 
-# ccba:quarantine seam_id=cli.apply_anchor_patch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _emit_patch_cli_success(
+    modified_paths: list[Path],
+    root_path: Path,
+    dry_run: bool,
+    as_json: bool,
+    quiet: bool,
+) -> int:
+    """Outputs formatted success result for apply-anchor-patch CLI and returns 0."""
+    rel_paths = [
+        str(p.relative_to(root_path)) if p.is_relative_to(root_path) else str(p)
+        for p in modified_paths
+    ]
+    if as_json:
+        print(
+            json.dumps(
+                {
+                    "status": "DRY_RUN_OK" if dry_run else "APPLIED",
+                    "count": len(rel_paths),
+                    "files": rel_paths,
+                    "dry_run": dry_run,
+                }
+            )
+        )
+    elif not quiet:
+        verb = "Validated" if dry_run else "Successfully applied"
+        print(f"[OK] {verb} {len(rel_paths)} file(s):")
+        for f in rel_paths:
+            print(f"  - {f}")
+    return 0
+
+
 def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for applying anchor patches (`ccba-harness apply-anchor-patch` - ADR-0063)."""
     parser = argparse.ArgumentParser(
@@ -616,30 +622,19 @@ def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
     )
 
     args = parser.parse_args(args_list)
-
     if args.patch_file == "-":
         raw_content = sys.stdin.read()
     else:
         patch_path = Path(args.patch_file).resolve()
         if not patch_path.exists():
-            err_msg = f"Patch file not found: {patch_path}"
-            if args.json:
-                print(json.dumps({"status": "ERROR", "error": err_msg}))
-            else:
-                print(f"[FAIL] {err_msg}", file=sys.stderr)
-            return 1
+            return _emit_patch_cli_error(f"Patch file not found: {patch_path}", args.json)
         raw_content = patch_path.read_text(encoding="utf-8")
 
     from ccba_harness.peer import apply_anchor_patch, extract_anchor_payload
 
     payload = extract_anchor_payload(raw_content)
     if payload is None:
-        err_msg = "No valid AnchorPatchPayload found in input"
-        if args.json:
-            print(json.dumps({"status": "ERROR", "error": err_msg}))
-        else:
-            print(f"[FAIL] {err_msg}", file=sys.stderr)
-        return 1
+        return _emit_patch_cli_error("No valid AnchorPatchPayload found in input", args.json)
 
     root_path = Path(args.root).resolve() if args.root else Path.cwd()
     try:
@@ -650,33 +645,6 @@ def run_apply_anchor_patch_cli(args_list: Sequence[str] | None = None) -> int:
             backup=args.backup,
         )
     except Exception as exc:
-        if args.json:
-            print(json.dumps({"status": "ERROR", "error": str(exc)}))
-        else:
-            print(f"[FAIL] Failed to apply anchor patch: {exc}", file=sys.stderr)
-        return 1
+        return _emit_patch_cli_error(f"Failed to apply anchor patch: {exc}", args.json)
 
-    rel_paths = [
-        str(p.relative_to(root_path)) if p.is_relative_to(root_path) else str(p)
-        for p in modified_paths
-    ]
-    status_label = "DRY_RUN_OK" if args.dry_run else "APPLIED"
-
-    if args.json:
-        print(
-            json.dumps(
-                {
-                    "status": status_label,
-                    "count": len(rel_paths),
-                    "files": rel_paths,
-                    "dry_run": args.dry_run,
-                }
-            )
-        )
-    elif not args.quiet:
-        action_verb = "Validated" if args.dry_run else "Successfully applied"
-        print(f"[OK] {action_verb} {len(rel_paths)} file(s):")
-        for f in rel_paths:
-            print(f"  - {f}")
-
-    return 0
+    return _emit_patch_cli_success(modified_paths, root_path, args.dry_run, args.json, args.quiet)
