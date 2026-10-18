@@ -16,8 +16,18 @@ from ccba_legal.sync import LegalSyncEngine
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
 
-def test_find_local_knowledge_corpus_via_hub_path(tmp_path: Path) -> None:
+def test_find_local_knowledge_corpus_via_hub_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Xác minh LegalSyncEngine tự động tìm ccba-legal-knowledge qua hub_path trong workspace_context.yaml."""
+    for env_key in (
+        "CCBA_LEGAL_KNOWLEDGE_PATH",
+        "CCBA_LEGAL_CORPUS_PATH",
+        "CCBA_HUB_PATH",
+        "HUB_PATH",
+    ):
+        monkeypatch.delenv(env_key, raising=False)
+
     # 1. Tạo mock ccba-legal-knowledge
     knowledge_dir = tmp_path / "isolated_drive" / "my_legal_knowledge"
     (knowledge_dir / "legal_docs").mkdir(parents=True, exist_ok=True)
