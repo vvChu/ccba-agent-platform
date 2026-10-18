@@ -28,67 +28,36 @@ SAFE_CLAUSE_PATTERN = re.compile(r"^[a-zA-Z0-9_\-.]+$")
 
 
 def canonicalize_clause_id(clause_id: str) -> str:
-    """Canonicalize clause aliases to gold standard anchor format.
-
-    Supports articles (d1, d15, d65a), clauses (d15k2), points (d6k2a, d15k2da, d15-k2-diem-a),
-    and decimal sections (1.1, 1.1.1, m1.1, muc-1-1).
-
-    Args:
-        clause_id: Input clause alias or anchor string.
-
-    Returns:
-        Standardized clause ID string.
-    """
+    """Canonicalize clause aliases (d1, d15k2, d6k2a, 1.1, muc-1-1) to gold standard anchor format."""
     cid = clause_id.strip().lower()
+    for pat in (
+        r"^d(\d+[a-z]?)[-_]?k(\d+)[-_]?(?:d|diem[-_]?)?([a-z0-9]+)$",
+        r"^dieu[-_](\d+[a-z]?)[-_]khoan[-_](\d+)[-_]diem[-_]([a-z0-9]+)$",
+    ):
+        m_dkd = re.match(pat, cid)
+        if m_dkd:
+            art = m_dkd.group(1)
+            art_norm = str(int(art)) if art.isdigit() else art
+            return f"dieu-{art_norm}-khoan-{int(m_dkd.group(2))}-diem-{m_dkd.group(3)}"
 
-    # Match d{article}k{clause}(d|diem)?{point} e.g. d6k2a, d6k2-a, d6k2_a, d6k2da, d6k2_diem_a
-    m_dkd = re.match(r"^d(\d+[a-z]?)[-_]?k(\d+)[-_]?(?:d|diem[-_]?)?([a-z0-9]+)$", cid)
-    if m_dkd:
-        art = m_dkd.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}-khoan-{int(m_dkd.group(2))}-diem-{m_dkd.group(3)}"
+    for pat in (r"^d(\d+[a-z]?)[-_]?k(\d+)$", r"^dieu[-_](\d+[a-z]?)[-_]khoan[-_](\d+)$"):
+        m_dk = re.match(pat, cid)
+        if m_dk:
+            art = m_dk.group(1)
+            art_norm = str(int(art)) if art.isdigit() else art
+            return f"dieu-{art_norm}-khoan-{int(m_dk.group(2))}"
 
-    # Match d{article}k{clause} e.g. d15k2, d15_k2, d15-k2
-    m_dk = re.match(r"^d(\d+[a-z]?)[-_]?k(\d+)$", cid)
-    if m_dk:
-        art = m_dk.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}-khoan-{int(m_dk.group(2))}"
+    for pat in (r"^d(\d+[a-z]?)$", r"^dieu[-_](\d+[a-z]?)$"):
+        m_d = re.match(pat, cid)
+        if m_d:
+            art = m_d.group(1)
+            art_norm = str(int(art)) if art.isdigit() else art
+            return f"dieu-{art_norm}"
 
-    # Match dieu_X_khoan_Y_diem_Z or dieu-X-khoan-Y-diem-Z
-    m_dkd_full = re.match(r"^dieu[-_](\d+[a-z]?)[-_]khoan[-_](\d+)[-_]diem[-_]([a-z0-9]+)$", cid)
-    if m_dkd_full:
-        art = m_dkd_full.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}-khoan-{int(m_dkd_full.group(2))}-diem-{m_dkd_full.group(3)}"
-
-    # Match dieu_X_khoan_Y or dieu-X-khoan-Y
-    m_dieu_khoan = re.match(r"^dieu[-_](\d+[a-z]?)[-_]khoan[-_](\d+)$", cid)
-    if m_dieu_khoan:
-        art = m_dieu_khoan.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}-khoan-{int(m_dieu_khoan.group(2))}"
-
-    # Match d{article} e.g. d1, d15, d65a
-    m_d = re.match(r"^d(\d+[a-z]?)$", cid)
-    if m_d:
-        art = m_d.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}"
-
-    # Match dieu_X or dieu-X e.g. dieu-1, dieu-65a
-    m_dieu = re.match(r"^dieu[-_](\d+[a-z]?)$", cid)
-    if m_dieu:
-        art = m_dieu.group(1)
-        art_norm = str(int(art)) if art.isdigit() else art
-        return f"dieu-{art_norm}"
-
-    # Match k{clause} e.g. k2 -> khoan-2
     m_k = re.match(r"^k(\d+)$", cid)
     if m_k:
         return f"khoan-{int(m_k.group(1))}"
 
-    # Match section numbers e.g. 1.1, 1.1.1, m1.1, muc-1.1, muc-1-1
     m_muc = re.match(r"^(?:m|muc[-_]?)?(\d+(?:[.\-_]\d+)*)$", cid)
     if m_muc:
         sec_parts = re.split(r"[.\-_]", m_muc.group(1))
@@ -270,114 +239,99 @@ class LegalKnowledgeEngine:
             doc_copy["suggested_replacement"] = lifecycle["suggested_replacement"]
         return doc_copy
 
-    def find_bundle_dir(self, doc_id: str) -> Path | None:
-        """Locate bundle directory for doc_id with two-tier CWE-22 containment check.
+    @staticmethod
+    def _verify_bundle_containment(b_path: Path, base_dir: Path) -> Path:
+        """Verifies CWE-22 Tier 2 containment of a resolved bundle directory."""
+        resolved = b_path.resolve()
+        if not resolved.is_relative_to(base_dir.resolve()):
+            raise ValueError(f"Path traversal detected: bundle '{resolved}' outside '{base_dir}'")
+        return resolved
 
-        Prioritizes exact slug/metadata matches first before falling back to prefix
-        or substring matches to prevent base documents from hijacking amendments.
-
-        Args:
-            doc_id: Document ID or slug.
-
-        Returns:
-            Resolved Path to bundle directory, or None if not found.
-
-        Raises:
-            ValueError: If doc_id contains unsafe characters or violates containment.
-        """
-        # Tier 1: Whitelist check
-        if not SAFE_IDENTIFIER_PATTERN.match(doc_id) or ".." in doc_id:
-            raise ValueError(f"Path traversal detected in doc_id: '{doc_id}'")
-
-        norm_slug = re.sub(r"[\s\-_/.]+", "_", doc_id.lower()).strip("_")
-        simple_slug = re.sub(r"[^a-z0-9]", "", doc_id.lower())
-
-        if norm_slug in self._bundle_cache:
-            return self._bundle_cache[norm_slug]["bundle_dir"]
-
+    def _collect_bundle_candidates(self) -> list[tuple[Path, Path]]:
+        """Collects candidate (bundle_dir, base_dir) pairs across configured corpus directories."""
         search_dirs: list[Path] = []
         if self.corpus_dir and self.corpus_dir.is_dir():
             search_dirs.append(self.corpus_dir)
-
-        # Also search sibling legal_docs
-        local_docs = resolve_project_root() / "legal_docs"
-        if local_docs.is_dir() and local_docs not in search_dirs:
-            search_dirs.append(local_docs)
-        local_md_docs = resolve_project_root() / ".md" / "legal_docs"
-        if local_md_docs.is_dir() and local_md_docs not in search_dirs:
-            search_dirs.append(local_md_docs)
+        for rel in ("legal_docs", ".md/legal_docs"):
+            local_d = resolve_project_root() / rel
+            if local_d.is_dir() and local_d not in search_dirs:
+                search_dirs.append(local_d)
 
         all_candidates: list[tuple[Path, Path]] = []
-        categories = ["01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"]
+        categories = {"01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"}
         for s_dir in search_dirs:
             for child in sorted(s_dir.iterdir()):
                 if not child.is_dir():
                     continue
                 if child.name in categories:
-                    for sub in sorted(child.iterdir()):
-                        if sub.is_dir():
-                            all_candidates.append((sub, s_dir))
+                    all_candidates.extend(
+                        (sub, s_dir) for sub in sorted(child.iterdir()) if sub.is_dir()
+                    )
                 else:
                     all_candidates.append((child, s_dir))
+        return all_candidates
 
-        def _verify_and_resolve(b_path: Path, base_dir: Path) -> Path:
-            resolved = b_path.resolve()
-            if not resolved.is_relative_to(base_dir.resolve()):
-                raise ValueError(
-                    f"Path traversal detected: bundle '{resolved}' outside '{base_dir}'"
-                )
-            return resolved
+    def _match_bundle_by_metadata(
+        self, all_candidates: list[tuple[Path, Path]], doc_id: str, norm_slug: str
+    ) -> Path | None:
+        """Matches a candidate bundle against its metadata.yaml id or document_number."""
+        for b, s_dir in all_candidates:
+            meta_p = b / "metadata.yaml"
+            if not meta_p.is_file():
+                continue
+            try:
+                meta = yaml.safe_load(meta_p.read_text(encoding="utf-8")) or {}
+                m_id = str(meta.get("id") or meta.get("doc_id") or "")
+                m_num = str(meta.get("document_number") or "")
+                for candidate_val in (m_id, m_num):
+                    if not candidate_val:
+                        continue
+                    c_norm = re.sub(r"[\s\-_/.]+", "_", candidate_val.lower()).strip("_")
+                    if candidate_val.lower() == doc_id.lower() or c_norm == norm_slug:
+                        return self._verify_bundle_containment(b, s_dir)
+            except Exception:
+                pass
+        return None
 
-        # Phase 1: Exact matches (slug or metadata)
+    def find_bundle_dir(self, doc_id: str) -> Path | None:
+        """Locate bundle directory for doc_id with two-tier CWE-22 containment check."""
+        if not SAFE_IDENTIFIER_PATTERN.match(doc_id) or ".." in doc_id:
+            raise ValueError(f"Path traversal detected in doc_id: '{doc_id}'")
+
+        norm_slug = re.sub(r"[\s\-_/.]+", "_", doc_id.lower()).strip("_")
+        simple_slug = re.sub(r"[^a-z0-9]", "", doc_id.lower())
+        if norm_slug in self._bundle_cache:
+            return self._bundle_cache[norm_slug]["bundle_dir"]
+
+        all_candidates = self._collect_bundle_candidates()
         for b, s_dir in all_candidates:
             b_norm = re.sub(r"[\s\-_/.]+", "_", b.name.lower()).strip("_")
             b_simple = re.sub(r"[^a-z0-9]", "", b.name.lower())
             if b_norm == norm_slug or b_simple == simple_slug:
-                return _verify_and_resolve(b, s_dir)
+                return self._verify_bundle_containment(b, s_dir)
 
-        for b, s_dir in all_candidates:
-            meta_p = b / "metadata.yaml"
-            if meta_p.is_file():
-                try:
-                    with open(meta_p, encoding="utf-8") as f:
-                        meta = yaml.safe_load(f) or {}
-                    m_id = str(meta.get("id") or meta.get("doc_id") or "")
-                    m_num = str(meta.get("document_number") or "")
-                    if (
-                        m_id.lower() == doc_id.lower()
-                        or re.sub(r"[\s\-_/.]+", "_", m_id.lower()).strip("_") == norm_slug
-                    ):
-                        return _verify_and_resolve(b, s_dir)
-                    if m_num and (
-                        m_num.lower() == doc_id.lower()
-                        or re.sub(r"[\s\-_/.]+", "_", m_num.lower()).strip("_") == norm_slug
-                    ):
-                        return _verify_and_resolve(b, s_dir)
-                except Exception:
-                    pass
+        meta_match = self._match_bundle_by_metadata(all_candidates, doc_id, norm_slug)
+        if meta_match:
+            return meta_match
 
-        # Phase 2: Prefix matches (bundle name extends query or query extends bundle name)
-        prefix_matches: list[tuple[Path, Path]] = []
-        for b, s_dir in all_candidates:
-            b_norm = re.sub(r"[\s\-_/.]+", "_", b.name.lower()).strip("_")
-            if b_norm.startswith(norm_slug + "_"):
-                prefix_matches.append((b, s_dir))
-
+        prefix_matches = [
+            (b, s_dir)
+            for b, s_dir in all_candidates
+            if re.sub(r"[\s\-_/.]+", "_", b.name.lower()).strip("_").startswith(norm_slug + "_")
+        ]
         if prefix_matches:
             prefix_matches.sort(key=lambda x: len(x[0].name))
-            return _verify_and_resolve(prefix_matches[0][0], prefix_matches[0][1])
+            return self._verify_bundle_containment(prefix_matches[0][0], prefix_matches[0][1])
 
-        # Phase 3: Substring fallback
-        sub_matches: list[tuple[Path, Path]] = []
-        for b, s_dir in all_candidates:
-            b_norm = re.sub(r"[\s\-_/.]+", "_", b.name.lower()).strip("_")
-            if norm_slug in b_norm or b_norm in norm_slug:
-                sub_matches.append((b, s_dir))
-
+        sub_matches = [
+            (b, s_dir)
+            for b, s_dir in all_candidates
+            if norm_slug in (bn := re.sub(r"[\s\-_/.]+", "_", b.name.lower()).strip("_"))
+            or bn in norm_slug
+        ]
         if sub_matches:
             sub_matches.sort(key=lambda x: abs(len(x[0].name) - len(doc_id)))
-            return _verify_and_resolve(sub_matches[0][0], sub_matches[0][1])
-
+            return self._verify_bundle_containment(sub_matches[0][0], sub_matches[0][1])
         return None
 
     def _load_bundle(self, bundle_dir: Path, norm_slug: str) -> dict[str, Any]:
@@ -389,8 +343,7 @@ class LegalKnowledgeEngine:
         meta_p = bundle_dir / "metadata.yaml"
         if meta_p.is_file():
             try:
-                with open(meta_p, encoding="utf-8") as f:
-                    metadata = yaml.safe_load(f) or {}
+                metadata = yaml.safe_load(meta_p.read_text(encoding="utf-8")) or {}
             except Exception:
                 pass
 
@@ -398,12 +351,10 @@ class LegalKnowledgeEngine:
         clauses_p = bundle_dir / "clauses.json"
         if clauses_p.is_file():
             try:
-                with open(clauses_p, encoding="utf-8") as f:
-                    clauses = json.load(f)
+                clauses = json.loads(clauses_p.read_text(encoding="utf-8"))
             except Exception:
                 pass
 
-        # Identify main markdown file
         md_files = [
             p
             for p in bundle_dir.glob("*.md")
@@ -412,7 +363,6 @@ class LegalKnowledgeEngine:
         main_md_path: Path | None = None
         md_text = ""
         if md_files:
-            # Prefer file with name matching bundle name or full_text.md
             pref = [p for p in md_files if p.stem.lower() == bundle_dir.name.lower()]
             main_md_path = pref[0] if pref else md_files[0]
             try:
@@ -433,8 +383,7 @@ class LegalKnowledgeEngine:
     @staticmethod
     def _find_anchor_pos(text: str, anchor_id: str) -> int:
         """Find the start character index of an anchor tag in text."""
-        candidates = [anchor_id, anchor_id.replace("-", "_"), anchor_id.replace("_", "-")]
-        for aid in candidates:
+        for aid in (anchor_id, anchor_id.replace("-", "_"), anchor_id.replace("_", "-")):
             pat = re.compile(
                 r"<a\s+(?:id|name)=[\"']" + re.escape(aid) + r"[\"']\s*(?:/>|>\s*</a>|>)",
                 re.IGNORECASE,
@@ -444,26 +393,212 @@ class LegalKnowledgeEngine:
                 return m.start()
         return -1
 
+    def _slice_article_region(self, md_text: str, art_num: str) -> str | None:
+        """Extracts full article text (Điều X) up to the next article or structural heading."""
+        art_start = self._find_anchor_pos(md_text, f"dieu-{art_num}")
+        if art_start == -1:
+            m = re.search(r"(?m)^#{1,3}\s+Điều\s+0*" + re.escape(art_num) + r"\b.*$", md_text)
+            if m:
+                art_start = m.start()
+        if art_start == -1:
+            return None
+
+        search_region = md_text[art_start:]
+        stop_patterns = [
+            re.compile(
+                r"<a\s+(?:id|name)=[\"']dieu[-_](?!0*"
+                + re.escape(art_num)
+                + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
+                + re.escape(art_num)
+                + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
+            ),
+        ]
+        first_stop = len(search_region)
+        for spat in stop_patterns:
+            for sm in spat.finditer(search_region):
+                if 10 < sm.start() < first_stop:
+                    first_stop = sm.start()
+        return search_region[:first_stop].strip()
+
+    def _slice_clause_in_article(self, md_text: str, art_num: str, khoan_num: str) -> str | None:
+        """Extracts a specific clause (Khoản Y) scoped within Article X."""
+        art_text = self._slice_article_region(md_text, art_num) or md_text
+        k_start = self._find_anchor_pos(art_text, f"dieu-{art_num}-khoan-{khoan_num}")
+        if k_start == -1:
+            k_start = self._find_anchor_pos(art_text, f"khoan-{khoan_num}")
+        if k_start == -1:
+            m = re.search(r"(?m)^\s*0*" + re.escape(khoan_num) + r"\.\s+", art_text)
+            if m:
+                k_start = m.start()
+        if k_start == -1:
+            return None
+
+        k_region = art_text[k_start:]
+        k_stops = [
+            re.compile(
+                r"<a\s+(?:id|name)=[\"'](?:dieu[-_]"
+                + re.escape(art_num)
+                + r"[-_])?khoan[-_](?!0*"
+                + re.escape(khoan_num)
+                + r"\b)[^\"']*[\"']",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(?m)^\s*(?!0*" + re.escape(khoan_num) + r"\b)\d+\.\s+"),
+            re.compile(
+                r"<a\s+(?:id|name)=[\"']dieu[-_](?!0*"
+                + re.escape(art_num)
+                + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
+                + re.escape(art_num)
+                + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
+            ),
+        ]
+        first_k_stop = len(k_region)
+        for spat in k_stops:
+            for sm in spat.finditer(k_region):
+                if 10 < sm.start() < first_k_stop:
+                    first_k_stop = sm.start()
+        return k_region[:first_k_stop].strip()
+
+    def _slice_point_in_clause(
+        self, doc_id: str, art_num: str, khoan_num: str, diem_id: str
+    ) -> str | None:
+        """Extracts a specific point (Điểm Z) scoped within Điều X Khoản Y."""
+        clause_dict = self.get_clause(doc_id, f"dieu-{art_num}-khoan-{khoan_num}")
+        if not clause_dict or not clause_dict.get("content"):
+            return None
+        k_content = clause_dict["content"]
+
+        d_start = self._find_anchor_pos(
+            k_content, f"dieu-{art_num}-khoan-{khoan_num}-diem-{diem_id}"
+        )
+        if d_start == -1:
+            d_start = self._find_anchor_pos(k_content, f"diem-{diem_id}")
+        if d_start == -1:
+            m = re.search(r"(?m)^\s*" + re.escape(diem_id) + r"\)\s+", k_content)
+            if m:
+                d_start = m.start()
+        if d_start == -1:
+            return None
+
+        d_region = k_content[d_start:]
+        first_line_end = d_region.find("\n")
+        min_offset = first_line_end + 1 if first_line_end > 0 else 5
+        d_stops = [
+            re.compile(
+                r"<a\s+(?:id|name)=[\"'][^\"']*diem[-_](?!0*"
+                + re.escape(diem_id)
+                + r"\b)[^\"']*[\"']",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(?m)^\s*(?!0*" + re.escape(diem_id) + r"\b)[a-z0-9]\)\s+"),
+        ]
+        first_d_stop = len(d_region)
+        for spat in d_stops:
+            for sm in spat.finditer(d_region):
+                if min_offset <= sm.start() < first_d_stop:
+                    first_d_stop = sm.start()
+        return d_region[:first_d_stop].strip()
+
+    def _slice_section_region(self, md_text: str, sec_id: str) -> str | None:
+        """Extracts a numbered technical standard section (muc-1, muc-1-1)."""
+        sec_dotted = sec_id.replace("-", ".")
+        sec_start = self._find_anchor_pos(md_text, f"muc-{sec_id}")
+        if sec_start == -1:
+            m = re.search(r"(?m)^#{1,4}\s+" + re.escape(sec_dotted) + r"\b.*$", md_text)
+            if m:
+                sec_start = m.start()
+        if sec_start == -1:
+            return None
+
+        search_region = md_text[sec_start:]
+        stop_patterns = [
+            re.compile(
+                r"<a\s+(?:id|name)=[\"']muc-(?!(?:"
+                + re.escape(sec_id)
+                + r"\b|"
+                + re.escape(sec_id + "-")
+                + r"))[^\"']*[\"']",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?m)^#{1,3}\s+(?!(?:"
+                + re.escape(sec_dotted)
+                + r"\b|"
+                + re.escape(sec_dotted + ".")
+                + r"))\d+(?:\.\d+)*\b"
+            ),
+            re.compile(r"(?m)^#{1,3}\s+(?:Chương|Phần|PHỤ LỤC|Phụ lục)\b"),
+        ]
+        first_stop = len(search_region)
+        first_line_end = search_region.find("\n")
+        min_offset = first_line_end + 1 if first_line_end > 0 else 10
+        lines = search_region.splitlines()
+        if len(lines) > 1 and lines[1].startswith("#"):
+            min_offset = len(lines[0]) + len(lines[1]) + 2
+        for spat in stop_patterns:
+            for sm in spat.finditer(search_region):
+                if min_offset <= sm.start() < first_stop:
+                    first_stop = sm.start()
+        return search_region[:first_stop].strip()
+
+    def _slice_fallback_anchor(
+        self, md_text: str, canonical_id: str, m_khoan_top: re.Match[str] | None
+    ) -> str | None:
+        """Extracts top-level Khoản or generic anchor region."""
+        start_idx = self._find_anchor_pos(md_text, canonical_id)
+        if start_idx == -1 and m_khoan_top:
+            m = re.search(r"(?m)^\s*0*" + re.escape(m_khoan_top.group(1)) + r"\.\s+", md_text)
+            if m:
+                start_idx = m.start()
+        if start_idx == -1:
+            return None
+
+        search_region = md_text[start_idx:]
+        first_line_end = search_region.find("\n")
+        min_offset = first_line_end + 1 if first_line_end > 0 else 10
+        lines = search_region.splitlines()
+        if len(lines) > 1 and lines[1].startswith("#"):
+            min_offset = len(lines[0]) + len(lines[1]) + 2
+        stop_patterns = [
+            re.compile(r"<a\s+(?:id|name)=[\"'][^\"']+[\"']", re.IGNORECASE),
+            re.compile(r"(?m)^#{1,4}\s+"),
+        ]
+        first_stop = len(search_region)
+        for spat in stop_patterns:
+            for sm in spat.finditer(search_region):
+                if min_offset <= sm.start() < first_stop:
+                    first_stop = sm.start()
+        return search_region[:first_stop].strip()
+
+    def _dispatch_clause_slice(self, doc_id: str, md_text: str, canonical_id: str) -> str | None:
+        if m_art := re.match(r"^dieu-(\d+[a-z]?)$", canonical_id):
+            return self._slice_article_region(md_text, m_art.group(1))
+        if m_clause := re.match(r"^dieu-(\d+[a-z]?)-khoan-(\d+)$", canonical_id):
+            return self._slice_clause_in_article(md_text, m_clause.group(1), m_clause.group(2))
+        if m_point := re.match(r"^dieu-(\d+[a-z]?)-khoan-(\d+)-diem-([a-z0-9]+)$", canonical_id):
+            return self._slice_point_in_clause(
+                doc_id, m_point.group(1), m_point.group(2), m_point.group(3)
+            )
+        if m_sec := re.match(r"^muc-(\d+(?:-\d+)*)$", canonical_id):
+            return self._slice_section_region(md_text, m_sec.group(1))
+        return self._slice_fallback_anchor(
+            md_text, canonical_id, re.match(r"^khoan-(\d+)$", canonical_id)
+        )
+
     def get_clause(self, doc_id: str, clause_id: str) -> dict[str, Any] | None:
-        """Extract clause, article, point, or section Markdown from OKF bundle using hierarchical tier-aware slicing.
-
-        Args:
-            doc_id: Document ID or slug.
-            clause_id: Clause identifier or alias (e.g. 'd1', 'dieu-1', 'd15k2', 'd6k2a', '1.1', 'muc-1-1').
-
-        Returns:
-            Dictionary containing doc_id, clause_id, title, content, and bundle_path,
-            or None if document or clause not found.
-
-        Raises:
-            ValueError: If doc_id or clause_id contains unsafe characters or path traversal.
-        """
-        # Tier 1 Whitelist check
+        """Extract clause, article, point, or section Markdown from OKF bundle using tier-aware slicing."""
         if not SAFE_IDENTIFIER_PATTERN.match(doc_id) or ".." in doc_id:
             raise ValueError(f"Path traversal detected in doc_id: '{doc_id}'")
         if not SAFE_CLAUSE_PATTERN.match(clause_id) or ".." in clause_id:
             raise ValueError(f"Path traversal detected in clause_id: '{clause_id}'")
-
         canonical_id = canonicalize_clause_id(clause_id)
         if not SAFE_IDENTIFIER_PATTERN.match(canonical_id):
             raise ValueError(f"Path traversal detected in canonical clause_id: '{canonical_id}'")
@@ -471,294 +606,44 @@ class LegalKnowledgeEngine:
         bundle_dir = self.find_bundle_dir(doc_id)
         if not bundle_dir:
             return None
-
-        norm_slug = re.sub(r"[\s\-_/.]+", "_", doc_id.lower()).strip("_")
-        bundle_data = self._load_bundle(bundle_dir, norm_slug)
-        md_text = bundle_data["md_text"]
-        if not md_text:
+        bundle_data = self._load_bundle(
+            bundle_dir, re.sub(r"[\s\-_/.]+", "_", doc_id.lower()).strip("_")
+        )
+        if not bundle_data["md_text"]:
+            return None
+        extracted = self._dispatch_clause_slice(doc_id, bundle_data["md_text"], canonical_id)
+        if not extracted:
             return None
 
-        # Parse target ID structure
-        m_art = re.match(r"^dieu-(\d+[a-z]?)$", canonical_id)
-        m_clause = re.match(r"^dieu-(\d+[a-z]?)-khoan-(\d+)$", canonical_id)
-        m_point = re.match(r"^dieu-(\d+[a-z]?)-khoan-(\d+)-diem-([a-z0-9]+)$", canonical_id)
-        m_sec = re.match(r"^muc-(\d+(?:-\d+)*)$", canonical_id)
-        m_khoan_top = re.match(r"^khoan-(\d+)$", canonical_id)
-
-        extracted_content = ""
-
-        # Case 1: Article (Điều X)
-        if m_art:
-            art_num = m_art.group(1)
-            art_start = self._find_anchor_pos(md_text, f"dieu-{art_num}")
-            if art_start == -1:
-                art_pat = re.compile(r"(?m)^#{1,3}\s+Điều\s+0*" + re.escape(art_num) + r"\b.*$")
-                m = art_pat.search(md_text)
-                if m:
-                    art_start = m.start()
-            if art_start == -1:
-                return None
-
-            search_region = md_text[art_start:]
-            # Next article or higher structural heading
-            stop_patterns = [
-                re.compile(
-                    r"<a\s+(?:id|name)=[\"']dieu[-_](?!0*"
-                    + re.escape(art_num)
-                    + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
-                    re.IGNORECASE,
-                ),
-                re.compile(
-                    r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
-                    + re.escape(art_num)
-                    + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
-                ),
-            ]
-            first_stop = len(search_region)
-            for spat in stop_patterns:
-                for sm in spat.finditer(search_region):
-                    if sm.start() > 10 and sm.start() < first_stop:
-                        first_stop = sm.start()
-            extracted_content = md_text[art_start : art_start + first_stop].strip()
-
-        # Case 2: Clause within Article (Điều X Khoản Y)
-        elif m_clause:
-            art_num = m_clause.group(1)
-            khoan_num = m_clause.group(2)
-            # Find Article region first to scope clause search
-            art_start = self._find_anchor_pos(md_text, f"dieu-{art_num}")
-            if art_start == -1:
-                art_pat = re.compile(r"(?m)^#{1,3}\s+Điều\s+0*" + re.escape(art_num) + r"\b.*$")
-                m = art_pat.search(md_text)
-                if m:
-                    art_start = m.start()
-            if art_start == -1:
-                art_start = 0
-                art_end = len(md_text)
-            else:
-                search_region = md_text[art_start:]
-                stop_pat = re.compile(
-                    r"(?m)(?:<a\s+(?:id|name)=[\"']dieu[-_](?!0*"
-                    + re.escape(art_num)
-                    + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']|^#{1,3}\s+(?:Điều\s+(?!0*"
-                    + re.escape(art_num)
-                    + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục))",
-                    re.IGNORECASE,
-                )
-                m_next_art = None
-                for sm in stop_pat.finditer(search_region):
-                    if sm.start() > 10:
-                        m_next_art = sm
-                        break
-                art_end = art_start + (m_next_art.start() if m_next_art else len(search_region))
-
-            art_text = md_text[art_start:art_end]
-            # Search for clause inside art_text
-            k_start = self._find_anchor_pos(art_text, f"dieu-{art_num}-khoan-{khoan_num}")
-            if k_start == -1:
-                k_start = self._find_anchor_pos(art_text, f"khoan-{khoan_num}")
-            if k_start == -1:
-                k_pat = re.compile(r"(?m)^\s*0*" + re.escape(khoan_num) + r"\.\s+")
-                m = k_pat.search(art_text)
-                if m:
-                    k_start = m.start()
-            if k_start == -1:
-                return None
-
-            k_region = art_text[k_start:]
-            # Stop condition for Khoản: Next Khoản or Next Article or Structural Heading
-            k_stops = [
-                re.compile(
-                    r"<a\s+(?:id|name)=[\"'](?:dieu[-_]"
-                    + re.escape(art_num)
-                    + r"[-_])?khoan[-_](?!0*"
-                    + re.escape(khoan_num)
-                    + r"\b)[^\"']*[\"']",
-                    re.IGNORECASE,
-                ),
-                re.compile(r"(?m)^\s*(?!0*" + re.escape(khoan_num) + r"\b)\d+\.\s+"),
-                re.compile(
-                    r"<a\s+(?:id|name)=[\"']dieu[-_](?!0*"
-                    + re.escape(art_num)
-                    + r"(?:[-_]khoan|[-_]diem|_|\b))[^\"']*[\"']",
-                    re.IGNORECASE,
-                ),
-                re.compile(
-                    r"(?m)^#{1,3}\s+(?:Điều\s+(?!0*"
-                    + re.escape(art_num)
-                    + r"\b)|Chương|Mục|Phần|PHỤ LỤC|Phụ lục)"
-                ),
-            ]
-            first_k_stop = len(k_region)
-            for spat in k_stops:
-                for sm in spat.finditer(k_region):
-                    if sm.start() > 10 and sm.start() < first_k_stop:
-                        first_k_stop = sm.start()
-            extracted_content = k_region[:first_k_stop].strip()
-
-        # Case 3: Point within Clause (Điều X Khoản Y Điểm Z)
-        elif m_point:
-            art_num = m_point.group(1)
-            khoan_num = m_point.group(2)
-            diem_id = m_point.group(3)
-
-            # First resolve Khoản Y
-            clause_dict = self.get_clause(doc_id, f"dieu-{art_num}-khoan-{khoan_num}")
-            if not clause_dict or not clause_dict.get("content"):
-                return None
-            k_content = clause_dict["content"]
-
-            d_start = self._find_anchor_pos(
-                k_content, f"dieu-{art_num}-khoan-{khoan_num}-diem-{diem_id}"
-            )
-            if d_start == -1:
-                d_start = self._find_anchor_pos(k_content, f"diem-{diem_id}")
-            if d_start == -1:
-                d_pat = re.compile(r"(?m)^\s*" + re.escape(diem_id) + r"\)\s+")
-                m = d_pat.search(k_content)
-                if m:
-                    d_start = m.start()
-            if d_start == -1:
-                return None
-
-            d_region = k_content[d_start:]
-            first_line_end = d_region.find("\n")
-            min_offset = first_line_end + 1 if first_line_end > 0 else 5
-
-            d_stops = [
-                re.compile(
-                    r"<a\s+(?:id|name)=[\"'][^\"']*diem[-_](?!0*"
-                    + re.escape(diem_id)
-                    + r"\b)[^\"']*[\"']",
-                    re.IGNORECASE,
-                ),
-                re.compile(r"(?m)^\s*(?!0*" + re.escape(diem_id) + r"\b)[a-z0-9]\)\s+"),
-            ]
-            first_d_stop = len(d_region)
-            for spat in d_stops:
-                for sm in spat.finditer(d_region):
-                    if sm.start() >= min_offset and sm.start() < first_d_stop:
-                        first_d_stop = sm.start()
-            extracted_content = d_region[:first_d_stop].strip()
-
-        # Case 4: Section / Mục (muc-1, muc-1-1, muc-1-1-1)
-        elif m_sec:
-            sec_id = m_sec.group(1)
-            sec_dotted = sec_id.replace("-", ".")
-            sec_start = self._find_anchor_pos(md_text, f"muc-{sec_id}")
-            if sec_start == -1:
-                sec_pat = re.compile(r"(?m)^#{1,4}\s+" + re.escape(sec_dotted) + r"\b.*$")
-                m = sec_pat.search(md_text)
-                if m:
-                    sec_start = m.start()
-            if sec_start == -1:
-                return None
-
-            search_region = md_text[sec_start:]
-            stop_patterns = [
-                re.compile(
-                    r"<a\s+(?:id|name)=[\"']muc-(?!(?:"
-                    + re.escape(sec_id)
-                    + r"\b|"
-                    + re.escape(sec_id + "-")
-                    + r"))[^\"']*[\"']",
-                    re.IGNORECASE,
-                ),
-                re.compile(
-                    r"(?m)^#{1,3}\s+(?!(?:"
-                    + re.escape(sec_dotted)
-                    + r"\b|"
-                    + re.escape(sec_dotted + ".")
-                    + r"))\d+(?:\.\d+)*\b"
-                ),
-                re.compile(r"(?m)^#{1,3}\s+(?:Chương|Phần|PHỤ LỤC|Phụ lục)\b"),
-            ]
-            first_stop = len(search_region)
-            first_line_end = search_region.find("\n")
-            min_offset = first_line_end + 1 if first_line_end > 0 else 10
-            lines = search_region.splitlines()
-            if len(lines) > 1 and lines[1].startswith("#"):
-                min_offset = len(lines[0]) + len(lines[1]) + 2
-
-            for spat in stop_patterns:
-                for sm in spat.finditer(search_region):
-                    if sm.start() >= min_offset and sm.start() < first_stop:
-                        first_stop = sm.start()
-            extracted_content = search_region[:first_stop].strip()
-
-        # Case 5: Top-level Khoản or Fallback Anchor Search
-        else:
-            start_idx = self._find_anchor_pos(md_text, canonical_id)
-            if start_idx == -1 and m_khoan_top:
-                khoan_num = m_khoan_top.group(1)
-                m = re.search(r"(?m)^\s*0*" + re.escape(khoan_num) + r"\.\s+", md_text)
-                if m:
-                    start_idx = m.start()
-            if start_idx == -1:
-                return None
-
-            search_region = md_text[start_idx:]
-            first_line_end = search_region.find("\n")
-            min_offset = first_line_end + 1 if first_line_end > 0 else 10
-            lines = search_region.splitlines()
-            if len(lines) > 1 and lines[1].startswith("#"):
-                min_offset = len(lines[0]) + len(lines[1]) + 2
-
-            stop_patterns = [
-                re.compile(r"<a\s+(?:id|name)=[\"'][^\"']+[\"']", re.IGNORECASE),
-                re.compile(r"(?m)^#{1,4}\s+"),
-            ]
-            first_stop = len(search_region)
-            for spat in stop_patterns:
-                for sm in spat.finditer(search_region):
-                    if sm.start() >= min_offset and sm.start() < first_stop:
-                        first_stop = sm.start()
-            extracted_content = search_region[:first_stop].strip()
-
-        if not extracted_content:
-            return None
-
-        # Step 3: Resolve title from clauses.json or extracted heading
-        title = ""
-        for c in bundle_data.get("clauses", []):
-            if c.get("clause_id") == canonical_id or c.get("anchor") == canonical_id:
-                title = c.get("title", "")
-                break
-
+        title = next(
+            (
+                c.get("title", "")
+                for c in bundle_data.get("clauses", [])
+                if c.get("clause_id") in (canonical_id, c.get("anchor"))
+                or c.get("anchor") == canonical_id
+            ),
+            "",
+        )
         if not title:
-            first_line = extracted_content.splitlines()[0] if extracted_content else ""
-            if first_line.startswith("<a "):
-                lines = extracted_content.splitlines()
-                first_line = lines[1] if len(lines) > 1 else first_line
-            title = first_line.lstrip("#").strip()
+            lines = extracted.splitlines()
+            title = (
+                (lines[1] if len(lines) > 1 and lines[0].startswith("<a ") else lines[0])
+                .lstrip("#")
+                .strip()
+            )
 
         return {
             "doc_id": doc_id,
             "clause_id": canonical_id,
             "title": title or canonical_id,
-            "content": extracted_content,
+            "content": extracted,
             "bundle_path": str(bundle_dir),
             "source_file": bundle_data["main_md_path"].name if bundle_data["main_md_path"] else "",
         }
 
     def get_table(self, doc_id: str, table_id: str, format: str = "markdown") -> str | None:
-        """Extract table data from OKF bundle in CSV or Markdown format.
-
-        Args:
-            doc_id: Document ID or slug.
-            table_id: Table identifier (e.g. 'bang_01' or 'bang-01').
-            format: Output format ('markdown' or 'csv').
-
-        Returns:
-            Table string formatted as markdown or csv, or None if not found.
-
-        Raises:
-            ValueError: If doc_id or table_id contains unsafe characters or violates containment.
-        """
-        # Strip optional .csv suffix before validation
+        """Extract table data from OKF bundle in CSV or Markdown format."""
         clean_table_id = table_id[:-4] if table_id.lower().endswith(".csv") else table_id
-
-        # Tier 1 Whitelist check
         if not SAFE_IDENTIFIER_PATTERN.match(doc_id) or ".." in doc_id:
             raise ValueError(f"Path traversal detected in doc_id: '{doc_id}'")
         if not SAFE_IDENTIFIER_PATTERN.match(clean_table_id) or ".." in clean_table_id:
@@ -768,35 +653,21 @@ class LegalKnowledgeEngine:
         if not bundle_dir:
             return None
 
-        # Search for table CSV
-        csv_candidates: list[Path] = []
-        tables_csv_dir = bundle_dir / "tables" / "csv"
-        tables_dir = bundle_dir / "tables"
-
         cand_names = [
             f"{clean_table_id}.csv",
             f"{clean_table_id.replace('-', '_')}.csv",
             f"{clean_table_id.replace('_', '-')}.csv",
             clean_table_id,
         ]
+        csv_candidates: list[Path] = []
+        for sub_dir in (bundle_dir / "tables" / "csv", bundle_dir / "tables"):
+            if sub_dir.is_dir():
+                csv_candidates.extend(sub_dir / name for name in cand_names)
 
-        if tables_csv_dir.is_dir():
-            for name in cand_names:
-                csv_candidates.append(tables_csv_dir / name)
-        if tables_dir.is_dir():
-            for name in cand_names:
-                csv_candidates.append(tables_dir / name)
-
-        target_file: Path | None = None
-        for cand in csv_candidates:
-            if cand.is_file():
-                target_file = cand
-                break
-
+        target_file = next((cand for cand in csv_candidates if cand.is_file()), None)
         if not target_file:
             return None
 
-        # Tier 2: Double containment check
         resolved = target_file.resolve()
         if not resolved.is_relative_to(bundle_dir.resolve()):
             raise ValueError(
@@ -808,14 +679,7 @@ class LegalKnowledgeEngine:
         except Exception:
             raw_csv = resolved.read_text(encoding="utf-8", errors="replace")
 
-        if format.lower() == "csv":
-            return raw_csv
-
-        return csv_to_markdown(raw_csv)
+        return raw_csv if format.lower() == "csv" else csv_to_markdown(raw_csv)
 
 
-__all__ = [
-    "LegalKnowledgeEngine",
-    "canonicalize_clause_id",
-    "csv_to_markdown",
-]
+__all__ = ["LegalKnowledgeEngine", "canonicalize_clause_id", "csv_to_markdown"]

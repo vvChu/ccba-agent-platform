@@ -160,108 +160,59 @@ class LegalSyncEngine:
             clean_drive=clean_drive,
         )
 
-    # ccba:quarantine seam_id=legal_sync.find_corpus reason=legacy_sync_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/439
-    def find_local_knowledge_corpus(self, explicit_path: Path | None = None) -> Path | None:
-        """Discover the canonical Knowledge Corpus Spoke (ccba-legal-knowledge) on local machine (ADR 0050)."""
-        if explicit_path and explicit_path.exists():
-            return explicit_path.resolve()
+    def _find_corpus_in_hub_registry(self, hub_p: Path) -> Path | None:
+        """Searches spoke_registry files under hub_p for the canonical legal knowledge corpus."""
+        for reg_name in ("spoke_registry_decrypted.yaml", "spoke_registry.yaml"):
+            spoke_reg = hub_p / ".md" / "data" / reg_name
+            if not spoke_reg.is_file():
+                continue
+            try:
+                reg_content = yaml.safe_load(spoke_reg.read_text(encoding="utf-8")) or {}
+                for sp in reg_content.get("spokes", []):
+                    if not isinstance(sp, dict):
+                        continue
+                    sp_name = str(sp.get("name", "")).lower()
+                    if "legal-knowledge" in sp_name or sp.get("archetype") == "knowledge_corpus":
+                        p_str = sp.get("path")
+                        if p_str:
+                            cand = Path(p_str)
+                            if cand.exists() and (
+                                (cand / "legal_docs").exists()
+                                or (cand / ".md" / "data" / "legal_registry.yaml").exists()
+                            ):
+                                return cand.resolve()
+            except Exception:
+                pass
+        return None
 
-        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH") or os.environ.get(
-            "CCBA_LEGAL_CORPUS_PATH"
-        )
-        if env_path:
-            p = Path(env_path)
-            if p.exists():
-                if (p / "legal_docs").exists():
-                    return p.resolve()
-                elif p.name == "legal_docs":
-                    return p.parent.resolve()
-                return p.resolve()
-
-        # Check CCBA_HUB_PATH environment variable first
-        for env_hub_key in ("CCBA_HUB_PATH", "HUB_PATH"):
-            env_hub = os.environ.get(env_hub_key)
-            if env_hub:
-                hub_p = Path(env_hub).resolve()
-                for reg_name in ["spoke_registry_decrypted.yaml", "spoke_registry.yaml"]:
-                    spoke_reg = hub_p / ".md" / "data" / reg_name
-                    if spoke_reg.is_file():
-                        try:
-                            with open(spoke_reg, encoding="utf-8") as rf:
-                                reg_content = yaml.safe_load(rf) or {}
-                            for sp in reg_content.get("spokes", []):
-                                if isinstance(sp, dict) and (
-                                    sp.get("name") == "ccba-legal-knowledge"
-                                    or "legal-knowledge" in str(sp.get("name", "")).lower()
-                                    or sp.get("archetype") == "knowledge_corpus"
-                                ):
-                                    p_str = sp.get("path")
-                                    if p_str:
-                                        cand = Path(p_str)
-                                        if cand.exists() and (
-                                            (cand / "legal_docs").exists()
-                                            or (
-                                                cand / ".md" / "data" / "legal_registry.yaml"
-                                            ).exists()
-                                        ):
-                                            return cand.resolve()
-                        except Exception:
-                            pass
-
-        # Hub-mediated discovery via workspace_context.yaml (KISS - Zero Extra Config)
-        for ctx_name in [".md/workspace_context.yaml", ".agents/workspace_context.yaml"]:
+    def _resolve_hub_from_workspace_ctx(self) -> Path | None:
+        """Extracts hub_path from .md/workspace_context.yaml or .agents/workspace_context.yaml."""
+        for ctx_name in (".md/workspace_context.yaml", ".agents/workspace_context.yaml"):
             local_ctx = self.project_root / ctx_name
-            if local_ctx.is_file():
-                try:
-                    with open(local_ctx, encoding="utf-8") as f:
-                        ctx_data = yaml.safe_load(f) or {}
-                    proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
-                    hub_val = ctx_data.get("hub_path") or (
-                        proj_data.get("hub_path") if isinstance(proj_data, dict) else None
-                    )
-                    hub_path_str: str = ""
-                    if isinstance(hub_val, dict):
-                        os_k = "windows" if os.name == "nt" else "linux"
-                        hub_path_str = str(hub_val.get(os_k) or hub_val.get("posix") or "")
-                    elif isinstance(hub_val, str):
-                        hub_path_str = hub_val
+            if not local_ctx.is_file():
+                continue
+            try:
+                ctx_data = yaml.safe_load(local_ctx.read_text(encoding="utf-8")) or {}
+                proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
+                hub_val = ctx_data.get("hub_path") or (
+                    proj_data.get("hub_path") if isinstance(proj_data, dict) else None
+                )
+                hub_str = ""
+                if isinstance(hub_val, dict):
+                    os_k = "windows" if os.name == "nt" else "linux"
+                    hub_str = str(hub_val.get(os_k) or hub_val.get("posix") or "")
+                elif isinstance(hub_val, str):
+                    hub_str = hub_val
+                is_win_drive = bool(re.match(r"^[A-Za-z]:[\\/]", hub_str))
+                if hub_str and not (os.name != "nt" and is_win_drive):
+                    hub_p = Path(hub_str)
+                    return hub_p if hub_p.is_absolute() else (self.project_root / hub_p).resolve()
+            except (OSError, yaml.YAMLError) as e:
+                logger.debug("Lỗi khi đọc file cấu hình hub/workspace: %s", e)
+        return None
 
-                    if hub_path_str:
-                        is_win_drive = bool(re.match(r"^[A-Za-z]:[\\/]", hub_path_str))
-                        if not (os.name != "nt" and is_win_drive):
-                            hub_p = Path(hub_path_str)
-                            if not hub_p.is_absolute():
-                                hub_p = (self.project_root / hub_p).resolve()
-                            for reg_name in [
-                                "spoke_registry_decrypted.yaml",
-                                "spoke_registry.yaml",
-                            ]:
-                                spoke_reg = hub_p / ".md" / "data" / reg_name
-                                if spoke_reg.is_file():
-                                    with open(spoke_reg, encoding="utf-8") as rf:
-                                        reg_content = yaml.safe_load(rf) or {}
-                                    for sp in reg_content.get("spokes", []):
-                                        if isinstance(sp, dict) and (
-                                            sp.get("name") == "ccba-legal-knowledge"
-                                            or "legal-knowledge" in str(sp.get("name", "")).lower()
-                                            or sp.get("archetype") == "knowledge_corpus"
-                                        ):
-                                            p_str = sp.get("path")
-                                            if p_str:
-                                                cand = Path(p_str)
-                                                if cand.exists() and (
-                                                    (cand / "legal_docs").exists()
-                                                    or (
-                                                        cand
-                                                        / ".md"
-                                                        / "data"
-                                                        / "legal_registry.yaml"
-                                                    ).exists()
-                                                ):
-                                                    return cand.resolve()
-                except (OSError, yaml.YAMLError) as e:
-                    logger.debug("Lỗi khi đọc file cấu hình hub/workspace: %s", e)
-
+    def _find_corpus_in_default_candidates(self) -> Path | None:
+        """Checks standard sibling and home directory locations for ccba-legal-knowledge."""
         candidates = [
             self.project_root.parent / "ccba-legal-knowledge",
             self.project_root / ".." / "ccba-legal-knowledge",
@@ -270,7 +221,6 @@ class LegalSyncEngine:
             Path.home() / "GitHubProjects" / "ccba-legal-knowledge",
             Path.home() / "ccba-legal-knowledge",
         ]
-
         for cand in candidates:
             try:
                 resolved = cand.resolve()
@@ -281,14 +231,121 @@ class LegalSyncEngine:
                     return resolved
             except OSError:
                 continue
-
-        # Check if project_root itself contains legal_docs
         if (self.project_root / "legal_docs").exists():
             return self.project_root.resolve()
-
         return None
 
-    # ccba:quarantine seam_id=legal_sync.pull_bundles reason=legacy_sync_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/439
+    def find_local_knowledge_corpus(self, explicit_path: Path | None = None) -> Path | None:
+        """Discover the canonical Knowledge Corpus Spoke (ccba-legal-knowledge) on local machine (ADR 0050)."""
+        if explicit_path and explicit_path.exists():
+            return explicit_path.resolve()
+
+        env_path = os.environ.get("CCBA_LEGAL_KNOWLEDGE_PATH") or os.environ.get(
+            "CCBA_LEGAL_CORPUS_PATH"
+        )
+        if env_path and Path(env_path).exists():
+            p = Path(env_path)
+            if (p / "legal_docs").exists():
+                return p.resolve()
+            return p.parent.resolve() if p.name == "legal_docs" else p.resolve()
+
+        for env_hub_key in ("CCBA_HUB_PATH", "HUB_PATH"):
+            env_hub = os.environ.get(env_hub_key)
+            if env_hub:
+                found = self._find_corpus_in_hub_registry(Path(env_hub).resolve())
+                if found:
+                    return found
+
+        ctx_hub = self._resolve_hub_from_workspace_ctx()
+        if ctx_hub:
+            found = self._find_corpus_in_hub_registry(ctx_hub)
+            if found:
+                return found
+
+        return self._find_corpus_in_default_candidates()
+
+    def _resolve_sync_dest_root(self, target_dir: Path | str | None) -> Path:
+        """Resolves destination root directory for OKF bundles."""
+        if target_dir:
+            return Path(target_dir)
+        is_master = self.project_root.name.lower() == "ccba-legal-knowledge"
+        if not is_master:
+            for ctx_dir in (self.project_root / ".agents", self.project_root / ".md"):
+                ctx_path = ctx_dir / "workspace_context.yaml"
+                if ctx_path.is_file():
+                    try:
+                        ctx = yaml.safe_load(ctx_path.read_text(encoding="utf-8")) or {}
+                        proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
+                        if isinstance(proj, dict) and (
+                            str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
+                            or proj.get("is_master") is True
+                        ):
+                            is_master = True
+                            break
+                    except Exception:
+                        pass
+        return (
+            (self.project_root / "legal_docs")
+            if is_master
+            else (self.project_root / ".md" / "legal_docs")
+        )
+
+    def _copy_local_corpus_bundles(
+        self, corpus_path: Path, dest_root: Path, doc_ids: list[str] | None
+    ) -> list[str]:
+        """Copies matching OKF bundles from local corpus_path into dest_root."""
+        synced_bundles: list[str] = []
+        source_legal_docs = corpus_path / "legal_docs"
+        if not source_legal_docs.exists():
+            return synced_bundles
+        norm_ids = [re.sub(r"[\s\-_/.]+", "", d.lower()) for d in (doc_ids or [])]
+        for cat in ("01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"):
+            cat_dir = source_legal_docs / cat
+            if not cat_dir.exists():
+                continue
+            for bundle_dir in sorted(cat_dir.iterdir()):
+                if not bundle_dir.is_dir():
+                    continue
+                slug = bundle_dir.name
+                if norm_ids:
+                    norm_slug = re.sub(r"[\s\-_/.]+", "", slug.lower())
+                    if not any(nid in norm_slug for nid in norm_ids):
+                        continue
+                target_bundle = dest_root / cat / slug
+                target_bundle.mkdir(parents=True, exist_ok=True)
+                for item in bundle_dir.iterdir():
+                    dest_item = target_bundle / item.name
+                    if item.is_dir():
+                        if dest_item.is_file() or _is_link_or_junction(dest_item):
+                            safe_remove(dest_item)
+                        shutil.copytree(
+                            item, dest_item, dirs_exist_ok=True, copy_function=safe_copy2
+                        )
+                    else:
+                        if dest_item.is_dir():
+                            safe_remove(dest_item)
+                        safe_copy2(item, dest_item)
+                synced_bundles.append(f"{cat}/{slug}")
+        return synced_bundles
+
+    def _merge_local_corpus_registry(
+        self, corpus_path: Path, update_registry: bool
+    ) -> dict[str, int]:
+        """Merges master legal_registry.yaml from local corpus_path when update_registry is True."""
+        summary: dict[str, int] = {"updated": 0, "added": 0, "preserved": 0}
+        if not update_registry:
+            return summary
+        master_reg_path = corpus_path / ".md" / "data" / "legal_registry.yaml"
+        if not master_reg_path.exists():
+            master_reg_path = corpus_path / "legal_registry.yaml"
+        if master_reg_path.exists():
+            master_data = load_legal_registry(master_reg_path)
+            local_mgr = LegalRegistryManager(
+                self.project_root / ".md" / "data" / "legal_registry.yaml"
+            )
+            summary = local_mgr.merge_with_master_registry(master_data, backup=True)
+        return summary
+
     def pull_latest_okf_bundles(
         self,
         target_dir: Path | str | None = None,
@@ -297,48 +354,11 @@ class LegalSyncEngine:
         update_registry: bool = True,
         pull_assets: bool = True,
     ) -> dict[str, Any]:
-        """Pull and synchronize OKF v2.4 legal bundles into Spoke with Non-Destructive Registry Merge (ADR 0050).
-
-        Args:
-            target_dir: Destination directory for OKF bundles (default: '.md/legal_docs' for consuming spokes, 'legal_docs' for master spoke).
-            doc_ids: Optional list of specific document IDs/numbers to sync. If None, syncs all available.
-            source_corpus_dir: Optional explicit path to ccba-legal-knowledge repository.
-            update_registry: Whether to perform Non-Destructive Additive Merge on local legal_registry.yaml.
-            pull_assets: Whether to physically copy OKF bundles into target_dir (default: True, False for Zero-Bloat reference mode).
-
-        Returns:
-            Dictionary reporting sync status, tier used, synced bundle slugs, and registry merge counts.
-        """
-        if target_dir:
-            dest_root = Path(target_dir)
-        else:
-            is_master = self.project_root.name.lower() == "ccba-legal-knowledge"
-            if not is_master:
-                for ctx_dir in [self.project_root / ".agents", self.project_root / ".md"]:
-                    ctx_path = ctx_dir / "workspace_context.yaml"
-                    if ctx_path.is_file():
-                        try:
-                            with open(ctx_path, encoding="utf-8") as f:
-                                ctx = yaml.safe_load(f) or {}
-                            proj = ctx.get("project", {}) if isinstance(ctx, dict) else {}
-                            if isinstance(proj, dict) and (
-                                str(proj.get("name", "")).lower() == "ccba-legal-knowledge"
-                                or proj.get("is_master") is True
-                            ):
-                                is_master = True
-                                break
-                        except Exception:
-                            pass
-            dest_root = (
-                (self.project_root / "legal_docs")
-                if is_master
-                else (self.project_root / ".md" / "legal_docs")
-            )
-
+        """Pull and synchronize OKF v2.4 legal bundles into Spoke with Non-Destructive Registry Merge (ADR 0050)."""
+        dest_root = self._resolve_sync_dest_root(target_dir)
         explicit = Path(source_corpus_dir) if source_corpus_dir else None
         corpus_path = self.find_local_knowledge_corpus(explicit)
 
-        # Self-copy guard for Master Legal Corpus
         if corpus_path:
             try:
                 if (corpus_path / "legal_docs").resolve() == dest_root.resolve():
@@ -356,85 +376,26 @@ class LegalSyncEngine:
 
         if pull_assets:
             dest_root.mkdir(parents=True, exist_ok=True)
-
-        synced_bundles: list[str] = []
-        registry_merge_summary: dict[str, int] = {"updated": 0, "added": 0, "preserved": 0}
-
-        if corpus_path:
-            # Tier 1: Local Knowledge Corpus Sync (0s Offline Speed)
-            if pull_assets:
-                source_legal_docs = corpus_path / "legal_docs"
-                if source_legal_docs.exists():
-                    categories = ["01_vbpl", "02_qcvn", "03_tcvn", "04_appendices"]
-                    for cat in categories:
-                        cat_dir = source_legal_docs / cat
-                        if not cat_dir.exists():
-                            continue
-                        for bundle_dir in sorted(cat_dir.iterdir()):
-                            if not bundle_dir.is_dir():
-                                continue
-                            slug = bundle_dir.name
-
-                            # Filter by doc_ids if specified
-                            if doc_ids:
-                                norm_ids = [re.sub(r"[\s\-_/.]+", "", d.lower()) for d in doc_ids]
-                                norm_slug = re.sub(r"[\s\-_/.]+", "", slug.lower())
-                                if not any(nid in norm_slug for nid in norm_ids):
-                                    continue
-
-                            target_bundle = dest_root / cat / slug
-                            target_bundle.mkdir(parents=True, exist_ok=True)
-
-                            # Copy bundle assets
-                            for item in bundle_dir.iterdir():
-                                if item.is_dir():
-                                    dest_subdir = target_bundle / item.name
-                                    if dest_subdir.is_file() or _is_link_or_junction(dest_subdir):
-                                        safe_remove(dest_subdir)
-                                    shutil.copytree(
-                                        item,
-                                        dest_subdir,
-                                        dirs_exist_ok=True,
-                                        copy_function=safe_copy2,
-                                    )
-                                else:
-                                    target_file = target_bundle / item.name
-                                    if target_file.is_dir():
-                                        safe_remove(target_file)
-                                    safe_copy2(item, target_file)
-
-                            synced_bundles.append(f"{cat}/{slug}")
-
-            # Merge master registry
-            if update_registry:
-                master_reg_path = corpus_path / ".md" / "data" / "legal_registry.yaml"
-                if not master_reg_path.exists():
-                    master_reg_path = corpus_path / "legal_registry.yaml"
-
-                if master_reg_path.exists():
-                    master_data = load_legal_registry(master_reg_path)
-                    local_mgr = LegalRegistryManager(
-                        self.project_root / ".md" / "data" / "legal_registry.yaml"
-                    )
-                    registry_merge_summary = local_mgr.merge_with_master_registry(
-                        master_data, backup=True
-                    )
-
-            return {
-                "status": "success",
-                "tier": "tier_1_local_corpus",
-                "source": str(corpus_path),
-                "target": str(dest_root),
-                "bundles_synced": synced_bundles,
-                "registry_merge": registry_merge_summary,
-            }
-        else:
+        if not corpus_path:
             return self._sync_from_remote_cdn(
                 dest_root=dest_root,
                 doc_ids=doc_ids,
                 update_registry=update_registry,
                 pull_assets=pull_assets,
             )
+
+        synced_bundles = (
+            self._copy_local_corpus_bundles(corpus_path, dest_root, doc_ids) if pull_assets else []
+        )
+        registry_merge_summary = self._merge_local_corpus_registry(corpus_path, update_registry)
+        return {
+            "status": "success",
+            "tier": "tier_1_local_corpus",
+            "source": str(corpus_path),
+            "target": str(dest_root),
+            "bundles_synced": synced_bundles,
+            "registry_merge": registry_merge_summary,
+        }
 
     def _fetch_remote_registry(
         self, update_registry: bool
