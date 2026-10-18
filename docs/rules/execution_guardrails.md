@@ -1,442 +1,243 @@
 # CCBA Execution Guardrails & Async Task Policy
 
-> **Tài liệu Tham chiếu Quy chuẩn Thực thi (Layer 2)**  
-> Áp dụng cho toàn bộ các tác vụ lập trình, chạy kiểm thử, và điều phối quy trình ngầm trên CCBA Platform.
+> **Tài liệu Tham chiếu Quy chuẩn Thực thi (Layer 2 — SSOT)**  
+> Áp dụng cho toàn bộ các tác vụ lập trình, chạy kiểm thử, điều phối đa tác nhân và đồng bộ liên bang trên CCBA Platform.
+
+## 🧭 Bảng Điều Hướng Nhanh Theo Miền (Quick Navigation Index)
+
+| Miền Quản Trị (Domain) | Các Mục Quy Chuẩn (Sections) |
+| :--- | :--- |
+| **I. Thực Thi Kiểm Thử & Tiến Trình Ngầm (Runtime & Async)** | [1. Scoped Test](#1-scoped-test-execution-kiểm-thử-cô-lập) · [2. Bounded Async & Reactive Wakeup](#2-bounded-async-task-zero-polling--reactive-wakeup-invariant) · [3. TDD Retry Cap](#3-tdd-retry-cap--early-escalation-giới-hạn-vòng-lặp--điểm-cắt-lỗi) · [4. Anti-Duplicate Runner](#4-anti-duplicate-background-runner) · [5. Safe Process Termination](#5-safe-process-termination-invariant) · [6. Task Log Readiness](#6-task-log-readiness-check) · [7. Invalid Args Breaker](#7-invalid-args-circuit-breaker) · [8. 2-Tier Test Speed](#8-2-tier-test-speed-compliance) |
+| **II. Điều Phối Đa Tác Nhân & Hooks (Multi-Agent & Hooks)** | [9. Boost Deep Reasoning](#9-boost-deep-reasoning-protocol--escalation-gate) · [10. Teamwork Orchestration](#10-teamwork-orchestration-protocol-quy-chuẩn-điều-phối-đa-tác-nhân-dài-hạn) · [11. Antigravity Lifecycle Hooks](#11-antigravity-lifecycle-hooks-policy-chính-sách-móc-vòng-đời-antigravity--adr-0054) |
+| **III. GitHub CLI & Khóa Nhận Việc Đa Máy (GitHub & Claim Locking)** | [12. Safe GitHub CLI Input & Query](#12-safe-github-cli-input--query-parameterization-guardrails-quy-chuẩn-nhập-liệu--truy-vấn-an-toàn-cho-github-cli) · [13. Multi-Client Issue & PR Locking](#13-multi-client-issue--pull-request-coordination-protocol-quy-chuẩn-điều-phối-issue-và-pr-đa-máy--khóa-nhận-việc) |
+| **IV. Đa Nền Tảng, CDP & Worktree (Cross-Platform, CDP & Worktree)** | [14. Cross-Platform Machine-State Isolation](#14-cross-platform-machine-state-isolation--environment-parity-invariant-quy-chuẩn-cách-ly-trạng-thái-máy--đồng-bộ-đa-nền-tảng) · [15. Chrome CDP Automation](#15-chrome-devtools-protocol-cdp--browser-agent-automation-invariant-quy-chuẩn-tự-động-hóa-trình-duyệt--bảo-mật-cdp) · [16. Ephemeral Worktree & Nightly Cron](#16-ephemeral-worktree--automated-nightly-cron-invariant-quy-chuẩn-vận-hành-worktree-tạm-thời) · [17. Spoke CLI Parameter Symmetry](#17-spoke-cli-parameter-symmetry--safe-invocation-invariant-quy-chuẩn-chữ-ký-tham-số--an-toàn-thực-thi-spoke-cli) |
+| **V. Hợp Đồng Seam, Micro-PR & Ủy Quyền Ngang Hàng (Seams, PR & Peer)** | [18. Pre-Flight Seam Inventory (ADR-0061)](#18-pre-flight-seam-inventory--fast-path-policy-chính-sách-tiền-thẩm-định-kế-hoạch--miễn-trừ-nhanh) · [19. Atomic Micro-PR & Advisory AI Review](#19-atomic-micro-pr-pipeline--read-only-advisory-ai-review-guardrail-quy-chuẩn-pr-nguyên-tử--rào-chắn-ai-review-chỉ-đọc) · [20. Level-2 Peer Delegation (Grok ↔ Antigravity)](#20-level-2-peer-agent-delegation-protocol-grok--antigravity-cost-turn--liveness-guardrails---adr-00630065) |
 
 ---
 
 ## 1. Scoped Test Execution (Kiểm thử Cô lập)
-- Nghiêm cấm kích hoạt các lệnh kiểm thử toàn diện (unscoped `pytest`) trên toàn bộ repository mà không chỉ định rõ phạm vi.
-- Luôn chỉ định rõ file test hoặc module mục tiêu: ví dụ `pytest packages/{pkg}/tests/test_file.py` hoặc cờ loại trừ `-m "not slow and not stress"`.
+- Nghiêm cấm kích hoạt kiểm thử toàn diện không khoanh vùng (unscoped `pytest`) trên toàn bộ repository.
+- Luôn chỉ định rõ file test hoặc module mục tiêu (`pytest packages/{pkg}/tests/test_file.py`) kèm `WaitMsBeforeAsync=10000` (10s) để lệnh hoàn tất đồng bộ ngay trong lượt gọi đầu tiên, hoặc dùng cờ loại trừ `-m "not slow and not stress"`.
 
 ---
 
 ## 2. Bounded Async Task, Zero-Polling & Reactive Wakeup Invariant
-- Khi một lệnh chạy dưới dạng tác vụ ngầm (Background Task) như `run_harness_evals.py`, `pytest`, hoặc `gh pr checks`:
-  - **Nguyên lý Reactive Wakeup (Thức dậy theo sự kiện - Bắt buộc):** Hệ thống Antigravity tự động đánh thức và gửi thông điệp `<SYSTEM_MESSAGE>` cho Agent ngay khi tác vụ nền hoàn thành.
+- Khi một lệnh chuyển sang chạy ngầm (Background Task) như `pytest`, `peer-dispatch`, hoặc `gh pr checks --watch`:
+  - **Nguyên lý Reactive Wakeup (Bắt buộc):** Runtime tự động đánh thức và gửi `<SYSTEM_MESSAGE>` ngay khi tác vụ nền hoàn thành.
   - **Chính sách Không Polling Tuyệt Đối (Zero-Tolerance Polling Policy):**
-    - Nghiêm cấm Agent tự tạo vòng lặp kín để thăm dò trạng thái (`manage_task status`) nhiều lần liên tiếp trong lúc chờ tiến trình nền.
+    - Nghiêm cấm lặp `manage_task status` để thăm dò trạng thái tiến trình nền.
     - **Hành động bắt buộc ngay sau khi lệnh chuyển sang Background Task:**
-      1. **Dừng gọi công cụ (Stop Calling Tools / End Turn):** Thông báo ngắn gọn cho người dùng (nếu cần) và kết thúc lượt ngay lập tức để runtime tự động đánh thức khi tác vụ hoàn thành.
-      2. **Hoặc Triển khai công việc song song có ích (Parallel Work):** Soạn thảo tài liệu, cập nhật artifact, phân tích mã nguồn độc lập khác trong lúc chờ — tuyệt đối không chèn các lệnh kiểm tra trạng thái vô nghĩa.
-  - **Nguyên tắc Scoped Execution First:**
-    - Với các lệnh kiểm tra cục bộ, **luôn chỉ định phạm vi hẹp (Scoped Target)** kết hợp cấu hình `WaitMsBeforeAsync=10000` (10s) để lệnh hoàn tất đồng bộ ngay trong lượt gọi đầu tiên, tránh đẩy vô cớ xuống Background Task.
-    - Nghiêm cấm chạy full test suite unscoped chỉ để kiểm tra 1 thay đổi cục bộ.
-  - **Rào chắn lệnh theo dõi CI (`gh pr checks`):** Nghiêm cấm chạy `gh pr checks --watch` kết hợp lặp `manage_task status`. Thay vào đó, chạy `gh pr checks` đơn lẻ hoặc khởi chạy `--watch` rồi lập tức dừng lượt để hệ thống tự động trả về kết quả khi CI hoàn tất.
-  - **Rào chắn Review Requests của Copilot (Chống Race Condition):** Nghiêm cấm kích hoạt `gh pr merge` khi `gh pr view --json reviewRequests` vẫn còn chứa bot reviewer (`copilot-pull-request-reviewer`). Phải đợi bot hoàn thành nộp bài review và đối soát toàn bộ comments trước khi merge.
+      1. **Dừng gọi công cụ (End Turn):** Thông báo ngắn gọn cho người dùng và kết thúc lượt ngay để hệ thống tự động đánh thức khi hoàn tất; **hoặc**
+      2. **Làm việc song song có ích (Parallel Work):** Soạn thảo tài liệu hoặc phân tích mã nguồn độc lập khác trong lúc chờ.
+  - **Rào chắn theo dõi CI & Copilot Review (`gh pr checks`):** Khởi chạy `gh pr checks <id> --watch` rồi dừng lượt chờ Reactive Wakeup. Nghiêm cấm chạy `gh pr merge` khi `gh pr view <id> --json reviewRequests` vẫn còn `copilot-pull-request-reviewer`.
 
 ---
 
 ## 3. TDD Retry Cap & Early Escalation (Giới Hạn Vòng Lặp & Điểm Cắt Lỗi)
-- Trong vòng lặp Red→Green→Refactor (TDD) hoặc edit→test, Agent chỉ được lặp lại tối đa **5 vòng** cho cùng một seam hoặc test file.
-- **Quy tắc Cắt Lỗi Sớm (Early Escalation tại vòng 3):**
-  - Nếu sau **3 vòng test liên tiếp** vẫn không pass do lỗi logic sâu, race condition, hoặc xung đột đa file: Agent **bắt buộc dừng thử mù**, không được tiếp tục đoán mò cách sửa.
-  - Agent phải lập tức đóng gói **Deep Problem Brief** (gồm: Triệu chứng lỗi, Giả thuyết đã thử nhưng sai, Các code seams liên quan, Log lỗi then chốt).
-- **Hành động tại vòng 5 (Hard Stop):**
-  - Nếu chạm mốc 5 vòng, Agent dừng ngay lập tức, commit Work-In-Progress (WIP), xuất Deep Problem Brief và kích hoạt **Boost Escalation Gate** (Mục 9) — tuyệt đối không lặp tiếp làm cạn kiệt ngân sách ngữ cảnh.
+- Trong vòng lặp Red $\rightarrow$ Green $\rightarrow$ Refactor, chỉ được thử tối đa **5 vòng** cho cùng một seam hoặc test file:
+  - **Cắt lỗi sớm tại vòng 3 (Early Escalation):** Nếu sau 3 vòng liên tiếp vẫn lỗi do logic sâu hoặc race condition, dừng đoán mò và đóng gói **Deep Problem Brief** (Mục 9).
+  - **Dừng cứng tại vòng 5 (Hard Stop):** Commit WIP, xuất Deep Problem Brief và kích hoạt **Boost Escalation Gate** (Mục 9) — tuyệt đối không lặp tiếp làm cạn ngân sách ngữ cảnh.
 
 ---
 
 ## 4. Anti-Duplicate Background Runner
-- Nghiêm cấm Agent kích hoạt nhiều lệnh chạy ngầm (`run_command` async) cho cùng một script test runner hoặc harness evaluation.
-- Mọi script test runner ngầm bắt buộc phải tích hợp Singleton Process Lock (`ensure_single_instance()`) và kiểm tra tiến trình cũ trước khi khởi động.
+- Nghiêm cấm kích hoạt nhiều lệnh chạy ngầm (`run_command` async) cho cùng một script test runner hoặc harness evaluation.
+- Mọi script runner ngầm bắt buộc tích hợp khóa đơn tiến trình (`ensure_single_instance`) và kiểm tra tiến trình cũ trước khi khởi động.
 
 ---
 
 ## 5. Safe Process Termination Invariant
-- Khi viết hoặc thực thi bất kỳ logic nào có chức năng dọn dẹp hoặc duy trì đơn tiến trình (`ensure_single_instance()`), Agent **bắt buộc phải loại trừ** cả tiến trình hiện tại (`os.getpid()`) và tiến trình cha (`os.getppid()`).
-- Nghiêm cấm kích hoạt `taskkill` hoặc `proc.terminate()` lên `os.getppid()` để tránh làm sập Agent Server Host.
+- Khi viết hoặc thực thi logic dọn dẹp tiến trình (`ensure_single_instance`), **bắt buộc loại trừ** cả tiến trình hiện tại (`os.getpid`) và tiến trình cha (`os.getppid`).
+- Nghiêm cấm gọi `taskkill` hoặc `proc.terminate` lên `os.getppid` để tránh làm sập Agent Server Host.
 
 ---
 
 ## 6. Task Log Readiness Check
-- Nghiêm cấm gọi `view_file` tới tệp `task-XXX.log` lập tức ngay sau lượt `run_command` async mà không kiểm tra xem tệp tin log đã thực sự được hệ thống tạo và ghi dữ liệu lên ổ đĩa hay chưa.
-- Phải dùng `manage_task status` hoặc chờ thông báo hoàn tất từ hệ thống trước khi đọc log.
+- Nghiêm cấm gọi `view_file` tới `task-XXX.log` ngay sau lượt `run_command` async khi chưa nhận được thông báo hoàn tất từ hệ thống hoặc kiểm tra trạng thái qua `manage_task status`.
 
 ---
 
 ## 7. Invalid Args Circuit Breaker
-- Khi gặp lỗi `model output error: invalid tool call error (invalid_args)` từ **2 lần liên tiếp trở lên**, đây là tín hiệu context budget sắp cạn kiệt.
-- Agent phải **dừng ngay lập tức**, commit WIP nếu có thay đổi chưa lưu, tóm tắt trạng thái công việc hiện tại, và thông báo cho người dùng mở phiên mới để tiếp tục — không được cố gắng chạy thêm bất kỳ tool call nào.
+- Khi gặp lỗi `model output error: invalid tool call error (invalid_args)` từ **2 lần liên tiếp trở lên** (dấu hiệu cạn kiệt context budget), Agent phải **dừng ngay lập tức**, commit WIP, tóm tắt trạng thái và đề nghị người dùng mở phiên mới (hoặc dùng `/compact`).
 
 ---
 
 ## 8. 2-Tier Test Speed Compliance
-- Mọi tệp kiểm thử đơn vị (Unit Test) mới viết bắt buộc phải chạy dưới 2.0 giây.
-- Các tệp test tích hợp mạng, Chromium CDP, hoặc LLM latency nặng bắt buộc phải được dán decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress` để tự động loại trừ khỏi vòng lặp kiểm thử nhanh hàng ngày (`-m "not slow"`).
+- Mọi Unit Test mới bắt buộc chạy dưới **2.0 giây**.
+- Các bài test tích hợp mạng, Chromium CDP, hoặc LLM thực tế bắt buộc gắn decorator `@pytest.mark.slow` hoặc `@pytest.mark.stress` để loại trừ khỏi vòng kiểm thử nhanh (`-m "not slow"`).
 
 ---
 
 ## 9. Boost Deep Reasoning Protocol & Escalation Gate
-- Khi xử lý các bài toán kỹ thuật có độ phức tạp cao vượt quá khả năng xử lý của vòng lặp đơn lẻ (Single-turn ReAct), Agent và Kỹ sư CCBA áp dụng quy chuẩn **Boost Deep Reasoning**:
-  - **Trường hợp kích hoạt:**
-    1. **Concurrency & Race Conditions:** Xung đột tiến trình nền, mutex lock (`TVPLSessionMutex`), pipeline đa tiến trình (VvC Second Brain daemons, IDOP staging sync).
-    2. **Polyglot Monorepo Deep Refactoring:** Tái cấu trúc hoặc trích xuất Deep Seams qua nhiều package Python/TypeScript đồng thời.
-    3. **Thẩm định Pháp lý & Xung đột Quy chuẩn Đa ngành:** Xử lý các điều khoản chồng chéo, xung đột ranh giới thẩm quyền (Luật 55/2024, NĐ 105/2025, QCVN 06, TCVN 3890).
-    4. **Bế tắc TDD (Chạm ngưỡng 3–5 vòng test fail):** Khi TDD Retry Cap bị kích hoạt.
-  - **Quy chuẩn Đóng Gói Deep Problem Brief:**
-    Khi kích hoạt Escalation Gate, Agent phải tổng hợp tệp hoặc thông điệp chuẩn mực:
-    ```markdown
-    ### 🔬 Deep Problem Brief
-    - **Vấn đề cốt lõi (Failure Manifest):** [Mô tả ngắn gọn lỗi kỹ thuật/test fail]
-    - **Các giả thuyết đã kiểm chứng & Thất bại (Tested Hypotheses):** [Liệt kê 2-3 cách sửa đã thử và lý do fail]
-    - **Vùng ảnh hưởng (Seams Involved):** [Danh sách files / classes / functions liên quan]
-    - **Logs / Error Trace:** [Trích đoạn log lỗi then chốt]
-    - **Khuyến nghị hành động:** [Đề xuất người dùng kích hoạt `/boost` kèm brief này để chạy chu trình suy luận đa tác nhân]
-    ```
-  - **Rào chắn An Toàn Đa Tác Nhân (Two-Layer Sub-Agent Guardrail — ADR 0035):**
-    Khi quy trình CCBA tự động mô phỏng hoặc khởi tạo các subagents chạy ngầm theo mô hình 3 pha của Boost (Strategy $\rightarrow$ Parallel Workers $\rightarrow$ Synthesis):
-    1. **Giới hạn Độ sâu (Depth Limit = 1):** Nghiêm cấm subagent spawn thêm subagent con để chống bùng nổ đệ quy.
-    2. **Giới hạn Công cụ (Tool Scoping):** Subagents chỉ được cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`) và chạy kiểm thử cô lập (`run_command` scoped test), tuyệt đối không cấp quyền chỉnh sửa file hoặc lệnh Git nguy hiểm.
-    3. **Giới hạn Số Lượng (Max Workers):** Tối đa 3 subagents chạy song song trong một phiên điều tra/nghiên cứu.
+- Kích hoạt **Boost Deep Reasoning** (`/boost`) khi gặp: (1) Concurrency & Race Conditions; (2) Polyglot Monorepo Deep Refactoring đa package; (3) Thẩm định Pháp lý & Xung đột Quy chuẩn đa ngành (Luật Xây dựng `135/2025/QH15`, NĐ `217/2026/NĐ-CP`, Luật PCCC `55/2024/QH15`, NĐ `105/2025/NĐ-CP`, QCVN 06, TCVN 3890); hoặc (4) Chạm ngưỡng TDD Retry Cap (Mục 3).
+- **Mẫu Deep Problem Brief:**
+  ```markdown
+  ### 🔬 Deep Problem Brief
+  - **Vấn đề cốt lõi (Failure Manifest):** [Mô tả ngắn gọn lỗi kỹ thuật/test fail]
+  - **Các giả thuyết đã kiểm chứng & Thất bại (Tested Hypotheses):** [2-3 cách sửa đã thử và lý do fail]
+  - **Vùng ảnh hưởng (Seams Involved):** [Danh sách files / classes / functions liên quan]
+  - **Logs / Error Trace:** [Trích đoạn log lỗi then chốt]
+  - **Khuyến nghị hành động:** [Đề xuất kích hoạt `/boost` kèm brief này]
+  ```
+- **Rào chắn An Toàn Đa Tác Nhân (Two-Layer Sub-Agent Guardrail — ADR-0035):**
+  1. **Depth Limit = 1:** Cấm subagent tự khởi tạo thêm subagent con.
+  2. **Tool Scoping:** Subagents chỉ có quyền đọc (`view_file`, `grep_search`) và chạy test cô lập; cấm sửa file hoặc chạy lệnh Git đột biến.
+  3. **Max Workers = 3:** Tối đa 3 subagents chạy song song trong một phiên điều tra.
 
 ---
 
 ## 10. Teamwork Orchestration Protocol (Quy Chuẩn Điều Phối Đa Tác Nhân Dài Hạn)
-- Khi triển khai các dự án quy mô lớn đòi hỏi phân rã đa seams (Monorepo refactoring, thẩm tra thiết kế 4 bộ môn, nạp kho pháp điển hàng loạt), Platform áp dụng khung **Teamwork Framework** (lấy cảm hứng từ Antigravity `/teamwork-preview` và ADR 0053):
-  - **Mô hình 3 Vai Trò Tối Giản (KISS Hierarchy):**
-    1. **Orchestrator (Nhạc Trưởng):** Chịu trách nhiệm toàn trình (phỏng vấn, lập `team_sheet.md`, dispatch workers, điều phối, tổng hợp kết quả, ghi file chính thức và commit Git). Duy nhất Orchestrator có quyền ghi đè codebase.
-    2. **Workers (Tác Nhân Thực Thi):** Chạy song song độc lập. Tuân thủ nghiêm ngặt **Two-Layer Guardrail (ADR 0035)**: Chỉ có quyền đọc và chạy test scoped; xuất kết quả phân tích/code draft dưới dạng artifact text vào thư mục sandbox cô lập (`.system_generated/scratch/worker_{N}/`).
-    3. **Success Auditor (Kiểm Định Nghiệm Thu):** Độc lập chạy kiểm thử scoped, quét an toàn Maskara, và thực hiện kiểm toán phân vùng file.
-  - **Giới Hạn Tác Nhân & Chiến Lược Phân Đợt (Worker Cap & Batching Strategy):**
-    - Tối đa **3 workers** chạy đồng thời trong cùng một thời điểm.
-    - Nếu dự án có nhiều hơn 3 seams/milestones độc lập, Orchestrator **bắt buộc phân đợt** (Batching): chạy tối đa 3 workers/batch, chờ batch hoàn tất rồi mới dispatch batch tiếp theo.
-  - **Kiểm Toán Phân Vùng Hậu Hợp Nhất (Post-Merge Diff Audit):**
-    - Sau mỗi milestone, trước khi hợp nhất, Auditor hoặc Orchestrator phải đối chiếu `git diff --name-only` với danh sách file scope đã khai báo trong `team_sheet.md`.
-    - Mọi tệp tin bị sửa đổi nằm ngoài phạm vi seam được phân quyền phải bị gắn cờ cảnh báo rò rỉ seam (Seam Boundary Leakage) để Orchestrator xử lý trước khi commit.
-  - **Rào Chắn Quá Giờ & Cơ Chế Khôi Phục (Worker Timeout & Fallback Protocol):**
-    - Mỗi worker có thời hạn tối đa là **10 phút** cho một tác vụ subagent.
-    - Nếu worker không phản hồi hoặc gặp lỗi suy thoái ngữ cảnh (`invalid_args` / Context Exhaustion): Orchestrator đánh dấu milestone là `INCOMPLETE`, trích xuất log trung gian và chọn 1 trong 2 nhánh:
-      - *Nhánh A:* Khởi động lại với Worker mới kèm prompt thu hẹp phạm vi.
-      - *Nhánh B:* Nếu lỗi do bế tắc logic sâu, đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
-  - **Phân Định Ranh Giới `/boost` vs `/ccba-teamwork`:**
-    - **`/boost` (Escalation UP):** Xử lý sự cố kỹ thuật bế tắc, phân tích sâu lỗi logic/concurrency đơn lẻ trong phạm vi 1 session.
-    - **`/ccba-teamwork` (Coordination OUT):** Điều phối phân rã dự án quy mô lớn thành nhiều workstreams độc lập chạy song song qua nhiều milestones.
-    - **Kết hợp:** Trong phiên Teamwork, nếu một Worker gặp sự cố logic bế tắc tại seam của mình, Orchestrator có thể kích hoạt Boost Escalation Gate để xử lý triệt để seam đó trước khi tiếp tục chu trình Teamwork.
+- Khi triển khai dự án lớn đa seams (ADR-0053), áp dụng mô hình **3 Vai Trò Tối Giản**:
+  1. **Orchestrator (Nhạc Trưởng):** Lập `team_sheet.md`, điều phối workers, tổng hợp kết quả, và là **tác nhân duy nhất có quyền ghi codebase / commit Git** (Single-Writer Invariant).
+  2. **Workers (Tác Nhân Thực Thi):** Tối đa **3 workers/batch** chạy song song (tuân thủ ADR-0035, thời hạn tối đa **10 phút/worker**), xuất kết quả nháp vào `.system_generated/scratch/worker_{N}/`.
+  3. **Success Auditor (Kiểm Định Nghiệm Thu):** Chạy kiểm thử cô lập, quét Maskara, và đối chiếu `git diff --name-only` với phạm vi khai báo trong `team_sheet.md` (chống Seam Boundary Leakage).
+- **Cơ chế Khôi phục & Phân định Ranh giới:**
+  - Nếu worker quá hạn hoặc suy thoái ngữ cảnh, Orchestrator đánh dấu milestone là `"INCOMPLETE"` và khởi động lại với phạm vi thu hẹp hoặc kích hoạt `/boost` (Escalation UP cho bế tắc sâu đơn lẻ) trước khi tiếp tục `/ccba-teamwork` (Coordination OUT cho đa luồng công việc).
 
 ---
 
 ## 11. Antigravity Lifecycle Hooks Policy (Chính Sách Móc Vòng Đời Antigravity) — ADR 0054
-- Platform tích hợp **Antigravity Lifecycle Hooks** (`hooks.json`) theo kiến trúc Adapter Bridge (ADR 0054):
-  - **Bridge = Adapter Layer Mỏng:** File `scripts/hooks/antigravity_hook_bridge.py` chỉ dịch schema giữa Antigravity stdin/stdout (camelCase) và CCBA `HookCoordinator` (snake_case). Không chứa business logic chặn/quét.
-  - **Schema Translation:** `toolCall.name` → `tool`, `toolCall.args` (object) → `args` (JSON string), `exit_code` (0/1/2) → `decision` (allow/ask/deny).
-  - **Phase 1:** Chỉ bật `PreToolUse` trên matcher `run_command|write_to_file|replace_file_content|multi_replace_file_content`.
-  - **Hiệu năng:** Tổng subprocess overhead ~200-500ms trên Windows (Python startup), logic-only < 15ms. Hooks chạy đồng bộ, chặn agent loop.
-  - **Fail-Safe Default:** Mọi ngoại lệ không mong muốn trong bridge đều fallback về `{"decision": "allow"}` — không bao giờ làm gián đoạn IDE.
-  - **Hai Entry Point:** CLI `hook_runner.py` (offline/CI) và Antigravity `hooks.json` (IDE) cùng dẫn về `HookCoordinator` với cùng 7 hooks.
+- File `scripts/hooks/antigravity_hook_bridge.py` đóng vai trò **Adapter Layer mỏng** dịch schema giữa Antigravity IDE (`toolCall.name` / `toolCall.args` camelCase) và `HookCoordinator` (snake_case, cùng chia sẻ 7 hooks với CLI `hook_runner.py`).
+- Chỉ kích hoạt ở bước `"PreToolUse"` trên matcher `run_command|write_to_file|replace_file_content|multi_replace_file_content`.
+- **Fail-Safe Default:** Mọi ngoại lệ không mong muốn trong bridge đều trả về `{"decision": "allow"}` để không làm gián đoạn IDE.
 
 ---
 
 ## 12. Safe GitHub CLI Input & Query Parameterization Guardrails (Quy Chuẩn Nhập Liệu & Truy Vấn An Toàn cho GitHub CLI)
 
-### 12.1. Safe File-Based Input Invariant for Mutations (-F / --body-file)
-- Khi gọi các lệnh GitHub CLI tạo hoặc sửa đổi dữ liệu (`gh issue comment`, `gh issue create`, `gh pr create`, `gh pr comment`) có nội dung nhiều dòng, Markdown phức tạp, mã nguồn hoặc ký tự đặc biệt:
-  - **Nghiêm cấm:** Truyền trực tiếp chuỗi nội dung qua tham số dòng lệnh `--body "..."` (dễ gây lỗi escape ký tự, vượt quá độ dài dòng lệnh hệ điều hành và bị pre-tool security hook chặn).
-  - **Bắt buộc (File-First Pattern):**
-    1. Ghi nội dung cần đăng vào tệp tạm thời trong thư mục `.md/scratch/` (ví dụ: `.md/scratch/comment_<id>.md` hoặc `.md/scratch/pr_body.md`).
-    2. Sử dụng cờ `-F` hoặc `--body-file` để truyền đường dẫn tệp tin:
-       ```bash
-       gh issue comment <issue_id> -F .md/scratch/comment_<issue_id>.md
-       gh pr create --title "..." -F .md/scratch/pr_body.md
-       ```
-    3. Mẫu này đảm bảo bảo toàn 100% mã hóa UTF-8, định dạng Markdown, bảng biểu và không bao giờ bị bộ lọc an toàn command-line từ chối.
+### 12.1. Safe File-Based Input Invariant for Mutations (`-F` / `--body-file`)
+- Khi gọi `gh issue comment`, `gh issue create`, `gh pr create`, `gh pr comment` có nội dung nhiều dòng hoặc Markdown:
+  - **Nghiêm cấm:** Truyền chuỗi trực tiếp qua `--body "..."` (dễ lỗi shell expansion/backticks).
+  - **Bắt buộc:** Ghi vào tệp tạm (hoặc truyền qua `--body-file - << 'EOF'` với single-quoted heredoc) rồi gọi `-F` / `--body-file`:
+    ```bash
+    gh issue comment <issue_id> -F .md/scratch/comment_<issue_id>.md
+    gh pr create --title "..." -F .md/scratch/pr_body.md
+    ```
 
-### 12.2. Safe JSON Parameterization for Queries (gh issue/pr view)
-- **GraphQL Deprecation Invariant**: Tuyệt đối không gọi `gh issue view <id>` hoặc `gh pr view <id>` trần không có tham số trường dữ liệu, do GitHub đang ngưng hỗ trợ Projects Classic (`repository.issue.projectCards`) gây lỗi GraphQL Exit Code 1.
-- **Chuẩn thực thi**: Luôn chỉ định tường minh các trường JSON cần thiết qua cờ `--json`:
+### 12.2. Safe JSON Parameterization for Queries (`gh issue/pr view --json`)
+- **GraphQL Deprecation Invariant (`RULE-5.11`):** Tuyệt đối không gọi `gh issue view <id>` hoặc `gh pr view <id>` thiếu cờ `--json` (do GitHub đã gỡ `projectCards` của Projects Classic gây lỗi GraphQL Exit Code 1):
   ```bash
-  # Tra cứu Issue:
-  gh issue view <id> --json number,title,state,assignees,labels
-  # Tra cứu Pull Request:
-  gh pr view <id> --json number,title,state,headRefName,baseRefName,mergeable
+  gh issue view <id> --json number,title,state,assignees,labels,body,comments
+  gh pr view <id> --json number,title,state,headRefName,baseRefName,mergeable,reviewRequests
   ```
-- **Lợi ích**: Triệt tiêu lỗi deprecation, phản hồi nhanh hơn gấp 3 lần, định dạng JSON chuẩn máy-đọc-được và không bao giờ bị nghẽn bởi Pager (`cat`/`less`).
 
 ---
 
 ## 13. Multi-Client Issue & Pull Request Coordination Protocol (Quy Chuẩn Điều Phối Issue và PR Đa Máy & Khóa Nhận Việc)
 
-### A. Quy Trình Khóa Nhận Việc Cho GitHub Issues (Issue Claim Locking - TTL 24h)
-1. **Chuyển trạng thái tức thì:**
-   - Kiểm tra nhãn hiện tại qua `gh issue view <id> --json labels`. Chỉ gỡ `ready-for-agent` hoặc `backlog` nếu nhãn đó thực sự tồn tại (tránh lỗi API 404).
-   - Gán nhãn `in-progress` và gán assignee động theo tài khoản đang đăng nhập:
-     ```bash
-     gh issue edit <id> --add-label "in-progress" --add-assignee "@me"
-     ```
-2. **Đăng thông báo nhận việc máy-đọc-được (Machine-Parseable Claim Notice):**
-   - Tạo tệp nội dung tạm thời trong `.md/scratch/` và đăng qua cờ `-F` (tuân thủ Guardrail 12):
-     ```markdown
-     <!-- CCBA_PEER_CLAIM_LOCK
-     host: [linux-workstation / windows-pc / wsl]
-     branch: feat/issue-[id]-[short-desc]
-     claimed_at: [ISO-8601-UTC-Timestamp]
-     ttl_hours: 24
-     -->
-     🤖 **Agent Claim & Coordination Notice**: Issue này đang được xử lý trong phiên làm việc hiện tại trên môi trường [OS]. Vui lòng bỏ qua, không claim nhận việc trùng lặp.
-     ```
-3. **Khóa an toàn chống đua đồng thời (Post-Claim Verification & Concurrency Safe-Guard):**
-   - Sau khi đăng claim, Agent bắt buộc đọc lại danh sách comments: `gh issue view <id> --json comments`.
-   - Nếu phát hiện có một Claim Notice của peer agent khác được đăng trước comment của mình dù chỉ vài giây: Agent nhận việc sau **bắt buộc phải nhượng bộ (yield)**, tự động rollback (`--remove-label "in-progress"`) và chuyển sang tìm issue khác.
-4. **Xử lý Stale Claims (Cơ Chế Takeover Sau 24h):**
-   - Nếu một issue mang nhãn `in-progress` nhưng không có commit mới nào trên nhánh remote liên kết trong vòng **24 giờ** $\rightarrow$ issue được coi là *Stale Claim*.
-   - **Chế độ tương tác (Interactive):** Agent hỏi ý kiến người dùng: *"⚠️ Issue #X đang in-progress bởi client cũ nhưng đã ngừng hoạt động > 24h. Bạn có muốn tiếp quản (re-claim) issue này không?"*. Khi người dùng đồng ý, Agent đăng comment takeover và đổi assignee sang `@me`.
-   - **Chế độ tự động/ngầm (Headless/CI/Daemon):** Agent tự động bỏ qua (skip) để tránh treo tiến trình.
-5. **Nghiệm thu & Đóng Issue sạch sẽ (Clean Handoff & Closure):**
-   - Khi hoàn tất và PR được squash merge vào `main`, để lại bình luận tổng kết nghiệm thu kèm PR link/Commit SHA và đóng issue ngay lập tức (`gh issue close <id> --reason "completed"`).
+### A. Khóa Nhận Việc Cho GitHub Issues (Issue Claim Locking — TTL 24h)
+1. **Chuyển trạng thái & Gán nhãn:** Kiểm tra nhãn qua `gh issue view <id> --json labels`, sau đó gán `in-progress` và `@me`:
+   ```bash
+   gh issue edit <id> --add-label "in-progress" --add-assignee "@me"
+   ```
+2. **Đăng Claim Notice máy-đọc-được (qua `-F`):**
+   ```markdown
+   <!-- CCBA_PEER_CLAIM_LOCK
+   host: [linux-workstation / windows-pc / wsl]
+   branch: feat/issue-[id]-[short-desc]
+   claimed_at: [ISO-8601-UTC-Timestamp]
+   ttl_hours: 24
+   -->
+   🤖 **Agent Claim & Coordination Notice**: Issue này đang được xử lý trên môi trường [OS]. Vui lòng không claim trùng lặp.
+   ```
+3. **Chống đua đồng thời (Post-Claim Verification):** Đọc lại `gh issue view <id> --json comments`; nếu có Claim Notice của peer khác đăng trước, bắt buộc nhượng bộ (`--remove-label "in-progress"`).
+4. **Takeover Stale Claims (> 24h không có commit mới):** Hỏi xác nhận người dùng khi chạy tương tác, hoặc tự động bỏ qua khi chạy ngầm (headless/daemon).
+5. **Đóng Issue khi hoàn tất:** Sau khi squash-merge PR vào `main`, đăng comment nghiệm thu kèm PR/Commit SHA và đóng issue (`gh issue close <id> --reason "completed"`).
 
-### B. Quy Trình Khóa Tranh Chấp Cho Pull Requests (PR Claim Locking & Lease Push - TTL 4h)
-1. **Khóa Nhận Xử Lý PR (PR Assignee & Status Locking):**
-   - Khi Agent tiếp nhận một PR để review, sửa lỗi CI, hoặc đối soát nhận xét Copilot:
-     ```bash
-     gh pr edit <id> --add-assignee "@me" --add-label "in-progress"
-     ```
-2. **Đăng PR Lock Notice (TTL = 4 giờ):**
-   - Đăng comment khóa PR qua tệp tin trong `.md/scratch/`:
-     ```markdown
-     <!-- CCBA_PR_CLAIM_LOCK
-     host: [linux-workstation / windows-pc / wsl]
-     agent_role: [pr-review / ci-repair / merge-release]
-     branch: [head-branch-name]
-     claimed_at: [ISO-8601-UTC-Timestamp]
-     ttl_hours: 4
-     -->
-     🤖 **Agent PR Claim Notice**: PR này đang được tiếp nhận xử lý bởi Agent trên môi trường [OS]. Vui lòng không can thiệp hoặc push đè lên nhánh `[branch]`.
-     ```
-3. **Rào Chắn Đẩy Mã Nguồn An Toàn (Pre-Push Lease Invariant):**
-   - Tuyệt đối **NGHIÊM CẤM** sử dụng lệnh bare `git push --force` (`-f`) trên các nhánh PR.
-   - Khi cần cập nhật nhánh sau rebase, **BẮT BUỘC** sử dụng:
-     ```bash
-     git fetch origin
-     git push --force-with-lease origin <branch-name>
-     ```
-   - Lệnh này đảm bảo nếu có Agent khác vừa đẩy commit lên remote trong lúc bạn đang làm việc, lệnh push sẽ bị từ chối an toàn thay vì ghi đè làm mất mã nguồn của đồng đội.
-4. **Giải Quyết Xung Đột Đồng Thời Trên PR (Post-Claim Verification for PRs):**
-   - Sau khi claim PR, Agent đọc lại comments: `gh pr view <id> --json comments`.
-   - Nếu có peer claim đăng trước, Agent lập tức hủy claim (`gh pr edit <id> --remove-assignee "@me"`).
-5. **Cơ Chế Giải Phóng Khóa (Release / Takeover Protocol for PRs):**
-   - **Tự động đóng khóa khi merge:** Khi PR được squash merge vào `main`, trạng thái khóa tự động kết thúc.
-   - **Chủ động giải phóng khi dừng phiên:** Nếu Agent dừng phiên trước khi PR hoàn tất, bắt buộc đăng comment `<!-- CCBA_PR_CLAIM_RELEASE -->` và gỡ assignee: `gh pr edit <id> --remove-assignee "@me"`.
-   - **Stale PR Claim Takeover (Ngưỡng 4 giờ):** Nếu một PR bị khóa nhưng nhánh không có commit mới sau **4 giờ**, Agent ở máy khác được phép kích hoạt Interactive Takeover để tiếp quản việc sửa PR.
-6. **Rào Chắn Không Hợp Nhất Khi CI Đỏ & Đồng Bộ Copilot (Zero-Red-Merge Invariant):**
-   - Tuyệt đối **NGHIÊM CẤM** sử dụng cờ `--admin` để cưỡng chế sáp nhập PR khi CI đang PENDING hoặc FAILED.
-   - **NGHIÊM CẤM** sử dụng cờ `--auto` (chống race condition sáp nhập tự động trước khi bot Copilot hoàn thành review).
-   - **Quy trình sáp nhập chuẩn mực:**
-     1. Khởi chạy giám sát CI: `gh pr checks <PR_NUMBER> --watch` và dừng lượt để nhận Reactive Wakeup khi checks hoàn tất.
-     2. Kiểm tra trạng thái review của bot Copilot: `gh pr view <PR_NUMBER> --json reviewRequests,comments` (đảm bảo `reviewRequests` rỗng).
-     3. Chỉ thực hiện `gh pr merge <id> --squash --delete-branch` khi 100% checks báo xanh và toàn bộ nhận xét của Copilot đã được xử lý/giải trình.
+### B. Khóa Tranh Chấp Cho Pull Requests (PR Claim Locking & Lease Push — TTL 4h)
+1. **Khóa PR & Đăng Notice (TTL = 4h):** Chạy `gh pr edit <id> --add-assignee "@me" --add-label "in-progress"` và đăng block `<!-- CCBA_PR_CLAIM_LOCK ... ttl_hours: 4 -->` qua `-F`. Khi dừng phiên sớm, đăng `<!-- CCBA_PR_CLAIM_RELEASE -->` và gỡ `@me`.
+2. **Pre-Push Lease Invariant:** Nghiêm cấm dùng bare `git push --force` (`-f`). Bắt buộc dùng:
+   ```bash
+   git fetch origin
+   git push --force-with-lease origin <branch-name>
+   ```
+3. **Zero-Red-Merge Invariant:** Nghiêm cấm dùng `--admin` hoặc `--auto`. Chỉ chạy `gh pr merge <id> --squash --delete-branch` sau khi 100% checks báo xanh và `reviewRequests` rỗng.
 
 ---
 
 ## 14. Cross-Platform Machine-State Isolation & Environment Parity Invariant (Quy Chuẩn Cách Ly Trạng Thái Máy & Đồng Bộ Đa Nền Tảng)
-- Nhằm đảm bảo mã nguồn và tài liệu vận hành trơn tru giữa máy Windows và Linux/WSL:
-  1. **Ưu tiên biến môi trường `$CCBA_HUB_PATH`:** Mọi script phân giải vị trí Hub/Spoke bắt buộc phải kiểm tra biến môi trường `$CCBA_HUB_PATH` lên hàng đầu trước khi duyệt file system.
-  2. **Bảo vệ đường dẫn ổ đĩa Windows trên POSIX:** Trên môi trường Linux/WSL/POSIX, tuyệt đối không truyền chuỗi đường dẫn mang ký tự ổ đĩa (`D:\...`, `C:\...`) trực tiếp vào `Path()`, phải sử dụng hàm phân giải đường dẫn an toàn (`resolve_cross_platform_path()`).
-  3. **Chống rò rỉ trạng thái máy (Zero Machine-State Leakage):** Nghiêm cấm commit các đường dẫn máy cục bộ (`/home/...`, `D:/...`, `C:/...`). Kiểm định bắt buộc bằng lệnh `check_spoke_cleanliness.py`.
-  4. **Chuẩn hóa Line Endings & Ngân Sách Bộ Nhớ In-Memory (LF & UTF-8 Budget Invariant):**
-     - Mọi repository thuộc hệ sinh thái CCBA bắt buộc có cấu hình `.gitattributes` chuẩn hóa (`* text=auto eol=lf` và `*.md text eol=lf`) để triệt tiêu xung đột CRLF/LF khi làm việc đa nền tảng.
-     - Mọi thuật toán kiểm soát ngân sách tệp tài liệu (ví dụ: ngưỡng 10.0 KB của `session_learnings.md` theo ADR-0030/ADR-0057) **BẮT BUỘC** phải tính toán trên chuỗi UTF-8 đã chuẩn hóa dấu xuống dòng in-memory:
-       `file_size_kb = len(content.replace("\r\n", "\n").encode("utf-8")) / 1024`
-       Tuyệt đối không dùng `file_path.stat().st_size` của tệp trên đĩa vật lý để đánh giá tiêu chuẩn nghiệm thu, tránh trường hợp bị đếm đội byte do Windows CRLF.
-  5. **Cổng Cưỡng Chế Sharded Registry (Hard Completion Gate):** Tại các Spoke tri thức quản lý văn bản pháp lý (có thư mục `legal_docs/`), lệnh kiểm tra tính toàn vẹn `ccba-legal compile-registry --check` (hoặc `validate_registry_sync()`) là điều kiện tiên quyết bắt buộc phải trả về `exit code 0`. Nếu có drift, Agent phải chạy compile trước khi commit.
-  6. **Skills Hygiene Linting Rule:** Trong các tài liệu `SKILL.md`, các đoạn mã bash có chứa lệnh gán biến môi trường (`export VAR=...`) bắt buộc phải gắn nhãn ngôn ngữ chứa `linux` hoặc `ubuntu` (ví dụ ````bash (linux)````) để vượt qua bộ lọc chống Windows Bashism của `audit_skills_hygiene.py`.
+1. **Ưu tiên `$CCBA_HUB_PATH`:** Mọi script phân giải vị trí Hub/Spoke phải ưu tiên đọc biến môi trường `$CCBA_HUB_PATH`.
+2. **An toàn đường dẫn đa hệ điều hành:** Trên Linux/WSL/POSIX, không truyền trực tiếp chuỗi ổ đĩa Windows (`D:\...`, `C:\...`) vào `pathlib.Path`; bắt buộc dùng `resolve_cross_platform_path`.
+3. **Chống rò rỉ trạng thái máy (ADR-0061):** Cấm commit đường dẫn tuyệt đối cục bộ (`/home/...`, `C:/...`) hoặc IP cứng; kiểm định qua `check_spoke_cleanliness.py`.
+4. **Chuẩn hóa LF & Ngân sách In-Memory:** Mọi repo phải có `.gitattributes` (`* text=auto eol=lf`). Ngưỡng dung lượng tài liệu (như 10.0 KB của `session_learnings.md`) phải tính sau khi chuẩn hóa `content.replace("\r\n", "\n").encode("utf-8")`.
+5. **Sharded Legal Registry Gate:** Tại các Spoke có `legal_docs/`, lệnh `ccba-legal compile-registry --check` bắt buộc trả về exit code 0 trước khi commit.
+6. **Skills Hygiene Bash Labeling:** Các khối bash trong `SKILL.md` có lệnh `export` phải ghi nhãn ````bash (linux)````.
 
 ---
 
 ## 15. Chrome DevTools Protocol (CDP) & Browser Agent Automation Invariant (Quy Chuẩn Tự Động Hóa Trình Duyệt & Bảo Mật CDP)
-
-- **Cờ Bắt Buộc Bắt Tay WebSocket (`--remote-allow-origins=*`):**
-  - Kể từ Chrome 111 đến các phiên bản hiện đại (Chrome 153+), bất kỳ câu lệnh khởi chạy Chrome nào sử dụng `--remote-debugging-port` đều **bắt buộc** phải gắn kèm cờ `--remote-allow-origins=*`.
-  - Nghiêm cấm khởi chạy thiếu cờ này vì sẽ dẫn đến lỗi `403 Forbidden` khi client WebSocket (Antigravity `/browser`, CDP, Node.js, Python) bắt tay kết nối tới `http://127.0.0.1:9222`.
-
-- **Khóa Chặt Cổng Lắng Nghe Trên Loopback (`127.0.0.1` Invariant):**
-  - Khi kích hoạt cờ `--remote-allow-origins=*`, Chrome tuyệt đối **chỉ được phép lắng nghe trên địa chỉ loopback nội bộ `127.0.0.1`**.
-  - Nghiêm cấm cấu hình `--remote-debugging-address=0.0.0.0` hoặc gán vào IP card mạng ngoài (LAN/Wi-Fi/WAN) nhằm ngăn chặn triệt để nguy cơ tin tặc cùng mạng nội bộ chiếm quyền điều khiển trình duyệt và đánh cắp auth cookies.
-
-- **Chính Sách Cổng 9222 Cố Định (Strict SSOT & Auto-Healing):**
-  - Cổng `9222` là định danh cổng chuẩn duy nhất (SSOT) cho toàn bộ hệ thống (`mcp_config.json`, `/browser`, `ccba_legal`).
-  - Nghiêm cấm tự ý nhảy cổng động (như 9333) khi cổng 9222 bận, vì sẽ làm gãy cấu hình tĩnh của Chrome DevTools MCP Server. Thay vào đó, launcher phải phát hiện PID đang giữ cổng và hỗ trợ gọi `Stop-Chrome-Debug` để tự chữa lành (Auto-Healing).
-
-- **Tách Biệt Profile Bền Vững Dùng Chung (Unified Persistent Profile Isolation):**
-  - Môi trường tự động hóa trình duyệt chuẩn của Antigravity và CCBA Platform sử dụng chung một profile duy nhất tại: `~/.gemini/antigravity-browser-profile`.
-  - Toàn bộ phiên đăng nhập (SharePoint CCBA `ibstbim.sharepoint.com`, Google Workspace, Thư Viện Pháp Luật...) được bảo toàn vĩnh viễn trên profile này, giúp tất cả các tác vụ kế thừa phiên làm việc mà không cần lặp lại xác thực OTP/2FA.
-  - Các công cụ CLI và crawler phải áp dụng nguyên tắc **"Attach-first via CDP"**: nếu cổng 9222 đang mở thì kết nối trực tiếp vào các tab có sẵn, tránh tự ý spawn tiến trình Chrome mới đè lên profile.
-
-- **Cơ Chế Tự Phục Hồi Khóa Profile (Stale LOCK File Recovery):**
-  - Trước khi khởi động Chrome CDP, launcher bắt buộc phải kiểm tra và tự động dọn dẹp file tồn đọng `~/.gemini/antigravity-browser-profile/LOCK` (nếu cổng 9222 chưa có tiến trình nào chiếm giữ) để ngăn ngừa tình trạng Chrome từ chối mở do sự cố crash trước đó.
-
-- **Quy Tắc Dừng An Toàn Chọn Lọc (Selective Safe Termination Invariant):**
-  - Khi viết hoặc thực thi các lệnh dừng trình duyệt Debug (`Stop-Chrome-Debug`), Agent **chỉ được phép** tắt tiến trình gắn với cổng 9222 hoặc chứa tham số `antigravity-browser-profile`.
-  - Tuyệt đối nghiêm cấm chạy lệnh `taskkill /IM chrome.exe /F` hàng loạt làm tắt các cửa sổ làm việc cá nhân của người dùng.
-
-- **Bảo Trì Danh Sách Tên Miền (`browserAllowlist.txt`):**
-  - Khi bổ sung luồng tự động hóa tới một domain mới, Agent phải kiểm tra và cập nhật `browserAllowlist.txt` đồng thời ở cả hai thư mục `~/.gemini/antigravity/` và `~/.gemini/antigravity-ide/`.
+- **Bắt buộc `--remote-allow-origins=*` & Khóa Loopback `127.0.0.1`:** Mọi lệnh mở Chrome Debug trên cổng `9222` (SSOT duy nhất) phải kèm `--remote-allow-origins=*` và chỉ lắng nghe trên `127.0.0.1` (cấm `0.0.0.0`).
+- **Attach-First & Profile Dùng Chung:** Dùng chung profile bền vững `~/.gemini/antigravity-browser-profile`; tự động dọn `~/.gemini/antigravity-browser-profile/LOCK` bị treo nếu cổng `9222` trống.
+- **Dừng An Toàn Chọn Lọc:** Chỉ tắt tiến trình gắn với cổng `9222` hoặc `antigravity-browser-profile`; nghiêm cấm `taskkill /IM chrome.exe /F` hàng loạt.
 
 ---
 
 ## 16. Ephemeral Worktree & Automated Nightly Cron Invariant (Quy Chuẩn Vận Hành Worktree Tạm Thời)
-
-### 16.1. Ephemeral Worktree Isolation & PYTHONPATH Leakage Guard
-- Mọi tác vụ telemetry, ratchet tuning hoặc chỉnh sửa tài liệu tự động BẮT BUỘC phải khởi tạo trong detached ephemeral worktree riêng biệt (ví dụ: `git worktree add --detach "$WORKTREE_DIR" origin/main`).
-- Tuyệt đối nghiêm cấm việc `cd` trực tiếp vào thư mục làm việc cục bộ của kỹ sư để chạy test, mutate file hoặc đo đạc dữ liệu.
-- **Rào chắn chống rò rỉ `PYTHONPATH` (PYTHONPATH Leakage Invariant):** Khi kích hoạt tiến trình trong Ephemeral Worktree, BẮT BUỘC phải thiết lập lại biến môi trường `PYTHONPATH` trỏ ưu tiên vào worktree:
+- **Cách ly Worktree & Chống rò rỉ đường dẫn import:** Mọi tác vụ auto-tuner/telemetry tự động phải chạy trong detached worktree (`.worktrees/` đã khai báo trong `.gitignore`) và đặt lại đường dẫn tìm kiếm gói Python ưu tiên trỏ vào worktree trước khi chạy test:
   ```bash (linux)
-  export PYTHONPATH="$WORKTREE_DIR/packages/ccba-harness/src:$WORKTREE_DIR/packages/ccba-ai/src:$WORKTREE_DIR:${PYTHONPATH:-}"
+  export PYTHONPATH="$worktree_dir/packages/ccba-harness/src:$worktree_dir/packages/ccba-ai/src:$worktree_dir"
   ```
-  Tuyệt đối không để tiến trình con trong worktree kế thừa `PYTHONPATH` trỏ về workspace chính đang dirty của kỹ sư.
-- Thư mục `.worktrees/` bắt buộc phải được khai báo trong `.gitignore` của tất cả kho chứa (Hub và mọi Spoke).
-
-### 16.2. Untracked File Collision & Fast-Forward Guard
-- Khi commit và push thành công báo cáo từ worktree lên `origin/main`:
-  - Nghiêm cấm sao chép tệp đã push ngược vào thư mục làm việc của kỹ sư dưới dạng tệp không theo dõi (`untracked files`), vì hành vi này sẽ làm gãy hoàn toàn lệnh `git pull` hoặc `git merge` kế tiếp của kỹ sư (`error: untracked working tree files would be overwritten by merge`).
-  - Sử dụng cơ chế đánh dấu `.push_success`. Chỉ thực hiện `git merge --ff-only origin/main` nếu thư mục làm việc đang ở nhánh `main` và có working tree hoàn toàn sạch sẽ (`status --porcelain` rỗng). Nếu kỹ sư đang sửa dở hoặc ở nhánh tính năng khác, giữ nguyên không can thiệp.
-
-### 16.3. Dynamic Timestamp Branching
-- Mọi nhánh auto-refactor do daemon tạo tự động phải mang hậu tố timestamp (`docs/auto-refactor-YYYYMMDD_HHMMSS`), tuyệt đối không dùng tên nhánh tĩnh cố định để tránh crash khi lần chạy trước bị gián đoạn.
-- Khi kiểm thử cục bộ: Nghiêm cấm chạy `run_nightly_tuner.sh` trên working tree đang dirty vì script sẽ tự động kéo `origin/main` gây hiểu lầm kết quả. Để kiểm thử cục bộ mã dở dang, sử dụng trực tiếp: `.venv/bin/python3 scripts/eval/nightly_tuner_daemon.py --dry-run`.
-
-### 16.4. Active Process Pre-Flight Inspection Before Worktree Cleanup
-- Trước khi gỡ bỏ bất kỳ ephemeral worktree nào (`git worktree remove`) hoặc xóa bất kỳ tệp khóa nào (`/tmp/*.lock`):
-  - Agent **BẮT BUỘC PHẢI KIỂM TRA** xem có tiến trình nào đang chiếm dụng thư mục worktree hoặc đang giữ mutex lock hay không:
-    ```bash (linux)
-    # 1. Kiểm tra tiến trình đang mở tệp hoặc có cwd bên trong thư mục worktree:
-    fuser -v "$WORKTREE_DIR" 2>&1
-
-    # 2. Kiểm tra tiến trình giữ khóa độc quyền (Active Mutex Lock):
-    flock -n "$LOCK_FILE" -c "true" || echo "⚠️ Lock đang bị chiếm giữ bởi tiến trình khác"
-    ```
-    ```powershell (windows)
-    # 1. Kiểm tra tiến trình gắn với worktree qua CommandLine:
-    Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*$WORKTREE_DIR*" } | Select-Object ProcessId, CommandLine
-    ```
-  - **Quy tắc Bất Biến (Active Lock Protection Invariant):**
-    Tuyệt đối nghiêm cấm việc xóa worktree (`git worktree remove --force`) hoặc xóa file lock nếu tiến trình gắn với nó vẫn đang tồn tại trong bảng tiến trình hệ điều hành (trừ trạng thái Zombie `Z`). Chỉ được phép dọn dẹp khi tiến trình đã kết thúc hoàn toàn hoặc khi script tự động thu hồi qua hook `trap cleanup_worktree EXIT`.
+- **Fast-Forward Guard & Dynamic Branching:** Dùng hậu tố nhánh động `docs/auto-refactor-YYYYMMDD_HHMMSS`. Không chép ngược untracked files vào workspace chính; chỉ `git merge --ff-only origin/main` khi working tree chính hoàn toàn sạch.
+- **Kiểm tra tiến trình trước khi xóa Worktree (`Active Lock Protection`):** Trước khi `git worktree remove` hoặc xóa lock file, bắt buộc kiểm tra bằng `fuser -v "$worktree_dir"` và `flock -n "$lock_file" -c "true"`; cấm xóa khi tiến trình đang hoạt động.
 
 ---
 
 ## 17. Spoke CLI Parameter Symmetry & Safe Invocation Invariant (Quy Chuẩn Chữ Ký Tham Số & An Toàn Thực Thi Spoke CLI)
-
-Khi tự động hóa hoặc hướng dẫn sử dụng bộ công cụ Spoke CLI, Agent BẮT BUỘC tuân thủ đúng chữ ký tham số theo từng chế độ thực thi:
-
-1. **Bộ Script Độc Lập (Standalone Scripts):**
-   - **`scripts/sync_spoke.py` (Safe-by-Default 2-Phase):**
-     - Mặc định trong môi trường non-interactive (CI, Subagent) chỉ chạy xem trước (Preview), không ghi đĩa.
-     - BẮT BUỘC truyền cờ `--apply` (hoặc `-y`) để chính thức áp dụng thay đổi vào Spoke.
-     - Tham số chỉ định đường dẫn Spoke là `--spoke <path>`. TUYỆT ĐỐI CẤM dùng tham số vị trí (positional) hoặc `--spoke-path`.
-   - **`scripts/adopt_spoke.py` (Direct Execution by Default):**
-     - Mặc định là áp dụng thay đổi ngay lập tức lên thư mục đích; BẮT BUỘC truyền cờ `--dry-run` nếu chỉ muốn xem trước ma trận phát hiện.
-     - Tham số chỉ định đường dẫn Spoke là `--spoke <path>`. TUYỆT ĐỐI CẤM dùng tham số vị trí (positional) hoặc `--spoke-path`.
-     - TUYỆT ĐỐI CẤM truyền cờ `--apply` (gây lỗi `argparse: unrecognized arguments: --apply`, Exit Code 2).
-   - **`scripts/init_spoke.py` (Positional First):**
-     - Nhận đường dẫn Spoke dưới dạng tham số vị trí `[spoke_path]` hoặc cờ `-p` / `--path`. TUYỆT ĐỐI CẤM dùng cờ `--spoke`.
-
-2. **Giao Diện Hợp Nhất (`scripts/ccba_platform_cli.py`):**
-   - Cả 3 lệnh con `init-spoke`, `adopt-spoke`, `sync-spoke` đều nhận đường dẫn Spoke dưới dạng **tham số vị trí** `[spoke_path]` (ví dụ: `python scripts/ccba_platform_cli.py sync-spoke /path/to/spoke --apply`).
-   - TUYỆT ĐỐI CẤM truyền cờ `--spoke` vào CLI hợp nhất (gây lỗi `unrecognized arguments: --spoke`, Exit Code 2).
+1. **Bộ Script Độc Lập (`scripts/`):**
+   - `python scripts/sync_spoke.py --spoke <path> [--apply]`: Mặc định chạy xem trước (Preview); bắt buộc truyền `--apply` để ghi đĩa.
+   - `python scripts/adopt_spoke.py --spoke <path> [--dry-run]`: Mặc định áp dụng trực tiếp; truyền `--dry-run` để xem trước (cấm truyền `--apply`).
+   - `python scripts/init_spoke.py <spoke_path>` (hoặc `-p <spoke_path>`): Nhận tham số vị trí (cấm truyền `--spoke`).
+2. **CLI Hợp Nhất (`scripts/ccba_platform_cli.py`):** Cả 3 lệnh `init-spoke`, `adopt-spoke`, `sync-spoke` đều nhận `<spoke_path>` là **tham số vị trí** (cấm truyền `--spoke`).
 
 ---
 
 ## 18. Pre-Flight Seam Inventory & Fast-Path Policy (Chính Sách Tiền Thẩm Định Kế Hoạch & Miễn Trừ Nhanh)
 
-### 18.1. Pre-Flight Seam Inventory Check & CLI Proof
-Trước khi đề xuất bất kỳ giải pháp kỹ thuật, tính năng mới, hoặc viết script trong kế hoạch thực thi (`implementation_plan.md`), Agent **BẮT BUỘC** phải thực hiện kiểm tra Seam qua CLI:
+### 18.1. Tra Cứu Hợp Đồng Năng Lực Seam & Biên Lai Kiểm Toán (`ADR-0061`)
+Trước khi đề xuất giải pháp kỹ thuật hoặc viết script/utility mới trong `implementation_plan.md`, Agent **BẮT BUỘC** tra cứu Seam Capability Contracts theo kiểu đầu vào/đầu ra:
 ```bash
-python scripts/governance/compile_catalog.py --query "<từ_khóa>"
+ccba-platform find-seam --in <input_types> --out <output_types> [--hardware <hw>] --json
 # Hoặc:
-ccba-platform find-seam "<từ_khóa>"
+python scripts/governance/compile_catalog.py --in <input_types> --out <output_types> --json
 ```
-- **Audit Receipt Invariant (Bằng Chứng Tra Cứu Tất Định):** Kế hoạch thực thi bắt buộc phải dán trích đoạn output của lệnh tra cứu CLI vào mục `User Review Required / Architectural Alignment`.
-- Nếu CLI trả về Seam khớp $\to$ Kế hoạch bắt buộc phải tuyên bố tái sử dụng Seam đó (`from ccba_<pkg> import <Seam>`).
-- Nếu CLI không trả về Seam $\to$ Agent mới được phép đề xuất viết hàm micro-utility hoặc đóng góp Seam mới.
+- **Audit Receipt Invariant (`index_sha256`):** Bắt buộc dán biên lai JSON (có trường `index_sha256`) vào `implementation_plan.md`.
+- **Cấm ngụy biện bằng Keyword Search:** Tra cứu theo từ khóa vị trí (`--query "<kw>"`) chỉ trả về `"KEYWORD_HINT"` và **không được coi là biên lai hợp đồng**. Nếu nền tảng đã có Seam khớp $\rightarrow$ bắt buộc tái sử dụng (`from ccba_<pkg> import <Seam>`). Mọi ngoại lệ thư viện thứ ba phải qua `# ccba:quarantine seam_id=... reason=... until=YYYY-MM-DD issue=...`.
 
-### 18.2. Ngưỡng Kích Hoạt Bắt Buộc (Mandatory Trigger Thresholds)
-Pre-Flight Seam Inventory là **bắt buộc** đối với các tác vụ:
-1. **File I/O**: Đọc, ghi, chuyển đổi, trích xuất tài liệu (PDF, Word DOCX, Excel XLSX, PPTX, Markdown, OCR).
-2. **Security & Secrets**: Xác thực, PII, mã hóa, xử lý API keys hoặc tokens (bắt buộc dùng `ccba-maskara`).
-3. **Networking & Cloud**: Tải dữ liệu, crawl web, đồng bộ Google Drive / SharePoint (bắt buộc dùng `ccba_legal.sync`, CDP mutex).
-4. **Tạo Script / Utility mới**: Bất kỳ tệp `.py` mới nào được tạo trong `scripts/` hoặc `packages/`.
-5. **Pháp lý & Thẩm định**: Trích dẫn quy chuẩn, phân định thẩm quyền PCCC, tra cứu hiệu lực văn bản (bắt buộc dùng `ccba_legal` Currency Resolver, `ccba_qc_core` PCCC Router).
-
-### 18.3. Fast-Path Miễn Trừ (Exemptions)
-Các tác vụ sau được hưởng cơ chế **Fast-Path** (không bắt buộc dán receipt CLI tra cứu Seam, giảm ma sát tối đa):
-1. **Sửa lỗi bugfix cục bộ**: Vá lỗi trong phạm vi 1 hàm hoặc 1 file hiện có mà không thêm dependency hay thư viện mới.
-2. **Test Fixtures & Harness Evals**: Bổ sung test cases, sửa mock data, cập nhật test datasets (`.agents/skills/ccba-eval-gate/test_cases/`).
-3. **Tài liệu & Markdown**: Cập nhật tài liệu kỹ thuật, báo cáo nghiệm thu, sửa chính tả, cập nhật `walkthrough.md`.
+### 18.2. Ngưỡng Kích Hoạt Bắt Buộc & Fast-Path Miễn Trừ
+- **Bắt buộc có Audit Receipt** đối với: (1) File I/O & chuyển đổi tài liệu; (2) Security & Secrets (`ccba-maskara`); (3) Networking, Crawl & Cloud Sync; (4) Tạo tệp `.py` mới trong `scripts/` hoặc `packages/`; (5) Thẩm định pháp lý & QC thiết kế.
+- **Miễn trừ Fast-Path** (không cần dán biên lai CLI) đối với: (1) Bugfix cục bộ trong 1 hàm/1 file hiện hữu không thêm dependency; (2) Cập nhật test fixtures/eval cases; (3) Sửa tài liệu Markdown thuần túy.
 
 ---
 
 ## 19. Atomic Micro-PR Pipeline & Read-Only Advisory AI Review Guardrail (Quy Chuẩn PR Nguyên Tử & Rào Chắn AI Review Chỉ Đọc)
 
-Để tối ưu hóa thông lượng merge, giảm thiểu lỗi hallucination và ngăn chặn rủi ro bão request làm cạn kiệt tài nguyên (đúc kết từ mô hình Cursor 2,500 PRs/tháng và nghiên cứu Bugbot), toàn bộ quy trình phát triển và kiểm duyệt trên Hub và Spoke bắt buộc tuân thủ 4 nguyên lý bất biến:
+### 19.1. Giới Hạn Kích Thước PR Nguyên Tử & Phân Loại Cửa Một Chiều (`ADR-0067`)
+- Mọi Pull Request mã nguồn logic nghiệp vụ phải khống chế trong ngân sách **$\le 200$ LOC diff** (không tính tests và `.md`) và tác động tối đa **1 Public Deep Seam** mỗi PR.
+- Các PR chạm vào 7 danh mục Cửa Một Chiều (`door_policy.py`) hoặc vượt chuỗi tích lũy $K \ge 3$ PRs `"PAVED_ROAD"` trong 72h trên cùng `packages/<pkg>` bắt buộc đính kèm **Tradeoff Card** (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` $\le 30$ dòng) được kiểm định tự động qua `ccba-harness door-triage` (`backpressure.py`).
 
-### 19.1. Giới Hạn Kích Thước PR Nguyên Tử (Atomic Micro-PR Slicing)
-- Mọi Pull Request mã nguồn logic nghiệp vụ bắt buộc phải khống chế phạm vi trong ngân sách **$\le 200$ LOC diff** (không bao gồm test fixtures, test cases, và tài liệu markdown `.md`).
-- Mọi PR chỉ được phép tác động lên **tối đa 1 Public Deep Seam** duy nhất đã đăng ký trong `catalog.yaml`. Cấm gộp nhiều seam không liên quan vào cùng một PR.
-- Nếu một tính năng lớn cần sửa đổi nhiều tầng, Agent bắt buộc phải phân rã thành chuỗi các Micro-PRs tuần tự (Tracer-Bullet pattern).
-
-### 19.2. Rào Chắn AI Review Chỉ Đọc (Read-Only Advisory Guardrail)
-- Các công cụ tự động hóa kiểm duyệt sử dụng mô hình ngôn ngữ lớn (Cursor Bugbot, GitHub Copilot Reviewer, AI Agents) vận hành theo cơ chế **Chỉ Đọc & Tư Vấn (Read-Only Advisory)**.
-- AI Reviewers **TUYỆT ĐỐI KHÔNG CÓ QUYỀN GỬI TRẠNG THÁI "APPROVE"** và **CẤM TỰ ĐỘNG MERGE MÃ NGUỒN LOGIC NGHIỆP VỤ**. Mọi quyết định merge bắt buộc phải do Kỹ sư trưởng hoặc qua cơ chế Merge Danger Triage có sự giám sát của con người.
-- Phân định rõ ràng giữa:
-  1. **Deterministic Status Checks (Hard Floor)**: Bộ kiểm định máy tính tất định (`ccba_harness verify-patch`, CI matrix) bắt buộc phải Exit Code 0 (PASS $100\%$) mới được phép merge.
-  2. **Advisory AI Review (Soft Guidance)**: Đóng góp ý kiến dưới dạng review comments hoặc suggestion blocks để hỗ trợ con người rà soát các Invariants.
-
-### 19.3. Danh Mục 10 Invariants Kiểm Tra Tự Động (`.github/bugbot-rules.md`)
-Khi thực hiện AI Review, các reviewers tự động bắt buộc phải đối chiếu diff với tập luật 10 Invariants được công bố tại [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md):
-- **`[RULE-01] SEAM_REUSE`**: Cấm tạo helper/script chắp vá khi `catalog.yaml` đã có Seam.
-- **`[RULE-02] DECOUPLED_CONNECTION`**: Cấm import ngược từ consumer vào tầng kết nối (`*_client.py`).
-- **`[RULE-03] AST_SPAN_INSPECTION`**: Chú thích miễn trừ `# ccba:quarantine` / `# ccba:allow-*` phải bao trọn AST span của import statement nhiều dòng.
-- **`[RULE-04] MULTI_KEY_SORT`**: Sắp xếp đa tiêu chí hỗn hợp cấm `reverse=True`, bắt buộc dùng negation toán học `-round(x.score, N)`.
-- **`[RULE-05] INODE_INVARIANCE`**: Quét tệp xây dựng lookup map bắt buộc sort theo `stem` để bảo đảm tính tất định trên mọi HĐH.
-- **`[RULE-06] POSIX_PERMISSIONS`**: Bảo toàn execute bit (`stat.S_IXUSR`) khi ghi đè tệp script/CLI.
-- **`[RULE-07] MACHINE_STATE_DECOUPLING`**: Cấm commit đường dẫn ổ đĩa tuyệt đối (Windows `C:\`, Linux `/home/vvc`); bắt buộc phân giải qua `CCBA_HUB_PATH`.
-- **`[RULE-08] SECRETS_MASKARA`**: Cấm tuyệt đối rò rỉ API keys, private keys, passwords trong diff (bắt buộc dùng `ccba-maskara`).
-- **`[RULE-09] VERIFIER_TEST_PARITY`**: Mọi sửa đổi Seam hoặc public API bắt buộc có unit test tương ứng và vượt qua `verify-patch`.
-- **`[RULE-10] ATOMIC_MICRO_PR`**: Khống chế diff $\le 200$ LOC để kiểm soát bán kính rủi ro (blast radius).
-
-### 19.4. Rào Chắn Chống Bão Quota & Nghẽn Gateway (Opt-in Trigger Guardrail)
-- Để bảo vệ hạ tầng máy chủ AI Gateway (Spark `:8090`) và tránh lãng phí token Cloud, AI Review trên PR **không được kích hoạt tự động** trên mọi commit.
-- AI Review chỉ được kích hoạt khi:
-  1. PR được gán nhãn `ai-review-requested`, HOẶC
-  2. Người dùng gõ comment triệu hồi `/ccba-ai-review`.
-  3. Tự động bỏ qua các PR được mở bởi automated bots (Dependabot, Auto-Tuner).
-- Mọi diff gửi cho AI Review bắt buộc phải đi qua cổng làm sạch bảo mật `ccba_maskara.redact_secrets_in_text()` để loại trừ 100% rủi ro rò rỉ bí mật.
+### 19.2. Rào Chắn AI Review Chỉ Đọc & 10 Invariants Kiểm Tra Tự Động (`.github/bugbot-rules.md`)
+- Các AI Reviewers tự động (Bugbot, Copilot Reviewer) chỉ vận hành ở chế độ **Chỉ Đọc & Tư Vấn (Read-Only Advisory)** — nghiêm cấm tự động gửi trạng thái `"APPROVE"` hoặc auto-merge mã nguồn.
+- Toàn bộ 10 quy tắc kiểm tra tự động (từ Invariant #1 Seam Reuse đến Invariant #10 Atomic Micro-PR) được định nghĩa đầy đủ tại SSOT [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md).
+- **Chống bão Quota:** AI Review trên PR chỉ kích hoạt opt-in qua nhãn `ai-review-requested` hoặc lệnh `/ccba-ai-review` (bỏ qua PR của bots) sau khi đã lọc qua `redact_secrets_in_text`.
 
 ---
 
 ## 20. Level-2 Peer Agent Delegation Protocol (Grok ↔ Antigravity Cost, Turn & Liveness Guardrails - ADR-0063..0065)
 
-Nhằm tối ưu hóa hiệu quả chi phí, kiểm soát ngân sách token, kế thừa KV-Cache liên giai đoạn và ngăn chặn rủi ro treo tiến trình hoặc suy thoái suy luận âm thầm khi ủy quyền nhiệm vụ giữa Antigravity và Grok CLI, toàn bộ tiến trình tương tác bắt buộc tuân thủ 5 quy chuẩn sau:
+### 20.1. Ma Trận 8 Execution Profiles & Trần Vòng Lặp Bắt Buộc (`peer.PROFILE_SPECS`)
+Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc CLI `ccba-harness peer-dispatch` với `--verbatim --disable-web-search` theo 8 profiles chuẩn hóa:
+1. **`deep_spec_audit` (Stage 1 Pre-Code Deep Audit):** $\le 25$ turns, `reasoning_effort: xhigh`, `output_format: json`, `timeout: 900s`, chỉ đọc (`read_file`, `grep`, `list_dir`).
+2. **`audit_plan`:** $\le 12$ turns, `reasoning_effort: xhigh`, `timeout: 900s`, chỉ đọc.
+3. **`signoff_diff` (Stage 3 Post-Code Sign-off):** $\le 15$ turns, `reasoning_effort: high`, `output_format: json`, `fork_session: True`, `timeout: 600s`; hỗ trợ `--resume <session_id> --fork-session` kế thừa KV-Cache từ Stage 1 (hoặc kèm `--no-tools` khi đã nhúng đủ diff).
+4. **`arch_audit`:** $\le 8$ turns, `reasoning_effort: xhigh`, `timeout: 600s`, chỉ đọc.
+5. **`code_review`:** $\le 10$ turns, `reasoning_effort: high`, `timeout: 300s`, chỉ đọc.
+6. **`audit_direct`:** $\le 3$ turns, `reasoning_effort: high`, `timeout: 120s`, khóa toàn bộ 15 built-in tools (`--deny "*"`).
+7. **`agentic_code`:** $\le 8$ turns, `reasoning_effort: high`, `timeout: 600s`, cho phép `read_file`, `search_replace`, `list_dir`.
+8. **`patch_fast`:** Đúng **1 turn** (`--max-turns 1`), `timeout: 120s`, khóa toàn bộ 15 built-in tools (`--deny "*"`), sinh bản ghi neo để `apply_anchor_patch` áp dụng (xác thực SHA-256 trước khi ghi).
 
-### 20.1. Ma Trận 8 Execution Profiles & Trần Vòng Lặp Bắt Buộc (`PROFILE_SPECS`)
-- **Nghiêm cấm** triệu hồi Grok CLI ở chế độ vô trần (`--max-turns` không giới hạn) hoặc bỏ qua cờ `--verbatim --disable-web-search`.
-- Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc CLI `ccba-harness peer-dispatch` theo 8 profiles chuẩn hóa trong `PROFILE_SPECS`:
-  1. **`deep_spec_audit` (Stage 1 Pre-Code Deep Audit)**: Trần **$\le 25$ turns**, `reasoning_effort: xhigh`, `output_format: json`, `timeout: 900s`, chỉ cho phép công cụ đọc (`read_file`, `grep`, `list_dir`).
-  2. **`audit_plan`**: Trần **$\le 12$ turns**, `reasoning_effort: xhigh`, `timeout: 900s`, chỉ đọc (`READ_ONLY_DISALLOW_LIST`).
-  3. **`signoff_diff` (Stage 3 Post-Code Sign-off)**: Trần **$\le 15$ turns**, `reasoning_effort: high`, `output_format: json`, `fork_session: True`, `timeout: 600s`; hỗ trợ `--resume <session_id> --fork-session` kế thừa KV-Cache từ Stage 1 (hoặc kèm `--no-tools` khi đã nhúng đủ diff trong prompt).
-  4. **`arch_audit`**: Trần **$\le 8$ turns**, `reasoning_effort: xhigh`, `timeout: 600s`, chỉ đọc.
-  5. **`code_review`**: Trần **$\le 10$ turns**, `reasoning_effort: high`, `timeout: 300s`, chỉ đọc.
-  6. **`audit_direct`**: Trần **$\le 3$ turns**, `reasoning_effort: high`, `timeout: 120s`, khóa toàn bộ 15 built-in tools (`NO_TOOLS_DISALLOW_LIST`, `--deny "*"`).
-  7. **`agentic_code`**: Trần **$\le 8$ turns**, `reasoning_effort: high`, `timeout: 600s`, cho phép `read_file`, `search_replace`, `list_dir`.
-  8. **`patch_fast`**: Trần **đúng 1 turn** (`--max-turns 1`), `timeout: 120s`, khóa toàn bộ 15 built-in tools (`NO_TOOLS_DISALLOW_LIST`, `--deny "*"`), sinh bản ghi neo để Antigravity áp dụng.
-
-### 20.2. Khóa Cứng 15 Built-in Tools & Tối Ưu Headless (`NO_TOOLS_DISALLOW_LIST` & `READ_ONLY_DISALLOW_LIST`)
-- Toàn bộ 8 profiles bắt buộc bật `verbatim: True` và `disable_web_search: True` để loại bỏ độ trễ khởi tạo MCP Web-Search.
-- Khi chạy chế độ không công cụ (`patch_fast`, `audit_direct`, hoặc cờ `--no-tools`), bắt buộc áp dụng `NO_TOOLS_DISALLOW_LIST` khóa toàn bộ 15 built-in tools của Grok CLI (bao gồm cả tool ghi tệp `write`, `todo_write`, `monitor`, `search_tool`, `use_tool`, `workflow`, `enter_plan_mode`, `exit_plan_mode`, `ask_user_question`, `send_feedback`, `web_fetch`).
-- Các profile chỉ đọc bắt buộc áp dụng `READ_ONLY_DISALLOW_LIST` (chặn `write`, `write_file`, `search_replace`, `run_terminal_command`, `spawn_subagent`, `search_tool`, `use_tool`).
-
-### 20.3. Liveness-Aware Watchdog & Cứu Hộ Lịch Sử Phiên (`inspect_session_liveness`)
-- Tiến trình con Grok CLI được giám sát qua `inspect_session_liveness` đọc sự kiện cuối trong `~/.grok/sessions/**/<session_id>/events.jsonl`:
-  - **Fail-Fast An Toàn**: Ngắt tiến trình ngay khi gặp `turn_ended:error`, `turn_ended:cancelled`, hoặc kẹt tại `mcp_init_completed:` quá `90.0s`. Tuyệt đối **không** ngắt sớm ở trạng thái `phase_changed:waiting_for_model` để bảo vệ các phiên suy luận sâu hợp lệ.
-  - **Turn-Ended Drain**: Khi tiến trình treo sau khi đã phát `turn_ended:*` quá `5.0s`, đọc toàn bộ bộ đệm `temp_out` trước khi thu hồi process group (`_terminate_proc_tree`).
-  - **Streaming Grace Window**: Khi chạm `deadline` nhưng tiến trình đang tích cực phát văn bản (`phase_changed:streaming_text` hoặc `phase_changed:streaming_reasoning` có tuổi sự kiện `< 5.0s`), cấp thêm **1 lần gia hạn `+45.0s`** để hoàn tất phản hồi.
-  - **Cứu hộ `chat_history.jsonl`**: Khi JSON stdout bị cắt do chạm trần lượt (`stopReason != "end_turn"`), gọi `_recover_verdict_from_chat_history` để cứu hộ phán quyết hợp lệ đã sinh ra trong phiên.
-
-### 20.4. Telemetry Đa Lượt (`--resume`) & Rào Chắn Suy Thoái Suy Luận (`COND-DEGRADED-REASONING`)
-- Khi nối tiếp phiên qua `--resume`, `extract_grok_session_telemetry` ưu tiên lấy số liệu của lượt cuối cùng (`turns[-1]`) thay vì tổng phiên lượt đầu, đồng thời cộng dồn chính xác `CombinedTelemetry` vào `status.json`.
-- Nếu một profile yêu cầu suy luận mức cao (`high` hoặc `xhigh`) nhưng telemetry thực tế ghi nhận `reasoning_tokens == 0`, cờ `degraded_reasoning` sẽ được bật và `synthesize_verdicts` tự động chèn điều kiện chặn `COND-DEGRADED-REASONING` (`blocking=True`), hạ cấp đồng thuận từ `APPROVE` xuống `APPROVE_WITH_CONDITIONS`.
-
-### 20.5. Quy Chuẩn Bản Ghi Neo & Định Tuyến Mô Hình 3 Tầng (`apply_anchor_patch`)
-- Với các thay đổi nhỏ ($\le 100$ LOC) trong phạm vi 1 seam, ưu tiên sử dụng Hợp đồng Bản ghi Neo qua `apply_anchor_patch` (xác thực SHA-256 trước khi ghi và đảm bảo chuỗi `old` duy nhất).
-- **Tier 1 (`local` — 0 USD)**: `qwen-local` trên DGX Spark GB10 cho `patch_fast`.
-- **Tier 2 (`gateway` — Cost-Effective)**: `gemini-38-flash` hoặc `claude-sonnet-4-6` qua AI Gateway (`:8090`).
-- **Tier 3 (`cloud` — Frontier Reasoning)**: `grok-4.7` (xAI) cho `deep_spec_audit`, `audit_plan`, `arch_audit`, và `signoff_diff`.
+### 20.2. Liveness-Aware Watchdog, Telemetry Đa Lượt & Rào Chắn Suy Thoái Suy Luận (`RULE-4.19`)
+- **Liveness-Aware Watchdog (`inspect_session_liveness`):** Giám sát `~/.grok/sessions/**/<session_id>/events.jsonl`:
+  - *Fail-Fast:* Ngắt ngay khi gặp `turn_ended:error`, `turn_ended:cancelled`, hoặc kẹt tại `mcp_init_completed:` quá `90.0s` (cấm ngắt ở `phase_changed:waiting_for_model`).
+  - *Turn-Ended Drain & Grace Window:* Đọc `temp_out` trước khi thu hồi process group (`_terminate_proc_tree`) khi treo sau `turn_ended:*` quá `5.0s`; cấp 1 lần gia hạn `+45.0s` khi đang streaming (`age_s < 5.0s`); cứu hộ phán quyết từ `chat_history.jsonl` qua `_recover_verdict_from_chat_history` khi chạm `max_turns`.
+- **Multi-Turn Telemetry & Degraded-Reasoning Gate:** Khi dùng `--resume`, `extract_grok_session_telemetry` ưu tiên lấy số liệu lượt cuối (`turns[-1]`). Nếu profile `high`/`xhigh` trả về `reasoning_tokens == 0`, `synthesize_verdicts` tự động chèn điều kiện chặn `COND-DEGRADED-REASONING` (`blocking=True`), hạ đồng thuận từ `"APPROVE"` xuống `"APPROVE_WITH_CONDITIONS"`.
+- **Định tuyến 3 Tầng (Multi-Tier Routing):** Tier 1 `local` (`qwen-local` — `$0.00` cho `patch_fast`), Tier 2 `gateway` (`gemini-38-flash` / `claude-sonnet-4-6`), Tier 3 `cloud` (`grok-4.7` cho thẩm định kiến trúc & nghiệm thu).
