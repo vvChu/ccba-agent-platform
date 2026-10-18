@@ -5,7 +5,6 @@
   "packages/ccba-harness/src/ccba_harness/fleet.py": 1024,
   "packages/ccba-harness/src/ccba_harness/skill_validator.py": 1503,
   "packages/ccba-legal-intel/src/ccba_legal/cli.py": 1455,
-  "packages/ccba-legal-intel/src/ccba_legal/converters/standard/handlers/table_handler.py": 801,
   "packages/ccba-legal-intel/src/ccba_legal/registry.py": 1260,
   "packages/ccba-ooxml/src/ccba_ooxml/pptx/deck_builder.py": 1586,
   "packages/ccba-ooxml/src/ccba_ooxml/pptx/inventory.py": 1033,
