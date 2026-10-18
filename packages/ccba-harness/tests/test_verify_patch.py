@@ -370,3 +370,13 @@ def test_cli_verify_patch_with_eval_preset() -> None:
     """Verify `ccba-harness verify-patch --preset eval` integration."""
     code = run_verify_patch_cli(["--preset", "eval"])
     assert code == 0
+
+
+def test_cli_verify_patch_missing_target_returns_1(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify `ccba-harness verify-patch --preset doc` without --target prints ERROR and exits 1."""
+    code = run_verify_patch_cli(["--preset", "doc"])
+    assert code == 1
+    captured = capsys.readouterr()
+    assert "ERROR: Preset 'doc' requires a target file path" in captured.err
