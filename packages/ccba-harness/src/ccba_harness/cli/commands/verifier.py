@@ -6,6 +6,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 
 def _parse_commands_from_file(file_path: Path) -> list[str]:
@@ -99,7 +100,49 @@ def run_verify_doc_cli(args_list: Sequence[str] | None = None) -> int:
         return 1
 
 
-# ccba:quarantine seam_id=cli.verify_patch reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _resolve_patch_commands(args: argparse.Namespace) -> list[str] | None:
+    """Resolves commands from CLI args, positional args, and --file."""
+    commands_to_run: list[str] = []
+    if args.commands:
+        commands_to_run.extend(args.commands)
+    if args.pos_commands:
+        commands_to_run.extend(args.pos_commands)
+    if args.file:
+        f_path = Path(args.file)
+        if not f_path.exists():
+            print(f"ERROR: Commands file does not exist: {f_path}", file=sys.stderr)
+            return None
+        commands_to_run.extend(_parse_commands_from_file(f_path))
+    if not commands_to_run and not args.preset:
+        print("ERROR: No commands or preset specified for verification.", file=sys.stderr)
+        return None
+    return commands_to_run
+
+
+def _emit_verify_patch_output(
+    report: Any, healing_report: Any | None, args: argparse.Namespace
+) -> int:
+    """Writes optional report file and prints verification output to stdout."""
+    import json
+
+    active = healing_report if healing_report else report
+    if args.report_file:
+        rf_path = Path(args.report_file)
+        rf_path.parent.mkdir(parents=True, exist_ok=True)
+        if rf_path.suffix.lower() == ".json":
+            rf_path.write_text(
+                json.dumps(active.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+        else:
+            rf_path.write_text(active.to_markdown(), encoding="utf-8")
+
+    if args.json:
+        print(json.dumps(active.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        print(active.to_markdown())
+    return 0 if report.all_passed else 1
+
+
 def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for deterministic patch verification (`ccba-harness verify-patch`)."""
     if sys.platform == "win32":
@@ -205,33 +248,17 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     )
 
     args = parser.parse_args(args_list)
-
-    commands_to_run: list[str] = []
-    if args.commands:
-        commands_to_run.extend(args.commands)
-    if args.pos_commands:
-        commands_to_run.extend(args.pos_commands)
-
-    if args.file:
-        f_path = Path(args.file)
-        if not f_path.exists():
-            print(f"ERROR: Commands file does not exist: {f_path}", file=sys.stderr)
-            return 1
-        parsed_cmds = _parse_commands_from_file(f_path)
-        commands_to_run.extend(parsed_cmds)
-
-    if not commands_to_run and not args.preset:
-        print("ERROR: No commands or preset specified for verification.", file=sys.stderr)
+    commands_to_run = _resolve_patch_commands(args)
+    if commands_to_run is None:
         return 1
+
+    from ccba_harness.verifier import verify_patch_execution
 
     headings = (
         [h.strip() for h in args.required_headings.split(",") if h.strip()]
         if args.required_headings
         else None
     )
-
-    from ccba_harness.verifier import verify_patch_execution
-
     report = verify_patch_execution(
         commands=commands_to_run,
         preset=args.preset,
@@ -242,44 +269,15 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         timeout=args.timeout,
         fail_fast=args.fail_fast,
     )
-
     healing_report = None
     if not report.all_passed and args.self_heal:
         from ccba_harness.healing import SelfHealingEngine
 
         target_base = Path(args.cwd).resolve() if args.cwd else Path.cwd()
         engine = SelfHealingEngine(base_dir=target_base, max_iterations=args.max_heal_iterations)
-        cmds_to_heal = [r.command for r in report.results]
         healing_report = engine.attempt_closed_loop_healing(
-            verify_commands=cmds_to_heal,
-            timeout=args.timeout,
+            verify_commands=[r.command for r in report.results], timeout=args.timeout
         )
         if healing_report.final_verification_report:
             report = healing_report.final_verification_report
-
-    if args.report_file:
-        import json
-
-        rf_path = Path(args.report_file)
-        rf_path.parent.mkdir(parents=True, exist_ok=True)
-        if rf_path.suffix.lower() == ".json":
-            data_to_write = healing_report.to_dict() if healing_report else report.to_dict()
-            rf_path.write_text(
-                json.dumps(data_to_write, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-        else:
-            text_to_write = healing_report.to_markdown() if healing_report else report.to_markdown()
-            rf_path.write_text(text_to_write, encoding="utf-8")
-
-    if args.json:
-        import json
-
-        data_to_print = healing_report.to_dict() if healing_report else report.to_dict()
-        print(json.dumps(data_to_print, indent=2, ensure_ascii=False))
-    else:
-        if healing_report:
-            print(healing_report.to_markdown())
-        else:
-            print(report.to_markdown())
-
-    return 0 if report.all_passed else 1
+    return _emit_verify_patch_output(report, healing_report, args)
