@@ -15,6 +15,18 @@ from ccba_legal.sync.engine import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_corpus_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ensure remote streaming tests do not accidentally read ambient machine corpus env vars."""
+    for env_key in (
+        "CCBA_LEGAL_KNOWLEDGE_PATH",
+        "CCBA_LEGAL_CORPUS_PATH",
+        "CCBA_HUB_PATH",
+        "HUB_PATH",
+    ):
+        monkeypatch.delenv(env_key, raising=False)
+
+
 @pytest.fixture
 def mock_remote_registry_content() -> bytes:
     """Mock canonical legal_registry.yaml content."""

@@ -594,7 +594,7 @@ def _build_linter_check(target_files: list[Path], ws: Path) -> GateCheck:
     """Builds and executes the linter gate check."""
     flake8_bin = shutil.which("flake8")
     if flake8_bin and target_files:
-        flake8_cmd = [flake8_bin, "--max-line-length=120", "--extend-ignore=E501"] + [
+        flake8_cmd = [flake8_bin, "--max-line-length=120", "--extend-ignore=E501,E203"] + [
             str(f) for f in target_files
         ]
         return run_command_check("flake8_lint", flake8_cmd, cwd=ws)
