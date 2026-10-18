@@ -68,9 +68,9 @@
 - **RULE-4.17 [Adversarial Rebuttal on `audit_direct`, Tool-Starvation Defense & CLI Parity]**:
   - Khi `audit_direct` suy diễn sai hoặc đòi GitHub API khi CI có `fetch-depth: 0`, đối chiếu AST theo KISS; ưu tiên `audit_direct --no-tools` khi plan đủ ngữ cảnh; sync subcommand vào `test_cli_contract_parity.py`.
 - **RULE-4.18 [Pre-Brief/Pre-Plan Problem-Validity, Scale & Seam-Parity Gate]**:
-  - Trước `Agent Brief`/`implementation_plan.md`, BẮT BUỘC thẩm định: áp hạ tầng nặng (RRF `#511`) lên tập nhỏ (`catalog.yaml` $N=76$ skills, `2ms`), xung đột `ADR-0040`/`ADR-0057` (`#512`, `#514`), trùng Seams/lệch biên Hub (`#522`, `#523`), hoặc đã giải quyết (`IDOP` `#10`–`#12`) $\to$ đóng `not_planned`/`completed` (Mục 42).
-- **RULE-4.19 [Liveness-Aware Grok Watchdog, Multi-Turn Resume Telemetry & Degraded-Reasoning Gate]**:
-  - Watchdog (`_peer_watchdog.py` — `inspect_session_liveness`) đọc `events.jsonl` (grace `+45s` khi `streaming_text`/`streaming_reasoning`, fail-fast `90s` tại `mcp_init_completed:`, cấm ngắt `waiting_for_model`). Telemetry `--resume` lấy `turns[-1]`; `reasoning_tokens == 0` trên `high`/`xhigh` bơm `COND-DEGRADED-REASONING` (`blocking=True`) vào `synthesize_verdicts()` (Mục 43).
+  - Trước `Agent Brief`/`implementation_plan.md`, thẩm định: hạ tầng nặng (RRF `#511`) trên tập nhỏ ($N=76$ skills, `2ms`), xung đột `ADR-0040`/`ADR-0057` (`#512`, `#514`), trùng Seams/lệch biên Hub (`#522`, `#523`), hoặc OBE (`IDOP` `#10`–`#12`) $\to$ đóng `not_planned`/`completed` (Mục 42).
+- **RULE-4.19 [Liveness Watchdog, Single-Verdict Guardrails & Unconditional Re-Render]**:
+  - Watchdog (`_peer_watchdog.py`) đọc `events.jsonl` (grace `+45s`, fail-fast `90s` tại `mcp_init_completed:`). `_enforce_single_verdict_guardrails` bơm `COND-DEGRADED-REASONING` & hạ cấp `APPROVE` có blocking/risk $\ge 4$ ở cả đơn luồng, BẮT BUỘC `render_verdict_header` ghi đĩa (`COND-RE-RENDER-ON-MUTATION`, Mục 43, 46).
 
 ---
 
