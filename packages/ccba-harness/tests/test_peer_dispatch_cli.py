@@ -193,3 +193,44 @@ def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(tmp_path, cap
     assert "--resume 01a148d0-ac92-7ef2-a970-efb8c8fe1aed --fork-session" in out
     assert "--verbatim" in out
     assert "--disable-web-search" in out
+
+
+def test_peer_dispatch_default_spec_lockdown_and_summary_output(tmp_path, monkeypatch, capsys):
+    prompt = tmp_path / "prompt_no_profile.md"
+    envelope = PeerPromptEnvelope(
+        request_id="req-cli-default-001",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="discuss",
+        subject="Default Spec Lockdown Test",
+        timestamp="2026-10-18T18:50:00+07:00",
+        output_path="grok_no_profile.md",
+    )
+    prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
+
+    # 1. Dry-run without profile should enforce DEFAULT_GROK_SPEC read-only lockdown
+    ret_dry = run_peer_dispatch_cli(["--prompt-file", str(prompt), "--dry-run"])
+    assert ret_dry == 0
+    out_dry = capsys.readouterr().out
+    assert "--verbatim" in out_dry
+    assert "--disable-web-search" in out_dry
+    assert "--tools read_file,grep,list_dir" in out_dry
+
+    # 2. Live execution prints [PEER-SUMMARY] line with Verdict, Risk, Blocking Conditions, Session ID
+    out_file = tmp_path / "grok_no_profile.md"
+    out_file.write_text(
+        "---\nrequest_id: req-cli-default-001\nverdict: APPROVE_WITH_CONDITIONS\nrisk_score: 2\n"
+        "conditions:\n  - id: COND-01\n    description: Check A\n    blocking: true\n"
+        "telemetry:\n  session_id: sess-sum-123\n  primary_model: grok-4.7\n"
+        "  input_tokens: 100\n  output_tokens: 50\n  total_tokens: 150\n---\n# Done\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("ccba_harness.peer.invoke_grok_cli", lambda **kw: True)
+    ret_live = run_peer_dispatch_cli(["--prompt-file", str(prompt)])
+    assert ret_live == 0
+    out_live = capsys.readouterr().out
+    assert "[OK] Peer dispatch completed successfully with valid verdict." in out_live
+    assert (
+        "[PEER-SUMMARY] Verdict: APPROVE_WITH_CONDITIONS | Risk: 2 | Blocking Conditions: 1 | Session ID: sess-sum-123"
+        in out_live
+    )

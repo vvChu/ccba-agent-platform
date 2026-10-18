@@ -7,13 +7,45 @@ import subprocess
 import time
 from typing import Any
 
-from ._peer_models import PeerVerdictTelemetry
+from ._peer_models import PeerCondition, PeerVerdictBlock, PeerVerdictTelemetry
 from ._peer_watchdog import CostMode
+
+_PASS_VERDICTS: frozenset[str] = frozenset(
+    {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS", "APPROVE_WITH_RESERVATIONS"}
+)
 
 
 def _is_degraded_reasoning(expected_effort: str | None, reasoning_tokens: int) -> bool:
     """Checks whether a high/xhigh reasoning profile silently returned 0 reasoning tokens."""
     return bool(expected_effort in ("high", "xhigh") and reasoning_tokens <= 0)
+
+
+def _enforce_single_verdict_guardrails(verdict: PeerVerdictBlock) -> bool:
+    """Applies degraded reasoning condition and downgrades pass verdicts if blocking conditions exist."""
+    modified = False
+    telemetry = verdict.telemetry
+    has_degraded = bool(telemetry and getattr(telemetry, "degraded_reasoning", False))
+    existing_cond_ids = {c.id for c in verdict.conditions}
+
+    if has_degraded and "COND-DEGRADED-REASONING" not in existing_cond_ids:
+        verdict.conditions.append(
+            PeerCondition(
+                id="COND-DEGRADED-REASONING",
+                description="High/xhigh reasoning profile returned 0 reasoning_tokens (silent reasoning degradation).",
+                blocking=True,
+                source_profile="telemetry",
+                source_profiles=["telemetry"],
+            )
+        )
+        modified = True
+
+    has_blocking = any(c.blocking for c in verdict.conditions)
+    has_high_risk = (verdict.risk_score or 1) >= 4
+    if verdict.verdict in _PASS_VERDICTS and (has_blocking or has_high_risk):
+        verdict.verdict = "APPROVE_WITH_CONDITIONS"
+        modified = True
+
+    return modified
 
 
 def _compute_session_cost(
@@ -102,7 +134,7 @@ def _build_fallback_telemetry(
             cost_usd=est_cost,
             cost_mode="estimated",
             duration_seconds=round(duration_seconds, 2),
-            degraded_reasoning=_is_degraded_reasoning(expected_reasoning_effort, 0),
+            degraded_reasoning=False,
         )
     except Exception:
         return None

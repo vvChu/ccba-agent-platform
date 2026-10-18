@@ -67,6 +67,7 @@ from ._peer_models import (
 )
 from ._peer_telemetry import (
     _accumulate_verdict_telemetry,
+    _enforce_single_verdict_guardrails,
     extract_grok_session_telemetry,
 )
 from ._peer_watchdog import (
@@ -100,10 +101,13 @@ DEFAULT_GROK_SPEC: dict[str, Any] = {
     "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
     "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
     "max_turns": 12,
-    "tools": None,
-    "disallowed_tools": ["spawn_subagent"],
+    "tools": ["read_file", "grep", "list_dir"],
+    "disallowed_tools": list(READ_ONLY_DISALLOW_LIST),
+    "deny": ["Bash", "Write", "Edit", "WebFetch"],
+    "disable_web_search": True,
+    "verbatim": True,
     "reasoning_effort": "xhigh",
-    "timeout": 180.0,
+    "timeout": 600.0,
 }
 
 
@@ -287,7 +291,7 @@ def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any]
     ]
     if not grok_resps:
         return None
-    grok_resps.sort(key=lambda x: x.get("mtime", 0.0), reverse=True)
+    grok_resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
     top = grok_resps[0]
     verdict = top["verdict"]
     return {
@@ -367,7 +371,7 @@ def update_live_summary(
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     resp_roles = ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
     resps = [i for i in registry.values() if i["role"] in resp_roles and i["verdict"]]
-    resps.sort(key=lambda x: x["mtime"], reverse=True)
+    resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
 
     lines = [
         "# ⚡ Grok & Antigravity Live Peer Summary\n",
@@ -537,6 +541,7 @@ def _finalize_grok_verdict_and_telemetry(
 ) -> bool:
     """Validates parsed verdict or anchor patch, attaches session telemetry, and writes output_file."""
     verdict = parse_verdict_from_md(stdout_text)
+    prompt_content: str | None = None
     if verdict is None:
         if extract_anchor_payload(stdout_text) is None:
             return False
@@ -547,10 +552,10 @@ def _finalize_grok_verdict_and_telemetry(
             verdict="HANDOFF",
             summary="Fast-path anchor patch generated; pending orchestrator apply and verification.",
         )
-        stdout_text = render_verdict_header(verdict) + "\n" + stdout_text.lstrip()
 
     if session_id:
-        prompt_content, _ = safe_read_and_hash(prompt_path)
+        if prompt_content is None:
+            prompt_content, _ = safe_read_and_hash(prompt_path)
         telemetry = extract_grok_session_telemetry(
             session_id=session_id,
             timeout=3.0,
@@ -562,10 +567,11 @@ def _finalize_grok_verdict_and_telemetry(
         )
         if telemetry:
             verdict.telemetry = telemetry
-            _, body = extract_frontmatter(stdout_text)
-            stdout_text = render_verdict_header(verdict) + body.lstrip()
 
-    atomic_write_text(output_file, stdout_text)
+    _enforce_single_verdict_guardrails(verdict)
+    _, body = extract_frontmatter(stdout_text)
+    final_output = render_verdict_header(verdict) + "\n" + body.lstrip()
+    atomic_write_text(output_file, final_output)
     return True
 
 
