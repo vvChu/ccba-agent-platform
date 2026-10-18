@@ -7,17 +7,12 @@ from pathlib import Path
 from typing import Any
 
 
-# ccba:quarantine seam_id=cli.peer_dispatch_auto_apply reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
-def handle_peer_dispatch_auto_apply(
+def _validate_dispatch_output_for_auto_apply(
     prompt_path: Path,
-    root: str | None,
-    verify_preset: str | None,
-    keep_backups: bool,
     active_profile: str | None,
-) -> int:
-    """Handles Level-3 auto-apply verification gate for peer-dispatch (ADR-0065)."""
+) -> tuple[Path | None, Any | None]:
+    """Validates prompt profile, output file, HANDOFF verdict, and AnchorPatchPayload."""
     from ccba_harness.peer import (
-        auto_apply_and_verify_patch,
         extract_anchor_payload,
         parse_envelope_from_md,
         parse_verdict_from_md,
@@ -27,13 +22,10 @@ def handle_peer_dispatch_auto_apply(
     content, _ = safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(content or "")
     profile = active_profile or (envelope.profile if envelope else None)
-
     if profile != "patch_fast":
-        print(
-            f"[FAIL] --auto-apply is strictly restricted to 'patch_fast' profile, got '{profile}' (COND-LEVEL3-TRUST).",
-            file=sys.stderr,
-        )
-        return 1
+        msg = f"[FAIL] --auto-apply is strictly restricted to 'patch_fast' profile, got '{profile}' (COND-LEVEL3-TRUST)."
+        print(msg, file=sys.stderr)
+        return None, None
 
     out_name = Path(envelope.output_path).name if (envelope and envelope.output_path) else None
     if not out_name:
@@ -41,23 +33,20 @@ def handle_peer_dispatch_auto_apply(
             "[FAIL] --auto-apply requested but envelope does not specify output_path.",
             file=sys.stderr,
         )
-        return 1
+        return None, None
 
     output_path = (prompt_path.parent / out_name).resolve()
     if not output_path.exists():
         print(f"[FAIL] Output file not found for auto-apply: {output_path}", file=sys.stderr)
-        return 1
+        return None, None
 
     out_content, _ = safe_read_and_hash(output_path)
-    out_verdict_block = parse_verdict_from_md(out_content or "")
-    worker_verdict = out_verdict_block.verdict if out_verdict_block else None
-
+    out_verdict = parse_verdict_from_md(out_content or "")
+    worker_verdict = out_verdict.verdict if out_verdict else None
     if worker_verdict != "HANDOFF":
-        print(
-            f"[FAIL] --auto-apply rejected worker verdict '{worker_verdict}': only HANDOFF is accepted (COND-LEVEL3-TRUST).",
-            file=sys.stderr,
-        )
-        return 1
+        msg = f"[FAIL] --auto-apply rejected worker verdict '{worker_verdict}': only HANDOFF is accepted (COND-LEVEL3-TRUST)."
+        print(msg, file=sys.stderr)
+        return None, None
 
     payload = extract_anchor_payload(out_content or "")
     if payload is None:
@@ -65,6 +54,22 @@ def handle_peer_dispatch_auto_apply(
             "[FAIL] --auto-apply requested but output contains no AnchorPatchPayload.",
             file=sys.stderr,
         )
+        return None, None
+    return output_path, payload
+
+
+def handle_peer_dispatch_auto_apply(
+    prompt_path: Path,
+    root: str | None,
+    verify_preset: str | None,
+    keep_backups: bool,
+    active_profile: str | None,
+) -> int:
+    """Handles Level-3 auto-apply verification gate for peer-dispatch (ADR-0065)."""
+    from ccba_harness.peer import auto_apply_and_verify_patch
+
+    output_path, payload = _validate_dispatch_output_for_auto_apply(prompt_path, active_profile)
+    if output_path is None or payload is None:
         return 1
 
     auto_res = auto_apply_and_verify_patch(
@@ -73,7 +78,6 @@ def handle_peer_dispatch_auto_apply(
         verify_preset=verify_preset or "ci",
         keep_backups=keep_backups,
     )
-
     return record_auto_apply_gate_result(
         gate_file=output_path.with_suffix(".gate.md"),
         auto_res=auto_res,
@@ -123,7 +127,50 @@ def record_auto_apply_gate_result(
     return 1
 
 
-# ccba:quarantine seam_id=cli.peer_co_review_auto_apply reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _validate_co_review_for_auto_apply(
+    report: Any,
+    patch_file: str | None,
+) -> tuple[Any | None, int]:
+    """Validates consensus report and patch file for co-review auto-apply."""
+    from ccba_harness.peer import extract_anchor_payload, safe_read_and_hash
+
+    if not patch_file:
+        print(
+            "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
+            file=sys.stderr,
+        )
+        return None, 1
+
+    blocking_conditions = [c for c in report.conditions if c.blocking]
+    is_clean = (
+        report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT")
+        and report.risk_score <= 3
+        and len(blocking_conditions) == 0
+    )
+    if not is_clean:
+        print(
+            f"[FAIL] Consensus conditions not met for --auto-apply (verdict: {report.verdict}, "
+            f"risk: {report.risk_score}/5, blocking conditions: {len(blocking_conditions)}) (COND-LEVEL3-TRUST).",
+            file=sys.stderr,
+        )
+        return None, (2 if report.verdict.startswith("APPROVE") else 4)
+
+    patch_path = Path(patch_file).resolve()
+    if not patch_path.exists():
+        print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
+        return None, 1
+
+    patch_content, _ = safe_read_and_hash(patch_path)
+    payload = extract_anchor_payload(patch_content or "")
+    if payload is None:
+        print(
+            f"[FAIL] No valid AnchorPatchPayload found in patch file: {patch_path}",
+            file=sys.stderr,
+        )
+        return None, 1
+    return payload, 0
+
+
 def handle_peer_co_review_auto_apply(
     prompt_path: Path,
     output_path: Path | None,
@@ -134,47 +181,11 @@ def handle_peer_co_review_auto_apply(
     keep_backups: bool,
 ) -> int:
     """Handles Level-3 auto-apply verification gate for peer-co-review (ADR-0065)."""
-    from ccba_harness.peer import (
-        auto_apply_and_verify_patch,
-        extract_anchor_payload,
-        safe_read_and_hash,
-    )
+    from ccba_harness.peer import auto_apply_and_verify_patch
 
-    if not patch_file:
-        print(
-            "[FAIL] --auto-apply on co-review requires an explicit --patch-file (COND-LEVEL3-TRUST).",
-            file=sys.stderr,
-        )
-        return 1
-
-    blocking_conditions = [c for c in report.conditions if c.blocking]
-    is_clean_approval = (
-        report.verdict in ("APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT")
-        and report.risk_score <= 3
-        and len(blocking_conditions) == 0
-    )
-
-    if not is_clean_approval:
-        print(
-            f"[FAIL] Consensus conditions not met for --auto-apply (verdict: {report.verdict}, "
-            f"risk: {report.risk_score}/5, blocking conditions: {len(blocking_conditions)}) (COND-LEVEL3-TRUST).",
-            file=sys.stderr,
-        )
-        return 2 if report.verdict.startswith("APPROVE") else 4
-
-    patch_path = Path(patch_file).resolve()
-    if not patch_path.exists():
-        print(f"[FAIL] Specified patch file not found: {patch_path}", file=sys.stderr)
-        return 1
-
-    patch_content, _ = safe_read_and_hash(patch_path)
-    payload = extract_anchor_payload(patch_content or "")
+    payload, err_code = _validate_co_review_for_auto_apply(report, patch_file)
     if payload is None:
-        print(
-            f"[FAIL] No valid AnchorPatchPayload found in patch file: {patch_path}",
-            file=sys.stderr,
-        )
-        return 1
+        return err_code
 
     auto_res = auto_apply_and_verify_patch(
         root=root,
@@ -182,7 +193,6 @@ def handle_peer_co_review_auto_apply(
         verify_preset=verify_preset or "ci",
         keep_backups=keep_backups,
     )
-
     gate_target = (
         output_path
         if output_path

@@ -64,7 +64,7 @@ def test_ccba_new_feature_workflow_structure() -> None:
     assert skill_path.exists(), "ccba-new-feature SKILL.md must exist"
 
     content = skill_path.read_text(encoding="utf-8")
-    assert 'version: "1.4.0"' in content or 'version: "1.3.0"' in content
+    assert any(f'version: "{v}"' in content for v in ("1.5.0", "1.4.0", "1.3.0"))
     assert "triage" in content
     assert "backlog" in content
     assert "claim issue" in content
