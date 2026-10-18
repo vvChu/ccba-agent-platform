@@ -12,7 +12,184 @@ from typing import Any
 from ccba_harness.skill_validator import SkillAuditIssue, SkillValidator
 
 
-# ccba:quarantine seam_id=cli.skill_validation reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _collect_target_skill_files(
+    args: argparse.Namespace, project_root: Path
+) -> tuple[list[Path], bool]:
+    """Resolves unique SKILL.md and workflow files from CLI arguments or default workspace paths."""
+    skills_files: list[Path] = []
+    has_explicit_targets = False
+
+    if args.file:
+        has_explicit_targets = True
+        target_path = Path(args.file)
+        if not target_path.is_absolute():
+            target_path = project_root / target_path
+        skills_files.append(target_path)
+
+    if args.paths:
+        has_explicit_targets = True
+        for p_str in args.paths:
+            p = Path(p_str) if Path(p_str).is_absolute() else project_root / p_str
+            if not p.exists():
+                skills_files.append(p)
+            elif p.is_file() and (p.name == "SKILL.md" or p.suffix == ".md"):
+                skills_files.append(p)
+            elif p.is_dir():
+                skills_files.extend(p.rglob("SKILL.md"))
+
+    if not has_explicit_targets:
+        default_dir = project_root / ".agents" / "skills"
+        scan_root = default_dir if default_dir.exists() else project_root
+        skills_files = list(scan_root.rglob("SKILL.md"))
+
+    seen: set[Path] = set()
+    unique_files: list[Path] = []
+    for sf in skills_files:
+        try:
+            sf_res = sf.resolve()
+        except Exception:
+            sf_res = sf
+        if sf_res not in seen:
+            seen.add(sf_res)
+            unique_files.append(sf)
+    return unique_files, has_explicit_targets
+
+
+def _audit_single_skill_or_workflow(
+    target_path: Path, validator: SkillValidator, args: argparse.Namespace
+) -> tuple[int, int]:
+    """Audits a single SKILL.md or workflow file and prints warnings/errors."""
+    is_workflow = (
+        target_path.is_relative_to(validator.project_root / ".agents" / "workflows")
+        if target_path.is_relative_to(validator.project_root)
+        else "workflows" in target_path.parts
+    )
+    if is_workflow:
+        issues = validator.audit_workflow(target_path)
+        error_prefix = "[WORKFLOW ERROR]"
+    else:
+        issues = validator.audit_skill(
+            target_path, check_shallow=True, enforce_gpi=args.enforce_gpi
+        )
+        error_prefix = "[SKILL ERROR]"
+
+    if not issues:
+        return 0, 0
+
+    rel_path = (
+        target_path.relative_to(validator.project_root)
+        if target_path.is_relative_to(validator.project_root)
+        else target_path
+    )
+    warnings: list[SkillAuditIssue] = [i for i in issues if i.category.endswith("_WARNING")]
+    errors: list[SkillAuditIssue] = [i for i in issues if not i.category.endswith("_WARNING")]
+    err_count, warn_count = 0, 0
+
+    if warnings:
+        print(f"\n\x1b[33m[SKILL WARNING]\x1b[0m {rel_path}:")
+        for w in warnings:
+            print(f"  Line {w.line_number}: {w.message}")
+            warn_count += 1
+            if args.strict:
+                err_count += 1
+
+    if errors:
+        print(f"\n\x1b[31m{error_prefix}\x1b[0m {rel_path}:")
+        for e in errors:
+            print(f"  Line {e.line_number}: {e.message}")
+            err_count += 1
+    return err_count, warn_count
+
+
+def _audit_workflows_and_workspace_gates(
+    validator: SkillValidator, args: argparse.Namespace, has_explicit_targets: bool
+) -> tuple[int, int, int]:
+    """Audits workspace workflows and CI gates when performing a full directory scan."""
+    if has_explicit_targets:
+        return 0, 0, 0
+
+    err_count, warn_count, wf_count = 0, 0, 0
+    wf_dir = validator.project_root / ".agents" / "workflows"
+    if wf_dir.exists():
+        workflow_files = list(wf_dir.glob("*.md"))
+        wf_count = len(workflow_files)
+        for wf_path in workflow_files:
+            wf_issues = validator.audit_workflow(wf_path)
+            if wf_issues:
+                rel_wf = (
+                    wf_path.relative_to(validator.project_root)
+                    if wf_path.is_relative_to(validator.project_root)
+                    else wf_path
+                )
+                print(f"\n\x1b[31m[WORKFLOW ERROR]\x1b[0m {rel_wf}:")
+                for w_issue in wf_issues:
+                    print(f"  Line {w_issue.line_number}: {w_issue.message}")
+                    err_count += 1
+
+    skills_dir = validator.project_root / ".agents" / "skills"
+    if skills_dir.exists():
+        gate_issues = validator.audit_workspace_gates(skills_dir)
+        gate_errors = [g for g in gate_issues if not g.category.endswith("_WARNING")]
+        gate_warnings = [g for g in gate_issues if g.category.endswith("_WARNING")]
+        if gate_warnings:
+            print("\n\x1b[33m[WORKSPACE WARNING]\x1b[0m Workspace-level Warnings:")
+            for gw in gate_warnings:
+                print(f"  [{gw.category}] {gw.message}")
+                warn_count += 1
+                if args.strict:
+                    err_count += 1
+        if gate_errors:
+            print("\n\x1b[31m[HARD CI GATE ERROR]\x1b[0m Workspace-level Skill Violations:")
+            for ge in gate_errors:
+                print(f"  [{ge.category}] {ge.message}")
+                err_count += 1
+    return wf_count, err_count, warn_count
+
+
+def _execute_skill_validation(args: argparse.Namespace, validator: SkillValidator | None) -> int:
+    """Coordinates skill, workflow, and workspace gate validation."""
+    if validator is None:
+        root_path = Path(args.root).resolve() if args.root else Path.cwd()
+        validator = SkillValidator(project_root=root_path)
+    elif args.root:
+        validator.project_root = Path(args.root).resolve()
+
+    skills_files, has_explicit_targets = _collect_target_skill_files(args, validator.project_root)
+    if not skills_files:
+        if has_explicit_targets:
+            print(
+                "ERROR: No SKILL.md or workflow files found matching specified targets.",
+                file=sys.stderr,
+            )
+            return 1
+        print("No SKILL.md files found for validation.")
+        return 0
+
+    total_errors, total_warnings = 0, 0
+    for target_path in skills_files:
+        errs, warns = _audit_single_skill_or_workflow(target_path, validator, args)
+        total_errors += errs
+        total_warnings += warns
+
+    wf_count, gate_errs, gate_warns = _audit_workflows_and_workspace_gates(
+        validator, args, has_explicit_targets
+    )
+    total_errors += gate_errs
+    total_warnings += gate_warns
+
+    if total_errors > 0:
+        warn_note = f" (and {total_warnings} warning(s))" if total_warnings else ""
+        print(f"\nValidation failed with {total_errors} error(s){warn_note}.")
+        return 1
+
+    wf_msg = f" and {wf_count} workflow file(s)" if wf_count else ""
+    warn_msg = f" with {total_warnings} warning(s)" if total_warnings else ""
+    print(
+        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s){wf_msg}{warn_msg} across all CI Gates.\x1b[0m"
+    )
+    return 0
+
+
 def run_skill_validation_cli(
     args_list: Sequence[str] | None = None,
     validator: SkillValidator | None = None,
@@ -63,168 +240,7 @@ def run_skill_validation_cli(
         help="Enforce GPI metrics block in SKILL.md frontmatter per RES-2026-ARCH-001",
     )
     args = parser.parse_args(args_list)
-
-    if validator is None:
-        root_path = Path(args.root).resolve() if args.root else Path.cwd()
-        validator = SkillValidator(project_root=root_path)
-    else:
-        if args.root:
-            validator.project_root = Path(args.root).resolve()
-
-    skills_files: list[Path] = []
-    has_explicit_targets = False
-
-    if args.file:
-        has_explicit_targets = True
-        target_path = Path(args.file)
-        if not target_path.is_absolute():
-            target_path = validator.project_root / target_path
-        skills_files.append(target_path)
-
-    if args.paths:
-        has_explicit_targets = True
-        for p_str in args.paths:
-            p = Path(p_str)
-            if not p.is_absolute():
-                p = validator.project_root / p
-            if not p.exists():
-                skills_files.append(p)
-                continue
-            if p.is_file():
-                if p.name == "SKILL.md" or p.suffix == ".md":
-                    skills_files.append(p)
-            elif p.is_dir():
-                skills_files.extend(p.rglob("SKILL.md"))
-
-    if not has_explicit_targets:
-        default_dir = validator.project_root / ".agents" / "skills"
-        if default_dir.exists():
-            skills_files = list(default_dir.rglob("SKILL.md"))
-        else:
-            # Fallback to scanning current directory
-            skills_files = list(validator.project_root.rglob("SKILL.md"))
-
-    # De-duplicate while preserving order
-    seen: set[Path] = set()
-    unique_skills_files: list[Path] = []
-    for sf in skills_files:
-        try:
-            sf_res = sf.resolve()
-        except Exception:
-            sf_res = sf
-        if sf_res not in seen:
-            seen.add(sf_res)
-            unique_skills_files.append(sf)
-    skills_files = unique_skills_files
-
-    if not skills_files:
-        if has_explicit_targets:
-            print(
-                "ERROR: No SKILL.md or workflow files found matching specified targets.",
-                file=sys.stderr,
-            )
-            return 1
-        print("No SKILL.md files found for validation.")
-        return 0
-
-    total_errors = 0
-    total_warnings = 0
-
-    for target_path in skills_files:
-        is_workflow = (
-            target_path.is_relative_to(validator.project_root / ".agents" / "workflows")
-            if target_path.is_relative_to(validator.project_root)
-            else "workflows" in target_path.parts
-        )
-        if is_workflow:
-            issues = validator.audit_workflow(target_path)
-            error_prefix = "[WORKFLOW ERROR]"
-        else:
-            issues = validator.audit_skill(
-                target_path, check_shallow=True, enforce_gpi=args.enforce_gpi
-            )
-            error_prefix = "[SKILL ERROR]"
-
-        if issues:
-            rel_path = (
-                target_path.relative_to(validator.project_root)
-                if target_path.is_relative_to(validator.project_root)
-                else target_path
-            )
-
-            warnings: list[SkillAuditIssue] = []
-            errors: list[SkillAuditIssue] = []
-            for issue_item in issues:
-                if issue_item.category.endswith("_WARNING"):
-                    warnings.append(issue_item)
-                else:
-                    errors.append(issue_item)
-
-            if warnings:
-                print(f"\n\x1b[33m[SKILL WARNING]\x1b[0m {rel_path}:")
-                for w in warnings:
-                    print(f"  Line {w.line_number}: {w.message}")
-                    total_warnings += 1
-                    if args.strict:
-                        total_errors += 1
-
-            if errors:
-                print(f"\n\x1b[31m{error_prefix}\x1b[0m {rel_path}:")
-                for e in errors:
-                    print(f"  Line {e.line_number}: {e.message}")
-                    total_errors += 1
-
-    # Validate all Workflows in .agents/workflows if full directory scan
-    workflow_files: list[Path] = []
-    if not has_explicit_targets:
-        wf_dir = validator.project_root / ".agents" / "workflows"
-        if wf_dir.exists():
-            workflow_files = list(wf_dir.glob("*.md"))
-            for wf_path in workflow_files:
-                wf_issues = validator.audit_workflow(wf_path)
-                if wf_issues:
-                    rel_wf = (
-                        wf_path.relative_to(validator.project_root)
-                        if wf_path.is_relative_to(validator.project_root)
-                        else wf_path
-                    )
-                    print(f"\n\x1b[31m[WORKFLOW ERROR]\x1b[0m {rel_wf}:")
-                    for w_issue in wf_issues:
-                        print(f"  Line {w_issue.line_number}: {w_issue.message}")
-                        total_errors += 1
-
-    # Run Workspace Hard CI Gates
-    skills_dir = validator.project_root / ".agents" / "skills"
-    if skills_dir.exists() and not has_explicit_targets:
-        gate_issues = validator.audit_workspace_gates(skills_dir)
-        gate_errors = [g for g in gate_issues if not g.category.endswith("_WARNING")]
-        gate_warnings = [g for g in gate_issues if g.category.endswith("_WARNING")]
-
-        if gate_warnings:
-            print("\n\x1b[33m[WORKSPACE WARNING]\x1b[0m Workspace-level Warnings:")
-            for gw in gate_warnings:
-                print(f"  [{gw.category}] {gw.message}")
-                total_warnings += 1
-                if args.strict:
-                    total_errors += 1
-
-        if gate_errors:
-            print("\n\x1b[31m[HARD CI GATE ERROR]\x1b[0m Workspace-level Skill Violations:")
-            for ge in gate_errors:
-                print(f"  [{ge.category}] {ge.message}")
-                total_errors += 1
-
-    if total_errors > 0:
-        warn_note = f" (and {total_warnings} warning(s))" if total_warnings else ""
-        print(f"\nValidation failed with {total_errors} error(s){warn_note}.")
-        return 1
-
-    wf_msg = f" and {len(workflow_files)} workflow file(s)" if workflow_files else ""
-    warn_msg = f" with {total_warnings} warning(s)" if total_warnings else ""
-    print(
-        f"\x1b[32mSuccessfully validated {len(skills_files)} SKILL.md file(s){wf_msg}{warn_msg} across all CI Gates.\x1b[0m"
-    )
-    return 0
+    return _execute_skill_validation(args, validator)
 
 
 def _print_gpi_result(result: Any, as_json: bool = False) -> None:
@@ -262,7 +278,79 @@ def _print_gpi_result(result: Any, as_json: bool = False) -> None:
     print("=" * 60)
 
 
-# ccba:quarantine seam_id=cli.evaluate_gpi reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _evaluate_gpi_from_file(args: argparse.Namespace) -> int:
+    """Evaluates GPI directly from an existing SKILL.md file."""
+    file_path = Path(args.file)
+    if not file_path.exists():
+        print(f"ERROR: Skill file does not exist: {args.file}", file=sys.stderr)
+        return 1
+    validator = SkillValidator()
+    try:
+        from ccba_harness.gpi import GPIMetrics
+
+        override_metrics: GPIMetrics | None = None
+        if None not in (args.s, args.k, args.a, args.p):
+            override_metrics = GPIMetrics(
+                s=float(args.s), k=float(args.k), a=float(args.a), p=float(args.p)
+            )
+        result = validator.evaluate_skill_file(
+            file_path,
+            override_deterministic=True if args.deterministic else None,
+            override_orchestrated=True if args.orchestrated else None,
+            override_metrics=override_metrics,
+            override_parent=args.parent,
+            override_existing_tier=args.existing_tier,
+            override_force_tier_flip=args.force_tier_flip,
+        )
+    except Exception as err:
+        print(f"ERROR: Failed to evaluate skill file: {err}", file=sys.stderr)
+        return 1
+
+    _print_gpi_result(result, as_json=args.json)
+    return 0
+
+
+def _evaluate_gpi_from_args(args: argparse.Namespace) -> int:
+    """Evaluates GPI from explicit CLI parameters."""
+    from ccba_harness.gpi import (
+        DecisionRequest,
+        GPIMetrics,
+        evaluate_two_stage_decision,
+    )
+
+    gpi_metrics: GPIMetrics | None = None
+    if not args.deterministic and not args.orchestrated:
+        if None in (args.s, args.k, args.a, args.p):
+            print(
+                "ERROR: When not deterministic or orchestrated, all 4 GPI metrics (--s, --k, --a, --p) are required.",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            gpi_metrics = GPIMetrics(s=args.s, k=args.k, a=args.a, p=args.p)
+        except (TypeError, ValueError) as err:
+            print(f"ERROR: Invalid GPI metric values: {err}", file=sys.stderr)
+            return 1
+
+    try:
+        request = DecisionRequest(
+            name=args.name,
+            is_deterministic=args.deterministic,
+            is_orchestrated=args.orchestrated,
+            gpi_metrics=gpi_metrics,
+            parent_skill=args.parent,
+            existing_tier=args.existing_tier,
+            force_tier_flip=args.force_tier_flip,
+        )
+        result = evaluate_two_stage_decision(request)
+    except Exception as err:
+        print(f"ERROR: Evaluation failed: {err}", file=sys.stderr)
+        return 1
+
+    _print_gpi_result(result, as_json=args.json)
+    return 0
+
+
 def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for GPI evaluation (`ccba-harness evaluate-gpi`)."""
     if sys.platform == "win32":
@@ -323,80 +411,122 @@ def run_evaluate_gpi_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output result in JSON format")
 
     args = parser.parse_args(args_list)
-
     if args.file:
-        file_path = Path(args.file)
-        if not file_path.exists():
-            print(f"ERROR: Skill file does not exist: {args.file}", file=sys.stderr)
-            return 1
-        validator = SkillValidator()
-        try:
-            from ccba_harness.gpi import GPIMetrics
+        return _evaluate_gpi_from_file(args)
+    return _evaluate_gpi_from_args(args)
 
-            override_metrics: GPIMetrics | None = None
-            if None not in (args.s, args.k, args.a, args.p):
-                override_metrics = GPIMetrics(
-                    s=float(args.s),
-                    k=float(args.k),
-                    a=float(args.a),
-                    p=float(args.p),
-                )
-            result = validator.evaluate_skill_file(
-                file_path,
-                override_deterministic=True if args.deterministic else None,
-                override_orchestrated=True if args.orchestrated else None,
-                override_metrics=override_metrics,
-                override_parent=args.parent,
-                override_existing_tier=args.existing_tier,
-                override_force_tier_flip=args.force_tier_flip,
-            )
-        except Exception as err:
-            print(f"ERROR: Failed to evaluate skill file: {err}", file=sys.stderr)
-            return 1
 
-        _print_gpi_result(result, as_json=args.json)
-        return 0
+def _resolve_eval_root_and_dataset(args: argparse.Namespace) -> tuple[Path, str | None] | None:
+    """Resolves workspace root and validates optional dataset path."""
+    if args.root:
+        root_path = Path(args.root).resolve()
+    else:
+        cur = Path.cwd().resolve()
+        root_path = cur
+        for p in [cur, *cur.parents]:
+            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
+                root_path = p
+                break
 
-    from ccba_harness.gpi import (
-        DecisionRequest,
-        GPIMetrics,
-        evaluate_two_stage_decision,
-    )
-
-    gpi_metrics: GPIMetrics | None = None
-    if not args.deterministic and not args.orchestrated:
-        if None in (args.s, args.k, args.a, args.p):
-            print(
-                "ERROR: When not deterministic or orchestrated, all 4 GPI metrics (--s, --k, --a, --p) are required.",
-                file=sys.stderr,
-            )
-            return 1
-        try:
-            gpi_metrics = GPIMetrics(s=args.s, k=args.k, a=args.a, p=args.p)
-        except (TypeError, ValueError) as err:
-            print(f"ERROR: Invalid GPI metric values: {err}", file=sys.stderr)
-            return 1
-
-    try:
-        request = DecisionRequest(
-            name=args.name,
-            is_deterministic=args.deterministic,
-            is_orchestrated=args.orchestrated,
-            gpi_metrics=gpi_metrics,
-            parent_skill=args.parent,
-            existing_tier=args.existing_tier,
-            force_tier_flip=args.force_tier_flip,
+    if args.limit is not None and args.limit < 1:
+        print(
+            f"ERROR: --limit must be a positive integer (>= 1), got {args.limit}",
+            file=sys.stderr,
         )
-        result = evaluate_two_stage_decision(request)
-    except Exception as err:
-        print(f"ERROR: Evaluation failed: {err}", file=sys.stderr)
-        return 1
+        return None
 
-    _print_gpi_result(result, as_json=args.json)
-    return 0
+    dataset_target = args.dataset
+    if args.dataset:
+        d_path = Path(args.dataset)
+        if not d_path.is_absolute():
+            d_path = root_path / d_path
+        if not d_path.exists():
+            print(f"ERROR: Dataset path does not exist: {args.dataset}", file=sys.stderr)
+            return None
+        dataset_target = str(d_path)
+    return root_path, dataset_target
 
 
-# ccba:quarantine seam_id=cli.eval reason=thin_shell_refactor until=2026-12-31 issue=https://github.com/vvChu/ccba-agent-platform/issues/494
+def _render_eval_empty_report(args: argparse.Namespace, report: Any) -> int:
+    """Prints error and optional JSON output when 0 evaluation items were found."""
+    err_msg = (
+        f"No evaluation test cases found for target skill: {args.skill}"
+        if args.skill
+        else (
+            f"No evaluation test cases found in dataset: {args.dataset}"
+            if args.dataset
+            else "No evaluation test cases found."
+        )
+    )
+    print(f"ERROR: {err_msg}", file=sys.stderr)
+    if args.json:
+        data = {
+            "skill": args.skill,
+            "trials": args.trials,
+            "auto_tune": args.auto_tune,
+            "total_items": 0,
+            "passed_items": 0,
+            "failed_items": 0,
+            "overall_score": 0.0,
+            "pass_rate": 0.0,
+            "passed": False,
+            "summary_by_scorer": {},
+            "metadata": report.metadata,
+            "error": err_msg,
+        }
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+    return 1
+
+
+def _render_eval_cli_report(args: argparse.Namespace, report: Any) -> int:
+    """Formats and prints the skill evaluation report in JSON or table format."""
+    passed_all = (
+        report.total_items > 0 and report.pass_rate >= args.threshold and report.failed_items == 0
+    )
+    if args.json:
+        data = {
+            "skill": args.skill,
+            "trials": args.trials,
+            "auto_tune": args.auto_tune,
+            "total_items": report.total_items,
+            "passed_items": report.passed_items,
+            "failed_items": report.failed_items,
+            "overall_score": report.overall_score,
+            "pass_rate": report.pass_rate,
+            "passed": passed_all,
+            "summary_by_scorer": report.summary_by_scorer,
+            "metadata": report.metadata,
+        }
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return 0 if passed_all else 1
+
+    print("=" * 60)
+    print("CCBA SKILL EVALUATION REPORT")
+    print(f"Target Skill     : {args.skill or 'ALL'}")
+    print(f"Evaluation Trials: {args.trials}")
+    print(f"Auto-Tune Mode   : {'ENABLED' if args.auto_tune else 'DISABLED'}")
+    print(f"Total Cases      : {report.total_items}")
+    print(f"Passed Cases     : {report.passed_items}")
+    print(f"Failed Cases     : {report.failed_items}")
+    print(f"Overall Score    : {report.overall_score:.2f}% (Threshold: {args.threshold:.2f}%)")
+    print(f"Pass Rate        : {report.pass_rate:.2f}%")
+    print(f"Status           : {'PASS' if passed_all else 'FAIL'}")
+    if report.summary_by_scorer:
+        print("Scorer Breakdown :")
+        for sc_name, sc_val in report.summary_by_scorer.items():
+            print(f"  - {sc_name}: {sc_val:.2f}%")
+    ratchet_rep = report.metadata.get("ratchet_report")
+    if ratchet_rep and isinstance(ratchet_rep, dict):
+        print("\nAuto-Tune Git-Ratchet Summary:")
+        print(f"  - Target File    : {ratchet_rep.get('target_file')}")
+        print(f"  - Baseline Score : {ratchet_rep.get('initial_score', 0.0):.2f}%")
+        print(f"  - Final Score    : {ratchet_rep.get('final_score', 0.0):.2f}%")
+        print(f"  - Commits Kept   : {ratchet_rep.get('kept_commits', 0)}")
+        print(f"  - Trials Reverted: {ratchet_rep.get('reverted_trials', 0)}")
+    print("=" * 60)
+    return 0 if passed_all else 1
+
+
 def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for skill evaluation benchmarks (`ccba-harness eval`)."""
     if sys.platform == "win32":
@@ -479,35 +609,12 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     )
 
     args = parser.parse_args(args_list)
-
-    if args.root:
-        root_path = Path(args.root).resolve()
-    else:
-        cur = Path.cwd().resolve()
-        root_path = cur
-        for p in [cur, *cur.parents]:
-            if (p / ".agents").exists() or (p / "pyproject.toml").exists():
-                root_path = p
-                break
-
-    if args.limit is not None and args.limit < 1:
-        print(
-            f"ERROR: --limit must be a positive integer (>= 1), got {args.limit}",
-            file=sys.stderr,
-        )
+    resolved = _resolve_eval_root_and_dataset(args)
+    if resolved is None:
         return 1
+    root_path, dataset_target = resolved
 
     from ccba_harness.evals.runner import run_eval_pipeline
-
-    dataset_target = args.dataset
-    if args.dataset:
-        d_path = Path(args.dataset)
-        if not d_path.is_absolute():
-            d_path = root_path / d_path
-        if not d_path.exists():
-            print(f"ERROR: Dataset path does not exist: {args.dataset}", file=sys.stderr)
-            return 1
-        dataset_target = str(d_path)
 
     try:
         report = run_eval_pipeline(
@@ -527,79 +634,5 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
         return 1
 
     if report.total_items == 0:
-        err_msg = (
-            f"No evaluation test cases found for target skill: {args.skill}"
-            if args.skill
-            else (
-                f"No evaluation test cases found in dataset: {args.dataset}"
-                if args.dataset
-                else "No evaluation test cases found."
-            )
-        )
-        print(f"ERROR: {err_msg}", file=sys.stderr)
-        if args.json:
-            data = {
-                "skill": args.skill,
-                "trials": args.trials,
-                "auto_tune": args.auto_tune,
-                "total_items": 0,
-                "passed_items": 0,
-                "failed_items": 0,
-                "overall_score": 0.0,
-                "pass_rate": 0.0,
-                "passed": False,
-                "summary_by_scorer": {},
-                "metadata": report.metadata,
-                "error": err_msg,
-            }
-            print(json.dumps(data, indent=2, ensure_ascii=False))
-        return 1
-
-    passed_all = (
-        report.total_items > 0 and report.pass_rate >= args.threshold and report.failed_items == 0
-    )
-
-    if args.json:
-        data = {
-            "skill": args.skill,
-            "trials": args.trials,
-            "auto_tune": args.auto_tune,
-            "total_items": report.total_items,
-            "passed_items": report.passed_items,
-            "failed_items": report.failed_items,
-            "overall_score": report.overall_score,
-            "pass_rate": report.pass_rate,
-            "passed": passed_all,
-            "summary_by_scorer": report.summary_by_scorer,
-            "metadata": report.metadata,
-        }
-        print(json.dumps(data, indent=2, ensure_ascii=False))
-    else:
-        print("=" * 60)
-        print("CCBA SKILL EVALUATION REPORT")
-        print(f"Target Skill     : {args.skill or 'ALL'}")
-        print(f"Evaluation Trials: {args.trials}")
-        print(f"Auto-Tune Mode   : {'ENABLED' if args.auto_tune else 'DISABLED'}")
-        print(f"Total Cases      : {report.total_items}")
-        print(f"Passed Cases     : {report.passed_items}")
-        print(f"Failed Cases     : {report.failed_items}")
-        print(f"Overall Score    : {report.overall_score:.2f}% (Threshold: {args.threshold:.2f}%)")
-        print(f"Pass Rate        : {report.pass_rate:.2f}%")
-        print(f"Status           : {'PASS' if passed_all else 'FAIL'}")
-        if report.summary_by_scorer:
-            print("Scorer Breakdown :")
-            for sc_name, sc_val in report.summary_by_scorer.items():
-                print(f"  - {sc_name}: {sc_val:.2f}%")
-        ratchet_rep = report.metadata.get("ratchet_report")
-        if ratchet_rep and isinstance(ratchet_rep, dict):
-            print("\nAuto-Tune Git-Ratchet Summary:")
-            print(f"  - Target File    : {ratchet_rep.get('target_file')}")
-            print(f"  - Baseline Score : {ratchet_rep.get('initial_score', 0.0):.2f}%")
-            print(f"  - Final Score    : {ratchet_rep.get('final_score', 0.0):.2f}%")
-            print(f"  - Commits Kept   : {ratchet_rep.get('kept_commits', 0)}")
-            print(f"  - Trials Reverted: {ratchet_rep.get('reverted_trials', 0)}")
-        print("=" * 60)
-
-    if not passed_all:
-        return 1
-    return 0
+        return _render_eval_empty_report(args, report)
+    return _render_eval_cli_report(args, report)
