@@ -29,10 +29,19 @@ ccba-mcp = "ccba_ai.mcp_server:main"
 packages = ["src/ccba_ai"]
 
 [tool.pytest.ini_options]
+pythonpath = [
+    "src",
+    "../ccba-harness/src",
+]
 asyncio_mode = "auto"
 markers = [
-    "fast: mark test as fast-running (< 2s)",
-    "unit: mark test as unit test",
+    "fast: Fast isolated unit tests (under 2s, pure logic and mock I/O)",
+    "unit: Fast isolated unit tests (under 1s)",
+    "integration: Integration tests (under 5s)",
+    "slow: Tests taking more than 5s",
+    "stress: High load stress and concurrency tests",
+    "adversarial: Adversarial edge-case and attack-vector tests",
+    "asyncio: Mark async test functions",
 ]
 
 [tool.uv.sources]

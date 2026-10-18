@@ -58,7 +58,23 @@ ccba-ai = { workspace = true }
 packages = ["src/mdconverter"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = [
+    "src",
+    "../ccba-pdf-prep/src",
+    "../ccba-ai/src",
+    "../ccba-harness/src",
+]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=src/mdconverter --cov-report=term-missing"
+addopts = "-v --tb=short --strict-markers -m 'not stress and not slow' --import-mode=importlib"
+timeout = 30
+asyncio_mode = "strict"
+markers = [
+    "fast: Fast isolated unit tests (under 2s, pure logic and mock I/O)",
+    "unit: Fast isolated unit tests (under 1s)",
+    "integration: Integration tests (under 5s)",
+    "slow: Tests taking more than 5s",
+    "stress: High load stress and concurrency tests",
+    "adversarial: Adversarial edge-case and attack-vector tests",
+    "asyncio: Mark async test functions",
+]
