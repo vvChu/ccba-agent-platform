@@ -956,3 +956,40 @@ Qua phân tích thực chứng trên **602/603 sessions** trong `~/.grok/session
    - Trong `_build_telemetry_from_usage_json()`, ưu tiên hợp nhất `turns[-1]` khi `len(turns) > 1` để lấy đúng token/cost của lượt `--resume`.
    - Khi `expected_reasoning_effort in ("high", "xhigh")` nhưng `reasoning_tokens <= 0`, bật `degraded_reasoning = True` trên `PeerVerdictTelemetry` và tự động chèn `PeerCondition(id="COND-DEGRADED-REASONING", blocking=True)` trong `_consolidate_peer_conditions()` / `synthesize_verdicts()` để hạ cấp `APPROVE` $\to$ `APPROVE_WITH_CONDITIONS`.
 
+---
+
+## 44. Xóa Sạch 100% `# ccba:quarantine` Toàn Monorepo, Phân Rã `peer.py` & Chống Ghi Đè Cấu Hình `pytest` Cục Bộ (PR `#540`–`#546`, `RULE-2.9`, `RULE-2.20`)
+
+### Context & Refactoring Scope (Chuỗi PR `#540`, `#541`, `#542`, `#543`, `#545`, `#546` ngày 2026-10-18)
+Sau khi hoàn tất PR `#539`, rà soát toàn diện kiến trúc `ccba-harness`, `ccba-legal-intel` và tài liệu quy tắc vận hành phát hiện:
+1. [`docs/rules/execution_guardrails.md`](../../../docs/rules/execution_guardrails.md) dài `442` dòng (vượt ngân sách `< 250` dòng của Layer-2 rule docs và còn tham chiếu `ADR 0044` cũ thay vì `ADR-0061`).
+2. [`packages/ccba-harness/src/ccba_harness/peer.py`](../../../packages/ccba-harness/src/ccba_harness/peer.py) dài `1,879` dòng (vượt ngân sách `800` LOC của `module_size_budget`), và chính [`peer_gate.py`](../../../packages/ccba-harness/src/ccba_harness/peer_gate.py) có 5 hàm vượt quá giới hạn `50` dòng của cổng `check_ast_function_length` do chính nó thực thi.
+3. Toàn monorepo tồn tại **12 thẻ `# ccba:quarantine`** (`10` trong `ccba-harness` và `2` trong `ccba-legal-intel/src/ccba_legal/sync/engine.py`) cùng 2 module sát ngưỡng 800 dòng trong `ccba-legal-intel` (`engine.py` `821` LOC và `table_handler.py` `801` LOC).
+4. Khi chạy lệnh Scoped Tests theo tài liệu `packages/*/AGENTS.md`, `pytest packages/ccba-legal-intel/tests` bị lỗi `ModuleNotFoundError: No module named 'ccba_pdf_prep'` kèm 47 cảnh báo `PytestUnknownMarkWarning`, và `pytest packages/mdconverter/tests` thất bại với `exit code 4 (unrecognized arguments: --cov=...)` do `[tool.pytest.ini_options]` trong `pyproject.toml` của package con ghi đè `pyproject.toml` gốc.
+
+### Key Architectural Invariants & Learned Rules (`RULE-2.9`, `RULE-2.20`)
+1. **Zero-Quarantine Monorepo & Modular Facade Decomposition (`RULE-2.20`)**:
+   - **PR `#540` (`1ba5ea8b`)**: Tinh gọn `docs/rules/execution_guardrails.md` từ `442` xuống `243` dòng (`< 250` dòng), đồng bộ tham chiếu `ADR-0061` và danh mục 15 built-in tools của Grok CLI.
+   - **PR `#541` (`b3430468`)**: Phân rã `peer.py` (`1,879 -> 775` LOC) thành 4 module có ranh giới trách nhiệm rõ ràng (`_peer_models.py` `384` LOC, `_peer_anchor.py` `290` LOC, `_peer_co_review.py` `468` LOC, và facade `peer.py` `775` LOC bảo toàn 100% `__all__` backward-compatibility), xóa `peer.py` khỏi `module_budget_baseline.json` và gỡ 5 thẻ `# ccba:quarantine` trong `cli/commands/peer.py` & `_peer_auto_apply.py`.
+   - **PR `#542` (`e914a9e2`)**: Gỡ tiếp 5 thẻ `# ccba:quarantine` còn lại trong `ccba-harness` (`evals.py`, `telemetry.py`, `verifier.py`), phân rã 5 hàm vượt ngưỡng trong `peer_gate.py` ($\le 50$ LOC/hàm), và bổ sung `E203` vào `--extend-ignore=E501,E203` của `flake8` để tương thích với khoảng trắng trong slice (`line[idx : idx + N]`) của `ruff format`.
+   - **PR `#543` (`e0073100`) & PR `#545` (`a93a57e7`)**: Gỡ 2 thẻ `# ccba:quarantine` cuối cùng tại `ccba_legal/sync/engine.py` (đưa tổng số `# ccba:quarantine` toàn monorepo về **0**), đồng thời phân rã `ccba_legal/engine.py` (`821 -> 686` LOC) và `table_handler.py` (`801 -> 692` LOC) đạt 100% `check_ast_function_length` ($\le 50$ LOC/hàm) và xóa cả 2 file khỏi `module_budget_baseline.json`.
+   - **PR `#546` (`6d6970ac`)**: Bắt ngoại lệ `ValueError` thân thiện trong `run_verify_patch_cli` (`cli/commands/verifier.py`) khi gọi `--preset doc` / `--preset skill` thiếu `--target <file>`, trả về exit code `1` kèm thông báo `ERROR:` trên `stderr`.
+2. **Subpackage `[tool.pytest.ini_options]` Shadowing & Hermetic Legal Sync Env (`RULE-2.9`)**:
+   - Khi một package con (`ccba-legal-intel`, `mdconverter`, `ccba-ai`) định nghĩa `[tool.pytest.ini_options]` trong `packages/<pkg>/pyproject.toml`, `pytest` sẽ chọn file cấu hình cục bộ đó làm `inifile` và bỏ qua `pyproject.toml` gốc. Do đó, mọi `[tool.pytest.ini_options]` cấp package bắt buộc phải đồng bộ đầy đủ `pythonpath` sang các sibling packages phụ thuộc (`../ccba-pdf-prep/src`, `../ccba-ai/src`, `../ccba-harness/src`), danh sách `markers` chuẩn (`fast`, `unit`, `integration`, `slow`, `stress`, `adversarial`, `asyncio`), và cấm gắn cứng `--cov` trong `addopts`.
+   - Các bài kiểm thử đồng bộ pháp lý (`test_hub_mediated_sync.py`, `test_remote_streaming_sync.py`) bắt buộc xóa cả `CCBA_LEGAL_KNOWLEDGE_PATH`, `CCBA_LEGAL_CORPUS_PATH`, `CCBA_HUB_PATH`, `HUB_PATH` qua `monkeypatch.delenv(..., raising=False)` để cô lập hoàn toàn khỏi biến môi trường máy trạm.
+
+---
+
+## 45. Điều Phối Đa Chế Độ Cho Kỹ Năng Hợp Nhất (`3-Mode Intent Dispatch`) & Chuẩn Hóa Tham Chiếu Kỹ Năng Trong `resources/*.yaml` (PR `#544`, `RULE-1.18`, `RULE-4.2`)
+
+### Context & Incident Root Cause (Sự cố ngày 2026-10-18 trên `/ccba-ask`)
+Khi người dùng gọi `/ccba-ask` để hỏi về kỹ năng thực hiện Brainstorming, rà soát 2 vòng (Double-Pass Adversarial Review — Rule 5 KISS & Rule 8) trên `.agents/skills/ccba-ask/` phát hiện 2 điểm đứt gãy hậu hợp nhất kỹ năng (Skill Consolidation):
+1. **Đứt gãy định tuyến nội bộ trong `SKILL.md` (Missing Multi-Mode Dispatch Table)**: Trong đợt hợp nhất trần 76 skills (`ADR-0057`), `/ccba-ask` đã hấp thụ 2 kỹ năng `/ccba-brainstorm` (`references/brainstorm_templates.md`, `references/brainstorm_techniques.md`) và `/ccba-wait-what` (`references/clarification_patterns.md`), đồng thời bổ sung `brainstorm` và `wait-what` vào `triggers`. Tuy nhiên, phần thân `SKILL.md` chỉ mô tả duy nhất chế độ Tư vấn chọn Slash Command và không nhắc tới Brainstorming ở Bước 1 của luồng `Idea -> Ship`, khiến Agent chỉ trả lời lý thuyết nếu không chủ động mở Level 3 references.
+2. **Tham chiếu kỹ năng lỗi thời (`Dangling Skill References`) trong `resources/brainstorm_topics.yaml`**: Đối chiếu thực nghiệm với 76 skills trong `.agents/skills/` phát hiện **11/20** mục trong `required_skills` của 4 chủ đề (`legal`, `pccc_mep`, `bim_arch`, `software`) vẫn trỏ tới tên cũ trước khi hợp nhất/đổi tên (`docx`, `pdf`, `legal-document-tracker`, `excalidraw-diagram`, `ccba-prototype`, `code-review`, `web-testing`, `api-circuit-breaker`, `append-only-logger`), do cổng `audit_workspace_gates()` trong `skill_validator.py` chỉ quét frontmatter của `SKILL.md` mà chưa quét khóa `required_skills` trong `resources/*.yaml`.
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.18`, `RULE-4.2`)
+1. **Multi-Mode Intent Dispatch Table cho Consolidated Skills (`RULE-4.2`)**:
+   - Mọi kỹ năng hợp nhất đa chức năng (như `/ccba-ask` tích hợp Router + Brainstorm Coach + Wait-What, `/ccba-contribute-to-hub` tích hợp Contribute + Review Proposal, `/ccba-issue-to-hub` tích hợp RFC Issue + Triage) **BẮT BUỘC** có bảng **Phân Tuyến Chế Độ Hoạt Động (Mode Dispatch Table)** ngay ở phần thân `SKILL.md` để chỉ rõ tín hiệu kích hoạt và tệp tham chiếu Level 3 cần nạp ngay lập tức (`references/brainstorm_templates.md`, `references/proposal_review_sop.md`, `references/issue_triage_flow.md`).
+2. **Canonical Skill-Reference Parity trong `resources/*.yaml` (`RULE-1.18`)**:
+   - Mọi danh sách kỹ năng trong tệp cấu hình tài nguyên của skill (`required_skills` trong `.agents/skills/*/resources/*.yaml`) bắt buộc phải khớp 100% với tên thư mục canonical trong `.agents/skills/` (có đầy đủ tiền tố namespace `ccba-` / `bigbim-` và không chứa tên skill đã bị gộp như `ccba-prototype`, `docx`, `pdf`).
+
