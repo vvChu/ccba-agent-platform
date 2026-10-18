@@ -473,3 +473,84 @@ def test_extract_grok_session_telemetry_multi_turn_resume_and_degraded_reasoning
     report = synthesize_verdicts("req-deg-1", {"arch_audit": vb})
     assert report.verdict == "APPROVE_WITH_CONDITIONS"
     assert any(c.id == "COND-DEGRADED-REASONING" and c.blocking for c in report.conditions)
+
+
+def test_single_dispatch_finalize_degraded_reasoning_and_unconditional_rerender(
+    tmp_path, monkeypatch
+):
+    """Verifies single-profile _finalize_grok_verdict_and_telemetry enforces degraded_reasoning and COND-RE-RENDER-ON-MUTATION."""
+    from ccba_harness.peer import _build_latest_verdict, _finalize_grok_verdict_and_telemetry
+
+    prompt_file = tmp_path / "prompt_single.md"
+    prompt_file.write_text("---\nrequest_id: req-s1\n---\nBody", encoding="utf-8")
+    out_file = tmp_path / "grok_single.md"
+
+    # Case 1: session_id=None, verdict=APPROVE but risk_score=4 -> must downgrade and re-render on disk
+    raw_high_risk = "---\nrequest_id: req-s1\nverdict: APPROVE\nrisk_score: 4\nsummary: High risk\n---\n# Body\n"
+    ok1 = _finalize_grok_verdict_and_telemetry(
+        stdout_text=raw_high_risk,
+        prompt_path=prompt_file,
+        output_file=out_file,
+        duration=1.5,
+        session_id=None,
+        candidate_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+    )
+    assert ok1 is True
+    parsed1 = parse_verdict_from_md(out_file.read_text(encoding="utf-8"))
+    assert parsed1 is not None
+    assert parsed1.verdict == "APPROVE_WITH_CONDITIONS"
+
+    # Case 2: session_id provided, grok usage reports reasoningTokens=0 on xhigh -> injects COND-DEGRADED-REASONING
+    usage_zero = {
+        "session": {
+            "primaryModelId": "grok-4.7",
+            "inputTokens": 1000,
+            "outputTokens": 200,
+            "reasoningTokens": 0,
+            "totalTokens": 1200,
+        }
+    }
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *a, **kw: subprocess.CompletedProcess(
+            args=a[0], returncode=0, stdout=json.dumps(usage_zero), stderr=""
+        ),
+    )
+    raw_clean = (
+        "---\nrequest_id: req-s2\nverdict: APPROVE\nrisk_score: 1\nsummary: Clean\n---\n# Body\n"
+    )
+    ok2 = _finalize_grok_verdict_and_telemetry(
+        stdout_text=raw_clean,
+        prompt_path=prompt_file,
+        output_file=out_file,
+        duration=2.0,
+        session_id="sess-zero-rsn",
+        candidate_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+    )
+    assert ok2 is True
+    parsed2 = parse_verdict_from_md(out_file.read_text(encoding="utf-8"))
+    assert parsed2 is not None
+    assert parsed2.verdict == "APPROVE_WITH_CONDITIONS"
+    assert any(c.id == "COND-DEGRADED-REASONING" and c.blocking for c in parsed2.conditions)
+
+    # Case 3: Deterministic tie-breaking in _build_latest_verdict when mtime is equal
+    reg = {
+        "b.md": {
+            "role": "GROK_RESPONSE",
+            "path": tmp_path / "grok_b.md",
+            "mtime": 100.0,
+            "verdict": parsed1,
+        },
+        "a.md": {
+            "role": "GROK_RESPONSE",
+            "path": tmp_path / "grok_a.md",
+            "mtime": 100.0,
+            "verdict": parsed2,
+        },
+    }
+    latest = _build_latest_verdict(reg)
+    assert latest is not None
+    assert latest["output_path"] == "grok_a.md"

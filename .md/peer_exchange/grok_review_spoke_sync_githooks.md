@@ -1,3 +1,20 @@
+---
+request_id: "req-review-spoke-sync-githooks-001"
+verdict: "APPROVE_WITH_CONDITIONS"
+risk_score: 2
+conditions:
+  - id: "COND-01"
+    description: "Chuẩn hóa CRLF/LF khi so sánh file text hook trong are_files_identical"
+    blocking: true
+  - id: "COND-02"
+    description: "Truyền cwd=self.spoke_root hoặc git -C khi gọi git config core.hooksPath"
+    blocking: true
+  - id: "COND-03"
+    description: "Bổ sung cờ --add vào git update-index --add --chmod=+x .githooks/pre-commit"
+    blocking: true
+summary: "Phê duyệt kế hoạch tự động kích hoạt Git Pre-Commit Hook với 3 điều kiện kháng lỗi đa hệ điều hành và repo mới."
+---
+
 ### ĐÁNH GIÁ ĐỐI KHÁNG (ADVERSARIAL REVIEW)
 
 **Từ**: Grok Peer Reviewer  
