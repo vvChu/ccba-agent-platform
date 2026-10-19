@@ -1196,3 +1196,53 @@ async def test_run_async_holdout_error_graceful_handling(tmp_path: Path) -> None
     assert report.holdout_initial_score is None
     assert report.holdout_score is None
     assert report.initial_score == 90.0
+
+
+def test_pre_eval_guard_rejects_skill_hygiene_violation(tmp_path: Path) -> None:
+    """Verify _run_pre_eval_guards fast-fails on newly introduced skill hygiene violations (e.g. bashisms) before LLM eval."""
+    target = tmp_path / "SKILL.md"
+    clean_baseline = (
+        "---\n"
+        "name: ccba-test-hygiene\n"
+        "description: Test skill\n"
+        "metadata:\n"
+        "  version: '1.0.0'\n"
+        "  author: ccba\n"
+        "---\n"
+        "# Clean Skill\n"
+        "Safe instructions.\n"
+    )
+    target.write_text(clean_baseline, encoding="utf-8")
+
+    cfg = RatchetConfig(
+        target_file=str(target),
+        skill_name="ccba-test-hygiene",
+        max_iterations=1,
+        target_score=100.0,
+        full_sweep=True,
+    )
+    opt = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
+    opt.evaluate_content = MagicMock(
+        return_value=EvalReport(
+            total_items=1,
+            passed_items=0,
+            failed_items=1,
+            overall_score=60.0,
+            pass_rate=0.0,
+            item_results=[],
+        )
+    )
+    # Propose a mutation containing a forbidden Windows bashism $(...)
+    bad_mutation = clean_baseline + "\nRun `echo $(date)` in shell.\n"
+    opt.propose_mutation = MagicMock(return_value=bad_mutation)
+
+    report = opt.run()
+
+    # Baseline evaluated once, but trial mutation was rejected pre-eval (evaluate_content called only once!)
+    assert opt.evaluate_content.call_count == 1
+    assert report.kept_commits == 0
+    assert report.reverted_trials == 1
+    assert len(report.history) == 1
+    assert report.history[0].decision == "REVERT"
+    assert "Từ chối mutation vì vi phạm vệ sinh kỹ năng" in report.history[0].summary
+    assert target.read_text(encoding="utf-8") == clean_baseline

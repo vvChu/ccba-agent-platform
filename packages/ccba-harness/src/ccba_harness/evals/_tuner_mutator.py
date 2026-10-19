@@ -365,6 +365,43 @@ class _RatchetMutationGitMixin:
             logger.warning(f"⚠️ LinkAuditor check encountered error: {e}")
             return []
 
+    def _find_hygiene_audit_issues(self, baseline_content: str, mutated_content: str) -> list[Any]:
+        """Runs audit_skill against target_file and returns any newly introduced hygiene issues."""
+        if self.target_file.name.lower() != "skill.md":
+            return []
+        try:
+            if str(self.project_root) not in sys.path:
+                sys.path.insert(0, str(self.project_root))
+            from scripts.governance.audit_skills_hygiene import audit_skill
+
+            mutated_res = audit_skill(self.target_file.parent, hub_root=self.project_root)
+            if not mutated_res.issues:
+                return []
+            self.target_file.write_text(baseline_content, encoding="utf-8")
+            base_res = audit_skill(self.target_file.parent, hub_root=self.project_root)
+            self.target_file.write_text(mutated_content, encoding="utf-8")
+            base_keys = {(i.category, i.detail) for i in base_res.issues}
+            return [i for i in mutated_res.issues if (i.category, i.detail) not in base_keys]
+        except Exception as e:
+            logger.warning(f"⚠️ Skill hygiene check encountered error: {e}")
+            return []
+
+    def _reject_pre_eval_mutation(
+        self,
+        reason: str,
+        iter_idx: int,
+        t0: float,
+        prev_tokens: tuple[int, int, int],
+        state: _RatchetLoopState,
+    ) -> bool:
+        """Rolls back a pre-eval invariant violation and records a REVERT trial."""
+        logger.warning(f"⚠️ [PRE-EVAL FAST-FAIL] {reason}")
+        self.git_rollback_target(state.best_content, has_committed=state.has_committed)
+        state.reverted_count += 1
+        state.stagnant_trials += 1
+        self._record_trial(iter_idx, state.best_score, 0, "REVERT", reason, t0, prev_tokens, state)
+        return True
+
     def _run_pre_eval_guards(
         self,
         mutated_content: str,
@@ -373,7 +410,7 @@ class _RatchetMutationGitMixin:
         prev_tokens: tuple[int, int, int],
         state: _RatchetLoopState,
     ) -> bool:
-        """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, link integrity)."""
+        """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, links, hygiene)."""
         self.target_file.write_text(mutated_content, encoding="utf-8")
 
         best_adr_nums = set(ADR_REF_PATTERN.findall(state.best_content))
@@ -382,32 +419,21 @@ class _RatchetMutationGitMixin:
             [f"ADR-{int(num):04d}" for num in best_adr_nums if num not in mutated_adr_nums]
         )
         if dropped_adrs:
-            dropped_str = ", ".join(dropped_adrs)
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì làm mất thẻ ADR bắt buộc: {dropped_str}"
-            )
-            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
-            summary = f"Từ chối mutation vì làm mất thẻ ADR: {dropped_str}"
-            self._record_trial(
-                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
-            )
-            return True
+            reason = f"Từ chối mutation vì làm mất thẻ ADR: {', '.join(dropped_adrs)}"
+            return self._reject_pre_eval_mutation(reason, iter_idx, t0, prev_tokens, state)
 
         link_issues = self._find_link_audit_issues()
         if link_issues:
-            logger.warning(
-                f"⚠️ [PRE-EVAL FAST-FAIL] Từ chối mutation vì vi phạm liên kết ({link_issues[0].category}): {link_issues[0].message}"
+            reason = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
+            return self._reject_pre_eval_mutation(reason, iter_idx, t0, prev_tokens, state)
+
+        hygiene_issues = self._find_hygiene_audit_issues(state.best_content, mutated_content)
+        if hygiene_issues:
+            first = hygiene_issues[0]
+            reason = (
+                f"Từ chối mutation vì vi phạm vệ sinh kỹ năng ({first.category}): {first.detail}"
             )
-            self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
-            summary = f"Từ chối mutation vì vi phạm liên kết: {link_issues[0].message}"
-            self._record_trial(
-                iter_idx, state.best_score, 0, "REVERT", summary, t0, prev_tokens, state
-            )
-            return True
+            return self._reject_pre_eval_mutation(reason, iter_idx, t0, prev_tokens, state)
 
         return False
 
