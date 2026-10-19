@@ -22,7 +22,7 @@ keywords:
 argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
 metadata:
   author: CCBA
-  version: 1.1.0
+  version: 1.2.0
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -134,21 +134,24 @@ Kỹ năng tự động xác định chế độ vận hành dựa trên hiện 
    - Tạo thư mục `.agents/skills/verify-<app>/`.
    - Tạo thư mục con `.agents/skills/verify-<app>/harness/` chứa các kịch bản thực thi.
    - **Tiêu chí hoàn thành:** Thư mục `.agents/skills/verify-<app>/harness/` được tạo thành công trên hệ thống tệp.
-3. **Sinh Tệp Định Nghĩa Kỹ Năng (`verify-<app>/SKILL.md`):**
+3. **Sinh Tệp Định Nghĩa Kỹ Năng (`verify-<app>/SKILL.md`) & Neo Phiên Bản (`sync_commit`):**
    - Định nghĩa frontmatter chuẩn (`name: verify-<app>`, `category: verification`, v.v.).
+   - Ghi nhận rõ trường `sync_commit` (mã commit SHA tại thời điểm xác nhận bộ kiểm định khớp 100% với mã nguồn) và danh mục `covered_paths` (các tệp/hàm cốt lõi được bộ kiểm định bảo vệ).
    - Hướng dẫn các bước chạy kiểm định và đối chiếu trạng thái theo 5 khối cấu trúc.
-   - **Tiêu chí hoàn thành:** Tệp `.agents/skills/verify-<app>/SKILL.md` được sinh ra với đầy đủ frontmatter và quy trình 5 khối.
+   - **Tiêu chí hoàn thành:** Tệp `.agents/skills/verify-<app>/SKILL.md` được sinh ra với đầy đủ frontmatter, quy trình 5 khối, trường `sync_commit` và `covered_paths`.
 4. **Khởi Tạo Features Map (`features/INDEX.md`):**
    - Lập danh mục các tính năng hiện có của ứng dụng theo chuẩn `features_map_guide.md`.
    - **Tiêu chí hoàn thành:** Tệp `features/INDEX.md` được khởi tạo với bảng ánh xạ các tính năng chính và bài kiểm thử tương ứng.
-5. **Chạy Thử Nghiệm Xác Minh (Dry-Run Verification):**
-   - Thực thi thử kịch bản harness để xác nhận hệ thống có thể khởi động, chạy probe, và dọn dẹp sạch sẽ với exit code 0.
-   - **Tiêu chí hoàn thành:** Kịch bản harness thực thi dry-run thành công và thoát với mã exit code 0.
+5. **Chạy Thử Nghiệm Xác Minh & Phép Thử Đột Biến Ngữ Nghĩa (Semantic Mutation Proof — COND-01, COND-02):**
+   - Xác nhận cây làm việc sạch tuyệt đối (`git diff --quiet && git diff --cached --quiet`) trước khi thử nghiệm.
+   - Thực hiện 1 phép thử **Đột Biến Ngữ Nghĩa (Semantic Mutation)** tạm thời trên mã nguồn (ví dụ: đảo toán tử so sánh biên `>` $\to$ `>=`, đảo ngược cờ boolean, hoặc bỏ qua bước cập nhật trạng thái; tuyệt đối cấm chèn lỗi cú pháp thô hay lệnh `raise` ở đầu hàm), chạy `verify-<app>` để chứng minh bộ kiểm định bắt được lỗi và lưu lại nhật ký lỗi phản chứng (*counterexample failure log*).
+   - Hoàn nguyên tự động (`git checkout -- <mutated_files>`), kiểm tra `git status --porcelain` rỗng, và chạy lại kịch bản harness xác nhận thoát sạch với exit code 0.
+   - **Tiêu chí hoàn thành:** Bộ kiểm định bắt được lỗi đột biến ngữ nghĩa (có counterexample log), mã nguồn được hoàn nguyên 100% sạch sẽ và lần chạy chính thức thoát với mã exit code 0.
 
 ### Mode 2 — Bảo Trì & Sửa Sai Lệch Drift (`maintain`)
-1. **Kiểm Tra Nguồn Gốc Thay Đổi (Pre-Remediation Provenance Check - COND-01):**
-   - Đối chiếu commit history hoặc tài liệu API: nếu thay đổi là chủ đích thiết kế (đổi route, port, schema) $\rightarrow$ sửa `harness/`; nếu là lỗi hồi quy ngoài ý muốn (regression) $\rightarrow$ **CẤM SỬA `harness/`**, giữ nguyên bài test và yêu cầu sửa mã nguồn ứng dụng.
-   - **Tiêu chí hoàn thành:** Phân loại chính xác nguyên nhân lỗi thuộc diện Lệch Hợp Đồng (Contract Drift) hay Lỗi Hồi Quy (Regression).
+1. **Kiểm Tra Nguồn Gốc Thay Đổi & Lịch Sử Từ `sync_commit` (Pre-Remediation Provenance Check - COND-01):**
+   - Đối chiếu `git diff <sync_commit>..HEAD` trên các tệp thuộc `covered_paths`: nếu thay đổi là chủ đích thiết kế (đổi route, port, schema có bằng chứng trong PR/commit/ADR) $\rightarrow$ sửa `harness/` (trạng thái `updated`); nếu là lỗi hồi quy ngoài ý muốn (regression) $\rightarrow$ **CẤM SỬA `harness/`**, gán trạng thái `bug`, giữ nguyên bài test và yêu cầu sửa mã nguồn ứng dụng.
+   - **Tiêu chí hoàn thành:** Phân loại chính xác nguyên nhân lỗi thuộc 1 trong 4 trạng thái chuẩn (`in_sync`, `updated`, `bug`, `blocked`) theo `references/maintain_drift_guide.md`.
 2. **Đối Chiếu Bề Mặt Tính Năng (Surface Diff):**
    - So sánh các route/command hiện hành với tài liệu `features/INDEX.md` để khoanh vùng điểm lệch.
    - **Tiêu chí hoàn thành:** Xác định danh sách các điểm trôi lệch giữa code và tài liệu.
@@ -158,9 +161,10 @@ Kỹ năng tự động xác định chế độ vận hành dựa trên hiện 
 4. **Khắc Phục Tận Gốc Trong Thư Mục `harness/`:**
    - Cập nhật lệnh CLI, port, timeout, probe URL hoặc schema assertions bên trong `.agents/skills/verify-<app>/harness/`. Tuyệt đối không tạo file rác tại thư mục gốc `scripts/` (ADR-0044).
    - **Tiêu chí hoàn thành:** Kịch bản trong `harness/` và `features/INDEX.md` được cập nhật đồng bộ.
-5. **Xác Minh Thoát Sạch Tuyệt Đối (Clean Exit Verification):**
-   - Chạy lại bài kiểm định, bảo đảm đạt exit code 0 và tiêu diệt sạch toàn bộ cây tiến trình con.
-   - **Tiêu chí hoàn thành:** Toàn bộ harness chạy thành công với exit code 0, không còn tiến trình zombie.
+5. **Kiểm Chứng Đột Biến Ngữ Nghĩa, Cập Nhật `sync_commit` & Xác Minh Thoát Sạch (COND-01, COND-02):**
+   - Khi cập nhật harness (`updated`), bắt buộc thực hiện phép thử **Semantic Mutation Proof** (xác nhận `git diff` sạch $\to$ tiêm đột biến ngữ nghĩa trên nhánh mã mới để chứng minh harness mới không bị mất khả năng bắt lỗi $\to$ `git checkout -- <mutated_files>` và xác nhận `git status --porcelain` rỗng).
+   - Chỉ tiến hành nâng `sync_commit` lên commit hiện tại khi đạt kết quả `in_sync` hoặc `updated` và bài kiểm định thoát với exit code 0. Tuyệt đối CẤM nâng `sync_commit` khi kết quả là `bug` hoặc `blocked`.
+   - **Tiêu chí hoàn thành:** Harness vượt qua Semantic Mutation Proof, thoát sạch với exit code 0, không còn tiến trình zombie và `sync_commit` được cập nhật chuẩn xác.
 
 ---
 
@@ -169,7 +173,7 @@ Kỹ năng tự động xác định chế độ vận hành dựa trên hiện 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/features_map_guide.md` | Hướng dẫn thiết lập và duy trì Features Map (`features/INDEX.md`) cho ứng dụng |
-| `references/maintain_drift_guide.md` | Hướng dẫn phát hiện & khắc phục 4 dạng drift kiểm định, chống test tampering và bảo vệ Spoke cleanliness |
+| `references/maintain_drift_guide.md` | Hướng dẫn phát hiện & khắc phục 4 dạng drift kiểm định, ma trận 4 trạng thái (`in_sync`, `updated`, `bug`, `blocked`), Semantic Mutation Proof và bảo vệ Spoke cleanliness |
 
 ---
 

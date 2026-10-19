@@ -23,7 +23,7 @@ disable-model-invocation: true
 bundle: _software
 tier: kernel
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 triggers:
 - grill
@@ -52,12 +52,20 @@ Kỹ năng này bắt buộc Agent phải chạy một vòng lặp phỏng vấn
 - **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) qua 3 nhánh tác nghiệp: Nhánh A (Standard Stress-Test phỏng vấn thiết kế), Nhánh B (Rule Compliance Stress-Test đối soát quy chuẩn) và Nhánh C (Visual Prototype Grilling hội tụ UI). Danh mục Seam chuẩn hóa của Platform không quản lý logic tương tác phỏng vấn người dùng, do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập.
 - **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 >= 12.0. Tệp tài liệu chuyên sâu duy nhất `references/workflow_looping.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
 
+## Bước 0: Tiền Khởi Động — Diễn Đạt Lại Mục Tiêu & Mài Sắc Bài Toán (`in-your-own-words` & `sharpen` — Pstack v0.15.27)
+
+Trước khi bắt đầu đặt câu hỏi ở bất kỳ nhánh Grilling nào (A, B, hoặc C), Agent **BẮT BUỘC** thực hiện bước định hình ngắn gọn:
+1. **Diễn đạt lại mục tiêu (`in-your-own-words`):** Phát biểu lại trong 2–3 câu bằng ngôn ngữ của chính Agent về mục tiêu thực sự và bài toán cốt lõi mà người dùng đang muốn giải quyết.
+2. **Mài sắc theo chuẩn chuyên gia (`sharpen`):** Tự xác định cách một chuyên gia đầu ngành sẽ tiếp cận tác vụ này: sử dụng nguồn dữ liệu gốc nào (*raw sources*), phương pháp thực chất nào (*real methods*), và duy trì ít nhất **1 cơ chế kiểm chứng độc lập bên ngoài (*outside check*)** để chứng minh kết quả đúng.
+3. **Cân bằng mức độ đặc tả:** Chủ động đề xuất tháo bỏ các ràng buộc quá chi tiết nhưng không phục vụ mục tiêu (*over-specification*) song song với việc bổ sung các ràng buộc còn thiếu (*under-specification*), giữ nguyên các lựa chọn thuộc thẩm quyền của người dùng.
+   - **Tiêu chí hoàn thành:** Tóm tắt rõ 2–3 câu mục tiêu thực chất, xác định được 1 cơ chế kiểm chứng độc lập bên ngoài (*outside check*) và ranh giới đặc tả trước khi mở câu hỏi Frontier đầu tiên.
+
 ## Các Chế độ chạy (Branches)
 
 ### Nhánh A: Standard Stress-Test (Phỏng vấn Thiết kế)
 Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, cấu trúc file, sự đánh đổi kỹ thuật.
 *   **Quy trình:**
-    1. Đọc kỹ kế hoạch/thiết kế hiện tại.
+    1. Đọc kỹ kế hoạch/thiết kế hiện tại và thực hiện **Bước 0 (Tiền Khởi Động)**.
     2. Đưa ra các câu hỏi stress-test xoay quanh: sự đánh đổi (trade-offs), độ phức tạp (complexity), khả năng mở rộng (scalability), và các giả định chưa được kiểm chứng.
     3. Đặt từng câu hỏi một (one-by-one), chờ người dùng trả lời xong mới chuyển sang câu tiếp theo. **Tuyệt đối không in ra danh sách nhiều câu hỏi cùng lúc.**
     4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu.
@@ -67,7 +75,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
 ### Nhánh B: Rule Compliance Stress-Test (Grill with Docs)
 Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, specifications, standards, e.g., `AGENTS.md`, `legal_registry.yaml`, các spec nghiệp vụ trong `.md/knowledge/`) và yêu cầu đối soát.
 *   **Quy trình:**
-    1. Nạp và đọc kỹ các tài liệu quy chuẩn được chỉ định.
+    1. Nạp và đọc kỹ các tài liệu quy chuẩn được chỉ định, đồng thời thực hiện **Bước 0 (Tiền Khởi Động)**.
     2. Đọc kỹ kế hoạch/thiết kế hiện tại của người dùng.
     3. Tìm kiếm các điểm sai lệch, mâu thuẫn hoặc chưa tuân thủ quy chuẩn trong tài liệu.
     4. Chạy Grilling loop: Chất vấn người dùng từng câu một (one-by-one) về các điểm chưa khớp, yêu cầu giải trình lý do và đưa ra giải pháp sửa đổi cụ thể để tuân thủ spec.
@@ -79,7 +87,7 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 > Nguồn gốc: Thích ứng từ `grilling-frontend-prototyping` của Matt Pocock (MIT License).
 
 *   **Quy trình:**
-    1. Xác định câu hỏi thiết kế UI cần giải quyết (layout, component, interaction pattern).
+    1. Thực hiện **Bước 0 (Tiền Khởi Động)** và xác định câu hỏi thiết kế UI cần giải quyết (layout, component, interaction pattern).
     2. **Grilling bằng Prototype:** Mỗi vòng, Agent tạo **3-5 prototype UI khác nhau triệt để** (tùy mức độ zoom: 5 cho tổng thể, 3 cho component cụ thể) trong **1 file HTML duy nhất** (standalone artifact), cập nhật tại chỗ mỗi vòng.
     3. File HTML phải chứa một **floating picker** (draggable, góc dưới phải) với tên từng thiết kế và phím ←/→ để chuyển đổi giữa các variant live. Khi thiết kế có nhiều trạng thái có ý nghĩa (ví dụ: inbox đầy vs trống), thêm nút toggle trạng thái vào picker.
     4. **Visual Design Tree:** Grilling đi theo cây thiết kế trực quan, mỗi vòng phán quyết zoom sâu hơn một tầng: **overall design → component groups → individual components**. Agent được phép dừng sớm nếu người dùng đã hài lòng, hoặc zoom thêm tầng nếu component phức tạp — quyết định dừng hay tiếp thuộc về người dùng.
