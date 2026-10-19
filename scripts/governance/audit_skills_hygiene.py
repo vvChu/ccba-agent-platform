@@ -16,6 +16,7 @@ Zero external dependencies outside Python stdlib and PyYAML.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import re
 import sys
@@ -29,10 +30,6 @@ HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 PORTALS_FILE = HUB_ROOT / "docs" / "skills" / "portals.yaml"
 DEFAULT_REPORT_MD = HUB_ROOT / ".md" / "scratch" / "skills_audit_report.md"
-
-# ---------------------------------------------------------------------------
-# Governance Audit Regex Patterns
-# ---------------------------------------------------------------------------
 
 RE_DEAD_WOOD: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"/ck:[a-zA-Z0-9_\-]+"), "ClaudeKit Command (/ck:*)"),
@@ -73,7 +70,6 @@ RE_BASHISMS: list[tuple[re.Pattern[str], str]] = [
 ]
 
 RE_START_PROCESS = re.compile(r"\bStart-Process\b")
-
 RE_BROKEN_SKILL_LINK = re.compile(r"\[([^\]]+)\]\((SKILL\.md)\)")
 RE_LEVEL3_HEADER = re.compile(
     r"##\s+(?:Progressive Disclosure|Reference Index|Tài liệu Tham Chiếu|Bảng Tham Chiếu)",
@@ -98,6 +94,14 @@ BENIGN_GREP_PATTERNS = (
     "grep +",
 )
 
+PORTALS_ORDER = (
+    "init_navigation",
+    "core_engineering",
+    "bim_aiqc",
+    "legal_compliance",
+    "governance_upkeep",
+)
+
 
 def is_start_process_protected(text: str, match_start: int, match_end: int) -> bool:
     """Check if a Start-Process invocation is wrapped inside a safe try { ... } catch block."""
@@ -105,11 +109,9 @@ def is_start_process_protected(text: str, match_start: int, match_end: int) -> b
     try_matches = list(re.finditer(r"\btry\s*\{", before))
     if not try_matches:
         return False
-    last_try = try_matches[-1]
-    between_try = text[last_try.end() : match_start]
+    between_try = text[try_matches[-1].end() : match_start]
     if between_try.count("{") < between_try.count("}"):
         return False
-
     after = text[match_end:]
     catch_match = re.search(r"\}\s*catch\b", after)
     if not catch_match:
@@ -120,42 +122,41 @@ def is_start_process_protected(text: str, match_start: int, match_end: int) -> b
     return net_open == net_close
 
 
-def resolve_uncovered_references(
-    skill_content: str,
-    ref_dir: Path,
-    ref_files: list[Path],
-) -> list[str]:
-    """Resolve full coverage of reference files via Level 3 index and deep router INDEX.md files.
-
-    Returns:
-        list of relative paths (to ref_dir) for any reference files not covered.
-    """
-    l3_match = RE_LEVEL3_HEADER.search(skill_content)
-    l3_text = skill_content[l3_match.start() :] if l3_match is not None else skill_content
-
+def _seed_direct_reference_coverage(
+    l3_text: str, ref_dir: Path, ref_files: list[Path]
+) -> tuple[set[Path], set[Path]]:
+    """Identifies directly referenced files and top-level INDEX.md routers in Level 3 section."""
     covered_files: set[Path] = set()
     covered_routers: set[Path] = set()
-
     for rf in ref_files:
         rel_to_ref = rf.relative_to(ref_dir).as_posix()
         is_direct = (rel_to_ref in l3_text) or (f"references/{rel_to_ref}" in l3_text)
         if not is_direct and rf.name == "INDEX.md":
             parent_rel = rf.parent.relative_to(ref_dir).as_posix()
             if parent_rel != ".":
-                if (
-                    parent_rel in l3_text
-                    or f"{parent_rel}/" in l3_text
-                    or f"references/{parent_rel}" in l3_text
-                    or f"references/{parent_rel}/" in l3_text
-                ):
-                    is_direct = True
+                tokens = (
+                    parent_rel,
+                    f"{parent_rel}/",
+                    f"references/{parent_rel}",
+                    f"references/{parent_rel}/",
+                )
+                is_direct = any(tok in l3_text for tok in tokens)
             elif "references/" in l3_text or "references/INDEX.md" in l3_text:
                 is_direct = True
-
         if is_direct:
             covered_files.add(rf)
             if rf.name == "INDEX.md":
                 covered_routers.add(rf)
+    return covered_files, covered_routers
+
+
+def resolve_uncovered_references(
+    skill_content: str, ref_dir: Path, ref_files: list[Path]
+) -> list[str]:
+    """Resolve full coverage of reference files via Level 3 index and deep router INDEX.md files."""
+    l3_match = RE_LEVEL3_HEADER.search(skill_content)
+    l3_text = skill_content[l3_match.start() :] if l3_match is not None else skill_content
+    covered_files, covered_routers = _seed_direct_reference_coverage(l3_text, ref_dir, ref_files)
 
     changed = True
     while changed:
@@ -165,11 +166,10 @@ def resolve_uncovered_references(
                 router_text = router.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
-            router_dir = router.parent
             for rf in ref_files:
                 if rf not in covered_files and rf != router:
                     try:
-                        rf_rel = rf.relative_to(router_dir).as_posix()
+                        rf_rel = rf.relative_to(router.parent).as_posix()
                     except ValueError:
                         continue
                     if rf_rel in router_text or rf.name in router_text:
@@ -181,16 +181,11 @@ def resolve_uncovered_references(
     return sorted(rf.relative_to(ref_dir).as_posix() for rf in ref_files if rf not in covered_files)
 
 
-# ---------------------------------------------------------------------------
-# Data Transfer Objects
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class Issue:
     """Represents a detected governance or hygiene violation."""
 
-    severity: str  # RED, YELLOW
+    severity: str
     category: str
     file_rel: str
     line_no: int
@@ -222,23 +217,13 @@ class SkillAuditResult:
         return "GREEN"
 
 
-# ---------------------------------------------------------------------------
-# Portal & Frontmatter Loaders
-# ---------------------------------------------------------------------------
-
-
 def load_portals(
     portals_path: Path | None = None,
 ) -> tuple[dict[str, tuple[str, str]], dict[str, str]]:
-    """Load portal navigation taxonomy from portals.yaml.
-
-    Returns:
-        tuple[skill_to_portal_map, portal_names_map]
-    """
+    """Load portal navigation taxonomy from portals.yaml."""
     path = portals_path or PORTALS_FILE
     skill_to_portal: dict[str, tuple[str, str]] = {}
     portal_names: dict[str, str] = {}
-
     if path.exists():
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -250,7 +235,6 @@ def load_portals(
                     skill_to_portal[sname] = (pid, pname)
         except Exception:
             pass
-
     return skill_to_portal, portal_names
 
 
@@ -268,97 +252,58 @@ def parse_frontmatter(content: str) -> dict[str, Any]:
     return {}
 
 
-# ---------------------------------------------------------------------------
-# Skill Audit Logic
-# ---------------------------------------------------------------------------
-
-
-def audit_skill(
-    skill_dir: Path,
-    skill_to_portal: dict[str, tuple[str, str]] | None = None,
-    hub_root: Path | None = None,
-) -> SkillAuditResult:
-    """Audit a single skill directory against full CCBA hygiene standards."""
-    sname = skill_dir.name
-    portal_map = skill_to_portal if skill_to_portal is not None else {}
-    portal_id, portal_name = portal_map.get(sname, ("unknown", "Chưa phân loại"))
-    result = SkillAuditResult(name=sname, portal_id=portal_id, portal_name=portal_name)
-
-    skill_md = skill_dir / "SKILL.md"
-    if not skill_md.exists():
-        result.issues.append(
-            Issue(
-                severity="RED",
-                category="Directory Hygiene (ADR-0057)",
-                file_rel=sname,
-                line_no=0,
-                detail="Missing SKILL.md",
-            )
-        )
-        return result
-
-    # Check 1: Root stray markdown files
+def _check_directory_hygiene(
+    skill_dir: Path, sname: str, ref_dir: Path, result: SkillAuditResult
+) -> None:
+    """Validates ADR-0057 directory hygiene (no stray root .md, no non-.md in references/)."""
     try:
         dir_items = sorted(skill_dir.iterdir(), key=lambda p: p.name.lower())
     except Exception:
         dir_items = []
-
     for item in dir_items:
         if item.is_file() and item.suffix.lower() == ".md" and item.name != "SKILL.md":
             result.issues.append(
                 Issue(
-                    severity="RED",
-                    category="Directory Hygiene (ADR-0057)",
-                    file_rel=f"{sname}/{item.name}",
-                    line_no=1,
-                    detail=f"Stray markdown file at skill root: {item.name}. Must be moved to references/.",
+                    "RED",
+                    "Directory Hygiene (ADR-0057)",
+                    f"{sname}/{item.name}",
+                    1,
+                    f"Stray markdown file at skill root: {item.name}. Must be moved to references/.",
                 )
             )
-
-    # Count references & Check 2: Non-markdown files inside references/
-    ref_dir = skill_dir / "references"
-    ref_files = (
-        sorted(ref_dir.glob("**/*.md"), key=lambda p: p.as_posix()) if ref_dir.is_dir() else []
-    )
-    result.num_references = len(ref_files)
-
     if ref_dir.is_dir():
         for item in sorted(ref_dir.rglob("*"), key=lambda p: p.as_posix()):
             if item.is_file() and item.suffix.lower() != ".md":
-                rel_ref_item = item.relative_to(skill_dir).as_posix()
+                rel_ref = item.relative_to(skill_dir).as_posix()
                 result.issues.append(
                     Issue(
-                        severity="RED",
-                        category="Directory Hygiene (ADR-0057)",
-                        file_rel=f"{sname}/{rel_ref_item}",
-                        line_no=1,
-                        detail=f"Non-markdown file in references/: {item.name}. Must be moved to resources/ or scripts/.",
+                        "RED",
+                        "Directory Hygiene (ADR-0057)",
+                        f"{sname}/{rel_ref}",
+                        1,
+                        f"Non-markdown file in references/: {item.name}. Must be moved to resources/ or scripts/.",
                     )
                 )
 
-    # Read SKILL.md and parse frontmatter
-    skill_content = skill_md.read_text(encoding="utf-8", errors="replace")
+
+def _check_frontmatter_metadata(skill_content: str, sname: str, result: SkillAuditResult) -> None:
+    """Validates SKILL.md YAML frontmatter and mandatory metadata.version / metadata.author."""
+    rel = f"{sname}/SKILL.md"
     if not skill_content.startswith("---"):
         result.issues.append(
-            Issue(
-                severity="RED",
-                category="Governance Metadata",
-                file_rel=f"{sname}/SKILL.md",
-                line_no=1,
-                detail="Missing YAML frontmatter in SKILL.md",
-            )
+            Issue("RED", "Governance Metadata", rel, 1, "Missing YAML frontmatter in SKILL.md")
         )
-        fm = {}
+        fm: dict[str, Any] = {}
     else:
         fm = parse_frontmatter(skill_content)
         if not fm:
             result.issues.append(
                 Issue(
-                    severity="RED",
-                    category="Governance Metadata",
-                    file_rel=f"{sname}/SKILL.md",
-                    line_no=1,
-                    detail="Invalid or empty YAML frontmatter in SKILL.md",
+                    "RED",
+                    "Governance Metadata",
+                    rel,
+                    1,
+                    "Invalid or empty YAML frontmatter in SKILL.md",
                 )
             )
 
@@ -369,147 +314,189 @@ def audit_skill(
     result.tier = str(fm.get("tier", "N/A"))
     result.bundle = str(fm.get("bundle", "N/A"))
 
-    # Validate metadata version & author
     if result.version in ("N/A", "None", ""):
         result.issues.append(
             Issue(
-                severity="YELLOW",
-                category="Governance Metadata",
-                file_rel=f"{sname}/SKILL.md",
-                line_no=1,
-                detail="Missing metadata.version in frontmatter",
+                "YELLOW",
+                "Governance Metadata",
+                rel,
+                1,
+                "Missing metadata.version in frontmatter",
             )
         )
     if result.author in ("N/A", "None", ""):
         result.issues.append(
             Issue(
-                severity="RED",
-                category="Governance Metadata",
-                file_rel=f"{sname}/SKILL.md",
-                line_no=1,
-                detail="Missing or empty metadata.author in frontmatter (mandatory)",
+                "RED",
+                "Governance Metadata",
+                rel,
+                1,
+                "Missing or empty metadata.author in frontmatter (mandatory)",
             )
         )
 
-    # Check 3: Level 3 Reference Index & Full Coverage
-    if result.num_references > 0:
-        has_index = bool(
-            RE_LEVEL3_HEADER.search(skill_content)
-            or ("references/" in skill_content and "| :---" in skill_content)
+
+def _check_level3_index(
+    skill_content: str,
+    sname: str,
+    ref_dir: Path,
+    ref_files: list[Path],
+    result: SkillAuditResult,
+) -> None:
+    """Checks Level 3 Reference Index presence and full reference coverage."""
+    if result.num_references == 0:
+        return
+    has_index = bool(
+        RE_LEVEL3_HEADER.search(skill_content)
+        or ("references/" in skill_content and "| :---" in skill_content)
+    )
+    result.has_level3_index = has_index
+    rel = f"{sname}/SKILL.md"
+    last_line = len(skill_content.splitlines())
+    if not has_index:
+        result.issues.append(
+            Issue(
+                "YELLOW",
+                "Progressive Disclosure",
+                rel,
+                last_line,
+                f"Has {result.num_references} reference files but lacks Level 3 Reference Index in SKILL.md",
+            )
         )
-        result.has_level3_index = has_index
-        if not has_index:
+        return
+    uncovered = resolve_uncovered_references(skill_content, ref_dir, ref_files)
+    if uncovered:
+        suffix = f" (+{len(uncovered) - 3} more)" if len(uncovered) > 3 else ""
+        result.issues.append(
+            Issue(
+                "YELLOW",
+                "Progressive Disclosure",
+                rel,
+                last_line,
+                f"Reference files not indexed in Level 3 table: {', '.join(uncovered[:3])}{suffix}",
+            )
+        )
+
+
+def _scan_bashisms_in_lines(lines: list[str], rel_path: str, result: SkillAuditResult) -> None:
+    """Scans markdown lines for Windows PowerShell incompatible bashisms outside Linux code fences."""
+    in_code_fence = False
+    is_linux_fence = False
+    for idx, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            if in_code_fence:
+                in_code_fence, is_linux_fence = False, False
+            else:
+                in_code_fence = True
+                lang = stripped[3:].strip().lower()
+                is_linux_fence = any(
+                    k in lang for k in ("linux", "ubuntu", "bash (linux)", "sh (linux)")
+                )
+            continue
+        if in_code_fence and is_linux_fence:
+            continue
+        is_table_row = stripped.startswith("|") and stripped.endswith("|")
+        for pattern, label in RE_BASHISMS:
+            if "grep" in label.lower():
+                if any(benign in line for benign in BENIGN_GREP_PATTERNS):
+                    continue
+                if is_table_row and "`grep" not in stripped:
+                    continue
+            if pattern.search(line):
+                result.issues.append(
+                    Issue(
+                        "RED",
+                        "Windows Bashism",
+                        rel_path,
+                        idx,
+                        f"Found {label}: `{stripped[:60]}`",
+                    )
+                )
+
+
+def _scan_markdown_file(
+    md_file: Path, sname: str, skill_dir: Path, result: SkillAuditResult
+) -> None:
+    """Scans a single markdown file for broken links, dead wood, bashisms, and unsafe Start-Process."""
+    rel_path = f"{sname}/{md_file.relative_to(skill_dir).as_posix()}"
+    text = md_file.read_text(encoding="utf-8", errors="replace")
+    lines = text.splitlines()
+
+    if "references" in md_file.parts:
+        for idx, line in enumerate(lines, start=1):
+            if RE_BROKEN_SKILL_LINK.search(line):
+                result.issues.append(
+                    Issue(
+                        "RED",
+                        "Relative Link Broken",
+                        rel_path,
+                        idx,
+                        "Broken link [SKILL.md](SKILL.md) in references/. Must be [SKILL.md](../SKILL.md).",
+                    )
+                )
+
+    for pattern, label in RE_DEAD_WOOD:
+        for idx, line in enumerate(lines, start=1):
+            if pattern.search(line):
+                result.issues.append(
+                    Issue(
+                        "RED",
+                        "Dead Wood Remnant",
+                        rel_path,
+                        idx,
+                        f"Found {label}: `{line.strip()[:60]}`",
+                    )
+                )
+
+    _scan_bashisms_in_lines(lines, rel_path, result)
+
+    for match in RE_START_PROCESS.finditer(text):
+        if not is_start_process_protected(text, match.start(), match.end()):
+            line_no = text[: match.start()].count("\n") + 1
             result.issues.append(
                 Issue(
-                    severity="YELLOW",
-                    category="Progressive Disclosure",
-                    file_rel=f"{sname}/SKILL.md",
-                    line_no=len(skill_content.splitlines()),
-                    detail=f"Has {result.num_references} reference files but lacks Level 3 Reference Index in SKILL.md",
+                    "RED",
+                    "Safe Headless Process",
+                    rel_path,
+                    line_no,
+                    "Start-Process without try/catch fallback block. May fail in headless/CI environment.",
                 )
             )
-        else:
-            uncovered = resolve_uncovered_references(skill_content, ref_dir, ref_files)
-            if uncovered:
-                result.issues.append(
-                    Issue(
-                        severity="YELLOW",
-                        category="Progressive Disclosure",
-                        file_rel=f"{sname}/SKILL.md",
-                        line_no=len(skill_content.splitlines()),
-                        detail=f"Reference files not indexed in Level 3 table: {', '.join(uncovered[:3])}"
-                        + (f" (+{len(uncovered) - 3} more)" if len(uncovered) > 3 else ""),
-                    )
-                )
 
-    # Scan all markdown files in skill for Dead Wood, Bashisms, Start-Process
-    all_md_files = sorted(skill_dir.rglob("*.md"), key=lambda p: p.as_posix())
-    for md_file in all_md_files:
-        rel_path = f"{sname}/{md_file.relative_to(skill_dir).as_posix()}"
-        text = md_file.read_text(encoding="utf-8", errors="replace")
-        lines = text.splitlines()
 
-        # Check 4: Broken links in references/
-        if "references" in md_file.parts:
-            for idx, line in enumerate(lines, start=1):
-                if RE_BROKEN_SKILL_LINK.search(line):
-                    result.issues.append(
-                        Issue(
-                            severity="RED",
-                            category="Relative Link Broken",
-                            file_rel=rel_path,
-                            line_no=idx,
-                            detail="Broken link [SKILL.md](SKILL.md) in references/. Must be [SKILL.md](../SKILL.md).",
-                        )
-                    )
+def audit_skill(
+    skill_dir: Path,
+    skill_to_portal: dict[str, tuple[str, str]] | None = None,
+    hub_root: Path | None = None,
+) -> SkillAuditResult:
+    """Audit a single skill directory against full CCBA hygiene standards."""
+    _ = hub_root
+    sname = skill_dir.name
+    portal_map = skill_to_portal if skill_to_portal is not None else {}
+    portal_id, portal_name = portal_map.get(sname, ("unknown", "Chưa phân loại"))
+    result = SkillAuditResult(name=sname, portal_id=portal_id, portal_name=portal_name)
 
-        # Check 5: Clean Dead Wood
-        for pattern, label in RE_DEAD_WOOD:
-            for idx, line in enumerate(lines, start=1):
-                if pattern.search(line):
-                    result.issues.append(
-                        Issue(
-                            severity="RED",
-                            category="Dead Wood Remnant",
-                            file_rel=rel_path,
-                            line_no=idx,
-                            detail=f"Found {label}: `{line.strip()[:60]}`",
-                        )
-                    )
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        result.issues.append(
+            Issue("RED", "Directory Hygiene (ADR-0057)", sname, 0, "Missing SKILL.md")
+        )
+        return result
 
-        # Check 6: Windows PowerShell Compatibility (Bashisms)
-        in_code_fence = False
-        is_linux_fence = False
-        for idx, line in enumerate(lines, start=1):
-            stripped = line.strip()
-            if stripped.startswith("```"):
-                if in_code_fence:
-                    in_code_fence = False
-                    is_linux_fence = False
-                else:
-                    in_code_fence = True
-                    lang = stripped[3:].strip().lower()
-                    is_linux_fence = any(
-                        k in lang for k in ("linux", "ubuntu", "bash (linux)", "sh (linux)")
-                    )
-                continue
+    ref_dir = skill_dir / "references"
+    ref_files = (
+        sorted(ref_dir.glob("**/*.md"), key=lambda p: p.as_posix()) if ref_dir.is_dir() else []
+    )
+    result.num_references = len(ref_files)
 
-            if in_code_fence and is_linux_fence:
-                continue
+    _check_directory_hygiene(skill_dir, sname, ref_dir, result)
+    skill_content = skill_md.read_text(encoding="utf-8", errors="replace")
+    _check_frontmatter_metadata(skill_content, sname, result)
+    _check_level3_index(skill_content, sname, ref_dir, ref_files, result)
 
-            is_table_row = stripped.startswith("|") and stripped.endswith("|")
-
-            for pattern, label in RE_BASHISMS:
-                if "grep" in label.lower():
-                    if any(benign in line for benign in BENIGN_GREP_PATTERNS):
-                        continue
-                    if is_table_row and "`grep" not in stripped:
-                        continue
-
-                if pattern.search(line):
-                    result.issues.append(
-                        Issue(
-                            severity="RED",
-                            category="Windows Bashism",
-                            file_rel=rel_path,
-                            line_no=idx,
-                            detail=f"Found {label}: `{line.strip()[:60]}`",
-                        )
-                    )
-
-        # Check 7: Headless Start-Process without try/catch
-        for match in RE_START_PROCESS.finditer(text):
-            if not is_start_process_protected(text, match.start(), match.end()):
-                line_no = text[: match.start()].count("\n") + 1
-                result.issues.append(
-                    Issue(
-                        severity="RED",
-                        category="Safe Headless Process",
-                        file_rel=rel_path,
-                        line_no=line_no,
-                        detail="Start-Process without try/catch fallback block. May fail in headless/CI environment.",
-                    )
-                )
+    for md_file in sorted(skill_dir.rglob("*.md"), key=lambda p: p.as_posix()):
+        _scan_markdown_file(md_file, sname, skill_dir, result)
 
     return result
 
@@ -521,75 +508,22 @@ def audit_all_skills(
     """Audit all active skills in the repository."""
     root = hub_root or HUB_ROOT
     s_dir = skills_dir or (root / ".agents" / "skills")
-    portals_path = root / "docs" / "skills" / "portals.yaml"
-    skill_to_portal, _ = load_portals(portals_path)
-
+    skill_to_portal, _ = load_portals(root / "docs" / "skills" / "portals.yaml")
     if not s_dir.exists():
         return []
-
     skill_dirs = sorted(
         [d for d in s_dir.iterdir() if d.is_dir() and not d.name.startswith((".", "_"))],
         key=lambda p: p.name,
     )
-
     return [audit_skill(d, skill_to_portal, hub_root=root) for d in skill_dirs]
 
 
-# ---------------------------------------------------------------------------
-# Report Generation
-# ---------------------------------------------------------------------------
-
-
-def generate_report(
-    results: list[SkillAuditResult],
-    portal_names: dict[str, str] | None = None,
-) -> str:
-    """Generate comprehensive Markdown audit report."""
-    total_skills = len(results)
-    red_skills = [r for r in results if r.status == "RED"]
-    yellow_skills = [r for r in results if r.status == "YELLOW"]
-    green_skills = [r for r in results if r.status == "GREEN"]
-    p_names = portal_names or {}
-
-    green_pct = (len(green_skills) * 100 / total_skills) if total_skills else 0.0
-    yellow_pct = (len(yellow_skills) * 100 / total_skills) if total_skills else 0.0
-    red_pct = (len(red_skills) * 100 / total_skills) if total_skills else 0.0
-
-    lines: list[str] = [
-        f"# 📊 Báo Cáo Khảo Sát Toàn Diện {total_skills} Skills Nền Tảng CCBA Hub",
-        "",
-        f"> **Thời điểm khảo sát:** 2026-09-12 | **Tổng số kỹ năng active:** {total_skills}",
-        "> **Tiêu chuẩn kiểm định:** Clean Dead Wood (KISS), Windows PowerShell Compatibility, ADR-0057 Directory Hygiene, Level 3 Progressive Disclosure, Safe Headless Fallback.",
-        "",
-        "---",
-        "",
-        "## 1. Tóm Tắt Tình Trạng Toàn Nền Tảng (Executive Summary)",
-        "",
-        "| Phân Nhóm Đánh Giá | Số Lượng Kỹ Năng | Tỷ Lệ | Đánh Giá Tác Động & Trạng Thái |",
-        "| :--- | :---: | :---: | :--- |",
-        f"| 🟢 **Xanh (Đạt Chuẩn Hoàn Toàn)** | **{len(green_skills)}** / {total_skills} | {green_pct:.1f}% | 100% tuân thủ ADR-0057, không tàn dư ngoại lai, an toàn Windows PowerShell |",
-        f"| 🟡 **Vàng (Cần Hoàn Thiện)** | **{len(yellow_skills)}** / {total_skills} | {yellow_pct:.1f}% | Thiếu bảng Level 3 Reference Index hoặc thiếu metadata version trong frontmatter |",
-        f"| 🔴 **Đỏ (Ưu Tiên Nâng Cấp Ngay)** | **{len(red_skills)}** / {total_skills} | {red_pct:.1f}% | Chứa tàn dư ClaudeKit, lệnh bash không chạy được trên Windows, hoặc sai cấu trúc thư mục |",
-        "",
-        "---",
-        "",
-        "## 2. Thống Kê Theo 5 Cổng Điều Hướng (5 Portals Breakdown)",
-        "",
-        "| Cổng Điều Hướng | Tổng Số Skills | 🟢 Xanh | 🟡 Vàng | 🔴 Đỏ | Trạng Thái Ưu Tiên |",
-        "| :--- | :---: | :---: | :---: | :---: | :--- |",
-    ]
-
-    portals_order = [
-        "init_navigation",
-        "core_engineering",
-        "bim_aiqc",
-        "legal_compliance",
-        "governance_upkeep",
-    ]
-    for pid in portals_order:
+def _render_portal_rows(results: list[SkillAuditResult], p_names: dict[str, str]) -> list[str]:
+    """Renders Markdown table rows for the 5 portals breakdown."""
+    rows: list[str] = []
+    for pid in PORTALS_ORDER:
         pname = p_names.get(pid, pid)
         p_skills = [r for r in results if r.portal_id == pid]
-        p_total = len(p_skills)
         p_green = sum(1 for r in p_skills if r.status == "GREEN")
         p_yellow = sum(1 for r in p_skills if r.status == "YELLOW")
         p_red = sum(1 for r in p_skills if r.status == "RED")
@@ -598,142 +532,126 @@ def generate_report(
             if p_red > 0
             else ("🟡 Hoàn thiện index" if p_yellow > 0 else "🟢 Rất tốt")
         )
-        lines.append(
-            f"| **{pname}** (`{pid}`) | {p_total} | {p_green} | {p_yellow} | {p_red} | {priority} |"
+        rows.append(
+            f"| **{pname}** (`{pid}`) | {len(p_skills)} | {p_green} | {p_yellow} | {p_red} | {priority} |"
         )
+    return rows
 
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## 3. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Đỏ (🔴 Cần Nâng Cấp)",
-            "",
-        ]
-    )
 
+def _render_red_and_yellow_sections(
+    red_skills: list[SkillAuditResult], yellow_skills: list[SkillAuditResult]
+) -> list[str]:
+    """Renders Markdown sections 3 (RED skills) and 4 (YELLOW skills)."""
+    lines = ["", "---", "", "## 3. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Đỏ (🔴 Cần Nâng Cấp)", ""]
     if not red_skills:
         lines.append("🎉 *Không có kỹ năng nào thuộc Nhóm Đỏ!*")
-    else:
-        for r in red_skills:
-            lines.append(f"### 🔴 `{r.name}` (Cổng: {r.portal_name} | v{r.version})")
-            lines.append(
-                f"- **Vị trí:** `.agents/skills/{r.name}/` | **Số file references:** {r.num_references}"
-            )
-            lines.append("- **Các vấn đề phát hiện:**")
-            for issue in r.issues:
-                prefix = "❌" if issue.severity == "RED" else "⚠️"
-                lines.append(
-                    f"  - {prefix} `[{issue.category}]` {issue.file_rel}:{issue.line_no} $\\rightarrow$ {issue.detail}"
-                )
-            lines.append("")
-
+    for r in red_skills:
+        lines.extend(
+            [
+                f"### 🔴 `{r.name}` (Cổng: {r.portal_name} | v{r.version})",
+                f"- **Vị trí:** `.agents/skills/{r.name}/` | **Số file references:** {r.num_references}",
+                "- **Các vấn đề phát hiện:**",
+                *[
+                    f"  - {'❌' if i.severity == 'RED' else '⚠️'} `[{i.category}]` {i.file_rel}:{i.line_no} $\\rightarrow$ {i.detail}"
+                    for i in r.issues
+                ],
+                "",
+            ]
+        )
     lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## 4. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Vàng (🟡 Cần Hoàn Thiện)",
-            "",
-        ]
+        ["", "---", "", "## 4. Danh Sách Chi Tiết Các Kỹ Năng Nhóm Vàng (🟡 Cần Hoàn Thiện)", ""]
     )
-
     if not yellow_skills:
         lines.append("🎉 *Không có kỹ năng nào thuộc Nhóm Vàng!*")
     else:
-        lines.append(
-            "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | References | Vấn Đề Cần Hoàn Thiện |"
+        lines.extend(
+            [
+                "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | References | Vấn Đề Cần Hoàn Thiện |",
+                "| :--- | :--- | :---: | :---: | :--- |",
+                *[
+                    f"| `{r.name}` | {r.portal_name} | v{r.version} | {r.num_references} | {'; '.join(i.detail for i in r.issues)} |"
+                    for r in yellow_skills
+                ],
+            ]
         )
-        lines.append("| :--- | :--- | :---: | :---: | :--- |")
-        for r in yellow_skills:
-            issues_str = "; ".join(f"{i.detail}" for i in r.issues)
-            lines.append(
-                f"| `{r.name}` | {r.portal_name} | v{r.version} | {r.num_references} | {issues_str} |"
-            )
+    return lines
 
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## 5. Danh Sách Các Kỹ Năng Đạt Chuẩn Hoàn Toàn (🟢 Nhóm Xanh)",
-            "",
-            "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | Tier / Bundle | References | Level 3 Index |",
-            "| :--- | :--- | :---: | :---: | :---: | :---: |",
-        ]
+
+def generate_report(
+    results: list[SkillAuditResult], portal_names: dict[str, str] | None = None
+) -> str:
+    """Generate comprehensive Markdown audit report."""
+    total = len(results)
+    reds = [r for r in results if r.status == "RED"]
+    yellows = [r for r in results if r.status == "YELLOW"]
+    greens = [r for r in results if r.status == "GREEN"]
+    g_pct, y_pct, r_pct = (
+        (len(greens) * 100 / total if total else 0.0),
+        (len(yellows) * 100 / total if total else 0.0),
+        (len(reds) * 100 / total if total else 0.0),
     )
-
-    for r in green_skills:
-        l3_str = "✅ Đã có" if r.has_level3_index or r.num_references == 0 else "N/A"
-        lines.append(
-            f"| `{r.name}` | {r.portal_name} | v{r.version} | `{r.tier}` / `{r.bundle}` | {r.num_references} | {l3_str} |"
-        )
-
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## 6. Lộ Trình Nâng Cấp Khuyến Nghị (Batch Refactoring Plan)",
-            "",
-            "Thay vì cập nhật toàn bộ cùng lúc gây vi phạm `simplify_gate` và race condition:",
-            "1. **Đợt 1 — Xử lý Nhóm Đỏ (Cụm Kỹ Nghệ & Quản trị):** Xử lý dứt điểm các tàn dư ClaudeKit, bashisms và file root sai vị trí.",
-            "2. **Đợt 2 — Bổ sung Level 3 Reference Index cho Nhóm Vàng:** Chèn bảng chỉ mục tham chiếu chi tiết và chuẩn hóa metadata.",
-            "3. **Mỗi đợt tuân thủ nghiêm ngặt:** Chạy Recompilation Gate (`compile_catalog.py`, `compile_skills_docs.py --write`), đạt `verify-patch --preset skill` và commit riêng rẽ.",
-            "",
-            "---",
-            "*Báo cáo được tạo tự động bởi CCBA Platform Quality Auditor*",
-        ]
-    )
-
+    today = datetime.date.today().isoformat()
+    lines = [
+        f"# 📊 Báo Cáo Khảo Sát Toàn Diện {total} Skills Nền Tảng CCBA Hub\n",
+        f"> **Thời điểm khảo sát:** {today} | **Tổng số kỹ năng active:** {total}",
+        "> **Tiêu chuẩn kiểm định:** Clean Dead Wood (KISS), Windows PowerShell Compatibility, ADR-0057 Directory Hygiene, Level 3 Progressive Disclosure, Safe Headless Fallback.\n\n---\n",
+        "## 1. Tóm Tắt Tình Trạng Toàn Nền Tảng (Executive Summary)\n",
+        "| Phân Nhóm Đánh Giá | Số Lượng Kỹ Năng | Tỷ Lệ | Đánh Giá Tác Động & Trạng Thái |",
+        "| :--- | :---: | :---: | :--- |",
+        f"| 🟢 **Xanh (Đạt Chuẩn Hoàn Toàn)** | **{len(greens)}** / {total} | {g_pct:.1f}% | 100% tuân thủ ADR-0057, không tàn dư ngoại lai, an toàn Windows PowerShell |",
+        f"| 🟡 **Vàng (Cần Hoàn Thiện)** | **{len(yellows)}** / {total} | {y_pct:.1f}% | Thiếu bảng Level 3 Reference Index hoặc thiếu metadata version trong frontmatter |",
+        f"| 🔴 **Đỏ (Ưu Tiên Nâng Cấp Ngay)** | **{len(reds)}** / {total} | {r_pct:.1f}% | Chứa tàn dư ClaudeKit, lệnh bash không chạy được trên Windows, hoặc sai cấu trúc thư mục |\n\n---\n",
+        "## 2. Thống Kê Theo 5 Cổng Điều Hướng (5 Portals Breakdown)\n",
+        "| Cổng Điều Hướng | Tổng Số Skills | 🟢 Xanh | 🟡 Vàng | 🔴 Đỏ | Trạng Thái Ưu Tiên |",
+        "| :--- | :---: | :---: | :---: | :---: | :--- |",
+        *_render_portal_rows(results, portal_names or {}),
+        *_render_red_and_yellow_sections(reds, yellows),
+        "\n---\n\n## 5. Danh Sách Các Kỹ Năng Đạt Chuẩn Hoàn Toàn (🟢 Nhóm Xanh)\n",
+        "| Tên Kỹ Năng | Cổng Điều Hướng | Phiên Bản | Tier / Bundle | References | Level 3 Index |",
+        "| :--- | :--- | :---: | :---: | :---: | :---: |",
+        *[
+            f"| `{r.name}` | {r.portal_name} | v{r.version} | `{r.tier}` / `{r.bundle}` | {r.num_references} | {'✅ Đã có' if r.has_level3_index or r.num_references == 0 else 'N/A'} |"
+            for r in greens
+        ],
+        "\n---\n*Báo cáo được tạo tự động bởi CCBA Platform Quality Auditor*",
+    ]
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# Integrated Governance Hook
-# ---------------------------------------------------------------------------
+def _resolve_target_skill_dir(target_path: Path | str, root: Path) -> tuple[bool, Path]:
+    """Resolves a file or directory path to its enclosing skill directory, detecting workflows."""
+    target = Path(target_path).resolve()
+    if "workflows" in target.parts:
+        return True, target
+    if not target.is_file():
+        return False, target
+    if target.name.lower() == "skill.md":
+        return False, target.parent
+    curr = target.parent
+    while curr != curr.parent and curr != root:
+        if (curr / "SKILL.md").exists():
+            return False, curr
+        curr = curr.parent
+    return False, target.parent
 
 
 def check_skills_hygiene(
     hub_root: Path | None = None,
     target_path: Path | str | None = None,
 ) -> tuple[bool, str]:
-    """Check skills hygiene across repository or for a single target skill.
-
-    Returns:
-        tuple[bool, str]: (is_clean, diagnostic_summary)
-    """
+    """Check skills hygiene across repository or for a single target skill."""
     root = hub_root or HUB_ROOT
-    portals_path = root / "docs" / "skills" / "portals.yaml"
-    skill_to_portal, _ = load_portals(portals_path)
+    skill_to_portal, _ = load_portals(root / "docs" / "skills" / "portals.yaml")
 
     if target_path:
-        target = Path(target_path).resolve()
-        if "workflows" in target.parts:
+        is_wf, skill_dir = _resolve_target_skill_dir(target_path, root)
+        if is_wf:
             return True, f"Target '{target_path}' is a workflow; skipped from skill hygiene check."
-
-        if target.is_file():
-            if target.name.lower() == "skill.md":
-                skill_dir = target.parent
-            else:
-                curr = target.parent
-                found = None
-                while curr != curr.parent and curr != root:
-                    if (curr / "SKILL.md").exists():
-                        found = curr
-                        break
-                    curr = curr.parent
-                skill_dir = found if found else target.parent
-        else:
-            skill_dir = target
-
         if not skill_dir.exists():
             return False, f"Skill target directory does not exist: {skill_dir}"
-
         result = audit_skill(skill_dir, skill_to_portal, hub_root=root)
         if result.status == "GREEN":
             return True, f"Skill '{result.name}' is 100% compliant with hygiene standards."
-
         details = [
             f"  - [{i.severity}] [{i.category}] {i.file_rel}:{i.line_no} -> {i.detail}"
             for i in result.issues
@@ -743,11 +661,9 @@ def check_skills_hygiene(
             f"Skill '{result.name}' failed hygiene audit ({result.status}):\n" + "\n".join(details),
         )
 
-    # Workspace-wide audit
     results = audit_all_skills(hub_root=root)
     reds = [r for r in results if r.status == "RED"]
     yellows = [r for r in results if r.status == "YELLOW"]
-
     if not reds and not yellows:
         return (
             True,
@@ -765,29 +681,22 @@ def check_skills_hygiene(
             )
     if len(reds) + len(yellows) > 10:
         msg_lines.append(f"  ... and {len(reds) + len(yellows) - 10} more skills with issues.")
-
     return False, "\n".join(msg_lines)
 
 
-# ---------------------------------------------------------------------------
-# CLI Entrypoint
-# ---------------------------------------------------------------------------
-
-
-def main(argv: list[str] | None = None) -> int:
-    """CLI runner for skill hygiene audit tool."""
+def _configure_win32_utf8() -> None:
+    """Reconfigures stdout and stderr to UTF-8 on Windows platforms."""
     if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            try:
-                sys.stdout.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
-        if hasattr(sys.stderr, "reconfigure"):
-            try:
-                sys.stderr.reconfigure(encoding="utf-8")
-            except Exception:
-                pass
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                try:
+                    stream.reconfigure(encoding="utf-8")
+                except Exception:
+                    pass
 
+
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Constructs the CLI argument parser for audit_skills_hygiene."""
     parser = argparse.ArgumentParser(
         description="CCBA Skills Hygiene & Standards Auditor (HUB-ADR-0058)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -796,40 +705,77 @@ def main(argv: list[str] | None = None) -> int:
         "--check",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run audit and return exit code 0 if 100% GREEN, 1 if any RED or YELLOW issues (default: True).",
+        help="Run audit and return exit code 0 if 100% GREEN, 1 if any RED or YELLOW issues.",
     )
     parser.add_argument(
-        "--file",
-        "-f",
-        type=str,
-        default=None,
-        help="Audit a specific skill directory or SKILL.md file path.",
+        "--file", "-f", type=str, default=None, help="Audit a specific skill directory or SKILL.md."
     )
     parser.add_argument(
-        "--report",
-        type=str,
-        default=None,
-        help="Path to write detailed markdown report file.",
+        "--report", type=str, default=None, help="Path to write detailed markdown report file."
     )
     parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output audit summary and results as JSON to stdout.",
+        "--json", action="store_true", help="Output audit summary and results as JSON to stdout."
     )
     parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Print detailed violations for each skill.",
+        "--verbose", "-v", action="store_true", help="Print detailed violations for each skill."
     )
+    return parser
 
-    args = parser.parse_args(argv)
 
+def _emit_cli_output(
+    results: list[SkillAuditResult],
+    portal_names: dict[str, str],
+    args: argparse.Namespace,
+) -> int:
+    """Formats and prints CLI output (report file, JSON, or human summary) and returns exit code."""
+    if args.report:
+        report_path = Path(args.report).resolve()
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(generate_report(results, portal_names), encoding="utf-8")
+        if not args.json:
+            print(f"[OK] Markdown report saved to: {report_path}")
+
+    red_count = sum(1 for r in results if r.status == "RED")
+    yellow_count = sum(1 for r in results if r.status == "YELLOW")
+    green_count = sum(1 for r in results if r.status == "GREEN")
+    passed = red_count == 0 and yellow_count == 0
+
+    if args.json:
+        summary_data: dict[str, Any] = {
+            "total": len(results),
+            "red_count": red_count,
+            "yellow_count": yellow_count,
+            "green_count": green_count,
+            "status": "PASS" if passed else "FAIL",
+            "skills": [asdict(r) for r in results],
+        }
+        print(json.dumps(summary_data, indent=2, ensure_ascii=False))
+    else:
+        print(f"[OK] Audit completed for {len(results)} skill(s).")
+        print(f"     [GREEN]  Fully Compliant: {green_count}")
+        print(f"     [YELLOW] Need Improvement: {yellow_count}")
+        print(f"     [RED]    Critical Upgrades Needed: {red_count}")
+        if args.verbose or not passed:
+            for r in results:
+                if r.status != "GREEN" or args.verbose:
+                    icon = "🟢" if r.status == "GREEN" else ("🟡" if r.status == "YELLOW" else "🔴")
+                    print(f"\n{icon} Skill: {r.name} (v{r.version}, {r.portal_name})")
+                    for i in r.issues:
+                        sev = "❌" if i.severity == "RED" else "⚠️"
+                        print(f"  {sev} [{i.category}] {i.file_rel}:{i.line_no} -> {i.detail}")
+
+    return (0 if passed else 1) if args.check else 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI runner for skill hygiene audit tool."""
+    _configure_win32_utf8()
+    args = _build_arg_parser().parse_args(argv)
     skill_to_portal, portal_names = load_portals()
 
     if args.file:
-        target = Path(args.file).resolve()
-        if "workflows" in target.parts:
+        is_wf, skill_dir = _resolve_target_skill_dir(args.file, HUB_ROOT)
+        if is_wf:
             if args.json:
                 print(
                     json.dumps(
@@ -839,74 +785,14 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"[INFO] '{args.file}' is a workflow; excluded from skill hygiene audit.")
             return 0
-
-        if target.is_file():
-            if target.name.lower() == "skill.md":
-                skill_dir = target.parent
-            else:
-                curr = target.parent
-                found = None
-                while curr != curr.parent and curr != HUB_ROOT:
-                    if (curr / "SKILL.md").exists():
-                        found = curr
-                        break
-                    curr = curr.parent
-                skill_dir = found if found else target.parent
-        else:
-            skill_dir = target
-
         if not skill_dir.exists():
             print(f"[ERROR] Target skill directory not found: {skill_dir}", file=sys.stderr)
             return 1
-
         results = [audit_skill(skill_dir, skill_to_portal)]
     else:
         results = audit_all_skills()
 
-    report_md = generate_report(results, portal_names)
-
-    if args.report:
-        report_path = Path(args.report).resolve()
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(report_md, encoding="utf-8")
-        if not args.json:
-            print(f"[OK] Markdown report saved to: {report_path}")
-
-    red_count = sum(1 for r in results if r.status == "RED")
-    yellow_count = sum(1 for r in results if r.status == "YELLOW")
-    green_count = sum(1 for r in results if r.status == "GREEN")
-
-    summary_data: dict[str, Any] = {
-        "total": len(results),
-        "red_count": red_count,
-        "yellow_count": yellow_count,
-        "green_count": green_count,
-        "status": "PASS" if all(r.status == "GREEN" for r in results) else "FAIL",
-        "skills": [asdict(r) for r in results],
-    }
-
-    if args.json:
-        print(json.dumps(summary_data, indent=2, ensure_ascii=False))
-    else:
-        print(f"[OK] Audit completed for {len(results)} skill(s).")
-        print(f"     [GREEN]  Fully Compliant: {green_count}")
-        print(f"     [YELLOW] Need Improvement: {yellow_count}")
-        print(f"     [RED]    Critical Upgrades Needed: {red_count}")
-
-        if args.verbose or red_count > 0 or yellow_count > 0:
-            for r in results:
-                if r.status != "GREEN" or args.verbose:
-                    icon = "🟢" if r.status == "GREEN" else ("🟡" if r.status == "YELLOW" else "🔴")
-                    print(f"\n{icon} Skill: {r.name} (v{r.version}, {r.portal_name})")
-                    for issue in r.issues:
-                        sev_icon = "❌" if issue.severity == "RED" else "⚠️"
-                        print(
-                            f"  {sev_icon} [{issue.category}] {issue.file_rel}:{issue.line_no} -> {issue.detail}"
-                        )
-
-    if args.check:
-        return 0 if summary_data["status"] == "PASS" else 1
-    return 0
+    return _emit_cli_output(results, portal_names, args)
 
 
 if __name__ == "__main__":

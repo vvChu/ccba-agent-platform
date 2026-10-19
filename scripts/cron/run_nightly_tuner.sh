@@ -22,6 +22,7 @@ USE_REAL_LLM_FLAG=""
 BUDGET_LIMIT_FLAG="--token-budget 10000000"
 MODEL_FLAG=""
 SKILL_FLAG=""
+ENABLE_TUNER="${CCBA_ENABLE_NIGHTLY_TUNER:-0}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -35,12 +36,13 @@ Sử dụng:
 Tùy chọn:
   -h, --help           Hiển thị hướng dẫn sử dụng và thoát
   --dry-run            Chạy kiểm thử an toàn, không commit/push git hoặc mở Pull Request
+  --enable-tuner       Bật chu trình đột biến LLM toàn cục (mặc định: TẮT để bảo toàn token, chỉ chạy kiểm định tĩnh)
   --max-iter N         Số vòng lặp tối đa cho mỗi kỹ năng (mặc định: 30)
   --ref TARGET_REF     Git target ref để so khớp baseline (mặc định: origin/main)
   --use-real-llm       Kích hoạt chạy với mô hình LLM thực tế qua AI Gateway LiteLLM
   --token-budget N     Giới hạn trần ngân sách token hàng đêm (mặc định: 10,000,000)
   --model MODEL_NAME   Tên mô hình LLM (mặc định: qwen-local-primary)
-  --skill SKILL_NAME   Chỉ định tối ưu một kỹ năng cụ thể (bỏ qua queue toàn bộ catalog)
+  --skill SKILL_NAME   Chỉ định tối ưu một kỹ năng cụ thể (tự động bật tuner cho kỹ năng đó)
 
 Ví dụ:
   ./scripts/cron/run_nightly_tuner.sh --dry-run
@@ -50,6 +52,10 @@ EOF
             ;;
         --dry-run)
             DRY_RUN_FLAG="--dry-run"
+            shift
+            ;;
+        --enable-tuner)
+            ENABLE_TUNER="1"
             shift
             ;;
         --max-iter)
@@ -74,6 +80,7 @@ EOF
             ;;
         --skill|--skills)
             SKILL_FLAG="--skill $2"
+            ENABLE_TUNER="1"
             shift 2
             ;;
         *)
@@ -348,13 +355,20 @@ if [ -n "$LEGAL_SPOKE_DIR" ]; then
     python3 scripts/governance/compact_session_learnings.py --profile spoke --target-dir "$TARGET_SPOKE_AUDIT" --check || echo "⚠️ Warning: Spoke session learnings exceeded budget."
 fi
 
-# 8.1. Ensure clean detached HEAD from TARGET_REF before running Tuner
+# 8.1. Ensure clean detached HEAD from TARGET_REF before Phase 3
 echo "🔄 Đồng bộ trạng thái worktree về HEAD sạch từ $TARGET_REF..."
 git checkout --detach "$TARGET_REF"
 
-# 9. Run Multi-Skill Nightly Auto-Tuner Daemon with specified iterations
-echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER, skip-cooldown: ON)..."
-python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" --skip-cooldown ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${BUDGET_LIMIT_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
+# 9. Phase 3: Deterministic Skills Governance & Hygiene Audit (+ Optional LLM Auto-Tuner)
+echo "🛡️ [3/3] Running Deterministic Skills Governance & Hygiene Audit (verify-patch --preset skill)..."
+python3 -m ccba_harness verify-patch --preset skill
+
+if [ "$ENABLE_TUNER" = "1" ]; then
+    echo "🌙 [3/3] Running Multi-Skill Nightly Auto-Tuner (max-iter: $MAX_ITER, skip-cooldown: ON)..."
+    python3 scripts/eval/nightly_tuner_daemon.py --max-iter "$MAX_ITER" --skip-cooldown ${DRY_RUN_FLAG} ${USE_REAL_LLM_FLAG} ${BUDGET_LIMIT_FLAG} ${MODEL_FLAG} ${SKILL_FLAG}
+else
+    echo "⏭️ [3/3] Bỏ qua LLM Auto-Tuner toàn cục (mặc định TẮT để bảo toàn token; truyền --enable-tuner hoặc --skill <name> để bật)."
+fi
 
 echo "================================================================="
 echo "[CCBA Nightly Daemon] Finished successfully at $(date)"
