@@ -143,6 +143,11 @@ Khi viết unit tests cho các cơ chế kiểm định phòng vệ (Guardrails,
      - Trường hợp có thẻ ngoại lệ hợp lệ $\rightarrow$ Phải tha bổng thành công (`assert len(violations) == 0`).
 3. **Bao phủ toàn diện các ký tự phân cách (Separator Coverage):**
    - Bộ test cho parser/regex ranh giới bắt buộc phải kiểm thử độc lập cả 3 họ phân cách: phân cấp số thập phân (`.1`), hậu tố gạch nối (`-bis`, `-sub`), và gạch chéo (`/2`).
+4. **Phép thử hai biến đổi hành vi (Two-Edit Behavioral Test Litmus — Pstack v0.15.25 & COND-03):**
+   - **Hành vi quan sát được (Observable Behavior)** được định nghĩa gắn kết trực tiếp với các bất biến tiêu chuẩn tại Mục 12: bao gồm giá trị trả về, giới hạn quy chuẩn/tiêu chuẩn, lỗi chuẩn hóa mà caller phân nhánh xử lý, trạng thái đọc lại được qua giao diện công khai, và hiệu ứng phụ (side-effects) lên hệ thống ngoài.
+   - Mọi bài unit/integration test phải vượt qua đồng thời 2 phép biến đổi giả định:
+     - **Phá vỡ hành vi (Break the behavior):** Giả sử làm sai lệch kết quả trả về, vi phạm ngưỡng tiêu chuẩn (Mục 12), bỏ qua một side-effect hoặc gọi trùng lặp $\rightarrow$ nếu bài test vẫn PASS, bài test đó vô giá trị (thường do assertion quá lỏng như `is not None`, hoặc tự tính expected value bằng chính hàm đang test). Bắt buộc viết lại hoặc xóa bỏ.
+     - **Thay đổi cấu trúc nội bộ (Change the internals):** Giữ nguyên 100% hành vi quan sát được và tính tuân thủ quy chuẩn nhưng đổi tên hàm helper nội bộ hoặc thứ tự gọi private $\rightarrow$ nếu bài test FAIL, bài test đang bị ghim cứng vào implementation thay vì contract.
 
 ---
 
@@ -240,5 +245,8 @@ Quy chuẩn xử lý bài toán kỹ thuật phức tạp, di chuyển kiến tr
    - **Bắt buộc lưu vết thường trực (Reproducer Codification):** Mọi Minimal Reproducer sau khi chứng minh và sửa lỗi thành công BẮT BUỘC phải được chuẩn hóa thành test case chính thức trong `tests/` hoặc bài kiểm tra trong `harness/`, tuyệt đối không xóa bỏ dưới dạng script rác tạm thời.
 4. **Runtime Evidence over Proxy Assumptions (Bằng Chứng Thực Tế Thay Vì Giả Định Ảo):**
    - Tuyệt đối CẤM kết luận "code nhìn có vẻ đúng" hoặc "lý thuyết đã khớp". Mọi nghiệm thu bắt buộc phải kèm theo bằng chứng runtime thực tế (kết quả chạy lệnh, stdout/stderr, mã thoát 0 từ `ccba-harness verify-patch`).
+5. **Post-Forensic Cheap Always-On Signal (Tín Hiệu Giám Sát Thường Trực Sau Điều Tra Sâu — Pstack v0.15.22 & COND-03):**
+   - Khi một ca chẩn đoán lỗi đòi hỏi phải đào sâu qua nhiều tầng dữ liệu mới tìm ra dữ kiện quyết định (*deciding fact*), sau khi khắc phục nguyên nhân gốc, Agent bắt buộc phải bổ sung hoặc đề xuất một **tín hiệu giám sát rẻ, luôn bật (cheap always-on signal)** — như một trường dữ liệu trong structured log, một kiểm tra bất biến (invariant assertion) nhẹ mang mã định danh điều khoản/quy chuẩn liên quan (theo Mục 12), hoặc một chỉ báo trong readiness probe — để nếu lỗi tương tự tái diễn, nguyên nhân sẽ lộ diện ngay ở cái nhìn đầu tiên mà không làm suy giảm hiệu năng hệ thống.
+
 
 

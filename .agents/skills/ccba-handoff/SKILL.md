@@ -8,7 +8,7 @@ tier: kernel
 disable-model-invocation: true
 metadata:
   author: CCBA
-  version: 2.0.0
+  version: 2.1.0
 user-invocable: true
 command: /ccba-handoff
 gpi:
@@ -38,7 +38,7 @@ Mục tiêu tối thượng là giúp **Agent ở phiên làm việc tiếp theo
 ## 📋 Tiêu Chí Hoàn Thành (Completion Criteria)
 - [x] Tạo thành công tệp bàn giao tại: `.md/scratch/handoffs/handoff-<YYYY-MM-DD-HHMMSS>.md`.
 - [x] Thư mục `.md/scratch/` đã được cấu hình trong `.gitignore` (không đẩy dữ liệu nháp lên remote).
-- [x] Tài liệu tuân thủ đầy đủ **Cấu trúc 5 Phần Tiêu chuẩn CCBA**.
+- [x] Tài liệu tuân thủ đầy đủ **Cấu trúc 5 Phần Tiêu chuẩn CCBA** và chuẩn **Decision-Decidable Catch-up (Pstack v0.15.27)**.
 - [x] Đã che giấu (redact) 100% API keys, tokens, mật khẩu qua chuẩn Maskara.
 
 ---
@@ -57,8 +57,13 @@ Tài liệu bàn giao bắt buộc phải tuân theo cấu trúc sau:
 
 ---
 
-## 1. Outstanding User Requests (Nhiệm vụ còn dang dở & Yêu cầu người dùng)
-- **Danh sách yêu cầu mở:** Liệt kê theo thứ tự ưu tiên (P1, P2, P3).
+## 1. Outstanding User Requests & Decision-Decidable Calls (Nhiệm vụ mở & Quyết định chờ duyệt)
+- **Danh sách quyết định đang chờ người dùng (`riskiest first`):** Liệt kê đầy đủ 100% các mục cần người dùng phê duyệt/lựa chọn (tuyệt đối không cắt bớt vì giới hạn từ), sắp xếp từ rủi ro cao nhất xuống thấp nhất. Mỗi mục (~30 từ) gồm đủ 5 thành tố:
+  1. **Call Required:** Quyết định cần người dùng chốt (merge, approve, chọn phương án).
+  2. **Recommended Pick:** Phương án Agent khuyến nghị thực hiện đầu tiên.
+  3. **User-Visible Impact:** Thay đổi thực tế đối với người dùng/hệ thống.
+  4. **Evidence:** Bằng chứng thực nghiệm hoặc kết quả kiểm thử hậu thuẫn.
+  5. **Risk:** Mức độ rủi ro cụ thể (ghi rõ cả khi rủi ro thấp).
 - **Phân loại giai đoạn:** PLANNING / IMPLEMENTATION / VERIFICATION / REVIEW.
 - **Ngữ cảnh bổ sung:** Trích dẫn nguyên văn câu lệnh hoặc định hướng của người dùng.
 
@@ -90,7 +95,9 @@ Tài liệu bàn giao bắt buộc phải tuân theo cấu trúc sau:
 
 ---
 
-## 🔒 Quy Tắc An Toàn & Bảo Mật
+## 🔒 Quy Tắc An Toàn, Trình Bày & Bảo Mật
 1. **Không trùng lặp tài liệu tĩnh:** Không sao chép lại toàn bộ nội dung của các file spec, ADR hay kế hoạch lớn; thay vào đó hãy sử dụng liên kết Markdown dẫn tới file đó.
 2. **Khử lộ lọt dữ liệu:** Tuyệt đối không lưu API Key, bí mật hay thông tin nhạy cảm vào file handoff.
 3. **Cá nhân hóa theo tham số:** Nếu người dùng truyền thêm tham số (argument) khi gọi lệnh (ví dụ: `/ccba-handoff chuẩn bị seminar PCCC`), hãy tập trung phần `Immediate Next Steps` vào đúng chủ đề đó.
+4. **Quy tắc sơ đồ trực quan tinh gọn (Compact Visuals — `ketchup` Discipline Pstack v0.15.27):** Khi minh họa kiến trúc, luồng thay đổi hoặc chuỗi phụ thuộc PR bằng sơ đồ Mermaid, giới hạn tối đa $\le 6$ khối (nodes) và $\le 8$ từ trong mỗi khối bằng ngôn ngữ tự nhiên ngắn gọn, không vẽ sơ đồ cho danh sách trạng thái đơn thuần và không lặp lại thông tin đã viết trong văn bản.
+   - **Tiêu chí hoàn thành:** Tài liệu bàn giao liệt kê đầy đủ 100% các quyết định chờ người dùng theo 5 thành tố chuẩn (`riskiest first`), sơ đồ Mermaid (nếu có) tuân thủ giới hạn $\le 6$ khối / $\le 8$ từ mỗi khối, và vượt qua kiểm chuẩn bảo mật Maskara.
