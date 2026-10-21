@@ -1473,7 +1473,13 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     hub_root = tmp_path / "hub"
     (hub_root / "docs" / "rules").mkdir(parents=True)
     (hub_root / ".github").mkdir(parents=True)
-    for r_name in ("execution_guardrails.md", "git_conventions.md", "code_quality.md"):
+    for r_name in (
+        "execution_runtime_guardrails.md",
+        "execution_coordination_guardrails.md",
+        "git_conventions.md",
+        "code_quality_standards.md",
+        "code_quality_verification.md",
+    ):
         (hub_root / "docs" / "rules" / r_name).write_text(f"# {r_name}\n", encoding="utf-8")
     (hub_root / ".github" / "bugbot-rules.md").write_text("# Bugbot Rules\n", encoding="utf-8")
 
@@ -1482,17 +1488,24 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     spoke_rules.mkdir(parents=True)
     custom_rule = spoke_rules / "custom_spoke_rule.md"
     custom_rule.write_text("# Custom Spoke Rule\n", encoding="utf-8")
+    # Legacy monolithic rule in spoke to verify cleanup migration (Issue #552)
+    (spoke_rules / "code_quality.md").write_text("# Legacy Code Quality\n", encoding="utf-8")
 
     # 1. Sync Layer 2 rules
     actions_1 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
-    assert len(actions_1) == 4
-    assert all(a["status"] == "NEW" for a in actions_1)
-    assert (spoke_rules / "execution_guardrails.md").is_file()
+    assert len(actions_1) == 7
+    assert any(a["status"] == "REMOVED" and a["name"] == "rules/code_quality.md" for a in actions_1)
+    assert not (spoke_rules / "code_quality.md").exists()
+    assert (spoke_rules / "execution_runtime_guardrails.md").is_file()
+    assert (spoke_rules / "execution_coordination_guardrails.md").is_file()
+    assert (spoke_rules / "code_quality_standards.md").is_file()
+    assert (spoke_rules / "code_quality_verification.md").is_file()
     assert (spoke_rules / "bugbot-rules.md").is_file()
     assert custom_rule.is_file()
 
     # Second run is UNCHANGED
     actions_2 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
+    assert len(actions_2) == 6
     assert all(a["status"] == "UNCHANGED" for a in actions_2)
 
     # 2. Merge AGENTS.md with evolved invariant keys and Hub-relative Progressive Disclosure links
@@ -1502,9 +1515,10 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
         "- **Reuse-First Gate & Platform-Aware KISS v2.0 (ADR-0061)**: Use seam contracts.\n"
         "- **Machine-State Path Scanner Robustness (ADR-0061)**: Scan raw strings.\n\n"
         "## Progressive Disclosure\n\n"
-        "- Guardrails: [`docs/rules/execution_guardrails.md`](../docs/rules/execution_guardrails.md)\n"
+        "- Guardrails: [`docs/rules/execution_runtime_guardrails.md`](../docs/rules/execution_runtime_guardrails.md) and "
+        "[`docs/rules/execution_coordination_guardrails.md`](../docs/rules/execution_coordination_guardrails.md)\n"
         "- Bugbot: [`.github/bugbot-rules.md`](../.github/bugbot-rules.md) and "
-        "[`docs/rules/execution_guardrails.md`](../docs/rules/execution_guardrails.md#19-atomic)\n"
+        "[`docs/rules/execution_coordination_guardrails.md`](../docs/rules/execution_coordination_guardrails.md#19-atomic)\n"
         "- Domain: [`CONTEXT.md`](../CONTEXT.md) and [`docs/adr/`](../docs/adr/)\n"
     )
     spoke_agents = (
@@ -1526,8 +1540,9 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     assert "Intermediate rule." not in merged_1
     assert merged_1.count("Machine-State Path Scanner Robustness") == 1
     assert "**Spoke Custom Invariant**: Keep this custom bullet." in merged_1
-    assert "](rules/execution_guardrails.md)" in merged_1
-    assert "](rules/execution_guardrails.md#19-atomic)" in merged_1
+    assert "](rules/execution_runtime_guardrails.md)" in merged_1
+    assert "](rules/execution_coordination_guardrails.md)" in merged_1
+    assert "](rules/execution_coordination_guardrails.md#19-atomic)" in merged_1
     assert "](rules/bugbot-rules.md)" in merged_1
     assert "`CONTEXT.md`" in merged_1
     assert "(../CONTEXT.md)" not in merged_1

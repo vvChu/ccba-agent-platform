@@ -1,36 +1,17 @@
-# CCBA Code Quality & Engineering Standards
+# CCBA Code Quality Verification & SDLC Loop
 
-> **Tài liệu Tham chiếu Quy chuẩn Lập trình (Layer 2)**  
-> Áp dụng cho phát triển mã nguồn Python, TypeScript, và thiết kế Deep Modules trên CCBA Platform.
+> **Tài liệu Tham chiếu Quy chuẩn Kiểm thử & Thẩm định (Layer 2 — SSOT)**  
+> Áp dụng cho quy trình kiểm thử, thẩm định chất lượng, vòng lặp SDLC và điều tra thực nghiệm trên CCBA Platform.  
+> Đối với quy chuẩn kiến trúc và lập trình mã nguồn, xem [`docs/rules/code_quality_standards.md`](code_quality_standards.md).
 
----
+## 🧭 Bảng Điều Hướng Nhanh (Verification Navigation Index)
 
-## 1. Automation-First Quality Gate
-- Mọi thay đổi mã nguồn Python bắt buộc phải pass qua hai cổng kiểm tra tự động trước khi hoàn tất:
-  1. **Linter & Formatter**: `ruff check` (tuân thủ cấu hình trong `pyproject.toml`).
-  2. **Static Type Checker**: `mypy` (chế độ strict mode, 100% type hints cho parameters và return types).
-
----
-
-## 2. Deep Seams, Platform-Aware KISS & Anti-Phantom Deferral
-
-### 2.1. Deep Modules & Shallow Module Elimination
-- **Deep Modules**: Thiết kế giao diện công khai phẳng, đơn giản (1-3 public functions/classes) ẩn giấu toàn bộ độ phức tạp nghiệp vụ bên trong (high depth, low surface area).
-- **Tránh Shallow Modules**: Không tạo các class/wrapper mỏng chỉ ủy quyền 1-1 mà không thêm giá trị xử lý.
-
-### 2.2. Platform-Aware KISS (Tối Thiểu Hóa Entropy Toàn Cục)
-- **Bản chất của KISS trên CCBA Platform**: "Đơn giản" không đồng nghĩa với giải pháp chắp vá cục bộ (local patchwork). Nếu nền tảng đã có sẵn một Monorepo Deep Seam hoặc Master Skill, việc **tái sử dụng Seam đó chỉ bằng 1 dòng import và 3-5 dòng gọi hàm** chính là giải pháp KISS **bậc 1** (tối thiểu hóa entropy toàn cục, zero tech debt).
-- **Ngụy biện KISS (False KISS / Anti-Pattern)**: Tự viết một script phụ trần, tự kết nối API thô, tự phân tích văn bản/PDF/DOCX bằng regex cục bộ thay vì gọi Seam của nền tảng là ngụy biện KISS. Hành vi này tạo ra dữ liệu cô lập (Data Silo), phân rã kiến trúc và vi phạm Hiến pháp Nền tảng.
-
-### 2.3. Ba Cấp Độ Đánh Giá KISS (KISS Hierarchy)
-1. **Cấp 1 — Platform Seam Reuse (Ưu tiên tối thượng)**: Tra cứu Catalog/CLI (`compile_catalog.py --query <keyword>` hoặc `ccba-platform find-seam <kw>`). Nếu đã có Seam $\to$ BẮT BUỘC tái sử dụng.
-2. **Cấp 2 — Standard Library / Micro-Utility**: Chỉ áp dụng khi: (a) Đã tra cứu Catalog và xác nhận 100% chưa có Seam; (b) Tác vụ mang tính cục bộ cao và chi phí tạo package mới không đáng kể.
-3. **Cấp 3 — Upstream Seam Contribution**: Nếu một logic giải thuật hoặc I/O lặp lại $\ge 2$ lần $\to$ BẮT BUỘC đóng gói thành Public Deep Seam trong Monorepo package tương ứng.
-
-### 2.4. Nguyên Tắc "Chống Trì Hoãn Ảo" (Anti-Phantom Deferral Invariant)
-- **Nghiêm cấm phân kỳ giai đoạn ảo**: Tuyệt đối không đề xuất phương án: *"Phase 1: Tạo script tạm thời chắp vá cục bộ; Phase 2: Sẽ refactor tích hợp vào kiến trúc chuẩn CCBA sau"* khi nền tảng đã có sẵn hạ tầng Seam!
-- Khi Seam đã có trong Catalog $\to$ BẮT BUỘC phải tích hợp ngay từ Phase 1.
-
+| Nhóm Quy Chuẩn (Category) | Các Mục Quy Chuẩn (Sections) |
+| :--- | :--- |
+| **I. Vòng Lặp SDLC & Cổng Kỹ Năng** | [3. SDLC Implementation Loop](#3-sdlc-implementation-loop) · [4. Cognitive Skills Quality & Invariant Gates](#4-cognitive-skills-quality--invariant-gates-layer-2) |
+| **II. Kiểm Thử Thực Chất & Bất Biến** | [9. Pre-Evaluation Fast-Fail & CI Parity](#9-pre-evaluation-working-tree-fast-fail--ci-parity-cho-tác-tử-tự-hóa-auto-tuner-guardrails) · [10. Test Integrity & Anti-Potemkin](#10-test-integrity--anti-potemkin-invariant-kiểm-thử-thực-chất--chống-test-giả-lập) · [12. Standards-to-Code Enforcement](#12-standards-to-code-enforcement-invariant-kỷ-luật-đồng-bộ-giữa-quy-chuẩn-văn-bản--mã-nguồn-thực-thi) · [13. Temporal Invariance & Collinear Sort](#13-temporal-invariance--collinear-multi-key-sort-testing-kiểm-thử-bất-biến-thời-gian--chống-bẫy-cùng-chiều) |
+| **III. Kiểm Chuẩn Tài Liệu & Điều Tra Sâu** | [14. Document Validation Arity & Drift Cleanliness](#14-document-validation-arity--drift-cleanliness-gate-cổng-kiểm-chuẩn-tài-liệu--vệ-sinh-kiến-trúc) · [17. Hypothesis-Driven Forensic & Ambiguity Resolution](#17-hypothesis-driven-forensic--ambiguity-resolution-figure-it-out-discipline) |
+| **IV. Kiến Trúc & Tiêu Chuẩn Lập Trình** | Xem tài liệu bổ trợ: [`code_quality_standards.md`](code_quality_standards.md) (Mục 1, 2, 5, 6, 7, 8, 11, 15, 16) |
 
 ---
 
@@ -52,70 +33,6 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
   1. `python scripts/governance/compile_catalog.py` (Cập nhật catalog SSOT `catalog.yaml`).
   2. `python scripts/governance/compile_skills_docs.py --write` (Đồng bộ Web Docs Portal, Markdown docs, và llms.txt).
   3. `python scripts/sync_hub_adr_matrix.py` (Đồng bộ Living Traceability Matrix nếu kỹ năng có viện dẫn hoặc điều chỉnh phạm vi ADR).
-
----
-
-## 5. Clean Upstream Porting & Foreign Framework Pruning (KISS)
-- **Tẩy uế tàn dư ngoại lai (Clean Dead Wood):** Khi chuyển đổi (port) hoặc nâng cấp bất kỳ kỹ năng nào từ nguồn thượng nguồn (ClaudeKit, external plugins), Agent **BẮT BUỘC** phải loại bỏ hoàn toàn:
-  1. Các thẻ XML điều phối ngoại lai (ví dụ: `<tasks>`, `<task>`, `<action>`).
-  2. Các hướng dẫn/tệp tin mô tả hệ thống quản lý tác vụ không tương thích (như Claude Native Tasks: `TaskCreate`, `TaskUpdate`, `TaskList`).
-  3. Các lệnh giả định hoặc công cụ không tồn tại trong nền tảng CCBA (ví dụ: `/ck:*`, `/ultrathink`, `git-manager`, `AskUserQuestion`).
-- **Nguyên tắc Tối Giản (KISS):** Mọi quy trình điều phối đa tác tử (Parallel Review, Codebase Scan) phải tinh gọn tối đa $\le 2$ subagents chuyên biệt (ví dụ: `Standards Worker` & `Spec Worker`), tuân thủ Single-Writer Protocol và chỉ xuất nháp vào sandbox `.system_generated/scratch/`.
-
----
-
-## 6. Safe Headless External Process Fallback
-- Khi viết kịch bản, hướng dẫn hoặc quy trình có thao tác mở tệp/giao diện ngoại vi trên máy trạm lập trình viên (ví dụ: mở tệp HTML báo cáo, tài liệu Word/PDF):
-- Agent **BẮT BUỘC** phải bọc lệnh mở tiến trình trong khối xử lý lỗi an toàn đa nền tảng:
-  ```powershell
-  try {
-      Start-Process "<absolute-path-to-file>"
-  } catch {
-      Write-Warning "Headless environment detected or browser unavailable. Please open manually: file:///<absolute-path-to-file>"
-  }
-  ```
-- Tuyệt đối không để lệnh mở file trần không có xử lý ngoại lệ gây crash hoặc đứt gãy luồng thực thi tự động trong môi trường headless, CI runner, hoặc SSH sessions.
-
----
-
-## 7. Cross-Platform Filesystem Hardening & Permissions Invariant
-- **Bảo toàn quyền thực thi thư mục (`+x` trên POSIX):**
-  - Khi gỡ bỏ cờ Read-Only (`_make_writable`), **TUYỆT ĐỐI CẤM** gán mode tĩnh (ví dụ `0o600`, `0o666`, `stat.S_IWRITE | stat.S_IREAD`) vì sẽ tước bỏ bit `stat.S_IXUSR` (`+x`) của thư mục trên Linux/macOS, gây ra `PermissionError: [Errno 13]` khi thao tác tệp con bên trong.
-  - **Quy chuẩn bắt buộc:** Luôn bảo toàn các bit mode hiện có:
-    ```python
-    def _make_writable(p: Path) -> None:
-        try:
-            st = p.stat()
-            p.chmod(st.st_mode | stat.S_IWUSR)
-        except OSError:
-            pass
-    ```
-- **Xử lý an toàn Windows NTFS Directory Junctions vs Symlinks (`safe_remove`):**
-  - `shutil.rmtree` và `os.walk(..., topdown=False)` trên Windows không coi junction là symlink (`is_symlink() == False`), dẫn đến việc xóa nhầm dữ liệu bên ngoài target.
-  - Bắt buộc duyệt `topdown=True`, kiểm tra cờ `FILE_ATTRIBUTE_REPARSE_POINT` (0x400) cho cả Python 3.10-3.11 (nơi `st_reparse_tag` bị khuyết thiếu trên `os.lstat`).
-  - Xử lý junction như lá cây: dùng `os.rmdir(p)` trên Windows junction mà không đệ quy; dùng `p.unlink()` trên symlink.
-- **Chặn đột biến quyền của Symlink/Junction Target:**
-  - Tuyệt đối không gọi `os.chmod` lên symlink hoặc junction vì trên POSIX sẽ làm biến đổi quyền của tệp gốc bên ngoài.
-- **Phân giải đích thư mục trong `safe_copy2`:**
-  - Khi sao chép tệp ghi đè quyền Read-Only, nếu `dst` là thư mục, bắt buộc chuẩn hóa:
-    `target_dst = (dst / src.name) if dst.is_dir() else dst`.
-
----
-
-## 8. Clean Architecture & Decoupled Connection Layer (Inverted Coupling Prevention)
-Khi xây dựng các bộ công cụ tích hợp dịch vụ ngoại vi (Google Drive, Cloud Storage, Database, External APIs):
-1. **Ngưỡng Kích Hoạt (Trigger Threshold - Tuân thủ KISS):**
-   - Chỉ bắt buộc tách riêng tầng kết nối khi tồn tại $\ge 2$ consumers độc lập (ví dụ: vừa Đẩy vừa Kéo dữ liệu) HOẶC dịch vụ yêu cầu xác thực phức tạp (OAuth refresh, credentials migration, session pooling, circuit breaking). Đối với các HTTP call đơn giản 5-10 dòng trong một module duy nhất, ưu tiên giữ gọn tại chỗ (tránh Shallow Modules).
-2. **Phân Tách Rõ Rệt 2 Tầng:**
-   - **Tầng Hạ Tầng Kết Nối (Connection/Client Factory):** Chuyên trách xác thực (OAuth, API tokens), giải quyết đường dẫn credentials (`~/.ccba/credentials/`), quản lý vòng đời client/session và xử lý lỗi mạng cơ sở (ví dụ: `drive_client.py`).
-   - **Tầng Nghiệp Vụ Tiêu Thụ (Domain Consumers):** Các module xử lý luồng dữ liệu chuyên biệt (ví dụ: `drive_uploader.py` cho chiều Đẩy, `drive_ingestor.py` cho chiều Kéo, `notebooklm_sync.py` cho đồng bộ).
-3. **CẤM Phụ Thuộc Ngược (No Inverted Coupling) & Quy Tắc Cây Lá (Leaf Dependency):**
-   - Tuyệt đối KHÔNG để module Chiều Kéo (Ingestor/Reader) phụ thuộc ngược vào module Chiều Đẩy (Uploader/Writer) chỉ vì module đẩy được viết trước và có sẵn hàm kết nối. Cả hai phải là consumers ngang hàng.
-   - Module hạ tầng kết nối (`*_client.py`) phải là **nút lá (leaf dependency)**: tuyệt đối không import ngược bất kỳ logic nghiệp vụ nào từ consumers để loại trừ vĩnh viễn lỗi Circular Import.
-4. **Bảo Toàn Tương Thích Ngược & Tuân Thủ Linter (Zero-Breakage Re-export):**
-   - Khi chuyển hàm kết nối sang module mới, module cũ BẮT BUỘC phải re-export lại và khai báo tường minh trong `__all__`, đảm bảo callers cũ không bị gãy và không vi phạm quy tắc linter `F401 (imported but unused)`.
-5. **Tăng Tính Phát Hiện (Agent Ergonomics & Discoverability):**
-   - Đặt tên module hạ tầng nhất quán (`*_client.py`), giúp AI Agents và kỹ sư định vị chức năng ngay tức thì mà không phải duyệt qua hàng trăm dòng mã nghiệp vụ phức tạp.
 
 ---
 
@@ -151,19 +68,6 @@ Khi viết unit tests cho các cơ chế kiểm định phòng vệ (Guardrails,
 
 ---
 
-## 11. Hierarchical Regex Boundary Discipline (Kỷ Luật Ranh Giới Regex Cho Mã Phân Cấp)
-Khi xây dựng các biểu thức chính quy (Regex) để trích xuất, đối soát hoặc kiểm tra mã định danh phân cấp (như `RULE-1.1`, `SEC-1`, `P01.01`):
-1. **Cấm dùng bare `\b` đơn lẻ cho các mã có chứa số hoặc dấu nối:**
-   - Trong Python Regex, ranh giới từ `\b` xác định ranh giới giữa `\w` và `\W`. Ký tự dấu chấm `.`, gạch nối `-`, và gạch chéo `/` đều là `\W`.
-   - Do đó, `\b1\b` sẽ khớp với số `1` trong `1.1` hoặc trong `RULE-2.1`. Biểu thức `\bRULE-1.1\b` sẽ khớp với tiền tố của `RULE-1.1-bis`.
-2. **Khuôn mẫu chuẩn mực bắt buộc:**
-   - Đối với phân vùng/chương: Bắt buộc neo tiền tố cấu trúc rõ ràng kết hợp chặn ký tự phân cách:
-     `rf"(?:SEC-|Miền\s+|Trụ\s+Cột\s+){sec_num}(?![.\-\/][\w\d])\b"`
-   - Đối với quy tắc có phân cấp: Luôn bọc negative lookahead để loại trừ toàn bộ số phân cấp con hoặc hậu tố chữ/gạch nối/gạch chéo:
-     `rf"\b{escaped}(?![.\-\/][\w\d])\b"`
-
----
-
 ## 12. Standards-to-Code Enforcement Invariant (Kỷ Luật Đồng Bộ Giữa Quy Chuẩn Văn Bản & Mã Nguồn Thực Thi)
 - Khi ban hành hoặc nâng cấp bất kỳ quy chuẩn kỹ thuật nào trong `docs/rules/*.md` (ví dụ: mở rộng regex ranh giới từ `(?!\.\d)` sang `(?![.\-\/][\w\d])`):
 - Agent **BẮT BUỘC** phải:
@@ -195,36 +99,6 @@ Khi chạy kiểm định tài liệu hoặc chuẩn bị báo cáo nghiệm thu
 
 ---
 
-## 15. Parameter Externalization & Dynamic Scale Invariant (Quản Trị Tham Số Động & Triệt Tiêu Hardcoding)
-
-Để bảo vệ nguyên tắc Platform-Aware KISS và khả năng mở rộng hệ thống (Open-Closed Principle):
-
-1. **Cấm Hardcode Model Strings:** Tuyệt đối KHÔNG nhúng trực tiếp tên mô hình AI dạng chuỗi thô (`"gemini-*"`, `"gpt-*"`, `"claude-*"`, `"llama-*"`) vào mã nguồn hàm gọi hoặc gán giá trị mặc định trong packages và skills. BẮT BUỘC sử dụng Seam định tuyến chuẩn `ccba_ai.routing.choose_model()` hoặc `ModelArchetype`. Trong trường hợp ngoại lệ bắt buộc, phải chú thích `# ccba:allow-raw-model`.
-2. **Cấm Hardcode Network IPs & Endpoints:** Tuyệt đối KHÔNG gán cứng địa chỉ IP máy chủ hoặc cổng hạ tầng vật lý vào code (như `100.83.192.30:8090`). BẮT BUỘC đọc từ biến môi trường (`AI_GATEWAY_URL`, `CCBA_TELEMETRY_STREAM_URL`). Trong trường hợp fallback bắt buộc, phải chú thích `# ccba:allow-raw-ip`.
-3. **Cấm Hardcode Machine Drive Paths:** Tuyệt đối KHÔNG nhúng đường dẫn ổ đĩa tuyệt đối cục bộ (`C:\...`, `D:\...`, `/home/vvc/...`). BẮT BUỘC dùng `Path` tương đối hoặc biến môi trường `CCBA_HUB_PATH`. Trong trường hợp fallback bắt buộc trên Windows, phải chú thích `# ccba:allow-machine-path`.
-4. **Phân tách Cấu hình Khai báo (Declarative Config):** Các siêu tham số, trọng số đánh giá và từ khóa routing của harness phải được tách thành cấu hình khai báo (YAML/JSON/dataclass/Pydantic) thay vì gán cứng trong logic xử lý Python, tuân thủ nguyên tắc Open-Closed Principle (OCP).
-
----
-
-## 16. Anti-Slop & Zero-Noise Code Discipline (ADR-0009 Upstream Pstack Disciplines)
-
-Kỷ luật viết code tinh gọn, chống ô nhiễm context và triệt tiêu mã giả/nhiễu rác từ các mô hình sinh mã tự động (LLM slop):
-
-1. **Zero-Noise Comments & Clean Identifier Rule:**
-   - Không viết các comment thừa thãi chỉ đơn thuần dịch tên hàm/lớp/biến sang ngôn ngữ tự nhiên (ví dụ: `# get project by id` ngay trên `def get_project_by_id():`). Tên định danh phải tự tường minh (self-documenting).
-   - Comment chỉ được phép tồn tại khi giải thích **LÝ DO (WHY)**, quyết định kiến trúc, giả định kỹ thuật hoặc trích dẫn pháp lý (Legal Verbatim Citations theo ADR-0059).
-2. **Commented-Out Dead Code Prohibition:**
-   - Tuyệt đối CẤM commit các khối mã bị vô hiệu hóa bằng dấu comment (`# def old_fn(): ...`, `# import legacy_module`, `# return False`). Mọi lịch sử mã nguồn đã có Git bảo vệ; dead code trong source tree làm ô nhiễm context window của LLM và gây nhiễu AST parser.
-3. **No Over-Engineering & Speculative Code:**
-   - Chỉ giải quyết vấn đề trước mắt theo yêu cầu (`Fast-Path / KISS`). Không viết code phỏng đoán tương lai ("có thể mai sau cần"), không tạo factories, layers of abstraction, generic wrappers khi chỉ có duy nhất một implementation đơn giản.
-4. **Token-Pruned Prompt Economy:**
-   - Prompt và System Instructions trong các skills và agents phải tuân thủ kỷ luật Token ROI: loại bỏ các cụm từ sáo rỗng, biểu cảm thừa thãi, các đoạn văn lặp lại nội dung đã có trong hiến pháp nền tảng.
-5. **AST Comment Sanitation Gate Enforcement:**
-   - Mọi thay đổi mã nguồn Python phải vượt qua `check_redundant_comments()` tích hợp trong 7-Stage Peer Implementation Gate (`run_full_gate` / `run_implementation_gate`).
-   - Các ngoại lệ hợp lệ được allowlist tự động: Chỉ thị công cụ (`# ccba:*`, `# noqa`, `# type: ignore`, `# pragma: no cover`, `# flake8:`, `# mypy:`), ranh giới phân tách trực quan (`# ---`), chú thích văn bản quy phạm pháp luật (`# Theo Điều...`, `# Luật Xây dựng`, `# NĐ...`, `# QCVN...`, `# TCVN...`).
-
----
-
 ## 17. Hypothesis-Driven Forensic & Ambiguity Resolution (Figure-It-Out Discipline)
 
 Quy chuẩn xử lý bài toán kỹ thuật phức tạp, di chuyển kiến trúc quy mô lớn, hoặc chẩn đoán các lỗi ẩn không rõ nguyên nhân (ambiguous anomalies):
@@ -247,6 +121,3 @@ Quy chuẩn xử lý bài toán kỹ thuật phức tạp, di chuyển kiến tr
    - Tuyệt đối CẤM kết luận "code nhìn có vẻ đúng" hoặc "lý thuyết đã khớp". Mọi nghiệm thu bắt buộc phải kèm theo bằng chứng runtime thực tế (kết quả chạy lệnh, stdout/stderr, mã thoát 0 từ `ccba-harness verify-patch`).
 5. **Post-Forensic Cheap Always-On Signal (Tín Hiệu Giám Sát Thường Trực Sau Điều Tra Sâu — Pstack v0.15.22 & COND-03):**
    - Khi một ca chẩn đoán lỗi đòi hỏi phải đào sâu qua nhiều tầng dữ liệu mới tìm ra dữ kiện quyết định (*deciding fact*), sau khi khắc phục nguyên nhân gốc, Agent bắt buộc phải bổ sung hoặc đề xuất một **tín hiệu giám sát rẻ, luôn bật (cheap always-on signal)** — như một trường dữ liệu trong structured log, một kiểm tra bất biến (invariant assertion) nhẹ mang mã định danh điều khoản/quy chuẩn liên quan (theo Mục 12), hoặc một chỉ báo trong readiness probe — để nếu lỗi tương tự tái diễn, nguyên nhân sẽ lộ diện ngay ở cái nhìn đầu tiên mà không làm suy giảm hiệu năng hệ thống.
-
-
-
