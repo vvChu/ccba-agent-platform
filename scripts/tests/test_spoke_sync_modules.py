@@ -1490,13 +1490,17 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     custom_rule.write_text("# Custom Spoke Rule\n", encoding="utf-8")
     # Legacy monolithic rules in spoke to verify cleanup migration (Issue #552 & Grok Review)
     (spoke_rules / "code_quality.md").write_text("# Legacy Code Quality\n", encoding="utf-8")
-    (spoke_rules / "execution_guardrails.md").write_text("# Legacy Execution Guardrails\n", encoding="utf-8")
+    (spoke_rules / "execution_guardrails.md").write_text(
+        "# Legacy Execution Guardrails\n", encoding="utf-8"
+    )
 
     # 1. Sync Layer 2 rules
     actions_1 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
     assert len(actions_1) == 8
     assert any(a["status"] == "REMOVED" and a["name"] == "rules/code_quality.md" for a in actions_1)
-    assert any(a["status"] == "REMOVED" and a["name"] == "rules/execution_guardrails.md" for a in actions_1)
+    assert any(
+        a["status"] == "REMOVED" and a["name"] == "rules/execution_guardrails.md" for a in actions_1
+    )
     assert not (spoke_rules / "code_quality.md").exists()
     assert not (spoke_rules / "execution_guardrails.md").exists()
     assert (spoke_rules / "execution_runtime_guardrails.md").is_file()
