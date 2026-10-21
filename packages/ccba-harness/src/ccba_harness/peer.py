@@ -59,6 +59,8 @@ from ._peer_models import (
     PeerVerdictBlock,
     PeerVerdictTelemetry,
     ProfileTelemetryItem,
+    _registry_timestamp,
+    _sort_key_latest_exchange,
     extract_frontmatter,
     parse_envelope_from_md,
     parse_verdict_from_md,
@@ -281,27 +283,6 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
                 pending_anti.append(name)
 
     return pending_anti, pending_grok
-
-
-def _registry_timestamp(
-    envelope: PeerPromptEnvelope | None,
-    verdict: PeerVerdictBlock | None,
-) -> str:
-    """Prefer a verdict frontmatter timestamp, then the prompt envelope timestamp."""
-    if verdict is not None and verdict.timestamp:
-        return str(verdict.timestamp)
-    if envelope is not None and envelope.timestamp:
-        return str(envelope.timestamp)
-    return ""
-
-
-def _sort_key_latest_exchange(item: dict[str, Any]) -> tuple[float, str, str]:
-    """Newer mtime, then newer ISO timestamp, then greater filename."""
-    return (
-        round(float(item.get("mtime", 0.0)), 4),
-        str(item.get("timestamp") or ""),
-        item["path"].name,
-    )
 
 
 def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
