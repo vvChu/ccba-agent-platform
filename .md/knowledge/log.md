@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-21] [update] | Khắc Phục Điểm Mù Zombie Cleanup, Phân Giải Multi-Target Anchor & Rào Chắn E2E Spoke Sync Sandbox (`PR #556` — `b9c9e003`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (Thẩm định phản biện Grok 4.7 `COND-E2E-01..05` & `PR #556`)
+- **Affected Files**: `scripts/spoke/sync/graduation.py`, `scripts/tests/test_spoke_sync_modules.py`, `.md/knowledge/`
+- **Summary**: Khắc phục triệt để 3 điểm mù trong pipeline đồng bộ Spoke và xác lập kịch bản kiểm chứng E2E sandbox an toàn:
+  1. **Khắc phục Broken Symlinks & Báo cáo trung thực**: Sử dụng `is_symlink() or exists()` để phát hiện và gỡ bỏ dangling symlinks của monolithic rules cũ; kiểm tra lại đĩa sau `unlink()` để gán `status: "CLEANUP_FAILED"` thay vì nuốt `OSError`.
+  2. **Multi-Target Anchor Routing**: Nâng cấp `LEGACY_RULE_LINK_MIGRATIONS` với biểu thức chính quy nhận diện mục neo (`#...`), phân phối chính xác các liên kết điều phối và kiểm thử sang `execution_coordination_guardrails.md` và `code_quality_verification.md`.
+  3. **Zero Hub Pollution Spoke Sync Sandbox**: Xác lập quy chuẩn kiểm thử E2E Spoke với `CCBA_SKIP_GIT_PULL=1`, `CCBA_HUB_PATH`, và giới hạn `--sync-item` bảo đảm bất biến 100% tệp `spoke_registry.yaml` trên Hub. 41/41 unit tests pass, 8/8 CI checks pass.
+
+---
+
 ## [2026-10-21] [update] | Phân Rã Layer 2 Rules Dưới Trần Antigravity 24KB, Tự Động Dọn Dẹp Zombie Rules & Di Trú Liên Kết Spoke (`PR #553` — `3f7db2d3`)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (`Issue #552` / `PR #553` & `/learn`)
 - **Affected Files**: `docs/rules/`, `.agents/AGENTS.md`, `AGENTS.md`, `scripts/spoke/sync/graduation.py`, `scripts/spoke/sync/__init__.py`, `scripts/tests/test_spoke_sync_modules.py`, `tests/test_agent_execution_guardrails.py`, `.md/knowledge/`
