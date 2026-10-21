@@ -48,7 +48,7 @@
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - Viện dẫn HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP** (Mục 27).
+  - Viện dẫn HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP** (*RULE-3.2 [ADR 0031 — TVPL VIP]*, Mục 27).
 - **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
   - `clauses.json` span bao trọn toàn văn quy phạm; cấm span 1 dòng chỉ trỏ `<a>`. Tests dùng `tmp_path / "legal_registry.yaml"`.
 - **RULE-3.5 [Documentation Link Scheme Portability Invariant]**:
