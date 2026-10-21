@@ -46,7 +46,7 @@ Tài liệu này cung cấp checklist chuyên biệt để nhận diện và lo�
 - [ ] **Giới hạn thử nghiệm (COND-02)**: Các nhánh giả thuyết thực nghiệm (Empirical Forks) có tuân thủ giới hạn tối đa 3 lần thử-sai không?
 - [ ] **Khắc sâu bài test thường trực (COND-04)**: Minimal Reproducer đã được chuẩn hóa thành test case chính thức trong `tests/` hoặc `harness/` thay vì bị xóa bỏ không?
 - [ ] **Bằng chứng runtime thực tế**: Mọi khẳng định hoàn thành đều có bằng chứng lệnh thực thi (exit code 0), không dựa trên giả định phỏng đoán.
-- [ ] **Two-Edit Behavioral Test Litmus (Pstack v0.15.25 & COND-03)**: Bài test mới có đảm bảo FAIL khi phá vỡ hành vi quan sát được (*Break the behavior* theo hợp đồng/Mục 12 `code_quality.md`) và vẫn PASS khi chỉ tái cấu trúc nội bộ (*Change the internals*) không?
+- [ ] **Two-Edit Behavioral Test Litmus (Pstack v0.15.25 & COND-03)**: Bài test mới có đảm bảo FAIL khi phá vỡ hành vi quan sát được (*Break the behavior* theo hợp đồng/Mục 12 `code_quality_verification.md`) và vẫn PASS khi chỉ tái cấu trúc nội bộ (*Change the internals*) không?
 - [ ] **Cheap Always-On Signal (Pstack v0.15.22 & COND-03)**: Nếu PR sửa một lỗi phải đào sâu mới tìm ra dữ kiện quyết định, đã bổ sung invariant assertion hoặc structured log nhẹ (kèm mã định danh quy chuẩn/điều khoản nếu có) để lần sau phát hiện ngay ở cái nhìn đầu tiên chưa?
 - [ ] **Semantic Mutation Proof & `sync_commit` (Pstack v0.15.28 & COND-01/02)**: Khi khởi tạo hoặc bảo trì `verify-<app>`, đã kiểm chứng bằng đột biến ngữ nghĩa an toàn (kiểm tra `git diff` sạch trước/sau, thu thập counterexample failure log) và cập nhật `sync_commit` chuẩn xác chưa?
 
