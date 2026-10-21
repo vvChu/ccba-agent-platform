@@ -248,6 +248,7 @@ def scan_peer_exchange(
             "role": role,
             "path": path,
             "mtime": entry.stat().st_mtime,
+            "timestamp": _registry_timestamp(envelope, verdict),
             "envelope": envelope,
             "verdict": verdict,
             "sha256": digest,
@@ -282,6 +283,27 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
     return pending_anti, pending_grok
 
 
+def _registry_timestamp(
+    envelope: PeerPromptEnvelope | None,
+    verdict: PeerVerdictBlock | None,
+) -> str:
+    """Prefer a verdict frontmatter timestamp, then the prompt envelope timestamp."""
+    if verdict is not None and verdict.timestamp:
+        return str(verdict.timestamp)
+    if envelope is not None and envelope.timestamp:
+        return str(envelope.timestamp)
+    return ""
+
+
+def _sort_key_latest_exchange(item: dict[str, Any]) -> tuple[float, str, str]:
+    """Newer mtime, then newer ISO timestamp, then greater filename."""
+    return (
+        round(float(item.get("mtime", 0.0)), 4),
+        str(item.get("timestamp") or ""),
+        item["path"].name,
+    )
+
+
 def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
     """Extracts the most recent Grok verdict details from registry."""
     grok_resps = [
@@ -291,7 +313,7 @@ def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any]
     ]
     if not grok_resps:
         return None
-    grok_resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
+    grok_resps.sort(key=_sort_key_latest_exchange, reverse=True)
     top = grok_resps[0]
     verdict = top["verdict"]
     return {
@@ -371,7 +393,7 @@ def update_live_summary(
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     resp_roles = ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
     resps = [i for i in registry.values() if i["role"] in resp_roles and i["verdict"]]
-    resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
+    resps.sort(key=_sort_key_latest_exchange, reverse=True)
 
     lines = [
         "# ⚡ Grok & Antigravity Live Peer Summary\n",

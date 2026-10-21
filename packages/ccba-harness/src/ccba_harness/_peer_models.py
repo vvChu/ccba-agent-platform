@@ -156,6 +156,7 @@ class PeerVerdictBlock(BaseModel):
     risk_score: int | None = Field(default=None, ge=1, le=5)
     effort: EffortType | None = None
     summary: str = ""
+    timestamp: str | None = None
     telemetry: PeerVerdictTelemetry | CombinedTelemetry | None = None
 
     @field_validator("risk_score", mode="before")
