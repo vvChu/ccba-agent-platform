@@ -156,6 +156,7 @@ class PeerVerdictBlock(BaseModel):
     risk_score: int | None = Field(default=None, ge=1, le=5)
     effort: EffortType | None = None
     summary: str = ""
+    timestamp: str | None = None
     telemetry: PeerVerdictTelemetry | CombinedTelemetry | None = None
 
     @field_validator("risk_score", mode="before")
@@ -322,3 +323,24 @@ def render_verdict_header(verdict: PeerVerdictBlock) -> str:
     payload = verdict.model_dump(exclude_none=True)
     yaml_str = yaml.dump(payload, sort_keys=False, allow_unicode=True)
     return f"---\n{yaml_str}---\n"
+
+
+def _registry_timestamp(
+    envelope: PeerPromptEnvelope | None,
+    verdict: PeerVerdictBlock | None,
+) -> str:
+    """Prefer a verdict frontmatter timestamp, then the prompt envelope timestamp."""
+    if verdict is not None and verdict.timestamp:
+        return str(verdict.timestamp)
+    if envelope is not None and envelope.timestamp:
+        return str(envelope.timestamp)
+    return ""
+
+
+def _sort_key_latest_exchange(item: dict[str, Any]) -> tuple[float, str, str]:
+    """Newer mtime, then newer ISO timestamp, then greater filename."""
+    return (
+        round(float(item.get("mtime", 0.0)), 4),
+        str(item.get("timestamp") or ""),
+        item["path"].name,
+    )
