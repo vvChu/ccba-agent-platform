@@ -2,7 +2,7 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
-## [2026-10-21] [refactor] | Phân Rã Layer 2 Rules Dưới Trần Antigravity 24KB, Tự Động Dọn Dẹp Zombie Rules & Di Trú Liên Kết Spoke (`PR #553` — `3f7db2d3`)
+## [2026-10-21] [update] | Phân Rã Layer 2 Rules Dưới Trần Antigravity 24KB, Tự Động Dọn Dẹp Zombie Rules & Di Trú Liên Kết Spoke (`PR #553` — `3f7db2d3`)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (`Issue #552` / `PR #553` & `/learn`)
 - **Affected Files**: `docs/rules/`, `.agents/AGENTS.md`, `AGENTS.md`, `scripts/spoke/sync/graduation.py`, `scripts/spoke/sync/__init__.py`, `scripts/tests/test_spoke_sync_modules.py`, `tests/test_agent_execution_guardrails.py`, `.md/knowledge/`
 - **Summary**: Hoàn tất phân rã 2 tệp quy tắc Layer 2 vượt trần 24,000 bytes của Google Antigravity (`rules.go:544`) gây silent truncation và nâng cấp toàn diện pipeline đồng bộ Spoke:
