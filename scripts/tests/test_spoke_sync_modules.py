@@ -1488,14 +1488,17 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     spoke_rules.mkdir(parents=True)
     custom_rule = spoke_rules / "custom_spoke_rule.md"
     custom_rule.write_text("# Custom Spoke Rule\n", encoding="utf-8")
-    # Legacy monolithic rule in spoke to verify cleanup migration (Issue #552)
+    # Legacy monolithic rules in spoke to verify cleanup migration (Issue #552 & Grok Review)
     (spoke_rules / "code_quality.md").write_text("# Legacy Code Quality\n", encoding="utf-8")
+    (spoke_rules / "execution_guardrails.md").write_text("# Legacy Execution Guardrails\n", encoding="utf-8")
 
     # 1. Sync Layer 2 rules
     actions_1 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
-    assert len(actions_1) == 7
+    assert len(actions_1) == 8
     assert any(a["status"] == "REMOVED" and a["name"] == "rules/code_quality.md" for a in actions_1)
+    assert any(a["status"] == "REMOVED" and a["name"] == "rules/execution_guardrails.md" for a in actions_1)
     assert not (spoke_rules / "code_quality.md").exists()
+    assert not (spoke_rules / "execution_guardrails.md").exists()
     assert (spoke_rules / "execution_runtime_guardrails.md").is_file()
     assert (spoke_rules / "execution_coordination_guardrails.md").is_file()
     assert (spoke_rules / "code_quality_standards.md").is_file()
@@ -1515,10 +1518,13 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
         "- **Reuse-First Gate & Platform-Aware KISS v2.0 (ADR-0061)**: Use seam contracts.\n"
         "- **Machine-State Path Scanner Robustness (ADR-0061)**: Scan raw strings.\n\n"
         "## Progressive Disclosure\n\n"
-        "- Guardrails: [`docs/rules/execution_runtime_guardrails.md`](../docs/rules/execution_runtime_guardrails.md) and "
-        "[`docs/rules/execution_coordination_guardrails.md`](../docs/rules/execution_coordination_guardrails.md)\n"
-        "- Bugbot: [`.github/bugbot-rules.md`](../.github/bugbot-rules.md) and "
-        "[`docs/rules/execution_coordination_guardrails.md`](../docs/rules/execution_coordination_guardrails.md#19-atomic)\n"
+        "- Standards: [Code Standards](docs/rules/code_quality.md#2-deep-seams)\n"
+        "- Verification: [Code Verification](docs/rules/code_quality.md#10-test-integrity)\n"
+        "- Runtime: [Runtime Guardrails](docs/rules/execution_guardrails.md#11-hooks)\n"
+        "- Coordination: [Coordination Guardrails](docs/rules/execution_guardrails.md#19-atomic)\n"
+        "- Bare Code: [Code Standards](docs/rules/code_quality.md)\n"
+        "- Bare Guardrails: [Runtime Guardrails](docs/rules/execution_guardrails.md)\n"
+        "- Bugbot: [`.github/bugbot-rules.md`](../.github/bugbot-rules.md)\n"
         "- Domain: [`CONTEXT.md`](../CONTEXT.md) and [`docs/adr/`](../docs/adr/)\n"
     )
     spoke_agents = (
@@ -1540,9 +1546,14 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     assert "Intermediate rule." not in merged_1
     assert merged_1.count("Machine-State Path Scanner Robustness") == 1
     assert "**Spoke Custom Invariant**: Keep this custom bullet." in merged_1
-    assert "](rules/execution_runtime_guardrails.md)" in merged_1
-    assert "](rules/execution_coordination_guardrails.md)" in merged_1
+    assert "](rules/code_quality_standards.md#2-deep-seams)" in merged_1
+    assert "](rules/code_quality_verification.md#10-test-integrity)" in merged_1
+    assert "](rules/execution_runtime_guardrails.md#11-hooks)" in merged_1
     assert "](rules/execution_coordination_guardrails.md#19-atomic)" in merged_1
+    assert "](rules/code_quality_standards.md)" in merged_1
+    assert "](rules/execution_runtime_guardrails.md)" in merged_1
+    assert "code_quality.md" not in merged_1
+    assert "execution_guardrails.md" not in merged_1
     assert "](rules/bugbot-rules.md)" in merged_1
     assert "`CONTEXT.md`" in merged_1
     assert "(../CONTEXT.md)" not in merged_1
@@ -1556,6 +1567,46 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     spoke_agents_file = spoke_root / ".agents" / "AGENTS.md"
     spoke_agents_file.write_text(merged_1, encoding="utf-8")
     assert audit_spoke_markdown_links(spoke_root, apply_fixes=False) == []
+
+
+def test_legacy_monolithic_rules_broken_symlinks_and_cleanup_status(tmp_path: Path) -> None:
+    """Verify broken symlinks are detected/removed and deletion failure records CLEANUP_FAILED."""
+    from unittest.mock import patch
+
+    from scripts.spoke.sync.graduation import _cleanup_legacy_monolithic_rules
+
+    spoke_root = tmp_path / "spoke"
+    spoke_rules = spoke_root / ".agents" / "rules"
+    spoke_rules.mkdir(parents=True)
+
+    # 1. Broken symlink to non-existent target
+    broken_symlink = spoke_rules / "code_quality.md"
+    broken_symlink.symlink_to(spoke_root / "nonexistent_target.md")
+    assert broken_symlink.is_symlink()
+    assert not broken_symlink.exists()
+
+    # Dry-run reports REMOVED but leaves broken symlink intact
+    dry_actions = _cleanup_legacy_monolithic_rules(spoke_root, spoke_rules, dry_run=True)
+    assert len(dry_actions) == 1
+    assert dry_actions[0]["status"] == "REMOVED"
+    assert broken_symlink.is_symlink()
+
+    # Apply unlinks broken symlink cleanly
+    apply_actions = _cleanup_legacy_monolithic_rules(spoke_root, spoke_rules, dry_run=False)
+    assert len(apply_actions) == 1
+    assert apply_actions[0]["status"] == "REMOVED"
+    assert not broken_symlink.is_symlink()
+    assert not broken_symlink.exists()
+
+    # 2. Deletion failure case (unremovable file due to mocked OSError)
+    real_file = spoke_rules / "execution_guardrails.md"
+    real_file.write_text("# Unremovable\n", encoding="utf-8")
+
+    with patch.object(Path, "unlink", side_effect=OSError("Permission denied")):
+        fail_actions = _cleanup_legacy_monolithic_rules(spoke_root, spoke_rules, dry_run=False)
+        assert len(fail_actions) == 1
+        assert fail_actions[0]["status"] == "CLEANUP_FAILED"
+        assert real_file.is_file()
 
 
 def test_audit_spoke_markdown_links_and_verify_spoke_gate(tmp_path: Path) -> None:

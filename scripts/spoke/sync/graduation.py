@@ -125,16 +125,20 @@ def merge_core_invariants_block(
 
 LEGACY_RULE_LINK_MIGRATIONS: tuple[tuple[str, str], ...] = (
     (
-        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md(#19-[a-zA-Z0-9_-]+)\)",
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md(#(?:9|10|12|13|18|19|20)-[a-zA-Z0-9_-]+)\)",
         r"](rules/execution_coordination_guardrails.md\1)",
     ),
     (
-        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md\)",
-        r"](rules/execution_runtime_guardrails.md)",
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md((?:#[a-zA-Z0-9_-]+)?)\)",
+        r"](rules/execution_runtime_guardrails.md\1)",
     ),
     (
-        r"\]\((?:\.\./)?(?:docs/rules/|rules/)code_quality\.md\)",
-        r"](rules/code_quality_standards.md)",
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)code_quality\.md(#(?:3|4|9|10|12|13|14|17)-[a-zA-Z0-9_-]+)\)",
+        r"](rules/code_quality_verification.md\1)",
+    ),
+    (
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)code_quality\.md((?:#[a-zA-Z0-9_-]+)?)\)",
+        r"](rules/code_quality_standards.md\1)",
     ),
 )
 
@@ -188,21 +192,24 @@ def _cleanup_legacy_monolithic_rules(
         return actions
     for legacy_name in LEGACY_MONOLITHIC_RULES:
         legacy_path = spoke_rules_dir / legacy_name
-        if not legacy_path.exists():
+        if not (legacy_path.is_symlink() or legacy_path.exists()):
             continue
+        status = "REMOVED"
+        if not dry_run:
+            try:
+                legacy_path.unlink()
+                if legacy_path.is_symlink() or legacy_path.exists():
+                    status = "CLEANUP_FAILED"
+            except OSError:
+                status = "CLEANUP_FAILED"
         actions.append(
             {
                 "type": "Rule",
                 "name": f"rules/{legacy_name}",
-                "status": "REMOVED",
+                "status": status,
                 "path": str(legacy_path.relative_to(spoke_root)),
             }
         )
-        if not dry_run:
-            try:
-                legacy_path.unlink()
-            except OSError:
-                pass
     return actions
 
 
