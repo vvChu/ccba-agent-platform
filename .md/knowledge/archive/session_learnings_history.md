@@ -1031,3 +1031,27 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
 2. **Pre-Eval Skill Hygiene Delta Guard & Opt-In Nightly LLM Tuner (`PR #551`)**:
    - Trong `_RunAndGitMutatorMixin._run_pre_eval_guards()` (`_tuner_mutator.py`), hàm `_find_hygiene_audit_issues(baseline_content, mutated_content)` đối chiếu tập vi phạm `(category, detail)` của `audit_skill()` giữa bản đột biến và bản gốc (`mutated_issues - baseline_issues`). Cách đối chiếu chênh lệch (delta) này vừa chặn tức thì mọi lỗi vệ sinh mới (Windows bashisms `$(...)`, Dead Wood, lỗi frontmatter) trong `~2ms` trước khi tốn token LLM, vừa tương thích ngược 100% với các test fixtures tối giản không có frontmatter đầy đủ.
    - Trong `scripts/cron/run_nightly_tuner.sh`, Pha `[3/3]` mặc định thực thi cổng kiểm định tĩnh 76 skills (`python3 -m ccba_harness verify-patch --preset skill`, `0 tokens`, `~1.5s`). Chu trình đột biến LLM (`nightly_tuner_daemon.py`) được khóa sau cờ tường minh `--enable-tuner`, `--skill <name>`, hoặc biến môi trường `CCBA_ENABLE_NIGHTLY_TUNER=1`.
+
+---
+
+## 48. Phân Rã Layer 2 Rules Dưới Trần Antigravity 24KB, Tự Động Dọn Dẹp Zombie Rules & Di Trú Liên Kết Spoke (`PR #553` — `3f7db2d3`)
+
+### Context & Incident Root Cause (Khảo sát Issue #552 ngày 2026-10-21)
+1. **Giới hạn cứng 24KB của Google Antigravity Language Server (`rules.go:544`)**:
+   - Runtime inspection phát hiện Antigravity tự động cắt cụt các tệp rule vượt quá 24,000 bytes khi nạp vào context window: `code_quality.md` (30,768 bytes, vượt 6.7KB, ~22% bị mất) và `execution_guardrails.md` (24,787 bytes, vượt 787 bytes).
+   - Cơ chế `sync_layer2_rules` sao chép trực tiếp các tệp này xuống `.agents/rules/` của toàn bộ các Spoke (`IDOP-CCBA-WAY`, v.v.), khiến toàn bộ các AI Agent tại Spoke bị mất các quy tắc then chốt ở cuối file (như *Anti-Slop*, *Hypothesis-Driven Forensic*, *Atomic Micro-PR*, *Peer Delegation Protocol*).
+2. **Nguy cơ Zombie Rules tại Spoke & Gãy Liên Kết Tham Chiếu**:
+   - Nếu chỉ tạo tệp mới mà không dọn dẹp tệp cũ ở Spoke, cả tệp monolithic cũ và tệp phân rã mới sẽ cùng tồn tại song song, làm nhân đôi context injection.
+   - Đồng thời, các liên kết trong `AGENTS.md` (kèm các anchor như `#19-atomic...`) cần được di trú tự động để tránh gãy liên kết khi các Spoke chạy lệnh đồng bộ.
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.25`, `RULE-5.12`)
+1. **Antigravity 24KB Rule Hard Cap, Decomposition & Fleet Zombie Cleanup Invariant (`RULE-1.25`)**:
+   - Mọi tệp quy tắc trong `docs/rules/` và `.agents/rules/` bắt buộc $\le 24,000$ bytes (mục tiêu $11–18$ KB) để triệt tiêu hoàn toàn lỗi silent truncation.
+   - Khi phân rã tệp quy chuẩn tại Hub:
+     - `docs/rules/code_quality.md` $\to$ `code_quality_standards.md` (16.3 KB) & `code_quality_verification.md` (18.2 KB).
+     - `docs/rules/execution_guardrails.md` $\to$ `execution_runtime_guardrails.md` (11.2 KB) & `execution_coordination_guardrails.md` (14.8 KB).
+   - `scripts/spoke/sync/graduation.py`: Bổ sung `LEGACY_MONOLITHIC_RULES` và cơ chế `_cleanup_legacy_monolithic_rules` tự động xóa tệp monolithic cũ khi sync xuống Spoke; `normalize_spoke_agents_links` tích hợp bảng `_migrate_legacy_rule_links` tự động viết lại đường dẫn cũ và anchor sang tệp phân rã mới.
+2. **Venv Tooling Execution Parity & Non-Test Module Verify-Patch Pattern (`RULE-5.12`)**:
+   - Trên môi trường Linux/POSIX, các công cụ linter (`ruff`, `mypy`) được cài đặt trong virtual environment `.venv/bin/python`, không nằm trong system python `/usr/bin/python3`. Lệnh kiểm định tự động bắt buộc phân giải qua `.venv/bin/python`.
+   - Đối với các module không chứa test case (như `scripts/spoke/sync/graduation.py`), lệnh `verify-patch --preset code` sẽ thoát với exit code 5 (do pytest không thu thập được test nào). Quy chuẩn bắt buộc: sử dụng `verify-patch -c` chỉ định rõ linter + test suite mục tiêu thay cho preset code trần.
+   - Kỷ luật AST Function Length $\le 50$ LOC: Mọi hàm bổ sung trong bộ đồng bộ hóa Spoke bắt buộc phải phân tách thành các hàm con đơn nhiệm, bảo đảm 100% tuân thủ bài test `test_coordinator_ast_function_length_compliance`.
