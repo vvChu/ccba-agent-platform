@@ -21,16 +21,23 @@ from .base import are_text_files_identical
 GRADUATED_STUB_MARKER = "<!-- CCBA_GRADUATED_STUB -->"
 
 CORE_LAYER2_RULES: tuple[str, ...] = (
-    "docs/rules/execution_guardrails.md",
+    "docs/rules/execution_runtime_guardrails.md",
+    "docs/rules/execution_coordination_guardrails.md",
     "docs/rules/git_conventions.md",
-    "docs/rules/code_quality.md",
+    "docs/rules/code_quality_standards.md",
+    "docs/rules/code_quality_verification.md",
     ".github/bugbot-rules.md",
+)
+
+LEGACY_MONOLITHIC_RULES: tuple[str, ...] = (
+    "code_quality.md",
+    "execution_guardrails.md",
 )
 
 DEFAULT_GRADUATED_SPOKE_DOCS: dict[str, dict[str, str]] = {
     ".md/knowledge/platform_aware_kiss_standard.md": {
         "hub_adr": "docs/adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md",
-        "spoke_rule": ".agents/rules/code_quality.md",
+        "spoke_rule": ".agents/rules/code_quality_standards.md",
         "summary": (
             "Tiêu chuẩn Platform-Aware KISS v2.0 và cơ chế cách ly `# ccba:quarantine` "
             "(thay thế cú pháp nháp `# ccba:seam-escape`) đã được chuẩn hóa thành Hiến pháp "
@@ -116,6 +123,29 @@ def merge_core_invariants_block(
     return f"{clean_hub_inv}\n{joined_spoke}\n"
 
 
+LEGACY_RULE_LINK_MIGRATIONS: tuple[tuple[str, str], ...] = (
+    (
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md(#19-[a-zA-Z0-9_-]+)\)",
+        r"](rules/execution_coordination_guardrails.md\1)",
+    ),
+    (
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)execution_guardrails\.md\)",
+        r"](rules/execution_runtime_guardrails.md)",
+    ),
+    (
+        r"\]\((?:\.\./)?(?:docs/rules/|rules/)code_quality\.md\)",
+        r"](rules/code_quality_standards.md)",
+    ),
+)
+
+
+def _migrate_legacy_rule_links(text: str) -> str:
+    """Migrates legacy monolithic rule links to partitioned rules."""
+    for pattern, repl in LEGACY_RULE_LINK_MIGRATIONS:
+        text = re.sub(pattern, repl, text)
+    return text
+
+
 def normalize_spoke_agents_links(content: str, spoke_root: Path | None = None) -> str:
     """Normalizes Hub-relative Layer 2 rule links in Spoke .agents/AGENTS.md (COND-01).
 
@@ -126,7 +156,7 @@ def normalize_spoke_agents_links(content: str, spoke_root: Path | None = None) -
     Returns:
         Normalized markdown string with LF line endings and valid relative links.
     """
-    normalized = content.replace("\r\n", "\n")
+    normalized = _migrate_legacy_rule_links(content.replace("\r\n", "\n"))
     normalized = re.sub(
         r"\]\((?:\.\./)?docs/rules/([a-zA-Z0-9_-]+\.md(?:#[a-zA-Z0-9_-]+)?)\)",
         r"](rules/\1)",
@@ -147,6 +177,35 @@ def normalize_spoke_agents_links(content: str, spoke_root: Path | None = None) -
     return normalized
 
 
+def _cleanup_legacy_monolithic_rules(
+    spoke_root: Path,
+    spoke_rules_dir: Path,
+    dry_run: bool,
+) -> list[dict[str, str]]:
+    """Removes deprecated monolithic rule files from Spoke rules directory."""
+    actions: list[dict[str, str]] = []
+    if not spoke_rules_dir.is_dir():
+        return actions
+    for legacy_name in LEGACY_MONOLITHIC_RULES:
+        legacy_path = spoke_rules_dir / legacy_name
+        if not legacy_path.exists():
+            continue
+        actions.append(
+            {
+                "type": "Rule",
+                "name": f"rules/{legacy_name}",
+                "status": "REMOVED",
+                "path": str(legacy_path.relative_to(spoke_root)),
+            }
+        )
+        if not dry_run:
+            try:
+                legacy_path.unlink()
+            except OSError:
+                pass
+    return actions
+
+
 def sync_layer2_rules(
     spoke_root: Path,
     hub_root: Path,
@@ -162,19 +221,18 @@ def sync_layer2_rules(
     Returns:
         List of synchronization action dictionaries for reporting.
     """
-    actions: list[dict[str, str]] = []
     spoke_rules_dir = spoke_root / ".agents" / "rules"
+    actions = _cleanup_legacy_monolithic_rules(spoke_root, spoke_rules_dir, dry_run)
+
     for rel_src in CORE_LAYER2_RULES:
         src = hub_root / rel_src
         if not src.exists():
             continue
         dest = spoke_rules_dir / src.name
-        if src.resolve() == dest.resolve():
+        if src.resolve() == dest.resolve() or are_text_files_identical(src, dest):
             status = "UNCHANGED"
         elif not dest.exists():
             status = "NEW"
-        elif are_text_files_identical(src, dest):
-            status = "UNCHANGED"
         else:
             status = "UPDATED"
         actions.append(
@@ -215,7 +273,7 @@ def _extract_proposal_graduations(proposal_file: Path) -> dict[str, dict[str, st
     if not isinstance(superseded, list):
         return {}
     graduated_to = str(meta.get("graduated_to") or "docs/adr/")
-    spoke_rule = str(meta.get("spoke_rule") or ".agents/rules/code_quality.md")
+    spoke_rule = str(meta.get("spoke_rule") or ".agents/rules/code_quality_standards.md")
     result: dict[str, dict[str, str]] = {}
     for item in superseded:
         if isinstance(item, str) and item.strip():
@@ -252,7 +310,7 @@ def load_graduated_spoke_docs(hub_root: Path) -> dict[str, dict[str, str]]:
 def _render_graduated_stub(rel_path: str, meta: dict[str, str], archive_rel: str) -> str:
     """Renders the Canonical Pointer Stub replacing a graduated Spoke draft."""
     hub_adr = meta.get("hub_adr", "docs/adr/")
-    spoke_rule = meta.get("spoke_rule", ".agents/rules/code_quality.md")
+    spoke_rule = meta.get("spoke_rule", ".agents/rules/code_quality_standards.md")
     summary = meta.get("summary", "Tài liệu này đã được chuẩn hóa và hợp nhất lên Hub SSOT.")
     return (
         f"{GRADUATED_STUB_MARKER}\n"

@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-19] [update] | Tích Hợp Pre-Eval Skill Hygiene Guard, Refactor `audit_skills_hygiene.py` Chuẩn KISS & Bảo Toàn Ngân Sách Token Ban Đêm (`PR #551` — `3ae61cca`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (`PR #551` & `/ccba-session-retrospective`)
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/evals/_tuner_mutator.py`, `packages/ccba-harness/tests/test_tuner_hardening.py`, `scripts/governance/audit_skills_hygiene.py`, `scripts/cron/run_nightly_tuner.sh`, `.md/knowledge/`
+- **Summary**: Hoàn tất đánh giá phản biện 2 vòng (Rule 5 KISS & Rule 8) trên hệ thống kiểm định kỹ năng và chu trình Nightly Auto-Tuner, đóng PR tự động `#549` bị vượt thời gian và phát hành `PR #551` (`3ae61cca`):
+  1. **Cổng Vệ Sinh Kỹ Năng Tiền Đánh Giá (`Pre-Eval Skill Hygiene Delta Guard`)**: Bổ sung `_find_hygiene_audit_issues()` và `_reject_pre_eval_mutation()` vào `_RunAndGitMutatorMixin._run_pre_eval_guards()` trong `_tuner_mutator.py`, chặn tức thì (`~2ms`, `0 LLM token`) mọi đột biến làm phát sinh vi phạm `audit_skill()` (Windows bashism `$(...)`, Dead Wood, lỗi frontmatter) kèm unit test `test_pre_eval_guard_rejects_skill_hygiene_violation`.
+  2. **Refactor Nội Bộ `scripts/governance/audit_skills_hygiene.py` (`913 -> 799` LOC)**: Phân rã 5 hàm quá khổ (`audit_skill` `239 -> 34` LOC, `generate_report` `147 -> 39` LOC, `main` `133 -> 26` LOC, `check_skills_hygiene` `73 -> 47` LOC, `resolve_uncovered_references` `59 -> 29` LOC) đạt 100% `check_ast_function_length <= 50 LOC` (`22/22` hàm) và `<= 800 LOC`; hợp nhất `_resolve_target_skill_dir()` và sửa ngày báo cáo động `datetime.date.today().isoformat()`.
+  3. **Bảo Toàn Ngân Sách Token Ban Đêm (`scripts/cron/run_nightly_tuner.sh`)**: Thay thế quét đột biến LLM đại trà mặc định ở Pha `[3/3]` bằng cổng kiểm định tĩnh 76 skills (`python3 -m ccba_harness verify-patch --preset skill`, `0 tokens`, `~1.5s`), khóa `nightly_tuner_daemon.py` sau cờ `--enable-tuner`, `--skill <name>` hoặc `CCBA_ENABLE_NIGHTLY_TUNER=1` (tiết kiệm `2M–6.8M tokens/đêm`).
+
+---
+
 ## [2026-10-19] [synthesize] | Phát Hành Pstack Phase 3 (`v0.15.20` → `v0.15.27/28`): Semantic Mutation Proof, `sync_commit`, Two-Edit Test Litmus, Pre-Grill Sharpening & Decision-Decidable Catch-up (`Zero Skill Bloat`)
 - **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok CLI (`req-20261019-plan-pstack-phase3-001` & `req-20261019-signoff-pstack-phase3-001` — `FINAL_ACCEPT`, `risk_score: 1/5`)
 - **Affected Files**: `.agents/skills/ccba-create-verification-skill/SKILL.md`, `.agents/skills/ccba-create-verification-skill/references/maintain_drift_guide.md`, `.agents/skills/ccba-grilling/SKILL.md`, `.agents/skills/ccba-handoff/SKILL.md`, `.agents/skills/ccba-code-review/references/unslop_checklist.md`, `docs/rules/code_quality.md`, `.md/peer_exchange/`, `.md/knowledge/log.md`

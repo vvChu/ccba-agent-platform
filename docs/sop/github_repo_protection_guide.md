@@ -4,7 +4,7 @@
 > **Phiên bản**: Rev 1.0 (2026)  
 > **Phân tầng quản trị**: Layer 2 — Standard Operating Procedures (SOP)  
 > **Thẩm quyền phê duyệt**: TRUONG_PHONG_RD_HTQT / CHU_TRI_BO_MON (QC Level 2)  
-> **Tham chiếu quy chuẩn**: [ADR 0047](../adr/0047-catalog-manifest-compiler-and-frontmatter-ssot.md), [ADR 0058](../adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [Git Conventions](../rules/git_conventions.md), [Execution Guardrails](../rules/execution_guardrails.md)
+> **Tham chiếu quy chuẩn**: [ADR 0047](../adr/0047-catalog-manifest-compiler-and-frontmatter-ssot.md), [ADR 0058](../adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md), [Git Conventions](../rules/git_conventions.md), [Execution Guardrails](../rules/execution_runtime_guardrails.md)
 
 ---
 
