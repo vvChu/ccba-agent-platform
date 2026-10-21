@@ -553,4 +553,25 @@ def test_single_dispatch_finalize_degraded_reasoning_and_unconditional_rerender(
     }
     latest = _build_latest_verdict(reg)
     assert latest is not None
-    assert latest["output_path"] == "grok_a.md"
+    assert latest["output_path"] == "grok_b.md"
+
+    # Case 4: same mtime, newer frontmatter timestamp wins over the greater filename
+    reg_ts = {
+        "b.md": {
+            "role": "GROK_RESPONSE",
+            "path": tmp_path / "grok_b.md",
+            "mtime": 100.0,
+            "timestamp": "2026-10-01T00:00:00Z",
+            "verdict": parsed1,
+        },
+        "a.md": {
+            "role": "GROK_RESPONSE",
+            "path": tmp_path / "grok_a.md",
+            "mtime": 100.0,
+            "timestamp": "2026-10-18T00:00:00Z",
+            "verdict": parsed2,
+        },
+    }
+    latest_ts = _build_latest_verdict(reg_ts)
+    assert latest_ts is not None
+    assert latest_ts["output_path"] == "grok_a.md"

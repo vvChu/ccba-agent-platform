@@ -1099,6 +1099,18 @@ def test_verdict_synonym_normalization():
         PeerVerdictBlock(request_id="r4", verdict="NEEDS_REVISION").verdict  # type: ignore[arg-type]
         == "REVISE_PLAN"
     )
+    assert (
+        PeerVerdictBlock(request_id="r5", verdict="APPROVE_CODE").verdict  # type: ignore[arg-type]
+        == "FINAL_ACCEPT"
+    )
+    assert (
+        PeerVerdictBlock(request_id="r6", verdict="CONDITIONAL_GO").verdict  # type: ignore[arg-type]
+        == "APPROVE_WITH_CONDITIONS"
+    )
+    assert (
+        PeerVerdictBlock(request_id="r7", verdict="APPROVE_WITH_CORRECTIONS").verdict  # type: ignore[arg-type]
+        == "APPROVE_WITH_CONDITIONS"
+    )
 
 
 def test_3stage_protocol_profiles_and_session_resume(tmp_path):
