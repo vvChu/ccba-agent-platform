@@ -59,6 +59,8 @@ from ._peer_models import (
     PeerVerdictBlock,
     PeerVerdictTelemetry,
     ProfileTelemetryItem,
+    _registry_timestamp,
+    _sort_key_latest_exchange,
     extract_frontmatter,
     parse_envelope_from_md,
     parse_verdict_from_md,
@@ -248,6 +250,7 @@ def scan_peer_exchange(
             "role": role,
             "path": path,
             "mtime": entry.stat().st_mtime,
+            "timestamp": _registry_timestamp(envelope, verdict),
             "envelope": envelope,
             "verdict": verdict,
             "sha256": digest,
@@ -291,7 +294,7 @@ def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any]
     ]
     if not grok_resps:
         return None
-    grok_resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
+    grok_resps.sort(key=_sort_key_latest_exchange, reverse=True)
     top = grok_resps[0]
     verdict = top["verdict"]
     return {
@@ -371,7 +374,7 @@ def update_live_summary(
     now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     resp_roles = ("GROK_RESPONSE", "GROK_IMPLEMENTATION")
     resps = [i for i in registry.values() if i["role"] in resp_roles and i["verdict"]]
-    resps.sort(key=lambda x: (-round(float(x.get("mtime", 0.0)), 4), x["path"].name))
+    resps.sort(key=_sort_key_latest_exchange, reverse=True)
 
     lines = [
         "# ⚡ Grok & Antigravity Live Peer Summary\n",
