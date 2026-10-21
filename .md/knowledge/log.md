@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-10-21] [update] | Phân Rã Layer 2 Rules Dưới Trần Antigravity 24KB, Tự Động Dọn Dẹp Zombie Rules & Di Trú Liên Kết Spoke (`PR #553` — `3f7db2d3`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (`Issue #552` / `PR #553` & `/learn`)
+- **Affected Files**: `docs/rules/`, `.agents/AGENTS.md`, `AGENTS.md`, `scripts/spoke/sync/graduation.py`, `scripts/spoke/sync/__init__.py`, `scripts/tests/test_spoke_sync_modules.py`, `tests/test_agent_execution_guardrails.py`, `.md/knowledge/`
+- **Summary**: Hoàn tất phân rã 2 tệp quy tắc Layer 2 vượt trần 24,000 bytes của Google Antigravity (`rules.go:544`) gây silent truncation và nâng cấp toàn diện pipeline đồng bộ Spoke:
+  1. **Phân rã Quy chuẩn Layer 2**: `docs/rules/code_quality.md` (30.8 KB) $\to$ `code_quality_standards.md` (16.3 KB) & `code_quality_verification.md` (18.2 KB); `docs/rules/execution_guardrails.md` (24.8 KB) $\to$ `execution_runtime_guardrails.md` (11.2 KB) & `execution_coordination_guardrails.md` (14.8 KB). 100% tệp quy chuẩn đều nằm an toàn dưới trần 24 KB.
+  2. **Nâng cấp Spoke Sync & Zombie Cleanup**: Khai báo `CORE_LAYER2_RULES` mới và `LEGACY_MONOLITHIC_RULES`; `sync_layer2_rules` tự động dọn dẹp các tệp monolithic cũ tại `.agents/rules/` của Spoke; `normalize_spoke_agents_links` tự động di trú liên kết và anchor cũ.
+  3. **AST Function Length Compliance**: Refactor các hàm trong `graduation.py` tuân thủ nghiêm ngặt chuẩn $\le 50$ LOC; 100% 8/8 CI checks pass.
+
+---
+
 ## [2026-10-19] [update] | Tích Hợp Pre-Eval Skill Hygiene Guard, Refactor `audit_skills_hygiene.py` Chuẩn KISS & Bảo Toàn Ngân Sách Token Ban Đêm (`PR #551` — `3ae61cca`)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity (`PR #551` & `/ccba-session-retrospective`)
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/evals/_tuner_mutator.py`, `packages/ccba-harness/tests/test_tuner_hardening.py`, `scripts/governance/audit_skills_hygiene.py`, `scripts/cron/run_nightly_tuner.sh`, `.md/knowledge/`

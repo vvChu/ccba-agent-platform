@@ -11,7 +11,7 @@
   - *Cổng 0 (Determinism)*: Thuần giải thuật/IO $\to$ Deep Seams (`packages/*/src/`); `SKILL.md` không code trần.
   - *Cổng 1 (Orchestration)*: Đa luồng/StateGraph/HITL $\to$ Tier 3 Composite Orchestrator (bỏ qua GPI).
   - *Chỉ số GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \to$ Tier 2A; $\ge 12.0 \to$ Tier 2B. Rituals: $A = 1.0$.
-- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6..1.9, 1.15..1.17, 1.19, 1.21 tại Mục 23-27, 33-36: `supersede_graduated_spoke_docs` lưu `<stem>.local-<sha8>.md` & khử link `file://` trong `.md/INDEX.md`)*
+- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6..1.9, 1.15..1.17, 1.19, 1.21..1.22 tại Mục 23-27, 33-38: Class A Fail-Fast)*
 - **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
   - Tái sử dụng Package Seams/Master Skills là KISS bậc 1 (`compile_catalog.py --query <kw>`); CẤM script chắp vá hoặc hoãn Phase 2.
 - **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
@@ -24,12 +24,12 @@
   - `bundle: _core` chỉ chứa SDLC loop; `_software` chứa nghiệp vụ code. Frontmatter có `scope: hub | spoke | universal`; linter chặn `command: /...` ở `_governance` thiếu `scope: hub` & đối soát GPI (COND-01). `required_skills` trong `resources/*.yaml` khớp `.agents/skills/` (Mục 45).
 - **RULE-1.20 [ADR 0061 — Posture Title, Parity Radar & Contract Inflation]**:
   - Dùng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR ở header); CẤM token ADR không tạo ADR mới (`sync_hub_adr_matrix.py`). 16 Deep Seams `package-bound`; 60 skills `seam-exempt`.
-- **RULE-1.22 [Reasoning Tiering Parity & Anti-Silent-Degradation]**:
-  - Suy luận giữ Class A; CẤM fallback về Class C (`ocr-tier4`, `ocr-fallback`). Cạn quota Class A $\to$ **Fail-Fast** (HTTP 503, Mục 38).
 - **RULE-1.23 [ADR 0067 — 3-Tier One-Way Door Manifest & Backpressure]**:
-  - `classify_pr_door` (`door_policy.py`: `TWO_WAY_DOOR`, `PAVED_ROAD`, `ONE_WAY_DOOR`) & `compute_cumulative_streak` cấp `packages/<pkg>` ($K \ge 3$ PRs/72h hoặc $>200$ LOC $\to$ `ONE_WAY_DOOR`, mẫu 10% `is_sampled_for_audit`). `evaluate_backpressure_queue` (`backpressure.py`) ngắt khi $>5$ PRs/$>24\text{h}$; `validate_tradeoff_card` bắt buộc `Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` ($\le 30$ dòng) qua `door-triage` (Mục 40).
+  - `classify_pr_door` (`TWO_WAY_DOOR`, `PAVED_ROAD`, `ONE_WAY_DOOR`) & `compute_cumulative_streak` ($K \ge 3$ PRs/72h hoặc $>200$ LOC $\to$ `ONE_WAY_DOOR`). `evaluate_backpressure_queue` ngắt khi $>5$ PRs/$>24\text{h}$; `validate_tradeoff_card` bắt buộc Tradeoff Card ($\le 30$ dòng) qua `door-triage` (Mục 40).
 - **RULE-1.24 [Federated Role & ERP Boundary — ADR 0046 vs IDOP-CCBA-WAY]**:
-  - 15 `ROLE_ID` (`06_ccba_org_role_matrix.md`) & ERP 5 pha (`OPPORTUNITY` $\to$ `SETTLEMENT`/`PGV`) thuộc `IDOP-CCBA-WAY` (`ADR-0060`). Tại Hub, SSOT là **ADR-0046** (`seat_role` + 5 cấp QC, giữ `CHU_TRI_BO_MON`), qua `idop_bridge.py` (`StagedSubmittal`), LiteLLM Virtual Keys + `telemetry.py`/`fleet.py`. CẤM Dual-SSOT/tiêm `ROLE_ID` vào System Prompt (`ADR-0040`, Mục 42).
+  - 15 `ROLE_ID` & ERP 5 pha thuộc `IDOP-CCBA-WAY` (`ADR-0060`). Hub SSOT là **ADR-0046** (`seat_role` + 5 cấp QC), qua `idop_bridge.py`; CẤM Dual-SSOT/tiêm `ROLE_ID` vào System Prompt (`ADR-0040`, Mục 42).
+- **RULE-1.25 [Antigravity 24KB Rule Hard Cap, Decomposition & Fleet Zombie Cleanup Invariant]**:
+  - File rules bắt buộc $\le 24,000$ bytes (mục tiêu $11–18$ KB) chống silent truncation (`rules.go:544`). Khi phân rã tệp Hub, `CORE_LAYER2_RULES` cập nhật tệp mới; `sync_layer2_rules` tự động dọn `LEGACY_MONOLITHIC_RULES` tại Spoke (`.agents/rules/`) chống Zombie Rule; `normalize_spoke_agents_links` di trú regex link cũ/anchor sang tệp phân rã (Issue #552, PR #553).
 
 ---
 
@@ -75,12 +75,12 @@
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm
-- *(Xem RULE-5.1..5.5 tại archive/session_learnings_history.md)*
+- *(Xem RULE-5.1..5.5, 5.10 [vLLM Routing Fallback] tại Mục 23, 41)*
 - **RULE-5.8 [Thinking Token Starvation Defense in Structured Pipelines]**:
   - Structured output tắt thinking (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens`; tách `local-instruct` vs `local-coder`.
 - **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
   - DGX Spark Blackwell mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; tách `--reasoning-parser` & `--tool-call-parser`.
-- **RULE-5.10 [Layer Anchoring Invariant: vLLM Backend vs Gateway Routing]**:
-  - `fallbacks:` trong `litellm_config.yaml` chỉ nhận `model_name` tĩnh, CẤM nhúng `qwen-local-primary (enable_thinking=true)`. Suy luận fallback về `local-coder` (`enable_thinking: true`) vs `rag-core`.
 - **RULE-5.11 [GitHub Classic Projects GraphQL Deprecation & Project V2 Field Discovery]**:
   - `gh issue view <id>` (thiếu `--json`) lỗi exit 1 do `projectCards`; truyền `--json ...` hoặc `gh api`. Khi `gh project item-edit`, chạy `gh project field-list <num> --owner <owner> --format json` lấy `PVTSSF_...` (Mục 42).
+- **RULE-5.12 [Venv Tooling Execution Parity & Non-Test Module Verify-Patch Pattern]**:
+  - Trên POSIX/CI, linters/mypy bắt buộc gọi qua `.venv/bin/python` thay vì system python; với module không chứa test case (nhánh core/sync), `verify-patch -c` chỉ định rõ linter + test suite mục tiêu thay cho `--preset code` (tránh exit code 5 của pytest khi 0 test collected).
