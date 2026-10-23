@@ -144,9 +144,15 @@ flowchart TD
 | Giai đoạn | Nhiệm vụ chính | Sản phẩm bàn giao |
 | :--- | :--- | :--- |
 | **Giai đoạn 1** | Xây dựng bộ từ điển chuẩn cốt lõi (Core Taxonomy) | Tệp `canonical_construction_taxonomy.yaml` với 200+ thuật ngữ chuẩn |
-| **Giai đoạn 2** | Thẩm định Peer Exchange với Grok 4.7 xhigh | Báo cáo phản biện kiến trúc và phán quyết từ Grok |
+| **Giai đoạn 2** | Thẩm định Peer Exchange với Grok 4.7 xhigh | Báo cáo phản biện kiến trúc và phán quyết `APPROVE_WITH_CONDITIONS` từ Grok (`req-spoke-canonical-lexicon-framework-001`) |
 | **Giai đoạn 3** | Hiện thực hóa Seam Normalizer trong `ccba-legal-intel` | Module `lexicon_normalizer.py` và bài test unit tests |
 | **Giai đoạn 4** | Thiết lập Cổng CI Linter trên Hub và Spoke | Bài test `lint_construction_terminology.py` tích hợp vào GitHub Actions |
+
+### 4 Điều Kiện Phong Tỏa Kỹ Thuật từ Grok 4.7 xhigh (COND-11 đến COND-14):
+1. **`COND-11 (Context-Aware Boundary & Verbatim Guard)`**: Cơ chế thay thế tự động phải dùng ranh giới từ `\b` và TUYỆT ĐỐI KHÔNG thay thế bên trong các khối trích dẫn nguyên văn lịch sử (`verbatim quotes`), mã định danh kỹ thuật, hoặc URL.
+2. **`COND-12 (Modular Multilingual Schema)`**: Thiết kế cấu trúc đa ngôn ngữ mở rộng `translations: {en: "...", ja: "...", ko: "..."}` phục vụ trực tiếp cho các dự án FDI Nhật Bản/Hàn Quốc.
+3. **`COND-13 (Temporal Validity Stamping)`**: Gắn mỏ neo thời gian hiệu lực (`effective_from`, `superseded_by`) phục vụ công tác đối soát các công trình cải tạo lịch sử (Grandfathering).
+4. **`COND-14 (Single Source of Truth Placement)`**: Lưu trữ từ điển chuẩn duy nhất tại Hub (`packages/ccba-legal-intel`), Spoke chỉ tiêu thụ read-only qua Seam, nghiêm cấm duy trì các file từ điển phân mảnh.
 
 - **Đánh giá Giá trị × Rủi ro × KISS:**
   * **Giá trị (Value):** Rất cao. Chuẩn hóa triệt để ngôn ngữ kỹ thuật, pháp lý và thể chế nội bộ cho toàn bộ mạng lưới Spoke.
