@@ -163,7 +163,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 - **Về Slide:** Không chấp nhận slide chỉ text trắng nền trắng.
 - **Về màu sắc:** Mọi tổ hợp text/background phải đạt contrast WCAG.
 - **Về Word khi user không nói rõ:** Hỏi trước — sự khác biệt giữa NĐ 30 và đề xuất doanh nghiệp là rất lớn.
-- **Về biểu mẫu RFI & Trao đổi Kỹ thuật Dự án (RULE-6.1):** Áp dụng cấu trúc 2 cấp quản lý (`Viện Khoa học công nghệ xây dựng` → `Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng`), bỏ Quốc hiệu NĐ 30 và dòng "Bộ Xây dựng". Tuân thủ danh xưng chuẩn mực: Viện (`Viện`, `Viện KHCN`, `IBST` - CẤM `Viện IBST`) và Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA` - CẤM `Trung tâm CCBA`). Trường From ghi nhận chuẩn `IBST / CCBA`. Bổ sung khối "💡 Đề xuất của IBST / CCBA" tại từng hạng mục kỹ thuật.
+- **Về biểu mẫu RFI & Trao đổi Kỹ thuật Dự án (RULE-6.1):** Áp dụng cấu trúc 2 cấp quản lý (`Viện Khoa học công nghệ xây dựng` → `Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng`), bỏ Quốc hiệu NĐ 30 và dòng "Bộ Xây dựng". Tuân thủ danh xưng chuẩn mực: Viện (`Viện`, `Viện KHCN`, `IBST` - CẤM `Viện IBST`) và Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA` - CẤM `Trung tâm CCBA`). Trường From ghi nhận chuẩn `IBST - CCBA` (CẤM dùng slash `IBST / CCBA` để tránh hiểu lầm liên danh). Bổ sung khối "💡 Đề xuất của Tư vấn" tại từng hạng mục kỹ thuật.
 
 ## Không được phép
 

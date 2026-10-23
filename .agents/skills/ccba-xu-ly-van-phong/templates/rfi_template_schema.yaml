@@ -17,7 +17,7 @@ organization:
   parent_org_en: "Institute for Building Science and Technology"
   direct_unit_vi: "TRUNG TÂM TƯ VẤN VÀ ỨNG DỤNG BIM TRONG XÂY DỰNG"
   direct_unit_en: "Center for Consulting Services and BIM Application in Construction (CCBA)"
-  short_identifier: "IBST / CCBA"
+  short_identifier: "IBST - CCBA"
 
 project_control:
   project_name: "Dự án Đầu tư Xây dựng Nhà máy Mở rộng PAPVN"
@@ -25,7 +25,7 @@ project_control:
   package_name: "Tư vấn Thiết kế & Khảo sát Hiện trạng"
   client_name: "Công ty TNHH Panasonic Việt Nam (PAPVN)"
   client_contact: "Mr. Lê Thanh Nội — Trưởng ban QLDA"
-  consultant_name: "IBST / CCBA"
+  consultant_name: "IBST - CCBA"
   coordinator_pic: "Trương Tuấn Anh — 0935.386.154 (anhtt@ibst-bim.vn)"
   discipline: "PCCC, Kiến trúc, Cơ điện & Kết cấu"
   location: "Lô J1-J2, KCN Thăng Long, Đông Anh, Hà Nội"
@@ -35,13 +35,13 @@ project_control:
 
 purpose_and_scope:
   vi: >
-    Phiếu này được thiết kế để nhóm chuyên gia IBST / CCBA trực tiếp đồng hành, phỏng vấn và hỗ trợ Nhà máy
+    Phiếu này được thiết kế để nhóm chuyên gia IBST trực tiếp đồng hành, phỏng vấn và hỗ trợ Nhà máy
     thu thập các Yêu cầu sử dụng của Chủ đầu tư (User Requirements) và các thông số công nghệ đầu vào.
-    Dựa trên các yêu cầu này, nhóm chuyên gia IBST / CCBA sẽ chịu trách nhiệm phân tích quy chuẩn (QCVN 06:2022/BXD,
+    Dựa trên các yêu cầu này, nhóm chuyên gia IBST sẽ chịu trách nhiệm phân tích quy chuẩn (QCVN 06:2022/BXD,
     QCVN 10:2025/BCA), tính toán kỹ thuật và đề xuất các phương án tối ưu trong Hồ sơ Đề cương (SOW) và Báo giá Tư vấn.
   en: >
-    This brief is designed for IBST / CCBA experts to walk through and conduct on-site interviews with the Client,
-    gathering User Requirements and manufacturing baselines. Based on these inputs, IBST / CCBA will assume full
+    This brief is designed for IBST - CCBA experts to walk through and conduct on-site interviews with the Client,
+    gathering User Requirements and manufacturing baselines. Based on these inputs, IBST - CCBA will assume full
     responsibility for statutory code analysis, engineering calculations, and proposing optimal technical schemes.
 
 sections:
@@ -56,7 +56,7 @@ sections:
           - "Xác định công trình mở rộng nằm trong khuôn viên Lô J1-J2 hiện hữu hay thuê bổ sung lô đất liền kề."
           - "Cung cấp bản vẽ sơ họa vị trí dự kiến xây dựng nhà máy mới trên tổng mặt bằng."
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: Nếu phía Nhà máy chưa có bản vẽ tách lô chính thức, chuyên gia IBST / CCBA
+          Đề xuất của Tư vấn: Nếu phía Nhà máy chưa có bản vẽ tách lô chính thức, chuyên gia IBST
           sẽ mang thiết bị Flycam và máy đo toàn đạc để định vị tọa độ mốc ranh giới ngay trong buổi khảo sát.
         deliverable_formats:
           - checked: true
@@ -66,7 +66,7 @@ sections:
           - checked: false
             label: "Mô hình BIM (.rvt/.ifc)"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Thuộc khuôn viên Lô J1-J2 hiện hữu"
           - checked: false
             text: "Thuê thêm lô đất mới ngoài hàng rào"
@@ -80,7 +80,7 @@ sections:
           - "Bản sao Bản vẽ Quy hoạch tổng mặt bằng 1/500 của Lô J1-J2 đã được BQL KCN phê duyệt."
           - "Các thỏa thuận đấu nối hạ tầng ngoài hàng rào sẵn có (giao thông, thoát nước, cấp điện)."
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: IBST / CCBA sẽ đối soát trực tiếp các chỉ tiêu quy hoạch (mật độ xây dựng tối đa,
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ đối soát trực tiếp các chỉ tiêu quy hoạch (mật độ xây dựng tối đa,
           chỉ giới xây dựng lùi) để tối đa hóa diện tích sàn xưởng được phép xây dựng theo QCVN 01:2021/BXD.
         deliverable_formats:
           - checked: true
@@ -88,7 +88,7 @@ sections:
           - checked: false
             label: "Bản sao văn bản thỏa thuận"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có sẵn bản vẽ 1/500 phê duyệt cũ"
           - checked: false
             text: "Cần hỗ trợ liên hệ BQL KCN"
@@ -100,7 +100,7 @@ sections:
           - "Bản vẽ mặt bằng, mặt cắt trạm bơm PCCC và kích thước hình học bể nước ngầm hiện hữu."
           - "Catalog thông số kỹ thuật của các máy bơm chữa cháy đang hoạt động."
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: Chuyên gia IBST / CCBA sẽ đo đạc cao độ rốn hút (Sump pit), tấm chống xoáy và tính toán
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ đo đạc cao độ rốn hút (Sump pit), tấm chống xoáy và tính toán
           lại dung tích hữu ích theo QCVN 02:2020/BCA nhằm tận dụng tối đa trạm bơm hiện có, tránh phát sinh chi phí xây mới.
         deliverable_formats:
           - checked: true
@@ -108,10 +108,10 @@ sections:
           - checked: true
             label: "Khảo sát đo đạc thực tế bể"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có sẵn bản vẽ trạm bơm cũ (cho mượn sao chép)"
           - checked: true
-            text: "Nhất trí để IBST / CCBA đo đạc lại cao độ bể thực tế"
+            text: "Nhất trí để chuyên gia IBST đo đạc lại cao độ bể thực tế"
 
   - section_id: "II"
     section_title_vi: "NHU CẦU KHÔNG GIAN & QUY MÔ DÂY CHUYỀN SẢN XUẤT"
@@ -125,7 +125,7 @@ sections:
           - "Tổng diện tích sàn xây dựng mong muốn khoảng bao nhiêu m2?"
           - "Diện tích xưởng sản xuất chính cần khoảng bao nhiêu m2?"
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: Đối với nhà máy sản xuất thiết bị điện tử có phòng sạch, giải pháp 2 tầng
+          Đề xuất của Tư vấn: Đối với nhà máy sản xuất thiết bị điện tử có phòng sạch, giải pháp 2 tầng
           kết cấu thép chịu lửa kết hợp sàn Decking bê tông sẽ tối ưu hóa mật độ xây dựng và thuận tiện bố trí tầng kỹ thuật MEPF.
         deliverable_formats:
           - checked: true
@@ -133,7 +133,7 @@ sections:
           - checked: false
             label: "Sơ đồ dây chuyền khối"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Dự kiến: 02 tầng, tổng diện tích sàn khoảng 12.000 m2"
           - checked: false
             text: "Diện tích xưởng sản xuất sạch: khoảng 6.000 m2"
@@ -145,13 +145,13 @@ sections:
           - "Khu vực sản xuất chính, phòng sạch (Cleanroom), kho nguyên vật liệu / kho thành phẩm."
           - "Văn phòng điều hành, phòng họp, phòng thay đồ, trạm biến áp, phòng nén khí."
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: IBST / CCBA sẽ quy hoạch hành lang phân tách luồng người (Personnel Flow)
-          và luồng hàng (Material Flow) độc lập ngay từ bước Thiết kế Khái niệm để đáp ứng tiêu chuẩn GMP/ISO quốc tế.
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ quy hoạch hành lang phân tách luồng người (Personnel Flow)
+          và luồng hàng (Material Flow) độc lập ngay từ bước Thiết kế ý tưởng (Concept Design) để đáp ứng tiêu chuẩn GMP/ISO quốc tế.
         deliverable_formats:
           - checked: true
             label: "Danh mục phòng ban chức năng"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Cần tích hợp khu văn phòng quản lý trên tầng 2"
           - checked: true
             text: "Kho nguyên liệu cần cửa xuất nhập độc lập"
@@ -163,13 +163,13 @@ sections:
           - "Chiều cao thông thủy trần yêu cầu để lắp đặt dây chuyền/máy móc (đáy dầm đến mặt sàn) (m)."
           - "Chiều cao xếp hàng hóa trong kho hàng và tải trọng sàn thiết kế (Tấn/m2)."
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: Trần xưởng sạch khuyến nghị 4.5m - 5.0m; kho hàng khuyến nghị 7.5m - 9.0m.
+          Đề xuất của Tư vấn: Trần xưởng sạch khuyến nghị 4.5m - 5.0m; kho hàng khuyến nghị 7.5m - 9.0m.
           Tải trọng sàn khu vực máy SMT đề xuất thiết kế 2.0 - 2.5 Tấn/m2.
         deliverable_formats:
           - checked: true
             label: "Bản kê thông số máy móc"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Chiều cao trần sạch mong muốn: 4.5m"
           - checked: true
             text: "Tải trọng sàn xưởng chính: 2.0 Tấn/m2"
@@ -186,13 +186,13 @@ sections:
           - "Yêu cầu kiểm soát nhiệt độ (độ C) và độ ẩm tương đối (% RH)?"
           - "Yêu cầu chống tĩnh điện cho sàn (ESD)?"
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: Ứng dụng hệ thống điều hòa chính xác AHU tích hợp lọc HEPA và buồng đệm Air Shower,
+          Đề xuất của Tư vấn: Ứng dụng hệ thống điều hòa chính xác AHU tích hợp lọc HEPA và buồng đệm Air Shower,
           sử dụng sàn Epoxy dẫn điện / phân tán tĩnh điện ESD đạt tiêu chuẩn IEC 61340.
         deliverable_formats:
           - checked: true
             label: "Bảng thông số môi trường xưởng"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Phòng sạch yêu cầu: ISO Class 7 (Class 10.000)"
           - checked: true
             text: "Nhiệt độ 22 +/- 2 độ C, Độ ẩm 50 +/- 5% RH"
@@ -204,25 +204,25 @@ sections:
           - "Trong quy trình có sử dụng cồn công nghiệp (IPA), dung môi hữu cơ, keo dán tẩy rửa không?"
           - "Khối lượng lưu trữ hóa chất tối đa tại khu vực sản xuất và kho chứa?"
         consultant_recommendation: >
-          Đề xuất của IBST / CCBA: IBST / CCBA sẽ chịu trách nhiệm tính toán xác định Hạng nguy hiểm cháy C hoặc D
-          theo Phụ lục C QCVN 06:2022/BXD. Nếu có dung môi IPA, IBST / CCBA sẽ bố trí phòng pha chế chuyên dụng
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ chịu trách nhiệm tính toán xác định Hạng nguy hiểm cháy C hoặc D
+          theo Phụ lục C QCVN 06:2022/BXD. Nếu có dung môi IPA, Chuyên gia IBST sẽ bố trí phòng pha chế chuyên dụng
           có tường ngăn cháy loại 1 và hệ thống hút khí xả phòng nổ để bảo vệ toàn bộ nhà máy không bị phân loại Hạng A/B.
         deliverable_formats:
           - checked: true
             label: "Bảng dữ liệu an toàn hóa chất (MSDS)"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có dùng cồn IPA vệ sinh bản mạch (số lượng nhỏ)"
           - checked: true
-            text: "Nhờ IBST / CCBA tính toán giải pháp ngăn cháy kho IPA"
+            text: "Nhờ chuyên gia IBST tính toán giải pháp ngăn cháy kho IPA"
 
 signoff:
   consultant:
-    org_title: "ĐẠI DIỆN ĐƠN VỊ TƯ VẤN (IBST / CCBA)"
+    org_title: "ĐẠI DIỆN ĐƠN VỊ TƯ VẤN (IBST - CCBA)"
     unit_subtitle: "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG"
     author_role: "Người lập phiếu (Author / Cấp 1A):"
     author_name: "Trương Tuấn Anh"
-    author_title: "Kỹ sư Điều phối Dự án"
+    author_title: "Điều phối dự án"
     lead_role: "Chủ trì Kỹ thuật / Lãnh đạo Phòng (Lead / Cấp 2-3):"
     lead_name: "Vũ Văn Chủ"
     lead_title: "Giám đốc Trung tâm"
