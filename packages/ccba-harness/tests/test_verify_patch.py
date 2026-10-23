@@ -326,6 +326,9 @@ def test_resolve_preset_commands() -> None:
     eval_ds_cmds = resolve_preset_commands("eval", "test_cases.json")
     assert any("eval --dataset test_cases.json" in c for c in eval_ds_cmds)
 
+    lex_cmds = resolve_preset_commands("lexicon", "docs/")
+    assert any("lint_construction_terminology.py --path docs/ --check" in c for c in lex_cmds)
+
     with pytest.raises(ValueError, match="Unknown verification preset"):
         resolve_preset_commands("unknown_preset")
 

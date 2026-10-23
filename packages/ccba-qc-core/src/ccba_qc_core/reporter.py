@@ -21,7 +21,7 @@ class ReporterEngine:
         self,
         project_name: str,
         author: str = "CCBA Platform",
-        company: str = "CCBA Engineering",
+        company: str = "IBST - CCBA",
     ) -> None:
         self.project_name = project_name
         self.author = author
@@ -57,6 +57,15 @@ class ReporterEngine:
         sections.append(self._render_footer())
 
         report = "\n\n".join(sections)
+
+        # Apply canonical terminology normalization (CCILF Phase 4, COND-18)
+        try:
+            from ccba_legal.lexicon.normalizer import CanonicalTermNormalizer
+
+            report = CanonicalTermNormalizer().normalize(report).normalized_text
+        except Exception as e:
+            logger.debug("Canonical terminology normalization skipped: %s", e)
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(report, encoding="utf-8")
         logger.info("Report written to %s", output_path)

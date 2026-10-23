@@ -282,7 +282,7 @@ def resolve_preset_commands(
     """Resolve a verification preset into deterministic command strings.
 
     Args:
-        preset: Preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
+        preset: Preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon').
         target: Target file or directory path.
         min_bytes: Minimum bytes for 'doc' preset.
         required_headings: List of headings required for 'doc' preset.
@@ -381,8 +381,14 @@ def resolve_preset_commands(
                 cmds.append(f"{python_exec} -m ccba_harness eval --skill {target_str}")
         return cmds
 
+    if p == "lexicon":
+        target_path = target_str if target_str else ".agents/proposals"
+        return [
+            f"{python_exec} scripts/lint_construction_terminology.py --path {target_path} --check",
+        ]
+
     raise ValueError(
-        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval'."
+        f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon'."
     )
 
 
@@ -400,7 +406,7 @@ def verify_patch_execution(
 
     Args:
         commands: List of shell command strings to execute.
-        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval').
+        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon').
         target: Target path when using a preset.
         min_bytes: Minimum bytes for 'doc' preset.
         required_headings: Required headings for 'doc' preset.

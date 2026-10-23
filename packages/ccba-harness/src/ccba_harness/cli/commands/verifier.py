@@ -201,7 +201,7 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--preset",
         type=str,
-        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval", "lexicon"],
         default=None,
         help="Verification preset to automatically generate standard check commands",
     )
