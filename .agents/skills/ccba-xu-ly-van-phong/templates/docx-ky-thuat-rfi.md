@@ -36,12 +36,14 @@
   - Right = $2.0\text{ cm}$ (`1134 DXA`)
 - **Chiều rộng nội dung (CONTENT_WIDTH)**:
   $$\mathbf{CONTENT\_WIDTH = 11906 - 1701 - 1134 = 9071\text{ DXA}}$$
-- **Lưới 4 cột bảng dữ liệu (The 4-Column Response Grid)**:
-  - Cột 1 (STT / Mã số tham chiếu): **`700 DXA`** (~7.7%)
-  - Cột 2 (Nội dung Yêu cầu & Đề xuất của Tư vấn): **`3400 DXA`** (~37.5%)
-  - Cột 3 (Định dạng & Tiêu chuẩn giao nộp CDE): **`1800 DXA`** (~19.8%)
-  - Cột 4 (Phản hồi của Đối tác / Hồ sơ đính kèm): **`3171 DXA`** (~35.0%)
-  - **Tổng cộng**: $\mathbf{700 + 3400 + 1800 + 3171 = 9071\text{ DXA}}$ ($100.0\%$).
+- **Động cơ Cân bằng Cột Thích ứng & Bất biến OpenXML Fixed Grid (Adaptive Balancing & Fixed Invariant)**:
+  - Bảng RFI phải đảm bảo **Visual Parity 100% giữa Microsoft Word và PDF Engine (LibreOffice)** bằng cách tiêm bắt buộc `<w:tblLayout w:val="fixed"/>` và `<w:tblGrid><w:gridCol w:w="..."/>` trong OpenXML.
+  - Phân bổ 4 cột linh hoạt theo mật độ nội dung (Content-Aware Density):
+    - Cột 1 (STT / Mã số tham chiếu): **`650 - 750 DXA`** (~7.2 - 8.2%)
+    - Cột 2 (Nội dung Yêu cầu & Đề xuất của Tư vấn): **`4121 - 4300 DXA`** (~45.4 - 47.4%) — *Mở rộng +21%...26% diện tích, giúp trải dài khối đề xuất và giảm ~40% số trang in*.
+    - Cột 3 (Định dạng & Tiêu chuẩn giao nộp CDE): **`1500 - 1700 DXA`** (~16.5 - 18.7%) — *Tối ưu vừa khít checkbox và nhãn định dạng, khử hoàn toàn khoảng trắng dư thừa*.
+    - Cột 4 (Phản hồi của Đối tác / Hồ sơ đính kèm): **`2450 - 2600 DXA`** (~27.0 - 28.7%) — *Gọn gàng, đủ rộng cho checkbox và ghi chú viết tay*.
+    - **Tổng cộng bất biến**: $\mathbf{\sum W_i = 9071\text{ DXA}}$ ($100.0\%$).
 - **Khối ký 2 ô (Sign-off Block Grid)**:
   - Cột 1 (Đại diện Tư vấn IBST / CCBA): **`4535 DXA`**
   - Cột 2 (Đại diện Khách hàng / Đối tác): **`4536 DXA`**
@@ -98,14 +100,14 @@
 │ I. MỤC ĐÍCH & Ý NGHĨA KỸ THUẬT (PURPOSE & STATUTORY OBJECTIVE)                                         │
 │    {{MUC_DICH_KY_THUAT}}                                                                              │
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ II. DANH MỤC DỮ LIỆU YÊU CẦU & ĐỀ XUẤT CỦA TƯ VẤN (4-COLUMN RESPONSE GRID - 9071 DXA)                  │
+│ II. DANH MỤC DỮ LIỆU YÊU CẦU & ĐỀ XUẤT CỦA TƯ VẤN (ADAPTIVE 4-COLUMN GRID - 9071 DXA)                  │
 ├───────┬─────────────────────────────────┬───────────────────────────────┬──────────────────────────────┤
 │ STT   │ Nội dung Yêu cầu & Đề xuất Tư vấn│ Định dạng & Giao nộp CDE      │ Phản hồi & Đính kèm Đối tác  │
-│ (700) │ (3400 DXA)                      │ (1800 DXA)                    │ (3171 DXA)                   │
+│ (650) │ (4121 DXA - Mở rộng tối ưu)     │ (1700 DXA - Vừa khít)         │ (2600 DXA - Gọn gàng)        │
 ├───────┼─────────────────────────────────┼───────────────────────────────┼──────────────────────────────┤
 │ 1.1   │ [Tên hạng mục]                  │ [ ] File CAD (.dwg)           │ [ ] Đã đính kèm: ...         │
 │       │ • Yêu cầu chi tiết...           │ [ ] File BIM (.rvt / .ifc)    │ [ ] Cung cấp tại buổi họp    │
-│       │ • Đề xuất của Tư vấn     │ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
+│       │ • 💡 Đề xuất của Tư vấn:        │ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
 │       │   (Consultant's Recommendation) │ [ ] Khảo sát thực địa         │     khảo sát đề xuất phương án│
 ├───────┴─────────────────────────────────┴───────────────────────────────┴──────────────────────────────┤
 │ III. XÁC NHẬN & ĐÓNG PHIẾU (SIGN-OFF & PROTOCOL - 2 Ô CHỐNG TÁCH TRANG - 9071 DXA)                    │
