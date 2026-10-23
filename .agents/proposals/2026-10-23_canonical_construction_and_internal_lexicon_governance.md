@@ -2,7 +2,10 @@
 proposal_id: "2026-10-23_canonical_construction_and_internal_lexicon_governance"
 type: "architecture"
 name: "canonical-construction-and-internal-lexicon-governance"
-status: "proposed"
+status: "merged"
+merged_pr: "#561"
+merged_commit: "818055bc"
+merged_date: "2026-10-23"
 priority: "Cao"
 proposed_by_project: "ccba-legal-knowledge"
 proposed_by_archetype: "knowledge_corpus"
@@ -22,7 +25,7 @@ supersedes_spoke_docs: []
 - **Tên sáng kiến:** Canonical Construction, Statutory & Internal Governance Lexicon Framework (CCILF)
 - **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm CCBA - IBST)
 - **Ngày lập:** 2026-10-23
-- **Trạng thái:** Đang đề xuất (Proposed) — Đã đạt phán quyết `APPROVE_WITH_CONDITIONS` từ Grok 4.7 xhigh (`req-discuss-canonical-lexicon-architecture-001`)
+- **Trạng thái:** Đã hợp nhất (Merged) — PR [#561](https://github.com/vvChu/ccba-agent-platform/pull/561) (Commit `818055bc`) — Đã đạt phán quyết `APPROVE_WITH_CONDITIONS` từ Grok 4.7 xhigh (`req-discuss-canonical-lexicon-architecture-001`)
 - **Căn cứ pháp lý & thể chế nền tảng:**
   - [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md) (Hub Proposal Ingestion Governance)
   - [ADR-0046](../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md) (Personal Sandbox Lifecycle & Charter 2026 Alignment)
