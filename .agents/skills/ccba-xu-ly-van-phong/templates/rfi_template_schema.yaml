@@ -146,7 +146,7 @@ sections:
           - "Văn phòng điều hành, phòng họp, phòng thay đồ, trạm biến áp, phòng nén khí."
         consultant_recommendation: >
           Đề xuất của Tư vấn: Chuyên gia IBST sẽ quy hoạch hành lang phân tách luồng người (Personnel Flow)
-          và luồng hàng (Material Flow) độc lập ngay từ bước Thiết kế Khái niệm để đáp ứng tiêu chuẩn GMP/ISO quốc tế.
+          và luồng hàng (Material Flow) độc lập ngay từ bước Thiết kế ý tưởng (Concept Design) để đáp ứng tiêu chuẩn GMP/ISO quốc tế.
         deliverable_formats:
           - checked: true
             label: "Danh mục phòng ban chức năng"
@@ -222,7 +222,7 @@ signoff:
     unit_subtitle: "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG"
     author_role: "Người lập phiếu (Author / Cấp 1A):"
     author_name: "Trương Tuấn Anh"
-    author_title: "Kỹ sư Điều phối Dự án"
+    author_title: "Điều phối dự án"
     lead_role: "Chủ trì Kỹ thuật / Lãnh đạo Phòng (Lead / Cấp 2-3):"
     lead_name: "Vũ Văn Chủ"
     lead_title: "Giám đốc Trung tâm"
