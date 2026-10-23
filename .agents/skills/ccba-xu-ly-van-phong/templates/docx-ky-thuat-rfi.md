@@ -54,16 +54,22 @@
 
 ---
 
-## 🎨 Bảng Màu Nhận Diện Formal Navy (COND-02)
+## 🎨 Tiêu Chuẩn In Ấn Sạch & Tiết Kiệm Mực (Print-Friendly & Ink-Saving Invariant)
+
+Nhằm tối ưu hóa chi phí in ấn công trường/văn phòng và ngăn chặn hoàn toàn hiện tượng đen xì, nhòe mực khi in máy in laser đen trắng hoặc photocopy (sao y tài liệu), bảng RFI áp dụng quy chuẩn **Print-Friendly Clean White**:
+- **Nền Header Bảng**: Sử dụng nền **Trắng thuần (`#FFFFFF`)** thay vì nền xanh tối đặc `#1F3864`. Tiết kiệm 100% mực in nền, không làm ướt/nhăn giấy.
+- **Chữ Tiêu Đề**: Chữ màu xanh đậm `#1F3864` (hoặc đen `#000000`), in đậm (`Bold`), hiển thị sang trọng trên bản điện tử và đen nhánh, sắc nét tối đa trên bản in giấy.
+- **Viền Phân Cách Header**: Viền trên đơn `#1F3864` (`size 8`), viền dưới là **đường kẻ đôi `double` `#1F3864` (`size 12`)** — chuẩn mực thiết kế tài liệu kỹ thuật quốc tế FIDIC / ISO.
+- **Quy Tắc Ô Checkbox Phát Hành (Blank Issued Form)**: Khi phát hành phiếu RFI gửi khách hàng, **100% checkbox tại Cột 4 (Phản hồi đối tác) bắt buộc để trống `[ ]`**. Tuyệt đối không được tích sẵn `[x]` thay cho khách hàng.
 
 | Vai trò | Mã HEX | Áp dụng trên RFI Form |
 | :--- | :---: | :--- |
-| **Primary** | `#1F3864` | Nền Header bảng, Heading 2, Viền khung chính |
+| **Primary (Text & Border)** | `#1F3864` | Chữ Header bảng, Viền đôi phân cách, Heading 2, Khung chính |
+| **Header Background** | `#FFFFFF` | Nền trắng thuần (Print-Friendly, 0% lãng phí mực in) |
 | **Accent** | `#C00000` | Ngày hạn phản hồi (Due Date), Mức độ Khẩn / Urgent, Heading 1 |
 | **Secondary** | `#595959` | Dòng phụ đề tiếng Anh, Chú thích kỹ thuật, Metadata phụ |
 | **Body Text** | `#202020` | Văn bản nội dung (đen nhẹ, chống chói mắt) |
-| **Zebra Lẻ** | `#F2F2F2` | Nền xen kẽ cho các dòng dữ liệu lẻ |
-| **Zebra Chẵn** | `#FFFFFF` | Nền trắng thuần cho các dòng dữ liệu chẵn |
+| **Zebra Lẻ / Chẵn** | `#FFFFFF` | Nền trắng thuần sạch sẽ khi in ấn |
 | **Border / Line** | `#BFBFBF` | Đường kẻ mảnh phân cách bảng và viền ô |
 
 ---

@@ -66,7 +66,7 @@ sections:
           - checked: false
             label: "Mô hình BIM (.rvt/.ifc)"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Thuộc khuôn viên Lô J1-J2 hiện hữu"
           - checked: false
             text: "Thuê thêm lô đất mới ngoài hàng rào"
@@ -88,7 +88,7 @@ sections:
           - checked: false
             label: "Bản sao văn bản thỏa thuận"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có sẵn bản vẽ 1/500 phê duyệt cũ"
           - checked: false
             text: "Cần hỗ trợ liên hệ BQL KCN"
@@ -108,7 +108,7 @@ sections:
           - checked: true
             label: "Khảo sát đo đạc thực tế bể"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có sẵn bản vẽ trạm bơm cũ (cho mượn sao chép)"
           - checked: true
             text: "Nhất trí để chuyên gia IBST đo đạc lại cao độ bể thực tế"
@@ -133,7 +133,7 @@ sections:
           - checked: false
             label: "Sơ đồ dây chuyền khối"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Dự kiến: 02 tầng, tổng diện tích sàn khoảng 12.000 m2"
           - checked: false
             text: "Diện tích xưởng sản xuất sạch: khoảng 6.000 m2"
@@ -151,7 +151,7 @@ sections:
           - checked: true
             label: "Danh mục phòng ban chức năng"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Cần tích hợp khu văn phòng quản lý trên tầng 2"
           - checked: true
             text: "Kho nguyên liệu cần cửa xuất nhập độc lập"
@@ -169,7 +169,7 @@ sections:
           - checked: true
             label: "Bản kê thông số máy móc"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Chiều cao trần sạch mong muốn: 4.5m"
           - checked: true
             text: "Tải trọng sàn xưởng chính: 2.0 Tấn/m2"
@@ -192,7 +192,7 @@ sections:
           - checked: true
             label: "Bảng thông số môi trường xưởng"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Phòng sạch yêu cầu: ISO Class 7 (Class 10.000)"
           - checked: true
             text: "Nhiệt độ 22 +/- 2 độ C, Độ ẩm 50 +/- 5% RH"
@@ -211,7 +211,7 @@ sections:
           - checked: true
             label: "Bảng dữ liệu an toàn hóa chất (MSDS)"
         client_feedback:
-          - checked: true
+          - checked: false
             text: "Có dùng cồn IPA vệ sinh bản mạch (số lượng nhỏ)"
           - checked: true
             text: "Nhờ chuyên gia IBST tính toán giải pháp ngăn cháy kho IPA"
