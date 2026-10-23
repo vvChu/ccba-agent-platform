@@ -24,17 +24,25 @@ from ccba_legal.lexicon.models import (
     TermFacet,
     TermTemporal,
 )
+from ccba_legal.lexicon.normalizer import (
+    CanonicalTermNormalizer,
+    NormalizationReport,
+    TermReplacement,
+)
 
 __all__ = [
     "DEFAULT_RESOURCE_PATH",
     "CanonicalTerm",
+    "CanonicalTermNormalizer",
     "DisambiguationResult",
     "FacetedDisambiguationEngine",
     "ImmutableSpanMasker",
     "LexiconHarvester",
+    "NormalizationReport",
     "ProtectedSpan",
     "ProvenanceRecord",
     "TermFacet",
+    "TermReplacement",
     "TermTemporal",
     "compile_taxonomy_to_py",
     "compute_sha256",

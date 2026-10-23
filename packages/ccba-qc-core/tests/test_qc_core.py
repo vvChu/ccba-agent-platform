@@ -122,6 +122,7 @@ def test_reporter_engine_synthesize(tmp_path: Path) -> None:
     assert "Sample Project" in content
     assert "Truc 1-2" in content
     assert "Ban Do Rui Ro (Heat Map)" in content
+    assert "IBST - CCBA" in content
 
     out_json = out_md.with_suffix(".json")
     assert out_json.exists()

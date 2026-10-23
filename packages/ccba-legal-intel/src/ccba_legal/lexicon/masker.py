@@ -129,10 +129,11 @@ class ImmutableSpanMasker:
         curr_idx = 0
 
         for idx, span in enumerate(spans):
-            placeholder = f"{self.placeholder_prefix}{idx}__"
+            newline_padding = "\n" * span.text.count("\n")
+            placeholder = f"{self.placeholder_prefix}{idx}__{newline_padding}"
             masked_chunks.append(text[curr_idx : span.start])
             masked_chunks.append(placeholder)
-            span_registry[placeholder] = span.text
+            span_registry[f"{self.placeholder_prefix}{idx}__"] = span.text
             curr_idx = span.end
 
         masked_chunks.append(text[curr_idx:])
@@ -151,5 +152,8 @@ class ImmutableSpanMasker:
         if not span_registry:
             return text
 
-        pattern = re.compile(re.escape(self.placeholder_prefix) + r"\d+__")
-        return pattern.sub(lambda m: span_registry.get(m.group(0), m.group(0)), text)
+        pattern = re.compile(re.escape(self.placeholder_prefix) + r"(\d+)__\n*")
+        return pattern.sub(
+            lambda m: span_registry.get(f"{self.placeholder_prefix}{m.group(1)}__", m.group(0)),
+            text,
+        )
