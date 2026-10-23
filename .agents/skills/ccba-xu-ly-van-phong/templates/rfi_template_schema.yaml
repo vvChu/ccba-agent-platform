@@ -35,9 +35,9 @@ project_control:
 
 purpose_and_scope:
   vi: >
-    Phiếu này được thiết kế để nhóm chuyên gia Trung tâm BIM (IBST) trực tiếp đồng hành, phỏng vấn và hỗ trợ Nhà máy
+    Phiếu này được thiết kế để nhóm chuyên gia IBST trực tiếp đồng hành, phỏng vấn và hỗ trợ Nhà máy
     thu thập các Yêu cầu sử dụng của Chủ đầu tư (User Requirements) và các thông số công nghệ đầu vào.
-    Dựa trên các yêu cầu này, nhóm chuyên gia Trung tâm BIM (IBST) sẽ chịu trách nhiệm phân tích quy chuẩn (QCVN 06:2022/BXD,
+    Dựa trên các yêu cầu này, nhóm chuyên gia IBST sẽ chịu trách nhiệm phân tích quy chuẩn (QCVN 06:2022/BXD,
     QCVN 10:2025/BCA), tính toán kỹ thuật và đề xuất các phương án tối ưu trong Hồ sơ Đề cương (SOW) và Báo giá Tư vấn.
   en: >
     This brief is designed for IBST - CCBA experts to walk through and conduct on-site interviews with the Client,
@@ -56,7 +56,7 @@ sections:
           - "Xác định công trình mở rộng nằm trong khuôn viên Lô J1-J2 hiện hữu hay thuê bổ sung lô đất liền kề."
           - "Cung cấp bản vẽ sơ họa vị trí dự kiến xây dựng nhà máy mới trên tổng mặt bằng."
         consultant_recommendation: >
-          Đề xuất của Tư vấn: Nếu phía Nhà máy chưa có bản vẽ tách lô chính thức, chuyên gia Trung tâm BIM (IBST)
+          Đề xuất của Tư vấn: Nếu phía Nhà máy chưa có bản vẽ tách lô chính thức, chuyên gia IBST
           sẽ mang thiết bị Flycam và máy đo toàn đạc để định vị tọa độ mốc ranh giới ngay trong buổi khảo sát.
         deliverable_formats:
           - checked: true
@@ -80,7 +80,7 @@ sections:
           - "Bản sao Bản vẽ Quy hoạch tổng mặt bằng 1/500 của Lô J1-J2 đã được BQL KCN phê duyệt."
           - "Các thỏa thuận đấu nối hạ tầng ngoài hàng rào sẵn có (giao thông, thoát nước, cấp điện)."
         consultant_recommendation: >
-          Đề xuất của Tư vấn: Trung tâm BIM sẽ đối soát trực tiếp các chỉ tiêu quy hoạch (mật độ xây dựng tối đa,
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ đối soát trực tiếp các chỉ tiêu quy hoạch (mật độ xây dựng tối đa,
           chỉ giới xây dựng lùi) để tối đa hóa diện tích sàn xưởng được phép xây dựng theo QCVN 01:2021/BXD.
         deliverable_formats:
           - checked: true
@@ -100,7 +100,7 @@ sections:
           - "Bản vẽ mặt bằng, mặt cắt trạm bơm PCCC và kích thước hình học bể nước ngầm hiện hữu."
           - "Catalog thông số kỹ thuật của các máy bơm chữa cháy đang hoạt động."
         consultant_recommendation: >
-          Đề xuất của Tư vấn: Chuyên gia Trung tâm BIM sẽ đo đạc cao độ rốn hút (Sump pit), tấm chống xoáy và tính toán
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ đo đạc cao độ rốn hút (Sump pit), tấm chống xoáy và tính toán
           lại dung tích hữu ích theo QCVN 02:2020/BCA nhằm tận dụng tối đa trạm bơm hiện có, tránh phát sinh chi phí xây mới.
         deliverable_formats:
           - checked: true
@@ -111,7 +111,7 @@ sections:
           - checked: true
             text: "Có sẵn bản vẽ trạm bơm cũ (cho mượn sao chép)"
           - checked: true
-            text: "Nhất trí để Trung tâm BIM đo đạc lại cao độ bể thực tế"
+            text: "Nhất trí để chuyên gia IBST đo đạc lại cao độ bể thực tế"
 
   - section_id: "II"
     section_title_vi: "NHU CẦU KHÔNG GIAN & QUY MÔ DÂY CHUYỀN SẢN XUẤT"
@@ -145,7 +145,7 @@ sections:
           - "Khu vực sản xuất chính, phòng sạch (Cleanroom), kho nguyên vật liệu / kho thành phẩm."
           - "Văn phòng điều hành, phòng họp, phòng thay đồ, trạm biến áp, phòng nén khí."
         consultant_recommendation: >
-          Đề xuất của Tư vấn: Trung tâm BIM sẽ quy hoạch hành lang phân tách luồng người (Personnel Flow)
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ quy hoạch hành lang phân tách luồng người (Personnel Flow)
           và luồng hàng (Material Flow) độc lập ngay từ bước Thiết kế Khái niệm để đáp ứng tiêu chuẩn GMP/ISO quốc tế.
         deliverable_formats:
           - checked: true
@@ -204,8 +204,8 @@ sections:
           - "Trong quy trình có sử dụng cồn công nghiệp (IPA), dung môi hữu cơ, keo dán tẩy rửa không?"
           - "Khối lượng lưu trữ hóa chất tối đa tại khu vực sản xuất và kho chứa?"
         consultant_recommendation: >
-          Đề xuất của Tư vấn: Trung tâm BIM sẽ chịu trách nhiệm tính toán xác định Hạng nguy hiểm cháy C hoặc D
-          theo Phụ lục C QCVN 06:2022/BXD. Nếu có dung môi IPA, Trung tâm BIM sẽ bố trí phòng pha chế chuyên dụng
+          Đề xuất của Tư vấn: Chuyên gia IBST sẽ chịu trách nhiệm tính toán xác định Hạng nguy hiểm cháy C hoặc D
+          theo Phụ lục C QCVN 06:2022/BXD. Nếu có dung môi IPA, Chuyên gia IBST sẽ bố trí phòng pha chế chuyên dụng
           có tường ngăn cháy loại 1 và hệ thống hút khí xả phòng nổ để bảo vệ toàn bộ nhà máy không bị phân loại Hạng A/B.
         deliverable_formats:
           - checked: true
@@ -214,7 +214,7 @@ sections:
           - checked: true
             text: "Có dùng cồn IPA vệ sinh bản mạch (số lượng nhỏ)"
           - checked: true
-            text: "Nhờ Trung tâm BIM tính toán giải pháp ngăn cháy kho IPA"
+            text: "Nhờ chuyên gia IBST tính toán giải pháp ngăn cháy kho IPA"
 
 signoff:
   consultant:
