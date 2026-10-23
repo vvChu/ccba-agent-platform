@@ -18,7 +18,7 @@
    - Viết chuẩn: **`IBST - CCBA`** hoặc **`IBST - Trung tâm BIM`** (Cơ quan chủ quản trước $\to$ Đơn vị trực thuộc thực hiện sau).
    - *CẤM DÙNG:* `IBST / CCBA` (dấu slash `/` dễ bị đối tác quốc tế hiểu lầm là Liên danh nhà thầu/tư vấn Joint Venture hoặc quan hệ thay thế And/Or).
 4. **Khối tư vấn dẫn dắt trong câu văn**:
-   - Viết chuẩn: **`💡 Đề xuất của Trung tâm BIM`** (hoặc `Đề xuất của Trung tâm BIM (IBST)`), tạo văn phong tự nhiên, mềm mại, tôn trọng tiếng Việt và giữ vững vị thế tư vấn trực tiếp.
+   - Viết chuẩn: **`💡 Đề xuất của Tư vấn`** (hoặc `Đề xuất của Tư vấn (IBST)`), tạo văn phong tự nhiên, mềm mại, tôn trọng tiếng Việt và giữ vững vị thế tư vấn trực tiếp.
 5. **Phân cấp Header**:
    - **Tối đa 2 cấp**: Cấp Viện (dòng 1) và Cấp Trung tâm (dòng 2).
    - **Tuyệt đối KHÔNG đưa "BỘ XÂY DỰNG"** vào Header của biểu mẫu kỹ thuật dự án.
@@ -105,7 +105,7 @@
 ├───────┼─────────────────────────────────┼───────────────────────────────┼──────────────────────────────┤
 │ 1.1   │ [Tên hạng mục]                  │ [ ] File CAD (.dwg)           │ [ ] Đã đính kèm: ...         │
 │       │ • Yêu cầu chi tiết...           │ [ ] File BIM (.rvt / .ifc)    │ [ ] Cung cấp tại buổi họp    │
-│       │ • Đề xuất của Trung tâm BIM     │ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
+│       │ • Đề xuất của Tư vấn     │ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
 │       │   (Consultant's Recommendation) │ [ ] Khảo sát thực địa         │     khảo sát đề xuất phương án│
 ├───────┴─────────────────────────────────┴───────────────────────────────┴──────────────────────────────┤
 │ III. XÁC NHẬN & ĐÓNG PHIẾU (SIGN-OFF & PROTOCOL - 2 Ô CHỐNG TÁCH TRANG - 9071 DXA)                    │

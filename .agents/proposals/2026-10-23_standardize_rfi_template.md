@@ -68,4 +68,4 @@ Trong quá trình triển khai các dự án tư vấn BIM và PCCC công nghi�
    - **Bảng màu Formal Navy (COND-02):** Header `#1F3864`, Text `#FFFFFF`, Zebra `#F2F2F2` / `#FFFFFF`, Accent `#C00000`, Secondary `#595959`, Body `#202020`.
    - **Bảo toàn OpenXML (COND-06):** $100\%$ thẻ `<w:cantSplit/>` cho từng dòng, thẻ `<w:tblHeader/>` cho dòng tiêu đề.
    - **Quy chuẩn danh xưng bất biến (RULE-6.1):** Viện (`Viện`, `Viện KHCN`, `IBST`), Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA`). Đơn vị gửi: `IBST - CCBA` (CẤM dùng slash `IBST / CCBA` để tránh hiểu lầm liên danh). Bỏ Quốc hiệu NĐ 30 và "Bộ Xây dựng" khỏi Header kỹ thuật.
-   - **Khối tư vấn dẫn dắt:** Bắt buộc có mục "💡 Đề xuất của Trung tâm BIM (Consultant's Recommendation)" dưới mỗi câu hỏi.
+   - **Khối tư vấn dẫn dắt:** Bắt buộc có mục "💡 Đề xuất của Tư vấn (Consultant's Recommendation)" dưới mỗi câu hỏi.
