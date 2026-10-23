@@ -290,7 +290,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--verify-preset",
         type=str,
-        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval", "lexicon"],
         default="ci",
         help="Verification preset to run upon auto-apply (default: ci).",
     )
@@ -506,7 +506,7 @@ def run_peer_co_review_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--verify-preset",
         type=str,
-        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval"],
+        choices=["code", "doc", "skill", "adr", "telemetry", "ci", "eval", "lexicon"],
         default="ci",
         help="Verification preset to run upon auto-apply (default: ci).",
     )
