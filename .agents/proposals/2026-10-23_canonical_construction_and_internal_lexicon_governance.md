@@ -25,7 +25,7 @@ supersedes_spoke_docs: []
 - **Trạng thái:** Đang đề xuất (Proposed)
 - **Căn cứ pháp lý & thể chế nền tảng:**
   - [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md) (Hub Proposal Ingestion Governance)
-  - [ADR-0061](../../docs/adr/0061-platform-aware-kiss-seam-contracts.md) (Platform-Aware KISS & Seam Contracts)
+  - [ADR-0061](../../docs/adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md) (Platform-Aware KISS v2.0 & Quarantine Governance)
   - Luật Xây dựng (Luật 50/2014/QH13 & Luật 62/2020/QH14)
   - Nghị định 15/2021/NĐ-CP & Nghị định 50/2024/NĐ-CP
   - Quy chuẩn QCVN 06:2022/BXD (Sửa đổi 1:2023) & Hệ thống TCVN
