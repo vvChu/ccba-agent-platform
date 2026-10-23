@@ -130,6 +130,8 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 |---|---|
 | `templates/docx-hanh-chinh-*.md` | 9 mẫu VB hành chính NĐ 30 (công văn, quyết định, tờ trình...) |
 | `templates/docx-de-xuat-*.md` | Mẫu đề xuất/báo cáo |
+| `templates/docx-ky-thuat-rfi.md` | Mẫu Phiếu Yêu cầu Cung cấp Thông tin Kỹ thuật (RFI) theo ISO 19650/FIDIC (4-column response grid 9071 DXA, Formal Navy) |
+| `templates/rfi_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho biểu mẫu RFI kỹ thuật |
 | `examples/docx-bao-cao-formal-navy.docx` | DOCX báo cáo — palette Formal Navy |
 | `examples/docx-cong-van-nd30.docx` | DOCX công văn — chuẩn NĐ 30 |
 | `examples/xlsx-bao-cao-tien-do.xlsx` | Excel tracking — palette X2 Corporate Green |
@@ -147,6 +149,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 | Báo cáo nội bộ nhanh | `page-setup` + `heading` + `table` | Không (đen trắng) | `docx.md` |
 | Bảng tính tracking | `table.md` | Không hoặc tùy chọn | `xlsx.md` |
 | Slide pitch deck | — | `slide-palettes.md` | `pptx.md` |
+| Phiếu RFI kỹ thuật dự án | `docx-ky-thuat-rfi.md` | `formal-navy.md` | `docx.md` / `WordFormFiller` |
 | PDF scan → DOCX | Phân tích cấu trúc gốc | Phân tích màu gốc | `pdf.md` + `docx.md` |
 | PDF digital → DOCX | — | — | `convert.md` |
 | Giữ format file mẫu | — | — | `office-xml.md` |
@@ -160,6 +163,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 - **Về Slide:** Không chấp nhận slide chỉ text trắng nền trắng.
 - **Về màu sắc:** Mọi tổ hợp text/background phải đạt contrast WCAG.
 - **Về Word khi user không nói rõ:** Hỏi trước — sự khác biệt giữa NĐ 30 và đề xuất doanh nghiệp là rất lớn.
+- **Về biểu mẫu RFI & Trao đổi Kỹ thuật Dự án (RULE-6.1):** Áp dụng cấu trúc 2 cấp quản lý (`Viện Khoa học công nghệ xây dựng` → `Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng`), bỏ Quốc hiệu NĐ 30 và dòng "Bộ Xây dựng". Tuân thủ danh xưng chuẩn mực: Viện (`Viện`, `Viện KHCN`, `IBST` - CẤM `Viện IBST`) và Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA` - CẤM `Trung tâm CCBA`). Trường From ghi nhận chuẩn `IBST / CCBA`. Bổ sung khối "💡 Đề xuất của IBST / CCBA" tại từng hạng mục kỹ thuật.
 
 ## Không được phép
 
