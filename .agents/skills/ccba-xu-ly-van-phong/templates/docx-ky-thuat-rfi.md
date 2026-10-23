@@ -14,9 +14,12 @@
 2. **Đơn vị trực thuộc**: Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng.
    - Danh xưng viết tắt chuẩn: **`Trung tâm`**, **`Trung tâm BIM`**, hoặc **`CCBA`**.
    - *CẤM TUYỆT ĐỐI:* Dùng `Trung tâm CCBA` (lặp từ tautology).
-3. **Đơn vị gửi (From / Consultant)**:
-   - Viết chuẩn: **`IBST / CCBA`** hoặc **`IBST - CCBA`** (Cơ quan chủ quản trước $\to$ Đơn vị thực hiện sau).
-4. **Phân cấp Header**:
+3. **Đơn vị gửi (From / Consultant) & Metadata**:
+   - Viết chuẩn: **`IBST - CCBA`** hoặc **`IBST - Trung tâm BIM`** (Cơ quan chủ quản trước $\to$ Đơn vị trực thuộc thực hiện sau).
+   - *CẤM DÙNG:* `IBST / CCBA` (dấu slash `/` dễ bị đối tác quốc tế hiểu lầm là Liên danh nhà thầu/tư vấn Joint Venture hoặc quan hệ thay thế And/Or).
+4. **Khối tư vấn dẫn dắt trong câu văn**:
+   - Viết chuẩn: **`💡 Đề xuất của Trung tâm BIM`** (hoặc `Đề xuất của Trung tâm BIM (IBST)`), tạo văn phong tự nhiên, mềm mại, tôn trọng tiếng Việt và giữ vững vị thế tư vấn trực tiếp.
+5. **Phân cấp Header**:
    - **Tối đa 2 cấp**: Cấp Viện (dòng 1) và Cấp Trung tâm (dòng 2).
    - **Tuyệt đối KHÔNG đưa "BỘ XÂY DỰNG"** vào Header của biểu mẫu kỹ thuật dự án.
    - **Không chèn đuôi ngoặc đơn `(IBST)` và `(CCBA)`** vào dòng tiếng Việt chính thức. Tên tiếng Anh viết tắt được thể hiện qua Logo hoặc dòng phụ đề song ngữ trang nhã (`Secondary #595959`).
@@ -86,7 +89,7 @@
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ THÔNG TIN KIỂM SOÁT DỰ ÁN (PROJECT CONTROL MATRIX) - 9071 DXA                                          │
 ├───────────────────────────────┬────────────────────────────────┬───────────────────────────────────────┤
-│ Dự án: {{TEN_DU_AN}}          │ Gửi đến (To): {{BEN_NHAN}}     │ Đơn vị gửi (From): IBST / CCBA        │
+│ Dự án: {{TEN_DU_AN}}          │ Gửi đến (To): {{BEN_NHAN}}     │ Đơn vị gửi (From): IBST - CCBA        │
 │ Gói thầu: {{TEN_GOI_THAU}}    │ Người nhận: {{NGUOI_NHAN}}     │ Điều phối viên (PIC): {{DIEU_PHOI_VIEN│
 ├───────────────────────────────┼────────────────────────────────┼───────────────────────────────────────┤
 │ Bộ môn: {{BO_MON}}            │ Phân khu / Tầng: {{VI_TRI}}    │ Ảnh hưởng Chi phí:  {{ANH_HUONG_CHI_PH│
@@ -102,12 +105,12 @@
 ├───────┼─────────────────────────────────┼───────────────────────────────┼──────────────────────────────┤
 │ 1.1   │ [Tên hạng mục]                  │ [ ] File CAD (.dwg)           │ [ ] Đã đính kèm: ...         │
 │       │ • Yêu cầu chi tiết...           │ [ ] File BIM (.rvt / .ifc)    │ [ ] Cung cấp tại buổi họp    │
-│       │ • Đề xuất kỹ thuật của IBST/CCBA│ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
+│       │ • Đề xuất của Trung tâm BIM     │ [ ] File PDF ký số            │ [ ] Chưa có / Nhờ tư vấn     │
 │       │   (Consultant's Recommendation) │ [ ] Khảo sát thực địa         │     khảo sát đề xuất phương án│
 ├───────┴─────────────────────────────────┴───────────────────────────────┴──────────────────────────────┤
 │ III. XÁC NHẬN & ĐÓNG PHIẾU (SIGN-OFF & PROTOCOL - 2 Ô CHỐNG TÁCH TRANG - 9071 DXA)                    │
 ├───────────────────────────────────────────────┬────────────────────────────────────────────────────────┤
-│          ĐẠI DIỆN TƯ VẤN (IBST / CCBA)        │             ĐẠI DIỆN KHÁCH HÀNG / ĐỐI TÁC              │
+│          ĐẠI DIỆN TƯ VẤN (IBST - CCBA)        │             ĐẠI DIỆN KHÁCH HÀNG / ĐỐI TÁC              │
 │                                               │                                                        │
 │ Người lập phiếu (Author / Cấp 1A):            │ Người tiếp nhận & Phản hồi (Recipient):                │
 │ {{NGUOI_LAP_PHIEU}}                           │ {{NGUOI_TIEP_NHAN}}                                    │

@@ -67,5 +67,5 @@ Trong quá trình triển khai các dự án tư vấn BIM và PCCC công nghi�
    - **Hình học nền tảng khóa cứng (COND-01):** Khổ A4, lề trái $3.0\text{ cm}$ (`1701 DXA`), lề phải/trên/dưới $2.0\text{ cm}$ (`1134 DXA`). Vùng nội dung bất biến $\mathbf{CONTENT\_WIDTH = 9071\text{ DXA}}$. Lưới 4 cột: $700 + 3400 + 1800 + 3171 = 9071\text{ DXA}$ ($100.0\%$). Khối ký 2 ô: $4535 + 4536 = 9071\text{ DXA}$. Đệm ô: $57\text{ DXA}$ dọc, $85\text{ DXA}$ ngang.
    - **Bảng màu Formal Navy (COND-02):** Header `#1F3864`, Text `#FFFFFF`, Zebra `#F2F2F2` / `#FFFFFF`, Accent `#C00000`, Secondary `#595959`, Body `#202020`.
    - **Bảo toàn OpenXML (COND-06):** $100\%$ thẻ `<w:cantSplit/>` cho từng dòng, thẻ `<w:tblHeader/>` cho dòng tiêu đề.
-   - **Quy chuẩn danh xưng bất biến (RULE-6.1):** Viện (`Viện`, `Viện KHCN`, `IBST`), Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA`). Đơn vị gửi: `IBST / CCBA`. Bỏ Quốc hiệu NĐ 30 và "Bộ Xây dựng" khỏi Header kỹ thuật.
-   - **Khối tư vấn dẫn dắt:** Bắt buộc có mục "💡 Đề xuất của IBST / CCBA (Consultant's Recommendation)" dưới mỗi câu hỏi.
+   - **Quy chuẩn danh xưng bất biến (RULE-6.1):** Viện (`Viện`, `Viện KHCN`, `IBST`), Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA`). Đơn vị gửi: `IBST - CCBA` (CẤM dùng slash `IBST / CCBA` để tránh hiểu lầm liên danh). Bỏ Quốc hiệu NĐ 30 và "Bộ Xây dựng" khỏi Header kỹ thuật.
+   - **Khối tư vấn dẫn dắt:** Bắt buộc có mục "💡 Đề xuất của Trung tâm BIM (Consultant's Recommendation)" dưới mỗi câu hỏi.
