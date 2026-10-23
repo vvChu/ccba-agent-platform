@@ -20,7 +20,9 @@ supersedes_spoke_docs: []
 - **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm CCBA)
 - **Ngày lập:** 2026-10-23
 - **Trạng thái:** Đang đề xuất (Proposed)
-- **Phán quyết Thẩm định:** **`APPROVE`** từ Grok 4.7 (`req-spoke-standardize-rfi-template-002`, 0 blocking conditions)
+- **Phán quyết Thẩm định:**
+  - Vòng 1 (Khung mẫu RFI): **`APPROVE`** từ Grok 4.7 (`req-spoke-standardize-rfi-template-002`, 0 blocking conditions).
+  - Vòng 2 (Điển hình hóa Động cơ Cân bằng Cột Thích ứng & Bất biến OpenXML Fixed Grid): **`APPROVE_WITH_CONDITIONS`** từ Grok 4.7 (`req-spoke-adaptive-table-balancer-001`, tuân thủ 4 điều kiện phong tỏa COND-07 đến COND-10).
 - **Căn cứ pháp lý nền tảng:** [ADR-0045](../../docs/adr/0045-hub-proposal-ingestion-governance.md), [ADR-0061](../../docs/adr/0061-platform-aware-kiss-seam-contracts.md), Tiêu chuẩn ISO 19650, Hợp đồng Mẫu FIDIC, Thể chế Thương hiệu CCBA.
 
 ---
@@ -69,3 +71,8 @@ Trong quá trình triển khai các dự án tư vấn BIM và PCCC công nghi�
    - **Bảo toàn OpenXML (COND-06):** $100\%$ thẻ `<w:cantSplit/>` cho từng dòng, thẻ `<w:tblHeader/>` cho dòng tiêu đề.
    - **Quy chuẩn danh xưng bất biến (RULE-6.1):** Viện (`Viện`, `Viện KHCN`, `IBST`), Trung tâm (`Trung tâm`, `Trung tâm BIM`, `CCBA`). Đơn vị gửi: `IBST - CCBA` (CẤM dùng slash `IBST / CCBA` để tránh hiểu lầm liên danh). Bỏ Quốc hiệu NĐ 30 và "Bộ Xây dựng" khỏi Header kỹ thuật.
    - **Khối tư vấn dẫn dắt:** Bắt buộc có mục "💡 Đề xuất của Tư vấn (Consultant's Recommendation)" dưới mỗi câu hỏi.
+   - **4 Điều kiện phong tỏa Vòng 2 của Grok (COND-07 đến COND-10):**
+     * `COND-07 (Font-Scale Heuristic)`: Bề rộng ký tự tính co dãn theo cỡ phông `char_width_dxa = round(font_size_pt * 5.8)` kèm sàn an toàn $W_{\min}$ cho từng vai trò ($W_{\text{INDEX}} \ge 600$, $W_{\text{DISCRETE}} \ge 1400$, $W_{\text{FEEDBACK}} \ge 2200$).
+     * `COND-08 (Multi-Primary Distribution)`: Khi có $\ge 2$ cột chính (như bảng so sánh VBHN hoặc giải trình thẩm tra), phần dư $W_{\text{residual}}$ được chia theo tỷ lệ trọng số $w_j / \sum w_k$ (mặc định 1:1).
+     * `COND-09 (Strict OpenXML & Opt-In)`: Kiểm tra điều kiện $\sum \text{gridCol} == \text{tblW}$ (sai số = 0) trước khi tiêm fixed grid, cung cấp Seam API độc lập `build_adaptive_fixed_table()` để bảo toàn tính tương thích ngược.
+     * `COND-10 (Hub Placement Invariant)`: Đóng gói động cơ trên Hub tại `packages/ccba-ooxml/src/ccba_ooxml/table/grid_balancer.py`, giữ nguyên ngân sách $15/15$ scripts của Spoke.
