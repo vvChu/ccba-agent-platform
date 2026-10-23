@@ -2,12 +2,13 @@
 
 Compiles canonical_construction_taxonomy.yaml into a zero-IO, offline-capable
 Python module (_generated_taxonomy.py) for distribution wheels and edge runtimes.
+Generates compact, high-performance static data respecting the 800-LOC module budget.
 """
 
 from __future__ import annotations
 
 import hashlib
-import pprint
+import json
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +38,7 @@ def compile_taxonomy_to_py(
     data: dict[str, Any] = yaml.safe_load(raw_bytes) or {}
 
     version = data.get("schema_version", data.get("taxonomy_version", "2026.10.1"))
-    terms = data.get("terms", {})
+    json_payload = json.dumps(data, ensure_ascii=False)
 
     lines = [
         '"""AUTO-GENERATED FILE — DO NOT EDIT DIRECTLY.',
@@ -49,12 +50,15 @@ def compile_taxonomy_to_py(
         "",
         "from __future__ import annotations",
         "",
+        "import json",
+        "",
         f'TAXONOMY_VERSION: str = "{version}"',
         f'TAXONOMY_SHA256: str = "{sha256_hash}"',
         "",
-        f"CANONICAL_TAXONOMY: dict = {pprint.pformat(data, width=100, compact=True)}",
+        f"_RAW_JSON: str = {json.dumps(json_payload)}",
         "",
-        f"TERMS: dict = {pprint.pformat(terms, width=100, compact=True)}",
+        "CANONICAL_TAXONOMY: dict = json.loads(_RAW_JSON)",
+        'TERMS: dict = CANONICAL_TAXONOMY.get("terms", {})',
         "",
     ]
 
