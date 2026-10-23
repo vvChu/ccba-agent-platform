@@ -39,8 +39,15 @@ def inject_semantic_anchors(
             continue
         khoan_match = profile.khoan_pattern.match(stripped)
         if khoan_match and current_dieu:
-            khoan_num = khoan_match.group(1) or khoan_match.group(2)
-            khoan_rest = khoan_match.group(3)
+            if khoan_match.lastindex == 2:
+                khoan_num = khoan_match.group(1)
+                khoan_rest = khoan_match.group(2)
+            elif khoan_match.lastindex and khoan_match.lastindex >= 3:
+                khoan_num = khoan_match.group(1) or khoan_match.group(2)
+                khoan_rest = khoan_match.group(3)
+            else:
+                khoan_num = khoan_match.group(1)
+                khoan_rest = ""
             anchor = f'<a id="dieu-{current_dieu}-khoan-{khoan_num}"></a>'
             processed_lines.append(f"{anchor}\n**{khoan_num}.** {khoan_rest}")
             continue

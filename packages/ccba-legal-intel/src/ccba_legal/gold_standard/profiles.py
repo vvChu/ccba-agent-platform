@@ -17,7 +17,9 @@ class DocProfile:
         )
     )
     khoan_pattern: re.Pattern[str] = field(
-        default_factory=lambda: re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)")
+        default_factory=lambda: re.compile(
+            r"^\s*(?:\*{0,2}_*(\d+)[\.\*\_]{1,3}\*{0,2}_*)\s+([^\n]+)"
+        )
     )
     sec_pattern: re.Pattern[str] = field(
         default_factory=lambda: re.compile(
@@ -36,7 +38,7 @@ def get_doc_profile(doc_type: str | None = "vbpl") -> DocProfile:
             dieu_pattern=re.compile(
                 r"^#*\s*[\"“]?(?:__|\*\*)?\s*(Điều\s+(\d+[a-zA-ZđĐ]?)\.?[^\n]*)", re.IGNORECASE
             ),
-            khoan_pattern=re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)"),
+            khoan_pattern=re.compile(r"^\s*(?:\*{0,2}_*(\d+)[\.\*\_]{1,3}\*{0,2}_*)\s+([^\n]+)"),
             sec_pattern=re.compile(
                 r"^#*\s*(?:<a[^>]+></a>\s*)?(((?:[A-Z]\.)?\d+(?:\.\d+)*|[A-Z]\.\d+)\s+([^\n]+))"
             ),
@@ -47,7 +49,7 @@ def get_doc_profile(doc_type: str | None = "vbpl") -> DocProfile:
         dieu_pattern=re.compile(
             r"^#*\s*[\"“]?(?:__|\*\*)?\s*(Điều\s+(\d+[a-zA-ZđĐ]?)\.?[^\n]*)", re.IGNORECASE
         ),
-        khoan_pattern=re.compile(r"^(?:\*\*(\d+)\.\*\*|(\d+)\.)\s+([^\n]+)"),
+        khoan_pattern=re.compile(r"^\s*(?:\*{0,2}_*(\d+)[\.\*\_]{1,3}\*{0,2}_*)\s+([^\n]+)"),
         sec_pattern=re.compile(r"^#*\s*((\d+\.\d+(\.\d+)?)\s+([^\n]+))"),
         section_prefix="muc",
     )
