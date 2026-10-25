@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -636,3 +637,99 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     if report.total_items == 0:
         return _render_eval_empty_report(args, report)
     return _render_eval_cli_report(args, report)
+
+
+def _load_env_fallback() -> None:
+    """Loads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from workspace or Hub .env if unset."""
+    if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
+        return
+    from ccba_harness.evals.daemon import find_project_root
+
+    candidates = [Path.cwd() / ".env"]
+    hub_env = os.environ.get("CCBA_HUB_PATH")
+    if hub_env:
+        candidates.append(Path(hub_env) / ".env")
+    candidates.append(find_project_root() / ".env")
+    for env_file in candidates:
+        if not env_file.is_file():
+            continue
+        for raw in env_file.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            key = k.strip()
+            if key in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID") and key not in os.environ:
+                os.environ[key] = v.strip().strip("'\"")
+
+
+def _dispatch_notify_args(args: argparse.Namespace) -> int:
+    """Executes token health check, document upload, or text alert based on parsed CLI args."""
+    _load_env_fallback()
+    from ccba_harness.evals.daemon import (
+        check_telegram_token_health,
+        send_telegram_alert,
+        send_telegram_document,
+    )
+
+    if args.check_token:
+        ok = check_telegram_token_health(bot_token=args.token, mock_fallback=args.mock)
+        return 0 if ok else 1
+
+    if args.file:
+        ok = send_telegram_document(
+            file_path=args.file,
+            caption=args.caption or args.message,
+            bot_token=args.token,
+            chat_id=args.chat_id,
+            parse_mode=args.parse_mode or "HTML",
+            mock_fallback=args.mock,
+        )
+        return 0 if ok else 1
+
+    msg = args.message or args.caption
+    if not msg:
+        print("ERROR: Either --file or --caption/--message is required.", file=sys.stderr)
+        return 1
+    ok = send_telegram_alert(
+        message=msg,
+        bot_token=args.token,
+        chat_id=args.chat_id,
+        parse_mode=args.parse_mode or "Markdown",
+        mock_fallback=args.mock,
+    )
+    return 0 if ok else 1
+
+
+def run_notify_cli(args_list: Sequence[str] | None = None) -> int:
+    """CLI entry point for unified Telegram & ChatOps artifact dispatcher (`ccba-harness notify`)."""
+    parser = argparse.ArgumentParser(
+        prog="ccba-harness notify",
+        description="Unified Telegram & ChatOps Artifact Dispatcher with Token Health Check.",
+    )
+    parser.add_argument(
+        "--file", "-f", type=str, default=None, help="Path to artifact file to send"
+    )
+    parser.add_argument(
+        "--caption", "-c", type=str, default=None, help="Caption or notification text"
+    )
+    parser.add_argument(
+        "--message", "-m", type=str, default=None, help="Text message (when no --file)"
+    )
+    parser.add_argument(
+        "--parse-mode", type=str, default=None, help="Telegram parse mode (HTML/Markdown)"
+    )
+    parser.add_argument(
+        "--token", type=str, default=None, help="Explicit Telegram Bot Token override"
+    )
+    parser.add_argument(
+        "--chat-id", type=str, default=None, help="Explicit Telegram Chat ID override"
+    )
+    parser.add_argument(
+        "--check-token", action="store_true", help="Run pre-flight token health check only"
+    )
+    parser.add_argument(
+        "--mock", action="store_true", help="Enable mock fallback when credentials missing"
+    )
+    args = parser.parse_args(args_list)
+    return _dispatch_notify_args(args)

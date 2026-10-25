@@ -106,6 +106,12 @@ COMMANDS: tuple[CommandSpec, ...] = (
         attr="run_door_triage_cli",
         help="Classify PR into TWO_WAY_DOOR, PAVED_ROAD, or ONE_WAY_DOOR.",
     ),
+    CommandSpec(
+        names=("notify",),
+        module="ccba_harness.cli.commands.evals",
+        attr="run_notify_cli",
+        help="Dispatch files or alerts to Telegram with token pre-flight health check.",
+    ),
 )
 
 COMMAND_MAP: dict[str, CommandSpec] = {name: spec for spec in COMMANDS for name in spec.names}
