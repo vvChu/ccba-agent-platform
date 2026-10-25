@@ -10,9 +10,12 @@ import datetime
 import hashlib
 import json
 import logging
+import mimetypes
 import os
 import subprocess
+import urllib.error
 import urllib.request
+import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
@@ -49,6 +52,172 @@ from .tuner import (
 )
 
 logger = logging.getLogger("ccba.eval.nightly")
+
+SUPPORTED_TELEGRAM_DOC_EXTENSIONS: frozenset[str] = frozenset(
+    {".pdf", ".docx", ".pptx", ".xlsx", ".html", ".png", ".md", ".txt", ".json", ".zip"}
+)
+
+
+def check_telegram_token_health(
+    bot_token: str | None = None,
+    timeout: int = 5,
+    mock_fallback: bool = False,
+) -> bool:
+    """Verifies Telegram Bot Token validity via /getMe pre-flight endpoint."""
+    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not tg_bot_auth:
+        if mock_fallback:
+            logger.info("📱 [Mock Telegram Token Health Check Passed]")
+            return True
+        logger.warning("⚠️ Missing TELEGRAM_BOT_TOKEN. Token health check failed.")
+        return False
+
+    if "PYTEST_CURRENT_TEST" in os.environ and bot_token is None:
+        logger.info("📱 [Mock Telegram Test Mode - Skipped Token Health Check]")
+        return True
+
+    req = urllib.request.Request(f"https://api.telegram.org/bot{tg_bot_auth}/getMe", method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            if resp.status == 200:
+                return True
+            if resp.status == 401:
+                logger.warning(
+                    "⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather"
+                )
+                return False
+            logger.warning(f"⚠️ Telegram getMe phản hồi mã: {resp.status}")
+            return False
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            logger.warning(
+                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
+            )
+            return False
+        logger.warning(f"⚠️ Telegram token health check HTTP error ({e.code}): {e}")
+        return False
+    except Exception as e:
+        logger.warning(f"⚠️ Không thể kiểm tra Telegram token health: {e}")
+        return False
+
+
+def _build_multipart_document_body(
+    chat_id: str,
+    file_path: Path,
+    caption: str | None,
+    parse_mode: str,
+) -> tuple[bytes, str]:
+    """Encodes chat_id, optional caption, and document file into multipart/form-data."""
+    boundary = f"----CCBATelegramBoundary{uuid.uuid4().hex}"
+    crlf = b"\r\n"
+    chunks: list[bytes] = []
+
+    fields: list[tuple[str, str]] = [("chat_id", chat_id)]
+    if caption:
+        fields.append(("caption", caption))
+        if parse_mode:
+            fields.append(("parse_mode", parse_mode))
+
+    for name, val in fields:
+        chunks.append(f"--{boundary}".encode())
+        chunks.append(f'Content-Disposition: form-data; name="{name}"'.encode())
+        chunks.append(b"")
+        chunks.append(val.encode("utf-8"))
+
+    mime_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+    chunks.append(f"--{boundary}".encode())
+    chunks.append(
+        f'Content-Disposition: form-data; name="document"; filename="{file_path.name}"'.encode()
+    )
+    chunks.append(f"Content-Type: {mime_type}".encode())
+    chunks.append(b"")
+    chunks.append(file_path.read_bytes())
+    chunks.append(f"--{boundary}--".encode())
+    chunks.append(b"")
+    return crlf.join(chunks), f"multipart/form-data; boundary={boundary}"
+
+
+def _dispatch_telegram_multipart(
+    tg_bot_auth: str,
+    target_channel: str,
+    doc_path: Path,
+    caption: str | None,
+    parse_mode: str,
+    timeout: int,
+) -> bool:
+    """Dispatches encoded multipart document payload to Telegram /sendDocument endpoint."""
+    body, content_type = _build_multipart_document_body(
+        chat_id=target_channel, file_path=doc_path, caption=caption, parse_mode=parse_mode
+    )
+    endpoint_url = f"https://api.telegram.org/bot{tg_bot_auth}/sendDocument"
+    req = urllib.request.Request(endpoint_url, data=body, headers={"Content-Type": content_type})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            if resp.status == 200:
+                logger.info(f"✅ Đã gửi tài liệu Telegram thành công: {doc_path.name}")
+                return True
+            if resp.status == 401:
+                logger.warning(
+                    "⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather"
+                )
+                return False
+            logger.warning(f"⚠️ Telegram sendDocument phản hồi mã: {resp.status}")
+            return False
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            logger.warning(
+                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
+            )
+            return False
+        logger.warning(f"⚠️ Lỗi HTTP khi gửi tài liệu Telegram ({e.code}): {e}")
+        return False
+    except Exception as e:
+        logger.warning(f"⚠️ Không thể gửi tài liệu Telegram: {e}")
+        return False
+
+
+def send_telegram_document(
+    file_path: str | Path,
+    caption: str | None = None,
+    bot_token: str | None = None,
+    chat_id: str | None = None,
+    parse_mode: str = "HTML",
+    timeout: int = 30,
+    mock_fallback: bool = False,
+    check_token: bool = True,
+) -> bool:
+    """Sends an artifact file (.pdf, .docx, .pptx, .xlsx, .html, .png, etc.) to Telegram Bot API."""
+    doc_path = Path(file_path)
+    if not doc_path.is_file():
+        logger.warning(f"⚠️ File không tồn tại để gửi Telegram: {doc_path}")
+        return False
+    if doc_path.suffix.lower() not in SUPPORTED_TELEGRAM_DOC_EXTENSIONS:
+        logger.warning(f"⚠️ Định dạng file không được hỗ trợ gửi Telegram: {doc_path.suffix}")
+        return False
+
+    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    if not tg_bot_auth or not target_channel:
+        if mock_fallback:
+            logger.info(f"📱 [Mock Telegram Document Sent]: {doc_path.name}")
+            return True
+        logger.warning(
+            "⚠️ Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID. Telegram document was not sent."
+        )
+        return False
+
+    if "PYTEST_CURRENT_TEST" in os.environ and bot_token is None:
+        logger.info(f"📱 [Mock Telegram Test Mode - Skipped Document Upload]: {doc_path.name}")
+        return True
+
+    if check_token and not check_telegram_token_health(
+        bot_token=tg_bot_auth, timeout=min(timeout, 10)
+    ):
+        return False
+
+    return _dispatch_telegram_multipart(
+        tg_bot_auth, str(target_channel), doc_path, caption, parse_mode, timeout
+    )
 
 
 def send_telegram_alert(
@@ -92,6 +261,14 @@ def send_telegram_alert(
                 return True
             logger.warning(f"⚠️ Telegram API phản hồi mã: {resp.status}")
             return False
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            logger.warning(
+                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
+            )
+            return False
+        logger.warning(f"⚠️ Không thể gửi Telegram alert ({e.code}): {e}")
+        return False
     except Exception as e:
         logger.warning(f"⚠️ Không thể gửi Telegram alert: {e}")
         return False
@@ -568,15 +745,18 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
 __all__ = [
     "DEFAULT_MUTATION_STRATEGIES_PATH",
     "FLAGSHIP_REDTEAM_DATASET_OVERRIDES",
+    "SUPPORTED_TELEGRAM_DOC_EXTENSIONS",
     "GitRatchetTuner",
     "NightlyDaemonReport",
     "NightlyTunerDaemon",
     "SkillEvolutionSummary",
     "WeightedPriorityQueue",
+    "check_telegram_token_health",
     "find_project_root",
     "get_last_applied_strategies_hash",
     "get_mutation_strategies_hash",
     "resolve_domain_dataset",
     "save_applied_strategies_hash",
     "send_telegram_alert",
+    "send_telegram_document",
 ]

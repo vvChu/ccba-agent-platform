@@ -40,6 +40,7 @@ from .blast_radius import (
 from .cli import (
     run_apply_anchor_patch_cli,
     run_door_triage_cli,
+    run_notify_cli,
     run_peer_co_review_cli,
     run_peer_dispatch_cli,
 )
@@ -110,6 +111,7 @@ from .evals import (
     StatutoryDocument,
     UniclassEntry,
     UniclassFlatIndex,
+    check_telegram_token_health,
     classify_slicing_tier,
     extract_code_blocks,
     extract_failure_signals,
@@ -130,6 +132,8 @@ from .evals import (
     render_failure_patch,
     run_eval_pipeline,
     save_failure_ledger,
+    send_telegram_alert,
+    send_telegram_document,
 )
 from .execution import DetachedExecutionEngine
 from .fleet import (
@@ -492,4 +496,8 @@ __all__ = [
     "parse_tradeoff_card",
     "validate_tradeoff_card",
     "run_door_triage_cli",
+    "run_notify_cli",
+    "check_telegram_token_health",
+    "send_telegram_alert",
+    "send_telegram_document",
 ]

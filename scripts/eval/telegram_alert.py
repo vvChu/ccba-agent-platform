@@ -14,6 +14,16 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
-from ccba_harness.evals.daemon import send_telegram_alert
+from ccba_harness.evals.daemon import (
+    SUPPORTED_TELEGRAM_DOC_EXTENSIONS,
+    check_telegram_token_health,
+    send_telegram_alert,
+    send_telegram_document,
+)
 
-__all__ = ["send_telegram_alert"]
+__all__ = [
+    "SUPPORTED_TELEGRAM_DOC_EXTENSIONS",
+    "check_telegram_token_health",
+    "send_telegram_alert",
+    "send_telegram_document",
+]

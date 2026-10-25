@@ -21,14 +21,17 @@ from .archetypes import (
     get_default_domain_scorers,
 )
 from .daemon import (
+    SUPPORTED_TELEGRAM_DOC_EXTENSIONS,
     NightlyDaemonReport,
     NightlyTunerDaemon,
     SkillEvolutionSummary,
     WeightedPriorityQueue,
+    check_telegram_token_health,
     get_last_applied_strategies_hash,
     get_mutation_strategies_hash,
     save_applied_strategies_hash,
     send_telegram_alert,
+    send_telegram_document,
 )
 from .failure_mutator import (
     DEFAULT_LEDGER_DIR,
@@ -194,12 +197,15 @@ __all__ = [
     "AdaptiveRateLimiter",
     "NightlyDaemonReport",
     "NightlyTunerDaemon",
+    "SUPPORTED_TELEGRAM_DOC_EXTENSIONS",
     "SkillEvolutionSummary",
     "WeightedPriorityQueue",
+    "check_telegram_token_health",
     "get_last_applied_strategies_hash",
     "get_mutation_strategies_hash",
     "save_applied_strategies_hash",
     "send_telegram_alert",
+    "send_telegram_document",
     "classify_target_skill",
     "generate_eval_spec_item",
     "identify_failures",
