@@ -56,6 +56,7 @@ logger = logging.getLogger("ccba.eval.nightly")
 SUPPORTED_TELEGRAM_DOC_EXTENSIONS: frozenset[str] = frozenset(
     {".pdf", ".docx", ".pptx", ".xlsx", ".html", ".png", ".md", ".txt", ".json", ".zip"}
 )
+MAX_TELEGRAM_DOC_BYTES: int = 50 * 1024 * 1024
 
 
 def check_telegram_token_health(
@@ -125,9 +126,10 @@ def _build_multipart_document_body(
         chunks.append(val.encode("utf-8"))
 
     mime_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+    clean_filename = file_path.name.replace('"', "_").replace("\r", "").replace("\n", "").strip()
     chunks.append(f"--{boundary}".encode())
     chunks.append(
-        f'Content-Disposition: form-data; name="document"; filename="{file_path.name}"'.encode()
+        f'Content-Disposition: form-data; name="document"; filename="{clean_filename}"'.encode()
     )
     chunks.append(f"Content-Type: {mime_type}".encode())
     chunks.append(b"")
@@ -194,6 +196,12 @@ def send_telegram_document(
     if doc_path.suffix.lower() not in SUPPORTED_TELEGRAM_DOC_EXTENSIONS:
         logger.warning(f"⚠️ Định dạng file không được hỗ trợ gửi Telegram: {doc_path.suffix}")
         return False
+    file_size = doc_path.stat().st_size
+    if file_size > MAX_TELEGRAM_DOC_BYTES:
+        logger.warning(
+            f"⚠️ File vượt quá giới hạn Telegram Bot API (50 MB): {file_size / (1024 * 1024):.2f} MB"
+        )
+        return False
 
     tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
     target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
@@ -231,7 +239,6 @@ def send_telegram_alert(
     """Sends a notification message to Telegram Bot API or logs a mock fallback."""
     tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
     target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
-
     if not tg_bot_auth or not target_channel:
         if mock_fallback:
             logger.info(f"📱 [Mock Telegram Notification Sent]:\n{message}")
@@ -250,9 +257,10 @@ def send_telegram_alert(
     if parse_mode:
         data_dict["parse_mode"] = parse_mode
 
-    payload = json.dumps(data_dict).encode("utf-8")
     req = urllib.request.Request(
-        endpoint_url, data=payload, headers={"Content-Type": "application/json"}
+        endpoint_url,
+        data=json.dumps(data_dict).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -263,11 +271,9 @@ def send_telegram_alert(
             return False
     except urllib.error.HTTPError as e:
         if e.code == 401:
-            logger.warning(
-                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
-            )
-            return False
-        logger.warning(f"⚠️ Không thể gửi Telegram alert ({e.code}): {e}")
+            logger.warning("⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather")
+        else:
+            logger.warning(f"⚠️ Không thể gửi Telegram alert ({e.code}): {e}")
         return False
     except Exception as e:
         logger.warning(f"⚠️ Không thể gửi Telegram alert: {e}")

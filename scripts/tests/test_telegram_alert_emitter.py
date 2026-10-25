@@ -264,3 +264,23 @@ def test_send_telegram_document_validation_and_cli_notify(tmp_path: Path) -> Non
     with patch("ccba_harness.evals.daemon.check_telegram_token_health", return_value=True) as m_chk:
         assert run_notify_cli(["--check-token", "--mock"]) == 0
         m_chk.assert_called_once()
+
+
+def test_send_telegram_document_rejects_oversized_file_and_sanitizes_filename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify COND-01 (filename quote/CRLF sanitization) and COND-02 (50 MB size guard)."""
+    from ccba_harness.evals.daemon import MAX_TELEGRAM_DOC_BYTES, _build_multipart_document_body
+
+    dirty_file = tmp_path / 'report_"pccc"\r\ninjected.pdf'
+    dirty_file.write_bytes(b"%PDF-1.4 safe")
+    body, _ = _build_multipart_document_body("12345", dirty_file, caption=None, parse_mode="HTML")
+    assert b'filename="report__pccc_injected.pdf"' in body
+    assert b'filename="report_"pccc"' not in body
+
+    monkeypatch.setattr(
+        "ccba_harness.evals.daemon.MAX_TELEGRAM_DOC_BYTES",
+        10,
+    )
+    assert MAX_TELEGRAM_DOC_BYTES == 50 * 1024 * 1024
+    assert send_telegram_document(dirty_file, bot_token="t", chat_id="c") is False

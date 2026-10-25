@@ -223,7 +223,7 @@ cards:
       in: [pdf, docx, pptx, xlsx, html, png, text]
       out: [telegram_notification]
     hardware: [any]
-    failure_modes: [token_unauthorized, network_timeout, file_not_found]
+    failure_modes: [token_unauthorized, network_timeout, file_not_found, file_too_large]
     owner: hub-governance
     implementation_packages: [ccba_harness]
 
