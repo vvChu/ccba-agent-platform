@@ -5,11 +5,17 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from scripts.eval.telegram_alert import send_telegram_alert
+from ccba_harness.cli import run_notify_cli
+from scripts.eval.telegram_alert import (
+    check_telegram_token_health,
+    send_telegram_alert,
+    send_telegram_document,
+)
 from scripts.verify_telegram_alert import main as verify_main
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -144,3 +150,137 @@ def test_send_telegram_alert_suppressed_in_pytest_when_bot_token_is_none(
     # it must safely intercept without making actual HTTP requests.
     result = send_telegram_alert(message="Test message during pytest", bot_token=None)
     assert result is True
+
+
+def test_check_telegram_token_health_200_ok() -> None:
+    """Verify check_telegram_token_health returns True on HTTP 200 OK."""
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with patch("urllib.request.urlopen", return_value=mock_resp) as mock_open:
+        ok = check_telegram_token_health("valid_123")
+        assert ok is True
+        req = mock_open.call_args[0][0]
+        assert req.full_url.endswith("/botvalid_123/getMe")
+
+
+def test_check_telegram_token_health_401_unauthorized(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify check_telegram_token_health catches HTTP 401 Unauthorized and logs @BotFather guidance."""
+    err_401 = urllib.error.HTTPError(
+        url="https://api.telegram.org/botrevoked/getMe",
+        code=401,
+        msg="Unauthorized",
+        hdrs=MagicMock(),
+        fp=None,
+    )
+    with patch("urllib.request.urlopen", side_effect=err_401):
+        ok = check_telegram_token_health("revoked_123")
+        assert ok is False
+        assert "@BotFather" in caplog.text
+
+
+def test_send_telegram_document_200_ok(tmp_path: Path) -> None:
+    """Verify send_telegram_document encodes multipart payload and succeeds on HTTP 200."""
+    doc_file = tmp_path / "pccc_audit_report.pdf"
+    doc_file.write_bytes(b"%PDF-1.4 mock content")
+
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    captured_reqs: list[urllib.request.Request] = []
+
+    def fake_urlopen(req: urllib.request.Request, timeout: int = 10) -> MagicMock:
+        captured_reqs.append(req)
+        return mock_resp
+
+    with patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        ok = send_telegram_document(
+            doc_file,
+            "<b>Báo cáo thẩm tra PCCC</b>",
+            "doc_123",
+            "987654321",
+            "HTML",
+        )
+
+    assert ok is True
+    assert len(captured_reqs) == 2
+    assert captured_reqs[0].full_url.endswith("/getMe")
+    upload_req = captured_reqs[1]
+    assert upload_req.full_url.endswith("/sendDocument")
+    assert "multipart/form-data; boundary=" in str(upload_req.headers.get("Content-type"))
+    body_bytes = bytes(upload_req.data)
+    assert b'filename="pccc_audit_report.pdf"' in body_bytes
+    assert b"%PDF-1.4 mock content" in body_bytes
+    assert "<b>Báo cáo thẩm tra PCCC</b>".encode() in body_bytes
+
+
+def test_send_telegram_document_401_unauthorized(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify send_telegram_document aborts and logs @BotFather guidance when token returns 401."""
+    doc_file = tmp_path / "report.docx"
+    doc_file.write_bytes(b"PK mock docx")
+
+    err_401 = urllib.error.HTTPError(
+        url="https://api.telegram.org/botexpired/getMe",
+        code=401,
+        msg="Unauthorized",
+        hdrs=MagicMock(),
+        fp=None,
+    )
+    with patch("urllib.request.urlopen", side_effect=err_401):
+        ok = send_telegram_document(
+            doc_file,
+            "Test",
+            "exp_123",
+            "12345",
+        )
+    assert ok is False
+    assert "@BotFather" in caplog.text
+
+
+def test_send_telegram_document_validation_and_cli_notify(tmp_path: Path) -> None:
+    """Verify missing file, unsupported extension, and run_notify_cli dispatch."""
+    assert send_telegram_document(tmp_path / "missing.pdf", bot_token="t", chat_id="c") is False
+
+    bad_ext = tmp_path / "malware.exe"
+    bad_ext.write_bytes(b"MZ")
+    assert send_telegram_document(bad_ext, bot_token="t", chat_id="c") is False
+
+    valid_html = tmp_path / "dashboard.html"
+    valid_html.write_text("<h1>Report</h1>", encoding="utf-8")
+
+    with patch("ccba_harness.evals.daemon.send_telegram_document", return_value=True) as mock_doc:
+        rc = run_notify_cli(["--file", str(valid_html), "--caption", "HTML Report", "--mock"])
+        assert rc == 0
+        mock_doc.assert_called_once()
+
+    with patch("ccba_harness.evals.daemon.check_telegram_token_health", return_value=True) as m_chk:
+        assert run_notify_cli(["--check-token", "--mock"]) == 0
+        m_chk.assert_called_once()
+
+
+def test_send_telegram_document_rejects_oversized_file_and_sanitizes_filename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify COND-01 (filename quote/CRLF sanitization) and COND-02 (50 MB size guard)."""
+    from ccba_harness.evals.daemon import MAX_TELEGRAM_DOC_BYTES, _build_multipart_document_body
+
+    dirty_file = tmp_path / 'report_"pccc"\r\ninjected.pdf'
+    dirty_file.write_bytes(b"%PDF-1.4 safe")
+    body, _ = _build_multipart_document_body("12345", dirty_file, caption=None, parse_mode="HTML")
+    assert b'filename="report__pccc_injected.pdf"' in body
+    assert b'filename="report_"pccc"' not in body
+
+    monkeypatch.setattr(
+        "ccba_harness.evals.daemon.MAX_TELEGRAM_DOC_BYTES",
+        10,
+    )
+    assert MAX_TELEGRAM_DOC_BYTES == 50 * 1024 * 1024
+    assert send_telegram_document(dirty_file, bot_token="t", chat_id="c") is False

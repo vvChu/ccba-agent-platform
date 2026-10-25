@@ -214,3 +214,17 @@ cards:
     owner: hub-core
     implementation_packages: [ccba_notebooklm]
 
+  - seam_id: telegram_notify.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_harness:send_telegram_document
+    capability:
+      in: [pdf, docx, pptx, xlsx, html, png, text]
+      out: [telegram_notification]
+    hardware: [any]
+    failure_modes: [token_unauthorized, network_timeout, file_not_found, file_too_large]
+    owner: hub-governance
+    implementation_packages: [ccba_harness]
+
+

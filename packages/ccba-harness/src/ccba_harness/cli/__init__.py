@@ -23,6 +23,7 @@ __all__ = [
     "run_blast_radius_cli",
     "run_explain_why_cli",
     "run_door_triage_cli",
+    "run_notify_cli",
     "run_peer_watch_cli",
     "run_peer_dispatch_cli",
     "run_peer_co_review_cli",
@@ -48,6 +49,7 @@ _SYMBOL_MAP: dict[str, str] = {
     "run_blast_radius_cli": "ccba_harness.cli.commands.architecture",
     "run_explain_why_cli": "ccba_harness.cli.commands.architecture",
     "run_door_triage_cli": "ccba_harness.cli.commands.architecture",
+    "run_notify_cli": "ccba_harness.cli.commands.evals",
 }
 
 
