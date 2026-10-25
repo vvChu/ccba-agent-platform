@@ -284,3 +284,44 @@ def test_send_telegram_document_rejects_oversized_file_and_sanitizes_filename(
     )
     assert MAX_TELEGRAM_DOC_BYTES == 50 * 1024 * 1024
     assert send_telegram_document(dirty_file, bot_token="t", chat_id="c") is False
+
+
+def test_resolve_telegram_credentials_non_mutating_spoke_hub_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify non-mutating credential resolver, shallow path guard, LRU cache, and pytest guard."""
+    import os
+
+    from ccba_harness.evals.daemon import (
+        _find_hub_root_candidate,
+        _read_env_file_cached,
+        resolve_telegram_credentials,
+    )
+
+    assert _find_hub_root_candidate(Path("/a/b.py")) is None
+    hub_root = _find_hub_root_candidate()
+    assert hub_root is not None and (hub_root / "seam-contracts.yaml").is_file()
+
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.chdir(tmp_path)
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "TELEGRAM_BOT_TOKEN=spoke_val\nTELEGRAM_CHAT_ID=chat_val\n", encoding="utf-8"
+    )
+
+    # COND-03: While PYTEST_CURRENT_TEST is set, .env files on disk must be ignored
+    assert resolve_telegram_credentials() == (None, None)
+
+    # Outside pytest guard, resolver reads .env without mutating os.environ (COND-02 LRU cache)
+    _read_env_file_cached.cache_clear()
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.delenv("CCBA_TESTING", raising=False)
+    resolved = resolve_telegram_credentials()
+    assert resolved == ("spoke_val", "chat_val")
+    assert "TELEGRAM_BOT_TOKEN" not in os.environ
+    assert "TELEGRAM_CHAT_ID" not in os.environ
+
+    # Second call hits LRU cache
+    assert resolve_telegram_credentials() == ("spoke_val", "chat_val")
+    assert _read_env_file_cached.cache_info().hits >= 1
