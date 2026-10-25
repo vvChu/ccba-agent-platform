@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -639,33 +638,8 @@ def run_eval_cli(args_list: Sequence[str] | None = None) -> int:
     return _render_eval_cli_report(args, report)
 
 
-def _load_env_fallback() -> None:
-    """Loads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from workspace or Hub .env if unset."""
-    if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
-        return
-    from ccba_harness.evals.daemon import find_project_root
-
-    candidates = [Path.cwd() / ".env"]
-    hub_env = os.environ.get("CCBA_HUB_PATH")
-    if hub_env:
-        candidates.append(Path(hub_env) / ".env")
-    candidates.append(find_project_root() / ".env")
-    for env_file in candidates:
-        if not env_file.is_file():
-            continue
-        for raw in env_file.read_text(encoding="utf-8", errors="ignore").splitlines():
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            k, v = line.split("=", 1)
-            key = k.strip()
-            if key in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID") and key not in os.environ:
-                os.environ[key] = v.strip().strip("'\"")
-
-
 def _dispatch_notify_args(args: argparse.Namespace) -> int:
     """Executes token health check, document upload, or text alert based on parsed CLI args."""
-    _load_env_fallback()
     from ccba_harness.evals.daemon import (
         check_telegram_token_health,
         send_telegram_alert,

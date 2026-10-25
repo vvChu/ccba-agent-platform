@@ -7,6 +7,7 @@ and Git-Ratchet iteration lifecycle into a first-class Deep Seam in ccba_harness
 from __future__ import annotations
 
 import datetime
+import functools
 import hashlib
 import json
 import logging
@@ -34,14 +35,8 @@ from ._daemon_reporting import (
     get_mutation_strategies_hash,
     save_applied_strategies_hash,
 )
-from .archetypes import (
-    resolve_domain_archetype,
-    resolve_domain_dataset,
-)
-from .failure_mutator import (
-    get_unapplied_failure_signals,
-    load_failure_ledger,
-)
+from .archetypes import resolve_domain_archetype, resolve_domain_dataset
+from .failure_mutator import get_unapplied_failure_signals, load_failure_ledger
 from .tuner import (
     _UNSET,
     DEFAULT_MUTATION_STRATEGIES_PATH,
@@ -59,13 +54,102 @@ SUPPORTED_TELEGRAM_DOC_EXTENSIONS: frozenset[str] = frozenset(
 MAX_TELEGRAM_DOC_BYTES: int = 50 * 1024 * 1024
 
 
+@functools.lru_cache(maxsize=8)
+def _read_env_file_cached(env_path: Path) -> dict[str, str]:
+    """Reads and parses key-value pairs from a .env file with in-memory LRU caching."""
+    records: dict[str, str] = {}
+    if not env_path.is_file():
+        return records
+    try:
+        for raw in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            records[k.strip()] = v.strip().strip("'\"")
+    except OSError:
+        pass
+    return records
+
+
+def _find_hub_root_candidate(source_file: Path | None = None) -> Path | None:
+    """Resolves the Hub monorepo root from the editable installation path of ccba-harness."""
+    resolved = (source_file or Path(__file__)).resolve()
+    for hub_dir in resolved.parents[:7]:
+        if (hub_dir / "seam-contracts.yaml").is_file():
+            return hub_dir
+    return None
+
+
+def resolve_telegram_credentials(
+    bot_token: str | None = None, chat_id: str | None = None
+) -> tuple[str | None, str | None]:
+    """Resolves Telegram credentials without mutating os.environ across Spoke and Hub .env files."""
+    resolved_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    resolved_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    if resolved_auth and resolved_channel:
+        return resolved_auth, resolved_channel
+    if "PYTEST_CURRENT_TEST" in os.environ or "CCBA_TESTING" in os.environ:
+        return resolved_auth, resolved_channel
+
+    candidates: list[Path] = [Path.cwd() / ".env", find_project_root() / ".env"]
+    hub_env = os.environ.get("CCBA_HUB_PATH")
+    if hub_env:
+        candidates.append(Path(hub_env) / ".env")
+    hub_root = _find_hub_root_candidate()
+    if hub_root:
+        candidates.append(hub_root / ".env")
+
+    for env_file in candidates:
+        if not env_file.is_file():
+            continue
+        env_vars = _read_env_file_cached(env_file.resolve())
+        if not resolved_auth:
+            resolved_auth = env_vars.get("TELEGRAM_BOT_TOKEN")
+        if not resolved_channel:
+            resolved_channel = env_vars.get("TELEGRAM_CHAT_ID")
+        if resolved_auth and resolved_channel:
+            break
+    return resolved_auth, resolved_channel
+
+
+def _execute_telegram_request(
+    req: urllib.request.Request, timeout: int, success_msg: str | None = None
+) -> bool:
+    """Executes a Telegram Bot API HTTP request and handles status/401/network errors."""
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            if resp.status == 200:
+                if success_msg:
+                    logger.info(success_msg)
+                return True
+            if resp.status == 401:
+                logger.warning(
+                    "⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather"
+                )
+            else:
+                logger.warning(f"⚠️ Telegram API phản hồi mã: {resp.status}")
+            return False
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            logger.warning(
+                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
+            )
+        else:
+            logger.warning(f"⚠️ Lỗi HTTP Telegram ({e.code}): {e}")
+        return False
+    except Exception as e:
+        logger.warning(f"⚠️ Không thể kết nối Telegram API: {e}")
+        return False
+
+
 def check_telegram_token_health(
     bot_token: str | None = None,
     timeout: int = 5,
     mock_fallback: bool = False,
 ) -> bool:
     """Verifies Telegram Bot Token validity via /getMe pre-flight endpoint."""
-    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    tg_bot_auth, _ = resolve_telegram_credentials(bot_token, None)
     if not tg_bot_auth:
         if mock_fallback:
             logger.info("📱 [Mock Telegram Token Health Check Passed]")
@@ -78,28 +162,7 @@ def check_telegram_token_health(
         return True
 
     req = urllib.request.Request(f"https://api.telegram.org/bot{tg_bot_auth}/getMe", method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            if resp.status == 200:
-                return True
-            if resp.status == 401:
-                logger.warning(
-                    "⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather"
-                )
-                return False
-            logger.warning(f"⚠️ Telegram getMe phản hồi mã: {resp.status}")
-            return False
-    except urllib.error.HTTPError as e:
-        if e.code == 401:
-            logger.warning(
-                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
-            )
-            return False
-        logger.warning(f"⚠️ Telegram token health check HTTP error ({e.code}): {e}")
-        return False
-    except Exception as e:
-        logger.warning(f"⚠️ Không thể kiểm tra Telegram token health: {e}")
-        return False
+    return _execute_telegram_request(req, timeout=timeout)
 
 
 def _build_multipart_document_body(
@@ -153,29 +216,9 @@ def _dispatch_telegram_multipart(
     )
     endpoint_url = f"https://api.telegram.org/bot{tg_bot_auth}/sendDocument"
     req = urllib.request.Request(endpoint_url, data=body, headers={"Content-Type": content_type})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            if resp.status == 200:
-                logger.info(f"✅ Đã gửi tài liệu Telegram thành công: {doc_path.name}")
-                return True
-            if resp.status == 401:
-                logger.warning(
-                    "⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather"
-                )
-                return False
-            logger.warning(f"⚠️ Telegram sendDocument phản hồi mã: {resp.status}")
-            return False
-    except urllib.error.HTTPError as e:
-        if e.code == 401:
-            logger.warning(
-                "⚠️ TELEGRAM_BOT_TOKEN expired or revoked (401 Unauthorized). Please update via @BotFather"
-            )
-            return False
-        logger.warning(f"⚠️ Lỗi HTTP khi gửi tài liệu Telegram ({e.code}): {e}")
-        return False
-    except Exception as e:
-        logger.warning(f"⚠️ Không thể gửi tài liệu Telegram: {e}")
-        return False
+    return _execute_telegram_request(
+        req, timeout=timeout, success_msg=f"✅ Đã gửi tài liệu Telegram thành công: {doc_path.name}"
+    )
 
 
 def send_telegram_document(
@@ -203,8 +246,7 @@ def send_telegram_document(
         )
         return False
 
-    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
-    target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    tg_bot_auth, target_channel = resolve_telegram_credentials(bot_token, chat_id)
     if not tg_bot_auth or not target_channel:
         if mock_fallback:
             logger.info(f"📱 [Mock Telegram Document Sent]: {doc_path.name}")
@@ -235,8 +277,7 @@ def send_telegram_alert(
     mock_fallback: bool = False,
 ) -> bool:
     """Sends a notification message to Telegram Bot API or logs a mock fallback."""
-    tg_bot_auth = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
-    target_channel = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    tg_bot_auth, target_channel = resolve_telegram_credentials(bot_token, chat_id)
     if not tg_bot_auth or not target_channel:
         if mock_fallback:
             logger.info(f"📱 [Mock Telegram Notification Sent]:\n{message}")
@@ -260,22 +301,9 @@ def send_telegram_alert(
         data=json.dumps(data_dict).encode("utf-8"),
         headers={"Content-Type": "application/json"},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            if resp.status == 200:
-                logger.info("✅ Đã gửi thông báo Telegram thành công.")
-                return True
-            logger.warning(f"⚠️ Telegram API phản hồi mã: {resp.status}")
-            return False
-    except urllib.error.HTTPError as e:
-        if e.code == 401:
-            logger.warning("⚠️ TELEGRAM_BOT_TOKEN expired or revoked. Please update via @BotFather")
-        else:
-            logger.warning(f"⚠️ Không thể gửi Telegram alert ({e.code}): {e}")
-        return False
-    except Exception as e:
-        logger.warning(f"⚠️ Không thể gửi Telegram alert: {e}")
-        return False
+    return _execute_telegram_request(
+        req, timeout=timeout, success_msg="✅ Đã gửi thông báo Telegram thành công."
+    )
 
 
 class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
