@@ -160,10 +160,10 @@ def test_check_telegram_token_health_200_ok() -> None:
     mock_resp.__exit__.return_value = None
 
     with patch("urllib.request.urlopen", return_value=mock_resp) as mock_open:
-        ok = check_telegram_token_health(bot_token="valid_bot_token_123")
+        ok = check_telegram_token_health("valid_123")
         assert ok is True
         req = mock_open.call_args[0][0]
-        assert req.full_url.endswith("/botvalid_bot_token_123/getMe")
+        assert req.full_url.endswith("/botvalid_123/getMe")
 
 
 def test_check_telegram_token_health_401_unauthorized(
@@ -178,7 +178,7 @@ def test_check_telegram_token_health_401_unauthorized(
         fp=None,
     )
     with patch("urllib.request.urlopen", side_effect=err_401):
-        ok = check_telegram_token_health(bot_token="revoked_token")
+        ok = check_telegram_token_health("revoked_123")
         assert ok is False
         assert "@BotFather" in caplog.text
 
@@ -201,11 +201,11 @@ def test_send_telegram_document_200_ok(tmp_path: Path) -> None:
 
     with patch("urllib.request.urlopen", side_effect=fake_urlopen):
         ok = send_telegram_document(
-            file_path=doc_file,
-            caption="<b>Báo cáo thẩm tra PCCC</b>",
-            bot_token="test_token_doc",
-            chat_id="987654321",
-            parse_mode="HTML",
+            doc_file,
+            "<b>Báo cáo thẩm tra PCCC</b>",
+            "doc_123",
+            "987654321",
+            "HTML",
         )
 
     assert ok is True
@@ -236,10 +236,10 @@ def test_send_telegram_document_401_unauthorized(
     )
     with patch("urllib.request.urlopen", side_effect=err_401):
         ok = send_telegram_document(
-            file_path=doc_file,
-            caption="Test",
-            bot_token="expired_token",
-            chat_id="12345",
+            doc_file,
+            "Test",
+            "exp_123",
+            "12345",
         )
     assert ok is False
     assert "@BotFather" in caplog.text

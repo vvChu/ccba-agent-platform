@@ -218,9 +218,7 @@ def send_telegram_document(
         logger.info(f"📱 [Mock Telegram Test Mode - Skipped Document Upload]: {doc_path.name}")
         return True
 
-    if check_token and not check_telegram_token_health(
-        bot_token=tg_bot_auth, timeout=min(timeout, 10)
-    ):
+    if check_token and not check_telegram_token_health(tg_bot_auth, timeout=min(timeout, 10)):
         return False
 
     return _dispatch_telegram_multipart(
