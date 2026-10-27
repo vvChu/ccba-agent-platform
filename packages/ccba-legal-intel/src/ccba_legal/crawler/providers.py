@@ -179,15 +179,10 @@ class TVPLVIPDocProvider(LegalDocProvider):
             return
 
         user_query_js = TVPLSelectors.get_user_js_query()
-        check_login_js = f"""
-        (() => {{
-            let user_lbl = {user_query_js};
-            if (user_lbl && user_lbl.innerText.trim().length > 0) {{
-                return user_lbl.innerText.trim();
-            }}
-            return null;
-        }})()
-        """
+        check_login_js = (
+            f"(() => {{ let u = {user_query_js}; "
+            "return (u && u.innerText.trim().length > 0) ? u.innerText.trim() : null; })()"
+        )
         user = cdp.evaluate_js(check_login_js)
         if user:
             print(f"[TVPLVIPDocProvider] Already logged in as: {user}")
