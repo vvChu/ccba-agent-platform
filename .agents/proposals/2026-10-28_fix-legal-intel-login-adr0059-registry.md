@@ -8,7 +8,8 @@ source_project: "ccba-legal-knowledge"
 type: "fix"
 target_skill: "ccba-legal-intel"
 related_issue: "#572"
-status: "proposed"
+status: "merged"
+merged_date: "2026-10-28"
 ---
 
 ## Bối cảnh (Context)
