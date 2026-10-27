@@ -96,50 +96,50 @@ def _build_spoke_from_heartbeat(s_id: str, hb: dict[str, Any], root: Path) -> di
     }
 
 
-def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
-    """Retrieve all decrypted active registered spokes from registry or local cache.
+def _decrypt_spokes_with_rsa_key(registry_file: Path) -> list[dict[str, Any]]:
+    """Decrypts spoke entries from registry_file using the local RSA private key."""
+    decrypted: list[dict[str, Any]] = []
+    if not (HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists()):
+        return decrypted
+    try:
+        with open(PRIVATE_KEY_PATH, "rb") as f:
+            private_key = serialization.load_pem_private_key(f.read(), password=None)
+        if not isinstance(private_key, rsa.RSAPrivateKey):
+            return decrypted
+        with open(registry_file, encoding="utf-8") as f:
+            registry_data = yaml.safe_load(f) or {"spokes": []}
+        for spoke in registry_data.get("spokes", []):
+            spoke_id = spoke.get("spoke_id")
+            encrypted_b64 = spoke.get("encrypted_data")
+            try:
+                encrypted_bytes = base64.b64decode(encrypted_b64)
+                decrypted_bytes = private_key.decrypt(
+                    encrypted_bytes,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None,
+                    ),
+                )
+                spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
+                spoke_info["spoke_id"] = spoke_id
+                spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
+                decrypted.append(spoke_info)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return decrypted
 
-    Returns:
-        list[dict]: List of spoke dicts with 'name', 'path', 'project_type', 'archetype', 'last_sync', 'spoke_id', 'exists'.
-    """
+
+def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
+    """Retrieve all decrypted active registered spokes from registry or local cache."""
     root = hub_root or Path(__file__).resolve().parents[2]
     registry_file = root / REGISTRY_REL_PATH
     decrypted_file = root / DECRYPTED_REL_PATH
     heartbeats = load_spoke_heartbeats(root)
 
-    decrypted_spokes: list[dict[str, Any]] = []
-
-    # Case 1: Try decrypting with RSA Private Key if available
-    if HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists():
-        try:
-            with open(PRIVATE_KEY_PATH, "rb") as f:
-                private_key = serialization.load_pem_private_key(f.read(), password=None)
-
-            if isinstance(private_key, rsa.RSAPrivateKey):
-                with open(registry_file, encoding="utf-8") as f:
-                    registry_data = yaml.safe_load(f) or {"spokes": []}
-
-                for spoke in registry_data.get("spokes", []):
-                    spoke_id = spoke.get("spoke_id")
-                    encrypted_b64 = spoke.get("encrypted_data")
-                    try:
-                        encrypted_bytes = base64.b64decode(encrypted_b64)
-                        decrypted_bytes = private_key.decrypt(
-                            encrypted_bytes,
-                            padding.OAEP(
-                                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                                algorithm=hashes.SHA256(),
-                                label=None,
-                            ),
-                        )
-                        spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
-                        spoke_info["spoke_id"] = spoke_id
-                        spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
-                        decrypted_spokes.append(spoke_info)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+    decrypted_spokes = _decrypt_spokes_with_rsa_key(registry_file)
 
     # Case 2: Fallback to decrypted cache file if RSA decrypt returned nothing
     if not decrypted_spokes and decrypted_file.exists():
