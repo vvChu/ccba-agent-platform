@@ -649,8 +649,22 @@ def execute_ingest_legal(
                             if c_pdf.exists() and c_pdf.resolve() != temp_pdf_path.resolve():
                                 shutil.copy2(c_pdf, temp_pdf_path)
 
+                        handoff_meta = {
+                            k: v
+                            for k, v in res.items()
+                            if k
+                            not in {
+                                "docx_path",
+                                "pdf_path",
+                                "attachments",
+                                "links",
+                                "content",
+                                "html",
+                                "raw_html",
+                            }
+                        }
                         meta_json_path.write_text(
-                            json.dumps(res, indent=2, ensure_ascii=False, default=str),
+                            json.dumps(handoff_meta, indent=2, ensure_ascii=False, default=str),
                             encoding="utf-8",
                         )
                         crawler_success = True
@@ -659,17 +673,12 @@ def execute_ingest_legal(
 
             if not crawler_success or not temp_docx_path.exists():
                 print(
-                    "  [Crawler Fallback] VIP binary download unavailable. Generating authoritative sandbox assets..."
+                    "  [ADR-0059 Acquisition Barrier] Live TVPL VIP binary download failed or unavailable.\n"
+                    "  Synthetic mock fallback is strictly prohibited in live mode (mock=False).\n"
+                    "  Please verify TVPL VIP login session on Chrome CDP or provide local --docx / --pdf files.",
+                    file=sys.stderr,
                 )
-                _generate_authoritative_fallback(
-                    slug=slug,
-                    url=url,
-                    category=category,
-                    doc_type=doc_type,
-                    temp_docx_path=temp_docx_path,
-                    temp_pdf_path=temp_pdf_path,
-                    meta_json_path=meta_json_path,
-                )
+                return False
 
         # Step 2: Delegate ingestion to Spoke CLI
         print("\n[Step 2/4] Delegating ingestion to Spoke Ingestion Engine...")
