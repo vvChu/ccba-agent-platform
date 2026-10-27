@@ -19,13 +19,20 @@ except ImportError:
 REGISTRY_REL_PATH = ".md/data/spoke_registry.yaml"
 DECRYPTED_REL_PATH = ".md/data/spoke_registry_decrypted.yaml"
 HEARTBEATS_REL_PATH = ".md/telemetry/spoke_heartbeats.yaml"
-PRIVATE_KEY_DIR = os.path.expanduser(r"~\.gemini\antigravity\keys")
+PRIVATE_KEY_DIR = str(Path.home() / ".gemini" / "antigravity" / "keys")
 PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
+
+
+def _is_pytest_ephemeral_path(path_str: str) -> bool:
+    """Return True if path_str points to an ephemeral pytest temporary directory."""
+    norm = path_str.replace("\\", "/")
+    return "/pytest-of-" in norm or "/pytest-" in norm or "MOCK-TEST-SPOKE" in path_str
 
 
 def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
     """Loads dynamic last_sync heartbeats from .md/telemetry/spoke_heartbeats.yaml."""
-    root = hub_root or Path(__file__).resolve().parents[2]
+    default_root = Path(__file__).resolve().parents[2]
+    root = hub_root or default_root
     hb_file = root / HEARTBEATS_REL_PATH
     if not hb_file.exists():
         return {}
@@ -33,55 +40,106 @@ def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
         with open(hb_file, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
             heartbeats = data.get("heartbeats", {})
-            return heartbeats if isinstance(heartbeats, dict) else {}
+            if not isinstance(heartbeats, dict):
+                return {}
+            if root.resolve() == default_root.resolve():
+                return {
+                    k: v
+                    for k, v in heartbeats.items()
+                    if isinstance(v, dict) and not _is_pytest_ephemeral_path(str(v.get("path", "")))
+                }
+            return heartbeats
     except Exception:
         return {}
 
 
-def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
-    """Retrieve all decrypted active registered spokes from registry or local cache.
+def _build_spoke_from_heartbeat(s_id: str, hb: dict[str, Any], root: Path) -> dict[str, Any] | None:
+    """Construct spoke metadata entry from active local heartbeat and workspace_context.yaml."""
+    sp_path_str = str(hb.get("path", "")).strip()
+    if not sp_path_str or not os.path.exists(sp_path_str):
+        return None
+    sp_path = Path(sp_path_str)
+    if sp_path.resolve() == root.resolve() or sp_path.name.startswith("ccba-agent-platform"):
+        return None
+    ctx_file = sp_path / ".md" / "workspace_context.yaml"
+    if not ctx_file.exists():
+        ctx_file = sp_path / ".agents" / "workspace_context.yaml"
+    if not ctx_file.exists():
+        return None
+    proj_type = ""
+    archetype = ""
+    is_sandbox = False
+    sp_name = str(hb.get("name") or sp_path.name)
+    try:
+        ctx = yaml.safe_load(ctx_file.read_text(encoding="utf-8")) or {}
+        proj = ctx.get("project", {}) if isinstance(ctx.get("project"), dict) else {}
+        sp_name = str(proj.get("name") or ctx.get("project_name") or sp_name)
+        proj_type = str(
+            proj.get("type") or proj.get("project_type") or ctx.get("project_type") or ""
+        )
+        archetype = str(proj.get("archetype") or ctx.get("archetype") or "")
+        guardrails = ctx.get("guardrails", {}) if isinstance(ctx.get("guardrails"), dict) else {}
+        is_sandbox = (
+            proj.get("sub_type") == "personal_sandbox" or guardrails.get("sandbox_mode") is True
+        )
+    except Exception:
+        pass
+    return {
+        "spoke_id": s_id,
+        "name": sp_name,
+        "path": sp_path_str,
+        "project_type": proj_type,
+        "archetype": archetype,
+        "is_sandbox": is_sandbox,
+        "last_sync": str(hb.get("last_sync", "")),
+        "exists": True,
+    }
 
-    Returns:
-        list[dict]: List of spoke dicts with 'name', 'path', 'project_type', 'archetype', 'last_sync', 'spoke_id', 'exists'.
-    """
+
+def _decrypt_spokes_with_rsa_key(registry_file: Path) -> list[dict[str, Any]]:
+    """Decrypts spoke entries from registry_file using the local RSA private key."""
+    decrypted: list[dict[str, Any]] = []
+    if not (HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists()):
+        return decrypted
+    try:
+        with open(PRIVATE_KEY_PATH, "rb") as f:
+            private_key = serialization.load_pem_private_key(f.read(), password=None)
+        if not isinstance(private_key, rsa.RSAPrivateKey):
+            return decrypted
+        with open(registry_file, encoding="utf-8") as f:
+            registry_data = yaml.safe_load(f) or {"spokes": []}
+        for spoke in registry_data.get("spokes", []):
+            spoke_id = spoke.get("spoke_id")
+            encrypted_b64 = spoke.get("encrypted_data")
+            try:
+                encrypted_bytes = base64.b64decode(encrypted_b64)
+                decrypted_bytes = private_key.decrypt(
+                    encrypted_bytes,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None,
+                    ),
+                )
+                spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
+                spoke_info["spoke_id"] = spoke_id
+                spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
+                decrypted.append(spoke_info)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return decrypted
+
+
+def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
+    """Retrieve all decrypted active registered spokes from registry or local cache."""
     root = hub_root or Path(__file__).resolve().parents[2]
     registry_file = root / REGISTRY_REL_PATH
     decrypted_file = root / DECRYPTED_REL_PATH
     heartbeats = load_spoke_heartbeats(root)
 
-    decrypted_spokes: list[dict[str, Any]] = []
-
-    # Case 1: Try decrypting with RSA Private Key if available
-    if HAS_CRYPTOGRAPHY and os.path.exists(PRIVATE_KEY_PATH) and registry_file.exists():
-        try:
-            with open(PRIVATE_KEY_PATH, "rb") as f:
-                private_key = serialization.load_pem_private_key(f.read(), password=None)
-
-            if isinstance(private_key, rsa.RSAPrivateKey):
-                with open(registry_file, encoding="utf-8") as f:
-                    registry_data = yaml.safe_load(f) or {"spokes": []}
-
-                for spoke in registry_data.get("spokes", []):
-                    spoke_id = spoke.get("spoke_id")
-                    encrypted_b64 = spoke.get("encrypted_data")
-                    try:
-                        encrypted_bytes = base64.b64decode(encrypted_b64)
-                        decrypted_bytes = private_key.decrypt(
-                            encrypted_bytes,
-                            padding.OAEP(
-                                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                                algorithm=hashes.SHA256(),
-                                label=None,
-                            ),
-                        )
-                        spoke_info = yaml.safe_load(decrypted_bytes.decode("utf-8"))
-                        spoke_info["spoke_id"] = spoke_id
-                        spoke_info["exists"] = os.path.exists(spoke_info.get("path", ""))
-                        decrypted_spokes.append(spoke_info)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+    decrypted_spokes = _decrypt_spokes_with_rsa_key(registry_file)
 
     # Case 2: Fallback to decrypted cache file if RSA decrypt returned nothing
     if not decrypted_spokes and decrypted_file.exists():
@@ -93,6 +151,15 @@ def get_registered_spokes(hub_root: Path | None = None) -> list[dict[str, Any]]:
                     decrypted_spokes.append(s)
         except Exception:
             pass
+
+    # Case 3: Fallback to active local heartbeats when RSA key and decrypted cache are unavailable
+    if not decrypted_spokes and heartbeats:
+        for s_id, hb in sorted(heartbeats.items()):
+            if not isinstance(hb, dict):
+                continue
+            sp_entry = _build_spoke_from_heartbeat(s_id, hb, root)
+            if sp_entry is not None:
+                decrypted_spokes.append(sp_entry)
 
     # Attach dynamic heartbeats and ensure archetype exists
     for sp in decrypted_spokes:

@@ -781,7 +781,7 @@ class SpokeSynchronizer:
         actions: list[dict[str, Any]] = []
         if not spoke_skills_dir.exists():
             return actions
-        for existing_skill in spoke_skills_dir.iterdir():
+        for existing_skill in sorted(spoke_skills_dir.iterdir(), key=lambda p: p.name):
             if not existing_skill.is_dir() or existing_skill.name in synced_skill_folders:
                 continue
             replacement = SKILL_DEPRECATION_ALIASES.get(existing_skill.name)
@@ -862,7 +862,7 @@ class SpokeSynchronizer:
         actions: list[dict[str, Any]] = []
         if not spoke_workflows_dir.exists():
             return actions
-        for existing_wf in spoke_workflows_dir.iterdir():
+        for existing_wf in sorted(spoke_workflows_dir.iterdir(), key=lambda p: p.name):
             if not existing_wf.is_file() or existing_wf.name in synced_wf_filenames:
                 continue
             stem = existing_wf.stem
@@ -1035,7 +1035,11 @@ class SpokeSynchronizer:
         updated_count = sum(1 for a in actions if a["status"] == "UPDATED")
         unchanged_count = sum(1 for a in actions if a["status"] == "UNCHANGED")
         preserved_count = sum(1 for a in actions if a["status"] == "PRESERVED")
-        deprecated_count = sum(1 for a in actions if a["status"] == "DEPRECATED_REPLACED")
+        deprecated_count = sum(
+            1
+            for a in actions
+            if a["status"] in ("DEPRECATED_REPLACED", "DEPRECATED_MIGRATED_TO_SKILL", "REMOVED")
+        )
 
         print("\n" + "=" * 90)
         print(f" CCBA SPOKE SYNC REPORT — {'[DRY-RUN SIMULATION]' if dry_run else '[EXECUTION]'}")
@@ -1048,6 +1052,8 @@ class SpokeSynchronizer:
             "UNCHANGED": "⚪ UNCHANGED",
             "PRESERVED": "🛡️ PRESERVED",
             "DEPRECATED_REPLACED": "🗑️ DEPRECATED",
+            "DEPRECATED_MIGRATED_TO_SKILL": "🗑️ DEPRECATED",
+            "REMOVED": "🗑️ REMOVED",
         }
         for act in actions:
             status_symbol = status_map.get(act["status"], act["status"])

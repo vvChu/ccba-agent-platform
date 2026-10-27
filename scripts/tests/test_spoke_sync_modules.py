@@ -1660,3 +1660,46 @@ def test_coordinator_ast_function_length_compliance() -> None:
     ]
     result = check_ast_function_length(targets, max_lines=50)
     assert result.passed, f"AST function length violation (> 50 LOC):\n{result.stdout_tail}"
+
+
+def test_heartbeat_fallback_and_pytest_pollution_guard(tmp_path: Path) -> None:
+    """Verify get_registered_spokes falls back to active heartbeats and SpokeRegistrar blocks pytest pollution (#569)."""
+    from scripts.spoke.decrypt_spoke_registry import PRIVATE_KEY_DIR, get_registered_spokes
+    from scripts.spoke.sync.base import PLATFORM_ROOT
+    from scripts.spoke.sync.registry import SpokeRegistrar
+
+    assert "\\" not in PRIVATE_KEY_DIR or sys.platform == "win32"
+
+    hub_root = tmp_path / "mock_hub"
+    spoke_root = tmp_path / "active_spoke"
+    (spoke_root / ".md").mkdir(parents=True)
+    (spoke_root / ".md" / "workspace_context.yaml").write_text(
+        "project:\n  name: dgx-spark-toolkit\n  type: Phần mềm\n  archetype: specialized_extension\n",
+        encoding="utf-8",
+    )
+
+    hb_file = hub_root / ".md" / "telemetry" / "spoke_heartbeats.yaml"
+    hb_file.parent.mkdir(parents=True)
+    hb_file.write_text(
+        yaml.safe_dump(
+            {
+                "heartbeats": {
+                    "spoke_1": {
+                        "name": "dgx-spark-toolkit",
+                        "path": str(spoke_root),
+                        "last_sync": "2026-10-25T18:31:23",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spokes = get_registered_spokes(hub_root=hub_root)
+    assert len(spokes) == 1
+    assert spokes[0]["name"] == "dgx-spark-toolkit"
+    assert spokes[0]["project_type"] == "Phần mềm"
+    assert spokes[0]["archetype"] == "specialized_extension"
+
+    assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, PLATFORM_ROOT) is True
+    assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, hub_root) is False
