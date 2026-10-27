@@ -349,3 +349,82 @@ def test_execute_ingest_legal_category_standards() -> None:
             assert "03_tcvn" in ingest_args
             assert "-t" in ingest_args
             assert "tcvn" in ingest_args
+
+
+def test_execute_ingest_legal_enforces_adr0059_no_synthetic_fallback() -> None:
+    """Verify live ingest-legal (mock=False) fails fast without synthetic fallback when crawler fails (ADR-0059)."""
+    with tempfile.TemporaryDirectory() as tmp_spoke:
+        spoke_dir = Path(tmp_spoke)
+        scripts_dir = spoke_dir / "scripts"
+        scripts_dir.mkdir(parents=True, exist_ok=True)
+        (spoke_dir / "legal_registry.yaml").write_text("laws: []\n", encoding="utf-8")
+        (scripts_dir / "spoke_cli.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+
+        mock_crawler = MagicMock()
+        mock_crawler.fetch_document.return_value = {"title": "Incomplete crawl without docx_path"}
+
+        with patch("ccba_legal.crawler.TVPLCrawler", return_value=mock_crawler):
+            with patch("ccba_legal.crawler.TVPLSessionMutex.__enter__"):
+                with patch("scripts.ccba_platform_cli.subprocess.run") as mock_run:
+                    res = execute_ingest_legal(
+                        url="https://thuvienphapluat.vn/van-ban/quyet-dinh-1812-qd-bxd-2026.aspx",
+                        spoke_path=spoke_dir,
+                        mock=False,
+                    )
+
+                    assert res is False
+                    mock_run.assert_not_called()
+
+
+def test_execute_ingest_legal_strips_transient_sandbox_keys() -> None:
+    """Verify metadata handoff strips transient sandbox keys (docx_path, attachments, links, content)."""
+    import json
+
+    with tempfile.TemporaryDirectory() as tmp_spoke:
+        spoke_dir = Path(tmp_spoke)
+        scripts_dir = spoke_dir / "scripts"
+        scripts_dir.mkdir(parents=True, exist_ok=True)
+        (spoke_dir / "legal_registry.yaml").write_text("laws: []\n", encoding="utf-8")
+        (scripts_dir / "spoke_cli.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+
+        mock_crawler_res = {
+            "title": "Quyết định 1812/QĐ-BXD",
+            "document_number": "1812/QĐ-BXD",
+            "slug": "quyet_dinh_1812_qd_bxd",
+            "docx_path": str(spoke_dir / "temp.docx"),
+            "pdf_path": str(spoke_dir / "temp.pdf"),
+            "attachments": ["/tmp/ccba_legal_ingest_xyz/temp.docx"],
+            "links": [{"text": "Share", "href": "https://facebook.com/sharer.php"}],
+            "content": "Raw full text",
+            "status": "Còn hiệu lực",
+        }
+        Path(mock_crawler_res["docx_path"]).write_text("dummy docx", encoding="utf-8")
+        Path(mock_crawler_res["pdf_path"]).write_text("dummy pdf", encoding="utf-8")
+
+        captured_meta: dict[str, object] = {}
+
+        def fake_run(cmd: list[str], **kwargs: object) -> MagicMock:
+            if "ingest" in cmd and "--metadata" in cmd:
+                meta_idx = cmd.index("--metadata") + 1
+                captured_meta.update(json.loads(Path(cmd[meta_idx]).read_text(encoding="utf-8")))
+            return MagicMock(returncode=0, stdout="OK", stderr="")
+
+        mock_crawler = MagicMock()
+        mock_crawler.fetch_document.return_value = mock_crawler_res
+
+        with patch("ccba_legal.crawler.TVPLCrawler", return_value=mock_crawler):
+            with patch("ccba_legal.crawler.TVPLSessionMutex.__enter__"):
+                with patch("scripts.ccba_platform_cli.subprocess.run", side_effect=fake_run):
+                    res = execute_ingest_legal(
+                        url="https://thuvienphapluat.vn/van-ban/quyet-dinh-1812-qd-bxd-2026.aspx",
+                        spoke_path=spoke_dir,
+                        mock=False,
+                    )
+
+                    assert res is True
+                    assert captured_meta["document_number"] == "1812/QĐ-BXD"
+                    assert "docx_path" not in captured_meta
+                    assert "pdf_path" not in captured_meta
+                    assert "attachments" not in captured_meta
+                    assert "links" not in captured_meta
+                    assert "content" not in captured_meta

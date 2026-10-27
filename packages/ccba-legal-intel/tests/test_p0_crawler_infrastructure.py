@@ -30,11 +30,13 @@ def test_tvpl_batch_crawler_init_default():
     assert isinstance(crawler.engine, TVPLCrawlerEngine)
 
 
-def test_tvpl_batch_crawler_with_custom_engine():
+def test_tvpl_batch_crawler_with_custom_engine(tmp_path: Path):
     """Test TVPLBatchCrawler preserves custom engine if provided."""
     mock_engine = MagicMock()
     mock_engine.fetch_doc.return_value = {"slug": "test", "relations": {}}
-    crawler = TVPLBatchCrawler(crawler_engine=mock_engine)
+    crawler = TVPLBatchCrawler(
+        crawler_engine=mock_engine, registry_path=tmp_path / "test_registry.yaml"
+    )
     res = crawler.crawl_hierarchy("test_url", max_depth=0)
     assert "test" in res
     mock_engine.fetch_doc.assert_called_once_with("test_url")

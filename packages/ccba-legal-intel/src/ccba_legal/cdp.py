@@ -532,24 +532,10 @@ class ChromeCDP:
             print("  [Login] Found login popup, autofilling credentials and submitting...")
             sleep_with_jitter(3.0, 0.5, 1.5)
 
-            confirm_kw_js = json.dumps(TVPLSelectors.CONFIRM_KEYWORDS)
-            warning_js = f"""
-            (() => {{
-                let keywords = {confirm_kw_js};
-                let agree_btn = Array.from(document.querySelectorAll('input, button, a')).find(el => {{
-                    let txt = (el.value || el.innerText || "").trim().toLowerCase();
-                    return keywords.some(kw => txt.includes(kw));
-                }});
-                if (agree_btn) {{
-                    agree_btn.click();
-                    return "Clicked Dong y";
-                }}
-                return "No warning popup";
-            }})()
-            """
+            warning_js = TVPLSelectors.get_multi_session_confirm_js()
             warn_res = self.evaluate_js(warning_js)
             print(f"  [Login Warning Check] Result: {warn_res}")
-            if "Clicked Dong y" in str(warn_res):
+            if "Clicked Dong y" in str(warn_res) or "ContinueLogin" in str(warn_res):
                 sleep_with_jitter(4.0, 0.5, 1.5)
             else:
                 sleep_with_jitter(2.0, 0.5, 1.0)

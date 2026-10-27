@@ -124,9 +124,21 @@ def get_crawled_doc_data(cdp: ChromeCDP, url: str) -> tuple[str, str, list[dict[
     raw_links = cdp.evaluate_js(links_js) or []
     seen = set()
     links = []
+    excluded_substrings = (
+        "facebook.com",
+        "dmca.com",
+        "google.com",
+        "tvpl-hdsd-",
+        "/bieumau",
+        "dangky",
+        "thong-tin-ca-nhan",
+    )
     for lnk in raw_links:
-        h = lnk["href"].split("?")[0].split("#")[0]
-        if h not in seen and h != url:
+        raw_href = str(lnk.get("href", ""))
+        if any(ex in raw_href.lower() for ex in excluded_substrings):
+            continue
+        h = raw_href.split("?")[0].split("#")[0]
+        if h not in seen and h != url.split("?")[0].split("#")[0]:
             seen.add(h)
             links.append({"text": lnk["text"], "href": h, "relationship": lnk["relationship"]})
 

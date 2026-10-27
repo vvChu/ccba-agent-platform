@@ -96,3 +96,45 @@ class TVPLSelectors:
             f"let pass = {p_js};\n"
             f"let login_btn = {b_js} || Array.from(document.querySelectorAll({btn_query})).find(b => (b.value && b.value.includes('Đăng nhập')) || (b.innerText && b.innerText.includes('Đăng nhập')));"
         )
+
+    @classmethod
+    def get_multi_session_confirm_js(cls) -> str:
+        """Construct JS expression to resolve TVPL multi-session warning popup by clicking visible confirm button."""
+        import json
+
+        confirm_kw_js = json.dumps(cls.CONFIRM_KEYWORDS)
+        return f"""
+        (() => {{
+            let keywords = {confirm_kw_js};
+            let isVisible = (el) => {{
+                if (!el) return false;
+                let cur = el;
+                while (cur && cur.nodeType === 1) {{
+                    let st = window.getComputedStyle(cur);
+                    if (st.display === 'none' || st.visibility === 'hidden') return false;
+                    cur = cur.parentElement;
+                }}
+                return true;
+            }};
+            let activeDialogs = Array.from(document.querySelectorAll('.ui-dialog, #TB_window')).filter(isVisible);
+            for (let d of activeDialogs) {{
+                let btns = Array.from(d.querySelectorAll('button, input[type="button"], input[type="submit"], a'));
+                let btn = btns.find(b => isVisible(b) && keywords.some(kw => (b.innerText || b.value || '').trim().toLowerCase().includes(kw)));
+                if (btn) {{
+                    btn.click();
+                    return 'Clicked Dong y: ' + (btn.innerText || btn.value || '').trim();
+                }}
+            }}
+            let allBtns = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"], a')).filter(isVisible);
+            let agreeBtn = allBtns.find(b => keywords.some(kw => (b.innerText || b.value || '').trim().toLowerCase().includes(kw)));
+            if (agreeBtn) {{
+                agreeBtn.click();
+                return 'Clicked Dong y: ' + (agreeBtn.innerText || agreeBtn.value || '').trim();
+            }}
+            if (typeof ContinueLogin === 'function') {{
+                ContinueLogin();
+                return 'Called ContinueLogin()';
+            }}
+            return 'No warning popup';
+        }})()
+        """

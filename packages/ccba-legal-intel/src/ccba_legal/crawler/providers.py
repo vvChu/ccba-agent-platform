@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import urllib.parse
 from pathlib import Path
 from typing import Any
@@ -180,15 +179,10 @@ class TVPLVIPDocProvider(LegalDocProvider):
             return
 
         user_query_js = TVPLSelectors.get_user_js_query()
-        check_login_js = f"""
-        (() => {{
-            let user_lbl = {user_query_js};
-            if (user_lbl && user_lbl.innerText.trim().length > 0) {{
-                return user_lbl.innerText.trim();
-            }}
-            return null;
-        }})()
-        """
+        check_login_js = (
+            f"(() => {{ let u = {user_query_js}; "
+            "return (u && u.innerText.trim().length > 0) ? u.innerText.trim() : null; })()"
+        )
         user = cdp.evaluate_js(check_login_js)
         if user:
             print(f"[TVPLVIPDocProvider] Already logged in as: {user}")
@@ -223,26 +217,7 @@ class TVPLVIPDocProvider(LegalDocProvider):
         cdp.wait_ready()
         cdp.handle_cloudflare()
 
-        confirm_kw_js = json.dumps(TVPLSelectors.CONFIRM_KEYWORDS)
-        confirm_js = f"""
-        (() => {{
-            let keywords = {confirm_kw_js};
-            let btns = Array.from(document.querySelectorAll('.ui-dialog-buttonpane button, .ui-dialog-buttonset button, input[type="button"], button'));
-            let dong_y = btns.find(b => {{
-                let txt = (b.innerText || b.value || '').trim().toLowerCase();
-                return keywords.some(kw => txt.includes(kw));
-            }});
-            if (dong_y) {{
-                dong_y.click();
-                return 'Clicked: ' + (dong_y.innerText || dong_y.value);
-            }}
-            if (typeof ContinueLogin === 'function') {{
-                ContinueLogin();
-                return 'Called ContinueLogin()';
-            }}
-            return 'No multi-session warning';
-        }})()
-        """
+        confirm_js = TVPLSelectors.get_multi_session_confirm_js()
         res_conf = cdp.evaluate_js(confirm_js)
         print(f"[TVPLVIPDocProvider] Multi-session confirmation: {res_conf}")
         sleep_with_jitter(2.0, 0.5, 1.0)
