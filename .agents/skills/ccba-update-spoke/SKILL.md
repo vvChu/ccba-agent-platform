@@ -176,7 +176,7 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 | `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
 | `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
 | `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
-| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: kiểm định liên kết Markdown in-process (`LinkAuditor` trên `.agents/AGENTS.md` và `.md/INDEX.md`), `check_spoke_cleanliness.py`, `check_hub_import_depth.py`, và `pytest`. |
+| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: kiểm định liên kết Markdown in-process (`LinkAuditor` trên `.agents/AGENTS.md` và `.md/INDEX.md`), `scripts/_guardrails/check_spoke_cleanliness.py`, `scripts/_guardrails/check_hub_import_depth.py`, và `pytest`. |
 | `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
 | `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
 | `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
@@ -192,10 +192,10 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
    * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
      - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
-     - `scripts/safe_pytest.py` (Test runner an toàn)
-     - `scripts/check_hub_import_depth.py` (Kiểm soát độ sâu import)
-     - `scripts/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
-4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/check_spoke_cleanliness.py`.
+     - `scripts/_guardrails/safe_pytest.py` (Test runner an toàn)
+     - `scripts/_guardrails/check_hub_import_depth.py` (Kiểm soát độ sâu import)
+     - `scripts/_guardrails/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
+4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/_guardrails/check_spoke_cleanliness.py`.
 5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
 6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts/ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Any
 
 import yaml
 
-from .base import HAS_CRYPTOGRAPHY
+from .base import HAS_CRYPTOGRAPHY, PLATFORM_ROOT
 from .catalog import CatalogMerger
 
 if HAS_CRYPTOGRAPHY:
@@ -78,6 +79,18 @@ class SpokeRegistrar:
             info["owner_email"] = owner_email
         return info
 
+    @staticmethod
+    def _is_ephemeral_test_spoke_on_real_hub(spoke_root: Path, hub_root: Path) -> bool:
+        """Return True when a pytest or temp spoke is targeting the real Hub repository."""
+        if hub_root.resolve() != PLATFORM_ROOT.resolve():
+            return False
+        spoke_posix = spoke_root.resolve().as_posix()
+        return (
+            "PYTEST_CURRENT_TEST" in os.environ
+            or "/pytest-of-" in spoke_posix
+            or "/pytest-" in spoke_posix
+        )
+
     def register(
         self,
         spoke_root: Path,
@@ -93,6 +106,9 @@ class SpokeRegistrar:
                 "[Registry] Warning: cryptography package not installed. Skipping Spoke registration.",
                 file=sys.stderr,
             )
+            return
+
+        if self._is_ephemeral_test_spoke_on_real_hub(spoke_root, hub_root):
             return
 
         public_key_path = hub_root / ".agents" / "resources" / "registry_public_key.pem"
@@ -194,6 +210,14 @@ class SpokeRegistrar:
             heartbeats = heartbeat_data.get("heartbeats", {})
             if not isinstance(heartbeats, dict):
                 heartbeats = {}
+            if hub_root.resolve() == PLATFORM_ROOT.resolve():
+                heartbeats = {
+                    k: v
+                    for k, v in heartbeats.items()
+                    if isinstance(v, dict)
+                    and "/pytest-of-" not in str(v.get("path", "")).replace("\\", "/")
+                    and "/pytest-" not in str(v.get("path", "")).replace("\\", "/")
+                }
             heartbeats[spoke_id] = {
                 "name": project_name,
                 "path": str(spoke_root.resolve()),
