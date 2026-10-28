@@ -19,7 +19,10 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import os
 import re
+import tempfile
+import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -151,10 +154,14 @@ def resolve_skill_stability_zone(
     content: str,
     velocity_state: VelocitySignalState | None = None,
 ) -> Literal["evolvable", "locked"]:
-    """Resolves effective stability zone (`evolvable` or `locked`) for a skill."""
+    """Resolves effective stability zone (`evolvable` or `locked`) with hard system precedence."""
     if velocity_state is not None and velocity_state.quarantined:
         return "locked"
     fm = parse_skill_frontmatter(content)
+    bundle = str(fm.get("bundle", "")).strip().lower()
+    name = str(fm.get("name", "")).strip().lower()
+    if bundle == "_governance" or name in SYSTEM_LOCKED_SKILL_NAMES:
+        return "locked"
     raw_zone = _extract_raw_stability_zone(fm)
     if isinstance(raw_zone, str):
         norm = raw_zone.strip().lower()
@@ -162,11 +169,23 @@ def resolve_skill_stability_zone(
             return "locked"
         if norm == "evolvable":
             return "evolvable"
-    bundle = str(fm.get("bundle", "")).strip().lower()
-    name = str(fm.get("name", "")).strip().lower()
-    if bundle == "_governance" or name in SYSTEM_LOCKED_SKILL_NAMES:
-        return "locked"
     return "evolvable"
+
+
+def _atomic_write_text(target_path: Path, text: str) -> None:
+    """Atomically writes text to target_path via same-directory temp file and os.replace."""
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(target_path.parent), prefix=f".{target_path.name}.", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.replace(tmp_name, target_path)
+    except Exception:
+        if os.path.exists(tmp_name):
+            os.unlink(tmp_name)
+        raise
 
 
 def check_skill_mutation_allowed(
@@ -187,7 +206,8 @@ class SkillVersionStore:
     """Manages content-addressed green snapshots, draft buffers, and deterministic rollback."""
 
     def __init__(self, skill_name: str, versions_root: Path | None = None) -> None:
-        safe_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", skill_name or "default_skill")
+        cleaned = re.sub(r"[^a-zA-Z0-9_.-]", "_", skill_name or "default_skill").strip(".")
+        safe_name = re.sub(r"\.{2,}", "_", cleaned) or "default_skill"
         base_root = versions_root if versions_root is not None else Path.cwd() / ".skill_versions"
         self.skill_name = safe_name
         self.store_dir = Path(base_root) / safe_name
@@ -207,11 +227,8 @@ class SkillVersionStore:
             return {"skill_name": self.skill_name, "last_green": None, "history": []}
 
     def _save_manifest(self, data: dict[str, Any]) -> None:
-        """Persists manifest JSON to disk."""
-        self.store_dir.mkdir(parents=True, exist_ok=True)
-        self.manifest_path.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        """Atomically persists manifest JSON to disk."""
+        _atomic_write_text(self.manifest_path, json.dumps(data, ensure_ascii=False, indent=2))
 
     def snapshot_green(self, content: str, score: float | None = None) -> SkillVersionSnapshot:
         """Records a known-good green version snapshot before or after a validated patch."""
@@ -237,7 +254,7 @@ class SkillVersionStore:
 
         version_id = f"v{len(history) + 1:04d}"
         snap_filename = f"green_{version_id}.snapshot"
-        (self.store_dir / snap_filename).write_text(content, encoding="utf-8")
+        _atomic_write_text(self.store_dir / snap_filename, content)
         snap = SkillVersionSnapshot(
             version_id=version_id,
             sha256=digest,
@@ -271,13 +288,12 @@ class SkillVersionStore:
         green_content = self.get_last_green_content()
         if green_content is None:
             raise FileNotFoundError(f"No green snapshot available for skill '{self.skill_name}'")
-        target_file.write_text(green_content, encoding="utf-8")
+        _atomic_write_text(target_file, green_content)
         return green_content
 
     def save_amber_draft(self, candidate_content: str, reason: str, failures: int) -> Path:
         """Saves candidate mutation to draft buffer when Velocity Signal reaches Amber (>= 3)."""
-        self.store_dir.mkdir(parents=True, exist_ok=True)
-        self.draft_buffer_path.write_text(candidate_content, encoding="utf-8")
+        _atomic_write_text(self.draft_buffer_path, candidate_content)
         manifest = self._load_manifest()
         manifest["amber_draft"] = {
             "sha256": hashlib.sha256(candidate_content.encode("utf-8")).hexdigest(),
@@ -326,11 +342,10 @@ class SkillVelocityTracker:
             return VelocitySignalState(skill_name=self.skill_name)
 
     def save_state(self, state: VelocitySignalState) -> VelocitySignalState:
-        """Persists VelocitySignalState to sidecar JSON."""
-        self.version_store.store_dir.mkdir(parents=True, exist_ok=True)
+        """Atomically persists VelocitySignalState to sidecar JSON."""
         state.updated_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        self.state_path.write_text(
-            json.dumps(state.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
+        _atomic_write_text(
+            self.state_path, json.dumps(state.to_dict(), ensure_ascii=False, indent=2)
         )
         return state
 
@@ -378,22 +393,30 @@ class SkillVelocityTracker:
 
 
 def count_normative_directives(content: str) -> dict[str, int]:
-    """Counts normative constraint directives (`MUST`, `MUST NOT`, `BẮT BUỘC`, etc.)."""
+    """Counts normative constraint directives after NFC Unicode normalization (COND-03)."""
+    norm_text = unicodedata.normalize("NFC", content)
     return {
-        name: len(pattern.findall(content))
+        name: len(pattern.findall(norm_text))
         for name, pattern in NORMATIVE_DIRECTIVE_PATTERNS.items()
     }
 
 
-def _compute_token_delta_ratio(baseline_content: str, mutated_content: str) -> float:
+def _compute_token_delta_ratio(
+    baseline_content: str,
+    mutated_content: str,
+    min_baseline_words: int = 1,
+    min_baseline_chars: int = 1,
+) -> float:
     """Computes maximum relative growth ratio across whitespace tokens and character count."""
-    base_words = max(len(baseline_content.split()), 1)
+    raw_base_words = len(baseline_content.split())
+    base_words = max(raw_base_words, min_baseline_words, 1)
     mut_words = len(mutated_content.split())
-    word_ratio = (mut_words - base_words) / base_words
+    word_ratio = (mut_words - raw_base_words) / base_words
 
-    base_chars = max(len(baseline_content), 1)
+    raw_base_chars = len(baseline_content)
+    base_chars = max(raw_base_chars, min_baseline_chars, 1)
     mut_chars = len(mutated_content)
-    char_ratio = (mut_chars - base_chars) / base_chars
+    char_ratio = (mut_chars - raw_base_chars) / base_chars
     return round(max(word_ratio, char_ratio), 4)
 
 
@@ -402,6 +425,8 @@ def evaluate_static_lint_gate(
     mutated_content: str,
     max_token_delta_ratio: float = DEFAULT_MAX_TOKEN_DELTA_RATIO,
     enforce_token_ratio: bool = True,
+    min_baseline_words: int = 1,
+    min_baseline_chars: int = 1,
 ) -> RegressionGateVerdict:
     """Tier 1 Static Linting Gate: checks normative directive preservation and +15% token delta."""
     base_counts = count_normative_directives(baseline_content)
@@ -409,7 +434,9 @@ def evaluate_static_lint_gate(
     dropped: dict[str, tuple[int, int]] = {
         k: (base_counts[k], mut_counts[k]) for k in base_counts if mut_counts[k] < base_counts[k]
     }
-    delta_ratio = _compute_token_delta_ratio(baseline_content, mutated_content)
+    delta_ratio = _compute_token_delta_ratio(
+        baseline_content, mutated_content, min_baseline_words, min_baseline_chars
+    )
     if dropped:
         details = ", ".join(f"{k} ({b} -> {m})" for k, (b, m) in sorted(dropped.items()))
         return RegressionGateVerdict(
@@ -482,9 +509,13 @@ def evaluate_negative_constraint_gate(
     mutated_content: str,
     max_single_patch_growth_ratio: float = DEFAULT_MAX_SINGLE_PATCH_GROWTH_RATIO,
     enforce_growth_ratio: bool = True,
+    min_baseline_words: int = 1,
+    min_baseline_chars: int = 1,
 ) -> RegressionGateVerdict:
     """Tier 3 Negative Constraint Gate: rejects single-patch bloat > 20% for edge-case fixes."""
-    delta_ratio = _compute_token_delta_ratio(baseline_content, mutated_content)
+    delta_ratio = _compute_token_delta_ratio(
+        baseline_content, mutated_content, min_baseline_words, min_baseline_chars
+    )
     if enforce_growth_ratio and delta_ratio > max_single_patch_growth_ratio:
         return RegressionGateVerdict(
             passed=False,
@@ -507,13 +538,19 @@ def evaluate_regression_gate(
     max_token_delta_ratio: float = DEFAULT_MAX_TOKEN_DELTA_RATIO,
     max_single_patch_growth_ratio: float = DEFAULT_MAX_SINGLE_PATCH_GROWTH_RATIO,
     enforce_token_ratio: bool = True,
+    min_baseline_words: int = 1,
+    min_baseline_chars: int = 1,
 ) -> RegressionGateVerdict:
     """Executes all 3 tiers of the Skill Regression Gate in fail-fast order."""
+    eff_min_words = min_baseline_words if enforce_token_ratio else 1500
+    eff_min_chars = min_baseline_chars if enforce_token_ratio else 8000
     tier3 = evaluate_negative_constraint_gate(
         baseline_content,
         mutated_content,
         max_single_patch_growth_ratio=max_single_patch_growth_ratio,
-        enforce_growth_ratio=enforce_token_ratio,
+        enforce_growth_ratio=True,
+        min_baseline_words=eff_min_words,
+        min_baseline_chars=eff_min_chars,
     )
     if not tier3.passed:
         return tier3
@@ -522,7 +559,9 @@ def evaluate_regression_gate(
         baseline_content,
         mutated_content,
         max_token_delta_ratio=max_token_delta_ratio,
-        enforce_token_ratio=enforce_token_ratio,
+        enforce_token_ratio=True,
+        min_baseline_words=eff_min_words,
+        min_baseline_chars=eff_min_chars,
     )
     if not tier1.passed:
         return tier1

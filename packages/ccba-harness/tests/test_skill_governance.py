@@ -51,6 +51,11 @@ def test_phase1_stability_zone_validation_and_defaults(tmp_path: Path) -> None:
     assert resolve_skill_stability_zone(gov_default) == "locked"
     assert resolve_skill_stability_zone(general_default) == "evolvable"
 
+    gov_override_attempt = (
+        "---\nname: platform-loader\nbundle: _governance\nstability_zone: evolvable\n---\n# Body\n"
+    )
+    assert resolve_skill_stability_zone(gov_override_attempt) == "locked"
+
     skill_dir = tmp_path / "ccba-demo"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text(
@@ -245,3 +250,20 @@ def test_tuner_pre_eval_rejects_deleted_normative_directive(tmp_path: Path) -> N
     assert report.reverted_trials == 1
     assert "TIER1_NORMATIVE_DIRECTIVE_DELETED" in report.history[0].summary
     assert skill_file.read_text(encoding="utf-8") == initial_content
+
+
+def test_grok_conditions_nfc_normalization_and_path_traversal(tmp_path: Path) -> None:
+    """Verifies COND-03 (NFC Unicode normalization) and COND-04 (path traversal sanitization)."""
+    import unicodedata
+
+    from ccba_harness.evals.skill_governance import count_normative_directives
+
+    nfc_text = "Agent BẮT BUỘC và TUYỆT ĐỐI KHÔNG vi phạm."
+    nfd_text = unicodedata.normalize("NFD", nfc_text)
+    assert count_normative_directives(nfc_text) == count_normative_directives(nfd_text)
+    assert count_normative_directives(nfd_text)["BAT_BUOC"] == 1
+    assert count_normative_directives(nfd_text)["TUYET_DOI_KHONG"] == 1
+
+    store = SkillVersionStore("../../etc/passwd", versions_root=tmp_path / ".skill_versions")
+    assert ".." not in store.skill_name
+    assert store.store_dir.parent == (tmp_path / ".skill_versions")
