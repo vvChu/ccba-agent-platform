@@ -159,5 +159,3 @@ specs/modules/
 .md/cache/eval_failure_ledger/
 .md/peer_exchange/.bridge_cache.json
 .md/peer_exchange/*.lock
-.skill_versions/
-**/.skill_versions/

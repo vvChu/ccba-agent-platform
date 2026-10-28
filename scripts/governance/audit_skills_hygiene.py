@@ -336,26 +336,6 @@ def _check_frontmatter_metadata(skill_content: str, sname: str, result: SkillAud
         )
 
 
-def _check_stability_zone(skill_content: str, sname: str, result: SkillAuditResult) -> None:
-    """Validates optional stability_zone frontmatter field ('evolvable' | 'locked')."""
-    fm = parse_frontmatter(skill_content)
-    raw_zone = fm.get("stability_zone", fm.get("stability-zone"))
-    if raw_zone is None and isinstance(fm.get("metadata"), dict):
-        raw_zone = fm["metadata"].get("stability_zone", fm["metadata"].get("stability-zone"))
-    if raw_zone is not None and (
-        not isinstance(raw_zone, str) or raw_zone.strip().lower() not in ("evolvable", "locked")
-    ):
-        result.issues.append(
-            Issue(
-                "RED",
-                "Governance Metadata",
-                f"{sname}/SKILL.md",
-                1,
-                f"Invalid stability_zone '{raw_zone}' in frontmatter (must be 'evolvable' or 'locked')",
-            )
-        )
-
-
 def _check_level3_index(
     skill_content: str,
     sname: str,
@@ -513,7 +493,6 @@ def audit_skill(
     _check_directory_hygiene(skill_dir, sname, ref_dir, result)
     skill_content = skill_md.read_text(encoding="utf-8", errors="replace")
     _check_frontmatter_metadata(skill_content, sname, result)
-    _check_stability_zone(skill_content, sname, result)
     _check_level3_index(skill_content, sname, ref_dir, ref_files, result)
 
     for md_file in sorted(skill_dir.rglob("*.md"), key=lambda p: p.as_posix()):
