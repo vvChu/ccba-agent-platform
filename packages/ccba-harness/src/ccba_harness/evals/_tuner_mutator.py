@@ -33,6 +33,12 @@ from .failure_mutator import (
 )
 from .legal_index import LegalFlatIndex
 from .models import EvalItem, EvalReport
+from .skill_governance import (
+    SKILL_LOCKED_HALT_REASON,
+    check_skill_mutation_allowed,
+    evaluate_regression_gate,
+    has_explicit_stability_zone,
+)
 from .slicing import SlicedDataset
 
 logger = logging.getLogger("ccba.eval.ratchet")
@@ -173,6 +179,12 @@ class _RatchetMutationGitMixin:
 
     def propose_mutation(self, current_content: str, iteration: int) -> str:
         """Generates a prompt mutation proposition based on multi-strategy optimization operators."""
+        vel_state = (
+            self.velocity_tracker.load_state() if hasattr(self, "velocity_tracker") else None
+        )
+        allowed, _ = check_skill_mutation_allowed(current_content, velocity_state=vel_state)
+        if not allowed:
+            return current_content
         arch = resolve_domain_archetype(self.config.skill_name)
         arch_name = arch.name if arch else "general"
 
@@ -413,6 +425,19 @@ class _RatchetMutationGitMixin:
         """Applies candidate mutation to disk and validates pre-eval invariants (ADRs, links, hygiene)."""
         self.target_file.write_text(mutated_content, encoding="utf-8")
 
+        gate_verdict = evaluate_regression_gate(
+            state.best_content,
+            mutated_content,
+            enforce_token_ratio=has_explicit_stability_zone(state.best_content),
+        )
+        if not gate_verdict.passed:
+            if hasattr(self, "velocity_tracker"):
+                self.velocity_tracker.record_patch_failure(
+                    mutated_content, reason=gate_verdict.reason
+                )
+            reason = f"Từ chối mutation [{gate_verdict.failure_code}]: {gate_verdict.reason}"
+            return self._reject_pre_eval_mutation(reason, iter_idx, t0, prev_tokens, state)
+
         best_adr_nums = set(ADR_REF_PATTERN.findall(state.best_content))
         mutated_adr_nums = set(ADR_REF_PATTERN.findall(mutated_content))
         dropped_adrs = sorted(
@@ -452,25 +477,27 @@ class _RatchetMutationGitMixin:
 
         if current_score > state.best_score and crit_fails == 0:
             diff_str = f"{state.best_score:.1f}% -> {current_score:.1f}% (+{current_score - state.best_score:.1f}%)"
-            committed = self.git_commit_improvement(diff_str)
-            if committed:
+            if self.git_commit_improvement(diff_str):
                 state.has_committed = True
-            state.best_score = current_score
-            state.best_content = mutated_content
-            state.kept_count += 1
-            state.stagnant_trials = 0
-            decision = "KEEP"
-            summary = f"Cải thiện điểm số thành công: {diff_str}"
+            state.best_score, state.best_content = current_score, mutated_content
+            state.kept_count, state.stagnant_trials = state.kept_count + 1, 0
+            decision, summary = "KEEP", f"Cải thiện điểm số thành công: {diff_str}"
+            if hasattr(self, "velocity_tracker"):
+                self.velocity_tracker.record_patch_keep(mutated_content, score=current_score)
         else:
             self.git_rollback_target(state.best_content, has_committed=state.has_committed)
-            state.reverted_count += 1
-            state.stagnant_trials += 1
+            state.reverted_count, state.stagnant_trials = (
+                state.reverted_count + 1,
+                state.stagnant_trials + 1,
+            )
             decision = "REVERT"
             summary = (
                 f"Không cải thiện (Score {current_score:.1f}% vs Best {state.best_score:.1f}%)"
                 if crit_fails == 0
                 else f"Vi phạm điều kiện nghiêm ngặt: {crit_fails} Điểm Liệt."
             )
+            if hasattr(self, "velocity_tracker"):
+                self.velocity_tracker.record_patch_failure(mutated_content, reason=summary)
 
         self._record_trial(
             iter_idx, current_score, crit_fails, decision, summary, t0, prev_tokens, state
@@ -478,19 +505,23 @@ class _RatchetMutationGitMixin:
         logger.info(f"📌 Quyết định [{decision}]: {summary}")
 
     def _check_budget_and_early_stop(
-        self,
-        iter_idx: int,
-        effective_patience: int,
-        baseline_tokens: int,
-        state: _RatchetLoopState,
+        self, iter_idx: int, effective_patience: int, baseline_tokens: int, state: _RatchetLoopState
     ) -> tuple[bool, str | None]:
         """Checks if optimization should halt due to target reached, token budgets, or early stopping."""
+        if (
+            has_explicit_stability_zone(state.best_content)
+            and hasattr(self, "velocity_tracker")
+            and self.velocity_tracker.load_state().quarantined
+        ):
+            logger.info(
+                f"🛑 [{SKILL_LOCKED_HALT_REASON}] Circuit breaker Red kích hoạt. Tạm khóa đột biến."
+            )
+            return True, SKILL_LOCKED_HALT_REASON
         if state.best_score >= self.config.target_score and not self.config.full_sweep:
             logger.info(
                 f"🎉 Đã đạt điểm mục tiêu {self.config.target_score}% tại iteration {iter_idx}!"
             )
             return True, None
-
         total_session_tokens = self.token_tracker.total_tokens
         if (
             self.config.hard_max_tokens_per_skill is not None
@@ -498,11 +529,9 @@ class _RatchetMutationGitMixin:
         ):
             logger.info(
                 f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Tổng session tokens ({total_session_tokens:,}) "
-                f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials. "
-                f"Dừng đột biến để bảo vệ ngân sách toàn đêm."
+                f"đã chạm ngưỡng trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}) sau {iter_idx} trials."
             )
             return True, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED"
-
         mutation_tokens = self.token_tracker.total_tokens - baseline_tokens
         if (
             self.config.per_skill_mutation_budget is not None
@@ -511,17 +540,14 @@ class _RatchetMutationGitMixin:
             and iter_idx >= 2
         ):
             logger.info(
-                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) "
-                f"đã vượt trần ngân sách ({self.config.per_skill_mutation_budget:,}) sau {iter_idx} trials (kept_count=0)."
+                f"🛑 [PER_SKILL_TOKEN_BUDGET_EXCEEDED] Mutation tokens ({mutation_tokens:,}) vượt trần sau {iter_idx} trials."
             )
             return True, "PER_SKILL_TOKEN_BUDGET_EXCEEDED"
-
         if effective_patience > 0 and state.stagnant_trials >= effective_patience:
             logger.info(
-                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {state.stagnant_trials} vòng liên tiếp không cải thiện điểm số (Patience={effective_patience})."
+                f"🛑 [Adaptive Early Stopping] Dừng sớm sau {state.stagnant_trials} vòng liên tiếp không cải thiện."
             )
             return True, None
-
         return False, None
 
     def _handle_iteration_exception(
@@ -684,10 +710,30 @@ class _RatchetMutationGitMixin:
         )
         return effective_max_iter, effective_patience
 
+    def _build_zero_token_report(self, halt_reason: str) -> RatchetReport:
+        """Builds a 0-token short-circuit RatchetReport for locked or exhausted skills."""
+        base_score = self.config.baseline_score if self.config.baseline_score is not None else 0.0
+        h_sc = base_score if base_score > 0 else None
+        st = _RatchetLoopState(best_score=base_score, best_content="")
+        return self._build_final_report(base_score, h_sc, h_sc, halt_reason, st)
+
     def _check_zero_token_short_circuit(
         self, initial_content: str
     ) -> tuple[str, RatchetReport | None]:
-        """Checks if all strategies and failure signals are already applied, returning short-circuit report."""
+        """Checks stability zone lock and strategy exhaustion before baseline evaluation."""
+        vel_state = getattr(self, "velocity_tracker", None) and self.velocity_tracker.load_state()
+        allowed, lock_reason = check_skill_mutation_allowed(
+            initial_content, velocity_state=vel_state
+        )
+        if not allowed:
+            reason_code = lock_reason or SKILL_LOCKED_HALT_REASON
+            logger.info(
+                f"🛑 [{reason_code}] Skill '{self.config.skill_name}' thuộc vùng ổn định khoá."
+            )
+            return "locked", self._build_zero_token_report(reason_code)
+        if hasattr(self, "version_store"):
+            self.version_store.snapshot_green(initial_content, score=self.config.baseline_score)
+
         unapplied = remaining_strategies(initial_content, self.config.skill_name)
         has_unapplied_signals = False
         arch = resolve_domain_archetype(self.config.skill_name)
@@ -695,38 +741,15 @@ class _RatchetMutationGitMixin:
         if arch_name in {"legal", "legal_tooling"}:
             ledger = load_failure_ledger(self.config.skill_name)
             if ledger and ledger.signals:
-                unapplied_sigs = get_unapplied_failure_signals(
-                    initial_content, list(ledger.signals)
+                has_unapplied_signals = bool(
+                    get_unapplied_failure_signals(initial_content, list(ledger.signals))
                 )
-                has_unapplied_signals = len(unapplied_sigs) > 0
 
         if not unapplied and not has_unapplied_signals:
             logger.info(
-                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ "
-                f"chiến lược đột biến có sẵn và không còn tín hiệu lỗi chưa áp. Bỏ qua chấm điểm baseline và holdout để bảo toàn 100% token ngân sách."
+                f"🛑 [HALT_NO_FURTHER_STRATEGIES] Skill '{self.config.skill_name}' đã áp dụng toàn bộ chiến lược."
             )
-            base_score = (
-                self.config.baseline_score if self.config.baseline_score is not None else 0.0
-            )
-            return arch_name, RatchetReport(
-                target_file=str(self.target_file),
-                initial_score=base_score,
-                final_score=base_score,
-                total_iterations=0,
-                kept_commits=0,
-                reverted_trials=0,
-                history=[],
-                total_tokens=0,
-                prompt_tokens=0,
-                completion_tokens=0,
-                avg_latency_s=0.0,
-                halt_reason="HALT_NO_FURTHER_STRATEGIES",
-                slicing_tier=self.sliced_data.tier.value if self.sliced_data else None,
-                tuning_size=len(self.tuning_dataset),
-                holdout_size=len(self.holdout_dataset),
-                holdout_score=base_score if base_score > 0 else None,
-                holdout_initial_score=base_score if base_score > 0 else None,
-            )
+            return arch_name, self._build_zero_token_report("HALT_NO_FURTHER_STRATEGIES")
         return arch_name, None
 
     def _prepare_post_baseline_state(
