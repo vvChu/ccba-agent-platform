@@ -77,7 +77,6 @@ from .models import EvalItem, EvalReport
 from .runner import EvalRunner, load_eval_dataset
 from .scorers import BaseScorer
 from .simulation import build_mock_agent_task
-from .skill_governance import SkillVelocityTracker, SkillVersionStore
 from .slicing import AdaptiveDataSlicer, SlicedDataset
 
 logger = logging.getLogger("ccba.eval.ratchet")
@@ -190,27 +189,10 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
 
         self._applied_failure_patches: int = 0
         self._applied_fingerprints: set[str] = set()
-        self._init_skill_governance()
         try:
             self.legal_index: LegalFlatIndex | None = load_legal_flat_index()
         except Exception:
             self.legal_index = None
-
-    def _init_skill_governance(self) -> None:
-        """Initializes SkillVersionStore and SkillVelocityTracker for target_file."""
-        gov_name = self.config.skill_name or self.target_file.parent.name or self.target_file.stem
-        target_parent = (
-            self.target_file.resolve().parent
-            if self.target_file.is_absolute()
-            else self.project_root
-        )
-        v_root = (
-            target_parent / ".skill_versions"
-            if self.dry_run_git
-            else self.project_root / ".skill_versions"
-        )
-        self.version_store = SkillVersionStore(gov_name, versions_root=v_root)
-        self.velocity_tracker = SkillVelocityTracker(gov_name, version_store=self.version_store)
 
     def _load_dataset(self) -> list[EvalItem]:
         """Loads evaluation dataset from JSON or creates synthetic items."""
