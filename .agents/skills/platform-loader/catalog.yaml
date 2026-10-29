@@ -1306,7 +1306,9 @@ seams:
     inspect_session_liveness, OneWayDoorCategory, DoorClassificationResult, classify_pr_door,
     compute_cumulative_streak, is_sampled_for_audit, TradeoffCard, validate_tradeoff_card,
     BackpressureStatus, evaluate_backpressure_queue, run_door_triage_cli, run_notify_cli,
-    check_telegram_token_health, send_telegram_alert, send_telegram_document`.'
+    check_telegram_token_health, send_telegram_alert, send_telegram_document, SkillVersionStore,
+    SkillVelocityTracker, RegressionGateVerdict, check_skill_mutation_allowed, evaluate_regression_gate,
+    resolve_skill_stability_zone`.'
   contracts: Evaluations must be deterministic and isolated with explicit timeout
     guards. Two-Stage Granularity Decision Framework and GPI calculation enforce RES-2026-ARCH-001
     v1.2 architecture rules. Fast unit tests must maintain SLA < 2.0s.
