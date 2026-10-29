@@ -5,6 +5,7 @@ Autonomous Vietnamese construction legal intelligence, TVPL crawl coordination, 
 - **Public Deep Seams**:
   - Core Seams: `from ccba_legal import LegalKnowledgeEngine, LegalIntelPipeline, LegalProcessor, LegalSyncEngine, LegalRegistryManager, LegalGroundingGate, OKFBundlePackager, DocxCanonicalSanitizer, DynamicStatutoryResolver, CurrencyCard`.
   - Cloud Ingestion Seam: `from ccba_legal.sync import GoogleDriveIngestor`.
+  - Canonical Lexicon Seam: `from ccba_legal.lexicon import CanonicalTerm, DataDictionarySpec, LexiconHarvester, CanonicalTermNormalizer, FacetedDisambiguationEngine, NationalConstructionIdInfo, parse_national_construction_id`.
 
 - **Contracts**:
   - Chrome CDP crawlers MUST use `TVPLSessionMutex` and `CookieVault` to prevent session conflict and rate limits.

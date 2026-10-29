@@ -11,7 +11,7 @@ triggers: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy p
 gpi: {s: 4.0, k: 3.0, a: 4.0, p: 1.0}
 metadata:
   author: CCBA
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # 🏛️ Kỹ Năng: Tư Vấn & Giải Đáp Pháp Lý Xây Dựng (`legal-advisor`)
@@ -51,6 +51,9 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
   2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
   3. *[Mẫu 3 — Bảng Ma trận Checklist]:* Xuất bảng đối soát đa cột phục vụ báo cáo thẩm tra kỹ thuật.
   4. *[Mẫu 4 — Bóc tách Biểu mẫu & Thủ tục]:* Hướng dẫn hồ sơ cấp phép xây dựng hoặc nghiệm thu hoàn công.
+* **Giao thức Ngôn ngữ Chung Hai Bề Mặt (Dual-Surface Ubiquitous Language — Quyết định 1812/QĐ-BXD):**
+  - *Bề mặt Giao tiếp Người dùng (Human Surface):* Khi đặt câu hỏi làm rõ (A/B/C), sử dụng danh mục chuẩn hóa của Bộ Xây dựng: 5 nguồn vốn (`1- Đầu tư công`, `2- PPP`, `3- Đầu tư kinh doanh`, `4- Nguồn vốn khác`, `5- Hỗn hợp`), 4 kịch bản thủ tục công trình (`II.A` Dự án thẩm định BCNCKT, `II.B` Công trình thuộc DA thẩm định BCNCKT được miễn GPXD, `II.C` Công trình cấp GPXD, `II.D` Công trình chỉ lập BCKTKT và miễn GPXD), 5 cấp công trình (`0- Đặc biệt`, `1- Cấp I` .. `4- Cấp IV`), và địa giới hành chính 2 cấp (`Tỉnh/Thành phố` + `Phường/Xã/Đặc khu` theo Quyết định 19/2025/QĐ-TTg).
+  - *Bề mặt Nội bộ Agent (Agent Internal State):* Ghi nhận song song khóa kỹ thuật chuẩn `camelCase` (`nguonVonDauTu`, `loaiDuAn`, `capCongTrinh`, `section_namespace`, `maTinh`, `maXa`) trong Mục 1 của Phiếu Giải Đáp Pháp Lý để sẵn sàng liên thông CSDL Quốc gia.
 - **Tiêu chí hoàn thành:** Thu thập đủ dữ liệu đầu vào cần thiết thông qua phỏng vấn thích ứng kèm gợi ý lựa chọn.
 
 ---

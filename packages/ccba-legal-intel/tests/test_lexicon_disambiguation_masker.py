@@ -11,6 +11,7 @@ from ccba_legal.lexicon import (
     compile_taxonomy_to_py,
     get_canonical_terms,
     load_canonical_taxonomy,
+    parse_national_construction_id,
 )
 
 
@@ -170,3 +171,64 @@ def test_taxonomy_loader_and_static_compilation() -> None:
     assert "STAT-CDT-001" in ids
     assert "STAT-001" in ids
     assert "INT-GOV-001" in ids
+
+
+def test_parse_national_construction_id_1812_qd_bxd() -> None:
+    """Tests deterministic decoding of 12-digit, 13/15-digit, and TTHC IDs (COND-01)."""
+    # 1. 12-digit Planning ID (maThongTinQH)
+    qh_info = parse_national_construction_id("012611188888")
+    assert qh_info.is_valid is True
+    assert qh_info.kind == "PLANNING"
+    assert qh_info.province_code == "01"
+    assert qh_info.year == 2026
+    assert qh_info.planning_level == 1
+    assert qh_info.planning_level_label == "Quy hoạch chung"
+    assert qh_info.planning_type == 1
+    assert qh_info.adjustment_type == 1
+    assert qh_info.sequence_number == "88888"
+
+    # 2. 13-digit Project ID (default) vs 13-digit Gazette Construction Sample (COND-01)
+    proj_info = parse_national_construction_id("0125215364201")
+    assert proj_info.is_valid is True
+    assert proj_info.kind == "PROJECT"
+    assert proj_info.provenance_note == "canonical_13_digit_project_id"
+
+    ct_13 = parse_national_construction_id("0125215364201", expected_kind="CONSTRUCTION")
+    assert ct_13.is_valid is True
+    assert ct_13.kind == "CONSTRUCTION"
+    assert ct_13.design_adjustment_count == "01"
+    assert ct_13.is_canonical_length is True
+    assert ct_13.provenance_note == "gazette_13_digit_sample_compatibility"
+
+    # 3. 15-digit Full Construction ID (COND-01)
+    ct_15 = parse_national_construction_id("012521536420102")
+    assert ct_15.is_valid is True
+    assert ct_15.kind == "CONSTRUCTION"
+    assert ct_15.design_adjustment_count == "02"
+    assert ct_15.provenance_note == "full_15_digit_construction_id"
+
+    # 4. TTHC Dossier ID (maKhoiTao - Decree 118/2025/NĐ-CP)
+    tthc = parse_national_construction_id("H26.17-250112-0938")
+    assert tthc.is_valid is True
+    assert tthc.kind == "PROCEDURE"
+    assert tthc.submission_date == "2025-01-12"
+
+    # 5. Negative cases (Two-Edit Behavioral Test Litmus)
+    bad_qh = parse_national_construction_id("012691188888")
+    assert bad_qh.is_valid is False
+    assert any("planning_level" in err for err in bad_qh.validation_errors)
+
+    bad_tthc = parse_national_construction_id("H26.17-251340-0938")
+    assert bad_tthc.is_valid is False
+
+
+def test_faceted_disambiguation_2tier_geography() -> None:
+    """Tests 2-tier administrative geography warning per Decision 19/2025/QĐ-TTg & 1812/QĐ-BXD."""
+    engine = FacetedDisambiguationEngine()
+    res = engine.disambiguate_term(
+        "Quận Cầu Giấy", "Kê khai địa điểm xây dựng công trình mới năm 2026."
+    )
+    assert res is not None
+    assert res.canonical_id == "STAT-1812-GEO-2TIER"
+    assert res.warning is not None
+    assert "1812/QĐ-BXD" in res.warning

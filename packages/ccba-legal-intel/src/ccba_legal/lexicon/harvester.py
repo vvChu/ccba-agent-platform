@@ -6,6 +6,7 @@ from IDOP-CCBA-WAY, and compiles the Hub SSOT taxonomy (ADR-0059, ADR-0061, COND
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import logging
@@ -19,7 +20,9 @@ import yaml
 from ccba_legal.gold_standard import get_doc_profile
 from ccba_legal.lexicon.models import (
     CanonicalTerm,
+    DataDictionarySpec,
     ProvenanceRecord,
+    TermFacet,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,11 +38,154 @@ DEFINITION_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+SECTION_NAMESPACE_MAP: dict[str, str] = {
+    "I": "I_QH",
+    "A": "II_A_DA",
+    "B": "II_B_CT_TD",
+    "C": "II_C_CT_GPXD",
+    "D": "II_D_CT_KTKT",
+    "E": "II_E_CCHN",
+    "G": "II_G_NLTC",
+    "H": "II_H_NLCN",
+}
+
+_ENUM_ITEM_PATTERN = re.compile(r"(\d+)\s*-\s*([^\d]+?)(?=\s+\d+\s*-|$)")
+
 
 def compute_sha256(text: str) -> str:
     """Computes SHA-256 hash of verbatim definition text (ADR-0059)."""
     clean_text = text.strip()
     return hashlib.sha256(clean_text.encode("utf-8")).hexdigest()
+
+
+def _detect_section_namespace(stt_cell: str, current_ns: str) -> tuple[str, bool]:
+    """Detects section header transitions in 1812/QĐ-BXD data dictionary table."""
+    token = stt_cell.strip().lstrip("\ufeff")
+    if token in SECTION_NAMESPACE_MAP:
+        return SECTION_NAMESPACE_MAP[token], True
+    if token == "II":
+        return "II_A_DA", True
+    return current_ns, False
+
+
+def _sanitize_technical_code(raw_cell: str, name_cell: str) -> tuple[str, str, bool]:
+    """Sanitizes broken camelCase keys while preserving raw gazette text (COND-02)."""
+    raw_clean = raw_cell.strip()
+    name_clean = name_cell.strip()
+    if not raw_clean or raw_clean == name_clean or not raw_clean.isascii():
+        slug = re.sub(r"[^\w]+", "_", (raw_clean or name_clean).lower()).strip("_")
+        return f"group_{slug}", raw_clean, True
+    cleaned = re.sub(r"\s+", "", raw_clean)
+    if cleaned and cleaned[0].isupper() and not cleaned.isupper():
+        cleaned = cleaned[0].lower() + cleaned[1:]
+    return cleaned, raw_clean, False
+
+
+def _extract_enum_mapping(text_cell: str) -> dict[str, str]:
+    """Extracts closed-world enum code->label pairs from Danh mục specification."""
+    mapping: dict[str, str] = {}
+    if not text_cell or "Danh mục" not in text_cell:
+        return mapping
+    body = text_cell.split("Danh mục", 1)[-1].lstrip(": ")
+    for match in _ENUM_ITEM_PATTERN.finditer(body):
+        code, label = match.group(1).strip(), match.group(2).strip().rstrip(".;,")
+        if label:
+            mapping[code] = label
+    return mapping
+
+
+def _build_row_term(
+    row: list[str],
+    section_ns: str,
+    parent_group: str | None,
+    doc_id: str,
+) -> CanonicalTerm:
+    """Builds a CanonicalTerm from a single 1812/QĐ-BXD CSV data row."""
+    stt = row[0].strip()
+    raw_tech = row[1].strip() if len(row) > 1 else ""
+    biz_name = row[2].strip() if len(row) > 2 else raw_tech
+    definition = row[3].strip() if len(row) > 3 else ""
+    example = row[4].strip() if len(row) > 4 else ""
+    data_spec = row[6].strip() if len(row) > 6 else ""
+    notes_col = row[7].strip() if len(row) > 7 else ""
+
+    tech_code, raw_preserved, is_group = _sanitize_technical_code(raw_tech, biz_name)
+    enums = _extract_enum_mapping(notes_col or data_spec)
+    verbatim_text = definition or biz_name
+    spec = DataDictionarySpec(
+        section_namespace=section_ns,
+        stt=stt,
+        technical_code=tech_code,
+        raw_technical_code=raw_preserved,
+        data_type_spec=data_spec,
+        enum_values=enums,
+        example_value=example,
+        parent_group=parent_group,
+        is_parent_group=is_group,
+    )
+    return CanonicalTerm(
+        canonical_id=f"STAT-1812-{section_ns}-{stt.replace('.', '_')}",
+        canonical_vi=biz_name,
+        domain=f"data_dictionary.{section_ns.lower()}",
+        context_notes=notes_col or None,
+        schema_spec=spec,
+        enum_values=enums,
+        provenance=ProvenanceRecord(
+            source_type="statutory",
+            doc_id=doc_id,
+            clause_anchor=f"{section_ns.lower()}-{stt.replace('.', '-')}",
+            verbatim_definition=verbatim_text,
+            verbatim_sha256=compute_sha256(verbatim_text),
+        ),
+    )
+
+
+def _merge_polysemous_terms(raw_terms: list[CanonicalTerm]) -> list[CanonicalTerm]:
+    """Merges rows sharing the same technical_code across sections into faceted terms."""
+    by_code: dict[str, list[CanonicalTerm]] = {}
+    for term in raw_terms:
+        key = (
+            term.schema_spec.technical_code
+            if term.schema_spec and not term.schema_spec.is_parent_group
+            else term.canonical_id
+        )
+        by_code.setdefault(key, []).append(term)
+
+    merged: list[CanonicalTerm] = []
+    for code, group in by_code.items():
+        if len(group) == 1:
+            merged.append(group[0])
+            continue
+        primary = group[0]
+        facets: dict[str, TermFacet] = {}
+        for item in group:
+            spec = item.schema_spec
+            ns = spec.section_namespace if spec else item.domain
+            facet_key = ns if ns not in facets else f"{ns}_{spec.stt if spec else len(facets)}"
+            facets[facet_key] = TermFacet(
+                domain=ns.lower(),
+                legal_basis="Quyết định 1812/QĐ-BXD",
+                clause_anchor=item.provenance.clause_anchor if item.provenance else None,
+                verbatim_definition=item.provenance.verbatim_definition
+                if item.provenance
+                else item.canonical_vi,
+                verbatim_sha256=item.provenance.verbatim_sha256
+                if item.provenance
+                else compute_sha256(item.canonical_vi),
+                key_distinction=f"{item.canonical_vi} ({spec.data_type_spec if spec else ''})",
+                schema_spec=spec,
+                enum_values=item.enum_values,
+            )
+        merged.append(
+            primary.model_copy(
+                update={
+                    "canonical_id": f"STAT-1812-POLY-{code}",
+                    "is_faceted": True,
+                    "facets": facets,
+                }
+            )
+        )
+    return merged
 
 
 class LexiconHarvester:
@@ -189,11 +335,54 @@ class LexiconHarvester:
                 )
         return terms
 
+    def harvest_data_dictionary_csv(
+        self,
+        csv_path: Path | None = None,
+        doc_id: str = "quyet_dinh_1812_qd_bxd_2026.md",
+        merge_polysemous: bool = True,
+    ) -> list[CanonicalTerm]:
+        """Harvests 2D tabular data dictionary rows from Decision 1812/QĐ-BXD (COND-02, COND-03)."""
+        target_csv = csv_path or (
+            self.legal_corpus_dir
+            / "01_vbpl"
+            / "quyet_dinh_1812_qd_bxd_2026"
+            / "tables"
+            / "csv"
+            / "bang_01.csv"
+        )
+        if not target_csv.exists():
+            return []
+
+        raw_terms: list[CanonicalTerm] = []
+        current_ns = "I_QH"
+        current_parent: str | None = None
+        with open(target_csv, encoding="utf-8") as f:
+            reader = csv.reader(f)
+            next(reader, None)  # Skip header row
+            for row in reader:
+                if not row or not row[0].strip():
+                    continue
+                current_ns, is_header = _detect_section_namespace(row[0], current_ns)
+                if is_header:
+                    current_parent = None
+                    continue
+                stt = row[0].strip()
+                if "." not in stt:
+                    current_parent = None
+                term = _build_row_term(row, current_ns, current_parent, doc_id)
+                if term.schema_spec and term.schema_spec.is_parent_group:
+                    current_parent = term.canonical_vi
+                raw_terms.append(term)
+
+        return _merge_polysemous_terms(raw_terms) if merge_polysemous else raw_terms
+
     def build_seed_canonical_taxonomy(self) -> dict[str, Any]:
         """Compiles the complete Seed Taxonomy SSOT according to COND-11 to COND-18."""
         seed_terms = self._get_pillar1_core_statutory_terms()
         seed_terms.update(self._get_pillar2_international_terms())
         seed_terms.update(self._get_pillar3_internal_governance_terms())
+        seed_terms.update(self._get_pillar4_lead_role_terms())
+        seed_terms.update(self._get_pillar4_national_schema_terms())
 
         # Merge harvested IDOP taxonomies if available
         idop_terms = self.harvest_idop_taxonomies()
@@ -204,14 +393,16 @@ class LexiconHarvester:
 
         return {
             "schema_version": "2.0.0",
+            "dictionary_version": "1812/QĐ-BXD-v1.0",
             "governance_authority": "IBST - CCBA Core Architecture Council",
-            "last_updated": "2026-10-23",
+            "last_updated": "2026-10-28",
             "governance_basis": [
                 "ADR-0046",
                 "ADR-0059",
                 "ADR-0061",
                 "RULE-6.1",
                 "COND-11..18",
+                "1812/QĐ-BXD",
             ],
             "terms": seed_terms,
         }
@@ -463,6 +654,96 @@ class LexiconHarvester:
             },
         }
 
+    def _get_pillar4_lead_role_terms(self) -> dict[str, Any]:
+        """Compiles Pillar IV canonical lead role titles per Decision 1812/QĐ-BXD (Mục I.21 & II.C.11)."""
+        role_specs = [
+            ("01", "Chủ nhiệm đồ án quy hoạch xây dựng", "Urban Planning Project Director", []),
+            ("02", "Chủ trì đồ án quy hoạch xây dựng", "Urban Planning Discipline Lead", []),
+            ("03", "Chủ nhiệm khảo sát xây dựng", "Construction Survey Manager", []),
+            ("04", "Chủ trì khảo sát xây dựng", "Construction Survey Lead", []),
+            ("05", "Chủ nhiệm thiết kế xây dựng", "Chief Design Manager", []),
+            ("06", "Chủ trì thiết kế xây dựng", "Design Discipline Lead", []),
+            ("07", "Chủ nhiệm thẩm tra thiết kế xây dựng", "Chief Design Verification Manager", []),
+            (
+                "08",
+                "Giám đốc quản lý dự án",
+                "Project Management Director",
+                ["Trưởng ban quản lý dự án", "Trưởng dự án QLDA"],
+            ),
+            (
+                "09",
+                "Chỉ huy trưởng công trường",
+                "Site Commander / Construction Site Manager",
+                ["Chỉ huy trưởng thi công", "Quản lý công trường"],
+            ),
+        ]
+        terms: dict[str, Any] = {}
+        for idx, vi_label, en_label, forbidden in role_specs:
+            key = f"vai_tro_chu_tri_{idx}"
+            terms[key] = {
+                "canonical_id": f"STAT-1812-ROLE-{idx}",
+                "canonical_vi": vi_label,
+                "domain": "professional_capacity",
+                "translations": {"en": en_label},
+                "vi_forbidden": forbidden,
+                "enum_values": {str(int(idx)): vi_label},
+                "provenance": {
+                    "source_type": "statutory",
+                    "doc_id": "quyet_dinh_1812_qd_bxd_2026.md",
+                    "clause_anchor": f"ii-c-11-3-role-{idx}",
+                    "verbatim_definition": f"Danh mục chức danh chủ trì mã {int(idx)}: {vi_label} theo Quyết định 1812/QĐ-BXD.",
+                    "verbatim_sha256": compute_sha256(vi_label),
+                },
+            }
+        return terms
+
+    def _get_pillar4_national_schema_terms(self) -> dict[str, Any]:
+        """Compiles Pillar IV national database schema terms & 2-tier geography (1812/QĐ-BXD)."""
+        return {
+            "quy_hoach_chi_tiet_rut_gon": {
+                "canonical_id": "STAT-1812-QH-04",
+                "canonical_vi": "Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt bằng)",
+                "domain": "urban_planning",
+                "translations": {"en": "Abbreviated Detailed Master Plan"},
+                "vi_forbidden": ["Quy hoạch tổng mặt bằng 1/500 rút gọn"],
+                "enum_values": {
+                    "1": "Quy hoạch chung",
+                    "2": "Quy hoạch phân khu",
+                    "3": "Quy hoạch chi tiết",
+                    "4": "Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt bằng)",
+                },
+            },
+            "nguon_von_dau_tu_1812": {
+                "canonical_id": "STAT-1812-VON",
+                "canonical_vi": "Nguồn vốn đầu tư",
+                "domain": "project_investment",
+                "enum_values": {
+                    "1": "Dự án sử dụng vốn đầu tư công",
+                    "2": "Dự án PPP",
+                    "3": "Dự án đầu tư kinh doanh",
+                    "4": "Dự án sử dụng nguồn vốn khác",
+                    "5": "Dự án sử dụng hỗn hợp nhiều nguồn vốn",
+                },
+            },
+            "dia_gioi_hanh_chinh_2_cap": {
+                "canonical_id": "STAT-1812-GEO-2TIER",
+                "canonical_vi": "Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)",
+                "domain": "administrative_geography",
+                "context_notes": "Theo Quyết định 19/2025/QĐ-TTg và Quyết định 1812/QĐ-BXD: Địa điểm xây dựng gồm maTinh (2 số) và maXa (5 số: Phường/Xã/Đặc khu), không còn cấp Quận/Huyện trung gian.",
+            },
+            "kich_ban_thu_tuc_cong_trinh_1812": {
+                "canonical_id": "STAT-1812-PROC-SCENARIOS",
+                "canonical_vi": "Phân nhóm thủ tục dự án và công trình xây dựng",
+                "domain": "administrative_procedure",
+                "enum_values": {
+                    "II_A_DA": "Dự án đầu tư xây dựng thuộc đối tượng thẩm định BCNCKT",
+                    "II_B_CT_TD": "Công trình thuộc dự án thẩm định BCNCKT được miễn GPXD",
+                    "II_C_CT_GPXD": "Công trình thuộc đối tượng đề nghị cấp Giấy phép xây dựng",
+                    "II_D_CT_KTKT": "Công trình chỉ yêu cầu lập Báo cáo kinh tế - kỹ thuật và miễn GPXD",
+                },
+            },
+        }
+
     def save_canonical_taxonomy_yaml(
         self,
         taxonomy: dict[str, Any] | None = None,
@@ -473,7 +754,7 @@ class LexiconHarvester:
         target_path = output_path or DEFAULT_RESOURCE_PATH
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        class CleanDumper(yaml.SafeDumper):
+        class CleanDumper(yaml.SafeDumper):  # type: ignore[misc]
             """Clean YAML dumper preserving unicode and indenting lists."""
 
         CleanDumper.add_representer(
