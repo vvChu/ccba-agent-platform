@@ -11,7 +11,7 @@ triggers: [tu van phap ly, giai dap phap luat, quy chuan xay dung, hoi dap quy p
 gpi: {s: 4.0, k: 3.0, a: 4.0, p: 1.0}
 metadata:
   author: CCBA
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # 🏛️ Kỹ Năng: Tư Vấn & Giải Đáp Pháp Lý Xây Dựng (`legal-advisor`)
@@ -141,3 +141,14 @@ Mọi câu trả lời cuối cùng bắt buộc phải được định dạng 
 * **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
 * Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi tư vấn chuyên sâu cho công trình sản xuất công nghiệp hoặc tổ hợp kỹ thuật phức tạp, Agent đọc tài liệu tham chiếu chuyên đề tại tầng Level 3:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| [`references/industrial_f5_pccc_pitfalls.md`](references/industrial_f5_pccc_pitfalls.md) | Quy tắc tách bạch "3 Sổ Độc Lập" cho tầng lửng & sàn thao tác Catwalk/OHU, phòng máy chủ (`QCVN 10:2025/BCA`), trạm bơm & bể nước PCCC (`QCVN 02:2020/BCA`), khối tích Bảng 16 & lỗ mở mái 2,5% cho nhà máy công nghiệp nhóm `F5` |
+
