@@ -1,12 +1,14 @@
 schema_version: 2.0.0
+dictionary_version: 1812/QĐ-BXD-v1.0
 governance_authority: IBST - CCBA Core Architecture Council
-last_updated: '2026-10-23'
+last_updated: '2026-10-28'
 governance_basis:
 - ADR-0046
 - ADR-0059
 - ADR-0061
 - RULE-6.1
 - COND-11..18
+- 1812/QĐ-BXD
 terms:
   chu_dau_tu:
     canonical_id: STAT-CDT-001
@@ -232,6 +234,196 @@ terms:
     context_notes: 'Quy trình kiểm soát theo Điều 13 CCBA Charter 2026: Level 1 Technical
       Check -> Level 2 Management Approval -> Level 3 Department Review -> Level 4
       Compliance QA -> Level 5 Final Approval'
+  vai_tro_chu_tri_01:
+    canonical_id: STAT-1812-ROLE-01
+    canonical_vi: Chủ nhiệm đồ án quy hoạch xây dựng
+    domain: professional_capacity
+    translations:
+      en: Urban Planning Project Director
+    vi_forbidden: []
+    enum_values:
+      '1': Chủ nhiệm đồ án quy hoạch xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-01
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 1: Chủ nhiệm đồ án quy hoạch
+        xây dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: d4db9066a1d3530c1aa872c0b5aecff47aa2af1c610b4c8c6cd9059d60790f94
+  vai_tro_chu_tri_02:
+    canonical_id: STAT-1812-ROLE-02
+    canonical_vi: Chủ trì đồ án quy hoạch xây dựng
+    domain: professional_capacity
+    translations:
+      en: Urban Planning Discipline Lead
+    vi_forbidden: []
+    enum_values:
+      '2': Chủ trì đồ án quy hoạch xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-02
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 2: Chủ trì đồ án quy hoạch
+        xây dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 0228a80ce4d23b500048ea6c293c69f55d7cb695563755dbaefd903a9a2cff27
+  vai_tro_chu_tri_03:
+    canonical_id: STAT-1812-ROLE-03
+    canonical_vi: Chủ nhiệm khảo sát xây dựng
+    domain: professional_capacity
+    translations:
+      en: Construction Survey Manager
+    vi_forbidden: []
+    enum_values:
+      '3': Chủ nhiệm khảo sát xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-03
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 3: Chủ nhiệm khảo sát xây
+        dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: cd371ba1406e42d05933cd2c8dda02805c179d355697c9882f5deba29e1d5c65
+  vai_tro_chu_tri_04:
+    canonical_id: STAT-1812-ROLE-04
+    canonical_vi: Chủ trì khảo sát xây dựng
+    domain: professional_capacity
+    translations:
+      en: Construction Survey Lead
+    vi_forbidden: []
+    enum_values:
+      '4': Chủ trì khảo sát xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-04
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 4: Chủ trì khảo sát xây
+        dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 7de64fb4c5e111f964b566cd6d5f3e4102ebdbbe99db3c23c2066de7e1fcce89
+  vai_tro_chu_tri_05:
+    canonical_id: STAT-1812-ROLE-05
+    canonical_vi: Chủ nhiệm thiết kế xây dựng
+    domain: professional_capacity
+    translations:
+      en: Chief Design Manager
+    vi_forbidden: []
+    enum_values:
+      '5': Chủ nhiệm thiết kế xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-05
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 5: Chủ nhiệm thiết kế xây
+        dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: b32779c3c12ed79cd5aecb85a825c847cf59ffa2ee688891027cdba83b145b76
+  vai_tro_chu_tri_06:
+    canonical_id: STAT-1812-ROLE-06
+    canonical_vi: Chủ trì thiết kế xây dựng
+    domain: professional_capacity
+    translations:
+      en: Design Discipline Lead
+    vi_forbidden: []
+    enum_values:
+      '6': Chủ trì thiết kế xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-06
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 6: Chủ trì thiết kế xây
+        dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: c241d48afb92fb16ecab2eecae18ee66d8f06c20958463157a6fd68ba79cb426
+  vai_tro_chu_tri_07:
+    canonical_id: STAT-1812-ROLE-07
+    canonical_vi: Chủ nhiệm thẩm tra thiết kế xây dựng
+    domain: professional_capacity
+    translations:
+      en: Chief Design Verification Manager
+    vi_forbidden: []
+    enum_values:
+      '7': Chủ nhiệm thẩm tra thiết kế xây dựng
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-07
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 7: Chủ nhiệm thẩm tra thiết
+        kế xây dựng theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 0975a436e8f33857196045881b77099b59618be5313c1a055515b971bc6c1da3
+  vai_tro_chu_tri_08:
+    canonical_id: STAT-1812-ROLE-08
+    canonical_vi: Giám đốc quản lý dự án
+    domain: professional_capacity
+    translations:
+      en: Project Management Director
+    vi_forbidden:
+    - Trưởng ban quản lý dự án
+    - Trưởng dự án QLDA
+    enum_values:
+      '8': Giám đốc quản lý dự án
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-08
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 8: Giám đốc quản lý dự án
+        theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: a1b262f1e80b097b41a979c658180f5ecaa2e8e9387d38d9e43ad27fd4e593d3
+  vai_tro_chu_tri_09:
+    canonical_id: STAT-1812-ROLE-09
+    canonical_vi: Chỉ huy trưởng công trường
+    domain: professional_capacity
+    translations:
+      en: Site Commander / Construction Site Manager
+    vi_forbidden:
+    - Chỉ huy trưởng thi công
+    - Quản lý công trường
+    enum_values:
+      '9': Chỉ huy trưởng công trường
+    provenance:
+      source_type: statutory
+      doc_id: quyet_dinh_1812_qd_bxd_2026.md
+      clause_anchor: ii-c-11-3-role-09
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 9: Chỉ huy trưởng công trường
+        theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: a1c5a72c1a1f691a9c38a35c7a6aeb1e72f17b936f0df0f499f4b5f59068fc1e
+  quy_hoach_chi_tiet_rut_gon:
+    canonical_id: STAT-1812-QH-04
+    canonical_vi: Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng
+      mặt bằng)
+    domain: urban_planning
+    translations:
+      en: Abbreviated Detailed Master Plan
+    vi_forbidden:
+    - Quy hoạch tổng mặt bằng 1/500 rút gọn
+    enum_values:
+      '1': Quy hoạch chung
+      '2': Quy hoạch phân khu
+      '3': Quy hoạch chi tiết
+      '4': Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt
+        bằng)
+  nguon_von_dau_tu_1812:
+    canonical_id: STAT-1812-VON
+    canonical_vi: Nguồn vốn đầu tư
+    domain: project_investment
+    enum_values:
+      '1': Dự án sử dụng vốn đầu tư công
+      '2': Dự án PPP
+      '3': Dự án đầu tư kinh doanh
+      '4': Dự án sử dụng nguồn vốn khác
+      '5': Dự án sử dụng hỗn hợp nhiều nguồn vốn
+  dia_gioi_hanh_chinh_2_cap:
+    canonical_id: STAT-1812-GEO-2TIER
+    canonical_vi: Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)
+    domain: administrative_geography
+    context_notes: 'Theo Quyết định 19/2025/QĐ-TTg và Quyết định 1812/QĐ-BXD: Địa
+      điểm xây dựng gồm maTinh (2 số) và maXa (5 số: Phường/Xã/Đặc khu), không còn
+      cấp Quận/Huyện trung gian.'
+  kich_ban_thu_tuc_cong_trinh_1812:
+    canonical_id: STAT-1812-PROC-SCENARIOS
+    canonical_vi: Phân nhóm thủ tục dự án và công trình xây dựng
+    domain: administrative_procedure
+    enum_values:
+      II_A_DA: Dự án đầu tư xây dựng thuộc đối tượng thẩm định BCNCKT
+      II_B_CT_TD: Công trình thuộc dự án thẩm định BCNCKT được miễn GPXD
+      II_C_CT_GPXD: Công trình thuộc đối tượng đề nghị cấp Giấy phép xây dựng
+      II_D_CT_KTKT: Công trình chỉ yêu cầu lập Báo cáo kinh tế - kỹ thuật và miễn
+        GPXD
   phát_triển_tùy_biến_công_nghệ_bim:
     canonical_id: INT-GOV-CCBA_CHUCDAN-ae477931
     canonical_vi: Phát triển ＆ Tùy biến Công nghệ BIM
@@ -245,6 +437,7 @@ terms:
       doc_id: CCBA_ChucDanhBIM.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhBIM
       verbatim_sha256: 60f3590691342297c767639e19bdc58cf905f908f60fa2aaaf7ced9b7b5d3c83
+    enum_values: {}
   quản_lý_điều_phối_bim:
     canonical_id: INT-GOV-CCBA_CHUCDAN-fafc0840
     canonical_vi: Quản lý ＆ Điều phối BIM
@@ -258,6 +451,7 @@ terms:
       doc_id: CCBA_ChucDanhBIM.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhBIM
       verbatim_sha256: d3c0278a9445761d41609e89270f0a9f72f176018a683abb2d5601d56d4131c5
+    enum_values: {}
   thực_thi_phát_triển_mô_hình_bim:
     canonical_id: INT-GOV-CCBA_CHUCDAN-f86db6ef
     canonical_vi: Thực thi ＆ Phát triển Mô hình BIM
@@ -271,6 +465,7 @@ terms:
       doc_id: CCBA_ChucDanhBIM.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhBIM
       verbatim_sha256: e6343fc21f8a24c958ce39c06eb399ba9dd88ef1b036a520f559006ee88a8b3b
+    enum_values: {}
   1_khảo_sát_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-08e834c9
     canonical_vi: 1. Khảo sát xây dựng
@@ -284,6 +479,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: fd08ee854ac3c0dd57a3856a4b4bea20bb2caf4e0f45d0ec33d2def75077e625
+    enum_values: {}
   2_lập_quy_hoạch_đô_thị_và_nông_thôn:
     canonical_id: INT-GOV-CCBA_CHUCDAN-9233246d
     canonical_vi: 2. Lập quy hoạch đô thị và nông thôn
@@ -297,6 +493,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: c9e3972c81d5ff63a55db9d1119cd09052b203d4058d6232d972208c758ef9eb
+    enum_values: {}
   3_tư_vấn_thiết_kế_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-98602a74
     canonical_vi: 3. Tư vấn Thiết kế xây dựng
@@ -310,6 +507,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: b90016117854e3b61ffd3aa8694b4a1c0013894839edd9f64135ad13b3c37b0e
+    enum_values: {}
   4_tư_vấn_thẩm_tra_thiết_kế_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-e914697e
     canonical_vi: 4. Tư vấn Thẩm tra thiết kế xây dựng
@@ -323,6 +521,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: f9514574bb8381afe3615b0e7a1cb4f9442b55f5b94b693140ee3f4eba4dab74
+    enum_values: {}
   5_tư_vấn_giám_sát_thi_công_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-6ed815b3
     canonical_vi: 5. Tư vấn Giám sát thi công xây dựng
@@ -336,6 +535,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: a80df2ff576e3a2bb6bd2c07f5ab6db3f68c2f1adcb195a6c8e073f076cd4784
+    enum_values: {}
   6_tư_vấn_kiểm_định_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-85b0d2cb
     canonical_vi: 6. Tư vấn Kiểm định xây dựng
@@ -349,6 +549,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: 725e7d48ea8ee7ea55f67bd895a41348aa7956877afd5f6014bdb75001142249
+    enum_values: {}
   7_quản_lý_chi_phí_định_giá_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-773805ce
     canonical_vi: 7. Quản lý Chi phí (Định giá xây dựng)
@@ -362,6 +563,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: 53ac3ddd0b309ffd42b842780a9f41c8e864be607e45b8fc37f0838735ddbfda
+    enum_values: {}
   8_quản_lý_dự_án_đầu_tư_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-b18694f7
     canonical_vi: 8. Quản lý Dự án đầu tư xây dựng
@@ -375,6 +577,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: bdeaf717730cb4aef11f7ecb86b7b94bf7be0ff983297816aacc8738b78f94e6
+    enum_values: {}
   9_thi_công_xây_dựng:
     canonical_id: INT-GOV-CCBA_CHUCDAN-66d5f0a9
     canonical_vi: 9. Thi công xây dựng
@@ -388,6 +591,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: c720e3c9f8ae15f5c7c7b10220a9e6c61c4a02c9a07d805207f80aaf6d1ada49
+    enum_values: {}
   10_công_việc_đặc_thù_miễn_chứng_chỉ_hành_nghề:
     canonical_id: INT-GOV-CCBA_CHUCDAN-f5e4a129
     canonical_vi: 10. Công việc đặc thù & Miễn chứng chỉ hành nghề
@@ -401,6 +605,7 @@ terms:
       doc_id: CCBA_ChucDanhXayDung.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_ChucDanhXayDung
       verbatim_sha256: 13fe78637766018dc8f85f2d5b08829af1c6b7869337d5d041253dfd2bab5afb
+    enum_values: {}
   100_ban_lãnh_đạo:
     canonical_id: INT-GOV-CCBA_DONVIPH-3d93b5fb
     canonical_vi: 100. BAN LÃNH ĐẠO
@@ -414,6 +619,7 @@ terms:
       doc_id: CCBA_DonViPhongBan.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_DonViPhongBan
       verbatim_sha256: 6f20cd4e23245bc059d81c622f6b38a0d67950e2e8eff44c029304e4755ce2c3
+    enum_values: {}
   200_khối_văn_phòng:
     canonical_id: INT-GOV-CCBA_DONVIPH-c5685305
     canonical_vi: 200. KHỐI VĂN PHÒNG
@@ -427,6 +633,7 @@ terms:
       doc_id: CCBA_DonViPhongBan.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_DonViPhongBan
       verbatim_sha256: 5e40dc6b4432a614c34192302f0e4151c585d4e2e5fa748918a83b625b2da845
+    enum_values: {}
   300_khối_chuyên_môn:
     canonical_id: INT-GOV-CCBA_DONVIPH-734bbf13
     canonical_vi: 300. KHỐI CHUYÊN MÔN
@@ -440,6 +647,7 @@ terms:
       doc_id: CCBA_DonViPhongBan.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_DonViPhongBan
       verbatim_sha256: 170a20acaa722fe11325da540e46cd205def3cc89a6295dd14dffd99c0c6d6f6
+    enum_values: {}
   ibst:
     canonical_id: INT-GOV-CCBA_DONVIPH-3e532cec
     canonical_vi: IBST
@@ -453,6 +661,7 @@ terms:
       doc_id: CCBA_DonViPhongBan.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_DonViPhongBan
       verbatim_sha256: e8801e6a628e856d705839e91a95b893659b802aee986c116626579f40e2ad3f
+    enum_values: {}
   1_lĩnh_vực_khảo_sát_xây_dựng:
     canonical_id: INT-GOV-CCBA_LINHVUC-b7269240
     canonical_vi: 1. Lĩnh vực Khảo sát xây dựng
@@ -466,6 +675,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: f08d2320830d30c6b0b4ab0e252d950ee5665c3e2986453ebb2a65247625518b
+    enum_values: {}
   2_lĩnh_vực_lập_quy_hoạch_đô_thị_và_nông_thôn:
     canonical_id: INT-GOV-CCBA_LINHVUC-e941566e
     canonical_vi: 2. Lĩnh vực Lập quy hoạch đô thị và nông thôn
@@ -479,6 +689,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: 2442fb278409dbc69bc34aef20bbdaa1806c61dad5be69859e0fed66949c9973
+    enum_values: {}
   3_lĩnh_vực_thiết_kế_xây_dựng:
     canonical_id: INT-GOV-CCBA_LINHVUC-fac5c2ff
     canonical_vi: 3. Lĩnh vực Thiết kế xây dựng
@@ -492,6 +703,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: ca119afac60a91196ee360d5e41a31d440e98cbadd8c8fed84e8c04d25f659b1
+    enum_values: {}
   4_lĩnh_vực_giám_sát_thi_công_xây_dựng:
     canonical_id: INT-GOV-CCBA_LINHVUC-eec21028
     canonical_vi: 4. Lĩnh vực Giám sát thi công xây dựng
@@ -505,6 +717,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: 47cfc79fbe1c4c29c1532d389c4d14c8ccc73bae2d44ee149bf5ec5732dbc070
+    enum_values: {}
   5_lĩnh_vực_quản_lý_dự_án_đầu_tư_xây_dựng:
     canonical_id: INT-GOV-CCBA_LINHVUC-6c47500b
     canonical_vi: 5. Lĩnh vực Quản lý dự án đầu tư xây dựng
@@ -518,6 +731,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: 456e11a0095420af6175aa8976fca5041e3c78e29336a3685745ec15c4d46f91
+    enum_values: {}
   6_lĩnh_vực_thi_công_xây_dựng_công_trình:
     canonical_id: INT-GOV-CCBA_LINHVUC-6480e4d9
     canonical_vi: 6. Lĩnh vực Thi công xây dựng công trình
@@ -531,6 +745,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: ece8796b5663d46d36dfcbdcd9d682621e54e4e5bdd487d9e5d49039e5cbad54
+    enum_values: {}
   7_lĩnh_vực_định_giá_xây_dựng_quản_lý_chi_phí:
     canonical_id: INT-GOV-CCBA_LINHVUC-b0d58378
     canonical_vi: 7. Lĩnh vực Định giá xây dựng (Quản lý chi phí)
@@ -544,6 +759,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: 5624f338456c208b38c190fd736b73c1cabe022e4c369d25bf6ed1da190e5165
+    enum_values: {}
   8_lĩnh_vực_kiểm_định_xây_dựng:
     canonical_id: INT-GOV-CCBA_LINHVUC-e3d00dbb
     canonical_vi: 8. Lĩnh vực Kiểm định xây dựng
@@ -557,6 +773,7 @@ terms:
       doc_id: CCBA_LinhVucChuyenMon.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LinhVucChuyenMon
       verbatim_sha256: 174274343ecb0acabeff736480ffc0172a53001e4c92762cc8fd7f93c57098af
+    enum_values: {}
   chi_phí_nhân_sự:
     canonical_id: INT-GOV-CCBA_LOAICHI-0c1d2e3f
     canonical_vi: Chi phí Nhân sự
@@ -570,6 +787,7 @@ terms:
       doc_id: CCBA_LoaiChiPhi.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LoaiChiPhi
       verbatim_sha256: 01fb87072abf0b37775fdb3633191b480ada5f6a1000a93a70ad4cfca4a042d3
+    enum_values: {}
   chi_phí_vật_tư:
     canonical_id: INT-GOV-CCBA_LOAICHI-0c1d2e3f
     canonical_vi: Chi phí Vật tư
@@ -583,6 +801,7 @@ terms:
       doc_id: CCBA_LoaiChiPhi.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LoaiChiPhi
       verbatim_sha256: 1da9a6d2e5cbd531315771932ac19355574d5b02ede047ac33e452499045c1c9
+    enum_values: {}
   chi_phí_dịch_vụ:
     canonical_id: INT-GOV-CCBA_LOAICHI-0c1d2e3f
     canonical_vi: Chi phí Dịch vụ
@@ -596,6 +815,7 @@ terms:
       doc_id: CCBA_LoaiChiPhi.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LoaiChiPhi
       verbatim_sha256: 2bcf4d73d01d624de1feac2e0dd943919f2dc2865df9b78facc79dd6f8fbf584
+    enum_values: {}
   chi_phí_di_chuyển:
     canonical_id: INT-GOV-CCBA_LOAICHI-0c1d2e3f
     canonical_vi: Chi phí Di chuyển
@@ -609,6 +829,7 @@ terms:
       doc_id: CCBA_LoaiChiPhi.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LoaiChiPhi
       verbatim_sha256: 11d6ac34923101236e1ca15b3ea6304aa65586bdc5c3237e41bdc55d7f8d26ef
+    enum_values: {}
   khác:
     canonical_id: INT-GOV-CCBA_LOAICHI-0c1d2e3f
     canonical_vi: Khác
@@ -622,3 +843,4 @@ terms:
       doc_id: CCBA_LoaiChiPhi.json
       verbatim_definition: Thuộc nhóm phân loại thể chế CCBA_LoaiChiPhi
       verbatim_sha256: bda82bf0c5f3deeb90d0567e8207e22378356445550be1c20ff2b4a5a394b569
+    enum_values: {}

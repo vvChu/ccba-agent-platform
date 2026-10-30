@@ -9,7 +9,7 @@ bundle: _consulting
 tier: kernel
 command: /ccba-completion-checklist
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -60,11 +60,12 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 ### 1. Tạo Checklist cho dự án cụ thể
 
 1. Đọc `resources/checklist_master.yaml` để nắm khung cấu trúc master
-2. Hỏi user các thông tin dự án:
-   - Tên dự án / công trình
-   - Loại công trình (dân dụng / công nghiệp / hạ tầng kỹ thuật)
-   - Cấp công trình (đặc biệt / I / II / III / IV)
-   - Chủ đầu tư
+2. Hỏi user các thông tin dự án (theo chuẩn Ngôn ngữ Chung Hai Bề Mặt — Quyết định 1812/QĐ-BXD):
+   - Tên dự án / công trình (`tenDuAn` / `tenCongTrinh`) và Mã định danh (`maThongTin` 13/15 số nếu có)
+   - Kịch bản thủ tục công trình (`II_B_CT_TD` miễn GPXD thuộc DA thẩm định BCNCKT / `II_C_CT_GPXD` cấp GPXD / `II_D_CT_KTKT` chỉ lập BCKTKT)
+   - Loại công trình (`loaiCongTrinh`: `1- Dân dụng`, `2- Công nghiệp`, `3- Hạ tầng kỹ thuật`, `4- Giao thông`, `5- NN&PTNT`, `6- Quốc phòng, an ninh`)
+   - Cấp công trình (`capCongTrinh`: `0- Đặc biệt`, `1- Cấp I`, `2- Cấp II`, `3- Cấp III`, `4- Cấp IV`) và Địa điểm 2 cấp (`maTinh` Tỉnh/TP - `maXa` Phường/Xã/Đặc khu theo QĐ 19/2025/QĐ-TTg)
+   - Chủ đầu tư (`tenChuDauTu`) và Chức danh chủ trì (`vaiTroChuTri`: `Giám đốc quản lý dự án`, `Chỉ huy trưởng công trường`, `Chủ nhiệm/Chủ trì thiết kế`)
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
 5. Xuất ra Markdown (và Docx khi phát hành qua `ccba_ooxml:DocxDocument`)

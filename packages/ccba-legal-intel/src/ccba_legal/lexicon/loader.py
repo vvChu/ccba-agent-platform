@@ -38,7 +38,7 @@ def load_canonical_taxonomy(resource_path: Path | None = None) -> dict[str, Any]
 
     # Prefer static compiled module (zero file I/O)
     try:
-        from ccba_legal.lexicon import _generated_taxonomy  # type: ignore
+        from ccba_legal.lexicon import _generated_taxonomy
 
         if hasattr(_generated_taxonomy, "CANONICAL_TAXONOMY"):
             return _generated_taxonomy.CANONICAL_TAXONOMY
