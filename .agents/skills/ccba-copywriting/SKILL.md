@@ -7,7 +7,7 @@ argument-hint: '[loại-văn-bản-theo-mẫu] [ngữ-cảnh]'
 license: MIT
 metadata:
   author: claudekit
-  version: 1.0.0
+  version: 1.1.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -39,8 +39,8 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
-- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) master soạn thảo hồ sơ thầu, quyết định, công văn, hợp đồng từ biểu mẫu chuẩn hóa (`ccba-xu-ly-van-phong/templates/`), kết hợp công thức viết thuyết phục (`references/copy-formulas.md`), định hình phong cách viết (`references/writing-styles.md`) và quản lý hai kỹ năng trực thuộc: `form-template-cleaner` và `ccba-viet-chuyen-nghiep`. Quy trình hoạt động thuần nhận thức ngôn ngữ và sáng tạo nội dung văn bản, không phụ thuộc Seam đóng gói Python độc lập và không nhận `package_path`.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 10 dòng tài liệu tham chiếu chuyên sâu tại tầng Level 3 (bao gồm 9 tệp markdown và router index `references/viet_chuyen_nghiep/INDEX.md`).
+- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) master soạn thảo hồ sơ thầu, quyết định, công văn, hợp đồng từ biểu mẫu chuẩn hóa (`ccba-xu-ly-van-phong/templates/`), kết hợp công thức viết thuyết phục (`references/copy-formulas.md`), định hình phong cách viết (`references/writing-styles.md`), chuẩn mực ngoại giao kỹ thuật FDI (`references/fdi-b2b-consulting-copy.md`) và quản lý hệ thống viết chuyên nghiệp `ccba-viet-chuyen-nghiep`. Quy trình hoạt động thuần nhận thức ngôn ngữ và sáng tạo nội dung văn bản, không phụ thuộc Seam đóng gói Python độc lập và không nhận `package_path`.
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 11 dòng tài liệu tham chiếu chuyên sâu tại tầng Level 3 (bao gồm 10 tệp markdown và router index `references/viet_chuyen_nghiep/INDEX.md`).
 
 ---
 
@@ -103,6 +103,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/writing-styles.md` | Định hình phong cách viết, thanh âm (tone & voice) và chuẩn văn phong |
 | `references/headline-templates.md` | Mẫu tiêu đề thu hút sự chú ý và tối ưu tỷ lệ chuyển đổi |
 | `references/email-copy.md` | Kỹ thuật viết email hành chính, email truyền thông và chuỗi nuôi dưỡng |
+| `references/fdi-b2b-consulting-copy.md` | Chuẩn mực hành văn, cơ chế Internal Forwarding & ngoại giao kỹ thuật với khách hàng công nghiệp FDI |
 | `references/landing-page-copy.md` | Cấu trúc và kỹ thuật viết nội dung trang đích (landing page) chuyển đổi cao |
 | `references/cta-patterns.md` | Các mẫu hình lời kêu gọi hành động (CTA) kích thích tương tác |
 | `references/power-words.md` | Từ điển từ ngữ mạnh mẽ, tạo sức nặng cảm xúc và lập luận thuyết phục |
