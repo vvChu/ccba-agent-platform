@@ -51,14 +51,15 @@ def compile_taxonomy_to_py(
         "from __future__ import annotations",
         "",
         "import json",
+        "from typing import Any",
         "",
         f'TAXONOMY_VERSION: str = "{version}"',
         f'TAXONOMY_SHA256: str = "{sha256_hash}"',
         "",
         f"_RAW_JSON: str = {json.dumps(json_payload)}",
         "",
-        "CANONICAL_TAXONOMY: dict = json.loads(_RAW_JSON)",
-        'TERMS: dict = CANONICAL_TAXONOMY.get("terms", {})',
+        "CANONICAL_TAXONOMY: dict[str, Any] = json.loads(_RAW_JSON)",
+        'TERMS: dict[str, Any] = CANONICAL_TAXONOMY.get("terms", {})',
         "",
     ]
 

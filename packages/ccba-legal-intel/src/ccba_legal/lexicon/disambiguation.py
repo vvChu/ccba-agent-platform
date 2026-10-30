@@ -31,7 +31,7 @@ class FacetedDisambiguationEngine:
     INVESTOR_FACET_KEYWORDS: dict[str, tuple[str, str, set[str]]] = {
         "xay_dung": (
             "FACET-CHỦ-ĐẦU-TƯ-XD",
-            "Điều 3 Khoản 9 Luật Xây dựng 2014",
+            "Điều 9 Luật Xây dựng 2025 (Luật số 135/2025/QH15; kế thừa quy định tại Điều 3 Khoản 9 Luật Xây dựng 2014)",
             {
                 "xây dựng",
                 "thiết kế",
@@ -123,6 +123,12 @@ class FacetedDisambiguationEngine:
 
         if norm_term in {"trung tâm ccba", "viện ibst", "ibst"}:
             return self._disambiguate_brand(term)
+
+        if any(
+            kw in norm_term
+            for kw in {"quận", "huyện", "thị xã", "phường/xã/đặc khu", "địa giới hành chính"}
+        ):
+            return self._disambiguate_admin_geography(term, norm_context)
 
         return None
 
@@ -242,4 +248,27 @@ class FacetedDisambiguationEngine:
             statutory_ref="Quy chế Tổ chức & Hoạt động CCBA 2026",
             confidence=1.0,
             warning="Nomenclature: Sử dụng tên thương hiệu chuẩn mực 'IBST - CCBA' theo RULE-6.1.",
+        )
+
+    def _disambiguate_admin_geography(self, term: str, norm_context: str) -> DisambiguationResult:
+        """Resolves 2-tier administrative geography (maTinh + maXa per Decision 19/2025/QĐ-TTg & 1812/QĐ-BXD)."""
+        norm_term = term.strip().lower()
+        is_legacy_district = any(kw in norm_term for kw in {"quận", "huyện", "thị xã"})
+        warning = (
+            "Theo Quyết định 19/2025/QĐ-TTg và Quyết định 1812/QĐ-BXD, dữ liệu địa điểm xây dựng "
+            "áp dụng mô hình địa giới hành chính 2 cấp: Tỉnh/Thành phố (maTinh - 2 ký tự) và "
+            "Phường/Xã/Đặc khu (maXa - 5 ký tự); không sử dụng cấp Quận/Huyện trong biểu mẫu CSDL mới."
+            if is_legacy_district
+            else None
+        )
+        return DisambiguationResult(
+            original_term=term,
+            canonical_id="STAT-1812-GEO-2TIER",
+            canonical_term="Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)",
+            domain="administrative_geography",
+            facet_id="FACET-GEO-2TIER",
+            statutory_ref="Quyết định 19/2025/QĐ-TTg & Quyết định 1812/QĐ-BXD",
+            confidence=0.95,
+            notes="Mô hình địa danh 2 cấp: maTinh (2 số) + maXa (5 số).",
+            warning=warning,
         )

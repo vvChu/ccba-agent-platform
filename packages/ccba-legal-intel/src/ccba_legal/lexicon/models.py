@@ -44,6 +44,36 @@ class TermTemporal(BaseModel):
     )
 
 
+class DataDictionarySpec(BaseModel):
+    """Technical schema binding and closed-world enum contract from 1812/QĐ-BXD (COND-02)."""
+
+    section_namespace: str = Field(
+        ...,
+        description="Section namespace (e.g. I_QH, II_A_DA, II_B_CT_TD, II_C_CT_GPXD, II_D_CT_KTKT, II_E_CCHN, II_G_NLTC, II_H_NLCN)",
+    )
+    stt: str = Field(..., description="Row ordinal or hierarchical number (e.g. '16', '16.1')")
+    technical_code: str = Field(
+        ..., description="Sanitized camelCase technical field key (whitespace stripped)"
+    )
+    raw_technical_code: str = Field(
+        ..., description="Original verbatim cell value from gazette table for ADR-0059 provenance"
+    )
+    data_type_spec: str = Field(
+        default="", description="Data type and length specification from 'Mô tả dữ liệu' column"
+    )
+    enum_values: dict[str, str] = Field(
+        default_factory=dict,
+        description="Closed-world enum code -> canonical Vietnamese label mapping",
+    )
+    example_value: str = Field(default="", description="Example value from 'Ví dụ' column")
+    parent_group: str | None = Field(
+        default=None, description="Parent object group name if nested under a grouping row"
+    )
+    is_parent_group: bool = Field(
+        default=False, description="True if row is a parent object grouping header"
+    )
+
+
 class TermFacet(BaseModel):
     """Facet representing domain-specific statutory definition for polysemous terms."""
 
@@ -59,6 +89,12 @@ class TermFacet(BaseModel):
     effective_from: str | None = Field(default=None, description="Effective date in this domain")
     key_distinction: str | None = Field(
         default=None, description="Core legal distinction distinguishing this facet"
+    )
+    schema_spec: DataDictionarySpec | None = Field(
+        default=None, description="Technical data dictionary schema specification (1812/QĐ-BXD)"
+    )
+    enum_values: dict[str, str] = Field(
+        default_factory=dict, description="Closed-world enum mapping if applicable"
     )
 
 
@@ -86,6 +122,12 @@ class CanonicalTerm(BaseModel):
     )
     context_notes: str | None = Field(
         default=None, description="Engineering or consulting usage context notes"
+    )
+    schema_spec: DataDictionarySpec | None = Field(
+        default=None, description="Technical data dictionary schema specification (1812/QĐ-BXD)"
+    )
+    enum_values: dict[str, str] = Field(
+        default_factory=dict, description="Closed-world enum mapping if applicable"
     )
 
     def to_dict(self) -> dict[str, Any]:

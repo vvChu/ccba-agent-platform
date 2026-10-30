@@ -10,6 +10,10 @@ from ccba_legal.lexicon.harvester import (
     LexiconHarvester,
     compute_sha256,
 )
+from ccba_legal.lexicon.id_parser import (
+    NationalConstructionIdInfo,
+    parse_national_construction_id,
+)
 from ccba_legal.lexicon.loader import (
     get_canonical_terms,
     load_canonical_taxonomy,
@@ -20,6 +24,7 @@ from ccba_legal.lexicon.masker import (
 )
 from ccba_legal.lexicon.models import (
     CanonicalTerm,
+    DataDictionarySpec,
     ProvenanceRecord,
     TermFacet,
     TermTemporal,
@@ -34,10 +39,12 @@ __all__ = [
     "DEFAULT_RESOURCE_PATH",
     "CanonicalTerm",
     "CanonicalTermNormalizer",
+    "DataDictionarySpec",
     "DisambiguationResult",
     "FacetedDisambiguationEngine",
     "ImmutableSpanMasker",
     "LexiconHarvester",
+    "NationalConstructionIdInfo",
     "NormalizationReport",
     "ProtectedSpan",
     "ProvenanceRecord",
@@ -48,4 +55,5 @@ __all__ = [
     "compute_sha256",
     "get_canonical_terms",
     "load_canonical_taxonomy",
+    "parse_national_construction_id",
 ]
