@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.5.0
+  version: 1.6.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -84,7 +84,8 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP kernel hai trục Standard
 - Spawn đồng thời tối đa 2 sub-agents (sử dụng subagent `research` với công cụ chỉ đọc):
   - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells + Python checklist (nếu có) + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code. Lưu bản thảo vào `.system_generated/scratch/standards_report.md`.
   - **Spec Sub-agent Prompt:** Nhận Git Diff + nội dung Spec + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các điểm thiếu hụt tính năng so với yêu cầu hoặc scope creep dư thừa. Lưu bản thảo vào `.system_generated/scratch/spec_report.md`.
-- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) theo Single-Writer Protocol mà không phát sinh đệ quy sub-agent.
+- **Phân vai Đề xuất Kiểm chứng (Candidate Emission Only — Pstack `interrogate` v0.15.36 & COND-01):** Do vận hành trong sandbox chỉ đọc (ADR-0035), hai sub-agents chỉ xuất mỗi phát hiện ở trạng thái **`candidate`** kèm vị trí `file:line`, trục (Spec/Standards), và đề xuất **1 lệnh kiểm chứng không ghi repo (`repro_command`)** (ví dụ: `pytest` node id, preset `verify-patch`, hoặc lệnh probe chỉ đọc). Sub-agent tuyệt đối không tự gán trạng thái đã kiểm chứng thực thi.
+- **Tiêu chí hoàn thành:** Khởi chạy thành công 2 sub-agents chạy song song và nhận lại đầy đủ 2 báo cáo phân tích độc lập (Standards Report và Spec Report) chứa danh sách `candidate` kèm `repro_command` theo Single-Writer Protocol mà không phát sinh đệ quy sub-agent.
 
 ### 5. Tổng hợp báo cáo & Phân giải Kiểm tra Khách quan (Aggregate Findings & Deterministic Gate)
 - **Đánh giá Merge Danger (Reversibility & Blast Radius):** Ngay đầu báo cáo tổng hợp, Agent bắt buộc phải xuất mục `## Merge Danger` gồm 2 chỉ số cốt lõi để người duyệt ra quyết định nhanh:
@@ -92,6 +93,10 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP kernel hai trục Standard
   * **Blast Radius:** `Localized` (1 file/hàm nội bộ), `Package-wide` (trong 1 package), `Monorepo-wide` (ảnh hưởng tooling/scripts/CI), hoặc `Spoke-affecting` (thay đổi contract/interface mà Spoke phụ thuộc).
   * *Tóm tắt lý do và tác động rủi ro (1-2 câu).*
 - Tổng hợp kết quả từ hai sub-agents dưới dạng báo cáo rõ ràng với hai tiêu đề `## Standards` và `## Spec`.
+- **Bộ Lọc Phát Hiện Có Chứng Minh Thực Thi (Execution-Proven Findings Filter — Pstack `interrogate` v0.15.36 & COND-01):**
+  * **Orchestrator là vai duy nhất** thực thi các `repro_command` do sub-agents đề xuất (giữ nguyên cây làm việc PR sạch sẽ) và phân loại kết quả thành hai nhóm tường minh trong báo cáo:
+  * **Verified Findings (Lỗi chặn):** Các lỗi được chứng minh bằng lần chạy thực tế, bắt buộc đính kèm bộ 4 bằng chứng: `command`, `cwd`, `exit_code`, và `output` rút gọn. Mọi thất bại của các cổng kiểm định tĩnh sẵn có (`verify-patch`, linter, kiểm tra AST seam / Mục 12) luôn là bằng chứng thực thi hợp lệ và thuộc nhóm lỗi chặn.
+  * **Dropped / Unverified Notes (Không chặn PR):** Các `candidate` không tái hiện được lỗi khi chạy lệnh hoặc các giả thuyết rủi ro chỉ xảy ra *"nếu tương lai viết thêm code khác"*. Nhóm này vẫn được hiển thị đầy đủ ở cuối báo cáo để kỹ sư tham khảo nhưng không được dùng để chặn PR.
 - Chạy cổng kiểm tra máy tính khách quan đối với codebase hiện tại:
   * **Phân giải target package:** Nếu diff chỉ giới hạn trong một gói cụ thể thuộc monorepo (`packages/<pkg_name>`), chạy scoped test:
     ```bash

@@ -22,7 +22,7 @@ keywords:
 argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
 metadata:
   author: CCBA
-  version: 1.2.0
+  version: 1.3.0
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -95,6 +95,9 @@ flowchart TD
 ### 4. Evidence-Capture Test Suite (Thực Thi Kiểm Thử & Thu Thập Bằng Chứng)
 - Chạy toàn bộ các kịch bản kiểm thử (API, UI, hoặc integration tests).
 - Lưu giữ kết quả có cấu trúc (JUnit XML, JSON log, hoặc test artifacts) để phục vụ CI/CD và báo cáo nghiệm thu.
+- **Đối Chứng Đường Lỗi Statechart Vào Mã Nguồn Thực (`Statechart Bug-Path Replay` — Pstack v0.15.36 & `COND-02`):** Khi luồng trạng thái hoặc giao thức đồng thời được mô hình hóa bằng `stateDiagram-v2` kèm danh sách có thứ tự `bug_path: [{from, to, when}]` (theo quy chuẩn tại [`../ccba-mermaid-diagram/references/statechart_verification_guide.md`](../ccba-mermaid-diagram/references/statechart_verification_guide.md)):
+  - Nếu mã nguồn thực thi đã có trong repo, Agent bắt buộc replay từng bước trong `bug_path` thành một bài `pytest` (hoặc live repro) chạy trên code thật. Nếu lỗi không tái hiện trên code thật $\rightarrow$ kết luận mô hình đang sai và sửa lại mô hình trước khi báo cáo.
+  - Nếu sơ đồ được vẽ ở giai đoạn thiết kế khi chưa có code thực thi, bắt buộc gắn nhãn `"model only"` và không được báo cáo là lỗi thực thi đã chứng minh.
 
 ### 5. Guaranteed Graceful Cleanup (Dọn Dẹp Đảm Bảo Tuyệt Đối)
 - Quá trình dừng server BẮT BUỘC nằm trong khối `finally:` để đảm bảo không để lại tiến trình mồ côi (zombie processes) ngay cả khi bài test thất bại:
