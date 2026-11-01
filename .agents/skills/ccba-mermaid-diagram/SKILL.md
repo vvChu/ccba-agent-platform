@@ -11,7 +11,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-mermaid-diagram
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -62,7 +62,7 @@ Khi áp dụng chủ đề cho `flowchart` hoặc `graph`:
 | `auxiliary` | Node phụ trợ, đầu ra thứ cấp, ghi chú | `#f8fafc` (Slate 50) | `#64748b` (dashed 1px) | `#475569` |
 
 ### Mã khai báo mẫu (Class Definitions):
-```mermaid
+```text
 classDef principal fill:#0f172a,stroke:#020617,stroke-width:2px,color:#ffffff,font-weight:bold;
 classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
 classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray: 4 4,color:#475569;
@@ -73,14 +73,16 @@ classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray
 ## Quy trình thực hiện (6 bước)
 
 ### Bước 0: Xác định loại sơ đồ và chuẩn render
-- Xác định mục tiêu biểu diễn:
-  - Luồng quy trình, kiến trúc phân tầng, chu trình: dùng `flowchart TB` hoặc `flowchart LR`.
+- Xác định mục tiêu biểu diễn trong tập loại sơ đồ tương thích đa trình xem (**Antigravity IDE**, **GitHub**, **Obsidian**):
+  - Luồng quy trình, kiến trúc phân tầng, chu trình, cây phân cấp hoặc lộ trình tiến độ: dùng `flowchart TB` hoặc `flowchart LR` (kết hợp `subgraph` theo giai đoạn).
   - Máy trạng thái, kiểm chứng giao thức đồng thời & đường dẫn phản chứng (`bug_path`): dùng `stateDiagram-v2` (xem quy chuẩn Anti-Lie & 4 lớp đánh dấu kiểm định tại [`references/statechart_verification_guide.md`](references/statechart_verification_guide.md)).
   - Tương tác giao thức, trao đổi thông điệp theo thời gian: dùng `sequenceDiagram`.
-  - Dòng thời gian, lộ trình lịch sử: dùng `timeline`.
-  - Cây phân cấp ý tưởng: dùng `mindmap`.
-- **Lưu ý loại trừ (`COND-02`)**: Các sơ đồ dạng `flowchart`, `graph` và `stateDiagram-v2` (trên trạng thái lá) hỗ trợ trực tiếp `classDef` / `class`. Các loại sơ đồ khác (`pie`, `timeline`, `mindmap`, `sequenceDiagram`) **tuyệt đối không tiêm classDef** mà phải sử dụng directive `%%{init: ...}%%`.
-- **Tiêu chí hoàn thành:** Chọn đúng loại sơ đồ và xác định chính xác cơ chế áp dụng phong cách (classDef hay directive %%{init}%%).
+  - Mô hình lớp hướng đối tượng hoặc quan hệ thực thể cơ sở dữ liệu: dùng `classDiagram` hoặc `erDiagram`.
+  - Biểu đồ thống kê định lượng: dùng `xychart-beta` hoặc `pie`.
+- **Rào chắn tương thích trình xem**: Tránh dùng `timeline`, `mindmap`, hoặc `gantt` vì không được hỗ trợ trên bộ kết xuất của Antigravity IDE (luôn thay thế bằng `flowchart LR` / `flowchart TB` hoặc bảng Markdown).
+- **Quy tắc khối mã hoàn chỉnh**: Mọi khối mở đầu bằng ```` ```mermaid ```` bắt buộc phải có dòng khai báo loại sơ đồ hợp lệ ở đầu và có phần thân sơ đồ. Khi chỉ trích dẫn một đoạn lệnh cấu hình rời rạc (`classDef`, `class`, `style`, `%%{init}%%`) trong tài liệu hướng dẫn, bắt buộc dùng nhãn ```` ```text ````.
+- **Lưu ý loại trừ (`COND-02`)**: Các sơ đồ dạng `flowchart`, `graph` và `stateDiagram-v2` (trên trạng thái lá) hỗ trợ trực tiếp `classDef` / `class`. Các loại sơ đồ khác (`pie`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `xychart-beta`) **tuyệt đối không tiêm classDef** mà phải sử dụng directive `%%{init: ...}%%`.
+- **Tiêu chí hoàn thành:** Chọn đúng loại sơ đồ được hỗ trợ và xác định chính xác cơ chế áp dụng phong cách (classDef hay directive %%{init}%%).
 
 ### Bước 1: Thiết kế kiến trúc và luồng dữ liệu (Visual Isomorphism)
 - Xác định rõ các node và hướng di chuyển:
@@ -103,35 +105,38 @@ classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray
 
 ### Bước 3: Áp dụng bảng màu học thuật Academic Grayscale Palette
 - Tiêm các định nghĩa lớp `principal`, `standard`, `auxiliary` vào cuối khối flowchart:
-  ```mermaid
+  ```text
   class NodeChinh principal;
   class Node1,Node2,Node3 standard;
   class NodePhu auxiliary;
   ```
-- Đối với sơ đồ phi-flowchart (`sequenceDiagram`, `mindmap`, v.v.), khai báo directive:
-  ```mermaid
+- Đối với sơ đồ phi-flowchart (`sequenceDiagram`, `classDiagram`, `erDiagram`, v.v.), đặt dòng khai báo directive ngay phía trên từ khóa loại sơ đồ trong cùng một khối:
+  ```text
   %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', 'primaryBorderColor': '#334155', 'primaryTextColor': '#0f172a'}}}%%
   ```
 - **Tiêu chí hoàn thành:** Định nghĩa và gán đúng các lớp phong cách học thuật cho từng node theo đúng phân cấp vai trò.
 
 ### Bước 4: Xử lý Subgraph & Cụm Container An Toàn
 - **Quy tắc bất biến**: KHÔNG gán `class <subgraph_id> standard;` hoặc dùng `classDef` cho Subgraph.
-- Định dạng Subgraph bằng lệnh `style`:
+- Định dạng Subgraph bằng lệnh `style` bên trong sơ đồ `flowchart`:
   ```mermaid
-  subgraph ClusterA ["Phân Vùng Hệ Thống"]
-      A1["Thành phần 1"]
-      A2["Thành phần 2"]
-  end
-  style ClusterA fill:#f8fafc,stroke:#334155,stroke-width:1px;
+  flowchart LR
+      subgraph ClusterA ["Phân Vùng Hệ Thống"]
+          A1["Thành phần 1"]:::standard --> A2["Thành phần 2"]:::standard
+      end
+      style ClusterA fill:#f8fafc,stroke:#334155,stroke-width:1px;
+      classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
   ```
 - **Tiêu chí hoàn thành:** Toàn bộ subgraph trong sơ đồ được tạo kiểu bằng lệnh style riêng biệt, triệt tiêu nguy cơ lỗi cú pháp render.
 
 ### Bước 5: Kiểm tra và Nhúng vào Tài liệu
-- Nhúng khối mã Mermaid trực tiếp vào tài liệu markdown:
-  ````markdown
+- Nhúng khối mã Mermaid hoàn chỉnh (có header loại sơ đồ và bảng màu `classDef`) trực tiếp vào tài liệu markdown:
+  ````text
   ```mermaid
   flowchart TB
-      A["Bắt đầu"] --> B["Xử lý"]
+      A["Bắt đầu"]:::standard --> B["Xử lý"]:::principal
+      classDef principal fill:#0f172a,stroke:#020617,stroke-width:2px,color:#ffffff,font-weight:bold;
+      classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
   ```
   ````
 - Kiểm tra tính tương thích trên cả chế độ xem Dark Mode và Light Mode.
