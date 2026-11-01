@@ -17,7 +17,7 @@ Khi nhận được lệnh này từ người dùng, Agent sẽ tự động n�
 Agent phân tích yêu cầu của người dùng để xác định tham số:
 - **Kiểm thử một kỹ năng cụ thể:** Nếu người dùng yêu cầu kiểm tra một kỹ năng (ví dụ: `/ccba-eval-gate ccba-copywriting` hoặc viết gọn `copywriting`), xác lập tham số `--skill ccba-copywriting`.
 - **Kiểm thử toàn bộ:** Nếu người dùng chỉ gõ lệnh chung `/ccba-eval-gate`, mặc định chạy cho tất cả kỹ năng bằng cách bỏ trống `--skill` hoặc đặt `--skill all`.
-- **Số lần chạy thử:** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy. Nếu người dùng cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
+- **Số lần chạy thử & Ngưỡng quyết định trước khi đo (`COND-04`):** Mặc định chạy 3 lần thử (`--trials 3`) để đo độ tin cậy; trước khi chạy phải ghi nhận ngưỡng quyết định và kiểm soát biên độ nhiễu (`spread = max - min` so với `abs(delta)`) cùng `named_limiter` theo bản chuẩn tại Mục 17.6 [`docs/rules/code_quality_verification.md`](../../../../docs/rules/code_quality_verification.md#17-hypothesis-driven-forensic--ambiguity-resolution-figure-it-out-discipline). Nếu người dùng chỉ cần chạy nhanh để kiểm tra lỗi cú pháp, có thể đặt `--trials 1`.
 
 **Tiêu chí hoàn thành:** Xác định rõ kỹ năng mục tiêu và số lượt thử nghiệm.
 

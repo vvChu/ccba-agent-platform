@@ -11,7 +11,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-mermaid-diagram
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -75,10 +75,11 @@ classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray
 ### Bước 0: Xác định loại sơ đồ và chuẩn render
 - Xác định mục tiêu biểu diễn:
   - Luồng quy trình, kiến trúc phân tầng, chu trình: dùng `flowchart TB` hoặc `flowchart LR`.
+  - Máy trạng thái, kiểm chứng giao thức đồng thời & đường dẫn phản chứng (`bug_path`): dùng `stateDiagram-v2` (xem quy chuẩn Anti-Lie & 4 lớp đánh dấu kiểm định tại [`references/statechart_verification_guide.md`](references/statechart_verification_guide.md)).
   - Tương tác giao thức, trao đổi thông điệp theo thời gian: dùng `sequenceDiagram`.
   - Dòng thời gian, lộ trình lịch sử: dùng `timeline`.
   - Cây phân cấp ý tưởng: dùng `mindmap`.
-- **Lưu ý loại trừ**: Chỉ các sơ đồ dạng `flowchart` và `graph` mới hỗ trợ `classDef`. Các loại sơ đồ khác (`pie`, `timeline`, `mindmap`, `sequenceDiagram`, `stateDiagram`) **tuyệt đối không tiêm classDef** mà phải sử dụng directive `%%{init: ...}%%`.
+- **Lưu ý loại trừ (`COND-02`)**: Các sơ đồ dạng `flowchart`, `graph` và `stateDiagram-v2` (trên trạng thái lá) hỗ trợ trực tiếp `classDef` / `class`. Các loại sơ đồ khác (`pie`, `timeline`, `mindmap`, `sequenceDiagram`) **tuyệt đối không tiêm classDef** mà phải sử dụng directive `%%{init: ...}%%`.
 - **Tiêu chí hoàn thành:** Chọn đúng loại sơ đồ và xác định chính xác cơ chế áp dụng phong cách (classDef hay directive %%{init}%%).
 
 ### Bước 1: Thiết kế kiến trúc và luồng dữ liệu (Visual Isomorphism)
@@ -185,12 +186,19 @@ sequenceDiagram
 ## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
 Skill này thuộc thế năng **`seam-exempt`** (Miễn trừ Seam Platform):
-* **Lý do miễn trừ:** Sơ đồ Mermaid là dạng "Diagrams-as-Code" khai báo thuần túy (declarative Markdown), được phân tích cú pháp và kết xuất trực tiếp ở phía client (GitHub Markdown, Obsidian, IDE previews, trình duyệt). Nền tảng CCBA không sở hữu hay duy trì engine tính toán layout độc quyền cho Mermaid trong Monorepo packages.
+* **Lý do miễn trừ:** Sơ đồ Mermaid là dạng "Diagrams-as-Code" khai báo thuần túy (declarative Markdown), được phân tích cú pháp và kết xuất trực tiếp ở phía client (GitHub Markdown, Obsidian, IDE previews, trình duyệt). Nền tảng CCBA không sở hữu hay duy trì engine tính toán layout độc quyền cho Mermaid trong 10 package seams của Monorepo.
 * **Quy chuẩn vận hành:** Agent không thực hiện tra cứu `find-seam` cho Mermaid, không tạo script Python backend để sinh layout Mermaid.
 * **Quy ước Escape Cú Pháp Phân Biệt:** Nhãn node Mermaid bắt buộc escape ký tự đặc biệt theo quy chuẩn web: `#40;` / `#41;` cho ngoặc đơn, `#124;` cho dấu gạch đứng, `#quot;` cho ngoặc kép (phân biệt tuyệt đối với Excalidraw Spec Table vốn cấm các entity này và yêu cầu dùng ngoặc tròn thật `()`).
+* **Governance Compliance:** Đạt chuẩn Governance Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 4.0, A: 2.0, P: 1.0) = 18.0 >= 12.0. Tệp tài liệu chuyên sâu `references/statechart_verification_guide.md` được bảo tồn tại chỉ mục Level 3.
 
 ---
 
-## 📐 Cấu Trúc Tinh Gọn & Tự Thân (Self-Contained Invariant)
-Toàn bộ quy chuẩn cú pháp, bảng màu Academic Grayscale, các rào chắn kỹ thuật (subgraph isolation, directive theme) và mẫu thực hành chuẩn của Mermaid đã được đóng gói đầy đủ, tự thân trong tài liệu này; không phân mảnh hay dẫn xuất sang các tài liệu tham chiếu rỗng ngoài đĩa.
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`) hoặc biểu diễn đường dẫn phản chứng kiểm định giao thức, Agent sử dụng công cụ đọc tệp để nạp hướng dẫn chi tiết:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| [`references/statechart_verification_guide.md`](references/statechart_verification_guide.md) | Hợp đồng cú pháp `stateDiagram-v2` đa trình xem, phân vùng song song (`--`), 4 lớp đánh dấu (`breaks`, `mayBreak`, `bugPath`, `repeats`), 4 quy tắc Anti-Lie Pruning ($\le 20$ cạnh) và định dạng bàn giao `bug_path` |
+
 
