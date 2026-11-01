@@ -8060,7 +8060,7 @@ Khi áp dụng chủ đề cho `flowchart` hoặc `graph`:
 | `auxiliary` | Node phụ trợ, đầu ra thứ cấp, ghi chú | `#f8fafc` (Slate 50) | `#64748b` (dashed 1px) | `#475569` |
 
 ### Mã khai báo mẫu (Class Definitions):
-```mermaid
+```text
 classDef principal fill:#0f172a,stroke:#020617,stroke-width:2px,color:#ffffff,font-weight:bold;
 classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
 classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray: 4 4,color:#475569;
@@ -8100,35 +8100,38 @@ classDef auxiliary fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray
 
 ### Bước 3: Áp dụng bảng màu học thuật Academic Grayscale Palette
 - Tiêm các định nghĩa lớp `principal`, `standard`, `auxiliary` vào cuối khối flowchart:
-  ```mermaid
+  ```text
   class NodeChinh principal;
   class Node1,Node2,Node3 standard;
   class NodePhu auxiliary;
   ```
-- Đối với sơ đồ phi-flowchart (`sequenceDiagram`, `mindmap`, v.v.), khai báo directive:
-  ```mermaid
+- Đối với sơ đồ phi-flowchart (`sequenceDiagram`, `classDiagram`, `erDiagram`, v.v.), đặt dòng khai báo directive ngay phía trên từ khóa loại sơ đồ trong cùng một khối:
+  ```text
   %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', 'primaryBorderColor': '#334155', 'primaryTextColor': '#0f172a'}}}%%
   ```
 - **Tiêu chí hoàn thành:** Định nghĩa và gán đúng các lớp phong cách học thuật cho từng node theo đúng phân cấp vai trò.
 
 ### Bước 4: Xử lý Subgraph & Cụm Container An Toàn
 - **Quy tắc bất biến**: KHÔNG gán `class <subgraph_id> standard;` hoặc dùng `classDef` cho Subgraph.
-- Định dạng Subgraph bằng lệnh `style`:
+- Định dạng Subgraph bằng lệnh `style` bên trong sơ đồ `flowchart`:
   ```mermaid
-  subgraph ClusterA ["Phân Vùng Hệ Thống"]
-      A1["Thành phần 1"]
-      A2["Thành phần 2"]
-  end
-  style ClusterA fill:#f8fafc,stroke:#334155,stroke-width:1px;
+  flowchart LR
+      subgraph ClusterA ["Phân Vùng Hệ Thống"]
+          A1["Thành phần 1"]:::standard --> A2["Thành phần 2"]:::standard
+      end
+      style ClusterA fill:#f8fafc,stroke:#334155,stroke-width:1px;
+      classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
   ```
 - **Tiêu chí hoàn thành:** Toàn bộ subgraph trong sơ đồ được tạo kiểu bằng lệnh style riêng biệt, triệt tiêu nguy cơ lỗi cú pháp render.
 
 ### Bước 5: Kiểm tra và Nhúng vào Tài liệu
-- Nhúng khối mã Mermaid trực tiếp vào tài liệu markdown:
-  ````markdown
+- Nhúng khối mã Mermaid hoàn chỉnh (có header loại sơ đồ và bảng màu `classDef`) trực tiếp vào tài liệu markdown:
+  ````text
   ```mermaid
   flowchart TB
-      A["Bắt đầu"] --> B["Xử lý"]
+      A["Bắt đầu"]:::standard --> B["Xử lý"]:::principal
+      classDef principal fill:#0f172a,stroke:#020617,stroke-width:2px,color:#ffffff,font-weight:bold;
+      classDef standard fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;
   ```
   ````
 - Kiểm tra tính tương thích trên cả chế độ xem Dark Mode và Light Mode.

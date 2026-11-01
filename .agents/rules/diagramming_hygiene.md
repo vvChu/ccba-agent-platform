@@ -27,11 +27,11 @@ Mọi tệp `.excalidraw.md` **BẮT BUỘC** tuân thủ cấu trúc 3 tầng c
 ## 2. Mermaid Syntax & Theme Hygiene
 Khi tạo hoặc nhúng sơ đồ Mermaid:
 - **Subgraph Styling**: TUYỆT ĐỐI KHÔNG dùng `classDef` hay lệnh gán `class <id>` cho `subgraph`. Subgraph trong Mermaid là phần tử SVG group `<g class="cluster">`, không phải leaf node. Luôn dùng cú pháp:
-  ```mermaid
+  ```text
   style <subgraphId> fill:#f8fafc,stroke:#334155,stroke-width:1px;
   ```
-- **Non-Flowchart Diagrams**: Tuyệt đối không tiêm `classDef` vào các loại sơ đồ chuyên biệt (`pie`, `timeline`, `mindmap`, `sequenceDiagram`, `stateDiagram`). Trình phân tích cú pháp của Mermaid sẽ vỡ ngay lập tức. Tùy biến màu sắc qua khối directive khởi tạo:
-  ```mermaid
+- **Non-Flowchart Diagrams**: Chỉ `flowchart`, `graph` và `stateDiagram-v2` (trên trạng thái lá) hỗ trợ trực tiếp `classDef` / `class`. Tuyệt đối không tiêm `classDef` vào các loại sơ đồ chuyên biệt khác (`pie`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `xychart-beta`) vì trình phân tích cú pháp của Mermaid sẽ báo lỗi. Tùy biến màu sắc qua khối directive khởi tạo đặt ngay trên dòng khai báo loại sơ đồ:
+  ```text
   %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0f172a', ...}}}%%
   ```
 - **Nhãn An Toàn (Label Escaping & Wrapping)**:

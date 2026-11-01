@@ -7,7 +7,9 @@ Verifies that:
 4. check_skills_docs_in_sync passes without error.
 """
 
+import re
 import sys
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
 
@@ -162,3 +164,154 @@ def test_validate_skills_cli_check_flag() -> None:
     assert exit_code == 0, (
         f"run_skills_validation_cli(['--check']) failed with exit code {exit_code}"
     )
+
+
+VALID_MERMAID_HEADERS = (
+    "flowchart",
+    "graph",
+    "sequenceDiagram",
+    "classDiagram",
+    "stateDiagram",
+    "stateDiagram-v2",
+    "erDiagram",
+    "gantt",
+    "pie",
+    "gitGraph",
+    "mindmap",
+    "timeline",
+    "quadrantChart",
+    "xychart-beta",
+    "sankey-beta",
+    "block-beta",
+    "packet-beta",
+    "kanban",
+    "architecture-beta",
+    "C4Context",
+    "C4Container",
+    "C4Component",
+    "C4Dynamic",
+    "C4Deployment",
+    "journey",
+    "requirementDiagram",
+    "zenuml",
+)
+RE_MERMAID_BLOCK = re.compile(r"```mermaid\s*\n(.*?)```", re.DOTALL)
+RE_COMPOSITE_START = re.compile(r'^state\s+(?:"[^"]+"\s+as\s+)?([A-Za-z0-9_]+)\s*\{$')
+RE_CLASS_ASSIGN = re.compile(r"^class\s+([A-Za-z0-9_,\s]+)\s+[A-Za-z0-9_]+\s*;?$")
+RE_STATE_EDGE = re.compile(r"^(\[\*\]|[A-Za-z0-9_]+)\s*-->\s*(\[\*\]|[A-Za-z0-9_]+)(?:\s*:.*)?$")
+
+
+def _parse_statechart_lines(
+    lines: list[str],
+) -> tuple[list[tuple[str, str]], set[str], set[str], list[str]]:
+    """Parse stateDiagram-v2 lines into edges, composite states, classed states, and syntax errors."""
+    edges: list[tuple[str, str]] = []
+    composite_states: set[str] = set()
+    classed_states: set[str] = set()
+    errors: list[str] = []
+    scope_stack: list[str] = []
+    for raw_line in lines[1:]:
+        line = raw_line.strip()
+        if m_comp := RE_COMPOSITE_START.match(line):
+            comp_id = m_comp.group(1)
+            composite_states.add(comp_id)
+            scope_stack.append(comp_id)
+        elif line == "}":
+            if scope_stack:
+                scope_stack.pop()
+        elif line == "--":
+            if not scope_stack:
+                errors.append("root-level '--' parallel separator outside composite state")
+        elif m_cls := RE_CLASS_ASSIGN.match(line):
+            classed_states.update(s.strip() for s in m_cls.group(1).split(",") if s.strip())
+        elif m_edge := RE_STATE_EDGE.match(line):
+            src, dst = m_edge.group(1), m_edge.group(2)
+            eff_src = scope_stack[-1] if (src == "[*]" and scope_stack) else src
+            edges.append((eff_src, dst))
+    return edges, composite_states, classed_states, errors
+
+
+def verify_statechart_anti_lie(lines: list[str]) -> list[str]:
+    """Validate a stateDiagram-v2 block against the 5 Pstack Anti-Lie invariants."""
+    edges, composite_states, classed_states, errors = _parse_statechart_lines(lines)
+    if len(edges) > 20:
+        errors.append(f"edge count {len(edges)} exceeds Anti-Lie budget (<= 20)")
+    for bad_cls in sorted(composite_states & classed_states):
+        errors.append(f"class applied to composite state '{bad_cls}'")
+    adj: dict[str, set[str]] = defaultdict(set)
+    non_self_out: dict[str, set[str]] = defaultdict(set)
+    all_states: set[str] = set()
+    for src, dst in edges:
+        adj[src].add(dst)
+        if src != dst:
+            non_self_out[src].add(dst)
+        if src != "[*]":
+            all_states.add(src)
+        if dst != "[*]":
+            all_states.add(dst)
+    visited: set[str] = {"[*]"}
+    queue: deque[str] = deque(["[*]"])
+    while queue:
+        curr = queue.popleft()
+        for nxt in adj.get(curr, ()):
+            if nxt not in visited:
+                visited.add(nxt)
+                queue.append(nxt)
+    for st in sorted(all_states - visited):
+        errors.append(f"unreachable state '{st}' from [*]")
+    for st in sorted(all_states & visited):
+        if not non_self_out.get(st):
+            errors.append(f"deadlock/inescapable state '{st}' has no exit transition")
+    return errors
+
+
+def test_all_mermaid_blocks_have_valid_diagram_headers() -> None:
+    """Ensure every ```mermaid block in skills, rules, and docs has a valid header and body."""
+    search_roots = (SKILLS_DIR, HUB_ROOT / ".agents" / "rules", DOCS_DIR)
+    violations: list[str] = []
+    for root in search_roots:
+        for md_file in sorted(root.rglob("*.md")):
+            content = md_file.read_text(encoding="utf-8")
+            for match in RE_MERMAID_BLOCK.finditer(content):
+                lines = [
+                    ln.strip()
+                    for ln in match.group(1).splitlines()
+                    if ln.strip() and not ln.strip().startswith("%%")
+                ]
+                lineno = content[: match.start()].count("\n") + 1
+                rel_path = md_file.relative_to(HUB_ROOT)
+                if not lines:
+                    violations.append(f"{rel_path}:{lineno}: empty mermaid diagram body")
+                elif not any(lines[0].startswith(h) for h in VALID_MERMAID_HEADERS):
+                    violations.append(f"{rel_path}:{lineno}: invalid header '{lines[0]}'")
+                elif lines[0].startswith("stateDiagram"):
+                    for err in verify_statechart_anti_lie(lines):
+                        violations.append(f"{rel_path}:{lineno}: {err}")
+    assert not violations, "Invalid ```mermaid blocks found:\n" + "\n".join(violations)
+
+
+def test_verify_statechart_anti_lie_catches_violations() -> None:
+    """Verify verify_statechart_anti_lie detects all 5 Anti-Lie statechart violations."""
+    bad_lines = [
+        "stateDiagram-v2",
+        "--",
+        "[*] --> Idle",
+        "Idle --> Running",
+        "state Running {",
+        "  [*] --> Stuck",
+        "  Stuck --> Stuck",
+        "}",
+        "Orphan --> [*]",
+        "class Running breaks",
+    ]
+    errors = verify_statechart_anti_lie(bad_lines)
+    assert any("root-level '--'" in e for e in errors)
+    assert any("composite state 'Running'" in e for e in errors)
+    assert any("unreachable state 'Orphan'" in e for e in errors)
+    assert any("deadlock/inescapable state 'Stuck'" in e for e in errors)
+    over_budget = (
+        ["stateDiagram-v2", "[*] --> S0"]
+        + [f"S{i} --> S{i + 1}" for i in range(20)]
+        + ["S20 --> [*]"]
+    )
+    assert any("exceeds Anti-Lie budget" in e for e in verify_statechart_anti_lie(over_budget))
