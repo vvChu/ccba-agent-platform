@@ -40,7 +40,7 @@ Một sơ đồ trạng thái vượt quá **20 mũi tên (cạnh)** sẽ gây q
 
 ## 4. Mẫu Thực Hành Chuẩn (Canonical Statechart & `bug_path` Fixture)
 
-> **Biên bản kiểm chứng hiển thị (`COND-05`):** Fixture dưới đây gán đủ cả 4 lớp (`breaks`, `mayBreak`, `bugPath`, `repeats`) trên 4 trạng thái lá (`Halted`, `Settled`, `Audit`, `Compute`) và đã được kiểm chứng kết xuất trực tiếp trên **Antigravity IDE Artifact Renderer**. Trên môi trường máy trạm Linux CLI headless hiện tại không mở trực tiếp ứng dụng desktop **Obsidian** hay trình duyệt **GitHub Web UI**; tương thích cho hai trình xem này được đảm bảo thông qua việc chỉ dùng cú pháp chuẩn `stateDiagram-v2` (Mermaid $\ge 10.2$) và tiền tố nhãn văn bản (`BREAKS:`, `MAY-BREAK:`, `BUG-PATH:`, `REPEATS:`) độc lập với sanitizer CSS.
+> **Biên bản kiểm chứng hiển thị (`COND-05`):** Fixture dưới đây gán đủ cả 4 lớp (`breaks`, `mayBreak`, `bugPath`, `repeats`) trên 4 trạng thái lá (**Halted**, **Settled**, **Audit**, **Compute**) và đã được kiểm chứng kết xuất trực tiếp trên **Antigravity IDE Artifact Renderer**. Trên môi trường máy trạm Linux CLI headless hiện tại không mở trực tiếp ứng dụng desktop **Obsidian** hay trình duyệt **GitHub Web UI**; tương thích cho hai trình xem này được đảm bảo thông qua việc chỉ dùng cú pháp chuẩn `stateDiagram-v2` (Mermaid $\ge 10.2$) và tiền tố nhãn văn bản (`BREAKS:`, `MAY-BREAK:`, `BUG-PATH:`, `REPEATS:`) độc lập với sanitizer CSS.
 
 ```mermaid
 stateDiagram-v2
