@@ -28,8 +28,8 @@
   - `classify_pr_door` & `compute_cumulative_streak` ($K \ge 3$ PRs/72h hoặc $>200$ LOC $\to$ `ONE_WAY_DOOR`). `evaluate_backpressure_queue` ngắt khi $>5$ PRs/$>24\text{h}$; `validate_tradeoff_card` bắt buộc Tradeoff Card ($\le 30$ dòng, Mục 40).
 - **RULE-1.24 [Federated Role & ERP Boundary — ADR 0046 vs IDOP-CCBA-WAY]**:
   - 15 `ROLE_ID` & ERP 5 pha thuộc `IDOP-CCBA-WAY` (`ADR-0060`). Hub SSOT là **ADR-0046** (`seat_role` + 5 cấp QC), qua `idop_bridge.py`; CẤM Dual-SSOT/tiêm `ROLE_ID` vào System Prompt (`ADR-0040`, Mục 42).
-- **RULE-1.25 [Antigravity 24KB Rule Hard Cap, Decomposition & Fleet Zombie Cleanup Invariant]**:
-  - File rules bắt buộc $\le 24,000$ bytes (mục tiêu $11–18$ KB) chống silent truncation (`rules.go:544`). Khi phân rã tệp Hub, `CORE_LAYER2_RULES` cập nhật tệp mới; `sync_layer2_rules` dọn `LEGACY_MONOLITHIC_RULES` tại Spoke (`.agents/rules/`) chống Zombie Rule: dùng `(is_symlink() or exists())` xử lý broken symlinks và assert sau `unlink()` (`CLEANUP_FAILED` nếu còn file). `normalize_spoke_agents_links` định tuyến đa mục tiêu theo section anchor (`#...`) sang tệp con tương ứng (PR #553, #556).
+- **RULE-1.25 [Antigravity 24KB Rule Cap, Decomposition & Zombie Cleanup]**:
+  - File rules $\le 24,000$ bytes ($11–18$ KB) chống silent truncation (`rules.go:544`). Phân rã tệp Hub sync `CORE_LAYER2_RULES`; `sync_layer2_rules` dọn `LEGACY_MONOLITHIC_RULES` tại Spoke (`.agents/rules/`) qua `(is_symlink() or exists())` & assert sau `unlink()` (`CLEANUP_FAILED`). `normalize_spoke_agents_links` định tuyến theo anchor (`#...`, Mục 48, PR #553, #556).
 
 ---
 
@@ -39,9 +39,9 @@
 - **RULE-2.5 [ADR 0058 — Archetype Routing, Pre-Eval Hygiene Delta & Opt-In Tuner]**:
   - Ánh xạ `eval_*.json` qua `archetypes.py` (17 archetypes); chuyên biệt trước khái quát. `_run_pre_eval_guards` chặn delta `audit_skill()`; `run_nightly_tuner.sh` mặc định chạy `verify-patch --preset skill` (0 token), khóa tuner sau `--enable-tuner`/`--skill` (Mục 47).
 - **RULE-2.9 [Test Fixture Isolation, Subpackage Pytest INI Parity & Zero Hub Pollution Sandbox]**:
-  - `conftest.py` xóa `CCBA_HUB_PATH`, `HUB_PATH`, `CCBA_LEGAL_KNOWLEDGE_PATH`, `CCBA_LEGAL_CORPUS_PATH` & mock lock (`is_kernel_runner_locked`, `check_daemon_lock` $\to$ `False`). Subpackage `[tool.pytest.ini_options]` sync `pythonpath` & `markers`, cấm `--cov` cứng. Harness/E2E test Spoke sync bắt buộc cô lập Hub: `CCBA_SKIP_GIT_PULL=1`, `CCBA_HUB_PATH`, `--sync-item platform-loader`, và kiểm tra SHA-256 `spoke_registry.yaml` bất biến (Mục 44, PR #556).
-- **RULE-2.20 [Zero-Quarantine, AST Budget, Two-Edit Litmus & Mutation Proof]**:
-  - CẤM hàm $> 50$ LOC, CLI post-parse $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test mới qua **Two-Edit Litmus** (*Break behavior* $\to$ FAIL; *Change internals* $\to$ PASS); `Semantic Mutation Proof` hoàn nguyên 3 bước (`git diff --quiet` $\to$ fail log $\to$ `git checkout --`, Mục 44, 47).
+  - `conftest.py` xóa `CCBA_HUB_PATH`, `HUB_PATH`, `CCBA_LEGAL_KNOWLEDGE_PATH`, `CCBA_LEGAL_CORPUS_PATH` & mock lock (`is_kernel_runner_locked`, `check_daemon_lock` $\to$ `False`). Subpackage `[tool.pytest.ini_options]` sync `pythonpath` & `markers`, cấm `--cov` cứng. E2E test Spoke sync cô lập Hub: `CCBA_SKIP_GIT_PULL=1`, `CCBA_HUB_PATH`, `--sync-item platform-loader` & assert SHA-256 `spoke_registry.yaml` (Mục 44, PR #556).
+- **RULE-2.20 [Zero-Quarantine, AST Budget, Two-Edit Litmus, Mutation Proof & Statechart BFS]**:
+  - CẤM hàm $> 50$ LOC, CLI post-parse $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước. `verify_statechart_anti_lie` kiểm 4 bất biến `stateDiagram-v2` ($\le 20$ cạnh, `bug_path` liền kề); liveness dùng **Cycle-Safe BFS (`visited: set[str]`)** + 2-Tier Golden Snapshot (Mục 44, 47, 49).
 
 ---
 
@@ -49,8 +49,8 @@
 
 - **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
   - Viện dẫn HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP** (*RULE-3.2 [ADR 0031 — TVPL VIP]*, Mục 27).
-- **RULE-3.4 [RAG Normative Spanning & ADR-0059 Test Isolation]**:
-  - `clauses.json` span bao trọn toàn văn quy phạm; cấm span 1 dòng chỉ trỏ `<a>`. Tests dùng `tmp_path / "legal_registry.yaml"`.
+- **RULE-3.4 [ADR-0059, 3-Surface Lexicon Sync, `CONTEXT.md` AST & Lossless `unmask`]**:
+  - `clauses.json` span bao trọn toàn văn; tests dùng `tmp_path / "legal_registry.yaml"`. Đồng bộ 3 bề mặt (`CONTEXT.md`, `canonical_construction_taxonomy.yaml`, `SKILL.md`) theo chuỗi 7 bậc (`Luật XD 2025` $\to$ `1812/QĐ-BXD` $\to$ `CCBA WAY`); backtick trong `CONTEXT.md` khớp AST (`ImmutableSpanMasker`). `unmask()` chỉ cắt `original.count("\n")` dòng đệm (`match.group(2)[padding_len:]`, Mục 49).
 - **RULE-3.5 [Documentation Link Scheme Portability Invariant]**:
   - `validate_docs.py` cấm URL tuyệt đối `file:///home/...` hoặc `file:///C:/...`; dùng relative paths.
 
@@ -63,8 +63,8 @@
 - *(RULE-4.4..4.7, 4.10, 4.11, 4.13..4.15 tại Mục 25, 28-33: Turn budget $\ge 10-14$ turns; `PeerVerdictBlock` `extra="ignore"`; `apply_anchor_patch` kiểm tra `is_file()` & `stat.st_mode`)*
 - **RULE-4.8 & 4.12 [Review Danger Triage & Architecture Drift Pre-Commit]**:
   - AI Reviewers chỉ đọc/tư vấn, CẤM auto-merge code logic (`door-triage`). Thêm/xóa/đổi tên Level-1 files chạy `python scripts/update_arch_stats.py` sync `README.md` & `PLATFORM.md`.
-- **RULE-4.16 [Two-Pass Peer Review, Pre-Grill Sharpening & Decision-Decidable Handoff]**:
-  - Pass 1 (`APPROVE_PLAN`) đóng băng thiết kế; Pass 2 (`APPROVE`) đối soát reflog (timeout $\ge 900$s). `ccba-grilling` có Bước 0 (`in-your-own-words` & `sharpen` 1 *outside check*); `ccba-handoff` xếp `riskiest first` (5 thành tố) & Mermaid $\le 6$ khối (Mục 47).
+- **RULE-4.16 [Two-Pass Peer Review, Pre-Grill Sharpening, Canary & Noise Floor Gate]**:
+  - Pass 1 (`APPROVE_PLAN`) đóng băng thiết kế; Pass 2 (`APPROVE`) đối soát reflog (timeout $\ge 900$s). `ccba-grilling` có Bước 0 (`in-your-own-words` & `sharpen`); `ccba-handoff` xếp `riskiest first` & Mermaid $\le 6$ khối. `ccba-teamwork` bắt buộc First-Unit Canary (`canary_verdict`); `spread > abs(delta)` $\to$ `inconclusive` (Mục 47, 49).
 - **RULE-4.17 [Adversarial Rebuttal on `audit_direct`, Tool-Starvation Defense & CLI Parity]**:
   - Khi `audit_direct` suy diễn sai/đòi GitHub API khi CI có `fetch-depth: 0`, đối chiếu AST theo KISS; ưu tiên `audit_direct --no-tools`; sync subcommand vào `test_cli_contract_parity.py`.
 - **RULE-4.18 [Pre-Brief/Pre-Plan Problem-Validity, Scale & Seam-Parity Gate]**:
@@ -82,5 +82,5 @@
   - DGX Spark Blackwell mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; tách `--reasoning-parser` & `--tool-call-parser`.
 - **RULE-5.11 [GitHub Classic Projects GraphQL Deprecation & Project V2 Field Discovery]**:
   - `gh issue view <id>` (thiếu `--json`) lỗi exit 1 do `projectCards`; truyền `--json ...` hoặc `gh api`. Khi `gh project item-edit`, lấy field ID qua `gh project field-list` (Mục 42).
-- **RULE-5.12 [Venv Tooling Execution Parity & Non-Test Module Verify-Patch Pattern]**:
-  - Trên POSIX/CI, linters/mypy bắt buộc gọi qua `.venv/bin/python` thay vì system python; với module không chứa test case (nhánh core/sync), `verify-patch -c` chỉ định rõ linter + test suite mục tiêu thay cho `--preset code` (tránh exit code 5 của pytest khi 0 test collected).
+- **RULE-5.12 [Venv Tooling Parity, Non-Test Verify-Patch & Pytest 8.x Info-Flag Guard]**:
+  - Trên POSIX/CI, gọi linters/mypy qua `.venv/bin/python`; module không test dùng `verify-patch -c`. `conftest.py` miễn trừ `--version`/`--help` (`pytest 8.x`) & `coordinator.py` dùng `-c "import pytest"` (Mục 48, 49).
