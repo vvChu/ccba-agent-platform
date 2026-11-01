@@ -152,8 +152,15 @@ class ImmutableSpanMasker:
         if not span_registry:
             return text
 
-        pattern = re.compile(re.escape(self.placeholder_prefix) + r"(\d+)__\n*")
-        return pattern.sub(
-            lambda m: span_registry.get(f"{self.placeholder_prefix}{m.group(1)}__", m.group(0)),
-            text,
-        )
+        pattern = re.compile(re.escape(self.placeholder_prefix) + r"(\d+)__(\n*)")
+
+        def _restore_span(match: re.Match[str]) -> str:
+            key = f"{self.placeholder_prefix}{match.group(1)}__"
+            original = span_registry.get(key)
+            if original is None:
+                return match.group(0)
+            padding_len = original.count("\n")
+            remaining_newlines = match.group(2)[padding_len:]
+            return original + remaining_newlines
+
+        return pattern.sub(_restore_span, text)
