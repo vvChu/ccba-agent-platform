@@ -49,7 +49,7 @@ applies_to:
 
 ---
 
-### 3. Thiết Kế Chi Tiết & Thay Đổi Kỹ Thuật
+### 3. Đặc Tả Kỹ Thuật & Thay Đổi Chi Tiết
 
 - **Tệp sửa đổi trọng tâm:** `.agents/skills/ccba-create-pr/SKILL.md` (bump version `1.1.0` $\rightarrow$ `1.2.0`).
   - **Bước 0:** Xác định nhánh chính `<default_branch>` (qua `git symbolic-ref --short refs/remotes/origin/HEAD`) và dùng `<default_branch>` cho các lệnh kiểm tra commit chưa push và reset nhánh chính.

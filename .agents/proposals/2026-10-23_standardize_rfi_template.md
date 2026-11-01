@@ -15,9 +15,9 @@ graduated_to: ""
 supersedes_spoke_docs: []
 ---
 
-# RFC Proposal: Chuẩn Hóa Biểu Mẫu Phiếu Yêu Cầu Cung Cấp Thông Tin Kỹ Thuật (RFI) Cho IBST / CCBA
+# RFC Proposal: Chuẩn Hóa Biểu Mẫu Phiếu Yêu Cầu Cung Cấp Thông Tin Kỹ Thuật (RFI) Cho IBST - CCBA
 
-- **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm CCBA)
+- **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng (CCBA))
 - **Ngày lập:** 2026-10-23
 - **Trạng thái:** Đang đề xuất (Proposed)
 - **Phán quyết Thẩm định:**
@@ -58,7 +58,7 @@ Trong quá trình triển khai các dự án tư vấn BIM và PCCC công nghi�
 
 ---
 
-### 3. Thiết Kế Chi Tiết & Tích Hợp Vào Hub (Technical Specification)
+### 3. Đặc Tả Kỹ Thuật & Tích Hợp Vào Hub (Technical Specification)
 
 1. **Vị trí tích hợp tại Hub Monorepo:**
    - Đặc tả mẫu Tier 4: `.agents/skills/ccba-xu-ly-van-phong/templates/docx-ky-thuat-rfi.md`

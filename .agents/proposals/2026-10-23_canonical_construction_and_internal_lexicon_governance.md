@@ -23,7 +23,7 @@ supersedes_spoke_docs: []
 # RFC Proposal: Khung Quản Trị & Đồ Thị Tri Thức Thuật Ngữ Chuẩn Ngành Xây Dựng, Pháp Lý Quy Phạm & Quy Chế Nội Bộ (CCILF)
 
 - **Tên sáng kiến:** Canonical Construction, Statutory & Internal Governance Lexicon Framework (CCILF)
-- **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm CCBA - IBST)
+- **Tác giả đề xuất:** Antigravity (Pair Architect & Builder) & Kỹ sư Vũ Văn Chủ (Giám đốc Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng (CCBA) - IBST)
 - **Ngày lập:** 2026-10-23
 - **Trạng thái:** Đã hợp nhất (Merged) — PR [#561](https://github.com/vvChu/ccba-agent-platform/pull/561) (Commit `818055bc`) — Đã đạt phán quyết `APPROVE_WITH_CONDITIONS` từ Grok 4.7 xhigh (`req-discuss-canonical-lexicon-architecture-001`)
 - **Căn cứ pháp lý & thể chế nền tảng:**
@@ -54,7 +54,7 @@ Trong quá trình phát triển các Agent tự hành phục vụ tư vấn phá
    - AI dịch *"As-built drawings"* thành *"Bản vẽ như xây dựng"* (thay vì **"Bản vẽ hoàn công"**).
    - AI dịch *"Grandfathering clause"* thành *"Điều khoản ông nội"* thay vì **"Nguyên tắc bảo lưu công trình hiện hữu / Không áp dụng hồi tố"**.
 2. **Sai lệch bản chất pháp lý & Trôi lệch thẩm quyền nguy hiểm:**
-   - AI nhầm lẫn giữa *"Thẩm tra"* (dịch vụ tư vấn độc lập của Viện IBST/CCBA theo Luật XD 2025 Điều 3 Khoản 15, Điều 36) và *"Thẩm định"* (thẩm quyền quản lý nhà nước của Sở XD/Bộ XD hoặc Chủ đầu tư theo Điều 3 Khoản 16, Điều 38) và *"Thẩm định thiết kế về phòng cháy và chữa cháy"* (thẩm quyền kép của CQ Chuyên môn Xây dựng và CQ Công an theo Luật PCCC 2024 Điều 2 Khoản 17).
+   - AI nhầm lẫn giữa *"Thẩm tra"* (dịch vụ tư vấn độc lập của IBST - CCBA theo Luật XD 2025 Điều 3 Khoản 15, Điều 36) và *"Thẩm định"* (thẩm quyền quản lý nhà nước của Sở XD/Bộ XD hoặc Chủ đầu tư theo Điều 3 Khoản 16, Điều 38) và *"Thẩm định thiết kế về phòng cháy và chữa cháy"* (thẩm quyền kép của CQ Chuyên môn Xây dựng và CQ Công an theo Luật PCCC 2024 Điều 2 Khoản 17).
    - AI lẫn lộn giữa *"Chiều cao công trình"* theo quy hoạch đô thị (QCVN 01:2021/BXD Mục 1.4.25 Lines 397-405) và *"Chiều cao PCCC"* ($H_{PCCC}$ đo đến mép dưới cửa sổ tầng trên cùng theo QCVN 06:2022/BXD Mục 1.4.9).
    - AI nhầm lẫn tính đa nghĩa liên luật của thuật ngữ *"Chủ đầu tư"* giữa Luật Xây dựng (Điều 9 chia 4 nhóm), Luật Đấu thầu (Điều 4 Khoản 2), Luật Đất đai (Điều 3 Khoản 10) và Luật Nhà ở (Điều 2 Khoản 14).
    - AI nhầm lẫn thứ bậc quản lý chi phí NĐ 206/2026/NĐ-CP (Sơ bộ TMĐT $\to$ TMĐT $\to$ Dự toán xây dựng CT $\to$ Dự toán gói thầu $\to$ Giá gói thầu).
@@ -155,12 +155,12 @@ flowchart TD
   * **Cấp 2 (`LEVEL_2_MANAGEMENT_APPROVAL`):** Chủ trì hợp đồng (CTHĐ) đối soát phạm vi, cam kết và tiến độ; hoặc Trưởng phòng chuyên môn đối với mô hình quản lý tập trung (TVGS/QLDA/Thi công).
   * **Cấp 3 (`LEVEL_3_DEPARTMENT_REVIEW`):** Lãnh đạo Phòng chuyên môn kiểm soát chất lượng bàn giao chuyên môn.
   * **Cấp 4 (`LEVEL_4_COMPLIANCE_QA`):** Ban Cố vấn Pháp lý, Tiêu chuẩn & Đảm bảo Chất lượng ("Người gác cổng" ISO 9001, thể thức, quy chuẩn).
-  * **Cấp 5 (`LEVEL_5_FINAL_APPROVAL`):** Giám đốc/Phó Giám đốc CCBA ký phát hành (đóng dấu Trung tâm) hoặc Giám đốc CCBA duyệt trình Lãnh đạo Viện IBST ký (đối với HĐ ký cấp Viện).
+  * **Cấp 5 (`LEVEL_5_FINAL_APPROVAL`):** Giám đốc/Phó Giám đốc CCBA ký phát hành (đóng dấu Trung tâm) hoặc Giám đốc CCBA duyệt trình Lãnh đạo Viện KHCN (IBST) ký (đối với HĐ ký cấp Viện).
 - **Khai phá & tích hợp toàn vẹn 21 bộ Taxonomy `IDOP-CCBA-WAY`:**
   * 5 Trạng thái phê duyệt bất biến: `Nháp` $\to$ `Đệ trình` $\to$ `Yêu cầu bổ sung` $\to$ `Phê duyệt` $\to$ `Từ chối` (`CCBA_TrangThaiPheDuyet.json`).
   * 5 Nhóm tài liệu chuẩn: `Hồ sơ Dự án`, `Hồ sơ Hợp đồng`, `Hồ sơ Kỹ thuật`, `Hồ sơ Tài chính`, `Văn bản Nội bộ/Pháp quy` (`CCBA_LoaiTaiLieu.json`).
   * 10 Nhóm hợp đồng kinh tế theo Quy chế QCCTNB 3209: `N1a` đến `N7` (`CCBA_NhomHopDongKT.json`).
-  * Hệ thống mã phòng ban CCBA (101 đến 303) và Viện IBST (00 đến 03) (`CCBA_DonViPhongBan.json`).
+  * Hệ thống mã phòng ban CCBA (101 đến 303) và Viện KHCN (IBST) (00 đến 03) (`CCBA_DonViPhongBan.json`).
   * Phân nhóm chức danh BIM: Dynamo/Python Specialist; BIM Director/Manager/Coordinator; BIM Modeler (`CCBA_ChucDanhBIM.json`).
 
 ---

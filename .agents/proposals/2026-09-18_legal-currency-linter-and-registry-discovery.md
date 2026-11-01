@@ -57,7 +57,7 @@ applies_to:
 
 ---
 
-### 3. Thiết Kế Chi Tiết & Thay Đổi Kỹ Thuật
+### 3. Đặc Tả Kỹ Thuật & Thay Đổi Chi Tiết
 
 1. **Vá lỗi Tầng Nhân Tra Cứu (`packages/ccba-legal-intel/src/ccba_legal/registry.py` & `models.py`):**
    - Tự động nhận diện registry Spoke theo thứ tự ưu tiên 6 tầng (ADR 0050).

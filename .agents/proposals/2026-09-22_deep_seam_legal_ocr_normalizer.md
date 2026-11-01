@@ -54,7 +54,7 @@ applies_to:
 
 ---
 
-### 3. Thiết Kế Chi Tiết & Thay Đổi Kỹ Thuật
+### 3. Đặc Tả Kỹ Thuật & Thay Đổi Chi Tiết
 
 - **Submodule mới:** `packages/ccba-legal-intel/src/ccba_legal/normalizers/`
   * `ocr_fixes.py`: Khử khoảng cách vỡ hạt ký tự (`normalize_ocr_spacing`), sửa lỗi chính tả OCR phổ biến (`fix_common_ocr_typos`), tách từ dính tiếng Việt (`fix_stuck_vietnamese_words`, `fix_vietnamese_syllable_boundaries`).
