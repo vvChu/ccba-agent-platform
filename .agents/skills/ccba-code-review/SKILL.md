@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.6.0
+  version: 1.7.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -73,13 +73,14 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP kernel hai trục Standard
 - **Tiêu chí hoàn thành:** Xác định chính xác tệp tin Spec (ví dụ: `spec-{slug}.md`) làm nguồn chân lý để đối chiếu (hoặc ghi nhận bỏ qua trục Spec), đồng thời xác nhận không còn unresolved Copilot review comments.
 
 ### 3. Xác định tài liệu quy chuẩn (Identify the standards sources)
-- Tìm kiếm các quy định chuẩn viết code của dự án (ví dụ: `.agents/AGENTS.md` hoặc `CODING_STANDARDS.md`).
+- Tìm kiếm và luôn truyền tường minh các tệp quy chuẩn viết code của dự án (như [`docs/rules/code_quality_standards.md`](../../../docs/rules/code_quality_standards.md), [`docs/rules/code_quality_verification.md`](../../../docs/rules/code_quality_verification.md), `.agents/AGENTS.md`, hoặc `CONTRIBUTING.md`) cho Standards sub-agent (`v1.3.2 #1208`).
 - Đồng thời, áp dụng 12 Fowler smells cơ bản (Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest) làm quy chuẩn bổ trợ.
 - **Python Monorepo Overlay:** Nếu phát hiện tệp `pyproject.toml`, tự động nạp thêm checklist chuyên biệt `references/checklists/python.md` (ADR-0035 private module isolation, mypy strict, Windows UTF-8 encoding, KISS function limit).
 - **Tiêu chí hoàn thành:** Xác định đầy đủ các tệp tài liệu tiêu chuẩn hiện hành của repo để nạp vào prompt cho sub-agent.
 
 ### 4. Gọi song song hai Sub-agents (Spawn sub-agents in parallel)
-- Áp dụng **Rào Chắn Kép (Two-Layer Sub-Agent Guardrail)**:
+- Áp dụng **Rào Chắn Kép (Two-Layer Sub-Agent Guardrail)** & **Cửa Sổ Ngữ Cảnh Mới (`fresh context window` — `v1.3.2 #1341`)**:
+  - Khởi chạy mỗi sub-agent với một **`fresh context window`** ở foreground (tuyệt đối không fork ngữ cảnh hội thoại hiện tại để tránh làm ô nhiễm đánh giá độc lập) và sử dụng trực tiếp báo cáo trả về của chúng.
   - Bắt buộc chèn chỉ dẫn cấm ủy thác vào prompt của cả hai sub-agents: `"CRITICAL CONSTRAINT: You are a dedicated review sub-agent. Do NOT invoke /ccba-code-review, do NOT spawn any child sub-agents, and do NOT propose bash execution. Perform this review directly using read-only tools and output your structured report immediately."`
 - Spawn đồng thời tối đa 2 sub-agents (sử dụng subagent `research` với công cụ chỉ đọc):
   - **Standards Sub-agent Prompt:** Nhận Git Diff + danh sách tiêu chuẩn + 12 smells + Python checklist (nếu có) + chỉ dẫn cấm ủy thác. Yêu cầu chỉ ra các vi phạm quy chuẩn và smell kèm trích dẫn dòng code. Lưu bản thảo vào `.system_generated/scratch/standards_report.md`.

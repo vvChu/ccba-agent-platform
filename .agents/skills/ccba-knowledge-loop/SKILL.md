@@ -9,7 +9,7 @@ disable-model-invocation: true
 bundle: _core
 command: /ccba-knowledge-loop
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 triggers:
 - knowledge-loop
@@ -23,7 +23,7 @@ Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP orchestrator điều phối vòng lặp tri thức toàn trình qua 4 pha liên kết: `/ccba-youtube-learn` (trinh sát video), `/ccba-research` (nghiên cứu ngầm), `/ccba-ask` (hội chẩn brainstorm) và `/ccba-wayfinder` (lập lộ trình bản đồ). Toàn bộ luồng dữ liệu tuân thủ nghiêm ngặt Single-Writer Protocol, lưu trữ bản đồ tại `.md/knowledge/issues/<feature>/map.md` và xuất nháp vào scratch. 16 card Seam chuẩn hóa đứng yên, kỹ năng giữ vai trò điều phối tri thức độc lập.
-- **Governance Compliance**: Giữ vững phân tầng Tier 3 Composite Orchestrator (`tier: orchestrator`, `is-orchestrated: true`), short-circuit qua Cổng 1 Stage 2. Kỹ năng chưa có thư mục `references/` phụ trợ.
+- **Governance Compliance**: Giữ vững phân tầng Tier 3 Composite Orchestrator (`tier: orchestrator`, `is-orchestrated: true`), short-circuit qua Cổng 1 Stage 2. Tệp tài liệu tham chiếu chuyên sâu `references/llm-wiki.md` được đăng ký tại chỉ mục Level 3.
 
 ---
 
@@ -91,6 +91,14 @@ Giải quyết các Frontier Tickets và mở rộng bản đồ:
 4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md) mini với User để thống nhất hướng đi tiếp theo.
 
 - **Tiêu chí hoàn thành:** Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu hoặc lưu trữ bộ nhớ tri thức dài hạn qua nhiều phiên, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/llm-wiki.md` | Kiến trúc Dated & Commit-Pinned Historical LLM Wiki (`.md/knowledge/wiki/`) với chu trình Ingest, Query, Lint |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

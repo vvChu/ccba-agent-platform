@@ -8,7 +8,7 @@ command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 triggers:
 - ccba-implement
@@ -44,7 +44,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
 ## Các bước thực hiện
 
 ### Bước 1: Phân tích đặc tả và thiết kế Deep Seams (Spec Breakdown)
-1. Đọc kỹ đặc tả hoặc danh sách ticket do người dùng cung cấp.
+1. Đọc kỹ đặc tả hoặc danh sách ticket do người dùng cung cấp. Nếu người dùng truyền mã tham chiếu ticket/issue, bắt buộc truy xuất ticket từ Issue Tracker và nêu rõ tiêu đề ticket trước khi bắt đầu; nếu tham chiếu mơ hồ thì hỏi lại người dùng ngay (`v1.3.2 #1196`). Khi triển khai toàn bộ một Spec gồm đồ thị nhiều tickets phụ thuộc nhau (Task Graph), đọc và áp dụng quy trình tại [`references/implement-spec.md`](references/implement-spec.md).
 2. Kiểm tra `catalog.yaml` để áp dụng nguyên tắc Reuse-First, tránh viết lại các tiện ích đã tồn tại.
 3. Xác định các Deep Seams cần sửa đổi hoặc tạo mới, vạch rõ phạm vi thay đổi (blast radius).
 - **Tiêu chí hoàn thành:** Bản tóm tắt yêu cầu, danh sách module bị tác động và các interfaces cần tuân thủ được xác lập rõ ràng.
@@ -85,6 +85,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
+| `references/implement-spec.md` | Quy trình điều phối Task Graph Frontier trên nhánh tích hợp với First-Unit Canary & Single-Writer Protocol |
 | `references/discard_feature_sop.md` | Quy trình chuẩn thao tác Git hủy bỏ tính năng an toàn |
 | `references/prototyping_patterns.md` | Mẫu hình tạo spike / prototype nhanh để kiểm chứng giải pháp kỹ thuật |
 | `references/prototype_logic.md` | Hướng dẫn tạo prototype logic dòng lệnh và thuật toán kiểm chứng nhanh |

@@ -349,4 +349,9 @@ Báo cáo tự động đánh giá các tính năng mới từ thượng nguồn
 <!-- DEVELOPER-NOTES-START -->
 ## 📝 Ghi chú của Kỹ sư (Developer Notes)
 *Kỹ sư có thể tự do ghi chép các phân tích, đánh giá thủ công tại đây. Phần này sẽ được tự động bảo toàn khi đồng bộ thượng nguồn.*
+
+- **[2026-11-01 — `/ccba-xia` Upstream Adaptation `mattpocock/skills@4ae2317` (`v1.3.2` — ADOPTED)]:**
+  - Đã hoàn tất chuyển dịch theo **Phương án A (Hybrid Adopt + Tier 2A Progressive Reference — Zero Skill Bloat)**, bảo toàn trần 76 Hub Skills:
+    - **Tier 2A Progressive References mới (`[NEW]`):** `ccba-implement/references/implement-spec.md` (`COND-01` First-Unit Canary & Orchestrator Single-Writer), `ccba-knowledge-loop/references/llm-wiki.md` (`COND-02` `.md/knowledge/wiki/index.md` Dated & Commit-Pinned Historical Wiki), `ccba-grilling/references/to-questionnaire.md` (*Grill the send, not the subject*).
+    - **Nâng cấp tại chỗ (`[MODIFY]`):** `ccba-build-skill/references/skill_authoring_guide.md` (`writing-for-agents` + `SKILL-MECHANICS.md` v1.3.2), `ccba-implement/references/prototype_logic.md` & `prototyping_patterns.md` (`Shareable HTML` + `Guided Walkthroughs`), `ccba-diagnosing-bugs/SKILL.md` (`v1.1.0` `<REDACTED>` & Phase 5 `git diff` Forced Mutation Gate), `ccba-tdd/SKILL.md` (`v1.3.0` Seam catches/misses), `ccba-code-review/SKILL.md` (`v1.7.0` `fresh context window` & explicit standards handoff), `ccba-create-pr/SKILL.md` (`v1.3.0` Show-Me Visual Summary + Evidence + Merge Danger), `ccba-implement/SKILL.md` (`v1.1.0`), `ccba-grilling/SKILL.md` (`v1.2.0`), `ccba-knowledge-loop/SKILL.md` (`v1.1.0`).
 <!-- DEVELOPER-NOTES-END -->

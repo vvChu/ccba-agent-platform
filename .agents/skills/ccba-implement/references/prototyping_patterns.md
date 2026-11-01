@@ -42,14 +42,16 @@ Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều ki�
 
 **Tiêu chí hoàn thành:** Mẫu thử chạy được nhanh bằng 1 lệnh duy nhất và tuân thủ các nguyên tắc throwaway.
 
-### Bước 3: Thu hoạch và dọn dẹp (Absorb or Delete)
+### Bước 3: Thu hoạch Quyết định & Lưu vết Primary Source (Capture or Clean Up — `v1.3.2`)
 Khi mẫu thử đã trả lời được câu hỏi thiết kế:
-- Ghi nhận quyết định thiết kế vào commit message, ADR (Architectural Decision Record) hoặc file `NOTES.md` nằm trong thư mục `.md/knowledge/issues/[feature_name]/prototypes/`.
-- **Dọn dẹp sạch sẽ**: 
-  - Nếu là Logic: Xóa bỏ TUI shell thô, chỉ copy module logic thuần túy (reducer/pure functions) vào codebase thật và viết code chuẩn chỉ.
-  - Nếu là UI: Xóa bỏ switcher tạm và các variant bị loại; chỉ giữ lại variant chiến thắng và refactor nó theo chuẩn chất lượng của dự án.
+- Ghi nhận quyết định thiết kế đã kiểm chứng (câu hỏi ban đầu + phán quyết cuối cùng) vào commit message, ADR hoặc file `NOTES.md` nằm trong thư mục `.md/knowledge/issues/[feature_name]/prototypes/`.
+- **Lưu vết Nguyên mẫu như Nguồn Tư liệu Gốc (`Primary Source`):**
+  - Có thể commit nguyên mẫu vào một nhánh throwaway riêng biệt (`prototype/<slug>`, nằm ngoài nhánh `main`) và để lại một *context pointer* trỏ tới nhánh đó trên Issue triển khai hoặc trong `NOTES.md`.
+- **Giữ sạch nhánh `main`:**
+  - Nếu là Logic: Xóa bỏ lớp vỏ HTML/TUI thử nghiệm khỏi nhánh làm việc chính, chỉ nhấc module logic thuần túy (reducer/pure functions) vào codebase thật và viết kiểm thử chuẩn mực.
+  - Nếu là UI: Xóa bỏ switcher tạm và các variant bị loại; chỉ giữ lại variant chiến thắng và refactor theo chuẩn chất lượng của dự án.
 
-**Tiêu chí hoàn thành:** Quyết định thiết kế được ghi nhận vào NOTES.md và mã nguồn thô tạm thời được dọn dẹp sạch sẽ.
+**Tiêu chí hoàn thành:** Quyết định thiết kế được ghi nhận vào `NOTES.md` (kèm con trỏ tới nhánh `prototype/<slug>` nếu cần lưu vết) và mã nguồn thô tạm thời được dọn sạch khỏi nhánh chính.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
