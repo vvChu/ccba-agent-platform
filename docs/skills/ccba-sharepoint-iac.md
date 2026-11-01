@@ -1,6 +1,6 @@
 # ccba-sharepoint-iac
 
-> **Mô tả ngắn**: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
+> **Mô tả ngắn**: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP PowerShell.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-sharepo
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng PnP PowerShell.
+Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP PowerShell.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

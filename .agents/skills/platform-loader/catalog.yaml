@@ -1027,8 +1027,9 @@ skills:
 - name: ccba-sharepoint-iac
   bundle: _software
   description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
-    Hướng dẫn thiết kế JSON schema, kiểm định Lookups/Taxonomy và triển khai bằng
-    PnP PowerShell.
+    Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo
+    mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP
+    PowerShell.
   triggers:
   - ccba-sharepoint-iac
   - sharepoint iac

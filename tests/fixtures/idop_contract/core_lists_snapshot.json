@@ -1,0 +1,1227 @@
+{
+  "schema_version": "1.0.0",
+  "source_repo": "IDOP-CCBA-WAY",
+  "known_lists": [
+    "Activities",
+    "AllocationRules",
+    "ApprovalDelegations",
+    "ApprovalHistories",
+    "ApprovalNodes",
+    "ApprovalWorkflows",
+    "Assets",
+    "AssignmentDetails",
+    "BankAccounts",
+    "BenefitPackages",
+    "CDEDocuments",
+    "Certifications",
+    "Contacts",
+    "ContractScopes",
+    "Contracts",
+    "Customers",
+    "Departments",
+    "DocumentRequirements",
+    "DynamicForms",
+    "EmployeeBenefits",
+    "EmployeeHistory",
+    "Employees",
+    "EmploymentContracts",
+    "EnvironmentVariables",
+    "ExpenseChecklists",
+    "Expenses",
+    "FinancialPlans",
+    "InputInvoices",
+    "IntegrationPoints",
+    "InvoiceRequests",
+    "JobAssignments",
+    "Leads",
+    "LessonsLearned",
+    "MaintenanceLogs",
+    "Measurables",
+    "OKRSKeyResults",
+    "OKRSObjectives",
+    "Opportunities",
+    "OpportunityServices",
+    "OpportunityStageHistory",
+    "OpportunityStakeholders",
+    "OutgoingInvoices",
+    "PotentialProjects",
+    "ProjectHistory",
+    "ProjectIssues",
+    "ProjectMembers",
+    "ProjectRisks",
+    "ProjectTasks",
+    "Projects",
+    "Quarters",
+    "Rewards",
+    "ScopeDepartmentAllocations",
+    "ScorecardData",
+    "ServiceCatalog",
+    "SharedCostAllocations",
+    "Submissions",
+    "SystemSettings",
+    "Timesheets",
+    "Vendors",
+    "WorkPackages",
+    "activities",
+    "allocation_rules",
+    "approval_delegations",
+    "approval_histories",
+    "approval_nodes",
+    "approval_workflows",
+    "assets",
+    "assignment_details",
+    "bank_accounts",
+    "benefit_packages",
+    "cde_documents",
+    "certifications",
+    "contacts",
+    "contract_scopes",
+    "contracts",
+    "customers",
+    "departments",
+    "document_requirements",
+    "dynamic_forms",
+    "employee_benefits",
+    "employee_history",
+    "employees",
+    "employment_contracts",
+    "environment_variables",
+    "expense_checklists",
+    "expenses",
+    "financial_plans",
+    "input_invoices",
+    "integration_points",
+    "invoice_requests",
+    "job_assignments",
+    "leads",
+    "lessons_learned",
+    "maintenance_logs",
+    "measurables",
+    "okrs_key_results",
+    "okrs_objectives",
+    "opportunities",
+    "opportunity_services",
+    "opportunity_stage_history",
+    "opportunity_stakeholders",
+    "outgoing_invoices",
+    "potential_projects",
+    "project_history",
+    "project_issues",
+    "project_members",
+    "project_risks",
+    "project_tasks",
+    "projects",
+    "quarters",
+    "rewards",
+    "scope_department_allocations",
+    "scorecard_data",
+    "service_catalog",
+    "shared_cost_allocations",
+    "submissions",
+    "system_settings",
+    "timesheets",
+    "vendors",
+    "work_packages"
+  ],
+  "known_taxonomy": [
+    "CCBA_ChucDanhBIM",
+    "CCBA_ChucDanhXayDung",
+    "CCBA_DonViPhongBan",
+    "CCBA_LinhVucChuyenMon",
+    "CCBA_LoaiChiPhi",
+    "CCBA_LoaiChiPhiPhanBo",
+    "CCBA_LoaiCongTrinh",
+    "CCBA_LoaiHinhDichVu",
+    "CCBA_LoaiKhachHang",
+    "CCBA_LoaiTaiLieu",
+    "CCBA_MucDoUuTien",
+    "CCBA_NganhLinhVuc",
+    "CCBA_NguonGocCoHoi",
+    "CCBA_NguonVon",
+    "CCBA_NhomHopDongKT",
+    "CCBA_PhanLoaiBaiHoc",
+    "CCBA_TrangThaiChung",
+    "CCBA_TrangThaiNhanSu",
+    "CCBA_TrangThaiPheDuyet",
+    "CCBA_TrangThaiTaiSan",
+    "CCBA_VaiTroLienHe"
+  ],
+  "core_lists": {
+    "projects": {
+      "ListName": "Projects",
+      "Description": "Dự án thực thi",
+      "Columns": [
+        {
+          "Name": "ProjectCode",
+          "Type": "Text",
+          "Required": true,
+          "Indexed": true,
+          "DisplayName": "Mã dự án"
+        },
+        {
+          "Name": "ProjectName",
+          "Type": "Text",
+          "Required": true,
+          "DisplayName": "Tên dự án"
+        },
+        {
+          "Name": "NationalProjectID",
+          "Type": "Text",
+          "DisplayName": "Mã dự án quốc gia / Viện IBST",
+          "Description": "Mã định danh dự án cấp quốc gia / Viện IBST theo QCTK 2815"
+        },
+        {
+          "Name": "ContractId",
+          "Type": "Lookup",
+          "Indexed": true,
+          "Lookup": {
+            "List": "Contracts",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Hợp đồng"
+        },
+        {
+          "Name": "Budget",
+          "Type": "Number",
+          "DisplayName": "Ngân sách dự án (VND)"
+        },
+        {
+          "Name": "ServiceType",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LoaiHinhDichVu"
+          },
+          "DisplayName": "Loại hình dịch vụ"
+        },
+        {
+          "Name": "Status",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_TrangThaiChung"
+          },
+          "DisplayName": "Trạng thái"
+        },
+        {
+          "Name": "CooperatingDepartment",
+          "Type": "ManagedMetadata",
+          "AllowMultiple": true,
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_DonViPhongBan"
+          },
+          "DisplayName": "Đơn vị phối hợp",
+          "Description": "Các đơn vị thành viên phối hợp cấp dự án (bản sao phục vụ tra cứu; SSOT in PGV là Contracts.CooperatingDepartment)"
+        },
+        {
+          "Name": "FundingSource",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_NguonVon"
+          },
+          "DisplayName": "Nguồn vốn"
+        },
+        {
+          "Name": "StartDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày bắt đầu"
+        },
+        {
+          "Name": "EndDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày kết thúc"
+        },
+        {
+          "Name": "CdeFolderDriveItemId",
+          "Type": "Text",
+          "Description": "ID mục thư mục dự án trên iCDE OneDrive Master.",
+          "DisplayName": "ID mục thư mục CDE"
+        },
+        {
+          "Name": "CdeFolderPath",
+          "Type": "Text",
+          "Description": "Đường dẫn thư mục dự án trong iCDE (ví dụ: iCDE/tvgs_qlda/{ProjectCode}/).",
+          "DisplayName": "Đường dẫn thư mục CDE"
+        },
+        {
+          "Name": "CdeFolderUrl",
+          "Type": "Hyperlink",
+          "Description": "URL truy cập trực tiếp thư mục CDE dự án.",
+          "DisplayName": "URL thư mục CDE"
+        },
+        {
+          "Name": "ProjectGrade",
+          "Type": "Choice",
+          "Choices": [
+            "Cấp đặc biệt",
+            "Cấp I",
+            "Cấp II",
+            "Cấp III",
+            "Cấp IV"
+          ],
+          "DisplayName": "Cấp công trình",
+          "Description": "Cấp công trình xây dựng theo quy định phân cấp công trình (Thông tư 06/2021/TT-BXD & Nghị định 175/2024/NĐ-CP)"
+        },
+        {
+          "Name": "ProjectGroup",
+          "Type": "Choice",
+          "Choices": [
+            "Quan trọng quốc gia",
+            "Nhóm A",
+            "Nhóm B",
+            "Nhóm C"
+          ],
+          "DisplayName": "Nhóm dự án",
+          "Description": "Nhóm dự án đầu tư xây dựng xác định theo TMĐT và lĩnh vực (Luật Đầu tư công & Luật Xây dựng)"
+        },
+        {
+          "Name": "TotalInvestmentBudget",
+          "Type": "Number",
+          "DisplayName": "Tổng mức đầu tư dự án (VND)",
+          "Description": "Tổng mức đầu tư toàn bộ dự án của Chủ đầu tư (TMĐT dùng để xác định Nhóm A/B/C)"
+        },
+        {
+          "Name": "ProjectBuildingType",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LoaiCongTrinh"
+          },
+          "DisplayName": "Loại công trình xây dựng",
+          "Description": "Phân loại theo loại hình công trình xây dựng (Dân dụng, Công nghiệp, Giao thông, Đặc thù)"
+        },
+        {
+          "Name": "RecordsFolderDriveId",
+          "Type": "Text",
+          "DisplayName": "ID ổ lưu trữ quản trị dự án (Drive ID)",
+          "Description": "Microsoft Graph Drive ID của Master Storage ccba-storage chứa thư mục 05_Projects"
+        },
+        {
+          "Name": "RecordsFolderDriveItemId",
+          "Type": "Text",
+          "Description": "ID mục thư mục dự án trên iOPS/05_Projects OneDrive Master.",
+          "DisplayName": "ID thư mục quản trị dự án"
+        },
+        {
+          "Name": "RecordsFolderState",
+          "Type": "Choice",
+          "Choices": [
+            "Not Created",
+            "Creating",
+            "Created",
+            "Failed"
+          ],
+          "DisplayName": "Trạng thái thư mục quản trị dự án",
+          "Description": "Trạng thái khởi tạo thư mục hồ sơ nghiệm thu - quyết toán 05_Projects (Khóa phân tán chống race condition)"
+        },
+        {
+          "Name": "RecordsFolderPath",
+          "Type": "Text",
+          "Description": "Đường dẫn thư mục dự án trong iOPS/05_Projects (ví dụ: iOPS/05_Projects/{ProjectCode}/).",
+          "DisplayName": "Đường dẫn thư mục quản trị dự án"
+        },
+        {
+          "Name": "RecordsFolderUrl",
+          "Type": "Hyperlink",
+          "Description": "URL truy cập trực tiếp thư mục hồ sơ nghiệm thu - quyết toán dự án (05_Projects).",
+          "DisplayName": "URL thư mục quản trị dự án"
+        },
+        {
+          "Name": "ArchiveStatus",
+          "Type": "Choice",
+          "Choices": [
+            "Chưa nộp TCHC",
+            "Đã nộp TCHC",
+            "Lưu tại Đơn vị / Phân viện"
+          ],
+          "DisplayName": "Trạng thái nộp lưu TCHC",
+          "Description": "Trạng thái nộp lưu trữ hồ sơ pháp lý - kỹ thuật về Phòng TCHC Viện sau thanh lý theo Điều 8.4 QCTK 2815"
+        },
+        {
+          "Name": "ProjectLocation",
+          "Type": "Note",
+          "RichText": false,
+          "DisplayName": "Địa điểm xây dựng",
+          "Description": "Địa điểm xây dựng công trình/dự án phục vụ in Phiếu giao việc (plain text)"
+        },
+        {
+          "Name": "SpokeSiteUrl",
+          "Type": "URL",
+          "Required": false,
+          "Indexed": false,
+          "DisplayName": "Liên kết Spoke Site dự án"
+        },
+        {
+          "Name": "TotalIRCount",
+          "Type": "Number",
+          "Decimals": 0,
+          "Required": false,
+          "Indexed": false,
+          "DisplayName": "Tổng số phiếu yêu cầu nghiệm thu (IR)"
+        },
+        {
+          "Name": "OpenIRCount",
+          "Type": "Number",
+          "Decimals": 0,
+          "Required": false,
+          "Indexed": false,
+          "DisplayName": "Số phiếu IR đang mở"
+        },
+        {
+          "Name": "OverdueIRCount",
+          "Type": "Number",
+          "Decimals": 0,
+          "Required": false,
+          "Indexed": false,
+          "DisplayName": "Số phiếu IR quá hạn"
+        },
+        {
+          "Name": "LastIRSyncAt",
+          "Type": "DateTime",
+          "Format": "DateTime",
+          "Required": false,
+          "Indexed": false,
+          "DisplayName": "Thời điểm đồng bộ IR gần nhất"
+        }
+      ]
+    },
+    "job_assignments": {
+      "ListName": "JobAssignments",
+      "Description": "Phân công công việc (Phiếu Giao Việc PGV)",
+      "Columns": [
+        {
+          "Name": "ProjectId",
+          "Type": "Lookup",
+          "Required": true,
+          "Indexed": true,
+          "Lookup": {
+            "List": "Projects",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Dự án"
+        },
+        {
+          "Name": "PgvCode",
+          "Type": "Text",
+          "DisplayName": "Số Phiếu giao việc",
+          "Description": "Số hiệu văn bản PGV theo mẫu Viện (ví dụ: '071.a/VKH', '126/2026VKH')"
+        },
+        {
+          "Name": "PgvRevision",
+          "Type": "Text",
+          "DisplayName": "Lần ban hành PGV",
+          "Description": "Lần ban hành PGV (ví dụ: '.a' ban hành lần đầu, '.b' điều chỉnh bổ sung nhân sự/tỷ lệ)"
+        },
+        {
+          "Name": "ContractId",
+          "Type": "Lookup",
+          "Indexed": true,
+          "Lookup": {
+            "List": "Contracts",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Hợp đồng kinh tế",
+          "Description": "Hợp đồng kinh tế gốc phát sinh PGV này"
+        },
+        {
+          "Name": "Status",
+          "Type": "Choice",
+          "Choices": [
+            "Bản thảo",
+            "Đã trình nội bộ",
+            "Đã trình Viện",
+            "Đã phê duyệt",
+            "Đã hủy"
+          ],
+          "DisplayName": "Trạng thái phê duyệt PGV",
+          "Description": "Trạng thái phê duyệt PGV (Bản thảo, Đã trình nội bộ, Đã trình Viện, Đã phê duyệt, Đã hủy)"
+        },
+        {
+          "Name": "ContractScopeId",
+          "Type": "Lookup",
+          "Lookup": {
+            "List": "ContractScopes",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Hạng mục hợp đồng"
+        },
+        {
+          "Name": "EmployeeId",
+          "Type": "Lookup",
+          "Indexed": true,
+          "Lookup": {
+            "List": "Employees",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Nhân viên phân công"
+        },
+        {
+          "Name": "Role",
+          "Type": "Text",
+          "DisplayName": "Vai trò giao việc"
+        },
+        {
+          "Name": "ContractLeadUser",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Chủ trì hợp đồng (PM)"
+        },
+        {
+          "Name": "ScopeChiefsSummary",
+          "Type": "Note",
+          "DisplayName": "Tổng hợp Chủ nhiệm KT theo Scope (Rollup)",
+          "Description": "Tự động bởi Power Automate từ ContractScopes.ScopeChiefUser. VD: 'TVTK: Nguyễn A (TK-I-xxx) | KSXD: Lê C (KS-I-zzz)'"
+        },
+        {
+          "Name": "FinancialOfficerUser",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Phụ trách tài chính (nếu có)",
+          "Description": "Tùy chọn. Gán khi HĐ cần người riêng phụ trách quản lý tài chính dự án. Đối với HĐ nhỏ, Chủ trì HĐ tự phụ trách. Thường là Phụ trách Kế toán Đơn vị (Ghế ⑤ CCBA) hoặc cán bộ được Trưởng đơn vị cử"
+        },
+        {
+          "Name": "StartDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày bắt đầu"
+        },
+        {
+          "Name": "EndDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày kết thúc"
+        },
+        {
+          "Name": "TotalAllocatedHours",
+          "Type": "Number",
+          "DisplayName": "Tổng số giờ phân bổ (Rollup)",
+          "Description": "Tổng hợp tự động từ AssignmentDetails.AllocatedHours bằng Power Automate"
+        },
+        {
+          "Name": "TotalDisciplinesCount",
+          "Type": "Number",
+          "DisplayName": "Số bộ môn tham gia (Rollup)",
+          "Description": "Đếm tự động số dòng AssignmentDetails distinct DisciplineCode"
+        },
+        {
+          "Name": "TotalStaffCount",
+          "Type": "Number",
+          "DisplayName": "Tổng số cán bộ tham gia (Rollup)",
+          "Description": "Đếm tự động tổng TeamMembers + DisciplineLead từ AssignmentDetails"
+        },
+        {
+          "Name": "DisciplineTeamSummary",
+          "Type": "Note",
+          "DisplayName": "Tổng hợp đội ngũ theo bộ môn (Rollup)",
+          "Description": "Tự động bởi Power Automate từ AssignmentDetails. VD: '[ARC] CT: Trần B | Nhóm: Hà E, Minh F (3 người, 400h)'"
+        },
+        {
+          "Name": "SignedFileDriveId",
+          "Type": "Text",
+          "DisplayName": "ID ổ lưu trữ tệp PGV ký số",
+          "Description": "Microsoft Graph Drive ID của 5TB Master OneDrive chứa tệp PDF PGV ký số"
+        },
+        {
+          "Name": "SignedFileItemId",
+          "Type": "Text",
+          "DisplayName": "ID tệp PDF PGV ký số",
+          "Description": "OneDrive Item ID của tệp PDF Phiếu đề nghị giao việc có chữ ký số/đóng dấu"
+        },
+        {
+          "Name": "SignedFileSha256",
+          "Type": "Text",
+          "DisplayName": "Mã băm SHA-256 tệp PGV ký số",
+          "Description": "Mã băm mật mã SHA-256 (64 ký tự hex) đảm bảo tính toàn vẹn không thể chối bỏ của tệp PDF PGV ký số"
+        },
+        {
+          "Name": "SignedFileSize",
+          "Type": "Number",
+          "DisplayName": "Dung lượng tệp PGV ký số (Bytes)",
+          "Description": "Kích thước byte của tệp PDF PGV ký số phục vụ đối soát toàn vẹn sau upload"
+        },
+        {
+          "Name": "SignedAt",
+          "Type": "DateTime",
+          "DisplayName": "Thời điểm phát hành PGV ký số",
+          "Description": "Thời điểm lưu trữ chính thức bản PDF PGV đã phê duyệt/ký số"
+        },
+        {
+          "Name": "PgvSignedPdfUrl",
+          "Type": "Hyperlink",
+          "DisplayName": "Liên kết PDF PGV ký số",
+          "Description": "URL truy cập trực tiếp bản PDF PGV đã ký số lưu tại 05_Projects/.../01_PGV_Decisions/"
+        },
+        {
+          "Name": "SubmissionDoc",
+          "Type": "Note",
+          "RichText": false,
+          "DisplayName": "Tờ trình / Căn cứ giao việc",
+          "Description": "Văn bản tờ trình căn cứ ban hành PGV (ví dụ: Tờ trình số 149/TTr-BIM ngày 04/06/2026...)"
+        },
+        {
+          "Name": "ClientContractNo",
+          "Type": "Text",
+          "DisplayName": "Số hợp đồng Chủ đầu tư (Bên A)"
+        },
+        {
+          "Name": "CoordinatorUser",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Điều phối viên kỹ thuật / BIM"
+        },
+        {
+          "Name": "TaskLeadCoordinatorName",
+          "Type": "Text",
+          "DisplayName": "Chủ trì CV & Điều phối (in phiếu)"
+        },
+        {
+          "Name": "ContractSecretaryUser",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Thư ký quản lý hợp đồng"
+        },
+        {
+          "Name": "LegalQAChecker",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Kiểm soát Pháp lý & QA"
+        },
+        {
+          "Name": "TotalExternalRate",
+          "Type": "Number",
+          "DisplayName": "Tổng tỷ lệ phân bổ ngoài CCBA (%)"
+        },
+        {
+          "Name": "TotalSubcontractRate",
+          "Type": "Number",
+          "DisplayName": "Tổng tỷ lệ thầu phụ ngoài Viện (%)"
+        },
+        {
+          "Name": "ExternalGatewayStatus",
+          "Type": "Choice",
+          "Choices": [
+            "N/A",
+            "Chờ Phòng TH thẩm tra",
+            "Đã thẩm tra hợp lệ"
+          ],
+          "DisplayName": "Trạng thái thẩm tra P.TH"
+        },
+        {
+          "Name": "ExternalGatewayReviewer",
+          "Type": "User",
+          "UserSelectionMode": "PeopleOnly",
+          "DisplayName": "Cán bộ P.TH thẩm tra"
+        },
+        {
+          "Name": "KickoffMeetingDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày họp Kick-off"
+        },
+        {
+          "Name": "KickoffMinutesUrl",
+          "Type": "Hyperlink",
+          "DisplayName": "Liên kết Biên bản Kick-off"
+        },
+        {
+          "Name": "PayloadVersion",
+          "Type": "Number",
+          "DisplayName": "Phiên bản Payload PGV"
+        }
+      ]
+    },
+    "cde_documents": {
+      "ListName": "CDEDocuments",
+      "Description": "Chỉ mục tài liệu CDE theo dự án, quản lý siêu dữ liệu ISO 19650 & liên kết đến thư mục/URL thực tế.",
+      "Columns": [
+        {
+          "Name": "Title",
+          "Type": "Text",
+          "Required": true,
+          "DisplayName": "Tiêu đề"
+        },
+        {
+          "Name": "Project",
+          "Type": "Lookup",
+          "Indexed": true,
+          "Lookup": {
+            "List": "Projects",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Dự án"
+        },
+        {
+          "Name": "ProjectCode",
+          "Type": "Text",
+          "Description": "Mã dự án để hỗ trợ tra cứu nhanh và RLS.",
+          "DisplayName": "Mã dự án"
+        },
+        {
+          "Name": "Originator",
+          "Type": "Text",
+          "Description": "Mã đơn vị tác giả tạo tài liệu (ISO 19650).",
+          "DisplayName": "Tác giả / Đơn vị tạo"
+        },
+        {
+          "Name": "ZoneVolume",
+          "Type": "Text",
+          "Description": "Mã phân khu hoặc khối công trình (ISO 19650).",
+          "DisplayName": "Phân khu / Khối công trình"
+        },
+        {
+          "Name": "LevelLocation",
+          "Type": "Text",
+          "Description": "Mã tầng hoặc cao độ (ISO 19650).",
+          "DisplayName": "Cao độ / Tầng"
+        },
+        {
+          "Name": "DocumentCode",
+          "Type": "Text",
+          "Description": "Mã tài liệu theo quy ước CDE/PMO.",
+          "DisplayName": "Mã tài liệu"
+        },
+        {
+          "Name": "IsoDocumentName",
+          "Type": "Text",
+          "Description": "Tên container tệp chuẩn định danh ISO 19650.",
+          "DisplayName": "Tên tệp chuẩn ISO 19650"
+        },
+        {
+          "Name": "DocumentType",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LoaiTaiLieu"
+          },
+          "DisplayName": "Loại tài liệu"
+        },
+        {
+          "Name": "Discipline",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LinhVucChuyenMon"
+          },
+          "DisplayName": "Chuyên ngành"
+        },
+        {
+          "Name": "ServiceType",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LoaiHinhDichVu"
+          },
+          "DisplayName": "Loại hình dịch vụ"
+        },
+        {
+          "Name": "Status",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_TrangThaiChung"
+          },
+          "DisplayName": "Trạng thái"
+        },
+        {
+          "Name": "ApprovalStatus",
+          "Type": "Choice",
+          "Indexed": true,
+          "Choices": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "A1"
+          ],
+          "Description": "Trạng thái phê duyệt ISO 19650 (S0: WIP, S1: Shared Internal, S2: Shared PMO, S3: Shared Legal QA, A1: Approved/Published).",
+          "DisplayName": "Trạng thái phê duyệt CDE"
+        },
+        {
+          "Name": "Version",
+          "Type": "Text",
+          "DisplayName": "Phiên bản"
+        },
+        {
+          "Name": "FileUrl",
+          "Type": "Hyperlink",
+          "Description": "Liên kết tới file/thư mục trong CDE (SharePoint/OneDrive).",
+          "DisplayName": "Liên kết tệp"
+        },
+        {
+          "Name": "DriveItemId",
+          "Type": "Text",
+          "Description": "ID mục tệp lưu trữ canonical trên OneDrive Master.",
+          "DisplayName": "ID mục tệp lưu trữ"
+        },
+        {
+          "Name": "FolderPath",
+          "Type": "Text",
+          "Description": "Đường dẫn thư mục tệp trong iCDE (ví dụ: iCDE/thiet_ke_BIM/...).",
+          "DisplayName": "Đường dẫn thư mục"
+        },
+        {
+          "Name": "Submission",
+          "Type": "Lookup",
+          "Lookup": {
+            "List": "Submissions",
+            "Field": "Title",
+            "Behavior": "cascade"
+          },
+          "DisplayName": "Hồ sơ nộp"
+        },
+        {
+          "Name": "RetentionUntil",
+          "Type": "DateTime",
+          "Description": "Ngày hết hạn lưu trữ theo chính sách.",
+          "DisplayName": "Lưu đến ngày"
+        },
+        {
+          "Name": "Owner",
+          "Type": "User",
+          "DisplayName": "Người phụ trách"
+        }
+      ]
+    },
+    "contracts": {
+      "ListName": "Contracts",
+      "Description": "Hợp đồng",
+      "Columns": [
+        {
+          "Name": "ContractCode",
+          "DisplayName": "Số hợp đồng",
+          "Type": "Text",
+          "Required": true,
+          "Indexed": true
+        },
+        {
+          "Name": "ContractName",
+          "DisplayName": "Tên hợp đồng kinh tế",
+          "Type": "Text",
+          "Required": true
+        },
+        {
+          "Name": "CustomerId",
+          "Type": "Lookup",
+          "Indexed": true,
+          "Lookup": {
+            "List": "Customers",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Khách hàng (Bên A)"
+        },
+        {
+          "Name": "Currency",
+          "DisplayName": "Loại tiền",
+          "Type": "Choice",
+          "Choices": [
+            "VND",
+            "USD",
+            "EUR"
+          ]
+        },
+        {
+          "Name": "VATRate",
+          "DisplayName": "Thuế suất GTGT (%)",
+          "Type": "Number"
+        },
+        {
+          "Name": "GrossAmount",
+          "DisplayName": "Giá trị sau thuế (VND)",
+          "Type": "Number"
+        },
+        {
+          "Name": "NetAmount",
+          "DisplayName": "Giá trị trước thuế (VND)",
+          "Type": "Number"
+        },
+        {
+          "Name": "PrimaryContractGroup",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_NhomHopDongKT"
+          },
+          "DisplayName": "Nhóm HĐKT chính (Phụ lục 7)"
+        },
+        {
+          "Name": "CooperatingDepartment",
+          "Type": "ManagedMetadata",
+          "AllowMultiple": true,
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_DonViPhongBan"
+          },
+          "DisplayName": "Đơn vị phối hợp (Viện IBST)",
+          "Description": "Các đơn vị thành viên thuộc Viện IBST cùng tham gia phối hợp thực hiện hợp đồng"
+        },
+        {
+          "Name": "ContractStructure",
+          "Type": "Choice",
+          "Choices": [
+            "Độc lập",
+            "Liên danh"
+          ],
+          "DisplayName": "Cơ cấu liên danh hợp đồng",
+          "Description": "Độc lập: Viện/CCBA độc lập thực hiện; Liên danh: Liên danh với nhà thầu bên ngoài (ví dụ Liên danh IBST-ATS tại HĐ 188)"
+        },
+        {
+          "Name": "Status",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_TrangThaiChung"
+          },
+          "DisplayName": "Trạng thái"
+        },
+        {
+          "Name": "LoaiKyKet",
+          "Type": "Choice",
+          "Choices": [
+            "VienKy",
+            "CCBAKy",
+            "LienDanh"
+          ],
+          "DisplayName": "Loại ký kết HĐ",
+          "Description": "Thẩm quyền ký HĐ: VienKy (> hạn mức GĐ CCBA), CCBAKy (trong hạn mức), LienDanh (nhiều đơn vị). Ref: QCTK 2815 Điều 6.1"
+        },
+        {
+          "Name": "SignDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày ký hợp đồng"
+        },
+        {
+          "Name": "SignDateText",
+          "Type": "Text",
+          "DisplayName": "Ngày ký HĐ (văn bản)",
+          "Description": "Chuỗi ngày ký hành chính khi dự thảo HĐ khuyết ngày/tháng (ví dụ: ngày ..... tháng 03 năm 2026)"
+        },
+        {
+          "Name": "ContractorName",
+          "Type": "Note",
+          "RichText": false,
+          "DisplayName": "Nhà thầu thực hiện (Tên pháp lý HĐ)",
+          "Description": "Tên pháp lý nhà thầu hoặc liên danh trên HĐKT (mặc định: Viện Khoa học công nghệ xây dựng)"
+        },
+        {
+          "Name": "AmountNotes",
+          "Type": "Text",
+          "DisplayName": "Ghi chú giá trị HĐ (VAT)",
+          "Description": "Ghi chú thuế GTGT in kèm giá trị HĐ trên PGV, ví dụ: (chưa bao gồm thuế VAT), (bao gồm thuế VAT 8%)"
+        },
+        {
+          "Name": "OpportunityId",
+          "Type": "Lookup",
+          "Lookup": {
+            "List": "Opportunities",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "DisplayName": "Cơ hội kinh doanh (CRM)",
+          "Description": "Liên kết ngược về Opportunity trên strategy_crm để truy vết nguồn gốc HĐ"
+        },
+        {
+          "Name": "ServiceType",
+          "Type": "ManagedMetadata",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_LoaiHinhDichVu"
+          },
+          "DisplayName": "Loại hình dịch vụ chính"
+        },
+        {
+          "Name": "DocumentUrl",
+          "Type": "Hyperlink",
+          "DisplayName": "Liên kết file HĐ (OneDrive)",
+          "Description": "URL trỏ đến file HĐ scan/ký số trên 5TB Master OneDrive (02_Contracts/)"
+        },
+        {
+          "Name": "AuthorityThresholdVnd",
+          "Type": "Number",
+          "DisplayName": "Hạn mức thẩm quyền GĐ CCBA (VND)",
+          "Description": "Ngưỡng thẩm quyền ký kết theo nhóm HĐKT tại Điều 6.1 QCTK 2815 (0 / 2 tỷ / 5 tỷ / 10 tỷ VND)"
+        },
+        {
+          "Name": "RequiresIBSTSign",
+          "Type": "YesNo",
+          "DisplayName": "Yêu cầu trình Viện IBST ký",
+          "Description": "Cờ xác định hợp đồng thuộc diện Viện trưởng IBST trực tiếp ký kết (VienKy)"
+        },
+        {
+          "Name": "RequiresKHKTJointVentureNotice",
+          "Type": "YesNo",
+          "DisplayName": "Yêu cầu văn bản báo KHKT (Liên danh)",
+          "Description": "Cờ bắt buộc thông báo bằng văn bản cho Phòng KHKT Viện trước khi ký thỏa thuận liên danh (Điều 4.7 QCTK 2815)"
+        },
+        {
+          "Name": "KHKTJointVentureNoticeRef",
+          "Type": "Text",
+          "DisplayName": "Số hiệu văn bản thông báo KHKT (Liên danh)",
+          "Description": "Số/ký hiệu văn bản thông báo Phòng KHKT Viện đối với hợp đồng Liên danh"
+        },
+        {
+          "Name": "ContractFolderUrl",
+          "Type": "Hyperlink",
+          "DisplayName": "Thư mục hồ sơ HĐ (02_Contracts)",
+          "Description": "URL nội bộ trỏ tới thư mục iOPS/02_Contracts/{ContractCode}_{CustomerName}/ trên 5TB Master OneDrive"
+        },
+        {
+          "Name": "ContractDriveId",
+          "Type": "Text",
+          "DisplayName": "ID ổ đĩa lưu trữ HĐ (DriveId)",
+          "Description": "Microsoft Graph Drive ID của 5TB Master OneDrive chứa hồ sơ hợp đồng"
+        },
+        {
+          "Name": "ContractFolderItemId",
+          "Type": "Text",
+          "DisplayName": "ID thư mục gốc HĐ (ItemId)",
+          "Description": "OneDrive Item ID của thư mục gốc iOPS/02_Contracts/{ContractCode}_{CustomerName}/"
+        },
+        {
+          "Name": "HopDongGocItemId",
+          "Type": "Text",
+          "DisplayName": "ID thư mục HopDongGoc (ItemId)",
+          "Description": "OneDrive Item ID của thư mục con HopDongGoc"
+        },
+        {
+          "Name": "PhuLucItemId",
+          "Type": "Text",
+          "DisplayName": "ID thư mục PhuLuc (ItemId)",
+          "Description": "OneDrive Item ID của thư mục con PhuLuc"
+        },
+        {
+          "Name": "PhapLyItemId",
+          "Type": "Text",
+          "DisplayName": "ID thư mục PhapLy (ItemId)",
+          "Description": "OneDrive Item ID của thư mục con PhapLy"
+        },
+        {
+          "Name": "IBSTSubmissionStatus",
+          "Type": "Choice",
+          "Choices": [
+            "Not_Required",
+            "Pending_Internal",
+            "Submitted_to_IBST",
+            "IBST_Approved",
+            "IBST_Returned"
+          ],
+          "DisplayName": "Trạng thái trình Viện IBST (Gateway)",
+          "Description": "Trạng thái giao dịch qua đầu mối Phòng Tổng Hợp (ROLE_HEAD_ADMIN) với Viện IBST"
+        },
+        {
+          "Name": "IBSTGatewayRole",
+          "Type": "Text",
+          "DisplayName": "Vai trò đầu mối trình Viện",
+          "Description": "Vai trò đầu mối duy nhất giao tiếp với Viện IBST (ROLE_HEAD_ADMIN)"
+        },
+        {
+          "Name": "ArchiveDueDate",
+          "Type": "Date",
+          "DisplayName": "Hạn nộp lưu trữ HĐ (30 ngày)",
+          "Description": "Hạn chót 30 ngày kể từ SignDate để hoàn tất lưu trữ bản gốc HĐ theo Điều 6.3 QCTK 2815"
+        },
+        {
+          "Name": "ArchiveSLAStatus",
+          "Type": "Choice",
+          "Choices": [
+            "PendingSign",
+            "WithinSLA",
+            "DueSoon_7Days",
+            "Overdue_30Days",
+            "Archived"
+          ],
+          "DisplayName": "Trạng thái SLA lưu trữ 30 ngày",
+          "Description": "Trạng thái theo dõi hạn lưu trữ hợp đồng 30 ngày kể từ ngày ký"
+        },
+        {
+          "Name": "DaysSinceSign",
+          "Type": "Number",
+          "DisplayName": "Số ngày kể từ ngày ký",
+          "Description": "Số ngày đã trôi qua kể từ ngày ký hợp đồng (SignDate)"
+        }
+      ]
+    },
+    "submissions": {
+      "ListName": "Submissions",
+      "Description": "Hồ sơ nộp phê duyệt đa cấp",
+      "Columns": [
+        {
+          "Name": "SubmissionTitle",
+          "Type": "Text",
+          "Required": true,
+          "DisplayName": "Tiêu đề tờ trình"
+        },
+        {
+          "Name": "RelatedEntity",
+          "Type": "Choice",
+          "DisplayName": "Loại thực thể liên quan",
+          "Indexed": true,
+          "Choices": [
+            "Contract",
+            "ContractAppendix",
+            "JobAssignment",
+            "Expense",
+            "Invoice",
+            "Vendor",
+            "Opportunity",
+            "Project",
+            "WorkPackage",
+            "CDEDocument",
+            "Other"
+          ]
+        },
+        {
+          "Name": "RelatedId",
+          "Type": "Number",
+          "DisplayName": "ID thực thể liên quan",
+          "Indexed": true
+        },
+        {
+          "Name": "WorkflowId",
+          "Type": "Lookup",
+          "DisplayName": "Quy trình phê duyệt",
+          "Lookup": {
+            "List": "ApprovalWorkflows",
+            "Field": "Title",
+            "Behavior": "restrict"
+          }
+        },
+        {
+          "Name": "SubmissionStatus",
+          "Type": "Choice",
+          "DisplayName": "Trạng thái luồng duyệt",
+          "Choices": [
+            "Draft",
+            "Pending",
+            "In Review",
+            "Returned",
+            "Approved",
+            "Rejected"
+          ]
+        },
+        {
+          "Name": "CurrentStep",
+          "Type": "Number",
+          "DisplayName": "Bước duyệt hiện tại"
+        },
+        {
+          "Name": "TargetFolderUrl",
+          "Type": "Hyperlink",
+          "DisplayName": "Thư mục hồ sơ lưu trữ"
+        },
+        {
+          "Name": "TargetDriveId",
+          "Type": "Text",
+          "DisplayName": "Mã ổ đĩa lưu trữ (DriveId)"
+        },
+        {
+          "Name": "TargetItemId",
+          "Type": "Text",
+          "DisplayName": "Mã mục lưu trữ (ItemId)"
+        },
+        {
+          "Name": "SubmittedBy",
+          "Type": "User",
+          "DisplayName": "Người trình"
+        },
+        {
+          "Name": "SubmissionDate",
+          "Type": "DateTime",
+          "DisplayName": "Ngày trình"
+        },
+        {
+          "Name": "Status",
+          "Type": "ManagedMetadata",
+          "DisplayName": "Trạng thái phê duyệt (Taxonomy)",
+          "TermSet": {
+            "Group": "CCBA Taxonomy",
+            "Name": "CCBA_TrangThaiPheDuyet"
+          }
+        }
+      ]
+    },
+    "approval_nodes": {
+      "ListName": "ApprovalNodes",
+      "Description": "Định nghĩa các nút duyệt từng cấp trong quy trình phê duyệt",
+      "Columns": [
+        {
+          "Name": "WorkflowId",
+          "Type": "Lookup",
+          "DisplayName": "Quy trình phê duyệt",
+          "Lookup": {
+            "List": "ApprovalWorkflows",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "Description": "Quy trình phê duyệt liên quan"
+        },
+        {
+          "Name": "SubmissionLookup",
+          "Type": "Lookup",
+          "DisplayName": "Hồ sơ trình duyệt",
+          "Lookup": {
+            "List": "Submissions",
+            "Field": "Title",
+            "Behavior": "restrict"
+          },
+          "Indexed": true,
+          "Description": "Hồ sơ trình duyệt liên quan"
+        },
+        {
+          "Name": "StepOrder",
+          "Type": "Number",
+          "DisplayName": "Thứ tự cấp duyệt",
+          "Description": "Thứ tự cấp duyệt (1-5)"
+        },
+        {
+          "Name": "ApproverRole",
+          "Type": "Text",
+          "DisplayName": "Vai trò người duyệt",
+          "Description": "Chức danh / Vai trò người duyệt"
+        },
+        {
+          "Name": "RequiredThreshold",
+          "Type": "Number",
+          "DisplayName": "Hạn mức yêu cầu (VNĐ)",
+          "Description": "Hạn mức tài chính yêu cầu (VNĐ)"
+        },
+        {
+          "Name": "Outcome",
+          "Type": "Choice",
+          "DisplayName": "Kết quả phê duyệt",
+          "Choices": [
+            "Pending",
+            "Approved",
+            "Rejected",
+            "Returned"
+          ],
+          "Description": "Kết quả quyết định tại nút duyệt"
+        },
+        {
+          "Name": "Comments",
+          "Type": "Note",
+          "RichText": false,
+          "DisplayName": "Ý kiến phê duyệt",
+          "Description": "Ý kiến phê duyệt hoặc lý do trả hồ sơ"
+        },
+        {
+          "Name": "ApprovedBy",
+          "Type": "User",
+          "DisplayName": "Người thực hiện duyệt",
+          "Description": "Người thực hiện phê duyệt"
+        },
+        {
+          "Name": "ApprovedAt",
+          "Type": "DateTime",
+          "DisplayName": "Thời điểm duyệt",
+          "Description": "Thời điểm phê duyệt"
+        }
+      ]
+    }
+  }
+}
