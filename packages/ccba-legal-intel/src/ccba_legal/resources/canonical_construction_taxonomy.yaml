@@ -70,11 +70,11 @@ terms:
       source_type: statutory
       doc_id: luat_xay_dung_2025_135_2025_qh15.md
       clause_anchor: dieu-3-khoan-15
-      line_anchor: 84
       verbatim_definition: Thẩm tra là việc tổ chức, cá nhân thực hiện kiểm tra, đánh
         giá, kết luận đối với những nội dung cần thiết về chuyên môn trong quá trình
         chuẩn bị và thực hiện dự án đầu tư xây dựng.
       verbatim_sha256: ff851af8f00014473495b2ac0f5e0f78ff62eab4bdb8be71dcd0cfef6cea2abc
+      line_anchor: 84
   tham_dinh_thiet_ke_pccc:
     canonical_id: STAT-002
     canonical_vi: Thẩm định thiết kế về phòng cháy và chữa cháy
@@ -95,11 +95,11 @@ terms:
       source_type: statutory
       doc_id: luat_phong_chay_chua_chay_va_cuu_nan_cuu_ho_2024_55_2024_qh1.md
       clause_anchor: dieu-2-khoan-17
-      line_anchor: 104
       verbatim_definition: Thẩm định thiết kế về phòng cháy và chữa cháy là việc xem
         xét, đánh giá sự tuân thủ các quy định của pháp luật, tiêu chuẩn, quy chuẩn
         kỹ thuật áp dụng đối với thiết kế về PCCC.
       verbatim_sha256: 0a69a9a3a1ee976da1f01536e99f3c0642ca414ca90601fe56f08d1ba353c11b
+      line_anchor: 104
   chieu_cao_pccc:
     canonical_id: STAT-003
     canonical_vi: Chiều cao PCCC (HPCCC)
@@ -236,152 +236,145 @@ terms:
       Compliance QA -> Level 5 Final Approval'
   vai_tro_chu_tri_01:
     canonical_id: STAT-1812-ROLE-01
-    canonical_vi: Chủ nhiệm đồ án quy hoạch xây dựng
+    canonical_vi: Chủ nhiệm lập quy hoạch
     domain: professional_capacity
-    translations:
-      en: Urban Planning Project Director
     vi_forbidden: []
+    legacy_aliases:
+    - Chủ nhiệm đồ án quy hoạch xây dựng
     enum_values:
-      '1': Chủ nhiệm đồ án quy hoạch xây dựng
+      '1': Chủ nhiệm lập quy hoạch
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-01
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 1: Chủ nhiệm đồ án quy hoạch
-        xây dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: d4db9066a1d3530c1aa872c0b5aecff47aa2af1c610b4c8c6cd9059d60790f94
+      clause_anchor: ii-c-11-role-01
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 1: Chủ nhiệm lập quy hoạch
+        theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 28d89aee5dc3891ff497d1a43650eccf5c564efeab5047660fd243ea436057ee
   vai_tro_chu_tri_02:
     canonical_id: STAT-1812-ROLE-02
-    canonical_vi: Chủ trì đồ án quy hoạch xây dựng
+    canonical_vi: Chủ trì bộ môn thiết kế
     domain: professional_capacity
-    translations:
-      en: Urban Planning Discipline Lead
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
-      '2': Chủ trì đồ án quy hoạch xây dựng
+      '2': Chủ trì bộ môn thiết kế
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-02
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 2: Chủ trì đồ án quy hoạch
-        xây dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: 0228a80ce4d23b500048ea6c293c69f55d7cb695563755dbaefd903a9a2cff27
+      clause_anchor: ii-c-11-role-02
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 2: Chủ trì bộ môn thiết
+        kế theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 0e326de9c5ddb35993ed52da07cca4e748a5adef8a60371b3b0dada99a2fdca3
   vai_tro_chu_tri_03:
     canonical_id: STAT-1812-ROLE-03
     canonical_vi: Chủ nhiệm khảo sát xây dựng
     domain: professional_capacity
-    translations:
-      en: Construction Survey Manager
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
       '3': Chủ nhiệm khảo sát xây dựng
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-03
+      clause_anchor: ii-c-11-role-03
       verbatim_definition: 'Danh mục chức danh chủ trì mã 3: Chủ nhiệm khảo sát xây
         dựng theo Quyết định 1812/QĐ-BXD.'
       verbatim_sha256: cd371ba1406e42d05933cd2c8dda02805c179d355697c9882f5deba29e1d5c65
   vai_tro_chu_tri_04:
     canonical_id: STAT-1812-ROLE-04
-    canonical_vi: Chủ trì khảo sát xây dựng
+    canonical_vi: Chủ nhiệm thiết kế
     domain: professional_capacity
-    translations:
-      en: Construction Survey Lead
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
-      '4': Chủ trì khảo sát xây dựng
+      '4': Chủ nhiệm thiết kế
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-04
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 4: Chủ trì khảo sát xây
-        dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: 7de64fb4c5e111f964b566cd6d5f3e4102ebdbbe99db3c23c2066de7e1fcce89
+      clause_anchor: ii-c-11-role-04
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 4: Chủ nhiệm thiết kế theo
+        Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 376db3e868ee27963dba54d51df34dc08016b1de3503c873e3763c9e993788ea
   vai_tro_chu_tri_05:
     canonical_id: STAT-1812-ROLE-05
-    canonical_vi: Chủ nhiệm thiết kế xây dựng
+    canonical_vi: Chủ trì bộ môn thiết kế (thiết kế xây dựng)
     domain: professional_capacity
-    translations:
-      en: Chief Design Manager
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
-      '5': Chủ nhiệm thiết kế xây dựng
+      '5': Chủ trì bộ môn thiết kế (thiết kế xây dựng)
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-05
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 5: Chủ nhiệm thiết kế xây
-        dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: b32779c3c12ed79cd5aecb85a825c847cf59ffa2ee688891027cdba83b145b76
+      clause_anchor: ii-c-11-role-05
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 5: Chủ trì bộ môn thiết
+        kế (thiết kế xây dựng) theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 242b0b06e79da7c28640d41c06e7dffa6b34d088c190b6883e7dba79dfed75e9
   vai_tro_chu_tri_06:
     canonical_id: STAT-1812-ROLE-06
-    canonical_vi: Chủ trì thiết kế xây dựng
+    canonical_vi: Chủ nhiệm thẩm tra thiết kế
     domain: professional_capacity
-    translations:
-      en: Design Discipline Lead
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
-      '6': Chủ trì thiết kế xây dựng
+      '6': Chủ nhiệm thẩm tra thiết kế
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-06
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 6: Chủ trì thiết kế xây
-        dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: c241d48afb92fb16ecab2eecae18ee66d8f06c20958463157a6fd68ba79cb426
+      clause_anchor: ii-c-11-role-06
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 6: Chủ nhiệm thẩm tra thiết
+        kế theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 070f32cc01714c4fc680605e8239d517dc11de533cc9185870d4d9c132d0e0fc
   vai_tro_chu_tri_07:
     canonical_id: STAT-1812-ROLE-07
-    canonical_vi: Chủ nhiệm thẩm tra thiết kế xây dựng
+    canonical_vi: Chủ trì thẩm tra các bộ môn thiết kế
     domain: professional_capacity
-    translations:
-      en: Chief Design Verification Manager
     vi_forbidden: []
+    legacy_aliases: []
     enum_values:
-      '7': Chủ nhiệm thẩm tra thiết kế xây dựng
+      '7': Chủ trì thẩm tra các bộ môn thiết kế
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-07
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 7: Chủ nhiệm thẩm tra thiết
-        kế xây dựng theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: 0975a436e8f33857196045881b77099b59618be5313c1a055515b971bc6c1da3
+      clause_anchor: ii-c-11-role-07
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 7: Chủ trì thẩm tra các
+        bộ môn thiết kế theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: a006fa5c3b93ca3b27194391561afbd87170af2b6ad5dba68db3b6f288a7fab4
   vai_tro_chu_tri_08:
     canonical_id: STAT-1812-ROLE-08
-    canonical_vi: Giám đốc quản lý dự án
+    canonical_vi: Giám sát trưởng của đơn vị giám sát
     domain: professional_capacity
-    translations:
-      en: Project Management Director
     vi_forbidden:
-    - Trưởng ban quản lý dự án
-    - Trưởng dự án QLDA
+    - Trưởng đoàn giám sát tự phát
+    legacy_aliases:
+    - Giám đốc quản lý dự án
     enum_values:
-      '8': Giám đốc quản lý dự án
+      '8': Giám sát trưởng của đơn vị giám sát
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-08
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 8: Giám đốc quản lý dự án
-        theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: a1b262f1e80b097b41a979c658180f5ecaa2e8e9387d38d9e43ad27fd4e593d3
+      clause_anchor: ii-c-11-role-08
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 8: Giám sát trưởng của đơn
+        vị giám sát theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 7ae4ba69d837df6a05232ca017173913245c64ecb73e168233ab5a11c280d922
   vai_tro_chu_tri_09:
     canonical_id: STAT-1812-ROLE-09
-    canonical_vi: Chỉ huy trưởng công trường
+    canonical_vi: Chỉ huy trưởng của nhà thầu thi công xây dựng công trình
     domain: professional_capacity
-    translations:
-      en: Site Commander / Construction Site Manager
     vi_forbidden:
     - Chỉ huy trưởng thi công
     - Quản lý công trường
+    legacy_aliases:
+    - Chỉ huy trưởng công trường
     enum_values:
-      '9': Chỉ huy trưởng công trường
+      '9': Chỉ huy trưởng của nhà thầu thi công xây dựng công trình
     provenance:
       source_type: statutory
       doc_id: quyet_dinh_1812_qd_bxd_2026.md
-      clause_anchor: ii-c-11-3-role-09
-      verbatim_definition: 'Danh mục chức danh chủ trì mã 9: Chỉ huy trưởng công trường
-        theo Quyết định 1812/QĐ-BXD.'
-      verbatim_sha256: a1c5a72c1a1f691a9c38a35c7a6aeb1e72f17b936f0df0f499f4b5f59068fc1e
+      clause_anchor: ii-c-11-role-09
+      verbatim_definition: 'Danh mục chức danh chủ trì mã 9: Chỉ huy trưởng của nhà
+        thầu thi công xây dựng công trình theo Quyết định 1812/QĐ-BXD.'
+      verbatim_sha256: 2c23f26114282bffe8eb9c1ce0c822729456c71260e39e1977470c9ee69a596a
   quy_hoach_chi_tiet_rut_gon:
     canonical_id: STAT-1812-QH-04
     canonical_vi: Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng
@@ -402,11 +395,21 @@ terms:
     canonical_vi: Nguồn vốn đầu tư
     domain: project_investment
     enum_values:
-      '1': Dự án sử dụng vốn đầu tư công
-      '2': Dự án PPP
-      '3': Dự án đầu tư kinh doanh
-      '4': Dự án sử dụng nguồn vốn khác
-      '5': Dự án sử dụng hỗn hợp nhiều nguồn vốn
+      VONDAUTUCONG: Vốn đầu tư công
+      VONNHANUOC: Vốn nhà nước ngoài đầu tư công
+      PPP: Vốn PPP
+      KHAC: Vốn khác
+      HONHOP: Vốn hỗn hợp
+  cap_cong_trinh_1812:
+    canonical_id: STAT-1812-CAP-CT
+    canonical_vi: Cấp công trình
+    domain: building_classification
+    enum_values:
+      DACBIET: Cấp đặc biệt
+      I: Cấp I
+      II: Cấp II
+      III: Cấp III
+      IV: Cấp IV
   dia_gioi_hanh_chinh_2_cap:
     canonical_id: STAT-1812-GEO-2TIER
     canonical_vi: Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)
@@ -418,12 +421,17 @@ terms:
     canonical_id: STAT-1812-PROC-SCENARIOS
     canonical_vi: Phân nhóm thủ tục dự án và công trình xây dựng
     domain: administrative_procedure
+    legacy_aliases:
+    - II_D_CT_KTKT
     enum_values:
-      II_A_DA: Dự án đầu tư xây dựng thuộc đối tượng thẩm định BCNCKT
-      II_B_CT_TD: Công trình thuộc dự án thẩm định BCNCKT được miễn GPXD
-      II_C_CT_GPXD: Công trình thuộc đối tượng đề nghị cấp Giấy phép xây dựng
-      II_D_CT_KTKT: Công trình chỉ yêu cầu lập Báo cáo kinh tế - kỹ thuật và miễn
-        GPXD
+      II_A_DA: Dự án đầu tư xây dựng
+      II_B_CT_TD: Công trình xây dựng yêu cầu thẩm định thiết kế xây dựng triển khai
+        sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng
+      II_C_CT_GPXD: Công trình xây dựng không yêu cầu thẩm định thiết kế xây dựng
+        triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, chỉ yêu
+        cầu cấp giấy phép xây dựng
+      II_D_CT_GPXD: Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ
+        yêu cầu cấp giấy phép xây dựng
   phát_triển_tùy_biến_công_nghệ_bim:
     canonical_id: INT-GOV-CCBA_CHUCDAN-ae477931
     canonical_vi: Phát triển ＆ Tùy biến Công nghệ BIM
@@ -432,6 +440,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhBIM.json
@@ -446,6 +455,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhBIM.json
@@ -460,6 +470,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhBIM.json
@@ -474,6 +485,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -488,6 +500,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -502,6 +515,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -516,6 +530,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -530,6 +545,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -544,6 +560,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -558,6 +575,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -572,6 +590,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -586,6 +605,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -600,6 +620,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_ChucDanhXayDung.json
@@ -614,6 +635,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_DonViPhongBan.json
@@ -628,6 +650,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_DonViPhongBan.json
@@ -642,6 +665,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_DonViPhongBan.json
@@ -656,6 +680,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_DonViPhongBan.json
@@ -670,6 +695,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -684,6 +710,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -698,6 +725,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -712,6 +740,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -726,6 +755,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -740,6 +770,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -754,6 +785,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -768,6 +800,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LinhVucChuyenMon.json
@@ -782,6 +815,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LoaiChiPhi.json
@@ -796,6 +830,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LoaiChiPhi.json
@@ -810,6 +845,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LoaiChiPhi.json
@@ -824,6 +860,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LoaiChiPhi.json
@@ -838,6 +875,7 @@ terms:
     facets: {}
     translations: {}
     vi_forbidden: []
+    legacy_aliases: []
     provenance:
       source_type: internal_governance
       doc_id: CCBA_LoaiChiPhi.json

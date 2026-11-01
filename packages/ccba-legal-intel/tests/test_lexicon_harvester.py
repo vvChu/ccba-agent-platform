@@ -116,7 +116,11 @@ def test_save_canonical_taxonomy_yaml(tmp_path: Path) -> None:
     assert "chu_dau_tu" in loaded["terms"]
     assert loaded["terms"]["chu_dau_tu"]["canonical_vi"] == "Chủ đầu tư"
     assert "vai_tro_chu_tri_08" in loaded["terms"]
-    assert loaded["terms"]["vai_tro_chu_tri_08"]["canonical_vi"] == "Giám đốc quản lý dự án"
+    assert (
+        loaded["terms"]["vai_tro_chu_tri_08"]["canonical_vi"]
+        == "Giám sát trưởng của đơn vị giám sát"
+    )
+    assert "Giám đốc quản lý dự án" in loaded["terms"]["vai_tro_chu_tri_08"]["legacy_aliases"]
     assert "quy_hoach_chi_tiet_rut_gon" in loaded["terms"]
     assert "dia_gioi_hanh_chinh_2_cap" in loaded["terms"]
 
@@ -166,3 +170,50 @@ def test_harvest_data_dictionary_csv_sanitization_and_polysemy(tmp_path: Path) -
     assert poly_term.is_faceted is True
     assert "II_A_DA" in poly_term.facets
     assert "II_B_CT_TD" in poly_term.facets
+
+
+def test_two_pass_density_enum_extraction_and_false_positive_rejection(tmp_path: Path) -> None:
+    """Verifies Two-Pass Density Parser for A/B/C, uppercase, Roman, colon/semicolon enums and false-positive rejection."""
+    csv_file = tmp_path / "bang_01_enums.csv"
+    csv_content = (
+        "TT — I,Tên trường kỹ thuật,Tên nghiệp vụ,Định nghĩa,Ví dụ,Căn cứ,Đặc tả,Ghi chú\n"
+        "A,Dự án đầu tư xây dựng,Dự án đầu tư xây dựng,,,,,\n"
+        "4,nhomDuAn,Nhóm dự án,Chọn trong các nhóm dự án,A,TT 39/2026,Object,"
+        "Danh mục: A- Nhóm A B- Nhóm B C- Nhóm C\n"
+        "12,nguonVonDauTu,Nguồn vốn đầu tư,Nguồn vốn,VONDAUTUCONG,Luật XD,Object,"
+        "Danh mục: VONDAUTUCONG - Vốn đầu tư công VONNHANUOC - Vốn nhà nước ngoài đầu tư công PPP - Dự án PPP KHAC - Vốn khác HONHOP - Vốn hỗn hợp\n"
+        "15,trangThai,Trạng thái công khai,Trạng thái,1,NĐ 212/2026,Integer,0: Không công khai 1: Công khai\n"
+        "C,Công trình cấp GPXD,Công trình cấp GPXD,,,,,\n"
+        "5,capCongTrinh,Cấp công trình,Cấp công trình,I,TT 06/2021,Object,"
+        "Danh mục cấp công trình: DACBIET - Đặc biệt I - Cấp I II - Cấp II III - Cấp III IV - Cấp IV\n"
+        "11,vaiTroChuTri,Vai trò chủ trì,Vai trò,8,TT 39/2026,Object,"
+        "1- Chủ nhiệm lập quy hoạch; 8- Giám sát trưởng của đơn vị giám sát; 9- Chỉ huy trưởng của nhà thầu thi công xây dựng công trình\n"
+        "30,ngayPheDuyet,Ngày phê duyệt,Ngày ký,2026-10-21,NĐ 175/2024,Date,Ghi chú ngày 2026-10-21 hoặc String - 500\n"
+    )
+    csv_file.write_text(csv_content, encoding="utf-8")
+
+    harvester = LexiconHarvester()
+    terms = harvester.harvest_data_dictionary_csv(csv_path=csv_file)
+    by_code = {t.schema_spec.technical_code: t for t in terms if t.schema_spec is not None}
+
+    assert by_code["nhomDuAn"].enum_values == {"A": "Nhóm A", "B": "Nhóm B", "C": "Nhóm C"}
+    assert by_code["nguonVonDauTu"].enum_values["VONDAUTUCONG"] == "Vốn đầu tư công"
+    assert by_code["nguonVonDauTu"].enum_values["VONNHANUOC"] == "Vốn nhà nước ngoài đầu tư công"
+    assert by_code["capCongTrinh"].enum_values["DACBIET"] == "Đặc biệt"
+    assert by_code["capCongTrinh"].enum_values["IV"] == "Cấp IV"
+    assert by_code["trangThai"].enum_values == {"0": "Không công khai", "1": "Công khai"}
+    assert by_code["vaiTroChuTri"].enum_values["8"] == "Giám sát trưởng của đơn vị giám sát"
+    assert by_code["ngayPheDuyet"].enum_values == {}
+
+    taxonomy = harvester.build_seed_canonical_taxonomy()["terms"]
+    assert (
+        taxonomy["nguon_von_dau_tu_1812"]["enum_values"]["VONNHANUOC"]
+        == "Vốn nhà nước ngoài đầu tư công"
+    )
+    assert taxonomy["cap_cong_trinh_1812"]["enum_values"]["DACBIET"] == "Cấp đặc biệt"
+    proc_term = taxonomy["kich_ban_thu_tuc_cong_trinh_1812"]
+    assert (
+        proc_term["enum_values"]["II_D_CT_GPXD"]
+        == "Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng"
+    )
+    assert "II_D_CT_KTKT" in proc_term["legacy_aliases"]
