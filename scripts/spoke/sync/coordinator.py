@@ -1427,7 +1427,7 @@ class SpokeSynchronizer:
         test_runtime = spoke_python
         try:
             check_res = subprocess.run(
-                [str(spoke_python), "-m", "pytest", "--version"],
+                [str(spoke_python), "-c", "import pytest"],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",

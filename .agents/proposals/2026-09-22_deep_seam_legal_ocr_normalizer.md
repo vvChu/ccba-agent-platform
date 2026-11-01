@@ -1,18 +1,6 @@
 ---
-proposal_id: "2026-09-22_deep_seam_legal_ocr_normalizer"
-type: "tool"
-name: "deep-seam-legal-ocr-normalizer"
-status: "open"
-priority: "Cao"
-related_issue: "#322"
-proposed_by_project: "dgx-spark-toolkit"
-proposed_by_archetype: "specialized_extension"
-proposed_date: "2026-09-22"
-applies_to:
-  - "Phần mềm"
-  - "Thẩm tra thiết kế"
-  - "Tất cả Spokes"
----
+proposal_id: "2026-09-22_deep_seam_legal_ocr_normalizer"type: "tool"name: "deep-seam-legal-ocr-normalizer"status: "open"priority: "Cao"related_issue: "#322"proposed_by_project: "dgx-spark-toolkit"proposed_by_archetype: "specialized_extension"proposed_date: "2026-09-22"applies_to:
+  - "Phần mềm"  - "Thẩm tra thiết kế"  - "Tất cả Spokes"---
 
 # RFC Proposal: Tích Hợp Deep Seam Multi-Pass Legal OCR Text Normalizer Vào ccba-legal-intel
 
@@ -54,19 +42,15 @@ applies_to:
 
 ---
 
-### 3. Thiết Kế Chi Tiết & Thay Đổi Kỹ Thuật
+### 3. Thiết kế bản vẽ thi công (TKBVTC) & Thay Đổi Kỹ Thuật
 
-- **Submodule mới:** `packages/ccba-legal-intel/src/ccba_legal/normalizers/`
-  * `ocr_fixes.py`: Khử khoảng cách vỡ hạt ký tự (`normalize_ocr_spacing`), sửa lỗi chính tả OCR phổ biến (`fix_common_ocr_typos`), tách từ dính tiếng Việt (`fix_stuck_vietnamese_words`, `fix_vietnamese_syllable_boundaries`).
+- **Submodule mới:** `packages/ccba-legal-intel/src/ccba_legal/normalizers/`  * `ocr_fixes.py`: Khử khoảng cách vỡ hạt ký tự (`normalize_ocr_spacing`), sửa lỗi chính tả OCR phổ biến (`fix_common_ocr_typos`), tách từ dính tiếng Việt (`fix_stuck_vietnamese_words`, `fix_vietnamese_syllable_boundaries`).
   * `boilerplate.py`: Khử khối Quốc hiệu - Tiêu ngữ, Nơi nhận, Ký thay, chữ ký số điện tử.
   * `structure.py`: Nối dòng gãy giữa câu (`rejoin_paragraphs`), nối đoạn xuyên trang (`rejoin_cross_page_paragraphs`), chuẩn hóa heading Điều/Khoản/Điểm.
   * `tables.py`: Phát hiện bảng quét biến dạng (`detect_garbled_table`), phục hồi bảng pipe table thiếu hàng phân cách.
   * `text_normalizer.py`: Facade `TextNormalizer` và `NormalizerConfig` điều phối chuỗi xử lý đa tầng.
   * `__init__.py`: Re-export toàn bộ public API của submodule.
-- **Nâng cấp Facade hiện hữu:** `packages/ccba-legal-intel/src/ccba_legal/cleaners.py`
-  * Cập nhật `Cleaners.remove_ocr_artifacts`: Tích hợp thêm bước xử lý khoảng cách và chính tả OCR trước khi regex lọc dòng chữ in hoa, bảo toàn tương thích ngược 100%.
+- **Nâng cấp Facade hiện hữu:** `packages/ccba-legal-intel/src/ccba_legal/cleaners.py`  * Cập nhật `Cleaners.remove_ocr_artifacts`: Tích hợp thêm bước xử lý khoảng cách và chính tả OCR trước khi regex lọc dòng chữ in hoa, bảo toàn tương thích ngược 100%.
   * Bổ sung phương thức `Cleaners.normalize_legal_text(text, config, strip_doc_id_prefix)` và alias `normalize_legal_text`.
-- **Root Package Exports:** `packages/ccba-legal-intel/src/ccba_legal/__init__.py`
-  * Xuất khẩu `TextNormalizer`, `NormalizerConfig`, `get_text_normalizer`, `normalize_chunk_text`, `normalize_legal_text`.
-- **Bộ Kiểm Thử:** `packages/ccba-legal-intel/tests/test_text_normalizer.py`
-  * 40 unit tests kiểm thử toàn diện toàn bộ các kịch bản chuẩn hóa và tích hợp với `Cleaners`.
+- **Root Package Exports:** `packages/ccba-legal-intel/src/ccba_legal/__init__.py`  * Xuất khẩu `TextNormalizer`, `NormalizerConfig`, `get_text_normalizer`, `normalize_chunk_text`, `normalize_legal_text`.
+- **Bộ Kiểm Thử:** `packages/ccba-legal-intel/tests/test_text_normalizer.py`  * 40 unit tests kiểm thử toàn diện toàn bộ các kịch bản chuẩn hóa và tích hợp với `Cleaners`.

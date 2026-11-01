@@ -25,6 +25,10 @@ def pytest_cmdline_main(config: Any) -> int | None:
     """Hook kiểm tra các tham số đầu vào trước khi tiến hành chạy pytest."""
     import os
 
+    raw_args = list(getattr(config.invocation_params, "args", []))
+    if any(a in ("--version", "-V", "--help", "-h", "--fixtures", "--markers") for a in raw_args):
+        return None
+
     if (
         config.getoption("--allow-unscoped", default=False)
         or os.getenv("CI") == "true"
@@ -33,7 +37,6 @@ def pytest_cmdline_main(config: Any) -> int | None:
         return None
 
     project_root = Path(config.rootpath).resolve()
-    raw_args = list(getattr(config.invocation_params, "args", []))
 
     # Tách các positional args (không bắt đầu bằng '-')
     positional_args = [a for a in raw_args if not a.startswith("-")]
