@@ -18,6 +18,7 @@
 
 ## 📜 2. Quy Chuẩn & Phương Pháp Luận Nghiệp Vụ (Domain Guidelines & Standards)
 
+- [fdi_client_communication_playbook.md](fdi_client_communication_playbook.md): **[MỚI]** Cẩm nang Chuẩn Mực Hành Văn & Ngoại Giao Kỹ Thuật Với Khách Hàng FDI (Internal Forwarding Optimization).
 - [ccba_brand_identity_guidelines.md](ccba_brand_identity_guidelines.md): **[MỚI]** Quy chuẩn Nhận diện Thương hiệu CCBA (ver 3.4) — Hệ thống màu WCAG AAA, Responsive Logo, Typography 2 tầng và Slogan.
 - [guidelines/domain_success_criteria_rubrics.md](guidelines/domain_success_criteria_rubrics.md): **[MỚI]** Quy chuẩn Tiêu chí Thành công & Barem điểm Rubrics Định lượng Đa miền (QC PCCC 40/30/20/10, Pháp điển VBHN 35/35/20/10, Viết Học thuật 35/25/25/15).
 - [guidelines/phuong_phap_luan_lap_trinh_agentic.md](guidelines/phuong_phap_luan_lap_trinh_agentic.md): Cẩm nang phương pháp luận lập trình Agentic AI thực chiến.
