@@ -1,6 +1,17 @@
 ---
-proposal_id: "2026-10-23_standardize_rfi_template"type: "skills"name: "standardize-rfi-template"status: "proposed"priority: "Cao"proposed_by_project: "ccba-legal-knowledge"proposed_by_archetype: "knowledge_corpus"proposed_date: "2026-10-23"applies_to:
-  - "Phần mềm"  - "Thẩm tra thiết kế"  - "Tất cả Spokes"graduated_to: ""
+proposal_id: "2026-10-23_standardize_rfi_template"
+type: "skills"
+name: "standardize-rfi-template"
+status: "proposed"
+priority: "Cao"
+proposed_by_project: "ccba-legal-knowledge"
+proposed_by_archetype: "knowledge_corpus"
+proposed_date: "2026-10-23"
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Tất cả Spokes"
+graduated_to: ""
 supersedes_spoke_docs: []
 ---
 
@@ -47,10 +58,12 @@ Trong quá trình triển khai các dự án tư vấn BIM và PCCC công nghi�
 
 ---
 
-### 3. Thiết kế bản vẽ thi công (TKBVTC) & Tích Hợp Vào Hub (Technical Specification)
+### 3. Đặc Tả Kỹ Thuật & Tích Hợp Vào Hub (Technical Specification)
 
 1. **Vị trí tích hợp tại Hub Monorepo:**
-   - Đặc tả mẫu Tier 4: `.agents/skills/ccba-xu-ly-van-phong/templates/docx-ky-thuat-rfi.md`   - Mô hình dữ liệu YAML IR: `.agents/skills/ccba-xu-ly-van-phong/templates/rfi_template_schema.yaml`   - Cập nhật Master Skill: `.agents/skills/ccba-xu-ly-van-phong/SKILL.md` (bổ sung tra cứu Composable Table và quy tắc thương hiệu `RULE-6.1`)
+   - Đặc tả mẫu Tier 4: `.agents/skills/ccba-xu-ly-van-phong/templates/docx-ky-thuat-rfi.md`
+   - Mô hình dữ liệu YAML IR: `.agents/skills/ccba-xu-ly-van-phong/templates/rfi_template_schema.yaml`
+   - Cập nhật Master Skill: `.agents/skills/ccba-xu-ly-van-phong/SKILL.md` (bổ sung tra cứu Composable Table và quy tắc thương hiệu `RULE-6.1`)
 
 2. **Các Bất Biến Kỹ Thuật Được Thiết Lập:**
    - **Hình học nền tảng khóa cứng & Động cơ Cân bằng Thích ứng (COND-01 & COND-06):** Khổ A4, lề trái $3.0\text{ cm}$ (`1701 DXA`), lề phải/trên/dưới $2.0\text{ cm}$ (`1134 DXA`). Vùng nội dung bất biến $\mathbf{CONTENT\_WIDTH = 9071\text{ DXA}}$. Lưới 4 cột cân bằng thích ứng (Adaptive Content-Aware Balancing) kết hợp cưỡng chế khóa cứng OpenXML (`tblLayout="fixed"` và `tblGrid`) để bảo đảm 100% Visual Parity giữa Microsoft Word và PDF Engine (LibreOffice): Cột 1 ($650 - 750\text{ DXA}$), Cột 2 ($4121 - 4300\text{ DXA}$ — mở rộng tối đa diện tích cho đề xuất tư vấn), Cột 3 ($1500 - 1700\text{ DXA}$), Cột 4 ($2450 - 2600\text{ DXA}$). Khối ký 2 ô: $4535 + 4536 = 9071\text{ DXA}$. Đệm ô: $57\text{ DXA}$ dọc, $85\text{ DXA}$ ngang.

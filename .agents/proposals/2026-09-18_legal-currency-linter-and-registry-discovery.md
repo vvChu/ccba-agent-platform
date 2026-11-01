@@ -1,6 +1,21 @@
 ---
-proposal_id: "2026-09-18_legal-currency-linter-and-registry-discovery"type: "tool"name: "legal-currency-linter-and-registry-discovery"status: "merged"merged_pr: "#289"merged_commit: "7468b665df8f0a2f5d7ab9d6a6249afff571f837"merged_date: "2026-09-19"priority: "Cao"related_issue: "#288"proposed_by_project: "IBST_TVTT_T09_002_Voltage_BV"proposed_by_archetype: "specialized_extension"proposed_date: "2026-09-18"applies_to:
-  - "Phần mềm"  - "Thẩm tra thiết kế"  - "Tất cả Spokes"---
+proposal_id: "2026-09-18_legal-currency-linter-and-registry-discovery"
+type: "tool"
+name: "legal-currency-linter-and-registry-discovery"
+status: "merged"
+merged_pr: "#289"
+merged_commit: "7468b665df8f0a2f5d7ab9d6a6249afff571f837"
+merged_date: "2026-09-19"
+priority: "Cao"
+related_issue: "#288"
+proposed_by_project: "IBST_TVTT_T09_002_Voltage_BV"
+proposed_by_archetype: "specialized_extension"
+proposed_date: "2026-09-18"
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Tất cả Spokes"
+---
 
 # RFC Proposal: Linter Nhận Thức Ngữ Cảnh Đa Định Dạng & Vá Lỗi Tầng Nhân Khám Phá Registry (ccba-legal-intel)
 
@@ -42,7 +57,7 @@ proposal_id: "2026-09-18_legal-currency-linter-and-registry-discovery"type: "too
 
 ---
 
-### 3. Thiết kế bản vẽ thi công (TKBVTC) & Thay Đổi Kỹ Thuật
+### 3. Đặc Tả Kỹ Thuật & Thay Đổi Chi Tiết
 
 1. **Vá lỗi Tầng Nhân Tra Cứu (`packages/ccba-legal-intel/src/ccba_legal/registry.py` & `models.py`):**
    - Tự động nhận diện registry Spoke theo thứ tự ưu tiên 6 tầng (ADR 0050).

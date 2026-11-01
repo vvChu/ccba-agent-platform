@@ -1,12 +1,26 @@
 ---
-proposal_id: "2026-09-17_dynamic-base-branch-for-create-pr"type: "skills"name: "dynamic-base-branch-for-create-pr"status: "merged"merged_commit: "c84fe74433444b592c17b491e5588db16226dfb2"merged_date: "2026-09-17"priority: "Cao"proposed_by_project: "dgx-spark-toolkit"proposed_by_archetype: "specialized_extension"proposed_date: "2026-09-17"applies_to:
-  - "Phần mềm"  - "Thẩm tra thiết kế"  - "Tất cả Spokes"---
+proposal_id: "2026-09-17_dynamic-base-branch-for-create-pr"
+type: "skills"
+name: "dynamic-base-branch-for-create-pr"
+status: "merged"
+merged_commit: "c84fe74433444b592c17b491e5588db16226dfb2"
+merged_date: "2026-09-17"
+priority: "Cao"
+proposed_by_project: "dgx-spark-toolkit"
+proposed_by_archetype: "specialized_extension"
+proposed_date: "2026-09-17"
+applies_to:
+  - "Phần mềm"
+  - "Thẩm tra thiết kế"
+  - "Tất cả Spokes"
+---
 
 # RFC Proposal: Nâng Cấp Kỹ Năng ccba-create-pr Tự Động Nhận Diện Base Branch (v1.2.0)
 
 - **Tác giả đề xuất:** Kỹ sư / Agent đại diện Spoke (`dgx-spark-toolkit`)
 - **Ngày lập:** 2026-09-17
-- **Trạng thái:** Đã hợp nhất (Merged) — Commit `c84fe744`- **Căn cứ pháp lý nền tảng:** ADR-0045, ADR-0046, ADR-0056, ADR-0058
+- **Trạng thái:** Đã hợp nhất (Merged) — Commit `c84fe744`
+- **Căn cứ pháp lý nền tảng:** ADR-0045, ADR-0046, ADR-0056, ADR-0058
 
 ---
 
@@ -35,7 +49,7 @@ proposal_id: "2026-09-17_dynamic-base-branch-for-create-pr"type: "skills"name: "
 
 ---
 
-### 3. Thiết kế bản vẽ thi công (TKBVTC) & Thay Đổi Kỹ Thuật
+### 3. Đặc Tả Kỹ Thuật & Thay Đổi Chi Tiết
 
 - **Tệp sửa đổi trọng tâm:** `.agents/skills/ccba-create-pr/SKILL.md` (bump version `1.1.0` $\rightarrow$ `1.2.0`).
   - **Bước 0:** Xác định nhánh chính `<default_branch>` (qua `git symbolic-ref --short refs/remotes/origin/HEAD`) và dùng `<default_branch>` cho các lệnh kiểm tra commit chưa push và reset nhánh chính.

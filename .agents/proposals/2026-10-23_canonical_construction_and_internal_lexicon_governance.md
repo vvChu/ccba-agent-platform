@@ -1,6 +1,22 @@
 ---
-proposal_id: "2026-10-23_canonical_construction_and_internal_lexicon_governance"type: "architecture"name: "canonical-construction-and-internal-lexicon-governance"status: "merged"merged_pr: "#561"merged_commit: "818055bc"merged_date: "2026-10-23"priority: "Cao"proposed_by_project: "ccba-legal-knowledge"proposed_by_archetype: "knowledge_corpus"proposed_date: "2026-10-23"applies_to:
-  - "Tất cả Spokes"  - "Pháp lý & Thẩm tra"  - "Xử lý văn phòng"  - "Hồ sơ hoàn thành công trình"  - "ERP & Quản trị nội bộ"graduated_to: ""
+proposal_id: "2026-10-23_canonical_construction_and_internal_lexicon_governance"
+type: "architecture"
+name: "canonical-construction-and-internal-lexicon-governance"
+status: "merged"
+merged_pr: "#561"
+merged_commit: "818055bc"
+merged_date: "2026-10-23"
+priority: "Cao"
+proposed_by_project: "ccba-legal-knowledge"
+proposed_by_archetype: "knowledge_corpus"
+proposed_date: "2026-10-23"
+applies_to:
+  - "Tất cả Spokes"
+  - "Pháp lý & Thẩm tra"
+  - "Xử lý văn phòng"
+  - "Hồ sơ hoàn thành công trình"
+  - "ERP & Quản trị nội bộ"
+graduated_to: ""
 supersedes_spoke_docs: []
 ---
 
@@ -20,9 +36,12 @@ supersedes_spoke_docs: []
   - Luật Xây dựng 2025 (Số 135/2025/QH15 - Điều 3, Điều 9, Điều 36, Điều 38, Điều 88)
   - Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 (Số 55/2024/QH15 - Điều 2, Điều 17)
   - Luật Đất đai 2024 (Số 31/2024/QH15 - Điều 3) & Luật Nhà ở 2023 (Số 27/2023/QH15 - Điều 2) & Luật Đấu thầu 2023 (Số 22/2023/QH15 - Điều 4)
-  - Nghị định 217/2026/NĐ-CP, Nghị định 207/2026/NĐ-CP, Nghị định 206/2026/NĐ-CP, Nghị định 210/2026/NĐ-CP, Nghị định 212/2026/NĐ-CP  - Quy chuẩn QCVN 06:2022/BXD Mục 1.4.9 ($H_{PCCC}$) & QCVN 01:2021/BXD Mục 1.4.25 (Chiều cao công trình, Lines 397-405)
+  - Nghị định 217/2026/NĐ-CP, Nghị định 207/2026/NĐ-CP, Nghị định 206/2026/NĐ-CP, Nghị định 210/2026/NĐ-CP, Nghị định 212/2026/NĐ-CP
+  - Quy chuẩn QCVN 06:2022/BXD Mục 1.4.9 ($H_{PCCC}$) & QCVN 01:2021/BXD Mục 1.4.25 (Chiều cao công trình, Lines 397-405)
   - Tiêu chuẩn ISO 19650-1/2 (TCVN ISO 19650:2021 & TCVN 14177:2024) & Hợp đồng Mẫu FIDIC (Red/Yellow/White Book)
-  - Điều 13 CCBA Charter 2026 (Hệ thống Kiểm soát 05 Cấp), Quy chuẩn thương hiệu RULE-6.1, và 21 bộ Taxonomy `IDOP-CCBA-WAY`---
+  - Điều 13 CCBA Charter 2026 (Hệ thống Kiểm soát 05 Cấp), Quy chuẩn thương hiệu RULE-6.1, và 21 bộ Taxonomy `IDOP-CCBA-WAY`
+
+---
 
 ## 1. Bối cảnh & Động lực Thực tiễn (Context & Motivation)
 
@@ -35,7 +54,7 @@ Trong quá trình phát triển các Agent tự hành phục vụ tư vấn phá
    - AI dịch *"As-built drawings"* thành *"Bản vẽ như xây dựng"* (thay vì **"Bản vẽ hoàn công"**).
    - AI dịch *"Grandfathering clause"* thành *"Điều khoản ông nội"* thay vì **"Nguyên tắc bảo lưu công trình hiện hữu / Không áp dụng hồi tố"**.
 2. **Sai lệch bản chất pháp lý & Trôi lệch thẩm quyền nguy hiểm:**
-   - AI nhầm lẫn giữa *"Thẩm tra"* (dịch vụ tư vấn độc lập của Viện Khoa học công nghệ xây dựng (IBST)/CCBA theo Luật XD 2025 Điều 3 Khoản 15, Điều 36) và *"Thẩm định"* (thẩm quyền quản lý nhà nước của Sở XD/Bộ XD hoặc Chủ đầu tư theo Điều 3 Khoản 16, Điều 38) và *"Thẩm định thiết kế về phòng cháy và chữa cháy"* (thẩm quyền kép của CQ Chuyên môn Xây dựng và CQ Công an theo Luật PCCC 2024 Điều 2 Khoản 17).
+   - AI nhầm lẫn giữa *"Thẩm tra"* (dịch vụ tư vấn độc lập của IBST - CCBA theo Luật XD 2025 Điều 3 Khoản 15, Điều 36) và *"Thẩm định"* (thẩm quyền quản lý nhà nước của Sở XD/Bộ XD hoặc Chủ đầu tư theo Điều 3 Khoản 16, Điều 38) và *"Thẩm định thiết kế về phòng cháy và chữa cháy"* (thẩm quyền kép của CQ Chuyên môn Xây dựng và CQ Công an theo Luật PCCC 2024 Điều 2 Khoản 17).
    - AI lẫn lộn giữa *"Chiều cao công trình"* theo quy hoạch đô thị (QCVN 01:2021/BXD Mục 1.4.25 Lines 397-405) và *"Chiều cao PCCC"* ($H_{PCCC}$ đo đến mép dưới cửa sổ tầng trên cùng theo QCVN 06:2022/BXD Mục 1.4.9).
    - AI nhầm lẫn tính đa nghĩa liên luật của thuật ngữ *"Chủ đầu tư"* giữa Luật Xây dựng (Điều 9 chia 4 nhóm), Luật Đấu thầu (Điều 4 Khoản 2), Luật Đất đai (Điều 3 Khoản 10) và Luật Nhà ở (Điều 2 Khoản 14).
    - AI nhầm lẫn thứ bậc quản lý chi phí NĐ 206/2026/NĐ-CP (Sơ bộ TMĐT $\to$ TMĐT $\to$ Dự toán xây dựng CT $\to$ Dự toán gói thầu $\to$ Giá gói thầu).
@@ -74,7 +93,9 @@ flowchart TD
     D --> E["Two-Pass Span-Masking Tokenizer & Trie Regex Interceptor\n(normalize_construction_terms COND-11, 17)"]
     D --> F["Tri-Tier Context Disambiguation Engine\n(Explicit Seam Domain -> Heading AST Scope -> Super-Entity COND-16)"]
     D --> G["Master CI Terminology Linter Gate\n(python -m ccba_harness verify-patch)"]
-```---
+```
+
+---
 
 ### Trụ Cột I: Thuật Ngữ Quy Phạm Pháp Luật & Tiêu Chuẩn Kỹ Thuật (Statutory & Codes)
 - **Quy mô khảo sát thực chứng:** 57 gói văn bản quy phạm trong kho `ccba-legal-knowledge` chứa trên 550 mục từ định nghĩa nguyên văn.
@@ -106,25 +127,26 @@ flowchart TD
 
 | Thuật ngữ Tiếng Anh | Chuẩn Tiếng Việt (`vi_canonical`) | Chuẩn Tiếng Nhật (`ja` - MLIT/JIS) | Chuẩn Tiếng Hàn (`ko` - MOLIT/KCS) | Thuật ngữ Cấm / Dịch sai (`vi_forbidden`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Concept Design** | **Thiết kế ý tưởng** | 構想設計 / 企画設計 | 기본구상 / 기획설계 | Thiết kế ý tưởng, Thiết kế ý tưởng |
-| **Schematic Design** | **Thiết kế sơ bộ / Phương án** | 基本計画 / 概略設計 | 계획설계 | Thiết kế sơ bộ / Phương án, Thiết kế sơ bộ / Phương án |
+| **Concept Design** | **Thiết kế ý tưởng** | 構想設計 / 企画設計 | 기본구상 / 기획설계 | Thiết kế khái niệm, Khái niệm thiết kế |
+| **Schematic Design** | **Thiết kế sơ bộ / Phương án** | 基本計画 / 概略設計 | 계획설계 | Thiết kế sơ đồ, Thiết kế lược đồ |
 | **Basic Design** | **Thiết kế cơ sở** | 基本設計 | 기본설계 | Thiết kế căn bản, Thiết kế nền tảng |
 | **FEED** | **Thiết kế kỹ thuật tổng thể (FEED)** | 基本設計フロントエンド | 초기 엔지니어링 설계 (FEED) | Thiết kế đầu vào, Kỹ thuật mặt trước |
-| **Detailed Design** | **Thiết kế bản vẽ thi công (TKBVTC)** | 実施設計 / 施工図面 | 실시설계 / 시공도면 | Thiết kế bản vẽ thi công (TKBVTC), Thiết kế bản vẽ thi công (TKBVTC) |
+| **Detailed Design** | **Thiết kế bản vẽ thi công (TKBVTC)** | 実施設計 / 施工図面 | 실시설계 / 시공도면 | Thiết kế chi tiết, Bản vẽ xây dựng |
 | **Shop Drawings** | **Bản vẽ chi tiết thi công / Shop drawing** | 施工図 / 工作図 | 시공상세도 / 샵드로잉 | Bản vẽ cửa hàng, Bản vẽ tiệm |
-| **As-Built Drawings** | **Bản vẽ hoàn công** | 竣工図 / 完成図 | 준공도면 | Bản vẽ hoàn công, Bản vẽ hoàn công |
+| **As-Built Drawings** | **Bản vẽ hoàn công** | 竣工図 / 完成図 | 준공도면 | Bản vẽ như xây dựng, Bản vẽ như đã xây |
 | **BOQ** | **Bảng tiên lượng / Bảng khối lượng mời thầu**| 内訳明細書 / 数量内訳書 | 공사내역서 / 물량내역서 | Hóa đơn số lượng, Hóa đơn khối lượng |
 | **RFI** | **Phiếu yêu cầu làm rõ thông tin kỹ thuật** | 質疑書 / 照会書 | 기술질의서 (RFI) | Đòi hỏi thông tin, Yêu cầu tin tức |
 | **Variation Order (VO)** | **Lệnh thay đổi / Điều chỉnh phát sinh**| 設計変更指示書 | 설계변경명령서 (VO) | Thứ tự biến thể, Đơn hàng biến đổi |
 | **Taking-Over (TOC)** | **Biên bản bàn giao đưa vào sử dụng** | 引渡証明書 / 竣工引渡書 | 준공인수증 | Giấy chứng nhận tiếp quản, Chiếm hữu |
 | **Defects Notification (DNP)**| **Thời hạn thông báo sai sót / Bảo hành**| 瑕疵担保期間 / 瑕疵修補期間 | 하자담보책임기간 | Thời kỳ thông báo khiếm khuyết |
 | **Punch List** | **Danh mục tồn tại cần khắc phục trước bàn giao**| 指摘事項リスト / 手直しリスト | 펀치리스트 / 미결사항목록 | Danh sách đấm, Danh sách cú đấm |
-| **Grandfathering Clause** | **Nguyên tắc bảo lưu công trình hiện hữu** | 既存不適格条項 / 祖父条項 | 기득권 보호 조항 | Nguyên tắc bảo lưu công trình hiện hữu, Nguyên tắc bảo lưu công trình hiện hữu |
+| **Grandfathering Clause** | **Nguyên tắc bảo lưu công trình hiện hữu** | 既存不適格条項 / 祖父条項 | 기득권 보호 조항 | Điều khoản ông nội, Khoản mục ông cố |
 | **Value Engineering (VE)** | **Kỹ thuật giá trị / Tối ưu hóa giá trị công trình**| バリューエンジニアリング | 가치공학 (VE) | Kỹ thuật giá trị gia tăng |
 
 ---
 
-### Trụ Cột III: Thể Chế Nội Bộ IBST - CCBA & 21 Bộ Taxonomy `IDOP-CCBA-WAY`- **Chuẩn hóa danh xưng thương hiệu thể chế (RULE-6.1):**
+### Trụ Cột III: Thể Chế Nội Bộ IBST - CCBA & 21 Bộ Taxonomy `IDOP-CCBA-WAY`
+- **Chuẩn hóa danh xưng thương hiệu thể chế (RULE-6.1):**
   * Cấp Viện: `Viện`, `Viện KHCN`, `IBST` *(Nghiêm cấm: "Viện IBST")*.
   * Cấp Trung tâm: `Trung tâm`, `Trung tâm BIM`, `CCBA` *(Nghiêm cấm: "Trung tâm CCBA")*.
   * Đơn vị gửi trong hồ sơ kỹ thuật/dự án/RFI: `IBST - CCBA` *(Nghiêm cấm dùng dấu gạch chéo "IBST / CCBA" để tránh hiểu lầm là liên danh hai pháp nhân độc lập)*.
@@ -133,12 +155,12 @@ flowchart TD
   * **Cấp 2 (`LEVEL_2_MANAGEMENT_APPROVAL`):** Chủ trì hợp đồng (CTHĐ) đối soát phạm vi, cam kết và tiến độ; hoặc Trưởng phòng chuyên môn đối với mô hình quản lý tập trung (TVGS/QLDA/Thi công).
   * **Cấp 3 (`LEVEL_3_DEPARTMENT_REVIEW`):** Lãnh đạo Phòng chuyên môn kiểm soát chất lượng bàn giao chuyên môn.
   * **Cấp 4 (`LEVEL_4_COMPLIANCE_QA`):** Ban Cố vấn Pháp lý, Tiêu chuẩn & Đảm bảo Chất lượng ("Người gác cổng" ISO 9001, thể thức, quy chuẩn).
-  * **Cấp 5 (`LEVEL_5_FINAL_APPROVAL`):** Giám đốc/Phó Giám đốc CCBA ký phát hành (đóng dấu Trung tâm) hoặc Giám đốc CCBA duyệt trình Lãnh đạo Viện Khoa học công nghệ xây dựng (IBST) ký (đối với HĐ ký cấp Viện).
+  * **Cấp 5 (`LEVEL_5_FINAL_APPROVAL`):** Giám đốc/Phó Giám đốc CCBA ký phát hành (đóng dấu Trung tâm) hoặc Giám đốc CCBA duyệt trình Lãnh đạo Viện KHCN (IBST) ký (đối với HĐ ký cấp Viện).
 - **Khai phá & tích hợp toàn vẹn 21 bộ Taxonomy `IDOP-CCBA-WAY`:**
   * 5 Trạng thái phê duyệt bất biến: `Nháp` $\to$ `Đệ trình` $\to$ `Yêu cầu bổ sung` $\to$ `Phê duyệt` $\to$ `Từ chối` (`CCBA_TrangThaiPheDuyet.json`).
   * 5 Nhóm tài liệu chuẩn: `Hồ sơ Dự án`, `Hồ sơ Hợp đồng`, `Hồ sơ Kỹ thuật`, `Hồ sơ Tài chính`, `Văn bản Nội bộ/Pháp quy` (`CCBA_LoaiTaiLieu.json`).
   * 10 Nhóm hợp đồng kinh tế theo Quy chế QCCTNB 3209: `N1a` đến `N7` (`CCBA_NhomHopDongKT.json`).
-  * Hệ thống mã phòng ban CCBA (101 đến 303) và Viện Khoa học công nghệ xây dựng (IBST) (00 đến 03) (`CCBA_DonViPhongBan.json`).
+  * Hệ thống mã phòng ban CCBA (101 đến 303) và Viện KHCN (IBST) (00 đến 03) (`CCBA_DonViPhongBan.json`).
   * Phân nhóm chức danh BIM: Dynamo/Python Specialist; BIM Director/Manager/Coordinator; BIM Modeler (`CCBA_ChucDanhBIM.json`).
 
 ---
@@ -177,7 +199,9 @@ flowchart TD
           term_alias: "Chủ đầu tư dự án đầu tư có sử dụng đất"
           verbatim_sha256: "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
           effective_from: "2024-08-01"
-  ```### 2. Bộ Lọc Mặt Nạ Hai Pha & Regex Trie Normalizer [COND-11, COND-17]:
+  ```
+
+### 2. Bộ Lọc Mặt Nạ Hai Pha & Regex Trie Normalizer [COND-11, COND-17]:
 - Triển khai trong package `packages/ccba-legal-intel` (module `ccba_legal.lexicon`):
   * **Pha 1 (Span Masking):** Lớp `ImmutableSpanMasker` nhận diện và thay thế toàn bộ các phân vùng bất biến (Markdown Blockquote, Inline Code, Code Block, chuỗi trong ngoặc kép, mã số văn bản cũ, URL, Anchor Tags) bằng token `__CCBA_MASK_000001__`.
   * **Pha 2 (Trie Regex Normalization):** Kích hoạt compiled Trie Regex với ranh giới từ `\b` trên phần văn bản khả biến. Tốc độ xử lý $< 50\text{ms}$ cho 100 trang văn bản.
@@ -187,7 +211,9 @@ flowchart TD
   from ccba_legal.lexicon import normalize_construction_terms
   
   clean_text = normalize_construction_terms(raw_text, context_domain="xay_dung")
-  ```### 3. Động Cơ Khử Nhập Nhằng Ngữ Cảnh Ba Tầng (Tri-Tier Disambiguation) [COND-16]:
+  ```
+
+### 3. Động Cơ Khử Nhập Nhằng Ngữ Cảnh Ba Tầng (Tri-Tier Disambiguation) [COND-16]:
 - **Cấp 1 (Ghi đè tường minh):** Truyền trực tiếp `context_domain="dau_thau"` vào Seam call.
 - **Cấp 2 (AST Heading Scoping Heuristics):** Phân tích tiêu đề mục Markdown H1/H2 gần nhất (`Đất đai` $\to$ domain `dat_dai`; `Đấu thầu` $\to$ domain `dau_thau`; `Thiết kế/Thi công` $\to$ domain `xay_dung`).
 - **Cấp 3 (Faceted Annotation):** Tại đoạn văn bản tổng hợp, xuất chú thích đa chiều: `Chủ đầu tư [Xây dựng: Đ9 L.XD 2025 | Đấu thầu: Đ4.2 L.ĐT 2023 | Đất đai: Đ3.10 L.ĐĐ 2024]`.
