@@ -49,7 +49,7 @@ class DataDictionarySpec(BaseModel):
 
     section_namespace: str = Field(
         ...,
-        description="Section namespace (e.g. I_QH, II_A_DA, II_B_CT_TD, II_C_CT_GPXD, II_D_CT_KTKT, II_E_CCHN, II_G_NLTC, II_H_NLCN)",
+        description="Section namespace (e.g. I_QH, II_A_DA, II_B_CT_TD, II_C_CT_GPXD, II_D_CT_GPXD, II_E_CCHN, II_G_NLTC, II_H_NLCN)",
     )
     stt: str = Field(..., description="Row ordinal or hierarchical number (e.g. '16', '16.1')")
     technical_code: str = Field(
@@ -115,6 +115,10 @@ class CanonicalTerm(BaseModel):
     )
     vi_forbidden: list[str] = Field(
         default_factory=list, description="List of prohibited literal translations"
+    )
+    legacy_aliases: list[str] = Field(
+        default_factory=list,
+        description="Backward-compatible legacy aliases or deprecated slugs (ADR-0059)",
     )
     temporal: TermTemporal | None = Field(default=None, description="Temporal validity record")
     provenance: ProvenanceRecord | None = Field(

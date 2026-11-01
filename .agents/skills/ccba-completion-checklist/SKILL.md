@@ -60,12 +60,13 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 ### 1. Tạo Checklist cho dự án cụ thể
 
 1. Đọc `resources/checklist_master.yaml` để nắm khung cấu trúc master
-2. Hỏi user các thông tin dự án (theo chuẩn Ngôn ngữ Chung Hai Bề Mặt — Quyết định 1812/QĐ-BXD):
-   - Tên dự án / công trình (`tenDuAn` / `tenCongTrinh`) và Mã định danh (`maThongTin` 13/15 số nếu có)
-   - Kịch bản thủ tục công trình (`II_B_CT_TD` miễn GPXD thuộc DA thẩm định BCNCKT / `II_C_CT_GPXD` cấp GPXD / `II_D_CT_KTKT` chỉ lập BCKTKT)
-   - Loại công trình (`loaiCongTrinh`: `1- Dân dụng`, `2- Công nghiệp`, `3- Hạ tầng kỹ thuật`, `4- Giao thông`, `5- NN&PTNT`, `6- Quốc phòng, an ninh`)
-   - Cấp công trình (`capCongTrinh`: `0- Đặc biệt`, `1- Cấp I`, `2- Cấp II`, `3- Cấp III`, `4- Cấp IV`) và Địa điểm 2 cấp (`maTinh` Tỉnh/TP - `maXa` Phường/Xã/Đặc khu theo QĐ 19/2025/QĐ-TTg)
-   - Chủ đầu tư (`tenChuDauTu`) và Chức danh chủ trì (`vaiTroChuTri`: `Giám đốc quản lý dự án`, `Chỉ huy trưởng công trường`, `Chủ nhiệm/Chủ trì thiết kế`)
+2. Hỏi user các thông tin dự án (theo chuẩn Ngôn ngữ Chung Ba Bề Mặt — Quyết định 1812/QĐ-BXD & CCBA WAY):
+   - Tên dự án / công trình (`tenDuAn` / `tenCongTrinh`) và Mã định danh (`maThongTin` 13 số cho dự án tại `II_A_DA` hoặc 13/15 số cho công trình tại `II_B_CT_TD`..`II_D_CT_GPXD` nếu có)
+   - Nguồn vốn đầu tư (`nguonVonDauTu`: `VONDAUTUCONG - Vốn đầu tư công`, `VONNHANUOC - Vốn nhà nước ngoài đầu tư công`, `PPP - Dự án PPP`, `KHAC - Vốn khác`, `HONHOP - Vốn hỗn hợp`)
+   - Kịch bản thủ tục công trình (`II_B_CT_TD` Công trình xây dựng yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng / `II_C_CT_GPXD` Công trình xây dựng không yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, chỉ yêu cầu cấp giấy phép xây dựng / `II_D_CT_GPXD` Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng)
+   - Loại công trình (`loaiCongTrinh`: `1- Công trình dân dụng`, `2- Công trình công nghiệp`, `3- Công trình hạ tầng kỹ thuật`, `4- Công trình giao thông`, `5- Công trình nông nghiệp phát triển nông thôn`)
+   - Cấp công trình (`capCongTrinh`: `DACBIET - Cấp đặc biệt`, `I - Cấp I`, `II - Cấp II`, `III - Cấp III`, `IV - Cấp IV`) và Địa điểm 2 cấp (`maTinh` Tỉnh/TP 2 số - `maXa` Phường/Xã/Đặc khu 5 số theo QĐ 19/2025/QĐ-TTg)
+   - Chủ đầu tư (`tenChuDauTu`) và Phân tầng chức danh chủ trì (`vaiTroChuTri` mã `1..9` theo Mục II.C.11 Quyết định 1812/QĐ-BXD: `1- Chủ nhiệm lập quy hoạch`, `3- Chủ nhiệm khảo sát xây dựng`, `4- Chủ nhiệm thiết kế`, `6- Chủ nhiệm thẩm tra thiết kế`, `8- Giám sát trưởng của đơn vị giám sát`, `9- Chỉ huy trưởng của nhà thầu thi công xây dựng công trình`; đối chiếu với 3 tầng PGV QCTK 2815: `CHU_TRI_HOP_DONG_PM`, Chủ nhiệm theo hoạt động XD, và `CHU_TRI_BO_MON`)
 3. Đọc template `resources/checklist_by_project.md`
 4. Tạo checklist phù hợp, bỏ các mục không áp dụng (đánh dấu N/A)
 5. Xuất ra Markdown (và Docx khi phát hành qua `ccba_ooxml:DocxDocument`)
