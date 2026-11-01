@@ -403,3 +403,38 @@ Quy trình rà soát và phê duyệt hồ sơ dịch vụ kỹ thuật 5 cấp 
 **Sandbox Draft Watermark & Promotion Protocol (ADR 0046)**:
 Cơ chế tự động chèn thủy ấn `[CCBA SANDBOX DRAFT]` cho mọi báo cáo tạo ra từ Spoke cá nhân, khóa cứng trần phê duyệt ở Cấp 1, và quy trình chuyển giao 3 bước (Cleanse $\rightarrow$ Target Ingestion $\rightarrow$ PGV Staging) khi hoàn thành bàn giao sang Spoke Dự Án chính thức.
 
+---
+
+## 7. Đồng Bộ Ngôn Ngữ Chung Ba Bề Mặt (Tri-Surface Ubiquitous Language — 1812/QĐ-BXD & CCBA WAY)
+
+**Tri-Surface Ubiquitous Language Architecture (Kiến Trúc Đồng Bộ Ngôn Ngữ Chung 3 Bề Mặt)**:
+Mô hình hợp nhất từ vựng xuyên suốt giữa Con người và AI Agent trên 3 bề mặt vận hành độc lập nhưng liên thông chặt chẽ:
+1. **Bề mặt Pháp điển Quốc gia (Statutory Surface — Quyết định 1812/QĐ-BXD v1.0):** Bộ từ điển dữ liệu chuẩn CSDL quốc gia về hoạt động xây dựng với các trường kỹ thuật `camelCase` (`maThongTin`, `nhomDuAn`, `nguonVonDauTu`, `loaiCongTrinh`, `capCongTrinh`, `maTinh`, `maXa`, `vaiTroChuTri`) và 4 phân nhóm thủ tục Phần II nguyên văn Công báo (`II.A` — `II_A_DA`: "Dự án đầu tư xây dựng"; `II.B` — `II_B_CT_TD`: "Công trình xây dựng yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng"; `II.C` — `II_C_CT_GPXD`: "Công trình xây dựng không yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, chỉ yêu cầu cấp giấy phép xây dựng"; `II.D` — `II_D_CT_GPXD`: "Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng").
+2. **Bề mặt Quản trị Doanh nghiệp (Enterprise Governance Surface — CCBA WAY / ADR-0046 / QCTK 2815):** Hệ thống 11 Ghế Trách nhiệm Giải trình (`CHU_TRI_HOP_DONG_PM`, `TRUONG_PHONG_BIM_THIET_KE`, `TRUONG_PHONG_BIM_DU_AN`, `CHU_TRI_BO_MON`, `KY_SU_THUC_THI`), Quy trình Kiểm soát Chất lượng 05 Cấp và Phiếu Giao Việc (PGV theo QCTK 2815).
+3. **Bề mặt Thực thi Nền tảng Agent (Platform Execution Surface):** Các Deep Seams (`LexiconHarvester`, `SemanticDisambiguationMasker`, `CanonicalTerm`, `DataDictionarySpec`, `LegalIntelPipeline`, `QCAuditPipeline`, `IDOPBridge`) tự động chuẩn hóa, che chắn đa nghĩa (polysemy masking) và đồng bộ từ điển SSOT (`canonical_construction_taxonomy.yaml` và `_generated_taxonomy.py`).
+_Avoid_: Gán nhãn phân nhóm `II.D` là công trình chỉ lập Báo cáo kinh tế - kỹ thuật (slug cũ `II_D_CT_KTKT` chỉ được lưu trong `legacy_aliases` để tương thích ngược theo ADR-0059; trường `fileQDBaoCaoKTKT` thuộc Mục `II.C.14`).
+
+**Chủ trì Hợp đồng (Contract Lead / Project Manager — Tầng 1 PGV QCTK 2815)**:
+Ghế trách nhiệm giải trình cấp hợp đồng (`CHU_TRI_HOP_DONG_PM` theo ADR-0046 và Phụ lục 01 Quy chế CCBA 2026), chịu trách nhiệm toàn diện trước Giám đốc Trung tâm về tiến độ WBS, điều phối đa bộ môn, chất lượng hồ sơ Cấp 2 và nghĩa vụ thương mại của hợp đồng tư vấn. Không đồng nhất với chức danh hành nghề cá nhân ghi trên chứng chỉ hành nghề xây dựng.
+_Avoid_: Chủ nhiệm hợp đồng, Chủ trì dự án chung chung, Giám đốc hợp đồng
+
+**Chủ nhiệm theo Hoạt động Xây dựng (Statutory Activity Director — Tầng 2 Pháp lý & PGV)**:
+Chức danh pháp lý của cá nhân chủ trì toàn bộ một lĩnh vực hoạt động xây dựng theo Điều 22 Nghị định 175/2024/NĐ-CP và trường `vaiTroChuTri` (Mục `I.21` & `II.C.11`, mã `1..9`) trong Quyết định 1812/QĐ-BXD (bao gồm: `1- Chủ nhiệm lập quy hoạch`, `3- Chủ nhiệm khảo sát xây dựng`, `4- Chủ nhiệm thiết kế`, `6- Chủ nhiệm thẩm tra thiết kế`, `8- Giám sát trưởng của đơn vị giám sát`, `9- Chỉ huy trưởng của nhà thầu thi công xây dựng công trình`).
+_Avoid_: Chủ trì hợp đồng, Trưởng nhóm kỹ thuật nội bộ, đánh đồng mã `8` của `vaiTroChuTri` với Giám đốc quản lý dự án
+
+**Chủ trì Bộ môn (Discipline Lead — Tầng 3 Chuyên ngành PGV QCTK 2815)**:
+Ghế trách nhiệm giải trình cấp bộ môn chuyên ngành (`CHU_TRI_BO_MON` theo ADR-0046 và QCTK 2815: Kiến trúc, Kết cấu, Cơ điện MEP, PCCC, Dự toán; tương ứng các mã `2- Chủ trì bộ môn thiết kế`, `5- Chủ trì bộ môn thiết kế (thiết kế xây dựng)`, `7- Chủ trì thẩm tra các bộ môn thiết kế` trong `vaiTroChuTri`), chịu trách nhiệm trực tiếp kiểm soát kỹ thuật nội bộ Cấp 1 và ký tờ trình nghiệm thu chuyên môn của bộ môn mình dưới sự điều phối của Chủ nhiệm thiết kế/thẩm tra và `CHU_TRI_HOP_DONG_PM`.
+_Avoid_: Chủ nhiệm bộ môn, Trưởng bộ môn tự phát
+
+### Bảng Đối Chiếu Ngôn Ngữ Chung Ba Bề Mặt (Tri-Surface Mapping Matrix)
+
+| Khái niệm Nghiệp vụ | Bề mặt Pháp điển (`1812/QĐ-BXD` v1.0) | Bề mặt Quản trị (`CCBA WAY` / ADR-0046 / QCTK 2815) | Bề mặt Thực thi Agent (`ccba-agent-platform`) |
+| :--- | :--- | :--- | :--- |
+| **Mã định danh (Polysemous ID)** | `maThongTin`: 12 số (`I_QH`), 13 số (`II_A_DA`), 13/15 số (`II_B_CT_TD`..`II_D_CT_GPXD`) | `NationalProjectID` & `ProjectCode` trên SharePoint IDOP | `DataDictionarySpec` + `CanonicalTerm` (`is_faceted=True`) trong `harvester.py` |
+| **Nhóm dự án & Nguồn vốn (`nhomDuAn` / `nguonVonDauTu`)** | `nhomDuAn`: `A`, `B`, `C`; `nguonVonDauTu`: `VONDAUTUCONG`, `VONNHANUOC`, `PPP`, `KHAC`, `HONHOP` | Phân nhóm Chủ đầu tư & mẫu hợp đồng tư vấn (Đầu tư công / Ngoài ĐTC / PPP) | Term `nguon_von_dau_tu_1812` trong `_generated_taxonomy.py` & `ccba-legal-advisor` |
+| **Kịch bản thủ tục Phần II (4 nhóm)** | `II.A` (`II_A_DA`), `II.B` (`II_B_CT_TD`), `II.C` (`II_C_CT_GPXD`), `II.D` (`II_D_CT_GPXD`: "Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng") | Phân luồng phạm vi công việc WBS & Danh mục Hồ sơ hoàn thành công trình | Term `kich_ban_thu_tuc_cong_trinh_1812` (`legacy_aliases: ["II_D_CT_KTKT"]`) & `ccba-completion-checklist` |
+| **Cấp công trình (5 cấp)** | `capCongTrinh`: `DACBIET` ("Cấp đặc biệt"), `I`, `II`, `III`, `IV` | Xác định hạng năng lực tổ chức/cá nhân & Cấp phê duyệt QC Gate (Cấp 1–5) | Term `cap_cong_trinh_1812` trong `LexiconHarvester` & `QCAuditPipeline` |
+| **Địa giới hành chính 2 cấp** | `maTinh` (2 số: Tỉnh/TP) + `maXa` (5 số: Phường/Xã/Đặc khu — QĐ 19/2025/QĐ-TTg) | Địa điểm xây dựng chuẩn hóa trên Phiếu Giao Việc (PGV) & Tờ trình thẩm định | Term `dia_gioi_hanh_chinh_2_cap` (loại bỏ cấp Quận/Huyện trung gian) |
+| **Phân tầng Chủ trì / Chủ nhiệm (3 tầng)** | `vaiTroChuTri` (mã `1..9` Mục `II.C.11`): `1` CN lập QH, `2` CT bộ môn TK, `3` CN khảo sát, `4` CN thiết kế, `5` CT bộ môn TKXD, `6` CN thẩm tra, `7` CT thẩm tra bộ môn, `8` Giám sát trưởng của đơn vị giám sát, `9` Chỉ huy trưởng của nhà thầu thi công XDCT | **Tầng 1:** `CHU_TRI_HOP_DONG_PM`<br>**Tầng 2:** Chủ nhiệm theo hoạt động XD (`TRUONG_PHONG_BIM_THIET_KE` / `TRUONG_PHONG_BIM_DU_AN`)<br>**Tầng 3:** `CHU_TRI_BO_MON` + `KY_SU_THUC_THI` | Terms `vai_tro_chu_tri_01`..`vai_tro_chu_tri_09`, `SemanticDisambiguationMasker` (`masker.py`), `IDOPBridge` (`idop_bridge.py`) |
+
+

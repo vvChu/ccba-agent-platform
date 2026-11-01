@@ -43,19 +43,56 @@ SECTION_NAMESPACE_MAP: dict[str, str] = {
     "A": "II_A_DA",
     "B": "II_B_CT_TD",
     "C": "II_C_CT_GPXD",
-    "D": "II_D_CT_KTKT",
+    "D": "II_D_CT_GPXD",
     "E": "II_E_CCHN",
     "G": "II_G_NLTC",
     "H": "II_H_NLCN",
 }
 
-_ENUM_ITEM_PATTERN = re.compile(r"(\d+)\s*-\s*([^\d]+?)(?=\s+\d+\s*-|$)")
+_ENUM_KEY_TOKEN = r"(?:[0-9]{1,2}|[A-Z][A-Z0-9_]{2,19}|[IVX]{1,4}|[A-Z])"
+_ENUM_PAIR_PATTERN = re.compile(
+    rf"(?P<key>{_ENUM_KEY_TOKEN})\s*(?:[-–—]|\:)\s*(?P<val>.*?)"
+    rf"(?=(?:\s*;\s*|\s*,\s*|\s+){_ENUM_KEY_TOKEN}\s*(?:[-–—]|\:)|$)",
+    re.UNICODE,
+)
+_DATE_SHAPE_PATTERN = re.compile(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}")
 
 
 def compute_sha256(text: str) -> str:
     """Computes SHA-256 hash of verbatim definition text (ADR-0059)."""
-    clean_text = text.strip()
-    return hashlib.sha256(clean_text.encode("utf-8")).hexdigest()
+    return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
+
+
+def _seed_entry(
+    cid: str,
+    vi: str,
+    dom: str,
+    trans: tuple[str, ...] | dict[str, str] | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Builds a compact canonical taxonomy dictionary entry."""
+    res: dict[str, Any] = {"canonical_id": cid, "canonical_vi": vi, "domain": dom}
+    if isinstance(trans, tuple):
+        keys = ("en", "ja", "ko")
+        res["translations"] = {keys[i]: val for i, val in enumerate(trans) if val}
+    elif isinstance(trans, dict):
+        res["translations"] = trans
+    res.update({k: v for k, v in kwargs.items() if v is not None})
+    return res
+
+
+def _prov_entry(doc: str, anchor: str, vdef: str, line_no: int | None = None) -> dict[str, Any]:
+    """Builds a statutory provenance record dictionary."""
+    res: dict[str, Any] = {
+        "source_type": "statutory",
+        "doc_id": doc,
+        "clause_anchor": anchor,
+        "verbatim_definition": vdef,
+        "verbatim_sha256": compute_sha256(vdef),
+    }
+    if line_no is not None:
+        res["line_anchor"] = line_no
+    return res
 
 
 def _detect_section_namespace(stt_cell: str, current_ns: str) -> tuple[str, bool]:
@@ -82,16 +119,20 @@ def _sanitize_technical_code(raw_cell: str, name_cell: str) -> tuple[str, str, b
 
 
 def _extract_enum_mapping(text_cell: str) -> dict[str, str]:
-    """Extracts closed-world enum code->label pairs from Danh mục specification."""
-    mapping: dict[str, str] = {}
-    if not text_cell or "Danh mục" not in text_cell:
-        return mapping
-    body = text_cell.split("Danh mục", 1)[-1].lstrip(": ")
-    for match in _ENUM_ITEM_PATTERN.finditer(body):
-        code, label = match.group(1).strip(), match.group(2).strip().rstrip(".;,")
-        if label:
-            mapping[code] = label
-    return mapping
+    """Extracts closed-world enum code->label pairs using Two-Pass Density Parser (COND-01)."""
+    if not text_cell:
+        return {}
+    cleaned = text_cell.strip().strip('"')
+    has_prefix = "Danh mục" in cleaned
+    target = re.sub(r"^.*?Danh mục\s*:\s*", "", cleaned).strip()
+    if _DATE_SHAPE_PATTERN.match(target):
+        return {}
+    results: dict[str, str] = {}
+    for key, val in _ENUM_PAIR_PATTERN.findall(target):
+        ck, cv = key.strip(), val.strip().rstrip(';,."')
+        if ck and cv:
+            results[ck] = cv
+    return results if len(results) >= (1 if has_prefix else 2) else {}
 
 
 def _build_row_term(
@@ -407,341 +448,301 @@ class LexiconHarvester:
             "terms": seed_terms,
         }
 
-    def _get_pillar1_core_statutory_terms(self) -> dict[str, Any]:
-        """Compiles Pillar I core statutory definitions and faceted super-entities."""
+    def _get_pillar1_chu_dau_tu_term(self) -> dict[str, Any]:
+        """Builds faceted Chủ đầu tư seed entry for Pillar I."""
         return {
-            "chu_dau_tu": {
-                "canonical_id": "STAT-CDT-001",
-                "canonical_vi": "Chủ đầu tư",
-                "domain": "governance",
-                "is_faceted": True,
-                "translations": {
-                    "en": "Employer / Client / Project Owner",
-                    "ja": "発注者 / 事業主",
-                    "ko": "발주처 / 사업시행자",
+            "canonical_id": "STAT-CDT-001",
+            "canonical_vi": "Chủ đầu tư",
+            "domain": "governance",
+            "is_faceted": True,
+            "translations": {
+                "en": "Employer / Client / Project Owner",
+                "ja": "発注者 / 事業主",
+                "ko": "발주처 / 사업시행자",
+            },
+            "vi_forbidden": ["Người sử dụng lao động", "Bên thuê", "Chủ tiền"],
+            "facets": {
+                "xay_dung": {
+                    "domain": "xay_dung",
+                    "legal_basis": "Điều 9 Luật Xây dựng số 135/2025/QH15",
+                    "clause_anchor": "dieu-9",
+                    "verbatim_definition": "Chủ đầu tư phân thành 4 nhóm theo tính chất nguồn vốn.",
+                    "verbatim_sha256": compute_sha256("Chủ đầu tư Luật Xây dựng 2025 Điều 9"),
+                    "effective_from": "2026-07-01",
+                    "key_distinction": "Chủ thể trực tiếp quản lý, sử dụng vốn và chịu trách nhiệm trước Người QĐĐT",
                 },
-                "vi_forbidden": ["Người sử dụng lao động", "Bên thuê", "Chủ tiền"],
-                "facets": {
-                    "xay_dung": {
-                        "domain": "xay_dung",
-                        "legal_basis": "Điều 9 Luật Xây dựng số 135/2025/QH15",
-                        "clause_anchor": "dieu-9",
-                        "verbatim_definition": "Chủ đầu tư phân thành 4 nhóm theo tính chất nguồn vốn.",
-                        "verbatim_sha256": compute_sha256("Chủ đầu tư Luật Xây dựng 2025 Điều 9"),
-                        "effective_from": "2026-07-01",
-                        "key_distinction": "Chủ thể trực tiếp quản lý, sử dụng vốn và chịu trách nhiệm trước Người QĐĐT",
-                    },
-                    "dau_thau": {
-                        "domain": "dau_thau",
-                        "legal_basis": "Khoản 2 Điều 4 Luật Đấu thầu số 22/2023/QH15",
-                        "clause_anchor": "dieu-4-khoan-2",
-                        "verbatim_definition": "Cơ quan, tổ chức sở hữu vốn hoặc vay vốn trực tiếp quản lý sử dụng vốn.",
-                        "verbatim_sha256": compute_sha256(
-                            "Chủ đầu tư Luật Đấu thầu 2023 Điều 4 Khoản 2"
-                        ),
-                        "effective_from": "2024-01-01",
-                        "key_distinction": "Chủ thể phê duyệt kế hoạch lựa chọn nhà thầu và ký hợp đồng thầu",
-                    },
-                    "dat_dai": {
-                        "domain": "dat_dai",
-                        "legal_basis": "Khoản 10 Điều 3 Luật Đất đai số 31/2024/QH15",
-                        "clause_anchor": "dieu-3-khoan-10",
-                        "verbatim_definition": "Nhà đầu tư được lựa chọn và được giao đất, cho thuê đất.",
-                        "verbatim_sha256": compute_sha256(
-                            "Chủ đầu tư Luật Đất đai 2024 Điều 3 Khoản 10"
-                        ),
-                        "effective_from": "2024-08-01",
-                        "key_distinction": "Chủ thể được cấp quyền sử dụng đất để triển khai dự án",
-                    },
+                "dau_thau": {
+                    "domain": "dau_thau",
+                    "legal_basis": "Khoản 2 Điều 4 Luật Đấu thầu số 22/2023/QH15",
+                    "clause_anchor": "dieu-4-khoan-2",
+                    "verbatim_definition": "Cơ quan, tổ chức sở hữu vốn hoặc vay vốn trực tiếp quản lý sử dụng vốn.",
+                    "verbatim_sha256": compute_sha256(
+                        "Chủ đầu tư Luật Đấu thầu 2023 Điều 4 Khoản 2"
+                    ),
+                    "effective_from": "2024-01-01",
+                    "key_distinction": "Chủ thể phê duyệt kế hoạch lựa chọn nhà thầu và ký hợp đồng thầu",
+                },
+                "dat_dai": {
+                    "domain": "dat_dai",
+                    "legal_basis": "Khoản 10 Điều 3 Luật Đất đai số 31/2024/QH15",
+                    "clause_anchor": "dieu-3-khoan-10",
+                    "verbatim_definition": "Nhà đầu tư được lựa chọn và được giao đất, cho thuê đất.",
+                    "verbatim_sha256": compute_sha256(
+                        "Chủ đầu tư Luật Đất đai 2024 Điều 3 Khoản 10"
+                    ),
+                    "effective_from": "2024-08-01",
+                    "key_distinction": "Chủ thể được cấp quyền sử dụng đất để triển khai dự án",
                 },
             },
-            "tham_tra": {
-                "canonical_id": "STAT-001",
-                "canonical_vi": "Thẩm tra",
-                "domain": "consulting",
-                "translations": {
+        }
+
+    def _get_pillar1_core_statutory_terms(self) -> dict[str, Any]:
+        """Compiles Pillar I core statutory definitions and faceted super-entities."""
+        tt_def = "Thẩm tra là việc tổ chức, cá nhân thực hiện kiểm tra, đánh giá, kết luận đối với những nội dung cần thiết về chuyên môn trong quá trình chuẩn bị và thực hiện dự án đầu tư xây dựng."
+        pccc_def = "Thẩm định thiết kế về phòng cháy và chữa cháy là việc xem xét, đánh giá sự tuân thủ các quy định của pháp luật, tiêu chuẩn, quy chuẩn kỹ thuật áp dụng đối với thiết kế về PCCC."
+        hpccc_def = "Đo từ mặt đường xe chữa cháy tiếp cận đến mép dưới của lỗ cửa sổ mở trên tường ngoài tầng trên cùng."
+        lxd_doc = "luat_xay_dung_2025_135_2025_qh15.md"
+        pccc_doc = "luat_phong_chay_chua_chay_va_cuu_nan_cuu_ho_2024_55_2024_qh1.md"
+        return {
+            "chu_dau_tu": self._get_pillar1_chu_dau_tu_term(),
+            "tham_tra": _seed_entry(
+                "STAT-001",
+                "Thẩm tra",
+                "consulting",
+                {
                     "en": "Design Verification / Engineering Review",
                     "ja": "第三者照査 / 技術審査",
                     "ko": "설계적격성검토",
                 },
-                "vi_forbidden": [
+                vi_forbidden=[
                     "Thẩm định độc lập",
                     "Thẩm duyệt thiết kế xây dựng",
                     "Kiểm định thiết kế",
                 ],
-                "temporal": {"status": "active", "effective_from": "2026-07-01"},
-                "provenance": {
-                    "source_type": "statutory",
-                    "doc_id": "luat_xay_dung_2025_135_2025_qh15.md",
-                    "clause_anchor": "dieu-3-khoan-15",
-                    "line_anchor": 84,
-                    "verbatim_definition": "Thẩm tra là việc tổ chức, cá nhân thực hiện kiểm tra, đánh giá, kết luận đối với những nội dung cần thiết về chuyên môn trong quá trình chuẩn bị và thực hiện dự án đầu tư xây dựng.",
-                    "verbatim_sha256": compute_sha256(
-                        "Thẩm tra là việc tổ chức, cá nhân thực hiện kiểm tra, đánh giá, kết luận đối với những nội dung cần thiết về chuyên môn trong quá trình chuẩn bị và thực hiện dự án đầu tư xây dựng."
-                    ),
-                },
-            },
-            "tham_dinh_thiet_ke_pccc": {
-                "canonical_id": "STAT-002",
-                "canonical_vi": "Thẩm định thiết kế về phòng cháy và chữa cháy",
-                "domain": "fire_safety",
-                "translations": {
-                    "en": "Fire Safety Design Appraisal",
-                    "ja": "消防設計審査",
-                    "ko": "소방설계심사",
-                },
-                "vi_forbidden": ["Thẩm duyệt thiết kế PCCC", "Phê duyệt PCCC", "Cấp phép PCCC"],
-                "temporal": {
+                temporal={"status": "active", "effective_from": "2026-07-01"},
+                provenance=_prov_entry(lxd_doc, "dieu-3-khoan-15", tt_def, 84),
+            ),
+            "tham_dinh_thiet_ke_pccc": _seed_entry(
+                "STAT-002",
+                "Thẩm định thiết kế về phòng cháy và chữa cháy",
+                "fire_safety",
+                ("Fire Safety Design Appraisal", "消防設計審査", "소방설계심사"),
+                vi_forbidden=["Thẩm duyệt thiết kế PCCC", "Phê duyệt PCCC", "Cấp phép PCCC"],
+                temporal={
                     "status": "active",
                     "effective_from": "2025-07-01",
                     "grandfathering_legacy_term": "Thẩm duyệt thiết kế về PCCC (Nghị định 136/2020)",
                 },
-                "provenance": {
-                    "source_type": "statutory",
-                    "doc_id": "luat_phong_chay_chua_chay_va_cuu_nan_cuu_ho_2024_55_2024_qh1.md",
-                    "clause_anchor": "dieu-2-khoan-17",
-                    "line_anchor": 104,
-                    "verbatim_definition": "Thẩm định thiết kế về phòng cháy và chữa cháy là việc xem xét, đánh giá sự tuân thủ các quy định của pháp luật, tiêu chuẩn, quy chuẩn kỹ thuật áp dụng đối với thiết kế về PCCC.",
-                    "verbatim_sha256": compute_sha256(
-                        "Thẩm định thiết kế về phòng cháy và chữa cháy là việc xem xét, đánh giá sự tuân thủ các quy định của pháp luật, tiêu chuẩn, quy chuẩn kỹ thuật áp dụng đối với thiết kế về PCCC."
-                    ),
+                provenance=_prov_entry(pccc_doc, "dieu-2-khoan-17", pccc_def, 104),
+            ),
+            "chieu_cao_pccc": _seed_entry(
+                "STAT-003",
+                "Chiều cao PCCC (HPCCC)",
+                "fire_safety",
+                ("Fire Rescue Height (HPCCC)", "消防活動上有効な高さ", "소방구조높이"),
+                vi_forbidden=["Chiều cao công trình PCCC", "Độ cao dập lửa"],
+                provenance=_prov_entry("qcvn_06_2022_bxd.md", "muc-1-4-9", hpccc_def),
+            ),
+        }
+
+    def _get_pillar2_design_stage_terms(self) -> dict[str, Any]:
+        """Compiles Pillar II international design and documentation stage terms."""
+        return {
+            "concept_design": _seed_entry(
+                "INTL-001",
+                "Thiết kế ý tưởng",
+                "design_stages",
+                ("Concept Design", "構想設計 / 企画設計", "기본구상 / 기획설계"),
+                vi_forbidden=["Thiết kế khái niệm", "Khái niệm thiết kế", "Bản vẽ ý niệm"],
+                provenance={
+                    "source_type": "international_fidic",
+                    "doc_id": "FIDIC White Book / RIBA Stage 1",
                 },
-            },
-            "chieu_cao_pccc": {
-                "canonical_id": "STAT-003",
-                "canonical_vi": "Chiều cao PCCC (HPCCC)",
-                "domain": "fire_safety",
-                "translations": {
-                    "en": "Fire Rescue Height (HPCCC)",
-                    "ja": "消防活動上有効な高さ",
-                    "ko": "소방구조높이",
-                },
-                "vi_forbidden": ["Chiều cao công trình PCCC", "Độ cao dập lửa"],
-                "provenance": {
-                    "source_type": "statutory",
-                    "doc_id": "qcvn_06_2022_bxd.md",
-                    "clause_anchor": "muc-1-4-9",
-                    "verbatim_definition": "Đo từ mặt đường xe chữa cháy tiếp cận đến mép dưới của lỗ cửa sổ mở trên tường ngoài tầng trên cùng.",
-                    "verbatim_sha256": compute_sha256(
-                        "Đo từ mặt đường xe chữa cháy tiếp cận đến mép dưới của lỗ cửa sổ mở trên tường ngoài tầng trên cùng."
-                    ),
-                },
-            },
+            ),
+            "schematic_design": _seed_entry(
+                "INTL-002",
+                "Thiết kế sơ bộ / Phương án",
+                "design_stages",
+                ("Schematic Design", "基本計画 / 概略設計", "계획설계"),
+                vi_forbidden=["Thiết kế sơ đồ", "Thiết kế lược đồ"],
+            ),
+            "detailed_design": _seed_entry(
+                "INTL-003",
+                "Thiết kế bản vẽ thi công (TKBVTC)",
+                "design_stages",
+                (
+                    "Detailed Design / Construction Drawings",
+                    "実施設計 / 施工図面",
+                    "실시설계 / 시공도면",
+                ),
+                vi_forbidden=["Thiết kế chi tiết", "Bản vẽ xây dựng"],
+            ),
+            "as_built_drawings": _seed_entry(
+                "INTL-004",
+                "Bản vẽ hoàn công",
+                "project_documentation",
+                ("As-Built Drawings", "竣工図 / 完成図", "준공도면"),
+                vi_forbidden=["Bản vẽ như xây dựng", "Bản vẽ như đã xây"],
+            ),
         }
 
     def _get_pillar2_international_terms(self) -> dict[str, Any]:
         """Compiles Pillar II FDI and ISO 19650 international terminology."""
-        return {
-            "concept_design": {
-                "canonical_id": "INTL-001",
-                "canonical_vi": "Thiết kế ý tưởng",
-                "domain": "design_stages",
-                "translations": {
-                    "en": "Concept Design",
-                    "ja": "構想設計 / 企画設計",
-                    "ko": "기본구상 / 기획설계",
-                },
-                "vi_forbidden": [
-                    "Thiết kế khái niệm",
-                    "Khái niệm thiết kế",
-                    "Bản vẽ ý niệm",
-                ],
-                "provenance": {
-                    "source_type": "international_fidic",
-                    "doc_id": "FIDIC White Book / RIBA Stage 1",
-                },
-            },
-            "schematic_design": {
-                "canonical_id": "INTL-002",
-                "canonical_vi": "Thiết kế sơ bộ / Phương án",
-                "domain": "design_stages",
-                "translations": {
-                    "en": "Schematic Design",
-                    "ja": "基本計画 / 概略設計",
-                    "ko": "계획설계",
-                },
-                "vi_forbidden": ["Thiết kế sơ đồ", "Thiết kế lược đồ"],
-            },
-            "detailed_design": {
-                "canonical_id": "INTL-003",
-                "canonical_vi": "Thiết kế bản vẽ thi công (TKBVTC)",
-                "domain": "design_stages",
-                "translations": {
-                    "en": "Detailed Design / Construction Drawings",
-                    "ja": "実施設計 / 施工図面",
-                    "ko": "실시설계 / 시공도면",
-                },
-                "vi_forbidden": ["Thiết kế chi tiết", "Bản vẽ xây dựng"],
-            },
-            "as_built_drawings": {
-                "canonical_id": "INTL-004",
-                "canonical_vi": "Bản vẽ hoàn công",
-                "domain": "project_documentation",
-                "translations": {
-                    "en": "As-Built Drawings",
-                    "ja": "竣工図 / 完成図",
-                    "ko": "준공도면",
-                },
-                "vi_forbidden": ["Bản vẽ như xây dựng", "Bản vẽ như đã xây"],
-            },
-            "project_coordinator": {
-                "canonical_id": "INTL-005",
-                "canonical_vi": "Điều phối dự án (PIC)",
-                "domain": "project_management",
-                "translations": {
-                    "en": "Project Coordinator (PIC)",
-                    "ja": "プロジェクトコーディネーター (担当)",
-                    "ko": "프로젝트 코디네이터 (담당)",
-                },
-                "vi_forbidden": ["Kỹ sư Điều phối Dự án", "Người điều phối"],
-            },
-            "iso19650_capability": {
-                "canonical_id": "INTL-BIM-001",
-                "canonical_vi": "Năng lực (Capability)",
-                "domain": "bim_iso19650",
-                "translations": {"en": "Capability", "ja": "能力 (Capability)"},
-                "context_notes": "Thước đo kỹ năng, hiểu biết và trình độ chuyên môn của nhân sự (ISO 19650 Mục 3.3.17)",
-            },
-            "iso19650_capacity": {
-                "canonical_id": "INTL-BIM-002",
-                "canonical_vi": "Khả năng (Capacity)",
-                "domain": "bim_iso19650",
-                "translations": {"en": "Capacity", "ja": "リソース・キャパシティ"},
-                "context_notes": "Thước đo phương tiện, nguồn lực và thời gian sẵn có của tổ chức (ISO 19650 Mục 3.3.18)",
-            },
-            "grandfathering_clause": {
-                "canonical_id": "INTL-006",
-                "canonical_vi": "Nguyên tắc bảo lưu công trình hiện hữu",
-                "domain": "compliance",
-                "translations": {
-                    "en": "Grandfathering Clause",
-                    "ja": "既存不適格条項 / 祖父条項",
-                    "ko": "기득권 보호 조항",
-                },
-                "vi_forbidden": ["Điều khoản ông nội", "Khoản mục ông cố"],
-            },
-        }
+        terms = self._get_pillar2_design_stage_terms()
+        terms.update(
+            {
+                "project_coordinator": _seed_entry(
+                    "INTL-005",
+                    "Điều phối dự án (PIC)",
+                    "project_management",
+                    (
+                        "Project Coordinator (PIC)",
+                        "プロジェクトコーディネーター (担当)",
+                        "프로젝트 코디네이터 (담당)",
+                    ),
+                    vi_forbidden=["Kỹ sư Điều phối Dự án", "Người điều phối"],
+                ),
+                "iso19650_capability": _seed_entry(
+                    "INTL-BIM-001",
+                    "Năng lực (Capability)",
+                    "bim_iso19650",
+                    ("Capability", "能力 (Capability)"),
+                    context_notes="Thước đo kỹ năng, hiểu biết và trình độ chuyên môn của nhân sự (ISO 19650 Mục 3.3.17)",
+                ),
+                "iso19650_capacity": _seed_entry(
+                    "INTL-BIM-002",
+                    "Khả năng (Capacity)",
+                    "bim_iso19650",
+                    ("Capacity", "リソース・キャパシティ"),
+                    context_notes="Thước đo phương tiện, nguồn lực và thời gian sẵn có của tổ chức (ISO 19650 Mục 3.3.18)",
+                ),
+                "grandfathering_clause": _seed_entry(
+                    "INTL-006",
+                    "Nguyên tắc bảo lưu công trình hiện hữu",
+                    "compliance",
+                    ("Grandfathering Clause", "既存不適格条項 / 祖父条項", "기득권 보호 조항"),
+                    vi_forbidden=["Điều khoản ông nội", "Khoản mục ông cố"],
+                ),
+            }
+        )
+        return terms
 
     def _get_pillar3_internal_governance_terms(self) -> dict[str, Any]:
         """Compiles Pillar III corporate governance and RULE-6.1 brand terms."""
         return {
-            "brand_institute": {
-                "canonical_id": "INT-GOV-001",
-                "canonical_vi": "Viện Khoa học công nghệ xây dựng (IBST)",
-                "domain": "brand_nomenclature",
-                "vi_forbidden": ["Viện IBST"],
-                "context_notes": "Cấp Viện gọi là Viện, Viện KHCN hoặc IBST theo RULE-6.1",
-            },
-            "brand_center": {
-                "canonical_id": "INT-GOV-002",
-                "canonical_vi": "Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng (CCBA)",
-                "domain": "brand_nomenclature",
-                "vi_forbidden": ["Trung tâm CCBA"],
-                "context_notes": "Cấp Trung tâm gọi là Trung tâm hoặc CCBA theo RULE-6.1",
-            },
-            "brand_dispatch_header": {
-                "canonical_id": "INT-GOV-003",
-                "canonical_vi": "IBST - CCBA",
-                "domain": "brand_nomenclature",
-                "vi_forbidden": ["IBST / CCBA"],
-                "context_notes": "Giao tiếp dự án dùng dấu gạch ngang IBST - CCBA",
-            },
-            "qc_gate_5_levels": {
-                "canonical_id": "INT-GOV-004",
-                "canonical_vi": "Hệ thống Kiểm soát Chất lượng Nội bộ 05 Cấp",
-                "domain": "quality_control",
-                "context_notes": "Quy trình kiểm soát theo Điều 13 CCBA Charter 2026: Level 1 Technical Check -> Level 2 Management Approval -> Level 3 Department Review -> Level 4 Compliance QA -> Level 5 Final Approval",
-            },
+            "brand_institute": _seed_entry(
+                "INT-GOV-001",
+                "Viện Khoa học công nghệ xây dựng (IBST)",
+                "brand_nomenclature",
+                vi_forbidden=["Viện IBST"],
+                context_notes="Cấp Viện gọi là Viện, Viện KHCN hoặc IBST theo RULE-6.1",
+            ),
+            "brand_center": _seed_entry(
+                "INT-GOV-002",
+                "Trung tâm Tư vấn và Ứng dụng BIM trong xây dựng (CCBA)",
+                "brand_nomenclature",
+                vi_forbidden=["Trung tâm CCBA"],
+                context_notes="Cấp Trung tâm gọi là Trung tâm hoặc CCBA theo RULE-6.1",
+            ),
+            "brand_dispatch_header": _seed_entry(
+                "INT-GOV-003",
+                "IBST - CCBA",
+                "brand_nomenclature",
+                vi_forbidden=["IBST / CCBA"],
+                context_notes="Giao tiếp dự án dùng dấu gạch ngang IBST - CCBA",
+            ),
+            "qc_gate_5_levels": _seed_entry(
+                "INT-GOV-004",
+                "Hệ thống Kiểm soát Chất lượng Nội bộ 05 Cấp",
+                "quality_control",
+                context_notes="Quy trình kiểm soát theo Điều 13 CCBA Charter 2026: Level 1 Technical Check -> Level 2 Management Approval -> Level 3 Department Review -> Level 4 Compliance QA -> Level 5 Final Approval",
+            ),
         }
 
     def _get_pillar4_lead_role_terms(self) -> dict[str, Any]:
         """Compiles Pillar IV canonical lead role titles per Decision 1812/QĐ-BXD (Mục I.21 & II.C.11)."""
-        role_specs = [
-            ("01", "Chủ nhiệm đồ án quy hoạch xây dựng", "Urban Planning Project Director", []),
-            ("02", "Chủ trì đồ án quy hoạch xây dựng", "Urban Planning Discipline Lead", []),
-            ("03", "Chủ nhiệm khảo sát xây dựng", "Construction Survey Manager", []),
-            ("04", "Chủ trì khảo sát xây dựng", "Construction Survey Lead", []),
-            ("05", "Chủ nhiệm thiết kế xây dựng", "Chief Design Manager", []),
-            ("06", "Chủ trì thiết kế xây dựng", "Design Discipline Lead", []),
-            ("07", "Chủ nhiệm thẩm tra thiết kế xây dựng", "Chief Design Verification Manager", []),
-            (
-                "08",
-                "Giám đốc quản lý dự án",
-                "Project Management Director",
-                ["Trưởng ban quản lý dự án", "Trưởng dự án QLDA"],
-            ),
-            (
-                "09",
-                "Chỉ huy trưởng công trường",
-                "Site Commander / Construction Site Manager",
-                ["Chỉ huy trưởng thi công", "Quản lý công trường"],
-            ),
-        ]
-        terms: dict[str, Any] = {}
-        for idx, vi_label, en_label, forbidden in role_specs:
-            key = f"vai_tro_chu_tri_{idx}"
-            terms[key] = {
-                "canonical_id": f"STAT-1812-ROLE-{idx}",
-                "canonical_vi": vi_label,
-                "domain": "professional_capacity",
-                "translations": {"en": en_label},
-                "vi_forbidden": forbidden,
-                "enum_values": {str(int(idx)): vi_label},
-                "provenance": {
-                    "source_type": "statutory",
-                    "doc_id": "quyet_dinh_1812_qd_bxd_2026.md",
-                    "clause_anchor": f"ii-c-11-3-role-{idx}",
-                    "verbatim_definition": f"Danh mục chức danh chủ trì mã {int(idx)}: {vi_label} theo Quyết định 1812/QĐ-BXD.",
-                    "verbatim_sha256": compute_sha256(vi_label),
-                },
-            }
-        return terms
+        roles = _extract_enum_mapping(
+            "1- Chủ nhiệm lập quy hoạch; 2- Chủ trì bộ môn thiết kế; 3- Chủ nhiệm khảo sát xây dựng; "
+            "4- Chủ nhiệm thiết kế; 5- Chủ trì bộ môn thiết kế (thiết kế xây dựng); "
+            "6- Chủ nhiệm thẩm tra thiết kế; 7- Chủ trì thẩm tra các bộ môn thiết kế; "
+            "8- Giám sát trưởng của đơn vị giám sát; 9- Chỉ huy trưởng của nhà thầu thi công xây dựng công trình"
+        )
+        aliases = {
+            "1": ["Chủ nhiệm đồ án quy hoạch xây dựng"],
+            "8": ["Giám đốc quản lý dự án"],
+            "9": ["Chỉ huy trưởng công trường"],
+        }
+        forbidden = {
+            "8": ["Trưởng đoàn giám sát tự phát"],
+            "9": ["Chỉ huy trưởng thi công", "Quản lý công trường"],
+        }
+        return {
+            f"vai_tro_chu_tri_{int(k):02d}": _seed_entry(
+                f"STAT-1812-ROLE-{int(k):02d}",
+                v,
+                "professional_capacity",
+                vi_forbidden=forbidden.get(k, []),
+                legacy_aliases=aliases.get(k, []),
+                enum_values={k: v},
+                provenance=_prov_entry(
+                    "quyet_dinh_1812_qd_bxd_2026.md",
+                    f"ii-c-11-role-{int(k):02d}",
+                    f"Danh mục chức danh chủ trì mã {k}: {v} theo Quyết định 1812/QĐ-BXD.",
+                )
+                | {"verbatim_sha256": compute_sha256(v)},
+            )
+            for k, v in roles.items()
+        }
 
     def _get_pillar4_national_schema_terms(self) -> dict[str, Any]:
         """Compiles Pillar IV national database schema terms & 2-tier geography (1812/QĐ-BXD)."""
+        qh4 = "Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt bằng)"
+        qh_enums = _extract_enum_mapping(
+            f"1- Quy hoạch chung 2- Quy hoạch phân khu 3- Quy hoạch chi tiết 4- {qh4}"
+        )
+        von_enums = _extract_enum_mapping(
+            "VONDAUTUCONG- Vốn đầu tư công VONNHANUOC- Vốn nhà nước ngoài đầu tư công PPP- Vốn PPP KHAC- Vốn khác HONHOP- Vốn hỗn hợp"
+        )
+        cap_enums = _extract_enum_mapping(
+            "DACBIET- Cấp đặc biệt I- Cấp I II- Cấp II III- Cấp III IV- Cấp IV"
+        )
+        proc_enums = _extract_enum_mapping(
+            "II_A_DA- Dự án đầu tư xây dựng; "
+            "II_B_CT_TD- Công trình xây dựng yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng; "
+            "II_C_CT_GPXD- Công trình xây dựng không yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, chỉ yêu cầu cấp giấy phép xây dựng; "
+            "II_D_CT_GPXD- Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng"
+        )
         return {
-            "quy_hoach_chi_tiet_rut_gon": {
-                "canonical_id": "STAT-1812-QH-04",
-                "canonical_vi": "Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt bằng)",
-                "domain": "urban_planning",
-                "translations": {"en": "Abbreviated Detailed Master Plan"},
-                "vi_forbidden": ["Quy hoạch tổng mặt bằng 1/500 rút gọn"],
-                "enum_values": {
-                    "1": "Quy hoạch chung",
-                    "2": "Quy hoạch phân khu",
-                    "3": "Quy hoạch chi tiết",
-                    "4": "Quy hoạch chi tiết được lập theo quy trình rút gọn (quy hoạch tổng mặt bằng)",
-                },
-            },
-            "nguon_von_dau_tu_1812": {
-                "canonical_id": "STAT-1812-VON",
-                "canonical_vi": "Nguồn vốn đầu tư",
-                "domain": "project_investment",
-                "enum_values": {
-                    "1": "Dự án sử dụng vốn đầu tư công",
-                    "2": "Dự án PPP",
-                    "3": "Dự án đầu tư kinh doanh",
-                    "4": "Dự án sử dụng nguồn vốn khác",
-                    "5": "Dự án sử dụng hỗn hợp nhiều nguồn vốn",
-                },
-            },
-            "dia_gioi_hanh_chinh_2_cap": {
-                "canonical_id": "STAT-1812-GEO-2TIER",
-                "canonical_vi": "Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)",
-                "domain": "administrative_geography",
-                "context_notes": "Theo Quyết định 19/2025/QĐ-TTg và Quyết định 1812/QĐ-BXD: Địa điểm xây dựng gồm maTinh (2 số) và maXa (5 số: Phường/Xã/Đặc khu), không còn cấp Quận/Huyện trung gian.",
-            },
-            "kich_ban_thu_tuc_cong_trinh_1812": {
-                "canonical_id": "STAT-1812-PROC-SCENARIOS",
-                "canonical_vi": "Phân nhóm thủ tục dự án và công trình xây dựng",
-                "domain": "administrative_procedure",
-                "enum_values": {
-                    "II_A_DA": "Dự án đầu tư xây dựng thuộc đối tượng thẩm định BCNCKT",
-                    "II_B_CT_TD": "Công trình thuộc dự án thẩm định BCNCKT được miễn GPXD",
-                    "II_C_CT_GPXD": "Công trình thuộc đối tượng đề nghị cấp Giấy phép xây dựng",
-                    "II_D_CT_KTKT": "Công trình chỉ yêu cầu lập Báo cáo kinh tế - kỹ thuật và miễn GPXD",
-                },
-            },
+            "quy_hoach_chi_tiet_rut_gon": _seed_entry(
+                "STAT-1812-QH-04",
+                qh4,
+                "urban_planning",
+                ("Abbreviated Detailed Master Plan",),
+                vi_forbidden=["Quy hoạch tổng mặt bằng 1/500 rút gọn"],
+                enum_values=qh_enums,
+            ),
+            "nguon_von_dau_tu_1812": _seed_entry(
+                "STAT-1812-VON", "Nguồn vốn đầu tư", "project_investment", enum_values=von_enums
+            ),
+            "cap_cong_trinh_1812": _seed_entry(
+                "STAT-1812-CAP-CT",
+                "Cấp công trình",
+                "building_classification",
+                enum_values=cap_enums,
+            ),
+            "dia_gioi_hanh_chinh_2_cap": _seed_entry(
+                "STAT-1812-GEO-2TIER",
+                "Địa giới hành chính 2 cấp (Tỉnh/Thành phố - Phường/Xã/Đặc khu)",
+                "administrative_geography",
+                context_notes="Theo Quyết định 19/2025/QĐ-TTg và Quyết định 1812/QĐ-BXD: Địa điểm xây dựng gồm maTinh (2 số) và maXa (5 số: Phường/Xã/Đặc khu), không còn cấp Quận/Huyện trung gian.",
+            ),
+            "kich_ban_thu_tuc_cong_trinh_1812": _seed_entry(
+                "STAT-1812-PROC-SCENARIOS",
+                "Phân nhóm thủ tục dự án và công trình xây dựng",
+                "administrative_procedure",
+                legacy_aliases=["II_D_CT_KTKT"],
+                enum_values=proc_enums,
+            ),
         }
 
     def save_canonical_taxonomy_yaml(
