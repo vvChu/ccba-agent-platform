@@ -16,7 +16,7 @@ command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 triggers:
 - teamwork
@@ -120,7 +120,8 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
 ---
 
 ### Giai Đoạn 3: Thực Thi Song Song Độc Quyền (Parallel Milestone Execution)
-1. **Dispatch Batch:**
+1. **Dispatch Batch & Chốt Chặn First-Unit Canary (`COND-03`):**
+   - Đối với chiến dịch gồm nhiều đơn vị công việc đồng dạng (dùng chung một mẫu kickoff template), trước khi fan-out các batches song song, Orchestrator bắt buộc chạy thử **1 đơn vị thật (Canary Unit)** đi trọn vòng `Kickoff -> Worker -> Single-Writer Patch -> Success Auditor -> verify-patch exit 0` và xác thực `canary_verdict` (`head_sha` + `kickoff_sha256`) theo đúng bản chuẩn tại Mục 10 [`docs/rules/execution_coordination_guardrails.md`](../../../docs/rules/execution_coordination_guardrails.md#10-teamwork-orchestration-protocol-quy-chuẩn-điều-phối-đa-tác-nhân-dài-hạn).
    - Khởi chạy các Worker subagents (tối đa 3 workers/batch) qua `invoke_subagent` hoặc công cụ điều phối nền tảng.
    - Prompt của từng Worker **bắt buộc** chứa:
      - Danh sách file được phép đọc (Exclusive File Scope).

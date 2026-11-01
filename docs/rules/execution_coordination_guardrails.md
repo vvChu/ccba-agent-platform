@@ -40,6 +40,9 @@
   3. **Success Auditor (Kiểm Định Nghiệm Thu):** Chạy kiểm thử cô lập, quét Maskara, và đối chiếu `git diff --name-only` với phạm vi khai báo trong `team_sheet.md` (chống Seam Boundary Leakage).
 - **Cơ chế Khôi phục & Phân định Ranh giới:**
   - Nếu worker quá hạn hoặc suy thoái ngữ cảnh, Orchestrator đánh dấu milestone là `"INCOMPLETE"` và khởi động lại với phạm vi thu hẹp hoặc kích hoạt `/boost` (Escalation UP cho bế tắc sâu đơn lẻ) trước khi tiếp tục `/ccba-teamwork` (Coordination OUT cho đa luồng công việc).
+- **Thử Nghiệm Đơn Vị Đầu Tiên & Phán Quyết Gắn SHA (First-Unit Canary & SHA-Bound Verdict — Pstack v0.15.36 & COND-03):**
+  - Khi chiến dịch gồm nhiều đơn vị công việc đồng dạng (cùng kickoff template, chỉ khác `unit_id`), trước khi fan-out hàng loạt, Orchestrator bắt buộc chạy **1 đơn vị thật (Canary Unit)** trên cây làm việc hiện tại đi trọn vòng local: `Kickoff -> Worker -> Single-Writer Patch -> Success Auditor -> verify-patch exit 0`.
+  - Ghi nhận biên lai `canary_verdict` gồm `{head_sha, unit_id, kickoff_sha256, verify_command, exit_code: 0}`. Chỉ được phép fan-out các batches còn lại khi commit hiện tại (`git rev-parse HEAD`) còn bằng `head_sha` và mã băm của kickoff template còn bằng `kickoff_sha256` (nếu commit đầu nhánh hoặc template thay đổi, bắt buộc chạy lại Canary). Quá trình Canary và Fan-out luôn giữ nguyên 1 Single-Writer mỗi batch, tuân thủ Claim Lock, Remote Mutation Idempotency và `--force-with-lease`.
 
 ---
 
