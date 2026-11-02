@@ -18,6 +18,10 @@ metadata:
   author: CCBA
   version: 1.0.0
 sync_commit: "27101e016788ec36713826486aa9e29e678dd857"
+verification_mode:
+  - scaffold
+  - sync
+  - verify
 covered_paths:
   - .agents/skills/ccba-xia/SKILL.md
   - .agents/skills/ccba-xia/references/modes.md
