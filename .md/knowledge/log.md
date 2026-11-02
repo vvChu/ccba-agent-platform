@@ -2,6 +2,16 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-03] [ingest] | Khởi Tạo Không Gian Tên Historical LLM Wiki (`.md/knowledge/wiki/`), Nén Bộ Nhớ Phân Tầng (`6.96 KB < 7.0 KB`) & Đóng Sổ Ứng Viên Thượng Nguồn (`PR #587`–`#590`)
+- **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok CLI (`Session IDs: 6acfc77b-69f8-446a-8f2d-59b5e40ff5a3`, `c8938996-3ee7-4309-9c61-25902f319059`, `0a350328-e4e3-4a69-8da7-5ac5ea5dfdeb`)
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/wiki/index.md`, `.md/knowledge/wiki/verification-harness-and-skill-governance-evolution.md`, `.md/knowledge/index.md`, `.md/knowledge/port_recommendations.md`, `packages/ccba-harness/.agents/skills/verify-ccba-*/`, `packages/ccba-harness/features/INDEX.md`
+- **Summary**: Hoàn tất chuyển dịch `mattpocock/skills` `v1.3.2` (`4ae2317`), mở rộng hệ thống kiểm định 5 khối và thực thi 5 điều kiện phản biện của Grok (`COND-01`..`COND-05`):
+  1. **Nén Bộ Nhớ Tác Nghiệp Phân Tầng Dưới Trần `7.0 KB` (`COND-01`)**: Nén `.md/knowledge/session_learnings.md` từ `10,185` bytes (`9.95 KB`) xuống `7,125` bytes (`6.96 KB`), bảo toàn 100% `REQUIRED_INVARIANTS` và `RULE-\d+\.\d+` headers cho `ZeroDeletionGuard`, đồng thời lưu trữ Mục 50 vào `archive/session_learnings_history.md`.
+  2. **Khởi Tạo & Dogfood Không Gian Tên Historical LLM Wiki (`COND-03`)**: Thiết lập `.md/knowledge/wiki/index.md` và bài biên niên sử `verification-harness-and-skill-governance-evolution.md` neo cứng tại `2026-11-03` & `ccba-agent-platform@ae5c1b28` theo quy tắc *"Write History, Not the Present"*.
+  3. **Đóng Sổ Ứng Viên Thượng Nguồn Trùng Lặp (`COND-05`)**: Ghi nhận trạng thái `[DECLINED / SUPERSEDED]` cho `retro` và `writing-beats` trong `.md/knowledge/port_recommendations.md`.
+
+---
+
 ## [2026-11-01] [update] | Kiểm Định Hạ Tầng `IDOP-CCBA-WAY` (`Cycle-Safe BFS`), Đồng Bộ 3 Bề Mặt Thuật Ngữ `1812/QĐ-BXD` & Khắc Phục Điểm Mù `ImmutableSpanMasker.unmask` / `conftest.py` (`PR #582`–`#585`)
 - **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok CLI (`Session IDs: fdea9318-4eff-49c2-bc3f-614935fecc76`, `1a0cae16-2a73-497c-90b7-8f4f1677182f`, `cc36a0a9-759f-472d-90d5-5e8f6239f970`)
 - **Affected Files**: `scripts/governance/mermaid_syntax_linter.py`, `scripts/tests/test_idop_schema_compatibility.py`, `tests/fixtures/idop_contract/core_lists_snapshot.json`, `.agents/skills/ccba-sharepoint-iac/SKILL.md`, `.agents/skills/ccba-completion-checklist/SKILL.md`, `.agents/skills/ccba-legal-advisor/SKILL.md`, `CONTEXT.md`, `packages/ccba-legal-intel/src/ccba_legal/lexicon/masker.py`, `conftest.py`, `scripts/spoke/sync/coordinator.py`, `.agents/proposals/`, `.md/knowledge/`
