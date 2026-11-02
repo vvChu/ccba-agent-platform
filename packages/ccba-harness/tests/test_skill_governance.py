@@ -267,3 +267,50 @@ def test_grok_conditions_nfc_normalization_and_path_traversal(tmp_path: Path) ->
     store = SkillVersionStore("../../etc/passwd", versions_root=tmp_path / ".skill_versions")
     assert ".." not in store.skill_name
     assert store.store_dir.parent == (tmp_path / ".skill_versions")
+
+
+def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
+    """Verifies 5-block verification skills structure, mirror parity, and central FEAT registry."""
+    import re
+
+    import yaml
+
+    repo_root = Path(__file__).resolve().parents[3]
+    pkg_skills_root = repo_root / "packages" / "ccba-harness" / ".agents" / "skills"
+    hub_skills_root = repo_root / ".agents" / "skills"
+    central_index = repo_root / "packages" / "ccba-harness" / "features" / "INDEX.md"
+
+    assert central_index.is_file()
+    central_text = central_index.read_text(encoding="utf-8")
+    expected_prefixes = ("FEAT-00", "FEAT-XIA-", "FEAT-WF-", "FEAT-GRILL-", "FEAT-IMP-", "FEAT-KL-")
+    for prefix in expected_prefixes:
+        assert prefix in central_text, f"Missing {prefix} in central features/INDEX.md"
+
+    skill_pairs = [
+        ("verify-ccba-xia", "ccba-xia", "xia"),
+        ("verify-ccba-wayfinder", "ccba-wayfinder", "wayfinder"),
+        ("verify-ccba-grilling", "ccba-grilling", "grilling"),
+        ("verify-ccba-implement", "ccba-implement", "implement"),
+        ("verify-ccba-knowledge-loop", "ccba-knowledge-loop", "knowledge_loop"),
+    ]
+    for verify_name, target_name, mod_suffix in skill_pairs:
+        v_dir = pkg_skills_root / verify_name
+        t_dir = hub_skills_root / target_name / "harness"
+        assert (v_dir / "SKILL.md").is_file(), f"Missing {verify_name}/SKILL.md"
+        assert (v_dir / "features" / "INDEX.md").is_file(), (
+            f"Missing {verify_name}/features/INDEX.md"
+        )
+
+        raw = (v_dir / "SKILL.md").read_text(encoding="utf-8")
+        fm = yaml.safe_load(raw.split("---", 2)[1])
+        assert fm["name"] == verify_name
+        assert re.fullmatch(r"[0-9a-f]{40}", str(fm.get("sync_commit", "")))
+        assert fm.get("verification_mode") == ["scaffold", "sync", "verify"]
+
+        for fname in (f"run_verify_{mod_suffix}.py", f"test_{mod_suffix}_suite.py"):
+            p1 = v_dir / "harness" / fname
+            p2 = t_dir / fname
+            assert p1.is_file() and p2.is_file(), f"Missing harness file {fname} for {verify_name}"
+            assert p1.read_text(encoding="utf-8") == p2.read_text(encoding="utf-8"), (
+                f"Mirror drift detected between {p1} and {p2}"
+            )
