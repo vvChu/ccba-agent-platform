@@ -97,7 +97,7 @@ stateDiagram-v2
 ### Bước 1: Thực Thi Bộ Kiểm Định 5 Khối Cho `/ccba-grilling`
 - Chạy kịch bản điều phối kiểm định tự động từ thư mục gốc của dự án:
   ```bash
-  .venv/bin/python .agents/skills/ccba-grilling/harness/run_verify_grilling.py
+  .venv/bin/python packages/ccba-harness/.agents/skills/verify-ccba-grilling/harness/run_verify_grilling.py
   ```
 - **Tiêu chí hoàn thành:** Kịch bản thực thi trọn vẹn cả 5 khối, toàn bộ 7 bài kiểm thử trong `test_grilling_suite.py` vượt qua 100%, tiến trình con được dọn sạch và lệnh thoát với `exit code 0`.
 
