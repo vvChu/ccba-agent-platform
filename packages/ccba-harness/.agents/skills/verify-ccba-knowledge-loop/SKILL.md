@@ -97,7 +97,7 @@ stateDiagram-v2
 ### Bước 1: Thực Thi Bộ Kiểm Định 5 Khối Cho `/ccba-knowledge-loop`
 - Chạy kịch bản điều phối kiểm định tự động từ thư mục gốc của dự án:
   ```bash
-  .venv/bin/python .agents/skills/ccba-knowledge-loop/harness/run_verify_knowledge_loop.py
+  .venv/bin/python packages/ccba-harness/.agents/skills/verify-ccba-knowledge-loop/harness/run_verify_knowledge_loop.py
   ```
 - **Tiêu chí hoàn thành:** Kịch bản thực thi trọn vẹn cả 5 khối, toàn bộ 7 bài kiểm thử trong `test_knowledge_loop_suite.py` vượt qua 100%, tiến trình con được dọn sạch và lệnh thoát với `exit code 0`.
 
