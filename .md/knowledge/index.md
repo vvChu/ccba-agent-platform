@@ -10,6 +10,8 @@
 
 - [CONTEXT.md](CONTEXT.md): Từ điển thuật ngữ domain xây dựng, BIM, pháp điển hóa và các nguyên lý kiến trúc nền tảng.
 - [session_learnings.md](session_learnings.md): Kho tri thức 30+ nguyên lý thực chiến qua các phiên làm việc (Process Locks, 2-Tier Test SLA, Windows Subprocess, Deep Modules).
+- [wiki/index.md](wiki/index.md): **[MỚI]** Chỉ mục điều hướng trung tâm của Historical LLM Wiki (`.md/knowledge/wiki/`, `COND-02`/`COND-03` — *"Write History, Not the Present"*).
+- [wiki/verification-harness-and-skill-governance-evolution.md](wiki/verification-harness-and-skill-governance-evolution.md): **[MỚI]** Biên niên sử tiến hóa Quản trị Kỹ năng (`ADR-0057`) và Hệ thống Kiểm định 5 Khối Single-Source (`ccba-agent-platform@ae5c1b28`).
 - [port_recommendations.md](port_recommendations.md): Tổng hợp khuyến nghị porting tính năng từ các nguồn upstream.
 - [upstream_skills_mapping.md](upstream_skills_mapping.md): Bản đồ phân rã và ánh xạ kỹ năng giữa ClaudeKit, MattPocock và CCBA Platform.
 - [upstream_sources.yaml](upstream_sources.yaml): Định nghĩa các nguồn upstream chính thức.
