@@ -270,7 +270,7 @@ def test_grok_conditions_nfc_normalization_and_path_traversal(tmp_path: Path) ->
 
 
 def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
-    """Verifies 5-block verification skills structure, mirror parity, and central FEAT registry."""
+    """Verifies canonical single-source 5-block verification skills (COND-02) and central 70-feature registry."""
     import re
 
     import yaml
@@ -282,24 +282,40 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
 
     assert central_index.is_file()
     central_text = central_index.read_text(encoding="utf-8")
-    expected_prefixes = ("FEAT-00", "FEAT-XIA-", "FEAT-WF-", "FEAT-GRILL-", "FEAT-IMP-", "FEAT-KL-")
+    expected_prefixes = (
+        "FEAT-00",
+        "FEAT-XIA-",
+        "FEAT-WF-",
+        "FEAT-GRILL-",
+        "FEAT-IMP-",
+        "FEAT-KL-",
+        "FEAT-BUG-",
+        "FEAT-TDD-",
+        "FEAT-REV-",
+        "FEAT-PR-",
+    )
     for prefix in expected_prefixes:
         assert prefix in central_text, f"Missing {prefix} in central features/INDEX.md"
 
     skill_pairs = [
+        ("verify-ccba-harness", "ccba-harness", "harness"),
         ("verify-ccba-xia", "ccba-xia", "xia"),
         ("verify-ccba-wayfinder", "ccba-wayfinder", "wayfinder"),
         ("verify-ccba-grilling", "ccba-grilling", "grilling"),
         ("verify-ccba-implement", "ccba-implement", "implement"),
         ("verify-ccba-knowledge-loop", "ccba-knowledge-loop", "knowledge_loop"),
+        ("verify-ccba-diagnosing-bugs", "ccba-diagnosing-bugs", "diagnosing_bugs"),
+        ("verify-ccba-tdd", "ccba-tdd", "tdd"),
+        ("verify-ccba-code-review", "ccba-code-review", "code_review"),
+        ("verify-ccba-create-pr", "ccba-create-pr", "create_pr"),
     ]
     for verify_name, target_name, mod_suffix in skill_pairs:
         v_dir = pkg_skills_root / verify_name
-        t_dir = hub_skills_root / target_name / "harness"
         assert (v_dir / "SKILL.md").is_file(), f"Missing {verify_name}/SKILL.md"
-        assert (v_dir / "features" / "INDEX.md").is_file(), (
-            f"Missing {verify_name}/features/INDEX.md"
-        )
+        if verify_name != "verify-ccba-harness":
+            assert (v_dir / "features" / "INDEX.md").is_file(), (
+                f"Missing {verify_name}/features/INDEX.md"
+            )
 
         raw = (v_dir / "SKILL.md").read_text(encoding="utf-8")
         fm = yaml.safe_load(raw.split("---", 2)[1])
@@ -309,8 +325,9 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
 
         for fname in (f"run_verify_{mod_suffix}.py", f"test_{mod_suffix}_suite.py"):
             p1 = v_dir / "harness" / fname
-            p2 = t_dir / fname
-            assert p1.is_file() and p2.is_file(), f"Missing harness file {fname} for {verify_name}"
-            assert p1.read_text(encoding="utf-8") == p2.read_text(encoding="utf-8"), (
-                f"Mirror drift detected between {p1} and {p2}"
-            )
+            assert p1.is_file(), f"Missing canonical harness file {fname} for {verify_name}"
+
+        dup_dir = hub_skills_root / target_name / "harness"
+        assert not dup_dir.exists(), (
+            f"COND-02 violation: duplicate harness directory found at {dup_dir}"
+        )

@@ -1,0 +1,11 @@
+# Application Features Map & Verification Matrix (`ccba-code-review`)
+
+| Mã Tính Năng | Tên Tính Năng | Endpoint / CLI / Module | Verification Script | Trạng Thái | Last Verified |
+| :--- | :--- | :--- | :--- | :---: | :---: |
+| `FEAT-REV-001` | Frontmatter, Slash Command & GPI Threshold ($16.5 \ge 12.0$) | `.agents/skills/ccba-code-review/SKILL.md` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-002` | Step 1–3 Simplify Gate (`400 LOC`/`8 tệp`/`200 LOC`), Copilot Gate (`audit_pr_comments.py`) & Explicit Standards Handoff (`v1.3.2 #1208`) | `.agents/skills/ccba-code-review/SKILL.md` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-003` | Step 4–5 `fresh context window` (`v1.3.2 #1341`), Execution-Proven Filter (`candidate` + `repro_command`) & `## Merge Danger` | `run_verify_code_review.validate_code_review_execution` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-004` | Complete Level 3 Reference Suite (14 Checklists & Workflows in `references/`) | `.agents/skills/ccba-code-review/references/` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-005` | Spoke Sync Legacy Alias (`code-review` $\to$ `ccba-code-review`) & Archetype Catalog Registration | `scripts.spoke.sync.coordinator.SKILL_DEPRECATION_ALIASES` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-006` | 5-Block Lifecycle, Statechart Bug-Path Replay & Drift Modes | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/run_verify_code_review.py` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-REV-007` | Surface Diff Parity, Git Provenance & Domain Eval Ratchet Optimizer | `ccba_harness.evals.tuner.GitRatchetOptimizer` | `packages/ccba-harness/.agents/skills/verify-ccba-code-review/harness/test_code_review_suite.py` | `stable` | 2026-11-03 |

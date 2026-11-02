@@ -1,0 +1,11 @@
+# Application Features Map & Verification Matrix (`ccba-diagnosing-bugs`)
+
+| Mã Tính Năng | Tên Tính Năng | Endpoint / CLI / Module | Verification Script | Trạng Thái | Last Verified |
+| :--- | :--- | :--- | :--- | :---: | :---: |
+| `FEAT-BUG-001` | Frontmatter, Slash Command & GPI Threshold ($14.5 \ge 12.0$) | `.agents/skills/ccba-diagnosing-bugs/SKILL.md` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-002` | `## Redact` Guardrail (`<REDACTED>`) & Phase 1–2 Tight Red-Capable Feedback Loop | `.agents/skills/ccba-diagnosing-bugs/SKILL.md` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-003` | Phase 3–4 Ranked Falsifiable Hypotheses (3–5), `/ccba-issue-tree` & `[DEBUG-...]` Tagged Probes | `run_verify_diagnosing_bugs.validate_diagnosis_phase_transition` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-004` | Phase 5–6 Forced Mutation `git diff` Gate (`v1.3.2 #1209`), `/ccba-session-retrospective` & `mock_debugging_patterns.md` | `.agents/skills/ccba-diagnosing-bugs/references/mock_debugging_patterns.md` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-005` | Spoke Sync Legacy Aliases (`diagnosing-bugs`, `mock-debugger`) & Archetype Catalog Registration | `scripts.spoke.sync.coordinator.SKILL_DEPRECATION_ALIASES` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-006` | 5-Block Lifecycle, Statechart Bug-Path Replay & Drift Modes | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/run_verify_diagnosing_bugs.py` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-BUG-007` | Surface Diff Parity, Git Provenance & Domain Eval Ratchet Optimizer | `ccba_harness.evals.tuner.GitRatchetOptimizer` | `packages/ccba-harness/.agents/skills/verify-ccba-diagnosing-bugs/harness/test_diagnosing_bugs_suite.py` | `stable` | 2026-11-03 |
