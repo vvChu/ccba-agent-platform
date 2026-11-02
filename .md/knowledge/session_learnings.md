@@ -1,86 +1,59 @@
 # 🧠 CCBA Platform Knowledge Base: Active Architectural Invariants
 
-> **Phạm vi:** Hub (`ccba-agent-platform`) & Spokes | **Chuẩn:** ADR 0030, 0031, 0035, 0041, 0057, 0058.
-> **Lịch sử:** [session_learnings_history.md](archive/session_learnings_history.md) | Ngưỡng: $\le 10\text{ KB}$
+> **Phạm vi:** Hub (`ccba-agent-platform`) & Spokes | **Chuẩn:** ADR 0030, 0031, 0033, 0035, 0037, 0041, 0046, 0051, 0053, 0056, 0057, 0058, 0060, 0061, 0062, 0066, 0067, ADR-0040, ADR-0046, ADR-0059, ADR-0060.
+> **Lịch sử:** [session_learnings_history.md](archive/session_learnings_history.md) | **Wiki:** [wiki/index.md](wiki/index.md) | Ngưỡng: $\le 10\text{ KB}$
 
 ---
 
 ## Miền 1. 🏛️ Kiến Trúc, Phân Tầng Kỹ Năng & Quản Trị Seams
 
-- **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & Chỉ Số GPI]**:
-  - *Cổng 0 (Determinism)*: Thuần giải thuật/IO $\to$ Deep Seams (`packages/*/src/`); `SKILL.md` không code trần.
-  - *Cổng 1 (Orchestration)*: Đa luồng/StateGraph/HITL $\to$ Tier 3 Composite Orchestrator (bỏ qua GPI).
-  - *Chỉ số GPI*: $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$. $< 12.0 \to$ Tier 2A; $\ge 12.0 \to$ Tier 2B. Rituals: $A = 1.0$.
-- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6..1.9, 1.15..1.17, 1.19, 1.21..1.22 tại Mục 23-27, 33-38: Class A Fail-Fast)*
-- **RULE-1.10 [Platform-Aware KISS & Anti-Phantom Deferral]**:
-  - Tái sử dụng Package Seams/Master Skills là KISS bậc 1 (`compile_catalog.py --query <kw>`); CẤM script chắp vá hoặc hoãn Phase 2.
-- **RULE-1.12 [ADR 0060 — Team Whitelist & Federated Architecture]**:
-  - Unignore `!.agents/teams/` trong `.gitignore`. 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị qua CLI/REST/gRPC.
-- **RULE-1.13 [Parameter Externalization & Active Cleanliness Guardrails]**:
-  - CẤM nhúng raw model (`gemini-*`, `gpt-*`) hoặc IP; dùng `choose_model()`/`ModelArchetype` & env vars (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`). `check_spoke_cleanliness.py` nối AST & docstring checkers vào `scan_spoke_cleanliness()` (Mục 41).
-- **RULE-1.14 [ADR 0062 — Declarative Sync Registry & Fail-Closed Gate]**:
-  - `assess_catalog_freshness` chặn `--apply` (exit 1) khi `catalog.yaml` stale (`--allow-stale-catalog` ghi audit log). Bindings tại `catalog_base.yaml`; `spoke_bootstrap.py` dùng Kahn's topo sort.
-- **RULE-1.18 [ADR 0066 — Skills Taxonomy, Scope & Resource Skill-Ref Parity]**:
-  - `bundle: _core` chỉ chứa SDLC; `_software` chứa code. Frontmatter có `scope: hub | spoke | universal`; linter chặn `command: /...` ở `_governance` thiếu `scope: hub` & đối soát GPI. `required_skills` trong `resources/*.yaml` khớp `.agents/skills/` (Mục 45).
-- **RULE-1.20 [ADR 0061 — Posture Title, Parity Radar & Contract Inflation]**:
-  - Dùng `## 🏛️ Platform-Aware Architecture Posture` (0 số ADR ở header); CẤM token ADR không tạo ADR mới (`sync_hub_adr_matrix.py`). 16 Deep Seams `package-bound`; 60 skills `seam-exempt`.
-- **RULE-1.23 [ADR 0067 — 3-Tier One-Way Door Manifest & Backpressure]**:
-  - `classify_pr_door` & `compute_cumulative_streak` ($K \ge 3$ PRs/72h hoặc $>200$ LOC $\to$ `ONE_WAY_DOOR`). `evaluate_backpressure_queue` ngắt khi $>5$ PRs/$>24\text{h}$; `validate_tradeoff_card` bắt buộc Tradeoff Card ($\le 30$ dòng, Mục 40).
-- **RULE-1.24 [Federated Role & ERP Boundary — ADR 0046 vs IDOP-CCBA-WAY]**:
-  - 15 `ROLE_ID` & ERP 5 pha thuộc `IDOP-CCBA-WAY` (`ADR-0060`). Hub SSOT là **ADR-0046** (`seat_role` + 5 cấp QC), qua `idop_bridge.py`; CẤM Dual-SSOT/tiêm `ROLE_ID` vào System Prompt (`ADR-0040`, Mục 42).
-- **RULE-1.25 [Antigravity 24KB Rule Cap, Decomposition & Zombie Cleanup]**:
-  - File rules $\le 24,000$ bytes ($11–18$ KB) chống silent truncation (`rules.go:544`). Phân rã tệp Hub sync `CORE_LAYER2_RULES`; `sync_layer2_rules` dọn `LEGACY_MONOLITHIC_RULES` tại Spoke (`.agents/rules/`) qua `(is_symlink() or exists())` & assert sau `unlink()` (`CLEANUP_FAILED`). `normalize_spoke_agents_links` định tuyến theo anchor (`#...`, Mục 48, PR #553, #556).
+- **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & GPI]**: Cổng 0 (Determinism) $\to$ Deep Seams (`packages/*/src/`); Cổng 1 (Orchestration) $\to$ Tier 3. $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$ ($< 12.0 \to$ Tier 2A; $\ge 12.0 \to$ Tier 2B; Rituals $A = 1.0$).
+- *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23-38)*
+- **RULE-1.10 [Platform-Aware KISS]**: Tái sử dụng Package Seams (`compile_catalog.py --query <kw>`); CẤM script chắp vá hoặc hoãn Phase 2.
+- **RULE-1.12 [ADR 0060 — Federated Architecture]**: Unignore `!.agents/teams/`; 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị.
+- **RULE-1.13 [Parameter Externalization]**: CẤM raw model/IP; dùng `choose_model()`/`ModelArchetype` & env vars (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`, `scan_spoke_cleanliness()`).
+- **RULE-1.14 [ADR 0062 — Declarative Sync Registry]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale; `spoke_bootstrap.py` dùng Kahn's topo sort.
+- **RULE-1.18 [ADR 0066 — Skills Taxonomy & Scope]**: `bundle: _core` (SDLC) vs `_software` (code); `scope: hub | spoke | universal`; `required_skills` khớp `.agents/skills/` (Mục 45).
+- **RULE-1.20 [ADR 0061 — Posture Title & Parity]**: Header `## 🏛️ Platform-Aware Architecture Posture`; CẤM token ADR mới thiếu file ADR (`sync_hub_adr_matrix.py`).
+- **RULE-1.23 [ADR 0067 — One-Way Door & Backpressure]**: `classify_pr_door` & `compute_cumulative_streak` ($K \ge 3$ PRs/72h hoặc $>200$ LOC $\to$ `ONE_WAY_DOOR`); `validate_tradeoff_card` ($\le 30$ dòng).
+- **RULE-1.24 [Federated Role — ADR 0046]**: 15 `ROLE_ID` thuộc `IDOP-CCBA-WAY` (`ADR-0060`); Hub SSOT là **ADR-0046** qua `idop_bridge.py`; CẤM tiêm `ROLE_ID` vào System Prompt (`ADR-0040`).
+- **RULE-1.25 [Antigravity 24KB Cap & Zombie Cleanup]**: File rules $\le 24,000$ bytes ($11–18$ KB); `sync_layer2_rules` xóa `LEGACY_MONOLITHIC_RULES` qua `(is_symlink() or exists())`.
 
 ---
 
 ## Miền 2. 🔒 Chất Lượng Mã Nguồn & Rào Chắn CI
 
-- *(RULE-2.1..2.4, 2.8, 2.10..2.19 tại Mục 24-35: `.md/knowledge/` biên mục vào `index.md` chống Orphan Notes; `cat << 'EOF'`)*
-- **RULE-2.5 [ADR 0058 — Archetype Routing, Pre-Eval Hygiene Delta & Opt-In Tuner]**:
-  - Ánh xạ `eval_*.json` qua `archetypes.py` (17 archetypes); chuyên biệt trước khái quát. `_run_pre_eval_guards` chặn delta `audit_skill()`; `run_nightly_tuner.sh` mặc định chạy `verify-patch --preset skill` (0 token), khóa tuner sau `--enable-tuner`/`--skill` (Mục 47).
-- **RULE-2.9 [Test Fixture Isolation, Subpackage Pytest INI Parity & Zero Hub Pollution Sandbox]**:
-  - `conftest.py` xóa `CCBA_HUB_PATH`, `HUB_PATH`, `CCBA_LEGAL_KNOWLEDGE_PATH`, `CCBA_LEGAL_CORPUS_PATH` & mock lock (`is_kernel_runner_locked`, `check_daemon_lock` $\to$ `False`). Subpackage `[tool.pytest.ini_options]` sync `pythonpath` & `markers`, cấm `--cov` cứng. E2E test Spoke sync cô lập Hub: `CCBA_SKIP_GIT_PULL=1`, `CCBA_HUB_PATH`, `--sync-item platform-loader` & assert SHA-256 `spoke_registry.yaml` (Mục 44, PR #556).
-- **RULE-2.20 [Zero-Quarantine, AST Budget, Two-Edit Litmus, Mutation Proof & Statechart BFS]**:
-  - CẤM hàm $> 50$ LOC, CLI post-parse $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước. `verify_statechart_anti_lie` kiểm 4 bất biến `stateDiagram-v2` ($\le 20$ cạnh, `bug_path` liền kề); liveness dùng **Cycle-Safe BFS (`visited: set[str]`)** + 2-Tier Golden Snapshot (Mục 44, 47, 49).
+- *(RULE-2.1..2.4, 2.8, 2.10..2.19 tại Mục 24-35: `.md/knowledge/` biên mục vào `index.md` chống Orphan Notes)*
+- **RULE-2.5 [ADR 0058 — Archetype Routing & Opt-In Tuner]**: Ánh xạ `eval_*.json` qua `archetypes.py`; `_run_pre_eval_guards` chặn delta `audit_skill()`; `run_nightly_tuner.sh` mặc định chạy `verify-patch --preset skill`.
+- **RULE-2.9 [Test Fixture Isolation & Sandbox]**: `conftest.py` xóa env Hub/Legal & mock lock; E2E Spoke sync dùng `CCBA_SKIP_GIT_PULL=1` & assert SHA-256 `spoke_registry.yaml`.
+- **RULE-2.20 [Zero-Quarantine, AST Budget & Statechart BFS]**: CẤM hàm $> 50$ LOC, CLI $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **Cycle-Safe BFS (`visited: set[str]`)**.
+- **RULE-2.21 [Single-Source 5-Block Harnesses, Isolated `__path__` & Wiki]**: `scripts/tests/__init__.py` nối `tests/` gốc vào `__path__` chống shadowing `tests.governance`. 5-block verification harnesses đặt nguồn chuẩn duy nhất tại `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/` (CẤM nhân đôi tại `.agents/skills/ccba-*/harness/`). Wiki lịch sử cô lập tại `.md/knowledge/wiki/index.md` (Mục 50).
 
 ---
 
 ## Miền 3. 📜 Chuẩn Mực Pháp Lý & Dữ Liệu Hiện Hành
 
-- **RULE-3.1 [Rào Chắn Hiệu Lực Pháp Lý Tuyệt Đối — Từ 01/07/2026]**:
-  - Viện dẫn HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP** (*RULE-3.2 [ADR 0031 — TVPL VIP]*, Mục 27).
-- **RULE-3.4 [ADR-0059, 3-Surface Lexicon Sync, `CONTEXT.md` AST & Lossless `unmask`]**:
-  - `clauses.json` span bao trọn toàn văn; tests dùng `tmp_path / "legal_registry.yaml"`. Đồng bộ 3 bề mặt (`CONTEXT.md`, `canonical_construction_taxonomy.yaml`, `SKILL.md`) theo chuỗi 7 bậc (`Luật XD 2025` $\to$ `1812/QĐ-BXD` $\to$ `CCBA WAY`); backtick trong `CONTEXT.md` khớp AST (`ImmutableSpanMasker`). `unmask()` chỉ cắt `original.count("\n")` dòng đệm (`match.group(2)[padding_len:]`, Mục 49).
-- **RULE-3.5 [Documentation Link Scheme Portability Invariant]**:
-  - `validate_docs.py` cấm URL tuyệt đối `file:///home/...` hoặc `file:///C:/...`; dùng relative paths.
+- **RULE-3.1 [Hiệu Lực Pháp Lý Từ 01/07/2026]**: Viện dẫn HIỆU LỰC: **Luật Xây dựng 2025** (`135/2025/QH15`), **NĐ 217/2026/NĐ-CP**, **NĐ 207/2026/NĐ-CP**, **NĐ 206/2026/NĐ-CP** (*RULE-3.2 [ADR 0031 — TVPL VIP]*, Mục 27).
+- **RULE-3.4 [ADR-0059, 3-Surface Lexicon Sync & Lossless `unmask`]**: Đồng bộ 3 bề mặt (`CONTEXT.md`, `canonical_construction_taxonomy.yaml`, `SKILL.md`) theo 7 bậc (`1812/QĐ-BXD`); backtick trong `CONTEXT.md` khớp AST (`ImmutableSpanMasker`); `unmask()` chỉ cắt `original.count("\n")` dòng đệm (Mục 49).
+- **RULE-3.5 [Link Scheme Portability]**: `validate_docs.py` cấm URL tuyệt đối `file:///home/...` hoặc `file:///C:/...`; dùng relative paths.
 
 ---
 
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent
 
-- **RULE-4.1 & 4.2 [Entry Point `/ccba-new-feature`, Slash Command Parity & Multi-Mode Dispatch]**:
-  - Có Issue ID $\to$ `/ccba-new-feature #<id>` (8 bước). Đối chiếu `catalog.yaml` (`command: /...`) trước đề xuất `/command` (cấm `/ccba-verify`). Kỹ năng hợp nhất (`/ccba-ask`, `/ccba-contribute-to-hub`, `/ccba-issue-to-hub`) có bảng `Mode Dispatch` trong `SKILL.md` trỏ Level-3 (Mục 45, 47).
-- *(RULE-4.4..4.7, 4.10, 4.11, 4.13..4.15 tại Mục 25, 28-33: Turn budget $\ge 10-14$ turns; `PeerVerdictBlock` `extra="ignore"`; `apply_anchor_patch` kiểm tra `is_file()` & `stat.st_mode`)*
-- **RULE-4.8 & 4.12 [Review Danger Triage & Architecture Drift Pre-Commit]**:
-  - AI Reviewers chỉ đọc/tư vấn, CẤM auto-merge code logic (`door-triage`). Thêm/xóa/đổi tên Level-1 files chạy `python scripts/update_arch_stats.py` sync `README.md` & `PLATFORM.md`.
-- **RULE-4.16 [Two-Pass Peer Review, Pre-Grill Sharpening, Canary & Noise Floor Gate]**:
-  - Pass 1 (`APPROVE_PLAN`) đóng băng thiết kế; Pass 2 (`APPROVE`) đối soát reflog (timeout $\ge 900$s). `ccba-grilling` có Bước 0 (`in-your-own-words` & `sharpen`); `ccba-handoff` xếp `riskiest first` & Mermaid $\le 6$ khối. `ccba-teamwork` bắt buộc First-Unit Canary (`canary_verdict`); `spread > abs(delta)` $\to$ `inconclusive` (Mục 47, 49).
-- **RULE-4.17 [Adversarial Rebuttal on `audit_direct`, Tool-Starvation Defense & CLI Parity]**:
-  - Khi `audit_direct` suy diễn sai/đòi GitHub API khi CI có `fetch-depth: 0`, đối chiếu AST theo KISS; ưu tiên `audit_direct --no-tools`; sync subcommand vào `test_cli_contract_parity.py`.
-- **RULE-4.18 [Pre-Brief/Pre-Plan Problem-Validity, Scale & Seam-Parity Gate]**:
-  - Trước `Agent Brief`/`implementation_plan.md`, thẩm định: hạ tầng nặng trên tập nhỏ ($N=76$), xung đột ADR (`#512`, `#514`), trùng Seams/lệch biên Hub (`#522`, `#523`), hoặc OBE $\to$ đóng `not_planned`/`completed` (Mục 42).
-- **RULE-4.19 [Liveness Watchdog, Single-Verdict Guardrails & Unconditional Re-Render]**:
-  - Watchdog đọc `events.jsonl` (grace `+45s`, fail-fast `90s`). `_enforce_single_verdict_guardrails` bơm `COND-DEGRADED-REASONING` & hạ cấp `APPROVE` có blocking/risk $\ge 4$ ở đơn luồng, `render_verdict_header` ghi đĩa (`COND-RE-RENDER-ON-MUTATION`, Mục 43, 46).
+- **RULE-4.1 & 4.2 [Entry Point `/ccba-new-feature` & Command Parity]**: Có Issue ID $\to$ `/ccba-new-feature #<id>`. Đối chiếu `catalog.yaml` (`command: /...`); kỹ năng hợp nhất có bảng `Mode Dispatch` trỏ Level-3 (Mục 45, 47).
+- *(RULE-4.4..4.7, 4.10, 4.11, 4.13..4.15 tại Mục 25, 28-33)*
+- **RULE-4.8 & 4.12 [Review Danger Triage & Arch Stats]**: AI Reviewers chỉ đọc/tư vấn, CẤM auto-merge code logic (`door-triage`); chạy `python scripts/update_arch_stats.py` khi đổi Level-1 files.
+- **RULE-4.16 [Two-Pass Peer Review, Sharpening, Canary & Noise Floor]**: Pass 1 (`APPROVE_PLAN`) $\to$ Pass 2 (`APPROVE`). `ccba-grilling` Bước 0 (`in-your-own-words` & `sharpen`); `ccba-teamwork` First-Unit Canary (`canary_verdict`); `spread > abs(delta)` $\to$ `inconclusive`.
+- **RULE-4.17 [Adversarial Rebuttal & CLI Parity]**: Ưu tiên `audit_direct --no-tools`; đối chiếu AST theo KISS; sync subcommand vào `test_cli_contract_parity.py`.
+- **RULE-4.18 [Problem-Validity, Scale & Seam-Parity Gate]**: Trước `Agent Brief`/`implementation_plan.md`, thẩm định quy mô ($N=76$), xung đột ADR, trùng Seams hoặc OBE $\to$ đóng `not_planned`/`completed`.
+- **RULE-4.19 [Liveness Watchdog & Single-Verdict Guardrails]**: Watchdog đọc `events.jsonl` (`90s`); `_enforce_single_verdict_guardrails` bơm `COND-DEGRADED-REASONING` & hạ cấp `APPROVE` có blocking, `render_verdict_header` ghi đĩa.
 
 ---
 
 ## Miền 5. 💻 Hạ Tầng & Môi Trường Máy Trạm
-- *(Xem RULE-5.1..5.5, 5.10 [vLLM Routing Fallback] tại Mục 23, 41)*
-- **RULE-5.8 [Thinking Token Starvation Defense in Structured Pipelines]**:
-  - Structured output tắt thinking (`chat_template_kwargs: {"enable_thinking": False}`) hoặc dự phòng `max_tokens`; tách `local-instruct` vs `local-coder`.
-- **RULE-5.9 [vLLM Production Mounting & Dual Parser Separation]**:
-  - DGX Spark Blackwell mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; tách `--reasoning-parser` & `--tool-call-parser`.
-- **RULE-5.11 [GitHub Classic Projects GraphQL Deprecation & Project V2 Field Discovery]**:
-  - `gh issue view <id>` (thiếu `--json`) lỗi exit 1 do `projectCards`; truyền `--json ...` hoặc `gh api`. Khi `gh project item-edit`, lấy field ID qua `gh project field-list` (Mục 42).
-- **RULE-5.12 [Venv Tooling Parity, Non-Test Verify-Patch & Pytest 8.x Info-Flag Guard]**:
-  - Trên POSIX/CI, gọi linters/mypy qua `.venv/bin/python`; module không test dùng `verify-patch -c`. `conftest.py` miễn trừ `--version`/`--help` (`pytest 8.x`) & `coordinator.py` dùng `-c "import pytest"` (Mục 48, 49).
+
+- **RULE-5.8 [Thinking Token Starvation Defense]**: Structured output tắt thinking (`enable_thinking: False`) hoặc dự phòng `max_tokens`; tách `local-instruct` vs `local-coder`.
+- **RULE-5.9 [vLLM Mounting & Dual Parser]**: DGX Spark Blackwell mount `~/.cache/vllm` bảo toàn TorchInductor AOT cache; tách `--reasoning-parser` & `--tool-call-parser`.
+- **RULE-5.11 [GitHub GraphQL Deprecation]**: `gh issue view <id>` truyền `--json ...` hoặc `gh api`; lấy field ID qua `gh project field-list`.
+- **RULE-5.12 [Venv Tooling Parity & Pytest 8.x Guard]**: Trên POSIX/CI, gọi linters/mypy qua `.venv/bin/python`; `conftest.py` miễn trừ `--version`/`--help` (`pytest 8.x`) & `coordinator.py` dùng `-c "import pytest"`.
