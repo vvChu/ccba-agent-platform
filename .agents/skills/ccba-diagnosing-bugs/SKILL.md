@@ -8,7 +8,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-diagnosing-bugs
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -38,6 +38,13 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP kernel chẩn đoán và k
 ---
 
 When exploring the codebase, read `CONTEXT.md` (if it exists) to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
+
+## Redact (Bảo mật thông tin nhạy cảm — v1.2.3 #779 & `COND-03`)
+
+This skill requires showing commands, outputs, and captured artifacts. Make redaction the first move on each:
+- Replace every credential, token, API key, or secret in shown commands and outputs with `<REDACTED>`.
+- Build feedback loops against environment variables so credentials stay in the environment and never enter the command string or transcript.
+- Quote only the signal-carrying lines of a captured artifact rather than dumping raw payloads.
 
 ## Phase 1 — Build a feedback loop
 
@@ -156,12 +163,13 @@ A correct seam is one where the test exercises the **real bug pattern** as it oc
 If a correct seam exists:
 
 1. Turn the minimised repro into a failing test at that seam.
-2. Watch it fail.
-3. Apply the fix.
-4. Watch it pass.
-5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
+2. **Forced Mutation `git diff` Verification (`v1.3.2 #1209`):** When forcing a mutation or verifying that the test goes red, run `git diff` against a pristine copy before trusting the red result, ensuring a no-op edit cannot pass as a valid failing test.
+3. Watch it fail.
+4. Apply the fix.
+5. Watch it pass.
+6. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
 
-**Completion Criterion:** Regression test passes and feedback loop verifies the fix against original scenario.
+**Completion Criterion:** Regression test passes (verified against a non-empty `git diff` when testing mutations) and feedback loop verifies the fix against original scenario.
 
 ## Phase 6 — Cleanup + post-mortem
 
@@ -173,7 +181,7 @@ Required before declaring done:
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
 
-**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/ccba-codebase-design` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+**Then ask: what would have prevented this bug?** Once the fix is in, point to [`/ccba-session-retrospective`](../ccba-session-retrospective/SKILL.md) to evaluate what environment guardrail or automated check would have caught the bug early, and to [`/ccba-codebase-design`](../ccba-codebase-design/SKILL.md) when the finding is a missing test seam or tangled callers. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
 
 **Completion Criterion:** All debug instrumentation cleaned up, post-mortem documented, and prevention recommendations made.
 

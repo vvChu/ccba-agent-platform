@@ -19,7 +19,7 @@ triggers:
 - quality
 metadata:
   author: CCBA
-  version: 1.2.0
+  version: 1.3.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -69,6 +69,7 @@ Một **seam** (mối nối) là ranh giới công khai bạn thực hiện ki�
 > Bắt buộc tuân thủ quy tắc thiết kế module sâu. Chỉ viết test tại các seam (giao diện module thực sự). Nghiêm cấm viết các unit test quá sâu vào cấu trúc hoặc implementation private của các module nông (shallow modules) để tránh tình trạng vỡ bộ test khi refactor code sau này.
 
 Hỏi người dùng: *"Giao diện công khai là gì, và chúng ta nên kiểm thử ở những seam nào?"*
+- **Ghi chú Đánh đổi cho từng Seam đề xuất (`v1.3.2 #1192`):** Khi đề xuất các seam ứng viên, bắt buộc đính kèm **1 dòng ghi chú cho mỗi seam về việc nó bắt được lỗi gì (`what it catches`) và bỏ sót điều gì (`what it misses`)**, giúp việc lựa chọn giữa các seams dựa trên thông tin rõ ràng thay vì phỏng đoán.
 
 ## Các mẫu phản hoa tiêu (Anti-patterns) cần tránh
 
