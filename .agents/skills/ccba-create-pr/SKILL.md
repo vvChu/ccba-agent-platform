@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -127,7 +127,23 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    - **Xác định Base Branch:** Lấy tên nhánh chính (`<default_branch>`) từ Bước 0 (`main` hoặc `master`).
    - **Tiêu đề PR (Conventional Commits):** Trích xuất từ tiền tố branch (`feat/`, `fix/`, `refactor/`) và commit đầu tiên.
    - **Liên kết Issue:** Nếu branch có chứa mã Issue (ví dụ `feat/issue-266-...` hoặc có tham số `--issue <id>`), tự động gắn `Closes #<id>` vào phần cuối của PR body.
-   - **Mô tả PR (PR Body):** Tự động liệt kê các commit trên branch tính năng so với nhánh chính:
+   - **Mô tả PR (`PR Body` — Khuôn mẫu Show-Me Visual & Merge Danger `v1.3.0 #1120`):** Sử dụng ngôn ngữ nghiệp vụ từ `CONTEXT.md` và trình bày theo cấu trúc 3 phần chuẩn mực:
+     ```markdown
+     ## Summary
+
+     <chọn góc nhìn trực quan nhỏ nhất làm rõ điểm cốt lõi: pseudocode cho thuật toán, call tree cho luồng gọi runtime, file tree cho tái cấu trúc thư mục, sơ đồ Mermaid cho tương tác thành phần, hoặc khối diff tập trung>
+
+     ## Evidence
+
+     - **Before:** <kết quả test lỗi / output CLI cũ / ảnh chụp màn hình trước khi sửa>
+     - **After:** <kết quả test xanh / output CLI mới / ảnh chụp màn hình sau khi sửa>
+
+     ## Merge Danger
+
+     **Door:** <One-way hoặc Two-way>
+     **Blast Radius:** <Localized | Package-wide | Monorepo-wide | Spoke-affecting>
+     ```
+     Kèm danh sách các commit trên branch tính năng so với nhánh chính:
      ```bash
      git log origin/<default_branch>..HEAD --pretty=format:"- %s"
      ```

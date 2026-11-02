@@ -26,28 +26,33 @@ Chúng ta có hai lựa chọn kích hoạt, tương ứng với việc đánh �
 
 > [!TIP]
 > Chỉ chọn **Model-invoked** khi Agent hoặc các kỹ năng khác bắt buộc phải tự gọi nó một cách tự động. Nếu chỉ chạy thủ công bằng tay, hãy để **User-invoked** để tối ưu hóa token ngữ cảnh. Khi số lượng lệnh User-invoked quá nhiều, hãy giải quyết bằng **Kỹ năng điều phối (Router Skill)** như `/ccba-ask` để dẫn đường.
+> - **Chia sẻ tài liệu giữa các kỹ năng User-invoked (`Shared Reference` — `SKILL-MECHANICS.md` v1.3.2):** Vì các kỹ năng `disable-model-invocation: true` không thể tự kích hoạt lẫn nhau, mọi tài liệu tham chiếu dùng chung giữa hai kỹ năng User-invoked bắt buộc phải được tách ra thành tệp tham chiếu độc lập bên ngoài (`references/*.md` hoặc `docs/`) để cả hai cùng dẫn chiếu tới.
 
 ---
 
-## 2. Viết mô tả Frontmatter
+## 2. Con Trỏ Ngữ Cảnh (`Context Pointers`), Từ Khóa Dẫn Đường (`Leading Words`) & Frontmatter
 
-Một phần mô tả của kỹ năng **Model-invoked** thực hiện hai nhiệm vụ: định nghĩa kỹ năng đó là gì và liệt kê các nhánh (branches) kích hoạt nó:
+Một dòng mô tả (`description`) của kỹ năng Model-invoked hoặc một dòng chỉ dẫn trong `AGENTS.md` chính là một **Con trỏ ngữ cảnh (`Context Pointers` — `writing-for-agents` v1.3.2)**: nó vừa nêu tên tài liệu đích, vừa mã hóa điều kiện kích hoạt để Agent tìm đến tài liệu đó. **Từ ngữ của con trỏ** (chứ không phải nội dung tài liệu đích) quyết định độ tin cậy khi Agent triệu hồi tài liệu. Một tài liệu quan trọng nằm sau một con trỏ diễn đạt yếu ớt là một **lỗi biến thiên hành vi (variance bug)**: hãy mài sắc từ ngữ của con trỏ trước, và chỉ nhúng thẳng (inline) nội dung khi việc mài sắc không đủ.
 
-- **Đặt từ khóa dẫn đường lên đầu** (Front-load the leading word) để mô hình nhận diện tức thì.
+- **Đặt từ khóa dẫn đường lên đầu (`Leading Words`):** Một *leading word* (như `tight`, `red`, `relentless`, `tracer bullets`) là khái niệm cô đọng đã có sẵn trong tiền huấn luyện của mô hình. Khi lặp lại nhất quán dưới dạng một token đơn lẻ trong cả prompt, tài liệu và codebase, nó neo chặt cả **khả năng kích hoạt (invocation)** ở con trỏ lẫn **hành vi thực thi (execution)** trong thân bài với chi phí token thấp nhất.
 - **Mỗi nhánh công việc chỉ có một trigger duy nhất.** Tránh trùng lặp từ đồng nghĩa (Ví dụ: viết "xây dựng tính năng bằng TDD ... yêu cầu phát triển hướng test-first" là lặp lại một nhánh hai lần).
 - **Cắt tỉa các thông tin thừa đã có sẵn trong body.** Giữ phần mô tả tập trung tuyệt đối vào triggers và điều kiện gọi.
 
 ---
 
-## 3. Phân tầng thông tin (Information Hierarchy)
+## 3. Phân tầng thông tin (Information Hierarchy) & Chống Kéo Sớm (`Post-Completion Pull`)
 
 Nội dung của một kỹ năng được xây dựng từ hai thành phần: **các bước (steps)** và **tài liệu tham chiếu (reference)**:
 
-1.  **Bước trong kỹ năng (In-skill step):** Các hành động tuần tự trong `SKILL.md`. Mỗi bước bắt buộc phải kết thúc bằng **Tiêu chí hoàn thành (Completion Criterion)** dưới dạng có thể kiểm chứng được (Agent phân biệt được thế nào là hoàn thành và chưa hoàn thành) và triệt để. Một tiêu chí hoàn thành mơ hồ sẽ dẫn đến lỗi **Hoàn thành non (Premature Completion)**.
-2.  **Tham chiếu trong kỹ năng (In-skill reference):** Định nghĩa, quy tắc hoặc sự thật được tra cứu khi cần thiết trong `SKILL.md`.
-3.  **Tham chiếu ngoài (External reference):** Các tài liệu được đẩy ra ngoài `SKILL.md` và dẫn chiếu qua **Liên kết tương đối (Relative Link)** đến các file Markdown sibling (ví dụ: `GLOSSARY.md`) hoặc thư mục `references/` để giữ cho tệp tin chính gọn gàng. Đây là nguyên tắc **Bộc lộ dần dần (Progressive Disclosure)**.
+1.  **Bước trong kỹ năng (In-skill step) — Độ rõ ràng (`Clarity`) & Độ đòi hỏi (`Demand`):**
+    - Các hành động tuần tự trong `SKILL.md`. Mỗi bước bắt buộc phải kết thúc bằng **Tiêu chí hoàn thành (Completion Criterion)** hội tụ đủ 2 thuộc tính:
+      - **Độ rõ ràng (`Clarity`) chống Sức hút Hậu hoàn thành (`Post-Completion Pull`):** Các bước kế tiếp đang hiển thị trước mắt luôn tạo ra lực hút kéo sự chú ý của Agent sang việc *"sắp xong rồi"*, gây ra lỗi **Hoàn thành non (Premature Completion)**. Hãy bảo vệ bước hiện tại bằng cách mài sắc ranh giới hoàn thành trước; nếu tác vụ vẫn bị vội vã, hãy tách chuỗi bước qua một **ranh giới ngữ cảnh thực sự** (ủy quyền cho subagent với `fresh context window` hoặc handoff, vì gọi inline vẫn để lộ các bước sau trong cùng ngữ cảnh).
+      - **Độ đòi hỏi (`Demand`) thúc đẩy Đào sâu (`Legwork`):** Viết tiêu chí đòi hỏi tính vét cạn (*"mọi model sửa đổi đều được đối soát"* thay vì *"xuất danh sách thay đổi"*) để buộc Agent tự đào sâu kiểm chứng.
+2.  **Tham chiếu trong kỹ năng (In-skill reference):** Định nghĩa, quy tắc hoặc sự thật được tra cứu khi cần thiết trong `SKILL.md`. Giữ nguyên tắc **Đồng định vị (Co-location)**: gom định nghĩa, quy tắc và ngoại lệ của cùng một khái niệm dưới một tiêu đề duy nhất thay vì rải rác nhiều nơi.
+3.  **Tham chiếu ngoài (Disclosed / External reference):** Các tài liệu được đẩy ra ngoài `SKILL.md` và dẫn chiếu qua **Liên kết tương đối (Relative Link)** đến các file Markdown sibling hoặc thư mục `references/` để giữ cho tệp tin chính gọn gàng (**Progressive Disclosure**). Nhánh nào mọi lần chạy đều cần thì giữ inline; nhánh nào chỉ một số trường hợp mới chạm tới thì đẩy ra sau con trỏ.
+4.  **Môi trường là Nguồn chân lý (`Environment as SSoT` vs Document as Cache):** Môi trường thực thi (`pyproject.toml`, `package.json`, cấu trúc thư mục, đầu ra `--help`) tự thân là nguồn chân lý sống. Một tài liệu chép lại các thông tin tra cứu 1 lệnh từ môi trường chỉ là một **bản cache dễ lỗi thời**. Chỉ ghi vào tài liệu những quy ước bất thành văn, lý do đằng sau quyết định thiết kế, và các bẫy ngầm (gotchas) mà cấu hình không tự nói ra.
 
-4.  **Nhánh xử lý (Branch):** Khi skill có nhiều nhánh xử lý (branches), mỗi nhánh được coi là một mini-process riêng biệt. Nếu nhánh chứa steps, mỗi nhánh phải có **Tiêu chí hoàn thành** riêng. Nếu nhánh phức tạp hoặc có nhiều tham số, tách chi tiết ra file sibling (ví dụ: `MODES.md`) theo Progressive Disclosure.
+5.  **Nhánh xử lý (Branch):** Khi skill có nhiều nhánh xử lý (branches), mỗi nhánh được coi là một mini-process riêng biệt. Nếu nhánh chứa steps, mỗi nhánh phải có **Tiêu chí hoàn thành** riêng. Nếu nhánh phức tạp hoặc có nhiều tham số, tách chi tiết ra file sibling (ví dụ: `MODES.md`) theo Progressive Disclosure.
 
 ### 3.1. Thiết kế Kỹ Năng Đa Chế Độ (Multi-Mode Skills) & Tiêu Chí Hoàn Thành Động
 Khi kỹ năng hỗ trợ nhiều chế độ chạy qua các cờ dòng lệnh (flags/modes được tách ra file sibling như `MODES.md`):

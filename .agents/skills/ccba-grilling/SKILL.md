@@ -23,7 +23,7 @@ disable-model-invocation: true
 bundle: _software
 tier: kernel
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - grill
@@ -68,7 +68,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
     1. Đọc kỹ kế hoạch/thiết kế hiện tại và thực hiện **Bước 0 (Tiền Khởi Động)**.
     2. Đưa ra các câu hỏi stress-test xoay quanh: sự đánh đổi (trade-offs), độ phức tạp (complexity), khả năng mở rộng (scalability), và các giả định chưa được kiểm chứng.
     3. Đặt từng câu hỏi một (one-by-one), chờ người dùng trả lời xong mới chuyển sang câu tiếp theo. **Tuyệt đối không in ra danh sách nhiều câu hỏi cùng lúc.**
-    4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu.
+    4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu, đồng thời **diễn đạt câu hỏi sao cho câu trả lời "Đồng ý / Yes" luôn chấp nhận phương án đề xuất đó** (để sự đồng thuận không bao giờ mang nghĩa trả lời "Không" — `v1.3.2 #1193`). Khi trình bày nhiều câu hỏi trong một vòng (chế độ Batching), phân tách các câu hỏi liên tiếp bằng đường kẻ ngang `---` (`v1.3.0 #917`). Khi người dùng cần chuyển một quyết định chưa thể tự trả lời thành bảng câu hỏi khảo sát bất đồng bộ gửi cho người khác, đọc và áp dụng [`references/to-questionnaire.md`](references/to-questionnaire.md).
     5. **Nguyên tắc tra cứu:** Nếu một dữ kiện thực tế (*fact*) có thể tìm thấy bằng cách khám phá codebase, Agent phải tự tra cứu thay vì hỏi người dùng. Tuy nhiên, các quyết định thiết kế (*decisions*) là của người dùng — hãy đặt từng câu hỏi quyết định cho người dùng và chờ phản hồi.
     6. **Điểm dừng leo thang (Escalation Checkpoint):** Khi phát hiện $\ge 2$ phương án kiến trúc mâu thuẫn hoặc sự đánh đổi lớn (major trade-offs), đề xuất triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Solution How-Tree) để lượng hóa và xếp hạng các phương án qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục.
 
@@ -136,6 +136,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/workflow_looping.md` | Kỹ thuật phỏng vấn vòng lặp chuyên sâu nhằm khai thác tường tận yêu cầu quy trình |
+| `references/to-questionnaire.md` | Kỹ thuật "Grill the send, not the subject" tạo bảng câu hỏi khảo sát bất đồng bộ |
 
 ## Chuẩn Mực Vận Hành & Khảo Sát Kiểm Chứng
 * **Ranh giới trách nhiệm rõ ràng:** Phân tách rành mạch dữ liệu đầu vào và kết quả đầu ra.
