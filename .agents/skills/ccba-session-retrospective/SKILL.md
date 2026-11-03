@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.5.1
+  version: 1.6.0
 bundle: _core
 tier: kernel
 triggers:
@@ -97,6 +97,8 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 
 ### Bước 3: Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop) & Recompilation Gate
 - **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `ccba-improve-codebase-architecture`, `ccba-code-review`, `ccba-tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
+  * **Bộ lọc `skill-not-used`:** Chỉ đề xuất sửa thân `SKILL.md` khi phiên này đã gọi kỹ năng đó. Kỹ năng có sẵn mà không kích hoạt: chỉ đề xuất chỉnh `description` / `triggers`.
+  * **Bộ lọc `already-covered`:** Đọc tệp đích trước khi thêm dòng. Quy tắc đã viết rõ mà Agent vẫn làm sai: chuyển thành kiểm tra tất định (AST / linter / test) hoặc đưa câu lệnh sát bước kích hoạt.
   * **Bổ sung bước rà soát cụ thể:** Đưa các câu hỏi tự phản biện (Pre-Proposal Self-Check) hoặc rào chắn kỹ thuật vào quy trình của Skill tương ứng.
   * **Bắt buộc có Tiêu chí hoàn thành (Exit Criteria):** Mọi bước rà soát mới thêm vào Skill phải có tiêu chí đo lường rõ ràng (ví dụ: bảng xác nhận ✅/❌ 4 dòng, tỷ lệ phục hồi, mã thoát CLI).
   * **Bump Version:** Cập nhật version trong frontmatter của tệp `SKILL.md` được sửa đổi (ví dụ: `1.1.0` $\rightarrow$ `1.2.0`).
