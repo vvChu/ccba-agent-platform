@@ -54,3 +54,4 @@ source_assets:
 
 1. **Harness CI Gate:** `python -m ccba_harness verify-patch` sẽ xác thực tính hợp lệ của mọi bundle pháp lý mới/sửa đổi.
 2. **Grounding Verifier:** Hàm `verify_legal_grounding()` trong `ccba_legal.grounding` sẽ chặn và gắn cờ vi phạm nếu phát hiện nội dung trích dẫn không khớp với `clauses.json` và tệp nguồn đã đóng dấu mật mã.
+3. **Giao thức Thu thập Internet & Sidecar `.meta.yaml`:** Đối với quy trình định tuyến công cụ thu thập 3 tầng (`HTTP SDK -> CDP 9222 -> Hard Stop`) và lược đồ sidecar `.meta.yaml` / `provenance_registry.yaml` khi tải tài liệu từ Internet, tuân thủ quy định tại `docs/rules/knowledge_research_protocol.md` (hoặc `.agents/rules/knowledge_research_protocol.md` tại Spoke).

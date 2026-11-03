@@ -58,10 +58,13 @@ Khi nhận yêu cầu từ người dùng, Agent thực hiện định tuyến t
 - **Yêu cầu nghiệp vụ hoặc tác vụ AI** ("đồng bộ spoke", "so sánh kiến trúc", "thẩm tra PCCC", "soạn thảo hồ sơ hoàn thành") $\rightarrow$ Tra cứu `catalog.yaml` theo `triggers` để nạp `SKILL.md` tương ứng.
 - **Yêu cầu viết mã nguồn xử lý dữ liệu mới** ("viết script chuyển PDF sang Markdown", "đọc file docx", "gọi LLM") $\rightarrow$ BẮT BUỘC tra cứu Seam Contracts qua CLI: `ccba-platform find-seam --in <types> --out <types>`. Nếu có Seam sẵn $\rightarrow$ Tái sử dụng; cấm viết script chắp vá cục bộ.
 
-### 2. Tự động áp dụng Rules
+### 2. Tự động áp dụng Domain Rules (Kèm Virtual Hub Fallback tại Spoke)
 - Nếu kết quả đầu ra nhân danh CCBA $\rightarrow$ Nạp `.agents/rules/ccba_identity.md`.
-- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `.agents/rules/legal_compliance.md`.
+- Nếu liên quan đến pháp luật hoặc văn bản pháp lý $\rightarrow$ Nạp `.agents/rules/legal_compliance.md` và `.agents/rules/legal_verbatim_grounding_guardrail.md`.
 - Nếu tạo tệp tin hoặc thư mục mới $\rightarrow$ Nạp `.agents/rules/naming_conventions.md`.
+- Nếu tạo hoặc cập nhật sơ đồ trực quan (Mermaid, Excalidraw, D2) $\rightarrow$ Nạp `.agents/rules/diagramming_hygiene.md`.
+- **Virtual Hub Fallback cho Rules tại Spoke:** Các tệp domain rules trong `.agents/rules/` được lưu trữ tập trung tại Hub để tránh làm phình bộ nhớ ngữ cảnh thường trực tại Spoke (`ADR-0030`). Khi Agent đang hoạt động tại Spoke và tệp `.agents/rules/<tên-rule>.md` không có sẵn cục bộ, Agent đọc trực tiếp từ kho Hub qua biến môi trường `$CCBA_HUB_PATH`:
+  `view_file "$CCBA_HUB_PATH/.agents/rules/<tên-rule>.md"`
 
 ### 3. Khai thác Kỹ năng tại Spoke: Fallback vs Đồng bộ Vật lý
 Khi Agent đang hoạt động tại Spoke và phát hiện kỹ năng cần dùng chưa có sẵn trong thư mục cục bộ `.agents/skills/`:
