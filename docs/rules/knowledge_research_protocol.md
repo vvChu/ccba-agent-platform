@@ -6,18 +6,12 @@
 
 ---
 
-## 1. Nguyên Tắc Cốt Lõi (Core Invariants)
+## 1. Nguyên Tắc Cốt Lõi & Tham Chiếu Chuẩn Gốc (`ADR-0059`)
 
-Theo quy định tại **HUB-ADR-0059**, mọi tri thức và văn bản thu thập từ Internet (văn bản quy phạm pháp luật, tiêu chuẩn kỹ thuật xây dựng, tài liệu thẩm định) đều phải tuân thủ nghiêm ngặt 3 nguyên tắc bất biến:
+Mọi tri thức và văn bản thu thập từ Internet (văn bản quy phạm pháp luật, tiêu chuẩn kỹ thuật xây dựng, tài liệu thẩm định) bắt buộc tuân thủ **3 nguyên tắc bất biến của `HUB-ADR-0059`** (*Strict Verbatim Invariant*, *Mandatory Acquisition-First Policy*, và *Cryptographic Provenance Stamping*):
 
-1. **Bất biến Không Bịa đặt (Zero-Hallucination & Strict Verbatim Grounding):**  
-   Nghiêm cấm Agent tự suy diễn, biên soạn tóm lược giả định hoặc tạo mock text thay thế cho tài liệu gốc. Mọi nội dung trích dẫn phải đối soát nguyên văn 100% với tệp tài liệu được ban hành chính thức.
-
-2. **Chính sách Thu thập Bắt buộc Trước tiên (Mandatory Acquisition-First Policy):**  
-   Khi cần dữ liệu từ văn bản chưa có bản số hóa cục bộ, Agent bắt buộc phải thực thi công cụ thu thập để tải tệp gốc (PDF/DOCX) trước khi tiến hành phân tích. Nếu không thể tải tự động hoặc tệp không khả dụng trực tuyến, Agent **bắt buộc phải dừng lại** và yêu cầu người dùng cung cấp tệp gốc.
-
-3. **Đóng dấu Xác thực Mật mã (Cryptographic Provenance Stamping):**  
-   Mọi tài liệu thu thập từ Internet khi lưu trữ vào hệ thống bắt buộc phải tính toán và lưu kèm mã băm an toàn **SHA-256** của tệp gốc.
+- **Quy chuẩn Gói Pháp lý OKF v2.4 & Trích dẫn Điều khoản:** Xem quy định chi tiết về `source_assets` trong `metadata.yaml`, đối soát `clauses.json` và hàm kiểm định `ccba_legal.grounding.verify_legal_grounding()` tại `.agents/rules/legal_verbatim_grounding_guardrail.md`.
+- **Phạm vi của Giao thức này:** Quy định lược đồ siêu dữ liệu xuất xứ tệp thu thập trực tuyến (`.meta.yaml` / `provenance_registry.yaml`) và thứ tự định tuyến công cụ thu thập 3 tầng (`HTTP SDK -> CDP 9222 -> Hard Stop`).
 
 ---
 

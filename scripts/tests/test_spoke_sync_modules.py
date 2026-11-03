@@ -1479,6 +1479,7 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
         "git_conventions.md",
         "code_quality_standards.md",
         "code_quality_verification.md",
+        "knowledge_research_protocol.md",
     ):
         (hub_root / "docs" / "rules" / r_name).write_text(f"# {r_name}\n", encoding="utf-8")
     (hub_root / ".github" / "bugbot-rules.md").write_text("# Bugbot Rules\n", encoding="utf-8")
@@ -1496,7 +1497,7 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
 
     # 1. Sync Layer 2 rules
     actions_1 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
-    assert len(actions_1) == 8
+    assert len(actions_1) == 9
     assert any(a["status"] == "REMOVED" and a["name"] == "rules/code_quality.md" for a in actions_1)
     assert any(
         a["status"] == "REMOVED" and a["name"] == "rules/execution_guardrails.md" for a in actions_1
@@ -1507,12 +1508,13 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     assert (spoke_rules / "execution_coordination_guardrails.md").is_file()
     assert (spoke_rules / "code_quality_standards.md").is_file()
     assert (spoke_rules / "code_quality_verification.md").is_file()
+    assert (spoke_rules / "knowledge_research_protocol.md").is_file()
     assert (spoke_rules / "bugbot-rules.md").is_file()
     assert custom_rule.is_file()
 
     # Second run is UNCHANGED
     actions_2 = sync_layer2_rules(spoke_root, hub_root, dry_run=False)
-    assert len(actions_2) == 6
+    assert len(actions_2) == 7
     assert all(a["status"] == "UNCHANGED" for a in actions_2)
 
     # 2. Merge AGENTS.md with evolved invariant keys and Hub-relative Progressive Disclosure links
@@ -1528,6 +1530,7 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
         "- Coordination: [Coordination Guardrails](docs/rules/execution_guardrails.md#19-atomic)\n"
         "- Bare Code: [Code Standards](docs/rules/code_quality.md)\n"
         "- Bare Guardrails: [Runtime Guardrails](docs/rules/execution_guardrails.md)\n"
+        "- Research: [`docs/rules/knowledge_research_protocol.md`](../docs/rules/knowledge_research_protocol.md)\n"
         "- Bugbot: [`.github/bugbot-rules.md`](../.github/bugbot-rules.md)\n"
         "- Domain: [`CONTEXT.md`](../CONTEXT.md) and [`docs/adr/`](../docs/adr/)\n"
     )
@@ -1559,6 +1562,7 @@ def test_layer2_rules_sync_and_agents_link_normalization_idempotency(tmp_path: P
     assert "code_quality.md" not in merged_1
     assert "execution_guardrails.md" not in merged_1
     assert "](rules/bugbot-rules.md)" in merged_1
+    assert "](rules/knowledge_research_protocol.md)" in merged_1
     assert "`CONTEXT.md`" in merged_1
     assert "(../CONTEXT.md)" not in merged_1
     assert "`docs/adr/`" in merged_1

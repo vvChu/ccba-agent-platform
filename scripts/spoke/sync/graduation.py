@@ -26,6 +26,7 @@ CORE_LAYER2_RULES: tuple[str, ...] = (
     "docs/rules/git_conventions.md",
     "docs/rules/code_quality_standards.md",
     "docs/rules/code_quality_verification.md",
+    "docs/rules/knowledge_research_protocol.md",
     ".github/bugbot-rules.md",
 )
 
