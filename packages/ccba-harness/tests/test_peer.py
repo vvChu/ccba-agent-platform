@@ -1237,9 +1237,24 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
         assert spec.get("disable_web_search") is True, f"{prof_name} missing disable_web_search"
         assert spec.get("verbatim") is True, f"{prof_name} missing verbatim"
 
-    for tool_name in ("write", "todo_write", "monitor", "search_tool", "use_tool", "web_fetch"):
+    for tool_name in (
+        "write",
+        "todo_write",
+        "monitor",
+        "search_tool",
+        "use_tool",
+        "web_fetch",
+        "image_gen",
+        "image_edit",
+        "image_to_video",
+        "reference_to_video",
+    ):
         assert tool_name in NO_TOOLS_DISALLOW_LIST
         assert tool_name in PROFILE_SPECS["patch_fast"]["disallowed_tools"]
+
+    for media_tool in ("image_gen", "image_edit", "image_to_video", "reference_to_video"):
+        assert media_tool in PROFILE_SPECS["arch_audit"]["disallowed_tools"]
+        assert media_tool in PROFILE_SPECS["agentic_code"]["disallowed_tools"]
 
     sid = "11111111-2222-3333-4444-555555555555"
     sess_dir = tmp_path / "proj" / sid
@@ -1267,3 +1282,93 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
     )
     assert "verdict: APPROVE" in recovered
     assert parse_verdict_from_md(recovered) is not None
+
+
+def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monkeypatch):
+    """Verify BOUNDED_TOOL_BUDGET_PROMPT across 5 read-only profiles and auto-resume synthesis on max_turns."""
+    import json
+
+    import ccba_harness.peer as peer_mod
+    from ccba_harness._peer_watchdog import BOUNDED_TOOL_BUDGET_PROMPT, is_max_turns_exhausted
+    from ccba_harness.peer import PROFILE_SPECS, invoke_grok_cli
+
+    for prof in ("audit_plan", "arch_audit", "deep_spec_audit", "code_review", "signoff_diff"):
+        sys_prompt = PROFILE_SPECS[prof].get("system_prompt")
+        assert isinstance(sys_prompt, str) and BOUNDED_TOOL_BUDGET_PROMPT in sys_prompt
+
+    sid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    sess_dir = tmp_path / "sessions" / sid
+    sess_dir.mkdir(parents=True)
+    events_file = sess_dir / "events.jsonl"
+    events_file.write_text(
+        json.dumps(
+            {
+                "type": "turn_ended",
+                "outcome": "cancelled",
+                "cancellation_context": {"reason": "max_turns_reached", "limit": 8},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is True
+    assert is_max_turns_exhausted("nonexistent-id", session_root=tmp_path / "sessions") is False
+
+    prompt = tmp_path / "prompt.md"
+    envelope = PeerPromptEnvelope(
+        request_id="req-synth-01",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Explore then synthesize test",
+        timestamp="2026-11-03T11:20:00+07:00",
+        output_path="out.md",
+        profile="arch_audit",
+    )
+    prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
+
+    calls: list[list[str]] = []
+
+    def fake_run_single(cmd, prompt_path, output_file, timeout, **kwargs):
+        calls.append(cmd)
+        if "--deny" in cmd and "*" in cmd:
+            verdict = PeerVerdictBlock(
+                request_id="req-synth-01", verdict="APPROVE", summary="Synthesized after max_turns"
+            )
+            output_file.write_text(render_verdict_header(verdict) + "\nBody", encoding="utf-8")
+            return True
+        return False
+
+    monkeypatch.setattr(peer_mod, "_run_single_grok_attempt", fake_run_single)
+    monkeypatch.setattr(peer_mod, "is_max_turns_exhausted", lambda s: True)
+
+    assert invoke_grok_cli(prompt, profile="arch_audit") is True
+    assert len(calls) == 2
+    assert "--tools" in calls[0]
+    assert "--resume" in calls[1]
+    assert "--fork-session" in calls[1]
+    assert "*" in calls[1]
+    assert calls[1][calls[1].index("--max-turns") + 1] == "1"
+
+    v_norm = parse_verdict_from_md(
+        "---\n"
+        "request_id: req-norm-01\n"
+        "verdict: APPROVE_WITH_CONDITIONS\n"
+        "risk_score: 62\n"
+        "conditions:\n"
+        "  - id: COND-01\n"
+        "    text: Full condition text\n"
+        "    summary: Short title\n"
+        "  - statement: Statement alias without id\n"
+        "summary: Normalized verdict\n"
+        "---\nBody\n"
+    )
+    assert v_norm is not None
+    assert v_norm.risk_score == 3
+    assert v_norm.conditions[0].description == "Full condition text"
+    assert v_norm.conditions[1].id == "COND-02"
+    assert v_norm.conditions[1].description == "Statement alias without id"
+    v_zero = parse_verdict_from_md("---\nrequest_id: r0\nverdict: APPROVE\nrisk_score: 0\n---\n")
+    assert v_zero is not None and v_zero.risk_score == 1
+    v_ten = parse_verdict_from_md("---\nrequest_id: r10\nverdict: APPROVE\nrisk_score: 6.5\n---\n")
+    assert v_ten is not None and v_ten.risk_score == 3

@@ -84,6 +84,10 @@ READ_ONLY_DISALLOW_LIST: list[str] = [
     "spawn_subagent",
     "search_tool",
     "use_tool",
+    "image_gen",
+    "image_edit",
+    "image_to_video",
+    "reference_to_video",
 ]
 
 NO_TOOLS_DISALLOW_LIST: list[str] = [
@@ -108,7 +112,29 @@ NO_TOOLS_DISALLOW_LIST: list[str] = [
     "ask_user_question",
     "send_feedback",
     "web_fetch",
+    "image_gen",
+    "image_edit",
+    "image_to_video",
+    "reference_to_video",
 ]
+
+VERDICT_RESERVE_TURNS: int = 2
+
+BOUNDED_TOOL_BUDGET_PROMPT: str = (
+    "You have read-only tools (read_file, grep, list_dir) to inspect cross-file invariants, "
+    "AST structures, and linters. Budget your tool usage strictly: complete repository exploration "
+    f"with at least {VERDICT_RESERVE_TURNS} turns remaining before max_turns, and in your final synthesis "
+    "turn (containing zero tool calls) emit your complete YAML frontmatter verdict enclosed in '---' "
+    "with risk_score as an integer 1..5 and conditions items containing id, description, and blocking."
+)
+
+SYNTHESIS_FALLBACK_PROMPT: str = (
+    "You are synthesizing the final peer audit verdict from evidence already gathered in this session. "
+    "Emit zero tool calls. Start your response with YAML frontmatter enclosed in '---' containing "
+    "request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | APPROVE_PLAN | REVISE_PLAN | REJECT | FINAL_ACCEPT | HANDOFF), "
+    "risk_score (integer 1..5), conditions (list of items with id, description, and blocking), and summary, "
+    "followed by your structured findings."
+)
 
 PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "audit_plan": {
@@ -121,6 +147,13 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "disable_web_search": True,
         "verbatim": True,
         "reasoning_effort": "xhigh",
+        "system_prompt": (
+            "You are an expert technical implementation plan auditor. In your final synthesis turn "
+            "(containing zero tool calls), start your response with YAML frontmatter enclosed in '---' "
+            "containing request_id, verdict (APPROVE_PLAN | REVISE_PLAN | REJECT_PLAN | APPROVE | APPROVE_WITH_CONDITIONS | HANDOFF), "
+            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
+            "followed by your plan audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
+        ),
         "timeout": 900.0,
     },
     "agentic_code": {
@@ -128,7 +161,14 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "fallback_model": "claude-sonnet-4-6",  # ccba:allow-raw-model
         "max_turns": 8,
         "tools": ["read_file", "search_replace", "list_dir"],
-        "disallowed_tools": ["spawn_subagent", "run_terminal_command"],
+        "disallowed_tools": [
+            "spawn_subagent",
+            "run_terminal_command",
+            "image_gen",
+            "image_edit",
+            "image_to_video",
+            "reference_to_video",
+        ],
         "disable_web_search": True,
         "verbatim": True,
         "reasoning_effort": "high",
@@ -164,9 +204,11 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "reasoning_effort": "high",
         "system_prompt": (
-            "You are an expert peer code reviewer. You MUST start your response immediately with "
-            "YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, conditions, "
-            "and summary, followed by your structured code review findings."
+            "You are an expert peer code reviewer. In your final synthesis turn (containing zero tool calls), "
+            "start your response with YAML frontmatter enclosed in '---' containing request_id, verdict "
+            "(APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score (integer 1..5), "
+            "conditions (list of {id, description, blocking}), and summary, followed by your structured code review findings. "
+            + BOUNDED_TOOL_BUDGET_PROMPT
         ),
         "timeout": 300.0,
     },
@@ -181,9 +223,11 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "reasoning_effort": "xhigh",
         "system_prompt": (
-            "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
-            "conditions, and summary, followed by your architectural audit findings."
+            "You are an expert software and system architecture auditor. In your final synthesis turn "
+            "(containing zero tool calls), start your response with YAML frontmatter enclosed in '---' "
+            "containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), "
+            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
+            "followed by your architectural audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
         ),
         "timeout": 600.0,
     },
@@ -198,9 +242,10 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "reasoning_effort": "high",
         "system_prompt": (
-            "You are an expert software and system architecture auditor. You MUST start your response "
-            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score, "
-            "conditions, and summary, followed by your architectural audit findings. "
+            "You are an expert software and system architecture auditor. Start your response "
+            "with YAML frontmatter enclosed in '---' containing request_id, verdict "
+            "(APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score (integer 1..5), "
+            "conditions (list of {id, description, blocking}), and summary, followed by your architectural audit findings. "
             "Respond directly without invoking external tools."
         ),
         "timeout": 120.0,
@@ -218,9 +263,10 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "xhigh",
         "system_prompt": (
             "You are a Stage 1 Pre-Code Deep Architectural & Line-Level Specification Auditor. "
-            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
-            "request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT), "
-            "risk_score, conditions, and summary, followed by your full line-level audit."
+            "In your final synthesis turn (containing zero tool calls), start your response with YAML frontmatter "
+            "enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT), "
+            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
+            "followed by your full line-level audit. " + BOUNDED_TOOL_BUDGET_PROMPT
         ),
         "timeout": 900.0,
     },
@@ -238,9 +284,10 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "high",
         "system_prompt": (
             "You are a Stage 3 Post-Code Diff Sign-off Auditor resuming a prior Stage 1 session. "
-            "You MUST start your response with YAML frontmatter enclosed in '---' containing "
-            "request_id, verdict (FINAL_ACCEPT | APPROVE | APPROVE_WITH_CONDITIONS | REJECT), "
-            "risk_score, conditions, and summary, followed by your delta verification table."
+            "In your final synthesis turn (containing zero tool calls), start your response with YAML frontmatter "
+            "enclosed in '---' containing request_id, verdict (FINAL_ACCEPT | APPROVE | APPROVE_WITH_CONDITIONS | REJECT), "
+            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
+            "followed by your delta verification table. " + BOUNDED_TOOL_BUDGET_PROMPT
         ),
         "timeout": 600.0,
     },
@@ -374,6 +421,41 @@ def inspect_session_liveness(
     except Exception:
         pass
     return None, None
+
+
+def is_max_turns_exhausted(
+    session_id: str,
+    session_root: Path | None = None,
+) -> bool:
+    """Checks if a Grok session terminated due to max_turns_reached in events.jsonl."""
+    if not session_id:
+        return False
+    root = session_root or (Path.home() / ".grok" / "sessions")
+    if not root.exists():
+        return False
+    try:
+        for p in root.rglob(f"{session_id}/events.jsonl"):
+            if p.is_file() and "max_turns_reached" in p.read_text(
+                encoding="utf-8", errors="replace"
+            ):
+                return True
+    except Exception:
+        pass
+    return False
+
+
+def _build_synthesis_opts(opts: dict[str, Any], eff_sid: str) -> dict[str, Any]:
+    """Constructs single-turn zero-tool synthesis options after max_turns exploration."""
+    return {
+        **opts,
+        "tools": None,
+        "disallowed_tools": list(NO_TOOLS_DISALLOW_LIST),
+        "deny": ["*"],
+        "max_turns": 1,
+        "system_prompt": SYNTHESIS_FALLBACK_PROMPT,
+        "resume_session_id": eff_sid,
+        "fork_session": True,
+    }
 
 
 def _recover_verdict_from_chat_history(

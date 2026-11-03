@@ -16,6 +16,7 @@ def test_agents_md_has_scoped_test_guardrail() -> None:
 
     coord_doc = root / "docs/rules/execution_coordination_guardrails.md"
     assert coord_doc.exists(), "execution_coordination_guardrails.md must exist in docs/rules/"
+    coord_content = coord_doc.read_text(encoding="utf-8")
 
     assert "execution_runtime_guardrails.md" in content, (
         "AGENTS.md must link to execution_runtime_guardrails.md under Progressive Disclosure"
@@ -23,6 +24,10 @@ def test_agents_md_has_scoped_test_guardrail() -> None:
     assert "execution_coordination_guardrails.md" in content, (
         "AGENTS.md must link to execution_coordination_guardrails.md under Progressive Disclosure"
     )
+    for token in ("### 20.3.", "[ADOPT_AS_IS]", "[ADOPT_ADAPTED]", "[REBUT_WITH_EVIDENCE]"):
+        assert token in coord_content, (
+            f"execution_coordination_guardrails.md must define Section 20.3 token {token}"
+        )
     assert "Scoped Test Execution" in guardrails_content, (
         "execution_runtime_guardrails.md must contain Scoped Test Execution Guardrail rule"
     )
