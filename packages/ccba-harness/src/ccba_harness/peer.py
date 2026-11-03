@@ -88,11 +88,13 @@ from ._peer_watchdog import (
     PeerExecutionProfile,
     RequestType,
     VerdictType,
+    _build_synthesis_opts,
     _poll_grok_process_with_watchdog,
     _recover_verdict_from_chat_history,
     _terminate_proc_tree,
     _unwrap_grok_json_stdout,
     inspect_session_liveness,
+    is_max_turns_exhausted,
 )
 from .verifier import resolve_preset_commands, verify_patch_execution
 
@@ -744,7 +746,7 @@ def _dispatch_grok_candidate(
         if (not opts["resume_session_id"] or opts["fork_session"])
         else opts["resume_session_id"]
     )
-    return _run_single_grok_attempt(
+    ok = _run_single_grok_attempt(
         cmd,
         prompt_path,
         output_file,
@@ -752,6 +754,11 @@ def _dispatch_grok_candidate(
         session_id=eff_sid,
         candidate_model=candidate,
         expected_reasoning_effort=opts["reasoning_effort"],
+    )
+    if ok or not (opts.get("tools") and is_max_turns_exhausted(eff_sid)):
+        return ok
+    return _dispatch_grok_candidate(
+        prompt_path, output_file, candidate, _build_synthesis_opts(opts, eff_sid), worktree
     )
 
 
