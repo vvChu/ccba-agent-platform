@@ -346,3 +346,22 @@ def test_skill_validator_audit_skill_directory_unit(tmp_path: Path) -> None:
 
     issues = validator.audit_skill_directory(tmp_path)
     assert any("nonexistent.md" in str(i) for i in issues)
+
+
+def test_office_master_skills_belong_to_core_bundle() -> None:
+    """Ensure all 4 platform office/document master skills belong to _core so non-software Spokes receive them."""
+    catalog_data = yaml.safe_load(CATALOG_PATH.read_text(encoding="utf-8")) or {}
+    registered_skills = {
+        s["name"]: s for s in catalog_data.get("skills", []) if isinstance(s, dict) and "name" in s
+    }
+    office_masters = (
+        "ccba-xu-ly-van-phong",
+        "ccba-copywriting",
+        "ccba-markdown-document-processing",
+        "ccba-academic-writing",
+    )
+    for skill_name in office_masters:
+        assert skill_name in registered_skills, f"{skill_name} missing from catalog.yaml"
+        assert registered_skills[skill_name].get("bundle") == "_core", (
+            f"{skill_name} must be in bundle '_core', got '{registered_skills[skill_name].get('bundle')}'"
+        )

@@ -351,3 +351,60 @@ def test_optimizer_finalize_disk_failure_raises_runtime_error(
 
     with pytest.raises(RuntimeError, match="Failed to finalize disk state"):
         opt.run()
+
+
+def test_git_mutex_lock_windows_msvcrt_fallback(
+    lock_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """On Windows (sys.platform == 'win32') where fcntl is absent, GitMutexLock uses msvcrt.locking."""
+    import sys
+    import types
+
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setitem(sys.modules, "fcntl", None)
+
+    locked_state: dict[str, bool] = {"held": False}
+    calls: list[tuple[int, int]] = []
+
+    fake_msvcrt = types.ModuleType("msvcrt")
+    fake_msvcrt.LK_NBLCK = 2  # type: ignore[attr-defined]
+    fake_msvcrt.LK_UNLCK = 0  # type: ignore[attr-defined]
+
+    def fake_locking(fd: int, mode: int, nbytes: int) -> None:
+        calls.append((mode, nbytes))
+        if mode == fake_msvcrt.LK_NBLCK:  # type: ignore[attr-defined]
+            if locked_state["held"]:
+                raise OSError("File already locked")
+            locked_state["held"] = True
+        elif mode == fake_msvcrt.LK_UNLCK:  # type: ignore[attr-defined]
+            locked_state["held"] = False
+
+    fake_msvcrt.locking = fake_locking  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "msvcrt", fake_msvcrt)
+
+    holder = GitMutexLock(lock_path=lock_path, timeout=1.0, retry_interval=0.01)
+    contender = GitMutexLock(lock_path=lock_path, timeout=0.05, retry_interval=0.01)
+
+    holder.acquire()
+    assert locked_state["held"] is True
+    assert (2, 1) in calls
+
+    # Contender on another thread should time out when msvcrt.locking raises OSError
+    err_holder: list[BaseException] = []
+
+    def try_contend() -> None:
+        try:
+            contender.acquire()
+        except BaseException as exc:
+            err_holder.append(exc)
+
+    t = threading.Thread(target=try_contend)
+    t.start()
+    t.join(timeout=2.0)
+    assert len(err_holder) == 1
+    assert isinstance(err_holder[0], TimeoutError)
+
+    holder.release()
+    assert locked_state["held"] is False
+    assert (0, 1) in calls
+    assert not lock_path.exists()

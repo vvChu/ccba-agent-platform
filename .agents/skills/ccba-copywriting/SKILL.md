@@ -9,7 +9,7 @@ metadata:
   author: claudekit
   version: 1.1.0
 disable-model-invocation: true
-bundle: _software
+bundle: _core
 tier: kernel
 user-invocable: true
 command: /ccba-copywriting
