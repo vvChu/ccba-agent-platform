@@ -20,7 +20,7 @@ Khi triển khai mã nguồn dựa trên đặc tả (Spec):
 1. **TDD (Test-Driven Development)**: Viết unit tests trước tại các điểm khớp nối công khai (seams).
 2. **Continuous Validation**: Chạy kiểm tra kiểu (`mypy`) và chạy test suite liên tục.
 3. **Review before Merge**: Chạy `/ccba-code-review` để quét code smells trước khi tạo PR.
-4. **Merge Danger Triage**: Mọi PR và Kế hoạch Thực thi (`implementation_plan.md`) bắt buộc tự phân loại mức độ nguy hiểm: Khả năng đảo ngược (**One-way door** vs **Two-way door**) và Bán kính ảnh hưởng (**Localized** vs **Package-wide** vs **Monorepo-wide** vs **Spoke-affecting**) để tối ưu hóa thời gian review của con người.
+4. **Merge Danger Triage**: Mọi PR và Kế hoạch Thực thi (`implementation_plan.md`) bắt buộc tự phân loại mức độ nguy hiểm: Khả năng đảo ngược (**One-way door** vs **Two-way door**) và Bán kính ảnh hưởng (**Localized** vs **Package-wide** vs **Monorepo-wide** vs **Spoke-affecting**) để tối ưu hóa thời gian review của con người. Với Door One-way, Safety Fact là bộ ba Tradeoff Card ADR-0067 (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` $\le 30$ dòng). Danh sách caller không đứng vai Safety Fact. Two-way và Paved Road giữ nhãn Door và Blast Radius.
 
 ---
 
@@ -126,3 +126,4 @@ Quy chuẩn xử lý bài toán kỹ thuật phức tạp, di chuyển kiến tr
    - **Ghi ngưỡng quyết định trước khi chạy (Write the Decision Before You Run):** Trước khi khởi chạy lệnh đo, bắt buộc ghi rõ vào hồ sơ kết quả định lượng nào (`delta`) sẽ làm thay đổi quyết định kỹ thuật và số lượt chạy $N$ (với `eval`: mặc định $N = 3$ qua `--trials 3`).
    - **Quy tắc `inconclusive` đối xứng theo biên độ nhiễu (`spread`):** Gọi `spread = max(scores) - min(scores)` trên $N$ lần chạy đã khai báo trước. Nếu `spread > abs(delta)` $\rightarrow$ kết luận bắt buộc là **`inconclusive`** đối xứng cho cả hai chiều (không công nhận cải thiện trong nhiễu và không dùng dao động trong nhiễu làm bằng chứng hồi quy).
    - **Bộ ba bằng chứng bắt buộc (`run_count`, `spread`, `named_limiter`):** Mọi con số dùng làm đầu vào quyết định phải đi kèm `run_count`, `spread`, và `named_limiter` trỏ tới đúng 1 counter/metric thực tế thu thập trong chính lần chạy để trả lời câu hỏi *"Why not double?"* (dừng tại 1 limiter thực chứng, không mở rộng thành phiên profiling không đáy).
+   - **Chặn kỷ lục giả (`work_done_count`, `error_count`, xen kẽ A/B):** Chỉ với phép đo thời gian, thông lượng hoặc chi phí token (hillclimb / autoresearch). Điểm `ccba-harness eval` và cổng pass/fail giữ bộ ba ở gạch trên. Trong vùng bấm giờ: `work_done_count > 0` và `error_count == 0`; nếu không, kết quả là `invalid`. Khi so baseline `A` với candidate `B` trên cùng máy: thứ tự `A, B, A, B`.
