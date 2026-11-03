@@ -188,6 +188,16 @@ class PeerVerdictBlock(BaseModel):
                 normalized.append(
                     {"id": f"COND-{i + 1:02d}", "description": item, "blocking": True}
                 )
+            elif isinstance(item, dict):
+                d = dict(item)
+                if not d.get("description"):
+                    for alias in ("text", "statement", "condition", "summary"):
+                        if d.get(alias):
+                            d["description"] = str(d[alias])
+                            break
+                if not d.get("id"):
+                    d["id"] = f"COND-{i + 1:02d}"
+                normalized.append(d)
             else:
                 normalized.append(item)
         return normalized
@@ -279,6 +289,23 @@ def parse_envelope_from_md(md_content: str) -> PeerPromptEnvelope | None:
         return None
 
 
+def _coerce_frontmatter_risk_score(raw: Any) -> Any:
+    """Coerces out-of-range LLM frontmatter risk_score scales (0, 10-pt, 100-pt) into 1..5."""
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+        return raw
+    if isinstance(raw, float) and 0.0 <= raw < 1.0:
+        return raw
+    if raw <= 0:
+        return 1
+    if raw <= 5:
+        return int(round(raw))
+    if raw <= 10:
+        return max(1, min(5, int(round(raw / 2))))
+    if raw <= 100:
+        return max(1, min(5, int(round(raw / 20))))
+    return 5
+
+
 def parse_verdict_from_md(md_content: str) -> PeerVerdictBlock | None:
     """Parses PeerVerdictBlock from markdown frontmatter.
 
@@ -291,6 +318,8 @@ def parse_verdict_from_md(md_content: str) -> PeerVerdictBlock | None:
     data, _ = extract_frontmatter(md_content)
     if not data or "verdict" not in data:
         return None
+    if "risk_score" in data:
+        data = {**data, "risk_score": _coerce_frontmatter_risk_score(data["risk_score"])}
     try:
         return PeerVerdictBlock.model_validate(data)
     except Exception:

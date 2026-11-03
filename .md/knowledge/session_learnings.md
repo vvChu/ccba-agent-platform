@@ -27,7 +27,7 @@
 - **RULE-2.5 [ADR 0058 — Archetype Routing & Opt-In Tuner]**: Ánh xạ `eval_*.json` qua `archetypes.py`; `_run_pre_eval_guards` chặn delta `audit_skill()`; `run_nightly_tuner.sh` mặc định chạy `verify-patch --preset skill`.
 - **RULE-2.9 [Test Fixture Isolation & Sandbox]**: `conftest.py` xóa env Hub/Legal & mock lock; E2E Spoke sync dùng `CCBA_SKIP_GIT_PULL=1` & assert SHA-256 `spoke_registry.yaml`.
 - **RULE-2.20 [Zero-Quarantine, AST Budget & Statechart BFS]**: CẤM hàm $> 50$ LOC, CLI $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **Cycle-Safe BFS (`visited: set[str]`)**.
-- **RULE-2.21 [Single-Source 5-Block Harnesses, Isolated `__path__` & Wiki]**: `scripts/tests/__init__.py` nối `tests/` gốc vào `__path__` chống shadowing `tests.governance`. 5-block verification harnesses đặt nguồn chuẩn duy nhất tại `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/` (CẤM nhân đôi tại `.agents/skills/ccba-*/harness/`). Wiki lịch sử cô lập tại `.md/knowledge/wiki/index.md` (Mục 50).
+- **RULE-2.21 [Single-Source Harnesses, Isolated `__path__` & Wiki]**: `scripts/tests/__init__.py` nối `tests/` gốc vào `__path__`. 5-block harnesses chuẩn tại `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/` (CẤM `.agents/skills/ccba-*/harness/`). Wiki lịch sử tại `.md/knowledge/wiki/index.md` (Mục 50).
 
 ---
 
@@ -45,7 +45,7 @@
 - *(RULE-4.4..4.7, 4.10, 4.11, 4.13..4.15 tại Mục 25, 28-33)*
 - **RULE-4.8 & 4.12 [Review Danger Triage & Arch Stats]**: AI Reviewers chỉ đọc/tư vấn, CẤM auto-merge code logic (`door-triage`); chạy `python scripts/update_arch_stats.py` khi đổi Level-1 files.
 - **RULE-4.16 [Two-Pass Peer Review, Sharpening, Canary & Noise Floor]**: Pass 1 (`APPROVE_PLAN`) $\to$ Pass 2 (`APPROVE`). `ccba-grilling` Bước 0 (`in-your-own-words` & `sharpen`); `ccba-teamwork` First-Unit Canary (`canary_verdict`); `spread > abs(delta)` $\to$ `inconclusive`.
-- **RULE-4.17 [Adversarial Rebuttal & CLI Parity]**: Ưu tiên `audit_direct --no-tools`; đối chiếu AST theo KISS; sync subcommand vào `test_cli_contract_parity.py`.
+- **RULE-4.17 [Bounded Tool Audit, 3-Way Triage & CLI Parity]**: Bật Read-Only Tools cho `audit_plan`/`arch_audit`/`deep_spec_audit`/`code_review`/`signoff_diff` (`--no-tools` chỉ cho `patch_fast`/`audit_direct`); phân loại `COND-XX` theo `ADOPT_AS_IS`/`ADOPT_ADAPTED`/`REBUT_WITH_EVIDENCE` kèm `file:line`; sync `test_cli_contract_parity.py`.
 - **RULE-4.18 [Problem-Validity, Scale & Seam-Parity Gate]**: Trước `Agent Brief`/`implementation_plan.md`, thẩm định quy mô ($N=76$), xung đột ADR, trùng Seams hoặc OBE $\to$ đóng `not_planned`/`completed`.
 - **RULE-4.19 [Liveness Watchdog & Single-Verdict Guardrails]**: Watchdog đọc `events.jsonl` (`90s`); `_enforce_single_verdict_guardrails` bơm `COND-DEGRADED-REASONING` & hạ cấp `APPROVE` có blocking, `render_verdict_header` ghi đĩa.
 
