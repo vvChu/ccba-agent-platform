@@ -37,7 +37,7 @@ cards:
     import_path: ccba_pdf_prep:PDFProcessingPipeline
     capability:
       in: [pdf]
-      out: [tiles, segments, text]
+      out: [tiles, segments, text, png]
     hardware: [any]
     failure_modes: [password_protected, render_error]
     owner: hub-core

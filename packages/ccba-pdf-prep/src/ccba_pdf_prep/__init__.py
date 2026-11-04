@@ -133,6 +133,7 @@ __all__ = [
     "split_pdf_pages",
     "extract_text_from_pdf",
     "parse_pages",
+    "render_page_to_image",
     "render_page_to_image_stream",
     "extract_pdf_pages_stream",
     # === MEDIA DEEP SEAMS (YouTube & Video extraction) ===
@@ -155,6 +156,5 @@ __all__ = [
 # Internals still importable for backward compatibility — but not part of the
 # public API. Prefer using PDFProcessingPipeline instead of reaching into:
 #   PDFAnalyzer, VisionOptimizer, TitleBlockDetector, CompositeBuilder,
-#   TitleBlockRegion, TileResult, split_pdf, get_blind_chunks,
-#   render_page_to_image
+#   TitleBlockRegion, TileResult, split_pdf, get_blind_chunks
 # ---------------------------------------------------------------------------
