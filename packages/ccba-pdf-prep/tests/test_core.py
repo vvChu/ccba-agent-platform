@@ -202,6 +202,10 @@ class TestRenderPageToImageStream:
         with pytest.raises(FileNotFoundError):
             render_page_to_image_stream(tmp_path / "missing.pdf", page_num=0)
 
+    def test_render_stream_pixel_budget_exceeded(self, tmp_pdf_text: Path) -> None:
+        with pytest.raises(ValueError, match="vượt quá ngân sách an toàn"):
+            render_page_to_image_stream(tmp_pdf_text, page_num=0, dpi=6000)
+
 
 # ---------------------------------------------------------------------------
 # render_page_to_image
