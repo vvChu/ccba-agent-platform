@@ -5,10 +5,12 @@ from pathlib import Path
 import pytest
 
 from ccba_pdf_prep import (
+    MAX_RENDER_PIXELS,
     PDFAnalyzer,
     PDFCategory,
     Segment,
     get_blind_chunks,
+    get_pdf_page_count,
     render_page_to_image,
     render_page_to_image_stream,
     split_pdf,
@@ -224,3 +226,25 @@ class TestRenderPageToImage:
         out_png = tmp_path / "page_0.png"
         with pytest.raises(FileNotFoundError):
             render_page_to_image(tmp_path / "nonexistent.pdf", page_num=0, output_path=out_png)
+
+    def test_render_pixel_budget_exceeded(self, tmp_pdf_text: Path, tmp_path: Path) -> None:
+        assert MAX_RENDER_PIXELS == 50_000_000
+        out_png = tmp_path / "page_0.png"
+        # 6000 DPI on standard page will produce > 50M pixels
+        with pytest.raises(ValueError, match="vượt quá ngân sách an toàn"):
+            render_page_to_image(tmp_pdf_text, page_num=0, output_path=out_png, dpi=6000)
+
+
+# ---------------------------------------------------------------------------
+# get_pdf_page_count
+# ---------------------------------------------------------------------------
+class TestGetPdfPageCount:
+    """Tests for safe PDF page count seam."""
+
+    def test_get_page_count_success(self, tmp_pdf_text: Path) -> None:
+        count = get_pdf_page_count(tmp_pdf_text)
+        assert count > 0
+
+    def test_get_page_count_missing_file(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError):
+            get_pdf_page_count(tmp_path / "nonexistent.pdf")

@@ -1367,10 +1367,11 @@ seams:
     and title block extraction.
   public_seams:
   - '`from ccba_pdf_prep import PDFProcessingPipeline, ProcessingResult, render_page_to_image,
-    render_page_to_image_stream, extract_pdf_pages_stream` (`pipeline.process(pdf_path,
+    render_page_to_image_stream, extract_pdf_pages_stream, get_pdf_page_count` (`pipeline.process(pdf_path,
     output_dir)`).'
-  contracts: External callers must interact via `PDFProcessingPipeline`. Sub-modules
-    (`PDFAnalyzer`, `VisionOptimizer`, etc.) are internal.
+  contracts: External callers must interact via declared Public Deep Seams (`PDFProcessingPipeline`,
+    `render_page_to_image`, `get_pdf_page_count`). Sub-modules (`PDFAnalyzer`, `VisionOptimizer`,
+    etc.) are internal.
   tests: '`pytest packages/ccba-pdf-prep/tests`'
 - package: ccba-qc-core
   path: packages/ccba-qc-core
