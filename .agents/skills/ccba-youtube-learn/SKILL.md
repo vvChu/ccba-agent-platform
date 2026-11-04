@@ -81,8 +81,8 @@ Kỹ năng chỉ được coi là thực hiện thành công khi tạo ra cấu 
 
 ### Phase 4: Tổng hợp Kiến thức (Belief Archaeology Synthesis)
 Sử dụng LLM để phân tích toàn bộ Transcript và danh sách hình ảnh đã lọc, sau đó xuất ra:
-1.  **`notes_concept.md`**: Tóm tắt kiến thức, lưu trữ hình ảnh slide tương ứng dưới dạng các liên kết markdown `![Alt Text]` `(./images/tên_file.webp)` kèm mô tả alt-text sinh động.
-2.  **`notes_worldview.md`**: Bóc tách các giả định ẩn sâu bên dưới lập luận của người thuyết trình.
+1.  **`notes_concept.md`**: Tóm tắt kiến thức, lưu trữ hình ảnh slide tương ứng dưới dạng các liên kết markdown `![Alt Text]` `(./images/tên_file.webp)` kèm mô tả alt-text sinh động. Khi diễn giả đề cập đến các mô hình định lượng, công thức toán học hoặc cấu trúc phí/xác suất chuẩn (như Black-Litterman, Sharpe Ratio, Pass-Through Fee...), bắt buộc tường minh hóa thành khối phương trình LaTeX độc lập (`$$...$$`) kèm giải thích ý nghĩa thực tiễn của từng biến số; tuyệt đối không tự bịa công thức giả toán học cho các khái niệm quản trị/văn hóa định tính.
+2.  **`notes_worldview.md`**: Bóc tách các giả định ẩn sâu bên dưới lập luận của người thuyết trình, đồng thời bổ sung mục **Cầu nối Liên ngành (Cross-Domain Synapses)** liên kết thế giới quan vừa bóc tách sang 2–3 lĩnh vực ngoài ngành của video (ví dụ: Kỹ thuật hệ thống, Quản trị rủi ro, Kiến trúc AI) để tránh tạo ốc đảo tri thức đơn ngành.
 3.  **`notes_speaker.md`**: Tổng hợp tiểu sử và phương pháp tiếp cận của diễn giả.
 *   **Tiêu chí hoàn thành:** Cả 3 tệp tin `notes_concept.md`, `notes_worldview.md`, và `notes_speaker.md` được tạo lập và điền đầy đủ dữ liệu phân tích đúng cấu trúc thư mục Cohesive Topic Folder.
 
