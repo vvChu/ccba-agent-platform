@@ -411,7 +411,7 @@ skills:
   command: /ccba-contribute-to-hub
   tier: kernel
 - name: ccba-copywriting
-  bundle: _software
+  bundle: _core
   description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
     và áp dụng các công thức viết thuyết phục (AIDA, PAS).
   triggers:
@@ -1227,7 +1227,7 @@ skills:
   command: /ccba-xia
   tier: kernel
 - name: ccba-xu-ly-van-phong
-  bundle: _software
+  bundle: _core
   description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
     tiêu chuẩn cấu trúc & phối màu chuyên nghiệp hoặc Nghị định 30.
   triggers:

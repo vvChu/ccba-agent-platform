@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import fcntl
 import os
 import re
+import sys
 import threading
 import time
 from dataclasses import asdict, dataclass, field
@@ -30,8 +30,47 @@ class TokenBudgetExceededError(Exception):
     pass
 
 
+def _try_lock_fd(fd: int) -> bool:
+    """Attempt a non-blocking exclusive OS lock on fd across POSIX and Windows."""
+    if sys.platform.startswith("win"):
+        import msvcrt
+
+        try:
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            return True
+        except OSError:
+            return False
+    import fcntl
+
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except OSError:
+        return False
+
+
+def _unlock_fd(fd: int) -> None:
+    """Release an OS lock on fd across POSIX and Windows."""
+    if sys.platform.startswith("win"):
+        import msvcrt
+
+        try:
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass
+        return
+    import fcntl
+
+    try:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+    except OSError:
+        pass
+
+
 class GitMutexLock:
-    """POSIX file-based mutex lock for Git mutation operations (fcntl.flock).
+    """Cross-platform file-based mutex lock for Git mutation operations (fcntl / msvcrt).
 
     Prevents concurrent Git commits/rollbacks from racing when multiple tuner
     processes target the same repository. Implements a context manager and
@@ -68,18 +107,16 @@ class GitMutexLock:
             fd = os.open(str(self.lock_path), os.O_CREAT | os.O_WRONLY)
             deadline = time.monotonic() + self.timeout
             while True:
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                if _try_lock_fd(fd):
                     self._fd = fd
                     return self
-                except BlockingIOError:
-                    if time.monotonic() >= deadline:
-                        os.close(fd)
-                        raise TimeoutError(
-                            f"GitMutexLock: could not acquire lock on "
-                            f"'{self.lock_path}' within {self.timeout}s"
-                        ) from None
-                    time.sleep(self.retry_interval)
+                if time.monotonic() >= deadline:
+                    os.close(fd)
+                    raise TimeoutError(
+                        f"GitMutexLock: could not acquire lock on "
+                        f"'{self.lock_path}' within {self.timeout}s"
+                    ) from None
+                time.sleep(self.retry_interval)
         except Exception:
             self._thread_lock.release()
             raise
@@ -91,10 +128,7 @@ class GitMutexLock:
 
         try:
             if self._fd is not None:
-                try:
-                    fcntl.flock(self._fd, fcntl.LOCK_UN)
-                except OSError:
-                    pass
+                _unlock_fd(self._fd)
                 try:
                     os.close(self._fd)
                 except OSError:
@@ -209,7 +243,7 @@ def _resolve_cfg_float(
             except ValueError:
                 pass
         return float(cfg_section.get(cfg_key, default))
-    return float(val) if isinstance(val, str) else val
+    return float(val)
 
 
 def _resolve_cfg_int(
@@ -229,7 +263,7 @@ def _resolve_cfg_int(
                 return int(raw)
             except ValueError:
                 return fallback
-        return val
+        return int(val)
     env_v = os.getenv(env_key)
     if env_v:
         raw_env = env_v.replace(",", "").replace("_", "") if strip_seps else env_v
@@ -249,7 +283,7 @@ def _resolve_cfg_bool(
         if env_v is not None:
             return env_v.lower() in ("1", "true", "yes")
         return bool(cfg_section.get(cfg_key, default))
-    return val
+    return bool(val)
 
 
 def _detect_program_root(program_path: Path) -> Path:
