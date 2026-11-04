@@ -306,6 +306,33 @@ def get_blind_chunks(total_pages: int, chunk_size: int = 20) -> list[tuple[int, 
     ]
 
 
+MAX_RENDER_PIXELS: int = 50_000_000
+
+
+def get_pdf_page_count(pdf_path: Path | str) -> int:
+    """Return the total number of pages in a PDF file safely.
+
+    Args:
+        pdf_path: Path or string path to the PDF file.
+
+    Returns:
+        Total number of pages.
+
+    Raises:
+        FileNotFoundError: If the PDF file does not exist.
+    """
+    import fitz
+
+    p = Path(pdf_path)
+    if not p.exists() or not p.is_file():
+        raise FileNotFoundError(f"PDF not found: {p}")
+    doc = fitz.open(str(p))
+    try:
+        return len(doc)
+    finally:
+        doc.close()
+
+
 def render_page_to_image(
     pdf_path: Path,
     page_num: int,
@@ -322,6 +349,11 @@ def render_page_to_image(
 
     Returns:
         Path to the saved image file.
+
+    Raises:
+        FileNotFoundError: If the PDF file does not exist.
+        IndexError: If page_num is out of range.
+        ValueError: If expected render dimensions exceed MAX_RENDER_PIXELS.
     """
     import fitz
 
@@ -336,7 +368,15 @@ def render_page_to_image(
         if page_num < 0 or page_num >= len(doc):
             raise IndexError(f"Page number {page_num} out of range for PDF with {len(doc)} pages")
         page = doc[page_num]
-        matrix = fitz.Matrix(dpi / 72, dpi / 72)
+        zoom = dpi / 72.0
+        target_w = int(page.rect.width * zoom)
+        target_h = int(page.rect.height * zoom)
+        if target_w * target_h > MAX_RENDER_PIXELS:
+            raise ValueError(
+                f"Kích thước kết xuất dự kiến ({target_w}x{target_h} = {target_w * target_h} pixels) "
+                f"vượt quá ngân sách an toàn ({MAX_RENDER_PIXELS} pixels). Hãy giảm DPI."
+            )
+        matrix = fitz.Matrix(zoom, zoom)
         pix = page.get_pixmap(matrix=matrix)
         pix.save(str(output_path))
     finally:
@@ -365,6 +405,7 @@ def render_page_to_image_stream(
     Raises:
         FileNotFoundError: If pdf_source is a non-existent file path.
         IndexError: If page_num is out of range.
+        ValueError: If expected render dimensions exceed MAX_RENDER_PIXELS.
     """
     import fitz
 
@@ -380,7 +421,15 @@ def render_page_to_image_stream(
         if page_num < 0 or page_num >= len(doc):
             raise IndexError(f"Page number {page_num} out of range for PDF with {len(doc)} pages")
         page = doc[page_num]
-        matrix = fitz.Matrix(dpi / 72, dpi / 72)
+        zoom = dpi / 72.0
+        target_w = int(page.rect.width * zoom)
+        target_h = int(page.rect.height * zoom)
+        if target_w * target_h > MAX_RENDER_PIXELS:
+            raise ValueError(
+                f"Kích thước kết xuất dự kiến ({target_w}x{target_h} = {target_w * target_h} pixels) "
+                f"vượt quá ngân sách an toàn ({MAX_RENDER_PIXELS} pixels). Hãy giảm DPI."
+            )
+        matrix = fitz.Matrix(zoom, zoom)
         pix = page.get_pixmap(matrix=matrix)
         return pix.tobytes(output=image_format)
     finally:

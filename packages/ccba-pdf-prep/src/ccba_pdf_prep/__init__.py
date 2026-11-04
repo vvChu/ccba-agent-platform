@@ -11,6 +11,9 @@ Document Skills (standalone utilities for PDF forms):
 
 from .composite import CompositeBuilder as CompositeBuilder
 from .core import (
+    MAX_RENDER_PIXELS as MAX_RENDER_PIXELS,
+)
+from .core import (
     PageDetail as PageDetail,
 )
 from .core import (
@@ -27,6 +30,9 @@ from .core import (
 )
 from .core import (
     get_blind_chunks as get_blind_chunks,
+)
+from .core import (
+    get_pdf_page_count as get_pdf_page_count,
 )
 from .core import (
     render_page_to_image as render_page_to_image,
@@ -133,6 +139,8 @@ __all__ = [
     "split_pdf_pages",
     "extract_text_from_pdf",
     "parse_pages",
+    "get_pdf_page_count",
+    "MAX_RENDER_PIXELS",
     "render_page_to_image",
     "render_page_to_image_stream",
     "extract_pdf_pages_stream",
