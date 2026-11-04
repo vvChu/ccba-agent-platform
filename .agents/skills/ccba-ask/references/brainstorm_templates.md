@@ -78,8 +78,14 @@ Khi người dùng yêu cầu tổng hợp (hoặc sau Energy Checkpoint chọn 
    - **Nhóm phân loại:** Bảng phân nhóm
    - **Ưu tiên:** Top ý tưởng được chọn
    - **Action items:** Bước tiếp theo
+5. **Khung Cược Trước & Chuyển tiếp Phản biện (Pre-Flight Conviction Handoff):** Ở cuối bản tổng hợp, xuất kèm khối mẫu 3 dòng Cược Trước cho phương án ưu tiên số 1 để người dùng có thể dán trực tiếp sang `Command.md` (kích hoạt `Adversarial Twin Mode` và ghi sổ `Friday Alpha Arena`) hoặc dùng làm đầu vào cho `/ccba-grilling` / `/ccba-to-spec`:
+   ```markdown
+   🎯 Cược của tôi: [Giả thuyết / quyết định cốt lõi và xác suất tin tưởng X%]
+   💣 Điểm gãy: [Điều kiện thực tế hoặc dữ liệu nào xảy ra sẽ chứng minh cược này sai]
+   🔍 Câu hỏi ép cung AI: [Câu hỏi yêu cầu AI đóng vai phản biện tìm lỗ hổng lớn nhất]
+   ```
 
-- **Tiêu chí hoàn thành:** Artifact Session Document đã được tạo và hiển thị cho người dùng.
+- **Tiêu chí hoàn thành:** Artifact Session Document đã được tạo kèm Khung Cược Trước 3 dòng và hiển thị cho người dùng.
 
 ---
 
