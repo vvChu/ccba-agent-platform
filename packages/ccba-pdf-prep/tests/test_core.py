@@ -9,6 +9,7 @@ from ccba_pdf_prep import (
     PDFCategory,
     Segment,
     get_blind_chunks,
+    render_page_to_image,
     render_page_to_image_stream,
     split_pdf,
 )
@@ -198,3 +199,28 @@ class TestRenderPageToImageStream:
     def test_render_stream_file_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError):
             render_page_to_image_stream(tmp_path / "missing.pdf", page_num=0)
+
+
+# ---------------------------------------------------------------------------
+# render_page_to_image
+# ---------------------------------------------------------------------------
+class TestRenderPageToImage:
+    """Tests for file-based page image rendering."""
+
+    def test_render_to_file_png(self, tmp_pdf_text: Path, tmp_path: Path) -> None:
+        out_png = tmp_path / "rendered" / "page_0.png"
+        res_path = render_page_to_image(tmp_pdf_text, page_num=0, output_path=out_png, dpi=100)
+        assert res_path == out_png
+        assert out_png.exists()
+        header = out_png.read_bytes()[:8]
+        assert header == b"\x89PNG\r\n\x1a\n"
+
+    def test_render_to_file_invalid_page(self, tmp_pdf_text: Path, tmp_path: Path) -> None:
+        out_png = tmp_path / "page_99.png"
+        with pytest.raises(IndexError):
+            render_page_to_image(tmp_pdf_text, page_num=99, output_path=out_png)
+
+    def test_render_to_file_missing_pdf(self, tmp_path: Path) -> None:
+        out_png = tmp_path / "page_0.png"
+        with pytest.raises(FileNotFoundError):
+            render_page_to_image(tmp_path / "nonexistent.pdf", page_num=0, output_path=out_png)
