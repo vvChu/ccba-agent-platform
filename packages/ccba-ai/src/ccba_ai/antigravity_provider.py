@@ -297,7 +297,7 @@ def canonicalize_model_name(name: str) -> str:
 
     Examples:
         'Gemini 3.8 Flash (High)' -> 'gemini-3.8-flash-high'
-        'Gemini 3.7 Flash (Medium)' -> 'gemini-3.7-flash-medium'
+        'Claude Opus 5.5 (High)' -> 'claude-opus-5-5-high'
         'gemini-3.7-flash-medium' -> 'gemini-3.7-flash-medium'
     """
     raw = name.strip()
@@ -307,6 +307,7 @@ def canonicalize_model_name(name: str) -> str:
     cleaned = raw.replace("(", "").replace(")", "").strip()
     # Replace spaces and underscores with dashes
     slug = re.sub(r"[\s_]+", "-", cleaned).lower()
+    slug = re.sub(r"\b(claude-(?:opus|sonnet)-)(\d+)\.(\d+)", r"\1\2-\3", slug)
     return slug
 
 
@@ -357,6 +358,22 @@ def resolve_latest_compatible_model(requested_model: str, available_models: list
     req_slug = canonicalize_model_name(requested_model)
     if req_slug in available_models:
         return req_slug
+
+    claude_match = re.match(
+        r"^(claude-(?:opus|sonnet))-(\d+(?:[-.]\d+)*)(?:-(.*))?$", req_slug
+    )
+    if claude_match:
+        c_family, _, c_effort = claude_match.groups()
+        target_effort = "high" if c_effort in (None, "", "thinking") else c_effort
+        c_candidates = [m for m in available_models if m.startswith(f"{c_family}-")]
+        if c_candidates:
+            exact_c = [m for m in c_candidates if m.endswith(f"-{target_effort}")]
+            pool = exact_c or c_candidates
+            pool.sort(
+                key=lambda m: tuple(int(p) for p in re.findall(r"\d+", m[len(c_family) :])),
+                reverse=True,
+            )
+            return pool[0]
 
     # Parse requested model: e.g. gemini-3.7-flash-medium
     # match (family)-(version)-(variant)

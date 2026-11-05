@@ -62,6 +62,21 @@ TIER_FALLBACK_MATRIX: dict[str, dict[str, str]] = {
         TierType.TIER2_CLOUD.value: "gemini-2.5-flash",
         TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
     },
+    "claude-opus-5-5-high": {
+        TierType.TIER1_GATEWAY.value: "claude-opus-5-5-high",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-pro",
+        TierType.TIER3_COPILOT.value: "gpt-5.4",
+    },
+    "claude-sonnet-5-5-high": {
+        TierType.TIER1_GATEWAY.value: "claude-sonnet-5-5-high",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-pro",
+        TierType.TIER3_COPILOT.value: "gpt-5.4",
+    },
+    "gpt-oss-120b": {
+        TierType.TIER1_GATEWAY.value: "gpt-oss-120b",
+        TierType.TIER2_CLOUD.value: "gemini-2.5-flash",
+        TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
+    },
 }
 
 

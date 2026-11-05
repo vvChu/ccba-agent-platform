@@ -94,12 +94,12 @@ Mọi tương tác LLM từ client (Hub/Spoke/CLI) BẮT BUỘC định tuyến 
 
 Khi tích hợp từ phía client (Hub/Spoke/Web/CLI), luôn định tuyến model theo đúng 4 Archetypes chuẩn qua Seam `model_routing.v1`:
 
-| Archetype | Task Key (`choose_model`) | Enum Archetype | Khi nào sử dụng? |
+| Archetype | Task Key (`choose_model`) | Enum Archetype / Model Aliases | Khi nào sử dụng? |
 | :--- | :--- | :--- | :--- |
-| **1. OCR & Vision** | `"ocr"` | `ModelArchetype.OCR` | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
-| **2. Standard / Coding** | `"general"`, `"coding"` | `ModelArchetype.STANDARD` | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
-| **3. Deep Reasoning** | `"reasoning"`, `"audit"` | `ModelArchetype.REASONING` | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước. |
-| **4. Local Private** | `"private"`, `"rag"` | `ModelArchetype.LOCAL`, `ModelArchetype.RAG` | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
+| **1. OCR & Vision** | `"ocr"` | `ModelArchetype.OCR` (`tier-ocr` / `ocr-primary`) | Xử lý OCR tài liệu PDF, bản vẽ, hình ảnh, trích xuất text bảng biểu. |
+| **2. Standard / Coding** | `"general"`, `"coding"` | `ModelArchetype.STANDARD` (`tier-fast` / `gemini-3.8-flash` / `gemini-4-argon` / `gpt-oss-120b`) | Chat tổng quát, code sinh tự động, tóm tắt bài viết, đàm thoại agent. |
+| **3. Deep Reasoning** | `"reasoning"`, `"audit"` | `ModelArchetype.REASONING` (`tier-reasoning` / `claude-sonnet-4-6` / `claude-opus-5-5-high` / `claude-sonnet-5-5-high` / `gemini-4-argon-high`) | Phân tích điều khoản hợp đồng phức tạp, đối soát pháp lý, suy luận đa bước (1M context). |
+| **4. Local Private** | `"private"`, `"rag"` | `ModelArchetype.LOCAL`, `ModelArchetype.RAG` (`tier-local` / `local-coder` / `rag-core`) | Chạy offline, dữ liệu tuyệt mật nội bộ, fallback chốt chặn khi mất Internet. |
 
 ---
 

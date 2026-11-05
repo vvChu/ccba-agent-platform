@@ -9,7 +9,7 @@ Quick Start:
     from ccba_ai import ai
 
     reply = ai.chat("Xin chào!")
-    reply = ai.chat("Review code", model="claude-sonnet-4-6")
+    reply = ai.chat("Review code", model="claude-sonnet-5-5-high")
 
     for chunk in ai.stream("Write quicksort"):
         print(chunk, end="")

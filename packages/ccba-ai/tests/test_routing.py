@@ -15,6 +15,18 @@ def test_model_archetype_constants() -> None:
     assert ModelArchetype.LOCAL == "qwen-local-primary"
     assert ModelArchetype.RAG == "rag-core"
     assert ModelArchetype.CLAUDE_OPUS_46 == "claude-opus-4-6"
+    assert ModelArchetype.GEMINI_4_ARGON == "gemini-4-argon"
+    assert ModelArchetype.GPT_OSS_120B == "gpt-oss-120b"
+    assert ModelArchetype.CLAUDE_SONNET_46 == "claude-sonnet-4-6"
+    assert ModelArchetype.CLAUDE_SONNET_55 == "claude-sonnet-5-5"
+    assert ModelArchetype.CLAUDE_SONNET_55_HIGH == "claude-sonnet-5-5-high"
+    assert ModelArchetype.CLAUDE_OPUS_55 == "claude-opus-5-5"
+    assert ModelArchetype.CLAUDE_OPUS_55_HIGH == "claude-opus-5-5-high"
+    assert ModelArchetype.TIER_OCR == "tier-ocr"
+    assert ModelArchetype.TIER_FAST == "tier-fast"
+    assert ModelArchetype.TIER_REASONING == "tier-reasoning"
+    assert ModelArchetype.TIER_LOCAL == "tier-local"
+    assert ModelArchetype.LOCAL_CODER == "local-coder"
 
 
 def test_choose_model_routing() -> None:
@@ -52,7 +64,19 @@ def test_is_reasoning_model() -> None:
     assert is_reasoning_model("o1-preview") is True
     assert is_reasoning_model("o3-mini") is True
     assert is_reasoning_model("custom-high") is True
+    assert is_reasoning_model("claude-opus-5-5") is True
+    assert is_reasoning_model("claude-sonnet-5-5") is True
+    assert is_reasoning_model("opus-5.5") is True
+    assert is_reasoning_model("sonnet-5.5") is True
+    assert is_reasoning_model("claude-opus-5-5-high") is True
+    assert is_reasoning_model("claude-sonnet-5-5-high") is True
 
+    assert is_reasoning_model("claude-opus-5-5-low") is False
+    assert is_reasoning_model("claude-sonnet-5-5-low") is False
+    assert is_reasoning_model("opus-5.5-low") is False
+    assert is_reasoning_model("sonnet-5.5-low") is False
+    assert is_reasoning_model("gpt-oss-120b") is False
+    assert is_reasoning_model("gemini-4-argon-low") is False
     assert is_reasoning_model("gemini-3.7-flash") is False
     assert is_reasoning_model("qwen-local-primary") is False
     assert is_reasoning_model("ocr-primary") is False
