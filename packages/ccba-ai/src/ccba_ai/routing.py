@@ -6,6 +6,8 @@ AI Gateway Client Integration Contract.
 
 from __future__ import annotations
 
+import re
+
 
 class ModelArchetype:
     """Standard Model Archetypes for CCBA AI Gateway on Server Spark."""
@@ -14,14 +16,19 @@ class ModelArchetype:
     OCR = "ocr-primary"
     OCR_FALLBACK = "ocr-fallback"
     OCR_TIER4 = "ocr-tier4"
+    TIER_OCR = "tier-ocr"
 
     # Archetype 2: Standard General / Coding (Google API + Centralized Proxy)
     STANDARD = "gemini-3.7-flash"
     STANDARD_MEDIUM = "gemini-3.7-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
     GEMINI_38_FLASH = "gemini-3.8-flash"
+    GEMINI_4_ARGON = "gemini-4-argon"
     GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"
     GEMINI_4_ARGON_LOW = "gemini-4-argon-low"
+    GPT_OSS_120B = "gpt-oss-120b"
+    CLAUDE_SONNET_46 = "claude-sonnet-4-6"
+    TIER_FAST = "tier-fast"
 
     # Archetype 3: Deep Reasoning / Complex Audit (Google API + Centralized Proxy)
     REASONING = "gemini-3.7-flash-high"
@@ -30,10 +37,17 @@ class ModelArchetype:
     GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
     GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"
     CLAUDE_OPUS_46 = "claude-opus-4-6"
+    CLAUDE_SONNET_55 = "claude-sonnet-5-5"
+    CLAUDE_SONNET_55_HIGH = "claude-sonnet-5-5-high"
+    CLAUDE_OPUS_55 = "claude-opus-5-5"
+    CLAUDE_OPUS_55_HIGH = "claude-opus-5-5-high"
+    TIER_REASONING = "tier-reasoning"
 
     # Archetype 4: Local Private / Zero-Cost (vLLM Qwen 35B Local GPU DGX)
     LOCAL = "qwen-local-primary"
+    LOCAL_CODER = "local-coder"
     RAG = "rag-core"
+    TIER_LOCAL = "tier-local"
 
     # Archetype 5: Embeddings
     EMBEDDING = "gemini-embedding-2"
@@ -82,6 +96,8 @@ def is_reasoning_model(model_name: str) -> bool:
     if not model_name:
         return False
     name = model_name.lower().strip()
+    if re.search(r"(?:opus|sonnet)-5[-.]5(?!-low)", name):
+        return True
     return any(
         kw in name
         for kw in (

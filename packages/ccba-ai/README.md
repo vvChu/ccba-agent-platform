@@ -45,7 +45,7 @@ from ccba_ai import ai
 reply = ai.chat("Xin chào!")
 
 # 2. Chọn model archetype hoặc tên cụ thể
-reply = ai.chat("Review code này", model="claude-sonnet-4-6")
+reply = ai.chat("Review code này", model="claude-sonnet-5-5-high")
 
 # 3. Chat kèm metadata (đo latency và token usage)
 result = ai.chat_with_metadata("Thẩm tra hồ sơ", model="gemini-3.7-flash")
