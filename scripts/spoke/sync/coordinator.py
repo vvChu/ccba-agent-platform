@@ -1460,6 +1460,11 @@ class SpokeSynchronizer:
                 f"❌ FAILED: Spoke post-sync verification failed with exit code {exit_code}.",
                 file=sys.stderr,
             )
+            if first_failed:
+                print(f"  ↳ Failed Command: {first_failed.command}", file=sys.stderr)
+                snippet = (first_failed.stderr or first_failed.stdout or "").strip()
+                if snippet:
+                    print(f"  ↳ Output Snippet:\n{snippet[:600]}", file=sys.stderr)
             return exit_code
         except Exception as e:
             print(f"  ❌ Lỗi khi thực hiện post-sync verification: {e}", file=sys.stderr)
