@@ -359,9 +359,7 @@ def resolve_latest_compatible_model(requested_model: str, available_models: list
     if req_slug in available_models:
         return req_slug
 
-    claude_match = re.match(
-        r"^(claude-(?:opus|sonnet))-(\d+(?:[-.]\d+)*)(?:-(.*))?$", req_slug
-    )
+    claude_match = re.match(r"^(claude-(?:opus|sonnet))-(\d+(?:[-.]\d+)*)(?:-(.*))?$", req_slug)
     if claude_match:
         c_family, _, c_effort = claude_match.groups()
         target_effort = "high" if c_effort in (None, "", "thinking") else c_effort

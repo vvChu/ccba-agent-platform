@@ -109,8 +109,14 @@ class TestResolveLatestCompatibleModel:
             "claude-opus-5-5-high",
             "claude-sonnet-5-5-high",
         ]
-        assert resolve_latest_compatible_model("claude-opus-4-6-thinking", available) == "claude-opus-5-5-high"
-        assert resolve_latest_compatible_model("claude-sonnet-4-6", available) == "claude-sonnet-5-5-high"
+        assert (
+            resolve_latest_compatible_model("claude-opus-4-6-thinking", available)
+            == "claude-opus-5-5-high"
+        )
+        assert (
+            resolve_latest_compatible_model("claude-sonnet-4-6", available)
+            == "claude-sonnet-5-5-high"
+        )
 
     def test_already_supported_returns_original(self) -> None:
         available = ["gemini-3.7-flash-medium", "gemini-3.8-flash-medium"]
