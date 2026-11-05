@@ -39,6 +39,8 @@ class TestCanonicalizeModelName:
         assert canonicalize_model_name("Gemini 3.8 Flash (High)") == "gemini-3.8-flash-high"
         assert canonicalize_model_name("Gemini 3.8 Flash (Medium)") == "gemini-3.8-flash-medium"
         assert canonicalize_model_name("Gemini 3.1 Pro (Low)") == "gemini-3.1-pro-low"
+        assert canonicalize_model_name("Claude Opus 5.5 (High)") == "claude-opus-5-5-high"
+        assert canonicalize_model_name("Claude Sonnet 5.5 (Medium)") == "claude-sonnet-5-5-medium"
 
     def test_already_canonical(self) -> None:
         assert canonicalize_model_name("gemini-3.7-flash-medium") == "gemini-3.7-flash-medium"
@@ -63,7 +65,7 @@ class TestExtractAvailableModels:
         assert len(models) == 10
         assert models[0] == "gemini-3.8-flash-high"
         assert models[1] == "gemini-3.8-flash-medium"
-        assert "claude-sonnet-4.6-thinking" in models or "claude-sonnet-4.6" in models
+        assert "claude-sonnet-4-6-thinking" in models or "claude-sonnet-4.6-thinking" in models
 
     def test_no_marker(self) -> None:
         models = extract_available_models_from_stderr("Some other error without marker")
@@ -98,6 +100,23 @@ class TestResolveLatestCompatibleModel:
         # Requesting 3.7 high -> should pick 3.8 high
         resolved = resolve_latest_compatible_model("gemini-3.7-flash-high", available)
         assert resolved == "gemini-3.8-flash-high"
+
+    def test_upgrade_claude_46_to_55(self) -> None:
+        available = [
+            "gemini-4-argon-medium",
+            "claude-opus-5-5-low",
+            "claude-opus-5-5-medium",
+            "claude-opus-5-5-high",
+            "claude-sonnet-5-5-high",
+        ]
+        assert (
+            resolve_latest_compatible_model("claude-opus-4-6-thinking", available)
+            == "claude-opus-5-5-high"
+        )
+        assert (
+            resolve_latest_compatible_model("claude-sonnet-4-6", available)
+            == "claude-sonnet-5-5-high"
+        )
 
     def test_already_supported_returns_original(self) -> None:
         available = ["gemini-3.7-flash-medium", "gemini-3.8-flash-medium"]
