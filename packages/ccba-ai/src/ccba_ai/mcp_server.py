@@ -12,35 +12,56 @@ import sys
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, Protocol, TypeVar, cast
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-# Attempt import of FastMCP
-try:
-    from mcp.server.fastmcp import FastMCP
-except ImportError:
 
-    class _DummyFastMCP:
-        """Fallback mock when 'mcp' optional package is not installed."""
+class _MCPServerPort(Protocol):
+    """Minimal protocol seam across MCP 2.x (MCPServer), MCP 1.x (FastMCP), and offline fallback."""
 
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+    def tool(self, *args: Any, **kwargs: Any) -> Callable[[F], F]: ...
 
-        def tool(self, *args: Any, **kwargs: Any) -> Callable[[F], F]:
-            def decorator(func: F) -> F:
-                return func
+    def run(self, *args: Any, **kwargs: Any) -> None: ...
 
-            return decorator
 
-        def run(self, *args: Any, **kwargs: Any) -> None:
-            print(
-                "[Error] Anthropic 'mcp' package is not installed. Run 'uv sync' or 'pip install mcp' first.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
+class _DummyFastMCP:
+    """Fallback stand-in when 'mcp' optional package is not installed."""
 
-    FastMCP = _DummyFastMCP  # type: ignore[misc,assignment]
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+    def tool(self, *args: Any, **kwargs: Any) -> Callable[[F], F]:
+        def decorator(func: F) -> F:
+            return func
+
+        return decorator
+
+    def run(self, *args: Any, **kwargs: Any) -> None:
+        print(
+            "[Error] Anthropic 'mcp' package is not installed. Run 'uv sync' or 'pip install mcp' first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+def _create_mcp_server(name: str = "ccba-mcp-server") -> _MCPServerPort:
+    """Resolve and instantiate MCPServer (mcp 2.x), FastMCP (mcp 1.x), or _DummyFastMCP."""
+    import importlib
+
+    for mod_path, cls_name in (
+        ("mcp.server.mcpserver", "MCPServer"),
+        ("mcp.server.fastmcp", "FastMCP"),
+    ):
+        try:
+            mod = importlib.import_module(mod_path)
+            server_cls = getattr(mod, cls_name, None)
+            if server_cls is not None:
+                return cast(_MCPServerPort, server_cls(name))
+        except ImportError:
+            continue
+    return _DummyFastMCP(name)
+
 
 # Import services from ccba_ai
 # Expose scripts folder for idop_scaffolder import
@@ -61,8 +82,8 @@ if cwd_scripts.exists():
     except Exception:
         pass
 
-# Initialize FastMCP Server
-mcp = FastMCP("ccba-mcp-server")
+# Initialize MCP Server via version-agnostic seam
+mcp: _MCPServerPort = _create_mcp_server("ccba-mcp-server")
 
 LOG_DIR = Path(".md") / "logs"
 LOG_FILE = LOG_DIR / "mcp_server.log"
@@ -324,6 +345,39 @@ def run_seo_audit(file_path: str) -> dict[str, Any]:
 # ==========================================
 
 
+def _run_idop_scaffolder_steps(
+    scaffolder: Any,
+    out_abs: str,
+    app_abs: str,
+    app_dir: str,
+    *,
+    scaffold_cde: bool,
+    scaffold_lists: bool,
+    scaffold_workflows: bool,
+    scaffold_react_app: bool,
+    pack_solution: bool,
+    solution_name: str,
+) -> list[str]:
+    """Execute individual IDOP scaffolding steps and return status lines."""
+    reports: list[str] = []
+    if scaffold_cde:
+        scaffolder.scaffold_cde(out_abs)
+        reports.append("- Cấu trúc thư mục CDE: Đã khởi tạo.")
+    if scaffold_lists:
+        scaffolder.scaffold_lists(out_abs)
+        reports.append("- SharePoint Lists Schema & PnP Scripts: Đã khởi tạo.")
+    if scaffold_workflows:
+        scaffolder.scaffold_workflows(out_abs)
+        reports.append("- Power Automate flow definitions: Đã khởi tạo.")
+    if scaffold_react_app:
+        scaffolder.scaffold_app(app_abs)
+        reports.append(f"- React + Vite + TS Code App: Đã khởi tạo tại {app_dir}")
+    if pack_solution:
+        scaffolder.pack_solution(out_abs, solution_name, "CCBA", "ccba")
+        reports.append(f"- Đóng gói Solution zip '{solution_name}': Đã hoàn thành.")
+    return reports
+
+
 @mcp.tool()
 @privacy_protected
 def scaffold_idop_project(
@@ -336,49 +390,26 @@ def scaffold_idop_project(
     pack_solution: bool = False,
     solution_name: str = "IDOP_Solution",
 ) -> str:
-    """Tạo nhanh bộ khung dự án CDE, SharePoint IDOP Lists, Power Automate, và React App.
-
-    Args:
-        output_dir: Đường dẫn thư mục đầu ra CDE (mặc định: './CDE')
-        app_dir: Thư mục đầu ra cho React App (mặc định: './src/idop-app')
-        scaffold_cde: Có tạo cấu trúc thư mục CDE không (mặc định: True)
-        scaffold_lists: Có tạo schema SharePoint Lists không (mặc định: True)
-        scaffold_workflows: Có tạo thiết kế Power Automate workflow không (mặc định: True)
-        scaffold_react_app: Có khởi tạo dự án React/Vite/TS Code App không (mặc định: False)
-        pack_solution: Có đóng gói SharePoint Solution zip không (mặc định: False)
-        solution_name: Tên gói Solution (mặc định: 'IDOP_Solution')
-    """
+    """Tạo nhanh bộ khung dự án CDE, SharePoint IDOP Lists, Power Automate, và React App."""
     log(
         f"Tool scaffold_idop_project called (output_dir={output_dir}, react_app={scaffold_react_app})"
     )
     if not idop_scaffolder:
         return "Error: idop_scaffolder module could not be imported. Ensure scripts/idop_scaffolder.py exists."
 
-    out_abs = os.path.abspath(output_dir)
-    app_abs = os.path.abspath(app_dir)
-
-    reports = []
     try:
-        if scaffold_cde:
-            idop_scaffolder.scaffold_cde(out_abs)
-            reports.append("- Cấu trúc thư mục CDE: Đã khởi tạo.")
-
-        if scaffold_lists:
-            idop_scaffolder.scaffold_lists(out_abs)
-            reports.append("- SharePoint Lists Schema & PnP Scripts: Đã khởi tạo.")
-
-        if scaffold_workflows:
-            idop_scaffolder.scaffold_workflows(out_abs)
-            reports.append("- Power Automate flow definitions: Đã khởi tạo.")
-
-        if scaffold_react_app:
-            idop_scaffolder.scaffold_app(app_abs)
-            reports.append(f"- React + Vite + TS Code App: Đã khởi tạo tại {app_dir}")
-
-        if pack_solution:
-            idop_scaffolder.pack_solution(out_abs, solution_name, "CCBA", "ccba")
-            reports.append(f"- Đóng gói Solution zip '{solution_name}': Đã hoàn thành.")
-
+        reports = _run_idop_scaffolder_steps(
+            idop_scaffolder,
+            os.path.abspath(output_dir),
+            os.path.abspath(app_dir),
+            app_dir,
+            scaffold_cde=scaffold_cde,
+            scaffold_lists=scaffold_lists,
+            scaffold_workflows=scaffold_workflows,
+            scaffold_react_app=scaffold_react_app,
+            pack_solution=pack_solution,
+            solution_name=solution_name,
+        )
         return "Scaffolding dự án IDOP thành công:\n" + "\n".join(reports)
     except Exception as e:
         return f"Error executing scaffolding: {e}"

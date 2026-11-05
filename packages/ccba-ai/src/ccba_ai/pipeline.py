@@ -26,6 +26,36 @@ class AuditReportSummary(BaseModel):
     report_file: Path | None = None
 
 
+def _synthesize_or_write_fallback(
+    reporter_engine: QCReporterEngine | None,
+    project_name: str,
+    backbone: Any,
+    audit_reports: list[AuditReport],
+    report_file: Path,
+) -> None:
+    """Delegate report synthesis to QCReporterEngine or write fallback Markdown."""
+    if reporter_engine:
+        reporter_engine.synthesize(
+            backbone=backbone,
+            audit_results=audit_reports,  # type: ignore[arg-type]
+            output_path=report_file,
+        )
+        return
+
+    lines = [
+        f"# Báo Cáo Thẩm Tra Chất Lượng Hồ Sơ: {project_name}",
+        f"- **Số lượng cấp độ/tầng đã quét**: {len(audit_reports)}",
+        f"- **Tổng số lỗi phát hiện**: {sum(r.finding_count for r in audit_reports)}",
+        "",
+        "## Chi Tiết Các Tầng",
+    ]
+    for r in audit_reports:
+        lines.append(f"### Tầng {r.level} (Mô hình: {r.ai_model})")
+        for f in r.findings:
+            lines.append(f"- **[{f.severity.upper()}]** {f.location}: {f.description}")
+    report_file.write_text("\n".join(lines), encoding="utf-8")
+
+
 class QCAuditPipeline:
     """Unified Orchestrator Deep Seam for Multi-Discipline QC Audits.
 
@@ -56,54 +86,28 @@ class QCAuditPipeline:
         out_dir.mkdir(parents=True, exist_ok=True)
         disc_list = disciplines or ["Architecture", "Structure", "MEP", "PCCC"]
 
-        # 1. Discover drawings
-        pdf_files = list(p_dir.glob("*.pdf"))
-        backbone: Any = None
-        if self.discovery_engine:
-            backbone = await self.discovery_engine.discover(pdf_files)
+        pdf_files = sorted(p_dir.glob("*.pdf"), key=lambda p: p.stem)
+        backbone: Any = (
+            await self.discovery_engine.discover(pdf_files) if self.discovery_engine else None
+        )
 
-        # 2. Audit levels
         audit_reports: list[AuditReport] = []
         if self.audit_engine:
-            level_map: dict[str, list[Path]] = {}
-            for pdf in pdf_files:
-                level_name = pdf.stem
-                level_map[level_name] = [pdf]
+            level_map: dict[str, list[Path]] = {pdf.stem: [pdf] for pdf in pdf_files}
             audit_reports = await self.audit_engine.run_multi_level_audit(
                 level_map, discipline_order=disc_list
             )
 
-        # 3. Synthesize report
         report_file = out_dir / "qc_audit_report.md"
-        if self.reporter_engine:
-            self.reporter_engine.synthesize(
-                backbone=backbone,
-                audit_results=audit_reports,  # type: ignore[arg-type]
-                output_path=report_file,
-            )
-        else:
-            lines = [
-                f"# Báo Cáo Thẩm Tra Chất Lượng Hồ Sơ: {p_dir.name}",
-                f"- **Số lượng cấp độ/tầng đã quét**: {len(audit_reports)}",
-                f"- **Tổng số lỗi phát hiện**: {sum(r.finding_count for r in audit_reports)}",
-                "",
-                "## Chi Tiết Các Tầng",
-            ]
-            for r in audit_reports:
-                lines.append(f"### Tầng {r.level} (Mô hình: {r.ai_model})")
-                for f in r.findings:
-                    lines.append(f"- **[{f.severity.upper()}]** {f.location}: {f.description}")
-            report_file.write_text("\n".join(lines), encoding="utf-8")
-
-        total_find = sum(r.finding_count for r in audit_reports)
-        high_sev = sum(r.high_severity_count for r in audit_reports)
-        levels = [r.level for r in audit_reports] or [p.stem for p in pdf_files]
+        _synthesize_or_write_fallback(
+            self.reporter_engine, p_dir.name, backbone, audit_reports, report_file
+        )
 
         return AuditReportSummary(
             project_name=p_dir.name,
-            levels_audited=levels,
-            total_findings=total_find,
-            high_severity_count=high_sev,
+            levels_audited=[r.level for r in audit_reports] or [p.stem for p in pdf_files],
+            total_findings=sum(r.finding_count for r in audit_reports),
+            high_severity_count=sum(r.high_severity_count for r in audit_reports),
             reports=audit_reports,
             report_file=report_file if report_file.exists() else None,
         )
