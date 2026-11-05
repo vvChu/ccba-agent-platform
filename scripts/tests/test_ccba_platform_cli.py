@@ -6,20 +6,36 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from scripts.ccba_platform_cli import build_parser, execute_ingest_legal, main, sanitize_doc_slug
+from scripts.ccba_platform_cli import (
+    _COMMAND_HANDLERS,
+    build_parser,
+    execute_ingest_legal,
+    main,
+    sanitize_doc_slug,
+)
 
 
 def test_cli_parser_help_and_subcommands() -> None:
-    """Verify that the parser includes adopt-spoke, sync-spoke, and ingest-legal."""
+    """Verify all 10 CLI subcommands are registered and mapped 1-to-1 in _COMMAND_HANDLERS."""
     parser = build_parser()
     subparsers_actions = [action for action in parser._actions if action.dest == "command"]
     assert len(subparsers_actions) == 1
     choices = subparsers_actions[0].choices
-    assert "adopt-spoke" in choices
-    assert "sync-spoke" in choices
-    assert "ingest-legal" in choices
-    assert "doc-audit" in choices
-    assert "find-seam" in choices
+    expected_commands = {
+        "init-spoke",
+        "adopt-spoke",
+        "sync-spoke",
+        "bootstrap-spoke",
+        "spoke-status",
+        "ingest-legal",
+        "doc-audit",
+        "validate-cross-ref",
+        "protect-repo",
+        "find-seam",
+    }
+    assert choices is not None
+    assert set(choices) == expected_commands
+    assert set(_COMMAND_HANDLERS.keys()) == expected_commands
 
 
 def test_execute_ingest_legal_mock_flow() -> None:
@@ -377,30 +393,32 @@ def test_execute_ingest_legal_enforces_adr0059_no_synthetic_fallback() -> None:
 
 
 def test_execute_ingest_legal_strips_transient_sandbox_keys() -> None:
-    """Verify metadata handoff strips transient sandbox keys (docx_path, attachments, links, content)."""
+    """Verify metadata handoff strips transient keys and copies only non-primary attachments."""
     import json
 
     with tempfile.TemporaryDirectory() as tmp_spoke:
         spoke_dir = Path(tmp_spoke)
-        scripts_dir = spoke_dir / "scripts"
-        scripts_dir.mkdir(parents=True, exist_ok=True)
+        (spoke_dir / "scripts").mkdir(parents=True, exist_ok=True)
         (spoke_dir / "legal_registry.yaml").write_text("laws: []\n", encoding="utf-8")
-        (scripts_dir / "spoke_cli.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
-
-        mock_crawler_res = {
+        (spoke_dir / "scripts/spoke_cli.py").write_text(
+            "import sys; sys.exit(0)\n", encoding="utf-8"
+        )
+        docx_p, pdf_p = spoke_dir / "temp.docx", spoke_dir / "temp.pdf"
+        extra_att = spoke_dir / "phu_luc_01.xlsx"
+        docx_p.write_text("dummy docx", encoding="utf-8")
+        pdf_p.write_text("dummy pdf", encoding="utf-8")
+        extra_att.write_text("mock xlsx", encoding="utf-8")
+        mock_crawler_res: dict[str, object] = {
             "title": "Quyết định 1812/QĐ-BXD",
             "document_number": "1812/QĐ-BXD",
             "slug": "quyet_dinh_1812_qd_bxd",
-            "docx_path": str(spoke_dir / "temp.docx"),
-            "pdf_path": str(spoke_dir / "temp.pdf"),
-            "attachments": ["/tmp/ccba_legal_ingest_xyz/temp.docx"],
+            "docx_path": str(docx_p),
+            "pdf_path": str(pdf_p),
+            "attachments": [str(docx_p), str(extra_att)],
             "links": [{"text": "Share", "href": "https://facebook.com/sharer.php"}],
             "content": "Raw full text",
             "status": "Còn hiệu lực",
         }
-        Path(mock_crawler_res["docx_path"]).write_text("dummy docx", encoding="utf-8")
-        Path(mock_crawler_res["pdf_path"]).write_text("dummy pdf", encoding="utf-8")
-
         captured_meta: dict[str, object] = {}
 
         def fake_run(cmd: list[str], **kwargs: object) -> MagicMock:
@@ -409,22 +427,16 @@ def test_execute_ingest_legal_strips_transient_sandbox_keys() -> None:
                 captured_meta.update(json.loads(Path(cmd[meta_idx]).read_text(encoding="utf-8")))
             return MagicMock(returncode=0, stdout="OK", stderr="")
 
-        mock_crawler = MagicMock()
-        mock_crawler.fetch_document.return_value = mock_crawler_res
-
-        with patch("ccba_legal.crawler.TVPLCrawler", return_value=mock_crawler):
-            with patch("ccba_legal.crawler.TVPLSessionMutex.__enter__"):
-                with patch("scripts.ccba_platform_cli.subprocess.run", side_effect=fake_run):
-                    res = execute_ingest_legal(
-                        url="https://thuvienphapluat.vn/van-ban/quyet-dinh-1812-qd-bxd-2026.aspx",
-                        spoke_path=spoke_dir,
-                        mock=False,
-                    )
-
-                    assert res is True
-                    assert captured_meta["document_number"] == "1812/QĐ-BXD"
-                    assert "docx_path" not in captured_meta
-                    assert "pdf_path" not in captured_meta
-                    assert "attachments" not in captured_meta
-                    assert "links" not in captured_meta
-                    assert "content" not in captured_meta
+        mock_crawler = MagicMock(fetch_document=MagicMock(return_value=mock_crawler_res))
+        with (
+            patch("ccba_legal.crawler.TVPLCrawler", return_value=mock_crawler),
+            patch("ccba_legal.crawler.TVPLSessionMutex.__enter__"),
+            patch("scripts.ccba_platform_cli.subprocess.run", side_effect=fake_run),
+        ):
+            assert execute_ingest_legal("https://tvpl.vn/1812.aspx", spoke_dir, mock=False) is True
+            assert captured_meta["document_number"] == "1812/QĐ-BXD"
+            for key in ("docx_path", "pdf_path", "attachments", "links", "content"):
+                assert key not in captured_meta
+            att_dir = spoke_dir / "legal_docs/01_vbpl/quyet_dinh_1812_qd_bxd/sources/attachments"
+            assert (att_dir / "phu_luc_01.xlsx").is_file()
+            assert not (att_dir / "temp.docx").exists()
