@@ -204,6 +204,88 @@ def _build_pure_normative_body(pure_body_raw: str) -> str:
     return inject_semantic_anchors(pure_body, archetype="VBPL_ADMIN")
 
 
+def _build_merged_bundle_metadata(
+    bundle_dir: Path,
+    doc_meta: dict[str, Any],
+    legal_basis: list[dict[str, str]],
+    spec_version: str = CURRENT_OKF_SPEC,
+) -> dict[str, Any]:
+    """Merge existing metadata.yaml with new doc_meta while preserving extended fields."""
+    meta_file = bundle_dir / "metadata.yaml"
+    existing: dict[str, Any] = {}
+    if meta_file.exists():
+        try:
+            loaded = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                existing = loaded
+        except Exception:
+            existing = {}
+
+    doc_num = (
+        doc_meta.get("document_number")
+        or existing.get("document_number")
+        or bundle_dir.name.upper()
+    )
+    doc_title = (
+        doc_meta.get("title") or existing.get("title") or f"Văn bản quy phạm pháp luật {doc_num}"
+    )
+    issued_by = str(
+        doc_meta.get("issued_by")
+        or doc_meta.get("issuer")
+        or existing.get("issued_by")
+        or existing.get("issuer")
+        or ""
+    ).strip()
+    pdf_path = str(
+        doc_meta.get("pdf_path") or existing.get("pdf_path") or f"sources/{bundle_dir.name}.pdf"
+    ).replace("\\", "/")
+
+    merged: dict[str, Any] = dict(existing)
+    merged.update(
+        {
+            "id": doc_meta.get("id") or existing.get("id") or bundle_dir.name,
+            "document_number": doc_num,
+            "type": doc_meta.get("type") or existing.get("type") or "Nghị định",
+            "title": doc_title,
+            "status": doc_meta.get("status") or existing.get("status") or "active",
+            "effective_date": str(
+                doc_meta.get("effective_date") or existing.get("effective_date") or ""
+            ).strip(),
+            "signer": str(doc_meta.get("signer") or existing.get("signer") or "").strip(),
+            "pdf_path": pdf_path,
+            "pdf_sha256": doc_meta.get("pdf_sha256") or existing.get("pdf_sha256") or "UNVERIFIED",
+            "pdf_status": doc_meta.get("pdf_status") or existing.get("pdf_status") or "verified",
+            "legal_basis": legal_basis,
+            "replaces": doc_meta.get("relations", {}).get("replaces", [])
+            if isinstance(doc_meta.get("relations"), dict)
+            else doc_meta.get("replaces", existing.get("replaces", [])),
+            "okf_spec": spec_version,
+            "converter_version": CURRENT_CONVERTER_VERSION,
+            "schema_uri": CURRENT_OKF_SCHEMA_URI,
+            "extracted_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    if issued_by:
+        merged["issued_by"] = issued_by
+    for keep_key in (
+        "issued_date",
+        "published_date",
+        "expiration_date",
+        "pdf_origin",
+        "raw_scan_pdf",
+        "source_assets",
+        "source_url",
+        "source_file",
+        "relations",
+        "verification_scope",
+        "okf_version",
+    ):
+        val = doc_meta.get(keep_key) if keep_key in doc_meta else existing.get(keep_key)
+        if val is not None:
+            merged[keep_key] = val
+    return merged
+
+
 def _write_bundle_metadata_and_index(
     bundle_dir: Path,
     target_md_name: str,
@@ -216,43 +298,39 @@ def _write_bundle_metadata_and_index(
     spec_version: str = CURRENT_OKF_SPEC,
 ) -> None:
     """Write metadata.yaml and human-readable index.md for the OKF bundle."""
-    doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
-    doc_title = doc_meta.get("title", f"Văn bản quy phạm pháp luật {doc_num}")
-    effective_date = doc_meta.get("effective_date", "2021-03-03")
-    signer = doc_meta.get("signer", "Thủ tướng Chính phủ")
-    pdf_path = doc_meta.get("pdf_path", f"{bundle_dir.name}.pdf")
-    pdf_sha256 = doc_meta.get("pdf_sha256", "UNVERIFIED")
-
-    metadata_obj = {
-        "id": doc_meta.get("id", bundle_dir.name),
-        "document_number": doc_num,
-        "type": doc_meta.get("type", "Nghị định"),
-        "title": doc_title,
-        "status": doc_meta.get("status", "effective"),
-        "effective_date": effective_date,
-        "signer": signer,
-        "pdf_path": pdf_path,
-        "pdf_sha256": pdf_sha256,
-        "pdf_status": doc_meta.get("pdf_status", "verified"),
-        "legal_basis": legal_basis,
-        "replaces": doc_meta.get("relations", {}).get("replaces", [])
-        if isinstance(doc_meta.get("relations"), dict)
-        else doc_meta.get("replaces", []),
-        "okf_spec": spec_version,
-        "converter_version": CURRENT_CONVERTER_VERSION,
-        "schema_uri": CURRENT_OKF_SCHEMA_URI,
-        "extracted_at": datetime.now(timezone.utc).isoformat(),
-    }
+    metadata_obj = _build_merged_bundle_metadata(bundle_dir, doc_meta, legal_basis, spec_version)
     with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
         yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
 
-    index_md = f"""# Gói Tri Thức Pháp Lý OKF {CURRENT_OKF_SPEC}: {doc_num}
+    issued_by = str(metadata_obj.get("issued_by", "")).strip()
+    signer = str(metadata_obj.get("signer", "")).strip()
+    if issued_by and signer:
+        issuer_line = f"> **Cơ quan ban hành:** {issued_by} (Người ký: {signer}).\n"
+    elif issued_by:
+        issuer_line = f"> **Cơ quan ban hành:** {issued_by}.\n"
+    elif signer:
+        issuer_line = f"> **Người ký:** {signer}.\n"
+    else:
+        issuer_line = ""
+    eff_date = str(metadata_obj.get("effective_date", "")).strip()
+    eff_line = f"> **Hiệu lực:** {eff_date}.\n" if eff_date else ""
+    pdf_name = Path(str(metadata_obj["pdf_path"])).name
+    templates_line = (
+        f"- [Kho Biểu Mẫu Chuẩn Hóa (Templates Directory)](./templates/) — {templates_cnt} Biểu mẫu Markdown phục vụ Agent Copywriting & Sinh Hồ Sơ.\n"
+        if templates_cnt > 0
+        else ""
+    )
+    tables_line = (
+        f"- [Bảng Tra Cứu Kỹ Thuật (Tables Directory)](./tables/) — {tables_cnt} Bảng tra cứu số học (CSV + JSON).\n"
+        if tables_cnt > 0
+        else ""
+    )
+
+    index_md = f"""# Gói Tri Thức Pháp Lý OKF {CURRENT_OKF_SPEC}: {metadata_obj["document_number"]}
 
 > [!NOTE]
-> **Văn bản:** {doc_title}
-> **Cơ quan ban hành:** Chính phủ (Người ký: {signer}).
-> **Hiệu lực:** {effective_date}.
-> **Mỏ neo PDF Công báo:** [{Path(pdf_path).name}](./{Path(pdf_path).name}) *(SHA-256: `{pdf_sha256}`)*.
+> **Văn bản:** {metadata_obj["title"]}
+{issuer_line}{eff_line}> **Mỏ neo PDF Công báo:** [{pdf_name}](./sources/{pdf_name}) *(SHA-256: `{metadata_obj["pdf_sha256"]}`)*.
 
 ---
 
@@ -262,9 +340,7 @@ def _write_bundle_metadata_and_index(
 - [Metadata Pháp lý & Đồ thị (YAML)](./metadata.yaml) — Đặc tả thuộc tính và cây đồ thị `legal_basis`.
 - [Cây Cú Pháp Điều Khoản (AST Clauses JSON)](./clauses.json) — {clauses_cnt} nodes điều khoản phục vụ AI QC & RAG.
 - [Bộ Đánh Giá Độ Chính Xác (QA Benchmark)](./qa_benchmark.json) — {qa_cnt} cặp câu hỏi - câu trả lời đối soát.
-- [Kho Biểu Mẫu Chuẩn Hóa (Templates Directory)](./templates/) — {templates_cnt} Biểu mẫu Markdown phục vụ Agent Copywriting & Sinh Hồ Sơ.
-- [Bảng Tra Cứu Kỹ Thuật (Tables Directory)](./tables/) — {tables_cnt} Bảng tra cứu số học (CSV + JSON).
-"""
+{templates_line}{tables_line}"""
     (bundle_dir / "index.md").write_text(index_md, encoding="utf-8")
 
 
@@ -276,10 +352,10 @@ def _generate_vbpl_frontmatter(
     doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
     title = doc_meta.get("title", f"Văn bản quy phạm pháp luật {doc_num}")
     doc_type = doc_meta.get("type", "Nghị định")
-    issued_by = doc_meta.get("issued_by", "Chính phủ")
-    signer = doc_meta.get("signer", "Thủ tướng Chính phủ")
-    issued_date = doc_meta.get("issued_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-    effective_date = doc_meta.get("effective_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    issued_by = doc_meta.get("issued_by", "")
+    signer = doc_meta.get("signer", "")
+    issued_date = doc_meta.get("issued_date", "")
+    effective_date = doc_meta.get("effective_date", "")
     status = doc_meta.get("status", "active")
     pdf_path = doc_meta.get("pdf_path", f"./sources/{bundle_dir.name}.pdf")
     pdf_name = Path(pdf_path).name
