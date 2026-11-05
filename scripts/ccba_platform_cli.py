@@ -649,6 +649,26 @@ def execute_ingest_legal(
                             if c_pdf.exists() and c_pdf.resolve() != temp_pdf_path.resolve():
                                 shutil.copy2(c_pdf, temp_pdf_path)
 
+                        raw_atts = res.get("attachments")
+                        if isinstance(raw_atts, list):
+                            primary_paths = {
+                                Path(res["docx_path"]).resolve(),
+                                *([Path(res["pdf_path"]).resolve()] if res.get("pdf_path") else []),
+                            }
+                            spoke_att_dir = (
+                                target_spoke
+                                / "legal_docs"
+                                / category
+                                / slug
+                                / "sources"
+                                / "attachments"
+                            )
+                            for att in raw_atts:
+                                att_p = Path(str(att))
+                                if att_p.is_file() and att_p.resolve() not in primary_paths:
+                                    spoke_att_dir.mkdir(parents=True, exist_ok=True)
+                                    shutil.copy2(att_p, spoke_att_dir / att_p.name)
+
                         handoff_meta = {
                             k: v
                             for k, v in res.items()
@@ -656,14 +676,13 @@ def execute_ingest_legal(
                             not in {
                                 "docx_path",
                                 "pdf_path",
+                                "attachments",
                                 "links",
                                 "content",
                                 "html",
                                 "raw_html",
                             }
                         }
-                        if isinstance(res.get("attachments"), list):
-                            handoff_meta["attachments"] = [str(p) for p in res["attachments"] if p]
                         meta_json_path.write_text(
                             json.dumps(handoff_meta, indent=2, ensure_ascii=False, default=str),
                             encoding="utf-8",
