@@ -187,7 +187,7 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
 1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`, `🗑️ DEPRECATED`.
 2. **Đồng bộ Layer 2 Rules & Thu hồi Bản thảo Tốt nghiệp (Issue #520):**
-   * Tự động đồng bộ các quy tắc Layer 2 (`execution_runtime_guardrails.md`, `execution_coordination_guardrails.md`, `git_conventions.md`, `code_quality_standards.md`, `code_quality_verification.md`, `bugbot-rules.md`) xuống `.agents/rules/` và chuẩn hóa liên kết trong `.agents/AGENTS.md` (cùng `.md/INDEX.md`).
+   * Tự động đồng bộ các quy tắc Layer 2 (`execution_runtime_guardrails.md`, `execution_coordination_guardrails.md`, `git_conventions.md`, `code_quality_standards.md`, `code_quality_verification.md`, `knowledge_research_protocol.md`, `bugbot-rules.md`) xuống `.agents/rules/` và chuẩn hóa liên kết trong `.agents/AGENTS.md` (cùng `.md/INDEX.md`).
    * Tự động lưu trữ các bản thảo `.md/knowledge/*` đã tốt nghiệp lên Hub vào `.md/knowledge/archive/` (hỗ trợ phân nhánh mã băm SHA-256 nếu có chỉnh sửa mới) và ghi đè **Canonical Pointer Stub** (`<!-- CCBA_GRADUATED_STUB -->`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
    * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
@@ -197,7 +197,7 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
      - `scripts/_guardrails/check_spoke_cleanliness.py` (Rào chắn cleanliness & script budget)
 4. **Kiểm tra Script Budget & Cleanliness:** Chạy `python scripts/_guardrails/check_spoke_cleanliness.py`.
 5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
-6. **Kiểm tra sức khỏe tổng thể:** Chạy `python scripts/ccba_platform_cli.py spoke-status` xác nhận trạng thái xanh.
+6. **Kiểm tra sức khỏe tổng thể:** Chạy `python "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" spoke-status` xác nhận trạng thái xanh.
 
 
 ## Progressive Disclosure & Reference Index (Level 3)
