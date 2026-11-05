@@ -330,3 +330,90 @@ def test_bundle_provenance_validation(tmp_path: Path) -> None:
     ok, msg = validate_bundle_provenance(invalid_bundle)
     assert ok is False
     assert "Thiếu thuộc tính source_assets" in msg
+
+
+def test_write_bundle_metadata_and_index_preserves_extended_fields_and_fixes_links(
+    tmp_path: Path,
+) -> None:
+    """Verify C4 & C5: preserve metadata.yaml fields, use real issued_by (or blank), link ./sources/{pdf}, omit empty ./templates/."""
+    from ccba_legal.converters.vbpl_admin import _write_bundle_metadata_and_index
+
+    bundle_dir = tmp_path / "quyet_dinh_1812_qd_bxd_2026"
+    bundle_dir.mkdir(parents=True)
+    existing_meta = {
+        "id": "quyet_dinh_1812_qd_bxd_2026",
+        "issued_by": "Bộ Xây dựng",
+        "issued_date": "2026-08-19",
+        "pdf_origin": "docx_vector_rendered",
+        "raw_scan_pdf": "legal_docs/01_vbpl/quyet_dinh_1812_qd_bxd_2026/sources/quyet_dinh_1812_qd_bxd_2026_raw_scan.pdf",
+        "source_assets": {"pdf": {"sha256": "abc123"}},
+        "verification_scope": {"normative_body_pages": [1, 10]},
+    }
+    (bundle_dir / "metadata.yaml").write_text(
+        yaml.dump(existing_meta, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+
+    doc_meta = {
+        "id": "quyet_dinh_1812_qd_bxd_2026",
+        "document_number": "1812/QĐ-BXD",
+        "type": "Quyết định",
+        "title": "Quyết định 1812/QĐ-BXD năm 2026",
+        "signer": "Nguyễn Tường Văn",
+        "pdf_path": "legal_docs/01_vbpl/quyet_dinh_1812_qd_bxd_2026/sources/quyet_dinh_1812_qd_bxd_2026.pdf",
+        "pdf_sha256": "abc123",
+    }
+    _write_bundle_metadata_and_index(
+        bundle_dir=bundle_dir,
+        doc_meta=doc_meta,
+        legal_basis=["Luật Xây dựng"],
+        target_md_name="quyet_dinh_1812_qd_bxd_2026.md",
+        clauses_cnt=15,
+        qa_cnt=15,
+        templates_cnt=0,
+        tables_cnt=2,
+    )
+
+    saved_meta = yaml.safe_load((bundle_dir / "metadata.yaml").read_text(encoding="utf-8"))
+    assert saved_meta["issued_by"] == "Bộ Xây dựng"
+    assert saved_meta["pdf_origin"] == "docx_vector_rendered"
+    assert saved_meta["raw_scan_pdf"].endswith("_raw_scan.pdf")
+    assert saved_meta["source_assets"] == {"pdf": {"sha256": "abc123"}}
+    assert saved_meta["verification_scope"] == {"normative_body_pages": [1, 10]}
+
+    index_text = (bundle_dir / "index.md").read_text(encoding="utf-8")
+    assert "Bộ Xây dựng" in index_text
+    assert "Chính phủ" not in index_text
+    assert "(./sources/quyet_dinh_1812_qd_bxd_2026.pdf)" in index_text
+    assert "(./templates/)" not in index_text
+
+    # Also test when issued_by, signer, and effective_date are completely missing/empty:
+    # must not fabricate 'Chính phủ', 'Thủ tướng Chính phủ', 'Cơ quan có thẩm quyền', or '2021-03-03'
+    bundle_dir_no_issuer = tmp_path / "unknown_issuer_bundle"
+    bundle_dir_no_issuer.mkdir(parents=True)
+    _write_bundle_metadata_and_index(
+        bundle_dir=bundle_dir_no_issuer,
+        doc_meta={
+            "document_number": "01/VB",
+            "effective_date": "",
+            "signer": "",
+            "pdf_path": "sources/a.pdf",
+        },
+        legal_basis=[],
+        target_md_name="unknown_issuer_bundle.md",
+        clauses_cnt=1,
+        qa_cnt=1,
+        templates_cnt=1,
+        tables_cnt=0,
+    )
+    saved_no_issuer_meta = yaml.safe_load(
+        (bundle_dir_no_issuer / "metadata.yaml").read_text(encoding="utf-8")
+    )
+    assert saved_no_issuer_meta["effective_date"] == ""
+    assert saved_no_issuer_meta["signer"] == ""
+    index_no_issuer = (bundle_dir_no_issuer / "index.md").read_text(encoding="utf-8")
+    assert "Chính phủ" not in index_no_issuer
+    assert "Thủ tướng" not in index_no_issuer
+    assert "Người ký" not in index_no_issuer
+    assert "2021-03-03" not in index_no_issuer
+    assert "Cơ quan có thẩm quyền" not in index_no_issuer
+    assert "(./templates/)" in index_no_issuer

@@ -534,11 +534,11 @@ def execute_ingest_legal(
                 "source_url": url,
                 "id": slug,
                 "doc_id": slug,
-                "document_number": slug.replace("_", " ").upper(),
-                "title": f"Document {slug}",
+                "document_number": "",
+                "title": "",
                 "category": category,
                 "doc_type": doc_type,
-                "status": "effective",
+                "status": "active",
             }
             meta_json_path.write_text(
                 json.dumps(meta_data, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -656,13 +656,14 @@ def execute_ingest_legal(
                             not in {
                                 "docx_path",
                                 "pdf_path",
-                                "attachments",
                                 "links",
                                 "content",
                                 "html",
                                 "raw_html",
                             }
                         }
+                        if isinstance(res.get("attachments"), list):
+                            handoff_meta["attachments"] = [str(p) for p in res["attachments"] if p]
                         meta_json_path.write_text(
                             json.dumps(handoff_meta, indent=2, ensure_ascii=False, default=str),
                             encoding="utf-8",
