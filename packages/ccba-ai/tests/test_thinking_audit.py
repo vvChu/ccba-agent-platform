@@ -131,3 +131,41 @@ async def test_async_chat_result_thinking_privacy_guard_blocks_reasoning_content
     ):
         with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
             await client.chat_with_metadata("Audit this")
+
+
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_chat_and_chat_multi_privacy_guard_blocks_reasoning_content_leak():
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from ccba_ai import AIClient, AsyncAIClient
+
+    mock_resp = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Safe content."
+    mock_choice.message.reasoning_content = (
+        "Leaking key: AIzaSyDummyGeminiKey_1234567890abcdef in reasoning"
+    )
+    mock_resp.choices = [mock_choice]
+    mock_resp.model = "reasoning-primary"
+    mock_resp.usage = None
+
+    sync_client = AIClient(base_url="http://fake:1/v1", api_key="fake", mock_mode=False)
+    with patch.object(sync_client._client.chat.completions, "create", return_value=mock_resp):
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            sync_client.chat("Audit this")
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            sync_client.chat_multi([{"role": "user", "content": "Audit this"}])
+
+    async_client = AsyncAIClient(base_url="http://fake:1/v1", api_key="fake", mock_mode=False)
+    with patch.object(
+        async_client._client.chat.completions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_resp,
+    ):
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            await async_client.chat("Audit this")
+        with pytest.raises(ValueError, match="Security Violation: Detected sensitive API Key leak"):
+            await async_client.chat_multi([{"role": "user", "content": "Audit this"}])
