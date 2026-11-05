@@ -435,7 +435,7 @@ Khi khởi tạo Spoke mới hoặc chuyển đổi dự án brownfield, công c
   # Khởi tạo Spoke mới:
   python scripts/ccba_platform_cli.py init-spoke [path/to/spoke]
   # Hoặc áp dụng cho Spoke sẵn có:
-  python scripts/ccba_platform_cli.py adopt-spoke --spoke [path/to/spoke]
+  python scripts/ccba_platform_cli.py adopt-spoke [path/to/spoke]
   ```
 - **Kết quả tự động sinh:**
   1. Thư mục `.githooks/` chứa `pre-commit` (quét bí mật Maskara) và `pre-push` (chặn đẩy/xóa `main`).
