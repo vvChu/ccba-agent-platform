@@ -20,166 +20,95 @@ from typing import Any
 
 from ._mutex import FileMutexLock
 from ._peer_anchor import (
-    apply_anchor_patch as apply_anchor_patch,
-)
-from ._peer_anchor import (
-    auto_apply_and_verify_patch as auto_apply_and_verify_patch,
-)
-from ._peer_anchor import (
-    extract_anchor_payload as extract_anchor_payload,
-)
-from ._peer_anchor import (
-    get_git_toplevel as get_git_toplevel,
-)
-from ._peer_anchor import (
-    recover_pending_anchor_transactions as recover_pending_anchor_transactions,
+    apply_anchor_patch,
+    auto_apply_and_verify_patch,
+    extract_anchor_payload,
+    get_git_toplevel,
+    recover_pending_anchor_transactions,
 )
 from ._peer_co_review import (
-    orchestrate_peer_co_review as orchestrate_peer_co_review,
-)
-from ._peer_co_review import (
-    render_consensus_report_markdown as render_consensus_report_markdown,
-)
-from ._peer_co_review import (
-    synthesize_verdicts as synthesize_verdicts,
+    orchestrate_peer_co_review,
+    render_consensus_report_markdown,
+    synthesize_verdicts,
 )
 from ._peer_models import (
-    FRONTMATTER_PATTERN as FRONTMATTER_PATTERN,
-)
-from ._peer_models import (
-    AnchorPatchPayload as AnchorPatchPayload,
-)
-from ._peer_models import (
-    AutoApplyResult as AutoApplyResult,
-)
-from ._peer_models import (
-    CombinedTelemetry as CombinedTelemetry,
-)
-from ._peer_models import (
-    FileChange as FileChange,
-)
-from ._peer_models import (
-    FilePatch as FilePatch,
-)
-from ._peer_models import (
-    PatchReplacement as PatchReplacement,
-)
-from ._peer_models import (
-    PeerCondition as PeerCondition,
-)
-from ._peer_models import (
-    PeerConsensusReport as PeerConsensusReport,
-)
-from ._peer_models import (
-    PeerPromptEnvelope as PeerPromptEnvelope,
-)
-from ._peer_models import (
-    PeerVerdictBlock as PeerVerdictBlock,
-)
-from ._peer_models import (
-    PeerVerdictTelemetry as PeerVerdictTelemetry,
-)
-from ._peer_models import (
-    ProfileTelemetryItem as ProfileTelemetryItem,
-)
-from ._peer_models import (
+    FRONTMATTER_PATTERN,
+    AnchorPatchPayload,
+    AutoApplyResult,
+    CombinedTelemetry,
+    FileChange,
+    FilePatch,
+    PatchReplacement,
+    PeerCondition,
+    PeerConsensusReport,
+    PeerPromptEnvelope,
+    PeerVerdictBlock,
+    PeerVerdictTelemetry,
+    ProfileTelemetryItem,
     _registry_timestamp,
     _sort_key_latest_exchange,
-)
-from ._peer_models import (
-    extract_frontmatter as extract_frontmatter,
-)
-from ._peer_models import (
-    parse_envelope_from_md as parse_envelope_from_md,
-)
-from ._peer_models import (
-    parse_verdict_from_md as parse_verdict_from_md,
-)
-from ._peer_models import (
-    render_prompt_header as render_prompt_header,
-)
-from ._peer_models import (
-    render_verdict_header as render_verdict_header,
+    extract_frontmatter,
+    parse_envelope_from_md,
+    parse_verdict_from_md,
+    render_prompt_header,
+    render_verdict_header,
 )
 from ._peer_telemetry import (
     _accumulate_verdict_telemetry,
     _enforce_single_verdict_guardrails,
-)
-from ._peer_telemetry import (
-    extract_grok_session_telemetry as extract_grok_session_telemetry,
+    extract_grok_session_telemetry,
 )
 from ._peer_watchdog import (
-    _VERDICT_ALIASES as _VERDICT_ALIASES,
-)
-from ._peer_watchdog import (
-    AUDIT_BASE_SYSTEM_PROMPT as AUDIT_BASE_SYSTEM_PROMPT,
-)
-from ._peer_watchdog import (
-    DEFAULT_FALLBACK_AUDITOR_MODEL as DEFAULT_FALLBACK_AUDITOR_MODEL,
-)
-from ._peer_watchdog import (
-    DEFAULT_PRIMARY_AUDITOR_MODEL as DEFAULT_PRIMARY_AUDITOR_MODEL,
-)
-from ._peer_watchdog import (
-    NO_TOOLS_DISALLOW_LIST as NO_TOOLS_DISALLOW_LIST,
-)
-from ._peer_watchdog import (
-    PROFILE_SPECS as PROFILE_SPECS,
-)
-from ._peer_watchdog import (
-    READ_ONLY_DISALLOW_LIST as READ_ONLY_DISALLOW_LIST,
-)
-from ._peer_watchdog import (
-    TIER_DEFAULT_MODELS as TIER_DEFAULT_MODELS,
-)
-from ._peer_watchdog import (
-    VERDICT_LATTICE_RANK as VERDICT_LATTICE_RANK,
-)
-from ._peer_watchdog import (
-    AgentIdentity as AgentIdentity,
-)
-from ._peer_watchdog import (
-    CostMode as CostMode,
-)
-from ._peer_watchdog import (
-    EffortType as EffortType,
-)
-from ._peer_watchdog import (
-    ModelTier as ModelTier,
-)
-from ._peer_watchdog import (
-    PeerExecutionProfile as PeerExecutionProfile,
-)
-from ._peer_watchdog import (
-    RequestType as RequestType,
-)
-from ._peer_watchdog import (
-    VerdictType as VerdictType,
-)
-from ._peer_watchdog import (
+    _VERDICT_ALIASES,
+    AUDIT_BASE_SYSTEM_PROMPT,
+    DEFAULT_FALLBACK_AUDITOR_MODEL,
+    DEFAULT_PRIMARY_AUDITOR_MODEL,
+    NO_TOOLS_DISALLOW_LIST,
+    PROFILE_SPECS,
+    READ_ONLY_DISALLOW_LIST,
+    TIER_DEFAULT_MODELS,
+    VERDICT_LATTICE_RANK,
+    AgentIdentity,
+    CostMode,
+    EffortType,
+    ModelTier,
+    PeerExecutionProfile,
+    RequestType,
+    VerdictType,
     _build_synthesis_opts,
     _poll_grok_process_with_watchdog,
     _recover_verdict_from_chat_history,
+    _resolve_grok_profile_options,
+    _resolve_target_models,
     _terminate_proc_tree,
+    _unwrap_grok_json_stdout,
+    inspect_session_liveness,
+    is_max_turns_exhausted,
     write_synthesis_prompt_file,
 )
-from ._peer_watchdog import (
-    _resolve_grok_profile_options as _resolve_grok_profile_options,
-)
-from ._peer_watchdog import (
-    _resolve_target_models as _resolve_target_models,
-)
-from ._peer_watchdog import (
-    _unwrap_grok_json_stdout as _unwrap_grok_json_stdout,
-)
-from ._peer_watchdog import (
-    inspect_session_liveness as inspect_session_liveness,
-)
-from ._peer_watchdog import (
-    is_max_turns_exhausted as is_max_turns_exhausted,
-)
-from .verifier import resolve_preset_commands
-from .verifier import verify_patch_execution as verify_patch_execution
+from .verifier import resolve_preset_commands, verify_patch_execution
+
+# fmt: off
+__all__ = [
+    "AUDIT_BASE_SYSTEM_PROMPT", "AgentIdentity", "AnchorPatchPayload", "AutoApplyResult",
+    "CombinedTelemetry", "CostMode", "DEFAULT_FALLBACK_AUDITOR_MODEL", "DEFAULT_GROK_SPEC",
+    "DEFAULT_PRIMARY_AUDITOR_MODEL", "EffortType", "FRONTMATTER_PATTERN", "FileChange",
+    "FilePatch", "ModelTier", "NO_TOOLS_DISALLOW_LIST", "PROFILE_SPECS", "PatchReplacement",
+    "PeerCondition", "PeerConsensusReport", "PeerExecutionProfile", "PeerPromptEnvelope",
+    "PeerVerdictBlock", "PeerVerdictTelemetry", "ProfileTelemetryItem", "READ_ONLY_DISALLOW_LIST",
+    "RequestType", "TIER_DEFAULT_MODELS", "VERDICT_LATTICE_RANK", "VerdictType",
+    "_resolve_grok_profile_options", "_resolve_target_models", "_unwrap_grok_json_stdout",
+    "apply_anchor_patch", "atomic_write_text", "auto_apply_and_verify_patch", "build_grok_cmd",
+    "classify_file_role", "compute_pending_queues", "extract_anchor_payload",
+    "extract_frontmatter", "extract_grok_session_telemetry", "flush_pending_peer_triggers",
+    "get_git_toplevel", "inspect_session_liveness", "invoke_grok_cli", "is_max_turns_exhausted",
+    "orchestrate_peer_co_review", "parse_envelope_from_md", "parse_verdict_from_md",
+    "publish_peer_message", "recover_pending_anchor_transactions",
+    "render_consensus_report_markdown", "render_prompt_header", "render_verdict_header",
+    "run_sync_cycle", "safe_read_and_hash", "scan_peer_exchange", "synthesize_verdicts",
+    "verify_patch_execution",
+]
+# fmt: on
 
 _SYNC_MUTEX = threading.Lock()
 _PENDING_THREADS: list[threading.Thread] = []
