@@ -188,7 +188,7 @@ def test_peer_dispatch_cli_deep_spec_audit_and_signoff_diff_resume(tmp_path, cap
     assert ret == 0
     out = capsys.readouterr().out
     assert "[DRY-RUN] Profile: signoff_diff" in out
-    assert "[DRY-RUN] Max Turns: 15" in out
+    assert "[DRY-RUN] Max Turns: 8" in out
     assert "--output-format json" in out
     assert "--resume 01a148d0-ac92-7ef2-a970-efb8c8fe1aed --fork-session" in out
     assert "--verbatim" in out

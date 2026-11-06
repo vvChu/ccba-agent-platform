@@ -315,6 +315,17 @@ def _prepare_co_review_tasks(
     return tasks
 
 
+def _validate_co_review_profiles(profiles: Sequence[str]) -> None:
+    """Validates profile names against PROFILE_SPECS allowlist."""
+    for prof in profiles:
+        if not re.match(r"^[a-z0-9_]{1,32}$", prof):
+            raise ValueError(f"Invalid profile name '{prof}': must match ^[a-z0-9_]{{1,32}}$")
+        if prof not in PROFILE_SPECS:
+            raise ValueError(
+                f"Unknown execution profile '{prof}': must be one of {sorted(PROFILE_SPECS.keys())}"
+            )
+
+
 def orchestrate_peer_co_review(
     prompt_path: Path,
     profiles: Sequence[str] = ("code_review", "arch_audit"),
@@ -326,14 +337,7 @@ def orchestrate_peer_co_review(
     """Orchestrates multi-agent co-review execution in parallel threads with isolated outputs (ADR-0065)."""
     from . import peer as _peer_mod
 
-    for prof in profiles:
-        if not re.match(r"^[a-z0-9_]{1,32}$", prof):
-            raise ValueError(f"Invalid profile name '{prof}': must match ^[a-z0-9_]{{1,32}}$")
-        if prof not in PROFILE_SPECS:
-            raise ValueError(
-                f"Unknown execution profile '{prof}': must be one of {sorted(PROFILE_SPECS.keys())}"
-            )
-
+    _validate_co_review_profiles(profiles)
     content, _ = _peer_mod.safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(content or "")
     if not envelope:
@@ -360,6 +364,7 @@ def orchestrate_peer_co_review(
             prompt_path.parent / f"grok_consensus_{prompt_path.stem.replace('prompt_', '')}.md"
         )
         _peer_mod.atomic_write_text(final_out, render_consensus_report_markdown(report))
+        _peer_mod._sync_if_peer_exchange_dir(final_out.parent)
         return report
     finally:
         temp_dir_obj.cleanup()

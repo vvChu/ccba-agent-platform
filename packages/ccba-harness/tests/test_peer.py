@@ -1134,10 +1134,11 @@ def test_3stage_protocol_profiles_and_session_resume(tmp_path):
 
     assert "signoff_diff" in PROFILE_SPECS
     sd = PROFILE_SPECS["signoff_diff"]
-    assert sd["max_turns"] == 15
+    assert sd["max_turns"] == 8
     assert sd["reasoning_effort"] == "high"
     assert sd["output_format"] == "json"
     assert sd["fork_session"] is True
+    assert dsa["system_prompt"] == sd["system_prompt"]
 
     prompt_file = tmp_path / "prompt.md"
     prompt_file.write_text("---\nrequest_id: r1\n---\nBody", encoding="utf-8")
@@ -1145,7 +1146,7 @@ def test_3stage_protocol_profiles_and_session_resume(tmp_path):
     cmd = build_grok_cmd(
         prompt_path=prompt_file,
         model="grok-4.7",
-        max_turns=15,
+        max_turns=8,
         tools=["read_file", "grep", "list_dir"],
         disallowed_tools=["Agent"],
         deny=["Bash", "Write", "Edit", "WebFetch"],
@@ -1200,16 +1201,25 @@ def test_3stage_protocol_profiles_and_session_resume(tmp_path):
 
 
 def test_classify_file_role_gate_exclusion_and_verdict_aliases(tmp_path):
-    """Verify .gate.md is classified as AUXILIARY and new verdict/request_type aliases parse cleanly."""
-    from ccba_harness.peer import classify_file_role
+    """Verify .gate.md is classified as AUXILIARY, verdict_*.md as GROK_RESPONSE, and new verdict aliases parse."""
+    from ccba_harness.peer import classify_file_role, compute_pending_queues
 
     assert classify_file_role(tmp_path / "grok_implement_issue458.gate.md") == "AUXILIARY"
     assert classify_file_role(tmp_path / "grok_implement_issue458.md") == "GROK_IMPLEMENTATION"
+    assert classify_file_role(tmp_path / "verdict_grok_arch_audit.md") == "GROK_RESPONSE"
 
     vb_ready = PeerVerdictBlock(request_id="r-ready", verdict="IMPLEMENTATION_READY")  # type: ignore[arg-type]
     assert vb_ready.verdict == "APPROVE"
     vb_plan = PeerVerdictBlock(request_id="r-plan", verdict="PLAN_SUBMITTED")  # type: ignore[arg-type]
     assert vb_plan.verdict == "APPROVE_PLAN"
+    for alias, expected in (
+        ("REQUEST_CHANGES", "REVISE_PLAN"),
+        ("CHANGES_REQUESTED", "REVISE_PLAN"),
+        ("CONDITIONAL", "APPROVE_WITH_CONDITIONS"),
+        ("CONDITIONAL_PASS", "APPROVE_WITH_CONDITIONS"),
+        ("ACCEPTED_WITH_REVISED_CONDITIONS", "APPROVE_WITH_CONDITIONS"),
+    ):
+        assert PeerVerdictBlock(request_id="r-al", verdict=alias).verdict == expected  # type: ignore[arg-type]
 
     env = PeerPromptEnvelope(
         request_id="r-plan-req",
@@ -1218,13 +1228,53 @@ def test_classify_file_role_gate_exclusion_and_verdict_aliases(tmp_path):
         request_type="plan",
         subject="Test plan type",
         timestamp="2026-10-17T00:00:00Z",
-        output_path="out.md",
+        output_path="verdict_out.md",
     )
     assert env.request_type == "plan"
 
+    # Verify compute_pending_queues output_path + mtime matching (COND-05)
+    prompt_env = PeerPromptEnvelope(
+        request_id="req-prompt-new",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Output path match",
+        timestamp="2026-11-06T00:00:00Z",
+        output_path=".md/peer_exchange/verdict_out.md",
+    )
+    verdict_DiffId = PeerVerdictBlock(
+        request_id="req-mismatched-id",
+        verdict="APPROVE",
+        summary="Matched by fresher output_path",
+    )
+    reg_fresher = {
+        "prompt_grok_1.md": {
+            "role": "PROMPT_TO_GROK",
+            "mtime": 100.0,
+            "envelope": prompt_env,
+            "verdict": None,
+        },
+        "verdict_out.md": {
+            "role": "GROK_RESPONSE",
+            "mtime": 105.0,
+            "envelope": None,
+            "verdict": verdict_DiffId,
+        },
+    }
+    _, pending_grok_fresher = compute_pending_queues(reg_fresher)
+    assert pending_grok_fresher == []
+
+    # Stale output_path (mtime < prompt mtime) must NOT clear pending_grok
+    reg_stale = {
+        **reg_fresher,
+        "verdict_out.md": {**reg_fresher["verdict_out.md"], "mtime": 90.0},
+    }
+    _, pending_grok_stale = compute_pending_queues(reg_stale)
+    assert pending_grok_stale == ["prompt_grok_1.md"]
+
 
 def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
-    """Verify inspect_session_liveness on events.jsonl and _recover_verdict_from_chat_history."""
+    """Verify inspect_session_liveness on events.jsonl (including NUL-byte resilience) and _recover_verdict_from_chat_history."""
     import json
 
     from ccba_harness._peer_watchdog import (
@@ -1260,11 +1310,12 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
     sess_dir = tmp_path / "proj" / sid
     sess_dir.mkdir(parents=True)
     events_file = sess_dir / "events.jsonl"
+    # Trailing NUL bytes / partial JSON line must be skipped to read the valid streaming event (COND-07)
     events_file.write_text(
         json.dumps(
             {"ts": "2026-10-17T00:00:00Z", "type": "phase_changed", "phase": "streaming_text"}
         )
-        + "\n",
+        + '\n\x00\x00{"type": "truncated_partial\n',
         encoding="utf-8",
     )
     state, age = inspect_session_liveness(sid, session_root=tmp_path)
@@ -1274,7 +1325,7 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
     chat_file = sess_dir / "chat_history.jsonl"
     valid_md = "---\nrequest_id: req-rec-01\nverdict: APPROVE\nrisk_score: 2\nsummary: Rescued\n---\n# Body\n"
     chat_file.write_text(
-        json.dumps({"type": "assistant", "content": valid_md}) + "\n",
+        json.dumps({"type": "assistant", "content": valid_md}) + "\n\x00\x00{bad_json\n",
         encoding="utf-8",
     )
     recovered = _recover_verdict_from_chat_history(
@@ -1285,16 +1336,45 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
 
 
 def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monkeypatch):
-    """Verify BOUNDED_TOOL_BUDGET_PROMPT across 5 read-only profiles and auto-resume synthesis on max_turns."""
+    """Verify AUDIT_BASE_SYSTEM_PROMPT across 5 read-only profiles and KV-cache-preserving synthesis on max_turns."""
     import json
+    from pathlib import Path
 
     import ccba_harness.peer as peer_mod
-    from ccba_harness._peer_watchdog import BOUNDED_TOOL_BUDGET_PROMPT, is_max_turns_exhausted
-    from ccba_harness.peer import PROFILE_SPECS, invoke_grok_cli
+    from ccba_harness._peer_watchdog import (
+        AUDIT_BASE_SYSTEM_PROMPT,
+        BOUNDED_TOOL_BUDGET_PROMPT,
+        SYNTHESIS_FALLBACK_PROMPT,
+        is_max_turns_exhausted,
+    )
+    from ccba_harness.peer import PROFILE_SPECS, _spawn_and_poll_grok, invoke_grok_cli
 
     for prof in ("audit_plan", "arch_audit", "deep_spec_audit", "code_review", "signoff_diff"):
         sys_prompt = PROFILE_SPECS[prof].get("system_prompt")
-        assert isinstance(sys_prompt, str) and BOUNDED_TOOL_BUDGET_PROMPT in sys_prompt
+        assert sys_prompt == AUDIT_BASE_SYSTEM_PROMPT
+        assert BOUNDED_TOOL_BUDGET_PROMPT in sys_prompt
+
+    # Verify subprocess env isolation in _spawn_and_poll_grok (COND-08)
+    captured_envs: list[dict[str, str]] = []
+
+    class DummyProc:
+        pid = 4242
+
+        def poll(self):
+            return 0
+
+        def communicate(self):
+            return "", ""
+
+    monkeypatch.setattr(
+        "subprocess.Popen",
+        lambda cmd, **kw: (captured_envs.append(kw.get("env") or {}), DummyProc())[1],
+    )
+    _spawn_and_poll_grok(["grok"], tmp_path / "dummy.md", 0.0, 5.0, None)
+    assert len(captured_envs) == 1
+    assert captured_envs[0].get("GROK_BACKEND_SEARCH") == "0"
+    assert captured_envs[0].get("GROK_CLAUDE_MCPS_ENABLED") == "0"
+    assert captured_envs[0].get("GROK_CURSOR_MCPS_ENABLED") == "0"
 
     sid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
     sess_dir = tmp_path / "sessions" / sid
@@ -1314,7 +1394,9 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is True
     assert is_max_turns_exhausted("nonexistent-id", session_root=tmp_path / "sessions") is False
 
-    prompt = tmp_path / "prompt.md"
+    pe_dir = tmp_path / "peer_exchange"
+    pe_dir.mkdir(parents=True)
+    prompt = pe_dir / "prompt_grok_synth.md"
     envelope = PeerPromptEnvelope(
         request_id="req-synth-01",
         from_agent="antigravity",
@@ -1322,16 +1404,25 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
         request_type="review",
         subject="Explore then synthesize test",
         timestamp="2026-11-03T11:20:00+07:00",
-        output_path="out.md",
+        output_path="verdict_synth.md",
         profile="arch_audit",
     )
     prompt.write_text(render_prompt_header(envelope) + "Body", encoding="utf-8")
 
     calls: list[list[str]] = []
+    synth_prompt_contents: list[str] = []
+    synth_prompt_paths: list[Path] = []
+    captured_kwargs: list[dict[str, object]] = []
 
     def fake_run_single(cmd, prompt_path, output_file, timeout, **kwargs):
         calls.append(cmd)
-        if "--deny" in cmd and "*" in cmd:
+        captured_kwargs.append(kwargs)
+        p_idx = cmd.index("--prompt-file") + 1
+        cli_p = Path(cmd[p_idx])
+        if "--resume" in cmd:
+            synth_prompt_paths.append(cli_p)
+            synth_prompt_contents.append(cli_p.read_text(encoding="utf-8"))
+            assert prompt_path == prompt  # original prompt_path kept for fallback telemetry
             verdict = PeerVerdictBlock(
                 request_id="req-synth-01", verdict="APPROVE", summary="Synthesized after max_turns"
             )
@@ -1345,29 +1436,91 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     assert invoke_grok_cli(prompt, profile="arch_audit") is True
     assert len(calls) == 2
     assert "--tools" in calls[0]
+    assert "--tools" in calls[1]
+    assert calls[0][calls[0].index("--system-prompt-override") + 1] == AUDIT_BASE_SYSTEM_PROMPT
+    assert calls[1][calls[1].index("--system-prompt-override") + 1] == AUDIT_BASE_SYSTEM_PROMPT
     assert "--resume" in calls[1]
-    assert "--fork-session" in calls[1]
-    assert "*" in calls[1]
-    assert calls[1][calls[1].index("--max-turns") + 1] == "1"
+    assert "--fork-session" not in calls[1]
+    assert calls[1][calls[1].index("--max-turns") + 1] == "2"
+    assert SYNTHESIS_FALLBACK_PROMPT in synth_prompt_contents[0]
+    assert "req-synth-01" in synth_prompt_contents[0]
+    assert not synth_prompt_paths[0].exists()  # temp file deleted in finally
+    assert captured_kwargs[1].get("synthesize_turns") == 2
+    assert (pe_dir / "status.json").exists()
+    assert (pe_dir / "grok_live_summary.md").exists()
+    status_obj = json.loads((pe_dir / "status.json").read_text(encoding="utf-8"))
+    assert status_obj["exchange_stats"]["pending_grok"] == []
 
+    # Verify synthesis turn stops after 1 retry (no infinite recursion when synthesis also fails)
+    calls_fail: list[list[str]] = []
+    monkeypatch.setattr(
+        peer_mod,
+        "_run_single_grok_attempt",
+        lambda cmd, *a, **kw: (calls_fail.append(cmd), False)[1],
+    )
+    assert invoke_grok_cli(prompt, profile="arch_audit", model="grok-4.7") is False
+    assert len(calls_fail) == 2
+
+    # Verify preamble-tolerant frontmatter, effort, fraction risk_score, and 1-key condition dicts (COND-03)
     v_norm = parse_verdict_from_md(
-        "---\n"
+        "I have completed the repository audit and verified all seams.---\n"
         "request_id: req-norm-01\n"
         "verdict: APPROVE_WITH_CONDITIONS\n"
-        "risk_score: 62\n"
+        "risk_score: '7.2/10'\n"
+        "effort: 'S — ~65 LOC across 3 files'\n"
         "conditions:\n"
         "  - id: COND-01\n"
         "    text: Full condition text\n"
         "    summary: Short title\n"
         "  - statement: Statement alias without id\n"
+        "  - observation: Observation alias item\n"
+        "  - COND-99: Promoted single-key condition\n"
         "summary: Normalized verdict\n"
         "---\nBody\n"
     )
     assert v_norm is not None
-    assert v_norm.risk_score == 3
+    assert v_norm.risk_score == 4
+    assert v_norm.effort == "S"
     assert v_norm.conditions[0].description == "Full condition text"
     assert v_norm.conditions[1].id == "COND-02"
     assert v_norm.conditions[1].description == "Statement alias without id"
+    assert v_norm.conditions[2].description == "Observation alias item"
+    assert v_norm.conditions[3].id == "COND-99"
+    assert v_norm.conditions[3].description == "Promoted single-key condition"
+
+    # Echoed prompt envelope before verdict block must still select the verdict block
+    echoed_md = (
+        "---\nrequest_id: req-e1\nfrom_agent: antigravity\nto_agent: grok\n"
+        "request_type: review\nsubject: s\ntimestamp: '2026-11-06'\noutput_path: o.md\n---\n"
+        "Preamble text\n---\nrequest_id: req-e1\nverdict: CONDITIONAL_PASS\nrisk_score: '3/10'\n"
+        "effort: medium\nsummary: Selected second fence\n---\n# Findings\n"
+    )
+    v_echo = parse_verdict_from_md(echoed_md)
+    assert v_echo is not None
+    assert v_echo.verdict == "APPROVE_WITH_CONDITIONS"
+    assert v_echo.risk_score == 2
+    assert v_echo.effort == "M"
+
+    assert PeerVerdictBlock(request_id="re1", verdict="APPROVE", effort="high").effort == "L"  # type: ignore[arg-type]
+    assert PeerVerdictBlock(request_id="re2", verdict="APPROVE", effort="plan-audit").effort is None  # type: ignore[arg-type]
+    assert PeerVerdictBlock(request_id="re3", verdict="APPROVE", effort="(M)").effort == "M"  # type: ignore[arg-type]
+
+    # Preamble containing a markdown horizontal rule '---' and colon prose before YAML frontmatter
+    hr_preamble_md = (
+        "Loop 0 summary.\n---\nNote: emitting structured verdict below:\n---\n"
+        "request_id: req-hr-1\nverdict: APPROVE\nrisk_score: '1.8/10'\nsummary: Clean\n---\n# Body\n"
+    )
+    v_hr = parse_verdict_from_md(hr_preamble_md)
+    assert v_hr is not None
+    assert v_hr.verdict == "APPROVE"
+    assert v_hr.risk_score == 1  # '1.8/10' -> 0.9 on 5-pt scale -> 1 (no double-scaling to 4)
+
+    # Plain markdown without frontmatter but with '---' rules around colon text must return (None, doc)
+    plain_hr_doc = "# Heading\n---\nNote: not frontmatter\n---\nParagraph\n"
+    fm_dict, fm_body = extract_frontmatter(plain_hr_doc)
+    assert fm_dict is None
+    assert fm_body == plain_hr_doc
+
     v_zero = parse_verdict_from_md("---\nrequest_id: r0\nverdict: APPROVE\nrisk_score: 0\n---\n")
     assert v_zero is not None and v_zero.risk_score == 1
     v_ten = parse_verdict_from_md("---\nrequest_id: r10\nverdict: APPROVE\nrisk_score: 6.5\n---\n")
