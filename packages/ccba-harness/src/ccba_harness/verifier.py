@@ -12,6 +12,7 @@ Supports:
 
 from __future__ import annotations
 
+import glob as glob_module
 import shlex
 import shutil
 import subprocess
@@ -117,6 +118,25 @@ class PatchVerificationReport:
         return "\n".join(lines).strip() + "\n"
 
 
+def shell_command_to_argv(command: str, cwd: Path | str | None = None) -> list[str]:
+    """Split a command string into argv and expand shell-style globs without shell=True.
+
+    Preset commands historically relied on the shell to expand patterns like
+    ``test_tuner*.py``. With ``shell=False`` we must expand those ourselves relative
+    to ``cwd`` (or the process cwd when unset).
+    """
+    argv = shlex.split(command, posix=(sys.platform != "win32"))
+    base = Path(cwd) if cwd else Path.cwd()
+    expanded: list[str] = []
+    for arg in argv:
+        if any(ch in arg for ch in "*?["):
+            matches = sorted(glob_module.glob(arg, root_dir=str(base)))
+            expanded.extend(matches if matches else [arg])
+        else:
+            expanded.append(arg)
+    return expanded
+
+
 def _execute_single_command(
     command: str,
     cwd: Path | str | None,
@@ -126,7 +146,7 @@ def _execute_single_command(
     start_time = time.perf_counter()
     try:
         # Prefer argv + shell=False to avoid shell metacharacter injection.
-        argv = shlex.split(command, posix=(sys.platform != "win32"))
+        argv = shell_command_to_argv(command, cwd=cwd)
         proc = subprocess.run(
             argv,
             shell=False,
