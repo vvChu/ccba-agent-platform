@@ -24,7 +24,7 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 - **Spoke** = Chi nhánh nhượng quyền — vận hành độc lập tại từng dự án, kế thừa quy trình từ Hub, nhưng tùy chỉnh theo ngữ cảnh địa phương (`workspace_context.yaml`).
 - **Downstream Sync** = Cập nhật Sổ tay Nhượng quyền — khi Hub cập nhật kỹ năng/workflow mới, các Spoke đồng bộ xuôi để nhận bản mới nhất.
 - **Upstream Loop** = Đóng góp Sáng kiến từ Chi nhánh — khi một Spoke phát triển quy trình mới hiệu quả, đóng gói và đề xuất ngược lên Hub qua Pull Request.
-- **AI Gateway** = Đường dây nóng trung tâm — mọi chi nhánh đều liên lạc qua một cổng duy nhất (`100.83.192.30:8090/v1`) để truy cập hệ thống đa mô hình AI (local GPU & cloud).
+- **AI Gateway** = Đường dây nóng trung tâm — mọi chi nhánh đều liên lạc qua một cổng duy nhất (`<TAILSCALE_GATEWAY_IP>:8090/v1`) để truy cập hệ thống đa mô hình AI (local GPU & cloud).
 - **Deep Seams** = Chuyên gia nội bộ — mỗi package/module đóng vai trò một chuyên gia đầu ngành, ẩn giấu toàn bộ sự phức tạp nghiệp vụ đằng sau một giao diện đơn giản duy nhất.
 - **Skill Factory (`/ccba-build-skill`)** = Dây chuyền R&D nhượng quyền — tự động đóng gói các công thức nấu ăn / quy trình nghiệp vụ mới thành sổ tay chuẩn (Skill) phân phối cho toàn mạng lưới.
 
@@ -186,7 +186,7 @@ A formatting preservation technique where only specific key-value pairs (like st
 ## 3. Hạ Tầng AI Gateway, LLM Prompting & Auto-Tuner
 
 **AI Gateway Master Endpoint**:
-Cổng giao tiếp duy nhất `http://100.83.192.30:8090/v1` kết nối qua Tailscale VPN tới hệ thống LiteLLM AI Gateway trên Server Spark, điều hướng tự động đa mô hình AI (local GPU & cloud).
+Cổng giao tiếp duy nhất `http://<TAILSCALE_GATEWAY_IP>:8090/v1` kết nối qua Tailscale VPN tới hệ thống LiteLLM AI Gateway trên Server Spark, điều hướng tự động đa mô hình AI (local GPU & cloud).
 
 **RAG Virtual Aliases (Bí danh ảo RAG)**:
 Chuỗi định danh mô hình ảo (`ocr-primary`, `ocr-fallback`, `rag-core`, `text-gemma`, `reasoning-gemma`) được AI Gateway tự động định tuyến nhằm tối ưu hóa chi phí (Free Tier Farm) và hiệu năng xử lý văn bản lớn.

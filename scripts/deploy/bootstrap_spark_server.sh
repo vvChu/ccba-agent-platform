@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap_spark_server.sh - Automated Deployment Script for Server Spark (100.83.192.30)
+# bootstrap_spark_server.sh - Automated Deployment Script for Server Spark (<TAILSCALE_GATEWAY_IP>)
 # Designed to be executed autonomously by Antigravity Agent or Server Administrator.
 
 set -euo pipefail
