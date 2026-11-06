@@ -11,7 +11,7 @@ __version__ = "2.3.0"
 __author__ = "IBST BIM Team"
 
 from mdconverter.academic import (
-    AuditFinding,
+    AcademicAuditFinding,
     MicrostructureReport,
     audit_microstructure,
     export_paper_to_docx,
@@ -50,6 +50,9 @@ from mdconverter.writer import (
     stitch_markdown_sections,
 )
 
+# Backward-compatible top-level alias while keeping __all__ collision-free
+AuditFinding = AcademicAuditFinding
+
 __all__ = [
     # Configuration & Core Pipeline
     "Settings",
@@ -67,7 +70,7 @@ __all__ = [
     "ProviderError",
     "__version__",
     # Academic Writing Seams
-    "AuditFinding",
+    "AcademicAuditFinding",
     "MicrostructureReport",
     "audit_microstructure",
     "scaffold_manuscript",

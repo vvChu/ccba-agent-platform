@@ -89,7 +89,9 @@ topics:
       - "ccba-append-only-logger"
       - "ccba-research"
       - "ccba-grilling"
+      - "ccba-xia"
     guidelines:
       - "Tuân thủ tiêu chuẩn chất lượng KISS (Keep It Simple, Stupid) và ưu tiên composition over inheritance."
+      - "Khi thảo luận ứng dụng mã nguồn mở (OSS), kiểm tra trực tiếp 3 chỉ số Live Facts (Stars, Commits, Tip Commit Date <= 120 ngày) và định tuyến qua Ma trận 4 Ô: ưu tiên trích xuất giải thuật tự chủ bằng /ccba-xia nếu repo đã STALE/ARCHIVED thay vì cài làm dependency trực tiếp."
       - "Rà soát lỗi bảo mật (OWASP Top 10), rò rỉ API keys, thông tin nhạy cảm."
       - "Viết test suite tự động và tích hợp type hints, docstring Google style."

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from enum import Enum
 from typing import Any
 
@@ -271,6 +271,58 @@ class TieredFallbackRouter:
                 return True
         return False
 
+    def _is_mock_active(self) -> bool:
+        """Check whether mock mode is active for this router."""
+        return self.mock_mode if self.mock_mode is not None else is_mock_mode_enabled()
+
+    def _iter_cli_candidates(
+        self, model: str, *, is_async: bool
+    ) -> Iterator[tuple[str, Any, str, bool]]:
+        """Yield Tier 3 CLI candidates ordered by Model-Family Affinity."""
+        is_openai_affinity = any(
+            k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
+        )
+        cli_order = ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
+        for cli_name in cli_order:
+            if cli_name == "copilot":
+                copilot = self._get_copilot_provider()
+                if copilot and copilot.is_available():
+                    mapped = map_model_for_tier(model, TierType.TIER3_COPILOT)
+                    cop_client: Any = copilot.async_client if is_async else copilot.sync_client
+                    yield (f"Tier 3 (Copilot CLI: {mapped})", cop_client, mapped, False)
+            elif cli_name == "antigravity":
+                agy = self._get_agy_provider()
+                if agy and agy.is_available():
+                    mapped = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
+                    agy_client: Any = agy.async_client if is_async else agy.sync_client
+                    yield (f"Tier 3 (Antigravity CLI: {mapped})", agy_client, mapped, False)
+
+    def _iter_fallback_candidates(
+        self, model: str, timeout: float, *, is_async: bool
+    ) -> Iterator[tuple[str, Any, str, bool]]:
+        """Yield ordered failover steps (label, client_adapter, mapped_model, is_terminal_mock)."""
+        client_getter = self.get_async_client if is_async else self.get_sync_client
+
+        tier2_cfg = self.get_tier2_config()
+        if tier2_cfg:
+            mapped_t2 = map_model_for_tier(model, TierType.TIER2_CLOUD, tier2_cfg["provider"])
+            c_t2 = client_getter(TierType.TIER2_CLOUD, timeout=timeout, provider_cfg=tier2_cfg)
+            yield (f"Tier 2 ({tier2_cfg['provider']}: {mapped_t2})", c_t2, mapped_t2, False)
+
+        yield from self._iter_cli_candidates(model, is_async=is_async)
+
+        tier4_cfg = self.get_tier4_ollama_config()
+        if tier4_cfg:
+            mapped_t4 = map_model_for_tier(model, TierType.TIER4_OLLAMA)
+            c_t4 = client_getter(
+                TierType.TIER4_OLLAMA, timeout=min(timeout, 30.0), provider_cfg=tier4_cfg
+            )
+            yield (f"Tier 4 (Local Ollama: {mapped_t4})", c_t4, mapped_t4, False)
+
+        if self.enable_mock_fallback:
+            mock_c = self.mock_provider.async_client if is_async else self.mock_provider.sync_client
+            yield ("Tier 5 (Mock Provider)", mock_c, model, True)
+
     def execute_sync(
         self,
         primary_fn: Callable[[], Any],
@@ -280,8 +332,7 @@ class TieredFallbackRouter:
         fallback_fn_builder: Callable[[Any, str], Any] | None = None,
     ) -> Any:
         """Execute request with automatic multi-tier fallback cascade (sync)."""
-        is_mock = self.mock_mode if self.mock_mode is not None else is_mock_mode_enabled()
-        if is_mock:
+        if self._is_mock_active():
             if fallback_fn_builder:
                 return fallback_fn_builder(self.mock_provider.sync_client, model)
             return primary_fn()
@@ -291,92 +342,20 @@ class TieredFallbackRouter:
         except Exception as primary_exc:
             if not self.enable_fallback or not self.is_tier_failover_exception(primary_exc):
                 raise
-
             logger.warning(
                 f"[ccba-ai] Primary Gateway (Tier 1) connection failed: {primary_exc}. Attempting multi-tier failover..."
             )
-
-            # --- Try Tier 2 (Cloud Direct) ---
-            tier2_cfg = self.get_tier2_config()
-            if tier2_cfg and fallback_fn_builder:
-                try:
-                    mapped_model = map_model_for_tier(
-                        model, TierType.TIER2_CLOUD, tier2_cfg["provider"]
-                    )
-                    client = self.get_sync_client(
-                        TierType.TIER2_CLOUD, timeout=timeout, provider_cfg=tier2_cfg
-                    )
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 2 ({tier2_cfg['provider']}: {mapped_model})..."
-                    )
-                    res = fallback_fn_builder(client, mapped_model)
-                    return res
-                except Exception as t2_exc:
-                    logger.warning(f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) failed: {t2_exc}")
-
-            # --- Try Tier 3 (Dual-CLI Provider Matrix: Copilot & Antigravity) ---
-            is_openai_affinity = any(
-                k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
-            )
-            cli_order = (
-                ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
-            )
-
-            for cli_name in cli_order:
-                if cli_name == "copilot":
-                    copilot = self._get_copilot_provider()
-                    if copilot and copilot.is_available() and fallback_fn_builder:
-                        try:
-                            mapped_model = map_model_for_tier(model, TierType.TIER3_COPILOT)
-                            logger.info(
-                                f"[ccba-ai] Failing over to Tier 3 (Copilot CLI: {mapped_model})..."
-                            )
-                            res = fallback_fn_builder(copilot.sync_client, mapped_model)
-                            return res
-                        except Exception as t3_copilot_exc:
-                            logger.warning(
-                                f"[ccba-ai] Tier 3 (Copilot CLI) failed: {t3_copilot_exc}"
-                            )
-                elif cli_name == "antigravity":
-                    agy = self._get_agy_provider()
-                    if agy and agy.is_available() and fallback_fn_builder:
-                        try:
-                            mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
-                            logger.info(
-                                f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
-                                "WARNING: ~30-40s latency expected if daemon not active."
-                            )
-                            res = fallback_fn_builder(agy.sync_client, mapped_model)
-                            return res
-                        except Exception as t3_agy_exc:
-                            logger.warning(
-                                f"[ccba-ai] Tier 3 (Antigravity CLI) failed: {t3_agy_exc}"
-                            )
-
-            # --- Try Tier 4 (Local Ollama) ---
-            tier4_cfg = self.get_tier4_ollama_config()
-            if tier4_cfg and fallback_fn_builder:
-                try:
-                    mapped_model = map_model_for_tier(model, TierType.TIER4_OLLAMA)
-                    client = self.get_sync_client(
-                        TierType.TIER4_OLLAMA, timeout=min(timeout, 30.0), provider_cfg=tier4_cfg
-                    )
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
-                    )
-                    res = fallback_fn_builder(client, mapped_model)
-                    return res
-                except Exception as t4_exc:
-                    logger.warning(f"[ccba-ai] Tier 4 (Local Ollama) failed: {t4_exc}")
-
-            # --- Try Tier 5 (Mock Provider Fallback if enabled) ---
-            if self.enable_mock_fallback and fallback_fn_builder:
-                logger.info(
-                    "[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)..."
-                )
-                return fallback_fn_builder(self.mock_provider.sync_client, model)
-
-            # Re-raise original primary error if all failovers failed
+            if fallback_fn_builder:
+                for label, client, mapped, is_mock_tier in self._iter_fallback_candidates(
+                    model, timeout, is_async=False
+                ):
+                    try:
+                        logger.info(f"[ccba-ai] Failing over to {label}...")
+                        return fallback_fn_builder(client, mapped)
+                    except Exception as tier_exc:
+                        if is_mock_tier:
+                            raise
+                        logger.warning(f"[ccba-ai] {label} failed: {tier_exc}")
             raise primary_exc
 
     async def execute_async(
@@ -388,8 +367,7 @@ class TieredFallbackRouter:
         fallback_coro_builder: Callable[[Any, str], Any] | None = None,
     ) -> Any:
         """Execute request with automatic multi-tier fallback cascade (async)."""
-        is_mock = self.mock_mode if self.mock_mode is not None else is_mock_mode_enabled()
-        if is_mock:
+        if self._is_mock_active():
             if fallback_coro_builder:
                 return await fallback_coro_builder(self.mock_provider.async_client, model)
             return await primary_coro_fn()
@@ -399,92 +377,18 @@ class TieredFallbackRouter:
         except Exception as primary_exc:
             if not self.enable_fallback or not self.is_tier_failover_exception(primary_exc):
                 raise
-
             logger.warning(
                 f"[ccba-ai] Primary Gateway (Tier 1) async connection failed: {primary_exc}. Attempting multi-tier failover..."
             )
-
-            # --- Try Tier 2 (Cloud Direct) ---
-            tier2_cfg = self.get_tier2_config()
-            if tier2_cfg and fallback_coro_builder:
-                try:
-                    mapped_model = map_model_for_tier(
-                        model, TierType.TIER2_CLOUD, tier2_cfg["provider"]
-                    )
-                    client = self.get_async_client(
-                        TierType.TIER2_CLOUD, timeout=timeout, provider_cfg=tier2_cfg
-                    )
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 2 ({tier2_cfg['provider']}: {mapped_model})..."
-                    )
-                    res = await fallback_coro_builder(client, mapped_model)
-                    return res
-                except Exception as t2_exc:
-                    logger.warning(
-                        f"[ccba-ai] Tier 2 ({tier2_cfg['provider']}) async failed: {t2_exc}"
-                    )
-
-            # --- Try Tier 3 (Dual-CLI Provider Matrix: Copilot & Antigravity) ---
-            is_openai_affinity = any(
-                k in (model or "").lower() for k in ("gpt", "o1", "o3", "codex", "copilot")
-            )
-            cli_order = (
-                ["copilot", "antigravity"] if is_openai_affinity else ["antigravity", "copilot"]
-            )
-
-            for cli_name in cli_order:
-                if cli_name == "copilot":
-                    copilot = self._get_copilot_provider()
-                    if copilot and copilot.is_available() and fallback_coro_builder:
-                        try:
-                            mapped_model = map_model_for_tier(model, TierType.TIER3_COPILOT)
-                            logger.info(
-                                f"[ccba-ai] Failing over to Tier 3 (Copilot CLI: {mapped_model})..."
-                            )
-                            res = await fallback_coro_builder(copilot.async_client, mapped_model)
-                            return res
-                        except Exception as t3_copilot_exc:
-                            logger.warning(
-                                f"[ccba-ai] Tier 3 (Copilot CLI) async failed: {t3_copilot_exc}"
-                            )
-                elif cli_name == "antigravity":
-                    agy = self._get_agy_provider()
-                    if agy and agy.is_available() and fallback_coro_builder:
-                        try:
-                            mapped_model = map_model_for_tier(model, TierType.TIER3_ANTIGRAVITY)
-                            logger.info(
-                                f"[ccba-ai] Failing over to Tier 3 (Antigravity CLI: {mapped_model})... "
-                                "WARNING: ~30-40s latency expected if daemon not active."
-                            )
-                            res = await fallback_coro_builder(agy.async_client, mapped_model)
-                            return res
-                        except Exception as t3_agy_exc:
-                            logger.warning(
-                                f"[ccba-ai] Tier 3 (Antigravity CLI) async failed: {t3_agy_exc}"
-                            )
-
-            # --- Try Tier 4 (Local Ollama) ---
-            tier4_cfg = self.get_tier4_ollama_config()
-            if tier4_cfg and fallback_coro_builder:
-                try:
-                    mapped_model = map_model_for_tier(model, TierType.TIER4_OLLAMA)
-                    client = self.get_async_client(
-                        TierType.TIER4_OLLAMA, timeout=min(timeout, 30.0), provider_cfg=tier4_cfg
-                    )
-                    logger.info(
-                        f"[ccba-ai] Failing over to Tier 4 (Local Ollama: {mapped_model})..."
-                    )
-                    res = await fallback_coro_builder(client, mapped_model)
-                    return res
-                except Exception as t4_exc:
-                    logger.warning(f"[ccba-ai] Tier 4 (Local Ollama) async failed: {t4_exc}")
-
-            # --- Try Tier 5 (Mock Provider Fallback if enabled) ---
-            if self.enable_mock_fallback and fallback_coro_builder:
-                logger.info(
-                    "[ccba-ai] All live tiers exhausted. Failing over to Tier 5 (Mock Provider)..."
-                )
-                return await fallback_coro_builder(self.mock_provider.async_client, model)
-
-            # Re-raise original primary error if all failovers failed
+            if fallback_coro_builder:
+                for label, client, mapped, is_mock_tier in self._iter_fallback_candidates(
+                    model, timeout, is_async=True
+                ):
+                    try:
+                        logger.info(f"[ccba-ai] Failing over to {label}...")
+                        return await fallback_coro_builder(client, mapped)
+                    except Exception as tier_exc:
+                        if is_mock_tier:
+                            raise
+                        logger.warning(f"[ccba-ai] {label} async failed: {tier_exc}")
             raise primary_exc

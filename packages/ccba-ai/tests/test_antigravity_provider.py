@@ -282,3 +282,52 @@ class TestAgyAsyncProvider:
             text, usage = await provider.chat_async("Async test")
             assert text == "Async answer"
             assert usage.total_tokens == 220
+
+    @pytest.mark.asyncio
+    async def test_adapter_forwards_explicit_timeout_sync_and_async(self) -> None:
+        """Should forward kwargs['timeout'] to provider.chat and provider.chat_async."""
+        from unittest.mock import AsyncMock
+
+        from ccba_ai.models import ChatUsage
+
+        provider = AntigravityCLIProvider(binary_path="agy")
+        with patch.object(
+            provider, "chat", return_value=("sync ok", ChatUsage())
+        ) as mock_sync_chat:
+            provider.sync_client.chat.completions.create(
+                model="gemini-3-flash-preview",
+                messages=[{"role": "user", "content": "Hello"}],
+                timeout=45.0,
+            )
+            mock_sync_chat.assert_called_once_with(
+                "Hello",
+                model="gemini-3-flash-preview",
+                timeout=45.0,
+            )
+
+        with patch.object(
+            provider,
+            "chat_async",
+            new_callable=AsyncMock,
+            return_value=("async ok", ChatUsage()),
+        ) as mock_async_chat:
+            await provider.async_client.chat.completions.create(
+                model="gemini-3-flash-preview",
+                messages=[{"role": "user", "content": "Hello"}],
+                timeout=45.0,
+            )
+            mock_async_chat.assert_called_once_with(
+                "Hello",
+                model="gemini-3-flash-preview",
+                timeout=45.0,
+            )
+
+
+def test_mcp_server_resolves_sdk_port() -> None:
+    """Should initialize mcp server via _create_mcp_server() without type or import errors."""
+    from ccba_ai.mcp_server import _create_mcp_server, mcp
+
+    server = _create_mcp_server("test-ccba-ai")
+    assert hasattr(server, "tool")
+    assert hasattr(server, "run")
+    assert hasattr(mcp, "tool")
