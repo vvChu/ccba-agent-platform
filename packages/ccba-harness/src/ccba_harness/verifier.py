@@ -12,6 +12,7 @@ Supports:
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import subprocess
 import sys
@@ -124,9 +125,11 @@ def _execute_single_command(
     """Execute a single shell command and return its structured CommandResult."""
     start_time = time.perf_counter()
     try:
+        # Prefer argv + shell=False to avoid shell metacharacter injection.
+        argv = shlex.split(command, posix=(sys.platform != "win32"))
         proc = subprocess.run(
-            command,
-            shell=True,
+            argv,
+            shell=False,
             cwd=str(cwd) if cwd else None,
             capture_output=True,
             text=True,

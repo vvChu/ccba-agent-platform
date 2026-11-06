@@ -9,6 +9,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -195,9 +196,10 @@ class EvalOrchestrator:
 
         try:
             with tempfile.TemporaryFile() as tmp_out:
+                argv = shlex.split(cmd, posix=(sys.platform != "win32")) if isinstance(cmd, str) else cmd
                 proc = subprocess.Popen(
-                    cmd,
-                    shell=True,
+                    argv,
+                    shell=False,
                     cwd=cwd,
                     stdout=tmp_out,
                     stderr=subprocess.STDOUT,

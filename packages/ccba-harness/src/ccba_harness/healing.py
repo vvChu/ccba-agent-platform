@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 import re
+import shlex
+import sys
 import subprocess
 import time
 from collections.abc import Sequence
@@ -367,9 +369,10 @@ class SelfHealingEngine:
 
         try:
             logger.info("Executing self-healing command: %s", action.command)
+            argv = shlex.split(action.command, posix=(sys.platform != "win32"))
             proc = subprocess.run(
-                action.command,
-                shell=True,
+                argv,
+                shell=False,
                 cwd=str(self.base_dir),
                 capture_output=True,
                 text=True,
