@@ -32,7 +32,7 @@ ccba-agent-platform/
 ## 2. Các Thành phần Công nghệ & Thư viện Chính
 
 - **Python SDK & AI Gateway**:
-  - Package **`ccba-ai`** (`packages/ccba-ai`): Đóng vai trò là cổng LLM duy nhất của platform, cho phép gọi `from ccba_ai import ai` và kết nối trực tiếp với LiteLLM Server Spark (`100.83.192.30:8090`).
+  - Package **`ccba-ai`** (`packages/ccba-ai`): Đóng vai trò là cổng LLM duy nhất của platform, cho phép gọi `from ccba_ai import ai` và kết nối trực tiếp với LiteLLM Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`).
 - **Công cụ Đóng gói & Kiểm định Tài liệu**:
   - **Repomix Wrapper** (`scripts/repomix_pack.py`): Đóng gói codebase tạm thời thành XML để nạp context cho Agent.
   - **Docs Linter** (`scripts/validate_docs.py`): Tự động phát hiện lỗi liên kết tương đối, code refs bị đổi tên/xóa và env vars thiếu trong `.env.example`.

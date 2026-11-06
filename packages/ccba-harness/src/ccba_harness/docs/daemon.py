@@ -356,7 +356,7 @@ class DocAutoEvolutionEngine:
             "",
             f"> **🌿 Branch:** `{report.branch_name}`  ",
             f"> **📊 Health Status:** {'🟢 100% HEALTHY' if report.health.is_healthy else '⚠️ CẦN TINH CHỈNH'}  ",
-            "> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`100.83.192.30`)  ",  # ccba:allow-raw-ip
+            "> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`<TAILSCALE_GATEWAY_IP>`)  ",
             "",
             "---",
             "",

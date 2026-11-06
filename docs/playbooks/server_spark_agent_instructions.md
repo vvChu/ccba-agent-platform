@@ -1,4 +1,4 @@
-# 🤖 CHỈ DẪN DÀNH CHO ANTIGRAVITY AGENT TRÊN SERVER SPARK (`100.83.192.30`)
+# 🤖 CHỈ DẪN DÀNH CHO ANTIGRAVITY AGENT TRÊN SERVER SPARK (`<TAILSCALE_GATEWAY_IP>`)
 
 > **Mục tiêu:** Cung cấp quy trình tự động hóa (Autonomous Playbook) để Antigravity Agent khi được kích hoạt trên **Server Spark** có thể tự khảo sát, cài đặt, cấu hình và vận hành toàn bộ nền tảng CCBA Hub & Knowledge Spoke mà không cần con người can thiệp.
 
@@ -6,7 +6,7 @@
 
 ## 🎯 VAI TRÒ CỦA AGENT TRÊN SERVER SPARK
 
-Trên Server Spark (`100.83.192.30`), Agent đóng vai trò là **Kỹ Sư Trưởng Hạ Tầng AI (AI Platform Site Reliability Engineer)**:
+Trên Server Spark (`<TAILSCALE_GATEWAY_IP>`), Agent đóng vai trò là **Kỹ Sư Trưởng Hạ Tầng AI (AI Platform Site Reliability Engineer)**:
 1. Duy trì hoạt động 24/7 của AI Gateway LiteLLM (`:8090`).
 2. Quản lý kho tri thức gốc `ccba-legal-knowledge` (OKF v2.0).
 3. Đảm bảo cỗ máy **Nightly Auto-Tuner Daemon** tự động quét 73+ kỹ năng và mở PR hàng đêm lúc 00:00.

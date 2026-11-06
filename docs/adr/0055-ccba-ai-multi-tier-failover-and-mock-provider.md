@@ -10,7 +10,7 @@
 
 ## Context & Problem Statement
 
-Thư viện cốt lõi `ccba-ai` (`packages/ccba-ai`) đóng vai trò là client thống nhất kết nối toàn bộ hệ thống Hub-Spoke với LiteLLM AI Gateway trên Server Spark (`100.83.192.30:8090/v1`).
+Thư viện cốt lõi `ccba-ai` (`packages/ccba-ai`) đóng vai trò là client thống nhất kết nối toàn bộ hệ thống Hub-Spoke với LiteLLM AI Gateway trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090/v1`).
 Tuy nhiên, môi trường vận hành bộc lộ các thách thức sau:
 1. **Rớt mạng Tailscale VPN / Bảo trì Server Spark:** Khi Server Spark khởi động lại hoặc mạng VPN bị gián đoạn, các lệnh gọi `ai.chat()` rơi vào vòng lặp retry và gây crash timeout (`APIConnectionError`), làm tê liệt các pipeline tự động (TVPL crawler, PCCC audit, OKF parser).
 2. **Nhu cầu làm việc Ngoại tuyến (Air-gapped / Offline):** Kỹ sư làm việc tại công trường hoặc trên máy bay không có kết nối internet/VPN nhưng vẫn cần khả năng xử lý LLM cơ bản qua mô hình cục bộ (Local LLM).
@@ -24,7 +24,7 @@ Tuy nhiên, môi trường vận hành bộc lộ các thách thức sau:
 Quyết định triển khai **Multi-Tier Failover Matrix** (5 tầng) trực tiếp trong `packages/ccba-ai`:
 
 ### 1. Ma trận 5 Tầng Chuyển vùng Dự phòng (Tiered Fallback Router)
-- **Tier 1 (Default - Central Gateway):** LiteLLM Proxy trên Server Spark (`http://100.83.192.30:8090/v1`) theo chuẩn 4 Model Archetypes (ADR 0029).
+- **Tier 1 (Default - Central Gateway):** LiteLLM Proxy trên Server Spark (`http://<TAILSCALE_GATEWAY_IP>:8090/v1`) theo chuẩn 4 Model Archetypes (ADR 0029).
 - **Tier 2 (Cloud Direct Fallback):** Tự động phát hiện các API keys độc lập trong môi trường:
   - Google Gemini API (`GEMINI_API_KEY`) → endpoint Google AI Studio / Vertex AI.
   - Groq API (`GROQ_API_KEY`) → endpoint `api.groq.com/openai/v1`.

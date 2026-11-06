@@ -61,10 +61,10 @@ def test_async_client_init_timeout():
 
 def test_async_url_sanitizer_redirects_8045():
     """Test AsyncAIClient URL sanitizer automatically redirects :8045 to :8090."""
-    client = AsyncAIClient(base_url="http://100.83.192.30:8045/v1")
+    client = AsyncAIClient(base_url="http://localhost:8045/v1")
     assert "8090" in str(client._client.base_url)
     assert "8045" not in str(client._client.base_url)
-    assert client.base_url == "http://100.83.192.30:8090/v1"
+    assert client.base_url == "http://localhost:8090/v1"
 
 
 def test_async_url_sanitizer_empty_env_and_whitespace():
@@ -72,10 +72,10 @@ def test_async_url_sanitizer_empty_env_and_whitespace():
     with patch.dict("os.environ", {"AI_GATEWAY_URL": ""}, clear=False):
         with patch("ccba_ai.client._find_and_load_env"):
             client = AsyncAIClient()
-            assert client.base_url == "http://100.83.192.30:8090/v1"
+            assert client.base_url.endswith(":8090/v1")
 
-    client_ws = AsyncAIClient(base_url="  http://100.83.192.30:8045/v1 \n ")
-    assert client_ws.base_url == "http://100.83.192.30:8090/v1"
+    client_ws = AsyncAIClient(base_url="  http://localhost:8045/v1 \n ")
+    assert client_ws.base_url == "http://localhost:8090/v1"
 
 
 @pytest.mark.asyncio

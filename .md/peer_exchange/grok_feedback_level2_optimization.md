@@ -242,7 +242,7 @@ Patch Qwen chỉ chạy khi prompt đã render nhỏ hơn trần đã đo. Promp
 
 9. **Bí mật.** Provider gateway đang để khóa trong `config.toml`. Dispatcher và log peer không dump file này. `ccba-maskara` trên stdout JSON trước khi ghi `.md/peer_exchange/`.
 
-10. **Máy và đường dẫn.** Profile YAML không ghi đường dẫn tuyệt đối Windows hay IP `100.83.192.30`. Hub path lấy từ `CCBA_HUB_PATH`. Khớp invariant multi-device.
+10. **Máy và đường dẫn.** Profile YAML không ghi đường dẫn tuyệt đối Windows hay IP `<TAILSCALE_GATEWAY_IP>`. Hub path lấy từ `CCBA_HUB_PATH`. Khớp invariant multi-device.
 
 11. **Reuse-first.** Đã có `invoke_grok_cli`, `run_peer_watch_cli`, và shim `scripts/peer_bridge_watcher.py`. `peer-dispatch` là subcommand cùng kiểu `peer-watch`. Script wrapper một hàm ủy quyền. Logic profile một bản trong `ccba_harness`.
 

@@ -27,7 +27,7 @@ class CircuitBreakerOpenError(Exception):
     def __init__(
         self,
         message: str = "AI Gateway is currently unreachable. Circuit breaker is OPEN (fast-fail mode).",
-        suggestion: str = "Check Tailscale VPN status (100.83.192.30:8090) or wait for cooldown period.",  # ccba:allow-raw-ip
+        suggestion: str = "Check Tailscale VPN status (AI_GATEWAY_URL :8090) or wait for cooldown period.",
         extra: dict[str, Any] | None = None,
     ) -> None:
         self.code = CCBAErrorCode.CIRCUIT_BREAKER_OPEN

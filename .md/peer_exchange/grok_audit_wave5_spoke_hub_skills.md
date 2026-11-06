@@ -101,7 +101,7 @@ Sáu kernel đứng từ 14.0 trở lên, ngoài deadband `[11.5, 12.5)`. `ccba-
 
 ## 4. COND-04 — đường máy, placeholder, octet
 
-Tám skill và `ccba-init-spoke/references/server_deployment.md` dẫn Hub bằng `$CCBA_HUB_PATH` và `$env:CCBA_HUB_PATH`. Quét `[hub_path]`, `<hub_path>` và octet `100.83.192.30` trên tám thư mục skill trả về rỗng. `# ccba:allow-raw-ip` vắng trong Markdown của đợt.
+Tám skill và `ccba-init-spoke/references/server_deployment.md` dẫn Hub bằng `$CCBA_HUB_PATH` và `$env:CCBA_HUB_PATH`. Quét `[hub_path]`, `<hub_path>` và octet `<TAILSCALE_GATEWAY_IP>` trên tám thư mục skill trả về rỗng. `# ccba:allow-raw-ip` vắng trong Markdown của đợt.
 
 `ccba-platform` kiểm tra gateway bằng `${AI_GATEWAY_URL}`. `server_deployment.md` dòng 15 dùng cùng biến. `.env.example` khai báo `AI_GATEWAY_URL`.
 

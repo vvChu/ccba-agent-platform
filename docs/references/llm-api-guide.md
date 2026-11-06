@@ -8,7 +8,7 @@ All AI access should go through the **AI Gateway** for unified routing, fallback
 
 ```
 http://localhost:8090/v1          (local)
-http://100.83.192.30:8090/v1     (remote via Tailscale)
+http://<TAILSCALE_GATEWAY_IP>:8090/v1     (remote via Tailscale)
 Authorization: Bearer $LITELLM_MASTER_KEY
 ```
 
@@ -99,7 +99,7 @@ from openai import OpenAI
 # Via Gateway (recommended — all models + fallbacks)
 client = OpenAI(
     base_url="http://localhost:8090/v1",
-    api_key=os.environ["LITELLM_MASTER_KEY"]
+    api_key=os.environ.get("LITELLM_MASTER_KEY")
 )
 
 response = client.chat.completions.create(

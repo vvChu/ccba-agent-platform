@@ -2,14 +2,14 @@
 
 > **Mã Ticket**: `[WF-02]` (Wayfinder IDOP Hub-Spoke Ecosystem)  
 > **Tác giả**: CCBA AI Platform Engineering  
-> **Tham chiếu**: [ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0046](../../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), [AI Gateway SDK SKILL](../../../.agents/skills/ai-gateway-sdk/SKILL.md)  
+> **Tham chiếu**: [ADR 0041](../../../docs/adr/0041-hub-spoke-ecosystem-taxonomy-and-archetypes.md), [ADR 0046](../../../docs/adr/0046-personal-sandbox-lifecycle-and-charter-2026-alignment.md), [AI Gateway SDK SKILL](../../../.agents/skills/ccba-ai-gateway-sdk/SKILL.md)  
 > **Quy chuẩn**: Tuân thủ Global Rule 8 (Double-Pass Adversarial Review)  
 
 ---
 
 ## 1. Bối Cảnh & Hiện Trạng Hệ Thống
 
-AI Gateway triển khai trên **Server Spark (`100.83.192.30:8090/v1`)** thông qua nền tảng LiteLLM Proxy đóng vai trò là "Cổng Giao Tiếp Trí Tuệ Duy Nhất" cho toàn bộ hệ sinh thái CCBA Hub-Spoke.
+AI Gateway triển khai trên **Server Spark (`<TAILSCALE_GATEWAY_IP>:8090/v1`)** thông qua nền tảng LiteLLM Proxy đóng vai trò là "Cổng Giao Tiếp Trí Tuệ Duy Nhất" cho toàn bộ hệ sinh thái CCBA Hub-Spoke.
 
 ### Hiện trạng Hạ tầng:
 - **Kết nối**: Mạng lưới Tailscale VPN nội bộ mã hóa WireGuard, cô lập hoàn toàn khỏi Public Internet.

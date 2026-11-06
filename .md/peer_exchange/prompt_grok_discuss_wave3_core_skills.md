@@ -57,7 +57,7 @@ Sau khi Đợt 1 (Hạ tầng điều phối Hub-Spoke) và Đợt 2 (Monorepo P
 - **Đề xuất**: Rà soát lại từng bước của `ccba-legal-advisor` và `ccba-legal-ingest`, củng cố rào chắn: nếu thiếu file gốc công báo (PDF/DOCX), Agent bắt buộc phải dừng lại yêu cầu tệp nguồn hoặc tải qua `TVPLCrawler`, không được phép tự suy diễn điều luật.
 
 ### Trọng Điểm 3: Tham Số Hóa & Triệt Tiêu Raw Model Strings (Parameter Externalization Invariant)
-- **Vấn đề**: Các skills không được chứa chuỗi model thô (như `"gemini-2.5-flash"`, `"gpt-4o"`, v.v.) hoặc địa chỉ IP máy chủ hạ tầng cứng (`100.83.192.30`).
+- **Vấn đề**: Các skills không được chứa chuỗi model thô (như `"gemini-2.5-flash"`, `"gpt-4o"`, v.v.) hoặc địa chỉ IP máy chủ hạ tầng cứng (`<TAILSCALE_GATEWAY_IP>`).
 - **Đề xuất**: Quét và chuyển đổi toàn bộ về `from ccba_ai.routing import choose_model, ModelArchetype`. Mọi ngoại lệ bắt buộc phải có chú thích `# ccba:allow-raw-model` hoặc `# ccba:allow-raw-ip`.
 
 ### Trọng Điểm 4: Chuẩn Hóa Cấu Trúc Khung Quyết Định Hai Giai Đoạn (ADR-0057) & Progressive Disclosure
