@@ -27,6 +27,88 @@ class ExtractedTable(BaseModel):
     footnotes: list[str] = Field(default_factory=list)
 
 
+def _extract_docx_table_titles(paragraphs: list[str]) -> list[dict[str, Any]]:
+    """Extract numbered table titles from DOCX paragraph strings."""
+    title_pattern = re.compile(
+        r"^(?:Bảng|Table)\s+([A-Z0-9]+(?:\.[0-9]+)?)\s*[-–:]\s*(.+)$",
+        re.IGNORECASE,
+    )
+    table_titles: list[dict[str, Any]] = []
+    for p_idx, text in enumerate(paragraphs):
+        match = title_pattern.match(text)
+        if match:
+            table_titles.append(
+                {
+                    "num": match.group(1),
+                    "title": f"Bảng {match.group(1)} - {match.group(2).strip()}",
+                    "p_idx": p_idx,
+                }
+            )
+    return table_titles
+
+
+def _parse_docx_table_grid(table: Any) -> tuple[list[list[str]], list[str]]:
+    """Extract cell grid and footnote rows from a DOCX table object."""
+    grid: list[list[str]] = []
+    footnotes: list[str] = []
+    for row in table.rows:
+        row_cells = [c.text.replace("\n", " ").strip() for c in row.cells]
+        if len(set(row_cells)) == 1 and (
+            row_cells[0].startswith("CHÚ THÍCH")
+            or re.match(r"^\d+\)\s+", row_cells[0])
+            or len(row_cells[0]) > 80
+        ):
+            if row_cells[0] and row_cells[0] not in footnotes:
+                footnotes.append(row_cells[0])
+            continue
+        grid.append(row_cells)
+    return grid, footnotes
+
+
+def _build_extracted_table(table: Any, table_info: dict[str, Any]) -> ExtractedTable | None:
+    """Convert a single DOCX table and its title metadata into an ExtractedTable."""
+    num_str = str(table_info["num"])
+    slug = (
+        f"bang_{int(num_str):02d}"
+        if re.match(r"^\d+$", num_str)
+        else f"bang_{num_str.lower().replace('.', '_')}"
+    )
+    grid, footnotes = _parse_docx_table_grid(table)
+    if not grid:
+        return None
+
+    headers = grid[0]
+    clean_rows = [
+        [re.sub(r"\s+", " ", cell).strip() for cell in r]
+        for r in grid[1:]
+        if any(re.sub(r"\s+", " ", cell).strip() for cell in r)
+    ]
+    cols_count = len(headers)
+    table_anchor = f"bang-{num_str.lower().replace('.', '-')}"
+    md_lines = [
+        f'<a id="{table_anchor}"></a>',
+        f"### {table_info['title']}\n",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(["---"] * cols_count) + " |",
+    ]
+    for r in clean_rows:
+        padded = r + [""] * (cols_count - len(r)) if len(r) < cols_count else r
+        md_lines.append("| " + " | ".join(padded[:cols_count]) + " |")
+    if footnotes:
+        md_lines.append("\n" + "\n".join(f"_{fn}_" for fn in footnotes))
+
+    return ExtractedTable(
+        table_id=slug,
+        caption=table_info["title"],
+        rows=len(clean_rows) + 1,
+        cols=cols_count,
+        markdown_representation="\n".join(md_lines),
+        headers=headers,
+        data=clean_rows,
+        footnotes=footnotes,
+    )
+
+
 def extract_docx_tables(docx_path: Path | str) -> list[ExtractedTable]:
     """Extract all tables from a Word document, resolving merged cells cleanly.
 
@@ -42,99 +124,18 @@ def extract_docx_tables(docx_path: Path | str) -> list[ExtractedTable]:
 
     doc = Document(str(path_obj))
     paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-
-    title_pattern = re.compile(
-        r"^(?:Bảng|Table)\s+([A-Z0-9]+(?:\.[0-9]+)?)\s*[-–:]\s*(.+)$",
-        re.IGNORECASE,
-    )
-
-    table_titles: list[dict[str, Any]] = []
-    for p_idx, text in enumerate(paragraphs):
-        match = title_pattern.match(text)
-        if match:
-            table_titles.append(
-                {
-                    "num": match.group(1),
-                    "title": f"Bảng {match.group(1)} - {match.group(2).strip()}",
-                    "p_idx": p_idx,
-                }
-            )
+    table_titles = _extract_docx_table_titles(paragraphs)
 
     results: list[ExtractedTable] = []
-
     for idx, table in enumerate(doc.tables):
         table_info = (
             table_titles[idx]
             if idx < len(table_titles)
-            else {
-                "num": str(idx + 1),
-                "title": f"Bảng {idx + 1}",
-            }
+            else {"num": str(idx + 1), "title": f"Bảng {idx + 1}"}
         )
-
-        num_str = str(table_info["num"])
-        slug = f"bang_{num_str.lower().replace('.', '_')}"
-        if re.match(r"^\d+$", num_str):
-            slug = f"bang_{int(num_str):02d}"
-
-        grid: list[list[str]] = []
-        footnotes: list[str] = []
-
-        for row in table.rows:
-            row_cells = [c.text.replace("\n", " ").strip() for c in row.cells]
-            if len(set(row_cells)) == 1 and (
-                row_cells[0].startswith("CHÚ THÍCH")
-                or re.match(r"^\d+\)\s+", row_cells[0])
-                or len(row_cells[0]) > 80
-            ):
-                if row_cells[0] and row_cells[0] not in footnotes:
-                    footnotes.append(row_cells[0])
-                continue
-            grid.append(row_cells)
-
-        if not grid:
-            continue
-
-        headers = grid[0]
-        data_rows = grid[1:]
-        clean_rows = []
-        for r in data_rows:
-            clean_r = [re.sub(r"\s+", " ", cell).strip() for cell in r]
-            if any(clean_r):
-                clean_rows.append(clean_r)
-
-        cols_count = len(headers)
-        table_anchor = f"bang-{num_str.lower().replace('.', '-')}"
-
-        md_lines = [
-            f'<a id="{table_anchor}"></a>',
-            f"### {table_info['title']}\n",
-            "| " + " | ".join(headers) + " |",
-            "| " + " | ".join(["---"] * cols_count) + " |",
-        ]
-        for r in clean_rows:
-            if len(r) < cols_count:
-                r = r + [""] * (cols_count - len(r))
-            md_lines.append("| " + " | ".join(r[:cols_count]) + " |")
-
-        if footnotes:
-            md_lines.append("\n" + "\n".join(f"_{fn}_" for fn in footnotes))
-
-        md_rep = "\n".join(md_lines)
-
-        results.append(
-            ExtractedTable(
-                table_id=slug,
-                caption=table_info["title"],
-                rows=len(clean_rows) + 1,
-                cols=cols_count,
-                markdown_representation=md_rep,
-                headers=headers,
-                data=clean_rows,
-                footnotes=footnotes,
-            )
-        )
-
+        extracted = _build_extracted_table(table, table_info)
+        if extracted is not None:
+            results.append(extracted)
     return results
 
 
@@ -190,6 +191,22 @@ def format_qcvn_md_table(table_raw_md: str) -> str:
     return "\n".join(out_lines)
 
 
+def _extract_qcvn_block_lines(body_text: str) -> tuple[list[str], list[str]]:
+    """Split raw QCVN table block lines into data rows and footnote lines."""
+    row_lines: list[str] = []
+    footnotes: list[str] = []
+    for line in body_text.splitlines():
+        clean_str = re.sub(r"<a id=\"[^\"]+\"></a>", "", line.strip())
+        clean_str = re.sub(r"^[#*\s|]+", "", clean_str).strip(" |")
+        if not clean_str or clean_str == "---":
+            continue
+        if re.match(r"^\d+\)\s+", clean_str) or clean_str.startswith("CHÚ THÍCH"):
+            footnotes.append(clean_str)
+            continue
+        row_lines.append(clean_str)
+    return row_lines, footnotes
+
+
 def format_all_qcvn_md_tables(md_path: Path | str) -> int:
     """Scan and convert all multiline/broken table blocks in md_path to 2D GFM Pipe Tables.
 
@@ -209,35 +226,15 @@ def format_all_qcvn_md_tables(md_path: Path | str) -> int:
         r"(.*?)(?=\n<a id=\"muc-|\n### |\n# |\n(?:\#|\*)*\s*Bảng|\Z)",
         re.DOTALL | re.IGNORECASE,
     )
-
     formatted_count = 0
 
     def replace_table_block(match: re.Match[str]) -> str:
         nonlocal formatted_count
         table_num = match.group(4)
-        table_title_text = match.group(5).strip("*\n# ")
-        table_title = f"Bảng {table_num} - {table_title_text}"
+        raw_title = match.group(5).strip("*\n# ")
+        table_title = f"Bảng {table_num} - {raw_title}"
         table_anchor = f"bang-{table_num.lower().replace('.', '-')}"
-        body_text = match.group(7)
-
-        raw_lines = body_text.splitlines()
-        row_lines: list[str] = []
-        footnotes: list[str] = []
-
-        for line in raw_lines:
-            line_str = line.strip()
-            clean_str = re.sub(r"<a id=\"[^\"]+\"></a>", "", line_str)
-            clean_str = re.sub(r"^[#*\s|]+", "", clean_str).strip(" |")
-
-            if not clean_str or clean_str == "---":
-                continue
-
-            if re.match(r"^\d+\)\s+", clean_str) or clean_str.startswith("CHÚ THÍCH"):
-                footnotes.append(clean_str)
-                continue
-
-            row_lines.append(clean_str)
-
+        row_lines, footnotes = _extract_qcvn_block_lines(match.group(7))
         if len(row_lines) < 2:
             return str(match.group(0))
 
@@ -304,7 +301,7 @@ def convert_docx_to_okf_bundle(
     target_md = bundle_dir / f"{in_file.stem}.md"
 
     try:
-        import mammoth
+        import mammoth  # type: ignore[import-untyped]
 
         with open(in_file, "rb") as f:
             result = mammoth.convert_to_markdown(f)

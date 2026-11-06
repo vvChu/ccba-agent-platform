@@ -149,28 +149,10 @@ def parse_academic_sections(content: str) -> dict[str, list[str]]:
     return sections
 
 
-def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
-    """Audit the argumentative microstructure of an academic manuscript.
-
-    Args:
-        paper_markdown: Raw Markdown string or path to Markdown file.
-
-    Returns:
-        MicrostructureReport containing passive voice ratios, CARS signals, and stylistic findings.
-    """
-    if isinstance(paper_markdown, Path) or (
-        isinstance(paper_markdown, str)
-        and "\n" not in paper_markdown
-        and Path(paper_markdown).is_file()
-    ):
-        content = Path(paper_markdown).read_text(encoding="utf-8")
-    else:
-        content = str(paper_markdown)
-
-    sections = parse_academic_sections(content)
-    findings: list[AuditFinding] = []
-
-    # 1. Passive voice analysis
+def _analyze_passive_voice(
+    sections: dict[str, list[str]], findings: list[AuditFinding]
+) -> dict[str, Any]:
+    """Compute passive-voice ratios per section and append threshold findings."""
     passive_stats: dict[str, Any] = {}
     thresholds = {
         "Introduction": (20.0, "max"),
@@ -178,12 +160,10 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
         "Results": (25.0, "max"),
         "Discussion": (25.0, "max"),
     }
-
     for sec_name, lines in sections.items():
         if sec_name == "Other" or not lines:
             continue
-        text = " ".join(lines)
-        sentences = [s.strip() for s in re.split(r"\. |\? |\! ", text) if s.strip()]
+        sentences = [s.strip() for s in re.split(r"\. |\? |\! ", " ".join(lines)) if s.strip()]
         if not sentences:
             continue
         passive_count = sum(1 for s in sentences if PASSIVE_VOICE_RE.search(s))
@@ -193,7 +173,6 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
             "passive_sentences": passive_count,
             "ratio_percent": round(ratio, 1),
         }
-
         if sec_name in thresholds:
             limit, direction = thresholds[sec_name]
             if direction == "max" and ratio > limit:
@@ -214,13 +193,17 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
                         suggestion="Consider using passive voice to maintain scientific objectivity.",
                     )
                 )
+    return passive_stats
 
-    # 2. CARS signals in Introduction
+
+def _analyze_cars_signals(
+    sections: dict[str, list[str]], findings: list[AuditFinding]
+) -> list[str]:
+    """Check Swales CARS model move signals in Introduction."""
     cars_found: list[str] = []
     intro_text = " ".join(sections.get("Introduction", [])).lower()
     for move_name, signals in CARS_SIGNALS.items():
-        matched = [sig for sig in signals if sig in intro_text]
-        if matched:
+        if any(sig in intro_text for sig in signals):
             cars_found.append(move_name)
         else:
             findings.append(
@@ -231,10 +214,12 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
                     suggestion=f"Include standard signaling phrases such as {signals[:2]}.",
                 )
             )
+    return cars_found
 
-    # 3. Intensifiers, nominalizations, typos
-    lines = content.splitlines()
-    for idx, line in enumerate(lines, 1):
+
+def _analyze_lexical_style(content: str, findings: list[AuditFinding]) -> None:
+    """Scan lines for intensifiers, nominalizations, and unstandardized terms."""
+    for idx, line in enumerate(content.splitlines(), 1):
         line_lower = line.lower()
         for word, desc in INTENSIFIERS.items():
             if re.search(rf"\b{word}\b", line_lower):
@@ -267,6 +252,31 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
                     )
                 )
 
+
+def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
+    """Audit the argumentative microstructure of an academic manuscript.
+
+    Args:
+        paper_markdown: Raw Markdown string or path to Markdown file.
+
+    Returns:
+        MicrostructureReport containing passive voice ratios, CARS signals, and stylistic findings.
+    """
+    if isinstance(paper_markdown, Path) or (
+        isinstance(paper_markdown, str)
+        and "\n" not in paper_markdown
+        and Path(paper_markdown).is_file()
+    ):
+        content = Path(paper_markdown).read_text(encoding="utf-8")
+    else:
+        content = str(paper_markdown)
+
+    sections = parse_academic_sections(content)
+    findings: list[AuditFinding] = []
+    passive_stats = _analyze_passive_voice(sections, findings)
+    cars_found = _analyze_cars_signals(sections, findings)
+    _analyze_lexical_style(content, findings)
+
     paragraphs = [p for p in content.split("\n\n") if p.strip()]
     readability = round(max(0.0, min(100.0, 100.0 - (len(findings) * 2.5))), 1)
 
@@ -280,32 +290,7 @@ def audit_microstructure(paper_markdown: str | Path) -> MicrostructureReport:
     )
 
 
-def scaffold_manuscript(
-    output_path: Path | str,
-    title: str = "Enter Your Research Paper Title Here",
-) -> Path:
-    """Generate a blank academic research paper template in Markdown.
-
-    Args:
-        output_path: Path to destination file.
-        title: Title of the manuscript.
-
-    Returns:
-        Path to generated Markdown template.
-    """
-    out_file = Path(output_path)
-    content = f"""---
-title: "{title}"
-authors:
-  - name: "Author 1 Name"
-    affiliation: "CCBA - Institute of Construction BIM, Vietnam"
-    email: "author1@ccba.vn"
-    corresponding: true
-  - name: "Author 2 Name"
-    affiliation: "Department of Construction IT, Vietnam"
----
-
-# Abstract
+_MANUSCRIPT_BODY_TEMPLATE = """# Abstract
 Write a concise summary of your research, methodologies, and key findings here.
 
 # Introduction
@@ -330,9 +315,101 @@ The implications of these findings are discussed in comparison with baseline ben
 # References
 - [1] Standard Guidelines for Construction Consulting.
 """
+
+
+def scaffold_manuscript(
+    output_path: Path | str,
+    title: str = "Enter Your Research Paper Title Here",
+) -> Path:
+    """Generate a blank academic research paper template in Markdown.
+
+    Args:
+        output_path: Path to destination file.
+        title: Title of the manuscript.
+
+    Returns:
+        Path to generated Markdown template.
+    """
+    out_file = Path(output_path)
+    frontmatter = (
+        f'---\ntitle: "{title}"\nauthors:\n'
+        '  - name: "Author 1 Name"\n'
+        '    affiliation: "CCBA - Institute of Construction BIM, Vietnam"\n'
+        '    email: "author1@ccba.vn"\n'
+        "    corresponding: true\n"
+        '  - name: "Author 2 Name"\n'
+        '    affiliation: "Department of Construction IT, Vietnam"\n---\n\n'
+    )
     out_file.parent.mkdir(parents=True, exist_ok=True)
-    out_file.write_text(content, encoding="utf-8")
+    out_file.write_text(frontmatter + _MANUSCRIPT_BODY_TEMPLATE, encoding="utf-8")
     return out_file
+
+
+def _extract_frontmatter_and_body(md_text: str) -> tuple[dict[str, Any], str]:
+    """Parse optional YAML frontmatter from academic markdown text."""
+    if md_text.startswith("---"):
+        parts = md_text.split("---", 2)
+        if len(parts) >= 3:
+            try:
+                return yaml.safe_load(parts[1]) or {}, parts[2]
+            except Exception:
+                pass
+    return {}, md_text
+
+
+def _render_docx_title_block(doc: Any, frontmatter: dict[str, Any]) -> None:
+    """Render title and author list paragraphs onto a DOCX document."""
+    if "title" not in frontmatter:
+        return
+    p_title = doc.add_paragraph()
+    p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_title.paragraph_format.space_before = Pt(36)
+    p_title.paragraph_format.space_after = Pt(18)
+    run_title = p_title.add_run(str(frontmatter["title"]))
+    run_title.font.name = "Times New Roman"
+    run_title.font.size = Pt(16)
+    run_title.font.bold = True
+
+    authors = frontmatter.get("authors", [])
+    if authors:
+        p_auth = doc.add_paragraph()
+        p_auth.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_auth.paragraph_format.space_after = Pt(24)
+        for i, auth in enumerate(authors):
+            name = auth.get("name", "") if isinstance(auth, dict) else str(auth)
+            r_auth = p_auth.add_run(name)
+            r_auth.font.name = "Times New Roman"
+            r_auth.font.size = Pt(12)
+            if i < len(authors) - 1:
+                p_auth.add_run(", ")
+
+
+def _render_docx_body_line(doc: Any, trimmed: str) -> None:
+    """Render a single heading or body paragraph line into the DOCX document."""
+    heading_specs = {"# ": (1, 14, 6), "## ": (2, 12, 4), "### ": (3, 10, 3)}
+    for prefix, (level, before_pt, after_pt) in heading_specs.items():
+        if trimmed.startswith(prefix):
+            p = doc.add_heading(trimmed[len(prefix) :], level=level)
+            p.paragraph_format.space_before = Pt(before_pt)
+            p.paragraph_format.space_after = Pt(after_pt)
+            return
+
+    p = doc.add_paragraph()
+    p.paragraph_format.line_spacing = 2.0
+    p.paragraph_format.first_line_indent = Inches(0.5)
+    p.paragraph_format.space_after = Pt(6)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    for token in re.split(r"(\*\*.*?\*\*|\*.*?\*)", trimmed):
+        if not token:
+            continue
+        is_bold = token.startswith("**") and token.endswith("**")
+        is_italic = not is_bold and token.startswith("*") and token.endswith("*")
+        text = token[2:-2] if is_bold else (token[1:-1] if is_italic else token)
+        r = p.add_run(text)
+        r.font.name = "Times New Roman"
+        r.font.size = Pt(12)
+        r.bold = is_bold
+        r.italic = is_italic
 
 
 def export_paper_to_docx(
@@ -357,99 +434,29 @@ def export_paper_to_docx(
         out_file = Path(output_docx) if output_docx is not None else Path("academic_paper.docx")
 
     doc = Document()
-
-    # 1. Margins: 1 inch (72 pt) all sides
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
         section.left_margin = Inches(1.0)
         section.right_margin = Inches(1.0)
 
-    # 2. Extract YAML Frontmatter if present
-    frontmatter: dict[str, Any] = {}
-    body_text = md_text
-    if md_text.startswith("---"):
-        parts = md_text.split("---", 2)
-        if len(parts) >= 3:
-            try:
-                frontmatter = yaml.safe_load(parts[1]) or {}
-                body_text = parts[2]
-            except Exception:
-                pass
+    frontmatter, body_text = _extract_frontmatter_and_body(md_text)
+    _render_docx_title_block(doc, frontmatter)
 
-    # Title page if frontmatter title is present
-    if "title" in frontmatter:
-        p_title = doc.add_paragraph()
-        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_title.paragraph_format.space_before = Pt(36)
-        p_title.paragraph_format.space_after = Pt(18)
-        run_title = p_title.add_run(str(frontmatter["title"]))
-        run_title.font.name = "Times New Roman"
-        run_title.font.size = Pt(16)
-        run_title.font.bold = True
-
-        authors = frontmatter.get("authors", [])
-        if authors:
-            p_auth = doc.add_paragraph()
-            p_auth.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p_auth.paragraph_format.space_after = Pt(24)
-            for i, auth in enumerate(authors):
-                name = auth.get("name", "") if isinstance(auth, dict) else str(auth)
-                r_auth = p_auth.add_run(name)
-                r_auth.font.name = "Times New Roman"
-                r_auth.font.size = Pt(12)
-                if i < len(authors) - 1:
-                    p_auth.add_run(", ")
-
-    # 3. Process Body Paragraphs
     for line in body_text.splitlines():
         trimmed = line.strip()
-        if not trimmed:
-            continue
-        if trimmed.startswith("# "):
-            p = doc.add_heading(trimmed[2:], level=1)
-            p.paragraph_format.space_before = Pt(14)
-            p.paragraph_format.space_after = Pt(6)
-        elif trimmed.startswith("## "):
-            p = doc.add_heading(trimmed[3:], level=2)
-            p.paragraph_format.space_before = Pt(12)
-            p.paragraph_format.space_after = Pt(4)
-        elif trimmed.startswith("### "):
-            p = doc.add_heading(trimmed[4:], level=3)
-            p.paragraph_format.space_before = Pt(10)
-            p.paragraph_format.space_after = Pt(3)
-        else:
-            p = doc.add_paragraph()
-            p.paragraph_format.line_spacing = 2.0
-            p.paragraph_format.first_line_indent = Inches(0.5)
-            p.paragraph_format.space_after = Pt(6)
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-
-            tokens = re.split(r"(\*\*.*?\*\*|\*.*?\*)", trimmed)
-            for token in tokens:
-                if not token:
-                    continue
-                if token.startswith("**") and token.endswith("**"):
-                    r = p.add_run(token[2:-2])
-                    r.font.name = "Times New Roman"
-                    r.font.size = Pt(12)
-                    r.bold = True
-                elif token.startswith("*") and token.endswith("*"):
-                    r = p.add_run(token[1:-1])
-                    r.font.name = "Times New Roman"
-                    r.font.size = Pt(12)
-                    r.italic = True
-                else:
-                    r = p.add_run(token)
-                    r.font.name = "Times New Roman"
-                    r.font.size = Pt(12)
+        if trimmed:
+            _render_docx_body_line(doc, trimmed)
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_file))
     return out_file
 
 
+AcademicAuditFinding = AuditFinding
+
 __all__ = [
+    "AcademicAuditFinding",
     "AuditFinding",
     "MicrostructureReport",
     "audit_microstructure",

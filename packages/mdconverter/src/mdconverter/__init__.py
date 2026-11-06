@@ -11,9 +11,7 @@ __version__ = "2.3.0"
 __author__ = "IBST BIM Team"
 
 from mdconverter.academic import (
-    AuditFinding as AcademicAuditFinding,
-)
-from mdconverter.academic import (
+    AcademicAuditFinding,
     MicrostructureReport,
     audit_microstructure,
     export_paper_to_docx,
