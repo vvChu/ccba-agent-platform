@@ -71,7 +71,7 @@ class TestArchStatsUpdater(unittest.TestCase):
         """Verify scripts.update_arch_stats exposes a callable main entry point."""
         import scripts.update_arch_stats as root_shim
 
-        self.assertTrue(callable(root_shim.main))
+        self.assertTrue(callable(getattr(root_shim, "main", None)))
 
 
 class TestRepomixPackager(unittest.TestCase):
@@ -96,9 +96,28 @@ class TestRepomixPackager(unittest.TestCase):
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
             self.assertTrue(self.packager.check_npx_available())
+            self.assertFalse(mock_run.call_args.kwargs.get("shell", True))
 
             mock_run.side_effect = FileNotFoundError()
             self.assertFalse(self.packager.check_npx_available())
+
+    def test_windows_npx_resolution_and_pack_shell_false(self) -> None:
+        from scripts.scaffolding.repomix import _resolve_npx_executable
+
+        with (
+            patch("scripts.scaffolding.repomix.sys.platform", "win32"),
+            patch("scripts.scaffolding.repomix.shutil.which", side_effect=["C:/nodejs/npx.cmd"]),
+        ):
+            self.assertEqual(_resolve_npx_executable(), "C:/nodejs/npx.cmd")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src_dir = Path(tmpdir)
+            out_file = src_dir / "out.xml"
+            with patch("subprocess.run") as mock_run:
+                mock_run.return_value = MagicMock(returncode=0)
+                ok = self.packager.pack(src_dir, out_file)
+                self.assertTrue(ok)
+                self.assertFalse(mock_run.call_args.kwargs.get("shell", True))
 
     def test_security_facade_backward_compatibility(self) -> None:
         self.assertTrue(callable(run_repomix))
