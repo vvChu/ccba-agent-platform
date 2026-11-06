@@ -8,7 +8,7 @@ Configure mdconvert using environment variables or `.env` file.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AI_GATEWAY_URL` | AI Gateway URL (Server Spark) | `http://100.83.192.30:8090/v1` |
+| `AI_GATEWAY_URL` | AI Gateway URL (Server Spark) | `http://<TAILSCALE_GATEWAY_IP>:8090/v1` |
 | `AI_GATEWAY_KEY` | AI Gateway API key | — |
 
 ### mdconverter Settings
@@ -28,7 +28,7 @@ Create a `.env` file in your project root:
 
 ```bash
 # AI Gateway
-AI_GATEWAY_URL=http://<AI_GATEWAY_HOST>:8090/v1
+AI_GATEWAY_URL=http://<TAILSCALE_GATEWAY_IP>:8090/v1
 AI_GATEWAY_KEY=your-key-here
 
 # Conversion Settings

@@ -18,7 +18,7 @@ conditions:
   source_profile: arch_audit
   source_profiles: []
 - id: COND-04
-  description: Đã khóa. Đường Hub qua $CCBA_HUB_PATH và $env:CCBA_HUB_PATH. Gateway qua biến AI_GATEWAY_URL đang có trong .env.example. Gỡ octet 100.83.192.30 và mọi placeholder hub_path trong tám skill, kể cả <hub_path> và câu hub_path trong workspace_context.yaml.
+  description: Đã khóa. Đường Hub qua $CCBA_HUB_PATH và $env:CCBA_HUB_PATH. Gateway qua biến AI_GATEWAY_URL đang có trong .env.example. Gỡ octet <TAILSCALE_GATEWAY_IP> và mọi placeholder hub_path trong tám skill, kể cả <hub_path> và câu hub_path trong workspace_context.yaml.
   blocking: false
   source_profile: arch_audit
   source_profiles: []

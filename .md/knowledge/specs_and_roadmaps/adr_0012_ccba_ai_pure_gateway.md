@@ -9,7 +9,7 @@
 ## Bối Cảnh
 
 `packages/ccba-ai` được định vị là Pure AI Gateway SDK kết nối LiteLLM Server Spark
-(`:8090`, Tailscale `100.83.192.30`, 22 models). Tuy nhiên sau đợt quét kiến trúc
+(`:8090`, Tailscale `<TAILSCALE_GATEWAY_IP>`, 22 models). Tuy nhiên sau đợt quét kiến trúc
 (ADR 0011 → Architecture Scan Report), package có một số vấn đề kỹ thuật cần xử lý.
 
 ---

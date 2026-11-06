@@ -9,7 +9,7 @@
 
 ## 1. Danh Mục Mô Hình Khả Dụng & Phân Phối Tải Trên Spark Gateway (:8090)
 
-Hệ thống AI Gateway LiteLLM trên Server Spark (`100.83.192.30:8090/v1`) phân loại theo các Archetypes chuyên biệt:
+Hệ thống AI Gateway LiteLLM trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090/v1`) phân loại theo các Archetypes chuyên biệt:
 
 ### 1.1. Nhóm Mô hình Local GPU (vLLM trên Server Spark DGX) — ⭐ KHUYẾN NGHỊ MẶC ĐỊNH
 - **`qwen-local-primary`** (backend `Qwen/Qwen2.5-35B-Instruct-FP8` trên vLLM):
@@ -37,11 +37,11 @@ Hệ thống AI Gateway LiteLLM trên Server Spark (`100.83.192.30:8090/v1`) ph�
 ### 2.1. Thiết lập Biến Môi Trường Chuẩn trong `.env`
 ```env
 # Endpoint LiteLLM trên Server Spark qua Tailscale VPN
-AI_GATEWAY_URL=http://<AI_GATEWAY_HOST>:8090/v1
+AI_GATEWAY_URL=http://<TAILSCALE_GATEWAY_IP>:8090/v1
 
 # Key xác thực AI Gateway (Khai báo cả 2 để tương thích SDK và môi trường)
-AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
-AI_GATEWAY_API_KEY=<YOUR_AI_GATEWAY_KEY>
+AI_GATEWAY_KEY=your_ai_gateway_key_here
+AI_GATEWAY_API_KEY=your_ai_gateway_key_here
 
 # Model dùng cho Nightly Auto-Tuner
 CCBA_TUNER_MODEL=qwen-local-primary

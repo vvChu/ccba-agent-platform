@@ -18,7 +18,7 @@ Khảo sát đối kháng chéo (Dual-Pass Adversarial Review) ghi nhận các �
 
 Tuy nhiên, cuộc rà soát đối kháng đã chỉ ra **3 rủi ro kỹ thuật cần đặc biệt lưu ý**:
 - **Vách đá độ trễ (Latency Cliff):** Khi đứt kết nối VPN Tailscale vào Server Spark, thời gian chờ timeout tích lũy qua 3 lần retry có thể lên tới ~247 giây (~4.1 phút) trước khi kích hoạt tầng failover tiếp theo.
-- **Rủi ro lộ sơ đồ mạng nội bộ:** IP CGNAT Tailscale `100.83.192.30:8090` và Ollama `127.0.0.1:11434` đang được gán cứng làm giá trị mặc định trong code.
+- **Rủi ro lộ sơ đồ mạng nội bộ:** IP CGNAT Tailscale `<TAILSCALE_GATEWAY_IP>:8090` và Ollama `127.0.0.1:11434` đang được gán cứng làm giá trị mặc định trong code.
 - **Độ phình của `client.py`:** Tệp tin hiện dài 964 dòng, gánh quá nhiều trách nhiệm (tải env, retry, streaming, sync/async client, routing).
 
 ---
@@ -56,7 +56,7 @@ Hệ thống vận hành theo chuỗi chuyển tiếp một chiều (không có 
 
 | Trục Đánh Giá | Hiện Trạng Thực Tế | Rủi Ro / Điểm Nghẽn | Mức Độ |
 | :--- | :--- | :--- | :---: |
-| **Bảo Mật & Secrets** | Có `PrivacyGuardHook` quét prompt & response theo chuẩn Maskara. | Hardcode IP Tailscale `100.83.192.30` trong `client.py:153`. Fallback về `"mock-key-for-ci"` gây chậm phát hiện lỗi thiếu key. Tự ý duyệt ngược 5 cấp thư mục tìm `.env`. | 🟡 Medium |
+| **Bảo Mật & Secrets** | Có `PrivacyGuardHook` quét prompt & response theo chuẩn Maskara. | Hardcode IP Tailscale `<TAILSCALE_GATEWAY_IP>` trong `client.py:153`. Fallback về `"mock-key-for-ci"` gây chậm phát hiện lỗi thiếu key. Tự ý duyệt ngược 5 cấp thư mục tìm `.env`. | 🟡 Medium |
 | **Độ Trễ Khi Đứt VPN (Latency Cliff)** | Retry exponential backoff (3 lần) phối hợp `timeout=60s`. | Khi đứt mạng Spark, thời gian chờ Tier 1 lên tới **247 giây** trước khi sang Tier 2. Thiếu `connect_timeout` ngắn (fail-fast LAN). | 🔴 High |
 | **Circuit Breaker Coupling** | Ngưỡng `failure_threshold = 3`. | Mỗi lần retry trong cùng 1 request đều tính là 1 failure $\rightarrow$ 1 request duy nhất bị timeout là CircuitBreaker chuyển sang `OPEN`. | 🟡 Medium |
 | **Độ Phức Tạp Mã Nguồn** | `client.py` dài 964 dòng chứa toàn bộ logic. | Vi phạm nguyên tắc Single Responsibility Principle (SRP) và KISS. | 🟡 Medium |
@@ -97,16 +97,16 @@ $$\text{Tổng Điểm} = \text{Giá Trị} \times 3.0 - \text{Độ Phức Tạ
 ## 5. Tài Liệu Tham Chiếu & Citations
 
 1. **Monorepo Package Core:**
-   - Cấu hình Package: [`packages/ccba-ai/pyproject.toml`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/pyproject.toml)
-   - Cửa ngõ Deep Seam: [`packages/ccba-ai/src/ccba_ai/__init__.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/__init__.py)
-   - Core Transport Client: [`packages/ccba-ai/src/ccba_ai/client.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/client.py)
-   - Fallback Matrix: [`packages/ccba-ai/src/ccba_ai/fallback.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/fallback.py)
-   - Circuit Breaker: [`packages/ccba-ai/src/ccba_ai/circuit_breaker.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/circuit_breaker.py)
-   - Testing Mock: [`packages/ccba-ai/src/ccba_ai/mock_provider.py`](file:///d:/GitHubProjects/ccba-agent-platform/packages/ccba-ai/src/ccba_ai/mock_provider.py)
+   - Cấu hình Package: [`packages/ccba-ai/pyproject.toml`](../../../packages/ccba-ai/pyproject.toml)
+   - Cửa ngõ Deep Seam: [`packages/ccba-ai/src/ccba_ai/__init__.py`](../../../packages/ccba-ai/src/ccba_ai/__init__.py)
+   - Core Transport Client: [`packages/ccba-ai/src/ccba_ai/client.py`](../../../packages/ccba-ai/src/ccba_ai/client.py)
+   - Fallback Matrix: [`packages/ccba-ai/src/ccba_ai/fallback.py`](../../../packages/ccba-ai/src/ccba_ai/fallback.py)
+   - Circuit Breaker: [`packages/ccba-ai/src/ccba_ai/circuit_breaker.py`](../../../packages/ccba-ai/src/ccba_ai/circuit_breaker.py)
+   - Testing Mock: [`packages/ccba-ai/src/ccba_ai/mock_provider.py`](../../../packages/ccba-ai/src/ccba_ai/mock_provider.py)
 2. **Quy Định Kiến Trúc & Hiến Pháp:**
-   - [`docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md): Nguyên tắc Thin Seams & Deep Modules.
-   - [`docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md`](file:///d:/GitHubProjects/ccba-agent-platform/docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md): Chuẩn mực ma trận chuyển vùng đa tầng.
-   - [Global User Rules & AI Gateway Integration](file:///C:/Users/chuvu/.gemini/GEMINI.md#2-ai-gateway-integration): Quy tắc triệu hồi `from ccba_ai import ai`.
+   - [`docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md`](../../../docs/adr/0035-polyglot-deep-modules-and-subagent-guardrails.md): Nguyên tắc Thin Seams & Deep Modules.
+   - [`docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md`](../../../docs/adr/0055-ccba-ai-multi-tier-failover-and-mock-provider.md): Chuẩn mực ma trận chuyển vùng đa tầng.
+   - [Global User Rules & AI Gateway Integration](../../../AGENTS.md): Quy tắc triệu hồi `from ccba_ai import ai`.
 
 ---
 

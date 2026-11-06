@@ -68,11 +68,11 @@ Hệ thống triển khai một cơ chế phòng vệ 3 lớp (3-Tier Resilience
 ## Out of Scope
 
 - Can thiệp trực tiếp vào mã nguồn hạ tầng Antigravity Client UI (phần mềm client VS Code bên ngoài) để sửa hiển thị chuỗi ký tự `"User cancelled agent execution"`.
-- Thay đổi cấu hình phần cứng hoặc restart policy của Server Spark Gateway (100.83.192.30).
+- Thay đổi cấu hình phần cứng hoặc restart policy của Server Spark Gateway (<TAILSCALE_GATEWAY_IP>).
 
 ---
 
 ## Further Notes
 
-- Kế hoạch triển khai mã nguồn cụ thể cho Ticket 3 đã được lập sẵn tại [implementation_plan.md](file:///C:/Users/chuvu/.gemini/antigravity/brain/37699796-52bb-464f-be93-af5d82403d41/implementation_plan.md).
+- Kế hoạch triển khai mã nguồn cụ thể cho Ticket 3 đã được lập sẵn trong `implementation_plan.md`.
 - Tài liệu Đặc tả Kỹ thuật này được duy trì công khai tại `.md/knowledge/specs/spec-wayfinder-cancelled-error.md` để phục vụ đối soát và phân rã ticket trong các chu trình phát triển tiếp theo.

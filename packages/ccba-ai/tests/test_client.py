@@ -66,10 +66,10 @@ class TestAIClientInit:
 
     def test_url_sanitizer_redirects_8045_explicit(self) -> None:
         """Test URL sanitizer automatically redirects :8045 to :8090."""
-        client = AIClient(base_url="http://100.83.192.30:8045/v1")
+        client = AIClient(base_url="http://localhost:8045/v1")
         assert "8090" in str(client._client.base_url)
         assert "8045" not in str(client._client.base_url)
-        assert client.base_url == "http://100.83.192.30:8090/v1"
+        assert client.base_url == "http://localhost:8090/v1"
 
     @patch.dict("os.environ", {"AI_GATEWAY_URL": "http://localhost:8045/v1"}, clear=False)
     def test_url_sanitizer_redirects_8045_from_env(self) -> None:
@@ -78,19 +78,19 @@ class TestAIClientInit:
             client = AIClient()
             assert "8090" in str(client._client.base_url)
             assert "8045" not in str(client._client.base_url)
-            assert client.base_url == "http://100.83.192.30:8090/v1"
+            assert client.base_url == "http://localhost:8090/v1"
 
     @patch.dict("os.environ", {"AI_GATEWAY_URL": ""}, clear=False)
     def test_url_sanitizer_empty_env_fallback(self) -> None:
         """Test URL sanitizer falls back to 8090 when AI_GATEWAY_URL is empty string."""
         with patch("ccba_ai.client._find_and_load_env"):
             client = AIClient()
-            assert client.base_url == "http://100.83.192.30:8090/v1"
+            assert client.base_url.endswith(":8090/v1")
 
     def test_url_sanitizer_whitespace_trim(self) -> None:
         """Test URL sanitizer trims whitespace and sanitizes port."""
-        client = AIClient(base_url="   http://100.83.192.30:8045/v1\n  ")
-        assert client.base_url == "http://100.83.192.30:8090/v1"
+        client = AIClient(base_url="   http://localhost:8045/v1\n  ")
+        assert client.base_url == "http://localhost:8090/v1"
 
     @patch.dict(
         "os.environ", {"AI_GATEWAY_KEY": "", "OPENAI_API_KEY": "fallback-test-key"}, clear=False

@@ -1,6 +1,6 @@
 # Báo cáo Đánh giá Model `qwen-local-primary`
 
-Dựa trên các bài benchmark thông qua thư viện `ccba-ai` kết nối tới AI Gateway Server (`http://100.83.192.30:8090/v1`), dưới đây là báo cáo đánh giá chi tiết về hiệu năng, tính năng và cách khai thác tối ưu nhất cho model `qwen-local-primary`.
+Dựa trên các bài benchmark thông qua thư viện `ccba-ai` kết nối tới AI Gateway Server (`http://<TAILSCALE_GATEWAY_IP>:8090/v1`), dưới đây là báo cáo đánh giá chi tiết về hiệu năng, tính năng và cách khai thác tối ưu nhất cho model `qwen-local-primary`.
 
 ---
 

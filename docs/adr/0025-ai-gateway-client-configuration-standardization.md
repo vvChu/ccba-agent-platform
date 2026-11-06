@@ -9,7 +9,7 @@ During the document review and grilling process (`/ccba-grill-with-docs`), incon
 ## Decisions
 
 1. **AI Gateway Endpoint Standardization**:
-   - All AI integrations MUST use `AI_GATEWAY_URL=http://<AI_GATEWAY_HOST>:8090/v1` and `AI_GATEWAY_KEY`.
+   - All AI integrations MUST use `AI_GATEWAY_URL=http://<TAILSCALE_GATEWAY_IP>:8090/v1` and `AI_GATEWAY_KEY`.
    - Direct bypass to vLLM ports (e.g., port 8004) is prohibited in application layer code; all calls must flow through the central LiteLLM AI Gateway for auditing, fallback, and rate limiting.
 
 2. **Model Alias Refactoring**:

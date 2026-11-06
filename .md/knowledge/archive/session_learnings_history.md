@@ -299,7 +299,7 @@ Mọi văn bản trước khi nghiệm thu vào kho tri thức bắt buộc ph�
 
 - **Core Pattern P18.4 — AI Gateway Spark Server Auth & Fast-Inference Model Gating:**
   - **Vấn đề:** Khi chạy Swarm Map-Reduce với nhiều workers song song, việc gọi trực tiếp các mô hình cục bộ nặng có thể dẫn đến thời gian chờ warmup lâu (60-120s), gây nghẽn hàng đợi kiểm định.
-  - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`) với header xác thực `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
+  - **Giải pháp:** Kết nối tới LiteLLM Gateway trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`) với header xác thực `Authorization: Bearer <YOUR_AI_GATEWAY_KEY>`. Định tuyến linh hoạt: sử dụng `gemini-3.7-flash` làm mô hình phản hồi nhanh (< 1s cho các bước map-reduce trinh sát tài liệu) và dùng `qwen-local-primary` sau khi đã hoàn tất warmup GPU.
 ---
 
 ## 19. Spoke Synchronization Hardening, Decoupled Telemetry Heartbeat & Spoke Leakage Guard (Issue #268, PR #269)
@@ -899,7 +899,7 @@ Phiên triển khai đặc tả Danh mục Cửa Một Chiều (One-Way Door Man
 ### Context & Implementation Summary
 Phiên xử lý Issue #530 (PR #534 — `c9313552`) tích hợp bộ kiểm tra chuỗi model thô và địa chỉ IPv4 cố định vào kịch bản vệ sinh trung tâm `scripts/spoke/check_spoke_cleanliness.py`:
 - **Active Guardrail Wiring over Dead Helpers (Phương án A2)**: Tại Spoke `dgx-spark-toolkit`, hai hàm `check_raw_model_leakage` và `check_raw_ip_leakage` trước đó chỉ được định nghĩa độc lập để phục vụ unit test mà chưa được nối vào `scan_spoke_cleanliness()`, đồng thời có nguy cơ bị ghi đè mỗi khi chạy `sync_spoke.py --apply` (do `TestGuardrailCopier` trong `sdk_inspector.py` chép đè từ `scripts/spoke/check_spoke_cleanliness.py`). PR #534 tích hợp cả hai hàm vào Hub SSOT và nối trực tiếp vào `scan_spoke_cleanliness()` (`_append_code_violations`, `_append_machine_and_ip_violations`), cưỡng chế `Parameter Externalization & Dynamic Scale Invariant` (Layer 1 Constitution) trên toàn bộ Spokes.
-- **Single-Line Docstring State Preservation (`COND-02`)**: Trong `check_raw_ip_leakage`, trạng thái `was_in_docstring = in_docstring` được ghi nhận trước khi đảo cờ `"""` / `'''` kết hợp kiểm tra `triple_q in stripped`, đảm bảo các docstring 1 dòng (`"""Example IP: 100.83.192.30"""`) được bỏ qua chính xác thay vì chỉ bỏ qua docstring nhiều dòng.
+- **Single-Line Docstring State Preservation (`COND-02`)**: Trong `check_raw_ip_leakage`, trạng thái `was_in_docstring = in_docstring` được ghi nhận trước khi đảo cờ `"""` / `'''` kết hợp kiểm tra `triple_q in stripped`, đảm bảo các docstring 1 dòng (`"""Example IP: <TAILSCALE_GATEWAY_IP>"""`) được bỏ qua chính xác thay vì chỉ bỏ qua docstring nhiều dòng.
 - **AST Function Length Decomposition ($\le 50$ LOC)**: Tách `_hub_catalog_from_workspace_ctx`, `_append_code_violations`, và `_append_machine_and_ip_violations` để toàn bộ hàm trong `check_spoke_cleanliness.py` đạt $\le 50$ LOC (`peer-gate` 8/8 PASS).
 
 ### Key Architectural Invariants & Learned Patterns

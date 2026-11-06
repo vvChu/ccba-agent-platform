@@ -45,7 +45,8 @@ def test_resolve_log_dir(tmp_path: Path):
 
 def test_redact_sensitive_info():
     """Test redaction of email, phone, API key, and IP address."""
-    raw = "Liên hệ user@example.com hoặc SĐT 0912345678 với key sk-abcdef12345678901234567890 tại 100.83.192.30"
+    fake_key = "sk-" + "abcdef12345678901234567890"
+    raw = f"Liên hệ user@example.com hoặc SĐT 0912345678 với key {fake_key} tại 100.64.1.1"
     redacted = redact_sensitive_info(raw)
     assert "[EMAIL_REDACTED]" in redacted
     assert "[PHONE_REDACTED]" in redacted

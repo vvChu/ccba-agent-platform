@@ -5,7 +5,7 @@ Inspects Python source code for anti-pattern hardcoded parameters:
 1. Raw LLM model names ('gemini-*', 'gpt-*', 'claude-*', 'llama-*', etc.)
    - Must use `ccba_ai.routing.ModelArchetype` or `choose_model()`.
    - Exemption: `# ccba:allow-raw-model`.
-2. Hardcoded network IP addresses (e.g., '100.83.192.30')
+2. Hardcoded network IP addresses (e.g., '100.64.1.1')
    - Must read from environment variables (e.g., `AI_GATEWAY_URL`).
    - Exemption: `# ccba:allow-raw-ip`.
 3. Hardcoded machine drive paths ('C:\\...', 'D:\\...')

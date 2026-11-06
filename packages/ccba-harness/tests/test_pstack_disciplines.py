@@ -84,9 +84,9 @@ def test_hub_import_depth_enforcement():
 def test_secret_ip_cleanliness():
     """Verify Tailscale IPs without allowlist comment are blocked."""
     clean_code = (
-        "ip = os.getenv('NODE_IP', '127.0.0.1')\nallow_ip = '100.83.192.30' # ccba:allow-raw-ip\n"
+        "ip = os.getenv('NODE_IP', '127.0.0.1')\nallow_ip = '100.64.1.1' # ccba:allow-raw-ip\n"
     )
-    leak_code = "ip = '100.83.192.30'\n"
+    leak_code = "ip = '100.64.1.1'\n"
 
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tf1:
         tf1.write(clean_code)
