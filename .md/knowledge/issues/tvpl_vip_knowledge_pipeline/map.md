@@ -14,9 +14,7 @@ Xây dựng hoàn chỉnh Hệ thống Pipeline Thu thập & Cấu trúc hóa Tr
 
 ## 📌 2. GHI CHÚ (NOTES)
 
-- **Bảo mật Session:** Credentials **chỉ** nạp từ môi trường / vault — never commit real values:
-  - `TVPL_USERNAME=<from-env>`
-  - `TVPL_PASSWORD=<from-env>`
+- **Bảo mật Session:** Credentials **chỉ** nạp từ môi trường / vault — never commit real values. Required env vars (values never in git): `TVPL_USERNAME`, `TVPL_PASSWORD`.
 - **Kho Cookie:** Local-only encrypted/session store at `.md/data/chrome_vip_profile/cookies.json` (gitignored; do not commit Chrome profiles).
 - **Nhật ký:** Mọi sự kiện đăng nhập, gia hạn session và cào văn bản ghi vết tại `.md/data/tvpl_session_audit.log` (gitignored via `*.log`).
 - **Human follow-up:** If credentials or cookies were ever committed, rotate the TVPL VIP password and invalidate sessions immediately; scrub git history after tree cleanup.
