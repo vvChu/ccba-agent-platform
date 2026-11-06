@@ -163,3 +163,10 @@ specs/modules/
 !.md/peer_exchange/.gitkeep
 .skill_versions/
 **/.skill_versions/
+
+# === Security: local sessions & browser profiles (never commit) ===
+**/chrome_vip_profile/
+!**/.md/data/chrome_vip_profile/README.md
+**/cookies.json
+.md/data/tvpl_session_audit.log
+**/tvpl_session_audit.log
