@@ -188,13 +188,13 @@ class PeerVerdictBlock(BaseModel):
     def _normalize_effort(cls, v: Any) -> Any:
         if not isinstance(v, str) or not v.strip():
             return None
-        tokens = [t for t in re.split(r"[\s—–\-:/,;()]+", v.strip().upper()) if t]
-        if not tokens:
+        parts = [t for t in re.split(r"[\s—–\-:/,;()]+", v.strip().upper()) if t]
+        if not parts:
             return None
-        token = tokens[0]
-        if token in ("XS", "S", "M", "L", "XL"):
-            return token
-        return _EFFORT_ALIASES.get(token)
+        head = parts[0]
+        if head in ("XS", "S", "M", "L", "XL"):
+            return head
+        return _EFFORT_ALIASES.get(head)
 
     @field_validator("verdict", mode="before")
     @classmethod
