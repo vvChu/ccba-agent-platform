@@ -23,7 +23,9 @@ from scripts.spoke.upstream_evaluator import (
     call_ai_evaluation,
     check_is_duplicate,
     check_repo_license,
+    format_vitality_badge,
     generate_xia_command,
+    get_repo_vitality_metrics,
     load_eval_cache,
     load_upstream_sources,
     resolve_upstream_resources,
@@ -668,3 +670,127 @@ def test_evaluate_repo_diff_handles_deleted_file_gracefully(tmp_path: Path) -> N
             repo_type="diff_repo",
             remote_url="https://github.com/diff/repo",
         )
+
+
+def test_get_repo_vitality_metrics_full_and_stale(tmp_path: Path) -> None:
+    """Verify full clone vitality uses origin/<branch>, counts commits, and flags stale >= 120d."""
+    from datetime import datetime, timezone
+    from unittest.mock import MagicMock
+
+    repo_dir = tmp_path / "stale_repo"
+    (repo_dir / ".git").mkdir(parents=True)
+    stale_epoch = str(int(datetime.now(timezone.utc).timestamp()) - (141 * 86400))
+
+    def mock_run(cmd: list[str], **kwargs: object) -> MagicMock:
+        res = MagicMock(returncode=0, stdout="")
+        if "--verify" in cmd and "origin/main" in cmd:
+            res.stdout = "abc1234\n"
+        elif "--format=%ct" in cmd:
+            assert "origin/main" in cmd
+            res.stdout = f"{stale_epoch}\n"
+        elif "--is-shallow-repository" in cmd:
+            res.stdout = "false\n"
+        elif "--count" in cmd:
+            res.stdout = "2451\n"
+        return res
+
+    with patch("subprocess.run", side_effect=mock_run):
+        metrics = get_repo_vitality_metrics(repo_dir, branch="main", stale_days=120)
+        assert metrics["stale"] is True
+        assert metrics["age_days"] == 141
+        assert metrics["commits_count"] == 2451
+        assert metrics["ref"] == "origin/main"
+        badge = format_vitality_badge(metrics, local_only=True)
+        assert "STALE_UPSTREAM" in badge
+        assert "2451 commits" in badge
+        assert "local ref origin/main" in badge
+
+
+def test_get_repo_vitality_metrics_shallow_and_future_skew(tmp_path: Path) -> None:
+    """Verify shallow clone sets commits_count=None and future timestamp clamps age_days to 0."""
+    from datetime import datetime, timezone
+    from unittest.mock import MagicMock
+
+    repo_dir = tmp_path / "shallow_repo"
+    (repo_dir / ".git").mkdir(parents=True)
+    future_epoch = str(int(datetime.now(timezone.utc).timestamp()) + 7200)
+
+    def mock_run(cmd: list[str], **kwargs: object) -> MagicMock:
+        res = MagicMock(returncode=0, stdout="")
+        if "--verify" in cmd:
+            raise OSError("missing origin ref")
+        if "--format=%ct" in cmd:
+            res.stdout = f"{future_epoch}\n"
+        elif "--is-shallow-repository" in cmd:
+            res.stdout = "true\n"
+        return res
+
+    with patch("subprocess.run", side_effect=mock_run):
+        metrics = get_repo_vitality_metrics(repo_dir, branch="main", stale_days=120)
+        assert metrics["stale"] is False
+        assert metrics["age_days"] == 0
+        assert metrics["commits_count"] is None
+        assert metrics["ref"] == "HEAD"
+        assert "shallow clone" in format_vitality_badge(metrics)
+
+
+def test_get_repo_vitality_metrics_missing_or_empty_repo(tmp_path: Path) -> None:
+    """Verify missing .git or empty repository returns stale=False with error sentinel."""
+    no_git_dir = tmp_path / "no_git"
+    no_git_dir.mkdir()
+    m1 = get_repo_vitality_metrics(no_git_dir)
+    assert m1["stale"] is False
+    assert m1["error"] == "no_git_history"
+    assert "VITALITY_UNKNOWN" in format_vitality_badge(m1)
+
+
+def test_check_and_evaluate_single_emits_vitality_on_up_to_date_and_offline(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify COND-01: vitality badge prints on up-to-date branch and when remote fails."""
+    repo_dir = tmp_path / "repo"
+    (repo_dir / ".git").mkdir(parents=True)
+    sha_file = tmp_path / "sha.txt"
+    sha_file.write_text("deadbeef12345678", encoding="utf-8")
+    cfg = {
+        "name": "test-repo",
+        "type": "engineer",
+        "local_path": repo_dir,
+        "remote_url": "https://github.com/test/repo",
+        "branch": "main",
+        "sha_file": sha_file,
+        "stale_upstream_days": 120,
+    }
+    fake_metrics = {
+        "commits_count": 2451,
+        "last_commit_date": "2026-06-18",
+        "age_days": 141,
+        "stale": True,
+        "ref": "origin/main",
+        "error": None,
+    }
+    evaluator = UpstreamEvaluator(configs=[cfg])
+    with (
+        patch.object(evaluator, "get_remote_sha", return_value="deadbeef12345678"),
+        patch.object(evaluator, "ensure_local_repo", return_value=True),
+        patch(
+            "scripts.spoke.upstream_evaluator.get_repo_vitality_metrics",
+            return_value=fake_metrics,
+        ),
+    ):
+        evaluator.check_and_evaluate_single(cfg, check_only=True)
+    out = capsys.readouterr().out
+    assert "is up-to-date" in out
+    assert "STALE_UPSTREAM" in out
+
+    with (
+        patch.object(evaluator, "get_remote_sha", return_value=""),
+        patch(
+            "scripts.spoke.upstream_evaluator.get_repo_vitality_metrics",
+            return_value=fake_metrics,
+        ),
+    ):
+        evaluator.check_and_evaluate_single(cfg, check_only=True)
+    out_offline = capsys.readouterr().out
+    assert "Local Vitality:" in out_offline
+    assert "STALE_UPSTREAM" in out_offline

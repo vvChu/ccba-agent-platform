@@ -20,7 +20,7 @@ import stat
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +40,7 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[2]
 if str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src") not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src"))
 
-from ccba_harness.gpi import (
+from ccba_harness.gpi import (  # noqa: E402
     DecisionRequest,
     GPIMetrics,
     evaluate_two_stage_decision,
@@ -51,6 +51,7 @@ RECOMMENDATIONS_FILE = PLATFORM_ROOT / ".md" / "knowledge" / "port_recommendatio
 CACHE_FILE = PLATFORM_ROOT / ".md" / "scratch" / "upstream_eval_cache.json"
 LOCK_FILE = PLATFORM_ROOT / ".md" / "scratch" / "upstream_sync.lock"
 LOCK_TIMEOUT = 300  # 5 minutes KISS mutex timeout
+DEFAULT_STALE_UPSTREAM_DAYS = 120
 
 DEFAULT_REPOS_CONFIG = [
     {
@@ -61,6 +62,7 @@ DEFAULT_REPOS_CONFIG = [
         "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt",
         "description": "ClaudeKit Engineering Skills",
+        "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
     },
     {
         "name": "claudekit-marketing",
@@ -70,6 +72,7 @@ DEFAULT_REPOS_CONFIG = [
         "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt",
         "description": "ClaudeKit Marketing Skills",
+        "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
     },
     {
         "name": "mattpocock-skills",
@@ -79,6 +82,7 @@ DEFAULT_REPOS_CONFIG = [
         "branch": "main",
         "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt",
         "description": "Matt Pocock Skills Repository",
+        "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
     },
 ]
 
@@ -224,24 +228,28 @@ def save_eval_cache(cache: dict[str, Any]) -> None:
         print(f"[Evaluator] Warning: Could not save eval cache: {e}")
 
 
+def _parse_int_or_default(val: Any, default: int) -> int:
+    """Safely parse positive integer from YAML value or return default."""
+    return int(val) if isinstance(val, (int, str)) and str(val).isdigit() else default
+
+
 def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any]]:
     """Load upstream repositories configuration from YAML with fallback to defaults."""
     target_file = config_file or SOURCES_CONFIG_FILE
     if not target_file.exists():
         return DEFAULT_REPOS_CONFIG
-
     try:
-        content = target_file.read_text(encoding="utf-8")
-        data = yaml.safe_load(content)
+        data = yaml.safe_load(target_file.read_text(encoding="utf-8"))
         if not isinstance(data, dict) or "sources" not in data:
             return DEFAULT_REPOS_CONFIG
-
-        LEGACY_SHA_NAMES: dict[str, str] = {
+        legacy_sha = {
             "claudekit-engineer": "claudekit_last_sha.txt",
             "claudekit-marketing": "claudekit_marketing_last_sha.txt",
             "mattpocock-skills": "mattpocock_last_sha.txt",
         }
-
+        root_stale = _parse_int_or_default(
+            data.get("stale_upstream_days"), DEFAULT_STALE_UPSTREAM_DAYS
+        )
         sources: list[dict[str, Any]] = []
         for s in data.get("sources", []):
             if not isinstance(s, dict) or not s.get("enabled", True):
@@ -249,26 +257,22 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
             name = str(s.get("name", s.get("type", "unknown"))).strip()
             repo_type = str(s.get("type", name)).strip()
             remote_url = str(s.get("remote_url", "")).strip()
-            branch = str(s.get("branch", "main")).strip()
-            description = str(s.get("description", "")).strip()
-
             if not remote_url:
                 print(f"[Evaluator] Warning: Skipping source '{name}' because remote_url is empty.")
                 continue
-
-            sha_filename = LEGACY_SHA_NAMES.get(
-                name, LEGACY_SHA_NAMES.get(repo_type, f"{name}_last_sha.txt")
-            )
-
+            sha_fn = legacy_sha.get(name, legacy_sha.get(repo_type, f"{name}_last_sha.txt"))
             sources.append(
                 {
                     "name": name,
                     "type": repo_type,
                     "local_path": PLATFORM_ROOT / ".md" / "scratch" / "repos" / name,
                     "remote_url": remote_url,
-                    "branch": branch,
-                    "sha_file": PLATFORM_ROOT / ".md" / "scratch" / sha_filename,
-                    "description": description,
+                    "branch": str(s.get("branch", "main")).strip(),
+                    "sha_file": PLATFORM_ROOT / ".md" / "scratch" / sha_fn,
+                    "description": str(s.get("description", "")).strip(),
+                    "stale_upstream_days": _parse_int_or_default(
+                        s.get("stale_upstream_days"), root_stale
+                    ),
                 }
             )
         return sources if sources else DEFAULT_REPOS_CONFIG
@@ -315,6 +319,58 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
                 pass
 
     return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
+
+
+def _run_git_text(repo_path: Path, args: list[str], timeout: int = 10) -> str | None:
+    """Run a read-only git command with timeout and return stripped stdout or None on error."""
+    if not (repo_path / ".git").exists():
+        return None
+    try:
+        res = subprocess.run(
+            ["git", *args],
+            cwd=str(repo_path),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=True,
+        )
+        return res.stdout.strip()
+    except (subprocess.SubprocessError, OSError):
+        return None
+
+
+def get_repo_vitality_metrics(
+    repo_path: Path, branch: str = "main", stale_days: int = DEFAULT_STALE_UPSTREAM_DAYS
+) -> dict[str, Any]:
+    """Measure local git vitality metrics (tip epoch, age_days, commits_count, stale flag)."""
+    origin_ref = f"origin/{branch}"
+    ref = origin_ref if _run_git_text(repo_path, ["rev-parse", "--verify", origin_ref]) else "HEAD"
+    ts_str = _run_git_text(repo_path, ["log", "-1", "--format=%ct", ref])
+    if not ts_str or not ts_str.lstrip("-").isdigit():
+        return {"commits_count": None, "last_commit_date": None, "age_days": None, "stale": False, "ref": ref, "error": "no_git_history"}  # fmt: skip
+    epoch = int(ts_str)
+    age_days = max(0, (int(datetime.now(timezone.utc).timestamp()) - epoch) // 86400)
+    commit_dt = datetime.fromtimestamp(epoch, tz=timezone.utc).strftime("%Y-%m-%d")
+    is_shallow = _run_git_text(repo_path, ["rev-parse", "--is-shallow-repository"]) == "true"
+    cnt_str = None if is_shallow else _run_git_text(repo_path, ["rev-list", "--count", ref])
+    commits_count = int(cnt_str) if cnt_str and cnt_str.isdigit() else None
+    return {"commits_count": commits_count, "last_commit_date": commit_dt, "age_days": age_days, "stale": age_days >= stale_days, "ref": ref, "error": None}  # fmt: skip
+
+
+def format_vitality_badge(metrics: dict[str, Any], local_only: bool = False) -> str:
+    """Format concise vitality badge string for console output and markdown report."""
+    if metrics.get("error"):
+        return "⚪ VITALITY_UNKNOWN (no local git history)"
+    status = "⚠️ STALE_UPSTREAM" if metrics.get("stale") else "🟢 FRESH"
+    cnt = (
+        f"{metrics['commits_count']} commits"
+        if metrics.get("commits_count") is not None
+        else "shallow clone"
+    )
+    scope = f", local ref {metrics.get('ref')}" if local_only else ""
+    return f"{status} (last commit: {metrics['last_commit_date']}, {metrics['age_days']}d ago, {cnt}{scope})"
 
 
 def get_existing_elements() -> tuple[list[str], list[str]]:
@@ -816,6 +872,7 @@ def append_recommendation(
     result: dict[str, Any],
     remote_url: str = "",
     license_desc: str = "MIT License",
+    vitality_badge: str = "",
 ) -> None:
     """Write recommendation to port_recommendations.md using Parse-Protection markers."""
     try:
@@ -877,8 +934,9 @@ def append_recommendation(
         if dec_res and dec_res.get("gpi_score") is not None:
             gpi_info = f" (GPI: {dec_res['gpi_score']:.2f})"
 
+        vitality_suffix = f" — {vitality_badge}" if vitality_badge else ""
         body_md = f"""### {color} [{status_text}] Skill: `{skill_name}` (Score: {result.get("score", 0)}/100) — {tier}{gpi_info}
-*   **Kho chứa nguồn**: `{repo_type}` ({remote_url})
+*   **Kho chứa nguồn**: `{repo_type}` ({remote_url}){vitality_suffix}
 *   **Bản quyền**: `{license_desc}`
 *   **Phân tầng đề xuất (ADR-0057)**: `{tier}` (Bundle: `{bundle}`, `disable-model-invocation: {str(disable_inv).lower()}`)
 *   **Đánh giá tương thích Python**: {py_compat}
@@ -913,6 +971,7 @@ class UpstreamEvaluator:
 
     def __init__(self, configs: list[dict[str, Any]] | None = None):
         self.configs = configs if configs is not None else load_upstream_sources()
+        self._last_vitality_badge: str = ""
 
     def ensure_local_repo(self, config: dict[str, Any], fast: bool = False) -> bool:
         """Ensure local repo is cloned and updated with self-healing index.lock and clean-clone fallback."""
@@ -1041,6 +1100,7 @@ class UpstreamEvaluator:
         local_repo_ref: str = "",
         limit: int | None = None,
         fast: bool = False,
+        vitality_badge: str = "",
     ) -> None:
         """Run git diff and evaluate modified or new skills under ADR-0057 & RES-2026-ARCH-001."""
         if not repo_path.exists():
@@ -1147,6 +1207,7 @@ class UpstreamEvaluator:
                         result=result,
                         remote_url=remote_url,
                         license_desc=license_desc,
+                        vitality_badge=vitality_badge or self._last_vitality_badge,
                     )
                     evaluated += 1
                     break
@@ -1160,30 +1221,25 @@ class UpstreamEvaluator:
         check_only: bool = False,
         limit: int | None = None,
         fast: bool = False,
+        vitality_badge: str = "",
     ) -> None:
         """Perform full scan of all upstream resources in repo."""
         local_path: Path = config["local_path"]
         repo_type: str = config["type"]
         remote_url: str = config["remote_url"]
         local_repo_ref = f".md/scratch/repos/{config['name']}"
-
         resources = resolve_upstream_resources(local_path, repo_type=repo_type)
         print(f"  - Found {len(resources)} total upstream resources in {repo_type}.")
-
         if check_only:
             print("  - [Check-Only Mode] Discovered resources:")
-            items = resources[:limit] if limit is not None else resources
-            for r in items:
+            for r in resources[:limit] if limit is not None else resources:
                 print(f"    * [{r['type']}] {r['name']} ({r['relative_path']})")
             return
-
         license_type, license_desc = check_repo_license(local_path)
-        evaluated_count = 0
-        for r in resources:
+        for evaluated_count, r in enumerate(resources):
             if limit is not None and evaluated_count >= limit:
                 print(f"  - Reached limit of {limit} evaluations for {repo_type}.")
                 break
-
             result = call_ai_evaluation(
                 repo_type=repo_type,
                 skill_name=r["name"],
@@ -1200,8 +1256,8 @@ class UpstreamEvaluator:
                 result=result,
                 remote_url=remote_url,
                 license_desc=license_desc,
+                vitality_badge=vitality_badge or self._last_vitality_badge,
             )
-            evaluated_count += 1
 
     def check_and_evaluate_single(
         self,
@@ -1217,6 +1273,8 @@ class UpstreamEvaluator:
         remote_url: str = config["remote_url"]
         sha_file: Path = config["sha_file"]
         local_repo_ref = f".md/scratch/repos/{config['name']}"
+        branch = str(config.get("branch", "main"))
+        stale_days = int(config.get("stale_upstream_days", DEFAULT_STALE_UPSTREAM_DAYS))
 
         print(f"[Upstream Check] Checking {repo_type} ({remote_url})...")
 
@@ -1242,9 +1300,12 @@ class UpstreamEvaluator:
                 except Exception:
                     remote_sha = "HEAD"
         else:
-            remote_sha = self.get_remote_sha(remote_url, branch=config.get("branch"))
+            remote_sha = self.get_remote_sha(remote_url, branch=branch)
             if not remote_sha:
                 print(f"[Upstream Check] Warning: Could not connect to remote {repo_type}.")
+                if local_path.exists():
+                    vitality = get_repo_vitality_metrics(local_path, branch, stale_days)
+                    print(f"  - Local Vitality: {format_vitality_badge(vitality, local_only=True)}")
                 return
 
             success = self.ensure_local_repo(config, fast=fast)
@@ -1253,6 +1314,10 @@ class UpstreamEvaluator:
                 return
 
         local_sha = self.get_local_sha(config)
+        vitality = get_repo_vitality_metrics(local_path, branch, stale_days)
+        vitality_badge = format_vitality_badge(vitality, local_only=fast)
+        self._last_vitality_badge = vitality_badge
+        print(f"  - Vitality: {vitality_badge}")
 
         # 1. Zero-Scan Init Trap: When local_sha is empty, do initial scan rather than returning early
         if not local_sha:
@@ -1318,7 +1383,7 @@ class UpstreamEvaluator:
             sha_file.write_text(remote_sha, encoding="utf-8")
             print(f"[Upstream Check] Successfully processed updates for {repo_type}.\n")
         else:
-            print(f"[Upstream Check] {repo_type} is up-to-date.")
+            print(f"[Upstream Check] {repo_type} is up-to-date. ({vitality_badge})")
 
     def sync_and_evaluate(
         self,

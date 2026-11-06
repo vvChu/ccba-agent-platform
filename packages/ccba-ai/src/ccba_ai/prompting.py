@@ -102,75 +102,51 @@ def parse_xml_tags(text: str, tags: list[str] | None = None) -> dict[str, str]:
     return extracted
 
 
+async def _run_optimization_step(
+    iteration: int,
+    current_feedback: str | None,
+    generator_fn: Callable[[str | None], Awaitable[str] | str],
+    evaluator_fn: Callable[[str], Awaitable[tuple[float, str]] | tuple[float, str]],
+) -> OptimizationStep:
+    """Execute one generate-and-evaluate iteration and return an OptimizationStep."""
+    raw_draft = generator_fn(current_feedback)
+    draft = await raw_draft if isinstance(raw_draft, Awaitable) else str(raw_draft)
+
+    raw_eval = evaluator_fn(draft)
+    score, feedback = await raw_eval if isinstance(raw_eval, Awaitable) else raw_eval
+    return OptimizationStep(iteration=iteration, draft=draft, score=score, feedback=feedback)
+
+
 async def evaluator_optimizer_loop_async(
     generator_fn: Callable[[str | None], Awaitable[str] | str],
     evaluator_fn: Callable[[str], Awaitable[tuple[float, str]] | tuple[float, str]],
     max_iterations: int = 3,
     pass_score: float = 85.0,
 ) -> OptimizationResult:
-    """Executes an asynchronous Evaluator-Optimizer refinement loop.
-
-    Workflow:
-    1. Generator produces an initial draft: generator_fn(feedback=None)
-    2. Evaluator assesses draft: score, feedback = evaluator_fn(draft)
-    3. If score >= pass_score: Loop terminates with success.
-    4. If score < pass_score: feedback is sent into next iteration: generator_fn(feedback=feedback)
-    5. Repeats up to max_iterations (default: 3).
-
-    Args:
-        generator_fn: Callable receiving (feedback: str | None) and returning draft string.
-        evaluator_fn: Callable receiving (draft: str) and returning (score: float, feedback: str).
-        max_iterations: Maximum refinement iterations before stopping (default: 3).
-        pass_score: Target score threshold between 0.0 and 100.0 (default: 85.0).
-
-    Returns:
-        OptimizationResult with final output, score, and step history.
-    """
+    """Executes an asynchronous Evaluator-Optimizer refinement loop."""
     history: list[OptimizationStep] = []
     current_feedback: str | None = None
     best_draft = ""
     best_score = -1.0
 
     for iteration in range(1, max_iterations + 1):
-        # 1. Generate / Refine draft
-        raw_draft = generator_fn(current_feedback)
-        if isinstance(raw_draft, Awaitable):
-            draft = await raw_draft
-        else:
-            draft = str(raw_draft)
-
-        # 2. Evaluate draft
-        raw_eval = evaluator_fn(draft)
-        if isinstance(raw_eval, Awaitable):
-            score, feedback = await raw_eval
-        else:
-            score, feedback = raw_eval
-
-        step = OptimizationStep(
-            iteration=iteration,
-            draft=draft,
-            score=score,
-            feedback=feedback,
-        )
+        step = await _run_optimization_step(iteration, current_feedback, generator_fn, evaluator_fn)
         history.append(step)
 
-        if score > best_score:
-            best_score = score
-            best_draft = draft
+        if step.score > best_score:
+            best_score = step.score
+            best_draft = step.draft
 
-        # 3. Check pass condition
-        if score >= pass_score:
+        if step.score >= pass_score:
             return OptimizationResult(
-                final_output=draft,
+                final_output=step.draft,
                 iterations=iteration,
-                score=score,
+                score=step.score,
                 passed=True,
                 history=history,
             )
+        current_feedback = step.feedback
 
-        current_feedback = feedback
-
-    # Max iterations reached without meeting pass_score
     return OptimizationResult(
         final_output=best_draft if best_draft else (history[-1].draft if history else ""),
         iterations=len(history),

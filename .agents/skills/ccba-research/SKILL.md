@@ -4,7 +4,7 @@ description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc ph
   các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
   Dual-Agent Adversarial).
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 user-invocable: true
 command: /ccba-research
@@ -87,6 +87,18 @@ Sử dụng `invoke_subagent` khởi chạy đồng thời **2 subagents độc 
 2. **Subagent B (`Risk & Boundary Challenger`):**
    - Nhiệm vụ: Rà soát rủi ro bảo mật (Maskara), vi phạm ranh giới Deep Seams (ADR 0035), breaking changes, và các trường hợp biên (edge cases).
    - Budget: Max 5 tool calls.
+
+#### Trường Hợp C — Nghiên Cứu & So Sánh Ứng Dụng Mã Nguồn Mở (OSS Vitality & 4-Quadrant Adoption Router)
+Khi chủ đề nghiên cứu liên quan đến việc đánh giá, lựa chọn hoặc ứng dụng thư viện/công cụ mã nguồn mở trên GitHub:
+1. **Thu thập Live Facts (Cấm dùng trí nhớ huấn luyện LLM):**
+   - Bắt buộc đo trực tiếp 3 chỉ số định lượng qua `gh api repos/{owner}/{repo}` (`stargazers_count`, `pushed_at`, `archived`, `default_branch`, `license.spdx_id`) và `gh api repos/{owner}/{repo}/commits/{default_branch}` (`commit.committer.date`), hoặc kiểm tra lịch sử git cục bộ (`stale_upstream_days: 120` trong `.md/knowledge/upstream_sources.yaml`).
+2. **Hiệu chỉnh theo Đặc thù Ngành (Domain Calibration):**
+   - Không áp cứng ngưỡng `1.000–1.500` sao hay `1.700–2.500` commits cho các công cụ chuyên ngành hẹp (BIM, IFC4X3, CAD) hoặc các kho kỹ năng khai báo / repo dùng `Squash and Merge`; đánh giá kết hợp với mật độ Releases và độ phủ Test Suite.
+3. **Định tuyến Phương thức Ứng dụng qua Ma trận 4 Ô (4-Quadrant Router):**
+   - **Ô 1 — Ngôi sao Sống & Đã chín (`FRESH <= 120 ngày`, Commits & Stars cao):** Cho phép tích hợp qua Deep Seam (sau khi vượt qua Cổng Reuse-First ADR-0061) hoặc chuyển dịch qua `/ccba-xia`.
+   - **Ô 2 — Kho tàng Ngủ đông / Đã đóng băng (`STALE > 120 ngày` hoặc `ARCHIVED`, nhưng Commits/Stars cao):** **CẤM** cài làm dependency trực tiếp (`pyproject.toml`); chỉ dùng `/ccba-xia` để trích xuất giải thuật/pattern về Pure Python tự chủ.
+   - **Ô 3 — Công cụ Ngách Chuyên ngành / Mới nổi (`FRESH <= 120 ngày`, Stars `< 500` hoặc Commits `< 600`):** Thẩm định sâu mã nguồn và test suite thực tế trước khi kết luận.
+   - **Ô 4 — Sản phẩm Ngẫu hứng Bị bỏ rơi (`STALE > 120 ngày` + Commits & Stars thấp):** Bác bỏ sớm (`Fail-Fast`) và tự triển khai theo chuẩn KISS (10–15 dòng code).
 
 ---
 

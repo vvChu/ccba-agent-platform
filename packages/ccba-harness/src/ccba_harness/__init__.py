@@ -131,6 +131,7 @@ from .evals import (
     get_unapplied_failure_signals,
     get_visual_diagram_scorers,
     is_signal_applied,
+    load_eval_dataset,
     load_failure_ledger,
     load_legal_flat_index,
     load_uniclass_flat_index,

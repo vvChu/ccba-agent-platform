@@ -17,8 +17,9 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from ccba_ai.daemon_bridge import kill_process_tree
 from ccba_ai.routing import ModelArchetype
@@ -82,84 +83,127 @@ class AgyChatCompletion:
 # ---------------------------------------------------------------------------
 
 
-class AgyCompletions:
-    """Sync mock of ``client.chat.completions`` namespace."""
+@runtime_checkable
+class CLIProviderPort(Protocol):
+    """Port protocol for CLI-backed LLM failover providers (Antigravity & Copilot)."""
 
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
+    default_model: str
+
+    def is_available(self) -> bool: ...
+
+    def chat(
+        self, prompt: str, *, model: str | None = None, timeout: float | None = None
+    ) -> tuple[str, Any]: ...
+
+    async def chat_async(
+        self, prompt: str, *, model: str | None = None, timeout: float | None = None
+    ) -> tuple[str, Any]: ...
+
+
+def _default_agy_completion(text: str, model: str, usage: Any) -> AgyChatCompletion:
+    """Construct default AgyChatCompletion from CLI output."""
+    return AgyChatCompletion(
+        choices=[AgyChoice(message=AgyMessage(content=text))],
+        model=model,
+        usage=usage,
+    )
+
+
+class CLISyncCompletions:
+    """Shared sync adapter of ``client.chat.completions`` namespace for CLI providers."""
+
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
         self._provider = provider
+        self._completion_factory = completion_factory
 
-    def create(self, **kwargs: Any) -> AgyChatCompletion:
-        """Sync create — mimics ``OpenAI().chat.completions.create()``.
-
-        Accepts ``model``, ``messages``, and silently ignores unsupported
-        kwargs (``max_tokens``, ``temperature``) since agy doesn't support them.
-        """
+    def create(self, **kwargs: Any) -> Any:
+        """Sync create — mimics ``OpenAI().chat.completions.create()``."""
         model = str(kwargs.get("model", self._provider.default_model))
         messages: list[dict[str, str]] = kwargs.get("messages", [])
+        timeout: float | None = kwargs.get("timeout")
 
         prompt = serialize_messages(messages)
-        text, usage = self._provider.chat(prompt, model=model)
-
-        return AgyChatCompletion(
-            choices=[AgyChoice(message=AgyMessage(content=text))],
-            model=model,
-            usage=usage,
-        )
+        text, usage = self._provider.chat(prompt, model=model, timeout=timeout)
+        return self._completion_factory(text, model, usage)
 
 
-class AsyncAgyCompletions:
-    """Async mock of ``client.chat.completions`` namespace."""
+class CLIAsyncCompletions:
+    """Shared async adapter of ``client.chat.completions`` namespace for CLI providers."""
 
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
         self._provider = provider
+        self._completion_factory = completion_factory
 
-    async def create(self, **kwargs: Any) -> AgyChatCompletion:
+    async def create(self, **kwargs: Any) -> Any:
         """Async create — mimics ``AsyncOpenAI().chat.completions.create()``."""
         model = str(kwargs.get("model", self._provider.default_model))
         messages: list[dict[str, str]] = kwargs.get("messages", [])
+        timeout: float | None = kwargs.get("timeout")
 
         prompt = serialize_messages(messages)
-        text, usage = await self._provider.chat_async(prompt, model=model)
-
-        return AgyChatCompletion(
-            choices=[AgyChoice(message=AgyMessage(content=text))],
-            model=model,
-            usage=usage,
-        )
+        text, usage = await self._provider.chat_async(prompt, model=model, timeout=timeout)
+        return self._completion_factory(text, model, usage)
 
 
-class AgyChatResource:
+class CLISyncChatResource:
     """Sync mock of ``client.chat`` namespace."""
 
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
-        self.completions = AgyCompletions(provider)
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
+        self.completions = CLISyncCompletions(provider, completion_factory)
 
 
-class AsyncAgyChatResource:
+class CLIAsyncChatResource:
     """Async mock of ``client.chat`` namespace."""
 
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
-        self.completions = AsyncAgyCompletions(provider)
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
+        self.completions = CLIAsyncCompletions(provider, completion_factory)
 
 
-class AgySyncClient:
-    """OpenAI-compatible sync adapter for ``fallback_fn_builder``.
+class CLISyncClient:
+    """OpenAI-compatible sync adapter for ``fallback_fn_builder``."""
 
-    Supports: ``client.chat.completions.create(model=..., messages=..., **kwargs)``
-    """
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
+        self.chat = CLISyncChatResource(provider, completion_factory)
 
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
-        self.chat = AgyChatResource(provider)
+
+class CLIAsyncClient:
+    """OpenAI-compatible async adapter for ``fallback_coro_builder``."""
+
+    def __init__(
+        self,
+        provider: CLIProviderPort,
+        completion_factory: Callable[[str, str, Any], Any] = _default_agy_completion,
+    ) -> None:
+        self.chat = CLIAsyncChatResource(provider, completion_factory)
 
 
-class AgyAsyncClient:
-    """OpenAI-compatible async adapter for ``fallback_coro_builder``.
-
-    Supports: ``await client.chat.completions.create(model=..., messages=..., **kwargs)``
-    """
-
-    def __init__(self, provider: AntigravityCLIProvider) -> None:
-        self.chat = AsyncAgyChatResource(provider)
+# Backward-compatible aliases for Antigravity CLI adapter classes
+AgyCompletions = CLISyncCompletions
+AsyncAgyCompletions = CLIAsyncCompletions
+AgyChatResource = CLISyncChatResource
+AsyncAgyChatResource = CLIAsyncChatResource
+AgySyncClient = CLISyncClient
+AgyAsyncClient = CLIAsyncClient
 
 
 # ---------------------------------------------------------------------------
@@ -193,29 +237,11 @@ def serialize_messages(messages: list[dict[str, str]]) -> str:
     return "\n\n".join(parts)
 
 
-def parse_ndjson_response(raw_output: str) -> tuple[str, AgyUsage]:
-    """Extract response text and usage from NDJSON stream-json output.
-
-    Expected NDJSON events from ``agy -p --output-format stream-json``::
-
-        {"event":"init", ...}
-        {"event":"step_update", "step_update":{"step_type":"agent_response", "text_delta":"..."}}
-        {"event":"result", "result":{"response":"...", "usage":{...}}}
-
-    Args:
-        raw_output: Raw stdout from agy subprocess.
-
-    Returns:
-        Tuple of (response_text, usage).
-
-    Raises:
-        RuntimeError: If no valid response found in output.
-    """
+def _extract_ndjson_result_event(lines: list[str]) -> tuple[str | None, AgyUsage]:
+    """Scan NDJSON lines for a 'result' event and return (response_text, usage)."""
     usage = AgyUsage()
-
-    # Primary: look for "result" event
-    for line in raw_output.strip().splitlines():
-        line = line.strip()
+    for raw_line in lines:
+        line = raw_line.strip()
         if not line:
             continue
         try:
@@ -234,10 +260,18 @@ def parse_ndjson_response(raw_output: str) -> tuple[str, AgyUsage]:
                     return response_text.strip(), usage
         except (json.JSONDecodeError, KeyError):
             continue
+    return None, usage
 
-    # Fallback: concatenate text_delta from step_update events
+
+def parse_ndjson_response(raw_output: str) -> tuple[str, AgyUsage]:
+    """Extract response text and usage from NDJSON stream-json output."""
+    lines = raw_output.strip().splitlines()
+    primary_text, usage = _extract_ndjson_result_event(lines)
+    if primary_text is not None:
+        return primary_text, usage
+
     text_parts: list[str] = []
-    for line in raw_output.strip().splitlines():
+    for line in lines:
         try:
             obj = json.loads(line)
             step = obj.get("step_update", {})
@@ -341,80 +375,75 @@ def extract_available_models_from_stderr(stderr: str) -> list[str]:
     return models
 
 
-def resolve_latest_compatible_model(requested_model: str, available_models: list[str]) -> str:
-    """Resolve the best compatible successor model if requested_model is not available.
+def _parse_model_version_tuple(model_name: str) -> tuple[int, ...]:
+    """Extract numeric version tuple from a canonical model slug."""
+    v_match = re.search(r"-(\d+(?:\.\d+)*)-", model_name)
+    if v_match:
+        try:
+            return tuple(int(p) for p in v_match.group(1).split("."))
+        except ValueError:
+            return (0,)
+    return (0,)
 
-    Preserves:
-    1. Provider / Family (e.g. gemini)
-    2. Tier (e.g. flash vs pro)
-    3. Effort / Variant (e.g. medium vs high vs low)
-    And selects the highest version available.
-    """
-    if not available_models:
-        return requested_model
-    if requested_model in available_models:
+
+def _resolve_claude_successor(req_slug: str, available_models: list[str]) -> str | None:
+    """Resolve compatible Claude model successor if req_slug is a Claude slug."""
+    claude_match = re.match(r"^(claude-(?:opus|sonnet))-(\d+(?:[-.]\d+)*)(?:-(.*))?$", req_slug)
+    if not claude_match:
+        return None
+    c_family, _, c_effort = claude_match.groups()
+    target_effort = "high" if c_effort in (None, "", "thinking") else c_effort
+    c_candidates = [m for m in available_models if m.startswith(f"{c_family}-")]
+    if not c_candidates:
+        return None
+    exact_c = [m for m in c_candidates if m.endswith(f"-{target_effort}")]
+    pool = exact_c or c_candidates
+    pool.sort(
+        key=lambda m: tuple(int(p) for p in re.findall(r"\d+", m[len(c_family) :])),
+        reverse=True,
+    )
+    return pool[0]
+
+
+def resolve_latest_compatible_model(requested_model: str, available_models: list[str]) -> str:
+    """Resolve the best compatible successor model if requested_model is not available."""
+    if not available_models or requested_model in available_models:
         return requested_model
 
     req_slug = canonicalize_model_name(requested_model)
     if req_slug in available_models:
         return req_slug
 
-    claude_match = re.match(r"^(claude-(?:opus|sonnet))-(\d+(?:[-.]\d+)*)(?:-(.*))?$", req_slug)
-    if claude_match:
-        c_family, _, c_effort = claude_match.groups()
-        target_effort = "high" if c_effort in (None, "", "thinking") else c_effort
-        c_candidates = [m for m in available_models if m.startswith(f"{c_family}-")]
-        if c_candidates:
-            exact_c = [m for m in c_candidates if m.endswith(f"-{target_effort}")]
-            pool = exact_c or c_candidates
-            pool.sort(
-                key=lambda m: tuple(int(p) for p in re.findall(r"\d+", m[len(c_family) :])),
-                reverse=True,
-            )
-            return pool[0]
+    claude_res = _resolve_claude_successor(req_slug, available_models)
+    if claude_res:
+        return claude_res
 
-    # Parse requested model: e.g. gemini-3.7-flash-medium
-    # match (family)-(version)-(variant)
     match = re.match(r"^([a-zA-Z]+)-([\d\.]+)-(.*)$", req_slug)
     if not match:
         return available_models[0]
 
-    family, version_str, variant = match.groups()
-
-    def parse_version(model_name: str) -> tuple[int, ...]:
-        v_match = re.search(r"-(\d+(?:\.\d+)*)-", model_name)
-        if v_match:
-            try:
-                return tuple(int(p) for p in v_match.group(1).split("."))
-            except ValueError:
-                return (0,)
-        return (0,)
-
-    # 1. Exact variant match (same family & same variant, e.g. flash-medium)
+    family, _, variant = match.groups()
     exact_variant_candidates = [
         m for m in available_models if m.startswith(f"{family}-") and m.endswith(f"-{variant}")
     ]
     if exact_variant_candidates:
-        exact_variant_candidates.sort(key=parse_version, reverse=True)
+        exact_variant_candidates.sort(key=_parse_model_version_tuple, reverse=True)
         return exact_variant_candidates[0]
 
-    # 2. Same tier match (e.g. flash)
     tier = variant.split("-")[0] if "-" in variant else variant
     same_tier_candidates = [
         m for m in available_models if m.startswith(f"{family}-") and f"-{tier}-" in m
     ]
     if same_tier_candidates:
-        # Prefer medium effort if original was medium, else highest version
         same_tier_candidates.sort(
-            key=lambda m: (parse_version(m), "medium" in m),
+            key=lambda m: (_parse_model_version_tuple(m), "medium" in m),
             reverse=True,
         )
         return same_tier_candidates[0]
 
-    # 3. Same family match
     same_family_candidates = [m for m in available_models if m.startswith(f"{family}-")]
     if same_family_candidates:
-        same_family_candidates.sort(key=parse_version, reverse=True)
+        same_family_candidates.sort(key=_parse_model_version_tuple, reverse=True)
         return same_family_candidates[0]
 
     return available_models[0]
@@ -464,6 +493,36 @@ class AntigravityCLIProvider:
             return True
         return os.path.isfile(self._binary_path)
 
+    def _retry_sync_with_resolved_model(
+        self, prompt: str, effective_model: str, stderr: str, effective_timeout: float
+    ) -> tuple[str, AgyUsage] | None:
+        """Attempt 1-shot sync retry if stderr indicates an unrecognized model."""
+        resolved_model = self._resolve_fallback_model_on_error(effective_model, stderr)
+        if not resolved_model:
+            return None
+        logger.warning(
+            f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
+            f"Auto-redirecting to '{resolved_model}' (retry 1/1)..."
+        )
+        retry_cmd = self._build_command(prompt, resolved_model)
+        try:
+            retry_res = subprocess.run(
+                retry_cmd,
+                capture_output=True,
+                text=True,
+                timeout=effective_timeout,
+                encoding="utf-8",
+            )
+            if retry_res.returncode == 0:
+                return parse_ndjson_response(retry_res.stdout)
+            logger.warning(
+                f"[ccba-ai] Retry with '{resolved_model}' failed (exit {retry_res.returncode}): "
+                f"{retry_res.stderr[:200]}"
+            )
+        except Exception as retry_exc:
+            logger.warning(f"[ccba-ai] Retry with '{resolved_model}' failed: {retry_exc}")
+        return None
+
     def chat(
         self,
         prompt: str,
@@ -471,25 +530,10 @@ class AntigravityCLIProvider:
         model: str | None = None,
         timeout: float | None = None,
     ) -> tuple[str, AgyUsage]:
-        """Execute single prompt via ``agy -p`` (sync subprocess).
-
-        Args:
-            prompt: The prompt text (already serialized from messages).
-            model: Model name for ``agy --model`` flag.
-            timeout: Subprocess timeout override in seconds.
-
-        Returns:
-            Tuple of (response_text, usage).
-
-        Raises:
-            RuntimeError: If agy fails or returns no valid response.
-            subprocess.TimeoutExpired: If execution exceeds timeout.
-        """
+        """Execute single prompt via ``agy -p`` (sync subprocess)."""
         effective_model = model or self.default_model
         effective_timeout = timeout or self.timeout
-
         cmd = self._build_command(prompt, effective_model)
-
         logger.info(
             f"[ccba-ai] Antigravity CLI call: model={effective_model}, timeout={effective_timeout}s"
         )
@@ -501,37 +545,17 @@ class AntigravityCLIProvider:
                 text=True,
                 timeout=effective_timeout,
                 encoding="utf-8",
-                # shell=False (default) — NO shell injection risk
             )
         except subprocess.TimeoutExpired:
             logger.warning(f"[ccba-ai] Antigravity CLI timed out after {effective_timeout}s")
             raise
 
         if result.returncode != 0:
-            resolved_model = self._resolve_fallback_model_on_error(effective_model, result.stderr)
-            if resolved_model:
-                logger.warning(
-                    f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
-                    f"Auto-redirecting to '{resolved_model}' (retry 1/1)..."
-                )
-                retry_cmd = self._build_command(prompt, resolved_model)
-                try:
-                    retry_res = subprocess.run(
-                        retry_cmd,
-                        capture_output=True,
-                        text=True,
-                        timeout=effective_timeout,
-                        encoding="utf-8",
-                    )
-                    if retry_res.returncode == 0:
-                        return parse_ndjson_response(retry_res.stdout)
-                    logger.warning(
-                        f"[ccba-ai] Retry with '{resolved_model}' failed (exit {retry_res.returncode}): "
-                        f"{retry_res.stderr[:200]}"
-                    )
-                except Exception as retry_exc:
-                    logger.warning(f"[ccba-ai] Retry with '{resolved_model}' failed: {retry_exc}")
-
+            retried = self._retry_sync_with_resolved_model(
+                prompt, effective_model, result.stderr, effective_timeout
+            )
+            if retried is not None:
+                return retried
             logger.warning(
                 f"[ccba-ai] Antigravity CLI exited with code {result.returncode}: "
                 f"{result.stderr[:500]}"
@@ -542,33 +566,10 @@ class AntigravityCLIProvider:
 
         return parse_ndjson_response(result.stdout)
 
-    async def chat_async(
-        self,
-        prompt: str,
-        *,
-        model: str | None = None,
-        timeout: float | None = None,
-    ) -> tuple[str, AgyUsage]:
-        """Execute single prompt via ``agy -p`` (async subprocess).
-
-        Args:
-            prompt: The prompt text.
-            model: Model name for ``agy --model`` flag.
-            timeout: Subprocess timeout override in seconds.
-
-        Returns:
-            Tuple of (response_text, usage).
-
-        Raises:
-            RuntimeError: If agy fails or times out.
-        """
-        effective_model = model or self.default_model
-        effective_timeout = timeout or self.timeout
-
-        cmd = self._build_command(prompt, effective_model)
-
-        logger.info(f"[ccba-ai] Antigravity CLI async call: model={effective_model}")
-
+    async def _run_async_subprocess(
+        self, cmd: list[str], effective_timeout: float
+    ) -> tuple[int, str, str]:
+        """Spawn async agy subprocess and return (returncode, stdout, stderr)."""
         kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
@@ -581,7 +582,6 @@ class AntigravityCLIProvider:
             stderr=asyncio.subprocess.PIPE,
             **kwargs,
         )
-
         try:
             stdout_bytes, stderr_bytes = await asyncio.wait_for(
                 proc.communicate(), timeout=effective_timeout
@@ -592,41 +592,47 @@ class AntigravityCLIProvider:
                 f"Antigravity CLI async timed out after {effective_timeout}s"
             ) from None
 
-        stdout = stdout_bytes.decode("utf-8", errors="replace")
-        stderr = stderr_bytes.decode("utf-8", errors="replace")
+        return (
+            proc.returncode or 0,
+            stdout_bytes.decode("utf-8", errors="replace"),
+            stderr_bytes.decode("utf-8", errors="replace"),
+        )
 
-        if proc.returncode != 0:
+    async def chat_async(
+        self,
+        prompt: str,
+        *,
+        model: str | None = None,
+        timeout: float | None = None,
+    ) -> tuple[str, AgyUsage]:
+        """Execute single prompt via ``agy -p`` (async subprocess)."""
+        effective_model = model or self.default_model
+        effective_timeout = timeout or self.timeout
+        cmd = self._build_command(prompt, effective_model)
+        logger.info(f"[ccba-ai] Antigravity CLI async call: model={effective_model}")
+
+        rc, stdout, stderr = await self._run_async_subprocess(cmd, effective_timeout)
+        if rc != 0:
             resolved_model = self._resolve_fallback_model_on_error(effective_model, stderr)
             if resolved_model:
                 logger.warning(
                     f"[ccba-ai] Model '{effective_model}' not recognized by agy. "
                     f"Auto-redirecting to '{resolved_model}' (async retry 1/1)..."
                 )
-                retry_cmd = self._build_command(prompt, resolved_model)
                 try:
-                    retry_proc = await asyncio.create_subprocess_exec(
-                        *retry_cmd,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                        **kwargs,
+                    r_rc, r_out, r_err = await self._run_async_subprocess(
+                        self._build_command(prompt, resolved_model), effective_timeout
                     )
-                    retry_stdout_bytes, retry_stderr_bytes = await asyncio.wait_for(
-                        retry_proc.communicate(), timeout=effective_timeout
-                    )
-                    if retry_proc.returncode == 0:
-                        retry_stdout = retry_stdout_bytes.decode("utf-8", errors="replace")
-                        return parse_ndjson_response(retry_stdout)
-                    retry_stderr = retry_stderr_bytes.decode("utf-8", errors="replace")
+                    if r_rc == 0:
+                        return parse_ndjson_response(r_out)
                     logger.warning(
-                        f"[ccba-ai] Async retry with '{resolved_model}' failed (exit {retry_proc.returncode}): "
-                        f"{retry_stderr[:200]}"
+                        f"[ccba-ai] Async retry with '{resolved_model}' failed (exit {r_rc}): {r_err[:200]}"
                     )
                 except Exception as retry_exc:
                     logger.warning(
                         f"[ccba-ai] Async retry with '{resolved_model}' failed: {retry_exc}"
                     )
-
-            raise RuntimeError(f"Antigravity CLI failed (exit {proc.returncode}): {stderr[:200]}")
+            raise RuntimeError(f"Antigravity CLI failed (exit {rc}): {stderr[:200]}")
 
         return parse_ndjson_response(stdout)
 

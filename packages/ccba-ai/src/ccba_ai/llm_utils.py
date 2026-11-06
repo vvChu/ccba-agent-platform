@@ -99,25 +99,31 @@ class LLMOutputParser:
         return cls.extract_thinking_and_content(text)[0]
 
     @classmethod
+    def _validate_schema(cls, data: Any, schema: type[T], raw: str, *, strict: bool = False) -> Any:
+        """Validate parsed JSON data against a Pydantic BaseModel or callable schema."""
+        try:
+            if isinstance(schema, type) and issubclass(schema, BaseModel):
+                return schema.model_validate(data)
+            if callable(schema):
+                return (
+                    cast(Any, schema)(data)
+                    if not isinstance(data, dict)
+                    else cast(Any, schema)(**data)
+                )
+        except Exception as err:
+            if strict:
+                raise LLMParseError(f"Schema validation failed: {err}", raw_output=raw) from err
+            return None
+        return data
+
+    @classmethod
     def extract_json(
         cls,
         raw: str,
         schema: type[T] | None = None,
         strict: bool = False,
     ) -> Any:
-        """Extract JSON object/array from raw text, with optional Pydantic schema validation.
-
-        Args:
-            raw: Raw LLM output string.
-            schema: Optional Pydantic BaseModel or type to validate parsed data against.
-            strict: If True, raises LLMParseError on parse or schema validation failures instead of returning None.
-
-        Returns:
-            Parsed data structure (dict, list, primitive, or validated schema instance), or None if parsing fails (when strict=False).
-
-        Raises:
-            LLMParseError: If strict=True and parsing or schema validation fails.
-        """
+        """Extract JSON object/array from raw text, with optional Pydantic schema validation."""
         if not raw:
             if strict:
                 raise LLMParseError("Input text is empty", raw_output=raw or "")
@@ -125,47 +131,23 @@ class LLMOutputParser:
 
         clean = cls.strip_think_tags(raw)
         data = None
-
-        # 1. Try markdown code blocks first
         match = re.search(
             r"```(?:json)?\s*([\{\[].*?[\}\]])\s*```", clean, flags=re.DOTALL | re.IGNORECASE
         )
         if match:
-            cleaned_text = match.group(1).strip()
-            data = cls._safe_json_load(cleaned_text)
-
-        # 2. Try matching outer braces or brackets
+            data = cls._safe_json_load(match.group(1).strip())
         if data is None:
             match = re.search(r"([\{\[].*[\}\]])", clean, flags=re.DOTALL)
             if match:
-                cleaned_text = match.group(1).strip()
-                data = cls._safe_json_load(cleaned_text)
-
-        # 3. Attempt to load clean text directly
+                data = cls._safe_json_load(match.group(1).strip())
         if data is None:
             data = cls._safe_json_load(clean.strip())
-
         if data is None:
             if strict:
                 raise LLMParseError("No valid JSON structure found in text", raw_output=raw)
             return None
-
-        # 4. Schema validation if requested
         if schema is not None:
-            try:
-                if isinstance(schema, type) and issubclass(schema, BaseModel):
-                    return schema.model_validate(data)
-                elif callable(schema):
-                    return (
-                        cast(Any, schema)(data)
-                        if not isinstance(data, dict)
-                        else cast(Any, schema)(**data)
-                    )
-            except Exception as err:
-                if strict:
-                    raise LLMParseError(f"Schema validation failed: {err}", raw_output=raw) from err
-                return None
-
+            return cls._validate_schema(data, schema, raw, strict=strict)
         return data
 
     @classmethod

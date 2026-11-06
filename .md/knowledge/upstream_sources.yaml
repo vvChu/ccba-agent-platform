@@ -2,6 +2,7 @@
 # Danh mục các kho chứa mã nguồn/kỹ năng thượng nguồn được theo dõi định kỳ bởi /ccba-sync-upstream.
 
 version: "1.0"
+stale_upstream_days: 120
 
 sources:
   - name: "claudekit-engineer"

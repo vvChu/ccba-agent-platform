@@ -250,24 +250,8 @@ def slugify(text: str) -> str:
     return re.sub(r"[-\s]+", "-", text).strip("-")
 
 
-def create_plan(
-    title: str, phases_list: list[str], workspace_root: Path | None = None
-) -> PlanCreationResult:
-    """Create a new plan directory with plan.md and phase markdown stubs."""
-    root = workspace_root or Path.cwd()
-    plans_dir = root / "plans"
-    plans_dir.mkdir(exist_ok=True)
-
-    date_str = datetime.now().strftime("%y%m%d")
-    slug = slugify(title)
-    plan_folder = plans_dir / f"{date_str}-{slug}"
-
-    if plan_folder.exists():
-        raise FileExistsError(f"Plan folder {plan_folder.relative_to(root)} already exists.")
-
-    plan_folder.mkdir(parents=True, exist_ok=True)
-
-    branch = "main"
+def _resolve_git_branch(root: Path) -> str:
+    """Resolve current git branch name in root directory or fallback to 'main'."""
     try:
         res = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -276,18 +260,29 @@ def create_plan(
             text=True,
             check=True,
         )
-        branch = res.stdout.strip()
+        return res.stdout.strip() or "main"
     except Exception:
-        pass
+        return "main"
 
-    phases = []
-    created_files = []
 
+def create_plan(
+    title: str, phases_list: list[str], workspace_root: Path | None = None
+) -> PlanCreationResult:
+    """Create a new plan directory with plan.md and phase markdown stubs."""
+    root = workspace_root or Path.cwd()
+    plans_dir = root / "plans"
+    plans_dir.mkdir(exist_ok=True)
+
+    plan_folder = plans_dir / f"{datetime.now().strftime('%y%m%d')}-{slugify(title)}"
+    if plan_folder.exists():
+        raise FileExistsError(f"Plan folder {plan_folder.relative_to(root)} already exists.")
+    plan_folder.mkdir(parents=True, exist_ok=True)
+
+    phases: list[Phase] = []
+    created_files: list[str] = []
     for idx, phase_name in enumerate(phases_list, 1):
         phase_num = f"{idx:02d}"
-        phase_slug = slugify(phase_name)
-        phase_filename = f"phase-{phase_num}-{phase_slug}.md"
-
+        phase_filename = f"phase-{phase_num}-{slugify(phase_name)}.md"
         phase_obj = Phase(num=phase_num, name=phase_name, status="pending", filename=phase_filename)
         phase_obj.save(plan_folder)
         phases.append(phase_obj)
@@ -296,7 +291,7 @@ def create_plan(
     plan_filepath = plan_folder / "plan.md"
     plan_obj = Plan(
         title=title,
-        branch=branch,
+        branch=_resolve_git_branch(root),
         date=datetime.now().strftime("%Y-%m-%d"),
         status="in-progress",
         phases=phases,

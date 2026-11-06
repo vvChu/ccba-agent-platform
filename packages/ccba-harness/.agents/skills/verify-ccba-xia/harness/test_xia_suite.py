@@ -77,6 +77,12 @@ def test_feat_xia_002_recon_and_license_classification_gate(tmp_path: Path) -> N
     assert "--depth 1" in body
     assert ".md/scratch/xia_sources/" in body
     assert "source manifest" in body
+    assert "health_posture" in body
+    modes_body = (
+        repo_root / ".agents" / "skills" / "ccba-xia" / "references" / "modes.md"
+    ).read_text(encoding="utf-8")
+    for posture in ("FRESH", "STALE", "ARCHIVED", "UNKNOWN"):
+        assert posture in modes_body
 
     mit_repo = tmp_path / "mit_repo"
     mit_repo.mkdir()

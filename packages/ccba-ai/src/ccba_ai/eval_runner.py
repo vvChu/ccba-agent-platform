@@ -65,62 +65,61 @@ class ModelEvalSummary:
         return (self.passed_cases / self.total_cases * 100.0) if self.total_cases else 0.0
 
 
+def _validate_json_keys_case(text: str, expected: list[str]) -> tuple[bool, str | None]:
+    """Validate that text parses as a JSON dict containing all expected keys."""
+    try:
+        data = parse_llm_json(text)
+        if not isinstance(data, dict):
+            return False, f"Expected JSON dict, got {type(data).__name__}"
+        missing = [k for k in expected if k not in data]
+        return (False, f"Missing required JSON keys: {missing}") if missing else (True, None)
+    except Exception as e:
+        return False, f"JSON parse error: {e}"
+
+
+def _validate_code_ast_case(text: str, expected: list[str]) -> tuple[bool, str | None]:
+    """Validate that code block parses as valid Python AST and contains expected tokens."""
+    code = text
+    if "```python" in code:
+        code = code.split("```python", 1)[1].split("```", 1)[0]
+    elif "```" in code:
+        code = code.split("```", 1)[1].split("```", 1)[0]
+    try:
+        ast.parse(code)
+    except SyntaxError as se:
+        return False, f"Python SyntaxError: {se}"
+    missing = [kw for kw in expected if kw not in code]
+    return (False, f"Missing expected code tokens: {missing}") if missing else (True, None)
+
+
 def validate_case_output(case: dict[str, Any], raw_output: str) -> tuple[bool, str | None]:
     """Validate model output against case validation rules."""
     val_type = case.get("validation_type", "")
     text = raw_output.strip()
 
     if val_type == "json_keys":
-        try:
-            data = parse_llm_json(text)
-            if not isinstance(data, dict):
-                return False, f"Expected JSON dict, got {type(data).__name__}"
-            expected = case.get("expected_keys", [])
-            missing = [k for k in expected if k not in data]
-            if missing:
-                return False, f"Missing required JSON keys: {missing}"
+        return _validate_json_keys_case(text, case.get("expected_keys", []))
+    if val_type == "verbatim_keywords":
+        missing = [kw for kw in case.get("expected_keywords", []) if kw.lower() not in text.lower()]
+        return (
+            (False, f"Missing expected legal entities/keywords: {missing}")
+            if missing
+            else (True, None)
+        )
+    if val_type == "code_ast":
+        return _validate_code_ast_case(text, case.get("expected_keywords", []))
+    if val_type == "decision_match":
+        missing = [kw for kw in case.get("expected_keywords", []) if kw.lower() not in text.lower()]
+        return (
+            (False, f"Audit reasoning missing conclusion keywords: {missing}")
+            if missing
+            else (True, None)
+        )
+    if val_type == "exact_or_prefix":
+        expected = case.get("expected_keywords", [])
+        if any(kw.lower() in text.lower() for kw in expected):
             return True, None
-        except Exception as e:
-            return False, f"JSON parse error: {e}"
-
-    elif val_type == "verbatim_keywords":
-        expected = case.get("expected_keywords", [])
-        missing = [kw for kw in expected if kw.lower() not in text.lower()]
-        if missing:
-            return False, f"Missing expected legal entities/keywords: {missing}"
-        return True, None
-
-    elif val_type == "code_ast":
-        # Extract code block if wrapped in markdown
-        code = text
-        if "```python" in code:
-            code = code.split("```python", 1)[1].split("```", 1)[0]
-        elif "```" in code:
-            code = code.split("```", 1)[1].split("```", 1)[0]
-        try:
-            ast.parse(code)
-        except SyntaxError as se:
-            return False, f"Python SyntaxError: {se}"
-        expected = case.get("expected_keywords", [])
-        missing = [kw for kw in expected if kw not in code]
-        if missing:
-            return False, f"Missing expected code tokens: {missing}"
-        return True, None
-
-    elif val_type == "decision_match":
-        expected = case.get("expected_keywords", [])
-        missing = [kw for kw in expected if kw.lower() not in text.lower()]
-        if missing:
-            return False, f"Audit reasoning missing conclusion keywords: {missing}"
-        return True, None
-
-    elif val_type == "exact_or_prefix":
-        expected = case.get("expected_keywords", [])
-        for kw in expected:
-            if kw.lower() in text.lower():
-                return True, None
         return False, f"Output did not match expected probe token: {expected}"
-
     return True, None
 
 
@@ -160,6 +159,51 @@ def setup_mock_benchmark_responses(provider: Any) -> None:
     )
 
 
+def _run_single_eval_case(
+    client: AIClient, model: str, case: dict[str, Any]
+) -> tuple[TestCaseResult, int]:
+    """Execute a single benchmark case and return (TestCaseResult, total_tokens_used)."""
+    cid = case["id"]
+    cat = case.get("category", "general")
+    title = case.get("title", cid)
+    t0 = time.perf_counter()
+    passed = False
+    err_msg: str | None = None
+    output_preview = ""
+    p_tok = c_tok = r_tok = tot_tok = 0
+
+    try:
+        res = client.chat_with_metadata(case["prompt"], model=model, temperature=0.0)
+        latency = time.perf_counter() - t0
+        output_text = res.content
+        output_preview = (output_text[:120] + "...") if len(output_text) > 120 else output_text
+        if res.usage:
+            p_tok = res.usage.prompt_tokens
+            c_tok = res.usage.completion_tokens
+            tot_tok = res.usage.total_tokens
+            r_tok = getattr(res.usage, "reasoning_tokens", 0)
+        passed, err_msg = validate_case_output(case, output_text)
+    except Exception as exc:
+        latency = time.perf_counter() - t0
+        err_msg = str(exc)
+
+    return (
+        TestCaseResult(
+            case_id=cid,
+            category=cat,
+            title=title,
+            passed=passed,
+            latency_s=latency,
+            prompt_tokens=p_tok,
+            completion_tokens=c_tok,
+            reasoning_tokens=r_tok,
+            error_message=err_msg,
+            output_preview=output_preview,
+        ),
+        tot_tok,
+    )
+
+
 def evaluate_model_on_cases(
     client: AIClient,
     model: str,
@@ -174,51 +218,10 @@ def evaluate_model_on_cases(
     total_tokens = 0
 
     for case in cases:
-        cid = case["id"]
-        cat = case.get("category", "general")
-        title = case.get("title", cid)
-        prompt = case["prompt"]
-
-        t0 = time.perf_counter()
-        passed = False
-        err_msg = None
-        output_preview = ""
-        p_tok = c_tok = r_tok = 0
-
-        try:
-            res = client.chat_with_metadata(prompt, model=model, temperature=0.0)
-            latency = time.perf_counter() - t0
-            latencies.append(latency)
-            output_text = res.content
-            output_preview = (output_text[:120] + "...") if len(output_text) > 120 else output_text
-
-            if res.usage:
-                p_tok = res.usage.prompt_tokens
-                c_tok = res.usage.completion_tokens
-                total_tokens += res.usage.total_tokens
-                r_tok = getattr(res.usage, "reasoning_tokens", 0)
-
-            passed, err_msg = validate_case_output(case, output_text)
-        except Exception as exc:
-            latency = time.perf_counter() - t0
-            latencies.append(latency)
-            passed = False
-            err_msg = str(exc)
-
-        results.append(
-            TestCaseResult(
-                case_id=cid,
-                category=cat,
-                title=title,
-                passed=passed,
-                latency_s=latency,
-                prompt_tokens=p_tok,
-                completion_tokens=c_tok,
-                reasoning_tokens=r_tok,
-                error_message=err_msg,
-                output_preview=output_preview,
-            )
-        )
+        case_res, tok = _run_single_eval_case(client, model, case)
+        results.append(case_res)
+        latencies.append(case_res.latency_s)
+        total_tokens += tok
 
     latencies_sorted = sorted(latencies)
     avg_lat = sum(latencies) / len(latencies) if latencies else 0.0
@@ -237,25 +240,27 @@ def evaluate_model_on_cases(
     )
 
 
-def generate_markdown_report(
-    target_summary: ModelEvalSummary,
-    baseline_summary: ModelEvalSummary | None = None,
-) -> str:
-    """Generate professional Markdown comparison report."""
-    lines: list[str] = []
-    lines.append("# CCBA Model Benchmark Evaluation Report")
-    lines.append("")
-    lines.append(f"- **Target Candidate**: `{target_summary.model_name}`")
+def _format_summary_matrix_lines(
+    target_summary: ModelEvalSummary, baseline_summary: ModelEvalSummary | None
+) -> list[str]:
+    """Build Markdown lines for the header and overall performance matrix table."""
+    lines = [
+        "# CCBA Model Benchmark Evaluation Report",
+        "",
+        f"- **Target Candidate**: `{target_summary.model_name}`",
+    ]
     if baseline_summary:
         lines.append(f"- **Baseline Reference**: `{baseline_summary.model_name}`")
-    lines.append(f"- **Total Benchmark Cases**: {target_summary.total_cases}")
-    lines.append("")
-
-    # Summary table
-    lines.append("## 1. Overall Performance Matrix")
-    lines.append("")
-    lines.append("| Metric | Target Candidate | Baseline | Status |")
-    lines.append("| :--- | :---: | :---: | :---: |")
+    lines.extend(
+        [
+            f"- **Total Benchmark Cases**: {target_summary.total_cases}",
+            "",
+            "## 1. Overall Performance Matrix",
+            "",
+            "| Metric | Target Candidate | Baseline | Status |",
+            "| :--- | :---: | :---: | :---: |",
+        ]
+    )
     target_pr = f"{target_summary.pass_rate:.1f}% ({target_summary.passed_cases}/{target_summary.total_cases})"
     base_pr = (
         f"{baseline_summary.pass_rate:.1f}% ({baseline_summary.passed_cases}/{baseline_summary.total_cases})"
@@ -277,12 +282,23 @@ def generate_markdown_report(
         f"| **Total Tokens** | {target_summary.total_tokens:,} | {base_tokens} | [MEASURED] |"
     )
     lines.append("")
+    return lines
 
-    # Detail breakdown
-    lines.append("## 2. Test Case Breakdown")
-    lines.append("")
-    lines.append("| Case ID | Category | Status | Latency | Tokens | Details |")
-    lines.append("| :--- | :--- | :---: | :---: | :---: | :--- |")
+
+def generate_markdown_report(
+    target_summary: ModelEvalSummary,
+    baseline_summary: ModelEvalSummary | None = None,
+) -> str:
+    """Generate professional Markdown comparison report."""
+    lines = _format_summary_matrix_lines(target_summary, baseline_summary)
+    lines.extend(
+        [
+            "## 2. Test Case Breakdown",
+            "",
+            "| Case ID | Category | Status | Latency | Tokens | Details |",
+            "| :--- | :--- | :---: | :---: | :---: | :--- |",
+        ]
+    )
     for r in target_summary.case_results:
         status_icon = "[Pass]" if r.passed else "[Fail]"
         tok_info = f"{r.prompt_tokens} in / {r.completion_tokens} out"
@@ -290,11 +306,7 @@ def generate_markdown_report(
         lines.append(
             f"| `{r.case_id}` | {r.category} | {status_icon} | {r.latency_s:.2f}s | {tok_info} | {detail} |"
         )
-    lines.append("")
-
-    # Upgrade Recommendation
-    lines.append("## 3. Platform Upgrade Recommendation")
-    lines.append("")
+    lines.extend(["", "## 3. Platform Upgrade Recommendation", ""])
     if target_summary.pass_rate >= 80.0:
         lines.append(
             f"[RECOMMEND APPROVAL]: Candidate `{target_summary.model_name}` achieved "
@@ -307,7 +319,6 @@ def generate_markdown_report(
             f"is below the 80% threshold. Do not promote."
         )
     lines.append("")
-
     return "\n".join(lines)
 
 

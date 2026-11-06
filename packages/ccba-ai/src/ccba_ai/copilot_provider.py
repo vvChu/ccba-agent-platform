@@ -21,7 +21,15 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
-from ccba_ai.antigravity_provider import serialize_messages
+from ccba_ai.antigravity_provider import (
+    CLIAsyncChatResource,
+    CLIAsyncClient,
+    CLIAsyncCompletions,
+    CLIProviderPort,
+    CLISyncChatResource,
+    CLISyncClient,
+    CLISyncCompletions,
+)
 from ccba_ai.daemon_bridge import PersistentStdioDaemon
 
 logger = logging.getLogger("ccba_ai.copilot")
@@ -80,68 +88,52 @@ class CopilotChatCompletion:
 # ---------------------------------------------------------------------------
 
 
-class CopilotSyncCompletions:
+def _default_copilot_completion(text: str, model: str, usage: Any) -> CopilotChatCompletion:
+    """Construct CopilotChatCompletion from CLI output."""
+    choice = CopilotChoice(message=CopilotMessage(content=text))
+    return CopilotChatCompletion(choices=[choice], model=model, usage=usage)
+
+
+class CopilotSyncCompletions(CLISyncCompletions):
     """Duck-typed completions resource for sync OpenAI interface."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self._provider = provider
-
-    def create(self, **kwargs: Any) -> CopilotChatCompletion:
-        messages = kwargs.get("messages", [])
-        model = kwargs.get("model", self._provider.default_model)
-        timeout = kwargs.get("timeout")
-
-        prompt = serialize_messages(messages)
-        text, usage = self._provider.chat(prompt, model=model, timeout=timeout)
-
-        choice = CopilotChoice(message=CopilotMessage(content=text))
-        return CopilotChatCompletion(choices=[choice], model=model, usage=usage)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
-class CopilotSyncChat:
+class CopilotSyncChat(CLISyncChatResource):
     """Duck-typed chat resource for sync OpenAI interface."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self.completions = CopilotSyncCompletions(provider)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
-class CopilotSyncClient:
+class CopilotSyncClient(CLISyncClient):
     """Duck-typed sync client compatible with OpenAI SDK."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self.chat = CopilotSyncChat(provider)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
-class CopilotAsyncCompletions:
+class CopilotAsyncCompletions(CLIAsyncCompletions):
     """Duck-typed completions resource for async OpenAI interface."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self._provider = provider
-
-    async def create(self, **kwargs: Any) -> CopilotChatCompletion:
-        messages = kwargs.get("messages", [])
-        model = kwargs.get("model", self._provider.default_model)
-        timeout = kwargs.get("timeout")
-
-        prompt = serialize_messages(messages)
-        text, usage = await self._provider.chat_async(prompt, model=model, timeout=timeout)
-
-        choice = CopilotChoice(message=CopilotMessage(content=text))
-        return CopilotChatCompletion(choices=[choice], model=model, usage=usage)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
-class CopilotAsyncChat:
+class CopilotAsyncChat(CLIAsyncChatResource):
     """Duck-typed chat resource for async OpenAI interface."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self.completions = CopilotAsyncCompletions(provider)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
-class CopilotAsyncClient:
+class CopilotAsyncClient(CLIAsyncClient):
     """Duck-typed async client compatible with AsyncOpenAI SDK."""
 
-    def __init__(self, provider: CopilotCLIProvider) -> None:
-        self.chat = CopilotAsyncChat(provider)
+    def __init__(self, provider: CLIProviderPort) -> None:
+        super().__init__(provider, completion_factory=_default_copilot_completion)
 
 
 # ---------------------------------------------------------------------------
@@ -149,52 +141,42 @@ class CopilotAsyncClient:
 # ---------------------------------------------------------------------------
 
 
-def parse_copilot_json_response(raw_output: str) -> tuple[str, CopilotUsage]:
-    """Parse output from copilot CLI (--output-format json or plain text).
-
-    Args:
-        raw_output: Stdout string from copilot subprocess.
-
-    Returns:
-        Tuple of (response_text, usage).
-    """
+def _scan_copilot_jsonl_lines(lines: list[str]) -> tuple[bool, list[str], int, float]:
+    """Scan JSONL lines from copilot output and return (is_jsonl, text_pieces, p_tokens, duration_ms)."""
     text_pieces: list[str] = []
     p_tokens = 0
-    c_tokens = 0
     api_duration_ms = 0.0
-
-    lines = raw_output.strip().splitlines()
     is_jsonl = False
 
     for line in lines:
         line_s = line.strip()
         if not line_s or not line_s.startswith("{"):
             continue
-
         try:
             obj = json.loads(line_s)
             is_jsonl = True
             event_type = obj.get("type")
-
             if event_type == "assistant.message":
                 content = obj.get("data", {}).get("content", "")
                 if content:
                     text_pieces.append(content)
-
             elif event_type == "session.usage_checkpoint":
-                # Extract prompt tokens if available
-                checkpoint_data = obj.get("data", {})
-                for break_state in checkpoint_data.get("promptCacheBreakState", []):
+                for break_state in obj.get("data", {}).get("promptCacheBreakState", []):
                     for _, mdata in break_state.get("models", {}).items():
                         if "prompt_tokens" in mdata:
                             p_tokens = max(p_tokens, int(mdata["prompt_tokens"]))
-
             elif event_type == "result":
                 usage_meta = obj.get("usage", {})
                 api_duration_ms = float(usage_meta.get("totalApiDurationMs", 0.0))
-
         except (json.JSONDecodeError, KeyError):
             continue
+    return is_jsonl, text_pieces, p_tokens, api_duration_ms
+
+
+def parse_copilot_json_response(raw_output: str) -> tuple[str, CopilotUsage]:
+    """Parse output from copilot CLI (--output-format json or plain text)."""
+    lines = raw_output.strip().splitlines()
+    is_jsonl, text_pieces, p_tokens, api_duration_ms = _scan_copilot_jsonl_lines(lines)
 
     if is_jsonl and text_pieces:
         full_text = "".join(text_pieces).strip()
@@ -207,7 +189,6 @@ def parse_copilot_json_response(raw_output: str) -> tuple[str, CopilotUsage]:
         )
         return full_text, usage
 
-    # Plain text fallback (from -s or unstructured stdout)
     plain_text = raw_output.strip()
     if plain_text:
         words = len(plain_text.split())

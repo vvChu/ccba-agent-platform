@@ -23,27 +23,14 @@ logger = logging.getLogger("ccba_ai.daemon")
 DEFAULT_IDLE_TIMEOUT = 900.0
 
 
-def kill_process_tree(pid: int | None) -> None:
-    """Kill process tree on Windows or Unix cleanly and safely.
-
-    Guards against invalid PIDs, system PIDs (<= 1), self, and ancestor processes.
-    Uses psutil if available, otherwise gracefully falls back to OS-native commands.
-    Never uses os.killpg to prevent collateral damage to the calling process group.
-    """
-    # 1. Type & range guard: strictly int, strictly > 1 (excludes bool, mock, 0, 1, negatives)
-    if type(pid) is not int or pid <= 1:
-        return
-
-    # 2. Self and parent immunity guard
-    current_pid = os.getpid()
-    parent_pid = os.getppid() if hasattr(os, "getppid") else None
-    if pid == current_pid or (parent_pid is not None and pid == parent_pid):
-        return
-
-    # 3. Strategy A: psutil (preferred: clean recursive tree termination)
+def _kill_tree_psutil(pid: int, current_pid: int, parent_pid: int | None) -> bool:
+    """Attempt recursive process tree termination via psutil; return False if psutil unavailable."""
     try:
         import psutil  # type: ignore[import-untyped]
+    except ImportError:
+        return False
 
+    try:
         ancestor_pids: set[int] = {current_pid}
         if parent_pid is not None:
             ancestor_pids.add(parent_pid)
@@ -52,16 +39,9 @@ def kill_process_tree(pid: int | None) -> None:
             ancestor_pids.update(p.pid for p in curr_proc.parents())
         except Exception:
             pass
-
         if pid in ancestor_pids:
-            return
-
-        try:
-            target = psutil.Process(pid)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            # Process does not exist or already terminated
-            return
-
+            return True
+        target = psutil.Process(pid)
         for child in target.children(recursive=True):
             if child.pid not in ancestor_pids:
                 try:
@@ -73,38 +53,49 @@ def kill_process_tree(pid: int | None) -> None:
             target.wait(timeout=1.0)
         except (psutil.NoSuchProcess, psutil.TimeoutExpired):
             pass
-        return
-    except ImportError:
-        pass
     except Exception:
-        return
+        pass
+    return True
 
-    # 4. Strategy B: Native OS Fallback (strictly without os.killpg)
+
+def _kill_tree_os_fallback(pid: int) -> None:
+    """Terminate process tree using OS-native commands without os.killpg."""
     if sys.platform == "win32":
         try:
             subprocess.run(
-                ["taskkill", "/F", "/T", "/PID", str(pid)],
-                capture_output=True,
-                check=False,
+                ["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, check=False
             )
         except Exception:
             pass
-    else:
-        try:
-            subprocess.run(
-                ["pkill", "-KILL", "-P", str(pid)],
-                capture_output=True,
-                check=False,
-            )
-        except Exception:
-            pass
+        return
 
-        try:
-            import signal
+    try:
+        subprocess.run(["pkill", "-KILL", "-P", str(pid)], capture_output=True, check=False)
+    except Exception:
+        pass
+    try:
+        import signal
 
-            os.kill(pid, signal.SIGKILL)
-        except (ProcessLookupError, OSError):
-            pass
+        os.kill(pid, signal.SIGKILL)
+    except (ProcessLookupError, OSError):
+        pass
+
+
+def kill_process_tree(pid: int | None) -> None:
+    """Kill process tree on Windows or Unix cleanly and safely.
+
+    Guards against invalid PIDs, system PIDs (<= 1), self, and ancestor processes.
+    Uses psutil if available, otherwise gracefully falls back to OS-native commands.
+    Never uses os.killpg to prevent collateral damage to the calling process group.
+    """
+    if type(pid) is not int or pid <= 1:
+        return
+    current_pid = os.getpid()
+    parent_pid = os.getppid() if hasattr(os, "getppid") else None
+    if pid == current_pid or (parent_pid is not None and pid == parent_pid):
+        return
+    if not _kill_tree_psutil(pid, current_pid, parent_pid):
+        _kill_tree_os_fallback(pid)
 
 
 class PersistentStdioDaemon:
@@ -222,6 +213,40 @@ class PersistentStdioDaemon:
                 self.stop()
                 break
 
+    def _read_sync_turn(
+        self,
+        proc: subprocess.Popen[str],
+        prompt: str,
+        parse_response_fn: Callable[[str], tuple[str, Any]],
+        fallback_oneshot_fn: Callable[[str], tuple[str, Any]],
+    ) -> tuple[str, Any]:
+        """Write prompt to sync stdio pipe and read lines until parse_response_fn succeeds."""
+        if proc.stdin is None or proc.stdout is None:
+            return fallback_oneshot_fn(prompt)
+
+        proc.stdin.write(prompt + "\n")
+        proc.stdin.flush()
+
+        collected_lines: list[str] = []
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            collected_lines.append(line)
+            try:
+                return parse_response_fn("".join(collected_lines))
+            except Exception:
+                continue
+
+        raw_text = "".join(collected_lines)
+        if raw_text.strip():
+            return parse_response_fn(raw_text)
+
+        logger.warning(
+            "[ccba-ai-daemon] No output from persistent daemon. Falling back to One-Shot."
+        )
+        return fallback_oneshot_fn(prompt)
+
     def send_turn_sync(
         self,
         prompt: str,
@@ -229,11 +254,7 @@ class PersistentStdioDaemon:
         fallback_oneshot_fn: Callable[[str], tuple[str, Any]],
         timeout: float = 120.0,
     ) -> tuple[str, Any]:
-        """Send a single prompt turn over synchronized Stdio pipe (sync).
-
-        If lock contention exceeds threshold, seamlessly spills over to One-Shot.
-        """
-        # 1. Check contention for spillover
+        """Send a single prompt turn over synchronized Stdio pipe (sync)."""
         with self._state_lock:
             if self._waiting_count >= self.max_waiting_requests:
                 logger.info(
@@ -243,60 +264,57 @@ class PersistentStdioDaemon:
             self._waiting_count += 1
 
         try:
-            # 2. Acquire lock for pipe access
-            acquired = self._sync_lock.acquire(timeout=timeout)
-            if not acquired:
+            if not self._sync_lock.acquire(timeout=timeout):
                 logger.warning(
                     "[ccba-ai-daemon] Lock acquire timed out. Spilling over to One-Shot."
                 )
                 return fallback_oneshot_fn(prompt)
-
             try:
                 proc = self._start_sync_if_needed()
                 self._last_active_time = time.time()
-
-                if proc.stdin is None or proc.stdout is None:
-                    return fallback_oneshot_fn(prompt)
-
-                # Send prompt line
-                proc.stdin.write(prompt + "\n")
-                proc.stdin.flush()
-
-                # Read output lines until valid response or EOF
-                collected_lines: list[str] = []
-                while True:
-                    line = proc.stdout.readline()
-                    if not line:
-                        break
-                    collected_lines.append(line)
-                    try:
-                        # Attempt early parse on NDJSON events
-                        raw_block = "".join(collected_lines)
-                        return parse_response_fn(raw_block)
-                    except Exception:
-                        continue
-
-                # Final parse attempt
-                raw_text = "".join(collected_lines)
-                if raw_text.strip():
-                    return parse_response_fn(raw_text)
-
-                logger.warning(
-                    "[ccba-ai-daemon] No output from persistent daemon. Falling back to One-Shot."
-                )
-                return fallback_oneshot_fn(prompt)
-
+                return self._read_sync_turn(proc, prompt, parse_response_fn, fallback_oneshot_fn)
             except Exception as exc:
                 logger.warning(f"[ccba-ai-daemon] Daemon turn failed: {exc}. Restarting process...")
                 self.stop()
                 return fallback_oneshot_fn(prompt)
-
             finally:
                 self._sync_lock.release()
-
         finally:
             with self._state_lock:
                 self._waiting_count = max(0, self._waiting_count - 1)
+
+    async def _read_async_turn(
+        self,
+        proc: asyncio.subprocess.Process,
+        prompt: str,
+        parse_response_fn: Callable[[str], tuple[str, Any]],
+        timeout: float,
+    ) -> tuple[str, Any] | None:
+        """Write prompt to async stdio pipe and read lines until parse_response_fn succeeds."""
+        if proc.stdin is None or proc.stdout is None:
+            return None
+
+        proc.stdin.write((prompt + "\n").encode("utf-8"))
+        await proc.stdin.drain()
+
+        collected_lines: list[str] = []
+        while True:
+            try:
+                line_bytes = await asyncio.wait_for(proc.stdout.readline(), timeout=timeout)
+            except asyncio.TimeoutError:
+                break
+            if not line_bytes:
+                break
+            collected_lines.append(line_bytes.decode("utf-8", errors="replace"))
+            try:
+                return parse_response_fn("".join(collected_lines))
+            except Exception:
+                continue
+
+        raw_text = "".join(collected_lines)
+        if raw_text.strip():
+            return parse_response_fn(raw_text)
+        return None
 
     async def send_turn_async(
         self,
@@ -305,6 +323,8 @@ class PersistentStdioDaemon:
         fallback_oneshot_fn: Callable[[str], Any],
         timeout: float = 120.0,
     ) -> tuple[str, Any]:
+        """Send a single prompt turn over synchronized Stdio pipe (async)."""
+
         async def _call_fallback() -> tuple[str, Any]:
             res = fallback_oneshot_fn(prompt)
             if asyncio.iscoroutine(res) or hasattr(res, "__await__"):
@@ -323,43 +343,12 @@ class PersistentStdioDaemon:
                 try:
                     proc = await self._start_async_if_needed()
                     self._last_active_time = time.time()
-
-                    if proc.stdin is None or proc.stdout is None:
-                        return await _call_fallback()
-
-                    proc.stdin.write((prompt + "\n").encode("utf-8"))
-                    await proc.stdin.drain()
-
-                    collected_lines: list[str] = []
-                    while True:
-                        try:
-                            line_bytes = await asyncio.wait_for(
-                                proc.stdout.readline(), timeout=timeout
-                            )
-                        except asyncio.TimeoutError:
-                            break
-
-                        if not line_bytes:
-                            break
-                        line_str = line_bytes.decode("utf-8", errors="replace")
-                        collected_lines.append(line_str)
-                        try:
-                            raw_block = "".join(collected_lines)
-                            return parse_response_fn(raw_block)
-                        except Exception:
-                            continue
-
-                    raw_text = "".join(collected_lines)
-                    if raw_text.strip():
-                        return parse_response_fn(raw_text)
-
-                    return await _call_fallback()
-
+                    parsed = await self._read_async_turn(proc, prompt, parse_response_fn, timeout)
+                    return parsed if parsed is not None else await _call_fallback()
                 except Exception as exc:
                     logger.warning(f"[ccba-ai-daemon] Async daemon turn failed: {exc}")
                     self.stop()
                     return await _call_fallback()
-
         finally:
             self._waiting_count = max(0, self._waiting_count - 1)
 

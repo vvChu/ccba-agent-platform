@@ -1128,3 +1128,51 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
    - Hàm `_compact_pdf_page_if_cad(raw_page)` trả nguyên vẹn `(raw_page, False)` (100% byte-stable) cho mọi trang PDF có `< 40` dòng khác rỗng hoặc `< 50%` dòng 1–2 ký tự; chỉ các trang đạt ngưỡng CAD mới khử trùng lặp dòng $\ge 3$ ký tự theo thứ tự xuất hiện đầu tiên và gom tối đa 15 nhãn ngắn vào `[Nhãn ngắn/Trục]: ...`.
    - Trong `read_gdrive_file`, nhận diện link thư mục `/folders/<id>` trước `_extract_gdrive_file_id` và tải `embeddedfolderview` qua fetcher riêng (`follow_redirects=False`, kiểm tra chặt host `https://drive.google.com` mỗi hop, trần `512 KiB`, phân tích `flip-entry` bằng stdlib `HTMLParser` trong RAM, không ghi vào `gdrive_index.json`).
 
+
+---
+
+## 52. Thẩm Định Sức Khỏe Thượng Nguồn Mã Nguồn Mở (`OSS Vitality & Preflight Health Posture`), Chống Điểm Mù Nhánh `up-to-date` & Nhiễu Slash-Command Trên Đường Dẫn REST (`RULE-2.21`, `RULE-4.18`)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-06 — Thẩm định `ccba-xia` v2.2.0 & `upstream_evaluator.py`, Grok Sessions `78d815b2` & `d9b05344`)
+1. **Điểm mù nhánh `local_sha == remote_sha` đối với kho mã nguồn thượng nguồn bị bỏ rơi (`COND-01`, `COND-02`, `COND-05`)**:
+   - Trong `scripts/spoke/upstream_evaluator.py`, một kho mã nguồn thượng nguồn bị ngừng bảo trì (ví dụ `claudekit-engineer`: `2,451` commits, commit cuối `2026-06-18`, tức `141` ngày không cập nhật tính tới `2026-11-06`) sẽ không phát sinh commit mới trên remote. Do đó, sau lần đồng bộ đầu tiên, `local_sha == remote_sha` luôn đúng và luồng thực thi luôn rẽ vào nhánh `else: ... is up-to-date`, không bao giờ gọi `evaluate_repo_diff()` hay `append_recommendation()`. Nếu đặt hàm đo sinh lực (`get_repo_vitality_metrics`) bên trong nhánh có diff, cảnh báo `STALE_UPSTREAM` trở thành mã chết đối với chính các repo đã ngừng hoạt động.
+   - Đồng thời, với ngưỡng `180` ngày sẽ bỏ lọt `claudekit-engineer` (`141` ngày); ngược lại, nếu dùng ngưỡng số lượng commits cứng (`1,700–2,500` commits) làm cổng chặn sẽ loại nhầm các kho kỹ năng khai báo tinh gọn (`mattpocock-skills` chỉ có `553` commits nhưng vừa cập nhật `5` ngày trước) hoặc các repo dùng chiến lược `Squash and Merge` (`ccba-agent-platform` có `1,229` commits).
+2. **Nhiễu nhánh phụ từ `pushed_at` của GitHub REST API và bẫy `git rev-list --count HEAD == 1` trên Shallow Clone (`COND-03`)**:
+   - Trường `pushed_at` trả về từ `GET /repos/{owner}/{repo}` bị cập nhật mỗi khi có push vào bất kỳ nhánh phụ hoặc PR tự động nào (như Dependabot), không phản ánh nhịp độ phát triển trên nhánh mặc định (`default_branch`), và object repository cũng không chứa tổng số commits.
+   - Khi chạy hạ cấp ngoại tuyến sau `git clone --depth 1`, lệnh `git rev-list --count HEAD` luôn trả về `1` bất kể lịch sử thực tế của dự án.
+3. **Bẫy quét Slash Command (`UNREGISTERED_SLASH_COMMAND`) đối với đường dẫn REST API trong `SKILL.md` và `references/*.md`**:
+   - Bộ kiểm định `validate_skills.py` (`test_zero_unregistered_slash_commands_in_skills_and_readme`) quét các chuỗi bắt đầu bằng dấu `/` (như `GET /repos/{owner}/{repo}` hoặc ``(`/commits`)``) trong thân `SKILL.md` và `references/*.md` và báo lỗi `UNREGISTERED_SLASH_COMMAND` vì `/repos` và `/commits` không phải lệnh slash đã đăng ký trong `catalog.yaml`.
+
+### Key Architectural Invariants & Learned Rules (`RULE-2.21`, `RULE-4.18`)
+1. **Unconditional Local Vitality Badge & Configurable `stale_upstream_days` (`scripts/spoke/upstream_evaluator.py`, `.md/knowledge/upstream_sources.yaml`)**:
+   - Cấu hình `stale_upstream_days: 120` tại gốc `.md/knowledge/upstream_sources.yaml` (nạp qua `load_upstream_sources()` với fallback `DEFAULT_STALE_UPSTREAM_DAYS = 120`).
+   - Hàm `get_repo_vitality_metrics(local_path, stale_days)` thực thi 3 lệnh `git` cục bộ (`git rev-parse --is-shallow-repository`, `git rev-list --count HEAD` khi `is_shallow=False`, và `git log -1 --format=%ct` kẹp `max(0, ...)` chống lệch đồng hồ tương lai), tính toán ngay đầu `check_and_evaluate_single()` và hiển thị huy hiệu `format_vitality_badge()` trên cả nhánh `up-to-date` (`local_sha == remote_sha`), chế độ `--fast` (`local_only=True`), nhánh hạ cấp mất mạng và trong mục đề xuất của `port_recommendations.md`.
+2. **Two-Object GitHub API Preflight Health Check & Abandonware Challenge (`ccba-xia` v2.2.0)**:
+   - Tại Bước 1 Pha 1 (Recon) của `ccba-xia/SKILL.md`, sử dụng 2 lệnh đơn đối tượng (`gh api repos/{owner}/{repo}` lấy `archived`, `default_branch`, `stargazers_count`, `pushed_at` và `gh api repos/{owner}/{repo}/commits/{default_branch}` lấy `commit.committer.date` làm `tip_commit_date`) để phân loại `health_posture` $\in$ `{FRESH, STALE, ARCHIVED, UNKNOWN}` (ưu tiên `ARCHIVED` cao nhất; khi ngoại tuyến trên bản clone `--depth 1`, chỉ dùng `git log -1 --format=%ct/%cI` và ghi `commit_count: "unknown (shallow clone)"`).
+   - Khi `health_posture` là `STALE` hoặc `ARCHIVED`, Pha 4 (Challenge) bắt buộc kích hoạt câu hỏi phản biện *Abandonware / Maintenance Ownership* ở cả chế độ đầy đủ và chế độ `--fast` (`COND-R2`), bên cạnh 2 câu hỏi bất biến ADR-0057.
+3. **Slash-Token Avoidance for REST Endpoints in Skill Markdown (`RULE-2.21`)**:
+   - Trong mọi tệp `.agents/skills/*/SKILL.md` và `references/*.md`, tuyệt đối không viết đường dẫn REST API bắt đầu bằng dấu gạch chéo độc lập sau khoảng trắng hoặc dấu ngoặc (như `GET /repos/...` hay ``(`/commits`)``); bắt buộc viết theo cú pháp CLI không có `/` đầu (`gh api repos/{owner}/{repo}`) để không kích hoạt dương tính giả `UNREGISTERED_SLASH_COMMAND` trên `validate_skills.py`.
+
+---
+
+## 53. Làm Sâu Module Điều Phối QC (`QCAuditPipeline` Hybrid Variant 1+3), Rào Chắn Toàn Vẹn `__all__` Toàn Monorepo & Phân Rã AST $\le 50$ LOC (`RULE-1.10`, `RULE-2.20`)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-06 — `/ccba-codebase-design`, Grok Sessions `f581b631` & `13eac630`)
+1. **Nhân đôi điều phối Shallow Wrapper giữa `ccba-ai` và `ccba-qc-core` (`COND-DISCOVER-POLICY`, `COND-FAULT-POLICY`, `COND-LAZY-CTOR`)**:
+   - `packages/ccba-ai/src/ccba_ai/pipeline.py` và `packages/ccba-qc-core/src/ccba_qc_core/pipeline.py` cùng định nghĩa lớp `QCAuditPipeline` với 112 dòng `run_audit` / `run_audit_sync` gần như giống hệt nhau, chỉ khác ở 3 chi tiết tinh tế: (a) `ccba_qc_core` truyền `extract_titleblocks=False, run_ai=False` vào `discover()` để tránh đốt tiền gọi Vision LLM 2 lần; (b) `ccba_qc_core` bắt `try/except Exception` kèm `logger.warning` trên từng stage (fault-tolerant batch); và (c) `ccba_qc_core` khởi tạo lười (lazy-init) `DiscoveryEngine`, `QuadViewAuditEngine`, `ReporterEngine` bên trong `run_audit`.
+2. **Định danh treo (`Unbound`) và Trùng tên lớp trong `__all__` giữa các Package (`COND-SEAM-PRUNE`, `COND-HARNESS-EXPORT`)**:
+   - `packages/ccba-harness/src/ccba_harness/__init__.py` khai báo `"load_eval_dataset"` trong `__all__` nhưng quên import từ `.evals`.
+   - `packages/ccba-legal-intel/src/ccba_legal/__init__.py` khai báo `"format_all_qcvn_md_tables"` (thực tế nằm ở `mdconverter.tables`) và lặp 2 lần `"download_three_tier"`.
+   - Cả `ccba_ai` và `mdconverter` đều xuất `"AuditFinding"` trong `__all__` với lược đồ Pydantic hoàn toàn khác nhau.
+3. **Nợ kỹ thuật hàm $> 50$ LOC tại `mdconverter` và `check_dependency_contracts.py` (`RULE-2.20`)**:
+   - Khi chạm vào `packages/mdconverter/src/mdconverter/academic.py`, `tables.py` và `scripts/governance/check_dependency_contracts.py`, cổng `peer-gate` (`check_ast_function_length`) chặn các hàm legacy vượt trần 50 dòng (`_check_module_import` 264 LOC, `audit_microstructure` 129 LOC, `export_paper_to_docx` 112 LOC, `extract_docx_tables` 109 LOC).
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.10`, `RULE-2.20`)
+1. **Deep Seam Subclassing via 1-Line Hook Overrides over Intermediate ABCs (`Hybrid Variant 1+3`)**:
+   - Thay vì tạo thêm lớp cơ sở trừu tượng trung gian (`BaseQCAuditPipeline`) làm phình bề mặt API, giữ `ccba_ai.pipeline.QCAuditPipeline` làm Deep Seam gốc (`_fault_tolerant: bool = False`, tách các stage helpers `_resolve_*_engine`, `_invoke_discovery`, `_run_discovery_stage`, `_run_audit_stage`, `_write_report` $\le 35$ LOC/hàm) và cho `ccba_qc_core.pipeline.QCAuditPipeline` kế thừa trực tiếp với `_fault_tolerant = True` + 4 hooks 1 dòng (`_invoke_discovery` khóa cứng `extract_titleblocks=False, run_ai=False`).
+2. **Runtime `__all__` Binding & Cross-Package Symbol Disambiguation (`check_package_all_exports`)**:
+   - Tích hợp `check_package_all_exports(packages_dir)` trực tiếp vào `scripts/governance/check_dependency_contracts.py` và `test_monorepo_package_all_exports_contract` (`packages/ccba-ai/tests/test_qc_pipeline.py`) để kiểm tra tự động cả 10 packages trong monorepo: đảm bảo `0` định danh treo (`hasattr(mod, sym)`) và `0` định danh trùng lặp trong `__all__`.
+   - Đổi tên xuất khẩu trong `mdconverter.__all__` thành `"AcademicAuditFinding"` (giữ alias `AuditFinding = AcademicAuditFinding` ở cấp module để tương thích ngược).
+3. **Filesystem Stem Sorting & AST $\le 50$ LOC Enforcement (`COND-SORT-PIN`, `RULE-2.20`)**:
+   - Mọi truy vấn `rglob("*.pdf")` nạp bảng ánh xạ bản vẽ (`QCBatchOrchestrator.find_page_in_dir`) bắt buộc sắp xếp tất định `sorted(directory.rglob("*.pdf"), key=lambda p: (p.stem, str(p)))`.
+   - Phân rã toàn bộ hàm vượt trần 50 LOC trong `academic.py`, `tables.py`, và `check_dependency_contracts.py` xuống $\le 45$ LOC/hàm.

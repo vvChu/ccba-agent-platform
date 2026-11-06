@@ -291,3 +291,72 @@ def test_qc_audit_pipeline_orchestration(tmp_path: Path) -> None:
     assert len(summary.reports) == 1
     assert summary.report_file is not None
     assert summary.report_file.exists()
+    mock_discovery.discover.assert_awaited_once_with(
+        [pdf_dummy], extract_titleblocks=False, run_ai=False
+    )
+
+
+def test_find_page_in_dir_deterministic_stem_sort(tmp_path: Path) -> None:
+    """Verify QCBatchOrchestrator.find_page_in_dir selects winner by (stem, path)."""
+    from unittest.mock import MagicMock
+
+    from ccba_qc_core.pipeline import QCBatchOrchestrator
+
+    drawings = tmp_path / "drawings"
+    drawings.mkdir()
+    pdf_b = drawings / "b_sheet.pdf"
+    pdf_a = drawings / "a_sheet.pdf"
+    pdf_b.write_bytes(b"%PDF-1.4 dummy")
+    pdf_a.write_bytes(b"%PDF-1.4 dummy")
+
+    orchestrator = QCBatchOrchestrator(
+        project_dir=tmp_path,
+        matrix_csv=tmp_path / "matrix.csv",
+        out_dir=tmp_path / "out",
+    )
+    fake_page = MagicMock()
+    fake_page.get_text.return_value = "SHEET KT-01 FLOOR PLAN"
+    orchestrator._get_doc = MagicMock(return_value=[fake_page])  # type: ignore[method-assign]
+
+    winner_path, page_idx = orchestrator.find_page_in_dir(drawings, "KT-01")
+    assert winner_path == pdf_a
+    assert page_idx == 0
+
+
+def test_qc_audit_pipeline_empty_dir_and_fault_tolerant_warnings(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify empty-dir skip and fault-tolerant warning paths in QCAuditPipeline."""
+    from unittest.mock import MagicMock
+
+    empty_dir = tmp_path / "empty_proj"
+    empty_dir.mkdir()
+    mock_disc = AsyncMock()
+    mock_audit = AsyncMock()
+    mock_rep = MagicMock()
+
+    empty_pipe = QCAuditPipeline(
+        discovery_engine=mock_disc, audit_engine=mock_audit, reporter_engine=mock_rep
+    )
+    empty_sum = empty_pipe.run_audit_sync(project_dir=empty_dir, output_dir=tmp_path / "out_empty")
+    mock_disc.discover.assert_not_awaited()
+    mock_audit.run_multi_level_audit.assert_not_awaited()
+    assert empty_sum.levels_audited == []
+
+    fault_dir = tmp_path / "fault_proj"
+    fault_dir.mkdir()
+    (fault_dir / "tang_01.pdf").write_bytes(b"%PDF-1.4 dummy")
+    mock_disc.discover.side_effect = RuntimeError("disc boom")
+    mock_audit.run_multi_level_audit.side_effect = RuntimeError("audit boom")
+    mock_rep.synthesize.side_effect = RuntimeError("rep boom")
+
+    fault_out = tmp_path / "out_fault"
+    fault_sum = empty_pipe.run_audit_sync(project_dir=fault_dir, output_dir=fault_out)
+    assert fault_sum.report_file is not None
+    assert fault_sum.report_file.exists()
+    assert "Báo Cáo Thẩm Tra Chất Lượng Hồ Sơ: fault_proj" in fault_sum.report_file.read_text(
+        encoding="utf-8"
+    )
+    assert "Discovery warning:" in caplog.text
+    assert "Audit run warning:" in caplog.text
+    assert "Report synthesis warning:" in caplog.text
