@@ -21,7 +21,7 @@ Quy trình thao tác chuẩn (SOP) này hướng dẫn chi tiết các bước t
 graph TD
     S1["Bước 1: Tạo Thư Mục Dự Án<br/>(D:\OneDrive - IBST BIM\00 Works\...)"] --> S2["Bước 2: Khởi Tạo workspace_context.yaml<br/>(Sao chép từ template chuẩn)"]
     S2 --> S3["Bước 3: Chạy Lệnh Adopt Spoke<br/>(python scripts/adopt_spoke.py ...)"]
-    S3 --> S4["Bước 4: Cấu Hình .env & AI Gateway<br/>(AI_GATEWAY_KEY=KEY_PROJ_...)"]
+    S3 --> S4["Bước 4: Cấu Hình .env & AI Gateway<br/>(AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>)"]
     S4 --> Complete["🎉 Sẵn Sàng Thực Thi AI Workflows"]
 ```
 
@@ -90,8 +90,8 @@ Lệnh này sẽ tự động:
 Tạo tệp `.env` tại thư mục gốc của Spoke dự án:
 
 ```env
-AI_GATEWAY_URL=http://100.83.192.30:8090/v1
-AI_GATEWAY_KEY=KEY_PROJ_2026_04_DH_VIET_NHAT
+AI_GATEWAY_URL=http://<AI_GATEWAY_HOST>:8090/v1
+AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_MODEL=gemini-3.7-flash
 ```
 
