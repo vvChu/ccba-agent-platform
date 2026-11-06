@@ -301,7 +301,9 @@ def convert_docx_to_okf_bundle(
     target_md = bundle_dir / f"{in_file.stem}.md"
 
     try:
-        import mammoth  # type: ignore[import-untyped]
+        import importlib
+
+        mammoth: Any = importlib.import_module("mammoth")
 
         with open(in_file, "rb") as f:
             result = mammoth.convert_to_markdown(f)
