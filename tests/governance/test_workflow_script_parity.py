@@ -36,6 +36,7 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/_guardrails/safe_runner.py",
     "scripts/spoke_bootstrap.py",
     "scripts/spoke_cli.py",
+    "scripts/sync_adr_matrix.py",
 }
 
 

@@ -511,40 +511,20 @@ class SkillValidator:
                 )
             ]
 
+        fp = str(file_path)
         if yaml is None:
-            return [
-                SkillAuditIssue(
-                    1,
-                    str(file_path),
-                    "PyYAML package is required to parse skill frontmatter. Run: pip install pyyaml",
-                    category="YAML_PACKAGE_MISSING",
-                    file_path=str(file_path),
-                )
-            ]
+            msg = "PyYAML package is required to parse skill frontmatter. Run: pip install pyyaml"
+            return [SkillAuditIssue(1, fp, msg, "YAML_PACKAGE_MISSING", fp)]
 
         try:
             meta = yaml.safe_load(match.group(1))
         except Exception as e:
-            return [
-                SkillAuditIssue(
-                    1,
-                    str(file_path),
-                    f"Failed to parse frontmatter YAML: {e}",
-                    category="YAML_PARSE_ERROR",
-                    file_path=str(file_path),
-                )
-            ]
+            msg = f"Failed to parse frontmatter YAML: {e}"
+            return [SkillAuditIssue(1, fp, msg, "YAML_PARSE_ERROR", fp)]
 
         if not isinstance(meta, dict):
-            return [
-                SkillAuditIssue(
-                    1,
-                    str(file_path),
-                    "Frontmatter YAML is not a valid dictionary",
-                    category="MALFORMED_FRONTMATTER",
-                    file_path=str(file_path),
-                )
-            ]
+            msg = "Frontmatter YAML is not a valid dictionary"
+            return [SkillAuditIssue(1, fp, msg, "MALFORMED_FRONTMATTER", fp)]
 
         name = meta.get("name")
         description = meta.get("description")
@@ -554,26 +534,24 @@ class SkillValidator:
 
         # Name validation
         if not name or not isinstance(name, str):
-            issues.append(
-                SkillAuditIssue(
-                    1,
-                    str(file_path),
-                    "Missing or invalid 'name' in frontmatter",
-                    category="MISSING_NAME",
-                    file_path=str(file_path),
-                )
-            )
+            msg = "Missing or invalid 'name' in frontmatter"
+            issues.append(SkillAuditIssue(1, fp, msg, "MISSING_NAME", fp))
         else:
-            is_valid_namespace = name.startswith(("ccba-", "bigbim-")) or name == "platform-loader"
+            is_verify_cat = str(meta.get("category", "")).strip() == "verification"
+            is_valid_namespace = (
+                name.startswith(("ccba-", "bigbim-"))
+                or name == "platform-loader"
+                or (name.startswith("verify-") and is_verify_cat)
+            )
             if not is_valid_namespace:
                 issues.append(
                     SkillAuditIssue(
                         1,
-                        str(file_path),
+                        fp,
                         f"Skill name '{name}' violates ADR-0056 namespace rules. "
-                        f"Must start with 'ccba-' (or 'bigbim-', or exactly 'platform-loader')",
+                        f"Must start with 'ccba-' (or 'bigbim-', 'verify-' with category: verification, or 'platform-loader')",
                         category="INVALID_NAMESPACE",
-                        file_path=str(file_path),
+                        file_path=fp,
                     )
                 )
 

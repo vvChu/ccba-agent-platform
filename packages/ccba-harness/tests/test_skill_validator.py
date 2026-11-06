@@ -104,6 +104,14 @@ def test_missing_name_and_invalid_namespace() -> None:
         issues = validator.audit_skill(file_path)
         assert any(i.category == "INVALID_NAMESPACE" for i in issues)
 
+        # Valid verification skill namespace (verify-* with category: verification)
+        file_path.write_text(
+            "---\nname: verify-sample-app\ncategory: verification\ndescription: Desc.\nbundle: _core\n---\n# Title",
+            encoding="utf-8",
+        )
+        issues = validator.audit_skill(file_path)
+        assert not any(i.category == "INVALID_NAMESPACE" for i in issues)
+
 
 def test_description_length_limit() -> None:
     """Test description <= 180 chars for model-invoked skills."""
