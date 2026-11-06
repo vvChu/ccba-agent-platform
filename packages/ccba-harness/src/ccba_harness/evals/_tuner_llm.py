@@ -20,8 +20,14 @@ from ._tuner_models import (
 from .models import EvalItem
 
 try:
-    from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
-    from ccba_ai.client import AIClient, AsyncAIClient
+    from ccba_ai.circuit_breaker import (
+        CircuitBreaker as CircuitBreaker,
+    )
+    from ccba_ai.circuit_breaker import (
+        CircuitBreakerOpenError as CircuitBreakerOpenError,
+    )
+    from ccba_ai.client import AIClient as AIClient
+    from ccba_ai.client import AsyncAIClient as AsyncAIClient
 except ImportError:
     AIClient = None  # type: ignore[assignment, misc]
     AsyncAIClient = None  # type: ignore[assignment, misc]
@@ -219,7 +225,7 @@ class LLMTaskAdapter:
     def _init_clients(self, client: Any | None, async_client: Any | None) -> None:
         """Initializes synchronous and asynchronous AI clients with fallback validation."""
         if client is not None or async_client is not None:
-            self.client = client if client is not None else async_client
+            self.client: Any = client if client is not None else async_client
         elif AIClient is not None:
             self.client = AIClient(default_model=self.model, circuit_breaker=self.circuit_breaker)
         else:
@@ -228,7 +234,7 @@ class LLMTaskAdapter:
             )
 
         if async_client is not None or client is not None:
-            self.async_client = async_client if async_client is not None else client
+            self.async_client: Any = async_client if async_client is not None else client
         elif AsyncAIClient is not None:
             self.async_client = AsyncAIClient(
                 default_model=self.model, circuit_breaker=self.circuit_breaker

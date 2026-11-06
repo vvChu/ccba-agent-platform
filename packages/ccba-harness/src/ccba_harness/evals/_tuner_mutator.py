@@ -721,7 +721,8 @@ class _RatchetMutationGitMixin:
         self, initial_content: str
     ) -> tuple[str, RatchetReport | None]:
         """Checks stability zone lock and strategy exhaustion before baseline evaluation."""
-        vel_state = getattr(self, "velocity_tracker", None) and self.velocity_tracker.load_state()
+        vel_tracker: Any = getattr(self, "velocity_tracker", None)
+        vel_state = vel_tracker.load_state() if vel_tracker is not None else None
         allowed, lock_reason = check_skill_mutation_allowed(
             initial_content, velocity_state=vel_state
         )
