@@ -1152,3 +1152,27 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
    - Khi `health_posture` là `STALE` hoặc `ARCHIVED`, Pha 4 (Challenge) bắt buộc kích hoạt câu hỏi phản biện *Abandonware / Maintenance Ownership* ở cả chế độ đầy đủ và chế độ `--fast` (`COND-R2`), bên cạnh 2 câu hỏi bất biến ADR-0057.
 3. **Slash-Token Avoidance for REST Endpoints in Skill Markdown (`RULE-2.21`)**:
    - Trong mọi tệp `.agents/skills/*/SKILL.md` và `references/*.md`, tuyệt đối không viết đường dẫn REST API bắt đầu bằng dấu gạch chéo độc lập sau khoảng trắng hoặc dấu ngoặc (như `GET /repos/...` hay ``(`/commits`)``); bắt buộc viết theo cú pháp CLI không có `/` đầu (`gh api repos/{owner}/{repo}`) để không kích hoạt dương tính giả `UNREGISTERED_SLASH_COMMAND` trên `validate_skills.py`.
+
+---
+
+## 53. Làm Sâu Module Điều Phối QC (`QCAuditPipeline` Hybrid Variant 1+3), Rào Chắn Toàn Vẹn `__all__` Toàn Monorepo & Phân Rã AST $\le 50$ LOC (`RULE-1.10`, `RULE-2.20`)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-06 — `/ccba-codebase-design`, Grok Sessions `f581b631` & `13eac630`)
+1. **Nhân đôi điều phối Shallow Wrapper giữa `ccba-ai` và `ccba-qc-core` (`COND-DISCOVER-POLICY`, `COND-FAULT-POLICY`, `COND-LAZY-CTOR`)**:
+   - `packages/ccba-ai/src/ccba_ai/pipeline.py` và `packages/ccba-qc-core/src/ccba_qc_core/pipeline.py` cùng định nghĩa lớp `QCAuditPipeline` với 112 dòng `run_audit` / `run_audit_sync` gần như giống hệt nhau, chỉ khác ở 3 chi tiết tinh tế: (a) `ccba_qc_core` truyền `extract_titleblocks=False, run_ai=False` vào `discover()` để tránh đốt tiền gọi Vision LLM 2 lần; (b) `ccba_qc_core` bắt `try/except Exception` kèm `logger.warning` trên từng stage (fault-tolerant batch); và (c) `ccba_qc_core` khởi tạo lười (lazy-init) `DiscoveryEngine`, `QuadViewAuditEngine`, `ReporterEngine` bên trong `run_audit`.
+2. **Định danh treo (`Unbound`) và Trùng tên lớp trong `__all__` giữa các Package (`COND-SEAM-PRUNE`, `COND-HARNESS-EXPORT`)**:
+   - `packages/ccba-harness/src/ccba_harness/__init__.py` khai báo `"load_eval_dataset"` trong `__all__` nhưng quên import từ `.evals`.
+   - `packages/ccba-legal-intel/src/ccba_legal/__init__.py` khai báo `"format_all_qcvn_md_tables"` (thực tế nằm ở `mdconverter.tables`) và lặp 2 lần `"download_three_tier"`.
+   - Cả `ccba_ai` và `mdconverter` đều xuất `"AuditFinding"` trong `__all__` với lược đồ Pydantic hoàn toàn khác nhau.
+3. **Nợ kỹ thuật hàm $> 50$ LOC tại `mdconverter` và `check_dependency_contracts.py` (`RULE-2.20`)**:
+   - Khi chạm vào `packages/mdconverter/src/mdconverter/academic.py`, `tables.py` và `scripts/governance/check_dependency_contracts.py`, cổng `peer-gate` (`check_ast_function_length`) chặn các hàm legacy vượt trần 50 dòng (`_check_module_import` 264 LOC, `audit_microstructure` 129 LOC, `export_paper_to_docx` 112 LOC, `extract_docx_tables` 109 LOC).
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.10`, `RULE-2.20`)
+1. **Deep Seam Subclassing via 1-Line Hook Overrides over Intermediate ABCs (`Hybrid Variant 1+3`)**:
+   - Thay vì tạo thêm lớp cơ sở trừu tượng trung gian (`BaseQCAuditPipeline`) làm phình bề mặt API, giữ `ccba_ai.pipeline.QCAuditPipeline` làm Deep Seam gốc (`_fault_tolerant: bool = False`, tách các stage helpers `_resolve_*_engine`, `_invoke_discovery`, `_run_discovery_stage`, `_run_audit_stage`, `_write_report` $\le 35$ LOC/hàm) và cho `ccba_qc_core.pipeline.QCAuditPipeline` kế thừa trực tiếp với `_fault_tolerant = True` + 4 hooks 1 dòng (`_invoke_discovery` khóa cứng `extract_titleblocks=False, run_ai=False`).
+2. **Runtime `__all__` Binding & Cross-Package Symbol Disambiguation (`check_package_all_exports`)**:
+   - Tích hợp `check_package_all_exports(packages_dir)` trực tiếp vào `scripts/governance/check_dependency_contracts.py` và `test_monorepo_package_all_exports_contract` (`packages/ccba-ai/tests/test_qc_pipeline.py`) để kiểm tra tự động cả 10 packages trong monorepo: đảm bảo `0` định danh treo (`hasattr(mod, sym)`) và `0` định danh trùng lặp trong `__all__`.
+   - Đổi tên xuất khẩu trong `mdconverter.__all__` thành `"AcademicAuditFinding"` (giữ alias `AuditFinding = AcademicAuditFinding` ở cấp module để tương thích ngược).
+3. **Filesystem Stem Sorting & AST $\le 50$ LOC Enforcement (`COND-SORT-PIN`, `RULE-2.20`)**:
+   - Mọi truy vấn `rglob("*.pdf")` nạp bảng ánh xạ bản vẽ (`QCBatchOrchestrator.find_page_in_dir`) bắt buộc sắp xếp tất định `sorted(directory.rglob("*.pdf"), key=lambda p: (p.stem, str(p)))`.
+   - Phân rã toàn bộ hàm vượt trần 50 LOC trong `academic.py`, `tables.py`, và `check_dependency_contracts.py` xuống $\le 45$ LOC/hàm.

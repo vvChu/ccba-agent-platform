@@ -9,7 +9,7 @@
 
 - **RULE-1.1 [ADR 0057 — Khung 2 Giai Đoạn & GPI]**: Cổng 0 (Determinism) $\to$ Deep Seams (`packages/*/src/`); Cổng 1 (Orchestration) $\to$ Tier 3. $\mathbf{GPI} = 2.5S + 2.0K + 2.0A - 1.5P$ ($< 12.0 \to$ Tier 2A; $\ge 12.0 \to$ Tier 2B; Rituals $A = 1.0$).
 - *(RULE-1.2 [ADR 0053 Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051] tại Mục 23-38)*
-- **RULE-1.10 [Platform-Aware KISS]**: Tái sử dụng Package Seams (`compile_catalog.py --query <kw>`); CẤM script chắp vá hoặc hoãn Phase 2.
+- **RULE-1.10 [Platform-Aware KISS & Deep Seam Subclassing]**: Tái sử dụng Package Seams (`compile_catalog.py --query <kw>`); CẤM script chắp vá hoặc tạo ABC trung gian khi có thể kế thừa Deep Seam gốc với `_fault_tolerant` + 1-line hooks (`QCAuditPipeline`, Mục 53).
 - **RULE-1.12 [ADR 0060 — Federated Architecture]**: Unignore `!.agents/teams/`; 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`) tự trị.
 - **RULE-1.13 [Parameter Externalization]**: CẤM raw model/IP; dùng `choose_model()`/`ModelArchetype` & env vars (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`, `scan_spoke_cleanliness()`).
 - **RULE-1.14 [ADR 0062 — Declarative Sync Registry]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale; `spoke_bootstrap.py` dùng Kahn's topo sort.
@@ -26,7 +26,7 @@
 - *(RULE-2.1..2.4, 2.8, 2.10..2.19 tại Mục 24-35: `.md/knowledge/` biên mục vào `index.md` chống Orphan Notes)*
 - **RULE-2.5 [ADR 0058 — Archetype Routing & Opt-In Tuner]**: Ánh xạ `eval_*.json` qua `archetypes.py`; `_run_pre_eval_guards` chặn delta `audit_skill()`; `run_nightly_tuner.sh` mặc định chạy `verify-patch --preset skill`.
 - **RULE-2.9 [Test Fixture Isolation & Sandbox]**: `conftest.py` xóa env Hub/Legal & mock lock; E2E Spoke sync dùng `CCBA_SKIP_GIT_PULL=1` & assert SHA-256 `spoke_registry.yaml`.
-- **RULE-2.20 [Zero-Quarantine, AST Budget & Statechart BFS]**: CẤM hàm $> 50$ LOC, CLI $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **Cycle-Safe BFS (`visited: set[str]`)**.
+- **RULE-2.20 [Zero-Quarantine, AST Budget, `__all__` Parity & Statechart BFS]**: CẤM hàm $> 50$ LOC, CLI $> 40$ LOC, module $> 800$ LOC (`0` `# ccba:quarantine`), và định danh treo/trùng trong `__all__` (`check_package_all_exports`, Mục 53). Test qua **Two-Edit Litmus** & `Semantic Mutation Proof` 3 bước; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **Cycle-Safe BFS (`visited: set[str]`)**.
 - **RULE-2.21 [Single-Source Harnesses, Isolated `__path__` & Wiki]**: `scripts/tests/__init__.py` nối `tests/` gốc vào `__path__`. 5-block harnesses chuẩn tại `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/` (CẤM `.agents/skills/ccba-*/harness/`). Wiki lịch sử tại `.md/knowledge/wiki/index.md` (Mục 50).
 
 ---
