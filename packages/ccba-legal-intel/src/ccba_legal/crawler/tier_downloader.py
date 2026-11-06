@@ -151,12 +151,8 @@ PDF_FINDER_JS = """
     });
     if (a_tier1) {
         let href_val = (a_tier1.getAttribute('href') || a_tier1.href || '').trim();
-        if (href_val.toLowerCase().startsWith('javascript:')) {
-            try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
-            catch(e) { a_tier1.click(); }
-        } else {
-            a_tier1.click();
-        }
+        // Never eval javascript: href bodies — click the element only.
+        a_tier1.click();
         return { clicked: true, tier: 1, href: a_tier1.href || a_tier1.innerText };
     }
     // Pass 2: Tier 3 - Gazette Scan / Photocopy PDF Fallback (part=0 or #vietnameseHyperLink_Pdf)
@@ -178,12 +174,8 @@ PDF_FINDER_JS = """
     }
     if (a_tier3) {
         let href_val = (a_tier3.getAttribute('href') || a_tier3.href || '').trim();
-        if (href_val.toLowerCase().startsWith('javascript:')) {
-            try { eval(decodeURIComponent(href_val.replace(/^javascript:/i, ''))); }
-            catch(e) { a_tier3.click(); }
-        } else {
-            a_tier3.click();
-        }
+        // Never eval javascript: href bodies — click the element only.
+        a_tier3.click();
         return { clicked: true, tier: 3, href: a_tier3.href || a_tier3.innerText };
     }
     return { clicked: false, tier: null, href: null };
@@ -280,16 +272,8 @@ def trigger_download(
             }
             if (a_docx) {
                 let href_val = (a_docx.getAttribute('href') || a_docx.href || '').trim();
-                if (href_val.toLowerCase().startsWith('javascript:')) {
-                    let jsCode = decodeURIComponent(href_val.replace(/^javascript:/i, ''));
-                    try {
-                        eval(jsCode);
-                    } catch (e) {
-                        a_docx.click();
-                    }
-                } else {
-                    a_docx.click();
-                }
+                // Never eval javascript: href bodies — click the element only.
+                a_docx.click();
                 return "Clicked DOCX: " + (a_docx.innerText || a_docx.href);
             }
             return "No DOCX/DOC link in tab=7";
