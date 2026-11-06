@@ -10,10 +10,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+
+def _resolve_npx_executable() -> str:
+    """Resolve the npx executable path across platforms without invoking a shell."""
+    if sys.platform == "win32":
+        resolved = shutil.which("npx.cmd") or shutil.which("npx")
+        return resolved or "npx.cmd"
+    return shutil.which("npx") or "npx"
 
 
 class RepomixPackager:
@@ -45,12 +54,12 @@ class RepomixPackager:
         """Check if npx CLI is available in the current environment."""
         try:
             subprocess.run(
-                ["npx", "--version"],
+                [_resolve_npx_executable(), "--version"],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
                 check=True,
-                shell=True if sys.platform == "win32" else False,
+                shell=False,
             )
             return True
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -90,7 +99,7 @@ class RepomixPackager:
 
             print(f"[Repomix Pack] Running npx repomix on directory: {source_dir}")
             cmd = [
-                "npx",
+                _resolve_npx_executable(),
                 "--yes",
                 "repomix",
                 str(source_dir.resolve()),
@@ -103,7 +112,7 @@ class RepomixPackager:
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
-                shell=True if sys.platform == "win32" else False,
+                shell=False,
             )
 
             if result.returncode == 0:
