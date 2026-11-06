@@ -313,7 +313,7 @@ Deep module của package `ccba-pdf-prep` cung cấp seam công khai duy nhất 
 _Avoid_: PDFPrepEngine, pdf_pipeline, pdf_processor
 
 **Source Manifest (Biên bản nguồn)**:
-Bản ghi siêu dữ liệu bắt buộc được tạo ra trong Pha 1 (Recon) của quy trình port tính năng (`ccba-xia`), bao gồm đường dẫn repo, nhánh, commit SHA, loại giấy phép (`license_type`) và danh sách dependencies cốt lõi.
+Bản ghi siêu dữ liệu bắt buộc được tạo ra trong Pha 1 (Recon) của quy trình port tính năng (`ccba-xia`), bao gồm đường dẫn repo, nhánh, commit SHA, loại giấy phép (`license_type`), các chỉ số sức khỏe mã nguồn mở (`stars_count`, `pushed_at`, `tip_commit_date`, `health_posture`) và danh sách dependencies cốt lõi.
 _Avoid_: Source info, repo metadata
 
 **Copy-Raw (Sao chép thô)**:
