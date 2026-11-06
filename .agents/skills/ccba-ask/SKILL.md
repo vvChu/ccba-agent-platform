@@ -24,7 +24,7 @@ triggers:
 - brainstorm
 metadata:
   author: CCBA
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Bản đồ Định hướng Kỹ năng & Điều phối Tư duy Nền tảng (CCBA Ask & Brainstorm Guide)
