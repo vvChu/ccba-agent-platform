@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .verifier import shell_command_to_argv
+
 
 class EvalOrchestrator:
     """Deep module orchestrating test evaluation suites, sandbox isolation, and process locking."""
@@ -66,7 +68,11 @@ class EvalOrchestrator:
                             f"🧹 [AUTO-LOCK] Thu hồi tiến trình cũ PID {pid} ({script_keyword})..."
                         )
                         proc.terminate()
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                except (
+                    psutil.NoSuchProcess,
+                    psutil.AccessDenied,
+                    psutil.ZombieProcess,
+                ):
                     continue
         except ImportError:
             if sys.platform == "win32":
@@ -95,7 +101,8 @@ class EvalOrchestrator:
                                         f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid}..."
                                     )
                                     subprocess.run(
-                                        ["taskkill", "/F", "/PID", str(pid)], capture_output=True
+                                        ["taskkill", "/F", "/PID", str(pid)],
+                                        capture_output=True,
                                     )
                 except Exception:
                     pass
@@ -195,9 +202,10 @@ class EvalOrchestrator:
 
         try:
             with tempfile.TemporaryFile() as tmp_out:
+                argv = shell_command_to_argv(cmd, cwd=cwd) if isinstance(cmd, str) else list(cmd)
                 proc = subprocess.Popen(
-                    cmd,
-                    shell=True,
+                    argv,
+                    shell=False,
                     cwd=cwd,
                     stdout=tmp_out,
                     stderr=subprocess.STDOUT,

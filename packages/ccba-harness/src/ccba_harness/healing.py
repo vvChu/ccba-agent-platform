@@ -20,7 +20,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from .verifier import PatchVerificationReport, verify_patch_execution
+from .verifier import (
+    PatchVerificationReport,
+    shell_command_to_argv,
+    verify_patch_execution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -367,9 +371,10 @@ class SelfHealingEngine:
 
         try:
             logger.info("Executing self-healing command: %s", action.command)
+            argv = shell_command_to_argv(action.command, cwd=self.base_dir)
             proc = subprocess.run(
-                action.command,
-                shell=True,
+                argv,
+                shell=False,
                 cwd=str(self.base_dir),
                 capture_output=True,
                 text=True,
@@ -484,7 +489,8 @@ class SelfHealingEngine:
 
             if current_report.all_passed:
                 logger.info(
-                    "Self-Healing successfully restored Exit Code 0 at iteration %d!", iteration
+                    "Self-Healing successfully restored Exit Code 0 at iteration %d!",
+                    iteration,
                 )
                 return HealingReport(
                     success=True,
