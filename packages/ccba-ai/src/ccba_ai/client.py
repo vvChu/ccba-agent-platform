@@ -233,9 +233,10 @@ class _BaseAIClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.circuit_breaker = circuit_breaker if circuit_breaker is not None else CircuitBreaker()
+        key_val = _resolve_api_key(api_key)
         self._client = self._client_cls(
             base_url=self.base_url,
-            api_key=_resolve_api_key(api_key),
+            api_key=key_val,
             timeout=self.timeout,
         )
 
