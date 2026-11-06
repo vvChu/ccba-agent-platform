@@ -474,6 +474,97 @@ def test_extract_grok_session_telemetry_multi_turn_resume_and_degraded_reasoning
     assert report.verdict == "APPROVE_WITH_CONDITIONS"
     assert any(c.id == "COND-DEGRADED-REASONING" and c.blocking for c in report.conditions)
 
+    # Verify synthesize_turns=2 sums turns[-2:] while keeping last-turn degraded_reasoning (COND-02)
+    tel_synth = extract_grok_session_telemetry(
+        session_id="sess-resumed",
+        duration_seconds=35.0,
+        fallback_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+        synthesize_turns=2,
+    )
+    assert tel_synth is not None
+    assert tel_synth.turn_count == 2
+    assert tel_synth.input_tokens == 210000
+    assert tel_synth.output_tokens == 3500
+    assert tel_synth.reasoning_tokens == 5000
+    assert tel_synth.cached_read_tokens == 118000
+    assert tel_synth.total_tokens == 213500
+    assert tel_synth.model_calls == 6
+    assert tel_synth.degraded_reasoning is True
+
+    # Verify forked child session (len(turns) == 1) sums parent_session_id counters (COND-02)
+    child_payload = {
+        "session": {"primaryModelId": "grok-4.7", "turnCount": 1},
+        "turns": [
+            {
+                "turnNumber": 1,
+                "inputTokens": 40000,
+                "outputTokens": 1200,
+                "reasoningTokens": 800,
+                "cachedReadTokens": 38000,
+                "totalTokens": 41200,
+                "modelCalls": 1,
+                "costUsdTicks": 100000000,
+            }
+        ],
+    }
+    parent_payload = {
+        "session": {"primaryModelId": "grok-4.7", "turnCount": 1},
+        "turns": [
+            {
+                "turnNumber": 1,
+                "inputTokens": 60000,
+                "outputTokens": 800,
+                "reasoningTokens": 4000,
+                "cachedReadTokens": 10000,
+                "totalTokens": 60800,
+                "modelCalls": 8,
+                "costUsdTicks": 300000000,
+            }
+        ],
+    }
+
+    def mock_run_fork(cmd, **kwargs):
+        target_sid = cmd[2]
+        body = child_payload if target_sid == "child-sid" else parent_payload
+        return subprocess.CompletedProcess(
+            args=cmd, returncode=0, stdout=json.dumps(body), stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", mock_run_fork)
+    tel_fork = extract_grok_session_telemetry(
+        session_id="child-sid",
+        duration_seconds=42.5,
+        fallback_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+        synthesize_turns=2,
+        parent_session_id="parent-sid",
+    )
+    assert tel_fork is not None
+    assert tel_fork.turn_count == 2
+    assert tel_fork.input_tokens == 100000
+    assert tel_fork.output_tokens == 2000
+    assert tel_fork.reasoning_tokens == 4800
+    assert tel_fork.cached_read_tokens == 48000
+    assert tel_fork.total_tokens == 102000
+    assert tel_fork.model_calls == 9
+    assert tel_fork.cost_usd == 0.04
+    assert tel_fork.degraded_reasoning is False
+
+    # Verify synthesize_turns=1 on 1-turn child_payload still overlays turns[0] counters
+    tel_single = extract_grok_session_telemetry(
+        session_id="child-sid",
+        duration_seconds=10.0,
+        fallback_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+        synthesize_turns=1,
+    )
+    assert tel_single is not None
+    assert tel_single.turn_count == 1
+    assert tel_single.input_tokens == 40000
+    assert tel_single.reasoning_tokens == 800
+    assert tel_single.degraded_reasoning is False
+
 
 def test_single_dispatch_finalize_degraded_reasoning_and_unconditional_rerender(
     tmp_path, monkeypatch

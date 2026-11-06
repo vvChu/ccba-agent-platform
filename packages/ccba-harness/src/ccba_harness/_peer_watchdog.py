@@ -8,6 +8,7 @@ import os
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -128,6 +129,15 @@ BOUNDED_TOOL_BUDGET_PROMPT: str = (
     "with risk_score as an integer 1..5 and conditions items containing id, description, and blocking."
 )
 
+AUDIT_BASE_SYSTEM_PROMPT: str = (
+    "You are an expert software, architecture, and specification peer auditor. "
+    "In your final synthesis turn (containing zero tool calls), start your response with YAML frontmatter "
+    "enclosed in '---' containing request_id, verdict "
+    "(APPROVE | APPROVE_WITH_CONDITIONS | APPROVE_PLAN | REVISE_PLAN | REJECT_PLAN | REJECT | FINAL_ACCEPT | HANDOFF), "
+    "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
+    "followed by your structured audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
+)
+
 SYNTHESIS_FALLBACK_PROMPT: str = (
     "You are synthesizing the final peer audit verdict from evidence already gathered in this session. "
     "Emit zero tool calls. Start your response with YAML frontmatter enclosed in '---' containing "
@@ -147,13 +157,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "disable_web_search": True,
         "verbatim": True,
         "reasoning_effort": "xhigh",
-        "system_prompt": (
-            "You are an expert technical implementation plan auditor. In your final synthesis turn "
-            "(containing zero tool calls), start your response with YAML frontmatter enclosed in '---' "
-            "containing request_id, verdict (APPROVE_PLAN | REVISE_PLAN | REJECT_PLAN | APPROVE | APPROVE_WITH_CONDITIONS | HANDOFF), "
-            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
-            "followed by your plan audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
-        ),
+        "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
         "timeout": 900.0,
     },
     "agentic_code": {
@@ -203,13 +207,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "disable_web_search": True,
         "verbatim": True,
         "reasoning_effort": "high",
-        "system_prompt": (
-            "You are an expert peer code reviewer. In your final synthesis turn (containing zero tool calls), "
-            "start your response with YAML frontmatter enclosed in '---' containing request_id, verdict "
-            "(APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score (integer 1..5), "
-            "conditions (list of {id, description, blocking}), and summary, followed by your structured code review findings. "
-            + BOUNDED_TOOL_BUDGET_PROMPT
-        ),
+        "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
         "timeout": 300.0,
     },
     "arch_audit": {
@@ -222,13 +220,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "disable_web_search": True,
         "verbatim": True,
         "reasoning_effort": "xhigh",
-        "system_prompt": (
-            "You are an expert software and system architecture auditor. In your final synthesis turn "
-            "(containing zero tool calls), start your response with YAML frontmatter enclosed in '---' "
-            "containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), "
-            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
-            "followed by your architectural audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
-        ),
+        "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
         "timeout": 600.0,
     },
     "audit_direct": {
@@ -261,19 +253,13 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "output_format": "json",
         "reasoning_effort": "xhigh",
-        "system_prompt": (
-            "You are a Stage 1 Pre-Code Deep Architectural & Line-Level Specification Auditor. "
-            "In your final synthesis turn (containing zero tool calls), start your response with YAML frontmatter "
-            "enclosed in '---' containing request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT), "
-            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
-            "followed by your full line-level audit. " + BOUNDED_TOOL_BUDGET_PROMPT
-        ),
+        "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
         "timeout": 900.0,
     },
     "signoff_diff": {
         "model": "grok-4.7",  # ccba:allow-raw-model
         "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 15,
+        "max_turns": 8,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": list(READ_ONLY_DISALLOW_LIST),
         "deny": ["Bash", "Write", "Edit", "WebFetch"],
@@ -282,13 +268,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "fork_session": True,
         "output_format": "json",
         "reasoning_effort": "high",
-        "system_prompt": (
-            "You are a Stage 3 Post-Code Diff Sign-off Auditor resuming a prior Stage 1 session. "
-            "In your final synthesis turn (containing zero tool calls), start your response with YAML frontmatter "
-            "enclosed in '---' containing request_id, verdict (FINAL_ACCEPT | APPROVE | APPROVE_WITH_CONDITIONS | REJECT), "
-            "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
-            "followed by your delta verification table. " + BOUNDED_TOOL_BUDGET_PROMPT
-        ),
+        "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
         "timeout": 600.0,
     },
 }
@@ -307,6 +287,11 @@ _VERDICT_ALIASES: dict[str, str] = {
     "REJECTED_PLAN": "REJECT_PLAN",
     "REVISE": "REVISE_PLAN",
     "NEEDS_REVISION": "REVISE_PLAN",
+    "REQUEST_CHANGES": "REVISE_PLAN",
+    "CHANGES_REQUESTED": "REVISE_PLAN",
+    "CONDITIONAL": "APPROVE_WITH_CONDITIONS",
+    "CONDITIONAL_PASS": "APPROVE_WITH_CONDITIONS",
+    "ACCEPTED_WITH_REVISED_CONDITIONS": "APPROVE_WITH_CONDITIONS",
     "PASS": "GATE_PASS",
     "FAIL": "GATE_FAIL",
     "APPROVE_CODE": "FINAL_ACCEPT",
@@ -411,9 +396,15 @@ def inspect_session_liveness(
                 continue
             lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
             for raw in reversed(lines):
-                if not raw.strip():
+                cleaned = raw.strip(" \t\r\n\x00")
+                if not cleaned:
                     continue
-                evt = json.loads(raw)
+                try:
+                    evt = json.loads(cleaned)
+                except Exception:
+                    continue
+                if not isinstance(evt, dict):
+                    continue
                 etype = str(evt.get("type") or "")
                 detail = str(evt.get("phase") or evt.get("outcome") or "")
                 ts = _parse_event_timestamp(evt.get("ts"), p.stat().st_mtime)
@@ -445,17 +436,31 @@ def is_max_turns_exhausted(
 
 
 def _build_synthesis_opts(opts: dict[str, Any], eff_sid: str) -> dict[str, Any]:
-    """Constructs single-turn zero-tool synthesis options after max_turns exploration."""
+    """Constructs KV-cache-preserving in-place synthesis options after max_turns exploration."""
     return {
         **opts,
-        "tools": None,
-        "disallowed_tools": list(NO_TOOLS_DISALLOW_LIST),
-        "deny": ["*"],
-        "max_turns": 1,
-        "system_prompt": SYNTHESIS_FALLBACK_PROMPT,
+        "max_turns": 2,
         "resume_session_id": eff_sid,
-        "fork_session": True,
+        "fork_session": False,
+        "is_synthesis_turn": True,
     }
+
+
+def write_synthesis_prompt_file(prompt_path: Path, request_id: str | None = None) -> Path:
+    """Writes a temporary user-turn synthesis prompt file preserving Turn 1 KV-cache prefix."""
+    req_id = request_id
+    if not req_id and prompt_path.exists():
+        raw = prompt_path.read_text(encoding="utf-8", errors="replace")
+        for line in raw.splitlines()[:30]:
+            if line.strip().startswith("request_id:"):
+                req_id = line.split(":", 1)[1].strip().strip("'\"")
+                break
+    req_clause = f"\nTarget request_id: {req_id}\n" if req_id else "\n"
+    fd, tmp_name = tempfile.mkstemp(prefix="grok_synth_", suffix=".md")
+    tmp_path = Path(tmp_name)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(f"{SYNTHESIS_FALLBACK_PROMPT}{req_clause}")
+    return tmp_path
 
 
 def _recover_verdict_from_chat_history(
@@ -486,9 +491,15 @@ def _recover_verdict_from_chat_history(
                     f.readline()
                 lines = f.readlines()
             for line in reversed(lines):
-                if not line.strip():
+                cleaned = line.strip(" \t\r\n\x00")
+                if not cleaned:
                     continue
-                d = json.loads(line)
+                try:
+                    d = json.loads(cleaned)
+                except Exception:
+                    continue
+                if not isinstance(d, dict):
+                    continue
                 cand = d.get("content") if d.get("type") == "assistant" else None
                 if isinstance(cand, str) and cand and parse_fn(cand) is not None:
                     return cand
@@ -546,3 +557,68 @@ def _poll_grok_process_with_watchdog(
                 _terminate_proc_tree(proc)
                 return "", False
         time.sleep(1.0)
+
+
+def _resolve_target_models(
+    model: str | None,
+    tier: ModelTier | str | None,
+    spec: dict[str, Any],
+) -> list[str]:
+    """Resolves ordered list of candidate Grok models (primary + fallback)."""
+    if model:
+        return [model]
+    if tier and str(tier) in TIER_DEFAULT_MODELS:
+        return [TIER_DEFAULT_MODELS[str(tier)]]
+    if os.getenv("CCBA_GROK_MODEL"):
+        return [os.environ["CCBA_GROK_MODEL"]]
+    targets = [spec["model"]]
+    fallback = spec.get("fallback_model")
+    if fallback and fallback not in targets:
+        targets.append(fallback)
+    return targets
+
+
+def _resolve_grok_profile_options(
+    spec: dict[str, Any],
+    envelope: Any,
+    max_turns: int | None,
+    timeout: float | None,
+    no_tools: bool,
+    resume_session_id: str | None,
+    fork_session: bool | None,
+) -> dict[str, Any]:
+    """Resolves effective CLI options from profile spec, prompt envelope, and caller overrides."""
+    env_turns = envelope.max_turns if envelope is not None else None
+    eff_turns = (
+        max_turns
+        if max_turns is not None
+        else (env_turns if env_turns is not None else spec.get("max_turns"))
+    )
+    tools, disallowed, deny = spec.get("tools"), spec.get("disallowed_tools"), spec.get("deny")
+    if no_tools:
+        tools, disallowed, deny = None, list(NO_TOOLS_DISALLOW_LIST), ["*"]
+        if max_turns is None and (eff_turns is None or eff_turns > 3):
+            eff_turns = 3
+    eff_resume = resume_session_id or (envelope.resume_session_id if envelope is not None else None)
+    env_fork = envelope.fork_session if envelope is not None else None
+    eff_fork = (
+        fork_session
+        if fork_session is not None
+        else (
+            env_fork if env_fork is not None else bool(spec.get("fork_session", bool(eff_resume)))
+        )
+    )
+    return {
+        "max_turns": eff_turns,
+        "tools": tools,
+        "disallowed_tools": disallowed,
+        "deny": deny,
+        "reasoning_effort": spec.get("reasoning_effort"),
+        "system_prompt": spec.get("system_prompt"),
+        "timeout": timeout if timeout is not None else spec.get("timeout", 180.0),
+        "resume_session_id": eff_resume,
+        "fork_session": eff_fork,
+        "verbatim": bool(spec.get("verbatim", False)),
+        "disable_web_search": bool(spec.get("disable_web_search", False)),
+        "output_format": str(spec.get("output_format") or "plain"),
+    }

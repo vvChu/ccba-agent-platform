@@ -56,7 +56,6 @@ from ._peer_models import (
     PeerCondition,
     PeerConsensusReport,
     PeerPromptEnvelope,
-    PeerVerdictBlock,
     PeerVerdictTelemetry,
     ProfileTelemetryItem,
     _registry_timestamp,
@@ -65,8 +64,9 @@ from ._peer_models import (
     parse_envelope_from_md,
     parse_verdict_from_md,
     render_prompt_header,
-    render_verdict_header,
 )
+from ._peer_models import PeerVerdictBlock as PeerVerdictBlock
+from ._peer_models import render_verdict_header as render_verdict_header
 from ._peer_telemetry import (
     _accumulate_verdict_telemetry,
     _enforce_single_verdict_guardrails,
@@ -74,6 +74,7 @@ from ._peer_telemetry import (
 )
 from ._peer_watchdog import (
     _VERDICT_ALIASES,
+    AUDIT_BASE_SYSTEM_PROMPT,
     DEFAULT_FALLBACK_AUDITOR_MODEL,
     DEFAULT_PRIMARY_AUDITOR_MODEL,
     NO_TOOLS_DISALLOW_LIST,
@@ -91,12 +92,16 @@ from ._peer_watchdog import (
     _build_synthesis_opts,
     _poll_grok_process_with_watchdog,
     _recover_verdict_from_chat_history,
+    _resolve_grok_profile_options,
+    _resolve_target_models,
     _terminate_proc_tree,
     _unwrap_grok_json_stdout,
     inspect_session_liveness,
     is_max_turns_exhausted,
+    write_synthesis_prompt_file,
 )
-from .verifier import resolve_preset_commands, verify_patch_execution
+from .verifier import resolve_preset_commands
+from .verifier import verify_patch_execution as verify_patch_execution
 
 _SYNC_MUTEX = threading.Lock()
 _PENDING_THREADS: list[threading.Thread] = []
@@ -197,7 +202,7 @@ def classify_file_role(path: Path) -> str:
         return "PROMPT_TO_GROK"
     if name.startswith("grok_implementation_") or name.startswith("grok_implement_"):
         return "GROK_IMPLEMENTATION"
-    if name.startswith("grok_"):
+    if name.startswith("grok_") or name.startswith("verdict_"):
         return "GROK_RESPONSE"
     return "AUXILIARY"
 
@@ -247,7 +252,9 @@ def scan_peer_exchange(
             continue
 
         envelope = parse_envelope_from_md(content)
-        verdict = parse_verdict_from_md(content)
+        verdict = (
+            None if role in ("PROMPT_TO_GROK", "GROK_REQUEST") else parse_verdict_from_md(content)
+        )
         registry[entry.name] = {
             "role": role,
             "path": path,
@@ -266,22 +273,31 @@ def scan_peer_exchange(
 
 
 def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[str], list[str]]:
-    """Matches request_ids to identify unanswered prompts for Antigravity and Grok."""
+    """Matches request_ids or fresher output_path verdicts to identify unanswered prompts."""
     answered_ids: set[str] = set()
-    for item in registry.values():
+    grok_verdict_mtimes: dict[str, float] = {}
+    for name, item in registry.items():
         if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]:
             answered_ids.add(item["verdict"].request_id)
+            grok_verdict_mtimes[name] = float(item.get("mtime", 0.0))
         elif item["role"] == "ANTIGRAVITY_RESPONSE" and item["verdict"]:
             answered_ids.add(item["verdict"].request_id)
 
     pending_grok: list[str] = []
     pending_anti: list[str] = []
     for name, item in registry.items():
-        if item["role"] == "PROMPT_TO_GROK" and item["envelope"]:
-            if item["envelope"].request_id not in answered_ids:
+        env = item.get("envelope")
+        if item["role"] == "PROMPT_TO_GROK" and env:
+            out_name = Path(env.output_path).name if env.output_path else ""
+            is_fresher_out = (
+                bool(out_name)
+                and out_name in grok_verdict_mtimes
+                and grok_verdict_mtimes[out_name] >= float(item.get("mtime", 0.0))
+            )
+            if env.request_id not in answered_ids and not is_fresher_out:
                 pending_grok.append(name)
-        elif item["role"] == "GROK_REQUEST" and item["envelope"]:
-            if item["envelope"].request_id not in answered_ids:
+        elif item["role"] == "GROK_REQUEST" and env:
+            if env.request_id not in answered_ids:
                 pending_anti.append(name)
 
     return pending_anti, pending_grok
@@ -543,6 +559,8 @@ def _finalize_grok_verdict_and_telemetry(
     session_id: str | None,
     candidate_model: str,
     expected_reasoning_effort: str | None,
+    synthesize_turns: int = 1,
+    parent_session_id: str | None = None,
 ) -> bool:
     """Validates parsed verdict or anchor patch, attaches session telemetry, and writes output_file."""
     verdict = parse_verdict_from_md(stdout_text)
@@ -569,6 +587,8 @@ def _finalize_grok_verdict_and_telemetry(
             duration_seconds=duration,
             fallback_model=candidate_model,
             expected_reasoning_effort=expected_reasoning_effort,
+            synthesize_turns=synthesize_turns,
+            parent_session_id=parent_session_id,
         )
         if telemetry:
             verdict.telemetry = telemetry
@@ -599,6 +619,12 @@ def _spawn_and_poll_grok(
             "text": True,
             "encoding": "utf-8",
             "errors": "replace",
+            "env": {
+                **os.environ,
+                "GROK_BACKEND_SEARCH": "0",
+                "GROK_CLAUDE_MCPS_ENABLED": "0",
+                "GROK_CURSOR_MCPS_ENABLED": "0",
+            },
         }
         if sys.platform != "win32":
             popen_kw["start_new_session"] = True
@@ -622,6 +648,9 @@ def _run_single_grok_attempt(
     session_id: str | None = None,
     candidate_model: str = "unknown",
     expected_reasoning_effort: str | None = None,
+    prior_duration: float = 0.0,
+    synthesize_turns: int = 1,
+    parent_session_id: str | None = None,
 ) -> bool:
     """Executes a single invocation of grok CLI and verifies output verdict (ADR-0064 / ADR-0065)."""
     start_time = time.time()
@@ -641,78 +670,15 @@ def _run_single_grok_attempt(
             stdout_text,
             prompt_path,
             output_file,
-            time.time() - start_time,
+            (time.time() - start_time) + max(0.0, prior_duration),
             session_id,
             candidate_model,
             expected_reasoning_effort,
+            synthesize_turns=synthesize_turns,
+            parent_session_id=parent_session_id,
         )
     except Exception:
         return False
-
-
-def _resolve_target_models(
-    model: str | None,
-    tier: ModelTier | str | None,
-    spec: dict[str, Any],
-) -> list[str]:
-    """Resolves ordered list of candidate Grok models (primary + fallback)."""
-    if model:
-        return [model]
-    if tier and str(tier) in TIER_DEFAULT_MODELS:
-        return [TIER_DEFAULT_MODELS[str(tier)]]
-    if os.getenv("CCBA_GROK_MODEL"):
-        return [os.environ["CCBA_GROK_MODEL"]]
-    targets = [spec["model"]]
-    fallback = spec.get("fallback_model")
-    if fallback and fallback not in targets:
-        targets.append(fallback)
-    return targets
-
-
-def _resolve_grok_profile_options(
-    spec: dict[str, Any],
-    envelope: PeerPromptEnvelope | None,
-    max_turns: int | None,
-    timeout: float | None,
-    no_tools: bool,
-    resume_session_id: str | None,
-    fork_session: bool | None,
-) -> dict[str, Any]:
-    """Resolves effective CLI options from profile spec, prompt envelope, and caller overrides."""
-    env_turns = envelope.max_turns if envelope is not None else None
-    eff_turns = (
-        max_turns
-        if max_turns is not None
-        else (env_turns if env_turns is not None else spec.get("max_turns"))
-    )
-    tools, disallowed, deny = spec.get("tools"), spec.get("disallowed_tools"), spec.get("deny")
-    if no_tools:
-        tools, disallowed, deny = None, list(NO_TOOLS_DISALLOW_LIST), ["*"]
-        if max_turns is None and (eff_turns is None or eff_turns > 3):
-            eff_turns = 3
-    eff_resume = resume_session_id or (envelope.resume_session_id if envelope is not None else None)
-    env_fork = envelope.fork_session if envelope is not None else None
-    eff_fork = (
-        fork_session
-        if fork_session is not None
-        else (
-            env_fork if env_fork is not None else bool(spec.get("fork_session", bool(eff_resume)))
-        )
-    )
-    return {
-        "max_turns": eff_turns,
-        "tools": tools,
-        "disallowed_tools": disallowed,
-        "deny": deny,
-        "reasoning_effort": spec.get("reasoning_effort"),
-        "system_prompt": spec.get("system_prompt"),
-        "timeout": timeout if timeout is not None else spec.get("timeout", 180.0),
-        "resume_session_id": eff_resume,
-        "fork_session": eff_fork,
-        "verbatim": bool(spec.get("verbatim", False)),
-        "disable_web_search": bool(spec.get("disable_web_search", False)),
-        "output_format": str(spec.get("output_format") or "plain"),
-    }
 
 
 def _dispatch_grok_candidate(
@@ -723,43 +689,56 @@ def _dispatch_grok_candidate(
     worktree: bool,
 ) -> bool:
     """Builds CLI command for a single candidate model and executes _run_single_grok_attempt."""
-    cand_sid = str(uuid.uuid4())
-    cmd = build_grok_cmd(
-        prompt_path=prompt_path,
-        model=candidate,
-        max_turns=opts["max_turns"],
-        tools=opts["tools"],
-        disallowed_tools=opts["disallowed_tools"],
-        deny=opts["deny"],
-        reasoning_effort=opts["reasoning_effort"],
-        output_format=opts["output_format"],
-        worktree=worktree,
-        session_id=cand_sid,
-        system_prompt=opts["system_prompt"],
-        resume_session_id=opts["resume_session_id"],
-        fork_session=opts["fork_session"],
-        verbatim=opts["verbatim"],
-        disable_web_search=opts["disable_web_search"],
-    )
+    cand_sid, is_synth = str(uuid.uuid4()), bool(opts.get("is_synthesis_turn"))
+    synth_prompt = write_synthesis_prompt_file(prompt_path) if is_synth else None
     eff_sid = (
         cand_sid
         if (not opts["resume_session_id"] or opts["fork_session"])
         else opts["resume_session_id"]
     )
-    ok = _run_single_grok_attempt(
-        cmd,
-        prompt_path,
-        output_file,
-        opts["timeout"],
-        session_id=eff_sid,
-        candidate_model=candidate,
-        expected_reasoning_effort=opts["reasoning_effort"],
-    )
-    if ok or not (opts.get("tools") and is_max_turns_exhausted(eff_sid)):
+    cmd_kw = {
+        k: v for k, v in opts.items() if k not in ("timeout", "is_synthesis_turn", "prior_duration")
+    }
+    t0 = time.time()
+    try:
+        cmd = build_grok_cmd(
+            synth_prompt or prompt_path,
+            candidate,
+            worktree=worktree,
+            session_id=cand_sid,
+            **cmd_kw,
+        )
+        ok = _run_single_grok_attempt(
+            cmd,
+            prompt_path,
+            output_file,
+            opts["timeout"],
+            session_id=eff_sid,
+            candidate_model=candidate,
+            expected_reasoning_effort=opts["reasoning_effort"],
+            prior_duration=float(opts.get("prior_duration", 0.0)),
+            synthesize_turns=2 if is_synth else 1,
+            parent_session_id=opts.get("resume_session_id") if is_synth else None,
+        )
+    finally:
+        if synth_prompt is not None:
+            synth_prompt.unlink(missing_ok=True)
+    if ok or is_synth or not (opts.get("tools") and is_max_turns_exhausted(eff_sid)):
         return ok
-    return _dispatch_grok_candidate(
-        prompt_path, output_file, candidate, _build_synthesis_opts(opts, eff_sid), worktree
-    )
+    synth_opts = {
+        **_build_synthesis_opts(opts, eff_sid),
+        "prior_duration": max(0.0, time.time() - t0),
+    }
+    return _dispatch_grok_candidate(prompt_path, output_file, candidate, synth_opts, worktree)
+
+
+def _sync_if_peer_exchange_dir(directory: Path) -> None:
+    """Runs best-effort sync cycle when directory is peer_exchange or tracks status.json."""
+    if directory.name == "peer_exchange" or (directory / "status.json").exists():
+        try:
+            run_sync_cycle(directory, auto_grok=False)
+        except Exception:
+            pass
 
 
 def invoke_grok_cli(
@@ -785,7 +764,10 @@ def invoke_grok_cli(
     opts = _resolve_grok_profile_options(
         spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session
     )
-    return any(
+    ok = any(
         _dispatch_grok_candidate(prompt_path, output_file, cand, opts, worktree)
         for cand in _resolve_target_models(model, tier, spec)
     )
+    if ok:
+        _sync_if_peer_exchange_dir(prompt_path.parent)
+    return ok
