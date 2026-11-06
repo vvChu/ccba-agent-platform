@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -172,9 +172,9 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    - Chạy kiểm tra: `gh pr checks <PR_NUMBER>`.
    - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, Agent có thể chạy `gh pr checks <PR_NUMBER>` hoặc kết thúc lượt (End Turn) để hệ thống tự động đánh thức khi nhận kết quả. Tuyệt đối **CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
 3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
-   - Kiểm tra bot review:
+   - Kiểm tra bot review (tại Hub gọi trực tiếp `scripts/validation/audit_pr_comments.py`, tại Spoke gọi qua `CCBA_HUB_PATH`):
      ```bash
-     python scripts/validation/audit_pr_comments.py --pr <PR_NUMBER>
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/audit_pr_comments.py" --pr <PR_NUMBER>
      ```
    - Chờ Copilot / Bugbot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
    - **Đối soát Invariants:** Rà soát các góp ý của bot đối chiếu với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).

@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   author: "CCBA Hub"
 triggers:
 - release
@@ -35,9 +35,9 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 *Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải tuân thủ Giao thức TRIHT (Tiered Release Integrity & Hermetic Teardown)** gồm 3 giai đoạn để ngăn chặn hoàn toàn nguy cơ mất mã nguồn và chống gián đoạn chuyển nhánh:
 
 1. **Cổng 0.1 — Khóa Sạch Sẽ Tiền Kiểm Tra (Pre-Flight Cleanliness Lock):**
-   - *Bắt buộc kiểm tra:* Repository phải ở trạng thái sạch sẽ 100% (không có tệp modified hoặc untracked chưa commit). Tuyệt đối cấm release khi mã nguồn cục bộ chưa được commit vào PR:
+   - *Bắt buộc kiểm tra:* Repository phải ở trạng thái sạch sẽ 100% (không có tệp modified hoặc untracked chưa commit). Tuyệt đối cấm release khi mã nguồn cục bộ chưa được commit vào PR (tại Spoke định tuyến qua `CCBA_HUB_PATH`):
      ```bash
-     python scripts/validation/check_release_cleanliness.py --phase pre
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase pre
      ```
    - Nếu phát hiện tệp chưa commit thuộc tác vụ song song khác:
      1. Thực hiện stash có định danh rõ ràng kèm cả tệp untracked:
@@ -66,7 +66,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 3. **Cổng 0.3 — Hàng rào Thu hồi Tệp tạm Sau Kiểm thử (Post-Test Scoped Teardown Gate):**
    - *Bắt buộc kiểm tra:* Sau khi bài test chạy xong, đối soát delta trạng thái working tree. Tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) và chặn đứng nếu có test suite sửa đổi mã nguồn:
      ```bash
-     python scripts/validation/check_release_cleanliness.py --phase post
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase post
      ```
    - Nếu lệnh trả về exit code 1 (phát hiện mã nguồn bị sửa đổi hoặc tệp lạ), Agent **dừng khẩn cấp** để điều tra bài test vi phạm.
 
@@ -113,7 +113,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 
 5. **Thực hiện đối soát bình luận & Review Body của Copilot trên PR (Hard Blocker):**
    ```bash
-   python scripts/validation/audit_pr_comments.py
+   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/audit_pr_comments.py"
    ```
    - Script tự động quét toàn bộ:
      - `reviews`: Quét `author.login` và chặn đứng nếu có `### 🟡 Changes recommended` hoặc `state == CHANGES_REQUESTED`.
