@@ -12,7 +12,9 @@ from typing import Any
 import yaml
 
 try:
-    from ccba_maskara import REGEX_PATTERNS as MASKARA_REGEX_PATTERNS
+    from ccba_maskara import REGEX_PATTERNS as _MASKARA_PATTERNS
+
+    MASKARA_REGEX_PATTERNS: dict[str, Any] = _MASKARA_PATTERNS
 except ImportError:
     MASKARA_REGEX_PATTERNS = {
         "anthropic-api-key": {"pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")},
