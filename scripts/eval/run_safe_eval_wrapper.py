@@ -7,6 +7,8 @@ Singleton Process Lock, ghi nhật ký cô lập và trích xuất tệp chẩn 
 
 import argparse
 import json
+import os
+import shlex
 import subprocess
 import sys
 import time
@@ -100,9 +102,12 @@ def run_safe_wrapper(
         log_f.write(f"=== Command: {cmd} ===\n")
         log_f.write(f"=== Started: {timestamp} ===\n\n")
 
+        # shell=False (#625): tokenize the command instead of handing it to a shell.
+        # On Windows Popen accepts the raw command string without a shell.
+        popen_args: str | list[str] = cmd if os.name == "nt" else shlex.split(cmd)
         proc = subprocess.Popen(
-            cmd,
-            shell=True,
+            popen_args,
+            shell=False,
             cwd=cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
