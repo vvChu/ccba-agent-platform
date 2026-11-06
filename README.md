@@ -121,7 +121,7 @@ Dành cho Kỹ sư khi clone `ccba-agent-platform` về máy cá nhân để s�
 
 ### 1. Điều Kiện Tiên Quyết (Prerequisites)
 - **Python**: Phiên bản `>= 3.10` (Khuyến nghị **Python 3.11**).
-- **Tailscale VPN**: Kết nối vào mạng Server Spark (`100.83.192.30`) để truy cập AI Gateway nội bộ và các models GPU không tốn chi phí.
+- **Tailscale VPN**: Kết nối vào mạng Server Spark (`<AI_GATEWAY_HOST>`) để truy cập AI Gateway nội bộ và các models GPU không tốn chi phí.
 - **LibreOffice** *(Tùy chọn)*: Cài đặt nếu cần sử dụng tính năng chuyển đổi vector PDF headless (`convert_to_pdf`) hoặc tính toán công thức Excel headless (`recalc_xlsx`) trong `ccba-ooxml` trên Linux/WSL/CI.
 
 ---
