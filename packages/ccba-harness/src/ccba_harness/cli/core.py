@@ -159,4 +159,4 @@ def main(argv: Sequence[str] | None = None) -> int:
         mod = importlib.import_module(spec.module)
         handler = getattr(mod, spec.attr)
 
-    return handler(args[1:])
+    return int(handler(args[1:]))

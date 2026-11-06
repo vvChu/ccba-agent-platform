@@ -1321,6 +1321,11 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
     state, age = inspect_session_liveness(sid, session_root=tmp_path)
     assert state == "phase_changed:streaming_text"
     assert age is not None and age >= 0.0
+    # Prior-turn event (ts < min_timestamp) must be ignored during in-place Turn 2 boot
+    assert inspect_session_liveness(sid, session_root=tmp_path, min_timestamp=1900000000.0) == (
+        None,
+        None,
+    )
 
     chat_file = sess_dir / "chat_history.jsonl"
     valid_md = "---\nrequest_id: req-rec-01\nverdict: APPROVE\nrisk_score: 2\nsummary: Rescued\n---\n# Body\n"
@@ -1333,6 +1338,20 @@ def test_inspect_session_liveness_and_chat_history_recovery(tmp_path):
     )
     assert "verdict: APPROVE" in recovered
     assert parse_verdict_from_md(recovered) is not None
+
+    # Turn-boundary stop: Stage 1 assistant verdict before Stage 3 user prompt must NOT leak into Stage 3
+    chat_file.write_text(
+        json.dumps({"type": "assistant", "content": valid_md})
+        + "\n"
+        + json.dumps({"type": "user", "content": "Stage 3 signoff prompt"})
+        + "\n"
+        + json.dumps({"type": "tool_result", "content": "diff output"})
+        + "\n",
+        encoding="utf-8",
+    )
+    assert (
+        _recover_verdict_from_chat_history(sid, parse_verdict_from_md, session_root=tmp_path) == ""
+    )
 
 
 def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monkeypatch):
@@ -1393,6 +1412,10 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     )
     assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is True
     assert is_max_turns_exhausted("nonexistent-id", session_root=tmp_path / "sessions") is False
+    # After in-place synthesis Turn 2 appends a completed turn_ended, is_max_turns_exhausted must be False
+    with events_file.open("a", encoding="utf-8") as ef:
+        ef.write(json.dumps({"type": "turn_ended", "outcome": "completed"}) + "\n")
+    assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is False
 
     pe_dir = tmp_path / "peer_exchange"
     pe_dir.mkdir(parents=True)

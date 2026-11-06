@@ -167,7 +167,7 @@ FLAGSHIP_REDTEAM_DATASET_OVERRIDES: dict[str, str] = {
 def _resolve_daemon_env_int(val: Any, env_key: str, default: int) -> int:
     """Resolves integer daemon config from explicit value, environment variable, or default."""
     if val is not _UNSET:
-        return val
+        return int(val)
     env_v = os.getenv(env_key)
     if env_v:
         try:
@@ -738,17 +738,17 @@ class _DaemonReportingAndGitMixin:
         }
         res = subprocess.run(cmd, **run_kw)
         if res.returncode == 0:
-            pr_url = res.stdout.strip()
+            pr_url = str(res.stdout).strip()
             logger.info(f"🎉 Đã mở Pull Request: {pr_url}")
             return pr_url
 
-        err_msg = res.stderr.strip() or f"exit code {res.returncode}"
+        err_msg = str(res.stderr).strip() or f"exit code {res.returncode}"
         logger.warning(f"⚠️ gh pr create thất bại (exit {res.returncode}): {err_msg}")
         if "--label" in cmd:
             logger.info("🔄 Thử tạo lại PR không kèm nhãn (--label)...")
             retry_res = subprocess.run(base_cmd, **run_kw)
             if retry_res.returncode == 0:
-                pr_url = retry_res.stdout.strip()
+                pr_url = str(retry_res.stdout).strip()
                 logger.info(f"🎉 Đã mở Pull Request thành công (fallback không nhãn): {pr_url}")
                 return pr_url
             retry_err = retry_res.stderr.strip() or f"exit code {retry_res.returncode}"

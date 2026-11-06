@@ -41,9 +41,8 @@ async def _safe_score_item(
 ) -> ScoreResult:
     """Safely executes a scorer against an item output, capturing runtime exceptions."""
     try:
-        res = scorer.score(task_output, item)
-        if asyncio.iscoroutine(res):
-            res = await res
+        raw_res: Any = scorer.score(task_output, item)
+        res = await raw_res if asyncio.iscoroutine(raw_res) else raw_res
         if isinstance(res, ScoreResult):
             return res
         return ScoreResult(
