@@ -1,34 +1,31 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #593 (Bounded Tool Audit, Explore-Then-Synthesize Auto-Recovery & 3-Way Triage Gate)
-## Feature: `feat(ccba-harness): enable bounded tool exploration, auto-resume synthesis, and 3-way peer triage gate`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #632 (Peer Coordination Protocol v2 Hardening)
+## Feature: `feat(harness): harden grok peer protocol v2 kv-cache synthesis, telemetry and parser`
 
-> **Nguồn Kiểm Toán:** Đối soát 287 phiên lịch sử trong `~/.grok/sessions/` & Phiên thảo luận trực tiếp với `grok-4.7-build` (`Session: c10398b2-d405-47fa-9a16-3316cd2832c6`, kế thừa từ `64859e18-e701-4186-bef1-b0ad5af3ac9c` $\to$ `91ef4dda-76c2-4580-a067-eceaa9131248`)  
-> **Pull Requests Liên Quan:** [#592](https://github.com/vvChu/ccba-agent-platform/pull/592) (`2d0a3381`), [#591](https://github.com/vvChu/ccba-agent-platform/pull/591) (`8c731731`)  
-> **Branch:** `feat/peer-bounded-tool-audit-and-triage-gate`  
-> **Trạng thái:** ✅ **96/96 PEER & GOVERNANCE TESTS PASS — 8/8 HISTORICAL REJECTED VERDICTS RESCUED, `verify-patch --preset ci` 6/6 PASS**
+> **Nguồn Kiểm Toán:** Đối soát 932 phiên lịch sử trong `~/.grok/sessions/` trên 7 repositories & Nghiệm thu 2 vòng trực tiếp với `grok-4.7-build` (`Stage 1: c67c2f8c-5971-46b7-9a9e-db389292ccdc` $\to$ `Stage 3 FINAL_ACCEPT: 082a3d79-9812-4e5e-982f-8f109a04a3c5`)
+> **Pull Request:** [#632](https://github.com/vvChu/ccba-agent-platform/pull/632) (`6ecd4998`)
+> **Branch:** `feat/peer-protocol-v2-hardening`
+> **Trạng thái:** ✅ **97/97 PEER TESTS PASS, 669/669 HARNESS TESTS PASS, 8/8 CI CHECKS PASS, SQUASH MERGED**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`COND-01`..`COND-04`)
+## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`COND-01`..`COND-08`)
 
 | Hạng Mục / Component | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **`COND-01`: Media-Tool Disallow & `VERDICT_RESERVE_TURNS = 2`** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py` | Bổ sung 4 công cụ media (`image_gen`, `image_edit`, `image_to_video`, `reference_to_video`) vào `READ_ONLY_DISALLOW_LIST`, `NO_TOOLS_DISALLOW_LIST`, và `PROFILE_SPECS["agentic_code"]["disallowed_tools"]`. Thêm `system_prompt` cho `audit_plan` và chuẩn hóa `BOUNDED_TOOL_BUDGET_PROMPT` + `SYNTHESIS_FALLBACK_PROMPT` cho 5 profiles Read-Only (`audit_plan`, `arch_audit`, `deep_spec_audit`, `code_review`, `signoff_diff`) cùng `audit_direct`. | Verified |
-| **`COND-02`: `PeerVerdictBlock` Condition & Risk Score Normalization** | `packages/ccba-harness/src/ccba_harness/_peer_models.py` | Mở rộng `_normalize_conditions` ánh xạ các khóa alias `("text", "statement", "condition", "summary")` sang `"description"` và tự điền `"id": f"COND-{i + 1:02d}"` khi thiếu `"id"`. Mở rộng `_normalize_risk_score` quy đổi `<= 0` $\to$ `1`, `(5, 10]` $\to$ `round(v / 2)`, `(10, 100]` $\to$ `round(v / 20)`, `> 100` $\to$ `5` (bảo toàn nhánh `bool` và `[0, 1)`). | Verified |
-| **`COND-03`: Explore-Then-Synthesize Auto-Recovery (`max_turns=1`)** | `packages/ccba-harness/src/ccba_harness/peer.py`, `_peer_watchdog.py` | Bổ sung `is_max_turns_exhausted()` và `_build_synthesis_opts()`: khi phiên có bật `tools` chạm `max_turns_reached` trong `events.jsonl`, `_dispatch_grok_candidate()` tự động kích hoạt 1 lượt `--resume <eff_sid> --fork-session` (`max_turns=1`, `SYNTHESIS_FALLBACK_PROMPT`, `tools=None`) để thu hoạch phán quyết YAML từ ngữ cảnh mã nguồn đã đọc. | Verified |
-| **`COND-04`: Section 20.3 3-Way Triage Gate & `RULE-4.17` Scope** | `docs/rules/execution_coordination_guardrails.md`, `.md/knowledge/session_learnings.md` | Khóa cứng Mục `20.3` (`[ADOPT_AS_IS]`, `[ADOPT_ADAPTED]`, `[REBUT_WITH_EVIDENCE]` kèm bắt buộc trích dẫn `file:line`), xóa chú thích `--no-tools` khỏi `signoff_diff` tại dòng 138, và cập nhật `RULE-4.17` liệt kê đầy đủ 5 profiles bật tools + 2 profiles `--no-tools` (`7,193` bytes = `7.02 KB <= 10.0 KB`). | Verified |
+| **`COND-08`: Subprocess Env Isolation** | `packages/ccba-harness/src/ccba_harness/peer.py` | Bơm `GROK_BACKEND_SEARCH=0`, `GROK_CLAUDE_MCPS_ENABLED=0`, `GROK_CURSOR_MCPS_ENABLED=0` vào `_spawn_and_poll_grok()` để khóa triệt để `X search` phía server và `notebooklm-mcp` trong các phiên headless. | Verified |
+| **`COND-01` & `COND-04`: Shared `AUDIT_BASE_SYSTEM_PROMPT` & In-Place Auto-Synthesis** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `peer.py` | Hợp nhất `AUDIT_BASE_SYSTEM_PROMPT` cho 5 profiles kiểm toán (`audit_plan`, `deep_spec_audit`, `arch_audit`, `code_review`, `signoff_diff`), hạ `signoff_diff` `max_turns=8`, và cập nhật `_build_synthesis_opts()` dùng in-place resume (`fork_session=False`, `max_turns=2`, `is_synthesis_turn=True`) giữ nguyên `system_prompt`, `tools` và `x-grok-conv-id` kèm `write_synthesis_prompt_file()`. | Verified |
+| **`COND-02`: Multi-Turn & Forked-Parent Telemetry** | `packages/ccba-harness/src/ccba_harness/_peer_telemetry.py` | Bổ sung `_merge_synthesis_turns()` và `_fetch_usage_json()` giữ nguyên `session.turnCount`, cộng dồn `turns[-2:]` (hoặc từ `parent_session_id`) khi `synthesize_turns=2`, đồng thời neo `primary_model` và `degraded_reasoning` theo lượt cuối. | Verified |
+| **`COND-03`: Preamble-Tolerant Frontmatter & 4 Normalizers** | `packages/ccba-harness/src/ccba_harness/_peer_models.py`, `_peer_watchdog.py` | Thay regex neo đầu tệp bằng `INLINE_FRONTMATTER_PATTERN` + `_extract_all_frontmatter_blocks()` chọn khối đầu tiên có `"verdict"`; bổ sung `_normalize_effort()`, `_coerce_frontmatter_risk_score()`, `"observation"` alias + 1-key dict promotion trong `_normalize_conditions()`, và 5 alias mới trong `_VERDICT_ALIASES`. | Verified |
+| **`COND-05`, `COND-06` & `COND-07`: NUL-Byte Liveness, `verdict_*.md` Role & Auto-Sync** | `packages/ccba-harness/src/ccba_harness/peer.py`, `_peer_co_review.py`, `docs/rules/execution_coordination_guardrails.md` | Khử `\x00` và bọc `try/except continue` từng dòng khi đọc `events.jsonl` / `chat_history.jsonl`; phân loại `verdict_*.md` là `GROK_RESPONSE`; khớp `output_path` có `mtime >= prompt_mtime`; tự động gọi `run_sync_cycle(auto_grok=False)` sau khi ghi verdict. | Verified |
 
 ---
 
 ## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Tự Động (`ADR-0058`)
 
-- **Đối soát hồi quy trên 8 phiên lịch sử từng bị đánh trượt trong `~/.grok/sessions/`**:
-  - Cả **8/8 phiên** (`01a106d7`, `01a106e2`, `bcae120e`, `ba58a786`, `01a111f4`, `332ae19c`, `6f3b0103`, `91ef4dda`) đều được `PeerVerdictBlock` giải mã thành công (`[RESCUED] 8/8`).
-- **Bộ kiểm thử đơn vị & hợp đồng CLI (`96/96 passed in 9.60s`)**:
-  - `packages/ccba-harness/tests/test_peer.py`: `37 passed` (bao gồm `test_bounded_tool_budget_and_explore_then_synthesize_recovery`).
-  - `packages/ccba-harness/tests/test_peer_dispatch_cli.py`: `8 passed`.
-  - `packages/ccba-harness/tests/test_cli_contract_parity.py`: `26 passed`.
-  - `tests/governance/test_compact_session_learnings.py`: `8 passed`.
-  - `scripts/tests/test_doc_refactor_daemon.py`: `15 passed`.
-  - `tests/test_agent_execution_guardrails.py`: `2 passed`.
-- **Cổng kiểm định `verify-patch --preset ci` (`6/6 passed in 17.80s`)**:
-  - `ruff check`, `ruff format --check`, `pytest`, `validate_skills.py --enforce-gpi`, `compile_catalog.py --check`, `sync_hub_adr_matrix.py --check`: **ALL PASS**.
+- **Nghiệm thu Stage 3 trực tiếp với Grok (`082a3d79-9812-4e5e-982f-8f109a04a3c5`)**:
+  - Đạt **`FINAL_ACCEPT`** (`risk_score: 2/5`, `0` blocking conditions), kế thừa KV-Cache từ Stage 1 đạt **`907,392 / 1,059,210` (85.7%)** trên Turn 3 và bảo toàn `turn_count: 4`.
+- **Backfill dữ liệu lịch sử trên 5 repositories (`50` files)**:
+  - Đã phục hồi chính xác `turn_count` và tổng token multi-turn cho 20 file verdict lịch sử tại Hub và 30 file verdict tại 3 Spoke (`ccba-legal-knowledge`, `IDOP-CCBA-WAY`, `IBST_UNIFIED_ERP`), đồng bộ `status.json` trên toàn bộ 5 repositories.
+- **GitHub Actions CI & Copilot Review trên PR #632**:
+  - **8/8 CI Checks PASS** (`PR Danger Triage & Verification`, `Deterministic Parity & Schema Audit`, `Lint Markdown`, `Test - Python 3.10/3.11/3.12`, `Security & Privacy Scan`, `Documentation Check`).
+  - `audit_pr_comments.py --pr 632`: `[OK] All Copilot reviews and comments on PR #632 are clean or resolved.`
