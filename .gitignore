@@ -165,7 +165,8 @@ specs/modules/
 **/.skill_versions/
 
 # === Security: local sessions & browser profiles (never commit) ===
-**/chrome_vip_profile/*
+**/chrome_vip_profile/**
+!**/chrome_vip_profile/
 !**/chrome_vip_profile/README.md
 **/cookies.json
 .md/data/tvpl_session_audit.log
