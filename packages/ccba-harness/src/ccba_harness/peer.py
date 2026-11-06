@@ -20,14 +20,6 @@ from typing import Any
 
 from ._mutex import FileMutexLock
 from ._peer_anchor import (
-    _commit_anchor_patch_writes,
-    _execute_locked_patch_transaction,
-    _finalize_auto_apply_decision,
-    _journal_anchor_preimages,
-    _prepare_single_file_patch,
-    _recover_single_anchor_txn,
-    _resolve_auto_apply_root,
-    _rollback_from_journal,
     apply_anchor_patch,
     auto_apply_and_verify_patch,
     extract_anchor_payload,
@@ -35,12 +27,6 @@ from ._peer_anchor import (
     recover_pending_anchor_transactions,
 )
 from ._peer_co_review import (
-    _consolidate_peer_conditions,
-    _consolidate_peer_telemetry,
-    _merge_profile_conditions,
-    _prepare_co_review_tasks,
-    _resolve_baseline_consensus_verdict,
-    _run_co_review_workers,
     orchestrate_peer_co_review,
     render_consensus_report_markdown,
     synthesize_verdicts,
@@ -56,6 +42,7 @@ from ._peer_models import (
     PeerCondition,
     PeerConsensusReport,
     PeerPromptEnvelope,
+    PeerVerdictBlock,
     PeerVerdictTelemetry,
     ProfileTelemetryItem,
     _registry_timestamp,
@@ -64,9 +51,8 @@ from ._peer_models import (
     parse_envelope_from_md,
     parse_verdict_from_md,
     render_prompt_header,
+    render_verdict_header,
 )
-from ._peer_models import PeerVerdictBlock as PeerVerdictBlock
-from ._peer_models import render_verdict_header as render_verdict_header
 from ._peer_telemetry import (
     _accumulate_verdict_telemetry,
     _enforce_single_verdict_guardrails,
@@ -100,8 +86,29 @@ from ._peer_watchdog import (
     is_max_turns_exhausted,
     write_synthesis_prompt_file,
 )
-from .verifier import resolve_preset_commands
-from .verifier import verify_patch_execution as verify_patch_execution
+from .verifier import resolve_preset_commands, verify_patch_execution
+
+# fmt: off
+__all__ = [
+    "AUDIT_BASE_SYSTEM_PROMPT", "AgentIdentity", "AnchorPatchPayload", "AutoApplyResult",
+    "CombinedTelemetry", "CostMode", "DEFAULT_FALLBACK_AUDITOR_MODEL", "DEFAULT_GROK_SPEC",
+    "DEFAULT_PRIMARY_AUDITOR_MODEL", "EffortType", "FRONTMATTER_PATTERN", "FileChange",
+    "FilePatch", "ModelTier", "NO_TOOLS_DISALLOW_LIST", "PROFILE_SPECS", "PatchReplacement",
+    "PeerCondition", "PeerConsensusReport", "PeerExecutionProfile", "PeerPromptEnvelope",
+    "PeerVerdictBlock", "PeerVerdictTelemetry", "ProfileTelemetryItem", "READ_ONLY_DISALLOW_LIST",
+    "RequestType", "TIER_DEFAULT_MODELS", "VERDICT_LATTICE_RANK", "VerdictType",
+    "_resolve_grok_profile_options", "_resolve_target_models", "_unwrap_grok_json_stdout",
+    "apply_anchor_patch", "atomic_write_text", "auto_apply_and_verify_patch", "build_grok_cmd",
+    "classify_file_role", "compute_pending_queues", "extract_anchor_payload",
+    "extract_frontmatter", "extract_grok_session_telemetry", "flush_pending_peer_triggers",
+    "get_git_toplevel", "inspect_session_liveness", "invoke_grok_cli", "is_max_turns_exhausted",
+    "orchestrate_peer_co_review", "parse_envelope_from_md", "parse_verdict_from_md",
+    "publish_peer_message", "recover_pending_anchor_transactions",
+    "render_consensus_report_markdown", "render_prompt_header", "render_verdict_header",
+    "run_sync_cycle", "safe_read_and_hash", "scan_peer_exchange", "synthesize_verdicts",
+    "verify_patch_execution",
+]
+# fmt: on
 
 _SYNC_MUTEX = threading.Lock()
 _PENDING_THREADS: list[threading.Thread] = []
@@ -658,9 +665,13 @@ def _run_single_grok_attempt(
         stdout_text, ok = _spawn_and_poll_grok(cmd, output_file, start_time, timeout, session_id)
         if not ok:
             return False
-        stdout_text, json_sid, _ = _unwrap_grok_json_stdout(stdout_text)
+        stdout_text, json_sid, is_aborted = _unwrap_grok_json_stdout(stdout_text)
         session_id = session_id or json_sid
-        if (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None) and session_id:
+        if (
+            not is_aborted
+            and (not stdout_text.strip() or parse_verdict_from_md(stdout_text) is None)
+            and session_id
+        ):
             stdout_text = (
                 _recover_verdict_from_chat_history(session_id, parse_verdict_from_md) or stdout_text
             )

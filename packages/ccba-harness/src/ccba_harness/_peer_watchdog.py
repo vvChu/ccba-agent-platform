@@ -375,12 +375,14 @@ def _parse_event_timestamp(raw_ts: Any, fallback_mtime: float) -> float:
 def inspect_session_liveness(
     session_id: str,
     session_root: Path | None = None,
+    min_timestamp: float | None = None,
 ) -> tuple[str | None, float | None]:
     """Inspects the latest event in ~/.grok/sessions/**/<session_id>/events.jsonl.
 
     Args:
         session_id: UUID of the active Grok session.
         session_root: Optional override root directory for sessions.
+        min_timestamp: Optional lower-bound epoch timestamp for current-turn events.
 
     Returns:
         Tuple of (state_string 'type:phase_or_outcome', age_seconds) or (None, None).
@@ -405,9 +407,11 @@ def inspect_session_liveness(
                     continue
                 if not isinstance(evt, dict):
                     continue
+                ts = _parse_event_timestamp(evt.get("ts"), p.stat().st_mtime)
+                if min_timestamp is not None and ts < min_timestamp:
+                    return None, None
                 etype = str(evt.get("type") or "")
                 detail = str(evt.get("phase") or evt.get("outcome") or "")
-                ts = _parse_event_timestamp(evt.get("ts"), p.stat().st_mtime)
                 return f"{etype}:{detail}", max(0.0, time.time() - ts)
     except Exception:
         pass
@@ -418,7 +422,7 @@ def is_max_turns_exhausted(
     session_id: str,
     session_root: Path | None = None,
 ) -> bool:
-    """Checks if a Grok session terminated due to max_turns_reached in events.jsonl."""
+    """Checks if a Grok session's latest turn terminated due to max_turns_reached in events.jsonl."""
     if not session_id:
         return False
     root = session_root or (Path.home() / ".grok" / "sessions")
@@ -426,9 +430,20 @@ def is_max_turns_exhausted(
         return False
     try:
         for p in root.rglob(f"{session_id}/events.jsonl"):
-            if p.is_file() and "max_turns_reached" in p.read_text(
-                encoding="utf-8", errors="replace"
-            ):
+            if not p.is_file():
+                continue
+            text = p.read_text(encoding="utf-8", errors="replace")
+            for raw in reversed(text.splitlines()):
+                cleaned = raw.strip(" \t\r\n\x00")
+                if not cleaned:
+                    continue
+                try:
+                    evt = json.loads(cleaned)
+                except Exception:
+                    continue
+                if isinstance(evt, dict) and evt.get("type") == "turn_ended":
+                    return "max_turns_reached" in cleaned
+            if "max_turns_reached" in text:
                 return True
     except Exception:
         pass
@@ -500,6 +515,8 @@ def _recover_verdict_from_chat_history(
                     continue
                 if not isinstance(d, dict):
                     continue
+                if d.get("type") == "user":
+                    break
                 cand = d.get("content") if d.get("type") == "assistant" else None
                 if isinstance(cand, str) and cand and parse_fn(cand) is not None:
                     return cand
@@ -533,7 +550,7 @@ def _poll_grok_process_with_watchdog(
             if valid_content:
                 _terminate_proc_tree(proc)
                 return valid_content, True
-        last_state, age_s = inspect_session_liveness(session_id or "")
+        last_state, age_s = inspect_session_liveness(session_id or "", min_timestamp=start_time)
         if last_state and age_s is not None:
             if last_state in ("turn_ended:error", "turn_ended:cancelled") or (
                 last_state == "mcp_init_completed:" and age_s > 90.0
