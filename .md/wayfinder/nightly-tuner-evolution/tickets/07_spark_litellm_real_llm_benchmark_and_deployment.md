@@ -10,7 +10,7 @@
 ---
 
 ## 🎯 Mục Tiêu
-Khảo sát và xác định mô hình tối ưu trên LiteLLM Server Spark (:8090, qua Tailscale VPN `100.83.192.30`) để chạy đợt tuning ban đêm với Real LLM (`--use-real-llm`), bao gồm:
+Khảo sát và xác định mô hình tối ưu trên LiteLLM Server Spark (:8090, qua Tailscale VPN `<TAILSCALE_GATEWAY_IP>`) để chạy đợt tuning ban đêm với Real LLM (`--use-real-llm`), bao gồm:
 1. Danh mục 22 mô hình khả dụng trên Spark (:8090) và phân loại theo tier (Local GPU vs Cloud fallback).
 2. Đo lường tốc độ suy luận (latency), chi phí token, và giới hạn quota/concurrency khi chạy batch 73 kỹ năng.
 3. Xác lập bộ tham số mặc định cho `scripts/cron/run_nightly_tuner.sh`: `--model`, `--token-budget`, timeout per call, circuit breaker threshold.

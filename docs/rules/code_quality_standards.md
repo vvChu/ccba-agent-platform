@@ -125,7 +125,7 @@ Khi xây dựng các biểu thức chính quy (Regex) để trích xuất, đố
 Để bảo vệ nguyên tắc Platform-Aware KISS và khả năng mở rộng hệ thống (Open-Closed Principle):
 
 1. **Cấm Hardcode Model Strings:** Tuyệt đối KHÔNG nhúng trực tiếp tên mô hình AI dạng chuỗi thô (`"gemini-*"`, `"gpt-*"`, `"claude-*"`, `"llama-*"`) vào mã nguồn hàm gọi hoặc gán giá trị mặc định trong packages và skills. BẮT BUỘC sử dụng Seam định tuyến chuẩn `ccba_ai.routing.choose_model()` hoặc `ModelArchetype`. Trong trường hợp ngoại lệ bắt buộc, phải chú thích `# ccba:allow-raw-model`.
-2. **Cấm Hardcode Network IPs & Endpoints:** Tuyệt đối KHÔNG gán cứng địa chỉ IP máy chủ hoặc cổng hạ tầng vật lý vào code (như `100.83.192.30:8090`). BẮT BUỘC đọc từ biến môi trường (`AI_GATEWAY_URL`, `CCBA_TELEMETRY_STREAM_URL`). Trong trường hợp fallback bắt buộc, phải chú thích `# ccba:allow-raw-ip`.
+2. **Cấm Hardcode Network IPs & Endpoints:** Tuyệt đối KHÔNG gán cứng địa chỉ IP máy chủ hoặc cổng hạ tầng vật lý vào code (như `<TAILSCALE_GATEWAY_IP>:8090`). BẮT BUỘC đọc từ biến môi trường (`AI_GATEWAY_URL`, `CCBA_TELEMETRY_STREAM_URL`). Trong trường hợp fallback bắt buộc, phải chú thích `# ccba:allow-raw-ip`.
 3. **Cấm Hardcode Machine Drive Paths:** Tuyệt đối KHÔNG nhúng đường dẫn ổ đĩa tuyệt đối cục bộ (`C:\...`, `D:\...`, `/home/vvc/...`). BẮT BUỘC dùng `Path` tương đối hoặc biến môi trường `CCBA_HUB_PATH`. Trong trường hợp fallback bắt buộc trên Windows, phải chú thích `# ccba:allow-machine-path`.
 4. **Phân tách Cấu hình Khai báo (Declarative Config):** Các siêu tham số, trọng số đánh giá và từ khóa routing của harness phải được tách thành cấu hình khai báo (YAML/JSON/dataclass/Pydantic) thay vì gán cứng trong logic xử lý Python, tuân thủ nguyên tắc Open-Closed Principle (OCP).
 

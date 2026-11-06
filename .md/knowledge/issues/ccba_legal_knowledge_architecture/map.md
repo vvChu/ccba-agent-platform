@@ -43,7 +43,7 @@ graph TD
 - **Cơ chế 3 tầng:**
   - Tầng 1: Đọc local path `D:\GitHubProjects\ccba-legal-knowledge\legal_docs\`.
   - Tầng 2: Fallback đọc Embedded Registry từ Package `ccba-legal-intel`.
-  - Tầng 3: Fallback gọi REST API Gateway Server Spark (`100.83.192.30:8090`).
+  - Tầng 3: Fallback gọi REST API Gateway Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`).
 
 ### 🎫 Ticket 04: Nâng cấp `tvpl_vip_crawler.py` (Atomic Ingestion & Dual Sync)
 - **Mục tiêu:** Tự động hóa cào dữ liệu và đồng bộ 2 chiều (ADR-002 & ADR-003).

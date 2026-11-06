@@ -107,17 +107,21 @@ def _find_and_load_env() -> None:
 
 def _sanitize_gateway_url(url: str | None) -> str:
     """Sanitize gateway URL redirecting legacy port :8045 to centralized port :8090."""
+    default_host = os.environ.get("CCBA_SPARK_HOST", "localhost").strip() or "localhost"
+    default_url = f"http://{default_host}:8090/v1"
     raw = (
         (url.strip() if url and url.strip() else None)
         or (os.environ.get("AI_GATEWAY_URL") or "").strip()
-        or "http://100.83.192.30:8090/v1"  # ccba:allow-raw-ip
+        or default_url
     )
     if ":8045" in raw:
+        redirected = raw.replace(":8045", ":8090")
         logger.warning(
-            "Legacy AI Gateway port :8045 detected in URL (%s). Automatically redirecting to http://100.83.192.30:8090/v1",  # ccba:allow-raw-ip
+            "Legacy AI Gateway port :8045 detected in URL (%s). Automatically redirecting to %s",
             raw,
+            redirected,
         )
-        return "http://100.83.192.30:8090/v1"  # ccba:allow-raw-ip
+        return redirected
     return raw
 
 

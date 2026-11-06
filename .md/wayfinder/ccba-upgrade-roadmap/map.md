@@ -142,7 +142,7 @@ Toàn bộ **67 kỹ năng và các orchestrators** trong hệ sinh thái **CCBA
 
 - **[Đã chốt - 2026-09-10] Real-Time Telemetry Streaming Bridge qua Server Spark (Ticket P4.3)**:
   - Xây dựng module `packages/ccba-harness/src/ccba_harness/streamer.py` với cấu trúc `TelemetryEvent` chuẩn hóa, bộ đệm ngoại tuyến `OfflineBufferManager` và cầu nối `TelemetryStreamingBridge`.
-  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động chuyển sang `OFFLINE_BUFFERING` khi Server Spark (`100.83.192.30:8090`) hoặc VPN gián đoạn, tuyệt đối không làm gián đoạn Agent loop.
+  - Thiết kế an toàn Offline-First & Graceful Degradation: Tự động chuyển sang `OFFLINE_BUFFERING` khi Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`) hoặc VPN gián đoạn, tuyệt đối không làm gián đoạn Agent loop.
   - Tích hợp subcommand `ccba-harness telemetry stream` và tiện ích độc lập `scripts/governance/telemetry_streamer.py` (`ping`, `stream`, `flush`, `status`).
   - Bộ unit tests `tests/governance/test_telemetry_streamer.py` (7/7 PASS) và 100% vượt qua 7 Cổng CI Eval Gates.
 
@@ -369,7 +369,7 @@ flowchart TD
 ---
 
 ### Ticket P4.3: [Prototype/HITL] `[Real-Time Telemetry Streaming Bridge qua Server Spark]` ✅
-- **Mục tiêu**: Xây dựng cầu nối truyền phát dữ liệu đo lường thời gian thực (Real-time Telemetry Bridge) từ Antigravity Worktrees về máy chủ Spark (`100.83.192.30:8090`) qua Tailscale VPN.
+- **Mục tiêu**: Xây dựng cầu nối truyền phát dữ liệu đo lường thời gian thực (Real-time Telemetry Bridge) từ Antigravity Worktrees về máy chủ Spark (`<TAILSCALE_GATEWAY_IP>:8090`) qua Tailscale VPN.
 - **Đầu ra thực tế**:
   - Module [`packages/ccba-harness/src/ccba_harness/streamer.py`](../../../packages/ccba-harness/src/ccba_harness/streamer.py) (`TelemetryEvent`, `StreamingConfig`, `StreamingStatus`, `StreamingReport`, `OfflineBufferManager`, `AsyncTranscriptFollower`, `TelemetryStreamingBridge`).
   - Tích hợp CLI subcommand `ccba-harness telemetry stream` trong [`packages/ccba-harness/src/ccba_harness/cli.py`](../../../packages/ccba-harness/src/ccba_harness/cli.py) hỗ trợ `--endpoint`, `--buffer-file`, `--flush-buffer`, `--ping`, `--dry-run`, `--json`.

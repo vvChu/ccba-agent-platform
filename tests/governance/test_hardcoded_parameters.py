@@ -63,19 +63,19 @@ def test_whitelists_test_files() -> None:
 def test_detects_hardcoded_ip() -> None:
     code = """
 def connect():
-    url = "http://100.83.192.30:8090/v1/chat"
+    url = "http://100.64.1.1:8090/v1/chat"
     return url
 """
     violations = check_file_content(Path("src/adapter.py"), code)
     assert len(violations) == 1
     assert violations[0].rule_name == "HardcodedNetworkIPViolation"
-    assert "100.83.192.30" in violations[0].message
+    assert "100.64.1.1" in violations[0].message
 
 
 def test_allows_ip_with_annotation() -> None:
     code = """
 def connect():
-    url = "http://100.83.192.30:8090/v1/chat"  # ccba:allow-raw-ip
+    url = "http://100.64.1.1:8090/v1/chat"  # ccba:allow-raw-ip
     return url
 """
     violations = check_file_content(Path("src/adapter.py"), code)

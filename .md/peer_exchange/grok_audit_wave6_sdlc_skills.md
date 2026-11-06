@@ -98,7 +98,7 @@ Mỗi skill có một mục `## 🏛️ Platform-Aware Architecture Posture (ADR
 | Hai lệnh gán `BRANCH_NAME` | Dòng 98 khi có Issue: `proposal/issue-${ISSUE_ID}-${PROPOSAL_NAME}`. Dòng 101 khi không có Issue: `proposal/${PROPOSAL_NAME}` |
 | Hai lệnh `gh pr create` | Dòng 119 có `Closes #[ISSUE_ID]`. Dòng 122 không có Issue |
 
-Mẫu `${ISSUE_ID:+...}` không còn trong skill. Quét octet `100.83.192.30`, `[hub_path]` và `<hub_path>` trên skill này trả về rỗng. Hồ sơ đệ trình còn trích dòng 86–91 của bản trước khi chèn mục posture. Nội dung đã khóa đang đứng ở các dòng trên.
+Mẫu `${ISSUE_ID:+...}` không còn trong skill. Quét octet `<TAILSCALE_GATEWAY_IP>`, `[hub_path]` và `<hub_path>` trên skill này trả về rỗng. Hồ sơ đệ trình còn trích dòng 86–91 của bản trước khi chèn mục posture. Nội dung đã khóa đang đứng ở các dòng trên.
 
 Quét `$(...)` trên tám cây skill trả về rỗng, gồm `ccba-tdd` và `ccba-diagnosing-bugs`. Regex vệ sinh trong `audit_skills_hygiene.py` gắn RED cho mẫu này khi đứng ngoài fence `linux`.
 

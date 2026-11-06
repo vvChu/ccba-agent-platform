@@ -28,7 +28,7 @@ applies_to:
 
 1. **Nỗi đau thực tế (Pain point):**
    - Trước đây, cỗ máy ban đêm của Hub (`run_nightly_tuner.sh` / `.bat`) chỉ thực hiện Pha 2 (Document Auto-Evolution) và Pha 3 (Multi-Skill Nightly Auto-Tuner) mà chưa có cơ chế tự động đo lường và phát hiện sự trôi dạt (drift), rụng câu chữ hoặc gãy liên kết của 58 gói tri thức pháp luật quy chuẩn tại Spoke `ccba-legal-knowledge`.
-   - Các kiểm định Master CI 15 cổng chỉ được chạy cục bộ khi lập trình viên có mặt trên máy, không có cơ chế tự động ghi telemetry và cảnh báo định kỳ qua đêm trên máy chủ Server Spark (100.83.192.30).
+   - Các kiểm định Master CI 15 cổng chỉ được chạy cục bộ khi lập trình viên có mặt trên máy, không có cơ chế tự động ghi telemetry và cảnh báo định kỳ qua đêm trên máy chủ Server Spark (<TAILSCALE_GATEWAY_IP>).
 
 2. **Quá trình ươm tạo tại Spoke:**
    - Xây dựng thành công `verify_ground_truth_parity.py` (v2.0 Hardened) với thuật toán Greedy Multi-Span Coverage và Anti-Vacuous Table Regularity.

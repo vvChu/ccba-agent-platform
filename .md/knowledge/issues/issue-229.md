@@ -14,7 +14,7 @@ merged_pr: 234
 
 # 📖 Mô tả (Description)
 ### 1. Bối cảnh & Vấn đề (Context & Problem):
-- `ccba-ai` hiện chỉ trỏ duy nhất vào LiteLLM Proxy trên Server Spark (`100.83.192.30:8090`).
+- `ccba-ai` hiện chỉ trỏ duy nhất vào LiteLLM Proxy trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`).
 - Khi lập trình viên làm việc offline, mạng Tailscale VPN bị ngắt, hoặc khi Server Spark bảo trì/khởi động lại, các lệnh gọi `ai.chat()` rơi vào vòng lặp retry và gây crash timeout (`APIConnectionError`).
 - Chưa có cơ chế chuyển vùng dự phòng tự động (Automated Failover) sang Local Ollama (`localhost:11434`) hoặc Deterministic Mock Provider phục vụ Unit Test và Offline CI.
 
@@ -62,7 +62,7 @@ Xây dựng `TieredFallbackRouter` trong `packages/ccba-ai/src/ccba_ai/routing.p
 **Tóm tắt yêu cầu:** Triển khai Tiered Fallback Router 4 tầng (Spark LiteLLM -> Direct Cloud API -> Local Ollama -> Deterministic Mock) trong `ccba-ai` để đảm bảo hoạt động liên tục khi offline.
 
 ### Hành vi hiện tại (Current behavior)
-- `ccba-ai` phụ thuộc hoàn toàn vào kết nối tới Server Spark (`100.83.192.30:8090`).
+- `ccba-ai` phụ thuộc hoàn toàn vào kết nối tới Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`).
 - Khi offline hoặc mất kết nối Tailscale VPN, `ai.chat()` liên tục retry và ném ngoại lệ `APIConnectionError`, làm dừng pipeline.
 - Chưa có mock provider tích hợp để chạy unit tests và CI độc lập mà không cần network/token.
 

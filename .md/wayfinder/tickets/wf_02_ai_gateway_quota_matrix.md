@@ -10,7 +10,7 @@
 
 ## 1. Bối cảnh & Mục tiêu
 
-AI Gateway trên Server Spark (`100.83.192.30:8090/v1`) là cổng kết nối duy nhất cho toàn bộ hệ sinh thái CCBA:
+AI Gateway trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090/v1`) là cổng kết nối duy nhất cho toàn bộ hệ sinh thái CCBA:
 - Tích hợp 22 models bao gồm:
   - Local GPU models: `qwen-local-primary` (Qwen 35B FP8 - chạy trên GPU của Spark Server), `reasoning-gemma`, v.v.
   - Cloud Frontier models: Gemini 3.7 / 2.5 Pro & Flash, Claude Sonnet 4.6, Claude Haiku 4.5.
