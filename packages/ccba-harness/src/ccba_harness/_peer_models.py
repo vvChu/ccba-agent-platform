@@ -20,7 +20,21 @@ from ._peer_watchdog import (
     VerdictType,
 )
 
-FRONTMATTER_PATTERN = re.compile(r"^---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
+FRONTMATTER_PATTERN = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
+INLINE_FRONTMATTER_PATTERN = re.compile(
+    r"(?:^|\r?\n|(?<=[.!*`]))---\s*\r?\n(.*?)(?=(\r?\n---\s*(?:\r?\n|$)))", re.DOTALL
+)
+_FRONTMATTER_KEYS: tuple[str, ...] = ("verdict", "from_agent", "request_id")
+
+_EFFORT_ALIASES: dict[str, str] = {
+    "LOW": "S",
+    "SMALL": "S",
+    "MEDIUM": "M",
+    "MODERATE": "M",
+    "HIGH": "L",
+    "LARGE": "L",
+    "XHIGH": "XL",
+}
 
 
 class FileChange(NamedTuple):
@@ -169,6 +183,19 @@ class PeerVerdictBlock(BaseModel):
                 return int(round(v))
         return v
 
+    @field_validator("effort", mode="before")
+    @classmethod
+    def _normalize_effort(cls, v: Any) -> Any:
+        if not isinstance(v, str) or not v.strip():
+            return None
+        tokens = [t for t in re.split(r"[\s—–\-:/,;()]+", v.strip().upper()) if t]
+        if not tokens:
+            return None
+        token = tokens[0]
+        if token in ("XS", "S", "M", "L", "XL"):
+            return token
+        return _EFFORT_ALIASES.get(token)
+
     @field_validator("verdict", mode="before")
     @classmethod
     def _normalize_verdict(cls, v: Any) -> Any:
@@ -183,6 +210,7 @@ class PeerVerdictBlock(BaseModel):
         if not isinstance(v, (list, tuple)):
             return []
         normalized: list[Any] = []
+        aliases = ("text", "statement", "condition", "summary", "observation")
         for i, item in enumerate(v):
             if isinstance(item, str):
                 normalized.append(
@@ -191,10 +219,14 @@ class PeerVerdictBlock(BaseModel):
             elif isinstance(item, dict):
                 d = dict(item)
                 if not d.get("description"):
-                    for alias in ("text", "statement", "condition", "summary"):
+                    for alias in aliases:
                         if d.get(alias):
                             d["description"] = str(d[alias])
                             break
+                if not d.get("description") and len(d) == 1:
+                    k, val = next(iter(d.items()))
+                    if k not in ("id", "blocking", *aliases):
+                        d = {"id": str(k), "description": str(val), "blocking": True}
                 if not d.get("id"):
                     d["id"] = f"COND-{i + 1:02d}"
                 normalized.append(d)
@@ -238,37 +270,55 @@ class AutoApplyResult(BaseModel):
     modified_files: list[str] = Field(default_factory=list)
 
 
+def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any], str]]:
+    """Extracts all valid YAML frontmatter dicts and their trailing bodies from markdown text."""
+    if not md_content:
+        return []
+    content = md_content.lstrip()
+    if content.startswith("```"):
+        content = re.sub(r"^```[a-zA-Z0-9_-]*\r?\n", "", content)
+    blocks: list[tuple[dict[str, Any], str]] = []
+    consumed_until = 0
+    if content.startswith("---"):
+        match = FRONTMATTER_PATTERN.match(content)
+        if match:
+            try:
+                data = yaml.safe_load(match.group(1))
+                if isinstance(data, dict):
+                    blocks.append((data, content[match.end() :]))
+                    consumed_until = match.end()
+            except Exception:
+                pass
+    for match in INLINE_FRONTMATTER_PATTERN.finditer(content):
+        if match.start() < consumed_until or (blocks and match.start() == 0):
+            continue
+        try:
+            data = yaml.safe_load(match.group(1))
+            if isinstance(data, dict) and any(k in data for k in _FRONTMATTER_KEYS):
+                closing_end = match.end() + len(match.group(2))
+                blocks.append((data, content[closing_end:]))
+                consumed_until = closing_end
+        except Exception:
+            continue
+    return blocks
+
+
 def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
     """Extracts raw YAML frontmatter dictionary and remaining body from markdown content.
 
     Args:
-        md_content: Raw markdown text possibly starting with YAML frontmatter.
+        md_content: Raw markdown text possibly containing YAML frontmatter.
 
     Returns:
         A tuple of (parsed_dict, body_text). If absent or invalid, returns (None, md_content).
     """
-    if not md_content:
+    blocks = _extract_all_frontmatter_blocks(md_content)
+    if not blocks:
         return None, md_content
-
-    content = md_content.lstrip()
-    if content.startswith("```"):
-        content = re.sub(r"^```[a-zA-Z0-9_-]*\r?\n", "", content)
-
-    if not content.startswith("---"):
-        return None, md_content
-    match = FRONTMATTER_PATTERN.match(content)
-    if not match:
-        return None, md_content
-    yaml_text = match.group(1)
-    end_pos = match.end()
-    body = content[end_pos:]
-    try:
-        data = yaml.safe_load(yaml_text)
-        if isinstance(data, dict):
+    for data, body in blocks:
+        if "verdict" in data:
             return data, body
-        return None, md_content
-    except Exception:
-        return None, md_content
+    return blocks[0]
 
 
 def parse_envelope_from_md(md_content: str) -> PeerPromptEnvelope | None:
@@ -280,20 +330,33 @@ def parse_envelope_from_md(md_content: str) -> PeerPromptEnvelope | None:
     Returns:
         PeerPromptEnvelope instance if valid, or None if invalid or absent.
     """
-    data, _ = extract_frontmatter(md_content)
-    if not data or "from_agent" not in data:
-        return None
-    try:
-        return PeerPromptEnvelope.model_validate(data)
-    except Exception:
-        return None
+    for data, _ in _extract_all_frontmatter_blocks(md_content):
+        if "from_agent" in data:
+            try:
+                return PeerPromptEnvelope.model_validate(data)
+            except Exception:
+                continue
+    return None
 
 
 def _coerce_frontmatter_risk_score(raw: Any) -> Any:
-    """Coerces out-of-range LLM frontmatter risk_score scales (0, 10-pt, 100-pt) into 1..5."""
+    """Coerces out-of-range or string/fraction LLM frontmatter risk_score scales into 1..5."""
+    if isinstance(raw, str):
+        s = raw.strip()
+        frac = re.match(r"^(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)$", s)
+        if frac:
+            num, den = float(frac.group(1)), float(frac.group(2))
+            if den <= 0:
+                return 1
+            scaled = (num / den * 5.0) if den > 5.0 else num
+            return max(1, min(5, int(round(scaled))))
+        try:
+            raw = float(s)
+        except ValueError:
+            return raw
     if isinstance(raw, bool) or not isinstance(raw, (int, float)):
         return raw
-    if isinstance(raw, float) and 0.0 <= raw < 1.0:
+    if isinstance(raw, float) and 0.0 < raw < 1.0:
         return raw
     if raw <= 0:
         return 1
@@ -315,15 +378,19 @@ def parse_verdict_from_md(md_content: str) -> PeerVerdictBlock | None:
     Returns:
         PeerVerdictBlock instance if valid, or None if invalid or absent.
     """
-    data, _ = extract_frontmatter(md_content)
-    if not data or "verdict" not in data:
-        return None
-    if "risk_score" in data:
-        data = {**data, "risk_score": _coerce_frontmatter_risk_score(data["risk_score"])}
-    try:
-        return PeerVerdictBlock.model_validate(data)
-    except Exception:
-        return None
+    for data, _ in _extract_all_frontmatter_blocks(md_content):
+        if "verdict" not in data:
+            continue
+        cand = (
+            {**data, "risk_score": _coerce_frontmatter_risk_score(data["risk_score"])}
+            if "risk_score" in data
+            else data
+        )
+        try:
+            return PeerVerdictBlock.model_validate(cand)
+        except Exception:
+            continue
+    return None
 
 
 def render_prompt_header(envelope: PeerPromptEnvelope) -> str:

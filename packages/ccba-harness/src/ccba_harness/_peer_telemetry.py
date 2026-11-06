@@ -65,27 +65,76 @@ def _compute_session_cost(
     return round((inp / 1e6 * rate_in) + (outp / 1e6 * rate_out), 4), "estimated"
 
 
+_SUMMABLE_TURN_KEYS: tuple[str, ...] = (
+    "inputTokens",
+    "outputTokens",
+    "reasoningTokens",
+    "cachedReadTokens",
+    "totalTokens",
+    "costUsdTicks",
+    "modelCalls",
+)
+
+
+def _merge_synthesis_turns(
+    s_data: dict[str, Any],
+    turns_list: Any,
+    synthesize_turns: int,
+    parent_data: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any], int, int]:
+    """Resolves turn counters, session turn_count, and last-turn reasoning tokens."""
+    t_list = [t for t in turns_list if isinstance(t, dict)] if isinstance(turns_list, list) else []
+    turn_count = int(s_data.get("turnCount") or (len(t_list) if t_list else 1))
+    if synthesize_turns <= 1:
+        if t_list:
+            s_data = {**s_data, **t_list[-1]}
+        return s_data, turn_count, int(s_data.get("reasoningTokens", 0))
+
+    last_turn = t_list[-1] if t_list else s_data
+    last_rsn = int(last_turn.get("reasoningTokens", s_data.get("reasoningTokens", 0)))
+    window = (
+        list(t_list[-synthesize_turns:]) if len(t_list) >= 2 else (list(t_list) or [dict(s_data)])
+    )
+    if len(window) == 1 and isinstance(parent_data, dict):
+        p_sess = dict(parent_data.get("session") or {})
+        p_turns = parent_data.get("turns")
+        p_last = (
+            p_turns[-1]
+            if isinstance(p_turns, list) and p_turns and isinstance(p_turns[-1], dict)
+            else p_sess
+        )
+        if p_last:
+            window.insert(0, p_last)
+            p_tc = int(p_sess.get("turnCount") or 1)
+            turn_count = max(turn_count + 1, p_tc + 1)
+    merged = {**s_data, **(t_list[-1] if t_list else {})}
+    for key in _SUMMABLE_TURN_KEYS:
+        if any(key in t for t in window):
+            merged[key] = sum(int(t.get(key, 0) or 0) for t in window)
+    return merged, turn_count, last_rsn
+
+
 def _build_telemetry_from_usage_json(
     session_id: str,
     data: dict[str, Any],
     duration_seconds: float,
     fallback_model: str,
     expected_reasoning_effort: str | None = None,
+    synthesize_turns: int = 1,
+    parent_data: dict[str, Any] | None = None,
 ) -> PeerVerdictTelemetry:
     """Constructs PeerVerdictTelemetry from parsed `grok usage <session_id>` JSON output."""
-    s_data = dict(data.get("session") or {})
-    turns_list = data.get("turns")
-    if isinstance(turns_list, list) and len(turns_list) > 1 and isinstance(turns_list[-1], dict):
-        s_data = {**s_data, **turns_list[-1]}
-
+    s_data, turn_count, last_rsn = _merge_synthesis_turns(
+        dict(data.get("session") or {}),
+        data.get("turns"),
+        synthesize_turns,
+        parent_data=parent_data,
+    )
     primary_model = str(s_data.get("primaryModelId") or fallback_model)
     inp, outp = int(s_data.get("inputTokens", 0)), int(s_data.get("outputTokens", 0))
     rsn, cached = int(s_data.get("reasoningTokens", 0)), int(s_data.get("cachedReadTokens", 0))
     total = int(s_data.get("totalTokens", inp + outp))
     calls = int(s_data.get("modelCalls", 1))
-    turn_count = int(
-        s_data.get("turnCount", len(turns_list) if isinstance(turns_list, list) else 1)
-    )
     cost_usd, mode_typed = _compute_session_cost(s_data, primary_model, inp, outp)
 
     return PeerVerdictTelemetry(
@@ -101,7 +150,7 @@ def _build_telemetry_from_usage_json(
         cost_usd=cost_usd,
         cost_mode=mode_typed,
         duration_seconds=round(duration_seconds, 2),
-        degraded_reasoning=_is_degraded_reasoning(expected_reasoning_effort, rsn),
+        degraded_reasoning=_is_degraded_reasoning(expected_reasoning_effort, last_rsn),
     )
 
 
@@ -140,16 +189,8 @@ def _build_fallback_telemetry(
         return None
 
 
-def extract_grok_session_telemetry(
-    session_id: str,
-    timeout: float = 3.0,
-    fallback_prompt_text: str | None = None,
-    fallback_resp_text: str | None = None,
-    duration_seconds: float = 0.0,
-    fallback_model: str = "unknown",
-    expected_reasoning_effort: str | None = None,
-) -> PeerVerdictTelemetry | None:
-    """Safely extracts telemetry metrics from grok usage CLI with bounded retry & fallback (ADR-0064)."""
+def _fetch_usage_json(session_id: str, timeout: float) -> dict[str, Any] | None:
+    """Queries `grok usage <session_id>` with up to 3 bounded attempts."""
     cmd = ["grok", "usage", session_id]
     deadline = time.time() + timeout
     for attempt in range(3):
@@ -166,17 +207,48 @@ def extract_grok_session_telemetry(
                 stdin=subprocess.DEVNULL,
             )
             if proc.returncode == 0 and proc.stdout.strip():
-                return _build_telemetry_from_usage_json(
-                    session_id,
-                    json.loads(proc.stdout),
-                    duration_seconds,
-                    fallback_model,
-                    expected_reasoning_effort,
-                )
+                parsed = json.loads(proc.stdout)
+                if isinstance(parsed, dict):
+                    return parsed
         except Exception:
             pass
         if attempt < 2 and time.time() < deadline:
             time.sleep(0.1)
+    return None
+
+
+def extract_grok_session_telemetry(
+    session_id: str,
+    timeout: float = 3.0,
+    fallback_prompt_text: str | None = None,
+    fallback_resp_text: str | None = None,
+    duration_seconds: float = 0.0,
+    fallback_model: str = "unknown",
+    expected_reasoning_effort: str | None = None,
+    synthesize_turns: int = 1,
+    parent_session_id: str | None = None,
+) -> PeerVerdictTelemetry | None:
+    """Safely extracts telemetry metrics from grok usage CLI with bounded retry & fallback (ADR-0064)."""
+    data = _fetch_usage_json(session_id, timeout)
+    if data is not None:
+        parent_data: dict[str, Any] | None = None
+        turns = data.get("turns")
+        if (
+            synthesize_turns >= 2
+            and parent_session_id
+            and parent_session_id != session_id
+            and (not isinstance(turns, list) or len(turns) <= 1)
+        ):
+            parent_data = _fetch_usage_json(parent_session_id, max(0.5, timeout / 2))
+        return _build_telemetry_from_usage_json(
+            session_id,
+            data,
+            duration_seconds,
+            fallback_model,
+            expected_reasoning_effort,
+            synthesize_turns=synthesize_turns,
+            parent_data=parent_data,
+        )
 
     return _build_fallback_telemetry(
         session_id,
