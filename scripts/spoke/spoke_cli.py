@@ -103,8 +103,7 @@ class SpokeCLI:
         print(f"  • Hub Valid:      {'✅ Active' if hub_valid else '❌ Invalid Hub Path'}")
 
         # AI Gateway info
-        default_gw_url = "http://100.83.192.30:8090/v1"  # ccba:allow-raw-ip
-        ai_url = os.environ.get("AI_GATEWAY_URL", default_gw_url)
+        ai_url = os.environ.get("AI_GATEWAY_URL", "") or "⚠️ Missing AI_GATEWAY_URL"
         ai_key = os.environ.get("AI_GATEWAY_KEY", "")
         print("\n🤖 AI Gateway Configuration:")
         print(f"  • Gateway URL:    {ai_url}")

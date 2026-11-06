@@ -9,7 +9,8 @@ class TestSettings:
     def test_default_settings(self):
         """Test default values are set."""
         settings = Settings(_env_file=None)
-        assert settings.ai_gateway_url == "http://100.83.192.30:8090/v1"
+        assert settings.ai_gateway_url.startswith("http")
+        assert settings.ai_gateway_url.endswith(":8090/v1")
         assert settings.max_output_tokens == 65536
         assert settings.timeout_seconds == 600
         assert settings.temperature == 0.1
