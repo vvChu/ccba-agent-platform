@@ -125,11 +125,21 @@ def shell_command_to_argv(command: str, cwd: Path | str | None = None) -> list[s
     ``test_tuner*.py``. With ``shell=False`` we must expand those ourselves relative
     to ``cwd`` (or the process cwd when unset).
     """
-    argv = shlex.split(command, posix=(sys.platform != "win32"))
+    is_win = sys.platform == "win32"
+    raw_argv = shlex.split(command, posix=(not is_win))
+    argv = (
+        [
+            arg[1:-1] if len(arg) >= 2 and arg[0] == arg[-1] and arg[0] in ('"', "'") else arg
+            for arg in raw_argv
+        ]
+        if is_win
+        else raw_argv
+    )
     base = Path(cwd) if cwd else Path.cwd()
     expanded: list[str] = []
-    for arg in argv:
-        if any(ch in arg for ch in "*?["):
+    for idx, arg in enumerate(argv):
+        prev = argv[idx - 1] if idx > 0 else ""
+        if prev not in ("-c", "-k", "-m") and any(ch in arg for ch in "*?"):
             matches = sorted(glob_module.glob(arg, root_dir=str(base)))
             expanded.extend(matches if matches else [arg])
         else:

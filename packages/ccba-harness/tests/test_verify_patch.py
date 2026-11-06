@@ -383,3 +383,21 @@ def test_cli_verify_patch_missing_target_returns_1(
     assert code == 1
     captured = capsys.readouterr()
     assert "ERROR: Preset 'doc' requires a target file path" in captured.err
+
+
+def test_shell_command_to_argv_glob_and_win32_quotes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify glob expansion, -c inline code protection, and win32 quote stripping."""
+    from ccba_harness.verifier import shell_command_to_argv
+
+    (tmp_path / "test_tuner_a.py").write_text("", encoding="utf-8")
+    (tmp_path / "test_tuner_b.py").write_text("", encoding="utf-8")
+
+    argv_glob = shell_command_to_argv("pytest test_tuner*.py -k 'test_foo[bar*]'", cwd=tmp_path)
+    assert argv_glob == ["pytest", "test_tuner_a.py", "test_tuner_b.py", "-k", "test_foo[bar*]"]
+
+    monkeypatch.setattr(sys, "platform", "win32")
+    win_cmd = '"C:\\\\Python\\\\python.exe" -c "import sys; sys.exit(42)"'
+    argv_win = shell_command_to_argv(win_cmd, cwd=tmp_path)
+    assert argv_win == ["C:\\\\Python\\\\python.exe", "-c", "import sys; sys.exit(42)"]
