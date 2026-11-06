@@ -27,7 +27,7 @@ from ccba_ai.routing import ModelArchetype
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-GATEWAY_URL = os.getenv("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1")  # ccba:allow-raw-ip
+GATEWAY_URL = os.getenv("AI_GATEWAY_URL", "http://localhost:8090/v1")
 GATEWAY_KEY = os.getenv("AI_GATEWAY_KEY", "ccba-platform")
 TIMEOUT = 60.0
 

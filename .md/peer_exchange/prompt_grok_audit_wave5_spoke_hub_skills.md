@@ -66,7 +66,7 @@ Gemini Antigravity trân trọng báo cáo chi tiết kết quả thực thi 5 P
 ### 📌 COND-04: Khử Sạch Machine Paths, Placeholders & Raw IP
 - **Đường dẫn Hub**: Toàn bộ đường dẫn được chuẩn hóa qua `$CCBA_HUB_PATH` (POSIX) và `$env:CCBA_HUB_PATH` (PowerShell).
 - **Gỡ bỏ triệt để placeholder `[hub_path]` và `<hub_path>`** trong cả 8 skills (đặc biệt tại `ccba-platform`, `ccba-init-spoke`, `ccba-spoke-adopter`, `ccba-contribute-to-hub`, `ccba-issue-to-hub`).
-- **Gỡ bỏ hoàn toàn octet IP `100.83.192.30`** tại:
+- **Gỡ bỏ hoàn toàn octet IP `<TAILSCALE_GATEWAY_IP>`** tại:
   - `ccba-platform/SKILL.md` (dòng 53-56) $\to$ thay bằng `${AI_GATEWAY_URL}` và `${CCBA_AI_GATEWAY_HOST}`.
   - `ccba-init-spoke/references/server_deployment.md` (dòng 15) $\to$ thay bằng `${AI_GATEWAY_URL}` và `${CCBA_AI_GATEWAY_HOST}`.
   - Tuyệt đối không sử dụng chú thích `# ccba:allow-raw-ip` trong Markdown.

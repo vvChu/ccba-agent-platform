@@ -16,7 +16,7 @@ Khi `DocAutoEvolutionEngine` chạy qua đêm lúc 00:00 trên Server Spark, m�
 
 > **🌿 Branch:** `docs/auto-refactor-20260816_000500`  
 > **📊 Health Status:** 🟢 100% HEALTHY (0 Broken Links, 8 Pillars Balanced)  
-> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`100.83.192.30`)  
+> **🤖 Automated Engine:** `DocAutoEvolutionEngine` on Server Spark (`<TAILSCALE_GATEWAY_IP>`)  
 
 ---
 

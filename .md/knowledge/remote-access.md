@@ -7,7 +7,7 @@ Tài liệu này hướng dẫn cách kết nối từ máy cá nhân tới các
 | | |
 |---|---|
 | **Hostname** | `spark-CCBA` |
-| **IP Tailscale** | `100.83.192.30` |
+| **IP Tailscale** | `<TAILSCALE_GATEWAY_IP>` |
 | **AI Gateway** | port `8090` — 44 models |
 | **Direct vLLM Primary** | port `8004` — Qwen 35B (active) |
 | **Direct vLLM Fallback** | port `8003` — (currently inactive/offline) |
@@ -29,7 +29,7 @@ sudo bash /home/vvc/Codebase/dgx-spark-toolkit/scripts/setup-remote-access.sh
 
 ```bash
 # Test kết nối
-curl http://100.83.192.30:8090/v1/models \
+curl http://<TAILSCALE_GATEWAY_IP>:8090/v1/models \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
 

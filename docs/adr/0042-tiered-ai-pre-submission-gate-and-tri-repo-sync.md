@@ -2,7 +2,7 @@
 
 ## Context
 As the CCBA Agent Platform integrates closely with the enterprise governance operating system (`IDOP-CCBA-WAY`) and interfaces with the functional departments of the Institute for Building Science and Technology (Viện IBST: KHKT, TCKT, TCHC), we must ensure:
-1. Continuous synchronization between Hub tooling, National Legal Knowledge, and Enterprise Governance on Server Spark (`100.83.192.30`).
+1. Continuous synchronization between Hub tooling, National Legal Knowledge, and Enterprise Governance on Server Spark (`<TAILSCALE_GATEWAY_IP>`).
 2. Zero administrative and financial submission rejections from Viện IBST without imposing rigid mechanical bottlenecks that impair business agility.
 
 ## Decision

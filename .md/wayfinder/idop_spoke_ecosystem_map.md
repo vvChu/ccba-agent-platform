@@ -14,7 +14,7 @@
 Thiết lập bản đồ chiến lược và hoàn thiện mô hình tổ chức, phân bổ, cấp quyền và đồng bộ hóa toàn diện mạng lưới CCBA Hub-Spoke tích hợp nền tảng doanh nghiệp IDOP:
 1. **Định danh & Ranh giới Thẩm quyền**: Phân định ranh giới rõ ràng, không chồng chéo giữa Hub (`ccba-agent-platform`), Spoke Quản trị Doanh nghiệp (`IDOP-CCBA-WAY`), Spoke Mỏ neo Chân lý Pháp lý (`ccba-legal-knowledge`), các Spoke Triển khai Dự án (`project_delivery`), và Spoke Không gian Cá nhân (`personal_workspace`).
 2. **Giao thức Chuyển tiếp Dữ liệu Nháp $\rightarrow$ IDOP (Local Staging & Ingestion)**: Quy chuẩn luồng công việc từ file soạn thảo/kiểm tra cục bộ của Kỹ sư lên 58 SharePoint Lists và 5TB Master OneDrive qua `IDOPBridge` với khả năng Zero-Downtime, Offline-First và Idempotent Replay.
-3. **Cơ chế Quản trị & Phân bổ Năng lượng AI Gateway**: Chuẩn hóa chính sách định tuyến đa mô hình, cấp phát Quota và Virtual Keys cho các vai trò/kỹ sư thông qua LiteLLM Gateway trên Server Spark (`100.83.192.30:8090`).
+3. **Cơ chế Quản trị & Phân bổ Năng lượng AI Gateway**: Chuẩn hóa chính sách định tuyến đa mô hình, cấp phát Quota và Virtual Keys cho các vai trò/kỹ sư thông qua LiteLLM Gateway trên Server Spark (`<TAILSCALE_GATEWAY_IP>:8090`).
 4. **SOP Vận hành Golden Layout**: Hướng dẫn chuẩn mực cho Kỹ sư thiết lập môi trường làm việc trên ổ đĩa `D:\`, đồng bộ hóa xuôi (Downstream Sync) và tham gia vòng lặp đóng góp ngược (Upstream Loop).
 
 ---

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # AI Gateway Configuration (replaces legacy Antigravity Proxy)
     ai_gateway_url: str = Field(
-        default="http://100.83.192.30:8090/v1",  # ccba:allow-raw-ip
+        default="http://localhost:8090/v1",
         description="AI Gateway URL (LiteLLM on Server Spark)",
         alias="AI_GATEWAY_URL",
     )

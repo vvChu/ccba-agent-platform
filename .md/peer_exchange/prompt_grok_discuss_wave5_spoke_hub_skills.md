@@ -66,7 +66,7 @@ Antigravity chân thành cảm ơn phân tích kiến trúc sâu sắc, chuẩn 
 
 ### COND-04: Khử Tuyệt Đối Machine Paths, Placeholders & Raw IP
 - **Đường dẫn Hub**: Khử toàn bộ `[hub_path]` $\to$ sử dụng `$CCBA_HUB_PATH` (Bash/Linux) và `$env:CCBA_HUB_PATH` (PowerShell/Windows).
-- **IP trần**: Khử triệt để IP `100.83.192.30` tại:
+- **IP trần**: Khử triệt để IP `<TAILSCALE_GATEWAY_IP>` tại:
   - `ccba-platform/SKILL.md` (dòng 48–49) $\to$ thay bằng `${AI_GATEWAY_URL}` hoặc `${CCBA_AI_GATEWAY_HOST}`.
   - `ccba-init-spoke/references/server_deployment.md` $\to$ thay bằng tên biến môi trường `${AI_GATEWAY_URL}` / `${CCBA_AI_GATEWAY_HOST}`.
   - Cấm chú thích `# ccba:allow-raw-ip` trong Markdown.
@@ -112,7 +112,7 @@ flowchart TD
 | PR | Tệp Tác Động | Posture & Tier | Trọng Tâm Thay Đổi | Bộ Kiểm Tra Khóa Hoàn Tất |
 | :---: | :--- | :---: | :--- | :--- |
 | **5A** | `.agents/skills/platform-loader/SKILL.md` | `seam-exempt`<br/>`tier: kernel` (17.5) | Thêm khối posture `seam-exempt`. Giữ nguyên bảng 3 chỉ mục và logic bootstrap. | `validate_skills` + `audit_skills_hygiene` + `verify-patch --preset skill` |
-| **5B** | `.agents/skills/ccba-platform/SKILL.md` | `seam-exempt`<br/>`tier: orchestrator` | Thêm khối posture `seam-exempt`. Gỡ IP `100.83.192.30` $\to$ `${AI_GATEWAY_URL}`. Gỡ placeholder `[hub_path]`. | `validate_skills` + `audit_skills_hygiene` + `verify-patch --preset skill` |
+| **5B** | `.agents/skills/ccba-platform/SKILL.md` | `seam-exempt`<br/>`tier: orchestrator` | Thêm khối posture `seam-exempt`. Gỡ IP `<TAILSCALE_GATEWAY_IP>` $\to$ `${AI_GATEWAY_URL}`. Gỡ placeholder `[hub_path]`. | `validate_skills` + `audit_skills_hygiene` + `verify-patch --preset skill` |
 | **5C** | `.agents/skills/ccba-init-spoke/SKILL.md`<br/>`.agents/skills/ccba-init-spoke/references/server_deployment.md`<br/>`.agents/skills/ccba-spoke-adopter/SKILL.md`<br/>`.agents/skills/ccba-update-spoke/SKILL.md` | `seam-exempt`<br/>init: 14.5<br/>adopter: orchestrator<br/>update: 14.0 | Thống nhất sổ lệnh COND-03 (greenfield vs brownfield vs máy mới). Gỡ IP server_deployment. Thay `[hub_path]` bằng `$CCBA_HUB_PATH`. Tách rõ CLI unified vs sync wrapper. | `validate_skills` + `audit_skills_hygiene` (cho cả 3 thư mục) + `verify-patch --preset skill` |
 | **5D** | `.agents/skills/ccba-sync-upstream/SKILL.md` | `seam-exempt`<br/>`tier: kernel` (20.5) | Thêm posture `seam-exempt`. Giữ nguyên phạm vi radar Hub và GPI (4,3,3,1) = 20.5. | `validate_skills` + `audit_skills_hygiene` + `verify-patch --preset skill` |
 | **5E** | `.agents/skills/ccba-contribute-to-hub/SKILL.md`<br/>`.agents/skills/ccba-issue-to-hub/SKILL.md` | `seam-exempt`<br/>`tier: kernel` (14.0) | Thêm posture `seam-exempt`. Thay `[hub_path]` bằng `$CCBA_HUB_PATH`. Viết 2 lệnh `gh pr create` tường minh (có issue và không issue). | `validate_skills` + `audit_skills_hygiene` (cho cả 2 thư mục) + `verify-patch --preset skill` |

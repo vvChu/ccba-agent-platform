@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_SPARK_TELEMETRY_URL = os.environ.get(
     "CCBA_TELEMETRY_STREAM_URL",
-    "http://100.83.192.30:8090/telemetry/events",  # ccba:allow-raw-ip
+    "http://localhost:8090/telemetry/events",
 )
 DEFAULT_BUFFER_PATH = Path(".md/telemetry/offline_buffer.jsonl")
 

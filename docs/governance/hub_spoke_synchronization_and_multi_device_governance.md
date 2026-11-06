@@ -329,7 +329,7 @@ flowchart TD
   - `skill`: Kích hoạt workflow Agent sau khi sync skill.
 
 ### 8.2. Mặt Phẳng Dữ Liệu & Suy Luận (Data Plane): Server Spark & Zero-Bloat RAG
-- **Kết nối an toàn qua Tailscale Mesh VPN (`100.83.192.30`)**: Mã hóa đầu cuối giữa client và server.
+- **Kết nối an toàn qua Tailscale Mesh VPN (`<TAILSCALE_GATEWAY_IP>`)**: Mã hóa đầu cuối giữa client và server.
 - **Quản trị chi phí qua Virtual Keys**: Cấp Virtual Key độc lập cho từng Spoke/kỹ sư ($30-$50/tháng, 60-120 RPM, Token Bucket Limiter), ngăn ngừa cạn kiệt ngân sách toàn công ty.
 - **Zero-Bloat Legal RAG**: Client không cần tải kho dữ liệu pháp lý nặng về máy; gọi FastMCP `query_legal_ground_truth` với SLA < 1.2s từ mô hình BGE-M3 thường trực trên VRAM chip Blackwell GB10.
 - **An ninh Multi-User POSIX ACLs Pin-Hole Traversal (ADR-0060 Mục 2)**:

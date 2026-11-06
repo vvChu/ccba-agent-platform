@@ -45,12 +45,12 @@ Dùng OpenAI SDK chuẩn, thay đổi model name là xong.
 **Trên máy client:**
 1. Cài Tailscale: https://tailscale.com/download
 2. Đăng nhập cùng tài khoản Tailscale với server
-3. Server IP qua Tailscale: **`100.83.192.30`**
+3. Server IP qua Tailscale: **`<TAILSCALE_GATEWAY_IP>`**
 
 ```bash
 # Test kết nối
-ping 100.83.192.30
-curl http://100.83.192.30:8090/v1/models \
+ping <TAILSCALE_GATEWAY_IP>
+curl http://<TAILSCALE_GATEWAY_IP>:8090/v1/models \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 ```
 
@@ -101,18 +101,18 @@ Copy file `.env.ai-gateway` (đã cung cấp sẵn) vào project, hoặc thêm c
 ```env
 # === AI Gateway Connection ===
 # Chọn 1 trong các SERVER_IP phù hợp:
-#   Tailscale:  100.83.192.30
+#   Tailscale:  <TAILSCALE_GATEWAY_IP>
 #   LAN:        <LAN_IP>
 #   SSH Tunnel: localhost
 # Ghi chú: `<YOUR_AI_GATEWAY_KEY>` là master key mặc định cho $LITELLM_MASTER_KEY / $AI_GATEWAY_KEY
 
-AI_GATEWAY_URL=http://100.83.192.30:8090/v1
+AI_GATEWAY_URL=http://<TAILSCALE_GATEWAY_IP>:8090/v1
 AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_GATEWAY_TIMEOUT=60.0
 
 # Nếu project dùng OpenAI SDK convention:
-OPENAI_API_BASE=http://100.83.192.30:8090/v1
-OPENAI_API_KEY=<YOUR_AI_GATEWAY_KEY>
+OPENAI_API_BASE=http://<TAILSCALE_GATEWAY_IP>:8090/v1
+OPENAI_API_KEY=your_ai_gateway_key_here
 
 # Model mặc định (4 Archetypes chuẩn)
 AI_MODEL=gemini-3.7-flash
@@ -168,7 +168,7 @@ from openai import OpenAI
 load_dotenv()
 
 client = OpenAI(
-    base_url=os.environ.get("AI_GATEWAY_URL", "http://100.83.192.30:8090/v1"),
+    base_url=os.environ.get("AI_GATEWAY_URL", "http://<TAILSCALE_GATEWAY_IP>:8090/v1"),
     api_key=os.environ.get("AI_GATEWAY_KEY", "<YOUR_AI_GATEWAY_KEY>"),
     timeout=60.0,  # Bắt buộc: >= 30s - 60s
 )
@@ -216,7 +216,7 @@ import 'dotenv/config';
 
 const client = new OpenAI({
   baseURL: process.env.AI_GATEWAY_URL,
-  apiKey: process.env.AI_GATEWAY_KEY,
+  apiKey: "${AI_GATEWAY_KEY}", // hoặc truyền từ biến môi trường AI_GATEWAY_KEY
   timeout: 120000, // Best practice: 120s timeout cho proxy
 });
 
@@ -262,7 +262,7 @@ var client = new ChatClient(
     credential: new ApiKeyCredential("<YOUR_AI_GATEWAY_KEY>"),
     options: new OpenAIClientOptions
     {
-        Endpoint = new Uri("http://100.83.192.30:8090/v1")
+        Endpoint = new Uri("http://<TAILSCALE_GATEWAY_IP>:8090/v1")
     }
 );
 
@@ -274,11 +274,11 @@ Console.WriteLine(completion.Content[0].Text);
 
 ```bash
 # Kiểm tra gateway hoạt động
-curl http://100.83.192.30:8090/v1/models \
+curl http://<TAILSCALE_GATEWAY_IP>:8090/v1/models \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
 
 # Chat với Qwen 35B local
-curl http://100.83.192.30:8090/v1/chat/completions \
+curl http://<TAILSCALE_GATEWAY_IP>:8090/v1/chat/completions \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -288,7 +288,7 @@ curl http://100.83.192.30:8090/v1/chat/completions \
   }'
 
 # Streaming
-curl http://100.83.192.30:8090/v1/chat/completions \
+curl http://<TAILSCALE_GATEWAY_IP>:8090/v1/chat/completions \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -317,14 +317,14 @@ Hoặc tự test:
 
 ```bash
 # 1. Test connectivity & health (LiteLLM yêu cầu Bearer key khi master key active)
-curl -s http://100.83.192.30:8090/health -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" | python3 -m json.tool
+curl -s http://<TAILSCALE_GATEWAY_IP>:8090/health -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" | python3 -m json.tool
 
 # 2. List models
-curl -s http://100.83.192.30:8090/v1/models \
+curl -s http://<TAILSCALE_GATEWAY_IP>:8090/v1/models \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" | python3 -m json.tool
 
 # 3. Test Qwen 35B local
-curl -s http://100.83.192.30:8090/v1/chat/completions \
+curl -s http://<TAILSCALE_GATEWAY_IP>:8090/v1/chat/completions \
   -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"model":"qwen-local-primary","messages":[{"role":"user","content":"Say hello in Vietnamese"}],"max_tokens":50}' \
