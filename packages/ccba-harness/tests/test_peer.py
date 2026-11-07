@@ -1372,6 +1372,9 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
         sys_prompt = PROFILE_SPECS[prof].get("system_prompt")
         assert sys_prompt == AUDIT_BASE_SYSTEM_PROMPT
         assert BOUNDED_TOOL_BUDGET_PROMPT in sys_prompt
+    assert "All tools (including local read_file" in str(
+        PROFILE_SPECS["audit_direct"].get("system_prompt")
+    )
 
     # Verify subprocess env isolation in _spawn_and_poll_grok (COND-08)
     captured_envs: list[dict[str, str]] = []
@@ -1416,6 +1419,19 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     with events_file.open("a", encoding="utf-8") as ef:
         ef.write(json.dumps({"type": "turn_ended", "outcome": "completed"}) + "\n")
     assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is False
+
+    # Single-turn preamble-only stop (outcome="completed" + chat_history.jsonl present, 1 turn_ended)
+    sid_preamble = "11111111-2222-3333-4444-555555555555"
+    sess_preamble = tmp_path / "sessions" / sid_preamble
+    sess_preamble.mkdir(parents=True)
+    (sess_preamble / "events.jsonl").write_text(
+        json.dumps({"type": "turn_ended", "outcome": "completed"}) + "\n", encoding="utf-8"
+    )
+    (sess_preamble / "chat_history.jsonl").write_text(
+        json.dumps({"type": "assistant", "content": "I am reading those modules."}) + "\n",
+        encoding="utf-8",
+    )
+    assert is_max_turns_exhausted(sid_preamble, session_root=tmp_path / "sessions") is True
 
     pe_dir = tmp_path / "peer_exchange"
     pe_dir.mkdir(parents=True)
@@ -1483,6 +1499,17 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     )
     assert invoke_grok_cli(prompt, profile="arch_audit", model="grok-4.7") is False
     assert len(calls_fail) == 2
+
+    # Verify audit_direct (tools=None) also triggers in-place synthesis retry before failing/falling back
+    calls_direct: list[list[str]] = []
+    monkeypatch.setattr(
+        peer_mod,
+        "_run_single_grok_attempt",
+        lambda cmd, *a, **kw: (calls_direct.append(cmd), "--resume" in cmd)[1],
+    )
+    assert invoke_grok_cli(prompt, profile="audit_direct", model="grok-4.7") is True
+    assert len(calls_direct) == 2
+    assert "--resume" in calls_direct[1]
 
     # Verify preamble-tolerant frontmatter, effort, fraction risk_score, and 1-key condition dicts (COND-03)
     v_norm = parse_verdict_from_md(
