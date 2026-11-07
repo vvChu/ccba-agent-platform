@@ -122,6 +122,19 @@ def enhance_prompt(base_prompt, style=None, industry=None, brand_name=None):
     return LOGO_PROMPT_TEMPLATE.format(prompt=combined)
 
 
+BATCH_LOGO_STYLES = (
+    ("minimalist", "Clean, simple geometric shape with minimal details"),
+    ("modern", "Sleek gradient with tech-forward aesthetic"),
+    ("geometric", "Abstract geometric patterns, mathematical precision"),
+    ("gradient", "Vibrant color transitions, modern digital feel"),
+    ("abstract", "Conceptual symbolic representation"),
+    ("lettermark", "Stylized letter 'U' as monogram"),
+    ("negative-space", "Clever use of negative space, hidden meaning"),
+    ("lineart", "Single stroke continuous line design"),
+    ("3d", "Dimensional design with depth and shadows"),
+)
+
+
 def generate_logo(
     prompt,
     style=None,
@@ -131,13 +144,7 @@ def generate_logo(
     use_pro=False,
     aspect_ratio=None,
 ):
-    """Generate a logo using AI image generation
-
-    Args:
-        aspect_ratio: Image aspect ratio. Options: "1:1", "16:9", "9:16", "4:3", "3:4"
-                      Default is "1:1" (square) for logos.
-    """
-    # Import adapter động để tránh lỗi dependencies
+    """Generate a logo using AI image generation."""
     sys.path.insert(0, str(Path(__file__).parent.parent))
     try:
         import llm_adapter
@@ -145,38 +152,27 @@ def generate_logo(
         print("Error: Could not import llm_adapter.")
         return None
 
-    # Enhance the prompt
     full_prompt = enhance_prompt(prompt, style, industry, brand_name)
-
-    # Select model
     model = MODEL_PRO if use_pro else MODEL_FAST
-
-    # Set aspect ratio (default to 1:1 for logos)
     ratio = aspect_ratio if aspect_ratio in ASPECT_RATIOS else DEFAULT_ASPECT_RATIO
 
     try:
-        # Gọi sinh ảnh qua adapter linh hoạt
         image_data = llm_adapter.generate_image(
             prompt=full_prompt, default_model=model, aspect_ratio=ratio
         )
-
         if not image_data:
             print("No image generated. The model may not have produced an image.")
             return None
 
-        # Determine output path
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             brand_slug = brand_name.lower().replace(" ", "_") if brand_name else "logo"
             output_path = f"{brand_slug}_{timestamp}.png"
 
-        # Save image
         with open(output_path, "wb") as f:
             f.write(image_data)
-
         print(f"Logo saved to: {output_path}")
         return output_path
-
     except Exception as e:
         print(f"Error generating logo: {e}")
         return None
@@ -186,49 +182,21 @@ def generate_batch(
     prompt, brand_name, count, output_dir, use_pro=False, brand_context=None, aspect_ratio=None
 ):
     """Generate multiple logo variants with different styles"""
-
-    # Select appropriate styles for batch generation
-    batch_styles = [
-        ("minimalist", "Clean, simple geometric shape with minimal details"),
-        ("modern", "Sleek gradient with tech-forward aesthetic"),
-        ("geometric", "Abstract geometric patterns, mathematical precision"),
-        ("gradient", "Vibrant color transitions, modern digital feel"),
-        ("abstract", "Conceptual symbolic representation"),
-        ("lettermark", "Stylized letter 'U' as monogram"),
-        ("negative-space", "Clever use of negative space, hidden meaning"),
-        ("lineart", "Single stroke continuous line design"),
-        ("3d", "Dimensional design with depth and shadows"),
-    ]
-
-    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-
     results = []
     model_label = "Pro" if use_pro else "Flash"
     ratio = aspect_ratio if aspect_ratio in ASPECT_RATIOS else DEFAULT_ASPECT_RATIO
+    print(f"\nBATCH LOGO GENERATION: {brand_name} ({model_label}, {ratio}, {count} variants) -> {output_dir}")
 
-    print(f"\n{'=' * 60}")
-    print(f"  BATCH LOGO GENERATION: {brand_name}")
-    print(f"  Model: AI Image ({model_label})")
-    print(f"  Aspect Ratio: {ratio}")
-    print(f"  Variants: {count}")
-    print(f"  Output: {output_dir}")
-    print(f"{'=' * 60}\n")
-
-    for i in range(min(count, len(batch_styles))):
-        style_key, style_desc = batch_styles[i]
-
-        # Build enhanced prompt with brand context
+    for i in range(min(count, len(BATCH_LOGO_STYLES))):
+        style_key, style_desc = BATCH_LOGO_STYLES[i]
         enhanced_prompt = f"{prompt}, {style_desc}"
         if brand_context:
             enhanced_prompt = f"{brand_context}, {enhanced_prompt}"
 
-        # Generate filename
         filename = f"{brand_name.lower().replace(' ', '_')}_{style_key}_{i + 1:02d}.png"
         output_path = os.path.join(output_dir, filename)
-
         print(f"[{i + 1}/{count}] Generating {style_key} variant...")
-
         result = generate_logo(
             prompt=enhanced_prompt,
             style=style_key,
@@ -238,93 +206,56 @@ def generate_batch(
             use_pro=use_pro,
             aspect_ratio=aspect_ratio,
         )
-
         if result:
             results.append(result)
-            print(f"  ✓ Saved: {filename}\n")
-        else:
-            print(f"  ✗ Failed: {style_key}\n")
-
-        # Rate limiting between requests
         if i < count - 1:
             time.sleep(2)
 
-    print(f"\n{'=' * 60}")
-    print(f"  BATCH COMPLETE: {len(results)}/{count} logos generated")
-    print(f"{'=' * 60}\n")
-
+    print(f"BATCH COMPLETE: {len(results)}/{count} logos generated")
     return results
 
 
-def main():
+def _parse_logo_args():
     parser = argparse.ArgumentParser(description="Generate logos using AI image generation")
     parser.add_argument("--prompt", "-p", type=str, help="Logo description prompt")
     parser.add_argument("--brand", "-b", type=str, help="Brand name")
     parser.add_argument("--style", "-s", choices=list(STYLE_MODIFIERS.keys()), help="Logo style")
-    parser.add_argument(
-        "--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type"
-    )
+    parser.add_argument("--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type")
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     parser.add_argument("--output-dir", type=str, help="Output directory for batch generation")
-    parser.add_argument(
-        "--batch", type=int, help="Number of logo variants to generate (batch mode)"
-    )
+    parser.add_argument("--batch", type=int, help="Number of logo variants to generate")
     parser.add_argument("--brand-context", type=str, help="Additional brand context for prompts")
+    parser.add_argument("--pro", action="store_true", help="Use Pro image model")
     parser.add_argument(
-        "--pro",
-        action="store_true",
-        help="Use Pro image model for professional quality",
-    )
-    parser.add_argument(
-        "--aspect-ratio",
-        "-r",
-        choices=ASPECT_RATIOS,
-        default=DEFAULT_ASPECT_RATIO,
-        help=f"Image aspect ratio (default: {DEFAULT_ASPECT_RATIO} for logos)",
+        "--aspect-ratio", "-r", choices=ASPECT_RATIOS, default=DEFAULT_ASPECT_RATIO, help="Aspect ratio"
     )
     parser.add_argument("--list-styles", action="store_true", help="List available styles")
     parser.add_argument("--list-industries", action="store_true", help="List available industries")
+    return parser, parser.parse_args()
 
-    args = parser.parse_args()
 
+def main():
+    parser, args = _parse_logo_args()
     if args.list_styles:
-        print("Available styles:")
         for style, desc in STYLE_MODIFIERS.items():
             print(f"  {style}: {desc[:60]}...")
         return
-
     if args.list_industries:
-        print("Available industries:")
         for industry, desc in INDUSTRY_PROMPTS.items():
             print(f"  {industry}: {desc[:60]}...")
         return
-
     if not args.prompt and not args.brand:
         parser.error("Either --prompt or --brand is required")
 
     prompt = args.prompt or "professional logo"
-
-    # Batch mode
     if args.batch:
         output_dir = args.output_dir or f"./{args.brand.lower().replace(' ', '_')}_logos"
         generate_batch(
-            prompt=prompt,
-            brand_name=args.brand or "Logo",
-            count=args.batch,
-            output_dir=output_dir,
-            use_pro=args.pro,
-            brand_context=args.brand_context,
-            aspect_ratio=args.aspect_ratio,
+            prompt, args.brand or "Logo", args.batch, output_dir, args.pro, args.brand_context, args.aspect_ratio
         )
     else:
         generate_logo(
-            prompt=prompt,
-            style=args.style,
-            industry=args.industry,
-            brand_name=args.brand,
-            output_path=args.output,
-            use_pro=args.pro,
-            aspect_ratio=args.aspect_ratio,
+            prompt, args.style, args.industry, args.brand, args.output, args.pro, args.aspect_ratio
         )
 
 

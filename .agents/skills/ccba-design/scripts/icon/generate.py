@@ -174,6 +174,26 @@ def apply_viewbox_size(svg_code, size):
     return svg_code
 
 
+def _build_single_icon_prompt(prompt, style, category, name, color, size, viewbox):
+    style_instructions = f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    color_instructions = (
+        f"- Use color: {color} for primary elements, currentColor for secondary"
+        if color
+        else "- Use currentColor for all strokes and fills"
+    )
+    size_instructions = f"- Design for {size}px display size, optimize detail level accordingly"
+    icon_prompt = f"{prompt} (category: {ICON_CATEGORIES[category]})" if (category and category in ICON_CATEGORIES) else prompt
+    if name:
+        icon_prompt = f"'{name}' icon: {icon_prompt}"
+    return SVG_PROMPT_TEMPLATE.format(
+        prompt=icon_prompt,
+        viewbox=viewbox,
+        style_instructions=style_instructions,
+        color_instructions=color_instructions,
+        size_instructions=size_instructions,
+    )
+
+
 def generate_icon(
     prompt, style=None, category=None, name=None, color=None, size=24, output_path=None, viewbox=24
 ):
@@ -185,76 +205,27 @@ def generate_icon(
         print("Error: Could not import llm_adapter.")
         return None
 
-    # Build style instructions
-    style_instructions = ""
-    if style and style in ICON_STYLES:
-        style_instructions = f"- Style: {ICON_STYLES[style]}"
-
-    # Build color instructions
-    color_instructions = "- Use currentColor for all strokes and fills"
-    if color:
-        color_instructions = (
-            f"- Use color: {color} for primary elements, currentColor for secondary"
-        )
-
-    # Build size instructions
-    size_instructions = f"- Design for {size}px display size, optimize detail level accordingly"
-
-    # Build final prompt
-    icon_prompt = prompt
-    if category and category in ICON_CATEGORIES:
-        icon_prompt = f"{prompt} (category: {ICON_CATEGORIES[category]})"
-    if name:
-        icon_prompt = f"'{name}' icon: {icon_prompt}"
-
-    full_prompt = SVG_PROMPT_TEMPLATE.format(
-        prompt=icon_prompt,
-        viewbox=viewbox,
-        style_instructions=style_instructions,
-        color_instructions=color_instructions,
-        size_instructions=size_instructions,
-    )
-
-    print(f"Generating icon (task: {MODEL_TASK})...")
-    print(f"Prompt: {prompt}")
-    if style:
-        print(f"Style: {style}")
-    print()
+    full_prompt = _build_single_icon_prompt(prompt, style, category, name, color, size, viewbox)
+    print(f"Generating icon (task: {MODEL_TASK}): {prompt} [{style or 'default'}]")
 
     try:
-        # Gọi sinh văn bản qua adapter
         response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL_TASK)
-
         svgs = extract_svgs(response_text)
-
         if not svgs:
-            print("No valid SVG generated. Model response:")
-            print(response_text[:500])
+            print(f"No valid SVG generated:\n{response_text[:500]}")
             return None
 
-        svg_code = svgs[0]
-
-        # Apply color if specified
-        svg_code = apply_color(svg_code, color)
-
-        # Apply size
-        svg_code = apply_viewbox_size(svg_code, size)
-
-        # Determine output path
+        svg_code = apply_viewbox_size(apply_color(svgs[0], color), size)
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            slug = name or prompt.split()[0] if prompt else "icon"
-            slug = re.sub(r"[^a-zA-Z0-9_-]", "_", slug.lower())
+            slug = re.sub(r"[^a-zA-Z0-9_-]", "_", (name or prompt.split()[0] if prompt else "icon").lower())
             style_suffix = f"_{style}" if style else ""
             output_path = f"{slug}{style_suffix}_{timestamp}.svg"
 
-        # Save SVG
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(svg_code)
-
         print(f"Icon saved to: {output_path}")
         return output_path
-
     except Exception as e:
         print(f"Error generating icon: {e}")
         return None
@@ -270,16 +241,12 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
         return []
 
     os.makedirs(output_dir, exist_ok=True)
-
-    # Build instructions
-    style_instructions = ""
-    if style and style in ICON_STYLES:
-        style_instructions = f"- Style: {ICON_STYLES[style]}"
-
-    color_instructions = "- Use currentColor for all strokes and fills"
-    if color:
-        color_instructions = f"- Use color: {color} for primary elements"
-
+    style_instructions = f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    color_instructions = (
+        f"- Use color: {color} for primary elements"
+        if color
+        else "- Use currentColor for all strokes and fills"
+    )
     full_prompt = SVG_BATCH_PROMPT_TEMPLATE.format(
         prompt=prompt,
         count=count,
@@ -287,47 +254,26 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
         style_instructions=style_instructions,
         color_instructions=color_instructions,
     )
-
-    print(f"\n{'=' * 60}")
-    print("  BATCH ICON GENERATION")
-    print(f"  Task: {MODEL_TASK}")
-    print(f"  Prompt: {prompt}")
-    print(f"  Variants: {count}")
-    print(f"  Output: {output_dir}")
-    print(f"{'=' * 60}\n")
+    print(f"\nBATCH ICON GENERATION ({count} variants) -> {output_dir}")
 
     try:
-        # Gọi sinh văn bản qua adapter
         response_text = llm_adapter.generate_text(prompt=full_prompt, default_model=MODEL_TASK)
-
         svgs = extract_svgs(response_text)
-
         if not svgs:
-            print("No valid SVGs generated.")
-            print(response_text[:500])
+            print(f"No valid SVGs generated:\n{response_text[:500]}")
             return []
 
         results = []
         slug = name or re.sub(r"[^a-zA-Z0-9_-]", "_", prompt.split()[0].lower())
         style_suffix = f"_{style}" if style else ""
-
         for i, svg_code in enumerate(svgs[:count]):
             svg_code = apply_color(svg_code, color)
-            filename = f"{slug}{style_suffix}_{i + 1:02d}.svg"
-            filepath = os.path.join(output_dir, filename)
-
+            filepath = os.path.join(output_dir, f"{slug}{style_suffix}_{i + 1:02d}.svg")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(svg_code)
-
             results.append(filepath)
-            print(f"  [{i + 1}/{len(svgs[:count])}] Saved: {filename}")
-
-        print(f"\n{'=' * 60}")
-        print(f"  BATCH COMPLETE: {len(results)}/{count} icons generated")
-        print(f"{'=' * 60}\n")
-
+        print(f"BATCH COMPLETE: {len(results)}/{count} icons generated")
         return results
-
     except Exception as e:
         print(f"Error generating icons: {e}")
         return []
@@ -335,42 +281,30 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
 
 def generate_sizes(prompt, sizes, style=None, color=None, output_dir=None, name=None):
     """Generate same icon at multiple sizes"""
-    if output_dir is None:
-        output_dir = "."
+    output_dir = output_dir or "."
     os.makedirs(output_dir, exist_ok=True)
-
     results = []
     slug = name or re.sub(r"[^a-zA-Z0-9_-]", "_", prompt.split()[0].lower())
     style_suffix = f"_{style}" if style else ""
 
     for size in sizes:
-        print(f"Generating {size}px variant...")
-        filename = f"{slug}{style_suffix}_{size}px.svg"
-        filepath = os.path.join(output_dir, filename)
-
+        filepath = os.path.join(output_dir, f"{slug}{style_suffix}_{size}px.svg")
         result = generate_icon(
             prompt=prompt, style=style, color=color, size=size, output_path=filepath, viewbox=size
         )
-
         if result:
             results.append(result)
-
         time.sleep(1)
-
     return results
 
 
-def main():
+def _parse_icon_args():
     parser = argparse.ArgumentParser(description="Generate SVG icons using reasoning model routing")
     parser.add_argument("--prompt", "-p", type=str, help="Icon description")
     parser.add_argument("--name", "-n", type=str, help="Icon name (for filename)")
     parser.add_argument("--style", "-s", choices=list(ICON_STYLES.keys()), help="Icon style")
-    parser.add_argument(
-        "--category", "-c", choices=list(ICON_CATEGORIES.keys()), help="Icon category for context"
-    )
-    parser.add_argument(
-        "--color", type=str, help="Primary color (hex, e.g. #6366F1). Default: currentColor"
-    )
+    parser.add_argument("--category", "-c", choices=list(ICON_CATEGORIES.keys()), help="Icon category")
+    parser.add_argument("--color", type=str, help="Primary color (hex, e.g. #6366F1)")
     parser.add_argument("--size", type=int, default=24, help="Icon size in px (default: 24)")
     parser.add_argument("--viewbox", type=int, default=24, help="SVG viewBox size (default: 24)")
     parser.add_argument("--output", "-o", type=str, help="Output file path")
@@ -378,63 +312,34 @@ def main():
     parser.add_argument("--batch", type=int, help="Number of icon variants to generate")
     parser.add_argument("--sizes", type=str, help="Comma-separated sizes (e.g. '16,24,32,48')")
     parser.add_argument("--list-styles", action="store_true", help="List available icon styles")
-    parser.add_argument(
-        "--list-categories", action="store_true", help="List available icon categories"
-    )
+    parser.add_argument("--list-categories", action="store_true", help="List available icon categories")
+    return parser, parser.parse_args()
 
-    args = parser.parse_args()
 
+def main():
+    parser, args = _parse_icon_args()
     if args.list_styles:
-        print("Available icon styles:")
         for style, desc in ICON_STYLES.items():
             print(f"  {style}: {desc[:70]}...")
         return
-
     if args.list_categories:
-        print("Available icon categories:")
         for cat, desc in ICON_CATEGORIES.items():
             print(f"  {cat}: {desc}")
         return
-
     if not args.prompt and not args.name:
         parser.error("Either --prompt or --name is required")
 
     prompt = args.prompt or args.name
-
-    # Multi-size mode
     if args.sizes:
         sizes = [int(s.strip()) for s in args.sizes.split(",")]
-        generate_sizes(
-            prompt=prompt,
-            sizes=sizes,
-            style=args.style,
-            color=args.color,
-            output_dir=args.output_dir or "./icons",
-            name=args.name,
-        )
-    # Batch mode
+        generate_sizes(prompt, sizes, args.style, args.color, args.output_dir or "./icons", args.name)
     elif args.batch:
-        output_dir = args.output_dir or "./icons"
         generate_batch(
-            prompt=prompt,
-            count=args.batch,
-            output_dir=output_dir,
-            style=args.style,
-            color=args.color,
-            viewbox=args.viewbox,
-            name=args.name,
+            prompt, args.batch, args.output_dir or "./icons", args.style, args.color, args.viewbox, args.name
         )
-    # Single icon
     else:
         generate_icon(
-            prompt=prompt,
-            style=args.style,
-            category=args.category,
-            name=args.name,
-            color=args.color,
-            size=args.size,
-            output_path=args.output,
-            viewbox=args.viewbox,
+            prompt, args.style, args.category, args.name, args.color, args.size, args.output, args.viewbox
         )
 
 
