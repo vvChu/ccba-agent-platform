@@ -1,12 +1,14 @@
 """Automated CI Gate: Skills Documentation & Public Catalog Portal Integrity (ADR-0058).
 
 Verifies that:
-1. All 73 active skills are classified into docs/skills/portals.yaml with zero duplicates or orphans.
+1. All 76 active skills are classified into docs/skills/portals.yaml with zero duplicates or orphans.
 2. docs/skills/*.md files conform strictly to the 5-section standardized structure.
 3. Central index (docs/skills/INDEX.md), FAQ, llms.txt, llms-full.txt, and docs/index.html exist and are 100% in sync.
-4. check_skills_docs_in_sync passes without error.
+4. check_skills_docs_in_sync, portal map fields, guide paths, seam contracts, AST budgets, and WCAG contrast pass.
 """
 
+import ast
+import json
 import re
 import sys
 from collections import defaultdict, deque
@@ -23,8 +25,10 @@ if str(project_root) not in sys.path:
 from scripts.governance.compile_skills_docs import (
     HUB_ROOT,
     PIPELINE_MAP,
+    TEMPLATE_HTML_PATH,
     check_skills_docs_in_sync,
     load_portals,
+    load_seam_contract_cards,
 )
 
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
@@ -315,3 +319,137 @@ def test_verify_statechart_anti_lie_catches_violations() -> None:
         + ["S20 --> [*]"]
     )
     assert any("exceeds Anti-Lie budget" in e for e in verify_statechart_anti_lie(over_budget))
+
+
+def test_portal_map_fields_and_spine_order(
+    portal_skill_names: tuple[list[dict[str, Any]], set[str]],
+) -> None:
+    """Verify step, question, start_with, and spine_order in portals.yaml (COND-MAP-FIELDS)."""
+    portals, _ = portal_skill_names
+    steps: set[str] = set()
+    all_spine: list[str] = []
+    for p in portals:
+        pid = p.get("id")
+        step = str(p.get("step") or "")
+        question = str(p.get("question") or "").strip()
+        start_with = str(p.get("start_with") or "").strip()
+        p_skills = [str(s) for s in p.get("skills", [])]
+        spine = [str(s) for s in p.get("spine_order", [])]
+
+        assert step in {"01", "02", "03", "04", "05"}, f"Invalid step {step!r} in {pid}"
+        steps.add(step)
+        assert question, f"Empty question in portal {pid}"
+        assert start_with in p_skills, f"start_with {start_with!r} not in {pid} skills"
+        assert spine, f"Empty spine_order in portal {pid}"
+        assert len(spine) == len(set(spine)), f"Duplicate spine_order items in {pid}"
+        assert set(spine) <= set(p_skills), f"spine_order not subset of skills in {pid}"
+        all_spine.extend(spine)
+    assert steps == {"01", "02", "03", "04", "05"}, f"Expected 5 unique steps, got {steps}"
+    assert len(all_spine) == len(set(all_spine)), "Overlapping spine_order skills across portals"
+
+
+def test_portal_guide_paths_resolve_inside_docs(
+    portal_skill_names: tuple[list[dict[str, Any]], set[str]],
+) -> None:
+    """Verify every portal guide path resolves cleanly inside docs/ (COND-GUIDE-PATH)."""
+    portals, _ = portal_skill_names
+    docs_root = DOCS_DIR.resolve()
+    for p in portals:
+        pid = p.get("id")
+        guides = p.get("guides") or []
+        assert guides, f"Portal {pid} must declare at least one guide"
+        for g in guides:
+            rel_path = str(g.get("path") or "")
+            assert rel_path and not rel_path.startswith("/"), f"Leading slash in {pid}: {rel_path}"
+            assert not rel_path.startswith("docs/"), f"Redundant docs/ prefix in {pid}: {rel_path}"
+            assert ".." not in rel_path and "\\" not in rel_path, (
+                f"Unsafe path in {pid}: {rel_path}"
+            )
+            target = (DOCS_DIR / rel_path).resolve()
+            assert target.is_relative_to(docs_root), f"Path escapes docs/ in {pid}: {rel_path}"
+            assert target.is_file(), f"Missing guide file for {pid}: {target}"
+
+
+def test_index_html_embedded_json_parity() -> None:
+    """Verify embedded JSON payloads in docs/index.html match YAML sources (COND-CARD-SHAPE)."""
+    html = (DOCS_DIR / "index.html").read_text(encoding="utf-8")
+    payloads: dict[str, Any] = {}
+    for var_name in ("SKILLS", "PORTALS", "PACKAGE_SEAMS", "SEAM_CONTRACTS"):
+        m = re.search(rf"const\s+{var_name}\s*=\s*(\[.*?\]);\s*$", html, re.MULTILINE)
+        assert m is not None, f"Embedded const {var_name} not found in docs/index.html"
+        payloads[var_name] = json.loads(m.group(1))
+
+    assert len(payloads["SKILLS"]) == 76
+    assert len(payloads["PORTALS"]) == 5
+    assert len(payloads["PACKAGE_SEAMS"]) == 10
+    expected_cards = load_seam_contract_cards(HUB_ROOT)
+    assert len(payloads["SEAM_CONTRACTS"]) == len(expected_cards)
+    assert {c["seam_id"] for c in payloads["SEAM_CONTRACTS"]} == {
+        c["seam_id"] for c in expected_cards
+    }
+    for card in payloads["SEAM_CONTRACTS"]:
+        assert card["kind"] in {"package", "skill"}
+        assert isinstance(card["in"], list) and isinstance(card["out"], list)
+        assert isinstance(card["hardware"], list)
+        assert isinstance(card["forbidden_substitute_imports"], list)
+
+
+def test_compiler_ast_size_budget() -> None:
+    """Verify compile_skills_docs.py obeys module and function LOC budgets via stdlib ast (COND-PAGES-AST)."""
+    compiler_path = HUB_ROOT / "scripts" / "governance" / "compile_skills_docs.py"
+    source = compiler_path.read_text(encoding="utf-8")
+    total_lines = len(source.splitlines())
+    assert total_lines <= 800, f"compile_skills_docs.py has {total_lines} lines (> 800)"
+    tree = ast.parse(source, filename=str(compiler_path))
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            end_line = getattr(node, "end_lineno", node.lineno)
+            func_len = end_line - node.lineno + 1
+            assert func_len <= 50, f"Function {node.name} is {func_len} lines (> 50)"
+            if node.name == "main":
+                for sub in ast.walk(node):
+                    if isinstance(sub, ast.Call) and getattr(sub.func, "attr", "") == "parse_args":
+                        parse_line = getattr(sub, "end_lineno", sub.lineno)
+                        post_lines = end_line - parse_line + 1
+                        assert post_lines <= 40, (
+                            f"main post-parse_args is {post_lines} lines (> 40)"
+                        )
+
+
+def _relative_luminance(hex_color: str) -> float:
+    """Calculate WCAG 2.x relative luminance from a 6-digit hex color."""
+    h = hex_color.lstrip("#")
+    assert len(h) == 6, f"Expected 6-digit hex color, got {hex_color!r}"
+    channels: list[float] = []
+    for i in (0, 2, 4):
+        c = int(h[i : i + 2], 16) / 255.0
+        channels.append(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
+def _contrast_ratio(hex_a: str, hex_b: str) -> float:
+    """Calculate WCAG contrast ratio between two 6-digit hex colors."""
+    lum_a, lum_b = _relative_luminance(hex_a), _relative_luminance(hex_b)
+    lighter, darker = max(lum_a, lum_b), min(lum_a, lum_b)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def test_portal_template_css_tokens_and_wcag_contrast() -> None:
+    """Verify --ccba-* tokens, split grid rules, and WCAG 2.2 AA contrast >= 4.5:1 (COND-CONTRAST-PAIRS)."""
+    css_html = TEMPLATE_HTML_PATH.read_text(encoding="utf-8")
+    assert "--ah-" not in css_html, "Found unprefixed --ah- token in skills_portal.html"
+    assert "minmax(0, 0.9fr) minmax(0, 1.1fr)" in css_html
+    assert "var(--ccba-line)" in css_html
+
+    for selector in (r":root", r'\[data-theme="light"\]'):
+        m_block = re.search(rf"{selector}\s*\{{(.*?)\}}", css_html, re.DOTALL)
+        assert m_block is not None, f"Missing CSS block for {selector}"
+        tokens = dict(
+            re.findall(r"(--ccba-[a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{6})\b", m_block.group(1))
+        )
+        bg = tokens.get("--ccba-bg", "")
+        fg_body = tokens.get("--ccba-fg-body", "")
+        fg_muted = tokens.get("--ccba-fg-muted", "")
+        assert bg and fg_body and fg_muted, f"Missing core hex tokens in {selector}: {tokens}"
+        assert _contrast_ratio(bg, fg_body) >= 4.5, f"Low body contrast in {selector}"
+        assert _contrast_ratio(bg, fg_muted) >= 4.5, f"Low muted contrast in {selector}"

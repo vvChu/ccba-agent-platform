@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCBA Skills Portal — Bản Đồ Tác Nghiệp &amp; Danh Mục Kỹ Năng Agent Platform</title>
+  <meta name="description" content="Cổng tra cứu __SKILL_COUNT__ kỹ năng, bản đồ tác nghiệp The Map, xương sống quy trình (Ordered Spine) và hợp đồng Deep Seams cho kỹ sư xây dựng và AI Coding Agents trên CCBA Agent Services Platform.">
+  <style>
+    :root {
+      --ccba-bg: #0e0e0d;
+      --ccba-bg-card: #16181c;
+      --ccba-bg-card-hover: #1f2329;
+      --ccba-accent-panel: #1d1a11;
+      --ccba-accent-wash: #2a2415;
+      --ccba-accent-line: #b88f28;
+      --ccba-fg-body: #f4f3f1;
+      --ccba-fg-muted: #b5b8c0;
+      --ccba-fg-subtle: #969aa3;
+      --ccba-fg-faint: #7d828c;
+      --ccba-primary: #58a6ff;
+      --ccba-primary-hover: #79c0ff;
+      --ccba-gold: #f5c451;
+      --ccba-accent: #238636;
+      --ccba-line: #282c34;
+      --ccba-line-strong: #3b4048;
+      --ccba-badge-bg: #21262d;
+      --ccba-code-bg: #0b0d10;
+      --ccba-modal-overlay: rgba(0, 0, 0, 0.78);
+    }
+    [data-theme="light"] {
+      --ccba-bg: #f6f7f9;
+      --ccba-bg-card: #ffffff;
+      --ccba-bg-card-hover: #eef1f5;
+      --ccba-accent-panel: #f3efe2;
+      --ccba-accent-wash: #faf6e8;
+      --ccba-accent-line: #9a6e00;
+      --ccba-fg-body: #14161a;
+      --ccba-fg-muted: #4a505c;
+      --ccba-fg-subtle: #59606e;
+      --ccba-fg-faint: #656d76;
+      --ccba-primary: #0969da;
+      --ccba-primary-hover: #0550ae;
+      --ccba-gold: #9a6700;
+      --ccba-accent: #1a7f37;
+      --ccba-line: #d0d7de;
+      --ccba-line-strong: #afb8c1;
+      --ccba-badge-bg: #eff2f5;
+      --ccba-code-bg: #f0f3f6;
+      --ccba-modal-overlay: rgba(20, 22, 26, 0.55);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--ccba-bg);
+      color: var(--ccba-fg-body);
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    code, pre, .font-mono {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    header {
+      border-bottom: 1px solid var(--ccba-line);
+      background-color: var(--ccba-bg-card);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--ccba-fg-body);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-icon {
+      background: linear-gradient(135deg, #1f6feb, #238636);
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 1rem;
+    }
+    .view-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--ccba-bg);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-line);
+    }
+    .view-tab {
+      background: transparent;
+      border: none;
+      color: var(--ccba-fg-muted);
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .view-tab:hover { color: var(--ccba-fg-body); }
+    .view-tab.active {
+      background: var(--ccba-bg-card);
+      color: var(--ccba-fg-body);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-size: 0.85rem;
+    }
+    .nav-links a, .nav-links .nav-doc-btn {
+      color: var(--ccba-fg-muted);
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: color 0.15s ease;
+    }
+    .nav-links a:hover, .nav-links .nav-doc-btn:hover { color: var(--ccba-primary); }
+    .theme-btn {
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-body);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2.25rem 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--ccba-gold);
+      margin-bottom: 0.5rem;
+    }
+    .hero {
+      border-bottom: 1px solid var(--ccba-line);
+      padding-bottom: 2rem;
+      margin-bottom: 2rem;
+    }
+    .hero h1 {
+      font-size: 2.35rem;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.032em;
+      max-width: 28ch;
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      color: var(--ccba-fg-muted);
+      max-width: 66ch;
+      font-size: 1.05rem;
+      margin-bottom: 1.35rem;
+    }
+    .stats-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      color: var(--ccba-fg-muted);
+    }
+    .pill strong { color: var(--ccba-fg-body); }
+    .jump-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+      max-width: 860px;
+    }
+    @media (min-width: 640px) {
+      .jump-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .jump-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-radius: 7px;
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-bg-card);
+      color: var(--ccba-fg-body);
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .jump-card:first-child {
+      border-color: var(--ccba-accent-line);
+      background: var(--ccba-accent-wash);
+    }
+    .jump-card:hover {
+      border-color: var(--ccba-line-strong);
+      background: var(--ccba-bg-card-hover);
+    }
+    .jump-step {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ccba-gold);
+      flex-shrink: 0;
+    }
+    .jump-question {
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .jump-arrow {
+      margin-left: auto;
+      color: var(--ccba-fg-faint);
+      font-size: 0.9rem;
+    }
+    /* Goal Sections on The Map */
+    .goal-section {
+      border-bottom: 1px solid var(--ccba-line);
+      padding: 2.25rem 0;
+      scroll-margin-top: 4.5rem;
+    }
+    .goal-header {
+      margin-bottom: 1.35rem;
+    }
+    .goal-header h2 {
+      font-size: 1.55rem;
+      font-weight: 750;
+      letter-spacing: -0.025em;
+      line-height: 1.18;
+      margin-bottom: 0.45rem;
+    }
+    .goal-header p {
+      color: var(--ccba-fg-muted);
+      max-width: 64ch;
+      font-size: 0.98rem;
+    }
+    .do-this-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-accent-line);
+      background: var(--ccba-accent-panel);
+      margin-bottom: 1.25rem;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .do-this-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--ccba-gold);
+    }
+    .do-this-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ccba-gold);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .do-this-cmd {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+    }
+    .do-this-cmd .slash { color: var(--ccba-primary); }
+    .do-this-desc {
+      font-size: 0.88rem;
+      color: var(--ccba-fg-muted);
+      margin-top: 0.2rem;
+    }
+    .do-this-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 9999px;
+      border: 1px solid var(--ccba-line-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--ccba-fg-body);
+    }
+    .spine-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 1.15rem;
+    }
+    .spine-node {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem;
+      color: var(--ccba-fg-body);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .spine-node:hover { border-color: var(--ccba-primary); color: var(--ccba-primary); }
+    .spine-sep { color: var(--ccba-fg-faint); font-size: 0.85rem; }
+    .guides-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.75rem;
+    }
+    .guide-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-bg-card);
+      color: var(--ccba-fg-muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .guide-pill:hover {
+      border-color: var(--ccba-primary);
+      color: var(--ccba-fg-body);
+    }
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 2.5rem;
+      padding: 1.5rem;
+      border: 1px solid var(--ccba-line);
+      border-radius: 8px;
+      background: var(--ccba-bg-card);
+    }
+    @media (min-width: 768px) {
+      .philosophy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .philosophy-col h3 {
+      font-size: 0.95rem;
+      color: var(--ccba-gold);
+      margin-bottom: 0.35rem;
+    }
+    .philosophy-col p {
+      font-size: 0.88rem;
+      color: var(--ccba-fg-muted);
+    }
+    /* Asymmetric 0.9fr : 1.1fr Skills Spine (COND-GRID-STACK) */
+    .spine-list {
+      list-style: none;
+      border-top: 1px solid var(--ccba-line);
+    }
+    .spine-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 1.85rem 0;
+      border-bottom: 1px solid var(--ccba-line);
+    }
+    @media (min-width: 768px) {
+      .spine-row {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 3rem;
+        border-bottom: 1px solid var(--ccba-line);
+      }
+    }
+    .spine-left h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      margin-bottom: 0.4rem;
+    }
+    .spine-left p {
+      font-size: 0.9rem;
+      color: var(--ccba-fg-muted);
+      max-width: 46ch;
+      margin-bottom: 0.65rem;
+    }
+    .start-with-line {
+      font-size: 0.8rem;
+      color: var(--ccba-fg-subtle);
+    }
+    .start-with-link {
+      color: var(--ccba-fg-body);
+      text-decoration: underline;
+      text-decoration-color: var(--ccba-line-strong);
+      text-underline-offset: 3px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .start-with-link:hover { color: var(--ccba-primary); }
+    .spine-right-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .spine-skill-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid var(--ccba-line);
+      transition: background 0.12s;
+      border-radius: 4px;
+    }
+    .spine-skill-item:last-child { border-bottom: none; }
+    .spine-skill-item:hover { background: var(--ccba-bg-card); }
+    /* Search & Filter Bar */
+    .search-section {
+      position: sticky;
+      top: 53px;
+      background: var(--ccba-bg);
+      padding: 1rem 0;
+      z-index: 40;
+      border-bottom: 1px solid var(--ccba-line);
+      margin-bottom: 1.5rem;
+    }
+    .search-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      border-radius: 7px;
+      padding: 0.7rem 1rem 0.7rem 2.4rem;
+      font-size: 0.95rem;
+      color: var(--ccba-fg-body);
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--ccba-primary); }
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ccba-fg-muted);
+      pointer-events: none;
+    }
+    .portal-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .chip {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-muted);
+      padding: 0.38rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .chip.active {
+      background: var(--ccba-primary);
+      border-color: var(--ccba-primary);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 1.1rem;
+    }
+    .skill-card {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      border-radius: 8px;
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .skill-card:hover { border-color: var(--ccba-primary); }
+    .skill-name {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+      cursor: pointer;
+    }
+    .skill-name:hover { color: var(--ccba-primary); }
+    .badge {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-kernel { background: #238636; color: #ffffff; }
+    .badge-orchestrator { background: #8957e5; color: #ffffff; }
+    .badge-portal { background: var(--ccba-badge-bg); border: 1px solid var(--ccba-line); color: var(--ccba-fg-muted); }
+    .badge-user { background: #1f6feb; color: #ffffff; }
+    .badge-model { background: #9e6a03; color: #ffffff; }
+    .badge-both { background: #388bfd; color: #ffffff; }
+    .skill-desc {
+      font-size: 0.86rem;
+      color: var(--ccba-fg-muted);
+      margin: 0.6rem 0 0.85rem;
+    }
+    .tag {
+      font-size: 0.7rem;
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-muted);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 0.45rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ccba-line);
+      margin-top: 0.75rem;
+    }
+    .btn {
+      flex: 1;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-badge-bg);
+      color: var(--ccba-fg-body);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .btn:hover { border-color: var(--ccba-primary); }
+    .btn-primary {
+      background: var(--ccba-primary);
+      border-color: var(--ccba-primary);
+      color: #ffffff;
+    }
+    /* Seams Table */
+    .seam-card {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      border-radius: 8px;
+      padding: 1.15rem;
+      margin-bottom: 0.85rem;
+    }
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--ccba-modal-overlay);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line-strong);
+      border-radius: 10px;
+      max-width: 860px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--ccba-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--ccba-fg-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 1.4rem;
+      overflow-y: auto;
+      font-size: 0.92rem;
+    }
+    .modal-section { margin-bottom: 1.35rem; }
+    .modal-section h3 {
+      font-size: 1rem;
+      color: var(--ccba-primary);
+      margin-bottom: 0.45rem;
+      border-bottom: 1px solid var(--ccba-line);
+      padding-bottom: 0.25rem;
+    }
+    .pipeline-box {
+      background: var(--ccba-code-bg);
+      border: 1px solid var(--ccba-line);
+      border-radius: 6px;
+      padding: 0.85rem;
+    }
+    .md-viewer {
+      background: var(--ccba-code-bg);
+      border: 1px solid var(--ccba-line);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 0.75rem;
+    }
+    .md-viewer h1, .md-viewer h2, .md-viewer h3, .md-viewer h4 {
+      margin: 0.75rem 0 0.35rem;
+      color: var(--ccba-fg-body);
+    }
+    .md-viewer p, .md-viewer ul { margin-bottom: 0.6rem; }
+    .md-viewer pre {
+      background: var(--ccba-bg-card);
+      padding: 0.65rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 0.65rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #238636;
+      color: #ffffff;
+      padding: 0.65rem 1.15rem;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+      z-index: 200;
+    }
+    footer {
+      border-top: 1px solid var(--ccba-line);
+      background: var(--ccba-bg-card);
+      padding: 2rem 1.5rem;
+      margin-top: 3rem;
+      font-size: 0.82rem;
+      color: var(--ccba-fg-muted);
+    }
+    .footer-grid {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .footer-grid { grid-template-columns: 1.5fr 1fr 1fr; }
+    }
+    footer a { color: var(--ccba-primary); text-decoration: none; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand" onclick="switchView('map'); return false;">
+        <span class="brand-icon">⚡</span>
+        <span>CCBA Skills Portal</span>
+      </a>
+      <div class="view-tabs" role="tablist">
+        <button class="view-tab active" id="tabMap" onclick="switchView('map')">🗺️ Bản Đồ (The Map)</button>
+        <button class="view-tab" id="tabSkills" onclick="switchView('skills')">⚡ Kỹ Năng (__SKILL_COUNT__)</button>
+        <button class="view-tab" id="tabSeams" onclick="switchView('seams')">🧩 Deep Seams &amp; Contracts</button>
+      </div>
+      <div class="nav-links">
+        <button class="nav-doc-btn" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
+        <button class="nav-doc-btn" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
+        <a href="llms.txt">llms.txt</a>
+        <a href="llms-full.txt">llms-full.txt</a>
+        <a href="https://github.com/vvChu/ccba-agent-platform" target="_blank" rel="noopener">GitHub</a>
+        <button id="themeToggle" class="theme-btn" title="Đổi giao diện Sáng / Tối">🌓 Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- VIEW 1: THE MAP (aihero.dev/learn) -->
+    <div id="viewMap">
+      <section class="hero">
+        <div class="eyebrow">The Map · CCBA Software Factory</div>
+        <h1>Bạn muốn giải quyết bài toán nào cùng CCBA Agent hôm nay?</h1>
+        <p>Chọn đúng bài toán bạn đang đối mặt. Mỗi lộ trình mở ra câu lệnh khởi đầu (<code>Start with /...</code>), chuỗi kỹ năng tuần tự (<code>The Spine</code>) và tài liệu SOP chuẩn mực.</p>
+        <div class="stats-pills">
+          <span class="pill">⚡ <strong>__SKILL_COUNT__</strong> Active Skills</span>
+          <span class="pill">🧭 <strong>5</strong> Lộ Trình Tác Nghiệp</span>
+          <span class="pill">🧩 <strong>10</strong> Monorepo Packages</span>
+          <span class="pill">🛡️ <strong>100%</strong> Deterministic CI (ADR-0058)</span>
+        </div>
+        <nav aria-label="Lộ trình trên trang" class="jump-grid" id="mapJumpGrid"></nav>
+      </section>
+
+      <div id="mapGoalSections"></div>
+
+      <section class="philosophy-grid">
+        <div class="philosophy-col">
+          <h3>1. Vấn đề (The Problem)</h3>
+          <p>AI Agent chỉ tốt bằng đúng quy trình bạn giao cho nó. Nếu để tự đoán mò, Agent sẽ sinh mã chắp vá (ad-hoc scripts) làm suy thoái kiến trúc dự án.</p>
+        </div>
+        <div class="philosophy-col">
+          <h3>2. Giải pháp (The Fix)</h3>
+          <p>Mỗi kỹ năng CCBA đóng gói một thói quen kỹ nghệ chuẩn mực (Grilling, Spec, TDD, AI-QC, OKF v2.4) kết nối thẳng vào các gói lõi Deep Seams.</p>
+        </div>
+        <div class="philosophy-col">
+          <h3>3. Hiệu ứng cộng gộp (Why It Compounds)</h3>
+          <p>Các kỹ năng nối đuôi nhau thành dây chuyền (The Spine): đầu ra đã kiểm chứng của bước trước là đầu vào tất định của bước tiếp theo.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIEW 2: SKILLS SPINE & CATALOG (aihero.dev/skills) -->
+    <div id="viewSkills" class="hidden">
+      <div class="search-section">
+        <div class="search-controls">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
+          </div>
+          <div class="view-tabs">
+            <button class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')">Chế độ Xương Sống (01→05)</button>
+            <button class="view-tab" id="modeGridBtn" onclick="setSkillsDisplayMode('grid')">Chế độ Lưới Thẻ</button>
+          </div>
+        </div>
+        <div class="portal-chips" id="portalChips"></div>
+      </div>
+
+      <ul class="spine-list" id="skillsSpineList"></ul>
+      <div class="skills-grid hidden" id="skillsGrid"></div>
+    </div>
+
+    <!-- VIEW 3: DEEP SEAMS & CONTRACTS (COND-SEAM-SSOT) -->
+    <div id="viewSeams" class="hidden">
+      <section class="hero">
+        <div class="eyebrow">ADR-0061 · Platform-Aware KISS v2.0</div>
+        <h1>Monorepo Packages &amp; Seam Capability Contracts</h1>
+        <p>Tách biệt minh bạch 2 sổ dữ liệu chính thống: (1) 10 gói Monorepo &amp; Public Seams từ <code>catalog.yaml</code>, và (2) Thẻ Hợp Đồng Năng Lực (<code>in / out / hardware</code>) từ <code>seam-contracts.yaml</code>.</p>
+      </section>
+
+      <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
+      <div id="packageSeamsContainer" style="margin-bottom: 2.5rem;"></div>
+
+      <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
+      <div id="seamContractsContainer"></div>
+    </div>
+  </main>
+
+  <div class="modal-backdrop" id="skillModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalTitle" style="font-size: 1.3rem;">Chi Tiết</h2>
+          <div id="modalMeta" style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top: 0.35rem;"></div>
+        </div>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <strong style="color:var(--ccba-fg-body);">CCBA Agent Services Platform</strong>
+        <p style="margin-top:0.35rem;">Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng (CCBA). Vận hành theo Hiến pháp Tầng 1 &amp; Khóa cứng Kỷ luật Hoàn thành ADR-0058.</p>
+      </div>
+      <div>
+        <strong style="color:var(--ccba-fg-body);">Dành cho Kỹ sư (Humans)</strong>
+        <p style="margin-top:0.35rem;"><a href="#" onclick="switchView('map'); return false;">Bản đồ Tác nghiệp (The Map)</a> · <a href="#" onclick="switchView('skills'); return false;">Skills Spine</a> · <a href="#" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (FAQ)'); return false;">FAQ</a></p>
+      </div>
+      <div>
+        <strong style="color:var(--ccba-fg-body);">Dành cho AI Agents (Machine Endpoints)</strong>
+        <p style="margin-top:0.35rem;"><a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a> · <a href="skills/INDEX.md">skills/INDEX.md</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const SKILLS = __SKILLS_JSON__;
+    const PORTALS = __PORTALS_JSON__;
+    const PACKAGE_SEAMS = __PACKAGE_SEAMS_JSON__;
+    const SEAM_CONTRACTS = __SEAM_CONTRACTS_JSON__;
+
+    let activeView = "map";
+    let skillsDisplayMode = "spine";
+    let activePortal = "all";
+    let searchQuery = "";
+
+    const searchInput = document.getElementById("searchInput");
+    const portalChipsContainer = document.getElementById("portalChips");
+    const skillsSpineList = document.getElementById("skillsSpineList");
+    const skillsGrid = document.getElementById("skillsGrid");
+    const skillModal = document.getElementById("skillModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMeta = document.getElementById("modalMeta");
+    const modalBody = document.getElementById("modalBody");
+    const modalClose = document.getElementById("modalClose");
+    const toast = document.getElementById("toast");
+    const themeToggle = document.getElementById("themeToggle");
+
+    // Theme Management
+    const savedTheme = localStorage.getItem("ccba_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("ccba_theme", next);
+    });
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 2200);
+    }
+
+    function copyToClipboard(text, label) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`Đã sao chép ${label}: ${text}`);
+        }).catch(() => fallbackCopy(text, label));
+      } else {
+        fallbackCopy(text, label);
+      }
+    }
+
+    function fallbackCopy(text, label) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      showToast(`Đã sao chép ${label}: ${text}`);
+    }
+
+    window.switchView = function(viewName) {
+      activeView = viewName;
+      document.getElementById("viewMap").classList.toggle("hidden", viewName !== "map");
+      document.getElementById("viewSkills").classList.toggle("hidden", viewName !== "skills");
+      document.getElementById("viewSeams").classList.toggle("hidden", viewName !== "seams");
+      document.getElementById("tabMap").classList.toggle("active", viewName === "map");
+      document.getElementById("tabSkills").classList.toggle("active", viewName === "skills");
+      document.getElementById("tabSeams").classList.toggle("active", viewName === "seams");
+    };
+
+    window.setSkillsDisplayMode = function(mode) {
+      skillsDisplayMode = mode;
+      document.getElementById("modeSpineBtn").classList.toggle("active", mode === "spine");
+      document.getElementById("modeGridBtn").classList.toggle("active", mode === "grid");
+      renderSkillsCatalog();
+    };
+
+    // Safe relative path rebasing & sanitizer (COND-MD-SAFE)
+    function resolveAndSanitizeHref(rawHref, basePath) {
+      const trimmed = String(rawHref || "").trim();
+      if (!trimmed) return null;
+      const lower = trimmed.toLowerCase();
+      if (
+        lower.startsWith("javascript:") ||
+        lower.startsWith("data:") ||
+        lower.startsWith("vbscript:") ||
+        trimmed.startsWith("//") ||
+        trimmed.startsWith("\\") ||
+        trimmed.startsWith("/")
+      ) {
+        return null;
+      }
+      if (lower.startsWith("https://") || lower.startsWith("http://") || trimmed.startsWith("#")) {
+        return trimmed;
+      }
+      const baseParts = String(basePath || "").split("/").slice(0, -1).filter(Boolean);
+      const relParts = trimmed.split("/");
+      for (const part of relParts) {
+        if (!part || part === ".") continue;
+        if (part === "..") {
+          if (baseParts.length === 0) return null;
+          baseParts.pop();
+        } else {
+          baseParts.push(part);
+        }
+      }
+      return baseParts.join("/");
+    }
+
+    function renderSafeMarkdown(mdText, basePath) {
+      const lines = String(mdText || "").split(/\r?\n/);
+      const out = [];
+      let inCode = false;
+      for (const rawLine of lines) {
+        if (rawLine.trim().startsWith("```")) {
+          if (!inCode) {
+            inCode = true;
+            out.push("<pre><code>");
+          } else {
+            inCode = false;
+            out.push("</code></pre>");
+          }
+          continue;
+        }
+        if (inCode) {
+          out.push(escapeHtml(rawLine) + "\n");
+          continue;
+        }
+        let line = escapeHtml(rawLine);
+        line = line.replace(/`([^`]+)`/g, "<code>$1</code>");
+        line = line.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, rawUrl) => {
+          const safeHref = resolveAndSanitizeHref(rawUrl, basePath);
+          if (!safeHref) return label;
+          if (safeHref.endsWith(".md") && !safeHref.startsWith("http")) {
+            return `<a href="#" data-doc="${escapeHtml(safeHref)}" onclick="openDocModal(this.getAttribute('data-doc'), this.getAttribute('data-doc')); return false;">${label}</a>`;
+          }
+          return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener">${label}</a>`;
+        });
+        if (line.startsWith("### ")) {
+          out.push(`<h4>${line.slice(4)}</h4>`);
+        } else if (line.startsWith("## ")) {
+          out.push(`<h3>${line.slice(3)}</h3>`);
+        } else if (line.startsWith("# ")) {
+          out.push(`<h2>${line.slice(2)}</h2>`);
+        } else if (line.startsWith("- ")) {
+          out.push(`<div style="padding-left:1rem;">• ${line.slice(2)}</div>`);
+        } else if (line.trim() !== "") {
+          out.push(`<p>${line}</p>`);
+        }
+      }
+      if (inCode) out.push("</code></pre>");
+      return out.join("\n");
+    }
+
+    // View 1: Render The Map
+    function renderTheMap() {
+      const jumpGrid = document.getElementById("mapJumpGrid");
+      const sectionsContainer = document.getElementById("mapGoalSections");
+      jumpGrid.innerHTML = "";
+      sectionsContainer.innerHTML = "";
+
+      PORTALS.forEach(p => {
+        const jump = document.createElement("a");
+        jump.className = "jump-card";
+        jump.href = `#goal-${escapeHtml(p.id)}`;
+        jump.innerHTML = `
+          <span class="jump-step font-mono">${escapeHtml(p.step)}</span>
+          <span class="jump-question">${escapeHtml(p.question)}</span>
+          <span class="jump-arrow" aria-hidden="true">↓</span>
+        `;
+        jumpGrid.appendChild(jump);
+
+        const startSkill = SKILLS.find(s => s.name === p.start_with) || {
+          name: p.start_with,
+          command: "/" + p.start_with,
+          desc: p.desc
+        };
+
+        const spineHtml = (p.spine_order || []).map((sName, idx) => {
+          const arrow = idx > 0 ? `<span class="spine-sep">→</span>` : "";
+          return `${arrow}<button class="spine-node font-mono" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-gold);">${idx + 1}.</span> /${escapeHtml(sName)}</button>`;
+        }).join(" ");
+
+        const guidesHtml = (p.guides || []).map(g => {
+          return `<button class="guide-pill" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">📖 ${escapeHtml(g.title)} <span class="font-mono" style="font-size:0.72rem; color:var(--ccba-fg-faint);">(${escapeHtml(g.path)})</span></button>`;
+        }).join(" ");
+
+        const sec = document.createElement("section");
+        sec.className = "goal-section";
+        sec.id = `goal-${p.id}`;
+        sec.innerHTML = `
+          <div class="goal-header">
+            <div class="eyebrow font-mono">${escapeHtml(p.step)} · ${p.icon} ${escapeHtml(p.name)} (${p.count} Kỹ năng)</div>
+            <h2>${escapeHtml(p.question)}</h2>
+            <p>${escapeHtml(p.desc)}</p>
+          </div>
+          <div class="do-this-card" data-skill="${escapeHtml(startSkill.name)}" onclick="openModal(this.getAttribute('data-skill'))">
+            <div>
+              <span class="do-this-label font-mono">Do this with · Điểm khởi đầu khuyên dùng</span>
+              <div class="do-this-cmd font-mono"><span class="slash">/</span>${escapeHtml(startSkill.name)}</div>
+              <div class="do-this-desc">${escapeHtml(startSkill.desc)}</div>
+            </div>
+            <span class="do-this-circle" aria-hidden="true">→</span>
+          </div>
+          <div style="margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--ccba-fg-subtle);">Xương sống thực thi tuần tự (The Spine):</div>
+          <div class="spine-chain">${spineHtml}</div>
+          <div class="guides-row">${guidesHtml}</div>
+        `;
+        sectionsContainer.appendChild(sec);
+      });
+    }
+
+    // View 2: Render Portal Chips + Spine / Grid
+    function renderPortalChips() {
+      portalChipsContainer.innerHTML = "";
+      const allChip = document.createElement("button");
+      allChip.className = `chip ${activePortal === "all" ? "active" : ""}`;
+      allChip.innerHTML = `Tất cả (${SKILLS.length})`;
+      allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); };
+      portalChipsContainer.appendChild(allChip);
+
+      PORTALS.forEach(p => {
+        const chip = document.createElement("button");
+        chip.className = `chip ${activePortal === p.id ? "active" : ""}`;
+        chip.innerHTML = `${escapeHtml(p.step)} · ${p.icon} ${escapeHtml(p.name)} (${p.count})`;
+        chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); };
+        portalChipsContainer.appendChild(chip);
+      });
+    }
+
+    function getFilteredSkills() {
+      const q = searchQuery.trim().toLowerCase();
+      return SKILLS.filter(s => {
+        if (activePortal !== "all" && s.portal_id !== activePortal) return false;
+        if (!q) return true;
+        const hay = `${s.name} ${s.command} ${s.desc} ${s.triggers.join(" ")} ${s.bundle} ${s.portal_name}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function renderSkillsCatalog() {
+      const filtered = getFilteredSkills();
+      const useSpine = skillsDisplayMode === "spine" && !searchQuery.trim();
+      skillsSpineList.classList.toggle("hidden", !useSpine);
+      skillsGrid.classList.toggle("hidden", useSpine);
+
+      if (useSpine) {
+        skillsSpineList.innerHTML = "";
+        PORTALS.filter(p => activePortal === "all" || p.id === activePortal).forEach(p => {
+          const portalSkills = filtered.filter(s => s.portal_id === p.id);
+          const spineSet = new Set(p.spine_order || []);
+          const ordered = [
+            ...(p.spine_order || []).map(n => portalSkills.find(s => s.name === n)).filter(Boolean),
+            ...portalSkills.filter(s => !spineSet.has(s.name))
+          ];
+          const itemsHtml = ordered.map(s => {
+            const isSpine = spineSet.has(s.name);
+            const tierBadge = s.tier === "orchestrator" ? "badge-orchestrator" : "badge-kernel";
+            return `
+              <li class="spine-skill-item">
+                <div style="min-width:0; flex:1;">
+                  <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span class="skill-name font-mono" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-primary);">/</span>${escapeHtml(s.name)}</span>
+                    <span class="badge ${tierBadge}">${s.tier === "orchestrator" ? "Orchestrator" : "Kernel"}</span>
+                    ${isSpine ? `<span class="tag font-mono" style="color:var(--ccba-gold); border-color:var(--ccba-accent-line);">SPINE</span>` : ""}
+                  </div>
+                  <div style="font-size:0.84rem; color:var(--ccba-fg-muted); margin-top:0.2rem;">${escapeHtml(s.desc)}</div>
+                </div>
+                <div style="display:flex; gap:0.35rem; flex-shrink:0;">
+                  <button class="btn font-mono" data-clipboard="${escapeHtml(s.command)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')">📋 Copy</button>
+                  <button class="btn btn-primary" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))">Chi Tiết</button>
+                </div>
+              </li>
+            `;
+          }).join("");
+
+          const li = document.createElement("li");
+          li.className = "spine-row";
+          li.innerHTML = `
+            <div class="spine-left">
+              <h3><span class="font-mono" style="font-size:0.82rem; color:var(--ccba-fg-faint);">${escapeHtml(p.step)}</span> ${p.icon} ${escapeHtml(p.name)}</h3>
+              <p>${escapeHtml(p.desc)}</p>
+              <div class="start-with-line font-mono">Start with <span class="start-with-link" data-skill="${escapeHtml(p.start_with)}" onclick="openModal(this.getAttribute('data-skill'))">/${escapeHtml(p.start_with)}</span></div>
+            </div>
+            <ul class="spine-right-items">${itemsHtml}</ul>
+          `;
+          skillsSpineList.appendChild(li);
+        });
+      } else {
+        skillsGrid.innerHTML = "";
+        filtered.forEach(s => {
+          const tierClass = s.tier === "orchestrator" ? "badge-orchestrator" : "badge-kernel";
+          const card = document.createElement("div");
+          card.className = "skill-card";
+          card.innerHTML = `
+            <div>
+              <div style="display:flex; justify-content:space-between; gap:0.5rem; margin-bottom:0.35rem;">
+                <span class="skill-name font-mono" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))">${escapeHtml(s.name)}</span>
+                <span class="badge ${tierClass}">${s.tier === "orchestrator" ? "Orchestrator" : "Kernel"}</span>
+              </div>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                <span class="badge badge-portal">${s.portal_icon} ${escapeHtml(s.portal_name)}</span>
+                <span class="badge badge-${escapeHtml(s.inv)}">${escapeHtml(s.inv.toUpperCase())}</span>
+              </div>
+              <div class="skill-desc">${escapeHtml(s.desc)}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn font-mono" data-clipboard="${escapeHtml(s.command)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')">📋 ${escapeHtml(s.command)}</button>
+              <button class="btn btn-primary" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))">Chi Tiết</button>
+            </div>
+          `;
+          skillsGrid.appendChild(card);
+        });
+      }
+    }
+
+    // View 3: Render Deep Seams & Seam Contracts (COND-SEAM-SSOT & COND-CARD-SHAPE)
+    function renderSeamsView() {
+      const pkgContainer = document.getElementById("packageSeamsContainer");
+      const contractContainer = document.getElementById("seamContractsContainer");
+
+      pkgContainer.innerHTML = PACKAGE_SEAMS.map(pkg => {
+        const pubSeams = (pkg.public_seams || []).map(ps => `<div class="font-mono" style="font-size:0.8rem; padding:0.2rem 0; color:var(--ccba-primary);">• ${escapeHtml(ps)}</div>`).join("");
+        return `
+          <div class="seam-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.4rem;">
+              <strong style="font-size:1.05rem;">📦 ${escapeHtml(pkg.package)}</strong>
+              <span class="tag font-mono">${escapeHtml(pkg.path)}</span>
+            </div>
+            <p style="font-size:0.88rem; color:var(--ccba-fg-muted); margin-bottom:0.5rem;">${escapeHtml(pkg.description)}</p>
+            <div style="margin-bottom:0.45rem;">${pubSeams}</div>
+            <div style="font-size:0.82rem; color:var(--ccba-fg-subtle);"><strong>Contracts:</strong> ${escapeHtml(pkg.contracts)}</div>
+            <div style="font-size:0.8rem; color:var(--ccba-fg-faint); margin-top:0.25rem;" class="font-mono"><strong>Tests:</strong> ${escapeHtml(pkg.tests)}</div>
+          </div>
+        `;
+      }).join("");
+
+      contractContainer.innerHTML = SEAM_CONTRACTS.map(c => {
+        const targetInfo = c.kind === "package"
+          ? `<span class="tag font-mono">import_path: ${escapeHtml(c.import_path)}</span>`
+          : `<span class="tag font-mono">command: ${escapeHtml(c.command)}</span> <span class="tag font-mono">skill_path: ${escapeHtml(c.skill_path)}</span>`;
+        const forbidden = (c.forbidden_substitute_imports && c.forbidden_substitute_imports.length > 0)
+          ? `<div style="font-size:0.8rem; color:var(--ccba-gold); margin-top:0.35rem;">🚫 Forbidden substitutes: <code>${escapeHtml(c.forbidden_substitute_imports.join(", "))}</code></div>`
+          : "";
+        return `
+          <div class="seam-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.4rem;">
+              <strong class="font-mono" style="font-size:1rem; color:var(--ccba-primary);">${escapeHtml(c.seam_id)}</strong>
+              <span class="badge ${c.kind === 'package' ? 'badge-kernel' : 'badge-orchestrator'}">kind: ${escapeHtml(c.kind)}</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.45rem;">
+              ${targetInfo}
+              <span class="tag font-mono">in: [${escapeHtml((c.in || []).join(", "))}]</span>
+              <span class="tag font-mono">out: [${escapeHtml((c.out || []).join(", "))}]</span>
+              <span class="tag font-mono">hardware: [${escapeHtml((c.hardware || []).join(", "))}]</span>
+            </div>
+            ${forbidden}
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Modal Details with 3 Explicit Sources & Offline Fallback (COND-BODY-SOURCE & COND-OFFLINE-DEGRADE)
+    window.openModal = function(skillName) {
+      const s = SKILLS.find(item => item.name === skillName);
+      if (!s) return;
+
+      modalTitle.textContent = s.name;
+      modalMeta.innerHTML = `
+        <span class="badge ${s.tier === 'orchestrator' ? 'badge-orchestrator' : 'badge-kernel'}">${escapeHtml(s.tier_display)}</span>
+        <span class="badge badge-portal">${s.portal_icon} ${escapeHtml(s.portal_name)}</span>
+        <span class="badge badge-${escapeHtml(s.inv)}">${escapeHtml(s.inv_display)}</span>
+        <span class="badge badge-portal">Bundle: ${escapeHtml(s.bundle)}</span>
+      `;
+
+      const triggersHtml = (s.triggers || []).map(t => `<span class="tag font-mono">#${escapeHtml(t)}</span>`).join(" ");
+      const gpiHtml = s.gpi ? `<p style="margin-top:0.35rem; color:var(--ccba-fg-muted); font-size:0.85rem;"><strong>Điểm GPI (ADR-0057):</strong> <code>${escapeHtml(s.gpi)}</code></p>` : "";
+      const headingsHtml = (s.headings && s.headings.length > 0)
+        ? `<ul style="padding-left:1.25rem; color:var(--ccba-fg-muted); font-size:0.86rem;">${s.headings.map(h => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`
+        : `<p style="color:var(--ccba-fg-faint); font-size:0.85rem;">Không có đề mục phụ.</p>`;
+
+      modalBody.innerHTML = `
+        <div class="modal-section">
+          <h3>1. Action Header &amp; Kích Hoạt Nhanh</h3>
+          <p><strong>Slash Command:</strong> <code>${escapeHtml(s.command)}</code></p>
+          <p><strong>Lệnh Đồng Bộ Spoke:</strong> <code>python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${escapeHtml(s.name)} --apply</code></p>
+          ${gpiHtml}
+        </div>
+        <div class="modal-section">
+          <h3>2. Mục Đích &amp; Đề Cương SKILL.md Thực Tế (Outline)</h3>
+          <p style="margin-bottom:0.5rem;">${escapeHtml(s.desc)}</p>
+          <div class="pipeline-box">
+            <strong style="font-size:0.82rem; color:var(--ccba-gold); display:block; margin-bottom:0.3rem;">Đề cương trích từ ${escapeHtml(s.skill_path)}:</strong>
+            ${headingsHtml}
+          </div>
+        </div>
+        <div class="modal-section">
+          <h3>3. Triggers &amp; Kích Hoạt</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:0.3rem;">${triggersHtml}</div>
+        </div>
+        <div class="modal-section">
+          <h3>4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)</h3>
+          <div class="pipeline-box">
+            <p><strong>Đầu vào (Upstream):</strong> ${escapeHtml(s.upstream)}</p>
+            <p><strong>Vai trò (In-flight):</strong> ${escapeHtml(s.role)}</p>
+            <p><strong>Đầu ra (Downstream):</strong> ${escapeHtml(s.downstream)}</p>
+          </div>
+        </div>
+        <div class="modal-section">
+          <h3>5. Khóa Cứng Kỷ Luật Kiểm Thử (ADR-0058) &amp; Nguồn Tài Liệu</h3>
+          <pre style="background:var(--ccba-code-bg); padding:0.7rem; border-radius:6px; border:1px solid var(--ccba-line); font-size:0.82rem; overflow-x:auto;"><code>python -m ccba_harness verify-patch --preset skill
+python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-gpi</code></pre>
+          <div style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem;">
+            <button class="btn" data-skill="${escapeHtml(s.name)}" onclick="loadCompiledSkillDoc(this.getAttribute('data-skill'))">📄 Xem Bản Đóng Gói 5 Mục Chuẩn (ADR-0058 — docs/skills/${escapeHtml(s.name)}.md)</button>
+            <a href="${escapeHtml(s.blob_url)}" target="_blank" rel="noopener" class="btn btn-primary">🔗 Mở Toàn Văn SKILL.md Gốc (GitHub Blob: ${escapeHtml(s.skill_path)})</a>
+          </div>
+          <div id="inlineDocContainer"></div>
+        </div>
+      `;
+      skillModal.classList.add("open");
+    };
+
+    window.loadCompiledSkillDoc = function(skillName) {
+      const container = document.getElementById("inlineDocContainer");
+      const s = SKILLS.find(item => item.name === skillName);
+      if (!container || !s) return;
+      const docPath = `skills/${encodeURIComponent(skillName)}.md`;
+      container.innerHTML = `<div class="md-viewer">Đang tải <code>docs/${escapeHtml(docPath)}</code>...</div>`;
+      fetch(docPath).then(r => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      }).then(md => {
+        container.innerHTML = `
+          <div class="md-viewer">
+            <div style="font-size:0.78rem; color:var(--ccba-gold); margin-bottom:0.5rem;">Nguồn đang hiển thị: Bản đóng gói 5 mục chuẩn (<code>docs/skills/${escapeHtml(skillName)}.md</code>)</div>
+            ${renderSafeMarkdown(md, docPath)}
+          </div>
+        `;
+      }).catch(() => {
+        container.innerHTML = `
+          <div class="md-viewer">
+            <p><strong>Chế độ Offline / Local File:</strong> Trình duyệt chặn <code>fetch("${escapeHtml(docPath)}")</code> khi mở qua <code>file://</code> hoặc không có mạng. Toàn bộ 5 mục chuẩn và đề cương <code>headings</code> phía trên vẫn khả dụng 100% offline.</p>
+            <p style="margin-top:0.4rem;">👉 <a href="${escapeHtml(s.blob_url)}" target="_blank" rel="noopener">Mở toàn văn ${escapeHtml(s.skill_path)} trên GitHub</a></p>
+          </div>
+        `;
+      });
+    };
+
+    window.openDocModal = function(docPath, title) {
+      modalTitle.textContent = title || docPath;
+      modalMeta.innerHTML = `<span class="tag font-mono">Nguồn: docs/${escapeHtml(docPath)}</span>`;
+      modalBody.innerHTML = `<div class="md-viewer">Đang tải <code>docs/${escapeHtml(docPath)}</code>...</div>`;
+      skillModal.classList.add("open");
+      fetch(docPath).then(r => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      }).then(md => {
+        modalBody.innerHTML = `<div class="md-viewer">${renderSafeMarkdown(md, docPath)}</div>`;
+      }).catch(() => {
+        modalBody.innerHTML = `
+          <div class="md-viewer">
+            <p><strong>Chế độ Offline / Local File:</strong> Không thể fetch <code>docs/${escapeHtml(docPath)}</code> trực tiếp qua giao thức <code>file://</code>.</p>
+            <p style="margin-top:0.4rem;">👉 <a href="https://github.com/vvChu/ccba-agent-platform/blob/main/docs/${escapeHtml(docPath)}" target="_blank" rel="noopener">Xem tài liệu docs/${escapeHtml(docPath)} trên GitHub</a></p>
+          </div>
+        `;
+      });
+    };
+
+    modalClose.addEventListener("click", () => { skillModal.classList.remove("open"); });
+    skillModal.addEventListener("click", (e) => { if (e.target === skillModal) skillModal.classList.remove("open"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") skillModal.classList.remove("open"); });
+    searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderSkillsCatalog(); });
+
+    renderTheMap();
+    renderPortalChips();
+    renderSkillsCatalog();
+    renderSeamsView();
+  </script>
+</body>
+</html>

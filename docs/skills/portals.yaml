@@ -1,109 +1,502 @@
 # CCBA Agent Platform — Skills Navigation Portals Taxonomy
-# Source of Truth for Portal categorization across 73 active skills (ADR-0047, ADR-0057)
+# Source of Truth for Portal categorization across 76 active skills (ADR-0047, ADR-0057)
 
 portals:
-  - id: "init_navigation"
-    name: "Khởi tạo, Điều hướng & Đồng bộ"
-    icon: "🚀"
-    description: "Khởi tạo phân vùng Spoke, cập nhật đồng bộ kỹ năng từ Hub, điều hướng bản đồ nhiệm vụ và bàn giao phiên làm việc sạch sẽ."
-    skills:
-      - platform-loader
-      - ccba-ask
-      - ccba-init-spoke
-      - ccba-spoke-adopter
-      - ccba-update-spoke
-      - ccba-setup-skills
-      - ccba-handoff
-      - ccba-wayfinder
-
-  - id: "core_engineering"
-    name: "Kỹ nghệ Phần mềm & Đa Tác nhân"
-    icon: "⚙️"
-    description: "Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng."
-    skills:
-      - ccba-grilling
-      - ccba-to-spec
-      - ccba-implement
-      - ccba-tdd
-      - ccba-teamwork
-      - ccba-code-review
-      - ccba-codebase-design
-      - ccba-diagnosing-bugs
-      - ccba-web-testing
-      - ccba-chrome-debug
-      - ccba-design
-      - ccba-domain-modeling
-      - ccba-excalidraw-diagram
-      - ccba-mermaid-diagram
-      - ccba-new-feature
-      - ccba-create-pr
-      - ccba-release-feature
-      - ccba-session-retrospective
-      - ccba-git-guardrails
-      - ccba-api-circuit-breaker
-      - ccba-append-only-logger
-      - ccba-issue-tree
-
-  - id: "bim_aiqc"
-    name: "BIGBIM & Thẩm tra AI-QC"
-    icon: "📐"
-    description: "Hệ thống quản trị mô hình BIM Sợi Chỉ Vàng, phân loại bảng Uniclass, kiểm soát mâu thuẫn thông tin V2 và thẩm tra tự động thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC)."
-    skills:
-      - bigbim-classification
-      - bigbim-governance
-      - bigbim-rase
-      - bigbim-risk
-      - bigbim-vbpl-digest
-      - ccba-ai-qc
-      - ccba-ai-qc-pccc-audit
-
-  - id: "legal_compliance"
-    name: "Pháp lý Xây dựng & Tự động hóa Văn phòng"
-    icon: "⚖️"
-    description: "Tư vấn & giải đáp pháp lý xây dựng OKF v2.4, theo dõi văn bản quy phạm pháp luật (VBPL, VBHN), bóc tách phụ lục và tự động hóa hồ sơ hoàn thành công trình."
-    skills:
-      - ccba-legal-advisor
-      - ccba-legal-intel
-      - ccba-legal-document-tracker
-      - ccba-legal-ingest
-      - ccba-tvpl-vip-crawler
-      - ccba-completion-checklist
-      - ccba-xu-ly-van-phong
-      - ccba-markdown-document-processing
-      - ccba-pptx
-      - ccba-copywriting
-
-  - id: "governance_upkeep"
-    name: "Quản trị Nền tảng, AI Gateway & Nghiên cứu"
-    icon: "🛡️"
-    description: "Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập."
-    skills:
-      - ccba-adr-lifecycle
-      - ccba-eval-gate
-      - ccba-maskara
-      - ccba-platform
-      - ccba-build-skill
-      - ccba-skill-repair
-      - ccba-autoresearch
-      - ccba-graduate-rd
-      - ccba-knowledge-loop
-      - ccba-ai-gateway-sdk
-      - ccba-vllm-manager
-      - ccba-ai-pdf-preprocessor
-      - ccba-hybrid-rag-search
-      - ccba-llm-pipeline-patterns
-      - ccba-file-stability-guard
-      - ccba-notebooklm-connector
-      - ccba-academic-writing
-      - ccba-research
-      - ccba-seminar-builder
-      - ccba-youtube-learn
-      - ccba-contribute-to-hub
-      - ccba-review-proposal
-      - ccba-issue-to-hub
-      - ccba-promote-sandbox
-      - ccba-sharepoint-iac
-      - ccba-xia
-      - ccba-docs-manager
-      - ccba-sync-upstream
-      - ccba-create-verification-skill
+- id: init_navigation
+  name: Khởi tạo, Điều hướng & Đồng bộ
+  icon: 🚀
+  description: Khởi tạo phân vùng Spoke, cập nhật đồng bộ kỹ năng từ Hub, điều hướng bản đồ nhiệm vụ và
+    bàn giao phiên làm việc sạch sẽ.
+  skills:
+  - platform-loader
+  - ccba-ask
+  - ccba-init-spoke
+  - ccba-spoke-adopter
+  - ccba-update-spoke
+  - ccba-setup-skills
+  - ccba-handoff
+  - ccba-wayfinder
+  step: '01'
+  question: Làm sao để khởi tạo hoặc đồng bộ dự án Vệ tinh (Spoke) với CCBA Hub?
+  start_with: ccba-ask
+  spine_order:
+  - platform-loader
+  - ccba-ask
+  - ccba-init-spoke
+  - ccba-spoke-adopter
+  - ccba-setup-skills
+  - ccba-update-spoke
+  - ccba-wayfinder
+  - ccba-handoff
+  guides:
+  - title: SOP Thiết lập Dự án Spoke
+    path: sop/project_delivery_spoke_setup.md
+  - title: Runbook Đồng bộ Hub-Spoke
+    path: sop/hub_spoke_sync_runbook.md
+  - title: Hỏi đáp Thường gặp (FAQ)
+    path: skills/FAQ.md
+- id: core_engineering
+  name: Kỹ nghệ Phần mềm & Đa Tác nhân
+  icon: ⚙️
+  description: Kỹ nghệ phần mềm chuẩn mực từ mài giũa ý tưởng, đặc tả kỹ thuật, phát triển dẫn dắt bởi
+    kiểm thử (TDD), review mã nguồn, gỡ lỗi đa tác nhân đến xuất xưởng.
+  skills:
+  - ccba-grilling
+  - ccba-to-spec
+  - ccba-implement
+  - ccba-tdd
+  - ccba-teamwork
+  - ccba-code-review
+  - ccba-codebase-design
+  - ccba-diagnosing-bugs
+  - ccba-web-testing
+  - ccba-chrome-debug
+  - ccba-design
+  - ccba-domain-modeling
+  - ccba-excalidraw-diagram
+  - ccba-mermaid-diagram
+  - ccba-new-feature
+  - ccba-create-pr
+  - ccba-release-feature
+  - ccba-session-retrospective
+  - ccba-git-guardrails
+  - ccba-api-circuit-breaker
+  - ccba-append-only-logger
+  - ccba-issue-tree
+  step: '02'
+  question: Làm sao để biến ý tưởng thành mã nguồn sạch, có TDD và vượt qua cổng CI?
+  start_with: ccba-grilling
+  spine_order:
+  - ccba-grilling
+  - ccba-to-spec
+  - ccba-tdd
+  - ccba-implement
+  - ccba-code-review
+  - ccba-create-pr
+  - ccba-release-feature
+  - ccba-session-retrospective
+  guides:
+  - title: Chuẩn mực Chất lượng Mã nguồn
+    path: rules/code_quality_standards.md
+  - title: Cổng Kiểm định Tất định (ADR-0058)
+    path: rules/code_quality_verification.md
+  - title: Quy ước Git & Micro-PR
+    path: rules/git_conventions.md
+- id: bim_aiqc
+  name: BIGBIM & Thẩm tra AI-QC
+  icon: 📐
+  description: Hệ thống quản trị mô hình BIM Sợi Chỉ Vàng, phân loại bảng Uniclass, kiểm soát mâu thuẫn
+    thông tin V2 và thẩm tra tự động thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP, PCCC).
+  skills:
+  - bigbim-classification
+  - bigbim-governance
+  - bigbim-rase
+  - bigbim-risk
+  - bigbim-vbpl-digest
+  - ccba-ai-qc
+  - ccba-ai-qc-pccc-audit
+  step: '03'
+  question: Làm sao để quản trị mô hình BIM Sợi Chỉ Vàng và thẩm tra thiết kế đa bộ môn (PCCC/MEP/KC)?
+  start_with: bigbim-governance
+  spine_order:
+  - bigbim-governance
+  - bigbim-classification
+  - bigbim-rase
+  - bigbim-risk
+  - bigbim-vbpl-digest
+  - ccba-ai-qc
+  - ccba-ai-qc-pccc-audit
+  guides:
+  - title: Rào chắn Điều phối & Thực thi
+    path: rules/execution_coordination_guardrails.md
+  - title: Rào chắn Runtime & Bất đồng bộ
+    path: rules/execution_runtime_guardrails.md
+- id: legal_compliance
+  name: Pháp lý Xây dựng & Tự động hóa Văn phòng
+  icon: ⚖️
+  description: Tư vấn & giải đáp pháp lý xây dựng OKF v2.4, theo dõi văn bản quy phạm pháp luật (VBPL,
+    VBHN), bóc tách phụ lục và tự động hóa hồ sơ hoàn thành công trình.
+  skills:
+  - ccba-legal-advisor
+  - ccba-legal-intel
+  - ccba-legal-document-tracker
+  - ccba-legal-ingest
+  - ccba-tvpl-vip-crawler
+  - ccba-completion-checklist
+  - ccba-xu-ly-van-phong
+  - ccba-markdown-document-processing
+  - ccba-pptx
+  - ccba-copywriting
+  step: '04'
+  question: Làm sao để tra cứu, hợp nhất VBPL Xây dựng (OKF v2.4) và lập Hồ sơ Hoàn thành?
+  start_with: ccba-legal-advisor
+  spine_order:
+  - ccba-tvpl-vip-crawler
+  - ccba-legal-ingest
+  - ccba-legal-document-tracker
+  - ccba-legal-intel
+  - ccba-legal-advisor
+  - ccba-completion-checklist
+  - ccba-markdown-document-processing
+  guides:
+  - title: Giao thức Nghiên cứu & Nguồn dẫn
+    path: rules/knowledge_research_protocol.md
+  - title: Mục lục Kỹ năng (INDEX.md)
+    path: skills/INDEX.md
+- id: governance_upkeep
+  name: Quản trị Nền tảng, AI Gateway & Nghiên cứu
+  icon: 🛡️
+  description: Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI
+    Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.
+  skills:
+  - ccba-adr-lifecycle
+  - ccba-eval-gate
+  - ccba-maskara
+  - ccba-platform
+  - ccba-build-skill
+  - ccba-skill-repair
+  - ccba-autoresearch
+  - ccba-graduate-rd
+  - ccba-knowledge-loop
+  - ccba-ai-gateway-sdk
+  - ccba-vllm-manager
+  - ccba-ai-pdf-preprocessor
+  - ccba-hybrid-rag-search
+  - ccba-llm-pipeline-patterns
+  - ccba-file-stability-guard
+  - ccba-notebooklm-connector
+  - ccba-academic-writing
+  - ccba-research
+  - ccba-seminar-builder
+  - ccba-youtube-learn
+  - ccba-contribute-to-hub
+  - ccba-review-proposal
+  - ccba-issue-to-hub
+  - ccba-promote-sandbox
+  - ccba-sharepoint-iac
+  - ccba-xia
+  - ccba-docs-manager
+  - ccba-sync-upstream
+  - ccba-create-verification-skill
+  step: '05'
+  question: Làm sao để vận hành AI Gateway, xây dựng Kỹ năng đạt chuẩn GPI và quản trị Nền tảng?
+  start_with: ccba-autoresearch
+  spine_order:
+  - ccba-autoresearch
+  - ccba-build-skill
+  - ccba-eval-gate
+  - ccba-skill-repair
+  - ccba-adr-lifecycle
+  - ccba-ai-gateway-sdk
+  - ccba-vllm-manager
+  - ccba-knowledge-loop
+  guides:
+  - title: Playbook Vận hành Server Spark
+    path: playbooks/server_spark_agent_instructions.md
+  - title: Hướng dẫn Bảo vệ Repository
+    path: sop/github_repo_protection_guide.md
+pipeline_trail:
+  platform-loader:
+    upstream: Khởi động IDE / Mở phiên làm việc mới
+    downstream: ccba-ask / Kỹ năng nghiệp vụ cụ thể
+    role: Cửa ngõ nạp danh mục Service Catalog và thiết lập bối cảnh ban đầu.
+  ccba-ask:
+    upstream: Yêu cầu thô từ người dùng / Chưa rõ hướng đi
+    downstream: ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt
+    role: Bản đồ tư vấn định hướng lựa chọn Slash Command phù hợp nhất.
+  ccba-init-spoke:
+    upstream: Thành lập dự án mới từ Hub
+    downstream: ccba-setup-skills / ccba-update-spoke
+    role: Khởi tạo cấu trúc phân vùng Spoke chuẩn mực theo Archetype.
+  ccba-spoke-adopter:
+    upstream: Dự án có sẵn cần tích hợp CCBA Platform
+    downstream: ccba-setup-skills / ccba-git-guardrails
+    role: Nhận diện cấu hình và chuyển đổi dự án hiện hữu thành Spoke.
+  ccba-update-spoke:
+    upstream: Hub phát hành cập nhật mới
+    downstream: Kỹ năng nghiệp vụ cục bộ tại Spoke
+    role: Đồng bộ một chiều các kỹ năng và quy tắc từ Hub về Spoke.
+  ccba-setup-skills:
+    upstream: Khởi tạo hoặc cấu hình lại Spoke
+    downstream: Toàn bộ quy trình tác nghiệp
+    role: Cài đặt hàng loạt kỹ năng tương ứng với Archetype của Spoke.
+  ccba-handoff:
+    upstream: Kết thúc phiên làm việc / Sắp cạn Context Budget
+    downstream: Phiên làm việc sạch tiếp theo của Agent
+    role: Đóng gói bối cảnh, bài học kinh nghiệm và bàn giao phiên sạch sẽ.
+  ccba-wayfinder:
+    upstream: Dự án lớn, cấu trúc phức tạp nhiều tầng
+    downstream: Kỹ năng lập trình hoặc thẩm tra
+    role: Định vị nhanh các Deep Seams và tệp mã nguồn liên quan.
+  ccba-grilling:
+    upstream: Ý tưởng sơ khai / Yêu cầu người dùng (Idea Phase)
+    downstream: ccba-to-spec / ccba-adr-lifecycle
+    role: Phỏng vấn phản biện sâu để làm rõ các giả định và góc khuất kỹ thuật.
+  ccba-to-spec:
+    upstream: ccba-grilling / CONTEXT.md
+    downstream: ccba-implement / ccba-tdd
+    role: Biến ý tưởng thành Đặc tả Kỹ thuật và bẻ ticket lát cắt dọc.
+  ccba-implement:
+    upstream: ccba-to-spec / Bản đặc tả & danh sách ticket
+    downstream: ccba-code-review / ccba-ai-qc / ccba-session-retrospective
+    role: Hiện thực hóa mã nguồn tối thiểu theo triết lý KISS và Deep Seam.
+  ccba-tdd:
+    upstream: ccba-to-spec / Ticket cần độ tin cậy cao
+    downstream: ccba-implement / ccba-code-review
+    role: Quy trình phát triển dẫn dắt bởi kiểm thử (Red - Green - Refactor).
+  ccba-teamwork:
+    upstream: Tác vụ quy mô lớn cần phân rã nhiều Agent
+    downstream: Các worker subagents độc lập
+    role: Điều phối Swarm đa tác nhân, giám sát tiến độ và tổng hợp kết quả.
+  ccba-code-review:
+    upstream: ccba-implement / PR chuẩn bị merge
+    downstream: Sửa lỗi / ccba-release-feature
+    role: Đánh giá phản biện mã nguồn, rà soát lỗ hổng và tuân thủ chuẩn mực.
+  ccba-codebase-design:
+    upstream: Phát hiện mã nguồn nông (Shallow Modules) / Cần tái cấu trúc
+    downstream: ccba-implement / ccba-to-spec
+    role: Thiết kế kiến trúc sâu, đóng gói module và củng cố Deep Seams.
+  ccba-diagnosing-bugs:
+    upstream: Lỗi phần mềm / CI Gate thất bại / Báo cáo bug
+    downstream: Viết test hồi quy -> ccba-implement vá lỗi
+    role: Điều tra nguyên nhân gốc rễ và khóa lỗi bằng kiểm thử tự động.
+  ccba-web-testing:
+    upstream: Giao diện web / REST API đã hoàn thiện
+    downstream: ccba-code-review / Báo cáo nghiệm thu
+    role: Kiểm thử tự động giao diện End-to-End và kiểm chứng hành vi người dùng.
+  ccba-chrome-debug:
+    upstream: Web testing / Tự động hóa trình duyệt qua CDP
+    downstream: Gỡ lỗi giao diện / Báo cáo kết quả kiểm thử
+    role: Điều khiển và gỡ lỗi Chrome qua giao thức Chrome DevTools Protocol.
+  ccba-design:
+    upstream: Yêu cầu giao diện hoặc trải nghiệm người dùng mới
+    downstream: ccba-to-spec / ccba-implement
+    role: Thiết kế kiến trúc hệ thống và giao diện người dùng mạch lạc.
+  ccba-domain-modeling:
+    upstream: Bắt đầu bài toán nghiệp vụ phức tạp
+    downstream: ccba-to-spec / Thiết kế Schema CSDL
+    role: Xây dựng mô hình miền và ngôn ngữ chung (Ubiquitous Language).
+  ccba-excalidraw-diagram:
+    upstream: Kiến trúc hệ thống hoặc quy trình cần trực quan hóa
+    downstream: Tài liệu kỹ thuật / Trình bày phương án
+    role: Sinh sơ đồ kiến trúc Excalidraw trực quan từ văn bản mô tả.
+  ccba-mermaid-diagram:
+    upstream: Thiết kế luồng quy trình, kiến trúc hoặc tuần tự
+    downstream: Tài liệu kỹ thuật / Markdown specs / Walkthroughs
+    role: Sinh biểu đồ Mermaid tiêu chuẩn, tối ưu cú pháp và kiểm soát độ phức tạp.
+  ccba-new-feature:
+    upstream: Kế hoạch bổ sung tính năng mới
+    downstream: ccba-implement / ccba-tdd
+    role: Scaffolding khung tính năng mới dọc theo toàn bộ các tầng mã nguồn.
+  ccba-create-pr:
+    upstream: Tính năng đã hoàn thành kiểm thử cục bộ (ccba-implement / ccba-tdd)
+    downstream: ccba-release-feature / GitHub Actions CI & Copilot Review
+    role: Kiểm định Shift-Left, bảo vệ nhánh main, mở Pull Request và đồng hành CI.
+  ccba-release-feature:
+    upstream: Tính năng đã vượt qua toàn bộ CI Gates
+    downstream: Bàn giao / Đóng gói phiên bản
+    role: Đóng gói, gắn tag phiên bản và xuất bản bản phát hành.
+  ccba-session-retrospective:
+    upstream: Hoàn tất một chu kỳ phát triển hoặc phiên làm việc
+    downstream: session_learnings.md / ccba-handoff
+    role: Đúc rút bài học kinh nghiệm, rà soát hiệu suất và cải tiến quy trình.
+  ccba-git-guardrails:
+    upstream: Chuẩn bị commit hoặc tạo nhánh mới
+    downstream: Git push / Pull Request
+    role: Bảo vệ lịch sử Git, định dạng commit và ngăn ngừa xung đột nhánh.
+  ccba-api-circuit-breaker:
+    upstream: Tác vụ gọi LLM hoặc API bên ngoài quy mô lớn
+    downstream: Pipeline xử lý dữ liệu hàng loạt
+    role: Kiểm soát tốc độ gọi API, ngắt mạch khi lỗi và tránh cạn kiệt hạn mức.
+  ccba-append-only-logger:
+    upstream: Hệ thống đa tiến trình / Daemons chạy song song
+    downstream: Phân tích nhật ký / Giám sát lỗi
+    role: Ghi log an toàn luồng (Thread-safe), chống hỏng mã hóa và race condition.
+  ccba-issue-tree:
+    upstream: Vấn đề phức tạp / Sự cố chưa rõ nguyên nhân / Yêu cầu đa chiều
+    downstream: ccba-grilling / ccba-to-spec / Kỹ năng chuyên biệt các bộ môn
+    role: Phân rã bài toán đa chiều theo cấu trúc cây MECE và quản trị kiểm chứng giả thuyết.
+  bigbim-classification:
+    upstream: Mô hình BIM sơ bộ / Hồ sơ thiết kế
+    downstream: bigbim-rase / bigbim-risk
+    role: Tự động phân loại vật tư Uniclass và chuẩn hóa định danh thực thể ISO.
+  bigbim-governance:
+    upstream: Khởi động dự án BIM từ giai đoạn A0
+    downstream: Phối hợp mô hình / Kiểm tra chất lượng
+    role: Cưỡng chế Hiến pháp Sợi Chỉ Vàng và rào chắn Sợi Chỉ Đỏ cho thông tin BIM.
+  bigbim-rase:
+    upstream: bigbim-classification / Tiêu chuẩn kỹ thuật
+    downstream: bigbim-risk / ccba-ai-qc
+    role: Phân tích quy tắc RASE và gắn kết tập thuộc tính IFC (Qto_xxx).
+  bigbim-risk:
+    upstream: bigbim-rase / Mô hình phối hợp V2
+    downstream: ccba-ai-qc / Báo cáo xung đột thông tin
+    role: Phát hiện xung đột thông tin phi hình học vượt ngoài va chạm vật lý.
+  bigbim-vbpl-digest:
+    upstream: Yêu cầu tra cứu quy chuẩn BIM Việt Nam
+    downstream: Tư vấn thiết kế / Thẩm tra tuân thủ
+    role: Tóm lược các nghị định, thông tư và tiêu chuẩn ISO 19650 cho BIM.
+  ccba-ai-qc:
+    upstream: Mô hình thiết kế đa bộ môn (Kiến trúc, Kết cấu, MEP)
+    downstream: Heat Map Report / Nghiệm thu thiết kế
+    role: Master Orchestrator thẩm tra chất lượng thiết kế qua Deep Seam QCAuditPipeline.
+  ccba-ai-qc-pccc-audit:
+    upstream: Hồ sơ thiết kế PCCC / Bản vẽ mặt bằng
+    downstream: ccba-ai-qc / Báo cáo thẩm tra PCCC
+    role: Thẩm tra lỗi thiết kế PCCC theo cơ chế Semantic Map-Reduce và QCVN 06.
+  ccba-legal-advisor:
+    upstream: Tình huống pháp lý xây dựng cần làm rõ
+    downstream: Phiếu Ý kiến Pháp lý (Legal Opinion)
+    role: Phỏng vấn làm rõ ngữ cảnh và tư vấn pháp lý xây dựng trích dẫn OKF v2.4.
+  ccba-legal-intel:
+    upstream: Văn bản quy phạm pháp luật mới ban hành
+    downstream: ccba-completion-checklist / Bảng kiểm tra
+    role: Tự động thu thập, phân tích khác biệt (diff) và tạo compliance checklist.
+  ccba-legal-document-tracker:
+    upstream: Cơ sở dữ liệu văn bản pháp quy
+    downstream: ccba-legal-advisor / Cập nhật hiệu lực
+    role: Theo dõi hiệu lực, so sánh văn bản sửa đổi bổ sung với VBHNEngine.
+  ccba-legal-ingest:
+    upstream: Tệp văn bản pháp lý thô (PDF/Docx/HTML)
+    downstream: Registry pháp lý OKF v2.4
+    role: Tiếp nhận, chuẩn hóa cấu trúc AST và thẩm định qua 15 Cổng CI.
+  ccba-tvpl-vip-crawler:
+    upstream: Liên kết Thư Viện Pháp Luật
+    downstream: ccba-legal-ingest
+    role: Thu thập nội dung số hóa bản quyền từ hệ thống TVPL VIP.
+  ccba-completion-checklist:
+    upstream: Giai đoạn kết thúc thi công / Nghiệm thu bàn giao
+    downstream: Hồ sơ hoàn thành công trình (Word/Markdown)
+    role: Lập và duy trì Danh mục Hồ sơ Hoàn thành Công trình theo luật hiện hành.
+  ccba-xu-ly-van-phong:
+    upstream: Tài liệu văn phòng, công văn, biên bản họp
+    downstream: Văn bản định dạng chuẩn công vụ
+    role: Tự động hóa xử lý văn thư và biểu mẫu hành chính xây dựng.
+  ccba-markdown-document-processing:
+    upstream: Tài liệu Word (.docx) hoặc PDF kỹ thuật
+    downstream: Markdown chuẩn hóa / Knowledge Base
+    role: Chuyển đổi và chuẩn hóa tài liệu phức tạp sang Markdown chất lượng cao.
+  ccba-pptx:
+    upstream: Nội dung thuyết trình / Đề cương báo cáo
+    downstream: File trình chiếu PowerPoint (.pptx)
+    role: Tạo slide thuyết trình kỹ thuật chuyên nghiệp, tự động căn chỉnh bố cục.
+  ccba-copywriting:
+    upstream: Ý tưởng truyền thông / Thông báo kỹ thuật
+    downstream: Bài viết hoàn thiện chuẩn văn phong
+    role: Biên tập bài viết kỹ thuật và tài liệu truyền thông chuẩn văn phong CCBA.
+  ccba-adr-lifecycle:
+    upstream: Quyết định kiến trúc quan trọng nảy sinh
+    downstream: Bản ghi ADR mới / Living Traceability Matrix
+    role: 'Quản trị vòng đời quyết định kiến trúc: Scaffolding, Cascading và Matrix.'
+  ccba-eval-gate:
+    upstream: Kỹ năng mới hoặc sửa đổi cần thẩm định
+    downstream: Đạt chuẩn xuất xưởng lên Hub
+    role: Chấm điểm GPI, đánh giá cổng CI và cưỡng chế chuẩn mực chất lượng kỹ năng.
+  ccba-maskara:
+    upstream: Trước khi commit, tạo log hoặc chia sẻ file
+    downstream: Mã nguồn sạch, an toàn bảo mật
+    role: Phát hiện và che giấu (redact) thông tin nhạy cảm (API Keys, Passwords).
+  ccba-platform:
+    upstream: Quản trị hệ thống Hub & Spoke toàn cục
+    downstream: Hạ tầng platform ổn định
+    role: Điểm tựa vận hành và bảo trì cấu trúc nền tảng CCBA Platform.
+  ccba-build-skill:
+    upstream: Nhu cầu đóng gói quy trình mới thành kỹ năng
+    downstream: ccba-eval-gate / SKILL.md chuẩn
+    role: Tạo khung kỹ năng mới tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057).
+  ccba-skill-repair:
+    upstream: Kỹ năng bị lỗi lint, trôi dạt metadata hoặc CI fail
+    downstream: Kỹ năng được phục hồi, vượt qua CI
+    role: Tự động chẩn đoán và sửa chữa nhanh các lỗi cấu trúc trong SKILL.md.
+  ccba-autoresearch:
+    upstream: Chủ đề nghiên cứu khoa học / Kỹ thuật mới
+    downstream: Báo cáo nghiên cứu đa chiều
+    role: 'Quy trình nghiên cứu 2 vòng: Code-First Research và Self-Adversarial Review.'
+  ccba-graduate-rd:
+    upstream: Thử nghiệm thành công trong sandbox
+    downstream: Gói monorepo chính thức trong packages/
+    role: Tốt nghiệp các dự án nghiên cứu và chuyển đổi thành thư viện sản phẩm.
+  ccba-knowledge-loop:
+    upstream: Phiên làm việc phát sinh giải pháp hay lỗi hiếm
+    downstream: .md/knowledge/session_learnings.md
+    role: Đúc kết tri thức định kỳ và tối ưu hóa cẩm nang học tập của Agent.
+  ccba-ai-gateway-sdk:
+    upstream: Nhu cầu gọi mô hình AI từ mã Python
+    downstream: Kết quả suy luận từ AI Gateway
+    role: Giao diện lập trình chuẩn kết nối AI Gateway đa mô hình trên Server Spark.
+  ccba-vllm-manager:
+    upstream: Triển khai hoặc gỡ lỗi container mô hình cục bộ trên DGX Spark
+    downstream: Endpoint suy luận sẵn sàng phục vụ AI Gateway
+    role: Quản trị vLLM container, tối ưu Inductor AOT cache và cấu hình reasoning/tool parsers.
+  ccba-ai-pdf-preprocessor:
+    upstream: Tệp PDF bản vẽ hoặc hồ sơ dung lượng lớn
+    downstream: Ảnh tiled và văn bản phân đoạn cho LLM
+    role: Tối ưu hóa tài liệu PDF cho thị giác máy tính và trích xuất ngữ cảnh.
+  ccba-hybrid-rag-search:
+    upstream: Truy vấn tìm kiếm tri thức dự án
+    downstream: Danh sách đoạn văn bản phù hợp nhất
+    role: Tìm kiếm kết hợp BM25 + Vector Embedding và xếp hạng lại bằng RRF Fusion.
+  ccba-llm-pipeline-patterns:
+    upstream: Thiết kế hệ thống xử lý ngôn ngữ quy mô lớn
+    downstream: Kiến trúc pipeline bền vững, tối ưu chi phí
+    role: Cẩm nang quy chuẩn thiết kế và phòng tránh lỗi cho LLM Pipelines.
+  ccba-file-stability-guard:
+    upstream: Xử lý file đồng bộ từ đám mây (OneDrive/GDrive)
+    downstream: Pipeline xử lý file an toàn
+    role: Kiểm tra kích thước thực tế đảm bảo file đã tải xong hoàn toàn.
+  ccba-notebooklm-connector:
+    upstream: Nguồn tài liệu video, PDF, URL hoặc Drive
+    downstream: Hỏi đáp RAG / Audio Overview
+    role: Tương tác với Google NotebookLM để nạp nguồn tri thức và tạo podcast âm thanh.
+  ccba-academic-writing:
+    upstream: Kết quả nghiên cứu thực nghiệm
+    downstream: Bài báo khoa học định dạng chuẩn
+    role: Hỗ trợ viết bài báo nghiên cứu khoa học chuẩn cấu trúc học thuật quốc tế.
+  ccba-research:
+    upstream: Vấn đề kỹ thuật cần nghiên cứu chuyên sâu
+    downstream: Tài liệu nghiên cứu kỹ thuật
+    role: Thực hiện khảo sát công nghệ, phân tích ưu nhược điểm và đề xuất giải pháp.
+  ccba-seminar-builder:
+    upstream: Nội dung đào tạo hoặc chia sẻ nội bộ CCBA
+    downstream: Bộ tài liệu seminar trong .md/teach/
+    role: Chuẩn bị đề cương, recap và lưu trữ tài liệu các buổi hội thảo nội bộ.
+  ccba-youtube-learn:
+    upstream: Video YouTube bài giảng / Hội thảo công nghệ
+    downstream: Bản tóm tắt tri thức cốt lõi
+    role: Trích xuất phụ đề, phân tích nội dung và tổng hợp tri thức từ video.
+  ccba-contribute-to-hub:
+    upstream: Cải tiến hoặc kỹ năng mới phát triển tại Spoke
+    downstream: Pull Request đóng góp ngược về Hub
+    role: Quy trình đóng gói và gửi đóng góp từ dự án vệ tinh về kho trung tâm Hub.
+  ccba-review-proposal:
+    upstream: Pull Request đề xuất đóng góp từ Spoke gửi lên Hub
+    downstream: Mã nguồn được thẩm định và squash merge vào Hub Monorepo
+    role: Thẩm định toàn trình PR từ Spoke, quét Spoke Leakage, CI và đồng bộ Catalog.
+  ccba-issue-to-hub:
+    upstream: Sự cố hoặc yêu cầu phát sinh từ Spoke
+    downstream: GitHub Issue đã được phân loại trên Hub
+    role: Tiếp nhận, lọc trùng lặp và chuyển giao vấn đề lên Hub để xử lý.
+  ccba-promote-sandbox:
+    upstream: Thử nghiệm thành công trong thư mục sandbox
+    downstream: Mã nguồn chính thức của hệ thống
+    role: Nâng cấp mã nguồn thử nghiệm thành thành phần chính thức của nền tảng.
+  ccba-sharepoint-iac:
+    upstream: Cấu trúc lưu trữ tài liệu dự án
+    downstream: Thư viện tài liệu SharePoint được đồng bộ
+    role: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.
+  ccba-xia:
+    upstream: Tài liệu kỹ thuật phức tạp cần bóc tách
+    downstream: Dữ liệu cấu trúc hóa chuẩn xác
+    role: Tác nhân thông minh chuyên trích xuất thông tin chuyên sâu từ tài liệu.
+  ccba-docs-manager:
+    upstream: Thay đổi tài liệu hoặc thêm kỹ năng mới
+    downstream: Hệ thống tài liệu nhất quán, không đứt gãy liên kết
+    role: Quản trị cấu trúc tài liệu, kiểm toán liên kết chéo và chuẩn hóa định dạng.
+  ccba-sync-upstream:
+    upstream: Kho chứa thượng nguồn (ClaudeKit, Matt Pocock, v.v.)
+    downstream: ccba-xia / Khuyến nghị porting
+    role: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar).
+  ccba-create-verification-skill:
+    upstream: Ứng dụng hoặc Spoke mới cần bộ kiểm định tự động / ADR-0009
+    downstream: Kỹ năng verify-<app> và bộ harness cô lập
+    role: Khởi tạo bộ kỹ năng kiểm định tự động verify-<app> cô lập cho ứng dụng hoặc spoke.
