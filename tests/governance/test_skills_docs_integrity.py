@@ -453,3 +453,14 @@ def test_portal_template_css_tokens_and_wcag_contrast() -> None:
         assert bg and fg_body and fg_muted, f"Missing core hex tokens in {selector}: {tokens}"
         assert _contrast_ratio(bg, fg_body) >= 4.5, f"Low body contrast in {selector}"
         assert _contrast_ratio(bg, fg_muted) >= 4.5, f"Low muted contrast in {selector}"
+
+
+def test_portal_template_escapes_portal_icon_and_count() -> None:
+    """Verify that p.icon, p.count, p.id, and s.portal_icon are HTML-escaped via escapeHtml()."""
+    html_text = TEMPLATE_HTML_PATH.read_text(encoding="utf-8")
+    for raw_expr in ("${p.icon}", "${p.count}", "goal-${p.id}", "${s.portal_icon}"):
+        assert raw_expr not in html_text, f"Unescaped expression {raw_expr} in skills_portal.html"
+    assert "${escapeHtml(p.icon)}" in html_text
+    assert "${escapeHtml(p.count)}" in html_text
+    assert "goal-${escapeHtml(p.id)}" in html_text
+    assert "${escapeHtml(s.portal_icon)}" in html_text
