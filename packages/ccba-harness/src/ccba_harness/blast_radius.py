@@ -144,6 +144,29 @@ def calculate_risk(affected_files: list[str]) -> RiskLevel:
     return "LOW"
 
 
+_STEM_TEST_ALIASES: dict[str, str] = {
+    "hermes_executive_mcp": "executive_ops_mcp",
+}
+
+
+def _candidate_test_stems(stem: str) -> list[str]:
+    """Builds ordered candidate test stems for a source file stem."""
+    candidates: list[str] = [stem]
+    if stem in ("__init__", "__main__"):
+        return candidates
+    stripped = stem.lstrip("_")
+    if stripped and stripped not in candidates:
+        candidates.append(stripped)
+    alias = _STEM_TEST_ALIASES.get(stripped)
+    if alias and alias not in candidates:
+        candidates.append(alias)
+    if "_" in stripped:
+        first_part = stripped.split("_", 1)[0]
+        if first_part and first_part not in candidates:
+            candidates.append(first_part)
+    return candidates
+
+
 def recommend_tests(affected_files: list[str], root_dir: Path) -> list[str]:
     """Recommends specific pytest targets based on impacted files.
 
@@ -157,14 +180,20 @@ def recommend_tests(affected_files: list[str], root_dir: Path) -> list[str]:
     tests: set[str] = set()
     for rel_path in affected_files:
         stem = Path(rel_path).stem
-        # Look for direct unit test matching test_<stem>.py
-        direct_test = root_dir / "tests" / f"test_{stem}.py"
-        if direct_test.exists():
-            tests.add(str(direct_test.relative_to(root_dir)))
+        for cand in _candidate_test_stems(stem):
+            matched = False
+            direct_test = root_dir / "tests" / f"test_{cand}.py"
+            if direct_test.exists():
+                tests.add(direct_test.relative_to(root_dir).as_posix())
+                matched = True
 
-        pkg_test = root_dir / "packages" / "ccba-harness" / "tests" / f"test_{stem}.py"
-        if pkg_test.exists():
-            tests.add(str(pkg_test.relative_to(root_dir)))
+            pkg_test = root_dir / "packages" / "ccba-harness" / "tests" / f"test_{cand}.py"
+            if pkg_test.exists():
+                tests.add(pkg_test.relative_to(root_dir).as_posix())
+                matched = True
+
+            if matched:
+                break
 
     if not tests:
         # Fallback to general test suites if present

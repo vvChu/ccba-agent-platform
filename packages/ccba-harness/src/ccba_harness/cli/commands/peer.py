@@ -55,6 +55,14 @@ def run_peer_gate_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--file", action="append", default=None, help="Specific files to gate-check"
     )
+    parser.add_argument(
+        "--pytest-target",
+        dest="pytest_target",
+        action="extend",
+        nargs="+",
+        default=None,
+        help="Explicit pytest target path(s) to run in pytest_suite stage",
+    )
     parser.add_argument("--root", type=str, default=None, help="Project workspace root directory")
     parser.add_argument(
         "--output-verdict",
@@ -69,7 +77,12 @@ def run_peer_gate_cli(args_list: Sequence[str] | None = None) -> int:
     root_p = Path(args.root).resolve() if args.root else Path.cwd().resolve()
     from ccba_harness.peer_gate import print_summary_table, run_full_gate, write_verdict_file
 
-    result = run_full_gate(workspace_dir=root_p, branch=args.branch, changed_files=args.file)
+    result = run_full_gate(
+        workspace_dir=root_p,
+        branch=args.branch,
+        changed_files=args.file,
+        pytest_targets=args.pytest_target,
+    )
 
     if args.output_verdict:
         peer_dir = root_p / ".md" / "peer_exchange"
