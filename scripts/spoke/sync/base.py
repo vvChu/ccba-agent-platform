@@ -56,13 +56,30 @@ def are_text_files_identical(file1: Path, file2: Path) -> bool:
         return False
 
 
+SKILL_SYNC_IGNORE_DIRS: frozenset[str] = frozenset({".skill_versions", "__pycache__"})
+SKILL_SYNC_IGNORE_PATTERNS = shutil.ignore_patterns(".skill_versions", "__pycache__", "*.pyc")
+
+
+def _is_ignored_sync_path(rel_path: Path) -> bool:
+    """Return True if a relative path inside a skill directory should be ignored during sync."""
+    return bool(set(rel_path.parts) & SKILL_SYNC_IGNORE_DIRS) or rel_path.suffix == ".pyc"
+
+
 def are_dirs_identical(dir1: Path, dir2: Path) -> bool:
-    """Recursively compare two directories by file contents."""
+    """Recursively compare two directories by file contents, ignoring transient local directories."""
     if not dir1.exists() or not dir2.exists():
         return False
 
-    files1 = {p.relative_to(dir1): p for p in dir1.rglob("*") if p.is_file()}
-    files2 = {p.relative_to(dir2): p for p in dir2.rglob("*") if p.is_file()}
+    files1 = {
+        p.relative_to(dir1): p
+        for p in dir1.rglob("*")
+        if p.is_file() and not _is_ignored_sync_path(p.relative_to(dir1))
+    }
+    files2 = {
+        p.relative_to(dir2): p
+        for p in dir2.rglob("*")
+        if p.is_file() and not _is_ignored_sync_path(p.relative_to(dir2))
+    }
 
     if set(files1.keys()) != set(files2.keys()):
         return False
