@@ -122,6 +122,8 @@ def test_collision_cluster_descriptions_and_exclusions() -> None:
         "ccba-legal-intel",
         "ccba-legal-ingest",
         "bigbim-vbpl-digest",
+        "ccba-ai-gateway-sdk",
+        "ccba-llm-pipeline-patterns",
     ]
     for name in collision_skills:
         fm, _ = _load_skill_frontmatter(name)
@@ -154,6 +156,8 @@ COLLISION_CLUSTERS: dict[str, list[str]] = {
         "ccba-legal-ingest",
         "bigbim-vbpl-digest",
     ],
+    "spark_ai": ["ccba-ai-gateway-sdk", "ccba-vllm-manager"],
+    "rag_pipeline": ["ccba-llm-pipeline-patterns", "ccba-hybrid-rag-search"],
 }
 
 STAY_OFF_ROUTING_MATRIX: list[tuple[str, str, list[str], list[str]]] = [
@@ -274,6 +278,32 @@ STAY_OFF_ROUTING_MATRIX: list[tuple[str, str, list[str], list[str]]] = [
             "Quản lý vòng đời legal_registry.yaml và hợp nhất VBHN ngoài BIM qua VBHNEngine",
         ],
     ),
+    (
+        "ccba-ai-gateway-sdk",
+        "spark_ai",
+        [
+            "Kết nối AI Gateway trên Server Spark qua Python package ccba-ai",
+            "Sử dụng choose_model và ai.chat trong Python package ccba-ai để gọi AI Gateway",
+            "Tích hợp Python package ccba-ai kết nối AI Gateway đa mô hình trên Server Spark",
+        ],
+        [
+            "Quản trị máy chủ vLLM và tối ưu hóa AOT Inductor cache trên DGX Blackwell GB10",
+            "Cấu hình phân tách reasoning parser và Inductor cache cho máy chủ vLLM",
+        ],
+    ),
+    (
+        "ccba-llm-pipeline-patterns",
+        "rag_pipeline",
+        [
+            "Áp dụng anti-patterns và best practices thiết kế LLM processing pipelines (pipeline patterns)",
+            "Thiết kế synthesis pipeline và 2-pass self-correction theo VvC LLM OS",
+            "Kiểm tra best practices cho llm pipeline và multi turn memory",
+        ],
+        [
+            "Chạy tìm kiếm ngữ nghĩa kết hợp BM25 và Embedding với RRF Fusion (hybrid rag)",
+            "Thực hiện tìm kiếm ngữ nghĩa BM25 và Embedding search với độ chính xác 20x",
+        ],
+    ),
 ]
 
 
@@ -299,9 +329,9 @@ def _score_description(query: str, description: str) -> int:
 
 
 def test_collision_cluster_stay_off_routing() -> None:
-    """Verify COND-02 & COND-02R: 9 skills x (3 positive + 2 near-miss) = 45 cases on description & triggers."""
+    """Verify COND-02 & COND-02R: 11 skills x (3 positive + 2 near-miss) = 55 cases on description & triggers."""
     fms = {s: _load_skill_frontmatter(s)[0] for c in COLLISION_CLUSTERS.values() for s in c}
-    assert len(STAY_OFF_ROUTING_MATRIX) == 9
+    assert len(STAY_OFF_ROUTING_MATRIX) == 11
     total_cases = 0
 
     for skill_name, cluster_id, positives, near_misses in STAY_OFF_ROUTING_MATRIX:
@@ -325,7 +355,7 @@ def test_collision_cluster_stay_off_routing() -> None:
             assert self_score <= 0 and max(sib_scores.values()) > self_score
             assert all(t not in nm.lower() for t in triggers)
 
-    assert total_cases == 45
+    assert total_cases == 55
 
 
 def test_external_source_skills_have_prompt_injection_guard_and_learn_routing() -> None:

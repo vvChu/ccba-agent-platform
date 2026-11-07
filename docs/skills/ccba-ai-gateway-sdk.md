@@ -1,6 +1,6 @@
 # ccba-ai-gateway-sdk
 
-> **Mô tả ngắn**: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+> **Mô tả ngắn**: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-gate
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,17 +45,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `ai`
-- `llm`
-- `model`
-- `gateway`
-- `chat`
-- `inference`
-- `DGX`
-- `vLLM`
-- `Qwen`
-- `Claude`
-- `Gemini`
+- `ccba-ai`
+- `ai gateway`
+- `choose_model`
+- `ai.chat`
+- `litellm spark`
+- `modelarchetype`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Giao diện lập trình chuẩn kết nối AI Gateway đa mô hình trên Server Spark.

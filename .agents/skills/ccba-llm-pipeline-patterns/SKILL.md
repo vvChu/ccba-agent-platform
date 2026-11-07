@@ -1,7 +1,6 @@
 ---
 name: ccba-llm-pipeline-patterns
-description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-  Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+description: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -21,11 +20,8 @@ triggers:
 - llm pipeline
 - pipeline patterns
 - 2-pass
-- ground truth
-- rag pipeline
 - synthesis pipeline
 - self-correction
-- map reduce
 - multi turn memory
 ---
 

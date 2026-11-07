@@ -113,7 +113,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | :--- | :--- | :--- | :--- | :--- |
 | [ccba-academic-writing](ccba-academic-writing.md) | `/ccba-academic-writing` | `kernel` | `User` | Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo... |
 | [ccba-adr-lifecycle](ccba-adr-lifecycle.md) | `/ccba-adr-lifecycle` | `kernel` | `Both` | Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Sc... |
-| [ccba-ai-gateway-sdk](ccba-ai-gateway-sdk.md) | `/ccba-ai-gateway-sdk` | `kernel` | `Model` | Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endp... |
+| [ccba-ai-gateway-sdk](ccba-ai-gateway-sdk.md) | `/ccba-ai-gateway-sdk` | `kernel` | `Model` | Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Pyt... |
 | [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tilin... |
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
@@ -126,7 +126,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-hybrid-rag-search](ccba-hybrid-rag-search.md) | `/ccba-hybrid-rag-search` | `kernel` | `Model` | Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) + RRF Fusion... |
 | [ccba-issue-to-hub](ccba-issue-to-hub.md) | `/ccba-issue-to-hub` | `kernel` | `User` | Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ Spoke lê... |
 | [ccba-knowledge-loop](ccba-knowledge-loop.md) | `/ccba-knowledge-loop` | `orchestrator` | `User` | Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm → Way... |
-| [ccba-llm-pipeline-patterns](ccba-llm-pipeline-patterns.md) | `/ccba-llm-pipeline-patterns` | `kernel` | `Model` | Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đ... |
+| [ccba-llm-pipeline-patterns](ccba-llm-pipeline-patterns.md) | `/ccba-llm-pipeline-patterns` | `kernel` | `Model` | Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS... |
 | [ccba-maskara](ccba-maskara.md) | `/ccba-maskara` | `kernel` | `Model` | Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords, private... |
 | [ccba-notebooklm-connector](ccba-notebooklm-connector.md) | `/ccba-notebooklm-connector` | `kernel` | `Both` | Interact with Google NotebookLM to import YouTube, URLs, PDFs, and Drive docs... |
 | [ccba-platform](ccba-platform.md) | `/ccba-platform` | `orchestrator` | `User` | Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent... |

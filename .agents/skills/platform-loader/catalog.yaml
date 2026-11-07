@@ -171,20 +171,15 @@ skills:
   tier: kernel
 - name: ccba-ai-gateway-sdk
   bundle: _core
-  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
-    1 endpoint. Bao gồm Python package ccba-ai.
+  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud)
+    qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
   triggers:
-  - ai
-  - llm
-  - model
-  - gateway
-  - chat
-  - inference
-  - DGX
-  - vLLM
-  - Qwen
-  - Claude
-  - Gemini
+  - ccba-ai
+  - ai gateway
+  - choose_model
+  - ai.chat
+  - litellm spark
+  - modelarchetype
   skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
   command: /ccba-ai-gateway-sdk
   package_path: packages/ccba-ai
@@ -800,17 +795,14 @@ skills:
   tier: kernel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
-  description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+  description: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC
+    LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
   triggers:
   - llm pipeline
   - pipeline patterns
   - 2-pass
-  - ground truth
-  - rag pipeline
   - synthesis pipeline
   - self-correction
-  - map reduce
   - multi turn memory
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
   command: /ccba-llm-pipeline-patterns
