@@ -1,6 +1,6 @@
 # bigbim-vbpl-digest
 
-> **Mô tả ngắn**: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
+> **Mô tả ngắn**: Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu chuẩn ISO 19650-1/2/3/5. Không dùng cho tư vấn hoặc hợp nhất VBHN ngoài BIM/ISO 19650.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-vbpl-
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
+Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu chuẩn ISO 19650-1/2/3/5. Không dùng cho tư vấn hoặc hợp nhất VBHN ngoài BIM/ISO 19650.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

@@ -4,6 +4,7 @@
 Main entry point script to fetch transcripts, extract slide frames, and synthesize notes.
 """
 
+import argparse
 import logging
 import os
 import sys
@@ -114,11 +115,9 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
     """Uses LLM to detect the speaker's real name from the first part of transcript."""
     from ccba_ai import ai
 
-    # If transcript is very short, just return default
     if not transcript or len(transcript) < 100:
         return default
 
-    # Send only the first 3000 chars to save tokens
     sample = transcript[:3000]
     prompt = (
         "Bạn là trợ lý nghiên cứu học thuật cao cấp tại CCBA. Dưới đây là phần đầu của phụ đề một bài phát biểu hoặc bài giảng.\n"
@@ -133,7 +132,6 @@ def extract_speaker_from_transcript(transcript: str, default: str = "Diễn gi�
     try:
         res = ai.chat(prompt, model=choose_model("fast"), max_tokens=100, temperature=0.1)
         cleaned = res.strip().strip("'\"")
-        # If it returned some long sentence instead of a name, fallback
         if (
             cleaned
             and len(cleaned) < 50
@@ -160,9 +158,8 @@ def _extract_video_id(video_url: str) -> str:
     return hashlib.md5(video_url.encode("utf-8")).hexdigest()[:11]
 
 
-def main():
-    import argparse
-
+def _parse_args() -> argparse.Namespace:
+    """Parse command line arguments for watch_video."""
     parser = argparse.ArgumentParser(description="CCBA youtube-learn Orchestrator.")
     parser.add_argument("video_url", type=str, help="URL of the video or local video path")
     parser.add_argument(
@@ -172,73 +169,25 @@ def main():
         "--project", "-p", type=str, default=None, help="Tên đề tài/dự án (Cohesive Topic Folder)"
     )
     parser.add_argument("--speaker", type=str, default=None, help="Explicit speaker name")
+    return parser.parse_args()
 
-    args = parser.parse_args()
-    video_url = args.video_url
-    video_id = _extract_video_id(video_url)
 
-    # Resolve Output Directory Fallback
+def _resolve_output_dir(args: argparse.Namespace) -> Path:
+    """Resolve and create target output directory."""
     if args.project:
         output_dir = (Path.cwd() / ".md" / "projects" / args.project).absolute()
     elif args.output_dir:
         output_dir = Path(args.output_dir).absolute()
     else:
-        # Fallback to default cohesive topic folder
         output_dir = (Path.cwd() / ".md" / "projects" / "default_topic").absolute()
-
     output_dir.mkdir(parents=True, exist_ok=True)
-    images_dir = output_dir / f"images_{video_id}"
+    return output_dir
 
-    _logger.info(f"CCBA youtube-learn run started. Output folder: {output_dir.absolute()}")
 
-    # Pre-execution checks
-    ffmpeg_path = _find_ffmpeg_bin()
-    is_text_only = False
-    if not ffmpeg_path:
-        _logger.warning("ffmpeg is missing from the system. Falling back to TEXT-ONLY MODE.")
-        is_text_only = True
-
-    # Pre-execution API Key Check for non-YouTube URLs
-    is_youtube = any(x in video_url for x in ["youtube.com", "youtu.be"])
-    if not is_youtube:
-        # Verify API Keys for Whisper STT
-        gateway_key = os.environ.get("AI_GATEWAY_KEY") or os.environ.get("OPENAI_API_KEY")
-        if not gateway_key:
-            _logger.error(
-                "API Key (AI_GATEWAY_KEY / OPENAI_API_KEY) is missing for non-YouTube STT transcription. Aborting execution to save bandwidth."
-            )
-            sys.exit(1)
-
-    # 1. Fetch transcript
-    _logger.info("Phase 2: Extracting/transcribing audio transcript...")
-    transcript = fetch_youtube_transcript(video_url, output_dir)
-
-    if not transcript:
-        _logger.error("Failed to extract transcript. Exiting.")
-        sys.exit(1)
-
-    # Save raw transcript
-    transcript_file = output_dir / f"raw_transcript_{video_id}.txt"
-    transcript_file.write_text(transcript, encoding="utf-8")
-    try:
-        rel_path = transcript_file.relative_to(Path.cwd())
-    except ValueError:
-        rel_path = transcript_file.absolute()
-    _logger.info(f"Saved raw transcript to {rel_path}")
-
-    # 2. Extract images (if not in Text-Only Mode)
-    saved_images = []
-    if not is_text_only:
-        _logger.info("Phase 3: Extracting video frames...")
-        saved_images = extract_video_visuals(video_url, images_dir, transcript)
-        _logger.info(f"Extracted and saved {len(saved_images)} slide images.")
-    else:
-        _logger.info("Skipping frame extraction due to missing ffmpeg.")
-
-    # 3. Synthesize notes
-    _logger.info("Phase 4: Generating knowledge synthesis documents...")
-
-    # Try to extract metadata for naming
+def _resolve_video_metadata(
+    video_url: str, transcript: str, explicit_speaker: str | None
+) -> tuple[str, str]:
+    """Resolve speaker name and video title from yt-dlp metadata or LLM transcript scan."""
     speaker_name = "Diễn giả"
     video_title = "Bài giảng"
     try:
@@ -252,57 +201,106 @@ def main():
     except Exception:
         pass
 
-    # Use explicit speaker name if provided, otherwise extract from transcript
-    if args.speaker:
-        speaker_name = args.speaker
+    if explicit_speaker:
+        speaker_name = explicit_speaker
     else:
         speaker_name = extract_speaker_from_transcript(transcript, default=speaker_name)
         _logger.info(f"Auto-detected speaker name: {speaker_name}")
+    return speaker_name, video_title
 
-    # Calculate smart adaptive max_tokens limits based on transcript length
-    transcript_len = len(transcript)
-    if transcript_len > 60000:  # Video ~ >1 hour
-        dynamic_concept_limit = 32768
-        dynamic_worldview_limit = 8192
-    elif transcript_len > 30000:  # Video ~ 30-60 minutes
-        dynamic_concept_limit = 16384
-        dynamic_worldview_limit = 6144
-    else:  # Video ~ <30 minutes
-        dynamic_concept_limit = 8192
-        dynamic_worldview_limit = 4096
 
-    def _safe_int_env(var_name: str, fallback: int) -> int:
-        val = os.environ.get(var_name)
-        if val is None:
-            return fallback
-        try:
-            return int(val)
-        except ValueError:
-            _logger.warning(
-                f"Invalid integer for env var '{var_name}': '{val}'. Using default '{fallback}'."
-            )
-            return fallback
+def _safe_int_env(var_name: str, fallback: int) -> int:
+    """Read integer environment variable with fallback."""
+    val = os.environ.get(var_name)
+    if val is None:
+        return fallback
+    try:
+        return int(val)
+    except ValueError:
+        _logger.warning(
+            f"Invalid integer for env var '{var_name}': '{val}'. Using default '{fallback}'."
+        )
+        return fallback
 
-    max_tokens_concept = _safe_int_env("MAX_TOKENS_CONCEPT", dynamic_concept_limit)
-    max_tokens_worldview = _safe_int_env("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit)
-    max_tokens_speaker = _safe_int_env("MAX_TOKENS_SPEAKER", 2048)
 
+def _compute_token_limits(transcript_len: int) -> tuple[int, int, int]:
+    """Calculate adaptive max_tokens limits based on transcript character length."""
+    if transcript_len > 60000:
+        dynamic_concept_limit, dynamic_worldview_limit = 32768, 8192
+    elif transcript_len > 30000:
+        dynamic_concept_limit, dynamic_worldview_limit = 16384, 6144
+    else:
+        dynamic_concept_limit, dynamic_worldview_limit = 8192, 4096
+
+    return (
+        _safe_int_env("MAX_TOKENS_CONCEPT", dynamic_concept_limit),
+        _safe_int_env("MAX_TOKENS_WORLDVIEW", dynamic_worldview_limit),
+        _safe_int_env("MAX_TOKENS_SPEAKER", 2048),
+    )
+
+
+def _run_pipeline(args: argparse.Namespace, output_dir: Path, is_text_only: bool) -> None:
+    """Execute transcript extraction, visual extraction, and note synthesis."""
+    video_url = args.video_url
+    video_id = _extract_video_id(video_url)
+    images_dir = output_dir / f"images_{video_id}"
+
+    _logger.info("Phase 2: Extracting/transcribing audio transcript...")
+    transcript = fetch_youtube_transcript(video_url, output_dir)
+    if not transcript:
+        _logger.error("Failed to extract transcript. Exiting.")
+        sys.exit(1)
+
+    transcript_file = output_dir / f"raw_transcript_{video_id}.txt"
+    transcript_file.write_text(transcript, encoding="utf-8")
+    _logger.info(f"Saved raw transcript to {transcript_file}")
+
+    saved_images: list[str] = []
+    if not is_text_only:
+        _logger.info("Phase 3: Extracting video frames...")
+        saved_images = extract_video_visuals(video_url, images_dir, transcript)
+        _logger.info(f"Extracted and saved {len(saved_images)} slide images.")
+    else:
+        _logger.info("Skipping frame extraction due to missing ffmpeg.")
+
+    _logger.info("Phase 4: Generating knowledge synthesis documents...")
+    speaker_name, video_title = _resolve_video_metadata(video_url, transcript, args.speaker)
+    max_concept, max_worldview, max_speaker = _compute_token_limits(len(transcript))
     images_subfolder = f"images_{video_id}" if not is_text_only else "images"
+
     concept_notes = synthesize_concept_notes(
-        transcript, saved_images, images_subfolder=images_subfolder, max_tokens=max_tokens_concept
+        transcript, saved_images, images_subfolder=images_subfolder, max_tokens=max_concept
     )
     worldview_notes = synthesize_worldview_notes(
-        transcript, speaker_name, video_title, max_tokens=max_tokens_worldview
+        transcript, speaker_name, video_title, max_tokens=max_worldview
     )
-    speaker_notes = synthesize_speaker_notes(
-        transcript, speaker_name, max_tokens=max_tokens_speaker
-    )
+    speaker_notes = synthesize_speaker_notes(transcript, speaker_name, max_tokens=max_speaker)
 
-    # Write files
     (output_dir / f"notes_concept_{video_id}.md").write_text(concept_notes, encoding="utf-8")
     (output_dir / f"notes_worldview_{video_id}.md").write_text(worldview_notes, encoding="utf-8")
     (output_dir / f"notes_speaker_{video_id}.md").write_text(speaker_notes, encoding="utf-8")
 
+
+def main() -> None:
+    """CLI entry point for youtube-learn orchestrator."""
+    args = _parse_args()
+    output_dir = _resolve_output_dir(args)
+    _logger.info(f"CCBA youtube-learn run started. Output folder: {output_dir.absolute()}")
+
+    is_text_only = not bool(_find_ffmpeg_bin())
+    if is_text_only:
+        _logger.warning("ffmpeg is missing from the system. Falling back to TEXT-ONLY MODE.")
+
+    is_youtube = any(x in args.video_url for x in ["youtube.com", "youtu.be"])
+    if not is_youtube and not (
+        os.environ.get("AI_GATEWAY_KEY") or os.environ.get("OPENAI_API_KEY")
+    ):
+        _logger.error(
+            "API Key (AI_GATEWAY_KEY / OPENAI_API_KEY) is missing for non-YouTube STT transcription."
+        )
+        sys.exit(1)
+
+    _run_pipeline(args, output_dir, is_text_only)
     _logger.info("All documents synthesized and saved successfully!")
     print("\n🎉 CCBA Belief Archaeology completed successfully!")
     print(f"📁 Output files saved at: {output_dir.absolute()}")

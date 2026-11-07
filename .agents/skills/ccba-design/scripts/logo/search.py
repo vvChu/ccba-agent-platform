@@ -34,61 +34,59 @@ def format_output(result):
     return "\n".join(output)
 
 
-def generate_design_brief(query, brand_name=None):
-    """Generate a comprehensive logo design brief based on query"""
-    results = search_all(query, max_results=2)
-
-    output = []
-    output.append("=" * 60)
-    if brand_name:
-        output.append(f"  LOGO DESIGN BRIEF: {brand_name.upper()}")
-    else:
-        output.append("  LOGO DESIGN BRIEF")
-    output.append("=" * 60)
-    output.append(f"  Query: {query}")
-    output.append("=" * 60)
-    output.append("")
-
-    # Industry recommendations
+def _append_industry_and_style(output, results):
     if "industry" in results:
         output.append("## INDUSTRY ANALYSIS")
         for r in results["industry"]:
-            output.append(f"**Industry:** {r.get('Industry', 'N/A')}")
-            output.append(f"- Recommended Styles: {r.get('Recommended Styles', 'N/A')}")
-            output.append(f"- Colors: {r.get('Primary Colors', 'N/A')}")
-            output.append(f"- Typography: {r.get('Typography', 'N/A')}")
-            output.append(f"- Symbols: {r.get('Common Symbols', 'N/A')}")
-            output.append(f"- Mood: {r.get('Mood', 'N/A')}")
-            output.append(f"- Best Practices: {r.get('Best Practices', 'N/A')}")
-            output.append(f"- Avoid: {r.get('Avoid', 'N/A')}")
-            output.append("")
-
-    # Style recommendations
+            output.extend(
+                [
+                    f"**Industry:** {r.get('Industry', 'N/A')}",
+                    f"- Recommended Styles: {r.get('Recommended Styles', 'N/A')}",
+                    f"- Colors: {r.get('Primary Colors', 'N/A')}",
+                    f"- Typography: {r.get('Typography', 'N/A')}",
+                    f"- Symbols: {r.get('Common Symbols', 'N/A')}",
+                    f"- Mood: {r.get('Mood', 'N/A')}",
+                    f"- Best Practices: {r.get('Best Practices', 'N/A')}",
+                    f"- Avoid: {r.get('Avoid', 'N/A')}",
+                    "",
+                ]
+            )
     if "style" in results:
         output.append("## STYLE RECOMMENDATIONS")
         for r in results["style"]:
-            output.append(f"**{r.get('Style Name', 'N/A')}** ({r.get('Category', 'N/A')})")
-            output.append(
-                f"- Colors: {r.get('Primary Colors', 'N/A')} | {r.get('Secondary Colors', 'N/A')}"
+            output.extend(
+                [
+                    f"**{r.get('Style Name', 'N/A')}** ({r.get('Category', 'N/A')})",
+                    f"- Colors: {r.get('Primary Colors', 'N/A')} | {r.get('Secondary Colors', 'N/A')}",
+                    f"- Typography: {r.get('Typography', 'N/A')}",
+                    f"- Effects: {r.get('Effects', 'N/A')}",
+                    f"- Best For: {r.get('Best For', 'N/A')}",
+                    f"- Complexity: {r.get('Complexity', 'N/A')}",
+                    "",
+                ]
             )
-            output.append(f"- Typography: {r.get('Typography', 'N/A')}")
-            output.append(f"- Effects: {r.get('Effects', 'N/A')}")
-            output.append(f"- Best For: {r.get('Best For', 'N/A')}")
-            output.append(f"- Complexity: {r.get('Complexity', 'N/A')}")
-            output.append("")
 
-    # Color recommendations
+
+def generate_design_brief(query, brand_name=None):
+    """Generate a comprehensive logo design brief based on query"""
+    results = search_all(query, max_results=2)
+    title = f"  LOGO DESIGN BRIEF: {brand_name.upper()}" if brand_name else "  LOGO DESIGN BRIEF"
+    output = ["=" * 60, title, "=" * 60, f"  Query: {query}", "=" * 60, ""]
+    _append_industry_and_style(output, results)
     if "color" in results:
         output.append("## COLOR PALETTE OPTIONS")
         for r in results["color"]:
-            output.append(f"**{r.get('Palette Name', 'N/A')}**")
-            output.append(f"- Primary: {r.get('Primary Hex', 'N/A')}")
-            output.append(f"- Secondary: {r.get('Secondary Hex', 'N/A')}")
-            output.append(f"- Accent: {r.get('Accent Hex', 'N/A')}")
-            output.append(f"- Background: {r.get('Background Hex', 'N/A')}")
-            output.append(f"- Psychology: {r.get('Psychology', 'N/A')}")
-            output.append("")
-
+            output.extend(
+                [
+                    f"**{r.get('Palette Name', 'N/A')}**",
+                    f"- Primary: {r.get('Primary Hex', 'N/A')}",
+                    f"- Secondary: {r.get('Secondary Hex', 'N/A')}",
+                    f"- Accent: {r.get('Accent Hex', 'N/A')}",
+                    f"- Background: {r.get('Background Hex', 'N/A')}",
+                    f"- Psychology: {r.get('Psychology', 'N/A')}",
+                    "",
+                ]
+            )
     output.append("=" * 60)
     return "\n".join(output)
 

@@ -1,7 +1,6 @@
 ---
 name: ccba-ai-gateway-sdk
-description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
-  1 endpoint. Bao gồm Python package ccba-ai.
+description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
 applies_to:
 - Phần mềm
 - Thẩm tra thiết kế
@@ -19,17 +18,14 @@ gpi:
   a: 4.0
   p: 1.0
 triggers:
-- ai
-- llm
-- model
+- ccba-ai
+- ai gateway
 - gateway
 - chat
-- inference
-- DGX
-- vLLM
-- Qwen
-- Claude
-- Gemini
+- choose_model
+- ai.chat
+- litellm spark
+- modelarchetype
 package_path: packages/ccba-ai
 ---
 # AI Gateway SDK

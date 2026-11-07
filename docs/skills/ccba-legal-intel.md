@@ -1,6 +1,6 @@
 # ccba-legal-intel
 
-> **Mô tả ngắn**: Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+> **Mô tả ngắn**: Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query, get-clause) và sinh checklist tuân thủ. Không dùng để thu thập văn bản mới.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-i
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query, get-clause) và sinh checklist tuân thủ. Không dùng để thu thập văn bản mới.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -46,11 +46,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ### Từ Khóa Kích Hoạt (Triggers)
 - `ccba-legal-intel`
-- `crawl law`
 - `diff law`
 - `legal checklist`
-- `thuvienphapluat`
-- `TVPL`
+- `legal graph`
+- `get-clause`
+- `đồ thị pháp luật`
+- `tra cứu điều khoản`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tự động thu thập, phân tích khác biệt (diff) và tạo compliance checklist.

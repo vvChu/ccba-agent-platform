@@ -1,6 +1,6 @@
 # ccba-ai-qc
 
-> **Mô tả ngắn**: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+> **Mô tả ngắn**: Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View Vision, Heat Map) qua QCAuditPipeline. Không dùng cho thẩm tra thuyết minh PCCC.
 
 ---
 
@@ -29,7 +29,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc -
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View Vision, Heat Map) qua QCAuditPipeline. Không dùng cho thẩm tra thuyết minh PCCC.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -44,10 +44,11 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `qc`
-- `audit`
 - `quad-view`
 - `discovery`
+- `qcauditpipeline`
+- `bản vẽ đa bộ môn`
+- `heat map`
 - `reporter`
 - `collision-check`
 - `qcauditpipeline`

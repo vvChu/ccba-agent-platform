@@ -1,7 +1,6 @@
 ---
 name: ccba-legal-document-tracker
-description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
-  và Registry.
+description: Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
 applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
@@ -19,14 +18,14 @@ gpi:
   a: 4.0
   p: 1.0
 triggers:
-- VBPL
-- pháp luật
-- legal
 - registry
-- nghị định
-- thông tư
-- văn bản pháp luật
-- luật xây dựng
+- registry vbpl
+- cập nhật thông tư
+- legal_registry
+- vbhn
+- hợp nhất văn bản
+- vòng đời văn bản
+- so sánh ast diff
 - ccba-update-legal-registry
 - update-legal-registry
 ---

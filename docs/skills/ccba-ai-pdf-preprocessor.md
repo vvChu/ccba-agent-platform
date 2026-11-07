@@ -1,6 +1,6 @@
 # ccba-ai-pdf-preprocessor
 
-> **Mô tả ngắn**: Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
+> **Mô tả ngắn**: Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tiling ảnh cho AI Vision. Không dùng để chuyển đổi tài liệu sang Markdown.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-pdf-
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
+Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tiling ảnh cho AI Vision. Không dùng để chuyển đổi tài liệu sang Markdown.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,12 +45,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `pdf`
 - `preprocessor`
-- `chunk`
-- `tiling`
-- `bản vẽ`
-- `scan`
+- `chunk pdf`
+- `tiling bản vẽ`
+- `bản vẽ lớn`
+- `scan pdf`
+- `segment pdf`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tối ưu hóa tài liệu PDF cho thị giác máy tính và trích xuất ngữ cảnh.

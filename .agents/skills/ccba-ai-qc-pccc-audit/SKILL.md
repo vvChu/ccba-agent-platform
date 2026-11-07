@@ -1,7 +1,6 @@
 ---
 name: ccba-ai-qc-pccc-audit
-description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
-  qua cơ chế Semantic Map-Reduce.
+description: Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn dự án.
 applies_to:
 - Thẩm tra thiết kế
 - Thiết kế

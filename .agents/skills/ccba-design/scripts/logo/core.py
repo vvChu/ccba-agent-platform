@@ -161,63 +161,63 @@ def _search_csv(filepath, search_cols, output_cols, query, max_results):
     return results
 
 
+DOMAIN_KEYWORDS = {
+    "style": (
+        "style",
+        "minimalist",
+        "vintage",
+        "modern",
+        "retro",
+        "geometric",
+        "abstract",
+        "emblem",
+        "badge",
+        "wordmark",
+        "mascot",
+        "luxury",
+        "playful",
+        "corporate",
+    ),
+    "color": (
+        "color",
+        "palette",
+        "hex",
+        "#",
+        "rgb",
+        "blue",
+        "red",
+        "green",
+        "gold",
+        "warm",
+        "cool",
+        "vibrant",
+        "pastel",
+    ),
+    "industry": (
+        "tech",
+        "healthcare",
+        "finance",
+        "legal",
+        "restaurant",
+        "food",
+        "fashion",
+        "beauty",
+        "education",
+        "sports",
+        "fitness",
+        "real estate",
+        "crypto",
+        "gaming",
+    ),
+}
+
+
 def detect_domain(query):
     """Auto-detect the most relevant domain from query"""
     query_lower = query.lower()
-
-    domain_keywords = {
-        "style": [
-            "style",
-            "minimalist",
-            "vintage",
-            "modern",
-            "retro",
-            "geometric",
-            "abstract",
-            "emblem",
-            "badge",
-            "wordmark",
-            "mascot",
-            "luxury",
-            "playful",
-            "corporate",
-        ],
-        "color": [
-            "color",
-            "palette",
-            "hex",
-            "#",
-            "rgb",
-            "blue",
-            "red",
-            "green",
-            "gold",
-            "warm",
-            "cool",
-            "vibrant",
-            "pastel",
-        ],
-        "industry": [
-            "tech",
-            "healthcare",
-            "finance",
-            "legal",
-            "restaurant",
-            "food",
-            "fashion",
-            "beauty",
-            "education",
-            "sports",
-            "fitness",
-            "real estate",
-            "crypto",
-            "gaming",
-        ],
-    }
-
     scores = {
         domain: sum(1 for kw in keywords if kw in query_lower)
-        for domain, keywords in domain_keywords.items()
+        for domain, keywords in DOMAIN_KEYWORDS.items()
     }
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "style"

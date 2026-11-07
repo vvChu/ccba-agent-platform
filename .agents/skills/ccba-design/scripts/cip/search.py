@@ -61,68 +61,39 @@ def format_brief(brief):
     return "\n".join(output)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Search CIP design guidelines",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Search deliverables
-  python search.py "business card"
-
-  # Search specific domain
-  python search.py "luxury elegant" --domain style
-
-  # Generate CIP brief
-  python search.py "tech startup" --cip-brief -b "TechFlow"
-
-  # Search all domains
-  python search.py "corporate professional" --all
-
-  # JSON output
-  python search.py "vehicle branding" --json
-        """,
-    )
-
+def _parse_search_args():
+    parser = argparse.ArgumentParser(description="Search CIP design guidelines")
     parser.add_argument("query", help="Search query")
-    parser.add_argument(
-        "--domain",
-        "-d",
-        choices=list(CSV_CONFIG.keys()),
-        help="Search domain (auto-detected if not specified)",
-    )
+    parser.add_argument("--domain", "-d", choices=list(CSV_CONFIG.keys()), help="Search domain")
     parser.add_argument("--max", "-m", type=int, default=3, help="Max results (default: 3)")
     parser.add_argument("--all", "-a", action="store_true", help="Search all domains")
     parser.add_argument("--cip-brief", "-c", action="store_true", help="Generate CIP brief")
     parser.add_argument("--brand", "-b", default="BrandName", help="Brand name for CIP brief")
     parser.add_argument("--style", "-s", help="Style override for CIP brief")
     parser.add_argument("--json", "-j", action="store_true", help="Output as JSON")
+    return parser.parse_args()
 
-    args = parser.parse_args()
 
+def main():
+    args = _parse_search_args()
     if args.cip_brief:
         brief = get_cip_brief(args.brand, args.query, args.style)
-        if args.json:
-            print(json.dumps(brief, indent=2))
-        else:
-            print(format_brief(brief))
+        print(json.dumps(brief, indent=2) if args.json else format_brief(brief))
     elif args.all:
         results = search_all(args.query, args.max)
         if args.json:
             print(json.dumps(results, indent=2))
         else:
             for domain, items in results.items():
-                print(f"\n{'#' * 60}")
-                print(f"# {domain.upper()}")
-                print(format_results(items, domain))
+                print(f"\n{'#' * 60}\n# {domain.upper()}\n{format_results(items, domain)}")
     else:
         result = search(args.query, args.domain, args.max)
         if args.json:
             print(json.dumps(result, indent=2))
         else:
-            print(f"\nDomain: {result['domain']}")
-            print(f"Query: {result['query']}")
-            print(f"Results: {result['count']}")
+            print(
+                f"\nDomain: {result['domain']}\nQuery: {result['query']}\nResults: {result['count']}"
+            )
             print(format_results(result.get("results", []), result["domain"]))
 
 

@@ -182,71 +182,71 @@ def _search_csv(filepath, search_cols, output_cols, query, max_results):
     return results
 
 
+DOMAIN_KEYWORDS = {
+    "deliverable": (
+        "card",
+        "letterhead",
+        "envelope",
+        "folder",
+        "shirt",
+        "cap",
+        "badge",
+        "signage",
+        "vehicle",
+        "car",
+        "van",
+        "stationery",
+        "uniform",
+        "merchandise",
+        "packaging",
+        "banner",
+        "booth",
+    ),
+    "style": (
+        "style",
+        "minimal",
+        "modern",
+        "luxury",
+        "vintage",
+        "industrial",
+        "elegant",
+        "bold",
+        "corporate",
+        "organic",
+        "playful",
+    ),
+    "industry": (
+        "tech",
+        "finance",
+        "legal",
+        "healthcare",
+        "hospitality",
+        "food",
+        "fashion",
+        "retail",
+        "construction",
+        "logistics",
+    ),
+    "mockup": (
+        "mockup",
+        "scene",
+        "context",
+        "photo",
+        "shot",
+        "lighting",
+        "background",
+        "studio",
+        "lifestyle",
+    ),
+}
+
+
 def detect_domain(query):
     """Auto-detect the most relevant domain from query"""
     query_lower = query.lower()
-
-    domain_keywords = {
-        "deliverable": [
-            "card",
-            "letterhead",
-            "envelope",
-            "folder",
-            "shirt",
-            "cap",
-            "badge",
-            "signage",
-            "vehicle",
-            "car",
-            "van",
-            "stationery",
-            "uniform",
-            "merchandise",
-            "packaging",
-            "banner",
-            "booth",
-        ],
-        "style": [
-            "style",
-            "minimal",
-            "modern",
-            "luxury",
-            "vintage",
-            "industrial",
-            "elegant",
-            "bold",
-            "corporate",
-            "organic",
-            "playful",
-        ],
-        "industry": [
-            "tech",
-            "finance",
-            "legal",
-            "healthcare",
-            "hospitality",
-            "food",
-            "fashion",
-            "retail",
-            "construction",
-            "logistics",
-        ],
-        "mockup": [
-            "mockup",
-            "scene",
-            "context",
-            "photo",
-            "shot",
-            "lighting",
-            "background",
-            "studio",
-            "lifestyle",
-        ],
-    }
-
     scores = {
         domain: sum(1 for kw in keywords if kw in query_lower)
-        for domain, keywords in domain_keywords.items()
+        for domain, keywords in DOMAIN_KEYWORDS.items()
     }
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "deliverable"

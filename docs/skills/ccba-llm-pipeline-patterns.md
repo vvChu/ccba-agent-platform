@@ -1,6 +1,6 @@
 # ccba-llm-pipeline-patterns
 
-> **Mô tả ngắn**: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+> **Mô tả ngắn**: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-llm-pip
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -48,11 +48,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `llm pipeline`
 - `pipeline patterns`
 - `2-pass`
-- `ground truth`
-- `rag pipeline`
 - `synthesis pipeline`
 - `self-correction`
-- `map reduce`
 - `multi turn memory`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi

@@ -538,7 +538,7 @@ python scripts/validate_skills.py --file .agents/skills/bigbim-risk/SKILL.md --e
 <!-- SKILL 6/76: bigbim-vbpl-digest -->
 # bigbim-vbpl-digest
 
-> **Mô tả ngắn**: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
+> **Mô tả ngắn**: Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu chuẩn ISO 19650-1/2/3/5. Không dùng cho tư vấn hoặc hợp nhất VBHN ngoài BIM/ISO 19650.
 
 ---
 
@@ -568,7 +568,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item bigbim-vbpl-
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
+Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu chuẩn ISO 19650-1/2/3/5. Không dùng cho tư vấn hoặc hợp nhất VBHN ngoài BIM/ISO 19650.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -846,7 +846,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-adr-lifecycle/SKILL
 <!-- SKILL 9/76: ccba-ai-gateway-sdk -->
 # ccba-ai-gateway-sdk
 
-> **Mô tả ngắn**: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+> **Mô tả ngắn**: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
 
 ---
 
@@ -876,7 +876,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-gate
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endpoint. Bao gồm Python package ccba-ai.
+Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -891,17 +891,14 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `ai`
-- `llm`
-- `model`
+- `ccba-ai`
+- `ai gateway`
 - `gateway`
 - `chat`
-- `inference`
-- `DGX`
-- `vLLM`
-- `Qwen`
-- `Claude`
-- `Gemini`
+- `choose_model`
+- `ai.chat`
+- `litellm spark`
+- `modelarchetype`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Giao diện lập trình chuẩn kết nối AI Gateway đa mô hình trên Server Spark.
@@ -954,7 +951,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-gateway-sdk/SKIL
 <!-- SKILL 10/76: ccba-ai-pdf-preprocessor -->
 # ccba-ai-pdf-preprocessor
 
-> **Mô tả ngắn**: Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
+> **Mô tả ngắn**: Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tiling ảnh cho AI Vision. Không dùng để chuyển đổi tài liệu sang Markdown.
 
 ---
 
@@ -984,7 +981,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-pdf-
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling cho AI Vision.
+Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tiling ảnh cho AI Vision. Không dùng để chuyển đổi tài liệu sang Markdown.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -999,12 +996,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `pdf`
 - `preprocessor`
-- `chunk`
-- `tiling`
-- `bản vẽ`
-- `scan`
+- `chunk pdf`
+- `tiling bản vẽ`
+- `bản vẽ lớn`
+- `scan pdf`
+- `segment pdf`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tối ưu hóa tài liệu PDF cho thị giác máy tính và trích xuất ngữ cảnh.
@@ -1057,7 +1054,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-pdf-preprocessor
 <!-- SKILL 11/76: ccba-ai-qc -->
 # ccba-ai-qc
 
-> **Mô tả ngắn**: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+> **Mô tả ngắn**: Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View Vision, Heat Map) qua QCAuditPipeline. Không dùng cho thẩm tra thuyết minh PCCC.
 
 ---
 
@@ -1086,7 +1083,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc -
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View Vision, Heat Map) qua QCAuditPipeline. Không dùng cho thẩm tra thuyết minh PCCC.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -1101,10 +1098,11 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `qc`
-- `audit`
 - `quad-view`
 - `discovery`
+- `qcauditpipeline`
+- `bản vẽ đa bộ môn`
+- `heat map`
 - `reporter`
 - `collision-check`
 - `qcauditpipeline`
@@ -1164,7 +1162,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-ai-qc/SKILL.md --en
 <!-- SKILL 12/76: ccba-ai-qc-pccc-audit -->
 # ccba-ai-qc-pccc-audit
 
-> **Mô tả ngắn**: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+> **Mô tả ngắn**: Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn dự án.
 
 ---
 
@@ -1194,7 +1192,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc-p
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn dự án.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4418,7 +4416,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-knowledge-loop/SKIL
 <!-- SKILL 43/76: ccba-legal-advisor -->
 # ccba-legal-advisor
 
-> **Mô tả ngắn**: Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
+> **Mô tả ngắn**: Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn bản mới.
 
 ---
 
@@ -4448,7 +4446,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-a
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
+Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn bản mới.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4471,8 +4469,9 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `tham dinh du an`
 - `ho so cap phep`
 - `nghiem thu cong trinh`
-- `pccc`
 - `luat xay dung 2025`
+- `phieu y kien phap ly`
+- `phiếu ý kiến pháp lý`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Phỏng vấn làm rõ ngữ cảnh và tư vấn pháp lý xây dựng trích dẫn OKF v2.4.
@@ -4525,7 +4524,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-advisor/SKILL
 <!-- SKILL 44/76: ccba-legal-document-tracker -->
 # ccba-legal-document-tracker
 
-> **Mô tả ngắn**: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+> **Mô tả ngắn**: Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
 
 ---
 
@@ -4555,7 +4554,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-d
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4570,14 +4569,14 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `VBPL`
-- `pháp luật`
-- `legal`
 - `registry`
-- `nghị định`
-- `thông tư`
-- `văn bản pháp luật`
-- `luật xây dựng`
+- `registry vbpl`
+- `cập nhật thông tư`
+- `legal_registry`
+- `vbhn`
+- `hợp nhất văn bản`
+- `vòng đời văn bản`
+- `so sánh ast diff`
 - `ccba-update-legal-registry`
 - `update-legal-registry`
 
@@ -4632,7 +4631,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-document-trac
 <!-- SKILL 45/76: ccba-legal-ingest -->
 # ccba-legal-ingest
 
-> **Mô tả ngắn**: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
+> **Mô tả ngắn**: Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và kiểm định 15-Gate CI. Không dùng để tư vấn tình huống hoặc tra cứu điều khoản lẻ.
 
 ---
 
@@ -4662,7 +4661,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-i
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
+Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và kiểm định 15-Gate CI. Không dùng để tư vấn tình huống hoặc tra cứu điều khoản lẻ.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4740,7 +4739,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-ingest/SKILL.
 <!-- SKILL 46/76: ccba-legal-intel -->
 # ccba-legal-intel
 
-> **Mô tả ngắn**: Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+> **Mô tả ngắn**: Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query, get-clause) và sinh checklist tuân thủ. Không dùng để thu thập văn bản mới.
 
 ---
 
@@ -4770,7 +4769,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-i
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Autonomous legal intelligence agent to crawl, diff, and generate compliance checklists from Vietnamese legal documents.
+Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query, get-clause) và sinh checklist tuân thủ. Không dùng để thu thập văn bản mới.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4786,11 +4785,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ### Từ Khóa Kích Hoạt (Triggers)
 - `ccba-legal-intel`
-- `crawl law`
 - `diff law`
 - `legal checklist`
-- `thuvienphapluat`
-- `TVPL`
+- `legal graph`
+- `get-clause`
+- `đồ thị pháp luật`
+- `tra cứu điều khoản`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tự động thu thập, phân tích khác biệt (diff) và tạo compliance checklist.
@@ -4843,7 +4843,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-legal-intel/SKILL.m
 <!-- SKILL 47/76: ccba-llm-pipeline-patterns -->
 # ccba-llm-pipeline-patterns
 
-> **Mô tả ngắn**: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+> **Mô tả ngắn**: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
 
 ---
 
@@ -4873,7 +4873,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-llm-pip
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Anti-patterns và best practices cho việc xây dựng LLM processing pipelines. Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+Anti-patterns và best practices thiết kế LLM processing pipelines (VvC LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -4891,11 +4891,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `llm pipeline`
 - `pipeline patterns`
 - `2-pass`
-- `ground truth`
-- `rag pipeline`
 - `synthesis pipeline`
 - `self-correction`
-- `map reduce`
 - `multi turn memory`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
@@ -4949,7 +4946,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-llm-pipeline-patter
 <!-- SKILL 48/76: ccba-markdown-document-processing -->
 # ccba-markdown-document-processing
 
-> **Mô tả ngắn**: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+> **Mô tả ngắn**: Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown qua ConversionPipeline. Không dùng cho văn bản pháp quy hoặc chunk/tiling bản vẽ PDF.
 
 ---
 
@@ -4979,7 +4976,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-markdow
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown qua ConversionPipeline. Không dùng cho văn bản pháp quy hoặc chunk/tiling bản vẽ PDF.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

@@ -128,8 +128,9 @@ skills:
   tier: kernel
 - name: bigbim-vbpl-digest
   bundle: _bim
-  description: Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các
-    tiêu chuẩn ISO 19650-1/2/3/5 và quy chuẩn kỹ thuật xây dựng.
+  description: Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu
+    chuẩn ISO 19650-1/2/3/5. Không dùng cho tư vấn hoặc hợp nhất VBHN ngoài BIM/ISO
+    19650.
   triggers:
   - nghị định BIM
   - điều khoản BIM
@@ -170,48 +171,46 @@ skills:
   tier: kernel
 - name: ccba-ai-gateway-sdk
   bundle: _core
-  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud),
-    1 endpoint. Bao gồm Python package ccba-ai.
+  description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud)
+    qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
   triggers:
-  - ai
-  - llm
-  - model
+  - ccba-ai
+  - ai gateway
   - gateway
   - chat
-  - inference
-  - DGX
-  - vLLM
-  - Qwen
-  - Claude
-  - Gemini
+  - choose_model
+  - ai.chat
+  - litellm spark
+  - modelarchetype
   skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
   command: /ccba-ai-gateway-sdk
   package_path: packages/ccba-ai
   tier: kernel
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
-  description: 'Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking)
-    và Tiling cho AI Vision.'
+  description: 'Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking
+    và Tiling ảnh cho AI Vision. Không dùng để chuyển đổi tài liệu sang Markdown.'
   triggers:
-  - pdf
   - preprocessor
-  - chunk
-  - tiling
-  - bản vẽ
-  - scan
+  - chunk pdf
+  - tiling bản vẽ
+  - bản vẽ lớn
+  - scan pdf
+  - segment pdf
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
   command: /ccba-ai-pdf-preprocessor
   package_path: packages/ccba-pdf-prep
   tier: kernel
 - name: ccba-ai-qc
   bundle: _qc
-  description: Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế
-    đa bộ môn (Discovery, Quad-View Vision, Heat Map Report) qua Deep Seam QCAuditPipeline.
+  description: Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View
+    Vision, Heat Map) qua QCAuditPipeline. Không dùng cho thẩm tra thuyết minh PCCC.
   triggers:
-  - qc
-  - audit
   - quad-view
   - discovery
+  - qcauditpipeline
+  - bản vẽ đa bộ môn
+  - heat map
   - reporter
   - collision-check
   - qcauditpipeline
@@ -225,8 +224,9 @@ skills:
   tier: orchestrator
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
-  description: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông
-    qua cơ chế Semantic Map-Reduce.
+  description: Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN
+    3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn
+    dự án.
   triggers:
   - pccc audit
   - semantic map-reduce
@@ -725,8 +725,9 @@ skills:
   tier: orchestrator
 - name: ccba-legal-advisor
   bundle: _consulting
-  description: 'Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ
-    cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.'
+  description: 'Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ
+    cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn
+    bản mới.'
   triggers:
   - tu van phap ly
   - giai dap phap luat
@@ -736,24 +737,25 @@ skills:
   - tham dinh du an
   - ho so cap phep
   - nghiem thu cong trinh
-  - pccc
   - luat xay dung 2025
+  - phieu y kien phap ly
+  - phiếu ý kiến pháp lý
   skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
   command: /ccba-legal-advisor
   tier: kernel
 - name: ccba-legal-document-tracker
   bundle: _consulting
-  description: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine
-    và Registry.
+  description: Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp
+    nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
   triggers:
-  - VBPL
-  - pháp luật
-  - legal
   - registry
-  - nghị định
-  - thông tư
-  - văn bản pháp luật
-  - luật xây dựng
+  - registry vbpl
+  - cập nhật thông tư
+  - legal_registry
+  - vbhn
+  - hợp nhất văn bản
+  - vòng đời văn bản
+  - so sánh ast diff
   - ccba-update-legal-registry
   - update-legal-registry
   skill_path: .agents/skills/ccba-legal-document-tracker/SKILL.md
@@ -761,8 +763,9 @@ skills:
   tier: kernel
 - name: ccba-legal-ingest
   bundle: _consulting
-  description: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation,
-    and 15-Gate CI verification workflow.
+  description: Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và
+    kiểm định 15-Gate CI. Không dùng để tư vấn tình huống hoặc tra cứu điều khoản
+    lẻ.
   triggers:
   - ccba-legal-ingest
   - nap van ban
@@ -780,40 +783,39 @@ skills:
   tier: kernel
 - name: ccba-legal-intel
   bundle: _consulting
-  description: Autonomous legal intelligence agent to crawl, diff, and generate compliance
-    checklists from Vietnamese legal documents.
+  description: Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query,
+    get-clause) và sinh checklist tuân thủ. Không dùng để thu thập văn bản mới.
   triggers:
   - ccba-legal-intel
-  - crawl law
   - diff law
   - legal checklist
-  - thuvienphapluat
-  - TVPL
+  - legal graph
+  - get-clause
+  - đồ thị pháp luật
+  - tra cứu điều khoản
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
   command: /ccba-legal-intel
   package_path: packages/ccba-legal-intel
   tier: kernel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
-  description: Anti-patterns và best practices cho việc xây dựng LLM processing pipelines.
-    Đúc rút từ VvC LLM OS (v5.1→v8.16, 2026).
+  description: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC
+    LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
   triggers:
   - llm pipeline
   - pipeline patterns
   - 2-pass
-  - ground truth
-  - rag pipeline
   - synthesis pipeline
   - self-correction
-  - map reduce
   - multi turn memory
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
   command: /ccba-llm-pipeline-patterns
   tier: kernel
 - name: ccba-markdown-document-processing
   bundle: _core
-  description: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua
-    Deep Seam ConversionPipeline.
+  description: Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown
+    qua ConversionPipeline. Không dùng cho văn bản pháp quy hoặc chunk/tiling bản
+    vẽ PDF.
   triggers:
   - markdown
   - xử lý markdown
