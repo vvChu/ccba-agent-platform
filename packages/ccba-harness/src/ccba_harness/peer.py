@@ -734,7 +734,7 @@ def _dispatch_grok_candidate(
     finally:
         if synth_prompt is not None:
             synth_prompt.unlink(missing_ok=True)
-    if ok or is_synth or not (opts.get("tools") and is_max_turns_exhausted(eff_sid)):
+    if ok or is_synth or not is_max_turns_exhausted(eff_sid):
         return ok
     synth_opts = {
         **_build_synthesis_opts(opts, eff_sid),
