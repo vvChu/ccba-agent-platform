@@ -10,6 +10,10 @@ on:
       - 'scripts/spoke/compile_knowledge.py'
       - '.github/workflows/notebooklm-sync.yml'
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest

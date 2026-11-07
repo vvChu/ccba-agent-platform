@@ -18,6 +18,10 @@ on:
       - '**/*.toml'
       - '.github/workflows/validate-docs.yml'
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
