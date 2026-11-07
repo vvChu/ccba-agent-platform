@@ -401,3 +401,65 @@ def test_shell_command_to_argv_glob_and_win32_quotes(
     win_cmd = '"C:\\\\Python\\\\python.exe" -c "import sys; sys.exit(42)"'
     argv_win = shell_command_to_argv(win_cmd, cwd=tmp_path)
     assert argv_win == ["C:\\\\Python\\\\python.exe", "-c", "import sys; sys.exit(42)"]
+
+
+def test_cli_verify_patch_repeated_and_multi_token_cmd(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify C2: repeated --cmd/--commands accumulate in order without overwriting."""
+    cmd1 = f'"{sys.executable}" -c "print(\'FIRST_CMD\')"'
+    cmd2 = f'"{sys.executable}" -c "print(\'SECOND_CMD\')"'
+    cmd3 = f'"{sys.executable}" -c "print(\'THIRD_CMD\')"'
+
+    code = run_verify_patch_cli(["--json", "--cmd", cmd1, "--commands", cmd2, cmd3])
+    assert code == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["total_commands"] == 3
+    assert [r["stdout"].strip() for r in data["results"]] == [
+        "FIRST_CMD",
+        "SECOND_CMD",
+        "THIRD_CMD",
+    ]
+
+
+def test_verify_patch_execution_user_commands_precede_preset(tmp_path: Path) -> None:
+    """Verify C2: user commands execute first and preset commands are appended after."""
+    doc = tmp_path / "spec.md"
+    doc.write_text("# Heading\n" + "Valid content body. " * 10, encoding="utf-8")
+    user_cmd = f'"{sys.executable}" -c "print(\'USER_FIRST\')"'
+    report = verify_patch_execution(
+        commands=[user_cmd],
+        preset="doc",
+        target=doc,
+        min_bytes=20,
+    )
+    assert report.all_passed is True
+    assert report.total_commands == 2
+    assert "USER_FIRST" in report.results[0].stdout
+    assert "verify-doc" in report.results[1].command
+
+
+def test_resolve_code_preset_single_file_and_test_file(tmp_path: Path) -> None:
+    """Verify C3 & C5: single source file resolves pytest via recommend_tests while test_*.py stays intact."""
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "tests").mkdir()
+    daemon_file = tmp_path / "scripts" / "chatops_daemon.py"
+    leaf_file = tmp_path / "scripts" / "_chatops_telegram.py"
+    hermes_file = tmp_path / "scripts" / "hermes_executive_mcp.py"
+    chatops_test = tmp_path / "tests" / "test_chatops.py"
+    hermes_test = tmp_path / "tests" / "test_executive_ops_mcp.py"
+
+    for f in (daemon_file, leaf_file, hermes_file, chatops_test, hermes_test):
+        f.write_text("# stub\n", encoding="utf-8")
+
+    cmds_daemon = resolve_preset_commands("code", "scripts/chatops_daemon.py", cwd=tmp_path)
+    assert cmds_daemon[-1].endswith("-m pytest tests/test_chatops.py -q")
+
+    cmds_leaf = resolve_preset_commands("code", "scripts/_chatops_telegram.py", cwd=tmp_path)
+    assert cmds_leaf[-1].endswith("-m pytest tests/test_chatops.py -q")
+
+    cmds_hermes = resolve_preset_commands("code", "scripts/hermes_executive_mcp.py", cwd=tmp_path)
+    assert cmds_hermes[-1].endswith("-m pytest tests/test_executive_ops_mcp.py -q")
+
+    cmds_test = resolve_preset_commands("code", "tests/test_chatops.py", cwd=tmp_path)
+    assert cmds_test[-1].endswith("-m pytest tests/test_chatops.py -q")

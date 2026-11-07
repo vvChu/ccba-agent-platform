@@ -160,8 +160,9 @@ def run_verify_patch_cli(args_list: Sequence[str] | None = None) -> int:
         "--cmd",
         "--commands",
         dest="commands",
+        action="extend",
         nargs="+",
-        default=[],
+        default=None,
         help="Command string(s) to execute",
     )
     parser.add_argument(
