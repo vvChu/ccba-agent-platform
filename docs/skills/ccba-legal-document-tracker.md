@@ -1,6 +1,6 @@
 # ccba-legal-document-tracker
 
-> **Mô tả ngắn**: Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+> **Mô tả ngắn**: Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-d
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và Registry.
+Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -45,14 +45,12 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ## 3. Khi Nào Sử Dụng & Kích Hoạt (Triggers)
 
 ### Từ Khóa Kích Hoạt (Triggers)
-- `VBPL`
-- `pháp luật`
-- `legal`
 - `registry`
-- `nghị định`
-- `thông tư`
-- `văn bản pháp luật`
-- `luật xây dựng`
+- `legal_registry`
+- `vbhn`
+- `hợp nhất văn bản`
+- `vòng đời văn bản`
+- `so sánh ast diff`
 - `ccba-update-legal-registry`
 - `update-legal-registry`
 

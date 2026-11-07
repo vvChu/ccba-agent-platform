@@ -1,6 +1,6 @@
 # ccba-markdown-document-processing
 
-> **Mô tả ngắn**: Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+> **Mô tả ngắn**: Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown qua ConversionPipeline. Không dùng cho văn bản pháp quy hoặc chunk/tiling bản vẽ PDF.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-markdow
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam ConversionPipeline.
+Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown qua ConversionPipeline. Không dùng cho văn bản pháp quy hoặc chunk/tiling bản vẽ PDF.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

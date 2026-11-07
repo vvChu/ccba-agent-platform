@@ -78,9 +78,9 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [bigbim-governance](bigbim-governance.md) | `/bigbim-governance` | `kernel` | `Model` | Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp Sợi Chỉ Và... |
 | [bigbim-rase](bigbim-rase.md) | `/bigbim-rase` | `kernel` | `Model` | Tự động phân tích RASE (Requirement, Applicability, Selection, Exception) cho... |
 | [bigbim-risk](bigbim-risk.md) | `/bigbim-risk` | `kernel` | `Model` | Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học tại bước ... |
-| [bigbim-vbpl-digest](bigbim-vbpl-digest.md) | `/bigbim-vbpl-digest` | `kernel` | `Model` | Tra cứu và tóm lược nội dung văn bản pháp lý BIM Việt Nam kết hợp các tiêu ch... |
-| [ccba-ai-qc](ccba-ai-qc.md) | `/ccba-ai-qc` | `orchestrator` | `Both` | Master Deep Skill điều phối toàn trình thẩm tra chất lượng thiết kế đa bộ môn... |
-| [ccba-ai-qc-pccc-audit](ccba-ai-qc-pccc-audit.md) | `/ccba-ai-qc-pccc-audit` | `kernel` | `Both` | Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ ... |
+| [bigbim-vbpl-digest](bigbim-vbpl-digest.md) | `/bigbim-vbpl-digest` | `kernel` | `Model` | Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu chuẩn IS... |
+| [ccba-ai-qc](ccba-ai-qc.md) | `/ccba-ai-qc` | `orchestrator` | `Both` | Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View Vision, ... |
+| [ccba-ai-qc-pccc-audit](ccba-ai-qc-pccc-audit.md) | `/ccba-ai-qc-pccc-audit` | `kernel` | `Both` | Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) q... |
 
 ---
 
@@ -93,11 +93,11 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | :--- | :--- | :--- | :--- | :--- |
 | [ccba-completion-checklist](ccba-completion-checklist.md) | `/ccba-completion-checklist` | `kernel` | `Model` | Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện hành. Hỗ t... |
 | [ccba-copywriting](ccba-copywriting.md) | `/ccba-copywriting` | `kernel` | `User` | Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa và áp dụ... |
-| [ccba-legal-advisor](ccba-legal-advisor.md) | `/ccba-legal-advisor` | `kernel` | `Model` | Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xu... |
-| [ccba-legal-document-tracker](ccba-legal-document-tracker.md) | `/ccba-legal-document-tracker` | `kernel` | `Both` | Theo dõi, so sánh và phân tích các VBPL xây dựng Việt Nam với VBHNEngine và R... |
-| [ccba-legal-ingest](ccba-legal-ingest.md) | `/ccba-legal-ingest` | `kernel` | `Model` | Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidatio... |
-| [ccba-legal-intel](ccba-legal-intel.md) | `/ccba-legal-intel` | `kernel` | `Model` | Autonomous legal intelligence agent to crawl, diff, and generate compliance c... |
-| [ccba-markdown-document-processing](ccba-markdown-document-processing.md) | `/ccba-markdown-document-processing` | `kernel` | `Both` | Master Skill quản lý và chuẩn hóa tài liệu Markdown từ Word/PDF qua Deep Seam... |
+| [ccba-legal-advisor](ccba-legal-advisor.md) | `/ccba-legal-advisor` | `kernel` | `Model` | Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuấ... |
+| [ccba-legal-document-tracker](ccba-legal-document-tracker.md) | `/ccba-legal-document-tracker` | `kernel` | `Both` | Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp nhất VBH... |
+| [ccba-legal-ingest](ccba-legal-ingest.md) | `/ccba-legal-ingest` | `kernel` | `Model` | Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và kiểm địn... |
+| [ccba-legal-intel](ccba-legal-intel.md) | `/ccba-legal-intel` | `kernel` | `Model` | Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query, get-... |
+| [ccba-markdown-document-processing](ccba-markdown-document-processing.md) | `/ccba-markdown-document-processing` | `kernel` | `Both` | Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown qua C... |
 | [ccba-pptx](ccba-pptx.md) | `/ccba-pptx` | `kernel` | `User` | Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao bằng HT... |
 | [ccba-tvpl-vip-crawler](ccba-tvpl-vip-crawler.md) | `/ccba-tvpl-vip-crawler` | `kernel` | `User` | Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep Seam TVPL... |
 | [ccba-xu-ly-van-phong](ccba-xu-ly-van-phong.md) | `/ccba-xu-ly-van-phong` | `kernel` | `User` | Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo tiêu chuẩn... |
@@ -114,7 +114,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-academic-writing](ccba-academic-writing.md) | `/ccba-academic-writing` | `kernel` | `User` | Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa học theo... |
 | [ccba-adr-lifecycle](ccba-adr-lifecycle.md) | `/ccba-adr-lifecycle` | `kernel` | `Both` | Autonomous lifecycle governance for Architecture Decision Records (ADRs) - Sc... |
 | [ccba-ai-gateway-sdk](ccba-ai-gateway-sdk.md) | `/ccba-ai-gateway-sdk` | `kernel` | `Model` | Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud), 1 endp... |
-| [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tối ưu hóa PDF cho LLM: Phân đoạn (Segmenting), Chia nhỏ (Chunking) và Tiling... |
+| [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tilin... |
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
 | [ccba-contribute-to-hub](ccba-contribute-to-hub.md) | `/ccba-contribute-to-hub` | `kernel` | `User` | Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừn... |

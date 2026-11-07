@@ -1,6 +1,6 @@
 # ccba-legal-ingest
 
-> **Mô tả ngắn**: Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
+> **Mô tả ngắn**: Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và kiểm định 15-Gate CI. Không dùng để tư vấn tình huống hoặc tra cứu điều khoản lẻ.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-i
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Autonomous legal document acquisition, OKF v2.4 conversion, VBHN consolidation, and 15-Gate CI verification workflow.
+Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và kiểm định 15-Gate CI. Không dùng để tư vấn tình huống hoặc tra cứu điều khoản lẻ.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

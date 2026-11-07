@@ -47,6 +47,13 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP Git/PR chuẩn mực đón
 
 ## 📋 Bước 1: Thu thập Thông tin, Liên Kết Issue & Cổng Kiểm Lọc R&D
 Ghi nhận đầy đủ thông tin cốt lõi:
+0. **Cổng Phân Loại 5 Điểm Rơi Phản Hồi Liên Bang (Layer 08 Learn — ADR-0045, ADR-0057, ADR-0059):**
+   Trước khi mở Proposal/PR từ Spoke về Hub, bắt buộc phân loại phản hồi/bài học vào đúng 1 trong 5 điểm rơi:
+   - **Điểm rơi 1 (Sửa 1 lần cho riêng 1 bản vẽ/hồ sơ):** Chỉ sửa đầu ra hiện tại (`one-off edit`), **DỪNG TẠI SPOKE**, cấm ghi thành rule hay đẩy lên Hub.
+   - **Điểm rơi 2 (Quy ước cục bộ của riêng dự án Spoke):** Lưu tại `.md/workspace_context.yaml` hoặc `.md/knowledge/` của Spoke, **CẤM ĐẨY LÊN HUB** (tránh vi phạm Spoke Leakage Guard).
+   - **Điểm rơi 3 (Văn bản quy phạm pháp luật / Biểu mẫu pháp lý dùng chung):** Bắt buộc đi qua đường thu thập chính quy `TVPLCrawler` (`ccba-legal-ingest`) và đóng dấu SHA-256 trên **Legal Data Hub (`ccba-legal-knowledge`, ADR-0059)**. Tuyệt đối **CẤM sửa tay `references/*.md` trên `ccba-agent-platform`** từ trí nhớ kỹ sư Spoke.
+   - **Điểm rơi 4 (Quy trình hoặc tiêu chí kiểm tra đầu ra lặp lại ở nhiều dự án):** Đóng gói qua `/ccba-contribute-to-hub` để cập nhật mục `Done means` / Checklist trong `SKILL.md` (hoặc bộ ca kiểm thử `eval_*.json` qua `git_ratchet_tuner.py`) tại Hub (Tier 2B, kiểm định `python scripts/validate_skills.py --enforce-gpi` & `/ccba-review-proposal`).
+   - **Điểm rơi 5 (Lỗi tính toán tất định hoặc bỏ sót bản ghi dữ liệu):** Đóng gói qua `/ccba-contribute-to-hub` để bổ sung `assert` và unit test trong `packages/*/src/` tại Hub (Tier 1 Deep Seam, Cổng 0 `ADR-0057`, kiểm định `python -m ccba_harness verify-patch --preset code`).
 1. **Liên kết Issue & Cổng Tự Động Phân Loại Scope (Smart Scope-Aware Issue Gate):**
    - **Nếu có `--issue [ID]`:** Kế thừa trực tiếp mã Issue để liên kết và đóng tự động (`Closes #[ID]`).
    - **Nếu KHÔNG có `--issue`:** Agent tự động đánh giá quy mô thay đổi:
@@ -107,11 +114,11 @@ Thực thi tại thư mục Hub (`$CCBA_HUB_PATH`):
    Chạy đồng bộ catalog và kiểm định toàn bộ kỹ năng trước khi commit:
    ```bash
    python scripts/governance/compile_catalog.py
-   python scripts/validate_skills.py
+   python scripts/validate_skills.py --enforce-gpi
    python scripts/governance/check_spoke_leakage.py
    git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
    ```
-- **Tiêu chí hoàn thành:** Nhánh mới được tạo, mã nguồn đóng gói, proposal ghi nhận, catalog đồng bộ và pass toàn bộ `scripts/validate_skills.py` cùng `check_spoke_leakage.py`.
+- **Tiêu chí hoàn thành:** Nhánh mới được tạo, mã nguồn đóng gói, proposal ghi nhận, catalog đồng bộ và pass toàn bộ `scripts/validate_skills.py --enforce-gpi` cùng `check_spoke_leakage.py`.
 
 ---
 

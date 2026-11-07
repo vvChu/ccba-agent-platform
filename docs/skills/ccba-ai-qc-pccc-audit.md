@@ -1,6 +1,6 @@
 # ccba-ai-qc-pccc-audit
 
-> **Mô tả ngắn**: Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+> **Mô tả ngắn**: Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn dự án.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-qc-p
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Hệ thống Thẩm tra lỗi thiết kế đa bộ môn (PCCC, MEP, Kiến trúc) thông qua cơ chế Semantic Map-Reduce.
+Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN 3890) qua Semantic Map-Reduce. Không dùng cho điều phối bản vẽ đa bộ môn toàn dự án.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

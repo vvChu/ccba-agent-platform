@@ -1,6 +1,6 @@
 # ccba-legal-advisor
 
-> **Mô tả ngắn**: Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
+> **Mô tả ngắn**: Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn bản mới.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-legal-a
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tư vấn & giải đáp pháp lý xây dựng: Phỏng vấn thích ứng làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý (Legal Opinion) chuẩn mực trích dẫn OKF v2.4.
+Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn bản mới.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -53,8 +53,9 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `tham dinh du an`
 - `ho so cap phep`
 - `nghiem thu cong trinh`
-- `pccc`
 - `luat xay dung 2025`
+- `phieu y kien phap ly`
+- `phiếu ý kiến pháp lý`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Phỏng vấn làm rõ ngữ cảnh và tư vấn pháp lý xây dựng trích dẫn OKF v2.4.
