@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,9 @@
   <meta name="description" content="Cổng tra cứu 76 kỹ năng, bản đồ tác nghiệp The Map, xương sống quy trình (Ordered Spine) và hợp đồng Deep Seams cho kỹ sư xây dựng và AI Coding Agents trên CCBA Agent Services Platform.">
   <style>
     :root {
+      --ccba-nav-height: 62px;
       --ccba-bg: #0e0e0d;
+      --ccba-bg-sidebar: #121316;
       --ccba-bg-card: #16181c;
       --ccba-bg-card-hover: #1f2329;
       --ccba-accent-panel: #1d1a11;
@@ -20,6 +22,9 @@
       --ccba-primary: #58a6ff;
       --ccba-primary-hover: #79c0ff;
       --ccba-gold: #f5c451;
+      --ccba-cta-bg: #f5c451;
+      --ccba-cta-bg-hover: #ffd873;
+      --ccba-cta-fg: #191510;
       --ccba-accent: #238636;
       --ccba-line: #282c34;
       --ccba-line-strong: #3b4048;
@@ -28,10 +33,12 @@
       --ccba-modal-overlay: rgba(0, 0, 0, 0.78);
     }
     [data-theme="light"] {
-      --ccba-bg: #f6f7f9;
+      --ccba-nav-height: 62px;
+      --ccba-bg: #fbfbfc;
+      --ccba-bg-sidebar: #f5f6f8;
       --ccba-bg-card: #ffffff;
-      --ccba-bg-card-hover: #eef1f5;
-      --ccba-accent-panel: #f3efe2;
+      --ccba-bg-card-hover: #f1f2f5;
+      --ccba-accent-panel: #ecedef;
       --ccba-accent-wash: #faf6e8;
       --ccba-accent-line: #9a6e00;
       --ccba-fg-body: #14161a;
@@ -41,6 +48,9 @@
       --ccba-primary: #0969da;
       --ccba-primary-hover: #0550ae;
       --ccba-gold: #9a6700;
+      --ccba-cta-bg: #f5c451;
+      --ccba-cta-bg-hover: #eab534;
+      --ccba-cta-fg: #191510;
       --ccba-accent: #1a7f37;
       --ccba-line: #d0d7de;
       --ccba-line-strong: #afb8c1;
@@ -66,45 +76,68 @@
       background-color: var(--ccba-bg-card);
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 60;
+      height: var(--ccba-nav-height);
     }
     .header-container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 0.75rem 1.5rem;
+      width: 100%;
+      height: 100%;
+      padding: 0 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
+      flex-wrap: nowrap;
+      gap: 0.75rem;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+    .mobile-menu-btn {
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-body);
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.55rem;
       text-decoration: none;
       color: var(--ccba-fg-body);
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1rem;
       letter-spacing: -0.02em;
+      white-space: nowrap;
     }
     .brand-icon {
       background: linear-gradient(135deg, #1f6feb, #238636);
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      flex-shrink: 0;
     }
     .view-tabs {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.25rem;
       background: var(--ccba-bg);
-      padding: 0.25rem;
+      padding: 0.2rem;
       border-radius: 8px;
       border: 1px solid var(--ccba-line);
     }
@@ -112,24 +145,27 @@
       background: transparent;
       border: none;
       color: var(--ccba-fg-muted);
-      padding: 0.4rem 0.85rem;
+      padding: 0.35rem 0.7rem;
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.15s ease;
     }
     .view-tab:hover { color: var(--ccba-fg-body); }
     .view-tab.active {
       background: var(--ccba-bg-card);
       color: var(--ccba-fg-body);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 0.85rem;
-      font-size: 0.85rem;
+      gap: 0.65rem;
+      font-size: 0.84rem;
+      margin-left: auto;
+      flex-shrink: 0;
     }
     .nav-links a, .nav-links .nav-doc-btn {
       color: var(--ccba-fg-muted);
@@ -137,7 +173,8 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
+      white-space: nowrap;
       transition: color 0.15s ease;
     }
     .nav-links a:hover, .nav-links .nav-doc-btn:hover { color: var(--ccba-primary); }
@@ -145,17 +182,149 @@
       background: var(--ccba-badge-bg);
       border: 1px solid var(--ccba-line);
       color: var(--ccba-fg-body);
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.65rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 500;
+      white-space: nowrap;
     }
-    main {
+    .header-cta-btn {
+      background: var(--ccba-cta-bg);
+      color: var(--ccba-cta-fg);
+      border: 1px solid var(--ccba-accent-line);
+      border-radius: 8px;
+      padding: 0.42rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s ease;
+    }
+    .header-cta-btn:hover { background: var(--ccba-cta-bg-hover); }
+    .app-shell {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+      position: relative;
+    }
+    .app-sidebar {
+      width: 264px;
+      flex-shrink: 0;
+      background: var(--ccba-bg-sidebar);
+      border-right: 1px solid var(--ccba-line);
+      padding: 1.25rem 1rem 2rem;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      z-index: 55;
+    }
+    .app-sidebar.mobile-open {
+      display: flex;
+      position: fixed;
+      top: var(--ccba-nav-height);
+      left: 0;
+      bottom: 0;
+      height: calc(100vh - var(--ccba-nav-height));
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: var(--ccba-nav-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--ccba-modal-overlay);
+      z-index: 54;
+    }
+    .sidebar-backdrop.open { display: block; }
+    @media (min-width: 1024px) {
+      .mobile-menu-btn { display: none; }
+      .sidebar-backdrop, .sidebar-backdrop.open { display: none !important; }
+      .app-sidebar, .app-sidebar.mobile-open {
+        display: flex;
+        position: sticky;
+        top: var(--ccba-nav-height);
+        height: calc(100vh - var(--ccba-nav-height));
+        align-self: flex-start;
+        box-shadow: none;
+      }
+    }
+    .sidebar-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      margin-bottom: 1.15rem;
+    }
+    .sidebar-group-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ccba-fg-subtle);
+      padding: 0 0.55rem 0.3rem;
+    }
+    .sidebar-item {
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      padding: 0.42rem 0.55rem;
+      font-size: 0.84rem;
+      color: var(--ccba-fg-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      text-decoration: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .sidebar-item:hover {
+      background: var(--ccba-bg-card-hover);
+      color: var(--ccba-fg-body);
+    }
+    .sidebar-item.active,
+    .sidebar-item[data-active="true"] {
+      background: var(--ccba-fg-body);
+      color: var(--ccba-bg);
+      font-weight: 700;
+    }
+    .sidebar-cta-box {
+      margin-top: auto;
+      padding: 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-accent-line);
+      background: var(--ccba-accent-panel);
+    }
+    .sidebar-cta-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+      margin-bottom: 0.25rem;
+    }
+    .sidebar-cta-desc {
+      font-size: 0.76rem;
+      color: var(--ccba-fg-muted);
+      margin-bottom: 0.65rem;
+    }
+    .app-main {
+      flex: 1;
+      min-width: 0;
+      padding: 2.25rem 1.5rem;
+      width: 100%;
+    }
+    .app-main-inner {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 2.25rem 1.5rem;
-      flex: 1;
       width: 100%;
     }
     .eyebrow {
@@ -269,7 +438,33 @@
       max-width: 64ch;
       font-size: 0.98rem;
     }
+    .inline-advisor-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.15rem;
+      max-width: 860px;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-accent-line);
+      background: var(--ccba-accent-panel);
+    }
+    .inline-advisor-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+      margin-bottom: 0.15rem;
+    }
+    .inline-advisor-desc {
+      font-size: 0.84rem;
+      color: var(--ccba-fg-muted);
+    }
     .do-this-card {
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -357,6 +552,102 @@
     .guide-pill:hover {
       border-color: var(--ccba-primary);
       color: var(--ccba-fg-body);
+    }
+    .media-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.1rem;
+    }
+    .media-card {
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 1.125rem;
+      padding: 0.875rem;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-bg-card);
+      color: var(--ccba-fg-body);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .media-card:hover {
+      border-color: var(--ccba-line-strong);
+      background: var(--ccba-bg-card-hover);
+    }
+    .media-thumb {
+      width: 132px;
+      height: 78px;
+      border-radius: 8px;
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-accent-panel);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 0.5rem 0.6rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .media-thumb-step {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--ccba-gold);
+      letter-spacing: 0.08em;
+    }
+    .media-thumb-code {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+      word-break: break-all;
+      line-height: 1.2;
+    }
+    .media-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .media-card-eyebrow {
+      display: inline-block;
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ccba-fg-muted);
+      border: 1px solid var(--ccba-line);
+      background: var(--ccba-badge-bg);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      margin-bottom: 0.35rem;
+    }
+    .media-card-body h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ccba-fg-body);
+      margin-bottom: 0.2rem;
+      line-height: 1.3;
+    }
+    .media-card-desc {
+      font-size: 0.86rem;
+      color: var(--ccba-fg-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .media-card-arrow {
+      width: 34px;
+      height: 34px;
+      border-radius: 9999px;
+      border: 1px solid var(--ccba-line-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--ccba-fg-body);
+      font-size: 0.9rem;
     }
     .philosophy-grid {
       display: grid;
@@ -446,7 +737,7 @@
     /* Search & Filter Bar */
     .search-section {
       position: sticky;
-      top: 53px;
+      top: var(--ccba-nav-height);
       background: var(--ccba-bg);
       padding: 1rem 0;
       z-index: 40;
@@ -703,95 +994,121 @@
 <body>
   <header>
     <div class="header-container">
-      <a href="#" class="brand" onclick="switchView('map'); return false;">
-        <span class="brand-icon">⚡</span>
-        <span>CCBA Skills Portal</span>
-      </a>
-      <div class="view-tabs" role="tablist">
-        <button class="view-tab active" id="tabMap" onclick="switchView('map')">🗺️ Bản Đồ (The Map)</button>
-        <button class="view-tab" id="tabSkills" onclick="switchView('skills')">⚡ Kỹ Năng (76)</button>
-        <button class="view-tab" id="tabSeams" onclick="switchView('seams')">🧩 Deep Seams &amp; Contracts</button>
+      <div class="header-left">
+        <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-controls="appSidebar" aria-expanded="false" onclick="toggleMobileSidebar()">☰</button>
+        <a href="#" class="brand" onclick="switchView('map'); return false;">
+          <span class="brand-icon">⚡</span>
+          <span>CCBA Skills Portal</span>
+        </a>
+        <div class="view-tabs" role="tablist">
+          <button type="button" class="view-tab active" id="tabMap" onclick="switchView('map')">🗺️ Bản Đồ (The Map)</button>
+          <button type="button" class="view-tab" id="tabSkills" onclick="switchView('skills')">⚡ Kỹ Năng (76)</button>
+          <button type="button" class="view-tab" id="tabSeams" onclick="switchView('seams')">🧩 Deep Seams &amp; Contracts</button>
+        </div>
       </div>
       <div class="nav-links">
-        <button class="nav-doc-btn" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
-        <button class="nav-doc-btn" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
+        <button type="button" class="nav-doc-btn" id="headerSearchBtn" onclick="openSearchFromHeader()">🔍 Search</button>
+        <button type="button" class="nav-doc-btn" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
+        <button type="button" class="nav-doc-btn" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
         <a href="llms.txt">llms.txt</a>
         <a href="llms-full.txt">llms-full.txt</a>
         <a href="https://github.com/vvChu/ccba-agent-platform" target="_blank" rel="noopener">GitHub</a>
-        <button id="themeToggle" class="theme-btn" title="Đổi giao diện Sáng / Tối">🌓 Theme</button>
+        <button type="button" id="themeToggle" class="theme-btn" title="Đổi giao diện Sáng / Tối">🌓 Theme</button>
+        <button type="button" class="header-cta-btn" onclick="openModal('ccba-ask')">Ask /ccba-ask</button>
       </div>
     </div>
   </header>
 
-  <main>
-    <!-- VIEW 1: THE MAP (aihero.dev/learn) -->
-    <div id="viewMap">
-      <section class="hero">
-        <div class="eyebrow">The Map · CCBA Software Factory</div>
-        <h1>Bạn muốn giải quyết bài toán nào cùng CCBA Agent hôm nay?</h1>
-        <p>Chọn đúng bài toán bạn đang đối mặt. Mỗi lộ trình mở ra câu lệnh khởi đầu (<code>Start with /...</code>), chuỗi kỹ năng tuần tự (<code>The Spine</code>) và tài liệu SOP chuẩn mực.</p>
-        <div class="stats-pills">
-          <span class="pill">⚡ <strong>76</strong> Active Skills</span>
-          <span class="pill">🧭 <strong>5</strong> Lộ Trình Tác Nghiệp</span>
-          <span class="pill">🧩 <strong>10</strong> Monorepo Packages</span>
-          <span class="pill">🛡️ <strong>100%</strong> Deterministic CI (ADR-0058)</span>
-        </div>
-        <nav aria-label="Lộ trình trên trang" class="jump-grid" id="mapJumpGrid"></nav>
-      </section>
-
-      <div id="mapGoalSections"></div>
-
-      <section class="philosophy-grid">
-        <div class="philosophy-col">
-          <h3>1. Vấn đề (The Problem)</h3>
-          <p>AI Agent chỉ tốt bằng đúng quy trình bạn giao cho nó. Nếu để tự đoán mò, Agent sẽ sinh mã chắp vá (ad-hoc scripts) làm suy thoái kiến trúc dự án.</p>
-        </div>
-        <div class="philosophy-col">
-          <h3>2. Giải pháp (The Fix)</h3>
-          <p>Mỗi kỹ năng CCBA đóng gói một thói quen kỹ nghệ chuẩn mực (Grilling, Spec, TDD, AI-QC, OKF v2.4) kết nối thẳng vào các gói lõi Deep Seams.</p>
-        </div>
-        <div class="philosophy-col">
-          <h3>3. Hiệu ứng cộng gộp (Why It Compounds)</h3>
-          <p>Các kỹ năng nối đuôi nhau thành dây chuyền (The Spine): đầu ra đã kiểm chứng của bước trước là đầu vào tất định của bước tiếp theo.</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- VIEW 2: SKILLS SPINE & CATALOG (aihero.dev/skills) -->
-    <div id="viewSkills" class="hidden">
-      <div class="search-section">
-        <div class="search-controls">
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" class="search-input" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
-          </div>
-          <div class="view-tabs">
-            <button class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')">Chế độ Xương Sống (01→05)</button>
-            <button class="view-tab" id="modeGridBtn" onclick="setSkillsDisplayMode('grid')">Chế độ Lưới Thẻ</button>
-          </div>
-        </div>
-        <div class="portal-chips" id="portalChips"></div>
+  <div class="app-shell" data-slot="sidebar-wrapper">
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+    <aside class="app-sidebar" id="appSidebar" data-slot="sidebar" aria-label="Learning navigation">
+      <div id="sidebarContent"></div>
+      <div class="sidebar-cta-box">
+        <div class="sidebar-cta-title">Chưa biết bắt đầu từ đâu?</div>
+        <p class="sidebar-cta-desc">Hỏi cố vấn định tuyến kỹ năng và quy trình tự động của CCBA.</p>
+        <button type="button" class="header-cta-btn" style="width:100%; justify-content:center;" onclick="openModal('ccba-ask')">Ask /ccba-ask →</button>
       </div>
+    </aside>
 
-      <ul class="spine-list" id="skillsSpineList"></ul>
-      <div class="skills-grid hidden" id="skillsGrid"></div>
-    </div>
+    <main class="app-main">
+      <div class="app-main-inner">
+        <!-- VIEW 1: THE MAP (aihero.dev/learn) -->
+        <div id="viewMap">
+          <section class="hero">
+            <div class="eyebrow">The Map · CCBA Software Factory</div>
+            <h1>Bạn muốn giải quyết bài toán nào cùng CCBA Agent hôm nay?</h1>
+            <p>Chọn đúng bài toán bạn đang đối mặt. Mỗi lộ trình mở ra câu lệnh khởi đầu (<code>Start with /...</code>), chuỗi kỹ năng tuần tự (<code>The Spine</code>) và tài liệu SOP chuẩn mực.</p>
+            <div class="stats-pills">
+              <span class="pill">⚡ <strong>76</strong> Active Skills</span>
+              <span class="pill">🧭 <strong>5</strong> Lộ Trình Tác Nghiệp</span>
+              <span class="pill">🧩 <strong>10</strong> Monorepo Packages</span>
+              <span class="pill">🛡️ <strong>100%</strong> Deterministic CI (ADR-0058)</span>
+            </div>
+            <nav aria-label="Lộ trình trên trang" class="jump-grid" id="mapJumpGrid"></nav>
+            <div class="inline-advisor-banner">
+              <div>
+                <div class="inline-advisor-title">🤖 Chưa biết bắt đầu từ đâu? Hỏi /ccba-ask</div>
+                <div class="inline-advisor-desc">Trợ lý định tuyến thông minh giúp bạn chọn đúng kỹ năng, quy trình Spine và hợp đồng Deep Seam cho bài toán hiện tại.</div>
+              </div>
+              <button type="button" class="header-cta-btn" onclick="openModal('ccba-ask')">Ask /ccba-ask →</button>
+            </div>
+          </section>
 
-    <!-- VIEW 3: DEEP SEAMS & CONTRACTS (COND-SEAM-SSOT) -->
-    <div id="viewSeams" class="hidden">
-      <section class="hero">
-        <div class="eyebrow">ADR-0061 · Platform-Aware KISS v2.0</div>
-        <h1>Monorepo Packages &amp; Seam Capability Contracts</h1>
-        <p>Tách biệt minh bạch 2 sổ dữ liệu chính thống: (1) 10 gói Monorepo &amp; Public Seams từ <code>catalog.yaml</code>, và (2) Thẻ Hợp Đồng Năng Lực (<code>in / out / hardware</code>) từ <code>seam-contracts.yaml</code>.</p>
-      </section>
+          <div id="mapGoalSections"></div>
 
-      <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
-      <div id="packageSeamsContainer" style="margin-bottom: 2.5rem;"></div>
+          <section class="philosophy-grid">
+            <div class="philosophy-col">
+              <h3>1. Vấn đề (The Problem)</h3>
+              <p>AI Agent chỉ tốt bằng đúng quy trình bạn giao cho nó. Nếu để tự đoán mò, Agent sẽ sinh mã chắp vá (ad-hoc scripts) làm suy thoái kiến trúc dự án.</p>
+            </div>
+            <div class="philosophy-col">
+              <h3>2. Giải pháp (The Fix)</h3>
+              <p>Mỗi kỹ năng CCBA đóng gói một thói quen kỹ nghệ chuẩn mực (Grilling, Spec, TDD, AI-QC, OKF v2.4) kết nối thẳng vào các gói lõi Deep Seams.</p>
+            </div>
+            <div class="philosophy-col">
+              <h3>3. Hiệu ứng cộng gộp (Why It Compounds)</h3>
+              <p>Các kỹ năng nối đuôi nhau thành dây chuyền (The Spine): đầu ra đã kiểm chứng của bước trước là đầu vào tất định của bước tiếp theo.</p>
+            </div>
+          </section>
+        </div>
 
-      <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
-      <div id="seamContractsContainer"></div>
-    </div>
-  </main>
+        <!-- VIEW 2: SKILLS SPINE & CATALOG (aihero.dev/skills) -->
+        <div id="viewSkills" class="hidden">
+          <div class="search-section">
+            <div class="search-controls">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
+              </div>
+              <div class="view-tabs">
+                <button type="button" class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')">Chế độ Xương Sống (01→05)</button>
+                <button type="button" class="view-tab" id="modeGridBtn" onclick="setSkillsDisplayMode('grid')">Chế độ Lưới Thẻ</button>
+              </div>
+            </div>
+            <div class="portal-chips" id="portalChips"></div>
+          </div>
+
+          <ul class="spine-list" id="skillsSpineList"></ul>
+          <div class="skills-grid hidden" id="skillsGrid"></div>
+        </div>
+
+        <!-- VIEW 3: DEEP SEAMS & CONTRACTS (COND-SEAM-SSOT) -->
+        <div id="viewSeams" class="hidden">
+          <section class="hero">
+            <div class="eyebrow">ADR-0061 · Platform-Aware KISS v2.0</div>
+            <h1>Monorepo Packages &amp; Seam Capability Contracts</h1>
+            <p>Tách biệt minh bạch 2 sổ dữ liệu chính thống: (1) 10 gói Monorepo &amp; Public Seams từ <code>catalog.yaml</code>, và (2) Thẻ Hợp Đồng Năng Lực (<code>in / out / hardware</code>) từ <code>seam-contracts.yaml</code>.</p>
+          </section>
+
+          <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
+          <div id="packageSeamsContainer" style="margin-bottom: 2.5rem;"></div>
+
+          <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
+          <div id="seamContractsContainer"></div>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <div class="modal-backdrop" id="skillModal">
     <div class="modal-card">
@@ -847,9 +1164,12 @@
     const modalClose = document.getElementById("modalClose");
     const toast = document.getElementById("toast");
     const themeToggle = document.getElementById("themeToggle");
+    const appSidebar = document.getElementById("appSidebar");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 
-    // Theme Management
-    const savedTheme = localStorage.getItem("ccba_theme") || "dark";
+    // Theme Management (OBL-LIGHT-DEFAULT & COND-ROOT-STAYS-DARK)
+    const savedTheme = localStorage.getItem("ccba_theme") || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
     themeToggle.addEventListener("click", () => {
       const current = document.documentElement.getAttribute("data-theme");
@@ -857,6 +1177,20 @@
       document.documentElement.setAttribute("data-theme", next);
       localStorage.setItem("ccba_theme", next);
     });
+
+    window.toggleMobileSidebar = function() {
+      const isOpen = appSidebar.classList.toggle("mobile-open");
+      sidebarBackdrop.classList.toggle("open", isOpen);
+      if (mobileMenuBtn) {
+        mobileMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      }
+    };
+
+    window.closeMobileSidebar = function() {
+      if (appSidebar) appSidebar.classList.remove("mobile-open");
+      if (sidebarBackdrop) sidebarBackdrop.classList.remove("open");
+      if (mobileMenuBtn) mobileMenuBtn.setAttribute("aria-expanded", "false");
+    };
 
     function escapeHtml(str) {
       if (str === null || str === undefined) return "";
@@ -902,6 +1236,34 @@
       document.getElementById("tabMap").classList.toggle("active", viewName === "map");
       document.getElementById("tabSkills").classList.toggle("active", viewName === "skills");
       document.getElementById("tabSeams").classList.toggle("active", viewName === "seams");
+      [
+        ["sideNavMap", "map"],
+        ["sideNavSkills", "skills"],
+        ["sideNavSeams", "seams"]
+      ].forEach(([id, v]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          const isAct = viewName === v;
+          el.classList.toggle("active", isAct);
+          el.setAttribute("data-active", isAct ? "true" : "false");
+        }
+      });
+      closeMobileSidebar();
+    };
+
+    window.openSearchFromHeader = function() {
+      switchView("skills");
+      if (searchInput) {
+        searchInput.focus();
+      }
+    };
+
+    window.jumpToTopic = function(portalId) {
+      switchView("map");
+      const target = document.getElementById("goal-" + portalId);
+      if (target && target.scrollIntoView) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     };
 
     window.setSkillsDisplayMode = function(mode) {
@@ -910,6 +1272,59 @@
       document.getElementById("modeGridBtn").classList.toggle("active", mode === "grid");
       renderSkillsCatalog();
     };
+
+    // Left Sidebar Dynamic Rendering (OBL-SHELL-SIDEBAR & COND-SIDEBAR-DATA)
+    function renderSidebar() {
+      const container = document.getElementById("sidebarContent");
+      if (!container) return;
+
+      const seenGuides = new Set();
+      const uniqueGuides = [];
+      PORTALS.forEach(p => {
+        (p.guides || []).forEach(g => {
+          if (g && g.path && !seenGuides.has(g.path)) {
+            seenGuides.add(g.path);
+            uniqueGuides.push(g);
+          }
+        });
+      });
+
+      const guidesSidebarHtml = uniqueGuides.map(g => {
+        return `<button type="button" class="sidebar-item" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📖 ${escapeHtml(g.title)}</span></button>`;
+      }).join("");
+
+      const whatsNewSkills = PORTALS.map(p => p.start_with).filter(Boolean);
+      const whatsNewHtml = whatsNewSkills.map(sName => {
+        return `<button type="button" class="sidebar-item font-mono" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))"><span>/${escapeHtml(sName)}</span></button>`;
+      }).join("");
+
+      const topicsHtml = PORTALS.map(p => {
+        return `<button type="button" class="sidebar-item" data-portal-id="${escapeHtml(p.id)}" onclick="jumpToTopic(this.getAttribute('data-portal-id'))"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><span class="font-mono" style="color:var(--ccba-gold); margin-right:0.35rem;">${escapeHtml(p.step)}</span>${escapeHtml(p.icon)} ${escapeHtml(p.name)}</span><span aria-hidden="true">›</span></button>`;
+      }).join("");
+
+      container.innerHTML = `
+        <div class="sidebar-group">
+          <div class="sidebar-group-label font-mono" data-slot="sidebar-group-label">Explore</div>
+          <button type="button" class="sidebar-item ${activeView === 'map' ? 'active' : ''}" id="sideNavMap" data-active="${activeView === 'map' ? 'true' : 'false'}" onclick="switchView('map')"><span>🗺️ Map</span></button>
+          <button type="button" class="sidebar-item ${activeView === 'skills' ? 'active' : ''}" id="sideNavSkills" data-active="${activeView === 'skills' ? 'true' : 'false'}" onclick="switchView('skills')"><span>⚡ Skills (${SKILLS.length})</span></button>
+          <button type="button" class="sidebar-item ${activeView === 'seams' ? 'active' : ''}" id="sideNavSeams" data-active="${activeView === 'seams' ? 'true' : 'false'}" onclick="switchView('seams')"><span>🧩 Deep Seams (${PACKAGE_SEAMS.length})</span></button>
+          <a href="llms.txt" class="sidebar-item"><span>🤖 Machine Endpoints (llms.txt)</span></a>
+        </div>
+        <div class="sidebar-group">
+          <div class="sidebar-group-label font-mono" data-slot="sidebar-group-label">Guides</div>
+          ${guidesSidebarHtml}
+        </div>
+        <div class="sidebar-group">
+          <div class="sidebar-group-label font-mono" data-slot="sidebar-group-label">What's New</div>
+          ${whatsNewHtml}
+          <button type="button" class="sidebar-item" onclick="switchView('skills')"><span>All (${SKILLS.length})</span><span aria-hidden="true">→</span></button>
+        </div>
+        <div class="sidebar-group">
+          <div class="sidebar-group-label font-mono" data-slot="sidebar-group-label">Topics</div>
+          ${topicsHtml}
+        </div>
+      `;
+    }
 
     // Safe relative path rebasing & sanitizer (COND-MD-SAFE)
     function resolveAndSanitizeHref(rawHref, basePath) {
@@ -989,7 +1404,7 @@
       return out.join("\n");
     }
 
-    // View 1: Render The Map
+    // View 1: Render The Map (OBL-MEDIA-CARDS & COND-A11Y-AND-TEST)
     function renderTheMap() {
       const jumpGrid = document.getElementById("mapJumpGrid");
       const sectionsContainer = document.getElementById("mapGoalSections");
@@ -1015,12 +1430,47 @@
 
         const spineHtml = (p.spine_order || []).map((sName, idx) => {
           const arrow = idx > 0 ? `<span class="spine-sep">→</span>` : "";
-          return `${arrow}<button class="spine-node font-mono" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-gold);">${idx + 1}.</span> /${escapeHtml(sName)}</button>`;
+          return `${arrow}<button type="button" class="spine-node font-mono" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-gold);">${idx + 1}.</span> /${escapeHtml(sName)}</button>`;
         }).join(" ");
 
         const guidesHtml = (p.guides || []).map(g => {
-          return `<button class="guide-pill" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">📖 ${escapeHtml(g.title)} <span class="font-mono" style="font-size:0.72rem; color:var(--ccba-fg-faint);">(${escapeHtml(g.path)})</span></button>`;
+          return `<button type="button" class="guide-pill" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">📖 ${escapeHtml(g.title)} <span class="font-mono" style="font-size:0.72rem; color:var(--ccba-fg-faint);">(${escapeHtml(g.path)})</span></button>`;
         }).join(" ");
+
+        const mediaSpineHtml = (p.spine_order || []).map((sName, idx) => {
+          const sObj = SKILLS.find(s => s.name === sName) || { name: sName, desc: p.desc, tier_display: "Skill" };
+          return `
+            <button type="button" class="media-card" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))">
+              <div class="media-thumb" aria-hidden="true">
+                <span class="media-thumb-step font-mono">STEP ${escapeHtml(p.step)} · ${escapeHtml(p.icon)}</span>
+                <span class="media-thumb-code font-mono">/${escapeHtml(sName)}</span>
+              </div>
+              <div class="media-card-body">
+                <span class="media-card-eyebrow font-mono">SKILL · SPINE #${idx + 1} · ${escapeHtml(sObj.tier_display || "Kernel")}</span>
+                <h3 class="font-mono">/${escapeHtml(sName)}</h3>
+                <p class="media-card-desc">${escapeHtml(sObj.desc)}</p>
+              </div>
+              <span class="media-card-arrow" aria-hidden="true">→</span>
+            </button>
+          `;
+        }).join("");
+
+        const mediaGuidesHtml = (p.guides || []).map(g => {
+          return `
+            <button type="button" class="media-card" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">
+              <div class="media-thumb" aria-hidden="true">
+                <span class="media-thumb-step font-mono">GUIDE · ${escapeHtml(p.step)}</span>
+                <span class="media-thumb-code font-mono">SOP &amp; DOC</span>
+              </div>
+              <div class="media-card-body">
+                <span class="media-card-eyebrow font-mono">GUIDE · ${escapeHtml(g.path)}</span>
+                <h3>📖 ${escapeHtml(g.title)}</h3>
+                <p class="media-card-desc">Tài liệu hướng dẫn thực thi chuẩn mực (docs/${escapeHtml(g.path)}).</p>
+              </div>
+              <span class="media-card-arrow" aria-hidden="true">→</span>
+            </button>
+          `;
+        }).join("");
 
         const sec = document.createElement("section");
         sec.className = "goal-section";
@@ -1031,17 +1481,18 @@
             <h2>${escapeHtml(p.question)}</h2>
             <p>${escapeHtml(p.desc)}</p>
           </div>
-          <div class="do-this-card" data-skill="${escapeHtml(startSkill.name)}" onclick="openModal(this.getAttribute('data-skill'))">
+          <button type="button" class="do-this-card" data-skill="${escapeHtml(startSkill.name)}" onclick="openModal(this.getAttribute('data-skill'))">
             <div>
               <span class="do-this-label font-mono">Do this with · Điểm khởi đầu khuyên dùng</span>
               <div class="do-this-cmd font-mono"><span class="slash">/</span>${escapeHtml(startSkill.name)}</div>
               <div class="do-this-desc">${escapeHtml(startSkill.desc)}</div>
             </div>
             <span class="do-this-circle" aria-hidden="true">→</span>
-          </div>
+          </button>
           <div style="margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--ccba-fg-subtle);">Xương sống thực thi tuần tự (The Spine):</div>
           <div class="spine-chain">${spineHtml}</div>
           <div class="guides-row">${guidesHtml}</div>
+          <div class="media-card-list">${mediaSpineHtml}${mediaGuidesHtml}</div>
         `;
         sectionsContainer.appendChild(sec);
       });
@@ -1305,9 +1756,10 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
 
     modalClose.addEventListener("click", () => { skillModal.classList.remove("open"); });
     skillModal.addEventListener("click", (e) => { if (e.target === skillModal) skillModal.classList.remove("open"); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") skillModal.classList.remove("open"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { skillModal.classList.remove("open"); closeMobileSidebar(); } });
     searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderSkillsCatalog(); });
 
+    renderSidebar();
     renderTheMap();
     renderPortalChips();
     renderSkillsCatalog();

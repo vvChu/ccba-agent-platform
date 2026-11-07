@@ -435,7 +435,7 @@ def _contrast_ratio(hex_a: str, hex_b: str) -> float:
 
 
 def test_portal_template_css_tokens_and_wcag_contrast() -> None:
-    """Verify --ccba-* tokens, split grid rules, and WCAG 2.2 AA contrast >= 4.5:1 (COND-CONTRAST-PAIRS)."""
+    """Verify --ccba-* tokens, split grid rules, and WCAG 2.2 AA contrast >= 4.5:1 (COND-CONTRAST-PAIRS & COND-ROOT-STAYS-DARK)."""
     css_html = TEMPLATE_HTML_PATH.read_text(encoding="utf-8")
     assert "--ah-" not in css_html, "Found unprefixed --ah- token in skills_portal.html"
     assert "minmax(0, 0.9fr) minmax(0, 1.1fr)" in css_html
@@ -444,15 +444,31 @@ def test_portal_template_css_tokens_and_wcag_contrast() -> None:
     for selector in (r":root", r'\[data-theme="light"\]'):
         m_block = re.search(rf"{selector}\s*\{{(.*?)\}}", css_html, re.DOTALL)
         assert m_block is not None, f"Missing CSS block for {selector}"
+        assert "--ccba-nav-height: 62px" in m_block.group(1)
         tokens = dict(
             re.findall(r"(--ccba-[a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{6})\b", m_block.group(1))
         )
-        bg = tokens.get("--ccba-bg", "")
-        fg_body = tokens.get("--ccba-fg-body", "")
-        fg_muted = tokens.get("--ccba-fg-muted", "")
-        assert bg and fg_body and fg_muted, f"Missing core hex tokens in {selector}: {tokens}"
-        assert _contrast_ratio(bg, fg_body) >= 4.5, f"Low body contrast in {selector}"
-        assert _contrast_ratio(bg, fg_muted) >= 4.5, f"Low muted contrast in {selector}"
+        if selector == r":root":
+            assert tokens.get("--ccba-bg") == "#0e0e0d"
+            assert tokens.get("--ccba-fg-body") == "#f4f3f1"
+            assert tokens.get("--ccba-fg-muted") == "#b5b8c0"
+        else:
+            assert tokens.get("--ccba-bg") == "#fbfbfc"
+            assert tokens.get("--ccba-bg-sidebar") == "#f5f6f8"
+            assert tokens.get("--ccba-gold") == "#9a6700"
+        pairs = (
+            ("--ccba-bg", "--ccba-fg-body"),
+            ("--ccba-bg", "--ccba-fg-muted"),
+            ("--ccba-bg", "--ccba-gold"),
+            ("--ccba-bg-sidebar", "--ccba-fg-body"),
+            ("--ccba-bg-sidebar", "--ccba-fg-muted"),
+            ("--ccba-bg-sidebar", "--ccba-gold"),
+            ("--ccba-cta-bg", "--ccba-cta-fg"),
+        )
+        for k_a, k_b in pairs:
+            c_a, c_b = tokens.get(k_a, ""), tokens.get(k_b, "")
+            assert c_a and c_b, f"Missing token pair ({k_a}, {k_b}) in {selector}"
+            assert _contrast_ratio(c_a, c_b) >= 4.5, f"Low contrast ({k_a}, {k_b}) in {selector}"
 
 
 def test_portal_template_escapes_portal_icon_and_count() -> None:
@@ -464,3 +480,64 @@ def test_portal_template_escapes_portal_icon_and_count() -> None:
     assert "${escapeHtml(p.count)}" in html_text
     assert "goal-${escapeHtml(p.id)}" in html_text
     assert "${escapeHtml(s.portal_icon)}" in html_text
+
+
+REQUIRED_SHELL_SNIPPETS = (
+    '<html lang="vi" data-theme="light">',
+    'const savedTheme = localStorage.getItem("ccba_theme") || "light";',
+    'document.documentElement.setAttribute("data-theme", savedTheme);',
+    "--ccba-nav-height: 62px;",
+    "flex-wrap: nowrap;",
+    "top: var(--ccba-nav-height);",
+    'id="mobileMenuBtn"',
+    'aria-controls="appSidebar"',
+    'aria-expanded="false"',
+    "openSearchFromHeader()",
+    "searchInput.focus()",
+    'class="header-cta-btn"',
+    'data-slot="sidebar-wrapper"',
+    'data-slot="sidebar"',
+    'aria-label="Learning navigation"',
+    "width: 264px;",
+    "height: calc(100vh - var(--ccba-nav-height));",
+    "@media (min-width: 1024px)",
+    "z-index: 55;",
+    "background: var(--ccba-fg-body);",
+    "color: var(--ccba-bg);",
+    'class="app-main"',
+    "min-width: 0;",
+    'class="app-main-inner"',
+    "function renderSidebar()",
+    'data-slot="sidebar-group-label">Explore</div>',
+    'data-slot="sidebar-group-label">Guides</div>',
+    'data-slot="sidebar-group-label">What\'s New</div>',
+    'data-slot="sidebar-group-label">Topics</div>',
+    "${SKILLS.length}",
+    "${PACKAGE_SEAMS.length}",
+    "PORTALS.map(p => p.start_with)",
+    "seenGuides.has(g.path)",
+    "jumpToTopic(",
+    'class="inline-advisor-banner"',
+    '<button type="button" class="do-this-card"',
+    '<button type="button" class="media-card"',
+    'class="media-thumb"',
+    "width: 132px;",
+    "height: 78px;",
+    'class="media-card-arrow"',
+    "width: 34px;",
+    "height: 34px;",
+)
+
+
+def test_aihero_app_shell_sidebar_and_obligations() -> None:
+    """Verify OBL-SHELL-SIDEBAR, OBL-HEADER-MINIMAL, OBL-LIGHT-DEFAULT, OBL-MEDIA-CARDS, and 4 Grok conditions."""
+    for target_path in (TEMPLATE_HTML_PATH, DOCS_DIR / "index.html"):
+        html_text = target_path.read_text(encoding="utf-8")
+        assert "--ah-" not in html_text, f"Forbidden --ah- token in {target_path.name}"
+        assert "top: 53px" not in html_text, f"Stale top: 53px found in {target_path.name}"
+        assert "minmax(0, 0.9fr) minmax(0, 1.1fr)" in html_text
+        assert html_text.index("</header>") < html_text.index('data-slot="sidebar-wrapper"'), (
+            f".app-shell must appear after </header> in {target_path.name}"
+        )
+        for snippet in REQUIRED_SHELL_SNIPPETS:
+            assert snippet in html_text, f"Missing {snippet!r} in {target_path.name}"
