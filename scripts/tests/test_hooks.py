@@ -12,7 +12,7 @@ import json
 import os
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from scripts.eval.hook_runner import run_hooks
 from scripts.hooks import (
@@ -224,7 +224,12 @@ class TestSpeedAndSessionHooks(unittest.TestCase):
     def test_session_init_execution(self) -> None:
         hook = SessionInitHook()
         ctx = HookContext(event="session-init")
-        res = hook.execute(ctx)
+        mock_run_res = MagicMock(returncode=0, stdout=f"{Path.cwd()}\n")
+        with (
+            patch("scripts.hooks.session.subprocess.run", return_value=mock_run_res),
+            patch("scripts.hooks.session.subprocess.Popen"),
+        ):
+            res = hook.execute(ctx)
         self.assertEqual(res.exit_code, 0)
 
     def test_speed_hook_approved_clean_path(self) -> None:

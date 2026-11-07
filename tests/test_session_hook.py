@@ -29,7 +29,10 @@ def test_session_init_creates_kb_dir(tmp_path: Path) -> None:
     hook = SessionInitHook()
     ctx = HookContext(event="session-init", cwd=str(tmp_path))
 
-    with patch("subprocess.run", side_effect=subprocess.SubprocessError("Not a git repo")):
+    with (
+        patch("subprocess.run", side_effect=subprocess.SubprocessError("Not a git repo")),
+        patch("subprocess.Popen"),
+    ):
         res = hook.execute(ctx)
         assert res.exit_code == 0
         assert (tmp_path / ".md").exists()

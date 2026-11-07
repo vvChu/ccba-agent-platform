@@ -510,11 +510,19 @@ def validate_seam_contracts(hub_root: Path = HUB_ROOT) -> list[str]:
                 continue
 
             exported = _extract_module_exported_symbols(target_file)
-            if exported is not None and sym_name not in exported:
+            symbols = [s.strip() for s in sym_name.split(",") if s.strip()]
+            if not symbols:
                 errors.append(
-                    f"Package card '{seam_id}' declares symbol '{sym_name}' from '{mod_name}', "
-                    f"but '{sym_name}' is not exported by '{target_file.name}'."
+                    f"Package card '{seam_id}' missing or invalid 'import_path' (expected 'module:Symbol')."
                 )
+                continue
+            if exported is not None:
+                for sym in symbols:
+                    if sym not in exported:
+                        errors.append(
+                            f"Package card '{seam_id}' declares symbol '{sym}' from '{mod_name}', "
+                            f"but '{sym}' is not exported by '{target_file.name}'."
+                        )
 
         elif kind == "skill":
             skill_path = str(card.get("skill_path", "")).strip()
