@@ -176,6 +176,8 @@ skills:
   triggers:
   - ccba-ai
   - ai gateway
+  - gateway
+  - chat
   - choose_model
   - ai.chat
   - litellm spark
@@ -747,6 +749,8 @@ skills:
     nhất VBHN qua VBHNEngine. Không dùng để lập Phiếu Ý kiến Pháp lý tình huống.
   triggers:
   - registry
+  - registry vbpl
+  - cập nhật thông tư
   - legal_registry
   - vbhn
   - hợp nhất văn bản

@@ -46,6 +46,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 
 ### Từ Khóa Kích Hoạt (Triggers)
 - `registry`
+- `registry vbpl`
+- `cập nhật thông tư`
 - `legal_registry`
 - `vbhn`
 - `hợp nhất văn bản`

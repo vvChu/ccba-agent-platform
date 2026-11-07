@@ -47,6 +47,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 ### Từ Khóa Kích Hoạt (Triggers)
 - `ccba-ai`
 - `ai gateway`
+- `gateway`
+- `chat`
 - `choose_model`
 - `ai.chat`
 - `litellm spark`

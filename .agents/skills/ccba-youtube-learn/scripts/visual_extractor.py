@@ -122,10 +122,12 @@ def _find_storyboard_spec(info_dict: dict[str, Any]) -> dict[str, Any] | None:
     formats = info_dict.get("formats", [])
     for target_sb in ["sb2", "sb1", "sb0"]:
         for fmt in formats:
-            if fmt.get("format_id") == target_sb:
+            if isinstance(fmt, dict) and fmt.get("format_id") == target_sb:
                 return fmt
     for fmt in formats:
-        if "storyboard" in fmt.get("format_note", "") or fmt.get("format_id", "").startswith("sb"):
+        if isinstance(fmt, dict) and (
+            "storyboard" in fmt.get("format_note", "") or fmt.get("format_id", "").startswith("sb")
+        ):
             return fmt
     return None
 

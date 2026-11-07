@@ -20,6 +20,8 @@ gpi:
 triggers:
 - ccba-ai
 - ai gateway
+- gateway
+- chat
 - choose_model
 - ai.chat
 - litellm spark

@@ -19,6 +19,8 @@ gpi:
   p: 1.0
 triggers:
 - registry
+- registry vbpl
+- cập nhật thông tư
 - legal_registry
 - vbhn
 - hợp nhất văn bản
