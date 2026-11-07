@@ -96,6 +96,15 @@ def test_base_utilities(tmp_path: Path):
     (d2 / "sub.txt").write_text("world", encoding="utf-8")
     assert not are_dirs_identical(d1, d2)
 
+    # Ignored transient paths (.skill_versions, __pycache__, *.pyc) should not cause diff
+    (d2 / "sub.txt").write_text("hello", encoding="utf-8")
+    (d1 / ".skill_versions").mkdir()
+    (d1 / ".skill_versions" / "snapshot.json").write_text("{}", encoding="utf-8")
+    (d2 / "__pycache__").mkdir()
+    (d2 / "__pycache__" / "mod.cpython-312.pyc").write_bytes(b"\x00\x01")
+    (d1 / "stale.pyc").write_bytes(b"\x00\x02")
+    assert are_dirs_identical(d1, d2)
+
     safe_remove(d1)
     assert not d1.exists()
 

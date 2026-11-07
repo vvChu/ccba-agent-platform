@@ -15,7 +15,14 @@ from pathlib import Path
 from typing import Any
 
 from .backup import GitWorkingTreeGuard, SpokeBackupManager
-from .base import HubNotFoundError, are_dirs_identical, are_files_identical, load_yaml, safe_remove
+from .base import (
+    SKILL_SYNC_IGNORE_PATTERNS,
+    HubNotFoundError,
+    are_dirs_identical,
+    are_files_identical,
+    load_yaml,
+    safe_remove,
+)
 from .discovery import HubDiscoverer
 from .graduation import (
     audit_spoke_markdown_links,
@@ -560,7 +567,7 @@ class SpokeSynchronizer:
                 print(f"[Sync] Copying skill [{sync_item}] -> {rel_dest}")
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 safe_remove(dest)
-                shutil.copytree(src, dest)
+                shutil.copytree(src, dest, ignore=SKILL_SYNC_IGNORE_PATTERNS)
             return True, 0
         return False, 0
 
@@ -840,14 +847,18 @@ class SpokeSynchronizer:
                 )
                 if not dry_run:
                     dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copytree(src, dest, dirs_exist_ok=True)
+                    shutil.copytree(
+                        src, dest, dirs_exist_ok=True, ignore=SKILL_SYNC_IGNORE_PATTERNS
+                    )
             else:
                 actions.append(
                     {"type": "Skill", "name": sk["name"], "status": "UPDATED", "path": rel_dest}
                 )
                 if not dry_run:
                     safe_remove(dest)
-                    shutil.copytree(src, dest, dirs_exist_ok=True)
+                    shutil.copytree(
+                        src, dest, dirs_exist_ok=True, ignore=SKILL_SYNC_IGNORE_PATTERNS
+                    )
         return synced_skill_folders, actions
 
     def _reconcile_existing_workflows(

@@ -15,6 +15,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+_ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
+
 
 def _safe_load_yaml(filepath: Path) -> dict[str, Any]:
     """Loads a YAML file with graceful fallback when PyYAML is unavailable."""
@@ -545,6 +549,8 @@ class SpokeBootstrapper:
             ".md/data/*.json",
             ".tmp/",
             ".out-of-scope/",
+            ".skill_versions/",
+            "**/.skill_versions/",
         ]
 
         if not gitignore_path.exists():
