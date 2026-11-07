@@ -245,6 +245,7 @@
     }
     .sidebar-backdrop.open { display: block; }
     @media (min-width: 1024px) {
+      header .view-tabs { display: none; }
       .mobile-menu-btn { display: none; }
       .sidebar-backdrop, .sidebar-backdrop.open { display: none !important; }
       .app-sidebar, .app-sidebar.mobile-open {
@@ -255,6 +256,9 @@
         align-self: flex-start;
         box-shadow: none;
       }
+    }
+    @media (max-width: 1279px) {
+      .header-aux-link { display: none !important; }
     }
     .sidebar-group {
       display: flex;
@@ -511,48 +515,6 @@
       flex-shrink: 0;
       color: var(--ccba-fg-body);
     }
-    .spine-chain {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.45rem;
-      margin-bottom: 1.15rem;
-    }
-    .spine-node {
-      background: var(--ccba-bg-card);
-      border: 1px solid var(--ccba-line);
-      border-radius: 6px;
-      padding: 0.4rem 0.75rem;
-      font-size: 0.82rem;
-      color: var(--ccba-fg-body);
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .spine-node:hover { border-color: var(--ccba-primary); color: var(--ccba-primary); }
-    .spine-sep { color: var(--ccba-fg-faint); font-size: 0.85rem; }
-    .guides-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 0.75rem;
-    }
-    .guide-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--ccba-line);
-      background: var(--ccba-bg-card);
-      color: var(--ccba-fg-muted);
-      font-size: 0.82rem;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .guide-pill:hover {
-      border-color: var(--ccba-primary);
-      color: var(--ccba-fg-body);
-    }
     .media-card-list {
       display: flex;
       flex-direction: column;
@@ -592,6 +554,9 @@
       flex-shrink: 0;
       overflow: hidden;
     }
+    .media-thumb--orchestrator { border-color: var(--ccba-gold); }
+    .media-thumb--kernel { border-color: var(--ccba-primary); }
+    .media-thumb--guide { border-color: var(--ccba-accent); }
     .media-thumb-step {
       font-size: 0.65rem;
       font-weight: 700;
@@ -1001,18 +966,18 @@
           <span>CCBA Skills Portal</span>
         </a>
         <div class="view-tabs" role="tablist">
-          <button type="button" class="view-tab active" id="tabMap" onclick="switchView('map')">🗺️ Bản Đồ (The Map)</button>
-          <button type="button" class="view-tab" id="tabSkills" onclick="switchView('skills')">⚡ Kỹ Năng (76)</button>
-          <button type="button" class="view-tab" id="tabSeams" onclick="switchView('seams')">🧩 Deep Seams &amp; Contracts</button>
+          <button type="button" class="view-tab active" id="tabMap" onclick="switchView('map')"><span>🗺️ Map</span></button>
+          <button type="button" class="view-tab" id="tabSkills" onclick="switchView('skills')"><span>⚡ Skills (76)</span></button>
+          <button type="button" class="view-tab" id="tabSeams" onclick="switchView('seams')"><span>🧩 Seams</span></button>
         </div>
       </div>
       <div class="nav-links">
         <button type="button" class="nav-doc-btn" id="headerSearchBtn" onclick="openSearchFromHeader()">🔍 Search</button>
-        <button type="button" class="nav-doc-btn" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
-        <button type="button" class="nav-doc-btn" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
-        <a href="llms.txt">llms.txt</a>
-        <a href="llms-full.txt">llms-full.txt</a>
-        <a href="https://github.com/vvChu/ccba-agent-platform" target="_blank" rel="noopener">GitHub</a>
+        <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
+        <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
+        <a href="llms.txt" class="header-aux-link">llms.txt</a>
+        <a href="llms-full.txt" class="header-aux-link">llms-full.txt</a>
+        <a href="https://github.com/vvChu/ccba-agent-platform" class="header-aux-link" target="_blank" rel="noopener">GitHub</a>
         <button type="button" id="themeToggle" class="theme-btn" title="Đổi giao diện Sáng / Tối">🌓 Theme</button>
         <button type="button" class="header-cta-btn" onclick="openModal('ccba-ask')">Ask /ccba-ask</button>
       </div>
@@ -1228,7 +1193,15 @@
       showToast(`Đã sao chép ${label}: ${text}`);
     }
 
-    window.switchView = function(viewName) {
+    const HASH_SLUG_RE = /^[a-z0-9-]+$/;
+
+    function updateUrlHash(nextHash) {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, "", "#" + nextHash);
+      }
+    }
+
+    window.switchView = function(viewName, syncHash = true) {
       activeView = viewName;
       document.getElementById("viewMap").classList.toggle("hidden", viewName !== "map");
       document.getElementById("viewSkills").classList.toggle("hidden", viewName !== "skills");
@@ -1248,6 +1221,10 @@
           el.setAttribute("data-active", isAct ? "true" : "false");
         }
       });
+      if (skillModal) skillModal.classList.remove("open");
+      if (syncHash !== false) {
+        updateUrlHash(viewName);
+      }
       closeMobileSidebar();
     };
 
@@ -1258,12 +1235,74 @@
       }
     };
 
-    window.jumpToTopic = function(portalId) {
-      switchView("map");
+    window.jumpToTopic = function(portalId, syncHash = true) {
+      switchView("map", false);
+      if (syncHash !== false) {
+        updateUrlHash("goal-" + portalId);
+      }
       const target = document.getElementById("goal-" + portalId);
       if (target && target.scrollIntoView) {
         target.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    };
+
+    window.applyHashRoute = function(rawHash) {
+      let cleaned = String(rawHash || "").replace(/^#/, "").trim();
+      if (!cleaned) {
+        switchView("map", false);
+        return;
+      }
+      try {
+        cleaned = decodeURIComponent(cleaned);
+      } catch (err) {
+        switchView("map", false);
+        return;
+      }
+      if (cleaned === "map" || cleaned === "skills" || cleaned === "seams") {
+        if (cleaned === "skills" && activePortal !== "all") {
+          activePortal = "all";
+          renderPortalChips();
+          renderSkillsCatalog();
+        }
+        switchView(cleaned, false);
+        return;
+      }
+      if (cleaned.startsWith("goal-")) {
+        const rawId = cleaned.slice(5);
+        const normId = rawId.replace(/_/g, "-");
+        const portal = HASH_SLUG_RE.test(normId) && PORTALS.find(p => p.id === rawId || p.id.replace(/_/g, "-") === normId);
+        if (portal) {
+          jumpToTopic(portal.id, false);
+          return;
+        }
+        switchView("map", false);
+        return;
+      }
+      if (cleaned.startsWith("skills/")) {
+        const rawId = cleaned.slice(7);
+        const normId = rawId.replace(/_/g, "-");
+        const portal = HASH_SLUG_RE.test(normId) && PORTALS.find(p => p.id === rawId || p.id.replace(/_/g, "-") === normId);
+        if (portal) {
+          activePortal = portal.id;
+          renderPortalChips();
+          renderSkillsCatalog();
+          switchView("skills", false);
+          return;
+        }
+        switchView("map", false);
+        return;
+      }
+      if (cleaned.startsWith("skill/")) {
+        const skillName = cleaned.slice(6);
+        const skillObj = HASH_SLUG_RE.test(skillName) && SKILLS.find(s => s.name === skillName);
+        if (skillObj) {
+          openModal(skillObj.name, false);
+          return;
+        }
+        switchView("map", false);
+        return;
+      }
+      switchView("map", false);
     };
 
     window.setSkillsDisplayMode = function(mode) {
@@ -1428,20 +1467,12 @@
           desc: p.desc
         };
 
-        const spineHtml = (p.spine_order || []).map((sName, idx) => {
-          const arrow = idx > 0 ? `<span class="spine-sep">→</span>` : "";
-          return `${arrow}<button type="button" class="spine-node font-mono" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-gold);">${idx + 1}.</span> /${escapeHtml(sName)}</button>`;
-        }).join(" ");
-
-        const guidesHtml = (p.guides || []).map(g => {
-          return `<button type="button" class="guide-pill" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">📖 ${escapeHtml(g.title)} <span class="font-mono" style="font-size:0.72rem; color:var(--ccba-fg-faint);">(${escapeHtml(g.path)})</span></button>`;
-        }).join(" ");
-
         const mediaSpineHtml = (p.spine_order || []).map((sName, idx) => {
-          const sObj = SKILLS.find(s => s.name === sName) || { name: sName, desc: p.desc, tier_display: "Skill" };
+          const sObj = SKILLS.find(s => s.name === sName) || { name: sName, desc: p.desc, tier: "kernel", tier_display: "Skill" };
+          const thumbMod = sObj.tier === "orchestrator" ? "media-thumb--orchestrator" : "media-thumb--kernel";
           return `
             <button type="button" class="media-card" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))">
-              <div class="media-thumb" aria-hidden="true">
+              <div class="media-thumb" data-thumb-mod="${thumbMod}" aria-hidden="true">
                 <span class="media-thumb-step font-mono">STEP ${escapeHtml(p.step)} · ${escapeHtml(p.icon)}</span>
                 <span class="media-thumb-code font-mono">/${escapeHtml(sName)}</span>
               </div>
@@ -1458,7 +1489,7 @@
         const mediaGuidesHtml = (p.guides || []).map(g => {
           return `
             <button type="button" class="media-card" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))">
-              <div class="media-thumb" aria-hidden="true">
+              <div class="media-thumb" data-thumb-mod="media-thumb--guide" aria-hidden="true">
                 <span class="media-thumb-step font-mono">GUIDE · ${escapeHtml(p.step)}</span>
                 <span class="media-thumb-code font-mono">SOP &amp; DOC</span>
               </div>
@@ -1489,11 +1520,11 @@
             </div>
             <span class="do-this-circle" aria-hidden="true">→</span>
           </button>
-          <div style="margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--ccba-fg-subtle);">Xương sống thực thi tuần tự (The Spine):</div>
-          <div class="spine-chain">${spineHtml}</div>
-          <div class="guides-row">${guidesHtml}</div>
           <div class="media-card-list">${mediaSpineHtml}${mediaGuidesHtml}</div>
         `;
+        sec.querySelectorAll(".media-thumb[data-thumb-mod]").forEach(el => {
+          el.classList.add(el.getAttribute("data-thumb-mod"));
+        });
         sectionsContainer.appendChild(sec);
       });
     }
@@ -1504,14 +1535,14 @@
       const allChip = document.createElement("button");
       allChip.className = `chip ${activePortal === "all" ? "active" : ""}`;
       allChip.innerHTML = `Tất cả (${SKILLS.length})`;
-      allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); };
+      allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); updateUrlHash("skills"); };
       portalChipsContainer.appendChild(allChip);
 
       PORTALS.forEach(p => {
         const chip = document.createElement("button");
         chip.className = `chip ${activePortal === p.id ? "active" : ""}`;
         chip.innerHTML = `${escapeHtml(p.step)} · ${escapeHtml(p.icon)} ${escapeHtml(p.name)} (${escapeHtml(p.count)})`;
-        chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); };
+        chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); updateUrlHash("skills/" + p.id); };
         portalChipsContainer.appendChild(chip);
       });
     }
@@ -1649,9 +1680,12 @@
     }
 
     // Modal Details with 3 Explicit Sources & Offline Fallback (COND-BODY-SOURCE & COND-OFFLINE-DEGRADE)
-    window.openModal = function(skillName) {
+    window.openModal = function(skillName, syncHash = true) {
       const s = SKILLS.find(item => item.name === skillName);
       if (!s) return;
+      if (syncHash !== false) {
+        updateUrlHash("skill/" + s.name);
+      }
 
       modalTitle.textContent = s.name;
       modalMeta.innerHTML = `
@@ -1754,16 +1788,25 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
       });
     };
 
-    modalClose.addEventListener("click", () => { skillModal.classList.remove("open"); });
-    skillModal.addEventListener("click", (e) => { if (e.target === skillModal) skillModal.classList.remove("open"); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { skillModal.classList.remove("open"); closeMobileSidebar(); } });
+    window.closeSkillModal = function() {
+      if (skillModal) skillModal.classList.remove("open");
+      if (String(window.location.hash || "").startsWith("#skill/")) {
+        updateUrlHash(activeView === "skills" && activePortal !== "all" ? "skills/" + activePortal : activeView);
+      }
+    };
+
+    modalClose.addEventListener("click", () => { closeSkillModal(); });
+    skillModal.addEventListener("click", (e) => { if (e.target === skillModal) closeSkillModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSkillModal(); closeMobileSidebar(); } });
     searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderSkillsCatalog(); });
+    window.addEventListener("hashchange", () => applyHashRoute(window.location.hash));
 
     renderSidebar();
     renderTheMap();
     renderPortalChips();
     renderSkillsCatalog();
     renderSeamsView();
+    applyHashRoute(window.location.hash);
   </script>
 </body>
 </html>
