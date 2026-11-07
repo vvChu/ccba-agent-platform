@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Architecture: Hub-and-Spoke](https://img.shields.io/badge/Architecture-Hub--and--Spoke-teal.svg)](#kien-truc-hub-and-spoke)
 [![AI Gateway: 50+ Models](https://img.shields.io/badge/AI%20Gateway-50+%20Models-orange.svg)](#ccba-ai--ai-gateway-client)
+[![Skills Portal: Live](https://img.shields.io/badge/Skills%20Portal-Live-10b981.svg)](https://vvchu.github.io/ccba-agent-platform/)
 
 ---
 
@@ -17,8 +18,8 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
                               ┌─────────────────────────────────────────┐
                               │            CCBA HUB (Bộ Não)             │
                               │  ├── Hiến pháp AGENTS.md (Layer 1)      │
-                              │  ├── 73 Kỹ năng (Skills) & 68 Archived  │
-                              │  ├── 9 Service Packages (ccba-*)        │
+                              │  ├── Kho Kỹ năng (Skills) & Workflows   │
+                              │  ├── Các Gói Dịch Vụ Lõi (ccba-*)       │
                               │  └── Spoke Synchronizer Engine          │
                               └────────────────────┬────────────────────┘
                                                    │
@@ -32,8 +33,30 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
        └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
 ```
 
-- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), 73 kỹ năng AI (và 68 workflows được lưu trữ/hợp nhất theo ADR-0056), 9 gói thư viện lõi và công cụ điều phối đồng bộ.
+- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), <!-- SKILL_COUNT_START -->76<!-- SKILL_COUNT_END --> kỹ năng AI (và <!-- ARCHIVED_WORKFLOW_COUNT_START -->68<!-- ARCHIVED_WORKFLOW_COUNT_END --> workflows được lưu trữ/hợp nhất theo ADR-0056), các gói thư viện lõi và công cụ điều phối đồng bộ.
 - **Dự Án Con (Spokes)**: Các repositories chuyên biệt (như `ccba-legal-knowledge`, `ccba-qc-web-app`, các dự án thẩm tra công trình cụ thể). Spoke kế thừa toàn bộ năng lực AI của Hub thông qua cơ chế **Reuse-First Gate** và công cụ đồng bộ **`sync_spoke.py`**.
+
+---
+
+## 🧭 Cổng Tra Cứu Kỹ Năng & Hợp Đồng Năng Lực (Public Skills Portal & Agent Endpoints)
+
+Toàn bộ danh mục kỹ năng, lộ trình tác nghiệp và hợp đồng năng lực của Hub được biên dịch tự động sang cả giao diện web tĩnh lẫn các điểm cuối chuẩn mở cho AI Agent:
+
+### 1. Giao Diện Web Tương Tác ([`https://vvchu.github.io/ccba-agent-platform/`](https://vvchu.github.io/ccba-agent-platform/) — [`docs/index.html`](docs/index.html))
+- **01. The Map (Bản đồ Lộ trình `01` $\to$ `05`)**: Định hướng theo câu hỏi tình huống (*"Grouped by when you reach for them"*), kỹ năng khởi đầu khuyến nghị (`Start with /<skill>`) và chuỗi xương sống quy trình (**Pipeline Spine**).
+- **02. Skills Spine & Catalog**: Bố cục lưới `minmax(0, 0.9fr) minmax(0, 1.1fr)` từ `768px` (một cột dưới mức đó), nối dọc các nút **Pipeline Spine** ở cột trái với **Supporting Skills Grid** ở cột phải và hỗ trợ đọc trực tiếp tài liệu chuẩn hóa qua Modal.
+- **03. Deep Seams & Contracts (Reuse-First Gate — ADR-0061)**: Tra cứu trực tiếp `10 packages` từ [`.agents/skills/platform-loader/catalog.yaml`](.agents/skills/platform-loader/catalog.yaml) và `17 capability cards` từ [`seam-contracts.yaml`](seam-contracts.yaml), kèm cú pháp tra cứu hợp đồng:
+  ```bash
+  ccba-platform find-seam --in <types> --out <types>
+  ```
+
+### 2. Điểm Cuối Chuẩn Mở Cho Terminal, IDE & AI Coding Agents
+- **Mục lục & Giải đáp Markdown**: [`docs/skills/INDEX.md`](docs/skills/INDEX.md) và [`docs/skills/FAQ.md`](docs/skills/FAQ.md) phục vụ tra cứu nhanh trực tiếp trong Terminal hoặc IDE.
+- **Chuẩn mở `llms.txt`**: [`docs/llms.txt`](docs/llms.txt) (tóm tắt điều hướng) và [`docs/llms-full.txt`](docs/llms-full.txt) (toàn văn hợp nhất của toàn bộ kỹ năng cho AI Agents và bộ lập chỉ mục RAG).
+- **Trình biên dịch & Kiểm chứng đồng bộ (ADR-0058)**:
+  ```bash
+  python scripts/governance/compile_skills_docs.py --check
+  ```
 
 ---
 
@@ -43,14 +66,19 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
 ccba-agent-platform/                    ← Hub Repository
 ├── AGENTS.md                          ← Minimal Root Constitution (Layer 1 Anchor)
 ├── CLAUDE.md                          ← Claude Code Cross-Agent Parity Bridge
+├── seam-contracts.yaml                ← Capability Contract Cards (ADR-0061)
 ├── docs/
+│   ├── index.html                     ← Static Web Portal (The Map, Spine & Deep Seams)
+│   ├── llms.txt                       ← Open Standard AI Agent Summary Endpoint
+│   ├── llms-full.txt                  ← Full Consolidated Skills Specification
 │   ├── adr/                           ← Architectural Decision Records (ADRs)
 │   ├── governance/                    ← Hub-Spoke Governance & Proposal Guides
 │   ├── rules/                         ← Progressive Disclosure Rules (Guardrails, Git, Code Quality)
+│   ├── skills/                        ← Standardized Skill Docs, INDEX.md, FAQ.md & portals.yaml
 │   └── sop/                           ← Standard Operating Procedures (Sync, Delivery, Repo Protection)
 ├── .agents/
 │   ├── AGENTS.md                      ← Layer 1 Constitution Mirror
-│   ├── skills/                        ← AI Agent skills (<!-- SKILL_COUNT_START -->76<!-- SKILL_COUNT_END --> skills) <!-- Last verified: 2026-09-18 -->
+│   ├── skills/                        ← AI Agent skills catalog
 │   │   ├── ccba-ai-gateway-sdk/       ←   Kết nối AI Gateway (50+ models)
 │   │   ├── ccba-spoke-adopter/        ←   Tiếp nhận Brownfield Spoke an toàn
 │   │   ├── ccba-sharepoint-iac/       ←   SharePoint Lists Schema & IaC
@@ -58,16 +86,17 @@ ccba-agent-platform/                    ← Hub Repository
 │   │   ├── ccba-completion-checklist/ ←   Quản lý HSHT công trình
 │   │   ├── ccba-ai-qc-pccc-audit/     ←   Thẩm tra thiết kế PCCC AI
 │   │   ├── ccba-codebase-design/      ←   Nguyên lý thiết kế Deep Modules
-│   │   └── ...                        ←   Và 59+ kỹ năng chuyên dụng khác
+│   │   └── ...                        ←   Và các kỹ năng chuyên dụng khác
 │   ├── workflows/                     ← Workflows lưu trữ an toàn (.md.bak, hợp nhất vào skills)
 │   └── templates/                     ← Biểu mẫu hành chính & kỹ thuật dùng chung
 ├── .md/                               ← Central Knowledge Base
 │   ├── knowledge/                     ←   Tài liệu nghiên cứu, ADRs, Session Learnings
 │   ├── seminars/                      ←   Agenda & biên bản thảo luận
 │   └── extracted_docs/                ←   Văn bản pháp luật trích xuất thô
-├── packages/                          ← 9 Internal Service Modules (pip installable)
+├── packages/                          ← Internal Service Modules (pip installable)
 │   ├── ccba-harness/                  ←   Testing harness, Two-Stage Decision Framework & GPI Calculator (ADR 0057), evals engine, singleton locks & process monitors
 │   ├── ccba-ai/                       ←   AI Gateway SDK (v1.2.0), drop_params embedding, reasoning streaming token floor & timeout scaling
+│   ├── ccba-diagram/                  ←   Deterministic layout engines, topology analysis & visual ergonomics for Excalidraw diagrams
 │   ├── ccba-maskara/                  ←   Secret detection, PII redaction & privacy guard
 │   ├── ccba-ooxml/                    ←   OOXML presentation builder (Swiss Minimalist & Storytelling), Word Form Filler (auto_map_fields, Dual-Engine Word COM & Layout Guard) & Excel macro calculation
 │   ├── ccba-pdf-prep/                 ←   PDF Vision Preprocessor (in-memory streaming, tiling, title-block, chunks)
@@ -78,6 +107,7 @@ ccba-agent-platform/                    ← Hub Repository
 ├── scripts/                           ← CLI Tooling & Governance Engines
 │   ├── spoke/                         ←   Spoke governance, adoption & synchronization engines
 │   ├── governance/                    ←   Unified Governance & Cross-Reference validation
+│   │   └── compile_skills_docs.py     ←   Skills Documentation & Static Portal Compiler
 │   ├── hooks/                         ←   Git hooks & guards (privacy, naming, simplify)
 │   ├── shell/                         ←   Developer PowerShell & Bash productivity aliases
 │   ├── tests/                         ←   Unit test suites cho Hub tools
@@ -97,14 +127,15 @@ ccba-agent-platform/                    ← Hub Repository
 
 ---
 
-## 📦 9 Service Modules (Gói Dịch Vụ Cốt Lõi)
+## 📦 Service Modules (Gói Dịch Vụ Cốt Lõi)
 
-Toàn bộ các gói dịch vụ nằm trong thư mục `packages/` được thiết kế dưới dạng Deep Modules độc lập, có thể cài đặt trực tiếp vào môi trường Python của kỹ sư:
+Toàn bộ <!-- PACKAGE_COUNT_START -->10<!-- PACKAGE_COUNT_END --> gói dịch vụ nằm trong thư mục `packages/` được thiết kế dưới dạng Deep Modules độc lập, có thể cài đặt trực tiếp vào môi trường Python của kỹ sư:
 
 | Package | Mô tả Chức năng | Lệnh Cài Đặt (Editable Mode) |
 | :--- | :--- | :--- |
 | **`ccba-harness`** | Testing harness, Two-Stage Granularity Decision Framework & GPI Calculator (ADR 0057), Multi-Disciplinary Evals Engine v2/v3 (SSOT Domain Archetypes `archetypes.py` with dedicated `bim_governance` and `bim_rase` subdomains, Nightly Ratchet Tuner token budget & cooldown penalty, Legal Verbatim Provenance ADR 0059, PCCC Parametric, Uniclass 200 BIM, Three-Tier Slicing & Docker Ephemeral Sandbox), Singleton Process Locks, giám sát tệp tin và tiến trình an toàn. | `pip install -e "packages/ccba-harness"` |
 | **`ccba-ai`** | AI Gateway SDK (v1.2.0) — Kết nối 50+ models qua 1 endpoint, hỗ trợ Adaptive Reasoning Timeout Clamp (>=90s), URL Sanitizer (:8045 -> :8090), bóc tách ChatResult.thinking, streaming ceiling 16k tokens và Circuit Breaker. | `pip install -e "packages/ccba-ai"` |
+| **`ccba-diagram`** | Động cơ bố cục tất định cho sơ đồ Excalidraw (Sugiyama, Wheel, Matrix, Tree, Radial, Concentric, Value Chain, Cycle), phân tích tô-pô và kiểm chuẩn thị giác khung 16:9 (`apply_smart_layout`, `DiagramTheme`, `generate_markdown_spec_table`). | `pip install -e "packages/ccba-diagram"` |
 | **`ccba-maskara`** | Quét và che giấu (redact) thông tin nhạy cảm (API Keys, PII) trong log/tệp trước khi commit. | `pip install -e "packages/ccba-maskara"` |
 | **`ccba-ooxml`** | Thao tác DOM file Office (.docx, .pptx, .doc), chuyển đổi DOCX sang vector PDF độc lập chuẩn Dual-Engine (`convert_to_pdf` / `docx_to_pdf`), điền form biểu mẫu tự động bảo toàn bố cục (`WordFormFiller.auto_map_fields` & `FormLayoutGuard`), bảo vệ file mẫu bất biến (`TemplateProtectionError`), sinh slide PowerPoint tự động chuẩn Swiss Minimalist & Storytelling With You (`DeckBuilder`), bóc tách và tái dựng cấu trúc bảng phức tạp (`TableReconstructor`), kiểm định tính toàn vẹn XML và tính toán công thức Excel (`recalc_xlsx`). | `pip install -e "packages/ccba-ooxml"` |
 | **`ccba-pdf-prep`** | Tiền xử lý PDF cho AI Vision: In-memory streaming (Zero Storage Bloat), phân mảnh thông minh (Tiling), bóc tách khung tên bản vẽ, chia nhỏ chunks. | `pip install -e "packages/ccba-pdf-prep"` |
@@ -126,7 +157,7 @@ Dành cho Kỹ sư khi clone `ccba-agent-platform` về máy cá nhân để s�
 
 ---
 
-### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ 9 Packages
+### 2. Cài Đặt Môi Trường Ảo & Toàn Bộ Internal Packages
 
 Mở terminal tại thư mục gốc dự án và thực hiện tuần tự:
 
@@ -140,9 +171,10 @@ python -m venv .venv
 # Trên Linux / macOS:
 source .venv/bin/activate
 
-# 3. Cài đặt toàn bộ 9 internal packages ở chế độ Editable (-e)
+# 3. Cài đặt toàn bộ internal packages ở chế độ Editable (-e)
 pip install -e "packages/ccba-harness" \
             -e "packages/ccba-ai" \
+            -e "packages/ccba-diagram" \
             -e "packages/ccba-maskara" \
             -e "packages/ccba-ooxml" \
             -e "packages/ccba-pdf-prep" \
@@ -186,7 +218,7 @@ python -c "from ccba_ai import ai; print('✅ AI Gateway Models:', len(ai.models
 # 2. Chạy toàn bộ Fast Test Suite (< 2.0s per test, loại trừ test mạng nặng)
 pytest -m "not slow"
 
-# 3. Chạy Governance Gate (Kiểm định 73 Skills & Toàn bộ Tài liệu Markdown)
+# 3. Chạy Governance Gate (Kiểm định toàn bộ Skills & Tài liệu Markdown)
 python scripts/validate_skills.py
 python scripts/validate_docs.py
 
