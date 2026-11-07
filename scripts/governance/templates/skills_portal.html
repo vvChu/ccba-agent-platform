@@ -1024,10 +1024,10 @@
 
         const sec = document.createElement("section");
         sec.className = "goal-section";
-        sec.id = `goal-${p.id}`;
+        sec.id = `goal-${escapeHtml(p.id)}`;
         sec.innerHTML = `
           <div class="goal-header">
-            <div class="eyebrow font-mono">${escapeHtml(p.step)} · ${p.icon} ${escapeHtml(p.name)} (${p.count} Kỹ năng)</div>
+            <div class="eyebrow font-mono">${escapeHtml(p.step)} · ${escapeHtml(p.icon)} ${escapeHtml(p.name)} (${escapeHtml(p.count)} Kỹ năng)</div>
             <h2>${escapeHtml(p.question)}</h2>
             <p>${escapeHtml(p.desc)}</p>
           </div>
@@ -1059,7 +1059,7 @@
       PORTALS.forEach(p => {
         const chip = document.createElement("button");
         chip.className = `chip ${activePortal === p.id ? "active" : ""}`;
-        chip.innerHTML = `${escapeHtml(p.step)} · ${p.icon} ${escapeHtml(p.name)} (${p.count})`;
+        chip.innerHTML = `${escapeHtml(p.step)} · ${escapeHtml(p.icon)} ${escapeHtml(p.name)} (${escapeHtml(p.count)})`;
         chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); };
         portalChipsContainer.appendChild(chip);
       });
@@ -1115,7 +1115,7 @@
           li.className = "spine-row";
           li.innerHTML = `
             <div class="spine-left">
-              <h3><span class="font-mono" style="font-size:0.82rem; color:var(--ccba-fg-faint);">${escapeHtml(p.step)}</span> ${p.icon} ${escapeHtml(p.name)}</h3>
+              <h3><span class="font-mono" style="font-size:0.82rem; color:var(--ccba-fg-faint);">${escapeHtml(p.step)}</span> ${escapeHtml(p.icon)} ${escapeHtml(p.name)}</h3>
               <p>${escapeHtml(p.desc)}</p>
               <div class="start-with-line font-mono">Start with <span class="start-with-link" data-skill="${escapeHtml(p.start_with)}" onclick="openModal(this.getAttribute('data-skill'))">/${escapeHtml(p.start_with)}</span></div>
             </div>
@@ -1136,7 +1136,7 @@
                 <span class="badge ${tierClass}">${s.tier === "orchestrator" ? "Orchestrator" : "Kernel"}</span>
               </div>
               <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-                <span class="badge badge-portal">${s.portal_icon} ${escapeHtml(s.portal_name)}</span>
+                <span class="badge badge-portal">${escapeHtml(s.portal_icon)} ${escapeHtml(s.portal_name)}</span>
                 <span class="badge badge-${escapeHtml(s.inv)}">${escapeHtml(s.inv.toUpperCase())}</span>
               </div>
               <div class="skill-desc">${escapeHtml(s.desc)}</div>
@@ -1205,7 +1205,7 @@
       modalTitle.textContent = s.name;
       modalMeta.innerHTML = `
         <span class="badge ${s.tier === 'orchestrator' ? 'badge-orchestrator' : 'badge-kernel'}">${escapeHtml(s.tier_display)}</span>
-        <span class="badge badge-portal">${s.portal_icon} ${escapeHtml(s.portal_name)}</span>
+        <span class="badge badge-portal">${escapeHtml(s.portal_icon)} ${escapeHtml(s.portal_name)}</span>
         <span class="badge badge-${escapeHtml(s.inv)}">${escapeHtml(s.inv_display)}</span>
         <span class="badge badge-portal">Bundle: ${escapeHtml(s.bundle)}</span>
       `;
