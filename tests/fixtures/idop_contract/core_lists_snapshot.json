@@ -15,7 +15,9 @@
     "CDEDocuments",
     "Certifications",
     "Contacts",
+    "ContractRoles",
     "ContractScopes",
+    "ContractUnitAllocations",
     "Contracts",
     "Customers",
     "Departments",
@@ -75,7 +77,9 @@
     "cde_documents",
     "certifications",
     "contacts",
+    "contract_roles",
     "contract_scopes",
+    "contract_unit_allocations",
     "contracts",
     "customers",
     "departments",
@@ -395,7 +399,7 @@
         {
           "Name": "ProjectId",
           "Type": "Lookup",
-          "Required": true,
+          "Required": false,
           "Indexed": true,
           "Lookup": {
             "List": "Projects",
@@ -419,6 +423,7 @@
         {
           "Name": "ContractId",
           "Type": "Lookup",
+          "Required": true,
           "Indexed": true,
           "Lookup": {
             "List": "Contracts",
@@ -470,6 +475,7 @@
         {
           "Name": "ContractLeadUser",
           "Type": "User",
+          "ReadOnly": true,
           "UserSelectionMode": "PeopleOnly",
           "DisplayName": "Chủ trì hợp đồng (PM)"
         },
@@ -482,6 +488,7 @@
         {
           "Name": "FinancialOfficerUser",
           "Type": "User",
+          "ReadOnly": true,
           "UserSelectionMode": "PeopleOnly",
           "DisplayName": "Phụ trách tài chính (nếu có)",
           "Description": "Tùy chọn. Gán khi HĐ cần người riêng phụ trách quản lý tài chính dự án. Đối với HĐ nhỏ, Chủ trì HĐ tự phụ trách. Thường là Phụ trách Kế toán Đơn vị (Ghế ⑤ CCBA) hoặc cán bộ được Trưởng đơn vị cử"
@@ -571,6 +578,7 @@
         {
           "Name": "CoordinatorUser",
           "Type": "User",
+          "ReadOnly": true,
           "UserSelectionMode": "PeopleOnly",
           "DisplayName": "Điều phối viên kỹ thuật / BIM"
         },
@@ -582,12 +590,14 @@
         {
           "Name": "ContractSecretaryUser",
           "Type": "User",
+          "ReadOnly": true,
           "UserSelectionMode": "PeopleOnly",
           "DisplayName": "Thư ký quản lý hợp đồng"
         },
         {
           "Name": "LegalQAChecker",
           "Type": "User",
+          "ReadOnly": true,
           "UserSelectionMode": "PeopleOnly",
           "DisplayName": "Kiểm soát Pháp lý & QA"
         },
@@ -1084,6 +1094,7 @@
         {
           "Name": "WorkflowId",
           "Type": "Lookup",
+          "Indexed": true,
           "DisplayName": "Quy trình phê duyệt",
           "Lookup": {
             "List": "ApprovalWorkflows",

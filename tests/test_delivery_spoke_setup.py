@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 import yaml
 from scripts.spoke.spoke_adopter import SpokeAdopter
 from scripts.spoke.spoke_synchronizer import SpokeRegistrar
@@ -50,8 +51,11 @@ def test_delivery_template_yaml_validity():
     assert len(data["cde_structure"]["folders"]) >= 4
 
 
-def test_mock_delivery_spoke_adoption_and_sync(tmp_path: Path):
+def test_mock_delivery_spoke_adoption_and_sync(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify that a mock Project Delivery spoke can be adopted and synchronized cleanly."""
+    monkeypatch.setenv("CCBA_SKIP_GIT_PULL", "1")
     hub_dir = Path(__file__).resolve().parent.parent
     spoke_dir = tmp_path / "2026-04-dh-viet-nhat"
     spoke_dir.mkdir()

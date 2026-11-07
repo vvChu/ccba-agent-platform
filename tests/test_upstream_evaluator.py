@@ -369,7 +369,7 @@ def test_ensure_local_repo_stale_index_lock_cleanup(tmp_path: Path) -> None:
 def test_ensure_local_repo_clean_clone_fallback(tmp_path: Path) -> None:
     """Verify ensure_local_repo cleans up corrupted repo and triggers clean clone fallback."""
     repo_dir = tmp_path / "broken_repo"
-    repo_dir.mkdir()
+    (repo_dir / ".git").mkdir(parents=True)
     (repo_dir / "corrupted_file.txt").write_text("broken", encoding="utf-8")
 
     config = {
