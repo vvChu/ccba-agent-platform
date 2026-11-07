@@ -70,6 +70,32 @@ cards:
     failure_modes: [missing_legal_basis, contradictory_regulations]
     owner: hub-legal
 
+  - seam_id: legal_lexicon.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_legal.lexicon:LexiconHarvester, ImmutableSpanMasker
+    capability:
+      in: [markdown, csv, text]
+      out: [canonical_taxonomy, masked_text]
+    hardware: [any]
+    failure_modes: [missing_corpus, invalid_taxonomy_schema, unclosed_span]
+    owner: hub-legal
+    implementation_packages: [ccba_legal]
+
+  - seam_id: statutory_currency.v1
+    kind: package
+    binding:
+      mode: local_import
+    import_path: ccba_legal:DynamicStatutoryResolver
+    capability:
+      in: [statutory_role, evaluation_date]
+      out: [currency_card, statutory_doc_info]
+    hardware: [any]
+    failure_modes: [unknown_statutory_role, registry_unavailable]
+    owner: hub-legal
+    implementation_packages: [ccba_legal]
+
   - seam_id: ai_chat.v1
     kind: package
     binding:

@@ -973,6 +973,24 @@ class UpstreamEvaluator:
         self.configs = configs if configs is not None else load_upstream_sources()
         self._last_vitality_badge: str = ""
 
+    def _clone_repo(self, local_path: Path, remote_url: str, repo_type: str) -> bool:
+        """Clone upstream repository into local_path with clean teardown on failure."""
+        if local_path.exists():
+            safe_rmtree(local_path)
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            subprocess.run(
+                ["git", "clone", remote_url, str(local_path)],
+                check=True,
+                capture_output=True,
+            )
+            print(f"[Repo Update] Successfully cloned {repo_type}.")
+            return True
+        except subprocess.SubprocessError as e:
+            print(f"[Repo Update] Error cloning {repo_type}: {e}")
+            safe_rmtree(local_path)
+            return False
+
     def ensure_local_repo(self, config: dict[str, Any], fast: bool = False) -> bool:
         """Ensure local repo is cloned and updated with self-healing index.lock and clean-clone fallback."""
         local_path: Path = config["local_path"]
@@ -980,81 +998,52 @@ class UpstreamEvaluator:
         repo_type: str = config["type"]
 
         if fast:
-            return local_path.exists()
+            return (local_path / ".git").exists()
 
-        # Self-healing 1: Check and clean up stale git index.lock
         lock_file = local_path / ".git" / "index.lock"
         if lock_file.exists():
             print(f"[Repo Update] Stale git index.lock detected in {repo_type}. Cleaning up...")
             lock_file.unlink(missing_ok=True)
 
-        if not local_path.exists():
+        if not (local_path / ".git").exists():
             print(f"[Repo Update] Cloning {repo_type} from {remote_url}...")
-            local_path.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                subprocess.run(
-                    ["git", "clone", remote_url, str(local_path)],
-                    check=True,
-                    capture_output=True,
-                )
-                print(f"[Repo Update] Successfully cloned {repo_type}.")
-                return True
-            except subprocess.SubprocessError as e:
-                print(f"[Repo Update] Error cloning {repo_type}: {e}")
-                safe_rmtree(local_path)
-                return False
-        else:
-            try:
-                print(f"[Repo Update] Fetching updates for {repo_type}...")
-                subprocess.run(
-                    ["git", "fetch", "origin"],
-                    cwd=str(local_path),
-                    check=True,
-                    capture_output=True,
-                )
-                configured_branch = config.get("branch")
-                if configured_branch:
-                    target_branch = configured_branch
-                else:
-                    res = subprocess.run(
-                        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
-                        cwd=str(local_path),
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                        errors="replace",
-                    )
-                    target_branch = (
-                        res.stdout.strip().split("/")[-1] if res.returncode == 0 else "main"
-                    )
+            return self._clone_repo(local_path, remote_url, repo_type)
 
-                subprocess.run(
-                    ["git", "reset", "--hard", f"origin/{target_branch}"],
+        try:
+            print(f"[Repo Update] Fetching updates for {repo_type}...")
+            subprocess.run(
+                ["git", "fetch", "origin"],
+                cwd=str(local_path),
+                check=True,
+                capture_output=True,
+            )
+            configured_branch = config.get("branch")
+            if configured_branch:
+                target_branch = configured_branch
+            else:
+                res = subprocess.run(
+                    ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
                     cwd=str(local_path),
-                    check=True,
                     capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 )
-                print(
-                    f"[Repo Update] Successfully updated {repo_type} on branch '{target_branch}'."
-                )
-                return True
-            except subprocess.SubprocessError as e:
-                # Self-healing 2: Clean clone fallback on corrupted or broken repository
-                print(
-                    f"[Repo Update] Error updating {repo_type}: {e}. Initiating clean clone fallback..."
-                )
-                safe_rmtree(local_path)
-                try:
-                    subprocess.run(
-                        ["git", "clone", remote_url, str(local_path)],
-                        check=True,
-                        capture_output=True,
-                    )
-                    print(f"[Repo Update] Successfully recovered {repo_type} via clean clone.")
-                    return True
-                except subprocess.SubprocessError as clone_err:
-                    print(f"[Repo Update] Clean clone fallback failed for {repo_type}: {clone_err}")
-                    return False
+                target_branch = res.stdout.strip().split("/")[-1] if res.returncode == 0 else "main"
+
+            subprocess.run(
+                ["git", "reset", "--hard", f"origin/{target_branch}"],
+                cwd=str(local_path),
+                check=True,
+                capture_output=True,
+            )
+            print(f"[Repo Update] Successfully updated {repo_type} on branch '{target_branch}'.")
+            return True
+        except subprocess.SubprocessError as e:
+            print(
+                f"[Repo Update] Error updating {repo_type}: {e}. Initiating clean clone fallback..."
+            )
+            return self._clone_repo(local_path, remote_url, repo_type)
 
     def get_local_sha(self, config: dict[str, Any]) -> str:
         """Get the recorded SHA from sha_file."""

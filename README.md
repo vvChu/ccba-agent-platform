@@ -45,7 +45,7 @@ Toàn bộ danh mục kỹ năng, lộ trình tác nghiệp và hợp đồng n�
 ### 1. Giao Diện Web Tương Tác ([`https://vvchu.github.io/ccba-agent-platform/`](https://vvchu.github.io/ccba-agent-platform/) — [`docs/index.html`](docs/index.html))
 - **01. The Map (Bản đồ Lộ trình `01` $\to$ `05`)**: Định hướng theo câu hỏi tình huống (*"Grouped by when you reach for them"*), kỹ năng khởi đầu khuyến nghị (`Start with /<skill>`) và chuỗi xương sống quy trình (**Pipeline Spine**).
 - **02. Skills Spine & Catalog**: Bố cục lưới `minmax(0, 0.9fr) minmax(0, 1.1fr)` từ `768px` (một cột dưới mức đó), nối dọc các nút **Pipeline Spine** ở cột trái với **Supporting Skills Grid** ở cột phải và hỗ trợ đọc trực tiếp tài liệu chuẩn hóa qua Modal.
-- **03. Deep Seams & Contracts (Reuse-First Gate — ADR-0061)**: Tra cứu trực tiếp `10 packages` từ [`.agents/skills/platform-loader/catalog.yaml`](.agents/skills/platform-loader/catalog.yaml) và `17 capability cards` từ [`seam-contracts.yaml`](seam-contracts.yaml), kèm cú pháp tra cứu hợp đồng:
+- **03. Deep Seams & Contracts (Reuse-First Gate — ADR-0061)**: Tra cứu trực tiếp `10 packages` từ [`.agents/skills/platform-loader/catalog.yaml`](.agents/skills/platform-loader/catalog.yaml) và `19 capability cards` từ [`seam-contracts.yaml`](seam-contracts.yaml), kèm cú pháp tra cứu hợp đồng:
   ```bash
   ccba-platform find-seam --in <types> --out <types>
   ```

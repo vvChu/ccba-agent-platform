@@ -385,3 +385,57 @@ def test_seam_contracts_no_forbidden_import_collisions() -> None:
     assert not collisions, "Collision(s) detected in forbidden_substitute_imports:\n" + "\n".join(
         f"  ❌ {c}" for c in collisions
     )
+
+
+def test_legal_lexicon_and_statutory_currency_seams_registered() -> None:
+    """Verify legal_lexicon.v1 and statutory_currency.v1 are registered and discoverable."""
+    code_lex, payload_lex = query_seam_contracts(
+        hub_root=HUB_ROOT,
+        in_types=["markdown", "csv"],
+        out_types=["canonical_taxonomy"],
+        as_json=True,
+    )
+    assert code_lex == 0
+    assert payload_lex["status"] == "MATCH"
+    assert any(c["seam_id"] == "legal_lexicon.v1" for c in payload_lex["cards"])
+
+    code_stat, payload_stat = query_seam_contracts(
+        hub_root=HUB_ROOT,
+        in_types=["statutory_role"],
+        out_types=["currency_card"],
+        as_json=True,
+    )
+    assert code_stat == 0
+    assert payload_stat["status"] == "MATCH"
+    assert any(c["seam_id"] == "statutory_currency.v1" for c in payload_stat["cards"])
+
+
+def test_seam_contracts_multi_symbol_import_path_validation(tmp_path: Path) -> None:
+    """Verify validate_seam_contracts validates every comma-separated symbol in import_path."""
+    pkg_dir = tmp_path / "packages" / "ccba-legal-intel"
+    src_dir = pkg_dir / "src" / "ccba_legal" / "lexicon"
+    src_dir.mkdir(parents=True)
+    (src_dir / "__init__.py").write_text(
+        '__all__ = ["LexiconHarvester", "ImmutableSpanMasker"]\n',
+        encoding="utf-8",
+    )
+
+    contracts_file = tmp_path / "seam-contracts.yaml"
+    contracts_file.write_text(
+        yaml.safe_dump(
+            {
+                "cards": [
+                    {
+                        "seam_id": "legal_lexicon.v1",
+                        "kind": "package",
+                        "binding": {"mode": "local_import"},
+                        "import_path": "ccba_legal.lexicon:LexiconHarvester, GhostMasker",
+                        "capability": {"in": ["markdown"], "out": ["canonical_taxonomy"]},
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    errors = validate_seam_contracts(tmp_path)
+    assert any("GhostMasker" in err and "not exported" in err for err in errors)
