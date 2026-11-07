@@ -3,6 +3,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from ccba_ai.services.plan import (
     FileMutexLock,
     Phase,
@@ -140,3 +142,34 @@ def test_plan_lifecycle_and_compatibility():
         phase_file = plan_file.parent / new_status.phases[0].file
         assert phase_file.exists()
         assert "status: completed" in phase_file.read_text(encoding="utf-8")
+
+
+def test_plan_rejects_second_order_phase_path_traversal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify plan.py blocks ../, absolute paths, and symlinks in the File column even if outside env is set."""
+    monkeypatch.setenv("CCBA_MCP_ALLOW_OUTSIDE_WORKSPACE", "1")
+    res = create_plan(title="Traversal Check", phases_list=["Phase 1"], workspace_root=tmp_path)
+    plan_file = tmp_path / res.plan_file
+    plan_dir = plan_file.parent
+    outside_target = tmp_path / "outside_victim.md"
+    outside_target.write_text("---\nstatus: untouched\n---\nBody\n", encoding="utf-8")
+
+    orig_text = plan_file.read_text(encoding="utf-8")
+    for bad_ref in ("../outside_victim.md", str(outside_target)):
+        plan_file.write_text(orig_text.replace("phase-01-phase-1.md", bad_ref), encoding="utf-8")
+        with pytest.raises(ValueError, match="Invalid phase filename"):
+            get_plan_status(plan_file, workspace_root=tmp_path)
+        with pytest.raises(ValueError, match="Invalid phase filename"):
+            update_phase_status(plan_file, "01", "completed", workspace_root=tmp_path)
+
+    symlink_phase = plan_dir / "phase-01-symlink.md"
+    symlink_phase.symlink_to(outside_target)
+    plan_file.write_text(
+        orig_text.replace("phase-01-phase-1.md", "phase-01-symlink.md"), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="resolves outside"):
+        get_plan_status(plan_file, workspace_root=tmp_path)
+    with pytest.raises(ValueError, match="resolves outside"):
+        update_phase_status(plan_file, "01", "completed", workspace_root=tmp_path)
+    assert "status: untouched" in outside_target.read_text(encoding="utf-8")

@@ -60,6 +60,28 @@ Brief objective of this phase.
 """
 
 
+def _resolve_phase_path(plan_dir: Path, filename: str) -> Path:
+    """Validate that phase filename is a strict basename within plan_dir."""
+    clean = filename.strip()
+    if (
+        not clean
+        or clean in {".", ".."}
+        or "/" in clean
+        or "\\" in clean
+        or Path(clean).name != clean
+    ):
+        raise ValueError(
+            f"Invalid phase filename '{filename}': must be a single basename in plan directory."
+        )
+    base_dir = plan_dir.resolve()
+    resolved = (base_dir / clean).resolve()
+    if not resolved.is_relative_to(base_dir):
+        raise ValueError(
+            f"Security Violation: Phase file '{filename}' resolves outside '{base_dir}'."
+        )
+    return resolved
+
+
 class Phase:
     """Domain model representing a single phase in the plan."""
 
@@ -110,7 +132,7 @@ class Phase:
 
     def save(self, dir_path: Path) -> None:
         """Saves the Phase back to disk. Preserves file formatting if file already exists."""
-        file_path = dir_path / self.filename
+        file_path = _resolve_phase_path(dir_path, self.filename)
 
         if file_path.exists():
             # Target Line Override: only update the status line in frontmatter
@@ -213,7 +235,7 @@ class Plan:
                     p_file = parts[3]
 
                     # Load Phase object
-                    phase_path = file_path.parent / p_file
+                    phase_path = _resolve_phase_path(file_path.parent, p_file)
                     phase_obj = Phase.from_file(phase_path, p_id, p_name, p_status, p_file)
                     phases.append(phase_obj)
 
@@ -331,7 +353,7 @@ def update_phase_status(
     # Save both
     plan_obj.save()
 
-    phase_file_path = plan_path.parent / phase_obj.filename
+    phase_file_path = _resolve_phase_path(plan_path.parent, phase_obj.filename)
     phase_file_updated = False
     if phase_file_path.exists():
         phase_obj.save(plan_path.parent)
