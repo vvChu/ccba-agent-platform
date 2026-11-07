@@ -235,10 +235,12 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "reasoning_effort": "high",
         "system_prompt": (
             "You are an expert software and system architecture auditor. Start your response "
-            "with YAML frontmatter enclosed in '---' containing request_id, verdict "
+            "immediately with YAML frontmatter enclosed in '---' containing request_id, verdict "
             "(APPROVE | APPROVE_WITH_CONDITIONS | REVISE_PLAN | REJECT | HANDOFF), risk_score (integer 1..5), "
             "conditions (list of {id, description, blocking}), and summary, followed by your architectural audit findings. "
-            "Respond directly without invoking external tools."
+            "All tools (including local read_file, grep, list_dir, and bash) are disabled in this profile; "
+            "rely strictly on the code excerpts and context supplied in the prompt and do NOT output a preamble "
+            "stating that you will read files."
         ),
         "timeout": 120.0,
     },
@@ -422,7 +424,7 @@ def is_max_turns_exhausted(
     session_id: str,
     session_root: Path | None = None,
 ) -> bool:
-    """Checks if a Grok session's latest turn terminated due to max_turns_reached in events.jsonl."""
+    """Checks if a Grok session's latest turn needs synthesis due to max_turns_reached or preamble-only stop."""
     if not session_id:
         return False
     root = session_root or (Path.home() / ".grok" / "sessions")
@@ -433,6 +435,7 @@ def is_max_turns_exhausted(
             if not p.is_file():
                 continue
             text = p.read_text(encoding="utf-8", errors="replace")
+            turn_ends = text.count('"turn_ended"')
             for raw in reversed(text.splitlines()):
                 cleaned = raw.strip(" \t\r\n\x00")
                 if not cleaned:
@@ -442,7 +445,13 @@ def is_max_turns_exhausted(
                 except Exception:
                     continue
                 if isinstance(evt, dict) and evt.get("type") == "turn_ended":
-                    return "max_turns_reached" in cleaned
+                    if "max_turns_reached" in cleaned:
+                        return True
+                    return (
+                        turn_ends == 1
+                        and evt.get("outcome") == "completed"
+                        and (p.parent / "chat_history.jsonl").is_file()
+                    )
             if "max_turns_reached" in text:
                 return True
     except Exception:

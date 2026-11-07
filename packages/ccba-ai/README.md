@@ -111,6 +111,12 @@ OLLAMA_MODEL=qwen2.5-coder:7b
 
 # Tier 4 (Mock Engine)
 CCBA_AI_MOCK=0
+
+# MCP Server Workspace Containment (ADR-0061 / Issue #647)
+# Mặc định giới hạn các thao tác đọc/ghi tệp của MCP tools trong thư mục làm việc hiện tại
+CCBA_MCP_WORKSPACE=/path/to/workspace
+# Chỉ đặt =1 khi chủ đích cho phép MCP tools truy cập đường dẫn ngoài workspace
+CCBA_MCP_ALLOW_OUTSIDE_WORKSPACE=0
 ```
 
 ---

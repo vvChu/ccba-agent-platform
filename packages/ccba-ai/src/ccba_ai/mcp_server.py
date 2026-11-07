@@ -64,29 +64,35 @@ def _create_mcp_server(name: str = "ccba-mcp-server") -> _MCPServerPort:
 
 
 # Import services from ccba_ai
-# Expose scripts folder for idop_scaffolder import
-import importlib.util
-
 from ccba_ai import services
 from ccba_ai.hooks import PrivacyGuardHook
-
-idop_scaffolder = None
-cwd_scripts = Path.cwd() / "scripts" / "idop_scaffolder.py"
-if cwd_scripts.exists():
-    try:
-        spec = importlib.util.spec_from_file_location("idop_scaffolder", cwd_scripts)
-        if spec and spec.loader:
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            idop_scaffolder = module
-    except Exception:
-        pass
 
 # Initialize MCP Server via version-agnostic seam
 mcp: _MCPServerPort = _create_mcp_server("ccba-mcp-server")
 
 LOG_DIR = Path(".md") / "logs"
 LOG_FILE = LOG_DIR / "mcp_server.log"
+
+
+def _get_workspace_root() -> Path:
+    """Return resolved workspace root from CCBA_MCP_WORKSPACE or current working directory."""
+    raw_root = os.environ.get("CCBA_MCP_WORKSPACE", "").strip()
+    return Path(raw_root).resolve() if raw_root else Path.cwd().resolve()
+
+
+def _resolve_workspace_path(raw_path: str | Path) -> Path:
+    """Resolve raw_path and enforce workspace containment unless explicitly opted out."""
+    workspace_root = _get_workspace_root()
+    candidate = Path(raw_path)
+    if not candidate.is_absolute():
+        candidate = workspace_root / candidate
+    resolved = candidate.resolve()
+    allow_outside = os.environ.get("CCBA_MCP_ALLOW_OUTSIDE_WORKSPACE", "").strip().lower()
+    if allow_outside not in {"1", "true", "yes"} and not resolved.is_relative_to(workspace_root):
+        raise PermissionError(
+            f"Access denied: Path '{raw_path}' resolves outside workspace '{workspace_root}'."
+        )
+    return resolved
 
 
 def log(msg: str) -> None:
@@ -237,7 +243,13 @@ def update_phase_status(plan_file: str, phase_id: str, status: str) -> dict[str,
     """
     log(f"Tool update_phase_status called for {plan_file} (Phase {phase_id} -> {status})")
     try:
-        return cast(dict[str, Any], services.update_phase_status(plan_file, phase_id, status))
+        resolved_plan = _resolve_workspace_path(plan_file)
+        return cast(
+            dict[str, Any],
+            services.update_phase_status(
+                resolved_plan, phase_id, status, workspace_root=_get_workspace_root()
+            ),
+        )
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -252,7 +264,11 @@ def get_plan_status(plan_file: str) -> dict[str, Any]:
     """
     log(f"Tool get_plan_status called for {plan_file}")
     try:
-        return cast(dict[str, Any], services.get_plan_status(plan_file))
+        resolved_plan = _resolve_workspace_path(plan_file)
+        return cast(
+            dict[str, Any],
+            services.get_plan_status(resolved_plan, workspace_root=_get_workspace_root()),
+        )
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -335,47 +351,15 @@ def run_seo_audit(file_path: str) -> dict[str, Any]:
     """
     log(f"Tool run_seo_audit called for {file_path}")
     try:
-        return cast(dict[str, Any], services.audit_file(file_path))
+        resolved_path = _resolve_workspace_path(file_path)
+        return cast(dict[str, Any], services.audit_file(str(resolved_path)))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
 # ==========================================
-# 5. Nhóm IDOP Scaffolder (Khởi tạo dự án)
+# 5. Nhóm IDOP Scaffolder (Đã gỡ theo ADR 0018)
 # ==========================================
-
-
-def _run_idop_scaffolder_steps(
-    scaffolder: Any,
-    out_abs: str,
-    app_abs: str,
-    app_dir: str,
-    *,
-    scaffold_cde: bool,
-    scaffold_lists: bool,
-    scaffold_workflows: bool,
-    scaffold_react_app: bool,
-    pack_solution: bool,
-    solution_name: str,
-) -> list[str]:
-    """Execute individual IDOP scaffolding steps and return status lines."""
-    reports: list[str] = []
-    if scaffold_cde:
-        scaffolder.scaffold_cde(out_abs)
-        reports.append("- Cấu trúc thư mục CDE: Đã khởi tạo.")
-    if scaffold_lists:
-        scaffolder.scaffold_lists(out_abs)
-        reports.append("- SharePoint Lists Schema & PnP Scripts: Đã khởi tạo.")
-    if scaffold_workflows:
-        scaffolder.scaffold_workflows(out_abs)
-        reports.append("- Power Automate flow definitions: Đã khởi tạo.")
-    if scaffold_react_app:
-        scaffolder.scaffold_app(app_abs)
-        reports.append(f"- React + Vite + TS Code App: Đã khởi tạo tại {app_dir}")
-    if pack_solution:
-        scaffolder.pack_solution(out_abs, solution_name, "CCBA", "ccba")
-        reports.append(f"- Đóng gói Solution zip '{solution_name}': Đã hoàn thành.")
-    return reports
 
 
 @mcp.tool()
@@ -390,29 +374,14 @@ def scaffold_idop_project(
     pack_solution: bool = False,
     solution_name: str = "IDOP_Solution",
 ) -> str:
-    """Tạo nhanh bộ khung dự án CDE, SharePoint IDOP Lists, Power Automate, và React App."""
+    """Stub bảo toàn schema: Công cụ IDOP Scaffolder đã được gỡ khỏi Central Hub theo ADR 0018 và chuyển sang Spoke IDOP-CCBA-WAY."""
     log(
         f"Tool scaffold_idop_project called (output_dir={output_dir}, react_app={scaffold_react_app})"
     )
-    if not idop_scaffolder:
-        return "Error: idop_scaffolder module could not be imported. Ensure scripts/idop_scaffolder.py exists."
-
-    try:
-        reports = _run_idop_scaffolder_steps(
-            idop_scaffolder,
-            os.path.abspath(output_dir),
-            os.path.abspath(app_dir),
-            app_dir,
-            scaffold_cde=scaffold_cde,
-            scaffold_lists=scaffold_lists,
-            scaffold_workflows=scaffold_workflows,
-            scaffold_react_app=scaffold_react_app,
-            pack_solution=pack_solution,
-            solution_name=solution_name,
-        )
-        return "Scaffolding dự án IDOP thành công:\n" + "\n".join(reports)
-    except Exception as e:
-        return f"Error executing scaffolding: {e}"
+    return (
+        "Error: idop_scaffolder has been removed from Central Hub per ADR 0018 "
+        "and relocated to the IDOP-CCBA-WAY Spoke."
+    )
 
 
 # ==========================================
@@ -431,19 +400,14 @@ async def convert_document(file_path: str, output_dir: str | None = None) -> dic
     """
     log(f"Tool convert_document called for {file_path}")
     try:
+        path = _resolve_workspace_path(file_path)
+        out_path = _resolve_workspace_path(output_dir) if output_dir else None
+
         from mdconverter.core.base import ConversionTool
         from mdconverter.core.pipeline import ConversionPipeline
 
-        path = Path(file_path)
-        if not path.is_absolute():
-            path = Path.cwd() / path
-
         if not path.exists():
             return {"status": "error", "message": f"File {file_path} not found."}
-
-        out_path = Path(output_dir) if output_dir else None
-        if out_path and not out_path.is_absolute():
-            out_path = Path.cwd() / out_path
 
         pipeline = ConversionPipeline(tool=ConversionTool.AUTO, output_dir=out_path)
 

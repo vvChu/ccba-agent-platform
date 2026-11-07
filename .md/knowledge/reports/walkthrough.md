@@ -1,29 +1,28 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #638 (Peer Protocol v2 In-Place Watchdog & Mypy Cleanliness)
-## Feature: `fix(harness): guard in-place synthesis watchdog liveness and resolve mypy strict exports`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PRs #654, #652, #653 (CI Pages Fix, Workflow Hardening, MCP Path Containment & IDOP Template Cleanup)
+## Feature: `fix(ci,security,ccba-ai): resolve open security & CI issues (#650, #649, #648, #647, #646, #645)`
 
-> **Nguồn Kiểm Toán:** Kiểm toán hiệu quả vận hành thực tế 290 phiên Hub + 2 phiên `VvC_Notes` dưới cơ chế Peer Coordination Protocol v2 (`ADR-0063..0067`)
-> **Pull Request:** [#638](https://github.com/vvChu/ccba-agent-platform/pull/638) (`e7e01b18`) — tiếp nối [#632](https://github.com/vvChu/ccba-agent-platform/pull/632) (`6ecd4998`)
-> **Branch:** `fix/peer-protocol-v2-in-place-watchdog`
-> **Trạng thái:** ✅ **89/89 MYPY FILES CLEAN, 669/669 HARNESS TESTS PASS, 8/8 CI CHECKS PASS, SQUASH MERGED**
+> **Nguồn Kiểm Toán:** Phản biện 2 vòng với **Grok 4.7** (`Pass 1: d68080e7-1507-4eb8-b296-ec99d77edb61` $\to$ `Pass 2: efad259d-82c1-4905-9e05-89a30f547fca`, phán quyết `APPROVE_PLAN`, `conditions: []`, `risk_score: 2`)
+> **Pull Requests:** [#654](https://github.com/vvChu/ccba-agent-platform/pull/654) (`c5548ef9`), [#652](https://github.com/vvChu/ccba-agent-platform/pull/652) (`e1240a76`), [#653](https://github.com/vvChu/ccba-agent-platform/pull/653) (`d790e32a`)
+> **Branches:** `fix/issues-650-649-workflow-hardening`, `fix/issues-648-647-mcp-security`, `chore/issue-646-remove-idop-templates`
+> **Trạng thái:** ✅ **8/8 CI CHECKS PASS TRÊN CẢ 3 PR, 0 DEPENDABOT ALERTS OPEN, 0 SECRET SCANNING ALERTS OPEN, SQUASH MERGED**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`PR #638`)
+## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`PR #654`, `PR #652`, `PR #653`)
 
 | Hạng Mục / Component | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **In-Place Synthesis Watchdog Guard (`min_timestamp`)** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py` | Bổ sung `min_timestamp` vào `inspect_session_liveness()` (truyền `min_timestamp=start_time` từ `_poll_grok_process_with_watchdog()`) để bỏ qua sự kiện `turn_ended` cũ khi tiến trình Turn 2 đang boot in-place (`fork_session=False`). | Verified |
-| **Turn-Boundary Verdict Recovery & `is_aborted` Guard** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `peer.py` | Dừng vòng lặp quét ngược `_recover_verdict_from_chat_history()` ngay tại ranh giới `"type": "user"` của lượt hiện tại và kiểm tra `not is_aborted` trước khi khôi phục, chặn triệt để rò rỉ verdict Stage 1 sang Stage 3. | Verified |
-| **Latest-Turn `is_max_turns_exhausted()` Check** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `tests/test_peer.py` | Chỉ xét sự kiện JSON `turn_ended` mới nhất trong `events.jsonl`, tự động đặt lại `False` sau khi lượt synthesis in-place hoàn tất (`outcome: completed`). | Verified |
-| **Mypy Strict Cleanliness & `peer.py` Budget (`<= 800` LOC)** | `packages/ccba-harness/src/ccba_harness/peer.py`, `cli/core.py`, `evals/*` | Khai báo `__all__` tường minh cho `peer.py` (784 dòng `<= 800` LOC) và làm sạch toàn bộ 60 lỗi `mypy` trên 89/89 tệp nguồn trong `packages/ccba-harness/src/`. | Verified |
+| **CI Pages Fix & Workflow Hardening (`PR #654` — Issues #650, #649)** | `.github/workflows/deploy-pages.yml`, `pr-verifier.yml`, `ci.yml`, `nightly-slow-tests.yml`, `security_scan.yml`, `validate-docs.yml`, `notebooklm-sync.yml` | Cài tường minh `pydantic` trong `deploy-pages.yml`; chuyển toàn bộ `${{ steps.*.outputs.* }}` trong `pr-verifier.yml` sang `env:` (`process.env.*` / `$VAR`); khai báo `permissions: contents: read` (kèm `actions: write` cho 2 workflow dùng `cache: 'pip'`). | Verified |
+| **MCP CWD Isolation & First/Second-Order Path Containment (`PR #652` — Issues #648, #647)** | `packages/ccba-ai/src/ccba_ai/mcp_server.py`, `services/plan.py`, `README.md`, `tests/test_mcp_security.py`, `tests/test_plan_manager.py` | Xóa cơ chế thực thi `Path.cwd() / "scripts" / "idop_scaffolder.py"` lúc import (`COND-648-NOEXEC`); thêm `_resolve_workspace_path()` (`CCBA_MCP_WORKSPACE`, break-glass `CCBA_MCP_ALLOW_OUTSIDE_WORKSPACE=1`) cho các MCP file tools và `_resolve_phase_path()` trong `services/plan.py` chặn Second-Order Path Traversal qua cột `File` của `plan.md` (`COND-647-PHASE`). | Verified |
+| **Orphaned IDOP Template Removal (`PR #653` — Issue #646)** | `scripts/templates/idop/*` (10 files deleted) | Thực thi `COND-646-B` theo ADR 0018: xóa toàn bộ thư mục mồ côi `scripts/templates/idop/` (`0` callers sau khi `scripts/idop_scaffolder.py` đã chuyển sang Spoke `IDOP-CCBA-WAY`), đóng dứt điểm toàn bộ 11 Dependabot alerts của `vite`. | Verified |
+| **Secret Scanning Governance (`Issue #645`)** | GitHub Secret Scanning Alerts #1, #2, #3 | Đóng Alert #1 (dangling commit `985ebd02` từ `2026-03-28`, đã rewrite thành `6d8b8f31` và đã rotate key) với `resolution=revoked`, và đóng Alert #2, #3 với `resolution=used_in_tests`. | Verified |
 
 ---
 
 ## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Tự Động (`ADR-0058`)
 
-- **Hiệu quả vận hành Peer Protocol v2 trên dữ liệu thực (`~/.grok/sessions/`)**:
-  - **Cô lập tiến trình con (`COND-08`)**: Giảm tỷ lệ khởi chạy MCP dư thừa từ `97.6%` (`279/286` phiên) xuống **`0.0%`** (`0/6` phiên), giảm bộ nhớ Peak RSS trung bình **89.3%** (`1,117.8 MB` $\to$ `119.3 MB`, giảm **98.1%** so với đỉnh `6,278.8 MB`).
-  - **Bảo vệ In-Place Synthesis (`fork_session=False`)**: Tiến trình Turn 2 vượt qua tick 0 khi `events.jsonl` có sẵn `turn_ended:cancelled` của Turn 1 (`ok=True, proc.killed=False, ticks=2`); phiên `fa67f7de` không còn rò rỉ verdict Stage 1.
-- **GitHub Actions CI & Copilot Review trên PR #638**:
-  - **8/8 CI Checks PASS** (`PR Danger Triage & Verifier Gate`, `Deterministic Parity & Schema Audit`, `Lint Markdown`, `Test - Python 3.10/3.11/3.12`, `Security & Privacy Scan`, `Documentation Check`).
-  - `audit_pr_comments.py`: `[OK] All Copilot reviews and comments on PR #638 are clean or resolved.`
+- **Kiểm thử đơn vị & đối kháng (`packages/ccba-ai`)**: `17/17 passed` (`test_mcp_security.py`, `test_plan_manager.py`, `test_mcp_legal_search.py`).
+- **Kiểm thử toàn vẹn tài liệu kỹ năng (`tests/governance/test_skills_docs_integrity.py`)**: `10/10 passed`.
+- **GitHub Actions CI & Copilot Review trên PR #654, #652, #653**:
+  - Cả 3 PR đều đạt **8/8 CI Checks PASS** (`PR Danger Triage & Verifier Gate`, `Deterministic Parity & Schema Audit`, `Lint Markdown`, `Test - Python 3.10/3.11/3.12`, `Security & Privacy Scan`, `Documentation Check`).
+  - `audit_pr_comments.py`: `[OK] All Copilot reviews and comments on PR #654 / #652 / #653 are clean or resolved.`
