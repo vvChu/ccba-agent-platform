@@ -1,29 +1,28 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PR #644 (Peer Protocol v2 `audit_direct` Preamble Guard & In-Place Synthesis)
-## Feature: `fix(harness): prevent audit_direct preamble-only stop and enable in-place synthesis`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — PRs #654, #652, #653 (CI Pages Fix, Workflow Hardening, MCP Path Containment & IDOP Template Cleanup)
+## Feature: `fix(ci,security,ccba-ai): resolve open security & CI issues (#650, #649, #648, #647, #646, #645)`
 
-> **Nguồn Kiểm Toán:** Kiểm toán hiệu quả vận hành thực tế 7 phiên Grok sau nâng cấp v2 (`c400b5f7`, `c67c2f8c`, `fa67f7de`, `082a3d79`, `7c138c28`, `032c5a43`, `014f6ddd`) dưới cơ chế Peer Coordination Protocol v2 (`ADR-0063..0067`)
-> **Pull Request:** [#644](https://github.com/vvChu/ccba-agent-platform/pull/644) (`38eb2efe`) — tiếp nối [#638](https://github.com/vvChu/ccba-agent-platform/pull/638) (`e7e01b18`) và [#632](https://github.com/vvChu/ccba-agent-platform/pull/632) (`6ecd4998`)
-> **Branch:** `fix/peer-audit-direct-preamble-synthesis`
-> **Trạng thái:** ✅ **12/12 TEST TARGETS PASS, 97/97 PEER TESTS PASS, 8/8 CI CHECKS PASS, SQUASH MERGED**
+> **Nguồn Kiểm Toán:** Phản biện 2 vòng với **Grok 4.7** (`Pass 1: d68080e7-1507-4eb8-b296-ec99d77edb61` $\to$ `Pass 2: efad259d-82c1-4905-9e05-89a30f547fca`, phán quyết `APPROVE_PLAN`, `conditions: []`, `risk_score: 2`)
+> **Pull Requests:** [#654](https://github.com/vvChu/ccba-agent-platform/pull/654) (`c5548ef9`), [#652](https://github.com/vvChu/ccba-agent-platform/pull/652) (`e1240a76`), [#653](https://github.com/vvChu/ccba-agent-platform/pull/653) (`d790e32a`)
+> **Branches:** `fix/issues-650-649-workflow-hardening`, `fix/issues-648-647-mcp-security`, `chore/issue-646-remove-idop-templates`
+> **Trạng thái:** ✅ **8/8 CI CHECKS PASS TRÊN CẢ 3 PR, 0 DEPENDABOT ALERTS OPEN, 0 SECRET SCANNING ALERTS OPEN, SQUASH MERGED**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`PR #644` & `PR #638`)
+## 1. Tổng Kết Thay Đổi Kiến Trúc & Quản Trị (`PR #654`, `PR #652`, `PR #653`)
 
 | Hạng Mục / Component | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **Explicit Tool Ban in `audit_direct` System Prompt (`PR #644`)** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py` | Khắc phục cách hiểu nhầm `"no external tools"` trong reasoning trace của phiên `7c138c28`: khẳng định rõ mọi công cụ (bao gồm `read_file`, `grep`, `list_dir`, `bash` cục bộ) đều bị vô hiệu hóa, cấm xuất câu mở đầu hứa hẹn đọc file và yêu cầu mở đầu ngay bằng `---` YAML frontmatter. | Verified |
-| **Single-Turn Preamble-Only Synthesis Recovery (`PR #644`)** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `peer.py`, `tests/test_peer.py` | Mở rộng `is_max_turns_exhausted()` và `_dispatch_grok_candidate()` để kích hoạt 1 lượt In-place Synthesis (`--resume <session_id>`) ngay trên `grok-4.7` khi Turn 1 kết thúc sớm (`outcome == "completed"`, `turn_ends == 1`, có `chat_history.jsonl`) mà thiếu YAML verdict, trước khi fallback sang `gemini-38-flash`. | Verified |
-| **In-Place Synthesis Watchdog Guard (`min_timestamp`, `PR #638`)** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py` | Bổ sung `min_timestamp` vào `inspect_session_liveness()` (truyền `min_timestamp=start_time` từ `_poll_grok_process_with_watchdog()`) để bỏ qua sự kiện `turn_ended` cũ khi tiến trình Turn 2 đang boot in-place (`fork_session=False`). | Verified |
-| **Turn-Boundary Verdict Recovery & `is_aborted` Guard (`PR #638`)** | `packages/ccba-harness/src/ccba_harness/_peer_watchdog.py`, `peer.py` | Dừng vòng lặp quét ngược `_recover_verdict_from_chat_history()` ngay tại ranh giới `"type": "user"` của lượt hiện tại và kiểm tra `not is_aborted` trước khi khôi phục, chặn triệt để rò rỉ verdict Stage 1 sang Stage 3. | Verified |
+| **CI Pages Fix & Workflow Hardening (`PR #654` — Issues #650, #649)** | `.github/workflows/deploy-pages.yml`, `pr-verifier.yml`, `ci.yml`, `nightly-slow-tests.yml`, `security_scan.yml`, `validate-docs.yml`, `notebooklm-sync.yml` | Cài tường minh `pydantic` trong `deploy-pages.yml`; chuyển toàn bộ `${{ steps.*.outputs.* }}` trong `pr-verifier.yml` sang `env:` (`process.env.*` / `$VAR`); khai báo `permissions: contents: read` (kèm `actions: write` cho 2 workflow dùng `cache: 'pip'`). | Verified |
+| **MCP CWD Isolation & First/Second-Order Path Containment (`PR #652` — Issues #648, #647)** | `packages/ccba-ai/src/ccba_ai/mcp_server.py`, `services/plan.py`, `README.md`, `tests/test_mcp_security.py`, `tests/test_plan_manager.py` | Xóa cơ chế thực thi `Path.cwd() / "scripts" / "idop_scaffolder.py"` lúc import (`COND-648-NOEXEC`); thêm `_resolve_workspace_path()` (`CCBA_MCP_WORKSPACE`, break-glass `CCBA_MCP_ALLOW_OUTSIDE_WORKSPACE=1`) cho các MCP file tools và `_resolve_phase_path()` trong `services/plan.py` chặn Second-Order Path Traversal qua cột `File` của `plan.md` (`COND-647-PHASE`). | Verified |
+| **Orphaned IDOP Template Removal (`PR #653` — Issue #646)** | `scripts/templates/idop/*` (10 files deleted) | Thực thi `COND-646-B` theo ADR 0018: xóa toàn bộ thư mục mồ côi `scripts/templates/idop/` (`0` callers sau khi `scripts/idop_scaffolder.py` đã chuyển sang Spoke `IDOP-CCBA-WAY`), đóng dứt điểm toàn bộ 11 Dependabot alerts của `vite`. | Verified |
+| **Secret Scanning Governance (`Issue #645`)** | GitHub Secret Scanning Alerts #1, #2, #3 | Đóng Alert #1 (dangling commit `985ebd02` từ `2026-03-28`, đã rewrite thành `6d8b8f31` và đã rotate key) với `resolution=revoked`, và đóng Alert #2, #3 với `resolution=used_in_tests`. | Verified |
 
 ---
 
 ## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Tự Động (`ADR-0058`)
 
-- **Hiệu quả vận hành Peer Protocol v2 trên dữ liệu thực (`~/.grok/sessions/`)**:
-  - **Phiên `014f6ddd` (`VvC_Notes` FUSE Errno 5 Plan Review, `2026-11-07 06:15+07:00`)**: `grok-4.7-build` (`audit_direct`) hoàn tất trong **1 lượt (`292.51s`, `$0.0464` exact)** với **`12,810` reasoning tokens**, **`16,300` output tokens**, **`123.2 MB` Peak RSS**, `0` MCP server overhead, xuất chuẩn xác `APPROVE_WITH_CONDITIONS` (`C1..C7`).
-  - **Khóa kẽ hở `7c138c28` $\to$ `032c5a43`**: Ngăn chặn việc `grok-4.7-build` dừng lượt sau 3 câu mở đầu (*"I am reading those modules..."*) và bảo đảm retry synthesis in-place giữ nguyên KV-cache trên `grok-4.7`.
-- **GitHub Actions CI & Copilot Review trên PR #644**:
-  - **8/8 CI Checks PASS** (`PR Danger Triage & Verifier Gate`, `Deterministic Parity & Schema Audit`, `Lint Markdown`, `Test - Python 3.10/3.11/3.12`, `Security & Privacy Scan`, `Documentation Check`).
-  - `audit_pr_comments.py`: `[OK] All Copilot reviews and comments on PR #644 are clean or resolved.`
+- **Kiểm thử đơn vị & đối kháng (`packages/ccba-ai`)**: `17/17 passed` (`test_mcp_security.py`, `test_plan_manager.py`, `test_mcp_legal_search.py`).
+- **Kiểm thử toàn vẹn tài liệu kỹ năng (`tests/governance/test_skills_docs_integrity.py`)**: `10/10 passed`.
+- **GitHub Actions CI & Copilot Review trên PR #654, #652, #653**:
+  - Cả 3 PR đều đạt **8/8 CI Checks PASS** (`PR Danger Triage & Verifier Gate`, `Deterministic Parity & Schema Audit`, `Lint Markdown`, `Test - Python 3.10/3.11/3.12`, `Security & Privacy Scan`, `Documentation Check`).
+  - `audit_pr_comments.py`: `[OK] All Copilot reviews and comments on PR #654 / #652 / #653 are clean or resolved.`
