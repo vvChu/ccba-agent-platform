@@ -103,3 +103,11 @@ Khi Agent đang hoạt động tại Spoke và phát hiện kỹ năng cần dù
   - Soạn thảo hành chính / đề xuất thầu $\rightarrow$ Nạp Master Skill `ccba-copywriting`.
   - Viết bài báo khoa học $\rightarrow$ Nạp Master Skill `ccba-academic-writing`.
 - **Nạp Sub-Skill / Utility khi cần thiết**: Nạp trực tiếp sub-skills (`ccba-pptx`, `../ccba-xu-ly-van-phong/references/docx_engine_guide.md`) khi cần xử lý thao tác vi mô. Đối với các tác vụ tái cấu trúc bảng, dọn dẹp template biểu mẫu, sửa liên kết tương đối, tham khảo tài liệu kỹ thuật Tier 2 trong `.agents/skills/ccba-markdown-document-processing/references/`.
+
+---
+
+## 5. Tiêu Chí Hoàn Thành (Done Means — Layer 06 Checks)
+
+- [ ] Đã phân định đúng yêu cầu của người dùng giữa `catalog.yaml` (kỹ năng/quy trình) và `seam-contracts.yaml` (`ccba-platform find-seam --in ... --out ...`, `ADR-0061`).
+- [ ] Tại môi trường Spoke, đã đọc kỹ năng/rule thiếu qua Virtual Hub Fallback (`$CCBA_HUB_PATH`) hoặc xin phép người dùng trước khi chạy `sync_spoke.py --apply`.
+- [ ] Không tự viết script xử lý dữ liệu chắp vá cục bộ khi nền tảng đã có Deep Seam đạt `status: MATCH`.

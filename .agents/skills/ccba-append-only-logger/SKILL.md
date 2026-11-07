@@ -123,3 +123,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 ```
+
+---
+
+## Tiêu Chí Hoàn Thành (Done Means — Layer 06 Checks)
+
+- [ ] Tệp log chỉ được mở ở chế độ append (`"a"`, `encoding="utf-8"`) hoặc qua `AppendOnlyLogger` từ `ccba_harness`, tuyệt đối không dùng `"w"` ghi đè lịch sử.
+- [ ] Mọi thao tác ghi log đa luồng/đa tiến trình đều có cơ chế khóa (`threading.Lock` / file lock) và xử lý ngoại lệ trả về JSON `[LOGGER_ERROR]` thay vì làm sập pipeline.
+- [ ] Cấu hình `sys.stdout.reconfigure(encoding="utf-8")` được đặt trước `logging.basicConfig(stream=sys.stdout)` khi chạy trên PowerShell/Windows.
+- [ ] Kiểm chứng bằng `python -m ccba_harness verify-patch` đạt mã thoát `0` (`ADR-0058`).

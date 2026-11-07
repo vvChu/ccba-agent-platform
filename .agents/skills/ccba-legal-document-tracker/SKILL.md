@@ -136,3 +136,12 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 * **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
 * Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
 * Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
+
+---
+
+## 6. Tiêu Chí Hoàn Thành (Done Means — Layer 06 Checks)
+
+- [ ] Trạng thái hiệu lực của mọi văn bản trong `legal_registry.yaml` đã được đối soát qua `python -m ccba_legal query` đạt chuẩn `ACTIVE` và không chứa văn bản hết hiệu lực.
+- [ ] Lệnh hợp nhất `python -m ccba_legal consolidate` (hoặc `VBHNEngine`) thoát mã `0` và xuất bảng đối chiếu AST diff theo đúng cấp chương/điều/khoản (`D1` $\leftrightarrow$ `dieu-1`).
+- [ ] Mọi văn bản quy phạm pháp luật mới đều đi qua `TVPLCrawler` kèm đóng dấu SHA-256 trên `ccba-legal-knowledge` (`ADR-0059`), không sửa tay từ trí nhớ.
+- [ ] Kiểm chứng `python -m ccba_harness verify-patch` thoát mã `0` (`ADR-0058`).

@@ -430,3 +430,23 @@ def test_skill_scripts_respect_ast_function_loc_budget() -> None:
                         f"{script_path.relative_to(PROJECT_ROOT)}:{node.lineno} {node.name} ({loc} > {limit} LOC)"
                     )
     assert not violations, f"Skill script AST LOC budget violations: {violations}"
+
+
+def test_all_autonomous_skills_have_layer06_done_means_check() -> None:
+    """Verify Layer 06 (Checks): All 26/26 Autonomous Skills have an explicit completion check in body."""
+    import re
+
+    missing: list[str] = []
+    check_pattern = re.compile(
+        r"(done means|tiêu chí hoàn thành|definition of done|checklist nghiệm thu|"
+        r"kiểm chứng hoàn thành|hard completion)",
+        re.IGNORECASE,
+    )
+    for skill_file in sorted((PROJECT_ROOT / ".agents" / "skills").glob("*/SKILL.md")):
+        name = skill_file.parent.name
+        fm, text = _load_skill_frontmatter(name)
+        if fm.get("disable-model-invocation") is True:
+            continue
+        if not check_pattern.search(text):
+            missing.append(name)
+    assert not missing, f"Autonomous skills missing Layer 06 Done/Completion check: {missing}"

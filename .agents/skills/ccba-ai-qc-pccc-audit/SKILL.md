@@ -106,3 +106,12 @@ python -m ccba_legal get-clause --doc qcvn_06_2022_bxd --clause <clause_id>
 ```
 Tuyệt đối **CẤM** Agent tự nhớ số liệu hoặc diễn giải lại điều khoản quy phạm ngoài văn bản chính thức.
 
+---
+
+## Tiêu Chí Hoàn Thành (Done Means — Layer 06 Checks)
+
+- [ ] Toàn bộ thông số quy chuẩn PCCC trích dẫn trong báo cáo đều đã được đối soát nguyên văn qua `python -m ccba_legal get-clause --doc qcvn_06_2022_bxd --clause <clause_id>` (`ADR-0059`).
+- [ ] Cả 3 nhánh Map (`Legal & Specs`, `MEP Water`, `MEP Alarm vs Arch`) đã được chạy và hợp nhất không trùng lặp tại bước `Reduce`.
+- [ ] Lệnh `ccba-qc pccc` (hoặc `PCCCSemanticEngine`) kết thúc với mã thoát `0` và tạo ra tệp báo cáo Markdown đầu ra không rỗng.
+- [ ] Không trích dẫn bất kỳ văn bản quy phạm pháp luật nào đã hết hiệu lực (như NĐ 136/2020/NĐ-CP cũ).
+
