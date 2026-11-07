@@ -8,6 +8,8 @@ on:
     paths:
       - "docs/**"
       - "scripts/governance/compile_skills_docs.py"
+      - "scripts/governance/templates/**"
+      - "seam-contracts.yaml"
       - ".agents/skills/**"
       - ".github/workflows/deploy-pages.yml"
       - "tests/governance/test_skills_docs_integrity.py"
