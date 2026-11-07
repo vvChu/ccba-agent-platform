@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
 
+permissions:
+  contents: read
+
 jobs:
   nightly-slow-tests:
     name: Run Slow Integration & Stress Tests

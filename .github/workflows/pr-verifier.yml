@@ -147,12 +147,13 @@ jobs:
         env:
           PYTHONPATH: .
           CCBA_AI_MOCK: "1"
+          DANGER_LEVEL: ${{ steps.triage.outputs.danger_level }}
         run: |
           mkdir -p .reports
           REPORT_FILE=".reports/pr_verification_report.md"
           
           # Choose preset: 'ci' for high danger, 'code' for low danger
-          if [ "${{ steps.triage.outputs.danger_level }}" = "HIGH" ]; then
+          if [ "$DANGER_LEVEL" = "HIGH" ]; then
             PRESET="ci"
           else
             PRESET="code"
@@ -170,17 +171,26 @@ jobs:
       - name: Post PR Comment & Diagnostic Summary
         if: always()
         uses: actions/github-script@v9
+        env:
+          DANGER_LEVEL: ${{ steps.triage.outputs.danger_level }}
+          SIZE_WARNING: ${{ steps.triage.outputs.size_warning }}
+          TOTAL_LOC: ${{ steps.triage.outputs.total_loc }}
+          IS_TWO_WAY_DOOR: ${{ steps.triage.outputs.is_two_way_door }}
+          DOOR_TYPE: ${{ steps.triage.outputs.door_type }}
+          SAMPLED_FOR_AUDIT: ${{ steps.triage.outputs.sampled_for_audit }}
+          MASKARA_EXIT: ${{ steps.maskara.outputs.maskara_exit }}
+          VERIFY_EXIT: ${{ steps.verifier.outputs.verify_exit }}
         with:
           script: |
             const fs = require('fs');
-            const dangerLevel = "${{ steps.triage.outputs.danger_level }}";
-            const sizeWarning = "${{ steps.triage.outputs.size_warning }}" === "true";
-            const totalLoc = "${{ steps.triage.outputs.total_loc }}";
-            const isTwoWayDoor = "${{ steps.triage.outputs.is_two_way_door }}" === "true";
-            const doorType = "${{ steps.triage.outputs.door_type }}" || (isTwoWayDoor ? "TWO_WAY_DOOR" : "ONE_WAY_DOOR");
-            const sampledForAudit = "${{ steps.triage.outputs.sampled_for_audit }}" === "true";
-            const maskaraExit = parseInt("${{ steps.maskara.outputs.maskara_exit }}", 10);
-            const verifyExit = parseInt("${{ steps.verifier.outputs.verify_exit }}", 10);
+            const dangerLevel = process.env.DANGER_LEVEL || "";
+            const sizeWarning = process.env.SIZE_WARNING === "true";
+            const totalLoc = process.env.TOTAL_LOC || "0";
+            const isTwoWayDoor = process.env.IS_TWO_WAY_DOOR === "true";
+            const doorType = process.env.DOOR_TYPE || (isTwoWayDoor ? "TWO_WAY_DOOR" : "ONE_WAY_DOOR");
+            const sampledForAudit = process.env.SAMPLED_FOR_AUDIT === "true";
+            const maskaraExit = parseInt(process.env.MASKARA_EXIT || "0", 10);
+            const verifyExit = parseInt(process.env.VERIFY_EXIT || "0", 10);
 
             let commentBody = `### 🛡️ CCBA PR Quality Gate Report\n\n`;
             commentBody += `| Metric | Assessment |\n| :--- | :--- |\n`;
@@ -268,11 +278,11 @@ jobs:
             }
 
       - name: Enforce Danger Triage Gate
+        env:
+          DANGER_LEVEL: ${{ steps.triage.outputs.danger_level }}
+          MASKARA_EXIT: ${{ steps.maskara.outputs.maskara_exit }}
+          VERIFY_EXIT: ${{ steps.verifier.outputs.verify_exit }}
         run: |
-          DANGER_LEVEL="${{ steps.triage.outputs.danger_level }}"
-          MASKARA_EXIT="${{ steps.maskara.outputs.maskara_exit }}"
-          VERIFY_EXIT="${{ steps.verifier.outputs.verify_exit }}"
-
           # Absolute blocking gate: any secret detected blocks merge immediately
           if [ "$MASKARA_EXIT" -ne 0 ]; then
             echo "::error title=Secret Leak Detected::Maskara detected sensitive credentials or API keys in PR diff. Merging is strictly locked."
