@@ -182,3 +182,12 @@ nvidia-smi
 * **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
 * **Tham chiếu liên kết:** Mọi tài liệu mở rộng tuân thủ cơ chế bộc lộ dần theo cấp độ (Level 1/2/3 Progressive Disclosure) và được dẫn xuất qua bảng chỉ mục Level 3.
 * **Chống rác dữ liệu (Anti-Debris Invariant):** Không để lại comment nháp, TODO tạm thời hay các chỉ thị thừa không cần thiết.
+
+---
+
+## 6. Tiêu Chí Hoàn Thành (Done Means — Layer 06 Checks)
+
+- [ ] Container vLLM mount thư mục `~/.cache/vllm` để bảo toàn TorchInductor AOT cache và tách bạch `--reasoning-parser` với `--tool-call-parser` (`RULE-5.9`).
+- [ ] Các tác vụ structured output / JSON schema (`max_tokens <= 512`) đều định tuyến qua `local-instruct` / `rag-core` hoặc tắt thinking (`enable_thinking: false`, `RULE-5.8`).
+- [ ] Health check tại `/v1/models` (cổng `8004` và `8090`) trả về danh sách model hợp lệ với `vllm:gpu_cache_usage_perc <= 95%`.
+- [ ] Kiểm chứng cấu hình qua `python -m ccba_harness verify-patch` thoát mã `0` (`ADR-0058`).
