@@ -541,3 +541,50 @@ def test_aihero_app_shell_sidebar_and_obligations() -> None:
         )
         for snippet in REQUIRED_SHELL_SNIPPETS:
             assert snippet in html_text, f"Missing {snippet!r} in {target_path.name}"
+
+
+PHASE3_REQUIRED_SNIPPETS = (
+    "do-this-card",
+    "media-card-list",
+    "SPINE #",
+    "header .view-tabs { display: none; }",
+    "@media (max-width: 1279px)",
+    ".header-aux-link { display: none !important; }",
+    'class="nav-doc-btn header-aux-link"',
+    'id="tabMap"',
+    'id="tabSkills"',
+    'id="tabSeams"',
+    "<span>🗺️ Map</span>",
+    "<span>🧩 Seams</span>",
+    "const HASH_SLUG_RE = /^[a-z0-9-]+$/;",
+    "decodeURIComponent",
+    "window.history.replaceState",
+    "window.applyHashRoute = function(rawHash)",
+    "window.closeSkillModal = function()",
+    'window.addEventListener("hashchange"',
+    ".media-thumb--orchestrator { border-color: var(--ccba-gold); }",
+    ".media-thumb--kernel { border-color: var(--ccba-primary); }",
+    ".media-thumb--guide { border-color: var(--ccba-accent); }",
+)
+
+
+def test_phase3_map_a2_scoped_header_and_safe_hash_router() -> None:
+    """Verify Phase 3 Grok conditions: COND-MAP-A2, COND-HEADER-CSS, COND-HASH-SAFE, and E."""
+    for target_path in (TEMPLATE_HTML_PATH, DOCS_DIR / "index.html"):
+        html_text = target_path.read_text(encoding="utf-8")
+        for forbidden in (
+            ".spine-chain",
+            ".spine-node",
+            ".spine-sep",
+            ".guides-row",
+            ".guide-pill",
+            "scrollWidth",
+        ):
+            assert forbidden not in html_text, f"Forbidden {forbidden!r} in {target_path.name}"
+        m_desktop = re.search(
+            r"@media\s*\(min-width:\s*1024px\)\s*\{(.*?)\n\s*\}", html_text, re.DOTALL
+        )
+        assert m_desktop is not None, f"Missing @media (min-width: 1024px) in {target_path.name}"
+        assert "header .view-tabs { display: none; }" in m_desktop.group(1)
+        for snippet in PHASE3_REQUIRED_SNIPPETS:
+            assert snippet in html_text, f"Missing Phase 3 {snippet!r} in {target_path.name}"
