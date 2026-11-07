@@ -5,6 +5,8 @@ Validates Pydantic v2 schemas, YAML frontmatter extraction, and fail-safe handli
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -1575,3 +1577,97 @@ def test_bounded_tool_budget_and_explore_then_synthesize_recovery(tmp_path, monk
     assert v_zero is not None and v_zero.risk_score == 1
     v_ten = parse_verdict_from_md("---\nrequest_id: r10\nverdict: APPROVE\nrisk_score: 6.5\n---\n")
     assert v_ten is not None and v_ten.risk_score == 3
+
+
+def test_recommend_tests_stem_aliases_and_leading_underscore(tmp_path: Path) -> None:
+    """Verify C5: Hub recommend_tests maps chatops_daemon, _chatops_*, and hermes_executive_mcp."""
+    from ccba_harness.blast_radius import recommend_tests
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_chatops.py").write_text("", encoding="utf-8")
+    (tmp_path / "tests" / "test_executive_ops_mcp.py").write_text("", encoding="utf-8")
+    (tmp_path / "tests" / "test_foo_bar.py").write_text("", encoding="utf-8")
+    (tmp_path / "tests" / "test_foo.py").write_text("", encoding="utf-8")
+
+    assert recommend_tests(["scripts/chatops_daemon.py"], tmp_path) == ["tests/test_chatops.py"]
+    assert recommend_tests(["scripts/_chatops_rag.py"], tmp_path) == ["tests/test_chatops.py"]
+    assert recommend_tests(["scripts/hermes_executive_mcp.py"], tmp_path) == [
+        "tests/test_executive_ops_mcp.py"
+    ]
+    # Full stem after stripping leading underscores is tried before first-token collapse
+    assert recommend_tests(["scripts/_foo_bar.py"], tmp_path) == ["tests/test_foo_bar.py"]
+    # __init__ and __main__ skip underscore stripping
+    assert recommend_tests(["scripts/__init__.py"], tmp_path) == ["tests"]
+
+
+def test_peer_gate_spoke_pytest_resolution_and_cli_flag(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify C4: run_full_gate resolves Spoke tests from target_files, honors --pytest-target, and fails closed when empty."""
+    from ccba_harness.cli.commands.peer import run_peer_gate_cli
+    from ccba_harness.peer_gate import GateCheck, _resolve_gate_pytest_targets, run_full_gate
+
+    # 1. Spoke workspace without packages/ccba-harness/tests/test_peer.py resolves via recommend_tests
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "tests").mkdir()
+    src = tmp_path / "scripts" / "_chatops_telegram.py"
+    tst = tmp_path / "tests" / "test_chatops.py"
+    src.write_text("def ok() -> int:\n    return 1\n", encoding="utf-8")
+    tst.write_text("def test_ok() -> None:\n    assert True\n", encoding="utf-8")
+
+    resolved = _resolve_gate_pytest_targets(tmp_path, [str(src)], None)
+    assert resolved == ["tests/test_chatops.py"]
+
+    # 2. Explicit pytest_targets win when existing, and fail closed when missing
+    assert _resolve_gate_pytest_targets(tmp_path, [str(src)], ["tests/test_chatops.py"]) == [
+        "tests/test_chatops.py"
+    ]
+    assert _resolve_gate_pytest_targets(tmp_path, [str(src)], ["tests/nonexistent.py"]) == []
+
+    res_empty = run_full_gate(
+        workspace_dir=tmp_path,
+        changed_files=["scripts/_chatops_telegram.py"],
+        pytest_targets=["tests/nonexistent.py"],
+    )
+    pytest_chk = next(c for c in res_empty.checks if c.name == "pytest_suite")
+    assert pytest_chk.passed is False
+    assert "No existing pytest targets" in pytest_chk.stdout_tail
+
+    # 3. CLI --pytest-target with action='extend' passes targets through to run_full_gate
+    captured_targets: list[list[str] | None] = []
+
+    def fake_run_full_gate(
+        workspace_dir=None, branch=None, changed_files=None, pytest_targets=None
+    ):
+        captured_targets.append(pytest_targets)
+        from ccba_harness.peer_gate import GateResult
+
+        return GateResult(
+            gate="PASS",
+            timestamp="2026-11-07T00:00:00+07:00",
+            branch=branch,
+            checks=[
+                GateCheck(
+                    name="pytest_suite",
+                    passed=True,
+                    exit_code=0,
+                    stdout_tail="OK",
+                    duration_ms=1,
+                )
+            ],
+        )
+
+    monkeypatch.setattr("ccba_harness.peer_gate.run_full_gate", fake_run_full_gate)
+    rc = run_peer_gate_cli(
+        [
+            "--root",
+            str(tmp_path),
+            "--pytest-target",
+            "tests/test_chatops.py",
+            "--pytest-target",
+            "tests/test_smart_watchdog.py",
+            "--json",
+        ]
+    )
+    assert rc == 0
+    assert captured_targets == [["tests/test_chatops.py", "tests/test_smart_watchdog.py"]]

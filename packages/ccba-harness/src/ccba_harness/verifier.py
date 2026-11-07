@@ -305,12 +305,59 @@ def verify_document_artifact(
     )
 
 
+def _resolve_code_preset_commands(
+    target_str: str,
+    python_exec: str,
+    cwd: Path | str | None = None,
+) -> list[str]:
+    """Resolves the 'code' verification preset into ruff, mypy, and pytest commands."""
+    if not target_str:
+        return [
+            f"{python_exec} -m ruff check .",
+            f"{python_exec} -m ruff format --check .",
+            f"{python_exec} -m pytest tests/ -q",
+        ]
+    ws_root = Path(cwd).resolve() if cwd else Path.cwd().resolve()
+    t_path = Path(target_str)
+    resolved_target = t_path.resolve() if t_path.is_absolute() else (ws_root / t_path).resolve()
+    q_target = shlex.quote(t_path.as_posix())
+    src_raw = (
+        (t_path / "src").as_posix() + "/"
+        if (resolved_target / "src").exists()
+        else t_path.as_posix()
+    )
+    src_str = shlex.quote(src_raw)
+    if resolved_target.is_file() and not resolved_target.name.startswith("test_"):
+        from ccba_harness.blast_radius import recommend_tests
+
+        try:
+            rel_target = resolved_target.relative_to(ws_root).as_posix()
+        except ValueError:
+            rel_target = t_path.as_posix()
+        rec_paths = [p for p in recommend_tests([rel_target], ws_root) if (ws_root / p).exists()]
+        tests_str = " ".join(shlex.quote(p) for p in rec_paths) if rec_paths else q_target
+    else:
+        raw_tests = (
+            (t_path / "tests").as_posix()
+            if (resolved_target / "tests").exists()
+            else t_path.as_posix()
+        )
+        tests_str = shlex.quote(raw_tests)
+    return [
+        f"{python_exec} -m ruff check {q_target}",
+        f"{python_exec} -m ruff format --check {q_target}",
+        f"{python_exec} -m mypy {src_str} --follow-imports=silent",
+        f"{python_exec} -m pytest {tests_str} -q",
+    ]
+
+
 def resolve_preset_commands(
     preset: str,
     target: Path | str | None = None,
     min_bytes: int = 100,
     required_headings: Sequence[str] | None = None,
     python_exec: str = "python",
+    cwd: Path | str | None = None,
 ) -> list[str]:
     """Resolve a verification preset into deterministic command strings.
 
@@ -320,6 +367,7 @@ def resolve_preset_commands(
         min_bytes: Minimum bytes for 'doc' preset.
         required_headings: List of headings required for 'doc' preset.
         python_exec: Python executable name or path.
+        cwd: Optional workspace root directory used to resolve single-file test targets.
 
     Returns:
         List of executable command strings.
@@ -333,26 +381,7 @@ def resolve_preset_commands(
         python_exec = sys.executable
 
     if p == "code":
-        cmds: list[str] = []
-        if target_str:
-            t_path = Path(target_str)
-            src_str = (
-                (t_path / "src").as_posix() + "/"
-                if (t_path / "src").exists()
-                else t_path.as_posix()
-            )
-            tests_str = (
-                (t_path / "tests").as_posix() if (t_path / "tests").exists() else t_path.as_posix()
-            )
-            cmds.append(f"{python_exec} -m ruff check {t_path.as_posix()}")
-            cmds.append(f"{python_exec} -m ruff format --check {t_path.as_posix()}")
-            cmds.append(f"{python_exec} -m mypy {src_str} --follow-imports=silent")
-            cmds.append(f"{python_exec} -m pytest {tests_str} -q")
-        else:
-            cmds.append(f"{python_exec} -m ruff check .")
-            cmds.append(f"{python_exec} -m ruff format --check .")
-            cmds.append(f"{python_exec} -m pytest tests/ -q")
-        return cmds
+        return _resolve_code_preset_commands(target_str, python_exec, cwd=cwd)
 
     if p == "doc":
         if not target_str:
@@ -452,17 +481,18 @@ def verify_patch_execution(
     """
     all_commands: list[str] = []
 
+    if commands:
+        all_commands.extend(commands)
+
     if preset:
         preset_cmds = resolve_preset_commands(
             preset=preset,
             target=target,
             min_bytes=min_bytes,
             required_headings=required_headings,
+            cwd=cwd,
         )
         all_commands.extend(preset_cmds)
-
-    if commands:
-        all_commands.extend(commands)
 
     results: list[CommandResult] = []
     total_duration_ms = 0.0

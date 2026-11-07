@@ -607,6 +607,34 @@ def _build_linter_check(target_files: list[Path], ws: Path) -> GateCheck:
     )
 
 
+def _resolve_gate_pytest_targets(
+    ws: Path, target_files: list[str], pytest_targets: list[str] | None
+) -> list[str]:
+    """Resolves existing pytest target paths for run_full_gate."""
+    if pytest_targets is not None:
+        return [
+            p
+            for p in pytest_targets
+            if (ws / p).exists() or (Path(p).is_absolute() and Path(p).exists())
+        ]
+    hub_default = "packages/ccba-harness/tests/test_peer.py"
+    if (ws / hub_default).exists():
+        return [hub_default]
+    from ccba_harness.blast_radius import recommend_tests
+
+    rel_files: list[str] = []
+    for f in target_files:
+        fp = Path(f)
+        if fp.is_absolute():
+            try:
+                rel_files.append(fp.relative_to(ws).as_posix())
+            except ValueError:
+                rel_files.append(fp.as_posix())
+        else:
+            rel_files.append(fp.as_posix())
+    return [p for p in recommend_tests(rel_files, ws) if (ws / p).exists()]
+
+
 def run_full_gate(
     workspace_dir: Path | None = None,
     branch: str | None = None,
@@ -616,8 +644,20 @@ def run_full_gate(
     """Executes the complete 6-stage automated gate across the given workspace."""
     ws = workspace_dir.resolve() if workspace_dir else Path.cwd().resolve()
     now_iso = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).isoformat()
-    test_args = pytest_targets or ["packages/ccba-harness/tests/test_peer.py"]
     target_files = get_target_files(ws, changed_files=changed_files, branch=branch)
+    test_args = _resolve_gate_pytest_targets(ws, target_files, pytest_targets)
+    if test_args:
+        pytest_check = run_command_check(
+            "pytest_suite", [sys.executable, "-m", "pytest", *test_args, "-q"], cwd=ws
+        )
+    else:
+        pytest_check = GateCheck(
+            name="pytest_suite",
+            passed=False,
+            exit_code=2,
+            stdout_tail="No existing pytest targets resolved for workspace.",
+            duration_ms=0,
+        )
     import_cmd = [
         sys.executable,
         "-c",
@@ -625,9 +665,7 @@ def run_full_gate(
     ]
 
     checks = [
-        run_command_check(
-            "pytest_suite", [sys.executable, "-m", "pytest"] + test_args + ["-q"], cwd=ws
-        ),
+        pytest_check,
         _build_linter_check(target_files, ws),
         check_ast_function_length(target_files, max_lines=50),
         check_redundant_comments(target_files),
