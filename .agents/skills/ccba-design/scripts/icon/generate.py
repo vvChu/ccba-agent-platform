@@ -175,14 +175,20 @@ def apply_viewbox_size(svg_code, size):
 
 
 def _build_single_icon_prompt(prompt, style, category, name, color, size, viewbox):
-    style_instructions = f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    style_instructions = (
+        f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    )
     color_instructions = (
         f"- Use color: {color} for primary elements, currentColor for secondary"
         if color
         else "- Use currentColor for all strokes and fills"
     )
     size_instructions = f"- Design for {size}px display size, optimize detail level accordingly"
-    icon_prompt = f"{prompt} (category: {ICON_CATEGORIES[category]})" if (category and category in ICON_CATEGORIES) else prompt
+    icon_prompt = (
+        f"{prompt} (category: {ICON_CATEGORIES[category]})"
+        if (category and category in ICON_CATEGORIES)
+        else prompt
+    )
     if name:
         icon_prompt = f"'{name}' icon: {icon_prompt}"
     return SVG_PROMPT_TEMPLATE.format(
@@ -218,7 +224,9 @@ def generate_icon(
         svg_code = apply_viewbox_size(apply_color(svgs[0], color), size)
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            slug = re.sub(r"[^a-zA-Z0-9_-]", "_", (name or prompt.split()[0] if prompt else "icon").lower())
+            slug = re.sub(
+                r"[^a-zA-Z0-9_-]", "_", (name or prompt.split()[0] if prompt else "icon").lower()
+            )
             style_suffix = f"_{style}" if style else ""
             output_path = f"{slug}{style_suffix}_{timestamp}.svg"
 
@@ -241,7 +249,9 @@ def generate_batch(prompt, count, output_dir, style=None, color=None, viewbox=24
         return []
 
     os.makedirs(output_dir, exist_ok=True)
-    style_instructions = f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    style_instructions = (
+        f"- Style: {ICON_STYLES[style]}" if (style and style in ICON_STYLES) else ""
+    )
     color_instructions = (
         f"- Use color: {color} for primary elements"
         if color
@@ -303,7 +313,9 @@ def _parse_icon_args():
     parser.add_argument("--prompt", "-p", type=str, help="Icon description")
     parser.add_argument("--name", "-n", type=str, help="Icon name (for filename)")
     parser.add_argument("--style", "-s", choices=list(ICON_STYLES.keys()), help="Icon style")
-    parser.add_argument("--category", "-c", choices=list(ICON_CATEGORIES.keys()), help="Icon category")
+    parser.add_argument(
+        "--category", "-c", choices=list(ICON_CATEGORIES.keys()), help="Icon category"
+    )
     parser.add_argument("--color", type=str, help="Primary color (hex, e.g. #6366F1)")
     parser.add_argument("--size", type=int, default=24, help="Icon size in px (default: 24)")
     parser.add_argument("--viewbox", type=int, default=24, help="SVG viewBox size (default: 24)")
@@ -312,7 +324,9 @@ def _parse_icon_args():
     parser.add_argument("--batch", type=int, help="Number of icon variants to generate")
     parser.add_argument("--sizes", type=str, help="Comma-separated sizes (e.g. '16,24,32,48')")
     parser.add_argument("--list-styles", action="store_true", help="List available icon styles")
-    parser.add_argument("--list-categories", action="store_true", help="List available icon categories")
+    parser.add_argument(
+        "--list-categories", action="store_true", help="List available icon categories"
+    )
     return parser, parser.parse_args()
 
 
@@ -332,14 +346,29 @@ def main():
     prompt = args.prompt or args.name
     if args.sizes:
         sizes = [int(s.strip()) for s in args.sizes.split(",")]
-        generate_sizes(prompt, sizes, args.style, args.color, args.output_dir or "./icons", args.name)
+        generate_sizes(
+            prompt, sizes, args.style, args.color, args.output_dir or "./icons", args.name
+        )
     elif args.batch:
         generate_batch(
-            prompt, args.batch, args.output_dir or "./icons", args.style, args.color, args.viewbox, args.name
+            prompt,
+            args.batch,
+            args.output_dir or "./icons",
+            args.style,
+            args.color,
+            args.viewbox,
+            args.name,
         )
     else:
         generate_icon(
-            prompt, args.style, args.category, args.name, args.color, args.size, args.output, args.viewbox
+            prompt,
+            args.style,
+            args.category,
+            args.name,
+            args.color,
+            args.size,
+            args.output,
+            args.viewbox,
         )
 
 

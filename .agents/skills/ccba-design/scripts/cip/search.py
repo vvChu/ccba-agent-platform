@@ -91,7 +91,9 @@ def main():
         if args.json:
             print(json.dumps(result, indent=2))
         else:
-            print(f"\nDomain: {result['domain']}\nQuery: {result['query']}\nResults: {result['count']}")
+            print(
+                f"\nDomain: {result['domain']}\nQuery: {result['query']}\nResults: {result['count']}"
+            )
             print(format_results(result.get("results", []), result["domain"]))
 
 

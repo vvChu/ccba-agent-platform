@@ -137,13 +137,43 @@ def test_collision_cluster_descriptions_and_exclusions() -> None:
 
     intel_fm, _ = _load_skill_frontmatter("ccba-legal-intel")
     intel_triggers = [str(t).lower() for t in intel_fm.get("triggers", [])]
-    assert "crawl law" not in intel_triggers, "ccba-legal-intel must not overlap 'crawl law' trigger"
+    assert "crawl law" not in intel_triggers, (
+        "ccba-legal-intel must not overlap 'crawl law' trigger"
+    )
 
 
 _ROUTING_STOPWORDS = {
-    "cho", "của", "các", "vào", "qua", "khi", "cần", "với", "bằng", "hoặc",
-    "không", "dùng", "văn", "bản", "tài", "liệu", "hồ", "sơ", "quy", "định",
-    "pháp", "luật", "lý", "xây", "dựng", "trình", "toàn", "mới", "từ", "để", "và",
+    "cho",
+    "của",
+    "các",
+    "vào",
+    "qua",
+    "khi",
+    "cần",
+    "với",
+    "bằng",
+    "hoặc",
+    "không",
+    "dùng",
+    "văn",
+    "bản",
+    "tài",
+    "liệu",
+    "hồ",
+    "sơ",
+    "quy",
+    "định",
+    "pháp",
+    "luật",
+    "lý",
+    "xây",
+    "dựng",
+    "trình",
+    "toàn",
+    "mới",
+    "từ",
+    "để",
+    "và",
 }
 
 COLLISION_CLUSTERS: dict[str, list[str]] = {
@@ -400,4 +430,3 @@ def test_skill_scripts_respect_ast_function_loc_budget() -> None:
                         f"{script_path.relative_to(PROJECT_ROOT)}:{node.lineno} {node.name} ({loc} > {limit} LOC)"
                     )
     assert not violations, f"Skill script AST LOC budget violations: {violations}"
-

@@ -199,7 +199,7 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
 
     date_str = datetime.now().strftime("%B %d, %Y")
     html_parts.append(
-        f"</section><footer class=\"footer\"><p><strong>{brand_name}</strong> Corporate Identity Program</p>"
+        f'</section><footer class="footer"><p><strong>{brand_name}</strong> Corporate Identity Program</p>'
         f"<p>Generated on {date_str}</p></footer></body></html>"
     )
 

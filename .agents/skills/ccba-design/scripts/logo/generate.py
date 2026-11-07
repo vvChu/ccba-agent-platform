@@ -186,7 +186,9 @@ def generate_batch(
     results = []
     model_label = "Pro" if use_pro else "Flash"
     ratio = aspect_ratio if aspect_ratio in ASPECT_RATIOS else DEFAULT_ASPECT_RATIO
-    print(f"\nBATCH LOGO GENERATION: {brand_name} ({model_label}, {ratio}, {count} variants) -> {output_dir}")
+    print(
+        f"\nBATCH LOGO GENERATION: {brand_name} ({model_label}, {ratio}, {count} variants) -> {output_dir}"
+    )
 
     for i in range(min(count, len(BATCH_LOGO_STYLES))):
         style_key, style_desc = BATCH_LOGO_STYLES[i]
@@ -220,14 +222,20 @@ def _parse_logo_args():
     parser.add_argument("--prompt", "-p", type=str, help="Logo description prompt")
     parser.add_argument("--brand", "-b", type=str, help="Brand name")
     parser.add_argument("--style", "-s", choices=list(STYLE_MODIFIERS.keys()), help="Logo style")
-    parser.add_argument("--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type")
+    parser.add_argument(
+        "--industry", "-i", choices=list(INDUSTRY_PROMPTS.keys()), help="Industry type"
+    )
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     parser.add_argument("--output-dir", type=str, help="Output directory for batch generation")
     parser.add_argument("--batch", type=int, help="Number of logo variants to generate")
     parser.add_argument("--brand-context", type=str, help="Additional brand context for prompts")
     parser.add_argument("--pro", action="store_true", help="Use Pro image model")
     parser.add_argument(
-        "--aspect-ratio", "-r", choices=ASPECT_RATIOS, default=DEFAULT_ASPECT_RATIO, help="Aspect ratio"
+        "--aspect-ratio",
+        "-r",
+        choices=ASPECT_RATIOS,
+        default=DEFAULT_ASPECT_RATIO,
+        help="Aspect ratio",
     )
     parser.add_argument("--list-styles", action="store_true", help="List available styles")
     parser.add_argument("--list-industries", action="store_true", help="List available industries")
@@ -251,7 +259,13 @@ def main():
     if args.batch:
         output_dir = args.output_dir or f"./{args.brand.lower().replace(' ', '_')}_logos"
         generate_batch(
-            prompt, args.brand or "Logo", args.batch, output_dir, args.pro, args.brand_context, args.aspect_ratio
+            prompt,
+            args.brand or "Logo",
+            args.batch,
+            output_dir,
+            args.pro,
+            args.brand_context,
+            args.aspect_ratio,
         )
     else:
         generate_logo(

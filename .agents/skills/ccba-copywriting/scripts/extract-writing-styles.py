@@ -177,7 +177,9 @@ def _print_style_list() -> None:
     print("\n# Danh sách văn phong/thư mục mẫu CCBA có sẵn:")
     print(f"Thư mục gốc: {styles['directory']}\n")
     if not styles["items"]:
-        print("Chưa có tệp văn phong mẫu nào. Hãy thêm file .txt/.md hoặc thư mục vào assets/writing-styles/")
+        print(
+            "Chưa có tệp văn phong mẫu nào. Hãy thêm file .txt/.md hoặc thư mục vào assets/writing-styles/"
+        )
         return
     print("| Tên tài sản | Loại tài sản | Chi tiết |\n|---|---|---|")
     for f in styles["items"]:
@@ -201,7 +203,9 @@ def _resolve_style_target(style_arg: str) -> tuple[Path, str]:
 def main() -> None:
     """Điểm nhập CLI cho CCBA Style & Template Extractor."""
     parser = argparse.ArgumentParser(description="CCBA Style & Template Extractor")
-    parser.add_argument("--list", action="store_true", help="Liệt kê danh sách văn phong hành chính có sẵn")
+    parser.add_argument(
+        "--list", action="store_true", help="Liệt kê danh sách văn phong hành chính có sẵn"
+    )
     parser.add_argument("--style", type=str, help="Tên file/thư mục mẫu hoặc đường dẫn trực tiếp")
     args = parser.parse_args()
 
@@ -211,7 +215,9 @@ def main() -> None:
 
     target_path, target_name = _resolve_style_target(args.style)
     if not target_path.exists():
-        print(f"Lỗi: Không tìm thấy tệp hoặc thư mục '{args.style}' cục bộ hoặc trong assets/writing-styles/.")
+        print(
+            f"Lỗi: Không tìm thấy tệp hoặc thư mục '{args.style}' cục bộ hoặc trong assets/writing-styles/."
+        )
         sys.exit(1)
     process_extraction(target_path, target_name)
 

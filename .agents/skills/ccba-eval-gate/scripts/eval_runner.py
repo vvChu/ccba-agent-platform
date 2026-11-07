@@ -63,7 +63,9 @@ def get_skill_path(skill_name: str) -> Path:
                 data = yaml.safe_load(f)
                 for item in data.get("skills", []):
                     name = item.get("name", "")
-                    if (name == skill_name or name == f"ccba-{skill_name}") and "skill_path" in item:
+                    if (
+                        name == skill_name or name == f"ccba-{skill_name}"
+                    ) and "skill_path" in item:
                         candidate = project_root / item["skill_path"]
                         if candidate.exists():
                             return candidate
@@ -76,7 +78,9 @@ def load_skill_prompt(skill_name: str) -> str:
     """Đọc tệp SKILL.md của skill tương ứng làm System Prompt."""
     skill_path = get_skill_path(skill_name)
     if not skill_path.exists():
-        logger.warning(f"Không tìm thấy file SKILL.md tại {skill_path}. Chạy ở chế độ không có System Prompt.")
+        logger.warning(
+            f"Không tìm thấy file SKILL.md tại {skill_path}. Chạy ở chế độ không có System Prompt."
+        )
         return ""
     try:
         return skill_path.read_text(encoding="utf-8")
@@ -127,7 +131,9 @@ def optimizer_edit_prompt(
     )
 
     try:
-        raw_edited = ai.chat(optimizer_instruction, model=model_id, max_tokens=4096, temperature=0.2)
+        raw_edited = ai.chat(
+            optimizer_instruction, model=model_id, max_tokens=4096, temperature=0.2
+        )
         return preserve_yaml_frontmatter(original_prompt, raw_edited)
     except Exception as e:
         logger.error(f"Lỗi khi chạy Optimizer Prompt: {e}")
@@ -153,7 +159,9 @@ def run_llm_judge(
 
     try:
         res = ai.chat(judge_prompt, model=judge_model, max_tokens=1024, temperature=0.1)
-        cleaned_res = re.sub(r"```(?:json)?", "", res.strip()).strip() if "```" in res else res.strip()
+        cleaned_res = (
+            re.sub(r"```(?:json)?", "", res.strip()).strip() if "```" in res else res.strip()
+        )
         json_match = re.search(r"\{.*\}", cleaned_res, re.DOTALL)
         data = json.loads(json_match.group(0) if json_match else cleaned_res)
         return bool(data.get("passed", False)), str(data.get("reason", "No reason provided."))
@@ -228,7 +236,9 @@ def evaluate_case(
     success_count = 0
     trial_details = []
     for t in range(1, trials + 1):
-        passed, detail = _evaluate_single_trial(t, trials, prompt, system_prompt, model_id, assertions)
+        passed, detail = _evaluate_single_trial(
+            t, trials, prompt, system_prompt, model_id, assertions
+        )
         if passed:
             success_count += 1
         trial_details.append(detail)
@@ -253,7 +263,9 @@ def run_eval_for_skill(skill_name: str, test_cases_path: Path, model_id: str, tr
         return False
 
     logger.info("==================================================")
-    logger.info(f"🎬 Khởi chạy Evals cho Skill: {skill_name} | Model: {model_id} | Trials: {trials}")
+    logger.info(
+        f"🎬 Khởi chạy Evals cho Skill: {skill_name} | Model: {model_id} | Trials: {trials}"
+    )
     logger.info("==================================================")
 
     try:
@@ -318,7 +330,9 @@ def auto_tune_skill(
 
     for iteration in range(1, max_iterations + 1):
         logger.info(f"\n--- 🔄 AUTO-TUNE ITERATION {iteration}/{max_iterations} ({skill_name}) ---")
-        current_pass_rate, failure_details = _evaluate_prompt_batch(cases, current_prompt, model_id, trials)
+        current_pass_rate, failure_details = _evaluate_prompt_batch(
+            cases, current_prompt, model_id, trials
+        )
         if current_pass_rate > best_pass_rate:
             best_pass_rate, best_prompt = current_pass_rate, current_prompt
         if current_pass_rate == 1.0 or iteration == max_iterations:
@@ -340,9 +354,7 @@ def auto_tune_skill(
     return best_pass_rate == 1.0
 
 
-def _validate_single_dry_run_case(
-    tf_name: str, skill_name: str, case: dict[str, Any]
-) -> list[str]:
+def _validate_single_dry_run_case(tf_name: str, skill_name: str, case: dict[str, Any]) -> list[str]:
     """Kiểm tra cú pháp, regex và noise prompt cho một test case đơn lẻ ở chế độ dry-run."""
     case_errors: list[str] = []
     cid = case.get("id", "")
@@ -363,7 +375,9 @@ def _validate_single_dry_run_case(
             try:
                 re.compile(pattern)
             except re.error as e:
-                case_errors.append(f"File {tf_name} case [{cid}]: Regex '{pattern}' không hợp lệ ({e})")
+                case_errors.append(
+                    f"File {tf_name} case [{cid}]: Regex '{pattern}' không hợp lệ ({e})"
+                )
     return case_errors
 
 
@@ -391,7 +405,9 @@ def dry_run_validate(test_files: list[Path]) -> bool:
             logger.info(f"  - [{skill_name}] ({len(cases)} cases): Syntax, Regex & Noise-free OK")
         errors.extend(file_errors)
 
-    logger.info(f"🧪 BÁO CÁO DRY-RUN: Validated {len(test_files)} files ({total_cases} test cases).")
+    logger.info(
+        f"🧪 BÁO CÁO DRY-RUN: Validated {len(test_files)} files ({total_cases} test cases)."
+    )
     if errors:
         for err in errors:
             logger.error(f"  - {err}")
@@ -403,14 +419,28 @@ def dry_run_validate(test_files: list[Path]) -> bool:
 def _parse_eval_args() -> argparse.Namespace:
     """Parse CLI arguments for eval_runner."""
     parser = argparse.ArgumentParser(description="CCBA AI Skills Evaluation Harness Runner.")
-    parser.add_argument("--skill", type=str, default=None, help="Tên skill cần kiểm định (mặc định: 'all').")
-    parser.add_argument("--test-cases", type=str, default=None, help="Đường dẫn file JSON test cases.")
-    parser.add_argument("--model", type=str, default=ModelArchetype.REASONING, help="Model ID của Agent.")
+    parser.add_argument(
+        "--skill", type=str, default=None, help="Tên skill cần kiểm định (mặc định: 'all')."
+    )
+    parser.add_argument(
+        "--test-cases", type=str, default=None, help="Đường dẫn file JSON test cases."
+    )
+    parser.add_argument(
+        "--model", type=str, default=ModelArchetype.REASONING, help="Model ID của Agent."
+    )
     parser.add_argument("--trials", type=int, default=3, help="Số lần chạy thử cho mỗi test case.")
-    parser.add_argument("--auto-tune", action="store_true", help="Bật chế độ tự động tối ưu hóa SKILL.md.")
-    parser.add_argument("--max-iterations", type=int, default=3, help="Số vòng lặp auto-tune tối đa.")
-    parser.add_argument("--dry-run", action="store_true", help="Kiểm tra cú pháp JSON và regex pattern.")
-    parser.add_argument("--mine-logs", action="store_true", help="Tự động bóc tách user prompts từ logs.")
+    parser.add_argument(
+        "--auto-tune", action="store_true", help="Bật chế độ tự động tối ưu hóa SKILL.md."
+    )
+    parser.add_argument(
+        "--max-iterations", type=int, default=3, help="Số vòng lặp auto-tune tối đa."
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Kiểm tra cú pháp JSON và regex pattern."
+    )
+    parser.add_argument(
+        "--mine-logs", action="store_true", help="Tự động bóc tách user prompts từ logs."
+    )
     return parser.parse_args()
 
 
@@ -465,7 +495,9 @@ def main() -> None:
         try:
             from scripts.eval.log_eval_miner import mine_logs_and_export
 
-            mine_logs_and_export(project_root / ".system_generated" / "logs", test_cases_dir, args.skill)
+            mine_logs_and_export(
+                project_root / ".system_generated" / "logs", test_cases_dir, args.skill
+            )
         except Exception as e:
             logger.warning(f"⚠️ Không thể mine logs: {e}")
 
@@ -476,7 +508,11 @@ def main() -> None:
         sys.exit(0 if dry_run_validate(list(test_cases_dir.glob("eval_*.json"))) else 1)
 
     if args.skill and args.skill.lower() != "all":
-        tc_path = Path(args.test_cases).absolute() if args.test_cases else _resolve_test_file(test_cases_dir, args.skill)
+        tc_path = (
+            Path(args.test_cases).absolute()
+            if args.test_cases
+            else _resolve_test_file(test_cases_dir, args.skill)
+        )
         ok = (
             auto_tune_skill(args.skill, tc_path, args.model, args.trials, args.max_iterations)
             if args.auto_tune

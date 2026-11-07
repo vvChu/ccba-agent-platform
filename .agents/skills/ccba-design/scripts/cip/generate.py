@@ -97,7 +97,18 @@ def _lookup_cip_metadata(deliverable, style, industry, mockup):
 
 
 def _assemble_cip_prompt_parts(
-    use_logo_image, deliverable_name, brand_name, description, style_name, primary_colors, typography, logo_placement, materials, finishes, mockup_context, mood
+    use_logo_image,
+    deliverable_name,
+    brand_name,
+    description,
+    style_name,
+    primary_colors,
+    typography,
+    logo_placement,
+    materials,
+    finishes,
+    mockup_context,
+    mood,
 ):
     if use_logo_image:
         return [
@@ -206,7 +217,9 @@ def generate_cip_mockup(
     model_name = MODELS.get(model_key, MODELS[DEFAULT_MODEL])
     mode = "image-editing" if logo_image else "text-to-image"
 
-    print(f"\n🎨 Generating CIP mockup ({mode}): {prompt_data['deliverable']} for {prompt_data['brand']} [{model_name}]")
+    print(
+        f"\n🎨 Generating CIP mockup ({mode}): {prompt_data['deliverable']} for {prompt_data['brand']} [{model_name}]"
+    )
     if logo_image:
         print(f"   Logo: Using provided image ({logo_image.size[0]}x{logo_image.size[1]})")
 
@@ -324,9 +337,17 @@ def _resolve_logo_for_cli(args):
 def _run_cip_set_cli(args, use_logo):
     deliverables = args.deliverables.split(",") if args.deliverables else None
     if args.prompt_only:
-        items = deliverables or ["business card", "letterhead", "office signage", "vehicle", "polo shirt"]
+        items = deliverables or [
+            "business card",
+            "letterhead",
+            "office signage",
+            "vehicle",
+            "polo shirt",
+        ]
         results = [
-            build_cip_prompt(d, args.brand, args.style, args.industry, args.mockup, use_logo_image=use_logo)
+            build_cip_prompt(
+                d, args.brand, args.style, args.industry, args.mockup, use_logo_image=use_logo
+            )
             for d in items
         ]
         if args.json:
@@ -336,10 +357,18 @@ def _run_cip_set_cli(args, use_logo):
                 print(f"\n{r['deliverable']}:\n{r['prompt']}\n")
         return
     results = generate_cip_set(
-        args.brand, args.industry, args.style, deliverables, args.output,
-        model_key=args.model, logo_path=args.logo, aspect_ratio=args.ratio,
+        args.brand,
+        args.industry,
+        args.style,
+        deliverables,
+        args.output,
+        model_key=args.model,
+        logo_path=args.logo,
+        aspect_ratio=args.ratio,
     )
-    print(json.dumps(results, indent=2) if args.json else f"\n✅ Generated {len(results)} CIP mockups")
+    print(
+        json.dumps(results, indent=2) if args.json else f"\n✅ Generated {len(results)} CIP mockups"
+    )
 
 
 def main():
@@ -356,10 +385,18 @@ def main():
         deliverable, args.brand, args.style, args.industry, args.mockup, use_logo_image=use_logo
     )
     if args.prompt_only:
-        print(json.dumps(prompt_data, indent=2) if args.json else f"\nPrompt:\n{prompt_data['prompt']}")
+        print(
+            json.dumps(prompt_data, indent=2)
+            if args.json
+            else f"\nPrompt:\n{prompt_data['prompt']}"
+        )
     else:
         filepath = generate_cip_mockup(
-            prompt_data, args.output, model_key=args.model, aspect_ratio=args.ratio, logo_image=logo_image
+            prompt_data,
+            args.output,
+            model_key=args.model,
+            aspect_ratio=args.ratio,
+            logo_image=logo_image,
         )
         if args.json:
             print(json.dumps({"filepath": filepath, **prompt_data}, indent=2))
