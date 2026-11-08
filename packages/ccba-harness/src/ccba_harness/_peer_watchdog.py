@@ -612,8 +612,11 @@ def _resolve_grok_profile_options(
     no_tools: bool,
     resume_session_id: str | None,
     fork_session: bool | None,
+    prompt_path: Path | None = None,
 ) -> dict[str, Any]:
     """Resolves effective CLI options from profile spec, prompt envelope, and caller overrides."""
+    from ._peer_telemetry import _resolve_effective_resume_session
+
     env_turns = envelope.max_turns if envelope is not None else None
     eff_turns = (
         max_turns
@@ -625,14 +628,12 @@ def _resolve_grok_profile_options(
         tools, disallowed, deny = None, list(NO_TOOLS_DISALLOW_LIST), ["*"]
         if max_turns is None and (eff_turns is None or eff_turns > 3):
             eff_turns = 3
-    eff_resume = resume_session_id or (envelope.resume_session_id if envelope is not None else None)
+    eff_resume = _resolve_effective_resume_session(resume_session_id, envelope, prompt_path)
     env_fork = envelope.fork_session if envelope is not None else None
     eff_fork = (
         fork_session
         if fork_session is not None
-        else (
-            env_fork if env_fork is not None else bool(spec.get("fork_session", bool(eff_resume)))
-        )
+        else (env_fork if env_fork is not None else bool(spec.get("fork_session", False)))
     )
     return {
         "max_turns": eff_turns,
