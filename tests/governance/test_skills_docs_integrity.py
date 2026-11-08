@@ -464,6 +464,18 @@ def test_portal_template_css_tokens_and_wcag_contrast() -> None:
             ("--ccba-bg-sidebar", "--ccba-fg-muted"),
             ("--ccba-bg-sidebar", "--ccba-gold"),
             ("--ccba-cta-bg", "--ccba-cta-fg"),
+            ("--ccba-bg", "--ccba-fg-subtle"),
+            ("--ccba-bg", "--ccba-fg-faint"),
+            ("--ccba-bg", "--ccba-primary"),
+            ("--ccba-bg-card", "--ccba-fg-subtle"),
+            ("--ccba-bg-card", "--ccba-fg-faint"),
+            ("--ccba-bg-card", "--ccba-primary"),
+            ("--ccba-bg-sidebar", "--ccba-fg-subtle"),
+            ("--ccba-bg-sidebar", "--ccba-fg-faint"),
+            ("--ccba-bg-sidebar", "--ccba-primary"),
+            ("--ccba-code-bg", "--ccba-fg-subtle"),
+            ("--ccba-code-bg", "--ccba-fg-faint"),
+            ("--ccba-code-bg", "--ccba-primary"),
         )
         for k_a, k_b in pairs:
             c_a, c_b = tokens.get(k_a, ""), tokens.get(k_b, "")
@@ -588,3 +600,51 @@ def test_phase3_map_a2_scoped_header_and_safe_hash_router() -> None:
         assert "header .view-tabs { display: none; }" in m_desktop.group(1)
         for snippet in PHASE3_REQUIRED_SNIPPETS:
             assert snippet in html_text, f"Missing Phase 3 {snippet!r} in {target_path.name}"
+
+
+PHASE4_OPERATE_MODE_SNIPPETS = (
+    '"Be Vietnam Pro"',
+    '"JetBrains Mono"',
+    "font-variant-numeric: tabular-nums;",
+    ":focus-visible {",
+    "overscroll-behavior: contain;",
+    "content-visibility: auto;",
+    'role="dialog" aria-modal="true" aria-labelledby="modalTitle"',
+    'aria-label="Đóng hộp thoại"',
+    "function normalizeVi(str)",
+    "function buildSkillsHash()",
+    "function buildSeamsHash()",
+    "window.resetSkillsFilter = function()",
+    "window.clearSeamFilter = function()",
+    'id="skillsEmptyState"',
+    'id="seamSearchInput"',
+)
+
+
+def test_phase4_operate_mode_and_ccba_design_compliance() -> None:
+    """Verify Phase 4 ccba-design v2.3.0 Operate-Mode, WCAG 2.2, and Surgical Refactor invariants."""
+    for target_path in (TEMPLATE_HTML_PATH, DOCS_DIR / "index.html"):
+        html_text = target_path.read_text(encoding="utf-8")
+        for snippet in PHASE4_OPERATE_MODE_SNIPPETS:
+            assert snippet in html_text, f"Missing Phase 4 {snippet!r} in {target_path.name}"
+        assert 'style="' not in html_text, f"Inline style attribute found in {target_path.name}"
+        style_block = html_text.split("<style>", 1)[1].split("</style>", 1)[0]
+        assert "#viewMap .hero" in style_block
+        font_sizes = re.findall(r"font-size:\s*([^;]+);", style_block)
+        assert font_sizes, f"No font-size declarations found in {target_path.name}"
+        for fs in font_sizes:
+            assert fs.strip().startswith("var(--ccba-text-"), (
+                f"Un-tokenized font-size {fs!r} in {target_path.name}"
+            )
+        radii = re.findall(r"border-radius:\s*([^;]+);", style_block)
+        assert radii, f"No border-radius declarations found in {target_path.name}"
+        for br in radii:
+            assert br.strip().startswith("var(--ccba-radius-"), (
+                f"Un-tokenized border-radius {br!r} in {target_path.name}"
+            )
+        route_fn = html_text.split("window.applyHashRoute = function(rawHash)", 1)[1].split(
+            "window.setSkillsDisplayMode", 1
+        )[0]
+        assert route_fn.index('indexOf("?")') < route_fn.index("decodeURIComponent("), (
+            f"applyHashRoute must split '?' before decodeURIComponent in {target_path.name}"
+        )

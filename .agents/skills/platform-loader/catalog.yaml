@@ -461,8 +461,9 @@ skills:
   tier: kernel
 - name: ccba-design
   bundle: _consulting
-  description: Design brand identity, logos, banners, and visual assets. Use for brand
-    systems, design tokens, corporate identity programs. Not for UI code patterns.
+  description: Design brand identity, web portals, UI/UX systems, logos, banners,
+    and CIP assets. Use for design tokens, portal Operate mode, shadcn/Tailwind, and
+    brand deliverables.
   triggers:
   - brand
   - logo
@@ -475,6 +476,10 @@ skills:
   - banner design
   - cip mockup
   - mockup
+  - design-system
+  - ui-styling
+  - portal design
+  - ui-ux
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design
   tier: kernel

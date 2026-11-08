@@ -1,10 +1,11 @@
 ---
 name: ccba-design
-description: Design brand identity, logos, banners, and visual assets. Use for brand
-  systems, design tokens, corporate identity programs. Not for UI code patterns.
+description: Design brand identity, web portals, UI/UX systems, logos, banners, and
+  CIP assets. Use for design tokens, portal Operate mode, shadcn/Tailwind, and brand
+  deliverables.
 user-invocable: true
 command: /ccba-design
-when_to_use: Invoke for brand systems and visual identity, not UI code.
+when_to_use: Invoke for brand systems, web portal UI/UX, design tokens, and visual identity.
 category: frontend
 gpi:
   s: 4.0
@@ -17,11 +18,13 @@ keywords:
 - CIP
 - banners
 - identity
+- portal
+- ui-ux
 argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: CCBA
-  version: 2.2.0
+  version: 2.3.0
 bundle: _consulting
 tier: kernel
 layer: _consulting
@@ -38,6 +41,10 @@ triggers:
 - banner design
 - cip mockup
 - mockup
+- design-system
+- ui-styling
+- portal design
+- ui-ux
 ---
 
 # Design
@@ -69,15 +76,40 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 
 | Task | Sub-skill | Details |
 |------|-----------|---------|
-| Brand identity, voice, assets | `brand` | External skill |
-| Tokens, specs, CSS vars | `design-system` | External skill |
-| shadcn/ui, Tailwind, code | `ui-styling` | External skill |
+| Brand identity, voice, assets | Brand & Tokens (built-in) | `references/design-system-tokens.md` |
+| Tokens, specs, CSS vars, dials | Design System (built-in) | `references/design-system-tokens.md` |
+| shadcn/ui, Tailwind, composition | UI Styling (built-in) | `references/ui-styling-shadcn.md` |
+| Web portals, Operate mode, Anti-Slop | Portal UX (built-in) | `references/portal-operate-and-antislop.md` |
 | Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
 | CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
 | Presentations, pitch decks | Slides (built-in) | `references/slides.md` |
 | Banners, covers, headers | Banner (built-in) | `references/banner-sizes-and-styles.md` |
 | Social media images/photos | Social Photos (built-in) | `references/social-photos-design.md` |
 | SVG icons, icon sets | Icon (built-in) | `references/icon-design.md` |
+
+## UI/UX & Web Portal Design (Built-in)
+
+Deterministic BM25 search over 6 UI/UX datasets (`styles.csv`, `ux-guidelines.csv`, `charts.csv`, `products.csv`, `typography.csv`, `stacks.csv`), quantitative Design Dials (`--density`, `--variance`, `--motion`), WCAG 2.1/2.2 contrast verification, and static UI slop code auditing.
+
+### UI/UX: Generate & Persist Portal Design System (`MASTER.md` + Page Overrides)
+
+```bash
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "legal portal statutory" --design-system -p "CCBA-Portal" --stack nextjs-shadcn --density 8 --variance 4 --motion 3 --persist .md/design-system
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "qc audit heatmap" --design-system -p "CCBA-Portal" --page qc-dashboard --density 9 --persist .md/design-system
+```
+
+### UI/UX: Search Domains (`product`, `style`, `ux`, `chart`, `typography`, `stack`), Verify Contrast & Audit UI Code
+
+```bash
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "qc dashboard pccc" --domain product
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "mira dense hairline" --domain style
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "wcag focus sticky url" --domain ux
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "heatmap clash compliance" --domain chart
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "vietnamese be vietnam pro tabular" --domain typography
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack sharepoint-spfx
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --contrast "#FFFFFF,#363883"
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --audit-file path/to/Component.tsx
+```
 
 ## Logo Design (Built-in)
 
@@ -306,12 +338,14 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### New Design System
 
-1. **Brand** (brand skill) → Define colors, typography, voice
-   - **Completion Criterion:** Core brand foundations established including color palette and typography.
-2. **Tokens** (design-system skill) → Create semantic token layers
-   - **Completion Criterion:** Semantic design tokens configured across scales.
-3. **Implement** (ui-styling skill) → Configure Tailwind, shadcn/ui
-   - **Completion Criterion:** Component styling rules implemented in Tailwind and component library.
+1. **Brand & Brief** (`scripts/ui/search.py --design-system --persist`) → Define product archetype, dials, and persist `MASTER.md`
+   - **Completion Criterion:** Core brand foundations and `MASTER.md` brief persisted under `.md/design-system/<project-slug>/`.
+2. **Tokens & Contrast** (`references/design-system-tokens.md`, `--contrast`) → Create 3-layer semantic tokens and verify WCAG 2.2 ratios
+   - **Completion Criterion:** Semantic design tokens and Vietnamese-safe font pairings configured with verified WCAG AA/AAA contrast ratios.
+3. **Implement** (`references/ui-styling-shadcn.md`, `--stack`) → Configure Tailwind, `shadcn/ui` geometry preset, or SharePoint SPFx tokens
+   - **Completion Criterion:** Component styling rules and URL-synchronized state implemented in the target stack.
+4. **Audit** (`scripts/ui/search.py --audit-file`) → Run static UI Slop and Operate-mode compliance scanner
+   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-07` findings reported on generated UI components.
 
 ## References
 
@@ -334,11 +368,17 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Banner Sizes & Styles | `references/banner-sizes-and-styles.md` |
 | Social Photos Guide | `references/social-photos-design.md` |
 | Icon Design Guide | `references/icon-design.md` |
+| Portal Operate & Anti-Slop | `references/portal-operate-and-antislop.md` |
+| Design System & Tokens | `references/design-system-tokens.md` |
+| UI Styling & shadcn | `references/ui-styling-shadcn.md` |
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
+| `scripts/bm25_engine.py` | Shared deterministic BM25 search engine across UI/UX, Logo, and CIP domains |
+| `scripts/ui/search.py` | Search UI/UX styles, guidelines, charts, products, typography, stacks, dials, and WCAG contrast |
+| `scripts/ui/core.py` | UI/UX domain search, Design Dials, WCAG 2.2 contrast calculator, and UI slop auditor |
 | `scripts/logo/search.py` | Search logo styles, colors, industries |
 | `scripts/logo/generate.py` | Generate logos with AI |
 | `scripts/logo/core.py` | BM25 search engine for logo data |
@@ -358,8 +398,8 @@ pip install -e packages/ccba-ai
 
 ## Tích hợp hệ thống & Vị trí trong Luồng công việc (Workflow Position)
 
-- **Thường chạy sau:** `/ccba-domain-modeling`, `/ccba-to-spec` (Khi đã xác định rõ domain và định hướng thương hiệu).
-- **Thường chạy trước:** `/ccba-implement`, `/ccba-seminar-builder` (Cung cấp tài sản hình ảnh, icon, slide cho implementation và seminar).
+- **Thường chạy sau:** `/ccba-domain-modeling`, `/ccba-to-spec`, hoặc `/ccba-grilling` (**Nhánh C: Visual Prototype Grilling** — khi đã hội tụ phương án giao diện qua 3–5 prototype HTML có floating picker).
+- **Thường chạy trước:** `/ccba-implement`, `/ccba-sharepoint-iac` (nếu triển khai cổng thông tin trên SharePoint Online / IDOP), `/ccba-seminar-builder`, và `/ccba-web-testing` (hậu kiểm Playwright E2E, Visual Regression, `axe-core` A11y và Lighthouse Core Web Vitals).
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -367,6 +407,9 @@ Khi thực thi các tác vụ thiết kế chuyên sâu, Agent sử dụng công
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
+| `references/portal-operate-and-antislop.md` | Kỷ luật thiết kế Cổng thông tin (Operate Mode), chống AI-Slop, đồng bộ URL state và WCAG 2.2 |
+| `references/design-system-tokens.md` | Kiến trúc Design Tokens 3 tầng, 3 núm vặn Design Dials và ma trận tương phản màu CCBA |
+| `references/ui-styling-shadcn.md` | Quy chuẩn `shadcn/ui` Geometry Presets (`mira`, `nova`), Tailwind semantic tokens và Compound Components |
 | `references/logo-design.md` | Quy trình tạo logo, brief nhận diện và bộ biến thể thương hiệu |
 | `references/logo-style-guide.md` | Cẩm nang phong cách thiết kế logo theo từng nhóm ngành nghề |
 | `references/logo-color-psychology.md` | Tâm lý học màu sắc và bảng phối màu tương thích theo cảm xúc |
