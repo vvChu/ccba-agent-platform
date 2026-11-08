@@ -3,17 +3,35 @@
 CIP Design Core - BM25 search engine for Corporate Identity Program design guidelines
 """
 
-import csv
-import re
-from collections import defaultdict
-from math import log
+from __future__ import annotations
+
+import sys
 from pathlib import Path
+from typing import Any
+
+_SCRIPTS_ROOT = Path(__file__).resolve().parent.parent
+if str(_SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_ROOT))
+
+from bm25_engine import BM25  # noqa: E402
+from bm25_engine import search_csv as _search_csv  # noqa: E402
+
+__all__ = [
+    "BM25",
+    "CSV_CONFIG",
+    "DATA_DIR",
+    "DOMAIN_KEYWORDS",
+    "detect_domain",
+    "get_cip_brief",
+    "search",
+    "search_all",
+]
 
 # ============ CONFIGURATION ============
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "cip"
-MAX_RESULTS = 3
+DATA_DIR: Path = _SCRIPTS_ROOT.parent / "data" / "cip"
+MAX_RESULTS: int = 3
 
-CSV_CONFIG = {
+CSV_CONFIG: dict[str, dict[str, Any]] = {
     "deliverable": {
         "file": "deliverables.csv",
         "search_cols": ["Deliverable", "Category", "Keywords", "Description", "Mockup Context"],
@@ -87,101 +105,6 @@ CSV_CONFIG = {
 }
 
 
-# ============ BM25 IMPLEMENTATION ============
-class BM25:
-    """BM25 ranking algorithm for text search"""
-
-    def __init__(self, k1=1.5, b=0.75):
-        self.k1 = k1
-        self.b = b
-        self.corpus = []
-        self.doc_lengths = []
-        self.avgdl = 0
-        self.idf = {}
-        self.doc_freqs = defaultdict(int)
-        self.N = 0
-
-    def tokenize(self, text):
-        """Lowercase, split, remove punctuation, filter short words"""
-        text = re.sub(r"[^\w\s]", " ", str(text).lower())
-        return [w for w in text.split() if len(w) > 2]
-
-    def fit(self, documents):
-        """Build BM25 index from documents"""
-        self.corpus = [self.tokenize(doc) for doc in documents]
-        self.N = len(self.corpus)
-        if self.N == 0:
-            return
-        self.doc_lengths = [len(doc) for doc in self.corpus]
-        self.avgdl = sum(self.doc_lengths) / self.N
-
-        for doc in self.corpus:
-            seen = set()
-            for word in doc:
-                if word not in seen:
-                    self.doc_freqs[word] += 1
-                    seen.add(word)
-
-        for word, freq in self.doc_freqs.items():
-            self.idf[word] = log((self.N - freq + 0.5) / (freq + 0.5) + 1)
-
-    def score(self, query):
-        """Score all documents against query"""
-        query_tokens = self.tokenize(query)
-        scores = []
-
-        for idx, doc in enumerate(self.corpus):
-            score = 0
-            doc_len = self.doc_lengths[idx]
-            term_freqs = defaultdict(int)
-            for word in doc:
-                term_freqs[word] += 1
-
-            for token in query_tokens:
-                if token in self.idf:
-                    tf = term_freqs[token]
-                    idf = self.idf[token]
-                    numerator = tf * (self.k1 + 1)
-                    denominator = tf + self.k1 * (1 - self.b + self.b * doc_len / self.avgdl)
-                    score += idf * numerator / denominator
-
-            scores.append((idx, score))
-
-        return sorted(scores, key=lambda x: x[1], reverse=True)
-
-
-# ============ SEARCH FUNCTIONS ============
-def _load_csv(filepath):
-    """Load CSV and return list of dicts"""
-    with open(filepath, encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def _search_csv(filepath, search_cols, output_cols, query, max_results):
-    """Core search function using BM25"""
-    if not filepath.exists():
-        return []
-
-    data = _load_csv(filepath)
-
-    # Build documents from search columns
-    documents = [" ".join(str(row.get(col, "")) for col in search_cols) for row in data]
-
-    # BM25 search
-    bm25 = BM25()
-    bm25.fit(documents)
-    ranked = bm25.score(query)
-
-    # Get top results with score > 0
-    results = []
-    for idx, score in ranked[:max_results]:
-        if score > 0:
-            row = data[idx]
-            results.append({col: row.get(col, "") for col in output_cols if col in row})
-
-    return results
-
-
 DOMAIN_KEYWORDS = {
     "deliverable": (
         "card",
@@ -241,67 +164,70 @@ DOMAIN_KEYWORDS = {
 }
 
 
-def detect_domain(query):
-    """Auto-detect the most relevant domain from query"""
+def detect_domain(query: str) -> str:
+    """Auto-detect the most relevant domain from query using deterministic tie-breaking."""
     query_lower = query.lower()
-    scores = {
-        domain: sum(1 for kw in keywords if kw in query_lower)
-        for domain, keywords in DOMAIN_KEYWORDS.items()
-    }
-    best = max(scores, key=scores.get)
-    return best if scores[best] > 0 else "deliverable"
+    domain_order = ("deliverable", "style", "industry", "mockup")
+    scored = [
+        (dom, sum(1 for kw in DOMAIN_KEYWORDS[dom] if kw in query_lower)) for dom in domain_order
+    ]
+    ranked = sorted(scored, key=lambda item: (-item[1], domain_order.index(item[0])))
+    return ranked[0][0] if ranked[0][1] > 0 else "deliverable"
 
 
-def search(query, domain=None, max_results=MAX_RESULTS):
-    """Main search function with auto-domain detection"""
+def search(query: str, domain: str | None = None, max_results: int = MAX_RESULTS) -> dict[str, Any]:
+    """Main search function with auto-domain detection."""
     if domain is None:
         domain = detect_domain(query)
 
     config = CSV_CONFIG.get(domain, CSV_CONFIG["deliverable"])
-    filepath = DATA_DIR / config["file"]
+    filepath = DATA_DIR / str(config["file"])
 
     if not filepath.exists():
         return {"error": f"File not found: {filepath}", "domain": domain}
 
     results = _search_csv(
-        filepath, config["search_cols"], config["output_cols"], query, max_results
+        filepath,
+        list(config["search_cols"]),
+        list(config["output_cols"]),
+        query,
+        max_results,
     )
 
     return {
         "domain": domain,
         "query": query,
-        "file": config["file"],
+        "file": str(config["file"]),
         "count": len(results),
         "results": results,
     }
 
 
-def search_all(query, max_results=2):
-    """Search across all domains and combine results"""
-    all_results = {}
+def search_all(query: str, max_results: int = 2) -> dict[str, list[dict[str, str]]]:
+    """Search across all domains and combine results."""
+    all_results: dict[str, list[dict[str, str]]] = {}
     for domain in CSV_CONFIG.keys():
         result = search(query, domain, max_results)
         if result.get("results"):
-            all_results[domain] = result["results"]
+            all_results[domain] = list(result["results"])
     return all_results
 
 
-def get_cip_brief(brand_name, industry_query, style_query=None):
-    """Generate a comprehensive CIP brief for a brand"""
-    # Search industry
+def get_cip_brief(
+    brand_name: str, industry_query: str, style_query: str | None = None
+) -> dict[str, Any]:
+    """Generate a comprehensive CIP brief for a brand."""
     industry_results = search(industry_query, "industry", 1)
     industry = industry_results.get("results", [{}])[0] if industry_results.get("results") else {}
 
-    # Search style (use industry style if not specified)
-    style_query = style_query or industry.get("CIP Style", "corporate minimal")
-    style_results = search(style_query, "style", 1)
+    resolved_style_query = style_query or str(industry.get("CIP Style", "corporate minimal"))
+    style_results = search(resolved_style_query, "style", 1)
     style = style_results.get("results", [{}])[0] if style_results.get("results") else {}
 
-    # Get recommended deliverables for the industry
-    key_deliverables = industry.get("Key Deliverables", "").split()
-    deliverable_results = []
-    for d in key_deliverables[:5]:
-        result = search(d, "deliverable", 1)
+    key_deliverables = str(industry.get("Key Deliverables", "")).split()
+    deliverable_results: list[dict[str, str]] = []
+    for item in key_deliverables[:5]:
+        result = search(item, "deliverable", 1)
         if result.get("results"):
             deliverable_results.append(result["results"][0])
 

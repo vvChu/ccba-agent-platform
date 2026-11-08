@@ -10,7 +10,7 @@ import io
 import sys
 
 from ccba_ai import ai
-from ccba_ai.routing import ModelArchetype, choose_model
+from ccba_ai.routing import choose_model
 
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")

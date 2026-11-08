@@ -6,9 +6,10 @@ When to use each design sub-skill.
 
 | Skill | Purpose | Key Files |
 |-------|---------|-----------|
-| brand | Brand identity, voice, assets | SKILL.md + 10 references + 3 scripts |
-| design-system | Token architecture, specs | SKILL.md + 7 references + 2 scripts |
-| ui-styling | Component implementation | SKILL.md + 7 references + 2 scripts |
+| brand | Brand identity, voice, assets | `design-system-tokens.md` + `logo-color-psychology.md` |
+| design-system | 3-layer token architecture, Design Dials, WCAG matrix | `design-system-tokens.md` + `../scripts/ui/search.py` |
+| ui-styling | Component composition, `shadcn/ui`, Tailwind, portals | `ui-styling-shadcn.md` + `portal-operate-and-antislop.md` |
+| portal-operate | Web portal Operate mode, Anti-Slop, URL state, WCAG 2.2 | `portal-operate-and-antislop.md` + `../scripts/ui/search.py` |
 | logo-design | AI logo generation (55 styles, 30 palettes) | SKILL.md + 4 references + 2 scripts |
 | cip-design | Corporate Identity Program (50 deliverables) | SKILL.md + 3 references + 3 scripts |
 | slides | HTML presentations with Chart.js | SKILL.md + 4 references |
