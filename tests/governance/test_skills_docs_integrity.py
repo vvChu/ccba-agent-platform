@@ -438,7 +438,7 @@ def test_portal_template_css_tokens_and_wcag_contrast() -> None:
     """Verify --ccba-* tokens, split grid rules, and WCAG 2.2 AA contrast >= 4.5:1 (COND-CONTRAST-PAIRS & COND-ROOT-STAYS-DARK)."""
     css_html = TEMPLATE_HTML_PATH.read_text(encoding="utf-8")
     assert "--ah-" not in css_html, "Found unprefixed --ah- token in skills_portal.html"
-    assert "minmax(0, 0.9fr) minmax(0, 1.1fr)" in css_html
+    assert "minmax(260px, 0.55fr) minmax(0, 1.45fr)" in css_html
     assert "var(--ccba-line)" in css_html
 
     for selector in (r":root", r'\[data-theme="light"\]'):
@@ -547,7 +547,7 @@ def test_aihero_app_shell_sidebar_and_obligations() -> None:
         html_text = target_path.read_text(encoding="utf-8")
         assert "--ah-" not in html_text, f"Forbidden --ah- token in {target_path.name}"
         assert "top: 53px" not in html_text, f"Stale top: 53px found in {target_path.name}"
-        assert "minmax(0, 0.9fr) minmax(0, 1.1fr)" in html_text
+        assert "minmax(260px, 0.55fr) minmax(0, 1.45fr)" in html_text
         assert html_text.index("</header>") < html_text.index('data-slot="sidebar-wrapper"'), (
             f".app-shell must appear after </header> in {target_path.name}"
         )
