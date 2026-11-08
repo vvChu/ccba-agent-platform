@@ -666,3 +666,152 @@ def test_single_dispatch_finalize_degraded_reasoning_and_unconditional_rerender(
     latest_ts = _build_latest_verdict(reg_ts)
     assert latest_ts is not None
     assert latest_ts["output_path"] == "grok_a.md"
+
+
+def test_auto_discover_resume_session_3_tiers_bloat_and_dedup(tmp_path, capsys):
+    """Verifies 3-tier session auto-discovery, fork_session=False default, bloat warning, and snapshot dedup."""
+    from ccba_harness.peer import (
+        PROFILE_SPECS,
+        PeerPromptEnvelope,
+        _resolve_grok_profile_options,
+        render_prompt_header,
+        render_verdict_header,
+    )
+
+    # 1. Seed Round 1 prompt and verdict for Chapter 8 (Tier 1 & Tier 2)
+    p1_env = PeerPromptEnvelope(
+        request_id="req-20261108-ai-eos-ch08",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Ch 8 v1",
+        timestamp="2026-11-08T16:00:00+07:00",
+        source_documents=["04 - Permanent/topics/chuong_8.md"],
+        output_path="grok_review_chuong_8.md",
+        profile="audit_direct",
+    )
+    (tmp_path / "prompt_grok_review_chuong_8.md").write_text(
+        render_prompt_header(p1_env) + "Body v1", encoding="utf-8"
+    )
+    v1 = PeerVerdictBlock(
+        request_id="req-20261108-ai-eos-ch08",
+        verdict="APPROVE_WITH_CONDITIONS",
+        summary="v1",
+        telemetry=PeerVerdictTelemetry(
+            session_id="sess-ch08-v1",
+            primary_model="gemini-3.8-flash-high",
+            input_tokens=1000,
+            output_tokens=200,
+            total_tokens=1200,
+            turn_count=1,
+            cost_usd=0.02,
+        ),
+    )
+    (tmp_path / "grok_review_chuong_8.md").write_text(
+        render_verdict_header(v1) + "\n# V1", encoding="utf-8"
+    )
+
+    # Tier 1: v2 prompt without explicit resume_session_id auto-discovers sess-ch08-v1 with fork_session=False
+    p2_env = PeerPromptEnvelope(
+        request_id="req-20261108-ai-eos-ch08-v2",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Ch 8 v2",
+        timestamp="2026-11-08T18:16:00+07:00",
+        output_path="grok_review_chuong_8_v2.md",
+        profile="audit_direct",
+    )
+    p2_path = tmp_path / "prompt_grok_review_chuong_8_v2.md"
+    p2_path.write_text(render_prompt_header(p2_env) + ("Line\n" * 405), encoding="utf-8")
+    opts_t1 = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_direct"], p2_env, None, None, False, None, None, p2_path
+    )
+    assert opts_t1["resume_session_id"] == "sess-ch08-v1"
+    assert opts_t1["fork_session"] is False
+    assert "[WARN-RESUMED-PAYLOAD-BLOAT]" in capsys.readouterr().err
+
+    # Opt-out ("new") disables auto-resume
+    opts_new = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_direct"], p2_env, None, None, False, "new", None, p2_path
+    )
+    assert opts_new["resume_session_id"] is None
+
+    # Tier 2: Different request_id stem but matching source_documents auto-discovers sess-ch08-v1
+    p_doc_env = PeerPromptEnvelope(
+        request_id="req-custom-delta-check",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Delta check",
+        timestamp="2026-11-08T18:20:00+07:00",
+        source_documents=["04 - Permanent/topics/chuong_8.md"],
+        output_path="grok_custom_delta.md",
+    )
+    p_doc_path = tmp_path / "prompt_custom_delta.md"
+    p_doc_path.write_text(render_prompt_header(p_doc_env) + "Short delta", encoding="utf-8")
+    opts_t2 = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_plan"], p_doc_env, None, None, False, None, None, p_doc_path
+    )
+    assert opts_t2["resume_session_id"] == "sess-ch08-v1"
+    assert opts_t2["fork_session"] is False
+
+    # Tier 3: Continuous discussion session
+    v_disc = PeerVerdictBlock(
+        request_id="req-discuss-arch-01",
+        verdict="APPROVE_PLAN",
+        summary="Discuss turn 1",
+        telemetry=PeerVerdictTelemetry(
+            session_id="sess-discuss-01",
+            primary_model="grok-4.7",
+            input_tokens=500,
+            output_tokens=100,
+            total_tokens=600,
+            turn_count=1,
+            cost_usd=0.01,
+        ),
+    )
+    (tmp_path / "grok_discuss_01.md").write_text(
+        render_verdict_header(v_disc) + "\n# D1", encoding="utf-8"
+    )
+    p_disc2 = PeerPromptEnvelope(
+        request_id="req-topic-next-step",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="discuss",
+        subject="Turn 2",
+        timestamp="2026-11-08T18:25:00+07:00",
+        output_path="grok_discuss_02.md",
+    )
+    p_disc2_path = tmp_path / "prompt_discuss_02.md"
+    p_disc2_path.write_text(render_prompt_header(p_disc2) + "Turn 2 question", encoding="utf-8")
+    opts_t3 = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_plan"], p_disc2, None, None, False, None, None, p_disc2_path
+    )
+    assert opts_t3["resume_session_id"] == "sess-discuss-01"
+
+    # Snapshot deduplication in update_status_json: identical (session_id, turn_count, total_tokens, cost) not double-counted
+    v1_Turn2 = PeerVerdictBlock(
+        request_id="req-20261108-ai-eos-ch08-v2",
+        verdict="APPROVE",
+        summary="v2",
+        telemetry=PeerVerdictTelemetry(
+            session_id="sess-ch08-v1",
+            primary_model="gemini-3.8-flash-high",
+            input_tokens=300,
+            output_tokens=100,
+            total_tokens=400,
+            turn_count=2,
+            cost_usd=0.005,
+        ),
+    )
+    status_f = tmp_path / "status.json"
+    reg_dedup = {
+        "r1.md": {"path": tmp_path / "r1.md", "role": "GROK_RESPONSE", "verdict": v1},
+        "r1_dup.md": {"path": tmp_path / "r1_dup.md", "role": "GROK_RESPONSE", "verdict": v1},
+        "r2.md": {"path": tmp_path / "r2.md", "role": "GROK_RESPONSE", "verdict": v1_Turn2},
+    }
+    update_status_json(status_f, reg_dedup, pending_anti=[], pending_grok=[])
+    st = json.loads(status_f.read_text(encoding="utf-8"))["exchange_stats"]
+    assert st["total_tokens"] == 1600
+    assert st["total_cost_usd"] == 0.025

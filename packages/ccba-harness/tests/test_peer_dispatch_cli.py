@@ -234,3 +234,97 @@ def test_peer_dispatch_default_spec_lockdown_and_summary_output(tmp_path, monkey
         "[PEER-SUMMARY] Verdict: APPROVE_WITH_CONDITIONS | Risk: 2 | Blocking Conditions: 1 | Session ID: sess-sum-123"
         in out_live
     )
+
+
+def test_parse_envelope_tolerant_normalization_and_reverify_suffix(tmp_path):
+    """Validates tolerant frontmatter normalization and -reverify/-signoff suffix session discovery."""
+    from ccba_harness._peer_watchdog import _resolve_grok_profile_options
+    from ccba_harness.peer import (
+        PROFILE_SPECS,
+        PeerVerdictBlock,
+        PeerVerdictTelemetry,
+        parse_envelope_from_md,
+        render_verdict_header,
+    )
+
+    raw_md = (
+        "---\n"
+        "task_id: req-20261108-ai-eos-ch08-v2-reverify\n"
+        "task_type: architectural_and_editorial_review\n"
+        "question: Final re-verification for Chapter 8\n"
+        "session_id: sess-stage1\n"
+        "stage: 3\n"
+        "schema_version: '1.0'\n"
+        "issue_ref: '#108'\n"
+        "---\n# Body\n"
+    )
+    prompt_p = tmp_path / "prompt_grok_review_chuong_8_v2_reverify.md"
+    env = parse_envelope_from_md(raw_md, prompt_path=prompt_p)
+    assert env is not None
+    assert env.request_id == "req-20261108-ai-eos-ch08-v2-reverify"
+    assert env.from_agent == "antigravity"
+    assert env.to_agent == "grok"
+    assert env.request_type == "review"
+    assert env.subject == "Final re-verification for Chapter 8"
+    assert env.resume_session_id == "sess-stage1"
+    assert env.fork_session is True
+    assert env.output_path == "grok_review_chuong_8_v2_reverify.md"
+
+    # Verify -v2-reverify auto-discovers session from -v2 verdict when resume_session_id is omitted
+    v2_verdict = PeerVerdictBlock(
+        request_id="req-20261108-ai-eos-ch08-v2",
+        verdict="APPROVE_WITH_CONDITIONS",
+        summary="v2 review",
+        telemetry=PeerVerdictTelemetry(
+            session_id="sess-ch08-v2",
+            primary_model="grok-4.7",
+            input_tokens=100,
+            output_tokens=50,
+            total_tokens=150,
+            turn_count=2,
+            cost_usd=0.01,
+        ),
+    )
+    (tmp_path / "grok_review_chuong_8_v2.md").write_text(
+        render_verdict_header(v2_verdict) + "\n# V2", encoding="utf-8"
+    )
+    raw_reverify = (
+        "---\n"
+        "request_id: req-20261108-ai-eos-ch08-v2-reverify\n"
+        "request_type: signoff\n"
+        "chapter: Chapter 8 Reverify\n"
+        "---\nShort delta\n"
+    )
+    prompt_p.write_text(raw_reverify, encoding="utf-8")
+    env_rev = parse_envelope_from_md(raw_reverify, prompt_path=prompt_p)
+    assert env_rev is not None
+    assert env_rev.request_type == "review"
+    opts = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_direct"], env_rev, None, None, False, None, None, prompt_p
+    )
+    assert opts["resume_session_id"] == "sess-ch08-v2"
+
+
+def test_peer_dispatch_output_file_flag_and_preflight_envelope_error(tmp_path, capsys):
+    """Validates -o/--output-file flag and [PREFLIGHT-ENVELOPE-ERROR] diagnostic on missing frontmatter."""
+    from ccba_harness.peer import invoke_grok_cli
+
+    bad_prompt = tmp_path / "prompt_no_frontmatter.md"
+    bad_prompt.write_text("# Just markdown without YAML frontmatter\n", encoding="utf-8")
+    assert invoke_grok_cli(bad_prompt) is False
+    err = capsys.readouterr().err
+    assert "[PREFLIGHT-ENVELOPE-ERROR]" in err
+    assert "prompt_no_frontmatter.md" in err
+
+    valid_prompt = tmp_path / "prompt_custom_out.md"
+    valid_prompt.write_text(
+        "---\nrequest_id: req-out-flag\nsubject: Custom out\n---\nBody\n",
+        encoding="utf-8",
+    )
+    custom_out = tmp_path / "custom_verdict.md"
+    ret = run_peer_dispatch_cli(
+        ["--prompt-file", str(valid_prompt), "-o", str(custom_out), "--dry-run"]
+    )
+    assert ret == 0
+    out = capsys.readouterr().out
+    assert f"[DRY-RUN] Expected Output: {custom_out.resolve()}" in out

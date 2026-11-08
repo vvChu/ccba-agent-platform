@@ -24,7 +24,62 @@ FRONTMATTER_PATTERN = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.
 INLINE_FRONTMATTER_PATTERN = re.compile(
     r"(?:^|\r?\n|(?<=[.!*`]))---\s*\r?\n(.*?)(?=(\r?\n---\s*(?:\r?\n|$)))", re.DOTALL
 )
-_FRONTMATTER_KEYS: tuple[str, ...] = ("verdict", "from_agent", "request_id")
+_FRONTMATTER_KEYS: tuple[str, ...] = (
+    "verdict",
+    "from_agent",
+    "request_id",
+    "task_id",
+    "profile",
+    "output_path",
+)
+_ENVELOPE_MARKER_KEYS: frozenset[str] = frozenset(
+    {
+        "from_agent",
+        "request_id",
+        "task_id",
+        "output_path",
+        "profile",
+        "resume_session_id",
+        "request_type",
+        "task_type",
+    }
+)
+_ENVELOPE_ALLOWED_KEYS: frozenset[str] = frozenset(
+    {
+        "request_id",
+        "from_agent",
+        "to_agent",
+        "request_type",
+        "subject",
+        "timestamp",
+        "source_documents",
+        "output_path",
+        "context",
+        "profile",
+        "max_turns",
+        "target_files",
+        "resume_session_id",
+        "fork_session",
+    }
+)
+_REQUEST_TYPE_ALIASES: dict[str, str] = {
+    "signoff": "review",
+    "signoff_diff": "verify",
+    "reverify": "verify",
+    "re-verify": "verify",
+    "re_verify": "verify",
+    "verification": "verify",
+    "code_review": "review",
+    "editorial_review": "review",
+    "architectural_and_editorial_review": "review",
+    "arch_audit": "audit",
+    "audit_plan": "audit",
+    "audit_direct": "audit",
+    "deep_spec_audit": "audit",
+    "plan": "discuss",
+    "brainstorm": "discuss",
+    "discussion": "discuss",
+}
 
 _EFFORT_ALIASES: dict[str, str] = {
     "LOW": "S",
@@ -321,19 +376,69 @@ def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
     return blocks[0]
 
 
-def parse_envelope_from_md(md_content: str) -> PeerPromptEnvelope | None:
-    """Parses PeerPromptEnvelope from markdown frontmatter.
+def _normalize_envelope_frontmatter(
+    data: dict[str, Any], prompt_path: Path | None = None
+) -> dict[str, Any] | None:
+    """Normalizes common agent frontmatter aliases and defaults into canonical PeerPromptEnvelope fields."""
+    if "verdict" in data or not any(k in data for k in _ENVELOPE_MARKER_KEYS):
+        return None
+    d = {k: v for k, v in data.items() if k in _ENVELOPE_ALLOWED_KEYS}
+    req_id = str(
+        data.get("request_id")
+        or data.get("task_id")
+        or data.get("id")
+        or (prompt_path.stem if prompt_path else "")
+        or ""
+    ).strip()
+    if not req_id:
+        return None
+    d["request_id"] = req_id
+    d.setdefault("from_agent", "antigravity")
+    d.setdefault("to_agent", "grok")
+    raw_rt = str(data.get("request_type") or data.get("task_type") or data.get("type") or "review")
+    d["request_type"] = _REQUEST_TYPE_ALIASES.get(raw_rt.strip().lower(), raw_rt.strip().lower())
+    subj = (
+        data.get("subject")
+        or data.get("question")
+        or data.get("chapter")
+        or data.get("title")
+        or req_id
+    )
+    d["subject"] = str(subj).strip()
+    d["timestamp"] = str(
+        data.get("timestamp") or datetime.datetime.now(datetime.timezone.utc).isoformat()
+    )
+    if not str(d.get("output_path") or "").strip():
+        stem = (
+            re.sub(r"^prompt_(?:grok_)?", "", prompt_path.stem, flags=re.IGNORECASE)
+            if prompt_path
+            else req_id
+        )
+        d["output_path"] = f"grok_{stem}.md"
+    if (
+        "resume_session_id" not in d
+        and data.get("session_id")
+        and (data.get("stage") == 3 or data.get("profile") == "signoff_diff")
+    ):
+        d["resume_session_id"] = str(data["session_id"]).strip()
+        d.setdefault("fork_session", True)
+    return d
 
-    Args:
-        md_content: Markdown content to parse.
 
-    Returns:
-        PeerPromptEnvelope instance if valid, or None if invalid or absent.
-    """
+def parse_envelope_from_md(
+    md_content: str, prompt_path: Path | None = None
+) -> PeerPromptEnvelope | None:
+    """Parses PeerPromptEnvelope from markdown frontmatter with alias normalization."""
     for data, _ in _extract_all_frontmatter_blocks(md_content):
         if "from_agent" in data:
             try:
                 return PeerPromptEnvelope.model_validate(data)
+            except Exception:
+                pass
+        norm = _normalize_envelope_frontmatter(data, prompt_path=prompt_path)
+        if norm is not None:
+            try:
+                return PeerPromptEnvelope.model_validate(norm)
             except Exception:
                 continue
     return None

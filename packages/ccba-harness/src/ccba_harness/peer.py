@@ -338,10 +338,13 @@ def _aggregate_registry_telemetry(
     total_tokens = 0
     total_cost_usd = 0.0
     by_model: dict[str, dict[str, Any]] = {}
+    seen_snapshots: set[tuple[str, int, int, float]] = set()
     for item in registry.values():
         v = item.get("verdict")
         if v and getattr(v, "telemetry", None):
-            tok_delta, cost_delta = _accumulate_verdict_telemetry(v.telemetry, by_model)
+            tok_delta, cost_delta = _accumulate_verdict_telemetry(
+                v.telemetry, by_model, seen_snapshots
+            )
             total_tokens += tok_delta
             total_cost_usd += cost_delta
     return total_tokens, total_cost_usd, by_model
@@ -763,20 +766,29 @@ def invoke_grok_cli(
     no_tools: bool = False,
     resume_session_id: str | None = None,
     fork_session: bool | None = None,
+    output_file: str | Path | None = None,
 ) -> bool:
     """Invokes Grok CLI with Level-2 execution profile mapping and budget guardrails (ADR-0063 / ADR-0064)."""
     content, _ = safe_read_and_hash(prompt_path)
-    envelope = parse_envelope_from_md(content or "")
-    if not envelope or not envelope.output_path:
+    envelope = parse_envelope_from_md(content or "", prompt_path=prompt_path)
+    if not envelope or (not envelope.output_path and not output_file):
+        print(
+            f"[PREFLIGHT-ENVELOPE-ERROR] Prompt '{prompt_path.name}' lacks valid YAML frontmatter (--- ... ---).",
+            file=sys.stderr,
+        )
         return False
 
-    output_file = prompt_path.parent / Path(envelope.output_path).name
+    target_out = (
+        Path(output_file).resolve()
+        if output_file
+        else (prompt_path.parent / Path(envelope.output_path).name)
+    )
     spec = PROFILE_SPECS.get(str(profile or envelope.profile), DEFAULT_GROK_SPEC)
     opts = _resolve_grok_profile_options(
-        spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session
+        spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session, prompt_path
     )
     ok = any(
-        _dispatch_grok_candidate(prompt_path, output_file, cand, opts, worktree)
+        _dispatch_grok_candidate(prompt_path, target_out, cand, opts, worktree)
         for cand in _resolve_target_models(model, tier, spec)
     )
     if ok:

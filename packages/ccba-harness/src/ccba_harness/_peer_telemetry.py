@@ -3,12 +3,34 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 import subprocess
+import sys
 import time
+from pathlib import Path
 from typing import Any
 
-from ._peer_models import PeerCondition, PeerVerdictBlock, PeerVerdictTelemetry
+from ._peer_models import (
+    PeerCondition,
+    PeerVerdictBlock,
+    PeerVerdictTelemetry,
+    parse_envelope_from_md,
+    parse_verdict_from_md,
+)
 from ._peer_watchdog import CostMode
+
+_ROUND_SUFFIX_RE = re.compile(
+    r"(?:[-_](?:v\d+|r\d+|round\d+|pass\d+|supplemental|followup|recheck|reverify|signoff|retry))+$",
+    re.IGNORECASE,
+)
+_PREFIX_ROLE_RE = re.compile(
+    r"^(?:prompt_grok_review_|prompt_grok_|prompt_|grok_review_|grok_implementation_|grok_implement_|grok_|verdict_|req[-_])",
+    re.IGNORECASE,
+)
+_OPT_OUT_RESUME_TOKENS: frozenset[str] = frozenset({"new", "none", "false", "0"})
+_RESUMED_BLOAT_MAX_LINES = 400
+_RESUMED_BLOAT_MAX_BYTES = 20_480
 
 _PASS_VERDICTS: frozenset[str] = frozenset(
     {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS", "APPROVE_WITH_RESERVATIONS"}
@@ -263,6 +285,7 @@ def extract_grok_session_telemetry(
 def _accumulate_verdict_telemetry(
     t: Any,
     by_model: dict[str, dict[str, Any]],
+    seen_snapshots: set[tuple[str, int, int, float]] | None = None,
 ) -> tuple[int, float]:
     """Accumulates either PeerVerdictTelemetry or CombinedTelemetry into status.json by_model map."""
     if hasattr(t, "profile_breakdown") and isinstance(getattr(t, "profile_breakdown", None), dict):
@@ -275,11 +298,146 @@ def _accumulate_verdict_telemetry(
         return int(getattr(t, "total_tokens", 0)), float(getattr(t, "cost_usd", 0.0))
 
     if hasattr(t, "primary_model"):
+        sid = str(getattr(t, "session_id", "") or "").strip()
+        tc = int(getattr(t, "turn_count", 1) or 1)
+        tot = int(getattr(t, "total_tokens", 0) or 0)
+        cost = float(getattr(t, "cost_usd", 0.0) or 0.0)
+        if seen_snapshots is not None and sid and sid.lower() not in ("none", "unknown"):
+            snap_key = (sid, tc, tot, round(cost, 4))
+            if snap_key in seen_snapshots:
+                return 0, 0.0
+            seen_snapshots.add(snap_key)
         m = str(getattr(t, "primary_model", "unknown"))
         entry = by_model.setdefault(m, {"calls": 0, "tokens": 0, "cost_usd": 0.0})
         entry["calls"] += 1
-        entry["tokens"] += int(getattr(t, "total_tokens", 0))
-        entry["cost_usd"] = round(entry["cost_usd"] + float(getattr(t, "cost_usd", 0.0)), 4)
-        return int(getattr(t, "total_tokens", 0)), float(getattr(t, "cost_usd", 0.0))
+        entry["tokens"] += tot
+        entry["cost_usd"] = round(entry["cost_usd"] + cost, 4)
+        return tot, cost
 
     return 0, 0.0
+
+
+def _normalize_thread_stem(value: str) -> str:
+    """Normalizes a request_id or filename stem by stripping prefixes and round/version suffixes."""
+    cleaned = Path(value).stem.strip().lower()
+    cleaned = _PREFIX_ROLE_RE.sub("", cleaned)
+    cleaned = _ROUND_SUFFIX_RE.sub("", cleaned)
+    return cleaned.strip("-_")
+
+
+def _has_round_suffix(value: str) -> bool:
+    """Checks whether a request_id or filename stem carries a follow-up round/version suffix."""
+    return bool(_ROUND_SUFFIX_RE.search(Path(value).stem.strip()))
+
+
+def _collect_prior_verdict_sessions(
+    peer_dir: Path, cur_req_id: str, cur_out_name: str
+) -> tuple[dict[str, Any], list[tuple[float, str, Any, str]]]:
+    """Scans peer_dir deterministically for prior prompt envelopes and verdicts with valid session_id."""
+    prompts_by_req: dict[str, Any] = {}
+    verdicts: list[tuple[float, str, Any, str]] = []
+    if not peer_dir.is_dir():
+        return prompts_by_req, verdicts
+    for entry in sorted(os.scandir(peer_dir), key=lambda e: e.name):
+        if not entry.is_file() or not entry.name.endswith(".md") or entry.name.startswith("."):
+            continue
+        try:
+            text = Path(entry.path).read_text(encoding="utf-8")
+            mtime = entry.stat().st_mtime
+        except (OSError, UnicodeDecodeError):
+            continue
+        if entry.name.startswith("prompt_"):
+            env = parse_envelope_from_md(text)
+            if env and env.request_id:
+                prompts_by_req[env.request_id] = env
+        elif entry.name.startswith(("grok_", "verdict_")) and entry.name != cur_out_name:
+            v = parse_verdict_from_md(text)
+            sid = (
+                str(getattr(v.telemetry, "session_id", "") or "").strip()
+                if v and v.telemetry
+                else ""
+            )
+            if v and v.request_id != cur_req_id and sid and sid.lower() not in ("none", "unknown"):
+                verdicts.append((mtime, entry.name, v, sid))
+    verdicts.sort(key=lambda item: (-round(item[0], 4), item[1]))
+    return prompts_by_req, verdicts
+
+
+def _auto_discover_resume_session_id(prompt_path: Path | None, envelope: Any) -> str | None:
+    """Discovers prior session_id across 3 tiers (stem match, target docs, discussion thread)."""
+    if prompt_path is None or envelope is None or not prompt_path.parent.is_dir():
+        return None
+    cur_req = str(getattr(envelope, "request_id", "") or "")
+    cur_out = Path(str(getattr(envelope, "output_path", "") or "")).name
+    prompts_by_req, verdicts = _collect_prior_verdict_sessions(prompt_path.parent, cur_req, cur_out)
+    if not verdicts:
+        return None
+    req_stem, file_stem = _normalize_thread_stem(cur_req), _normalize_thread_stem(prompt_path.name)
+    if _has_round_suffix(cur_req) or _has_round_suffix(prompt_path.name):
+        for _, v_name, v, sid in verdicts:
+            if (req_stem and _normalize_thread_stem(v.request_id) == req_stem) or (
+                file_stem and _normalize_thread_stem(v_name) == file_stem
+            ):
+                return sid
+    cur_docs = {
+        str(d).strip()
+        for d in (getattr(envelope, "source_documents", None) or [])
+        + (getattr(envelope, "target_files", None) or [])
+        if str(d).strip()
+    }
+    if cur_docs:
+        for _, _, v, sid in verdicts:
+            p_env = prompts_by_req.get(v.request_id)
+            p_docs = (
+                {
+                    str(d).strip()
+                    for d in (p_env.source_documents or []) + (p_env.target_files or [])
+                    if str(d).strip()
+                }
+                if p_env
+                else set()
+            )
+            if cur_docs & p_docs:
+                return sid
+    if getattr(envelope, "request_type", None) in ("discuss", "architecture"):
+        for _, _, v, sid in verdicts:
+            p_env = prompts_by_req.get(v.request_id)
+            if (p_env and p_env.request_type in ("discuss", "architecture")) or (
+                "discuss" in v.request_id.lower()
+            ):
+                return sid
+    return None
+
+
+def _check_resumed_payload_bloat(prompt_path: Path | None, eff_resume: str | None) -> bool:
+    """Emits stderr warning when a resumed prompt re-injects full-document payload (>400 lines or >20KB)."""
+    if not eff_resume or prompt_path is None or not prompt_path.is_file():
+        return False
+    try:
+        raw_bytes = prompt_path.read_bytes()
+        line_count = len(raw_bytes.decode("utf-8", errors="replace").splitlines())
+    except OSError:
+        return False
+    if line_count > _RESUMED_BLOAT_MAX_LINES or len(raw_bytes) > _RESUMED_BLOAT_MAX_BYTES:
+        print(
+            f"[WARN-RESUMED-PAYLOAD-BLOAT] Prompt '{prompt_path.name}' ({line_count} lines, "
+            f"{len(raw_bytes)}B) resumes session {eff_resume} with full-text payload; "
+            "prefer sending only conditions resolution + diff.",
+            file=sys.stderr,
+        )
+        return True
+    return False
+
+
+def _resolve_effective_resume_session(
+    resume_session_id: str | None, envelope: Any, prompt_path: Path | None = None
+) -> str | None:
+    """Resolves explicit or auto-discovered resume_session_id and checks payload bloat."""
+    raw = resume_session_id or (envelope.resume_session_id if envelope is not None else None)
+    if raw is not None and str(raw).strip().lower() in _OPT_OUT_RESUME_TOKENS:
+        return None
+    eff_resume = (
+        str(raw).strip() if raw else _auto_discover_resume_session_id(prompt_path, envelope)
+    )
+    _check_resumed_payload_bloat(prompt_path, eff_resume)
+    return eff_resume
