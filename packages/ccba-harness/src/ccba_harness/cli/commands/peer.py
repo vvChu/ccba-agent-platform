@@ -164,22 +164,14 @@ def run_peer_watch_cli(args_list: Sequence[str] | None = None) -> int:
 
 def _print_dispatch_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:
     """Resolves profile options via shared peer helpers and prints dry-run summary."""
-    from ccba_harness.peer import (
-        DEFAULT_GROK_SPEC,
-        PROFILE_SPECS,
-        _resolve_grok_profile_options,
-        _resolve_target_models,
-        build_grok_cmd,
-        parse_envelope_from_md,
-        safe_read_and_hash,
-    )
+    from ccba_harness import peer as _peer
 
-    content, _ = safe_read_and_hash(prompt_path)
-    envelope = parse_envelope_from_md(content or "")
+    content, _ = _peer.safe_read_and_hash(prompt_path)
+    envelope = _peer.parse_envelope_from_md(content or "", prompt_path=prompt_path)
     active_profile = args.profile or (envelope.profile if envelope else None)
-    spec = PROFILE_SPECS.get(str(active_profile), DEFAULT_GROK_SPEC)
-    model = _resolve_target_models(args.model, args.tier, spec)[0]
-    opts = _resolve_grok_profile_options(
+    spec = _peer.PROFILE_SPECS.get(str(active_profile), _peer.DEFAULT_GROK_SPEC)
+    model = _peer._resolve_target_models(args.model, args.tier, spec)[0]
+    opts = _peer._resolve_grok_profile_options(
         spec,
         envelope,
         args.max_turns,
@@ -187,8 +179,9 @@ def _print_dispatch_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:
         args.no_tools,
         args.resume_session_id,
         args.fork_session,
+        prompt_path,
     )
-    cmd = build_grok_cmd(
+    cmd = _peer.build_grok_cmd(
         prompt_path=prompt_path,
         model=model,
         max_turns=opts["max_turns"],
@@ -204,11 +197,13 @@ def _print_dispatch_dry_run(prompt_path: Path, args: argparse.Namespace) -> int:
         verbatim=opts["verbatim"],
         disable_web_search=opts["disable_web_search"],
     )
+    out_arg = getattr(args, "output_file", None)
     out_name = Path(envelope.output_path).name if envelope and envelope.output_path else "stdout"
+    out_p = Path(out_arg).resolve() if out_arg else (prompt_path.parent / out_name)
     print(f"[DRY-RUN] Profile: {active_profile}")
     print(f"[DRY-RUN] Model: {model}")
     print(f"[DRY-RUN] Max Turns: {opts['max_turns']}")
-    print(f"[DRY-RUN] Expected Output: {prompt_path.parent / out_name}")
+    print(f"[DRY-RUN] Expected Output: {out_p}")
     print(f"[DRY-RUN] Command: {' '.join(cmd)}")
     return 0
 
@@ -224,6 +219,14 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         type=str,
         required=True,
         help="Path to markdown prompt file containing PeerPromptEnvelope.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        dest="output_file",
+        type=str,
+        default=None,
+        help="Explicit output file path (overrides frontmatter output_path).",
     )
     parser.add_argument(
         "--profile",
@@ -340,6 +343,7 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         no_tools=args.no_tools,
         resume_session_id=args.resume_session_id,
         fork_session=args.fork_session,
+        output_file=args.output_file,
     )
     if not ok:
         print("[FAIL] Peer dispatch failed or returned invalid verdict.", file=sys.stderr)
@@ -348,26 +352,28 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         from ._peer_auto_apply import handle_peer_dispatch_auto_apply
 
         return handle_peer_dispatch_auto_apply(
-            prompt_path=prompt_path,
-            root=args.root,
-            verify_preset=args.verify_preset,
-            keep_backups=args.keep_backups,
-            active_profile=args.profile,
+            prompt_path, args.root, args.verify_preset, args.keep_backups, args.profile
         )
     print("[OK] Peer dispatch completed successfully with valid verdict.")
-    _print_dispatch_verdict_summary(prompt_path)
+    _print_dispatch_verdict_summary(prompt_path, args.output_file)
     return 0
 
 
-def _print_dispatch_verdict_summary(prompt_path: Path) -> None:
+def _print_dispatch_verdict_summary(
+    prompt_path: Path, output_file: str | Path | None = None
+) -> None:
     """Prints a concise one-line summary of verdict, risk, conditions, and session ID to stdout."""
     from ccba_harness.peer import parse_envelope_from_md, parse_verdict_from_md, safe_read_and_hash
 
     prompt_content, _ = safe_read_and_hash(prompt_path)
-    envelope = parse_envelope_from_md(prompt_content or "")
-    if not envelope or not envelope.output_path:
+    envelope = parse_envelope_from_md(prompt_content or "", prompt_path=prompt_path)
+    if not output_file and (not envelope or not envelope.output_path):
         return
-    out_file = prompt_path.parent / Path(envelope.output_path).name
+    out_file = (
+        Path(output_file).resolve()
+        if output_file
+        else (prompt_path.parent / Path(envelope.output_path).name)
+    )
     if not out_file.exists():
         return
     text, _ = safe_read_and_hash(out_file)
