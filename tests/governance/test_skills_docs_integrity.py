@@ -671,6 +671,10 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     "nav-label-mobile",
     "!skillModal.contains(document.activeElement)",
     ".jump-card:last-child:nth-child(odd) { grid-column: 1 / -1; }",
+    "sidebar-count-pill",
+    "sidebar-guides-more",
+    "syncSidebarTopicsActive()",
+    "width: 280px;",
 )
 
 
