@@ -83,7 +83,7 @@ classDiagram
 | Archetype | Bản chất lưu trữ | Mục đích sử dụng | Chính sách Git Remote | Bundles mặc định |
 | :--- | :--- | :--- | :--- | :--- |
 | `project_delivery` | OneDrive / SharePoint | Dự án tư vấn thiết kế, thẩm tra, kiểm định thực tế cho khách hàng. | **Tuyệt đối cấm** public Git remote; chỉ lưu trữ đám mây nội bộ. | `_core`, `_qc`, `_consulting` |
-| `enterprise_governance` | Server / Kho mã nội bộ | Hệ điều hành quản trị nội bộ IDOP, đồng bộ 58 SharePoint lists. | Private Git nội bộ có kiểm soát truy cập nghiêm ngặt. | `_core`, `_consulting` |
+| `enterprise_governance` | Server / Kho mã nội bộ | Hệ điều hành quản trị nội bộ IDOP, đồng bộ hệ thống SharePoint Lists. | Private Git nội bộ có kiểm soát truy cập nghiêm ngặt. | `_core`, `_consulting` |
 | `knowledge_corpus` | Local SSD / Data Lake | Kho pháp điển hóa, crawler văn bản pháp luật, vector database RAG. | Git repo chuyên biệt (e.g. `ccba-legal-knowledge`). | `_core`, `_software`, `_consulting` |
 | `specialized_extension` | Local Workspace / Sandbox | Nghiên cứu công nghệ mới, plugin CAD/BIM, ươm tạo sáng kiến cá nhân (`sub_type: personal_sandbox`). | Git feature branch hoặc standalone sandbox. | `_core`, `_software` (hoặc tùy biến) |
 

@@ -41,7 +41,7 @@ Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩ
 
 1. **Metadata-First & Master Storage Offloading (`<5GB` List Quota)**:
    - Các SharePoint Lists chỉ lưu trữ siêu dữ liệu (`Text`, `Number`, `DateTime`, `Lookup`, `ManagedMetadata`, `Choice`, `Hyperlink`/`URL`, `User`, `YesNo`).
-   - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ 2TB Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Scan phải được offload sang 5TB Master Storage (`ccba-storage`) theo 2 phân vùng:
+   - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ SharePoint Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Scan phải được offload sang Master OneDrive Storage (`ccba-storage`) theo 2 phân vùng:
      - `Documents/iOPS/` (`01_Bids_CRM/`, `02_Contracts/`, `05_Projects/`): Hồ sơ pháp lý, đấu thầu, hợp đồng và phiếu giao việc (PGV).
      - `Documents/iCDE/` (`tvgs_qlda/`, `thiet_ke_BIM/`, `tham_tra_TK/`, `kiem_dinh_CL/`, `khao_sat_TN/`, `bim_data/`): Hồ sơ kỹ thuật dự án theo chuẩn ISO 19650 (`S0` $\to$ `S1` $\to$ `S2` $\to$ `S3` $\to$ `A1`).
 2. **Kiến Trúc Bảo Mật Hai Phân Vùng (Dual-Zone Security Architecture)**:

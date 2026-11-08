@@ -17,7 +17,7 @@
 |:---:|:---|:---|:---:|:---|:---:|
 | **M1** | Khảo sát Hạ tầng Compute & AI Gateway | `TRUONG_PHONG_RD_HTQT` | Cấp 1 (Technical) | Đo lường chính xác RAM Prisma, kiểm thử Virtual Key API `/key/generate`, xác thực Whisper GPU GB10. | ✅ COMPLETED |
 | **M2** | Khảo sát An ninh OS Topology & POSIX ACLs | `CO_VAN_PHAP_LY_QA` | Cấp 2 (Governance) | Thắt chặt an toàn thư mục cá nhân (`~/.ssh`, `~/.gemini`), giải pháp POSIX ACLs `ccba-devs` bảo đảm quyền ghi đa người dùng. | ✅ COMPLETED |
-| **M3** | Khảo sát Tích hợp Microsoft 365 IDOP | `IDOP_LEAD` | Cấp 2 (Governance) | Đối soát 59 SharePoint lists schema, thiết kế Outbound Bridge Worker xử lý lỗi 429 và dead-letter queue. | ✅ COMPLETED |
+| **M3** | Khảo sát Tích hợp Microsoft 365 IDOP | `IDOP_LEAD` | Cấp 2 (Governance) | Đối soát toàn bộ SharePoint Lists schema, thiết kế Outbound Bridge Worker xử lý lỗi 429 và dead-letter queue. | ✅ COMPLETED |
 | **M4** | Khảo sát Federated RAG & Legal Corpus | `CHU_TRI_BO_MON` | Cấp 1 (Technical) | Phân rã độ trễ BGE-M3 (19.4s), kiểm tra Milvus `legal_docs_v11` (4,051 entities) và Neo4j Graph. | ✅ COMPLETED |
 | **M5** | Ban hành Kiến trúc Tổng thể & ADR-0060 | `GIAM_DOC` | Cấp 3 (Leadership) | ADR-0060 hoàn chỉnh, báo cáo lưu trữ Knowledge Base, 100% CI pass theo Deterministic Hard Completion Lock. | ✅ COMPLETED |
 
@@ -117,6 +117,6 @@
 - `2026-09-25 21:13`: Worker 2 (`os-topology-specialist`) hoàn thành xuất sắc báo cáo và script `setup_ccba_devs_acls.sh`.
 - `2026-09-25 21:16`: Worker 1 (`compute-gateway-specialist`) hoàn thành báo cáo chuyên sâu LiteLLM, script cắt tỉa PostgreSQL, payload Virtual Keys, và Speaches Whisper GPU GB10.
 - `2026-09-25 21:18`: Kích hoạt Batch 2 (Worker 3 và Worker 4).
-- `2026-09-25 21:22`: Worker 3 (`m365-bridge-specialist`) hoàn thành phân tích 59 SharePoint lists schema, module Python `ccba_m365_bridge.py` với rate limiting và DLQ.
+- `2026-09-25 21:22`: Worker 3 (`m365-bridge-specialist`) hoàn thành phân tích toàn bộ SharePoint Lists schema, module Python `ccba_m365_bridge.py` với rate limiting và DLQ.
 - `2026-09-25 21:24`: Worker 4 (`federated-rag-specialist`) hoàn thành giải mã nguyên nhân BGE-M3 swap VRAM (0.28s GPU vs 21.6s memory swap), tối ưu vLLM memory, và liên kết OKF v2.4 SHA-256 sidecars.
 - `2026-09-25 21:25`: Lead Orchestrator tổng hợp toàn bộ báo cáo, ban hành ADR-0060 và lưu trữ Knowledge Base.
