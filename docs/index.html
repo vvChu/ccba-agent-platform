@@ -1111,6 +1111,45 @@
       overflow-x: auto;
       margin-bottom: 0.65rem;
     }
+    .md-hr {
+      border: none;
+      border-top: 1px solid var(--ccba-line);
+      margin: 0.9rem 0;
+    }
+    .md-quote {
+      border: 1px solid var(--ccba-accent-line);
+      background: var(--ccba-accent-panel);
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--ccba-radius-sm);
+      color: var(--ccba-fg-muted);
+      margin-bottom: 0.65rem;
+      font-size: var(--ccba-text-sm);
+    }
+    .md-table-wrap {
+      overflow-x: auto;
+      margin-bottom: 0.85rem;
+      border: 1px solid var(--ccba-line);
+      border-radius: var(--ccba-radius-md);
+      background: var(--ccba-bg-card);
+    }
+    .md-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--ccba-text-xs);
+      text-align: left;
+    }
+    .md-table th, .md-table td {
+      padding: 0.5rem 0.7rem;
+      border-bottom: 1px solid var(--ccba-line);
+      vertical-align: top;
+    }
+    .md-table th {
+      background: var(--ccba-badge-bg);
+      color: var(--ccba-fg-body);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .md-table tr:last-child td { border-bottom: none; }
     .toast {
       position: fixed;
       bottom: 1.5rem;
@@ -1765,6 +1804,48 @@
       });
     }
 
+    let activeModalSkill = "";
+    let activeModalDoc = "";
+
+    function syncSidebarModalActive() {
+      document.querySelectorAll(".sidebar-item[data-skill]").forEach(btn => {
+        const isSkillAct = Boolean(activeModalSkill) && btn.getAttribute("data-skill") === activeModalSkill;
+        btn.classList.toggle("active", isSkillAct);
+        btn.setAttribute("data-active", isSkillAct ? "true" : "false");
+      });
+      document.querySelectorAll(".sidebar-item[data-path]").forEach(btn => {
+        const isDocAct = Boolean(activeModalDoc) && btn.getAttribute("data-path") === activeModalDoc;
+        btn.classList.toggle("active", isDocAct);
+        btn.setAttribute("data-active", isDocAct ? "true" : "false");
+        if (isDocAct) {
+          const parentDetails = btn.closest("details.sidebar-guides-more");
+          if (parentDetails) parentDetails.open = true;
+        }
+      });
+    }
+
+    function findKnownDocGuide(docPath) {
+      const trimmed = String(docPath || "").trim();
+      if (!trimmed || trimmed.includes("..") || trimmed.startsWith("/")) return null;
+      if (trimmed === "skills/INDEX.md") {
+        return { path: "skills/INDEX.md", title: "Mục Lục Kỹ Năng (docs/skills/INDEX.md)" };
+      }
+      if (trimmed === "skills/FAQ.md") {
+        return { path: "skills/FAQ.md", title: "Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)" };
+      }
+      for (const p of PORTALS) {
+        for (const g of (p.guides || [])) {
+          if (g && g.path === trimmed) return g;
+        }
+      }
+      if (trimmed.startsWith("skills/") && trimmed.endsWith(".md")) {
+        const sName = trimmed.slice(7, -3);
+        const sObj = HASH_SLUG_RE.test(sName) && SKILLS.find(s => s.name === sName);
+        if (sObj) return { path: trimmed, title: `Bản Đóng Gói 5 Mục: ${sObj.name}` };
+      }
+      return null;
+    }
+
     window.jumpToTopic = function(portalId, syncHash = true, forceMap = false) {
       if (activeView === "skills" && !forceMap) {
         activePortal = portalId;
@@ -1873,6 +1954,16 @@
         switchView("map", false);
         return;
       }
+      if (routePart.startsWith("doc/")) {
+        const docPath = routePart.slice(4);
+        const guideObj = findKnownDocGuide(docPath);
+        if (guideObj) {
+          openDocModal(guideObj.path, guideObj.title, false);
+          return;
+        }
+        switchView("map", false);
+        return;
+      }
       switchView("map", false);
     };
 
@@ -1976,12 +2067,57 @@
       return baseParts.join("/");
     }
 
+    window.scrollToMdAnchor = function(anchorId) {
+      const el = document.getElementById("md-anchor-" + String(anchorId || ""));
+      if (el && el.scrollIntoView) {
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
+    };
+
+    function formatInlineMd(rawStr, basePath) {
+      let line = escapeHtml(rawStr);
+      line = line.replace(/`([^`]+)`/g, "<code>$1</code>");
+      line = line.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      line = line.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, rawUrl) => {
+        const safeHref = resolveAndSanitizeHref(rawUrl, basePath);
+        if (!safeHref) return label;
+        if (safeHref.startsWith("#")) {
+          return `<a href="${escapeHtml(safeHref)}" data-anchor="${escapeHtml(safeHref.slice(1))}" onclick="scrollToMdAnchor(this.getAttribute('data-anchor')); return false;">${label}</a>`;
+        }
+        if (safeHref.endsWith(".md") && !safeHref.startsWith("http")) {
+          return `<a href="#" data-doc="${escapeHtml(safeHref)}" onclick="openDocModal(this.getAttribute('data-doc'), this.getAttribute('data-doc')); return false;">${label}</a>`;
+        }
+        return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener">${label}</a>`;
+      });
+      return line;
+    }
+
+    function renderMdTable(rows, basePath) {
+      const dataRows = rows.filter(r => !/^\|[\s:|-]+\|$/.test(r.trim()));
+      if (dataRows.length === 0) return "";
+      const parseCells = row => row.trim().slice(1, -1).split("|").map(c => formatInlineMd(c.trim(), basePath));
+      const headCells = parseCells(dataRows[0]).map(c => `<th>${c}</th>`).join("");
+      const bodyHtml = dataRows.slice(1).map(r => `<tr>${parseCells(r).map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+      return `<div class="md-table-wrap"><table class="md-table"><thead><tr>${headCells}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
+    }
+
     function renderSafeMarkdown(mdText, basePath) {
       const lines = String(mdText || "").split(/\r?\n/);
       const out = [];
       let inCode = false;
+      let tableBuf = [];
+      const flushTable = () => {
+        if (tableBuf.length > 0) {
+          out.push(renderMdTable(tableBuf, basePath));
+          tableBuf = [];
+        }
+      };
       for (const rawLine of lines) {
-        if (rawLine.trim().startsWith("```")) {
+        const trimmed = rawLine.trim();
+        if (trimmed.startsWith("```")) {
+          flushTable();
           if (!inCode) {
             inCode = true;
             out.push("<pre><code>");
@@ -1995,29 +2131,45 @@
           out.push(escapeHtml(rawLine) + "\n");
           continue;
         }
-        let line = escapeHtml(rawLine);
-        line = line.replace(/`([^`]+)`/g, "<code>$1</code>");
-        line = line.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-        line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, rawUrl) => {
-          const safeHref = resolveAndSanitizeHref(rawUrl, basePath);
-          if (!safeHref) return label;
-          if (safeHref.endsWith(".md") && !safeHref.startsWith("http")) {
-            return `<a href="#" data-doc="${escapeHtml(safeHref)}" onclick="openDocModal(this.getAttribute('data-doc'), this.getAttribute('data-doc')); return false;">${label}</a>`;
-          }
-          return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener">${label}</a>`;
-        });
+        if (trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 2) {
+          tableBuf.push(trimmed);
+          continue;
+        }
+        flushTable();
+        const anchorMatch = trimmed.match(/^<a\s+id="([a-zA-Z0-9_-]+)"\s*><\/a>$/);
+        if (anchorMatch) {
+          out.push(`<div id="md-anchor-${escapeHtml(anchorMatch[1])}"></div>`);
+          continue;
+        }
+        if (trimmed === "---") {
+          out.push('<hr class="md-hr">');
+          continue;
+        }
+        if (trimmed.startsWith("> ")) {
+          out.push(`<blockquote class="md-quote">${formatInlineMd(trimmed.slice(2), basePath)}</blockquote>`);
+          continue;
+        }
+        const line = formatInlineMd(rawLine, basePath);
+        const numMatch = line.match(/^\s*(\d+)\.\s+(.*)$/);
         if (line.startsWith("### ")) {
           out.push(`<h4>${line.slice(4)}</h4>`);
         } else if (line.startsWith("## ")) {
           out.push(`<h3>${line.slice(3)}</h3>`);
         } else if (line.startsWith("# ")) {
           out.push(`<h2>${line.slice(2)}</h2>`);
+        } else if (line.startsWith("- [ ] ")) {
+          out.push(`<div class="md-bullet-row">☐ ${line.slice(6)}</div>`);
+        } else if (line.startsWith("- [x] ") || line.startsWith("- [X] ")) {
+          out.push(`<div class="md-bullet-row">☑ ${line.slice(6)}</div>`);
         } else if (line.startsWith("- ")) {
           out.push(`<div class="md-bullet-row">• ${line.slice(2)}</div>`);
+        } else if (numMatch) {
+          out.push(`<div class="md-bullet-row"><span class="font-mono text-gold-step">${numMatch[1]}.</span> ${numMatch[2]}</div>`);
         } else if (line.trim() !== "") {
           out.push(`<p>${line}</p>`);
         }
       }
+      flushTable();
       if (inCode) out.push("</code></pre>");
       return out.join("\n");
     }
@@ -2377,6 +2529,9 @@
       if (document.activeElement && (!skillModal || !skillModal.contains(document.activeElement))) {
         lastFocusedElement = document.activeElement;
       }
+      activeModalSkill = s.name;
+      activeModalDoc = "";
+      syncSidebarModalActive();
       if (syncHash !== false) {
         updateUrlHash("skill/" + s.name);
       }
@@ -2489,12 +2644,20 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
       });
     };
 
-    window.openDocModal = function(docPath, title) {
+    window.openDocModal = function(docPath, title, syncHash = true) {
       closeMobileSidebar();
       if (document.activeElement && (!skillModal || !skillModal.contains(document.activeElement))) {
         lastFocusedElement = document.activeElement;
       }
-      modalTitle.textContent = title || docPath;
+      const known = findKnownDocGuide(docPath);
+      const effectiveTitle = (title && title !== docPath) ? title : (known ? known.title : docPath);
+      activeModalDoc = docPath;
+      activeModalSkill = "";
+      syncSidebarModalActive();
+      if (syncHash !== false && known) {
+        updateUrlHash("doc/" + known.path);
+      }
+      modalTitle.textContent = effectiveTitle || docPath;
       modalMeta.innerHTML = `<span class="tag font-mono">Nguồn: docs/${escapeHtml(docPath)}</span>`;
       modalBody.innerHTML = `<div class="md-viewer">Đang tải <code>docs/${escapeHtml(docPath)}</code>...</div>`;
       skillModal.classList.add("open");
@@ -2517,7 +2680,11 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
     window.closeSkillModal = function() {
       const restoreHash = arguments.length === 0 ? true : Boolean(arguments[0]);
       if (skillModal) skillModal.classList.remove("open");
-      if (restoreHash !== false && String(window.location.hash || "").startsWith("#skill/")) {
+      activeModalSkill = "";
+      activeModalDoc = "";
+      syncSidebarModalActive();
+      const curHash = String(window.location.hash || "");
+      if (restoreHash !== false && (curHash.startsWith("#skill/") || curHash.startsWith("#doc/"))) {
         updateUrlHash(activeView === "skills" ? buildSkillsHash() : (activeView === "seams" ? buildSeamsHash() : activeView));
       }
       if (lastFocusedElement && lastFocusedElement.isConnected && typeof lastFocusedElement.focus === "function") {
