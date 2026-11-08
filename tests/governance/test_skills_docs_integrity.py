@@ -681,6 +681,7 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     "syncSidebarModalActive()",
     "findKnownDocGuide(",
     'routePart.startsWith("doc/")',
+    "slugifyMdHeading(",
 )
 
 

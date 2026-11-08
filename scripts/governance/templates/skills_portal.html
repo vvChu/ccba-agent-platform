@@ -1843,6 +1843,9 @@
         const sObj = HASH_SLUG_RE.test(sName) && SKILLS.find(s => s.name === sName);
         if (sObj) return { path: trimmed, title: `Bản Đóng Gói 5 Mục: ${sObj.name}` };
       }
+      if (/^(?:adr|governance|sop|rules|playbooks)\/[a-zA-Z0-9_.-]+\.md$/.test(trimmed)) {
+        return { path: trimmed, title: `Tài liệu Tham chiếu (docs/${trimmed})` };
+      }
       return null;
     }
 
@@ -2067,8 +2070,18 @@
       return baseParts.join("/");
     }
 
+    function slugifyMdHeading(rawHeading) {
+      return String(rawHeading || "")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "")
+        .trim()
+        .replace(/ /g, "-");
+    }
+
     window.scrollToMdAnchor = function(anchorId) {
-      const el = document.getElementById("md-anchor-" + String(anchorId || ""));
+      let cleanId = String(anchorId || "");
+      try { cleanId = decodeURIComponent(cleanId); } catch (err) {}
+      const el = document.getElementById("md-anchor-" + cleanId) || document.getElementById("md-anchor-" + slugifyMdHeading(cleanId));
       if (el && el.scrollIntoView) {
         const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -2108,16 +2121,31 @@
       const out = [];
       let inCode = false;
       let tableBuf = [];
+      let quoteBuf = [];
       const flushTable = () => {
         if (tableBuf.length > 0) {
           out.push(renderMdTable(tableBuf, basePath));
           tableBuf = [];
         }
       };
+      const flushQuote = () => {
+        if (quoteBuf.length > 0) {
+          const inner = quoteBuf.filter(Boolean).map(qLine => {
+            const alertMatch = qLine.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i);
+            if (alertMatch) {
+              return `<strong class="font-mono modal-outline-label">📌 ${escapeHtml(alertMatch[1].toUpperCase())}</strong>`;
+            }
+            return `<div>${formatInlineMd(qLine, basePath)}</div>`;
+          }).join("");
+          if (inner) out.push(`<blockquote class="md-quote">${inner}</blockquote>`);
+          quoteBuf = [];
+        }
+      };
       for (const rawLine of lines) {
         const trimmed = rawLine.trim();
         if (trimmed.startsWith("```")) {
           flushTable();
+          flushQuote();
           if (!inCode) {
             inCode = true;
             out.push("<pre><code>");
@@ -2132,10 +2160,16 @@
           continue;
         }
         if (trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 2) {
+          flushQuote();
           tableBuf.push(trimmed);
           continue;
         }
         flushTable();
+        if (trimmed === ">" || trimmed.startsWith("> ")) {
+          quoteBuf.push(trimmed === ">" ? "" : trimmed.slice(2).trim());
+          continue;
+        }
+        flushQuote();
         const anchorMatch = trimmed.match(/^<a\s+id="([a-zA-Z0-9_-]+)"\s*><\/a>$/);
         if (anchorMatch) {
           out.push(`<div id="md-anchor-${escapeHtml(anchorMatch[1])}"></div>`);
@@ -2145,18 +2179,17 @@
           out.push('<hr class="md-hr">');
           continue;
         }
-        if (trimmed.startsWith("> ")) {
-          out.push(`<blockquote class="md-quote">${formatInlineMd(trimmed.slice(2), basePath)}</blockquote>`);
-          continue;
-        }
         const line = formatInlineMd(rawLine, basePath);
         const numMatch = line.match(/^\s*(\d+)\.\s+(.*)$/);
         if (line.startsWith("### ")) {
-          out.push(`<h4>${line.slice(4)}</h4>`);
+          const hSlug = escapeHtml(slugifyMdHeading(rawLine.trim().slice(4)));
+          out.push(`<h4 id="md-anchor-${hSlug}">${line.slice(4)}</h4>`);
         } else if (line.startsWith("## ")) {
-          out.push(`<h3>${line.slice(3)}</h3>`);
+          const hSlug = escapeHtml(slugifyMdHeading(rawLine.trim().slice(3)));
+          out.push(`<h3 id="md-anchor-${hSlug}">${line.slice(3)}</h3>`);
         } else if (line.startsWith("# ")) {
-          out.push(`<h2>${line.slice(2)}</h2>`);
+          const hSlug = escapeHtml(slugifyMdHeading(rawLine.trim().slice(2)));
+          out.push(`<h2 id="md-anchor-${hSlug}">${line.slice(2)}</h2>`);
         } else if (line.startsWith("- [ ] ")) {
           out.push(`<div class="md-bullet-row">☐ ${line.slice(6)}</div>`);
         } else if (line.startsWith("- [x] ") || line.startsWith("- [X] ")) {
@@ -2170,6 +2203,7 @@
         }
       }
       flushTable();
+      flushQuote();
       if (inCode) out.push("</code></pre>");
       return out.join("\n");
     }
