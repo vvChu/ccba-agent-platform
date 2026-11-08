@@ -151,6 +151,16 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
         "inp",
         "cls",
         "state",
+        "sidebar",
+        "modal",
+        "detail",
+        "markdown",
+        "deep-link",
+        "spine",
+        "nowrap",
+        "anchor",
+        "stepper",
+        "llms",
     ),
     "chart": (
         "chart",
@@ -266,9 +276,17 @@ UI_SLOP_PATTERNS: tuple[tuple[str, str, re.Pattern[str], str], ...] = (
         "SLOP-07",
         "Vietnamese Diacritic Font Guardrail",
         re.compile(
-            r"(?i)\b(?:Clash\s+Display|Cabinet\s+Grotesk|Satoshi|General\s+Sans|Monument\s+Extended)\b"
+            r"(?i)\b(?:Clash[ \t]+Display|Cabinet[ \t]+Grotesk|Satoshi|General[ \t]+Sans|Monument[ \t]+Extended)\b"
         ),
         "Non-Vietnamese-safe font detected; use Be Vietnam Pro, Inter, Plus Jakarta Sans, Public Sans, or Lexend.",
+    ),
+    (
+        "SLOP-08",
+        "Unsafe Portal Link / XSS Protocol Guardrail",
+        re.compile(
+            r"""(?is)(?:\bhref\s*=\s*(?:\{\s*)?["'`]?|setAttribute\s*\(\s*["']href["']\s*,\s*["'`]?)\s*(?:javascript|vbscript|data):"""
+        ),
+        'Avoid unsafe javascript:, data:, or vbscript: URLs in href attributes; use <button type="button"> or sanitized hrefs (UX-22).',
     ),
 )
 
@@ -399,9 +417,12 @@ def compute_contrast_ratio(fg_hex: str, bg_hex: str) -> dict[str, Any]:
 def audit_ui_code(content: str) -> list[dict[str, Any]]:
     """Scan HTML/JSX/TSX/CSS source content for deterministic UI slop and portal anti-patterns."""
     findings: list[dict[str, Any]] = []
-    for line_no, line in enumerate(content.splitlines(), 1):
-        for rule_id, category, pattern, message in UI_SLOP_PATTERNS:
-            if pattern.search(line):
+    seen: set[tuple[int, str]] = set()
+    for rule_id, category, pattern, message in UI_SLOP_PATTERNS:
+        for match in pattern.finditer(content):
+            line_no = content.count("\n", 0, match.start()) + 1
+            if (line_no, rule_id) not in seen:
+                seen.add((line_no, rule_id))
                 findings.append(
                     {
                         "rule_id": rule_id,
@@ -410,6 +431,7 @@ def audit_ui_code(content: str) -> list[dict[str, Any]]:
                         "message": message,
                     }
                 )
+    findings.sort(key=lambda item: (int(item["line"]), str(item["rule_id"])))
     if "<table" in content.lower() and "tabular-nums" not in content:
         findings.append(
             {

@@ -9,11 +9,12 @@ When to use each design sub-skill.
 | brand | Brand identity, voice, assets | `design-system-tokens.md` + `logo-color-psychology.md` |
 | design-system | 3-layer token architecture, Design Dials, WCAG matrix | `design-system-tokens.md` + `../scripts/ui/search.py` |
 | ui-styling | Component composition, `shadcn/ui`, Tailwind, portals | `ui-styling-shadcn.md` + `portal-operate-and-antislop.md` |
-| portal-operate | Web portal Operate mode, Anti-Slop, URL state, WCAG 2.2 | `portal-operate-and-antislop.md` + `../scripts/ui/search.py` |
+| portal-operate | Web portal Operate + Read mode, Homepage/Spine/Detail View, SharePoint HTML Cockpit, Anti-Slop, URL state, WCAG 2.2 | `portal-operate-and-antislop.md` + `../scripts/ui/search.py` |
 | logo-design | AI logo generation (55 styles, 30 palettes) | SKILL.md + 4 references + 2 scripts |
 | cip-design | Corporate Identity Program (50 deliverables) | SKILL.md + 3 references + 3 scripts |
 | slides | HTML presentations with Chart.js | SKILL.md + 4 references |
 | banner-design | Banners for social, ads, web, print (22 styles) | SKILL.md + 1 reference |
+| social-photos | Multi-platform social media photo layouts & headless export | `social-photos-design.md` |
 | icon-design | SVG icon generation (15 styles, reasoning archetype) | SKILL.md + 1 reference + 1 script |
 
 ## Routing by Task Type
@@ -46,6 +47,15 @@ When to use each design sub-skill.
 - Implement dark mode
 - Create responsive layouts
 - Build accessible components
+
+### Portal, Homepage & Detail View Tasks (→ portal-operate)
+**→ portal-operate**
+
+- Design enterprise information portals, skills catalogs, and SharePoint HTML cockpits (`Operate + Read`)
+- Structure 3-Tier Progression of Attention ("Tối giản & Hé lộ dần": Zero-Noise Action Pills + Proximity Drawer → Bento Pulse & 1-Click L10 Mode Toggle → Lifecycle Stepper & Lazy Mermaid/3D CDE Drawer)
+- Build 280px App Shell sidebars (`Explore → Topics → What's New → Guides`), `< 650px` task-routing homepages, and `0.55fr:1.45fr` asymmetric workflow spines
+- Implement 5-Section Detail Modals (`.spine-stepper`, 1-click `Copy Brief cho Agent`) and Safe Markdown Readers (`escapeHtml(rawStr)`, `resolveAndSanitizeHref(rawUrl, basePath)`, `#skill/` & `#doc/` deep-links)
+- Audit UI code for AI slop and XSS link anti-patterns (`SLOP-01` through `SLOP-08`)
 
 ### Logo Design Tasks
 **→ logo-design**
@@ -96,6 +106,10 @@ When to use each design sub-skill.
 | "What color should this be?" | brand |
 | "How do I create a token for X?" | design-system |
 | "How do I build a button component?" | ui-styling |
+| "How do I design a portal homepage, sidebar, or workflow spine?" | portal-operate |
+| "How should a skill/ADR detail modal or Safe Markdown reader be structured?" | portal-operate |
+| "How do I build a SharePoint HTML Page cockpit with progressive disclosure?" | portal-operate |
+| "How do I audit my HTML/JSX portal for AI slop and WCAG 2.2 compliance?" | portal-operate |
 | "Is this on-brand?" | brand |
 | "Should I use a CSS variable here?" | design-system |
 | "How do I add dark mode?" | ui-styling |
@@ -164,10 +178,10 @@ Application Code
 ## Quick Commands
 
 **Brand:**
-Tra cứu đặc tả thương hiệu và kiểm tra asset theo `brand.md`.
+Tra cứu đặc tả thương hiệu và kiểm tra asset theo `design-system-tokens.md`.
 
 **Tokens:**
-Sinh và kiểm tra design tokens theo tài liệu `design-system.md`.
+Sinh và kiểm tra design tokens theo tài liệu `design-system-tokens.md`.
 
 **Components:**
 ```bash

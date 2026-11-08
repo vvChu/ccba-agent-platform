@@ -2703,8 +2703,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `ui-ux`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Thiết kế kiến trúc hệ thống và giao diện người dùng mạch lạc.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Yêu cầu giao diện hoặc trải nghiệm người dùng mới**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Thiết kế hệ thống Token 3 tầng, Cổng thông tin (Operate + Read), Trang chi tiết & kiểm định Anti-Slop.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **ccba-grilling (Nhánh C: Visual Prototype) / ccba-domain-modeling / ccba-to-spec**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -2717,18 +2717,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-design` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Yêu cầu giao diện hoặc trải nghiệm người dùng mới ]
+[ ccba-grilling (Nhánh C: Visual Prototype) / ccba-domain-modeling / ccba-to-spec ]
           │
           ▼
-    >>> [ ccba-design ] <<<  (Thiết kế kiến trúc hệ thống và giao diện người dùng mạch lạc.)
+    >>> [ ccba-design ] <<<  (Thiết kế hệ thống Token 3 tầng, Cổng thông tin (Operate + Read), Trang chi tiết & kiểm định Anti-Slop.)
           │
           ▼
-[ ccba-to-spec / ccba-implement ]
+[ ccba-implement / ccba-sharepoint-iac -> ccba-web-testing ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Yêu cầu giao diện hoặc trải nghiệm người dùng mới`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `ccba-grilling (Nhánh C: Visual Prototype) / ccba-domain-modeling / ccba-to-spec`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `ccba-to-spec / ccba-implement`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `ccba-implement / ccba-sharepoint-iac -> ccba-web-testing`.
 
 ---
 
