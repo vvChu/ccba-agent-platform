@@ -41,7 +41,7 @@
   1. [Tiêu chuẩn 1]
   2. [Tiêu chuẩn 2]
 - **Chính sách Timeout:** 10 phút (Nếu quá hạn $\rightarrow$ Orchestrator fallback retry / escalate `/boost`)
-- **Trạng thái:** `PENDING` | `IN_PROGRESS` | `COMPLETED` | `FAILED`
+- **Trạng thái:** `PENDING` | `IN_PROGRESS` | `COMPLETED` | `DROPPED` | `HANDBACK` | `FAILED`
 
 #### 🤖 Worker 2: `[worker-slug-2]`
 - **Mục tiêu nhiệm vụ:** [Mô tả cụ thể]
@@ -52,7 +52,7 @@
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
   1. [Tiêu chuẩn 1]
 - **Chính sách Timeout:** 10 phút
-- **Trạng thái:** `PENDING`
+- **Trạng thái:** `PENDING` | `IN_PROGRESS` | `COMPLETED` | `DROPPED` | `HANDBACK` | `FAILED`
 
 ---
 
@@ -69,4 +69,4 @@
 
 ## 📝 Nhật Ký Tiến Độ (Progress Log)
 
-- `[YYYY-MM-DD HH:MM]` Khởi tạo Team Sheet bởi Orchestrator.
+- `[YYYY-MM-DD HH:MM]` Khởi tạo Team Sheet bởi Orchestrator (`Interview Mode: direct | spec-ready (source: <path>)`).
