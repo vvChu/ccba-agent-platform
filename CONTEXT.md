@@ -11,7 +11,7 @@ The CCBA Agent Services Platform is a framework to develop and coordinate AI age
 3. [🤖 3. Hạ Tầng AI Gateway, LLM Prompting & Auto-Tuner](#3-hạ-tầng-ai-gateway-llm-prompting--auto-tuner)
 4. [🛡️ 4. Chính Sách Kiểm Thử, CI Gates & An Toàn Tiến Trình](#4-chính-sách-kiểm-thử-ci-gates--an-toàn-tiến-trình)
 5. [📚 5. Pháp Điển Xây Dựng, VBHN & Xử Lý Tài Liệu](#5-pháp-điển-xây-dựng-vbhn--xử-lý-tài-liệu)
-6. [🏢 6. Quản Trị Doanh Nghiệp IDOP & Cổng Giao Tiếp Viện IBST (ADR 0042, 0043)](#6-quản-trị-doanh-nghiệp-idop--cổng-giao-tiếp-viện-ibst-adr-0042-0043)
+6. [🏢 6. Quản Trị Doanh Nghiệp IDOP & Cổng Giao Tiếp Viện (IBST Gateway) (ADR 0042, 0043)](#6-quản-trị-doanh-nghiệp-idop--cổng-giao-tiếp-viện-ibst-gateway-adr-0042-0043)
 
 ---
 
@@ -362,7 +362,7 @@ Chiến lược hòa trộn `legal_registry.yaml` khi đồng bộ: tự động
 
 ---
 
-## 6. Quản Trị Doanh Nghiệp IDOP & Cổng Giao Tiếp Viện IBST (ADR 0042, 0043)
+## 6. Quản Trị Doanh Nghiệp IDOP & Cổng Giao Tiếp Viện (IBST Gateway) (ADR 0042, 0043)
 
 **Tri-Repo Server Synchronization Gate (ADR 0042)**:
 Cơ chế đồng bộ hóa tuần tự kéo mã mới nhất của cả 3 kho lưu trữ cốt lõi (`ccba-legal-knowledge` $\rightarrow$ `IDOP-CCBA-WAY` $\rightarrow$ `ccba-agent-platform`) trước khi kích hoạt Auto-Tuner lúc 00:00 hàng đêm trên Server Spark.
@@ -374,7 +374,7 @@ Nguyên tắc lưu trữ: 58 SharePoint lists chỉ lưu trữ Metadata (Text, L
 Module Python kết nối trực tiếp đa nền tảng (Windows Kỹ sư & Linux Server) qua Microsoft Graph REST API và App-Only Certificate (`c055c7a4-9150-4bd5-bf01-445c65467feb`) để tự động cập nhật tiến độ WBS, PGV và đăng ký tài liệu ISO 19650 vào `CdeDocuments`.
 
 **Tiered AI Pre-Submission Gate (Rào Chắn Tiền Kiểm 3 Tầng — ADR 0042)**:
-Hệ thống kiểm soát đa cấp trước khi nộp hồ sơ trình Viện IBST:
+Hệ thống kiểm soát đa cấp trước khi nộp hồ sơ trình Viện:
 - **Tier 1 (Hard-Floor Auto-Block):** Tự động khóa cứng 100% đối với văn bản luật hết hiệu lực, tạm ứng $> 90\%$ hoặc sai lệch toán học dòng tiền 3 tầng.
 - **Tier 2 (Governance Override):** Cho phép Giám đốc (`ROLE_DIRECTOR`) phê duyệt vượt rào đối với các trường hợp ngoại lệ nghiệp vụ và bắt buộc ghi nhật ký giải trình bất biến (`Audit Trail`) vào `lessons_learned.json`.
 - **Tier 3 (Advisory Warnings):** Cảnh báo mềm về văn phong, định dạng và nhắc nhở mốc tiến độ WBS.

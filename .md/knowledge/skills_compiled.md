@@ -10541,7 +10541,7 @@ from ccba_ooxml import build_presentation_from_markdown
 build_presentation_from_markdown("outline.md", "seminar.pptx")
 ```
 - **Hỗ trợ đầy đủ các Archetypes Bố Cục Đỉnh Cao**:
-  - **Cover Hero Slide**: Eyebrow Capsule `[TRUNG TÂM CCBA — VIỆN IBST]`, Tiêu đề Display 34pt, thanh 3 màu và Logo IBST BIM độ nét cao.
+  - **Cover Hero Slide**: Eyebrow Capsule `[IBST — CCBA]`, Tiêu đề Display 34pt, thanh 3 màu và Logo IBST BIM độ nét cao.
   - **The Big Idea (`::: big-idea`)**: Khẩu hiệu chiến lược kèm 3 thẻ cột trụ (Bối cảnh, Rủi ro, Hành động).
   - **Visual Agenda (`::: agenda active=N`)**: Lộ trình 4 chặng tự động highlight phần đang nói kèm badge Navy `ĐANG TRÌNH BÀY`.
   - **Horizontal Process Stepper (`::: steps`)**: Quy trình 4 bước ngang `01` $\rightarrow$ `02` $\rightarrow$ `03` $\rightarrow$ `04` trực quan.
@@ -11111,7 +11111,7 @@ Mỗi List được lưu thành một tệp JSON trong `datamodel/sharepoint/lis
     {
       "Name": "RequiresIBSTSign",
       "Type": "YesNo",
-      "DisplayName": "Yêu cầu trình Viện IBST ký"
+      "DisplayName": "Yêu cầu trình Viện ký"
     },
     {
       "Name": "IBSTSubmissionStatus",
@@ -11123,7 +11123,7 @@ Mỗi List được lưu thành một tệp JSON trong `datamodel/sharepoint/lis
         "IBST_Approved",
         "IBST_Returned"
       ],
-      "DisplayName": "Trạng thái trình Viện IBST (Gateway)"
+      "DisplayName": "Trạng thái trình Viện (Gateway)"
     }
   ]
 }

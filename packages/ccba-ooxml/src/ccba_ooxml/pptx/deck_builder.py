@@ -140,7 +140,7 @@ class MarkdownDeckParser:
         subtitle = ""
         author = ""
         date = ""
-        org = "TRUNG TÂM TƯ VẤN & ỨNG DỤNG BIM TRONG XÂY DỰNG (CCBA) — VIỆN IBST"
+        org = "TRUNG TÂM TƯ VẤN & ỨNG DỤNG BIM TRONG XÂY DỰNG (CCBA) — VIỆN KHCN XÂY DỰNG (IBST)"
 
         for line in yaml_str.splitlines():
             line = line.strip()

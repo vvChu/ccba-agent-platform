@@ -93,7 +93,7 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
 - **Governance & Intelligence Hub (`ccba-agent-platform`)**: Trung tâm ban hành Hiến pháp Layer 1, Skills Catalog SSOT, khung điều phối đa tác tử Teamwork (ADR 0053), harness kiểm định tự động (ADR 0058), và SDK `ccba-ai`.
 - **Legal Data Hub (`ccba-legal-knowledge`)**: Kho dữ liệu chuẩn mực OKF v2.4, AST điều khoản `clauses.json`, văn bản gốc PDF/DOCX có chữ ký băm mật mã SHA-256 (ADR 0059), và TVPL VIP crawler (ADR 0031).
 - **Synthesis Hub (`VvC_Notes`)**: Kho tri thức cá nhân, tổng kết phương pháp luận VvC LLM OS, các playbooks chiến lược và mô hình nhận thức.
-- **Operations Hub (`IDOP-CCBA-WAY`)**: Nền tảng điều hành nghiệp vụ thực tế của Viện IBST và CCBA trên Microsoft 365 Enterprise.
+- **Operations Hub (`IDOP-CCBA-WAY`)**: Nền tảng điều hành nghiệp vụ thực tế của Viện KHCN Xây dựng (IBST) và CCBA trên Microsoft 365 Enterprise.
 
 ### 2. Chuẩn Mực An Ninh OS Topology: POSIX ACLs Pin-Hole Traversal
 - **Cấm Tuyệt Đối:** Sử dụng `chmod o+x /home/vvc`.
@@ -193,3 +193,5 @@ Nhằm giải quyết triệt để vấn đề phân phối tri thức quản t
 - **Yêu Cầu Quyền Quản Trị Hệ Thống Cho POSIX ACLs:** Script `setup_ccba_devs_acls.sh` yêu cầu quyền `sudo` để gán nhóm và quyền trên `/home/vvc`. *Biện pháp:* Đóng gói script độc lập có cơ chế kiểm tra an toàn và chạy thẩm định `bash -n` trước khi thực thi.
 - **Giới Hạn Tốc Độ Microsoft Graph API:** Việc giới hạn 5 req/s có thể kéo dài thời gian đồng bộ ban đầu khi nạp hàng ngàn hồ sơ CDE. *Biện pháp:* Kết hợp cơ chế lọc Delta Query và chỉ đồng bộ các tệp có cập nhật mới.
 - **Độ Phức Tạp Quản Lý Snapshot Cache Trên Spoke:** Cần cơ chế dọn dẹp các snapshot cũ hơn để không chiếm dụng dung lượng đĩa. *Biện pháp:* Giữ tối đa 2 snapshot gần nhất (bản `current` và bản trước đó) tại `.agents/cache/hub-catalog/snapshots/`.
+
+> *Erratum (RULE-6.1): Chuẩn hóa thuật ngữ hiển thị sang "Viện KHCN Xây dựng (IBST)" (không thay đổi nội dung quyết định kiến trúc; nguyên văn lịch sử được bảo lưu trong Git history).*

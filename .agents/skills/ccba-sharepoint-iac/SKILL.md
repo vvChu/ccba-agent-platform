@@ -137,7 +137,7 @@ Mỗi List được lưu thành một tệp JSON trong `datamodel/sharepoint/lis
     {
       "Name": "RequiresIBSTSign",
       "Type": "YesNo",
-      "DisplayName": "Yêu cầu trình Viện IBST ký"
+      "DisplayName": "Yêu cầu trình Viện ký"
     },
     {
       "Name": "IBSTSubmissionStatus",
@@ -149,7 +149,7 @@ Mỗi List được lưu thành một tệp JSON trong `datamodel/sharepoint/lis
         "IBST_Approved",
         "IBST_Returned"
       ],
-      "DisplayName": "Trạng thái trình Viện IBST (Gateway)"
+      "DisplayName": "Trạng thái trình Viện (Gateway)"
     }
   ]
 }

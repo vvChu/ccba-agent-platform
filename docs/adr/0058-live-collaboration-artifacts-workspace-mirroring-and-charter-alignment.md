@@ -43,7 +43,7 @@ Agent tự động đọc `.md/workspace_context.yaml` để áp dụng chính s
     * Thay đổi code/kỹ thuật: `CHU_TRI_BO_MON` (QC Level 2).
     * Nghiệm thu bàn giao / IDOP Task Sign-off: `CHU_TRI_HOP_DONG_PM` (QC Level 3) + `IDOP_LEAD`.
     * Tư vấn pháp lý / Quy chuẩn VBPL: `CO_VAN_PHAP_LY_QA` (QC Level 4).
-    * Hồ sơ xuất xưởng CĐT / Viện IBST: `GIAM_DOC` hoặc `PHO_GIAM_DOC` (QC Level 5).
+    * Hồ sơ xuất xưởng CĐT / Viện: `GIAM_DOC` hoặc `PHO_GIAM_DOC` (QC Level 5).
 - **Tại Hub Monorepo:** Thay đổi hệ sinh thái nền tảng do `TRUONG_PHONG_RD_HTQT` hoặc `GIAM_DOC` phê duyệt.
 
 ### 4. Khóa Hoàn Thành Cứng Bằng Bằng Chứng Máy Tính (Deterministic Exit-Code Binding)
@@ -63,3 +63,5 @@ Agent tự động đọc `.md/workspace_context.yaml` để áp dụng chính s
 ### Đánh đổi & Thách thức (Trade-offs)
 - Agent phải thực hiện thêm bước snapshot tự động khi kết thúc phiên.
 - Quy trình nghiệm thu đòi hỏi các lệnh kiểm tra tự động phải được thiết lập rõ ràng từ trước.
+
+> *Erratum (RULE-6.1): Chuẩn hóa thuật ngữ hiển thị sang "Viện" (không thay đổi nội dung quyết định kiến trúc; nguyên văn lịch sử được bảo lưu trong Git history).*

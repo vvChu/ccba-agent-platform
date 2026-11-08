@@ -1,6 +1,6 @@
 # Mẫu Biểu: Quyết Định Giao Việc Hợp Đồng Kinh Tế (Chuẩn NĐ 30)
 
-> **Mô tả**: Mẫu Quyết định giao việc thực hiện Hợp đồng Kinh tế nội bộ giữa Viện IBST và Đơn vị thực hiện (Trung tâm CCBA).
+> **Mô tả**: Mẫu Quyết định giao việc thực hiện Hợp đồng Kinh tế nội bộ giữa Viện KHCN Xây dựng (IBST) và Đơn vị thực hiện (CCBA).
 
 ---
 
