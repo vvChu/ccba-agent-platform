@@ -67,7 +67,7 @@
 ### Batch 2: Tích Hợp Doanh Nghiệp & Dữ Liệu Pháp Lý
 
 #### 🤖 Worker 3: `m365-bridge-specialist`
-- **Mục tiêu nhiệm vụ:** Khảo sát toàn diện 59 SharePoint Lists schema tại `IDOP-CCBA-WAY/datamodel/sharepoint/lists/`, thiết kế kiến trúc chi tiết cho module Python Outbound Bridge Worker (`msal` + `httpx`), xử lý mã 429 throttling và cơ chế dead-letter queue.
+- **Mục tiêu nhiệm vụ:** Khảo sát toàn diện các SharePoint Lists schema tại `IDOP-CCBA-WAY/datamodel/sharepoint/lists/`, thiết kế kiến trúc chi tiết cho module Python Outbound Bridge Worker (`msal` + `httpx`), xử lý mã 429 throttling và cơ chế dead-letter queue.
 - **Phạm vi Seam (Exclusive File Scope — Read Only):**
   - `/home/vvc/ccba/IDOP-CCBA-WAY/datamodel/sharepoint/lists/`
   - `/home/vvc/ccba/IDOP-CCBA-WAY/tools/config/environments.psd1`
@@ -75,7 +75,7 @@
   - `docs/adr/0043-idop-active-dev-resilience-and-fallback.md`
 - **Sandbox Output Dir:** `.system_generated/scratch/teamwork/4hubs_federated_spokes/worker_3/`
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
-  1. Phân loại 59 schemas theo độ ưu tiên đồng bộ (CDE, CRM, Hợp đồng, Phân bổ).
+  1. Phân loại toàn bộ SharePoint Lists schemas theo độ ưu tiên đồng bộ (CDE, CRM, Hợp đồng, Phân bổ).
   2. Thiết kế chi tiết module Python Bridge Worker không phụ thuộc PowerShell.
   3. Đặc tả chiến lược xử lý rate limit (Token Bucket) và Dead-Letter Queue.
 - **Chính sách Timeout:** 10 phút.

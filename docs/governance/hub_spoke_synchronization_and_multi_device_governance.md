@@ -298,8 +298,8 @@ flowchart TD
     end
 
     subgraph OpsPlane ["☁️ Operations Plane: IDOP (Microsoft 365 Enterprise)"]
-        SP59["59 SharePoint Lists<br/>(CDE ISO 19650, CRM, Contracts, WBS)"]
-        OneDrive["5TB Master OneDrive & Power Automate"]
+        SPLists["IDOP SharePoint Lists<br/>(CDE ISO 19650, CRM, Contracts, WBS)"]
+        OneDrive["Master OneDrive & Power Automate"]
     end
 
     Agent -->|"Tra cứu Seam < 2ms (Offline)"| Cache
@@ -308,9 +308,9 @@ flowchart TD
     LiteLLM --> LocalLLM
     LiteLLM --> RAGCore
     Agent -->|"3-Tier Gate: PASS"| Bridge
-    Bridge -->|"Token Bucket (Max 5.0 req/s)"| SP59
+    Bridge -->|"Token Bucket (Max 5.0 req/s)"| SPLists
     Bridge -.->|"Mất mạng: Lưu queue"| Queue
-    Queue ==="idop_bridge --flush (Idempotent Replay)"===> SP59
+    Queue ==="idop_bridge --flush (Idempotent Replay)"===> SPLists
 ```
 
 ### 8.1. Mặt Phẳng Quản Trị (Control Plane): Phân Phối Catalog & Seam Đa Tầng

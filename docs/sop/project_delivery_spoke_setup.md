@@ -11,7 +11,7 @@ Quy trình thao tác chuẩn (SOP) này hướng dẫn chi tiết các bước t
 ### 🏛️ Các Nguyên Tắc Bất Biến (Core Invariants):
 1. **Không Sử Dụng Git Remote**: Dự án tư vấn sản xuất hồ sơ thực tế chứa các tệp nhạy cảm của khách hàng và các tệp đồ họa dung lượng lớn (Revit `.rvt`, AutoCAD `.dwg`, PDF scan). Tuyệt đối **không** tạo kho Git remote công khai hoặc đẩy lên GitHub.
 2. **Đồng Bộ Xuôi 1 Chiều (Downstream Sync)**: Spoke dự án kế thừa 100% Kỹ năng (`.agents/skills/`) từ Central Hub (`ccba-agent-platform`) thông qua công cụ đồng bộ cục bộ.
-3. **Local-First IDOP Staging**: Toàn bộ biên bản, báo cáo thẩm tra và kết quả kiểm định được lưu tạm thời vào hàng đợi `.md/idop_staged/` trước khi đồng bộ lên 58 SharePoint Lists và CDE Master.
+3. **Local-First IDOP Staging**: Toàn bộ biên bản, báo cáo thẩm tra và kết quả kiểm định được lưu tạm thời vào hàng đợi `.md/idop_staged/` trước khi đồng bộ lên hệ thống SharePoint Lists IDOP và CDE Master.
 
 ---
 

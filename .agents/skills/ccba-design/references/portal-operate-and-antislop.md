@@ -40,7 +40,7 @@ Every interactive element (buttons, inputs, table rows, filter chips, tree nodes
 Enterprise knowledge portals, skills catalogs, and operations cockpits combine **Operate** and **Read** modes across three concentric layers:
 1. **Layer 1 — Task-Routing Homepage / Map View (`Operate` — Quick Orientation):**
    - **Above-the-Fold Budget (`< 650px`):** Keep `.hero` padding and vertical margins compact (`24px 0 18px`) so the first task-routing section header (`#goal-init_navigation h2`) starts above `650px` on `1366x768` and `1440x900` screens without scrolling.
-   - **Full-Width Section Alignment (`100%`):** Align hero prose, advisor banners, and jump-card grids to `100%` of `--ccba-content-max` (`1120px`) rather than mixing narrower `760px` blocks above `1120px` grids.
+   - **Full-Width Section Alignment (`100%`):** Align hero prose, advisor banners, and jump-card grids to `100%` of `--ccba-content-max` (e.g., `1440px`) rather than mixing narrower blocks above full-width grids.
    - **Odd-Card Full-Row Span:** When a 2-column task grid has an odd number of cards (e.g., 5 portals), apply `.jump-card:last-child:nth-child(odd) { grid-column: 1 / -1; }` so the final card spans the full row cleanly without leaving a 50% empty hole.
 2. **Layer 2 — Asymmetric Workflow Spine (`Operate` — High-Density Scanning):**
    - Use an asymmetric split `grid-template-columns: minmax(260px, 0.55fr) minmax(0, 1.45fr)` (`~27.5%` sticky goal identity, question, primary `"Do this"` CTA, and collapsible SOP drawer on the left; `~72.5%` ordered workflow spine media cards on the right, collapsing to `1fr` below `960px`).
