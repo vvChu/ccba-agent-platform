@@ -9,7 +9,7 @@
 
 ## 1. TỔNG QUAN & ĐẶT VẤN ĐỀ (EXECUTIVE SUMMARY & PROBLEM STATEMENT)
 
-Trong tư vấn xây dựng và thẩm tra kỹ thuật BIM của CCBA (Viện IBST), một bài thuyết trình slide phục vụ đồng thời 2 nhóm đối tượng có kỳ vọng trái ngược:
+Trong tư vấn xây dựng và thẩm tra kỹ thuật BIM của CCBA — Viện KHCN Xây dựng (IBST), một bài thuyết trình slide phục vụ đồng thời 2 nhóm đối tượng có kỳ vọng trái ngược:
 1. **Lãnh đạo cấp cao (Chủ đầu tư, Viện trưởng, Giám đốc QLDA)**: Cần nắm bắt thông điệp cốt lõi và số liệu KPI trong vòng **5-10 giây** lướt nhìn.
 2. **Hội đồng Thẩm định & Kỹ sư trưởng**: Cần căn cứ pháp lý chính xác (QCVN, TCVN, ISO 19650), vị trí cấu kiện cụ thể (Trục Grid, Tầng, IFC GUID) và số liệu va chạm chi tiết.
 
@@ -120,7 +120,7 @@ Dưới đây là thiết kế kiến trúc chi tiết cho 5 slide mẫu trong [
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [TRUNG TÂM TƯ VẤN & ỨNG DỤNG BIM CCBA — VIỆN IBST] (Capsule 11pt Bold)                 │
+│ [IBST — CCBA] (Capsule 11pt Bold)                                                      │
 │                                                                                        │
 │ ỨNG DỤNG BIM & NỀN TẢNG SỐ                                                             │
 │ TRONG THẨM TRA THIẾT KẾ                                                                │

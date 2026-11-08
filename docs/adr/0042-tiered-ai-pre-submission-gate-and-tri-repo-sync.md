@@ -1,9 +1,9 @@
 # ADR 0042: Tiered Multi-Severity AI Pre-Submission Gate and Tri-Repo Server Synchronization Protocol
 
 ## Context
-As the CCBA Agent Platform integrates closely with the enterprise governance operating system (`IDOP-CCBA-WAY`) and interfaces with the functional departments of the Institute for Building Science and Technology (Viện IBST: KHKT, TCKT, TCHC), we must ensure:
+As the CCBA Agent Platform integrates closely with the enterprise governance operating system (`IDOP-CCBA-WAY`) and interfaces with the functional departments of the Institute for Building Science and Technology (IBST: KHKT, TCKT, TCHC), we must ensure:
 1. Continuous synchronization between Hub tooling, National Legal Knowledge, and Enterprise Governance on Server Spark (`<TAILSCALE_GATEWAY_IP>`).
-2. Zero administrative and financial submission rejections from Viện IBST without imposing rigid mechanical bottlenecks that impair business agility.
+2. Zero administrative and financial submission rejections from Viện without imposing rigid mechanical bottlenecks that impair business agility.
 
 ## Decision
 We formally establish the **Tri-Repo Server Synchronization Protocol**, the **Headless Python IDOPBridge SDK**, and the **3-Tiered Multi-Severity AI Pre-Submission Gate**.
@@ -30,7 +30,7 @@ Spoke projects communicate with 58 IDOP SharePoint Lists via a headless Python S
 
 ```mermaid
 graph TD
-    Submittal["Hồ Sơ Nghiệm Thu / Đấu Thầu Trình Viện IBST"] --> Gate{"AI Pre-Submission Gate"}
+    Submittal["Hồ Sơ Nghiệm Thu / Đấu Thầu Trình Viện"] --> Gate{"AI Pre-Submission Gate"}
     
     Gate -- "🔴 Mức 1: Hard-Floor Critical" --> Block["⛔ Auto-Block 100% (Phải sửa sạch)"]
     Gate -- "🟡 Mức 2: Governance Exception" --> DirectorAuth{"ROLE_DIRECTOR Duyệt Override?"}
@@ -38,7 +38,7 @@ graph TD
     DirectorAuth -- "Không" --> Block
     Gate -- "🟢 Mức 3: Advisory Warning" --> SoftWarn["ℹ️ Khuyến Nghị Mềm (Tick Đã Xem)"]
     
-    AuditTrail --> Approved["✅ Xuất Bản Hồ Sơ Trình Viện IBST"]
+    AuditTrail --> Approved["✅ Xuất Bản Hồ Sơ Trình Viện"]
     SoftWarn --> Approved
 ```
 
@@ -49,6 +49,8 @@ graph TD
 | 🟢 **Tier 3: Advisory Warnings** | • Formatting refinements (Yale/APA style).<br/>• Non-blocking milestone reminders. | ℹ️ **Soft Warning** (Acknowledge & proceed) | **`ROLE_HEAD_ADMIN`** (Trưởng phòng TH) |
 
 ## Consequences
-- **Positive**: Eliminates 100% of illegal or mathematically flawed submittals to Viện IBST.
+- **Positive**: Eliminates 100% of illegal or mathematically flawed submittals to Viện.
 - **Positive**: Preserves executive flexibility for edge cases while guaranteeing full audit transparency.
 - **Positive**: Automated 3-repo synchronization prevents code drift across the AI ecosystem.
+
+> *Erratum (RULE-6.1): Chuẩn hóa thuật ngữ hiển thị sang "Viện" / "IBST" (không thay đổi nội dung quyết định kiến trúc; nguyên văn lịch sử được bảo lưu trong Git history).*

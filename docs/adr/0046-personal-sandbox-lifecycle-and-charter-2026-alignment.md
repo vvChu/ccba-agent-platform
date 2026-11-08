@@ -42,5 +42,7 @@ graph LR
 
 ## Consequences
 - **Positive**: Tự do sáng tạo và thử nghiệm an toàn thiết thực cho thành viên CCBA.
-- **Positive**: Tuân thủ 100% Quy chế CCBA 2026, triệt tiêu rủi ro sai lệch dữ liệu với Viện IBST.
+- **Positive**: Tuân thủ 100% Quy chế CCBA 2026, triệt tiêu rủi ro sai lệch dữ liệu với Viện.
 - **Positive**: Phân định rành mạch giữa tài sản dự án chính thức và bản nháp thử nghiệm cá nhân.
+
+> *Erratum (RULE-6.1): Chuẩn hóa thuật ngữ hiển thị sang "Viện" (không thay đổi nội dung quyết định kiến trúc; nguyên văn lịch sử được bảo lưu trong Git history).*

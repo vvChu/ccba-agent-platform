@@ -31,7 +31,7 @@ Khi `DocAutoEvolutionEngine` chạy qua đêm lúc 00:00 trên Server Spark, m�
 | `5` | Xử Lý Văn Bản, Bảng Biểu & Tài Liệu Pháp Lý | **4** | 🟢 BALANCED |
 | `6` | Thiết Kế Kiến Trúc Deep Modules & AI-Navigability | **20** | 🟢 BALANCED (Max: 25) |
 | `7` | Hệ Sinh Thái Hub-Spoke, Tiếp Nhận & Đồng Bộ | **15** | 🟢 BALANCED |
-| `8` | Quản Trị Doanh Nghiệp IDOP, Server Spark & Viện IBST | **8** | 🟢 BALANCED |
+| `8` | Quản Trị Doanh Nghiệp IDOP, Server Spark & Cổng Viện | **8** | 🟢 BALANCED |
 
 ---
 

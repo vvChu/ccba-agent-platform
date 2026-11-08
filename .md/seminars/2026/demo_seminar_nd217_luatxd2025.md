@@ -3,7 +3,7 @@ title: "ỨNG DỤNG BIM & NỀN TẢNG SỐ TRONG THẨM TRA THIẾT KẾ"
 subtitle: "Phổ biến Luật Xây dựng 2025, Nghị định 217/2026/NĐ-CP & Quy trình CCBA WAY"
 author: "TS. Nguyễn Văn A — Chuyên gia Trưởng BIM"
 date: "02/09/2026"
-org: "TRUNG TÂM TƯ VẤN & ỨNG DỤNG BIM TRONG XÂY DỰNG (CCBA) — VIỆN IBST"
+org: "TRUNG TÂM TƯ VẤN & ỨNG DỤNG BIM TRONG XÂY DỰNG (CCBA) — VIỆN KHCN XÂY DỰNG (IBST)"
 ---
 
 # [CHIẾN LƯỢC] Thông Điệp Cốt Lõi Dự Án

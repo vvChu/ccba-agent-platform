@@ -9,7 +9,7 @@
 
 ## 1. Tóm tắt Thực thi (Executive Summary)
 
-Quy chuẩn Nhận diện Thương hiệu CCBA (ver 3.3) sở hữu nền tảng ý niệm vững chắc, kế thừa trọn vẹn uy tín học thuật của Viện IBST và tạo lập bản sắc công nghệ số riêng biệt thông qua sự kết hợp giữa ba tông màu chủ đạo: **Đỏ IBST (`#DA251C`)**, **Xanh Đậm CCBA (`#363883`)**, và **Xanh Dương Sáng (`#0093DD`)**, gắn kết hữu cơ với Slogan **`Smarter Faster Better`** và chu trình quản trị **`CCBA WAY`**.
+Quy chuẩn Nhận diện Thương hiệu CCBA (ver 3.3) sở hữu nền tảng ý niệm vững chắc, kế thừa trọn vẹn uy tín học thuật của Viện KHCN Xây dựng (IBST) và tạo lập bản sắc công nghệ số riêng biệt thông qua sự kết hợp giữa ba tông màu chủ đạo: **Đỏ IBST (`#DA251C`)**, **Xanh Đậm CCBA (`#363883`)**, và **Xanh Dương Sáng (`#0093DD`)**, gắn kết hữu cơ với Slogan **`Smarter Faster Better`** và chu trình quản trị **`CCBA WAY`**.
 
 Tuy nhiên, qua kết quả kiểm định phản biện kỹ thuật độc lập (Adversarial Audit), tài liệu ver 3.3 còn bộc lộ **5 điểm nghẽn thực tế** khi áp dụng vào môi trường số và tài liệu giao nộp:
 1. **Vi phạm độ tương phản WCAG 2.1 AA**: Cặp màu chữ Slate Dark `#2C3E50` trên nền Xanh Đậm `#363883` có tỷ lệ tương phản chỉ **1.08:1** (chữ vô hình), và chữ Trắng trên nền Xanh Dương Sáng `#0093DD` chỉ đạt **3.38:1** (dưới ngưỡng chuẩn 4.5:1).

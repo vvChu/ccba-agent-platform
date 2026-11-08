@@ -171,8 +171,8 @@
         {
           "Name": "NationalProjectID",
           "Type": "Text",
-          "DisplayName": "Mã dự án quốc gia / Viện IBST",
-          "Description": "Mã định danh dự án cấp quốc gia / Viện IBST theo QCTK 2815"
+          "DisplayName": "Mã dự án quốc gia / IBST",
+          "Description": "Mã định danh dự án cấp quốc gia / IBST theo QCTK 2815"
         },
         {
           "Name": "ContractId",
@@ -867,8 +867,8 @@
             "Group": "CCBA Taxonomy",
             "Name": "CCBA_DonViPhongBan"
           },
-          "DisplayName": "Đơn vị phối hợp (Viện IBST)",
-          "Description": "Các đơn vị thành viên thuộc Viện IBST cùng tham gia phối hợp thực hiện hợp đồng"
+          "DisplayName": "Đơn vị phối hợp (IBST)",
+          "Description": "Các đơn vị thành viên thuộc IBST cùng tham gia phối hợp thực hiện hợp đồng"
         },
         {
           "Name": "ContractStructure",
@@ -959,8 +959,8 @@
         {
           "Name": "RequiresIBSTSign",
           "Type": "YesNo",
-          "DisplayName": "Yêu cầu trình Viện IBST ký",
-          "Description": "Cờ xác định hợp đồng thuộc diện Viện trưởng IBST trực tiếp ký kết (VienKy)"
+          "DisplayName": "Yêu cầu trình Viện ký",
+          "Description": "Cờ xác định hợp đồng thuộc diện Viện trưởng trực tiếp ký kết (VienKy)"
         },
         {
           "Name": "RequiresKHKTJointVentureNotice",
@@ -1020,14 +1020,14 @@
             "IBST_Approved",
             "IBST_Returned"
           ],
-          "DisplayName": "Trạng thái trình Viện IBST (Gateway)",
-          "Description": "Trạng thái giao dịch qua đầu mối Phòng Tổng Hợp (ROLE_HEAD_ADMIN) với Viện IBST"
+          "DisplayName": "Trạng thái trình Viện (Gateway)",
+          "Description": "Trạng thái giao dịch qua đầu mối Phòng Tổng Hợp (ROLE_HEAD_ADMIN) với Viện"
         },
         {
           "Name": "IBSTGatewayRole",
           "Type": "Text",
           "DisplayName": "Vai trò đầu mối trình Viện",
-          "Description": "Vai trò đầu mối duy nhất giao tiếp với Viện IBST (ROLE_HEAD_ADMIN)"
+          "Description": "Vai trò đầu mối duy nhất giao tiếp với Viện (ROLE_HEAD_ADMIN)"
         },
         {
           "Name": "ArchiveDueDate",
