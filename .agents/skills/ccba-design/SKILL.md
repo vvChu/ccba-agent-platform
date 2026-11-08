@@ -24,7 +24,7 @@ argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: CCBA
-  version: 2.3.0
+  version: 2.4.0
 bundle: _consulting
 tier: kernel
 layer: _consulting
@@ -66,6 +66,7 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 - Brand identity, voice, assets
 - Design system tokens and specs
 - UI styling with shadcn/ui + Tailwind
+- Web portals, task-routing homepages, SharePoint HTML cockpits ("Tối giản & Hé lộ dần"), and 5-section detail views (`Operate + Read`)
 - Logo design and AI generation
 - Corporate identity program (CIP) deliverables
 - Presentations and pitch decks
@@ -79,7 +80,7 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 | Brand identity, voice, assets | Brand & Tokens (built-in) | `references/design-system-tokens.md` |
 | Tokens, specs, CSS vars, dials | Design System (built-in) | `references/design-system-tokens.md` |
 | shadcn/ui, Tailwind, composition | UI Styling (built-in) | `references/ui-styling-shadcn.md` |
-| Web portals, Operate mode, Anti-Slop | Portal UX (built-in) | `references/portal-operate-and-antislop.md` |
+| Web portals, Operate + Read mode, Homepage/Spine/Detail View, Anti-Slop | Portal UX (built-in) | `references/portal-operate-and-antislop.md` |
 | Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
 | CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
 | Presentations, pitch decks | Slides (built-in) | `references/slides.md` |
@@ -89,7 +90,13 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 
 ## UI/UX & Web Portal Design (Built-in)
 
-Deterministic BM25 search over 6 UI/UX datasets (`styles.csv`, `ux-guidelines.csv`, `charts.csv`, `products.csv`, `typography.csv`, `stacks.csv`), quantitative Design Dials (`--density`, `--variance`, `--motion`), WCAG 2.1/2.2 contrast verification, and static UI slop code auditing.
+Deterministic BM25 search over 6 UI/UX datasets (`styles.csv`, `ux-guidelines.csv`, `charts.csv`, `products.csv`, `typography.csv`, `stacks.csv`), quantitative Design Dials (`--density`, `--variance`, `--motion`), WCAG 2.1/2.2 contrast verification, and static UI slop code auditing (`SLOP-01` through `SLOP-08`).
+
+### Portal App Shell, Spine & Detail View Architecture
+
+- **3-Tier Progression of Attention ("Tối giản & Hé lộ dần" — `UX-18` & `STK-07`):** Keep 80% of the initial viewport calm (*"Not an index of everything, but a decision aid"*): Tier 1 Above-the-Fold Zero-Noise Action Pills, Role-Adaptive Lenses & Slide-over Proximity Drawer → Tier 2 Asymmetric Workflow Spine (`minmax(260px, 0.55fr) minmax(0, 1.45fr)`), Bento Pulse & 1-Click Situational Mode Toggle (e.g., Daily vs. Friday L10 90-Minute Mode) → Tier 3 5-Step Lifecycle Bar, lazy-rendered Mermaid QA/QC flows, Babylon.js 3D preview & native `<details>` SOP drawers (`UX-19`).
+- **280px App Shell Sidebar & Context-Aware Routing (`UX-20`):** Order sidebar groups by operator frequency (`Explore → Topics → What's New → Guides`), align `.sidebar-count-pill` with `tabular-nums`, tuck `>4` secondary guides into `<details class="sidebar-guides-more">`, and route Topic clicks context-awarely (scroll on Map view vs. filter chip in Catalog view).
+- **5-Section Detail Modal, Safe Markdown Reader & Dual-Channel Endpoints (`UX-21` & `UX-22`):** Combine 1-click `📄 Copy Brief cho Agent`, interactive `.spine-stepper` (`aria-current="step"` / `🛰️ Satellite`), XSS-safe Markdown rendering (`escapeHtml(rawStr)` + `resolveAndSanitizeHref(rawHref, basePath)` + `slugifyMdHeading(rawHeading)` + `scrollToMdAnchor(anchorId)`), whitelisted `#skill/<slug>` & `#doc/<path>` deep-links, SharePoint `SitePages` Native RBAC Security Trimming + Dual-Mode Offline Fallback, and machine endpoints (`llms.txt`, `llms-full.txt`, `INDEX.md`).
 
 ### UI/UX: Generate & Persist Portal Design System (`MASTER.md` + Page Overrides)
 
@@ -346,7 +353,22 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 3. **Implement** (`references/ui-styling-shadcn.md`, `--stack`) → Configure Tailwind, `shadcn/ui` geometry preset, or SharePoint SPFx tokens
    - **Completion Criterion:** Component styling rules and URL-synchronized state implemented in the target stack.
 4. **Audit** (`scripts/ui/search.py --audit-file`) → Run static UI Slop and Operate-mode compliance scanner
-   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-07` findings reported on generated UI components.
+   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-08` findings reported on generated UI components.
+
+### Information Portal, Homepage & Detail View Design
+
+1. **Archetype & Surface Dials** (`scripts/ui/search.py "<query>" --design-system --persist .md/design-system`) → Classify surface mode (`Operate + Read`), set Dials (`--density 8 --variance 4 --motion 3`), and persist `MASTER.md` + `pages/<page>.md`
+   - **Completion Criterion:** Hierarchical design brief persisted under `.md/design-system/<project>/` with verified WCAG 2.2 AA/AAA token pairs (`>= 4.5:1`) and Vietnamese-safe typography (`Be Vietnam Pro` + `JetBrains Mono`).
+2. **App Shell & Left Sidebar IA** (`references/portal-operate-and-antislop.md`, `UX-20`) → Implement sticky header (`62px`, `flex-wrap: nowrap`), `280px` left sidebar ordered by operator frequency (`Explore → Topics → What's New → Guides`), `.sidebar-count-pill` (`tabular-nums`), `>4` `<details class="sidebar-guides-more">` drawer, and context-aware Topic routing
+   - **Completion Criterion:** App shell sidebar renders without horizontal overflow or premature Vietnamese label truncation and synchronizes active states across views.
+3. **Task-Routing Homepage & Progressive Disclosure** (`UX-18`, `UX-19`, `STK-07`) → Build `< 650px` above-the-fold hero (`100%` width alignment), odd-card full-row grid span (`.jump-card:last-child:nth-child(odd) { grid-column: 1 / -1; }`), 3-Tier "Tối giản & Hé lộ dần" layout (Zero-Noise Action Pills + Proximity Drawer → Asymmetric `0.55fr:1.45fr` Workflow Spine / 1-Click L10 Mode Toggle → Lifecycle Stepper / `<details>` SOP drawers), and contextual button wrapping (`nowrap` on short inline buttons vs. `overflow-wrap: anywhere` on long command CTAs)
+   - **Completion Criterion:** First task section header starts `< 650px` on desktop and `scrollWidth <= clientWidth` holds at `1440px`, `1024px`, `768px`, and `375px`.
+4. **5-Section Detail Modal & Interactive Spine Stepper** (`UX-21`) → Implement 5-section inspector modal (Action Header + `📄 Copy Brief cho Agent`, interactive `.spine-stepper` with `aria-current="step"` and `🛰️ Satellite` badge, Defining Constraints & Triggers, Pipeline Trail & Seam Contract, Hard Completion Lock) with keyboard focus trap and `overscroll-behavior: contain`
+   - **Completion Criterion:** Detail modal supports 1-click Agent Brief copy, lateral spine stepper navigation, `Escape` close, and `Tab` focus trapping.
+5. **Safe Markdown Reader, Deep-Links & Dual-Channel Endpoints** (`UX-22`) → Implement `escapeHtml(rawStr)`, `resolveAndSanitizeHref(rawHref, basePath)`, `renderMdTable(rows, basePath)`, blockquote callout badges, `slugifyMdHeading(rawHeading)` + `scrollToMdAnchor(anchorId)`, whitelisted `#skill/<slug>` & `#doc/<path>` hash routing, offline/SharePoint RBAC fallback, and `llms.txt` / `llms-full.txt` / `INDEX.md` parity
+   - **Completion Criterion:** Zero XSS protocol/path traversal vectors, deterministic heading anchor scrolling, and 100% parity across human HTML and machine endpoints.
+6. **Deterministic Slop Audit & Verification Gate** (`scripts/ui/search.py --audit-file`) → Run static UI Slop scanner (`SLOP-01`..`SLOP-08`) and governance integrity tests
+   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-08` findings and all verification gates (`validate_skills.py --enforce-gpi`, `verify-patch`) exit with code `0`.
 
 ## References
 

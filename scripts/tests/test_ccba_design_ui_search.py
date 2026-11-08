@@ -69,12 +69,25 @@ def test_ui_bm25_search_across_all_four_domains() -> None:
     assert res_ux_noxon["count"] >= 1
     assert any(r["Rule ID"] == "UX-18" for r in res_ux_noxon["results"])
 
+    for rule_id, query in (
+        ("UX-19", "asymmetric spine 0.55fr 1.45fr odd card span overflow-wrap"),
+        ("UX-20", "sidebar ia frequency ordering count pill 280px"),
+        ("UX-21", "detail view modal 5-section anatomy spine stepper satellite"),
+        ("UX-22", "markdown reader escapehtml sanitize href slugify deep-link"),
+    ):
+        res_rule = core.search(query, domain="ux")
+        assert res_rule["count"] >= 1
+        assert any(r["Rule ID"] == rule_id for r in res_rule["results"]), (
+            f"Expected {rule_id} for query {query!r}"
+        )
+
 
 def test_ui_detect_domain_and_search_all() -> None:
     """Verify automatic domain routing and multi-domain search_all aggregation."""
     core = _load_ui_module("ccba_design_ui_core", "core.py")
 
     assert core.detect_domain("wcag focus keyboard paste") == "ux"
+    assert core.detect_domain("sidebar modal detail markdown deep-link") == "ux"
     assert core.detect_domain("heatmap gantt sankey sparkline") == "chart"
     assert core.detect_domain("mira nova hairline bento") == "style"
     assert core.detect_domain("vbpl legal portal pccc dashboard") == "product"
@@ -125,7 +138,7 @@ def test_compute_contrast_ratio_wcag_compliance() -> None:
 
 
 def test_audit_ui_code_dual_assertion() -> None:
-    """Verify deterministic UI slop auditor catches all 6 anti-patterns and passes clean portal markup."""
+    """Verify deterministic UI slop auditor catches all 8 anti-patterns (including multi-line JSX/DOM hrefs) and passes clean portal markup."""
     core = _load_ui_module("ccba_design_ui_core", "core.py")
 
     clean_markup = (
@@ -137,7 +150,14 @@ def test_audit_ui_code_dual_assertion() -> None:
 
     sloppy_markup = (
         '<div className="bg-slate-900 space-x-4 border-l-4" style={{ fontSize: "clamp(1rem, 3vw, 2rem)", fontFamily: "Clash Display" }}>\n'
-        '  <input type="password" onPaste={(e) => e.preventDefault()} />\n'
+        '  <input type="password" onPaste={(e) => {\n'
+        "    e.preventDefault();\n"
+        "  }} />\n"
+        "  <a\n"
+        "    href={\n"
+        '      "javascript:alert(1)"\n'
+        "    }\n"
+        "  >Unsafe JSX</a>\n"
         "  <table><tbody><tr><td>42</td></tr></tbody></table>\n"
         "</div>\n"
     )
@@ -151,7 +171,17 @@ def test_audit_ui_code_dual_assertion() -> None:
         "SLOP-05",
         "SLOP-06",
         "SLOP-07",
+        "SLOP-08",
     }.issubset(rule_ids)
+
+    for variant in (
+        "<a href={`data:text/html,<script>alert(1)</script>`}>X</a>",
+        'el.setAttribute("href", "vbscript:msgbox(1)")',
+    ):
+        var_findings = core.audit_ui_code(variant)
+        assert any(f["rule_id"] == "SLOP-08" for f in var_findings), (
+            f"Missed SLOP-08 on {variant!r}"
+        )
 
 
 def test_generate_and_persist_design_system_hierarchy(tmp_path: Path) -> None:
