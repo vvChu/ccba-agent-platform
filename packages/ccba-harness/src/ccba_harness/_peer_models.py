@@ -29,17 +29,24 @@ _FRONTMATTER_KEYS: tuple[str, ...] = (
     "from_agent",
     "request_id",
     "task_id",
+    "id",
+    "question",
     "profile",
     "output_path",
 )
 _ENVELOPE_MARKER_KEYS: frozenset[str] = frozenset(
     {
         "from_agent",
+        "sender",
         "request_id",
         "task_id",
+        "id",
+        "question",
         "output_path",
+        "output_file",
         "profile",
         "resume_session_id",
+        "session_id",
         "request_type",
         "task_type",
     }
@@ -71,6 +78,7 @@ _REQUEST_TYPE_ALIASES: dict[str, str] = {
     "verification": "verify",
     "code_review": "review",
     "editorial_review": "review",
+    "architecture_review": "review",
     "architectural_and_editorial_review": "review",
     "arch_audit": "audit",
     "audit_plan": "audit",
@@ -79,6 +87,14 @@ _REQUEST_TYPE_ALIASES: dict[str, str] = {
     "plan": "discuss",
     "brainstorm": "discuss",
     "discussion": "discuss",
+    "consultation": "consult",
+}
+_PROFILE_ALIASES: dict[str, str] = {
+    "discuss": "audit_plan",
+    "code_audit": "code_review",
+    "review": "code_review",
+    "audit": "arch_audit",
+    "signoff": "signoff_diff",
 }
 
 _EFFORT_ALIASES: dict[str, str] = {
@@ -376,6 +392,21 @@ def extract_frontmatter(md_content: str) -> tuple[dict[str, Any] | None, str]:
     return blocks[0]
 
 
+def _coerce_doc_list(raw: Any) -> list[str]:
+    """Coerces string or dict items into a clean list of file path strings."""
+    if not isinstance(raw, (list, tuple)):
+        return []
+    out: list[str] = []
+    for item in raw:
+        if isinstance(item, dict):
+            val = str(item.get("path") or item.get("file") or "").strip()
+        else:
+            val = str(item or "").strip()
+        if val:
+            out.append(val)
+    return out
+
+
 def _normalize_envelope_frontmatter(
     data: dict[str, Any], prompt_path: Path | None = None
 ) -> dict[str, Any] | None:
@@ -388,37 +419,40 @@ def _normalize_envelope_frontmatter(
         or data.get("task_id")
         or data.get("id")
         or (prompt_path.stem if prompt_path else "")
-        or ""
     ).strip()
     if not req_id:
         return None
     d["request_id"] = req_id
-    d.setdefault("from_agent", "antigravity")
-    d.setdefault("to_agent", "grok")
+    d["from_agent"] = str(data.get("from_agent") or data.get("sender") or "antigravity").strip()
+    d["to_agent"] = str(data.get("to_agent") or data.get("recipient") or "grok").strip()
     raw_rt = str(data.get("request_type") or data.get("task_type") or data.get("type") or "review")
     d["request_type"] = _REQUEST_TYPE_ALIASES.get(raw_rt.strip().lower(), raw_rt.strip().lower())
-    subj = (
-        data.get("subject")
-        or data.get("question")
-        or data.get("chapter")
-        or data.get("title")
-        or req_id
-    )
-    d["subject"] = str(subj).strip()
+    if d.get("profile") is not None:
+        raw_p = str(d["profile"]).strip().lower()
+        d["profile"] = _PROFILE_ALIASES.get(raw_p, raw_p)
+    if "source_documents" in data or "context_files" in data:
+        d["source_documents"] = _coerce_doc_list(
+            data.get("source_documents") or data.get("context_files")
+        )
+    if "target_files" in data:
+        d["target_files"] = _coerce_doc_list(data.get("target_files"))
+    subj = data.get("subject") or data.get("question") or data.get("chapter") or data.get("title")
+    d["subject"] = str(subj or req_id).strip()
     d["timestamp"] = str(
         data.get("timestamp") or datetime.datetime.now(datetime.timezone.utc).isoformat()
     )
-    if not str(d.get("output_path") or "").strip():
-        stem = (
-            re.sub(r"^prompt_(?:grok_)?", "", prompt_path.stem, flags=re.IGNORECASE)
-            if prompt_path
-            else req_id
-        )
-        d["output_path"] = f"grok_{stem}.md"
+    stem = (
+        re.sub(r"^prompt_(?:grok_)?", "", prompt_path.stem, flags=re.IGNORECASE)
+        if prompt_path
+        else req_id
+    )
+    d["output_path"] = str(
+        data.get("output_path") or data.get("output_file") or f"grok_{stem}.md"
+    ).strip()
     if (
         "resume_session_id" not in d
         and data.get("session_id")
-        and (data.get("stage") == 3 or data.get("profile") == "signoff_diff")
+        and (data.get("stage") == 3 or d.get("profile") == "signoff_diff")
     ):
         d["resume_session_id"] = str(data["session_id"]).strip()
         d.setdefault("fork_session", True)
