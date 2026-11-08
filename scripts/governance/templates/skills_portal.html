@@ -1704,8 +1704,13 @@
       copyToClipboard(window.location.href, "Link bộ lọc");
     };
 
+    let activeMapTopic = "";
+
     window.switchView = function(viewName, syncHash = true) {
       activeView = viewName;
+      if (viewName !== "map" || syncHash !== false) {
+        activeMapTopic = "";
+      }
       document.getElementById("viewMap").classList.toggle("hidden", viewName !== "map");
       document.getElementById("viewSkills").classList.toggle("hidden", viewName !== "skills");
       document.getElementById("viewSeams").classList.toggle("hidden", viewName !== "seams");
@@ -1754,7 +1759,7 @@
     function syncSidebarTopicsActive() {
       document.querySelectorAll(".sidebar-item[data-portal-id]").forEach(btn => {
         const pid = btn.getAttribute("data-portal-id");
-        const isTopicActive = activeView === "skills" && activePortal === pid;
+        const isTopicActive = (activeView === "skills" && activePortal === pid) || (activeView === "map" && activeMapTopic === pid);
         btn.classList.toggle("active", isTopicActive);
         btn.setAttribute("data-active", isTopicActive ? "true" : "false");
       });
@@ -1772,7 +1777,9 @@
         closeMobileSidebar();
         return;
       }
+      activeMapTopic = portalId;
       switchView("map", false);
+      syncSidebarTopicsActive();
       if (syncHash !== false) {
         updateUrlHash("goal-" + portalId);
       }
@@ -2026,6 +2033,7 @@
         const jump = document.createElement("a");
         jump.className = "jump-card";
         jump.href = `#goal-${escapeHtml(p.id)}`;
+        jump.onclick = (e) => { e.preventDefault(); jumpToTopic(p.id); };
         jump.innerHTML = `
           <span class="jump-step font-mono">${escapeHtml(p.step)}</span>
           <span class="jump-question">${escapeHtml(p.question)}</span>
@@ -2042,10 +2050,11 @@
         const mediaSpineHtml = (p.spine_order || []).map((sName, idx) => {
           const sObj = SKILLS.find(s => s.name === sName) || { name: sName, desc: p.desc, tier: "kernel", tier_display: "Skill" };
           const thumbMod = sObj.tier === "orchestrator" ? "media-thumb--orchestrator" : "media-thumb--kernel";
+          const stepNum = String(idx + 1).padStart(2, "0");
           return `
             <button type="button" class="media-card" data-skill="${escapeHtml(sName)}" onclick="openModal(this.getAttribute('data-skill'))">
               <div class="media-thumb" data-thumb-mod="${thumbMod}" aria-hidden="true">
-                <span class="media-thumb-step font-mono">STEP ${escapeHtml(p.step)} · ${escapeHtml(p.icon)}</span>
+                <span class="media-thumb-step font-mono">STEP ${stepNum} · ${escapeHtml(p.icon)}</span>
                 <span class="media-thumb-code font-mono">/${escapeHtml(sName)}</span>
               </div>
               <div class="media-card-body">
@@ -2161,10 +2170,12 @@
       const emptyDesc = document.getElementById("skillsEmptyDesc");
       if (clearBtn) clearBtn.classList.toggle("hidden", !(hasQuery || activePortal !== "all"));
       if (metaEl) {
+        const activePortalObj = activePortal !== "all" ? PORTALS.find(p => p.id === activePortal) : null;
+        const portalMetaLabel = activePortalObj ? `${activePortalObj.step} · ${activePortalObj.name}` : activePortal;
         const shareBtn = hasFilter
           ? `<button type="button" class="search-clear-btn font-mono" onclick="copyCurrentFilterUrl()">🔗 Copy Link lọc</button>`
           : "";
-        metaEl.innerHTML = `<span>Hiển thị <strong>${filtered.length}</strong> / ${SKILLS.length} kỹ năng${activePortal !== "all" ? ` · Phân hệ: ${escapeHtml(activePortal)}` : ""}${hasQuery ? ` · Từ khóa: "${escapeHtml(searchQuery.trim())}"` : ""}</span>${shareBtn}`;
+        metaEl.innerHTML = `<span>Hiển thị <strong>${filtered.length}</strong> / ${SKILLS.length} kỹ năng${activePortal !== "all" ? ` · Phân hệ: <strong>${escapeHtml(portalMetaLabel)}</strong>` : ""}${hasQuery ? ` · Từ khóa: "${escapeHtml(searchQuery.trim())}"` : ""}</span>${shareBtn}`;
       }
       if (emptyEl) {
         emptyEl.classList.toggle("hidden", filtered.length > 0);

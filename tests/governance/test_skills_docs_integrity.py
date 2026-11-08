@@ -675,6 +675,8 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     "sidebar-guides-more",
     "syncSidebarTopicsActive()",
     "width: 280px;",
+    'const stepNum = String(idx + 1).padStart(2, "0");',
+    "const portalMetaLabel = activePortalObj",
 )
 
 
