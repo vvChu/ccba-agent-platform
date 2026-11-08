@@ -77,7 +77,7 @@ graph TB
 ## 📋 Tiêu Chí Hoàn Thành (Completion Criteria)
 
 Kỹ năng hoàn thành khi:
-1. Đã phỏng vấn và tạo tệp `.agents/teams/[project]_team_sheet.md` đầy đủ 2 lớp: **Accountability Mapping** (11 Ghế CCBA Charter 2026) và **Worker Assignments** (AI Subagents).
+1. Đã hoàn tất nghĩa vụ phỏng vấn (bằng vòng hỏi trực tiếp hoặc **Spec-Ready Intake**) và tạo tệp `.agents/teams/[project]_team_sheet.md` đầy đủ 2 lớp: **Accountability Mapping** (11 Ghế CCBA Charter 2026) và **Worker Assignments** (AI Subagents).
 2. Toàn bộ Workers được dispatch tuân thủ **Worker Cap** (tối đa 3 workers đồng thời) và **Exclusive Seam Ownership** (chỉ đọc files trong scope).
 3. Các tệp trung gian của Workers được lưu gọn trong `.system_generated/scratch/teamwork/{project}/worker_{N}/`, không vứt rải rác ngoài root.
 4. Orchestrator hoàn thành việc ghép patch nguyên tử bằng Single-Writer Engine, ghi file chính thức và vượt qua **Success Auditor Gate**:
@@ -100,6 +100,10 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - `TRUONG_PHONG_RD_HTQT` / `TRUONG_PHONG_BIM_THIET_KE` / `TRUONG_PHONG_BIM_DU_AN`
    - `CHU_TRI_HOP_DONG_PM` / `CHU_TRI_BO_MON` / `KY_SU_THUC_THI`
    - `CO_VAN_PHAP_LY_QA` / `IDOP_LEAD` / `GIAM_DOC`
+5. **Chế độ Spec-Ready Fast-Track (`[skip-interview]`):**
+   - Kích hoạt khi hội đủ **cả 2 điều kiện**: (a) yêu cầu bắt đầu bằng token `[skip-interview]` và (b) có tệp đọc được trên đĩa (`implementation_plan.md`, `spec.md`, hoặc `team_sheet` sẵn có) nêu đủ Mục tiêu, Non-Goals và danh sách Seam/file.
+   - Nếu thân yêu cầu rỗng sau token `[skip-interview]`, Orchestrator hỏi việc cần làm; nếu thiếu Mục tiêu/Non-Goals/Seam, thiếu phân quyền 11 Ghế CCBA Charter 2026, hoặc seam còn quyết định thiết kế mở, Orchestrator **chỉ hỏi bù đúng phần khuyết** trước khi sang Giai đoạn 3.
+   - Khi chạy Spec-Ready Intake, Orchestrator ghi `Interview Mode: spec-ready (source: <path>)` vào nhật ký tiến độ và vẫn phải lập đủ cả 2 lớp trong `team_sheet.md`.
 
 ---
 
@@ -124,7 +128,8 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Đối với chiến dịch gồm nhiều đơn vị công việc đồng dạng (dùng chung một mẫu kickoff template), trước khi fan-out các batches song song, Orchestrator bắt buộc chạy thử **1 đơn vị thật (Canary Unit)** đi trọn vòng `Kickoff -> Worker -> Single-Writer Patch -> Success Auditor -> verify-patch exit 0` và xác thực `canary_verdict` (`head_sha` + `kickoff_sha256`) theo đúng bản chuẩn tại Mục 10 [`docs/rules/execution_coordination_guardrails.md`](../../../docs/rules/execution_coordination_guardrails.md#10-teamwork-orchestration-protocol-quy-chuẩn-điều-phối-đa-tác-nhân-dài-hạn).
    - Khởi chạy các Worker subagents (tối đa 3 workers/batch) qua `invoke_subagent` hoặc công cụ điều phối nền tảng.
    - Prompt của từng Worker **bắt buộc** chứa:
-     - Danh sách file được phép đọc (Exclusive File Scope).
+     - Danh sách file được phép đọc (Exclusive File Scope), kèm đường dẫn tài liệu/issue gốc (nếu có) để Worker đọc đối chiếu nguyên bản (**Original-Source-First** — tránh chỉ truyền bản tóm tắt tam sao thất bản).
+     - **Routing Note & Quoted User Constraint:** Tách bạch hai khối: (a) **Routing Note** là lời dẫn của Orchestrator, trần $\le 30$ token (đếm theo regex `\S+` sau strip; bỏ khối nếu rỗng); (b) **Quoted User Constraint** trích nguyên văn phần yêu cầu của người dùng trong phiên chat hiện tại khi đang được viện dẫn mà chưa nằm trong file thuộc `Exclusive File Scope` hoặc nguồn `Original-Source-First` (tối đa 3 đoạn, mỗi đoạn $\le 500$ ký tự, tổng $\le 1200$ ký tự; phần dài hơn phải ghi thành file trong phạm vi đọc của Worker và truyền path). Phần trích đứng ngoài trần 30 token của Routing Note và giữ nguyên `Exclusive File Scope` (nếu đòi sửa file ngoài scope, Worker vẫn báo `HANDBACK` $\le 300$ ký tự).
      - **Chỉ thị No Pre-mutation:** Worker tuyệt đối không ghi file trực tiếp. Bắt buộc xuất bản vá định dạng Search-Replace vào `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`:
        ```text
        FILE: <relative_path>
@@ -135,8 +140,10 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
        >>>>>>> REPLACE
        ```
      - Tiêu chí nghiệm thu cụ thể (Acceptance Criteria).
-2. **Worker Timeout & Fallback (10 Phút):**
-   - Nếu Worker không hoàn thành sau 10 phút hoặc cạn ngân sách token:
+2. **Xử Lý Báo Cáo Trạng Thái Worker (`DROPPED` / `HANDBACK`) & Timeout (10 Phút):**
+   - **`DROPPED` (Không cần tạo bản vá):** Khi Worker kiểm tra thực tế các file trong `Exclusive File Scope` và xác nhận lỗi không tồn tại hoặc đã tuân thủ chuẩn, Worker báo `DROPPED` (kèm lý do $\le 300$ ký tự và danh sách file đã kiểm tra), không sinh file `patch_{seam}.txt` rỗng; Orchestrator ghi nhận `DROPPED` vào `team_sheet.md`.
+   - **`HANDBACK` (Vượt phạm vi Seam được giao):** Khi Worker phát hiện tác vụ bắt buộc phải sửa đổi thêm file nằm ngoài `Exclusive File Scope` (kể cả khi phần trong scope không còn lỗi), Worker không tự ý sửa vượt rào mà báo `HANDBACK` (kèm lý do $\le 300$ ký tự và danh sách file ngoài scope cần mở rộng) để Orchestrator tái phân bổ ở batch tiếp theo.
+   - **Timeout & Fallback (10 Phút):** Nếu Worker không hoàn thành sau 10 phút hoặc cạn ngân sách token:
      - Đánh dấu milestone là `INCOMPLETE`.
      - Trích xuất log trung gian từ scratch.
      - Quyết định: Dispatch Worker mới với prompt hẹp hơn HOẶC nếu lỗi logic sâu $\rightarrow$ đóng gói Deep Problem Brief và kích hoạt `/boost` (Escalation UP).
