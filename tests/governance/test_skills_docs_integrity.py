@@ -677,6 +677,10 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     "width: 280px;",
     'const stepNum = String(idx + 1).padStart(2, "0");',
     "const portalMetaLabel = activePortalObj",
+    "renderMdTable(",
+    "syncSidebarModalActive()",
+    "findKnownDocGuide(",
+    'routePart.startsWith("doc/")',
 )
 
 
