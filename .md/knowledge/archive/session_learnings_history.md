@@ -1202,3 +1202,34 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
 3. **Phân Nhánh Tường Minh `--profile hub` vs `--profile spoke` Trong `ccba-session-retrospective` v1.6.2**:
    - Nâng cấp `.agents/skills/ccba-session-retrospective/SKILL.md` (`v1.6.2`) tại Bước 4 để chỉ định rõ `--profile hub --file .md/knowledge/session_learnings.md --check` trên Hub và `--profile spoke --file .md/knowledge/session_learnings.md --check` trên Spoke, đồng bộ đồng nhất trên toàn bộ 5 repositories.
 
+---
+
+## 55. Nâng Cấp Cơ Chế Phối Hợp Antigravity ↔ Grok: Khôi Phục Phiên 3 Tầng (`Dual-Clock delta_sec`), Chống Phình Payload Lượt Tiếp Nối, Khử Trùng Lặp Telemetry & Ép Kiểu Dung Sai Frontmatter Lịch Sử (`RULE-4.19`, `PR #682`, `PR #684`)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-08 — Khảo sát Conversation `a46ad8bf` & Benchmark Lịch Sử, Grok Sessions `4a15bc86` & `f2818874`)
+1. **Đứt Gãy Phiên Đa Lượt (`Stateless Multi-Turn Amnesia`) & San Phẳng `st_mtime` Khi `git checkout`**:
+   - Trên Spoke `VvC_Notes` (Conversation `a46ad8bf`, `14c43933`, `caebea97`), chỉ `4/17` prompts truyền tường minh `resume_session_id`; các lượt vòng 2 (`_v2`, `_round2`, `_reverify`, `_signoff`) quên truyền `resume_session_id` dẫn tới tạo phiên mới và bơm lại toàn bộ thân tài liệu (`468–577` dòng), làm tốn gấp đôi token.
+   - Đồng thời, mọi `PROFILE_SPECS` đều mặc định `fork_session: True`, khiến ngay cả khi truyền `resume_session_id` thì Grok vẫn phân nhánh sang `session_id` mới qua mỗi lượt.
+   - Trên kho Git của Hub (`.md/peer_exchange/`), `git checkout` gán cùng một `st_mtime` cho hàng trăm tệp lịch sử; nếu bộ tự động dò tìm phiên (`_auto_discover_resume_session_id`) chỉ sắp xếp theo `st_mtime` thì thứ tự thời gian bị suy biến thành thứ tự bảng chữ cái và rò rỉ cả các verdict tương lai (độ chính xác Top-1 ban đầu chỉ đạt `28.6%` = `6/21`), hoặc nếu trộn lẫn `p_iso` (ISO timestamp trong frontmatter) với `mt` (`st_mtime` trên đĩa khi verdict thiếu timestamp) sẽ gây lệch hàng giờ đồng hồ thực trong unit tests.
+2. **Nhân Đôi Chi Phí Telemetry Khi Chạy Lại Lượt Phản Biện & Rơi Rớt Prompt Sai Lệch Lược Đồ Frontmatter**:
+   - Trong `status.json` của `VvC_Notes`, việc ghi nhiều tệp verdict cùng tham chiếu một snapshot `(session_id, turn_count, total_tokens, cost_usd)` khiến `gemini-3.8-flash-high` bị cộng đúp (`16 calls / $0.6687` thay vì `15 calls / $0.6237`).
+   - Trên `153` mẫu prompt lịch sử trong `transcript_full.jsonl` và `17` mẫu tại `VvC_Notes`, các biến thể viết tay như `request_type: "architecture_review"` / `"verification"`, `from`/`to` hoặc `sender`/`recipient`, `source_documents: [{"path": "...", "role": "..."}]`, `profile: "code_audit"` / `"discuss"`, hoặc thiếu `output_path` khiến `parse_envelope_from_md()` trả về `None` âm thầm (`5/17` mẫu Spoke bị `peer-watch` bỏ sót).
+3. **Bẫy Shell Redirect `> grok_*.md` Nuốt Mặt Nạ Lỗi & Nhân Đôi Bản Sao Giữa Brain Artifact Và `.md/peer_exchange/`**:
+   - Agent gọi `grok -p ... > grok_review_*.md` trực tiếp qua bash khiến khi CLI thất bại sớm, tệp đích vẫn được tạo rỗng và che giấu mã lỗi thật; hoặc viết song song 2 bản `implementation_plan.md` ở cả `<appDataDir>/brain/<id>/` và `.md/peer_exchange/`.
+
+### Key Architectural Invariants & Learned Rules (`RULE-4.19`)
+1. **3-Tier Auto-Resume Session Discovery Với Đồng Hồ Kép (`Dual-Clock delta_sec`) & Gọt Tiền Tố Giai Đoạn (`_STAGE_PREFIX_RE`)**:
+   - Khi `resume_session_id` không truyền tường minh (trừ khi opt-out bằng `"new"` / `"none"` / `"false"`), `_auto_discover_resume_session_id()` trong `packages/ccba-harness/src/ccba_harness/_peer_telemetry.py` tự động dò tìm `session_id` gần nhất trong cùng thư mục theo 3 tầng:
+     * **Tier 1 (Normalized Thread Stem Match)**: Khớp gốc `request_id` hoặc tên tệp sau khi gọt tiền tố vai trò (`_PREFIX_ROLE_RE`), ngày `^\d{8}[-_]+`, tiền tố giai đoạn (`_STAGE_PREFIX_RE`: `discuss_`, `review_plan_`, `signoff_`, `final_signoff_`, `final_acceptance_`) và hậu tố vòng (`_ROUND_SUFFIX_RE`: `-v2`, `-r2`, `-round2`, `-pass2`, `-reverify`, `-signoff`, `-fix`).
+     * **Tier 2 (Target/Source Document Overlap)**: Khớp tập tài liệu đích (`_extract_clean_doc_set` loại bỏ `.md/peer_exchange/*`, độ trùng lặp Jaccard $\ge 0.5$).
+     * **Tier 3 (Continuous Discussion Thread)**: Khớp phiên thảo luận `request_type in ("discuss", "architecture")` trong cửa sổ `14,400s` (`4h`).
+   - **Đồng hồ kép (`Dual-Clock delta_sec`)**: Tính `delta_sec = (p_iso - v_iso)` khi cả prompt hiện tại và verdict ứng viên (hoặc prompt gốc của nó) đều có ISO-8601 timestamp hợp lệ (`_parse_iso_ts`), và tự động chuyển sang `delta_sec = (p_mtime - mt)` khi một trong hai thiếu ISO timestamp; lọc `delta_sec >= -60.0` và sắp xếp theo `(round(delta_sec, 4), -round(mt, 4), v_name)` — đạt **`100.0%` (`21/21` trên Hub, `4/4` trên Spoke)** độ chính xác Top-1 Session Match.
+   - Khi có `resume_session_id` (tường minh hoặc tự động khám phá) và người dùng không truyền `--fork-session`, tự động đặt `fork_session = False` để giữ liên tục 1 `session_id` xuyên suốt các vòng.
+2. **Cảnh Báo Phình Payload Lượt Tiếp Nối (`_check_resumed_payload_bloat`) & Khử Trùng Lặp Snapshot Telemetry**:
+   - Nếu lượt chạy có `resume_session_id` nhưng tệp prompt vẫn vượt `400` dòng hoặc `20,480` bytes (`20 KB`), phát cảnh báo `[WARN-RESUMED-PAYLOAD-BLOAT]` ra `stderr` nhắc chỉ gửi bảng đối chiếu điều kiện + git diff.
+   - Trong `_accumulate_verdict_telemetry()` (`update_status_json`), khử trùng lặp theo khóa快照 `(session_id, turn_count, total_tokens, round(cost_usd, 4))` trong `seen_snapshots`, ngăn chặn cộng đúp chi phí khi ghi đè/tái xuất tệp verdict cùng lượt.
+3. **Ép Kiểu Dung Sai Frontmatter Lịch Sử (`_normalize_envelope_frontmatter`), Cờ CLI `-o`/`--output-file` & Quy Tắc Cross-Surface SSoT**:
+   - Chuẩn hóa dung sai trong `_peer_models.py`: ánh xạ `from`/`sender` $\to$ `from_agent`, `to`/`recipient` $\to$ `to_agent`, `context_files` $\to$ `source_documents`, `output_file` $\to$ `output_path`; ép kiểu danh sách dict `[{"path": "..."}]` qua `_coerce_doc_list()`; ánh xạ `_REQUEST_TYPE_ALIASES` (`architecture_review` $\to$ `review`, `verification` $\to$ `verify`, `consultation` $\to$ `consult`, `signoff` $\to$ `review`) và `_PROFILE_ALIASES` (`code_audit` $\to$ `code_review`, `discuss` $\to$ `audit_plan`); tự động suy diễn `output_path` từ tên tệp `prompt_<stem>.md` $\to$ `grok_<stem>.md` — nâng tỷ lệ nhận diện frontmatter lịch sử lên **`100.0%` (`153/153`)** và bổ sung `diagnose_envelope_parse_error()` báo lỗi dòng/trường cụ thể.
+   - Bổ sung cờ `-o` / `--output-file` cho `ccba-harness peer-dispatch` và ghi nhận vào `docs/rules/execution_coordination_guardrails.md` (Mục `19.7` & `19.8`): cấm dùng shell redirect `> grok_*.md`, bắt buộc mọi prompt $> 60$ dòng hoặc đa lượt đi qua `peer-dispatch`, và giữ 1 bản SSoT duy nhất giữa `<appDataDir>/brain/<id>/` và `.md/peer_exchange/`.
+
+
