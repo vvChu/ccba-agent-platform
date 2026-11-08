@@ -72,6 +72,7 @@
       --ccba-modal-overlay: rgba(20, 22, 26, 0.55);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scrollbar-gutter: stable; }
     body {
       font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--ccba-bg);
@@ -796,7 +797,7 @@
     .search-box {
       position: relative;
       flex: 1;
-      min-width: 240px;
+      min-width: min(100%, 240px);
     }
     .search-input {
       width: 100%;
@@ -890,15 +891,16 @@
       gap: 0.35rem;
     }
     .chip.active {
-      background: var(--ccba-primary);
-      border-color: var(--ccba-primary);
-      color: #ffffff;
+      background: var(--ccba-fg-body);
+      border-color: var(--ccba-fg-body);
+      color: var(--ccba-bg);
       font-weight: 600;
     }
     .skills-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
       gap: 1.1rem;
+      min-width: 0;
     }
     .skill-card {
       background: var(--ccba-bg-card);
@@ -908,6 +910,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      min-width: 0;
     }
     .skill-card:hover { border-color: var(--ccba-primary); }
     .skill-name {
@@ -1001,6 +1004,9 @@
       max-height: 90vh;
       display: flex;
       flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
     }
     .modal-header {
       padding: 1.1rem 1.4rem;
@@ -1029,6 +1035,7 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       font-size: var(--ccba-text-base);
+      min-height: 0;
     }
     .modal-section { margin-bottom: 1.35rem; }
     .modal-section h3 {
@@ -1075,6 +1082,8 @@
       font-weight: 600;
       display: none;
       z-index: 200;
+      max-width: min(24rem, calc(100% - 2rem));
+      overflow-wrap: anywhere;
     }
     footer {
       border-top: 1px solid var(--ccba-line);
@@ -1135,6 +1144,226 @@
     .md-bullet-row { padding-left: 1rem; }
     .footer-heading { color: var(--ccba-fg-body); }
     .footer-copy { margin-top: 0.35rem; }
+    /* N1: Interactive Spine Stepper in Modal Section 4 */
+    .spine-stepper {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px dashed var(--ccba-line);
+    }
+    .spine-step-btn {
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-muted);
+      padding: 0.22rem 0.55rem;
+      border-radius: var(--ccba-radius-sm);
+      font-size: var(--ccba-text-2xs);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .spine-step-btn:hover {
+      border-color: var(--ccba-primary);
+      color: var(--ccba-fg-body);
+    }
+    .spine-step-btn.current {
+      background: var(--ccba-fg-body);
+      border-color: var(--ccba-fg-body);
+      color: var(--ccba-bg);
+      font-weight: 700;
+    }
+    .spine-step-arrow {
+      font-size: var(--ccba-text-2xs);
+      color: var(--ccba-fg-faint);
+    }
+    .spine-step-satellite {
+      font-size: var(--ccba-text-2xs);
+      color: var(--ccba-gold);
+      margin-left: 0.25rem;
+    }
+    /* N2 & N3: Interactive Action Pills, Proximity Quick-Copy & Progressive Disclosure Drawer */
+    button.pill {
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    button.pill:hover {
+      border-color: var(--ccba-primary);
+      background: var(--ccba-bg-card-hover);
+    }
+    .do-this-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0.65rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .do-this-row .do-this-card {
+      flex: 1 1 320px;
+      margin-bottom: 0;
+      min-width: 0;
+    }
+    .do-this-copy-btn {
+      flex: 0 0 auto;
+      background: var(--ccba-bg-card);
+      border: 1px solid var(--ccba-accent-line);
+      color: var(--ccba-fg-body);
+      padding: 0.65rem 0.95rem;
+      border-radius: var(--ccba-radius-lg);
+      font-size: var(--ccba-text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .do-this-copy-btn:hover {
+      border-color: var(--ccba-gold);
+      background: var(--ccba-bg-card-hover);
+    }
+    .goal-guides-drawer {
+      margin-top: 0.75rem;
+      border: 1px solid var(--ccba-line);
+      border-radius: var(--ccba-radius-lg);
+      background: var(--ccba-bg-sidebar);
+      padding: 0.55rem 0.85rem;
+    }
+    .goal-guides-summary {
+      cursor: pointer;
+      font-size: var(--ccba-text-xs);
+      font-weight: 600;
+      color: var(--ccba-fg-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      list-style: none;
+    }
+    .goal-guides-summary::-webkit-details-marker { display: none; }
+    .goal-guides-summary:hover { color: var(--ccba-fg-body); }
+    .goal-guides-drawer[open] .goal-guides-summary {
+      margin-bottom: 0.65rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-body);
+    }
+    /* Phase 4C Unbreakable Token & Scroll-Lock Guards (COND-CASCADE-LATE) */
+    .seam-card, .modal-cmd-row { min-width: 0; }
+    .nav-label-mobile { display: none; }
+    .seam-pub-item,
+    .tag,
+    .modal-cmd-row code,
+    .seam-forbidden code,
+    .card-actions .btn,
+    .modal-doc-actions .btn {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+      min-width: 0;
+      white-space: normal;
+    }
+    html:has(.modal-backdrop.open),
+    body:has(.modal-backdrop.open) {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    @media (max-width: 1023px) {
+      html:has(.app-sidebar.mobile-open),
+      body:has(.app-sidebar.mobile-open) {
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+    }
+    @media (max-width: 767px) {
+      .search-section {
+        padding: 0.55rem 0;
+        margin-bottom: 0.85rem;
+      }
+      .search-controls {
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+      }
+      .search-input {
+        padding: 0.5rem 4.2rem 0.5rem 2.1rem;
+      }
+      .nav-label-mobile {
+        display: inline;
+      }
+      .search-controls .view-tabs {
+        width: 100%;
+        display: flex;
+      }
+      .search-controls .view-tab {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+        padding: 0.3rem 0.45rem;
+      }
+      .portal-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding-bottom: 0.2rem;
+        touch-action: pan-x;
+      }
+      .portal-chips .chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 0.3rem 0.65rem;
+      }
+      .result-meta-bar {
+        margin-top: 0.35rem;
+      }
+      .spine-skill-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+      }
+      .spine-skill-item .u-flex-actions {
+        width: 100%;
+      }
+      .spine-skill-item .u-flex-actions .btn {
+        flex: 1;
+      }
+      .do-this-copy-btn {
+        width: 100%;
+      }
+      .modal-backdrop {
+        padding: 0.5rem;
+        align-items: flex-end;
+      }
+      .modal-card {
+        max-height: 92vh;
+        max-height: 92dvh;
+      }
+      .modal-header {
+        padding: 0.85rem 1rem;
+      }
+      .modal-body {
+        padding: 1rem;
+      }
+      .modal-doc-actions {
+        flex-direction: column;
+      }
+      .modal-doc-actions .btn {
+        width: 100%;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -1186,10 +1415,10 @@
             <h1>Bạn muốn giải quyết bài toán nào cùng CCBA Agent hôm nay?</h1>
             <p>Chọn đúng bài toán bạn đang đối mặt. Mỗi lộ trình mở ra câu lệnh khởi đầu (<code>Start with /...</code>), chuỗi kỹ năng tuần tự (<code>The Spine</code>) và tài liệu SOP chuẩn mực.</p>
             <div class="stats-pills">
-              <span class="pill">⚡ <strong>__SKILL_COUNT__</strong> Active Skills</span>
-              <span class="pill">🧭 <strong>5</strong> Lộ Trình Tác Nghiệp</span>
-              <span class="pill">🧩 <strong>10</strong> Monorepo Packages</span>
-              <span class="pill">🛡️ <strong>100%</strong> Deterministic CI (ADR-0058)</span>
+              <button type="button" class="pill" onclick="switchView('skills')">⚡ <strong>__SKILL_COUNT__</strong> Active Skills</button>
+              <button type="button" class="pill" onclick="scrollToMapJumpGrid()">🧭 <strong>5</strong> Lộ Trình Tác Nghiệp</button>
+              <button type="button" class="pill" onclick="switchView('seams')">🧩 <strong>10</strong> Monorepo Packages</button>
+              <button type="button" class="pill" onclick="openDocModal('rules/code_quality_verification.md', 'Cổng Kiểm Định Tất Định (ADR-0058)')">🛡️ <strong>100%</strong> Deterministic CI (ADR-0058)</button>
             </div>
             <nav aria-label="Lộ trình trên trang" class="jump-grid" id="mapJumpGrid"></nav>
             <div class="inline-advisor-banner">
@@ -1225,15 +1454,15 @@
             <div class="search-controls">
               <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
+                <input type="text" id="searchInput" class="search-input" aria-label="Tìm kiếm kỹ năng theo tên, slash command, triggers hoặc mô tả" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
                 <span class="search-kbd-group">
                   <button type="button" id="searchClearBtn" class="search-clear-btn hidden" onclick="resetSkillsFilter()">✕ Xóa</button>
                   <kbd class="kbd-hint font-mono">⌘K /</kbd>
                 </span>
               </div>
               <div class="view-tabs">
-                <button type="button" class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')">Chế độ Xương Sống (01→05)</button>
-                <button type="button" class="view-tab" id="modeGridBtn" onclick="setSkillsDisplayMode('grid')">Chế độ Lưới Thẻ</button>
+                <button type="button" class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')"><span class="nav-label-desktop">Chế độ Xương Sống (01→05)</span><span class="nav-label-mobile">Spine</span></button>
+                <button type="button" class="view-tab" id="modeGridBtn" onclick="setSkillsDisplayMode('grid')"><span class="nav-label-desktop">Chế độ Lưới Thẻ</span><span class="nav-label-mobile">Lưới</span></button>
               </div>
             </div>
             <div class="portal-chips" id="portalChips"></div>
@@ -1258,7 +1487,7 @@
             <div class="search-controls seams-search-bar">
               <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="seamSearchInput" class="search-input" placeholder="Lọc nhanh gói Monorepo hoặc Seam Contract theo seam_id, in, out, hardware (vd: pdf, markdown, gpu)..." autocomplete="off">
+                <input type="text" id="seamSearchInput" class="search-input" aria-label="Lọc gói Monorepo hoặc Seam Contract theo seam_id, đầu vào, đầu ra hoặc phần cứng" placeholder="Lọc nhanh gói Monorepo hoặc Seam Contract theo seam_id, in, out, hardware (vd: pdf, markdown, gpu)..." autocomplete="off">
                 <span class="search-kbd-group">
                   <button type="button" id="seamClearBtn" class="search-clear-btn hidden" onclick="clearSeamFilter()">✕ Xóa</button>
                   <kbd class="kbd-hint font-mono">/</kbd>
@@ -1268,11 +1497,16 @@
             <div class="result-meta-bar font-mono" id="seamResultMeta"></div>
           </section>
 
-          <h2 class="seams-section-title">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
+          <h2 class="seams-section-title" id="seamPkgHeading">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
           <div id="packageSeamsContainer" class="seams-pkg-wrap"></div>
 
-          <h2 class="seams-section-title">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
+          <h2 class="seams-section-title" id="seamContractHeading">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
           <div id="seamContractsContainer"></div>
+          <div class="empty-state-card hidden" id="seamsEmptyState">
+            <h3>Không tìm thấy gói Monorepo hoặc Seam Contract khớp bộ lọc</h3>
+            <p id="seamsEmptyDesc">Không có hợp đồng năng lực nào khớp từ khóa bạn nhập.</p>
+            <button type="button" class="btn btn-primary btn-reset-empty" onclick="clearSeamFilter()">↺ Đặt lại bộ lọc Seams</button>
+          </div>
         </div>
       </div>
     </main>
@@ -1471,6 +1705,14 @@
       }
     };
 
+    window.scrollToMapJumpGrid = function() {
+      const grid = document.getElementById("mapJumpGrid");
+      if (grid && grid.scrollIntoView) {
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        grid.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
+    };
+
     window.jumpToTopic = function(portalId, syncHash = true) {
       switchView("map", false);
       if (syncHash !== false) {
@@ -1478,7 +1720,8 @@
       }
       const target = document.getElementById("goal-" + portalId);
       if (target && target.scrollIntoView) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
       }
     };
 
@@ -1775,15 +2018,25 @@
             <h2>${escapeHtml(p.question)}</h2>
             <p>${escapeHtml(p.desc)}</p>
           </div>
-          <button type="button" class="do-this-card" data-skill="${escapeHtml(startSkill.name)}" onclick="openModal(this.getAttribute('data-skill'))">
-            <div>
-              <span class="do-this-label font-mono">Do this with · Điểm khởi đầu khuyên dùng</span>
-              <div class="do-this-cmd font-mono"><span class="slash">/</span>${escapeHtml(startSkill.name)}</div>
-              <div class="do-this-desc">${escapeHtml(startSkill.desc)}</div>
-            </div>
-            <span class="do-this-circle" aria-hidden="true">→</span>
-          </button>
-          <div class="media-card-list">${mediaSpineHtml}${mediaGuidesHtml}</div>
+          <div class="do-this-row">
+            <button type="button" class="do-this-card" data-skill="${escapeHtml(startSkill.name)}" onclick="openModal(this.getAttribute('data-skill'))">
+              <div>
+                <span class="do-this-label font-mono">Do this with · Điểm khởi đầu khuyên dùng</span>
+                <div class="do-this-cmd font-mono"><span class="slash">/</span>${escapeHtml(startSkill.name)}</div>
+                <div class="do-this-desc">${escapeHtml(startSkill.desc)}</div>
+              </div>
+              <span class="do-this-circle" aria-hidden="true">→</span>
+            </button>
+            <button type="button" class="do-this-copy-btn font-mono" data-clipboard="${escapeHtml(startSkill.command)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')" aria-label="Copy lệnh khởi đầu /${escapeHtml(startSkill.name)}">📋 Copy /${escapeHtml(startSkill.name)}</button>
+          </div>
+          <div class="media-card-list">${mediaSpineHtml}</div>
+          <details class="goal-guides-drawer">
+            <summary class="goal-guides-summary font-mono">
+              <span>📖 Tài liệu SOP &amp; Quy chuẩn của lộ trình ${escapeHtml(p.step)} (${escapeHtml((p.guides || []).length)} tài liệu)</span>
+              <span aria-hidden="true">▾</span>
+            </summary>
+            <div class="media-card-list">${mediaGuidesHtml}</div>
+          </details>
         `;
         sec.querySelectorAll(".media-thumb[data-thumb-mod]").forEach(el => {
           el.classList.add(el.getAttribute("data-thumb-mod"));
@@ -1796,18 +2049,28 @@
     function renderPortalChips() {
       portalChipsContainer.innerHTML = "";
       const allChip = document.createElement("button");
+      allChip.type = "button";
       allChip.className = `chip ${activePortal === "all" ? "active" : ""}`;
+      allChip.setAttribute("aria-pressed", activePortal === "all" ? "true" : "false");
       allChip.innerHTML = `Tất cả (${SKILLS.length})`;
       allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); updateUrlHash(buildSkillsHash()); };
       portalChipsContainer.appendChild(allChip);
 
       PORTALS.forEach(p => {
         const chip = document.createElement("button");
+        chip.type = "button";
         chip.className = `chip ${activePortal === p.id ? "active" : ""}`;
+        chip.setAttribute("aria-pressed", activePortal === p.id ? "true" : "false");
         chip.innerHTML = `${escapeHtml(p.step)} · ${escapeHtml(p.icon)} ${escapeHtml(p.name)} (${escapeHtml(p.count)})`;
         chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); updateUrlHash(buildSkillsHash()); };
         portalChipsContainer.appendChild(chip);
       });
+
+      const activeChip = portalChipsContainer.querySelector(".chip.active");
+      if (activeChip && portalChipsContainer.clientWidth > 0) {
+        const targetScroll = activeChip.offsetLeft - Math.max(0, (portalChipsContainer.clientWidth - activeChip.offsetWidth) / 2);
+        portalChipsContainer.scrollLeft = Math.max(0, targetScroll);
+      }
     }
 
     function getFilteredSkills() {
@@ -1967,6 +2230,22 @@
         seamMeta.innerHTML = `<span>Hiển thị <strong>${filteredPkgs.length}</strong> / ${PACKAGE_SEAMS.length} gói Monorepo · <strong>${filteredContracts.length}</strong> / ${SEAM_CONTRACTS.length} Seam Contracts${qRaw ? ` · Lọc: "${escapeHtml(seamSearchQuery.trim())}"` : ""}</span>${shareBtn}`;
       }
 
+      const bothEmpty = filteredPkgs.length === 0 && filteredContracts.length === 0;
+      const pkgHeading = document.getElementById("seamPkgHeading");
+      const contractHeading = document.getElementById("seamContractHeading");
+      const seamsEmptyEl = document.getElementById("seamsEmptyState");
+      const seamsEmptyDesc = document.getElementById("seamsEmptyDesc");
+      if (pkgHeading) pkgHeading.classList.toggle("hidden", filteredPkgs.length === 0);
+      if (pkgContainer) pkgContainer.classList.toggle("hidden", filteredPkgs.length === 0);
+      if (contractHeading) contractHeading.classList.toggle("hidden", filteredContracts.length === 0);
+      if (contractContainer) contractContainer.classList.toggle("hidden", filteredContracts.length === 0);
+      if (seamsEmptyEl) seamsEmptyEl.classList.toggle("hidden", !bothEmpty);
+      if (seamsEmptyDesc && bothEmpty) {
+        seamsEmptyDesc.textContent = qRaw
+          ? `Không có gói Monorepo hoặc Seam Contract nào khớp từ khóa "${seamSearchQuery.trim()}". Thử tìm theo định dạng đầu vào/đầu ra (pdf, markdown, json) hoặc đặt lại bộ lọc.`
+          : "Không có dữ liệu Seam.";
+      }
+
       pkgContainer.innerHTML = filteredPkgs.map(pkg => {
         const pubSeams = (pkg.public_seams || []).map(ps => `<div class="font-mono seam-pub-item">• ${escapeHtml(ps)}</div>`).join("");
         return `
@@ -2017,7 +2296,9 @@
       const s = SKILLS.find(item => item.name === skillName);
       if (!s) return;
       closeMobileSidebar();
-      lastFocusedElement = document.activeElement;
+      if (document.activeElement && (!skillModal || !skillModal.contains(document.activeElement))) {
+        lastFocusedElement = document.activeElement;
+      }
       if (syncHash !== false) {
         updateUrlHash("skill/" + s.name);
       }
@@ -2036,6 +2317,20 @@
         ? `<ul class="modal-outline-list">${s.headings.map(h => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`
         : `<p class="modal-outline-empty">Không có đề mục phụ.</p>`;
       const spokeSyncCmd = `python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${s.name} --apply`;
+      const agentBrief = `${s.command} — Thực thi theo chuẩn ${s.skill_path} (Upstream: ${s.upstream} -> Downstream: ${s.downstream}). Bắt buộc verify qua: python -m ccba_harness verify-patch --preset skill`;
+      const portalObj = PORTALS.find(p => p.id === s.portal_id);
+      const spineOrder = (portalObj && portalObj.spine_order) ? portalObj.spine_order : [];
+      const isSpineMember = spineOrder.includes(s.name);
+      const spineStepsHtml = spineOrder.map((stepName, idx) => {
+        const isCurrent = stepName === s.name;
+        return `<button type="button" class="spine-step-btn font-mono ${isCurrent ? 'current' : ''}" ${isCurrent ? 'aria-current="step"' : ''} data-skill="${escapeHtml(stepName)}" onclick="openModal(this.getAttribute('data-skill'))">${isCurrent ? '★ ' : ''}${idx + 1}. /${escapeHtml(stepName)}</button>`;
+      }).join('<span class="spine-step-arrow" aria-hidden="true">→</span>');
+      const satelliteBadgeHtml = !isSpineMember
+        ? `<span class="spine-step-satellite font-mono">🛰️ Kỹ năng chuyên biệt thuộc phân hệ ${escapeHtml(s.portal_name)} (phối hợp cùng chuỗi Spine): <strong>/${escapeHtml(s.name)}</strong></span>`
+        : "";
+      const spineStepperBlock = spineOrder.length > 0
+        ? `<div class="spine-stepper" role="group" aria-label="Chuỗi kỹ năng xương sống của phân hệ">${spineStepsHtml}${satelliteBadgeHtml}</div>`
+        : "";
 
       modalBody.innerHTML = `
         <div class="modal-section">
@@ -2047,6 +2342,10 @@
           <p class="modal-cmd-row">
             <span><strong>Lệnh Đồng Bộ Spoke:</strong> <code>${escapeHtml(spokeSyncCmd)}</code></span>
             <button type="button" class="btn btn-compact font-mono" data-clipboard="${escapeHtml(spokeSyncCmd)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Spoke Sync')">📋 Copy</button>
+          </p>
+          <p class="modal-cmd-row">
+            <span><strong>Brief Giao Việc Cho Agent:</strong> <code>${escapeHtml(agentBrief)}</code></span>
+            <button type="button" class="btn btn-compact font-mono" data-clipboard="${escapeHtml(agentBrief)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Agent Brief')">📋 Copy Brief cho Agent</button>
           </p>
           ${gpiHtml}
         </div>
@@ -2065,6 +2364,7 @@
         <div class="modal-section">
           <h3>4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)</h3>
           <div class="pipeline-box">
+            ${spineStepperBlock}
             <p><strong>Đầu vào (Upstream):</strong> ${escapeHtml(s.upstream)}</p>
             <p><strong>Vai trò (In-flight):</strong> ${escapeHtml(s.role)}</p>
             <p><strong>Đầu ra (Downstream):</strong> ${escapeHtml(s.downstream)}</p>
@@ -2113,7 +2413,9 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
 
     window.openDocModal = function(docPath, title) {
       closeMobileSidebar();
-      lastFocusedElement = document.activeElement;
+      if (document.activeElement && (!skillModal || !skillModal.contains(document.activeElement))) {
+        lastFocusedElement = document.activeElement;
+      }
       modalTitle.textContent = title || docPath;
       modalMeta.innerHTML = `<span class="tag font-mono">Nguồn: docs/${escapeHtml(docPath)}</span>`;
       modalBody.innerHTML = `<div class="md-viewer">Đang tải <code>docs/${escapeHtml(docPath)}</code>...</div>`;
@@ -2197,6 +2499,11 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
       seamSearchInput.addEventListener("input", (e) => { seamSearchQuery = e.target.value; renderSeamsView(); updateUrlHash(buildSeamsHash()); });
     }
     window.addEventListener("hashchange", () => applyHashRoute(window.location.hash));
+    if (window.matchMedia) {
+      window.matchMedia("(min-width: 1024px)").addEventListener("change", (e) => {
+        if (e.matches) closeMobileSidebar();
+      });
+    }
 
     renderSidebar();
     renderTheMap();

@@ -107,6 +107,7 @@ python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "wcag focu
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "heatmap clash compliance" --domain chart
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "vietnamese be vietnam pro tabular" --domain typography
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack sharepoint-spfx
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack sharepoint-html-page
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --contrast "#FFFFFF,#363883"
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --audit-file path/to/Component.tsx
 ```
