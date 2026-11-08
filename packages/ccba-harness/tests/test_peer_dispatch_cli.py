@@ -304,6 +304,28 @@ def test_parse_envelope_tolerant_normalization_and_reverify_suffix(tmp_path):
     )
     assert opts["resume_session_id"] == "sess-ch08-v2"
 
+    # Verify historical transcript edge cases: sender/recipient/context_files, dict source_documents, profile alias
+    raw_edge = (
+        "---\n"
+        "id: req-review-pr-576\n"
+        "sender: antigravity\n"
+        "recipient: grok\n"
+        "type: ARCHITECTURE_REVIEW\n"
+        "profile: code_audit\n"
+        "source_documents:\n"
+        "  - path: tools/eos/drift.py\n"
+        "    role: drift validator\n"
+        "---\nBody\n"
+    )
+    env_edge = parse_envelope_from_md(raw_edge, prompt_path=tmp_path / "prompt_grok_pr_576.md")
+    assert env_edge is not None
+    assert env_edge.request_id == "req-review-pr-576"
+    assert env_edge.from_agent == "antigravity"
+    assert env_edge.to_agent == "grok"
+    assert env_edge.request_type == "review"
+    assert env_edge.profile == "code_review"
+    assert env_edge.source_documents == ["tools/eos/drift.py"]
+
 
 def test_peer_dispatch_output_file_flag_and_preflight_envelope_error(tmp_path, capsys):
     """Validates -o/--output-file flag and [PREFLIGHT-ENVELOPE-ERROR] diagnostic on missing frontmatter."""

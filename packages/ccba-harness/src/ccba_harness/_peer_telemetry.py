@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import re
@@ -20,12 +21,20 @@ from ._peer_models import (
 )
 from ._peer_watchdog import CostMode
 
+_STAGE_PREFIX_RE = re.compile(
+    r"^(?:final[-_])?(?:signoff|acceptance|review[-_]plan|review[-_]walkthrough|review|discuss|plan|arch[-_]audit|arch|audit)[-_]+",
+    re.IGNORECASE,
+)
 _ROUND_SUFFIX_RE = re.compile(
-    r"(?:[-_](?:v\d+|r\d+|round\d+|pass\d+|supplemental|followup|recheck|reverify|signoff|retry))+$",
+    r"(?:[-_](?:v\d+|r\d+|round\d*|pass\d+|turn\d+|supplemental|followup|follow[-_]up|recheck|reverify|re[-_]verify|signoff|final[-_]?signoff|final[-_]?acceptance|retry|stage\d+|audit|plan|\d{3}))+$",
+    re.IGNORECASE,
+)
+_FOLLOWUP_HINT_RE = re.compile(
+    r"(?:^|[-_])(?:v[2-9]\d*|r[2-9]\d*|round[2-9]\d*|pass[2-9]\d*|turn[2-9]\d*|supplemental|followup|follow[-_]up|recheck|reverify|re[-_]verify|signoff|final[-_]?signoff|final[-_]?acceptance|retry|stage[23]|00[2-9])(?:[-_]|$)",
     re.IGNORECASE,
 )
 _PREFIX_ROLE_RE = re.compile(
-    r"^(?:prompt_grok_review_|prompt_grok_|prompt_|grok_review_|grok_implementation_|grok_implement_|grok_|verdict_|req[-_])",
+    r"^(?:prompt_grok_review_|prompt_grok_|prompt_|grok_response_|grok_review_|grok_implementation_|grok_implement_|grok_|response_|verdict_|req[-_])+",
     re.IGNORECASE,
 )
 _OPT_OUT_RESUME_TOKENS: frozenset[str] = frozenset({"new", "none", "false", "0"})
@@ -318,36 +327,51 @@ def _accumulate_verdict_telemetry(
 
 
 def _normalize_thread_stem(value: str) -> str:
-    """Normalizes a request_id or filename stem by stripping prefixes and round/version suffixes."""
+    """Normalizes a request_id or filename stem by stripping prefixes, date tokens, and round suffixes."""
     cleaned = Path(value).stem.strip().lower()
     cleaned = _PREFIX_ROLE_RE.sub("", cleaned)
+    cleaned = re.sub(r"^\d{8}[-_]+", "", cleaned)
+    cleaned = _STAGE_PREFIX_RE.sub("", cleaned)
     cleaned = _ROUND_SUFFIX_RE.sub("", cleaned)
-    return cleaned.strip("-_")
+    return re.sub(r"[-_]+", "_", cleaned).strip("_")
 
 
 def _has_round_suffix(value: str) -> bool:
-    """Checks whether a request_id or filename stem carries a follow-up round/version suffix."""
-    return bool(_ROUND_SUFFIX_RE.search(Path(value).stem.strip()))
+    """Checks whether a request_id or filename stem carries a follow-up round/version marker."""
+    return bool(_FOLLOWUP_HINT_RE.search(Path(value).stem.strip()))
+
+
+def _parse_iso_ts(raw_ts: str | None) -> float | None:
+    """Parses ISO-8601 timestamp string into epoch seconds, or None if invalid/missing."""
+    if raw_ts:
+        try:
+            dt = datetime.datetime.fromisoformat(str(raw_ts).strip().replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+            return dt.timestamp()
+        except Exception:
+            pass
+    return None
 
 
 def _collect_prior_verdict_sessions(
-    peer_dir: Path, cur_req_id: str, cur_out_name: str
-) -> tuple[dict[str, Any], list[tuple[float, str, Any, str]]]:
+    peer_dir: Path, cur_req_id: str, cur_out_name: str, p_iso: float | None, p_mtime: float
+) -> tuple[dict[str, Any], list[tuple[float, float, str, Any, str]]]:
     """Scans peer_dir deterministically for prior prompt envelopes and verdicts with valid session_id."""
     prompts_by_req: dict[str, Any] = {}
-    verdicts: list[tuple[float, str, Any, str]] = []
+    raw_verdicts: list[tuple[float, str, Any, str]] = []
     if not peer_dir.is_dir():
-        return prompts_by_req, verdicts
+        return prompts_by_req, []
     for entry in sorted(os.scandir(peer_dir), key=lambda e: e.name):
         if not entry.is_file() or not entry.name.endswith(".md") or entry.name.startswith("."):
             continue
         try:
-            text = Path(entry.path).read_text(encoding="utf-8")
-            mtime = entry.stat().st_mtime
+            p = Path(entry.path)
+            text, mtime = p.read_text(encoding="utf-8"), entry.stat().st_mtime
         except (OSError, UnicodeDecodeError):
             continue
         if entry.name.startswith("prompt_"):
-            env = parse_envelope_from_md(text)
+            env = parse_envelope_from_md(text, prompt_path=p)
             if env and env.request_id:
                 prompts_by_req[env.request_id] = env
         elif entry.name.startswith(("grok_", "verdict_")) and entry.name != cur_out_name:
@@ -358,9 +382,49 @@ def _collect_prior_verdict_sessions(
                 else ""
             )
             if v and v.request_id != cur_req_id and sid and sid.lower() not in ("none", "unknown"):
-                verdicts.append((mtime, entry.name, v, sid))
-    verdicts.sort(key=lambda item: (-round(item[0], 4), item[1]))
+                raw_verdicts.append((mtime, entry.name, v, sid))
+    verdicts: list[tuple[float, float, str, Any, str]] = []
+    for mt, v_name, v, sid in raw_verdicts:
+        p_env = prompts_by_req.get(v.request_id)
+        v_iso = _parse_iso_ts(v.timestamp or (p_env.timestamp if p_env else None))
+        delta_sec = (p_iso - v_iso) if (p_iso is not None and v_iso is not None) else (p_mtime - mt)
+        if delta_sec >= -60.0:
+            verdicts.append((delta_sec, mt, v_name, v, sid))
+    verdicts.sort(key=lambda item: (round(item[0], 4), -round(item[1], 4), item[2]))
     return prompts_by_req, verdicts
+
+
+def _extract_clean_doc_set(envelope: Any) -> set[str]:
+    """Returns normalized document/target path set excluding internal .md/peer_exchange paths."""
+    if envelope is None:
+        return set()
+    raw = (getattr(envelope, "source_documents", None) or []) + (
+        getattr(envelope, "target_files", None) or []
+    )
+    return {
+        str(d).strip()
+        for d in raw
+        if str(d).strip() and not str(d).strip().startswith(".md/peer_exchange/")
+    }
+
+
+def _match_tier1_stem_session(
+    cur_req: str, prompt_name: str, verdicts: list[tuple[float, float, str, Any, str]]
+) -> str | None:
+    """Matches follow-up prompt stem against prior verdict request_id or filename stems."""
+    req_stem, file_stem = _normalize_thread_stem(cur_req), _normalize_thread_stem(prompt_name)
+    for _, _, v_name, v, sid in verdicts:
+        vr_stem, vf_stem = _normalize_thread_stem(v.request_id), _normalize_thread_stem(v_name)
+        if (req_stem and vr_stem == req_stem) or (file_stem and vf_stem == file_stem):
+            return sid
+        if (
+            req_stem
+            and vr_stem
+            and (req_stem in vr_stem or vr_stem in req_stem)
+            and min(len(req_stem), len(vr_stem)) >= 8
+        ):
+            return sid
+    return None
 
 
 def _auto_discover_resume_session_id(prompt_path: Path | None, envelope: Any) -> str | None:
@@ -369,42 +433,42 @@ def _auto_discover_resume_session_id(prompt_path: Path | None, envelope: Any) ->
         return None
     cur_req = str(getattr(envelope, "request_id", "") or "")
     cur_out = Path(str(getattr(envelope, "output_path", "") or "")).name
-    prompts_by_req, verdicts = _collect_prior_verdict_sessions(prompt_path.parent, cur_req, cur_out)
+    p_mtime = prompt_path.stat().st_mtime if prompt_path.exists() else time.time()
+    p_iso = _parse_iso_ts(getattr(envelope, "timestamp", None))
+    prompts_by_req, verdicts = _collect_prior_verdict_sessions(
+        prompt_path.parent, cur_req, cur_out, p_iso, p_mtime
+    )
     if not verdicts:
         return None
-    req_stem, file_stem = _normalize_thread_stem(cur_req), _normalize_thread_stem(prompt_path.name)
-    if _has_round_suffix(cur_req) or _has_round_suffix(prompt_path.name):
-        for _, v_name, v, sid in verdicts:
-            if (req_stem and _normalize_thread_stem(v.request_id) == req_stem) or (
-                file_stem and _normalize_thread_stem(v_name) == file_stem
-            ):
-                return sid
-    cur_docs = {
-        str(d).strip()
-        for d in (getattr(envelope, "source_documents", None) or [])
-        + (getattr(envelope, "target_files", None) or [])
-        if str(d).strip()
-    }
+    is_fu = (
+        _has_round_suffix(cur_req)
+        or _has_round_suffix(prompt_path.name)
+        or getattr(envelope, "profile", None) == "signoff_diff"
+    )
+    if is_fu:
+        hit = _match_tier1_stem_session(cur_req, prompt_path.name, verdicts)
+        if hit:
+            return hit
+    cur_docs = _extract_clean_doc_set(envelope)
+    req_type = getattr(envelope, "request_type", None)
     if cur_docs:
-        for _, _, v, sid in verdicts:
-            p_env = prompts_by_req.get(v.request_id)
-            p_docs = (
-                {
-                    str(d).strip()
-                    for d in (p_env.source_documents or []) + (p_env.target_files or [])
-                    if str(d).strip()
-                }
-                if p_env
-                else set()
-            )
-            if cur_docs & p_docs:
-                return sid
-    if getattr(envelope, "request_type", None) in ("discuss", "architecture"):
-        for _, _, v, sid in verdicts:
-            p_env = prompts_by_req.get(v.request_id)
-            if (p_env and p_env.request_type in ("discuss", "architecture")) or (
-                "discuss" in v.request_id.lower()
+        for delta_sec, _, v_name, v, sid in verdicts:
+            if (
+                not is_fu
+                and req_type not in ("verify", "patch", "discuss", "architecture")
+                and _has_round_suffix(v_name)
             ):
+                continue
+            if req_type in ("discuss", "architecture") and not is_fu and delta_sec <= 7200:
+                return sid
+            p_docs = _extract_clean_doc_set(prompts_by_req.get(v.request_id))
+            if p_docs and (
+                cur_docs == p_docs or len(cur_docs & p_docs) / len(cur_docs | p_docs) >= 0.5
+            ):
+                return sid
+    if req_type in ("discuss", "architecture"):
+        for delta_sec, _, _, _, sid in verdicts:
+            if delta_sec <= 14400:
                 return sid
     return None
 
