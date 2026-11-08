@@ -630,6 +630,10 @@ def test_phase4_operate_mode_and_ccba_design_compliance() -> None:
         assert 'style="' not in html_text, f"Inline style attribute found in {target_path.name}"
         style_block = html_text.split("<style>", 1)[1].split("</style>", 1)[0]
         assert "#viewMap .hero" in style_block
+        assert "@media (max-width: 959px)" in style_block
+        assert "@media (max-width: 767px)" in style_block
+        assert ".brand-title" in style_block
+        assert ".nav-label-desktop" in style_block
         font_sizes = re.findall(r"font-size:\s*([^;]+);", style_block)
         assert font_sizes, f"No font-size declarations found in {target_path.name}"
         for fs in font_sizes:

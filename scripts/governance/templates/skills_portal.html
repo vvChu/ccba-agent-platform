@@ -115,6 +115,8 @@
       align-items: center;
       gap: 0.75rem;
       min-width: 0;
+      flex: 1;
+      overflow: clip;
     }
     .mobile-menu-btn {
       background: var(--ccba-badge-bg);
@@ -140,6 +142,12 @@
       font-size: var(--ccba-text-base);
       letter-spacing: -0.02em;
       white-space: nowrap;
+      min-width: 0;
+    }
+    .brand-title {
+      min-width: 0;
+      overflow: clip;
+      text-overflow: ellipsis;
     }
     .brand-icon {
       background: linear-gradient(135deg, #1f6feb, #238636);
@@ -252,7 +260,9 @@
       top: var(--ccba-nav-height);
       left: 0;
       bottom: 0;
+      max-width: calc(100vw - 3rem);
       height: calc(100vh - var(--ccba-nav-height));
+      height: calc(100dvh - var(--ccba-nav-height));
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
     .sidebar-backdrop {
@@ -281,6 +291,36 @@
     }
     @media (max-width: 1279px) {
       .header-aux-link { display: none !important; }
+    }
+    @media (max-width: 959px) {
+      header .view-tabs { display: none; }
+    }
+    @media (max-width: 767px) {
+      .header-container { padding: 0 0.75rem; gap: 0.45rem; }
+      .header-left { gap: 0.45rem; }
+      .brand { font-size: var(--ccba-text-sm); gap: 0.4rem; }
+      .nav-links { gap: 0.35rem; }
+      .nav-label-desktop, header .kbd-hint, .search-box .kbd-hint { display: none; }
+      #headerSearchBtn, .theme-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ccba-badge-bg);
+        border: 1px solid var(--ccba-line);
+        border-radius: var(--ccba-radius-md);
+        color: var(--ccba-fg-body);
+      }
+      .header-cta-btn { padding: 0.38rem 0.65rem; }
+      .app-main { padding: 1rem 0.85rem; }
+      #viewMap .hero h1 { font-size: var(--ccba-text-2xl); }
+      .media-card { gap: 0.75rem; padding: 0.75rem; }
+      .media-thumb { width: 96px; height: 68px; }
+      .media-card-arrow { display: none; }
+      .spine-skill-item { flex-direction: column; gap: 0.6rem; }
+      .search-input { padding-right: 4rem; }
     }
     .sidebar-group {
       display: flex;
@@ -1105,7 +1145,7 @@
         <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-controls="appSidebar" aria-expanded="false" onclick="toggleMobileSidebar()">☰</button>
         <a href="#" class="brand" onclick="switchView('map'); return false;">
           <span class="brand-icon">⚡</span>
-          <span>CCBA Skills Portal</span>
+          <span class="brand-title">CCBA Skills Portal</span>
         </a>
         <div class="view-tabs" role="tablist">
           <button type="button" class="view-tab active" id="tabMap" onclick="switchView('map')"><span>🗺️ Map</span></button>
@@ -1114,13 +1154,13 @@
         </div>
       </div>
       <div class="nav-links">
-        <button type="button" class="nav-doc-btn" id="headerSearchBtn" onclick="openSearchFromHeader()">🔍 Search <kbd class="kbd-hint font-mono">⌘K</kbd></button>
+        <button type="button" class="nav-doc-btn" id="headerSearchBtn" aria-label="Tìm kiếm kỹ năng" onclick="openSearchFromHeader()">🔍<span class="nav-label-desktop"> Search</span> <kbd class="kbd-hint font-mono">⌘K</kbd></button>
         <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
         <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
         <a href="llms.txt" class="header-aux-link">llms.txt</a>
         <a href="llms-full.txt" class="header-aux-link">llms-full.txt</a>
         <a href="https://github.com/vvChu/ccba-agent-platform" class="header-aux-link" target="_blank" rel="noopener">GitHub</a>
-        <button type="button" id="themeToggle" class="theme-btn" title="Đổi giao diện Sáng / Tối">🌓 Theme</button>
+        <button type="button" id="themeToggle" class="theme-btn" aria-label="Đổi giao diện Sáng / Tối" title="Đổi giao diện Sáng / Tối">🌓<span class="nav-label-desktop"> Theme</span></button>
         <button type="button" class="header-cta-btn" onclick="openModal('ccba-ask')">Ask /ccba-ask</button>
       </div>
     </div>
@@ -1976,6 +2016,7 @@
     window.openModal = function(skillName, syncHash = true) {
       const s = SKILLS.find(item => item.name === skillName);
       if (!s) return;
+      closeMobileSidebar();
       lastFocusedElement = document.activeElement;
       if (syncHash !== false) {
         updateUrlHash("skill/" + s.name);
@@ -2071,6 +2112,7 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
     };
 
     window.openDocModal = function(docPath, title) {
+      closeMobileSidebar();
       lastFocusedElement = document.activeElement;
       modalTitle.textContent = title || docPath;
       modalMeta.innerHTML = `<span class="tag font-mono">Nguồn: docs/${escapeHtml(docPath)}</span>`;
