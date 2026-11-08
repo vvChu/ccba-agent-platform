@@ -61,6 +61,14 @@ def test_ui_bm25_search_across_all_four_domains() -> None:
     assert res_stack["count"] >= 1
     assert any("sharepoint-spfx" in r["Stack Name"] for r in res_stack["results"])
 
+    res_sp_html = core.search("sharepoint html site pages sandboxed iframe noxon", domain="stack")
+    assert res_sp_html["count"] >= 1
+    assert any("sharepoint-html-page" in r["Stack Name"] for r in res_sp_html["results"])
+
+    res_ux_noxon = core.search("noxon attention progressive disclosure proximity", domain="ux")
+    assert res_ux_noxon["count"] >= 1
+    assert any(r["Rule ID"] == "UX-18" for r in res_ux_noxon["results"])
+
 
 def test_ui_detect_domain_and_search_all() -> None:
     """Verify automatic domain routing and multi-domain search_all aggregation."""

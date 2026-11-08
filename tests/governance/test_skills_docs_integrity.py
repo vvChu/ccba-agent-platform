@@ -652,3 +652,39 @@ def test_phase4_operate_mode_and_ccba_design_compliance() -> None:
         assert route_fn.index('indexOf("?")') < route_fn.index("decodeURIComponent("), (
             f"applyHashRoute must split '?' before decodeURIComponent in {target_path.name}"
         )
+
+
+PHASE4C_AND_NOXON_SNIPPETS = (
+    'id="seamsEmptyState"',
+    'class="spine-stepper"',
+    'class="do-this-row"',
+    'class="do-this-copy-btn font-mono"',
+    'class="goal-guides-drawer"',
+    "Copy Brief cho Agent",
+    "prefers-reduced-motion: reduce",
+    "overflow-wrap: anywhere;",
+    "minmax(min(100%, 330px), 1fr)",
+    "min-width: min(100%, 240px);",
+    "html:has(.modal-backdrop.open)",
+    "html:has(.app-sidebar.mobile-open)",
+    'aria-current="step"',
+    "nav-label-mobile",
+    "!skillModal.contains(document.activeElement)",
+)
+
+
+def test_phase4c_mobile_overflow_and_noxon_invariants() -> None:
+    """Verify Phase 4C mobile cascade, overflow guards, chip contrast, and Noxon N1-N3 patterns."""
+    for target_path in (TEMPLATE_HTML_PATH, DOCS_DIR / "index.html"):
+        html_text = target_path.read_text(encoding="utf-8")
+        for snippet in PHASE4C_AND_NOXON_SNIPPETS:
+            assert snippet in html_text, f"Missing Phase 4C/Noxon {snippet!r} in {target_path.name}"
+        style_block = html_text.split("<style>", 1)[1].split("</style>", 1)[0]
+        base_chips_idx = style_block.index(".portal-chips {")
+        late_mobile_idx = style_block.rindex("@media (max-width: 767px)")
+        assert late_mobile_idx > base_chips_idx, (
+            f"Late @media (max-width: 767px) must appear after .portal-chips in {target_path.name}"
+        )
+        chip_active_block = style_block.split(".chip.active {", 1)[1].split("}", 1)[0]
+        assert "background: var(--ccba-fg-body);" in chip_active_block
+        assert "color: var(--ccba-bg);" in chip_active_block

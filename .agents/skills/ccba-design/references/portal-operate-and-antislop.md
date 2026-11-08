@@ -67,3 +67,10 @@ In any portal or dashboard, **the URL is the single source of truth for view sta
 - **Target Size (`2.5.8`):** All buttons, pagination controls, and tree toggles must provide at least `24x24px` hit area (`44x44px` on touch devices).
 - **Accessible Authentication (`3.3.8`):** Never block `onPaste` on password, token, or OTP inputs; always set proper `autocomplete` attributes.
 - **Multi-Modal Status Encoding (CVD-Safe):** Never use color alone to convey status. Always pair `[Icon] + [Text Badge] + [Color]` (`[PASS]` `#28A745`, `[WARN]` `#F2C811` with dark text `#1A202C`, `[FAIL]` `#DA251C`).
+
+### 4.4 Three-Tier Progression of Attention & SharePoint HTML Pages (`UX-18` & `STK-07`)
+- **Noxon 3-Tier Attention Architecture (`UX-18`):** Enterprise portals must serve as a **decision aid**, never an ungrouped link dump:
+  1. **Tier 1 (Above-the-Fold Signals):** Interactive status pills, role/task routing triggers, and the single primary action (`Do this with /...`).
+  2. **Tier 2 (Contextual Workflow Spine):** Ordered step-by-step pipeline with **Proximity Actions** (`📋 Copy` / `Chi tiết` directly adjacent to each item) and interactive spine steppers inside detail modals.
+  3. **Tier 3 (Progressive Disclosure Drawers):** Secondary SOP guides, statutory references, and deep checklists tucked inside native `<details>` drawers or slide-over panels.
+- **SharePoint Site Pages `.html` Sandboxed iFrame (`STK-07`):** When building single-file `.html` apps uploaded directly to SharePoint Online `Site Pages`, always implement a **Dual-Mode Data Loader** (live SharePoint REST/List fetch when hosted, falling back cleanly to embedded deterministic preview JSON when opened via `file://` or restricted by iframe sandbox) and restrict external scripts to SharePoint-approved managed CDNs.
