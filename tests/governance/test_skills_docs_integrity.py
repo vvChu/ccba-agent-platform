@@ -670,6 +670,7 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     'aria-current="step"',
     "nav-label-mobile",
     "!skillModal.contains(document.activeElement)",
+    ".jump-card:last-child:nth-child(odd) { grid-column: 1 / -1; }",
 )
 
 

@@ -443,10 +443,11 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: 0.65rem;
-      max-width: 860px;
+      width: 100%;
     }
     @media (min-width: 640px) {
       .jump-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .jump-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
     }
     .jump-card {
       display: flex;
@@ -526,7 +527,7 @@
       flex-wrap: wrap;
       gap: 1rem;
       margin-top: 1.15rem;
-      max-width: 860px;
+      width: 100%;
       padding: 1rem 1.25rem;
       border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-accent-line);
