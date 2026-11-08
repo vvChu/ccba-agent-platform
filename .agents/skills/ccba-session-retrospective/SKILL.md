@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.1
+  version: 1.6.2
 bundle: _core
 tier: kernel
 triggers:
@@ -138,7 +138,10 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
      ```
    - Kiểm tra ngân sách bộ nhớ `session_learnings.md` ($\le 10.0\text{ KB}$):
      ```bash
-     python scripts/governance/compact_session_learnings.py --check
+     # Trên Hub:
+     python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --check
+     # Trên Spoke (để kiểm định đúng SPOKE_REQUIRED_INVARIANTS thay vì mặc định hub):
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --check
      ```
    - Kiểm tra tài liệu, biến môi trường & Architecture Drift:
      ```bash

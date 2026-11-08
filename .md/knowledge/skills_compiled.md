@@ -10625,7 +10625,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.0
+  version: 1.6.2
 bundle: _core
 tier: kernel
 triggers:
@@ -10685,7 +10685,10 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 - Ghi nhận các quy tắc cô đọng `RULE-X.Y` mới vào [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) dưới đúng Miền Kiến Trúc tương ứng.
 - **Kiểm tra Kích thước Bộ nhớ Làm việc & Chống Nén Mất Ngữ Cảnh (Anti-Lossy-Compression Guardrail):**
   ```bash
+  # Tại Hub:
   python scripts/governance/compact_session_learnings.py --stats
+  # Tại Spoke:
+  python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --file .md/knowledge/session_learnings.md --stats
   ```
   Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes) hoặc trần 115 dòng (tại Spoke), thực hiện nén và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
   * **Bất biến Bảo toàn Điều kiện Biên (Scope Qualifier Preservation):** Khi rút gọn một `RULE-X.Y`, **bắt buộc** giữ nguyên phạm vi áp dụng cụ thể (tên cờ CLI như `--deny`, tên module, hoặc hệ điều hành) và đối chiếu chéo với bản ghi gốc trong `session_learnings_history.md`. Tuyệt đối không lược bỏ phạm vi hẹp khiến quy tắc bị khái quát hóa quá mức (over-generalization) và xung đột với các ADR nền tảng (như ADR-0060).
@@ -10693,7 +10696,10 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
 - **Tự động đồng bộ Living Traceability Matrix cho ADRs:**
   ```bash
+  # Tại Hub:
   python scripts/sync_hub_adr_matrix.py
+  # Tại Spoke:
+  python scripts/sync_adr_matrix.py
   ```
 - Giữ nguyên cấu trúc phân loại theo 5 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
 - **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$ mà không làm mất điều kiện biên của các `RULE-X.Y`, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
@@ -10735,7 +10741,10 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
      ```
    - Kiểm tra ngân sách bộ nhớ `session_learnings.md` ($\le 10.0\text{ KB}$):
      ```bash
-     python scripts/governance/compact_session_learnings.py --check
+     # Trên Hub:
+     python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --check
+     # Trên Spoke (để kiểm định đúng SPOKE_REQUIRED_INVARIANTS thay vì mặc định hub):
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --check
      ```
    - Kiểm tra tài liệu, biến môi trường & Architecture Drift:
      ```bash
