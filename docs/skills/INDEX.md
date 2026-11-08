@@ -48,7 +48,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-code-review](ccba-code-review.md) | `/ccba-code-review` | `kernel` | `User` | Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smell... |
 | [ccba-codebase-design](ccba-codebase-design.md) | `/ccba-codebase-design` | `kernel` | `User` | Shared vocabulary for designing deep modules (locality, depth, leverage, seam... |
 | [ccba-create-pr](ccba-create-pr.md) | `/ccba-create-pr` | `kernel` | `User` | Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code và mở GitH... |
-| [ccba-design](ccba-design.md) | `/ccba-design` | `kernel` | `User` | Design brand identity, logos, banners, and visual assets. Use for brand syste... |
+| [ccba-design](ccba-design.md) | `/ccba-design` | `kernel` | `User` | Design brand identity, web portals, UI/UX systems, logos, banners, and CIP as... |
 | [ccba-diagnosing-bugs](ccba-diagnosing-bugs.md) | `/ccba-diagnosing-bugs` | `kernel` | `User` | Diagnosis loop for hard bugs and performance regressions. Use when the user s... |
 | [ccba-domain-modeling](ccba-domain-modeling.md) | `/ccba-domain-modeling` | `kernel` | `User` | Build, refine, and maintain the project's domain model, ubiquitous language, ... |
 | [ccba-excalidraw-diagram](ccba-excalidraw-diagram.md) | `/ccba-excalidraw-diagram` | `kernel` | `User` | Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout engines v... |

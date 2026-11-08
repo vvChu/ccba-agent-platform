@@ -31,6 +31,19 @@
       --ccba-badge-bg: #21262d;
       --ccba-code-bg: #0b0d10;
       --ccba-modal-overlay: rgba(0, 0, 0, 0.78);
+      --ccba-text-2xs: 0.75rem;
+      --ccba-text-xs: 0.8125rem;
+      --ccba-text-sm: 0.875rem;
+      --ccba-text-base: 1rem;
+      --ccba-text-md: 1.05rem;
+      --ccba-text-lg: 1.2rem;
+      --ccba-text-xl: 1.35rem;
+      --ccba-text-2xl: 1.55rem;
+      --ccba-text-3xl: 2.15rem;
+      --ccba-radius-sm: 4px;
+      --ccba-radius-md: 6px;
+      --ccba-radius-lg: 8px;
+      --ccba-radius-pill: 9999px;
     }
     [data-theme="light"] {
       --ccba-nav-height: 62px;
@@ -60,7 +73,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--ccba-bg);
       color: var(--ccba-fg-body);
       line-height: 1.55;
@@ -69,7 +82,15 @@
       flex-direction: column;
     }
     code, pre, .font-mono {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .pill, .chip, .badge, .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    :focus-visible {
+      outline: 2px solid var(--ccba-primary);
+      outline-offset: 2px;
     }
     header {
       border-bottom: 1px solid var(--ccba-line);
@@ -101,12 +122,12 @@
       color: var(--ccba-fg-body);
       width: 34px;
       height: 34px;
-      border-radius: 6px;
+      border-radius: var(--ccba-radius-md);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: var(--ccba-text-base);
       flex-shrink: 0;
     }
     .brand {
@@ -116,7 +137,7 @@
       text-decoration: none;
       color: var(--ccba-fg-body);
       font-weight: 700;
-      font-size: 1rem;
+      font-size: var(--ccba-text-base);
       letter-spacing: -0.02em;
       white-space: nowrap;
     }
@@ -124,12 +145,12 @@
       background: linear-gradient(135deg, #1f6feb, #238636);
       width: 28px;
       height: 28px;
-      border-radius: 7px;
+      border-radius: var(--ccba-radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      font-size: 0.95rem;
+      font-size: var(--ccba-text-base);
       flex-shrink: 0;
     }
     .view-tabs {
@@ -138,7 +159,7 @@
       gap: 0.25rem;
       background: var(--ccba-bg);
       padding: 0.2rem;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-line);
     }
     .view-tab {
@@ -146,8 +167,8 @@
       border: none;
       color: var(--ccba-fg-muted);
       padding: 0.35rem 0.7rem;
-      border-radius: 6px;
-      font-size: 0.82rem;
+      border-radius: var(--ccba-radius-md);
+      font-size: var(--ccba-text-xs);
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
@@ -163,7 +184,7 @@
       display: flex;
       align-items: center;
       gap: 0.65rem;
-      font-size: 0.84rem;
+      font-size: var(--ccba-text-sm);
       margin-left: auto;
       flex-shrink: 0;
     }
@@ -173,7 +194,7 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 0.84rem;
+      font-size: var(--ccba-text-sm);
       white-space: nowrap;
       transition: color 0.15s ease;
     }
@@ -183,9 +204,9 @@
       border: 1px solid var(--ccba-line);
       color: var(--ccba-fg-body);
       padding: 0.35rem 0.65rem;
-      border-radius: 6px;
+      border-radius: var(--ccba-radius-md);
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: var(--ccba-text-xs);
       font-weight: 500;
       white-space: nowrap;
     }
@@ -193,9 +214,9 @@
       background: var(--ccba-cta-bg);
       color: var(--ccba-cta-fg);
       border: 1px solid var(--ccba-accent-line);
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       padding: 0.42rem 0.85rem;
-      font-size: 0.82rem;
+      font-size: var(--ccba-text-xs);
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
@@ -219,6 +240,7 @@
       border-right: 1px solid var(--ccba-line);
       padding: 1.25rem 1rem 2rem;
       overflow-y: auto;
+      overscroll-behavior: contain;
       display: none;
       flex-direction: column;
       gap: 1.25rem;
@@ -267,7 +289,7 @@
       margin-bottom: 1.15rem;
     }
     .sidebar-group-label {
-      font-size: 0.68rem;
+      font-size: var(--ccba-text-2xs);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -280,9 +302,9 @@
       font-family: inherit;
       background: transparent;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--ccba-radius-md);
       padding: 0.42rem 0.55rem;
-      font-size: 0.84rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
       cursor: pointer;
       display: flex;
@@ -305,25 +327,25 @@
     .sidebar-cta-box {
       margin-top: auto;
       padding: 0.9rem;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-accent-line);
       background: var(--ccba-accent-panel);
     }
     .sidebar-cta-title {
-      font-size: 0.84rem;
+      font-size: var(--ccba-text-sm);
       font-weight: 700;
       color: var(--ccba-fg-body);
       margin-bottom: 0.25rem;
     }
     .sidebar-cta-desc {
-      font-size: 0.76rem;
+      font-size: var(--ccba-text-xs);
       color: var(--ccba-fg-muted);
       margin-bottom: 0.65rem;
     }
     .app-main {
       flex: 1;
       min-width: 0;
-      padding: 2.25rem 1.5rem;
+      padding: 1.5rem 1.5rem;
       width: 100%;
     }
     .app-main-inner {
@@ -332,7 +354,7 @@
       width: 100%;
     }
     .eyebrow {
-      font-size: 0.72rem;
+      font-size: var(--ccba-text-2xs);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.14em;
@@ -345,7 +367,7 @@
       margin-bottom: 2rem;
     }
     .hero h1 {
-      font-size: 2.35rem;
+      font-size: var(--ccba-text-3xl);
       font-weight: 800;
       line-height: 1.08;
       letter-spacing: -0.032em;
@@ -355,7 +377,7 @@
     .hero p {
       color: var(--ccba-fg-muted);
       max-width: 66ch;
-      font-size: 1.05rem;
+      font-size: var(--ccba-text-md);
       margin-bottom: 1.35rem;
     }
     .stats-pills {
@@ -371,8 +393,8 @@
       background: var(--ccba-bg-card);
       border: 1px solid var(--ccba-line);
       padding: 0.3rem 0.8rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
+      border-radius: var(--ccba-radius-pill);
+      font-size: var(--ccba-text-xs);
       color: var(--ccba-fg-muted);
     }
     .pill strong { color: var(--ccba-fg-body); }
@@ -390,7 +412,7 @@
       align-items: center;
       gap: 0.75rem;
       padding: 0.85rem 1rem;
-      border-radius: 7px;
+      border-radius: var(--ccba-radius-md);
       border: 1px solid var(--ccba-line);
       background: var(--ccba-bg-card);
       color: var(--ccba-fg-body);
@@ -406,32 +428,46 @@
       background: var(--ccba-bg-card-hover);
     }
     .jump-step {
-      font-size: 0.78rem;
+      font-size: var(--ccba-text-xs);
       font-weight: 600;
       color: var(--ccba-gold);
       flex-shrink: 0;
     }
     .jump-question {
-      font-size: 0.92rem;
+      font-size: var(--ccba-text-sm);
       font-weight: 600;
       line-height: 1.35;
     }
     .jump-arrow {
       margin-left: auto;
       color: var(--ccba-fg-faint);
-      font-size: 0.9rem;
+      font-size: var(--ccba-text-sm);
     }
+    /* Scoped Hero Compaction on #viewMap (COND-HERO-SCOPE-MEASURE) */
+    #viewMap .hero { padding-bottom: 1rem; margin-bottom: 1rem; }
+    #viewMap .hero h1 { font-size: var(--ccba-text-3xl); margin-bottom: 0.45rem; }
+    #viewMap .hero p { margin-bottom: 0.75rem; }
+    #viewMap .stats-pills { margin-bottom: 0.75rem; }
+    #viewMap .jump-grid { gap: 0.45rem; }
+    #viewMap .jump-card { padding: 0.55rem 0.85rem; }
+    #viewMap .inline-advisor-banner { margin-top: 0.75rem; padding: 0.65rem 1rem; }
+    #viewMap .goal-section:first-child { padding-top: 1rem; }
     /* Goal Sections on The Map */
     .goal-section {
       border-bottom: 1px solid var(--ccba-line);
       padding: 2.25rem 0;
       scroll-margin-top: 4.5rem;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 360px;
+    }
+    @supports not (content-visibility: auto) {
+      .goal-section, .spine-row { contain: layout style paint; }
     }
     .goal-header {
       margin-bottom: 1.35rem;
     }
     .goal-header h2 {
-      font-size: 1.55rem;
+      font-size: var(--ccba-text-2xl);
       font-weight: 750;
       letter-spacing: -0.025em;
       line-height: 1.18;
@@ -440,7 +476,7 @@
     .goal-header p {
       color: var(--ccba-fg-muted);
       max-width: 64ch;
-      font-size: 0.98rem;
+      font-size: var(--ccba-text-base);
     }
     .inline-advisor-banner {
       display: flex;
@@ -451,18 +487,18 @@
       margin-top: 1.15rem;
       max-width: 860px;
       padding: 1rem 1.25rem;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-accent-line);
       background: var(--ccba-accent-panel);
     }
     .inline-advisor-title {
-      font-size: 0.95rem;
+      font-size: var(--ccba-text-base);
       font-weight: 700;
       color: var(--ccba-fg-body);
       margin-bottom: 0.15rem;
     }
     .inline-advisor-desc {
-      font-size: 0.84rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
     }
     .do-this-card {
@@ -474,7 +510,7 @@
       justify-content: space-between;
       gap: 1rem;
       padding: 1.1rem 1.25rem;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-accent-line);
       background: var(--ccba-accent-panel);
       margin-bottom: 1.25rem;
@@ -486,7 +522,7 @@
       border-color: var(--ccba-gold);
     }
     .do-this-label {
-      font-size: 0.72rem;
+      font-size: var(--ccba-text-2xs);
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--ccba-gold);
@@ -494,20 +530,20 @@
       margin-bottom: 0.2rem;
     }
     .do-this-cmd {
-      font-size: 1.2rem;
+      font-size: var(--ccba-text-lg);
       font-weight: 700;
       color: var(--ccba-fg-body);
     }
     .do-this-cmd .slash { color: var(--ccba-primary); }
     .do-this-desc {
-      font-size: 0.88rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
       margin-top: 0.2rem;
     }
     .do-this-circle {
       width: 34px;
       height: 34px;
-      border-radius: 9999px;
+      border-radius: var(--ccba-radius-pill);
       border: 1px solid var(--ccba-line-strong);
       display: flex;
       align-items: center;
@@ -529,7 +565,7 @@
       align-items: center;
       gap: 1.125rem;
       padding: 0.875rem;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-line);
       background: var(--ccba-bg-card);
       color: var(--ccba-fg-body);
@@ -543,7 +579,7 @@
     .media-thumb {
       width: 132px;
       height: 78px;
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       border: 1px solid var(--ccba-line);
       background: var(--ccba-accent-panel);
       display: flex;
@@ -558,13 +594,13 @@
     .media-thumb--kernel { border-color: var(--ccba-primary); }
     .media-thumb--guide { border-color: var(--ccba-accent); }
     .media-thumb-step {
-      font-size: 0.65rem;
+      font-size: var(--ccba-text-2xs);
       font-weight: 700;
       color: var(--ccba-gold);
       letter-spacing: 0.08em;
     }
     .media-thumb-code {
-      font-size: 0.72rem;
+      font-size: var(--ccba-text-2xs);
       font-weight: 700;
       color: var(--ccba-fg-body);
       word-break: break-all;
@@ -576,7 +612,7 @@
     }
     .media-card-eyebrow {
       display: inline-block;
-      font-size: 0.625rem;
+      font-size: var(--ccba-text-2xs);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -584,18 +620,18 @@
       border: 1px solid var(--ccba-line);
       background: var(--ccba-badge-bg);
       padding: 0.2rem 0.45rem;
-      border-radius: 4px;
+      border-radius: var(--ccba-radius-sm);
       margin-bottom: 0.35rem;
     }
     .media-card-body h3 {
-      font-size: 1.05rem;
+      font-size: var(--ccba-text-md);
       font-weight: 700;
       color: var(--ccba-fg-body);
       margin-bottom: 0.2rem;
       line-height: 1.3;
     }
     .media-card-desc {
-      font-size: 0.86rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -605,14 +641,14 @@
     .media-card-arrow {
       width: 34px;
       height: 34px;
-      border-radius: 9999px;
+      border-radius: var(--ccba-radius-pill);
       border: 1px solid var(--ccba-line-strong);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       color: var(--ccba-fg-body);
-      font-size: 0.9rem;
+      font-size: var(--ccba-text-sm);
     }
     .philosophy-grid {
       display: grid;
@@ -621,19 +657,19 @@
       margin-top: 2.5rem;
       padding: 1.5rem;
       border: 1px solid var(--ccba-line);
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       background: var(--ccba-bg-card);
     }
     @media (min-width: 768px) {
       .philosophy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     .philosophy-col h3 {
-      font-size: 0.95rem;
+      font-size: var(--ccba-text-base);
       color: var(--ccba-gold);
       margin-bottom: 0.35rem;
     }
     .philosophy-col p {
-      font-size: 0.88rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
     }
     /* Asymmetric 0.9fr : 1.1fr Skills Spine (COND-GRID-STACK) */
@@ -647,6 +683,8 @@
       gap: 1.5rem;
       padding: 1.85rem 0;
       border-bottom: 1px solid var(--ccba-line);
+      content-visibility: auto;
+      contain-intrinsic-size: auto 280px;
     }
     @media (min-width: 768px) {
       .spine-row {
@@ -656,7 +694,7 @@
       }
     }
     .spine-left h3 {
-      font-size: 1.2rem;
+      font-size: var(--ccba-text-lg);
       font-weight: 700;
       display: flex;
       align-items: baseline;
@@ -664,13 +702,13 @@
       margin-bottom: 0.4rem;
     }
     .spine-left p {
-      font-size: 0.9rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
       max-width: 46ch;
       margin-bottom: 0.65rem;
     }
     .start-with-line {
-      font-size: 0.8rem;
+      font-size: var(--ccba-text-xs);
       color: var(--ccba-fg-subtle);
     }
     .start-with-link {
@@ -695,7 +733,7 @@
       padding: 0.75rem 0.5rem;
       border-bottom: 1px solid var(--ccba-line);
       transition: background 0.12s;
-      border-radius: 4px;
+      border-radius: var(--ccba-radius-sm);
     }
     .spine-skill-item:last-child { border-bottom: none; }
     .spine-skill-item:hover { background: var(--ccba-bg-card); }
@@ -724,11 +762,10 @@
       width: 100%;
       background: var(--ccba-bg-card);
       border: 1px solid var(--ccba-line);
-      border-radius: 7px;
-      padding: 0.7rem 1rem 0.7rem 2.4rem;
-      font-size: 0.95rem;
+      border-radius: var(--ccba-radius-md);
+      padding: 0.7rem 5.4rem 0.7rem 2.4rem;
+      font-size: var(--ccba-text-base);
       color: var(--ccba-fg-body);
-      outline: none;
     }
     .search-input:focus { border-color: var(--ccba-primary); }
     .search-icon {
@@ -738,6 +775,62 @@
       transform: translateY(-50%);
       color: var(--ccba-fg-muted);
       pointer-events: none;
+    }
+    .search-kbd-group {
+      position: absolute;
+      right: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .kbd-hint {
+      font-size: var(--ccba-text-2xs);
+      color: var(--ccba-fg-subtle);
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      border-radius: var(--ccba-radius-sm);
+      padding: 0.12rem 0.4rem;
+      pointer-events: none;
+    }
+    .search-clear-btn {
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      color: var(--ccba-fg-muted);
+      border-radius: var(--ccba-radius-sm);
+      padding: 0.12rem 0.45rem;
+      font-size: var(--ccba-text-2xs);
+      cursor: pointer;
+    }
+    .search-clear-btn:hover { color: var(--ccba-fg-body); border-color: var(--ccba-primary); }
+    .result-meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.65rem;
+      font-size: var(--ccba-text-xs);
+      color: var(--ccba-fg-muted);
+    }
+    .empty-state-card {
+      background: var(--ccba-bg-card);
+      border: 1px dashed var(--ccba-line-strong);
+      border-radius: var(--ccba-radius-lg);
+      padding: 2.25rem 1.5rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .empty-state-card h3 {
+      font-size: var(--ccba-text-md);
+      color: var(--ccba-fg-body);
+      margin-bottom: 0.35rem;
+    }
+    .empty-state-card p {
+      font-size: var(--ccba-text-sm);
+      color: var(--ccba-fg-muted);
+      margin-bottom: 1rem;
     }
     .portal-chips {
       display: flex;
@@ -749,8 +842,8 @@
       border: 1px solid var(--ccba-line);
       color: var(--ccba-fg-muted);
       padding: 0.38rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.82rem;
+      border-radius: var(--ccba-radius-md);
+      font-size: var(--ccba-text-xs);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -770,7 +863,7 @@
     .skill-card {
       background: var(--ccba-bg-card);
       border: 1px solid var(--ccba-line);
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       padding: 1.15rem;
       display: flex;
       flex-direction: column;
@@ -778,16 +871,16 @@
     }
     .skill-card:hover { border-color: var(--ccba-primary); }
     .skill-name {
-      font-size: 1.02rem;
+      font-size: var(--ccba-text-md);
       font-weight: 700;
       color: var(--ccba-fg-body);
       cursor: pointer;
     }
     .skill-name:hover { color: var(--ccba-primary); }
     .badge {
-      font-size: 0.68rem;
+      font-size: var(--ccba-text-2xs);
       padding: 0.15rem 0.45rem;
-      border-radius: 4px;
+      border-radius: var(--ccba-radius-sm);
       font-weight: 600;
       text-transform: uppercase;
     }
@@ -798,17 +891,17 @@
     .badge-model { background: #9e6a03; color: #ffffff; }
     .badge-both { background: #388bfd; color: #ffffff; }
     .skill-desc {
-      font-size: 0.86rem;
+      font-size: var(--ccba-text-sm);
       color: var(--ccba-fg-muted);
       margin: 0.6rem 0 0.85rem;
     }
     .tag {
-      font-size: 0.7rem;
+      font-size: var(--ccba-text-2xs);
       background: var(--ccba-badge-bg);
       border: 1px solid var(--ccba-line);
       color: var(--ccba-fg-muted);
       padding: 0.12rem 0.4rem;
-      border-radius: 4px;
+      border-radius: var(--ccba-radius-sm);
     }
     .card-actions {
       display: flex;
@@ -820,8 +913,8 @@
     .btn {
       flex: 1;
       padding: 0.4rem 0.6rem;
-      font-size: 0.78rem;
-      border-radius: 6px;
+      font-size: var(--ccba-text-xs);
+      border-radius: var(--ccba-radius-md);
       border: 1px solid var(--ccba-line);
       background: var(--ccba-badge-bg);
       color: var(--ccba-fg-body);
@@ -843,7 +936,7 @@
     .seam-card {
       background: var(--ccba-bg-card);
       border: 1px solid var(--ccba-line);
-      border-radius: 8px;
+      border-radius: var(--ccba-radius-lg);
       padding: 1.15rem;
       margin-bottom: 0.85rem;
     }
@@ -862,7 +955,7 @@
     .modal-card {
       background: var(--ccba-bg-card);
       border: 1px solid var(--ccba-line-strong);
-      border-radius: 10px;
+      border-radius: var(--ccba-radius-lg);
       max-width: 860px;
       width: 100%;
       max-height: 90vh;
@@ -877,20 +970,29 @@
       align-items: flex-start;
     }
     .modal-close {
-      background: none;
-      border: none;
+      background: var(--ccba-badge-bg);
+      border: 1px solid var(--ccba-line);
+      border-radius: var(--ccba-radius-md);
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       color: var(--ccba-fg-muted);
-      font-size: 1.5rem;
+      font-size: var(--ccba-text-xl);
       cursor: pointer;
+      flex-shrink: 0;
     }
+    .modal-close:hover { color: var(--ccba-fg-body); border-color: var(--ccba-primary); }
     .modal-body {
       padding: 1.4rem;
       overflow-y: auto;
-      font-size: 0.92rem;
+      overscroll-behavior: contain;
+      font-size: var(--ccba-text-base);
     }
     .modal-section { margin-bottom: 1.35rem; }
     .modal-section h3 {
-      font-size: 1rem;
+      font-size: var(--ccba-text-base);
       color: var(--ccba-primary);
       margin-bottom: 0.45rem;
       border-bottom: 1px solid var(--ccba-line);
@@ -899,13 +1001,13 @@
     .pipeline-box {
       background: var(--ccba-code-bg);
       border: 1px solid var(--ccba-line);
-      border-radius: 6px;
+      border-radius: var(--ccba-radius-md);
       padding: 0.85rem;
     }
     .md-viewer {
       background: var(--ccba-code-bg);
       border: 1px solid var(--ccba-line);
-      border-radius: 6px;
+      border-radius: var(--ccba-radius-md);
       padding: 1rem;
       margin-top: 0.75rem;
     }
@@ -917,7 +1019,7 @@
     .md-viewer pre {
       background: var(--ccba-bg-card);
       padding: 0.65rem;
-      border-radius: 5px;
+      border-radius: var(--ccba-radius-sm);
       overflow-x: auto;
       margin-bottom: 0.65rem;
     }
@@ -928,8 +1030,8 @@
       background: #238636;
       color: #ffffff;
       padding: 0.65rem 1.15rem;
-      border-radius: 7px;
-      font-size: 0.85rem;
+      border-radius: var(--ccba-radius-md);
+      font-size: var(--ccba-text-sm);
       font-weight: 600;
       display: none;
       z-index: 200;
@@ -939,7 +1041,7 @@
       background: var(--ccba-bg-card);
       padding: 2rem 1.5rem;
       margin-top: 3rem;
-      font-size: 0.82rem;
+      font-size: var(--ccba-text-xs);
       color: var(--ccba-fg-muted);
     }
     .footer-grid {
@@ -953,6 +1055,46 @@
       .footer-grid { grid-template-columns: 1.5fr 1fr 1fr; }
     }
     footer a { color: var(--ccba-primary); text-decoration: none; }
+    /* Phase 4B Semantic & Utility Classes (COND-INLINE-CASCADE: 0 inline styles) */
+    .u-block-center { width: 100%; justify-content: center; }
+    .u-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .u-flex-1 { min-width: 0; flex: 1; }
+    .u-flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+    .u-flex-wrap-sm { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .u-flex-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+    .btn-compact { flex: 0 0 auto; padding: 0.2rem 0.55rem; font-size: var(--ccba-text-2xs); }
+    .btn-reset-empty { flex: 0 0 auto; padding: 0.5rem 1rem; }
+    .tag-spine { color: var(--ccba-gold); border-color: var(--ccba-accent-line); }
+    .text-primary-accent { color: var(--ccba-primary); }
+    .text-gold-step { color: var(--ccba-gold); margin-right: 0.35rem; }
+    .text-faint-step { font-size: var(--ccba-text-xs); color: var(--ccba-fg-faint); }
+    .spine-item-desc { font-size: var(--ccba-text-sm); color: var(--ccba-fg-muted); margin-top: 0.2rem; }
+    .seams-search-bar { margin-top: 1rem; margin-bottom: 0; }
+    .seams-section-title { margin-bottom: 1rem; font-size: var(--ccba-text-xl); }
+    .seams-pkg-wrap { margin-bottom: 2.5rem; }
+    .seam-pkg-title { font-size: var(--ccba-text-md); }
+    .seam-pkg-desc { font-size: var(--ccba-text-sm); color: var(--ccba-fg-muted); margin-bottom: 0.5rem; }
+    .seam-pub-list { margin-bottom: 0.45rem; }
+    .seam-pub-item { font-size: var(--ccba-text-xs); padding: 0.2rem 0; color: var(--ccba-primary); }
+    .seam-meta-subtle { font-size: var(--ccba-text-xs); color: var(--ccba-fg-subtle); }
+    .seam-meta-faint { font-size: var(--ccba-text-xs); color: var(--ccba-fg-faint); margin-top: 0.25rem; }
+    .seam-contract-id { font-size: var(--ccba-text-base); color: var(--ccba-primary); }
+    .seam-forbidden { font-size: var(--ccba-text-xs); color: var(--ccba-gold); margin-top: 0.35rem; }
+    .modal-title-heading { font-size: var(--ccba-text-xl); }
+    .modal-meta-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+    .modal-cmd-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+    .modal-gpi-line { margin-top: 0.35rem; color: var(--ccba-fg-muted); font-size: var(--ccba-text-sm); }
+    .modal-outline-list { padding-left: 1.25rem; color: var(--ccba-fg-muted); font-size: var(--ccba-text-sm); }
+    .modal-outline-empty { color: var(--ccba-fg-faint); font-size: var(--ccba-text-sm); }
+    .modal-outline-label { font-size: var(--ccba-text-xs); color: var(--ccba-gold); display: block; margin-bottom: 0.3rem; }
+    .modal-desc-lead { margin-bottom: 0.5rem; }
+    .modal-pre-box { background: var(--ccba-code-bg); padding: 0.7rem; border-radius: var(--ccba-radius-md); border: 1px solid var(--ccba-line); font-size: var(--ccba-text-xs); overflow-x: auto; }
+    .modal-doc-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+    .modal-source-note { font-size: var(--ccba-text-xs); color: var(--ccba-gold); margin-bottom: 0.5rem; }
+    .modal-offline-link { margin-top: 0.4rem; }
+    .md-bullet-row { padding-left: 1rem; }
+    .footer-heading { color: var(--ccba-fg-body); }
+    .footer-copy { margin-top: 0.35rem; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -972,7 +1114,7 @@
         </div>
       </div>
       <div class="nav-links">
-        <button type="button" class="nav-doc-btn" id="headerSearchBtn" onclick="openSearchFromHeader()">🔍 Search</button>
+        <button type="button" class="nav-doc-btn" id="headerSearchBtn" onclick="openSearchFromHeader()">🔍 Search <kbd class="kbd-hint font-mono">⌘K</kbd></button>
         <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/INDEX.md', 'Mục Lục Kỹ Năng (docs/skills/INDEX.md)')">INDEX.md</button>
         <button type="button" class="nav-doc-btn header-aux-link" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (docs/skills/FAQ.md)')">FAQ</button>
         <a href="llms.txt" class="header-aux-link">llms.txt</a>
@@ -991,7 +1133,7 @@
       <div class="sidebar-cta-box">
         <div class="sidebar-cta-title">Chưa biết bắt đầu từ đâu?</div>
         <p class="sidebar-cta-desc">Hỏi cố vấn định tuyến kỹ năng và quy trình tự động của CCBA.</p>
-        <button type="button" class="header-cta-btn" style="width:100%; justify-content:center;" onclick="openModal('ccba-ask')">Ask /ccba-ask →</button>
+        <button type="button" class="header-cta-btn u-block-center" onclick="openModal('ccba-ask')">Ask /ccba-ask →</button>
       </div>
     </aside>
 
@@ -1044,6 +1186,10 @@
               <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" class="search-input" placeholder="Tìm theo tên kỹ năng, slash command (/ccba-...), triggers hoặc mô tả..." autocomplete="off">
+                <span class="search-kbd-group">
+                  <button type="button" id="searchClearBtn" class="search-clear-btn hidden" onclick="resetSkillsFilter()">✕ Xóa</button>
+                  <kbd class="kbd-hint font-mono">⌘K /</kbd>
+                </span>
               </div>
               <div class="view-tabs">
                 <button type="button" class="view-tab active" id="modeSpineBtn" onclick="setSkillsDisplayMode('spine')">Chế độ Xương Sống (01→05)</button>
@@ -1051,10 +1197,16 @@
               </div>
             </div>
             <div class="portal-chips" id="portalChips"></div>
+            <div class="result-meta-bar font-mono" id="skillsResultMeta"></div>
           </div>
 
           <ul class="spine-list" id="skillsSpineList"></ul>
           <div class="skills-grid hidden" id="skillsGrid"></div>
+          <div class="empty-state-card hidden" id="skillsEmptyState">
+            <h3>Không tìm thấy kỹ năng khớp bộ lọc hiện tại</h3>
+            <p id="skillsEmptyDesc">Không có kỹ năng nào khớp từ khóa hoặc phân hệ bạn chọn.</p>
+            <button type="button" class="btn btn-primary btn-reset-empty" onclick="resetSkillsFilter()">↺ Đặt lại bộ lọc (Hiển thị toàn bộ __SKILL_COUNT__ kỹ năng)</button>
+          </div>
         </div>
 
         <!-- VIEW 3: DEEP SEAMS & CONTRACTS (COND-SEAM-SSOT) -->
@@ -1063,26 +1215,37 @@
             <div class="eyebrow">ADR-0061 · Platform-Aware KISS v2.0</div>
             <h1>Monorepo Packages &amp; Seam Capability Contracts</h1>
             <p>Tách biệt minh bạch 2 sổ dữ liệu chính thống: (1) 10 gói Monorepo &amp; Public Seams từ <code>catalog.yaml</code>, và (2) Thẻ Hợp Đồng Năng Lực (<code>in / out / hardware</code>) từ <code>seam-contracts.yaml</code>.</p>
+            <div class="search-controls seams-search-bar">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="seamSearchInput" class="search-input" placeholder="Lọc nhanh gói Monorepo hoặc Seam Contract theo seam_id, in, out, hardware (vd: pdf, markdown, gpu)..." autocomplete="off">
+                <span class="search-kbd-group">
+                  <button type="button" id="seamClearBtn" class="search-clear-btn hidden" onclick="clearSeamFilter()">✕ Xóa</button>
+                  <kbd class="kbd-hint font-mono">/</kbd>
+                </span>
+              </div>
+            </div>
+            <div class="result-meta-bar font-mono" id="seamResultMeta"></div>
           </section>
 
-          <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
-          <div id="packageSeamsContainer" style="margin-bottom: 2.5rem;"></div>
+          <h2 class="seams-section-title">1. Sổ Gói Lõi Monorepo &amp; Public Deep Seams (<code>catalog.yaml</code>)</h2>
+          <div id="packageSeamsContainer" class="seams-pkg-wrap"></div>
 
-          <h2 style="margin-bottom: 1rem; font-size: 1.35rem;">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
+          <h2 class="seams-section-title">2. Sổ Thẻ Hợp Đồng Năng Lực (<code>seam-contracts.yaml</code>)</h2>
           <div id="seamContractsContainer"></div>
         </div>
       </div>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="skillModal">
+  <div class="modal-backdrop" id="skillModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
       <div class="modal-header">
         <div>
-          <h2 id="modalTitle" style="font-size: 1.3rem;">Chi Tiết</h2>
-          <div id="modalMeta" style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top: 0.35rem;"></div>
+          <h2 id="modalTitle" class="modal-title-heading">Chi Tiết</h2>
+          <div id="modalMeta" class="modal-meta-row"></div>
         </div>
-        <button class="modal-close" id="modalClose">&times;</button>
+        <button type="button" class="modal-close" id="modalClose" aria-label="Đóng hộp thoại">&times;</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
     </div>
@@ -1093,16 +1256,16 @@
   <footer>
     <div class="footer-grid">
       <div>
-        <strong style="color:var(--ccba-fg-body);">CCBA Agent Services Platform</strong>
-        <p style="margin-top:0.35rem;">Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng (CCBA). Vận hành theo Hiến pháp Tầng 1 &amp; Khóa cứng Kỷ luật Hoàn thành ADR-0058.</p>
+        <strong class="footer-heading">CCBA Agent Services Platform</strong>
+        <p class="footer-copy">Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng (CCBA). Vận hành theo Hiến pháp Tầng 1 &amp; Khóa cứng Kỷ luật Hoàn thành ADR-0058.</p>
       </div>
       <div>
-        <strong style="color:var(--ccba-fg-body);">Dành cho Kỹ sư (Humans)</strong>
-        <p style="margin-top:0.35rem;"><a href="#" onclick="switchView('map'); return false;">Bản đồ Tác nghiệp (The Map)</a> · <a href="#" onclick="switchView('skills'); return false;">Skills Spine</a> · <a href="#" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (FAQ)'); return false;">FAQ</a></p>
+        <strong class="footer-heading">Dành cho Kỹ sư (Humans)</strong>
+        <p class="footer-copy"><a href="#" onclick="switchView('map'); return false;">Bản đồ Tác nghiệp (The Map)</a> · <a href="#" onclick="switchView('skills'); return false;">Skills Spine</a> · <a href="#" onclick="openDocModal('skills/FAQ.md', 'Hỏi Đáp Thường Gặp (FAQ)'); return false;">FAQ</a></p>
       </div>
       <div>
-        <strong style="color:var(--ccba-fg-body);">Dành cho AI Agents (Machine Endpoints)</strong>
-        <p style="margin-top:0.35rem;"><a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a> · <a href="skills/INDEX.md">skills/INDEX.md</a></p>
+        <strong class="footer-heading">Dành cho AI Agents (Machine Endpoints)</strong>
+        <p class="footer-copy"><a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a> · <a href="skills/INDEX.md">skills/INDEX.md</a></p>
       </div>
     </div>
   </footer>
@@ -1194,12 +1357,41 @@
     }
 
     const HASH_SLUG_RE = /^[a-z0-9-]+$/;
+    let lastFocusedElement = null;
+
+    function normalizeVi(str) {
+      return String(str || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d");
+    }
 
     function updateUrlHash(nextHash) {
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, "", "#" + nextHash);
       }
     }
+
+    function buildSkillsHash() {
+      const base = activePortal !== "all" ? "skills/" + activePortal : "skills";
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      if (skillsDisplayMode === "grid") params.set("mode", "grid");
+      const qs = params.toString();
+      return qs ? `${base}?${qs}` : base;
+    }
+
+    function buildSeamsHash() {
+      const params = new URLSearchParams();
+      if (seamSearchQuery.trim()) params.set("q", seamSearchQuery.trim());
+      const qs = params.toString();
+      return qs ? `seams?${qs}` : "seams";
+    }
+
+    window.copyCurrentFilterUrl = function() {
+      copyToClipboard(window.location.href, "Link bộ lọc");
+    };
 
     window.switchView = function(viewName, syncHash = true) {
       activeView = viewName;
@@ -1221,15 +1413,19 @@
           el.setAttribute("data-active", isAct ? "true" : "false");
         }
       });
-      if (skillModal) skillModal.classList.remove("open");
+      if (skillModal && skillModal.classList.contains("open")) {
+        closeSkillModal(false);
+      }
       if (syncHash !== false) {
-        updateUrlHash(viewName);
+        const nextHash = viewName === "skills" ? buildSkillsHash() : (viewName === "seams" ? buildSeamsHash() : viewName);
+        updateUrlHash(nextHash);
       }
       closeMobileSidebar();
     };
 
     window.openSearchFromHeader = function() {
-      switchView("skills");
+      switchView("skills", false);
+      updateUrlHash(buildSkillsHash());
       if (searchInput) {
         searchInput.focus();
       }
@@ -1247,28 +1443,46 @@
     };
 
     window.applyHashRoute = function(rawHash) {
-      let cleaned = String(rawHash || "").replace(/^#/, "").trim();
-      if (!cleaned) {
+      const raw = String(rawHash || "").replace(/^#/, "").trim();
+      if (!raw) {
         switchView("map", false);
         return;
       }
+      const qIdx = raw.indexOf("?");
+      const rawRoute = qIdx >= 0 ? raw.slice(0, qIdx) : raw;
+      const queryPart = qIdx >= 0 ? raw.slice(qIdx + 1) : "";
+      let routePart = rawRoute;
       try {
-        cleaned = decodeURIComponent(cleaned);
+        routePart = decodeURIComponent(rawRoute);
       } catch (err) {
         switchView("map", false);
         return;
       }
-      if (cleaned === "map" || cleaned === "skills" || cleaned === "seams") {
-        if (cleaned === "skills" && activePortal !== "all") {
+      const params = new URLSearchParams(queryPart);
+      const qParam = (params.get("q") || "").trim();
+      const modeParam = params.get("mode") === "grid" ? "grid" : "spine";
+
+      if (routePart === "map" || routePart === "skills" || routePart === "seams") {
+        if (routePart === "skills") {
           activePortal = "all";
+          searchQuery = qParam;
+          if (searchInput) searchInput.value = qParam;
+          skillsDisplayMode = modeParam;
+          document.getElementById("modeSpineBtn").classList.toggle("active", modeParam === "spine");
+          document.getElementById("modeGridBtn").classList.toggle("active", modeParam === "grid");
           renderPortalChips();
           renderSkillsCatalog();
+        } else if (routePart === "seams") {
+          seamSearchQuery = qParam;
+          const seamInput = document.getElementById("seamSearchInput");
+          if (seamInput) seamInput.value = qParam;
+          renderSeamsView();
         }
-        switchView(cleaned, false);
+        switchView(routePart, false);
         return;
       }
-      if (cleaned.startsWith("goal-")) {
-        const rawId = cleaned.slice(5);
+      if (routePart.startsWith("goal-")) {
+        const rawId = routePart.slice(5);
         const normId = rawId.replace(/_/g, "-");
         const portal = HASH_SLUG_RE.test(normId) && PORTALS.find(p => p.id === rawId || p.id.replace(/_/g, "-") === normId);
         if (portal) {
@@ -1278,12 +1492,17 @@
         switchView("map", false);
         return;
       }
-      if (cleaned.startsWith("skills/")) {
-        const rawId = cleaned.slice(7);
+      if (routePart.startsWith("skills/")) {
+        const rawId = routePart.slice(7);
         const normId = rawId.replace(/_/g, "-");
         const portal = HASH_SLUG_RE.test(normId) && PORTALS.find(p => p.id === rawId || p.id.replace(/_/g, "-") === normId);
         if (portal) {
           activePortal = portal.id;
+          searchQuery = qParam;
+          if (searchInput) searchInput.value = qParam;
+          skillsDisplayMode = modeParam;
+          document.getElementById("modeSpineBtn").classList.toggle("active", modeParam === "spine");
+          document.getElementById("modeGridBtn").classList.toggle("active", modeParam === "grid");
           renderPortalChips();
           renderSkillsCatalog();
           switchView("skills", false);
@@ -1292,10 +1511,13 @@
         switchView("map", false);
         return;
       }
-      if (cleaned.startsWith("skill/")) {
-        const skillName = cleaned.slice(6);
+      if (routePart.startsWith("skill/")) {
+        const skillName = routePart.slice(6);
         const skillObj = HASH_SLUG_RE.test(skillName) && SKILLS.find(s => s.name === skillName);
         if (skillObj) {
+          if (activeView !== "skills") {
+            switchView("skills", false);
+          }
           openModal(skillObj.name, false);
           return;
         }
@@ -1310,6 +1532,7 @@
       document.getElementById("modeSpineBtn").classList.toggle("active", mode === "spine");
       document.getElementById("modeGridBtn").classList.toggle("active", mode === "grid");
       renderSkillsCatalog();
+      updateUrlHash(buildSkillsHash());
     };
 
     // Left Sidebar Dynamic Rendering (OBL-SHELL-SIDEBAR & COND-SIDEBAR-DATA)
@@ -1329,7 +1552,7 @@
       });
 
       const guidesSidebarHtml = uniqueGuides.map(g => {
-        return `<button type="button" class="sidebar-item" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📖 ${escapeHtml(g.title)}</span></button>`;
+        return `<button type="button" class="sidebar-item" data-path="${escapeHtml(g.path)}" data-title="${escapeHtml(g.title)}" onclick="openDocModal(this.getAttribute('data-path'), this.getAttribute('data-title'))"><span class="u-truncate">📖 ${escapeHtml(g.title)}</span></button>`;
       }).join("");
 
       const whatsNewSkills = PORTALS.map(p => p.start_with).filter(Boolean);
@@ -1338,7 +1561,7 @@
       }).join("");
 
       const topicsHtml = PORTALS.map(p => {
-        return `<button type="button" class="sidebar-item" data-portal-id="${escapeHtml(p.id)}" onclick="jumpToTopic(this.getAttribute('data-portal-id'))"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><span class="font-mono" style="color:var(--ccba-gold); margin-right:0.35rem;">${escapeHtml(p.step)}</span>${escapeHtml(p.icon)} ${escapeHtml(p.name)}</span><span aria-hidden="true">›</span></button>`;
+        return `<button type="button" class="sidebar-item" data-portal-id="${escapeHtml(p.id)}" onclick="jumpToTopic(this.getAttribute('data-portal-id'))"><span class="u-truncate"><span class="font-mono text-gold-step">${escapeHtml(p.step)}</span>${escapeHtml(p.icon)} ${escapeHtml(p.name)}</span><span aria-hidden="true">›</span></button>`;
       }).join("");
 
       container.innerHTML = `
@@ -1434,7 +1657,7 @@
         } else if (line.startsWith("# ")) {
           out.push(`<h2>${line.slice(2)}</h2>`);
         } else if (line.startsWith("- ")) {
-          out.push(`<div style="padding-left:1rem;">• ${line.slice(2)}</div>`);
+          out.push(`<div class="md-bullet-row">• ${line.slice(2)}</div>`);
         } else if (line.trim() !== "") {
           out.push(`<p>${line}</p>`);
         }
@@ -1535,33 +1758,56 @@
       const allChip = document.createElement("button");
       allChip.className = `chip ${activePortal === "all" ? "active" : ""}`;
       allChip.innerHTML = `Tất cả (${SKILLS.length})`;
-      allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); updateUrlHash("skills"); };
+      allChip.onclick = () => { activePortal = "all"; renderPortalChips(); renderSkillsCatalog(); updateUrlHash(buildSkillsHash()); };
       portalChipsContainer.appendChild(allChip);
 
       PORTALS.forEach(p => {
         const chip = document.createElement("button");
         chip.className = `chip ${activePortal === p.id ? "active" : ""}`;
         chip.innerHTML = `${escapeHtml(p.step)} · ${escapeHtml(p.icon)} ${escapeHtml(p.name)} (${escapeHtml(p.count)})`;
-        chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); updateUrlHash("skills/" + p.id); };
+        chip.onclick = () => { activePortal = p.id; renderPortalChips(); renderSkillsCatalog(); updateUrlHash(buildSkillsHash()); };
         portalChipsContainer.appendChild(chip);
       });
     }
 
     function getFilteredSkills() {
-      const q = searchQuery.trim().toLowerCase();
+      const qRaw = searchQuery.trim().toLowerCase();
+      const qNorm = normalizeVi(qRaw);
       return SKILLS.filter(s => {
         if (activePortal !== "all" && s.portal_id !== activePortal) return false;
-        if (!q) return true;
-        const hay = `${s.name} ${s.command} ${s.desc} ${s.triggers.join(" ")} ${s.bundle} ${s.portal_name}`.toLowerCase();
-        return hay.includes(q);
+        if (!qRaw) return true;
+        const hayRaw = `${s.name} ${s.command} ${s.desc} ${s.triggers.join(" ")} ${s.bundle} ${s.portal_name}`.toLowerCase();
+        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
       });
     }
 
     function renderSkillsCatalog() {
       const filtered = getFilteredSkills();
-      const useSpine = skillsDisplayMode === "spine" && !searchQuery.trim();
+      const hasQuery = Boolean(searchQuery.trim());
+      const hasFilter = hasQuery || activePortal !== "all" || skillsDisplayMode === "grid";
+      const clearBtn = document.getElementById("searchClearBtn");
+      const metaEl = document.getElementById("skillsResultMeta");
+      const emptyEl = document.getElementById("skillsEmptyState");
+      const emptyDesc = document.getElementById("skillsEmptyDesc");
+      if (clearBtn) clearBtn.classList.toggle("hidden", !(hasQuery || activePortal !== "all"));
+      if (metaEl) {
+        const shareBtn = hasFilter
+          ? `<button type="button" class="search-clear-btn font-mono" onclick="copyCurrentFilterUrl()">🔗 Copy Link lọc</button>`
+          : "";
+        metaEl.innerHTML = `<span>Hiển thị <strong>${filtered.length}</strong> / ${SKILLS.length} kỹ năng${activePortal !== "all" ? ` · Phân hệ: ${escapeHtml(activePortal)}` : ""}${hasQuery ? ` · Từ khóa: "${escapeHtml(searchQuery.trim())}"` : ""}</span>${shareBtn}`;
+      }
+      if (emptyEl) {
+        emptyEl.classList.toggle("hidden", filtered.length > 0);
+      }
+      if (emptyDesc && filtered.length === 0) {
+        emptyDesc.textContent = hasQuery
+          ? `Không có kỹ năng nào khớp từ khóa "${searchQuery.trim()}". Thử tìm theo slash command (/ccba-...) hoặc đặt lại bộ lọc.`
+          : "Không có kỹ năng nào trong phân hệ này.";
+      }
+
+      const useSpine = skillsDisplayMode === "spine" && !hasQuery && filtered.length > 0;
       skillsSpineList.classList.toggle("hidden", !useSpine);
-      skillsGrid.classList.toggle("hidden", useSpine);
+      skillsGrid.classList.toggle("hidden", useSpine || filtered.length === 0);
 
       if (useSpine) {
         skillsSpineList.innerHTML = "";
@@ -1577,15 +1823,15 @@
             const tierBadge = s.tier === "orchestrator" ? "badge-orchestrator" : "badge-kernel";
             return `
               <li class="spine-skill-item">
-                <div style="min-width:0; flex:1;">
-                  <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                    <span class="skill-name font-mono" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))"><span style="color:var(--ccba-primary);">/</span>${escapeHtml(s.name)}</span>
+                <div class="u-flex-1">
+                  <div class="u-flex-wrap-sm">
+                    <span class="skill-name font-mono" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))"><span class="text-primary-accent">/</span>${escapeHtml(s.name)}</span>
                     <span class="badge ${tierBadge}">${s.tier === "orchestrator" ? "Orchestrator" : "Kernel"}</span>
-                    ${isSpine ? `<span class="tag font-mono" style="color:var(--ccba-gold); border-color:var(--ccba-accent-line);">SPINE</span>` : ""}
+                    ${isSpine ? `<span class="tag tag-spine font-mono">SPINE</span>` : ""}
                   </div>
-                  <div style="font-size:0.84rem; color:var(--ccba-fg-muted); margin-top:0.2rem;">${escapeHtml(s.desc)}</div>
+                  <div class="spine-item-desc">${escapeHtml(s.desc)}</div>
                 </div>
-                <div style="display:flex; gap:0.35rem; flex-shrink:0;">
+                <div class="u-flex-actions">
                   <button class="btn font-mono" data-clipboard="${escapeHtml(s.command)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')">📋 Copy</button>
                   <button class="btn btn-primary" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))">Chi Tiết</button>
                 </div>
@@ -1597,7 +1843,7 @@
           li.className = "spine-row";
           li.innerHTML = `
             <div class="spine-left">
-              <h3><span class="font-mono" style="font-size:0.82rem; color:var(--ccba-fg-faint);">${escapeHtml(p.step)}</span> ${escapeHtml(p.icon)} ${escapeHtml(p.name)}</h3>
+              <h3><span class="font-mono text-faint-step">${escapeHtml(p.step)}</span> ${escapeHtml(p.icon)} ${escapeHtml(p.name)}</h3>
               <p>${escapeHtml(p.desc)}</p>
               <div class="start-with-line font-mono">Start with <span class="start-with-link" data-skill="${escapeHtml(p.start_with)}" onclick="openModal(this.getAttribute('data-skill'))">/${escapeHtml(p.start_with)}</span></div>
             </div>
@@ -1613,11 +1859,11 @@
           card.className = "skill-card";
           card.innerHTML = `
             <div>
-              <div style="display:flex; justify-content:space-between; gap:0.5rem; margin-bottom:0.35rem;">
+              <div class="u-flex-between">
                 <span class="skill-name font-mono" data-skill="${escapeHtml(s.name)}" onclick="openModal(this.getAttribute('data-skill'))">${escapeHtml(s.name)}</span>
                 <span class="badge ${tierClass}">${s.tier === "orchestrator" ? "Orchestrator" : "Kernel"}</span>
               </div>
-              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+              <div class="u-flex-wrap-sm">
                 <span class="badge badge-portal">${escapeHtml(s.portal_icon)} ${escapeHtml(s.portal_name)}</span>
                 <span class="badge badge-${escapeHtml(s.inv)}">${escapeHtml(s.inv.toUpperCase())}</span>
               </div>
@@ -1633,41 +1879,88 @@
       }
     }
 
+    window.resetSkillsFilter = function() {
+      searchQuery = "";
+      activePortal = "all";
+      if (searchInput) searchInput.value = "";
+      renderPortalChips();
+      renderSkillsCatalog();
+      updateUrlHash(buildSkillsHash());
+    };
+
+    let seamSearchQuery = "";
+
+    window.clearSeamFilter = function() {
+      seamSearchQuery = "";
+      const seamInput = document.getElementById("seamSearchInput");
+      if (seamInput) seamInput.value = "";
+      renderSeamsView();
+      updateUrlHash("seams");
+    };
+
     // View 3: Render Deep Seams & Seam Contracts (COND-SEAM-SSOT & COND-CARD-SHAPE)
     function renderSeamsView() {
       const pkgContainer = document.getElementById("packageSeamsContainer");
       const contractContainer = document.getElementById("seamContractsContainer");
+      const seamClearBtn = document.getElementById("seamClearBtn");
+      const seamMeta = document.getElementById("seamResultMeta");
+      const qRaw = seamSearchQuery.trim().toLowerCase();
+      const qNorm = normalizeVi(qRaw);
+      if (seamClearBtn) seamClearBtn.classList.toggle("hidden", !qRaw);
 
-      pkgContainer.innerHTML = PACKAGE_SEAMS.map(pkg => {
-        const pubSeams = (pkg.public_seams || []).map(ps => `<div class="font-mono" style="font-size:0.8rem; padding:0.2rem 0; color:var(--ccba-primary);">• ${escapeHtml(ps)}</div>`).join("");
+      const filteredPkgs = PACKAGE_SEAMS.filter(pkg => {
+        if (!qRaw) return true;
+        const hayRaw = `${pkg.package} ${pkg.path} ${pkg.description} ${(pkg.public_seams || []).join(" ")} ${pkg.contracts}`.toLowerCase();
+        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
+      });
+
+      const filteredContracts = SEAM_CONTRACTS.filter(c => {
+        if (!qRaw) return true;
+        const hayRaw = `${c.seam_id} ${c.kind} ${c.import_path || ""} ${c.command || ""} ${c.skill_path || ""} ${(c.in || []).join(" ")} ${(c.out || []).join(" ")} ${(c.hardware || []).join(" ")}`.toLowerCase();
+        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
+      });
+
+      if (seamMeta) {
+        const shareBtn = qRaw
+          ? `<button type="button" class="search-clear-btn font-mono" onclick="copyCurrentFilterUrl()">🔗 Copy Link lọc</button>`
+          : "";
+        seamMeta.innerHTML = `<span>Hiển thị <strong>${filteredPkgs.length}</strong> / ${PACKAGE_SEAMS.length} gói Monorepo · <strong>${filteredContracts.length}</strong> / ${SEAM_CONTRACTS.length} Seam Contracts${qRaw ? ` · Lọc: "${escapeHtml(seamSearchQuery.trim())}"` : ""}</span>${shareBtn}`;
+      }
+
+      pkgContainer.innerHTML = filteredPkgs.map(pkg => {
+        const pubSeams = (pkg.public_seams || []).map(ps => `<div class="font-mono seam-pub-item">• ${escapeHtml(ps)}</div>`).join("");
         return `
           <div class="seam-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.4rem;">
-              <strong style="font-size:1.05rem;">📦 ${escapeHtml(pkg.package)}</strong>
+            <div class="u-flex-between">
+              <strong class="seam-pkg-title">📦 ${escapeHtml(pkg.package)}</strong>
               <span class="tag font-mono">${escapeHtml(pkg.path)}</span>
             </div>
-            <p style="font-size:0.88rem; color:var(--ccba-fg-muted); margin-bottom:0.5rem;">${escapeHtml(pkg.description)}</p>
-            <div style="margin-bottom:0.45rem;">${pubSeams}</div>
-            <div style="font-size:0.82rem; color:var(--ccba-fg-subtle);"><strong>Contracts:</strong> ${escapeHtml(pkg.contracts)}</div>
-            <div style="font-size:0.8rem; color:var(--ccba-fg-faint); margin-top:0.25rem;" class="font-mono"><strong>Tests:</strong> ${escapeHtml(pkg.tests)}</div>
+            <p class="seam-pkg-desc">${escapeHtml(pkg.description)}</p>
+            <div class="seam-pub-list">${pubSeams}</div>
+            <div class="seam-meta-subtle"><strong>Contracts:</strong> ${escapeHtml(pkg.contracts)}</div>
+            <div class="font-mono seam-meta-faint"><strong>Tests:</strong> ${escapeHtml(pkg.tests)}</div>
           </div>
         `;
       }).join("");
 
-      contractContainer.innerHTML = SEAM_CONTRACTS.map(c => {
+      contractContainer.innerHTML = filteredContracts.map(c => {
+        const copyTarget = c.kind === "package" ? c.import_path : c.command;
         const targetInfo = c.kind === "package"
           ? `<span class="tag font-mono">import_path: ${escapeHtml(c.import_path)}</span>`
           : `<span class="tag font-mono">command: ${escapeHtml(c.command)}</span> <span class="tag font-mono">skill_path: ${escapeHtml(c.skill_path)}</span>`;
         const forbidden = (c.forbidden_substitute_imports && c.forbidden_substitute_imports.length > 0)
-          ? `<div style="font-size:0.8rem; color:var(--ccba-gold); margin-top:0.35rem;">🚫 Forbidden substitutes: <code>${escapeHtml(c.forbidden_substitute_imports.join(", "))}</code></div>`
+          ? `<div class="seam-forbidden">🚫 Forbidden substitutes: <code>${escapeHtml(c.forbidden_substitute_imports.join(", "))}</code></div>`
           : "";
         return `
           <div class="seam-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.4rem;">
-              <strong class="font-mono" style="font-size:1rem; color:var(--ccba-primary);">${escapeHtml(c.seam_id)}</strong>
-              <span class="badge ${c.kind === 'package' ? 'badge-kernel' : 'badge-orchestrator'}">kind: ${escapeHtml(c.kind)}</span>
+            <div class="u-flex-between">
+              <strong class="font-mono seam-contract-id">${escapeHtml(c.seam_id)}</strong>
+              <div class="u-flex-wrap-sm">
+                <span class="badge ${c.kind === 'package' ? 'badge-kernel' : 'badge-orchestrator'}">kind: ${escapeHtml(c.kind)}</span>
+                <button type="button" class="btn btn-compact font-mono" data-clipboard="${escapeHtml(copyTarget)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Seam Contract')">📋 Copy</button>
+              </div>
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.45rem;">
+            <div class="seam-pub-list u-flex-wrap-sm">
               ${targetInfo}
               <span class="tag font-mono">in: [${escapeHtml((c.in || []).join(", "))}]</span>
               <span class="tag font-mono">out: [${escapeHtml((c.out || []).join(", "))}]</span>
@@ -1683,6 +1976,7 @@
     window.openModal = function(skillName, syncHash = true) {
       const s = SKILLS.find(item => item.name === skillName);
       if (!s) return;
+      lastFocusedElement = document.activeElement;
       if (syncHash !== false) {
         updateUrlHash("skill/" + s.name);
       }
@@ -1696,29 +1990,36 @@
       `;
 
       const triggersHtml = (s.triggers || []).map(t => `<span class="tag font-mono">#${escapeHtml(t)}</span>`).join(" ");
-      const gpiHtml = s.gpi ? `<p style="margin-top:0.35rem; color:var(--ccba-fg-muted); font-size:0.85rem;"><strong>Điểm GPI (ADR-0057):</strong> <code>${escapeHtml(s.gpi)}</code></p>` : "";
+      const gpiHtml = s.gpi ? `<p class="modal-gpi-line"><strong>Điểm GPI (ADR-0057):</strong> <code>${escapeHtml(s.gpi)}</code></p>` : "";
       const headingsHtml = (s.headings && s.headings.length > 0)
-        ? `<ul style="padding-left:1.25rem; color:var(--ccba-fg-muted); font-size:0.86rem;">${s.headings.map(h => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`
-        : `<p style="color:var(--ccba-fg-faint); font-size:0.85rem;">Không có đề mục phụ.</p>`;
+        ? `<ul class="modal-outline-list">${s.headings.map(h => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`
+        : `<p class="modal-outline-empty">Không có đề mục phụ.</p>`;
+      const spokeSyncCmd = `python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${s.name} --apply`;
 
       modalBody.innerHTML = `
         <div class="modal-section">
           <h3>1. Action Header &amp; Kích Hoạt Nhanh</h3>
-          <p><strong>Slash Command:</strong> <code>${escapeHtml(s.command)}</code></p>
-          <p><strong>Lệnh Đồng Bộ Spoke:</strong> <code>python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ${escapeHtml(s.name)} --apply</code></p>
+          <p class="modal-cmd-row">
+            <span><strong>Slash Command:</strong> <code>${escapeHtml(s.command)}</code></span>
+            <button type="button" class="btn btn-compact font-mono" data-clipboard="${escapeHtml(s.command)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Slash Command')">📋 Copy</button>
+          </p>
+          <p class="modal-cmd-row">
+            <span><strong>Lệnh Đồng Bộ Spoke:</strong> <code>${escapeHtml(spokeSyncCmd)}</code></span>
+            <button type="button" class="btn btn-compact font-mono" data-clipboard="${escapeHtml(spokeSyncCmd)}" onclick="copyToClipboard(this.getAttribute('data-clipboard'), 'Spoke Sync')">📋 Copy</button>
+          </p>
           ${gpiHtml}
         </div>
         <div class="modal-section">
           <h3>2. Mục Đích &amp; Đề Cương SKILL.md Thực Tế (Outline)</h3>
-          <p style="margin-bottom:0.5rem;">${escapeHtml(s.desc)}</p>
+          <p class="modal-desc-lead">${escapeHtml(s.desc)}</p>
           <div class="pipeline-box">
-            <strong style="font-size:0.82rem; color:var(--ccba-gold); display:block; margin-bottom:0.3rem;">Đề cương trích từ ${escapeHtml(s.skill_path)}:</strong>
+            <strong class="modal-outline-label">Đề cương trích từ ${escapeHtml(s.skill_path)}:</strong>
             ${headingsHtml}
           </div>
         </div>
         <div class="modal-section">
           <h3>3. Triggers &amp; Kích Hoạt</h3>
-          <div style="display:flex; flex-wrap:wrap; gap:0.3rem;">${triggersHtml}</div>
+          <div class="u-flex-wrap-sm">${triggersHtml}</div>
         </div>
         <div class="modal-section">
           <h3>4. Vị Trí Trong Chuỗi Giá Trị (The Pipeline Trail)</h3>
@@ -1730,9 +2031,9 @@
         </div>
         <div class="modal-section">
           <h3>5. Khóa Cứng Kỷ Luật Kiểm Thử (ADR-0058) &amp; Nguồn Tài Liệu</h3>
-          <pre style="background:var(--ccba-code-bg); padding:0.7rem; border-radius:6px; border:1px solid var(--ccba-line); font-size:0.82rem; overflow-x:auto;"><code>python -m ccba_harness verify-patch --preset skill
+          <pre class="modal-pre-box"><code>python -m ccba_harness verify-patch --preset skill
 python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-gpi</code></pre>
-          <div style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem;">
+          <div class="modal-doc-actions">
             <button class="btn" data-skill="${escapeHtml(s.name)}" onclick="loadCompiledSkillDoc(this.getAttribute('data-skill'))">📄 Xem Bản Đóng Gói 5 Mục Chuẩn (ADR-0058 — docs/skills/${escapeHtml(s.name)}.md)</button>
             <a href="${escapeHtml(s.blob_url)}" target="_blank" rel="noopener" class="btn btn-primary">🔗 Mở Toàn Văn SKILL.md Gốc (GitHub Blob: ${escapeHtml(s.skill_path)})</a>
           </div>
@@ -1740,6 +2041,7 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
         </div>
       `;
       skillModal.classList.add("open");
+      if (modalClose && modalClose.focus) modalClose.focus();
     };
 
     window.loadCompiledSkillDoc = function(skillName) {
@@ -1754,7 +2056,7 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
       }).then(md => {
         container.innerHTML = `
           <div class="md-viewer">
-            <div style="font-size:0.78rem; color:var(--ccba-gold); margin-bottom:0.5rem;">Nguồn đang hiển thị: Bản đóng gói 5 mục chuẩn (<code>docs/skills/${escapeHtml(skillName)}.md</code>)</div>
+            <div class="modal-source-note">Nguồn đang hiển thị: Bản đóng gói 5 mục chuẩn (<code>docs/skills/${escapeHtml(skillName)}.md</code>)</div>
             ${renderSafeMarkdown(md, docPath)}
           </div>
         `;
@@ -1762,17 +2064,19 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
         container.innerHTML = `
           <div class="md-viewer">
             <p><strong>Chế độ Offline / Local File:</strong> Trình duyệt chặn <code>fetch("${escapeHtml(docPath)}")</code> khi mở qua <code>file://</code> hoặc không có mạng. Toàn bộ 5 mục chuẩn và đề cương <code>headings</code> phía trên vẫn khả dụng 100% offline.</p>
-            <p style="margin-top:0.4rem;">👉 <a href="${escapeHtml(s.blob_url)}" target="_blank" rel="noopener">Mở toàn văn ${escapeHtml(s.skill_path)} trên GitHub</a></p>
+            <p class="modal-offline-link">👉 <a href="${escapeHtml(s.blob_url)}" target="_blank" rel="noopener">Mở toàn văn ${escapeHtml(s.skill_path)} trên GitHub</a></p>
           </div>
         `;
       });
     };
 
     window.openDocModal = function(docPath, title) {
+      lastFocusedElement = document.activeElement;
       modalTitle.textContent = title || docPath;
       modalMeta.innerHTML = `<span class="tag font-mono">Nguồn: docs/${escapeHtml(docPath)}</span>`;
       modalBody.innerHTML = `<div class="md-viewer">Đang tải <code>docs/${escapeHtml(docPath)}</code>...</div>`;
       skillModal.classList.add("open");
+      if (modalClose && modalClose.focus) modalClose.focus();
       fetch(docPath).then(r => {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.text();
@@ -1782,23 +2086,74 @@ python scripts/validate_skills.py --file ${escapeHtml(s.skill_path)} --enforce-g
         modalBody.innerHTML = `
           <div class="md-viewer">
             <p><strong>Chế độ Offline / Local File:</strong> Không thể fetch <code>docs/${escapeHtml(docPath)}</code> trực tiếp qua giao thức <code>file://</code>.</p>
-            <p style="margin-top:0.4rem;">👉 <a href="https://github.com/vvChu/ccba-agent-platform/blob/main/docs/${escapeHtml(docPath)}" target="_blank" rel="noopener">Xem tài liệu docs/${escapeHtml(docPath)} trên GitHub</a></p>
+            <p class="modal-offline-link">👉 <a href="https://github.com/vvChu/ccba-agent-platform/blob/main/docs/${escapeHtml(docPath)}" target="_blank" rel="noopener">Xem tài liệu docs/${escapeHtml(docPath)} trên GitHub</a></p>
           </div>
         `;
       });
     };
 
     window.closeSkillModal = function() {
+      const restoreHash = arguments.length === 0 ? true : Boolean(arguments[0]);
       if (skillModal) skillModal.classList.remove("open");
-      if (String(window.location.hash || "").startsWith("#skill/")) {
-        updateUrlHash(activeView === "skills" && activePortal !== "all" ? "skills/" + activePortal : activeView);
+      if (restoreHash !== false && String(window.location.hash || "").startsWith("#skill/")) {
+        updateUrlHash(activeView === "skills" ? buildSkillsHash() : (activeView === "seams" ? buildSeamsHash() : activeView));
       }
+      if (lastFocusedElement && lastFocusedElement.isConnected && typeof lastFocusedElement.focus === "function") {
+        lastFocusedElement.focus();
+      }
+      lastFocusedElement = null;
     };
 
     modalClose.addEventListener("click", () => { closeSkillModal(); });
     skillModal.addEventListener("click", (e) => { if (e.target === skillModal) closeSkillModal(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSkillModal(); closeMobileSidebar(); } });
-    searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderSkillsCatalog(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeSkillModal();
+        closeMobileSidebar();
+        return;
+      }
+      if (e.key === "Tab" && skillModal && skillModal.classList.contains("open")) {
+        const modalCard = skillModal.querySelector(".modal-card");
+        if (modalCard) {
+          const focusables = Array.from(
+            modalCard.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')
+          ).filter(el => !el.classList.contains("hidden") && el.offsetParent !== null);
+          if (focusables.length > 0) {
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && (document.activeElement === first || !modalCard.contains(document.activeElement))) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && (document.activeElement === last || !modalCard.contains(document.activeElement))) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+        return;
+      }
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+      const isInput = tag === "input" || tag === "textarea" || (e.target && e.target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openSearchFromHeader();
+        return;
+      }
+      if (!isInput && !e.metaKey && !e.ctrlKey && !e.altKey && e.key === "/") {
+        e.preventDefault();
+        if (activeView === "seams") {
+          const seamInput = document.getElementById("seamSearchInput");
+          if (seamInput) seamInput.focus();
+        } else {
+          openSearchFromHeader();
+        }
+      }
+    });
+    searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderSkillsCatalog(); updateUrlHash(buildSkillsHash()); });
+    const seamSearchInput = document.getElementById("seamSearchInput");
+    if (seamSearchInput) {
+      seamSearchInput.addEventListener("input", (e) => { seamSearchQuery = e.target.value; renderSeamsView(); updateUrlHash(buildSeamsHash()); });
+    }
     window.addEventListener("hashchange", () => applyHashRoute(window.location.hash));
 
     renderSidebar();

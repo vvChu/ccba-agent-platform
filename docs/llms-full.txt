@@ -2641,7 +2641,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-create-verification
 <!-- SKILL 26/76: ccba-design -->
 # ccba-design
 
-> **Mô tả ngắn**: Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
+> **Mô tả ngắn**: Design brand identity, web portals, UI/UX systems, logos, banners, and CIP assets. Use for design tokens, portal Operate mode, shadcn/Tailwind, and brand deliverables.
 
 ---
 
@@ -2671,7 +2671,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-design 
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns.
+Design brand identity, web portals, UI/UX systems, logos, banners, and CIP assets. Use for design tokens, portal Operate mode, shadcn/Tailwind, and brand deliverables.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -2697,6 +2697,10 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `banner design`
 - `cip mockup`
 - `mockup`
+- `design-system`
+- `ui-styling`
+- `portal design`
+- `ui-ux`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Thiết kế kiến trúc hệ thống và giao diện người dùng mạch lạc.
