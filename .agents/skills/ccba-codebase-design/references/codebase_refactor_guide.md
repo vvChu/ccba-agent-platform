@@ -110,7 +110,16 @@ Quy trình này được định hướng bởi domain model của dự án và 
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
 
 ### Bước 5: Khóa Cứng Nghiệm Thu Khách Quan (Deterministic Verification Gate - ADR-0058)
-- Trước khi tuyên bố hoàn thành tái cấu trúc hoặc đề xuất merge, bắt buộc chạy kiểm định máy tính khách quan cho package mục tiêu:
+- Trước khi tuyên bố hoàn thành tái cấu trúc hoặc đề xuất merge, bắt buộc kiểm tra **Bảng Xác Nhận 4 Cổng Hoàn Tất (Exit Criteria Matrix)**:
+
+| Cổng Kiểm Định | Rào Chắn Kỹ Thuật | Tiêu Chí Đo Lường (Exit Criteria) |
+| :--- | :--- | :--- |
+| **1. PEP 562 `__all__` $\leftrightarrow$ `_*_EXPORTS` Parity** | Nếu subpackage đích dùng PEP 562 lazy `__init__.py` (`__all__` + `__getattr__`), đăng ký đầy đủ mọi public symbol mới vào cả `_*_EXPORTS` và `__all__`. | `check_init_lazy_exports_parity` trả về `0` `OrphanLazyExportViolation` / `UnboundAllExportViolation`; `getattr(pkg, sym)` thành công 100%. |
+| **2. Backward-Compatible Re-Export** | Giữ alias re-export tại module nguồn cũ đối với các hàm/hằng số đang được `tests/` hoặc scripts vận hành import. | `0` `ImportError` trên toàn bộ test suite hồi quy hiện hữu. |
+| **3. Subprocess `sys.modules` Import Isolation** | Khi mục tiêu làm sâu là tách dependency nặng (`playwright`, `reportlab`, `sp_csom_deployer`...), kiểm chứng trong subprocess Python độc lập. | `python -c "import sys, <target>; assert '<heavy_dep>' not in sys.modules"` trả về exit code `0` kèm số đo module/latency trước-sau `[đo thực tế]`. |
+| **4. ADR-0058 Hard Lock (`verify-patch`)** | Chạy kiểm định máy tính khách quan cho package mục tiêu (`--preset code`) hoặc toàn diện (`--preset ci`). | Exit code `0` (`✅ ALL PASSED`). |
+
+- Lệnh kiểm định chuẩn:
   ```bash
   python -m ccba_harness verify-patch --preset code --target <package_path>
   ```
@@ -119,7 +128,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
   python -m ccba_harness verify-patch --preset ci
   ```
 - **Quy tắc Khóa Cứng (HUB-ADR-0058):** Nghiêm cấm tuyên bố hoàn tất nếu lệnh verify trả về exit code $\ne 0$.
-- **Tiêu chí hoàn thành:** Báo cáo xác thực từ `verify-patch` đạt trạng thái `✅ ALL PASSED` (exit code 0), 100% tests và linters liên quan đều pass.
+- **Tiêu chí hoàn thành:** Báo cáo xác thực đạt `4/4` cổng trong bảng trên và `verify-patch` đạt trạng thái `✅ ALL PASSED` (exit code 0), 100% tests và linters liên quan đều pass.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
