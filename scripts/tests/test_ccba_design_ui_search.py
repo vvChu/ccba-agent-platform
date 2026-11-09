@@ -197,11 +197,14 @@ def test_audit_ui_code_dual_assertion() -> None:
     for m365_slop in (
         '<a href="https://ibstbim.sharepoint.com/:f:/g/personal/Es12345">Temp Folder Link</a>',
         '{"ApiConnection": "shared_sharepointonline"}',
+        '{"type": "ApiConnection"}',
+        '{"type": "ApiConnectionWebhook"}',
     ):
         m365_findings = core.audit_ui_code(m365_slop)
         assert any(f["rule_id"] == "SLOP-09" for f in m365_findings), (
             f"Missed SLOP-09 on {m365_slop!r}"
         )
+    assert core.audit_ui_code('{"type": "OpenApiConnection"}') == []
 
     partial_table_markup = (
         '<span class="badge tabular-nums">12</span>\n'
