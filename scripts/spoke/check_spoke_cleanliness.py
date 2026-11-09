@@ -162,13 +162,21 @@ def check_machine_state_leakage(
         except (UnicodeDecodeError, OSError):
             continue
 
+        is_py = filepath.suffix.lower() == ".py"
+        doc_lines: set[int] = set()
+        if is_py:
+            try:
+                doc_lines = _collect_docstring_lines(ast.parse(content))
+            except SyntaxError:
+                is_py = False
+
         in_docstring = False
         for line_num, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
-            if stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1:
+            if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                in_docstring
+                (line_num in doc_lines if is_py else in_docstring)
                 or stripped.startswith(("#", "//", "/*", "*"))
                 or "ccba:allow-machine-path" in stripped
                 or "noqa" in stripped
@@ -478,15 +486,23 @@ def check_raw_ip_leakage(
             content = filepath.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
+
+        is_py = filepath.suffix.lower() == ".py"
+        doc_lines: set[int] = set()
+        if is_py:
+            try:
+                doc_lines = _collect_docstring_lines(ast.parse(content))
+            except SyntaxError:
+                is_py = False
+
         in_docstring = False
         for line_num, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
             was_in_docstring = in_docstring
-            if stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1:
+            if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                was_in_docstring
-                or in_docstring
+                (line_num in doc_lines if is_py else (was_in_docstring or in_docstring))
                 or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-raw-ip" in stripped
             ):
@@ -524,7 +540,7 @@ def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]
     for d in (scripts_dir, spoke_root / "src"):
         if d.exists():
             py_files.extend(
-                f for f in d.rglob("*.py") if not any(p in excluded_parts for p in f.parts)
+                f for f in sorted(d.rglob("*.py")) if not any(p in excluded_parts for p in f.parts)
             )
     return py_files
 

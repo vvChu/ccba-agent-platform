@@ -54,13 +54,19 @@ def _resolve_candidate_hub_path(raw: str, base_dir: Path) -> Path | None:
         if shutil.which("wslpath"):
             try:
                 res = subprocess.run(
-                    ["wslpath", "-u", raw], capture_output=True, text=True, timeout=2
+                    ["wslpath", "-u", raw],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=2,
+                    check=False,
                 )
                 if res.returncode == 0 and res.stdout.strip():
                     cand = Path(res.stdout.strip())
                     if cand.exists():
                         return cand
-            except Exception:
+            except (OSError, subprocess.SubprocessError):
                 pass
         return None
 
@@ -334,6 +340,10 @@ def scan_file(
                 )
                 if is_violation:
                     line_num = node.lineno
+                    end_line = getattr(node, "end_lineno", line_num) or line_num
+                    span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
+                    if any("ccba:quarantine" in sl or "noqa" in sl for sl in span_lines):
+                        continue
                     line_content = (
                         lines[line_num - 1].strip()
                         if 0 < line_num <= len(lines)
@@ -351,6 +361,10 @@ def scan_file(
                     )
                     if is_violation:
                         line_num = node.lineno
+                        end_line = getattr(node, "end_lineno", line_num) or line_num
+                        span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
+                        if any("ccba:quarantine" in sl or "noqa" in sl for sl in span_lines):
+                            continue
                         line_content = (
                             lines[line_num - 1].strip()
                             if 0 < line_num <= len(lines)

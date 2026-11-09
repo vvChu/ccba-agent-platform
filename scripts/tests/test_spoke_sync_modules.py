@@ -1716,3 +1716,31 @@ def test_heartbeat_fallback_and_pytest_pollution_guard(tmp_path: Path) -> None:
 
     assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, PLATFORM_ROOT) is True
     assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, hub_root) is False
+
+
+def test_check_hub_import_depth_multiline_ast_span_quarantine(tmp_path: Path) -> None:
+    """Verify check_hub_import_depth inspects full AST span [lineno, end_lineno] for ccba:quarantine and noqa (ADR-0061)."""
+    from scripts.spoke.check_hub_import_depth import scan_file
+
+    f_quarantined = tmp_path / "quarantined_imports.py"
+    f_quarantined.write_text(
+        "from ccba_legal.crawler.chrome_cdp import (\n"
+        "    ChromeCDP,\n"
+        ")  # ccba:quarantine seam_id=legal.cdp reason=legacy until=2026-12-31 issue=1\n"
+        "from ccba_ai._client import (\n"
+        "    Client,  # noqa: F401\n"
+        ")\n"
+        "import ccba_qc_core._private  # ccba:quarantine\n"
+        "import ccba_qc_core.rules.engine  # noqa\n",
+        encoding="utf-8",
+    )
+    assert scan_file(f_quarantined) == []
+
+    f_unexempt = tmp_path / "unexempt_multiline.py"
+    f_unexempt.write_text(
+        "from ccba_legal.crawler.chrome_cdp import (\n    ChromeCDP,\n)\n",
+        encoding="utf-8",
+    )
+    violations = scan_file(f_unexempt)
+    assert len(violations) == 1
+    assert violations[0][0] == 1
