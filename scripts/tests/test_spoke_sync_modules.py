@@ -1719,7 +1719,7 @@ def test_heartbeat_fallback_and_pytest_pollution_guard(tmp_path: Path) -> None:
 
 
 def test_check_hub_import_depth_multiline_ast_span_quarantine(tmp_path: Path) -> None:
-    """Verify check_hub_import_depth inspects full AST span [lineno, end_lineno] for ccba:quarantine and noqa (ADR-0061)."""
+    """Verify check_hub_import_depth inspects full AST span [lineno, end_lineno] for ccba:quarantine, ccba:allow-deep-import, and noqa (ADR-0061 / RULE-5.9)."""
     from scripts.spoke.check_hub_import_depth import scan_file
 
     f_quarantined = tmp_path / "quarantined_imports.py"
@@ -1727,10 +1727,14 @@ def test_check_hub_import_depth_multiline_ast_span_quarantine(tmp_path: Path) ->
         "from ccba_legal.crawler.chrome_cdp import (\n"
         "    ChromeCDP,\n"
         ")  # ccba:quarantine seam_id=legal.cdp reason=legacy until=2026-12-31 issue=1\n"
+        "from ccba_legal.crawler.tvpl_crawler import (\n"
+        "    TVPLCrawler,\n"
+        ")  # ccba:allow-deep-import\n"
         "from ccba_ai._client import (\n"
         "    Client,  # noqa: F401\n"
         ")\n"
         "import ccba_qc_core._private  # ccba:quarantine\n"
+        "import ccba_qc_core.rules._internal  # ccba:allow-deep-import\n"
         "import ccba_qc_core.rules.engine  # noqa\n",
         encoding="utf-8",
     )

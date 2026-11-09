@@ -173,11 +173,12 @@ def check_machine_state_leakage(
         in_docstring = False
         for line_num, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
+            was_in_docstring = in_docstring
             if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                (line_num in doc_lines if is_py else in_docstring)
-                or stripped.startswith(("#", "//", "/*", "*"))
+                (line_num in doc_lines if is_py else (was_in_docstring or in_docstring))
+                or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-machine-path" in stripped
                 or "noqa" in stripped
                 or "path/to" in stripped
@@ -350,7 +351,7 @@ def check_script_count(
     if not scripts_dir.exists() or not scripts_dir.is_dir():
         return [], []
 
-    all_py_files = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix == ".py"]
+    all_py_files = [f for f in sorted(scripts_dir.iterdir()) if f.is_file() and f.suffix == ".py"]
     counted: list[Path] = []
     ignored: list[Path] = []
     effective_allowlist = set(ALLOWLIST_SCRIPTS)
@@ -452,20 +453,26 @@ def check_raw_model_leakage(
         except SyntaxError:
             continue
         docstring_linenos = _collect_docstring_lines(tree)
+        file_violations: list[tuple[Path, int, str]] = []
         for node in ast.walk(tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 val = node.value.strip().lower()
                 lineno = getattr(node, "lineno", 0)
+                end_lineno = getattr(node, "end_lineno", lineno) or lineno
                 if lineno in docstring_linenos or lineno <= 0 or lineno > len(lines):
                     continue
-                if "ccba:allow-raw-model" in lines[lineno - 1] or val in APPROVED_MODEL_ALIASES:
+                span_lines = lines[max(0, lineno - 1) : min(len(lines), end_lineno)]
+                if (
+                    any("ccba:allow-raw-model" in sl for sl in span_lines)
+                    or val in APPROVED_MODEL_ALIASES
+                ):
                     continue
                 if (
                     any(val.startswith(pfx) for pfx in RAW_MODEL_PREFIXES)
                     and len(val) < 60
                     and " " not in val
                 ):
-                    violations.append(
+                    file_violations.append(
                         (
                             filepath,
                             lineno,
@@ -473,6 +480,8 @@ def check_raw_model_leakage(
                             "Use capability alias or annotate with '# ccba:allow-raw-model'.",
                         )
                     )
+        file_violations.sort(key=lambda x: x[1])
+        violations.extend(file_violations)
     return violations
 
 
