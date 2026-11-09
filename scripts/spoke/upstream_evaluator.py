@@ -141,6 +141,22 @@ UPSTREAM_ALIAS_MAP: dict[str, str] = {
     "core-web-vitals": "ccba-design",
     "performance": "ccba-design",
     "best-practices": "ccba-design",
+    "canvas-app": "ccba-sharepoint-iac",
+    "add-data-source": "ccba-sharepoint-iac",
+    "configure-canvas-mcp": "ccba-sharepoint-iac",
+    "create-code-app": "ccba-sharepoint-iac",
+    "add-sharepoint": "ccba-sharepoint-iac",
+    "add-office365": "ccba-sharepoint-iac",
+    "add-onedrive": "ccba-sharepoint-iac",
+    "add-teams": "ccba-sharepoint-iac",
+    "pcf": "ccba-sharepoint-iac",
+    "build-flow": "ccba-sharepoint-iac",
+    "create-flow": "ccba-sharepoint-iac",
+    "diagnose-flow": "ccba-sharepoint-iac",
+    "manage-flows": "ccba-sharepoint-iac",
+    "setup-datamodel": "ccba-sharepoint-iac",
+    "setup-solution": "ccba-sharepoint-iac",
+    "list-formatting": "ccba-sharepoint-iac",
 }
 
 

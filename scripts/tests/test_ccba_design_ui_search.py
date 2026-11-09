@@ -65,6 +65,12 @@ def test_ui_bm25_search_across_all_four_domains() -> None:
     assert res_sp_html["count"] >= 1
     assert any("sharepoint-html-page" in r["Stack Name"] for r in res_sp_html["results"])
 
+    res_powerapps = core.search(
+        "powerapps canvas pa.yaml list formatting adaptive cards", domain="stack"
+    )
+    assert res_powerapps["count"] >= 1
+    assert any("powerapps-m365" in r["Stack Name"] for r in res_powerapps["results"])
+
     res_ux_noxon = core.search("noxon attention progressive disclosure proximity", domain="ux")
     assert res_ux_noxon["count"] >= 1
     assert any(r["Rule ID"] == "UX-18" for r in res_ux_noxon["results"])
@@ -74,6 +80,7 @@ def test_ui_bm25_search_across_all_four_domains() -> None:
         ("UX-20", "sidebar ia frequency ordering count pill 280px"),
         ("UX-21", "detail view modal 5-section anatomy spine stepper satellite"),
         ("UX-22", "markdown reader escapehtml sanitize href slugify deep-link"),
+        ("UX-23", "m365 list formatting commandbarprops customcardprops delegation"),
     ):
         res_rule = core.search(query, domain="ux")
         assert res_rule["count"] >= 1
@@ -93,6 +100,8 @@ def test_ui_detect_domain_and_search_all() -> None:
     assert core.detect_domain("vbpl legal portal pccc dashboard") == "product"
     assert core.detect_domain("vietnamese font typeface diacritics") == "typography"
     assert core.detect_domain("sharepoint spfx nextjs tanstack") == "stack"
+    assert core.detect_domain("powerapps canvas pa.yaml list-formatting") == "stack"
+    assert core.detect_domain("commandbarprops customcardprops delegation") == "ux"
 
     combined = core.search_all("portal table compliance vietnamese nextjs", max_results=2)
     assert "product" in combined
@@ -183,6 +192,15 @@ def test_audit_ui_code_dual_assertion() -> None:
         var_findings = core.audit_ui_code(variant)
         assert any(f["rule_id"] == "SLOP-08" for f in var_findings), (
             f"Missed SLOP-08 on {variant!r}"
+        )
+
+    for m365_slop in (
+        '<a href="https://ibstbim.sharepoint.com/:f:/g/personal/Es12345">Temp Folder Link</a>',
+        '{"ApiConnection": "shared_sharepointonline"}',
+    ):
+        m365_findings = core.audit_ui_code(m365_slop)
+        assert any(f["rule_id"] == "SLOP-09" for f in m365_findings), (
+            f"Missed SLOP-09 on {m365_slop!r}"
         )
 
     partial_table_markup = (

@@ -40,3 +40,18 @@ sources:
     enabled: true
     description: "Addy Osmani's Web Quality, Core Web Vitals & WCAG 2.2 Skills (routed to ccba-design)"
 
+  - name: "power-platform-skills"
+    type: "power-platform-skills"
+    remote_url: "https://github.com/microsoft/power-platform-skills"
+    branch: "main"
+    enabled: true
+    description: "Microsoft Power Platform Agent Skills (Canvas Apps .pa.yaml, Code Apps, Power Automate, PCF - routed to ccba-sharepoint-iac)"
+
+  - name: "pnp-list-formatting"
+    type: "pnp-list-formatting"
+    remote_url: "https://github.com/pnp/List-Formatting"
+    branch: "master"
+    enabled: true
+    description: "Microsoft 365 & SharePoint PnP Declarative List/View/Form JSON Formatting Samples (routed to ccba-sharepoint-iac)"
+
+

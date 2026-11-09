@@ -134,7 +134,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-research](ccba-research.md) | `/ccba-research` | `kernel` | `User` | Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với các nguồ... |
 | [ccba-review-proposal](ccba-review-proposal.md) | `/ccba-review-proposal` | `kernel` | `User` | Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered Review (... |
 | [ccba-seminar-builder](ccba-seminar-builder.md) | `/ccba-seminar-builder` | `kernel` | `Both` | Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda, outline, v... |
-| [ccba-sharepoint-iac](ccba-sharepoint-iac.md) | `/ccba-sharepoint-iac` | `kernel` | `User` | Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Co... |
+| [ccba-sharepoint-iac](ccba-sharepoint-iac.md) | `/ccba-sharepoint-iac` | `kernel` | `User` | Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365 dạng mã... |
 | [ccba-skill-repair](ccba-skill-repair.md) | `/ccba-skill-repair` | `kernel` | `User` | Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-ha... |
 | [ccba-sync-upstream](ccba-sync-upstream.md) | `/ccba-sync-upstream` | `kernel` | `User` | Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar) kết hợp... |
 | [ccba-vllm-manager](ccba-vllm-manager.md) | `/ccba-vllm-manager` | `kernel` | `Model` | Quản trị mô hình vLLM trên DGX Spark Blackwell GB10, tối ưu hóa AOT Inductor ... |

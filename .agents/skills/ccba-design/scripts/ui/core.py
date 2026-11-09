@@ -161,6 +161,11 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
         "anchor",
         "stepper",
         "llms",
+        "delegation",
+        "commandbarprops",
+        "customcardprops",
+        "showcard",
+        "togglevisibility",
     ),
     "chart": (
         "chart",
@@ -236,6 +241,14 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
         "threejs",
         "webgl",
         "tanstack",
+        "powerapps",
+        "power apps",
+        "power automate",
+        "canvas",
+        "pa.yaml",
+        "list-formatting",
+        "adaptive cards",
+        "m365",
     ),
 }
 
@@ -287,6 +300,14 @@ UI_SLOP_PATTERNS: tuple[tuple[str, str, re.Pattern[str], str], ...] = (
             r"""(?is)(?:(?:\bhref\s*=\s*(?:\{\s*)?|(?:location(?:\.href)?|\.href)\s*=\s*|setAttribute\s*\(\s*["']href["']\s*,\s*)["'`]?\s*(?:javascript|vbscript|data):|\.innerHTML\s*=\s*(?:marked|remarkable|showdown|markdownIt)\b)"""
         ),
         "Avoid unsafe javascript:, data:, or vbscript: URLs in href attributes or DOM sinks, and never pipe unescaped Markdown into innerHTML (UX-22).",
+    ),
+    (
+        "SLOP-09",
+        "M365 Sharing Link & Legacy Connector Guardrail",
+        re.compile(
+            r"""(?is)(?:https?://[^\s"'`<>]+/:[fbwxu]:/[grs]/|\b(?:ApiConnection|Invoker)\b["']?\s*:\s*["']?shared_)"""
+        ),
+        "Avoid temporary SharePoint/OneDrive sharing links (/:f:/g/, /:b:/g/) or legacy ApiConnection/Invoker bindings; use canonical driveId+itemId links and OpenApiConnection (UX-23, STK-08).",
     ),
 )
 

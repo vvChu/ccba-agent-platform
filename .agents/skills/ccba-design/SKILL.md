@@ -24,7 +24,7 @@ argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: CCBA
-  version: 2.4.0
+  version: 2.5.0
 bundle: _consulting
 tier: kernel
 layer: _consulting
@@ -90,11 +90,11 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 
 ## UI/UX & Web Portal Design (Built-in)
 
-Deterministic BM25 search over 6 UI/UX datasets (`styles.csv`, `ux-guidelines.csv`, `charts.csv`, `products.csv`, `typography.csv`, `stacks.csv`), quantitative Design Dials (`--density`, `--variance`, `--motion`), WCAG 2.1/2.2 contrast verification, and static UI slop code auditing (`SLOP-01` through `SLOP-08`).
+Deterministic BM25 search over 6 UI/UX datasets (`styles.csv`, `ux-guidelines.csv`, `charts.csv`, `products.csv`, `typography.csv`, `stacks.csv`), quantitative Design Dials (`--density`, `--variance`, `--motion`), WCAG 2.1/2.2 contrast verification, and static UI slop code auditing (`SLOP-01` through `SLOP-09`).
 
 ### Portal App Shell, Spine & Detail View Architecture
 
-- **3-Tier Progression of Attention ("Tối giản & Hé lộ dần" — `UX-18` & `STK-07`):** Keep 80% of the initial viewport calm (*"Not an index of everything, but a decision aid"*): Tier 1 Above-the-Fold Zero-Noise Action Pills, Role-Adaptive Lenses & Slide-over Proximity Drawer → Tier 2 Asymmetric Workflow Spine (`minmax(260px, 0.55fr) minmax(0, 1.45fr)`), Bento Pulse & 1-Click Situational Mode Toggle (e.g., Daily vs. Friday L10 90-Minute Mode) → Tier 3 Project Lifecycle Stepper Bar, lazy-rendered Mermaid QA/QC flows, Babylon.js 3D preview & native `<details>` SOP drawers (`UX-19`).
+- **3-Tier Progression of Attention ("Tối giản & Hé lộ dần" — `UX-18`, `UX-23`, `STK-07`, `STK-08`):** Keep 80% of the initial viewport calm (*"Not an index of everything, but a decision aid"*): Tier 1 Above-the-Fold Zero-Noise Action Pills (`commandBarProps`), Role-Adaptive Lenses & Slide-over Proximity Drawer (`customCardProps`) → Tier 2 Asymmetric Workflow Spine (`minmax(260px, 0.55fr) minmax(0, 1.45fr)`), delegation-safe Power Apps Galleries, Bento Pulse & 1-Click Situational Mode Toggle (e.g., Daily vs. Friday L10 90-Minute Mode) → Tier 3 Project Lifecycle Stepper Bar, `customRowAction` (`executeFlow`), Adaptive Cards `Action.ToggleVisibility`, lazy-rendered Mermaid QA/QC flows, Babylon.js 3D preview & native `<details>` SOP drawers (`UX-19`).
 - **280px App Shell Sidebar & Context-Aware Routing (`UX-20`):** Order sidebar groups by operator frequency (`Explore → Topics → What's New → Guides`), align `.sidebar-count-pill` with `tabular-nums`, tuck `>4` secondary guides into `<details class="sidebar-guides-more">`, and route Topic clicks context-awarely (scroll on Map view vs. filter chip in Catalog view).
 - **5-Section Detail Modal, Safe Markdown Reader & Dual-Channel Endpoints (`UX-21` & `UX-22`):** Combine 1-click `📄 Copy Brief cho Agent`, interactive `.spine-stepper` (`aria-current="step"` / `🛰️ Satellite`), XSS-safe Markdown rendering (`escapeHtml(rawStr)` + `resolveAndSanitizeHref(rawHref, basePath)` + `slugifyMdHeading(rawHeading)` + `scrollToMdAnchor(anchorId)`), whitelisted `#skill/<slug>` & `#doc/<path>` deep-links, SharePoint `SitePages` Native RBAC Security Trimming + Dual-Mode Offline Fallback, and machine endpoints (`llms.txt`, `llms-full.txt`, `INDEX.md`).
 
@@ -115,6 +115,7 @@ python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "heatmap c
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py "vietnamese be vietnam pro tabular" --domain typography
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack sharepoint-spfx
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack sharepoint-html-page
+python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --stack powerapps-m365
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --contrast "#FFFFFF,#363883"
 python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/ui/search.py --audit-file path/to/Component.tsx
 ```
@@ -367,8 +368,8 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
    - **Completion Criterion:** Detail modal supports 1-click Agent Brief copy, lateral spine stepper navigation, `Escape` close, and `Tab` focus trapping.
 5. **Safe Markdown Reader, Deep-Links & Dual-Channel Endpoints** (`UX-22`) → Implement `escapeHtml(rawStr)`, `resolveAndSanitizeHref(rawHref, basePath)`, `renderMdTable(rows, basePath)`, blockquote callout badges, `slugifyMdHeading(rawHeading)` + `scrollToMdAnchor(anchorId)`, whitelisted `#skill/<slug>` & `#doc/<path>` hash routing, offline/SharePoint RBAC fallback, and `llms.txt` / `llms-full.txt` / `INDEX.md` parity
    - **Completion Criterion:** Zero XSS protocol/path traversal vectors, deterministic heading anchor scrolling, and 100% parity across human HTML and machine endpoints.
-6. **Deterministic Slop Audit & Verification Gate** (`scripts/ui/search.py --audit-file`) → Run static UI Slop scanner (`SLOP-01`..`SLOP-08`) and governance integrity tests
-   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-08` findings and all verification gates (`validate_skills.py --enforce-gpi`, `verify-patch`) exit with code `0`.
+6. **Deterministic Slop Audit & Verification Gate** (`scripts/ui/search.py --audit-file`) → Run static UI Slop scanner (`SLOP-01`..`SLOP-09`) and governance integrity tests
+   - **Completion Criterion:** Zero `SLOP-01` through `SLOP-09` findings and all verification gates (`validate_skills.py --enforce-gpi`, `verify-patch`) exit with code `0`.
 
 ## References
 
