@@ -177,11 +177,20 @@ def test_audit_ui_code_dual_assertion() -> None:
     for variant in (
         "<a href={`data:text/html,<script>alert(1)</script>`}>X</a>",
         'el.setAttribute("href", "vbscript:msgbox(1)")',
+        'linkEl.href = "javascript:void(0)"',
+        "panel.innerHTML = marked(rawMarkdown)",
     ):
         var_findings = core.audit_ui_code(variant)
         assert any(f["rule_id"] == "SLOP-08" for f in var_findings), (
             f"Missed SLOP-08 on {variant!r}"
         )
+
+    partial_table_markup = (
+        '<span class="badge tabular-nums">12</span>\n'
+        "<table><tbody><tr><td>99</td></tr></tbody></table>\n"
+    )
+    partial_findings = core.audit_ui_code(partial_table_markup)
+    assert any(f["rule_id"] == "SLOP-06" and f["line"] == 2 for f in partial_findings)
 
 
 def test_generate_and_persist_design_system_hierarchy(tmp_path: Path) -> None:
