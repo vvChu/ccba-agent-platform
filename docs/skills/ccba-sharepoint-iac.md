@@ -63,6 +63,10 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `view formatting`
 - `adaptive cards`
 - `pac cli`
+- `viva connections`
+- `adaptive card extension`
+- `purview`
+- `modern search`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.

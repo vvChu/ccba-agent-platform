@@ -89,9 +89,9 @@ Thực hiện truy vấn trực tiếp qua `gh api repos/{owner}/{repo}` và `co
 | `emilkowalski/vaul` | `8,695` | `2025-10-03` | `401` | `MIT` | **STALE** | **Ô 2 (Kho tàng Ngủ đông):** Nguyên mẫu **Proximity Slide-Over Drawer** (hiện đã chuyển hướng sang `mui/base-ui`). Chỉ học cơ chế chuyển động `150ms-200ms` và khóa cuộn nền. |
 | `Shopify/polaris` | `6,148` | `2026-09-09` | `60` | Custom | **ARCHIVED** | **Ô 2 (Đã đóng băng repo React cũ):** Cấm dùng gói npm cũ; chỉ bảo tồn triết lý thiết kế **Polaris Operations** (status badges CVD-safe, bảng vận hành mật độ cao) trong `MASTER.md`. |
 
-### 2.3.B. Hệ Sinh Thái Microsoft 365, SharePoint Online & Power Platform — 11 Kho Mã Nguồn Thực Chiến Cho IDOP (CCBA WAY)
+### 2.3.B. Hệ Sinh Thái Microsoft 365, SharePoint Online & Power Platform — 13 Kho Mã Nguồn Thực Chiến Cho IDOP (CCBA WAY)
 
-Trong bối cảnh vận hành **IDOP theo mô hình Hub/Spoke của CCBA WAY** lấy **Microsoft 365, SharePoint Online, Power Apps (Canvas `.pa.yaml` & Code Apps) và Power Automate** làm Stack công nghệ chủ đạo, nghiên cứu đã kiểm toán trực tiếp 11 kho mã nguồn mở chính thức của Microsoft và cộng đồng PnP qua `gh api` (`[đo thực tế 2026-11-09]`):
+Trong bối cảnh vận hành **IDOP theo mô hình Hub/Spoke của CCBA WAY** lấy **Microsoft 365, SharePoint Online, Viva Connections, Power Apps (Canvas `.pa.yaml` & Code Apps) và Power Automate** làm Stack công nghệ chủ đạo, nghiên cứu đã kiểm toán trực tiếp 13 kho mã nguồn mở chính thức của Microsoft và cộng đồng PnP qua `gh api` (`[đo thực tế 2026-11-09]`):
 
 | Kho Mã Nguồn (`owner/repo`) | Stars ⭐ | Ngày Commit Cuối | Tuổi (`ngày`) | Giấy Phép | Vitality Badge | Phân Ô & Ứng Dụng Trong Kiến Trúc 3 Tầng IDOP (`STK-07`, `STK-08`) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -101,10 +101,12 @@ Trong bối cảnh vận hành **IDOP theo mô hình Hub/Spoke của CCBA WAY** 
 | `microsoft/power-platform-skills` | `1,126` | `2026-11-08` | `0` | Custom | **FRESH** | **Ô 1 (Sống & Chín — Kho Skills Chính Thức của Microsoft):** Gồm 8 bộ plugin (`canvas-apps`, `code-apps`, `power-automate`, `pcf`, `model-apps`, `mobile-apps`, `mcp-apps`, `power-pages`) dạy AI Agent viết mã nguồn `.pa.yaml`, Power Fx delegation, `@microsoft/power-apps`, và đóng gói Solution. |
 | `pnp/powershell` | `912` | `2026-11-08` | `0` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — IaC Provisioning):** Công cụ chuẩn hóa Provisioning Template XML/JSON, RBAC ग्रुप và Site Script ở tầng hạ tầng SharePoint. |
 | `pnp/pnpjs` | `861` | `2026-10-30` | `9` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Thư viện Fluent JS/TS bọc SharePoint REST (`_api/web/lists`) và Microsoft Graph API với cơ chế batching và caching. |
+| `pnp/sp-dev-fx-extensions` | `704` | `2026-11-06` | `3` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — SPFx Application Customizers):** Kho mẫu `Top/Bottom Placeholders` toàn cục và ngăn kéo trượt phải (`CcbaMindApplicationCustomizer`) hiển thị thẻ quyết định ngữ cảnh (*"Your agent proposes $\to$ You decide"*). |
 | `microsoftgraph/msgraph-sdk-python` | `633` | `2026-11-06` | `3` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Backend Python IaC `/ccba-sharepoint-iac`):** SDK chính thức cho các kịch bản đồng bộ Graph API, kiểm toán schema, đọc/ghi batch `$batch` và quản trị Entra ID. |
-| `microsoft-search/pnp-modern-search` | `487` | `2026-11-06` | `2` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Giải pháp cổng tìm kiếm doanh nghiệp trên SharePoint dùng Handlebars + Fluent UI (Verticals, Refiners, Preview Callout). |
+| `microsoft-search/pnp-modern-search` | `487` | `2026-11-06` | `2` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Giải pháp cổng tìm kiếm doanh nghiệp trên SharePoint dùng Handlebars + Fluent UI (Verticals, Refiners theo Taxonomy `TermSet`, Preview Callout) vượt ngưỡng 5.000 items. |
 | `pnp/sp-dev-fx-controls-react` | `437` | `2026-11-01` | `8` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Bộ điều khiển React Fluent UI tái sử dụng cho SPFx Web Parts & Application Customizers khi cần mở rộng vượt giới hạn JSON. |
 | `microsoft/powerplatform-build-tools` | `314` | `2026-11-04` | `4` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Tự động hóa CI/CD (`pac solution unpack/pack`, kiểm định Solution Checker) quản lý mã nguồn Power Apps & Power Automate trên Git. |
+| `pnp/sp-dev-fx-aces` | `140` | `2026-10-15` | `25` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Viva Connections ACEs):** Kho mẫu **Adaptive Card Extensions** (`Card View` Tier 1 + `Quick View` Tier 2/3) đưa bảng điều khiển tác nghiệp vào thẳng Microsoft Teams Desktop & Mobile. |
 | `microsoft/powercat-creator-kit` | `411` | `2024-11-19` | `719` | `MIT` | **STALE** | **Ô 2 (Kho tàng Ngủ đông `> 120 ngày`):** Chỉ tham khảo mẫu bố cục Fluent UI (`CommandBar`, `DetailsList`, `Panel`, `Elevation`); cấm cài đặt thêm gói PCF phụ thuộc mới vào dự án. |
 
 #### Ánh Xạ Kiến Trúc 3 Tầng Bản Địa M365 (`UX-23` & `STK-08`)
