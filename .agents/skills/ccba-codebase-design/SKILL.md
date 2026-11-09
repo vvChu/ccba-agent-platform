@@ -22,7 +22,7 @@ keywords:
 - locality
 metadata:
   author: CCBA
-  version: 1.2.0
+  version: 1.3.0
 bundle: _core
 tier: kernel
 triggers:
@@ -171,10 +171,18 @@ class QCAuditService:
         report["audit_id"] = audit_id
         return report
 
-# 3. Ranh giới Gói (Package Boundary - ADR-0035 & PEP 328):
-# packages/my_package/__init__.py chỉ export public seam:
-# __all__ = ["QCAuditService", "AuditStorage"]
-# Chi tiết nội bộ (_internal.py hoặc sqlite_adapter.py) được giữ kín
+# 3. Ranh giới Gói & PEP 562 Lazy Seam (Package Boundary - ADR-0035, PEP 328 & PEP 562):
+# packages/my_package/__init__.py chỉ export public seam qua __all__ và __getattr__:
+__all__ = ["QCAuditService", "AuditStorage"]
+_AUDIT_EXPORTS = frozenset({"QCAuditService", "AuditStorage"})
+
+def __getattr__(name: str) -> object:
+    """PEP 562 lazy attribute loader: tránh nạp sớm submodule nặng (playwright, reportlab...)."""
+    if name in _AUDIT_EXPORTS:
+        import my_package.service as _mod
+        return getattr(_mod, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+# Mọi phần tử trong _*_EXPORTS bắt buộc phải có mặt trong __all__ (0 OrphanLazyExportViolation).
 ```
 
 **So sánh với Anti-pattern (Shallow Module & Hard to test):**

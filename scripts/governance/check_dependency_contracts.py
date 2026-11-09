@@ -470,51 +470,115 @@ def scan_file_for_violations(
     return visitor.violations
 
 
-def check_package_all_exports(packages_dir: Path) -> list[ImportViolation]:
-    """Verify every symbol declared in package __all__ is bound and non-duplicated."""
+def check_init_lazy_exports_parity(
+    init_file: Path,
+    mod_name: str = "",
+) -> list[ImportViolation]:
+    """Verify AST parity between __all__ and module-level _*_EXPORTS sets in __init__.py."""
+    violations: list[ImportViolation] = []
+    if not init_file.is_file():
+        return violations
+    label = mod_name or init_file.parent.name
+    try:
+        tree = ast.parse(init_file.read_text(encoding="utf-8"), filename=str(init_file))
+    except Exception:
+        return violations
+
+    all_list: list[str] | None = None
+    export_sets: list[tuple[str, int, list[str]]] = []
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id == "__all__" and isinstance(node.value, (ast.List, ast.Tuple)):
+                all_list = [
+                    elt.value
+                    for elt in node.value.elts
+                    if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+                ]
+            elif target.id.endswith("_EXPORTS"):
+                vals = [
+                    elt.value
+                    for elt in ast.walk(node.value)
+                    if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+                ]
+                export_sets.append((target.id, node.lineno, vals))
+
+    if all_list is None:
+        return violations
+    all_set = set(all_list)
+    for set_name, lineno, vals in export_sets:
+        for sym in vals:
+            if "." not in sym and sym not in all_set:
+                violations.append(
+                    ImportViolation(
+                        init_file,
+                        lineno,
+                        label,
+                        "OrphanLazyExportViolation",
+                        f"Symbol '{sym}' in {set_name} is missing from {label}.__all__.",
+                    )
+                )
+    return violations
+
+
+def check_package_all_exports(
+    packages_dir: Path,
+    project_root: Path | None = None,
+) -> list[ImportViolation]:
+    """Verify every symbol declared in package __all__ is bound, non-duplicated, and synced with _*_EXPORTS."""
     import importlib
 
     violations: list[ImportViolation] = []
-    if not packages_dir.is_dir():
-        return violations
+    if packages_dir.is_dir():
+        for pkg_folder, mod_name in sorted(PACKAGE_MAP.items()):
+            init_file = packages_dir / pkg_folder / "src" / mod_name / "__init__.py"
+            if not init_file.is_file():
+                continue
+            violations.extend(check_init_lazy_exports_parity(init_file, mod_name))
+            src_dir = str(packages_dir / pkg_folder / "src")
+            if src_dir not in sys.path:
+                sys.path.insert(0, src_dir)
+            try:
+                mod = importlib.import_module(mod_name)
+            except Exception:
+                continue
+            exports = getattr(mod, "__all__", None)
+            if not isinstance(exports, (list, tuple)):
+                continue
+            seen: set[str] = set()
+            for sym in exports:
+                if sym in seen:
+                    violations.append(
+                        ImportViolation(
+                            init_file,
+                            1,
+                            mod_name,
+                            "DuplicateAllExportViolation",
+                            f"Duplicate symbol '{sym}' in {mod_name}.__all__.",
+                        )
+                    )
+                seen.add(sym)
+                if not hasattr(mod, sym):
+                    violations.append(
+                        ImportViolation(
+                            init_file,
+                            1,
+                            mod_name,
+                            "UnboundAllExportViolation",
+                            f"Symbol '{sym}' in {mod_name}.__all__ is not bound at runtime.",
+                        )
+                    )
 
-    for pkg_folder, mod_name in sorted(PACKAGE_MAP.items()):
-        init_file = packages_dir / pkg_folder / "src" / mod_name / "__init__.py"
-        if not init_file.is_file():
-            continue
-        src_dir = str(packages_dir / pkg_folder / "src")
-        if src_dir not in sys.path:
-            sys.path.insert(0, src_dir)
-        try:
-            mod = importlib.import_module(mod_name)
-        except Exception:
-            continue
-        exports = getattr(mod, "__all__", None)
-        if not isinstance(exports, (list, tuple)):
-            continue
-        seen: set[str] = set()
-        for sym in exports:
-            if sym in seen:
-                violations.append(
-                    ImportViolation(
-                        init_file,
-                        1,
-                        mod_name,
-                        "DuplicateAllExportViolation",
-                        f"Duplicate symbol '{sym}' in {mod_name}.__all__.",
-                    )
-                )
-            seen.add(sym)
-            if not hasattr(mod, sym):
-                violations.append(
-                    ImportViolation(
-                        init_file,
-                        1,
-                        mod_name,
-                        "UnboundAllExportViolation",
-                        f"Symbol '{sym}' in {mod_name}.__all__ is not bound at runtime.",
-                    )
-                )
+    root = project_root or packages_dir.parent
+    tools_dir = root / "tools"
+    if tools_dir.is_dir():
+        for init_file in sorted(tools_dir.glob("*/__init__.py"), key=lambda p: p.as_posix()):
+            violations.extend(
+                check_init_lazy_exports_parity(init_file, f"tools.{init_file.parent.name}")
+            )
     return violations
 
 
@@ -559,7 +623,7 @@ def check_all_contracts(
                 visitor_collector=all_visitors,
             )
         )
-    violations.extend(check_package_all_exports(packages_dir))
+    violations.extend(check_package_all_exports(packages_dir, project_root=project_root))
 
     if audit_report is not None:
         audit_report["legacy_bypasses"] = [item for v in all_visitors for item in v.legacy_bypasses]

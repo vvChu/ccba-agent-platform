@@ -17,6 +17,7 @@ import pytest
 from scripts.governance.check_dependency_contracts import (
     DependencyASTVisitor,
     check_all_contracts,
+    check_init_lazy_exports_parity,
     scan_file_for_violations,
 )
 
@@ -240,3 +241,18 @@ def test_ast_visitor_allows_multiline_import_with_comment() -> None:
     visitor.visit(tree)
 
     assert len(visitor.violations) == 0
+
+
+def test_check_init_lazy_exports_parity_catches_orphan_symbol(tmp_path: Path) -> None:
+    """Verify check_init_lazy_exports_parity flags symbols in _*_EXPORTS missing from __all__."""
+    init_py = tmp_path / "__init__.py"
+    init_py.write_text(
+        '__all__ = ["upload_immutable_signed_pdf"]\n'
+        '_FOLDER_EXPORTS = frozenset({"upload_immutable_signed_pdf", "forgotten_helper"})\n',
+        encoding="utf-8",
+    )
+    violations = check_init_lazy_exports_parity(init_py, "tools.storage")
+    assert len(violations) == 1
+    assert violations[0].rule_name == "OrphanLazyExportViolation"
+    assert "forgotten_helper" in violations[0].message
+
