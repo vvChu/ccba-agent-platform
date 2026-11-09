@@ -255,4 +255,3 @@ def test_check_init_lazy_exports_parity_catches_orphan_symbol(tmp_path: Path) ->
     assert len(violations) == 1
     assert violations[0].rule_name == "OrphanLazyExportViolation"
     assert "forgotten_helper" in violations[0].message
-
