@@ -89,6 +89,35 @@ Thực hiện truy vấn trực tiếp qua `gh api repos/{owner}/{repo}` và `co
 | `emilkowalski/vaul` | `8,695` | `2025-10-03` | `401` | `MIT` | **STALE** | **Ô 2 (Kho tàng Ngủ đông):** Nguyên mẫu **Proximity Slide-Over Drawer** (hiện đã chuyển hướng sang `mui/base-ui`). Chỉ học cơ chế chuyển động `150ms-200ms` và khóa cuộn nền. |
 | `Shopify/polaris` | `6,148` | `2026-09-09` | `60` | Custom | **ARCHIVED** | **Ô 2 (Đã đóng băng repo React cũ):** Cấm dùng gói npm cũ; chỉ bảo tồn triết lý thiết kế **Polaris Operations** (status badges CVD-safe, bảng vận hành mật độ cao) trong `MASTER.md`. |
 
+### 2.3.B. Hệ Sinh Thái Microsoft 365, SharePoint Online & Power Platform — 11 Kho Mã Nguồn Thực Chiến Cho IDOP (CCBA WAY)
+
+Trong bối cảnh vận hành **IDOP theo mô hình Hub/Spoke của CCBA WAY** lấy **Microsoft 365, SharePoint Online, Power Apps (Canvas `.pa.yaml` & Code Apps) và Power Automate** làm Stack công nghệ chủ đạo, nghiên cứu đã kiểm toán trực tiếp 11 kho mã nguồn mở chính thức của Microsoft và cộng đồng PnP qua `gh api` (`[đo thực tế 2026-11-09]`):
+
+| Kho Mã Nguồn (`owner/repo`) | Stars ⭐ | Ngày Commit Cuối | Tuổi (`ngày`) | Giấy Phép | Vitality Badge | Phân Ô & Ứng Dụng Trong Kiến Trúc 3 Tầng IDOP (`STK-07`, `STK-08`) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| `pnp/List-Formatting` | `2,186` | `2026-11-03` | `5` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Trọng tâm Tier 1/2/3 SharePoint Native):** Kho mẫu JSON khai báo (`column-samples`, `view-samples`, `form-samples`) định hình `commandBarProps`, `customCardProps` (`openOnEvent: hover`), `customRowAction: executeFlow`, và `bodyJSON` 3 tầng mà không cần viết hay đóng gói SPFx `.sppkg`. |
+| `microsoft/AdaptiveCards` | `1,973` | `2026-10-29` | `10` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Trọng tâm Teams & Outlook Approvals):** Chuẩn thẻ tương tác cho thông báo vận hành và phê duyệt Gate/WIP; dùng `FactSet` (Tier 2) kết hợp `Action.ToggleVisibility` và `Action.ShowCard` (Tier 3) để hé lộ dần chi tiết ngay trong Teams. |
+| `pnp/cli-microsoft365` | `1,478` | `2026-11-08` | `0` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Đa nền tảng Linux/WSL/macOS/CI):** CLI quản trị M365, SharePoint Lists, Views, Site Pages, Teams và Power Platform chạy trực tiếp trên Node.js (thay thế hoàn hảo khi không dùng Windows PowerShell). |
+| `microsoft/power-platform-skills` | `1,126` | `2026-11-08` | `0` | Custom | **FRESH** | **Ô 1 (Sống & Chín — Kho Skills Chính Thức của Microsoft):** Gồm 8 bộ plugin (`canvas-apps`, `code-apps`, `power-automate`, `pcf`, `model-apps`, `mobile-apps`, `mcp-apps`, `power-pages`) dạy AI Agent viết mã nguồn `.pa.yaml`, Power Fx delegation, `@microsoft/power-apps`, và đóng gói Solution. |
+| `pnp/powershell` | `912` | `2026-11-08` | `0` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — IaC Provisioning):** Công cụ chuẩn hóa Provisioning Template XML/JSON, RBAC ग्रुप và Site Script ở tầng hạ tầng SharePoint. |
+| `pnp/pnpjs` | `861` | `2026-10-30` | `9` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Thư viện Fluent JS/TS bọc SharePoint REST (`_api/web/lists`) và Microsoft Graph API với cơ chế batching và caching. |
+| `microsoftgraph/msgraph-sdk-python` | `633` | `2026-11-06` | `3` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín — Backend Python IaC `/ccba-sharepoint-iac`):** SDK chính thức cho các kịch bản đồng bộ Graph API, kiểm toán schema, đọc/ghi batch `$batch` và quản trị Entra ID. |
+| `microsoft-search/pnp-modern-search` | `487` | `2026-11-06` | `2` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Giải pháp cổng tìm kiếm doanh nghiệp trên SharePoint dùng Handlebars + Fluent UI (Verticals, Refiners, Preview Callout). |
+| `pnp/sp-dev-fx-controls-react` | `437` | `2026-11-01` | `8` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Bộ điều khiển React Fluent UI tái sử dụng cho SPFx Web Parts & Application Customizers khi cần mở rộng vượt giới hạn JSON. |
+| `microsoft/powerplatform-build-tools` | `314` | `2026-11-04` | `4` | `MIT` | **FRESH** | **Ô 1 (Sống & Chín):** Tự động hóa CI/CD (`pac solution unpack/pack`, kiểm định Solution Checker) quản lý mã nguồn Power Apps & Power Automate trên Git. |
+| `microsoft/powercat-creator-kit` | `411` | `2024-11-19` | `719` | `MIT` | **STALE** | **Ô 2 (Kho tàng Ngủ đông `> 120 ngày`):** Chỉ tham khảo mẫu bố cục Fluent UI (`CommandBar`, `DetailsList`, `Panel`, `Elevation`); cấm cài đặt thêm gói PCF phụ thuộc mới vào dự án. |
+
+#### Ánh Xạ Kiến Trúc 3 Tầng Bản Địa M365 (`UX-23` & `STK-08`)
+1. **Tier 1 (Zero-Install SharePoint List & View Formatting — `pnp/List-Formatting`):**
+   - Dùng `commandBarProps` để ẩn các nút hệ thống gây nhiễu (`automate`, `integrate`, `export`, `powerBI`), giữ lại tối đa 3 hành động sơ cấp.
+   - Dùng `customCardProps` (`openOnEvent: "hover"`, `isBeakVisible: true`) để mở **Proximity Hover Card** xem nhanh thông tin hồ sơ mà không rời dòng hiện tại; dùng `customRowAction: { action: "executeFlow" }` kích hoạt luồng Power Automate từ hàng dữ liệu; dùng Form JSON (`headerJSON` + `bodyJSON` sections) gom nhóm trường nhập liệu theo 3 tầng.
+2. **Tier 2 (Power Apps Canvas `.pa.yaml`, Code Apps & Adaptive Cards — `microsoft/power-platform-skills` & `microsoft/AdaptiveCards`):**
+   - Trong **Power Apps Canvas (`.pa.yaml`)**: Tách biệt rõ 3 vùng (`conHeaderBar` 56px $\to$ `galMainQueue` + `conInspectorSpine` $\to$ `conDrawerOverlay` trượt phải khi `locShowDrawer = true`). Tuân thủ nghiêm ngặt **Rào chắn Ủy quyền Truy vấn (SharePoint Delegation Guardrail)**: chỉ dùng `Filter()`, `LookUp()`, `Sort()` với các toán tử ủy quyền được (`=`, `<>`, `<`, `<=`, `>`, `>=`, `And`, `Or`, `StartsWith`); cấm dùng `Search()`, `Lower()`, `In`, `Len()`, `IsBlank()` trên cột tính toán khiến ứng dụng bị cắt cụt ngầm ở giới hạn trang cục bộ.
+   - Trong **Power Automate & Adaptive Cards**: Bắt buộc dùng định danh kết nối `OpenApiConnection` (cấm `ApiConnection`/`Invoker` cũ bị chặn bởi `SLOP-09`), cấu hình **Trigger Conditions** (`@not(equals(...))`) chống vòng lặp vô tận, và dùng `Action.ToggleVisibility` / `Action.ShowCard` để thu gọn chi tiết kỹ thuật trong thông báo Teams.
+3. **Phân vai Workload theo Hạn ngạch Giấy phép (Licensing-Aware Workload Routing):**
+   - Các luồng phê duyệt và nhập liệu tương tác của người dùng chạy qua **Power Apps / Power Automate**; trong khi các tác vụ đồng bộ danh mục lớn, kiểm toán định kỳ và kết xuất cổng HTML chạy qua **Python App-Only IaC (`/ccba-sharepoint-iac`)** dùng Microsoft Graph API (`msgraph-sdk-python`), bảo vệ hạn ngạch **Power Platform Requests (PPR)** cho người vận hành.
+   - Mọi liên kết tài liệu SharePoint/OneDrive phải dùng cấu trúc định danh chuẩn (`driveId` + `itemId` + `webUrl`), cấm lưu liên kết chia sẻ tạm thời (`/:f:/g/`, `/:b:/g/`, `/:w:/g/` — bị chặn tự động bởi `SLOP-09`).
+
 ### 2.4. Bẫy Thường Gặp & Rủi Ro Phản Biện (Adversarial Risks & Common Pitfalls)
 
 Từ kết quả rà soát đối kháng của **Subagent B (`Risk & Boundary Challenger`)** trên `.agents/skills/ccba-design/scripts/ui/core.py` và `tests/governance/test_skills_docs_integrity.py`:
@@ -142,11 +171,14 @@ Từ kết quả rà soát đối kháng của **Subagent B (`Risk & Boundary Ch
 ## 4. Tài liệu Tham chiếu & Citations (References & Citations)
 
 ### 4.1. Nguồn Mã Nguồn Nội Bộ (`[đo thực tế]`)
-- `.agents/skills/ccba-design/SKILL.md` (`v2.4.0` — Quy trình 6 bước thiết kế cổng thông tin & Anti-Slop).
-- `.agents/skills/ccba-design/references/portal-operate-and-antislop.md` (Đặc tả chi tiết `UX-18..22`, `STK-07`, `SLOP-01..08`).
-- `.agents/skills/ccba-design/data/ui/ux-guidelines.csv` (Dòng `2..23`: `UX-01..UX-22`).
-- `.agents/skills/ccba-design/data/ui/stacks.csv` (Dòng `2..8`: `STK-01..STK-07`).
-- `.agents/skills/ccba-design/scripts/ui/core.py` (Dòng `242-291`, `417-444`: Bộ máy kiểm toán `audit_ui_code`).
+- `.agents/skills/ccba-design/SKILL.md` (`v2.5.0` — Quy trình 6 bước thiết kế cổng thông tin & Anti-Slop).
+- `.agents/skills/ccba-design/references/portal-operate-and-antislop.md` (Đặc tả chi tiết `UX-18..23`, `STK-07..08`, `SLOP-01..09`).
+- `.agents/skills/ccba-design/data/ui/ux-guidelines.csv` (Dòng `2..24`: `UX-01..UX-23`).
+- `.agents/skills/ccba-design/data/ui/stacks.csv` (Dòng `2..9`: `STK-01..STK-08`).
+- `.agents/skills/ccba-design/scripts/ui/core.py` (Bộ máy kiểm toán `audit_ui_code` và `SLOP-01..09`).
+- `.agents/skills/ccba-sharepoint-iac/SKILL.md` (`v1.2.0`) và 2 tài liệu tham chiếu Level-3:
+  - `.agents/skills/ccba-sharepoint-iac/references/m365-3tier-list-formatting-and-adaptive-cards.md`
+  - `.agents/skills/ccba-sharepoint-iac/references/powerapps-canvas-codeapps-and-power-automate.md`
 - `scripts/governance/templates/skills_portal.html` & `tests/governance/test_skills_docs_integrity.py`.
 - `.md/knowledge/archive/session_learnings_history.md` (Mục 56, dòng `1237-1259`).
 
@@ -162,6 +194,13 @@ Từ kết quả rà soát đối kháng của **Subagent B (`Risk & Boundary Ch
   - [radix-ui/primitives](https://github.com/radix-ui/primitives) (`19,482` stars, commit `2026-10-14`) & [mui/base-ui](https://github.com/mui/base-ui) (`11,335` stars, commit `2026-11-02`) — Headless accessible primitives.
   - [adobe/react-spectrum](https://github.com/adobe/react-spectrum) (`16,019` stars, commit `2026-11-06`) — Kiến trúc khả năng tiếp cận WCAG 2.2 và bảng dữ liệu mật độ cao.
   - [pnp/sp-dev-fx-webparts](https://github.com/pnp/sp-dev-fx-webparts) (`2,279` stars, commit `2026-11-07`) — Mẫu cổng thông tin SharePoint Framework & RBAC Security Trimming.
+- **Hệ Sinh Thái Microsoft 365, SharePoint Online & Power Platform (Ô 1 — `FRESH` & Ô 2 — `STALE`):**
+  - [pnp/List-Formatting](https://github.com/pnp/List-Formatting) (`2,186` stars, commit `2026-11-03`) — Mẫu JSON khai báo cho SharePoint Columns, Views (`commandBarProps`, `customCardProps`) và Forms (`bodyJSON`).
+  - [microsoft/AdaptiveCards](https://github.com/microsoft/AdaptiveCards) (`1,973` stars, commit `2026-10-29`) — Chuẩn thẻ tương tác cho Microsoft Teams & Outlook (`Action.ToggleVisibility`, `Action.ShowCard`).
+  - [pnp/cli-microsoft365](https://github.com/pnp/cli-microsoft365) (`1,478` stars, commit `2026-11-08`) & [pnp/powershell](https://github.com/pnp/powershell) (`912` stars, commit `2026-11-08`) — Công cụ CLI & IaC Provisioning đa nền tảng.
+  - [microsoft/power-platform-skills](https://github.com/microsoft/power-platform-skills) (`1,126` stars, commit `2026-11-08`) — Kho Agent Skills chính thức của Microsoft cho Power Apps (`.pa.yaml`, Code Apps, PCF) và Power Automate (`OpenApiConnection`).
+  - [pnp/pnpjs](https://github.com/pnp/pnpjs) (`861` stars, commit `2026-10-30`), [microsoftgraph/msgraph-sdk-python](https://github.com/microsoftgraph/msgraph-sdk-python) (`633` stars, commit `2026-11-06`), [microsoft-search/pnp-modern-search](https://github.com/microsoft-search/pnp-modern-search) (`487` stars, commit `2026-11-06`), [pnp/sp-dev-fx-controls-react](https://github.com/pnp/sp-dev-fx-controls-react) (`437` stars, commit `2026-11-01`), và [microsoft/powerplatform-build-tools](https://github.com/microsoft/powerplatform-build-tools) (`314` stars, commit `2026-11-04`).
+  - [microsoft/powercat-creator-kit](https://github.com/microsoft/powercat-creator-kit) (`411` stars, commit `2024-11-19`, `STALE`) — Mẫu giao diện Fluent UI cho Power Apps (chỉ trích xuất pattern thiết kế).
 - **Tài liệu Lý thuyết & Mẫu Tương tác Kinh điển (Ô 2 — Trích xuất Pattern):**
   - Nielsen Norman Group (NN/g): *Progressive Disclosure* (Jakob Nielsen) — Phân tầng thông tin sơ cấp và thứ cấp.
   - Amber Case / Mark Weiser: *Calm Technology Principles* ([calmtech.com](https://calmtech.com)) — Giữ thông tin ở vùng ngoại vi cho tới khi cần hành động.
@@ -178,6 +217,11 @@ Từ kết quả rà soát đối kháng của **Subagent B (`Risk & Boundary Ch
 2. **Quyết định 2 (Đăng ký `impeccable` & `web-quality-skills` kèm khóa trần 76 Skills `ADR-0057`) — ĐÃ PHÊ DUYỆT & THỰC THI:**
    - Đăng ký `impeccable` (`pbakaus/impeccable`) và `web-quality-skills` (`addyosmani/web-quality-skills`) vào `.md/knowledge/upstream_sources.yaml` (`enabled: true`).
    - Ánh xạ toàn bộ nhóm kỹ năng con UI/Web (`frontend-design`, `ui-ux-pro-max`, `web-design-guidelines`, `audit`, `critique`, `polish`, `distill`, `quieter`, `bolder`, `accessibility`, `core-web-vitals`, `performance`, `best-practices`) vào `UPSTREAM_ALIAS_MAP -> "ccba-design"` trong `scripts/spoke/upstream_evaluator.py`, định tuyến về chế độ `--compare` (bồi đắp tri thức Tier 2A cho `/ccba-design` và giữ nguyên trần 76 Active Skills).
+3. **Quyết định 3 (M365, SharePoint Online, Power Apps & Power Automate 3-Tier Native Mapping cho IDOP CCBA WAY) — ĐÃ PHÊ DUYỆT & THỰC THI:**
+   - **Giữ vững trần 76 Active Skills (`ADR-0057`) & Bất biến Quy mô Động (`RULE-1.13`):** Không tạo skill thứ 77 và không nhúng số lượng tĩnh (`Lists`, `ROLE_IDs`, `Entra ID Groups`, `TB`) vào Hub skills.
+   - **Nâng cấp `/ccba-sharepoint-iac` lên `v1.2.0`:** Bổ sung 2 tài liệu tham chiếu Level-3 (`m365-3tier-list-formatting-and-adaptive-cards.md` và `powerapps-canvas-codeapps-and-power-automate.md`) bao phủ `pnp/List-Formatting`, `microsoft/AdaptiveCards`, Power Apps Canvas `.pa.yaml` 3-Tier layout, Power Fx SharePoint Delegation Guardrail, Power Apps Code Apps (`@microsoft/power-apps`), và Power Automate (`OpenApiConnection` + Trigger Conditions).
+   - **Nâng cấp `/ccba-design` lên `v2.5.0`:** Bổ sung `STK-08` (`powerapps-m365`), `UX-23` (M365/SharePoint/PowerApps/AdaptiveCards 3-Tier Native Progression & Delegation Guardrail), và `SLOP-09` (chặn liên kết chia sẻ tạm thời `/:f:/g/`, `/:b:/g/` và định danh `ApiConnection`/`Invoker` cũ).
+   - **Đăng ký `microsoft/power-platform-skills` & `pnp/List-Formatting` vào Upstream Radar:** Thêm vào `.md/knowledge/upstream_sources.yaml` và ánh xạ các sub-skills (`canvas-app`, `create-code-app`, `build-flow`, `pcf`, `list-formatting`, v.v.) vào `UPSTREAM_ALIAS_MAP -> "ccba-sharepoint-iac"`.
 
 ---
 

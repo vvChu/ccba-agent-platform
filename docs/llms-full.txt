@@ -6399,7 +6399,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-setup-skills/SKILL.
 <!-- SKILL 62/76: ccba-sharepoint-iac -->
 # ccba-sharepoint-iac
 
-> **Mô tả ngắn**: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP PowerShell.
+> **Mô tả ngắn**: Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365 dạng mã nguồn (IaC). Hướng dẫn thiết kế List/View JSON schema, Canvas App (.pa.yaml), Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 
 ---
 
@@ -6429,7 +6429,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-sharepo
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code). Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP PowerShell.
+Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365 dạng mã nguồn (IaC). Hướng dẫn thiết kế List/View JSON schema, Canvas App (.pa.yaml), Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -6450,6 +6450,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `pnp powershell`
 - `m365 iac`
 - `datamodel sharepoint`
+- `power apps`
+- `powerapps`
+- `canvas app`
+- `pa.yaml`
+- `power fx`
+- `code apps`
+- `power automate`
+- `flowagent`
+- `list formatting`
+- `view formatting`
+- `adaptive cards`
+- `pac cli`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.

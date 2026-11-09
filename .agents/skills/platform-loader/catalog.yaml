@@ -1033,10 +1033,9 @@ skills:
   tier: kernel
 - name: ccba-sharepoint-iac
   bundle: _software
-  description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
-    Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo
-    mật Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP
-    PowerShell.
+  description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365
+    dạng mã nguồn (IaC). Hướng dẫn thiết kế List/View JSON schema, Canvas App (.pa.yaml),
+    Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
   triggers:
   - ccba-sharepoint-iac
   - sharepoint iac
@@ -1044,6 +1043,18 @@ skills:
   - pnp powershell
   - m365 iac
   - datamodel sharepoint
+  - power apps
+  - powerapps
+  - canvas app
+  - pa.yaml
+  - power fx
+  - code apps
+  - power automate
+  - flowagent
+  - list formatting
+  - view formatting
+  - adaptive cards
+  - pac cli
   skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
   command: /ccba-sharepoint-iac
   tier: kernel

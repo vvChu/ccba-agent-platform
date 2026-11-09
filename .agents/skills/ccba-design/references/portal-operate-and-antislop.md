@@ -65,6 +65,7 @@ To eliminate generic LLM-generated visual tells ("AI slop"), enforce these negat
 | Emoji characters (`🚀`, `✨`, `🔥`) used as UI icons | Use consistent SVG stroke icons (`16px` / `20px` viewBox, uniform `1.5px-2px` stroke) |
 | Generic purple/indigo/neon gradients on enterprise portals | Use official brand tokens (`#363883`, `#005A9C`, `#0093DD`, `#DA251C`) |
 | Unsafe `href="javascript:..."` or unescaped Markdown `innerHTML` (`SLOP-08`) | Use `<button type="button">` for actions and `resolveAndSanitizeHref(rawUrl, basePath)` + `escapeHtml(rawStr)` |
+| Temporary OneDrive/SharePoint sharing links (`/:[fbwxu]:/g/`) or legacy `ApiConnection`/`Invoker` (`SLOP-09`) | Use canonical `driveId` + `itemId` storage URLs and Solution-aware `OpenApiConnection` bindings (`UX-23`, `STK-08`) |
 
 ## 4. Portal Ergonomics, URL State & WCAG 2.2 Compliance
 
@@ -102,6 +103,19 @@ In any portal or dashboard, **the URL is the single source of truth for view sta
   4. `Guides` — Deduplicated SOPs, governance rules, and playbooks.
 - **Tabular Count Pills & `>4` Progressive Drawer:** Right-align `.sidebar-count-pill` badges with `font-variant-numeric: tabular-nums`. When any secondary sidebar group (such as `Guides`) exceeds `4` items, render the first `4` items directly and tuck the remainder inside a native `<details class="sidebar-guides-more">` progressive disclosure drawer (`+N Xem thêm tài liệu...`).
 - **Context-Aware Topic Routing:** Clicking a Topic in the sidebar must respect the active view mode — smooth-scrolling to `#goal-<id>` when in `Map` view, or applying the category chip filter (`?portal=<id>`) in-place when already inside the `Skills Catalog` view.
+
+### 4.6 M365, SharePoint List Formatting, Power Apps & Adaptive Cards 3-Tier Native Progression (`UX-23`, `STK-08` & `SLOP-09`)
+When building operational surfaces on the Microsoft 365 stack (**SharePoint Online Lists/Views**, **Power Apps Canvas `.pa.yaml` & Code Apps `@microsoft/power-apps`**, **Power Automate**, and **Teams Adaptive Cards**), map the 3-Tier Progression of Attention directly to native platform primitives:
+1. **SharePoint List, View & Form JSON Formatting (`pnp/List-Formatting`):**
+   - **Tier 1 (Zero-Noise Command Bar & Status Pills):** Use `commandBarProps` in View JSON to hide noisy system buttons (`automate`, `integrate`, `editInGridView`, `alertMe`) and render CVD-safe status badges (`choice-format.json`, `status-format.json` with `sp-field-severity--*` and `iconName`).
+   - **Tier 2 (Native Proximity Popover via `customCardProps`):** Attach `customCardProps` (`openOnEvent: "click"`, `directionalHint: "rightCenter"`) to primary identifier/status columns so operators can inspect summary metadata and trigger actions in-place without leaving the list view.
+   - **Tier 3 (Flow Execution & Collapsible Form Sections):** Bind `customRowAction` (`action: "executeFlow"`) for 1-click Power Automate triggers and partition SharePoint Form JSON (`headerJSON`, `bodyJSON`, `footerJSON`) into progressive sections.
+2. **Power Apps Canvas Apps (`.pa.yaml` / Power Fx) & Code Apps (`@microsoft/power-apps`):**
+   - **3-Tier Layout & Declarative Validation:** Keep the top app bar compact (`<= 64px`), use responsive Horizontal/Vertical Auto-Layout Containers (`LayoutDirection`, `FillPortions` `6:14` split), and control submit buttons declaratively via `DisplayMode.Disabled` when required fields are blank (strictly banning circular blocking validation loops).
+   - **SharePoint Delegation Guardrail:** Only use delegable Power Fx functions (`Filter()`, `StartsWith()`, `Sort()`) on indexed SharePoint columns (`"Indexed": true`, capped at `<= 20` per list). Strictly ban non-delegable `Search()` or `Lower()` inside `Filter()` on operational lists.
+3. **Teams Adaptive Cards (`microsoft/AdaptiveCards`) & Power Automate (`OpenApiConnection` — `SLOP-09`):**
+   - Keep Tier 1 approval cards in `Team IDOP` to `<= 5` core facts (`ContractCode`, owner, amount tier, `RequiresIBSTSign`) and tuck detailed allocation tables or `ApprovalNodes` history inside an `Action.ToggleVisibility` container (`isVisible: false` by default).
+   - Enforce `"type": "OpenApiConnection"` with Solution Connection References and Environment Variables across all Power Automate flows, banning legacy `ApiConnection`/`Invoker` bindings and temporary OneDrive/SharePoint sharing links (`/:[fbwxu]:/g/` — `SLOP-09`). Offload heavy batch scans to Python App-Only Certificate scripts to protect the workflow service account's `40,000 PPR/24h` quota.
 
 ## 5. Detail View, Inspector Modal & Safe Markdown Reader Architecture (`UX-21`, `UX-22` & Dual-Channel Agent Endpoints)
 

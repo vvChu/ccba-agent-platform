@@ -1,11 +1,11 @@
 ---
 name: ccba-sharepoint-iac
-description: Quản trị hạ tầng SharePoint Online & M365 dạng mã nguồn (Infrastructure-as-Code).
-  Hướng dẫn thiết kế JSON schema, kiểm định ngữ nghĩa Lookups/Taxonomy/Index, bảo mật
-  Dual-Zone, kiểm chứng trạng thái phê duyệt BFS và triển khai bằng Python/PnP PowerShell.
+description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365
+  dạng mã nguồn (IaC). Hướng dẫn thiết kế List/View JSON schema, Canvas App (.pa.yaml),
+  Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 disable-model-invocation: true
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 bundle: _software
 tier: kernel
@@ -16,6 +16,14 @@ gpi:
   k: 2.0
   a: 1.0
   p: 1.0
+keywords:
+- sharepoint
+- powerapps
+- power-automate
+- list-formatting
+- adaptive-cards
+- m365-iac
+- pac-cli
 triggers:
 - ccba-sharepoint-iac
 - sharepoint iac
@@ -23,10 +31,22 @@ triggers:
 - pnp powershell
 - m365 iac
 - datamodel sharepoint
+- power apps
+- powerapps
+- canvas app
+- pa.yaml
+- power fx
+- code apps
+- power automate
+- flowagent
+- list formatting
+- view formatting
+- adaptive cards
+- pac cli
 ---
-# Kỹ Năng: SharePoint & M365 Infrastructure-as-Code (`sharepoint-iac`)
+# Kỹ Năng: SharePoint, Power Apps, Power Automate & M365 IaC (`sharepoint-iac`)
 
-Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩa và triển khai hạ tầng dữ liệu trên SharePoint Online (Microsoft 365) bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform (áp dụng điển hình tại Spoke `IDOP-CCBA-WAY`).
+Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩa và triển khai hạ tầng dữ liệu, giao diện 3 tầng bản địa và luồng tự động hóa trên **SharePoint Online, Power Apps (Canvas `.pa.yaml` & Code Apps), Power Automate và Microsoft 365** bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform (áp dụng điển hình tại Spoke `IDOP-CCBA-WAY`).
 
 ## 🏛️ Platform-Aware Architecture Posture
 
@@ -166,7 +186,7 @@ Khi làm việc trên Spoke có SharePoint IaC (như `IDOP-CCBA-WAY`) hoặc đ�
    # Tại Spoke IDOP-CCBA-WAY: Kiểm định Draft-07, trần 20 chỉ mục, Lookup & Taxonomy
    python tools/validator/schema_validator.py --verbose
 
-   # Tại Hub ccba-agent-platform: Kiểm định Golden Snapshot, Live 60 Lists & BFS Statechart
+   # Tại Hub ccba-agent-platform: Kiểm định Golden Snapshot, Live Lists & BFS Statechart
    pytest scripts/tests/test_idop_schema_compatibility.py -v
    ```
    * **Tiêu chí hoàn thành:** Toàn bộ SharePoint Lists và kiểm chứng BFS Liveness/Safety đạt 100% pass (`exit code 0`), không có cột vượt trần 20 chỉ mục hoặc đứt gãy khóa ngoại.
@@ -177,7 +197,7 @@ Khi làm việc trên Spoke có SharePoint IaC (như `IDOP-CCBA-WAY`) hoặc đ�
    .\idop.ps1 validate datamodel
    python tools/governance/system_health_auditor.py
    ```
-   * **Tiêu chí hoàn thành:** Xác nhận 59+ Lists trên SharePoint Online khớp Schema, phân vùng `Zone 2` khóa `IDOP Members` ở mức `Read`, không rò rỉ quyền `CCBA_VCNLD_All`, và cấu trúc thư mục `Documents/iOPS/` + `Documents/iCDE/` nguyên vẹn.
+   * **Tiêu chí hoàn thành:** Xác nhận toàn bộ Lists đã khởi tạo trên SharePoint Online khớp Schema, phân vùng `Zone 2` khóa `IDOP Members` ở mức `Read`, không rò rỉ quyền `CCBA_VCNLD_All`, và cấu trúc thư mục `Documents/iOPS/` + `Documents/iCDE/` nguyên vẹn.
 
 3. **Bước 3: Triển Khai Thử Nghiệm (`DryRun`) & Triển Khai Thật (`Full Deployment`)**:
    ```powershell
@@ -197,10 +217,39 @@ Khi làm việc trên Spoke có SharePoint IaC (như `IDOP-CCBA-WAY`) hoặc đ�
 
 ---
 
-## 🔍 4. Checklist Rà Soát Chất Lượng (Quality Gate)
+## 🧩 4. Kiến Trúc 3 Tầng Bản Địa M365: List Formatting, Power Apps & Power Automate
+
+Khi triển khai giao diện và luồng nghiệp vụ trên nền tảng Microsoft 365 (SharePoint Lists, Power Apps, Power Automate, Teams), áp dụng triết lý **"Tối giản & Hé lộ dần" (3-Tier Progression of Attention)**:
+
+1. **SharePoint List / View / Form JSON Formatting (`pnp/List-Formatting`)**:
+   - **Tier 1 (Zero-Noise Command Bar & Status Pills):** Dùng `commandBarProps` ẩn các nút mặc định gây nhiễu (`automate`, `integrate`, `editInGridView`) và hiển thị trạng thái đa phương thức (`[Icon] + [Text] + [Color]`) qua `status-format.json` / `choice-format.json`.
+   - **Tier 2 (Native Proximity Card):** Dùng `customCardProps` (`openOnEvent: "click"`) để mở thẻ tóm tắt nhanh (Proximity Callout Drawer) ngay trên dòng dữ liệu mà không phải chuyển trang.
+   - **Tier 3 (Flow Action & Form Layout):** Dùng `customRowAction` (`action: "executeFlow"`) kích hoạt luồng Power Automate và chia Form JSON (`bodyJSON`) thành các nhóm thu gọn theo quy trình.
+2. **Power Apps Canvas Apps (`.pa.yaml` / Power Fx) & Code Apps (`@microsoft/power-apps`)**:
+   - **Tối ưu Bản quyền & Quota:** Phục vụ đại trà qua SharePoint Standard Connectors (`shared_sharepointonline`, `shared_office365users`, `shared_onedriveforbusiness`, `shared_teams`); bảo vệ nghiêm ngặt hạn mức `40.000 PPR/24h` của tài khoản dịch vụ `POWERAPPS_PER_USER` (chuyển các tác vụ batch ETL sang Python App-Only Certificate).
+   - **Rào chắn Power Fx SharePoint Delegation:** Chỉ dùng các hàm ủy thác được (`Filter()`, `StartsWith()`, `Sort()`) trên các cột đã đánh chỉ mục (`"Indexed": true`, $\le 20$ cột/bảng); **cấm tuyệt đối** dùng `Search()` hoặc `Lower()` bên trong `Filter()` trên các bảng lớn gây cắt cụt dữ liệu ở ngưỡng `500/2000` dòng. Dùng `DisplayMode.Disabled` khai báo thay vì vòng lặp chặn input.
+3. **Power Automate (`OpenApiConnection`) & Teams Adaptive Cards (`microsoft/AdaptiveCards`)**:
+   - Mọi hành động kết nối trong `workflow.json` bắt buộc dùng `"type": "OpenApiConnection"` qua **Connection References** và **Environment Variables** (cấm dùng `ApiConnection` hoặc `Invoker` cũ — `SLOP-09`).
+   - Thẻ phê duyệt Adaptive Cards trong `Team IDOP` hiển thị tối đa 5 trường cốt lõi ở Tier 1 và bọc bảng phân bổ/lịch sử `ApprovalNodes` trong khối `Action.ToggleVisibility` (`isVisible: false` mặc định).
+
+---
+
+## 🔍 5. Checklist Rà Soát Chất Lượng (Quality Gate)
 
 - [ ] Tên bảng `ListName` và các cột cốt lõi khớp với hợp đồng `CORE_REQUIRED_FIELDS` và `CdeDocumentSyncService`.
 - [ ] Số lượng cột `"Indexed": true` trên mỗi bảng $\le 20$ và không gắn chỉ mục vào kiểu `NON_INDEXABLE_COLUMN_TYPES`.
 - [ ] Mọi trường `ManagedMetadata` đều có `TermSet.Name` tồn tại trong `datamodel/sharepoint/taxonomy/`.
-- [ ] Không có trường nhị phân (Attachment/Binary) trong schema list; mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/`.
+- [ ] Không có trường nhị phân (Attachment/Binary) hoặc liên kết chia sẻ tạm thời (`/:[fbwxu]:/g/` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
 - [ ] Sơ đồ luồng phê duyệt `Submissions`/`ApprovalNodes` vượt qua kiểm chứng BFS Liveness và cổng `IBST_Gateway_Review`.
+- [ ] Công thức Power Fx (`App.pa.yaml`) tuân thủ 100% SharePoint Delegation và định nghĩa Power Automate Flow dùng chuẩn `OpenApiConnection` có Trigger Condition chống lặp vô hạn.
+
+---
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+Khi thực thi các tác vụ chuyên sâu về SharePoint List Formatting, Adaptive Cards, Power Apps hoặc Power Automate, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/m365-3tier-list-formatting-and-adaptive-cards.md` | Kiến trúc 3 tầng bản địa cho SharePoint List/View/Form JSON Formatting (`pnp/List-Formatting`: `commandBarProps`, `customCardProps`, `executeFlow`) và Teams Adaptive Cards (`Action.ToggleVisibility`) |
+| `references/powerapps-canvas-codeapps-and-power-automate.md` | Kiến trúc Power Apps Canvas (`.pa.yaml` / Power Fx SharePoint Delegation), Power Apps Code Apps (`@microsoft/power-apps`), Power Automate (`OpenApiConnection`, `pa_solution_packager.py`) và bảo vệ hạn mức `40.000 PPR/24h` |
