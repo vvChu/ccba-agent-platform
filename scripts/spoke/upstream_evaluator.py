@@ -128,6 +128,19 @@ UPSTREAM_ALIAS_MAP: dict[str, str] = {
     "improve-codebase-architecture": "ccba-codebase-design",
     "setup-ts-deep-modules": "ccba-codebase-design",
     "implement-spec": "ccba-implement-spec",
+    "frontend-design": "ccba-design",
+    "ui-ux-pro-max": "ccba-design",
+    "web-design-guidelines": "ccba-design",
+    "audit": "ccba-design",
+    "critique": "ccba-design",
+    "polish": "ccba-design",
+    "distill": "ccba-design",
+    "quieter": "ccba-design",
+    "bolder": "ccba-design",
+    "accessibility": "ccba-design",
+    "core-web-vitals": "ccba-design",
+    "performance": "ccba-design",
+    "best-practices": "ccba-design",
 }
 
 
