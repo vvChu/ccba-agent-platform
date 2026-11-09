@@ -252,3 +252,44 @@ def test_scan_spoke_cleanliness_catches_raw_model_and_ip(tmp_path: Path) -> None
     assert exit_code == 1
     assert any("Vi phạm Raw Model Leakage" in m for m in messages)
     assert any("Vi phạm Raw IP Leakage" in m for m in messages)
+
+
+def test_ast_docstring_vs_triple_quote_literals_and_sorted_scan(tmp_path: Path) -> None:
+    """Verifies AST docstring parsing does not get tricked by triple-quote string literals in code, and _collect_py_files_to_scan sorts deterministically (RULE-5.9)."""
+    from scripts.spoke.check_spoke_cleanliness import (
+        _collect_py_files_to_scan,
+        check_machine_state_leakage,
+        check_raw_ip_leakage,
+    )
+
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    ip_a = "100.83." + "192.30"
+    win_path = "D:\\GitHubProjects\\ccba-agent-platform"
+
+    tricky_py = scripts_dir / "z_tricky.py"
+    tricky_py.write_text(
+        '"""Module docstring."""\n'
+        'DELIM = \'"""\'\n'
+        f'LEAK_PATH = r"{win_path}"\n'
+        f'LEAK_IP = "http://{ip_a}:8090"\n',
+        encoding="utf-8",
+    )
+
+    broken_py = scripts_dir / "a_broken.py"
+    broken_py.write_text(
+        f'def broken(:\n    LEAK_PATH = r"{win_path}"\n',
+        encoding="utf-8",
+    )
+
+    path_violations = check_machine_state_leakage([tricky_py, broken_py])
+    assert len(path_violations) == 2
+    assert path_violations[0][0] == tricky_py and path_violations[0][1] == 3
+    assert path_violations[1][0] == broken_py and path_violations[1][1] == 2
+
+    ip_violations = check_raw_ip_leakage([tricky_py])
+    assert len(ip_violations) == 1
+    assert ip_violations[0][0] == tricky_py and ip_violations[0][1] == 4
+
+    collected = _collect_py_files_to_scan(tmp_path, scripts_dir)
+    assert collected == sorted(collected)
