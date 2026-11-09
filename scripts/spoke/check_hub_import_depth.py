@@ -215,14 +215,14 @@ def discover_hub_packages(
         return fallback
 
     discovered: set[str] = set()
-    for pkg_dir in packages_dir.iterdir():
+    for pkg_dir in sorted(packages_dir.iterdir()):
         if not pkg_dir.is_dir() or pkg_dir.name.startswith((".", "_")):
             continue
 
         # 1. Inspect packages/*/src/* for top-level package modules
         src_dir = pkg_dir / "src"
         if src_dir.is_dir():
-            for child in src_dir.iterdir():
+            for child in sorted(src_dir.iterdir()):
                 if (
                     child.is_dir()
                     and not child.name.startswith((".", "_"))
@@ -238,7 +238,7 @@ def discover_hub_packages(
 
         # 2. Inspect flat package layout (packages/*/<pkg_name>/__init__.py without src/)
         else:
-            for child in pkg_dir.iterdir():
+            for child in sorted(pkg_dir.iterdir()):
                 if (
                     child.is_dir()
                     and not child.name.startswith((".", "_"))
@@ -321,6 +321,7 @@ def scan_file(
         return violations
 
     lines = content.splitlines()
+    exempt_markers = ("ccba:quarantine", "ccba:allow-deep-import", "noqa")
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
@@ -342,7 +343,7 @@ def scan_file(
                     line_num = node.lineno
                     end_line = getattr(node, "end_lineno", line_num) or line_num
                     span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
-                    if any("ccba:quarantine" in sl or "noqa" in sl for sl in span_lines):
+                    if any(m in sl for sl in span_lines for m in exempt_markers):
                         continue
                     line_content = (
                         lines[line_num - 1].strip()
@@ -363,7 +364,7 @@ def scan_file(
                         line_num = node.lineno
                         end_line = getattr(node, "end_lineno", line_num) or line_num
                         span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
-                        if any("ccba:quarantine" in sl or "noqa" in sl for sl in span_lines):
+                        if any(m in sl for sl in span_lines for m in exempt_markers):
                             continue
                         line_content = (
                             lines[line_num - 1].strip()
@@ -417,10 +418,10 @@ def main() -> int:
     else:
         root = Path(args.path).resolve()
         # Scan root .py files + scripts/, src/, tests/
-        target_files.extend(root.glob("*.py"))
+        target_files.extend(sorted(root.glob("*.py")))
         for scan_dir in [root / "scripts", root / "src", root / "tests"]:
             if scan_dir.exists():
-                target_files.extend(scan_dir.rglob("*.py"))
+                target_files.extend(sorted(scan_dir.rglob("*.py")))
 
     # Exclude .venv, __pycache__, .git, .agents, .md
     target_files = [

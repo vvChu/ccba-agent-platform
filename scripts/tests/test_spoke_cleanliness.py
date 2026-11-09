@@ -255,11 +255,13 @@ def test_scan_spoke_cleanliness_catches_raw_model_and_ip(tmp_path: Path) -> None
 
 
 def test_ast_docstring_vs_triple_quote_literals_and_sorted_scan(tmp_path: Path) -> None:
-    """Verifies AST docstring parsing does not get tricked by triple-quote string literals in code, and _collect_py_files_to_scan sorts deterministically (RULE-5.9)."""
+    """Verifies AST docstring parsing does not get tricked by triple-quote string literals in code, fallback docstring closing lines are skipped, and file/model scans sort deterministically (RULE-5.9)."""
     from scripts.spoke.check_spoke_cleanliness import (
         _collect_py_files_to_scan,
         check_machine_state_leakage,
         check_raw_ip_leakage,
+        check_raw_model_leakage,
+        check_script_count,
     )
 
     scripts_dir = tmp_path / "scripts"
@@ -272,24 +274,41 @@ def test_ast_docstring_vs_triple_quote_literals_and_sorted_scan(tmp_path: Path) 
         '"""Module docstring."""\n'
         'DELIM = \'"""\'\n'
         f'LEAK_PATH = r"{win_path}"\n'
-        f'LEAK_IP = "http://{ip_a}:8090"\n',
+        f'LEAK_IP = "http://{ip_a}:8090"\n'
+        "def nested():\n"
+        '    return "gpt-4o"\n'  # ccba:allow-raw-model
+        'TOP_MODEL = "gemini-3-flash"\n'  # ccba:allow-raw-model
+        "EXEMPT_MULTILINE = (\n"
+        '    "claude-"\n'  # ccba:allow-raw-model
+        '    "haiku-4"  # ccba:allow-raw-model\n'
+        ")\n",
         encoding="utf-8",
     )
 
     broken_py = scripts_dir / "a_broken.py"
     broken_py.write_text(
-        f'def broken(:\n    LEAK_PATH = r"{win_path}"\n',
+        "def broken(:\n"
+        f'    """Single-line fallback docstring with {win_path}"""\n'
+        '    """Multi-line fallback docstring\n'
+        f'    closing with {win_path}"""\n'
+        f'    LEAK_PATH = r"{win_path}"\n',
         encoding="utf-8",
     )
 
     path_violations = check_machine_state_leakage([tricky_py, broken_py])
     assert len(path_violations) == 2
     assert path_violations[0][0] == tricky_py and path_violations[0][1] == 3
-    assert path_violations[1][0] == broken_py and path_violations[1][1] == 2
+    assert path_violations[1][0] == broken_py and path_violations[1][1] == 5
 
     ip_violations = check_raw_ip_leakage([tricky_py])
     assert len(ip_violations) == 1
     assert ip_violations[0][0] == tricky_py and ip_violations[0][1] == 4
+
+    model_violations = check_raw_model_leakage([tricky_py])
+    assert [v[1] for v in model_violations] == [6, 7]
+
+    counted, _ = check_script_count(scripts_dir)
+    assert counted == sorted(counted)
 
     collected = _collect_py_files_to_scan(tmp_path, scripts_dir)
     assert collected == sorted(collected)
