@@ -72,7 +72,7 @@
       --ccba-modal-overlay: rgba(20, 22, 26, 0.55);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scrollbar-gutter: stable; }
+    html { scrollbar-gutter: stable; scroll-padding-top: calc(var(--ccba-nav-height) + 1rem); }
     body {
       font-family: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--ccba-bg);
@@ -1102,6 +1102,7 @@
     .md-viewer h1, .md-viewer h2, .md-viewer h3, .md-viewer h4 {
       margin: 0.75rem 0 0.35rem;
       color: var(--ccba-fg-body);
+      scroll-margin-top: 1rem;
     }
     .md-viewer p, .md-viewer ul { margin-bottom: 0.6rem; }
     .md-viewer pre {
@@ -1136,6 +1137,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: var(--ccba-text-xs);
+      font-variant-numeric: tabular-nums;
       text-align: left;
     }
     .md-table th, .md-table td {
@@ -2113,7 +2115,7 @@
       const parseCells = row => row.trim().slice(1, -1).split("|").map(c => formatInlineMd(c.trim(), basePath));
       const headCells = parseCells(dataRows[0]).map(c => `<th>${c}</th>`).join("");
       const bodyHtml = dataRows.slice(1).map(r => `<tr>${parseCells(r).map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
-      return `<div class="md-table-wrap"><table class="md-table"><thead><tr>${headCells}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
+      return `<div class="md-table-wrap"><table class="md-table tabular-nums"><thead><tr>${headCells}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
     }
 
     function renderSafeMarkdown(mdText, basePath) {
@@ -2341,8 +2343,11 @@
       return SKILLS.filter(s => {
         if (activePortal !== "all" && s.portal_id !== activePortal) return false;
         if (!qRaw) return true;
-        const hayRaw = `${s.name} ${s.command} ${s.desc} ${s.triggers.join(" ")} ${s.bundle} ${s.portal_name}`.toLowerCase();
-        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
+        if (!s._hayRaw) {
+          s._hayRaw = `${s.name} ${s.command} ${s.desc} ${s.triggers.join(" ")} ${s.bundle} ${s.portal_name}`.toLowerCase();
+          s._hayNorm = normalizeVi(s._hayRaw);
+        }
+        return s._hayRaw.includes(qRaw) || s._hayNorm.includes(qNorm);
       });
     }
 
@@ -2477,14 +2482,20 @@
 
       const filteredPkgs = PACKAGE_SEAMS.filter(pkg => {
         if (!qRaw) return true;
-        const hayRaw = `${pkg.package} ${pkg.path} ${pkg.description} ${(pkg.public_seams || []).join(" ")} ${pkg.contracts}`.toLowerCase();
-        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
+        if (!pkg._hayRaw) {
+          pkg._hayRaw = `${pkg.package} ${pkg.path} ${pkg.description} ${(pkg.public_seams || []).join(" ")} ${pkg.contracts}`.toLowerCase();
+          pkg._hayNorm = normalizeVi(pkg._hayRaw);
+        }
+        return pkg._hayRaw.includes(qRaw) || pkg._hayNorm.includes(qNorm);
       });
 
       const filteredContracts = SEAM_CONTRACTS.filter(c => {
         if (!qRaw) return true;
-        const hayRaw = `${c.seam_id} ${c.kind} ${c.import_path || ""} ${c.command || ""} ${c.skill_path || ""} ${(c.in || []).join(" ")} ${(c.out || []).join(" ")} ${(c.hardware || []).join(" ")}`.toLowerCase();
-        return hayRaw.includes(qRaw) || normalizeVi(hayRaw).includes(qNorm);
+        if (!c._hayRaw) {
+          c._hayRaw = `${c.seam_id} ${c.kind} ${c.import_path || ""} ${c.command || ""} ${c.skill_path || ""} ${(c.in || []).join(" ")} ${(c.out || []).join(" ")} ${(c.hardware || []).join(" ")}`.toLowerCase();
+          c._hayNorm = normalizeVi(c._hayRaw);
+        }
+        return c._hayRaw.includes(qRaw) || c._hayNorm.includes(qNorm);
       });
 
       if (seamMeta) {

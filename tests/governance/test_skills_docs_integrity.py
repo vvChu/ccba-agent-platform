@@ -682,6 +682,8 @@ PHASE4C_AND_NOXON_SNIPPETS = (
     "findKnownDocGuide(",
     'routePart.startsWith("doc/")',
     "slugifyMdHeading(",
+    "scroll-padding-top: calc(var(--ccba-nav-height) + 1rem);",
+    "_hayNorm = normalizeVi(",
 )
 
 
