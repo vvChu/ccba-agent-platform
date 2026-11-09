@@ -794,3 +794,20 @@ def test_check_and_evaluate_single_emits_vitality_on_up_to_date_and_offline(
     out_offline = capsys.readouterr().out
     assert "Local Vitality:" in out_offline
     assert "STALE_UPSTREAM" in out_offline
+
+
+def test_ui_and_web_quality_upstream_aliases_route_to_ccba_design() -> None:
+    """Verify UI/UX and Web Quality upstream sub-skills map to ccba-design to preserve the 76-skill cap."""
+    existing_skills = ["ccba-design", "ccba-web-testing"]
+    for upstream_skill in (
+        "frontend-design",
+        "web-design-guidelines",
+        "polish",
+        "critique",
+        "distill",
+        "accessibility",
+        "core-web-vitals",
+    ):
+        is_dup, matched = check_is_duplicate(upstream_skill, existing_skills, [])
+        assert is_dup is True
+        assert matched == "ccba-design"

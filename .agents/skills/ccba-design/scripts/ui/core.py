@@ -12,7 +12,7 @@ _SCRIPTS_ROOT = Path(__file__).resolve().parent.parent
 if str(_SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_ROOT))
 
-from bm25_engine import BM25  # noqa: E402
+from bm25_engine import BM25  # type: ignore[import-not-found]  # noqa: E402
 from bm25_engine import search_csv as _search_csv  # noqa: E402
 
 __all__ = [
@@ -284,10 +284,15 @@ UI_SLOP_PATTERNS: tuple[tuple[str, str, re.Pattern[str], str], ...] = (
         "SLOP-08",
         "Unsafe Portal Link / XSS Protocol Guardrail",
         re.compile(
-            r"""(?is)(?:\bhref\s*=\s*(?:\{\s*)?["'`]?|setAttribute\s*\(\s*["']href["']\s*,\s*["'`]?)\s*(?:javascript|vbscript|data):"""
+            r"""(?is)(?:(?:\bhref\s*=\s*(?:\{\s*)?|(?:location(?:\.href)?|\.href)\s*=\s*|setAttribute\s*\(\s*["']href["']\s*,\s*)["'`]?\s*(?:javascript|vbscript|data):|\.innerHTML\s*=\s*(?:marked|remarkable|showdown|markdownIt)\b)"""
         ),
-        'Avoid unsafe javascript:, data:, or vbscript: URLs in href attributes; use <button type="button"> or sanitized hrefs (UX-22).',
+        "Avoid unsafe javascript:, data:, or vbscript: URLs in href attributes or DOM sinks, and never pipe unescaped Markdown into innerHTML (UX-22).",
     ),
+)
+
+_TABLE_TAG_RE = re.compile(r"(?is)<table\b[^>]*>")
+_GLOBAL_TABLE_TABULAR_RE = re.compile(
+    r"(?is)(?:^|[},;\s])(?:table|\.[a-z0-9_-]*table[a-z0-9_-]*)\s*\{[^}]*tabular-nums"
 )
 
 
@@ -431,14 +436,19 @@ def audit_ui_code(content: str) -> list[dict[str, Any]]:
                         "message": message,
                     }
                 )
+    if not _GLOBAL_TABLE_TABULAR_RE.search(content):
+        for match in _TABLE_TAG_RE.finditer(content):
+            if "tabular-nums" not in match.group(0).lower():
+                line_no = content.count("\n", 0, match.start()) + 1
+                if (line_no, "SLOP-06") not in seen:
+                    seen.add((line_no, "SLOP-06"))
+                    findings.append(
+                        {
+                            "rule_id": "SLOP-06",
+                            "category": "Operate Mode Numeric Alignment",
+                            "line": line_no,
+                            "message": "Data <table> detected without tabular-nums class or font-variant-numeric: tabular-nums.",
+                        }
+                    )
     findings.sort(key=lambda item: (int(item["line"]), str(item["rule_id"])))
-    if "<table" in content.lower() and "tabular-nums" not in content:
-        findings.append(
-            {
-                "rule_id": "SLOP-06",
-                "category": "Operate Mode Numeric Alignment",
-                "line": 1,
-                "message": "Data <table> detected without tabular-nums class or font-variant-numeric: tabular-nums.",
-            }
-        )
     return findings

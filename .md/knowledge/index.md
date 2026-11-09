@@ -47,6 +47,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-3-tier-portal-progressive-disclosure.md](research_and_studies/research-3-tier-portal-progressive-disclosure.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`RES-2026-UX-3TIER-001`): Kiến Trúc Cổng Thông Tin 3 Tầng ("Tối Giản & Hé Lộ Dần" / 3-Tier Progression of Attention) & Định Tuyến 14 Kho Mã Nguồn Mở UI/UX.
 - [research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md](research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Hệ Sinh Thái "Reverse Engineer Anything" (`morluto/rea`, `kong`, `replica-skill`, `unbrowse`) & Ứng Dụng Vào Kiến Trúc `4-Hubs × Federated Spokes`.
 - [research_and_studies/research-cursor-bugbot-adaptations.md](research_and_studies/research-cursor-bugbot-adaptations.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Áp Dụng Mô Hình "2,500 PRs/Month" & Bugbot Review Vào CCBA Agent Platform.
 - [research_and_studies/decision-log-sprint1-improvements.md](research_and_studies/decision-log-sprint1-improvements.md): **[MỚI]** Biên Bản Quyết Định Thiết Kế: Cải Tiến Nền Tảng CCBA Theo Mô Hình Cursor/Bugbot (Sprint 1).

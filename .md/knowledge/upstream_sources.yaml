@@ -25,3 +25,18 @@ sources:
     branch: "main"
     enabled: true
     description: "Matt Pocock's AI Engineering Skills & Mental Models"
+
+  - name: "impeccable"
+    type: "impeccable"
+    remote_url: "https://github.com/pbakaus/impeccable"
+    branch: "main"
+    enabled: true
+    description: "Impeccable UI/UX Craft Floor & Anti-Slop Design Vocabulary (routed to ccba-design)"
+
+  - name: "web-quality-skills"
+    type: "web-quality-skills"
+    remote_url: "https://github.com/addyosmani/web-quality-skills"
+    branch: "main"
+    enabled: true
+    description: "Addy Osmani's Web Quality, Core Web Vitals & WCAG 2.2 Skills (routed to ccba-design)"
+
