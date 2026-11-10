@@ -215,7 +215,10 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
         description="Level-2 Peer Agent Dispatcher and budget guardrail (ADR-0063).",
     )
     parser.add_argument(
+        "-p",
         "--prompt-file",
+        "--prompt",
+        dest="prompt_file",
         type=str,
         required=True,
         help="Path to markdown prompt file containing PeerPromptEnvelope.",
@@ -223,6 +226,8 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "-o",
         "--output-file",
+        "--output",
+        "--response-file",
         dest="output_file",
         type=str,
         default=None,
@@ -246,6 +251,8 @@ def run_peer_dispatch_cli(args_list: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--resume",
+        "--session-id",
+        "--session",
         dest="resume_session_id",
         type=str,
         default=None,
@@ -393,7 +400,7 @@ def _print_co_review_dry_run(prompt_path: Path, args: argparse.Namespace) -> int
     from ccba_harness.peer import PROFILE_SPECS, parse_envelope_from_md, safe_read_and_hash
 
     content, _ = safe_read_and_hash(prompt_path)
-    envelope = parse_envelope_from_md(content or "")
+    envelope = parse_envelope_from_md(content or "", prompt_path=prompt_path)
     req_id = envelope.request_id if envelope else "unknown"
     print(f"[DRY-RUN] Request ID: {req_id}")
     print(f"[DRY-RUN] Profiles: {', '.join(args.profiles)}")

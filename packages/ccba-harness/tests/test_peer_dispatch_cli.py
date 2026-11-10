@@ -350,3 +350,75 @@ def test_peer_dispatch_output_file_flag_and_preflight_envelope_error(tmp_path, c
     assert ret == 0
     out = capsys.readouterr().out
     assert f"[DRY-RUN] Expected Output: {custom_out.resolve()}" in out
+
+
+def test_peer_dispatch_cli_flag_aliases_and_minimal_frontmatter(tmp_path, capsys):
+    """Validates -p/--prompt, --output/--response-file, --session-id/--session aliases and minimal frontmatter."""
+    from ccba_harness.peer import parse_envelope_from_md, scan_peer_exchange
+
+    min_prompt = tmp_path / "prompt_grok_wave3_signoff.md"
+    min_prompt.write_text(
+        "---\n"
+        "author: antigravity\n"
+        "target: grok\n"
+        "request_type: signoff\n"
+        "wave: Wave 3 Architecture Sign-Off\n"
+        "session_id: 162a3e2c-9415-4a41-a219-f27a1d88bc2f\n"
+        "target_scope:\n"
+        "  - packages/ccba-harness/src/ccba_harness/peer.py\n"
+        "---\nBody\n",
+        encoding="utf-8",
+    )
+    env = parse_envelope_from_md(min_prompt.read_text(encoding="utf-8"), prompt_path=min_prompt)
+    assert env is not None
+    assert env.request_id == "prompt_grok_wave3_signoff"
+    assert env.from_agent == "antigravity"
+    assert env.to_agent == "grok"
+    assert env.subject == "Wave 3 Architecture Sign-Off"
+    assert env.resume_session_id == "162a3e2c-9415-4a41-a219-f27a1d88bc2f"
+    assert env.target_files == ["packages/ccba-harness/src/ccba_harness/peer.py"]
+
+    # scan_peer_exchange passes prompt_path=path so minimal frontmatter without request_id is parsed
+    _, _, reg = scan_peer_exchange(tmp_path, {})
+    assert reg["prompt_grok_wave3_signoff.md"]["envelope"] is not None
+
+    out_path = tmp_path / "response_grok_wave3_signoff.md"
+    ret = run_peer_dispatch_cli(
+        [
+            "-p",
+            str(min_prompt),
+            "--output",
+            str(out_path),
+            "--session-id",
+            "162a3e2c-9415-4a41-a219-f27a1d88bc2f",
+            "--profile",
+            "signoff_diff",
+            "--dry-run",
+        ]
+    )
+    assert ret == 0
+    out = capsys.readouterr().out
+    assert f"[DRY-RUN] Expected Output: {out_path.resolve()}" in out
+    assert "--resume 162a3e2c-9415-4a41-a219-f27a1d88bc2f" in out
+
+    # Verify fenced ```yaml PeerVerdictBlock / peer_verdict unwrapping without --- delimiters
+    from ccba_harness.peer import parse_verdict_from_md
+
+    fenced_verdict = (
+        "Preamble text before code fence.```yaml\n"
+        "PeerVerdictBlock:\n"
+        "  request_id: req-fenced-01\n"
+        "  verdict: APPROVE_WITH_CONDITIONS\n"
+        "  risk_score: 6\n"
+        "  summary: Fenced YAML verdict\n"
+        "telemetry:\n"
+        "  session_id: sess-fenced-01\n"
+        "  primary_model: grok-4.7\n"
+        "```\n# Detailed Analysis\n"
+    )
+    vb = parse_verdict_from_md(fenced_verdict)
+    assert vb is not None
+    assert vb.request_id == "req-fenced-01"
+    assert vb.verdict == "APPROVE_WITH_CONDITIONS"
+    assert vb.risk_score == 3
+    assert vb.telemetry is not None and vb.telemetry.session_id == "sess-fenced-01"
