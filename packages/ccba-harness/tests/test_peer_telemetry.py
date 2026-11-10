@@ -815,3 +815,104 @@ def test_auto_discover_resume_session_3_tiers_bloat_and_dedup(tmp_path, capsys):
     st = json.loads(status_f.read_text(encoding="utf-8"))["exchange_stats"]
     assert st["total_tokens"] == 1600
     assert st["total_cost_usd"] == 0.025
+
+
+def test_response_grok_prefix_ttl_bound_and_overwritten_telemetry_merge(tmp_path):
+    """Verifies response_grok_*.md recognition, 12h auto-resume TTL cap, and overwritten telemetry merge."""
+    from ccba_harness._peer_telemetry import merge_overwritten_telemetry
+    from ccba_harness.peer import (
+        PROFILE_SPECS,
+        PeerPromptEnvelope,
+        _resolve_grok_profile_options,
+        classify_file_role,
+        compute_pending_queues,
+        render_prompt_header,
+        render_verdict_header,
+        scan_peer_exchange,
+    )
+
+    assert classify_file_role(tmp_path / "response_grok_wave1_signoff.md") == "GROK_RESPONSE"
+    assert classify_file_role(tmp_path / "response_wave2.md") == "GROK_RESPONSE"
+
+    # 1. Stale session (5 days old) must NOT be auto-resumed by Tier 1 or Tier 2
+    p_old = PeerPromptEnvelope(
+        request_id="req-hermes-001",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="Old thread",
+        timestamp="2026-11-05T08:00:00Z",
+        source_documents=["scripts/hermes_executive_mcp.py"],
+        output_path="response_grok_hermes_001.md",
+    )
+    (tmp_path / "prompt_grok_hermes_001.md").write_text(
+        render_prompt_header(p_old) + "Old", encoding="utf-8"
+    )
+    v_old = PeerVerdictBlock(
+        request_id="req-hermes-001",
+        verdict="APPROVE_WITH_CONDITIONS",
+        timestamp="2026-11-05T08:10:00Z",
+        summary="Old v1",
+        telemetry=PeerVerdictTelemetry(
+            session_id="sess-stale-5d",
+            primary_model="grok-4.7",
+            input_tokens=500,
+            output_tokens=100,
+            total_tokens=600,
+            turn_count=1,
+            cost_usd=0.01,
+        ),
+    )
+    out_f = tmp_path / "response_grok_hermes_001.md"
+    out_f.write_text(render_verdict_header(v_old) + "\n# Old", encoding="utf-8")
+
+    p_new = PeerPromptEnvelope(
+        request_id="req-hermes-001-v2",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="New thread 5d later",
+        timestamp="2026-11-10T10:00:00Z",
+        source_documents=["scripts/hermes_executive_mcp.py"],
+        output_path="response_grok_hermes_002.md",
+    )
+    p_new_path = tmp_path / "prompt_grok_hermes_001_v2.md"
+    p_new_path.write_text(render_prompt_header(p_new) + "New", encoding="utf-8")
+    opts_stale = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_plan"], p_new, None, None, False, None, None, p_new_path
+    )
+    assert opts_stale["resume_session_id"] is None
+
+    # 2. Fresh response_grok_*.md (within 12h) is discovered by both scan_peer_exchange and auto-resume
+    v_old.timestamp = "2026-11-10T09:00:00Z"
+    v_old.telemetry.session_id = "sess-fresh-1h"
+    out_f.write_text(render_verdict_header(v_old) + "\n# Fresh", encoding="utf-8")
+    opts_fresh = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_plan"], p_new, None, None, False, None, None, p_new_path
+    )
+    assert opts_fresh["resume_session_id"] == "sess-fresh-1h"
+
+    _, _, reg = scan_peer_exchange(tmp_path, {})
+    assert reg["response_grok_hermes_001.md"]["role"] == "GROK_RESPONSE"
+    _, pending_grok = compute_pending_queues(reg)
+    assert "prompt_grok_hermes_001.md" not in pending_grok
+
+    # 3. Overwriting out_f with a Round 2 session accumulates prior telemetry
+    t_r2 = PeerVerdictTelemetry(
+        session_id="sess-round2",
+        primary_model="grok-4.7",
+        input_tokens=300,
+        output_tokens=50,
+        total_tokens=350,
+        model_calls=2,
+        turn_count=1,
+        cost_usd=0.02,
+        cost_mode="exact",
+        duration_seconds=5.0,
+    )
+    merged = merge_overwritten_telemetry(out_f, t_r2)
+    assert merged is not None
+    assert merged.session_id == "sess-round2"
+    assert merged.total_tokens == 950
+    assert merged.cost_usd == 0.03
+    assert merged.turn_count == 2

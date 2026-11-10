@@ -24,24 +24,41 @@ FRONTMATTER_PATTERN = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.
 INLINE_FRONTMATTER_PATTERN = re.compile(
     r"(?:^|\r?\n|(?<=[.!*`]))---\s*\r?\n(.*?)(?=(\r?\n---\s*(?:\r?\n|$)))", re.DOTALL
 )
+FENCED_YAML_PATTERN = re.compile(r"```(?:yaml|yml)\s*\r?\n(.*?)\r?\n```", re.DOTALL | re.IGNORECASE)
+_NESTED_VERDICT_KEYS: tuple[str, ...] = ("PeerVerdictBlock", "peer_verdict", "verdict_block")
 _FRONTMATTER_KEYS: tuple[str, ...] = (
     "verdict",
     "from_agent",
+    "author",
+    "from",
+    "sender",
     "request_id",
     "task_id",
     "id",
     "question",
     "profile",
     "output_path",
+    "request_type",
+    "task_type",
 )
 _ENVELOPE_MARKER_KEYS: frozenset[str] = frozenset(
     {
         "from_agent",
         "sender",
+        "author",
+        "from",
+        "to_agent",
+        "recipient",
+        "target",
+        "to",
         "request_id",
         "task_id",
         "id",
+        "subject",
         "question",
+        "chapter",
+        "title",
+        "wave",
         "output_path",
         "output_file",
         "profile",
@@ -49,6 +66,8 @@ _ENVELOPE_MARKER_KEYS: frozenset[str] = frozenset(
         "session_id",
         "request_type",
         "task_type",
+        "target_files",
+        "target_scope",
     }
 )
 _ENVELOPE_ALLOWED_KEYS: frozenset[str] = frozenset(
@@ -184,12 +203,12 @@ class PeerVerdictTelemetry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     session_id: str
-    primary_model: str
-    input_tokens: int
-    output_tokens: int
+    primary_model: str = "unknown"
+    input_tokens: int = 0
+    output_tokens: int = 0
     reasoning_tokens: int = 0
     cached_read_tokens: int = 0
-    total_tokens: int
+    total_tokens: int = 0
     model_calls: int = 1
     turn_count: int = 1
     cost_usd: float = 0.0
@@ -341,6 +360,17 @@ class AutoApplyResult(BaseModel):
     modified_files: list[str] = Field(default_factory=list)
 
 
+def _unwrap_nested_verdict_dict(data: Any) -> dict[str, Any] | None:
+    """Unwraps nested PeerVerdictBlock/peer_verdict dict if present while preserving sibling keys."""
+    if not isinstance(data, dict):
+        return None
+    for key in _NESTED_VERDICT_KEYS:
+        inner = data.get(key)
+        if isinstance(inner, dict):
+            return {k: v for k, v in data.items() if k != key} | inner
+    return data
+
+
 def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any], str]]:
     """Extracts all valid YAML frontmatter dicts and their trailing bodies from markdown text."""
     if not md_content:
@@ -354,8 +384,8 @@ def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any
         match = FRONTMATTER_PATTERN.match(content)
         if match:
             try:
-                data = yaml.safe_load(match.group(1))
-                if isinstance(data, dict):
+                data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+                if data is not None:
                     blocks.append((data, content[match.end() :]))
                     consumed_until = match.end()
             except Exception:
@@ -364,13 +394,21 @@ def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any
         if match.start() < consumed_until or (blocks and match.start() == 0):
             continue
         try:
-            data = yaml.safe_load(match.group(1))
-            if isinstance(data, dict) and any(k in data for k in _FRONTMATTER_KEYS):
+            data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+            if data is not None and any(k in data for k in _FRONTMATTER_KEYS):
                 closing_end = match.end() + len(match.group(2))
                 blocks.append((data, content[closing_end:]))
                 consumed_until = closing_end
         except Exception:
             continue
+    if not blocks:
+        for match in FENCED_YAML_PATTERN.finditer(md_content):
+            try:
+                data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+                if data is not None and any(k in data for k in _FRONTMATTER_KEYS):
+                    blocks.append((data, md_content[match.end() :]))
+            except Exception:
+                continue
     return blocks
 
 
@@ -407,6 +445,20 @@ def _coerce_doc_list(raw: Any) -> list[str]:
     return out
 
 
+def _apply_envelope_doc_and_session_aliases(data: dict[str, Any], d: dict[str, Any]) -> None:
+    """Applies document list coercions and session_id resume aliases onto normalized envelope dict."""
+    if "source_documents" in data or "context_files" in data:
+        d["source_documents"] = _coerce_doc_list(
+            data.get("source_documents") or data.get("context_files")
+        )
+    if "target_files" in data or "target_scope" in data:
+        d["target_files"] = _coerce_doc_list(data.get("target_files") or data.get("target_scope"))
+    if "resume_session_id" not in d and data.get("session_id"):
+        d["resume_session_id"] = str(data["session_id"]).strip()
+        if data.get("stage") == 3 or d.get("profile") == "signoff_diff":
+            d.setdefault("fork_session", True)
+
+
 def _normalize_envelope_frontmatter(
     data: dict[str, Any], prompt_path: Path | None = None
 ) -> dict[str, Any] | None:
@@ -423,20 +475,32 @@ def _normalize_envelope_frontmatter(
     if not req_id:
         return None
     d["request_id"] = req_id
-    d["from_agent"] = str(data.get("from_agent") or data.get("sender") or "antigravity").strip()
-    d["to_agent"] = str(data.get("to_agent") or data.get("recipient") or "grok").strip()
+    d["from_agent"] = str(
+        data.get("from_agent")
+        or data.get("sender")
+        or data.get("author")
+        or data.get("from")
+        or "antigravity"
+    ).strip()
+    d["to_agent"] = str(
+        data.get("to_agent")
+        or data.get("recipient")
+        or data.get("target")
+        or data.get("to")
+        or "grok"
+    ).strip()
     raw_rt = str(data.get("request_type") or data.get("task_type") or data.get("type") or "review")
     d["request_type"] = _REQUEST_TYPE_ALIASES.get(raw_rt.strip().lower(), raw_rt.strip().lower())
     if d.get("profile") is not None:
         raw_p = str(d["profile"]).strip().lower()
         d["profile"] = _PROFILE_ALIASES.get(raw_p, raw_p)
-    if "source_documents" in data or "context_files" in data:
-        d["source_documents"] = _coerce_doc_list(
-            data.get("source_documents") or data.get("context_files")
-        )
-    if "target_files" in data:
-        d["target_files"] = _coerce_doc_list(data.get("target_files"))
-    subj = data.get("subject") or data.get("question") or data.get("chapter") or data.get("title")
+    subj = (
+        data.get("subject")
+        or data.get("question")
+        or data.get("chapter")
+        or data.get("title")
+        or data.get("wave")
+    )
     d["subject"] = str(subj or req_id).strip()
     d["timestamp"] = str(
         data.get("timestamp") or datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -449,13 +513,7 @@ def _normalize_envelope_frontmatter(
     d["output_path"] = str(
         data.get("output_path") or data.get("output_file") or f"grok_{stem}.md"
     ).strip()
-    if (
-        "resume_session_id" not in d
-        and data.get("session_id")
-        and (data.get("stage") == 3 or d.get("profile") == "signoff_diff")
-    ):
-        d["resume_session_id"] = str(data["session_id"]).strip()
-        d.setdefault("fork_session", True)
+    _apply_envelope_doc_and_session_aliases(data, d)
     return d
 
 

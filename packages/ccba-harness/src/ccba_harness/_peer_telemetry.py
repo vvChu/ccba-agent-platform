@@ -40,6 +40,8 @@ _PREFIX_ROLE_RE = re.compile(
 _OPT_OUT_RESUME_TOKENS: frozenset[str] = frozenset({"new", "none", "false", "0"})
 _RESUMED_BLOAT_MAX_LINES = 400
 _RESUMED_BLOAT_MAX_BYTES = 20_480
+_MAX_RESUME_AGE_SECONDS = 43_200.0
+_VERDICT_FILE_PREFIXES: tuple[str, ...] = ("grok_", "verdict_", "response_grok_", "response_")
 
 _PASS_VERDICTS: frozenset[str] = frozenset(
     {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS", "APPROVE_WITH_RESERVATIONS"}
@@ -291,6 +293,47 @@ def extract_grok_session_telemetry(
     )
 
 
+def merge_overwritten_telemetry(
+    output_file: Path | None, current: PeerVerdictTelemetry | None
+) -> PeerVerdictTelemetry | None:
+    """Accumulates prior round telemetry when overwriting an existing verdict file on disk."""
+    if current is None or output_file is None or not output_file.is_file():
+        return current
+    try:
+        prior_verdict = parse_verdict_from_md(output_file.read_text(encoding="utf-8"))
+    except OSError:
+        return current
+    prior = getattr(prior_verdict, "telemetry", None) if prior_verdict else None
+    if not isinstance(prior, PeerVerdictTelemetry):
+        return current
+    if not prior.session_id or prior.session_id.lower() in ("none", "unknown"):
+        return current
+    if prior.session_id == current.session_id and prior.turn_count >= current.turn_count:
+        return current
+    new_turns = (
+        current.turn_count
+        if prior.session_id == current.session_id
+        else (prior.turn_count + current.turn_count)
+    )
+    return PeerVerdictTelemetry(
+        session_id=current.session_id,
+        primary_model=current.primary_model,
+        input_tokens=prior.input_tokens + current.input_tokens,
+        output_tokens=prior.output_tokens + current.output_tokens,
+        reasoning_tokens=prior.reasoning_tokens + current.reasoning_tokens,
+        cached_read_tokens=prior.cached_read_tokens + current.cached_read_tokens,
+        total_tokens=prior.total_tokens + current.total_tokens,
+        model_calls=prior.model_calls + current.model_calls,
+        turn_count=new_turns,
+        cost_usd=round(prior.cost_usd + current.cost_usd, 4),
+        cost_mode=(
+            "exact" if prior.cost_mode == "exact" and current.cost_mode == "exact" else "estimated"
+        ),
+        duration_seconds=round(prior.duration_seconds + current.duration_seconds, 2),
+        degraded_reasoning=current.degraded_reasoning,
+    )
+
+
 def _accumulate_verdict_telemetry(
     t: Any,
     by_model: dict[str, dict[str, Any]],
@@ -374,7 +417,7 @@ def _collect_prior_verdict_sessions(
             env = parse_envelope_from_md(text, prompt_path=p)
             if env and env.request_id:
                 prompts_by_req[env.request_id] = env
-        elif entry.name.startswith(("grok_", "verdict_")) and entry.name != cur_out_name:
+        elif entry.name.startswith(_VERDICT_FILE_PREFIXES) and entry.name != cur_out_name:
             v = parse_verdict_from_md(text)
             sid = (
                 str(getattr(v.telemetry, "session_id", "") or "").strip()
@@ -388,7 +431,7 @@ def _collect_prior_verdict_sessions(
         p_env = prompts_by_req.get(v.request_id)
         v_iso = _parse_iso_ts(v.timestamp or (p_env.timestamp if p_env else None))
         delta_sec = (p_iso - v_iso) if (p_iso is not None and v_iso is not None) else (p_mtime - mt)
-        if delta_sec >= -60.0:
+        if -60.0 <= delta_sec <= _MAX_RESUME_AGE_SECONDS:
             verdicts.append((delta_sec, mt, v_name, v, sid))
     verdicts.sort(key=lambda item: (round(item[0], 4), -round(item[1], 4), item[2]))
     return prompts_by_req, verdicts

@@ -54,9 +54,11 @@ from ._peer_models import (
     render_verdict_header,
 )
 from ._peer_telemetry import (
+    _VERDICT_FILE_PREFIXES,
     _accumulate_verdict_telemetry,
     _enforce_single_verdict_guardrails,
     extract_grok_session_telemetry,
+    merge_overwritten_telemetry,
 )
 from ._peer_watchdog import (
     _VERDICT_ALIASES,
@@ -209,7 +211,7 @@ def classify_file_role(path: Path) -> str:
         return "PROMPT_TO_GROK"
     if name.startswith("grok_implementation_") or name.startswith("grok_implement_"):
         return "GROK_IMPLEMENTATION"
-    if name.startswith("grok_") or name.startswith("verdict_"):
+    if name.startswith(_VERDICT_FILE_PREFIXES):
         return "GROK_RESPONSE"
     return "AUXILIARY"
 
@@ -258,7 +260,7 @@ def scan_peer_exchange(
         if not content or not digest:
             continue
 
-        envelope = parse_envelope_from_md(content)
+        envelope = parse_envelope_from_md(content, prompt_path=path)
         verdict = (
             None if role in ("PROMPT_TO_GROK", "GROK_REQUEST") else parse_verdict_from_md(content)
         )
@@ -296,10 +298,11 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
         env = item.get("envelope")
         if item["role"] == "PROMPT_TO_GROK" and env:
             out_name = Path(env.output_path).name if env.output_path else ""
-            is_fresher_out = (
-                bool(out_name)
-                and out_name in grok_verdict_mtimes
-                and grok_verdict_mtimes[out_name] >= float(item.get("mtime", 0.0))
+            stem = name.removeprefix("prompt_grok_").removeprefix("prompt_").removesuffix(".md")
+            cand_outs = {out_name, *(f"{pfx}{stem}.md" for pfx in _VERDICT_FILE_PREFIXES)} - {""}
+            is_fresher_out = any(
+                c in grok_verdict_mtimes and grok_verdict_mtimes[c] >= float(item.get("mtime", 0.0))
+                for c in cand_outs
             )
             if env.request_id not in answered_ids and not is_fresher_out:
                 pending_grok.append(name)
@@ -480,13 +483,9 @@ def publish_peer_message(
     auto_grok: bool = False,
 ) -> Path:
     """Atomically publishes a peer exchange envelope and asynchronously syncs state."""
-    frontmatter = render_prompt_header(envelope)
-    full_content = frontmatter + body_text.lstrip()
-    atomic_write_text(target_path, full_content)
-
+    atomic_write_text(target_path, render_prompt_header(envelope) + body_text.lstrip())
     if on_publish_hook:
         on_publish_hook(target_path)
-
     _clean_completed_threads()
 
     def _async_sync() -> None:
@@ -579,7 +578,7 @@ def _finalize_grok_verdict_and_telemetry(
         if extract_anchor_payload(stdout_text) is None:
             return False
         prompt_content, _ = safe_read_and_hash(prompt_path)
-        envelope = parse_envelope_from_md(prompt_content or "")
+        envelope = parse_envelope_from_md(prompt_content or "", prompt_path=prompt_path)
         verdict = PeerVerdictBlock(
             request_id=envelope.request_id if envelope else "req-auto",
             verdict="HANDOFF",
@@ -601,7 +600,7 @@ def _finalize_grok_verdict_and_telemetry(
             parent_session_id=parent_session_id,
         )
         if telemetry:
-            verdict.telemetry = telemetry
+            verdict.telemetry = merge_overwritten_telemetry(output_file, telemetry)
 
     _enforce_single_verdict_guardrails(verdict)
     _, body = extract_frontmatter(stdout_text)
@@ -748,9 +747,11 @@ def _dispatch_grok_candidate(
 
 def _sync_if_peer_exchange_dir(directory: Path) -> None:
     """Runs best-effort sync cycle when directory is peer_exchange or tracks status.json."""
-    if directory.name == "peer_exchange" or (directory / "status.json").exists():
+    is_pe = directory.name == "peer_exchange" or (directory / "status.json").exists()
+    target = directory if is_pe else (directory.parent / "peer_exchange")
+    if target.is_dir():
         try:
-            run_sync_cycle(directory, auto_grok=False)
+            run_sync_cycle(target, auto_grok=False)
         except Exception:
             pass
 
