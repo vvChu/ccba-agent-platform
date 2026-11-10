@@ -916,3 +916,109 @@ def test_response_grok_prefix_ttl_bound_and_overwritten_telemetry_merge(tmp_path
     assert merged.total_tokens == 950
     assert merged.cost_usd == 0.03
     assert merged.turn_count == 2
+
+
+def test_resumed_audit_direct_cache_prefix_preamble_and_cost_isolation(tmp_path, monkeypatch):
+    """Verifies resumed audit_direct KV-cache prefix preservation, multi-turn preamble detection, and costUsdTicks isolation."""
+    from ccba_harness._peer_watchdog import (
+        AUDIT_BASE_SYSTEM_PROMPT,
+        _build_synthesis_opts,
+        is_max_turns_exhausted,
+    )
+    from ccba_harness.peer import PROFILE_SPECS, PeerPromptEnvelope, _resolve_grok_profile_options
+
+    # 1. Resumed audit_direct preserves AUDIT_BASE_SYSTEM_PROMPT and read-only tools (KV-cache prefix)
+    env = PeerPromptEnvelope(
+        request_id="req-nb-v2",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        subject="v2",
+        timestamp="2026-11-10T16:10:00+07:00",
+        output_path="grok_nb_v2.md",
+        profile="audit_direct",
+        resume_session_id="d00ec01c-05d9-427b-a6db-1703ee48ddfa",
+    )
+    opts_resumed = _resolve_grok_profile_options(
+        PROFILE_SPECS["audit_direct"], env, None, None, False, None, None, None
+    )
+    assert opts_resumed["system_prompt"] == AUDIT_BASE_SYSTEM_PROMPT
+    assert opts_resumed["tools"] == ["read_file", "grep", "list_dir"]
+    assert opts_resumed["deny"] == ["Bash", "Write", "Edit", "WebFetch"]
+    assert opts_resumed["max_turns"] == 3
+    synth_opts = _build_synthesis_opts(opts_resumed, "d00ec01c-05d9-427b-a6db-1703ee48ddfa")
+    assert synth_opts["timeout"] >= 180.0
+
+    # 2. Multi-turn resumed session (turn_ends == 3) stopping on preamble triggers synthesis
+    sid = "d00ec01c-05d9-427b-a6db-1703ee48ddfa"
+    sdir = tmp_path / "sessions" / sid
+    sdir.mkdir(parents=True)
+    (sdir / "events.jsonl").write_text(
+        '{"type":"turn_ended","outcome":"cancelled","cancellation_context":{"reason":"max_turns_reached"}}\n'
+        '{"type":"turn_ended","outcome":"completed"}\n'
+        '{"type":"turn_ended","outcome":"completed"}\n',
+        encoding="utf-8",
+    )
+    chat_f = sdir / "chat_history.jsonl"
+    chat_f.write_text(
+        '{"type":"assistant","content":"---\\nrequest_id: r1\\nverdict: REVISE_PLAN\\n---"}\n'
+        '{"type":"user","content":"Round 2 delta"}\n'
+        '{"type":"assistant","content":"The round-2 plan claims all 13 conditions are adopted. I will check deltas."}\n',
+        encoding="utf-8",
+    )
+    assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is True
+    with chat_f.open("a", encoding="utf-8") as cf:
+        cf.write(
+            '{"type":"assistant","content":"---\\nrequest_id: r2\\nverdict: APPROVE_PLAN\\n---"}\n'
+        )
+    assert is_max_turns_exhausted(sid, session_root=tmp_path / "sessions") is False
+
+    # 3. Turn 4 without costUsdTicks does not inherit cumulative session costUsdTicks
+    usage_d00 = {
+        "session": {"primaryModelId": "grok-4.7-build", "costUsdTicks": 2627812400, "turnCount": 4},
+        "turns": [
+            {
+                "turnNumber": 1,
+                "inputTokens": 532633,
+                "outputTokens": 9705,
+                "costUsdTicks": 1608200000,
+            },
+            {
+                "turnNumber": 3,
+                "primaryModelId": "gemini-3.8-flash-high",
+                "inputTokens": 40000,
+                "outputTokens": 500,
+                "reasoningTokens": 600,
+                "totalTokens": 40500,
+                "modelCalls": 1,
+            },
+            {
+                "turnNumber": 4,
+                "primaryModelId": "gemini-3.8-flash-high",
+                "inputTokens": 84315,
+                "outputTokens": 2088,
+                "reasoningTokens": 1938,
+                "totalTokens": 86403,
+                "modelCalls": 1,
+            },
+        ],
+    }
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *a, **kw: subprocess.CompletedProcess(
+            args=a[0], returncode=0, stdout=json.dumps(usage_d00), stderr=""
+        ),
+    )
+    tel = extract_grok_session_telemetry(
+        session_id=sid, fallback_model="gemini-3.8-flash-high", synthesize_turns=1
+    )
+    assert tel is not None
+    assert tel.cost_mode == "estimated"
+    assert tel.cost_usd < 0.20
+    tel2 = extract_grok_session_telemetry(
+        session_id=sid, fallback_model="gemini-3.8-flash-high", synthesize_turns=2
+    )
+    assert tel2 is not None
+    assert tel2.cost_mode == "estimated"
+    assert tel2.cost_usd < 0.25
