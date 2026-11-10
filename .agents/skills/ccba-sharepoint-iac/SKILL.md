@@ -5,7 +5,7 @@ description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Autom
   Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 disable-model-invocation: true
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 bundle: _software
 tier: kernel
@@ -63,19 +63,23 @@ Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩ
 
 ## 🎯 1. Bốn Trụ Cột Thiết Kế & Kiểm Định Cốt Lõi (Core Invariants)
 
-1. **Metadata-First & Master Storage Offloading (`<5GB` List Quota)**:
-   - Các SharePoint Lists chỉ lưu trữ siêu dữ liệu (`Text`, `Number`, `DateTime`, `Lookup`, `ManagedMetadata`, `Choice`, `Hyperlink`/`URL`, `User`, `YesNo`).
-   - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ SharePoint Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Scan phải được offload sang Master OneDrive Storage (`ccba-storage`) theo 2 phân vùng:
-     - `Documents/iOPS/` (`01_Bids_CRM/`, `02_Contracts/`, `05_Projects/`): Hồ sơ pháp lý, đấu thầu, hợp đồng và phiếu giao việc (PGV).
-     - `Documents/iCDE/` (`tvgs_qlda/`, `thiet_ke_BIM/`, `tham_tra_TK/`, `kiem_dinh_CL/`, `khao_sat_TN/`, `bim_data/`): Hồ sơ kỹ thuật dự án theo chuẩn ISO 19650 (`S0` $\to$ `S1` $\to$ `S2` $\to$ `S3` $\to$ `A1`).
-2. **Kiến Trúc Bảo Mật Hai Phân Vùng (Dual-Zone Security Architecture)**:
-   - **Zone 1 (Public Intranet)**: Cho phép nhóm toàn viện/trung tâm (`CCBA_VCNLD_All`) quyền đọc tin tức, thông báo chung.
-   - **Zone 2 (Confidential Operations Engine — `sites/IDOP`)**: Hạ quyền nhóm `IDOP Members` xuống `Read` tại gốc Site; **cấm tuyệt đối** gán `CCBA_VCNLD_All` vào các bảng nghiệp vụ nhạy cảm (`Contracts`, `Invoices`, `PayrollRecords`, `SalaryStructures`, `EmployeeIncomes`, `Opportunities`, `Submissions`, `ApprovalNodes`); bắt buộc ngắt thừa kế quyền (`BreakRoleInheritance`) theo từng bảng/thư mục dự án.
-3. **Rào Chắn Ngữ Nghĩa Cột & Chỉ Mục (`MAX_INDEXED_COLUMNS_PER_LIST = 20`)**:
-   - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (`ContractCode`, `RequiresIBSTSign`, `ApprovalStatus`).
-   - **Giới hạn 20 chỉ mục**: Mỗi SharePoint List không được khai báo quá `20` cột có `"Indexed": true`.
+1. **Metadata-First (`<5GB`), Kiến Trúc `Core (62 Lists) × Satellite Modules` & Master Storage Offloading (`ccba-storage` 5TB)**:
+   - **Tầng Lõi (`idop-core` — `datamodel/sharepoint/lists/<domain>/*.json`)**: Khóa cứng `62` SharePoint Lists (`710` Columns, `82` SPO Views, `21` Term Sets). Chỉ lưu trữ siêu dữ liệu (`Text`, `Number`, `DateTime`, `Lookup`, `ManagedMetadata`, `Choice`, `Hyperlink`/`URL`, `User`, `YesNo`, `Boolean`).
+   - **Tầng Vệ Tinh (`satellite_modules` — `datamodel/sharepoint/satellites/<module>/*.json`)**: Khi mở rộng các tính năng mới (như `satellites/knowledge_viva`), khai báo JSON schema ngoài thư mục `lists/`, đăng ký vào `datamodel/sharepoint/module_manifest.json` (`"satellite_modules"`), và kết nối khóa ngoại ngữ nghĩa (`Lookup`, `ManagedMetadata`) về `62` Lists Lõi mà không làm biến đổi `active_list_count: 62` của Vùng 2.
+   - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ 2TB SharePoint Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Video MP4 phải được offload sang Master OneDrive Storage (`ccba-storage` — `5TB`) theo 2 phân nhánh:
+     - `Documents/iOPS/` (`01_Bidding/`, `02_Contracts/`, `03_Finance/`, `04_HR_Assets/`, `05_Projects/`): Hồ sơ pháp lý, đấu thầu, hợp đồng, tài chính, nhân sự (cách ly quyền thư mục con `00_CCBA_Onboarding_SOPs/`) và quyết toán A-B đóng băng.
+     - `Documents/iCDE/` (`thiet_ke_BIM/`, `tvgs_qlda/`, `tham_tra/`, `kiemdinh_khaosat/`, `other/`): Hồ sơ kỹ thuật dự án theo chuẩn ISO 19650 (`S0` $\to$ `S1` $\to$ `S2` $\to$ `S3` $\to$ `A1`) và học liệu đào tạo Stream (`other/00_CCBA_Academy_Learning/`). `WorkPackages.DeliverableFolderPath` chỉ được phép trỏ vào `iCDE/`.
+2. **Kiến Trúc Bảo Mật Đa Phân Vùng (Dual-Zone + `/sites/iCDE` & 4 Canonical Site IDs)**:
+   - Định danh 4 Site Collections chuẩn trong `tools.auth.site_preflight`:
+     - **Zone 1 (Public Intranet — `https://ibstbim.sharepoint.com`, `925e6eaa-8908-4094-8d1a-75c46c7901c9`)**: Cấp quyền đọc cho `CCBA_VCNLD_All` (`69` VCNLĐ) sau khi gỡ `'Everyone except external users'` (`ZONE1-ORDER`), `0` List WebParts (`controlType=3`).
+     - **Cổng Kỹ Thuật Độc Lập (`/sites/iCDE` — `186131e8-e45d-4d8a-b05a-0d46530cae43`)**: Hợp nhất và thay thế trang cũ `/SitePages/TVGS-CDE.aspx`; khóa `Read-Only` (`1073741826`) 3 thư viện lịch sử, nhúng 5 CoPs Kỹ thuật Viva Engage và lộ trình học tập Tier 2. Mọi thay đổi Canvas trên Zone 1 và `/sites/iCDE` phải qua `_assert_safe_portal_canvas()` (chặn sharing tokens, chặn List WebPart `controlType=3`, và chặn deep-link vào `Lists/LessonsLearned` hay các bảng tài chính Zone 2).
+     - **Zone 2 (Confidential Operations Engine — `/sites/idop`, `812726c1-098f-4755-8cd1-65a5a9eb37f2`)**: Bảo vệ `62` Core Lists; hạ quyền nhóm `IDOP Members` (`PrincipalId=5`) xuống `Read` (`1073741826`) tại gốc Site; **cấm tuyệt đối** gán `CCBA_VCNLD_All` vào Vùng 2; đồng bộ RBAC 1-Stop-Shop từ cột MultiChoice `Employees.SystemRoles`; giữ 3 trang điều hành (`Home.aspx`, `L10-Traction-Room.aspx`, `IDOP-Cockpit.aspx`) sạch 100% không nhúng feed mạng xã hội.
+     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`v1.0.4.0`).
+3. **Rào Chắn Ngữ Nghĩa Cột, Chỉ Mục, View Lookup & Bộ Đệm Ẩn ManagedMetadata**:
+   - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (`ContractCode`, `RequiresIBSTSign`, `ApprovalStatus`); `DisplayName` tiếng Việt có dấu $\le 50$ ký tự.
+   - **Giới hạn 20 chỉ mục Cột (`MAX_INDEXED_COLUMNS_PER_LIST = 20`) & 8 Lookup trên View (`MAX_VIEW_LOOKUP_COLUMNS = 8`)**: Mỗi SharePoint List không quá `20` cột `"Indexed": true`; mỗi SPO View (trong tổng số `82` Views) không quá `8` cột kiểu Lookup/User/Taxonomy (`count_view_lookup_columns`).
    - **Cấm lập chỉ mục trên kiểu không hỗ trợ (`NON_INDEXABLE_COLUMN_TYPES`)**: Không đặt `"Indexed": true` cho các cột kiểu `"ManagedMetadata"`, `"Taxonomy"`, `"Note"`, `"MultiChoice"`, `"URL"`, `"Hyperlink"`, hoặc cột đa giá trị `"Lookup"`/`"User"` (`"AllowMultiple": true`).
-   - **Toàn vẹn tham chiếu**: Mọi cột `"Lookup"` phải khai báo `Lookup.List` tồn tại và `Behavior: "restrict"` (hoặc `"cascade"` cho bảng phụ thuộc); mọi cột `"ManagedMetadata"` phải trỏ tới `TermSet.Name` có thực trong `datamodel/sharepoint/taxonomy/*.json`.
+   - **Toàn vẹn tham chiếu & Ghi cột phức hợp REST**: Mọi cột `"Lookup"` phải khai báo `Lookup.List` tồn tại trong `62 Core Lists ∪ declared Satellites` và `Behavior: "restrict"` (hoặc `"cascade"`); mọi cột `"ManagedMetadata"` phải trỏ tới `TermSet.Name` có thực trong `21` Term Sets (`datamodel/sharepoint/taxonomy/*.json`). Khi ghi cột Taxonomy/Hyperlink qua SharePoint REST, bắt buộc nạp bộ đệm trường Note ẩn 1 lượt (`&$top=500` + `@odata.nextLink`) qua `resolve_list_hidden_note_map_async` và `apply_complex_fields_via_sp_rest_async`. Trước khi bật `Required=True` trên cột hiện hữu, phải chạy `scan_required_column_null_blockers`.
 4. **Kiểm Chứng Máy Trạng Thái Phê Duyệt Đa Cấp (`Submissions` & `ApprovalNodes`)**:
    - Luồng phê duyệt đa cấp hỗ trợ 4 kết quả nút (`Pending`, `Approved`, `Rejected`, `Returned`). Khi hợp đồng/hồ sơ có cờ `RequiresIBSTSign = true`, mọi đường đi dẫn tới `Approved_Published` bắt buộc phải đi qua cổng đầu mối Phòng Tổng Hợp (`IBST_Gateway_Review` — `ROLE_HEAD_ADMIN`).
 
