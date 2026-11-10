@@ -420,6 +420,22 @@ def inspect_session_liveness(
     return None, None
 
 
+def _is_preamble_only_chat_tail(chat_file: Path) -> bool:
+    """Checks if chat_history.jsonl exists and the latest assistant turn lacks a verdict block."""
+    if not chat_file.is_file():
+        return False
+    try:
+        lines = chat_file.read_text(encoding="utf-8", errors="replace").splitlines()[-20:]
+    except OSError:
+        return False
+    for raw in reversed(lines):
+        if '"assistant"' in raw:
+            return "verdict:" not in raw.lower()
+        if '"user"' in raw:
+            break
+    return False
+
+
 def is_max_turns_exhausted(
     session_id: str,
     session_root: Path | None = None,
@@ -435,7 +451,6 @@ def is_max_turns_exhausted(
             if not p.is_file():
                 continue
             text = p.read_text(encoding="utf-8", errors="replace")
-            turn_ends = text.count('"turn_ended"')
             for raw in reversed(text.splitlines()):
                 cleaned = raw.strip(" \t\r\n\x00")
                 if not cleaned:
@@ -447,10 +462,8 @@ def is_max_turns_exhausted(
                 if isinstance(evt, dict) and evt.get("type") == "turn_ended":
                     if "max_turns_reached" in cleaned:
                         return True
-                    return (
-                        turn_ends == 1
-                        and evt.get("outcome") == "completed"
-                        and (p.parent / "chat_history.jsonl").is_file()
+                    return evt.get("outcome") == "completed" and _is_preamble_only_chat_tail(
+                        p.parent / "chat_history.jsonl"
                     )
             if "max_turns_reached" in text:
                 return True
@@ -464,6 +477,7 @@ def _build_synthesis_opts(opts: dict[str, Any], eff_sid: str) -> dict[str, Any]:
     return {
         **opts,
         "max_turns": 2,
+        "timeout": max(float(opts.get("timeout") or 180.0), 180.0),
         "resume_session_id": eff_sid,
         "fork_session": False,
         "is_synthesis_turn": True,
@@ -566,7 +580,7 @@ def _poll_grok_process_with_watchdog(
             ):
                 _terminate_proc_tree(proc)
                 return "", False
-            if last_state.startswith("turn_ended:") and age_s > 5.0:
+            if last_state.startswith("turn_ended:") and (age_s > 5.0 or time.time() >= deadline):
                 temp_out.seek(0)
                 stdout_text = temp_out.read()
                 _terminate_proc_tree(proc)
@@ -629,6 +643,12 @@ def _resolve_grok_profile_options(
         if max_turns is None and (eff_turns is None or eff_turns > 3):
             eff_turns = 3
     eff_resume = _resolve_effective_resume_session(resume_session_id, envelope, prompt_path)
+    sys_prompt = spec.get("system_prompt")
+    if eff_resume and not no_tools and tools is None and deny == ["*"]:
+        tools = ["read_file", "grep", "list_dir"]
+        disallowed = list(READ_ONLY_DISALLOW_LIST)
+        deny = ["Bash", "Write", "Edit", "WebFetch"]
+        sys_prompt = AUDIT_BASE_SYSTEM_PROMPT
     env_fork = envelope.fork_session if envelope is not None else None
     eff_fork = (
         fork_session
@@ -641,7 +661,7 @@ def _resolve_grok_profile_options(
         "disallowed_tools": disallowed,
         "deny": deny,
         "reasoning_effort": spec.get("reasoning_effort"),
-        "system_prompt": spec.get("system_prompt"),
+        "system_prompt": sys_prompt,
         "timeout": timeout if timeout is not None else spec.get("timeout", 180.0),
         "resume_session_id": eff_resume,
         "fork_session": eff_fork,

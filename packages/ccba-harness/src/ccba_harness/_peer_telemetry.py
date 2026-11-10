@@ -118,9 +118,12 @@ def _merge_synthesis_turns(
     """Resolves turn counters, session turn_count, and last-turn reasoning tokens."""
     t_list = [t for t in turns_list if isinstance(t, dict)] if isinstance(turns_list, list) else []
     turn_count = int(s_data.get("turnCount") or (len(t_list) if t_list else 1))
+    base_s_data = {k: v for k, v in s_data.items() if k != "costUsdTicks"} if t_list else s_data
     if synthesize_turns <= 1:
         if t_list:
-            s_data = {**s_data, **t_list[-1]}
+            s_data = base_s_data | t_list[-1]
+            if "primaryModelId" in t_list[-1]:
+                s_data["primaryModelId"] = t_list[-1]["primaryModelId"]
         return s_data, turn_count, int(s_data.get("reasoningTokens", 0))
 
     last_turn = t_list[-1] if t_list else s_data
@@ -140,7 +143,7 @@ def _merge_synthesis_turns(
             window.insert(0, p_last)
             p_tc = int(p_sess.get("turnCount") or 1)
             turn_count = max(turn_count + 1, p_tc + 1)
-    merged = {**s_data, **(t_list[-1] if t_list else {})}
+    merged = {**base_s_data, **(t_list[-1] if t_list else {})}
     for key in _SUMMABLE_TURN_KEYS:
         if any(key in t for t in window):
             merged[key] = sum(int(t.get(key, 0) or 0) for t in window)

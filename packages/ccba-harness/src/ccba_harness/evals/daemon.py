@@ -1,8 +1,4 @@
-"""daemon.py - Autonomous Multi-Skill Nightly Optimization Daemon (ADR-0023, ADR-0035, ADR-0057).
-
-Extracts and encapsulates the batch optimization engine, WeightedPriorityQueue,
-and Git-Ratchet iteration lifecycle into a first-class Deep Seam in ccba_harness.evals.
-"""
+"""daemon.py - Autonomous Multi-Skill Nightly Optimization Daemon (ADR-0023, ADR-0035, ADR-0057)."""
 
 from __future__ import annotations
 
@@ -49,9 +45,27 @@ from .tuner import (
 logger = logging.getLogger("ccba.eval.nightly")
 
 SUPPORTED_TELEGRAM_DOC_EXTENSIONS: frozenset[str] = frozenset(
-    {".pdf", ".docx", ".pptx", ".xlsx", ".html", ".png", ".md", ".txt", ".json", ".zip"}
+    ".pdf .docx .pptx .xlsx .html .png .md .txt .json .zip .csv .m4a .mp4".split()
 )
 MAX_TELEGRAM_DOC_BYTES: int = 50 * 1024 * 1024
+
+
+def _validate_telegram_extension_header(doc_path: Path) -> bool:
+    """Validates container/text header magic for extended Telegram document types (.m4a, .mp4, .csv)."""
+    ext = doc_path.suffix.lower()
+    if ext not in (".m4a", ".mp4", ".csv"):
+        return True
+    try:
+        with doc_path.open("rb") as fh:
+            head = fh.read(4096)
+    except OSError:
+        return False
+    if ext in (".m4a", ".mp4"):
+        return len(head) >= 8 and head[4:8] == b"ftyp"
+    try:
+        return b"\x00" not in head and isinstance(head.decode("utf-8"), str)
+    except UnicodeDecodeError:
+        return False
 
 
 @functools.lru_cache(maxsize=8)
@@ -93,23 +107,18 @@ def resolve_telegram_credentials(
         return resolved_auth, resolved_channel
 
     candidates: list[Path] = [Path.cwd() / ".env", find_project_root() / ".env"]
-    hub_env = os.environ.get("CCBA_HUB_PATH")
-    if hub_env:
+    if hub_env := os.environ.get("CCBA_HUB_PATH"):
         candidates.append(Path(hub_env) / ".env")
-    hub_root = _find_hub_root_candidate()
-    if hub_root:
+    if hub_root := _find_hub_root_candidate():
         candidates.append(hub_root / ".env")
 
     for env_file in candidates:
-        if not env_file.is_file():
-            continue
-        env_vars = _read_env_file_cached(env_file.resolve())
-        if not resolved_auth:
-            resolved_auth = env_vars.get("TELEGRAM_BOT_TOKEN")
-        if not resolved_channel:
-            resolved_channel = env_vars.get("TELEGRAM_CHAT_ID")
-        if resolved_auth and resolved_channel:
-            break
+        if env_file.is_file():
+            env_vars = _read_env_file_cached(env_file.resolve())
+            resolved_auth = resolved_auth or env_vars.get("TELEGRAM_BOT_TOKEN")
+            resolved_channel = resolved_channel or env_vars.get("TELEGRAM_CHAT_ID")
+            if resolved_auth and resolved_channel:
+                break
     return resolved_auth, resolved_channel
 
 
@@ -239,6 +248,11 @@ def send_telegram_document(
     if doc_path.suffix.lower() not in SUPPORTED_TELEGRAM_DOC_EXTENSIONS:
         logger.warning(f"⚠️ Định dạng file không được hỗ trợ gửi Telegram: {doc_path.suffix}")
         return False
+    if not _validate_telegram_extension_header(doc_path):
+        logger.warning(
+            f"⚠️ Header/magic byte không hợp lệ cho định dạng {doc_path.suffix}: {doc_path.name}"
+        )
+        return False
     file_size = doc_path.stat().st_size
     if file_size > MAX_TELEGRAM_DOC_BYTES:
         logger.warning(
@@ -328,22 +342,21 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         hard_max_tokens_per_skill: int | None = cast(Any, _UNSET),
     ) -> None:
         self.root = (root or find_project_root()).resolve()
-        self.max_iterations_low = max_iterations_low
-        self.max_iterations_perfect = max_iterations_perfect
-        self.early_stopping_patience = early_stopping_patience
-        self.use_real_llm = use_real_llm
+        self.max_iterations_low, self.max_iterations_perfect = (
+            max_iterations_low,
+            max_iterations_perfect,
+        )
+        self.early_stopping_patience, self.use_real_llm = early_stopping_patience, use_real_llm
         self.concurrency = _resolve_daemon_env_int(concurrency, "CCBA_TUNER_CONCURRENCY", 5)
-        self.token_budget = token_budget
+        self.token_budget, self.model = token_budget, model
         self.per_skill_mutation_budget = _resolve_daemon_env_int(
             per_skill_mutation_budget, "CCBA_TUNER_PER_SKILL_MUTATION_BUDGET", 250_000
         )
         self.hard_max_tokens_per_skill = _resolve_daemon_env_int(
             hard_max_tokens_per_skill, "CCBA_TUNER_HARD_MAX_PER_SKILL", 500_000
         )
-        self.model = model
         self.target_skills = [s.strip().lower() for s in target_skills] if target_skills else None
-        self.alert_emitter = alert_emitter
-        self.no_telegram = no_telegram
+        self.alert_emitter, self.no_telegram = alert_emitter, no_telegram
         env_sc = os.getenv("CCBA_TUNER_SKIP_COOLDOWN")
         self.skip_cooldown = (
             env_sc.lower() in ("1", "true", "yes") if env_sc is not None else skip_cooldown
@@ -357,8 +370,8 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             )
             target_ref = "main" if chk.returncode != 0 else target_ref
         self.target_ref = target_ref
-        self.test_cases_dir = self.root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
         self.skills_dir = self.root / ".agents" / "skills"
+        self.test_cases_dir = self.skills_dir / "ccba-eval-gate" / "test_cases"
 
     def _inspect_skill_status(
         self, skill_path: Path, skill_name: str
@@ -592,16 +605,7 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         except Exception as e:
             logger.error(f"❌ Lỗi trong quá trình tối ưu {skill_name}: {e}")
             return (
-                SkillEvolutionSummary(
-                    skill_name=skill_name,
-                    target_file=target_file,
-                    baseline_score=0.0,
-                    final_score=0.0,
-                    commits_kept=0,
-                    rollbacks=0,
-                    status=f"ERROR: {e}",
-                    halt_reason="ERROR",
-                ),
+                self._make_skip_summary(skill_name, target_file, 0.0, f"ERROR: {e}", "ERROR"),
                 False,
             )
 
