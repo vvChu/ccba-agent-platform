@@ -48,8 +48,18 @@ output_path: ".md/peer_exchange/grok_review_peer_coordination_sync_plan.md"
 ---
 ```
 
-Lệnh dispatch Grok CLI thực tế (chọn profile phù hợp: `arch_audit` hoặc `code_review`):
+Lệnh dispatch Grok CLI thực tế (chọn `profile` theo bảng chuẩn `peer.PROFILE_SPECS` dưới đây):
+
+| Việc | Profile | Model | Trần |
+|---|---|---|---|
+| Plan lớn | `audit_plan` | `grok-4.7` | 12 turns, 900s |
+| Kiến trúc vừa | `arch_audit` | `grok-4.7` | 8 turns, 600s |
+| Nghiệm thu vòng 2 | `signoff_diff` | `grok-4.7`, `fork_session` | 8 turns, 600s |
+| Review diff nhanh | `code_review` | `gemini-38-flash` | 10 turns, 300s |
+
+Các profile còn lại (`audit_direct`, `patch_fast`, `deep_spec_audit`, `agentic_code`) xem chi tiết tại `docs/rules/execution_coordination_guardrails.md` (§20.1); khi thông số lệch nhau thì `peer.PROFILE_SPECS` là SSOT.
+
 ```bash
-ccba-harness peer-dispatch --prompt-file .md/peer_exchange/prompt_grok_<subject>.md --profile arch_audit
+ccba-harness peer-dispatch --prompt-file .md/peer_exchange/prompt_grok_<subject>.md --profile audit_plan
 ccba-harness peer-watch --once --dir .md/peer_exchange
 ```
