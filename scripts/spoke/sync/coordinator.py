@@ -425,12 +425,14 @@ def ensure_peer_exchange_scaffold(
         hub_norm = hub_raw.replace("\r\n", "\n")
 
         if not spoke_file.exists():
-            actions.append({
-                "type": "protocol",
-                "name": filename,
-                "status": "NEW",
-                "path": rel_path,
-            })
+            actions.append(
+                {
+                    "type": "protocol",
+                    "name": filename,
+                    "status": "NEW",
+                    "path": rel_path,
+                }
+            )
             if not dry_run:
                 peer_dir.mkdir(parents=True, exist_ok=True)
                 spoke_file.write_text(hub_raw, encoding="utf-8")
@@ -438,19 +440,23 @@ def ensure_peer_exchange_scaffold(
             spoke_raw = spoke_file.read_text(encoding="utf-8")
             spoke_norm = spoke_raw.replace("\r\n", "\n")
             if spoke_norm == hub_norm:
-                actions.append({
-                    "type": "protocol",
-                    "name": filename,
-                    "status": "UNCHANGED",
-                    "path": rel_path,
-                })
+                actions.append(
+                    {
+                        "type": "protocol",
+                        "name": filename,
+                        "status": "UNCHANGED",
+                        "path": rel_path,
+                    }
+                )
             else:
-                actions.append({
-                    "type": "protocol",
-                    "name": filename,
-                    "status": "UPDATED",
-                    "path": rel_path,
-                })
+                actions.append(
+                    {
+                        "type": "protocol",
+                        "name": filename,
+                        "status": "UPDATED",
+                        "path": rel_path,
+                    }
+                )
                 if not dry_run:
                     from datetime import datetime
 
@@ -1095,7 +1101,9 @@ class SpokeSynchronizer:
                 dry_run=dry_run, force=force
             )
         )
-        actions.extend(ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=dry_run, force=force))
+        actions.extend(
+            ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=dry_run, force=force)
+        )
         return actions
 
     def _refresh_telemetry_and_register(

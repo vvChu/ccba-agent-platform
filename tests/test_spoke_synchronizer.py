@@ -619,7 +619,9 @@ def test_peer_exchange_preserves_user_draft_files(tmp_path: Path) -> None:
 
     ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
 
-    assert (spoke_peer / "prompt_grok_review_foo.md").read_text(encoding="utf-8") == "# User Prompt Draft\n"
+    assert (spoke_peer / "prompt_grok_review_foo.md").read_text(
+        encoding="utf-8"
+    ) == "# User Prompt Draft\n"
     assert (spoke_peer / "grok_review_foo.md").read_text(encoding="utf-8") == "# Grok Output\n"
     assert (spoke_peer / ".bridge_cache.json").read_text(encoding="utf-8") == '{"token": "xyz"}\n'
 
@@ -652,9 +654,12 @@ def test_runtime_health_warning_missing_venv(tmp_path: Path) -> None:
     assert "chưa có virtualenv (.venv)" in warning
 
 
-def test_runtime_health_warning_missing_package(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_runtime_health_warning_missing_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verifies check_spoke_runtime_health warns when .venv lacks ccba-harness."""
     import subprocess
+
     from scripts.spoke.sync.coordinator import check_spoke_runtime_health
 
     spoke_root = tmp_path / "py-spoke"
@@ -670,7 +675,9 @@ def test_runtime_health_warning_missing_package(tmp_path: Path, monkeypatch: pyt
     py_exec.chmod(0o755)
 
     def _mock_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
-        return subprocess.CompletedProcess(args=list(args), returncode=1, stdout="", stderr="No module ccba_harness")
+        return subprocess.CompletedProcess(
+            args=list(args), returncode=1, stdout="", stderr="No module ccba_harness"
+        )
 
     monkeypatch.setattr(subprocess, "run", _mock_run)
 
@@ -678,4 +685,3 @@ def test_runtime_health_warning_missing_package(tmp_path: Path, monkeypatch: pyt
     assert warning is not None
     assert "thiếu package 'ccba-harness'" in warning
     assert "--bootstrap" in warning
-

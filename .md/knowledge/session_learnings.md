@@ -64,21 +64,11 @@
 
 ## Miền 4. 🛠️ Điều Phối & Quy Trình Agent (Workflows, Commands & Review)
 
-- **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**:
-  - Khi đã xác định Issue ID, LUÔN đề xuất `/ccba-new-feature #<id>` làm hành động tiếp theo (bao trọn 8 bước Factory Model).
-  - CẤM TUYỆT ĐỐI nhảy thẳng vào `/ccba-implement`, `/ccba-to-spec`, `/ccba-to-tickets`.
-- **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**:
-  - BẮT BUỘC đối chiếu `catalog.yaml` trước khi đề xuất bất kỳ lệnh `/command`. Chỉ kỹ năng có `command: /...` mới được gắn tiền tố `/`.
-  - Tài liệu tham chiếu trong `references/*.md` (Tier 2A) CẤM dùng tiền tố `/` (hướng dẫn người dùng gọi Master Skill kèm nạp reference).
-- **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**:
-  - Tiêu chí hoàn thành phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`).
-  - Quy tắc kết hợp cờ chỉ tuyên bố 1 lần duy nhất tại mục `Kết hợp không hợp lệ` trong `MODES.md`.
-- **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
-  - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
-- **RULE-4.20 [Peer Lineage Envelope & Smart-Sync Scaffold — ADR-0067, Grok COND-01..16]**:
-  - (a) `PeerPromptEnvelope` giữ `extra="forbid"` bảo vệ KV-cache & truyền 4 trường lineage (`conversation_id`, `task_id`, `spoke_name`, `tags`) xuống `PeerVerdictBlock` (fallback `ANTIGRAVITY_CONVERSATION_ID`).
-  - (b) `ensure_peer_exchange_scaffold` chuẩn hóa `CRLF` $\to$ `LF`, schema 4 trường `{type, name, status, path}`, sao lưu cấm dấu `:` trên Windows; `.gitignore` Hub/Spoke chuẩn hóa giữ `PEER_HANDSHAKE.md`, `README.md`, `grok_review_*.md`, `grok_signoff_*.md` và ignore runtime state (`status.json`, `grok_live_summary.md`, `prompt_*.yaml`).
-  - (c) `check_spoke_runtime_health` warn-only exit 0 ở cuối bootstrap, bỏ qua non-Python Spoke.
+- **RULE-4.1 [Entry Point Duy Nhất Khi Có Issue ID: `/ccba-new-feature`]**: Có Issue ID $\to$ LUÔN đề xuất `/ccba-new-feature #<id>` (bao trọn 8 bước Factory Model); CẤM nhảy thẳng vào `/ccba-implement`, `/ccba-to-spec`, `/ccba-to-tickets`.
+- **RULE-4.2 [Slash Command Parity & Active Commands SSOT]**: Đối chiếu `catalog.yaml` (`command: /...`) trước khi gắn tiền tố `/`; tài liệu Tier 2A (`references/*.md`) CẤM dùng tiền tố `/`.
+- **RULE-4.3 [Tiêu Chí Hoàn Thành Đa Nhánh & DRY Reference]**: Phải có nhánh kiểm chứng cho từng cờ (`--compare`, `--port`, `--improve`, `--copy-raw`); quy tắc kết hợp cờ chỉ khai báo 1 lần tại `MODES.md`.
+- **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**: Quét `author.login` thay vì `user.login`; kiểm tra `### 🟡 Changes recommended` và review `body` kể cả khi `COMMENTED`, cấm merge nếu chưa sửa/giải trình.
+- **RULE-4.20 [Peer Lineage & Smart-Sync Scaffold — ADR-0067, COND-01..16]**: `PeerPromptEnvelope` giữ `extra="forbid"` & truyền 4 khóa lineage (`conversation_id`, `task_id`, `spoke_name`, `tags`) xuống `PeerVerdictBlock` (fallback `ANTIGRAVITY_CONVERSATION_ID`). `ensure_peer_exchange_scaffold` chuẩn hóa `CRLF` $\to$ `LF`, schema `{type, name, status, path}`, sao lưu cấm dấu `:`, bảo toàn `grok_*`/`prompt_*` trên đĩa; `.gitignore` chỉ track `PEER_HANDSHAKE.md`, `README.md`, `.gitkeep`. `check_spoke_runtime_health` warn-only exit `0` ở cuối bootstrap (bỏ qua non-Python Spoke).
 
 ---
 
