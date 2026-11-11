@@ -71,6 +71,7 @@ DEFAULT_REPOS_CONFIG = [
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_last_sha.txt",
         "description": "ClaudeKit Engineering Skills",
         "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
+        "licensed_use": False,
     },
     {
         "name": "claudekit-marketing",
@@ -81,6 +82,7 @@ DEFAULT_REPOS_CONFIG = [
         "sha_file": PLATFORM_ROOT / ".md/scratch/claudekit_marketing_last_sha.txt",
         "description": "ClaudeKit Marketing Skills",
         "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
+        "licensed_use": False,
     },
     {
         "name": "mattpocock-skills",
@@ -91,6 +93,7 @@ DEFAULT_REPOS_CONFIG = [
         "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_last_sha.txt",
         "description": "Matt Pocock Skills Repository",
         "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
+        "licensed_use": False,
     },
 ]
 
@@ -245,22 +248,23 @@ def safe_rmtree(path: Path) -> None:
 
 
 def load_eval_cache() -> dict[str, Any]:
-    """Load cached AI evaluations from scratch directory."""
+    """Load cached AI evaluations from scratch directory, purging legacy clamped entries."""
     if CACHE_FILE.exists():
         try:
             data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                return data
+                return _uh.purge_legacy_clamped_cache(data)
         except Exception:
             return {}
     return {}
 
 
 def save_eval_cache(cache: dict[str, Any]) -> None:
-    """Persist AI evaluations to scratch directory."""
+    """Persist AI evaluations to scratch directory after purging legacy clamped entries."""
     try:
+        cleaned = _uh.purge_legacy_clamped_cache(cache)
         CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        CACHE_FILE.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
+        CACHE_FILE.write_text(json.dumps(cleaned, indent=2, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print(f"[Evaluator] Warning: Could not save eval cache: {e}")
 
@@ -322,6 +326,7 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
                     "stale_upstream_days": _parse_int_or_default(
                         s.get("stale_upstream_days"), root_stale
                     ),
+                    "licensed_use": bool(s.get("licensed_use", False)),
                 }
             )
         return sources if sources else DEFAULT_REPOS_CONFIG
@@ -330,8 +335,8 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
         return DEFAULT_REPOS_CONFIG
 
 
-def check_repo_license(repo_path: Path) -> tuple[str, str]:
-    """Audit license file in repository and classify type (PERMISSIVE, COPYLEFT, PROPRIETARY, UNKNOWN)."""
+def check_repo_license(repo_path: Path, *, licensed_use: bool = False) -> tuple[str, str]:
+    """Audit license file in repository and classify type, supporting COMMERCIAL_LICENSED."""
     if not repo_path.exists():
         return "UNKNOWN", "Thư mục không tồn tại"
 
@@ -353,9 +358,16 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
                 continue
 
     if not texts:
-        return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
-    rules = load_upstream_governance_config().get("license_rules")
-    return _uh.classify_license_text("\n".join(texts), rules)
+        lic_type, lic_desc = "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
+    else:
+        rules = load_upstream_governance_config().get("license_rules")
+        lic_type, lic_desc = _uh.classify_license_text("\n".join(texts), rules)
+    if licensed_use and lic_type in {"PROPRIETARY", "UNKNOWN"}:
+        return (
+            "COMMERCIAL_LICENSED",
+            "Commercial License (Đã mua bản quyền — Cho phép Clean-Room --port/--improve, cấm --copy-raw)",
+        )
+    return lic_type, lic_desc
 
 
 def _run_git_text(repo_path: Path, args: list[str], timeout: int = 10) -> str | None:
@@ -688,12 +700,14 @@ def call_ai_evaluation(
         return _uh.clamp_license_policy(r, license_type, cmp_cmd)
 
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
-    cache_key = f"{repo_type}:{skill_name}:{license_type}:{content_hash}"
+    cache_key = f"v2:{repo_type}:{skill_name}:{content_hash}"
     eval_cache: dict[str, Any] = {}
     if use_cache:
         eval_cache = load_eval_cache()
-        hit = eval_cache.get(cache_key) or eval_cache.get(
-            f"{repo_type}:{skill_name}:{content_hash}"
+        hit = (
+            eval_cache.get(cache_key)
+            or eval_cache.get(f"{repo_type}:{skill_name}:{license_type}:{content_hash}")
+            or eval_cache.get(f"{repo_type}:{skill_name}:{content_hash}")
         )
         if isinstance(hit, dict):
             cached_result = dict(hit)
@@ -735,11 +749,10 @@ def call_ai_evaluation(
             ],
             "xia_command": generate_xia_command(source_ref, skill_name, "--port"),
         }
-        result = _clamp(result)
         if use_cache:
-            eval_cache[cache_key] = result
+            eval_cache[cache_key] = dict(result)
             save_eval_cache(eval_cache)
-        return result
+        return _clamp(result)
 
     # 5. AI Gateway Evaluation (if available and not fast/offline mode)
     if ai is not None and not fast:
@@ -827,13 +840,12 @@ def call_ai_evaluation(
             }
             mode = "--port" if ai_result.get("should_port") else "--compare"
             ai_result["xia_command"] = generate_xia_command(source_ref, skill_name, mode)
-            ai_result = _clamp(ai_result)
 
             if use_cache:
-                eval_cache[cache_key] = ai_result
+                eval_cache[cache_key] = dict(ai_result)
                 save_eval_cache(eval_cache)
 
-            return ai_result
+            return _clamp(ai_result)
         except Exception as e:
             print(f"[Evaluator] AI Gateway error: {e}. Switching to Rule-Based Fallback.")
 
@@ -908,13 +920,11 @@ def call_ai_evaluation(
         ],
         "xia_command": generate_xia_command(source_ref, skill_name, mode),
     }
-    fallback_result = _clamp(fallback_result)
-
     if use_cache:
-        eval_cache[cache_key] = fallback_result
+        eval_cache[cache_key] = dict(fallback_result)
         save_eval_cache(eval_cache)
 
-    return fallback_result
+    return _clamp(fallback_result)
 
 
 def append_recommendation(
@@ -1269,7 +1279,9 @@ class UpstreamEvaluator:
             return
         since, label = (base_sha[:8] if base_sha else ""), f"{rname} (corpus)"
         cmp_cmd = generate_xia_command(src, ".", "--compare", since_sha=since, target_skill=tgt)
-        lic_type, lic_desc = check_repo_license(repo_path)
+        lic_type, lic_desc = check_repo_license(
+            repo_path, licensed_use=bool(cfg.get("licensed_use", False))
+        )
         gate = self._gate_or_emit_unknown(
             cfg, repo_path, (".", label, tgt, ".", cmp_cmd), head_sha, lic_desc, badge
         )
@@ -1277,24 +1289,25 @@ class UpstreamEvaluator:
             return
         digest = _uh.build_corpus_digest(repo_path)
         d_hash = hashlib.sha256(digest.encode("utf-8")).hexdigest()[:16]
-        ckey = f"{rtype}:__corpus__:{lic_type}:{d_hash}"
+        ckey = f"v2:{rtype}:__corpus__:{d_hash}"
         cache = load_eval_cache()
         imp_cmd = generate_xia_command(src, ".", "--improve", since_sha=since, target_skill=tgt)
-        hit = cache.get(ckey)
+        hit = cache.get(ckey) or cache.get(f"{rtype}:__corpus__:{lic_type}:{d_hash}")
         if isinstance(hit, dict):
             res = _uh.clamp_license_policy({**hit, "xia_command": imp_cmd}, lic_type, cmp_cmd)
         else:
             raw = call_ai_evaluation(
                 rtype, f"{rname}-corpus", digest, rurl, lic_type, src, fast=fast, use_cache=False
             )
-            extra = {
+            pre = {
+                **raw,
                 "parent_master_skill": tgt,
                 "recommended_tier": f"Corpus Digest -> {tgt}",
                 "xia_command": imp_cmd,
             }
-            res = _uh.clamp_license_policy({**raw, **extra}, lic_type, cmp_cmd)
-            cache[ckey] = res
+            cache[ckey] = pre
             save_eval_cache(cache)
+            res = _uh.clamp_license_policy(pre, lic_type, cmp_cmd)
         append_recommendation(rtype, label, res, rurl, lic_desc, badge)
 
     def _resolve_repo_config(
@@ -1312,6 +1325,7 @@ class UpstreamEvaluator:
             "remote_url": remote_url,
             "source_kind": "skills",
             "default_target": None,
+            "licensed_use": False,
         }
 
     def evaluate_repo_diff(
@@ -1330,7 +1344,10 @@ class UpstreamEvaluator:
         """Run git diff and evaluate modified or new upstream resources. Returns False on git/blob error."""
         if not repo_path.exists():
             return False
-        license_type, license_desc = check_repo_license(repo_path)
+        cfg = self._resolve_repo_config(repo_type, remote_url, config)
+        license_type, license_desc = check_repo_license(
+            repo_path, licensed_use=bool(cfg.get("licensed_use", False))
+        )
         try:
             res = subprocess.run(
                 ["git", "diff", "--name-status", base_sha, head_sha],
@@ -1345,7 +1362,6 @@ class UpstreamEvaluator:
             print(f"[Evaluator] Git diff error in '{repo_path}': {e}")
             return False
 
-        cfg = self._resolve_repo_config(repo_type, remote_url, config)
         badge = vitality_badge or self._last_vitality_badge
         if cfg.get("source_kind") == "reference_corpus":
             self._evaluate_corpus_repo(cfg, repo_path, head_sha, base_sha, False, fast, badge)
@@ -1433,7 +1449,9 @@ class UpstreamEvaluator:
             return
         def_tgt = str(config["default_target"]) if config.get("default_target") else None
         existing_skills, existing_workflows = get_existing_elements()
-        license_type, license_desc = check_repo_license(local_path)
+        license_type, license_desc = check_repo_license(
+            local_path, licensed_use=bool(config.get("licensed_use", False))
+        )
         evaluated_count = 0
         for r in resources:
             if limit is not None and evaluated_count >= limit:
@@ -1701,6 +1719,8 @@ def main() -> None:
     if args.prune_stale:
         with MutexLock(LOCK_FILE) as acquired:
             if acquired:
+                if CACHE_FILE.exists():
+                    save_eval_cache(load_eval_cache())
                 n = _uh.prune_stale_recommendations(RECOMMENDATIONS_FILE)
                 print(f"[Upstream Check] Pruned {n} stale block(s).")
         if not (args.check_only or args.scan_all or args.repo):

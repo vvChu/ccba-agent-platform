@@ -1210,3 +1210,121 @@ def test_dogfood_corpus_digest_under_md_scratch_and_ledger_prune(tmp_path: Path)
     pruned = uh.prune_stale_recommendations(rec, cfg_yml)
     out = rec.read_text(encoding="utf-8")
     assert pruned == 1 and "to-questionnaire" not in out and "chief-of-staff" in out
+
+
+def test_commercial_licensed_policy_preclamp_cache_and_bidirectional_prune(
+    tmp_path: Path,
+) -> None:
+    """Verify COND-01..03 & COND-09: affirmative vs negated license, COMMERCIAL_LICENSED, v2 cache, and prune."""
+    from unittest.mock import patch
+
+    import scripts.spoke._upstream_helpers as uh
+    from scripts.spoke.upstream_evaluator import (
+        call_ai_evaluation,
+        check_repo_license,
+        load_eval_cache,
+        save_eval_cache,
+    )
+
+    ms_mit = (
+        "MIT License\nCopyright (c) Microsoft Corporation. All rights reserved.\n"
+        "Permission is hereby granted, free of charge, to any person obtaining a copy..."
+    )
+    neg_prop = "Copyright (c) 2025 Vendor. All Rights Reserved. Not under MIT License or BSD."
+    assert uh.classify_license_text(ms_mit)[0] == "PERMISSIVE"
+    assert uh.classify_license_text(neg_prop)[0] == "PROPRIETARY"
+
+    repo_prop = tmp_path / "prop_repo"
+    repo_prop.mkdir()
+    (repo_prop / "LICENSE").write_text(neg_prop, encoding="utf-8")
+    assert check_repo_license(repo_prop, licensed_use=False)[0] == "PROPRIETARY"
+    assert check_repo_license(repo_prop, licensed_use=True)[0] == "COMMERCIAL_LICENSED"
+
+    repo_gpl = tmp_path / "gpl_repo"
+    repo_gpl.mkdir()
+    (repo_gpl / "LICENSE").write_text("GNU General Public License v3.0", encoding="utf-8")
+    assert check_repo_license(repo_gpl, licensed_use=True)[0] == "COPYLEFT"
+
+    repo_ms = tmp_path / "ms_repo"
+    repo_ms.mkdir()
+    (repo_ms / "LICENSE").write_text(ms_mit, encoding="utf-8")
+    assert check_repo_license(repo_ms, licensed_use=False)[0] == "PERMISSIVE"
+
+    clamped_comm = uh.clamp_license_policy(
+        {
+            "should_port": True,
+            "xia_command": "/ccba-xia r s --copy-raw",
+            "actionable_steps": [
+                "Run `/ccba-xia r s --copy-raw`",
+                "Keep `/ccba-xia r s --improve`",
+            ],
+        },
+        "COMMERCIAL_LICENSED",
+        "/ccba-xia r s --compare",
+    )
+    assert clamped_comm["should_port"] is True
+    assert clamped_comm["xia_command"] == "/ccba-xia r s --port"
+    assert "--port" in clamped_comm["actionable_steps"][0]
+    assert "--improve" in clamped_comm["actionable_steps"][1]
+
+    cf = tmp_path / "eval_cache.json"
+    kw: dict[str, object] = {"CACHE_FILE": cf, "get_existing_elements": lambda: ([], [])}
+    with patch.multiple("scripts.spoke.upstream_evaluator", **kw):
+        save_eval_cache(
+            {
+                "marketing:ab-test:PROPRIETARY:aaa": {
+                    "should_port": False,
+                    "status_override": "COMPARE ONLY — LICENSE RESTRICTED",
+                }
+            }
+        )
+        assert load_eval_cache() == {}
+        r1 = call_ai_evaluation(
+            "marketing", "ab-test", "# AB", "https://g.co/m", "PROPRIETARY", fast=True
+        )
+        assert (
+            r1["should_port"] is False
+            and r1["status_override"] == "COMPARE ONLY — LICENSE RESTRICTED"
+        )
+        r2 = call_ai_evaluation(
+            "marketing", "ab-test", "# AB", "https://g.co/m", "COMMERCIAL_LICENSED", fast=True
+        )
+        assert r2["should_port"] is True and "status_override" not in r2
+
+    cfg_yml = tmp_path / "sources.yaml"
+    cfg_yml.write_text(
+        "sources:\n"
+        "  - name: 'claudekit-marketing'\n"
+        "    type: 'marketing'\n"
+        "    remote_url: 'https://g.co/m'\n"
+        "  - name: 'pnp-list-formatting'\n"
+        "    type: 'pnp-list-formatting'\n"
+        "    source_kind: 'reference_corpus'\n"
+        "    remote_url: 'https://g.co/p'\n"
+        "triage_ledger:\n"
+        "  - source: 'claudekit-marketing'\n"
+        "    upstream_path: 'ab-test-setup'\n"
+        "    target: 'ccba-copywriting'\n"
+        "    status: 'ADOPTED'\n"
+        "    reviewed_sha: '11c5eb05'\n"
+        "  - source: 'pnp-list-formatting'\n"
+        "    upstream_path: '.'\n"
+        "    target: 'ccba-sharepoint-iac'\n"
+        "    status: 'ADOPTED'\n"
+        "    reviewed_sha: '24a2a4ea'\n",
+        encoding="utf-8",
+    )
+    rec = tmp_path / "port_recs.md"
+    rec.write_text(
+        "<!-- AUTO-GENERATED-START -->\n"
+        "### 🟠 [COMPARE ONLY — LICENSE RESTRICTED] Skill: `ab-test-setup` (Score: 85/100)\n"
+        "*   **Kho chứa nguồn**: `marketing`\n"
+        "*   **Giấy phép (License)**: Bản quyền đóng\n"
+        "\n---\n\n"
+        "### 🟢 [RECOMMEND PORT] Skill: `pnp-list-formatting (corpus)` (Score: 80/100)\n"
+        "*   **Kho chứa nguồn**: `pnp-list-formatting`\n"
+        "<!-- AUTO-GENERATED-END -->\n",
+        encoding="utf-8",
+    )
+    assert uh.prune_stale_recommendations(rec, cfg_yml) == 2
+    assert "### " not in rec.read_text(encoding="utf-8")

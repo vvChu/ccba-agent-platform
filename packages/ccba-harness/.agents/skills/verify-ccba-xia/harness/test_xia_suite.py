@@ -361,6 +361,19 @@ def test_feat_xia_009_upstream_v22_delta_corpus_ledger_and_provenance(tmp_path: 
     assert clamped["status_override"] == "COMPARE ONLY — LICENSE RESTRICTED"
     assert "--compare" in clamped["actionable_steps"][0]
 
+    comm = clamp_license_policy(
+        {
+            "should_port": True,
+            "xia_command": "/ccba-xia repo skill --copy-raw",
+            "actionable_steps": ["Run `/ccba-xia repo skill --copy-raw`"],
+        },
+        "COMMERCIAL_LICENSED",
+        "/ccba-xia repo skill --compare",
+    )
+    assert comm["should_port"] is True
+    assert comm["xia_command"] == "/ccba-xia repo skill --port"
+    assert "--port" in comm["actionable_steps"][0]
+
     # 3. 3-Arg Duplicate Ignore vs UPSTREAM DELTA Evolution Routing
     dup_res = call_ai_evaluation("mattpocock-skills", "grill-me", "# Grill Me", use_cache=False)
     assert dup_res["should_port"] is False
