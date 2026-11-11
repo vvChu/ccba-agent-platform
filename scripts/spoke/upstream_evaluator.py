@@ -354,7 +354,7 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
 
     if not texts:
         return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
-    rules = load_upstream_governance_config()["license_rules"]
+    rules = load_upstream_governance_config().get("license_rules")
     return _uh.classify_license_text("\n".join(texts), rules)
 
 
@@ -1057,6 +1057,30 @@ def evaluate_upstream_delta(
     return _uh.clamp_license_policy(res, license_type, cmp_cmd)
 
 
+def record_triage_decision(
+    source: str,
+    upstream_path: str,
+    target: str,
+    status: str,
+    reviewed_sha: str,
+    reason: str = "",
+    config_file: Path | None = None,
+) -> bool:
+    """Record or update a triage_ledger decision surgically under MutexLock(LOCK_FILE)."""
+    entry = {
+        "source": source.strip(),
+        "upstream_path": upstream_path.strip(),
+        "target": target.strip(),
+        "status": status.strip().upper(),
+        "reviewed_sha": reviewed_sha.strip(),
+        "reason": reason.strip(),
+    }
+    with MutexLock(LOCK_FILE) as acquired:
+        if not acquired:
+            return False
+        return _uh.upsert_triage_ledger_yaml(config_file or SOURCES_CONFIG_FILE, entry)
+
+
 def _read_diff_blob(
     repo_path: Path, head_sha: str, rel_path: str, is_acmr: bool
 ) -> tuple[str | None, bool]:
@@ -1200,6 +1224,93 @@ class UpstreamEvaluator:
                 pass
         return ""
 
+    def _gate_or_emit_unknown(
+        self,
+        cfg: dict[str, Any],
+        repo_path: Path,
+        item: tuple[str, str, str | None, str, str],
+        head_sha: str,
+        lic_desc: str,
+        badge: str,
+    ) -> str:
+        """Run triage_ledger gate and write DELTA UNKNOWN block if needed; return gate state."""
+        up_path, label, target, git_rel, cmp_cmd = item
+        ledger = load_upstream_governance_config().get("triage_ledger", [])
+        keys = {str(cfg.get("name", cfg["type"])), str(cfg["type"])}
+        gate, entry = _uh.evaluate_triage_gate(
+            ledger, keys, up_path, target, repo_path, head_sha, git_rel
+        )
+        if gate == "DELTA_UNKNOWN" and entry is not None:
+            unk = _uh.make_delta_unknown_result(up_path, entry, cmp_cmd)
+            append_recommendation(
+                str(cfg["type"]), label, unk, str(cfg["remote_url"]), lic_desc, badge
+            )
+        return gate
+
+    def _evaluate_corpus_repo(
+        self,
+        cfg: dict[str, Any],
+        repo_path: Path,
+        head_sha: str,
+        base_sha: str = "",
+        check_only: bool = False,
+        fast: bool = False,
+        badge: str = "",
+    ) -> None:
+        """Evaluate a reference_corpus repository via <=30-line digest and shared triage_ledger."""
+        rname = str(cfg.get("name", cfg["type"]))
+        rtype, rurl = str(cfg["type"]), str(cfg["remote_url"])
+        tgt, src = str(cfg.get("default_target") or "_core"), f".md/scratch/repos/{rname}"
+        if check_only:
+            print(f"  - [Check-Only Mode] Reference corpus '{rname}' -> {tgt}")
+            return
+        since, label = (base_sha[:8] if base_sha else ""), f"{rname} (corpus)"
+        cmp_cmd = generate_xia_command(src, ".", "--compare", since_sha=since, target_skill=tgt)
+        lic_type, lic_desc = check_repo_license(repo_path)
+        gate = self._gate_or_emit_unknown(
+            cfg, repo_path, (".", label, tgt, ".", cmp_cmd), head_sha, lic_desc, badge
+        )
+        if gate in {"SKIP", "DELTA_UNKNOWN"}:
+            return
+        digest = _uh.build_corpus_digest(repo_path)
+        d_hash = hashlib.sha256(digest.encode("utf-8")).hexdigest()[:16]
+        ckey = f"{rtype}:__corpus__:{lic_type}:{d_hash}"
+        cache = load_eval_cache()
+        imp_cmd = generate_xia_command(src, ".", "--improve", since_sha=since, target_skill=tgt)
+        hit = cache.get(ckey)
+        if isinstance(hit, dict):
+            res = _uh.clamp_license_policy({**hit, "xia_command": imp_cmd}, lic_type, cmp_cmd)
+        else:
+            raw = call_ai_evaluation(
+                rtype, f"{rname}-corpus", digest, rurl, lic_type, src, fast=fast, use_cache=False
+            )
+            extra = {
+                "parent_master_skill": tgt,
+                "recommended_tier": f"Corpus Digest -> {tgt}",
+                "xia_command": imp_cmd,
+            }
+            res = _uh.clamp_license_policy({**raw, **extra}, lic_type, cmp_cmd)
+            cache[ckey] = res
+            save_eval_cache(cache)
+        append_recommendation(rtype, label, res, rurl, lic_desc, badge)
+
+    def _resolve_repo_config(
+        self, repo_type: str, remote_url: str, config: dict[str, Any] | None
+    ) -> dict[str, Any]:
+        """Resolve repository config dictionary from explicit arg or self.configs."""
+        if config is not None:
+            return config
+        for c in self.configs:
+            if c.get("type") == repo_type or c.get("name") == repo_type:
+                return c
+        return {
+            "name": repo_type,
+            "type": repo_type,
+            "remote_url": remote_url,
+            "source_kind": "skills",
+            "default_target": None,
+        }
+
     def evaluate_repo_diff(
         self,
         repo_path: Path,
@@ -1211,6 +1322,7 @@ class UpstreamEvaluator:
         limit: int | None = None,
         fast: bool = False,
         vitality_badge: str = "",
+        config: dict[str, Any] | None = None,
     ) -> bool:
         """Run git diff and evaluate modified or new upstream resources. Returns False on git/blob error."""
         if not repo_path.exists():
@@ -1230,9 +1342,14 @@ class UpstreamEvaluator:
             print(f"[Evaluator] Git diff error in '{repo_path}': {e}")
             return False
 
+        cfg = self._resolve_repo_config(repo_type, remote_url, config)
+        badge = vitality_badge or self._last_vitality_badge
+        if cfg.get("source_kind") == "reference_corpus":
+            self._evaluate_corpus_repo(cfg, repo_path, head_sha, base_sha, False, fast, badge)
+            return True
+        def_tgt = str(cfg["default_target"]) if cfg.get("default_target") else None
         existing_skills, existing_workflows = get_existing_elements()
         source_ref = local_repo_ref or remote_url
-        badge = vitality_badge or self._last_vitality_badge
         evaluated = 0
         for raw_name, actual_type, pri_rel, touched in _uh.collapse_diff_resources(
             res.stdout.splitlines(), repo_path
@@ -1251,9 +1368,16 @@ class UpstreamEvaluator:
                     blobs.append(text)
             if deleted_skip and not blobs:
                 continue
+            is_dup, matched = check_is_duplicate(raw_name, existing_skills, existing_workflows)
+            g_rel = pri_rel.removesuffix("/SKILL.md")
+            cmp = generate_xia_command(source_ref, raw_name, "--compare", since_sha=base_sha[:8])
+            item = (raw_name, raw_name, matched or def_tgt, g_rel, cmp)
+            gate = self._gate_or_emit_unknown(cfg, repo_path, item, head_sha, license_desc, badge)
+            if gate in {"SKIP", "DELTA_UNKNOWN"}:
+                evaluated += int(gate == "DELTA_UNKNOWN")
+                continue
             pri_text, _ = _read_diff_blob(repo_path, head_sha, pri_rel, False)
             content = pri_text if pri_text is not None else "\n".join(blobs)
-            is_dup, matched = check_is_duplicate(raw_name, existing_skills, existing_workflows)
             if actual_type == "skill" and is_dup and matched:
                 result = evaluate_upstream_delta(
                     repo_type,
@@ -1292,6 +1416,10 @@ class UpstreamEvaluator:
         local_path: Path = config["local_path"]
         repo_type: str = config["type"]
         remote_url: str = config["remote_url"]
+        badge = vitality_badge or self._last_vitality_badge
+        if config.get("source_kind") == "reference_corpus":
+            self._evaluate_corpus_repo(config, local_path, target_sha, "", check_only, fast, badge)
+            return
         local_repo_ref = f".md/scratch/repos/{config['name']}"
         resources = resolve_upstream_resources(local_path, repo_type=repo_type)
         print(f"  - Found {len(resources)} total upstream resources in {repo_type}.")
@@ -1300,11 +1428,24 @@ class UpstreamEvaluator:
             for r in resources[:limit] if limit is not None else resources:
                 print(f"    * [{r['type']}] {r['name']} ({r['relative_path']})")
             return
+        def_tgt = str(config["default_target"]) if config.get("default_target") else None
+        existing_skills, existing_workflows = get_existing_elements()
         license_type, license_desc = check_repo_license(local_path)
-        for evaluated_count, r in enumerate(resources):
+        evaluated_count = 0
+        for r in resources:
             if limit is not None and evaluated_count >= limit:
                 print(f"  - Reached limit of {limit} evaluations for {repo_type}.")
                 break
+            _, matched = check_is_duplicate(r["name"], existing_skills, existing_workflows)
+            g_rel = str(r["relative_path"]).removesuffix("/SKILL.md")
+            cmp = generate_xia_command(local_repo_ref, r["name"], "--compare")
+            item = (r["name"], r["name"], matched or def_tgt, g_rel, cmp)
+            gate = self._gate_or_emit_unknown(
+                config, local_path, item, target_sha, license_desc, badge
+            )
+            if gate in {"SKIP", "DELTA_UNKNOWN"}:
+                evaluated_count += int(gate == "DELTA_UNKNOWN")
+                continue
             result = call_ai_evaluation(
                 repo_type=repo_type,
                 skill_name=r["name"],
@@ -1321,8 +1462,9 @@ class UpstreamEvaluator:
                 result=result,
                 remote_url=remote_url,
                 license_desc=license_desc,
-                vitality_badge=vitality_badge or self._last_vitality_badge,
+                vitality_badge=badge,
             )
+            evaluated_count += 1
 
     def check_and_evaluate_single(
         self,
@@ -1446,6 +1588,7 @@ class UpstreamEvaluator:
                 local_repo_ref=local_repo_ref,
                 limit=limit,
                 fast=fast,
+                config=config,
             )
             if not ok:
                 print(
