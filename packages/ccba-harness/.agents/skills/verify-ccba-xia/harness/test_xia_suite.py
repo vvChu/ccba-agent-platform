@@ -254,7 +254,7 @@ def test_feat_xia_007_surface_diff_and_domain_eval_parity() -> None:
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "27101e016788ec36713826486aa9e29e678dd857",
+        "36e38dce8c0e040865be0871efa4aeb33a455f09",
         [
             ".agents/skills/ccba-xia/SKILL.md",
             ".agents/skills/ccba-xia/references/modes.md",
