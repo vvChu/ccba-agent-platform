@@ -13,7 +13,7 @@ bundle: _core
 tier: kernel
 command: /ccba-build-skill
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -46,10 +46,10 @@ Trước khi thực hiện bất kỳ thao tác nào, Agent bắt buộc phải 
 - Đọc `git remote get-url origin`.
   - **Trường hợp 1 (Hub Mode):** URL remote chứa `ccba-agent-platform`. Tiếp tục thực thi tác vụ tại checkout hiện tại.
   - **Trường hợp 2 (Spoke Mode):** Không chứa `ccba-agent-platform`.
-    1. Kiểm tra biến môi trường `CCBA_HUB_PATH`.
-    2. **Điều kiện dừng (Stop Conditions):** Nếu `CCBA_HUB_PATH` không được thiết lập, không phải thư mục git của Hub, trùng toplevel với Spoke hiện tại, hoặc cây làm việc của Hub đang bẩn (`git status --porcelain` khác rỗng), hoặc đã tồn tại nhánh `proposal/<tên-skill>` $\rightarrow$ **DỪNG LẠI NGAY** và thông báo lý do chi tiết. Cấm tự ý suy diễn đường dẫn ổ đĩa. Cấm tự ý chạy `git checkout main` hay `git pull` trên Hub.
-    3. Định tuyến toàn bộ việc tạo tệp tin kỹ năng sang `$CCBA_HUB_PATH` trên một nhánh làm việc mới `proposal/<tên-skill>`.
-    4. Chỉ chuẩn bị gói đề xuất, cấm tự ý đẩy mã lên remote. Sau khi hoàn tất kiểm định, yêu cầu người dùng xác nhận trước khi kích hoạt `/ccba-contribute-to-hub`.
+    1. Kiểm tra biến môi trường `CCBA_HUB_PATH` (`$CCBA_HUB_PATH` trên Bash hoặc `$env:CCBA_HUB_PATH` trên PowerShell).
+    2. **Điều kiện dừng (Stop Conditions):** Nếu `CCBA_HUB_PATH` không được thiết lập, không phải thư mục git của Hub, trùng toplevel với Spoke hiện tại, cây làm việc của Hub đang bẩn (`git -C "<hub_path>" status --porcelain` khác rỗng), Hub không đứng đúng nhánh tích hợp mặc định `main` (`git -C "<hub_path>" branch --show-current` khác `main`), hoặc đã tồn tại nhánh/PR `proposal/<tên-skill>` $\rightarrow$ **DỪNG LẠI NGAY** và thông báo lý do chi tiết. Cấm tự ý suy diễn đường dẫn ổ đĩa. Cấm tự ý chạy `git checkout` chuyển nhánh có sẵn hay `git pull` trên Hub.
+    3. Định tuyến toàn bộ việc tạo tệp tin kỹ năng sang `<hub_path>` trên một nhánh làm việc mới `git -C "<hub_path>" checkout -b proposal/<tên-skill>`.
+    4. Chỉ chuẩn bị gói đề xuất, chạy kiểm tra chống rò rỉ dữ liệu Spoke bằng `python "<hub_path>/scripts/governance/check_spoke_leakage.py" --root "<hub_path>"`, cấm tự ý đẩy mã lên remote. Sau khi hoàn tất kiểm định, yêu cầu người dùng xác nhận trước khi kích hoạt `/ccba-contribute-to-hub`.
 - **Tiêu chí hoàn thành:** Xác định đúng môi trường Hub/Spoke và vị trí làm việc hợp lệ.
 
 ---
@@ -92,18 +92,18 @@ python -m ccba_harness evaluate-gpi --name <tên-skill> --s <S> --k <K> --a <A> 
 - Kỹ năng mới (greenfield) **CẤM** truyền `--existing-tier` và `--force-tier-flip`.
 
 ### Phần 3.3: Định tuyến Đầu ra Dựa trên JSON
-Agent bắt buộc đọc trường `allow_standalone_skill` và `tier` trong JSON trả về (không chỉ dựa vào Exit Code 0):
-- **Cổng 0 (`tier: "tier-1"`):** **DỪNG LẠI NGAY**, triển khai tại Tầng 1 (`packages/*/src/`). Nghiêm cấm tạo Skill phẳng độc lập.
-- **Cổng 1 (`tier: "tier-3"`):** **DỪNG LẠI NGAY**, triển khai tại Tầng 3 (`.agents/workflows/`).
-- **Tier 2A (`tier: "tier-2a"` hoặc `allow_standalone_skill: false`):** Tạo tệp tham chiếu tăng tiến tại `.agents/skills/<parent-skill>/references/<tên-skill>.md` (kèm cờ `--parent <parent>`). Dừng quy trình tạo thư mục skill riêng.
-- **Tier 2B (`tier: "tier-2b"` và `allow_standalone_skill: true`):** Đủ điều kiện tạo thư mục kỹ năng riêng tại `.agents/skills/ccba-<tên-skill>/SKILL.md`. Sao chép chính xác 4 số $S, K, A, P$ từ kết quả JSON vào frontmatter (cấm giữ mẫu mặc định).
+Agent bắt buộc đọc trường `tier` (chuỗi `ArchitectureTier.value` đầy đủ; lưu ý các mã ngắn `tier-1..tier-3` chỉ là tham số CLI của `--existing-tier`) và cờ top-level `allow_standalone_skill` trong JSON trả về (không chỉ dựa vào Exit Code 0):
+- **Cổng 0 (`tier: "Tier 1: Package Function / Deep Seam"`):** **DỪNG LẠI NGAY**, triển khai tại Tầng 1 (`packages/*/src/`). Nghiêm cấm tạo Skill phẳng độc lập.
+- **Cổng 1 (`tier: "Tier 3: Composite Orchestrator"`):** **DỪNG LẠI NGAY**, triển khai tại Tầng 3 (`.agents/workflows/` hoặc Orchestrator khai báo `tier: orchestrator`).
+- **Tier 2A (`tier: "Tier 2A: Progressive Reference"` hoặc `allow_standalone_skill: false`):** Tạo tệp tham chiếu tăng tiến tại `.agents/skills/<parent-skill>/references/<tên-skill>.md` (kèm cờ `--parent <parent>`). Dừng quy trình tạo thư mục skill riêng.
+- **Tier 2B (`tier: "Tier 2B: Standalone Kernel Skill"` và `allow_standalone_skill: true`):** Đủ điều kiện tạo thư mục kỹ năng riêng tại `.agents/skills/ccba-<tên-skill>/SKILL.md`. Sao chép chính xác 4 số $S, K, A, P$ từ kết quả JSON vào frontmatter (cấm giữ mẫu mặc định).
 
 - **Tiêu chí hoàn thành:** Nhận được JSON định tuyến kiến trúc hợp lệ và xác định chính xác tầng đích lưu trữ.
 
 ---
 
 ## 🧩 4. Khởi Tạo Cấu Trúc SKILL.md Đạt Chuẩn & Full-Stack Scaffolding (HUB-ADR-0001, HUB-ADR-0040, HUB-ADR-0057, HUB-ADR-0058)
-Nếu $GPI \ge 12.0$ (`tier-2b`):
+Nếu $GPI \ge 12.0$ (`Tier 2B: Standalone Kernel Skill` và `allow_standalone_skill: true`):
 
 ### 4.1. Khởi tạo tệp `SKILL.md`
 Tạo thư mục tại `.agents/skills/ccba-<tên-skill-kebab-case>/SKILL.md` theo khung chuẩn:
@@ -112,11 +112,15 @@ Tạo thư mục tại `.agents/skills/ccba-<tên-skill-kebab-case>/SKILL.md` th
 ---
 name: ccba-<tên-skill-kebab-case>
 description: <Mô tả ngắn gọn súc tích <= 180 ký tự>
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub" # Bắt buộc có metadata.version & metadata.author để đạt GREEN trên audit_skills_hygiene.py
 user-invocable: true # Bắt buộc true nếu là slash command / ritual do người dùng gọi
-disable-model-invocation: true # true cho ritual/tool skills (0-token prompt), false nếu là master deep skill
+disable-model-invocation: true # true cho ritual/tool skills (0-token prompt, a: 1.0), false nếu là master deep skill
 command: /ccba-<tên-skill-kebab-case> # Bắt buộc có dòng command khớp với /{name} theo HUB-ADR-0056
 category: productivity # productivity | coding | testing | reasoning | documentation | governance
 bundle: _core # _core | _software | _qc | _consulting | _bim
+tier: kernel # Bắt buộc cho Standalone Kernel Skill để bảo lưu Hysteresis ADR-0057 về sau
 triggers:
 - <trigger_1>
 - <trigger_2>
@@ -166,8 +170,12 @@ python scripts/governance/compile_catalog.py
 ---
 
 ## ✅ 6. Kiểm Định Chất Lượng Tự Động & Vòng Lặp Tự Phục Hồi (ADR-0058 Hard Completion Lock)
-Chạy cổng kiểm định máy tính một chạm để xác nhận đạt chuẩn 100% trước khi bàn giao:
+Đồng bộ đủ 3 bề mặt quản trị trên Hub rồi chạy cổng kiểm định máy tính một chạm để xác nhận đạt chuẩn 100% trước khi bàn giao:
 ```bash
+python scripts/governance/compile_catalog.py
+python scripts/governance/compile_skills_docs.py --write
+python scripts/sync_hub_adr_matrix.py
+python scripts/governance/compile_skills_docs.py --check
 python -m ccba_harness verify-patch --preset skill --target .agents/skills/ccba-<tên-skill>
 ```
 *Cổng preset `skill` tự động chạy: (1) `validate_skills.py --enforce-gpi`, (2) `compile_catalog.py --check`, và (3) `sync_hub_adr_matrix.py --check`.*

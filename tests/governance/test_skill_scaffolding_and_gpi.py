@@ -547,16 +547,20 @@ def test_updated_phase1_skills_pass_enforce_gpi() -> None:
 
 
 def test_ccba_build_skill_v110_contractual_invariants() -> None:
-    """Verify ccba-build-skill v1.1.0 and references contain all required contractual tokens from Grok review."""
+    """Verify ccba-build-skill v1.1.1 and references contain all required contractual tokens from Grok review."""
     build_skill_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-build-skill" / "SKILL.md"
     assert build_skill_path.exists()
     content = build_skill_path.read_text(encoding="utf-8")
 
     # Contractual tokens in SKILL.md
-    assert 'version: "1.1.0"' in content
+    assert 'version: "1.1.1"' in content
     assert "CCBA_HUB_PATH" in content
+    assert "branch --show-current" in content
+    assert 'check_spoke_leakage.py" --root' in content
     assert "evaluate-gpi --name" in content
     assert "--json" in content
+    assert "Tier 1: Package Function / Deep Seam" in content
+    assert "Tier 2B: Standalone Kernel Skill" in content
     assert "allow_standalone_skill" in content
     assert "eval_<stem>.json" in content
     assert "resolve_domain_dataset" in content
@@ -575,6 +579,7 @@ def test_ccba_build_skill_v110_contractual_invariants() -> None:
     assert guide_path.exists()
     guide_content = guide_path.read_text(encoding="utf-8")
     assert "evaluate-gpi" in guide_content
+    assert "Tier 2B: Standalone Kernel Skill" in guide_content
     assert "allow_standalone_skill" in guide_content
     assert "CCBA_HUB_PATH" in guide_content
     assert "eval_<stem>.json" in guide_content

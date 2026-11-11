@@ -140,18 +140,22 @@ Mọi Standalone Kernel Skill (Tier 2B) bắt buộc phải khai báo khối `gp
 ---
 name: ccba-my-kernel-skill
 description: Mô tả ngắn gọn súc tích <= 180 ký tự.
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 bundle: _software
+tier: kernel
 user-invocable: true
 disable-model-invocation: true
 command: /ccba-my-kernel-skill
 gpi:
   s: 3.5
   k: 2.0
-  a: 2.0
+  a: 1.0
   p: 1.0
 ---
 ```
-*(Cũng hỗ trợ định dạng inline: `gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}`).*
+*(Cũng hỗ trợ định dạng inline: `gpi: {s: 3.5, k: 2.0, a: 1.0, p: 1.0}`; lưu ý với `disable-model-invocation: true` thì `a` bắt buộc bằng `1.0`).*
 
 ---
 
@@ -164,13 +168,13 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 
 ---
 
-## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.1.0)
+## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.1.1)
 
 Để đảm bảo tính nhất quán toàn diện khi tác tạo kỹ năng mới, quy trình `/ccba-build-skill` bắt buộc phải tuân thủ 6 hợp đồng kiến trúc bất biến sau:
 
 1. **Pre-flight Môi Trường & Bảo Tồn Upstream (Hub vs. Spoke):**
    - Đọc `git remote get-url origin`.
-   - Nếu ở Spoke: Kiểm tra bắt buộc biến môi trường `CCBA_HUB_PATH`. Thư mục Hub phải tồn tại, là checkout git sạch (`git status --porcelain` rỗng), khác toplevel Spoke, và chưa có nhánh `proposal/<tên-skill>`. Nếu thiếu điều kiện, DỪNG ngay. Cấm tự ý `git checkout main` hay `git pull` trên Hub. Định tuyến tạo file sang `$CCBA_HUB_PATH` trên nhánh `proposal/<tên-skill>`. Việc mở PR về Hub phải có xác nhận tường minh của người dùng qua `/ccba-contribute-to-hub`.
+   - Nếu ở Spoke: Kiểm tra bắt buộc biến môi trường `CCBA_HUB_PATH`. Thư mục Hub phải tồn tại, là checkout git sạch (`git -C "<hub_path>" status --porcelain` rỗng), đứng đúng nhánh tích hợp mặc định `main` (`git -C "<hub_path>" branch --show-current == main`), khác toplevel Spoke, và chưa có nhánh/PR `proposal/<tên-skill>`. Nếu thiếu điều kiện, DỪNG ngay. Cấm tự ý `git checkout` chuyển nhánh có sẵn hay `git pull` trên Hub. Định tuyến tạo file sang `<hub_path>` trên nhánh `proposal/<tên-skill>`, chạy `python "<hub_path>/scripts/governance/check_spoke_leakage.py" --root "<hub_path>"`, và xin xác nhận tường minh của người dùng trước khi mở PR qua `/ccba-contribute-to-hub`.
 2. **Định Tuyến Nguồn Theo Phân Loại Bảo Mật (Per-Source Ingestion & Privacy Guard):**
    - Quét `scripts/maskara.py` từng tệp nguồn. Có findings $\rightarrow$ DỪNG nguồn đó.
    - Nguồn công khai $\rightarrow$ Cloud RAG (`notebooklm_rag.v1`). Nguồn mật / nhạy cảm / `--local` $\rightarrow$ Local Fallback qua pipeline tài liệu (`ccba-markdown-document-processing`) và `model_routing.v1` (`choose_model()`).
@@ -178,7 +182,7 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 3. **Cổng Kiến Trúc Định Lượng Bằng JSON CLI Tất Định:**
    - Bắt buộc thực thi: `python -m ccba_harness evaluate-gpi --name <name> --s <S> --k <K> --a <A> --p <P> --json` kèm 4 dòng bằng chứng quan sát được.
    - Greenfield bỏ `--existing-tier` và `--force-tier-flip`.
-   - Quyền tạo skill độc lập nằm ở trường JSON: `tier == "tier-2b"` và `allow_standalone_skill == true`. Nếu không thỏa mãn, DỪNG tạo Standalone Kernel Skill và chuyển sang Tier 2A Reference (`references/<name>.md`). Sao chép chính xác 4 số $S, K, A, P$ từ JSON vào frontmatter.
+   - Quyền tạo skill độc lập nằm ở trường JSON: `tier == "Tier 2B: Standalone Kernel Skill"` (`ArchitectureTier.value`, không phải mã ngắn CLI `tier-2b`) và `allow_standalone_skill == true`. Nếu không thỏa mãn, DỪNG tạo Standalone Kernel Skill và chuyển sang Tier 2A Reference (`references/<name>.md`). Sao chép chính xác 4 số $S, K, A, P$ từ JSON vào frontmatter cùng `metadata: {version, author}` và `tier: kernel`.
 4. **Full-Stack Scaffolding & Naming Contract cho `resolve_domain_dataset()`:**
    - Khi tạo Standalone Kernel Skill (Tier 2B), bắt buộc sinh kèm tệp ca kiểm thử mẫu tại:
      `.agents/skills/ccba-eval-gate/test_cases/eval_<stem>.json`
