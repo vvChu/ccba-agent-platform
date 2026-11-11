@@ -267,7 +267,7 @@ def test_feat_grill_007_surface_diff_and_domain_eval_parity() -> None:
     sync_commit = str(verify_fm["sync_commit"])
     covered_paths: list[str] = list(verify_fm["covered_paths"])
     covered_sha256: dict[str, str] = dict(verify_fm["covered_sha256"])
-    assert sync_commit == "6c36e4112e95d433dc6633ec1f2e172c7b8d089f"
+    assert sync_commit == "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
     assert set(covered_sha256.keys()) == set(covered_paths)
 
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]

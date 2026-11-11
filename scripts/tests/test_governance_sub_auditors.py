@@ -623,6 +623,33 @@ description: Valid description
         self.assertTrue(len(drift_errors) > 0)
         self.assertIn("Structural drift detected", drift_errors[0])
 
+    def test_run_docs_validation_cli_scans_inside_scratch_parent_worktree(self) -> None:
+        """Ensure validate_docs scans markdown files when workspace resides under scratch/."""
+        import os
+        from unittest.mock import patch
+
+        from scripts.governance.cli import run_docs_validation_cli
+
+        wt_root = self.root / "scratch" / "wt_isolated"
+        (wt_root / "docs").mkdir(parents=True, exist_ok=True)
+        (wt_root / "scratch").mkdir(parents=True, exist_ok=True)
+        (wt_root / "docs" / "guide.md").write_text(
+            "# Guide\nSee [broken](missing_target.md).\n", encoding="utf-8"
+        )
+        # Nested scratch/ inside docs_dir MUST still be excluded
+        (wt_root / "scratch" / "draft.md").write_text(
+            "# Draft\nSee [ignored](nowhere.md).\n", encoding="utf-8"
+        )
+
+        auditor = DocumentAuditor(project_root=wt_root)
+        with patch.dict(os.environ, {"GITHUB_ACTIONS": "false"}):
+            exit_code = run_docs_validation_cli(auditor, [str(wt_root), "--root", str(wt_root)])
+            self.assertEqual(exit_code, 1)
+
+            (wt_root / "docs" / "guide.md").write_text("# Guide\nClean text.\n", encoding="utf-8")
+            exit_ok = run_docs_validation_cli(auditor, [str(wt_root), "--root", str(wt_root)])
+            self.assertEqual(exit_ok, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.4
+  version: 1.6.5
 bundle: _core
 tier: kernel
 triggers:
@@ -145,9 +145,9 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
      # Trên Spoke (để kiểm định đúng SPOKE_REQUIRED_INVARIANTS thay vì mặc định hub):
      python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
      ```
-   - Kiểm tra tài liệu, biến môi trường & Architecture Drift:
+   - Kiểm tra tài liệu, biến môi trường & Architecture Drift (khớp cờ `.github/workflows/validate-docs.yml`):
      ```bash
-     python scripts/validate_docs.py --changed
+     python scripts/validate_docs.py . --src scripts,packages --changed
      ```
      *Nếu phát hiện cảnh báo Structural Drift hoặc thiếu biến môi trường, Agent phải cập nhật ngay `README.md`, `PLATFORM.md`, và `.env.example` trước khi tiếp tục.*
 3. **Bộ test quản trị scoped nhanh (< 20s):**
@@ -157,6 +157,8 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 4. **Khóa cứng hoàn tất tất định (ADR-0058 Hard Completion Lock):**
    ```bash
    python -m ccba_harness verify-patch --preset skill
+   # Khi chạy trong git worktree cô lập, truyền --cwd <worktree_path> (verify-patch nhận --cwd, không nhận --root):
+   python -m ccba_harness verify-patch --preset skill --cwd <worktree_path>
    ```
 - **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm tra cốt lõi, scoped test suite và khóa cứng `verify-patch --preset skill` đều trả về Exit code 0 (100% PASS). Agent nghiêm cấm báo cáo hoàn thành hoặc yêu cầu người dùng nghiệm thu nếu có bất kỳ kiểm định nào thất bại. Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` — đây là chấp nhận được; chỉ khi Exit code 1 (`[ERROR]`) mới chặn hoàn tất.
 

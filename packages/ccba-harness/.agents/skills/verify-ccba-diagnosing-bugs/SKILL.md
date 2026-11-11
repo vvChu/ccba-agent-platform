@@ -16,8 +16,12 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.0
-sync_commit: "8c731731931966faaba6cc2571fedde11301c6c8"
+  version: 1.0.1
+sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+covered_sha256:
+  .agents/skills/ccba-diagnosing-bugs/SKILL.md: "c94b18ef24609169bc861ebd414261da6a4a46748f6407709eaccaeb2418a8bd"
+  .agents/skills/ccba-diagnosing-bugs/references/mock_debugging_patterns.md: "0ae74b2d19482e5c5fef385a6632d160c369fe119ab29d3dbc20c659dbe98a06"
+  scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
 verification_mode:
   - scaffold
   - sync
@@ -39,7 +43,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 6 pha của `.agents/skills/ccba-diagnosing-bugs/SKILL.md`, rào chắn che giấu bí mật `## Redact` (`<REDACTED>`), cổng kiểm chứng đột biến `git diff` tại Phase 5 (`v1.3.2 #1209`), tài liệu tham chiếu `references/mock_debugging_patterns.md`, cùng ánh xạ đồng bộ `scripts/spoke/sync/coordinator.py` và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `8c731731931966faaba6cc2571fedde11301c6c8` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

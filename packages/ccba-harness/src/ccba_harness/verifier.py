@@ -13,12 +13,13 @@ Supports:
 from __future__ import annotations
 
 import glob as glob_module
+import hashlib
 import shlex
 import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -521,3 +522,64 @@ def verify_patch_execution(
         total_duration_ms=round(total_duration_ms, 2),
         results=results,
     )
+
+
+def compute_file_lf_sha256(path: Path) -> str:
+    """Compute LF-normalized SHA-256 hex digest of a file for cross-OS parity."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def _is_git_shallow_repo(repo_root: Path) -> bool:
+    """Return True when repo_root is a shallow git clone (e.g., CI fetch-depth: 1)."""
+    res = subprocess.run(
+        ["git", "rev-parse", "--is-shallow-repository"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return res.returncode == 0 and res.stdout.strip().lower() == "true"
+
+
+def check_harness_git_provenance(
+    repo_root: Path,
+    sync_commit: str,
+    covered_paths: Sequence[str],
+    expected_sha256: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Verify covered_paths via LF SHA-256 and reachable sync_commit (fail-closed)."""
+    drifted: list[str] = []
+    sha_map = expected_sha256 or {}
+    has_full_sha_map = bool(sha_map) and all(p in sha_map for p in covered_paths)
+
+    if sha_map:
+        for rel_path in covered_paths:
+            exp_hash = sha_map.get(rel_path)
+            full_path = repo_root / rel_path
+            if exp_hash is None or not full_path.is_file():
+                drifted.append(rel_path)
+            elif compute_file_lf_sha256(full_path) != exp_hash:
+                drifted.append(rel_path)
+
+    probe = subprocess.run(
+        ["git", "cat-file", "-e", f"{sync_commit}^{{commit}}"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        if not (_is_git_shallow_repo(repo_root) and has_full_sha_map):
+            drifted.append(f"UNVERIFIABLE_SYNC_COMMIT:{sync_commit}")
+        return list(dict.fromkeys(drifted))
+
+    if has_full_sha_map:
+        return list(dict.fromkeys(drifted))
+
+    cmd = ["git", "diff", "--name-only", f"{sync_commit}..HEAD", "--", *covered_paths]
+    proc = subprocess.run(cmd, cwd=str(repo_root), capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        drifted.append(f"GIT_DIFF_ERROR:{sync_commit}")
+        return list(dict.fromkeys(drifted))
+    drifted.extend(line.strip() for line in proc.stdout.splitlines() if line.strip())
+    return list(dict.fromkeys(drifted))

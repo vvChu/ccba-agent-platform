@@ -40,6 +40,12 @@ def _load_runner_module() -> object:
     return mod
 
 
+def _load_skill_provenance(skill_md: Path) -> tuple[str, list[str], dict[str, str]]:
+    """Parses sync_commit, covered_paths, and covered_sha256 from SKILL.md frontmatter."""
+    fm = yaml.safe_load(skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+    return str(fm["sync_commit"]), list(fm["covered_paths"]), dict(fm["covered_sha256"])
+
+
 def test_feat_xia_001_frontmatter_and_gpi_contract() -> None:
     """Verifies FEAT-XIA-001: SkillValidator compliance, slash command, and GPI >= 12.0."""
     runner = _load_runner_module()
@@ -253,15 +259,14 @@ def test_feat_xia_007_surface_diff_and_domain_eval_parity() -> None:
     missing_feats = runner.verify_surface_diff(features_idx, suite_file)  # type: ignore[attr-defined]
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
+    sync_sha, cov_paths, cov_hashes = _load_skill_provenance(
+        features_idx.parent.parent / "SKILL.md"
+    )
+    assert set(cov_hashes.keys()) == set(cov_paths)
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "2438e345203d3717114b6e4c59c832bea228b6c1",
-        [
-            ".agents/skills/ccba-xia/SKILL.md",
-            ".agents/skills/ccba-xia/references/modes.md",
-            "scripts/spoke/upstream_evaluator.py",
-            "scripts/spoke/_upstream_helpers.py",
-            "docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md",
-        ],
+        sync_sha,
+        cov_paths,
+        expected_sha256=cov_hashes,
     )
     assert changed == []
 
@@ -339,7 +344,7 @@ def test_feat_xia_009_upstream_v22_delta_corpus_ledger_and_provenance(tmp_path: 
         "deadbeef00000000000000000000000000000000",
         ["scripts/spoke/upstream_evaluator.py"],
     )
-    assert bad_prov == ["GIT_PROVENANCE_ERROR"]
+    assert bad_prov == ["UNVERIFIABLE_SYNC_COMMIT:deadbeef00000000000000000000000000000000"]
 
     # 2. 6-Tier Dual License Classification & Post-Cache Clamp
     lic_perm, _ = classify_license_text("Licensed under MIT OR Apache-2.0")

@@ -271,12 +271,16 @@ from .telemetry import (
 from .verifier import (
     CommandResult,
     PatchVerificationReport,
+    check_harness_git_provenance,
+    compute_file_lf_sha256,
     resolve_preset_commands,
     verify_document_artifact,
     verify_patch_execution,
 )
 
 __all__ = [
+    "check_harness_git_provenance",
+    "compute_file_lf_sha256",
     "verify_document_artifact",
     "resolve_preset_commands",
     "HarnessEngine",

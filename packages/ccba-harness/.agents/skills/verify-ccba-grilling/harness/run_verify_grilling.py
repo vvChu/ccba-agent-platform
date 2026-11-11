@@ -12,7 +12,6 @@ Implements the 5 core verification blocks per ADR-0009, ADR-0044, ADR-0057, and 
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import signal
@@ -286,11 +285,6 @@ def validate_grilling_question_turn(
     return True, "DecisionRecorded"
 
 
-def _file_lf_sha256(path: Path) -> str:
-    """Computes LF-normalized SHA-256 hex digest of a file for cross-OS parity."""
-    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-
-
 def _is_shallow_repo() -> bool:
     """Returns True when REPO_ROOT is a shallow git clone (e.g., CI fetch-depth: 1)."""
     res = subprocess.run(
@@ -308,46 +302,18 @@ def check_git_provenance(
     covered_paths: Sequence[str],
     expected_sha256: Mapping[str, str] | None = None,
 ) -> list[str]:
-    """Inspects covered_paths drift via LF SHA-256 and git diff from sync_commit (fail-closed).
+    """Verifies covered_paths via LF SHA-256 and reachable sync_commit (fail-closed)."""
+    src_dir = str(REPO_ROOT / "packages" / "ccba-harness" / "src")
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+    from ccba_harness.verifier import check_harness_git_provenance
 
-    Args:
-        sync_commit: Baseline merged commit SHA recorded in verify-ccba-grilling/SKILL.md.
-        covered_paths: Relative file paths protected by the verification harness.
-        expected_sha256: Optional mapping of relative path -> expected LF SHA-256 hex digest.
-
-    Returns:
-        list[str]: Drifted file paths or fail-closed error sentinels (empty only if verified in_sync).
-    """
-    drifted: list[str] = []
-    if expected_sha256:
-        for rel_path, exp_hash in expected_sha256.items():
-            full_path = REPO_ROOT / rel_path
-            if not full_path.is_file() or _file_lf_sha256(full_path) != exp_hash:
-                drifted.append(rel_path)
-
-    probe = subprocess.run(
-        ["git", "cat-file", "-e", f"{sync_commit}^{{commit}}"],
-        cwd=str(REPO_ROOT),
-        capture_output=True,
-        text=True,
-        check=False,
+    return check_harness_git_provenance(
+        REPO_ROOT,
+        sync_commit,
+        covered_paths,
+        expected_sha256=expected_sha256,
     )
-    if probe.returncode != 0:
-        sha_map = expected_sha256 or {}
-        has_full_sha_map = bool(sha_map) and all(p in sha_map for p in covered_paths)
-        if not (_is_shallow_repo() and has_full_sha_map):
-            drifted.append(f"UNVERIFIABLE_SYNC_COMMIT:{sync_commit}")
-        return list(dict.fromkeys(drifted))
-
-    cmd = ["git", "diff", "--name-only", f"{sync_commit}..HEAD", "--", *covered_paths]
-    proc = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, check=False)
-    if proc.returncode != 0:
-        drifted.append(f"GIT_DIFF_ERROR:{sync_commit}")
-        return list(dict.fromkeys(drifted))
-    for line in proc.stdout.splitlines():
-        if line.strip():
-            drifted.append(line.strip())
-    return list(dict.fromkeys(drifted))
 
 
 def verify_surface_diff(features_index: Path, test_suite: Path) -> list[str]:

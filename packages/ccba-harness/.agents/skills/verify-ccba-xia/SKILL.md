@@ -16,8 +16,14 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.1
-sync_commit: "2438e345203d3717114b6e4c59c832bea228b6c1"
+  version: 1.0.2
+sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+covered_sha256:
+  .agents/skills/ccba-xia/SKILL.md: "a09c0f61e9e0a287f8f6307f786b3d15653254d7860188a63e5c57001e83ed60"
+  .agents/skills/ccba-xia/references/modes.md: "6784b9c698268d5ba798513034af572d276a3419295d7ce1ecb9293531a1b3bc"
+  scripts/spoke/upstream_evaluator.py: "c8c864b90c9a6c585a7e75646b486cf045c51d990a8f2dd2b69f3613d8435280"
+  scripts/spoke/_upstream_helpers.py: "f59468f393fc2d6cbe9a8fcd8f8f8db9e58f08e7ec154678e8c22dff45cfef51"
+  docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md: "a1fbc89c32c407e5dab2685038ad44bc9434a3b567b3ef2818fc967672abd512"
 verification_mode:
   - scaffold
   - sync
@@ -41,7 +47,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 6 pha của `.agents/skills/ccba-xia/SKILL.md`, bảng chế độ `.agents/skills/ccba-xia/references/modes.md`, chốt chặn `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`, cùng các hàm thực thi trong `scripts/spoke/upstream_evaluator.py` (`check_repo_license`, `check_is_duplicate`, `generate_xia_command`) và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `2438e345203d3717114b6e4c59c832bea228b6c1` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

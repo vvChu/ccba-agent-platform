@@ -178,3 +178,45 @@ def test_pre_remediation_provenance_check_contract_vs_regression() -> None:
         evaluate_provenance(is_intentional_contract_change=False, is_unintended_regression=True)
         == "BLOCK_HARNESS_TAMPERING_FIX_SOURCE_CODE"
     )
+
+
+def test_all_verify_ccba_harnesses_enforce_reachable_provenance_and_sha256() -> None:
+    """Verifies all 10 verify-ccba-* skills declare covered_sha256 and pass fail-closed provenance."""
+    import yaml
+
+    from ccba_harness.verifier import _is_git_shallow_repo, check_harness_git_provenance
+
+    repo_root = Path(__file__).resolve().parents[2]
+    skill_files = sorted(
+        (repo_root / "packages" / "ccba-harness" / ".agents" / "skills").glob(
+            "verify-ccba-*/SKILL.md"
+        )
+    )
+    assert len(skill_files) >= 10
+    is_shallow = _is_git_shallow_repo(repo_root)
+
+    for skill_md in skill_files:
+        fm = yaml.safe_load(skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+        sync_commit = str(fm["sync_commit"])
+        covered_paths = list(fm["covered_paths"])
+        covered_sha256 = dict(fm["covered_sha256"])
+
+        assert set(covered_sha256.keys()) == set(covered_paths), skill_md.parent.name
+        assert (
+            check_harness_git_provenance(
+                repo_root, sync_commit, covered_paths, expected_sha256=covered_sha256
+            )
+            == []
+        ), f"Drift in {skill_md.parent.name}"
+
+        tampered = dict(covered_sha256)
+        tampered[covered_paths[0]] = "0" * 64
+        assert check_harness_git_provenance(
+            repo_root, sync_commit, covered_paths, expected_sha256=tampered
+        ) == [covered_paths[0]]
+
+        if not is_shallow:
+            bad_sha = "deadbeef" * 5
+            assert check_harness_git_provenance(
+                repo_root, bad_sha, covered_paths, expected_sha256=covered_sha256
+            ) == [f"UNVERIFIABLE_SYNC_COMMIT:{bad_sha}"]

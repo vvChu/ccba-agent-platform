@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.2"
+  version: "1.3.3"
   author: "CCBA Hub"
 triggers:
 - release
@@ -85,10 +85,13 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    gh pr view --json number,title,state,headRefName,body
    ```
 
-   - **Sàng lọc Mức độ Nguy hiểm (Merge Danger Triage):**
-     * Đọc trường `## Merge Danger Assessment` từ mô tả PR:
+   - **Sàng lọc Mức độ Nguy hiểm & Thẻ Đánh Đổi (Merge Danger Triage & Tradeoff Card — ADR-0067):**
+     * Đọc trường `## Merge Danger Assessment` (hoặc `## Merge Danger`) từ mô tả PR:
        - Nếu **Two-way door** và bán kính **Localized**: Áp dụng *Fast-path review* (kiểm tra nhanh CI và Copilot comments để merge).
-       - Nếu **One-way door** hoặc bán kính **Monorepo-wide / Spoke-affecting**: Bắt buộc tiến hành *Deep review*, kiểm tra kỹ lưỡng các ảnh hưởng gãy vỡ hợp đồng giao diện, tính tương thích ngược với Spoke downstream trước khi quyết định merge.
+       - Nếu **One-way door**, bán kính **Monorepo-wide / Spoke-affecting**, hoặc diff vượt ngưỡng 200 LOC: Bắt buộc tiến hành *Deep review* và xác minh PR body đã có khối `### Tradeoff Card (ADR-0067)` hợp lệ (`<= 30` dòng, có neo dòng `#L<a>-L<b>`) trước khi chạy CI/merge:
+         ```bash
+         python -m ccba_harness door-triage <changed_files> --pr-body-file <body_file> --enforce-tradeoff-card
+         ```
 
 2. **Kiểm tra xác thực GitHub CLI (`gh`):**
    ```bash
@@ -143,6 +146,8 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
        gh pr checks [PR_NUMBER] --watch
        # Dừng gọi công cụ (End Turn). Khi Reactive Wakeup báo 100% checks xanh, thực hiện:
        gh pr merge [PR_NUMBER] --squash --delete-branch
+       # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge để tránh git checkout main trên thư mục gốc đang bận:
+       git -C <worktree_path> checkout --detach && gh pr merge [PR_NUMBER] --squash && git push origin --delete [HEAD_BRANCH]
        ```
    - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
 

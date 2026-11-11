@@ -37,6 +37,12 @@ def _load_runner_module() -> object:
     return mod
 
 
+def _load_skill_provenance(skill_md: Path) -> tuple[str, list[str], dict[str, str]]:
+    """Parses sync_commit, covered_paths, and covered_sha256 from SKILL.md frontmatter."""
+    fm = yaml.safe_load(skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+    return str(fm["sync_commit"]), list(fm["covered_paths"]), dict(fm["covered_sha256"])
+
+
 def test_feat_tdd_001_frontmatter_and_gpi_contract() -> None:
     """Verifies FEAT-TDD-001: SkillValidator compliance, slash command, and GPI == 12.0."""
     runner = _load_runner_module()
@@ -236,13 +242,14 @@ def test_feat_tdd_007_surface_diff_and_domain_eval_parity() -> None:
     missing_feats = runner.verify_surface_diff(features_idx, suite_file)  # type: ignore[attr-defined]
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
+    sync_sha, cov_paths, cov_hashes = _load_skill_provenance(
+        features_idx.parent.parent / "SKILL.md"
+    )
+    assert set(cov_hashes.keys()) == set(cov_paths)
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "8c731731931966faaba6cc2571fedde11301c6c8",
-        [
-            ".agents/skills/ccba-tdd/SKILL.md",
-            ".agents/skills/ccba-tdd/references/tests.md",
-            ".agents/skills/ccba-tdd/references/mocking.md",
-        ],
+        sync_sha,
+        cov_paths,
+        expected_sha256=cov_hashes,
     )
     assert changed == []
 

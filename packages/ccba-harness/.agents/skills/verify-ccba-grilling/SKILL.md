@@ -16,8 +16,8 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.2
-sync_commit: "6c36e4112e95d433dc6633ec1f2e172c7b8d089f"
+  version: 1.0.3
+sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
 covered_sha256:
   .agents/skills/ccba-grilling/SKILL.md: "5f70b3276d1b4d3bc2c718839a7b24010166e08c79d2643082abab8c3779ddf6"
   .agents/skills/ccba-grilling/references/to-questionnaire.md: "0536d172206fcfd908e9b1c5b8223b927476fd5ab616ac50812bc0bccbc076e8"
@@ -45,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng Bước 0 (`in-your-own-words` & `sharpen`), 3 nhánh tác nghiệp (Standard Stress-Test, Rule Compliance Stress-Test, Visual Prototype Grilling), cấu trúc Cây thiết kế (`Design Tree`, `Frontier Questions`, `Facts vs. Decisions`), và tài liệu tham chiếu Tier 2A `references/to-questionnaire.md` (*"Grill the send, not the subject"*).
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6c36e4112e95d433dc6633ec1f2e172c7b8d089f` kết hợp đối soát băm `covered_sha256` chuẩn hóa LF cho toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 
