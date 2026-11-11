@@ -8,7 +8,7 @@ command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - ccba-implement
@@ -59,14 +59,15 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
 1. Hiện thực hóa mã nguồn trong các file liên quan để làm các test case chuyển sang trạng thái Green.
 2. Tuân thủ chuẩn mực mã nguồn: Type hints đầy đủ, docstrings phong cách Google, hàm không vượt quá 50 dòng.
 3. Không tự ý thêm abstraction hoặc lớp trung gian nếu bài toán giải quyết được bằng 10-15 dòng code.
-- **Tiêu chí hoàn thành:** Toàn bộ scoped unit test chuyển sang trạng thái Green với mã nguồn đơn giản, mạch lạc.
+4. Đối với các hàm chuẩn hóa định danh hoặc khóa tra cứu có thể được gọi lặp (Dual-Read / re-entry), bắt buộc kiểm thử tính lũy đẳng `f(f(x)) == f(x)` trên cả dữ liệu thô lẫn dữ liệu đã chuẩn hóa.
+- **Tiêu chí hoàn thành:** Toàn bộ scoped unit test (gồm kiểm chứng lũy đẳng `f(f(x)) == f(x)` nếu có bộ chuẩn hóa định danh) chuyển sang trạng thái Green với mã nguồn đơn giản, mạch lạc.
 
 ### Bước 4: Kiểm tra tĩnh và kiểm thử hồi quy (Deterministic Gate & Regression)
 1. Kích hoạt cổng kiểm định máy tính một chạm:
    ```bash
    python -m ccba_harness verify-patch --preset code --target <package_or_dir>
    ```
-   *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`.*
+   *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`. Lưu ý: khi truyền lệnh tùy chỉnh qua `--cmd`, `verify-patch` phân tách bằng `shlex.split` (`shell=False`), nên mọi biến môi trường nội tuyến bắt buộc đi sau tiền tố `env` (ví dụ: `--cmd "env PYTHONPATH=services/rag-service pytest ..."`).*
 2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng.
 3. Nếu phát hiện lỗi (Exit Code $\ne 0$), kích hoạt vòng lặp Fix Loop để giải quyết triệt để lỗi kiểu và linter.
 - **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
