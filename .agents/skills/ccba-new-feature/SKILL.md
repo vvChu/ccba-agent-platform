@@ -197,6 +197,7 @@ Agent **bắt buộc** phải chuyển sang **Planning Mode**, tuyệt đối kh
   - Bắt buộc có mục `## Đánh giá khả năng tái sử dụng (Reuse Assessment)` tra cứu `catalog.yaml` (ADR 0047 / ADR 0032).
   - Đối chiếu diff dự kiến với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).
   - Xác định rõ các Deep Seams (khớp nối) và Scoped Verification Plan (ưu tiên Dynamic Re-Convert song song với Golden Snapshot tĩnh).
+  - **Thẩm định kế hoạch qua Grok (khi được yêu cầu hoặc chạm Cửa Một Chiều):** Đọc `.md/peer_exchange/PEER_HANDSHAKE.md` và gọi `ccba-harness peer-dispatch --profile audit_plan` (cấm gọi `grok` trần); nếu nhận `REVISE_PLAN` hoặc điều kiện `blocking: true`, sau khi chỉnh sửa bắt buộc chạy vòng 2 `--profile signoff_diff` nối tiếp phiên trước khi kết luận hoàn tất.
 - **Phê duyệt:** Đợi người dùng nhấn **Proceed** phê duyệt bản kế hoạch.
 - **Tiêu chí hoàn thành:** Đề xuất vượt qua Cổng Thẩm định Tính Hợp Lý, Quy Mô Thực Tế & Biên Giới Repo (hoặc được đóng an toàn `not planned` / `completed` kèm ma trận KISS nếu vi phạm), và bản kế hoạch implementation_plan.md được người dùng duyệt chính thức, tuân thủ nghiêm ngặt 2-Phase Planning Guardrail và Atomic Micro-PR Slicing.
 
