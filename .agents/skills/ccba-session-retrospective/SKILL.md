@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.3
+  version: 1.6.4
 bundle: _core
 tier: kernel
 triggers:
@@ -89,7 +89,7 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --file .md/knowledge/session_learnings.md --stats
   ```
   Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes) hoặc trần 115 dòng (tại Spoke), thực hiện nén câu chữ tại chỗ trong `session_learnings.md` và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
-  * **Cấm Ghi đè Mù quáng bằng Khuôn mẫu Tĩnh (`RULE-2.22`):** Tuyệt đối không chạy `compact_session_learnings.py --compact` để ghi đè `session_learnings.md` bằng khuôn mẫu tĩnh nếu tệp hiện hành đã tích lũy các mục `RULE-\d+\.\d+` mới hơn khuôn mẫu (`find_dropped_rules` sẽ chặn với mã thoát `1`). Luôn nén câu chữ trực tiếp trên tập `RULE-X.Y` hiện hành để bảo toàn 100% định danh cho `ZeroDeletionGuard`.
+  * **Cấm Ghi đè Mù quáng bằng Khuôn mẫu Tĩnh (`RULE-2.22`):** Tuyệt đối không chạy `compact_session_learnings.py --compact` để ghi đè `session_learnings.md` bằng khuôn mẫu tĩnh nếu tệp hiện hành đã tích lũy các mục `RULE-\d+\.\d+` mới hơn khuôn mẫu (`find_dropped_rules` sẽ chặn với mã thoát `1`, trừ khi liệt kê tường minh qua `--allow-rule-drop-ids`). Luôn nén câu chữ trực tiếp trên tập `RULE-X.Y` hiện hành để bảo toàn 100% định danh cho `ZeroDeletionGuard`.
   * **Bất biến Bảo toàn Điều kiện Biên (Scope Qualifier Preservation):** Khi rút gọn một `RULE-X.Y`, **bắt buộc** giữ nguyên phạm vi áp dụng cụ thể (tên cờ CLI như `--deny`, tên module, hoặc hệ điều hành) và đối chiếu chéo với bản ghi gốc trong `session_learnings_history.md`. Tuyệt đối không lược bỏ phạm vi hẹp khiến quy tắc bị khái quát hóa quá mức (over-generalization) và xung đột với các ADR nền tảng (như ADR-0060).
 - Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
@@ -141,9 +141,9 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
    - Kiểm tra ngân sách bộ nhớ `session_learnings.md` ($\le 10.0\text{ KB}$):
      ```bash
      # Trên Hub:
-     python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --check
+     python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
      # Trên Spoke (để kiểm định đúng SPOKE_REQUIRED_INVARIANTS thay vì mặc định hub):
-     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --check
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
      ```
    - Kiểm tra tài liệu, biến môi trường & Architecture Drift:
      ```bash
@@ -180,7 +180,7 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 ### Bước 6: Xuất Báo cáo Tóm tắt (Session Retrospective Summary)
 Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
 - **Mục tiêu & Kết quả:** Tóm tắt 2-4 dòng kết quả đã hoàn thành.
-- **Tri thức & Kỹ năng Tiến hóa:** Bảng liệt kê các Patterns/Anti-patterns/RULEs mới (thuộc 5 Miền Kiến Trúc) và các `SKILL.md` đã được nâng cấp.
+- **Tri thức & Kỹ năng Tiến hóa:** Bảng liệt kê các Patterns/Anti-patterns/RULEs mới (thuộc 6 Miền Kiến Trúc) và các `SKILL.md` đã được nâng cấp.
 - **Trạng thái Kiểm định Quản trị & ADR-0058:** Kết quả chạy bộ 4 Governance Gate và `ccba-harness verify-patch`.
 - **Mã Commit & Bypass:** Hash commit cuối cùng của phiên (kèm ghi chú `# APPROVED:` nếu áp dụng).
 - **Tiêu chí hoàn thành:** Báo cáo tổng kết hiển thị đầy đủ 4 mục trên trong cửa sổ chat, kèm liên kết Markdown dẫn đến các tệp tri thức vừa cập nhật.
