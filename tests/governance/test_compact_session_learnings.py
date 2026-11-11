@@ -19,6 +19,7 @@ from scripts.governance.compact_session_learnings import (
     SPOKE_COMPACTED_TEMPLATE,
     SPOKE_REQUIRED_INVARIANTS,
     backup_to_archive,
+    find_dropped_rules,
     get_file_metrics,
     run_check,
     run_compact,
@@ -168,3 +169,55 @@ def test_spoke_profile_compaction_and_check(tmp_path: Path) -> None:
     master_archive = archive_dir / "session_learnings_history.md"
     assert master_archive.exists()
     assert master_archive.read_text(encoding="utf-8") == bloated_initial
+
+
+def test_backup_to_archive_rebases_sibling_relative_links(tmp_path: Path) -> None:
+    """Verify backup_to_archive rewrites archive/ and wiki/ links so validate_docs passes."""
+    kb_dir = tmp_path / ".md" / "knowledge"
+    archive_dir = kb_dir / "archive"
+    (kb_dir / "wiki").mkdir(parents=True)
+    (kb_dir / "wiki" / "index.md").write_text("# Wiki\n", encoding="utf-8")
+    (kb_dir / "CONTEXT.md").write_text("# Context\n", encoding="utf-8")
+
+    source_file = kb_dir / "session_learnings.md"
+    source_file.write_text(
+        "> **Lịch sử:** [session_learnings_history.md](archive/session_learnings_history.md) "
+        "| **Wiki:** [wiki/index.md](wiki/index.md) | [CONTEXT](CONTEXT.md)\n",
+        encoding="utf-8",
+    )
+
+    ts_file, _ = backup_to_archive(source_file, archive_dir)
+    archived = ts_file.read_text(encoding="utf-8")
+
+    assert "(session_learnings_history.md)" in archived
+    assert "(archive/session_learnings_history.md)" not in archived
+    assert "(../wiki/index.md)" in archived
+    assert "(../CONTEXT.md)" in archived
+
+
+def test_run_compact_blocks_silent_active_rule_deletion(tmp_path: Path) -> None:
+    """Verify run_compact refuses to overwrite active RULE-X.Y entries missing from template."""
+    source_file = tmp_path / "session_learnings.md"
+    archive_dir = tmp_path / "archive"
+    original = (
+        " ".join(REQUIRED_INVARIANTS)
+        + "\n- **RULE-1.1 [ADR 0057]**: Base\n- **RULE-6.2 [4-Slice UCG]**: Active rule\n"
+    )
+    source_file.write_text(original, encoding="utf-8")
+    stale_template = " ".join(REQUIRED_INVARIANTS) + "\n- **RULE-1.1 [ADR 0057]**: Base\n"
+
+    assert find_dropped_rules(original, stale_template) == ["RULE-6.2"]
+    assert run_compact(source_file, archive_dir, max_size_kb=10.0, template=stale_template) == 1
+    assert source_file.read_text(encoding="utf-8") == original
+
+    # Explicit opt-in flag permits reset when intentionally invoked
+    assert (
+        run_compact(
+            source_file,
+            archive_dir,
+            max_size_kb=10.0,
+            template=stale_template,
+            allow_rule_drop=True,
+        )
+        == 0
+    )
