@@ -16,8 +16,11 @@ from ._peer_models import (
     PeerCondition,
     PeerVerdictBlock,
     PeerVerdictTelemetry,
+    _sort_key_latest_exchange,
+    extract_env_conversation_id,
     parse_envelope_from_md,
     parse_verdict_from_md,
+    resolve_spoke_slug_from_path,
 )
 from ._peer_watchdog import CostMode
 
@@ -551,3 +554,68 @@ def _resolve_effective_resume_session(
     )
     _check_resumed_payload_bloat(prompt_path, eff_resume)
     return eff_resume
+
+
+def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    """Extracts the most recent Grok verdict details from registry."""
+    grok_resps = [
+        item
+        for item in registry.values()
+        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
+    ]
+    if not grok_resps:
+        return None
+    grok_resps.sort(key=_sort_key_latest_exchange, reverse=True)
+    top = grok_resps[0]
+    verdict = top["verdict"]
+    return {
+        "request_id": verdict.request_id,
+        "verdict": verdict.verdict,
+        "blocking_conditions": len([c for c in verdict.conditions if c.blocking]),
+        "output_path": top["path"].name,
+        "summary": verdict.summary,
+    }
+
+
+def _aggregate_registry_telemetry(
+    registry: dict[str, dict[str, Any]],
+) -> tuple[int, float, dict[str, dict[str, Any]]]:
+    """Aggregates token and cost telemetry across all registry verdict entries."""
+    total_tokens = 0
+    total_cost_usd = 0.0
+    by_model: dict[str, dict[str, Any]] = {}
+    seen_snapshots: set[tuple[str, int, int, float]] = set()
+    for item in registry.values():
+        v = item.get("verdict")
+        if v and getattr(v, "telemetry", None):
+            tok_delta, cost_delta = _accumulate_verdict_telemetry(
+                v.telemetry, by_model, seen_snapshots
+            )
+            total_tokens += tok_delta
+            total_cost_usd += cost_delta
+    return total_tokens, total_cost_usd, by_model
+
+
+def _attach_verdict_lineage(
+    verdict: PeerVerdictBlock,
+    prompt_path: Path,
+    prompt_content: str | None,
+) -> None:
+    """Populates verdict lineage in-memory from prompt envelope and runtime env without rewriting prompt."""
+    content = prompt_content
+    if content is None:
+        try:
+            content = prompt_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            content = ""
+    envelope = parse_envelope_from_md(content or "", prompt_path=prompt_path)
+    env_cid = extract_env_conversation_id()
+    verdict.conversation_id = (
+        verdict.conversation_id or (envelope.conversation_id if envelope else None) or env_cid
+    )
+    verdict.task_id = verdict.task_id or (envelope.task_id if envelope else None)
+    verdict.spoke_name = (
+        verdict.spoke_name
+        or (envelope.spoke_name if envelope else None)
+        or resolve_spoke_slug_from_path(prompt_path, allow_ancestor_walk=bool(env_cid))
+    )
