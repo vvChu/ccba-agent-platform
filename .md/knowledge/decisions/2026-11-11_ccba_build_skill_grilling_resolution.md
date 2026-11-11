@@ -2,14 +2,14 @@
 
 - **Ngày thực hiện:** 2026-11-11
 - **Phương thức:** `/ccba-grilling` (Stress-Test & Phỏng vấn dồn dập Cây thiết kế)
-- **Đối tượng:** Kỹ năng [`ccba-build-skill`](../../.agents/skills/ccba-build-skill/SKILL.md)
+- **Đối tượng:** Kỹ năng [`ccba-build-skill`](../../../.agents/skills/ccba-build-skill/SKILL.md)
 - **Tình trạng:** Đã hoàn thành phỏng vấn (All Frontier Nodes Resolved)
 
 ---
 
 ## 1. Tóm Tắt Định Vị Kỹ Năng
 
-Kỹ năng `/ccba-build-skill` đóng vai trò là **"Nhà máy Tác tạo Kỹ năng Chuẩn mực" (Skill Factory)** của CCBA Agent Platform, thuộc nhóm Tier 2B Standalone Kernel Skill ($GPI = 14.0$). Kỹ năng chịu trách nhiệm chuyển hóa các nguồn tri thức thô thành các chỉ dẫn hành vi tất định cho Agent, tuân thủ nghiêm ngặt [ADR-0057](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/ADR-0057-skills-governance-and-two-stage-decision-framework.md), [ADR-0058](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/ADR-0058-automation-first-quality-and-deterministic-hard-completion-lock.md) và [ADR-0061](file:///home/vvc/ccba/ccba-agent-platform/docs/adr/ADR-0061-hub-spoke-capability-contracts-and-seam-governance.md).
+Kỹ năng `/ccba-build-skill` đóng vai trò là **"Nhà máy Tác tạo Kỹ năng Chuẩn mực" (Skill Factory)** của CCBA Agent Platform, thuộc nhóm Tier 2B Standalone Kernel Skill ($GPI = 14.0$). Kỹ năng chịu trách nhiệm chuyển hóa các nguồn tri thức thô thành các chỉ dẫn hành vi tất định cho Agent, tuân thủ nghiêm ngặt [ADR-0057](../../../docs/adr/0057-two-stage-granularity-decision-framework-and-gpi.md), [ADR-0058](../../../docs/adr/0058-live-collaboration-artifacts-workspace-mirroring-and-charter-alignment.md) và [ADR-0061](../../../docs/adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md).
 
 ---
 

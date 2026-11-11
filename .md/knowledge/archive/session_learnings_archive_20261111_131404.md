@@ -1,7 +1,7 @@
 # 🧠 CCBA Platform Knowledge Base: Active Architectural Invariants
 
 > **Phạm vi:** Hub (`ccba-agent-platform`) & Spokes | **Chuẩn:** ADR 0030, 0031, 0033, 0035, 0037, 0041, 0046, 0051, 0053, 0056, 0057, 0058, 0060, 0061, 0062, 0066, 0067, ADR-0040, ADR-0059.
-> **Lịch sử:** [session_learnings_history.md](archive/session_learnings_history.md) | **Wiki:** [wiki/index.md](wiki/index.md) | Trần: $\le 10\text{ KB}$
+> **Lịch sử:** [session_learnings_history.md](session_learnings_history.md) | **Wiki:** [wiki/index.md](../wiki/index.md) | Trần: $\le 10\text{ KB}$
 
 ---
 
