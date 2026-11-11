@@ -608,7 +608,7 @@ def _build_linter_check(target_files: list[Path], ws: Path) -> GateCheck:
 
 
 def _resolve_gate_pytest_targets(
-    ws: Path, target_files: list[str], pytest_targets: list[str] | None
+    ws: Path, target_files: Sequence[str | Path], pytest_targets: list[str] | None
 ) -> list[str]:
     """Resolves existing pytest target paths for run_full_gate."""
     if pytest_targets is not None:

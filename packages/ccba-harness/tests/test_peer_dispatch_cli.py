@@ -5,6 +5,8 @@ Validates Level-2 peer dispatch flags, dry-run output, and error handling (ADR-0
 
 from __future__ import annotations
 
+import pytest
+
 from ccba_harness.cli import main, run_peer_dispatch_cli
 from ccba_harness.peer import PeerPromptEnvelope, render_prompt_header
 
@@ -422,3 +424,64 @@ def test_peer_dispatch_cli_flag_aliases_and_minimal_frontmatter(tmp_path, capsys
     assert vb.verdict == "APPROVE_WITH_CONDITIONS"
     assert vb.risk_score == 3
     assert vb.telemetry is not None and vb.telemetry.session_id == "sess-fenced-01"
+
+
+def test_peer_dispatch_envelope_lineage_metadata(tmp_path):
+    """Validates lineage metadata fields, slug/tag sanitization, session alias preservation, and extra key rejection (COND-09)."""
+    from pydantic import ValidationError
+
+    from ccba_harness.peer import PeerPromptEnvelope, parse_envelope_from_md, render_prompt_header
+
+    prompt_file = tmp_path / "prompt_grok_lineage_test.md"
+    raw_md = (
+        "---\n"
+        "request_id: req-lineage-01\n"
+        "conversation_id: '0cbb4d3f-ee28-4985-8f9c-8cdea58eb14c'\n"
+        "task_id: 'task-721'\n"
+        "spoke_name: '/home/vvc/ccba/vvc-second-brain/'\n"
+        "tags:\n"
+        "  - spoke-sync\n"
+        "  - peer-coordination\n"
+        "  - 'tag_with_length_greater_than_forty_characters_must_be_truncated_properly'\n"
+        "from_agent: antigravity\n"
+        "to_agent: grok\n"
+        "request_type: plan\n"
+        "profile: arch_audit\n"
+        "subject: Lineage Metadata Verification\n"
+        "session_id: '24e26e37-4064-409c-93da-09d4c76b8653'\n"
+        "---\n"
+        "# Body\n"
+    )
+    prompt_file.write_text(raw_md, encoding="utf-8")
+    env = parse_envelope_from_md(raw_md, prompt_path=prompt_file)
+    assert env is not None
+    assert env.request_id == "req-lineage-01"
+    assert env.conversation_id == "0cbb4d3f-ee28-4985-8f9c-8cdea58eb14c"
+    assert env.task_id == "task-721"
+    assert env.spoke_name == "vvc-second-brain"
+    assert len(env.tags) == 3
+    assert len(env.tags[2]) <= 40
+    # session_id must alias to resume_session_id without being swallowed
+    assert env.resume_session_id == "24e26e37-4064-409c-93da-09d4c76b8653"
+
+    # Verify round-trip serialization via render_prompt_header
+    rendered = render_prompt_header(env)
+    assert "conversation_id: 0cbb4d3f-ee28-4985-8f9c-8cdea58eb14c" in rendered
+    assert "task_id: task-721" in rendered
+    assert "spoke_name: vvc-second-brain" in rendered
+    assert "spoke-sync" in rendered
+
+    # Verify direct model_validate still strictly rejects unknown keys (extra='forbid')
+    with pytest.raises(ValidationError):
+        PeerPromptEnvelope.model_validate(
+            {
+                "request_id": "r",
+                "from_agent": "antigravity",
+                "to_agent": "grok",
+                "request_type": "plan",
+                "subject": "s",
+                "timestamp": "t",
+                "output_path": "o",
+                "arbitrary_unknown_key": "not_allowed",
+            }
+        )

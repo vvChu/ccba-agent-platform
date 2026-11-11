@@ -86,6 +86,10 @@ _ENVELOPE_ALLOWED_KEYS: frozenset[str] = frozenset(
         "target_files",
         "resume_session_id",
         "fork_session",
+        "conversation_id",
+        "task_id",
+        "spoke_name",
+        "tags",
     }
 )
 _REQUEST_TYPE_ALIASES: dict[str, str] = {
@@ -183,6 +187,41 @@ class PeerPromptEnvelope(BaseModel):
     target_files: list[str] = Field(default_factory=list)
     resume_session_id: str | None = None
     fork_session: bool | None = None
+    conversation_id: str | None = None
+    task_id: str | None = None
+    spoke_name: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("conversation_id", "task_id", mode="before")
+    @classmethod
+    def _clean_optional_id(cls, v: Any) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s or None
+
+    @field_validator("spoke_name", mode="before")
+    @classmethod
+    def _clean_spoke_name(cls, v: Any) -> str | None:
+        if v is None:
+            return None
+        raw = str(v).strip()
+        if not raw:
+            return None
+        spoke_base = Path(raw).name if ("/" in raw or "\\" in raw) else raw
+        slug = re.sub(r"[^a-zA-Z0-9_\-]", "", spoke_base).strip()
+        return slug or None
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _clean_tags(cls, v: Any) -> list[str]:
+        if v is None:
+            return []
+        if isinstance(v, (list, tuple)):
+            return [str(t).strip()[:40] for t in v if str(t).strip()][:8]
+        if isinstance(v, str) and v.strip():
+            return [t.strip()[:40] for t in v.split(",") if t.strip()][:8]
+        return []
 
 
 class PeerCondition(BaseModel):
@@ -514,6 +553,32 @@ def _normalize_envelope_frontmatter(
         data.get("output_path") or data.get("output_file") or f"grok_{stem}.md"
     ).strip()
     _apply_envelope_doc_and_session_aliases(data, d)
+
+    # Lineage metadata extraction (ADR-0063 / COND-09)
+    raw_conv_id = str(data.get("conversation_id") or "").strip()
+    d["conversation_id"] = raw_conv_id or None
+
+    raw_task_id = str(data.get("task_id") or "").strip()
+    d["task_id"] = raw_task_id or None
+
+    raw_spoke = str(data.get("spoke_name") or data.get("spoke") or "").strip()
+    if raw_spoke:
+        spoke_base = Path(raw_spoke).name if ("/" in raw_spoke or "\\" in raw_spoke) else raw_spoke
+        slug = re.sub(r"[^a-zA-Z0-9_\-]", "", spoke_base).strip()
+        d["spoke_name"] = slug or None
+    else:
+        d["spoke_name"] = None
+
+    raw_tags = data.get("tags")
+    if isinstance(raw_tags, (list, tuple)):
+        clean_tags = [str(t).strip()[:40] for t in raw_tags if str(t).strip()][:8]
+        d["tags"] = clean_tags
+    elif isinstance(raw_tags, str) and raw_tags.strip():
+        clean_tags = [t.strip()[:40] for t in raw_tags.split(",") if t.strip()][:8]
+        d["tags"] = clean_tags
+    else:
+        d["tags"] = []
+
     return d
 
 
