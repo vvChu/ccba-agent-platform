@@ -140,18 +140,22 @@ Mọi Standalone Kernel Skill (Tier 2B) bắt buộc phải khai báo khối `gp
 ---
 name: ccba-my-kernel-skill
 description: Mô tả ngắn gọn súc tích <= 180 ký tự.
+metadata:
+  version: "1.0.0"
+  author: "CCBA Hub"
 bundle: _software
+tier: kernel
 user-invocable: true
 disable-model-invocation: true
 command: /ccba-my-kernel-skill
 gpi:
   s: 3.5
   k: 2.0
-  a: 2.0
+  a: 1.0
   p: 1.0
 ---
 ```
-*(Cũng hỗ trợ định dạng inline: `gpi: {s: 3.5, k: 2.0, a: 2.0, p: 1.0}`).*
+*(Cũng hỗ trợ định dạng inline: `gpi: {s: 3.5, k: 2.0, a: 1.0, p: 1.0}`; lưu ý với `disable-model-invocation: true` thì `a` bắt buộc bằng `1.0`).*
 
 ---
 
@@ -161,6 +165,37 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 1. **Nghiêm Cấm Script Bloat:** Tuyệt đối không đặt mã nguồn logic nặng, thuật toán phức tạp hoặc vượt quá **100 dòng mã (LOC)** vào thư mục `scripts/` của kỹ năng.
 2. **Đưa Logic Về Packages Monorepo:** Toàn bộ mã nguồn giải thuật xác định, thư viện phân tích cú pháp (DOCX/PDF/XML), xử lý regex và kiểm toán dữ liệu bắt buộc phải đóng gói thành các module chuẩn mực trong `packages/*/src/` và được bảo vệ 100% bởi unit test trong CI.
 3. **Mô Hình Thin Adapter:** Thư mục `scripts/` bên trong kỹ năng (nếu có) chỉ được đóng vai trò là các thin adapters (tối đa 10–30 LOC), chỉ làm nhiệm vụ nạp tham số CLI và gọi trực tiếp vào các **Deep Seams** của packages monorepo.
+
+---
+
+## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.1.1)
+
+Để đảm bảo tính nhất quán toàn diện khi tác tạo kỹ năng mới, quy trình `/ccba-build-skill` bắt buộc phải tuân thủ 6 hợp đồng kiến trúc bất biến sau:
+
+1. **Pre-flight Môi Trường & Bảo Tồn Upstream (Hub vs. Spoke):**
+   - Đọc `git remote get-url origin`.
+   - Nếu ở Spoke: Kiểm tra bắt buộc biến môi trường `CCBA_HUB_PATH`. Thư mục Hub phải tồn tại, là checkout git sạch (`git -C "<hub_path>" status --porcelain` rỗng), đứng đúng nhánh tích hợp mặc định `main` (`git -C "<hub_path>" branch --show-current == main`), khác toplevel Spoke, và chưa có nhánh/PR `proposal/<tên-skill>`. Nếu thiếu điều kiện, DỪNG ngay. Cấm tự ý `git checkout` chuyển nhánh có sẵn hay `git pull` trên Hub. Định tuyến tạo file sang `<hub_path>` trên nhánh `proposal/<tên-skill>`, chạy `python "<hub_path>/scripts/governance/check_spoke_leakage.py" --root "<hub_path>"`, và xin xác nhận tường minh của người dùng trước khi mở PR qua `/ccba-contribute-to-hub`.
+2. **Định Tuyến Nguồn Theo Phân Loại Bảo Mật (Per-Source Ingestion & Privacy Guard):**
+   - Quét `scripts/maskara.py` từng tệp nguồn. Có findings $\rightarrow$ DỪNG nguồn đó.
+   - Nguồn công khai $\rightarrow$ Cloud RAG (`notebooklm_rag.v1`). Nguồn mật / nhạy cảm / `--local` $\rightarrow$ Local Fallback qua pipeline tài liệu (`ccba-markdown-document-processing`) và `model_routing.v1` (`choose_model()`).
+   - Cẩm nang tri thức tạm thời bắt buộc lưu tại buffer `.md/scratch/build-skill/<tên-skill>/summary.md`. CẤM ghi trực tiếp vào `.md/knowledge/` dài hạn của repo trước khi hoàn tất nghiệm thu. Văn bản quy phạm pháp luật chuyển `/ccba-legal-ingest`.
+3. **Cổng Kiến Trúc Định Lượng Bằng JSON CLI Tất Định:**
+   - Bắt buộc thực thi: `python -m ccba_harness evaluate-gpi --name <name> --s <S> --k <K> --a <A> --p <P> --json` kèm 4 dòng bằng chứng quan sát được.
+   - Greenfield bỏ `--existing-tier` và `--force-tier-flip`.
+   - Quyền tạo skill độc lập nằm ở trường JSON: `tier == "Tier 2B: Standalone Kernel Skill"` (`ArchitectureTier.value`, không phải mã ngắn CLI `tier-2b`) và `allow_standalone_skill == true`. Nếu không thỏa mãn, DỪNG tạo Standalone Kernel Skill và chuyển sang Tier 2A Reference (`references/<name>.md`). Sao chép chính xác 4 số $S, K, A, P$ từ JSON vào frontmatter cùng `metadata: {version, author}` và `tier: kernel`.
+4. **Full-Stack Scaffolding & Naming Contract cho `resolve_domain_dataset()`:**
+   - Khi tạo Standalone Kernel Skill (Tier 2B), bắt buộc sinh kèm tệp ca kiểm thử mẫu tại:
+     `.agents/skills/ccba-eval-gate/test_cases/eval_<stem>.json`
+   - Quy ước tên: `<stem>` là tên skill đã bỏ tiền tố `ccba-`/`bigbim-` và đổi dấu gạch ngang `-` thành gạch dưới `_` (ví dụ: `ccba-legal-intel` $\rightarrow$ `eval_legal_intel.json`).
+   - Kiểm tra chống ghi đè: Nếu tệp đã tồn tại, DỪNG LẠI và cảnh báo.
+   - Schema JSON là mảng 2 phần tử: 1 ca happy-path (yêu cầu các token vận hành thật: `evaluate-gpi --json`, `allow_standalone_skill`, Maskara) và 1 ca red-team test (yêu cầu Agent dừng khi gặp tác vụ tất định, tài liệu mật, hoặc Spoke thiếu Hub path).
+5. **Vòng Lặp Tự Phục Hồi (Self-Healing Loop) Có Allowlist Nghiêm Ngặt:**
+   - Khi `verify-patch --preset skill` thất bại: Tối đa 2 lần thử lại, kiểm soát bộ đếm ngoài prompt.
+   - **Allowlist được sửa:** Cú pháp YAML frontmatter, liên kết tương đối hỏng, tiêu chí hoàn thành, chạy lại `compile_catalog.py`.
+   - **Danh mục CẤM:** CẤM sửa các hệ số $S, K, A, P$ trong khối `gpi:`, CẤM đảo ngược Cổng 0/1, CẤM gọi lại đệ quy `/ccba-build-skill`.
+   - Nếu sau 1 lần sửa mà hash SHA-256 của tệp không đổi $\rightarrow$ DỪNG NGAY. Hết 2 lần vẫn lỗi $\rightarrow$ Dừng theo ADR-0058 Hard Completion Lock.
+6. **Kiểm Định Toàn Diện của Bản Thân Kỹ Năng:**
+   - Mọi thay đổi đối với `ccba-build-skill` phải vượt qua `verify-patch --preset skill --target .agents/skills/ccba-build-skill`, đồng bộ catalog (`compile_catalog.py`), đồng bộ portal (`compile_skills_docs.py --write`), và kiểm thử hợp đồng tự động.
 
 ---
 

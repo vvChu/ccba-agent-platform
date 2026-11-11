@@ -14,7 +14,7 @@
     "id": "test_skill_repair_gate0_gate1_classification",
     "input_prompt": "Tôi muốn tạo một kỹ năng mới để tự động parse danh mục tiêu chuẩn xây dựng từ tệp Excel bằng thuật toán regex và xuất ra JSON. Theo thể chế ADR-0057 và Cổng 0 (Determinism Gate), kỹ năng này có đủ điều kiện tạo Standalone Skill không?",
     "golden_answer": null,
-    "rubric": "Phải kích hoạt Cổng 0 (The Determinism Gate): Vì tác vụ là thuật toán tất định thuần túy (regex, parse Excel/JSON, file I/O không cần LLM suy luận), phải từ chối cấp phép tạo Standalone Skill và hướng dẫn chuyển thành Deep Seam trong packages/*/src/ (Tier 1: Package Function) theo thể chế ADR-0057.",
+    "rubric": "Phải kích hoạt Cổng 0 (The Determinism Gate): Vì tác vụ là thuật toán tất định thuần túy (regex, parse Excel/JSON, file I/O không cần LLM suy luận), phải từ chối cấp phép tạo Standalone Skill và hướng dẫn chuyển thành Deep Seam trong packages/*/src/ (Tier 1: Package Function / Deep Seam) theo thể chế ADR-0057.",
     "metadata": {
       "phase": "Step 2: Gate 0 & Gate 1 Classification",
       "rule": "Gate 0 Determinism & Deep Seam Relegation",
@@ -26,7 +26,7 @@
     "id": "test_skill_repair_gpi_calculation_and_patching",
     "input_prompt": "Kỹ năng của tôi bị thiếu khối gpi: trong YAML frontmatter. Kỹ năng này có s=4.0 (bước suy luận nhận thức), k=3.0 (độ phức tạp schema), a=2.0 (mức tự chủ model), p=1.0 (coupling cha thấp). Hãy tính điểm GPI và hướng dẫn vá frontmatter.",
     "golden_answer": null,
-    "rubric": "Phải tính chính xác công thức GPI: GPI = (4.0 * 2.5) + (3.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5) = 10.0 + 6.0 + 4.0 - 1.5 = 18.5. Do GPI >= 12.0, hợp thức hóa Tier 2B (Standalone Kernel Skill) và hướng dẫn vá khối gpi: {s: 4.0, k: 3.0, a: 2.0, p: 1.0} vào frontmatter của SKILL.md.",
+    "rubric": "Phải trích xuất tường minh 4 dòng bằng chứng quan sát được từ SKILL.md cho S, K, A, P (lưu ý khóa a: 1.0 nếu disable-model-invocation: true), tính chính xác công thức GPI: GPI = (4.0 * 2.5) + (3.0 * 2.0) + (2.0 * 2.0) - (1.0 * 1.5) = 10.0 + 6.0 + 4.0 - 1.5 = 18.5, kiểm chứng qua python -m ccba_harness.cli evaluate-gpi --file <path> --s 4.0 --k 3.0 --a 2.0 --p 1.0 --json để xác nhận tier là Tier 2B: Standalone Kernel Skill và allow_standalone_skill: true trước khi ghi khối gpi: {s: 4.0, k: 3.0, a: 2.0, p: 1.0} vào frontmatter (cấm bơm điểm nếu không đủ ngưỡng).",
     "metadata": {
       "phase": "Step 2: GPI Calculation & Patching",
       "rule": "GPI Formula & Tier 2B Standalone Certification",
@@ -48,7 +48,7 @@
     "id": "test_skill_repair_mandatory_verification",
     "input_prompt": "Sau khi sửa chữa xong các lỗi linter của kỹ năng ccba-custom-tool, những lệnh kiểm định bắt buộc nào phải được thực thi để bảo đảm tuân thủ thể chế trước khi hoàn tất?",
     "golden_answer": null,
-    "rubric": "Phải hướng dẫn chạy lệnh kiểm định kép bắt buộc: python scripts/validate_skills.py --file <path> --enforce-gpi và python -m ccba_harness.cli evaluate-gpi --file <path>. Nếu có sửa đổi namespace/bundle, chạy python scripts/governance/compile_catalog.py. Cả hai lệnh kiểm định bắt buộc phải trả về exit code 0.",
+    "rubric": "Trên Hub, phải chạy đủ 3 writer đồng bộ trước khi check (python scripts/governance/compile_catalog.py, python scripts/governance/compile_skills_docs.py --write, python scripts/sync_hub_adr_matrix.py), sau đó thực thi kiểm định bắt buộc: python scripts/validate_skills.py --file <path> --enforce-gpi, python -m ccba_harness.cli evaluate-gpi --file <path> --json (chỉ gắn thêm --existing-tier tier-2b khi tệp vốn đã có sẵn tier: kernel trước phiên sửa; bắt buộc đọc JSON xác nhận allow_standalone_skill: true cho non-orchestrator, riêng exit code 0 của evaluate-gpi không phải điều kiện đủ), kèm python scripts/governance/compile_skills_docs.py --check và python -m ccba_harness verify-patch --preset skill --target <path> đều đạt exit code 0.",
     "metadata": {
       "phase": "Step 4: Mandatory Verification",
       "rule": "Deterministic Verification & Hard Completion Lock",
