@@ -7,7 +7,7 @@ argument-hint: '[loại-văn-bản-theo-mẫu] [ngữ-cảnh]'
 license: MIT
 metadata:
   author: claudekit
-  version: 1.1.0
+  version: 1.2.0
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -28,6 +28,9 @@ triggers:
 - marketing admin
 - ccba-viet-chuyen-nghiep
 - viet-chuyen-nghiep
+- ab testing
+- split test
+- competitor comparison
 ---
 
 # Kỹ năng Soạn thảo Văn bản theo Mẫu chuẩn (Copywriting)
@@ -40,7 +43,7 @@ Kỹ năng này chịu trách nhiệm tạo văn bản mới (hồ sơ thầu, q
 
 - **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
 - **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) master soạn thảo hồ sơ thầu, quyết định, công văn, hợp đồng từ biểu mẫu chuẩn hóa (`ccba-xu-ly-van-phong/templates/`), kết hợp công thức viết thuyết phục (`references/copy-formulas.md`), định hình phong cách viết (`references/writing-styles.md`), chuẩn mực ngoại giao kỹ thuật FDI (`references/fdi-b2b-consulting-copy.md`) và quản lý hệ thống viết chuyên nghiệp `ccba-viet-chuyen-nghiep`. Quy trình hoạt động thuần nhận thức ngôn ngữ và sáng tạo nội dung văn bản, không phụ thuộc Seam đóng gói Python độc lập và không nhận `package_path`.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 11 dòng tài liệu tham chiếu chuyên sâu tại tầng Level 3 (bao gồm 10 tệp markdown và router index `references/viet_chuyen_nghiep/INDEX.md`).
+- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 13 dòng tài liệu tham chiếu chuyên sâu tại tầng Level 3 (bao gồm 12 tệp markdown và router index `references/viet_chuyen_nghiep/INDEX.md`).
 
 ---
 
@@ -110,5 +113,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/social-media-copy.md` | Chiến lược và định dạng viết bài truyền thông mạng xã hội |
 | `references/viet_chuyen_nghiep_rules.md` | Cẩm nang quy tắc ngữ pháp, văn phong chuyên nghiệp và kiểm tra chất lượng bài viết |
 | `references/viet_chuyen_nghiep/INDEX.md` | Bảng điều hướng Router Index cho 27 submodules chuyên sâu của hệ thống viết chuyên nghiệp |
+| `references/ab-testing-and-experimentation.md` | Thiết kế thử nghiệm định lượng A/B, khung giả thuyết 5 thành tố, hệ chỉ số 3 tầng và kiểm định SRM (Clean-Room Synthesis) |
+| `references/competitor-comparison-pages.md` | Kiến trúc 4 định dạng trang đối chiếu giải pháp B2B, nguyên tắc ranh giới phù hợp và quản trị ma trận sự thật (Clean-Room Synthesis) |
 
 

@@ -426,6 +426,9 @@ skills:
   - marketing admin
   - ccba-viet-chuyen-nghiep
   - viet-chuyen-nghiep
+  - ab testing
+  - split test
+  - competitor comparison
   skill_path: .agents/skills/ccba-copywriting/SKILL.md
   command: /ccba-copywriting
   tier: kernel
