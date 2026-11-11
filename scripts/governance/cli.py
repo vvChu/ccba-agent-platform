@@ -95,12 +95,13 @@ def run_docs_validation_cli(auditor: DocumentAuditor, args_list: list[str] | Non
             if p.is_file():
                 if p.name.endswith("_compiled.md"):
                     continue
-                if any(ex in p.parts for ex in exclude_dirs):
+                rel_parts = p.relative_to(docs_dir).parts
+                if any(ex in rel_parts for ex in exclude_dirs):
                     continue
-                if ".agents" in p.parts:
-                    idx = p.parts.index(".agents")
-                    if len(p.parts) > idx + 1:
-                        subfolder = p.parts[idx + 1]
+                if ".agents" in rel_parts:
+                    idx = rel_parts.index(".agents")
+                    if len(rel_parts) > idx + 1:
+                        subfolder = rel_parts[idx + 1]
                         if subfolder not in {"skills", "workflows"}:
                             continue
                 md_files.append(p)
