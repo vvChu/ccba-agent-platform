@@ -485,9 +485,9 @@ pipeline_trail:
     downstream: Thư viện tài liệu SharePoint được đồng bộ
     role: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.
   ccba-xia:
-    upstream: Tài liệu kỹ thuật phức tạp cần bóc tách
-    downstream: Dữ liệu cấu trúc hóa chuẩn xác
-    role: Tác nhân thông minh chuyên trích xuất thông tin chuyên sâu từ tài liệu.
+    upstream: Kho chứa mã nguồn GitHub bên ngoài hoặc khuyến nghị từ ccba-sync-upstream
+    downstream: Kế hoạch chuyển dịch implementation_plan.md cho ccba-implement / ccba-build-skill / ccba-skill-repair
+    role: Trích xuất, phản biện 6 pha và lập kế hoạch chuyển dịch tính năng thượng nguồn vào nền tảng.
   ccba-docs-manager:
     upstream: Thay đổi tài liệu hoặc thêm kỹ năng mới
     downstream: Hệ thống tài liệu nhất quán, không đứt gãy liên kết

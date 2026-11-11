@@ -100,6 +100,7 @@ Khi chủ đề nghiên cứu liên quan đến việc đánh giá, lựa chọn
    - **Ô 2 — Kho tàng Ngủ đông / Đã đóng băng (`STALE > 120 ngày` hoặc `ARCHIVED`, nhưng Commits/Stars cao):** **CẤM** cài làm dependency trực tiếp (`pyproject.toml`); chỉ dùng `/ccba-xia` để trích xuất giải thuật/pattern về Pure Python tự chủ.
    - **Ô 3 — Công cụ Ngách Chuyên ngành / Mới nổi (`FRESH <= 120 ngày`, Stars `< 500` hoặc Commits `< 600`):** Thẩm định sâu mã nguồn và test suite thực tế trước khi kết luận.
    - **Ô 4 — Sản phẩm Ngẫu hứng Bị bỏ rơi (`STALE > 120 ngày` + Commits & Stars thấp):** Bác bỏ sớm (`Fail-Fast`) và tự triển khai theo chuẩn KISS (10–15 dòng code).
+   - **Cầu nối Phân tích Chuyên sâu sang `/ccba-xia`:** Khi cần đối sánh kiến trúc song song (side-by-side trade-off analysis) giữa một kho nguồn mở ở Ô 1/Ô 2/Ô 3 với kỹ năng hoặc package sẵn có trên Hub trước khi quyết định port, khuyến nghị chuyển tiếp sang `/ccba-xia <repo> <target> --compare`.
 
 ---
 

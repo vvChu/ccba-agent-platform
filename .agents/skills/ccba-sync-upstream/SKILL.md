@@ -13,7 +13,7 @@ command: /ccba-sync-upstream
 gpi:
   s: 4.0
   k: 3.0
-  a: 3.0
+  a: 1.0
   p: 1.0
 triggers:
 - sync-upstream
@@ -37,7 +37,7 @@ Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho 
 
 ## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
 
-Skill này thuộc thế năng **`seam-exempt`** (Radar thượng nguồn Hub-only). Script `upstream_evaluator.py` đã import `ccba_harness.gpi` và `ccba_ai.ai` và gọi AI Gateway ở nhịp thẩm tra (trục A=3.0); skill trỏ và điều phối script trinh sát `scripts/spoke/check_claudekit_updates.py`, không tự thân trở thành một seam GPI hay phụ thuộc Seam Contract ứng dụng cụ thể.
+Skill này thuộc thế năng **`seam-exempt`** (Radar thượng nguồn Hub-only). Script `upstream_evaluator.py` đã import `ccba_harness.gpi` và `ccba_ai.routing.choose_model` để gọi AI Gateway ở nhịp thẩm tra; bản thân skill mang `disable-model-invocation: true` (trục A=1.0, kích hoạt tường minh qua `/ccba-sync-upstream`), trỏ và điều phối script trinh sát `scripts/spoke/check_claudekit_updates.py` mà không tự thân trở thành một seam GPI ứng dụng.
 
 ---
 
@@ -52,6 +52,7 @@ Hệ thống cung cấp các cờ dòng lệnh linh hoạt phục vụ cả tự
 | `--repo <name>` | Chỉ định kho nguồn cụ thể cần kiểm tra (ví dụ: `--repo claudekit-marketing`, `claudekit-engineer`, `mattpocock-skills`) |
 | `--fast` / `--offline` | Chế độ ngoại tuyến: sử dụng clone cục bộ sẵn có, không gọi mạng `fetch`/`clone`, tận dụng cache đánh giá |
 | `--limit <N>` | Giới hạn tối đa $N$ tài nguyên được đánh giá trong mỗi kho (tránh cạn quota API) |
+| `--prune-stale` | Dọn dẹp các dòng khuyến nghị có đường dẫn cục bộ không còn tồn tại trong `port_recommendations.md` (giữ tối đa `max_active_rows` dòng hoạt động) |
 
 Ví dụ kích hoạt:
 ```powershell
@@ -72,6 +73,8 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
 4. **Khử Bẫy Khởi Tạo "Zero-Scan Init Trap":** Khi kho mới clone lần đầu chưa có `local_sha`, hệ thống tự động chuyển sang quét khởi tạo toàn diện thay vì kết thúc sớm.
 5. **Bộ Phân Giải Đa Năng (Multi-Resource Resolver):** Tự động phát hiện kỹ năng phân cấp lồng nhau (nested skills như `document-skills/docx`, `document-skills/pptx`), đồng thời phân biệt rạch ròi giữa **Domain Workflows** (Tier 3 Composite Orchestrator) và **Governance Rules** (Tier 2A Progressive Reference).
 6. **Khử Trùng Lặp Mờ & Bộ Nhớ Đệm Cache:** Tự động loại trừ prefix (`ck-`, `ccba-`), tra cứu `UPSTREAM_ALIAS_MAP` và lưu kết quả đánh giá tại `.md/scratch/upstream_eval_cache.json` để tối ưu tốc độ phản hồi và tiết kiệm token.
+7. **Phân Tách Hai Luồng Nguồn (`skills` vs `reference_corpus`) & Luồng Tiến Hóa Delta (`UPSTREAM DELTA`):** Đối với kho `source_kind: reference_corpus` (như `pnp-list-formatting`), hệ thống sinh **Repo Digest cô đọng (`<= 30` dòng)** định tuyến thẳng về `default_target`. Đối với tài nguyên trùng tên với kỹ năng đã có tại Hub nhưng xuất hiện commit mới, hệ thống kích hoạt thẩm tra tiến hóa `🔵 [UPSTREAM DELTA]` thay vì loại bỏ mù.
+8. **Sổ Cái Triage Bền Vững (`triage_ledger`) & Kẹp Bản Quyền 6 Tầng (`clamp_license_policy`):** Đối chiếu khóa `(source, upstream_path, target)` trong `.md/knowledge/upstream_sources.yaml` qua `git diff --quiet <reviewed_sha> <head_sha> -- <path>` (`ADOPTED`/`DECLINED` ẩn im lặng khi không đổi, đánh giá lại khi có diff, cảnh báo `🟠 [DELTA UNKNOWN]` khi thiếu lịch sử git; `DEFERRED` hiển thị lại kèm cache), đồng thời cưỡng chế kẹp giấy phép `COPYLEFT` / `PROPRIETARY` / `UNKNOWN` về `--compare` ngay cả sau khi đọc cache.
 
 ---
 
@@ -111,6 +114,10 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
   * **Chế độ So sánh Kiến trúc (Side-by-Side Architectural Evaluation):**
     ```text
     /ccba-xia .md/scratch/repos/mattpocock-skills grill-me --compare
+    ```
+  * **Chế độ Tiến hóa Kỹ năng Sẵn có (`UPSTREAM DELTA`):**
+    ```text
+    /ccba-xia .md/scratch/repos/mattpocock-skills grill-me --improve --since a1b2c3d4 --target ccba-grilling
     ```
 - Kỹ sư kích hoạt lệnh `/ccba-xia` để khởi chạy quy trình 6 Pha (đặc biệt là Hard Gate Pha 4 phản biện Socratic Grilling).
 - **Tiêu chí hoàn thành:** Người dùng nhận được bảng khuyến nghị kèm liên kết lệnh 1-Click Porting hoặc Compare rõ ràng.

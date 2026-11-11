@@ -5,7 +5,7 @@
 ## Cú pháp Lệnh
 
 ```text
-/ccba-xia <github-url|owner/repo|local-path> [feature-description] [--compare|--copy-raw|--improve|--port] [--auto|--fast]
+/ccba-xia <github-url|owner/repo|local-path> [feature-description] [--compare|--copy-raw|--improve|--port] [--since <sha>] [--target <skill-name>] [--auto|--fast]
 ```
 
 ## Các chế độ chạy (Modes)
@@ -21,6 +21,14 @@
 
 ## Kết hợp không hợp lệ (Invalid Combinations)
 - `--copy-raw` + `--fast`: **BỊ CẤM**. Nếu đã chọn bỏ qua refactor, phải giữ nguyên quy trình phản biện đầy đủ để đánh giá rủi ro.
+
+## Tham số Định tuyến Tiến hóa (`--since`, `--target`) & Bàn giao 3 Nhánh
+- `--since <sha>`: Giới hạn phân tích vào phần thay đổi `git diff <sha>..HEAD -- <feature-path>`. **Chỉ áp dụng** cho các bản clone cục bộ của Radar tại `.md/scratch/repos/<yaml name>` sau khi xác nhận cả `<sha>^{commit}` và `HEAD^{commit}` đều tồn tại qua `git cat-file -e`. Đối với URL từ xa (clone `--depth 1`) hoặc khi commit cũ không truy xuất được, hệ thống tự động hạ cấp về phân tích toàn cục (full-snapshot) kèm cảnh báo.
+- `--target <skill-name>`: Chỉ định kỹ năng Hub đích cần đối sánh hoặc nâng cấp (ví dụ: `--target ccba-grilling` hoặc `--target ccba-sharepoint-iac`), giúp Pha 2 tập trung ánh xạ delta vào `SKILL.md` / `references/*.md` của kỹ năng đích.
+- **Ma trận Bàn giao Pha 6 (3-Track Handoff):**
+  - `packages/*/src/` (Tier 1 Deep Seam) -> `/ccba-implement`
+  - Kỹ năng độc lập mới (`GPI >= 12.0`, Tier 2B) -> `/ccba-build-skill`
+  - Nâng cấp kỹ năng hiện có hoặc `references/*.md` (`--target <skill-name>`, Tier 2A/2B) -> `/ccba-skill-repair`
 
 ## Nhận diện ý định (Intent detection)
 - "compare" hoặc "vs" -> `--compare`
