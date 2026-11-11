@@ -17,7 +17,7 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "8f088b9949426b436deab9bae4145b285eeeb495"
+sync_commit: "971a6524c0c2caabf3a5582ba0d3525cf45fa1eb"
 verification_mode:
   - scaffold
   - sync
@@ -41,7 +41,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 6 pha của `.agents/skills/ccba-xia/SKILL.md`, bảng chế độ `.agents/skills/ccba-xia/references/modes.md`, chốt chặn `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`, cùng các hàm thực thi trong `scripts/spoke/upstream_evaluator.py` (`check_repo_license`, `check_is_duplicate`, `generate_xia_command`) và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `8f088b9949426b436deab9bae4145b285eeeb495` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit`)**: Neo tại commit `971a6524c0c2caabf3a5582ba0d3525cf45fa1eb` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
 
 ---
 
