@@ -1028,3 +1028,135 @@ def test_seam_routing_parse_fallback_and_github_archived_badge() -> None:
         )
         == "/ccba-xia .md/r sk --improve --since abcd1234 --target ccba-x"
     )
+
+
+def test_corpus_digest_cap_and_shared_triage_ledger(tmp_path: Path) -> None:
+    """Verify <=30-line corpus digest and shared triage_ledger (SKIP, DELTA_UNKNOWN, DEFERRED cache)."""
+    from unittest.mock import MagicMock
+
+    import scripts.spoke._upstream_helpers as uh
+
+    corpus = tmp_path / "pnp-list-formatting"
+    (corpus / ".git").mkdir(parents=True)
+    (corpus / "LICENSE").write_text(
+        "MIT License\nPermission is hereby granted...", encoding="utf-8"
+    )
+    for idx in range(40):
+        sub = corpus / f"sample-{idx:02d}" / "nested"
+        sub.mkdir(parents=True)
+        (sub / "view.json").write_text("{}", encoding="utf-8")
+    digest = uh.build_corpus_digest(corpus)
+    assert len(digest.splitlines()) <= 30 and "sample-00/" in digest
+
+    recs, cache_f = tmp_path / "recs.md", tmp_path / "cache.json"
+    cfg = {
+        "name": "pnp-list-formatting",
+        "type": "pnp-list-formatting",
+        "source_kind": "reference_corpus",
+        "default_target": "ccba-sharepoint-iac",
+        "local_path": corpus,
+        "remote_url": "https://github.com/pnp/List-Formatting",
+    }
+    ev = UpstreamEvaluator(configs=[cfg])
+    gov_skip = {
+        "triage_ledger": [
+            {
+                "source": "pnp-list-formatting",
+                "upstream_path": ".",
+                "target": "ccba-sharepoint-iac",
+                "status": "ADOPTED",
+                "reviewed_sha": "abc1234",
+            }
+        ]
+    }
+    with (
+        patch("scripts.spoke.upstream_evaluator.RECOMMENDATIONS_FILE", recs),
+        patch("scripts.spoke.upstream_evaluator.CACHE_FILE", cache_f),
+        patch(
+            "scripts.spoke.upstream_evaluator.load_upstream_governance_config",
+            return_value=gov_skip,
+        ),
+        patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="")),
+    ):
+        ev.scan_and_evaluate_repo(cfg, "def5678")
+    assert not recs.exists()
+
+    with (
+        patch("scripts.spoke.upstream_evaluator.RECOMMENDATIONS_FILE", recs),
+        patch(
+            "scripts.spoke.upstream_evaluator.load_upstream_governance_config",
+            return_value=gov_skip,
+        ),
+        patch("subprocess.run", return_value=MagicMock(returncode=128, stdout="")),
+    ):
+        ev.scan_and_evaluate_repo(cfg, "def5678")
+    assert "🟠 [DELTA UNKNOWN]" in recs.read_text(encoding="utf-8")
+
+    gov_def = {
+        "triage_ledger": [
+            {
+                "source": "pnp-list-formatting",
+                "upstream_path": ".",
+                "target": "ccba-sharepoint-iac",
+                "status": "DEFERRED",
+                "reviewed_sha": "abc1234",
+            }
+        ]
+    }
+    with (
+        patch("scripts.spoke.upstream_evaluator.RECOMMENDATIONS_FILE", recs),
+        patch("scripts.spoke.upstream_evaluator.CACHE_FILE", cache_f),
+        patch(
+            "scripts.spoke.upstream_evaluator.load_upstream_governance_config", return_value=gov_def
+        ),
+        patch(
+            "scripts.spoke.upstream_evaluator.call_ai_evaluation", wraps=call_ai_evaluation
+        ) as spy_eval,
+        patch("scripts.spoke.upstream_evaluator.ai", None),
+    ):
+        ev.scan_and_evaluate_repo(cfg, "def5678")
+        ev.scan_and_evaluate_repo(cfg, "def5678")
+        assert spy_eval.call_count == 1
+
+
+def test_surgical_triage_ledger_yaml_preserves_comments(tmp_path: Path) -> None:
+    """Verify record_triage_decision updates/inserts ledger entries under MutexLock while keeping comments."""
+    from scripts.spoke.upstream_evaluator import record_triage_decision
+
+    yml = tmp_path / "upstream_sources.yaml"
+    lock_f = tmp_path / "sync.lock"
+    yml.write_text(
+        "# Top header comment\nversion: '1.1'\n# Ledger section comment\ntriage_ledger:\n"
+        '  - source: "mattpocock-skills"\n    upstream_path: "retro"\n'
+        '    target: "ccba-session-retrospective"\n    status: "DECLINED"\n'
+        '    reviewed_sha: "4ae2317"\n    reason: "Old"\n',
+        encoding="utf-8",
+    )
+    with patch("scripts.spoke.upstream_evaluator.LOCK_FILE", lock_f):
+        assert record_triage_decision(
+            "mattpocock-skills",
+            "retro",
+            "ccba-session-retrospective",
+            "ADOPTED",
+            "9988776",
+            "Updated",
+            yml,
+        )
+        assert record_triage_decision(
+            "pnp-list-formatting",
+            ".",
+            "ccba-sharepoint-iac",
+            "DEFERRED",
+            "1122334",
+            "Corpus deferred",
+            yml,
+        )
+    raw = yml.read_text(encoding="utf-8")
+    assert "# Top header comment" in raw and "# Ledger section comment" in raw
+    parsed = yaml.safe_load(raw)["triage_ledger"]
+    assert (
+        len(parsed) == 2
+        and parsed[0]["status"] == "ADOPTED"
+        and parsed[0]["reviewed_sha"] == "9988776"
+    )
+    assert parsed[1]["source"] == "pnp-list-formatting" and parsed[1]["status"] == "DEFERRED"

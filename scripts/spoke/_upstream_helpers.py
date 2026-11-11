@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -171,3 +172,132 @@ def collapse_diff_resources(
         nm = sp[-1] if len(sp) == 2 and sp[0] in _SKILL_CATS else sub
         grouped.setdefault(("skill", nm), (f"{sdir}/SKILL.md", []))[1].append((rel, acmr))
     return [(nm, rt, pri, files) for (rt, nm), (pri, files) in grouped.items()]
+
+
+_SKIP_DIRS = {".git", "node_modules", ".md", "__pycache__", ".venv"}
+
+
+def _visible_children(folder: Path, dirs_only: bool = True) -> list[Path]:
+    """Return deterministically sorted non-hidden children excluding _SKIP_DIRS."""
+    items = [p for p in folder.iterdir() if not p.name.startswith(".") and p.name not in _SKIP_DIRS]
+    return sorted((p for p in items if p.is_dir() == dirs_only), key=lambda p: p.name)
+
+
+def build_corpus_digest(repo_path: Path) -> str:
+    """Build deterministic Level 1-2 directory & extension summary capped at <= 30 lines."""
+    if not repo_path.is_dir():
+        return f"# Corpus Digest: {repo_path.name}\n(missing repository)"
+    lines = [f"# Corpus Digest: {repo_path.name}"]
+    rfiles = [p.name for p in _visible_children(repo_path, dirs_only=False)]
+    if rfiles:
+        lines.append(f"- root files ({len(rfiles)}): {', '.join(rfiles[:5])}")
+    for d1 in _visible_children(repo_path, dirs_only=True)[:28]:
+        exts: dict[str, int] = {}
+        lvl2 = [p.name for p in _visible_children(d1, dirs_only=True)[:3]]
+        for f in d1.rglob("*"):
+            if f.is_file() and not any(part in _SKIP_DIRS for part in f.parts):
+                ext = f.suffix.lower() or "<no-ext>"
+                exts[ext] = exts.get(ext, 0) + 1
+        top = ", ".join(
+            f"{k}:{v}" for k, v in sorted(exts.items(), key=lambda x: (-x[1], x[0]))[:3]
+        )
+        sub = f" [subdirs: {', '.join(lvl2)}]" if lvl2 else ""
+        lines.append(f"- {d1.name}/ ({sum(exts.values())} files; {top or 'empty'}){sub}")
+    return "\n".join(lines[:30] if len(lines) > 1 else [*lines, "(empty repository)"])
+
+
+def evaluate_triage_gate(
+    ledger: list[dict[str, Any]],
+    repo_keys: set[str],
+    up_path: str,
+    target: str | None,
+    repo_path: Path,
+    head_sha: str,
+    git_rel: str,
+) -> tuple[str, dict[str, Any] | None]:
+    """Evaluate triage_ledger state: returns ('SKIP'|'PROCEED'|'DEFERRED'|'DELTA_UNKNOWN', entry)."""
+    hits = [
+        e
+        for e in ledger
+        if str(e.get("source", "")).strip() in repo_keys
+        and str(e.get("upstream_path", "")).strip() == up_path
+        and (not target or not e.get("target") or str(e.get("target", "")).strip() == target)
+    ]
+    if not hits:
+        return "PROCEED", None
+    exact = [e for e in hits if target and str(e.get("target", "")).strip() == target]
+    entry = exact[0] if exact else hits[0]
+    st = str(entry.get("status", "")).strip().upper()
+    rev = str(entry.get("reviewed_sha", "")).strip()
+    if st == "DEFERRED":
+        return "DEFERRED", entry
+    if st not in {"ADOPTED", "DECLINED"}:
+        return "PROCEED", entry
+    if not rev or not head_sha or not (repo_path / ".git").exists():
+        return "DELTA_UNKNOWN", entry
+    try:
+        cmd = ["git", "diff", "--quiet", rev, head_sha, "--", git_rel]
+        rc = subprocess.run(cmd, cwd=str(repo_path), capture_output=True, timeout=10).returncode
+        return (
+            ("SKIP", entry)
+            if rc == 0
+            else ("PROCEED", entry)
+            if rc == 1
+            else ("DELTA_UNKNOWN", entry)
+        )
+    except (subprocess.SubprocessError, OSError):
+        return "DELTA_UNKNOWN", entry
+
+
+def make_delta_unknown_result(up_path: str, entry: dict[str, Any], xia_cmd: str) -> dict[str, Any]:
+    """Construct an orange DELTA UNKNOWN recommendation block when reviewed_sha cannot be diffed."""
+    rev = str(entry.get("reviewed_sha", "?"))
+    tgt = str(entry.get("target") or "_core")
+    st = str(entry.get("status", "?"))
+    return {
+        "should_port": False,
+        "status_override": "DELTA UNKNOWN",
+        "color_override": "🟠",
+        "score": 50,
+        "recommended_tier": f"Ledger Check -> {tgt}",
+        "target_bundle": "_core",
+        "disable_model_invocation": True,
+        "python_compatibility_assessment": "Không thể xác minh git diff từ reviewed_sha.",
+        "reason": f"DELTA UNKNOWN: Mục `{up_path}` ({st}) không đối chiếu được SHA `{rev}`.",
+        "actionable_steps": [f"Chạy `{xia_cmd}` hoặc fetch lịch sử để kiểm tra từ `{rev}`"],
+        "xia_command": xia_cmd,
+    }
+
+
+def upsert_triage_ledger_yaml(cfg_path: Path, entry: dict[str, str]) -> bool:
+    """Surgically upsert a triage_ledger entry in YAML while preserving all comments."""
+    fields = ("source", "upstream_path", "target", "status", "reviewed_sha", "reason")
+    item_txt = "\n".join(
+        f"{'  - ' if i == 0 else '    '}{k}: {json.dumps(entry.get(k, ''), ensure_ascii=False)}"
+        for i, k in enumerate(fields)
+    )
+    raw = cfg_path.read_text(encoding="utf-8") if cfg_path.exists() else ""
+    m_sec = re.search(r"^triage_ledger:\s*$", raw, re.MULTILINE)
+    if not m_sec:
+        new_raw = (raw.rstrip() + f"\n\ntriage_ledger:\n{item_txt}\n").lstrip("\n")
+    else:
+        m_nx = re.search(r"^[A-Za-z0-9_-]+:\s*", raw[m_sec.end() :], re.MULTILINE)
+        s_end = m_sec.end() + m_nx.start() if m_nx else len(raw)
+        sec = raw[m_sec.end() : s_end]
+        key = (entry["source"], entry["upstream_path"], entry["target"])
+        done = False
+        for m_it in re.finditer(r"(?m)^  - .*?(?=^  - |\Z)", sec, re.DOTALL):
+            ld = yaml.safe_load(m_it.group(0))
+            row = ld[0] if isinstance(ld, list) and ld and isinstance(ld[0], dict) else {}
+            if (row.get("source"), row.get("upstream_path"), row.get("target")) == key:
+                nl = "\n" if m_it.group(0).endswith("\n") else ""
+                sec = sec[: m_it.start()] + item_txt + nl + sec[m_it.end() :]
+                done = True
+                break
+        tail = sec if done else sec.rstrip("\n") + f"\n{item_txt}\n"
+        new_raw = raw[: m_sec.end()] + tail + raw[s_end:]
+    if not isinstance(yaml.safe_load(new_raw), dict):
+        return False
+    cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    cfg_path.write_text(new_raw, encoding="utf-8")
+    return True
