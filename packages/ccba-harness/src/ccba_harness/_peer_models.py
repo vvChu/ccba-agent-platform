@@ -217,6 +217,41 @@ def extract_env_conversation_id() -> str | None:
     return None
 
 
+def _parse_tag_list(v: Any) -> list[str]:
+    """Normalizes list or comma-separated tags (max 8 items, <= 40 chars each)."""
+    if isinstance(v, (list, tuple)):
+        return [str(t).strip()[:40] for t in v if str(t).strip()][:8]
+    if isinstance(v, str) and v.strip():
+        return [t.strip()[:40] for t in v.split(",") if t.strip()][:8]
+    return []
+
+
+def _resolve_git_repo_name(repo_root: Path) -> str | None:
+    """Resolves canonical repository slug lexically, unwrapping linked .git worktree files."""
+    dot_git = repo_root / ".git"
+    if dot_git.is_dir():
+        return _sanitize_spoke_slug(repo_root.name)
+    if not dot_git.is_file():
+        return None
+    try:
+        lines = dot_git.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return None
+    if not lines or not lines[0].startswith("gitdir:"):
+        return None
+    raw = lines[0].partition(":")[2].strip()
+    if not raw:
+        return None
+    gitdir = Path(os.path.normpath(os.path.join(str(repo_root), raw)))
+    if gitdir.parent.name == "worktrees":
+        common = gitdir.parent.parent
+        owner = common.parent.name if common.name == ".git" else common.stem
+        return _sanitize_spoke_slug(owner)
+    if "modules" in gitdir.parts:
+        return _sanitize_spoke_slug(repo_root.name)
+    return None
+
+
 def resolve_spoke_slug_from_path(
     target_path: Path | None, *, allow_ancestor_walk: bool = False
 ) -> str | None:
@@ -227,11 +262,11 @@ def resolve_spoke_slug_from_path(
     if parent.name == "peer_exchange" and parent.parent.name == ".md":
         repo_root = parent.parent.parent
         if (repo_root / ".git").exists():
-            return _sanitize_spoke_slug(repo_root.name)
+            return _resolve_git_repo_name(repo_root)
     if allow_ancestor_walk:
         for candidate in (parent, *parent.parents):
             if (candidate / ".git").exists():
-                return _sanitize_spoke_slug(candidate.name)
+                return _resolve_git_repo_name(candidate)
     return None
 
 
@@ -302,13 +337,7 @@ class PeerPromptEnvelope(BaseModel):
     @field_validator("tags", mode="before")
     @classmethod
     def _clean_tags(cls, v: Any) -> list[str]:
-        if v is None:
-            return []
-        if isinstance(v, (list, tuple)):
-            return [str(t).strip()[:40] for t in v if str(t).strip()][:8]
-        if isinstance(v, str) and v.strip():
-            return [t.strip()[:40] for t in v.split(",") if t.strip()][:8]
-        return []
+        return _parse_tag_list(v)
 
 
 class PeerCondition(BaseModel):
@@ -384,6 +413,7 @@ class PeerVerdictBlock(BaseModel):
     conversation_id: str | None = None
     task_id: str | None = None
     spoke_name: str | None = None
+    tags: list[str] | None = None
     verdict: VerdictType
     conditions: list[PeerCondition] = Field(default_factory=list)
     risk_score: int | None = Field(default=None, ge=1, le=5)
@@ -401,6 +431,11 @@ class PeerVerdictBlock(BaseModel):
     @classmethod
     def _clean_verdict_spoke_name(cls, v: Any) -> str | None:
         return _sanitize_spoke_slug(v)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _clean_verdict_tags(cls, v: Any) -> list[str] | None:
+        return _parse_tag_list(v) or None
 
     @field_validator("risk_score", mode="before")
     @classmethod
@@ -585,6 +620,14 @@ def _apply_envelope_doc_and_session_aliases(data: dict[str, Any], d: dict[str, A
             d.setdefault("fork_session", True)
 
 
+def _first_str(data: dict[str, Any], keys: tuple[str, ...], default: str = "") -> str:
+    """Returns stripped string for the first truthy key found in data, else default."""
+    for k in keys:
+        if data.get(k):
+            return str(data[k]).strip()
+    return default
+
+
 def _normalize_envelope_frontmatter(
     data: dict[str, Any], prompt_path: Path | None = None
 ) -> dict[str, Any] | None:
@@ -592,80 +635,34 @@ def _normalize_envelope_frontmatter(
     if "verdict" in data or not any(k in data for k in _ENVELOPE_MARKER_KEYS):
         return None
     d = {k: v for k, v in data.items() if k in _ENVELOPE_ALLOWED_KEYS}
-    req_id = str(
-        data.get("request_id")
-        or data.get("task_id")
-        or data.get("id")
-        or (prompt_path.stem if prompt_path else "")
-    ).strip()
+    req_id = _first_str(
+        data, ("request_id", "task_id", "id"), prompt_path.stem.strip() if prompt_path else ""
+    )
     if not req_id:
         return None
     d["request_id"] = req_id
-    d["from_agent"] = str(
-        data.get("from_agent")
-        or data.get("sender")
-        or data.get("author")
-        or data.get("from")
-        or "antigravity"
-    ).strip()
-    d["to_agent"] = str(
-        data.get("to_agent")
-        or data.get("recipient")
-        or data.get("target")
-        or data.get("to")
-        or "grok"
-    ).strip()
-    raw_rt = str(data.get("request_type") or data.get("task_type") or data.get("type") or "review")
-    d["request_type"] = _REQUEST_TYPE_ALIASES.get(raw_rt.strip().lower(), raw_rt.strip().lower())
+    d["from_agent"] = _first_str(data, ("from_agent", "sender", "author", "from"), "antigravity")
+    d["to_agent"] = _first_str(data, ("to_agent", "recipient", "target", "to"), "grok")
+    raw_rt = _first_str(data, ("request_type", "task_type", "type"), "review").lower()
+    d["request_type"] = _REQUEST_TYPE_ALIASES.get(raw_rt, raw_rt)
     if d.get("profile") is not None:
         raw_p = str(d["profile"]).strip().lower()
         d["profile"] = _PROFILE_ALIASES.get(raw_p, raw_p)
-    subj = (
-        data.get("subject")
-        or data.get("question")
-        or data.get("chapter")
-        or data.get("title")
-        or data.get("wave")
-    )
-    d["subject"] = str(subj or req_id).strip()
-    d["timestamp"] = str(
-        data.get("timestamp") or datetime.datetime.now(datetime.timezone.utc).isoformat()
+    d["subject"] = _first_str(data, ("subject", "question", "chapter", "title", "wave"), req_id)
+    d["timestamp"] = _first_str(
+        data, ("timestamp",), datetime.datetime.now(datetime.timezone.utc).isoformat()
     )
     stem = (
         re.sub(r"^prompt_(?:grok_)?", "", prompt_path.stem, flags=re.IGNORECASE)
         if prompt_path
         else req_id
     )
-    d["output_path"] = str(
-        data.get("output_path") or data.get("output_file") or f"grok_{stem}.md"
-    ).strip()
+    d["output_path"] = _first_str(data, ("output_path", "output_file"), f"grok_{stem}.md")
     _apply_envelope_doc_and_session_aliases(data, d)
-
-    # Lineage metadata extraction (ADR-0063 / COND-09)
-    raw_conv_id = str(data.get("conversation_id") or "").strip()
-    d["conversation_id"] = raw_conv_id or None
-
-    raw_task_id = str(data.get("task_id") or "").strip()
-    d["task_id"] = raw_task_id or None
-
-    raw_spoke = str(data.get("spoke_name") or data.get("spoke") or "").strip()
-    if raw_spoke:
-        spoke_base = Path(raw_spoke).name if ("/" in raw_spoke or "\\" in raw_spoke) else raw_spoke
-        slug = re.sub(r"[^a-zA-Z0-9_\-]", "", spoke_base).strip()
-        d["spoke_name"] = slug or None
-    else:
-        d["spoke_name"] = None
-
-    raw_tags = data.get("tags")
-    if isinstance(raw_tags, (list, tuple)):
-        clean_tags = [str(t).strip()[:40] for t in raw_tags if str(t).strip()][:8]
-        d["tags"] = clean_tags
-    elif isinstance(raw_tags, str) and raw_tags.strip():
-        clean_tags = [t.strip()[:40] for t in raw_tags.split(",") if t.strip()][:8]
-        d["tags"] = clean_tags
-    else:
-        d["tags"] = []
-
+    d["conversation_id"] = _sanitize_optional_id(data.get("conversation_id"))
+    d["task_id"] = _sanitize_optional_id(data.get("task_id"))
+    d["spoke_name"] = _sanitize_spoke_slug(data.get("spoke_name") or data.get("spoke"))
+    d["tags"] = _parse_tag_list(data.get("tags"))
     return d
 
 
