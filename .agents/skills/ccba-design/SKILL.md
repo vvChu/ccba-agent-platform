@@ -24,7 +24,7 @@ argument-hint: '[design-type] [context]'
 license: MIT
 metadata:
   author: CCBA
-  version: 2.5.0
+  version: 2.6.0
 bundle: _consulting
 tier: kernel
 layer: _consulting
@@ -45,6 +45,10 @@ triggers:
 - ui-styling
 - portal design
 - ui-ux
+- seo
+- ui critique
+- ui polish
+- visual prompting
 ---
 
 # Design
@@ -87,6 +91,9 @@ Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Se
 | Banners, covers, headers | Banner (built-in) | `references/banner-sizes-and-styles.md` |
 | Social media images/photos | Social Photos (built-in) | `references/social-photos-design.md` |
 | SVG icons, icon sets | Icon (built-in) | `references/icon-design.md` |
+| UX critique, polish, typeset, harden | Critique & Refinement (built-in) | `references/impeccable-critique-and-refinement.md` |
+| Technical SEO, JSON-LD, AI crawlers | SEO & Discoverability (built-in) | `references/seo-and-agentic-discoverability.md` |
+| AI visual prompt structuring & remix | Visual Prompting Modes (built-in) | `references/ai-visual-prompting-modes.md` |
 
 ## UI/UX & Web Portal Design (Built-in)
 
@@ -212,7 +219,7 @@ Load `references/slides-create.md` for the creation workflow.
 
 ## Banner Design (Built-in)
 
-22 art direction styles across social, ads, web, print. Uses `frontend-design`, `ai-artist`, `ai-multimodal`, and browser capture tools.
+22 art direction styles across social, ads, web, print. Uses `frontend-design`, `references/ai-visual-prompting-modes.md`, and browser capture tools.
 
 Load `references/banner-sizes-and-styles.md` for complete sizes and styles reference.
 
@@ -395,6 +402,9 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Portal Operate & Anti-Slop | `references/portal-operate-and-antislop.md` |
 | Design System & Tokens | `references/design-system-tokens.md` |
 | UI Styling & shadcn | `references/ui-styling-shadcn.md` |
+| Critique & Iterative Refinement | `references/impeccable-critique-and-refinement.md` |
+| Technical SEO & AI Discoverability | `references/seo-and-agentic-discoverability.md` |
+| AI Visual Prompting Modes | `references/ai-visual-prompting-modes.md` |
 
 ## Scripts
 
@@ -452,6 +462,9 @@ Khi thực thi các tác vụ thiết kế chuyên sâu, Agent sử dụng công
 | `references/slides-copywriting-formulas.md` | Công thức viết lời tựa, tiêu đề và tóm lược thông điệp cốt lõi |
 | `references/slides-html-template.md` | Mẫu khung mã nguồn HTML/CSS/JS slide trình diễn tương tác |
 | `references/design-routing.md` | Ma trận định tuyến nghiệp vụ thiết kế đa bộ môn và phân loại tài sản |
+| `references/impeccable-critique-and-refinement.md` | Phản biện UX hai luồng cô lập (Nielsen 10 Heuristics), 4 chế độ bề mặt và 6 lượt tinh chỉnh (`polish`, `typeset`, `harden`) |
+| `references/seo-and-agentic-discoverability.md` | Quy trình SEO kỹ thuật dựa trên bằng chứng, JSON-LD, XML Sitemap và ma trận kiểm soát AI Crawlers / `/llms.txt` |
+| `references/ai-visual-prompting-modes.md` | Cổng khóa Brief trước khi sinh ảnh và 3 chế độ kiến tạo Prompt thị giác (Clean-Room Synthesis) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

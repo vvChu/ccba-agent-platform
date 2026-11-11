@@ -60,6 +60,10 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `ui-styling`
 - `portal design`
 - `ui-ux`
+- `seo`
+- `ui critique`
+- `ui polish`
+- `visual prompting`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Thiết kế hệ thống Token 3 tầng, Cổng thông tin (Operate + Read), Trang chi tiết & kiểm định Anti-Slop.
