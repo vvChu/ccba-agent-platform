@@ -1160,3 +1160,53 @@ def test_surgical_triage_ledger_yaml_preserves_comments(tmp_path: Path) -> None:
         and parsed[0]["reviewed_sha"] == "9988776"
     )
     assert parsed[1]["source"] == "pnp-list-formatting" and parsed[1]["status"] == "DEFERRED"
+
+
+def test_dogfood_corpus_digest_under_md_scratch_and_ledger_prune(tmp_path: Path) -> None:
+    """Verify corpus digest counts files inside .md/scratch/repos, skips tests/, and prunes closed ledger items."""
+    import scripts.spoke._upstream_helpers as uh
+
+    nested_corpus = tmp_path / ".md" / "scratch" / "repos" / "pnp-list-formatting"
+    (nested_corpus / "column-samples" / "approval").mkdir(parents=True)
+    (nested_corpus / "column-samples" / "approval" / "format.json").write_text(
+        "{}", encoding="utf-8"
+    )
+    digest = uh.build_corpus_digest(nested_corpus)
+    assert "column-samples/ (1 files; .json:1)" in digest
+
+    repo_with_test_fixture = tmp_path / "impeccable"
+    (repo_with_test_fixture / ".agent" / "skills" / "impeccable").mkdir(parents=True)
+    (repo_with_test_fixture / ".agent" / "skills" / "impeccable" / "SKILL.md").write_text(
+        "# Real", encoding="utf-8"
+    )
+    (repo_with_test_fixture / "tests" / "oracle" / "skills" / "audit").mkdir(parents=True)
+    (repo_with_test_fixture / "tests" / "oracle" / "skills" / "audit" / "SKILL.md").write_text(
+        "# Fixture", encoding="utf-8"
+    )
+    found = resolve_upstream_resources(repo_with_test_fixture, "impeccable")
+    assert [r["name"] for r in found] == ["impeccable"]
+
+    cfg_yml = tmp_path / "gov.yaml"
+    cfg_yml.write_text(
+        "triage_ledger:\n"
+        "  - source: 'mattpocock-skills'\n"
+        "    upstream_path: 'to-questionnaire'\n"
+        "    target: 'ccba-grilling'\n"
+        "    status: 'ADOPTED'\n"
+        "    reviewed_sha: '4ae2317d'\n",
+        encoding="utf-8",
+    )
+    rec = tmp_path / "recs.md"
+    rec.write_text(
+        "<!-- AUTO-GENERATED-START -->\n"
+        "### 🟢 [RECOMMEND PORT] Skill: `to-questionnaire` (Score: 85/100)\n"
+        "*   **Kho chứa nguồn**: `mattpocock-skills`\n"
+        "\n---\n\n"
+        "### 🟢 [RECOMMEND PORT] Skill: `chief-of-staff` (Score: 80/100)\n"
+        "*   **Kho chứa nguồn**: `mattpocock-skills`\n"
+        "<!-- AUTO-GENERATED-END -->\n",
+        encoding="utf-8",
+    )
+    pruned = uh.prune_stale_recommendations(rec, cfg_yml)
+    out = rec.read_text(encoding="utf-8")
+    assert pruned == 1 and "to-questionnaire" not in out and "chief-of-staff" in out
