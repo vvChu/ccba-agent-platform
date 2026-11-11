@@ -399,20 +399,117 @@ def merge_agents_constitution(
     return normalize_spoke_agents_links(merged, spoke_root=spoke_root)
 
 
-def ensure_peer_exchange_scaffold(spoke_root: Path, hub_root: Path, dry_run: bool = False) -> None:
-    """Ensures .md/peer_exchange directory and starter handshake files exist in Spoke workspace."""
+def ensure_peer_exchange_scaffold(
+    spoke_root: Path,
+    hub_root: Path,
+    dry_run: bool = False,
+    force: bool = False,
+) -> list[dict[str, str]]:
+    """Synchronizes .md/peer_exchange protocol handshake files with Smart-Sync, CRLF normalization, and backup."""
+    actions: list[dict[str, str]] = []
     peer_dir = spoke_root / ".md" / "peer_exchange"
-    if not dry_run:
-        peer_dir.mkdir(parents=True, exist_ok=True)
-        handshake_file = peer_dir / "PEER_HANDSHAKE.md"
-        hub_handshake = hub_root / ".md" / "peer_exchange" / "PEER_HANDSHAKE.md"
-        if not handshake_file.exists() and hub_handshake.exists():
-            handshake_file.write_text(hub_handshake.read_text(encoding="utf-8"), encoding="utf-8")
+    hub_peer_dir = hub_root / ".md" / "peer_exchange"
+    if not hub_peer_dir.exists():
+        return actions
 
-        readme_file = peer_dir / "README.md"
-        hub_readme = hub_root / ".md" / "peer_exchange" / "README.md"
-        if not readme_file.exists() and hub_readme.exists():
-            readme_file.write_text(hub_readme.read_text(encoding="utf-8"), encoding="utf-8")
+    protocol_files = ["PEER_HANDSHAKE.md", "README.md"]
+    for filename in protocol_files:
+        hub_file = hub_peer_dir / filename
+        spoke_file = peer_dir / filename
+        rel_path = f".md/peer_exchange/{filename}"
+
+        if not hub_file.exists():
+            continue
+
+        hub_raw = hub_file.read_text(encoding="utf-8")
+        hub_norm = hub_raw.replace("\r\n", "\n")
+
+        if not spoke_file.exists():
+            actions.append({
+                "type": "protocol",
+                "name": filename,
+                "status": "NEW",
+                "path": rel_path,
+            })
+            if not dry_run:
+                peer_dir.mkdir(parents=True, exist_ok=True)
+                spoke_file.write_text(hub_raw, encoding="utf-8")
+        else:
+            spoke_raw = spoke_file.read_text(encoding="utf-8")
+            spoke_norm = spoke_raw.replace("\r\n", "\n")
+            if spoke_norm == hub_norm:
+                actions.append({
+                    "type": "protocol",
+                    "name": filename,
+                    "status": "UNCHANGED",
+                    "path": rel_path,
+                })
+            else:
+                actions.append({
+                    "type": "protocol",
+                    "name": filename,
+                    "status": "UPDATED",
+                    "path": rel_path,
+                })
+                if not dry_run:
+                    from datetime import datetime
+
+                    ts = datetime.now().strftime("%Y%m%dT%H%M%S")
+                    backup_dir = spoke_root / ".md" / "backups" / "peer_exchange"
+                    backup_dir.mkdir(parents=True, exist_ok=True)
+                    stem = Path(filename).stem
+                    suffix = Path(filename).suffix
+                    bak_file = backup_dir / f"{stem}_bak_{ts}{suffix}"
+                    bak_file.write_text(spoke_raw, encoding="utf-8")
+                    spoke_file.write_text(hub_raw, encoding="utf-8")
+
+    return actions
+
+
+def check_spoke_runtime_health(spoke_root: Path, hub_root: Path) -> str | None:
+    """Probes Spoke virtualenv for ccba-harness runtime readiness (COND-05 / COND-11).
+
+    Returns a warning string if Spoke is a Python project and runtime is incomplete, else None.
+    Exit code remains 0 (warn-only).
+    """
+    try:
+        from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+
+        bootstrapper = SpokeBootstrapper(spoke_root, hub_root)
+        if not bootstrapper.is_python_project():
+            return None
+
+        venv_dir = bootstrapper.find_venv()
+        if not venv_dir:
+            return (
+                "⚠️ [Runtime Warning] Spoke chưa có virtualenv (.venv).\n"
+                "   Hãy tạo .venv trước khi chạy '--bootstrap' (-b) để liên kết packages."
+            )
+
+        py_bin = bootstrapper.get_python_exec(venv_dir)
+        if not py_bin.exists():
+            return (
+                "⚠️ [Runtime Warning] Không tìm thấy Python binary trong .venv của Spoke.\n"
+                "   Hãy kiểm tra lại môi trường ảo trước khi chạy '--bootstrap'."
+            )
+
+        import subprocess
+
+        probe = subprocess.run(
+            [str(py_bin), "-c", "import ccba_harness"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if probe.returncode != 0:
+            return (
+                "⚠️ [Runtime Warning] Spoke virtualenv thiếu package 'ccba-harness'.\n"
+                "   Cơ chế Grok Peer Dispatch và các cổng kiểm định CLI sẽ không hoạt động.\n"
+                "   👉 Chạy lại lệnh với cờ '--bootstrap' (-b) để tự động cài đặt liên kết 1-chạm."
+            )
+        return None
+    except Exception as exc:
+        return f"⚠️ [Runtime Warning] Lỗi khi kiểm tra Spoke runtime health: {exc}"
 
 
 def _format_freshness_detail(detail: object) -> str:
@@ -998,7 +1095,7 @@ class SpokeSynchronizer:
                 dry_run=dry_run, force=force
             )
         )
-        ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=dry_run)
+        actions.extend(ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=dry_run, force=force))
         return actions
 
     def _refresh_telemetry_and_register(
@@ -1118,6 +1215,10 @@ class SpokeSynchronizer:
                 print(
                     "   💡 Mẹo: Chạy 'python scripts/sync_spoke.py --bootstrap' để tự động cài đặt 1-chạm."
                 )
+
+            runtime_warn = check_spoke_runtime_health(spoke_root, hub_root)
+            if runtime_warn:
+                print(f"\n{runtime_warn}", file=sys.stderr)
 
         LegalKnowledgeSyncOrchestrator(
             spoke_root, hub_root, project_type, archetype=archetype
