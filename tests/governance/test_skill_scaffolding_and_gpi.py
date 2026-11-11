@@ -965,3 +965,92 @@ def test_hysteresis_deadband_preserves_existing_kernel_skill(tmp_path: Path) -> 
     assert gpi_sub_errors, (
         "Expected INSUFFICIENT_GPI_SCORE when score is below deadband [11.5, 12.5)"
     )
+
+
+def test_ccba_skill_repair_v110_contractual_invariants() -> None:
+    """Verify ccba-skill-repair v1.1.0 enforces all grilling & adversarial review guardrails (COND-01..08, GAP-01..04)."""
+    import re
+
+    import yaml
+
+    file_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-skill-repair" / "SKILL.md"
+    assert file_path.exists()
+    raw_text = file_path.read_text(encoding="utf-8")
+
+    # 1. Zero validator issues under --enforce-gpi
+    auditor = SkillAuditor(PROJECT_ROOT)
+    issues = auditor.audit_skill(file_path, check_shallow=True, enforce_gpi=True)
+    assert issues == [], f"Unexpected audit issues on ccba-skill-repair: {issues}"
+
+    # 2. Frontmatter version bump while preserving single-line gpi block
+    parts = raw_text.split("---", 2)
+    assert len(parts) >= 3
+    fm = yaml.safe_load(parts[1])
+    assert fm.get("metadata", {}).get("version") == "1.1.0"
+    assert "gpi: {s: 3.0, k: 2.0, a: 1.0, p: 1.0}" in parts[1]
+
+    # 3. Assert all v1.1.0 guardrails strictly on body (excluding frontmatter per COND-05)
+    body = parts[2]
+    assert "Tier 1: Package Function (Deep Seam)" not in body
+    required_body_tokens = [
+        # Role-split contract with ccba-build-skill & review checklist (COND-07, GAP-04, COND-S1)
+        "/ccba-build-skill",
+        "../ccba-build-skill/references/skill_review_checklist.md",
+        "ArchitectureTier.value",
+        "Tier 1: Package Function / Deep Seam",
+        # Step 0 Hub vs Spoke Pre-flight (COND-06, COND-08, GAP-03, COND-S3)
+        "CCBA_HUB_PATH",
+        "<hub_path>/.agents/skills/<skill-dir>/SKILL.md",
+        "<hub_path>/.agents/skills/platform-loader/catalog.yaml",
+        "branch --show-current",
+        "fix/repair-",
+        'check_spoke_leakage.py" --root',
+        "python -m ccba_harness validate-skill --file <path-to-skill> --enforce-gpi",
+        # Step 1 & 2 YAML-first, JSON contract, Orchestrator exemption & Anti-Inflation (COND-01, COND-02, COND-S2)
+        "python -m ccba_harness.cli evaluate-gpi --file <path-to-skill> --json",
+        "--existing-tier tier-2b --json",
+        "allow_standalone_skill",
+        "breakdown.preserved_by_hysteresis",
+        "Tier 3: Composite Orchestrator",
+        "tier: orchestrator",
+        "4 dòng bằng chứng quan sát được",
+        "a: 1.0",
+        "disable-model-invocation: true",
+        # Step 3 Narrowed Level-1 Allowlist, Hygiene & SOP Loop Guard (COND-04, GAP-02, COND-S2)
+        "CẤM tự ghi mới hoặc lật sang `tier: kernel`",
+        "# ccba:allow-machine-path",
+        "# ccba:allow-raw-ip",
+        "audit_skills_hygiene.py",
+        "SelfHealingEngine",
+        "SHA-256",
+        "Stop & Propose",
+        "compile_catalog.py --in",
+        # Step 4 3-surface Hub sync & Hard Completion Lock (COND-06)
+        "python scripts/governance/compile_skills_docs.py --write",
+        "python scripts/sync_hub_adr_matrix.py",
+        "python scripts/governance/compile_skills_docs.py --check",
+        "python -m ccba_harness verify-patch --preset skill --target <path-to-skill>",
+    ]
+    for token in required_body_tokens:
+        assert token in body, f"Missing required v1.1.0 guardrail token in SKILL.md body: {token!r}"
+
+    # 4. Slice body across headings ### 0. .. ### 4. and assert each has completion criterion (COND-05)
+    heading_matches = list(re.finditer(r"^### [0-4]\. .*$", body, flags=re.MULTILINE))
+    assert [m.group(0)[:6] for m in heading_matches] == [
+        "### 0.",
+        "### 1.",
+        "### 2.",
+        "### 3.",
+        "### 4.",
+    ]
+    end_marker = body.find("\n## Tiêu chí hoàn thành", heading_matches[-1].start())
+    assert end_marker != -1, "Expected summary '## Tiêu chí hoàn thành' section after ### 4."
+    for idx, match in enumerate(heading_matches):
+        slice_start = match.start()
+        slice_end = (
+            heading_matches[idx + 1].start() if idx + 1 < len(heading_matches) else end_marker
+        )
+        section_slice = body[slice_start:slice_end]
+        assert "**Tiêu chí hoàn thành:**" in section_slice, (
+            f"Section {match.group(0)!r} is missing '**Tiêu chí hoàn thành:**'"
+        )
