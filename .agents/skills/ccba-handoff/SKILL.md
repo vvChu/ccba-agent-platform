@@ -8,7 +8,7 @@ tier: kernel
 disable-model-invocation: true
 metadata:
   author: CCBA
-  version: 2.1.0
+  version: 2.2.0
 user-invocable: true
 command: /ccba-handoff
 gpi:
@@ -90,6 +90,7 @@ Tài liệu bàn giao bắt buộc phải tuân theo cấu trúc sau:
 ## 5. Current Work & Immediate Next Steps (Kế hoạch hành động cho Agent tiếp theo)
 - **Nhiệm vụ thực hiện ngay lập tức:** Mô tả chi tiết 1-3 bước hành động cụ thể.
 - **Tài liệu tham khảo bắt buộc:** Danh sách các tệp SKILL.md, ADR, spec cần đọc trước khi code.
+- **Kỹ năng gợi ý kích hoạt (Suggested Skills):** Đề xuất 1–3 lệnh kỹ năng đã đăng ký trên Hub phù hợp nhất với bước kế tiếp (ví dụ: `/ccba-implement`, `/ccba-code-review`, `/ccba-diagnosing-bugs`, `/ccba-to-spec`, `/ccba-grilling`) để Agent kế nhiệm khởi chạy ngay.
 - **Lệnh kiểm thử xác minh:** Các lệnh CLI / Pytest để kiểm tra lại trước khi bắt đầu.
 ```
 

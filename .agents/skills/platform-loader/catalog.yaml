@@ -372,6 +372,8 @@ skills:
   - deep module
   - module sâu
   - software design
+  - software-factory
+  - software factory
   - ccba-improve-codebase-architecture
   - improve-codebase-architecture
   skill_path: .agents/skills/ccba-codebase-design/SKILL.md

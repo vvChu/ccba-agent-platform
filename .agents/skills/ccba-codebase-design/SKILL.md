@@ -22,7 +22,7 @@ keywords:
 - locality
 metadata:
   author: CCBA
-  version: 1.3.0
+  version: 1.4.0
 bundle: _core
 tier: kernel
 triggers:
@@ -37,6 +37,8 @@ triggers:
 - deep module
 - module sâu
 - software design
+- software-factory
+- software factory
 - ccba-improve-codebase-architecture
 - improve-codebase-architecture
 ---
@@ -51,7 +53,7 @@ Design **deep modules**: a lot of behaviour behind a small interface, placed at 
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là Reference Skill cung cấp bộ từ vựng chuẩn mực về thiết kế module sâu (Deep Modules: Module, Interface, Implementation, Depth, Seam theo định nghĩa của Michael Feathers, Adapter, Leverage, Locality) kèm Quy Tắc Dừng Cứng (Hard Stopping Rule). Khái niệm "seam" trong kỹ năng này đề cập đến vị trí thiết kế và điểm nối mã nguồn trong kiến trúc phần mềm, hoàn toàn độc lập với 16 card Seam dữ liệu của Platform Monorepo, do đó nhận posture `seam-exempt`.
-- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Toàn bộ 4 tệp tài liệu chuyên sâu (`references/codebase_refactor_guide.md`, `references/deepening.md`, `references/design_it_twice.md`, `references/html_report_template.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 1.0, P: 1.0) = 16.5 >= 12.0. Toàn bộ 5 tệp tài liệu chuyên sâu (`references/codebase_refactor_guide.md`, `references/deepening.md`, `references/design_it_twice.md`, `references/html_report_template.md`, `references/software_factory.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
 
 ## Glossary
 
@@ -213,6 +215,7 @@ class ShallowAuditService:
 
 - **Deepening a cluster given its dependencies** — see [deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [design_it_twice.md](references/design_it_twice.md): spin up parallel sub-agents (max 3) to design the interface several radically different ways, then compare on depth, locality, and seam placement.
+- **Designing an autonomous software factory** — see [software_factory.md](references/software_factory.md): canonical vocabulary (Tasks, Triggers, Runs, Runners, 6 Service Slots), Three Brakes, and 9 factory task patterns.
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -224,6 +227,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/deepening.md` | Phân loại dependency và kỷ luật làm sâu module |
 | `references/design_it_twice.md` | Thiết kế 2-3 phương án giao diện đối chiếu (max 3 subagents) |
 | `references/html_report_template.md` | Mẫu HTML báo cáo trực quan với Tailwind & Mermaid |
+| `references/software_factory.md` | Ngôn ngữ chung thiết kế Software Factory (Tasks, Triggers, Runs, Runners, 6 Service Slots & Three Brakes) |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
