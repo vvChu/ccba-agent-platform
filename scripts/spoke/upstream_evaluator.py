@@ -37,9 +37,12 @@ except ImportError:
 
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
+if str(PLATFORM_ROOT) not in sys.path:
+    sys.path.insert(0, str(PLATFORM_ROOT))
 if str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src") not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src"))
 
+import scripts.spoke._upstream_helpers as _uh  # noqa: E402
 from ccba_harness.gpi import (  # noqa: E402
     DecisionRequest,
     GPIMetrics,
@@ -80,7 +83,7 @@ DEFAULT_REPOS_CONFIG = [
         "local_path": PLATFORM_ROOT / ".md/scratch/repos/mattpocock-skills",
         "remote_url": "https://github.com/mattpocock/skills",
         "branch": "main",
-        "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_skills_last_sha.txt",
+        "sha_file": PLATFORM_ROOT / ".md/scratch/mattpocock_last_sha.txt",
         "description": "Matt Pocock Skills Repository",
         "stale_upstream_days": DEFAULT_STALE_UPSTREAM_DAYS,
     },
@@ -262,12 +265,21 @@ def _parse_int_or_default(val: Any, default: int) -> int:
     return int(val) if isinstance(val, (int, str)) and str(val).isdigit() else default
 
 
+def load_upstream_governance_config(cfg: Path | None = None) -> dict[str, Any]:
+    """Load declarative governance rules, aliases, and triage_ledger from YAML."""
+    return _uh.load_governance_config(cfg or SOURCES_CONFIG_FILE, UPSTREAM_ALIAS_MAP)
+
+
+load_upstream_governance_config()
+
+
 def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any]]:
     """Load upstream repositories configuration from YAML with fallback to defaults."""
     target_file = config_file or SOURCES_CONFIG_FILE
     if not target_file.exists():
         return DEFAULT_REPOS_CONFIG
     try:
+        load_upstream_governance_config(target_file)
         data = yaml.safe_load(target_file.read_text(encoding="utf-8"))
         if not isinstance(data, dict) or "sources" not in data:
             return DEFAULT_REPOS_CONFIG
@@ -290,10 +302,13 @@ def load_upstream_sources(config_file: Path | None = None) -> list[dict[str, Any
                 print(f"[Evaluator] Warning: Skipping source '{name}' because remote_url is empty.")
                 continue
             sha_fn = legacy_sha.get(name, legacy_sha.get(repo_type, f"{name}_last_sha.txt"))
+            raw_target = s.get("default_target")
             sources.append(
                 {
                     "name": name,
                     "type": repo_type,
+                    "source_kind": str(s.get("source_kind", "skills")).strip() or "skills",
+                    "default_target": str(raw_target).strip() if raw_target else None,
                     "local_path": PLATFORM_ROOT / ".md" / "scratch" / "repos" / name,
                     "remote_url": remote_url,
                     "branch": str(s.get("branch", "main")).strip(),
@@ -323,31 +338,19 @@ def check_repo_license(repo_path: Path) -> tuple[str, str]:
         "LICENSE-MIT",
         "LICENSE-APACHE",
     ]
+    texts: list[str] = []
     for name in license_names:
         lic_file = repo_path / name
         if lic_file.exists():
             try:
-                text = lic_file.read_text(encoding="utf-8", errors="ignore").lower()
-                if (
-                    "gnu general public" in text
-                    or "gpl" in text
-                    or "agpl" in text
-                    or "lgpl" in text
-                ):
-                    return "COPYLEFT", "GPL/AGPL/LGPL (Rủi ro sao chép mã nguồn)"
-                if "mit license" in text or "permission is hereby granted" in text:
-                    return "PERMISSIVE", "MIT License (Tự do sử dụng)"
-                if "apache license" in text:
-                    return "PERMISSIVE", "Apache 2.0 License (Tự do sử dụng)"
-                if "bsd" in text:
-                    return "PERMISSIVE", "BSD License (Tự do sử dụng)"
-                if "all rights reserved" in text or "proprietary" in text:
-                    return "PROPRIETARY", "Bản quyền đóng (Không được sao chép)"
-                return "UNKNOWN", "Custom license: cần kiểm tra thủ công"
-            except Exception:
-                pass
+                texts.append(lic_file.read_text(encoding="utf-8", errors="ignore"))
+            except OSError:
+                continue
 
-    return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
+    if not texts:
+        return "UNKNOWN", "Không phát hiện tệp LICENSE rõ ràng"
+    rules = load_upstream_governance_config()["license_rules"]
+    return _uh.classify_license_text("\n".join(texts), rules)
 
 
 def _run_git_text(repo_path: Path, args: list[str], timeout: int = 10) -> str | None:
@@ -660,16 +663,24 @@ def call_ai_evaluation(
         }
 
     # 3. Evaluation Cache Check
+    cmp_cmd = generate_xia_command(source_ref, skill_name, "--compare")
+
+    def _clamp(r: dict[str, Any]) -> dict[str, Any]:
+        return _uh.clamp_license_policy(r, license_type, cmp_cmd)
+
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
-    cache_key = f"{repo_type}:{skill_name}:{content_hash}"
+    cache_key = f"{repo_type}:{skill_name}:{license_type}:{content_hash}"
     eval_cache: dict[str, Any] = {}
     if use_cache:
         eval_cache = load_eval_cache()
-        if cache_key in eval_cache:
-            cached_result = dict(eval_cache[cache_key])
+        hit = eval_cache.get(cache_key) or eval_cache.get(
+            f"{repo_type}:{skill_name}:{content_hash}"
+        )
+        if isinstance(hit, dict):
+            cached_result = dict(hit)
             mode = "--port" if cached_result.get("should_port") else "--compare"
             cached_result["xia_command"] = generate_xia_command(source_ref, skill_name, mode)
-            return cached_result
+            return _clamp(cached_result)
 
     # 4. Domain Workflows (Tier 3 Composite Orchestrator)
     if resource_type == "workflow":
@@ -705,6 +716,7 @@ def call_ai_evaluation(
             ],
             "xia_command": generate_xia_command(source_ref, skill_name, "--port"),
         }
+        result = _clamp(result)
         if use_cache:
             eval_cache[cache_key] = result
             save_eval_cache(eval_cache)
@@ -807,6 +819,7 @@ def call_ai_evaluation(
             }
             mode = "--port" if ai_result.get("should_port") else "--compare"
             ai_result["xia_command"] = generate_xia_command(source_ref, skill_name, mode)
+            ai_result = _clamp(ai_result)
 
             if use_cache:
                 eval_cache[cache_key] = ai_result
@@ -887,6 +900,7 @@ def call_ai_evaluation(
         ],
         "xia_command": generate_xia_command(source_ref, skill_name, mode),
     }
+    fallback_result = _clamp(fallback_result)
 
     if use_cache:
         eval_cache[cache_key] = fallback_result
@@ -952,8 +966,8 @@ def append_recommendation(
         xia_cmd = result.get("xia_command", generate_xia_command(remote_url, skill_name))
 
         if not result.get("should_port", True):
-            status_text = "IGNORE"
-            color = "🔴"
+            status_text = str(result.get("status_override") or "IGNORE")
+            color = str(result.get("color_override") or "🔴")
         else:
             status_text = "RECOMMEND PORT"
             color = "🟢"
@@ -1007,18 +1021,19 @@ class UpstreamEvaluator:
         if local_path.exists():
             safe_rmtree(local_path)
         local_path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            subprocess.run(
-                ["git", "clone", remote_url, str(local_path)],
-                check=True,
-                capture_output=True,
-            )
-            print(f"[Repo Update] Successfully cloned {repo_type}.")
-            return True
-        except subprocess.SubprocessError as e:
-            print(f"[Repo Update] Error cloning {repo_type}: {e}")
-            safe_rmtree(local_path)
-            return False
+        for extra in (["--filter=blob:none"], []):
+            try:
+                subprocess.run(
+                    ["git", "clone", *extra, remote_url, str(local_path)],
+                    check=True,
+                    capture_output=True,
+                )
+                print(f"[Repo Update] Successfully cloned {repo_type}.")
+                return True
+            except subprocess.SubprocessError as e:
+                print(f"[Repo Update] Error cloning {repo_type}: {e}")
+                safe_rmtree(local_path)
+        return False
 
     def ensure_local_repo(self, config: dict[str, Any], fast: bool = False) -> bool:
         """Ensure local repo is cloned and updated with self-healing index.lock and clean-clone fallback."""
@@ -1079,6 +1094,9 @@ class UpstreamEvaluator:
         sha_file: Path = config["sha_file"]
         if sha_file.exists():
             return sha_file.read_text(encoding="utf-8").strip()
+        leg = sha_file.with_name("mattpocock_skills_last_sha.txt")
+        if sha_file.name == "mattpocock_last_sha.txt" and leg.exists():
+            return leg.read_text(encoding="utf-8").strip()
         return ""
 
     def get_remote_sha(self, remote_url: str, branch: str | None = None) -> str:
@@ -1495,7 +1513,16 @@ def main() -> None:
         default=None,
         help="Limit the maximum number of items evaluated per repository",
     )
+    parser.add_argument("--prune-stale", action="store_true", help="Prune stale blocks")
     args = parser.parse_args()
+
+    if args.prune_stale:
+        with MutexLock(LOCK_FILE) as acquired:
+            if acquired:
+                n = _uh.prune_stale_recommendations(RECOMMENDATIONS_FILE)
+                print(f"[Upstream Check] Pruned {n} stale block(s).")
+        if not (args.check_only or args.scan_all or args.repo):
+            return
 
     evaluator = UpstreamEvaluator()
     evaluator.sync_and_evaluate(

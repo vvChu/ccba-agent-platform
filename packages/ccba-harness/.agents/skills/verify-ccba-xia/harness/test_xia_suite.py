@@ -254,8 +254,14 @@ def test_feat_xia_007_surface_diff_and_domain_eval_parity() -> None:
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "27101e016788ec36713826486aa9e29e678dd857",
-        [".agents/skills/ccba-xia/SKILL.md", "scripts/spoke/upstream_evaluator.py"],
+        "8f088b9949426b436deab9bae4145b285eeeb495",
+        [
+            ".agents/skills/ccba-xia/SKILL.md",
+            ".agents/skills/ccba-xia/references/modes.md",
+            "scripts/spoke/upstream_evaluator.py",
+            "scripts/spoke/_upstream_helpers.py",
+            "docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md",
+        ],
     )
     assert changed == []
 

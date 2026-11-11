@@ -823,3 +823,86 @@ def test_ui_and_web_quality_upstream_aliases_route_to_ccba_design() -> None:
         is_dup, matched = check_is_duplicate(m365_skill, existing_skills, [])
         assert is_dup is True
         assert matched == "ccba-sharepoint-iac"
+
+
+def test_license_classification_matrix_and_post_cache_clamp(tmp_path: Path) -> None:
+    """Verify 6-tier license classifier matrix and post-cache/fallback --compare clamping."""
+    cases = (
+        ("ISC License\nPermission to use, copy, modify, and/or distribute...", "PERMISSIVE"),
+        ("Zero-Clause BSD (0BSD)\nPermission to use, copy, modify...", "PERMISSIVE"),
+        ("This is free and unencumbered software released into the public domain.", "PERMISSIVE"),
+        ("Mozilla Public License Version 2.0 (MPL-2.0)", "COPYLEFT"),
+        ("Licensed under either of Apache-2.0 or MIT license at your option.", "PERMISSIVE"),
+        ("Dual licensed under the MIT OR GPL-2.0 license.", "COPYLEFT"),
+        ("Copyright 2026 Corp. All Rights Reserved.", "PROPRIETARY"),
+        ("Bespoke internal evaluation terms v1.", "UNKNOWN"),
+    )
+    lic_dir = tmp_path / "lic"
+    lic_dir.mkdir()
+    for body, expected in cases:
+        (lic_dir / "LICENSE").write_text(body, encoding="utf-8")
+        assert check_repo_license(lic_dir)[0] == expected
+
+    cf, rf = tmp_path / "cache.json", tmp_path / "recs.md"
+    kw: dict[str, object] = {
+        "CACHE_FILE": cf,
+        "RECOMMENDATIONS_FILE": rf,
+        "get_existing_elements": lambda: ([], []),
+    }
+    with patch.multiple("scripts.spoke.upstream_evaluator", **kw), patch("hashlib.sha256") as mh:
+        mh.return_value.hexdigest.return_value = "deadbeef12345678"
+        save_eval_cache({"mock:dual-skill:deadbeef12345678": {"should_port": True, "score": 90}})
+        res = call_ai_evaluation("mock", "dual-skill", "# D", "https://g.co/r", "COPYLEFT")
+        assert res["should_port"] is False and res["xia_command"].endswith(" --compare")
+        append_recommendation("mock", "dual-skill", res, "https://g.co/r", "Dual MIT/GPL")
+        rendered = rf.read_text(encoding="utf-8")
+        assert "🟠 [COMPARE ONLY — LICENSE RESTRICTED]" in rendered and "--compare" in rendered
+
+
+def test_governance_config_prune_sha_and_blobless_clone(tmp_path: Path) -> None:
+    """Verify YAML source_kind/aliases, --prune-stale isolation, SHA fallback, and blobless clone teardown."""
+    import subprocess
+
+    import scripts.spoke._upstream_helpers as uh
+
+    pnp = {s["name"]: s for s in load_upstream_sources()}["pnp-list-formatting"]
+    assert pnp["source_kind"] == "reference_corpus"
+    assert pnp["default_target"] == "ccba-sharepoint-iac"
+    cfg_y = tmp_path / "sources.yaml"
+    cfg_y.write_text("aliases:\n  polish: wrong\n  new-alias: ccba-ask\n", encoding="utf-8")
+    amap = {"polish": "ccba-design"}
+    uh.load_governance_config(cfg_y, amap)
+    assert amap == {"polish": "ccba-design", "new-alias": "ccba-ask"}
+
+    ev = UpstreamEvaluator()
+    (tmp_path / "mattpocock_skills_last_sha.txt").write_text("legacysha999\n", encoding="utf-8")
+    assert ev.get_local_sha({"sha_file": tmp_path / "mattpocock_last_sha.txt"}) == "legacysha999"
+
+    dest, seen, cmds = tmp_path / "corrupt_clone", [], []
+    (dest / ".git").mkdir(parents=True)
+
+    def fake_run(cmd: list[str], **kw: object) -> object:
+        seen.append(dest.exists())
+        cmds.append(cmd)
+        if "--filter=blob:none" in cmd:
+            (dest / ".git").mkdir(parents=True, exist_ok=True)
+            raise subprocess.SubprocessError("blobless unsupported")
+        return object()
+
+    with patch("subprocess.run", side_effect=fake_run):
+        assert ev._clone_repo(dest, "https://github.com/org/repo", "mock") is True
+    assert seen == [False, False] and "--filter=blob:none" in cmds[0]
+
+    rec_md = tmp_path / "recs.md"
+    rec_md.write_text(
+        "<!-- AUTO-GENERATED-START -->\n# Header\n\n---\n\n"
+        "### 🟢 [RECOMMEND PORT] Skill: `old` (Score: 85/100)\n* simulated approval\n\n---\n\n"
+        "### 🟢 [RECOMMEND PORT] Skill: `prop` (Score: 80/100)\n* **Bản quyền**: `Bản quyền đóng`\n"
+        "> ⚡ `/ccba-xia repo prop --port`\n<!-- AUTO-GENERATED-END -->\n\n"
+        "<!-- DEVELOPER-NOTES-START -->\nKeep ADR-0040 history here\n<!-- DEVELOPER-NOTES-END -->",
+        encoding="utf-8",
+    )
+    assert uh.prune_stale_recommendations(rec_md) == 1
+    out = rec_md.read_text(encoding="utf-8")
+    assert "simulated approval" not in out and "🟠 [COMPARE ONLY — LICENSE RESTRICTED]" in out
+    assert "Keep ADR-0040 history here" in out

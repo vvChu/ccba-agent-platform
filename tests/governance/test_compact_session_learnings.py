@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from scripts.governance.compact_session_learnings import (
+    COMPACTED_WORKING_MEMORY_TEMPLATE,
     DEFAULT_ARCHIVE_DIR,
     DEFAULT_FILE,
     DEFAULT_MAX_SIZE_KB,
@@ -210,14 +211,62 @@ def test_run_compact_blocks_silent_active_rule_deletion(tmp_path: Path) -> None:
     assert run_compact(source_file, archive_dir, max_size_kb=10.0, template=stale_template) == 1
     assert source_file.read_text(encoding="utf-8") == original
 
-    # Explicit opt-in flag permits reset when intentionally invoked
+    # Partial allowlist still refuses unapproved active rule drops
     assert (
         run_compact(
             source_file,
             archive_dir,
             max_size_kb=10.0,
             template=stale_template,
-            allow_rule_drop=True,
+            allowed_rule_drops={"RULE-1.1"},
+        )
+        == 1
+    )
+
+    # Explicit per-rule allowlist permits reset when intentionally invoked
+    assert (
+        run_compact(
+            source_file,
+            archive_dir,
+            max_size_kb=10.0,
+            template=stale_template,
+            allowed_rule_drops={"RULE-6.2"},
         )
         == 0
     )
+
+
+def test_find_dropped_rules_bidirectional_deprecated_and_boundary() -> None:
+    """Verify [DEPRECATED] works before or after RULE-X.Y without prefix-matching RULE-1.10."""
+    original = (
+        "- **RULE-1.1 [ADR 0057]**: Base\n"
+        "- **RULE-1.2 [ADR 0053]**: Old\n"
+        "- **RULE-1.3 [ADR 0035]**: Old2\n"
+        "- **RULE-1.10 [Platform KISS]**: Active\n"
+    )
+    collapsed_target = (
+        "- *([DEPRECATED] Lưu trữ tại Mục 23-38: RULE-1.2 [ADR 0053], RULE-1.3 [ADR 0035])*\n"
+        "- **RULE-1.10 [Platform KISS]**: Active\n"
+    )
+    # RULE-1.2 & RULE-1.3 are recognized after [DEPRECATED], while missing RULE-1.1 is still caught!
+    assert find_dropped_rules(original, collapsed_target) == ["RULE-1.1"]
+
+    suffix_target = (
+        "- **RULE-1.1 [ADR 0057]**: Base\n"
+        "- *(RULE-1.2, RULE-1.3 [DEPRECATED])*\n"
+        "- *(RULE-1.100 [DEPRECATED])*\n"
+    )
+    # RULE-1.100 [DEPRECATED] must NOT mask dropped RULE-1.10!
+    assert find_dropped_rules(original, suffix_target) == ["RULE-1.10"]
+
+
+def test_compacted_working_memory_template_six_domains() -> None:
+    """Verify Hub COMPACTED_WORKING_MEMORY_TEMPLATE preserves 6 domains and <= 10 KB budget."""
+    encoded = (COMPACTED_WORKING_MEMORY_TEMPLATE.strip() + "\n").encode("utf-8")
+    assert len(encoded) <= 10 * 1024
+    assert verify_invariants(COMPACTED_WORKING_MEMORY_TEMPLATE) == []
+    assert "## Miền 6." in COMPACTED_WORKING_MEMORY_TEMPLATE
+    assert "RULE-1.7" in COMPACTED_WORKING_MEMORY_TEMPLATE
+    assert "RULE-2.22" in COMPACTED_WORKING_MEMORY_TEMPLATE
+    assert "RULE-4.20" in COMPACTED_WORKING_MEMORY_TEMPLATE
+    assert "RULE-4.21" in COMPACTED_WORKING_MEMORY_TEMPLATE

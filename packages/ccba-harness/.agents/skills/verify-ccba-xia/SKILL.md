@@ -16,8 +16,8 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.0
-sync_commit: "27101e016788ec36713826486aa9e29e678dd857"
+  version: 1.0.1
+sync_commit: "8f088b9949426b436deab9bae4145b285eeeb495"
 verification_mode:
   - scaffold
   - sync
@@ -26,6 +26,7 @@ covered_paths:
   - .agents/skills/ccba-xia/SKILL.md
   - .agents/skills/ccba-xia/references/modes.md
   - scripts/spoke/upstream_evaluator.py
+  - scripts/spoke/_upstream_helpers.py
   - docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md
 triggers:
   - verify-ccba-xia
@@ -40,7 +41,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 6 pha của `.agents/skills/ccba-xia/SKILL.md`, bảng chế độ `.agents/skills/ccba-xia/references/modes.md`, chốt chặn `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`, cùng các hàm thực thi trong `scripts/spoke/upstream_evaluator.py` (`check_repo_license`, `check_is_duplicate`, `generate_xia_command`) và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `27101e016788ec36713826486aa9e29e678dd857` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit`)**: Neo tại commit `8f088b9949426b436deab9bae4145b285eeeb495` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
 
 ---
 
@@ -104,13 +105,13 @@ stateDiagram-v2
 - **Tiêu chí hoàn thành:** Kịch bản thực thi trọn vẹn cả 5 khối, toàn bộ 6 bài kiểm thử trong `test_xia_suite.py` vượt qua 100%, tiến trình con được dọn sạch và lệnh thoát với `exit code 0`.
 
 ### Bước 2: Kiểm Tra Nguồn Gốc Thay Đổi Khi Phát Sinh Lỗi (`Pre-Remediation Provenance Check`)
-- Đối chiếu `git diff <sync_commit>..HEAD` trên các tệp thuộc `covered_paths` (`.agents/skills/ccba-xia/SKILL.md`, `.agents/skills/ccba-xia/references/modes.md`, `scripts/spoke/upstream_evaluator.py`, `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`).
+- Đối chiếu `git diff <sync_commit>..HEAD` trên các tệp thuộc `covered_paths` (`.agents/skills/ccba-xia/SKILL.md`, `.agents/skills/ccba-xia/references/modes.md`, `scripts/spoke/upstream_evaluator.py`, `scripts/spoke/_upstream_helpers.py`, `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`).
 - Phân loại kết quả vào đúng 1 trong 4 trạng thái chuẩn (`in_sync`, `updated`, `bug`, `blocked`).
 - **Tiêu chí hoàn thành:** Xác định rõ trạng thái thuộc 1 trong 4 phân loại (`in_sync`, `updated`, `bug`, `blocked`) trước khi can thiệp mã; tuyệt đối cấm sửa `harness/` nếu phát hiện lỗi hồi quy (`bug`).
 
 ### Bước 3: Phép Thử Đột Biến Ngữ Nghĩa (`Semantic Mutation Proof`)
 - Xác nhận cây làm việc sạch (`git diff --quiet && git diff --cached --quiet`).
-- Thực hiện 1 đột biến ngữ nghĩa tạm thời trên `covered_paths` (ví dụ: đổi phân loại giấy phép GPL trong `scripts/spoke/upstream_evaluator.py::check_repo_license` từ `"COPYLEFT"` sang `"PERMISSIVE"`).
+- Thực hiện 1 đột biến ngữ nghĩa tạm thời trên `covered_paths` (ví dụ: đổi phân loại giấy phép GPL trong `scripts/spoke/_upstream_helpers.py::classify_license_text` từ `"COPYLEFT"` sang `"PERMISSIVE"`).
 - Chạy lại `run_verify_xia.py` để xác nhận bộ kiểm định bắt trúng lỗi (exit code $\ne 0$) và lưu nhật ký phản chứng (*counterexample failure log*).
-- Hoàn nguyên tức thì (`git checkout -- scripts/spoke/upstream_evaluator.py`), xác nhận `git diff` sạch và chạy lại `run_verify_xia.py` đạt `exit code 0`.
+- Hoàn nguyên tức thì (`git checkout -- scripts/spoke/_upstream_helpers.py`), xác nhận `git diff` sạch và chạy lại `run_verify_xia.py` đạt `exit code 0`.
 - **Tiêu chí hoàn thành:** Phép thử đột biến ngữ nghĩa bắt được lỗi, mã nguồn được hoàn nguyên 100% và lượt chạy nghiệm thu thoát sạch với `exit code 0`.

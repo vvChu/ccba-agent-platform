@@ -1,12 +1,13 @@
 # CCBA Upstream Sources Registry
 # Danh mục các kho chứa mã nguồn/kỹ năng thượng nguồn được theo dõi định kỳ bởi /ccba-sync-upstream.
 
-version: "1.0"
+version: "1.1"
 stale_upstream_days: 120
 
 sources:
   - name: "claudekit-engineer"
     type: "engineer"
+    source_kind: "skills"
     remote_url: "https://github.com/claudekit/claudekit-engineer"
     branch: "main"
     enabled: true
@@ -14,6 +15,7 @@ sources:
 
   - name: "claudekit-marketing"
     type: "marketing"
+    source_kind: "skills"
     remote_url: "https://github.com/claudekit/claudekit-marketing"
     branch: "main"
     enabled: true
@@ -21,6 +23,7 @@ sources:
 
   - name: "mattpocock-skills"
     type: "mattpocock-skills"
+    source_kind: "skills"
     remote_url: "https://github.com/mattpocock/skills"
     branch: "main"
     enabled: true
@@ -28,6 +31,8 @@ sources:
 
   - name: "impeccable"
     type: "impeccable"
+    source_kind: "skills"
+    default_target: "ccba-design"
     remote_url: "https://github.com/pbakaus/impeccable"
     branch: "main"
     enabled: true
@@ -35,6 +40,8 @@ sources:
 
   - name: "web-quality-skills"
     type: "web-quality-skills"
+    source_kind: "skills"
+    default_target: "ccba-design"
     remote_url: "https://github.com/addyosmani/web-quality-skills"
     branch: "main"
     enabled: true
@@ -42,6 +49,8 @@ sources:
 
   - name: "power-platform-skills"
     type: "power-platform-skills"
+    source_kind: "skills"
+    default_target: "ccba-sharepoint-iac"
     remote_url: "https://github.com/microsoft/power-platform-skills"
     branch: "main"
     enabled: true
@@ -49,9 +58,79 @@ sources:
 
   - name: "pnp-list-formatting"
     type: "pnp-list-formatting"
+    source_kind: "reference_corpus"
+    default_target: "ccba-sharepoint-iac"
     remote_url: "https://github.com/pnp/List-Formatting"
     branch: "master"
     enabled: true
     description: "Microsoft 365 & SharePoint PnP Declarative List/View/Form JSON Formatting Samples (routed to ccba-sharepoint-iac)"
 
+# Bảng luật phân loại bản quyền 6 bậc (ADR-0061 Parameter Externalization)
+license_rules:
+  dual_copyleft_regex:
+    - '\b(?:mit|apache(?:-2\.0)?|bsd|isc)\s*(?:or|/|\|)\s*(?:a|l)?gpl'
+    - '\b(?:a|l)?gpl(?:[-_ ]?v?[23](?:\.0)?)?\s*(?:or|/|\|)\s*(?:mit|apache|bsd|isc)'
+    - '\bdual[- ]licens[^\n]{0,100}\b(?:a|l)?gpl\b'
+  dual_permissive_regex:
+    - '\b(?:mit|apache(?:-2\.0)?|bsd|isc)\s*(?:or|/|\|)\s*(?:mit|apache(?:-2\.0)?|bsd|isc)\b'
+  copyleft_regex:
+    - 'gnu general public'
+    - 'mozilla public license'
+    - '\b(?:a|l)?gpl(?:\b|[-_ ]?v?[23])'
+    - '\bmpl(?:\b|[-_ ]?2)'
+  permissive_tokens:
+    - 'mit license'
+    - 'permission is hereby granted'
+    - 'isc license'
+    - 'permission to use, copy, modify, and/or distribute'
+    - 'apache license'
+    - 'zero-clause bsd'
+    - '0bsd'
+    - 'bsd'
+    - 'unlicense'
+    - 'this is free and unencumbered software'
+  proprietary_tokens:
+    - 'all rights reserved'
+    - 'proprietary'
 
+report_hygiene:
+  stale_block_tokens:
+    - 'simulated approval'
+    - 'Port via ccba-kit'
+    - '(ADR-0040)'
+    - '[IGNORE (Đã tồn tại)]'
+  restricted_license_markers:
+    - 'Bản quyền đóng'
+    - 'Rủi ro sao chép'
+    - 'Custom license'
+    - 'Không phát hiện'
+
+# Siêu tập ánh xạ alias thượng nguồn -> Hub target (chỉ chèn khóa chưa có vào UPSTREAM_ALIAS_MAP)
+aliases:
+  grill-me: "ccba-grilling"
+  grilling: "ccba-grilling"
+  batch-grill-me: "ccba-grilling"
+  to-questionnaire: "ccba-grilling"
+  wayfinder: "ccba-wayfinder"
+  implement: "ccba-implement"
+  implement-spec: "ccba-implement"
+  llm-wiki: "ccba-knowledge-loop"
+  diagnosing-bugs: "ccba-diagnosing-bugs"
+  tdd: "ccba-tdd"
+  code-review: "ccba-code-review"
+  create-pr: "ccba-create-pr"
+
+# Sổ cái quyết định Triage khép kín theo khóa bộ ba (source, upstream_path, target)
+triage_ledger:
+  - source: "mattpocock-skills"
+    upstream_path: "retro"
+    target: "ccba-session-retrospective"
+    status: "DECLINED"
+    reviewed_sha: "4ae2317"
+    reason: "Đã được bao phủ bởi /ccba-session-retrospective + compact_session_learnings.py (COND-05)."
+  - source: "mattpocock-skills"
+    upstream_path: "writing-beats"
+    target: "ccba-copywriting"
+    status: "DECLINED"
+    reviewed_sha: "4ae2317"
+    reason: "Out-of-scope choose-your-own-adventure; đã có /ccba-copywriting & /ccba-seminar-builder (COND-05)."
