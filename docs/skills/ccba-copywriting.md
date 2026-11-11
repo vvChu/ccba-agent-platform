@@ -54,6 +54,9 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `marketing admin`
 - `ccba-viet-chuyen-nghiep`
 - `viet-chuyen-nghiep`
+- `ab testing`
+- `split test`
+- `competitor comparison`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Biên tập bài viết kỹ thuật và tài liệu truyền thông chuẩn văn phong CCBA.
