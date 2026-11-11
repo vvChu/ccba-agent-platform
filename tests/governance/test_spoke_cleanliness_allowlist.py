@@ -17,6 +17,7 @@ import yaml
 from scripts.spoke.check_spoke_cleanliness import (
     check_ephemeral_scripts,
     check_machine_state_leakage,
+    check_raw_ip_leakage,
     check_script_count,
     load_cleanliness_config,
     scan_spoke_cleanliness,
@@ -143,3 +144,25 @@ def test_scan_spoke_cleanliness_with_workspace_config(tmp_path: Path) -> None:
     exit_code, messages = scan_spoke_cleanliness(tmp_path, max_scripts=15, strict=True)
     assert exit_code == 0
     assert not any("Script Tạm Thời" in m for m in messages)
+
+
+def test_raw_ip_scanner_distinguishes_statutory_clauses_and_multiline_exemptions(
+    tmp_path: Path,
+) -> None:
+    """Verify statutory 4-part QCVN section citations and multiline allow-raw-ip spans pass while real IPs fail."""
+    sample = tmp_path / "consolidate_qcvn_sample.py"
+    sample.write_text(
+        'body_3 = """5.1.1.1  Việc trang bị cấp nước chữa cháy ngoài nhà.\n'
+        'Các cửa đi phải phù hợp với các yêu cầu tại 3.2.1.1.\n'
+        'Yêu cầu ngăn cách tuân thủ 2.4.3.3."""\n'
+        'EXEMPT_CFG = (\n'
+        '    "http://198.51.100.42:8090"\n'
+        ')  # ccba:allow-raw-ip\n'
+        'REAL_LEAK = "http://203.0.113.25:8080/api"\n',
+        encoding="utf-8",
+    )
+
+    violations = check_raw_ip_leakage([sample])
+    assert len(violations) == 1
+    assert violations[0][1] == 7
+    assert "203.0.113.25" in violations[0][2]
