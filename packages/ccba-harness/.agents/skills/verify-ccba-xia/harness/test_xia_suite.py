@@ -319,3 +319,123 @@ def test_feat_xia_008_mattpocock_v132_hybrid_adopt_and_tier2a_references() -> No
         text = path.read_text(encoding="utf-8")
         for marker in markers:
             assert marker in text, f"Missing marker {marker!r} in {rel_path}"
+
+
+def test_feat_xia_009_upstream_v22_delta_corpus_ledger_and_provenance(tmp_path: Path) -> None:
+    """Verifies FEAT-XIA-009: v2.2 radar license clamp, delta routing, corpus digest, ledger, and provenance."""
+    from scripts.spoke._upstream_helpers import (
+        build_corpus_digest,
+        clamp_license_policy,
+        classify_license_text,
+        evaluate_triage_gate,
+    )
+    from scripts.spoke.upstream_evaluator import call_ai_evaluation, evaluate_upstream_delta
+
+    runner = _load_runner_module()
+    repo_root: Path = runner.REPO_ROOT  # type: ignore[attr-defined]
+
+    # 1. COND-05: Unreachable sync_commit must fail closed with GIT_PROVENANCE_ERROR
+    bad_prov = runner.check_git_provenance(  # type: ignore[attr-defined]
+        "deadbeef00000000000000000000000000000000",
+        ["scripts/spoke/upstream_evaluator.py"],
+    )
+    assert bad_prov == ["GIT_PROVENANCE_ERROR"]
+
+    # 2. 6-Tier Dual License Classification & Post-Cache Clamp
+    lic_perm, _ = classify_license_text("Licensed under MIT OR Apache-2.0")
+    assert lic_perm == "PERMISSIVE"
+    lic_copy, _ = classify_license_text("Dual licensed under MIT OR GPL-3.0")
+    assert lic_copy == "COPYLEFT"
+
+    clamped = clamp_license_policy(
+        {"should_port": True, "actionable_steps": ["Run `/ccba-xia repo skill --port`"]},
+        "COPYLEFT",
+        "/ccba-xia repo skill --compare",
+    )
+    assert clamped["should_port"] is False
+    assert clamped["status_override"] == "COMPARE ONLY — LICENSE RESTRICTED"
+    assert "--compare" in clamped["actionable_steps"][0]
+
+    # 3. 3-Arg Duplicate Ignore vs UPSTREAM DELTA Evolution Routing
+    dup_res = call_ai_evaluation("mattpocock-skills", "grill-me", "# Grill Me", use_cache=False)
+    assert dup_res["should_port"] is False
+
+    delta_res = evaluate_upstream_delta(
+        "mattpocock-skills",
+        "grill-me",
+        "ccba-grilling",
+        "a1b2c3d4e5f60718",
+        ["grill-me/SKILL.md", "grill-me/references/flow.md"],
+        ".md/scratch/repos/mattpocock-skills",
+        "PERMISSIVE",
+    )
+    assert delta_res["status_override"] == "UPSTREAM DELTA"
+    assert delta_res["color_override"] == "🔵"
+    assert (
+        delta_res["xia_command"]
+        == "/ccba-xia .md/scratch/repos/mattpocock-skills grill-me --improve --since a1b2c3d4 --target ccba-grilling"
+    )
+
+    # 4. Bounded <= 30-line Corpus Digest & Shared triage_ledger Gate
+    corpus_dir = tmp_path / "pnp_corpus"
+    corpus_dir.mkdir()
+    for idx in range(36):
+        sub = corpus_dir / f"sample_{idx:02d}"
+        sub.mkdir()
+        (sub / "view.json").write_text("{}", encoding="utf-8")
+    digest = build_corpus_digest(corpus_dir)
+    assert len(digest.splitlines()) <= 30
+
+    ledger = [
+        {
+            "source": "pnp-list-formatting",
+            "upstream_path": ".",
+            "target": "ccba-sharepoint-iac",
+            "status": "ADOPTED",
+            "reviewed_sha": "11112222",
+        },
+        {
+            "source": "mattpocock-skills",
+            "upstream_path": "grill-me",
+            "target": "ccba-grilling",
+            "status": "DEFERRED",
+            "reviewed_sha": "33334444",
+        },
+    ]
+    act_unk, _ = evaluate_triage_gate(
+        ledger,
+        {"pnp-list-formatting"},
+        ".",
+        "ccba-sharepoint-iac",
+        corpus_dir,
+        "9999aaaa",
+        ".",
+    )
+    assert act_unk == "DELTA_UNKNOWN"
+    act_def, _ = evaluate_triage_gate(
+        ledger,
+        {"mattpocock-skills"},
+        "grill-me",
+        "ccba-grilling",
+        corpus_dir,
+        "9999aaaa",
+        "grill-me",
+    )
+    assert act_def == "DEFERRED"
+
+    # 5. Skill & Modes v2.2 Contract Markers
+    xia_text = (repo_root / ".agents" / "skills" / "ccba-xia" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    modes_text = (
+        repo_root / ".agents" / "skills" / "ccba-xia" / "references" / "modes.md"
+    ).read_text(encoding="utf-8")
+    for tok in (
+        "--since <sha>",
+        "--target <skill-name>",
+        "/ccba-build-skill",
+        "/ccba-skill-repair",
+    ):
+        assert tok in xia_text
+        assert tok in modes_text
+    assert "triage_ledger" in xia_text

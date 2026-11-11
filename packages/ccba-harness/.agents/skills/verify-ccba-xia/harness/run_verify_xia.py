@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import signal
 import socket
 import subprocess
@@ -291,7 +292,7 @@ def check_git_provenance(sync_commit: str, covered_paths: Sequence[str]) -> list
     cmd = ["git", "diff", "--name-only", f"{sync_commit}..HEAD", "--", *covered_paths]
     proc = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, check=False)
     if proc.returncode != 0:
-        return []
+        return ["GIT_PROVENANCE_ERROR"]
     return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
 
@@ -309,10 +310,12 @@ def verify_surface_diff(features_index: Path, test_suite: Path) -> list[str]:
         return ["MISSING_INDEX_OR_SUITE"]
     index_text = features_index.read_text(encoding="utf-8")
     suite_text = test_suite.read_text(encoding="utf-8").lower()
+    declared_ids = set(re.findall(r"FEAT-XIA-\d{3}", index_text))
+    expected_ids = {f"FEAT-XIA-00{idx}" for idx in range(1, 10)}
     missing: list[str] = []
-    for idx in range(1, 7):
-        feat_id = f"FEAT-XIA-00{idx}"
-        test_prefix = f"test_feat_xia_00{idx}_"
+    for feat_id in sorted(declared_ids | expected_ids):
+        suffix = feat_id.rsplit("-", 1)[-1].lower()
+        test_prefix = f"test_feat_xia_{suffix}_"
         if feat_id not in index_text or test_prefix not in suite_text:
             missing.append(feat_id)
     return missing

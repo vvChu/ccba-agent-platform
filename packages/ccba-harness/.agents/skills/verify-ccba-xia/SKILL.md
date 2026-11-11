@@ -69,7 +69,7 @@ flowchart TD
 - BẮT BUỘC dùng vòng lặp thăm dò HTTP readiness endpoint (`/healthz`) với timeout xác định (`10.0s`, chu kỳ `50ms`).
 
 ### 4. Evidence-Capture Test Suite (Thực Thi Kiểm Thử & Thu Thập Bằng Chứng)
-- Thực thi bộ kiểm thử hợp đồng `test_xia_suite.py` đối chiếu toàn bộ 6 tính năng trong `features/INDEX.md`.
+- Thực thi bộ kiểm thử hợp đồng `test_xia_suite.py` đối chiếu toàn bộ 9 tính năng trong `features/INDEX.md`.
 - Đối chứng đường lỗi Statechart (`Statechart Bug-Path Replay`) cho luồng 6 pha của `/ccba-xia`:
 
 ```mermaid
@@ -102,7 +102,7 @@ stateDiagram-v2
   ```bash
   .venv/bin/python packages/ccba-harness/.agents/skills/verify-ccba-xia/harness/run_verify_xia.py
   ```
-- **Tiêu chí hoàn thành:** Kịch bản thực thi trọn vẹn cả 5 khối, toàn bộ 6 bài kiểm thử trong `test_xia_suite.py` vượt qua 100%, tiến trình con được dọn sạch và lệnh thoát với `exit code 0`.
+- **Tiêu chí hoàn thành:** Kịch bản thực thi trọn vẹn cả 5 khối, toàn bộ 9 bài kiểm thử trong `test_xia_suite.py` vượt qua 100%, tiến trình con được dọn sạch và lệnh thoát với `exit code 0`.
 
 ### Bước 2: Kiểm Tra Nguồn Gốc Thay Đổi Khi Phát Sinh Lỗi (`Pre-Remediation Provenance Check`)
 - Đối chiếu `git diff <sync_commit>..HEAD` trên các tệp thuộc `covered_paths` (`.agents/skills/ccba-xia/SKILL.md`, `.agents/skills/ccba-xia/references/modes.md`, `scripts/spoke/upstream_evaluator.py`, `scripts/spoke/_upstream_helpers.py`, `docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md`).
