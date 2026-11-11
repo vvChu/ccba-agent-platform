@@ -90,11 +90,20 @@ LIVING_DOC_BANNED_TOKENS: tuple[tuple[str, str], ...] = (
     ("gemma-3-27b", "Retired model 'gemma-3-27b'"),
     ("Qwen3.5-35B", "Deprecated local model checkpoint 'Qwen3.5-35B' (use 'Qwen3.6-35B-A3B-FP8')"),
     ("Qwen 35B", "Outdated local model label 'Qwen 35B' (use 'Qwen 3.6 35B')"),
-    ("qwen-3.5-35b", "Deprecated local model alias 'qwen-3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')"),
-    ("qwen3.5-35b", "Deprecated local model name 'qwen3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')"),
+    (
+        "qwen-3.5-35b",
+        "Deprecated local model alias 'qwen-3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')",
+    ),
+    (
+        "qwen3.5-35b",
+        "Deprecated local model name 'qwen3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')",
+    ),
     ("vllm-35b", "Deprecated vLLM service/job name 'vllm-35b' (use 'vllm-36b' or 'qwen36b')"),
     ("smart-brain", "Deprecated model alias 'smart-brain' (use 'tier-fast' or 'rag-core')"),
-    ("smartest-brain", "Deprecated model alias 'smartest-brain' (use 'tier-reasoning' or 'rag-core')"),
+    (
+        "smartest-brain",
+        "Deprecated model alias 'smartest-brain' (use 'tier-reasoning' or 'rag-core')",
+    ),
     ("ocr-tier3", "Removed OCR tier alias 'ocr-tier3' (use 'ocr-tier4' or 'ocr-proxy')"),
     ("legal_docs_v3", "Deprecated Milvus collection 'legal_docs_v3' (use 'legal_docs_v12_okf')"),
     ("legal_docs_v11", "Deprecated Milvus collection 'legal_docs_v11' (use 'legal_docs_v12_okf')"),
@@ -256,7 +265,7 @@ def _resolve_py_doc_and_exempt_lines(
             if isinstance(node, ast.stmt):
                 start = getattr(node, "lineno", 0)
                 end = getattr(node, "end_lineno", start) or start
-                span = raw_lines[max(0, start - 1): min(len(raw_lines), end)]
+                span = raw_lines[max(0, start - 1) : min(len(raw_lines), end)]
                 if any(exempt_marker in sl for sl in span):
                     exempt_lines.update(range(start, end + 1))
     return True, doc_lines, exempt_lines
@@ -283,7 +292,11 @@ def check_machine_state_leakage(
             if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                (line_num in doc_lines or line_num in exempt_lines if is_py else (was_in_docstring or in_docstring))
+                (
+                    line_num in doc_lines or line_num in exempt_lines
+                    if is_py
+                    else (was_in_docstring or in_docstring)
+                )
                 or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-machine-path" in stripped
                 or "noqa" in stripped
@@ -569,7 +582,7 @@ def check_raw_model_leakage(
                 end_lineno = getattr(node, "end_lineno", lineno) or lineno
                 if lineno in docstring_linenos or lineno <= 0 or lineno > len(lines):
                     continue
-                span_lines = lines[max(0, lineno - 1): min(len(lines), end_lineno)]
+                span_lines = lines[max(0, lineno - 1) : min(len(lines), end_lineno)]
                 if any("ccba:allow-raw-model" in sl for sl in span_lines) or val in allowed_aliases:
                     continue
                 if (
@@ -715,7 +728,11 @@ def check_raw_ip_leakage(
             if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                (line_num in doc_lines or line_num in exempt_lines if is_py else (was_in_docstring or in_docstring))
+                (
+                    line_num in doc_lines or line_num in exempt_lines
+                    if is_py
+                    else (was_in_docstring or in_docstring)
+                )
                 or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-raw-ip" in stripped
             ):
@@ -892,7 +909,9 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="CCBA Spoke Cleanliness & Script Budget Checker (ADR 0044 / Issue #215)"
     )
-    parser.add_argument("--path", "-p", default=".", help="Target Spoke root directory (default: current dir)")
+    parser.add_argument(
+        "--path", "-p", default=".", help="Target Spoke root directory (default: current dir)"
+    )
     parser.add_argument(
         "--max-scripts",
         type=int,

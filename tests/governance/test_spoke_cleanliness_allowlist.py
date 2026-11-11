@@ -153,11 +153,11 @@ def test_raw_ip_scanner_distinguishes_statutory_clauses_and_multiline_exemptions
     sample = tmp_path / "consolidate_qcvn_sample.py"
     sample.write_text(
         'body_3 = """5.1.1.1  Việc trang bị cấp nước chữa cháy ngoài nhà.\n'
-        'Các cửa đi phải phù hợp với các yêu cầu tại 3.2.1.1.\n'
+        "Các cửa đi phải phù hợp với các yêu cầu tại 3.2.1.1.\n"
         'Yêu cầu ngăn cách tuân thủ 2.4.3.3."""\n'
-        'EXEMPT_CFG = (\n'
+        "EXEMPT_CFG = (\n"
         '    "http://198.51.100.42:8090"\n'
-        ')  # ccba:allow-raw-ip\n'
+        ")  # ccba:allow-raw-ip\n"
         'REAL_LEAK = "http://203.0.113.25:8080/api"\n',
         encoding="utf-8",
     )

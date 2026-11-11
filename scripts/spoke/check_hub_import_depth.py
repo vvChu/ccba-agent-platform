@@ -342,7 +342,7 @@ def scan_file(
                 if is_violation:
                     line_num = node.lineno
                     end_line = getattr(node, "end_lineno", line_num) or line_num
-                    span_lines = lines[max(0, line_num - 1): min(len(lines), end_line)]
+                    span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
                     if any(m in sl for sl in span_lines for m in exempt_markers):
                         continue
                     line_content = (
@@ -363,7 +363,7 @@ def scan_file(
                     if is_violation:
                         line_num = node.lineno
                         end_line = getattr(node, "end_lineno", line_num) or line_num
-                        span_lines = lines[max(0, line_num - 1): min(len(lines), end_line)]
+                        span_lines = lines[max(0, line_num - 1) : min(len(lines), end_line)]
                         if any(m in sl for sl in span_lines for m in exempt_markers):
                             continue
                         line_content = (
