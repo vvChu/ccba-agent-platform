@@ -289,6 +289,15 @@ def main() -> None:
             ]
             if (project_root / "scripts/tests").exists():
                 test_args.append("scripts/tests")
+            verify_skills_root = project_root / "packages" / "ccba-harness" / ".agents" / "skills"
+            if verify_skills_root.is_dir():
+                test_args.extend(
+                    sorted(
+                        str(h.relative_to(project_root))
+                        for h in verify_skills_root.glob("verify-ccba-*/harness")
+                        if h.is_dir()
+                    )
+                )
 
         # Gate 3: Pytest Unit Tests
         marker_expr = "not slow" if args.stress else "not slow and not stress"

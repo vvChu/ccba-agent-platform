@@ -16,8 +16,8 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.0
-sync_commit: "8c731731931966faaba6cc2571fedde11301c6c8"
+  version: 1.0.1
+sync_commit: "c62cc569fe0a70a74dd8b86d339276186f0fde6f"
 verification_mode:
   - scaffold
   - sync
@@ -39,7 +39,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 5 bước của `.agents/skills/ccba-create-pr/SKILL.md`, khuôn mẫu `.github/pull_request_template.md`, rào chắn Zero-Polling Policy (`RULE-4.8`), quy chuẩn lưu walkthrough (`.md/knowledge/reports/walkthrough.md` — `RULE-4.10`), cùng ánh xạ `scripts/spoke/sync/coordinator.py` và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `8c731731931966faaba6cc2571fedde11301c6c8` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit`)**: Neo tại commit `c62cc569fe0a70a74dd8b86d339276186f0fde6f` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
 
 ---
 
