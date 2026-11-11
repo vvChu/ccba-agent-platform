@@ -23,7 +23,7 @@ disable-model-invocation: true
 bundle: _software
 tier: kernel
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "CCBA Hub"
 triggers:
 - grill
@@ -120,7 +120,8 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 ## Tiêu chí hoàn thành (Completion Criteria)
 *   [x] Mọi câu hỏi ở Frontier đã được thảo luận và có phản hồi rõ ràng từ người dùng.
 *   [x] Không còn giả định mầm (silent assumptions) hay sương mù chưa được làm rõ trên Cây thiết kế.
-*   [x] Xuất ra biên bản tổng hợp quyết định (Decision Log / Resolution Summary) sau khi kết thúc phỏng vấn.
+*   [x] Xuất ra biên bản tổng hợp quyết định (Decision Log / Resolution Summary) sau khi kết thúc phỏng vấn; mọi liên kết trong biên bản lưu kho bắt buộc dùng đường dẫn tương đối chuẩn repo (cấm lược đồ URI tệp cục bộ tuyệt đối theo `RULE-3.5`, đối chiếu đúng tên tệp thực tế `docs/adr/NNNN-*.md`).
+*   [x] Nếu ghi biên bản mới vào `.md/knowledge/` (ví dụ `.md/knowledge/decisions/*.md` hoặc `.md/knowledge/questionnaires/*.md`), đăng ký ngay đường dẫn tệp vào `.md/knowledge/index.md` và cập nhật `.md/knowledge/log.md` để `wiki_health_linter.py` và `validate_docs.py --changed` đạt mã thoát `0` (`RULE-2.22`).
 *   [x] Tự động cập nhật lại bản Kế hoạch triển khai (`implementation_plan.md`) nếu cuộc thảo luận dẫn đến thay đổi thiết kế hoặc cách tiếp cận kỹ thuật.
 
 ---

@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.2
+  version: 1.6.3
 bundle: _core
 tier: kernel
 triggers:
@@ -57,12 +57,13 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
 ## Quy trình Thực hiện (Process)
 
 ### Bước 1: Thu thập & Chắt lọc Tri thức (Evidence-Backed Learnings)
-- Đọc [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) để nắm context 5 Miền Kiến Trúc (ADR-0057) hiện tại và chống trùng lặp:
+- Đọc [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) để nắm context 6 Miền Kiến Trúc (ADR-0057, ADR-0060) hiện tại và chống trùng lặp:
   1. **Architecture & Governance** (Miền 1)
   2. **Code Quality & Testing** (Miền 2)
   3. **Legal & Data Standards** (Miền 3)
   4. **Workflows & Review** (Miền 4)
   5. **Windows & Tooling** (Miền 5)
+  6. **Context Graph & Institutional Identity** (Miền 6)
 - **Quy chuẩn Tiered Memory Model (ADR-0030, ADR-0057):**
   * Ngân sách trần cứng của `session_learnings.md` là $\le 10.0\text{ KB}$ (10,240 bytes).
   * Chỉ ghi nhận các quy tắc cô đọng dạng `RULE-X.Y` (ngắn gọn, tập trung vào Invariants).
@@ -87,7 +88,8 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   # Tại Spoke:
   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --file .md/knowledge/session_learnings.md --stats
   ```
-  Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes) hoặc trần 115 dòng (tại Spoke), thực hiện nén và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
+  Nếu kích thước vượt quá hoặc tiệm cận $10.0\text{ KB}$ (10,240 bytes) hoặc trần 115 dòng (tại Spoke), thực hiện nén câu chữ tại chỗ trong `session_learnings.md` và lưu trữ bug narratives chi tiết vào [`.md/knowledge/archive/session_learnings_history.md`](../../../.md/knowledge/archive/session_learnings_history.md).
+  * **Cấm Ghi đè Mù quáng bằng Khuôn mẫu Tĩnh (`RULE-2.22`):** Tuyệt đối không chạy `compact_session_learnings.py --compact` để ghi đè `session_learnings.md` bằng khuôn mẫu tĩnh nếu tệp hiện hành đã tích lũy các mục `RULE-\d+\.\d+` mới hơn khuôn mẫu (`find_dropped_rules` sẽ chặn với mã thoát `1`). Luôn nén câu chữ trực tiếp trên tập `RULE-X.Y` hiện hành để bảo toàn 100% định danh cho `ZeroDeletionGuard`.
   * **Bất biến Bảo toàn Điều kiện Biên (Scope Qualifier Preservation):** Khi rút gọn một `RULE-X.Y`, **bắt buộc** giữ nguyên phạm vi áp dụng cụ thể (tên cờ CLI như `--deny`, tên module, hoặc hệ điều hành) và đối chiếu chéo với bản ghi gốc trong `session_learnings_history.md`. Tuyệt đối không lược bỏ phạm vi hẹp khiến quy tắc bị khái quát hóa quá mức (over-generalization) và xung đột với các ADR nền tảng (như ADR-0060).
 - Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
@@ -98,7 +100,7 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   # Tại Spoke:
   python scripts/sync_adr_matrix.py
   ```
-- Giữ nguyên cấu trúc phân loại theo 5 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
+- Giữ nguyên cấu trúc phân loại theo 6 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
 - **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$ mà không làm mất điều kiện biên của các `RULE-X.Y`, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
 
 ### Bước 3: Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop) & Recompilation Gate
@@ -170,8 +172,10 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 - **Vượt cổng `simplify_gate` an toàn (Commit Bypass Protocol — RULE-2.10):**
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
-- **Commit toàn bộ thay đổi:** Tạo commit với message chuẩn `docs(knowledge): session retrospective ...`.
-- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked, tài nguyên canonical `.agents/teams/` được bảo toàn), và commit thành công tuân thủ rào chắn `simplify_gate`.
+- **Commit & Nộp PR tuân thủ Rào chắn Hub (`RULE-4.21`):**
+  * Tại Spoke cho phép commit trực tiếp: tạo commit với message chuẩn `docs(knowledge): session retrospective ...`.
+  * Tại Hub (`ccba-agent-platform`, nơi `.githooks/pre-push` chặn đẩy trực tiếp lên `main`): tạo nhánh PR riêng (`docs/session-retrospective-...` hoặc `fix/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create -F <body_file> --assignee "@me"`. Nếu nhánh `main` cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, thực thi toàn bộ Bước 2–5 trên một `git worktree` cô lập tách từ `origin/main` (không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận).
+- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked, tài nguyên canonical `.agents/teams/` được bảo toàn), và commit/PR thành công tuân thủ rào chắn `simplify_gate` cùng `pre-push`.
 
 ### Bước 6: Xuất Báo cáo Tóm tắt (Session Retrospective Summary)
 Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
