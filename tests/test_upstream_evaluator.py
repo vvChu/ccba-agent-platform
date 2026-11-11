@@ -906,3 +906,125 @@ def test_governance_config_prune_sha_and_blobless_clone(tmp_path: Path) -> None:
     out = rec_md.read_text(encoding="utf-8")
     assert "simulated approval" not in out and "🟠 [COMPARE ONLY — LICENSE RESTRICTED]" in out
     assert "Keep ADR-0040 history here" in out
+
+
+def test_upstream_delta_collapsing_acmr_guard_and_repo_upsert(tmp_path: Path) -> None:
+    """Verify subfile collapsing, UPSTREAM DELTA routing/clamping, ACMR SHA guard, and (repo, skill) upsert."""
+    from unittest.mock import MagicMock
+
+    repo = tmp_path / "impeccable"
+    (repo / ".git").mkdir(parents=True)
+    (repo / "LICENSE").write_text("MIT License\nPermission is hereby granted...", encoding="utf-8")
+    (repo / "skills" / "polish").mkdir(parents=True)
+    (repo / "skills" / "polish" / "SKILL.md").write_text("# Polish", encoding="utf-8")
+    recs, sha_f = tmp_path / "recs.md", tmp_path / "sha.txt"
+    sha_f.write_text("1111222233334444", encoding="utf-8")
+
+    def ok_git(cmd: list[str], **kw: object) -> MagicMock:
+        r = MagicMock(returncode=0, stdout="")
+        if "diff" in cmd:
+            r.stdout = "M\tskills/polish/references/a.md\nM\tskills/polish/scripts/b.py\n"
+        elif "show" in cmd:
+            r.stdout = "# Changed content"
+        return r
+
+    ev = UpstreamEvaluator()
+    with (
+        patch("scripts.spoke.upstream_evaluator.RECOMMENDATIONS_FILE", recs),
+        patch(
+            "scripts.spoke.upstream_evaluator.get_existing_elements",
+            return_value=(["ccba-design"], []),
+        ),
+        patch("subprocess.run", side_effect=ok_git),
+    ):
+        assert (
+            ev.evaluate_repo_diff(
+                repo,
+                "1111222233334444",
+                "99998888",
+                "impeccable",
+                "https://g.co/i",
+                ".md/scratch/repos/impeccable",
+            )
+            is True
+        )
+        append_recommendation(
+            "web-quality-skills",
+            "polish",
+            {"should_port": True, "score": 80, "reason": "Other repo"},
+            "https://g.co/w",
+        )
+    txt = recs.read_text(encoding="utf-8")
+    assert "🔵 [UPSTREAM DELTA]" in txt and "--improve --since 11112222 --target ccba-design" in txt
+    assert txt.count("Skill: `polish`") == 2
+
+    cfg = {
+        "name": "impeccable",
+        "type": "impeccable",
+        "local_path": repo,
+        "remote_url": "https://github.com/pbakaus/impeccable",
+        "branch": "main",
+        "sha_file": sha_f,
+    }
+
+    def broken_blob(cmd: list[str], **kw: object) -> MagicMock:
+        if "diff" in cmd:
+            return MagicMock(returncode=0, stdout="M\tskills/missing/SKILL.md\n")
+        return MagicMock(returncode=128, stdout="")
+
+    with (
+        patch.object(ev, "get_remote_sha", return_value="9999888877776666"),
+        patch.object(ev, "ensure_local_repo", return_value=True),
+        patch("subprocess.run", side_effect=broken_blob),
+    ):
+        ev.check_and_evaluate_single(cfg)
+    assert sha_f.read_text(encoding="utf-8") == "1111222233334444"
+
+
+def test_seam_routing_parse_fallback_and_github_archived_badge() -> None:
+    """Verify choose_model('audit') + max_tokens=2048 + parse_llm_json fallback and ARCHIVED badge."""
+    from unittest.mock import MagicMock
+
+    import scripts.spoke._upstream_helpers as uh
+
+    mock_ai = MagicMock()
+    mock_ai.chat.return_value = "<think>reasoning</think>\nNot valid JSON at all!"
+    with (
+        patch("scripts.spoke.upstream_evaluator.ai", mock_ai),
+        patch("scripts.spoke.upstream_evaluator.get_existing_elements", return_value=([], [])),
+    ):
+        res = call_ai_evaluation(
+            "engineer", "novel-skill", "# Skill", "https://github.com/o/r", use_cache=False
+        )
+    call_kw = mock_ai.chat.call_args.kwargs
+    assert call_kw["max_tokens"] == 2048 and call_kw.get("model") is not None
+    assert res["should_port"] is True
+
+    with (
+        patch("shutil.which", return_value="/usr/bin/gh"),
+        patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="true\n")),
+    ):
+        assert (
+            uh.check_github_archived(
+                "https://github.com/org/archived-repo.git", _allow_in_pytest=True
+            )
+            is True
+        )
+    badge = format_vitality_badge(
+        {
+            "commits_count": 10,
+            "last_commit_date": "2025-01-01",
+            "age_days": 200,
+            "stale": True,
+            "archived": True,
+            "ref": "HEAD",
+            "error": None,
+        }
+    )
+    assert "⚠️ STALE_UPSTREAM" in badge and "🏛️ ARCHIVED" in badge
+    assert (
+        generate_xia_command(
+            ".md/r", "sk", "--improve", since_sha="abcd1234", target_skill="ccba-x"
+        )
+        == "/ccba-xia .md/r sk --improve --since abcd1234 --target ccba-x"
+    )
