@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.5
+  version: 1.6.6
 bundle: _core
 tier: kernel
 triggers:
@@ -97,8 +97,8 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   ```bash
   # Tại Hub:
   python scripts/sync_hub_adr_matrix.py
-  # Tại Spoke:
-  python scripts/sync_adr_matrix.py
+  # Tại Spoke (chế độ Two-Tier Matrix qua CCBA_HUB_PATH):
+  python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/sync_hub_adr_matrix.py" --spoke-dir .
   ```
 - Giữ nguyên cấu trúc phân loại theo 6 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
 - **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$ mà không làm mất điều kiện biên của các `RULE-X.Y`, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
@@ -132,35 +132,48 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 2. **Bộ 4 lệnh kiểm tra cốt lõi:**
    - Kiểm tra tính hợp lệ & chỉ số GPI của Skills:
      ```bash
+     # Trên Hub:
      python scripts/validate_skills.py --enforce-gpi
+     # Trên Spoke:
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validate_skills.py" --enforce-gpi .agents/skills
      ```
    - Kiểm tra sức khỏe LLM-Wiki Knowledge Hub:
      ```bash
+     # Trên Hub:
      python scripts/governance/wiki_health_linter.py
+     # Trên Spoke:
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/wiki_health_linter.py"
      ```
    - Kiểm tra ngân sách bộ nhớ `session_learnings.md` ($\le 10.0\text{ KB}$):
      ```bash
      # Trên Hub:
      python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
-     # Trên Spoke (để kiểm định đúng SPOKE_REQUIRED_INVARIANTS thay vì mặc định hub):
+     # Trên Spoke (dùng --profile spoke cho ccba-legal-knowledge; với Spoke hạ tầng riêng dùng --stats + kiểm tra <= 10240 bytes):
      python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
      ```
    - Kiểm tra tài liệu, biến môi trường & Architecture Drift (khớp cờ `.github/workflows/validate-docs.yml`):
      ```bash
+     # Trên Hub:
      python scripts/validate_docs.py . --src scripts,packages --changed
+     # Trên Spoke:
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validate_docs.py" --changed
      ```
      *Nếu phát hiện cảnh báo Structural Drift hoặc thiếu biến môi trường, Agent phải cập nhật ngay `README.md`, `PLATFORM.md`, và `.env.example` trước khi tiếp tục.*
 3. **Bộ test quản trị scoped nhanh (< 20s):**
    ```bash
+   # Trên Hub:
    python -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q
+   # Trên Spoke:
+   python scripts/_guardrails/check_spoke_cleanliness.py && python scripts/_guardrails/check_hub_import_depth.py
    ```
 4. **Khóa cứng hoàn tất tất định (ADR-0058 Hard Completion Lock):**
    ```bash
+   # Trên Hub (hoặc worktree Hub qua --cwd <worktree_path>):
    python -m ccba_harness verify-patch --preset skill
-   # Khi chạy trong git worktree cô lập, truyền --cwd <worktree_path> (verify-patch nhận --cwd, không nhận --root):
-   python -m ccba_harness verify-patch --preset skill --cwd <worktree_path>
+   # Trên Spoke (do --preset skill giả định scripts/* tại gốc Hub, dùng --preset doc kết hợp --cmd trỏ qua CCBA_HUB_PATH):
+   python -m ccba_harness verify-patch --preset doc --target .md/knowledge/session_learnings.md
    ```
-- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm tra cốt lõi, scoped test suite và khóa cứng `verify-patch --preset skill` đều trả về Exit code 0 (100% PASS). Agent nghiêm cấm báo cáo hoàn thành hoặc yêu cầu người dùng nghiệm thu nếu có bất kỳ kiểm định nào thất bại. Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` — đây là chấp nhận được; chỉ khi Exit code 1 (`[ERROR]`) mới chặn hoàn tất.
+- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm tra cốt lõi, scoped test suite/guardrails và khóa cứng `verify-patch` đều trả về Exit code 0 (100% PASS). Agent nghiêm cấm báo cáo hoàn thành hoặc yêu cầu người dùng nghiệm thu nếu có bất kỳ kiểm định nào thất bại. Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` — đây là chấp nhận được; chỉ khi Exit code 1 (`[ERROR]`) mới chặn hoàn tất.
 
 ### Bước 5: Dọn dẹp Tự động & Commit Bypass (Workspace & Git Clean)
 - **Dọn dẹp tự động qua công cụ nền tảng:**
