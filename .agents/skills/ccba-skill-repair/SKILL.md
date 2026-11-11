@@ -26,7 +26,7 @@ Kỹ năng này điều phối quy trình khảo sát, phân loại kiến trúc
 - **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel chuyên trách chẩn đoán và phục hồi tệp `SKILL.md`, phối hợp trực tiếp với các CLI kiểm định chính thức (`validate_skills.py`, `ccba_harness validate-skill`, `evaluate-gpi`, `verify-patch --preset skill`). Các card trong `seam-contracts.yaml` không bao phủ nghiệp vụ sửa chữa đặc tả kỹ năng, do đó kỹ năng mang tư thế `seam-exempt` và tuyệt đối không sinh thêm script Python ad-hoc cục bộ.
 - **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (`s: 3.0, k: 2.0, a: 1.0, p: 1.0`) = `12.0 >= 12.0` (thuộc nhánh Tier 2B và nằm trong dải trễ hysteresis `[11.5, 12.5)`). Khối `gpi` một dòng được khóa bất biến và kỹ năng không sử dụng thư mục `references/` phụ trợ.
 
-## 🤝 Hợp Đồng Phân Vai Với `/ccba-build-skill` v1.1.0
+## 🤝 Hợp Đồng Phân Vai Với `/ccba-build-skill` v1.1.1
 
 Để ngăn ngừa xung đột ngữ nghĩa giữa quy trình tạo mới (Greenfield) và quy trình bảo trì (Maintenance):
 - **Greenfield (`/ccba-build-skill`):** Cấm truyền cờ `--existing-tier` ở bước tính GPI ban đầu (bắt buộc vượt ngưỡng trần `GPI >= 12.0`) và cấm chỉnh sửa bất kỳ hệ số `s, k, a, p` nào trong vòng tự sửa lỗi.

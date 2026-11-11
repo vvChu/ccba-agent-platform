@@ -254,12 +254,26 @@ def test_feat_grill_007_surface_diff_and_domain_eval_parity() -> None:
     missing_feats = runner.verify_surface_diff(features_idx, suite_file)  # type: ignore[attr-defined]
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
+    verify_skill_md = (
+        repo_root
+        / "packages"
+        / "ccba-harness"
+        / ".agents"
+        / "skills"
+        / "verify-ccba-grilling"
+        / "SKILL.md"
+    )
+    verify_fm = yaml.safe_load(verify_skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+    sync_commit = str(verify_fm["sync_commit"])
+    covered_paths: list[str] = list(verify_fm["covered_paths"])
+    covered_sha256: dict[str, str] = dict(verify_fm["covered_sha256"])
+    assert sync_commit == "6c36e4112e95d433dc6633ec1f2e172c7b8d089f"
+    assert set(covered_sha256.keys()) == set(covered_paths)
+
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "9948fdf18663ae2609edf06ae0cbdbd4c87f8f4a",
-        [
-            ".agents/skills/ccba-grilling/SKILL.md",
-            ".agents/skills/ccba-grilling/references/to-questionnaire.md",
-        ],
+        sync_commit,
+        covered_paths,
+        expected_sha256=covered_sha256,
     )
     assert changed == []
 
@@ -269,3 +283,43 @@ def test_feat_grill_007_surface_diff_and_domain_eval_parity() -> None:
     eval_rep = opt.evaluate_content(skill_file.read_text(encoding="utf-8"))
     assert eval_rep.overall_score == 100.0
     assert eval_rep.passed_items == eval_rep.total_items == 2
+
+
+def test_check_git_provenance_fail_closed() -> None:
+    """Verifies check_git_provenance fails closed on unreachable commit or tampered SHA-256."""
+    runner = _load_runner_module()
+    repo_root: Path = runner.REPO_ROOT  # type: ignore[attr-defined]
+    verify_skill_md = (
+        repo_root
+        / "packages"
+        / "ccba-harness"
+        / ".agents"
+        / "skills"
+        / "verify-ccba-grilling"
+        / "SKILL.md"
+    )
+    verify_fm = yaml.safe_load(verify_skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+    sync_commit = str(verify_fm["sync_commit"])
+    covered_paths: list[str] = list(verify_fm["covered_paths"])
+    covered_sha256: dict[str, str] = dict(verify_fm["covered_sha256"])
+
+    missing_sha = "deadbeef" * 5
+    assert runner.check_git_provenance(  # type: ignore[attr-defined]
+        missing_sha,
+        covered_paths,
+    ) == [f"UNVERIFIABLE_SYNC_COMMIT:{missing_sha}"]
+
+    if not runner._is_shallow_repo():  # type: ignore[attr-defined]
+        assert runner.check_git_provenance(  # type: ignore[attr-defined]
+            missing_sha,
+            covered_paths,
+            expected_sha256=covered_sha256,
+        ) == [f"UNVERIFIABLE_SYNC_COMMIT:{missing_sha}"]
+
+    tampered = dict(covered_sha256)
+    tampered[".agents/skills/ccba-grilling/SKILL.md"] = "0" * 64
+    assert runner.check_git_provenance(  # type: ignore[attr-defined]
+        sync_commit,
+        covered_paths,
+        expected_sha256=tampered,
+    ) == [".agents/skills/ccba-grilling/SKILL.md"]
