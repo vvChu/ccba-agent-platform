@@ -26,13 +26,15 @@ Kỹ năng này thực hiện quy trình đánh giá thể chế kiến trúc (A
       * Kiểm tra xem frontmatter có khai báo đầy đủ khối `gpi: {s, k, a, p}` hay không.
       * Chạy lệnh CLI kiểm định trực tiếp:
         ```bash
-        python -m ccba_harness.cli evaluate-gpi --file <path-to-skill.md>
+        python -m ccba_harness.cli evaluate-gpi --file <path-to-skill.md> --json
         ```
       * Tính toán chỉ số GPI theo công thức RES-2026-ARCH-001 v1.2:
         $$GPI = (s \times 2.5) + (k \times 2.0) + (a \times 2.0) - (p \times 1.5)$$
       * **Tiêu chí từ chối (Rejection Criteria):**
-        - Nếu $GPI < 12.0 $\rightarrow$ **TỪ CHỐI** cấp phép Standalone Kernel Skill (Tier 2B). Bắt buộc yêu cầu gộp thành tài liệu tham chiếu lũy tiến Tier 2A (`references/*.md`) thuộc Master Skill phù hợp.
+        - Nếu $GPI < 12.0$ hoặc JSON trả về `allow_standalone_skill: false` $\rightarrow$ **TỪ CHỐI** cấp phép Standalone Kernel Skill (Tier 2B). Bắt buộc yêu cầu gộp thành tài liệu tham chiếu lũy tiến Tier 2A (`references/*.md`) thuộc Master Skill phù hợp.
         - Nếu thư mục `scripts/` của skill chứa mã nguồn > 100 LOC $\rightarrow$ **TỪ CHỐI** (vi phạm rào chắn Chống Script Bloat - RES-2026-ARCH-001). Bắt buộc chuyển mã nguồn thành Deep Seams trong các gói monorepo `packages/*/src/`.
+        - Nếu kỹ năng Tier 2B thiếu tệp ca kiểm thử mẫu `eval_<stem>.json` tại `.agents/skills/ccba-eval-gate/test_cases/` hoặc tên tệp không khớp với `resolve_domain_dataset()` $\rightarrow$ **TỪ CHỐI**.
+        - Nếu vòng tự sửa lỗi (Self-Healing) sửa đổi các hệ số $s, k, a, p$ trong `gpi:` hoặc vượt quá trần 2 lần thử lại $\rightarrow$ **TỪ CHỐI**.
     - **Kiểm tra Linter & Quy chuẩn:**
       * Kiểm tra độ dài mô tả `description` trong frontmatter (đối với kỹ năng model-invoked, bắt buộc dưới **180 ký tự**).
       * Kiểm tra xem mọi bước hướng dẫn trong các phần quy trình (dưới tiêu đề `Process` hoặc `Quy trình`) có chứa dòng `Tiêu chí hoàn thành:` hoặc `Completion Criterion:` hay chưa. Khi skill có nhiều nhánh (branches), kiểm tra Completion Criterion cho từng nhánh chứa steps.

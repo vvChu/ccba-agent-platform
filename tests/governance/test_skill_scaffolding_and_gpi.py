@@ -546,6 +546,40 @@ def test_updated_phase1_skills_pass_enforce_gpi() -> None:
     assert authoring_ref.exists()
 
 
+def test_ccba_build_skill_v110_contractual_invariants() -> None:
+    """Verify ccba-build-skill v1.1.0 and references contain all required contractual tokens from Grok review."""
+    build_skill_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-build-skill" / "SKILL.md"
+    assert build_skill_path.exists()
+    content = build_skill_path.read_text(encoding="utf-8")
+
+    # Contractual tokens in SKILL.md
+    assert 'version: "1.1.0"' in content
+    assert "CCBA_HUB_PATH" in content
+    assert "evaluate-gpi --name" in content
+    assert "--json" in content
+    assert "allow_standalone_skill" in content
+    assert "eval_<stem>.json" in content
+    assert "resolve_domain_dataset" in content
+    assert "Self-Healing Loop" in content
+    assert "2 lần thử lại" in content or "tối đa 2 lần" in content
+
+    # Contractual tokens in skill_authoring_guide.md
+    guide_path = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-build-skill"
+        / "references"
+        / "skill_authoring_guide.md"
+    )
+    assert guide_path.exists()
+    guide_content = guide_path.read_text(encoding="utf-8")
+    assert "evaluate-gpi" in guide_content
+    assert "allow_standalone_skill" in guide_content
+    assert "CCBA_HUB_PATH" in guide_content
+    assert "eval_<stem>.json" in guide_content
+
+
 def test_updated_phase2_skills_pass_enforce_gpi() -> None:
     """Verify that ccba-eval-gate and ccba-update-spoke pass --enforce-gpi validation."""
     auditor = SkillAuditor(PROJECT_ROOT)
