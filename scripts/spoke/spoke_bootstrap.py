@@ -36,6 +36,27 @@ def _safe_load_yaml(filepath: Path) -> dict[str, Any]:
         return {}
 
 
+SPOKE_HYGIENE_GITIGNORE_RULES: tuple[str, ...] = (
+    "requirements-hub.txt",
+    ".md/teach/",
+    ".md/scratch/",
+    ".md/backups/",
+    ".md/peer_exchange/.bridge_cache.json",
+    ".md/peer_exchange/*.lock",
+    ".md/peer_exchange/status.json",
+    ".md/peer_exchange/*.md",
+    "!.md/peer_exchange/PEER_HANDSHAKE.md",
+    "!.md/peer_exchange/README.md",
+    "!.md/peer_exchange/.gitkeep",
+    ".md/data/telemetry_summary.json",
+    ".md/data/*.json",
+    ".tmp/",
+    ".out-of-scope/",
+    ".skill_versions/",
+    "**/.skill_versions/",
+)
+
+
 DEFAULT_PACKAGE_TOPOLOGY_ORDER: list[str] = [
     "ccba-harness",
     "ccba-ai",
@@ -540,18 +561,7 @@ class SpokeBootstrapper:
     def ensure_gitignore_rule(self, dry_run: bool = False) -> bool:
         """Ensures requirements-hub.txt and Spoke Leakage Guard rules are included in .gitignore."""
         gitignore_path = self.spoke_root / ".gitignore"
-        rules = [
-            "requirements-hub.txt",
-            ".md/teach/",
-            ".md/scratch/",
-            ".md/peer_exchange/.bridge_cache.json",
-            ".md/data/telemetry_summary.json",
-            ".md/data/*.json",
-            ".tmp/",
-            ".out-of-scope/",
-            ".skill_versions/",
-            "**/.skill_versions/",
-        ]
+        rules = list(SPOKE_HYGIENE_GITIGNORE_RULES)
 
         if not gitignore_path.exists():
             if not dry_run:
@@ -560,7 +570,10 @@ class SpokeBootstrapper:
             return True
 
         content = gitignore_path.read_text(encoding="utf-8")
-        missing_rules = [r for r in rules if r not in content]
+        existing_lines = {line.strip() for line in content.splitlines()}
+        missing_rules = [
+            r for r in rules if r not in existing_lines and r.rstrip("/") not in existing_lines
+        ]
         if not missing_rules:
             return False
 

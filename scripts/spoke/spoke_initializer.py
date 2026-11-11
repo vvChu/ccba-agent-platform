@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from scripts.spoke.spoke_adopter import install_security_guardrails
+from scripts.spoke.spoke_bootstrap import SPOKE_HYGIENE_GITIGNORE_RULES
 from scripts.spoke.sync.coordinator import merge_agents_constitution
 
 DEFAULT_CANONICAL_CONSTITUTION = """# CCBA Agent Services Platform — Layer 1 Constitution
@@ -325,13 +326,7 @@ Cấu trúc tri thức trung tâm và danh mục tài liệu của dự án {sel
             ".coverage",
             "",
             "# Hub auto-generated editable links & Spoke Leakage Guard (ADR 0045)",
-            "requirements-hub.txt",
-            ".md/teach/",
-            ".md/scratch/",
-            ".md/data/telemetry_summary.json",
-            ".md/data/*.json",
-            ".tmp/",
-            ".out-of-scope/",
+            *SPOKE_HYGIENE_GITIGNORE_RULES,
         ]
 
         if not gitignore_path.exists():
