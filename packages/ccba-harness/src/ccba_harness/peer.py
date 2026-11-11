@@ -47,11 +47,13 @@ from ._peer_models import (
     ProfileTelemetryItem,
     _registry_timestamp,
     _sort_key_latest_exchange,
+    extract_env_conversation_id,
     extract_frontmatter,
     parse_envelope_from_md,
     parse_verdict_from_md,
     render_prompt_header,
     render_verdict_header,
+    resolve_spoke_slug_from_path,
 )
 from ._peer_telemetry import (
     _VERDICT_FILE_PREFIXES,
@@ -483,7 +485,15 @@ def publish_peer_message(
     auto_grok: bool = False,
 ) -> Path:
     """Atomically publishes a peer exchange envelope and asynchronously syncs state."""
-    atomic_write_text(target_path, render_prompt_header(envelope) + body_text.lstrip())
+    env_cid = extract_env_conversation_id()
+    eff_envelope = envelope.model_copy(
+        update={
+            "conversation_id": envelope.conversation_id or env_cid,
+            "spoke_name": envelope.spoke_name
+            or resolve_spoke_slug_from_path(target_path, allow_ancestor_walk=bool(env_cid)),
+        }
+    )
+    atomic_write_text(target_path, render_prompt_header(eff_envelope) + body_text.lstrip())
     if on_publish_hook:
         on_publish_hook(target_path)
     _clean_completed_threads()
@@ -560,6 +570,28 @@ def _check_valid_output_file(output_file: Path) -> str | None:
     return None
 
 
+def _attach_verdict_lineage(
+    verdict: PeerVerdictBlock,
+    prompt_path: Path,
+    prompt_content: str | None,
+) -> None:
+    """Populates verdict lineage in-memory from prompt envelope and runtime env without rewriting prompt."""
+    content = prompt_content
+    if content is None:
+        content, _ = safe_read_and_hash(prompt_path)
+    envelope = parse_envelope_from_md(content or "", prompt_path=prompt_path)
+    env_cid = extract_env_conversation_id()
+    verdict.conversation_id = (
+        verdict.conversation_id or (envelope.conversation_id if envelope else None) or env_cid
+    )
+    verdict.task_id = verdict.task_id or (envelope.task_id if envelope else None)
+    verdict.spoke_name = (
+        verdict.spoke_name
+        or (envelope.spoke_name if envelope else None)
+        or resolve_spoke_slug_from_path(prompt_path, allow_ancestor_walk=bool(env_cid))
+    )
+
+
 def _finalize_grok_verdict_and_telemetry(
     stdout_text: str,
     prompt_path: Path,
@@ -602,6 +634,7 @@ def _finalize_grok_verdict_and_telemetry(
         if telemetry:
             verdict.telemetry = merge_overwritten_telemetry(output_file, telemetry)
 
+    _attach_verdict_lineage(verdict, prompt_path, prompt_content)
     _enforce_single_verdict_guardrails(verdict)
     _, body = extract_frontmatter(stdout_text)
     final_output = render_verdict_header(verdict) + "\n" + body.lstrip()

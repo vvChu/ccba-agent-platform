@@ -1671,3 +1671,78 @@ def test_peer_gate_spoke_pytest_resolution_and_cli_flag(
     )
     assert rc == 0
     assert captured_targets == [["tests/test_chatops.py", "tests/test_smart_watchdog.py"]]
+
+
+def test_verdict_lineage_propagation_and_env_fallback(tmp_path, monkeypatch):
+    """Verifies COND-12: verdict inherits lineage without rewriting prompt_path on disk."""
+    import json
+
+    from ccba_harness.peer import _finalize_grok_verdict_and_telemetry
+
+    repo_root = tmp_path / "ccba-legal-knowledge"
+    (repo_root / ".git").mkdir(parents=True)
+    pe_dir = repo_root / ".md" / "peer_exchange"
+    pe_dir.mkdir(parents=True)
+
+    prompt_file = pe_dir / "prompt_grok_test.md"
+    prompt_raw = (
+        "---\n"
+        "request_id: req-v23-001\n"
+        "from_agent: antigravity\n"
+        "to_agent: grok\n"
+        "request_type: plan\n"
+        "subject: Test Lineage\n"
+        "timestamp: '2026-11-11T13:00:00+07:00'\n"
+        "output_path: .md/peer_exchange/grok_test.md\n"
+        "task_id: task-777\n"
+        "---\n# Body\n"
+    )
+    prompt_file.write_text(prompt_raw, encoding="utf-8")
+    out_file = pe_dir / "grok_test.md"
+
+    valid_uuid = "0cbb4d3f-ee28-4985-8f9c-8cdea58eb14c"
+    monkeypatch.setenv(
+        "ANTIGRAVITY_SOURCE_METADATA",
+        json.dumps({"tool": {"conversationId": valid_uuid}}),
+    )
+    verdict_stdout = "---\nrequest_id: req-v23-001\nverdict: APPROVE_PLAN\nrisk_score: 2\nsummary: OK\n---\n# Audit\n"
+    ok = _finalize_grok_verdict_and_telemetry(
+        stdout_text=verdict_stdout,
+        prompt_path=prompt_file,
+        output_file=out_file,
+        duration=1.2,
+        session_id=None,
+        candidate_model="grok-4.7",
+        expected_reasoning_effort="xhigh",
+    )
+    assert ok is True
+    assert prompt_file.read_text(encoding="utf-8") == prompt_raw
+    out_text = out_file.read_text(encoding="utf-8")
+    assert "tags:" not in out_text
+    parsed = parse_verdict_from_md(out_text)
+    assert parsed is not None
+    assert parsed.conversation_id == valid_uuid
+    assert parsed.task_id == "task-777"
+    assert parsed.spoke_name == "ccba-legal-knowledge"
+
+
+def test_verdict_env_lineage_rejects_malformed_or_non_uuid(monkeypatch):
+    """Verifies COND-12: invalid JSON or non-UUID conversationId is ignored cleanly."""
+    import json
+
+    from ccba_harness._peer_models import extract_env_conversation_id
+
+    monkeypatch.setenv("ANTIGRAVITY_SOURCE_METADATA", "{bad-json")
+    assert extract_env_conversation_id() is None
+    monkeypatch.setenv(
+        "ANTIGRAVITY_SOURCE_METADATA",
+        json.dumps({"tool": {"conversationId": "not-a-uuid-at-all"}}),
+    )
+    assert extract_env_conversation_id() is None
+
+    clean_block = PeerVerdictBlock(request_id="req-clean", verdict="APPROVE", summary="Clean")
+    header = render_verdict_header(clean_block)
+    assert "conversation_id" not in header
+    assert "spoke_name" not in header
+    assert "tags" not in header
+
