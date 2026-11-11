@@ -75,6 +75,10 @@
   - Quy tắc kết hợp cờ chỉ tuyên bố 1 lần duy nhất tại mục `Kết hợp không hợp lệ` trong `MODES.md`.
 - **RULE-4.4 [GitHub Copilot Multi-Tier Review Gating]**:
   - Quét `author.login` thay vì `user.login`. Bắt buộc kiểm tra `### 🟡 Changes recommended` và review `body` của Copilot kể cả khi trạng thái là `COMMENTED`. Cấm merge nếu chưa sửa hoặc giải trình.
+- **RULE-4.20 [Peer Lineage Envelope & Smart-Sync Scaffold — ADR-0067, Grok COND-01..16]**:
+  - (a) `PeerPromptEnvelope` giữ `extra="forbid"` bảo vệ KV-cache & truyền 4 trường lineage (`conversation_id`, `task_id`, `spoke_name`, `tags`) xuống `PeerVerdictBlock` (fallback `ANTIGRAVITY_CONVERSATION_ID`).
+  - (b) `ensure_peer_exchange_scaffold` chuẩn hóa `CRLF` $\to$ `LF`, schema 4 trường `{type, name, status, path}`, sao lưu cấm dấu `:` trên Windows; `.gitignore` Hub/Spoke chuẩn hóa giữ `PEER_HANDSHAKE.md`, `README.md`, `grok_review_*.md`, `grok_signoff_*.md` và ignore runtime state (`status.json`, `grok_live_summary.md`, `prompt_*.yaml`).
+  - (c) `check_spoke_runtime_health` warn-only exit 0 ở cuối bootstrap, bỏ qua non-Python Spoke.
 
 ---
 
