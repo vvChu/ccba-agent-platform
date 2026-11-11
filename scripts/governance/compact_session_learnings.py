@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import math
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -263,15 +264,55 @@ def verify_invariants(content: str, invariants: list[str] | None = None) -> list
     return [inv for inv in check_list if inv not in content]
 
 
+_ACTIVE_RULE_RE = re.compile(r"(?m)^\s*-\s+\*\*(RULE-\d+\.\d+)\b")
+_MD_LINK_RE = re.compile(r"(\[[^\]]+\]\()([^)\s]+)(\))")
+
+
+def _rebase_archive_links(content: str, source_file: Path, archive_dir: Path) -> str:
+    """Rebase relative markdown links when copying source_file into a child archive_dir."""
+    if archive_dir.resolve().parent != source_file.resolve().parent:
+        return content
+
+    archive_prefix = f"{archive_dir.name}/"
+
+    def _replace(match: re.Match[str]) -> str:
+        prefix, target, suffix = match.group(1), match.group(2), match.group(3)
+        if target.startswith(("http://", "https://", "mailto:", "#", "/", "file://", "../")):
+            return match.group(0)
+        if target.startswith(archive_prefix):
+            return f"{prefix}{target[len(archive_prefix) :]}{suffix}"
+        clean_target = target.split("#", 1)[0].split("?", 1)[0]
+        if target.startswith("wiki/") or (
+            clean_target and (source_file.parent / clean_target).exists()
+        ):
+            return f"{prefix}../{target}{suffix}"
+        return match.group(0)
+
+    return _MD_LINK_RE.sub(_replace, content)
+
+
+def find_dropped_rules(original_content: str, target_content: str) -> list[str]:
+    """Return sorted active RULE-X.Y identifiers present in original_content but missing in target_content."""
+    orig_rules = set(_ACTIVE_RULE_RE.findall(original_content))
+    target_rules = set(_ACTIVE_RULE_RE.findall(target_content))
+    missing = [
+        rule
+        for rule in (orig_rules - target_rules)
+        if not re.search(rf"(?i)\b{re.escape(rule)}\b.*?\[DEPRECATED\]", target_content)
+    ]
+    return sorted(missing, key=lambda r: tuple(int(part) for part in r.split("-")[1].split(".")))
+
+
 def backup_to_archive(source_file: Path, archive_dir: Path) -> tuple[Path, Path]:
-    """Backup source file to a timestamped archive and update master history."""
+    """Backup source file to a timestamped archive with rebased relative links."""
     archive_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     timestamped_file = archive_dir / f"session_learnings_archive_{timestamp}.md"
     master_history_file = archive_dir / "session_learnings_history.md"
 
-    content = source_file.read_text(encoding="utf-8")
-    timestamped_file.write_text(content, encoding="utf-8")
+    raw_content = source_file.read_text(encoding="utf-8")
+    rebased_content = _rebase_archive_links(raw_content, source_file, archive_dir)
+    timestamped_file.write_text(rebased_content, encoding="utf-8")
     if not master_history_file.exists():
         shutil.copy2(timestamped_file, master_history_file)
 
@@ -344,8 +385,9 @@ def run_compact(
     max_size_kb: float,
     template: str | None = None,
     invariants: list[str] | None = None,
+    allow_rule_drop: bool = False,
 ) -> int:
-    """Execute memory compaction, archive original, and verify invariants."""
+    """Execute memory compaction, archive original, and verify zero-deletion & invariants."""
     if not file_path.exists():
         print(f"[Error] Source file not found: {file_path}", file=sys.stderr)
         return 1
@@ -353,16 +395,26 @@ def run_compact(
     target_template = template if template is not None else COMPACTED_WORKING_MEMORY_TEMPLATE
     target_invariants = invariants if invariants is not None else REQUIRED_INVARIANTS
 
-    # Step 1: Backup original
-    ts_file, master_file = backup_to_archive(file_path, archive_dir)
-    print(f"[Archive] Full uncompressed file archived to: {ts_file.name}")
-    print(f"[Archive] Master history updated at:        {master_file.name}")
+    source_text = file_path.read_text(encoding="utf-8")
+    dropped_rules = find_dropped_rules(source_text, target_template)
+    if dropped_rules and not allow_rule_drop:
+        print(
+            f"[Error] Refusing lossy template overwrite — active rules would be dropped: {dropped_rules}. "
+            "Edit session_learnings.md in-place or pass --allow-rule-drop.",
+            file=sys.stderr,
+        )
+        return 1
 
-    # Step 2: Validate template invariants
+    # Step 1: Validate template invariants before touching archive/files
     missing = verify_invariants(target_template, target_invariants)
     if missing:
         print(f"[Error] Compacted template missing invariants: {missing}", file=sys.stderr)
         return 1
+
+    # Step 2: Backup original
+    ts_file, master_file = backup_to_archive(file_path, archive_dir)
+    print(f"[Archive] Full uncompressed file archived to: {ts_file.name}")
+    print(f"[Archive] Master history updated at:        {master_file.name}")
 
     # Step 3: Write compacted content
     old_size = file_path.stat().st_size
@@ -371,7 +423,7 @@ def run_compact(
 
     new_kb = round(new_size / 1024, 2)
     saved_bytes = old_size - new_size
-    reduction_pct = round((saved_bytes / old_size) * 100, 1)
+    reduction_pct = round((saved_bytes / old_size) * 100, 1) if old_size else 0.0
 
     print("[Success] Memory compaction completed:")
     print(f"  Before: {old_size:,} bytes (~{old_size // 4:,} tokens)")
@@ -388,13 +440,8 @@ def run_compact(
     return 0
 
 
-def main() -> int:
-    """CLI Entrypoint for compact_session_learnings."""
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Build argument parser for compact_session_learnings CLI."""
     parser = argparse.ArgumentParser(
         description="Session Learnings Memory Compaction Engine (ADR-0030, ADR-0057)."
     )
@@ -404,87 +451,67 @@ def main() -> int:
         default="hub",
         help="Profile to use (hub or spoke, default: hub).",
     )
-    parser.add_argument(
-        "--target-dir",
-        type=Path,
-        default=None,
-        help="Custom root directory for profile (e.g. path to ccba-legal-knowledge).",
-    )
-    parser.add_argument(
-        "--file",
-        type=Path,
-        default=None,
-        help="Path to session_learnings.md file.",
-    )
-    parser.add_argument(
-        "--archive-dir",
-        type=Path,
-        default=None,
-        help="Directory to store historical archives.",
-    )
+    parser.add_argument("--target-dir", type=Path, default=None, help="Custom root directory.")
+    parser.add_argument("--file", type=Path, default=None, help="Path to session_learnings.md.")
+    parser.add_argument("--archive-dir", type=Path, default=None, help="Archive directory path.")
     parser.add_argument(
         "--max-size-kb",
         type=float,
         default=DEFAULT_MAX_SIZE_KB,
         help=f"Maximum size allowed in KB (default: {DEFAULT_MAX_SIZE_KB}).",
     )
+    parser.add_argument("--check", action="store_true", help="Check size and invariants.")
+    parser.add_argument("--stats", action="store_true", help="Display file metrics.")
+    parser.add_argument("--compact", action="store_true", help="Execute compaction.")
     parser.add_argument(
-        "--check",
+        "--allow-rule-drop",
         action="store_true",
-        help="Check if file meets size and invariant requirements.",
+        help="Explicitly allow --compact template overwrite even when active RULE-X.Y items drop.",
     )
-    parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Display file metrics and budget status.",
-    )
-    parser.add_argument(
-        "--compact",
-        action="store_true",
-        help="Execute compaction and archive original.",
-    )
+    return parser
 
-    args = parser.parse_args()
 
-    # Resolve profile targets
+def _resolve_profile_targets(
+    args: argparse.Namespace,
+) -> tuple[Path, Path, str, list[str]]:
+    """Resolve target file, archive directory, template, and invariants for the chosen profile."""
     if args.profile == "spoke":
         spoke_root = (
             args.target_dir.resolve()
             if args.target_dir
             else (HUB_ROOT.parent / "ccba-legal-knowledge").resolve()
         )
-        target_file = (
-            args.file if args.file else (spoke_root / ".md" / "knowledge" / "session_learnings.md")
-        )
-        target_archive = (
-            args.archive_dir if args.archive_dir else (spoke_root / ".md" / "knowledge" / "archive")
-        )
-        target_template = SPOKE_COMPACTED_TEMPLATE
-        target_invariants = SPOKE_REQUIRED_INVARIANTS
-    else:
-        hub_root = args.target_dir.resolve() if args.target_dir else HUB_ROOT
-        target_file = (
-            args.file if args.file else (hub_root / ".md" / "knowledge" / "session_learnings.md")
-        )
-        target_archive = (
-            args.archive_dir if args.archive_dir else (hub_root / ".md" / "knowledge" / "archive")
-        )
-        target_template = COMPACTED_WORKING_MEMORY_TEMPLATE
-        target_invariants = REQUIRED_INVARIANTS
+        target_file = args.file or (spoke_root / ".md" / "knowledge" / "session_learnings.md")
+        target_archive = args.archive_dir or (spoke_root / ".md" / "knowledge" / "archive")
+        return target_file, target_archive, SPOKE_COMPACTED_TEMPLATE, SPOKE_REQUIRED_INVARIANTS
+
+    hub_root = args.target_dir.resolve() if args.target_dir else HUB_ROOT
+    target_file = args.file or (hub_root / ".md" / "knowledge" / "session_learnings.md")
+    target_archive = args.archive_dir or (hub_root / ".md" / "knowledge" / "archive")
+    return target_file, target_archive, COMPACTED_WORKING_MEMORY_TEMPLATE, REQUIRED_INVARIANTS
+
+
+def main() -> int:
+    """CLI Entrypoint for compact_session_learnings."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+    args = _build_arg_parser().parse_args()
+    target_file, target_archive, target_template, target_invariants = _resolve_profile_targets(args)
 
     if args.check:
         return run_check(target_file, args.max_size_kb, target_invariants)
-
-    if args.stats:
-        run_stats(target_file, args.max_size_kb)
-        return 0
-
     if args.compact:
         return run_compact(
-            target_file, target_archive, args.max_size_kb, target_template, target_invariants
+            target_file,
+            target_archive,
+            args.max_size_kb,
+            target_template,
+            target_invariants,
+            allow_rule_drop=bool(args.allow_rule_drop),
         )
-
-    # Default action if no flags provided
     run_stats(target_file, args.max_size_kb)
     return 0
 

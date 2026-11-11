@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   author: "CCBA Hub"
 triggers:
 - release
@@ -48,6 +48,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
         ```bash
         git branch --show-current
         ```
+   - *Rào chắn Cô lập `git worktree` khi `main` cục bộ có phiên song song (`RULE-4.21`):* Nếu nhánh `main` trên thư mục làm việc chính đang chứa các commit chưa đẩy của phiên đồng đẳng (`ahead > 0`), nghiêm cấm chạy `git checkout` hoặc `git pull` trực tiếp trên thư mục gốc. Agent khởi tạo một `git worktree` tạm thời tách từ `origin/main` (hoặc nhánh PR cần phát hành) trong thư mục scratch để chạy trọn vẹn Cổng 0.1–0.3, Bước 1–3 và gỡ bỏ worktree tạm (`git worktree remove <path> && git worktree prune`) **trước** khi gọi `gh pr merge --squash --delete-branch` (hoặc chạy bù `git push origin --delete [feature_branch_name]` nếu gộp ở trạng thái detached HEAD).
 
 2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Tại Hub Platform (`ccba-agent-platform`):**
@@ -219,15 +220,16 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      ```bash
      python scripts/governance/compile_catalog.py
      ```
-   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-4.5 & Pre-Push Lock):*
-     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). BẮT BUỘC lưu trữ tài liệu nghiệm thu qua nhánh và Pull Request riêng:
+   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-4.5, RULE-4.21 & Pre-Push Lock):*
+     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (cấm URI tệp cục bộ tuyệt đối theo `RULE-3.5`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F` theo Bất biến §12.1:
      ```bash
      git checkout main && git pull origin main
      git checkout -b docs/walkthrough-pr-[PR_NUMBER]
      git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
-     git push origin docs/walkthrough-pr-[PR_NUMBER]
-     gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" --body "Records the completion walkthrough for PR #[PR_NUMBER] into repository knowledge base."
+     git push -u origin docs/walkthrough-pr-[PR_NUMBER]
+     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md) rồi truyền qua -F:
+     gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
      # PR chỉ thay đổi tài liệu thuộc Two-way Door Fast-Path; chờ CI hoàn tất và merge:
      gh pr checks --watch
      gh pr merge --squash --delete-branch
