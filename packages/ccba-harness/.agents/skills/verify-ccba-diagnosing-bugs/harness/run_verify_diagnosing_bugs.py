@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -215,13 +215,23 @@ def validate_diagnosis_phase_transition(
     return True, "Phase6CleanupPostMortem"
 
 
-def check_git_provenance(sync_commit: str, covered_paths: Sequence[str]) -> list[str]:
-    """Inspects git diff from sync_commit to HEAD across covered_paths."""
-    cmd = ["git", "diff", "--name-only", f"{sync_commit}..HEAD", "--", *covered_paths]
-    proc = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, check=False)
-    if proc.returncode != 0:
-        return []
-    return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+def check_git_provenance(
+    sync_commit: str,
+    covered_paths: Sequence[str],
+    expected_sha256: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Verifies covered_paths via LF SHA-256 and reachable sync_commit (fail-closed)."""
+    src_dir = str(REPO_ROOT / "packages" / "ccba-harness" / "src")
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+    from ccba_harness.verifier import check_harness_git_provenance
+
+    return check_harness_git_provenance(
+        REPO_ROOT,
+        sync_commit,
+        covered_paths,
+        expected_sha256=expected_sha256,
+    )
 
 
 def verify_surface_diff(features_index: Path, test_suite: Path) -> list[str]:

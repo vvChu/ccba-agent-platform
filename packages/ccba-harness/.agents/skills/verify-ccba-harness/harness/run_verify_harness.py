@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -244,6 +244,25 @@ def classify_drift_status(
     if contract_changed and intentional_change and suite_passed:
         return "updated"
     return "bug"
+
+
+def check_git_provenance(
+    sync_commit: str,
+    covered_paths: Sequence[str],
+    expected_sha256: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Verifies covered_paths via LF SHA-256 and reachable sync_commit (fail-closed)."""
+    src_dir = str(REPO_ROOT / "packages" / "ccba-harness" / "src")
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+    from ccba_harness.verifier import check_harness_git_provenance
+
+    return check_harness_git_provenance(
+        REPO_ROOT,
+        sync_commit,
+        covered_paths,
+        expected_sha256=expected_sha256,
+    )
 
 
 def execute_verification_harness(evidence_out: Path | None = None) -> int:

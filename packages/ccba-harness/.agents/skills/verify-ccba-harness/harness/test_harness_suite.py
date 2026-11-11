@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ccba_harness.cli.core import COMMAND_MAP, main
 from ccba_harness.door_policy import OneWayDoorCategory, classify_pr_door
@@ -193,3 +194,23 @@ def test_feat_006_statechart_bug_path_replay_and_drift_modes() -> None:
             intentional_change=intentional,
         )
         assert actual == expected
+
+
+def test_feat_006_git_provenance_lock_and_fail_closed() -> None:
+    """Verifies FEAT-006: verify-ccba-harness SKILL.md SHA-256 lock and fail-closed provenance."""
+    runner = _load_runner_module()
+    check_prov = runner.check_git_provenance  # type: ignore[attr-defined]
+    skill_md = Path(__file__).resolve().parent.parent / "SKILL.md"
+    fm = yaml.safe_load(skill_md.read_text(encoding="utf-8").split("---", 2)[1])
+    sync_commit = str(fm["sync_commit"])
+    covered_paths = list(fm["covered_paths"])
+    covered_sha256 = dict(fm["covered_sha256"])
+
+    assert set(covered_sha256.keys()) == set(covered_paths)
+    assert check_prov(sync_commit, covered_paths, expected_sha256=covered_sha256) == []
+
+    tampered = dict(covered_sha256)
+    tampered[covered_paths[0]] = "0" * 64
+    assert check_prov(sync_commit, covered_paths, expected_sha256=tampered) == [covered_paths[0]]
+    bad_sha = "deadbeef" * 5
+    assert check_prov(bad_sha, covered_paths) == [f"UNVERIFIABLE_SYNC_COMMIT:{bad_sha}"]

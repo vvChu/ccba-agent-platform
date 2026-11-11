@@ -16,8 +16,13 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.0
-sync_commit: "8c731731931966faaba6cc2571fedde11301c6c8"
+  version: 1.0.1
+sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+covered_sha256:
+  .agents/skills/ccba-tdd/SKILL.md: "8dc8bad5535a8593eb501505bcca2e9929def735ae0a1327340b67aabffa9fdd"
+  .agents/skills/ccba-tdd/references/tests.md: "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a"
+  .agents/skills/ccba-tdd/references/mocking.md: "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef"
+  scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
 verification_mode:
   - scaffold
   - sync
@@ -40,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 3 pha Red-Green-Refactor của `.agents/skills/ccba-tdd/SKILL.md`, quy tắc đánh đổi Seam (`what it catches` / `what it misses` — `v1.3.2 #1192`), ngân sách 5 vòng lặp với `scripts/safe_pytest.py`, tài liệu tham chiếu `references/tests.md` và `references/mocking.md`, cùng ánh xạ đồng bộ `scripts/spoke/sync/coordinator.py` và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit`)**: Neo tại commit `8c731731931966faaba6cc2571fedde11301c6c8` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 
