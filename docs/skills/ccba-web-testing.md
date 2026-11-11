@@ -56,6 +56,9 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `e2e test`
 - `browser automation`
 - `vitest`
+- `web-quality-audit`
+- `lighthouse audit`
+- `agentic browsing`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Kiểm thử tự động giao diện End-to-End và kiểm chứng hành vi người dùng.

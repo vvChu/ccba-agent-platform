@@ -482,6 +482,10 @@ skills:
   - ui-styling
   - portal design
   - ui-ux
+  - seo
+  - ui critique
+  - ui polish
+  - visual prompting
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design
   tier: kernel
@@ -1229,6 +1233,9 @@ skills:
   - e2e test
   - browser automation
   - vitest
+  - web-quality-audit
+  - lighthouse audit
+  - agentic browsing
   skill_path: .agents/skills/ccba-web-testing/SKILL.md
   command: /ccba-web-testing
   tier: kernel

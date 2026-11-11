@@ -21,7 +21,7 @@ license: Apache-2.0
 argument-hint: '[test-type] [target]'
 metadata:
   author: claudekit
-  version: 3.0.0
+  version: 3.1.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -37,6 +37,9 @@ triggers:
 - e2e test
 - browser automation
 - vitest
+- web-quality-audit
+- lighthouse audit
+- agentic browsing
 ---
 # Web Testing Skill
 
@@ -87,7 +90,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/mobile-gesture-testing.md` | Kiểm thử thao tác cảm ứng di động: touch, swipe, pinch, orientation |
 | `references/interactive-testing-patterns.md` | Mẫu kiểm thử tương tác người dùng phức tạp (drag-and-drop, canvas, modal) |
 | `references/shadow-dom-testing.md` | Kỹ thuật kiểm thử các Web Components có Shadow DOM và slot elements |
-| `references/performance-core-web-vitals.md` | Đo lường và tối ưu Core Web Vitals (LCP, CLS, INP) qua Lighthouse CI |
+| `references/performance-core-web-vitals.md` | Đo lường Core Web Vitals (LCP, CLS, INP), Lighthouse 13+ Shared Insights và khung kiểm toán chất lượng web 5 trụ cột |
 | `references/visual-regression.md` | Kiểm thử hồi quy giao diện qua so sánh ảnh chụp màn hình (pixel diffing) |
 | `references/test-flakiness-mitigation.md` | Chiến lược phát hiện, cô lập và giảm thiểu test chập chờn (flaky tests) |
 | `references/accessibility-testing.md` | Hướng dẫn kiểm thử khả năng truy cập (a11y) theo chuẩn WCAG và axe-core |

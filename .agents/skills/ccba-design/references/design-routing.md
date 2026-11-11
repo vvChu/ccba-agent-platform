@@ -16,6 +16,9 @@ When to use each design sub-skill.
 | banner-design | Banners for social, ads, web, print (22 styles) | SKILL.md + 1 reference |
 | social-photos | Multi-platform social media photo layouts & headless export | `social-photos-design.md` |
 | icon-design | SVG icon generation (15 styles, reasoning archetype) | SKILL.md + 1 reference + 1 script |
+| critique-refine | Two-track UX critique (Nielsen 10 Heuristics) & 6 iterative passes (`polish`, `typeset`, `harden`) | `impeccable-critique-and-refinement.md` |
+| seo-discoverability | Evidence-led technical SEO, JSON-LD, XML sitemap, AI crawler matrix & `/llms.txt` | `seo-and-agentic-discoverability.md` |
+| visual-prompting | Pre-generation brief gate & 3 AI visual prompting modes (Archetype, Remix, Technical Style) | `ai-visual-prompting-modes.md` |
 
 ## Routing by Task Type
 
@@ -124,6 +127,9 @@ When to use each design sub-skill.
 | "Generate a settings icon" | icon-design |
 | "Create SVG icons for my app" | icon-design |
 | "Design an icon set" | icon-design |
+| "Critique, polish, typeset, or harden my UI component/page" | critique-refine |
+| "Improve technical SEO, JSON-LD, or AI crawler / llms.txt setup" | seo-discoverability |
+| "Structure an AI visual prompt or remix multiple visual references" | visual-prompting |
 
 ## Multi-Skill Workflows
 
