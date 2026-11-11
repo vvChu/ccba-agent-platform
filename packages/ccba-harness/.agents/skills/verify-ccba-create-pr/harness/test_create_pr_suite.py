@@ -245,7 +245,7 @@ def test_feat_pr_007_surface_diff_and_domain_eval_parity() -> None:
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "8c731731931966faaba6cc2571fedde11301c6c8",
+        "c62cc569fe0a70a74dd8b86d339276186f0fde6f",
         [
             ".agents/skills/ccba-create-pr/SKILL.md",
             ".github/pull_request_template.md",
