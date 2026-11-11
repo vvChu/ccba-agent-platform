@@ -26,21 +26,26 @@ from typing import Any
 
 import yaml
 
-# Attempt importing AI Gateway
+PLATFORM_ROOT = Path(__file__).resolve().parents[2]
+for _pkg_dir in (
+    PLATFORM_ROOT,
+    PLATFORM_ROOT / "packages" / "ccba-harness" / "src",
+    PLATFORM_ROOT / "packages" / "ccba-ai" / "src",
+):
+    if str(_pkg_dir) not in sys.path:
+        sys.path.insert(0, str(_pkg_dir))
+
 ai: Any = None
+choose_model: Any = None
+parse_llm_json: Any = None
 try:
     from ccba_ai import ai as _ai
+    from ccba_ai import choose_model as _choose_model
+    from ccba_ai import parse_llm_json as _parse_llm_json
 
-    ai = _ai
+    ai, choose_model, parse_llm_json = _ai, _choose_model, _parse_llm_json
 except ImportError:
     pass
-
-
-PLATFORM_ROOT = Path(__file__).resolve().parents[2]
-if str(PLATFORM_ROOT) not in sys.path:
-    sys.path.insert(0, str(PLATFORM_ROOT))
-if str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src") not in sys.path:
-    sys.path.insert(0, str(PLATFORM_ROOT / "packages" / "ccba-harness" / "src"))
 
 import scripts.spoke._upstream_helpers as _uh  # noqa: E402
 from ccba_harness.gpi import (  # noqa: E402
@@ -393,8 +398,9 @@ def get_repo_vitality_metrics(
 
 def format_vitality_badge(metrics: dict[str, Any], local_only: bool = False) -> str:
     """Format concise vitality badge string for console output and markdown report."""
+    arch = " | 🏛️ ARCHIVED" if metrics.get("archived") else ""
     if metrics.get("error"):
-        return "⚪ VITALITY_UNKNOWN (no local git history)"
+        return f"⚪ VITALITY_UNKNOWN (no local git history){arch}"
     status = "⚠️ STALE_UPSTREAM" if metrics.get("stale") else "🟢 FRESH"
     cnt = (
         f"{metrics['commits_count']} commits"
@@ -402,7 +408,7 @@ def format_vitality_badge(metrics: dict[str, Any], local_only: bool = False) -> 
         else "shallow clone"
     )
     scope = f", local ref {metrics.get('ref')}" if local_only else ""
-    return f"{status} (last commit: {metrics['last_commit_date']}, {metrics['age_days']}d ago, {cnt}{scope})"
+    return f"{status} (last commit: {metrics['last_commit_date']}, {metrics['age_days']}d ago, {cnt}{scope}){arch}"
 
 
 def get_existing_elements() -> tuple[list[str], list[str]]:
@@ -421,11 +427,21 @@ def get_existing_elements() -> tuple[list[str], list[str]]:
         return [], []
 
 
-def generate_xia_command(source: str, skill_name: str, mode: str = "--compare") -> str:
+def generate_xia_command(
+    source: str,
+    skill_name: str,
+    mode: str = "--compare",
+    *,
+    since_sha: str = "",
+    target_skill: str = "",
+) -> str:
     """Generate 1-click CLI command for ccba-xia targeting local path or remote URL."""
-    if source:
-        return f"/ccba-xia {source} {skill_name} {mode}"
-    return f"/ccba-xia <repo-source> {skill_name} {mode}"
+    cmd = f"/ccba-xia {source or '<repo-source>'} {skill_name} {mode}"
+    if since_sha:
+        cmd += f" --since {since_sha}"
+    if target_skill:
+        cmd += f" --target {target_skill}"
+    return cmd
 
 
 def check_is_duplicate(
@@ -761,25 +777,14 @@ def call_ai_evaluation(
         ```
         """
         try:
-            reply = ai.chat(user_prompt, system=system_prompt)
-            clean_reply = reply.strip()
-            json_block = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_reply, re.DOTALL)
-            if json_block:
-                raw_json = json_block.group(1)
-            else:
-                match = re.search(r"(\{.*\})", clean_reply, re.DOTALL)
-                raw_json = match.group(1) if match else clean_reply
-            try:
-                ai_result: dict[str, Any] = dict(json.loads(raw_json))
-            except json.JSONDecodeError:
-                for sub_match in re.finditer(r"(\{.*?\})", clean_reply, re.DOTALL):
-                    try:
-                        ai_result = dict(json.loads(sub_match.group(1)))
-                        break
-                    except json.JSONDecodeError:
-                        continue
-                else:
-                    raise
+            chat_kw: dict[str, Any] = {"system": system_prompt, "max_tokens": 2048}
+            if choose_model is not None:
+                chat_kw["model"] = choose_model("audit")
+            reply = ai.chat(user_prompt, **chat_kw)
+            parsed = parse_llm_json(reply) if parse_llm_json is not None else json.loads(reply)
+            if not isinstance(parsed, dict):
+                raise ValueError("LLM response did not parse into a JSON object")
+            ai_result: dict[str, Any] = dict(parsed)
 
             gpi_metrics: GPIMetrics | None = None
             raw_gpi = ai_result.get("gpi_scores")
@@ -965,8 +970,13 @@ def append_recommendation(
         py_compat = result.get("python_compatibility_assessment", "Chưa có đánh giá")
         xia_cmd = result.get("xia_command", generate_xia_command(remote_url, skill_name))
 
-        if not result.get("should_port", True):
-            status_text = str(result.get("status_override") or "IGNORE")
+        if result.get("status_override"):
+            status_text = str(result["status_override"])
+            color = str(
+                result.get("color_override") or ("🟢" if result.get("should_port") else "🔴")
+            )
+        elif not result.get("should_port", True):
+            status_text = "IGNORE"
             color = str(result.get("color_override") or "🔴")
         else:
             status_text = "RECOMMEND PORT"
@@ -991,9 +1001,9 @@ def append_recommendation(
 
         body_md += f"> ⚡ **Lệnh kích hoạt Port 1-Click:** `{xia_cmd}`"
 
-        escaped_skill = re.escape(skill_name)
+        esc_skill, esc_repo = re.escape(skill_name), re.escape(repo_type)
         item_pattern = re.compile(
-            rf"###\s+.*?Skill:\s+`{escaped_skill}`.*?(?=(?:\n---|\Z))",
+            rf"###\s+[^\n]*Skill:\s+`{esc_skill}`[^\n]*\n\*\s+\*\*Kho chứa nguồn\*\*:\s+`{esc_repo}`.*?(?=(?:\n---|\Z))",
             re.DOTALL,
         )
         if item_pattern.search(auto_gen_content):
@@ -1007,6 +1017,70 @@ def append_recommendation(
         print(f"[Evaluator] Wrote recommendation for '{skill_name}' -> {status_text} ({tier})")
     except Exception as e:
         print(f"[Evaluator] Error writing recommendation: {e}")
+
+
+def evaluate_upstream_delta(
+    repo_type: str,
+    skill_name: str,
+    matched_target: str,
+    base_sha: str,
+    touched_files: list[str],
+    source_ref: str,
+    license_type: str = "PERMISSIVE",
+) -> dict[str, Any]:
+    """Build an UPSTREAM DELTA recommendation targeting an already-mapped Hub skill."""
+    since = base_sha[:8]
+    imp_cmd = generate_xia_command(
+        source_ref, skill_name, "--improve", since_sha=since, target_skill=matched_target
+    )
+    cmp_cmd = generate_xia_command(
+        source_ref, skill_name, "--compare", since_sha=since, target_skill=matched_target
+    )
+    summary = ", ".join(touched_files[:3]) + ("..." if len(touched_files) > 3 else "")
+    res: dict[str, Any] = {
+        "should_port": True,
+        "status_override": "UPSTREAM DELTA",
+        "color_override": "🔵",
+        "score": 85,
+        "recommended_tier": f"Delta -> {matched_target}",
+        "target_bundle": "_core",
+        "disable_model_invocation": True,
+        "parent_master_skill": matched_target,
+        "python_compatibility_assessment": f"Cập nhật gia tăng cho `{matched_target}` ({summary}).",
+        "reason": f"UPSTREAM DELTA ({repo_type}): `{skill_name}` có thay đổi mới sau `{since}` khớp với `{matched_target}`.",
+        "actionable_steps": [
+            f"Chạy `{imp_cmd}` để thẩm định diff từ `{since}` vào `{matched_target}`",
+            "Cập nhật reviewed_sha trong triage_ledger sau khi hoàn tất",
+        ],
+        "xia_command": imp_cmd,
+    }
+    return _uh.clamp_license_policy(res, license_type, cmp_cmd)
+
+
+def _read_diff_blob(
+    repo_path: Path, head_sha: str, rel_path: str, is_acmr: bool
+) -> tuple[str | None, bool]:
+    """Read file blob from git head_sha or working tree; return (content, fatal_acmr_error)."""
+    show_res = subprocess.run(
+        ["git", "show", f"{head_sha}:{rel_path}"],
+        cwd=str(repo_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if show_res.returncode == 0:
+        return show_res.stdout, False
+    local_file = repo_path / rel_path
+    if local_file.is_file():
+        return local_file.read_text(encoding="utf-8", errors="ignore"), False
+    if is_acmr:
+        print(f"[Evaluator] Error: Missing git blob for ACMR file '{rel_path}' at {head_sha[:8]}.")
+        return None, True
+    print(
+        f"[Evaluator] Upstream file '{rel_path}' was deleted in head commit. Skipping evaluation."
+    )
+    return None, False
 
 
 class UpstreamEvaluator:
@@ -1137,16 +1211,14 @@ class UpstreamEvaluator:
         limit: int | None = None,
         fast: bool = False,
         vitality_badge: str = "",
-    ) -> None:
-        """Run git diff and evaluate modified or new skills under ADR-0057 & RES-2026-ARCH-001."""
+    ) -> bool:
+        """Run git diff and evaluate modified or new upstream resources. Returns False on git/blob error."""
         if not repo_path.exists():
-            return
-
+            return False
         license_type, license_desc = check_repo_license(repo_path)
-
         try:
             res = subprocess.run(
-                ["git", "diff", "--name-only", base_sha, head_sha],
+                ["git", "diff", "--name-status", base_sha, head_sha],
                 cwd=str(repo_path),
                 capture_output=True,
                 text=True,
@@ -1154,101 +1226,58 @@ class UpstreamEvaluator:
                 errors="replace",
                 check=True,
             )
-            files = res.stdout.strip().splitlines()
-
-            # Flexible resource matching patterns (supports nested skills & workflows)
-            patterns = [
-                (re.compile(r"claude/skills/(.+)/SKILL\.md$"), "skill"),
-                (re.compile(r"\.agents?/skills/(.+)/SKILL\.md$"), "skill"),
-                (re.compile(r"skills/(.+)/SKILL\.md$"), "skill"),
-                (re.compile(r"claude/workflows/(.+)\.md$"), "workflow"),
-                (re.compile(r"\.agents?/workflows/(.+)\.md$"), "workflow"),
-                (re.compile(r"workflows/(.+)\.md$"), "workflow"),
-            ]
-
-            evaluated = 0
-            for f in files:
-                if limit is not None and evaluated >= limit:
-                    break
-
-                for pattern, res_type in patterns:
-                    match = pattern.search(f)
-                    if not match:
-                        continue
-
-                    raw_name = match.group(1)
-                    parts = raw_name.split("/")
-                    if len(parts) == 2 and parts[0] in (
-                        "engineering",
-                        "productivity",
-                        "misc",
-                        "in-progress",
-                        "deprecated",
-                    ):
-                        raw_name = parts[-1]
-
-                    actual_type = res_type
-                    if res_type == "workflow" and any(
-                        kw in raw_name.lower()
-                        for kw in [
-                            "rule",
-                            "protocol",
-                            "governance",
-                            "guideline",
-                            "standard",
-                            "documentation-management",
-                        ]
-                    ):
-                        actual_type = "governance_rule"
-
-                    print(
-                        f"[Evaluator] Found new/modified {actual_type}: '{raw_name}' in {repo_type}"
-                    )
-
-                    show_res = subprocess.run(
-                        ["git", "show", f"{head_sha}:{f}"],
-                        cwd=str(repo_path),
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                        errors="replace",
-                    )
-                    try:
-                        if show_res.returncode == 0:
-                            content = show_res.stdout
-                        elif (repo_path / f).exists():
-                            content = (repo_path / f).read_text(encoding="utf-8", errors="ignore")
-                        else:
-                            print(
-                                f"[Evaluator] Upstream file '{f}' was deleted in head commit. Skipping evaluation."
-                            )
-                            continue
-                    except Exception as err:
-                        print(f"[Evaluator] Warning reading '{f}': {err}")
-                        continue
-
-                    result = call_ai_evaluation(
-                        repo_type=repo_type,
-                        skill_name=raw_name,
-                        content=content,
-                        remote_url=remote_url,
-                        license_type=license_type,
-                        local_path=local_repo_ref,
-                        resource_type=actual_type,
-                        fast=fast,
-                    )
-                    append_recommendation(
-                        repo_type=repo_type,
-                        skill_name=raw_name,
-                        result=result,
-                        remote_url=remote_url,
-                        license_desc=license_desc,
-                        vitality_badge=vitality_badge or self._last_vitality_badge,
-                    )
-                    evaluated += 1
-                    break
         except subprocess.SubprocessError as e:
             print(f"[Evaluator] Git diff error in '{repo_path}': {e}")
+            return False
+
+        existing_skills, existing_workflows = get_existing_elements()
+        source_ref = local_repo_ref or remote_url
+        badge = vitality_badge or self._last_vitality_badge
+        evaluated = 0
+        for raw_name, actual_type, pri_rel, touched in _uh.collapse_diff_resources(
+            res.stdout.splitlines(), repo_path
+        ):
+            if limit is not None and evaluated >= limit:
+                break
+            blobs: list[str] = []
+            deleted_skip = False
+            for f_rel, is_acmr in touched:
+                text, fatal = _read_diff_blob(repo_path, head_sha, f_rel, is_acmr)
+                if fatal:
+                    return False
+                if text is None:
+                    deleted_skip = True
+                else:
+                    blobs.append(text)
+            if deleted_skip and not blobs:
+                continue
+            pri_text, _ = _read_diff_blob(repo_path, head_sha, pri_rel, False)
+            content = pri_text if pri_text is not None else "\n".join(blobs)
+            is_dup, matched = check_is_duplicate(raw_name, existing_skills, existing_workflows)
+            if actual_type == "skill" and is_dup and matched:
+                result = evaluate_upstream_delta(
+                    repo_type,
+                    raw_name,
+                    matched,
+                    base_sha,
+                    [f for f, _ in touched],
+                    source_ref,
+                    license_type,
+                )
+            else:
+                result = call_ai_evaluation(
+                    repo_type=repo_type,
+                    skill_name=raw_name,
+                    content=content,
+                    remote_url=remote_url,
+                    license_type=license_type,
+                    local_path=local_repo_ref,
+                    resource_type=actual_type,
+                    fast=fast,
+                )
+            append_recommendation(repo_type, raw_name, result, remote_url, license_desc, badge)
+            evaluated += 1
+        return True
 
     def scan_and_evaluate_repo(
         self,
@@ -1351,6 +1380,8 @@ class UpstreamEvaluator:
 
         local_sha = self.get_local_sha(config)
         vitality = get_repo_vitality_metrics(local_path, branch, stale_days)
+        if remote_url and not fast and _uh.check_github_archived(remote_url):
+            vitality = {**vitality, "archived": True}
         vitality_badge = format_vitality_badge(vitality, local_only=fast)
         self._last_vitality_badge = vitality_badge
         print(f"  - Vitality: {vitality_badge}")
@@ -1406,7 +1437,7 @@ class UpstreamEvaluator:
                 return
 
             print("  - Running Automated ADR-0057 & RES-2026-ARCH-001 Feature Evaluator...")
-            self.evaluate_repo_diff(
+            ok = self.evaluate_repo_diff(
                 local_path,
                 local_sha,
                 remote_sha,
@@ -1416,6 +1447,11 @@ class UpstreamEvaluator:
                 limit=limit,
                 fast=fast,
             )
+            if not ok:
+                print(
+                    f"[Upstream Check] Warning: Diff evaluation failed for {repo_type}; preserving previous SHA."
+                )
+                return
             sha_file.write_text(remote_sha, encoding="utf-8")
             print(f"[Upstream Check] Successfully processed updates for {repo_type}.\n")
         else:

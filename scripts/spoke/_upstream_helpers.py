@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +13,12 @@ import yaml
 
 _CANONICAL_YAML = Path(__file__).resolve().parents[2] / ".md/knowledge/upstream_sources.yaml"
 _RX_MODE = r"--(?:port|improve|copy-raw)\b"
+_GOV_KWS = ("rule", "protocol", "governance", "guideline", "standard", "documentation-management")
+_SKILL_CATS = {"engineering", "productivity", "misc", "in-progress", "deprecated"}
+_RX_WF = re.compile(r"^(?:claude/|\.agents?/)?workflows/([^/]+)\.md$")
+_RX_SK = re.compile(
+    r"^(?:(claude/skills|\.agents?/skills|skills)/)?(.+?)/(SKILL\.md|references/[^/]+\.md|scripts/.+)$"
+)
 
 
 def _read_yaml_dict(path: Path) -> dict[str, Any]:
@@ -93,3 +102,72 @@ def prune_stale_recommendations(rec_file: Path) -> int:
     body = content[: m.start(2)] + "\n\n---\n\n".join(kept) + content[m.end(2) :]
     rec_file.write_text(body, encoding="utf-8")
     return pruned
+
+
+def check_github_archived(remote_url: str, *, _allow_in_pytest: bool = False) -> bool:
+    """Query GitHub REST API via gh CLI to detect archived upstream repositories."""
+    if os.environ.get("PYTEST_CURRENT_TEST") and not _allow_in_pytest:
+        return False
+    m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$", remote_url.strip())
+    if not m or not shutil.which("gh"):
+        return False
+    try:
+        res = subprocess.run(
+            ["gh", "api", f"repos/{m.group(1)}/{m.group(2)}", "--jq", ".archived"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
+            check=False,
+        )
+        return res.returncode == 0 and res.stdout.strip().lower() == "true"
+    except (subprocess.SubprocessError, OSError):
+        return False
+
+
+def collapse_diff_resources(
+    raw_lines: list[str], repo_path: Path
+) -> list[tuple[str, str, str, list[tuple[str, bool]]]]:
+    """Collapse git diff lines into unique (name, res_type, primary_rel, touched_files) items."""
+    parsed: list[tuple[str, bool]] = []
+    skill_dirs: set[str] = set()
+    for ln in raw_lines:
+        if not ln.strip():
+            continue
+        if "\t" in ln:
+            parts = ln.split("\t")
+            st, rel = parts[0].strip(), parts[-1].strip()
+            if st.startswith("D"):
+                continue
+            acmr = st[:1] in {"A", "C", "M", "R"}
+        else:
+            rel, acmr = ln.strip(), False
+        if any(x in rel for x in (".git/", "node_modules/", ".md/scratch/")):
+            continue
+        parsed.append((rel, acmr))
+        if rel.endswith("/SKILL.md"):
+            skill_dirs.add(rel[: -len("/SKILL.md")])
+
+    grouped: dict[tuple[str, str], tuple[str, list[tuple[str, bool]]]] = {}
+    for rel, acmr in parsed:
+        wf_m = _RX_WF.match(rel)
+        if wf_m:
+            nm = wf_m.group(1)
+            rt = "governance_rule" if any(k in nm.lower() for k in _GOV_KWS) else "workflow"
+            grouped.setdefault((rt, nm), (rel, []))[1].append((rel, acmr))
+            continue
+        sk_m = _RX_SK.match(rel)
+        if not sk_m:
+            continue
+        pfx, sub, leaf = sk_m.group(1), sk_m.group(2), sk_m.group(3)
+        sdir = f"{pfx}/{sub}" if pfx else sub
+        if (
+            leaf != "SKILL.md"
+            and sdir not in skill_dirs
+            and not (repo_path / sdir / "SKILL.md").is_file()
+        ):
+            continue
+        sp = sub.split("/")
+        nm = sp[-1] if len(sp) == 2 and sp[0] in _SKILL_CATS else sub
+        grouped.setdefault(("skill", nm), (f"{sdir}/SKILL.md", []))[1].append((rel, acmr))
+    return [(nm, rt, pri, files) for (rt, nm), (pri, files) in grouped.items()]
