@@ -8,11 +8,7 @@
 ## Miền 1. 🏛️ Kiến Trúc, Phân Tầng Kỹ Năng & Quản Trị Seams
 
 - **RULE-1.1 [ADR 0057]**: Gate 0$\to$Seams (`packages/*/src/`); Gate 1$\to$Tier 3. $\mathbf{GPI}=2.5S+2.0K+2.0A-1.5P$ ($<12\to$2A; $\ge 12\to$2B; Rituals $A=1.0$).
-- **RULE-1.2 [ADR 0053 — Single-Writer]**: Chỉ Lead Orchestrator ghi file/logs; subagent xuất `.system_generated/scratch/` (Mục 23).
-- **RULE-1.3 [ADR 0035]**: Bộc lộ qua `__all__` (cấm `_*`, `check_dependency_contracts.py`, Mục 23).
-- **RULE-1.4 [ADR 0033, ADR 0056]**: `.md/{extracted_docs,knowledge,archive}`; `DEPRECATED_MIGRATED_TO_SKILL` (Mục 23).
-- **RULE-1.5 [ADR 0037, ADR 0051]**: Bảo toàn `CUSTOM_SECTIONS_START/END`; lọc `notes.md`/`template.md` (Mục 23).
-- **RULE-1.6 [ADR 0044]**: Tier 0$\to$1 bọc `ImportError`; BM25 singleton; `.npy`+`.sha256` (Mục 23).
+- *([DEPRECATED] Lưu trữ tại Mục 23-38: RULE-1.2 [ADR 0053 — Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6 [ADR 0044])*
 - **RULE-1.7 [ADR 0057/0058 — GPI JSON & Hygiene]**: `evaluate-gpi --json` xuất `ArchitectureTier.value`, `allow_standalone_skill`, `preserved_by_hysteresis`; `--existing-tier tier-2b` chỉ khi sẵn `tier: kernel` & bỏ qua `--s..--p` khi đủ 4 khóa; `audit_skills_hygiene.py` quét văn xuôi; Hub chạy 3 writer (`compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, Mục 57).
 - **RULE-1.10 [Platform KISS]**: Dùng Seams (`compile_catalog.py --query <kw>`); kế thừa qua `_fault_tolerant`+1-line hooks (`QCAuditPipeline`, Mục 53).
 - **RULE-1.12 [ADR 0060]**: Unignore `!.agents/teams/`; 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`).
