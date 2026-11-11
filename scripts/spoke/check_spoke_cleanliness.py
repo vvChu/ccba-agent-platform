@@ -26,22 +26,78 @@ APPROVED_MODEL_ALIASES = frozenset(
     {
         "ocr-primary",
         "ocr-fallback",
-        "ocr-tier3",
         "ocr-tier4",
+        "ocr-proxy",
         "rag-core",
         "rag-light",
+        "local-coder",
+        "local-instruct",
         "fast-realtime",
         "text-auto",
         "text-gemma",
         "text-gemma-12b",
         "text-gemma-4b",
+        "text-light-gemma",
         "text-light-auto",
+        "auto",
         "reasoning-gemma",
+        "reasoning-fallback",
         "qwen-local-primary",
         "gemini-flash-latest",
         "gemini-reasoning-latest",
         "embedding-default",
+        "audio-primary",
+        "whisper-primary",
+        "whisper-local",
+        "tier-reasoning",
+        "tier-fast",
+        "tier-ocr",
+        "tier-local",
     }
+)
+
+DEPRECATED_GATEWAY_COMPAT_PREFIXES = (
+    "gemini-2.5-",
+    "gemini-3.5-flash-",
+    "gemini-3.6-",
+    "gemini-3.7-",
+    "qwen-3.5-35b",
+    "qwen3.5-35b",
+    "gemma-3-27b",
+    "smart-brain",
+    "smartest-brain",
+    "ocr-tier3",
+)
+
+LIVING_DOC_BANNED_TOKENS: tuple[tuple[str, str], ...] = (
+    (".agent/skills/", "Deprecated singular skill path '.agent/skills/' (use '.agents/skills/')"),
+    (
+        ".config/antigravity/gui_config.json",
+        "Deprecated gui_config.json path (use '~/.antigravity_tools/gui_config.json')",
+    ),
+    ("vllm_ext_Utils.sh", "Non-existent script reference 'vllm_ext_Utils.sh'"),
+    (
+        "ingestion/stages/",
+        "Removed ingestion path 'ingestion/stages/' (consolidated into 'services/rag-service/ingestion/pipeline.py')",
+    ),
+    (
+        "ingestion/orchestrator.py",
+        "Removed module 'ingestion/orchestrator.py' (consolidated into 'DocumentIngestionPipeline' in 'pipeline.py')",
+    ),
+    ("gemini-2.5-", "Deprecated model family 'gemini-2.5-*'"),
+    ("gemini-3.6-", "Deprecated model family 'gemini-3.6-*'"),
+    ("gemini-3.7-", "Deprecated model family 'gemini-3.7-*'"),
+    ("gemma-3-27b", "Retired model 'gemma-3-27b'"),
+    ("Qwen3.5-35B", "Deprecated local model checkpoint 'Qwen3.5-35B' (use 'Qwen3.6-35B-A3B-FP8')"),
+    ("Qwen 35B", "Outdated local model label 'Qwen 35B' (use 'Qwen 3.6 35B')"),
+    ("qwen-3.5-35b", "Deprecated local model alias 'qwen-3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')"),
+    ("qwen3.5-35b", "Deprecated local model name 'qwen3.5-35b' (use 'qwen-3.6-35b' or 'qwen-local-primary')"),
+    ("vllm-35b", "Deprecated vLLM service/job name 'vllm-35b' (use 'vllm-36b' or 'qwen36b')"),
+    ("smart-brain", "Deprecated model alias 'smart-brain' (use 'tier-fast' or 'rag-core')"),
+    ("smartest-brain", "Deprecated model alias 'smartest-brain' (use 'tier-reasoning' or 'rag-core')"),
+    ("ocr-tier3", "Removed OCR tier alias 'ocr-tier3' (use 'ocr-tier4' or 'ocr-proxy')"),
+    ("legal_docs_v3", "Deprecated Milvus collection 'legal_docs_v3' (use 'legal_docs_v12_okf')"),
+    ("legal_docs_v11", "Deprecated Milvus collection 'legal_docs_v11' (use 'legal_docs_v12_okf')"),
 )
 
 RAW_MODEL_PREFIXES = (
@@ -65,6 +121,35 @@ FILE_LEVEL_MODEL_EXEMPT_NAMES = frozenset(
         "check_spoke_cleanliness.py",
     }
 )
+
+
+def _load_gateway_aliases(spoke_root: Path | None = None) -> frozenset[str]:
+    """Loads active model_name and model_group_alias entries from litellm_config.yaml merged with APPROVED_MODEL_ALIASES."""
+    aliases = set(APPROVED_MODEL_ALIASES)
+    if spoke_root is None:
+        return frozenset(aliases)
+    cfg_path = spoke_root / "services" / "ai-gateway" / "litellm_config.yaml"
+    if not cfg_path.is_file():
+        return frozenset(aliases)
+    try:
+        import yaml
+
+        data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        for entry in data.get("model_list") or []:
+            if isinstance(entry, dict) and isinstance(entry.get("model_name"), str):
+                name = entry["model_name"].strip().lower()
+                if name and not any(name.startswith(p) for p in DEPRECATED_GATEWAY_COMPAT_PREFIXES):
+                    aliases.add(name)
+        group_aliases = (data.get("router_settings") or {}).get("model_group_alias") or {}
+        if isinstance(group_aliases, dict):
+            for k in group_aliases:
+                name = str(k).strip().lower()
+                if name and not any(name.startswith(p) for p in DEPRECATED_GATEWAY_COMPAT_PREFIXES):
+                    aliases.add(name)
+    except Exception:
+        pass
+    return frozenset(aliases)
+
 
 STANDARD_PUBLIC_DNS = frozenset({"8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"})
 
@@ -151,6 +236,32 @@ def load_cleanliness_config(spoke_root: Path) -> tuple[set[str], set[str]]:
     return custom_allowlist, role_exemptions
 
 
+def _resolve_py_doc_and_exempt_lines(
+    filepath: Path,
+    content: str,
+    exempt_marker: str = "",
+) -> tuple[bool, set[int], set[int]]:
+    """Returns (is_valid_py, docstring_linenos, marker_exempt_linenos) for a file."""
+    if filepath.suffix.lower() != ".py":
+        return False, set(), set()
+    try:
+        tree = ast.parse(content, filename=str(filepath))
+    except SyntaxError:
+        return False, set(), set()
+    doc_lines = _collect_docstring_lines(tree)
+    exempt_lines: set[int] = set()
+    if exempt_marker:
+        raw_lines = content.splitlines()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.stmt):
+                start = getattr(node, "lineno", 0)
+                end = getattr(node, "end_lineno", start) or start
+                span = raw_lines[max(0, start - 1): min(len(raw_lines), end)]
+                if any(exempt_marker in sl for sl in span):
+                    exempt_lines.update(range(start, end + 1))
+    return True, doc_lines, exempt_lines
+
+
 def check_machine_state_leakage(
     target_files: list[Path],
 ) -> list[tuple[Path, int, str]]:
@@ -162,14 +273,9 @@ def check_machine_state_leakage(
         except (UnicodeDecodeError, OSError):
             continue
 
-        is_py = filepath.suffix.lower() == ".py"
-        doc_lines: set[int] = set()
-        if is_py:
-            try:
-                doc_lines = _collect_docstring_lines(ast.parse(content))
-            except SyntaxError:
-                is_py = False
-
+        is_py, doc_lines, exempt_lines = _resolve_py_doc_and_exempt_lines(
+            filepath, content, "ccba:allow-machine-path"
+        )
         in_docstring = False
         for line_num, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
@@ -177,7 +283,7 @@ def check_machine_state_leakage(
             if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                (line_num in doc_lines if is_py else (was_in_docstring or in_docstring))
+                (line_num in doc_lines or line_num in exempt_lines if is_py else (was_in_docstring or in_docstring))
                 or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-machine-path" in stripped
                 or "noqa" in stripped
@@ -435,8 +541,10 @@ def _collect_docstring_lines(tree: ast.AST) -> set[int]:
 
 def check_raw_model_leakage(
     target_files: list[Path],
+    spoke_root: Path | None = None,
 ) -> list[tuple[Path, int, str]]:
     """Checks for hardcoded raw model identifiers (e.g. gemini-*, claude-*, gpt-*, openai/*)."""
+    allowed_aliases = _load_gateway_aliases(spoke_root)
     violations: list[tuple[Path, int, str]] = []
     for filepath in target_files:
         if filepath.name in FILE_LEVEL_MODEL_EXEMPT_NAMES:
@@ -461,14 +569,14 @@ def check_raw_model_leakage(
                 end_lineno = getattr(node, "end_lineno", lineno) or lineno
                 if lineno in docstring_linenos or lineno <= 0 or lineno > len(lines):
                     continue
-                span_lines = lines[max(0, lineno - 1) : min(len(lines), end_lineno)]
-                if (
-                    any("ccba:allow-raw-model" in sl for sl in span_lines)
-                    or val in APPROVED_MODEL_ALIASES
-                ):
+                span_lines = lines[max(0, lineno - 1): min(len(lines), end_lineno)]
+                if any("ccba:allow-raw-model" in sl for sl in span_lines) or val in allowed_aliases:
                     continue
                 if (
-                    any(val.startswith(pfx) for pfx in RAW_MODEL_PREFIXES)
+                    any(
+                        val.startswith(pfx)
+                        for pfx in RAW_MODEL_PREFIXES + DEPRECATED_GATEWAY_COMPAT_PREFIXES
+                    )
                     and len(val) < 60
                     and " " not in val
                 ):
@@ -485,6 +593,108 @@ def check_raw_model_leakage(
     return violations
 
 
+def _collect_living_docs(spoke_root: Path) -> list[Path]:
+    """Collects active living documentation and config files for SSoT drift scanning."""
+    globs = (
+        ".agents/skills/**/SKILL.md",
+        ".agents/skills/**/references/*.md",
+        ".agents/workflows/*.md",
+        "playbooks/*.md",
+        ".github/instructions/*.md",
+        ".github/agents/*.md",
+        ".claude/agents/*.md",
+    )
+    direct_rels = (
+        "README.md",
+        "AGENTS.md",
+        "CONTEXT.md",
+        "services/rag-service/AGENTS.md",
+        "services/ai-gateway/FREE_TIER_LIMITS.md",
+        "services/ai-gateway/CLIENT_INTEGRATION_GUIDE.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DEVELOPMENT.md",
+        "docs/PITFALLS.md",
+        ".github/copilot-instructions.md",
+        ".agents/ARCHITECTURE.md",
+        ".md/knowledge/codebase_architecture_and_mental_model.md",
+        "integrations/open_webui/README.md",
+        "docker-compose.yml",
+        ".env.example",
+        "monitoring/prometheus.yml",
+        "helm/dgx-spark-toolkit/values.yaml",
+        "examples/nodejs-ai-api/vllm-api.js",
+        "examples/client-setup/README.md",
+        "examples/client-setup/.env.ai-gateway",
+        "examples/client-setup/test-connection.sh",
+        "services/rag-service/benchmarks/locustfile.py",
+        "services/rag-service/scripts/benchmark_ocr_models.py",
+    )
+    found: set[Path] = set()
+    for pattern in globs:
+        for p in sorted(spoke_root.glob(pattern), key=lambda x: x.as_posix()):
+            if p.is_file():
+                found.add(p)
+    for rel in direct_rels:
+        cand = spoke_root / rel
+        if cand.is_file():
+            found.add(cand)
+    return sorted(found, key=lambda x: x.as_posix())
+
+
+def check_living_doc_drift(spoke_root: Path) -> list[tuple[Path, int, str]]:
+    """Scans living docs and active root configs for deprecated paths, models, and collections."""
+    violations: list[tuple[Path, int, str]] = []
+    for filepath in _collect_living_docs(spoke_root):
+        try:
+            lines = filepath.read_text(encoding="utf-8").splitlines()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for line_num, line in enumerate(lines, start=1):
+            if "ccba:allow-doc-drift" in line:
+                continue
+            for token, reason in LIVING_DOC_BANNED_TOKENS:
+                if token in line:
+                    violations.append((filepath, line_num, f"{reason} (matched '{token}')"))
+    return violations
+
+
+def _append_living_doc_violations(spoke_root: Path, messages: list[str]) -> bool:
+    """Runs living documentation SSoT drift checks and appends formatted findings."""
+    drift_violations = check_living_doc_drift(spoke_root)
+    if drift_violations:
+        messages.append(
+            f"❌ [Vi phạm Living Doc / SSoT Drift] Phát hiện {len(drift_violations)} điểm trôi lệch:\n"
+            + "\n".join(
+                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in drift_violations
+            )
+        )
+        return True
+    messages.append("✅ [Living Doc SSoT Parity] Không phát hiện đường dẫn hoặc model đã khai tử.")
+    return False
+
+
+STATUTORY_CLAUSE_REF_RE = re.compile(
+    r"""(?:"""
+    r"""(?:["']{3}|^\s*#{1,6})\s*"""
+    r"""|(?:\b(?:tại|điểm|khoản|mục|như|bảng|hình|chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|nêu\s+tại|theo)\s+)"""
+    r""")"""
+    r"""(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
+    re.IGNORECASE,
+)
+
+
+def _is_statutory_clause_match(line: str, match: re.Match[str]) -> bool:
+    """Returns True when a 4-part dotted number is a statutory section citation (e.g. QCVN 3.2.1.1)."""
+    ip_str = match.group(1)
+    if any(int(part) > 30 for part in ip_str.split(".")):
+        return False
+    prefix = line[: match.end()]
+    for cm in STATUTORY_CLAUSE_REF_RE.finditer(line):
+        if cm.start(1) == match.start(1) and cm.end(1) == match.end(1):
+            return True
+    return prefix.lstrip().startswith(ip_str + "  ")
+
+
 def check_raw_ip_leakage(
     target_files: list[Path],
 ) -> list[tuple[Path, int, str]]:
@@ -495,15 +705,9 @@ def check_raw_ip_leakage(
             content = filepath.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
-
-        is_py = filepath.suffix.lower() == ".py"
-        doc_lines: set[int] = set()
-        if is_py:
-            try:
-                doc_lines = _collect_docstring_lines(ast.parse(content))
-            except SyntaxError:
-                is_py = False
-
+        is_py, doc_lines, exempt_lines = _resolve_py_doc_and_exempt_lines(
+            filepath, content, "ccba:allow-raw-ip"
+        )
         in_docstring = False
         for line_num, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
@@ -511,7 +715,7 @@ def check_raw_ip_leakage(
             if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
                 in_docstring = not in_docstring
             if (
-                (line_num in doc_lines if is_py else (was_in_docstring or in_docstring))
+                (line_num in doc_lines or line_num in exempt_lines if is_py else (was_in_docstring or in_docstring))
                 or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
                 or "ccba:allow-raw-ip" in stripped
             ):
@@ -528,6 +732,7 @@ def check_raw_ip_leakage(
                     or ip.is_multicast
                     or ip_str == "255.255.255.255"
                     or ip_str in STANDARD_PUBLIC_DNS
+                    or _is_statutory_clause_match(line, match)
                 ):
                     continue
                 violations.append(
@@ -543,13 +748,22 @@ def check_raw_ip_leakage(
 
 
 def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
-    """Collects Python source files under scripts/ and src/ excluding test/venv/archive folders."""
+    """Collects Python source files under scripts/, src/, and .agents/ excluding test/venv/archive folders."""
     excluded_parts = (".venv", "venv", "__pycache__", "tests", "archive", "legacy_scripts")
     py_files: list[Path] = []
-    for d in (scripts_dir, spoke_root / "src"):
+    scan_roots = (
+        scripts_dir,
+        spoke_root / "src",
+        spoke_root / ".agents" / "scripts",
+        spoke_root / ".agents" / "skills",
+    )
+    for d in scan_roots:
         if d.exists():
             py_files.extend(
-                f for f in sorted(d.rglob("*.py")) if not any(p in excluded_parts for p in f.parts)
+                sorted(
+                    (f for f in d.rglob("*.py") if not any(p in excluded_parts for p in f.parts)),
+                    key=lambda x: x.as_posix(),
+                )
             )
     return py_files
 
@@ -569,7 +783,7 @@ def _append_code_violations(
             )
         )
 
-    model_violations = check_raw_model_leakage(py_files_to_scan)
+    model_violations = check_raw_model_leakage(py_files_to_scan, spoke_root=spoke_root)
     if model_violations:
         has_errors = True
         messages.append(
@@ -669,26 +883,16 @@ def scan_spoke_cleanliness(
         py_files = _collect_py_files_to_scan(spoke_root, scripts_dir)
         has_errors = _append_code_violations(spoke_root, py_files, messages) or has_errors
         has_errors = _append_machine_and_ip_violations(spoke_root, py_files, messages) or has_errors
+    has_errors = _append_living_doc_violations(spoke_root, messages) or has_errors
     return (1 if has_errors or (strict and has_warnings) else 0), messages
 
 
-def main() -> int:
-    """CLI runner for spoke cleanliness check."""
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")
-        if hasattr(sys.stderr, "reconfigure"):
-            sys.stderr.reconfigure(encoding="utf-8")
-
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Builds CLI argument parser for spoke cleanliness check."""
     parser = argparse.ArgumentParser(
         description="CCBA Spoke Cleanliness & Script Budget Checker (ADR 0044 / Issue #215)"
     )
-    parser.add_argument(
-        "--path",
-        "-p",
-        default=".",
-        help="Target Spoke root directory (default: current dir)",
-    )
+    parser.add_argument("--path", "-p", default=".", help="Target Spoke root directory (default: current dir)")
     parser.add_argument(
         "--max-scripts",
         type=int,
@@ -712,23 +916,25 @@ def main() -> int:
         default=None,
         help="Script names exempted by role from ephemeral warnings (e.g. audits:audit_memory.py)",
     )
-    parser.add_argument(
-        "files",
-        nargs="*",
-        help="Optional specific files passed by pre-commit",
-    )
-    args = parser.parse_args()
+    parser.add_argument("files", nargs="*", help="Optional specific files passed by pre-commit")
+    return parser
 
+
+def main() -> int:
+    """CLI runner for spoke cleanliness check."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+
+    args = _build_arg_parser().parse_args()
     spoke_root = Path(args.path).resolve()
-
     custom_allowlist = set(args.allow_script) if args.allow_script else None
     role_allowlist: set[str] = set()
     if args.allow_role:
         for r in args.allow_role:
-            if ":" in r:
-                role_allowlist.add(r.split(":", 1)[1].strip())
-            else:
-                role_allowlist.add(r.strip())
+            role_allowlist.add(r.split(":", 1)[1].strip() if ":" in r else r.strip())
 
     exit_code, messages = scan_spoke_cleanliness(
         spoke_root=spoke_root,
@@ -744,7 +950,6 @@ def main() -> int:
     for m in messages:
         print(m)
     print("=" * 80)
-
     return exit_code
 
 

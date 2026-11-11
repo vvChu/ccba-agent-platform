@@ -10,7 +10,7 @@ bundle: _core
 tier: kernel
 command: /ccba-ai-gateway-sdk
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -30,7 +30,7 @@ package_path: packages/ccba-ai
 ---
 # AI Gateway SDK
 
-Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình thời gian thực qua `ai.models()` — từ Qwen 35B chạy local GPU đến Claude, Gemini trên cloud.
+Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình thời gian thực qua `ai.models()` — từ Qwen 3.6 35B chạy local GPU đến Claude, Gemini trên cloud.
 
 ---
 
@@ -132,7 +132,7 @@ graph TD
 - **Tier 1 (Gateway)**: LiteLLM trên Server Spark (:8090).
 - **Tier 2 (Cloud Direct)**: Gọi trực tiếp Google AI Studio / Groq / OpenAI qua API keys cục bộ.
 - **Tier 3 (Dual-CLI)**: Trực tiếp qua Antigravity CLI / GitHub Copilot CLI.
-- **Tier 4 (Local Offline)**: Ollama hoặc local vLLM Qwen 35B trên DGX Spark.
+- **Tier 4 (Local Offline)**: Ollama hoặc local vLLM Qwen 3.6 35B trên DGX Spark.
 - **Tier 5 (Mock)**: Giả lập kết quả cho testing không tốn token.
 
 **Kháng lỗi Ngân sách (`BudgetExceededError`)**:
@@ -242,7 +242,7 @@ ai.circuit_breaker = custom_cb
 
 ## 🧠 Đặc tính & Cách Xử lý Reasoning Models (Thinking Models)
 
-Một số model trên Gateway (như `gemini-3.7-flash-high`, `claude-sonnet-4-6-thinking`, `reasoning-gemma`, `qwen-local-primary`) sở hữu cơ chế tư duy nội suy. 
+Một số model trên Gateway (như `gemini-3.8-flash-high`, `claude-sonnet-4-6-thinking`, `reasoning-gemma`, `qwen-local-primary`) sở hữu cơ chế tư duy nội suy. 
 
 **Bản chất:** Model sinh ra quá trình suy luận bên trong thẻ `<think>...</think>` trước khi đưa ra kết quả cuối cùng.
 
@@ -306,7 +306,7 @@ curl http://${CCBA_AI_GATEWAY_HOST}:8090/health
 | `401 Unauthorized` | Sai API key — kiểm tra `AI_GATEWAY_KEY` |
 | `Model not found` | Kiểm tra tên model bằng `/v1/models` |
 | `504 Gateway Timeout` | Model đang load, chờ 2-3 phút rồi thử lại |
-| Qwen 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (9B AWQ, on-demand profile `vllm-light`) |
+| Qwen 3.6 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (9B AWQ, on-demand profile `vllm-light`) |
 
 ## 🧹 Output Processing — Làm Sạch LLM Output
 
