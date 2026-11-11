@@ -131,11 +131,11 @@ UPSTREAM_ALIAS_MAP: dict[str, str] = {
     "architecture": "ccba-codebase-design",
     "deep-modules": "ccba-codebase-design",
     "sync-upstream": "ccba-update-spoke",
-    "to-tickets": "ccba-to-tickets",
+    "to-tickets": "ccba-issue-tree",
     "domain-modeling": "ccba-domain-modeling",
     "improve-codebase-architecture": "ccba-codebase-design",
     "setup-ts-deep-modules": "ccba-codebase-design",
-    "implement-spec": "ccba-implement-spec",
+    "implement-spec": "ccba-implement",
     "frontend-design": "ccba-design",
     "ui-ux-pro-max": "ccba-design",
     "web-design-guidelines": "ccba-design",
@@ -525,7 +525,10 @@ def resolve_upstream_resources(repo_path: Path, repo_type: str = "") -> list[dic
     skill_files = sorted(repo_path.glob("**/SKILL.md"))
     for sf in skill_files:
         rel_str = str(sf.relative_to(repo_path)).replace("\\", "/")
-        if any(part in rel_str for part in [".git/", "node_modules/", ".md/scratch/"]):
+        if ".md/scratch/" in rel_str or any(
+            p in {".git", "node_modules", "__pycache__", "tests", "__tests__", "fixtures"}
+            for p in Path(rel_str).parts
+        ):
             continue
 
         if rel_str.startswith("claude/skills/"):

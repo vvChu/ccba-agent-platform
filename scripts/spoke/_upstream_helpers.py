@@ -79,8 +79,15 @@ def clamp_license_policy(result: dict[str, Any], license_type: str, xia_cmd: str
     return out
 
 
-def prune_stale_recommendations(rec_file: Path) -> int:
-    """Prune legacy simulated/ADR-0040/duplicate blocks solely within AUTO-GENERATED markers."""
+def _is_closed_in_ledger(part: str, closed_pairs: set[tuple[str, str]]) -> bool:
+    """Return True if a recommendation markdown block matches an ADOPTED/DECLINED ledger entry."""
+    m_sk = re.search(r"^###\s+[^\n]*Skill:\s+`([^`]+)`", part)
+    m_rp = re.search(r"\*\*Kho chứa nguồn\*\*:\s+`([^`]+)`", part)
+    return bool(m_sk and m_rp and (m_rp.group(1).strip(), m_sk.group(1).strip()) in closed_pairs)
+
+
+def prune_stale_recommendations(rec_file: Path, cfg_file: Path | None = None) -> int:
+    """Prune legacy/closed triage_ledger blocks solely within AUTO-GENERATED markers."""
     if not rec_file.exists():
         return 0
     content = rec_file.read_text(encoding="utf-8")
@@ -88,13 +95,21 @@ def prune_stale_recommendations(rec_file: Path) -> int:
     m = re.search(pat, content, re.DOTALL)
     if not m:
         return 0
-    hyg = load_governance_config(_CANONICAL_YAML)["report_hygiene"]
+    cfg = load_governance_config(cfg_file or _CANONICAL_YAML)
+    hyg = cfg["report_hygiene"]
+    closed = {
+        (str(e.get("source", "")).strip(), str(e.get("upstream_path", "")).strip())
+        for e in cfg.get("triage_ledger", [])
+        if str(e.get("status", "")).strip().upper() in {"ADOPTED", "DECLINED"}
+    }
     stale_toks = tuple(str(x) for x in hyg.get("stale_block_tokens", []))
     rest_mks = tuple(str(x) for x in hyg.get("restricted_license_markers", []))
     old_h, new_h = "### 🟢 [RECOMMEND PORT]", "### 🟠 [COMPARE ONLY — LICENSE RESTRICTED]"
     kept, pruned = [], 0
     for part in (p.strip() for p in re.split(r"\n---\n?", m.group(2).strip()) if p.strip()):
-        if part.startswith("### ") and any(t in part for t in stale_toks):
+        if part.startswith("### ") and (
+            any(t in part for t in stale_toks) or _is_closed_in_ledger(part, closed)
+        ):
             pruned += 1
             continue
         if part.startswith("### ") and any(mk in part for mk in rest_mks):
@@ -143,7 +158,10 @@ def collapse_diff_resources(
             acmr = st[:1] in {"A", "C", "M", "R"}
         else:
             rel, acmr = ln.strip(), False
-        if any(x in rel for x in (".git/", "node_modules/", ".md/scratch/")):
+        if ".md/scratch/" in rel or any(
+            p in {".git", "node_modules", "__pycache__", "tests", "__tests__", "fixtures"}
+            for p in Path(rel).parts
+        ):
             continue
         parsed.append((rel, acmr))
         if rel.endswith("/SKILL.md"):
@@ -195,7 +213,7 @@ def build_corpus_digest(repo_path: Path) -> str:
         exts: dict[str, int] = {}
         lvl2 = [p.name for p in _visible_children(d1, dirs_only=True)[:3]]
         for f in d1.rglob("*"):
-            if f.is_file() and not any(part in _SKIP_DIRS for part in f.parts):
+            if f.is_file() and not any(part in _SKIP_DIRS for part in f.relative_to(d1).parts):
                 ext = f.suffix.lower() or "<no-ext>"
                 exts[ext] = exts.get(ext, 0) + 1
         top = ", ".join(
