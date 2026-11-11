@@ -1784,3 +1784,211 @@ def test_classify_file_role_prompt_suffix_precedes_peer_review():
     assert classify_file_role(Path("peer_review_terumo_4_questions_prompt.md")) == "PROMPT_TO_GROK"
     assert classify_file_role(Path("peer_review_terumo_4_questions.md")) == "GROK_RESPONSE"
     assert classify_file_role(Path("peer_consultation_summary.md")) == "GROK_RESPONSE"
+
+
+def test_resolve_spoke_slug_git_worktree_and_submodule(tmp_path: Path) -> None:
+    """Verifies v2.4 Fix A: worktree .git file unwrapping (abs, rel, bare) and submodule slug."""
+    from ccba_harness._peer_models import resolve_spoke_slug_from_path
+    from ccba_harness.peer import _finalize_grok_verdict_and_telemetry
+
+    wt_abs = tmp_path / "wt_grok_signoff"
+    peer_dir = wt_abs / ".md" / "peer_exchange"
+    peer_dir.mkdir(parents=True)
+    (wt_abs / ".git").write_text(
+        "gitdir: /srv/repos/ccba-agent-platform/.git/worktrees/wt_grok_signoff\n",
+        encoding="utf-8",
+    )
+    prompt = peer_dir / "prompt_to_grok_v24.md"
+    prompt.write_text(
+        "---\nrequest_id: req-wt\nfrom_agent: antigravity\nto_agent: grok\n"
+        "request_type: review\nsubject: WT\ntimestamp: '2026-11-11T20:00:00+07:00'\n"
+        "output_path: .md/peer_exchange/grok_out.md\n---\nBody\n",
+        encoding="utf-8",
+    )
+    out = peer_dir / "grok_out.md"
+    assert _finalize_grok_verdict_and_telemetry(
+        "---\nrequest_id: req-wt\nverdict: APPROVE\nsummary: OK\n---\nDone\n",
+        prompt,
+        out,
+        1.0,
+        None,
+        "grok-4.7",
+        "xhigh",
+    )
+    parsed = parse_verdict_from_md(out.read_text(encoding="utf-8"))
+    assert parsed is not None and parsed.spoke_name == "ccba-agent-platform"
+
+    wt_rel = tmp_path / "scratch" / "wt_rel"
+    (wt_rel / ".md" / "peer_exchange").mkdir(parents=True)
+    (wt_rel / ".git").write_text(
+        "gitdir: ../../nonexistent-hub/.git/worktrees/wt_rel\n", encoding="utf-8"
+    )
+    assert (
+        resolve_spoke_slug_from_path(wt_rel / ".md" / "peer_exchange" / "p.md") == "nonexistent-hub"
+    )
+
+    wt_bare = tmp_path / "wt_bare"
+    wt_bare.mkdir()
+    (wt_bare / ".git").write_text("gitdir: /srv/custom-repo.git/worktrees/wt1\n", encoding="utf-8")
+    assert resolve_spoke_slug_from_path(wt_bare / "p.md", allow_ancestor_walk=True) == "custom-repo"
+
+    sub_dir = tmp_path / "my-sub"
+    sub_dir.mkdir()
+    (sub_dir / ".git").write_text("gitdir: ../.git/modules/my-sub\n", encoding="utf-8")
+    assert resolve_spoke_slug_from_path(sub_dir / "p.md", allow_ancestor_walk=True) == "my-sub"
+
+
+def test_resolve_spoke_slug_git_file_fail_closed(tmp_path: Path) -> None:
+    """Verifies v2.4 Fix A: unreadable or malformed .git file fails closed to None at boundary."""
+    from ccba_harness._peer_models import resolve_spoke_slug_from_path
+
+    parent_repo = tmp_path / "outer-repo"
+    bad_wt = parent_repo / "bad_wt"
+    (parent_repo / ".git").mkdir(parents=True)
+    bad_wt.mkdir(parents=True)
+    (bad_wt / ".git").write_bytes(b"\xff\xfeinvalid")
+    assert resolve_spoke_slug_from_path(bad_wt / "p.md", allow_ancestor_walk=True) is None
+    (bad_wt / ".git").write_text("not-a-gitdir-header\n", encoding="utf-8")
+    assert resolve_spoke_slug_from_path(bad_wt / "p.md", allow_ancestor_walk=True) is None
+    (bad_wt / ".git").write_text("gitdir:   \n", encoding="utf-8")
+    assert resolve_spoke_slug_from_path(bad_wt / "p.md", allow_ancestor_walk=True) is None
+
+
+def test_verdict_tags_propagation_and_empty_omission(tmp_path: Path) -> None:
+    """Verifies v2.4 Fix B: non-empty prompt tags propagate; empty tags omit 'tags:' cleanly."""
+    from ccba_harness.peer import _finalize_grok_verdict_and_telemetry
+
+    peer_dir = tmp_path / "hub-repo" / ".md" / "peer_exchange"
+    (tmp_path / "hub-repo" / ".git").mkdir(parents=True)
+    peer_dir.mkdir(parents=True)
+    tagged_prompt = peer_dir / "prompt_to_grok_tagged.md"
+    tagged_prompt.write_text(
+        "---\nrequest_id: req-tags\nfrom_agent: antigravity\nto_agent: grok\n"
+        "request_type: review\nsubject: Tags\ntimestamp: '2026-11-11T20:00:00+07:00'\n"
+        "tags: [p8-17, audit]\noutput_path: .md/peer_exchange/grok_tagged.md\n---\nBody\n",
+        encoding="utf-8",
+    )
+    tagged_out = peer_dir / "grok_tagged.md"
+    assert _finalize_grok_verdict_and_telemetry(
+        "---\nrequest_id: req-tags\nverdict: APPROVE\nsummary: Tagged\n---\nBody\n",
+        tagged_prompt,
+        tagged_out,
+        0.8,
+        None,
+        "grok-4.7",
+        "high",
+    )
+    parsed = parse_verdict_from_md(tagged_out.read_text(encoding="utf-8"))
+    assert parsed is not None and parsed.tags == ["p8-17", "audit"]
+
+    empty_block = PeerVerdictBlock(
+        request_id="req-empty-tags", verdict="APPROVE", tags=[], summary="S"
+    )
+    assert empty_block.tags is None
+    assert "tags:" not in render_verdict_header(empty_block)
+
+
+def _write_ttl_fixture_file(path: Path, body: str, mtime: float) -> None:
+    """Helper to write a peer fixture file with deterministic mtime."""
+    import os
+
+    path.write_text(body, encoding="utf-8")
+    os.utime(path, (mtime, mtime))
+
+
+def test_compute_pending_queues_ttl_checkout_mtime_and_stale_dropped(tmp_path: Path) -> None:
+    """Verifies v2.4 Fix C: 24h TTL on pending_grok via min(mtime, ts) and stale_prompts_dropped."""
+    import datetime
+    import json
+    import time
+
+    from ccba_harness.peer import compute_pending_queues, run_sync_cycle
+
+    peer_dir = tmp_path / ".md" / "peer_exchange"
+    peer_dir.mkdir(parents=True)
+    now = time.time()
+    fresh_iso = datetime.datetime.fromtimestamp(now - 600, tz=datetime.timezone.utc).isoformat()
+
+    _write_ttl_fixture_file(
+        peer_dir / "prompt_to_grok_old_checkout.md",
+        "---\nrequest_id: req-stale\nfrom_agent: antigravity\nto_agent: grok\n"
+        "request_type: review\nsubject: Old\ntimestamp: '2026-10-01T10:00:00+07:00'\n"
+        "output_path: .md/peer_exchange/grok_missing.md\n---\nOld\n",
+        now,
+    )
+    _write_ttl_fixture_file(
+        peer_dir / "prompt_to_grok_fresh.md",
+        f"---\nrequest_id: req-fresh\nfrom_agent: antigravity\nto_agent: grok\n"
+        f"request_type: review\nsubject: Fresh\ntimestamp: '{fresh_iso}'\n"
+        "output_path: .md/peer_exchange/grok_fresh.md\n---\nFresh\n",
+        now,
+    )
+    _write_ttl_fixture_file(
+        peer_dir / "grok_request_antigravity_old.md",
+        "---\nrequest_id: req-anti-old\nfrom_agent: grok\nto_agent: antigravity\n"
+        "request_type: audit\nsubject: Keep\ntimestamp: '2026-10-01T10:00:00+07:00'\n"
+        "output_path: .md/peer_exchange/anti_resp.md\n---\nKeep\n",
+        now - 200_000,
+    )
+    _write_ttl_fixture_file(
+        peer_dir / "grok_review_hist.md",
+        "---\nrequest_id: req-hist\nverdict: APPROVE\nsummary: Answered long ago\n---\nBody\n",
+        now - 500_000,
+    )
+    _write_ttl_fixture_file(
+        peer_dir / "prompt_to_grok_hist.md",
+        f"---\nrequest_id: req-hist\nfrom_agent: antigravity\nto_agent: grok\n"
+        f"request_type: review\nsubject: Hist\ntimestamp: '{fresh_iso}'\n"
+        "output_path: .md/peer_exchange/grok_review_hist.md\n---\nHist\n",
+        now,
+    )
+
+    _, _, reg = scan_peer_exchange(peer_dir, {})
+    dropped: list[str] = []
+    p_anti, p_grok = compute_pending_queues(reg, now_ts=now, stale_dropped_out=dropped)
+    assert (p_grok, dropped, p_anti) == (
+        ["prompt_to_grok_fresh.md"],
+        ["prompt_to_grok_old_checkout.md"],
+        ["grok_request_antigravity_old.md"],
+    )
+
+    run_sync_cycle(peer_dir, auto_grok=False)
+    status = json.loads((peer_dir / "status.json").read_text(encoding="utf-8"))
+    assert status["exchange_stats"]["stale_prompts_dropped"] == 1
+    assert status["exchange_stats"]["pending_grok"] == ["prompt_to_grok_fresh.md"]
+
+
+def test_invoke_grok_cli_syncs_cross_dir_output_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verifies v2.4 Fix A: cross-directory -o output_file also refreshes target_out.parent status.json."""
+    import json
+
+    import ccba_harness.peer as peer_mod
+
+    wt_peer = tmp_path / "wt_worktree" / ".md" / "peer_exchange"
+    main_peer = tmp_path / "main_repo" / ".md" / "peer_exchange"
+    wt_peer.mkdir(parents=True)
+    main_peer.mkdir(parents=True)
+
+    prompt = wt_peer / "prompt_to_grok_cross.md"
+    prompt.write_text(
+        "---\nrequest_id: req-cross\nfrom_agent: antigravity\nto_agent: grok\n"
+        "request_type: review\nsubject: Cross\ntimestamp: '2026-11-11T20:00:00+07:00'\n"
+        "output_path: .md/peer_exchange/grok_cross.md\n---\nBody\n",
+        encoding="utf-8",
+    )
+    target_out = main_peer / "grok_cross.md"
+
+    def _fake_dispatch(_p: Path, out: Path, *_a: object, **_kw: object) -> bool:
+        out.write_text(
+            "---\nrequest_id: req-cross\nverdict: APPROVE_PLAN\nsummary: Cross synced\n---\nOK\n",
+            encoding="utf-8",
+        )
+        return True
+
+    monkeypatch.setattr(peer_mod, "_dispatch_grok_candidate", _fake_dispatch)
+    assert invoke_grok_cli(prompt, model="grok-4.7", output_file=target_out) is True
+    assert (wt_peer / "status.json").exists()
+    main_status = json.loads((main_peer / "status.json").read_text(encoding="utf-8"))
+    assert main_status["peers"]["grok"]["latest_verdict"]["request_id"] == "req-cross"

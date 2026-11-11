@@ -403,6 +403,20 @@ def _parse_iso_ts(raw_ts: str | None) -> float | None:
     return None
 
 
+def _is_stale_prompt(item: dict[str, Any], env: Any, ref_ts: float, max_age_seconds: float) -> bool:
+    """Returns True if prompt age exceeds max_age_seconds using min(mtime, envelope timestamp)."""
+    if max_age_seconds <= 0 or ref_ts <= 0:
+        return False
+    mtime = float(item.get("mtime", 0.0))
+    env_ts = _parse_iso_ts(getattr(env, "timestamp", None))
+    birth_ts = (
+        min(mtime, env_ts)
+        if (env_ts is not None and mtime > 0)
+        else (env_ts if env_ts is not None else mtime)
+    )
+    return (ref_ts - birth_ts) > max_age_seconds
+
+
 def _collect_prior_verdict_sessions(
     peer_dir: Path, cur_req_id: str, cur_out_name: str, p_iso: float | None, p_mtime: float
 ) -> tuple[dict[str, Any], list[tuple[float, float, str, Any, str]]]:
@@ -619,3 +633,4 @@ def _attach_verdict_lineage(
         or (envelope.spoke_name if envelope else None)
         or resolve_spoke_slug_from_path(prompt_path, allow_ancestor_walk=bool(env_cid))
     )
+    verdict.tags = verdict.tags or ((envelope.tags or None) if envelope else None)

@@ -61,6 +61,7 @@ from ._peer_telemetry import (
     _attach_verdict_lineage,
     _build_latest_verdict,
     _enforce_single_verdict_guardrails,
+    _is_stale_prompt,
     extract_grok_session_telemetry,
     merge_overwritten_telemetry,
 )
@@ -287,7 +288,16 @@ def scan_peer_exchange(
     return changes, new_cache, registry
 
 
-def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[str], list[str]]:
+PENDING_QUEUE_TTL_SECONDS = 86_400.0
+
+
+def compute_pending_queues(
+    registry: dict[str, dict[str, Any]],
+    *,
+    now_ts: float | None = None,
+    max_age_seconds: float = PENDING_QUEUE_TTL_SECONDS,
+    stale_dropped_out: list[str] | None = None,
+) -> tuple[list[str], list[str]]:
     """Matches request_ids or fresher output_path verdicts to identify unanswered prompts."""
     answered_ids: set[str] = set()
     grok_verdict_mtimes: dict[str, float] = {}
@@ -298,6 +308,11 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
         elif item["role"] == "ANTIGRAVITY_RESPONSE" and item["verdict"]:
             answered_ids.add(item["verdict"].request_id)
 
+    ref_ts = (
+        now_ts
+        if now_ts is not None
+        else max((float(i.get("mtime", 0.0)) for i in registry.values()), default=0.0)
+    )
     pending_grok: list[str] = []
     pending_anti: list[str] = []
     for name, item in registry.items():
@@ -311,11 +326,13 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
                 for c in cand_outs
             )
             if env.request_id not in answered_ids and not is_fresher_out:
-                pending_grok.append(name)
-        elif item["role"] == "GROK_REQUEST" and env:
-            if env.request_id not in answered_ids:
-                pending_anti.append(name)
-
+                if _is_stale_prompt(item, env, ref_ts, max_age_seconds):
+                    if stale_dropped_out is not None:
+                        stale_dropped_out.append(name)
+                else:
+                    pending_grok.append(name)
+        elif item["role"] == "GROK_REQUEST" and env and env.request_id not in answered_ids:
+            pending_anti.append(name)
     return pending_anti, pending_grok
 
 
@@ -324,6 +341,7 @@ def update_status_json(
     registry: dict[str, dict[str, Any]],
     pending_anti: list[str],
     pending_grok: list[str],
+    stale_dropped: int = 0,
 ) -> None:
     """Updates status.json with latest state and verdicts protected by FileMutexLock."""
     tz = datetime.timezone(datetime.timedelta(hours=7))
@@ -354,6 +372,7 @@ def update_status_json(
             "by_model": by_model,
             "pending_antigravity": pending_anti,
             "pending_grok": pending_grok,
+            "stale_prompts_dropped": stale_dropped,
         },
     }
     lock_path = status_file.with_name(f"{status_file.name}.lock")
@@ -419,8 +438,11 @@ def run_sync_cycle(
         summary_file = peer_exchange_dir / "grok_live_summary.md"
         cache = load_cache(cache_file)
         changes, new_cache, registry = scan_peer_exchange(peer_exchange_dir, cache)
-        pending_anti, pending_grok = compute_pending_queues(registry)
-        update_status_json(status_file, registry, pending_anti, pending_grok)
+        stale_dropped: list[str] = []
+        pending_anti, pending_grok = compute_pending_queues(
+            registry, now_ts=time.time(), stale_dropped_out=stale_dropped
+        )
+        update_status_json(status_file, registry, pending_anti, pending_grok, len(stale_dropped))
         update_live_summary(summary_file, registry, pending_anti, pending_grok)
         if changes or new_cache != cache or not cache_file.exists():
             save_cache(cache_file, new_cache)
@@ -769,4 +791,6 @@ def invoke_grok_cli(
     )
     if ok:
         _sync_if_peer_exchange_dir(prompt_path.parent)
+        if target_out.parent.resolve() != prompt_path.parent.resolve():
+            _sync_if_peer_exchange_dir(target_out.parent)
     return ok
