@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.7.0
+  version: 1.8.0
 disable-model-invocation: true
 bundle: _software
 tier: kernel
@@ -109,6 +109,22 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP kernel hai trục Standard
     ```
 - Tuyệt đối không tự ý gộp chung hoặc trộn lẫn phát hiện của hai trục để tránh che lấp lỗi của nhau.
 - **Tiêu chí hoàn thành:** Xuất báo cáo tổng hợp chi tiết trình lập trình viên đối soát, đính kèm kết quả bảng báo cáo từ `ccba-harness verify-patch`, kèm tóm tắt 1 dòng về số lượng lỗi và lỗi nghiêm trọng nhất trên mỗi trục. Quy tắc Khóa Cứng (HUB-ADR-0058): Đánh dấu trạng thái Review là BLOCKED nếu exit-code gate $\ne 0$.
+
+### 6. Thẩm tra Phản biện Ngang hàng qua Grok CLI (Trục 3: Adversarial Peer Review — ADR-0063..0067)
+Khi cần phản biện độc lập cho các thay đổi quan trọng hoặc kiến trúc phức tạp, Agent phối hợp với Grok qua cơ chế Peer Dispatch:
+- **Tạo Prompt phong bì chuẩn:** Soạn thảo `.md/peer_exchange/prompt_grok_review_<subject>.md` với YAML front-matter đầy đủ (`conversation_id`, `task_id`, `spoke_name`, `tags`, `request_type: "review"`, `profile: "code_review"`).
+- **Thực thi CLI thực tế (Bất biến Chống Giả Lập):**
+  Cấm tuyệt đối tự đóng vai Grok hay tự ghi file `grok_*.md`. Bắt buộc chạy lệnh CLI:
+  ```bash
+  ccba-harness peer-dispatch --prompt-file .md/peer_exchange/prompt_grok_review_<subject>.md --profile code_review
+  ccba-harness peer-watch --once --dir .md/peer_exchange
+  ```
+  *(Lưu ý: Profile hợp lệ cho rà soát code là `code_review`; không dùng alias).*
+- **Ma Trận Phân Loại & Thẩm Định Ý Kiến Grok (3-Label Triage Matrix — Guardrail §20.3):**
+  Mọi ý kiến / điều kiện của Grok phải được rà soát kỹ thuật và gán một trong 3 nhãn chuẩn xác trước khi tiếp thu:
+  * `[ADOPT_AS_IS]`: Tiếp thu nguyên văn khi Grok chỉ ra chính xác vị trí `file:line` và logic phản biện hoàn toàn đúng đắn.
+  * `[ADOPT_ADAPTED]`: Tiếp thu có hiệu chỉnh kỹ thuật khi Grok phát hiện đúng bản chất rủi ro nhưng đề xuất giải pháp chưa tối ưu hoặc vượt quá phạm vi (scope creep).
+  * `[REBUT_WITH_EVIDENCE]`: Phản bác có lập luận và bằng chứng thực tế khi Grok giả định sai ngữ cảnh, đề xuất vi phạm KISS hoặc các bất biến Hiến pháp nền tảng.
 
 ## Tích hợp hệ thống (System Integration)
 

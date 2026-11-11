@@ -15,7 +15,7 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -166,6 +166,31 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
   python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --pull-assets
   ```
 - **Lệnh đồng bộ pháp lý độc lập:** `python -m ccba_legal sync --pull-latest` hoặc tải lẻ: `python -m ccba_legal sync --doc <doc_id>`.
+
+### 🤝 Chế độ 7: Đồng Bộ Khung Giao Thức Phối Hợp Ngang Hàng (Peer Coordination Protocol Scaffold — ADR-0067)
+- **Tự động hóa toàn diện:** Mỗi lần chạy `sync_spoke.py --apply`, hệ thống tự động khởi tạo hoặc đồng bộ thư mục `.md/peer_exchange/` gồm hai tệp chuẩn thức: `PEER_HANDSHAKE.md` và `README.md`.
+- **Cơ chế Smart-Sync & Bảo toàn bản thảo:**
+  - Tự động chuẩn hóa dấu xuống dòng (`CRLF` $\to$ `LF`) trước khi so sánh tránh cập nhật giả.
+  - Tự động sao lưu phiên bản cũ vào `.md/backups/peer_exchange/` trước khi ghi đè bản mới từ Hub (tên tệp sao lưu chuẩn hóa không chứa dấu `:` tương thích 100% Windows NTFS/FAT32).
+  - Bảo toàn tuyệt đối mọi bản thảo trao đổi hiện hành của Agent và người dùng (`prompt_grok_*.md`, `grok_*.md`, `.bridge_cache.json`).
+- **Khuyến nghị lệnh đồng bộ chuẩn (All-in-One):**
+  ```bash
+  # POSIX:
+  python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --bootstrap --verify
+  ```
+  ```powershell
+  # PowerShell:
+  python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --bootstrap --verify
+  ```
+- **Hậu kiểm Môi Trường Ảo & Package Runtime:**
+  Sau khi đồng bộ, kiểm tra runtime bằng Python của `.venv`:
+  ```bash
+  # POSIX:
+  .venv/bin/python -c "import ccba_harness; print('ccba-harness OK')"
+  
+  # PowerShell:
+  .\.venv\Scripts\python.exe -c "import ccba_harness; print('ccba-harness OK')"
+  ```
 
 ---
 

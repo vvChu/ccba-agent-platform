@@ -11,7 +11,7 @@ disable-model-invocation: true
 command: /ccba-spoke-adopter
 category: management
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub"
 keywords:
 - spoke
@@ -108,6 +108,22 @@ python "$env:CCBA_HUB_PATH\scripts\ccba_platform_cli.py" adopt-spoke . --archety
 ---
 
 **Tiêu chí hoàn thành:** Archetype và chế độ dự án được tùy biến chính xác.
+
+### Bước 4: Đồng Bộ An Toàn & Khởi Tạo Khung Giao Thức Ngang Hàng (Safe Sync & Peer Coordination Scaffold)
+Sau khi tiếp nhận cấu hình, tiến hành đồng bộ an toàn toàn bộ kỹ năng, hiến pháp, và khung giao thức ngang hàng Grok Peer Dispatch (`.md/peer_exchange/` gồm `PEER_HANDSHAKE.md` và `README.md`):
+```bash
+# POSIX — Chạy từ Spoke:
+python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply --bootstrap --verify
+```
+```powershell
+# PowerShell — Chạy từ Spoke:
+python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --apply --bootstrap --verify
+```
+- **Lợi ích:** Tự động kích hoạt Editable links cho các gói Hub monorepo, cài đặt Git hooks bảo vệ Maskara, đồng bộ scaffold giao thức phối hợp ngang hàng và kiểm tra tính toàn vẹn hệ thống Spoke.
+
+---
+
+**Tiêu chí hoàn thành:** Spoke được đồng bộ hoàn toàn với Hub, có đầy đủ kỹ năng và khung giao thức ngang hàng hợp lệ.
 
 ---
 
