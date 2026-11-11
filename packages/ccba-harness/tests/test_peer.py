@@ -1746,3 +1746,41 @@ def test_verdict_env_lineage_rejects_malformed_or_non_uuid(monkeypatch):
     assert "spoke_name" not in header
     assert "tags" not in header
 
+
+def test_normalize_conditions_title_alias_and_multikey_cardinality():
+    """Verifies COND-13 [ADOPT_ADAPTED]: title alias and 1-to-1 multi-key condition dicts."""
+    md = (
+        "---\n"
+        "request_id: req-vvc-notes\n"
+        "verdict: APPROVED_WITH_CONDITIONS\n"
+        "risk_score: 6/10\n"
+        "conditions:\n"
+        "  - id: COND-TITLE\n"
+        "    title: Replace raw sleep with stability guard\n"
+        "    blocking: true\n"
+        "  - SHORT_TERM: Add allowlist in test_architectural_budgets.py\n"
+        "    RATIONALE: Fixes Hub sync ratchet trap\n"
+        "    EXECUTION: Exclude synced guardrail files\n"
+        "  - MEDIUM_TERM: Move guardrails under scripts/_guardrails/\n"
+        "    RATIONALE: Directory-level isolation\n"
+        "---\n# Body\n"
+    )
+    verdict = parse_verdict_from_md(md)
+    assert verdict is not None
+    assert len(verdict.conditions) == 3
+    assert verdict.conditions[0].description == "Replace raw sleep with stability guard"
+    assert verdict.conditions[1].id == "SHORT_TERM-02"
+    assert "Add allowlist in test_architectural_budgets.py" in verdict.conditions[1].description
+    assert "RATIONALE: Fixes Hub sync ratchet trap" in verdict.conditions[1].description
+    assert verdict.conditions[2].id == "MEDIUM_TERM-03"
+
+
+def test_classify_file_role_prompt_suffix_precedes_peer_review():
+    """Verifies COND-13: *_prompt.md routes to PROMPT_TO_GROK before peer_review_* verdict rule."""
+    from pathlib import Path
+
+    from ccba_harness.peer import classify_file_role
+
+    assert classify_file_role(Path("peer_review_terumo_4_questions_prompt.md")) == "PROMPT_TO_GROK"
+    assert classify_file_role(Path("peer_review_terumo_4_questions.md")) == "GROK_RESPONSE"
+    assert classify_file_role(Path("peer_consultation_summary.md")) == "GROK_RESPONSE"

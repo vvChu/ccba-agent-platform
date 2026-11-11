@@ -235,6 +235,36 @@ def resolve_spoke_slug_from_path(
     return None
 
 
+def _normalize_condition_dict(d: dict[str, Any], index: int) -> dict[str, Any]:
+    """Normalizes a single condition dict (aliases and multi-key structured items)."""
+    aliases = ("text", "statement", "condition", "summary", "observation", "title")
+    out = dict(d)
+    if not out.get("description"):
+        for alias in aliases:
+            if out.get(alias):
+                out["description"] = str(out[alias])
+                break
+    if not out.get("description"):
+        reserved = {"id", "blocking", "source_profile", "source_profiles", *aliases}
+        extra = [
+            (str(k), str(val).strip())
+            for k, val in out.items()
+            if k not in reserved and val is not None and str(val).strip()
+        ]
+        if len(extra) == 1 and len(out) == 1:
+            k, val = extra[0]
+            return {"id": k, "description": val, "blocking": True}
+        if extra:
+            head_k, head_val = extra[0]
+            tail = "; ".join(f"{k}: {val}" for k, val in extra[1:])
+            out["description"] = f"{head_val} ({tail})" if tail else head_val
+            if not out.get("id"):
+                out["id"] = f"{head_k}-{index + 1:02d}"
+    if not out.get("id"):
+        out["id"] = f"COND-{index + 1:02d}"
+    return out
+
+
 class PeerPromptEnvelope(BaseModel):
     """Envelopes a prompt request sent from one peer agent to another."""
 
@@ -409,26 +439,13 @@ class PeerVerdictBlock(BaseModel):
         if not isinstance(v, (list, tuple)):
             return []
         normalized: list[Any] = []
-        aliases = ("text", "statement", "condition", "summary", "observation")
         for i, item in enumerate(v):
             if isinstance(item, str):
                 normalized.append(
                     {"id": f"COND-{i + 1:02d}", "description": item, "blocking": True}
                 )
             elif isinstance(item, dict):
-                d = dict(item)
-                if not d.get("description"):
-                    for alias in aliases:
-                        if d.get(alias):
-                            d["description"] = str(d[alias])
-                            break
-                if not d.get("description") and len(d) == 1:
-                    k, val = next(iter(d.items()))
-                    if k not in ("id", "blocking", *aliases):
-                        d = {"id": str(k), "description": str(val), "blocking": True}
-                if not d.get("id"):
-                    d["id"] = f"COND-{i + 1:02d}"
-                normalized.append(d)
+                normalized.append(_normalize_condition_dict(item, i))
             else:
                 normalized.append(item)
         return normalized

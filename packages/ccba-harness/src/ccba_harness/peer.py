@@ -209,10 +209,12 @@ def classify_file_role(path: Path) -> str:
         return "GROK_REQUEST"
     if name.startswith("antigravity_response_"):
         return "ANTIGRAVITY_RESPONSE"
-    if name.startswith("prompt_grok_") or name.startswith("prompt_"):
+    if name.startswith("prompt_grok_") or name.startswith("prompt_") or name.endswith("_prompt.md"):
         return "PROMPT_TO_GROK"
     if name.startswith("grok_implementation_") or name.startswith("grok_implement_"):
         return "GROK_IMPLEMENTATION"
+    if name.startswith(("peer_review_", "peer_consultation_")):
+        return "GROK_RESPONSE"
     if name.startswith(_VERDICT_FILE_PREFIXES):
         return "GROK_RESPONSE"
     return "AUXILIARY"
