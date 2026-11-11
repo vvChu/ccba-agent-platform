@@ -399,6 +399,44 @@ def merge_agents_constitution(
     return normalize_spoke_agents_links(merged, spoke_root=spoke_root)
 
 
+def _backup_and_write_peer_protocol(
+    spoke_root: Path, spoke_file: Path, filename: str, spoke_raw: str, hub_raw: str
+) -> None:
+    """Backs up an outdated Spoke protocol file using a Windows-safe timestamp before overwriting."""
+    from datetime import datetime
+
+    ts = datetime.now().strftime("%Y%m%dT%H%M%S")
+    backup_dir = spoke_root / ".md" / "backups" / "peer_exchange"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    bak_file = backup_dir / f"{Path(filename).stem}_bak_{ts}{Path(filename).suffix}"
+    bak_file.write_text(spoke_raw, encoding="utf-8")
+    spoke_file.write_text(hub_raw, encoding="utf-8")
+
+
+def _sync_single_peer_protocol_file(
+    spoke_root: Path, peer_dir: Path, hub_peer_dir: Path, filename: str, dry_run: bool
+) -> dict[str, str] | None:
+    """Smart-syncs a single peer exchange protocol file with CRLF normalization."""
+    hub_file = hub_peer_dir / filename
+    if not hub_file.exists():
+        return None
+    spoke_file = peer_dir / filename
+    rel_path = f".md/peer_exchange/{filename}"
+    hub_raw = hub_file.read_text(encoding="utf-8")
+    if not spoke_file.exists():
+        if not dry_run:
+            peer_dir.mkdir(parents=True, exist_ok=True)
+            spoke_file.write_text(hub_raw, encoding="utf-8")
+        return {"type": "protocol", "name": filename, "status": "NEW", "path": rel_path}
+
+    spoke_raw = spoke_file.read_text(encoding="utf-8")
+    if spoke_raw.replace("\r\n", "\n") == hub_raw.replace("\r\n", "\n"):
+        return {"type": "protocol", "name": filename, "status": "UNCHANGED", "path": rel_path}
+    if not dry_run:
+        _backup_and_write_peer_protocol(spoke_root, spoke_file, filename, spoke_raw, hub_raw)
+    return {"type": "protocol", "name": filename, "status": "UPDATED", "path": rel_path}
+
+
 def ensure_peer_exchange_scaffold(
     spoke_root: Path,
     hub_root: Path,
@@ -406,69 +444,16 @@ def ensure_peer_exchange_scaffold(
     force: bool = False,
 ) -> list[dict[str, str]]:
     """Synchronizes .md/peer_exchange protocol handshake files with Smart-Sync, CRLF normalization, and backup."""
-    actions: list[dict[str, str]] = []
+    _ = force
     peer_dir = spoke_root / ".md" / "peer_exchange"
     hub_peer_dir = hub_root / ".md" / "peer_exchange"
     if not hub_peer_dir.exists():
-        return actions
-
-    protocol_files = ["PEER_HANDSHAKE.md", "README.md"]
-    for filename in protocol_files:
-        hub_file = hub_peer_dir / filename
-        spoke_file = peer_dir / filename
-        rel_path = f".md/peer_exchange/{filename}"
-
-        if not hub_file.exists():
-            continue
-
-        hub_raw = hub_file.read_text(encoding="utf-8")
-        hub_norm = hub_raw.replace("\r\n", "\n")
-
-        if not spoke_file.exists():
-            actions.append(
-                {
-                    "type": "protocol",
-                    "name": filename,
-                    "status": "NEW",
-                    "path": rel_path,
-                }
-            )
-            if not dry_run:
-                peer_dir.mkdir(parents=True, exist_ok=True)
-                spoke_file.write_text(hub_raw, encoding="utf-8")
-        else:
-            spoke_raw = spoke_file.read_text(encoding="utf-8")
-            spoke_norm = spoke_raw.replace("\r\n", "\n")
-            if spoke_norm == hub_norm:
-                actions.append(
-                    {
-                        "type": "protocol",
-                        "name": filename,
-                        "status": "UNCHANGED",
-                        "path": rel_path,
-                    }
-                )
-            else:
-                actions.append(
-                    {
-                        "type": "protocol",
-                        "name": filename,
-                        "status": "UPDATED",
-                        "path": rel_path,
-                    }
-                )
-                if not dry_run:
-                    from datetime import datetime
-
-                    ts = datetime.now().strftime("%Y%m%dT%H%M%S")
-                    backup_dir = spoke_root / ".md" / "backups" / "peer_exchange"
-                    backup_dir.mkdir(parents=True, exist_ok=True)
-                    stem = Path(filename).stem
-                    suffix = Path(filename).suffix
-                    bak_file = backup_dir / f"{stem}_bak_{ts}{suffix}"
-                    bak_file.write_text(spoke_raw, encoding="utf-8")
-                    spoke_file.write_text(hub_raw, encoding="utf-8")
-
+        return []
+    actions: list[dict[str, str]] = []
+    for filename in ("PEER_HANDSHAKE.md", "README.md"):
+        act = _sync_single_peer_protocol_file(spoke_root, peer_dir, hub_peer_dir, filename, dry_run)
+        if act is not None:
+            actions.append(act)
     return actions
 
 
@@ -1180,6 +1165,26 @@ class SpokeSynchronizer:
             f"{deprecated_count} dọn dẹp cũ, {preserved_count} giữ nguyên nội bộ."
         )
 
+    def _print_sdk_recommendations_and_health(
+        self, spoke_root: Path, hub_root: Path, project_type: str, archetype: str
+    ) -> None:
+        """Prints shared SDK recommendations and warn-only runtime health diagnostics."""
+        cat_recs = SharedSdkInspector(
+            spoke_root, hub_root, project_type, archetype=archetype
+        ).get_categorized_recommendations()
+        if cat_recs:
+            print("\n💡 Gợi ý Shared SDKs cho Spoke Python (ADR 0044):")
+            for cat_title, cmds in cat_recs.items():
+                print(f"   [{cat_title}]:")
+                for cmd in cmds:
+                    print(f"   -> {cmd}")
+            print(
+                "   💡 Mẹo: Chạy 'python scripts/sync_spoke.py --bootstrap' để tự động cài đặt 1-chạm."
+            )
+        runtime_warn = check_spoke_runtime_health(spoke_root, hub_root)
+        if runtime_warn:
+            print(f"\n{runtime_warn}", file=sys.stderr)
+
     def _run_bootstrap_and_legal_sync(
         self,
         spoke_root: Path,
@@ -1211,22 +1216,9 @@ class SpokeSynchronizer:
                 if not dry_run:
                     return 1
         else:
-            cat_recs = SharedSdkInspector(
-                spoke_root, hub_root, project_type, archetype=archetype
-            ).get_categorized_recommendations()
-            if cat_recs:
-                print("\n💡 Gợi ý Shared SDKs cho Spoke Python (ADR 0044):")
-                for cat_title, cmds in cat_recs.items():
-                    print(f"   [{cat_title}]:")
-                    for cmd in cmds:
-                        print(f"   -> {cmd}")
-                print(
-                    "   💡 Mẹo: Chạy 'python scripts/sync_spoke.py --bootstrap' để tự động cài đặt 1-chạm."
-                )
-
-            runtime_warn = check_spoke_runtime_health(spoke_root, hub_root)
-            if runtime_warn:
-                print(f"\n{runtime_warn}", file=sys.stderr)
+            self._print_sdk_recommendations_and_health(
+                spoke_root, hub_root, project_type, archetype
+            )
 
         LegalKnowledgeSyncOrchestrator(
             spoke_root, hub_root, project_type, archetype=archetype
