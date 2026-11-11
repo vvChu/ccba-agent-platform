@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -89,11 +89,14 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      python -m ccba_harness verify-patch --preset skill
      # Nếu thay đổi liên quan đến monorepo packages/code:
      python -m ccba_harness verify-patch --preset code
+     # Nếu có sửa đổi dưới scripts/ (kiểm tra lại trần AST <= 50 dòng SAU khi chạy ruff format):
+     python -m pytest scripts/tests/ -q
      ```
    - **Tại Spoke (Pháp điển / Knowledge Corpus / Specialized Spokes):**
      ```bash
      python scripts/validate_legal_spoke.py
      ```
+   - **Nếu nhánh chính cục bộ đang có commit hoặc file dở dang của phiên đồng đẳng (`RULE-4.21`):** Thực thi kiểm định, tách nhánh và mở PR trên một `git worktree` cô lập tách trực tiếp từ `origin/<default_branch>`.
 3. **Quy tắc chặn lỗi tại nguồn:**
    - Nếu kiểm chuẩn trả về mã thoát `0`: Mã nguồn đạt chuẩn, chuyển sang Bước 2.
    - Nếu có lỗi kiểm thử hoặc vi phạm linting: **DỪNG LẠI NGAY LẬP TỨC**, sửa lỗi tại chỗ và commit lại trước khi đẩy lên remote.
@@ -147,15 +150,24 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      ```bash
      git log origin/<default_branch>..HEAD --pretty=format:"- %s"
      ```
-3. **Khởi tạo Pull Request bằng GitHub CLI:**
+   - **Tiền kiểm `One-Way Door` & `TradeoffCard` (`ADR-0067`):** Ghi mô tả PR ra tệp tạm `<body_file>` (tuyệt đối không truyền chuỗi Markdown dài trực tiếp qua `--body`), sau đó chạy kiểm định phân loại cửa rủi ro và thẻ đánh đổi (`#L<a>-L<b>` tối đa 30 dòng):
+     ```bash
+     python -m ccba_harness door-triage <changed_files> --pr-body-file <body_file> --enforce-tradeoff-card
+     ```
+3. **Kiểm tra chống trùng lặp & Khởi tạo Pull Request bằng GitHub CLI (`RULE-4.21`, `RULE-5.11`):**
    ```bash
-   gh pr create --title "<Title>" --body "$PR_BODY" --base <default_branch> --head <current_branch>
+   # Kiểm tra trạng thái remote trước khi tạo để chống sinh PR trùng lặp:
+   gh pr list --head <current_branch> --json number,url
+   # Tạo PR qua tệp mô tả (-F) và gán người phụ trách:
+   gh pr create --title "<Title>" -F <body_file> --base <default_branch> --head <current_branch> --assignee "@me"
+   # Khi cần cập nhật mô tả PR hiện có (tránh lỗi GraphQL Classic Projects của gh pr edit):
+   gh api repos/<owner>/<repo>/pulls/<PR_NUMBER> -X PATCH -F body=@<body_file>
    ```
 4. **Fallback thủ công (nếu `gh` chưa cài hoặc chưa đăng nhập):**
    - Trích xuất URL tạo PR từ `git remote get-url origin`: `https://github.com/<owner>/<repo>/compare/<default_branch>...<current_branch>`.
    - In đường dẫn kèm mẫu tiêu đề và mô tả để người dùng mở trên trình duyệt.
 
-- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub trỏ đúng base branch (`<default_branch>`) kèm link PR và mã số PR.
+- **Tiêu chí hoàn thành:** Lệnh `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, không phát sinh PR trùng lặp, và Pull Request được mở thành công trên GitHub trỏ đúng base branch (`<default_branch>`) kèm link PR và mã số PR.
 
 ---
 
@@ -174,6 +186,9 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
 3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
    - Kiểm tra bot review (tại Hub gọi trực tiếp `scripts/validation/audit_pr_comments.py`, tại Spoke gọi qua `CCBA_HUB_PATH`):
      ```bash
+     # Tại Hub:
+     python scripts/validation/audit_pr_comments.py --pr <PR_NUMBER>
+     # Tại Spoke:
      python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/audit_pr_comments.py" --pr <PR_NUMBER>
      ```
    - Chờ Copilot / Bugbot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
