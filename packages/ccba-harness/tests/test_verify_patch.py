@@ -463,3 +463,35 @@ def test_resolve_code_preset_single_file_and_test_file(tmp_path: Path) -> None:
 
     cmds_test = resolve_preset_commands("code", "tests/test_chatops.py", cwd=tmp_path)
     assert cmds_test[-1].endswith("-m pytest tests/test_chatops.py -q")
+
+
+def test_compute_file_lf_sha256_and_provenance_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify LF-normalized SHA-256 parity and fail-closed git provenance checks."""
+    from ccba_harness import verifier
+    from ccba_harness.verifier import check_harness_git_provenance, compute_file_lf_sha256
+
+    lf_file = tmp_path / "doc_lf.md"
+    crlf_file = tmp_path / "doc_crlf.md"
+    lf_file.write_bytes(b"line1\nline2\n")
+    crlf_file.write_bytes(b"line1\r\nline2\r\n")
+    digest = compute_file_lf_sha256(lf_file)
+    assert digest == compute_file_lf_sha256(crlf_file)
+
+    monkeypatch.setattr(verifier, "_is_git_shallow_repo", lambda _root: False)
+    bad_sha = "deadbeef" * 5
+    assert check_harness_git_provenance(
+        tmp_path, bad_sha, ["doc_lf.md"], expected_sha256={"doc_lf.md": digest}
+    ) == [f"UNVERIFIABLE_SYNC_COMMIT:{bad_sha}"]
+
+    monkeypatch.setattr(verifier, "_is_git_shallow_repo", lambda _root: True)
+    assert (
+        check_harness_git_provenance(
+            tmp_path, bad_sha, ["doc_lf.md"], expected_sha256={"doc_lf.md": digest}
+        )
+        == []
+    )
+    assert check_harness_git_provenance(
+        tmp_path, bad_sha, ["doc_lf.md"], expected_sha256={"doc_lf.md": "0" * 64}
+    ) == ["doc_lf.md"]
