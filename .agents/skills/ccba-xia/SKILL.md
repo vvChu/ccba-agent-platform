@@ -7,7 +7,7 @@ command: /ccba-xia
 when_to_use: Dùng khi cần port tính năng giữa các repository.
 category: dev-tools
 argument-hint: <github-url-or-owner/repo|local-path> [feature] [--compare|--copy-raw|--improve|--port]
-  [--auto|--fast]
+  [--since <sha>] [--target <skill-name>] [--auto|--fast]
 metadata:
   author: CCBA
   version: 2.2.0
@@ -68,13 +68,14 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 
 **Các bước thực hiện:**
 1. **Preflight OSS Health Check:** Nếu nguồn là GitHub repository (`owner/repo` hoặc URL), trước khi clone, truy vấn 2 đối tượng `gh api repos/{owner}/{repo}` và `gh api repos/{owner}/{repo}/commits/{default_branch}` (xem recipe tại [references/modes.md](references/modes.md)) để lấy `stargazers_count`, `pushed_at`, `archived` và ngày `commit.committer.date` của tip nhánh mặc định. Đối chiếu tuổi tip với ngưỡng `stale_upstream_days` tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml) để phân loại `health_posture` $\in$ `{FRESH, STALE, ARCHIVED, UNKNOWN}` (`ARCHIVED` ưu tiên cao nhất; nếu offline hoặc `gh` lỗi thì đặt `stars_count = null` và lấy ngày tip qua `git log -1` trên bản clone `--depth 1`).
-2. Sử dụng lệnh git CLI để clone repository nguồn về thư mục tạm `.md/scratch/xia_sources/` trong workspace, luôn sử dụng cờ `--depth 1` (shallow clone) để giảm dung lượng và tránh kéo theo lịch sử commit không cần thiết. Nếu là đường dẫn thư mục cục bộ, quét trực tiếp mà không clone.
+2. Sử dụng lệnh git CLI để clone repository nguồn về thư mục tạm `.md/scratch/xia_sources/` trong workspace, luôn sử dụng cờ `--depth 1` (shallow clone) để giảm dung lượng và tránh kéo theo lịch sử commit không cần thiết. Nếu là đường dẫn thư mục cục bộ, quét trực tiếp mà không clone. Riêng cờ `--since <sha>` **chỉ hỗ trợ** trên các bản clone cục bộ của Radar tại `.md/scratch/repos/<yaml name>` (đối chiếu `remote_url` trong [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)) sau khi xác minh cả `<since>^{commit}` và `HEAD^{commit}` đều tồn tại qua `git cat-file -e` (nếu thiếu lịch sử commit hoặc là bản clone `--depth 1`, tự động hạ cấp về phân tích toàn cục full-snapshot và ghi rõ cảnh báo).
 3. Sử dụng các công cụ tìm kiếm và đọc thư mục (`list_dir`, `grep_search`) để đọc cấu trúc file và dependencies thực tế của dự án nguồn.
 4. Quét codebase cục bộ để ánh xạ kiến trúc, các tính năng tương đương và các điểm tích hợp.
 5. **License Check (Kiểm tra giấy phép):** Đọc file LICENSE (hoặc LICENSE.md, COPYING) ở thư mục gốc của repo nguồn và phân loại giấy phép:
    - PERMISSIVE (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
    - COPYLEFT (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
    - UNKNOWN/NONE: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
+   - **Cưỡng chế Hạ cấp Chế độ theo Bản quyền:** Khi `license_type` thuộc `COPYLEFT`, `PROPRIETARY`, hoặc `UNKNOWN/NONE`, mọi chế độ `--port` / `--improve` / `--copy-raw` tự động bị kẹp (clamp) về `--compare` (trừ trường hợp dual-license như `MIT OR GPL` đã được người dùng xác nhận tường minh chọn nhánh permissive).
 
 **Tiêu chí hoàn thành:**
 *   [x] Phải xuất ra cụ thể `source manifest` (đường dẫn repo, nhánh, commit SHA, `license_type`, `stars_count`, `pushed_at`, `tip_commit_date`, `health_posture`).
@@ -88,7 +89,7 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 Phân tách tính năng thành các lớp để ánh xạ sang Platform hiện tại, đồng thời đối sánh miền dữ liệu và thuật ngữ để đảm bảo tính nhất quán.
 
 **Các bước thực hiện:**
-1. **Hub Catalog Check (Kiểm tra tái sử dụng):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `.agents/skills/platform-loader/catalog.yaml` của Hub để kiểm tra sự tồn tại của các tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp, Agent phải **nghiên cứu skill trùng lặp đó** (đọc SKILL.md của nó) để đánh giá chính xác mức độ bao phủ trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có, hoặc viết mới kèm lý do chi tiết.
+1. **Hub Catalog & Seam Contract Check (Kiểm tra tái sử dụng — ADR-0061):** Trước khi tiến hành ánh xạ, Agent bắt buộc phải tra cứu `.agents/skills/platform-loader/catalog.yaml` của Hub và chạy `ccba-platform find-seam --in <types> --out <types> --json` để kiểm tra sự tồn tại của các Seam, tool, skill hoặc workflow tương đương với tính năng cần port. Nếu phát hiện trùng lặp hoặc được truyền `--target <skill-name>`, Agent phải **nghiên cứu skill mục tiêu đó** (đọc `SKILL.md` và `references/*.md` của nó) để đối chiếu chính xác phần chênh lệch (delta) trước khi quyết định: kế thừa từ Hub, mở rộng skill hiện có (`--improve --target <skill-name>`), hoặc viết mới kèm lý do chi tiết.
 2. **Kiểm tra Cổng 0 (The Determinism Gate — ADR-0057):** Kiểm tra mọi tính năng bên ngoài định port qua Cổng 0. Nếu là thuật toán thuần túy (regex, AST parse, math, file I/O không cần LLM) $\rightarrow$ chỉ định port thẳng vào `packages/*/src/` dưới dạng Deep Seam (Tier 1: Package Function). Tuyệt đối không tạo Standalone Skill hoặc thư mục skill riêng cho các tác vụ tất định.
 3. Kiểm kê thành phần: logic cốt lõi, trạng thái (state), dữ liệu, API surface, config, types, tests.
 4. Xây dựng ma trận dependency từ thành phần nguồn sang thành phần cục bộ tương đương, bao gồm cột **Reuse Assessment** ghi nhận kết quả Hub Catalog Check cho từng thành phần.
@@ -191,7 +192,11 @@ Bàn giao kết quả phân tích và kế hoạch triển khai cho người dù
 1. **Auto-cleanup:** Xóa bỏ hoàn toàn thư mục tạm `.md/scratch/xia_sources/` trước khi thông báo hoàn tất.
 2. In ra thông báo bàn giao kế hoạch triển khai (hoặc báo cáo so sánh kiến trúc ở chế độ `--compare`).
 3. Cung cấp đường dẫn file `implementation_plan.md` (hoặc file báo cáo so sánh ở chế độ `--compare`) cho người dùng.
-4. **Next Step Recommendation:** In ra hướng dẫn bước tiếp theo cụ thể phù hợp với chế độ chạy: khuyến nghị chạy `/ccba-implement` với kế hoạch này khi ở các chế độ port/improve/copy-raw; hoặc khuyến nghị các bước đánh giá, theo dõi kiến trúc tiếp theo (architectural evaluation follow-up) khi ở chế độ `--compare`.
+4. **Next Step Recommendation & 3-Track Handoff Matrix:** In ra hướng dẫn bước tiếp theo cụ thể phù hợp với chế độ chạy: khuyến nghị chạy `/ccba-implement` với kế hoạch này khi ở các chế độ port/improve/copy-raw; hoặc khuyến nghị các bước đánh giá, theo dõi kiến trúc tiếp theo (architectural evaluation follow-up) khi ở chế độ `--compare`. Cụ thể hóa theo **Ma trận Bàn giao 3 Nhánh** dựa trên phân tầng Pha 5:
+   - **Track 1 — Code / Deep Seam (`packages/*/src/`):** Chuyển giao cho `/ccba-implement` (hoặc `/ccba-tdd`).
+   - **Track 2 — Kỹ năng Kernel độc lập mới (`GPI >= 12.0`, Tier 2B):** Chuyển giao cho `/ccba-build-skill`.
+   - **Track 3 — Tiến hóa kỹ năng sẵn có hoặc tài liệu `references/*.md` (Tier 2A / `--target <skill-name>`):** Chuyển giao cho `/ccba-skill-repair`.
+   - Nếu nguồn xuất phát từ Radar cục bộ (`.md/scratch/repos/<source>`), nhắc kỹ sư ghi nhận quyết định (`ADOPTED` / `DECLINED` / `DEFERRED` kèm `HEAD` SHA) vào `triage_ledger` tại `.md/knowledge/upstream_sources.yaml`.
 
 **Tiêu chí hoàn thành:**
 *   [x] Bàn giao thành công báo cáo so sánh (chế độ `--compare`) hoặc kế hoạch triển khai (chế độ khác) bằng liên kết file click được.

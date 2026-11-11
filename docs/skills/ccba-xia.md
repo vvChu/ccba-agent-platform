@@ -57,8 +57,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `adapt from`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tác nhân thông minh chuyên trích xuất thông tin chuyên sâu từ tài liệu.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Tài liệu kỹ thuật phức tạp cần bóc tách**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Trích xuất, phản biện 6 pha và lập kế hoạch chuyển dịch tính năng thượng nguồn vào nền tảng.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Kho chứa mã nguồn GitHub bên ngoài hoặc khuyến nghị từ ccba-sync-upstream**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -71,18 +71,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-xia` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Tài liệu kỹ thuật phức tạp cần bóc tách ]
+[ Kho chứa mã nguồn GitHub bên ngoài hoặc khuyến nghị từ ccba-sync-upstream ]
           │
           ▼
-    >>> [ ccba-xia ] <<<  (Tác nhân thông minh chuyên trích xuất thông tin chuyên sâu từ tài liệu.)
+    >>> [ ccba-xia ] <<<  (Trích xuất, phản biện 6 pha và lập kế hoạch chuyển dịch tính năng thượng nguồn vào nền tảng.)
           │
           ▼
-[ Dữ liệu cấu trúc hóa chuẩn xác ]
+[ Kế hoạch chuyển dịch implementation_plan.md cho ccba-implement / ccba-build-skill / ccba-skill-repair ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Tài liệu kỹ thuật phức tạp cần bóc tách`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Kho chứa mã nguồn GitHub bên ngoài hoặc khuyến nghị từ ccba-sync-upstream`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Dữ liệu cấu trúc hóa chuẩn xác`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Kế hoạch chuyển dịch implementation_plan.md cho ccba-implement / ccba-build-skill / ccba-skill-repair`.
 
 ---
 
