@@ -32,8 +32,8 @@
 - **RULE-2.5 [ADR 0058]**: `eval_*.json` qua `archetypes.py`; `_run_pre_eval_guards` chặn delta `audit_skill()`; `verify-patch --preset skill`.
 - **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal; E2E Spoke dùng `CCBA_SKIP_GIT_PULL=1` & SHA-256 `spoke_registry.yaml`.
 - **RULE-2.20 [AST, LOC & BFS]**: Hàm $\le 50$L (sau `ruff format`, kèm `pytest scripts/tests/`), `main` $\le 40$L, module $\le 800$L (`0` `# ccba:quarantine`), `check_package_all_exports` (Mục 53); **Two-Edit Litmus** & `Semantic Mutation Proof`; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **BFS (`visited: set[str]`)**; `ccba-design` `v2.5.0` & `ccba-sharepoint-iac` `v1.2.0` (Mục 56).
-- **RULE-2.21 [Harnesses & Wiki]**: `scripts/tests/__init__.py` nối `tests/`; 5-block `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/` nối `run_harness_evals.py --all` & sync `sync_commit` khi sửa `covered_paths`; Wiki `.md/knowledge/wiki/index.md` (Mục 50, 58).
-- **RULE-2.22 [Compaction & Index]**: `compact_session_learnings.py --compact` (`find_dropped_rules`) chặn rơi `RULE-\d+\.\d+` (trừ `--allow-rule-drop-ids`), `_rebase_archive_links` sửa `(archive/...`/`(wiki/...`; tệp `.md/knowledge/` mới ghi vào `.md/knowledge/index.md` (`WikiHealthLinter`, Mục 57).
+- **RULE-2.21 [Harnesses & Wiki]**: `scripts/tests/__init__.py` nối `tests/`; 5-block `verify-ccba-*/harness/` nối `run_harness_evals.py --all`, khóa `covered_sha256` (LF) + `sync_commit` `main` qua `check_harness_git_provenance` fail-closed; Wiki `.md/knowledge/wiki/index.md` (Mục 50, 58, 59).
+- **RULE-2.22 [Compaction & Index]**: `compact_session_learnings.py --compact` (`find_dropped_rules`) chặn rơi `RULE-\d+\.\d+` (`--allow-rule-drop-ids`), `_rebase_archive_links` sửa `(archive|wiki/...`; ghi tệp `.md/knowledge/` mới vào `.md/knowledge/index.md` (`WikiHealthLinter`, Mục 57).
 
 ---
 
@@ -43,7 +43,7 @@
 - **RULE-3.2 [ADR 0031 — TVPL VIP]**: Tier 1 (`part=-100` PDF)$\to$Tier 2 (`part=-1&docx=1`)$\to$Tier 3 (`part=0`, Mục 27).
 - **RULE-3.3 [Bảng & Footnote]**: Khử lặp `^[0-9]+[)\.]\s*`; bảng qua `| :--- |` (Mục 27).
 - **RULE-3.4 [ADR-0059 & `unmask`]**: Sync (`CONTEXT.md`, `canonical_construction_taxonomy.yaml`, `SKILL.md`) 7 bậc (`1812/QĐ-BXD`); `ImmutableSpanMasker.unmask()` cắt `original.count("\n")` (Mục 49).
-- **RULE-3.5 [Link Portability]**: `validate_docs.py` cấm `file:///home/...` hoặc `file:///C:/...`; dùng relative paths.
+- **RULE-3.5 [Link Portability]**: `validate_docs.py` (`p.relative_to(docs_dir).parts`) cấm `file:///`; dùng relative paths (Mục 59).
 
 ---
 
@@ -78,5 +78,5 @@
 
 ## Miền 6. 🧭 Đồ Thị Ngữ Cảnh & Định Danh Thể Chế
 
-- **RULE-6.1 [Danh Xưng & `LEGACY_NATURAL_KEY_ALIASES`]**: Cấm `"Viện IBST"`, `"Trung tâm CCBA"`, `"CCBA/TT BIM"`; chuẩn `"Viện"`, `"IBST"`, `"Viện KHCN Xây dựng (IBST)"`, `"CCBA"`, `"IBST - CCBA"`; đổi `key_field`: `(list_name, key_field, legacy_exact_string)` fail-closed + `existing_map.pop(legacy_key, None)` (Mục 54).
-- **RULE-6.2 [UCG & `C-DRIFT-CONTRACT` v1.1]**: `index_idop_kb.py` xuất `governance_drift_report.json` (`contract_version: "1.1"`, `superseded_statutes[]`, `replacement_statutes[]`, `impacted_metrics[]`, `authority_signoff_role`) từ 4 tệp `.md/governance_constitution/`; giữ `allocation_share` (`495.127.049.993 VNĐ`), tách `Ghost WIP` (`>=0.95`)/`Real WIP` (`#S1..#Sn`), `iso_week_bounds_ict`, cô lập `ctx.corpus` (Mục 54).
+- **RULE-6.1 [Danh Xưng & `LEGACY_NATURAL_KEY_ALIASES`]**: Cấm `"Viện IBST"`, `"Trung tâm CCBA"`, `"CCBA/TT BIM"`; chuẩn `"Viện"`/`"IBST"`/`"Viện KHCN Xây dựng (IBST)"`/`"CCBA"`/`"IBST - CCBA"`; đổi `key_field`: `(list_name, key_field, legacy_exact_string)` fail-closed + `existing_map.pop(legacy_key, None)` (Mục 54).
+- **RULE-6.2 [UCG & `C-DRIFT-CONTRACT` v1.1]**: `index_idop_kb.py` xuất `governance_drift_report.json` (`contract_version:"1.1"`, `superseded_statutes[]`, `replacement_statutes[]`, `impacted_metrics[]`, `authority_signoff_role`) từ 4 tệp `.md/governance_constitution/`; giữ `allocation_share` (`495.127.049.993 VNĐ`), tách `Ghost WIP` (`>=0.95`)/`Real WIP` (`#S1..#Sn`), `iso_week_bounds_ict`, cô lập `ctx.corpus` (Mục 54).
