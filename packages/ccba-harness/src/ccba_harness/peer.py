@@ -47,15 +47,19 @@ from ._peer_models import (
     ProfileTelemetryItem,
     _registry_timestamp,
     _sort_key_latest_exchange,
+    extract_env_conversation_id,
     extract_frontmatter,
     parse_envelope_from_md,
     parse_verdict_from_md,
     render_prompt_header,
     render_verdict_header,
+    resolve_spoke_slug_from_path,
 )
 from ._peer_telemetry import (
     _VERDICT_FILE_PREFIXES,
-    _accumulate_verdict_telemetry,
+    _aggregate_registry_telemetry,
+    _attach_verdict_lineage,
+    _build_latest_verdict,
     _enforce_single_verdict_guardrails,
     extract_grok_session_telemetry,
     merge_overwritten_telemetry,
@@ -207,10 +211,12 @@ def classify_file_role(path: Path) -> str:
         return "GROK_REQUEST"
     if name.startswith("antigravity_response_"):
         return "ANTIGRAVITY_RESPONSE"
-    if name.startswith("prompt_grok_") or name.startswith("prompt_"):
+    if name.startswith("prompt_grok_") or name.startswith("prompt_") or name.endswith("_prompt.md"):
         return "PROMPT_TO_GROK"
     if name.startswith("grok_implementation_") or name.startswith("grok_implement_"):
         return "GROK_IMPLEMENTATION"
+    if name.startswith(("peer_review_", "peer_consultation_")):
+        return "GROK_RESPONSE"
     if name.startswith(_VERDICT_FILE_PREFIXES):
         return "GROK_RESPONSE"
     return "AUXILIARY"
@@ -311,46 +317,6 @@ def compute_pending_queues(registry: dict[str, dict[str, Any]]) -> tuple[list[st
                 pending_anti.append(name)
 
     return pending_anti, pending_grok
-
-
-def _build_latest_verdict(registry: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
-    """Extracts the most recent Grok verdict details from registry."""
-    grok_resps = [
-        item
-        for item in registry.values()
-        if item["role"] in ("GROK_RESPONSE", "GROK_IMPLEMENTATION") and item["verdict"]
-    ]
-    if not grok_resps:
-        return None
-    grok_resps.sort(key=_sort_key_latest_exchange, reverse=True)
-    top = grok_resps[0]
-    verdict = top["verdict"]
-    return {
-        "request_id": verdict.request_id,
-        "verdict": verdict.verdict,
-        "blocking_conditions": len([c for c in verdict.conditions if c.blocking]),
-        "output_path": top["path"].name,
-        "summary": verdict.summary,
-    }
-
-
-def _aggregate_registry_telemetry(
-    registry: dict[str, dict[str, Any]],
-) -> tuple[int, float, dict[str, dict[str, Any]]]:
-    """Aggregates token and cost telemetry across all registry verdict entries."""
-    total_tokens = 0
-    total_cost_usd = 0.0
-    by_model: dict[str, dict[str, Any]] = {}
-    seen_snapshots: set[tuple[str, int, int, float]] = set()
-    for item in registry.values():
-        v = item.get("verdict")
-        if v and getattr(v, "telemetry", None):
-            tok_delta, cost_delta = _accumulate_verdict_telemetry(
-                v.telemetry, by_model, seen_snapshots
-            )
-            total_tokens += tok_delta
-            total_cost_usd += cost_delta
-    return total_tokens, total_cost_usd, by_model
 
 
 def update_status_json(
@@ -483,7 +449,15 @@ def publish_peer_message(
     auto_grok: bool = False,
 ) -> Path:
     """Atomically publishes a peer exchange envelope and asynchronously syncs state."""
-    atomic_write_text(target_path, render_prompt_header(envelope) + body_text.lstrip())
+    env_cid = extract_env_conversation_id()
+    eff_envelope = envelope.model_copy(
+        update={
+            "conversation_id": envelope.conversation_id or env_cid,
+            "spoke_name": envelope.spoke_name
+            or resolve_spoke_slug_from_path(target_path, allow_ancestor_walk=bool(env_cid)),
+        }
+    )
+    atomic_write_text(target_path, render_prompt_header(eff_envelope) + body_text.lstrip())
     if on_publish_hook:
         on_publish_hook(target_path)
     _clean_completed_threads()
@@ -602,6 +576,7 @@ def _finalize_grok_verdict_and_telemetry(
         if telemetry:
             verdict.telemetry = merge_overwritten_telemetry(output_file, telemetry)
 
+    _attach_verdict_lineage(verdict, prompt_path, prompt_content)
     _enforce_single_verdict_guardrails(verdict)
     _, body = extract_frontmatter(stdout_text)
     final_output = render_verdict_header(verdict) + "\n" + body.lstrip()

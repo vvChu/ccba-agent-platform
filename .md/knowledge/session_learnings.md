@@ -58,6 +58,7 @@
 - **RULE-4.17 [Tool Audit & 3-Way]**: Read-Only Tools + `AUDIT_BASE_SYSTEM_PROMPT` (`max_turns=8`, `--no-tools` `patch_fast`/`audit_direct`); `COND-XX` (`ADOPT_AS_IS`/`ADOPT_ADAPTED`/`REBUT_WITH_EVIDENCE`+`file:line`); `test_cli_contract_parity.py`.
 - **RULE-4.18 [Validity & OSS Vitality]**: Thẩm định quy mô ($N=76$), ADR, Seams/OBE $\to$ `not_planned`/`completed`; `ccba-xia` v2.2.0 (`upstream_evaluator.py`) đo `health_posture` (`120d`, `is-shallow-repository`, `gh api`, Mục 52, 56).
 - **RULE-4.19 [Watchdog & 3-Tier Resume]**: Watchdog `events.jsonl` (`90s`, khử `\x00`, `+45s`), tắt `GROK_BACKEND_SEARCH` & `CLAUDE/CURSOR_MCPS`; Auto-Synthesis (`fork_session=False`, `max_turns=2`); `COND-DEGRADED-REASONING`; `_auto_discover_resume_session_id` (`_STAGE_PREFIX_RE`, `delta_sec`), bloat `>400`L/`>20KB`, dedup `status.json`, `-o` & cấm `> grok_*.md` (`peer-dispatch`, Mục 55).
+- **RULE-4.20 [Peer Lineage & Scaffold Sync]**: `PeerPromptEnvelope` `extra="forbid"` truyền 4 khóa lineage tới `PeerVerdictBlock` (`ANTIGRAVITY_CONVERSATION_ID` fallback); `ensure_peer_exchange_scaffold` `CRLF`$\to$`LF`, giữ `grok_*`/`prompt_*`, `.gitignore` track 3 tệp tĩnh; `check_spoke_runtime_health` exit `0` (Mục 58).
 - **RULE-4.21 [Worktree PR & `-F` Gate]**: Khi `main` có commit song song, nhánh PR, TRIHT & `docs/walkthrough-pr-*`/`docs/session-retrospective-*` chạy trên `git worktree` từ `origin/main` (xóa nhánh remote sau `--detach` merge; dùng `-F <file>` cho `gh pr create/comment`, Mục 57).
 
 ---

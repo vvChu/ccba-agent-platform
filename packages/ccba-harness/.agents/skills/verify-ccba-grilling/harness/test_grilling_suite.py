@@ -255,7 +255,7 @@ def test_feat_grill_007_surface_diff_and_domain_eval_parity() -> None:
     assert not missing_feats, f"Uncovered features in INDEX.md: {missing_feats}"
 
     changed = runner.check_git_provenance(  # type: ignore[attr-defined]
-        "80ad54ed1f80d24c0cce0a8034ca29384bf50df3",
+        "9948fdf18663ae2609edf06ae0cbdbd4c87f8f4a",
         [
             ".agents/skills/ccba-grilling/SKILL.md",
             ".agents/skills/ccba-grilling/references/to-questionnaire.md",

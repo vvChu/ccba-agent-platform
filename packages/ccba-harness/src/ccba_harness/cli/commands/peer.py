@@ -374,13 +374,12 @@ def _print_dispatch_verdict_summary(
 
     prompt_content, _ = safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(prompt_content or "", prompt_path=prompt_path)
-    if not output_file and (not envelope or not envelope.output_path):
+    if output_file:
+        out_file = Path(output_file).resolve()
+    elif envelope and envelope.output_path:
+        out_file = prompt_path.parent / Path(envelope.output_path).name
+    else:
         return
-    out_file = (
-        Path(output_file).resolve()
-        if output_file
-        else (prompt_path.parent / Path(envelope.output_path).name)
-    )
     if not out_file.exists():
         return
     text, _ = safe_read_and_hash(out_file)

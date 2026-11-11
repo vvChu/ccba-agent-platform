@@ -16,7 +16,7 @@ command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - teamwork
@@ -104,6 +104,10 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Kích hoạt khi hội đủ **cả 2 điều kiện**: (a) yêu cầu bắt đầu bằng token `[skip-interview]` và (b) có tệp đọc được trên đĩa (`implementation_plan.md`, `spec.md`, hoặc `team_sheet` sẵn có) nêu đủ Mục tiêu, Non-Goals và danh sách Seam/file.
    - Nếu thân yêu cầu rỗng sau token `[skip-interview]`, Orchestrator hỏi việc cần làm; nếu thiếu Mục tiêu/Non-Goals/Seam, thiếu phân quyền 11 Ghế CCBA Charter 2026, hoặc seam còn quyết định thiết kế mở, Orchestrator **chỉ hỏi bù đúng phần khuyết** trước khi sang Giai đoạn 3.
    - Khi chạy Spec-Ready Intake, Orchestrator ghi `Interview Mode: spec-ready (source: <path>)` vào nhật ký tiến độ và vẫn phải lập đủ cả 2 lớp trong `team_sheet.md`.
+6. **Phản biện Kiến trúc Ngang hàng Grok CLI (Peer Architecture Audit — ADR-0063..0067):**
+   - Đối với các chiến dịch quy mô lớn hoặc tác động rộng, trước khi sinh team sheet, Orchestrator có thể dispatch Grok CLI để thẩm định tính khả thi của việc phân rã seam và ranh giới Non-Goals.
+   - Soạn thảo `.md/peer_exchange/prompt_grok_plan_<project>.md` (kèm `conversation_id`, `task_id`, `spoke_name`, `tags`, `request_type: "plan"`, `profile: "arch_audit"`).
+   - Chạy lệnh CLI thực tế: `ccba-harness peer-dispatch --prompt-file .md/peer_exchange/prompt_grok_plan_<project>.md --profile arch_audit`.
 
 ---
 
@@ -181,7 +185,14 @@ Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
    ```powershell
    python scripts/governance/compile_catalog.py
    ```
-5. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
+5. **Thẩm Định Độc Lập Hậu Hợp Nhất qua Grok CLI (Tùy chọn cho Epic/Migration lớn):**
+   - Khi chiến dịch có tác động diện rộng (Monorepo-wide hoặc Spoke-affecting), Orchestrator dispatch Grok CLI để kiểm toán lần cuối:
+     ```bash
+     ccba-harness peer-dispatch --prompt-file .md/peer_exchange/prompt_grok_audit_<project>.md --profile arch_audit
+     ccba-harness peer-watch --once --dir .md/peer_exchange
+     ```
+   - Áp dụng Ma Trận Phân Loại 3 Nhãn (§20.3): `[ADOPT_AS_IS]`, `[ADOPT_ADAPTED]`, `[REBUT_WITH_EVIDENCE]` trước khi chuyển sang bước nghiệm thu.
+6. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
 
 > [!CAUTION]
 > **Deterministic Hard Completion Lock (ADR-0058)**: Cấm Orchestrator tự nhận hoàn thành nếu bất kỳ bước kiểm định nào ở trên có Exit Code $\ne 0$.

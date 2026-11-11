@@ -144,6 +144,12 @@ def test_spoke_bootstrapper_resolves_packages_and_generates_lockfile(
     assert gitignore.exists()
     gi_content = gitignore.read_text(encoding="utf-8")
     assert "requirements-hub.txt" in gi_content
+    assert ".md/peer_exchange/*.md" in gi_content
+    assert "!.md/peer_exchange/PEER_HANDSHAKE.md" in gi_content
+    assert "!.md/peer_exchange/README.md" in gi_content
+    assert gi_content.index(".md/peer_exchange/*.md") < gi_content.index(
+        "!.md/peer_exchange/PEER_HANDSHAKE.md"
+    )
     assert ".md/data/telemetry_summary.json" in gi_content
     assert ".md/data/*.json" in gi_content
 

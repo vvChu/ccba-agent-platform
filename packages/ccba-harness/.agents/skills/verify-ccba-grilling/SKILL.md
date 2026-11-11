@@ -17,7 +17,7 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "80ad54ed1f80d24c0cce0a8034ca29384bf50df3"
+sync_commit: "9948fdf18663ae2609edf06ae0cbdbd4c87f8f4a"
 verification_mode:
   - scaffold
   - sync
@@ -40,7 +40,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng Bước 0 (`in-your-own-words` & `sharpen`), 3 nhánh tác nghiệp (Standard Stress-Test, Rule Compliance Stress-Test, Visual Prototype Grilling), cấu trúc Cây thiết kế (`Design Tree`, `Frontier Questions`, `Facts vs. Decisions`), và tài liệu tham chiếu Tier 2A `references/to-questionnaire.md` (*"Grill the send, not the subject"*).
-- **Version Anchor (`sync_commit`)**: Neo tại commit `80ad54ed1f80d24c0cce0a8034ca29384bf50df3` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
+- **Version Anchor (`sync_commit`)**: Neo tại commit `9948fdf18663ae2609edf06ae0cbdbd4c87f8f4a` bảo vệ danh mục `covered_paths` khai báo tại frontmatter.
 
 ---
 

@@ -161,3 +161,17 @@ Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc C
   1. **`[ADOPT_AS_IS]` (Tiếp thu nguyên bản):** Mục tiêu kiến trúc và cơ chế thực thi đều chính xác, trích dẫn rõ `file:line` tương thích 100% với codebase và các ADR hiện hành.
   2. **`[ADOPT_ADAPTED]` (Tiếp thu mục tiêu, hiệu chỉnh cơ chế):** Trích dẫn nguyên văn điều kiện gốc của Peer Reviewer bên cạnh ràng buộc thực tế (`file:line` của linter/guardrail nội bộ) và phương án hiệu chỉnh kỹ thuật.
   3. **`[REBUT_WITH_EVIDENCE]` (Bác bỏ kèm bằng chứng code):** Yêu cầu của Peer Reviewer dựa trên giả định sai lệch so với mã nguồn thực thi hoặc vi phạm KISS/ADR — trích dẫn rõ `file:line` để phản biện trực diện tại vòng `signoff_diff`.
+- **Chốt chặn SOP Nghiệm thu Vòng 2 (`Pass-2 Sign-off Discipline`):** Khi phán quyết vòng 1 trả về `REVISE_PLAN` hoặc chứa điều kiện `blocking: true`, sau khi hoàn tất sửa đổi theo bảng thẩm định §20.3, Agent **bắt buộc** thực thi vòng nghiệm thu `--profile signoff_diff` nối tiếp phiên (`--resume <session_id> --fork-session`) trước khi báo cáo hoàn thành tác vụ.
+
+### 20.4. Phong Bì Truy Vết Lineage & Bất Biến Pydantic "extra=forbid" (Grok COND-09 & ADR-0067)
+- **Bảo Vệ Chuỗi Parse & KV-Cache (`extra="forbid"` Invariant):** CẤM TUYỆT ĐỐI cấu hình `extra="ignore"` trên `PeerPromptEnvelope`. Do `parse_envelope_from_md` gọi `model_validate(raw)` trước, `extra="ignore"` sẽ nuốt mất alias `session_id` $\to$ `resume_session_id` ở các prompt Stage 3, làm gãy ngữ cảnh nối tiếp phiên trên Grok CLI.
+- **4 Trường Lineage Metadata Chuẩn Hóa:**
+  * `conversation_id`: ID phiên Antigravity (`conversation://<id>`) để truy vết 2 chiều.
+  * `task_id`: Task ID chạy ngầm (`task-677`) để tra cứu log.
+  * `spoke_name`: Tên định danh Spoke (bắt buộc chuẩn hóa slug, loại bỏ ký tự ổ đĩa tuyệt đối theo quy tắc Machine-State Decoupling).
+  * `tags`: Danh sách nhãn phân loại nghiệp vụ (tối đa 8 tags, mỗi tag $\le 40$ ký tự).
+- **Bất Biến Đồng Bộ Giao Thức (Scaffold Sync Invariants):**
+  * *Schema 4 trường:* Trả về đúng `{type: "protocol", name, status, path}`.
+  * *CRLF Invariance:* Chuẩn hóa `\r\n` $\to$ `\n` trước khi so sánh tránh cập nhật giả trên Windows.
+  * *Tên tệp sao lưu:* Cấm chứa dấu `:` trong timestamp sao lưu dưới `.md/backups/peer_exchange/`.
+  * *Runtime Health:* Thăm dò `ccba-harness` chỉ cảnh báo stderr, exit code giữ 0, bỏ qua non-Python Spokes.

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime
+import json
+import os
 import re
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -86,6 +88,10 @@ _ENVELOPE_ALLOWED_KEYS: frozenset[str] = frozenset(
         "target_files",
         "resume_session_id",
         "fork_session",
+        "conversation_id",
+        "task_id",
+        "spoke_name",
+        "tags",
     }
 )
 _REQUEST_TYPE_ALIASES: dict[str, str] = {
@@ -164,6 +170,101 @@ class AnchorPatchPayload(BaseModel):
     files: list[FilePatch]
 
 
+def _sanitize_optional_id(v: Any) -> str | None:
+    """Strips optional identifier strings and normalizes empty strings to None."""
+    if v is None:
+        return None
+    s = str(v).strip()
+    return s or None
+
+
+def _sanitize_spoke_slug(v: Any) -> str | None:
+    """Sanitizes spoke_name into a machine-path-free alphanumeric slug."""
+    if v is None:
+        return None
+    raw = str(v).strip()
+    if not raw:
+        return None
+    spoke_base = Path(raw).name if ("/" in raw or "\\" in raw) else raw
+    slug = re.sub(r"[^a-zA-Z0-9_\-]", "", spoke_base).strip()
+    return slug or None
+
+
+_UUID_PATTERN = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
+
+
+def extract_env_conversation_id() -> str | None:
+    """Extracts validated UUID conversationId from ANTIGRAVITY_SOURCE_METADATA if set."""
+    raw = os.environ.get("ANTIGRAVITY_SOURCE_METADATA", "").strip()
+    if not raw:
+        return None
+    try:
+        meta = json.loads(raw)
+        if not isinstance(meta, dict):
+            return None
+        tool_meta = meta.get("tool")
+        cid = (
+            tool_meta.get("conversationId")
+            if isinstance(tool_meta, dict)
+            else meta.get("conversationId")
+        )
+        if isinstance(cid, str) and _UUID_PATTERN.match(cid.strip()):
+            return cid.strip()
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None
+    return None
+
+
+def resolve_spoke_slug_from_path(
+    target_path: Path | None, *, allow_ancestor_walk: bool = False
+) -> str | None:
+    """Resolves spoke_name slug from canonical <repo>/.md/peer_exchange/ layout or .git ancestor."""
+    if target_path is None:
+        return None
+    parent = target_path.parent
+    if parent.name == "peer_exchange" and parent.parent.name == ".md":
+        repo_root = parent.parent.parent
+        if (repo_root / ".git").exists():
+            return _sanitize_spoke_slug(repo_root.name)
+    if allow_ancestor_walk:
+        for candidate in (parent, *parent.parents):
+            if (candidate / ".git").exists():
+                return _sanitize_spoke_slug(candidate.name)
+    return None
+
+
+def _normalize_condition_dict(d: dict[str, Any], index: int) -> dict[str, Any]:
+    """Normalizes a single condition dict (aliases and multi-key structured items)."""
+    aliases = ("text", "statement", "condition", "summary", "observation", "title")
+    out = dict(d)
+    if not out.get("description"):
+        for alias in aliases:
+            if out.get(alias):
+                out["description"] = str(out[alias])
+                break
+    if not out.get("description"):
+        reserved = {"id", "blocking", "source_profile", "source_profiles", *aliases}
+        extra = [
+            (str(k), str(val).strip())
+            for k, val in out.items()
+            if k not in reserved and val is not None and str(val).strip()
+        ]
+        if len(extra) == 1 and len(out) == 1:
+            k, val = extra[0]
+            return {"id": k, "description": val, "blocking": True}
+        if extra:
+            head_k, head_val = extra[0]
+            tail = "; ".join(f"{k}: {val}" for k, val in extra[1:])
+            out["description"] = f"{head_val} ({tail})" if tail else head_val
+            if not out.get("id"):
+                out["id"] = f"{head_k}-{index + 1:02d}"
+    if not out.get("id"):
+        out["id"] = f"COND-{index + 1:02d}"
+    return out
+
+
 class PeerPromptEnvelope(BaseModel):
     """Envelopes a prompt request sent from one peer agent to another."""
 
@@ -183,6 +284,31 @@ class PeerPromptEnvelope(BaseModel):
     target_files: list[str] = Field(default_factory=list)
     resume_session_id: str | None = None
     fork_session: bool | None = None
+    conversation_id: str | None = None
+    task_id: str | None = None
+    spoke_name: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("conversation_id", "task_id", mode="before")
+    @classmethod
+    def _clean_optional_id(cls, v: Any) -> str | None:
+        return _sanitize_optional_id(v)
+
+    @field_validator("spoke_name", mode="before")
+    @classmethod
+    def _clean_spoke_name(cls, v: Any) -> str | None:
+        return _sanitize_spoke_slug(v)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _clean_tags(cls, v: Any) -> list[str]:
+        if v is None:
+            return []
+        if isinstance(v, (list, tuple)):
+            return [str(t).strip()[:40] for t in v if str(t).strip()][:8]
+        if isinstance(v, str) and v.strip():
+            return [t.strip()[:40] for t in v.split(",") if t.strip()][:8]
+        return []
 
 
 class PeerCondition(BaseModel):
@@ -255,6 +381,9 @@ class PeerVerdictBlock(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     request_id: str
+    conversation_id: str | None = None
+    task_id: str | None = None
+    spoke_name: str | None = None
     verdict: VerdictType
     conditions: list[PeerCondition] = Field(default_factory=list)
     risk_score: int | None = Field(default=None, ge=1, le=5)
@@ -262,6 +391,16 @@ class PeerVerdictBlock(BaseModel):
     summary: str = ""
     timestamp: str | None = None
     telemetry: PeerVerdictTelemetry | CombinedTelemetry | None = None
+
+    @field_validator("conversation_id", "task_id", mode="before")
+    @classmethod
+    def _clean_verdict_optional_id(cls, v: Any) -> str | None:
+        return _sanitize_optional_id(v)
+
+    @field_validator("spoke_name", mode="before")
+    @classmethod
+    def _clean_verdict_spoke_name(cls, v: Any) -> str | None:
+        return _sanitize_spoke_slug(v)
 
     @field_validator("risk_score", mode="before")
     @classmethod
@@ -300,26 +439,13 @@ class PeerVerdictBlock(BaseModel):
         if not isinstance(v, (list, tuple)):
             return []
         normalized: list[Any] = []
-        aliases = ("text", "statement", "condition", "summary", "observation")
         for i, item in enumerate(v):
             if isinstance(item, str):
                 normalized.append(
                     {"id": f"COND-{i + 1:02d}", "description": item, "blocking": True}
                 )
             elif isinstance(item, dict):
-                d = dict(item)
-                if not d.get("description"):
-                    for alias in aliases:
-                        if d.get(alias):
-                            d["description"] = str(d[alias])
-                            break
-                if not d.get("description") and len(d) == 1:
-                    k, val = next(iter(d.items()))
-                    if k not in ("id", "blocking", *aliases):
-                        d = {"id": str(k), "description": str(val), "blocking": True}
-                if not d.get("id"):
-                    d["id"] = f"COND-{i + 1:02d}"
-                normalized.append(d)
+                normalized.append(_normalize_condition_dict(item, i))
             else:
                 normalized.append(item)
         return normalized
@@ -514,6 +640,32 @@ def _normalize_envelope_frontmatter(
         data.get("output_path") or data.get("output_file") or f"grok_{stem}.md"
     ).strip()
     _apply_envelope_doc_and_session_aliases(data, d)
+
+    # Lineage metadata extraction (ADR-0063 / COND-09)
+    raw_conv_id = str(data.get("conversation_id") or "").strip()
+    d["conversation_id"] = raw_conv_id or None
+
+    raw_task_id = str(data.get("task_id") or "").strip()
+    d["task_id"] = raw_task_id or None
+
+    raw_spoke = str(data.get("spoke_name") or data.get("spoke") or "").strip()
+    if raw_spoke:
+        spoke_base = Path(raw_spoke).name if ("/" in raw_spoke or "\\" in raw_spoke) else raw_spoke
+        slug = re.sub(r"[^a-zA-Z0-9_\-]", "", spoke_base).strip()
+        d["spoke_name"] = slug or None
+    else:
+        d["spoke_name"] = None
+
+    raw_tags = data.get("tags")
+    if isinstance(raw_tags, (list, tuple)):
+        clean_tags = [str(t).strip()[:40] for t in raw_tags if str(t).strip()][:8]
+        d["tags"] = clean_tags
+    elif isinstance(raw_tags, str) and raw_tags.strip():
+        clean_tags = [t.strip()[:40] for t in raw_tags.split(",") if t.strip()][:8]
+        d["tags"] = clean_tags
+    else:
+        d["tags"] = []
+
     return d
 
 

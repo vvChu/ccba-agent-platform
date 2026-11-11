@@ -444,3 +444,244 @@ def test_sync_with_additional_bundles(mock_spoke: Path, mock_hub: Path) -> None:
     assert (mock_spoke / ".agents" / "skills" / "core-skill" / "SKILL.md").exists()
     assert (mock_spoke / ".agents" / "skills" / "software-skill" / "SKILL.md").exists()
     assert (mock_spoke / ".agents" / "skills" / "consulting-skill" / "SKILL.md").exists()
+
+
+# =============================================================================
+# TESTS: Peer Exchange Protocol Scaffold Smart-Sync & Runtime Health (ADR-0067)
+# =============================================================================
+
+
+def test_peer_exchange_creates_new_scaffold_schema(tmp_path: Path) -> None:
+    """Verifies that ensure_peer_exchange_scaffold initializes scaffold with exact 4-field schema."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    (hub_peer / "PEER_HANDSHAKE.md").write_text("# Handshake Canonical\n", encoding="utf-8")
+    (hub_peer / "README.md").write_text("# Readme Canonical\n", encoding="utf-8")
+
+    actions = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+
+    assert len(actions) == 2
+    for act in actions:
+        assert set(act.keys()) == {"type", "name", "status", "path"}
+        assert act["type"] == "protocol"
+        assert act["status"] == "NEW"
+
+    assert (spoke_root / ".md" / "peer_exchange" / "PEER_HANDSHAKE.md").read_text(
+        encoding="utf-8"
+    ) == "# Handshake Canonical\n"
+    assert (spoke_root / ".md" / "peer_exchange" / "README.md").read_text(
+        encoding="utf-8"
+    ) == "# Readme Canonical\n"
+
+
+def test_peer_exchange_detects_unchanged(tmp_path: Path) -> None:
+    """Verifies that matching content returns UNCHANGED status."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    content = "# Same Content\n"
+    (hub_peer / "PEER_HANDSHAKE.md").write_text(content, encoding="utf-8")
+    (hub_peer / "README.md").write_text(content, encoding="utf-8")
+    (spoke_peer / "PEER_HANDSHAKE.md").write_text(content, encoding="utf-8")
+    (spoke_peer / "README.md").write_text(content, encoding="utf-8")
+
+    actions = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+    assert len(actions) == 2
+    assert all(a["status"] == "UNCHANGED" for a in actions)
+
+
+def test_peer_exchange_crlf_normalized_unchanged(tmp_path: Path) -> None:
+    """Verifies that CRLF vs LF differences are normalized and treated as UNCHANGED."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    (hub_peer / "PEER_HANDSHAKE.md").write_text("# Line 1\n# Line 2\n", encoding="utf-8")
+    (spoke_peer / "PEER_HANDSHAKE.md").write_text("# Line 1\r\n# Line 2\r\n", encoding="utf-8")
+
+    actions = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+    handshake_act = next(a for a in actions if a["name"] == "PEER_HANDSHAKE.md")
+    assert handshake_act["status"] == "UNCHANGED"
+
+
+def test_peer_exchange_dry_run_reports_updated_without_mutation(tmp_path: Path) -> None:
+    """Verifies dry-run reports UPDATED but performs no mutations or backup creation."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    (hub_peer / "PEER_HANDSHAKE.md").write_text("# Canonical\n", encoding="utf-8")
+    (spoke_peer / "PEER_HANDSHAKE.md").write_text("# Customized Spoke\n", encoding="utf-8")
+
+    actions = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=True)
+    handshake_act = next(a for a in actions if a["name"] == "PEER_HANDSHAKE.md")
+    assert handshake_act["status"] == "UPDATED"
+
+    # Spoke file must remain unchanged
+    assert (spoke_peer / "PEER_HANDSHAKE.md").read_text(encoding="utf-8") == "# Customized Spoke\n"
+    # No backups directory
+    assert not (spoke_root / ".md" / "backups").exists()
+
+
+def test_peer_exchange_apply_creates_backup_and_updates_content(tmp_path: Path) -> None:
+    """Verifies that apply mode creates a safe backup without colons and updates spoke content."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    old_content = "# Customized Spoke Handshake\n"
+    new_content = "# Canonical Hub Handshake\n"
+    (hub_peer / "PEER_HANDSHAKE.md").write_text(new_content, encoding="utf-8")
+    (spoke_peer / "PEER_HANDSHAKE.md").write_text(old_content, encoding="utf-8")
+
+    actions = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+    handshake_act = next(a for a in actions if a["name"] == "PEER_HANDSHAKE.md")
+    assert handshake_act["status"] == "UPDATED"
+
+    # Verify updated content
+    assert (spoke_peer / "PEER_HANDSHAKE.md").read_text(encoding="utf-8") == new_content
+
+    # Verify backup
+    backup_dir = spoke_root / ".md" / "backups" / "peer_exchange"
+    assert backup_dir.exists()
+    bak_files = list(backup_dir.glob("PEER_HANDSHAKE_bak_*.md"))
+    assert len(bak_files) == 1
+    # Check no colons in filename (Windows compatibility)
+    assert ":" not in bak_files[0].name
+    assert bak_files[0].read_text(encoding="utf-8") == old_content
+
+
+def test_peer_exchange_apply_idempotent(tmp_path: Path) -> None:
+    """Verifies that subsequent apply calls return UNCHANGED without creating duplicate backups."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    (hub_peer / "PEER_HANDSHAKE.md").write_text("# Hub V2\n", encoding="utf-8")
+    (spoke_peer / "PEER_HANDSHAKE.md").write_text("# Spoke V1\n", encoding="utf-8")
+
+    actions1 = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+    assert actions1[0]["status"] == "UPDATED"
+
+    actions2 = ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+    assert actions2[0]["status"] == "UNCHANGED"
+
+    # Backup directory should still have only 1 backup file
+    backup_dir = spoke_root / ".md" / "backups" / "peer_exchange"
+    assert len(list(backup_dir.glob("*.md"))) == 1
+
+
+def test_peer_exchange_preserves_user_draft_files(tmp_path: Path) -> None:
+    """Verifies that prompt_*.md, grok_*.md, and .bridge_cache.json are strictly preserved."""
+    from scripts.spoke.sync.coordinator import ensure_peer_exchange_scaffold
+
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    hub_peer = hub_root / ".md" / "peer_exchange"
+    spoke_peer = spoke_root / ".md" / "peer_exchange"
+    hub_peer.mkdir(parents=True)
+    spoke_peer.mkdir(parents=True)
+
+    (hub_peer / "PEER_HANDSHAKE.md").write_text("# Hub Handshake\n", encoding="utf-8")
+    (spoke_peer / "prompt_grok_review_foo.md").write_text("# User Prompt Draft\n", encoding="utf-8")
+    (spoke_peer / "grok_review_foo.md").write_text("# Grok Output\n", encoding="utf-8")
+    (spoke_peer / ".bridge_cache.json").write_text('{"token": "xyz"}\n', encoding="utf-8")
+
+    ensure_peer_exchange_scaffold(spoke_root, hub_root, dry_run=False)
+
+    assert (spoke_peer / "prompt_grok_review_foo.md").read_text(
+        encoding="utf-8"
+    ) == "# User Prompt Draft\n"
+    assert (spoke_peer / "grok_review_foo.md").read_text(encoding="utf-8") == "# Grok Output\n"
+    assert (spoke_peer / ".bridge_cache.json").read_text(encoding="utf-8") == '{"token": "xyz"}\n'
+
+
+def test_runtime_health_skips_non_python_project(tmp_path: Path) -> None:
+    """Verifies check_spoke_runtime_health returns None for non-Python projects."""
+    from scripts.spoke.sync.coordinator import check_spoke_runtime_health
+
+    spoke_root = tmp_path / "non-python-spoke"
+    hub_root = tmp_path / "hub"
+    spoke_root.mkdir()
+    hub_root.mkdir()
+
+    warning = check_spoke_runtime_health(spoke_root, hub_root)
+    assert warning is None
+
+
+def test_runtime_health_warning_missing_venv(tmp_path: Path) -> None:
+    """Verifies check_spoke_runtime_health warns when Python project lacks .venv."""
+    from scripts.spoke.sync.coordinator import check_spoke_runtime_health
+
+    spoke_root = tmp_path / "py-spoke"
+    hub_root = tmp_path / "hub"
+    spoke_root.mkdir()
+    hub_root.mkdir()
+    (spoke_root / "pyproject.toml").write_text("[project]\nname = 'demo'\n", encoding="utf-8")
+
+    warning = check_spoke_runtime_health(spoke_root, hub_root)
+    assert warning is not None
+    assert "chưa có virtualenv (.venv)" in warning
+
+
+def test_runtime_health_warning_missing_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verifies check_spoke_runtime_health warns when .venv lacks ccba-harness."""
+    import subprocess
+
+    from scripts.spoke.sync.coordinator import check_spoke_runtime_health
+
+    spoke_root = tmp_path / "py-spoke"
+    hub_root = tmp_path / "hub"
+    spoke_root.mkdir()
+    hub_root.mkdir()
+    (spoke_root / "pyproject.toml").write_text("[project]\nname = 'demo'\n", encoding="utf-8")
+
+    venv_bin = spoke_root / ".venv" / "bin"
+    venv_bin.mkdir(parents=True)
+    py_exec = venv_bin / "python"
+    py_exec.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    py_exec.chmod(0o755)
+
+    def _mock_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=list(args), returncode=1, stdout="", stderr="No module ccba_harness"
+        )
+
+    monkeypatch.setattr(subprocess, "run", _mock_run)
+
+    warning = check_spoke_runtime_health(spoke_root, hub_root)
+    assert warning is not None
+    assert "thiếu package 'ccba-harness'" in warning
+    assert "--bootstrap" in warning
