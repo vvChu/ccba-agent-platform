@@ -11,6 +11,7 @@ sources:
     remote_url: "https://github.com/claudekit/claudekit-engineer"
     branch: "main"
     enabled: true
+    licensed_use: true
     description: "ClaudeKit Engineering Skills & Workflows"
 
   - name: "claudekit-marketing"
@@ -19,6 +20,7 @@ sources:
     remote_url: "https://github.com/claudekit/claudekit-marketing"
     branch: "main"
     enabled: true
+    licensed_use: true
     description: "ClaudeKit Marketing & Copywriting Skills"
 
   - name: "mattpocock-skills"
@@ -107,6 +109,7 @@ report_hygiene:
 
 # Siêu tập ánh xạ alias thượng nguồn -> Hub target (chỉ chèn khóa chưa có vào UPSTREAM_ALIAS_MAP)
 aliases:
+  teach: "ccba-seminar-builder"
   grill-me: "ccba-grilling"
   grilling: "ccba-grilling"
   batch-grill-me: "ccba-grilling"

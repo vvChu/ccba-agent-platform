@@ -16,10 +16,10 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.1
-sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+  version: 1.0.2
+sync_commit: "d1f41fa1d00a213eb362dc2de2c6d0d70094af07"
 covered_sha256:
-  .agents/skills/ccba-implement/SKILL.md: "7edc8505d154e5f2943fb644cdcfa60c10361ef8f7fffc53d43f8cc96121fcd0"
+  .agents/skills/ccba-implement/SKILL.md: "c3b49dda133189c42e69c063ec54705ae4f87e6fdea8d8f5d870eff95520b588"
   .agents/skills/ccba-implement/references/implement-spec.md: "9270269b622313826e15d9b9563d9dc649a467a1a1290b59292b87b9ac26c601"
   .agents/skills/ccba-implement/references/prototype_logic.md: "3f0ca646b4f1a686af637f65de0ee41b3b5a45b58559c5d070c3cefa7af20ca6"
   .agents/skills/ccba-implement/references/prototyping_patterns.md: "03bba3ace4cf31fb90130f40199689fbf02d55e41c9f21cc815b939c21eede49"

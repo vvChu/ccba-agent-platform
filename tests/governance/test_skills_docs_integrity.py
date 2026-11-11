@@ -702,3 +702,48 @@ def test_phase4c_mobile_overflow_and_noxon_invariants() -> None:
         chip_active_block = style_block.split(".chip.active {", 1)[1].split("}", 1)[0]
         assert "background: var(--ccba-fg-body);" in chip_active_block
         assert "color: var(--ccba-bg);" in chip_active_block
+
+
+CLEAN_ROOM_DERIVATIVE_MAP: dict[str, str] = {
+    ".agents/skills/ccba-design/references/ai-visual-prompting-modes.md": ".agent/skills/ai-artist/SKILL.md",
+    ".agents/skills/ccba-copywriting/references/ab-testing-and-experimentation.md": ".agent/skills/ab-test-setup/SKILL.md",
+    ".agents/skills/ccba-copywriting/references/competitor-comparison-pages.md": ".agent/skills/competitor-alternatives/SKILL.md",
+}
+
+FORBIDDEN_COMMERCIAL_TOKENS = (
+    "prompts.csv",
+    "styles.csv",
+    "claudekit-marketing",
+    "gemini_batch_process.py",
+    "nano banana",
+    "6,000+ curated prompts",
+    "statistically valid, actionable results",
+    "rank for competitive search terms",
+)
+
+
+def _extract_8word_ngrams(text: str) -> set[tuple[str, ...]]:
+    """Extract normalized 8-word contiguous n-grams from markdown prose."""
+    words = re.findall(r"[a-z0-9\u00c0-\u1ef9]+", text.lower())
+    return {tuple(words[i : i + 8]) for i in range(max(0, len(words) - 7))}
+
+
+def test_clean_room_commercial_derivatives_guard() -> None:
+    """Enforce Clean-Room non-verbatim derivative rules on PUBLIC repo for commercial upstream skills."""
+    assert _extract_8word_ngrams("one two three four five six seven eight") != set()
+    clone_root = HUB_ROOT / ".md" / "scratch" / "repos" / "claudekit-marketing"
+    for rel_target, rel_src in CLEAN_ROOM_DERIVATIVE_MAP.items():
+        target_path = HUB_ROOT / rel_target
+        if not target_path.exists():
+            continue
+        low = target_path.read_text(encoding="utf-8").lower()
+        for tok in FORBIDDEN_COMMERCIAL_TOKENS:
+            assert tok not in low, f"Forbidden commercial token {tok!r} leaked into {rel_target}"
+        src_path = clone_root / rel_src
+        if src_path.exists():
+            overlap = _extract_8word_ngrams(low) & _extract_8word_ngrams(
+                src_path.read_text(encoding="utf-8")
+            )
+            assert not overlap, (
+                f"Clean-room violation in {rel_target}: verbatim 8-word overlap {next(iter(overlap))}"
+            )

@@ -16,13 +16,13 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.2
-sync_commit: "4676c8d46ccfcf5aa15545abfde541fc6ef09a2a"
+  version: 1.0.3
+sync_commit: "d1f41fa1d00a213eb362dc2de2c6d0d70094af07"
 covered_sha256:
-  .agents/skills/ccba-xia/SKILL.md: "a09c0f61e9e0a287f8f6307f786b3d15653254d7860188a63e5c57001e83ed60"
+  .agents/skills/ccba-xia/SKILL.md: "796e728d69aa1c9a5bab45efa4170ccd0662b9908d74e7f59cdeb7d9477f8272"
   .agents/skills/ccba-xia/references/modes.md: "6784b9c698268d5ba798513034af572d276a3419295d7ce1ecb9293531a1b3bc"
-  scripts/spoke/upstream_evaluator.py: "9eb4754d3894711f3cdf2cecc6733c3799632d12ba8412897df008ba6c649208"
-  scripts/spoke/_upstream_helpers.py: "3599e91c703a0d93384b91e53f743132866e4ef7bff3c6517458c149ff62084f"
+  scripts/spoke/upstream_evaluator.py: "aa3cdf1ec7929f5ec3233b8b4a8c099b34d9a049b452c0831181e42526c404dc"
+  scripts/spoke/_upstream_helpers.py: "8a97f40a64e633789828e658c449cabeb8137e09d03d5d6e7da5e7501e28117f"
   docs/adr/0022-restrict-fast-flag-in-xia-challenge-gate.md: "a1fbc89c32c407e5dab2685038ad44bc9434a3b567b3ef2818fc967672abd512"
 verification_mode:
   - scaffold

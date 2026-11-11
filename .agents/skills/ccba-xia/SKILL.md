@@ -73,9 +73,10 @@ Tìm hiểu repo nguồn và định vị tính năng mục tiêu.
 4. Quét codebase cục bộ để ánh xạ kiến trúc, các tính năng tương đương và các điểm tích hợp.
 5. **License Check (Kiểm tra giấy phép):** Đọc file LICENSE (hoặc LICENSE.md, COPYING) ở thư mục gốc của repo nguồn và phân loại giấy phép:
    - PERMISSIVE (MIT, Apache 2.0, BSD): Tiếp tục quy trình bình thường. Ghi nhận thông báo attribution vào kế hoạch triển khai.
+   - COMMERCIAL_LICENSED (Kho đóng `PROPRIETARY` hoặc `UNKNOWN` nhưng đã được khai báo tường minh `licensed_use: true` khớp `remote_url` hoặc tên nguồn trong [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)): Tách biệt hoàn toàn với `PERMISSIVE` — cho phép thực hiện Clean-Room `--port` và `--improve` (biên soạn lại 100% theo chuẩn CCBA, nghiêm cấm sao chép nguyên văn câu chữ, mẫu prompt hoặc tệp CSV độc quyền lên kho `PUBLIC`), và tự động ép mọi cờ `--copy-raw` về `--port`. Lưu ý: `COPYLEFT` tuyệt đối không được nâng lên `COMMERCIAL_LICENSED`.
    - COPYLEFT (GPL, AGPL, LGPL): **Dừng ngay** và cảnh báo người dùng về rủi ro pháp lý. Chỉ được tiếp tục nếu người dùng xác nhận tường minh, hoặc chuyển sang chế độ `--compare`.
    - UNKNOWN/NONE: **Dừng ngay**. Thông báo repo không có giấy phép rõ ràng (mặc định All Rights Reserved). Đề xuất chỉ dùng chế độ `--compare` để học hỏi kiến trúc mà không sao chép.
-   - **Cưỡng chế Hạ cấp Chế độ theo Bản quyền:** Khi `license_type` thuộc `COPYLEFT`, `PROPRIETARY`, hoặc `UNKNOWN/NONE`, mọi chế độ `--port` / `--improve` / `--copy-raw` tự động bị kẹp (clamp) về `--compare` (trừ trường hợp dual-license như `MIT OR GPL` đã được người dùng xác nhận tường minh chọn nhánh permissive).
+   - **Cưỡng chế Hạ cấp Chế độ theo Bản quyền:** Khi `license_type` thuộc `COPYLEFT`, `PROPRIETARY`, hoặc `UNKNOWN/NONE` (tức không thuộc `PERMISSIVE` và chưa được nâng hợp lệ lên `COMMERCIAL_LICENSED` qua `licensed_use: true`), mọi chế độ `--port` / `--improve` / `--copy-raw` tự động bị kẹp (clamp) về `--compare` (trừ trường hợp dual-license như `MIT OR GPL` đã được người dùng xác nhận tường minh chọn nhánh permissive).
 
 **Tiêu chí hoàn thành:**
 *   [x] Phải xuất ra cụ thể `source manifest` (đường dẫn repo, nhánh, commit SHA, `license_type`, `stars_count`, `pushed_at`, `tip_commit_date`, `health_posture`).

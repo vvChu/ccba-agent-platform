@@ -14,6 +14,18 @@ import yaml
 
 _CANONICAL_YAML = Path(__file__).resolve().parents[2] / ".md/knowledge/upstream_sources.yaml"
 _RX_MODE = r"--(?:port|improve|copy-raw)\b"
+_RX_NEG_LIC = re.compile(
+    r"\b(?:not|no|without|unlike|except)\s+(?:under\s+|licensed\s+under\s+|subject\s+to\s+|a\s+)?"
+    r"(?:the\s+)?(?:mit|apache|bsd|isc|0bsd|unlicense)(?:[-_ ]?2(?:\.0)?)?\s*(?:license)?\b"
+)
+_AFFIRMATIVE_GRANTS = (
+    "permission is hereby granted",
+    "permission to use, copy, modify",
+    "redistribution and use in source and binary forms",
+    "licensed under the apache license",
+    "apache license, version 2.0",
+    "this is free and unencumbered software",
+)
 _GOV_KWS = ("rule", "protocol", "governance", "guideline", "standard", "documentation-management")
 _SKILL_CATS = {"engineering", "productivity", "misc", "in-progress", "deprecated"}
 _RX_WF = re.compile(r"^(?:claude/|\.agents?/)?workflows/([^/]+)\.md$")
@@ -41,12 +53,25 @@ def load_governance_config(cfg: Path, amap: dict[str, str] | None = None) -> dic
     if amap is not None:
         for k, v in al.items():
             amap.setdefault(k, v)
+    s_map: dict[str, set[str]] = {}
+    for s in [*(base.get("sources") or []), *(raw.get("sources") or [])]:
+        if isinstance(s, dict):
+            nm, tp = str(s.get("name", "")).strip(), str(s.get("type", "")).strip()
+            if nm and tp:
+                s_map.setdefault(nm, {nm}).add(tp)
+                s_map.setdefault(tp, {tp}).add(nm)
     m_lr = {**(blr if isinstance(blr, dict) else {}), **(rlr if isinstance(rlr, dict) else {})}
     rules = {str(k): [str(p) for p in v] for k, v in m_lr.items() if isinstance(v, list) and v}
     hyg, led = raw.get("report_hygiene"), raw.get("triage_ledger")
     h_d = hyg if isinstance(hyg, dict) else {}
     t_led = [e for e in led if isinstance(e, dict)] if isinstance(led, list) else []
-    return {"aliases": al, "license_rules": rules, "report_hygiene": h_d, "triage_ledger": t_led}
+    return {
+        "aliases": al,
+        "source_aliases": s_map,
+        "license_rules": rules,
+        "report_hygiene": h_d,
+        "triage_ledger": t_led,
+    }
 
 
 def classify_license_text(text: str, rules: dict[str, list[str]] | None = None) -> tuple[str, str]:
@@ -59,31 +84,72 @@ def classify_license_text(text: str, rules: dict[str, list[str]] | None = None) 
         return "PERMISSIVE", "Dual Permissive License (Tự do sử dụng)"
     if any(re.search(p, low) for p in active.get("copyleft_regex", [])):
         return "COPYLEFT", "GPL/AGPL/LGPL/MPL (Rủi ro sao chép mã nguồn)"
-    if any(tok in low for tok in active.get("permissive_tokens", [])):
-        if "mit license" in low or "permission is hereby granted" in low:
+    clean_perm = _RX_NEG_LIC.sub(" ", low)
+    has_prop = any(tok in low for tok in active.get("proprietary_tokens", []))
+    has_grant = any(g in clean_perm for g in _AFFIRMATIVE_GRANTS)
+    if (not has_prop or has_grant) and any(
+        tok in clean_perm for tok in active.get("permissive_tokens", [])
+    ):
+        if "mit license" in clean_perm or "permission is hereby granted" in clean_perm:
             return "PERMISSIVE", "MIT License (Tự do sử dụng)"
-        lbl = "Apache 2.0" if "apache license" in low else "BSD" if "bsd" in low else "ISC/0BSD"
+        lbl = (
+            "Apache 2.0"
+            if "apache license" in clean_perm
+            else "BSD"
+            if "bsd" in clean_perm
+            else "ISC/0BSD"
+        )
         return "PERMISSIVE", f"{lbl} License (Tự do sử dụng)"
-    if any(tok in low for tok in active.get("proprietary_tokens", [])):
+    if has_prop:
         return "PROPRIETARY", "Bản quyền đóng (Không được sao chép)"
     return "UNKNOWN", "Custom license: cần kiểm tra thủ công"
 
 
 def clamp_license_policy(result: dict[str, Any], license_type: str, xia_cmd: str) -> dict[str, Any]:
-    """Clamp evaluation result to --compare when repository license is not PERMISSIVE."""
+    """Clamp evaluation result according to PERMISSIVE, COMMERCIAL_LICENSED, or restricted rules."""
     if license_type == "PERMISSIVE":
         return result
+    if license_type == "COMMERCIAL_LICENSED":
+        steps = [
+            re.sub(r"--copy-raw\b", "--port", str(s)) for s in result.get("actionable_steps", [])
+        ]
+        raw_xia = str(result.get("xia_command", xia_cmd))
+        return {
+            **result,
+            "xia_command": re.sub(r"--copy-raw\b", "--port", raw_xia),
+            "actionable_steps": steps,
+        }
     steps = [re.sub(_RX_MODE, "--compare", str(s)) for s in result.get("actionable_steps", [])]
     out = {**result, "should_port": False, "color_override": "🟠", "xia_command": xia_cmd}
     out.update(status_override="COMPARE ONLY — LICENSE RESTRICTED", actionable_steps=steps)
     return out
 
 
+def purge_legacy_clamped_cache(cache: dict[str, Any]) -> dict[str, Any]:
+    """Purge legacy pre-v2 marketing/engineer or post-clamp COMPARE ONLY cache entries."""
+    cleaned: dict[str, Any] = {}
+    for k, v in cache.items():
+        if not k.startswith("v2:"):
+            if k.startswith(("marketing:", "engineer:", "claudekit-")):
+                continue
+            if (
+                isinstance(v, dict)
+                and v.get("status_override") == "COMPARE ONLY — LICENSE RESTRICTED"
+            ):
+                continue
+        cleaned[k] = v
+    return cleaned
+
+
 def _is_closed_in_ledger(part: str, closed_pairs: set[tuple[str, str]]) -> bool:
     """Return True if a recommendation markdown block matches an ADOPTED/DECLINED ledger entry."""
     m_sk = re.search(r"^###\s+[^\n]*Skill:\s+`([^`]+)`", part)
     m_rp = re.search(r"\*\*Kho chứa nguồn\*\*:\s+`([^`]+)`", part)
-    return bool(m_sk and m_rp and (m_rp.group(1).strip(), m_sk.group(1).strip()) in closed_pairs)
+    if not (m_sk and m_rp):
+        return False
+    rp, sk = m_rp.group(1).strip(), m_sk.group(1).strip()
+    norm_sk = "." if sk.endswith(" (corpus)") else sk
+    return (rp, sk) in closed_pairs or (rp, norm_sk) in closed_pairs
 
 
 def prune_stale_recommendations(rec_file: Path, cfg_file: Path | None = None) -> int:
@@ -96,12 +162,13 @@ def prune_stale_recommendations(rec_file: Path, cfg_file: Path | None = None) ->
     if not m:
         return 0
     cfg = load_governance_config(cfg_file or _CANONICAL_YAML)
-    hyg = cfg["report_hygiene"]
-    closed = {
-        (str(e.get("source", "")).strip(), str(e.get("upstream_path", "")).strip())
-        for e in cfg.get("triage_ledger", [])
-        if str(e.get("status", "")).strip().upper() in {"ADOPTED", "DECLINED"}
-    }
+    hyg, s_aliases = cfg["report_hygiene"], cfg.get("source_aliases", {})
+    closed: set[tuple[str, str]] = set()
+    for e in cfg.get("triage_ledger", []):
+        if str(e.get("status", "")).strip().upper() in {"ADOPTED", "DECLINED"}:
+            src, up = str(e.get("source", "")).strip(), str(e.get("upstream_path", "")).strip()
+            for alias_src in s_aliases.get(src, {src}):
+                closed.add((alias_src, up))
     stale_toks = tuple(str(x) for x in hyg.get("stale_block_tokens", []))
     rest_mks = tuple(str(x) for x in hyg.get("restricted_license_markers", []))
     old_h, new_h = "### 🟢 [RECOMMEND PORT]", "### 🟠 [COMPARE ONLY — LICENSE RESTRICTED]"
