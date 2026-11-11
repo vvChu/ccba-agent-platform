@@ -33,7 +33,7 @@
 - **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal; E2E Spoke dùng `CCBA_SKIP_GIT_PULL=1` & SHA-256 `spoke_registry.yaml`.
 - **RULE-2.20 [Zero-Quarantine, AST & BFS]**: Hàm $\le 50$L, `main` $\le 40$L, module $\le 800$L (`0` `# ccba:quarantine`), `check_package_all_exports` (Mục 53); **Two-Edit Litmus** & `Semantic Mutation Proof`; `verify_statechart_anti_lie` ($\le 20$ cạnh) + **BFS (`visited: set[str]`)**; `ccba-design` `v2.5.0` & `ccba-sharepoint-iac` `v1.2.0` (Mục 56).
 - **RULE-2.21 [Harnesses & Wiki]**: `scripts/tests/__init__.py` nối `tests/`; 5-block tại `packages/ccba-harness/.agents/skills/verify-ccba-*/harness/`; Wiki `.md/knowledge/wiki/index.md` (Mục 50).
-- **RULE-2.22 [Compaction, Archive Links & Index]**: `compact_session_learnings.py --compact` (`find_dropped_rules`) chặn mất `RULE-\d+\.\d+` & `_rebase_archive_links` sửa `(archive/...`/`(wiki/...`; tệp `.md/knowledge/` mới ghi vào `.md/knowledge/index.md` (`WikiHealthLinter`, Mục 57).
+- **RULE-2.22 [Compaction, Archive Links & Index]**: `compact_session_learnings.py --compact` (`find_dropped_rules`) chặn mất `RULE-\d+\.\d+` (trừ `--allow-rule-drop-ids`) & `_rebase_archive_links` sửa `(archive/...`/`(wiki/...`; tệp `.md/knowledge/` mới ghi vào `.md/knowledge/index.md` (`WikiHealthLinter`, Mục 57).
 
 ---
 
