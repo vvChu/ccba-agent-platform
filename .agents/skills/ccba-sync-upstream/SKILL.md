@@ -3,7 +3,7 @@ name: ccba-sync-upstream
 description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
   kết hợp kích hoạt 1-Click Port qua /ccba-xia.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 disable-model-invocation: true
 bundle: _core
@@ -49,7 +49,7 @@ Hệ thống cung cấp các cờ dòng lệnh linh hoạt phục vụ cả tự
 | :--- | :--- |
 | `--check-only` | Chỉ kiểm tra SHA, tải repo và liệt kê tài nguyên/tệp thay đổi mà không gọi AI Gateway đánh giá |
 | `--scan-all` | Quét toàn bộ tài nguyên trong kho nguồn (bỏ qua điều kiện trùng SHA commit) |
-| `--repo <name>` | Chỉ định kho nguồn cụ thể cần kiểm tra (ví dụ: `--repo claudekit-marketing`, `claudekit-engineer`, `mattpocock-skills`) |
+| `--repo <name>` | Chỉ định kho nguồn cụ thể cần kiểm tra (ví dụ: `--repo claudekit-marketing`, `claudekit-engineer`, `mattpocock-skills`, `pstack`) |
 | `--fast` / `--offline` | Chế độ ngoại tuyến: sử dụng clone cục bộ sẵn có, không gọi mạng `fetch`/`clone`, tận dụng cache đánh giá |
 | `--limit <N>` | Giới hạn tối đa $N$ tài nguyên được đánh giá trong mỗi kho (tránh cạn quota API) |
 | `--prune-stale` | Dọn dẹp các dòng khuyến nghị có đường dẫn cục bộ không còn tồn tại trong `port_recommendations.md` (giữ tối đa `max_active_rows` dòng hoạt động) |
