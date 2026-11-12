@@ -10,7 +10,7 @@ describe('POST /users', () => {
   it('creates user with valid data', async () => {
     const res = await request(app)
       .post('/users')
-      .send({ email: 'test@example.com', password: 'secret123' });
+      .send({ email: 'test@example.com', password: 'placeholder_password' });
 
     expect(res.status).toBe(201);
     expect(res.body.id).toBeDefined();
