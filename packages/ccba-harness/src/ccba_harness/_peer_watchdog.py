@@ -618,6 +618,24 @@ def _resolve_target_models(
     return targets
 
 
+def _resolve_profile_tool_policy(
+    spec: dict[str, Any], no_tools: bool, eff_resume: str | None
+) -> tuple[Any, Any, Any, Any]:
+    """Resolves tool allow/deny lists and system prompt for a profile invocation."""
+    tools, disallowed, deny = spec.get("tools"), spec.get("disallowed_tools"), spec.get("deny")
+    sys_prompt = spec.get("system_prompt")
+    if no_tools:
+        return None, list(NO_TOOLS_DISALLOW_LIST), ["*"], sys_prompt
+    if eff_resume and tools is None and deny == ["*"]:
+        return (
+            ["read_file", "grep", "list_dir"],
+            list(READ_ONLY_DISALLOW_LIST),
+            ["Bash", "Write", "Edit", "WebFetch"],
+            AUDIT_BASE_SYSTEM_PROMPT,
+        )
+    return tools, disallowed, deny, sys_prompt
+
+
 def _resolve_grok_profile_options(
     spec: dict[str, Any],
     envelope: Any,
@@ -627,6 +645,8 @@ def _resolve_grok_profile_options(
     resume_session_id: str | None,
     fork_session: bool | None,
     prompt_path: Path | None = None,
+    *,
+    effective_profile: str | None = None,
 ) -> dict[str, Any]:
     """Resolves effective CLI options from profile spec, prompt envelope, and caller overrides."""
     from ._peer_telemetry import _resolve_effective_resume_session
@@ -637,18 +657,12 @@ def _resolve_grok_profile_options(
         if max_turns is not None
         else (env_turns if env_turns is not None else spec.get("max_turns"))
     )
-    tools, disallowed, deny = spec.get("tools"), spec.get("disallowed_tools"), spec.get("deny")
-    if no_tools:
-        tools, disallowed, deny = None, list(NO_TOOLS_DISALLOW_LIST), ["*"]
-        if max_turns is None and (eff_turns is None or eff_turns > 3):
-            eff_turns = 3
-    eff_resume = _resolve_effective_resume_session(resume_session_id, envelope, prompt_path)
-    sys_prompt = spec.get("system_prompt")
-    if eff_resume and not no_tools and tools is None and deny == ["*"]:
-        tools = ["read_file", "grep", "list_dir"]
-        disallowed = list(READ_ONLY_DISALLOW_LIST)
-        deny = ["Bash", "Write", "Edit", "WebFetch"]
-        sys_prompt = AUDIT_BASE_SYSTEM_PROMPT
+    if no_tools and max_turns is None and (eff_turns is None or eff_turns > 3):
+        eff_turns = 3
+    eff_resume = _resolve_effective_resume_session(
+        resume_session_id, envelope, prompt_path, effective_profile=effective_profile
+    )
+    tools, disallowed, deny, sys_prompt = _resolve_profile_tool_policy(spec, no_tools, eff_resume)
     env_fork = envelope.fork_session if envelope is not None else None
     eff_fork = (
         fork_session

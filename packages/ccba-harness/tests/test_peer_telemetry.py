@@ -817,6 +817,182 @@ def test_auto_discover_resume_session_3_tiers_bloat_and_dedup(tmp_path, capsys):
     assert st["total_cost_usd"] == 0.025
 
 
+def test_auto_discover_blocks_cross_phase_plan_to_code_across_tiers(tmp_path):
+    """Verifies G1 Cross-Phase Guard blocks Plan->Code leaks across Tier 1/2 while keeping same-phase resumes."""
+    from ccba_harness.peer import (
+        PROFILE_SPECS,
+        PeerPromptEnvelope,
+        _resolve_grok_profile_options,
+        parse_envelope_from_md,
+        render_prompt_header,
+        render_verdict_header,
+    )
+
+    shared_files = ["packages/ccba-harness/src/ccba_harness/peer.py"]
+    # 1. Seed Plan Pass 1 (normalized alias path: missing from_agent -> plan aliases to discuss + audit_plan)
+    raw_norm_plan = (
+        "---\nrequest_id: req-20261112-plan-compiler-001\ntask_type: plan\n"
+        "profile: discuss\nsubject: Plan v1\ntimestamp: '2026-11-12T10:00:00+07:00'\n"
+        f"target_files: {shared_files}\noutput_path: grok_compiler_plan_audit.md\n---\nPlan body\n"
+    )
+    (tmp_path / "prompt_grok_compiler_plan_audit.md").write_text(raw_norm_plan, encoding="utf-8")
+    norm_env = parse_envelope_from_md(raw_norm_plan)
+    assert norm_env is not None and norm_env.request_type == "discuss"
+    v_plan1 = PeerVerdictBlock(
+        request_id="req-20261112-plan-compiler-001",
+        verdict="REVISE_PLAN",
+        summary="Revise plan",
+        telemetry=PeerVerdictTelemetry(session_id="sess-plan-p1", primary_model="grok-4.7"),
+    )
+    (tmp_path / "grok_compiler_plan_audit.md").write_text(
+        render_verdict_header(v_plan1) + "\n# Plan P1", encoding="utf-8"
+    )
+
+    # Same-phase Plan Pass 2 (signoff_diff) MUST still auto-resume sess-plan-p1
+    p_plan_s2 = PeerPromptEnvelope(
+        request_id="req-20261112-plan-compiler-002-signoff",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="verify",
+        profile="signoff_diff",
+        subject="Plan signoff",
+        timestamp="2026-11-12T10:15:00+07:00",
+        target_files=shared_files,
+        output_path="grok_compiler_plan_audit_reverify.md",
+    )
+    p_s2_path = tmp_path / "prompt_grok_compiler_plan_audit_reverify.md"
+    p_s2_path.write_text(render_prompt_header(p_plan_s2) + "Delta", encoding="utf-8")
+    opts_plan_s2 = _resolve_grok_profile_options(
+        PROFILE_SPECS["signoff_diff"],
+        p_plan_s2,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_s2_path,
+        effective_profile="signoff_diff",
+    )
+    assert opts_plan_s2["resume_session_id"] == "sess-plan-p1"
+
+    # Seed Plan Pass 2 verdict with FINAL_ACCEPT (e.g. grok_*_plan_audit_reverify.md)
+    v_plan_fin = PeerVerdictBlock(
+        request_id="req-20261112-reverify-compiler-003",
+        verdict="FINAL_ACCEPT",
+        summary="Plan accepted",
+        telemetry=PeerVerdictTelemetry(session_id="sess-plan-fin", primary_model="grok-4.7"),
+    )
+    (tmp_path / "grok_compiler_plan_audit_reverify.md").write_text(
+        render_verdict_header(v_plan_fin) + "\n# Plan Final", encoding="utf-8"
+    )
+
+    # 2. Cross-phase Post-Impl Code Review copying template (`from_agent` present -> `request_type: plan` preserved!)
+    # with `profile: arch_audit` MUST NOT inherit sess-plan-p1 or sess-plan-fin via Tier 2 Jaccard
+    p_impl = PeerPromptEnvelope(
+        request_id="req-20261112-impl-compiler-001",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="plan",
+        profile="arch_audit",
+        subject="Post-impl code audit",
+        timestamp="2026-11-12T11:00:00+07:00",
+        target_files=shared_files,
+        output_path="grok_compiler_impl_audit.md",
+    )
+    p_impl_path = tmp_path / "prompt_grok_compiler_impl_audit.md"
+    p_impl_path.write_text(render_prompt_header(p_impl) + "Impl body", encoding="utf-8")
+    opts_impl = _resolve_grok_profile_options(
+        PROFILE_SPECS["arch_audit"],
+        p_impl,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_impl_path,
+        effective_profile="arch_audit",
+    )
+    assert opts_impl["resume_session_id"] is None
+
+    # 3. Tier-1 stem collision (`_STAGE_PREFIX_RE` strips `plan_` and `arch_audit_`) with `-reverify` suffix
+    # on a code-phase profile MUST ALSO block inheriting prior Plan sessions
+    p_impl_tier1 = PeerPromptEnvelope(
+        request_id="req-20261112-arch-audit-compiler-reverify",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        profile="code_review",
+        subject="Code review v2 without prior code session",
+        timestamp="2026-11-12T11:05:00+07:00",
+        target_files=shared_files,
+        output_path="grok_arch_audit_compiler_reverify.md",
+    )
+    p_t1_path = tmp_path / "prompt_grok_arch_audit_compiler_reverify.md"
+    p_t1_path.write_text(render_prompt_header(p_impl_tier1) + "Code v2", encoding="utf-8")
+    opts_t1_blk = _resolve_grok_profile_options(
+        PROFILE_SPECS["code_review"],
+        p_impl_tier1,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_t1_path,
+        effective_profile="code_review",
+    )
+    assert opts_t1_blk["resume_session_id"] is None
+
+    # 4. AEC domain noun `floor_plan` in a prior code review MUST NOT be misclassified as a Plan session
+    p_aec1 = PeerPromptEnvelope(
+        request_id="req-20261112-qc-floor-plan-001",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        profile="arch_audit",
+        subject="Floor plan QC code review",
+        timestamp="2026-11-12T11:10:00+07:00",
+        target_files=["packages/ccba-qc/floor_plan_parser.py"],
+        output_path="grok_qc_floor_plan_review.md",
+    )
+    (tmp_path / "prompt_grok_qc_floor_plan_review.md").write_text(
+        render_prompt_header(p_aec1) + "QC", encoding="utf-8"
+    )
+    v_aec1 = PeerVerdictBlock(
+        request_id="req-20261112-qc-floor-plan-001",
+        verdict="APPROVE_WITH_CONDITIONS",
+        summary="Fix parser",
+        telemetry=PeerVerdictTelemetry(session_id="sess-floor-code-1", primary_model="grok-4.7"),
+    )
+    (tmp_path / "grok_qc_floor_plan_review.md").write_text(
+        render_verdict_header(v_aec1) + "\n# Code V1", encoding="utf-8"
+    )
+    p_aec2 = PeerPromptEnvelope(
+        request_id="req-20261112-qc-floor-plan-002-reverify",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="review",
+        profile="code_review",
+        subject="Floor plan QC code review v2",
+        timestamp="2026-11-12T11:20:00+07:00",
+        target_files=["packages/ccba-qc/floor_plan_parser.py"],
+        output_path="grok_qc_floor_plan_review_v2.md",
+    )
+    p_aec2_path = tmp_path / "prompt_grok_qc_floor_plan_review_v2.md"
+    p_aec2_path.write_text(render_prompt_header(p_aec2) + "Delta", encoding="utf-8")
+    opts_aec2 = _resolve_grok_profile_options(
+        PROFILE_SPECS["code_review"],
+        p_aec2,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_aec2_path,
+        effective_profile="code_review",
+    )
+    assert opts_aec2["resume_session_id"] == "sess-floor-code-1"
+
+
 def test_response_grok_prefix_ttl_bound_and_overwritten_telemetry_merge(tmp_path):
     """Verifies response_grok_*.md recognition, 12h auto-resume TTL cap, and overwritten telemetry merge."""
     from ccba_harness._peer_telemetry import merge_overwritten_telemetry
