@@ -429,7 +429,7 @@ def test_approval_statechart_liveness_and_ibst_gateway_litmus() -> None:
 
 
 def test_sharepoint_iac_skill_statechart_and_bug_path_contract() -> None:
-    """Verifies that ccba-sharepoint-iac SKILL.md v1.1.0 includes a valid stateDiagram-v2 and bug_path."""
+    """Verifies that ccba-sharepoint-iac SKILL.md preserves a valid stateDiagram-v2 and bug_path."""
     repo_root = Path(__file__).resolve().parent.parent.parent
     skill_md = (repo_root / ".agents" / "skills" / "ccba-sharepoint-iac" / "SKILL.md").read_text(
         encoding="utf-8"
@@ -453,30 +453,39 @@ def _resolve_live_idop_sharepoint_dir() -> Path | None:
     return default_dir if default_dir.is_dir() else None
 
 
-def test_tier2_live_idop_schema_and_snapshot_parity_if_present() -> None:
-    """Tier-2 Live Gate: Scans all live IDOP-CCBA-WAY lists/taxonomies and checks Golden Snapshot parity."""
-    sp_dir = _resolve_live_idop_sharepoint_dir()
-    if sp_dir is None:
-        pytest.skip(
-            "IDOP-CCBA-WAY local directory not found; Tier-1 Golden Snapshot already verified."
-        )
+def _read_schema_map(
+    json_files: list[Path], *, filter_list_schemas: bool = False
+) -> tuple[dict[str, dict[str, Any]], set[str]]:
+    """Loads list schema dicts keyed by stem and collects ListName + stem identifiers."""
+    by_stem: dict[str, dict[str, Any]] = {}
+    names: set[str] = set()
+    for fp in json_files:
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        if filter_list_schemas and not isinstance(data.get("Columns"), list):
+            continue
+        if data.get("ListName"):
+            names.add(str(data["ListName"]))
+        names.add(fp.stem)
+        by_stem[fp.stem] = data
+    return by_stem, names
 
-    lists_dir = sp_dir / "lists"
-    tax_dir = sp_dir / "taxonomy"
-    list_files = sorted(lists_dir.rglob("*.json"), key=lambda p: (p.stem, p.as_posix()))
-    tax_files = sorted(tax_dir.glob("*.json"), key=lambda p: (p.stem, p.as_posix()))
+
+def _load_live_idop_schemas(
+    sp_dir: Path,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], set[str], set[str]]:
+    """Loads core lists, optional satellite list schemas, union known_lists, and known_tax."""
+    list_files = sorted((sp_dir / "lists").rglob("*.json"), key=lambda p: (p.stem, p.as_posix()))
+    tax_files = sorted((sp_dir / "taxonomy").glob("*.json"), key=lambda p: (p.stem, p.as_posix()))
     assert len(list_files) >= 59, f"Expected >=59 SharePoint lists, found {len(list_files)}"
     assert len(tax_files) >= 21, f"Expected >=21 Taxonomy files, found {len(tax_files)}"
-
-    known_lists: set[str] = set()
-    live_lists_by_stem: dict[str, dict[str, Any]] = {}
-    for fp in list_files:
-        data = json.loads(fp.read_text(encoding="utf-8"))
-        if data.get("ListName"):
-            known_lists.add(str(data["ListName"]))
-        known_lists.add(fp.stem)
-        live_lists_by_stem[fp.stem] = data
-
+    core_by_stem, core_names = _read_schema_map(list_files)
+    sat_dir = sp_dir / "satellites"
+    sat_files = (
+        sorted(sat_dir.rglob("*.json"), key=lambda p: (p.stem, p.as_posix()))
+        if sat_dir.is_dir()
+        else []
+    )
+    sat_by_stem, sat_names = _read_schema_map(sat_files, filter_list_schemas=True)
     known_tax: set[str] = set()
     for fp in tax_files:
         tdata = json.loads(fp.read_text(encoding="utf-8"))
@@ -484,16 +493,71 @@ def test_tier2_live_idop_schema_and_snapshot_parity_if_present() -> None:
         if tname:
             known_tax.add(str(tname))
         known_tax.add(fp.stem)
+    return core_by_stem, sat_by_stem, core_names | sat_names, known_tax
 
-    for stem, data in live_lists_by_stem.items():
+
+def test_tier2_live_idop_schema_and_snapshot_parity_if_present() -> None:
+    """Tier-2 Live Gate: Scans live IDOP core + satellite lists and checks Golden Snapshot parity."""
+    sp_dir = _resolve_live_idop_sharepoint_dir()
+    if sp_dir is None:
+        pytest.skip(
+            "IDOP-CCBA-WAY local directory not found; Tier-1 Golden Snapshot already verified."
+        )
+
+    core_by_stem, sat_by_stem, known_lists, known_tax = _load_live_idop_schemas(sp_dir)
+    for stem, data in core_by_stem.items():
         sem_errs = validate_idop_list_schema_semantics(data, known_lists, known_tax)
-        assert not sem_errs, f"Live semantic error in {stem}: {sem_errs}"
+        assert not sem_errs, f"Live core semantic error in {stem}: {sem_errs}"
+    for stem, data in sat_by_stem.items():
+        sem_errs = validate_idop_list_schema_semantics(data, known_lists, known_tax)
+        assert not sem_errs, f"Live satellite semantic error in {stem}: {sem_errs}"
 
     snapshot = load_golden_snapshot()
     for core_stem in CORE_REQUIRED_FIELDS:
-        assert core_stem in live_lists_by_stem, f"Missing live core list: {core_stem}"
-        live_core = live_lists_by_stem[core_stem]
+        assert core_stem in core_by_stem, f"Missing live core list: {core_stem}"
+        live_core = core_by_stem[core_stem]
         assert validate_core_contract_fields(core_stem, live_core) == []
         assert live_core.get("Columns") == snapshot["core_lists"][core_stem]["Columns"], (
             f"Golden Snapshot drift detected against live IDOP list '{core_stem}'"
         )
+
+
+def test_satellite_cross_lookup_and_semantic_validation(tmp_path: Path) -> None:
+    """Verifies satellite->core, satellite->satellite, manifest filtering, and broken lookup detection."""
+    sat_dir = tmp_path / "satellites" / "knowledge_viva"
+    sat_dir.mkdir(parents=True)
+    (sat_dir / "manifest_meta.json").write_text('{"module": "knowledge_viva"}', encoding="utf-8")
+    comm_schema: dict[str, Any] = {
+        "ListName": "VivaEngageCommunities",
+        "Columns": [{"Name": "CommunityCode", "Type": "Text", "Indexed": True}],
+    }
+    learn_schema: dict[str, Any] = {
+        "ListName": "LearningCatalog",
+        "Columns": [
+            {
+                "Name": "DepartmentId",
+                "Type": "Lookup",
+                "Lookup": {"List": "Departments", "Field": "Title", "Behavior": "restrict"},
+            },
+            {
+                "Name": "CommunityId",
+                "Type": "Lookup",
+                "Lookup": {
+                    "List": "VivaEngageCommunities",
+                    "Field": "Title",
+                    "Behavior": "restrict",
+                },
+            },
+        ],
+    }
+    (sat_dir / "viva_engage_communities.json").write_text(json.dumps(comm_schema), encoding="utf-8")
+    (sat_dir / "learning_catalog.json").write_text(json.dumps(learn_schema), encoding="utf-8")
+    sat_files = sorted(sat_dir.rglob("*.json"), key=lambda p: (p.stem, p.as_posix()))
+    sat_by_stem, sat_names = _read_schema_map(sat_files, filter_list_schemas=True)
+    assert set(sat_by_stem) == {"learning_catalog", "viva_engage_communities"}
+    known_lists = {"Departments", "departments"} | sat_names
+    assert validate_idop_list_schema_semantics(learn_schema, known_lists, set()) == []
+    broken = copy.deepcopy(learn_schema)
+    broken["Columns"][1]["Lookup"]["List"] = "NonExistentList"
+    errs = validate_idop_list_schema_semantics(broken, known_lists, set())
+    assert any("NonExistentList" in e for e in errs)
