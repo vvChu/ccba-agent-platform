@@ -307,7 +307,7 @@ UI_SLOP_PATTERNS: tuple[tuple[str, str, re.Pattern[str], str], ...] = (
         re.compile(
             r"""(?is)(?:https?://[^\s"'`<>]+/:[fbwxu]:/[grs]/|\b(?:ApiConnection|Invoker)\b["']?\s*:\s*["']?shared_|["']type["']\s*:\s*["']ApiConnection(?:Webhook)?["'])"""
         ),
-        "Avoid temporary SharePoint/OneDrive sharing links (/:f:/g/, /:b:/g/) or legacy ApiConnection/Invoker bindings; use canonical driveId+itemId links and OpenApiConnection (UX-23, STK-08).",
+        "Avoid temporary SharePoint/OneDrive sharing links (/:f:/g/, /:b:/g/) or legacy ApiConnection/Invoker bindings; use canonical driveId+itemId links and OpenApiConnection (UX-23, STK-08).",  # ccba:allow-machine-path
     ),
 )
 
