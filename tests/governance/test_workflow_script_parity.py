@@ -37,6 +37,20 @@ SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/spoke_bootstrap.py",
     "scripts/spoke_cli.py",
     "scripts/sync_adr_matrix.py",
+    "scripts/epub_convert.py",
+    "scripts/pdf_convert.py",
+    "scripts/wiki_maintain.py",
+    "scripts/core/vector_store.py",
+    "scripts/pipeline/book_assets.py",
+    "scripts/pipeline/book_staging.py",
+    "scripts/pipeline/ground_truth.py",
+    "scripts/pipeline/post_process.py",
+    "scripts/pipeline/self_correct.py",
+    "scripts/pipeline/semantic_merger.py",
+    "scripts/services/excalidraw_worker.py",
+    "scripts/tests/test_architectural_budgets.py",
+    "scripts/tests/test_book_compiler_contracts.py",
+    "scripts/tests/test_codebase_cleanliness.py",
 }
 
 

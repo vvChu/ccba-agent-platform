@@ -100,8 +100,8 @@ def test_all_active_skills_in_portals_yaml_exactly_match(
 
     assert not missing_in_portals, f"Active skills missing from portals.yaml: {missing_in_portals}"
     assert not orphans_in_portals, f"Skills in portals.yaml not found on disk: {orphans_in_portals}"
-    assert len(active_skill_names) == 76, (
-        f"Expected exactly 76 active skills, found {len(active_skill_names)}"
+    assert len(active_skill_names) == 77, (
+        f"Expected exactly 77 active skills, found {len(active_skill_names)}"
     )
 
 
@@ -379,7 +379,7 @@ def test_index_html_embedded_json_parity() -> None:
         assert m is not None, f"Embedded const {var_name} not found in docs/index.html"
         payloads[var_name] = json.loads(m.group(1))
 
-    assert len(payloads["SKILLS"]) == 76
+    assert len(payloads["SKILLS"]) == 77
     assert len(payloads["PORTALS"]) == 5
     assert len(payloads["PACKAGE_SEAMS"]) == 10
     expected_cards = load_seam_contract_cards(HUB_ROOT)

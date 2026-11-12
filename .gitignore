@@ -124,6 +124,7 @@ claudekit-engineer/
 .agents/**/*.json
 !.agents/skills/eval-gate/test_cases/*.json
 !.agents/skills/ccba-eval-gate/test_cases/*.json
+!.agents/skills/ccba-book-compiler/resources/templates/*.json
 .agents/**/*.env
 .agents/**/__pycache__/
 .agents/**/*.pyc

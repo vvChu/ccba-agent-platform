@@ -310,6 +310,22 @@ skills:
   skill_path: .agents/skills/ccba-autoresearch/SKILL.md
   command: /ccba-autoresearch
   tier: orchestrator
+- name: ccba-book-compiler
+  bundle: _core
+  description: Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten
+    Canonical v8.3 kèm nén WebP in-memory, đối soát BGE-M3 và Excalidraw 16:9.
+  triggers:
+  - ccba-book-compiler
+  - ccba-book-compile
+  - book-compile
+  - ebook-compile
+  - nap-sach
+  - chuyen-hoa-sach
+  - zettelkasten-compiler
+  - book-ingest
+  skill_path: .agents/skills/ccba-book-compiler/SKILL.md
+  command: /ccba-book-compiler
+  tier: kernel
 - name: ccba-build-skill
   bundle: _core
   description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
