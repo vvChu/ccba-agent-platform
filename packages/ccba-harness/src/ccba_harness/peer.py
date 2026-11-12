@@ -1,7 +1,8 @@
 """ccba_harness.peer - Structured Peer Exchange Protocol & Grok CLI Dispatcher (ADR-0007 / ADR-0063..0065)."""
 
 # flake8: noqa: F401
-# ruff: noqa: F401
+# ruff: noqa: F401, I001
+# isort: skip_file
 from __future__ import annotations
 
 import datetime
@@ -31,68 +32,32 @@ from ._peer_co_review import (
     render_consensus_report_markdown,
     synthesize_verdicts,
 )
+
+# fmt: off
 from ._peer_models import (
-    FRONTMATTER_PATTERN,
-    AnchorPatchPayload,
-    AutoApplyResult,
-    CombinedTelemetry,
-    FileChange,
-    FilePatch,
-    PatchReplacement,
-    PeerCondition,
-    PeerConsensusReport,
-    PeerPromptEnvelope,
-    PeerVerdictBlock,
-    PeerVerdictTelemetry,
-    ProfileTelemetryItem,
-    _registry_timestamp,
-    _sort_key_latest_exchange,
-    extract_env_conversation_id,
-    extract_frontmatter,
-    parse_envelope_from_md,
-    parse_verdict_from_md,
-    render_prompt_header,
-    render_verdict_header,
+    FRONTMATTER_PATTERN, AnchorPatchPayload, AutoApplyResult, CombinedTelemetry, FileChange,
+    FilePatch, PatchReplacement, PeerCondition, PeerConsensusReport, PeerPromptEnvelope,
+    PeerVerdictBlock, PeerVerdictTelemetry, ProfileTelemetryItem, _registry_timestamp,
+    _sort_key_latest_exchange, extract_env_conversation_id, extract_frontmatter,
+    parse_envelope_from_md, parse_verdict_from_md, render_prompt_header, render_verdict_header,
     resolve_spoke_slug_from_path,
 )
 from ._peer_telemetry import (
-    _VERDICT_FILE_PREFIXES,
-    _aggregate_registry_telemetry,
-    _attach_verdict_lineage,
-    _build_latest_verdict,
-    _enforce_single_verdict_guardrails,
-    _is_stale_prompt,
-    extract_grok_session_telemetry,
-    merge_overwritten_telemetry,
+    _VERDICT_FILE_PREFIXES, _aggregate_registry_telemetry, _attach_verdict_lineage,
+    _build_latest_verdict, _enforce_single_verdict_guardrails, _is_stale_prompt,
+    extract_grok_session_telemetry, merge_overwritten_telemetry,
 )
 from ._peer_watchdog import (
-    _VERDICT_ALIASES,
-    AUDIT_BASE_SYSTEM_PROMPT,
-    DEFAULT_FALLBACK_AUDITOR_MODEL,
-    DEFAULT_PRIMARY_AUDITOR_MODEL,
-    NO_TOOLS_DISALLOW_LIST,
-    PROFILE_SPECS,
-    READ_ONLY_DISALLOW_LIST,
-    TIER_DEFAULT_MODELS,
-    VERDICT_LATTICE_RANK,
-    AgentIdentity,
-    CostMode,
-    EffortType,
-    ModelTier,
-    PeerExecutionProfile,
-    RequestType,
-    VerdictType,
-    _build_synthesis_opts,
-    _poll_grok_process_with_watchdog,
-    _recover_verdict_from_chat_history,
-    _resolve_grok_profile_options,
-    _resolve_target_models,
-    _terminate_proc_tree,
-    _unwrap_grok_json_stdout,
-    inspect_session_liveness,
-    is_max_turns_exhausted,
+    _VERDICT_ALIASES, AUDIT_BASE_SYSTEM_PROMPT, DEFAULT_FALLBACK_AUDITOR_MODEL,
+    DEFAULT_PRIMARY_AUDITOR_MODEL, NO_TOOLS_DISALLOW_LIST, PROFILE_SPECS,
+    READ_ONLY_DISALLOW_LIST, TIER_DEFAULT_MODELS, VERDICT_LATTICE_RANK, AgentIdentity,
+    CostMode, EffortType, ModelTier, PeerExecutionProfile, RequestType, VerdictType,
+    _build_synthesis_opts, _poll_grok_process_with_watchdog, _recover_verdict_from_chat_history,
+    _resolve_grok_profile_options, _resolve_target_models, _terminate_proc_tree,
+    _unwrap_grok_json_stdout, inspect_session_liveness, is_max_turns_exhausted,
     write_synthesis_prompt_file,
 )
+# fmt: on
 from .verifier import resolve_preset_commands, verify_patch_execution
 
 # fmt: off
@@ -770,21 +735,15 @@ def invoke_grok_cli(
     content, _ = safe_read_and_hash(prompt_path)
     envelope = parse_envelope_from_md(content or "", prompt_path=prompt_path)
     if not envelope or (not envelope.output_path and not output_file):
-        print(
-            f"[PREFLIGHT-ENVELOPE-ERROR] Prompt '{prompt_path.name}' lacks valid YAML frontmatter (--- ... ---).",
-            file=sys.stderr,
-        )
+        msg = f"[PREFLIGHT-ENVELOPE-ERROR] Prompt '{prompt_path.name}' lacks valid YAML frontmatter (--- ... ---).\n"
+        sys.stderr.write(msg)
         return False
-
-    target_out = (
-        Path(output_file).resolve()
-        if output_file
-        else (prompt_path.parent / Path(envelope.output_path).name)
-    )
-    spec = PROFILE_SPECS.get(str(profile or envelope.profile), DEFAULT_GROK_SPEC)
-    opts = _resolve_grok_profile_options(
-        spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session, prompt_path
-    )
+    out_name = Path(envelope.output_path).name if envelope.output_path else ""
+    target_out = Path(output_file).resolve() if output_file else (prompt_path.parent / out_name)
+    eff_prof = str(profile or envelope.profile or "").strip() or None
+    spec = PROFILE_SPECS.get(str(eff_prof), DEFAULT_GROK_SPEC)
+    pos_args = (spec, envelope, max_turns, timeout, no_tools, resume_session_id, fork_session)
+    opts = _resolve_grok_profile_options(*pos_args, prompt_path, effective_profile=eff_prof)
     ok = any(
         _dispatch_grok_candidate(prompt_path, target_out, cand, opts, worktree)
         for cand in _resolve_target_models(model, tier, spec)
