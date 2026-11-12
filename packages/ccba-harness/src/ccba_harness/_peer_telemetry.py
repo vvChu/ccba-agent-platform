@@ -53,7 +53,7 @@ _CODE_AUDIT_PROFILES: frozenset[str] = frozenset(
     {"arch_audit", "code_review", "audit_direct", "agentic_code", "patch_fast"}
 )
 _PLAN_AUDIT_PROFILES: frozenset[str] = frozenset({"audit_plan", "deep_spec_audit"})
-_PLAN_TOKEN_RE = re.compile(r"(?:^|[-_.])plan(?:[-_.]|$)", re.IGNORECASE)
+_PLAN_PHASE_RE = re.compile(r"(?:^|[-_.])plan(?:[-_.]|$)", re.IGNORECASE)
 _NON_PHASE_PLAN_RE = re.compile(r"(?:floor|site|master|key|roof)[-_]plan", re.IGNORECASE)
 
 
@@ -478,10 +478,10 @@ def _extract_clean_doc_set(envelope: Any) -> set[str]:
 
 
 def _has_plan_phase_token(*texts: str) -> bool:
-    """Returns True if any identifier contains a phase-level `plan` token (excluding AEC nouns)."""
+    """Returns True if any identifier contains a phase-level `plan` segment (excluding AEC nouns)."""
     for raw in texts:
         cleaned = _NON_PHASE_PLAN_RE.sub("", str(raw or ""))
-        if _PLAN_TOKEN_RE.search(cleaned):
+        if _PLAN_PHASE_RE.search(cleaned):
             return True
     return False
 
