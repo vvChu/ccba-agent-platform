@@ -1,6 +1,6 @@
 # Impeccable Critique & Iterative UI Refinement Playbook
 
-> **Nguồn tham chiếu (Upstream Attribution):** Chuyển thể và bản địa hóa từ `pbakaus/impeccable` (`.agent/skills/impeccable`, commit `c1e0e549`, Apache License 2.0) tích hợp với bộ kiểm định tĩnh `../scripts/ui/search.py --audit-file` của CCBA Platform. Tuyệt đối không sử dụng launcher nhị phân `npx impeccable`.
+> **Nguồn tham chiếu (Upstream Attribution):** Chuyển thể và bản địa hóa từ `pbakaus/impeccable` (`.agent/skills/impeccable`, commit `c1e0e549`, Apache License 2.0) tích hợp với bộ kiểm định tĩnh `../scripts/ui/search.py --audit-file` của CCBA Platform. Tuyệt đối không sử dụng launcher nhị phân `npx impeccable`. <!-- ccba:allow-doc-drift -->
 
 Tài liệu này cung cấp quy trình thẩm định thiết kế hai luồng cô lập (Two-Track Isolated Critique), phân loại 4 chế độ bề mặt (Surface Modes) và 6 lượt tinh chỉnh giao diện chuyên sâu cho `/ccba-design`.
 
