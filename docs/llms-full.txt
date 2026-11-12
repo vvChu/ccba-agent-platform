@@ -6580,10 +6580,14 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `adaptive card extension`
 - `purview`
 - `modern search`
+- `spfx`
+- `onedrive rbac`
+- `satellite modules`
+- `drift audit`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
-- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.
-- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **Cấu trúc lưu trữ tài liệu dự án**
+- Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quản trị hạ tầng SharePoint Online, Power Apps (.pa.yaml), Power Automate, SPFx & M365 IaC theo kiến trúc 3 tầng và bảo mật Dual-Zone.
+- Trong chuỗi phát triển khi nhận tín hiệu bàn giao từ: **ccba-domain-modeling / ccba-to-spec / ccba-design (STK-07, STK-08) / ccba-codebase-design**
 
 ### Khi Nào KHÔNG Nên Dùng (Anti-patterns)
 - Không dùng nếu cần tư vấn định hướng ban đầu: hãy gọi `/ccba-ask`.
@@ -6596,18 +6600,18 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 Kỹ năng `ccba-sharepoint-iac` giữ vị trí then chốt trong chuỗi giá trị tích hợp của nền tảng:
 
 ```text
-[ Cấu trúc lưu trữ tài liệu dự án ]
+[ ccba-domain-modeling / ccba-to-spec / ccba-design (STK-07, STK-08) / ccba-codebase-design ]
           │
           ▼
-    >>> [ ccba-sharepoint-iac ] <<<  (Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.)
+    >>> [ ccba-sharepoint-iac ] <<<  (Quản trị hạ tầng SharePoint Online, Power Apps (.pa.yaml), Power Automate, SPFx & M365 IaC theo kiến trúc 3 tầng và bảo mật Dual-Zone.)
           │
           ▼
-[ Thư viện tài liệu SharePoint được đồng bộ ]
+[ ccba-web-testing / ccba-session-retrospective ]
 ```
 
-- **Đầu vào (Upstream)**: Nhận bối cảnh từ `Cấu trúc lưu trữ tài liệu dự án`.
+- **Đầu vào (Upstream)**: Nhận bối cảnh từ `ccba-domain-modeling / ccba-to-spec / ccba-design (STK-07, STK-08) / ccba-codebase-design`.
 - **Thực thi (In-flight)**: Áp dụng các quy tắc kỹ thuật và công cụ tự động hóa để sản sinh kết quả chuẩn mực.
-- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `Thư viện tài liệu SharePoint được đồng bộ`.
+- **Đầu ra & Bàn giao (Downstream)**: Chuyển giao thành phẩm sạch sẽ sang `ccba-web-testing / ccba-session-retrospective`.
 
 ---
 

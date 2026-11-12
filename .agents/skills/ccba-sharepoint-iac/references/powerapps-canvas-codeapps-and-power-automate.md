@@ -67,20 +67,35 @@ SharePoint Online connectors (`shared_sharepointonline`) enforce strict **Delega
 When building a custom Code App (distilled from `microsoft/power-platform-skills/plugins/code-apps`):
 1. **Scaffold & Tooling:** Initialize with `pac code init` (Vite + React + TypeScript + `@fluentui/react-components`), mapping Fluent v9 tokens (`colorBrandBackground`, `colorNeutralStroke1`) to CCBA brand colors (`#363883`, `#005A9C`, `#DA251C`).
 2. **Standard M365 Data Sources:** Register connectors declaratively via `add-sharepoint`, `add-office365`, `add-onedrive`, and `add-teams`, ensuring all queries respect SharePoint Native RBAC Security Trimming.
-3. **3-Tier Operate Mode Compliance:** Enforce all `/ccba-design` Operate Mode rules (`tabular-nums`, `< 650px` fold budget, bidirectional URL hash/query state, and zero `SLOP-01..09` findings).
+3. **3-Tier Operate Mode Compliance:** Enforce all `ccba-design` Operate Mode rules (`tabular-nums`, `< 650px` fold budget, bidirectional URL hash/query state, and zero `SLOP-01..09` findings).
 
 ---
 
-## 4. Power Automate Cloud Flows (`OpenApiConnection` & Solution Packaging)
+## 4. Power Automate Cloud Flows (`OpenApiConnection`, WDL AST & Flow RP Governance)
 
 Distilled from `microsoft/power-platform-skills/plugins/power-automate` (`build-flow`, `diagnose-flow`, `route-environments`) and `pa_solution_packager.py`:
 
-1. **Mandatory `OpenApiConnection` Binding (`SLOP-09`):**
-   - Every connector action in a Power Automate flow definition (`workflow.json`) MUST use `"type": "OpenApiConnection"` paired with `"connectionName"` referencing a Solution **Connection Reference** (`connectionreferences`).
+1. **Mandatory `OpenApiConnection` & `OpenApiConnectionWebhook` Binding (`SLOP-09`):**
+   - Every connector action in a Power Automate flow definition (`workflow.json`) MUST use `"type": "OpenApiConnection"` (or `"type": "OpenApiConnectionWebhook"` with `operationId: "StartAndWaitForAnApproval"` for Teams/Approvals — never legacy `CreateAndWaitForAnApproval` which fails with `HTTP 404`) paired with `"connectionName"` referencing a Solution **Connection Reference** (`connectionreferences`).
    - **Strictly Ban:** Legacy `"type": "ApiConnection"`, hardcoded `"Invoker"` bindings, or embedding raw credentials/tokens inside connector action parameters.
-2. **Environment Variables for Site & List Binding:**
-   - Never hardcode SharePoint Site URLs or List GUIDs directly inside flow actions when packaging for multi-environment deployment. Bind `"dataset"` and `"table"` to Power Platform **Environment Variables** (`environmentvariabledefinitions`).
-3. **Infinite Trigger Loop Prevention:**
+2. **WDL Integer `empty()` Trap & JSON Expression AST Rules:**
+   - **Never call `empty()` directly on Integer Lookup IDs** (e.g., `empty(triggerOutputs()?['body/ProjectId/Id'])`), as Azure Logic Apps / Workflow Definition Language throws `InvalidTemplate` at runtime on integer values; always coerce safely via `@empty(string(coalesce(triggerOutputs()?['body/ProjectId/Id'], '')))`.
+   - Inside `If` condition expression objects (`equals`, `empty`, `and`, `or`, `greater`, `less`), operands MUST always be serialized as a JSON `list` (`["@..."]`), and every SharePoint `PostItem` / `PatchItem` `"item/*"` parameter MUST match the target List JSON Schema (never pass bare strings into `ManagedMetadata` columns).
+3. **Environment Variables & Infinite Trigger Loop Prevention:**
+   - Bind SharePoint `"dataset"` and `"table"` targets to Power Platform **Environment Variables** (`environmentvariabledefinitions`) rather than hardcoding tenant-specific List GUIDs.
    - When a flow triggers on `When_an_item_is_created_or_modified` (`Submissions` or `Contracts`) and updates the same item's status (`IBSTSubmissionStatus`), ALWAYS configure a **Trigger Condition** (`@not(equals(triggerOutputs()?['body/Editor/Email'], 'ibstpm@ibst-bim.vn'))` or status-transition guard) to prevent infinite self-triggering loops that exhaust the `40,000 PPR/24h` quota in minutes.
-4. **Solution Packaging & Static Verification (`pa_solution_packager.py` & `pac solution`):**
-   - Package flows, connection references, environment variables, and Canvas Apps into a structured Solution archive (`Solution.xml`, `customizations.xml`, `Workflows/*.json`) and validate via `pa_solution_packager.py` / `pac solution check` before importing into target environments.
+4. **Offline Solution Verification & Flow RP Co-Owner Provisioning (`pa_solution_packager.py`):**
+   - Package flows, connection references, environment variables, and Canvas Apps into a structured Solution archive (`Solution.xml`, `customizations.xml`, `Workflows/*.json`) and run offline static checks via `pa_solution_packager.py`, `pac solution check`, or `flowagent-mcp` invoked through Python `subprocess.run(..., env={**os.environ, "FLOWAGENT_TELEMETRY_OPT_OUT": "1"})`.
+   - When granting flow co-ownership programmatically via `.../providers/Microsoft.ProcessSimple/environments/{env_id}/flows/{flow_rp_id}/modifyPermissions`, address the flow by its **Flow RP ID (`name`)** rather than Dataverse `workflowid`, and assign `"roleName": "CanEdit"` (passing `"Owner"` is rejected with `400 InvalidPermissionRoleName`).
+
+---
+
+## 5. Three-Tier Environment Drift Comparison & Zero-Secret Packaging
+
+Distilled from `microsoft/power-platform-skills` (`compare-site-configurations` & `route-environments`):
+
+1. **Zero-Secret Export & Pre-Deploy Role Gate:**
+   - Never export client secrets, certificate private keys, or user-bound connection tokens into unpacked Solution or portal configuration folders; verify target administrative security roles (`System Customizer` / SharePoint Site Collection Admin) before executing mutating deployment commands.
+2. **Three-Tier Drift Severity Ranking & Cross-Site Noise Filtering:**
+   - Structure every environment or site configuration diff report in strict priority order: **(1) Access, Authentication & RBAC Isolation** $\to$ **(2) Schema, State Transitions & Flow Behavior** $\to$ **(3) Content, Styling & Navigation**.
+   - Strip expected cross-environment GUID differences and unresolved dry-run placeholders (`bindings_path=None`) into a separate informational summary so operators focus exclusively on true behavioral or security drift.
