@@ -1,3 +1,6 @@
+# Bản Mẫu Concept Note Nguyên Tử (Canonical v8.3)
+
+````markdown
 ---
 title: "{concept_title}"
 aliases:
@@ -47,3 +50,4 @@ confidence: high
 
 - [[{source_note_slug}|{book_title} (Source Note)]]
 - [[{related_topic_slug}|{related_topic_title}]]
+````

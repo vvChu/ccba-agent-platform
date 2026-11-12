@@ -1,3 +1,6 @@
+# Bản Mẫu Bộ Công Cụ Thực Chiến 20/80 (FBA Toolkit)
+
+````markdown
 ---
 title: "Bộ Công Cụ Thực Chiến: Quy Trình {Workflow_Name} ({Framework_Name} Flow)"
 aliases:
@@ -81,3 +84,4 @@ flowchart TD
 
 - [[{source_note_slug}|{book_title} (Source Note)]]
 - [[{master_topic_slug}|{master_topic_title}]]
+````

@@ -1,3 +1,6 @@
+# Bản Mẫu Source Note Chuẩn Schema (AGENTS.md §3.1)
+
+````markdown
 ---
 title: "Tên Sách: Phụ Đề Đầy Đủ"
 aliases:
@@ -67,3 +70,4 @@ related: []
 
 - [[MOC_{moc_slug}|MOC {book_title}]]
 - [[index|Master Index]]
+````
