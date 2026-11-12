@@ -169,6 +169,7 @@ portals:
   - ccba-research
   - ccba-seminar-builder
   - ccba-youtube-learn
+  - ccba-book-compiler
   - ccba-contribute-to-hub
   - ccba-review-proposal
   - ccba-issue-to-hub
@@ -464,6 +465,10 @@ pipeline_trail:
     upstream: Video YouTube bài giảng / Hội thảo công nghệ
     downstream: Bản tóm tắt tri thức cốt lõi
     role: Trích xuất phụ đề, phân tích nội dung và tổng hợp tri thức từ video.
+  ccba-book-compiler:
+    upstream: Sách hoặc Ebook chuyên ngành (.epub / .pdf)
+    downstream: Hệ thống tri thức Zettelkasten, sơ đồ Excalidraw 16:9 và bộ công cụ FBA
+    role: Chuyển hóa tự động sách/ebook thành Concept Notes đối soát Ground Truth và từ điển chuẩn hóa.
   ccba-contribute-to-hub:
     upstream: Cải tiến hoặc kỹ năng mới phát triển tại Spoke
     downstream: Pull Request đóng góp ngược về Hub

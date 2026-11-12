@@ -33,7 +33,7 @@ CCBA Agent Services Platform vận hành theo kiến trúc **Hub-and-Spoke**:
        └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
 ```
 
-- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), <!-- SKILL_COUNT_START -->76<!-- SKILL_COUNT_END --> kỹ năng AI (và <!-- ARCHIVED_WORKFLOW_COUNT_START -->68<!-- ARCHIVED_WORKFLOW_COUNT_END --> workflows được lưu trữ/hợp nhất theo ADR-0056), các gói thư viện lõi và công cụ điều phối đồng bộ.
+- **CCBA Hub (`ccba-agent-platform`)**: Repository trung tâm lưu trữ toàn bộ tài sản trí tuệ chung, bao gồm Hiến pháp tối cao [`AGENTS.md`](.agents/AGENTS.md), <!-- SKILL_COUNT_START -->77<!-- SKILL_COUNT_END --> kỹ năng AI (và <!-- ARCHIVED_WORKFLOW_COUNT_START -->68<!-- ARCHIVED_WORKFLOW_COUNT_END --> workflows được lưu trữ/hợp nhất theo ADR-0056), các gói thư viện lõi và công cụ điều phối đồng bộ.
 - **Dự Án Con (Spokes)**: Các repositories chuyên biệt (như `ccba-legal-knowledge`, `ccba-qc-web-app`, các dự án thẩm tra công trình cụ thể). Spoke kế thừa toàn bộ năng lực AI của Hub thông qua cơ chế **Reuse-First Gate** và công cụ đồng bộ **`sync_spoke.py`**.
 
 ---

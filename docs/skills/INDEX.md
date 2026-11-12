@@ -1,6 +1,6 @@
 # CCBA Agent Platform — Danh Mục Kỹ Năng (Skills Catalog Index)
 
-> **Tổng hợp**: 76 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
+> **Tổng hợp**: 77 Kỹ năng Hoạt động được phân loại vào 5 Cổng Điều Hướng theo chuẩn ADR-0047, ADR-0057 và ADR-0058.
 
 Trang tài liệu này phục vụ tra cứu nhanh cho kỹ sư và AI Coding Agents trong Terminal hoặc IDE.
 Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm tắt chuẩn máy đọc tại [docs/llms.txt](../llms.txt).
@@ -13,7 +13,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 - [⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân](#core_engineering) (22 skills)
 - [📐 BIGBIM & Thẩm tra AI-QC](#bim_aiqc) (7 skills)
 - [⚖️ Pháp lý Xây dựng & Tự động hóa Văn phòng](#legal_compliance) (10 skills)
-- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (29 skills)
+- [🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu](#governance_upkeep) (30 skills)
 
 ---
 
@@ -105,7 +105,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 ---
 
 <a id="governance_upkeep"></a>
-## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (29 Kỹ Năng)
+## 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu (30 Kỹ Năng)
 
 *Quản trị vòng đời quyết định kiến trúc ADR, cổng đánh giá chất lượng kỹ năng (GPI), AI Gateway SDK, tìm kiếm kết hợp Hybrid RAG và chu trình tự nghiên cứu học tập.*
 
@@ -116,6 +116,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-ai-gateway-sdk](ccba-ai-gateway-sdk.md) | `/ccba-ai-gateway-sdk` | `kernel` | `Model` | Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud) qua Pyt... |
 | [ccba-ai-pdf-preprocessor](ccba-ai-pdf-preprocessor.md) | `/ccba-ai-pdf-preprocessor` | `kernel` | `Model` | Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking và Tilin... |
 | [ccba-autoresearch](ccba-autoresearch.md) | `/ccba-autoresearch` | `orchestrator` | `User` | Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tu... |
+| [ccba-book-compiler](ccba-book-compiler.md) | `/ccba-book-compiler` | `kernel` | `User` | Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten Cano... |
 | [ccba-build-skill](ccba-build-skill.md) | `/ccba-build-skill` | `kernel` | `User` | Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Sk... |
 | [ccba-contribute-to-hub](ccba-contribute-to-hub.md) | `/ccba-contribute-to-hub` | `kernel` | `User` | Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng lặp Dừn... |
 | [ccba-create-verification-skill](ccba-create-verification-skill.md) | `/ccba-create-verification-skill` | `kernel` | `User` | Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke (A... |

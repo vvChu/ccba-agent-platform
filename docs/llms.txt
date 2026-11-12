@@ -1,6 +1,6 @@
 # CCBA Agent Platform Skills
 
-> Curated registry of 76 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
+> Curated registry of 77 engineering, BIM, legal, and governance agent skills for the CCBA Agent Services Platform.
 
 ## Navigation Portals
 
@@ -12,11 +12,11 @@
 
 ## Core Endpoints & Documentation
 
-- [Skills Index](skills/INDEX.md): Markdown catalog index for all 76 skills.
+- [Skills Index](skills/INDEX.md): Markdown catalog index for all 77 skills.
 - [Skills FAQ](skills/FAQ.md): Frequently asked questions on Hub-Spoke, invocation, and troubleshooting.
-- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 76 skills.
+- [Full Consolidated Skills Text](llms-full.txt): Complete full-text documentation of all 77 skills.
 
-## All Active Skills (76 Skills)
+## All Active Skills (77 Skills)
 
 - [platform-loader](skills/platform-loader.md): /platform-loader — Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn bộ skills và rules.
 - [bigbim-classification](skills/bigbim-classification.md): /bigbim-classification — Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass 200, tích hợp chuẩn ISO (22274, 21511, 12006-2), ISO 19650 Room Naming & IFC Alignment.
@@ -34,6 +34,7 @@
 - [ccba-append-only-logger](skills/ccba-append-only-logger.md): /ccba-append-only-logger — Thread-safe, append-only logging pattern cho Python pipeline multi-daemon. Tránh race condition và encoding corruption khi nhiều process ghi cùng lúc vào shared log file.
 - [ccba-ask](skills/ccba-ask.md): /ccba-ask — Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
 - [ccba-autoresearch](skills/ccba-autoresearch.md): /ccba-autoresearch — Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
+- [ccba-book-compiler](skills/ccba-book-compiler.md): /ccba-book-compiler — Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten Canonical v8.3 kèm nén WebP in-memory, đối soát BGE-M3 và Excalidraw 16:9.
 - [ccba-build-skill](skills/ccba-build-skill.md): /ccba-build-skill — Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói sinh Skill mới đạt chuẩn CCBA.
 - [ccba-chrome-debug](skills/ccba-chrome-debug.md): /ccba-chrome-debug — Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent Profile và công cụ /browser cho Antigravity & CCBA Platform.
 - [ccba-code-review](skills/ccba-code-review.md): /ccba-code-review — Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells) và Spec (Spec/Requirements).
