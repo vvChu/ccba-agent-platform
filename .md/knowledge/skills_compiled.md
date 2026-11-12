@@ -3480,6 +3480,336 @@ python scripts/eval/git_ratchet_tuner.py --target .agents/skills/ccba-copywritin
 
 ---
 
+# Skill: ccba-book-compiler
+
+---
+name: ccba-book-compiler
+description: "Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten Canonical v8.3 kèm nén WebP in-memory, đối soát BGE-M3 và Excalidraw 16:9."
+role: kernel_skill
+bundle: _core
+tier: kernel
+disable-model-invocation: true
+user-invocable: true
+command: /ccba-book-compiler
+gpi:
+  s: 4.0
+  k: 4.5
+  a: 1.0
+  p: 1.0
+triggers:
+  - ccba-book-compiler
+  - ccba-book-compile
+  - book-compile
+  - ebook-compile
+  - nap-sach
+  - chuyen-hoa-sach
+  - zettelkasten-compiler
+  - book-ingest
+metadata:
+  version: "1.5.0"
+  author: "CCBA & VvC Second Brain"
+---
+
+# Master Skill: Deep Ebook Compilation Engine (/ccba-book-compiler)
+
+Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa một cuốn sách/ebook thô (`.epub` hoặc `.pdf`) thành mạng lưới tri thức sống động, kiểm chứng được bằng Ground Truth và áp dụng thực chiến ngay trong doanh nghiệp theo triết lý **LLM Compiler Pattern** và **Hiến pháp VvC Second Brain (v8.16.0)**.
+
+---
+
+## 🏛️ Platform-Aware Architecture Posture
+
+- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
+  - Tra cứu hợp đồng năng lực trước khi sinh sơ đồ (dùng biến môi trường `CCBA_HUB_PATH`):
+    ```bash
+    python "${CCBA_HUB_PATH}/scripts/ccba_platform_cli.py" find-seam --in diagram --out layout --json
+    ```
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill (`disable-model-invocation: true` theo ADR-0040) với điểm $\mathbf{GPI} = (4.0 \times 2.5) + (4.5 \times 2.0) + (1.0 \times 2.0) - (1.0 \times 1.5) = \mathbf{19.5} \ge 12.0$.
+- **Bất biến Bắt buộc (Mandatory Invariants)**:
+  1. *Race-Free Staging & Dual-Path Contract*: Mọi sách mới hoặc sách ngoại lai BẮT BUỘC đi qua `pipeline.book_staging.stage_book_for_compilation()` theo đúng thứ tự: kiểm tra `check_cross_machine_lease()` $\rightarrow$ tạo workspace `05 - Fleeting/<Book_Stem>/` $\rightarrow$ đồng bộ khóa mức cuốn sách `.book_stage_<Book_Stem>.lock` (tách rời khóa sống còn `.book_ingest.lock` của daemon 24/7) để trích xuất hoặc phục hồi corpus Markdown & ảnh `.webp` (`quality=80, max_dim=1200`, nén trong RAM, scratch trên `state_dir` cục bộ) tại `03 - Resources/books/<Book_Stem>_MD/` với chốt lũy đẳng `_toc_original.json` + đủ chương $\rightarrow$ khởi tạo `Source Note` qua `safe_write_text()` + `update_source_cache()` $\rightarrow$ sinh `_toc.json` & `<BOOK_CONTEXT>` $\rightarrow$ chép sách ngoại lai vào `03 - Resources/books/` cuối cùng.
+  2. *Metadata SSoT Gate*: Quét 5 tệp `.md` mở đầu trong `03 - Resources/books/<Book_Stem>_MD/` (`Title`, `Copyright`, `ISBN`, `Edition`, `Author`) để khóa chuẩn Full Title, Subtitle, Edition và Full Authors trước khi biên soạn.
+  3. *Write-Through Concept Pipeline & Batched Vector Flush*: Mọi Concept Note BẮT BUỘC chạy qua Stage 4 `verify_and_correct()` (`scripts/pipeline/self_correct.py`) và lưu qua `save_concept(..., book_name=book_name)` (`scripts/pipeline/post_process.py`) bên trong ngữ cảnh `with VectorStore.get_instance().batch():` (`scripts/core/vector_store.py`) để kích hoạt 5 cổng chất lượng, `arbitrate_and_merge()`, gắn sơ đồ NXB (`align_book_diagrams()`), cập nhật `_vault_concepts_cache.json` v4 và chỉ ghi đĩa `.npz` đúng 1 lần.
+  4. *MOC Lifecycle Discipline*: CẤM tạo tay `MOC_*.md` hoặc sửa tay `00 - Maps of Content/index.md` ở Pha 2 (vì `_cleanup_stale_mocs` sẽ xóa MOC khi `0` concepts). Chỉ chạy `scripts/wiki_maintain.py` ở cuối Pha 5 sau khi toàn bộ concepts đã lưu; tên MOC chuẩn do hệ thống sinh là `MOC_<normalize_moc_name(aliases[0])>.md` (`--check-only` dùng để kiểm tra không ghi đĩa).
+  5. *Zero-ASCII Art & Clean Wikilinks (v8.15.11)*: Cấm tuyệt đối vẽ sơ đồ ASCII/Unicode box art và cấm bọc backticks quanh wikilinks/embeds trên mọi bề mặt Markdown. Mọi tệp Topic/Source viết ra đĩa phải đi qua `clean_wikilink_quotes()` + `safe_write_text()`.
+  6. *Excalidraw 16:9 Seam Delegation*: Ủy quyền bố cục cho `ccba_diagram` + `clean_and_repair_excalidraw_json()`, khóa chặt hộp bao ngang `1.000px ≤ W ≤ 1.150px` (tính cả tọa độ điểm mũi tên 2D `el.x + pt[0]`) và cỡ chữ gốc `fontSize ≥ 13` (đảm bảo sàn hiển thị $\ge 8.5\text{px}$ sau scale), kèm Bảng Đặc Tả Ma Trận bên dưới.
+
+---
+
+## 💻 Cú Pháp Lệnh & Tham Số
+
+```bash
+/ccba-book-compiler <đường-dẫn-sách> [--canonical-name <Ten_Sach.epub>] [--domain <lĩnh-vực>] [--apply-to <quy-trình>] [--max-concepts <N>]
+```
+
+- `<đường-dẫn-sách>`: Đường dẫn tệp `.epub` hoặc `.pdf` (nội bộ `03 - Resources/books/` hoặc tệp tải lên từ bên ngoài).
+- `--canonical-name <Ten_Sach.epub>`: Tên tệp chuẩn hóa khi nạp sách từ đường dẫn tạm bên ngoài (ví dụ `The_Skills_Powered_Organization.epub`).
+- `--domain <lĩnh-vực>`: Nhãn domain MOC (`management`, `bim`, `law`, `lean`, `software`; mặc định: `management`).
+- `--apply-to <quy-trình>`: Quy trình doanh nghiệp mục tiêu để đóng gói Bộ công cụ thực chiến Pha 5.
+- `--max-concepts <N>`: Số lượng khái niệm nguyên tử 20/80 cần bóc tách (mặc định: `12` đến `16`).
+
+---
+
+## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.0)
+
+### Pha 1: Staging Chống Đua Daemon, Nén WebP & Metadata SSoT Gate
+1. **Chạy trình điều phối Staging lũy đẳng (`pipeline.book_staging`)**:
+   ```bash
+   PYTHONPATH=scripts scripts/.venv/bin/python scripts/pipeline/book_staging.py "<file_path>" --canonical-name "<Ten_Sach_Chuan.epub_hoac_pdf>"
+   ```
+   - Nếu cần gọi lẻ bộ chuyển đổi PDF qua CLI (tự động từ chối PDF scan ảnh và dọn sạch thư mục dở dang):
+     ```bash
+     PYTHONPATH=scripts scripts/.venv/bin/python scripts/pdf_convert.py "<pdf_path>" "03 - Resources/books/<Book_Stem>_MD" --workspace "05 - Fleeting/<Book_Stem>"
+     ```
+2. **Hậu kiểm nén ảnh WebP cho corpus cũ (nếu có)**:
+   ```bash
+   scripts/.venv/bin/python .agents/skills/ccba-book-compiler/scripts/compress_images_to_webp.py --dir "03 - Resources/books/<Book_Stem>_MD"
+   ```
+3. **Metadata SSoT & Bilingual Glossary Gate**:
+   - Đọc 5 tệp `.md` đầu tiên trong `03 - Resources/books/<Book_Stem>_MD/` và `05 - Fleeting/<Book_Stem>/_toc.json` để xác thực chính xác nhan đề đầy đủ, tác giả, nhà xuất bản, năm xuất bản và danh sách chương cốt lõi.
+   - Quét `04 - Permanent/sources/` và `05 - Fleeting/*/_context.txt` theo tên tác giả / nhan đề gốc, đồng thời kích hoạt Hệ Từ Điển Liên Hợp 2 Tầng (`core.lexicon.sync_workspace_glossary(workspace_dir)` & `lookup_glossary_for_text()`, đối chiếu `00 - Maps of Content/Vault_Terminology_Glossary.md`): nếu Vault đã có ấn bản dịch tiếng Việt hoặc bản gốc đối ứng, **bắt buộc kế thừa khối `<GLOSSARY>` chuẩn hóa** sang `_context.txt` của sách mới, gắn thuật ngữ ấn bản đối ứng vào `aliases` của Concept Notes (`Alias-First Resolution` + Cầu Ngữ Nghĩa BGE-M3), và liên kết hai chiều giữa hai `Source Note`.
+   - Với sách thuộc lĩnh vực pháp luật, xây dựng, đấu thầu, QCVN/TCVN hoặc BIM, ưu tiên đối chiếu thuật ngữ Tầng 1 bất biến từ SSoT `ccba_legal.lexicon` / `ccba-legal-knowledge` qua `core.lexicon` (ADR-0059 & ADR-0061), tuyệt đối không dùng các cụm trong `vi_forbidden` hoặc tự dịch lệch thuật ngữ luật định.
+- **Tiêu chí hoàn thành:** `stage_book_for_compilation` trả JSON thành công; `_toc_original.json`, `_toc.json`, `_context.txt` và stub `Source Note` đã sẵn sàng; 0 ảnh PNG/JPG thô.
+
+### Pha 2: Làm Giàu Source Note & Đồng Bộ `<BOOK_CONTEXT>` (Cấm Tạo MOC Sớm)
+1. **Nâng cấp trực tiếp `Source Note` do Pha 1 khởi tạo** (`04 - Permanent/sources/YYYY-MM-DD_<book_name_lower>.md`) theo [`source_note_template.md`](resources/templates/source_note_template.md):
+   - Khai báo đầy đủ `tags: [knowledge, source/book, domain/<domain>, type/source]`, `type: source`, `origin: book`, `source: "<book_filename>"`, `aliases: ["<Nhan Đề Ngắn>", "<Original Title>"]`.
+   - Ghi đĩa qua `clean_wikilink_quotes()` + `safe_write_text()`, cập nhật SSD cache và làm tươi `<SUMMARY>` trong `_context.txt`:
+     ```python
+     from core.fuse_guard import safe_write_text
+     from core.markdown_sanitizer import clean_wikilink_quotes
+     from core.vault import update_source_cache
+     from pipeline.map_reduce import refresh_book_context_summary
+
+     clean_src = clean_wikilink_quotes(source_markdown)
+     safe_write_text(source_note_path, clean_src)
+     update_source_cache(source_note_path, text=clean_src)
+     refresh_book_context_summary(workspace_dir, summary_str)
+     ```
+2. **Quy tắc cấm ở Pha 2**: Tuyệt đối **KHÔNG** tạo tay tệp `MOC_*.md`, **KHÔNG** sửa tay `00 - Maps of Content/index.md`, và **KHÔNG** chạy `wiki_maintain.py` khi chưa có Concept Notes.
+- **Tiêu chí hoàn thành:** `Source Note` đạt chuẩn Schema `AGENTS.md §3.1`, cache `_vault_sources_cache.json` và `<BOOK_CONTEXT>` đã đồng bộ tóm tắt mới.
+
+### Pha 3: Bóc Tách 12–16 Concept Notes Qua Seam Chính Thống & Batch `.npz`
+1. Tuyển chọn 12–16 nguyên lý đòn bẩy 20/80 từ các chương cốt lõi theo [`concept_note_template.md`](resources/templates/concept_note_template.md) (`origin: book`, Evidence Hook tiếng Việt + Citation Line + `## Core Idea` + `## 📖 Bản gốc & Ngữ cảnh mở rộng (Ground Truth)` nguyên văn).
+2. **Thực thi đối soát Ground Truth, Stage 4 & Lưu Batch**:
+   ```python
+   from core.vector_store import VectorStore
+   from pipeline.ground_truth import find_ground_truth, find_images_around_ground_truth
+   from pipeline.post_process import save_concept
+   from pipeline.self_correct import verify_and_correct
+
+   saved_concepts = []
+   with VectorStore.get_instance().batch():
+       for draft_md, gt_verbatim in compiled_drafts:
+           verified_md = verify_and_correct(draft_md, gt_verbatim)
+           out_path = save_concept(verified_md, book_name=book_name)
+           if out_path is not None:
+               saved_concepts.append(out_path)
+   ```
+   - `find_ground_truth()` và `find_images_around_ground_truth()` hỗ trợ truy hồi đoạn gốc và ảnh minh họa chương sách; `save_concept(..., book_name=book_name)` tự động gắn sơ đồ `.webp` qua `align_book_diagrams()`, kiểm định `_validate_quality()`, hợp nhất trùng lặp ngữ nghĩa và ghi nhận vector để flush `.npz` 1 lần khi thoát khối `with`.
+- **Tiêu chí hoàn thành:** Toàn bộ Concept Notes vượt qua 5 cổng chất lượng, 0 tệp `_[2-9].md`, SSD cache & chỉ mục vector BGE-M3 được đồng bộ sạch sẽ.
+
+### Pha 4: Luận Giải Kiến Trúc & Sinh Sơ Đồ Excalidraw 16:9 (`1.000px ≤ W ≤ 1.150px`)
+1. **Sinh Sơ Đồ Hệ Thống 16:9** tại `03 - Resources/attachments/<so_do_slug>.excalidraw.md`:
+   - Bố cục qua `ccba_diagram:apply_smart_layout` (hoặc container cụm phân tầng cho đồ thị chuỗi/đồng tâm để tránh sụp về cột dọc `W ≈ 260px`) kết hợp `services.excalidraw_worker.clean_and_repair_excalidraw_json()`.
+   - Khóa hộp bao ngang `1.000px ≤ W ≤ 1.150px`, cỡ chữ `fontSize ≥ 13`, đầy đủ `## Text Elements` `^id` và `## Drawing`.
+2. **Soạn Master Topic Note** (`> 2.500` từ) tại `04 - Permanent/topics/kien_truc_<chu_de>.md` (`type: topic`, `origin: book`, `source_type: compiled`), nhúng trần sơ đồ kèm Bảng Đặc Tả Ma Trận ngay bên dưới:
+   ```markdown
+   ![[so_do_slug.excalidraw.md|100%]]
+   ```
+   Ghi đĩa bắt buộc qua `clean_wikilink_quotes()` + `safe_write_text()`.
+- **Tiêu chí hoàn thành:** Master Topic Note và sơ đồ `.excalidraw.md` đạt chuẩn bề ngang `[1000..1150px]` và `fontSize >= 13`.
+
+### Pha 5: Đóng Gói Bộ Công Cụ Thực Chiến & Tự Động Hóa MOC / Master Index
+1. **Bộ Công Cụ Thực Chiến** (với sách quản trị/quy trình/kỹ thuật ứng dụng): Soạn `04 - Permanent/topics/bo_cong_cu_thuc_chien_<quy_trinh>.md` theo [`fba_toolkit_template.md`](resources/templates/fba_toolkit_template.md) (`type: topic`, `origin: book`, `source_type: compiled`, 100% bảng Markdown bản địa, 0 ASCII box art), lọc qua `clean_wikilink_quotes()` + `safe_write_text()`.
+2. **Liên kết ngược & Chạy `wiki_maintain.py`**:
+   - Cập nhật danh sách wikilinks của toàn bộ Concept Notes, Topic Notes, Sơ đồ Excalidraw và MOC đích `[[MOC_<moc_slug>|MOC <Book Title>]]` (`moc_slug = normalize_moc_name(aliases[0])` từ `services.moc_builder`) vào `Source Note`, rồi gọi lại `update_source_cache()`.
+   - Chạy trình bảo trì tự động để sinh `Source MOC`, `Domain MOC` và `00 - Maps of Content/index.md` (dùng `--check-only` nếu chỉ muốn chẩn đoán không ghi đĩa):
+     ```bash
+     scripts/.venv/bin/python scripts/wiki_maintain.py
+     ```
+- **Tiêu chí hoàn thành:** `MOC_<moc_slug>.md` và `index.md` được sinh tự động, khớp 100% liên kết hai chiều.
+
+### Pha 6: Cổng Kiểm Định Tất Định C4 (`--verify-book`, `0 broken_body_links`) & Bàn Giao
+1. **Chạy cổng kiểm định C4 toàn diện** (kiểm tra corpus WebP, TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()`, hộp bao Excalidraw `[1000..1150px]`, `fontSize >= 13`, và đối soát `broken_body_links == 0` đồng bộ `VaultLinter` + media embeds):
+   ```bash
+   scripts/.venv/bin/python .agents/skills/ccba-book-compiler/scripts/compress_images_to_webp.py \
+     --verify-book \
+     --dir "03 - Resources/books/<Book_Stem>_MD" \
+     --toc "05 - Fleeting/<Book_Stem>/_toc.json" \
+     --source "04 - Permanent/sources/YYYY-MM-DD_<book_name_lower>.md" \
+     --concepts <danh-sach-file-concepts> \
+     --topics <danh-sach-file-topics> \
+     --excalidraw "03 - Resources/attachments/<so_do_slug>.excalidraw.md"
+   ```
+2. **Chạy bộ kiểm thử kiến trúc & vệ sinh kho mã**:
+   ```bash
+   scripts/.venv/bin/pytest scripts/tests/test_book_compiler_contracts.py scripts/tests/test_codebase_cleanliness.py scripts/tests/test_architectural_budgets.py
+   python "${CCBA_HUB_PATH}/scripts/validate_skills.py" --file "<spoke_root>/.agents/skills/ccba-book-compiler/SKILL.md" --enforce-gpi
+   ```
+3. Xuất Báo cáo Bàn giao (Walkthrough) tóm tắt thành phẩm cho người dùng.
+- **Tiêu chí hoàn thành:** `--verify-book` in `[BOOK-VERIFY-OK]`, `pytest` và `validate_skills.py --enforce-gpi` đều đạt `exit code 0`.
+
+---
+
+## 📚 Progressive Disclosure & Reference Index (Level 3)
+
+| Tệp Tham Chiếu / Script | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| [`scripts/compress_images_to_webp.py`](scripts/compress_images_to_webp.py) | CLI nén WebP hồi tố & điều phối cổng `--verify-book` |
+| [`scripts/verify_book_artifacts.py`](scripts/verify_book_artifacts.py) | Động cơ kiểm định C4: TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()` và `VaultLinter` link parity |
+| [`scripts/verify_excalidraw_map.py`](scripts/verify_excalidraw_map.py) | Bộ giải mã `compressed-json` LZString & kiểm định hộp bao Excalidraw 16:9 (`[1000..1150px]`, `fontSize >= 13`) |
+| [`references/canonical_v83_concept_note.md`](references/canonical_v83_concept_note.md) | Quy cách Frontmatter, Evidence Hook (VN) và Ground Truth (EN) |
+| [`references/visual_and_diagramming_rules.md`](references/visual_and_diagramming_rules.md) | Quy chuẩn Excalidraw 16:9, Executive Typography và Bảng Markdown bản địa |
+| [`resources/templates/toc_schema_v80.json`](resources/templates/toc_schema_v80.json) | Schema JSON mục lục sách song ngữ Canonical v8.0 |
+| [`resources/templates/source_note_template.md`](resources/templates/source_note_template.md) | Bản mẫu Source Note chuẩn Schema `AGENTS.md §3.1` |
+| [`resources/templates/concept_note_template.md`](resources/templates/concept_note_template.md) | Bản mẫu Concept Note nguyên tử Canonical v8.3 |
+| [`resources/templates/fba_toolkit_template.md`](resources/templates/fba_toolkit_template.md) | Bản mẫu Bộ công cụ thực chiến 20/80 (`source_type: compiled`) |
+
+---
+*Tác tạo bởi CCBA & VvC Second Brain — Hệ Điều Hành Tri Thức Tự Trị*
+
+
+---
+
+# Skill Reference: ccba-book-compiler/references/canonical_v83_concept_note.md
+
+# Canonical Concept Note v8.3 — Cẩm Nang Quy Chuẩn Tri Thức Nguyên Tử
+
+Tài liệu này định nghĩa cấu trúc chuẩn hóa cho mọi Concept Note được trích xuất từ sách trong hệ thống VvC Second Brain và CCBA Platform.
+
+---
+
+## 1. Cấu Trúc Bắt Buộc 6 Thành Phần (Canonical v8.3 Body Order)
+
+Mỗi file concept note (`04 - Permanent/concepts/snake_case_concept_name.md`) bắt buộc tuân thủ thứ tự sau:
+
+```markdown
+---
+title: "Tên khái niệm nguyên tử"
+aliases:
+  - "Tên gọi khác 1"
+  - "Tên tiếng Anh (nếu có)"
+tags:
+  - knowledge
+  - domain/<lĩnh_vực>
+  - type/concept
+type: concept
+origin: book
+date_created: YYYY-MM-DD
+date_modified: YYYY-MM-DD
+source: "YYYY-MM-DD_Book_Title_Author.md"
+source_page: ""
+source_chapter: "[[ten_chuong_tieng_viet]]"
+ground_truth_page: ""
+ground_truth_chapter: "[[ten_chuong_ban_goc_en]]"
+source_type: epub | pdf | text
+summary: "Tóm tắt insight cốt lõi 1-2 câu — KHÔNG lặp lại Evidence Hook."
+people:
+  - "Tên Tác Giả"
+companies:
+  - "Tổ Chức / NXB"
+status: seed | growing | evergreen
+related:
+  - "[[snake_case_concept_1]]"
+  - "[[snake_case_concept_2]]"
+confidence: high
+---
+
+> "Trích dẫn nguyên văn bằng tiếng Việt (hoặc dịch sát nghĩa nếu nguồn là tiếng Anh) làm bằng chứng thực chứng cho khái niệm."
+> — **Tên Tác Giả**, trích dẫn trong *Tên Sách*, [[source_note_slug|Tên Nguồn Ngắn]]
+
+## Core Idea
+
+[Phân tích chuyên sâu 1-3 đoạn văn bằng thuần tiếng Việt. Luận giải bản chất cơ chế, động lực vận hành và ý nghĩa ứng dụng thực tiễn. Tuyệt đối KHÔNG lồng quote thứ hai bên trong. Tuyệt đối KHÔNG lặp lại nội dung của Evidence Hook.]
+
+## 📖 Bản gốc & Ngữ cảnh mở rộng (Ground Truth)
+
+> "[Đoạn trích dẫn nguyên văn bằng TIẾNG ANH (hoặc ngôn ngữ gốc của nguồn thô) từ sách để phục vụ đối chiếu, kiểm chứng học thuật và khử ảo giác AI.]"
+> — **Author Name**, *Original Book Title*, Chapter X: "Chapter Name"
+
+---
+
+## References
+
+- [[YYYY-MM-DD_Book_Title_Author|Tên Sách (Source Note)]]
+- [[chuong_sach_lien_quan|Chương Sách Liên Quan]]
+- [[khai_niem_nen_tang|Khái Niệm Nền Tảng Khác]]
+```
+
+---
+
+## 2. Bất Biến Vàng (Golden Invariants)
+
+1. **Nguyên tử hóa (Atomic)**: Một khái niệm = Một tệp duy nhất. Không gộp nhiều ý tưởng khác biệt vào chung một ghi chú.
+2. **Đối xứng Song Ngữ (Bilingual Ground Truth Grounding)**:
+   - Hook đầu trang: BẮT BUỘC bằng **Tiếng Việt**.
+   - Ground Truth phần dưới: BẮT BUỘC bằng **Tiếng Anh nguyên bản** từ tệp Markdown corpus thô.
+3. **Clean Wikilinks (Cấm bọc backticks quanh wikilinks)**:
+   - Cú pháp ví dụ bắt buộc phải đặt trong fenced code block (ngôn ngữ `text`):
+   ```text
+   [[concept_slug|Tên Hiển Thị]]
+   ```
+   - Tuyệt đối cấm bọc inline backticks quanh liên kết wikilinks vì sẽ biến liên kết thành code pill xám và làm gãy đồ thị Graph View trong Obsidian.
+4. **Hai Chiều Đóng Kín (Bidirectional Linking)**:
+   - Khi tạo concept note mới, phải tìm ít nhất 1-2 concept note cũ có liên quan mật thiết để cập nhật ngược liên kết `related` hoặc trích dẫn trong `## Core Idea`.
+
+
+---
+
+# Skill Reference: ccba-book-compiler/references/visual_and_diagramming_rules.md
+
+# Visual & Diagramming Rules — Quy Chuẩn Trực Quan Hóa Tri Thức
+
+Tài liệu này tổng hợp các quy chuẩn công thái học thị giác (Document Ergonomics) bắt buộc áp dụng khi biên dịch sách thành sơ đồ và bảng biểu.
+
+---
+
+## 1. Ngưỡng Vàng Lai (Hybrid Golden Threshold)
+
+- **Khi nào dùng Mermaid inline?**:
+  - Luồng tuyến tính một chiều ($\le 8$ nodes).
+  - Tương tác song phương (sequence $\le 6$ bước).
+  - Sơ đồ phân nhánh đơn giản.
+- **Khi nào BẮT BUỘC vẽ Excalidraw 16:9?**:
+  - Sơ đồ kiến trúc tổng thể $\ge 3$ layers.
+  - Số lượng node $\ge 9$ nodes.
+  - Kết nối chéo phức tạp $\ge 3$ subgraphs.
+  - Vị trí lưu tệp: BẮT BUỘC lưu tại `03 - Resources/attachments/<ten_so_do>.excalidraw.md`.
+
+---
+
+## 2. Quy Chuẩn Sơ Đồ Excalidraw 16:9 (Executive Typography)
+
+1. **Khung Canvas 16:9**:
+   - Chiều rộng hộp bao ngang (Horizontal Bounding Box, tính cả tọa độ điểm mũi tên 2D `el.x + pt[0]`): Khóa cứng $1.000\text{px} \le W \le 1.150\text{px}$ (khuyến nghị chuẩn $1.080\text{px}$; cổng C4 `verify_excalidraw_map.py` kiểm định cứng trên cả JSON thô và `compressed-json`).
+   - Chiều cao canvas mục tiêu: Khuyến nghị tỷ lệ $600\text{px} \le H \le 720\text{px}$ (mở rộng tự động theo số tầng để không tràn chữ).
+2. **Cỡ chữ gốc (Raw `fontSize` Floor)**:
+   - Tiêu đề chính (Title): $24\text{px} - 28\text{px}$, Bold.
+   - Nhãn phân hệ (Section Header): $16\text{px} - 20\text{px}$, Bold.
+   - Nội dung node (Node Text): Khóa cứng sàn `fontSize ≥ 13px` (khuyến nghị $13\text{px} - 15\text{px}$, đồng bộ 100% với `excalidraw_worker.py` và cổng C4 Pha 6 để đảm bảo sàn hiển thị $\ge 8.5\text{px}$ sau khi nhúng thu phóng trong note).
+3. **Auto-Expand Container**:
+   - Chiều cao khung chứa phải lớn hơn chiều cao văn bản ít nhất $30\text{px}$ ($H \ge H_{text} + 30\text{px}$) để chống tràn text.
+4. **Màu sắc Grayscale Học thuật**:
+   - Sử dụng bảng màu Grayscale (nền xám nhạt `#f4f4f5` / `#e4e4e7`, viền `#27272a` hoặc `#52525b`, chữ `#18181b`). Tránh màu vàng chói hoặc phối màu sặc sỡ.
+5. **Bảng Đặc Tả Ma Trận Kiến Trúc Markdown**:
+   - BẮT BUỘC tạo Bảng Đặc Tả ngay dưới thẻ nhúng `![[...excalidraw.md|100%]]` trong Topic Note để phục vụ tra cứu văn bản và nạp ngữ cảnh cho LLM (được cổng C4 kiểm tra tự động khi Topic Note nhúng `.excalidraw`).
+
+---
+
+## 3. Quy Chuẩn Bảng Markdown Bản Địa (Zero-ASCII Box Art)
+
+- **CẤM TUYỆT ĐỐI**: Dùng khối mã nguồn văn bản với các ký tự ASCII hộp phân cách để vẽ bảng hoặc sơ đồ.
+- **BẮT BUỘC**: Dùng thẻ Bảng Markdown chuẩn (`| Cột 1 | Cột 2 |`) với các quy tắc:
+  - Căn lề rõ ràng: `| :--- | :--- | :---: | :--- |`
+  - Thoát ký tự pipe khi nhúng wikilink trong bảng:
+    ```text
+    [[slug|Tên hiển thị]]  -->  [[slug\|Tên hiển thị]]
+    ```
+  - Xuống dòng nội bộ ô bảng bằng thẻ HTML `<br/>`.
+  - Không để rò rỉ các thực thể HTML parser (`#40;`, `#41;`) ra ngoài bảng Markdown; dùng dấu ngoặc đơn thông thường `()`.
+
+
+---
+
 # Skill: ccba-build-skill
 
 ---
@@ -6165,7 +6495,9 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * Nếu làm sắc nét thêm một thuật ngữ mập mờ $\rightarrow$ Cập nhật định nghĩa trực tiếp vào `CONTEXT.md`.
   * Nếu người dùng từ chối đề xuất vì một lý do kỹ thuật nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành tài liệu ADR trong thư mục `.md/knowledge/` để tránh các đợt quét sau đề xuất lại trùng lặp.
   * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
-  * **Đề xuất dựng mẫu thử nhanh (ADR 0010):** Sau khi thống nhất phương án triển khai, nếu việc refactor ảnh hưởng trực tiếp đến **Core Platform (Hub)** (ví dụ: sửa đổi core services, metadata registry, database schema chung), Agent bắt buộc phải đề xuất hoặc kích hoạt `/ccba-implement` (nhánh Logic/UI) để dựng nhanh mô phỏng hoạt động trước khi code thật. Đối với các Spoke apps hoặc hàm nghiệp vụ độc lập, Agent đề xuất viết code trực tiếp và chạy suite kiểm thử để tối ưu thời gian.
+  * **Cổng Phân Nhánh Bàn Giao Theo Tác Động Kiến Trúc (Impact-Based Handoff Gate — đồng bộ ADR-0067 & ADR 0010):** Cấm tự động nhảy sang sửa mã sản xuất ngay trong lượt chốt câu hỏi cuối của `ccba-grilling`. Áp dụng thống nhất 2 nhánh cho cả Hub và Spokes:
+    - *Nhánh Kiến trúc / Đa module* (`> 3` tệp mã nguồn, ước lượng diff `> 200` LOC, ứng viên hạng `Strong`, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam `__init__.py`, Schema, AuthZ, Hub Constitution): bắt buộc xuất bản Kế hoạch triển khai, thực thi cổng Peer Plan Audit (`audit_plan` → `signoff_diff` đạt `blocking_conditions == 0` hoặc chạm trần Pass 3) và nhận xác nhận `proceed` từ Kỹ sư trước khi sửa mã sản xuất (với Core Hub có thể dựng thêm mô phỏng qua `ccba-implement`).
+    - *Nhánh Cục bộ Fast-Path* ($\le 3$ tệp mã nguồn, $\le 200$ LOC, housekeeping nội bộ không đổi Public Seam): xuất tóm tắt Decision Log ngắn gọn và chờ Kỹ sư xác nhận thực thi trước khi viết mã và chạy kiểm thử.
 - **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
 
 ### Bước 5: Khóa Cứng Nghiệm Thu Khách Quan (Deterministic Verification Gate - ADR-0058)
@@ -13840,7 +14172,7 @@ python $CCBA_HUB_PATH/.agents/skills/ccba-design/scripts/icon/generate.py --list
 
 # Impeccable Critique & Iterative UI Refinement Playbook
 
-> **Nguồn tham chiếu (Upstream Attribution):** Chuyển thể và bản địa hóa từ `pbakaus/impeccable` (`.agent/skills/impeccable`, commit `c1e0e549`, Apache License 2.0) tích hợp với bộ kiểm định tĩnh `../scripts/ui/search.py --audit-file` của CCBA Platform. Tuyệt đối không sử dụng launcher nhị phân `npx impeccable`.
+> **Nguồn tham chiếu (Upstream Attribution):** Chuyển thể và bản địa hóa từ `pbakaus/impeccable` (`.agent/skills/impeccable`, commit `c1e0e549`, Apache License 2.0) tích hợp với bộ kiểm định tĩnh `../scripts/ui/search.py --audit-file` của CCBA Platform. Tuyệt đối không sử dụng launcher nhị phân `npx impeccable`. <!-- ccba:allow-doc-drift -->
 
 Tài liệu này cung cấp quy trình thẩm định thiết kế hai luồng cô lập (Two-Track Isolated Critique), phân loại 4 chế độ bề mặt (Surface Modes) và 6 lượt tinh chỉnh giao diện chuyên sâu cho `/ccba-design`.
 
@@ -17408,7 +17740,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
     4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu, đồng thời **diễn đạt câu hỏi sao cho câu trả lời "Đồng ý / Yes" luôn chấp nhận phương án đề xuất đó** (để sự đồng thuận không bao giờ mang nghĩa trả lời "Không" — `v1.3.2 #1193`). Khi trình bày nhiều câu hỏi trong một vòng (chế độ Batching), phân tách các câu hỏi liên tiếp bằng đường kẻ ngang `---` (`v1.3.0 #917`). Khi người dùng cần chuyển một quyết định chưa thể tự trả lời thành bảng câu hỏi khảo sát bất đồng bộ gửi cho người khác, đọc và áp dụng [`references/to-questionnaire.md`](references/to-questionnaire.md).
     5. **Nguyên tắc tra cứu:** Nếu một dữ kiện thực tế (*fact*) có thể tìm thấy bằng cách khám phá codebase, Agent phải tự tra cứu thay vì hỏi người dùng. Tuy nhiên, các quyết định thiết kế (*decisions*) là của người dùng — hãy đặt từng câu hỏi quyết định cho người dùng và chờ phản hồi.
     6. **Điểm dừng leo thang (Escalation Checkpoint):** Khi phát hiện $\ge 2$ phương án kiến trúc mâu thuẫn hoặc sự đánh đổi lớn (major trade-offs), đề xuất triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Solution How-Tree) để lượng hóa và xếp hạng các phương án qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục.
-    7. **Thẩm định độc lập ngang hàng (Peer Plan Audit):** Khi người dùng yêu cầu chuyển Grok phản biện kế hoạch, đọc `.md/peer_exchange/PEER_HANDSHAKE.md` và thực thi qua `ccba-harness peer-dispatch --profile audit_plan` (hoặc `arch_audit`); nếu phán quyết trả về `REVISE_PLAN` hoặc có điều kiện `blocking: true`, sau khi cập nhật bắt buộc chạy vòng nghiệm thu `--profile signoff_diff` nối tiếp phiên trước khi chốt hoàn tất.
+    7. **Thẩm định độc lập ngang hàng & Cổng Phân Nhánh Bàn Giao (Impact-Based Handoff Gate — ADR-0067):** Cấm tự động sửa mã sản xuất ngay trong lượt chốt câu hỏi Grilling cuối. Với thay đổi đa module (`> 3` tệp nguồn, ước lượng diff `> 200` LOC, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam, Schema, AuthZ, Hub Constitution) trên cả Hub và Spokes, hoặc khi người dùng yêu cầu phản biện ngang hàng, bắt buộc đọc `.md/peer_exchange/PEER_HANDSHAKE.md` và thực thi `ccba-harness peer-dispatch --profile audit_plan`; chừng nào `blocking_conditions > 0` (kể cả `APPROVE_WITH_CONDITIONS`), bắt buộc chạy nối tiếp `--profile signoff_diff --resume <sid> --fork-session` tối đa đến hết Pass 3 và chờ người dùng xác nhận `proceed` trước khi sửa mã. Với thay đổi cục bộ Fast-Path ($\le 3$ tệp, $\le 200$ LOC, không đổi Public Seam), xuất Decision Log ngắn gọn và chờ người dùng xác nhận thực thi.
 
 ### Nhánh B: Rule Compliance Stress-Test (Grill with Docs)
 Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, specifications, standards, e.g., `AGENTS.md`, `legal_registry.yaml`, các spec nghiệp vụ trong `.md/knowledge/`) và yêu cầu đối soát.
@@ -17460,7 +17792,7 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 *   [x] Không còn giả định mầm (silent assumptions) hay sương mù chưa được làm rõ trên Cây thiết kế.
 *   [x] Xuất ra biên bản tổng hợp quyết định (Decision Log / Resolution Summary) sau khi kết thúc phỏng vấn; mọi liên kết trong biên bản lưu kho bắt buộc dùng đường dẫn tương đối chuẩn repo (cấm lược đồ URI tệp cục bộ tuyệt đối theo `RULE-3.5`, đối chiếu đúng tên tệp thực tế `docs/adr/NNNN-*.md`).
 *   [x] Nếu ghi biên bản mới vào `.md/knowledge/` (ví dụ `.md/knowledge/decisions/*.md` hoặc `.md/knowledge/questionnaires/*.md`), đăng ký ngay đường dẫn tệp vào `.md/knowledge/index.md` và cập nhật `.md/knowledge/log.md` để `wiki_health_linter.py` và `validate_docs.py --changed` đạt mã thoát `0` (`RULE-2.22`).
-*   [x] Tự động cập nhật lại bản Kế hoạch triển khai (`implementation_plan.md`) nếu cuộc thảo luận dẫn đến thay đổi thiết kế hoặc cách tiếp cận kỹ thuật.
+*   [x] Tự động cập nhật hoặc kết xuất bản Kế hoạch triển khai (`implementation_plan.md`) nếu cuộc thảo luận dẫn đến thay đổi thiết kế/kỹ thuật, và dừng chờ xác nhận thực thi (`proceed`) của người dùng theo đúng 2 nhánh Impact-Based Handoff Gate (cấm tự ý sửa mã sản xuất ngay trong lượt chốt phỏng vấn).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -26239,7 +26571,7 @@ description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Autom
   Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 disable-model-invocation: true
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 bundle: _software
 tier: kernel
@@ -26281,6 +26613,10 @@ triggers:
 - adaptive card extension
 - purview
 - modern search
+- spfx
+- onedrive rbac
+- satellite modules
+- drift audit
 ---
 # Kỹ Năng: SharePoint, Power Apps, Power Automate & M365 IaC (`sharepoint-iac`)
 
@@ -26303,12 +26639,13 @@ Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩ
    - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ 2TB SharePoint Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Video MP4 phải được offload sang Master OneDrive Storage (`ccba-storage` — `5TB`) theo 2 phân nhánh:
      - `Documents/iOPS/` (`01_Bidding/`, `02_Contracts/`, `03_Finance/`, `04_HR_Assets/`, `05_Projects/`): Hồ sơ pháp lý, đấu thầu, hợp đồng, tài chính, nhân sự (cách ly quyền thư mục con `00_CCBA_Onboarding_SOPs/`) và quyết toán A-B đóng băng.
      - `Documents/iCDE/` (`thiet_ke_BIM/`, `tvgs_qlda/`, `tham_tra/`, `kiemdinh_khaosat/`, `other/`): Hồ sơ kỹ thuật dự án theo chuẩn ISO 19650 (`S0` $\to$ `S1` $\to$ `S2` $\to$ `S3` $\to$ `A1`) và học liệu đào tạo Stream (`other/00_CCBA_Academy_Learning/`). `WorkPackages.DeliverableFolderPath` chỉ được phép trỏ vào `iCDE/`.
+     - **Cách ly Quyền Hai Mặt Phẳng OneDrive (`Slice P8.17` — `viva_storage_and_community_provisioner.py`)**: Tách biệt 2 HTTP clients theo audience (`idop_client` cho site SharePoint và `mysite_client` cho `-my.sharepoint.com`), bắt buộc gắn `$expand=RoleAssignments/Member,RoleAssignments/RoleDefinitionBindings` trên REST `ListItemAllFields`; trước khi tải tệp seed lên thư mục con đã `breakroleinheritance`, **chỉ gọi `DELETE` đối với các quyền Graph trực tiếp ngoài allowlist có `perm.get("inheritedFrom") is None`**, và **bỏ qua mọi dòng kế thừa bằng `if perm.get("inheritedFrom") is not None: continue`** (cấm dùng truthiness `if perm.get("inheritedFrom"):` vì OneDrive Graph v1.0 tuần tự hóa quyền kế thừa thành từ điển rỗng `"inheritedFrom": {}` — gọi nhầm `DELETE` lên dòng `{}` sẽ bị lỗi `HTTP 400`), đồng thời giữ miễn trừ `scope == "existingAccess"`, quyền `owner` ngầm định của `IsSiteAdmin=true`, và nạp `viva_satellite_live_bindings.json` đối xứng cho cả `--dry-run` lẫn `--apply`.
 2. **Kiến Trúc Bảo Mật Đa Phân Vùng (Dual-Zone + `/sites/iCDE` & 4 Canonical Site IDs)**:
    - Định danh 4 Site Collections chuẩn trong `tools.auth.site_preflight`:
      - **Zone 1 (Public Intranet — `https://ibstbim.sharepoint.com`, `925e6eaa-8908-4094-8d1a-75c46c7901c9`)**: Cấp quyền đọc cho `CCBA_VCNLD_All` (`69` VCNLĐ) sau khi gỡ `'Everyone except external users'` (`ZONE1-ORDER`), `0` List WebParts (`controlType=3`).
      - **Cổng Kỹ Thuật Độc Lập (`/sites/iCDE` — `186131e8-e45d-4d8a-b05a-0d46530cae43`)**: Hợp nhất và thay thế trang cũ `/SitePages/TVGS-CDE.aspx`; khóa `Read-Only` (`1073741826`) 3 thư viện lịch sử, nhúng 5 CoPs Kỹ thuật Viva Engage và lộ trình học tập Tier 2. Mọi thay đổi Canvas trên Zone 1 và `/sites/iCDE` phải qua `_assert_safe_portal_canvas()` (chặn sharing tokens, chặn List WebPart `controlType=3`, và chặn deep-link vào `Lists/LessonsLearned` hay các bảng tài chính Zone 2).
      - **Zone 2 (Confidential Operations Engine — `/sites/idop`, `812726c1-098f-4755-8cd1-65a5a9eb37f2`)**: Bảo vệ `62` Core Lists; hạ quyền nhóm `IDOP Members` (`PrincipalId=5`) xuống `Read` (`1073741826`) tại gốc Site; **cấm tuyệt đối** gán `CCBA_VCNLD_All` vào Vùng 2; đồng bộ RBAC 1-Stop-Shop từ cột MultiChoice `Employees.SystemRoles`; giữ 3 trang điều hành (`Home.aspx`, `L10-Traction-Room.aspx`, `IDOP-Cockpit.aspx`) sạch 100% không nhúng feed mạng xã hội.
-     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`v1.0.4.0`).
+     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`SPFX_VERSION` trong `sp_spfx_cockpit_deployer.py`, đóng gói zero-Node 4 chế độ `WebPart`-shaped). Khi kiểm toán trên danh sách `'Client Side Component Manifests'`, bắt buộc truy vấn cột `InternalName` **`ClientComponentManifest`** (cấm dùng `$select=ComponentManifest` gây lỗi `400 Bad Request`), phân trang qua `@odata.nextLink`, xuất bundle JS kèm hậu tố phiên bản (`<bundle>-<version>.js`) chống lưu đệm cũ và đối soát SHA-256 trực tiếp từ `'Client Side Assets'`.
 3. **Rào Chắn Ngữ Nghĩa Cột, Chỉ Mục, View Lookup & Bộ Đệm Ẩn ManagedMetadata**:
    - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (`ContractCode`, `RequiresIBSTSign`, `ApprovalStatus`); `DisplayName` tiếng Việt có dấu $\le 50$ ký tự.
    - **Giới hạn 20 chỉ mục Cột (`MAX_INDEXED_COLUMNS_PER_LIST = 20`) & 8 Lookup trên View (`MAX_VIEW_LOOKUP_COLUMNS = 8`)**: Mỗi SharePoint List không quá `20` cột `"Indexed": true`; mỗi SPO View (trong tổng số `82` Views) không quá `8` cột kiểu Lookup/User/Taxonomy (`count_view_lookup_columns`).
@@ -26440,6 +26777,8 @@ Khi làm việc trên Spoke có SharePoint IaC (như `IDOP-CCBA-WAY`) hoặc đ�
    python tools/governance/system_health_auditor.py
    ```
    * **Tiêu chí hoàn thành:** Xác nhận toàn bộ Lists đã khởi tạo trên SharePoint Online khớp Schema, phân vùng `Zone 2` khóa `IDOP Members` ở mức `Read`, không rò rỉ quyền `CCBA_VCNLD_All`, và cấu trúc thư mục `Documents/iOPS/` + `Documents/iCDE/` nguyên vẹn.
+   * **Phân Hạng Drift Cấu Hình 3 Bậc & Khử Nhiễu GUID Liên Site**: Mọi báo cáo đối chiếu giữa JSON Schema/Manifest và môi trường M365 thực tế phải xếp hạng mức độ nghiêm trọng theo 3 bậc: *(1) Access & RBAC Isolation* $\to$ *(2) Schema, State & Flow Behavior* $\to$ *(3) Content & Navigation*, tách bạch các GUID định danh theo môi trường hoặc giá trị giữ chỗ (`bindings_path=None`) khỏi sai lệch cấu hình thật; kiểm chứng vai trò quản trị trước mọi lệnh ghi (`Pre-Deploy Role Verification`).
+   * **Tự Phục Hồi Hàng Đợi SQLite DLQ (`m365_bridge_worker.py` & `tvgs_ir_rollup_sync.py`)**: Kết nối SQLite bắt buộc bật `PRAGMA busy_timeout = 5000`; hàm `_is_superseded_tvgs_dlq_row` chỉ cho phép `_resolve_superseded_project_dlq` gọi `dlq.mark_resolved(id)` khi thỏa mãn đồng thời đủ **5 nhóm cổng kiểm tra (`W8-DLQ-MATCH-01`)**: (1) `sync_direction == "PUSH_SHAREPOINT"` và `list_name == "Projects"`, (2) `item_id` sau khi `strip()` thuộc `{sp_item_id, project_code}`, (3) `payload` là `Mapping` và `_TVGS_ACTION_SIGNATURE_KEYS` (`{"pmo_project_id", "total_ir_count", "spoke_site_url"}`) là tập con của khóa `payload`, (4) `error_code` thuộc nhóm lỗi mạng tạm thời (`_TRANSIENT_NETWORK_ERROR_CODES`) hoặc `HTTPStatusError` mang mã `429/500/502/503/504`, và (5) `created_at` phân tích được sang UTC (`_parse_utc_iso_strict`) thỏa `row_dt <= sync_dt` (tuyệt đối cấm chạy `--dlq-replay` thủ công đè payload cũ lên dữ liệu mới).
 
 3. **Bước 3: Triển Khai Thử Nghiệm (`DryRun`) & Triển Khai Thật (`Full Deployment`)**:
    ```powershell
@@ -26474,20 +26813,29 @@ Khi triển khai giao diện và luồng nghiệp vụ trên nền tảng Micros
    - Mọi hành động kết nối trong `workflow.json` bắt buộc dùng `"type": "OpenApiConnection"` qua **Connection References** và **Environment Variables** (cấm dùng `ApiConnection` hoặc `Invoker` cũ — `SLOP-09`).
    - Thẻ phê duyệt Adaptive Cards trong `Team IDOP` hiển thị tối đa 5 trường cốt lõi ở Tier 1 và bọc bảng phân bổ/lịch sử `ApprovalNodes` trong khối `Action.ToggleVisibility` (`isVisible: false` mặc định).
 4. **Viva Connections ACEs (`pnp/sp-dev-fx-aces`), SPFx Application Customizers (`pnp/sp-dev-fx-extensions`), Purview & PnP Modern Search**:
-   - **Viva Connections ACEs:** Thiết kế theo 2 tầng `Card View` (Tier 1 "To Know" — tối đa 1–2 chỉ số theo `ROLE_ID` kèm trạng thái Empty State chuẩn) và `Quick View` (Tier 2/3 "To Do" — biểu mẫu Adaptive Card v1.4 JSON nhập KPI hoặc phê duyệt 1-click qua Delegated User OBO token).
-   - **SPFx Application Customizer:** Gắn thanh điều hướng toàn cục tại `Top Placeholder` và ngăn kéo trượt phải (`CcbaMindApplicationCustomizer`) hiển thị **Interactive Decision Cards** (`requires_human_confirmation: true`).
-   - **Microsoft Purview & PnP Modern Search v4:** Khóa bản ghi bất biến (`Purview Retention Label`) khi hồ sơ CDE đạt trạng thái `A1 - Published`, mã hóa thư mục nhạy cảm bằng `Purview Sensitivity Labels`, và dùng **PnP Modern Search v4** (chỉ mục Graph Search + bộ lọc Taxonomy `TermSet` + Microsoft Search Bookmarks/Acronyms) để tìm kiếm xuyên danh mục vượt ngưỡng 5.000 items.
+   - **Viva Connections ACEs:** Thiết kế theo 2 tầng `Card View` (Tier 1 "To Know" — tối đa 1–2 chỉ số theo `ROLE_ID` kèm trạng thái Empty State chuẩn) và `Quick View` (Tier 2/3 "To Do" — biểu mẫu Adaptive Card v1.4 JSON nhập KPI hoặc phê duyệt 1-click qua Delegated User OBO token). Tại Spoke `IDOP-CCBA-WAY`, `IdopWeeklyPulseAce` được đóng gói zero-Node dưới dạng `componentType: "WebPart"` (`properties.spfxRole = "AdaptiveCardExtension"` trong `sp_spfx_cockpit_deployer.py`) để nhúng đồng nhất trên Site Pages & Teams Tabs.
+   - **SPFx Application Customizer:** Kiến trúc đích gắn thanh điều hướng toàn cục tại `Top Placeholder` và ngăn kéo trượt phải (`CcbaMindApplicationCustomizer`) hiển thị **Interactive Decision Cards** (`requires_human_confirmation: true`); tại `IDOP-CCBA-WAY`, thành phần này hiện được đóng gói zero-Node dưới dạng `componentType: "WebPart"` (`properties.spfxRole = "ApplicationCustomizer"`).
+   - **Microsoft Purview & PnP Modern Search v4:** Khóa bản ghi bất biến (`Purview Retention Label`) khi hồ sơ CDE đạt trạng thái `A1 - Published`, dùng **PnP Modern Search v4** (chỉ mục Graph Search + bộ lọc Taxonomy `TermSet` + Microsoft Search Bookmarks/Acronyms) để tìm kiếm xuyên danh mục vượt ngưỡng 5.000 items; `Purview Sensitivity Labels` và `Code Apps (@microsoft/power-apps)` đóng vai trò kiến trúc mở rộng tham chiếu khi nâng cấp vượt gói Standard nền tảng.
 
 ---
 
 ## 🔍 5. Checklist Rà Soát Chất Lượng (Quality Gate)
 
-- [ ] Tên bảng `ListName` và các cột cốt lõi khớp với hợp đồng `CORE_REQUIRED_FIELDS` và `CdeDocumentSyncService`.
+- [ ] Tên bảng `ListName` và các cột cốt lõi khớp với hợp đồng đối soát Hub (`CORE_REQUIRED_FIELDS`, `CdeDocumentSyncService` trong `test_idop_schema_compatibility.py` / `ccba_m365_bridge.py`) và daemon thực thi Spoke (`tools/bridge/m365_bridge_worker.py`).
 - [ ] Số lượng cột `"Indexed": true` trên mỗi bảng $\le 20$ và không gắn chỉ mục vào kiểu `NON_INDEXABLE_COLUMN_TYPES`.
 - [ ] Mọi trường `ManagedMetadata` đều có `TermSet.Name` tồn tại trong `datamodel/sharepoint/taxonomy/`.
-- [ ] Không có trường nhị phân (Attachment/Binary) hoặc liên kết chia sẻ tạm thời (`/:[fbwxu]:/g/` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
+- [ ] Không có trường nhị phân (Attachment/Binary) hoặc dấu hiệu liên kết chia sẻ tạm thời thuộc `FORBIDDEN_SHARING_MARKERS` (`10` markers: `/:[fbwxuvpo]:/g/`, `guestaccess.aspx`, `share=` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
 - [ ] Sơ đồ luồng phê duyệt `Submissions`/`ApprovalNodes` vượt qua kiểm chứng BFS Liveness và cổng `IBST_Gateway_Review`.
 - [ ] Công thức Power Fx (`App.pa.yaml`) tuân thủ 100% SharePoint Delegation và định nghĩa Power Automate Flow dùng chuẩn `OpenApiConnection` có Trigger Condition chống lặp vô hạn.
+- [ ] Tầng lưu trữ OneDrive và App Catalog vượt qua kiểm toán hai mặt phẳng (`idop_client` / `mysite_client`), cột `ClientComponentManifest`, và đối soát SHA-256 bundle `<bundle>-<version>.js`.
+
+---
+
+## 🔗 6. Tích Hợp Hệ Sinh Thái Kỹ Năng (4-Skill Mesh)
+
+- **Thượng nguồn Thiết kế Nghiệp vụ & Giao diện**: Khởi tạo mô hình thực thể và trạng thái từ `/ccba-domain-modeling` + `/ccba-to-spec`, sau đó áp dụng chuẩn giao diện 3 tầng của `/ccba-design` (`STK-07` `sharepoint-html-page`, `STK-08` `powerapps-m365`, chống rò rỉ liên kết chia sẻ `SLOP-09`).
+- **Đồng hành Kiến trúc Mã nguồn Python IaC**: Phối hợp với `/ccba-codebase-design` để giữ các gói công cụ triển khai (`tools/*`) tuân thủ đồ thị phụ thuộc phi chu trình (DAG) và nạp lười PEP 562 `__getattr__` cho các thư viện nặng (`msal`, `cryptography`, `httpx`, `pydantic`).
+- **Hạ nguồn Kiểm thử Thực địa & Đúc kết Tri thức**: Sau khi triển khai lên SharePoint Online / Teams, bàn giao sang `/ccba-web-testing` để kiểm tra DOM/Shadow DOM thực tế và cập nhật bài học vận hành qua `/ccba-session-retrospective`.
 
 ---
 
@@ -26641,15 +26989,20 @@ When Power Automate posts approval or alert cards into Microsoft Teams (`Team ID
 
 ---
 
-## 4. Security & Performance Guardrails on SharePoint Lists
+## 4. Security, CSOM & Navigation Guardrails on SharePoint Lists
 
 1. **5,000-Item List View Threshold Protection:**
    - Every View JSON (`views/*.json`) filtered or sorted by CAML/OData MUST reference columns with `"Indexed": true` (capped at `MAX_INDEXED_COLUMNS_PER_LIST = 20`).
    - Never apply View Formatting filters on unindexed `MultiChoice`, `Note`, or multi-value `Lookup` columns.
 2. **Safe URL Protocol & Canonical Storage Links (`SLOP-08` & `SLOP-09`):**
-   - SharePoint List Formatting automatically blocks `javascript:` URLs, but templates generated by scripts must also ban raw sharing links (`/:f:/g/`, `/:b:/g/`, `/:w:/g/`, `/:x:/g/`). Always bind file links to canonical `driveId` + `itemId` or site-relative paths under `Documents/iOPS/` and `Documents/iCDE/`.
+   - SharePoint List Formatting automatically blocks `javascript:` URLs, and templates or canvases generated by scripts must also ban all `10` sharing markers in `tools.auth.site_preflight.FORBIDDEN_SHARING_MARKERS` (`:f:/g/`, `:b:/g/`, `:u:/g/`, `:x:/g/`, `:w:/g/`, `:v:/g/`, `:p:/g/`, `:o:/g/`, `guestaccess.aspx`, `share=`). Always bind file links to canonical `driveId` + `itemId` or site-relative paths under `Documents/iOPS/` and `Documents/iCDE/`.
 3. **Deployment & Verification via CLI (`idop.ps1` & `pnp/cli-microsoft365`):**
    - Validate all JSON formatting files against official schema definitions (`column-formatting.schema.json`, `view-formatting.schema.json`) before deploying through `sp_view_formatter_deployer.py` or `idop.ps1`.
+4. **CSOM XML/JSON Escaping & Taxonomy `CustomProperties` Sync:**
+   - When deploying `View.CustomFormatter` or column formatters inside SharePoint CSOM XML envelopes, escape `&` $\to$ `\u0026` and `<` $\to$ `\u003c` inside the JSON string so the XML parser never truncates comparison operators (`<=`, `&&`), and synchronize `TermSetInfo.CustomProperties` independently with `SelectAll="true"`.
+5. **In-Place Navigation Node Updates (`GetNodeById` `MERGE`):**
+   - Update existing QuickLaunch or TopNavigationBar nodes in place via `POST /_api/web/navigation/GetNodeById({id})` with header `X-HTTP-Method: MERGE` so custom visual menu ordering is preserved.
+   - *Cross-Site Root Exception:* Repointing an existing navigation node on the Root site (`/`) across site collections to `/sites/iCDE` returns `HTTP 500`; delete the old node and recreate it in two steps (`http://` creation $\to$ `MERGE` to canonical `https://` URL).
 
 ---
 
@@ -26663,21 +27016,30 @@ For mobile-first executive and project-manager workflows inside Microsoft Teams 
 2. **Quick View (Tier 2/3 — Proximity Slide-Over Modal / To Do):**
    - Clicking the Card View action opens an **Adaptive Card v1.4 JSON Quick View** directly inside Teams/SharePoint without navigating away to a full list page.
    - Include `Input.Number` / `Input.Text` for inline KPI closeout, `Action.ToggleVisibility` for secondary context (`Trend13W`, `FiveWhys`), and `Action.Submit` bound to `AadHttpClient` (Delegated User OBO token — never App-Only certificate on client requests).
+3. **Zero-Node Packaging Posture in `IDOP-CCBA-WAY`:**
+   - In `tools/deployment/sp_spfx_cockpit_deployer.py` (`build_ace_manifest`), `IdopWeeklyPulseAce` is packaged without a Node SPFx build toolchain as a `WebPart`-shaped component (`componentType: "WebPart"`, `properties.spfxRole = "AdaptiveCardExtension"`, `supportedHosts = ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab"]`). Use native SPFx ACE (`componentType: "AdaptiveCardExtension"`) only when compiling via full SPFx Node toolchain for Viva Connections Dashboard tiles.
 
 ### 5.2. SPFx Application Customizers (`pnp/sp-dev-fx-extensions`)
-When cross-page navigation or contextual AI assistance is needed across all SharePoint Lists and Site Pages:
-1. **Top Placeholder (Global Dual-Zone Wayfinding Bar):** Render a compact status strip linking Zone 1 (Public Intranet) and Zone 2 (`/sites/idop` Operations Zone) alongside the current L10 weekly cutoff countdown.
+When cross-page navigation or contextual AI assistance is needed across SharePoint Lists and Site Pages:
+1. **Top Placeholder (Global Dual-Zone Wayfinding Bar — Target Extension Host):** Render a compact status strip linking Zone 1 (Public Intranet) and Zone 2 (`/sites/idop` Operations Zone) alongside the current L10 weekly cutoff countdown when deployed as a native SPFx Extension.
 2. **Right Slide-Over Drawer (`CcbaMindApplicationCustomizer`):** Render **Interactive Decision Cards** (*"Your agent proposes $\to$ You decide"*) over the pre-computed Friday 17:00 ICT derived snapshot. Every proposed mutation (`PROPOSE_IDS_TOP_RANK`, `PROPOSE_SUBMISSION_GATEWAY_CHECK`) MUST carry `requires_human_confirmation: true` and execute under the signed-in user's delegated permissions.
+3. **Zero-Node Packaging Posture in `IDOP-CCBA-WAY`:** In `sp_spfx_cockpit_deployer.py` (`build_app_customizer_manifest`), `CcbaMindApplicationCustomizer` is currently packaged as `componentType: "WebPart"` (`properties.spfxRole = "ApplicationCustomizer"`) for unified zero-Node `.sppkg` bundling alongside `IdopL10CockpitWebPart` and `IdopRoleLensWebPart`.
+4. **OPC `.sppkg` Bundling, Shadow DOM Isolation & App Catalog Verification:**
+   - Declare `@microsoft/sp-webpart-base` (`974a7777-0990-4136-8fa6-95d80114c2e0`) inside `ClientSideComponentProperties` and include `dialog:not([open]) { display: none !important; }` inside Shadow DOM CSS so closed `<dialog>` elements never bleed into host SharePoint canvas layouts.
+   - Emit version-suffixed JS assets (`<bundle>-<version>.js`) synced with `SPFX_VERSION`, verify SHA-256 parity from `'Client Side Assets'`, query internal column `ClientComponentManifest` (never `ComponentManifest`) with `@odata.nextLink` pagination on `'Client Side Component Manifests'`, and assert 4-mode semantic equivalence on `.aspx` pages (`zoneIndex: 2`).
 
 ### 5.3. Microsoft Purview Information Protection, PnP Modern Search v4 & Document Sets
 1. **Microsoft Purview Retention & Sensitivity Labels:**
    - When a CDE engineering deliverable transitions to `A1 - Published`, apply a Purview Retention Label (`Record` immutability until `RetentionUntil`) to satisfy statutory construction archiving requirements.
-   - Apply Purview Sensitivity Labels encrypted to Entra ID Security Groups (`CCBA_*`) on confidential Master Storage partitions (`04_HR_Assets`, `02_Contracts`) so downloaded files remain protected off-tenant.
+   - *Reference Extension Pattern:* When E3/E5 Information Protection licensing is enabled, apply Purview Sensitivity Labels encrypted to Entra ID Security Groups (`CCBA_*`) on confidential Master Storage partitions (`04_HR_Assets`, `02_Contracts`) so downloaded files remain protected off-tenant.
 2. **PnP Modern Search v4 (`microsoft-search/pnp-modern-search`) & Search Bookmarks/Acronyms:**
    - Use Microsoft Graph Search Index verticals and taxonomy refiners (`TermSet` facets) for cross-site document discovery without hitting the 5,000-item SharePoint list view threshold.
    - Seed canonical organizational acronyms (`PGV`, `HSHT`, `CDE`, `QCTK`, `QCCTNB`, `L10`, `IDS`) into Microsoft Search Bookmarks & Acronyms for instant Tier 1 resolution in the M365 search bar.
 3. **SharePoint Document Sets & Microsoft Forms:**
    - Use **Microsoft Forms** as a zero-noise external intake surface (routing responses into SharePoint via `OpenApiConnectionWebhook`), and **SharePoint Document Sets** to bundle multi-file bidding or completion packages with shared parent metadata (`ProjectCode`, `ContractCode`, `CdeState`).
+4. **Honest App-Only Certificate Fallbacks (`RULE-2.1`):**
+   - When unattended scripts authenticate via Entra ID App-Only certificates and Microsoft Graph `/search/acronyms` or `/search/bookmarks` returns `403 Forbidden`, generate an auditable `csv_export_fallback_403` import file gated by `assert_payload_no_sharing_tokens()`.
+   - When Graph `/retentionLabel` rejects application permissions without E5 Compliance licensing, apply `MetadataSealFallback` and report the fallback state explicitly rather than masking `403` responses as silent passes.
 
 
 
@@ -26747,28 +27109,45 @@ SharePoint Online connectors (`shared_sharepointonline`) enforce strict **Delega
 
 ---
 
-## 3. Power Apps Code Apps (`@microsoft/power-apps` — React + TypeScript + Fluent UI v9)
+## 3. Power Apps Code Apps (`@microsoft/power-apps` — React + TypeScript + Fluent UI v9, Reference Pattern)
+
+> **Scope Posture:** In `IDOP-CCBA-WAY`, active frontline apps and Standard flows ship via Canvas `.pa.yaml` (`powerapps/src/IdopFieldApprovalApp.pa.yaml`) and `PA-01..PA-05` (`tools/deployment/pa_solution_packager.py`). Use **Code Apps** as a reference expansion pattern when a bespoke React/TypeScript SPA hosted inside Power Apps is explicitly required.
 
 When building a custom Code App (distilled from `microsoft/power-platform-skills/plugins/code-apps`):
 1. **Scaffold & Tooling:** Initialize with `pac code init` (Vite + React + TypeScript + `@fluentui/react-components`), mapping Fluent v9 tokens (`colorBrandBackground`, `colorNeutralStroke1`) to CCBA brand colors (`#363883`, `#005A9C`, `#DA251C`).
 2. **Standard M365 Data Sources:** Register connectors declaratively via `add-sharepoint`, `add-office365`, `add-onedrive`, and `add-teams`, ensuring all queries respect SharePoint Native RBAC Security Trimming.
-3. **3-Tier Operate Mode Compliance:** Enforce all `/ccba-design` Operate Mode rules (`tabular-nums`, `< 650px` fold budget, bidirectional URL hash/query state, and zero `SLOP-01..09` findings).
+3. **3-Tier Operate Mode Compliance:** Enforce all `ccba-design` Operate Mode rules (`tabular-nums`, `< 650px` fold budget, bidirectional URL hash/query state, and zero `SLOP-01..09` findings).
 
 ---
 
-## 4. Power Automate Cloud Flows (`OpenApiConnection` & Solution Packaging)
+## 4. Power Automate Cloud Flows (`OpenApiConnection`, WDL AST & Flow RP Governance)
 
 Distilled from `microsoft/power-platform-skills/plugins/power-automate` (`build-flow`, `diagnose-flow`, `route-environments`) and `pa_solution_packager.py`:
 
-1. **Mandatory `OpenApiConnection` Binding (`SLOP-09`):**
-   - Every connector action in a Power Automate flow definition (`workflow.json`) MUST use `"type": "OpenApiConnection"` paired with `"connectionName"` referencing a Solution **Connection Reference** (`connectionreferences`).
+1. **Mandatory `OpenApiConnection` & `OpenApiConnectionWebhook` Binding (`SLOP-09`):**
+   - Every connector action in a Power Automate flow definition (`workflow.json`) MUST use `"type": "OpenApiConnection"` (or `"type": "OpenApiConnectionWebhook"` with `operationId: "StartAndWaitForAnApproval"` for Teams/Approvals — never legacy `CreateAndWaitForAnApproval` which fails with `HTTP 404`) paired with `"connectionName"` referencing a Solution **Connection Reference** (`connectionreferences`).
    - **Strictly Ban:** Legacy `"type": "ApiConnection"`, hardcoded `"Invoker"` bindings, or embedding raw credentials/tokens inside connector action parameters.
-2. **Environment Variables for Site & List Binding:**
-   - Never hardcode SharePoint Site URLs or List GUIDs directly inside flow actions when packaging for multi-environment deployment. Bind `"dataset"` and `"table"` to Power Platform **Environment Variables** (`environmentvariabledefinitions`).
-3. **Infinite Trigger Loop Prevention:**
+2. **WDL Integer `empty()` Trap & JSON Expression AST Rules:**
+   - **Never call `empty()` directly on Integer Lookup IDs** (e.g., `empty(triggerOutputs()?['body/ProjectId/Id'])`), as Azure Logic Apps / Workflow Definition Language throws `InvalidTemplate` at runtime on integer values; always coerce safely via `@empty(string(coalesce(triggerOutputs()?['body/ProjectId/Id'], '')))`.
+   - Inside `If` condition expression objects (`equals`, `empty`, `and`, `or`, `greater`, `less`), operands MUST always be serialized as a JSON `list` (`["@..."]`), and every SharePoint `PostItem` / `PatchItem` `"item/*"` parameter MUST match the target List JSON Schema (never pass bare strings into `ManagedMetadata` columns).
+3. **Environment Variables & Infinite Trigger Loop Prevention:**
+   - Bind SharePoint `"dataset"` and `"table"` targets to Power Platform **Environment Variables** (`environmentvariabledefinitions`) rather than hardcoding tenant-specific List GUIDs.
    - When a flow triggers on `When_an_item_is_created_or_modified` (`Submissions` or `Contracts`) and updates the same item's status (`IBSTSubmissionStatus`), ALWAYS configure a **Trigger Condition** (`@not(equals(triggerOutputs()?['body/Editor/Email'], 'ibstpm@ibst-bim.vn'))` or status-transition guard) to prevent infinite self-triggering loops that exhaust the `40,000 PPR/24h` quota in minutes.
-4. **Solution Packaging & Static Verification (`pa_solution_packager.py` & `pac solution`):**
-   - Package flows, connection references, environment variables, and Canvas Apps into a structured Solution archive (`Solution.xml`, `customizations.xml`, `Workflows/*.json`) and validate via `pa_solution_packager.py` / `pac solution check` before importing into target environments.
+4. **Offline Solution Verification & Flow RP Co-Owner Provisioning (`pa_solution_packager.py`):**
+   - Package flows, connection references, environment variables, and Canvas Apps into a structured Solution archive (`Solution.xml`, `customizations.xml`, `Workflows/*.json`) and run offline static checks via `pa_solution_packager.py`, `pac solution check`, or `flowagent-mcp` invoked through Python `subprocess.run(..., env={**os.environ, "FLOWAGENT_TELEMETRY_OPT_OUT": "1"})`.
+   - When granting flow co-ownership programmatically via `.../providers/Microsoft.ProcessSimple/environments/{env_id}/flows/{flow_rp_id}/modifyPermissions`, address the flow by its **Flow RP ID (`name`)** rather than Dataverse `workflowid`, and assign `"roleName": "CanEdit"` (passing `"Owner"` is rejected with `400 InvalidPermissionRoleName`).
+
+---
+
+## 5. Three-Tier Environment Drift Comparison & Zero-Secret Packaging
+
+Distilled from `microsoft/power-platform-skills` (`compare-site-configurations` & `route-environments`):
+
+1. **Zero-Secret Export & Pre-Deploy Role Gate:**
+   - Never export client secrets, certificate private keys, or user-bound connection tokens into unpacked Solution or portal configuration folders; verify target administrative security roles (`System Customizer` / SharePoint Site Collection Admin) before executing mutating deployment commands.
+2. **Three-Tier Drift Severity Ranking & Cross-Site Noise Filtering:**
+   - Structure every environment or site configuration diff report in strict priority order: **(1) Access, Authentication & RBAC Isolation** $\to$ **(2) Schema, State Transitions & Flow Behavior** $\to$ **(3) Content, Styling & Navigation**.
+   - Strip expected cross-environment GUID differences and unresolved dry-run placeholders (`bindings_path=None`) into a separate informational summary so operators focus exclusively on true behavioral or security drift.
 
 
 ---

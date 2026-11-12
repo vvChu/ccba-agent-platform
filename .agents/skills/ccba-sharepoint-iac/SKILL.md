@@ -5,7 +5,7 @@ description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Autom
   Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 disable-model-invocation: true
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   author: "CCBA Hub"
 bundle: _software
 tier: kernel
@@ -47,6 +47,10 @@ triggers:
 - adaptive card extension
 - purview
 - modern search
+- spfx
+- onedrive rbac
+- satellite modules
+- drift audit
 ---
 # Kỹ Năng: SharePoint, Power Apps, Power Automate & M365 IaC (`sharepoint-iac`)
 
@@ -69,12 +73,13 @@ Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩ
    - Tuyệt đối không đính kèm tệp binary trực tiếp vào List Items để bảo vệ 2TB SharePoint Tenant Quota. Toàn bộ tệp PDF/CAD/BIM/Video MP4 phải được offload sang Master OneDrive Storage (`ccba-storage` — `5TB`) theo 2 phân nhánh:
      - `Documents/iOPS/` (`01_Bidding/`, `02_Contracts/`, `03_Finance/`, `04_HR_Assets/`, `05_Projects/`): Hồ sơ pháp lý, đấu thầu, hợp đồng, tài chính, nhân sự (cách ly quyền thư mục con `00_CCBA_Onboarding_SOPs/`) và quyết toán A-B đóng băng.
      - `Documents/iCDE/` (`thiet_ke_BIM/`, `tvgs_qlda/`, `tham_tra/`, `kiemdinh_khaosat/`, `other/`): Hồ sơ kỹ thuật dự án theo chuẩn ISO 19650 (`S0` $\to$ `S1` $\to$ `S2` $\to$ `S3` $\to$ `A1`) và học liệu đào tạo Stream (`other/00_CCBA_Academy_Learning/`). `WorkPackages.DeliverableFolderPath` chỉ được phép trỏ vào `iCDE/`.
+     - **Cách ly Quyền Hai Mặt Phẳng OneDrive (`Slice P8.17` — `viva_storage_and_community_provisioner.py`)**: Tách biệt 2 HTTP clients theo audience (`idop_client` cho site SharePoint và `mysite_client` cho `-my.sharepoint.com`), bắt buộc gắn `$expand=RoleAssignments/Member,RoleAssignments/RoleDefinitionBindings` trên REST `ListItemAllFields`; trước khi tải tệp seed lên thư mục con đã `breakroleinheritance`, **chỉ gọi `DELETE` đối với các quyền Graph trực tiếp ngoài allowlist có `perm.get("inheritedFrom") is None`**, và **bỏ qua mọi dòng kế thừa bằng `if perm.get("inheritedFrom") is not None: continue`** (cấm dùng truthiness `if perm.get("inheritedFrom"):` vì OneDrive Graph v1.0 tuần tự hóa quyền kế thừa thành từ điển rỗng `"inheritedFrom": {}` — gọi nhầm `DELETE` lên dòng `{}` sẽ bị lỗi `HTTP 400`), đồng thời giữ miễn trừ `scope == "existingAccess"`, quyền `owner` ngầm định của `IsSiteAdmin=true`, và nạp `viva_satellite_live_bindings.json` đối xứng cho cả `--dry-run` lẫn `--apply`.
 2. **Kiến Trúc Bảo Mật Đa Phân Vùng (Dual-Zone + `/sites/iCDE` & 4 Canonical Site IDs)**:
    - Định danh 4 Site Collections chuẩn trong `tools.auth.site_preflight`:
      - **Zone 1 (Public Intranet — `https://ibstbim.sharepoint.com`, `925e6eaa-8908-4094-8d1a-75c46c7901c9`)**: Cấp quyền đọc cho `CCBA_VCNLD_All` (`69` VCNLĐ) sau khi gỡ `'Everyone except external users'` (`ZONE1-ORDER`), `0` List WebParts (`controlType=3`).
      - **Cổng Kỹ Thuật Độc Lập (`/sites/iCDE` — `186131e8-e45d-4d8a-b05a-0d46530cae43`)**: Hợp nhất và thay thế trang cũ `/SitePages/TVGS-CDE.aspx`; khóa `Read-Only` (`1073741826`) 3 thư viện lịch sử, nhúng 5 CoPs Kỹ thuật Viva Engage và lộ trình học tập Tier 2. Mọi thay đổi Canvas trên Zone 1 và `/sites/iCDE` phải qua `_assert_safe_portal_canvas()` (chặn sharing tokens, chặn List WebPart `controlType=3`, và chặn deep-link vào `Lists/LessonsLearned` hay các bảng tài chính Zone 2).
      - **Zone 2 (Confidential Operations Engine — `/sites/idop`, `812726c1-098f-4755-8cd1-65a5a9eb37f2`)**: Bảo vệ `62` Core Lists; hạ quyền nhóm `IDOP Members` (`PrincipalId=5`) xuống `Read` (`1073741826`) tại gốc Site; **cấm tuyệt đối** gán `CCBA_VCNLD_All` vào Vùng 2; đồng bộ RBAC 1-Stop-Shop từ cột MultiChoice `Employees.SystemRoles`; giữ 3 trang điều hành (`Home.aspx`, `L10-Traction-Room.aspx`, `IDOP-Cockpit.aspx`) sạch 100% không nhúng feed mạng xã hội.
-     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`SPFX_VERSION` trong `sp_spfx_cockpit_deployer.py`, đóng gói zero-Node 4 chế độ `WebPart`-shaped).
+     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`SPFX_VERSION` trong `sp_spfx_cockpit_deployer.py`, đóng gói zero-Node 4 chế độ `WebPart`-shaped). Khi kiểm toán trên danh sách `'Client Side Component Manifests'`, bắt buộc truy vấn cột `InternalName` **`ClientComponentManifest`** (cấm dùng `$select=ComponentManifest` gây lỗi `400 Bad Request`), phân trang qua `@odata.nextLink`, xuất bundle JS kèm hậu tố phiên bản (`<bundle>-<version>.js`) chống lưu đệm cũ và đối soát SHA-256 trực tiếp từ `'Client Side Assets'`.
 3. **Rào Chắn Ngữ Nghĩa Cột, Chỉ Mục, View Lookup & Bộ Đệm Ẩn ManagedMetadata**:
    - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (`ContractCode`, `RequiresIBSTSign`, `ApprovalStatus`); `DisplayName` tiếng Việt có dấu $\le 50$ ký tự.
    - **Giới hạn 20 chỉ mục Cột (`MAX_INDEXED_COLUMNS_PER_LIST = 20`) & 8 Lookup trên View (`MAX_VIEW_LOOKUP_COLUMNS = 8`)**: Mỗi SharePoint List không quá `20` cột `"Indexed": true`; mỗi SPO View (trong tổng số `82` Views) không quá `8` cột kiểu Lookup/User/Taxonomy (`count_view_lookup_columns`).
@@ -206,6 +211,8 @@ Khi làm việc trên Spoke có SharePoint IaC (như `IDOP-CCBA-WAY`) hoặc đ�
    python tools/governance/system_health_auditor.py
    ```
    * **Tiêu chí hoàn thành:** Xác nhận toàn bộ Lists đã khởi tạo trên SharePoint Online khớp Schema, phân vùng `Zone 2` khóa `IDOP Members` ở mức `Read`, không rò rỉ quyền `CCBA_VCNLD_All`, và cấu trúc thư mục `Documents/iOPS/` + `Documents/iCDE/` nguyên vẹn.
+   * **Phân Hạng Drift Cấu Hình 3 Bậc & Khử Nhiễu GUID Liên Site**: Mọi báo cáo đối chiếu giữa JSON Schema/Manifest và môi trường M365 thực tế phải xếp hạng mức độ nghiêm trọng theo 3 bậc: *(1) Access & RBAC Isolation* $\to$ *(2) Schema, State & Flow Behavior* $\to$ *(3) Content & Navigation*, tách bạch các GUID định danh theo môi trường hoặc giá trị giữ chỗ (`bindings_path=None`) khỏi sai lệch cấu hình thật; kiểm chứng vai trò quản trị trước mọi lệnh ghi (`Pre-Deploy Role Verification`).
+   * **Tự Phục Hồi Hàng Đợi SQLite DLQ (`m365_bridge_worker.py` & `tvgs_ir_rollup_sync.py`)**: Kết nối SQLite bắt buộc bật `PRAGMA busy_timeout = 5000`; hàm `_is_superseded_tvgs_dlq_row` chỉ cho phép `_resolve_superseded_project_dlq` gọi `dlq.mark_resolved(id)` khi thỏa mãn đồng thời đủ **5 nhóm cổng kiểm tra (`W8-DLQ-MATCH-01`)**: (1) `sync_direction == "PUSH_SHAREPOINT"` và `list_name == "Projects"`, (2) `item_id` sau khi `strip()` thuộc `{sp_item_id, project_code}`, (3) `payload` là `Mapping` và `_TVGS_ACTION_SIGNATURE_KEYS` (`{"pmo_project_id", "total_ir_count", "spoke_site_url"}`) là tập con của khóa `payload`, (4) `error_code` thuộc nhóm lỗi mạng tạm thời (`_TRANSIENT_NETWORK_ERROR_CODES`) hoặc `HTTPStatusError` mang mã `429/500/502/503/504`, và (5) `created_at` phân tích được sang UTC (`_parse_utc_iso_strict`) thỏa `row_dt <= sync_dt` (tuyệt đối cấm chạy `--dlq-replay` thủ công đè payload cũ lên dữ liệu mới).
 
 3. **Bước 3: Triển Khai Thử Nghiệm (`DryRun`) & Triển Khai Thật (`Full Deployment`)**:
    ```powershell
@@ -254,6 +261,15 @@ Khi triển khai giao diện và luồng nghiệp vụ trên nền tảng Micros
 - [ ] Không có trường nhị phân (Attachment/Binary) hoặc dấu hiệu liên kết chia sẻ tạm thời thuộc `FORBIDDEN_SHARING_MARKERS` (`10` markers: `/:[fbwxuvpo]:/g/`, `guestaccess.aspx`, `share=` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
 - [ ] Sơ đồ luồng phê duyệt `Submissions`/`ApprovalNodes` vượt qua kiểm chứng BFS Liveness và cổng `IBST_Gateway_Review`.
 - [ ] Công thức Power Fx (`App.pa.yaml`) tuân thủ 100% SharePoint Delegation và định nghĩa Power Automate Flow dùng chuẩn `OpenApiConnection` có Trigger Condition chống lặp vô hạn.
+- [ ] Tầng lưu trữ OneDrive và App Catalog vượt qua kiểm toán hai mặt phẳng (`idop_client` / `mysite_client`), cột `ClientComponentManifest`, và đối soát SHA-256 bundle `<bundle>-<version>.js`.
+
+---
+
+## 🔗 6. Tích Hợp Hệ Sinh Thái Kỹ Năng (4-Skill Mesh)
+
+- **Thượng nguồn Thiết kế Nghiệp vụ & Giao diện**: Khởi tạo mô hình thực thể và trạng thái từ `/ccba-domain-modeling` + `/ccba-to-spec`, sau đó áp dụng chuẩn giao diện 3 tầng của `/ccba-design` (`STK-07` `sharepoint-html-page`, `STK-08` `powerapps-m365`, chống rò rỉ liên kết chia sẻ `SLOP-09`).
+- **Đồng hành Kiến trúc Mã nguồn Python IaC**: Phối hợp với `/ccba-codebase-design` để giữ các gói công cụ triển khai (`tools/*`) tuân thủ đồ thị phụ thuộc phi chu trình (DAG) và nạp lười PEP 562 `__getattr__` cho các thư viện nặng (`msal`, `cryptography`, `httpx`, `pydantic`).
+- **Hạ nguồn Kiểm thử Thực địa & Đúc kết Tri thức**: Sau khi triển khai lên SharePoint Online / Teams, bàn giao sang `/ccba-web-testing` để kiểm tra DOM/Shadow DOM thực tế và cập nhật bài học vận hành qua `/ccba-session-retrospective`.
 
 ---
 

@@ -486,9 +486,9 @@ pipeline_trail:
     downstream: Mã nguồn chính thức của hệ thống
     role: Nâng cấp mã nguồn thử nghiệm thành thành phần chính thức của nền tảng.
   ccba-sharepoint-iac:
-    upstream: Cấu trúc lưu trữ tài liệu dự án
-    downstream: Thư viện tài liệu SharePoint được đồng bộ
-    role: Quản lý hạ tầng SharePoint dưới dạng mã và đồng bộ hóa thư mục dự án.
+    upstream: ccba-domain-modeling / ccba-to-spec / ccba-design (STK-07, STK-08) / ccba-codebase-design
+    downstream: ccba-web-testing / ccba-session-retrospective
+    role: Quản trị hạ tầng SharePoint Online, Power Apps (.pa.yaml), Power Automate, SPFx & M365 IaC theo kiến trúc 3 tầng và bảo mật Dual-Zone.
   ccba-xia:
     upstream: Kho chứa mã nguồn GitHub bên ngoài hoặc khuyến nghị từ ccba-sync-upstream
     downstream: Kế hoạch chuyển dịch implementation_plan.md cho ccba-implement / ccba-build-skill / ccba-skill-repair
