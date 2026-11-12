@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.3"
+  version: "1.3.4"
   author: "CCBA Hub"
 triggers:
 - release
@@ -233,13 +233,14 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
-     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md) rồi truyền qua -F:
+     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md), chạy tiền kiểm door-triage (vì compute_cumulative_streak K>=3/72h vẫn nâng PR tài liệu lên ONE_WAY_DOOR đòi TradeoffCard) rồi truyền qua -F:
+     python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card
      gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
-     # PR chỉ thay đổi tài liệu thuộc Two-way Door Fast-Path; chờ CI hoàn tất và merge:
      gh pr checks --watch
      gh pr merge --squash --delete-branch
      git checkout main && git pull origin main
      ```
+   - **Tiêu chí hoàn thành:** Lệnh `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
 
 6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
    - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:

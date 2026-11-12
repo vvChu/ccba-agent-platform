@@ -1342,3 +1342,22 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
 2. **Chuẩn Đường Dẫn `../scripts/` Trong `references/*.md`, Đồng Bộ `uvx ruff format` & Biên Dịch Tier 2A `compile_skills` (`RULE-2.4`, `RULE-2.20`, `RULE-4.18`)**:
    - Mọi tham chiếu script bên trong `.agents/skills/<skill>/references/*.md` bắt buộc dùng `../scripts/...` hoặc `.agents/skills/<skill>/scripts/...`; luôn định dạng mã Python bằng `uvx ruff format` để khớp tuyệt đối với `ruff 0.17.4` trên CI.
    - Mở rộng `compile_skills(..., include_references=True)` trong `scripts/spoke/compile_knowledge.py` (sắp xếp tất định theo đường dẫn tương đối POSIX) để biên dịch trọn vẹn cả `SKILL.md` lẫn `references/**/*.md` vào `.md/knowledge/skills_compiled.md` (`~257K` từ, dưới ngưỡng `500K` từ/nguồn của Google NotebookLM).
+
+---
+
+## 61. Đăng Ký `backnotprop/pstack` Vào Radar `/ccba-sync-upstream` Với Neo Baseline `v0.15.36` (`PR #727`..`#728`), Vệ Sinh `SAFE_STRINGS` Maskara & Cổng `Streak >= 3` Trên PR `walkthrough.md`
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-12 — Hub `PR #725`..`#728`)
+1. **Khoảng Trống Giám Sát Tự Động `backnotprop/pstack` & Bẫy Zero-Scan Init Kèm Các `SKILL.md` Lồng Ngoài `skills/`**:
+   - Trước `PR #727`, toàn bộ kỷ luật của `pstack v0.15.36` đã được tiếp thu qua 5 đợt PR thủ công (`PR #462`..`#596`) do repo gốc nằm trong monorepo `cursor/plugins`, nhưng kho mirror độc lập `backnotprop/pstack` (giấy phép MIT) chưa được đăng ký vào `.md/knowledge/upstream_sources.yaml`.
+   - Khi thử nghiệm bằng `resolve_upstream_resources()`, kho `backnotprop/pstack` có tổng cộng **61** tệp `**/SKILL.md` (58 kỹ năng dưới `skills/` cộng thêm 3 kỹ năng tự động hóa ẩn dưới `automations/benny/skills/*`). Nếu chỉ đăng ký `source_kind: "skills"` mà không ghi sổ `triage_ledger`, mọi máy trạm chưa có `.md/scratch/pstack_last_sha.txt` (do `.md/scratch/` bị gitignore) hoặc khi chạy `--scan-all` sẽ kích hoạt bẫy Zero-Scan Init và gọi AI Gateway đánh giá lại toàn bộ 61 mục cũ.
+2. **Chặn Pre-Commit Maskara Khi Biên Dịch `references/**/*.md` Vào `skills_compiled.md` & Nâng Bậc `ONE_WAY_DOOR` Do Chuỗi PR Liên Tiếp**:
+   - Khi `compile_skills(..., include_references=True)` gộp toàn bộ `.agents/skills/**/references/*.md` vào `.md/knowledge/skills_compiled.md`, quy tắc `env-secret` trong `packages/ccba-maskara/src/ccba_maskara/_rules.py` bắt cả các biểu thức JS không ngoặc kép truy cập `process.env.*` khi gán cho trường mật khẩu hoặc khóa `token` trừ khi giá trị nằm trong tập `SAFE_STRINGS`.
+   - Trong chuỗi phát hành nhiều PR liên tiếp trong 72h, `compute_cumulative_streak` (`ADR-0067`) đạt `Streak >= 3` (như `Streak: 5` tại `PR #727`) sẽ nâng cấp cả các PR chỉ sửa tài liệu (`walkthrough.md`) thành `ONE_WAY_DOOR` trên GitHub Actions CI, đòi hỏi `TradeoffCard` hợp lệ.
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.23`, `RULE-2.20`, `RULE-4.18`)
+1. **Quy Chuẩn Neo Baseline `triage_ledger` Khi Tiếp Nhận Kho Thượng Nguồn Đã Hấp Thụ Thủ Công (`RULE-4.18`, `ccba-sync-upstream` `v1.1.2`)**:
+   - Mọi kho `source_kind: "skills"` từng được tiếp thu thủ công trước khi đưa vào `.md/knowledge/upstream_sources.yaml` bắt buộc phải được quét thực nghiệm qua `resolve_upstream_resources()` để phát hiện đủ `**/SKILL.md` (bao gồm các gói lồng ngoài `skills/`), ánh xạ `aliases` không xung đột và ghi sổ `reviewed_sha` qua `upsert_triage_ledger_yaml` (`61/61` mục `pstack` tại `97de40dc`, `0` cuộc gọi LLM ở Initial Scan, tự động kích hoạt `🔵 [UPSTREAM DELTA]` từ `v0.15.37+`).
+2. **Vệ Sinh `SAFE_STRINGS` Cho Tài Liệu Mẫu & Tiền Kiểm `door-triage` Trên PR `walkthrough.md` (`RULE-1.23`, `RULE-2.20`, `ccba-release-feature` `v1.3.4`)**:
+   - Mọi đoạn mã minh họa gán mật khẩu/bí mật trong `.agents/skills/**/references/*.md` bắt buộc sử dụng hằng trong `SAFE_STRINGS` (`'placeholder_password'`, `'placeholder_key'`) để bảo đảm `skills_compiled.md` vượt qua Maskara Gate 100%.
+   - Tiến hóa Bước 5 của `/ccba-release-feature` (`v1.3.4`) bổ sung lệnh tiền kiểm `python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card` trước khi mở PR lưu trữ `walkthrough.md`.

@@ -24235,7 +24235,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.3"
+  version: "1.3.4"
   author: "CCBA Hub"
 triggers:
 - release
@@ -24457,13 +24457,14 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
-     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md) rồi truyền qua -F:
+     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md), chạy tiền kiểm door-triage (vì compute_cumulative_streak K>=3/72h vẫn nâng PR tài liệu lên ONE_WAY_DOOR đòi TradeoffCard) rồi truyền qua -F:
+     python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card
      gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
-     # PR chỉ thay đổi tài liệu thuộc Two-way Door Fast-Path; chờ CI hoàn tất và merge:
      gh pr checks --watch
      gh pr merge --squash --delete-branch
      git checkout main && git pull origin main
      ```
+   - **Tiêu chí hoàn thành:** Lệnh `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
 
 6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
    - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:
@@ -27135,7 +27136,7 @@ name: ccba-sync-upstream
 description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
   kết hợp kích hoạt 1-Click Port qua /ccba-xia.
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: "CCBA Hub"
 disable-model-invocation: true
 bundle: _core
@@ -27207,6 +27208,7 @@ python scripts/spoke/check_claudekit_updates.py --scan-all --repo claudekit-mark
 6. **Khử Trùng Lặp Mờ & Bộ Nhớ Đệm Cache:** Tự động loại trừ prefix (`ck-`, `ccba-`), tra cứu `UPSTREAM_ALIAS_MAP` và lưu kết quả đánh giá tại `.md/scratch/upstream_eval_cache.json` để tối ưu tốc độ phản hồi và tiết kiệm token.
 7. **Phân Tách Hai Luồng Nguồn (`skills` vs `reference_corpus`) & Luồng Tiến Hóa Delta (`UPSTREAM DELTA`):** Đối với kho `source_kind: reference_corpus` (như `pnp-list-formatting`), hệ thống sinh **Repo Digest cô đọng (`<= 30` dòng)** định tuyến thẳng về `default_target`. Đối với tài nguyên trùng tên với kỹ năng đã có tại Hub nhưng xuất hiện commit mới, hệ thống kích hoạt thẩm tra tiến hóa `🔵 [UPSTREAM DELTA]` thay vì loại bỏ mù.
 8. **Sổ Cái Triage Bền Vững (`triage_ledger`) & Kẹp Bản Quyền 6 Tầng (`clamp_license_policy`):** Đối chiếu khóa `(source, upstream_path, target)` trong `.md/knowledge/upstream_sources.yaml` qua `git diff --quiet <reviewed_sha> <head_sha> -- <path>` (`ADOPTED`/`DECLINED` ẩn im lặng khi không đổi, đánh giá lại khi có diff, cảnh báo `🟠 [DELTA UNKNOWN]` khi thiếu lịch sử git; `DEFERRED` hiển thị lại kèm cache), đồng thời cưỡng chế kẹp giấy phép `COPYLEFT` / `PROPRIETARY` / `UNKNOWN` về `--compare` ngay cả sau khi đọc cache.
+9. **Neo Baseline `triage_ledger` Khi Tiếp Nhận Kho Đã Hấp Thụ Thủ Công:** Khi đăng ký thêm kho `source_kind: "skills"` đã được tiếp thu trước đó (như `backnotprop/pstack`), bắt buộc chạy `resolve_upstream_resources()` để phát hiện toàn bộ `**/SKILL.md` (kể cả các gói lồng ngoài `skills/`) và ghi sổ `reviewed_sha` qua `upsert_triage_ledger_yaml` kèm `aliases`. *Tiêu chí hoàn thành:* Chạy `check_claudekit_updates.py --repo <name> --fast` khi chưa có `<name>_last_sha.txt` đạt Exit Code `0`, `0` cuộc gọi LLM và `0` mục mở phát sinh trong `port_recommendations.md`.
 
 ---
 
