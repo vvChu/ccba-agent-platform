@@ -2,6 +2,20 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-12] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Neo Baseline `triage_ledger` Cho Kho Đã Tiếp Thu (`pstack` `97de40dc`), Vệ Sinh `SAFE_STRINGS` Maskara & Tiến Hóa `/ccba-release-feature` (`v1.3.4`), `/ccba-sync-upstream` (`v1.1.2`) (`RULE-1.23`, `RULE-2.20`, `RULE-4.18`, Mục 61)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-sync-upstream/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
+- **Summary**: Chắt lọc tri thức thực chiến cuối phiên từ chuỗi `PR #721`..`#728` vào `RULE-1.23`, `RULE-2.20`, `RULE-4.18` (giữ `session_learnings.md` dưới trần `10.0 KB` và lưu trữ Mục 61 lịch sử), đồng thời tiến hóa trực tiếp `/ccba-release-feature` (`v1.3.4` — tiền kiểm `door-triage --enforce-tradeoff-card` cho PR `walkthrough.md` khi `compute_cumulative_streak` đạt `K >= 3`/72h) và `/ccba-sync-upstream` (`v1.1.2` — quy chuẩn quét `resolve_upstream_resources()` `**/SKILL.md` và neo baseline `triage_ledger` khi tiếp nhận kho đã hấp thụ thủ công).
+
+---
+
+## [2026-11-12] [update] | Đăng Ký Thượng Nguồn `backnotprop/pstack` Vào Radar `/ccba-sync-upstream` Với Neo Baseline `v0.15.36` (`97de40dc`)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/upstream_sources.yaml`, `.agents/skills/ccba-sync-upstream/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `tests/test_upstream_evaluator.py`, `.md/knowledge/log.md`
+- **Summary**: Đăng ký kho mirror MIT `backnotprop/pstack` (`source_kind: "skills"`, nhánh `main`) vào `.md/knowledge/upstream_sources.yaml` (nâng tổng số kho giám sát lên `8` kho), bổ sung `23` ánh xạ `aliases` không xung đột (`interrogate -> ccba-code-review`, `statechart -> ccba-mermaid-diagram`, `ketchup -> ccba-handoff`, `unslop -> ccba-code-review`, `blast-radius -> ccba-codebase-design`, v.v.) và đóng dấu `61` bản ghi `triage_ledger` neo tại SHA `97de40dc` (`pstack v0.15.36`, gồm `51 ADOPTED` từ `PR #462`..`#596` và `10 DECLINED` đặc thù Cursor/Slack/TS), giúp triệt tiêu bẫy Zero-Scan Init (`0` cuộc gọi LLM cho nền `v0.15.36`) và tự động kích hoạt `🔵 [UPSTREAM DELTA]` ngay khi phát sinh bản `v0.15.37+`.
+
+---
+
 ## [2026-11-12] [update] | Hoàn Tất Chiến Dịch Chuyển Dịch 13 Ứng Viên Thượng Nguồn (`PR #721`..`#724`), Chính Sách `COMMERCIAL_LICENSED` Clean-Room Guard & Biên Dịch Tri Thức Tier 2A `references/*.md` Cho NotebookLM (`RULE-2.4`, `RULE-2.20`, `RULE-4.18`, Mục 60)
 - **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok 4.7 (`Plan Review Session ID: 1388f962-b10f-4169-9f97-31896a38f9f5` `APPROVE_WITH_CONDITIONS`, `7/7` conditions resolved)
 - **Affected Files**: `scripts/spoke/_upstream_helpers.py`, `scripts/spoke/upstream_evaluator.py`, `scripts/spoke/compile_knowledge.py`, `scripts/tests/test_compile_knowledge.py`, `tests/test_upstream_evaluator.py`, `tests/governance/test_skills_docs_integrity.py`, `.agents/skills/ccba-codebase-design/`, `.agents/skills/ccba-handoff/SKILL.md`, `.agents/skills/ccba-design/`, `.agents/skills/ccba-web-testing/`, `.agents/skills/ccba-copywriting/`, `packages/ccba-harness/.agents/skills/verify-ccba-xia/SKILL.md`, `packages/ccba-harness/.agents/skills/verify-ccba-implement/SKILL.md`, `.md/knowledge/upstream_sources.yaml`, `.md/knowledge/port_recommendations.md`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/wiki/verification-harness-and-skill-governance-evolution.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/log.md`

@@ -1328,3 +1328,29 @@ def test_commercial_licensed_policy_preclamp_cache_and_bidirectional_prune(
     )
     assert uh.prune_stale_recommendations(rec, cfg_yml) == 2
     assert "### " not in rec.read_text(encoding="utf-8")
+
+
+def test_pstack_registered_with_baseline_ledger_and_aliases() -> None:
+    """Verify backnotprop/pstack is registered in upstream_sources.yaml with v0.15.36 baseline."""
+    import scripts.spoke._upstream_helpers as uh
+    from scripts.spoke.upstream_evaluator import get_existing_elements
+
+    sources = {s["name"]: s for s in load_upstream_sources()}
+    assert "pstack" in sources
+    pstack = sources["pstack"]
+    assert pstack["source_kind"] == "skills"
+    assert pstack["remote_url"] == "https://github.com/backnotprop/pstack"
+
+    gov = uh.load_governance_config(uh._CANONICAL_YAML)
+    aliases = gov["aliases"]
+    assert aliases["interrogate"] == "ccba-code-review"
+    assert aliases["statechart"] == "ccba-mermaid-diagram"
+    assert aliases["ketchup"] == "ccba-handoff"
+    assert aliases["unslop"] == "ccba-code-review"
+
+    pstack_entries = [e for e in gov["triage_ledger"] if e.get("source") == "pstack"]
+    assert len(pstack_entries) == 61
+    assert all(e.get("reviewed_sha") == "97de40dc" for e in pstack_entries)
+    existing_skills, existing_workflows = get_existing_elements()
+    dup, matched = check_is_duplicate("interrogate", existing_skills, existing_workflows)
+    assert dup is True and matched == "ccba-code-review"
