@@ -5,7 +5,7 @@ description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Autom
   Code Apps, Adaptive Cards, bảo mật Dual-Zone và kiểm chứng phê duyệt BFS.
 disable-model-invocation: true
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   author: "CCBA Hub"
 bundle: _software
 tier: kernel
@@ -74,7 +74,7 @@ Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩ
      - **Zone 1 (Public Intranet — `https://ibstbim.sharepoint.com`, `925e6eaa-8908-4094-8d1a-75c46c7901c9`)**: Cấp quyền đọc cho `CCBA_VCNLD_All` (`69` VCNLĐ) sau khi gỡ `'Everyone except external users'` (`ZONE1-ORDER`), `0` List WebParts (`controlType=3`).
      - **Cổng Kỹ Thuật Độc Lập (`/sites/iCDE` — `186131e8-e45d-4d8a-b05a-0d46530cae43`)**: Hợp nhất và thay thế trang cũ `/SitePages/TVGS-CDE.aspx`; khóa `Read-Only` (`1073741826`) 3 thư viện lịch sử, nhúng 5 CoPs Kỹ thuật Viva Engage và lộ trình học tập Tier 2. Mọi thay đổi Canvas trên Zone 1 và `/sites/iCDE` phải qua `_assert_safe_portal_canvas()` (chặn sharing tokens, chặn List WebPart `controlType=3`, và chặn deep-link vào `Lists/LessonsLearned` hay các bảng tài chính Zone 2).
      - **Zone 2 (Confidential Operations Engine — `/sites/idop`, `812726c1-098f-4755-8cd1-65a5a9eb37f2`)**: Bảo vệ `62` Core Lists; hạ quyền nhóm `IDOP Members` (`PrincipalId=5`) xuống `Read` (`1073741826`) tại gốc Site; **cấm tuyệt đối** gán `CCBA_VCNLD_All` vào Vùng 2; đồng bộ RBAC 1-Stop-Shop từ cột MultiChoice `Employees.SystemRoles`; giữ 3 trang điều hành (`Home.aspx`, `L10-Traction-Room.aspx`, `IDOP-Cockpit.aspx`) sạch 100% không nhúng feed mạng xã hội.
-     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`v1.0.4.0`).
+     - **Tenant App Catalog (`/sites/appcatalog`)**: Triển khai gói 4 thành phần `idop-cockpit-spfx.sppkg` (`SPFX_VERSION` trong `sp_spfx_cockpit_deployer.py`, đóng gói zero-Node 4 chế độ `WebPart`-shaped).
 3. **Rào Chắn Ngữ Nghĩa Cột, Chỉ Mục, View Lookup & Bộ Đệm Ẩn ManagedMetadata**:
    - `InternalName`: Bắt buộc dùng **PascalCase** không dấu, không khoảng trắng (`ContractCode`, `RequiresIBSTSign`, `ApprovalStatus`); `DisplayName` tiếng Việt có dấu $\le 50$ ký tự.
    - **Giới hạn 20 chỉ mục Cột (`MAX_INDEXED_COLUMNS_PER_LIST = 20`) & 8 Lookup trên View (`MAX_VIEW_LOOKUP_COLUMNS = 8`)**: Mỗi SharePoint List không quá `20` cột `"Indexed": true`; mỗi SPO View (trong tổng số `82` Views) không quá `8` cột kiểu Lookup/User/Taxonomy (`count_view_lookup_columns`).
@@ -240,18 +240,18 @@ Khi triển khai giao diện và luồng nghiệp vụ trên nền tảng Micros
    - Mọi hành động kết nối trong `workflow.json` bắt buộc dùng `"type": "OpenApiConnection"` qua **Connection References** và **Environment Variables** (cấm dùng `ApiConnection` hoặc `Invoker` cũ — `SLOP-09`).
    - Thẻ phê duyệt Adaptive Cards trong `Team IDOP` hiển thị tối đa 5 trường cốt lõi ở Tier 1 và bọc bảng phân bổ/lịch sử `ApprovalNodes` trong khối `Action.ToggleVisibility` (`isVisible: false` mặc định).
 4. **Viva Connections ACEs (`pnp/sp-dev-fx-aces`), SPFx Application Customizers (`pnp/sp-dev-fx-extensions`), Purview & PnP Modern Search**:
-   - **Viva Connections ACEs:** Thiết kế theo 2 tầng `Card View` (Tier 1 "To Know" — tối đa 1–2 chỉ số theo `ROLE_ID` kèm trạng thái Empty State chuẩn) và `Quick View` (Tier 2/3 "To Do" — biểu mẫu Adaptive Card v1.4 JSON nhập KPI hoặc phê duyệt 1-click qua Delegated User OBO token).
-   - **SPFx Application Customizer:** Gắn thanh điều hướng toàn cục tại `Top Placeholder` và ngăn kéo trượt phải (`CcbaMindApplicationCustomizer`) hiển thị **Interactive Decision Cards** (`requires_human_confirmation: true`).
-   - **Microsoft Purview & PnP Modern Search v4:** Khóa bản ghi bất biến (`Purview Retention Label`) khi hồ sơ CDE đạt trạng thái `A1 - Published`, mã hóa thư mục nhạy cảm bằng `Purview Sensitivity Labels`, và dùng **PnP Modern Search v4** (chỉ mục Graph Search + bộ lọc Taxonomy `TermSet` + Microsoft Search Bookmarks/Acronyms) để tìm kiếm xuyên danh mục vượt ngưỡng 5.000 items.
+   - **Viva Connections ACEs:** Thiết kế theo 2 tầng `Card View` (Tier 1 "To Know" — tối đa 1–2 chỉ số theo `ROLE_ID` kèm trạng thái Empty State chuẩn) và `Quick View` (Tier 2/3 "To Do" — biểu mẫu Adaptive Card v1.4 JSON nhập KPI hoặc phê duyệt 1-click qua Delegated User OBO token). Tại Spoke `IDOP-CCBA-WAY`, `IdopWeeklyPulseAce` được đóng gói zero-Node dưới dạng `componentType: "WebPart"` (`properties.spfxRole = "AdaptiveCardExtension"` trong `sp_spfx_cockpit_deployer.py`) để nhúng đồng nhất trên Site Pages & Teams Tabs.
+   - **SPFx Application Customizer:** Kiến trúc đích gắn thanh điều hướng toàn cục tại `Top Placeholder` và ngăn kéo trượt phải (`CcbaMindApplicationCustomizer`) hiển thị **Interactive Decision Cards** (`requires_human_confirmation: true`); tại `IDOP-CCBA-WAY`, thành phần này hiện được đóng gói zero-Node dưới dạng `componentType: "WebPart"` (`properties.spfxRole = "ApplicationCustomizer"`).
+   - **Microsoft Purview & PnP Modern Search v4:** Khóa bản ghi bất biến (`Purview Retention Label`) khi hồ sơ CDE đạt trạng thái `A1 - Published`, dùng **PnP Modern Search v4** (chỉ mục Graph Search + bộ lọc Taxonomy `TermSet` + Microsoft Search Bookmarks/Acronyms) để tìm kiếm xuyên danh mục vượt ngưỡng 5.000 items; `Purview Sensitivity Labels` và `Code Apps (@microsoft/power-apps)` đóng vai trò kiến trúc mở rộng tham chiếu khi nâng cấp vượt gói Standard nền tảng.
 
 ---
 
 ## 🔍 5. Checklist Rà Soát Chất Lượng (Quality Gate)
 
-- [ ] Tên bảng `ListName` và các cột cốt lõi khớp với hợp đồng `CORE_REQUIRED_FIELDS` và `CdeDocumentSyncService`.
+- [ ] Tên bảng `ListName` và các cột cốt lõi khớp với hợp đồng đối soát Hub (`CORE_REQUIRED_FIELDS`, `CdeDocumentSyncService` trong `test_idop_schema_compatibility.py` / `ccba_m365_bridge.py`) và daemon thực thi Spoke (`tools/bridge/m365_bridge_worker.py`).
 - [ ] Số lượng cột `"Indexed": true` trên mỗi bảng $\le 20$ và không gắn chỉ mục vào kiểu `NON_INDEXABLE_COLUMN_TYPES`.
 - [ ] Mọi trường `ManagedMetadata` đều có `TermSet.Name` tồn tại trong `datamodel/sharepoint/taxonomy/`.
-- [ ] Không có trường nhị phân (Attachment/Binary) hoặc liên kết chia sẻ tạm thời (`/:[fbwxu]:/g/` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
+- [ ] Không có trường nhị phân (Attachment/Binary) hoặc dấu hiệu liên kết chia sẻ tạm thời thuộc `FORBIDDEN_SHARING_MARKERS` (`10` markers: `/:[fbwxuvpo]:/g/`, `guestaccess.aspx`, `share=` — `SLOP-09`); mọi liên kết tệp trỏ về `Documents/iOPS/` hoặc `Documents/iCDE/` qua canonical `driveId` + `itemId`.
 - [ ] Sơ đồ luồng phê duyệt `Submissions`/`ApprovalNodes` vượt qua kiểm chứng BFS Liveness và cổng `IBST_Gateway_Review`.
 - [ ] Công thức Power Fx (`App.pa.yaml`) tuân thủ 100% SharePoint Delegation và định nghĩa Power Automate Flow dùng chuẩn `OpenApiConnection` có Trigger Condition chống lặp vô hạn.
 

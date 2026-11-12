@@ -60,7 +60,9 @@ SharePoint Online connectors (`shared_sharepointonline`) enforce strict **Delega
 
 ---
 
-## 3. Power Apps Code Apps (`@microsoft/power-apps` — React + TypeScript + Fluent UI v9)
+## 3. Power Apps Code Apps (`@microsoft/power-apps` — React + TypeScript + Fluent UI v9, Reference Pattern)
+
+> **Scope Posture:** In `IDOP-CCBA-WAY`, active frontline apps and Standard flows ship via Canvas `.pa.yaml` (`powerapps/src/IdopFieldApprovalApp.pa.yaml`) and `PA-01..PA-05` (`tools/deployment/pa_solution_packager.py`). Use **Code Apps** as a reference expansion pattern when a bespoke React/TypeScript SPA hosted inside Power Apps is explicitly required.
 
 When building a custom Code App (distilled from `microsoft/power-platform-skills/plugins/code-apps`):
 1. **Scaffold & Tooling:** Initialize with `pac code init` (Vite + React + TypeScript + `@fluentui/react-components`), mapping Fluent v9 tokens (`colorBrandBackground`, `colorNeutralStroke1`) to CCBA brand colors (`#363883`, `#005A9C`, `#DA251C`).
