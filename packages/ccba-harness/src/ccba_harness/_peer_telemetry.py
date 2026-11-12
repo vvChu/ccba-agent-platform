@@ -49,6 +49,12 @@ _VERDICT_FILE_PREFIXES: tuple[str, ...] = ("grok_", "verdict_", "response_grok_"
 _PASS_VERDICTS: frozenset[str] = frozenset(
     {"APPROVE", "APPROVE_PLAN", "FINAL_ACCEPT", "GATE_PASS", "APPROVE_WITH_RESERVATIONS"}
 )
+_CODE_AUDIT_PROFILES: frozenset[str] = frozenset(
+    {"arch_audit", "code_review", "audit_direct", "agentic_code", "patch_fast"}
+)
+_PLAN_AUDIT_PROFILES: frozenset[str] = frozenset({"audit_plan", "deep_spec_audit"})
+_PLAN_PHASE_RE = re.compile(r"(?:^|[-_.])plan(?:[-_.]|$)", re.IGNORECASE)
+_NON_PHASE_PLAN_RE = re.compile(r"(?:floor|site|master|key|roof)[-_]plan", re.IGNORECASE)
 
 
 def _is_degraded_reasoning(expected_effort: str | None, reasoning_tokens: int) -> bool:
@@ -471,12 +477,64 @@ def _extract_clean_doc_set(envelope: Any) -> set[str]:
     }
 
 
+def _has_plan_phase_token(*texts: str) -> bool:
+    """Returns True if any identifier contains a phase-level `plan` segment (excluding AEC nouns)."""
+    for raw in texts:
+        cleaned = _NON_PHASE_PLAN_RE.sub("", str(raw or ""))
+        if _PLAN_PHASE_RE.search(cleaned):
+            return True
+    return False
+
+
+def _is_prior_plan_session(prior_env: Any, verdict: Any, verdict_name: str) -> bool:
+    """Returns True when a prior prompt/verdict pair belongs to the Plan Audit phase."""
+    p_prof = getattr(prior_env, "profile", None) if prior_env is not None else None
+    p_req = getattr(prior_env, "request_type", None) if prior_env is not None else None
+    v_type = getattr(verdict, "verdict", None)
+    if p_prof in _PLAN_AUDIT_PROFILES or p_req == "plan":
+        return True
+    if v_type in ("APPROVE_PLAN", "REVISE_PLAN", "REJECT_PLAN"):
+        return True
+    has_tok = _has_plan_phase_token(verdict_name, str(getattr(verdict, "request_id", "") or ""))
+    if p_req == "discuss" or v_type in ("FINAL_ACCEPT", "APPROVE_WITH_CONDITIONS", "APPROVE"):
+        return has_tok
+    return False
+
+
+def _is_code_phase_target(envelope: Any, effective_profile: str | None = None) -> bool:
+    """Returns True when the current dispatch targets post-implementation code review/audit."""
+    if envelope is None and not effective_profile:
+        return False
+    prof = effective_profile or (
+        getattr(envelope, "profile", None) if envelope is not None else None
+    )
+    if prof in _CODE_AUDIT_PROFILES:
+        return True
+    if prof in _PLAN_AUDIT_PROFILES or prof == "signoff_diff":
+        return False
+    req_type = getattr(envelope, "request_type", None) if envelope is not None else None
+    if req_type in ("review", "audit", "implement"):
+        return not _has_plan_phase_token(
+            str(getattr(envelope, "request_id", "") or ""),
+            str(getattr(envelope, "output_path", "") or ""),
+        )
+    return False
+
+
 def _match_tier1_stem_session(
-    cur_req: str, prompt_name: str, verdicts: list[tuple[float, float, str, Any, str]]
+    cur_req: str,
+    prompt_name: str,
+    verdicts: list[tuple[float, float, str, Any, str]],
+    prompts_by_req: dict[str, Any] | None = None,
+    block_plan_sessions: bool = False,
 ) -> str | None:
     """Matches follow-up prompt stem against prior verdict request_id or filename stems."""
     req_stem, file_stem = _normalize_thread_stem(cur_req), _normalize_thread_stem(prompt_name)
     for _, _, v_name, v, sid in verdicts:
+        if block_plan_sessions and _is_prior_plan_session(
+            (prompts_by_req or {}).get(v.request_id), v, v_name
+        ):
+            continue
         vr_stem, vf_stem = _normalize_thread_stem(v.request_id), _normalize_thread_stem(v_name)
         if (req_stem and vr_stem == req_stem) or (file_stem and vf_stem == file_stem):
             return sid
@@ -490,46 +548,71 @@ def _match_tier1_stem_session(
     return None
 
 
-def _auto_discover_resume_session_id(prompt_path: Path | None, envelope: Any) -> str | None:
-    """Discovers prior session_id across 3 tiers (stem match, target docs, discussion thread)."""
+def _match_tier2_doc_session(
+    envelope: Any,
+    is_fu: bool,
+    block_plan: bool,
+    prompts_by_req: dict[str, Any],
+    verdicts: list[tuple[float, float, str, Any, str]],
+) -> str | None:
+    """Matches prior session via document/target_files Jaccard >= 0.5 or active discuss thread."""
+    cur_docs, req_type = _extract_clean_doc_set(envelope), getattr(envelope, "request_type", None)
+    if not cur_docs:
+        return None
+    for delta_sec, _, v_name, v, sid in verdicts:
+        if block_plan and _is_prior_plan_session(prompts_by_req.get(v.request_id), v, v_name):
+            continue
+        if (
+            not is_fu
+            and req_type not in ("verify", "patch", "discuss", "architecture")
+            and _has_round_suffix(v_name)
+        ):
+            continue
+        if req_type in ("discuss", "architecture") and not is_fu and delta_sec <= 7200:
+            return sid
+        p_docs = _extract_clean_doc_set(prompts_by_req.get(v.request_id))
+        if p_docs and (
+            cur_docs == p_docs or len(cur_docs & p_docs) / len(cur_docs | p_docs) >= 0.5
+        ):
+            return sid
+    return None
+
+
+def _auto_discover_resume_session_id(
+    prompt_path: Path | None, envelope: Any, *, effective_profile: str | None = None
+) -> str | None:
+    """Discovers prior session_id across 3 tiers while blocking Plan->Code phase leaks."""
     if prompt_path is None or envelope is None or not prompt_path.parent.is_dir():
         return None
     cur_req = str(getattr(envelope, "request_id", "") or "")
     cur_out = Path(str(getattr(envelope, "output_path", "") or "")).name
     p_mtime = prompt_path.stat().st_mtime if prompt_path.exists() else time.time()
-    p_iso = _parse_iso_ts(getattr(envelope, "timestamp", None))
     prompts_by_req, verdicts = _collect_prior_verdict_sessions(
-        prompt_path.parent, cur_req, cur_out, p_iso, p_mtime
+        prompt_path.parent,
+        cur_req,
+        cur_out,
+        _parse_iso_ts(getattr(envelope, "timestamp", None)),
+        p_mtime,
     )
     if not verdicts:
         return None
+    eff_prof = effective_profile or getattr(envelope, "profile", None)
+    block_plan = _is_code_phase_target(envelope, eff_prof)
     is_fu = (
         _has_round_suffix(cur_req)
         or _has_round_suffix(prompt_path.name)
-        or getattr(envelope, "profile", None) == "signoff_diff"
+        or eff_prof == "signoff_diff"
     )
     if is_fu:
-        hit = _match_tier1_stem_session(cur_req, prompt_path.name, verdicts)
+        hit = _match_tier1_stem_session(
+            cur_req, prompt_path.name, verdicts, prompts_by_req, block_plan
+        )
         if hit:
             return hit
-    cur_docs = _extract_clean_doc_set(envelope)
-    req_type = getattr(envelope, "request_type", None)
-    if cur_docs:
-        for delta_sec, _, v_name, v, sid in verdicts:
-            if (
-                not is_fu
-                and req_type not in ("verify", "patch", "discuss", "architecture")
-                and _has_round_suffix(v_name)
-            ):
-                continue
-            if req_type in ("discuss", "architecture") and not is_fu and delta_sec <= 7200:
-                return sid
-            p_docs = _extract_clean_doc_set(prompts_by_req.get(v.request_id))
-            if p_docs and (
-                cur_docs == p_docs or len(cur_docs & p_docs) / len(cur_docs | p_docs) >= 0.5
-            ):
-                return sid
-    if req_type in ("discuss", "architecture"):
+    hit_t2 = _match_tier2_doc_session(envelope, is_fu, block_plan, prompts_by_req, verdicts)
+    if hit_t2:
+        return hit_t2
+    if getattr(envelope, "request_type", None) in ("discuss", "architecture") and not block_plan:
         for delta_sec, _, _, _, sid in verdicts:
             if delta_sec <= 14400:
                 return sid
@@ -557,14 +640,22 @@ def _check_resumed_payload_bloat(prompt_path: Path | None, eff_resume: str | Non
 
 
 def _resolve_effective_resume_session(
-    resume_session_id: str | None, envelope: Any, prompt_path: Path | None = None
+    resume_session_id: str | None,
+    envelope: Any,
+    prompt_path: Path | None = None,
+    *,
+    effective_profile: str | None = None,
 ) -> str | None:
     """Resolves explicit or auto-discovered resume_session_id and checks payload bloat."""
     raw = resume_session_id or (envelope.resume_session_id if envelope is not None else None)
     if raw is not None and str(raw).strip().lower() in _OPT_OUT_RESUME_TOKENS:
         return None
     eff_resume = (
-        str(raw).strip() if raw else _auto_discover_resume_session_id(prompt_path, envelope)
+        str(raw).strip()
+        if raw
+        else _auto_discover_resume_session_id(
+            prompt_path, envelope, effective_profile=effective_profile
+        )
     )
     _check_resumed_payload_bloat(prompt_path, eff_resume)
     return eff_resume
