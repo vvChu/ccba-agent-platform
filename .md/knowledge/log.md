@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-12] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Neo Baseline `triage_ledger` Cho Kho Đã Tiếp Thu (`pstack` `97de40dc`), Vệ Sinh `SAFE_STRINGS` Maskara & Tiến Hóa `/ccba-release-feature` (`v1.3.4`), `/ccba-sync-upstream` (`v1.1.2`) (`RULE-1.23`, `RULE-2.20`, `RULE-4.18`, Mục 61)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-sync-upstream/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
+- **Summary**: Chắt lọc tri thức thực chiến cuối phiên từ chuỗi `PR #721`..`#728` vào `RULE-1.23`, `RULE-2.20`, `RULE-4.18` (giữ `session_learnings.md` dưới trần `10.0 KB` và lưu trữ Mục 61 lịch sử), đồng thời tiến hóa trực tiếp `/ccba-release-feature` (`v1.3.4` — tiền kiểm `door-triage --enforce-tradeoff-card` cho PR `walkthrough.md` khi `compute_cumulative_streak` đạt `K >= 3`/72h) và `/ccba-sync-upstream` (`v1.1.2` — quy chuẩn quét `resolve_upstream_resources()` `**/SKILL.md` và neo baseline `triage_ledger` khi tiếp nhận kho đã hấp thụ thủ công).
+
+---
+
 ## [2026-11-12] [update] | Đăng Ký Thượng Nguồn `backnotprop/pstack` Vào Radar `/ccba-sync-upstream` Với Neo Baseline `v0.15.36` (`97de40dc`)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `.md/knowledge/upstream_sources.yaml`, `.agents/skills/ccba-sync-upstream/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `tests/test_upstream_evaluator.py`, `.md/knowledge/log.md`
