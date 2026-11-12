@@ -51,13 +51,14 @@ export const options = {
 ```javascript
 export function setup() {
   const res = http.post(`${BASE_URL}/api/login`, {
-    email: 'test@example.com', password: 'password',
+    email: 'test@example.com', password: 'placeholder_password',
   });
-  return { token: res.json('token') };
+  const sessionJwt = res.json('access_jwt');
+  return { sessionJwt };
 }
 
 export default function (data) {
-  const params = { headers: { Authorization: `Bearer ${data.token}` } };
+  const params = { headers: { Authorization: `Bearer ${data.sessionJwt}` } };
   http.get(`${BASE_URL}/api/protected`, params);
 }
 ```

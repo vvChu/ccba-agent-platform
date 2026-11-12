@@ -8,29 +8,54 @@ import sys
 from pathlib import Path
 
 
-def compile_skills(skills_dir: Path, output_file: Path) -> None:
-    """Scan all skill directories and merge their SKILL.md contents.
+def _collect_skill_sections(folder: Path, *, include_references: bool = True) -> list[str]:
+    """Collect markdown sections for a single skill directory and its Tier 2A references."""
+    sections: list[str] = []
+    skill_file = folder / "SKILL.md"
+    if skill_file.is_file():
+        try:
+            content = skill_file.read_text(encoding="utf-8")
+            sections.append(f"# Skill: {folder.name}\n\n{content}\n\n---\n")
+        except (OSError, UnicodeDecodeError) as err:
+            print(f"Error reading skill {skill_file}: {err}", file=sys.stderr)
+
+    refs_dir = folder / "references"
+    if include_references and refs_dir.is_dir():
+        ref_files = sorted(
+            (p for p in refs_dir.rglob("*.md") if p.is_file()),
+            key=lambda p: p.relative_to(folder).as_posix(),
+        )
+        for ref_file in ref_files:
+            rel_ref = ref_file.relative_to(folder).as_posix()
+            try:
+                ref_content = ref_file.read_text(encoding="utf-8")
+                sections.append(
+                    f"# Skill Reference: {folder.name}/{rel_ref}\n\n{ref_content}\n\n---\n"
+                )
+            except (OSError, UnicodeDecodeError) as err:
+                print(f"Error reading skill reference {ref_file}: {err}", file=sys.stderr)
+    return sections
+
+
+def compile_skills(skills_dir: Path, output_file: Path, *, include_references: bool = True) -> None:
+    """Scan all skill directories and merge their SKILL.md and Tier 2A reference contents.
 
     Args:
         skills_dir: Path to the skills root directory.
         output_file: Path to the compiled markdown output file.
+        include_references: Whether to bundle Tier 2A `references/**/*.md` documents.
     """
     if not skills_dir.exists():
         print(f"Skills directory does not exist: {skills_dir}", file=sys.stderr)
         return
 
-    output_content = []
-    # Sorted for deterministic output
-    for folder in sorted(skills_dir.iterdir()):
+    output_content: list[str] = []
+    for folder in sorted(skills_dir.iterdir(), key=lambda p: p.name):
         if not folder.is_dir():
             continue
-        skill_file = folder / "SKILL.md"
-        if skill_file.exists():
-            try:
-                content = skill_file.read_text(encoding="utf-8")
-                output_content.append(f"# Skill: {folder.name}\n\n{content}\n\n---\n")
-            except Exception as e:
-                print(f"Error reading skill {skill_file}: {e}", file=sys.stderr)
+        output_content.extend(
+            _collect_skill_sections(folder, include_references=include_references)
+        )
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text("\n".join(output_content), encoding="utf-8")

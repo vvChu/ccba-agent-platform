@@ -96,3 +96,39 @@ def test_compile_workflows_archived_fallback() -> None:
         assert "# Archived Workflow: ccba-legacy-wf2" in content
         assert "content of legacy wf 2" in content
         assert "---" in content
+
+
+def test_compile_skills_includes_tier2a_references_deterministically(tmp_path: Path) -> None:
+    """Verify compile_skills bundles sorted Tier 2A references/*.md and supports opt-out."""
+    skills_dir = tmp_path / "skills"
+    skill_dir = skills_dir / "ccba-sample"
+    refs_dir = skill_dir / "references"
+    sub_refs = refs_dir / "nested"
+    sub_refs.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text("root skill body", encoding="utf-8")
+    (refs_dir / "zeta.md").write_text("zeta reference body", encoding="utf-8")
+    (refs_dir / "alpha.md").write_text("alpha reference body", encoding="utf-8")
+    (sub_refs / "beta.md").write_text("nested beta body", encoding="utf-8")
+    (refs_dir / "ignore.txt").write_text("non-markdown ignored", encoding="utf-8")
+
+    out_with_refs = tmp_path / "skills_with_refs.md"
+    compile_skills(skills_dir, out_with_refs)
+    compiled = out_with_refs.read_text(encoding="utf-8")
+
+    idx_skill = compiled.index("# Skill: ccba-sample")
+    idx_alpha = compiled.index("# Skill Reference: ccba-sample/references/alpha.md")
+    idx_nested = compiled.index("# Skill Reference: ccba-sample/references/nested/beta.md")
+    idx_zeta = compiled.index("# Skill Reference: ccba-sample/references/zeta.md")
+
+    assert idx_skill < idx_alpha < idx_nested < idx_zeta
+    assert "alpha reference body" in compiled
+    assert "nested beta body" in compiled
+    assert "zeta reference body" in compiled
+    assert "non-markdown ignored" not in compiled
+
+    out_no_refs = tmp_path / "skills_no_refs.md"
+    compile_skills(skills_dir, out_no_refs, include_references=False)
+    compiled_no_refs = out_no_refs.read_text(encoding="utf-8")
+    assert "# Skill: ccba-sample" in compiled_no_refs
+    assert "# Skill Reference:" not in compiled_no_refs

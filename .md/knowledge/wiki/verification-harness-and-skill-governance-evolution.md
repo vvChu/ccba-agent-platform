@@ -12,6 +12,8 @@
 - **Vào ngày `2026-11-02` (`ccba-agent-platform@fb84a076` — PR `#587`)**: Khi tiếp thu 13 cập nhật từ `mattpocock/skills` `v1.3.2` (`4ae2317`), qua thẩm định đối kháng 2 vòng với Grok (`Session: 6acfc77b-69f8-446a-8f2d-59b5e40ff5a3` & `c8938996-3ee7-4309-9c61-25902f319059`), nhóm dự án quyết định áp dụng chiến lược **Hybrid Adopt + Tier 2A Progressive Reference (Zero Skill Bloat)**:
   - Đóng gói 3 quy trình mới có $\text{GPI} < 12.0$ thành Tier 2A References: [`implement-spec.md`](../../../.agents/skills/ccba-implement/references/implement-spec.md) (`COND-01` First-Unit Canary & Single-Writer), [`llm-wiki.md`](../../../.agents/skills/ccba-knowledge-loop/references/llm-wiki.md) (`COND-02` cô lập `.md/knowledge/wiki/index.md`), và [`to-questionnaire.md`](../../../.agents/skills/ccba-grilling/references/to-questionnaire.md).
   - Nâng cấp tại chỗ 10 tệp kỹ năng và tài liệu tham chiếu hiện hữu, giữ nguyên tổng số `76` Hub Skills.
+- **Vào ngày `2026-11-11` (`ccba-agent-platform@a67d7cfc..c8aef4f7` — PR `#721`..`#724`, Grok Consultation `Session: 1388f962-b10f-4169-9f97-31896a38f9f5`)**: Nhóm dự án bổ sung chính sách `COMMERCIAL_LICENSED` (`licensed_use: true` trong [`.md/knowledge/upstream_sources.yaml`](../upstream_sources.yaml) kèm khóa cache tiền kẹp `v2:`) cho các kho thương mại có bản quyền (`claudekit-marketing`, `claudekit-engineer`) trên kho `PUBLIC`, áp dụng rào chắn Clean-Room 8-word n-gram & forbidden-token ([`test_skills_docs_integrity.py`](../../../tests/governance/test_skills_docs_integrity.py)), và hoàn tất chuyển dịch 13 mục tồn đọng (`pstack`, `impeccable`, `web-quality-skills`, `claudekit-*`) qua 6 tệp Tier 2A `references/*.md` cùng 2 cập nhật tại chỗ, giữ nguyên `76` Hub Skills và đưa hàng đợi `port_recommendations.md` về `0` mục mở.
+- **Vào ngày `2026-11-12` (PR `#725`)**: Mở rộng [`compile_knowledge.py`](../../../scripts/spoke/compile_knowledge.py) (`compile_skills(..., include_references=True)`) để biên dịch toàn bộ tài liệu Tier 2A `references/**/*.md` vào `skills_compiled.md` (`~257K` từ `< 500K` trần nguồn của Google NotebookLM), giúp hệ thống RAG/NotebookLM truy xuất đầy đủ tri thức chuyên sâu của Tier 2A.
 
 ---
 
@@ -31,6 +33,12 @@
 - **Trần Bộ Nhớ Tác Nghiệp `10.0 KB` Trên `session_learnings.md` (`2026-11-03`, `ccba-agent-platform@ae5c1b28`)**:
   - *Nguyên nhân:* Tính đến `ccba-agent-platform@ae5c1b28`, tệp [`.md/knowledge/session_learnings.md`](../session_learnings.md) đạt `10,185` bytes (`9.95 KB`), chỉ còn `55` bytes dư địa dưới ngưỡng `10,240` bytes của [`DocAutoEvolutionEngine`](../../../packages/ccba-harness/src/ccba_harness/docs/daemon.py).
   - *Giải pháp (`COND-01`):* Thu gọn từng `RULE-X.Y` về định dạng 1 dòng cô đọng (`< 7.0 KB`), bảo toàn 100% định danh `RULE-\d+\.\d+` cho `ZeroDeletionGuard` và chuyển toàn bộ diễn giải lịch sử sang [`.md/knowledge/archive/session_learnings_history.md`](../archive/session_learnings_history.md).
+- **Lệch Phiên Bản `ruff format` Giữa `.venv` Cục Bộ Và GitHub Actions CI (`2026-11-11`, `ccba-agent-platform@a67d7cfc` — PR `#721`)**:
+  - *Nguyên nhân:* `.venv` cục bộ cài đặt phiên bản `ruff` cũ hơn `ruff 0.17.4` trên CI, dẫn đến khác biệt ngắt dòng chuỗi đa dòng trong `packages/ccba-harness/tests/`.
+  - *Giải pháp:* Luôn chạy `uvx ruff format --check` / `uvx ruff format` đồng bộ với phiên bản mới nhất trên CI trước khi tính lại mã băm `covered_sha256` hoặc đẩy nhánh.
+- **Phân Giải Đường Dẫn Kịch Bản Tương Đối Bên Trong `references/*.md` (`2026-11-11`, `ccba-agent-platform@35e8f42e` — PR `#723`)**:
+  - *Nguyên nhân:* Bộ kiểm thử [`test_workflow_script_parity.py`](../../../tests/governance/test_workflow_script_parity.py) phân giải đường dẫn code-span tương đối tính từ thư mục cha của tệp Markdown (`references/`) hoặc gốc Hub, nên cú pháp trần `` `scripts/ui/search.py` `` bên trong `.agents/skills/ccba-design/references/*.md` bị báo lỗi không tồn tại.
+  - *Giải pháp:* Sử dụng tiền tố tương đối `../scripts/...` hoặc đường dẫn đầy đủ tính từ gốc Hub `.agents/skills/<skill>/scripts/...` bên trong mọi tệp `references/*.md`.
 
 ---
 

@@ -1322,3 +1322,23 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
 2. ** Chuẩn Hóa Đường Dẫn Tương Đối `rel_parts` Trong `validate_docs.py` & Đồng Bộ Cờ CI Trong Kỹ Năng Điều Phối (`RULE-3.5`, `RULE-4.21`)**:
    - Chuyển bộ lọc loại trừ thư mục trong `scripts/governance/cli.py` sang `rel_parts = p.relative_to(docs_dir).parts` để bảo đảm `validate_docs.py` luôn quét đầy đủ tài liệu kể cả khi repo hoặc `git worktree` đặt bên dưới thư mục cha có tên `scratch/` hoặc `.system_generated/`.
    - Tiến hóa trực tiếp `/ccba-session-retrospective` (`v1.6.5`) khớp cờ CI `python scripts/validate_docs.py . --src scripts,packages --changed` + ghi chú cờ `--cwd <worktree_path>` cho `ccba_harness verify-patch`, và `/ccba-release-feature` (`v1.3.3`) bổ sung tiền kiểm `door-triage --enforce-tradeoff-card` (`ADR-0067`) cùng chuỗi tách nhánh `--detach` khi gộp PR từ `git worktree`.
+
+---
+
+## 60. Chuyển Dịch Hàng Loạt 13 Ứng Viên Thượng Nguồn (`PR #721`..`#724`), Chính Sách `COMMERCIAL_LICENSED` Clean-Room Guard & Biên Dịch Tri Thức Tier 2A Cho NotebookLM (`PR #725`)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-11..12 — Hub `PR #721`..`#725`; Grok Session `1388f962`)
+1. **Xử Lý Bản Quyền Thương Mại Đã Mua (`claudekit-marketing`, `claudekit-engineer`) Trên Kho `PUBLIC` & Ô Nhiễm Cache v1 Hậu Kẹp**:
+   - Trước `PR #721`, `classify_license_posture()` trong `scripts/spoke/_upstream_helpers.py` gán nhãn `PROPRIETARY_OR_CUSTOM` và kẹp điểm xuống `2.9` cho mọi kho thương mại chưa có cờ cấp phép, đồng thời lưu điểm đã kẹp (`2.9`) vào `.md/scratch/upstream_eval_cache.json` nên kể cả khi bật cờ bản quyền thì cache cũ vẫn khóa chết kết quả đánh giá.
+   - Do `ccba-agent-platform` mang chế độ hiển thị `PUBLIC` trên GitHub, việc mua bản quyền thương mại cho phép tiếp thu kiến trúc và phương pháp luận nội bộ nhưng nghiêm cấm sao chép nguyên văn câu chữ hoặc nhận diện thương hiệu của bên cấp phép lên kho công khai.
+2. **Đường Dẫn Tương Đối Kịch Bản Trong `references/*.md`, Lệch `ruff format` CI & Khoảng Trống Tier 2A Trong `skills_compiled.md`**:
+   - Bên trong `.agents/skills/<skill>/references/*.md`, bộ kiểm thử `test_workflow_script_parity.py` phân giải đường dẫn code-span tương đối tính từ thư mục `references/` hoặc gốc Hub, nên cú pháp trần `scripts/ui/search.py` gây lỗi parity; ngoài ra `.venv` cục bộ chạy bản `ruff` cũ hơn `ruff 0.17.4` trên GitHub Actions CI.
+   - Trình biên dịch `scripts/spoke/compile_knowledge.py` trước đó chỉ gộp `SKILL.md` (`~115K` từ) mà bỏ sót toàn bộ tài liệu chuyên sâu Tier 2A `references/**/*.md` (`~142K` từ), làm giảm chiều sâu ngữ cảnh khi đồng bộ lên Google NotebookLM (`notebooklm-sync.yml`).
+
+### Key Architectural Invariants & Learned Rules (`RULE-2.4`, `RULE-2.20`, `RULE-4.18`)
+1. **Chính Sách `COMMERCIAL_LICENSED`, Khóa Cache Tiền Kẹp `v2:` & Rào Chắn Clean-Room 8-Gram (`RULE-4.18`)**:
+   - Bổ sung trạng thái `COMMERCIAL_LICENSED` khi `licensed_use: true` trong `.md/knowledge/upstream_sources.yaml`, tách khóa cache tiền kẹp `v2:<repo>:<sha>:<rel_path>` kèm tiện ích dọn cache `purge_legacy_clamped_cache()`, và chuẩn hóa đối xứng `sources[].name <-> sources[].type` cùng `<repo> (corpus) -> "."` trong `--prune-stale`.
+   - Khóa cứng bài kiểm thử `test_clean_room_commercial_derivatives_guard` trong `tests/governance/test_skills_docs_integrity.py` để chặn mọi chuỗi trùng khớp nguyên văn $\ge 8$ từ liên tiếp và mọi token thương hiệu ngoại lai trên các tài liệu kế thừa phương pháp luận thương mại; hoàn tất chuyển dịch 13/13 mục thượng nguồn qua 6 tệp Tier 2A `references/*.md` và 2 bản nâng cấp tại chỗ (`ccba-codebase-design` `v1.4.0`, `ccba-handoff` `v2.2.0`, `ccba-design` `v2.6.0`, `ccba-web-testing` `v3.1.0`, `ccba-copywriting` `v1.2.0`), giữ nguyên trần `76` Hub Skills.
+2. **Chuẩn Đường Dẫn `../scripts/` Trong `references/*.md`, Đồng Bộ `uvx ruff format` & Biên Dịch Tier 2A `compile_skills` (`RULE-2.4`, `RULE-2.20`, `RULE-4.18`)**:
+   - Mọi tham chiếu script bên trong `.agents/skills/<skill>/references/*.md` bắt buộc dùng `../scripts/...` hoặc `.agents/skills/<skill>/scripts/...`; luôn định dạng mã Python bằng `uvx ruff format` để khớp tuyệt đối với `ruff 0.17.4` trên CI.
+   - Mở rộng `compile_skills(..., include_references=True)` trong `scripts/spoke/compile_knowledge.py` (sắp xếp tất định theo đường dẫn tương đối POSIX) để biên dịch trọn vẹn cả `SKILL.md` lẫn `references/**/*.md` vào `.md/knowledge/skills_compiled.md` (`~257K` từ, dưới ngưỡng `500K` từ/nguồn của Google NotebookLM).
