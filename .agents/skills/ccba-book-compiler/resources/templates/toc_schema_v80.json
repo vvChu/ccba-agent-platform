@@ -1,0 +1,15 @@
+{
+  "book_title_vi": "Tiêu đề tiếng Việt của sách",
+  "book_title_original": "Original Title in English",
+  "author": "Tên Tác Giả",
+  "chapters": [
+    {
+      "chapter_num": 1,
+      "title_vi": "Tên chương 1 dịch nghĩa tiếng Việt",
+      "title_original": "Original Chapter 1 Title",
+      "epub_file": "01_Ch1.md",
+      "page_start": 1,
+      "page_end": 20
+    }
+  ]
+}
