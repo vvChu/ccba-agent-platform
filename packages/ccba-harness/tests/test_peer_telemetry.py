@@ -992,6 +992,55 @@ def test_auto_discover_blocks_cross_phase_plan_to_code_across_tiers(tmp_path):
     )
     assert opts_aec2["resume_session_id"] == "sess-floor-code-1"
 
+    # 5. Same-phase Code Pass 2 (`arch_audit` -> `signoff_diff`) auto-resumes prior code session,
+    # even if prior `arch_audit` prompt kept copied `request_type: plan` (`p_impl` above)
+    v_impl1 = PeerVerdictBlock(
+        request_id="req-20261112-impl-compiler-001",
+        verdict="APPROVE_WITH_CONDITIONS",
+        summary="Fix one edge case",
+        telemetry=PeerVerdictTelemetry(session_id="sess-code-p1", primary_model="grok-4.7"),
+    )
+    (tmp_path / "grok_compiler_impl_audit.md").write_text(
+        render_verdict_header(v_impl1) + "\n# Code P1", encoding="utf-8"
+    )
+    p_code_s2 = PeerPromptEnvelope(
+        request_id="req-20261112-impl-compiler-002-signoff",
+        from_agent="antigravity",
+        to_agent="grok",
+        request_type="verify",
+        profile="signoff_diff",
+        subject="Code signoff",
+        timestamp="2026-11-12T11:25:00+07:00",
+        target_files=shared_files,
+        output_path="grok_compiler_impl_signoff.md",
+    )
+    p_cs2_path = tmp_path / "prompt_grok_compiler_impl_signoff.md"
+    p_cs2_path.write_text(render_prompt_header(p_code_s2) + "Delta", encoding="utf-8")
+    opts_code_s2 = _resolve_grok_profile_options(
+        PROFILE_SPECS["signoff_diff"],
+        p_code_s2,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_cs2_path,
+        effective_profile="signoff_diff",
+    )
+    assert opts_code_s2["resume_session_id"] == "sess-code-p1"
+    opts_code_rev2 = _resolve_grok_profile_options(
+        PROFILE_SPECS["code_review"],
+        p_code_s2,
+        None,
+        None,
+        False,
+        None,
+        None,
+        p_cs2_path,
+        effective_profile="code_review",
+    )
+    assert opts_code_rev2["resume_session_id"] == "sess-code-p1"
+
 
 def test_response_grok_prefix_ttl_bound_and_overwritten_telemetry_merge(tmp_path):
     """Verifies response_grok_*.md recognition, 12h auto-resume TTL cap, and overwritten telemetry merge."""
