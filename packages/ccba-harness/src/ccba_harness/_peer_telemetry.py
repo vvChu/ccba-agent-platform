@@ -491,9 +491,11 @@ def _is_prior_plan_session(prior_env: Any, verdict: Any, verdict_name: str) -> b
     p_prof = getattr(prior_env, "profile", None) if prior_env is not None else None
     p_req = getattr(prior_env, "request_type", None) if prior_env is not None else None
     v_type = getattr(verdict, "verdict", None)
-    if p_prof in _PLAN_AUDIT_PROFILES or p_req == "plan":
+    if v_type in ("APPROVE_PLAN", "REVISE_PLAN", "REJECT_PLAN") or p_prof in _PLAN_AUDIT_PROFILES:
         return True
-    if v_type in ("APPROVE_PLAN", "REVISE_PLAN", "REJECT_PLAN"):
+    if p_prof in _CODE_AUDIT_PROFILES:
+        return False
+    if p_req == "plan":
         return True
     has_tok = _has_plan_phase_token(verdict_name, str(getattr(verdict, "request_id", "") or ""))
     if p_req == "discuss" or v_type in ("FINAL_ACCEPT", "APPROVE_WITH_CONDITIONS", "APPROVE"):
