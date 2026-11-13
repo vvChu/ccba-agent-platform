@@ -30,22 +30,23 @@ def test_model_archetype_constants() -> None:
 
 
 def test_choose_model_routing() -> None:
-    """Verify choose_model maps task types to correct model aliases."""
-    assert choose_model("ocr") == ModelArchetype.OCR
-    assert choose_model("coding") == ModelArchetype.STANDARD
-    assert choose_model("reasoning") == ModelArchetype.REASONING
-    assert choose_model("audit") == ModelArchetype.REASONING
-    assert choose_model("legal") == ModelArchetype.REASONING
-    assert choose_model("private") == ModelArchetype.LOCAL
-    assert choose_model("rag") == ModelArchetype.RAG
-    assert choose_model("synthesis") == ModelArchetype.CLAUDE_OPUS_46
-    assert choose_model("deep_reasoning") == ModelArchetype.CLAUDE_OPUS_46
+    """Verify choose_model maps task types to canonical virtual capability tiers."""
+    assert choose_model("ocr") == ModelArchetype.TIER_OCR
+    assert choose_model("coding") == ModelArchetype.TIER_FAST
+    assert choose_model("reasoning") == ModelArchetype.TIER_REASONING
+    assert choose_model("audit") == ModelArchetype.TIER_REASONING
+    assert choose_model("legal") == ModelArchetype.TIER_REASONING
+    assert choose_model("private") == ModelArchetype.TIER_LOCAL
+    assert choose_model("rag") == ModelArchetype.TIER_LOCAL
+    assert choose_model("synthesis") == ModelArchetype.TIER_REASONING
+    assert choose_model("deep_reasoning") == ModelArchetype.TIER_REASONING
+    assert choose_model("embedding") == "embedding-default"
 
 
 def test_choose_model_fallback() -> None:
-    """Verify unknown task type falls back to standard general model."""
-    assert choose_model("unknown-task-type") == ModelArchetype.STANDARD
-    assert choose_model("") == ModelArchetype.STANDARD
+    """Verify unknown task type falls back to tier-fast."""
+    assert choose_model("unknown-task-type") == ModelArchetype.TIER_FAST
+    assert choose_model("") == ModelArchetype.TIER_FAST
 
 
 def test_is_reasoning_model() -> None:

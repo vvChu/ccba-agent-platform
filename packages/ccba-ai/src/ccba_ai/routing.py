@@ -64,24 +64,24 @@ def choose_model(task_type: str) -> str:
         The target model name alias on AI Gateway.
     """
     routing = {
-        "ocr": ModelArchetype.OCR,
-        "vision": ModelArchetype.STANDARD,
-        "coding": ModelArchetype.STANDARD,
-        "general": ModelArchetype.STANDARD,
-        "fast": ModelArchetype.STANDARD,
-        "reasoning": ModelArchetype.REASONING,
-        "audit": ModelArchetype.REASONING,
-        "research": ModelArchetype.REASONING,
-        "legal": ModelArchetype.REASONING,
-        "synthesis": ModelArchetype.CLAUDE_OPUS_46,
-        "deep_reasoning": ModelArchetype.CLAUDE_OPUS_46,
-        "private": ModelArchetype.LOCAL,
-        "local": ModelArchetype.LOCAL,
-        "rag": ModelArchetype.RAG,
-        "vietnamese": ModelArchetype.LOCAL,
-        "embedding": ModelArchetype.EMBEDDING,
+        "ocr": ModelArchetype.TIER_OCR,
+        "vision": ModelArchetype.TIER_FAST,
+        "coding": ModelArchetype.TIER_FAST,
+        "general": ModelArchetype.TIER_FAST,
+        "fast": ModelArchetype.TIER_FAST,
+        "reasoning": ModelArchetype.TIER_REASONING,
+        "audit": ModelArchetype.TIER_REASONING,
+        "research": ModelArchetype.TIER_REASONING,
+        "legal": ModelArchetype.TIER_REASONING,
+        "synthesis": ModelArchetype.TIER_REASONING,
+        "deep_reasoning": ModelArchetype.TIER_REASONING,
+        "private": ModelArchetype.TIER_LOCAL,
+        "local": ModelArchetype.TIER_LOCAL,
+        "rag": ModelArchetype.TIER_LOCAL,
+        "vietnamese": ModelArchetype.TIER_LOCAL,
+        "embedding": "embedding-default",
     }
-    return routing.get(task_type.lower().strip(), ModelArchetype.STANDARD)
+    return routing.get(task_type.lower().strip(), ModelArchetype.TIER_FAST)
 
 
 def is_reasoning_model(model_name: str) -> bool:
