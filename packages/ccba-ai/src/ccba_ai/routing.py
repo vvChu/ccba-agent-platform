@@ -19,8 +19,8 @@ class ModelArchetype:
     TIER_OCR = "tier-ocr"
 
     # Archetype 2: Standard General / Coding (Google API + Centralized Proxy)
-    STANDARD = "gemini-3.7-flash"
-    STANDARD_MEDIUM = "gemini-3.7-flash-medium"
+    STANDARD = "gemini-3.8-flash"
+    STANDARD_MEDIUM = "gemini-3.8-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
     GEMINI_38_FLASH = "gemini-3.8-flash"
     GEMINI_4_ARGON = "gemini-4-argon"
@@ -31,7 +31,7 @@ class ModelArchetype:
     TIER_FAST = "tier-fast"
 
     # Archetype 3: Deep Reasoning / Complex Audit (Google API + Centralized Proxy)
-    REASONING = "gemini-3.7-flash-high"
+    REASONING = "gemini-3.8-flash-high"
     REASONING_ALT = "claude-sonnet-4-6-thinking"
     REASONING_GEMMA = "reasoning-gemma"
     GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
