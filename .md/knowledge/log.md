@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-14] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Định Tuyến 3 Tầng `run_workflow` & `swarm` Scratch, Rào Chắn Worktree Non-`main`, Sửa Schema `allow_auto_merge` & Chờ CI Phân Tầng (`RULE-2.4`, `RULE-4.2`, `RULE-4.21`, `RULE-5.11`, Mục 62)
+- **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok 4.7 (`PR #740` Session ID: `e7914d2b-eff1-476e-8b0b-7ddaded55461` `APPROVE`, `0` blocking conditions)
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
+- **Summary**: Chắt lọc tri thức thực chiến từ `Issue #739` (`PR #740` `0c3d2f16`, `PR #741` `5676c30b`) và khai thác telemetry/logs (`492` bước, `26.93M` tokens, `1` bản eval `test_ccba_release_feature_mined_01`) vào `RULE-2.4`, `RULE-4.2`, `RULE-4.21`, `RULE-5.11` (lưu trữ `Mục 62` lịch sử, giữ `session_learnings.md <= 10.0 KB`), đồng thời tiến hóa `/ccba-release-feature` (`v1.3.5` — thay `gh repo view --json autoMergeAllowed` lỗi schema bằng `gh api repos/{owner}/{repo} --jq .allow_auto_merge`, chuẩn hóa cô lập `git worktree` + `fetch --prune origin main:main` khi root đứng ở nhánh `!= main`, khóa độ sâu `../../../` cho `reports/walkthrough.md`), `/ccba-create-pr` (`v1.3.3` — chuẩn hóa theo dõi CI bằng `gh pr checks --watch` hoặc `schedule` phân tầng `240s` $\to$ `60s`, ghi nhận template `.github/pull_request_template.md` chữ thường) và neo lại `verify-ccba-create-pr` (`v1.0.3`).
+
+---
+
 ## [2026-11-12] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Neo Baseline `triage_ledger` Cho Kho Đã Tiếp Thu (`pstack` `97de40dc`), Vệ Sinh `SAFE_STRINGS` Maskara & Tiến Hóa `/ccba-release-feature` (`v1.3.4`), `/ccba-sync-upstream` (`v1.1.2`) (`RULE-1.23`, `RULE-2.20`, `RULE-4.18`, Mục 61)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-sync-upstream/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
