@@ -24,7 +24,7 @@ triggers:
 - brainstorm
 metadata:
   author: CCBA
-  version: "1.2.1"
+  version: "1.3.0"
 ---
 
 # Bản đồ Định hướng Kỹ năng & Điều phối Tư duy Nền tảng (CCBA Ask & Brainstorm Guide)
@@ -72,6 +72,7 @@ Khi người dùng gọi `/ccba-ask`, Agent **BẮT BUỘC** nhận diện ý đ
 4. **Triển khai lập trình (Coding & Multi-Agent Execution):**
    - Mở cửa sổ Agent sạch và chạy [`/ccba-implement`](../ccba-implement/SKILL.md) (hoặc [`/ccba-tdd`](../ccba-tdd/SKILL.md)) cho từng ticket độc lập.
    - Với dự án lớn đa gói/đa bộ môn cần chạy song song trên các nhánh cô lập: Triệu hồi [`/ccba-teamwork`](../ccba-teamwork/SKILL.md).
+   - Định tuyến mức độ ủy quyền tác nhân (`invoke_subagent` đơn lẻ, `run_workflow` khảo sát đọc theo lô, hoặc [`/ccba-teamwork`](../ccba-teamwork/SKILL.md)) theo **Ma trận Định tuyến Ủy quyền 3 Cấp** bên dưới.
 5. **Kiểm soát chất lượng & Cổng Kiểm định Tự động (QC & Deterministic Verification):**
    - Với mã nguồn/kỹ năng: Chạy [`/ccba-eval-gate`](../ccba-eval-gate/SKILL.md) (hoặc `python -m ccba_harness verify-patch`).
    - Với hồ sơ thiết kế xây dựng đa bộ môn: Chạy [`/ccba-ai-qc`](../ccba-ai-qc/SKILL.md) và [`/ccba-ai-qc-pccc-audit`](../ccba-ai-qc-pccc-audit/SKILL.md).
@@ -91,6 +92,16 @@ Khi người dùng gọi `/ccba-ask`, Agent **BẮT BUỘC** nhận diện ý đ
 *   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng [`/ccba-diagnosing-bugs`](../ccba-diagnosing-bugs/SKILL.md) để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
 *   **Upkeep kiến trúc hệ thống:** Chạy [`/ccba-codebase-design`](../ccba-codebase-design/SKILL.md) để phát hiện các module nông và deepening cấu trúc code.
 *   **Không gian học tập & Đào tạo:** Chạy [`/ccba-seminar-builder`](../ccba-seminar-builder/SKILL.md) để khởi động không gian bài giảng/nghiên cứu trong thư mục `.md/teach/`.
+
+---
+
+## 🔀 Ma trận Định tuyến Ủy quyền 3 Cấp (3-Tier Delegation Matrix)
+
+Khi tác vụ cần phối hợp tác nhân phụ, định tuyến theo 3 cấp tăng dần sau:
+
+1. **Cấp 1 — `invoke_subagent` (Đơn lẻ / Kiểm chứng cục bộ):** Dùng cho 1–2 tác vụ đọc hoặc kiểm thử cô lập theo `ADR-0035` (`depth limit = 1`, không khởi tạo subagent lồng nhau); giữ mặc định `Model="inherit"` trừ khi người dùng chủ động yêu cầu model khác.
+2. **Cấp 2 — `run_workflow` (Khảo sát Chỉ Đọc Theo Lô — Progressive Enhancement):** Chỉ kích hoạt tùy chọn khi cần rà soát diện rộng $> 3$ mục độc lập trên môi trường có công cụ `run_workflow`. **Khóa an toàn bắt buộc:** mọi lời gọi `agent(...)` phải truyền tường minh `type_name="research"` ngay tại constructor (cấm để mặc định `type_name="self"`) và `workspace="inherit"` (cấm `workspace="branch"`), chỉ sử dụng đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth limit = 1` (chạy test cô lập chỉ thuộc `Success Auditor` / bước xác minh kiểm thử), chia lô `parallel` tối đa **3 tác nhân/lô** bọc tuần tự trong `pipeline`, **mọi nhánh `parallel` bắt buộc gọi `finish` khi hoàn tất** (1 nhánh lỗi hoặc thiếu `finish` sẽ hủy toàn bộ lô), cho phép gán `model="flash"` hoặc `"flash_lite"` cho bước quét bề mặt; trên các nền tảng khác (Claude Code, Cursor, CLI), lùi về `invoke_subagent` (tối đa 2 song song) hoặc Python CLI.
+3. **Cấp 3 — [`/ccba-teamwork`](../ccba-teamwork/SKILL.md) (Thực thi Sửa Mã Nguồn Đa Seam):** Mọi tác vụ sinh thay đổi mã nguồn phải điều phối qua [`/ccba-teamwork`](../ccba-teamwork/SKILL.md) (`invoke_subagent` + Single-Writer Engine `apply_worker_patch.py`), giữ nguyên `Model="inherit"` cho Workers sinh patch.
 
 ---
 
