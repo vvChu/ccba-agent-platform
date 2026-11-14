@@ -8,7 +8,7 @@ command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "CCBA Hub"
 triggers:
 - ccba-implement
@@ -52,7 +52,8 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
 ### Bước 2: Thiết lập kiểm thử dẫn dắt (TDD Seam Definition)
 1. Tạo hoặc cập nhật tệp kiểm thử chuyên biệt phản ánh đúng các tiêu chí nghiệm thu của spec.
 2. Viết các ca kiểm thử cho cả trường hợp bình thường (happy path) và các điều kiện biên (edge cases).
-3. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
+3. Khi bổ sung middleware hoặc rate limiter chia sẻ trạng thái cấp module (như HTTP `429` bucket theo IP mặc định `"testclient"` của `TestClient`), bắt buộc đăng ký fixture `autouse=True` trong `conftest.py` xóa sạch `_buckets` giữa các test để ngăn rò rỉ trạng thái chéo.
+4. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
 - **Tiêu chí hoàn thành:** Scoped unit test được viết hoàn tất và ghi nhận trạng thái Red ban đầu.
 
 ### Bước 3: Triển khai mã nguồn tối thiểu (KISS Implementation)
@@ -68,9 +69,9 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
    python -m ccba_harness verify-patch --preset code --target <package_or_dir>
    ```
    *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`. Lưu ý: khi truyền lệnh tùy chỉnh qua `--cmd`, `verify-patch` phân tách bằng `shlex.split` (`shell=False`), nên mọi biến môi trường nội tuyến bắt buộc đi sau tiền tố `env` (ví dụ: `--cmd "env PYTHONPATH=services/rag-service pytest ..."`).*
-2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng.
+2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng. Lưu ý: khi thao tác trên `git worktree` mới tách (chưa có thư mục untracked `node_modules`), các lệnh kiểm thử/build frontend (`npm test`, `npm run build`, `esbuild`) bắt buộc chạy từ workspace gốc đã cài dependencies hoặc sau khi chạy `npm ci`.
 3. Nếu phát hiện lỗi (Exit Code $\ne 0$), kích hoạt vòng lặp Fix Loop để giải quyết triệt để lỗi kiểu và linter.
-- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
+- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` và các cổng kiểm thử frontend/regression liên quan đều trả về **Exit Code 0** (Overall Status: PASS, `0` lỗi `ENOENT node_modules` trên worktree, `0` lỗi rò rỉ HTTP `429` qua `TestClient`). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
 
 ### Bước 5: Kiểm toán kiến trúc và đóng gói (Architecture Audit & Handover)
 1. Kiểm tra xem có thay đổi cấu trúc monorepo hay không (thêm/xóa/đổi tên thư mục, packages, scripts).

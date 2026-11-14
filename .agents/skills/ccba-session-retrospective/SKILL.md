@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.0"
+  version: "1.7.1"
 bundle: _core
 tier: kernel
 triggers:
@@ -198,10 +198,10 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 - **Vượt cổng `simplify_gate` an toàn (Commit Bypass Protocol — RULE-2.10):**
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
-- **Commit & Nộp PR tuân thủ Rào chắn Hub (`RULE-4.21`):**
-  * Tại Spoke cho phép commit trực tiếp: tạo commit với message chuẩn `docs(knowledge): session retrospective ...`.
-  * Tại Hub (`ccba-agent-platform`, nơi `.githooks/pre-push` chặn đẩy trực tiếp lên `main`): tạo nhánh PR riêng (`docs/session-retrospective-...` hoặc `fix/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create -F <body_file> --assignee "@me"`. Nếu nhánh `main` cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, thực thi toàn bộ Bước 2–5 trên một `git worktree` cô lập tách từ `origin/main` (không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận).
-- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked, tài nguyên canonical `.agents/teams/` được bảo toàn), và commit/PR thành công tuân thủ rào chắn `simplify_gate` cùng `pre-push`.
+- **Commit & Nộp PR tuân thủ Rào chắn Nhánh Bảo vệ (`RULE-4.21`):**
+  * Tại Spoke không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
+  * Tại Hub (`ccba-agent-platform`) hoặc Protected Spoke có `.githooks/pre-push` chặn đẩy thẳng lên `main`/`master` (như `dgx-spark-toolkit`): thực thi trên `git worktree` cô lập tách từ `origin/<default_branch>` với nhánh PR riêng (`docs/session-retrospective-...` hoặc `chore/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create --body-file <body_file>` (nếu `gh pr edit`/`merge` gặp lỗi GraphQL `projectCards` thì chuyển sang REST `gh api repos/<owner>/<repo>/issues/<id>/assignees` và `PUT /pulls/<id>/merge`; bỏ `git push origin --delete` nếu repo tự xóa nhánh sau merge). Nếu nhánh gốc cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, tuyệt đối không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận.
+- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status --short --branch` chỉ còn `## <default_branch>...origin/<default_branch>`, `0` tệp untracked/dirty, tài nguyên canonical `.agents/teams/` và `.env` nguyên vẹn), toàn bộ CI checks trên PR đạt `SUCCESS` (Exit Code `0`), và commit/PR hoàn tất tuân thủ `simplify_gate` cùng `pre-push`.
 
 ### Bước 6: Xuất Báo cáo Tóm tắt (Session Retrospective Summary)
 Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
