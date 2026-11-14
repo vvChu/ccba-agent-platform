@@ -335,6 +335,8 @@ skills:
   - writing-great-skills
   - ccba-review-skill
   - review-skill
+  - from-workflow
+  - chưng cất quy trình
   skill_path: .agents/skills/ccba-build-skill/SKILL.md
   command: /ccba-build-skill
   tier: kernel

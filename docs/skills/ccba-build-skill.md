@@ -49,6 +49,8 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `writing-great-skills`
 - `ccba-review-skill`
 - `review-skill`
+- `from-workflow`
+- `chưng cất quy trình`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Tạo khung kỹ năng mới tuân thủ Khung Quyết Định Hai Giai Đoạn (ADR-0057).

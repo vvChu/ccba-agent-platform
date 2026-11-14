@@ -547,13 +547,13 @@ def test_updated_phase1_skills_pass_enforce_gpi() -> None:
 
 
 def test_ccba_build_skill_v110_contractual_invariants() -> None:
-    """Verify ccba-build-skill v1.1.1 and references contain all required contractual tokens from Grok review."""
+    """Verify ccba-build-skill v1.2.0 and references contain all required contractual tokens from Grok review."""
     build_skill_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-build-skill" / "SKILL.md"
     assert build_skill_path.exists()
     content = build_skill_path.read_text(encoding="utf-8")
 
     # Contractual tokens in SKILL.md
-    assert 'version: "1.1.1"' in content
+    assert 'version: "1.2.0"' in content
     assert "CCBA_HUB_PATH" in content
     assert "branch --show-current" in content
     assert 'check_spoke_leakage.py" --root' in content
@@ -583,6 +583,45 @@ def test_ccba_build_skill_v110_contractual_invariants() -> None:
     assert "allow_standalone_skill" in guide_content
     assert "CCBA_HUB_PATH" in guide_content
     assert "eval_<stem>.json" in guide_content
+
+
+def test_ccba_build_skill_v120_workflow_distillation_contract() -> None:
+    """Verify ccba-build-skill v1.2.0 --from-workflow branch and Tier 2A distillation guide."""
+    build_skill_path = PROJECT_ROOT / ".agents" / "skills" / "ccba-build-skill" / "SKILL.md"
+    skill_text = build_skill_path.read_text(encoding="utf-8")
+    for token in (
+        "--from-workflow",
+        "Chế độ C",
+        "references/workflow_distillation_guide.md",
+        "Workflow Distillation Matrix",
+    ):
+        assert token in skill_text, f"Missing v1.2.0 token in SKILL.md: {token!r}"
+
+    distill_ref = (
+        PROJECT_ROOT
+        / ".agents"
+        / "skills"
+        / "ccba-build-skill"
+        / "references"
+        / "workflow_distillation_guide.md"
+    )
+    assert distill_ref.exists()
+    ref_text = distill_ref.read_text(encoding="utf-8")
+    for token in (
+        "Nguồn gốc: Thích ứng từ",
+        "workflow-skill-creator",
+        "Apache-2.0",
+        "../SKILL.md",
+        "Workflow Distillation Matrix",
+        "Strict",
+        "Flexible",
+        "maskara.py",
+        "Tier 1: Package Function / Deep Seam",
+        "--output",
+        "--limit",
+        "eval_<stem>.json",
+    ):
+        assert token in ref_text, f"Missing token in workflow_distillation_guide.md: {token!r}"
 
 
 def test_updated_phase2_skills_pass_enforce_gpi() -> None:
