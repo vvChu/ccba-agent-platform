@@ -52,7 +52,7 @@ def test_map_model_for_tier():
     # Tier 3 CLI (Antigravity)
     assert (
         map_model_for_tier("gemini-3.7-flash", TierType.TIER3_ANTIGRAVITY)
-        == "gemini-3.7-flash-medium"
+        == "gemini-3.8-flash-medium"
     )
     assert (
         map_model_for_tier("gemini-3.7-flash-high", TierType.TIER3_ANTIGRAVITY)
@@ -67,7 +67,7 @@ def test_map_model_for_tier():
     )
     assert map_model_for_tier("gemini-4-argon-medium", TierType.TIER3_COPILOT) == "gpt-5.4-mini"
     assert (
-        map_model_for_tier("gemini-4-argon-low", TierType.TIER1_GATEWAY) == "gemini-3.1-flash-lite"
+        map_model_for_tier("gemini-4-argon-low", TierType.TIER1_GATEWAY) == "gemini-3.8-flash-low"
     )
 
 

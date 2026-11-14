@@ -19,23 +19,33 @@ class ModelArchetype:
     TIER_OCR = "tier-ocr"
 
     # Archetype 2: Standard General / Coding (Google API + Centralized Proxy)
-    STANDARD = "gemini-3.7-flash"
-    STANDARD_MEDIUM = "gemini-3.7-flash-medium"
+    STANDARD = "gemini-3.8-flash"
+    STANDARD_MEDIUM = "gemini-3.8-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
-    GEMINI_38_FLASH = "gemini-3.8-flash"
-    GEMINI_4_ARGON = "gemini-4-argon"
-    GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"
-    GEMINI_4_ARGON_LOW = "gemini-4-argon-low"
+    GEMINI_38_FLASH = "gemini-3.8-flash"  # ccba:allow-raw-model
+    GEMINI_35_FLASH_LITE = "gemini-3.5-flash-lite"  # ccba:allow-raw-model
+    GEMINI_4_ARGON = "gemini-4-argon"  # ccba:allow-raw-model
+    GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"  # ccba:allow-raw-model
+    GEMINI_4_ARGON_LOW = "gemini-4-argon-low"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN = "gemini-4-hydrogen"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_MEDIUM = "gemini-4-hydrogen-medium"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_LOW = "gemini-4-hydrogen-low"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_LOW = "gemini-4-carbon-low"  # ccba:allow-raw-model
     GPT_OSS_120B = "gpt-oss-120b"
     CLAUDE_SONNET_46 = "claude-sonnet-4-6"
     TIER_FAST = "tier-fast"
 
     # Archetype 3: Deep Reasoning / Complex Audit (Google API + Centralized Proxy)
-    REASONING = "gemini-3.7-flash-high"
+    REASONING = "gemini-3.8-flash-high"
     REASONING_ALT = "claude-sonnet-4-6-thinking"
     REASONING_GEMMA = "reasoning-gemma"
     GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
-    GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"
+    GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_HIGH = "gemini-4-hydrogen-high"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_XHIGH = "gemini-4-hydrogen-xhigh"  # ccba:allow-raw-model
+    GEMINI_4_CARBON = "gemini-4-carbon"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_MEDIUM = "gemini-4-carbon-medium"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_HIGH = "gemini-4-carbon-high"  # ccba:allow-raw-model
     CLAUDE_OPUS_46 = "claude-opus-4-6"
     CLAUDE_SONNET_55 = "claude-sonnet-5-5"
     CLAUDE_SONNET_55_HIGH = "claude-sonnet-5-5-high"
@@ -64,24 +74,24 @@ def choose_model(task_type: str) -> str:
         The target model name alias on AI Gateway.
     """
     routing = {
-        "ocr": ModelArchetype.OCR,
-        "vision": ModelArchetype.STANDARD,
-        "coding": ModelArchetype.STANDARD,
-        "general": ModelArchetype.STANDARD,
-        "fast": ModelArchetype.STANDARD,
-        "reasoning": ModelArchetype.REASONING,
-        "audit": ModelArchetype.REASONING,
-        "research": ModelArchetype.REASONING,
-        "legal": ModelArchetype.REASONING,
-        "synthesis": ModelArchetype.CLAUDE_OPUS_46,
-        "deep_reasoning": ModelArchetype.CLAUDE_OPUS_46,
-        "private": ModelArchetype.LOCAL,
-        "local": ModelArchetype.LOCAL,
-        "rag": ModelArchetype.RAG,
-        "vietnamese": ModelArchetype.LOCAL,
-        "embedding": ModelArchetype.EMBEDDING,
+        "ocr": ModelArchetype.TIER_OCR,
+        "vision": ModelArchetype.TIER_FAST,
+        "coding": ModelArchetype.TIER_FAST,
+        "general": ModelArchetype.TIER_FAST,
+        "fast": ModelArchetype.TIER_FAST,
+        "reasoning": ModelArchetype.TIER_REASONING,
+        "audit": ModelArchetype.TIER_REASONING,
+        "research": ModelArchetype.TIER_REASONING,
+        "legal": ModelArchetype.TIER_REASONING,
+        "synthesis": ModelArchetype.TIER_REASONING,
+        "deep_reasoning": ModelArchetype.TIER_REASONING,
+        "private": ModelArchetype.TIER_LOCAL,
+        "local": ModelArchetype.TIER_LOCAL,
+        "rag": ModelArchetype.TIER_LOCAL,
+        "vietnamese": ModelArchetype.TIER_LOCAL,
+        "embedding": "embedding-default",
     }
-    return routing.get(task_type.lower().strip(), ModelArchetype.STANDARD)
+    return routing.get(task_type.lower().strip(), ModelArchetype.TIER_FAST)
 
 
 def is_reasoning_model(model_name: str) -> bool:
@@ -102,8 +112,10 @@ def is_reasoning_model(model_name: str) -> bool:
         kw in name
         for kw in (
             "-high",
+            "-xhigh",
             "-thinking",
             "argon-medium",
+            "carbon-medium",
             "reasoning",
             "o1",
             "o3",

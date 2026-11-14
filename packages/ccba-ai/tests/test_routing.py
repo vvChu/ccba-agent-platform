@@ -8,14 +8,19 @@ def test_model_archetype_constants() -> None:
     assert ModelArchetype.OCR == "ocr-primary"
     assert ModelArchetype.OCR_FALLBACK == "ocr-fallback"
     assert ModelArchetype.OCR_TIER4 == "ocr-tier4"
-    assert ModelArchetype.STANDARD == "gemini-3.7-flash"
-    assert ModelArchetype.STANDARD_MEDIUM == "gemini-3.7-flash-medium"
-    assert ModelArchetype.REASONING == "gemini-3.7-flash-high"
+    assert ModelArchetype.STANDARD == "gemini-3.8-flash"
+    assert ModelArchetype.STANDARD_MEDIUM == "gemini-3.8-flash-medium"
+    assert ModelArchetype.REASONING == "gemini-3.8-flash-high"
     assert ModelArchetype.REASONING_ALT == "claude-sonnet-4-6-thinking"
     assert ModelArchetype.LOCAL == "qwen-local-primary"
     assert ModelArchetype.RAG == "rag-core"
     assert ModelArchetype.CLAUDE_OPUS_46 == "claude-opus-4-6"
+    assert ModelArchetype.GEMINI_35_FLASH_LITE == "gemini-3.5-flash-lite"
     assert ModelArchetype.GEMINI_4_ARGON == "gemini-4-argon"
+    assert ModelArchetype.GEMINI_4_HYDROGEN == "gemini-4-hydrogen"
+    assert ModelArchetype.GEMINI_4_HYDROGEN_XHIGH == "gemini-4-hydrogen-xhigh"
+    assert ModelArchetype.GEMINI_4_CARBON == "gemini-4-carbon"
+    assert ModelArchetype.GEMINI_4_CARBON_HIGH == "gemini-4-carbon-high"
     assert ModelArchetype.GPT_OSS_120B == "gpt-oss-120b"
     assert ModelArchetype.CLAUDE_SONNET_46 == "claude-sonnet-4-6"
     assert ModelArchetype.CLAUDE_SONNET_55 == "claude-sonnet-5-5"
@@ -30,22 +35,23 @@ def test_model_archetype_constants() -> None:
 
 
 def test_choose_model_routing() -> None:
-    """Verify choose_model maps task types to correct model aliases."""
-    assert choose_model("ocr") == ModelArchetype.OCR
-    assert choose_model("coding") == ModelArchetype.STANDARD
-    assert choose_model("reasoning") == ModelArchetype.REASONING
-    assert choose_model("audit") == ModelArchetype.REASONING
-    assert choose_model("legal") == ModelArchetype.REASONING
-    assert choose_model("private") == ModelArchetype.LOCAL
-    assert choose_model("rag") == ModelArchetype.RAG
-    assert choose_model("synthesis") == ModelArchetype.CLAUDE_OPUS_46
-    assert choose_model("deep_reasoning") == ModelArchetype.CLAUDE_OPUS_46
+    """Verify choose_model maps task types to canonical virtual capability tiers."""
+    assert choose_model("ocr") == ModelArchetype.TIER_OCR
+    assert choose_model("coding") == ModelArchetype.TIER_FAST
+    assert choose_model("reasoning") == ModelArchetype.TIER_REASONING
+    assert choose_model("audit") == ModelArchetype.TIER_REASONING
+    assert choose_model("legal") == ModelArchetype.TIER_REASONING
+    assert choose_model("private") == ModelArchetype.TIER_LOCAL
+    assert choose_model("rag") == ModelArchetype.TIER_LOCAL
+    assert choose_model("synthesis") == ModelArchetype.TIER_REASONING
+    assert choose_model("deep_reasoning") == ModelArchetype.TIER_REASONING
+    assert choose_model("embedding") == "embedding-default"
 
 
 def test_choose_model_fallback() -> None:
-    """Verify unknown task type falls back to standard general model."""
-    assert choose_model("unknown-task-type") == ModelArchetype.STANDARD
-    assert choose_model("") == ModelArchetype.STANDARD
+    """Verify unknown task type falls back to tier-fast."""
+    assert choose_model("unknown-task-type") == ModelArchetype.TIER_FAST
+    assert choose_model("") == ModelArchetype.TIER_FAST
 
 
 def test_is_reasoning_model() -> None:
@@ -77,6 +83,9 @@ def test_is_reasoning_model() -> None:
     assert is_reasoning_model("sonnet-5.5-low") is False
     assert is_reasoning_model("gpt-oss-120b") is False
     assert is_reasoning_model("gemini-4-argon-low") is False
+    assert is_reasoning_model("gemini-4-hydrogen-xhigh") is True
+    assert is_reasoning_model("gemini-4-carbon-medium") is True
+    assert is_reasoning_model("gemini-4-hydrogen-low") is False
     assert is_reasoning_model("gemini-3.7-flash") is False
     assert is_reasoning_model("qwen-local-primary") is False
     assert is_reasoning_model("ocr-primary") is False

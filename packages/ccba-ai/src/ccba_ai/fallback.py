@@ -58,7 +58,7 @@ TIER_FALLBACK_MATRIX: dict[str, dict[str, str]] = {
         TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
     },
     "gemini-4-argon-low": {
-        TierType.TIER1_GATEWAY.value: "gemini-3.1-flash-lite",
+        TierType.TIER1_GATEWAY.value: "gemini-3.8-flash-low",
         TierType.TIER2_CLOUD.value: "gemini-2.5-flash",
         TierType.TIER3_COPILOT.value: "gpt-5.4-mini",
     },
@@ -106,7 +106,7 @@ def map_model_for_tier(requested_model: str, tier: TierType, provider_type: str 
     if tier in (TierType.TIER3_ANTIGRAVITY, TierType.TIER3_CLI):
         if req.endswith(("-high", "-medium", "-low", "-thinking")):
             return req
-        return "gemini-3.7-flash-high" if is_high else "gemini-3.7-flash-medium"
+        return "gemini-3.8-flash-high" if is_high else "gemini-3.8-flash-medium"
 
     if tier == TierType.TIER3_COPILOT:
         return "gpt-5.4" if is_high else "gpt-5.4-mini"
