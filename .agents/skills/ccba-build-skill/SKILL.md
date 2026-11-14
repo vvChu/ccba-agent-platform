@@ -13,7 +13,7 @@ bundle: _core
 tier: kernel
 command: /ccba-build-skill
 metadata:
-  version: "1.1.1"
+  version: "1.2.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -25,19 +25,21 @@ triggers:
 - writing-great-skills
 - ccba-review-skill
 - review-skill
+- from-workflow
+- chưng cất quy trình
 ---
 
 # Workflow: Xây Dựng Kỹ Năng & Quy Trình Chuẩn (/ccba-build-skill)
 
 Khi người dùng kích hoạt lệnh này dưới dạng:
-`/ccba-build-skill <danh-sách-nguồn-hoặc-thư-mục> [--name <tên-skill>] [--local]`
+`/ccba-build-skill [<danh-sách-nguồn-hoặc-thư-mục> | --from-workflow] [--name <tên-skill>] [--local]`
 
 Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi tác vụ sau:
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: kiểm tra môi trường Hub vs. Spoke, quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`), nạp nguồn qua Cloud RAG (`notebooklm_rag.v1`) hoặc Local Fallback (`model_routing.v1`), áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI qua `ccba-harness evaluate-gpi --json`, sinh `SKILL.md` và `eval_<stem>.json`, biên dịch `compile_catalog.py`, tự phục hồi lỗi theo Allowlist và kiểm định `verify-patch --preset skill`. Kỹ năng đóng vai trò caller điều phối, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 3 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: kiểm tra môi trường Hub vs. Spoke, quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`), nạp nguồn qua Cloud RAG (`notebooklm_rag.v1`), Local Fallback (`model_routing.v1`) hoặc chưng cất từ phiên làm việc (`--from-workflow`), áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI qua `ccba-harness evaluate-gpi --json`, sinh `SKILL.md` và `eval_<stem>.json`, biên dịch `compile_catalog.py`, tự phục hồi lỗi theo Allowlist và kiểm định `verify-patch --preset skill`. Kỹ năng đóng vai trò caller điều phối, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 4 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`, `references/workflow_distillation_guide.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
 
 ---
 
@@ -54,14 +56,15 @@ Trước khi thực hiện bất kỳ thao tác nào, Agent bắt buộc phải 
 
 ---
 
-## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn Dual-Mode (Per-Source Ingestion)
-- Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video).
-- **Quét bảo mật từng nguồn:** Chạy quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) đối với từng tệp tin cục bộ. Nếu phát hiện rò rỉ bí mật (`findings` khác rỗng) $\rightarrow$ **DỪNG LẠI NGAY** đối với nguồn đó và cảnh báo người dùng.
-- **Định tuyến nguồn theo phân loại bảo mật:**
+## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn Đa Chế Độ (Per-Source Ingestion & Session Distillation)
+- Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video), hoặc kích hoạt chế độ chưng cất phiên làm việc khi có cờ `--from-workflow`.
+- **Quét bảo mật từng nguồn:** Chạy quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) đối với từng tệp tin cục bộ hoặc bản nháp trích xuất từ lịch sử phiên. Nếu phát hiện rò rỉ bí mật (`findings` khác rỗng) $\rightarrow$ **DỪNG LẠI NGAY** đối với nguồn đó và cảnh báo người dùng.
+- **Định tuyến nguồn theo phân loại bảo mật & chế độ:**
   - **Chế độ A (Cloud RAG qua NotebookLM):** Áp dụng cho tài liệu công khai, URL web, video YouTube. Sử dụng Seam `notebooklm_rag.v1` thông qua `python -m ccba_notebooklm`. Nếu gặp các failure modes của cloud (`auth_expired`, `quota_exceeded`, `source_upload_failed`) $\rightarrow$ tự động hạ cấp xuống Chế độ B.
   - **Chế độ B (Local Knowledge Extraction - Fallback):** Áp dụng khi người dùng truyền cờ `--local`, hoặc nguồn là tài liệu mật của dự án không được đưa lên cloud. Sử dụng pipeline xử lý tài liệu sẵn có (`ccba-markdown-document-processing`) và gọi mô hình qua `model_routing.v1` (`from ccba_ai.routing import choose_model`). Cấm viết parser ad-hoc mới.
+  - **Chế độ C (Chưng cất từ Phiên làm việc hoàn thành — `--from-workflow`):** Áp dụng khi người dùng truyền cờ `--from-workflow` hoặc yêu cầu đóng gói chuỗi thao tác vừa thực hiện thành công trong phiên hiện tại (thích ứng từ `workflow-skill-creator`, Apache-2.0). Nạp [`references/workflow_distillation_guide.md`](references/workflow_distillation_guide.md), trích xuất tóm tắt bước thực thi từ ngữ cảnh phiên ra tệp đệm tạm, quét qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) và khử đường dẫn máy cục bộ. Tự điền **Bảng Đối soát Chưng cất (`Workflow Distillation Matrix`)** và phỏng vấn người dùng tối đa **1–2 lượt** để chốt độ cứng từng bước (`Strict` vs `Flexible`), chính sách lỗi (`ask` / `fallback` / `fail-loud`), định tuyến các bước xử lý dữ liệu hoặc API qua Cổng 0 (`Tier 1: Package Function / Deep Seam` kèm quy ước `--output` và `--limit` bắt buộc), và trích xuất ca kiểm thử thực tế cho `eval_<stem>.json`.
   - **Văn bản pháp quy:** Nếu nguồn là văn bản quy phạm pháp luật Việt Nam, chuyển hướng sang `/ccba-legal-ingest` theo ADR-0059.
-- **Tiêu chí hoàn thành:** Toàn bộ nguồn được quét sạch bí mật và nạp an toàn theo đúng phân loại bảo mật.
+- **Tiêu chí hoàn thành:** Toàn bộ nguồn tài liệu hoặc lịch sử phiên (`--from-workflow`) được quét sạch bí mật qua Maskara, nạp đúng phân loại bảo mật và hoàn tất Bảng Đối soát Chưng cất (nếu chạy Chế độ C).
 
 ---
 
@@ -212,3 +215,4 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/skill_authoring_guide.md` | Cẩm nang hướng dẫn kỹ sư biên soạn tệp chỉ dẫn SKILL.md chuẩn mực |
 | `references/skill_review_checklist.md` | Bảng kiểm định chất lượng và tuân thủ thể chế ADR-0057 cho kỹ năng |
 | `references/skill_glossary.md` | Bảng thuật ngữ và quy ước định danh kỹ năng chuẩn mực CCBA |
+| `references/workflow_distillation_guide.md` | Cẩm nang chưng cất phiên làm việc hoàn thành (`--from-workflow`) với bảng đối soát `Workflow Distillation Matrix` và hợp đồng Cổng 0 (`--output`, `--limit`) |

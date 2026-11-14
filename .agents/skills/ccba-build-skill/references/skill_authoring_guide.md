@@ -168,7 +168,7 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 
 ---
 
-## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.1.1)
+## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.2.0)
 
 Để đảm bảo tính nhất quán toàn diện khi tác tạo kỹ năng mới, quy trình `/ccba-build-skill` bắt buộc phải tuân thủ 6 hợp đồng kiến trúc bất biến sau:
 
@@ -178,6 +178,7 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 2. **Định Tuyến Nguồn Theo Phân Loại Bảo Mật (Per-Source Ingestion & Privacy Guard):**
    - Quét `scripts/maskara.py` từng tệp nguồn. Có findings $\rightarrow$ DỪNG nguồn đó.
    - Nguồn công khai $\rightarrow$ Cloud RAG (`notebooklm_rag.v1`). Nguồn mật / nhạy cảm / `--local` $\rightarrow$ Local Fallback qua pipeline tài liệu (`ccba-markdown-document-processing`) và `model_routing.v1` (`choose_model()`).
+   - Chưng cất từ phiên làm việc đã hoàn thành (`--from-workflow`): Nạp [workflow_distillation_guide.md](./workflow_distillation_guide.md) để quét Maskara trên nhật ký trích xuất, chốt bảng đối soát `Workflow Distillation Matrix` qua 1–2 lượt hỏi đáp và áp dụng hợp đồng Cổng 0 (`--output` File-First, `--limit` bắt buộc).
    - Cẩm nang tri thức tạm thời bắt buộc lưu tại buffer `.md/scratch/build-skill/<tên-skill>/summary.md`. CẤM ghi trực tiếp vào `.md/knowledge/` dài hạn của repo trước khi hoàn tất nghiệm thu. Văn bản quy phạm pháp luật chuyển `/ccba-legal-ingest`.
 3. **Cổng Kiến Trúc Định Lượng Bằng JSON CLI Tất Định:**
    - Bắt buộc thực thi: `python -m ccba_harness evaluate-gpi --name <name> --s <S> --k <K> --a <A> --p <P> --json` kèm 4 dòng bằng chứng quan sát được.
