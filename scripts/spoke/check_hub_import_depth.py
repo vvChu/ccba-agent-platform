@@ -417,9 +417,9 @@ def main() -> int:
         target_files = [Path(f) for f in args.files if f.endswith(".py")]
     else:
         root = Path(args.path).resolve()
-        # Scan root .py files + scripts/, src/, tests/
+        # Scan root .py files + scripts/, src/, tools/, tests/
         target_files.extend(sorted(root.glob("*.py")))
-        for scan_dir in [root / "scripts", root / "src", root / "tests"]:
+        for scan_dir in [root / "scripts", root / "src", root / "tools", root / "tests"]:
             if scan_dir.exists():
                 target_files.extend(sorted(scan_dir.rglob("*.py")))
 

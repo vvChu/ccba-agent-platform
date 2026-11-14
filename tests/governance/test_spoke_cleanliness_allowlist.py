@@ -166,3 +166,67 @@ def test_raw_ip_scanner_distinguishes_statutory_clauses_and_multiline_exemptions
     assert len(violations) == 1
     assert violations[0][1] == 7
     assert "203.0.113.25" in violations[0][2]
+
+
+def test_cleanliness_scans_tools_dir_and_ignores_sp_tokens_and_versions(tmp_path: Path) -> None:
+    """Verify tools/ is scanned while SharePoint link tokens and version strings ending in .0 pass."""
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    tools_dir = tmp_path / "tools"
+    tools_dir.mkdir()
+
+    clean_tool = tools_dir / "site_preflight.py"
+    clean_tool.write_text(
+        'TOKENS = ("/:f:/g/", "/:v:/r/")\n'
+        'SCHEMA_VERSION = "15.0.0.0"\n'
+        'SOLUTION_VERSION = "1.0.5.0"\n',
+        encoding="utf-8",
+    )
+    assert check_machine_state_leakage([clean_tool]) == []
+    assert check_raw_ip_leakage([clean_tool]) == []
+
+    exit_code, _ = scan_spoke_cleanliness(tmp_path, max_scripts=15)
+    assert exit_code == 0
+
+    leaking_tool = tools_dir / "bad_tool.py"
+    leaking_tool.write_text('GATEWAY_IP = "203.0.113.42"\n', encoding="utf-8")
+    leak_rc, leak_msgs = scan_spoke_cleanliness(tmp_path, max_scripts=15)
+    assert leak_rc == 1
+    assert any("203.0.113.42" in m for m in leak_msgs)
+
+
+def test_conftest_resolves_safe_pytest_path_dynamically(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify conftest.py suggests scripts/_guardrails/safe_pytest.py on Spokes and scripts/safe_pytest.py on Hub."""
+    import conftest as root_conftest
+
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    class _DummyConfig:
+        def __init__(self, root: Path) -> None:
+            self.rootpath = root
+            self.invocation_params = type("Params", (), {"args": []})()
+
+        def getoption(self, name: str, default: bool = False) -> bool:
+            return default
+
+    # Hub layout: scripts/safe_pytest.py only
+    hub_root = tmp_path / "hub"
+    (hub_root / "scripts").mkdir(parents=True)
+    assert root_conftest.pytest_cmdline_main(_DummyConfig(hub_root)) == 1
+    hub_err = capsys.readouterr().err
+    assert "python scripts/safe_pytest.py -f" in hub_err
+    assert "_guardrails/safe_pytest.py" not in hub_err
+
+    # Spoke layout: scripts/_guardrails/safe_pytest.py present
+    spoke_root = tmp_path / "spoke"
+    guardrails_dir = spoke_root / "scripts" / "_guardrails"
+    guardrails_dir.mkdir(parents=True)
+    (guardrails_dir / "safe_pytest.py").write_text("# wrapper\n", encoding="utf-8")
+    assert root_conftest.pytest_cmdline_main(_DummyConfig(spoke_root)) == 1
+    spoke_err = capsys.readouterr().err
+    assert "python scripts/_guardrails/safe_pytest.py -f" in spoke_err
