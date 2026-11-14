@@ -305,8 +305,9 @@ def check_machine_state_leakage(
                 or "dummy" in stripped
             ):
                 continue
+            sanitized_line = re.sub(r"/?:[a-z]:/[grs]/", "", stripped, flags=re.IGNORECASE)
             for pattern, desc in MACHINE_STATE_LEAK_PATTERNS:
-                if pattern.search(stripped):
+                if pattern.search(sanitized_line):
                     violations.append(
                         (
                             filepath,
@@ -749,6 +750,7 @@ def check_raw_ip_leakage(
                     or ip.is_multicast
                     or ip_str == "255.255.255.255"
                     or ip_str in STANDARD_PUBLIC_DNS
+                    or (ip_str.endswith(".0") and "version" in line[: match.start()].lower())
                     or _is_statutory_clause_match(line, match)
                 ):
                     continue
@@ -765,12 +767,13 @@ def check_raw_ip_leakage(
 
 
 def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
-    """Collects Python source files under scripts/, src/, and .agents/ excluding test/venv/archive folders."""
+    """Collects Python source files under scripts/, src/, tools/, and .agents/ excluding test/venv/archive folders."""
     excluded_parts = (".venv", "venv", "__pycache__", "tests", "archive", "legacy_scripts")
     py_files: list[Path] = []
     scan_roots = (
         scripts_dir,
         spoke_root / "src",
+        spoke_root / "tools",
         spoke_root / ".agents" / "scripts",
         spoke_root / ".agents" / "skills",
     )
