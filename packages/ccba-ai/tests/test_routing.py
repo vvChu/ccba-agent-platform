@@ -15,7 +15,12 @@ def test_model_archetype_constants() -> None:
     assert ModelArchetype.LOCAL == "qwen-local-primary"
     assert ModelArchetype.RAG == "rag-core"
     assert ModelArchetype.CLAUDE_OPUS_46 == "claude-opus-4-6"
+    assert ModelArchetype.GEMINI_35_FLASH_LITE == "gemini-3.5-flash-lite"
     assert ModelArchetype.GEMINI_4_ARGON == "gemini-4-argon"
+    assert ModelArchetype.GEMINI_4_HYDROGEN == "gemini-4-hydrogen"
+    assert ModelArchetype.GEMINI_4_HYDROGEN_XHIGH == "gemini-4-hydrogen-xhigh"
+    assert ModelArchetype.GEMINI_4_CARBON == "gemini-4-carbon"
+    assert ModelArchetype.GEMINI_4_CARBON_HIGH == "gemini-4-carbon-high"
     assert ModelArchetype.GPT_OSS_120B == "gpt-oss-120b"
     assert ModelArchetype.CLAUDE_SONNET_46 == "claude-sonnet-4-6"
     assert ModelArchetype.CLAUDE_SONNET_55 == "claude-sonnet-5-5"
@@ -78,6 +83,9 @@ def test_is_reasoning_model() -> None:
     assert is_reasoning_model("sonnet-5.5-low") is False
     assert is_reasoning_model("gpt-oss-120b") is False
     assert is_reasoning_model("gemini-4-argon-low") is False
+    assert is_reasoning_model("gemini-4-hydrogen-xhigh") is True
+    assert is_reasoning_model("gemini-4-carbon-medium") is True
+    assert is_reasoning_model("gemini-4-hydrogen-low") is False
     assert is_reasoning_model("gemini-3.7-flash") is False
     assert is_reasoning_model("qwen-local-primary") is False
     assert is_reasoning_model("ocr-primary") is False

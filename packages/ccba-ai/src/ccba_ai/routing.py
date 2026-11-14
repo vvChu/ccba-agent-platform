@@ -22,10 +22,15 @@ class ModelArchetype:
     STANDARD = "gemini-3.8-flash"
     STANDARD_MEDIUM = "gemini-3.8-flash-medium"
     STANDARD_TEXT_GEMMA = "text-gemma"
-    GEMINI_38_FLASH = "gemini-3.8-flash"
-    GEMINI_4_ARGON = "gemini-4-argon"
-    GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"
-    GEMINI_4_ARGON_LOW = "gemini-4-argon-low"
+    GEMINI_38_FLASH = "gemini-3.8-flash"  # ccba:allow-raw-model
+    GEMINI_35_FLASH_LITE = "gemini-3.5-flash-lite"  # ccba:allow-raw-model
+    GEMINI_4_ARGON = "gemini-4-argon"  # ccba:allow-raw-model
+    GEMINI_4_ARGON_MEDIUM = "gemini-4-argon-medium"  # ccba:allow-raw-model
+    GEMINI_4_ARGON_LOW = "gemini-4-argon-low"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN = "gemini-4-hydrogen"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_MEDIUM = "gemini-4-hydrogen-medium"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_LOW = "gemini-4-hydrogen-low"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_LOW = "gemini-4-carbon-low"  # ccba:allow-raw-model
     GPT_OSS_120B = "gpt-oss-120b"
     CLAUDE_SONNET_46 = "claude-sonnet-4-6"
     TIER_FAST = "tier-fast"
@@ -35,7 +40,12 @@ class ModelArchetype:
     REASONING_ALT = "claude-sonnet-4-6-thinking"
     REASONING_GEMMA = "reasoning-gemma"
     GEMINI_31_PRO_HIGH = "gemini-3.1-pro-high"
-    GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"
+    GEMINI_4_ARGON_HIGH = "gemini-4-argon-high"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_HIGH = "gemini-4-hydrogen-high"  # ccba:allow-raw-model
+    GEMINI_4_HYDROGEN_XHIGH = "gemini-4-hydrogen-xhigh"  # ccba:allow-raw-model
+    GEMINI_4_CARBON = "gemini-4-carbon"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_MEDIUM = "gemini-4-carbon-medium"  # ccba:allow-raw-model
+    GEMINI_4_CARBON_HIGH = "gemini-4-carbon-high"  # ccba:allow-raw-model
     CLAUDE_OPUS_46 = "claude-opus-4-6"
     CLAUDE_SONNET_55 = "claude-sonnet-5-5"
     CLAUDE_SONNET_55_HIGH = "claude-sonnet-5-5-high"
@@ -102,8 +112,10 @@ def is_reasoning_model(model_name: str) -> bool:
         kw in name
         for kw in (
             "-high",
+            "-xhigh",
             "-thinking",
             "argon-medium",
+            "carbon-medium",
             "reasoning",
             "o1",
             "o3",
