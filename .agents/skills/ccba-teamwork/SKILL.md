@@ -16,7 +16,7 @@ command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 triggers:
 - teamwork
@@ -160,6 +160,13 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Nếu phát hiện **Semantic Conflict** (verification thất bại): Engine tự động rollback 100% snapshot, Orchestrator điều chỉnh logic xung đột.
    - Khi hoàn tất thành công, thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
 
+#### Ranh giới Model Tiering, Read-Only Recon & Khóa Ghi Sandbox Canonical
+- **Carve-out `ADR-0035` cho Patch Workers:** Quy tắc *"không ghi/sửa file"* của `ADR-0035` áp dụng nghiêm ngặt cho tác nhân `research` (read-only); toàn bộ Patch Workers sinh bản vá **bắt buộc dùng `invoke_subagent`** (không chạy qua `run_workflow`), giữ nguyên `Model="inherit"`, vẫn **cấm tuyệt đối sửa cây mã nguồn chính và cấm gọi Git**, và **chỉ được phép ghi duy nhất tệp sandbox canonical `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`**. Orchestrator tiếp tục hợp nhất qua `python scripts/governance/apply_worker_patch.py --patch-dir .system_generated/scratch/teamwork/{project}/` (không trỏ `--patch-dir` sang `.md/scratch/` vì `load_patches_from_directory` quét đệ quy mọi `*.diff`, `*.patch`, `*.txt`, `*.json`).
+- **Khảo sát đọc tiền thực thi (`run_workflow`):** Khi cần rà $> 3$ tệp trước khi phân seam bằng `run_workflow`, bắt buộc truyền tường minh `type_name="research"` ngay tại constructor `agent()` (cấm để mặc định `type_name="self"`) và `workspace="inherit"`, khóa công cụ thành đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth limit = 1`, chia lô `parallel <= 3` bọc trong `pipeline` với mỗi nhánh gọi `finish`, và chỉ cho phép gán `model="flash"` ở bước đọc này; **cấm dùng `workspace="branch"`** để thay thế Single-Writer `apply_worker_patch.py`.
+
+#### Chuẩn hóa Phong Bì Bàn Giao Cấu Trúc Worker (PATCHED | DROPPED | HANDBACK)
+Chuẩn hóa đầu ra kết thúc chủ động của mọi Worker theo 3 trạng thái `PATCHED | DROPPED | HANDBACK` (giữ `INCOMPLETE` khi chạm timeout 10 phút) với **5 khóa chuẩn** cho cả báo cáo văn bản lẫn JSON `schema`: `status`, `checked_files`, `out_of_scope_files`, `patch_path`, và `reason` ($\le 300$ ký tự).
+
 ---
 
 **Tiêu chí hoàn thành:** Các worker hoàn thành nhiệm vụ song song và orchestrator tổng hợp code nguyên tử không xung đột.
@@ -193,6 +200,9 @@ Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
      ```
    - Áp dụng Ma Trận Phân Loại 3 Nhãn (§20.3): `[ADOPT_AS_IS]`, `[ADOPT_ADAPTED]`, `[REBUT_WITH_EVIDENCE]` trước khi chuyển sang bước nghiệm thu.
 6. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
+
+#### Tái Kiểm Ngữ Nghĩa Giữ Ngữ Cảnh Cho Success Auditor (Stateful Auditor Re-Verify)
+`Success Auditor` bắt buộc giữ `Model="inherit"` và `workspace="inherit"`, chỉ kiểm định đọc và chạy kiểm thử cô lập theo `ADR-0035` (**tuyệt đối không tự áp dụng patch**, không sửa mã nguồn và không gọi Git đột biến). Khi xác minh bản vá sửa lỗi sau vòng 1, được phép tái sử dụng đúng phiên hội thoại hiện có của `Success Auditor` qua `send_message` tối đa **1 lượt tái kiểm ngữ nghĩa**.
 
 > [!CAUTION]
 > **Deterministic Hard Completion Lock (ADR-0058)**: Cấm Orchestrator tự nhận hoàn thành nếu bất kỳ bước kiểm định nào ở trên có Exit Code $\ne 0$.

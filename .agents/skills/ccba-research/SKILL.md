@@ -4,7 +4,7 @@ description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc ph
   các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
   Dual-Agent Adversarial).
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 user-invocable: true
 command: /ccba-research
@@ -53,10 +53,10 @@ Kỹ năng này hướng dẫn Agent cách khởi chạy **background subagents*
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)
 
 Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
-1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent` (chế độ Đơn tác nhân hoặc Phản biện Kép).
-2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên.
+1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent` (chế độ Đơn tác nhân hoặc Phản biện Kép) hoặc lô `run_workflow` chỉ đọc khi khảo sát diện rộng $> 3$ mục (Trường hợp D).
+2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên (đã tính gộp tối đa 1 lượt tái kiểm bổ sung của `Risk & Boundary Challenger` nếu có).
 3. Subagent thu thập thông tin trực tiếp từ **các nguồn sơ cấp đáng tin cậy** (tài liệu chính thức, source code dự án, API gốc, VBPL hiện hành) và áp dụng **Kiểm chứng Nguồn tin Chéo (Cross-Reference Validation)**.
-4. Tuân thủ nghiêm ngặt **Two-Layer Sub-Agent Guardrail (ADR 0035)**: Độ sâu `depth_limit = 1`, chỉ cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`), tối đa 2 subagents song song.
+4. Tuân thủ nghiêm ngặt **Two-Layer Sub-Agent Guardrail (ADR 0035)**: Độ sâu `depth_limit = 1` (không gọi subagent lồng nhau), chỉ cấp đúng 3 công cụ đọc (`view_file`, `grep_search`, `read_resource` — không cấp `run_command`, không ghi/sửa file, không gọi Git); tối đa **2 subagents song song** khi gọi `invoke_subagent` (Trường hợp B), hoặc tối đa **3 tác nhân/lô** (`parallel <= 3` bọc trong `pipeline`) khi chạy `run_workflow` chỉ đọc (Trường hợp D).
 5. Kết quả nghiên cứu được xuất ra tệp Markdown theo **Mẫu Báo cáo Kỹ thuật 5 phần chuẩn hóa**, có trích dẫn nguồn (citations) rõ ràng.
 6. Tệp báo cáo được lưu trữ linh hoạt tại:
    - Mặc định: `.md/knowledge/research_and_studies/research-[slug].md`
@@ -101,6 +101,19 @@ Khi chủ đề nghiên cứu liên quan đến việc đánh giá, lựa chọn
    - **Ô 3 — Công cụ Ngách Chuyên ngành / Mới nổi (`FRESH <= 120 ngày`, Stars `< 500` hoặc Commits `< 600`):** Thẩm định sâu mã nguồn và test suite thực tế trước khi kết luận.
    - **Ô 4 — Sản phẩm Ngẫu hứng Bị bỏ rơi (`STALE > 120 ngày` + Commits & Stars thấp):** Bác bỏ sớm (`Fail-Fast`) và tự triển khai theo chuẩn KISS (10–15 dòng code).
    - **Cầu nối Phân tích Chuyên sâu sang `/ccba-xia`:** Khi cần đối sánh kiến trúc song song (side-by-side trade-off analysis) giữa một kho nguồn mở ở Ô 1/Ô 2/Ô 3 với kỹ năng hoặc package sẵn có trên Hub trước khi quyết định port, khuyến nghị chuyển tiếp sang `/ccba-xia <repo> <target> --compare`.
+
+#### Quy tắc Phân tầng Model (Model Tiering)
+- Giữ mặc định `Model="inherit"` và `workspace="inherit"` cho mọi lời gọi `invoke_subagent`, trừ khi người dùng chủ động yêu cầu model khác.
+- **Cấm hạ cấp model** đối với `Risk & Boundary Challenger` ở Pha 2 và bước tổng hợp kiến trúc tại Pha 3.
+
+#### Trường Hợp D — Khảo Sát Đọc Diện Rộng Theo Lô (Batched Read-Only Fan-Out)
+Khi cần khảo sát $> 3$ tài liệu, tệp mã nguồn hoặc góc đối chiếu độc lập:
+- **Môi trường hỗ trợ `run_workflow` (Progressive Enhancement):** Khởi tạo mỗi nhánh qua `agent(..., type_name="research", workspace="inherit", model="flash")` (hoặc `"flash_lite"` cho bước quét bề mặt); **cấm để mặc định `type_name="self"`** và **cấm `workspace="branch"`**.
+- **Khóa công cụ & cấu trúc lô:** Chỉ sử dụng đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth_limit = 1`; chia các tác vụ thành lô `parallel` tối đa **3 tác nhân/lô** bọc tuần tự trong `pipeline` với JSON `schema` cô đọng. **Mọi nhánh `parallel` bắt buộc gọi `finish` khi hoàn tất** (chỉ 1 nhánh lỗi hoặc thiếu `finish` sẽ hủy toàn bộ lô).
+- **Fallback đa nền tảng:** Trên môi trường không có `run_workflow`, lùi về `invoke_subagent` theo từng cặp độc lập (tối đa **2 subagents song song** theo `ADR 0035`).
+
+#### Vòng Lặp Hậu Kiểm Giữ Ngữ Cảnh Có Trần (Stateful Challenger Re-Verify)
+Khi cần xác minh bổ sung phản biện từ `Risk & Boundary Challenger`, được phép nối tiếp đúng phiên hội thoại hiện có (qua `send_message` với `conversationId` hoặc biến `agent()` giữ trạng thái) tối đa **1 lượt tái kiểm bổ sung**, giữ nguyên `Model="inherit"` và `workspace="inherit"`. **Lượt tái kiểm này được tính gộp vào trần Search Budget Cap ($\le 5$ tool calls).**
 
 ---
 

@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.6
+  version: "1.7.0"
 bundle: _core
 tier: kernel
 triggers:
@@ -77,6 +77,17 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
     Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
   * Các phát hiện về công cụ và môi trường được phân loại chuẩn vào **Miền 5 (Windows & Tooling)** hoặc **Miền 2 (Code Quality & Testing)** trong `session_learnings.md`.
+
+#### Khai phá Dấu vết Thực thi Tất định (Trajectory & Transcript Error Mining — ADR-0061)
+Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằng chứng sẵn có và **cấm viết mới bộ phân tích JSONL** trùng lặp với `ccba_harness.telemetry` hoặc `ccba_harness.evals.miner`:
+1. **Đường lọc chính cho lỗi bước công cụ (`status == "ERROR"`):** Đọc trực tiếp `transcript.jsonl` của phiên hiện tại (chỉ tra dòng tương ứng trong `transcript_full.jsonl` khi bước đó có `truncated_fields`, đồng thời đối chiếu cả các bước mang `status == "CLEARED"`).
+2. **Tổng quan định lượng phiên (`tokens`, `tool_counts`, `turns_summary`):** Chạy CLI `python -m ccba_harness telemetry inspect <conversation_id_or_transcript_path> --json` (xuất `SubagentSessionMetrics`, không chứa trường `status` theo từng bước).
+3. **Khai phá lỗi công cụ theo phạm vi phiên:** Khi gọi `scripts/eval/log_eval_miner.py`, **bắt buộc truyền đủ `--log-dir <session_log_dir>`** trỏ tới thư mục log của đúng phiên cùng `--taxonomy TOOL_EXCEPTION --dry-run` để tránh `resolve_log_dir(None)` quét toàn bộ `~/.gemini/antigravity/brain` (lưu ý miner bỏ qua `*_full.jsonl`, còn `--dry-run` ghi nháp an toàn vào `.md/scratch/eval_runs/` thay vì ghi đè `.agents/skills/ccba-eval-gate/test_cases`):
+   ```powershell
+   python scripts/eval/log_eval_miner.py --log-dir <session_log_dir> --taxonomy TOOL_EXCEPTION --dry-run
+   ```
+- *Ghi chú tùy chọn:* Khi đang thực thi sẵn bên trong `run_workflow`, có thể gọi `await trajectory(tools=["run_command"], last=20)` để lọc nhanh trong bộ nhớ; các bước cũ mang `status == "CLEARED"` (`output == None`) vẫn phải đối chiếu qua `transcript.jsonl`.
+
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Miền Kiến Trúc, tuân thủ nghiêm ngặt Tiered Memory Model.
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
