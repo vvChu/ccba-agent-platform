@@ -1361,3 +1361,29 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
 2. **Vệ Sinh `SAFE_STRINGS` Cho Tài Liệu Mẫu & Tiền Kiểm `door-triage` Trên PR `walkthrough.md` (`RULE-1.23`, `RULE-2.20`, `ccba-release-feature` `v1.3.4`)**:
    - Mọi đoạn mã minh họa gán mật khẩu/bí mật trong `.agents/skills/**/references/*.md` bắt buộc sử dụng hằng trong `SAFE_STRINGS` (`'placeholder_password'`, `'placeholder_key'`) để bảo đảm `skills_compiled.md` vượt qua Maskara Gate 100%.
    - Tiến hóa Bước 5 của `/ccba-release-feature` (`v1.3.4`) bổ sung lệnh tiền kiểm `python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card` trước khi mở PR lưu trữ `walkthrough.md`.
+
+---
+
+## 62. Dynamic Workflow 3-Tier Routing, Slash-Regex Backtick Trap, Release Worktree Non-Main Guard & CI Watch Backoff (2026-11-14 — PR #740, PR #741)
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-14 — Hub `Issue #739`, `PR #740`, `PR #741`; Grok Session `e7914d2b`)
+1. **Định tuyến `run_workflow` & Bẫy Đường Dẫn Scratch Trên `swarm` (`Issue #739`, `PR #740` `0c3d2f16`, `COND-739-SCRATCH-PATH`)**:
+   - Khi triển khai 3-tier orchestration cho `ccba-teamwork`, `ccba-research` và `ccba-implement`, bản kế hoạch ban đầu ghi sai thư mục patch trung gian của `swarm` là `.md/scratch/`, xung đột trực tiếp với contract đọc thực tế của `apply_worker_patch.py` tại `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`.
+   - Trong `SKILL.md` (`ccba-research`), cụm `` `research`/read-only `` kích hoạt false-positive `[UNREGISTERED_SLASH_COMMAND] /read-only` tại `validate_skills.py` (`SLASH_CMD_RE`), và việc thêm tham chiếu `ADR-XXXX` chưa chạy `scripts/sync_hub_adr_matrix.py` khiến `verify-patch --preset skill` thất bại.
+2. **Lỗi Schema `gh repo view --json autoMergeAllowed` (`step_index: 395`), Hoa-Thường Template Linux (`step_index: 299`) & Đốt Token Khi Chờ CI (`11` x `60s` `schedule`)**:
+   - Bước 1.6 trong `ccba-release-feature` gọi `gh repo view --json autoMergeAllowed`, bị `gh` CLI v2+ từ chối (`exit 1`: `Unknown JSON field: "autoMergeAllowed"`). Đọc `.github/PULL_REQUEST_TEMPLATE.md` thất bại trên Linux phân biệt hoa-thường vì tệp thực tế là `.github/pull_request_template.md`.
+   - Khi đồng hành CI trên `PR #740` và `PR #741`, ma trận Python Hub mất `~6m30s–7m20s`, nhưng đặt `schedule(DurationSeconds=60)` ngay từ đầu kích hoạt 11 lần đánh thức tuần tự, tiêu tốn `~2.4M` prompt tokens và kích hoạt `[plan review due]` giữa lúc chờ CI. Ngoài ra, gọi thêm tool call khác trong cùng lượt với `schedule` gây lỗi hàm rỗng.
+3. **Cô Lập Worktree Khi Thư Mục Gốc Đứng Ở Nhánh Đồng Đẳng `!= main` & Tác Dụng Phụ `compile_knowledge.py` (`PR #741` `5676c30b`)**:
+   - Thư mục gốc đang checkout nhánh song song `chore/ccba-ai-sync-gemini-38` (`ahead 3`) khiến lệnh `git checkout main` trực tiếp bị cấm; mọi thao tác `/ccba-release-feature` và `/ccba-session-retrospective` đều phải chạy trong `git worktree` tách từ `origin/main` và đồng bộ `refs/heads/main` không chạm working tree qua `git fetch --prune origin main:main`.
+   - Liên kết từ `.md/knowledge/reports/walkthrough.md` lên gốc repo đòi lùi 3 cấp `../../../` (`validate_docs.py`). Đồng thời `scripts/spoke/compile_knowledge.py` không hỗ trợ `argparse`, nên chạy `--help` vẫn ghi đè `.md/knowledge/skills_compiled.md`.
+
+### Key Architectural Invariants & Learned Rules (`RULE-2.4`, `RULE-4.2`, `RULE-4.21`, `RULE-5.11`)
+1. **3-Tier Orchestration & `swarm` Scratch SSOT (`RULE-4.21`)**:
+   - Định tuyến nhất quán: `<= 2` nhánh dùng `invoke_subagent`; `>= 3` nhánh read-only dùng `run_workflow` (`parallel`/`pipeline`/`phase`, `research` subagent); multi-file write dùng `swarm` xuất unified diff vào `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt` rồi gộp tuần tự qua `apply_worker_patch.py`.
+2. **`SLASH_CMD_RE` & Ma Trận ADR (`RULE-4.2`)**:
+   - Cấm viết `/<word>` sát sau dấu backtick hoặc khoảng trắng trong prose `SKILL.md` (viết `` `research` (read-only) `` thay vì `` `research`/read-only ``); luôn chạy `scripts/sync_hub_adr_matrix.py` khi bổ sung `ADR-XXXX`.
+3. **GitHub REST `allow_auto_merge`, Template Chữ Thường & Chờ CI Tiết Kiệm Token (`RULE-5.11`, `ccba-release-feature` `v1.3.5`, `ccba-create-pr` `v1.3.3`)**:
+   - Kiểm tra auto-merge qua REST `gh api repos/{owner}/{repo} --jq .allow_auto_merge` (cấm `--json autoMergeAllowed`); đọc `.github/pull_request_template.md` chữ thường.
+   - Ưu tiên `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`, 1 Reactive Wakeup) hoặc `schedule` phân tầng `240s` lần đầu $\to$ `60s` pha đuôi; tuyệt đối không phát sinh tool call khác trong cùng lượt với `schedule`.
+4. **Cô Lập `git worktree` Khi Root `!= main` & Depth `../../../` (`RULE-2.4`, `RULE-4.21`)**:
+   - Bắt buộc dùng `git worktree` từ `origin/main` và `git fetch --prune origin main:main` bất cứ khi nào root `branch != main` hoặc `main` `ahead > 0`; mọi liên kết repo-root trong `.md/knowledge/reports/walkthrough.md` dùng `../../../` (`RULE-2.4`) và phải qua `! grep -E "file:///"`.

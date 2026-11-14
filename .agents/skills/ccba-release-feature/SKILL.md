@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.4"
+  version: "1.3.5"
   author: "CCBA Hub"
 triggers:
 - release
@@ -48,7 +48,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
         ```bash
         git branch --show-current
         ```
-   - *Rào chắn Cô lập `git worktree` khi `main` cục bộ có phiên song song (`RULE-4.21`):* Nếu nhánh `main` trên thư mục làm việc chính đang chứa các commit chưa đẩy của phiên đồng đẳng (`ahead > 0`), nghiêm cấm chạy `git checkout` hoặc `git pull` trực tiếp trên thư mục gốc. Agent khởi tạo một `git worktree` tạm thời tách từ `origin/main` (hoặc nhánh PR cần phát hành) trong thư mục scratch để chạy trọn vẹn Cổng 0.1–0.3, Bước 1–3 và gỡ bỏ worktree tạm (`git worktree remove <path> && git worktree prune`) **trước** khi gọi `gh pr merge --squash --delete-branch` (hoặc chạy bù `git push origin --delete [feature_branch_name]` nếu gộp ở trạng thái detached HEAD).
+   - *Rào chắn Cô lập `git worktree` khi thư mục gốc đang ở nhánh khác hoặc `main` có phiên song song (`RULE-4.21`):* Bất cứ khi nào thư mục làm việc gốc đang đứng trên nhánh đồng đẳng khác `main` (`git branch --show-current != main`) **HOẶC** nhánh `main` cục bộ có commit chưa đẩy (`ahead > 0`), nghiêm cấm chạy `git checkout` hoặc `git pull` trực tiếp trên thư mục gốc. Agent bắt buộc khởi tạo một `git worktree` cô lập tách từ `origin/main` (hoặc nhánh PR cần phát hành) để chạy trọn vẹn Cổng 0.1–0.3, Bước 1–3 và gỡ bỏ worktree tạm (`git worktree remove <path> && git worktree prune`) **trước** khi gọi `gh pr merge --squash --delete-branch` (hoặc tách HEAD `git -C <worktree_path> checkout --detach` rồi chạy `gh pr merge --squash && git push origin --delete [feature_branch_name]`), sau đó đồng bộ `refs/heads/main` không chạm working tree bằng `git fetch --prune origin main:main`.
 
 2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Tại Hub Platform (`ccba-agent-platform`):**
@@ -132,21 +132,21 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      gh pr merge --squash --delete-branch
      ```
    - *Cơ chế Xử lý Linh hoạt khi CI đang chạy:*
-     Kiểm tra thuộc tính `autoMergeAllowed` của repository trước khi áp dụng cờ `--auto`:
+     Kiểm tra thuộc tính `allow_auto_merge` của repository qua GitHub REST API (cảnh báo: `gh repo view --json autoMergeAllowed` lỗi `Unknown JSON field` trên `gh` CLI v2+) trước khi áp dụng cờ `--auto`:
      ```bash
-     # Bước 1: Tra cứu xem repo có cho phép auto-merge không:
-     gh repo view --json autoMergeAllowed --jq .autoMergeAllowed
+     # Bước 1: Tra cứu xem repo có cho phép auto-merge không qua REST API:
+     gh api repos/{owner}/{repo} --jq .allow_auto_merge
      ```
      - **Trường hợp A (Nếu kết quả là `true`):** Thực thi auto-merge:
        ```bash
        gh pr merge [PR_NUMBER] --squash --delete-branch --auto
        ```
-     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup rồi merge:
+     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup (hoặc `schedule` phân tầng `240s` lần đầu rồi `60s` pha đuôi; cấm gọi thêm tool khác trong cùng lượt với `schedule`) rồi merge:
        ```bash
        gh pr checks [PR_NUMBER] --watch
        # Dừng gọi công cụ (End Turn). Khi Reactive Wakeup báo 100% checks xanh, thực hiện:
        gh pr merge [PR_NUMBER] --squash --delete-branch
-       # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge để tránh git checkout main trên thư mục gốc đang bận:
+       # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge rồi gỡ worktree để tránh chạm thư mục gốc đang bận hoặc đang ở nhánh đồng đẳng:
        git -C <worktree_path> checkout --detach && gh pr merge [PR_NUMBER] --squash && git push origin --delete [HEAD_BRANCH]
        ```
    - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
@@ -179,10 +179,14 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    ```
    *Lưu ý:* Nếu có thay đổi chưa commit, hãy commit hoặc stash trước khi chuyển nhánh.
 
-2. Thu hồi tiến trình kiểm thử mồ côi và quay về branch `main` an toàn (chống treo Pager):
+2. Thu hồi tiến trình kiểm thử mồ côi và đồng bộ nhánh `main` an toàn (chống treo Pager & tôn trọng phiên đồng đẳng `RULE-4.21`):
    ```bash
    python -c "from scripts.eval.process_safety import ensure_single_instance; ensure_single_instance('pytest')"
+   # Nếu thư mục gốc đang ở nhánh `main` sạch (ahead == 0):
    git --no-pager checkout main && git pull origin main
+   # Nếu thư mục gốc đang đứng ở nhánh đồng đẳng khác `main` hoặc `main` có phiên khác (ahead > 0):
+   # KHÔNG chạm working tree gốc; cập nhật ref `main` cục bộ an toàn bằng:
+   git fetch --prune origin main:main
    ```
 
 3. Xóa branch feature cục bộ an toàn:
@@ -225,11 +229,18 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      ```bash
      python scripts/governance/compile_catalog.py
      ```
-   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-4.5, RULE-4.21 & Pre-Push Lock):*
-     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (cấm URI tệp cục bộ tuyệt đối theo `RULE-3.5`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F` theo Bất biến §12.1:
+   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-2.4, RULE-3.5, RULE-4.5, RULE-4.21 & Pre-Push Lock):*
+     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (tệp tại `.md/knowledge/reports/walkthrough.md` dẫn về thư mục gốc repo bằng độ sâu 3 cấp `../../../` theo `RULE-2.4`), không chứa URI tệp cục bộ tuyệt đối (`RULE-3.5`, kiểm tra qua `validate_docs.py`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F`:
      ```bash
+     # Trường hợp A (thư mục gốc đang ở nhánh `main` sạch):
      git checkout main && git pull origin main
      git checkout -b docs/walkthrough-pr-[PR_NUMBER]
+     # Trường hợp B (thư mục gốc đang ở nhánh đồng đẳng khác `main` hoặc `main` ahead > 0):
+     # Tạo worktree cô lập tại <walkthrough_wt> từ `origin/main` thay vì chạm working tree gốc:
+     git fetch --prune origin main:main
+     git worktree add -b docs/walkthrough-pr-[PR_NUMBER] <walkthrough_wt> origin/main
+
+     # Trong thư mục nhánh docs/walkthrough-pr-[PR_NUMBER]:
      git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
@@ -237,10 +248,12 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card
      gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
      gh pr checks --watch
-     gh pr merge --squash --delete-branch
-     git checkout main && git pull origin main
+     # Nếu đang dùng worktree cô lập, tách HEAD và gỡ worktree trước khi xóa nhánh remote:
+     git -C <walkthrough_wt> checkout --detach && git worktree remove <walkthrough_wt> && git worktree prune
+     gh pr merge [WALKTHROUGH_PR_NUMBER] --squash && git push origin --delete docs/walkthrough-pr-[PR_NUMBER]
+     git fetch --prune origin main:main
      ```
-   - **Tiêu chí hoàn thành:** Lệnh `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
+   - **Tiêu chí hoàn thành:** `validate_docs.py` (không chứa `file:///`), `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
 
 6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
    - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:

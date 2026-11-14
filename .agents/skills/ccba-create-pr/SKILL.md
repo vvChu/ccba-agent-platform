@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.2"
+  version: "1.3.3"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -130,7 +130,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    - **Xác định Base Branch:** Lấy tên nhánh chính (`<default_branch>`) từ Bước 0 (`main` hoặc `master`).
    - **Tiêu đề PR (Conventional Commits):** Trích xuất từ tiền tố branch (`feat/`, `fix/`, `refactor/`) và commit đầu tiên.
    - **Liên kết Issue:** Nếu branch có chứa mã Issue (ví dụ `feat/issue-266-...` hoặc có tham số `--issue <id>`), tự động gắn `Closes #<id>` vào phần cuối của PR body.
-   - **Mô tả PR (`PR Body` — Khuôn mẫu Show-Me Visual & Merge Danger `v1.3.0 #1120`):** Sử dụng ngôn ngữ nghiệp vụ từ `CONTEXT.md` và trình bày theo cấu trúc 3 phần chuẩn mực:
+   - **Mô tả PR (`PR Body` — Khuôn mẫu Show-Me Visual & Merge Danger `v1.3.0 #1120`):** Đọc khuôn mẫu chuẩn tại [`.github/pull_request_template.md`](../../../.github/pull_request_template.md) (tên tệp chữ thường trên Linux; không truy cập `PULL_REQUEST_TEMPLATE.md` viết hoa), sử dụng ngôn ngữ nghiệp vụ từ `CONTEXT.md` và trình bày theo cấu trúc 3 phần chuẩn mực:
      ```markdown
      ## Summary
 
@@ -182,7 +182,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    ```
 2. **Theo dõi GitHub Actions CI (Cổng 1):**
    - Chạy kiểm tra: `gh pr checks <PR_NUMBER>`.
-   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, Agent có thể chạy `gh pr checks <PR_NUMBER>` hoặc kết thúc lượt (End Turn) để hệ thống tự động đánh thức khi nhận kết quả. Tuyệt đối **CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
+   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, ưu tiên khởi chạy nền `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`) rồi **lập tức kết thúc lượt (End Turn)** để hệ thống đánh thức qua *Reactive Wakeup* đúng 1 lần khi hoàn tất. Nếu dùng `schedule` cho ma trận CI Hub (`~6–7` phút), bắt buộc áp dụng backoff phân tầng (`DurationSeconds: 240` lần đầu $\to$ `60` pha đuôi) thay vì đặt `60s` liên tiếp; **tuyệt đối không** gọi thêm tool nào khác trong cùng lượt với `schedule` và **tuyệt đối CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
 3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
    - Kiểm tra bot review (tại Hub gọi trực tiếp `scripts/validation/audit_pr_comments.py`, tại Spoke gọi qua `CCBA_HUB_PATH`):
      ```bash
@@ -191,14 +191,14 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      # Tại Spoke:
      python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/audit_pr_comments.py" --pr <PR_NUMBER>
      ```
-   - Chờ Copilot / Bugbot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
+   - Chờ Copilot hoặc Bugbot hoàn tất review (không merge khi `reviewRequests` vẫn còn chứa bot reviewer).
    - **Đối soát Invariants:** Rà soát các góp ý của bot đối chiếu với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).
 4. **Tự chữa lành (Self-Healing Loop):**
     - Nếu CI thất bại: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Vá lỗi $\rightarrow$ Commit & push.
-    - Nếu AI Reviewer (Copilot/Bugbot) góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
+    - Nếu AI Reviewer (Copilot hoặc Bugbot) góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
     - Lặp lại đến khi 100% checks xanh và `audit_pr_comments.py` trả về exit code 0.
 
-- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot/Bugbot được giải quyết triệt để tuân thủ 10 Invariants.
+- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot/Bugbot được giải quyết triệt để tuân thủ 10 Invariants (`python scripts/validation/audit_pr_comments.py --pr <PR_NUMBER>` trả về Exit Code `0`, `0` vòng lặp `manage_task` polling).
 
 ---
 

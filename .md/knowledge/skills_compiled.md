@@ -2996,7 +2996,7 @@ triggers:
 - brainstorm
 metadata:
   author: CCBA
-  version: "1.2.1"
+  version: "1.3.0"
 ---
 
 # Bản đồ Định hướng Kỹ năng & Điều phối Tư duy Nền tảng (CCBA Ask & Brainstorm Guide)
@@ -3044,6 +3044,7 @@ Khi người dùng gọi `/ccba-ask`, Agent **BẮT BUỘC** nhận diện ý đ
 4. **Triển khai lập trình (Coding & Multi-Agent Execution):**
    - Mở cửa sổ Agent sạch và chạy [`/ccba-implement`](../ccba-implement/SKILL.md) (hoặc [`/ccba-tdd`](../ccba-tdd/SKILL.md)) cho từng ticket độc lập.
    - Với dự án lớn đa gói/đa bộ môn cần chạy song song trên các nhánh cô lập: Triệu hồi [`/ccba-teamwork`](../ccba-teamwork/SKILL.md).
+   - Định tuyến mức độ ủy quyền tác nhân (`invoke_subagent` đơn lẻ, `run_workflow` khảo sát đọc theo lô, hoặc [`/ccba-teamwork`](../ccba-teamwork/SKILL.md)) theo **Ma trận Định tuyến Ủy quyền 3 Cấp** bên dưới.
 5. **Kiểm soát chất lượng & Cổng Kiểm định Tự động (QC & Deterministic Verification):**
    - Với mã nguồn/kỹ năng: Chạy [`/ccba-eval-gate`](../ccba-eval-gate/SKILL.md) (hoặc `python -m ccba_harness verify-patch`).
    - Với hồ sơ thiết kế xây dựng đa bộ môn: Chạy [`/ccba-ai-qc`](../ccba-ai-qc/SKILL.md) và [`/ccba-ai-qc-pccc-audit`](../ccba-ai-qc-pccc-audit/SKILL.md).
@@ -3063,6 +3064,16 @@ Khi người dùng gọi `/ccba-ask`, Agent **BẮT BUỘC** nhận diện ý đ
 *   **Xử lý lỗi hóc búa / Regression:** Sử dụng kỹ năng [`/ccba-diagnosing-bugs`](../ccba-diagnosing-bugs/SKILL.md) để xây dựng vòng phản hồi nhanh và viết test hồi quy trước khi vá lỗi.
 *   **Upkeep kiến trúc hệ thống:** Chạy [`/ccba-codebase-design`](../ccba-codebase-design/SKILL.md) để phát hiện các module nông và deepening cấu trúc code.
 *   **Không gian học tập & Đào tạo:** Chạy [`/ccba-seminar-builder`](../ccba-seminar-builder/SKILL.md) để khởi động không gian bài giảng/nghiên cứu trong thư mục `.md/teach/`.
+
+---
+
+## 🔀 Ma trận Định tuyến Ủy quyền 3 Cấp (3-Tier Delegation Matrix)
+
+Khi tác vụ cần phối hợp tác nhân phụ, định tuyến theo 3 cấp tăng dần sau:
+
+1. **Cấp 1 — `invoke_subagent` (Đơn lẻ / Kiểm chứng cục bộ):** Dùng cho 1–2 tác vụ đọc hoặc kiểm thử cô lập theo `ADR-0035` (`depth limit = 1`, không khởi tạo subagent lồng nhau); giữ mặc định `Model="inherit"` trừ khi người dùng chủ động yêu cầu model khác.
+2. **Cấp 2 — `run_workflow` (Khảo sát Chỉ Đọc Theo Lô — Progressive Enhancement):** Chỉ kích hoạt tùy chọn khi cần rà soát diện rộng $> 3$ mục độc lập trên môi trường có công cụ `run_workflow`. **Khóa an toàn bắt buộc:** mọi lời gọi `agent(...)` phải truyền tường minh `type_name="research"` ngay tại constructor (cấm để mặc định `type_name="self"`) và `workspace="inherit"` (cấm `workspace="branch"`), chỉ sử dụng đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth limit = 1` (chạy test cô lập chỉ thuộc `Success Auditor` / bước xác minh kiểm thử), chia lô `parallel` tối đa **3 tác nhân/lô** bọc tuần tự trong `pipeline`, **mọi nhánh `parallel` bắt buộc gọi `finish` khi hoàn tất** (1 nhánh lỗi hoặc thiếu `finish` sẽ hủy toàn bộ lô), cho phép gán `model="flash"` hoặc `"flash_lite"` cho bước quét bề mặt; trên các nền tảng khác (Claude Code, Cursor, CLI), lùi về `invoke_subagent` (tối đa 2 song song) hoặc Python CLI.
+3. **Cấp 3 — [`/ccba-teamwork`](../ccba-teamwork/SKILL.md) (Thực thi Sửa Mã Nguồn Đa Seam):** Mọi tác vụ sinh thay đổi mã nguồn phải điều phối qua [`/ccba-teamwork`](../ccba-teamwork/SKILL.md) (`invoke_subagent` + Single-Writer Engine `apply_worker_patch.py`), giữ nguyên `Model="inherit"` cho Workers sinh patch.
 
 ---
 
@@ -12153,7 +12164,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.2"
+  version: "1.3.3"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -12271,7 +12282,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    - **Xác định Base Branch:** Lấy tên nhánh chính (`<default_branch>`) từ Bước 0 (`main` hoặc `master`).
    - **Tiêu đề PR (Conventional Commits):** Trích xuất từ tiền tố branch (`feat/`, `fix/`, `refactor/`) và commit đầu tiên.
    - **Liên kết Issue:** Nếu branch có chứa mã Issue (ví dụ `feat/issue-266-...` hoặc có tham số `--issue <id>`), tự động gắn `Closes #<id>` vào phần cuối của PR body.
-   - **Mô tả PR (`PR Body` — Khuôn mẫu Show-Me Visual & Merge Danger `v1.3.0 #1120`):** Sử dụng ngôn ngữ nghiệp vụ từ `CONTEXT.md` và trình bày theo cấu trúc 3 phần chuẩn mực:
+   - **Mô tả PR (`PR Body` — Khuôn mẫu Show-Me Visual & Merge Danger `v1.3.0 #1120`):** Đọc khuôn mẫu chuẩn tại [`.github/pull_request_template.md`](../../../.github/pull_request_template.md) (tên tệp chữ thường trên Linux; không truy cập `PULL_REQUEST_TEMPLATE.md` viết hoa), sử dụng ngôn ngữ nghiệp vụ từ `CONTEXT.md` và trình bày theo cấu trúc 3 phần chuẩn mực:
      ```markdown
      ## Summary
 
@@ -12323,7 +12334,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    ```
 2. **Theo dõi GitHub Actions CI (Cổng 1):**
    - Chạy kiểm tra: `gh pr checks <PR_NUMBER>`.
-   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, Agent có thể chạy `gh pr checks <PR_NUMBER>` hoặc kết thúc lượt (End Turn) để hệ thống tự động đánh thức khi nhận kết quả. Tuyệt đối **CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
+   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, ưu tiên khởi chạy nền `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`) rồi **lập tức kết thúc lượt (End Turn)** để hệ thống đánh thức qua *Reactive Wakeup* đúng 1 lần khi hoàn tất. Nếu dùng `schedule` cho ma trận CI Hub (`~6–7` phút), bắt buộc áp dụng backoff phân tầng (`DurationSeconds: 240` lần đầu $\to$ `60` pha đuôi) thay vì đặt `60s` liên tiếp; **tuyệt đối không** gọi thêm tool nào khác trong cùng lượt với `schedule` và **tuyệt đối CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
 3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
    - Kiểm tra bot review (tại Hub gọi trực tiếp `scripts/validation/audit_pr_comments.py`, tại Spoke gọi qua `CCBA_HUB_PATH`):
      ```bash
@@ -12332,14 +12343,14 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      # Tại Spoke:
      python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/audit_pr_comments.py" --pr <PR_NUMBER>
      ```
-   - Chờ Copilot / Bugbot hoàn tất review (không merge khi reviewRequests vẫn còn chứa bot reviewer).
+   - Chờ Copilot hoặc Bugbot hoàn tất review (không merge khi `reviewRequests` vẫn còn chứa bot reviewer).
    - **Đối soát Invariants:** Rà soát các góp ý của bot đối chiếu với tập luật 10 Invariants tại [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md).
 4. **Tự chữa lành (Self-Healing Loop):**
     - Nếu CI thất bại: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Vá lỗi $\rightarrow$ Commit & push.
-    - Nếu AI Reviewer (Copilot/Bugbot) góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
+    - Nếu AI Reviewer (Copilot hoặc Bugbot) góp ý: Refactor code, giải trình vào báo cáo nghiệm thu tại `.md/knowledge/reports/walkthrough.md` (kèm review_id `PRR_...` hoặc inline comment `id` theo RULE-4.10; tuyệt đối không lưu tại `.md/walkthrough.md` trần) $\rightarrow$ Commit & push.
     - Lặp lại đến khi 100% checks xanh và `audit_pr_comments.py` trả về exit code 0.
 
-- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot/Bugbot được giải quyết triệt để tuân thủ 10 Invariants.
+- **Tiêu chí hoàn thành:** 100% CI Checks tích xanh và toàn bộ review của Copilot/Bugbot được giải quyết triệt để tuân thủ 10 Invariants (`python scripts/validation/audit_pr_comments.py --pr <PR_NUMBER>` trả về Exit Code `0`, `0` vòng lặp `manage_task` polling).
 
 ---
 
@@ -17740,7 +17751,7 @@ Sử dụng khi người dùng muốn rà quét điểm mù logic thiết kế, 
     4. Đối với mỗi câu hỏi, Agent phải đưa ra phương án đề xuất của mình trước (recommended answer) làm cơ sở tham chiếu, đồng thời **diễn đạt câu hỏi sao cho câu trả lời "Đồng ý / Yes" luôn chấp nhận phương án đề xuất đó** (để sự đồng thuận không bao giờ mang nghĩa trả lời "Không" — `v1.3.2 #1193`). Khi trình bày nhiều câu hỏi trong một vòng (chế độ Batching), phân tách các câu hỏi liên tiếp bằng đường kẻ ngang `---` (`v1.3.0 #917`). Khi người dùng cần chuyển một quyết định chưa thể tự trả lời thành bảng câu hỏi khảo sát bất đồng bộ gửi cho người khác, đọc và áp dụng [`references/to-questionnaire.md`](references/to-questionnaire.md).
     5. **Nguyên tắc tra cứu:** Nếu một dữ kiện thực tế (*fact*) có thể tìm thấy bằng cách khám phá codebase, Agent phải tự tra cứu thay vì hỏi người dùng. Tuy nhiên, các quyết định thiết kế (*decisions*) là của người dùng — hãy đặt từng câu hỏi quyết định cho người dùng và chờ phản hồi.
     6. **Điểm dừng leo thang (Escalation Checkpoint):** Khi phát hiện $\ge 2$ phương án kiến trúc mâu thuẫn hoặc sự đánh đổi lớn (major trade-offs), đề xuất triệu hồi [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) (Solution How-Tree) để lượng hóa và xếp hạng các phương án qua ma trận Giá trị × Độ phức tạp × Rủi ro × KISS trước khi tiếp tục.
-    7. **Thẩm định độc lập ngang hàng & Cổng Phân Nhánh Bàn Giao (Impact-Based Handoff Gate — ADR-0067):** Cấm tự động sửa mã sản xuất ngay trong lượt chốt câu hỏi Grilling cuối. Với thay đổi đa module (`> 3` tệp nguồn, ước lượng diff `> 200` LOC, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam, Schema, AuthZ, Hub Constitution) trên cả Hub và Spokes, hoặc khi người dùng yêu cầu phản biện ngang hàng, bắt buộc đọc `.md/peer_exchange/PEER_HANDSHAKE.md` và thực thi `ccba-harness peer-dispatch --profile audit_plan`; chừng nào `blocking_conditions > 0` (kể cả `APPROVE_WITH_CONDITIONS`), bắt buộc chạy nối tiếp `--profile signoff_diff --resume <sid> --fork-session` tối đa đến hết Pass 3 và chờ người dùng xác nhận `proceed` trước khi sửa mã. Với thay đổi cục bộ Fast-Path ($\le 3$ tệp, $\le 200$ LOC, không đổi Public Seam), xuất Decision Log ngắn gọn và chờ người dùng xác nhận thực thi.
+    7. **Thẩm định độc lập ngang hàng & Cổng Phân Nhánh Bàn Giao (Impact-Based Handoff Gate — ADR-0067):** Cấm tự động sửa mã sản xuất ngay trong lượt chốt câu hỏi Grilling cuối. Với thay đổi đa module (`> 3` tệp nguồn, ước lượng diff `> 200` LOC, ứng viên hạng `Strong`, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam, Schema, AuthZ, Hub Constitution) trên cả Hub và Spokes, hoặc khi người dùng yêu cầu phản biện ngang hàng, bắt buộc đọc `.md/peer_exchange/PEER_HANDSHAKE.md` và thực thi `ccba-harness peer-dispatch --profile audit_plan`; chừng nào `blocking_conditions > 0` (kể cả `APPROVE_WITH_CONDITIONS`), bắt buộc chạy nối tiếp `--profile signoff_diff --resume <sid> --fork-session` tối đa đến hết Pass 3 và chờ người dùng xác nhận `proceed` trước khi sửa mã. Với thay đổi cục bộ Fast-Path ($\le 3$ tệp, $\le 200$ LOC, không thuộc hạng `Strong`, không đổi Public Seam), xuất Decision Log ngắn gọn và chờ người dùng xác nhận thực thi.
 
 ### Nhánh B: Rule Compliance Stress-Test (Grill with Docs)
 Sử dụng khi người dùng cung cấp các tài liệu quy chuẩn (rules, specifications, standards, e.g., `AGENTS.md`, `legal_registry.yaml`, các spec nghiệp vụ trong `.md/knowledge/`) và yêu cầu đối soát.
@@ -24567,7 +24578,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.4"
+  version: "1.3.5"
   author: "CCBA Hub"
 triggers:
 - release
@@ -24604,7 +24615,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
         ```bash
         git branch --show-current
         ```
-   - *Rào chắn Cô lập `git worktree` khi `main` cục bộ có phiên song song (`RULE-4.21`):* Nếu nhánh `main` trên thư mục làm việc chính đang chứa các commit chưa đẩy của phiên đồng đẳng (`ahead > 0`), nghiêm cấm chạy `git checkout` hoặc `git pull` trực tiếp trên thư mục gốc. Agent khởi tạo một `git worktree` tạm thời tách từ `origin/main` (hoặc nhánh PR cần phát hành) trong thư mục scratch để chạy trọn vẹn Cổng 0.1–0.3, Bước 1–3 và gỡ bỏ worktree tạm (`git worktree remove <path> && git worktree prune`) **trước** khi gọi `gh pr merge --squash --delete-branch` (hoặc chạy bù `git push origin --delete [feature_branch_name]` nếu gộp ở trạng thái detached HEAD).
+   - *Rào chắn Cô lập `git worktree` khi thư mục gốc đang ở nhánh khác hoặc `main` có phiên song song (`RULE-4.21`):* Bất cứ khi nào thư mục làm việc gốc đang đứng trên nhánh đồng đẳng khác `main` (`git branch --show-current != main`) **HOẶC** nhánh `main` cục bộ có commit chưa đẩy (`ahead > 0`), nghiêm cấm chạy `git checkout` hoặc `git pull` trực tiếp trên thư mục gốc. Agent bắt buộc khởi tạo một `git worktree` cô lập tách từ `origin/main` (hoặc nhánh PR cần phát hành) để chạy trọn vẹn Cổng 0.1–0.3, Bước 1–3 và gỡ bỏ worktree tạm (`git worktree remove <path> && git worktree prune`) **trước** khi gọi `gh pr merge --squash --delete-branch` (hoặc tách HEAD `git -C <worktree_path> checkout --detach` rồi chạy `gh pr merge --squash && git push origin --delete [feature_branch_name]`), sau đó đồng bộ `refs/heads/main` không chạm working tree bằng `git fetch --prune origin main:main`.
 
 2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Tại Hub Platform (`ccba-agent-platform`):**
@@ -24688,21 +24699,21 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      gh pr merge --squash --delete-branch
      ```
    - *Cơ chế Xử lý Linh hoạt khi CI đang chạy:*
-     Kiểm tra thuộc tính `autoMergeAllowed` của repository trước khi áp dụng cờ `--auto`:
+     Kiểm tra thuộc tính `allow_auto_merge` của repository qua GitHub REST API (cảnh báo: `gh repo view --json autoMergeAllowed` lỗi `Unknown JSON field` trên `gh` CLI v2+) trước khi áp dụng cờ `--auto`:
      ```bash
-     # Bước 1: Tra cứu xem repo có cho phép auto-merge không:
-     gh repo view --json autoMergeAllowed --jq .autoMergeAllowed
+     # Bước 1: Tra cứu xem repo có cho phép auto-merge không qua REST API:
+     gh api repos/{owner}/{repo} --jq .allow_auto_merge
      ```
      - **Trường hợp A (Nếu kết quả là `true`):** Thực thi auto-merge:
        ```bash
        gh pr merge [PR_NUMBER] --squash --delete-branch --auto
        ```
-     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup rồi merge:
+     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup (hoặc `schedule` phân tầng `240s` lần đầu rồi `60s` pha đuôi; cấm gọi thêm tool khác trong cùng lượt với `schedule`) rồi merge:
        ```bash
        gh pr checks [PR_NUMBER] --watch
        # Dừng gọi công cụ (End Turn). Khi Reactive Wakeup báo 100% checks xanh, thực hiện:
        gh pr merge [PR_NUMBER] --squash --delete-branch
-       # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge để tránh git checkout main trên thư mục gốc đang bận:
+       # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge rồi gỡ worktree để tránh chạm thư mục gốc đang bận hoặc đang ở nhánh đồng đẳng:
        git -C <worktree_path> checkout --detach && gh pr merge [PR_NUMBER] --squash && git push origin --delete [HEAD_BRANCH]
        ```
    - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
@@ -24735,10 +24746,14 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    ```
    *Lưu ý:* Nếu có thay đổi chưa commit, hãy commit hoặc stash trước khi chuyển nhánh.
 
-2. Thu hồi tiến trình kiểm thử mồ côi và quay về branch `main` an toàn (chống treo Pager):
+2. Thu hồi tiến trình kiểm thử mồ côi và đồng bộ nhánh `main` an toàn (chống treo Pager & tôn trọng phiên đồng đẳng `RULE-4.21`):
    ```bash
    python -c "from scripts.eval.process_safety import ensure_single_instance; ensure_single_instance('pytest')"
+   # Nếu thư mục gốc đang ở nhánh `main` sạch (ahead == 0):
    git --no-pager checkout main && git pull origin main
+   # Nếu thư mục gốc đang đứng ở nhánh đồng đẳng khác `main` hoặc `main` có phiên khác (ahead > 0):
+   # KHÔNG chạm working tree gốc; cập nhật ref `main` cục bộ an toàn bằng:
+   git fetch --prune origin main:main
    ```
 
 3. Xóa branch feature cục bộ an toàn:
@@ -24781,11 +24796,18 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      ```bash
      python scripts/governance/compile_catalog.py
      ```
-   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-4.5, RULE-4.21 & Pre-Push Lock):*
-     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (cấm URI tệp cục bộ tuyệt đối theo `RULE-3.5`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F` theo Bất biến §12.1:
+   - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-2.4, RULE-3.5, RULE-4.5, RULE-4.21 & Pre-Push Lock):*
+     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (tệp tại `.md/knowledge/reports/walkthrough.md` dẫn về thư mục gốc repo bằng độ sâu 3 cấp `../../../` theo `RULE-2.4`), không chứa URI tệp cục bộ tuyệt đối (`RULE-3.5`, kiểm tra qua `validate_docs.py`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F`:
      ```bash
+     # Trường hợp A (thư mục gốc đang ở nhánh `main` sạch):
      git checkout main && git pull origin main
      git checkout -b docs/walkthrough-pr-[PR_NUMBER]
+     # Trường hợp B (thư mục gốc đang ở nhánh đồng đẳng khác `main` hoặc `main` ahead > 0):
+     # Tạo worktree cô lập tại <walkthrough_wt> từ `origin/main` thay vì chạm working tree gốc:
+     git fetch --prune origin main:main
+     git worktree add -b docs/walkthrough-pr-[PR_NUMBER] <walkthrough_wt> origin/main
+
+     # Trong thư mục nhánh docs/walkthrough-pr-[PR_NUMBER]:
      git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
@@ -24793,10 +24815,12 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card
      gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
      gh pr checks --watch
-     gh pr merge --squash --delete-branch
-     git checkout main && git pull origin main
+     # Nếu đang dùng worktree cô lập, tách HEAD và gỡ worktree trước khi xóa nhánh remote:
+     git -C <walkthrough_wt> checkout --detach && git worktree remove <walkthrough_wt> && git worktree prune
+     gh pr merge [WALKTHROUGH_PR_NUMBER] --squash && git push origin --delete docs/walkthrough-pr-[PR_NUMBER]
+     git fetch --prune origin main:main
      ```
-   - **Tiêu chí hoàn thành:** Lệnh `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
+   - **Tiêu chí hoàn thành:** `validate_docs.py` (không chứa `file:///`), `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
 
 6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
    - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:
@@ -24842,7 +24866,7 @@ description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc ph
   các nguồn tài liệu gốc đáng tin cậy bằng cách khởi chạy subagent chạy ngầm (hỗ trợ
   Dual-Agent Adversarial).
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: "CCBA Hub"
 user-invocable: true
 command: /ccba-research
@@ -24891,10 +24915,10 @@ Kỹ năng này hướng dẫn Agent cách khởi chạy **background subagents*
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)
 
 Kỹ năng chỉ được coi là hoàn thành khi đáp ứng các điều kiện sau:
-1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent` (chế độ Đơn tác nhân hoặc Phản biện Kép).
-2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên.
+1. Khởi chạy thành công subagent `research` chạy ngầm qua `invoke_subagent` (chế độ Đơn tác nhân hoặc Phản biện Kép) hoặc lô `run_workflow` chỉ đọc khi khảo sát diện rộng $> 3$ mục (Trường hợp D).
+2. Subagent tuân thủ **Rào chắn Ngân sách Tìm kiếm (Search Budget Cap)**: Tối đa 5 lượt tra cứu/tìm kiếm (max 5 tool calls) trong 1 phiên (đã tính gộp tối đa 1 lượt tái kiểm bổ sung của `Risk & Boundary Challenger` nếu có).
 3. Subagent thu thập thông tin trực tiếp từ **các nguồn sơ cấp đáng tin cậy** (tài liệu chính thức, source code dự án, API gốc, VBPL hiện hành) và áp dụng **Kiểm chứng Nguồn tin Chéo (Cross-Reference Validation)**.
-4. Tuân thủ nghiêm ngặt **Two-Layer Sub-Agent Guardrail (ADR 0035)**: Độ sâu `depth_limit = 1`, chỉ cấp quyền công cụ đọc (`view_file`, `grep_search`, `read_resource`), tối đa 2 subagents song song.
+4. Tuân thủ nghiêm ngặt **Two-Layer Sub-Agent Guardrail (ADR 0035)**: Độ sâu `depth_limit = 1` (không gọi subagent lồng nhau), chỉ cấp đúng 3 công cụ đọc (`view_file`, `grep_search`, `read_resource` — không cấp `run_command`, không ghi/sửa file, không gọi Git); tối đa **2 subagents song song** khi gọi `invoke_subagent` (Trường hợp B), hoặc tối đa **3 tác nhân/lô** (`parallel <= 3` bọc trong `pipeline`) khi chạy `run_workflow` chỉ đọc (Trường hợp D).
 5. Kết quả nghiên cứu được xuất ra tệp Markdown theo **Mẫu Báo cáo Kỹ thuật 5 phần chuẩn hóa**, có trích dẫn nguồn (citations) rõ ràng.
 6. Tệp báo cáo được lưu trữ linh hoạt tại:
    - Mặc định: `.md/knowledge/research_and_studies/research-[slug].md`
@@ -24939,6 +24963,19 @@ Khi chủ đề nghiên cứu liên quan đến việc đánh giá, lựa chọn
    - **Ô 3 — Công cụ Ngách Chuyên ngành / Mới nổi (`FRESH <= 120 ngày`, Stars `< 500` hoặc Commits `< 600`):** Thẩm định sâu mã nguồn và test suite thực tế trước khi kết luận.
    - **Ô 4 — Sản phẩm Ngẫu hứng Bị bỏ rơi (`STALE > 120 ngày` + Commits & Stars thấp):** Bác bỏ sớm (`Fail-Fast`) và tự triển khai theo chuẩn KISS (10–15 dòng code).
    - **Cầu nối Phân tích Chuyên sâu sang `/ccba-xia`:** Khi cần đối sánh kiến trúc song song (side-by-side trade-off analysis) giữa một kho nguồn mở ở Ô 1/Ô 2/Ô 3 với kỹ năng hoặc package sẵn có trên Hub trước khi quyết định port, khuyến nghị chuyển tiếp sang `/ccba-xia <repo> <target> --compare`.
+
+#### Quy tắc Phân tầng Model (Model Tiering)
+- Giữ mặc định `Model="inherit"` và `workspace="inherit"` cho mọi lời gọi `invoke_subagent`, trừ khi người dùng chủ động yêu cầu model khác.
+- **Cấm hạ cấp model** đối với `Risk & Boundary Challenger` ở Pha 2 và bước tổng hợp kiến trúc tại Pha 3.
+
+#### Trường Hợp D — Khảo Sát Đọc Diện Rộng Theo Lô (Batched Read-Only Fan-Out)
+Khi cần khảo sát $> 3$ tài liệu, tệp mã nguồn hoặc góc đối chiếu độc lập:
+- **Môi trường hỗ trợ `run_workflow` (Progressive Enhancement):** Khởi tạo mỗi nhánh qua `agent(..., type_name="research", workspace="inherit", model="flash")` (hoặc `"flash_lite"` cho bước quét bề mặt); **cấm để mặc định `type_name="self"`** và **cấm `workspace="branch"`**.
+- **Khóa công cụ & cấu trúc lô:** Chỉ sử dụng đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth_limit = 1`; chia các tác vụ thành lô `parallel` tối đa **3 tác nhân/lô** bọc tuần tự trong `pipeline` với JSON `schema` cô đọng. **Mọi nhánh `parallel` bắt buộc gọi `finish` khi hoàn tất** (chỉ 1 nhánh lỗi hoặc thiếu `finish` sẽ hủy toàn bộ lô).
+- **Fallback đa nền tảng:** Trên môi trường không có `run_workflow`, lùi về `invoke_subagent` theo từng cặp độc lập (tối đa **2 subagents song song** theo `ADR 0035`).
+
+#### Vòng Lặp Hậu Kiểm Giữ Ngữ Cảnh Có Trần (Stateful Challenger Re-Verify)
+Khi cần xác minh bổ sung phản biện từ `Risk & Boundary Challenger`, được phép nối tiếp đúng phiên hội thoại hiện có (qua `send_message` với `conversationId` hoặc biến `agent()` giữ trạng thái) tối đa **1 lượt tái kiểm bổ sung**, giữ nguyên `Model="inherit"` và `workspace="inherit"`. **Lượt tái kiểm này được tính gộp vào trần Search Budget Cap ($\le 5$ tool calls).**
 
 ---
 
@@ -25945,7 +25982,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: 1.6.6
+  version: "1.7.0"
 bundle: _core
 tier: kernel
 triggers:
@@ -26000,6 +26037,17 @@ Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
   * Nếu phiên làm việc gặp ma sát công cụ (tool friction), lỗi lặp lại kéo dài hoặc tốn nhiều lượt tìm kiếm tệp tin:
     Agent đọc tệp tham chiếu [`references/agent_environment_diagnostics.md`](references/agent_environment_diagnostics.md) để rà soát môi trường theo 7 tiêu chí tối ưu hóa của Matt Pocock (Navigation, Automated Checks over Rules, Role Decoupling, Tool Economy...).
   * Các phát hiện về công cụ và môi trường được phân loại chuẩn vào **Miền 5 (Windows & Tooling)** hoặc **Miền 2 (Code Quality & Testing)** trong `session_learnings.md`.
+
+#### Khai phá Dấu vết Thực thi Tất định (Trajectory & Transcript Error Mining — ADR-0061)
+Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằng chứng sẵn có và **cấm viết mới bộ phân tích JSONL** trùng lặp với `ccba_harness.telemetry` hoặc `ccba_harness.evals.miner`:
+1. **Đường lọc chính cho lỗi bước công cụ (`status == "ERROR"`):** Đọc trực tiếp `transcript.jsonl` của phiên hiện tại (chỉ tra dòng tương ứng trong `transcript_full.jsonl` khi bước đó có `truncated_fields`, đồng thời đối chiếu cả các bước mang `status == "CLEARED"`).
+2. **Tổng quan định lượng phiên (`tokens`, `tool_counts`, `turns_summary`):** Chạy CLI `python -m ccba_harness telemetry inspect <conversation_id_or_transcript_path> --json` (xuất `SubagentSessionMetrics`, không chứa trường `status` theo từng bước).
+3. **Khai phá lỗi công cụ theo phạm vi phiên:** Khi gọi `scripts/eval/log_eval_miner.py`, **bắt buộc truyền đủ `--log-dir <session_log_dir>`** trỏ tới thư mục log của đúng phiên cùng `--taxonomy TOOL_EXCEPTION --dry-run` để tránh `resolve_log_dir(None)` quét toàn bộ `~/.gemini/antigravity/brain` (lưu ý miner bỏ qua `*_full.jsonl`, còn `--dry-run` ghi nháp an toàn vào `.md/scratch/eval_runs/` thay vì ghi đè `.agents/skills/ccba-eval-gate/test_cases`):
+   ```powershell
+   python scripts/eval/log_eval_miner.py --log-dir <session_log_dir> --taxonomy TOOL_EXCEPTION --dry-run
+   ```
+- *Ghi chú tùy chọn:* Khi đang thực thi sẵn bên trong `run_workflow`, có thể gọi `await trajectory(tools=["run_command"], last=20)` để lọc nhanh trong bộ nhớ; các bước cũ mang `status == "CLEARED"` (`output == None`) vẫn phải đối chiếu qua `transcript.jsonl`.
+
 - **Tiêu chí hoàn thành:** Lập danh sách tri thức mới kèm dẫn chứng cụ thể từ codebase (tên class, tên module, mã lỗi) và phân loại chuẩn vào đúng Miền Kiến Trúc, tuân thủ nghiêm ngặt Tiered Memory Model.
 
 ### Bước 2: Cập nhật Knowledge Base, Mutation Log & Ma Trận ADR
@@ -27916,7 +27964,7 @@ command: /ccba-teamwork
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "CCBA Hub"
 triggers:
 - teamwork
@@ -28060,6 +28108,13 @@ Orchestrator làm rõ yêu cầu với kỹ sư:
    - Nếu phát hiện **Semantic Conflict** (verification thất bại): Engine tự động rollback 100% snapshot, Orchestrator điều chỉnh logic xung đột.
    - Khi hoàn tất thành công, thực hiện commit Git theo từng logical unit: `feat(scope): ...` hoặc `refactor(scope): ...`.
 
+#### Ranh giới Model Tiering, Read-Only Recon & Khóa Ghi Sandbox Canonical
+- **Carve-out `ADR-0035` cho Patch Workers:** Quy tắc *"không ghi/sửa file"* của `ADR-0035` áp dụng nghiêm ngặt cho tác nhân `research` (read-only); toàn bộ Patch Workers sinh bản vá **bắt buộc dùng `invoke_subagent`** (không chạy qua `run_workflow`), giữ nguyên `Model="inherit"`, vẫn **cấm tuyệt đối sửa cây mã nguồn chính và cấm gọi Git**, và **chỉ được phép ghi duy nhất tệp sandbox canonical `.system_generated/scratch/teamwork/{project}/worker_{N}/patch_{seam}.txt`**. Orchestrator tiếp tục hợp nhất qua `python scripts/governance/apply_worker_patch.py --patch-dir .system_generated/scratch/teamwork/{project}/` (không trỏ `--patch-dir` sang `.md/scratch/` vì `load_patches_from_directory` quét đệ quy mọi `*.diff`, `*.patch`, `*.txt`, `*.json`).
+- **Khảo sát đọc tiền thực thi (`run_workflow`):** Khi cần rà $> 3$ tệp trước khi phân seam bằng `run_workflow`, bắt buộc truyền tường minh `type_name="research"` ngay tại constructor `agent()` (cấm để mặc định `type_name="self"`) và `workspace="inherit"`, khóa công cụ thành đúng **3 công cụ đọc (`view_file`, `grep_search`, `read_resource`)** — không cấp `run_command`, không ghi/sửa file, không gọi Git, `depth limit = 1`, chia lô `parallel <= 3` bọc trong `pipeline` với mỗi nhánh gọi `finish`, và chỉ cho phép gán `model="flash"` ở bước đọc này; **cấm dùng `workspace="branch"`** để thay thế Single-Writer `apply_worker_patch.py`.
+
+#### Chuẩn hóa Phong Bì Bàn Giao Cấu Trúc Worker (PATCHED | DROPPED | HANDBACK)
+Chuẩn hóa đầu ra kết thúc chủ động của mọi Worker theo 3 trạng thái `PATCHED | DROPPED | HANDBACK` (giữ `INCOMPLETE` khi chạm timeout 10 phút) với **5 khóa chuẩn** cho cả báo cáo văn bản lẫn JSON `schema`: `status`, `checked_files`, `out_of_scope_files`, `patch_path`, và `reason` ($\le 300$ ký tự).
+
 ---
 
 **Tiêu chí hoàn thành:** Các worker hoàn thành nhiệm vụ song song và orchestrator tổng hợp code nguyên tử không xung đột.
@@ -28093,6 +28148,9 @@ Auditor hoặc Orchestrator thực hiện chuỗi kiểm định tự động:
      ```
    - Áp dụng Ma Trận Phân Loại 3 Nhãn (§20.3): `[ADOPT_AS_IS]`, `[ADOPT_ADAPTED]`, `[REBUT_WITH_EVIDENCE]` trước khi chuyển sang bước nghiệm thu.
 6. **Cập nhật trạng thái:** Cập nhật `team_sheet.md` sang `COMPLETED` và tóm tắt nghiệm thu cho người dùng.
+
+#### Tái Kiểm Ngữ Nghĩa Giữ Ngữ Cảnh Cho Success Auditor (Stateful Auditor Re-Verify)
+`Success Auditor` bắt buộc giữ `Model="inherit"` và `workspace="inherit"`, chỉ kiểm định đọc và chạy kiểm thử cô lập theo `ADR-0035` (**tuyệt đối không tự áp dụng patch**, không sửa mã nguồn và không gọi Git đột biến). Khi xác minh bản vá sửa lỗi sau vòng 1, được phép tái sử dụng đúng phiên hội thoại hiện có của `Success Auditor` qua `send_message` tối đa **1 lượt tái kiểm ngữ nghĩa**.
 
 > [!CAUTION]
 > **Deterministic Hard Completion Lock (ADR-0058)**: Cấm Orchestrator tự nhận hoàn thành nếu bất kỳ bước kiểm định nào ở trên có Exit Code $\ne 0$.

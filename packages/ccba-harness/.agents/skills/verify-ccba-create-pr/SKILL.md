@@ -16,10 +16,10 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.2
-sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+  version: 1.0.3
+sync_commit: "5676c30b16aa8566414272bef7fb449bb4691bad"
 covered_sha256:
-  .agents/skills/ccba-create-pr/SKILL.md: "629457ab4a500524c6d2c7497319efdaad0f94e9675fa4f6d06e7f140882f55b"
+  .agents/skills/ccba-create-pr/SKILL.md: "6739f2f5e332dd1418dcc7de9448c035fddf51232bd09dc4aa36f5ed32ce76e8"
   .github/pull_request_template.md: "70abccce9ce922f3aced6b306aea7e34a4b1c7a6b548ca7f10c4166e18d8b6db"
   scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
 verification_mode:
@@ -43,7 +43,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 5 bước của `.agents/skills/ccba-create-pr/SKILL.md`, khuôn mẫu `.github/pull_request_template.md`, rào chắn Zero-Polling Policy (`RULE-4.8`), quy chuẩn lưu walkthrough (`.md/knowledge/reports/walkthrough.md` — `RULE-4.10`), cùng ánh xạ `scripts/spoke/sync/coordinator.py` và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `5676c30b16aa8566414272bef7fb449bb4691bad` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 
