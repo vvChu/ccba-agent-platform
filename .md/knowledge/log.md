@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-14] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective` Lượt 2): Định Tuyến `choose_model()` Virtual Tiers (`PR #745`), Chưng Cất Kỹ Năng `--from-workflow` (`PR #743`), Rào Chắn `TradeoffCard` Span & Tiến Hóa `/ccba-update-spoke` (`v1.1.1`) (`RULE-1.10`, `RULE-1.13`, `RULE-1.23`, `RULE-2.1`, `RULE-4.21`, Mục 63)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-update-spoke/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
+- **Summary**: Chắt lọc tri thức thực chiến từ phiên hội thoại `19a9ea7c` (`PR #743` `fc312783`, `PR #744` `e175eda9`, `PR #745` `9d606269`, `PR #746` `ab9888cd` và đồng bộ `6/6` Spokes `🟢 ACTIVE`; telemetry `480` bước, `23.38M` tokens, `0` ca mới từ `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`) vào `RULE-1.10`, `RULE-1.13`, `RULE-1.23`, `RULE-2.1`, `RULE-4.21` (lưu trữ `Mục 63` lịch sử, giữ `session_learnings.md <= 10.0 KB`), đồng thời tiến hóa `/ccba-update-spoke` (`v1.1.1` — bổ sung bước tiền kiểm `git -C <spoke_path> status --short .agents` do `--dry-run` bỏ qua `GitWorkingTreeGuard`, yêu cầu xác nhận người dùng trước `--force`, và khóa tiêu chí hoàn thành cho Chế độ 2).
+
+---
+
 ## [2026-11-14] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Định Tuyến 3 Tầng `run_workflow` & `swarm` Scratch, Rào Chắn Worktree Non-`main`, Sửa Schema `allow_auto_merge` & Chờ CI Phân Tầng (`RULE-2.4`, `RULE-4.2`, `RULE-4.21`, `RULE-5.11`, Mục 62)
 - **Author / Agent**: Kỹ sư trưởng, Gemini Antigravity & Grok 4.7 (`PR #740` Session ID: `e7914d2b-eff1-476e-8b0b-7ddaded55461` `APPROVE`, `0` blocking conditions)
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`

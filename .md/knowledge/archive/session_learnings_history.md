@@ -1387,3 +1387,30 @@ Qua phân tích thực nghiệm toàn bộ `127` tệp trong `.md/peer_exchange/
    - Ưu tiên `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`, 1 Reactive Wakeup) hoặc `schedule` phân tầng `240s` lần đầu $\to$ `60s` pha đuôi; tuyệt đối không phát sinh tool call khác trong cùng lượt với `schedule`.
 4. **Cô Lập `git worktree` Khi Root `!= main` & Depth `../../../` (`RULE-2.4`, `RULE-4.21`)**:
    - Bắt buộc dùng `git worktree` từ `origin/main` và `git fetch --prune origin main:main` bất cứ khi nào root `branch != main` hoặc `main` `ahead > 0`; mọi liên kết repo-root trong `.md/knowledge/reports/walkthrough.md` dùng `../../../` (`RULE-2.4`) và phải qua `! grep -E "file:///"`.
+
+---
+
+## 63. Phiên 14/11/2026 (Lượt 2) — Chưng Cất Kỹ Năng Từ Luồng Hội Thoại (`ccba-build-skill v1.2.0`), Đồng Bộ `ccba-ai` Virtual Capability Tiers (`PR #743..#746`) & Bất Đối Xứng Dirty Guard Khi Đồng Bộ `6/6` Spokes
+
+### Context & Incident Root Cause (Phiên ngày 2026-11-14 — Conversation `19a9ea7c`, `PR #743`..`#746`)
+1. **Telemetry & Trajectory Mining (`19a9ea7c-b8fb-4ad9-babe-15c5d396fbb3`)**:
+   - Tổng khối lượng phiên: `480` bước (`192` turns), `23,378,877` tokens (`$29.4891`); lệnh `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run` ghi nhận `0` ca hồi quy mới cần sinh eval test.
+   - Kết quả bàn giao chính: `PR #743` (`fc312783` — nâng cấp `/ccba-build-skill` lên `v1.2.0` bổ sung Mode C `--from-workflow` & Tier 2A `references/workflow_distillation_guide.md`), `PR #744` (`e175eda9`), `PR #745` (`9d606269` — đồng bộ `ModelArchetype` thế hệ `3.8`/`4` & định tuyến `choose_model()` sang các Virtual Capability Tiers khớp `102/102` model trên LiteLLM Spark `:8090` / `litellm_config.yaml`), `PR #746` (`ab9888cd`) và đồng bộ `6/6` Spokes (`🟢 ACTIVE`).
+2. **Định Tuyến Virtual Capability Tiers, SSOT `seam-contracts.yaml` & Tham Số `check_hardcoded_parameters.py`**:
+   - Quá trình tìm kiếm tệp hợp đồng Seam ban đầu nhắm nhầm `.agents/skills/platform-loader/seam-contracts.yaml` (`step_index: 44`, `file does not exist`); SSOT thực tế nằm tại `packages/seam-contracts.yaml` (truy vấn chuẩn qua `ccba-platform find-seam --in ... --out ... --json`).
+   - Khi kiểm tra tham số cứng sau sửa `packages/ccba-ai`, truyền đối số vị trí cho `scripts/governance/check_hardcoded_parameters.py` gây lỗi cú pháp (`exit 2`, `step_index: 337`), còn chạy không truyền `--dir` khiến công cụ quét toàn bộ monorepo (`21` vi phạm cũ tại `check_spoke_cleanliness.py` và `ccba-harness`, `step_index: 334`).
+3. **Mypy Trên Worktree Mới & Hai Trần 30 Dòng Độc Lập Của `TradeoffCard` (`step_index: 290, 326, 351`)**:
+   - Trong `git worktree` mới chưa có `.mypy_cache`, chạy `mypy packages/ccba-ai` quét cả tệp test chưa gắn kiểu (`108` lỗi, `step_index: 290`), còn chạy `mypy packages/ccba-ai/src` không kèm `--follow-imports=silent` lần theo lazy import sang `ccba_legal` (`78` lỗi, `step_index: 326`).
+   - Khi `compute_cumulative_streak` đạt `K >= 3` (`Streak: 4` ở `PR #745`), `door-triage --enforce-tradeoff-card` cưỡng chế cả tổng độ dài khối `TradeoffCard <= 30` dòng LẪN độ rộng dải dòng `b - a + 1 <= 30` trong `- **Git Hunk Reference:** <path>#L<a>-L<b>` (`#L19-L95` = `77` dòng bị chặn `exit 1` ở `step_index: 351`).
+4. **Bất Đối Xứng `GitWorkingTreeGuard` Giữa `--dry-run` Và `--apply` Trong `sync_spoke.py`**:
+   - Trong `scripts/spoke/sync/coordinator.py` (`_check_git_working_tree_guard`), khi `dry_run=True`, hàm trả về `True` ngay lập tức (`if dry_run or not check_git or force: return True`), nên `sync_spoke.py --all --dry-run` báo `6/6 SUCCESS` dù `5/6` Spokes có thay đổi chưa commit trong `.agents/` và bị chặn khi chạy Pha 2 `--all --apply` (buộc xác nhận người dùng trước khi dùng `--force`, vẫn tạo `.md/backups/agents_backup_<timestamp>/`).
+
+### Key Architectural Invariants & Learned Rules (`RULE-1.10`, `RULE-1.13`, `RULE-1.23`, `RULE-2.1`, `RULE-4.21`)
+1. **Virtual Capability Tiers & Tra Cứu Seam SSOT (`RULE-1.10`, `RULE-1.13`)**:
+   - `choose_model()` trong `packages/ccba-ai/src/ccba_ai/routing.py` định tuyến tác vụ (`ocr`, `coding`/`general`/`fast`, `reasoning`/`audit`/`legal`, `private`/`local`/`rag`, `embedding`) sang các Virtual Capability Tiers trên LiteLLM (`tier-ocr`, `tier-fast`, `tier-reasoning`, `tier-local`, `embedding-default`) để tách rời code khỏi vòng đời tên thế hệ model.
+   - SSOT hợp đồng Seam đặt tại `packages/seam-contracts.yaml`; quét tham số cứng theo gói qua `python scripts/governance/check_hardcoded_parameters.py --dir <pkg_dir>` (hoặc `--file <path>`).
+2. **Mypy Scope Trên Worktree & Trần Kép 30 Dòng `TradeoffCard` (`RULE-1.23`, `RULE-2.1`)**:
+   - Kiểm tra kiểu cô lập trên worktree mới bằng `.venv/bin/mypy --follow-imports=silent packages/<pkg>/src` (khớp `verify-patch --preset code`).
+   - Khi viết `TradeoffCard`, vừa giữ khối thẻ `<= 30` dòng vừa bảo đảm `Git Hunk Reference` có `b - a + 1 <= 30` dòng trước khi chạy `door-triage --enforce-tradeoff-card`.
+3. **Tiền Kiểm `.agents` Trước Pha 2 `--all --apply` (`RULE-4.21`, `ccba-update-spoke` `v1.1.1`)**:
+   - Trước khi đồng bộ hàng loạt từ `--dry-run` sang `--apply`, kiểm tra `git -C <spoke_path> status --short .agents` và xin xác nhận người dùng trước khi truyền `--force`.
