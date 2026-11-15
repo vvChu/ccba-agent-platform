@@ -33,6 +33,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md](decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md): **[MỚI]** Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai 3 Ứng Viên Kiến Trúc Lõi (PEP 562 Lazy Seams, Frontmatter Seam & `SkillValidator`, Stdlib Parameter Scanner).
 - [../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md](../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md): **[MỚI]** ADR-0067: Danh mục Cửa Một Chiều 3 Tầng (One-Way Door Manifest) và Cơ chế Áp lực ngược (Backpressure Circuit-Breaker).
 - [../../docs/adr/0060-4hub-federated-spokes-architecture.md](../../docs/adr/0060-4hub-federated-spokes-architecture.md): **[MỚI]** ADR-0060: Kiến trúc Liên bang 4-Hubs × Spokes & Điều phối Hệ sinh thái Tri thức Phi tập trung.
 - [decisions/2026-11-11_sync_upstream_xia_grilling_resolution.md](decisions/2026-11-11_sync_upstream_xia_grilling_resolution.md): **[MỚI]** Biên Bản Quyết Định & Kế Hoạch Triển Khai v2.2: Nâng Cấp `/ccba-sync-upstream` ↔ `/ccba-xia` (`APPROVE_PLAN`, Issue #706).

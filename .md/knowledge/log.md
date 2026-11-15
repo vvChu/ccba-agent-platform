@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-15] [adr] | Biên Bản Quyết Định Grilling & Lộ Trình Wayfinder 3 Ứng Viên Kiến Trúc Lõi (PEP 562, Frontmatter Seam, Stdlib Parameter Scanner)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`, `.md/peer_exchange/grok_core_seams_governance_plan.md`, `.md/peer_exchange/grok_core_seams_governance_plan_signoff_p2.md`, `.md/peer_exchange/grok_core_seams_governance_plan_signoff_p3.md`, `.md/wayfinder/core-seams-and-governance-deepening/map.md`, `.md/wayfinder/core-seams-and-governance-deepening/tickets/wf_01_grilling_architecture_design_lock.md`, `.md/wayfinder/core-seams-and-governance-deepening/tickets/wf_02_peer_plan_audit_gate.md`
+- **Summary**: Hoàn tất phiên `/ccba-grilling` (`Q1`–`Q5`) và cổng thẩm định ngang hàng `WF-02` (`ADR-0067`) qua chuỗi 3 vòng Grok 4.7 (`9e8c03f7-d66d-4bca-9dfe-3e7a5a588b73` `REVISE_PLAN` -> `94f5c6c2-08af-44e4-9a81-23783877e138` `REVISE_PLAN` -> `951a1441-976f-49cb-bd84-057689eefb81` **`APPROVE_PLAN`**, `risk_score: 2`, `blocking_conditions: 0`). Kế hoạch `v2.1` chia thành DAG 8 Micro-PR (`PR-1a..PR-1d`, `PR-2a..PR-2b`, `PR-3a..PR-3b`) với 8 `TradeoffCard`, bao phủ PEP 562 cho 4 package + lazy `fitz`/`_get_fitz()`, `parse_markdown_frontmatter` (`SkillFrontmatterSpec.raw_block` + `re.DOTALL`) trên 13 callers & tách `SkillValidator` `<= 450 LOC`/module, cùng `_parameter_cleanliness.py` thuần stdlib đồng bộ Spoke Tier-0; dừng chờ lệnh `proceed` từ Kỹ sư trước khi mở thi công.
+
+---
+
 ## [2026-11-14] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective` Lượt 2): Định Tuyến `choose_model()` Virtual Tiers (`PR #745`), Chưng Cất Kỹ Năng `--from-workflow` (`PR #743`), Rào Chắn `TradeoffCard` Span & Tiến Hóa `/ccba-update-spoke` (`v1.1.1`) (`RULE-1.10`, `RULE-1.13`, `RULE-1.23`, `RULE-2.1`, `RULE-4.21`, Mục 63)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `scripts/governance/compact_session_learnings.py`, `.md/knowledge/archive/session_learnings_history.md`, `.agents/skills/ccba-update-spoke/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`, `.md/knowledge/log.md`
