@@ -73,6 +73,12 @@ class TestGuardrailCopier:
             "applies_to": ["python"],
         },
         {
+            "name": "_parameter_cleanliness.py",
+            "src": "packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py",
+            "dest": "scripts/_guardrails/_parameter_cleanliness.py",
+            "applies_to": ["python"],
+        },
+        {
             "name": "pre-commit",
             "src": ".githooks/pre-commit",
             "dest": ".githooks/pre-commit",

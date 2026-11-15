@@ -184,6 +184,9 @@ A formatting preservation technique where only specific key-value pairs (like st
 **Unified Markdown Frontmatter Seam (`parse_markdown_frontmatter` / `SkillFrontmatterSpec`)**:
 Public Deep Seam tại `ccba_harness` hợp nhất phân tích YAML frontmatter (`re.DOTALL`, bảo toàn từng byte CRLF/LF & comments qua `SkillFrontmatterSpec.raw_block` khi ghi lại `SKILL.md` và trả rõ mã lỗi YAML thay vì nuốt ngoại lệ).
 
+**Unified Stdlib Parameter Cleanliness Seam (`scan_parameter_cleanliness` / `ParameterViolation` / `is_statutory_clause_match`)**:
+Public Deep Seam thuần thư viện chuẩn (`_parameter_cleanliness.py`, 0 import bên thứ ba để đồng bộ Tier-0 sang Spoke `scripts/_guardrails/`) hợp nhất phát hiện raw model strings, hardcoded IPv4 (kèm miễn trừ tham chiếu điều khoản quy chuẩn `COND-11`) và hardcoded machine paths (Windows path có khoảng trắng, YAML không ngoặc kép, tùy chọn POSIX home) với cắt tỉa thư mục theo `Path.parts` (`os.walk` in-place).
+
 ---
 
 ## 3. Hạ Tầng AI Gateway, LLM Prompting & Auto-Tuner
