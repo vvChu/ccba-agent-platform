@@ -3838,7 +3838,7 @@ bundle: _core
 tier: kernel
 command: /ccba-build-skill
 metadata:
-  version: "1.1.1"
+  version: "1.2.0"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -3850,19 +3850,21 @@ triggers:
 - writing-great-skills
 - ccba-review-skill
 - review-skill
+- from-workflow
+- chưng cất quy trình
 ---
 
 # Workflow: Xây Dựng Kỹ Năng & Quy Trình Chuẩn (/ccba-build-skill)
 
 Khi người dùng kích hoạt lệnh này dưới dạng:
-`/ccba-build-skill <danh-sách-nguồn-hoặc-thư-mục> [--name <tên-skill>] [--local]`
+`/ccba-build-skill [<danh-sách-nguồn-hoặc-thư-mục> | --from-workflow] [--name <tên-skill>] [--local]`
 
 Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi tác vụ sau:
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: kiểm tra môi trường Hub vs. Spoke, quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`), nạp nguồn qua Cloud RAG (`notebooklm_rag.v1`) hoặc Local Fallback (`model_routing.v1`), áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI qua `ccba-harness evaluate-gpi --json`, sinh `SKILL.md` và `eval_<stem>.json`, biên dịch `compile_catalog.py`, tự phục hồi lỗi theo Allowlist và kiểm định `verify-patch --preset skill`. Kỹ năng đóng vai trò caller điều phối, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 3 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
+- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: kiểm tra môi trường Hub vs. Spoke, quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`), nạp nguồn qua Cloud RAG (`notebooklm_rag.v1`), Local Fallback (`model_routing.v1`) hoặc chưng cất từ phiên làm việc (`--from-workflow`), áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI qua `ccba-harness evaluate-gpi --json`, sinh `SKILL.md` và `eval_<stem>.json`, biên dịch `compile_catalog.py`, tự phục hồi lỗi theo Allowlist và kiểm định `verify-patch --preset skill`. Kỹ năng đóng vai trò caller điều phối, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
+- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 4 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`, `references/workflow_distillation_guide.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
 
 ---
 
@@ -3879,14 +3881,15 @@ Trước khi thực hiện bất kỳ thao tác nào, Agent bắt buộc phải 
 
 ---
 
-## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn Dual-Mode (Per-Source Ingestion)
-- Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video).
-- **Quét bảo mật từng nguồn:** Chạy quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) đối với từng tệp tin cục bộ. Nếu phát hiện rò rỉ bí mật (`findings` khác rỗng) $\rightarrow$ **DỪNG LẠI NGAY** đối với nguồn đó và cảnh báo người dùng.
-- **Định tuyến nguồn theo phân loại bảo mật:**
+## 🛡️ 1. Quét Bảo Mật & Nạp Nguồn Đa Chế Độ (Per-Source Ingestion & Session Distillation)
+- Đọc danh sách nguồn tài liệu được cung cấp (tệp tin cục bộ, URL hoặc video), hoặc kích hoạt chế độ chưng cất phiên làm việc khi có cờ `--from-workflow`.
+- **Quét bảo mật từng nguồn:** Chạy quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) đối với từng tệp tin cục bộ hoặc bản nháp trích xuất từ lịch sử phiên. Nếu phát hiện rò rỉ bí mật (`findings` khác rỗng) $\rightarrow$ **DỪNG LẠI NGAY** đối với nguồn đó và cảnh báo người dùng.
+- **Định tuyến nguồn theo phân loại bảo mật & chế độ:**
   - **Chế độ A (Cloud RAG qua NotebookLM):** Áp dụng cho tài liệu công khai, URL web, video YouTube. Sử dụng Seam `notebooklm_rag.v1` thông qua `python -m ccba_notebooklm`. Nếu gặp các failure modes của cloud (`auth_expired`, `quota_exceeded`, `source_upload_failed`) $\rightarrow$ tự động hạ cấp xuống Chế độ B.
   - **Chế độ B (Local Knowledge Extraction - Fallback):** Áp dụng khi người dùng truyền cờ `--local`, hoặc nguồn là tài liệu mật của dự án không được đưa lên cloud. Sử dụng pipeline xử lý tài liệu sẵn có (`ccba-markdown-document-processing`) và gọi mô hình qua `model_routing.v1` (`from ccba_ai.routing import choose_model`). Cấm viết parser ad-hoc mới.
+  - **Chế độ C (Chưng cất từ Phiên làm việc hoàn thành — `--from-workflow`):** Áp dụng khi người dùng truyền cờ `--from-workflow` hoặc yêu cầu đóng gói chuỗi thao tác vừa thực hiện thành công trong phiên hiện tại (thích ứng từ `workflow-skill-creator`, Apache-2.0). Nạp [`references/workflow_distillation_guide.md`](references/workflow_distillation_guide.md), trích xuất tóm tắt bước thực thi từ ngữ cảnh phiên ra tệp đệm tạm, quét qua `scripts/maskara.py` (Seam `maskara_scanner.v1`) và khử đường dẫn máy cục bộ. Tự điền **Bảng Đối soát Chưng cất (`Workflow Distillation Matrix`)** và phỏng vấn người dùng tối đa **1–2 lượt** để chốt độ cứng từng bước (`Strict` vs `Flexible`), chính sách lỗi (`ask` / `fallback` / `fail-loud`), định tuyến các bước xử lý dữ liệu hoặc API qua Cổng 0 (`Tier 1: Package Function / Deep Seam` kèm quy ước `--output` và `--limit` bắt buộc), và trích xuất ca kiểm thử thực tế cho `eval_<stem>.json`.
   - **Văn bản pháp quy:** Nếu nguồn là văn bản quy phạm pháp luật Việt Nam, chuyển hướng sang `/ccba-legal-ingest` theo ADR-0059.
-- **Tiêu chí hoàn thành:** Toàn bộ nguồn được quét sạch bí mật và nạp an toàn theo đúng phân loại bảo mật.
+- **Tiêu chí hoàn thành:** Toàn bộ nguồn tài liệu hoặc lịch sử phiên (`--from-workflow`) được quét sạch bí mật qua Maskara, nạp đúng phân loại bảo mật và hoàn tất Bảng Đối soát Chưng cất (nếu chạy Chế độ C).
 
 ---
 
@@ -4037,6 +4040,7 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/skill_authoring_guide.md` | Cẩm nang hướng dẫn kỹ sư biên soạn tệp chỉ dẫn SKILL.md chuẩn mực |
 | `references/skill_review_checklist.md` | Bảng kiểm định chất lượng và tuân thủ thể chế ADR-0057 cho kỹ năng |
 | `references/skill_glossary.md` | Bảng thuật ngữ và quy ước định danh kỹ năng chuẩn mực CCBA |
+| `references/workflow_distillation_guide.md` | Cẩm nang chưng cất phiên làm việc hoàn thành (`--from-workflow`) với bảng đối soát `Workflow Distillation Matrix` và hợp đồng Cổng 0 (`--output`, `--limit`) |
 
 
 ---
@@ -4213,7 +4217,7 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 
 ---
 
-## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.1.1)
+## 8. Quy Chuẩn Vận Hành Của Nhà Máy Tạo Kỹ Năng (`ccba-build-skill` v1.2.0)
 
 Để đảm bảo tính nhất quán toàn diện khi tác tạo kỹ năng mới, quy trình `/ccba-build-skill` bắt buộc phải tuân thủ 6 hợp đồng kiến trúc bất biến sau:
 
@@ -4223,6 +4227,7 @@ Nhằm loại bỏ hoàn toàn các "vùng mù kiểm thử" (blind spots) và h
 2. **Định Tuyến Nguồn Theo Phân Loại Bảo Mật (Per-Source Ingestion & Privacy Guard):**
    - Quét `scripts/maskara.py` từng tệp nguồn. Có findings $\rightarrow$ DỪNG nguồn đó.
    - Nguồn công khai $\rightarrow$ Cloud RAG (`notebooklm_rag.v1`). Nguồn mật / nhạy cảm / `--local` $\rightarrow$ Local Fallback qua pipeline tài liệu (`ccba-markdown-document-processing`) và `model_routing.v1` (`choose_model()`).
+   - Chưng cất từ phiên làm việc đã hoàn thành (`--from-workflow`): Nạp [workflow_distillation_guide.md](./workflow_distillation_guide.md) để quét Maskara trên nhật ký trích xuất, chốt bảng đối soát `Workflow Distillation Matrix` qua 1–2 lượt hỏi đáp và áp dụng hợp đồng Cổng 0 (`--output` File-First, `--limit` bắt buộc).
    - Cẩm nang tri thức tạm thời bắt buộc lưu tại buffer `.md/scratch/build-skill/<tên-skill>/summary.md`. CẤM ghi trực tiếp vào `.md/knowledge/` dài hạn của repo trước khi hoàn tất nghiệm thu. Văn bản quy phạm pháp luật chuyển `/ccba-legal-ingest`.
 3. **Cổng Kiến Trúc Định Lượng Bằng JSON CLI Tất Định:**
    - Bắt buộc thực thi: `python -m ccba_harness evaluate-gpi --name <name> --s <S> --k <K> --a <A> --p <P> --json` kèm 4 dòng bằng chứng quan sát được.
@@ -4536,6 +4541,76 @@ Kỹ năng này thực hiện quy trình đánh giá thể chế kiến trúc (A
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
+
+
+---
+
+# Skill Reference: ccba-build-skill/references/workflow_distillation_guide.md
+
+# Cẩm nang Chưng cất Phiên làm việc thành Kỹ năng (`--from-workflow`)
+
+> Nguồn gốc: Thích ứng từ `workflow-skill-creator` của Google LLC (Apache-2.0 License). Tài liệu tham chiếu tăng tiến (Tier 2A) cho kỹ năng gốc [ccba-build-skill](../SKILL.md).
+
+> **Lưu ý:** Tài liệu này là cẩm nang tham chiếu tăng tiến thuần túy (all-reference), dùng cho **Chế độ C (`--from-workflow`)** của `/ccba-build-skill`.
+
+---
+
+## 1. Ngữ cảnh Kích hoạt & Phạm vi (Bottom-Up Session Distillation)
+
+Khác với Chế độ A/B (tác tạo kỹ năng theo hướng Top-Down từ kho tài liệu nguồn), **Chế độ C (`--from-workflow`)** phục vụ chưng cất **Bottom-Up** một chuỗi thao tác thực tế đã hoàn thành thành công ngay trong phiên làm việc hiện tại:
+
+- **Khi kích hoạt:** Người dùng truyền cờ `--from-workflow` (ví dụ: `/ccba-build-skill --from-workflow [--name <tên-skill>]`) hoặc yêu cầu đóng gói quy trình vừa chạy trong hội thoại thành kỹ năng tái sử dụng.
+- **Không áp dụng khi:** Người dùng cần tạo kỹ năng mới từ đầu khi chưa có quy trình thực chiến đã chạy (dùng Chế độ A/B của `/ccba-build-skill`) hoặc chỉ muốn tiến hóa một `SKILL.md` đã tồn tại cuối phiên (dùng `/ccba-session-retrospective`).
+- **Tái sử dụng trước tiên (`ADR-0061`):** Kiểm tra `catalog.yaml` và chạy `ccba-platform find-seam --in <types> --out <types> --json`. Nếu một bước trong phiên đã được bao phủ bởi kỹ năng hoặc Deep Seam sẵn có của Platform, kỹ năng mới bắt buộc dẫn chiếu lại thay vì sao chép hoặc tự triển khai lại.
+
+---
+
+## 2. Quét Bảo mật Lịch sử Phiên & Khử Trạng thái Máy trạm (Privacy & Machine-State Guard)
+
+Lịch sử hội thoại và nhật ký terminal thường chứa khóa API, header xác thực hoặc đường dẫn máy cá nhân. Trước khi chưng cất tri thức ở Bước 2 của [ccba-build-skill](../SKILL.md), Agent thực hiện trình tự bảo vệ dữ liệu sau:
+
+- **Trích xuất vào vùng đệm tạm:** Rút gọn chuỗi bước thực tế, lệnh đã chạy, tham số I/O và kết quả kiểm chứng từ ngữ cảnh phiên vào tệp nháp tạm trong `.md/scratch/build-skill/<tên-skill>/`.
+- **Quét bí mật qua `scripts/maskara.py`:** Chạy `python scripts/maskara.py` (Seam `maskara_scanner.v1`) trực tiếp lên tệp nháp trích xuất. Nếu phát hiện rò rỉ thông tin nhạy cảm (`findings` khác rỗng) $\rightarrow$ **DỪNG NGAY**, loại bỏ hoặc ẩn token nhạy cảm và cảnh báo người dùng trước khi tiếp tục.
+- **Khử trạng thái máy trạm (`Machine-State Decoupling`):** Thay thế mọi đường dẫn ổ đĩa tuyệt đối cá nhân hoặc định danh phiên tạm thời bằng tham số cấu hình hoặc biến môi trường chuẩn (`CCBA_HUB_PATH`, tham số CLI) trước khi kết xuất sang `.md/scratch/build-skill/<tên-skill>/summary.md`.
+
+---
+
+## 3. Bảng Đối soát Chưng cất Tự điền & Phỏng vấn Hội tụ 1–2 Lượt (`Workflow Distillation Matrix`)
+
+Áp dụng nguyên tắc *tự tra cứu facts từ ngữ cảnh phiên, chỉ hỏi người dùng các decisions* (từ `/ccba-grilling`):
+
+- **Tự điền bảng nháp trước khi hỏi:** Agent tự trích xuất thông tin thực tế đã quan sát trong phiên để điền sẵn **Bảng Đối soát Chưng cất (`Workflow Distillation Matrix`)** theo khung dưới đây:
+
+| Bước | Thao tác thực tế trong phiên | Độ cứng (`Strict` / `Flexible`) | Chính sách lỗi (`ask` / `fallback` / `fail-loud`) | Phân tầng đích (`Tier 1 Seam` / `Tier 2 Step`) | Kỹ năng / Seam tái sử dụng |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `<Lệnh hoặc bước Agent đã chạy>` | `Strict` hoặc `Flexible` | `ask` / `fallback` / `fail-loud` | `Tier 1 Seam` hoặc `Tier 2 Step` | `<tên skill hoặc seam_id>` |
+
+- **Phỏng vấn hội tụ tối đa 1–2 lượt (2–3 câu/lượt, kèm phương án đề xuất trước):** Trình bày bảng nháp để người dùng hiệu chỉnh và khóa đủ **8 tiêu chí hội tụ** trước khi chuyển sang Bước 2 (Chưng cất vào scratch) và Bước 3 (`evaluate-gpi --json`):
+  1. **Mục tiêu & Phạm vi bước:** Xác nhận bước nào giữ lại, bước nào là thao tác sửa lỗi nhất thời cần loại bỏ, tần suất tái sử dụng (định kỳ hay theo sự kiện).
+  2. **Đầu vào & Đầu ra kỳ vọng (I/O Contract):** Định dạng dữ liệu đầu vào và sản phẩm đầu ra cuối cùng.
+  3. **Độ cứng từng bước (`Strict` vs `Flexible`):** Phân định bước nào bắt buộc dùng đúng công cụ/nguồn dữ liệu/thứ tự cố định (`Strict`), bước nào Agent được phép linh hoạt chọn phương án hợp lý (`Flexible`).
+  4. **Chính sách xử lý lỗi từng bước:** Khi bước chính thất bại (API sập, rỗng kết quả, sai định dạng), Agent cần: (a) hỏi người dùng (`ask`), (b) tự động thử nhánh thay thế (`fallback`), hay (c) dừng ngay kèm thông báo lỗi rõ ràng (`fail-loud`), và có phơi bày edge cases cho người dùng hay không.
+  5. **Kỹ năng & Deep Seams tái sử dụng:** Chốt danh sách kỹ năng/Seam hiện hữu trong `catalog.yaml` cần khai báo phụ thuộc thay vì viết lại.
+  6. **Phân tách Cổng 0 (Code vs. Instruction-Only):** Xác nhận mọi bước có gọi API, xử lý dữ liệu, I/O tệp hoặc tính toán tất định đều được đưa xuống Tầng 1 theo Mục 4 bên dưới.
+  7. **Ca kiểm thử mẫu từ phiên thực chiến (`eval_<stem>.json`):** Chốt 1 cặp truy vấn đầu vào + kết quả kỳ vọng thực tế vừa quan sát trong phiên để làm giàu ca Happy-Path (và bổ sung ca Red-Team tương ứng) tại `.agents/skills/ccba-eval-gate/test_cases/eval_<stem>.json`.
+  8. **Định danh & Tầng lưu trữ dự kiến:** Chốt tên gợi ý `ccba-<tên-skill>` (hoặc `<parent-skill>` nếu điểm GPI rơi vào Tier 2A) và xác nhận vị trí đích trên Hub (kể cả khi đang khởi phát từ Spoke).
+
+---
+
+## 4. Cổng 0, File-First Output & Hợp đồng Tham số Tường minh (`ADR-0057`, `ADR-0061`)
+
+Không đóng gói script xử lý dữ liệu dài hoặc client API cồng kềnh vào thư mục kỹ năng. Mọi bước mang tính lập trình phát hiện trong phiên phải tuân thủ 4 chuẩn kỹ thuật sau:
+
+- **Định tuyến Tầng 1 (`Tier 1: Package Function / Deep Seam`) & Chống Script Bloat:**
+  - Toàn bộ logic gọi API, parse dữ liệu, tính toán hoặc xử lý tệp tất định phải triển khai trong `packages/*/src/` và bảo vệ bằng unit test; tuyệt đối không giữ script vượt quá `100 LOC` trong `.agents/skills/<tên-skill>/scripts/`.
+  - Nếu cần điểm vào CLI nội bộ trong kỹ năng, chỉ tạo Thin Adapter ($\le 30$ LOC) gọi vào Deep Seam.
+  - Với API ngoài chưa có Seam, tái sử dụng mẫu rate limiting đa tiến trình chuẩn của Platform tại [ccba-api-circuit-breaker](../../ccba-api-circuit-breaker/SKILL.md); không sử dụng biến đếm trạng thái trong bộ nhớ như `last_request_time = 0.0` (vốn bị reset ở mỗi lần gọi subprocess CLI mới).
+- **File-First Output (`--output`):**
+  - Mọi lệnh con (subcommand) hoặc Thin Adapter xuất dữ liệu cấu trúc phải nhận tham số `--output` để ghi JSON (`indent=2`) ra tệp và chỉ in thông báo trạng thái ngắn ra `stdout`, bảo vệ cửa sổ ngữ cảnh khỏi bị tràn bởi payload lớn.
+- **Chống cắt ngầm kết quả (`--limit` bắt buộc):**
+  - Các lệnh tìm kiếm hoặc liệt kê danh sách phải khai báo tham số `--limit` với `required=True` (không gán giá trị mặc định ngầm), buộc Agent chỉ định rõ ngưỡng lấy dữ liệu thay vì lầm tưởng đã lấy đủ toàn bộ bản ghi.
+- **Diagnostic thân lỗi HTTP `4xx`:**
+  - Khi gặp lỗi HTTP không thể retry (`400`, `403`, `404`), đọc và đính kèm tối đa `1000` ký tự đầu của response body vào thông báo lỗi thay vì chỉ in mã trạng thái, giúp Agent tự hiệu chỉnh tham số gọi lại chính xác.
 
 
 ---
@@ -28712,7 +28787,7 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -28782,16 +28857,24 @@ python scripts\ccba_platform_cli.py spoke-status
 
 ### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
 ```bash
+# 0. Tiền kiểm trạng thái uncommitted trong thư mục .agents của từng Spoke (vì --dry-run bỏ qua GitWorkingTreeGuard):
+git -C <spoke_path> status --short .agents
+
 # 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
 python scripts/sync_spoke.py --all --dry-run
 python scripts/sync_spoke.py --all --apply
 
-# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
+# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046) hoặc bỏ qua git pull trên Hub đã sạch:
 python scripts/sync_spoke.py --all --apply --include-sandboxes
+CCBA_SKIP_GIT_PULL=1 python scripts/sync_spoke.py --all --apply
 
 # 4. Đồng bộ kèm xác thực tự động (ADR-0058 Hard Completion Lock):
 python scripts/sync_spoke.py --all --apply --verify
 ```
+> [!IMPORTANT]
+> Cờ `--dry-run` bỏ qua `GitWorkingTreeGuard` nên vẫn báo `SUCCESS` ngay cả khi Spoke đang có thay đổi chưa commit trong `.agents`. Nếu bước tiền kiểm phát hiện thay đổi chưa commit tại Spoke, Agent **bắt buộc** hỏi xác nhận người dùng trước khi truyền `--force` (hệ thống vẫn tạo snapshot sao lưu tự động tại `.md/backups/agents_backup_<timestamp>` trước khi ghi đè).
+
+- **Tiêu chí hoàn thành:** Lệnh `--all --apply` thoát với mã `0` trên toàn bộ Spoke mục tiêu, lượt chạy hậu kiểm `--all --dry-run` ghi nhận `0 mới, 0 cập nhật`, và `spoke-status` hiển thị trạng thái `🟢 ACTIVE`.
 
 ### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
 > [!TIP]

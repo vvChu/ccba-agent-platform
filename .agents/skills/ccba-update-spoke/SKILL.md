@@ -15,7 +15,7 @@ tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -85,16 +85,24 @@ python scripts\ccba_platform_cli.py spoke-status
 
 ### 🌐 Chế độ 2: Đồng Bộ Hàng Loạt Toàn Bộ Spoke Đang Đăng Ký (Từ Hub)
 ```bash
+# 0. Tiền kiểm trạng thái uncommitted trong thư mục .agents của từng Spoke (vì --dry-run bỏ qua GitWorkingTreeGuard):
+git -C <spoke_path> status --short .agents
+
 # 1. Xem trước mô phỏng (Pha 1) | 2. Đồng bộ chính thức (Pha 2, bỏ qua sandbox):
 python scripts/sync_spoke.py --all --dry-run
 python scripts/sync_spoke.py --all --apply
 
-# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046):
+# 3. Đồng bộ bao gồm cả Spoke Cá Nhân (ADR 0046) hoặc bỏ qua git pull trên Hub đã sạch:
 python scripts/sync_spoke.py --all --apply --include-sandboxes
+CCBA_SKIP_GIT_PULL=1 python scripts/sync_spoke.py --all --apply
 
 # 4. Đồng bộ kèm xác thực tự động (ADR-0058 Hard Completion Lock):
 python scripts/sync_spoke.py --all --apply --verify
 ```
+> [!IMPORTANT]
+> Cờ `--dry-run` bỏ qua `GitWorkingTreeGuard` nên vẫn báo `SUCCESS` ngay cả khi Spoke đang có thay đổi chưa commit trong `.agents`. Nếu bước tiền kiểm phát hiện thay đổi chưa commit tại Spoke, Agent **bắt buộc** hỏi xác nhận người dùng trước khi truyền `--force` (hệ thống vẫn tạo snapshot sao lưu tự động tại `.md/backups/agents_backup_<timestamp>` trước khi ghi đè).
+
+- **Tiêu chí hoàn thành:** Lệnh `--all --apply` thoát với mã `0` trên toàn bộ Spoke mục tiêu, lượt chạy hậu kiểm `--all --dry-run` ghi nhận `0 mới, 0 cập nhật`, và `spoke-status` hiển thị trạng thái `🟢 ACTIVE`.
 
 ### 📁 Chế độ 3: Đồng Bộ Toàn Bộ Cho Spoke Hiện Tại (Tại Spoke)
 > [!TIP]
