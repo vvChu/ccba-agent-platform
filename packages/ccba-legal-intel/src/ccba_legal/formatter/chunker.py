@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 from ccba_legal.monitor import TokenMonitor
 
@@ -29,7 +30,7 @@ def generate_chunks(content: str, bundle_dir: Path) -> None:
         return
     num_chunks = max(1, math.ceil(total_words / 300))
     target_size = total_words / num_chunks
-    chunks = []
+    chunks: list[dict[str, Any]] = []
     curr_chunk: list[str] = []
     curr_words = 0
     idx = 1

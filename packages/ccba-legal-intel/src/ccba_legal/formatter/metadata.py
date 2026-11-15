@@ -41,21 +41,19 @@ def inject_anchors(text: str) -> str:
             current_dieu = current_khoan = None
         elif muc_pattern.match(line):
             current_dieu = current_khoan = None
-        elif dieu_pattern.match(line):
-            current_dieu = dieu_pattern.match(line).group(2)
+        elif (m := dieu_pattern.match(line)) is not None:
+            current_dieu = m.group(2)
             current_khoan = None
             leading = len(line) - len(line.lstrip())
             line = line[:leading] + f'<a id="d{current_dieu}"></a>' + line[leading:]
-        elif current_dieu and khoan_pattern.match(line):
-            m = khoan_pattern.match(line)
+        elif current_dieu and (m := khoan_pattern.match(line)) is not None:
             current_khoan = m.group(2)
             line = (
                 m.group(1)
                 + f'<a id="d{current_dieu}k{current_khoan}"></a>'
                 + line[len(m.group(1)) :]
             )
-        elif current_dieu and current_khoan and diem_pattern.match(line):
-            m = diem_pattern.match(line)
+        elif current_dieu and current_khoan and (m := diem_pattern.match(line)) is not None:
             diem_char = m.group(2).lower()
             line = (
                 m.group(1)

@@ -563,7 +563,7 @@ def validate_article_sequence(page_texts: list[str]) -> list[str]:
 
     # 3. Build document-order position map for sequence analysis
     ordered = sorted(all_articles, key=lambda a: (a[1], a[2]))  # by page, offset
-    art_positions = {}  # article_num -> list of positions in ordered
+    art_positions: dict[int, list[int]] = {}  # article_num -> list of positions in ordered
     for pos, art in enumerate(ordered):
         art_positions.setdefault(art[0], []).append(pos)
 

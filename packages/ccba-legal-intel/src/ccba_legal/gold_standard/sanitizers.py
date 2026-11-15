@@ -25,7 +25,7 @@ def clean_html_tables(text: str) -> str:
     if "<table" not in text.lower():
         return text
 
-    def _replace_table(match: re.Match) -> str:
+    def _replace_table(match: re.Match[str]) -> str:
         html = match.group(0)
         soup = BeautifulSoup(html, "html.parser")
         rows = soup.find_all("tr")
@@ -85,7 +85,7 @@ def clean_table_footnotes_and_superscripts(text: str) -> str:
                 if line.replace("|", "").strip() == "":
                     continue
 
-            def _superscript_marker(m: re.Match) -> str:
+            def _superscript_marker(m: re.Match[str]) -> str:
                 return f"<sup>{m.group(1)}</sup>"
 
             line = re.sub(r"\s*([1-9]\))(?=\s*(?:\||$))", _superscript_marker, line)
@@ -148,7 +148,7 @@ def normalize_notes_and_lists(text: str) -> str:
         text,
     )
 
-    def _fix_codes(match: re.Match) -> str:
+    def _fix_codes(match: re.Match[str]) -> str:
         return f"- {match.group(1).strip()}"
 
     text = re.sub(

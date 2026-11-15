@@ -105,7 +105,7 @@ def build_frontmatter_yaml(bundle_dir: Path, doc_meta: dict[str, Any] | None = N
 
     return (
         "---\n"
-        + yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2).strip()
+        + str(yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2)).strip()
         + "\n---\n\n"
     )
 

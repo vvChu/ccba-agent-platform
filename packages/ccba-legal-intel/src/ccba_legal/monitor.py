@@ -22,7 +22,7 @@ class TokenMonitor:
             raise ValueError("max_tokens must be greater than 0")
 
         self.max_tokens = max_tokens
-        self._encoding = None
+        self._encoding: Any = None
         self._tiktoken_failed = False
 
     def _get_string_tokens(self, text: str) -> int:
