@@ -68,7 +68,7 @@ _WIN_PATH_RE = re.compile(
     r"""[=:]\s*[A-Za-z]:[\\/]+[A-Za-z0-9_.\-\\/]+)"""
 )
 _POSIX_HOME_RE = re.compile(r"""(?:["']|[=:]\s*)/home/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+""")
-_SHAREPOINT_TOKEN_RE = re.compile(r"/?:[a-z]:/[grs]/", re.IGNORECASE)
+_SHAREPOINT_MARKER_RE = re.compile(r"/?:[a-z]:/[grs]/", re.IGNORECASE)
 
 _PRUNED_DIR_NAMES: frozenset[str] = frozenset(
     (
@@ -359,7 +359,7 @@ class _ParameterCleanlinessScanner:
         ):
             if any(tok in stripped for tok in _PATH_NOISE_TOKENS):
                 continue
-            desc = self._match_machine_path_desc(_SHAREPOINT_TOKEN_RE.sub("", stripped))
+            desc = self._match_machine_path_desc(_SHAREPOINT_MARKER_RE.sub("", stripped))
             if desc is not None:
                 findings.append(
                     ParameterViolation(
