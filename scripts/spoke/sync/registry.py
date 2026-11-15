@@ -16,7 +16,12 @@ from typing import Any
 
 import yaml
 
-from .base import HAS_CRYPTOGRAPHY, PLATFORM_ROOT
+from .base import (
+    HAS_CRYPTOGRAPHY,
+    PLATFORM_ROOT,
+    is_ephemeral_spoke_path,
+    prune_ephemeral_heartbeats,
+)
 from .catalog import CatalogMerger
 
 if HAS_CRYPTOGRAPHY:
@@ -84,12 +89,7 @@ class SpokeRegistrar:
         """Return True when a pytest or temp spoke is targeting the real Hub repository."""
         if hub_root.resolve() != PLATFORM_ROOT.resolve():
             return False
-        spoke_posix = spoke_root.resolve().as_posix()
-        return (
-            "PYTEST_CURRENT_TEST" in os.environ
-            or "/pytest-of-" in spoke_posix
-            or "/pytest-" in spoke_posix
-        )
+        return "PYTEST_CURRENT_TEST" in os.environ or is_ephemeral_spoke_path(spoke_root)
 
     def register(
         self,
@@ -211,13 +211,7 @@ class SpokeRegistrar:
             if not isinstance(heartbeats, dict):
                 heartbeats = {}
             if hub_root.resolve() == PLATFORM_ROOT.resolve():
-                heartbeats = {
-                    k: v
-                    for k, v in heartbeats.items()
-                    if isinstance(v, dict)
-                    and "/pytest-of-" not in str(v.get("path", "")).replace("\\", "/")
-                    and "/pytest-" not in str(v.get("path", "")).replace("\\", "/")
-                }
+                heartbeats = prune_ephemeral_heartbeats(heartbeats)
             heartbeats[spoke_id] = {
                 "name": project_name,
                 "path": str(spoke_root.resolve()),

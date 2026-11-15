@@ -9,6 +9,7 @@ import importlib.util
 import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -136,3 +137,64 @@ def safe_remove(path: Path) -> None:
                 os.rmdir(path)
             except Exception:
                 pass
+
+
+_EPHEMERAL_POSIX_EXACT: frozenset[str] = frozenset({"/tmp", "/var/tmp", "/private/tmp"})
+_EPHEMERAL_POSIX_PREFIXES: tuple[str, ...] = ("/tmp/", "/var/tmp/", "/private/tmp/")
+
+
+def _is_under_os_temp_dir(candidate: Path) -> bool:
+    """Return True when candidate resides strictly inside OS tempfile.gettempdir()."""
+    try:
+        temp_raw = Path(tempfile.gettempdir())
+        temp_roots = {temp_raw, temp_raw.resolve()}
+        candidates = {candidate}
+        if candidate.is_absolute():
+            candidates.add(candidate.resolve())
+        for item in candidates:
+            for root in temp_roots:
+                if item != root and item.is_relative_to(root):
+                    return True
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return False
+
+
+def is_ephemeral_spoke_path(path_value: str | Path) -> bool:
+    """Return True if path_value points to a pytest fixture, mock spoke, or OS temp worktree.
+
+    Args:
+        path_value: Spoke filesystem path string or Path object.
+
+    Returns:
+        True if the path matches pytest/mock markers or resides under an OS temporary directory.
+    """
+    raw = str(path_value).strip()
+    if not raw:
+        return False
+    norm = raw.replace("\\", "/")
+    if (
+        "/pytest-of-" in norm
+        or "/pytest-" in norm
+        or "MOCK-TEST-SPOKE" in raw
+        or norm in _EPHEMERAL_POSIX_EXACT
+        or norm.startswith(_EPHEMERAL_POSIX_PREFIXES)
+    ):
+        return True
+    return _is_under_os_temp_dir(Path(raw))
+
+
+def prune_ephemeral_heartbeats(heartbeats: dict[str, Any]) -> dict[str, Any]:
+    """Filter out ephemeral pytest/mock/OS-temp spoke entries from a heartbeats mapping.
+
+    Args:
+        heartbeats: Mapping of spoke_id to heartbeat metadata dicts.
+
+    Returns:
+        Sanitized dictionary containing only non-ephemeral dict entries.
+    """
+    return {
+        k: v
+        for k, v in heartbeats.items()
+        if isinstance(v, dict) and not is_ephemeral_spoke_path(str(v.get("path", "")))
+    }

@@ -6,6 +6,14 @@ from typing import Any
 
 import yaml
 
+try:
+    from scripts.spoke.sync.base import is_ephemeral_spoke_path, prune_ephemeral_heartbeats
+except ImportError:
+    from sync.base import (  # type: ignore[import-not-found,no-redef]
+        is_ephemeral_spoke_path,
+        prune_ephemeral_heartbeats,
+    )
+
 # Attempt importing cryptography
 try:
     from cryptography.hazmat.primitives import hashes, serialization
@@ -24,9 +32,8 @@ PRIVATE_KEY_PATH = os.path.join(PRIVATE_KEY_DIR, "registry_private_key.pem")
 
 
 def _is_pytest_ephemeral_path(path_str: str) -> bool:
-    """Return True if path_str points to an ephemeral pytest temporary directory."""
-    norm = path_str.replace("\\", "/")
-    return "/pytest-of-" in norm or "/pytest-" in norm or "MOCK-TEST-SPOKE" in path_str
+    """Return True if path_str points to an ephemeral pytest or OS temporary directory."""
+    return is_ephemeral_spoke_path(path_str)
 
 
 def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
@@ -43,11 +50,7 @@ def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
             if not isinstance(heartbeats, dict):
                 return {}
             if root.resolve() == default_root.resolve():
-                return {
-                    k: v
-                    for k, v in heartbeats.items()
-                    if isinstance(v, dict) and not _is_pytest_ephemeral_path(str(v.get("path", "")))
-                }
+                return prune_ephemeral_heartbeats(heartbeats)
             return heartbeats
     except Exception:
         return {}

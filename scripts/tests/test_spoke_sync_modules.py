@@ -1667,6 +1667,7 @@ def test_coordinator_ast_function_length_compliance() -> None:
 
     sync_dir = Path(__file__).resolve().parents[1] / "spoke" / "sync"
     targets = [
+        sync_dir / "base.py",
         sync_dir / "coordinator.py",
         sync_dir / "graduation.py",
         sync_dir / "sdk_inspector.py",
@@ -1716,6 +1717,48 @@ def test_heartbeat_fallback_and_pytest_pollution_guard(tmp_path: Path) -> None:
 
     assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, PLATFORM_ROOT) is True
     assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(spoke_root, hub_root) is False
+
+
+def test_ephemeral_temp_worktree_spoke_blocked_on_real_hub(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify isolated OS temp worktree spokes cannot pollute real Hub registry or heartbeats."""
+    import tempfile
+
+    from scripts.spoke.sync.base import (
+        PLATFORM_ROOT,
+        is_ephemeral_spoke_path,
+        prune_ephemeral_heartbeats,
+    )
+    from scripts.spoke.sync.registry import SpokeRegistrar
+
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+    assert is_ephemeral_spoke_path("/tmp/wt-idop-sync-guard") is True
+    assert is_ephemeral_spoke_path("/var/tmp/wt-spoke") is True
+    assert is_ephemeral_spoke_path("/private/tmp/wt-macos") is True
+    assert is_ephemeral_spoke_path(Path(tempfile.gettempdir()) / "wt-ephemeral-spoke") is True
+    assert is_ephemeral_spoke_path("/srv/spokes/pytest-of-ci/spoke") is True
+    assert is_ephemeral_spoke_path("MOCK-TEST-SPOKE/demo") is True
+    assert is_ephemeral_spoke_path("/srv/spokes/IDOP-CCBA-WAY") is False
+    assert is_ephemeral_spoke_path("") is False
+
+    temp_wt = Path("/tmp/wt-idop-sync-guard")
+    real_spoke = Path("/srv/spokes/IDOP-CCBA-WAY")
+    assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(temp_wt, PLATFORM_ROOT) is True
+    assert SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(real_spoke, PLATFORM_ROOT) is False
+    assert (
+        SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(temp_wt, tmp_path / "mock_hub") is False
+    )
+
+    cleaned = prune_ephemeral_heartbeats(
+        {
+            "temp_wt": {"name": "IDOP-CCBA-WAY", "path": "/tmp/wt-idop-sync-guard"},
+            "pytest_dir": {"name": "MockSpoke", "path": "/tmp/pytest-of-ci/spoke"},
+            "real": {"name": "IDOP-CCBA-WAY", "path": "/srv/spokes/IDOP-CCBA-WAY"},
+        }
+    )
+    assert list(cleaned.keys()) == ["real"]
 
 
 def test_check_hub_import_depth_multiline_ast_span_quarantine(tmp_path: Path) -> None:
