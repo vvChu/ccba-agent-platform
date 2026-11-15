@@ -69,6 +69,11 @@ _WIN_PATH_RE = re.compile(
 )
 _POSIX_HOME_RE = re.compile(r"""(?:["']|[=:]\s*)/home/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+""")
 _SHAREPOINT_MARKER_RE = re.compile(r"/?:[a-z]:/[grs]/", re.IGNORECASE)
+_MODEL_HINT_RE = re.compile(
+    r"(?:gemini|gpt|claude|llama|mistral|qwen|deepseek|gemma|grok|"  # ccba:allow-raw-model
+    r"openai|anthropic|text-embedding)[-/\"']|"  # ccba:allow-raw-model
+    r"qwen3\.5-35b|smart-brain|smartest-brain|ocr-tier3"  # ccba:allow-raw-model
+)
 
 _PRUNED_DIR_NAMES: frozenset[str] = frozenset(
     (
@@ -150,7 +155,7 @@ def _resolve_py_context(
 
 def _collect_exempt_stmt_lines(tree: ast.AST | None, lines: list[str], tag: str) -> set[int]:
     """Return all line numbers spanned by statements containing the exemption tag."""
-    if tree is None:
+    if tree is None or not any(tag in ln or "noqa" in ln for ln in lines):
         return set()
     exempt_lines: set[int] = set()
     for node in ast.walk(tree):
@@ -173,11 +178,9 @@ def _is_whitelisted_path(path: Path) -> bool:
     normalized = path.as_posix()
     if "ccba_maskara" in normalized and "_locator.py" in normalized:
         return True
-    if path.name in _DEFAULT_EXEMPT_MODEL_FILES and (
+    return path.name in _DEFAULT_EXEMPT_MODEL_FILES and (
         "ccba_ai" in normalized or path.name == "_parameter_cleanliness.py"
-    ):
-        return True
-    return False
+    )
 
 
 def _iter_walk_py_files(root_dir: Path, pruned_dirs: AbstractSet[str]) -> list[Path]:
@@ -212,13 +215,34 @@ class _ParameterCleanlinessScanner:
 
     def scan_file(self, filepath: Path, content: str) -> list[ParameterViolation]:
         """Run enabled rules on a single in-memory file payload."""
+        has_m = (
+            "raw_model" in self._rules
+            and filepath.suffix == ".py"
+            and bool(_MODEL_HINT_RE.search(content.lower()))
+        )
+        has_i = (
+            "raw_ip" in self._rules and "." in content and bool(_IPV4_CANDIDATE_RE.search(content))
+        )
+        has_p = "machine_path" in self._rules and (
+            (
+                ":" in content
+                and bool(_WIN_PATH_RE.search(content) or _SHAREPOINT_MARKER_RE.search(content))
+            )
+            or (
+                self._check_posix_home
+                and "/home/" in content
+                and bool(_POSIX_HOME_RE.search(content))
+            )
+        )
+        if not (has_m or has_i or has_p):
+            return []
         is_py, tree, doc_lines, lines = _resolve_py_context(filepath, content)
         violations: list[ParameterViolation] = []
-        if "raw_model" in self._rules and is_py and tree is not None:
+        if has_m and is_py and tree is not None:
             violations.extend(self._scan_models(filepath, tree, doc_lines, lines))
-        if "raw_ip" in self._rules:
+        if has_i:
             violations.extend(self._scan_ips(filepath, is_py, tree, doc_lines, lines))
-        if "machine_path" in self._rules:
+        if has_p:
             violations.extend(self._scan_machine_paths(filepath, is_py, tree, doc_lines, lines))
         violations.sort(key=lambda v: (v.file_path.as_posix(), v.line_number, v.rule_name))
         return violations
@@ -248,16 +272,12 @@ class _ParameterCleanlinessScanner:
             if any("ccba:allow-raw-model" in sl or "noqa" in sl for sl in span_lines):
                 continue
             if self._is_raw_model_literal(node.value):
+                msg = (
+                    f"Raw model string '{node.value}' detected. "
+                    "Use ccba_ai.routing or alias, or annotate '# ccba:allow-raw-model'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=lineno,
-                        rule_name="RawModelStringViolation",
-                        message=(
-                            f"Raw model string '{node.value}' detected. "
-                            "Use ccba_ai.routing or alias, or annotate '# ccba:allow-raw-model'."
-                        ),
-                    )
+                    ParameterViolation(filepath, lineno, "RawModelStringViolation", msg)
                 )
         return findings
 
@@ -317,16 +337,12 @@ class _ParameterCleanlinessScanner:
                 ip_str = match.group(1)
                 if self._is_exempt_ipv4(line, match, ip_str):
                     continue
+                msg = (
+                    f"Hardcoded IP address '{ip_str}' detected. "
+                    "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate '# ccba:allow-raw-ip'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=line_num,
-                        rule_name="HardcodedNetworkIPViolation",
-                        message=(
-                            f"Hardcoded IP address '{ip_str}' detected. "
-                            "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate '# ccba:allow-raw-ip'."
-                        ),
-                    )
+                    ParameterViolation(filepath, line_num, "HardcodedNetworkIPViolation", msg)
                 )
                 break
         return findings
@@ -361,16 +377,12 @@ class _ParameterCleanlinessScanner:
                 continue
             desc = self._match_machine_path_desc(_SHAREPOINT_MARKER_RE.sub("", stripped))
             if desc is not None:
+                msg = (
+                    f"{desc} detected. Use env vars (e.g. CCBA_HUB_PATH) "
+                    "or annotate with '# ccba:allow-machine-path'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=line_num,
-                        rule_name="HardcodedMachinePathViolation",
-                        message=(
-                            f"{desc} detected. Use env vars (e.g. CCBA_HUB_PATH) "
-                            "or annotate with '# ccba:allow-machine-path'."
-                        ),
-                    )
+                    ParameterViolation(filepath, line_num, "HardcodedMachinePathViolation", msg)
                 )
         return findings
 
@@ -413,12 +425,10 @@ def scan_parameter_cleanliness(
 ) -> list[ParameterViolation]:
     """Scan Python or config targets for raw models, IPs, and hardcoded machine paths."""
     active_rules = _VALID_RULES if rules is None else frozenset(rules) & _VALID_RULES
-    extra_aliases = frozenset(allowed_model_aliases) if allowed_model_aliases else frozenset()
-    extra_exempt = frozenset(exempt_model_files) if exempt_model_files else frozenset()
     scanner = _ParameterCleanlinessScanner(
         rules=active_rules,
-        allowed_model_aliases=_APPROVED_MODEL_ALIASES | extra_aliases,
-        exempt_model_files=_DEFAULT_EXEMPT_MODEL_FILES | extra_exempt,
+        allowed_model_aliases=_APPROVED_MODEL_ALIASES | frozenset(allowed_model_aliases or ()),
+        exempt_model_files=_DEFAULT_EXEMPT_MODEL_FILES | frozenset(exempt_model_files or ()),
         check_posix_home=check_posix_home,
     )
     if content is not None and isinstance(targets, Path):

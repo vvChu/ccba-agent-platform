@@ -15,59 +15,51 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import ast
-import ipaddress
+import importlib.util
 import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
-APPROVED_MODEL_ALIASES = frozenset(
-    {
-        "ocr-primary",
-        "ocr-fallback",
-        "ocr-tier4",
-        "ocr-proxy",
-        "rag-core",
-        "rag-light",
-        "local-coder",
-        "local-instruct",
-        "fast-realtime",
-        "text-auto",
-        "text-gemma",
-        "text-gemma-12b",
-        "text-gemma-4b",
-        "text-light-gemma",
-        "text-light-auto",
-        "auto",
-        "reasoning-gemma",
-        "reasoning-fallback",
-        "qwen-local-primary",
-        "gemini-flash-latest",
-        "gemini-reasoning-latest",
-        "embedding-default",
-        "audio-primary",
-        "whisper-primary",
-        "whisper-local",
-        "tier-reasoning",
-        "tier-fast",
-        "tier-ocr",
-        "tier-local",
-    }
-)
 
-DEPRECATED_GATEWAY_COMPAT_PREFIXES = (
-    "gemini-2.5-",
-    "gemini-3.5-flash-",
-    "gemini-3.6-",
-    "gemini-3.7-",
-    "qwen-3.5-35b",
-    "qwen3.5-35b",
-    "gemma-3-27b",
-    "smart-brain",
-    "smartest-brain",
-    "ocr-tier3",
-)
+def _load_cleanliness_seam() -> Any:
+    """Load the pure-stdlib cleanliness seam via installed package, Tier-0 sibling, or Hub."""
+    try:
+        from ccba_harness import scan_parameter_cleanliness as _seam_scan
+
+        _ = _seam_scan
+        return sys.modules["ccba_harness._parameter_cleanliness"]
+    except ImportError:
+        pass
+    here = Path(__file__).resolve().parent
+    hub_fallback = (
+        here.parents[1] / "packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py"
+    )
+    for candidate in (
+        here / "_parameter_cleanliness.py",
+        here / "_guardrails" / "_parameter_cleanliness.py",
+        hub_fallback,
+    ):
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_ccba_parameter_cleanliness", candidate)
+            if spec is not None and spec.loader is not None:
+                mod = sys.modules.get(spec.name)
+                if mod is None:
+                    mod = importlib.util.module_from_spec(spec)
+                    sys.modules[spec.name] = mod
+                    spec.loader.exec_module(mod)
+                return mod
+    raise ImportError("Unable to locate stdlib _parameter_cleanliness seam.")
+
+
+_CLEANLINESS_SEAM = _load_cleanliness_seam()
+
+APPROVED_MODEL_ALIASES = _CLEANLINESS_SEAM._APPROVED_MODEL_ALIASES
+DEPRECATED_GATEWAY_COMPAT_PREFIXES = _CLEANLINESS_SEAM._DEPRECATED_MODEL_PREFIXES
+RAW_MODEL_PREFIXES = _CLEANLINESS_SEAM._RAW_MODEL_PREFIXES
+STANDARD_PUBLIC_DNS = _CLEANLINESS_SEAM._STANDARD_PUBLIC_DNS
+STATUTORY_CLAUSE_REF_RE = _CLEANLINESS_SEAM._STATUTORY_CLAUSE_REF_RE
 
 LIVING_DOC_BANNED_TOKENS: tuple[tuple[str, str], ...] = (
     (".agent/skills/", "Deprecated singular skill path '.agent/skills/' (use '.agents/skills/')"),
@@ -109,26 +101,8 @@ LIVING_DOC_BANNED_TOKENS: tuple[tuple[str, str], ...] = (
     ("legal_docs_v11", "Deprecated Milvus collection 'legal_docs_v11' (use 'legal_docs_v12_okf')"),
 )
 
-RAW_MODEL_PREFIXES = (
-    "gemini-",
-    "claude-",
-    "gpt-",
-    "deepseek-",
-    "gemma-",
-    "qwen-",
-    "grok-",
-    "mistral-",
-    "openai/",
-    "anthropic/",
-    "gemini/",
-)
-
 FILE_LEVEL_MODEL_EXEMPT_NAMES = frozenset(
-    {
-        "litellm_config.yaml",
-        "custom_callbacks.py",
-        "check_spoke_cleanliness.py",
-    }
+    "litellm_config.yaml custom_callbacks.py check_spoke_cleanliness.py _parameter_cleanliness.py".split()
 )
 
 
@@ -160,36 +134,18 @@ def _load_gateway_aliases(spoke_root: Path | None = None) -> frozenset[str]:
     return frozenset(aliases)
 
 
-STANDARD_PUBLIC_DNS = frozenset({"8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"})
-
-IPV4_CANDIDATE_PATTERN = re.compile(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b")
+IPV4_CANDIDATE_PATTERN = _CLEANLINESS_SEAM._IPV4_CANDIDATE_RE
 
 # System and Guardrail scripts that do NOT count towards the 15-file limit
-ALLOWLIST_SCRIPTS = {
-    "__init__.py",
-    "conftest.py",
-    "safe_pytest.py",
-    "safe_runner.py",
-    "check_hub_import_depth.py",
-    "check_spoke_cleanliness.py",
-    "check_claudekit_updates.py",
-    "spoke_bootstrap.py",
-    "spoke_bootstrap.ps1",
-    "setup_pre_commit.py",
-    "sync.py",
-}
+ALLOWLIST_SCRIPTS = set(
+    "__init__.py conftest.py safe_pytest.py safe_runner.py check_hub_import_depth.py "
+    "check_spoke_cleanliness.py _parameter_cleanliness.py check_claudekit_updates.py "
+    "spoke_bootstrap.py spoke_bootstrap.ps1 setup_pre_commit.py sync.py".split()
+)
 
 # Prefix patterns indicating one-off or temporary scripts
-EPHEMERAL_PREFIXES = (
-    "fix_",
-    "audit_",
-    "patch_",
-    "test_tmp_",
-    "debug_",
-    "tmp_",
-    "temp_",
-    "oneoff_",
-    "scratch_",
+EPHEMERAL_PREFIXES = tuple(
+    "fix_ audit_ patch_ test_tmp_ debug_ tmp_ temp_ oneoff_ scratch_".split()
 )
 
 # Patterns detecting anti-patterns or duplicated hub functionality
@@ -245,78 +201,40 @@ def load_cleanliness_config(spoke_root: Path) -> tuple[set[str], set[str]]:
     return custom_allowlist, role_exemptions
 
 
-def _resolve_py_doc_and_exempt_lines(
-    filepath: Path,
-    content: str,
-    exempt_marker: str = "",
-) -> tuple[bool, set[int], set[int]]:
-    """Returns (is_valid_py, docstring_linenos, marker_exempt_linenos) for a file."""
-    if filepath.suffix.lower() != ".py":
-        return False, set(), set()
-    try:
-        tree = ast.parse(content, filename=str(filepath))
-    except SyntaxError:
-        return False, set(), set()
-    doc_lines = _collect_docstring_lines(tree)
-    exempt_lines: set[int] = set()
-    if exempt_marker:
-        raw_lines = content.splitlines()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.stmt):
-                start = getattr(node, "lineno", 0)
-                end = getattr(node, "end_lineno", start) or start
-                span = raw_lines[max(0, start - 1) : min(len(raw_lines), end)]
-                if any(exempt_marker in sl for sl in span):
-                    exempt_lines.update(range(start, end + 1))
-    return True, doc_lines, exempt_lines
+def _scan_files_with_seam(
+    target_files: list[Path],
+    *,
+    rules: tuple[str, ...],
+    allowed_model_aliases: frozenset[str] | None = None,
+    exempt_model_files: frozenset[str] | None = None,
+    check_posix_home: bool = False,
+) -> list[tuple[Path, int, str]]:
+    """Run unified stdlib cleanliness checks per file preserving caller target order."""
+    results: list[tuple[Path, int, str]] = []
+    for filepath in target_files:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        findings = _CLEANLINESS_SEAM.scan_parameter_cleanliness(
+            filepath,
+            content=content,
+            rules=rules,
+            allowed_model_aliases=allowed_model_aliases,
+            exempt_model_files=exempt_model_files,
+            check_posix_home=check_posix_home,
+            respect_whitelist=False,
+        )
+        for item in findings:
+            results.append((item.file_path, item.line_number, item.message))
+    return results
 
 
 def check_machine_state_leakage(
     target_files: list[Path],
 ) -> list[tuple[Path, int, str]]:
     """Checks for hardcoded machine-specific absolute paths (e.g. C:\\, D:\\, /home/user)."""
-    violations: list[tuple[Path, int, str]] = []
-    for filepath in target_files:
-        try:
-            content = filepath.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-
-        is_py, doc_lines, exempt_lines = _resolve_py_doc_and_exempt_lines(
-            filepath, content, "ccba:allow-machine-path"
-        )
-        in_docstring = False
-        for line_num, line in enumerate(content.splitlines(), start=1):
-            stripped = line.strip()
-            was_in_docstring = in_docstring
-            if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
-                in_docstring = not in_docstring
-            if (
-                (
-                    line_num in doc_lines or line_num in exempt_lines
-                    if is_py
-                    else (was_in_docstring or in_docstring)
-                )
-                or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
-                or "ccba:allow-machine-path" in stripped
-                or "noqa" in stripped
-                or "path/to" in stripped
-                or "example" in stripped
-                or "dummy" in stripped
-            ):
-                continue
-            sanitized_line = re.sub(r"/?:[a-z]:/[grs]/", "", stripped, flags=re.IGNORECASE)
-            for pattern, desc in MACHINE_STATE_LEAK_PATTERNS:
-                if pattern.search(sanitized_line):
-                    violations.append(
-                        (
-                            filepath,
-                            line_num,
-                            f"{desc} detected. Use environment variables (e.g. CCBA_HUB_PATH) or relative paths.",
-                        )
-                    )
-                    break
-    return violations
+    return _scan_files_with_seam(target_files, rules=("machine_path",), check_posix_home=True)
 
 
 def guardrail_script_basename(dest: str) -> str | None:
@@ -474,11 +392,9 @@ def check_script_count(
     all_py_files = [f for f in sorted(scripts_dir.iterdir()) if f.is_file() and f.suffix == ".py"]
     counted: list[Path] = []
     ignored: list[Path] = []
-    effective_allowlist = set(ALLOWLIST_SCRIPTS)
-    if custom_allowlist:
-        effective_allowlist.update(custom_allowlist)
-    if catalog_allowlist:
-        effective_allowlist.update(catalog_allowlist)
+    effective_allowlist = (
+        set(ALLOWLIST_SCRIPTS) | (custom_allowlist or set()) | (catalog_allowlist or set())
+    )
 
     for f in all_py_files:
         if f.name in effective_allowlist or f.name.startswith("check_"):
@@ -526,31 +442,9 @@ def check_hub_duplications(target_files: list[Path]) -> list[tuple[Path, int, st
             if stripped.startswith("#"):
                 continue
             if SYS_PATH_HACK_PATTERN.search(stripped):
-                violations.append(
-                    (
-                        filepath,
-                        line_num,
-                        "Anti-pattern sys.path hack detected. Use 'pip install -e' via spoke_bootstrap.py instead.",
-                    )
-                )
+                msg = "Anti-pattern sys.path hack detected. Use 'pip install -e' via spoke_bootstrap.py instead."
+                violations.append((filepath, line_num, msg))
     return violations
-
-
-def _collect_docstring_lines(tree: ast.AST) -> set[int]:
-    """Collects 1-indexed line numbers belonging to module, class, or function docstrings."""
-    docstring_linenos: set[int] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Module)):
-            if (
-                node.body
-                and isinstance(node.body[0], ast.Expr)
-                and isinstance(node.body[0].value, ast.Constant)
-                and isinstance(node.body[0].value.value, str)
-            ):
-                start_ln = getattr(node.body[0], "lineno", 0)
-                end_ln = getattr(node.body[0], "end_lineno", start_ln)
-                docstring_linenos.update(range(start_ln, end_ln + 1))
-    return docstring_linenos
 
 
 def check_raw_model_leakage(
@@ -558,91 +452,34 @@ def check_raw_model_leakage(
     spoke_root: Path | None = None,
 ) -> list[tuple[Path, int, str]]:
     """Checks for hardcoded raw model identifiers (e.g. gemini-*, claude-*, gpt-*, openai/*)."""
-    allowed_aliases = _load_gateway_aliases(spoke_root)
-    violations: list[tuple[Path, int, str]] = []
-    for filepath in target_files:
-        if filepath.name in FILE_LEVEL_MODEL_EXEMPT_NAMES:
-            continue
-        try:
-            content = filepath.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-        lines = content.splitlines()
-        if any("ccba:allow-raw-model-file" in line for line in lines[:5]):
-            continue
-        try:
-            tree = ast.parse(content, filename=str(filepath))
-        except SyntaxError:
-            continue
-        docstring_linenos = _collect_docstring_lines(tree)
-        file_violations: list[tuple[Path, int, str]] = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                val = node.value.strip().lower()
-                lineno = getattr(node, "lineno", 0)
-                end_lineno = getattr(node, "end_lineno", lineno) or lineno
-                if lineno in docstring_linenos or lineno <= 0 or lineno > len(lines):
-                    continue
-                span_lines = lines[max(0, lineno - 1) : min(len(lines), end_lineno)]
-                if any("ccba:allow-raw-model" in sl for sl in span_lines) or val in allowed_aliases:
-                    continue
-                if (
-                    any(
-                        val.startswith(pfx)
-                        for pfx in RAW_MODEL_PREFIXES + DEPRECATED_GATEWAY_COMPAT_PREFIXES
-                    )
-                    and len(val) < 60
-                    and " " not in val
-                ):
-                    file_violations.append(
-                        (
-                            filepath,
-                            lineno,
-                            f"Raw model string '{node.value}' detected. "
-                            "Use capability alias or annotate with '# ccba:allow-raw-model'.",
-                        )
-                    )
-        file_violations.sort(key=lambda x: x[1])
-        violations.extend(file_violations)
-    return violations
+    return _scan_files_with_seam(
+        target_files,
+        rules=("raw_model",),
+        allowed_model_aliases=_load_gateway_aliases(spoke_root),
+        exempt_model_files=FILE_LEVEL_MODEL_EXEMPT_NAMES,
+    )
 
 
 def _collect_living_docs(spoke_root: Path) -> list[Path]:
     """Collects active living documentation and config files for SSoT drift scanning."""
     globs = (
-        ".agents/skills/**/SKILL.md",
-        ".agents/skills/**/references/*.md",
-        ".agents/workflows/*.md",
-        "playbooks/*.md",
-        ".github/instructions/*.md",
-        ".github/agents/*.md",
-        ".claude/agents/*.md",
-    )
+        ".agents/skills/**/SKILL.md .agents/skills/**/references/*.md "
+        ".agents/workflows/*.md playbooks/*.md .github/instructions/*.md "
+        ".github/agents/*.md .claude/agents/*.md"
+    ).split()
     direct_rels = (
-        "README.md",
-        "AGENTS.md",
-        "CONTEXT.md",
-        "services/rag-service/AGENTS.md",
-        "services/ai-gateway/FREE_TIER_LIMITS.md",
-        "services/ai-gateway/CLIENT_INTEGRATION_GUIDE.md",
-        "docs/ARCHITECTURE.md",
-        "docs/DEVELOPMENT.md",
-        "docs/PITFALLS.md",
-        ".github/copilot-instructions.md",
-        ".agents/ARCHITECTURE.md",
-        ".md/knowledge/codebase_architecture_and_mental_model.md",
-        "integrations/open_webui/README.md",
-        "docker-compose.yml",
-        ".env.example",
-        "monitoring/prometheus.yml",
-        "helm/dgx-spark-toolkit/values.yaml",
-        "examples/nodejs-ai-api/vllm-api.js",
-        "examples/client-setup/README.md",
-        "examples/client-setup/.env.ai-gateway",
-        "examples/client-setup/test-connection.sh",
-        "services/rag-service/benchmarks/locustfile.py",
-        "services/rag-service/scripts/benchmark_ocr_models.py",
-    )
+        "README.md AGENTS.md CONTEXT.md services/rag-service/AGENTS.md "
+        "services/ai-gateway/FREE_TIER_LIMITS.md services/ai-gateway/CLIENT_INTEGRATION_GUIDE.md "
+        "docs/ARCHITECTURE.md docs/DEVELOPMENT.md docs/PITFALLS.md "
+        ".github/copilot-instructions.md .agents/ARCHITECTURE.md "
+        ".md/knowledge/codebase_architecture_and_mental_model.md "
+        "integrations/open_webui/README.md docker-compose.yml .env.example "
+        "monitoring/prometheus.yml helm/dgx-spark-toolkit/values.yaml "
+        "examples/nodejs-ai-api/vllm-api.js examples/client-setup/README.md "
+        "examples/client-setup/.env.ai-gateway examples/client-setup/test-connection.sh "
+        "services/rag-service/benchmarks/locustfile.py "
+        "services/rag-service/scripts/benchmark_ocr_models.py"
+    ).split()
     found: set[Path] = set()
     for pattern in globs:
         for p in sorted(spoke_root.glob(pattern), key=lambda x: x.as_posix()):
@@ -672,98 +509,46 @@ def check_living_doc_drift(spoke_root: Path) -> list[tuple[Path, int, str]]:
     return violations
 
 
+def _report_violations(
+    spoke_root: Path,
+    messages: list[str],
+    violations: list[tuple[Path, int, str]],
+    err_header: str,
+    hint: str = "",
+    ok_msg: str = "",
+) -> bool:
+    """Append formatted relative violations (return True) or ok_msg (return False)."""
+    if not violations:
+        if ok_msg:
+            messages.append(ok_msg)
+        return False
+    body = "\n".join(f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in violations)
+    messages.append(f"{err_header}\n{body}\n{hint}" if hint else f"{err_header}\n{body}")
+    return True
+
+
 def _append_living_doc_violations(spoke_root: Path, messages: list[str]) -> bool:
     """Runs living documentation SSoT drift checks and appends formatted findings."""
-    drift_violations = check_living_doc_drift(spoke_root)
-    if drift_violations:
-        messages.append(
-            f"❌ [Vi phạm Living Doc / SSoT Drift] Phát hiện {len(drift_violations)} điểm trôi lệch:\n"
-            + "\n".join(
-                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in drift_violations
-            )
-        )
-        return True
-    messages.append("✅ [Living Doc SSoT Parity] Không phát hiện đường dẫn hoặc model đã khai tử.")
-    return False
-
-
-STATUTORY_CLAUSE_REF_RE = re.compile(
-    r"""(?:"""
-    r"""(?:["']{3}|^\s*#{1,6})\s*"""
-    r"""|(?:\b(?:tại|điểm|khoản|mục|như|bảng|hình|chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|nêu\s+tại|theo)\s+)"""
-    r""")"""
-    r"""(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
-    re.IGNORECASE,
-)
+    drift = check_living_doc_drift(spoke_root)
+    return _report_violations(
+        spoke_root,
+        messages,
+        drift,
+        f"❌ [Vi phạm Living Doc / SSoT Drift] Phát hiện {len(drift)} điểm trôi lệch:",
+        ok_msg="✅ [Living Doc SSoT Parity] Không phát hiện đường dẫn hoặc model đã khai tử.",
+    )
 
 
 def _is_statutory_clause_match(line: str, match: re.Match[str]) -> bool:
     """Returns True when a 4-part dotted number is a statutory section citation (e.g. QCVN 3.2.1.1)."""
-    ip_str = match.group(1)
-    if any(int(part) > 30 for part in ip_str.split(".")):
-        return False
-    prefix = line[: match.end()]
-    for cm in STATUTORY_CLAUSE_REF_RE.finditer(line):
-        if cm.start(1) == match.start(1) and cm.end(1) == match.end(1):
-            return True
-    return prefix.lstrip().startswith(ip_str + "  ")
+    return bool(_CLEANLINESS_SEAM.is_statutory_clause_match(line, match))
 
 
 def check_raw_ip_leakage(
     target_files: list[Path],
 ) -> list[tuple[Path, int, str]]:
     """Checks for hardcoded non-local IPv4 addresses in code, scripts, and configs."""
-    violations: list[tuple[Path, int, str]] = []
-    for filepath in target_files:
-        try:
-            content = filepath.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-        is_py, doc_lines, exempt_lines = _resolve_py_doc_and_exempt_lines(
-            filepath, content, "ccba:allow-raw-ip"
-        )
-        in_docstring = False
-        for line_num, line in enumerate(content.splitlines(), start=1):
-            stripped = line.strip()
-            was_in_docstring = in_docstring
-            if not is_py and (stripped.count('"""') % 2 == 1 or stripped.count("'''") % 2 == 1):
-                in_docstring = not in_docstring
-            if (
-                (
-                    line_num in doc_lines or line_num in exempt_lines
-                    if is_py
-                    else (was_in_docstring or in_docstring)
-                )
-                or stripped.startswith(("#", "//", "/*", "*", '"""', "'''"))
-                or "ccba:allow-raw-ip" in stripped
-            ):
-                continue
-            for match in IPV4_CANDIDATE_PATTERN.finditer(line):
-                ip_str = match.group(1)
-                try:
-                    ip = ipaddress.IPv4Address(ip_str)
-                except ValueError:
-                    continue
-                if (
-                    ip.is_loopback
-                    or ip.is_unspecified
-                    or ip.is_multicast
-                    or ip_str == "255.255.255.255"
-                    or ip_str in STANDARD_PUBLIC_DNS
-                    or (ip_str.endswith(".0") and "version" in line[: match.start()].lower())
-                    or _is_statutory_clause_match(line, match)
-                ):
-                    continue
-                violations.append(
-                    (
-                        filepath,
-                        line_num,
-                        f"Hardcoded IP address '{ip_str}' detected. "
-                        "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate with '# ccba:allow-raw-ip'.",
-                    )
-                )
-                break
-    return violations
+    return _scan_files_with_seam(target_files, rules=("raw_ip",))
 
 
 def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
@@ -792,71 +577,53 @@ def _append_code_violations(
     spoke_root: Path, py_files_to_scan: list[Path], messages: list[str]
 ) -> bool:
     """Runs sys.path duplication and AST raw model checks, appending formatted findings."""
-    has_errors = False
-    dup_violations = check_hub_duplications(py_files_to_scan)
-    if dup_violations:
-        has_errors = True
-        messages.append(
-            f"❌ [Vi phạm Hub Duplication / sys.path] Phát hiện {len(dup_violations)} vị trí vi phạm:\n"
-            + "\n".join(
-                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in dup_violations
-            )
-        )
-
-    model_violations = check_raw_model_leakage(py_files_to_scan, spoke_root=spoke_root)
-    if model_violations:
-        has_errors = True
-        messages.append(
-            f"❌ [Vi phạm Raw Model Leakage] Phát hiện {len(model_violations)} vị trí chứa model thô:\n"
-            + "\n".join(
-                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in model_violations
-            )
-            + "\n   💡 Dùng alias hoặc chú thích '# ccba:allow-raw-model'."
-        )
-    else:
-        messages.append(
-            "✅ [Model Externalization] Không phát hiện chuỗi model thô chưa chuẩn hoá."
-        )
-    return has_errors
+    dups = check_hub_duplications(py_files_to_scan)
+    models = check_raw_model_leakage(py_files_to_scan, spoke_root=spoke_root)
+    e1 = _report_violations(
+        spoke_root,
+        messages,
+        dups,
+        f"❌ [Vi phạm Hub Duplication / sys.path] Phát hiện {len(dups)} vị trí vi phạm:",
+    )
+    e2 = _report_violations(
+        spoke_root,
+        messages,
+        models,
+        f"❌ [Vi phạm Raw Model Leakage] Phát hiện {len(models)} vị trí chứa model thô:",
+        hint="   💡 Dùng alias hoặc chú thích '# ccba:allow-raw-model'.",
+        ok_msg="✅ [Model Externalization] Không phát hiện chuỗi model thô chưa chuẩn hoá.",
+    )
+    return e1 or e2
 
 
 def _append_machine_and_ip_violations(
     spoke_root: Path, py_files_to_scan: list[Path], messages: list[str]
 ) -> bool:
     """Runs raw IPv4 and machine-state path checks across Python and workspace config files."""
-    has_errors = False
-    files_to_check: list[Path] = list(py_files_to_scan)
-    for ctx_name in (".md/workspace_context.yaml", "workspace_context.yaml"):
-        ctx_cand = spoke_root / ctx_name
-        if ctx_cand.is_file():
-            files_to_check.append(ctx_cand)
-
-    ip_violations = check_raw_ip_leakage(files_to_check)
-    if ip_violations:
-        has_errors = True
-        messages.append(
-            f"❌ [Vi phạm Raw IP Leakage] Phát hiện {len(ip_violations)} vị trí chứa địa chỉ IPv4 thô:\n"
-            + "\n".join(
-                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in ip_violations
-            )
-            + "\n   💡 Dùng biến môi trường hoặc chú thích '# ccba:allow-raw-ip'."
-        )
-    else:
-        messages.append("✅ [IP Externalization] Không phát hiện hardcoded IPv4 trong code/config.")
-
-    machine_violations = check_machine_state_leakage(files_to_check)
-    if machine_violations:
-        has_errors = True
-        messages.append(
-            f"❌ [Vi phạm Machine-State Leakage] Phát hiện {len(machine_violations)} vị trí chứa đường dẫn máy tuyệt đối:\n"
-            + "\n".join(
-                f"   - {f.relative_to(spoke_root)}:{ln}: {msg}" for f, ln, msg in machine_violations
-            )
-            + "\n   💡 Hãy dùng biến môi trường (CCBA_HUB_PATH) hoặc đường dẫn tương đối để tránh xung đột đa máy."
-        )
-    else:
-        messages.append("✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.")
-    return has_errors
+    files_to_check = list(py_files_to_scan) + [
+        spoke_root / name
+        for name in (".md/workspace_context.yaml", "workspace_context.yaml")
+        if (spoke_root / name).is_file()
+    ]
+    ips = check_raw_ip_leakage(files_to_check)
+    paths = check_machine_state_leakage(files_to_check)
+    e1 = _report_violations(
+        spoke_root,
+        messages,
+        ips,
+        f"❌ [Vi phạm Raw IP Leakage] Phát hiện {len(ips)} vị trí chứa địa chỉ IPv4 thô:",
+        hint="   💡 Dùng biến môi trường hoặc chú thích '# ccba:allow-raw-ip'.",
+        ok_msg="✅ [IP Externalization] Không phát hiện hardcoded IPv4 trong code/config.",
+    )
+    e2 = _report_violations(
+        spoke_root,
+        messages,
+        paths,
+        f"❌ [Vi phạm Machine-State Leakage] Phát hiện {len(paths)} vị trí chứa đường dẫn máy tuyệt đối:",
+        hint="   💡 Hãy dùng biến môi trường (CCBA_HUB_PATH) hoặc đường dẫn tương đối để tránh xung đột đa máy.",
+        ok_msg="✅ [Machine-State] Không phát hiện rò rỉ đường dẫn máy tuyệt đối.",
+    )
+    return e1 or e2
 
 
 def scan_spoke_cleanliness(
@@ -945,10 +712,9 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 def main() -> int:
     """CLI runner for spoke cleanliness check."""
     if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")
-        if hasattr(sys.stderr, "reconfigure"):
-            sys.stderr.reconfigure(encoding="utf-8")
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                stream.reconfigure(encoding="utf-8")
 
     args = _build_arg_parser().parse_args()
     spoke_root = Path(args.path).resolve()
