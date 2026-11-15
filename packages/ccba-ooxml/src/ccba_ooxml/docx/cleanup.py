@@ -322,7 +322,7 @@ def _next_sibling_run(node: Any) -> Any | None:
 
 
 def _is_run(node: Any) -> bool:
-    name = node.localName or node.tagName
+    name: str = node.localName or node.tagName or ""
     return name == "r" or name.endswith(":r")
 
 
@@ -332,9 +332,9 @@ def _can_merge(run1: Any, run2: Any) -> bool:
 
     if (rpr1 is None) != (rpr2 is None):
         return False
-    if rpr1 is None:
+    if rpr1 is None or rpr2 is None:
         return True
-    return rpr1.toxml() == rpr2.toxml()
+    return bool(rpr1.toxml() == rpr2.toxml())
 
 
 def _merge_run_content(target: Any, source: Any) -> None:
@@ -395,7 +395,7 @@ def _merge_tracked_changes_in(container: Any, tag: str) -> int:
 
 
 def _is_element(node: Any, tag: str) -> bool:
-    name = node.localName or node.tagName
+    name: str = node.localName or node.tagName or ""
     return name == tag or name.endswith(f":{tag}")
 
 
@@ -404,8 +404,8 @@ def _get_author(elem: Any) -> str:
     if not author and hasattr(elem, "attributes") and elem.attributes:
         for attr in elem.attributes.values():
             if attr.localName == "author" or attr.name.endswith(":author"):
-                return attr.value
-    return author or ""
+                return str(attr.value)
+    return str(author) if author else ""
 
 
 def _can_merge_tracked(elem1: Any, elem2: Any) -> bool:

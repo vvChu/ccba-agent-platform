@@ -140,7 +140,7 @@ def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
 
     # Fallback to openpyxl (Lazy Import to prevent crash if openpyxl not installed)
     try:
-        from openpyxl import load_workbook
+        from openpyxl import load_workbook  # type: ignore[import-untyped]
 
         wb = load_workbook(filename, data_only=False)
         wb.save(filename)

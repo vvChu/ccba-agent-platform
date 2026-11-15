@@ -2,13 +2,37 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from xml.dom import minidom
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
 
     from .document import DocxXMLEditor
+
+
+def _swap_text_elements(dom: Any, container: Element, src_tag: str, dst_tag: str) -> None:
+    """Replace child elements matching src_tag with dst_tag preserving children and attributes."""
+    for src_elem in list(container.getElementsByTagName(src_tag)):
+        dst_elem = dom.createElement(dst_tag)
+        while src_elem.firstChild:
+            dst_elem.appendChild(src_elem.firstChild)
+        if src_elem.attributes is not None:
+            for i in range(src_elem.attributes.length):
+                attr = src_elem.attributes.item(i)
+                if isinstance(attr, minidom.Attr):
+                    dst_elem.setAttribute(attr.name, attr.value)
+        if src_elem.parentNode is not None:
+            src_elem.parentNode.replaceChild(dst_elem, src_elem)
+
+
+def _convert_run_rsid_to_del(run: Element, fallback_rsid: str) -> None:
+    """Convert w:rsidR attribute to w:rsidDel on a run element."""
+    if run.hasAttribute("w:rsidR"):
+        run.setAttribute("w:rsidDel", run.getAttribute("w:rsidR"))
+        run.removeAttribute("w:rsidR")
+    elif not run.hasAttribute("w:rsidDel"):
+        run.setAttribute("w:rsidDel", fallback_rsid)
 
 
 def revert_insertion(editor: DocxXMLEditor, elem: Element) -> list[Element]:
@@ -33,20 +57,8 @@ def revert_insertion(editor: DocxXMLEditor, elem: Element) -> list[Element]:
         del_wrapper = editor.dom.createElement("w:del")
 
         for run in runs:
-            if run.hasAttribute("w:rsidR"):
-                run.setAttribute("w:rsidDel", run.getAttribute("w:rsidR"))
-                run.removeAttribute("w:rsidR")
-            elif not run.hasAttribute("w:rsidDel"):
-                run.setAttribute("w:rsidDel", editor.rsid)
-
-            for t_elem in list(run.getElementsByTagName("w:t")):
-                del_text = editor.dom.createElement("w:delText")
-                while t_elem.firstChild:
-                    del_text.appendChild(t_elem.firstChild)
-                for i in range(t_elem.attributes.length):
-                    attr = t_elem.attributes.item(i)
-                    del_text.setAttribute(attr.name, attr.value)
-                t_elem.parentNode.replaceChild(del_text, t_elem)
+            _convert_run_rsid_to_del(run, editor.rsid)
+            _swap_text_elements(editor.dom, run, "w:t", "w:delText")
 
         while ins_elem.firstChild:
             del_wrapper.appendChild(ins_elem.firstChild)
@@ -84,15 +96,10 @@ def revert_deletion(editor: DocxXMLEditor, elem: Element) -> list[Element]:
 
         for run in runs:
             new_run = run.cloneNode(True)
+            if new_run is None:
+                continue
 
-            for del_text in list(new_run.getElementsByTagName("w:delText")):
-                t_elem = editor.dom.createElement("w:t")
-                while del_text.firstChild:
-                    t_elem.appendChild(del_text.firstChild)
-                for i in range(del_text.attributes.length):
-                    attr = del_text.attributes.item(i)
-                    t_elem.setAttribute(attr.name, attr.value)
-                del_text.parentNode.replaceChild(t_elem, del_text)
+            _swap_text_elements(editor.dom, new_run, "w:delText", "w:t")
 
             if new_run.hasAttribute("w:rsidDel"):
                 new_run.setAttribute("w:rsidR", new_run.getAttribute("w:rsidDel"))
@@ -144,82 +151,66 @@ def suggest_paragraph(xml_content: str) -> str:
     return para.toxml()
 
 
+def _suggest_run_deletion(editor: DocxXMLEditor, elem: Element) -> Element:
+    """Mark a w:r element as deleted with tracked changes."""
+    if elem.getElementsByTagName("w:delText"):
+        raise ValueError("w:r element already contains w:delText")
+
+    _swap_text_elements(editor.dom, elem, "w:t", "w:delText")
+    _convert_run_rsid_to_del(elem, editor.rsid)
+
+    del_wrapper: Element = editor.dom.createElement("w:del")
+    parent = elem.parentNode
+    if parent is None:
+        raise ValueError("Cannot mark detached w:r element as deleted")
+    parent.insertBefore(del_wrapper, elem)
+    parent.removeChild(elem)
+    del_wrapper.appendChild(elem)
+
+    editor._inject_attributes_to_nodes([del_wrapper])
+    return del_wrapper
+
+
+def _suggest_paragraph_deletion(editor: DocxXMLEditor, elem: Element) -> Element:
+    """Mark a w:p element as deleted with tracked changes."""
+    if elem.getElementsByTagName("w:ins") or elem.getElementsByTagName("w:del"):
+        raise ValueError("w:p element already contains tracked changes")
+
+    pPr_list = elem.getElementsByTagName("w:pPr")
+    is_numbered = pPr_list and pPr_list[0].getElementsByTagName("w:numPr")
+
+    if is_numbered:
+        pPr = pPr_list[0]
+        rPr_list = pPr.getElementsByTagName("w:rPr")
+        if not rPr_list:
+            rPr = editor.dom.createElement("w:rPr")
+            pPr.appendChild(rPr)
+        else:
+            rPr = rPr_list[0]
+
+        del_marker = editor.dom.createElement("w:del")
+        rPr.insertBefore(del_marker, rPr.firstChild) if rPr.firstChild else rPr.appendChild(
+            del_marker
+        )
+
+    _swap_text_elements(editor.dom, elem, "w:t", "w:delText")
+    for run in elem.getElementsByTagName("w:r"):
+        _convert_run_rsid_to_del(run, editor.rsid)
+
+    del_wrapper: Element = editor.dom.createElement("w:del")
+    for child in [c for c in elem.childNodes if c.nodeName != "w:pPr"]:
+        elem.removeChild(child)
+        del_wrapper.appendChild(child)
+    elem.appendChild(del_wrapper)
+
+    editor._inject_attributes_to_nodes([del_wrapper])
+    return elem
+
+
 def suggest_deletion(editor: DocxXMLEditor, elem: Element) -> Element:
     """Mark a w:r or w:p element as deleted with tracked changes."""
     if elem.nodeName == "w:r":
-        if elem.getElementsByTagName("w:delText"):
-            raise ValueError("w:r element already contains w:delText")
-
-        for t_elem in list(elem.getElementsByTagName("w:t")):
-            del_text = editor.dom.createElement("w:delText")
-            while t_elem.firstChild:
-                del_text.appendChild(t_elem.firstChild)
-            for i in range(t_elem.attributes.length):
-                attr = t_elem.attributes.item(i)
-                del_text.setAttribute(attr.name, attr.value)
-            t_elem.parentNode.replaceChild(del_text, t_elem)
-
-        if elem.hasAttribute("w:rsidR"):
-            elem.setAttribute("w:rsidDel", elem.getAttribute("w:rsidR"))
-            elem.removeAttribute("w:rsidR")
-        elif not elem.hasAttribute("w:rsidDel"):
-            elem.setAttribute("w:rsidDel", editor.rsid)
-
-        del_wrapper = editor.dom.createElement("w:del")
-        parent = elem.parentNode
-        parent.insertBefore(del_wrapper, elem)
-        parent.removeChild(elem)
-        del_wrapper.appendChild(elem)
-
-        editor._inject_attributes_to_nodes([del_wrapper])
-        return del_wrapper
-
-    elif elem.nodeName == "w:p":
-        if elem.getElementsByTagName("w:ins") or elem.getElementsByTagName("w:del"):
-            raise ValueError("w:p element already contains tracked changes")
-
-        pPr_list = elem.getElementsByTagName("w:pPr")
-        is_numbered = pPr_list and pPr_list[0].getElementsByTagName("w:numPr")
-
-        if is_numbered:
-            pPr = pPr_list[0]
-            rPr_list = pPr.getElementsByTagName("w:rPr")
-
-            if not rPr_list:
-                rPr = editor.dom.createElement("w:rPr")
-                pPr.appendChild(rPr)
-            else:
-                rPr = rPr_list[0]
-
-            del_marker = editor.dom.createElement("w:del")
-            rPr.insertBefore(del_marker, rPr.firstChild) if rPr.firstChild else rPr.appendChild(
-                del_marker
-            )
-
-        for t_elem in list(elem.getElementsByTagName("w:t")):
-            del_text = editor.dom.createElement("w:delText")
-            while t_elem.firstChild:
-                del_text.appendChild(t_elem.firstChild)
-            for i in range(t_elem.attributes.length):
-                attr = t_elem.attributes.item(i)
-                del_text.setAttribute(attr.name, attr.value)
-            t_elem.parentNode.replaceChild(del_text, t_elem)
-
-        for run in elem.getElementsByTagName("w:r"):
-            if run.hasAttribute("w:rsidR"):
-                run.setAttribute("w:rsidDel", run.getAttribute("w:rsidR"))
-                run.removeAttribute("w:rsidR")
-            elif not run.hasAttribute("w:rsidDel"):
-                run.setAttribute("w:rsidDel", editor.rsid)
-
-        del_wrapper = editor.dom.createElement("w:del")
-        for child in [c for c in elem.childNodes if c.nodeName != "w:pPr"]:
-            elem.removeChild(child)
-            del_wrapper.appendChild(child)
-        elem.appendChild(del_wrapper)
-
-        editor._inject_attributes_to_nodes([del_wrapper])
-        return elem
-
-    else:
-        raise ValueError(f"Element must be w:r or w:p, got {elem.nodeName}")
+        return _suggest_run_deletion(editor, elem)
+    if elem.nodeName == "w:p":
+        return _suggest_paragraph_deletion(editor, elem)
+    raise ValueError(f"Element must be w:r or w:p, got {elem.nodeName}")

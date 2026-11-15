@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import defusedxml.ElementTree as DET
 
@@ -84,7 +84,7 @@ class OOXMLWorkspace:
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: Any,
-    ) -> bool:
+    ) -> Literal[False]:
         """Pack changes, validate, and clean up workspace on exit."""
         try:
             if exc_type is None and self.working_dir:
@@ -150,7 +150,8 @@ class OOXMLWorkspace:
             raise FileNotFoundError(f"XML file not found in workspace: {rel_path}")
 
         tree = DET.parse(str(file_path))
-        return tree.getroot()
+        root: ET.Element = tree.getroot()
+        return root
 
     def write_xml(self, rel_path: str | Path, root: ET.Element) -> None:
         """Write an XML root element back to a file in the workspace.

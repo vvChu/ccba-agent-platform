@@ -278,8 +278,9 @@ class DocxDocument:
         return self.comment_engine.reply_to_comment(parent_comment_id, text)
 
     def __del__(self) -> None:
-        if getattr(self, "temp_dir", None) and Path(self.temp_dir).exists():
-            shutil.rmtree(self.temp_dir, ignore_errors=True)
+        temp_dir = getattr(self, "temp_dir", None)
+        if isinstance(temp_dir, str) and Path(temp_dir).exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def validate(self) -> None:
         """Validate the document against XSD schema and redlining rules."""
