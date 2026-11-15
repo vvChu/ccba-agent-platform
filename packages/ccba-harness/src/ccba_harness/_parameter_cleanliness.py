@@ -16,30 +16,22 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _APPROVED_MODEL_ALIASES: frozenset[str] = frozenset(
-    (
-        "ocr-primary ocr-fallback ocr-tier4 ocr-proxy rag-core rag-light "
-        "local-coder local-instruct fast-realtime text-auto text-gemma "
-        "text-gemma-12b text-gemma-4b text-light-gemma text-light-auto auto "
-        "reasoning-gemma reasoning-fallback qwen-local qwen-local-primary "  # ccba:allow-raw-model
-        "gemini-flash-latest gemini-reasoning-latest embedding-default "  # ccba:allow-raw-model
-        "audio-primary whisper-primary whisper-local "
-        "tier-reasoning tier-fast tier-ocr tier-local"
-    ).split()
+    "ocr-primary ocr-fallback ocr-tier4 ocr-proxy rag-core rag-light "
+    "local-coder local-instruct fast-realtime text-auto text-gemma "
+    "text-gemma-12b text-gemma-4b text-light-gemma text-light-auto auto "
+    "reasoning-gemma reasoning-fallback qwen-local qwen-local-primary "  # ccba:allow-raw-model
+    "gemini-flash-latest gemini-reasoning-latest embedding-default "  # ccba:allow-raw-model
+    "audio-primary whisper-primary whisper-local tier-reasoning tier-fast tier-ocr tier-local".split()
 )
 
 _DEPRECATED_MODEL_PREFIXES: tuple[str, ...] = tuple(
-    (
-        "gemini-2.5- gemini-3.5-flash- gemini-3.6- gemini-3.7- "  # ccba:allow-raw-model
-        "qwen-3.5-35b qwen3.5-35b gemma-3-27b "  # ccba:allow-raw-model
-        "smart-brain smartest-brain ocr-tier3"
-    ).split()
+    "gemini-2.5- gemini-3.5-flash- gemini-3.6- gemini-3.7- "  # ccba:allow-raw-model
+    "qwen-3.5-35b qwen3.5-35b gemma-3-27b smart-brain smartest-brain ocr-tier3".split()  # ccba:allow-raw-model
 )
 
 _RAW_MODEL_PREFIXES: tuple[str, ...] = tuple(
-    (
-        "gemini- claude- gpt- llama- mistral- qwen- deepseek- gemma- grok- "
-        "text-embedding- openai/ anthropic/ gemini/"
-    ).split()
+    "gemini- claude- gpt- llama- mistral- qwen- deepseek- gemma- grok- "
+    "text-embedding- openai/ anthropic/ gemini/".split()
 )
 
 _MODEL_PATTERN = re.compile(
@@ -54,12 +46,9 @@ _STANDARD_PUBLIC_DNS: frozenset[str] = frozenset(
 )
 
 _STATUTORY_CLAUSE_REF_RE = re.compile(
-    r"""(?:"""
-    r"""(?:["']{3}|^\s*#{1,6})\s*"""
-    r"""|(?:\b(?:tại|điểm|khoản|mục|điều|chương|phụ\s+lục|qcvn|tcvn|như|bảng|hình|"""
-    r"""chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|nêu\s+tại|theo)\s+)"""
-    r""")"""
-    r"""(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
+    r"""(?:(?:["']{3}|^\s*#{1,6})\s*|\b(?:tại|điểm|khoản|mục|điều|chương|phụ\s+lục|"""
+    r"""qcvn|tcvn|như|bảng|hình|chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|"""
+    r"""nêu\s+tại|theo)\s+)(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
     re.IGNORECASE,
 )
 
@@ -69,25 +58,22 @@ _WIN_PATH_RE = re.compile(
 )
 _POSIX_HOME_RE = re.compile(r"""(?:["']|[=:]\s*)/home/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+""")
 _SHAREPOINT_MARKER_RE = re.compile(r"/?:[a-z]:/[grs]/", re.IGNORECASE)
+_IP_HINT_RE = re.compile(r"\d\.\d+\.\d")
+_PATH_HINT_RE = re.compile(r"""(?:["'=:]\s*[A-Za-z]:[\\/\"']|/?:[a-zA-Z]:/[grsGRS]/)""")
 _MODEL_HINT_RE = re.compile(
-    r"(?:gemini|gpt|claude|llama|mistral|qwen|deepseek|gemma|grok|"  # ccba:allow-raw-model
-    r"openai|anthropic|text-embedding)[-/\"']|"  # ccba:allow-raw-model
-    r"qwen3\.5-35b|smart-brain|smartest-brain|ocr-tier3"  # ccba:allow-raw-model
+    r"""["'](?:\\[nrt]|\s)*(?:gemini[-/"']|gpt[-/"']|claude[-/"']|llama[-/"']|"""  # ccba:allow-raw-model
+    r"""mistral[-/"']|qwen[-/3"']|deepseek[-/"']|gemma[-/"']|grok[-/"']|"""  # ccba:allow-raw-model
+    r"""openai/|anthropic/|text-embedding[-/"']|smart-brain|smartest-brain|ocr-tier3)"""  # ccba:allow-raw-model
 )
 
 _PRUNED_DIR_NAMES: frozenset[str] = frozenset(
-    (
-        ".venv venv .git .md build dist archive legacy_scripts tests "
-        "__pycache__ node_modules .mypy_cache .pytest_cache .ruff_cache"
-    ).split()
+    ".venv venv .git .md build dist archive legacy_scripts tests "
+    "__pycache__ node_modules .mypy_cache .pytest_cache .ruff_cache".split()
 )
 
 _DEFAULT_EXEMPT_MODEL_FILES: frozenset[str] = frozenset(
-    (
-        "routing.py fallback.py mock_provider.py copilot_provider.py "
-        "litellm_config.yaml custom_callbacks.py "
-        "check_spoke_cleanliness.py _parameter_cleanliness.py"
-    ).split()
+    "routing.py fallback.py mock_provider.py copilot_provider.py "
+    "litellm_config.yaml custom_callbacks.py check_spoke_cleanliness.py _parameter_cleanliness.py".split()
 )
 
 _COMMENT_PREFIXES: tuple[str, ...] = ("#", "//", "/*", "*", '"""', "'''")
@@ -213,29 +199,36 @@ class _ParameterCleanlinessScanner:
         self._exempt_model_files = exempt_model_files
         self._check_posix_home = check_posix_home
 
-    def scan_file(self, filepath: Path, content: str) -> list[ParameterViolation]:
-        """Run enabled rules on a single in-memory file payload."""
+    def _prefilter(self, filepath: Path, content: str) -> tuple[bool, bool, bool]:
+        """Fast regex/substring prefilter returning (need_models, need_ips, need_paths)."""
+        is_py = filepath.suffix.lower() == ".py"
         has_m = (
             "raw_model" in self._rules
-            and filepath.suffix == ".py"
+            and is_py
+            and filepath.name not in self._exempt_model_files
+            and "ccba:allow-raw-model-file" not in content[:500]
             and bool(_MODEL_HINT_RE.search(content.lower()))
         )
-        has_i = (
-            "raw_ip" in self._rules and "." in content and bool(_IPV4_CANDIDATE_RE.search(content))
+        has_i = "raw_ip" in self._rules and "." in content and bool(_IP_HINT_RE.search(content))
+        has_p = "machine_path" in self._rules and bool(
+            (":" in content and _PATH_HINT_RE.search(content))
+            or (self._check_posix_home and "/home/" in content and _POSIX_HOME_RE.search(content))
         )
-        has_p = "machine_path" in self._rules and (
-            (
-                ":" in content
-                and bool(_WIN_PATH_RE.search(content) or _SHAREPOINT_MARKER_RE.search(content))
-            )
-            or (
-                self._check_posix_home
-                and "/home/" in content
-                and bool(_POSIX_HOME_RE.search(content))
-            )
-        )
+        return has_m, has_i, has_p
+
+    def scan_file(self, filepath: Path, content: str) -> list[ParameterViolation]:
+        """Run enabled rules on a single in-memory file payload."""
+        has_m, has_i, has_p = self._prefilter(filepath, content)
         if not (has_m or has_i or has_p):
             return []
+        if filepath.suffix.lower() == ".py" and not has_m:
+            raw_lines = content.splitlines()
+            probe_i = has_i and bool(self._scan_ips(filepath, True, None, set(), raw_lines))
+            probe_p = has_p and bool(
+                self._scan_machine_paths(filepath, True, None, set(), raw_lines)
+            )
+            if not (probe_i or probe_p):
+                return []
         is_py, tree, doc_lines, lines = _resolve_py_context(filepath, content)
         violations: list[ParameterViolation] = []
         if has_m and is_py and tree is not None:
