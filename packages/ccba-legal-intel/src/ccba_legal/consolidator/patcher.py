@@ -90,8 +90,11 @@ class LegislativeConsolidator:
                     PatchAction.INSERT_BEFORE,
                     PatchAction.INSERT_RANGE_AFTER,
                 ):
-                    added_count += rec.get(
-                        "added_count", len(patch.new_anchors) if patch.new_anchors else 1
+                    default_added = len(patch.new_anchors) if patch.new_anchors else 1
+                    added_count += (
+                        int(rec.get("added_count", default_added))
+                        if rec is not None
+                        else default_added
                     )
                 elif patch.action == PatchAction.REPEAL:
                     repealed_count += 1

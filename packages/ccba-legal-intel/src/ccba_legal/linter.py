@@ -291,7 +291,8 @@ def safe_parse_xml(xml_bytes: bytes) -> ET.Element:
     try:
         import defusedxml.ElementTree as DefusedET
 
-        return DefusedET.fromstring(xml_bytes)
+        parsed: ET.Element = DefusedET.fromstring(xml_bytes)
+        return parsed
     except ImportError:
         # Strictly forbid external DTD and entity declarations in stdlib fallback to prevent security downgrade
         if b"<!DOCTYPE" in xml_bytes or b"<!ENTITY" in xml_bytes:
@@ -397,20 +398,20 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
         return results
 
     if ext == ".docx":
-        results: list[tuple[int, str, str]] = []
+        docx_results: list[tuple[int, str, str]] = []
         try:
             with zipfile.ZipFile(file_path, "r") as z:
                 if "word/document.xml" in z.namelist():
                     zinfo = z.getinfo("word/document.xml")
                     if zinfo.file_size > MAX_XML_ENTRY_SIZE:
-                        results.append(
+                        docx_results.append(
                             (
                                 1,
                                 "Error",
                                 f"Document XML exceeds maximum allowed size ({zinfo.file_size} bytes)",
                             )
                         )
-                        return results
+                        return docx_results
                     tree = safe_parse_xml(z.read(zinfo))
                     p_idx = 0
                     for node in tree.iter():
@@ -420,10 +421,10 @@ def extract_file_lines(file_path: Path) -> list[tuple[int, str, str]]:
                                 t.text for t in node.iter() if t.tag.endswith("}t") and t.text
                             ).strip()
                             if p_text:
-                                results.append((p_idx, f"Para {p_idx}", p_text))
+                                docx_results.append((p_idx, f"Para {p_idx}", p_text))
         except Exception as e:
-            results.append((1, "Error", f"Failed to parse DOCX {file_path.name}: {e}"))
-        return results
+            docx_results.append((1, "Error", f"Failed to parse DOCX {file_path.name}: {e}"))
+        return docx_results
 
     return []
 
@@ -633,15 +634,15 @@ def lint_target_path(
         target_files = collect_scannable_files(target_path, scan_exts)
         result["files_scanned"] = len(target_files)
 
-        for f in target_files:
-            if f.suffix.lower() in {".md", ".markdown"}:
-                errs = lint_markdown_file(f)
+        for file_path in target_files:
+            if file_path.suffix.lower() in {".md", ".markdown"}:
+                errs = lint_markdown_file(file_path)
                 if errs:
                     result["format_errors"] += len(errs)
-                    result["details"].append({"file": str(f), "errors": errs})
+                    result["details"].append({"file": str(file_path), "errors": errs})
 
             if check_currency:
-                c_findings = lint_file_currency(f, registry_path=registry_path)
+                c_findings = lint_file_currency(file_path, registry_path=registry_path)
                 for item in c_findings:
                     if item["severity"] == "ERROR":
                         result["currency_errors"] += 1

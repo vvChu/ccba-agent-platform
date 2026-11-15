@@ -4,7 +4,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from .models import ASTNode, PatchAction
+from .models import ASTNode as ASTNode
+from .models import PatchAction as PatchAction
 
 
 @dataclass

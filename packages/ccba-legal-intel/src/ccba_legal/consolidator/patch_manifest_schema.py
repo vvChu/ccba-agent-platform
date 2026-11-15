@@ -20,7 +20,7 @@ class DocMode(str, Enum):
     THONG_TU = "thong_tu"
 
 
-from ..models import PatchAction
+from ..models import PatchAction as PatchAction
 
 
 class DefectSeverity(str, Enum):

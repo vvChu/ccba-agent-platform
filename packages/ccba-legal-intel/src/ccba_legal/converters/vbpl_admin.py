@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, BinaryIO
 
-import mammoth
+import mammoth  # type: ignore[import-untyped]
 import yaml
 
 from ccba_legal.constants import (
@@ -80,8 +80,9 @@ def _load_registry_metadata(
                     all_items.extend(v)
             for item in all_items:
                 doc_num = item.get("document_number")
-                if doc_num:
-                    reg_lookup[doc_num] = item.get("id")
+                item_id = item.get("id")
+                if doc_num and isinstance(item_id, str):
+                    reg_lookup[str(doc_num)] = item_id
                 if item.get("id") == bundle_name or item.get("document_number") == bundle_name:
                     doc_registry_meta = item
     return (reg_lookup, doc_registry_meta)
@@ -89,12 +90,12 @@ def _load_registry_metadata(
 
 def _convert_docx_to_clean_markdown(docx_input: Path | BinaryIO) -> str:
     """Convert docx to raw markdown via Mammoth and clean escaping artifacts."""
-    if hasattr(docx_input, "read"):
-        docx_input.seek(0)
-        raw_md = mammoth.convert_to_markdown(docx_input).value
-    else:
+    if isinstance(docx_input, Path):
         with open(docx_input, "rb") as f:
-            raw_md = mammoth.convert_to_markdown(f).value
+            raw_md = str(mammoth.convert_to_markdown(f).value)
+    else:
+        docx_input.seek(0)
+        raw_md = str(mammoth.convert_to_markdown(docx_input).value)
     cleaned = re.sub(r'<a id="[^"]+"></a>', "", raw_md)
     return normalize_docx_markdown(cleaned)
 
@@ -414,7 +415,7 @@ def _generate_vbpl_frontmatter(
         )
     return (
         "---\n"
-        + yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2).strip()
+        + str(yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2)).strip()
         + "\n---\n\n"
     )
 

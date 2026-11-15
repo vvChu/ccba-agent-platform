@@ -232,15 +232,15 @@ def verify_bundle_docx_vs_pdf(
     }
 
 
-class ParityResult(tuple):
+class ParityResult(tuple[float, list[tuple[int, str]]]):
     def __new__(
         cls, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0
-    ):
+    ) -> ParityResult:
         return super().__new__(cls, (parity_rate, missing_paras))
 
     def __init__(
         self, parity_rate: float, missing_paras: list[tuple[int, str]], effective_paras: int = 0
-    ):
+    ) -> None:
         self.parity_rate = parity_rate
         self.missing_paras = missing_paras
         self.effective_paras = effective_paras
