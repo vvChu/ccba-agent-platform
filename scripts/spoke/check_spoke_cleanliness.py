@@ -552,25 +552,40 @@ def check_raw_ip_leakage(
 
 
 def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
-    """Collects Python source files under scripts/, src/, tools/, and .agents/ excluding test/venv/archive folders."""
-    excluded_parts = (".venv", "venv", "__pycache__", "tests", "archive", "legacy_scripts")
+    """Collects Python source files under scripts/, src/, services/, tools/, and .agents/ safely."""
+    excluded_parts = frozenset(
+        {
+            ".venv",
+            "venv",
+            "__pycache__",
+            "tests",
+            "archive",
+            "legacy_scripts",
+            "volumes",
+            "node_modules",
+            "surya_src",
+            "autoresearch",
+            ".git",
+        }
+    )
     py_files: list[Path] = []
     scan_roots = (
         scripts_dir,
         spoke_root / "src",
+        spoke_root / "services",
         spoke_root / "tools",
         spoke_root / ".agents" / "scripts",
         spoke_root / ".agents" / "skills",
     )
     for d in scan_roots:
         if d.exists():
-            py_files.extend(
-                sorted(
-                    (f for f in d.rglob("*.py") if not any(p in excluded_parts for p in f.parts)),
-                    key=lambda x: x.as_posix(),
-                )
-            )
-    return py_files
+            for root_str, dirs, files in os.walk(d, onerror=lambda _: None):
+                dirs[:] = sorted(sub for sub in dirs if sub not in excluded_parts)
+                root_p = Path(root_str)
+                for fn in sorted(files):
+                    if fn.endswith(".py"):
+                        py_files.append(root_p / fn)
+    return sorted(set(py_files))
 
 
 def _append_code_violations(

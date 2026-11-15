@@ -312,3 +312,51 @@ def test_ast_docstring_vs_triple_quote_literals_and_sorted_scan(tmp_path: Path) 
 
     collected = _collect_py_files_to_scan(tmp_path, scripts_dir)
     assert collected == sorted(collected)
+
+
+def test_services_walk_prunes_volumes_and_checks_import_depth(tmp_path: Path, monkeypatch) -> None:
+    """Verifies cleanliness and import-depth guardrails scan services/ safely while pruning restricted dirs."""
+    import os
+    import sys
+
+    from scripts.spoke import check_hub_import_depth
+    from scripts.spoke.check_spoke_cleanliness import _collect_py_files_to_scan
+
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    svc_dir = tmp_path / "services" / "rag-service"
+    svc_tests = svc_dir / "tests"
+    svc_volumes = svc_dir / "volumes" / "etcd" / "member"
+    svc_node = svc_dir / "node_modules" / "pkg"
+    for d in (svc_tests, svc_volumes, svc_node):
+        d.mkdir(parents=True)
+
+    app_py = svc_dir / "app.py"
+    app_py.write_text("from ccba_ai.internal.submod import helper\n", encoding="utf-8")
+    (svc_tests / "test_x.py").write_text("from ccba_ai import ai\n", encoding="utf-8")
+    (svc_volumes / "state.py").write_text(
+        "from ccba_ai.internal.submod import helper\n", encoding="utf-8"
+    )
+    (svc_node / "ignored.py").write_text(
+        "from ccba_ai.internal.submod import helper\n", encoding="utf-8"
+    )
+
+    os.chmod(svc_volumes, 0o000)
+    try:
+        collected = _collect_py_files_to_scan(tmp_path, scripts_dir)
+        assert collected == [app_py]
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "check_hub_import_depth.py",
+                "--path",
+                str(tmp_path),
+                "--hub-path",
+                str(Path(__file__).resolve().parents[2]),
+            ],
+        )
+        assert check_hub_import_depth.main() == 1
+    finally:
+        os.chmod(svc_volumes, 0o755)
