@@ -7,6 +7,7 @@ No need for separate provider routing — the gateway handles it.
 
 import asyncio
 import logging
+import os
 import time
 import warnings
 from pathlib import Path
@@ -290,9 +291,11 @@ class LLMConverter(BaseConverter):
     def _get_pdf_page_count(source_path: Path) -> int | None:
         """Get page count from a PDF file path."""
         try:
-            import fitz  # ccba:allow-raw-bypass (lightweight page count fallback)
+            os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
+            import pymupdf  # ccba:allow-raw-bypass (lightweight page count fallback)
 
-            doc = fitz.open(str(source_path))
+            fitz_mod: Any = pymupdf
+            doc = fitz_mod.open(str(source_path))
             count = len(doc)
             doc.close()
             return count

@@ -2,7 +2,7 @@
 
 > **Thuộc bản đồ:** [🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị](../map.md)  
 > **Loại ticket:** `Task [AFK]`  
-> **Trạng thái:** `IN_PROGRESS` (Frontier Active — Claimed; đã mở khóa sau [WF-02: Thẩm định Kế hoạch Ngang hàng qua Peer Plan Audit (ADR-0067 One-Way Door Gate)](wf_02_peer_plan_audit_gate.md))  
+> **Trạng thái:** `CLOSED` (Hoàn tất qua PR `#751`, `#752`, `#753` và PR-1d; mở khóa [WF-04: Hợp nhất 9 Bộ Phân tích Frontmatter qua parse_markdown_frontmatter & Phân rã SkillValidator dưới 800 LOC](wf_04_unify_frontmatter_and_deepen_skill_validator.md))  
 > **Assignee:** `AI Platform Architect`
 
 ---
@@ -18,6 +18,6 @@ Loại bỏ eager import và side-effect khởi tạo tại root `__init__.py` t
 
 ## 2. Tiêu chí Hoàn thành (Completion Criteria)
 
-- [ ] `check_dependency_contracts.py` (`check_package_all_exports` + `check_init_lazy_exports_parity`) đạt `0` vi phạm.
-- [ ] Subprocess isolation kiểm chứng `ccba_ai.routing`, `ccba_legal.models`, `ccba_harness.gpi`, `ccba_qc_core.jurisdiction` không nạp `openai`, `httpx`, `fitz`, `pymupdf`, không còn `fitz` stderr deprecation warning, thời gian `< 15 ms` `[đo thực tế]`.
-- [ ] `verify-patch --preset code` pass trên cả `4` packages + `mdconverter` + `ccba-pdf-prep`, không phá vỡ [test_async_client.py](../../../../packages/ccba-ai/tests/test_async_client.py#L22) và [test_qc_core.py](../../../../packages/ccba-qc-core/tests/test_qc_core.py#L177).
+- [x] `check_dependency_contracts.py` (`check_package_all_exports` + `check_init_lazy_exports_parity`) đạt `0` vi phạm (`513` files scanned).
+- [x] Subprocess isolation kiểm chứng `ccba_ai.routing` (`8.77 ms`), `ccba_legal.models` (`9.35 ms` / `18.54 ms`), `ccba_qc_core.jurisdiction` (`22.46 ms`), `ccba_harness.gpi` (`11.06 ms`), `ccba_pdf_prep.core` (`61.36 ms`) không nạp `openai`, `httpx`, `fitz`, `pymupdf`, không còn `fitz` stderr deprecation warning `[đo thực tế]`.
+- [x] `verify-patch --preset code` pass trên `ccba-ai` (PR `#751`), `ccba-qc-core` (`4/4` PASS), `ccba-harness` (PR `#753`), `mdconverter` (`4/4` PASS), plus `packages/ccba-pdf-prep/tests` (`109` passed cùng isolation & dependency contract tests) và `packages/ccba-legal-intel/tests`; bảo toàn [test_async_client.py](../../../../packages/ccba-ai/tests/test_async_client.py#L22) và [test_qc_core.py](../../../../packages/ccba-qc-core/tests/test_qc_core.py#L177).

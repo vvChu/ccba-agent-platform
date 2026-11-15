@@ -124,10 +124,10 @@ def split(
     ),
 ) -> None:
     """Split a large PDF into smaller chunks."""
-    import fitz
-
+    from ._pymupdf import _get_fitz
     from .core import get_blind_chunks, split_pdf
 
+    fitz = _get_fitz()
     doc = fitz.open(str(pdf_path))
     total_pages = len(doc)
     doc.close()

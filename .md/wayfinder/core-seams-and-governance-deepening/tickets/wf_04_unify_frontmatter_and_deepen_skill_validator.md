@@ -2,8 +2,8 @@
 
 > **Thuộc bản đồ:** [🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị](../map.md)  
 > **Loại ticket:** `Task [AFK]`  
-> **Trạng thái:** `OPEN` (Blocked by [WF-02: Thẩm định Kế hoạch Ngang hàng qua Peer Plan Audit (ADR-0067 One-Way Door Gate)](wf_02_peer_plan_audit_gate.md); thực thi sau [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](wf_03_pep562_lazy_package_seams.md) trên `ccba_harness`)  
-> **Assignee:** `Chưa gán`
+> **Trạng thái:** `IN_PROGRESS` (Frontier Active — Unlocked sau [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](wf_03_pep562_lazy_package_seams.md))  
+> **Assignee:** `AI Platform Architect`
 
 ---
 
