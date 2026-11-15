@@ -552,7 +552,7 @@ def check_raw_ip_leakage(
 
 
 def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]:
-    """Collects Python source files under scripts/, src/, services/, tools/, and .agents/ safely."""
+    """Collects Python source files under scripts/, src/, services/, tools/, .md/scripts/, and .agents/ safely."""
     excluded_parts = frozenset(
         {
             ".venv",
@@ -574,6 +574,7 @@ def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]
         spoke_root / "src",
         spoke_root / "services",
         spoke_root / "tools",
+        spoke_root / ".md" / "scripts",
         spoke_root / ".agents" / "scripts",
         spoke_root / ".agents" / "skills",
     )
@@ -585,7 +586,38 @@ def _collect_py_files_to_scan(spoke_root: Path, scripts_dir: Path) -> list[Path]
                 for fn in sorted(files):
                     if fn.endswith(".py"):
                         py_files.append(root_p / fn)
-    return sorted(set(py_files))
+    return sorted(set(py_files), key=lambda p: p.as_posix())
+
+
+_AGENTS_SESSION_DEBRIS_RE = re.compile(
+    r"^(?:auditor|challenger|teamwork_preview|explorer|reviewer|worker|orchestrator|sentinel|victory_auditor)(?:_.*)?$|^ORIGINAL_REQUEST\.md$",
+    re.IGNORECASE,
+)
+
+
+def check_agents_session_debris(spoke_root: Path) -> list[Path]:
+    """Detect ephemeral session-debris entries under `.agents/` while preserving canonical files."""
+    agents_dir = spoke_root / ".agents"
+    if not agents_dir.is_dir():
+        return []
+    return [
+        entry
+        for entry in sorted(agents_dir.iterdir(), key=lambda p: p.name)
+        if _AGENTS_SESSION_DEBRIS_RE.match(entry.name)
+    ]
+
+
+def _append_agents_debris_violations(spoke_root: Path, messages: list[str]) -> bool:
+    """Append error message if ephemeral `.agents/` session debris directories/files exist."""
+    debris = check_agents_session_debris(spoke_root)
+    if not debris:
+        return False
+    debris_lines = "\n".join(f"   - {p.relative_to(spoke_root)}" for p in debris)
+    messages.append(
+        f"❌ [Vi phạm Session Debris Isolation] Phát hiện {len(debris)} thư mục/tệp tạm trong '.agents/':\n"
+        f"{debris_lines}\n   💡 Xoá khỏi kho mã (chỉ giữ '.agents/AGENTS.md', '.agents/rules/', '.agents/skills/')."
+    )
+    return True
 
 
 def _append_code_violations(
@@ -614,12 +646,15 @@ def _append_code_violations(
 def _append_machine_and_ip_violations(
     spoke_root: Path, py_files_to_scan: list[Path], messages: list[str]
 ) -> bool:
-    """Runs raw IPv4 and machine-state path checks across Python and workspace config files."""
+    """Runs raw IPv4 and machine-state path checks across Python, workspace config, and systemd files."""
     files_to_check = list(py_files_to_scan) + [
         spoke_root / name
         for name in (".md/workspace_context.yaml", "workspace_context.yaml")
         if (spoke_root / name).is_file()
     ]
+    systemd_dir = spoke_root / "tools" / "systemd"
+    if systemd_dir.is_dir():
+        files_to_check.extend(sorted(systemd_dir.glob("*.service"), key=lambda p: p.name))
     ips = check_raw_ip_leakage(files_to_check)
     paths = check_machine_state_leakage(files_to_check)
     e1 = _report_violations(
@@ -641,6 +676,48 @@ def _append_machine_and_ip_violations(
     return e1 or e2
 
 
+def _scan_scripts_dir(
+    spoke_root: Path,
+    scripts_dir: Path,
+    max_scripts: int,
+    effective_allowlist: set[str],
+    effective_roles: set[str],
+    messages: list[str],
+) -> tuple[bool, bool]:
+    """Scans scripts/ budget, ephemeral scripts, and code/config cleanliness violations."""
+    has_errors = False
+    has_warnings = False
+    catalog_allowlist = load_catalog_guardrail_script_names(spoke_root)
+    counted_scripts, ignored_scripts = check_script_count(
+        scripts_dir, max_scripts, effective_allowlist, catalog_allowlist
+    )
+    count = len(counted_scripts)
+    if count > max_scripts:
+        has_errors = True
+        names_csv = ", ".join(sorted(f.name for f in counted_scripts))
+        messages.append(
+            f"❌ [Script Budget Vượt Ngưỡng] Thư mục 'scripts/' có {count} tệp (tối đa cho phép: {max_scripts}).\n"
+            f"   Các file đang đếm ({count}): {names_csv}\n"
+            "   💡 Giải pháp: Di chuyển các script one-off/fix/audit cũ vào '.md/archive/legacy_scripts/' hoặc '.md/scratch/'."
+        )
+    else:
+        messages.append(
+            f"✅ [Script Budget] Thư mục 'scripts/' có {count}/{max_scripts} tệp hợp lệ ({len(ignored_scripts)} tệp hệ thống được bỏ qua)."
+        )
+    ephemeral = check_ephemeral_scripts(counted_scripts, role_allowlist=effective_roles)
+    if ephemeral:
+        has_warnings = True
+        eph_lines = "\n".join(f"   - {f.name}" for f in ephemeral)
+        messages.append(
+            f"⚠️  [Script Tạm Thời] Phát hiện {len(ephemeral)} script có tiền tố tạm thời (fix_*, audit_*, patch_*, tmp_*):\n"
+            f"{eph_lines}\n   💡 Hãy chuyển các script này vào '.md/archive/legacy_scripts/' sau khi chạy xong."
+        )
+    py_files = _collect_py_files_to_scan(spoke_root, scripts_dir)
+    has_errors = _append_code_violations(spoke_root, py_files, messages) or has_errors
+    has_errors = _append_machine_and_ip_violations(spoke_root, py_files, messages) or has_errors
+    return has_errors, has_warnings
+
+
 def scan_spoke_cleanliness(
     spoke_root: Path,
     max_scripts: int = 15,
@@ -657,34 +734,10 @@ def scan_spoke_cleanliness(
     effective_roles = set(cfg_roles) | (role_allowlist or set())
     scripts_dir = spoke_root / "scripts"
     if scripts_dir.exists():
-        catalog_allowlist = load_catalog_guardrail_script_names(spoke_root)
-        counted_scripts, ignored_scripts = check_script_count(
-            scripts_dir, max_scripts, effective_allowlist, catalog_allowlist
+        has_errors, has_warnings = _scan_scripts_dir(
+            spoke_root, scripts_dir, max_scripts, effective_allowlist, effective_roles, messages
         )
-        count = len(counted_scripts)
-        if count > max_scripts:
-            has_errors = True
-            names_csv = ", ".join(sorted(f.name for f in counted_scripts))
-            messages.append(
-                f"❌ [Script Budget Vượt Ngưỡng] Thư mục 'scripts/' có {count} tệp (tối đa cho phép: {max_scripts}).\n"
-                f"   Các file đang đếm ({count}): {names_csv}\n"
-                "   💡 Giải pháp: Di chuyển các script one-off/fix/audit cũ vào '.md/archive/legacy_scripts/' hoặc '.md/scratch/'."
-            )
-        else:
-            messages.append(
-                f"✅ [Script Budget] Thư mục 'scripts/' có {count}/{max_scripts} tệp hợp lệ ({len(ignored_scripts)} tệp hệ thống được bỏ qua)."
-            )
-        ephemeral = check_ephemeral_scripts(counted_scripts, role_allowlist=effective_roles)
-        if ephemeral:
-            has_warnings = True
-            eph_lines = "\n".join(f"   - {f.name}" for f in ephemeral)
-            messages.append(
-                f"⚠️  [Script Tạm Thời] Phát hiện {len(ephemeral)} script có tiền tố tạm thời (fix_*, audit_*, patch_*, tmp_*):\n"
-                f"{eph_lines}\n   💡 Hãy chuyển các script này vào '.md/archive/legacy_scripts/' sau khi chạy xong."
-            )
-        py_files = _collect_py_files_to_scan(spoke_root, scripts_dir)
-        has_errors = _append_code_violations(spoke_root, py_files, messages) or has_errors
-        has_errors = _append_machine_and_ip_violations(spoke_root, py_files, messages) or has_errors
+    has_errors = _append_agents_debris_violations(spoke_root, messages) or has_errors
     has_errors = _append_living_doc_violations(spoke_root, messages) or has_errors
     return (1 if has_errors or (strict and has_warnings) else 0), messages
 
