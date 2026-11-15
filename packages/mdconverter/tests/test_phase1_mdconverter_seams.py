@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -211,3 +214,59 @@ Detail for methods.
         assert out_doc.exists()
         d = Document(str(out_doc))
         assert len(d.paragraphs) >= 3
+
+
+def test_mdconverter_lazy_exports_ast_and_runtime_parity() -> None:
+    """Verify PEP 562 _LAZY_EXPORTS AST parity, __dir__, and AuditFinding alias contract."""
+    import mdconverter
+
+    init_path = Path(mdconverter.__file__)
+    tree = ast.parse(init_path.read_text(encoding="utf-8"))
+    assigns = {
+        node.targets[0].id: node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+    }
+    assert "_LAZY_EXPORTS" in assigns, "_LAZY_EXPORTS must be an unannotated ast.Assign"
+    lazy_map: dict[str, str] = ast.literal_eval(assigns["_LAZY_EXPORTS"])
+    assert len(mdconverter.__all__) == 31
+    assert len(lazy_map) == 30
+    assert set(mdconverter.__all__) == set(lazy_map) | {"__version__"}
+    assert all(mod.startswith("mdconverter.") for mod in lazy_map.values())
+    assert "AuditFinding" not in mdconverter.__all__
+    assert "AuditFinding" not in lazy_map
+    assert mdconverter.AuditFinding is mdconverter.AcademicAuditFinding
+    assert "AuditFinding" in dir(mdconverter)
+    for sym in mdconverter.__all__:
+        assert getattr(mdconverter, sym) is not None
+    with pytest.raises(AttributeError):
+        _ = mdconverter.non_existent_mdconverter_symbol
+
+
+def test_mdconverter_root_and_leaf_subprocess_isolation() -> None:
+    """Verify bare root import, __version__, and style leaf do not drag heavy dependencies."""
+    blocked = ("mdconverter.core", "openai", "httpx", "docx", "lxml")
+    for stmt in (
+        "import mdconverter",
+        "from mdconverter import __version__",
+        "import mdconverter.style",
+    ):
+        script = f"import sys; {stmt}; hits = [m for m in {blocked!r} if m in sys.modules]; assert not hits, hits"
+        proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+        assert proc.returncode == 0, f"{stmt} failed: {proc.stderr}"
+
+
+def test_mdconverter_lazy_core_registers_builtins() -> None:
+    """Verify lazy access to core symbols triggers builtin converter registration and reset()."""
+    script = (
+        "from mdconverter import ConversionPipeline, ConverterRegistry; "
+        "assert ConversionPipeline is not None; "
+        "expected = {'pandoc', 'llamaparse', 'llm'}; "
+        "names = {c['name'] for c in ConverterRegistry.list_all()}; "
+        "assert expected <= names, names; "
+        "ConverterRegistry.reset(); "
+        "reset_names = {c['name'] for c in ConverterRegistry.list_all()}; "
+        "assert expected <= reset_names, reset_names"
+    )
+    proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
