@@ -17,8 +17,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-import yaml
-
+from .._skill_frontmatter import parse_markdown_frontmatter
 from ._daemon_reporting import (
     FLAGSHIP_REDTEAM_DATASET_OVERRIDES,
     NightlyDaemonReport,
@@ -382,15 +381,15 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             try:
                 content = skill_path.read_text(encoding="utf-8", errors="replace")
                 skill_content = content
-                if content.startswith("---"):
-                    parts = content.split("---", 2)
-                    if len(parts) >= 3:
-                        fm = yaml.safe_load(parts[1])
-                        if isinstance(fm, dict) and fm.get("auto-tune") is False:
-                            logger.info(
-                                f"⏭️ Bỏ qua {skill_name} do cấu hình auto-tune: false trong frontmatter."
-                            )
-                            return True, False, False, False
+                spec = parse_markdown_frontmatter(content)
+                if spec.has_frontmatter and spec.error is None:
+                    if spec.metadata.get("auto-tune") is False:
+                        logger.info(
+                            f"⏭️ Bỏ qua {skill_name} do cấu hình auto-tune: false trong frontmatter."
+                        )
+                        return True, False, False, False
+                elif spec.error:
+                    logger.debug(f"Failed to parse frontmatter for {skill_path}: {spec.error}")
             except Exception as e:
                 logger.debug(f"Failed to parse frontmatter for {skill_path}: {e}")
 

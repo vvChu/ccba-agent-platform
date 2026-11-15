@@ -22,7 +22,7 @@ def _extract_assign(tree: ast.Module, name: str) -> ast.expr | None:
 
 
 def test_ccba_harness_all_and_lazy_exports_ast_parity() -> None:
-    """Verify exact 2-way AST parity between __all__ (237) and _LAZY_EXPORTS."""
+    """Verify exact 2-way AST parity between __all__ (240) and _LAZY_EXPORTS."""
     init_path = Path(__file__).resolve().parents[1] / "src" / "ccba_harness" / "__init__.py"
     tree = ast.parse(init_path.read_text(encoding="utf-8"), filename=str(init_path))
 
@@ -36,8 +36,8 @@ def test_ccba_harness_all_and_lazy_exports_ast_parity() -> None:
         for elt in all_node.elts
         if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
     ]
-    assert len(all_symbols) == 237
-    assert len(set(all_symbols)) == 237
+    assert len(all_symbols) == 240
+    assert len(set(all_symbols)) == 240
 
     lazy_keys = {
         k.value for k in lazy_node.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)

@@ -27,8 +27,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-import yaml
-
+from ccba_harness._skill_frontmatter import parse_markdown_frontmatter
 from ccba_harness.evals.models import EvalReport
 
 VALID_STABILITY_ZONES: tuple[str, str] = ("evolvable", "locked")
@@ -44,8 +43,6 @@ SYSTEM_LOCKED_SKILL_NAMES: frozenset[str] = frozenset(
         "ccba-maskara",
     }
 )
-
-_FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL)
 
 NORMATIVE_DIRECTIVE_PATTERNS: dict[str, re.Pattern[str]] = {
     "MUST_NOT": re.compile(r"\bMUST\s+NOT\b"),
@@ -103,14 +100,8 @@ class RegressionGateVerdict:
 
 def parse_skill_frontmatter(content: str) -> dict[str, Any]:
     """Parses YAML frontmatter dictionary from SKILL.md content."""
-    match = _FRONTMATTER_RE.match(content)
-    if not match:
-        return {}
-    try:
-        parsed = yaml.safe_load(match.group(1))
-        return parsed if isinstance(parsed, dict) else {}
-    except Exception:
-        return {}
+    spec = parse_markdown_frontmatter(content)
+    return spec.metadata if spec.has_frontmatter and spec.error is None else {}
 
 
 def has_explicit_stability_zone(content: str) -> bool:

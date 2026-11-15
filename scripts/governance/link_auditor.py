@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-import yaml
+from ccba_harness import parse_markdown_frontmatter
 
 from .base import (
     CODE_REF_RE,
@@ -34,17 +34,13 @@ class LinkAuditor(BaseAuditor):
 
     def parse_frontmatter(self, content: str) -> tuple[dict[str, Any] | None, str]:
         """Parse YAML frontmatter from document content."""
-        stripped = content.strip()
-        if not stripped.startswith("---"):
-            return None, content
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            try:
-                frontmatter = yaml.safe_load(parts[1])
-                if isinstance(frontmatter, dict):
-                    return frontmatter, parts[2]
-            except Exception:
-                pass
+        spec = parse_markdown_frontmatter(content)
+        if not spec.has_frontmatter:
+            stripped = content.lstrip()
+            if stripped != content:
+                spec = parse_markdown_frontmatter(stripped)
+        if spec.has_frontmatter and spec.error is None:
+            return spec.metadata, spec.body
         return None, content
 
     def extract_code_references(self, content: str) -> list[tuple[int, str]]:

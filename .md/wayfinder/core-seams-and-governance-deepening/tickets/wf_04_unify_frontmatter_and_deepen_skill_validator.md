@@ -2,7 +2,7 @@
 
 > **Thuộc bản đồ:** [🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị](../map.md)  
 > **Loại ticket:** `Task [AFK]`  
-> **Trạng thái:** `IN_PROGRESS` (Frontier Active — Unlocked sau [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](wf_03_pep562_lazy_package_seams.md))  
+> **Trạng thái:** `CLOSED` (`PR-2a` & `PR-2b` đã hoàn tất trên nhánh tích hợp; tiếp nối sang [WF-05](wf_05_unify_stdlib_parameter_cleanliness_scanners.md))  
 > **Assignee:** `AI Platform Architect`
 
 ---
@@ -18,6 +18,6 @@
 
 ## 2. Tiêu chí Hoàn thành (Completion Criteria)
 
-- [ ] Toàn bộ `9` caller dùng cùng quy tắc trích xuất; test hồi quy chứng minh YAML chứa `"---"` không ném hoặc nuốt `ScannerError` trả rỗng `{}`.
-- [ ] `check_ast_function_length` & `check_module_size_budget` (`RULE-2.20`) đạt `0` vi phạm trên tất cả module chỉnh sửa (`<= 800 LOC` / `<= 50 LOC`), không còn re-read L778 và `iterdir()` chưa sort.
-- [ ] `verify-patch --preset code --target packages/ccba-harness` và `pytest scripts/tests/` pass `100%`.
+- [x] Toàn bộ `13` caller mục tiêu dùng `parse_markdown_frontmatter` / `SkillFrontmatterSpec` (kèm fallback stdlib 3 tầng tại `find_skills.py`, bảo toàn byte `raw_block` tại `_tuner_mutator.py`, giữ nguyên `7` domain splitters & `_peer_models.extract_frontmatter`); test hồi quy chứng minh YAML chứa `"---"` không ném hoặc nuốt `ScannerError` trả rỗng `{}`.
+- [x] `check_ast_function_length` & `check_module_size_budget` (`RULE-2.20`) đạt `0` vi phạm trên tất cả module chỉnh sửa (`<= 450 LOC` / `<= 50 LOC`), không còn re-read và `iterdir()` chưa sort.
+- [x] `verify-patch --preset code --target packages/ccba-harness` và `pytest scripts/tests/` pass `100%`.

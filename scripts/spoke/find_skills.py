@@ -10,7 +10,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
+_FALLBACK_FRONTMATTER_RE = re.compile(r"\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)", re.DOTALL)
 
 hub_env = os.environ.get("CCBA_HUB_PATH")
 if hub_env and Path(hub_env).exists():
@@ -27,63 +32,103 @@ SKILLS_DIRS = [
 ]
 
 
+def _parse_stdlib_frontmatter(raw_yaml: str) -> dict[str, Any]:
+    """Parse single-line YAML key-value pairs using Python stdlib when PyYAML is missing."""
+    data: dict[str, Any] = {}
+    for raw_line in raw_yaml.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if raw_line[0].isspace() or ":" not in raw_line:
+            continue
+        key, raw_val = raw_line.split(":", 1)
+        clean_key = key.strip()
+        if not clean_key:
+            continue
+        val = raw_val.strip()
+        if val.startswith("[") and val.endswith("]"):
+            inner = val[1:-1].strip()
+            data[clean_key] = [
+                item.strip().strip("\"'") for item in inner.split(",") if item.strip()
+            ]
+        else:
+            if len(val) >= 2 and val[0] == val[-1] and val[0] in ("'", '"'):
+                val = val[1:-1]
+            data[clean_key] = val
+    return data
+
+
 def parse_frontmatter(file_path: Path) -> dict[str, Any]:
-    """Parse the YAML frontmatter of a SKILL.md file."""
+    """Parse YAML frontmatter with 3-tier fallback (ccba_harness -> PyYAML -> stdlib)."""
     try:
         content = file_path.read_text(encoding="utf-8")
-        match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
-        if match:
-            yaml_block = match.group(1)
-            data = yaml.safe_load(yaml_block)
-            return data if isinstance(data, dict) else {}
     except Exception:
+        return {}
+    try:
+        from ccba_harness import parse_markdown_frontmatter
+
+        spec = parse_markdown_frontmatter(content, yaml_module=yaml)
+        if spec.has_frontmatter and spec.error is None:
+            return spec.metadata
+        if spec.has_frontmatter and spec.error == "YAML_PACKAGE_MISSING":
+            return _parse_stdlib_frontmatter(spec.raw_yaml)
+        if spec.has_frontmatter:
+            return {}
+    except ImportError:
         pass
-    return {}
+    match = _FALLBACK_FRONTMATTER_RE.match(content)
+    if not match:
+        return {}
+    raw_yaml = match.group(1)
+    if yaml is not None:
+        try:
+            data = yaml.safe_load(raw_yaml)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    return _parse_stdlib_frontmatter(raw_yaml)
+
+
+def _build_skill_entry(skill_dir: Path, query_lower: str) -> dict[str, Any] | None:
+    """Build skill metadata dict if `skill_dir` matches `query_lower`, else return None."""
+    if not (skill_dir.is_dir() and not skill_dir.name.startswith(".")):
+        return None
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return None
+    meta = parse_frontmatter(skill_md)
+    name = str(meta.get("name", skill_dir.name))
+    desc = str(meta.get("description", ""))
+    raw_kw = meta.get("keywords", []) or meta.get("triggers", [])
+    keywords = [str(k) for k in raw_kw] if isinstance(raw_kw, list) else []
+    if query_lower and not (
+        query_lower in name.lower()
+        or query_lower in desc.lower()
+        or any(query_lower in kw.lower() for kw in keywords)
+    ):
+        return None
+    return {
+        "name": name,
+        "folder": skill_dir.name,
+        "command": meta.get("command", f"/{name}"),
+        "description": desc,
+        "keywords": keywords,
+        "source": skill_dir.parent.name,
+    }
 
 
 def find_skills(query: str = "") -> None:
     """Search for skills matching the query in name, description, or keywords."""
     query_lower = query.lower()
     matches: list[dict[str, Any]] = []
-
+    seen_names: set[str] = set()
     for skills_dir in SKILLS_DIRS:
         if not skills_dir.exists():
             continue
-
-        for p in skills_dir.iterdir():
-            if p.is_dir() and not p.name.startswith("."):
-                skill_md = p / "SKILL.md"
-                if skill_md.exists():
-                    meta = parse_frontmatter(skill_md)
-                    name = meta.get("name", p.name)
-                    desc = meta.get("description", "")
-                    keywords = meta.get("keywords", []) or meta.get("triggers", [])
-                    cmd = meta.get("command", f"/{name}")
-
-                    is_match = False
-                    if not query:
-                        is_match = True
-                    else:
-                        if (
-                            query_lower in name.lower()
-                            or query_lower in desc.lower()
-                            or any(query_lower in str(kw).lower() for kw in keywords)
-                        ):
-                            is_match = True
-
-                    if is_match:
-                        # Prevent duplicate names
-                        if not any(m["name"] == name for m in matches):
-                            matches.append(
-                                {
-                                    "name": name,
-                                    "folder": p.name,
-                                    "command": cmd,
-                                    "description": desc,
-                                    "keywords": [str(k) for k in keywords],
-                                    "source": p.parent.name,
-                                }
-                            )
+        for p in sorted(skills_dir.iterdir(), key=lambda entry: entry.name):
+            entry = _build_skill_entry(p, query_lower)
+            if entry and entry["name"] not in seen_names:
+                seen_names.add(entry["name"])
+                matches.append(entry)
 
     if not matches:
         print(f"[Skill Finder] No skills found matching '{query}'.")

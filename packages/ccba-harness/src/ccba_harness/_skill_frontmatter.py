@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -16,7 +17,8 @@ try:
 except ImportError:
     _DEFAULT_YAML = None
 
-FRONTMATTER_RE = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n", re.DOTALL)
+FRONTMATTER_PATTERN = re.compile(r"\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)", re.DOTALL)
+FRONTMATTER_RE = FRONTMATTER_PATTERN
 DEFAULT_VALID_BUNDLES: set[str] = set("_core _software _qc _consulting _bim _governance".split())
 SHALLOW_SKILL_MIN_LINES = 35
 MAX_MODEL_INVOKED_PER_BUNDLE = 10
@@ -27,6 +29,23 @@ _CATALOG_RELATIVE_PATHS = (
     Path(".agents") / "catalog.yaml",
 )
 _YAML_UNSET: Any = object()
+
+
+@dataclass(frozen=True)
+class SkillFrontmatterSpec:
+    """Structured result of parsing a Markdown file's leading YAML frontmatter block."""
+
+    raw_block: str
+    metadata: dict[str, Any]
+    body: str
+    raw_yaml: str
+    has_frontmatter: bool
+    error: str | None = None
+
+
+def _issue(fp: str, msg: str, category: str) -> SkillAuditIssue:
+    """Build a line-1 SkillAuditIssue record concisely."""
+    return SkillAuditIssue(1, fp, msg, category, fp)
 
 
 class SkillAuditIssue(NamedTuple):
@@ -154,6 +173,28 @@ def load_registered_commands(
     return commands
 
 
+def parse_markdown_frontmatter(
+    content: str, *, yaml_module: Any = _YAML_UNSET
+) -> SkillFrontmatterSpec:
+    """Parse leading YAML frontmatter block while preserving raw bytes and YAML errors."""
+    match = FRONTMATTER_PATTERN.match(content)
+    if not match:
+        return SkillFrontmatterSpec("", {}, content, "", False, None)
+    raw_block = match.group(0).rstrip("\r\n")
+    raw_yaml = match.group(1)
+    body = content[match.end() :]
+    yaml_mod = resolve_yaml_module(yaml_module)
+    if yaml_mod is None:
+        return SkillFrontmatterSpec(raw_block, {}, body, raw_yaml, True, "YAML_PACKAGE_MISSING")
+    try:
+        meta = yaml_mod.safe_load(raw_yaml)
+    except Exception as exc:
+        return SkillFrontmatterSpec(raw_block, {}, body, raw_yaml, True, f"YAML_PARSE_ERROR: {exc}")
+    if not isinstance(meta, dict):
+        return SkillFrontmatterSpec(raw_block, {}, body, raw_yaml, True, "NON_MAPPING_FRONTMATTER")
+    return SkillFrontmatterSpec(raw_block, meta, body, raw_yaml, True, None)
+
+
 def parse_frontmatter_dict(
     fp: str,
     content: str,
@@ -161,35 +202,22 @@ def parse_frontmatter_dict(
     missing_yaml_msg: str = "PyYAML package is required to parse skill frontmatter. Run: pip install pyyaml",
 ) -> tuple[re.Match[str] | None, dict[str, Any] | None, list[SkillAuditIssue]]:
     """Extract regex match and parse YAML frontmatter dictionary with fail-closed issues."""
-    match = FRONTMATTER_RE.match(content)
-    if not match:
-        return (
-            None,
-            None,
-            [SkillAuditIssue(1, fp, "Missing YAML frontmatter '---'", "MALFORMED_FRONTMATTER", fp)],
-        )
-
-    yaml_mod = resolve_yaml_module(yaml_module)
-    if yaml_mod is None:
-        return match, None, [SkillAuditIssue(1, fp, missing_yaml_msg, "YAML_PACKAGE_MISSING", fp)]
-
-    try:
-        meta = yaml_mod.safe_load(match.group(1))
-    except Exception as exc:
-        msg = f"Failed to parse frontmatter YAML: {exc}"
-        return match, None, [SkillAuditIssue(1, fp, msg, "YAML_PARSE_ERROR", fp)]
-
-    if not isinstance(meta, dict):
+    match = FRONTMATTER_PATTERN.match(content)
+    spec = parse_markdown_frontmatter(content, yaml_module=yaml_module)
+    if not spec.has_frontmatter:
+        return None, None, [_issue(fp, "Missing YAML frontmatter '---'", "MALFORMED_FRONTMATTER")]
+    if spec.error == "YAML_PACKAGE_MISSING":
+        return match, None, [_issue(fp, missing_yaml_msg, "YAML_PACKAGE_MISSING")]
+    if spec.error and spec.error.startswith("YAML_PARSE_ERROR: "):
+        msg = f"Failed to parse frontmatter YAML: {spec.error.removeprefix('YAML_PARSE_ERROR: ')}"
+        return match, None, [_issue(fp, msg, "YAML_PARSE_ERROR")]
+    if spec.error is not None:
         return (
             match,
             None,
-            [
-                SkillAuditIssue(
-                    1, fp, "Frontmatter YAML is not a valid dictionary", "MALFORMED_FRONTMATTER", fp
-                )
-            ],
+            [_issue(fp, "Frontmatter YAML is not a valid dictionary", "MALFORMED_FRONTMATTER")],
         )
-    return match, meta, []
+    return match, spec.metadata, []
 
 
 def check_shallow_skill_content(
@@ -210,28 +238,14 @@ def check_shallow_skill_content(
     if line_count >= SHALLOW_SKILL_MIN_LINES:
         return []
 
-    skill_name = file_path.parent.name
-    yaml_mod = resolve_yaml_module(yaml_module)
-    match = FRONTMATTER_RE.match(content)
-    if match and yaml_mod is not None:
-        try:
-            meta = yaml_mod.safe_load(match.group(1))
-            if isinstance(meta, dict) and meta.get("name"):
-                skill_name = str(meta["name"])
-        except Exception:
-            pass
-
-    return [
-        SkillAuditIssue(
-            1,
-            str(file_path),
-            f"Skill '{skill_name}' is too shallow ({line_count} content lines < "
-            f"{SHALLOW_SKILL_MIN_LINES} lines minimum per ADR-0040). "
-            "Provide detailed workflow instructions and complete step criteria.",
-            category="SHALLOW_SKILL_WARNING",
-            file_path=str(file_path),
-        )
-    ]
+    spec = parse_markdown_frontmatter(content, yaml_module=yaml_module)
+    skill_name = str(spec.metadata.get("name") or file_path.parent.name)
+    msg = (
+        f"Skill '{skill_name}' is too shallow ({line_count} content lines < "
+        f"{SHALLOW_SKILL_MIN_LINES} lines minimum per ADR-0040). "
+        "Provide detailed workflow instructions and complete step criteria."
+    )
+    return [_issue(str(file_path), msg, "SHALLOW_SKILL_WARNING")]
 
 
 def validate_skill_name_field(fp: str, meta: dict[str, Any]) -> list[SkillAuditIssue]:

@@ -12,11 +12,10 @@ from pathlib import Path
 from typing import Any
 
 from ._skill_frontmatter import (
-    FRONTMATTER_RE,
     MAX_MODEL_INVOKED_PER_BUNDLE,
     SkillAuditIssue,
     normalize_bool_flag,
-    resolve_yaml_module,
+    parse_markdown_frontmatter,
 )
 from .gpi import (
     GPI_STANDALONE_THRESHOLD,
@@ -251,16 +250,18 @@ def _load_frontmatter_for_decision(file_path: Path, yaml_module: Any) -> dict[st
     """Read and parse YAML frontmatter dict for `evaluate_skill_file` with strict errors."""
     if not file_path.exists():
         raise FileNotFoundError(f"Skill file does not exist: {file_path}")
-    match = FRONTMATTER_RE.match(file_path.read_text(encoding="utf-8"))
-    if not match:
+    spec = parse_markdown_frontmatter(
+        file_path.read_text(encoding="utf-8"), yaml_module=yaml_module
+    )
+    if not spec.has_frontmatter:
         raise ValueError(f"File '{file_path}' has no valid YAML frontmatter '---'")
-    yaml_mod = resolve_yaml_module(yaml_module)
-    if yaml_mod is None:
+    if spec.error == "YAML_PACKAGE_MISSING":
         raise RuntimeError("PyYAML package is required to parse skill frontmatter.")
-    meta = yaml_mod.safe_load(match.group(1))
-    if not isinstance(meta, dict):
+    if spec.error and spec.error.startswith("YAML_PARSE_ERROR:"):
+        raise ValueError(spec.error)
+    if spec.error is not None:
         raise ValueError(f"Frontmatter in '{file_path}' is not a valid dictionary.")
-    return meta
+    return spec.metadata
 
 
 def evaluate_skill_file_decision(
@@ -315,18 +316,15 @@ def _collect_workspace_skill_stats(
     seen_names: dict[str, list[Path]] = defaultdict(list)
     bundle_counts: dict[str, int] = defaultdict(int)
     relations: list[tuple[str, Path, str, str]] = []
-    yaml_mod = resolve_yaml_module(yaml_module)
 
     for sf in skill_files:
         try:
             content = sf.read_text(encoding="utf-8")
             issues.extend(shallow_checker(sf, content))
-            match = FRONTMATTER_RE.match(content)
-            if not (match and yaml_mod is not None):
+            spec = parse_markdown_frontmatter(content, yaml_module=yaml_module)
+            if not spec.has_frontmatter or spec.error is not None:
                 continue
-            meta = yaml_mod.safe_load(match.group(1))
-            if not isinstance(meta, dict):
-                continue
+            meta = spec.metadata
             name = str(meta.get("name") or "").strip()
             if name:
                 seen_names[name.lower()].append(sf)
