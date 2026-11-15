@@ -2,7 +2,7 @@
 
 > **Ngày chốt Grilling:** `2026-11-15` | **Phiên bản Kế hoạch:** `v2.1` (Giải trình đầy đủ `COND-01..12` Pass 1 + `COND-P2-01..06` Pass 2 + `COND-P3-01` Pass 3)  
 > **Chuỗi phiên Grok:** Pass 1 `9e8c03f7-d66d-4bca-9dfe-3e7a5a588b73` (`REVISE_PLAN`, `9` blocking) $\to$ Pass 2 `94f5c6c2-08af-44e4-9a81-23783877e138` (`REVISE_PLAN`, `risk_score: 3`, `4` blocking) $\to$ Pass 3 `951a1441-976f-49cb-bd84-057689eefb81` (**`APPROVE_PLAN`**, `risk_score: 2`, `blocking_conditions: 0`, biên bản `.md/peer_exchange/grok_core_seams_governance_plan_signoff_p3.md`)  
-> **Trạng thái:** `IN_EXECUTION` (`WF-02` đã đóng sau khi Kỹ sư xác nhận `Proceed`; mở khóa DAG 8 Micro-PR `PR-1a..PR-3b` theo [ADR-0067 One-Way Door Gate](../../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md))  
+> **Trạng thái:** `COMPLETED` (Hoàn tất toàn bộ 8 Micro-PRs: `#751` [`PR-1a`], `#752` [`PR-1b`], `#753` [`PR-1c`], `#754` [`PR-1d`], `#755` [`PR-2a`], `#756` [`PR-2b`], `#757` [`PR-3a`], `#758` [`PR-3b`] & rollup `WF-06` theo [ADR-0067 One-Way Door Gate](../../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md))  
 > **Bản đồ Wayfinder:** [🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị](../../wayfinder/core-seams-and-governance-deepening/map.md)  
 > **Báo cáo Kiến trúc Nguồn:** `.md/scratch/architecture-review/architecture-review-20261115-0825.html`  
 > **Biên lai Đối soát Seam (`ADR-0061`):** `model_routing.v1` $\to$ `ccba_ai:choose_model` (`MATCH`), `maskara_scanner.v1` $\to$ `ccba_maskara:MaskaraScanner` (`MATCH`) | `index_sha256`: `fe4c3c11ca879eba54a8790ade072dbd98022f26bb1393585dee90149dddacfc`
@@ -97,3 +97,14 @@
 - **Core Invariant:** Nối `check_hardcoded_parameters.py`, `check_spoke_cleanliness.py` (`979` $\to$ `< 800 LOC`) và `peer_gate.py` qua adapter stdlib thống nhất với prune prefix gốc repo (`< 1.0s`), miễn `'qwen-local*'`/`'3.2.1.1'`, bắt Windows path có dấu cách và tôn trọng `# ccba:allow-*` đa dòng.
 - **Invalidation Condition:** Revert PR-3b nếu `check_hardcoded_parameters.py --dir .` vượt `1.0s` hoặc làm rò false-negative trên bộ golden test `COND-11` hay gãy `test_spoke_cleanliness.py`.
 - **Git Hunk Reference:** `scripts/spoke/check_spoke_cleanliness.py#L15-L38`
+
+---
+
+## 5. Nghiệm Thu Thực Thi & Số Đo Hậu Cải Tiến (`[đo thực tế]`)
+
+Toàn bộ `8` Micro-PRs (`#751`..`#758`) đã hoàn tất, pass `8/8` checks GitHub Actions và merge về `main` (`27838d62`):
+
+- **PEP 562 Lazy Seams & Cô lập `pymupdf` (`PR #751..#754`)**: Đo clean subprocess (`PYMUPDF_MESSAGE=fd:2`) từ mức nền `283.72–644.24 ms` (`+1,214..+2,390` modules) giảm còn `ccba_ai.routing` `4.27 ms` (`+31`), `ccba_legal.models` `9.70 ms` (`+46`), `ccba_qc_core.jurisdiction` `22.06 ms` (`+104`), `ccba_harness.gpi` `12.98 ms` (`+57`), `heavy=[]`, `stderr=''` (`[đo thực tế]`).
+- **`SkillValidator` & Frontmatter Seam (`PR #755..#756`)**: `skill_validator.py` tách từ `1,481 LOC` $\to$ `263 LOC` facade + `_skill_frontmatter.py` (`423 LOC`), `_skill_content_checks.py` (`416 LOC`), `_skill_gpi_gates.py` (`420 LOC`), toàn bộ `<= 450 LOC`/module & `<= 50 LOC`/hàm; `parse_markdown_frontmatter` (`re.DOTALL`) + `SkillFrontmatterSpec.raw_block` nối đủ `13` caller (`find_skills.py` giữ fallback stdlib 3 tầng & `sorted(iterdir())`) (`[đo thực tế]`).
+- **Stdlib Parameter Scanner & Tier-0 Sync (`PR #757..#758`)**: `_parameter_cleanliness.py` (`442 LOC`) đồng bộ sang `scripts/_guardrails/_parameter_cleanliness.py`; `check_hardcoded_parameters.py --dir .` chạy trong `0.30s` (`0` vi phạm trên `569` tệp `.py`, giảm từ `8,676.16 ms` / `2,199` báo giả `.venv/`); `check_spoke_cleanliness.py` giảm `979` $\to$ `745 LOC` (`< 800 LOC`), `peer_gate.py` `753 LOC` (`<= 800 LOC`) (`[đo thực tế]`).
+- **Xử lý `[FOG-002]` (`[đo thực tế]`)**: Đo subprocess trên `ccba_pdf_prep` (`53.05 ms`, `+247` modules, `heavy=[]`, `stderr=''` — đã sạch); `ccba_ooxml` (`116.69 ms`, `+493` modules) và `mdconverter` (`357.86 ms`, `+1,461` modules, `heavy=['openai', 'httpx']`) được xếp vào backlog PEP 562 đợt kế tiếp trong [Bản đồ Wayfinder](../../wayfinder/core-seams-and-governance-deepening/map.md#L97-L101).
