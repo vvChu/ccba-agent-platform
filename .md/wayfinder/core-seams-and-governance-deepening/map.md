@@ -1,7 +1,7 @@
 # 🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị (Wayfinder Map)
 
 > **Mã định danh:** `WAYFINDER-CORE-SEAMS-GOVERNANCE-20261115`  
-> **Trạng thái:** `IN_PROGRESS` (Frontier hiện tại: [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md))  
+> **Trạng thái:** `COMPLETED` (Hoàn tất toàn bộ `WF-01..WF-06` qua 8 Micro-PRs `#751..#758` & PR đóng bản đồ)  
 > **Khởi tạo:** `2026-11-15` | **Chế độ dự án:** `hybrid` (`ccba-agent-platform` Hub Monorepo)  
 > **Phạm vi áp dụng:** 4 Package lõi (`ccba-ai`, `ccba-harness`, `ccba-legal-intel`, `ccba-qc-core`) + 13 Frontmatter Callers + 3 Parameter/IP/Machine-Path Scanners (8 Micro-PRs)  
 > **ADR-0061 Audit Receipt:** `model_routing.v1` → `ccba_ai:choose_model` (`MATCH`), `maskara_scanner.v1` → `ccba_maskara:MaskaraScanner` (`MATCH`) | `index_sha256`: `fe4c3c11ca879eba54a8790ade072dbd98022f26bb1393585dee90149dddacfc`
@@ -65,7 +65,7 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
 
 | Ticket | Loại | Trạng thái | Assignee | Đầu ra cốt lõi |
 | :--- | :--- | :--- | :--- | :--- |
-| [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md) | `Task [AFK]` | `IN_PROGRESS` | `AI Platform Architect` | `verify-patch --preset ci`, `compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, đo benchmark hậu cải tiến & đóng bản đồ |
+| *(Trống — Bản đồ đã hoàn tất 100%)* | `-` | `-` | `-` | `-` |
 
 ### Đã Hoàn Thành (Closed)
 
@@ -73,22 +73,23 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
 | :--- | :--- | :--- | :--- | :--- |
 | [WF-01: Phản biện & Chốt Thiết kế Chi tiết cho 3 Ứng viên Kiến trúc (PEP 562, Frontmatter Seam, Stdlib Parameter Scanner)](tickets/wf_01_grilling_architecture_design_lock.md) | `Grilling [HITL]` | `CLOSED` | `AI Platform Architect & Kỹ sư Trưởng` | Khóa `5/5` câu `Q1`–`Q5`, xuất [Biên bản Quyết định Grilling & Kế hoạch Triển khai 2026-11-15](../../knowledge/decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md) |
 | [WF-02: Thẩm định Kế hoạch Ngang hàng qua Peer Plan Audit (ADR-0067 One-Way Door Gate)](tickets/wf_02_peer_plan_audit_gate.md) | `Task [HITL]` | `CLOSED` | `AI Platform Architect & Grok 4.7 Auditor` | Pass 3 `951a1441-976f-49cb-bd84-057689eefb81` **`APPROVE_PLAN`** (`risk_score: 2`, `blocking_conditions: 0`, `.md/peer_exchange/grok_core_seams_governance_plan_signoff_p3.md`) & Kỹ sư xác nhận `Proceed` |
-| [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](tickets/wf_03_pep562_lazy_package_seams.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#751`..`#754`: PEP 562 cho `ccba_ai`, `ccba_legal`, `ccba_qc_core`, `ccba_harness` + lazy `pymupdf` (`0` cảnh báo `fitz` deprecation, `ccba_harness.gpi` `11.06 ms`) |
-| [WF-04: Hợp nhất 9 Bộ Phân tích Frontmatter qua parse_markdown_frontmatter & Phân rã SkillValidator dưới 800 LOC](tickets/wf_04_unify_frontmatter_and_deepen_skill_validator.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#755` (`PR-2a` phân rã `skill_validator.py` -> `<= 450 LOC`/module + neo SHA-256) & `PR-2b` (`FRONTMATTER_PATTERN`, `SkillFrontmatterSpec`, `parse_markdown_frontmatter` nối `13` callers + fallback `find_skills.py` + neo SHA-256) |
-| [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#757` (`PR-3a`: `_parameter_cleanliness` `449 LOC` thuần stdlib + `catalog_base.yaml` + `sdk_inspector.py`) & `PR-3b` (nối `3` callers, `--dir . < 1.0s`, thu gọn `check_spoke_cleanliness.py` còn `745 LOC` + `test_parameter_scanner_parity.py`) |
+| [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](tickets/wf_03_pep562_lazy_package_seams.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#751`..`#754`: PEP 562 cho `ccba_ai`, `ccba_legal`, `ccba_qc_core`, `ccba_harness` + lazy `pymupdf` (`0` cảnh báo `fitz` deprecation, `ccba_ai.routing` `4.27 ms`, `ccba_legal.models` `9.70 ms`, `ccba_qc_core.jurisdiction` `22.06 ms`, `ccba_harness.gpi` `12.98 ms`, `heavy=[]`) |
+| [WF-04: Hợp nhất 9 Bộ Phân tích Frontmatter qua parse_markdown_frontmatter & Phân rã SkillValidator dưới 800 LOC](tickets/wf_04_unify_frontmatter_and_deepen_skill_validator.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#755` (`PR-2a`: phân rã `skill_validator.py` `1,481` $\to$ `263`/`423`/`416`/`420 LOC <= 450 LOC` + neo SHA-256) & PR `#756` (`PR-2b`: `FRONTMATTER_PATTERN`, `SkillFrontmatterSpec.raw_block`, `parse_markdown_frontmatter` nối `13` callers + fallback `find_skills.py` + neo SHA-256) |
+| [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#757` (`PR-3a`: `_parameter_cleanliness` `442 LOC` thuần stdlib + `catalog_base.yaml` + `sdk_inspector.py`) & PR `#758` (`PR-3b`: nối `3` callers, `--dir .` `0.30s` / `0` vi phạm, thu gọn `check_spoke_cleanliness.py` `745 LOC` & `peer_gate.py` `753 LOC` + `test_parameter_scanner_parity.py`) |
+| [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | `verify-patch --preset ci` exit `0`, đối soát 3 SSOT writers (`compile_catalog.py`, `compile_skills_docs.py`, `sync_hub_adr_matrix.py`), đối chứng benchmark `[đo thực tế]` & chốt `[FOG-002]` |
 
 ### Đường ống Hạ nguồn (Downstream Tickets — Blocked chờ Frontier)
 
 | Ticket | Loại | Chặn bởi | Phạm vi tóm tắt |
 | :--- | :--- | :--- | :--- |
-| *(Trống — `WF-06` là frontier cuối cùng của bản đồ)* | `-` | `-` | `-` |
+| *(Trống — Bản đồ `WAYFINDER-CORE-SEAMS-GOVERNANCE-20261115` đã đóng `COMPLETED`)* | `-` | `-` | `-` |
 
 ---
 
 ## 🌫️ 5. Sương Mù Chiến Trận (Not Yet Specified)
 
 - `[FOG-001]` `[RESOLVED in WF-01 — Q4]` Hình thái đóng gói đồng bộ sang Spoke Tier-0 qua [sdk_inspector.py](../../../scripts/spoke/sync/sdk_inspector.py#L70-L74): đặt `_ParameterCleanlinessScanner` thuần stdlib tại `ccba_harness._parameter_cleanliness` và khai báo đồng bộ sang `scripts/_guardrails/_parameter_cleanliness.py` trong `catalog_base.yaml` + `sdk_inspector.py`, giữ cơ chế fallback `try/except ImportError` trong `check_spoke_cleanliness.py`.
-- `[FOG-002]` Sau khi [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](tickets/wf_03_pep562_lazy_package_seams.md) hoàn tất, các package phụ (`ccba-pdf-prep`, `mdconverter`, `ccba-ooxml`) có còn độ trễ nạp bắc cầu đáng kể để mở rộng PEP 562 ở đợt kế tiếp không?
+- `[FOG-002]` `[RESOLVED in WF-06]` Đo clean subprocess (`PYMUPDF_MESSAGE=fd:2`) trên `main` (`27838d62`): `ccba_pdf_prep` đạt `53.05 ms` (`+247` modules, `heavy=[]`, `stderr=''` — đã sạch, không cần đổi); `ccba_ooxml` (`116.69 ms`, `+493` modules, `heavy=[]`) và `mdconverter` (`357.86 ms`, `+1,461` modules, `heavy=['openai', 'httpx']`) vẫn còn eager import tại root `__init__.py` nên được đưa vào backlog PEP 562 đợt kế tiếp ở Mục 6.
 - `[FOG-003]` `[RESOLVED in WF-01 — Q5]` Không tạo ADR mới; cập nhật `packages/ccba-harness/AGENTS.md`, `CONTEXT.md` trong PR triển khai, và lưu [Biên bản Quyết định Grilling & Kế hoạch Triển khai 2026-11-15](../../knowledge/decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md) vào LLM-Wiki.
 
 ---
@@ -97,3 +98,4 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
 
 - **Các ứng viên bị loại ở 5 Cổng Bằng chứng:** `packages/ccba-legal-intel/src/ccba_legal/cli.py` (`1,455 LOC`, Gate 1 Glue Code >= 70%), `scripts/governance/skill_auditor.py` & `scripts/doc_auditor.py` (Gate 2 False Positive vì đã ủy quyền 100%), và các mục cũ từ `2026-11-05`/`11-06` đã xử lý xong trong PR `#610` (`301fc8fd`).
 - **Backlog ROI `#4–#6` (để sau đợt này):** `HarnessGuard` analyzers (`_process_monitor.py` `1,185 LOC` & `_file_monitor.py` `1,127 LOC`), Telemetry HTML/SVG renderers (`fleet.py` `1,024 LOC` & `dashboard.py` `645 LOC`), và `ccba-ooxml` monoliths (`pptx/deck_builder.py` `1,586 LOC` & `validation/base.py` `949 LOC`).
+- **Backlog PEP 562 Đợt Kế Tiếp (Từ kết quả đo `[FOG-002]`):** Chuyển root `packages/mdconverter/src/mdconverter/__init__.py` (`357.86 ms`, `+1,461` modules, `openai` + `httpx`) và `packages/ccba-ooxml/src/ccba_ooxml/__init__.py` (`116.69 ms`, `+493` modules) sang PEP 562 lazy seams (`ccba_pdf_prep` `53.05 ms` đã sạch, không cần xử lý).
