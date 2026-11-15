@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
@@ -72,8 +72,8 @@ def apply_tree_layout(
     elif len(roots) > 1:
         root_id = max(roots, key=g.out_degree)
     else:
-        degrees = dict(g.degree())
-        root_id = max(degrees, key=degrees.get) if degrees else list(g.nodes)[0]
+        degrees: dict[str, int] = {str(k): int(v) for k, v in g.degree()}
+        root_id = max(degrees, key=lambda n: degrees[n]) if degrees else str(next(iter(g.nodes)))
 
     # 2. Build Spanning Tree using BFS from Root
     tree_edges = list(nx.bfs_edges(g, root_id))

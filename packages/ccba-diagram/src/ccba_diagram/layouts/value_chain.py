@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
@@ -91,8 +91,8 @@ def apply_value_chain_layout(
         else:
             primary_chain = list(nx.topological_sort(g))
     except Exception:
-        degrees = dict(g.out_degree())
-        primary_chain = sorted(degrees, key=degrees.get, reverse=True)
+        degrees: dict[str, int] = {str(k): int(v) for k, v in g.out_degree()}
+        primary_chain = sorted(degrees, key=lambda n: (-degrees[n], n))
 
     # 2. Support Activities
     support_activities = [n for n in g.nodes if n not in primary_chain]

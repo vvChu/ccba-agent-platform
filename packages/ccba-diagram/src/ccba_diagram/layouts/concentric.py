@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
@@ -64,10 +64,10 @@ def apply_concentric_layout(
     if not g.nodes:
         return False
 
-    degrees = dict(g.degree())
+    degrees: dict[str, int] = {str(k): int(v) for k, v in g.degree()}
     if not degrees:
         return False
-    hub_id = max(degrees, key=degrees.get)
+    hub_id = max(degrees, key=lambda n: degrees[n])
 
     lengths = nx.single_source_shortest_path_length(g, hub_id)
     layers: dict[int, list[str]] = {}

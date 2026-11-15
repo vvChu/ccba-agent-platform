@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
@@ -64,8 +64,8 @@ def apply_radial_layout(
     if not g.nodes:
         return False
 
-    degrees = dict(g.degree())
-    hub_id = max(degrees, key=degrees.get) if degrees else list(g.nodes)[0]
+    degrees: dict[str, int] = {str(k): int(v) for k, v in g.degree()}
+    hub_id = max(degrees, key=lambda n: degrees[n]) if degrees else str(next(iter(g.nodes)))
 
     pos: dict[str, tuple[float, float]] = {}
     center_x, center_y = 600.0, 400.0
