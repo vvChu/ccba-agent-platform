@@ -184,7 +184,8 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict)
         }
         self._dynamic_table_indices: set[int] = set()
-        if not list_fields or not self._doc.tables:
+        doc = self._doc
+        if not list_fields or doc is None or not doc.tables:
             return
 
         matched_tables: dict[int, tuple[str, dict[str, str]]] = {}
@@ -194,7 +195,7 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
             best_mapping: dict[str, str] = {}
             best_score = 0
 
-            for table_idx, table in enumerate(self._doc.tables):
+            for table_idx, table in enumerate(doc.tables):
                 if len(table.rows) < 2:
                     continue
 
@@ -222,7 +223,7 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
 
         for table_idx, (field_key, mapping) in matched_tables.items():
             self._dynamic_table_indices.add(table_idx)
-            table = self._doc.tables[table_idx]
+            table = doc.tables[table_idx]
             items = list_fields[field_key]
             header_cells = [c.text.strip() for c in table.rows[0].cells]
             augmented_rows: list[dict[str, str]] = []
@@ -246,10 +247,11 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
 
     def _auto_map_property_sheet_tables(self, flat: dict[str, Any]) -> None:
         """Fills key-value cell pairs in property sheet tables (2-col or 4-col layout)."""
-        if not self._doc.tables:
+        doc = self._doc
+        if doc is None or not doc.tables:
             return
 
-        for table_idx, table in enumerate(self._doc.tables):
+        for table_idx, table in enumerate(doc.tables):
             if hasattr(self, "_dynamic_table_indices") and table_idx in self._dynamic_table_indices:
                 continue
             for row in table.rows:
@@ -348,8 +350,11 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
 
     def _auto_map_checkboxes(self, flat: dict[str, Any]) -> None:
         """Identifies and checks checkboxes [ ] -> [X] based on matching data values."""
-        paragraphs = list(self._doc.paragraphs)
-        for table in self._doc.tables:
+        doc = self._doc
+        if doc is None:
+            return
+        paragraphs = list(doc.paragraphs)
+        for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     paragraphs.extend(cell.paragraphs)
@@ -403,8 +408,11 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
 
     def _auto_map_inline_paragraphs(self, flat: dict[str, Any]) -> None:
         """Substitutes label-dot patterns and {{placeholders}} across all paragraphs."""
-        paragraphs = list(self._doc.paragraphs)
-        for table in self._doc.tables:
+        doc = self._doc
+        if doc is None:
+            return
+        paragraphs = list(doc.paragraphs)
+        for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     paragraphs.extend(cell.paragraphs)
@@ -526,17 +534,18 @@ class SofficeFallbackEngine(BaseFormFillerEngine):
 
     def _resolve_table(self, rule: TableRule) -> Any | None:
         """Finds target table by index or keyword search."""
-        if not self._doc.tables:
+        doc = self._doc
+        if doc is None or not doc.tables:
             return None
 
         if rule.header_keyword:
             kw = rule.header_keyword.lower()
-            for table in self._doc.tables:
+            for table in doc.tables:
                 if len(table.rows) > 0 and kw in table.rows[0].text.lower():
                     return table
 
-        if rule.table_index < len(self._doc.tables):
-            return self._doc.tables[rule.table_index]
+        if rule.table_index < len(doc.tables):
+            return doc.tables[rule.table_index]
 
         return None
 

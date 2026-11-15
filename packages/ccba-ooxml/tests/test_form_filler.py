@@ -471,3 +471,19 @@ def test_normalize_label_and_que_quan():
     f2, v2, k2 = resolve_field_value("Nơi sinh", data)
     assert f1 and v1 == "Nghệ An" and k1 == "que_quan"
     assert f2 and v2 == "Hà Nội" and k2 == "noi_sinh"
+
+
+def test_fallback_engine_closed_doc_guards(tmp_path: Path):
+    """Verifies internal mappers safely handle _doc is None after close()."""
+    template_path = tmp_path / "closed_guard.docx"
+    docx.Document().save(str(template_path))
+
+    engine = SofficeFallbackEngine(template_path)
+    engine.close()
+    assert engine._doc is None
+
+    engine._auto_map_dynamic_tables({"items": [{"a": 1}]})
+    engine._auto_map_property_sheet_tables({"a": 1})
+    engine._auto_map_checkboxes({})
+    engine._auto_map_inline_paragraphs({})
+    assert engine._resolve_table(TableRule(table_index=0, data_rows=[])) is None
