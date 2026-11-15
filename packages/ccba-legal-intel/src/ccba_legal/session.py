@@ -108,7 +108,8 @@ class CookieVault:
             return []
         try:
             with open(self.vault_path, encoding="utf-8") as f:
-                return json.load(f)
+                loaded: list[dict[str, Any]] = json.load(f)
+                return loaded
         except Exception:
             return []
 
@@ -183,18 +184,13 @@ def check_vip_session_health(session: requests.Session) -> bool:
 
 def get_tvpl_credentials() -> tuple[str, str]:
     """Retrieve TVPL credentials from environment variables, local .env, or Hub root .env."""
-    username = os.getenv("TVPL_USERNAME")
-    password = os.getenv("TVPL_PASSWORD")
+    tvpl_user = os.getenv("TVPL_USERNAME")
+    tvpl_pass = os.getenv("TVPL_PASSWORD")
 
-    if username and password:
-        return username, password
+    if tvpl_user and tvpl_pass:
+        return tvpl_user, tvpl_pass
 
-    candidate_dirs = [
-        Path.cwd(),
-        resolve_project_root(),
-    ]
-    for parent in resolve_project_root().parents:
-        candidate_dirs.append(parent)
+    candidate_dirs = [Path.cwd(), resolve_project_root(), *resolve_project_root().parents]
 
     ws_ctx = Path.cwd() / ".md" / "workspace_context.yaml"
     if ws_ctx.exists():
@@ -215,24 +211,24 @@ def get_tvpl_credentials() -> tuple[str, str]:
             try:
                 for line in env_file.read_text(encoding="utf-8").splitlines():
                     line = line.strip()
-                    if line.startswith("TVPL_USERNAME=") and not username:
-                        username = line.split("=", 1)[1].strip().strip('"').strip("'")
-                    elif line.startswith("TVPL_PASSWORD=") and not password:
-                        password = line.split("=", 1)[1].strip().strip('"').strip("'")
-                if username and password:
-                    os.environ["TVPL_USERNAME"] = username
-                    os.environ["TVPL_PASSWORD"] = password
-                    return username, password
+                    if line.startswith("TVPL_USERNAME=") and not tvpl_user:
+                        tvpl_user = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    elif line.startswith("TVPL_PASSWORD=") and not tvpl_pass:
+                        tvpl_pass = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if tvpl_user and tvpl_pass:
+                    os.environ["TVPL_USERNAME"] = tvpl_user
+                    os.environ["TVPL_PASSWORD"] = tvpl_pass
+                    return tvpl_user, tvpl_pass
             except Exception:
                 continue
 
-    if not username or not password:
+    if not tvpl_user or not tvpl_pass:
         raise OSError(
             "TVPL VIP credentials not configured. Please set TVPL_USERNAME and "
             "TVPL_PASSWORD in environment variables or .env file."
         )
 
-    return username, password
+    return tvpl_user, tvpl_pass
 
 
 def verify_tvpl_vip_status(cdp: Any) -> bool:
@@ -250,7 +246,7 @@ def verify_tvpl_vip_status(cdp: Any) -> bool:
     """
     try:
         status = cdp.evaluate_js(js)
-        is_vip = status == "VIP_PRO_ACTIVE"
+        is_vip = bool(status == "VIP_PRO_ACTIVE")
         log_session_audit("VIPStatusCheck", f"Status: {status} (VIP: {is_vip})")
         return is_vip
     except Exception as e:

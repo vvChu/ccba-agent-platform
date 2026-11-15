@@ -25,9 +25,9 @@ def _import_google_api() -> tuple[bool, Any, Any, Any, Any, Any, Any]:
         import google.auth
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
-        from googleapiclient.discovery import build
-        from googleapiclient.errors import HttpError
-        from googleapiclient.http import MediaFileUpload
+        from googleapiclient.discovery import build  # type: ignore[import-untyped]
+        from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
+        from googleapiclient.http import MediaFileUpload  # type: ignore[import-untyped]
 
         return True, google.auth, Request, Credentials, build, HttpError, MediaFileUpload
     except ImportError:

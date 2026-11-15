@@ -411,7 +411,7 @@ class GoogleDriveIngestor:
         if item.modified_time and reg_mod == item.modified_time:
             # If MD5 is provided, verify it
             if item.md5_checksum is not None:
-                return reg_md5 != item.md5_checksum
+                return bool(reg_md5 != item.md5_checksum)
             # For Google Docs without MD5, modifiedTime match is sufficient
             return False
 

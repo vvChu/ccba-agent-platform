@@ -221,7 +221,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
                 f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
             )
 
-            from googleapiclient.http import MediaIoBaseDownload
+            from googleapiclient.http import MediaIoBaseDownload  # type: ignore[import-untyped]
 
             request = drive_service.files().get_media(fileId=file_id)
             try:
@@ -249,8 +249,8 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
 def _check_aws_s3(download_dir: Path, slug_name: str, extensions: list[str]) -> bool:
     """Check AWS S3 bucket for the file and download if found."""
     try:
-        import boto3
-        from botocore.exceptions import ClientError
+        import boto3  # type: ignore[import-not-found]
+        from botocore.exceptions import ClientError  # type: ignore[import-not-found]
 
         bucket_name = os.environ.get("AWS_BUCKET_NAME") or os.environ.get("S3_BUCKET")
         if not bucket_name:

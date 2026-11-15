@@ -224,7 +224,7 @@ def ensure_chrome_cdp_port(port: int = 9222) -> bool:
     import subprocess
     import time
 
-    import requests  # type: ignore[import-untyped]
+    import requests
 
     try:
         resp = requests.get(f"http://127.0.0.1:{port}/json", timeout=1.5)

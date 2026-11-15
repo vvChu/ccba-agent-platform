@@ -301,7 +301,8 @@ class LegalKnowledgeEngine:
         norm_slug = re.sub(r"[\s\-_/.]+", "_", doc_id.lower()).strip("_")
         simple_slug = re.sub(r"[^a-z0-9]", "", doc_id.lower())
         if norm_slug in self._bundle_cache:
-            return self._bundle_cache[norm_slug]["bundle_dir"]
+            cached_dir = self._bundle_cache[norm_slug]["bundle_dir"]
+            return Path(cached_dir) if cached_dir is not None else None
 
         all_candidates = self._collect_bundle_candidates()
         for b, s_dir in all_candidates:
@@ -474,7 +475,7 @@ class LegalKnowledgeEngine:
         clause_dict = self.get_clause(doc_id, f"dieu-{art_num}-khoan-{khoan_num}")
         if not clause_dict or not clause_dict.get("content"):
             return None
-        k_content = clause_dict["content"]
+        k_content = str(clause_dict["content"])
 
         d_start = self._find_anchor_pos(
             k_content, f"dieu-{art_num}-khoan-{khoan_num}-diem-{diem_id}"
