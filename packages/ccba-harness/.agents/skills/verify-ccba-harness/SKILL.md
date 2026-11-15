@@ -17,13 +17,16 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+sync_commit: "8bb32df489b6f1c631ba4e0ed1964e7844fdb003"
 covered_sha256:
   packages/ccba-harness/src/ccba_harness/cli/core.py: "fd9d2db945faf2fdbfadf51700176d84cd4ab9940f81aff77b062f648c690d8f"
   packages/ccba-harness/src/ccba_harness/gpi.py: "aae45835ee736dd4cff77bfbbda47be46e6121b536a55f8b7621c444e488df92"
   packages/ccba-harness/src/ccba_harness/verifier.py: "fc73a6e6f74a4b6a69806249819651c7000a3f681e6ac0fef5b6e51fb7cb41bd"
   packages/ccba-harness/src/ccba_harness/door_policy.py: "32f2d036d0e67dc892805a5bfc652b02a0a16860bf8cbb7422bc4d972952f908"
-  packages/ccba-harness/src/ccba_harness/skill_validator.py: "a81e9bf76827e5211ae6c66ed07259764dce8c5306e532f4473dca8ca8646f7e"
+  packages/ccba-harness/src/ccba_harness/skill_validator.py: "b17ad6d7419f32adce1b451426302914f70bb225df92bbbbe8c3bf99e555bb88"
+  packages/ccba-harness/src/ccba_harness/_skill_frontmatter.py: "2bac9fb3040b8d61cc741af6b35064d58a3724e7c0385a55f2f6f83d39646506"
+  packages/ccba-harness/src/ccba_harness/_skill_content_checks.py: "3466c71af32907e62d59b9598b0df124730b008b7a0fe78e37a34886f6847c17"
+  packages/ccba-harness/src/ccba_harness/_skill_gpi_gates.py: "2629068907ecd9525d3d9924c33f4b7b4a57ff43d697dff71899436ee8616ec5"
 verification_mode:
   - scaffold
   - sync
@@ -34,6 +37,9 @@ covered_paths:
   - packages/ccba-harness/src/ccba_harness/verifier.py
   - packages/ccba-harness/src/ccba_harness/door_policy.py
   - packages/ccba-harness/src/ccba_harness/skill_validator.py
+  - packages/ccba-harness/src/ccba_harness/_skill_frontmatter.py
+  - packages/ccba-harness/src/ccba_harness/_skill_content_checks.py
+  - packages/ccba-harness/src/ccba_harness/_skill_gpi_gates.py
 triggers:
   - verify-ccba-harness
   - kiểm định ccba-harness
@@ -47,7 +53,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-har
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định trực tiếp các Public Deep Seams của `ccba_harness` (`calculate_gpi`, `evaluate_two_stage_decision`, `verify_patch_execution`, `verify_document_artifact`, `classify_pr_door`, `SkillValidator`) và bộ định tuyến CLI `ccba_harness.cli.core.main`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `8bb32df489b6f1c631ba4e0ed1964e7844fdb003` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 
