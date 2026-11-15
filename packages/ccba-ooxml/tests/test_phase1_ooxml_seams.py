@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -229,3 +232,36 @@ def test_format_docx_chapter_cover_page():
         title_para = formatted_doc.paragraphs[1]
         assert title_para.text == "QUY ĐỊNH CHUNG"
         assert title_para.runs[0].font.size.pt == 28
+
+
+def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
+    """Verify PEP 562 _LAZY_EXPORTS AST parity and runtime lookup for all 64 exports."""
+    import ccba_ooxml
+
+    init_path = Path(ccba_ooxml.__file__)
+    tree = ast.parse(init_path.read_text(encoding="utf-8"))
+    assigns = {
+        node.targets[0].id: node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+    }
+    assert "_LAZY_EXPORTS" in assigns, "_LAZY_EXPORTS must be an unannotated ast.Assign"
+    lazy_map: dict[str, str] = ast.literal_eval(assigns["_LAZY_EXPORTS"])
+    assert len(ccba_ooxml.__all__) == 64
+    assert len(lazy_map) == 64
+    assert set(ccba_ooxml.__all__) == set(lazy_map)
+    assert all(mod.startswith("ccba_ooxml.") for mod in lazy_map.values())
+    for sym in ccba_ooxml.__all__:
+        assert getattr(ccba_ooxml, sym) is not None
+        assert sym in dir(ccba_ooxml)
+    with pytest.raises(AttributeError):
+        _ = ccba_ooxml.non_existent_ccba_ooxml_symbol
+
+
+def test_ccba_ooxml_root_and_leaf_subprocess_isolation() -> None:
+    """Verify bare root import and pure-stdlib leaves do not import lxml, docx, or pptx."""
+    blocked = ("lxml", "docx", "pptx")
+    for stmt in ("import ccba_ooxml", "import ccba_ooxml.soffice", "import ccba_ooxml.calc"):
+        script = f"import sys; {stmt}; hits = [m for m in {blocked!r} if m in sys.modules]; assert not hits, hits"
+        proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+        assert proc.returncode == 0, f"{stmt} failed: {proc.stderr}"
