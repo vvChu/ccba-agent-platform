@@ -417,18 +417,53 @@ def main() -> int:
         target_files = [Path(f) for f in args.files if f.endswith(".py")]
     else:
         root = Path(args.path).resolve()
-        # Scan root .py files + scripts/, src/, tools/, tests/
+        # Scan root .py files + scripts/, src/, services/, tools/, tests/
         target_files.extend(sorted(root.glob("*.py")))
-        for scan_dir in [root / "scripts", root / "src", root / "tools", root / "tests"]:
+        pruned_dirs = {
+            ".venv",
+            "venv",
+            "__pycache__",
+            ".git",
+            "node_modules",
+            ".agents",
+            ".md",
+            "volumes",
+            "surya_src",
+            "autoresearch",
+        }
+        for scan_dir in [
+            root / "scripts",
+            root / "src",
+            root / "services",
+            root / "tools",
+            root / "tests",
+        ]:
             if scan_dir.exists():
-                target_files.extend(sorted(scan_dir.rglob("*.py")))
+                for walk_root, dirs, files in os.walk(scan_dir, onerror=lambda _: None):
+                    dirs[:] = sorted(sub for sub in dirs if sub not in pruned_dirs)
+                    walk_path = Path(walk_root)
+                    for fname in sorted(files):
+                        if fname.endswith(".py"):
+                            target_files.append(walk_path / fname)
 
-    # Exclude .venv, __pycache__, .git, .agents, .md
+    # Exclude .venv, __pycache__, .git, .agents, .md, volumes, node_modules
     target_files = [
         f
         for f in target_files
         if not any(
-            part in (".venv", "venv", "__pycache__", ".git", "node_modules", ".agents", ".md")
+            part
+            in (
+                ".venv",
+                "venv",
+                "__pycache__",
+                ".git",
+                "node_modules",
+                ".agents",
+                ".md",
+                "volumes",
+                "surya_src",
+                "autoresearch",
+            )
             for part in f.parts
         )
     ]

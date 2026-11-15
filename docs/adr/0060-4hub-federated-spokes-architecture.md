@@ -112,7 +112,7 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
   - Thiết lập tham số `maximum_spend_logs_retention_period: 30d` trong cấu hình LiteLLM để kích hoạt tiến trình dọn dẹp ngầm tự động.
 - **Cấp Phát Khoá Ảo Động (`POST /key/generate`):**
   - Quản trị hạn ngạch chi phí và tốc độ độc lập cho từng Spoke và kỹ sư:
-    + `spoke-idop`: 120 RPM, \$50/30d, 8 parallel requests.
+    + `spoke-idop`: 60 RPM, \$50/30d, 4 parallel requests.
     + `spoke-bim-planner`: 60 RPM, \$30/30d, 4 parallel requests.
     + `spoke-legal`: 60 RPM, \$40/30d, 4 parallel requests.
     + `dev-tta` / `dev-tat`: 30 RPM, \$15/30d, 2 parallel requests.
