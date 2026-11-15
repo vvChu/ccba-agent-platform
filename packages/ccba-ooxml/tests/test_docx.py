@@ -223,3 +223,21 @@ def test_workspace_get_docx_document_in_place() -> None:
             comments_content = zf.read("word/comments.xml").decode("utf-8")
             assert "In-place workspace comment" in comments_content
             assert 'w:author="AI Architect"' in comments_content
+
+
+def test_change_engine_rejects_detached_run_and_in_place_del(
+    minimal_docx_tree: tempfile.TemporaryDirectory[str],
+) -> None:
+    doc = DocxDocument(minimal_docx_tree.name, author="Reviewer", in_place=True)
+    editor = doc["word/document.xml"]
+    detached_run = editor.dom.createElement("w:r")
+    text_elem = editor.dom.createElement("w:t")
+    text_elem.appendChild(editor.dom.createTextNode("Orphan"))
+    detached_run.appendChild(text_elem)
+
+    with pytest.raises(ValueError, match="detached w:r"):
+        editor.suggest_deletion(detached_run)
+
+    # Confirm __del__ safely handles in_place=True (temp_dir is None)
+    assert doc.temp_dir is None
+    doc.__del__()
