@@ -21,6 +21,11 @@ if TYPE_CHECKING:
     from ._engine import HarnessEngine
     from ._guard import HarnessGuard
     from ._mutex import FileMutexLock
+    from ._parameter_cleanliness import (
+        ParameterViolation,
+        is_statutory_clause_match,
+        scan_parameter_cleanliness,
+    )
     from ._skill_frontmatter import (
         FRONTMATTER_PATTERN,
         SkillFrontmatterSpec,
@@ -116,6 +121,9 @@ __all__ = [
     "FRONTMATTER_PATTERN",
     "SkillFrontmatterSpec",
     "parse_markdown_frontmatter",
+    "ParameterViolation",
+    "is_statutory_clause_match",
+    "scan_parameter_cleanliness",
     "CommandResult",
     "PatchVerificationReport",
     "verify_patch_execution",
@@ -562,6 +570,9 @@ _LAZY_EXPORTS = {
     "FRONTMATTER_PATTERN": "ccba_harness._skill_frontmatter",
     "SkillFrontmatterSpec": "ccba_harness._skill_frontmatter",
     "parse_markdown_frontmatter": "ccba_harness._skill_frontmatter",
+    "ParameterViolation": "ccba_harness._parameter_cleanliness",
+    "is_statutory_clause_match": "ccba_harness._parameter_cleanliness",
+    "scan_parameter_cleanliness": "ccba_harness._parameter_cleanliness",
     "AsyncTranscriptFollower": "ccba_harness.streamer",
     "OfflineBufferManager": "ccba_harness.streamer",
     "StreamingConfig": "ccba_harness.streamer",
