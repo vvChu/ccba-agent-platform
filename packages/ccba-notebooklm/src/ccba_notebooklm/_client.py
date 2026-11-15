@@ -14,30 +14,72 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+NotebookLMClient: Any = None
+NetworkError: type[Exception] = Exception
+InfographicDetail: Any = None
+InfographicOrientation: Any = None
+InfographicStyle: Any = None
+QuizDifficulty: Any = None
+QuizQuantity: Any = None
+ReportFormat: Any = None
+SlideDeckFormat: Any = None
+SlideDeckLength: Any = None
+VideoFormat: Any = None
+VideoStyle: Any = None
+
 try:
-    from notebooklm import NotebookLMClient
-    from notebooklm.exceptions import NetworkError as NetworkError
-    from notebooklm.rpc.types import (
-        InfographicDetail,
-        InfographicOrientation,
-        InfographicStyle,
-        QuizDifficulty,
-        QuizQuantity,
-        ReportFormat,
-        SlideDeckFormat,
-        SlideDeckLength,
-        VideoFormat,
-        VideoStyle,
+    from notebooklm import (
+        InfographicDetail as _InfographicDetail,
+    )
+    from notebooklm import (
+        InfographicOrientation as _InfographicOrientation,
+    )
+    from notebooklm import (
+        InfographicStyle as _InfographicStyle,
+    )
+    from notebooklm import (
+        NetworkError as _NetworkError,
+    )
+    from notebooklm import (
+        NotebookLMClient as _NotebookLMClient,
+    )
+    from notebooklm import (
+        QuizDifficulty as _QuizDifficulty,
+    )
+    from notebooklm import (
+        QuizQuantity as _QuizQuantity,
+    )
+    from notebooklm import (
+        ReportFormat as _ReportFormat,
+    )
+    from notebooklm import (
+        SlideDeckFormat as _SlideDeckFormat,
+    )
+    from notebooklm import (
+        SlideDeckLength as _SlideDeckLength,
+    )
+    from notebooklm import (
+        VideoFormat as _VideoFormat,
+    )
+    from notebooklm import (
+        VideoStyle as _VideoStyle,
     )
 
+    NotebookLMClient = _NotebookLMClient
+    NetworkError = _NetworkError
+    InfographicDetail = _InfographicDetail
+    InfographicOrientation = _InfographicOrientation
+    InfographicStyle = _InfographicStyle
+    QuizDifficulty = _QuizDifficulty
+    QuizQuantity = _QuizQuantity
+    ReportFormat = _ReportFormat
+    SlideDeckFormat = _SlideDeckFormat
+    SlideDeckLength = _SlideDeckLength
+    VideoFormat = _VideoFormat
+    VideoStyle = _VideoStyle
     HAS_NOTEBOOKLM = True
 except ImportError:
-    NotebookLMClient = None
     HAS_NOTEBOOKLM = False
-    QuizQuantity = QuizDifficulty = SlideDeckFormat = SlideDeckLength = None
-    ReportFormat = InfographicOrientation = InfographicDetail = InfographicStyle = None
-    VideoFormat = VideoStyle = None
-    NetworkError = Exception
 
 
 __all__ = [
