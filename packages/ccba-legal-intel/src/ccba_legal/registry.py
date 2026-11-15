@@ -675,7 +675,7 @@ class LegalRegistryManager:
         superseded_date = str(doc["superseded_date"]) if doc.get("superseded_date") else None
 
         # Resolve supersedes / replaced docs
-        rel = doc.get("relations") if isinstance(doc.get("relations"), dict) else {}
+        rel = raw_rel if isinstance(raw_rel := doc.get("relations"), dict) else {}
         raw_supersedes = (
             doc.get("supersedes")
             or doc.get("replaces")

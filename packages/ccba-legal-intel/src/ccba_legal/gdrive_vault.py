@@ -66,7 +66,7 @@ class GoogleDriveVault:
             import google.auth
             from google.oauth2 import service_account
             from google.oauth2.credentials import Credentials
-            from googleapiclient.discovery import build
+            from googleapiclient.discovery import build  # type: ignore[import-untyped]
         except ImportError:
             logger.warning("google-api-python-client or google-auth not installed.")
             return None
@@ -125,10 +125,10 @@ class GoogleDriveVault:
             )
             files = response.get("files", [])
             if files:
-                return files[0]["id"]
+                return str(files[0]["id"])
 
             # Create folder
-            file_metadata = {
+            file_metadata: dict[str, Any] = {
                 "name": folder_name,
                 "mimeType": "application/vnd.google-apps.folder",
             }
@@ -144,7 +144,8 @@ class GoogleDriveVault:
                 )
                 .execute()
             )
-            return folder.get("id")
+            folder_id = folder.get("id")
+            return str(folder_id) if folder_id is not None else None
         except Exception as e:
             logger.error(f"Error getting/creating folder '{folder_name}': {e}")
             return None
@@ -246,7 +247,7 @@ class GoogleDriveVault:
             }
 
         try:
-            from googleapiclient.http import MediaFileUpload
+            from googleapiclient.http import MediaFileUpload  # type: ignore[import-untyped]
 
             target_folder_id = self.ensure_vault_structure(category, doc_slug)
             if not target_folder_id:

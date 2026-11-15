@@ -78,7 +78,7 @@ class TVPLCrawler:
         if hasattr(self.engine.provider, "search") and not isinstance(
             self.engine.provider, TVPLVIPDocProvider
         ):
-            res = self.engine.provider.search(query, max_results)
+            res: list[dict[str, Any]] = self.engine.provider.search(query, max_results)
             if res:
                 return res
         return [

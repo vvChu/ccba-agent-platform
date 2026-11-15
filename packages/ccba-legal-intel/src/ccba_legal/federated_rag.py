@@ -235,7 +235,7 @@ class FederatedLegalEngine:
     def _build_bm25_index(self) -> None:
         """Build the BM25 index."""
         try:
-            from rank_bm25 import BM25Okapi
+            from rank_bm25 import BM25Okapi  # type: ignore[import-untyped]
 
             tokenized_corpus = [self._tokenize(c["text"]) for c in self._chunks]
             self._bm25_index = BM25Okapi(tokenized_corpus)
@@ -309,7 +309,7 @@ class FederatedLegalEngine:
 
             raw_emb = AIClient(timeout=self._embed_timeout).embed([query])[0]
             query_emb = np.array(raw_emb, dtype=np.float32)
-            query_emb = query_emb / max(np.linalg.norm(query_emb), 1e-10)
+            query_emb = query_emb / max(float(np.linalg.norm(query_emb)), 1e-10)
 
             scores = self._embedding_matrix @ query_emb
             n_scores = len(scores)

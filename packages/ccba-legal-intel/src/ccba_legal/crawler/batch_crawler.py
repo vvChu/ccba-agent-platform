@@ -23,12 +23,14 @@ class TVPLBatchCrawler:
                 output_dir = Path(crawler_engine)
             crawler_engine = None
 
+        engine_out = getattr(crawler_engine, "output_dir", None)
+        provider_out = getattr(getattr(crawler_engine, "provider", None), "output_dir", None)
         if output_dir is not None:
             self.output_dir = Path(output_dir)
-        elif hasattr(crawler_engine, "output_dir"):
-            self.output_dir = Path(crawler_engine.output_dir)
-        elif hasattr(getattr(crawler_engine, "provider", None), "output_dir"):
-            self.output_dir = Path(crawler_engine.provider.output_dir)
+        elif engine_out is not None:
+            self.output_dir = Path(engine_out)
+        elif provider_out is not None:
+            self.output_dir = Path(provider_out)
         else:
             self.output_dir = Path(".md/extracted_docs")
 
