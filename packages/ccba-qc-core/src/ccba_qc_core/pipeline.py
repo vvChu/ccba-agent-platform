@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import fitz  # ccba:allow-raw-bypass (in-memory document cache for batch coordination)
 import pandas as pd
 from PIL import Image
 
@@ -26,6 +26,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _get_fitz() -> Any:
+    """Configure PYMUPDF_MESSAGE=fd:2 and lazily load pymupdf."""
+    os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
+    import pymupdf as fitz  # ccba:allow-raw-bypass (in-memory document cache for batch coordination)
+
+    return fitz
+
+
 class QCBatchOrchestrator:
     """Batch Orchestrator điều phối thẩm tra toàn bộ ma trận phối hợp (Coordination Matrix)."""
 
@@ -40,17 +48,18 @@ class QCBatchOrchestrator:
 
         self.blank_img = self.renders_dir / "blank.png"
         self._generate_blank_image()
-        self.pdf_cache: dict[Path, fitz.Document] = {}
+        self.pdf_cache: dict[Path, Any] = {}
 
     def _generate_blank_image(self) -> None:
         if not self.blank_img.exists():
             img = Image.new("RGB", (1000, 1000), "white")
             img.save(str(self.blank_img))
 
-    def _get_doc(self, pdf_path: Path) -> fitz.Document | None:
+    def _get_doc(self, pdf_path: Path) -> Any:
         if not pdf_path.exists():
             return None
         if pdf_path not in self.pdf_cache:
+            fitz = _get_fitz()
             try:
                 self.pdf_cache[pdf_path] = fitz.open(str(pdf_path))
             except Exception as e:

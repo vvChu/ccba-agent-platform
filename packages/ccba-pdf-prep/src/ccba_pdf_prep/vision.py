@@ -7,9 +7,12 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
-import fitz  # PyMuPDF
+from ._pymupdf import _get_fitz
+
+if TYPE_CHECKING:
+    import pymupdf as fitz
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ def _compute_ink_ratio(pixmap: fitz.Pixmap) -> float:
         if samples[i] == 255 and samples[i + 1] == 255 and samples[i + 2] == 255:
             white += 1
 
-    return 1.0 - (white / total)
+    return float(1.0 - (white / total))
 
 
 def _normalize_vn(text: str) -> str:
@@ -152,6 +155,7 @@ class VisionOptimizer:
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
         output_dir.mkdir(parents=True, exist_ok=True)
+        fitz = _get_fitz()
         doc = fitz.open(str(pdf_path))
         page = doc[page_num]
 

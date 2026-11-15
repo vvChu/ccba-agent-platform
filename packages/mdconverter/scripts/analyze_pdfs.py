@@ -11,10 +11,18 @@ Outputs a summary table with recommendations for converter selection.
 """
 
 import json
+import os
 import sys
 from pathlib import Path
+from typing import Any
 
-import fitz  # ccba:allow-raw-bypass (pdf analyzer CLI tool)
+
+def _get_fitz() -> Any:
+    """Configure PYMUPDF_MESSAGE=fd:2 and lazily load pymupdf."""
+    os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
+    import pymupdf as fitz  # ccba:allow-raw-bypass (pdf analyzer CLI tool)
+
+    return fitz
 
 
 def analyze_pdf(pdf_path: Path) -> dict:
@@ -39,6 +47,7 @@ def analyze_pdf(pdf_path: Path) -> dict:
     }
 
     try:
+        fitz = _get_fitz()
         doc = fitz.open(str(pdf_path))
         result["pages"] = len(doc)
 

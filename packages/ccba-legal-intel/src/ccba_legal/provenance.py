@@ -10,15 +10,12 @@ Compares official PDF Gazette Scan (Ground Truth) against freshly downloaded DOC
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any
 
-try:
-    import pymupdf as fitz  # ccba:allow-raw-bypass (cryptographic provenance and verbatim parity hashing)
-except ImportError:
-    import fitz  # ccba:allow-raw-bypass (cryptographic provenance fallback)
 from docx import Document
 
 from ccba_legal.constants import (
@@ -26,8 +23,20 @@ from ccba_legal.constants import (
     GATE_11_MIN_VERBATIM_PARITY,
 )
 
-# Suppress PyMuPDF internal warnings
-fitz.TOOLS.mupdf_display_errors(False)
+_PYMUPDF_INITIALIZED = False
+
+
+def _get_fitz() -> Any:
+    """Configure PYMUPDF_MESSAGE=fd:2 and lazily load pymupdf."""
+    global _PYMUPDF_INITIALIZED
+    os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
+    import pymupdf as fitz  # ccba:allow-raw-bypass (cryptographic provenance and verbatim parity hashing)
+
+    if not _PYMUPDF_INITIALIZED:
+        fitz.TOOLS.mupdf_display_errors(False)
+        _PYMUPDF_INITIALIZED = True
+    return fitz
+
 
 # Enforce UTF-8 output encoding
 if hasattr(sys.stdout, "reconfigure"):
@@ -119,6 +128,7 @@ def extract_docx_data(docx_path: Path) -> tuple[list[str], int, str]:
 
 def extract_pdf_data(pdf_path: Path) -> tuple[int, str]:
     """Extracts page count and full text from PDF."""
+    fitz = _get_fitz()
     pdf_doc = fitz.open(str(pdf_path))
     pages = len(pdf_doc)
     text = "".join(page.get_text() + "\n" for page in pdf_doc)

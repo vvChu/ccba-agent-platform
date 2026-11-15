@@ -3,14 +3,19 @@ CCBA PDF Preprocessor — Core logic for document analysis and manipulation.
 Migrated and generalized from mdconverter.
 """
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import fitz  # PyMuPDF
+from ._pymupdf import _get_fitz
+
+if TYPE_CHECKING:
+    import pymupdf as fitz
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +172,7 @@ class PDFAnalyzer:
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
         size_mb = round(pdf_path.stat().st_size / (1024 * 1024), 2)
+        fitz = _get_fitz()
         try:
             doc = fitz.open(str(pdf_path))
         except Exception as e:
@@ -321,7 +327,7 @@ def get_pdf_page_count(pdf_path: Path | str) -> int:
     Raises:
         FileNotFoundError: If the PDF file does not exist.
     """
-    import fitz
+    fitz = _get_fitz()
 
     p = Path(pdf_path)
     if not p.exists() or not p.is_file():
@@ -355,7 +361,7 @@ def render_page_to_image(
         IndexError: If page_num is out of range.
         ValueError: If expected render dimensions exceed MAX_RENDER_PIXELS.
     """
-    import fitz
+    fitz = _get_fitz()
 
     if not pdf_path.exists():
         raise FileNotFoundError(f"PDF not found: {pdf_path}")
@@ -407,7 +413,7 @@ def render_page_to_image_stream(
         IndexError: If page_num is out of range.
         ValueError: If expected render dimensions exceed MAX_RENDER_PIXELS.
     """
-    import fitz
+    fitz = _get_fitz()
 
     if isinstance(pdf_source, (bytes, bytearray)):
         doc = fitz.open(stream=pdf_source, filetype="pdf")
@@ -431,6 +437,6 @@ def render_page_to_image_stream(
             )
         matrix = fitz.Matrix(zoom, zoom)
         pix = page.get_pixmap(matrix=matrix)
-        return pix.tobytes(output=image_format)
+        return bytes(pix.tobytes(output=image_format))
     finally:
         doc.close()

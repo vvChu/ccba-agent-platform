@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
-import fitz  # PyMuPDF
-
+from ._pymupdf import _get_fitz
 from .vision import _compute_ink_ratio
+
+if TYPE_CHECKING:
+    import pymupdf as fitz
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,8 @@ class TitleBlockRegion(NamedTuple):
 
     @property
     def rect(self) -> fitz.Rect:
-        return fitz.Rect(self.x0, self.y0, self.x1, self.y1)
+        fitz_mod = _get_fitz()
+        return cast("fitz.Rect", fitz_mod.Rect(self.x0, self.y0, self.x1, self.y1))
 
     @property
     def width(self) -> float:
@@ -79,6 +82,7 @@ class TitleBlockDetector:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
+        fitz = _get_fitz()
         doc = fitz.open(str(pdf_path))
         page = doc[page_num]
         w = page.rect.width
@@ -125,6 +129,7 @@ class TitleBlockDetector:
         if output_path is None:
             output_path = pdf_path.parent / (f"{pdf_path.stem}_p{page_num + 1}_titleblock.png")
 
+        fitz = _get_fitz()
         doc = fitz.open(str(pdf_path))
         page = doc[page_num]
         matrix = fitz.Matrix(dpi / 72, dpi / 72)
@@ -144,6 +149,7 @@ class TitleBlockDetector:
         h: float,
     ) -> TitleBlockRegion | None:
         """Use vector path density to locate the title block."""
+        fitz = _get_fitz()
         search_rect = fitz.Rect(
             w * (1 - cls._SEARCH_RIGHT_FRAC),
             h * (1 - cls._SEARCH_BOTTOM_FRAC),
@@ -206,6 +212,7 @@ class TitleBlockDetector:
             return region
 
         # Verify region has actual content
+        fitz = _get_fitz()
         matrix = fitz.Matrix(1.0, 1.0)  # 72 DPI thumbnail
         pix = page.get_pixmap(matrix=matrix, clip=region.rect)
         ink = _compute_ink_ratio(pix)

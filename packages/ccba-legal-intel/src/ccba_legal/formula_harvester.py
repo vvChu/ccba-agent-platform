@@ -17,13 +17,12 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import re
 import time
 import zipfile
 from pathlib import Path
 from typing import Any
-
-from ccba_legal.converters.mtef_parser import decode_ole_mathtype
 
 logger = logging.getLogger(__name__)
 
@@ -559,6 +558,8 @@ def harvest_docx_formula_images(
                     if ole_rid in r_map:
                         ole_path = r_map[ole_rid]
                         if ole_path in z.namelist():
+                            from ccba_legal.converters.mtef_parser import decode_ole_mathtype
+
                             ole_bytes = z.read(ole_path)
                             mtef_latex = decode_ole_mathtype(ole_bytes)
                             if mtef_latex:
@@ -706,7 +707,8 @@ def harvest_pdf_formula_images(
         List cac dict {page_num, xref, width_px, height_px, katex}.
     """
     try:
-        import fitz  # ccba:allow-raw-bypass (low-level PDF image xref extraction for formula harvesting)
+        os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
+        import pymupdf as fitz  # ccba:allow-raw-bypass (low-level PDF image xref extraction for formula harvesting)
     except ImportError:
         logger.warning("PyMuPDF khong duoc cai dat. Bo qua PDF formula harvesting.")
         return []
