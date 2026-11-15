@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
@@ -107,7 +107,7 @@ def _order_outer_nodes(
     try:
         cycles = list(nx.simple_cycles(sub_dir))
         if cycles:
-            longest = max(cycles, key=len)
+            longest: list[str] = [str(x) for x in max(cycles, key=len)]
             if outer_nodes and outer_nodes[0] in longest:
                 idx = longest.index(outer_nodes[0])
                 longest = longest[idx:] + longest[:idx]
@@ -119,24 +119,24 @@ def _order_outer_nodes(
     try:
         basis = nx.cycle_basis(sub_undir)
         if basis:
-            longest = max(basis, key=len)
-            if outer_nodes and outer_nodes[0] in longest:
-                idx = longest.index(outer_nodes[0])
-                longest = longest[idx:] + longest[:idx]
-            if len(longest) >= 3:
+            longest_basis: list[str] = [str(x) for x in max(basis, key=len)]
+            if outer_nodes and outer_nodes[0] in longest_basis:
+                idx = longest_basis.index(outer_nodes[0])
+                longest_basis = longest_basis[idx:] + longest_basis[:idx]
+            if len(longest_basis) >= 3:
                 fwd = sum(
                     1
-                    for i in range(len(longest))
-                    if g_dir.has_edge(longest[i], longest[(i + 1) % len(longest)])
+                    for i in range(len(longest_basis))
+                    if g_dir.has_edge(longest_basis[i], longest_basis[(i + 1) % len(longest_basis)])
                 )
                 bwd = sum(
                     1
-                    for i in range(len(longest))
-                    if g_dir.has_edge(longest[(i + 1) % len(longest)], longest[i])
+                    for i in range(len(longest_basis))
+                    if g_dir.has_edge(longest_basis[(i + 1) % len(longest_basis)], longest_basis[i])
                 )
                 if bwd > fwd:
-                    longest = [longest[0]] + longest[:0:-1]
-            return longest + [n for n in outer_nodes if n not in longest]
+                    longest_basis = [longest_basis[0]] + longest_basis[:0:-1]
+            return longest_basis + [n for n in outer_nodes if n not in longest_basis]
     except Exception:
         pass
 

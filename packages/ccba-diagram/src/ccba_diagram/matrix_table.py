@@ -77,11 +77,15 @@ def generate_markdown_spec_table(
     for arr in arrows:
         sb = arr.get("startBinding", {})
         eb = arr.get("endBinding", {})
-        sid = sb.get("elementId") if isinstance(sb, dict) else (sb if isinstance(sb, str) else None)
-        eid = eb.get("elementId") if isinstance(eb, dict) else (eb if isinstance(eb, str) else None)
+        start_id: str | None = (
+            sb.get("elementId") if isinstance(sb, dict) else (sb if isinstance(sb, str) else None)
+        )
+        end_id: str | None = (
+            eb.get("elementId") if isinstance(eb, dict) else (eb if isinstance(eb, str) else None)
+        )
 
-        if sid in shapes and eid in shapes:
-            target_label = shape_labels[eid]
+        if start_id is not None and end_id is not None and start_id in shapes and end_id in shapes:
+            target_label = shape_labels[end_id]
             # Truncate target label if too long
             if len(target_label) > 35:
                 target_label = target_label[:32] + "..."
@@ -90,7 +94,7 @@ def generate_markdown_spec_table(
                 if isinstance(b, dict) and b.get("id") in text_nodes:
                     arrow_label = f" *({text_nodes[b['id']]})*"
                     break
-            connections[sid].append(f"↳&nbsp;{target_label}{arrow_label}")
+            connections[start_id].append(f"↳&nbsp;{target_label}{arrow_label}")
 
     lines = [
         f"### 📋 {table_title}",
