@@ -360,3 +360,55 @@ def test_services_walk_prunes_volumes_and_checks_import_depth(tmp_path: Path, mo
         assert check_hub_import_depth.main() == 1
     finally:
         os.chmod(svc_volumes, 0o755)
+
+
+def test_session_debris_md_scripts_and_systemd_service_scanning(tmp_path: Path) -> None:
+    """Verifies .agents session debris, .md/scripts/ scanning, and systemd unit leak detection."""
+    from scripts.spoke.check_spoke_cleanliness import (
+        _collect_py_files_to_scan,
+        check_agents_session_debris,
+        scan_spoke_cleanliness,
+    )
+
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    agents_dir = tmp_path / ".agents"
+    for canonical in ("rules", "skills", "proposals", "workflows"):
+        (agents_dir / canonical).mkdir(parents=True)
+    (agents_dir / "AGENTS.md").write_text("# canonical\n", encoding="utf-8")
+    debris_dir = agents_dir / "auditor_99"
+    debris_dir.mkdir()
+    debris_req = agents_dir / "ORIGINAL_REQUEST.md"
+    debris_req.write_text("ephemeral\n", encoding="utf-8")
+    assert check_agents_session_debris(tmp_path) == [debris_req, debris_dir]
+    rc_debris, msgs_debris = scan_spoke_cleanliness(tmp_path)
+    assert rc_debris == 1
+    assert any("Session Debris Isolation" in m for m in msgs_debris)
+    debris_req.unlink()
+    debris_dir.rmdir()
+    assert check_agents_session_debris(tmp_path) == []
+
+    md_helper = tmp_path / ".md" / "scripts" / "helper.py"
+    md_helper.parent.mkdir(parents=True)
+    md_helper.write_text("X = 1\n", encoding="utf-8")
+    archived_py = tmp_path / ".md" / "scripts" / "archive" / "old.py"
+    archived_py.parent.mkdir(parents=True)
+    archived_py.write_text("Y = 2\n", encoding="utf-8")
+    assert _collect_py_files_to_scan(tmp_path, scripts_dir) == [md_helper]
+
+    systemd_unit = tmp_path / "tools" / "systemd" / "demo.service"
+    systemd_unit.parent.mkdir(parents=True)
+    raw_home = "/home/" + "user/project"
+    raw_ip = ".".join(("100", "83", "192", "30"))
+    systemd_unit.write_text(
+        f"[Service]\nWorkingDirectory={raw_home}\nEnvironment=GATEWAY=http://{raw_ip}:8090\n",
+        encoding="utf-8",
+    )
+    rc_dirty, msgs_dirty = scan_spoke_cleanliness(tmp_path)
+    assert rc_dirty == 1
+    assert any("Raw IP Leakage" in m for m in msgs_dirty)
+    assert any("Machine-State Leakage" in m for m in msgs_dirty)
+
+    systemd_unit.write_text("[Service]\nWorkingDirectory=@PROJECT_ROOT@\n", encoding="utf-8")
+    rc_clean, _ = scan_spoke_cleanliness(tmp_path)
+    assert rc_clean == 0
