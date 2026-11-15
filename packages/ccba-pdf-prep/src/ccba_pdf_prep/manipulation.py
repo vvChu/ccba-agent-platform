@@ -281,7 +281,7 @@ def split_pdf(
         and isinstance(pages_or_ranges, (list, tuple))
         and isinstance(pages_or_ranges[0], tuple)
     ):
-        return split_pdf_chunks(source, pages_or_ranges, output)  # type: ignore[arg-type]
+        return split_pdf_chunks(source, pages_or_ranges, output)
     elif not pages_or_ranges and isinstance(pages_or_ranges, (list, tuple)):
         return split_pdf_chunks(source, [], output)
     return split_pdf_pages(source, pages_or_ranges, output)  # type: ignore[arg-type]

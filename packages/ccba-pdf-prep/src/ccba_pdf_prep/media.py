@@ -151,7 +151,7 @@ def fetch_youtube_transcript(url: str, output_dir: Path | str | None = None) -> 
         return ""
 
     try:
-        from youtube_transcript_api import YouTubeTranscriptApi
+        from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore[import-not-found]
 
         api = YouTubeTranscriptApi()
         transcript_list = api.list(video_id)

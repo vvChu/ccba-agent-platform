@@ -103,7 +103,7 @@ class CompositeBuilder:
 
         for idx, img in enumerate(loaded):
             # Fit image into cell_size × cell_size while preserving aspect ratio
-            img.thumbnail((cell_size, cell_size), Image.LANCZOS)
+            img.thumbnail((cell_size, cell_size), Image.Resampling.LANCZOS)
             cell_img = Image.new("RGB", (cell_size, cell_size), (255, 255, 255))
             # Center the thumbnail in the cell
             x_off = (cell_size - img.width) // 2
@@ -138,6 +138,7 @@ class CompositeBuilder:
         draw.rectangle([(0, 0), (img.width, label_h)], fill=_LABEL_BG)
 
         # Try to use a basic font, fall back to default
+        font: ImageFont.FreeTypeFont | ImageFont.ImageFont
         try:
             font = ImageFont.truetype("arial.ttf", size=18)
         except OSError:
