@@ -16,30 +16,22 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _APPROVED_MODEL_ALIASES: frozenset[str] = frozenset(
-    (
-        "ocr-primary ocr-fallback ocr-tier4 ocr-proxy rag-core rag-light "
-        "local-coder local-instruct fast-realtime text-auto text-gemma "
-        "text-gemma-12b text-gemma-4b text-light-gemma text-light-auto auto "
-        "reasoning-gemma reasoning-fallback qwen-local qwen-local-primary "  # ccba:allow-raw-model
-        "gemini-flash-latest gemini-reasoning-latest embedding-default "  # ccba:allow-raw-model
-        "audio-primary whisper-primary whisper-local "
-        "tier-reasoning tier-fast tier-ocr tier-local"
-    ).split()
+    "ocr-primary ocr-fallback ocr-tier4 ocr-proxy rag-core rag-light "
+    "local-coder local-instruct fast-realtime text-auto text-gemma "
+    "text-gemma-12b text-gemma-4b text-light-gemma text-light-auto auto "
+    "reasoning-gemma reasoning-fallback qwen-local qwen-local-primary "  # ccba:allow-raw-model
+    "gemini-flash-latest gemini-reasoning-latest embedding-default "  # ccba:allow-raw-model
+    "audio-primary whisper-primary whisper-local tier-reasoning tier-fast tier-ocr tier-local".split()
 )
 
 _DEPRECATED_MODEL_PREFIXES: tuple[str, ...] = tuple(
-    (
-        "gemini-2.5- gemini-3.5-flash- gemini-3.6- gemini-3.7- "  # ccba:allow-raw-model
-        "qwen-3.5-35b qwen3.5-35b gemma-3-27b "  # ccba:allow-raw-model
-        "smart-brain smartest-brain ocr-tier3"
-    ).split()
+    "gemini-2.5- gemini-3.5-flash- gemini-3.6- gemini-3.7- "  # ccba:allow-raw-model
+    "qwen-3.5-35b qwen3.5-35b gemma-3-27b smart-brain smartest-brain ocr-tier3".split()  # ccba:allow-raw-model
 )
 
 _RAW_MODEL_PREFIXES: tuple[str, ...] = tuple(
-    (
-        "gemini- claude- gpt- llama- mistral- qwen- deepseek- gemma- grok- "
-        "text-embedding- openai/ anthropic/ gemini/"
-    ).split()
+    "gemini- claude- gpt- llama- mistral- qwen- deepseek- gemma- grok- "
+    "text-embedding- openai/ anthropic/ gemini/".split()
 )
 
 _MODEL_PATTERN = re.compile(
@@ -54,12 +46,9 @@ _STANDARD_PUBLIC_DNS: frozenset[str] = frozenset(
 )
 
 _STATUTORY_CLAUSE_REF_RE = re.compile(
-    r"""(?:"""
-    r"""(?:["']{3}|^\s*#{1,6})\s*"""
-    r"""|(?:\b(?:tại|điểm|khoản|mục|điều|chương|phụ\s+lục|qcvn|tcvn|như|bảng|hình|"""
-    r"""chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|nêu\s+tại|theo)\s+)"""
-    r""")"""
-    r"""(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
+    r"""(?:(?:["']{3}|^\s*#{1,6})\s*|\b(?:tại|điểm|khoản|mục|điều|chương|phụ\s+lục|"""
+    r"""qcvn|tcvn|như|bảng|hình|chú\s+thích(?:\s+tại)?|tuân\s+thủ|quy\s+định\s+tại|"""
+    r"""nêu\s+tại|theo)\s+)(\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2})(?=\s{2,}|[\s.,);:"']|$)""",
     re.IGNORECASE,
 )
 
@@ -69,20 +58,22 @@ _WIN_PATH_RE = re.compile(
 )
 _POSIX_HOME_RE = re.compile(r"""(?:["']|[=:]\s*)/home/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+""")
 _SHAREPOINT_MARKER_RE = re.compile(r"/?:[a-z]:/[grs]/", re.IGNORECASE)
+_IP_HINT_RE = re.compile(r"\d\.\d+\.\d")
+_PATH_HINT_RE = re.compile(r"""(?:["'=:]\s*[A-Za-z]:[\\/\"']|/?:[a-zA-Z]:/[grsGRS]/)""")
+_MODEL_HINT_RE = re.compile(
+    r"""["'](?:\\[nrt]|\s)*(?:gemini[-/"']|gpt[-/"']|claude[-/"']|llama[-/"']|"""  # ccba:allow-raw-model
+    r"""mistral[-/"']|qwen[-/3"']|deepseek[-/"']|gemma[-/"']|grok[-/"']|"""  # ccba:allow-raw-model
+    r"""openai/|anthropic/|text-embedding[-/"']|smart-brain|smartest-brain|ocr-tier3)"""  # ccba:allow-raw-model
+)
 
 _PRUNED_DIR_NAMES: frozenset[str] = frozenset(
-    (
-        ".venv venv .git .md build dist archive legacy_scripts tests "
-        "__pycache__ node_modules .mypy_cache .pytest_cache .ruff_cache"
-    ).split()
+    ".venv venv .git .md build dist archive legacy_scripts tests "
+    "__pycache__ node_modules .mypy_cache .pytest_cache .ruff_cache".split()
 )
 
 _DEFAULT_EXEMPT_MODEL_FILES: frozenset[str] = frozenset(
-    (
-        "routing.py fallback.py mock_provider.py copilot_provider.py "
-        "litellm_config.yaml custom_callbacks.py "
-        "check_spoke_cleanliness.py _parameter_cleanliness.py"
-    ).split()
+    "routing.py fallback.py mock_provider.py copilot_provider.py "
+    "litellm_config.yaml custom_callbacks.py check_spoke_cleanliness.py _parameter_cleanliness.py".split()
 )
 
 _COMMENT_PREFIXES: tuple[str, ...] = ("#", "//", "/*", "*", '"""', "'''")
@@ -150,7 +141,7 @@ def _resolve_py_context(
 
 def _collect_exempt_stmt_lines(tree: ast.AST | None, lines: list[str], tag: str) -> set[int]:
     """Return all line numbers spanned by statements containing the exemption tag."""
-    if tree is None:
+    if tree is None or not any(tag in ln or "noqa" in ln for ln in lines):
         return set()
     exempt_lines: set[int] = set()
     for node in ast.walk(tree):
@@ -173,11 +164,9 @@ def _is_whitelisted_path(path: Path) -> bool:
     normalized = path.as_posix()
     if "ccba_maskara" in normalized and "_locator.py" in normalized:
         return True
-    if path.name in _DEFAULT_EXEMPT_MODEL_FILES and (
+    return path.name in _DEFAULT_EXEMPT_MODEL_FILES and (
         "ccba_ai" in normalized or path.name == "_parameter_cleanliness.py"
-    ):
-        return True
-    return False
+    )
 
 
 def _iter_walk_py_files(root_dir: Path, pruned_dirs: AbstractSet[str]) -> list[Path]:
@@ -210,15 +199,43 @@ class _ParameterCleanlinessScanner:
         self._exempt_model_files = exempt_model_files
         self._check_posix_home = check_posix_home
 
+    def _prefilter(self, filepath: Path, content: str) -> tuple[bool, bool, bool]:
+        """Fast regex/substring prefilter returning (need_models, need_ips, need_paths)."""
+        is_py = filepath.suffix.lower() == ".py"
+        has_m = (
+            "raw_model" in self._rules
+            and is_py
+            and filepath.name not in self._exempt_model_files
+            and "ccba:allow-raw-model-file" not in content[:500]
+            and bool(_MODEL_HINT_RE.search(content.lower()))
+        )
+        has_i = "raw_ip" in self._rules and "." in content and bool(_IP_HINT_RE.search(content))
+        has_p = "machine_path" in self._rules and bool(
+            (":" in content and _PATH_HINT_RE.search(content))
+            or (self._check_posix_home and "/home/" in content and _POSIX_HOME_RE.search(content))
+        )
+        return has_m, has_i, has_p
+
     def scan_file(self, filepath: Path, content: str) -> list[ParameterViolation]:
         """Run enabled rules on a single in-memory file payload."""
+        has_m, has_i, has_p = self._prefilter(filepath, content)
+        if not (has_m or has_i or has_p):
+            return []
+        if filepath.suffix.lower() == ".py" and not has_m:
+            raw_lines = content.splitlines()
+            probe_i = has_i and bool(self._scan_ips(filepath, True, None, set(), raw_lines))
+            probe_p = has_p and bool(
+                self._scan_machine_paths(filepath, True, None, set(), raw_lines)
+            )
+            if not (probe_i or probe_p):
+                return []
         is_py, tree, doc_lines, lines = _resolve_py_context(filepath, content)
         violations: list[ParameterViolation] = []
-        if "raw_model" in self._rules and is_py and tree is not None:
+        if has_m and is_py and tree is not None:
             violations.extend(self._scan_models(filepath, tree, doc_lines, lines))
-        if "raw_ip" in self._rules:
+        if has_i:
             violations.extend(self._scan_ips(filepath, is_py, tree, doc_lines, lines))
-        if "machine_path" in self._rules:
+        if has_p:
             violations.extend(self._scan_machine_paths(filepath, is_py, tree, doc_lines, lines))
         violations.sort(key=lambda v: (v.file_path.as_posix(), v.line_number, v.rule_name))
         return violations
@@ -248,16 +265,12 @@ class _ParameterCleanlinessScanner:
             if any("ccba:allow-raw-model" in sl or "noqa" in sl for sl in span_lines):
                 continue
             if self._is_raw_model_literal(node.value):
+                msg = (
+                    f"Raw model string '{node.value}' detected. "
+                    "Use ccba_ai.routing or alias, or annotate '# ccba:allow-raw-model'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=lineno,
-                        rule_name="RawModelStringViolation",
-                        message=(
-                            f"Raw model string '{node.value}' detected. "
-                            "Use ccba_ai.routing or alias, or annotate '# ccba:allow-raw-model'."
-                        ),
-                    )
+                    ParameterViolation(filepath, lineno, "RawModelStringViolation", msg)
                 )
         return findings
 
@@ -317,16 +330,12 @@ class _ParameterCleanlinessScanner:
                 ip_str = match.group(1)
                 if self._is_exempt_ipv4(line, match, ip_str):
                     continue
+                msg = (
+                    f"Hardcoded IP address '{ip_str}' detected. "
+                    "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate '# ccba:allow-raw-ip'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=line_num,
-                        rule_name="HardcodedNetworkIPViolation",
-                        message=(
-                            f"Hardcoded IP address '{ip_str}' detected. "
-                            "Use env vars (e.g. GATEWAY_PROXY_URL) or annotate '# ccba:allow-raw-ip'."
-                        ),
-                    )
+                    ParameterViolation(filepath, line_num, "HardcodedNetworkIPViolation", msg)
                 )
                 break
         return findings
@@ -361,16 +370,12 @@ class _ParameterCleanlinessScanner:
                 continue
             desc = self._match_machine_path_desc(_SHAREPOINT_MARKER_RE.sub("", stripped))
             if desc is not None:
+                msg = (
+                    f"{desc} detected. Use env vars (e.g. CCBA_HUB_PATH) "
+                    "or annotate with '# ccba:allow-machine-path'."
+                )
                 findings.append(
-                    ParameterViolation(
-                        file_path=filepath,
-                        line_number=line_num,
-                        rule_name="HardcodedMachinePathViolation",
-                        message=(
-                            f"{desc} detected. Use env vars (e.g. CCBA_HUB_PATH) "
-                            "or annotate with '# ccba:allow-machine-path'."
-                        ),
-                    )
+                    ParameterViolation(filepath, line_num, "HardcodedMachinePathViolation", msg)
                 )
         return findings
 
@@ -413,12 +418,10 @@ def scan_parameter_cleanliness(
 ) -> list[ParameterViolation]:
     """Scan Python or config targets for raw models, IPs, and hardcoded machine paths."""
     active_rules = _VALID_RULES if rules is None else frozenset(rules) & _VALID_RULES
-    extra_aliases = frozenset(allowed_model_aliases) if allowed_model_aliases else frozenset()
-    extra_exempt = frozenset(exempt_model_files) if exempt_model_files else frozenset()
     scanner = _ParameterCleanlinessScanner(
         rules=active_rules,
-        allowed_model_aliases=_APPROVED_MODEL_ALIASES | extra_aliases,
-        exempt_model_files=_DEFAULT_EXEMPT_MODEL_FILES | extra_exempt,
+        allowed_model_aliases=_APPROVED_MODEL_ALIASES | frozenset(allowed_model_aliases or ()),
+        exempt_model_files=_DEFAULT_EXEMPT_MODEL_FILES | frozenset(exempt_model_files or ()),
         check_posix_home=check_posix_home,
     )
     if content is not None and isinstance(targets, Path):

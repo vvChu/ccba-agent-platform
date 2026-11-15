@@ -1,7 +1,7 @@
 # 🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị (Wayfinder Map)
 
 > **Mã định danh:** `WAYFINDER-CORE-SEAMS-GOVERNANCE-20261115`  
-> **Trạng thái:** `IN_PROGRESS` (Frontier hiện tại: [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md))  
+> **Trạng thái:** `IN_PROGRESS` (Frontier hiện tại: [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md))  
 > **Khởi tạo:** `2026-11-15` | **Chế độ dự án:** `hybrid` (`ccba-agent-platform` Hub Monorepo)  
 > **Phạm vi áp dụng:** 4 Package lõi (`ccba-ai`, `ccba-harness`, `ccba-legal-intel`, `ccba-qc-core`) + 13 Frontmatter Callers + 3 Parameter/IP/Machine-Path Scanners (8 Micro-PRs)  
 > **ADR-0061 Audit Receipt:** `model_routing.v1` → `ccba_ai:choose_model` (`MATCH`), `maskara_scanner.v1` → `ccba_maskara:MaskaraScanner` (`MATCH`) | `index_sha256`: `fe4c3c11ca879eba54a8790ade072dbd98022f26bb1393585dee90149dddacfc`
@@ -22,7 +22,7 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
    - Phân rã [skill_validator.py](../../../packages/ccba-harness/src/ccba_harness/skill_validator.py#L40) từ `1,481 LOC` xuống `<= 450 LOC` mỗi module (`<= 800 LOC` trần cứng) và `<= 50 LOC` mỗi function (`RULE-2.20`), đồng thời loại bỏ thao tác đọc lặp lại đĩa tại dòng `778`.
 
 3. **Ứng viên #3 — Hợp nhất 3 Bộ quét Parameter, IP & Machine-Path Thuần Stdlib:**
-   - Hợp nhất `3` scanner ([check_hardcoded_parameters.py](../../../scripts/governance/check_hardcoded_parameters.py#L27-L160), [check_spoke_cleanliness.py](../../../scripts/spoke/check_spoke_cleanliness.py#L25-L175), [peer_gate.py](../../../packages/ccba-harness/src/ccba_harness/peer_gate.py#L544-L590)) về cùng luật chuẩn thuần stdlib (`scan_parameter_cleanliness` / `_ParameterCleanlinessScanner`), không kéo thêm phụ thuộc ngoài cho kịch bản Spoke đồng bộ qua [sdk_inspector.py](../../../scripts/spoke/sync/sdk_inspector.py#L70-L74).
+   - Hợp nhất `3` scanner ([check_hardcoded_parameters.py](../../../scripts/governance/check_hardcoded_parameters.py#L27-L150), [check_spoke_cleanliness.py](../../../scripts/spoke/check_spoke_cleanliness.py#L25-L175), [peer_gate.py](../../../packages/ccba-harness/src/ccba_harness/peer_gate.py#L544-L600)) về cùng luật chuẩn thuần stdlib (`scan_parameter_cleanliness` / `_ParameterCleanlinessScanner`), không kéo thêm phụ thuộc ngoài cho kịch bản Spoke đồng bộ qua [sdk_inspector.py](../../../scripts/spoke/sync/sdk_inspector.py#L70-L74).
    - Lệnh mặc định `check_hardcoded_parameters.py --dir .` chạy dưới `1.0s` (giảm từ `8,676.16 ms` / `2,199` false positives trong `.venv`), triệt tiêu các lỗi giả `'qwen-local*'` và `'3.2.1.1'`, bắt được đường dẫn Windows chứa dấu cách, và thu gọn [check_spoke_cleanliness.py](../../../scripts/spoke/check_spoke_cleanliness.py) từ `979 LOC` xuống `< 800 LOC`.
 
 4. **Khóa cứng Kiểm định Toàn sàn (`ADR-0058`):**
@@ -65,7 +65,7 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
 
 | Ticket | Loại | Trạng thái | Assignee | Đầu ra cốt lõi |
 | :--- | :--- | :--- | :--- | :--- |
-| [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md) | `Task [AFK]` | `IN_PROGRESS` | `AI Platform Architect` | Micro-PR `3a`/`3b`: `scan_parameter_cleanliness` / `_ParameterCleanlinessScanner` thuần stdlib (`PR-3a`) + sửa `.venv`, `qwen-local*`, `3.2.1.1`, Win path, Spoke Tier-0 sync & thu gọn `check_spoke_cleanliness.py` dưới `800 LOC` (`PR-3b`) |
+| [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md) | `Task [AFK]` | `IN_PROGRESS` | `AI Platform Architect` | `verify-patch --preset ci`, `compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, đo benchmark hậu cải tiến & đóng bản đồ |
 
 ### Đã Hoàn Thành (Closed)
 
@@ -75,12 +75,13 @@ Triển khai toàn diện **3 Ứng viên Kiến trúc hạng `Strong`** từ b�
 | [WF-02: Thẩm định Kế hoạch Ngang hàng qua Peer Plan Audit (ADR-0067 One-Way Door Gate)](tickets/wf_02_peer_plan_audit_gate.md) | `Task [HITL]` | `CLOSED` | `AI Platform Architect & Grok 4.7 Auditor` | Pass 3 `951a1441-976f-49cb-bd84-057689eefb81` **`APPROVE_PLAN`** (`risk_score: 2`, `blocking_conditions: 0`, `.md/peer_exchange/grok_core_seams_governance_plan_signoff_p3.md`) & Kỹ sư xác nhận `Proceed` |
 | [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](tickets/wf_03_pep562_lazy_package_seams.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#751`..`#754`: PEP 562 cho `ccba_ai`, `ccba_legal`, `ccba_qc_core`, `ccba_harness` + lazy `pymupdf` (`0` cảnh báo `fitz` deprecation, `ccba_harness.gpi` `11.06 ms`) |
 | [WF-04: Hợp nhất 9 Bộ Phân tích Frontmatter qua parse_markdown_frontmatter & Phân rã SkillValidator dưới 800 LOC](tickets/wf_04_unify_frontmatter_and_deepen_skill_validator.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#755` (`PR-2a` phân rã `skill_validator.py` -> `<= 450 LOC`/module + neo SHA-256) & `PR-2b` (`FRONTMATTER_PATTERN`, `SkillFrontmatterSpec`, `parse_markdown_frontmatter` nối `13` callers + fallback `find_skills.py` + neo SHA-256) |
+| [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md) | `Task [AFK]` | `CLOSED` | `AI Platform Architect` | PR `#757` (`PR-3a`: `_parameter_cleanliness` `449 LOC` thuần stdlib + `catalog_base.yaml` + `sdk_inspector.py`) & `PR-3b` (nối `3` callers, `--dir . < 1.0s`, thu gọn `check_spoke_cleanliness.py` còn `745 LOC` + `test_parameter_scanner_parity.py`) |
 
 ### Đường ống Hạ nguồn (Downstream Tickets — Blocked chờ Frontier)
 
 | Ticket | Loại | Chặn bởi | Phạm vi tóm tắt |
 | :--- | :--- | :--- | :--- |
-| [WF-06: Kiểm định Liên thông 4 Cổng ADR-0058, Đồng bộ Catalog/Docs SSOT & Đóng Bản đồ Wayfinder](tickets/wf_06_ci_verification_and_catalog_rollup.md) | `Task [AFK]` | [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](tickets/wf_05_unify_stdlib_parameter_cleanliness_scanners.md) | `verify-patch --preset ci`, `compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, đo benchmark hậu cải tiến & đóng bản đồ |
+| *(Trống — `WF-06` là frontier cuối cùng của bản đồ)* | `-` | `-` | `-` |
 
 ---
 

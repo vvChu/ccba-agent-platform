@@ -1,188 +1,90 @@
 #!/usr/bin/env python3
 """check_hardcoded_parameters.py - AST Hardcoded Parameter & KISS Linter.
 
-Inspects Python source code for anti-pattern hardcoded parameters:
+Thin governance CLI wrapper over ``ccba_harness.scan_parameter_cleanliness``:
 1. Raw LLM model names ('gemini-*', 'gpt-*', 'claude-*', 'llama-*', etc.)
-   - Must use `ccba_ai.routing.ModelArchetype` or `choose_model()`.
-   - Exemption: `# ccba:allow-raw-model`.
+   - Must use ``ccba_ai.routing.ModelArchetype`` or ``choose_model()``.
+   - Exemption: ``# ccba:allow-raw-model``.
 2. Hardcoded network IP addresses (e.g., '100.64.1.1')
-   - Must read from environment variables (e.g., `AI_GATEWAY_URL`).
-   - Exemption: `# ccba:allow-raw-ip`.
-3. Hardcoded machine drive paths ('C:\\...', 'D:\\...')
-   - Must use platform-agnostic relative paths or environment variables.
-   - Exemption: `# ccba:allow-machine-path`.
+   - Exemption: ``# ccba:allow-raw-ip`` or statutory clauses (``3.2.1.1``).
+3. Hardcoded machine drive paths ('C:\\...', 'D:\\...', including spaces)
+   - Exemption: ``# ccba:allow-machine-path``.
 """
 
 from __future__ import annotations
 
 import argparse
-import ast
-import re
+import importlib.util
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-# Regex patterns for hardcoded parameter detection
-MODEL_PATTERN = re.compile(
-    r"^(?:gemini[-/]|gpt[-/]|claude[-/]|llama[-/]|mistral[-/]|qwen[-/]|deepseek[-/]|text-embedding[-/])[a-zA-Z0-9_\-\.]+$",
-    re.IGNORECASE,
+_RULES = ("raw_model", "raw_ip", "machine_path")
+
+
+def _load_cleanliness_module() -> Any:
+    """Resolve the stdlib cleanliness module via public seam or repo fallback."""
+    try:
+        from ccba_harness import scan_parameter_cleanliness as _seam_scan
+
+        _ = _seam_scan
+        return sys.modules["ccba_harness._parameter_cleanliness"]
+    except ImportError:
+        pass
+    seam_file = (
+        Path(__file__).resolve().parents[2]
+        / "packages"
+        / "ccba-harness"
+        / "src"
+        / "ccba_harness"
+        / "_parameter_cleanliness.py"
+    )
+    spec = importlib.util.spec_from_file_location("_ccba_parameter_cleanliness", seam_file)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load cleanliness seam from {seam_file}")
+    mod = sys.modules.get(spec.name)
+    if mod is None:
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = mod
+        spec.loader.exec_module(mod)
+    return mod
+
+
+if TYPE_CHECKING:
+    from ccba_harness import ParameterViolation, scan_parameter_cleanliness
+
+    _CLEANLINESS: Any = None
+else:
+    _CLEANLINESS = _load_cleanliness_module()
+    ParameterViolation = _CLEANLINESS.ParameterViolation
+    scan_parameter_cleanliness = _CLEANLINESS.scan_parameter_cleanliness
+
+EXEMPT_FILES: frozenset[str] = (
+    frozenset() if TYPE_CHECKING else frozenset(_CLEANLINESS._DEFAULT_EXEMPT_MODEL_FILES)
 )
-IP_PATTERN = re.compile(r"\b(?!(?:127\.0\.0\.1|0\.0\.0\.0)\b)(?:[1-9]\d{0,2}\.){3}[1-9]\d{0,2}\b")
-WIN_PATH_PATTERN = re.compile(r"^[a-zA-Z]:[\\/][a-zA-Z0-9_\-\.\\/]+")
-
-# Files explicitly exempt from model name inspection (SSOT providers and mock infrastructure)
-EXEMPT_FILES = {
-    "routing.py",
-    "fallback.py",
-    "mock_provider.py",
-    "copilot_provider.py",
-}
-
-
-@dataclass
-class ParameterViolation:
-    """Represents a hardcoded parameter violation."""
-
-    file_path: Path
-    line_number: int
-    rule_name: str
-    message: str
 
 
 def is_whitelisted_file(path: Path) -> bool:
-    """Check if file is exempt from parameter inspection.
-
-    Args:
-        path: Path to the target file.
-
-    Returns:
-        True if the file should be skipped, False otherwise.
-    """
-    path_str = str(path).replace("\\", "/")
-
-    # Exclude tests, fixtures, and scenario verifications
-    if "/tests/" in path_str or path.name.startswith("test_") or path.name.startswith("verify_"):
-        return True
-
-    # Exclude virtualenvs, build dirs, internal docs, and archives
-    if any(
-        p in path_str for p in ["/.venv/", "/build/", "/dist/", "/.git/", "/.md/", "/archive/"]
-    ) or path_str.startswith(".md/"):
-        return True
-
-    # Exclude SSOT routing definitions and CLI secret credential locators
-    if path.name in EXEMPT_FILES and "ccba_ai" in path_str:
-        return True
-    if "ccba_maskara" in path_str and "_locator.py" in path_str:
-        return True
-
-    return False
-
-
-class HardcodedParameterASTVisitor(ast.NodeVisitor):
-    """AST Visitor that detects raw model names, IPs, and machine paths."""
-
-    def __init__(
-        self,
-        current_file: Path,
-        raw_lines: list[str] | None = None,
-    ) -> None:
-        self.current_file = current_file
-        self.raw_lines = raw_lines or []
-        self.violations: list[ParameterViolation] = []
-
-    def _has_exemption(self, line_number: int, end_line_number: int | None, tag: str) -> bool:
-        """Check if any line in span contains the exemption tag."""
-        if not self.raw_lines:
-            return False
-        end_line = end_line_number if end_line_number is not None else line_number
-        start_idx = max(0, line_number - 1)
-        end_idx = min(len(self.raw_lines), end_line)
-        for idx in range(start_idx, end_idx):
-            line = self.raw_lines[idx]
-            if tag in line or "noqa" in line:
-                return True
+    """Check if file is exempt from parameter inspection using Path segment rules."""
+    if _CLEANLINESS is None:
         return False
-
-    def visit_Constant(self, node: ast.Constant) -> None:
-        """Inspect string constants for hardcoded values."""
-        if isinstance(node.value, str):
-            val = node.value.strip()
-            end_lineno = getattr(node, "end_lineno", node.lineno)
-
-            # Check 1: Raw LLM Model Strings
-            if MODEL_PATTERN.match(val):
-                if not self._has_exemption(node.lineno, end_lineno, "ccba:allow-raw-model"):
-                    self.violations.append(
-                        ParameterViolation(
-                            file_path=self.current_file,
-                            line_number=node.lineno,
-                            rule_name="RawModelStringViolation",
-                            message=(
-                                f"Raw model string '{val}' hardcoded. Platform-Aware KISS requires "
-                                "using 'ccba_ai.routing.ModelArchetype' or 'choose_model()'."
-                            ),
-                        )
-                    )
-
-            # Check 2: Hardcoded Network IPs
-            elif IP_PATTERN.search(val):
-                if not self._has_exemption(node.lineno, end_lineno, "ccba:allow-raw-ip"):
-                    ip_match = IP_PATTERN.search(val)
-                    matched_ip = ip_match.group(0) if ip_match else val
-                    self.violations.append(
-                        ParameterViolation(
-                            file_path=self.current_file,
-                            line_number=node.lineno,
-                            rule_name="HardcodedNetworkIPViolation",
-                            message=(
-                                f"Hardcoded network IP '{matched_ip}' detected. Must read endpoint from "
-                                "environment variables (e.g. AI_GATEWAY_URL)."
-                            ),
-                        )
-                    )
-
-            # Check 3: Hardcoded Windows Machine Drive Paths
-            elif WIN_PATH_PATTERN.match(val):
-                if not self._has_exemption(node.lineno, end_lineno, "ccba:allow-machine-path"):
-                    self.violations.append(
-                        ParameterViolation(
-                            file_path=self.current_file,
-                            line_number=node.lineno,
-                            rule_name="HardcodedMachinePathViolation",
-                            message=(
-                                f"Hardcoded Windows machine path '{val}' detected. Must use dynamic path "
-                                "resolution or annotate with '# ccba:allow-machine-path'."
-                            ),
-                        )
-                    )
-
-        self.generic_visit(node)
+    return bool(_CLEANLINESS._is_whitelisted_path(path))
 
 
 def check_file_content(file_path: Path, content: str) -> list[ParameterViolation]:
-    """Parse and check file content for parameter violations.
-
-    Args:
-        file_path: Target path for reporting.
-        content: Python source code as string.
-
-    Returns:
-        List of detected ParameterViolations.
-    """
+    """Scan Python source content for hardcoded model, IP, and path violations."""
     if is_whitelisted_file(file_path):
         return []
-
-    try:
-        tree = ast.parse(content, filename=str(file_path))
-    except SyntaxError:
-        return []
-
-    lines = content.splitlines()
-    visitor = HardcodedParameterASTVisitor(file_path, raw_lines=lines)
-    visitor.visit(tree)
-    return visitor.violations
+    return list(
+        scan_parameter_cleanliness(
+            file_path,
+            content=content,
+            rules=_RULES,
+            check_posix_home=False,
+            respect_whitelist=False,
+        )
+    )
 
 
 def check_file(file_path: Path) -> list[ParameterViolation]:
@@ -204,12 +106,15 @@ def check_file(file_path: Path) -> list[ParameterViolation]:
 
 
 def scan_directory(root_dir: Path) -> list[ParameterViolation]:
-    """Recursively scan directory for Python parameter violations."""
-    all_violations: list[ParameterViolation] = []
-    for path in sorted(root_dir.rglob("*.py")):
-        if not is_whitelisted_file(path):
-            all_violations.extend(check_file(path))
-    return all_violations
+    """Recursively scan directory with segment pruning for parameter violations."""
+    return list(
+        scan_parameter_cleanliness(
+            root_dir,
+            rules=_RULES,
+            check_posix_home=False,
+            respect_whitelist=True,
+        )
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -217,11 +122,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="AST Linter for Hardcoded Parameters & Dynamic Scalability."
     )
-    parser.add_argument(
-        "--file",
-        type=Path,
-        help="Check a single Python file.",
-    )
+    parser.add_argument("--file", type=Path, help="Check a single Python file.")
     parser.add_argument(
         "--dir",
         type=Path,
@@ -234,23 +135,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=True,
         help="Exit with non-zero code if any violations are found.",
     )
-
     args = parser.parse_args(argv)
-
-    if args.file:
-        violations = check_file(args.file)
-    else:
-        violations = scan_directory(args.dir)
-
+    violations = check_file(args.file) if args.file else scan_directory(args.dir)
     if not violations:
         print("✅ [check_hardcoded_parameters] 0 violations found. All parameters compliant.")
         return 0
-
     print(f"❌ [check_hardcoded_parameters] Found {len(violations)} violation(s):")
     for v in violations:
-        rel_path = v.file_path.as_posix()
-        print(f"  {rel_path}:{v.line_number} [{v.rule_name}]: {v.message}")
-
+        print(f"  {v.file_path.as_posix()}:{v.line_number} [{v.rule_name}]: {v.message}")
     return 1 if args.check else 0
 
 

@@ -2,8 +2,8 @@
 
 > **Thuộc bản đồ:** [🗺️ Bản đồ Định hướng: Làm sâu Seam Lõi & Hợp nhất Quản trị](../map.md)  
 > **Loại ticket:** `Task [AFK]`  
-> **Trạng thái:** `OPEN` (Blocked by [WF-03: Triển khai PEP 562 Lazy Package Seams, Deferred AIClient & Cô lập PyMuPDF cho 4 Package Lõi](wf_03_pep562_lazy_package_seams.md), [WF-04: Hợp nhất 9 Bộ Phân tích Frontmatter qua parse_markdown_frontmatter & Phân rã SkillValidator dưới 800 LOC](wf_04_unify_frontmatter_and_deepen_skill_validator.md), [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](wf_05_unify_stdlib_parameter_cleanliness_scanners.md))  
-> **Assignee:** `Chưa gán`
+> **Trạng thái:** `IN_PROGRESS` (Frontier Active — Unlocked sau [WF-05: Chuẩn hóa Seam Quét Tham số, IP & Machine-Path Thuần Stdlib và Thu gọn check_spoke_cleanliness dưới 800 LOC](wf_05_unify_stdlib_parameter_cleanliness_scanners.md))  
+> **Assignee:** `AI Platform Architect`
 
 ---
 

@@ -541,8 +541,40 @@ def check_hub_import_depth(
     )
 
 
+def _scan_file_secrets(py_file: Path) -> list[str]:
+    """Scan one Python file for unexempted raw IPs or leaked API key patterns."""
+    from ._parameter_cleanliness import scan_parameter_cleanliness
+
+    if any(part in py_file.parts for part in ("__pycache__", ".venv", "tests")):
+        return []
+    try:
+        text = py_file.read_text(encoding="utf-8")
+    except Exception:
+        return []
+    findings: list[str] = []
+    for finding in scan_parameter_cleanliness(
+        py_file, content=text, rules=("raw_ip",), respect_whitelist=False
+    ):
+        if TAILSCALE_IP_REGEX.search(finding.message):
+            findings.append(
+                f"{py_file.name}:{finding.line_number} raw Tailscale IP detected without allowlist comment."
+            )
+        else:
+            findings.append(f"{py_file.name}:{finding.line_number} {finding.message}")
+    for idx, line in enumerate(text.splitlines(), start=1):
+        if "# ccba:allow-raw-ip" in line or "# ccba:allow-machine-path" in line:
+            continue
+        if (
+            LEAK_DETECTOR_REGEX.search(line)
+            and "dummy" not in line.lower()
+            and "mock" not in line.lower()
+        ):
+            findings.append(f"{py_file.name}:{idx} raw API key pattern detected.")
+    return findings
+
+
 def check_secret_ip_cleanliness(target_files: list[Path]) -> GateCheck:
-    """Scans code for hardcoded Tailscale IPs or raw API keys without explicit allowlist comment.
+    """Scans code for hardcoded IPs (via stdlib seam) or raw API keys without allowlist comment.
 
     Args:
         target_files: List of Python file paths to scan.
@@ -552,27 +584,8 @@ def check_secret_ip_cleanliness(target_files: list[Path]) -> GateCheck:
     """
     t0 = time.time()
     violations: list[str] = []
-
     for py_file in target_files:
-        if "__pycache__" in str(py_file) or ".venv" in str(py_file) or "tests" in str(py_file):
-            continue
-        try:
-            lines = py_file.read_text(encoding="utf-8").splitlines()
-            for idx, line in enumerate(lines, start=1):
-                if "# ccba:allow-raw-ip" in line or "# ccba:allow-machine-path" in line:
-                    continue
-                if TAILSCALE_IP_REGEX.search(line):
-                    violations.append(
-                        f"{py_file.name}:{idx} raw Tailscale IP detected without allowlist comment."
-                    )
-                if (
-                    LEAK_DETECTOR_REGEX.search(line)
-                    and "dummy" not in line.lower()
-                    and "mock" not in line.lower()
-                ):
-                    violations.append(f"{py_file.name}:{idx} raw API key pattern detected.")
-        except Exception:
-            continue
+        violations.extend(_scan_file_secrets(py_file))
 
     duration_ms = int((time.time() - t0) * 1000)
     passed = len(violations) == 0
