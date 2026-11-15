@@ -27,6 +27,12 @@ from typing import Any
 import yaml
 
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
+_HARNESS_SRC = HUB_ROOT / "packages" / "ccba-harness" / "src"
+if str(_HARNESS_SRC) not in sys.path:
+    sys.path.insert(0, str(_HARNESS_SRC))
+
+from ccba_harness import parse_markdown_frontmatter  # noqa: E402
+
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 PORTALS_FILE = HUB_ROOT / "docs" / "skills" / "portals.yaml"
 DEFAULT_REPORT_MD = HUB_ROOT / ".md" / "scratch" / "skills_audit_report.md"
@@ -240,16 +246,8 @@ def load_portals(
 
 def parse_frontmatter(content: str) -> dict[str, Any]:
     """Parse YAML frontmatter from document header."""
-    if not content.startswith("---"):
-        return {}
-    parts = content.split("---", 2)
-    if len(parts) >= 3:
-        try:
-            parsed = yaml.safe_load(parts[1])
-            return parsed if isinstance(parsed, dict) else {}
-        except Exception:
-            return {}
-    return {}
+    spec = parse_markdown_frontmatter(content)
+    return spec.metadata if spec.has_frontmatter and spec.error is None else {}
 
 
 def _check_directory_hygiene(
@@ -289,13 +287,14 @@ def _check_directory_hygiene(
 def _check_frontmatter_metadata(skill_content: str, sname: str, result: SkillAuditResult) -> None:
     """Validates SKILL.md YAML frontmatter and mandatory metadata.version / metadata.author."""
     rel = f"{sname}/SKILL.md"
-    if not skill_content.startswith("---"):
+    spec = parse_markdown_frontmatter(skill_content)
+    if not spec.has_frontmatter:
         result.issues.append(
             Issue("RED", "Governance Metadata", rel, 1, "Missing YAML frontmatter in SKILL.md")
         )
         fm: dict[str, Any] = {}
     else:
-        fm = parse_frontmatter(skill_content)
+        fm = spec.metadata if spec.error is None else {}
         if not fm:
             result.issues.append(
                 Issue(

@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
+from ccba_harness import parse_markdown_frontmatter
 
 # Safe UTF-8 reconfiguration for Windows stdout
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -162,25 +162,25 @@ class SpokeLeakageAuditor:
 
         try:
             text = resolved_file.read_text(encoding="utf-8")
-            if not text.startswith("---"):
-                self.errors.append(
-                    f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: File must start with YAML frontmatter '---'"
-                )
-                return False
-
-            parts = text.split("---", 2)
-            if len(parts) < 3:
-                self.errors.append(
+            spec = parse_markdown_frontmatter(text)
+            if not spec.has_frontmatter:
+                stripped = text.lstrip()
+                msg = (
                     f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Incomplete YAML frontmatter delimiter"
+                    if stripped.startswith("---")
+                    else f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: File must start with YAML frontmatter '---'"
                 )
+                self.errors.append(msg)
                 return False
-
-            meta = yaml.safe_load(parts[1])
-            if not isinstance(meta, dict):
-                self.errors.append(
+            if spec.error is not None:
+                msg = (
                     f"INVALID_PROPOSAL_FRONTMATTER [{rel_p}]: Frontmatter must be a YAML dictionary"
+                    if spec.error == "NON_MAPPING_FRONTMATTER"
+                    else f"PROPOSAL_PARSE_ERROR [{rel_p}]: {spec.error}"
                 )
+                self.errors.append(msg)
                 return False
+            meta = spec.metadata
 
             missing_fields = REQUIRED_PROPOSAL_FIELDS - set(meta.keys())
             if missing_fields:

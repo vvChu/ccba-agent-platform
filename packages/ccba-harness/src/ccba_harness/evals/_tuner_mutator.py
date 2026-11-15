@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .._skill_frontmatter import SkillFrontmatterSpec, parse_markdown_frontmatter
 from ._tuner_llm import CircuitBreakerOpenError, TokenUsageTracker
 from ._tuner_models import (
     ADR_HEADER_TAG_REGEX,
@@ -44,23 +45,28 @@ from .slicing import SlicedDataset
 logger = logging.getLogger("ccba.eval.ratchet")
 
 
+def _parse_frontmatter_allowing_leading_ws(text: str) -> SkillFrontmatterSpec:
+    """Parse leading YAML frontmatter, tolerating optional whitespace before `---`."""
+    spec = parse_markdown_frontmatter(text)
+    if spec.has_frontmatter:
+        return spec
+    stripped = text.lstrip()
+    return parse_markdown_frontmatter(stripped) if stripped != text else spec
+
+
 def preserve_yaml_frontmatter(original_content: str, edited_content: str) -> str:
     """Preserves YAML frontmatter metadata byte-for-byte when mutating SKILL.md body."""
-    fm_match = re.match(r"^---\r?\n(.*?)\r?\n---\r?\n?", original_content, re.DOTALL)
-    if not fm_match:
-        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", original_content, re.DOTALL)
-        if not fm_match:
-            return edited_content
+    orig_spec = _parse_frontmatter_allowing_leading_ws(original_content)
+    if not orig_spec.has_frontmatter:
+        return edited_content
 
-    frontmatter_block = fm_match.group(0).strip()
-    edited_fm_match = re.match(r"^\s*---\r?\n.*?\r?\n---\r?\n?(.*)$", edited_content, re.DOTALL)
-    body = edited_fm_match.group(1) if edited_fm_match else edited_content
-
+    edited_spec = _parse_frontmatter_allowing_leading_ws(edited_content)
+    body = edited_spec.body if edited_spec.has_frontmatter else edited_content
     clean_body = body.strip()
     nl = "\r\n" if "\r\n" in original_content else "\n"
     if clean_body:
-        return f"{frontmatter_block}{nl}{nl}{clean_body}{nl}"
-    return f"{frontmatter_block}{nl}"
+        return f"{orig_spec.raw_block}{nl}{nl}{clean_body}{nl}"
+    return f"{orig_spec.raw_block}{nl}"
 
 
 def remaining_strategies(
@@ -77,8 +83,8 @@ def remaining_strategies(
     if not strategies:
         return []
 
-    fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", content, re.DOTALL)
-    body = content[fm_match.end() :] if fm_match else content
+    spec = _parse_frontmatter_allowing_leading_ws(content)
+    body = spec.body if spec.has_frontmatter else content
 
     norm_body = ADR_HEADER_TAG_REGEX.sub("", body).replace("\r\n", "\n")
     unapplied: list[tuple[str, str]] = []
@@ -133,9 +139,11 @@ class _RatchetMutationGitMixin:
             f"⚖️ [FAILURE_MUTATION_APPLIED] Chèn thẻ lỗi '{sig.code}' "
             f"(fingerprint: {sig.fingerprint[:8]}). ({self._applied_failure_patches}/{max_patches})"
         )
-        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL)
-        fm = current_content[: fm_match.end()] if fm_match else ""
-        body_c = current_content[fm_match.end() :] if fm_match else current_content
+        spec = _parse_frontmatter_allowing_leading_ws(current_content)
+        fm = (
+            current_content[: len(current_content) - len(spec.body)] if spec.has_frontmatter else ""
+        )
+        body_c = spec.body if spec.has_frontmatter else current_content
         mutated_body = body_c.strip() + "\n\n" + card.strip()
         lines = mutated_body.splitlines()
         if len(lines) > 300:
@@ -197,8 +205,8 @@ class _RatchetMutationGitMixin:
         if not strategies:
             return current_content
 
-        fm_match = re.match(r"^\s*---\r?\n(.*?)\r?\n---\r?\n?", current_content, re.DOTALL)
-        body = current_content[fm_match.end() :] if fm_match else current_content
+        spec = _parse_frontmatter_allowing_leading_ws(current_content)
+        body = spec.body if spec.has_frontmatter else current_content
 
         chosen_strategy = None
         base_idx = (iteration - 1) % len(strategies)
@@ -664,11 +672,8 @@ class _RatchetMutationGitMixin:
 
     def _token_snapshot(self) -> tuple[int, int, int]:
         """Takes a snapshot of current token counters (prompt, completion, total)."""
-        return (
-            self.token_tracker.prompt_tokens,
-            self.token_tracker.completion_tokens,
-            self.token_tracker.total_tokens,
-        )
+        t = self.token_tracker
+        return t.prompt_tokens, t.completion_tokens, t.total_tokens
 
     def _propose_candidate(
         self, iter_idx: int, state: _RatchetLoopState
@@ -693,19 +698,21 @@ class _RatchetMutationGitMixin:
     def _init_ratchet_budget(self, baseline_score: float) -> tuple[int, int]:
         """Calculates effective max iterations and patience based on baseline score."""
         if baseline_score >= 100.0:
-            effective_max_iter = 1
-            effective_patience = 1
+            effective_max_iter, effective_patience = 1, 1
         elif baseline_score >= 90.0:
-            effective_max_iter = min(self.config.max_iterations, 5)
-            effective_patience = min(self.config.patience, 2)
+            effective_max_iter, effective_patience = (
+                min(self.config.max_iterations, 5),
+                min(self.config.patience, 2),
+            )
         else:
-            effective_max_iter = min(self.config.max_iterations, 10)
-            effective_patience = min(self.config.patience, 3)
+            effective_max_iter, effective_patience = (
+                min(self.config.max_iterations, 10),
+                min(self.config.patience, 3),
+            )
 
-        logger.info(f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name}")
         logger.info(
-            f"📊 Điểm chuẩn ban đầu (Baseline Score): {baseline_score:.2f}% | "
-            f"Mục tiêu: {self.config.target_score}% | "
+            f"🏁 Bắt đầu Git-Ratchet Loop cho {self.target_file.name} | "
+            f"📊 Baseline: {baseline_score:.2f}% | Target: {self.config.target_score}% | "
             f"Budget: {effective_max_iter} vòng (Patience={effective_patience})"
         )
         return effective_max_iter, effective_patience
@@ -778,22 +785,15 @@ class _RatchetMutationGitMixin:
             best_content=initial_content,
             seen_hashes={hashlib.sha256(initial_content.encode("utf-8")).hexdigest()},
         )
-        if (
-            self.config.hard_max_tokens_per_skill is not None
-            and self.token_tracker.total_tokens >= self.config.hard_max_tokens_per_skill
-        ):
+        base = (baseline_score, baseline_tokens, effective_max_iter, effective_patience, state)
+        hard_max = self.config.hard_max_tokens_per_skill
+        if hard_max is not None and self.token_tracker.total_tokens >= hard_max:
             logger.info(
                 f"🛑 [HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED] Baseline tokens ({self.token_tracker.total_tokens:,}) "
-                f"đã chạm hoặc vượt trần tuyệt đối ({self.config.hard_max_tokens_per_skill:,}). Dừng đột biến."
+                f"đã chạm hoặc vượt trần tuyệt đối ({hard_max:,}). Dừng đột biến."
             )
-            return (
-                baseline_score,
-                baseline_tokens,
-                effective_max_iter,
-                effective_patience,
-                state,
-                self._build_final_report(
-                    baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
-                ),
+            report = self._build_final_report(
+                baseline_score, None, None, "HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED", state
             )
-        return baseline_score, baseline_tokens, effective_max_iter, effective_patience, state, None
+            return (*base, report)
+        return (*base, None)

@@ -15,6 +15,8 @@ from typing import Any
 
 import yaml
 
+from ccba_harness import parse_markdown_frontmatter
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILLS_DIR = REPO_ROOT / ".agents" / "skills"
 
@@ -229,16 +231,11 @@ MIGRATION_MAPPINGS: list[dict[str, str]] = [
 
 def extract_frontmatter_and_body(content: str) -> tuple[dict[str, Any], str]:
     """Parse YAML frontmatter and return (dict, body)."""
-    if not content.startswith("---"):
+    spec = parse_markdown_frontmatter(content)
+    if not spec.has_frontmatter:
         return {}, content
-    parts = content.split("---", 2)
-    if len(parts) < 3:
-        return {}, content
-    try:
-        fm = yaml.safe_load(parts[1])
-        return (fm if isinstance(fm, dict) else {}), parts[2].strip()
-    except Exception:
-        return {}, parts[2].strip()
+    meta = spec.metadata if spec.error is None else {}
+    return meta, spec.body.strip()
 
 
 def migrate_single_micro_skill(item: dict[str, str]) -> None:

@@ -19,6 +19,12 @@ from typing import Any
 import yaml
 
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
+_HARNESS_SRC = HUB_ROOT / "packages" / "ccba-harness" / "src"
+if str(_HARNESS_SRC) not in sys.path:
+    sys.path.insert(0, str(_HARNESS_SRC))
+
+from ccba_harness import parse_markdown_frontmatter  # noqa: E402
+
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 DOCS_DIR = HUB_ROOT / "docs"
 DOCS_SKILLS_DIR = DOCS_DIR / "skills"
@@ -81,16 +87,18 @@ def extract_frontmatter_and_body(file_path: Path) -> tuple[dict[str, Any], str]:
     """Parse YAML frontmatter and body from a markdown file."""
     try:
         content = file_path.read_text(encoding="utf-8")
-        if not content.startswith("---"):
-            return {}, content
-        parts = content.split("---", 2)
-        if len(parts) < 3:
-            return {}, content
-        fm = yaml.safe_load(parts[1])
-        return (fm if isinstance(fm, dict) else {}), parts[2].strip()
     except Exception as exc:
         print(f"[Warning] Failed to parse {file_path}: {exc}", file=sys.stderr)
         return {}, ""
+    spec = parse_markdown_frontmatter(content)
+    if not spec.has_frontmatter:
+        return {}, content
+    if spec.error is not None:
+        if spec.error != "NON_MAPPING_FRONTMATTER":
+            print(f"[Warning] Failed to parse {file_path}: {spec.error}", file=sys.stderr)
+            return {}, ""
+        return {}, spec.body.strip()
+    return spec.metadata, spec.body.strip()
 
 
 def extract_body_headings(body: str, limit: int = 8) -> list[str]:

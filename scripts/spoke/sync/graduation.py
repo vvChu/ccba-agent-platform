@@ -14,7 +14,7 @@ import shutil
 from collections.abc import Callable
 from pathlib import Path
 
-import yaml
+from ccba_harness import parse_markdown_frontmatter
 
 from .base import are_text_files_identical
 
@@ -263,15 +263,10 @@ def _extract_proposal_graduations(proposal_file: Path) -> dict[str, dict[str, st
         raw = proposal_file.read_text(encoding="utf-8")
     except OSError:
         return {}
-    if not raw.startswith("---"):
+    spec = parse_markdown_frontmatter(raw)
+    if not spec.has_frontmatter or spec.error is not None:
         return {}
-    parts = raw.split("---", 2)
-    if len(parts) < 3:
-        return {}
-    try:
-        meta = yaml.safe_load(parts[1])
-    except Exception:
-        return {}
+    meta = spec.metadata
     if not isinstance(meta, dict) or str(meta.get("status", "")).lower() not in (
         "merged",
         "graduated",

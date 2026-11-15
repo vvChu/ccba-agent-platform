@@ -181,6 +181,9 @@ A file-based locking mechanism (`.plan.lock`) to prevent lost updates when multi
 **Target Line Override**:
 A formatting preservation technique where only specific key-value pairs (like status) in frontmatter are overwritten instead of full file re-serialization.
 
+**Unified Markdown Frontmatter Seam (`parse_markdown_frontmatter` / `SkillFrontmatterSpec`)**:
+Public Deep Seam tại `ccba_harness` hợp nhất phân tích YAML frontmatter (`re.DOTALL`, bảo toàn từng byte CRLF/LF & comments qua `SkillFrontmatterSpec.raw_block` khi ghi lại `SKILL.md` và trả rõ mã lỗi YAML thay vì nuốt ngoại lệ).
+
 ---
 
 ## 3. Hạ Tầng AI Gateway, LLM Prompting & Auto-Tuner

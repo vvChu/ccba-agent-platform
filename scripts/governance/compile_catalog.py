@@ -26,6 +26,12 @@ import yaml
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(HUB_ROOT) not in sys.path:
     sys.path.insert(0, str(HUB_ROOT))
+_HARNESS_SRC = HUB_ROOT / "packages" / "ccba-harness" / "src"
+if str(_HARNESS_SRC) not in sys.path:
+    sys.path.insert(0, str(_HARNESS_SRC))
+
+from ccba_harness import parse_markdown_frontmatter  # noqa: E402
+
 BASE_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog_base.yaml"
 OUTPUT_CATALOG_PATH = HUB_ROOT / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
 
@@ -64,17 +70,17 @@ PACKAGE_MAP: dict[str, str] = {
 def extract_frontmatter(file_path: Path) -> dict[str, Any]:
     """Extract and parse YAML frontmatter from a markdown file."""
     try:
-        content = file_path.read_text(encoding="utf-8")
-        if not content.startswith("---"):
-            return {}
-        parts = content.split("---", 2)
-        if len(parts) < 3:
-            return {}
-        fm = yaml.safe_load(parts[1])
-        return fm if isinstance(fm, dict) else {}
+        spec = parse_markdown_frontmatter(file_path.read_text(encoding="utf-8"))
     except Exception as e:
         print(f"[Warning] Failed to parse frontmatter from {file_path}: {e}", file=sys.stderr)
         return {}
+    if spec.error is not None:
+        print(
+            f"[Warning] Failed to parse frontmatter from {file_path}: {spec.error}",
+            file=sys.stderr,
+        )
+        return {}
+    return spec.metadata
 
 
 def compile_skills(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:

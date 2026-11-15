@@ -21,12 +21,14 @@ if sys.platform.startswith("win"):
     except AttributeError:
         pass
 
-# Add project root and ccba-ai package to sys.path to enable imports
+# Add project root and packages to sys.path to enable imports
 project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "packages" / "ccba-ai" / "src"))
+sys.path.insert(0, str(project_root / "packages" / "ccba-harness" / "src"))
 
 from ccba_ai.routing import ModelArchetype
+from ccba_harness import parse_markdown_frontmatter
 
 # Setup Logging
 logging.basicConfig(
@@ -91,22 +93,14 @@ def load_skill_prompt(skill_name: str) -> str:
 
 def preserve_yaml_frontmatter(original_prompt: str, edited_prompt: str) -> str:
     """Bảo tồn phần YAML Frontmatter gốc của file SKILL.md khi LLM Optimizer chỉnh sửa nội dung."""
-    if not original_prompt.startswith("---"):
+    orig_spec = parse_markdown_frontmatter(original_prompt)
+    if not orig_spec.has_frontmatter:
         return edited_prompt
 
-    parts = original_prompt.split("---", 2)
-    if len(parts) < 3:
-        return edited_prompt
-
-    original_frontmatter = f"---{parts[1]}---"
-    cleaned_body = edited_prompt
-    if edited_prompt.startswith("---"):
-        edited_parts = edited_prompt.split("---", 2)
-        if len(edited_parts) >= 3:
-            cleaned_body = edited_parts[2]
-
+    edited_spec = parse_markdown_frontmatter(edited_prompt)
+    cleaned_body = edited_spec.body if edited_spec.has_frontmatter else edited_prompt
     cleaned_body = cleaned_body.lstrip("\r\n")
-    return f"{original_frontmatter}\n\n{cleaned_body}"
+    return f"{orig_spec.raw_block}\n\n{cleaned_body}"
 
 
 def optimizer_edit_prompt(
