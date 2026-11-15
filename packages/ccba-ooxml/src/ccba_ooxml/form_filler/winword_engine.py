@@ -79,7 +79,7 @@ class WinwordEngine(BaseFormFillerEngine):
         """Initializes Word COM application and opens working document copy."""
         if self._word is None:
             try:
-                import win32com.client
+                import win32com.client  # type: ignore[import-untyped]
             except ImportError as e:
                 raise EngineUnavailableError(
                     "win32com.client (pywin32) is not available. WinwordEngine requires Windows and pywin32."
@@ -141,11 +141,12 @@ class WinwordEngine(BaseFormFillerEngine):
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict)
         }
         self._dynamic_table_indices: set[int] = set()
-        if not list_fields or not getattr(self._doc, "Tables", None):
+        doc = self._doc
+        if not list_fields or doc is None or not getattr(doc, "Tables", None):
             return
 
         try:
-            table_count = getattr(self._doc.Tables, "Count", 0)
+            table_count = getattr(doc.Tables, "Count", 0)
             matched_tables: dict[int, tuple[str, dict[str, str]]] = {}
 
             for field_key, items in list_fields.items():
@@ -154,7 +155,7 @@ class WinwordEngine(BaseFormFillerEngine):
                 best_score = 0
 
                 for t_idx in range(1, table_count + 1):
-                    table = self._doc.Tables.Item(t_idx)
+                    table = doc.Tables.Item(t_idx)
                     row_count = getattr(table.Rows, "Count", 0)
                     if row_count < 2:
                         continue
@@ -192,7 +193,7 @@ class WinwordEngine(BaseFormFillerEngine):
 
             for t_idx, (field_key, mapping) in matched_tables.items():
                 self._dynamic_table_indices.add(t_idx)
-                table = self._doc.Tables.Item(t_idx)
+                table = doc.Tables.Item(t_idx)
                 items = list_fields[field_key]
                 col_count = getattr(table.Columns, "Count", 0)
                 headers = []
@@ -226,15 +227,16 @@ class WinwordEngine(BaseFormFillerEngine):
 
     def _auto_map_property_sheet_tables(self, flat: dict[str, Any]) -> None:
         """Fills key-value cell pairs in Word COM tables."""
-        if not getattr(self._doc, "Tables", None):
+        doc = self._doc
+        if doc is None or not getattr(doc, "Tables", None):
             return
 
         try:
-            table_count = getattr(self._doc.Tables, "Count", 0)
+            table_count = getattr(doc.Tables, "Count", 0)
             for i in range(1, table_count + 1):
                 if hasattr(self, "_dynamic_table_indices") and i in self._dynamic_table_indices:
                     continue
-                t = self._doc.Tables.Item(i)
+                t = doc.Tables.Item(i)
                 try:
                     row_count = getattr(t.Rows, "Count", 0)
                     for r in range(1, row_count + 1):
@@ -355,7 +357,11 @@ class WinwordEngine(BaseFormFillerEngine):
             logger.debug(f"Checkbox processing error in COM: {e}")
 
     def _check_checkboxes_in_range(
-        self, rng: Any, flat: dict[str, Any], postfix_re: re.Pattern, prefix_re: re.Pattern
+        self,
+        rng: Any,
+        flat: dict[str, Any],
+        postfix_re: re.Pattern[str],
+        prefix_re: re.Pattern[str],
     ) -> None:
         text = getattr(rng, "Text", "")
         if not text or not any(cb in text for cb in ["[ ]", "[]", "( )", "()", "☐", "□"]):
@@ -435,7 +441,11 @@ class WinwordEngine(BaseFormFillerEngine):
             logger.debug(f"Inline substitution error in COM: {e}")
 
     def _substitute_inline_in_range(
-        self, rng: Any, flat: dict[str, Any], label_dot_re: re.Pattern, placeholder_re: re.Pattern
+        self,
+        rng: Any,
+        flat: dict[str, Any],
+        label_dot_re: re.Pattern[str],
+        placeholder_re: re.Pattern[str],
     ) -> None:
         text = getattr(rng, "Text", "")
         if not text:
@@ -556,21 +566,22 @@ class WinwordEngine(BaseFormFillerEngine):
 
     def _resolve_table(self, rule: TableRule) -> Any | None:
         """Finds target COM table by index or keyword search."""
-        if not self._doc.Tables or self._doc.Tables.Count == 0:
+        doc = self._doc
+        if doc is None or not doc.Tables or doc.Tables.Count == 0:
             return None
 
         if rule.header_keyword:
             kw = rule.header_keyword.lower()
-            for i in range(1, self._doc.Tables.Count + 1):
-                t = self._doc.Tables.Item(i)
+            for i in range(1, doc.Tables.Count + 1):
+                t = doc.Tables.Item(i)
                 if t.Rows.Count > 0:
                     header_text = t.Rows.Item(1).Range.Text.lower()
                     if kw in header_text:
                         return t
 
         target_idx_1based = rule.table_index + 1
-        if target_idx_1based <= self._doc.Tables.Count:
-            return self._doc.Tables.Item(target_idx_1based)
+        if target_idx_1based <= doc.Tables.Count:
+            return doc.Tables.Item(target_idx_1based)
 
         return None
 
