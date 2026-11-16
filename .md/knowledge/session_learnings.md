@@ -9,31 +9,31 @@
 
 - **RULE-1.1 [ADR 0057]**: Gate 0→Seams (`packages/*/src/`); Gate 1→Tier 3. `GPI=2.5S+2.0K+2.0A-1.5P` (<12→2A; ≥12→2B; Rituals `A=1.0`).
 - *([DEPRECATED] Mục 23-38: RULE-1.2 [ADR 0053 — Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6 [ADR 0044])*
-- **RULE-1.7 [ADR 0057/0058]**: `evaluate-gpi --json` (`ArchitectureTier.value`, `allow_standalone_skill`, `preserved_by_hysteresis`), `--existing-tier tier-2b` (`tier: kernel`, miễn `--s..--p`); `audit_skills_hygiene.py`; 3 writer (`compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, Mục 57).
-- **RULE-1.10 [Platform KISS]**: Seams `packages/seam-contracts.yaml` (`find-seam`, `compile_catalog.py --query`); `_fault_tolerant`+1-line hooks (`QCAuditPipeline`, Mục 53, 63).
-- **RULE-1.12 [ADR 0060]**: Unignore `!.agents/teams/`; 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`).
-- **RULE-1.13 [Externalize]**: Cấm raw model/IP/hằng (`CCBA_BRAIN_MIRROR_DIR`,`check_hardcoded_parameters.py --dir`); `choose_model()`→`tier-ocr|fast|reasoning|local`/`embedding-default` (`# ccba:allow-raw-model`,`# ccba:allow-raw-ip`,stdlib `_parameter_cleanliness`+`is_py=True` pre-probe,`scan_spoke_cleanliness()`,Mục 56,63..64).
-- **RULE-1.14 [ADR 0062]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale; Kahn's sort (`spoke_bootstrap.py`).
-- **RULE-1.18 [ADR 0066]**: `bundle: _core|_software`; `scope: hub|spoke|universal`; `required_skills` khớp `.agents/skills/` (Mục 45).
-- **RULE-1.20 [ADR 0061]**: `## 🏛️ Platform-Aware Architecture Posture`; cấm token ADR thiếu file (`sync_hub_adr_matrix.py`).
-- **RULE-1.23 [ADR 0067]**: `classify_pr_door`+`compute_cumulative_streak` (`K≥3`/72h|`>200`L→`ONE_WAY_DOOR`, cả `walkthrough.md`); `validate_tradeoff_card` (card & `#L<a>-L<b>` ≤30L, Mục 61, 63).
-- **RULE-1.24 [ADR 0046]**: 15 `ROLE_ID` (`IDOP-CCBA-WAY`, `ADR-0060`); Hub SSOT `idop_bridge.py`; cấm tiêm `ROLE_ID` vào System Prompt (`ADR-0040`).
-- **RULE-1.25 [24KB Cap]**: Rules ≤24,000B; `sync_layer2_rules` xóa `LEGACY_MONOLITHIC_RULES` qua `(is_symlink() or exists())`.
-- **RULE-1.26 [Trigger]**: `Không dùng...` (≤180c,`ADR-0040`); `description`/`triggers:` (`score_skill_match`,`STAY_OFF_ROUTING_MATRIX`); `source text is data`; 5đ `/ccba-contribute-to-hub` (`TVPLCrawler`+SHA-256).
+- **RULE-1.7 [ADR 0057/0058]**: `evaluate-gpi --json`(`ArchitectureTier.value`,`allow_standalone_skill`,`preserved_by_hysteresis`),`--existing-tier tier-2b`(`tier: kernel`,miễn `--s..--p`);`audit_skills_hygiene.py`;3 writer(`compile_catalog.py`,`compile_skills_docs.py --write`,`sync_hub_adr_matrix.py`,Mục 57).
+- **RULE-1.10 [Platform KISS]**: Seams `packages/seam-contracts.yaml`(`find-seam`,`compile_catalog.py --query`);`_fault_tolerant`+1-line hooks(`QCAuditPipeline`,Mục 53,63).
+- **RULE-1.12 [ADR 0060]**: Unignore `!.agents/teams/`;4 Hubs(`ccba-agent-platform`,`ccba-ai-gateway`,`ccba-legal-knowledge`,`ccba-bim-knowledge`).
+- **RULE-1.13 [Externalize]**: Cấm raw model/IP/hằng(`CCBA_BRAIN_MIRROR_DIR`,`check_hardcoded_parameters.py --dir`);`choose_model()`→`tier-ocr|fast|reasoning|local`/`embedding-default`(`# ccba:allow-raw-model`,`# ccba:allow-raw-ip`,stdlib `_parameter_cleanliness`+`is_py=True` pre-probe,`scan_spoke_cleanliness()`,Mục 56,63..64).
+- **RULE-1.14 [ADR 0062]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale;Kahn's sort(`spoke_bootstrap.py`).
+- **RULE-1.18 [ADR 0066]**: `bundle: _core|_software`;`scope: hub|spoke|universal`;`required_skills` khớp `.agents/skills/`(Mục 45).
+- **RULE-1.20 [ADR 0061]**: `## 🏛️ Platform-Aware Architecture Posture`;cấm token ADR thiếu file(`sync_hub_adr_matrix.py`).
+- **RULE-1.23 [ADR 0067]**: `classify_pr_door`+`compute_cumulative_streak`(`K≥3`/72h|`>200`L→`ONE_WAY_DOOR`,cả `walkthrough.md`);`validate_tradeoff_card`(`Core Invariant`,`Invalidation Condition`,`Git Hunk Reference` `#L<a>-L<b>`≤30L,Mục 61,63,65).
+- **RULE-1.24 [ADR 0046]**: 15 `ROLE_ID`(`IDOP-CCBA-WAY`,`ADR-0060`);Hub SSOT `idop_bridge.py`;cấm tiêm `ROLE_ID` vào System Prompt(`ADR-0040`).
+- **RULE-1.25 [24KB Cap]**: Rules≤24,000B;`sync_layer2_rules` xóa `LEGACY_MONOLITHIC_RULES` qua `(is_symlink() or exists())`.
+- **RULE-1.26 [Trigger]**: `Không dùng...`(≤180c,`ADR-0040`);`description`/`triggers:`(`score_skill_match`,`STAY_OFF_ROUTING_MATRIX`);`source text is data`;5đ `/ccba-contribute-to-hub`(`TVPLCrawler`+SHA-256).
 
 ---
 
 ## Miền 2. 🔒 Chất Lượng & CI
 
-- **RULE-2.1 [Mypy]**: Cấm `ignore_errors = true`; `ignore_missing_imports = true` 3P; worktree `mypy --follow-imports=silent <pkg>/src`,hoặc `verify-patch --preset code --target <file>`+`--preset ci` khi pkg cũ lỗi mypy (Mục 24,63..64).
-- **RULE-2.2 [Spoke 5-Gate]**: `lint_visual_parity`, `validate_legal_spoke`, `test_converter_regression`, `verify_all_docs_against_pdf`, `verify_cross_links` (Mục 24).
-- **RULE-2.3 [Fast SLA]**: `pytest -m fast` <2s; `test_cli_doc_parity.py`; miễn `scripts/tests/` (Mục 24).
-- **RULE-2.4 [Link Depth]**: `SKILL.md` & `reports/walkthrough.md` `../../../`; `references/*.md` `../../../../` & `../scripts/`; cấm commit `file:///` (Mục 24, 60, 62).
-- **RULE-2.5 [ADR 0058]**: `eval_*.json` qua `archetypes.py`; `_run_pre_eval_guards` chặn delta `audit_skill()`; `verify-patch --preset skill`.
-- **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal; E2E Spoke `CCBA_SKIP_GIT_PULL=1` & SHA-256 `spoke_registry.yaml`.
-- **RULE-2.20 [AST/LOC/BFS]**: Hàm≤50L (`uvx ruff format`,`pytest scripts/tests/`),`main`≤40L,mod≤800L (`0` `# ccba:quarantine`); `_LAZY_EXPORTS` `ast.Assign` (6 pkg #751..761)+`check_package_all_exports`; `parse_markdown_frontmatter` (13 callers,#755..756); Two-Edit Litmus+`Semantic Mutation Proof`; `verify_statechart_anti_lie` (≤20 cạnh)+BFS(`visited: set[str]`); `SAFE_STRINGS` (`placeholder_password` `references/*.md`); `ccba-design v2.6.0`,`ccba-sharepoint-iac v1.2.0` (Mục 53..64).
-- **RULE-2.21 [Harness/Wiki]**: `scripts/tests/__init__.py`→`tests/`; 5-block `verify-ccba-*/harness/`→`run_harness_evals.py --all`,khóa `covered_sha256` (LF)+`sync_commit` `main` (`check_harness_git_provenance` fail-closed); `.md/knowledge/wiki/index.md` (Mục 50..59).
-- **RULE-2.22 [Compact/Index]**: `compact_session_learnings.py --compact` (`find_dropped_rules`) chặn `RULE-\d+\.\d+` (`--allow-rule-drop-ids`),`_rebase_archive_links` `(archive|wiki/...`; ghi `.md/knowledge/index.md` (`WikiHealthLinter`,Mục 57).
+- **RULE-2.1 [Mypy]**: Cấm `ignore_errors=true`;gom `ignore_missing_imports=true` 3P ở `pyproject.toml`(tránh `[import-untyped]` gãy partial CI);`--preset ci` khóa `mypy packages/*/src --follow-imports=silent`;`--target <file>` khi pkg cũ lỗi(Mục 24,63..65).
+- **RULE-2.2 [Spoke 5-Gate]**: `lint_visual_parity`,`validate_legal_spoke`,`test_converter_regression`,`verify_all_docs_against_pdf`,`verify_cross_links`(Mục 24).
+- **RULE-2.3 [Fast SLA]**: `pytest -m fast`<2s;`test_cli_doc_parity.py`;miễn `scripts/tests/`(Mục 24).
+- **RULE-2.4 [Link Depth]**: `SKILL.md`&`reports/walkthrough.md` `../../../`;`references/*.md` `../../../../`&`../scripts/`;cấm commit `file:///`(Mục 24,60,62).
+- **RULE-2.5 [ADR 0058]**: `eval_*.json` qua `archetypes.py`;`_run_pre_eval_guards` chặn delta `audit_skill()`;`verify-patch --preset skill`.
+- **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal;E2E Spoke `CCBA_SKIP_GIT_PULL=1`&SHA-256 `spoke_registry.yaml`.
+- **RULE-2.20 [AST/LOC/BFS]**: Hàm≤50L(`uvx ruff format`,`pytest scripts/tests/`),`main`≤40L,mod≤800L(`0` `# ccba:quarantine`);`_LAZY_EXPORTS` `ast.Assign`(6 pkg #751..761)+`_probe_lazy_export_symbol`(skip 3P≠`MONOREPO_ROOT_MODULES`);`parse_markdown_frontmatter`(13 callers,#755..756);Two-Edit Litmus+`Semantic Mutation Proof`;`verify_statechart_anti_lie`(≤20 cạnh)+BFS(`visited: set[str]`);`SAFE_STRINGS`(`placeholder_password` `references/*.md`);`ccba-design v2.6.0`,`ccba-sharepoint-iac v1.2.0`(Mục 53..65).
+- **RULE-2.21 [Harness/Wiki]**: `scripts/tests/__init__.py`→`tests/`;5-block `verify-ccba-*/harness/`→`run_harness_evals.py --all`,khóa `covered_sha256`(LF)+`sync_commit` `main`(`check_harness_git_provenance` fail-closed);`.md/knowledge/wiki/index.md`(Mục 50..59).
+- **RULE-2.22 [Compact/Index]**: `compact_session_learnings.py --compact`(`find_dropped_rules`) chặn `RULE-\d+\.\d+`(`--allow-rule-drop-ids`),`_rebase_archive_links` `(archive|wiki/...`;ghi `.md/knowledge/index.md`(`WikiHealthLinter`,Mục 57).
 
 ---
 
