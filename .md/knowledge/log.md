@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-16] [adr] | Nghiên Cứu Giải Phẫu Kiến Trúc Công Khai `tose.sh` & Chốt Grilling Agent-First JSON Envelope Cho `ccba-harness`
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `.md/knowledge/research_and_studies/research-tose-sh-public-architecture.md`, `.md/knowledge/decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`, `.md/peer_exchange/grok_harness_agent_envelope_plan.md`, `.md/peer_exchange/grok_harness_agent_envelope_plan_signoff_p2.md`
+- **Summary**: Hoàn tất phiên `/ccba-research` (Dual-Agent Adversarial: `TOSE Architecture Proponent` vs `Risk & Boundary Challenger`, đóng dấu SHA-256 `openapi.yaml`, `api/skills`, `@tosesh/tose@0.2.0` vào `.md/extracted_docs/internet/provenance_registry.yaml`), chốt phiên `/ccba-grilling` (`Q1`–`Q4`) và vượt qua cổng thẩm định Grok `ADR-0067` (Pass 1 `7e0dd009-3c73-4773-9ff9-b5c311dbb7e3` `REVISE_PLAN` $\to$ Pass 2 `9c6bcf35-3738-497d-b827-fd8cff1bbeda` **`APPROVE_PLAN`**, `risk_score: 2`, `blocking_conditions: 0`) cho kế hoạch `v1.2` nâng cấp `verify-patch`, `verify-doc`, `door-triage` trong `ccba-harness` (Additive Flat JSON + `--semantic-exit-codes` + fail-closed `--enforce-tradeoff-card`); dừng chờ `proceed` trước khi sửa `.py`.
+
+---
+
 ## [2026-11-16] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Khóa Rò Rỉ Spoke Registry Worktree Tạm (`is_protected_hub_root`), Fail-Closed `audit_pr_comments --repo` & `ccba-contribute-to-hub v1.3.2` (`RULE-2.9`, `RULE-4.4`, `RULE-4.21`, Mục 66)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `scripts/spoke/sync/base.py`, `scripts/spoke/sync/registry.py`, `scripts/spoke/decrypt_spoke_registry.py`, `scripts/tests/test_spoke_sync_modules.py`, `.agents/skills/ccba-contribute-to-hub/SKILL.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
