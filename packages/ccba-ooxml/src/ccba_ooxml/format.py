@@ -36,6 +36,7 @@ class FormattingProfile(BaseModel):
     page_height_cm: float = 29.7
     header_distance_cm: float = 1.5
     footer_distance_cm: float = 1.5
+    palette: str = "default"
 
 
 def _set_font_all(style: Any, font_name: str = "Times New Roman") -> None:
@@ -410,50 +411,101 @@ def format_docx(
                     bg = "F5F5F5" if i % 2 == 1 else "FFFFFF"
                     tcPr.append(parse_xml(f'<w:shd {nsdecls("w")} w:fill="{bg}" w:val="clear"/>'))
 
+    _apply_table_integrity_and_palette(doc, p)
     out_file.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_file))
     return out_file
 
 
-def convert_md_to_docx(
-    md_path: Path | str,
-    output_path: Path | str | None = None,
-    title: str | None = None,
-) -> Path:
-    """Convert Markdown text or file into formatted Word DOCX.
+def _apply_formal_navy_headings(doc: Any) -> None:
+    """Apply Formal Navy heading colors and accent bottom borders."""
+    navy = RGBColor(0x1F, 0x38, 0x64)
+    for style_key in ("Heading 1", "Heading 2"):
+        if style_key in doc.styles:
+            doc.styles[style_key].font.color.rgb = navy
+    for para in doc.paragraphs:
+        sname = para.style.name if para.style else ""
+        if sname not in ("Heading 1", "Heading 2"):
+            continue
+        bdr_color, bdr_size = ("C00000", "12") if sname == "Heading 1" else ("1F3864", "6")
+        _add_bottom_border(para._element, bdr_color, bdr_size)
+        for run in para.runs:
+            run.font.color.rgb = navy
 
-    Args:
-        md_path: Path to Markdown file or markdown text content.
-        output_path: Destination DOCX file path.
-        title: Optional title for cover page.
 
-    Returns:
-        Path to generated DOCX file.
-    """
-    path_obj = Path(md_path)
-    if path_obj.exists() and path_obj.is_file():
-        md_text = path_obj.read_text(encoding="utf-8")
-        if output_path is None:
-            output_path = path_obj.with_suffix(".docx")
-    else:
-        md_text = str(md_path)
-        if output_path is None:
-            output_path = Path("output.docx")
+def _apply_table_integrity_and_palette(doc: Any, p: FormattingProfile) -> None:
+    """Apply tblHeader, cantSplit, and Formal Navy palette overrides across tables and headings."""
+    is_navy = p.palette == "formal-navy"
+    for table in doc.tables:
+        for i, row in enumerate(table.rows):
+            tr_pr = row._tr.find(qn("w:trPr"))
+            if tr_pr is None:
+                tr_pr = parse_xml(f"<w:trPr {nsdecls('w')}/>")
+                row._tr.insert(0, tr_pr)
+            if tr_pr.find(qn("w:cantSplit")) is None:
+                tr_pr.append(parse_xml(f"<w:cantSplit {nsdecls('w')}/>"))
+            if i == 0 and tr_pr.find(qn("w:tblHeader")) is None:
+                tr_pr.append(parse_xml(f"<w:tblHeader {nsdecls('w')}/>"))
+            if not is_navy:
+                continue
+            fill = "1F3864" if i == 0 else ("F2F2F2" if i % 2 == 1 else "FFFFFF")
+            for cell in row.cells:
+                tc_pr = cell._tc.find(qn("w:tcPr"))
+                if tc_pr is None:
+                    tc_pr = parse_xml(f"<w:tcPr {nsdecls('w')}/>")
+                    cell._tc.insert(0, tc_pr)
+                for old in tc_pr.findall(qn("w:shd")):
+                    tc_pr.remove(old)
+                tc_pr.append(parse_xml(f'<w:shd {nsdecls("w")} w:fill="{fill}" w:val="clear"/>'))
+    if is_navy:
+        _apply_formal_navy_headings(doc)
 
-    out_file = Path(output_path)
-    doc = Document()
 
-    if title:
-        p_title = doc.add_paragraph()
-        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p_title.add_run(title)
-        run.bold = True
-        run.font.size = Pt(18)
-        run.font.color.rgb = RGBColor(0x0D, 0x47, 0xA1)
+def _add_inline_runs(para: Any, text: str) -> None:
+    """Parse inline bold/italic markers and append runs to a paragraph."""
+    for token in re.split(r"(\*\*.*?\*\*|\*.*?\*)", text):
+        if not token:
+            continue
+        if token.startswith("**") and token.endswith("**") and len(token) > 4:
+            r = para.add_run(token[2:-2])
+            r.bold = True
+        elif token.startswith("*") and token.endswith("*") and len(token) > 2:
+            r = para.add_run(token[1:-1])
+            r.italic = True
+        else:
+            para.add_run(token)
 
+
+def _append_gfm_table(doc: Any, table_lines: list[str]) -> None:
+    """Parse buffered GFM pipe-table lines and append a formatted Word table."""
+    sep_re = re.compile(r"^\|\s*:?-{2,}:?(?:\s*\|\s*:?-{2,}:?)*\s*\|$")
+    rows = [
+        [c.strip() for c in ln.strip()[1:-1].split("|")]
+        for ln in table_lines
+        if not sep_re.match(ln.strip())
+    ]
+    if not rows:
+        return
+    num_cols = max(len(r) for r in rows)
+    table = doc.add_table(rows=len(rows), cols=num_cols)
+    for r_idx, row_cells in enumerate(rows):
+        for c_idx in range(num_cols):
+            cell_text = row_cells[c_idx] if c_idx < len(row_cells) else ""
+            _add_inline_runs(table.rows[r_idx].cells[c_idx].paragraphs[0], cell_text)
+
+
+def _render_markdown_body(doc: Any, md_text: str) -> None:
+    """Render Markdown headings, GFM pipe tables, and paragraphs into a DOCX Document."""
+    table_buf: list[str] = []
     for line in md_text.splitlines():
         striped = line.strip()
-        if not striped:
+        if striped.startswith("|") and striped.endswith("|"):
+            table_buf.append(striped)
+            continue
+        if table_buf:
+            _append_gfm_table(doc, table_buf)
+            table_buf.clear()
+        if not striped or striped == "---":
             continue
         if striped.startswith("### "):
             doc.add_heading(striped[4:], level=3)
@@ -462,24 +514,52 @@ def convert_md_to_docx(
         elif striped.startswith("# "):
             doc.add_heading(striped[2:], level=1)
         else:
-            para = doc.add_paragraph()
-            # Simple bold/italic parsing
-            tokens = re.split(r"(\*\*.*?\*\*|\*.*?\*)", striped)
-            for token in tokens:
-                if not token:
-                    continue
-                if token.startswith("**") and token.endswith("**"):
-                    r = para.add_run(token[2:-2])
-                    r.bold = True
-                elif token.startswith("*") and token.endswith("*"):
-                    r = para.add_run(token[1:-1])
-                    r.italic = True
-                else:
-                    para.add_run(token)
+            _add_inline_runs(doc.add_paragraph(), striped)
+    if table_buf:
+        _append_gfm_table(doc, table_buf)
 
+
+def convert_md_to_docx(
+    md_path: Path | str,
+    output_path: Path | str | None = None,
+    title: str | None = None,
+    palette: str = "default",
+) -> Path:
+    """Convert Markdown text or file into formatted Word DOCX.
+
+    Args:
+        md_path: Path to Markdown file or markdown text content.
+        output_path: Destination DOCX file path.
+        title: Optional title for cover page.
+        palette: Color palette name ('default' or 'formal-navy').
+
+    Returns:
+        Path to generated DOCX file.
+    """
+    path_obj = Path(md_path)
+    if path_obj.exists() and path_obj.is_file():
+        md_text = path_obj.read_text(encoding="utf-8")
+        out_file = Path(output_path) if output_path is not None else path_obj.with_suffix(".docx")
+    else:
+        md_text = str(md_path)
+        out_file = Path(output_path) if output_path is not None else Path("output.docx")
+
+    md_text = re.sub(r"\A---\s*\r?\n.*?\r?\n---\s*\r?\n", "", md_text, flags=re.DOTALL)
+    doc = Document()
+    if title:
+        p_title = doc.add_paragraph()
+        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p_title.add_run(title)
+        run.bold = True
+        run.font.size = Pt(18)
+        run.font.color.rgb = (
+            RGBColor(0x1F, 0x38, 0x64) if palette == "formal-navy" else RGBColor(0x0D, 0x47, 0xA1)
+        )
+
+    _render_markdown_body(doc, md_text)
     out_file.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_file))
-    return format_docx(out_file, out_file)
+    return format_docx(out_file, out_file, profile=FormattingProfile(palette=palette))
 
 
 __all__ = [

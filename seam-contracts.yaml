@@ -22,7 +22,7 @@ cards:
       mode: local_import
     import_path: ccba_ooxml:DocxDocument
     capability:
-      in: [docx, xlsx, pptx]
+      in: [docx, xlsx, pptx, markdown]
       out: [docx, structured_table, markdown]
     hardware: [any]
     failure_modes: [corrupted_zip, schema_mismatch]

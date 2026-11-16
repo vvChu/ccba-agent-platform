@@ -75,6 +75,32 @@ def test_convert_md_to_docx():
         assert len(headings) == 1
 
 
+def test_convert_md_to_docx_gfm_table_and_formal_navy():
+    """Verify YAML frontmatter stripping, GFM pipe-table parsing, and formal-navy palette."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        md_file = Path(temp_dir) / "mou.md"
+        md_file.write_text(
+            "---\ntitle: Test MOU\n---\n\n# MOU TITLE\n\n"
+            "| ENGLISH VERSION | BẢN TIẾNG VIỆT |\n"
+            "| :--- | :--- |\n"
+            "| **1. Scope** | **1. Phạm vi** |\n",
+            encoding="utf-8",
+        )
+        out_docx = Path(temp_dir) / "mou_navy.docx"
+        result = convert_md_to_docx(md_file, out_docx, palette="formal-navy")
+        assert result.exists()
+
+        doc = Document(str(result))
+        all_text = "\n".join(p.text for p in doc.paragraphs)
+        assert "title: Test MOU" not in all_text
+        assert len(doc.tables) == 1
+        tbl = doc.tables[0]
+        assert len(tbl.rows) == 2 and len(tbl.columns) == 2
+        assert "1. Scope" in tbl.rows[1].cells[0].text
+        xml_str = tbl._tbl.xml
+        assert "w:tblHeader" in xml_str and "w:cantSplit" in xml_str and "1F3864" in xml_str
+
+
 def test_soffice_helpers():
     """Test soffice environment helper functions."""
     env = get_soffice_env()

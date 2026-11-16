@@ -74,3 +74,35 @@ def test_pipeline_custom_post_processor_toggle(tmp_path: Path) -> None:
     )
     assert len(custom_pipeline.post_processors) == 1
     assert isinstance(custom_pipeline.post_processors[0], LinkPatcherPostProcessor)
+
+
+def test_pipeline_convert_explicit_output_path(tmp_path: Path) -> None:
+    """Verify ConversionPipeline.convert writes to explicit output_path without polluting source dir."""
+    src_docx = tmp_path / "source.docx"
+    src_docx.write_text("dummy", encoding="utf-8")
+    default_out = tmp_path / "source.md"
+    custom_out = tmp_path / "extracted" / "custom_doc.md"
+
+    async def _fake_convert(_src: Path) -> ConversionResult:
+        default_out.write_text("# Converted Heading\nBody text", encoding="utf-8")
+        return ConversionResult(
+            source_path=src_docx,
+            output_path=default_out,
+            content="# Converted Heading\nBody text",
+            status=ConversionStatus.SUCCESS,
+            tool_used=ConversionTool.PANDOC,
+        )
+
+    pipeline = ConversionPipeline(tool=ConversionTool.AUTO)
+    mock_converter = MagicMock()
+    mock_converter.output_dir = None
+    mock_converter.convert = AsyncMock(side_effect=_fake_convert)
+
+    with patch.object(pipeline, "_create_converter_for_file", return_value=mock_converter):
+        result = pipeline.convert(src_docx, output_path=custom_out)
+
+    assert result.status == ConversionStatus.SUCCESS
+    assert result.output_path == custom_out
+    assert custom_out.exists()
+    assert "# Converted Heading" in custom_out.read_text(encoding="utf-8")
+    assert not default_out.exists()

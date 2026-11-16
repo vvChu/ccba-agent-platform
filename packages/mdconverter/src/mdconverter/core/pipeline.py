@@ -105,6 +105,29 @@ def get_default_post_processors() -> list[PostProcessor]:
     return [VNLegalPostProcessor(), LinkPatcherPostProcessor()]
 
 
+def _apply_explicit_output_path(
+    result: ConversionResult,
+    output_path: Path | str | None,
+    default_existed: bool,
+) -> ConversionResult:
+    """Persist converted content to an explicit output_path and remove stray default output."""
+    if output_path is None or not result.is_success or not result.content:
+        return result
+    target = Path(output_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(result.content, encoding="utf-8")
+    prev = result.output_path
+    if (
+        prev is not None
+        and prev.resolve() != target.resolve()
+        and not default_existed
+        and prev.exists()
+    ):
+        prev.unlink()
+    result.output_path = target
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Conversion Pipeline
 # ---------------------------------------------------------------------------
@@ -138,7 +161,7 @@ class ConversionPipeline:
         self.extract_drawing = extract_drawing
         self._sem = asyncio.Semaphore(max_concurrency)
 
-    def convert(self, file: Path | str) -> ConversionResult:
+    def convert(self, file: Path | str, output_path: Path | str | None = None) -> ConversionResult:
         """Synchronously convert a single file with caching and post-processing.
 
         Convenience wrapper around async ``process_file`` for synchronous callers.
@@ -159,9 +182,11 @@ class ConversionPipeline:
                 "ConversionPipeline.convert() cannot be called from within a running event loop. "
                 "Please use 'await pipeline.process_file(file)' directly."
             )
-        return asyncio.run(self.process_file(path))
+        return asyncio.run(self.process_file(path, output_path=output_path))
 
-    async def process_file(self, file: Path) -> ConversionResult:
+    async def process_file(
+        self, file: Path, output_path: Path | str | None = None
+    ) -> ConversionResult:
         """Convert a single file with caching and post-processing.
 
         For PDF files, runs ``PDFAnalyzer`` first to classify the document
@@ -170,6 +195,7 @@ class ConversionPipeline:
 
         Args:
             file: Path to the source file.
+            output_path: Optional explicit destination path for the converted Markdown file.
 
         Returns:
             ConversionResult with status, content, and metadata.
@@ -177,6 +203,7 @@ class ConversionPipeline:
         # No longer wrap entire process_file in semaphore to allow parallel segmenting
         # async with self._sem:  <-- REFACTORED
         loop = asyncio.get_running_loop()
+        default_existed = self._expected_output_path(file).exists()
 
         # 0. PDF analysis — classify and auto-select tool
         pdf_report = None
@@ -199,24 +226,30 @@ class ConversionPipeline:
                 is_very_large = pdf_report.pages > 30
 
                 if (is_hybrid or is_very_large) and self.tool in (ConversionTool.AUTO, "auto"):
-                    return await self._process_segmented(file, pdf_report)
+                    seg_res = await self._process_segmented(file, pdf_report)
+                    return _apply_explicit_output_path(seg_res, output_path, default_existed)
 
         # 1. Check cache
         if self.cache:
             cached_content = await loop.run_in_executor(None, self.cache.get, file)
             if cached_content:
-                output_path = self._expected_output_path(file)
-                await loop.run_in_executor(None, self._write_cached, output_path, cached_content)
-                return ConversionResult(
+                cache_out = self._expected_output_path(file)
+                await loop.run_in_executor(None, self._write_cached, cache_out, cached_content)
+                cached_res = ConversionResult(
                     source_path=file,
-                    output_path=output_path,
+                    output_path=cache_out,
                     status=ConversionStatus.SUCCESS,
                     tool_used="cache",
                     content=cached_content,
                 )
+                return _apply_explicit_output_path(cached_res, output_path, default_existed)
 
         # 2. Convert with semaphore protection
         converter = self._create_converter_for_file(file, pdf_report)
+        if output_path is not None and self.output_dir is None:
+            target_dir = Path(output_path).parent
+            target_dir.mkdir(parents=True, exist_ok=True)
+            converter.output_dir = target_dir
         async with self._sem:
             result = await converter.convert(file)
 
@@ -234,7 +267,7 @@ class ConversionPipeline:
                     None, self.cache.set, file, result.content, result.tool_used
                 )
 
-            return result
+            return _apply_explicit_output_path(result, output_path, default_existed)
 
     async def _process_segmented(self, file: Path, report: "PDFReport") -> ConversionResult:
         """Handle conversion by splitting PDF into segments or chunks.

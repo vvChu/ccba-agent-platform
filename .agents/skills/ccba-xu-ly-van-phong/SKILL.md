@@ -131,6 +131,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 | `templates/docx-hanh-chinh-*.md` | 9 mẫu VB hành chính NĐ 30 (công văn, quyết định, tờ trình...) |
 | `templates/docx-de-xuat-*.md` | Mẫu đề xuất/báo cáo |
 | `templates/docx-ky-thuat-rfi.md` | Mẫu Phiếu Yêu cầu Cung cấp Thông tin Kỹ thuật (RFI) theo ISO 19650/FIDIC (4-column response grid 9071 DXA, Formal Navy) |
+| `templates/docx-hop-tac-mou-song-ngu.md` | Mẫu Biên bản Ghi nhớ Hợp tác Kinh doanh Song ngữ Anh–Việt (2-column 4535/4536 DXA + Exhibit A RACI Matrix, Formal Navy) |
 | `templates/rfi_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho biểu mẫu RFI kỹ thuật |
 | `examples/docx-bao-cao-formal-navy.docx` | DOCX báo cáo — palette Formal Navy |
 | `examples/docx-cong-van-nd30.docx` | DOCX công văn — chuẩn NĐ 30 |
