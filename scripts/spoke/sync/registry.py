@@ -20,6 +20,7 @@ from .base import (
     HAS_CRYPTOGRAPHY,
     PLATFORM_ROOT,
     is_ephemeral_spoke_path,
+    is_protected_hub_root,
     prune_ephemeral_heartbeats,
 )
 from .catalog import CatalogMerger
@@ -87,7 +88,7 @@ class SpokeRegistrar:
     @staticmethod
     def _is_ephemeral_test_spoke_on_real_hub(spoke_root: Path, hub_root: Path) -> bool:
         """Return True when a pytest or temp spoke is targeting the real Hub repository."""
-        if hub_root.resolve() != PLATFORM_ROOT.resolve():
+        if not is_protected_hub_root(hub_root, PLATFORM_ROOT):
             return False
         return "PYTEST_CURRENT_TEST" in os.environ or is_ephemeral_spoke_path(spoke_root)
 
@@ -210,7 +211,7 @@ class SpokeRegistrar:
             heartbeats = heartbeat_data.get("heartbeats", {})
             if not isinstance(heartbeats, dict):
                 heartbeats = {}
-            if hub_root.resolve() == PLATFORM_ROOT.resolve():
+            if is_protected_hub_root(hub_root, PLATFORM_ROOT):
                 heartbeats = prune_ephemeral_heartbeats(heartbeats)
             heartbeats[spoke_id] = {
                 "name": project_name,

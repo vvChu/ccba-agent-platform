@@ -7,10 +7,15 @@ from typing import Any
 import yaml
 
 try:
-    from scripts.spoke.sync.base import is_ephemeral_spoke_path, prune_ephemeral_heartbeats
+    from scripts.spoke.sync.base import (
+        is_ephemeral_spoke_path,
+        is_protected_hub_root,
+        prune_ephemeral_heartbeats,
+    )
 except ImportError:
     from sync.base import (  # type: ignore[import-not-found,no-redef]
         is_ephemeral_spoke_path,
+        is_protected_hub_root,
         prune_ephemeral_heartbeats,
     )
 
@@ -49,7 +54,7 @@ def load_spoke_heartbeats(hub_root: Path | None = None) -> dict[str, Any]:
             heartbeats = data.get("heartbeats", {})
             if not isinstance(heartbeats, dict):
                 return {}
-            if root.resolve() == default_root.resolve():
+            if is_protected_hub_root(root, default_root):
                 return prune_ephemeral_heartbeats(heartbeats)
             return heartbeats
     except Exception:

@@ -13,7 +13,7 @@ disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -184,7 +184,7 @@ Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bướ
    HUB_SYNC_WT="/tmp/wt-hub-sync-src"
    git -C "$CCBA_HUB_PATH" fetch --prune origin
    git -C "$CCBA_HUB_PATH" worktree add --detach "$HUB_SYNC_WT" origin/main
-   python "$HUB_SYNC_WT/scripts/sync_spoke.py" --spoke . --apply
+   CCBA_HUB_PATH="$HUB_SYNC_WT" CCBA_SKIP_GIT_PULL=1 python "$HUB_SYNC_WT/scripts/sync_spoke.py" --spoke . --apply
    git -C "$CCBA_HUB_PATH" worktree remove "$HUB_SYNC_WT"
    ```
 3. **Tái cài đặt Editable Package (nếu có sửa `packages/`):**
