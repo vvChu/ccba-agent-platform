@@ -175,7 +175,7 @@ Từ kiểm toán của **Risk & Boundary Challenger** và đối chiếu trực
 - [Hiến pháp Layer 1 (`AGENTS.md`)](../../../AGENTS.md)
 - [Ngữ cảnh & Từ vựng Nền tảng (`CONTEXT.md`)](../../../CONTEXT.md)
 - [Tri thức Tích lũy Phiên (`session_learnings.md`)](../session_learnings.md)
-- [Sổ cái Xuất xứ Tài liệu Internet (`provenance_registry.yaml`)](../../extracted_docs/internet/provenance_registry.yaml)
+- Sổ cái Xuất xứ Tài liệu Internet (`.md/extracted_docs/internet/provenance_registry.yaml`)
 - [Danh mục Kỹ năng & Seams (`catalog.yaml`)](../../../.agents/skills/platform-loader/catalog.yaml)
 - [Nghiên cứu `morluto/rea` & Chuyển hóa Hub-Spoke](research-reverse-engineer-anything-and-hub-spoke-applications.md)
 

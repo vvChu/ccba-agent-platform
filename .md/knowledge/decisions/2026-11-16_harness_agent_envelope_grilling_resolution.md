@@ -2,7 +2,7 @@
 
 > **Ngày chốt Grilling:** `2026-11-16` | **Phiên bản Kế hoạch:** `v1.2` (`APPROVE_PLAN` — Giải trình đầy đủ `COND-HEAL-SSOT`, `COND-NEXT-ACTIONS`, `COND-ARGPARSE-EXIT`, `COND-DOOR-MATRIX`, `COND-THIN-CLI`, `COND-CATALOG-CLI-LINE` + bổ sung 2 mục non-blocking `COND-DOC-FAIL-SPEC`, `COND-TIMEOUT-TEST`)  
 > **Nguồn cảm hứng Clean-Room:** [Báo cáo Nghiên cứu `tose.sh`](../research_and_studies/research-tose-sh-public-architecture.md)  
-> **Grok Audit Trail (`ADR-0067`):** Pass 1 `7e0dd009-3c73-4773-9ff9-b5c311dbb7e3` (`REVISE_PLAN`, `risk_score: 4`, `5` blocking) $\to$ Pass 2 `9c6bcf35-3738-497d-b827-fd8cff1bbeda` (**`APPROVE_PLAN`**, `risk_score: 2`, `0` blocking, biên bản [grok_harness_agent_envelope_plan_signoff_p2.md](../../peer_exchange/grok_harness_agent_envelope_plan_signoff_p2.md))  
+> **Grok Audit Trail (`ADR-0067`):** Pass 1 `7e0dd009-3c73-4773-9ff9-b5c311dbb7e3` (`REVISE_PLAN`, `risk_score: 4`, `5` blocking) $\to$ Pass 2 `9c6bcf35-3738-497d-b827-fd8cff1bbeda` (**`APPROVE_PLAN`**, `risk_score: 2`, `0` blocking, biên bản `.md/peer_exchange/grok_harness_agent_envelope_plan_signoff_p2.md`)  
 > **Trạng thái:** `IMPLEMENTED_VERIFIED` (Đã thi công xong & vượt qua toàn bộ cổng kiểm định tất định `ADR-0058` / `ADR-0061` / `ADR-0067`)  
 > **Biên lai Đối soát Seam (`ADR-0061`):** `compile_catalog.py --in markdown --out markdown --json` $\to$ `status: NO_MATCH`, `index_sha256: fe4c3c11ca879eba54a8790ade072dbd98022f26bb1393585dee90149dddacfc` — tái sử dụng trực tiếp `SelfHealingEngine.diagnose_failures()` & `generate_remediation_actions()` ([healing.py](../../../packages/ccba-harness/src/ccba_harness/healing.py#L174-L364)) và `validate_tradeoff_card()` ([backpressure.py](../../../packages/ccba-harness/src/ccba_harness/backpressure.py#L124-L155)).
 
