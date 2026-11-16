@@ -255,3 +255,34 @@ def test_check_init_lazy_exports_parity_catches_orphan_symbol(tmp_path: Path) ->
     assert len(violations) == 1
     assert violations[0].rule_name == "OrphanLazyExportViolation"
     assert "forgotten_helper" in violations[0].message
+
+
+def test_probe_lazy_export_symbol_distinguishes_external_vs_internal_missing_dep(
+    tmp_path: Path,
+) -> None:
+    """Verify uninstalled external deps skip while missing internal monorepo modules fail closed."""
+    from scripts.governance.check_dependency_contracts import _probe_lazy_export_symbol
+
+    init_py = tmp_path / "__init__.py"
+
+    class _ExternalMissingMod:
+        def __getattr__(self, name: str) -> object:
+            raise ModuleNotFoundError("No module named 'pptx'", name="pptx")
+
+    class _InternalMissingMod:
+        def __getattr__(self, name: str) -> object:
+            raise ModuleNotFoundError(
+                "No module named 'ccba_ooxml.nonexistent_submod'",
+                name="ccba_ooxml.nonexistent_submod",
+            )
+
+    assert (
+        _probe_lazy_export_symbol(_ExternalMissingMod(), "Presentation", "ccba_ooxml", init_py)
+        is None
+    )
+    internal_violation = _probe_lazy_export_symbol(
+        _InternalMissingMod(), "MissingSym", "ccba_ooxml", init_py
+    )
+    assert internal_violation is not None
+    assert internal_violation.rule_name == "UnboundAllExportViolation"
+    assert "ccba_ooxml.nonexistent_submod" in internal_violation.message
