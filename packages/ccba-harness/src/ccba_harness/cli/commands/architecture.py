@@ -7,6 +7,12 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
+from ccba_harness.cli._envelope import (
+    enrich_door_triage_dict,
+    parse_with_json_envelope,
+    resolve_exit_code,
+)
+
 
 def run_blast_radius_cli(args_list: Sequence[str] | None = None) -> int:
     """CLI entry point for cross-boundary blast radius scanner (`ccba-harness blast-radius`)."""
@@ -80,9 +86,25 @@ def run_explain_why_cli(args_list: Sequence[str] | None = None) -> int:
     return 0
 
 
+def _evaluate_one_way_card(pr_body_file: str | None, enforce: bool) -> list[str]:
+    """Validate Tradeoff Card for ONE_WAY_DOOR PRs with fail-closed missing/OSError guard."""
+    from ccba_harness.backpressure import validate_tradeoff_card
+
+    if not pr_body_file:
+        return (
+            ["Missing --pr-body-file for --enforce-tradeoff-card on ONE_WAY_DOOR."]
+            if enforce
+            else []
+        )
+    try:
+        body_text = Path(pr_body_file).read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"Cannot read --pr-body-file '{pr_body_file}': {exc}"] if enforce else []
+    return validate_tradeoff_card(body_text)
+
+
 def _execute_door_triage(args: argparse.Namespace) -> int:
     """Executes door policy classification and optional Tradeoff Card validation."""
-    from ccba_harness.backpressure import validate_tradeoff_card
     from ccba_harness.door_policy import classify_pr_door, load_recent_merges_from_git
 
     root_p = Path(args.root).resolve() if args.root else Path.cwd().resolve()
@@ -94,17 +116,19 @@ def _execute_door_triage(args: argparse.Namespace) -> int:
         repo=args.repo,
         pr_number=args.pr_number,
     )
-    card_errors: list[str] = []
-    if args.pr_body_file and Path(args.pr_body_file).exists():
-        body_text = Path(args.pr_body_file).read_text(encoding="utf-8")
-        if res.door_type == "ONE_WAY_DOOR":
-            card_errors = validate_tradeoff_card(body_text)
-
-    payload = {
+    card_errors = (
+        _evaluate_one_way_card(args.pr_body_file, args.enforce_tradeoff_card)
+        if res.door_type == "ONE_WAY_DOOR"
+        else []
+    )
+    base_payload = {
         **res.model_dump(mode="json"),
         "tradeoff_card_errors": card_errors,
         "tradeoff_card_valid": len(card_errors) == 0,
     }
+    payload, err_code = enrich_door_triage_dict(
+        base_payload, res.door_type, args.enforce_tradeoff_card
+    )
     if args.json:
         print(json.dumps(payload, indent=2, ensure_ascii=False))
     else:
@@ -112,9 +136,8 @@ def _execute_door_triage(args: argparse.Namespace) -> int:
         print(
             f"Door: {res.door_type} | Categories: {cats} | Streak: {res.cumulative_streak} | Sampled: {res.sampled_for_audit}"
         )
-    if args.enforce_tradeoff_card and res.door_type == "ONE_WAY_DOOR" and card_errors:
-        return 1
-    return 0
+    passed = err_code != "TRADEOFF_CARD_INVALID"
+    return resolve_exit_code(passed=passed, semantic=args.semantic_exit_codes, error_code=err_code)
 
 
 def run_door_triage_cli(args_list: Sequence[str] | None = None) -> int:
@@ -137,6 +160,13 @@ def run_door_triage_cli(args_list: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--root", type=str, default=None, help="Workspace root directory")
     parser.add_argument("--json", action="store_true", help="Output result in JSON format")
+    parser.add_argument(
+        "--semantic-exit-codes",
+        action="store_true",
+        help="Return semantic exit codes (0|1|2|4|124)",
+    )
 
-    args = parser.parse_args(args_list)
+    args, parse_err = parse_with_json_envelope(parser, args_list)
+    if args is None:
+        return parse_err if parse_err is not None else 2
     return _execute_door_triage(args)
