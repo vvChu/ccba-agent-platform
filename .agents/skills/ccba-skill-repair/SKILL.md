@@ -2,7 +2,7 @@
 name: ccba-skill-repair
 description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 disable-model-invocation: true
 user-invocable: true
@@ -50,10 +50,16 @@ Xác định môi trường làm việc qua `git remote get-url origin` trước
       * Cây làm việc Hub hoàn toàn sạch: `git -C "<hub_path>" status --porcelain` trả về rỗng.
       * Hub đang đứng đúng nhánh tích hợp mặc định `main`: `git -C "<hub_path>" branch --show-current` trả về `main`.
       * Chưa tồn tại nhánh `fix/repair-<tên-skill>` cục bộ hoặc Pull Request mở trùng tên trên remote.
-    * Nếu bất kỳ điều kiện nào vi phạm $\rightarrow$ **DỪNG NGAY** và thông báo để người dùng xử lý trạng thái kho Hub.
-    * Khi cả 4 điều kiện đạt: tạo nhánh mới `git -C "<hub_path>" checkout -b fix/repair-<tên-skill>`, thực hiện toàn bộ Mục 1–4 trên `<hub_path>`, chạy kiểm tra chống rò rỉ dữ liệu Spoke bằng lệnh đa nền tảng:
+    * **Nhánh Worktree Cô Lập khi `<hub_path>` bận phiên song song hoặc lệch `origin/main` (`RULE-4.21`):** Nếu `<hub_path>` hợp lệ (đứng đúng trên repo Hub và chưa có nhánh/PR trùng tên `fix/repair-<tên-skill>`) nhưng working tree `<hub_path>` đang có tệp chưa commit thuộc phiên làm việc song song hoặc nhánh `main` lệch `origin/main`, tuyệt đối **KHÔNG** chạm, stash hay `git checkout`/`git pull` trên `<hub_path>`. Thay vào đó, khởi tạo một `git worktree` cô lập từ `origin/main` của Hub:
       ```bash
-      python "<hub_path>/scripts/governance/check_spoke_leakage.py" --root "<hub_path>"
+      git -C "<hub_path>" fetch --prune origin
+      git -C "<hub_path>" worktree add -b "fix/repair-<tên-skill>" "/tmp/wt-hub-repair-<tên-skill>" origin/main
+      ```
+      Thực hiện toàn bộ Mục 1–4, kiểm tra chống rò rỉ dữ liệu Spoke (`--root "/tmp/wt-hub-repair-<tên-skill>"`), commit, chạy `door-triage` và push/mở PR ngay trong worktree cô lập; sau khi push xong thì chuyển về thư mục Spoke và gỡ worktree bằng `git -C "<hub_path>" worktree remove "/tmp/wt-hub-repair-<tên-skill>"`.
+    * Nếu phát sinh xung đột nhánh/PR trùng tên hoặc `<hub_path>` không hợp lệ $\rightarrow$ **DỪNG NGAY** và thông báo để người dùng xử lý.
+    * Khi `<hub_path>` sạch và cả 4 điều kiện đạt (hoặc đã mở thành công worktree cô lập `RULE-4.21`): thực hiện toàn bộ Mục 1–4 trong nhánh/worktree Hub, chạy kiểm tra chống rò rỉ dữ liệu Spoke bằng lệnh đa nền tảng:
+      ```bash
+      python "<hub_path_or_wt>/scripts/governance/check_spoke_leakage.py" --root "<hub_path_or_wt>"
       ```
       Sau khi nghiệm thu đạt 100%, dừng lại xin xác nhận rõ ràng của người dùng trước khi mở PR qua `/ccba-contribute-to-hub`.
   * **Nhánh B — Bản nháp cục bộ thuần Spoke (chưa có `<hub_path>/.agents/skills/<skill-dir>/SKILL.md` VÀ chưa có tên trong `catalog.yaml` của Hub):** Do Spoke không chứa `scripts/validate_skills.py`, sử dụng trực tiếp CLI của gói `ccba-harness`:
@@ -182,11 +188,13 @@ Khóa cứng chu trình đồng bộ và nghiệm thu tất định theo ADR-005
     python -m ccba_harness.cli evaluate-gpi --file <path-to-skill> --existing-tier tier-2b --json
     ```
     *(Bắt buộc xác nhận trong JSON trường `tier == "Tier 2B: Standalone Kernel Skill"` và `allow_standalone_skill: true`; **tuyệt đối không chỉ nhìn mã thoát `0`** vì `evaluate-gpi` vẫn trả mã thoát `0` ngay cả khi `allow_standalone_skill: false`).*
-  * Trên Hub, khóa cứng bằng kiểm tra tài liệu Portal và cổng nghiệm thu preset `skill`:
+  * Trên Hub, khóa cứng bằng kiểm tra tài liệu Portal, đối soát `SPOKE_SPECIFIC_SCRIPTS` và cổng nghiệm thu preset `skill`:
     ```bash
     python scripts/governance/compile_skills_docs.py --check
+    python -m pytest tests/governance/test_workflow_script_parity.py -q
     python -m ccba_harness verify-patch --preset skill --target <path-to-skill>
     ```
+    *(Lưu ý: nếu `SKILL.md` mới bổ sung tham chiếu nội tuyến tới script đặc thù của Spoke như `scripts/<pipeline_hoac_module>.py`, bắt buộc đăng ký đường dẫn đó vào tập `SPOKE_SPECIFIC_SCRIPTS` trong `tests/governance/test_workflow_script_parity.py` trên Hub trước khi chạy kiểm định.)*
     *(Trên bản nháp cục bộ thuần Spoke, nghiệm thu bằng `python -m ccba_harness validate-skill --file <path-to-skill> --enforce-gpi` kết hợp kiểm tra JSON của `evaluate-gpi`).*
 - **Xử lý khi kiểm định thất bại:** Nếu sau tối đa 2 vòng lặp (hoặc khi mã băm SHA-256 đứng yên) bất kỳ lệnh kiểm định nào trả về mã thoát khác `0` hay `allow_standalone_skill: false` trên kỹ năng non-orchestrator $\rightarrow$ **DỪNG NGAY** theo ADR-0058, giữ nguyên diff trên đĩa, in nguyên văn `stderr` / JSON chẩn đoán cho người dùng và nghiêm cấm tuyên bố hoàn thành.
 - **Tiêu chí hoàn thành:** Toàn bộ chuỗi đồng bộ 3 bề mặt, `validate_skills.py --enforce-gpi`, `compile_skills_docs.py --check`, `verify-patch --preset skill` đạt mã thoát `0` (100% PASS) và kết quả JSON `evaluate-gpi` xác nhận hợp lệ tầng kiến trúc đích.

@@ -1030,7 +1030,7 @@ def test_ccba_skill_repair_v110_contractual_invariants() -> None:
     parts = raw_text.split("---", 2)
     assert len(parts) >= 3
     fm = yaml.safe_load(parts[1])
-    assert fm.get("metadata", {}).get("version") == "1.1.0"
+    assert fm.get("metadata", {}).get("version") == "1.1.1"
     assert "gpi: {s: 3.0, k: 2.0, a: 1.0, p: 1.0}" in parts[1]
 
     # 3. Assert all v1.1.0 guardrails strictly on body (excluding frontmatter per COND-05)
@@ -1074,6 +1074,8 @@ def test_ccba_skill_repair_v110_contractual_invariants() -> None:
         "python scripts/sync_hub_adr_matrix.py",
         "python scripts/governance/compile_skills_docs.py --check",
         "python -m ccba_harness verify-patch --preset skill --target <path-to-skill>",
+        "RULE-4.21",
+        "SPOKE_SPECIFIC_SCRIPTS",
     ]
     for token in required_body_tokens:
         assert token in body, f"Missing required v1.1.0 guardrail token in SKILL.md body: {token!r}"
