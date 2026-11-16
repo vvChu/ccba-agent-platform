@@ -33,6 +33,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md](decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md): **[MỚI]** Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai Clean-Room Agent-First JSON Envelope, `next_actions` & Semantic Exit Codes cho `ccba-harness` (`Q1`–`Q4`, `ADR-0067`).
 - [decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md](decisions/2026-11-15_core_seams_and_governance_grilling_resolution.md): **[COMPLETED]** Biên Bản Phỏng Vấn Grilling & Nghiệm Thu Thực Thi 3 Ứng Viên Kiến Trúc Lõi (`PR #751..#758`: PEP 562 4 package lõi `4.27–22.06 ms`, `parse_markdown_frontmatter` 13 callers & `SkillValidator <= 450 LOC`, `_parameter_cleanliness` stdlib Tier-0 scanner `0.30s`).
 - [../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md](../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md): **[MỚI]** ADR-0067: Danh mục Cửa Một Chiều 3 Tầng (One-Way Door Manifest) và Cơ chế Áp lực ngược (Backpressure Circuit-Breaker).
 - [../../docs/adr/0060-4hub-federated-spokes-architecture.md](../../docs/adr/0060-4hub-federated-spokes-architecture.md): **[MỚI]** ADR-0060: Kiến trúc Liên bang 4-Hubs × Spokes & Điều phối Hệ sinh thái Tri thức Phi tập trung.
@@ -51,6 +52,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-tose-sh-public-architecture.md](research_and_studies/research-tose-sh-public-architecture.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`Dual-Agent Adversarial`): Giải Phẫu Kiến Trúc Công Khai Của TOSE (`tose.sh`) & Bản Đồ Đối Sánh Cho Hệ Sinh Thái CCBA.
 - [research_and_studies/research-3-tier-portal-progressive-disclosure.md](research_and_studies/research-3-tier-portal-progressive-disclosure.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`RES-2026-UX-3TIER-001`): Kiến Trúc Cổng Thông Tin 3 Tầng ("Tối Giản & Hé Lộ Dần" / 3-Tier Progression of Attention) & Định Tuyến 14 Kho Mã Nguồn Mở UI/UX.
 - [research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md](research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Hệ Sinh Thái "Reverse Engineer Anything" (`morluto/rea`, `kong`, `replica-skill`, `unbrowse`) & Ứng Dụng Vào Kiến Trúc `4-Hubs × Federated Spokes`.
 - [research_and_studies/research-cursor-bugbot-adaptations.md](research_and_studies/research-cursor-bugbot-adaptations.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Áp Dụng Mô Hình "2,500 PRs/Month" & Bugbot Review Vào CCBA Agent Platform.
