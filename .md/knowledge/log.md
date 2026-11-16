@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-16] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Giải Phẫu `tose.sh`, Agent-First JSON Envelope Cho `ccba-harness`, Fail-Closed `door-triage` & Bẫy Link `.gitignore` (`PR #781`, `RULE-1.23`, `RULE-2.21`, `RULE-3.5`, Mục 67)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/cli/_envelope.py`, `packages/ccba-harness/src/ccba_harness/cli/commands/verifier.py`, `packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py`, `packages/ccba-harness/tests/test_agent_envelope.py`, `packages/ccba-harness/AGENTS.md`, `.md/knowledge/research_and_studies/research-tose-sh-public-architecture.md`, `.md/knowledge/decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất retrospective phiên `f12b44a3-7100-472a-81e0-afc2a5728428` (`549` bước, `219` turns, `35,151,744` tokens, `44.33 USD`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `1` case dry-run) và phát hành **PR #781** (`53402177` trên `main`, TRIHT `12/12` test targets PASS, `8/8` CI checks PASS): đưa Additive Flat JSON Envelope (`schema_version`, `status`, `error`, `next_actions`) + `--semantic-exit-codes` (`0 | 1 | 2 | 4 | 124`) vào `verify-patch`/`verify-doc`/`door-triage` qua `cli/_envelope.py` (`120 LOC`, giữ nguyên `ccba_harness.__all__` và `8/8` `covered_sha256`); vá fail-closed `door-triage --enforce-tradeoff-card`; cập nhật `RULE-1.23`, `RULE-2.21`, `RULE-3.5` trong `.md/knowledge/session_learnings.md` ($\le 10.0\text{ KB}$) và lưu `Mục 67` tại `.md/knowledge/archive/session_learnings_history.md`.
+
+---
+
 ## [2026-11-16] [adr] | Nghiên Cứu Giải Phẫu Kiến Trúc Công Khai `tose.sh` & Chốt Grilling Agent-First JSON Envelope Cho `ccba-harness`
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `.md/knowledge/research_and_studies/research-tose-sh-public-architecture.md`, `.md/knowledge/decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`, `.md/peer_exchange/grok_harness_agent_envelope_plan.md`, `.md/peer_exchange/grok_harness_agent_envelope_plan_signoff_p2.md`
