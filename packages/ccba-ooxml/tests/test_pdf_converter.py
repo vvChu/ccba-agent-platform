@@ -33,6 +33,7 @@ def test_convert_to_pdf_via_soffice(tmp_path: Path):
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="OK", stderr="")
 
     with (
+        patch("ccba_ooxml.converter.sys.platform", "linux"),
         patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
         patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
     ):
@@ -53,6 +54,7 @@ def test_docx_to_pdf_alias_and_default_output(tmp_path: Path):
         return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
     with (
+        patch("ccba_ooxml.converter.sys.platform", "linux"),
         patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
         patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
     ):
@@ -66,10 +68,7 @@ def test_convert_to_pdf_missing_soffice_raises_engine_error(tmp_path: Path):
     in_docx = tmp_path / "test.docx"
     in_docx.write_text("text", encoding="utf-8")
 
-    with (
-        patch("ccba_ooxml.converter.find_soffice_bin", return_value=None),
-        patch("os.name", "posix"),
-    ):
+    with patch("ccba_ooxml.converter.find_soffice_bin", return_value=None):
         with pytest.raises(EngineUnavailableError) as exc_info:
             convert_to_pdf(in_docx, prefer_engine="soffice")
         assert "sudo apt-get install -y libreoffice-writer" in str(exc_info.value)

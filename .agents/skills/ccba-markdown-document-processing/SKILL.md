@@ -70,18 +70,20 @@ graph TD
 Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân thủ quy trình sau:
 
 1. **Chuyển đổi toàn diện qua Deep Seam (All-in-One Pass)**:
-   - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Hệ thống tự động kích hoạt toàn bộ các post-processors làm sạch bảng, biểu mẫu và vá liên kết tương đối:
+   - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Luôn chỉ định rõ `output_dir` (ví dụ `.md/extracted_docs`) hoặc `output_path` để tránh ghi tệp `.md` và thư mục `media/` trực tiếp ra Project Root:
      ```python
+     from pathlib import Path
      from mdconverter import ConversionPipeline
 
-     pipeline = ConversionPipeline()
-     result = pipeline.convert("path/to/document.docx")
+     pipeline = ConversionPipeline(output_dir=Path(".md/extracted_docs"))
+     result = pipeline.convert("path/to/document.docx", output_path=".md/extracted_docs/document.md")
+     markdown_text = result.content
      # Hoặc với async pipeline:
-     # result = await ConversionPipeline.process_file("path/to/document.docx")
+     # result = await pipeline.process_file(Path("path/to/document.docx"), output_path=".md/extracted_docs/document.md")
      ```
      Hoặc qua CLI:
      ```bash
-     python -m mdconverter.cli convert "path/to/document.docx"
+     python -m mdconverter.cli convert "path/to/document.docx" --output-dir .md/extracted_docs
      ```
    - **Tiêu chí hoàn thành:** Tệp `.md` đầu ra được tạo thành công, bảng biểu nguyên vẹn, tiêu đề biểu mẫu chuẩn xác và các liên kết phụ lục hợp lệ.
 
