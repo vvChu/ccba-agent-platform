@@ -352,6 +352,69 @@ def _resolve_code_preset_commands(
     ]
 
 
+def _resolve_ci_preset_commands(python_exec: str) -> list[str]:
+    """Resolve the 'ci' verification preset including monorepo strict mypy."""
+    return [
+        f"{python_exec} -m ruff check packages/ scripts/governance/ tests/governance/",
+        f"{python_exec} -m ruff format --check packages/ scripts/governance/ tests/governance/",
+        f"{python_exec} -m mypy packages/*/src --follow-imports=silent",
+        f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q",
+        f"{python_exec} scripts/validate_skills.py --enforce-gpi",
+        f"{python_exec} scripts/governance/compile_catalog.py --check",
+        f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
+    ]
+
+
+def _resolve_skill_preset_commands(target_str: str, python_exec: str) -> list[str]:
+    """Resolve the 'skill' verification preset into validator and registry checks."""
+    if target_str:
+        t_path = Path(target_str)
+        skill_file = (t_path / "SKILL.md").as_posix() if t_path.is_dir() else t_path.as_posix()
+        validate_cmd = f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi"
+    else:
+        validate_cmd = f"{python_exec} scripts/validate_skills.py --enforce-gpi"
+    return [
+        validate_cmd,
+        f"{python_exec} scripts/governance/compile_catalog.py --check",
+        f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
+    ]
+
+
+def _resolve_domain_preset_commands(p: str, target_str: str, python_exec: str) -> list[str] | None:
+    """Resolve adr, telemetry, eval, or lexicon verification preset commands."""
+    if p == "adr":
+        return [
+            f"{python_exec} -m pytest tests/governance/test_adr.py tests/governance/test_sync_adr_matrix.py -q",
+        ]
+    if p == "telemetry":
+        cmds = [
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py tests/governance/test_subagent_telemetry.py -q",
+        ]
+        if target_str:
+            cmds.append(
+                f"{python_exec} scripts/governance/subagent_telemetry.py budget-check {Path(target_str).as_posix()} --max-tokens 5000000"
+            )
+        return cmds
+    if p == "eval":
+        cmds = [
+            f"{python_exec} -m pytest packages/ccba-harness/tests/test_evals_engine.py packages/ccba-harness/tests/test_tuner*.py packages/ccba-harness/tests/test_slicing.py packages/ccba-harness/tests/test_legal_index.py packages/ccba-harness/tests/test_uniclass.py packages/ccba-harness/tests/test_sandbox.py packages/ccba-harness/tests/test_miner.py packages/ccba-harness/tests/test_simulators_modular.py -q",
+        ]
+        if target_str:
+            flag = (
+                "--dataset"
+                if target_str.endswith(".json") or Path(target_str).is_file()
+                else "--skill"
+            )
+            cmds.append(f"{python_exec} -m ccba_harness eval {flag} {target_str}")
+        return cmds
+    if p == "lexicon":
+        target_path = target_str if target_str else ".agents/proposals"
+        return [
+            f"{python_exec} scripts/lint_construction_terminology.py --path {target_path} --check",
+        ]
+    return None
+
+
 def resolve_preset_commands(
     preset: str,
     target: Path | str | None = None,
@@ -383,72 +446,20 @@ def resolve_preset_commands(
 
     if p == "code":
         return _resolve_code_preset_commands(target_str, python_exec, cwd=cwd)
-
     if p == "doc":
         if not target_str:
             raise ValueError("Preset 'doc' requires a target file path (--target <file>).")
         target_posix = Path(target_str).as_posix()
         doc_cmd = f"{python_exec} -m ccba_harness verify-doc --target {target_posix} --min-bytes {min_bytes}"
         if required_headings:
-            headings_arg = ",".join(required_headings)
-            doc_cmd += f' --required-headings "{headings_arg}"'
+            doc_cmd += f' --required-headings "{",".join(required_headings)}"'
         return [doc_cmd]
-
     if p == "skill":
-        cmds = []
-        if target_str:
-            t_path = Path(target_str)
-            skill_file = (t_path / "SKILL.md").as_posix() if t_path.is_dir() else t_path.as_posix()
-            cmds.append(
-                f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi"
-            )
-        else:
-            cmds.append(f"{python_exec} scripts/validate_skills.py --enforce-gpi")
-        cmds.append(f"{python_exec} scripts/governance/compile_catalog.py --check")
-        cmds.append(f"{python_exec} scripts/sync_hub_adr_matrix.py --check")
-        return cmds
-
-    if p == "adr":
-        return [
-            f"{python_exec} -m pytest tests/governance/test_adr.py tests/governance/test_sync_adr_matrix.py -q",
-        ]
-
-    if p == "telemetry":
-        cmds = [
-            f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py tests/governance/test_subagent_telemetry.py -q",
-        ]
-        if target_str:
-            cmds.append(
-                f"{python_exec} scripts/governance/subagent_telemetry.py budget-check {Path(target_str).as_posix()} --max-tokens 5000000"
-            )
-        return cmds
-
+        return _resolve_skill_preset_commands(target_str, python_exec)
     if p == "ci":
-        return [
-            f"{python_exec} -m ruff check packages/ scripts/governance/ tests/governance/",
-            f"{python_exec} -m ruff format --check packages/ scripts/governance/ tests/governance/",
-            f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q",
-            f"{python_exec} scripts/validate_skills.py --enforce-gpi",
-            f"{python_exec} scripts/governance/compile_catalog.py --check",
-            f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
-        ]
-
-    if p == "eval":
-        cmds = [
-            f"{python_exec} -m pytest packages/ccba-harness/tests/test_evals_engine.py packages/ccba-harness/tests/test_tuner*.py packages/ccba-harness/tests/test_slicing.py packages/ccba-harness/tests/test_legal_index.py packages/ccba-harness/tests/test_uniclass.py packages/ccba-harness/tests/test_sandbox.py packages/ccba-harness/tests/test_miner.py packages/ccba-harness/tests/test_simulators_modular.py -q",
-        ]
-        if target_str:
-            if target_str.endswith(".json") or Path(target_str).is_file():
-                cmds.append(f"{python_exec} -m ccba_harness eval --dataset {target_str}")
-            else:
-                cmds.append(f"{python_exec} -m ccba_harness eval --skill {target_str}")
-        return cmds
-
-    if p == "lexicon":
-        target_path = target_str if target_str else ".agents/proposals"
-        return [
-            f"{python_exec} scripts/lint_construction_terminology.py --path {target_path} --check",
-        ]
+        return _resolve_ci_preset_commands(python_exec)
+    if (domain_cmds := _resolve_domain_preset_commands(p, target_str, python_exec)) is not None:
+        return domain_cmds
 
     raise ValueError(
         f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon'."

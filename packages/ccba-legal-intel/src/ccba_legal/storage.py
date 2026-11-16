@@ -221,7 +221,7 @@ def _check_google_drive(download_dir: Path, slug_name: str, extensions: list[str
                 f"[download_three_tier] [Tier 2] Downloading {file_name} from Google Drive (ID: {file_id}) -> {dest_path}"
             )
 
-            from googleapiclient.http import MediaIoBaseDownload  # type: ignore[import-untyped]
+            from googleapiclient.http import MediaIoBaseDownload
 
             request = drive_service.files().get_media(fileId=file_id)
             try:

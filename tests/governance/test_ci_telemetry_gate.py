@@ -143,6 +143,7 @@ def test_verification_presets_telemetry_and_ci() -> None:
 
     ci_cmds = resolve_preset_commands("ci")
     assert any("ruff check" in c for c in ci_cmds)
+    assert any("mypy" in c for c in ci_cmds)
     assert any("pytest" in c for c in ci_cmds)
     assert any("validate_skills.py" in c for c in ci_cmds)
     assert any("compile_catalog.py" in c for c in ci_cmds)

@@ -313,6 +313,7 @@ def test_resolve_preset_commands() -> None:
     ci_cmds = resolve_preset_commands("ci")
     assert any("ruff check" in c for c in ci_cmds)
     assert any("ruff format --check" in c for c in ci_cmds)
+    assert any("mypy" in c for c in ci_cmds)
     assert any("validate_skills.py" in c for c in ci_cmds)
     assert any("compile_catalog.py" in c for c in ci_cmds)
     assert any("sync_hub_adr_matrix.py" in c for c in ci_cmds)

@@ -66,7 +66,7 @@ class GoogleDriveVault:
             import google.auth
             from google.oauth2 import service_account
             from google.oauth2.credentials import Credentials
-            from googleapiclient.discovery import build  # type: ignore[import-untyped]
+            from googleapiclient.discovery import build
         except ImportError:
             logger.warning("google-api-python-client or google-auth not installed.")
             return None
@@ -247,7 +247,7 @@ class GoogleDriveVault:
             }
 
         try:
-            from googleapiclient.http import MediaFileUpload  # type: ignore[import-untyped]
+            from googleapiclient.http import MediaFileUpload
 
             target_folder_id = self.ensure_vault_structure(category, doc_slug)
             if not target_folder_id:
