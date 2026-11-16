@@ -13,7 +13,7 @@ disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -82,97 +82,123 @@ Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 
 ---
 
-## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trên Branch Mới
-Thực thi tại thư mục Hub (`$CCBA_HUB_PATH`):
-1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
+## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trong Worktree Cô Lập
+Thực thi **toàn bộ Bước 3–6 bên trong một `git worktree` cô lập** tại `/tmp/wt-hub-<tên-đề-xuất>` (tách từ `origin/main` của Hub); giữ bản checkout gốc `$CCBA_HUB_PATH` hoàn toàn sạch để tránh va chạm phiên song song (`RULE-4.21`):
+1. **Khởi tạo Worktree Cô lập Từ `origin/main` (`RULE-4.21`):**
    ```bash
-   git checkout main && git pull origin main
-   git checkout -b "proposal/<tên-đề-xuất>"
+   BRANCH_NAME="proposal/<tên-đề-xuất>"
+   WT_DIR="/tmp/wt-hub-<tên-đề-xuất>"
+   git -C "$CCBA_HUB_PATH" fetch --prune origin
+   git -C "$CCBA_HUB_PATH" worktree add -b "$BRANCH_NAME" "$WT_DIR" origin/main
+   cd "$WT_DIR"
    ```
-2. **Đóng gói Mã nguồn & Tests vào Package tương ứng:**
+2. **Đóng gói Mã nguồn & Tests Vào Package Tương Ứng:**
    - Code: `packages/[pkg]/src/[submodule]/`, Public Deep Seam: `packages/[pkg]/src/__init__.py`, Tests: `packages/[pkg]/tests/`.
-   - Format, linting & cập nhật kiến trúc:
+   - Format, linting & cập nhật kiến trúc ngay trong `"$WT_DIR"`:
      ```bash
      python -m ruff check --fix packages/[pkg]/ && python -m ruff format packages/[pkg]/ && python scripts/update_arch_stats.py
      ```
-3. **Ghi nhận tệp Proposal (`.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` - ADR 0045):**
-   ```yaml
-   ---
-   proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
-   type: "tool" # "tool" | "skill" | "workflow" | "rules"
-   name: "[tên-đề-xuất]"
-   status: "open"
-   priority: "Cao"
-   related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
-   proposed_by_project: "[tên-spoke]"
-   proposed_by_archetype: "knowledge_corpus"
-   proposed_date: "YYYY-MM-DD"
-   applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
-   ---
-   ```
-4. **Kiểm Định Cục Bộ, Leakage Guard & Push:**
-   Chạy đồng bộ catalog và kiểm định toàn bộ kỹ năng trước khi commit:
+3. **Ghi Nhận Tệp Proposal Theo Quy Mô (`ADR 0045`):**
+   - **Quy mô Lớn (Major Scope — $\ge 100$ dòng, hoặc $\ge 3$ tệp, hoặc thêm module/Seam/ADR/Skill mới):** Bắt buộc tạo tệp `.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md`:
+     ```yaml
+     ---
+     proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
+     type: "tool" # "tool" | "skill" | "workflow" | "rules"
+     name: "[tên-đề-xuất]"
+     status: "open"
+     priority: "Cao"
+     related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
+     proposed_by_project: "[tên-spoke]"
+     proposed_by_archetype: "knowledge_corpus"
+     proposed_date: "YYYY-MM-DD"
+     applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
+     ---
+     ```
+   - **Quy mô Nhỏ / Nội bộ (Minor Scope — $< 100$ dòng vá lỗi nội bộ):** Bỏ qua tạo tệp proposal để tránh phát sinh rác kho mã, mở thẳng Micro-PR.
+4. **Tái Biên Dịch Catalog/Docs, Kiểm Định Cục Bộ & Push Từ Worktree:**
+   Chạy đầy đủ các cổng kiểm định bên trong `"$WT_DIR"` trước khi commit & push:
    ```bash
    python scripts/governance/compile_catalog.py
+   python scripts/governance/compile_skills_docs.py --write
    python scripts/validate_skills.py --enforce-gpi
    python scripts/governance/check_spoke_leakage.py
-   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
+   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất]" && git push -u origin "$BRANCH_NAME"
    ```
-- **Tiêu chí hoàn thành:** Nhánh mới được tạo, mã nguồn đóng gói, proposal ghi nhận, catalog đồng bộ và pass toàn bộ `scripts/validate_skills.py --enforce-gpi` cùng `check_spoke_leakage.py`.
+- **Tiêu chí hoàn thành:** Worktree cô lập được tạo sạch từ `origin/main`, mã nguồn/proposal (nếu Major) đóng gói đúng chuẩn, catalog/docs đồng bộ, pass 100% `scripts/validate_skills.py --enforce-gpi` cùng `check_spoke_leakage.py`, và nhánh đã đẩy lên `origin` trong khi `$CCBA_HUB_PATH` vẫn nguyên vẹn.
 
 ---
 
-## 🚀 Bước 4: Mở GitHub Pull Request (Kế thừa chuẩn /ccba-create-pr)
-Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm nội dung chuyên biệt cho đề xuất Spoke $\rightarrow$ Hub:
-- **Tự động qua GitHub CLI:**
+## 🚀 Bước 4: Đánh Giá Cửa PR (`door-triage`) & Mở GitHub Pull Request
+Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm đo lường `ADR-0067` từ `"$WT_DIR"`:
+- **Đo Cửa PR & Xác Thực Tradeoff Card (nếu `ONE_WAY_DOOR`) Trước Khi Mở PR:**
+  Đo danh sách tệp thay đổi (`git diff --name-only origin/main...HEAD`) và tổng số dòng logic thay đổi (`git diff --shortstat origin/main...HEAD`), rồi kiểm định:
   ```bash
-  # Trường hợp có liên kết Issue:
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]. Closes #[ISSUE_ID]" --base main --head "$BRANCH_NAME"
-
-  # Trường hợp không liên kết Issue (Minor Scope):
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]." --base main --head "$BRANCH_NAME"
+  python -m ccba_harness door-triage <changed_files> --logic-loc <n> --root "$WT_DIR" --pr-body-file <body_file> --enforce-tradeoff-card
+  ```
+- **Tạo Pull Request Qua GitHub CLI (`--repo vvChu/ccba-agent-platform`):**
+  ```bash
+  # Trường hợp có liên kết Issue (hoặc PR body đầy đủ kèm Tradeoff Card khi ONE_WAY_DOOR):
+  gh pr create --repo vvChu/ccba-agent-platform --title "feat([scope]): add [tên-đề-xuất]" --body-file /tmp/pr_body.md --base main --head "$BRANCH_NAME"
   ```
 - **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
-- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub liên kết đúng branch và Issue ID.
+- **Tiêu chí hoàn thành:** `door-triage --enforce-tradeoff-card` hợp lệ (`exit 0`) và Pull Request được mở thành công trên `vvChu/ccba-agent-platform`.
 
 ---
 
-## 🔄 Bước 5: Vòng Lặp Dừng Chờ & Tự Làm Xanh CI (Self-Healing Loop)
+## 🔄 Bước 5: Vòng Lặp Dừng Chờ & Tự Làm Xanh CI + Copilot Gate (Self-Healing Loop)
 
 > [!IMPORTANT]
-> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải đồng hành cho đến khi $100\%$ CI Tích Xanh.
+> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải đồng hành cho đến khi $100\%$ CI Tích Xanh và Copilot Review sạch (`exit 0`).
 
-1. **Dừng chờ động (Grace Period):** Dùng `schedule` hẹn giờ kiểm tra: PR nhỏ (<100 dòng) `45s`, PR vừa (100-500 dòng) `60s-90s`, PR lớn (>500 dòng) `90s-180s`.
-2. **Kiểm tra song song 2 cổng (Dual-Gate):**
-   - CI Status: `gh pr checks <PR_NUMBER>`
-   - Copilot Review: `gh pr view <PR_NUMBER> --json reviews,comments --jq '.reviews[] | select(.author.login=="copilot-pull-request-reviewer")'`
+1. **Dừng chờ động (Grace Period):** Dùng `schedule` hoặc `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform --watch` hẹn kiểm tra: PR nhỏ (<100 dòng) `45s`, PR vừa (100-500 dòng) `60s-90s`, PR lớn (>500 dòng) `90s-180s`.
+2. **Kiểm tra song song 2 cổng (Dual-Gate Fail-Closed):**
+   - CI Status: `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform`
+   - Copilot Review:
+     ```bash
+     python "$WT_DIR/scripts/validation/audit_pr_comments.py" --repo vvChu/ccba-agent-platform --pr <PR_NUMBER>
+     ```
 3. **Tự khắc phục (Self-Healing Action):**
-   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Sửa lỗi $\rightarrow$ Commit & push bản vá.
-   - Nếu Copilot góp ý: Refactor code đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
-   - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER>` pass 100%.
+   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --repo vvChu/ccba-agent-platform --log-failed` $\rightarrow$ Sửa lỗi trong `"$WT_DIR"` $\rightarrow$ Commit & push bản vá.
+   - Nếu Copilot góp ý: Refactor code trong `"$WT_DIR"` đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
+   - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform` pass 100% và `audit_pr_comments.py` trả mã thoát `0`.
 - **Tiêu chí hoàn thành:** 100% CI Checks pass xanh và toàn bộ review của Copilot (nếu có) được giải quyết triệt để.
 
 ---
 
-## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
-Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
-- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và sẵn sàng cho Maintainer kích hoạt `/ccba-review-proposal`.
+## ✅ Bước 6: Gỡ Worktree Sau Push & Bàn Giao Merge Cho Maintainer
+Sau khi nhánh đã được push lên `origin`, di chuyển `cd` ra khỏi `"$WT_DIR"` (về lại thư mục Spoke) rồi mới gỡ bỏ worktree tạm:
+```bash
+cd "$SPOKE_ROOT"
+git -C "$CCBA_HUB_PATH" worktree remove "$WT_DIR"
+```
+Tổng hợp báo cáo: Link PR, kết quả `door-triage`, kết quả CI `gh pr checks` và thông báo Maintainer kích hoạt `/ccba-release-feature` + `/ccba-review-proposal [PR_NUMBER]` để thực hiện squash-merge vào Hub `main`.
+- **Tiêu chí hoàn thành:** Worktree tạm đã gỡ sạch sau khi chuyển thư mục làm việc ra ngoài, bản checkout Hub gốc giữ nguyên trạng và báo cáo bàn giao đầy đủ Link PR.
 
 ---
 
 ## 🔄 Bước 7: Vòng Khép Kín Hậu Hợp Nhất (Closed-Loop Spoke Sync Gate)
 Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bước đóng vòng tại Spoke:
-1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state'` (phải là `MERGED`).
-2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc:
+1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --repo vvChu/ccba-agent-platform --json state,mergedAt --jq '.state'` (phải là `MERGED`).
+2. **Đồng bộ Downstream Từ `origin/main` Mới Nhất:** Tạo worktree tách rời trên `origin/main` của Hub (hoặc đảm bảo `$CCBA_HUB_PATH` đang khớp `origin/main`) rồi chạy `/ccba-update-spoke` hoặc:
    ```bash
-   python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+   HUB_SYNC_WT="/tmp/wt-hub-sync-src"
+   git -C "$CCBA_HUB_PATH" fetch --prune origin
+   git -C "$CCBA_HUB_PATH" worktree add --detach "$HUB_SYNC_WT" origin/main
+   python "$HUB_SYNC_WT/scripts/sync_spoke.py" --spoke . --apply
+   git -C "$CCBA_HUB_PATH" worktree remove "$HUB_SYNC_WT"
    ```
-3. **Tái cài đặt Editable Package:**
+3. **Tái cài đặt Editable Package (nếu có sửa `packages/`):**
    ```bash
    pip install -e "$CCBA_HUB_PATH/packages/[package-name]"
    ```
-4. **Hồi quy & Dọn dẹp:** Chạy kiểm thử Spoke (`python scripts\validate_legal_spoke.py`), xóa branch `git branch -D proposal/[tên-đề-xuất]`, và ghi log vào `.md/knowledge/session_learnings.md`.
-- **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ thành công và `session_learnings.md` được cập nhật.
+4. **Hồi quy Theo Archetype & Dọn Dẹp:** Đọc `project.archetype` trong `.md/workspace_context.yaml` và chạy bộ kiểm định tương ứng, sau đó xóa branch tạm và cập nhật `.md/knowledge/session_learnings.md`:
+   - `knowledge_corpus`: `python scripts/validate_legal_spoke.py`
+   - `project_delivery`, `enterprise_governance`, hoặc `specialized_extension`:
+     ```bash
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_spoke_cleanliness.py" --path .
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_hub_import_depth.py" --path .
+     ```
+- **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ sạch từ Hub `origin/main`, bộ kiểm định theo `archetype` đạt `exit 0` và `session_learnings.md` được cập nhật.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
