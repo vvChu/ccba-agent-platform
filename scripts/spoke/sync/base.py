@@ -184,6 +184,16 @@ def is_ephemeral_spoke_path(path_value: str | Path) -> bool:
     return _is_under_os_temp_dir(Path(raw))
 
 
+def is_protected_hub_root(hub_root: Path, reference_root: Path = PLATFORM_ROOT) -> bool:
+    """Return True when hub_root is the active Hub checkout or any non-ephemeral Hub path.
+
+    Protects persistent Hub checkouts even when sync_spoke.py is invoked from a detached
+    OS temporary Hub worktree (where PLATFORM_ROOT != persistent hub_root), while still
+    allowing pytest mock_hub fixtures under tmp_path to exercise registration logic.
+    """
+    return hub_root.resolve() == reference_root.resolve() or not is_ephemeral_spoke_path(hub_root)
+
+
 def prune_ephemeral_heartbeats(heartbeats: dict[str, Any]) -> dict[str, Any]:
     """Filter out ephemeral pytest/mock/OS-temp spoke entries from a heartbeats mapping.
 

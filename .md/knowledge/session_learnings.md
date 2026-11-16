@@ -30,8 +30,8 @@
 - **RULE-2.3 [Fast SLA]**: `pytest -m fast`<2s;`test_cli_doc_parity.py`;miễn `scripts/tests/`(Mục 24).
 - **RULE-2.4 [Link Depth]**: `SKILL.md`&`reports/walkthrough.md` `../../../`;`references/*.md` `../../../../`&`../scripts/`;cấm commit `file:///`(Mục 24,60,62).
 - **RULE-2.5 [ADR 0058]**: `eval_*.json` qua `archetypes.py`;`_run_pre_eval_guards` chặn delta `audit_skill()`;`verify-patch --preset skill`.
-- **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal;E2E Spoke `CCBA_SKIP_GIT_PULL=1`&SHA-256 `spoke_registry.yaml`.
-- **RULE-2.20 [AST/LOC/BFS]**: Hàm≤50L(`uvx ruff format`,`pytest scripts/tests/`),`main`≤40L,mod≤800L(`0` `# ccba:quarantine`);`_LAZY_EXPORTS` `ast.Assign`(6 pkg #751..761)+`_probe_lazy_export_symbol`(skip 3P≠`MONOREPO_ROOT_MODULES`);`parse_markdown_frontmatter`(13 callers,#755..756);Two-Edit Litmus+`Semantic Mutation Proof`;`verify_statechart_anti_lie`(≤20 cạnh)+BFS(`visited: set[str]`);`SAFE_STRINGS`(`placeholder_password` `references/*.md`);`ccba-design v2.6.0`,`ccba-sharepoint-iac v1.2.0`(Mục 53..65).
+- **RULE-2.9 [Fixture Sandbox]**: `conftest.py` xóa env Hub/Legal;E2E `CCBA_SKIP_GIT_PULL=1`&SHA-256 `spoke_registry.yaml`;`is_ephemeral_spoke_path`+`is_protected_hub_root` chặn `/tmp` spoke kể cả từ `/tmp/wt-hub-*`(Mục 66).
+- **RULE-2.20 [AST/LOC/BFS]**: Hàm≤50L(`ruff`,`pytest`),`main`≤40L,mod≤800L(`0` `# ccba:quarantine`);`_LAZY_EXPORTS` `ast.Assign`(6 pkg #751..761)+`_probe_lazy_export_symbol`(skip 3P≠`MONOREPO_ROOT_MODULES`);`parse_markdown_frontmatter`(13 callers,#755..756);Two-Edit Litmus+`Semantic Mutation Proof`;`verify_statechart_anti_lie`(≤20 cạnh)+BFS(`visited: set[str]`);`SAFE_STRINGS`(`placeholder_password` `references/*.md`);`ccba-design`/`sharepoint-iac`(Mục 53..65).
 - **RULE-2.21 [Harness/Wiki]**: `scripts/tests/__init__.py`→`tests/`;5-block `verify-ccba-*/harness/`→`run_harness_evals.py --all`,khóa `covered_sha256`(LF)+`sync_commit` `main`(`check_harness_git_provenance` fail-closed);`.md/knowledge/wiki/index.md`(Mục 50..59).
 - **RULE-2.22 [Compact/Index]**: `compact_session_learnings.py --compact`(`find_dropped_rules`) chặn `RULE-\d+\.\d+`(`--allow-rule-drop-ids`),`_rebase_archive_links` `(archive|wiki/...`;ghi `.md/knowledge/index.md`(`WikiHealthLinter`,Mục 57).
 
@@ -52,14 +52,14 @@
 - **RULE-4.1 [Entry `/ccba-new-feature`]**: Issue ID → `/ccba-new-feature #<id>` (cấm nhảy `/ccba-implement`).
 - **RULE-4.2 [Slash Parity]**: `catalog.yaml` (`command: /...`); `references/*.md` cấm `/`; cấm `/<word>` sát sau backtick (`SLASH_CMD_RE`); `Mode Dispatch` trỏ Level-3 (Mục 45, 47, 62).
 - **RULE-4.3 [Multi-Branch Exit]**: Exit criteria tách cờ (`--compare`, `--port`, `--improve`, `--copy-raw`); `MODES.md`.
-- **RULE-4.4 [Copilot Gating]**: Quét `author.login` & `### 🟡 Changes recommended` gồm `COMMENTED` (`audit_pr_comments.py`).
+- **RULE-4.4 [Copilot Gating]**: Quét `author.login` & `### 🟡 Changes recommended` gồm `COMMENTED` (`audit_pr_comments.py --repo` 2-phase fail-closed+`raw_decode`,Mục 66).
 - **RULE-4.8 [Danger Triage]**: AI chỉ tư vấn, cấm auto-merge (`door-triage`); chạy `update_arch_stats.py` khi đổi Level-1.
 - **RULE-4.16 [2-Pass]**: Pass 1 (`APPROVE_PLAN`)→Pass 2 (`APPROVE`); `ccba-grilling` Bước 0; `canary_verdict`; `spread > abs(delta)`→`inconclusive`.
 - **RULE-4.17 [3-Way]**: Read-Only Tools+`AUDIT_BASE_SYSTEM_PROMPT` (`max_turns=8`,`--no-tools` `patch_fast`/`audit_direct`); `COND-XX` (`ADOPT_AS_IS`/`ADOPT_ADAPTED`/`REBUT_WITH_EVIDENCE`+`file:line`); `test_cli_contract_parity.py`.
-- **RULE-4.18 [Clean-Room]**: Quy mô (`N=76`),ADR,Seams/OBE→`not_planned`/`completed`; `upstream_evaluator.py` (`health_posture` `120d`,`is-shallow-repository`,`gh api`,`COMMERCIAL_LICENSED` `licensed_use`/`v2:`/8-gram,seed `triage_ledger` `resolve_upstream_resources` `**/SKILL.md`)+`compile_skills(..., include_references=True)` (Mục 52..61).
-- **RULE-4.19 [Watchdog]**: Watchdog (`90s`,khử `\x00`,`+45s`),tắt `GROK_BACKEND_SEARCH`/MCPS; Auto-Synthesis (`max_turns=2`); `COND-DEGRADED-REASONING`; `_auto_discover_resume_session_id` (chặn Plan→Code Tier-1/2,`Max 3 Passes` `blk==0`),bloat `>400`L/`>20KB`,dedup `status.json`,`-o` & cấm `> grok_*.md` (Mục 55).
+- **RULE-4.18 [Clean-Room]**: Quy mô(`N=76`),ADR,Seams/OBE→`not_planned`/`completed`;`upstream_evaluator`(`120d`,`is-shallow-repository`,`gh api`,`COMMERCIAL_LICENSED` `licensed_use`/`v2:`/8-gram,`resolve_upstream_resources` `**/SKILL.md`)+`compile_skills(...,include_references=True)`(Mục 52..61).
+- **RULE-4.19 [Watchdog]**: `90s`,khử `\x00`,`+45s`,tắt `GROK_BACKEND_SEARCH`/MCPS;Auto-Synth(`max_turns=2`);`COND-DEGRADED-REASONING`;`_auto_discover_resume_session_id`(chặn Plan→Code Tier-1/2,`Max 3 Passes` `blk==0`),bloat `>400`L/`>20KB`,dedup `status.json`,`-o`&cấm `> grok_*.md`(Mục 55).
 - **RULE-4.20 [Peer]**: `PeerPromptEnvelope` `extra="forbid"`→`PeerVerdictBlock` (4 khóa,`ANTIGRAVITY_CONVERSATION_ID` fallback); `ensure_peer_exchange_scaffold` `CRLF`→`LF`,giữ `grok_*`/`prompt_*`,`.gitignore` 3 tệp; `check_spoke_runtime_health` exit `0` (Mục 58).
-- **RULE-4.21 [Worktree]**: `main` bận/root`!=main`→`git worktree` `origin/main`+`fetch --prune origin main:main` (gỡ trước merge,`-F`,`door-triage --enforce-tradeoff-card <files>` positional); `sync_spoke --dry-run` bỏ dirty guard (check `.agents` trước `--apply`); `<=2` `invoke_subagent`,`>=3` RO `run_workflow`,`swarm` `.system_generated/scratch/teamwork/`→`apply_worker_patch.py` (Mục 57..64).
+- **RULE-4.21 [Worktree]**: `main` bận/root`!=main`→`git worktree` `origin/main`+`fetch --prune origin main:main`(gỡ trước merge,`-F`,`door-triage --enforce-tradeoff-card <files>`);Step 7.2 `CCBA_HUB_PATH="$HUB_SYNC_WT" CCBA_SKIP_GIT_PULL=1`;`sync_spoke --dry-run` bỏ dirty guard;`<=2` `invoke_subagent`,`>=3` RO `run_workflow`,`swarm` `teamwork/`→`apply_worker_patch.py`(Mục 57..66).
 
 ---
 
@@ -70,7 +70,7 @@
 - **RULE-5.3 [TVPL Query]**: Thay `/`, `:`, `-` bằng space (`quote_plus`) tránh IIS `%2F` (Mục 27).
 - **RULE-5.8 [Thinking Defense]**: `enable_thinking: False` hoặc bù `max_tokens`; tách `local-instruct`/`local-coder`.
 - **RULE-5.9 [vLLM & Dual Parser]**: Mount `~/.cache/vllm` giữ Inductor; tách `--reasoning-parser` & `--tool-call-parser`.
-- **RULE-5.11 [GH/CI]**: `gh issue/pr view <id> --json`; PATCH `gh api .../pulls/<id> -X PATCH -F body=@<f>` (cấm `gh pr edit`); `gh api repos/{owner}/{repo} --jq .allow_auto_merge` (cấm `--json autoMergeAllowed`); CI `gh pr checks --watch`/`240s`→`60s`; `.github/pull_request_template.md` lowercase; `gh project field-list`; `scripts/validation/audit_pr_comments.py` (Mục 62,64).
+- **RULE-5.11 [GH/CI]**: `gh issue/pr view --json`;PATCH `gh api .../pulls/<id> -X PATCH -F body=@<f>`(cấm `gh pr edit`);`.allow_auto_merge`;CI `--watch`/`240s`→`60s`;`pull_request_template.md` lowercase;`gh project field-list`;`audit_pr_comments.py`;Maskara `env-secret` tránh tên biến `token=`(Mục 62..66).
 - **RULE-5.12 [Venv]**: Linters/mypy `.venv/bin/python`; `conftest.py` miễn `--version`/`--help` & `-c "import pytest"`.
 - **RULE-5.13 [PDF/XLSX/CAD]**: `PYMUPDF_MESSAGE=fd:2`+lazy `_get_fitz()` (#754) trước `fitz`; `.xlsx` chặn `xl/media/* > 2 MiB`+`active_rows`; `[XREF]` `.dwg`/`.dxf` (≤12Kc); PDF CAD (≥40L,≥50% nhãn 1–2c,Mục 51,64).
 

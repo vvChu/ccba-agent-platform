@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-16] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Khóa Rò Rỉ Spoke Registry Worktree Tạm (`is_protected_hub_root`), Fail-Closed `audit_pr_comments --repo` & `ccba-contribute-to-hub v1.3.2` (`RULE-2.9`, `RULE-4.4`, `RULE-4.21`, Mục 66)
+- **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
+- **Affected Files**: `scripts/spoke/sync/base.py`, `scripts/spoke/sync/registry.py`, `scripts/spoke/decrypt_spoke_registry.py`, `scripts/tests/test_spoke_sync_modules.py`, `.agents/skills/ccba-contribute-to-hub/SKILL.md`, `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất retrospective & sửa triệt để lỗ hổng bỏ qua `PLATFORM_ROOT` trong `SpokeRegistrar` và `load_spoke_heartbeats()` khi chạy `sync_spoke.py` từ worktree Hub tạm (`/tmp/wt-hub-*`) qua `is_protected_hub_root()` (chốt chặn đường dẫn persistent Hub không nằm trong OS temp dir trong khi vẫn bảo toàn `tmp_path/mock_hub` cho pytest); nâng cấp Bước 7.2 `ccba-contribute-to-hub v1.3.2` truyền `CCBA_HUB_PATH="$HUB_SYNC_WT" CCBA_SKIP_GIT_PULL=1`; đồng bộ tri thức `PR #765`, `#770`, `#774` và `v1.3.2` vào `RULE-2.9`, `RULE-4.4`, `RULE-4.21`, `RULE-5.11` và `Mục 66` trong `archive/session_learnings_history.md`.
+
+---
+
 ## [2026-11-16] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Triệt Tiêu 178 Lỗi Strict Mypy (10/10 Packages), Khóa Cổng `verify-patch --preset ci` & Sửa Probe PEP 562 Partial Runner (`RULE-1.23`, `RULE-2.1`, `RULE-2.20`, Mục 65)
 - **Author / Agent**: Kỹ sư trưởng & Gemini Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`

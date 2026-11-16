@@ -1761,6 +1761,40 @@ def test_ephemeral_temp_worktree_spoke_blocked_on_real_hub(
     assert list(cleaned.keys()) == ["real"]
 
 
+def test_detached_hub_worktree_still_protects_persistent_hub_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Protect persistent Hub checkouts even when sync runs from a detached temp Hub worktree."""
+    from scripts.spoke.sync.base import is_protected_hub_root
+    from scripts.spoke.sync.registry import SpokeRegistrar
+
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    detached_hub = Path("/tmp/wt-hub-sync-src")
+    persistent_hub = Path("/srv/hub/ccba-agent-platform")
+    monkeypatch.setattr("scripts.spoke.sync.registry.PLATFORM_ROOT", detached_hub)
+
+    assert is_protected_hub_root(persistent_hub, detached_hub) is True
+    assert is_protected_hub_root(tmp_path / "mock_hub", detached_hub) is False
+    assert (
+        SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(
+            Path("/tmp/wt-idop-sync-guard"), persistent_hub
+        )
+        is True
+    )
+    assert (
+        SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(
+            Path("/srv/spokes/IDOP-CCBA-WAY"), persistent_hub
+        )
+        is False
+    )
+    assert (
+        SpokeRegistrar._is_ephemeral_test_spoke_on_real_hub(
+            Path("/tmp/wt-idop-sync-guard"), tmp_path / "mock_hub"
+        )
+        is False
+    )
+
+
 def test_check_hub_import_depth_multiline_ast_span_quarantine(tmp_path: Path) -> None:
     """Verify check_hub_import_depth inspects full AST span [lineno, end_lineno] for ccba:quarantine, ccba:allow-deep-import, and noqa (ADR-0061 / RULE-5.9)."""
     from scripts.spoke.check_hub_import_depth import scan_file
