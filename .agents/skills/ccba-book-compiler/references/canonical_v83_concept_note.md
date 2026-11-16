@@ -77,3 +77,9 @@ confidence: high
    - Tuyệt đối cấm bọc inline backticks quanh liên kết wikilinks vì sẽ biến liên kết thành code pill xám và làm gãy đồ thị Graph View trong Obsidian.
 4. **Hai Chiều Đóng Kín (Bidirectional Linking)**:
    - Khi tạo concept note mới, phải tìm ít nhất 1-2 concept note cũ có liên quan mật thiết để cập nhật ngược liên kết `related` hoặc trích dẫn trong `## Core Idea`.
+5. **Chống Tự Nhúng & Nhúng `.md` Phi Sơ Đồ (Zero Invalid Embeds — v8.17.3)**:
+   - Tuyệt đối cấm để `![[<self_slug>.md]]` hoặc `![[<chapter>.md]]` xuất hiện trong Concept Note (trừ sơ đồ `.excalidraw.md` / `.mermaid.md`). Cổng kiểm định C4 (`find_invalid_concept_embeds`) sẽ từ chối ngay khi phát hiện nhúng đệ quy gây vòng lặp transclusion vô tận trong Obsidian.
+
+---
+
+[← Quay lại SKILL.md](../SKILL.md)

@@ -47,3 +47,7 @@ Tài liệu này tổng hợp các quy chuẩn công thái học thị giác (Do
     ```
   - Xuống dòng nội bộ ô bảng bằng thẻ HTML `<br/>`.
   - Không để rò rỉ các thực thể HTML parser (`#40;`, `#41;`) ra ngoài bảng Markdown; dùng dấu ngoặc đơn thông thường `()`.
+
+---
+
+[← Quay lại SKILL.md](../SKILL.md)
