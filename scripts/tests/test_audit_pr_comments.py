@@ -12,8 +12,14 @@ from unittest.mock import patch
 from scripts.validation.audit_pr_comments import (
     audit_pull_request,
     fetch_inline_comments,
+    fetch_pr_overview,
     get_current_pr_number,
     is_copilot_user,
+    parse_cli_args,
+    run_command,
+)
+from scripts.validation.audit_pr_comments import (
+    main as audit_main,
 )
 
 
@@ -158,6 +164,104 @@ class TestAuditPRComments(unittest.TestCase):
         cmd_called = mock_run.call_args[0][0]
         self.assertIn("--paginate", cmd_called)
         self.assertIn("repos/:owner/:repo/pulls/42/comments", cmd_called)
+
+    def test_parse_cli_args_variants_and_fail_closed_validation(self):
+        """Verify --repo / -R parsing and fail-closed ValueError on invalid CLI flags."""
+        self.assertEqual(
+            parse_cli_args(["--repo", "vvChu/ccba-agent-platform", "--pr", "770"]),
+            (770, "vvChu/ccba-agent-platform"),
+        )
+        self.assertEqual(
+            parse_cli_args(["-R=vvChu/ccba-agent-platform", "770"]),
+            (770, "vvChu/ccba-agent-platform"),
+        )
+        self.assertEqual(
+            parse_cli_args(["-R", "vvChu/idop-ccba-way"]), (None, "vvChu/idop-ccba-way")
+        )
+        for bad_argv in (
+            ["--pr", "0"],
+            ["--pr=-3"],
+            ["--pr", "abc"],
+            ["--repo", "badslug"],
+            ["--repo"],
+            ["--unknown-flag"],
+            ["770", "771"],
+        ):
+            with self.subTest(bad_argv=bad_argv), self.assertRaises(ValueError):
+                parse_cli_args(bad_argv)
+
+    @patch(
+        "scripts.validation.audit_pr_comments.subprocess.run",
+        side_effect=FileNotFoundError("no gh"),
+    )
+    def test_run_command_wraps_missing_gh_binary(self, _mock_sub):
+        """Missing gh executable must raise RuntimeError rather than propagating OSError."""
+        with self.assertRaises(RuntimeError):
+            run_command(["gh", "pr", "view"])
+
+    @patch("scripts.validation.audit_pr_comments.run_command")
+    def test_get_current_pr_number_distinguishes_no_pr_from_repo_or_api_errors(self, mock_run):
+        """Return 0 only when --pr absent, repo empty, and gh reports 'no pull requests found'."""
+        mock_run.side_effect = RuntimeError(
+            'Command gh failed: no pull requests found for branch "main"'
+        )
+        with patch("sys.argv", ["audit_pr_comments.py"]):
+            self.assertEqual(get_current_pr_number(), 0)
+
+        with (
+            patch("sys.argv", ["audit_pr_comments.py", "--repo", "vvChu/ccba-agent-platform"]),
+            self.assertRaises(RuntimeError),
+        ):
+            get_current_pr_number()
+
+        mock_run.side_effect = RuntimeError("Command gh failed: HTTP 404: Not Found")
+        with patch("sys.argv", ["audit_pr_comments.py"]), self.assertRaises(RuntimeError):
+            get_current_pr_number()
+
+    @patch("scripts.validation.audit_pr_comments.run_command")
+    def test_cross_repo_fetch_and_paginated_concatenation(self, mock_run):
+        """Cross-repo fetches pass --repo / unencoded repos/<repo> and flatten concatenated pages."""
+        mock_run.return_value = '{"reviewRequests": [], "reviews": [], "comments": []}'
+        fetch_pr_overview(770, repo="vvChu/ccba-agent-platform")
+        self.assertEqual(
+            mock_run.call_args[0][0][:5],
+            ["gh", "pr", "view", "770", "--repo"],
+        )
+        self.assertEqual(mock_run.call_args[0][0][5], "vvChu/ccba-agent-platform")
+
+        mock_run.return_value = '[{"id": 1, "body": "p1"}]\n[{"id": 2, "body": "p2"}]'
+        comments = fetch_inline_comments(770, repo="vvChu/ccba-agent-platform")
+        self.assertEqual([c["id"] for c in comments], [1, 2])
+        self.assertIn(
+            "repos/vvChu/ccba-agent-platform/pulls/770/comments", mock_run.call_args[0][0]
+        )
+
+        mock_run.return_value = '[[{"id": 1}]]'
+        with self.assertRaises(RuntimeError):
+            fetch_inline_comments(770, repo="vvChu/ccba-agent-platform")
+
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments")
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_fail_closed_and_pending_short_circuit(self, mock_ov, mock_in):
+        """Fetch errors yield (1, FETCH_ERROR) and pending review returns 2 before inline fetch."""
+        mock_ov.side_effect = RuntimeError("HTTP 404")
+        code, res = audit_pull_request(999999, repo="vvChu/ccba-agent-platform")
+        self.assertEqual(code, 1)
+        self.assertEqual(res["status"], "FETCH_ERROR")
+
+        mock_ov.side_effect = None
+        mock_ov.return_value = {"reviewRequests": [{"login": "copilot-pull-request-reviewer"}]}
+        code, res = audit_pull_request(770, repo="vvChu/ccba-agent-platform")
+        self.assertEqual(code, 2)
+        self.assertEqual(res["status"], "PENDING")
+        mock_in.assert_not_called()
+
+        with (
+            patch("sys.argv", ["audit_pr_comments.py", "--pr", "0"]),
+            self.assertRaises(SystemExit) as cm,
+        ):
+            audit_main()
+        self.assertEqual(cm.exception.code, 1)
 
 
 if __name__ == "__main__":
