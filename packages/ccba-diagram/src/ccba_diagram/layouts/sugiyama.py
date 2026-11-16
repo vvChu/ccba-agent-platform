@@ -5,8 +5,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from grandalf.graphs import Edge, Graph, Vertex  # type: ignore[import-untyped]
-from grandalf.layouts import SugiyamaLayout  # type: ignore[import-untyped]
+from grandalf.graphs import Edge, Graph, Vertex
+from grandalf.layouts import SugiyamaLayout
 
 from ccba_diagram.geometry import sync_bound_text_translation
 from ccba_diagram.theme import DEFAULT_THEME, DiagramTheme

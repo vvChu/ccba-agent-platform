@@ -17,11 +17,11 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "938630710b7b1be858bb8b0bbc9db0e8754dc2fe"
+sync_commit: "9bca7937e409a018d658bb3037f0774afb055df6"
 covered_sha256:
   packages/ccba-harness/src/ccba_harness/cli/core.py: "fd9d2db945faf2fdbfadf51700176d84cd4ab9940f81aff77b062f648c690d8f"
   packages/ccba-harness/src/ccba_harness/gpi.py: "aae45835ee736dd4cff77bfbbda47be46e6121b536a55f8b7621c444e488df92"
-  packages/ccba-harness/src/ccba_harness/verifier.py: "fc73a6e6f74a4b6a69806249819651c7000a3f681e6ac0fef5b6e51fb7cb41bd"
+  packages/ccba-harness/src/ccba_harness/verifier.py: "9ae31f14a82f957c145bb9ed74354c78567566bcf462c79d569d401ad90057e0"
   packages/ccba-harness/src/ccba_harness/door_policy.py: "32f2d036d0e67dc892805a5bfc652b02a0a16860bf8cbb7422bc4d972952f908"
   packages/ccba-harness/src/ccba_harness/skill_validator.py: "b17ad6d7419f32adce1b451426302914f70bb225df92bbbbe8c3bf99e555bb88"
   packages/ccba-harness/src/ccba_harness/_skill_frontmatter.py: "dd942032f5941b15a0704386791f34e9dd1ed7ec5be47c0accb0010ffc81687c"
@@ -53,7 +53,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-har
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định trực tiếp các Public Deep Seams của `ccba_harness` (`calculate_gpi`, `evaluate_two_stage_decision`, `verify_patch_execution`, `verify_document_artifact`, `classify_pr_door`, `SkillValidator`) và bộ định tuyến CLI `ccba_harness.cli.core.main`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `938630710b7b1be858bb8b0bbc9db0e8754dc2fe` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `9bca7937e409a018d658bb3037f0774afb055df6` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

@@ -524,6 +524,37 @@ def check_init_lazy_exports_parity(
     return violations
 
 
+def _probe_lazy_export_symbol(
+    mod: Any,
+    sym: str,
+    mod_name: str,
+    init_file: Path,
+) -> ImportViolation | None:
+    """Probe a single __all__ symbol, skipping uninstalled external third-party deps."""
+    try:
+        is_bound = hasattr(mod, sym)
+    except ModuleNotFoundError as exc:
+        missing_root = (exc.name or "").split(".", 1)[0]
+        if missing_root and missing_root not in MONOREPO_ROOT_MODULES:
+            return None
+        return ImportViolation(
+            init_file,
+            1,
+            mod_name,
+            "UnboundAllExportViolation",
+            f"Symbol '{sym}' in {mod_name}.__all__ failed lazy import: {exc}",
+        )
+    if not is_bound:
+        return ImportViolation(
+            init_file,
+            1,
+            mod_name,
+            "UnboundAllExportViolation",
+            f"Symbol '{sym}' in {mod_name}.__all__ is not bound at runtime.",
+        )
+    return None
+
+
 def check_package_all_exports(
     packages_dir: Path,
     project_root: Path | None = None,
@@ -561,16 +592,8 @@ def check_package_all_exports(
                         )
                     )
                 seen.add(sym)
-                if not hasattr(mod, sym):
-                    violations.append(
-                        ImportViolation(
-                            init_file,
-                            1,
-                            mod_name,
-                            "UnboundAllExportViolation",
-                            f"Symbol '{sym}' in {mod_name}.__all__ is not bound at runtime.",
-                        )
-                    )
+                if violation := _probe_lazy_export_symbol(mod, sym, mod_name, init_file):
+                    violations.append(violation)
 
     root = project_root or packages_dir.parent
     tools_dir = root / "tools"

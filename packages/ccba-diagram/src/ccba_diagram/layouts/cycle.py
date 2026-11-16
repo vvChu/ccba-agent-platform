@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-import networkx as nx  # type: ignore[import-untyped]
+import networkx as nx
 
 from ccba_diagram.geometry import (
     compute_safe_arrow_endpoints,
