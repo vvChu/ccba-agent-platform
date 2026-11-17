@@ -183,6 +183,20 @@ def _build_all_pytest_targets(project_root: Path) -> list[str]:
     return targets
 
 
+def _supports_xdist(py_exe: str) -> bool:
+    """Kiểm tra xem môi trường Python đích có cài đặt pytest-xdist hay không."""
+    try:
+        res = subprocess.run(
+            [py_exe, "-c", "import xdist"],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        return res.returncode == 0
+    except Exception:
+        return False
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -198,6 +212,16 @@ def main() -> None:
         "--stress",
         action="store_true",
         help="Kích hoạt chạy cả các bài test tải nặng (stress/adversarial).",
+    )
+    parser.add_argument(
+        "--ci-matrix",
+        action="store_true",
+        help="Chế độ ma trận CI: chỉ chạy Ruff, Mypy và Pytest theo phiên bản Python; bỏ qua các cổng tĩnh (Docs/Skills/ADR/Telemetry) đã có job chuyên trách.",
+    )
+    parser.add_argument(
+        "--workers",
+        default="auto",
+        help="Số luồng pytest-xdist (mặc định: auto, đặt '1' để chạy đơn luồng).",
     )
     args = parser.parse_args()
 
@@ -343,7 +367,10 @@ def main() -> None:
             "--maxfail=1",
             "-m",
             marker_expr,
-        ] + test_args
+        ]
+        if args.workers != "1" and (args.all or len(test_args) > 1) and _supports_xdist(py_exe):
+            pytest_cmd += ["-n", str(args.workers), "--dist=loadfile"]
+        pytest_cmd += test_args
 
         # Allow sufficient execution budget for all packages, root tests, and verify harnesses
         timeout_test = (
@@ -355,76 +382,77 @@ def main() -> None:
         gates_summary.append(("Gate 3: Pytest Unit Tests", success_test, out_test))
         all_success = all_success and success_test
 
-    # ==========================================
-    # GATE 4: Document & Architecture Verification (validate_docs.py)
-    # ==========================================
-    validate_script = project_root / "scripts" / "validate_docs.py"
-    if validate_script.exists():
-        success_docs, out_docs = run_command(
-            [py_exe, str(validate_script)],
-            project_root,
-            "Validate Docs Check",
-            timeout_seconds=180,
-        )
-        gates_summary.append(("Gate 4: Documentation Integrity", success_docs, out_docs))
-        all_success = all_success and success_docs
+    if not args.ci_matrix:
+        # ==========================================
+        # GATE 4: Document & Architecture Verification (validate_docs.py)
+        # ==========================================
+        validate_script = project_root / "scripts" / "validate_docs.py"
+        if validate_script.exists():
+            success_docs, out_docs = run_command(
+                [py_exe, str(validate_script)],
+                project_root,
+                "Validate Docs Check",
+                timeout_seconds=180,
+            )
+            gates_summary.append(("Gate 4: Documentation Integrity", success_docs, out_docs))
+            all_success = all_success and success_docs
 
-    # ==========================================
-    # GATE 5: Skills Governance & Catalog Sync (ADR-0057)
-    # ==========================================
-    val_skills = project_root / "scripts" / "validate_skills.py"
-    comp_cat = project_root / "scripts" / "governance" / "compile_catalog.py"
-    if val_skills.exists() and comp_cat.exists():
-        succ_skills, out_skills = run_command(
-            [py_exe, str(val_skills), "--enforce-gpi"],
+        # ==========================================
+        # GATE 5: Skills Governance & Catalog Sync (ADR-0057)
+        # ==========================================
+        val_skills = project_root / "scripts" / "validate_skills.py"
+        comp_cat = project_root / "scripts" / "governance" / "compile_catalog.py"
+        if val_skills.exists() and comp_cat.exists():
+            succ_skills, out_skills = run_command(
+                [py_exe, str(val_skills), "--enforce-gpi"],
+                project_root,
+                "Skills Governance Check",
+                timeout_seconds=120,
+            )
+            succ_cat, out_cat = run_command(
+                [py_exe, str(comp_cat), "--check"],
+                project_root,
+                "Catalog Sync Check",
+                timeout_seconds=60,
+            )
+            gate_5_succ = succ_skills and succ_cat
+            gate_5_out = f"Skills: {'PASS' if succ_skills else 'FAIL'}\n{out_skills}\n\nCatalog: {'PASS' if succ_cat else 'FAIL'}\n{out_cat}"
+            gates_summary.append(("Gate 5: Skills & Catalog Sync", gate_5_succ, gate_5_out))
+            all_success = all_success and gate_5_succ
+
+        # ==========================================
+        # GATE 6: ADR Matrix Traceability (ADR-0037)
+        # ==========================================
+        sync_adr = project_root / "scripts" / "sync_hub_adr_matrix.py"
+        if sync_adr.exists():
+            succ_adr, out_adr = run_command(
+                [py_exe, str(sync_adr), "--check"],
+                project_root,
+                "ADR Matrix Check",
+                timeout_seconds=60,
+            )
+            gates_summary.append(("Gate 6: ADR Matrix Traceability", succ_adr, out_adr))
+            all_success = all_success and succ_adr
+
+        # ==========================================
+        # GATE 7: Telemetry & Token Budget Gate (ADR-0030, ADR-0058)
+        # ==========================================
+        telemetry_cmd = [
+            py_exe,
+            "-m",
+            "pytest",
+            "packages/ccba-harness/tests/test_telemetry.py",
+            "tests/governance/test_subagent_telemetry.py",
+            "-q",
+        ]
+        succ_tel, out_tel = run_command(
+            telemetry_cmd,
             project_root,
-            "Skills Governance Check",
-            timeout_seconds=120,
-        )
-        succ_cat, out_cat = run_command(
-            [py_exe, str(comp_cat), "--check"],
-            project_root,
-            "Catalog Sync Check",
+            "Telemetry & Budget Gate",
             timeout_seconds=60,
         )
-        gate_5_succ = succ_skills and succ_cat
-        gate_5_out = f"Skills: {'PASS' if succ_skills else 'FAIL'}\n{out_skills}\n\nCatalog: {'PASS' if succ_cat else 'FAIL'}\n{out_cat}"
-        gates_summary.append(("Gate 5: Skills & Catalog Sync", gate_5_succ, gate_5_out))
-        all_success = all_success and gate_5_succ
-
-    # ==========================================
-    # GATE 6: ADR Matrix Traceability (ADR-0037)
-    # ==========================================
-    sync_adr = project_root / "scripts" / "sync_hub_adr_matrix.py"
-    if sync_adr.exists():
-        succ_adr, out_adr = run_command(
-            [py_exe, str(sync_adr), "--check"],
-            project_root,
-            "ADR Matrix Check",
-            timeout_seconds=60,
-        )
-        gates_summary.append(("Gate 6: ADR Matrix Traceability", succ_adr, out_adr))
-        all_success = all_success and succ_adr
-
-    # ==========================================
-    # GATE 7: Telemetry & Token Budget Gate (ADR-0030, ADR-0058)
-    # ==========================================
-    telemetry_cmd = [
-        py_exe,
-        "-m",
-        "pytest",
-        "packages/ccba-harness/tests/test_telemetry.py",
-        "tests/governance/test_subagent_telemetry.py",
-        "-q",
-    ]
-    succ_tel, out_tel = run_command(
-        telemetry_cmd,
-        project_root,
-        "Telemetry & Budget Gate",
-        timeout_seconds=60,
-    )
-    gates_summary.append(("Gate 7: Telemetry & Token Budget", succ_tel, out_tel))
-    all_success = all_success and succ_tel
+        gates_summary.append(("Gate 7: Telemetry & Token Budget", succ_tel, out_tel))
+        all_success = all_success and succ_tel
 
     # ==========================================
     # XUẤT KẾT QUẢ TỔNG HỢP (SUMMARY REPORT)

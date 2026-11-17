@@ -24,6 +24,8 @@ def ensure_single_instance(script_keyword: str) -> None:
     gh_env = os.environ.get("GITHUB_ACTIONS", "").strip().lower()
     if ci_env in ("true", "1", "yes") or gh_env in ("true", "1", "yes"):
         return
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        return
 
     if hasattr(sys.stdout, "reconfigure"):
         try:

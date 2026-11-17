@@ -160,16 +160,22 @@ def test_github_actions_ci_workflow_integrity() -> None:
 
     assert "jobs" in data
     assert "test" in data["jobs"]
+    assert "deterministic-parity" in data["jobs"]
 
-    # Check installed packages in step
+    # Check installed packages and matrix eval gates in test job
     test_steps = data["jobs"]["test"]["steps"]
     step_runs = [s.get("run", "") for s in test_steps if "run" in s]
     all_runs = "\n".join(step_runs)
 
     assert "packages/ccba-harness" in all_runs
     assert "packages/ccba-qc-core" in all_runs
+    assert "pytest-xdist" in all_runs
     assert "run_harness_evals.py --all" in all_runs
-    assert "verify-patch --preset ci" in all_runs
+
+    # Check deterministic lock is enforced in deterministic-parity job
+    parity_steps = data["jobs"]["deterministic-parity"]["steps"]
+    parity_runs = "\n".join(s.get("run", "") for s in parity_steps if "run" in s)
+    assert "verify-patch --preset ci" in parity_runs
 
 
 def test_subprocess_telemetry_cli(mock_swarm_workspace: Path) -> None:

@@ -27,6 +27,7 @@ def mock_rclone_available(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         shutil, "which", lambda cmd: "/usr/bin/rclone" if cmd == "rclone" else orig_which(cmd)
     )
+    monkeypatch.setattr(SpokeHydrator, "_auto_configure_remote", lambda self: None)
 
 
 @pytest.fixture
