@@ -148,13 +148,6 @@ disallow_untyped_calls = false
 module = [
     "ccba_ooxml.validation.*",
     "ccba_ooxml.pptx.*",
-    "ccba_harness._engine",
-    "ccba_harness._file_monitor",
-    "ccba_harness._guard",
-    "ccba_harness._mutex",
-    "ccba_harness._process_monitor",
-    "ccba_harness._sql_monitor",
-    "ccba_harness._state",
 ]
 ignore_errors = true
 

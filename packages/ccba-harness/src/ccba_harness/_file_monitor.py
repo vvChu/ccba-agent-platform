@@ -527,9 +527,9 @@ def _check_value_for_sensitive(val: Any, guards: list[HarnessGuard]) -> None:
 def _scan_ast_nodes(
     node: ast.AST, target_env: dict[str, str] | None = None, sys_argv_mock: list[str] | None = None
 ) -> tuple[list[str], list[bytes]]:
-    strs = []
-    bytes_list = []
-    local_vars = {}
+    strs: list[str] = []
+    bytes_list: list[bytes] = []
+    local_vars: dict[str, Any] = {}
     MAX_DEPTH = 100
 
     def eval_node(n: ast.AST, depth: int = 0) -> Any:
@@ -603,7 +603,7 @@ def _scan_ast_nodes(
             left_val = eval_node(n.left, depth + 1)
             right_val = eval_node(n.right, depth + 1)
             if left_val is not None and right_val is not None:
-                _OP_MAP = {
+                _OP_MAP: dict[Any, Any] = {
                     ast.Add: lambda left, right: left + right,
                     ast.Sub: lambda left, right: left - right,
                     ast.Mult: lambda left, right: left * right,
@@ -795,12 +795,12 @@ def _scan_ast_nodes(
                                     pass
                             elif mapped_func == "ord":
                                 try:
-                                    res_list = []
+                                    ord_list: list[int] = []
                                     for idx, x in enumerate(iter_val):
                                         if idx >= 1000:
                                             break
-                                        res_list.append(ord(x))
-                                    return res_list
+                                        ord_list.append(ord(x))
+                                    return ord_list
                                 except Exception:
                                     pass
             pass
@@ -1022,7 +1022,7 @@ def _wrapped_os_replace(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         HarnessState.local.__dict__["in_hook"] = None
 
 
-class _WrappedFileIO(_Originals.io_FileIO):
+class _WrappedFileIO(_Originals.io_FileIO):  # type: ignore[valid-type,misc]
     def __init__(self, file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> None:
         if _check_in_hook():
             super().__init__(file, mode, *args, **kwargs)
@@ -1042,7 +1042,7 @@ class _WrappedFileIO(_Originals.io_FileIO):
             HarnessState.local.__dict__["in_hook"] = None
 
 
-class _Wrapped_io_FileIO(_Originals._io_FileIO):
+class _Wrapped_io_FileIO(_Originals._io_FileIO):  # type: ignore[misc]
     def __init__(self, file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> None:
         if _check_in_hook():
             super().__init__(file, mode, *args, **kwargs)
@@ -1062,7 +1062,7 @@ class _Wrapped_io_FileIO(_Originals._io_FileIO):
             HarnessState.local.__dict__["in_hook"] = None
 
 
-def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
+def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> Any:
     if _check_in_hook():
         return _Originals.os_link(src, dst, *args, **kwargs)
 
@@ -1093,7 +1093,7 @@ def _wrapped_os_link(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
         HarnessState.local.__dict__["in_hook"] = None
 
 
-def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> None:
+def _wrapped_os_symlink(src: Any, dst: Any, *args: Any, **kwargs: Any) -> Any:
     if _check_in_hook():
         return _Originals.os_symlink(src, dst, *args, **kwargs)
 

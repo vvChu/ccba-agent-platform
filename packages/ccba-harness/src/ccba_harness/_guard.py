@@ -15,12 +15,9 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from ._engine import (
-    HarnessEngine,
-    HarnessState,
-    _get_active_guards,
-    _scan_for_sensitive_inodes,
-)
+from ._engine import HarnessEngine
+from ._file_monitor import _scan_for_sensitive_inodes
+from ._state import HarnessState, _get_active_guards
 
 
 class HarnessGuard:
@@ -257,7 +254,7 @@ if active == "1":
 
         return False
 
-    def _check_file_access(self, file: Any, args: tuple, kwargs: dict) -> None:
+    def _check_file_access(self, file: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
         """Intercept file access to perform security checking and track python file writing."""
         if isinstance(file, (str, bytes, os.PathLike)):
             file_str = os.fspath(file)

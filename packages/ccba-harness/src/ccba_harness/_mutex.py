@@ -229,6 +229,7 @@ class FileMutexLock:
                     lock_data = json.dumps({"pid": self.pid, "timestamp": time.time()}).encode(
                         "utf-8"
                     )
+                    assert fd is not None
                     os.lseek(fd, 0, os.SEEK_SET)
                     os.ftruncate(fd, 0)
                     os.write(fd, lock_data)

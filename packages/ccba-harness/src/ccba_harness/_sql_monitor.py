@@ -152,7 +152,7 @@ class _WrappedCursor:
         return iter(self._orig_cursor)
 
 
-class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):
+class _Wrappedsqlite3Connection(_Originals.sqlite3_Connection):  # type: ignore[valid-type,misc]
     def __init__(self, database: Any, *args: Any, **kwargs: Any) -> None:
         if _check_in_hook():
             super().__init__(database, *args, **kwargs)
