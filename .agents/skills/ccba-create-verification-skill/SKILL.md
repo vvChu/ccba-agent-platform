@@ -22,7 +22,7 @@ keywords:
 argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker,library,skill}]'
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.4.1
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -124,6 +124,7 @@ flowchart TD
   3. **Deterministic Import & Seam Readiness Barrier:** Nạp thẳng Public Deep Seam (`__all__` / PEP 562 lazy exports) hoặc `SkillValidator`; tuyệt đối không dùng `time.sleep(N)`.
   4. **Evidence-Capture Pytest & Statechart Bug-Path Replay:** Thực thi bộ kiểm thử hợp đồng và replay trực tiếp từng bước `bug_path` trên đối tượng thật, ghi nhận kết quả JSON có cấu trúc.
   5. **Guaranteed Workspace Cleanup:** Dọn sạch thư mục tạm và khôi phục trạng thái biến môi trường hoặc registry trong khối `finally:`.
+  6. **Cô lập C-Extension Lazy Import (`RULE-5.13`) & Đồng bộ Registry Hub:** Đối với package xử lý PDF/thị giác (`pymupdf`/`fitz`), bắt buộc thiết lập `os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")` và nạp `import pymupdf` **lười bên trong hàm helper fixture** của `harness/test_*_suite.py` thay vì ở đầu tệp module để không vi phạm `tests/governance/test_lazy_pymupdf_isolation.py`. Đồng thời đăng ký kỹ năng mới vào `packages/ccba-harness/features/INDEX.md` và `EXPECTED_VERIFY_PAIRS` trong `packages/ccba-harness/tests/test_skill_governance.py`, và neo `sync_commit` vào commit tổ tiên đã tồn tại trên `origin/main`.
 - **Hợp đồng bắt buộc chung cho mọi hồ sơ:** Cả Profile A lẫn Profile B đều phải khai báo đủ `sync_commit` (40 hex), `covered_paths`, `covered_sha256` (LF), `verification_mode: [scaffold, sync, verify]`, `features/INDEX.md`, `harness/run_verify_<suffix>.py` và `harness/test_<suffix>_suite.py`.
 
 ---
@@ -175,6 +176,7 @@ Kỹ năng tự động xác định chế độ vận hành dựa trên hiện 
    - Cập nhật lệnh CLI, port, timeout, probe URL hoặc schema assertions bên trong `.agents/skills/verify-<app>/harness/`. Tuyệt đối không tạo file rác tại thư mục gốc `scripts/` (ADR-0044).
    - **Tiêu chí hoàn thành:** Kịch bản trong `harness/` và `features/INDEX.md` được cập nhật đồng bộ.
 5. **Kiểm Chứng Đột Biến Ngữ Nghĩa, Cập Nhật `sync_commit` & Xác Minh Thoát Sạch (COND-01, COND-02):**
+   - **Khóa Stage/Commit Trước Đột Biến:** Nếu vừa sửa lỗi mã nguồn trong `covered_paths` vừa chạy phép thử đột biến để kiểm chứng bản vá mới, bắt buộc `git add` hoặc commit bản vá hợp lệ trước khi tiêm đột biến ngữ nghĩa tạm, nhằm bảo đảm `git checkout -- <mutated_files>` hoàn nguyên đúng về trạng thái đã vá thay vì xóa ngược bản vá về `HEAD`.
    - Khi cập nhật harness (`updated`), bắt buộc thực hiện phép thử **Semantic Mutation Proof** (xác nhận `git diff` sạch $\to$ tiêm đột biến ngữ nghĩa trên nhánh mã mới để chứng minh harness mới không bị mất khả năng bắt lỗi $\to$ `git checkout -- <mutated_files>` và xác nhận `git status --porcelain` rỗng).
    - Chỉ tiến hành nâng `sync_commit` lên commit hiện tại khi đạt kết quả `in_sync` hoặc `updated` và bài kiểm định thoát với exit code 0. Tuyệt đối CẤM nâng `sync_commit` khi kết quả là `bug` hoặc `blocked`.
    - **Tiêu chí hoàn thành:** Harness vượt qua Semantic Mutation Proof, thoát sạch với exit code 0, không còn tiến trình zombie và `sync_commit` được cập nhật chuẩn xác.
