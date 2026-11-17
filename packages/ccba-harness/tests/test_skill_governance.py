@@ -301,6 +301,7 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
         "FEAT-OOX-",
         "FEAT-NLM-",
         "FEAT-QCC-",
+        "FEAT-LEG-",
     )
     for prefix in expected_prefixes:
         assert prefix in central_text, f"Missing {prefix} in central features/INDEX.md"
@@ -315,6 +316,7 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
         ("verify-ccba-ooxml", "ccba-xu-ly-van-phong", "ooxml"),
         ("verify-ccba-notebooklm", "ccba-notebooklm-connector", "notebooklm"),
         ("verify-ccba-qc-core", "ccba-ai-qc", "qc_core"),
+        ("verify-ccba-legal-intel", "ccba-legal-intel", "legal_intel"),
         ("verify-ccba-xia", "ccba-xia", "xia"),
         ("verify-ccba-wayfinder", "ccba-wayfinder", "wayfinder"),
         ("verify-ccba-grilling", "ccba-grilling", "grilling"),
