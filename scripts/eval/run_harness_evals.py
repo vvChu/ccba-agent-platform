@@ -10,6 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 # Ensure project root is in sys.path when running script directly
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
@@ -127,6 +129,58 @@ def run_command(
                 log_file.unlink()
             except Exception:
                 pass
+
+
+def _collect_verify_harness_targets(project_root: Path, modified_files: set[Path]) -> set[str]:
+    """Map modified skill docs and verify covered_paths to incremental pytest targets."""
+    resolved_root = project_root.resolve()
+    rel_modified = {
+        f.resolve().relative_to(resolved_root).as_posix()
+        for f in modified_files
+        if f.resolve().is_relative_to(resolved_root)
+    }
+    targets: set[str] = set()
+    skills_root = project_root / "packages" / "ccba-harness" / ".agents" / "skills"
+    for skill_md in sorted(skills_root.glob("verify-ccba-*/SKILL.md")):
+        raw = skill_md.read_text(encoding="utf-8")
+        parts = raw.split("---", 2)
+        fm = yaml.safe_load(parts[1]) if (raw.startswith("---") and len(parts) >= 3) else {}
+        cov = {str(p) for p in (fm or {}).get("covered_paths", [])}
+        skill_prefix = skill_md.parent.relative_to(project_root).as_posix() + "/"
+        if (cov & rel_modified) or any(m.startswith(skill_prefix) for m in rel_modified):
+            harness_dir = skill_md.parent / "harness"
+            if harness_dir.is_dir():
+                targets.add(harness_dir.relative_to(project_root).as_posix())
+            targets.add("tests/governance/test_verification_harness_dogfood.py")
+    if any(m.startswith((".agents/skills/", "docs/")) for m in rel_modified):
+        targets.add("tests/governance/test_skills_docs_integrity.py")
+        targets.add("tests/governance/test_statechart_anti_lie.py")
+    return targets
+
+
+def _build_all_pytest_targets(project_root: Path) -> list[str]:
+    """Collect dynamic monorepo test targets including all packages and root tests."""
+    pkg_tests = sorted(
+        p.relative_to(project_root).as_posix()
+        for p in (project_root / "packages").glob("*/tests")
+        if p.is_dir()
+    )
+    root_tests = sorted(
+        p.relative_to(project_root).as_posix() for p in (project_root / "tests").glob("test_*.py")
+    )
+    targets = pkg_tests + ["tests/governance"] + root_tests
+    if (project_root / "scripts/tests").is_dir():
+        targets.append("scripts/tests")
+    verify_skills_root = project_root / "packages" / "ccba-harness" / ".agents" / "skills"
+    if verify_skills_root.is_dir():
+        targets.extend(
+            sorted(
+                h.relative_to(project_root).as_posix()
+                for h in verify_skills_root.glob("verify-ccba-*/harness")
+                if h.is_dir()
+            )
+        )
+    return targets
 
 
 def main() -> None:
@@ -267,37 +321,16 @@ def main() -> None:
                     else:
                         test_dirs.add("tests")
 
+            test_dirs.update(_collect_verify_harness_targets(project_root, modified_files))
             if test_dirs:
-                test_args = list(test_dirs)
+                test_args = sorted(test_dirs)
                 print(f"ℹ️ Chỉ chạy test cho các package bị ảnh hưởng: {test_args}")
             else:
                 # Fallback: nếu không có packages cụ thể bị đổi (ví dụ đổi core script), chạy các test nhỏ của scripts
                 test_args = ["scripts/tests"] if (project_root / "scripts/tests").exists() else []
         else:
-            # Chạy các test suite ổn định và độc lập trên môi trường sandbox/CI
-            test_args = [
-                "packages/ccba-ai/tests",
-                "packages/ccba-harness/tests",
-                "packages/ccba-legal-intel/tests",
-                "packages/ccba-maskara/tests",
-                "packages/ccba-notebooklm/tests",
-                "packages/ccba-ooxml/tests",
-                "packages/ccba-pdf-prep/tests",
-                "packages/ccba-qc-core/tests",
-                "packages/mdconverter/tests",
-                "tests/governance",
-            ]
-            if (project_root / "scripts/tests").exists():
-                test_args.append("scripts/tests")
-            verify_skills_root = project_root / "packages" / "ccba-harness" / ".agents" / "skills"
-            if verify_skills_root.is_dir():
-                test_args.extend(
-                    sorted(
-                        str(h.relative_to(project_root))
-                        for h in verify_skills_root.glob("verify-ccba-*/harness")
-                        if h.is_dir()
-                    )
-                )
+            # Chạy toàn bộ test suite trên 10 packages, governance, 27 root tests, và verify harnesses
+            test_args = _build_all_pytest_targets(project_root)
 
         # Gate 3: Pytest Unit Tests
         marker_expr = "not slow" if args.stress else "not slow and not stress"
@@ -312,8 +345,10 @@ def main() -> None:
             marker_expr,
         ] + test_args
 
-        # Allow sufficient execution budget for 1,300+ tests across 9 packages
-        timeout_test = 900 if (args.all and sys.platform == "win32") else (600 if args.all else 300)
+        # Allow sufficient execution budget for all packages, root tests, and verify harnesses
+        timeout_test = (
+            1200 if (args.all and sys.platform == "win32") else (900 if args.all else 450)
+        )
         success_test, out_test = run_command(
             pytest_cmd, project_root, "Pytest Suite", timeout_seconds=timeout_test
         )
