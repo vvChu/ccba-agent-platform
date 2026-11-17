@@ -1,6 +1,6 @@
 # ccba-mermaid-diagram
 
-> **Mô tả ngắn**: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
+> **Mô tả ngắn**: Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic Grayscale, an toàn cú pháp (subgraph, escaped labels, Anti-Lie) cho tài liệu và xuất bản.
 
 ---
 
@@ -30,7 +30,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-mermaid
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
+Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic Grayscale, an toàn cú pháp (subgraph, escaped labels, Anti-Lie) cho tài liệu và xuất bản.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 
@@ -48,6 +48,10 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `mermaid`
 - `vẽ mermaid`
 - `flowchart`
+- `statechart`
+- `stateDiagram-v2`
+- `sơ đồ trạng thái`
+- `bug_path`
 - `sequence diagram`
 - `sơ đồ mermaid`
 

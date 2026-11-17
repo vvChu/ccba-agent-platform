@@ -9,10 +9,11 @@ import sqlite3
 import subprocess
 import sys
 import threading
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    pass
+    from types import FrameType
 
 
 # ---------------------------------------------------------------------------
@@ -34,13 +35,13 @@ class _Originals:
     os_replace = os.replace
     io_FileIO = io.FileIO
     sqlite3_connect = sqlite3.connect
-    os_link = getattr(os, "link", None)
-    os_symlink = getattr(os, "symlink", None)
-    _io_open = getattr(_io, "open", None)
-    _io_FileIO = getattr(_io, "FileIO", None)
+    os_link: Any = getattr(os, "link", None)
+    os_symlink: Any = getattr(os, "symlink", None)
+    _io_open: Any = getattr(_io, "open", None)
+    _io_FileIO: Any = getattr(_io, "FileIO", None)
     sqlite3_Connection = sqlite3.Connection
     thread_start_new_thread = _thread.start_new_thread
-    thread_start_new = getattr(_thread, "start_new", None)
+    thread_start_new: Callable[..., int] | None = getattr(_thread, "start_new", None)
     os_funcs: dict[str, Any] = {}
 
 
@@ -151,7 +152,7 @@ def _check_in_hook() -> bool:
     if val is not _HOOK_TOKEN:
         return False
     try:
-        frame = sys._getframe(1)
+        frame: FrameType | None = sys._getframe(1)
         while frame:
             co_fn = frame.f_code.co_filename
             is_harness = "ccba_harness" in co_fn or "harness" in co_fn
@@ -186,11 +187,11 @@ def _get_active_guards() -> list[Any]:
 # ---------------------------------------------------------------------------
 # Utility: safe bounded iteration
 # ---------------------------------------------------------------------------
-def _safe_limit_iter(iterable: Any, max_size: int = 1000) -> list:
+def _safe_limit_iter(iterable: Any, max_size: int = 1000) -> list[Any]:
     """Iterate *iterable* but return at most *max_size* items."""
     if iterable is None:
         return []
-    res: list = []
+    res: list[Any] = []
     try:
         if isinstance(iterable, (str, bytes, bytearray, dict, set, list, tuple)):
             return list(iterable)[:max_size]

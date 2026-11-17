@@ -1,6 +1,6 @@
 ---
 name: ccba-mermaid-diagram
-description: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
+description: Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic Grayscale, an toàn cú pháp (subgraph, escaped labels, Anti-Lie) cho tài liệu và xuất bản.
 disable-model-invocation: true
 applies_to:
 - Phần mềm
@@ -11,7 +11,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-mermaid-diagram
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -22,6 +22,7 @@ keywords:
 - Mermaid
 - Diagram
 - Flowchart
+- Statechart
 - Visualization
 - Architecture
 - Sơ đồ
@@ -30,6 +31,10 @@ triggers:
 - mermaid
 - vẽ mermaid
 - flowchart
+- statechart
+- stateDiagram-v2
+- sơ đồ trạng thái
+- bug_path
 - sequence diagram
 - sơ đồ mermaid
 ---

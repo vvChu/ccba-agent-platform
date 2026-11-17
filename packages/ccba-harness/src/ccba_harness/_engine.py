@@ -85,6 +85,8 @@ from ._state import (
     _safe_limit_iter,
 )
 
+__all__ = ["_audit_hook", "HarnessEngine"]
+
 
 def _audit_hook(event: str, args: tuple[Any, ...]) -> None:
     if event == "sys._getframe":
@@ -187,15 +189,15 @@ class HarnessEngine:
             if not HarnessState.global_hooks_active:
                 builtins.open = _wrapped_builtins_open
                 io.open = _wrapped_io_open
-                subprocess.Popen = _wrapped_popen
-                threading.Thread.start = _wrapped_thread_start
+                subprocess.Popen = _wrapped_popen  # type: ignore[misc,assignment]
+                threading.Thread.start = _wrapped_thread_start  # type: ignore[method-assign]
                 _thread.start_new_thread = _wrapped_thread_start_new_thread
                 if _Originals.thread_start_new is not None:
                     _thread.start_new = _wrapped_thread_start_new
                 os.open = _wrapped_os_open
                 os.rename = _wrapped_os_rename
                 os.replace = _wrapped_os_replace
-                io.FileIO = _WrappedFileIO
+                io.FileIO = _WrappedFileIO  # type: ignore[misc]
                 sqlite3.connect = _wrapped_sqlite3_connect
                 if _Originals.os_link is not None:
                     os.link = _wrapped_os_link
@@ -205,8 +207,8 @@ class HarnessEngine:
                 if _Originals._io_open is not None:
                     _io.open = _wrapped__io_open
                 if _Originals._io_FileIO is not None:
-                    _io.FileIO = _Wrapped_io_FileIO
-                sqlite3.Connection = _Wrappedsqlite3Connection
+                    _io.FileIO = _Wrapped_io_FileIO  # type: ignore[misc]
+                sqlite3.Connection = _Wrappedsqlite3Connection  # type: ignore[misc]
                 for name, orig in _Originals.os_funcs.items():
                     setattr(os, name, _make_os_wrapper(name, orig))
                 HarnessState.global_hooks_active = True
@@ -227,15 +229,15 @@ class HarnessEngine:
         """Internal helper to force restore stdlib hooks."""
         builtins.open = _Originals.builtins_open
         io.open = _Originals.io_open
-        subprocess.Popen = _Originals.popen
-        threading.Thread.start = _Originals.thread_start
+        subprocess.Popen = _Originals.popen  # type: ignore[misc]
+        threading.Thread.start = _Originals.thread_start  # type: ignore[method-assign]
         _thread.start_new_thread = _Originals.thread_start_new_thread
         if _Originals.thread_start_new is not None:
             _thread.start_new = _Originals.thread_start_new
         os.open = _Originals.os_open
         os.rename = _Originals.os_rename
         os.replace = _Originals.os_replace
-        io.FileIO = _Originals.io_FileIO
+        io.FileIO = _Originals.io_FileIO  # type: ignore[misc]
         sqlite3.connect = _Originals.sqlite3_connect
         if _Originals.os_link is not None:
             os.link = _Originals.os_link
@@ -245,8 +247,8 @@ class HarnessEngine:
         if _Originals._io_open is not None:
             _io.open = _Originals._io_open
         if _Originals._io_FileIO is not None:
-            _io.FileIO = _Originals._io_FileIO
-        sqlite3.Connection = _Originals.sqlite3_Connection
+            _io.FileIO = _Originals._io_FileIO  # type: ignore[misc]
+        sqlite3.Connection = _Originals.sqlite3_Connection  # type: ignore[misc]
         for name, orig in _Originals.os_funcs.items():
             setattr(os, name, orig)
         HarnessState.global_hooks_active = False

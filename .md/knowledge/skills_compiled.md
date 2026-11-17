@@ -3517,19 +3517,19 @@ triggers:
   - zettelkasten-compiler
   - book-ingest
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
   author: "CCBA & VvC Second Brain"
 ---
 
 # Master Skill: Deep Ebook Compilation Engine (/ccba-book-compiler)
 
-Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa một cuốn sách/ebook thô (`.epub` hoặc `.pdf`) thành mạng lưới tri thức sống động, kiểm chứng được bằng Ground Truth và áp dụng thực chiến ngay trong doanh nghiệp theo triết lý **LLM Compiler Pattern** và **Hiến pháp VvC Second Brain (v8.16.0)**.
+Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa một cuốn sách/ebook thô (`.epub` hoặc `.pdf`) thành mạng lưới tri thức sống động, kiểm chứng được bằng Ground Truth và áp dụng thực chiến ngay trong doanh nghiệp theo triết lý **LLM Compiler Pattern** và **Hiến pháp VvC Second Brain (v8.17.3)**.
 
 ---
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
+- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/batch_helpers.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/pipeline/book_verification.py`, `scripts/pipeline/book_excalidraw_verifier.py`, `scripts/core/vault.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
   - Tra cứu hợp đồng năng lực trước khi sinh sơ đồ (dùng biến môi trường `CCBA_HUB_PATH`):
     ```bash
     python "${CCBA_HUB_PATH}/scripts/ccba_platform_cli.py" find-seam --in diagram --out layout --json
@@ -3538,7 +3538,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 - **Bất biến Bắt buộc (Mandatory Invariants)**:
   1. *Race-Free Staging & Dual-Path Contract*: Mọi sách mới hoặc sách ngoại lai BẮT BUỘC đi qua `pipeline.book_staging.stage_book_for_compilation()` theo đúng thứ tự: kiểm tra `check_cross_machine_lease()` $\rightarrow$ tạo workspace `05 - Fleeting/<Book_Stem>/` $\rightarrow$ đồng bộ khóa mức cuốn sách `.book_stage_<Book_Stem>.lock` (tách rời khóa sống còn `.book_ingest.lock` của daemon 24/7) để trích xuất hoặc phục hồi corpus Markdown & ảnh `.webp` (`quality=80, max_dim=1200`, nén trong RAM, scratch trên `state_dir` cục bộ) tại `03 - Resources/books/<Book_Stem>_MD/` với chốt lũy đẳng `_toc_original.json` + đủ chương $\rightarrow$ khởi tạo `Source Note` qua `safe_write_text()` + `update_source_cache()` $\rightarrow$ sinh `_toc.json` & `<BOOK_CONTEXT>` $\rightarrow$ chép sách ngoại lai vào `03 - Resources/books/` cuối cùng.
   2. *Metadata SSoT Gate*: Quét 5 tệp `.md` mở đầu trong `03 - Resources/books/<Book_Stem>_MD/` (`Title`, `Copyright`, `ISBN`, `Edition`, `Author`) để khóa chuẩn Full Title, Subtitle, Edition và Full Authors trước khi biên soạn.
-  3. *Write-Through Concept Pipeline & Batched Vector Flush*: Mọi Concept Note BẮT BUỘC chạy qua Stage 4 `verify_and_correct()` (`scripts/pipeline/self_correct.py`) và lưu qua `save_concept(..., book_name=book_name)` (`scripts/pipeline/post_process.py`) bên trong ngữ cảnh `with VectorStore.get_instance().batch():` (`scripts/core/vector_store.py`) để kích hoạt 5 cổng chất lượng, `arbitrate_and_merge()`, gắn sơ đồ NXB (`align_book_diagrams()`), cập nhật `_vault_concepts_cache.json` v4 và chỉ ghi đĩa `.npz` đúng 1 lần.
+  3. *Write-Through Concept Pipeline, Batch Helper & Batched Vector Flush*: Mọi Concept Note BẮT BUỘC chạy qua Stage 4 `verify_and_correct()` (`scripts/pipeline/self_correct.py`) và lưu qua `save_concept(..., book_name=book_name)` (`scripts/pipeline/post_process.py`) — hoặc qua seam hợp nhất `compile_book_concept()` (`scripts/pipeline/batch_helpers.py`) cho lô OCR sách — bên trong ngữ cảnh `with VectorStore.get_instance().batch():` (`scripts/core/vector_store.py`) để kích hoạt 5 cổng chất lượng, `arbitrate_and_merge()`, gắn sơ đồ NXB (`align_book_diagrams()`), chặn tự nhúng / nhúng `.md` phi sơ đồ qua `find_invalid_concept_embeds()` (`scripts/core/vault.py`), cập nhật `_vault_concepts_cache.json` v4 và chỉ ghi đĩa `.npz` đúng 1 lần.
   4. *MOC Lifecycle Discipline*: CẤM tạo tay `MOC_*.md` hoặc sửa tay `00 - Maps of Content/index.md` ở Pha 2 (vì `_cleanup_stale_mocs` sẽ xóa MOC khi `0` concepts). Chỉ chạy `scripts/wiki_maintain.py` ở cuối Pha 5 sau khi toàn bộ concepts đã lưu; tên MOC chuẩn do hệ thống sinh là `MOC_<normalize_moc_name(aliases[0])>.md` (`--check-only` dùng để kiểm tra không ghi đĩa).
   5. *Zero-ASCII Art & Clean Wikilinks (v8.15.11)*: Cấm tuyệt đối vẽ sơ đồ ASCII/Unicode box art và cấm bọc backticks quanh wikilinks/embeds trên mọi bề mặt Markdown. Mọi tệp Topic/Source viết ra đĩa phải đi qua `clean_wikilink_quotes()` + `safe_write_text()`.
   6. *Excalidraw 16:9 Seam Delegation*: Ủy quyền bố cục cho `ccba_diagram` + `clean_and_repair_excalidraw_json()`, khóa chặt hộp bao ngang `1.000px ≤ W ≤ 1.150px` (tính cả tọa độ điểm mũi tên 2D `el.x + pt[0]`) và cỡ chữ gốc `fontSize ≥ 13` (đảm bảo sàn hiển thị $\ge 8.5\text{px}$ sau scale), kèm Bảng Đặc Tả Ma Trận bên dưới.
@@ -3559,7 +3559,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ---
 
-## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.0)
+## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.1)
 
 ### Pha 1: Staging Chống Đua Daemon, Nén WebP & Metadata SSoT Gate
 1. **Chạy trình điều phối Staging lũy đẳng (`pipeline.book_staging`)**:
@@ -3615,7 +3615,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
            if out_path is not None:
                saved_concepts.append(out_path)
    ```
-   - `find_ground_truth()` và `find_images_around_ground_truth()` hỗ trợ truy hồi đoạn gốc và ảnh minh họa chương sách; `save_concept(..., book_name=book_name)` tự động gắn sơ đồ `.webp` qua `align_book_diagrams()`, kiểm định `_validate_quality()`, hợp nhất trùng lặp ngữ nghĩa và ghi nhận vector để flush `.npz` 1 lần khi thoát khối `with`.
+   - `find_ground_truth()` và `find_images_around_ground_truth()` hỗ trợ truy hồi đoạn gốc và ảnh minh họa chương sách (các lô OCR ảnh sách dùng seam hợp nhất `compile_book_concept()` tại `scripts/pipeline/batch_helpers.py`); `save_concept(..., book_name=book_name)` tự động gắn sơ đồ `.webp` qua `align_book_diagrams()`, kiểm định `_validate_quality()`, hợp nhất trùng lặp ngữ nghĩa và ghi nhận vector để flush `.npz` 1 lần khi thoát khối `with`.
 - **Tiêu chí hoàn thành:** Toàn bộ Concept Notes vượt qua 5 cổng chất lượng, 0 tệp `_[2-9].md`, SSD cache & chỉ mục vector BGE-M3 được đồng bộ sạch sẽ.
 
 ### Pha 4: Luận Giải Kiến Trúc & Sinh Sơ Đồ Excalidraw 16:9 (`1.000px ≤ W ≤ 1.150px`)
@@ -3639,8 +3639,8 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
      ```
 - **Tiêu chí hoàn thành:** `MOC_<moc_slug>.md` và `index.md` được sinh tự động, khớp 100% liên kết hai chiều.
 
-### Pha 6: Cổng Kiểm Định Tất Định C4 (`--verify-book`, `0 broken_body_links`) & Bàn Giao
-1. **Chạy cổng kiểm định C4 toàn diện** (kiểm tra corpus WebP, TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()`, hộp bao Excalidraw `[1000..1150px]`, `fontSize >= 13`, và đối soát `broken_body_links == 0` đồng bộ `VaultLinter` + media embeds):
+### Pha 6: Cổng Kiểm Định Tất Định C4 (`--verify-book`, `0 broken_body_links`, `0 invalid_embeds`) & Bàn Giao
+1. **Chạy cổng kiểm định C4 toàn diện** (kiểm tra corpus WebP, TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()`, chống tự nhúng / nhúng `.md` phi sơ đồ qua `find_invalid_concept_embeds()`, hộp bao Excalidraw `[1000..1150px]`, `fontSize >= 13`, và đối soát `broken_body_links == 0` đồng bộ `VaultLinter` + media embeds):
    ```bash
    scripts/.venv/bin/python .agents/skills/ccba-book-compiler/scripts/compress_images_to_webp.py \
      --verify-book \
@@ -3665,9 +3665,9 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 | Tệp Tham Chiếu / Script | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| [`scripts/compress_images_to_webp.py`](scripts/compress_images_to_webp.py) | CLI nén WebP hồi tố & điều phối cổng `--verify-book` |
-| [`scripts/verify_book_artifacts.py`](scripts/verify_book_artifacts.py) | Động cơ kiểm định C4: TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()` và `VaultLinter` link parity |
-| [`scripts/verify_excalidraw_map.py`](scripts/verify_excalidraw_map.py) | Bộ giải mã `compressed-json` LZString & kiểm định hộp bao Excalidraw 16:9 (`[1000..1150px]`, `fontSize >= 13`) |
+| [`scripts/compress_images_to_webp.py`](scripts/compress_images_to_webp.py) | Thin CLI wrapper (`<= 100 LOC`) nén WebP hồi tố & điều phối cổng `--verify-book` (ủy quyền sang `scripts/pipeline/book_excalidraw_verifier.py`) |
+| [`scripts/verify_book_artifacts.py`](scripts/verify_book_artifacts.py) | Thin adapter (`<= 100 LOC`) ủy quyền động cơ C4 sang `scripts/pipeline/book_verification.py` (TOC, profiles, `_validate_quality()`, `find_invalid_concept_embeds()`, `VaultLinter` parity) |
+| [`scripts/verify_excalidraw_map.py`](scripts/verify_excalidraw_map.py) | Thin adapter (`<= 100 LOC`) ủy quyền giải mã `compressed-json` LZString & kiểm định Excalidraw 16:9 sang `scripts/pipeline/book_excalidraw_verifier.py` |
 | [`references/canonical_v83_concept_note.md`](references/canonical_v83_concept_note.md) | Quy cách Frontmatter, Evidence Hook (VN) và Ground Truth (EN) |
 | [`references/visual_and_diagramming_rules.md`](references/visual_and_diagramming_rules.md) | Quy chuẩn Excalidraw 16:9, Executive Typography và Bảng Markdown bản địa |
 | [`resources/templates/toc_schema_v80.json`](resources/templates/toc_schema_v80.json) | Schema JSON mục lục sách song ngữ Canonical v8.0 |
@@ -3762,6 +3762,12 @@ confidence: high
    - Tuyệt đối cấm bọc inline backticks quanh liên kết wikilinks vì sẽ biến liên kết thành code pill xám và làm gãy đồ thị Graph View trong Obsidian.
 4. **Hai Chiều Đóng Kín (Bidirectional Linking)**:
    - Khi tạo concept note mới, phải tìm ít nhất 1-2 concept note cũ có liên quan mật thiết để cập nhật ngược liên kết `related` hoặc trích dẫn trong `## Core Idea`.
+5. **Chống Tự Nhúng & Nhúng `.md` Phi Sơ Đồ (Zero Invalid Embeds — v8.17.3)**:
+   - Tuyệt đối cấm để `![[<self_slug>.md]]` hoặc `![[<chapter>.md]]` xuất hiện trong Concept Note (trừ sơ đồ `.excalidraw.md` / `.mermaid.md`). Cổng kiểm định C4 (`find_invalid_concept_embeds`) sẽ từ chối ngay khi phát hiện nhúng đệ quy gây vòng lặp transclusion vô tận trong Obsidian.
+
+---
+
+[← Quay lại SKILL.md](../SKILL.md)
 
 
 ---
@@ -3817,6 +3823,10 @@ Tài liệu này tổng hợp các quy chuẩn công thái học thị giác (Do
     ```
   - Xuống dòng nội bộ ô bảng bằng thẻ HTML `<br/>`.
   - Không để rò rỉ các thực thể HTML parser (`#40;`, `#41;`) ra ngoài bảng Markdown; dùng dấu ngoặc đơn thông thường `()`.
+
+---
+
+[← Quay lại SKILL.md](../SKILL.md)
 
 
 ---
@@ -6256,7 +6266,7 @@ keywords:
 - locality
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.4.1
 bundle: _core
 tier: kernel
 triggers:
@@ -6450,6 +6460,7 @@ class ShallowAuditService:
 - **Deepening a cluster given its dependencies** — see [deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [design_it_twice.md](references/design_it_twice.md): spin up parallel sub-agents (max 3) to design the interface several radically different ways, then compare on depth, locality, and seam placement.
 - **Designing an autonomous software factory** — see [software_factory.md](references/software_factory.md): canonical vocabulary (Tasks, Triggers, Runs, Runners, 6 Service Slots), Three Brakes, and 9 factory task patterns.
+- **Statechart & concurrency verification (`statechart v0.15.42`)** — see [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md): khi thiết kế module có $\ge 2$ trạng thái chuyển tiếp, vòng lặp retry-fallback hoặc xử lý đồng thời (concurrency, lock, circuit-breaker), đọc hướng dẫn này để trích xuất sơ đồ `stateDiagram-v2` phân loại theo 4 lớp rủi ro (`breaks`, `mayBreak`, `bugPath`, `repeats`) thay vì chỉ mô tả bằng văn xuôi.
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
@@ -7115,7 +7126,7 @@ disable-model-invocation: true
 command: /ccba-contribute-to-hub
 user-invocable: true
 metadata:
-  version: "1.3.0"
+  version: "1.3.2"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -7184,97 +7195,123 @@ Trước khi tạo mới, Agent **bắt buộc** kiểm tra hệ sinh thái Hub:
 
 ---
 
-## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trên Branch Mới
-Thực thi tại thư mục Hub (`$CCBA_HUB_PATH`):
-1. **Đồng bộ nhánh & Khóa bảo vệ nhánh (Pre-Commit Branch Assertion):**
+## 📦 Bước 3: Đóng Gói Mã Nguồn & Tạo Proposal Trong Worktree Cô Lập
+Thực thi **toàn bộ Bước 3–6 bên trong một `git worktree` cô lập** tại `/tmp/wt-hub-<tên-đề-xuất>` (tách từ `origin/main` của Hub); giữ bản checkout gốc `$CCBA_HUB_PATH` hoàn toàn sạch để tránh va chạm phiên song song (`RULE-4.21`):
+1. **Khởi tạo Worktree Cô lập Từ `origin/main` (`RULE-4.21`):**
    ```bash
-   git checkout main && git pull origin main
-   git checkout -b "proposal/<tên-đề-xuất>"
+   BRANCH_NAME="proposal/<tên-đề-xuất>"
+   WT_DIR="/tmp/wt-hub-<tên-đề-xuất>"
+   git -C "$CCBA_HUB_PATH" fetch --prune origin
+   git -C "$CCBA_HUB_PATH" worktree add -b "$BRANCH_NAME" "$WT_DIR" origin/main
+   cd "$WT_DIR"
    ```
-2. **Đóng gói Mã nguồn & Tests vào Package tương ứng:**
+2. **Đóng gói Mã nguồn & Tests Vào Package Tương Ứng:**
    - Code: `packages/[pkg]/src/[submodule]/`, Public Deep Seam: `packages/[pkg]/src/__init__.py`, Tests: `packages/[pkg]/tests/`.
-   - Format, linting & cập nhật kiến trúc:
+   - Format, linting & cập nhật kiến trúc ngay trong `"$WT_DIR"`:
      ```bash
      python -m ruff check --fix packages/[pkg]/ && python -m ruff format packages/[pkg]/ && python scripts/update_arch_stats.py
      ```
-3. **Ghi nhận tệp Proposal (`.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md` - ADR 0045):**
-   ```yaml
-   ---
-   proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
-   type: "tool" # "tool" | "skill" | "workflow" | "rules"
-   name: "[tên-đề-xuất]"
-   status: "open"
-   priority: "Cao"
-   related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
-   proposed_by_project: "[tên-spoke]"
-   proposed_by_archetype: "knowledge_corpus"
-   proposed_date: "YYYY-MM-DD"
-   applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
-   ---
-   ```
-4. **Kiểm Định Cục Bộ, Leakage Guard & Push:**
-   Chạy đồng bộ catalog và kiểm định toàn bộ kỹ năng trước khi commit:
+3. **Ghi Nhận Tệp Proposal Theo Quy Mô (`ADR 0045`):**
+   - **Quy mô Lớn (Major Scope — $\ge 100$ dòng, hoặc $\ge 3$ tệp, hoặc thêm module/Seam/ADR/Skill mới):** Bắt buộc tạo tệp `.agents/proposals/[YYYY-MM-DD]_[tên-đề-xuất].md`:
+     ```yaml
+     ---
+     proposal_id: "[YYYY-MM-DD]_[tên-đề-xuất]"
+     type: "tool" # "tool" | "skill" | "workflow" | "rules"
+     name: "[tên-đề-xuất]"
+     status: "open"
+     priority: "Cao"
+     related_issue: "#[ISSUE_ID]" # Liên kết Issue nếu có
+     proposed_by_project: "[tên-spoke]"
+     proposed_by_archetype: "knowledge_corpus"
+     proposed_date: "YYYY-MM-DD"
+     applies_to: ["Phần mềm", "Thẩm tra thiết kế"]
+     ---
+     ```
+   - **Quy mô Nhỏ / Nội bộ (Minor Scope — $< 100$ dòng vá lỗi nội bộ):** Bỏ qua tạo tệp proposal để tránh phát sinh rác kho mã, mở thẳng Micro-PR.
+4. **Tái Biên Dịch Catalog/Docs, Kiểm Định Cục Bộ & Push Từ Worktree:**
+   Chạy đầy đủ các cổng kiểm định bên trong `"$WT_DIR"` trước khi commit & push:
    ```bash
    python scripts/governance/compile_catalog.py
+   python scripts/governance/compile_skills_docs.py --write
    python scripts/validate_skills.py --enforce-gpi
    python scripts/governance/check_spoke_leakage.py
-   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất] and proposal" && git push origin "$BRANCH_NAME"
+   git add -A && git commit -m "feat([scope]): add [tên-đề-xuất]" && git push -u origin "$BRANCH_NAME"
    ```
-- **Tiêu chí hoàn thành:** Nhánh mới được tạo, mã nguồn đóng gói, proposal ghi nhận, catalog đồng bộ và pass toàn bộ `scripts/validate_skills.py --enforce-gpi` cùng `check_spoke_leakage.py`.
+- **Tiêu chí hoàn thành:** Worktree cô lập được tạo sạch từ `origin/main`, mã nguồn/proposal (nếu Major) đóng gói đúng chuẩn, catalog/docs đồng bộ, pass 100% `scripts/validate_skills.py --enforce-gpi` cùng `check_spoke_leakage.py`, và nhánh đã đẩy lên `origin` trong khi `$CCBA_HUB_PATH` vẫn nguyên vẹn.
 
 ---
 
-## 🚀 Bước 4: Mở GitHub Pull Request (Kế thừa chuẩn /ccba-create-pr)
-Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm nội dung chuyên biệt cho đề xuất Spoke $\rightarrow$ Hub:
-- **Tự động qua GitHub CLI:**
+## 🚀 Bước 4: Đánh Giá Cửa PR (`door-triage`) & Mở GitHub Pull Request
+Kế thừa tiêu chuẩn khởi tạo PR từ kỹ năng [`/ccba-create-pr`](../ccba-create-pr/SKILL.md) kèm đo lường `ADR-0067` từ `"$WT_DIR"`:
+- **Đo Cửa PR & Xác Thực Tradeoff Card (nếu `ONE_WAY_DOOR`) Trước Khi Mở PR:**
+  Đo danh sách tệp thay đổi (`git diff --name-only origin/main...HEAD`) và tổng số dòng logic thay đổi (`git diff --shortstat origin/main...HEAD`), rồi kiểm định:
   ```bash
-  # Trường hợp có liên kết Issue:
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]. Closes #[ISSUE_ID]" --base main --head "$BRANCH_NAME"
-
-  # Trường hợp không liên kết Issue (Minor Scope):
-  gh pr create --title "feat([scope]): add [tên-đề-xuất]" --body "Automated proposal submission from Spoke [tên-spoke]." --base main --head "$BRANCH_NAME"
+  python -m ccba_harness door-triage <changed_files> --logic-loc <n> --root "$WT_DIR" --pr-body-file <body_file> --enforce-tradeoff-card
+  ```
+- **Tạo Pull Request Qua GitHub CLI (`--repo vvChu/ccba-agent-platform`):**
+  ```bash
+  # Trường hợp có liên kết Issue (hoặc PR body đầy đủ kèm Tradeoff Card khi ONE_WAY_DOOR):
+  gh pr create --repo vvChu/ccba-agent-platform --title "feat([scope]): add [tên-đề-xuất]" --body-file /tmp/pr_body.md --base main --head "$BRANCH_NAME"
   ```
 - **Thủ công:** Truy cập `[PR-creation-URL]/pull/new/[BRANCH_NAME]`.
-- **Tiêu chí hoàn thành:** Pull Request được mở thành công trên GitHub liên kết đúng branch và Issue ID.
+- **Tiêu chí hoàn thành:** `door-triage --enforce-tradeoff-card` hợp lệ (`exit 0`) và Pull Request được mở thành công trên `vvChu/ccba-agent-platform`.
 
 ---
 
-## 🔄 Bước 5: Vòng Lặp Dừng Chờ & Tự Làm Xanh CI (Self-Healing Loop)
+## 🔄 Bước 5: Vòng Lặp Dừng Chờ & Tự Làm Xanh CI + Copilot Gate (Self-Healing Loop)
 
 > [!IMPORTANT]
-> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải đồng hành cho đến khi $100\%$ CI Tích Xanh.
+> **Tuyệt đối không kết thúc quy trình ngay sau khi mở PR.** Agent phải đồng hành cho đến khi $100\%$ CI Tích Xanh và Copilot Review sạch (`exit 0`).
 
-1. **Dừng chờ động (Grace Period):** Dùng `schedule` hẹn giờ kiểm tra: PR nhỏ (<100 dòng) `45s`, PR vừa (100-500 dòng) `60s-90s`, PR lớn (>500 dòng) `90s-180s`.
-2. **Kiểm tra song song 2 cổng (Dual-Gate):**
-   - CI Status: `gh pr checks <PR_NUMBER>`
-   - Copilot Review: `gh pr view <PR_NUMBER> --json reviews,comments --jq '.reviews[] | select(.author.login=="copilot-pull-request-reviewer")'`
+1. **Dừng chờ động (Grace Period):** Dùng `schedule` hoặc `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform --watch` hẹn kiểm tra: PR nhỏ (<100 dòng) `45s`, PR vừa (100-500 dòng) `60s-90s`, PR lớn (>500 dòng) `90s-180s`.
+2. **Kiểm tra song song 2 cổng (Dual-Gate Fail-Closed):**
+   - CI Status: `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform`
+   - Copilot Review:
+     ```bash
+     python "$WT_DIR/scripts/validation/audit_pr_comments.py" --repo vvChu/ccba-agent-platform --pr <PR_NUMBER>
+     ```
 3. **Tự khắc phục (Self-Healing Action):**
-   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --log-failed` $\rightarrow$ Sửa lỗi $\rightarrow$ Commit & push bản vá.
-   - Nếu Copilot góp ý: Refactor code đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
-   - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER>` pass 100%.
+   - Nếu CI Fail: Đọc log qua `gh run view <RUN_ID> --repo vvChu/ccba-agent-platform --log-failed` $\rightarrow$ Sửa lỗi trong `"$WT_DIR"` $\rightarrow$ Commit & push bản vá.
+   - Nếu Copilot góp ý: Refactor code trong `"$WT_DIR"` đối soát với chuẩn CCBA $\rightarrow$ Commit & push.
+   - Tiêu chí: Lặp lại đến khi `gh pr checks <PR_NUMBER> --repo vvChu/ccba-agent-platform` pass 100% và `audit_pr_comments.py` trả mã thoát `0`.
 - **Tiêu chí hoàn thành:** 100% CI Checks pass xanh và toàn bộ review của Copilot (nếu có) được giải quyết triệt để.
 
 ---
 
-## ✅ Bước 6: Báo Cáo Hoàn Tất & Sẵn Sàng Merge
-Tổng hợp báo cáo: Link PR, kết quả CI, tóm tắt góp ý đã sửa, và thông báo Maintainer kích hoạt `/ccba-review-proposal [PR_NUMBER]`.
-- **Tiêu chí hoàn thành:** Báo cáo hoàn tất tổng hợp link PR và sẵn sàng cho Maintainer kích hoạt `/ccba-review-proposal`.
+## ✅ Bước 6: Gỡ Worktree Sau Push & Bàn Giao Merge Cho Maintainer
+Sau khi nhánh đã được push lên `origin`, di chuyển `cd` ra khỏi `"$WT_DIR"` (về lại thư mục Spoke) rồi mới gỡ bỏ worktree tạm:
+```bash
+cd "$SPOKE_ROOT"
+git -C "$CCBA_HUB_PATH" worktree remove "$WT_DIR"
+```
+Tổng hợp báo cáo: Link PR, kết quả `door-triage`, kết quả CI `gh pr checks` và thông báo Maintainer kích hoạt `/ccba-release-feature` + `/ccba-review-proposal [PR_NUMBER]` để thực hiện squash-merge vào Hub `main`.
+- **Tiêu chí hoàn thành:** Worktree tạm đã gỡ sạch sau khi chuyển thư mục làm việc ra ngoài, bản checkout Hub gốc giữ nguyên trạng và báo cáo bàn giao đầy đủ Link PR.
 
 ---
 
 ## 🔄 Bước 7: Vòng Khép Kín Hậu Hợp Nhất (Closed-Loop Spoke Sync Gate)
 Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bước đóng vòng tại Spoke:
-1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state'` (phải là `MERGED`).
-2. **Đồng bộ Downstream:** Chạy `/ccba-update-spoke` hoặc:
+1. **Xác nhận Hợp nhất:** `gh pr view <PR_NUMBER> --repo vvChu/ccba-agent-platform --json state,mergedAt --jq '.state'` (phải là `MERGED`).
+2. **Đồng bộ Downstream Từ `origin/main` Mới Nhất:** Tạo worktree tách rời trên `origin/main` của Hub (hoặc đảm bảo `$CCBA_HUB_PATH` đang khớp `origin/main`) rồi chạy `/ccba-update-spoke` hoặc:
    ```bash
-   python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --apply
+   HUB_SYNC_WT="/tmp/wt-hub-sync-src"
+   git -C "$CCBA_HUB_PATH" fetch --prune origin
+   git -C "$CCBA_HUB_PATH" worktree add --detach "$HUB_SYNC_WT" origin/main
+   CCBA_HUB_PATH="$HUB_SYNC_WT" CCBA_SKIP_GIT_PULL=1 python "$HUB_SYNC_WT/scripts/sync_spoke.py" --spoke . --apply
+   git -C "$CCBA_HUB_PATH" worktree remove "$HUB_SYNC_WT"
    ```
-3. **Tái cài đặt Editable Package:**
+3. **Tái cài đặt Editable Package (nếu có sửa `packages/`):**
    ```bash
    pip install -e "$CCBA_HUB_PATH/packages/[package-name]"
    ```
-4. **Hồi quy & Dọn dẹp:** Chạy kiểm thử Spoke (`python scripts\validate_legal_spoke.py`), xóa branch `git branch -D proposal/[tên-đề-xuất]`, và ghi log vào `.md/knowledge/session_learnings.md`.
-- **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ thành công và `session_learnings.md` được cập nhật.
+4. **Hồi quy Theo Archetype & Dọn Dẹp:** Đọc `project.archetype` trong `.md/workspace_context.yaml` và chạy bộ kiểm định tương ứng, sau đó xóa branch tạm và cập nhật `.md/knowledge/session_learnings.md`:
+   - `knowledge_corpus`: `python scripts/validate_legal_spoke.py`
+   - `project_delivery`, `enterprise_governance`, hoặc `specialized_extension`:
+     ```bash
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_spoke_cleanliness.py" --path .
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_hub_import_depth.py" --path .
+     ```
+- **Tiêu chí hoàn thành:** Nhánh feature được merge, Spoke downstream đồng bộ sạch từ Hub `origin/main`, bộ kiểm định theo `archetype` đạt `exit 0` và `session_learnings.md` được cập nhật.
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
@@ -12464,10 +12501,10 @@ keywords:
 - verify
 - drift
 - maintain
-argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
+argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker,library,skill}]'
 metadata:
   author: CCBA
-  version: 1.3.0
+  version: 1.4.0
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -12560,6 +12597,16 @@ flowchart TD
           except ProcessLookupError:
               pass
   ```
+
+### Hai Hồ Sơ Thực Thi 5 Khối (`Profile A: Daemon` vs. `Profile B: In-Process Library or Skill`)
+- **Profile A — Daemon & HTTP Service (`--type web|api|worker`):** Giữ nguyên quy trình 5 khối mở cổng TCP, cô lập Process Group và thăm dò HTTP phía trên (11 bộ `verify-ccba-*` hiện hữu giữ nguyên cấu trúc này để bảo toàn tương thích).
+- **Profile B — Thư viện & Kỹ năng thuần (`--type library|skill`):** Áp dụng cho các bộ mới khi đối tượng kiểm định là Python package hoặc tệp `SKILL.md` không lắng nghe cổng mạng (loại bỏ bước sinh `_probe_server.py` HTTP giả tạo):
+  1. **Clean-Slate Pre-flight:** Kiểm tra tồn tại toàn bộ `covered_paths` và chuẩn bị đường dẫn đọc mã băm `covered_sha256` (LF).
+  2. **In-Process Sandbox & Env Isolation:** Khởi tạo `tempfile.TemporaryDirectory`, thiết lập `PYTHONPATH` và biến môi trường an toàn (ví dụ `CCBA_AI_MOCK=1`).
+  3. **Deterministic Import & Seam Readiness Barrier:** Nạp thẳng Public Deep Seam (`__all__` / PEP 562 lazy exports) hoặc `SkillValidator`; tuyệt đối không dùng `time.sleep(N)`.
+  4. **Evidence-Capture Pytest & Statechart Bug-Path Replay:** Thực thi bộ kiểm thử hợp đồng và replay trực tiếp từng bước `bug_path` trên đối tượng thật, ghi nhận kết quả JSON có cấu trúc.
+  5. **Guaranteed Workspace Cleanup:** Dọn sạch thư mục tạm và khôi phục trạng thái biến môi trường hoặc registry trong khối `finally:`.
+- **Hợp đồng bắt buộc chung cho mọi hồ sơ:** Cả Profile A lẫn Profile B đều phải khai báo đủ `sync_commit` (40 hex), `covered_paths`, `covered_sha256` (LF), `verification_mode: [scaffold, sync, verify]`, `features/INDEX.md`, `harness/run_verify_<suffix>.py` và `harness/test_<suffix>_suite.py`.
 
 ---
 
@@ -16135,7 +16182,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-diagnosing-bugs
 metadata:
-  version: "1.1.0"
+  version: "1.1.2"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -16252,6 +16299,7 @@ Do not proceed until you have reproduced **and** minimised.
 Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
 
 - **Complex & Non-Deterministic Failures:** For multi-service, distributed, or non-deterministic bugs where hypotheses risk being fragmented or anchored, invoke [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) to construct a Diagnostic Why-Tree (MECE) before proceeding to falsification tests.
+- **Stateful, Async & Race Bugs (`statechart` v0.15.42):** Nếu lỗi liên quan đến chuyển trạng thái (state machine), đua luồng (race condition), vòng lặp retry-fallback hoặc bất đồng bộ (async lifecycle), đọc thêm [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md) để dựng sơ đồ `stateDiagram-v2` và truy vết chuỗi `bug_path` (gán lớp `class <StateId> bugPath` hoặc `breaks` trên trạng thái lá) trước khi đặt probe ở Phase 4.
 
 Each hypothesis must be **falsifiable**: state the prediction it makes.
 
@@ -18461,7 +18509,7 @@ command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "CCBA Hub"
 triggers:
 - ccba-implement
@@ -18505,7 +18553,8 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
 ### Bước 2: Thiết lập kiểm thử dẫn dắt (TDD Seam Definition)
 1. Tạo hoặc cập nhật tệp kiểm thử chuyên biệt phản ánh đúng các tiêu chí nghiệm thu của spec.
 2. Viết các ca kiểm thử cho cả trường hợp bình thường (happy path) và các điều kiện biên (edge cases).
-3. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
+3. Khi bổ sung middleware hoặc rate limiter chia sẻ trạng thái cấp module (như HTTP `429` bucket theo IP mặc định `"testclient"` của `TestClient`), bắt buộc đăng ký fixture `autouse=True` trong `conftest.py` xóa sạch `_buckets` giữa các test để ngăn rò rỉ trạng thái chéo.
+4. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
 - **Tiêu chí hoàn thành:** Scoped unit test được viết hoàn tất và ghi nhận trạng thái Red ban đầu.
 
 ### Bước 3: Triển khai mã nguồn tối thiểu (KISS Implementation)
@@ -18521,9 +18570,9 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
    python -m ccba_harness verify-patch --preset code --target <package_or_dir>
    ```
    *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`. Lưu ý: khi truyền lệnh tùy chỉnh qua `--cmd`, `verify-patch` phân tách bằng `shlex.split` (`shell=False`), nên mọi biến môi trường nội tuyến bắt buộc đi sau tiền tố `env` (ví dụ: `--cmd "env PYTHONPATH=services/rag-service pytest ..."`).*
-2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng.
+2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng. Lưu ý: khi thao tác trên `git worktree` mới tách (chưa có thư mục untracked `node_modules`), các lệnh kiểm thử/build frontend (`npm test`, `npm run build`, `esbuild`) bắt buộc chạy từ workspace gốc đã cài dependencies hoặc sau khi chạy `npm ci`.
 3. Nếu phát hiện lỗi (Exit Code $\ne 0$), kích hoạt vòng lặp Fix Loop để giải quyết triệt để lỗi kiểu và linter.
-- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
+- **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` và các cổng kiểm thử frontend/regression liên quan đều trả về **Exit Code 0** (Overall Status: PASS, `0` lỗi `ENOENT node_modules` trên worktree, `0` lỗi rò rỉ HTTP `429` qua `TestClient`). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.
 
 ### Bước 5: Kiểm toán kiến trúc và đóng gói (Architecture Audit & Handover)
 1. Kiểm tra xem có thay đổi cấu trúc monorepo hay không (thêm/xóa/đổi tên thư mục, packages, scripts).
@@ -21685,18 +21734,20 @@ graph TD
 Khi nhận được yêu cầu xử lý chuyển đổi tài liệu, hãy tuân thủ quy trình sau:
 
 1. **Chuyển đổi toàn diện qua Deep Seam (All-in-One Pass)**:
-   - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Hệ thống tự động kích hoạt toàn bộ các post-processors làm sạch bảng, biểu mẫu và vá liên kết tương đối:
+   - Sử dụng Python API hoặc CLI để chuyển đổi tài liệu. Luôn chỉ định rõ `output_dir` (ví dụ `.md/extracted_docs`) hoặc `output_path` để tránh ghi tệp `.md` và thư mục `media/` trực tiếp ra Project Root:
      ```python
+     from pathlib import Path
      from mdconverter import ConversionPipeline
 
-     pipeline = ConversionPipeline()
-     result = pipeline.convert("path/to/document.docx")
+     pipeline = ConversionPipeline(output_dir=Path(".md/extracted_docs"))
+     result = pipeline.convert("path/to/document.docx", output_path=".md/extracted_docs/document.md")
+     markdown_text = result.content
      # Hoặc với async pipeline:
-     # result = await ConversionPipeline.process_file("path/to/document.docx")
+     # result = await pipeline.process_file(Path("path/to/document.docx"), output_path=".md/extracted_docs/document.md")
      ```
      Hoặc qua CLI:
      ```bash
-     python -m mdconverter.cli convert "path/to/document.docx"
+     python -m mdconverter.cli convert "path/to/document.docx" --output-dir .md/extracted_docs
      ```
    - **Tiêu chí hoàn thành:** Tệp `.md` đầu ra được tạo thành công, bảng biểu nguyên vẹn, tiêu đề biểu mẫu chuẩn xác và các liên kết phụ lục hợp lệ.
 
@@ -22073,7 +22124,7 @@ Khi làm việc trong dự án có xử lý credentials, Agent **BẮT BUỘC** 
 
 ---
 name: ccba-mermaid-diagram
-description: Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (subgraph style, escaped labels, non-flowcharts) cho tài liệu và xuất bản.
+description: Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic Grayscale, an toàn cú pháp (subgraph, escaped labels, Anti-Lie) cho tài liệu và xuất bản.
 disable-model-invocation: true
 applies_to:
 - Phần mềm
@@ -22084,7 +22135,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-mermaid-diagram
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -22095,6 +22146,7 @@ keywords:
 - Mermaid
 - Diagram
 - Flowchart
+- Statechart
 - Visualization
 - Architecture
 - Sơ đồ
@@ -22103,6 +22155,10 @@ triggers:
 - mermaid
 - vẽ mermaid
 - flowchart
+- statechart
+- stateDiagram-v2
+- sơ đồ trạng thái
+- bug_path
 - sequence diagram
 - sơ đồ mermaid
 ---
@@ -22286,7 +22342,7 @@ Khi thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`) hoặc biểu 
 
 # Skill Reference: ccba-mermaid-diagram/references/statechart_verification_guide.md
 
-# Quy Chuẩn Biểu Diễn Máy Trạng Thái & Đường Dẫn Phản Chứng (`stateDiagram-v2` — Pstack `statechart` v0.15.36)
+# Quy Chuẩn Biểu Diễn Máy Trạng Thái & Đường Dẫn Phản Chứng (`stateDiagram-v2` — Pstack `statechart` v0.15.42)
 
 > **Mục đích & Ngữ cảnh sử dụng:** Hướng dẫn thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`), phân vùng song song trực giao (`--`), quy tắc chống sơ đồ nói dối (Anti-Lie Pruning), và định dạng bàn giao đường dẫn lỗi (`bug_path`) đã được kiểm chứng hiển thị trên Antigravity IDE (và tuân thủ đặc tả trình phân tích cú pháp Mermaid $\ge 10.2$ của GitHub Markdown / Obsidian).
 
@@ -22303,6 +22359,8 @@ Khi sử dụng `stateDiagram-v2` để biểu diễn luồng trạng thái (ví
 | **Vùng song song (`--`)** | Chỉ được dùng làm dấu phân cách **bên trong** một trạng thái hợp thành (`state running_group { ... }`). Tuyệt đối không đặt `--` ở cấp độ gốc (root level). Mỗi vùng song song phải có điểm khởi đầu `[*]` riêng biệt và kiểm tra tính liên thông theo từng vùng. |
 | **Nhãn chuyển tiếp (`when ...`)** | Điều kiện chuyển trạng thái viết sau dấu hai chấm `:`, ưu tiên dùng từ khóa `when ...` bằng ngôn ngữ tự nhiên (ví dụ: `Idle --> Running: when work is queued`). Tránh dùng ngoặc vuông `[...]` hoặc ngoặc nhọn `{...}` trên nhãn cạnh của `stateDiagram-v2` để không bị bộ phân tích cú pháp cắt nhầm. |
 | **Đường dẫn lỗi (`bug_path`)** | Do `classDef` không tô màu được cho cạnh (mũi tên) và `linkStyle` chỉ thuộc về `flowchart`, nguồn chân lý (SSOT) của đường đi ngắn nhất dẫn tới lỗi là khối danh sách có thứ tự `bug_path: [{from, to, when}]` đi kèm dưới sơ đồ. |
+| **Cạnh vào trạng thái cha (`Single-Way-In Parent Entry`)** | Khi mọi mũi tên từ bên ngoài đi vào các trạng thái con của một trạng thái hợp thành (`Parent`) đều xuất phát từ cùng một điểm nguồn duy nhất, vẽ 1 mũi tên từ nguồn đó vào thẳng vỏ `Parent` và dùng `[*] --> Child` bên trong khối `state Parent { ... }` để tránh mũi tên cắt ngang thanh tiêu đề của `Parent` (`drawnEdges` v0.15.42). |
+| **Gộp cạnh thoát cấp cha (`Composite Exit Lifting`)** | Khi mọi trạng thái con bên trong `Parent` đều có chung bước chuyển thoát ra cùng một đích bên ngoài (`Parent --> Next`), vẽ 1 mũi tên thoát duy nhất từ vỏ `Parent` thay vì lặp lại trên từng trạng thái con (`liftToParents`). |
 
 ---
 
@@ -22320,7 +22378,7 @@ Khi sử dụng `stateDiagram-v2` để biểu diễn luồng trạng thái (ví
 Một sơ đồ trạng thái vượt quá **20 mũi tên (cạnh)** sẽ gây quá tải nhận thức cho người duyệt. Khi lược giản hoặc gom nhóm trạng thái, Agent bắt buộc tuân thủ **4 bất biến Anti-Lie**:
 
 1. **Cấm gộp làm mờ lỗi:** Tuyệt đối không gộp một trạng thái `breaks` (luôn lỗi) với trạng thái bình thường làm biến nó thành `mayBreak`, và không gộp hai trạng thái vi phạm hai quy tắc khác nhau vào cùng một nút. Nếu vượt ngân sách 20 cạnh, bắt buộc **tách thành các sơ đồ riêng** (ví dụ: sơ đồ luồng chuẩn *happy-path* và sơ đồ luồng phản chứng *bug-path* hoặc tách theo từng vùng), giữ nguyên vẹn các nút `breaks`.
-2. **Bảo toàn tính liên thông theo vùng:** Mọi trạng thái xuất hiện trên sơ đồ phải có đường đi hợp lệ từ điểm khởi đầu `[*]` của vùng chứa nó.
+2. **Bảo toàn tính liên thông theo vùng:** Mọi trạng thái xuất hiện trên sơ đồ phải có đường đi hợp lệ từ điểm khởi đầu `[*]` của vùng chứa nó. Chỉ tách vùng song song (`--`) khi tổ hợp các trạng thái khởi đầu `[*]` của từng vùng đều tồn tại trong thực tế, điều kiện liên vùng biểu diễn được bằng mệnh đề đơn (`when ...` hoặc `unless ...`), và không sinh ra bước chuyển tích Đề-các giả (`regionsLie`); nếu vi phạm, bắt buộc hạ cấp từ vùng song song (`--`) về trạng thái cha-con (`state Parent { ... }`).
 3. **Cấm tạo Deadlock giả (hoặc cạnh giả):** Mọi trạng thái không phải trạng thái kết thúc phải giữ lại ít nhất 1 mũi tên đi ra nếu trong thực tế nó còn lối thoát. Ngược lại, **trạng thái kết thúc hợp lệ (terminal state)** chỉ được phép có cạnh đi tới `[*]` (hoặc không có cạnh ra), tuyệt đối không vẽ thêm cạnh giả.
 4. **Minh bạch các bước đã ẩn:** Nếu ẩn các bước chuyển phụ (như `reset` hoặc `heartbeat` xuất hiện ở mọi trạng thái), bắt buộc liệt kê rõ danh sách các bước đã ẩn ngay bên dưới sơ đồ. Với trạng thái `repeats` có cạnh tự lặp (`Compute --> Compute`), phải giữ cạnh thoát hoặc ghi rõ cạnh thoát nằm trong danh sách bước ẩn.
 
@@ -24653,7 +24711,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.5"
+  version: "1.3.6"
   author: "CCBA Hub"
 triggers:
 - release
@@ -24740,13 +24798,29 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    gh auth status
    ```
 
-3. **Kiểm tra trạng thái GitHub Actions CI:**
+3. **Kiểm tra trạng thái GitHub Actions CI (và Cổng Dự phòng Quota-Lock Fail-Closed):**
    ```bash
    gh pr checks
    ```
    - *Rào chắn Zero-Polling CI:* 
      - Nếu các checks đang ở trạng thái `pending`, Agent có thể khởi chạy `gh pr checks --watch` rồi **lập tức dừng gọi công cụ (End Turn)** để hệ thống đánh thức qua cơ chế *Reactive Wakeup* khi CI xanh.
      - **Tuyệt đối nghiêm cấm** chạy vòng lặp gọi `manage_task status` liên tiếp nhiều lần để thăm dò task `--watch`.
+   - *Cổng Dự phòng Quota-Lock Fail-Closed (4 Cổng Bắt buộc — Cấm suy đoán hoặc lách luật):*
+     Chỉ được phép chuyển sang mô phỏng CI cục bộ trên bản sao sạch khi thỏa **đồng thời cả 4 cổng** sau (bất kỳ điều kiện nào sai hoặc không đọc được $\to$ **DỪNG NGAY**):
+     1. **Cổng 1 — Chứng thực Quota-Lock qua API Trực tiếp (`statusCheckRollup` + `jobs` + `annotations`):**
+        - Toàn bộ check fail trên PR phải là `CheckRun` có kết luận `FAILURE` (nếu có bất kỳ `StatusContext` hay job nào fail vì lỗi biên dịch/test/lint $\to$ **DỪNG**).
+        - Trích xuất `<run_id>` và `<job_id>` từ `detailsUrl` (mẫu `/actions/runs/<run_id>/job/<job_id>`, hoặc dự phòng qua `GET /repos/{owner}/{repo}/commits/<head_sha>/check-runs`), sau đó gọi `GET /repos/{owner}/{repo}/actions/runs/<run_id>/jobs` và `GET /repos/{owner}/{repo}/check-runs/<job_id>/annotations`.
+        - Khẳng định **mọi** job fail đều có `steps == []` (`0` bước được chạy) **VÀ** có annotation mức `failure` chứa thông điệp khóa thanh toán/hạn mức tài khoản GitHub (`account payments have failed` hoặc `spending limit needs to be increased`).
+     2. **Cổng 2 — Kiểm toán Ruleset & Branch Protection (Fail-Closed, Non-Truncated):**
+        - Gọi REST trên nhánh mặc định (`<default_branch>`): `GET /repos/{owner}/{repo}/branches/<default_branch>/protection`, `GET /repos/{owner}/{repo}/rulesets`, và `GET /repos/{owner}/{repo}/rules/branches/<default_branch>`.
+        - Nếu REST trả `HTTP 200`, xác nhận KHÔNG có `required_status_checks` nào đang bật (`enforcement == "active"` hoặc rule tổng hợp có `type == "required_status_checks"`). Nếu có $\to$ **DỪNG**.
+        - Nếu REST trả `HTTP 403` (ví dụ repo `private` gói Free), bắt buộc truy vấn dự phòng qua GraphQL (`gh api graphql`): đọc `repository.rulesets(first: 20, includeParents: true)` (kèm `rules(first: 20)` bên trong từng ruleset) và `repository.branchProtectionRules(first: 20)`. Yêu cầu **fail-closed**: `HTTP 200`, `errors` rỗng/vắng mặt, mọi connection (`rulesets`, `rules`, `branchProtectionRules`) đều **không null**, và **`pageInfo.hasNextPage == false` ở mọi cấp** (kể cả `rules` lồng nhau); đồng thời không có ruleset `ACTIVE` / protection rule nào yêu cầu `REQUIRED_STATUS_CHECKS` / `requiresStatusChecks`. Nếu bị cắt trang (`hasNextPage == true`), null hoặc có check bắt buộc $\to$ **DỪNG**.
+     3. **Cổng 3 — Phê duyệt Tường minh của Người dùng:**
+        - Báo cáo đầy đủ bằng chứng Cổng 1 + Cổng 2 và chỉ được phép chạy mô phỏng thay thế khi có **chỉ thị/xác nhận rõ ràng của User** (trước hoặc tại thời điểm xử lý PR).
+     4. **Cổng 4 — Mô phỏng CI trên Bản sao Sạch (`/tmp`) & Đăng Biên lai Đã Redact:**
+        - Clone sạch nhánh PR ra `/tmp` (`git clone --depth 1 --branch <pr_branch> --single-branch ... /tmp/ci-clean-...`) và gỡ biến môi trường Hub cục bộ (`env -u CCBA_HUB_PATH -u HUB_PATH`) để đảm bảo zero-leakage từ file untracked hoặc trạng thái máy local.
+        - Chọn runtime container **đúng kiến trúc gốc (`uname -m`) thuộc họ image khai báo trong workflow** (tuyệt đối không gắn cứng tên tag cụ thể trong skill và không chạy image lệch kiến trúc qua emulation nếu đã có tag gốc tương ứng); mọi job phụ thuộc secrets hoặc dịch vụ ngoài không khả dụng tại local phải ghi nhận tường minh `SKIPPED_NO_SECRETS`.
+        - Rà soát và **khử toàn bộ token/password/certificate** (redact) trong báo cáo kết quả mô phỏng trước khi đăng lên PR qua `gh pr comment <PR> -F <tmp_report>`, sau đó xóa sạch `/tmp/ci-clean-*`.
 
 4. **Chốt chặn Review Requests của Copilot (Chống Race Condition Merge Sớm):**
    - Trước khi đọc comments, Agent **bắt buộc phải kiểm tra xem Copilot đã nộp bài review xong hay chưa**:
@@ -24795,7 +24869,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 
 ---
 
-**Tiêu chí hoàn thành:** CI 100% xanh, Copilot review giải quyết xong và PR đã merge thành công.
+**Tiêu chí hoàn thành:** CI 100% xanh (hoặc đối với trường hợp Quota-Lock thỏa đủ 4 cổng dự phòng fail-closed: mọi job fail đều có `steps == []` và failure annotation khóa thanh toán, kiểm toán REST/GraphQL non-truncated xác nhận không có `required_status_checks` đang bật, User đã xác nhận, bản sao sạch `/tmp` chạy xanh kèm danh sách job secret `SKIPPED_NO_SECRETS` và biên lai đã redact được đăng lên PR), Copilot review giải quyết xong và PR đã merge thành công.
 
 ---
 
@@ -24872,8 +24946,28 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      python scripts/governance/compile_catalog.py
      ```
    - *Quy trình Lưu trữ Walkthrough qua PR Riêng (Bắt buộc theo RULE-2.4, RULE-3.5, RULE-4.5, RULE-4.21 & Pre-Push Lock):*
-     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Tệp `walkthrough.md` lưu trong kho bắt buộc dùng liên kết tương đối chuẩn repo (tệp tại `.md/knowledge/reports/walkthrough.md` dẫn về thư mục gốc repo bằng độ sâu 3 cấp `../../../` theo `RULE-2.4`), không chứa URI tệp cục bộ tuyệt đối (`RULE-3.5`, kiểm tra qua `validate_docs.py`), và nội dung mô tả PR bắt buộc ghi ra tệp tạm rồi truyền qua `-F`:
+     Hook `pre-push` cấm tuyệt đối push trực tiếp lên `main` (`Direct push to 'main' is strictly prohibited!`). Không chạy mù `git add` cả 3 đường dẫn khi ở Spoke có thể không theo dõi các tệp walkthrough trong git: kiểm tra **từng đường dẫn theo logic OR** bằng `git ls-files --error-unmatch` trước khi mở PR lưu trữ (giữ nguyên ngoại lệ Step 1.5 cho phép ghi tạm `.md/knowledge/reports/walkthrough.md` trước khi merge nếu cần cho `audit_pr_comments.py` đọc rồi dọn sạch):
      ```bash
+     # Xác định Hub vs Spoke & thu thập từng đường dẫn được git track (logic OR, đa nền tảng Windows/Linux):
+     python -c '
+     import pathlib, subprocess
+     remote = subprocess.check_output(["git", "remote", "get-url", "origin"], text=True)
+     is_hub = "ccba-agent-platform" in remote.lower()
+     candidates = ["walkthrough.md", ".md/knowledge/reports/walkthrough.md", ".agents/proposals"]
+     tracked = [
+         p for p in candidates
+         if pathlib.Path(p).exists()
+         and subprocess.run(
+             ["git", "ls-files", "--error-unmatch", p],
+             stdout=subprocess.DEVNULL,
+             stderr=subprocess.DEVNULL,
+         ).returncode == 0
+     ]
+     print(f"is_hub={is_hub} tracked={tracked}")
+     '
+
+     # Chỉ tạo PR `docs/walkthrough-pr-[PR_NUMBER]` nếu `is_hub=True` HOẶC `len(tracked) > 0`;
+     # ngược lại trên Spoke không track các path trên, giữ Artifact walkthrough tại <appDataDir>/brain/...:
      # Trường hợp A (thư mục gốc đang ở nhánh `main` sạch):
      git checkout main && git pull origin main
      git checkout -b docs/walkthrough-pr-[PR_NUMBER]
@@ -24882,20 +24976,21 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      git fetch --prune origin main:main
      git worktree add -b docs/walkthrough-pr-[PR_NUMBER] <walkthrough_wt> origin/main
 
-     # Trong thư mục nhánh docs/walkthrough-pr-[PR_NUMBER]:
-     git add walkthrough.md .md/knowledge/reports/walkthrough.md .agents/proposals/
+     # Trong nhánh docs/walkthrough-pr-[PR_NUMBER]: chỉ stage <tracked_paths> (hoặc tệp mới tại Hub);
+     # tệp .md/knowledge/reports/walkthrough.md dẫn về gốc repo bằng ../../../ (RULE-2.4) và không chứa file:/// (RULE-3.5):
+     git add -- <tracked_paths>
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
-     # Ghi mô tả PR vào tệp scratch (ví dụ pr_walkthrough_body.md), chạy tiền kiểm door-triage (vì compute_cumulative_streak K>=3/72h vẫn nâng PR tài liệu lên ONE_WAY_DOOR đòi TradeoffCard) rồi truyền qua -F:
-     python -m ccba_harness door-triage walkthrough.md .md/knowledge/reports/walkthrough.md --pr-body-file pr_walkthrough_body.md --enforce-tradeoff-card
-     gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F pr_walkthrough_body.md
+     # Ghi mô tả PR vào tệp scratch (ví dụ /tmp/pr_walkthrough_body.md), chạy tiền kiểm door-triage (vì compute_cumulative_streak K>=3/72h vẫn nâng PR tài liệu lên ONE_WAY_DOOR đòi TradeoffCard) rồi truyền qua -F:
+     python -m ccba_harness door-triage <tracked_paths> --pr-body-file /tmp/pr_walkthrough_body.md --enforce-tradeoff-card
+     gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F /tmp/pr_walkthrough_body.md
      gh pr checks --watch
      # Nếu đang dùng worktree cô lập, tách HEAD và gỡ worktree trước khi xóa nhánh remote:
      git -C <walkthrough_wt> checkout --detach && git worktree remove <walkthrough_wt> && git worktree prune
      gh pr merge [WALKTHROUGH_PR_NUMBER] --squash && git push origin --delete docs/walkthrough-pr-[PR_NUMBER]
      git fetch --prune origin main:main
      ```
-   - **Tiêu chí hoàn thành:** `validate_docs.py` (không chứa `file:///`), `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ `walkthrough.md` vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`.
+   - **Tiêu chí hoàn thành:** Nếu tạo PR lưu trữ (`is_hub=True` hoặc `len(tracked) > 0`): `validate_docs.py` (không chứa `file:///`), `door-triage --enforce-tradeoff-card` trả về Exit Code `0`, PR lưu trữ vượt qua 100% CI Checks và được squash-merge sạch sẽ về `main`; nếu là Spoke không track các đường dẫn trên (`len(tracked) == 0`), Artifact walkthrough nằm tại `<appDataDir>/brain/...` mà không phát sinh file rác trong repo.
 
 6. **Khôi phục Tác Vụ Song Song Đã Stash (Guarded Post-Release Stash Recovery):**
    - Kiểm tra xem Bước 0 có tạo stash cho PR hiện tại hay không:
@@ -26057,7 +26152,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.0"
+  version: "1.7.1"
 bundle: _core
 tier: kernel
 triggers:
@@ -26233,10 +26328,10 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
 - **Vượt cổng `simplify_gate` an toàn (Commit Bypass Protocol — RULE-2.10):**
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
-- **Commit & Nộp PR tuân thủ Rào chắn Hub (`RULE-4.21`):**
-  * Tại Spoke cho phép commit trực tiếp: tạo commit với message chuẩn `docs(knowledge): session retrospective ...`.
-  * Tại Hub (`ccba-agent-platform`, nơi `.githooks/pre-push` chặn đẩy trực tiếp lên `main`): tạo nhánh PR riêng (`docs/session-retrospective-...` hoặc `fix/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create -F <body_file> --assignee "@me"`. Nếu nhánh `main` cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, thực thi toàn bộ Bước 2–5 trên một `git worktree` cô lập tách từ `origin/main` (không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận).
-- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status` clean, không còn file rác untracked, tài nguyên canonical `.agents/teams/` được bảo toàn), và commit/PR thành công tuân thủ rào chắn `simplify_gate` cùng `pre-push`.
+- **Commit & Nộp PR tuân thủ Rào chắn Nhánh Bảo vệ (`RULE-4.21`):**
+  * Tại Spoke không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
+  * Tại Hub (`ccba-agent-platform`) hoặc Protected Spoke có `.githooks/pre-push` chặn đẩy thẳng lên `main`/`master` (như `dgx-spark-toolkit`): thực thi trên `git worktree` cô lập tách từ `origin/<default_branch>` với nhánh PR riêng (`docs/session-retrospective-...` hoặc `chore/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create --body-file <body_file>` (nếu `gh pr edit`/`merge` gặp lỗi GraphQL `projectCards` thì chuyển sang REST `gh api repos/<owner>/<repo>/issues/<id>/assignees` và `PUT /pulls/<id>/merge`; bỏ `git push origin --delete` nếu repo tự xóa nhánh sau merge). Nếu nhánh gốc cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, tuyệt đối không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận.
+- **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status --short --branch` chỉ còn `## <default_branch>...origin/<default_branch>`, `0` tệp untracked/dirty, tài nguyên canonical `.agents/teams/` và `.env` nguyên vẹn), toàn bộ CI checks trên PR đạt `SUCCESS` (Exit Code `0`), và commit/PR hoàn tất tuân thủ `simplify_gate` cùng `pre-push`.
 
 ### Bước 6: Xuất Báo cáo Tóm tắt (Session Retrospective Summary)
 Xuất báo cáo tổng kết ra màn hình chat theo định dạng:
@@ -27281,7 +27376,7 @@ Distilled from `microsoft/power-platform-skills` (`compare-site-configurations` 
 name: ccba-skill-repair
 description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định ccba-harness.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 disable-model-invocation: true
 user-invocable: true
@@ -27329,10 +27424,16 @@ Xác định môi trường làm việc qua `git remote get-url origin` trước
       * Cây làm việc Hub hoàn toàn sạch: `git -C "<hub_path>" status --porcelain` trả về rỗng.
       * Hub đang đứng đúng nhánh tích hợp mặc định `main`: `git -C "<hub_path>" branch --show-current` trả về `main`.
       * Chưa tồn tại nhánh `fix/repair-<tên-skill>` cục bộ hoặc Pull Request mở trùng tên trên remote.
-    * Nếu bất kỳ điều kiện nào vi phạm $\rightarrow$ **DỪNG NGAY** và thông báo để người dùng xử lý trạng thái kho Hub.
-    * Khi cả 4 điều kiện đạt: tạo nhánh mới `git -C "<hub_path>" checkout -b fix/repair-<tên-skill>`, thực hiện toàn bộ Mục 1–4 trên `<hub_path>`, chạy kiểm tra chống rò rỉ dữ liệu Spoke bằng lệnh đa nền tảng:
+    * **Nhánh Worktree Cô Lập khi `<hub_path>` bận phiên song song hoặc lệch `origin/main` (`RULE-4.21`):** Nếu `<hub_path>` hợp lệ (đứng đúng trên repo Hub và chưa có nhánh/PR trùng tên `fix/repair-<tên-skill>`) nhưng working tree `<hub_path>` đang có tệp chưa commit thuộc phiên làm việc song song hoặc nhánh `main` lệch `origin/main`, tuyệt đối **KHÔNG** chạm, stash hay `git checkout`/`git pull` trên `<hub_path>`. Thay vào đó, khởi tạo một `git worktree` cô lập từ `origin/main` của Hub:
       ```bash
-      python "<hub_path>/scripts/governance/check_spoke_leakage.py" --root "<hub_path>"
+      git -C "<hub_path>" fetch --prune origin
+      git -C "<hub_path>" worktree add -b "fix/repair-<tên-skill>" "/tmp/wt-hub-repair-<tên-skill>" origin/main
+      ```
+      Thực hiện toàn bộ Mục 1–4, kiểm tra chống rò rỉ dữ liệu Spoke (`--root "/tmp/wt-hub-repair-<tên-skill>"`), commit, chạy `door-triage` và push/mở PR ngay trong worktree cô lập; sau khi push xong thì chuyển về thư mục Spoke và gỡ worktree bằng `git -C "<hub_path>" worktree remove "/tmp/wt-hub-repair-<tên-skill>"`.
+    * Nếu phát sinh xung đột nhánh/PR trùng tên hoặc `<hub_path>` không hợp lệ $\rightarrow$ **DỪNG NGAY** và thông báo để người dùng xử lý.
+    * Khi `<hub_path>` sạch và cả 4 điều kiện đạt (hoặc đã mở thành công worktree cô lập `RULE-4.21`): thực hiện toàn bộ Mục 1–4 trong nhánh/worktree Hub, chạy kiểm tra chống rò rỉ dữ liệu Spoke bằng lệnh đa nền tảng:
+      ```bash
+      python "<hub_path_or_wt>/scripts/governance/check_spoke_leakage.py" --root "<hub_path_or_wt>"
       ```
       Sau khi nghiệm thu đạt 100%, dừng lại xin xác nhận rõ ràng của người dùng trước khi mở PR qua `/ccba-contribute-to-hub`.
   * **Nhánh B — Bản nháp cục bộ thuần Spoke (chưa có `<hub_path>/.agents/skills/<skill-dir>/SKILL.md` VÀ chưa có tên trong `catalog.yaml` của Hub):** Do Spoke không chứa `scripts/validate_skills.py`, sử dụng trực tiếp CLI của gói `ccba-harness`:
@@ -27461,11 +27562,13 @@ Khóa cứng chu trình đồng bộ và nghiệm thu tất định theo ADR-005
     python -m ccba_harness.cli evaluate-gpi --file <path-to-skill> --existing-tier tier-2b --json
     ```
     *(Bắt buộc xác nhận trong JSON trường `tier == "Tier 2B: Standalone Kernel Skill"` và `allow_standalone_skill: true`; **tuyệt đối không chỉ nhìn mã thoát `0`** vì `evaluate-gpi` vẫn trả mã thoát `0` ngay cả khi `allow_standalone_skill: false`).*
-  * Trên Hub, khóa cứng bằng kiểm tra tài liệu Portal và cổng nghiệm thu preset `skill`:
+  * Trên Hub, khóa cứng bằng kiểm tra tài liệu Portal, đối soát `SPOKE_SPECIFIC_SCRIPTS` và cổng nghiệm thu preset `skill`:
     ```bash
     python scripts/governance/compile_skills_docs.py --check
+    python -m pytest tests/governance/test_workflow_script_parity.py -q
     python -m ccba_harness verify-patch --preset skill --target <path-to-skill>
     ```
+    *(Lưu ý: nếu `SKILL.md` mới bổ sung tham chiếu nội tuyến tới script đặc thù của Spoke như `scripts/<pipeline_hoac_module>.py`, bắt buộc đăng ký đường dẫn đó vào tập `SPOKE_SPECIFIC_SCRIPTS` trong `tests/governance/test_workflow_script_parity.py` trên Hub trước khi chạy kiểm định.)*
     *(Trên bản nháp cục bộ thuần Spoke, nghiệm thu bằng `python -m ccba_harness validate-skill --file <path-to-skill> --enforce-gpi` kết hợp kiểm tra JSON của `evaluate-gpi`).*
 - **Xử lý khi kiểm định thất bại:** Nếu sau tối đa 2 vòng lặp (hoặc khi mã băm SHA-256 đứng yên) bất kỳ lệnh kiểm định nào trả về mã thoát khác `0` hay `allow_standalone_skill: false` trên kỹ năng non-orchestrator $\rightarrow$ **DỪNG NGAY** theo ADR-0058, giữ nguyên diff trên đĩa, in nguyên văn `stderr` / JSON chẩn đoán cho người dùng và nghiêm cấm tuyên bố hoàn thành.
 - **Tiêu chí hoàn thành:** Toàn bộ chuỗi đồng bộ 3 bề mặt, `validate_skills.py --enforce-gpi`, `compile_skills_docs.py --check`, `verify-patch --preset skill` đạt mã thoát `0` (100% PASS) và kết quả JSON `evaluate-gpi` xác nhận hợp lệ tầng kiến trúc đích.
@@ -28257,7 +28360,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-to-spec
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -28339,6 +28442,9 @@ A list of implementation decisions that were made. This can include:
 Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
 
 Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+
+- **Experiment-Settled vs. Product or Preference Choices (`sharpen` v0.15.42):** For any open technical choice that a quick experiment, benchmark, or prototype can settle, require the agent to verify it empirically and recommend an option grounded in observed evidence. Reserve open questions exclusively for product or preference decisions that no experiment can settle.
+- **Stateful & Concurrent Behavior Statechart Pointer (`statechart` v0.15.42):** If the feature involves state transitions, retry-or-fallback loops, background workers, or race-sensitive flows, read [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md) and include a verified `stateDiagram-v2` (with `breaks`, `mayBreak`, `bugPath`, `repeats` classes) in Implementation Decisions.
 
 ## Testing Decisions
 
@@ -32473,6 +32579,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 | `templates/docx-hanh-chinh-*.md` | 9 mẫu VB hành chính NĐ 30 (công văn, quyết định, tờ trình...) |
 | `templates/docx-de-xuat-*.md` | Mẫu đề xuất/báo cáo |
 | `templates/docx-ky-thuat-rfi.md` | Mẫu Phiếu Yêu cầu Cung cấp Thông tin Kỹ thuật (RFI) theo ISO 19650/FIDIC (4-column response grid 9071 DXA, Formal Navy) |
+| `templates/docx-hop-tac-mou-song-ngu.md` | Mẫu Biên bản Ghi nhớ Hợp tác Kinh doanh Song ngữ Anh–Việt (2-column 4535/4536 DXA + Exhibit A RACI Matrix, Formal Navy) |
 | `templates/rfi_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho biểu mẫu RFI kỹ thuật |
 | `examples/docx-bao-cao-formal-navy.docx` | DOCX báo cáo — palette Formal Navy |
 | `examples/docx-cong-van-nd30.docx` | DOCX công văn — chuẩn NĐ 30 |

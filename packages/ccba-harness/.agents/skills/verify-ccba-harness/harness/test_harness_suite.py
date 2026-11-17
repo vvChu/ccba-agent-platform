@@ -6,17 +6,22 @@ Covers all features declared in `packages/ccba-harness/features/INDEX.md`:
 - FEAT-003: Deterministic Patch & Document Verifier (`ccba_harness.verifier`)
 - FEAT-004: 3-Tier One-Way Door Classification (`ccba_harness.door_policy`)
 - FEAT-005: 5-Block Verification Lifecycle Runner (`run_verify_harness.py`)
+- FEAT-006: Statechart Bug-Path Replay & Drift Provenance (`run_verify_harness.classify_drift_status`)
+- FEAT-007: Agent-First JSON Envelope, Semantic Exit Codes & Fail-Closed Door Triage (`ccba_harness.cli._envelope`)
 """
 
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
+from ccba_harness.cli.commands.architecture import run_door_triage_cli
+from ccba_harness.cli.commands.verifier import run_verify_doc_cli, run_verify_patch_cli
 from ccba_harness.cli.core import COMMAND_MAP, main
 from ccba_harness.door_policy import OneWayDoorCategory, classify_pr_door
 from ccba_harness.gpi import (
@@ -214,3 +219,44 @@ def test_feat_006_git_provenance_lock_and_fail_closed() -> None:
     assert check_prov(sync_commit, covered_paths, expected_sha256=tampered) == [covered_paths[0]]
     bad_sha = "deadbeef" * 5
     assert check_prov(bad_sha, covered_paths) == [f"UNVERIFIABLE_SYNC_COMMIT:{bad_sha}"]
+
+    central_index = Path(__file__).resolve().parents[4] / "features" / "INDEX.md"
+    assert runner.verify_surface_diff(central_index, Path(__file__).resolve()) == []  # type: ignore[attr-defined]
+
+
+def test_feat_007_agent_json_envelope_and_semantic_exit_codes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verifies FEAT-007: Additive Flat JSON envelope, semantic exit codes & fail-closed triage."""
+    bad_doc = tmp_path / "draft.md"
+    bad_doc.write_text("# Draft Title\n\nBody text.\n", encoding="utf-8")
+    doc_args = ["--target", str(bad_doc), "--min-bytes", "10", "--required-headings", "## Missing"]
+    doc_code = run_verify_doc_cli([*doc_args, "--json", "--semantic-exit-codes"])
+    doc_data = json.loads(capsys.readouterr().out)
+    assert doc_code == 1
+    assert doc_data["schema_version"] == "1"
+    assert doc_data["status"] == "error"
+    assert doc_data["error"]["code"] == "CHECKS_FAILED"
+    assert len(doc_data["next_actions"]) >= 1
+
+    patch_code = run_verify_patch_cli(["--json", "--semantic-exit-codes", "--unknown-flag"])
+    patch_data = json.loads(capsys.readouterr().out)
+    assert patch_code == 2
+    assert patch_data["error"]["code"] == "INVALID_INPUT"
+
+    seam_file = "packages/ccba-harness/AGENTS.md"
+    fail_triage = run_door_triage_cli(
+        [seam_file, "--enforce-tradeoff-card", "--json", "--semantic-exit-codes"]
+    )
+    fail_data = json.loads(capsys.readouterr().out)
+    assert fail_triage == 1
+    assert fail_data["error"]["code"] == "TRADEOFF_CARD_INVALID"
+
+    sem_triage = run_door_triage_cli([seam_file, "--json", "--semantic-exit-codes"])
+    sem_data = json.loads(capsys.readouterr().out)
+    assert sem_triage == 4
+    assert sem_data["status"] == "approval_required"
+    assert sem_data["error"]["code"] == "HUMAN_APPROVAL_REQUIRED"
+
+    assert run_door_triage_cli([seam_file, "--json"]) == 0
+    capsys.readouterr()

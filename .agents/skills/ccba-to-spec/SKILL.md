@@ -8,7 +8,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-to-spec
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -90,6 +90,9 @@ A list of implementation decisions that were made. This can include:
 Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
 
 Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+
+- **Experiment-Settled vs. Product or Preference Choices (`sharpen` v0.15.42):** For any open technical choice that a quick experiment, benchmark, or prototype can settle, require the agent to verify it empirically and recommend an option grounded in observed evidence. Reserve open questions exclusively for product or preference decisions that no experiment can settle.
+- **Stateful & Concurrent Behavior Statechart Pointer (`statechart` v0.15.42):** If the feature involves state transitions, retry-or-fallback loops, background workers, or race-sensitive flows, read [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md) and include a verified `stateDiagram-v2` (with `breaks`, `mayBreak`, `bugPath`, `repeats` classes) in Implementation Decisions.
 
 ## Testing Decisions
 

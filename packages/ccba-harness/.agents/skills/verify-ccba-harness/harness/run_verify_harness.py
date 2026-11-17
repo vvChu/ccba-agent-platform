@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import signal
 import socket
 import subprocess
@@ -263,6 +264,30 @@ def check_git_provenance(
         covered_paths,
         expected_sha256=expected_sha256,
     )
+
+
+def verify_surface_diff(features_index: Path, test_suite: Path) -> list[str]:
+    """Checks that every FEAT-00* entry in features/INDEX.md has a test in test_harness_suite.py.
+
+    Args:
+        features_index: Path to features/INDEX.md.
+        test_suite: Path to test_harness_suite.py.
+
+    Returns:
+        list[str]: Missing feature IDs not covered by the test suite.
+    """
+    if not features_index.is_file() or not test_suite.is_file():
+        return ["MISSING_INDEX_OR_SUITE"]
+    index_text = features_index.read_text(encoding="utf-8")
+    suite_text = test_suite.read_text(encoding="utf-8").lower()
+    declared_ids = set(re.findall(r"(?<![A-Z-])FEAT-\d{3}\b", index_text))
+    expected_ids = {f"FEAT-00{idx}" for idx in range(1, 8)}
+    missing: list[str] = []
+    for feat_id in sorted(declared_ids | expected_ids):
+        suffix = feat_id.rsplit("-", 1)[-1].lower()
+        if feat_id not in index_text or f"test_feat_{suffix}_" not in suite_text:
+            missing.append(feat_id)
+    return missing
 
 
 def execute_verification_harness(evidence_out: Path | None = None) -> int:

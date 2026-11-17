@@ -8,7 +8,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-diagnosing-bugs
 metadata:
-  version: "1.1.0"
+  version: "1.1.2"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -125,6 +125,7 @@ Do not proceed until you have reproduced **and** minimised.
 Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
 
 - **Complex & Non-Deterministic Failures:** For multi-service, distributed, or non-deterministic bugs where hypotheses risk being fragmented or anchored, invoke [`/ccba-issue-tree`](../ccba-issue-tree/SKILL.md) to construct a Diagnostic Why-Tree (MECE) before proceeding to falsification tests.
+- **Stateful, Async & Race Bugs (`statechart` v0.15.42):** Nếu lỗi liên quan đến chuyển trạng thái (state machine), đua luồng (race condition), vòng lặp retry-fallback hoặc bất đồng bộ (async lifecycle), đọc thêm [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md) để dựng sơ đồ `stateDiagram-v2` và truy vết chuỗi `bug_path` (gán lớp `class <StateId> bugPath` hoặc `breaks` trên trạng thái lá) trước khi đặt probe ở Phase 4.
 
 Each hypothesis must be **falsifiable**: state the prediction it makes.
 

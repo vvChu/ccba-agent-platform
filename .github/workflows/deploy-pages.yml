@@ -13,6 +13,7 @@ on:
       - ".agents/skills/**"
       - ".github/workflows/deploy-pages.yml"
       - "tests/governance/test_skills_docs_integrity.py"
+      - "tests/governance/test_statechart_anti_lie.py"
   workflow_dispatch:
 
 permissions:
@@ -50,7 +51,7 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          pytest tests/governance/test_skills_docs_integrity.py
+          pytest tests/governance/test_skills_docs_integrity.py tests/governance/test_statechart_anti_lie.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

@@ -293,12 +293,16 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
         "FEAT-TDD-",
         "FEAT-REV-",
         "FEAT-PR-",
+        "FEAT-AI-",
+        "FEAT-MDC-",
     )
     for prefix in expected_prefixes:
         assert prefix in central_text, f"Missing {prefix} in central features/INDEX.md"
 
     skill_pairs = [
         ("verify-ccba-harness", "ccba-harness", "harness"),
+        ("verify-ccba-ai", "ccba-ai-gateway-sdk", "ai"),
+        ("verify-ccba-mdconverter", "ccba-markdown-document-processing", "mdconverter"),
         ("verify-ccba-xia", "ccba-xia", "xia"),
         ("verify-ccba-wayfinder", "ccba-wayfinder", "wayfinder"),
         ("verify-ccba-grilling", "ccba-grilling", "grilling"),

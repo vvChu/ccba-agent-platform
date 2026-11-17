@@ -163,7 +163,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
     for _ in range(5):
         orig_reconstructed = reconstructed
 
-        def replace_delayed(m):
+        def replace_delayed(m: re.Match[str]) -> str:
             var_name = m.group(1)
             val = None
             for k, v in vars_dict.items():
@@ -207,7 +207,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
             flags=re.IGNORECASE,
         )
 
-        def replace_pct(m):
+        def replace_pct(m: re.Match[str]) -> str:
             var_name = m.group(1)
             val = None
             for k, v in vars_dict.items():
@@ -251,7 +251,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
             flags=re.IGNORECASE,
         )
 
-        def replace_unix(m):
+        def replace_unix(m: re.Match[str]) -> str:
             var_name = m.group(1)
             val = vars_dict.get(var_name)
             if val is None:
@@ -276,7 +276,7 @@ def _reconstruct_shell_variables(cmd_str: str) -> str:
         )
 
         for var, val in vars_dict.items():
-            reconstructed = re.sub(rf"\${var}\b", lambda m, val=val: val, reconstructed)
+            reconstructed = re.sub(rf"\${var}\b", val.replace("\\", "\\\\"), reconstructed)
 
         if reconstructed == orig_reconstructed:
             break
@@ -515,7 +515,7 @@ def _check_subprocess_call_internal(
     if has_wildcard:
         workspace_files = _get_workspace_files()
 
-    target_env = env if env is not None else os.environ
+    target_env: dict[str, str] = dict(env) if env is not None else dict(os.environ)
     sys_argv_mock = None
     if is_python_cmd and isinstance(cmd_args, list):
         try:
@@ -723,7 +723,7 @@ def _check_subprocess_call(name: str, args: tuple[Any, ...], kwargs: dict[str, A
     _check_subprocess_call_internal(cmd_args, env, stdin, exec_path, guards)
 
 
-def _extract_and_check_base64(text: str, active_guard) -> bool:
+def _extract_and_check_base64(text: str, active_guard: HarnessGuard) -> bool:
     contains_b64_keywords = False
     text_lower = text.lower()
     if (
@@ -873,7 +873,7 @@ def _normalize_cmd_args(cmd_args: Any) -> list[str]:
     return normalized_args
 
 
-def _inject_child_env(env_dict: Any, guards: list[HarnessGuard]) -> dict:
+def _inject_child_env(env_dict: Any, guards: list[HarnessGuard]) -> dict[str, str]:
     if env_dict is None:
         new_env = dict(os.environ)
     else:
@@ -1005,7 +1005,7 @@ def _wrapped_popen(*args: Any, **kwargs: Any) -> Any:
         HarnessState.local.__dict__["in_hook"] = old_in_hook
 
 
-def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
+def _make_os_wrapper(name: str, original_func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(original_func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         if _check_in_hook():
@@ -1042,9 +1042,7 @@ def _make_os_wrapper(name: str, original_func: Callable) -> Callable:
                     base = os.path.basename(cmd_clean)
                     if base.endswith(".exe"):
                         base = base[:-4]
-                    if re.match(r"^(python[\d\.]*w?|pyw?[\d\.]*)$", base):
-                        return True
-                    return False
+                    return bool(re.match(r"^(python[\d\.]*w?|pyw?[\d\.]*)$", base))
 
                 def _is_copied_python_executable(path: str) -> bool:
                     try:
@@ -1121,12 +1119,12 @@ def _wrapped_thread_start(self: threading.Thread, *args: Any, **kwargs: Any) -> 
 
                             HarnessEngine._restore_global_hooks_internal()
 
-    self.run = wrapped_run
+    self.run = wrapped_run  # type: ignore[method-assign]
     return _Originals.thread_start(self, *args, **kwargs)
 
 
 def _wrapped_thread_start_new_thread(
-    function: Callable, args: tuple, kwargs: dict | None = None
+    function: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any] | None = None
 ) -> int:
     parent_guards = list(_get_active_guards())
     if parent_guards:
@@ -1152,7 +1150,9 @@ def _wrapped_thread_start_new_thread(
     return _Originals.thread_start_new_thread(thread_target_wrapper, args, kwargs)
 
 
-def _wrapped_thread_start_new(function: Callable, args: tuple, kwargs: dict | None = None) -> int:
+def _wrapped_thread_start_new(
+    function: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any] | None = None
+) -> int:
     parent_guards = list(_get_active_guards())
     if parent_guards:
         with HarnessState.lock:

@@ -2,12 +2,13 @@
 
 | Mã Tính Năng | Tên Tính Năng | Endpoint / CLI / Module | Verification Script | Trạng Thái | Last Verified |
 | :--- | :--- | :--- | :--- | :---: | :---: |
-| `FEAT-001` | CLI Dispatcher & Static Command Registry | `ccba_harness.cli.core.main` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-01 |
-| `FEAT-002` | Two-Stage Decision Framework & GPI Engine | `ccba_harness.gpi.evaluate_two_stage_decision` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-01 |
-| `FEAT-003` | Deterministic Patch & Document Verifier | `ccba_harness.verifier.verify_patch_execution` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-01 |
-| `FEAT-004` | 3-Tier One-Way Door Classification | `ccba_harness.door_policy.classify_pr_door` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-01 |
-| `FEAT-005` | 5-Block Verification Lifecycle Runner | `run_verify_harness.py` | `.agents/skills/verify-ccba-harness/harness/run_verify_harness.py` | `stable` | 2026-11-01 |
-| `FEAT-006` | Statechart Bug-Path Replay & Drift Provenance | `run_verify_harness.classify_drift_status` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-01 |
+| `FEAT-001` | CLI Dispatcher & Static Command Registry | `ccba_harness.cli.core.main` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-002` | Two-Stage Decision Framework & GPI Engine | `ccba_harness.gpi.evaluate_two_stage_decision` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-003` | Deterministic Patch & Document Verifier | `ccba_harness.verifier.verify_patch_execution` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-004` | 3-Tier One-Way Door Classification | `ccba_harness.door_policy.classify_pr_door` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-005` | 5-Block Verification Lifecycle Runner | `run_verify_harness.py` | `.agents/skills/verify-ccba-harness/harness/run_verify_harness.py` | `stable` | 2026-11-16 |
+| `FEAT-006` | Statechart Bug-Path Replay & Drift Provenance | `run_verify_harness.classify_drift_status` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-007` | Agent-First JSON Envelope, Semantic Exit Codes & Fail-Closed Door Triage | `ccba_harness.cli._envelope` / `run_door_triage_cli` | `.agents/skills/verify-ccba-harness/harness/test_harness_suite.py` | `stable` | 2026-11-16 |
 | `FEAT-XIA-001` | Xia Frontmatter, Slash Command & GPI Threshold ($16.5 \ge 12.0$) | `.agents/skills/ccba-xia/SKILL.md` | `.agents/skills/verify-ccba-xia/harness/test_xia_suite.py` | `stable` | 2026-11-03 |
 | `FEAT-XIA-002` | Xia Pha 1 Recon, Shallow Clone & License Classification Gate | `scripts.spoke.upstream_evaluator.check_repo_license` | `.agents/skills/verify-ccba-xia/harness/test_xia_suite.py` | `stable` | 2026-11-03 |
 | `FEAT-XIA-003` | Xia Pha 2 Hub Catalog Duplicate Check & Gate 0 Determinism | `scripts.spoke.upstream_evaluator.check_is_duplicate` | `.agents/skills/verify-ccba-xia/harness/test_xia_suite.py` | `stable` | 2026-11-03 |
@@ -73,3 +74,15 @@
 | `FEAT-PR-005` | Create PR Spoke Sync Alias (`create-pr` $\to$ `ccba-contribute-to-hub`) & `PlatformToolingDomainSimulator` Registration | `scripts.spoke.sync.coordinator.SKILL_DEPRECATION_ALIASES` | `.agents/skills/verify-ccba-create-pr/harness/test_create_pr_suite.py` | `stable` | 2026-11-03 |
 | `FEAT-PR-006` | Create PR 5-Block Lifecycle, Statechart Bug-Path Replay & Drift Modes | `.agents/skills/verify-ccba-create-pr/harness/run_verify_create_pr.py` | `.agents/skills/verify-ccba-create-pr/harness/test_create_pr_suite.py` | `stable` | 2026-11-03 |
 | `FEAT-PR-007` | Create PR Surface Diff Parity, Git Provenance & Domain Eval Ratchet Optimizer ($100.0\%$) | `ccba_harness.evals.tuner.GitRatchetOptimizer` | `.agents/skills/verify-ccba-create-pr/harness/test_create_pr_suite.py` | `stable` | 2026-11-03 |
+| `FEAT-AI-001` | PEP 562 Lazy Public Seams & Exports (`AIClient`, `AsyncAIClient`, `choose_model`, `CircuitBreaker`) | `ccba_ai.__all__` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-AI-002` | Model Archetypes, Virtual Tiers (`tier-ocr`, `tier-fast`, `tier-reasoning`, `tier-local`), `choose_model()` & `resolve_max_tokens()` | `ccba_ai.routing` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-AI-003` | Circuit Breaker State Machine (`CLOSED` $\to$ `OPEN` $\to$ `HALF_OPEN` $\to$ `CLOSED` / `OPEN`) & `CircuitBreakerOpenError` | `ccba_ai.circuit_breaker` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-AI-004` | Multi-Tier Failover Cascade, Model-Family CLI Affinity & Adaptive Timeout Clamp | `ccba_ai.fallback` / `ccba_ai.client` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-AI-005` | 5-Block Lifecycle, Statechart Bug-Path Replay & Anti-Lie Validation | `run_verify_ai.py` / `verify_statechart_anti_lie` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-AI-006` | Surface Diff Parity, LF SHA-256 Git Provenance Lock & 4-State Drift Classifier | `run_verify_ai.verify_surface_diff` | `.agents/skills/verify-ccba-ai/harness/test_ai_suite.py` | `stable` | 2026-11-16 |
+| `FEAT-MDC-001` | mdconverter PEP 562 Lazy Public Seams & Phân Cấp Lỗi `MDConvertError` | `mdconverter.__init__`, `core/exceptions.py` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
+| `FEAT-MDC-002` | `ConverterRegistry` Priority Selection & `ValueError` Extension Lạ (`bug_path_2`) | `mdconverter.core.registry` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
+| `FEAT-MDC-003` | `ConversionCache` Hit-Miss & Missing-File Stale-Index Replay (`bug_path_4`) | `mdconverter.core.cache` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
+| `FEAT-MDC-004` | `ConversionPipeline` Drawing `SKIPPED` Branch & `PostProcessor` Chain | `mdconverter.core.pipeline` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
+| `FEAT-MDC-005` | Statechart Anti-Lie, `bug_path` Parity, Nested `RuntimeError` & Segmented `[!ERROR]` Partial Success | `mdconverter.core.pipeline` / `verify_statechart_anti_lie` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
+| `FEAT-MDC-006` | Surface Diff Parity, LF SHA-256 Provenance Lock & 4-State Drift Classifier | `run_verify_mdconverter.py` | `.agents/skills/verify-ccba-mdconverter/harness/test_mdconverter_suite.py` | `stable` | 2026-11-17 |
