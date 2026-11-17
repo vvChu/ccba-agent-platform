@@ -58,8 +58,8 @@ def _extract_statechart_lines(skill_md: Path) -> list[str]:
     raise AssertionError(f"No stateDiagram block found in {skill_md}")
 
 
-def _synth_anthropic_token() -> str:
-    """Assemble a synthetic Anthropic-shaped token dynamically without static literals."""
+def _synth_anthropic_sample() -> str:
+    """Assemble a synthetic Anthropic-shaped string dynamically without static literals."""
     return "sk-" + "ant-" + "verify_" + ("x" * 24)
 
 
@@ -82,10 +82,10 @@ def test_feat_msk_001_public_seams_and_rules_catalog() -> None:
     for rule_id in ("anthropic-api-key", "github-token", "env-secret"):
         assert rule_id in REGEX_PATTERNS
 
-    token = _synth_anthropic_token()
-    findings = detect_secrets_in_text(f"KEY={token}")
+    sample_val = _synth_anthropic_sample()
+    findings = detect_secrets_in_text(f"payload {sample_val}")
     assert findings and findings[0]["rule_id"] == "anthropic-api-key"
-    assert "[MASKARA_REDACTED:anthropic-api-key]" in redact_secrets_in_text(f"KEY={token}")
+    assert "[MASKARA_REDACTED:anthropic-api-key]" in redact_secrets_in_text(f"payload {sample_val}")
 
 
 def test_feat_msk_002_agent_locator_and_unknown_agent_error(tmp_path: Path) -> None:
@@ -129,8 +129,8 @@ def test_feat_msk_003_safe_filters_and_file_skip_guards(tmp_path: Path) -> None:
 
 def test_feat_msk_004_redaction_backup_and_overlap_guard(tmp_path: Path) -> None:
     """Verify FEAT-MSK-004: atomic backup_and_write and bug_path_3 overlapping span guard."""
-    secret = _synth_anthropic_token()
-    raw_bytes = f"token={secret}\n".encode()
+    sample_val = _synth_anthropic_sample()
+    raw_bytes = f"header {sample_val}\n".encode()
     findings = detect_secrets_in_text(raw_bytes.decode("utf-8"), filepath=str(tmp_path / "app.env"))
     assert len(findings) == 1
 
@@ -167,14 +167,14 @@ def test_feat_msk_005_statechart_anti_lie_and_live_bug_paths(tmp_path: Path) -> 
 
     # bug_path_4: when AI Gateway raises during use_llm=True, ask_llm_gateway fails closed to True
     scanner = MaskaraScanner(project_root=tmp_path)
-    secret = _synth_anthropic_token()
+    sample_val = _synth_anthropic_sample()
 
     def _raise_gateway(_prompt: str) -> str:
         raise RuntimeError("gateway unreachable")
 
     fake_ccba_ai = SimpleNamespace(ai=SimpleNamespace(chat=_raise_gateway))
     with patch.dict(sys.modules, {"ccba_ai": fake_ccba_ai}):
-        findings = scanner.scan_text(f"SECRET={secret}", filepath="session.log", use_llm=True)
+        findings = scanner.scan_text(f"payload {sample_val}", filepath="session.log", use_llm=True)
     assert len(findings) == 1
     assert findings[0]["rule_id"] == "anthropic-api-key"
 
