@@ -16,10 +16,10 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.3
-sync_commit: "5676c30b16aa8566414272bef7fb449bb4691bad"
+  version: 1.0.4
+sync_commit: "a94e22623ab599a3b6e8c612df8f88f73c8c296d"
 covered_sha256:
-  .agents/skills/ccba-create-pr/SKILL.md: "6739f2f5e332dd1418dcc7de9448c035fddf51232bd09dc4aa36f5ed32ce76e8"
+  .agents/skills/ccba-create-pr/SKILL.md: "24986328077a37cacd731fab4ceaa7890bbb535bc6c34271daa2028c1dacb884"
   .github/pull_request_template.md: "70abccce9ce922f3aced6b306aea7e34a4b1c7a6b548ca7f10c4166e18d8b6db"
   scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
 verification_mode:
