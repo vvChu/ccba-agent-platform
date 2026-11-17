@@ -22,7 +22,7 @@ keywords:
 - locality
 metadata:
   author: CCBA
-  version: 1.4.0
+  version: 1.4.1
 bundle: _core
 tier: kernel
 triggers:
@@ -216,6 +216,7 @@ class ShallowAuditService:
 - **Deepening a cluster given its dependencies** — see [deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [design_it_twice.md](references/design_it_twice.md): spin up parallel sub-agents (max 3) to design the interface several radically different ways, then compare on depth, locality, and seam placement.
 - **Designing an autonomous software factory** — see [software_factory.md](references/software_factory.md): canonical vocabulary (Tasks, Triggers, Runs, Runners, 6 Service Slots), Three Brakes, and 9 factory task patterns.
+- **Statechart & concurrency verification (`statechart v0.15.42`)** — see [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md): khi thiết kế module có $\ge 2$ trạng thái chuyển tiếp, vòng lặp retry-fallback hoặc xử lý đồng thời (concurrency, lock, circuit-breaker), đọc hướng dẫn này để trích xuất sơ đồ `stateDiagram-v2` phân loại theo 4 lớp rủi ro (`breaks`, `mayBreak`, `bugPath`, `repeats`) thay vì chỉ mô tả bằng văn xuôi.
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

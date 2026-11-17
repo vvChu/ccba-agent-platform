@@ -19,10 +19,10 @@ keywords:
 - verify
 - drift
 - maintain
-argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker}]'
+argument-hint: '[--app APP_NAME | --mode {scaffold,maintain} | --type {web,api,cli,worker,library,skill}]'
 metadata:
   author: CCBA
-  version: 1.3.0
+  version: 1.4.0
 disable-model-invocation: true
 bundle: _core
 tier: kernel
@@ -115,6 +115,16 @@ flowchart TD
           except ProcessLookupError:
               pass
   ```
+
+### Hai Hồ Sơ Thực Thi 5 Khối (`Profile A: Daemon` vs. `Profile B: In-Process Library or Skill`)
+- **Profile A — Daemon & HTTP Service (`--type web|api|worker`):** Giữ nguyên quy trình 5 khối mở cổng TCP, cô lập Process Group và thăm dò HTTP phía trên (11 bộ `verify-ccba-*` hiện hữu giữ nguyên cấu trúc này để bảo toàn tương thích).
+- **Profile B — Thư viện & Kỹ năng thuần (`--type library|skill`):** Áp dụng cho các bộ mới khi đối tượng kiểm định là Python package hoặc tệp `SKILL.md` không lắng nghe cổng mạng (loại bỏ bước sinh `_probe_server.py` HTTP giả tạo):
+  1. **Clean-Slate Pre-flight:** Kiểm tra tồn tại toàn bộ `covered_paths` và chuẩn bị đường dẫn đọc mã băm `covered_sha256` (LF).
+  2. **In-Process Sandbox & Env Isolation:** Khởi tạo `tempfile.TemporaryDirectory`, thiết lập `PYTHONPATH` và biến môi trường an toàn (ví dụ `CCBA_AI_MOCK=1`).
+  3. **Deterministic Import & Seam Readiness Barrier:** Nạp thẳng Public Deep Seam (`__all__` / PEP 562 lazy exports) hoặc `SkillValidator`; tuyệt đối không dùng `time.sleep(N)`.
+  4. **Evidence-Capture Pytest & Statechart Bug-Path Replay:** Thực thi bộ kiểm thử hợp đồng và replay trực tiếp từng bước `bug_path` trên đối tượng thật, ghi nhận kết quả JSON có cấu trúc.
+  5. **Guaranteed Workspace Cleanup:** Dọn sạch thư mục tạm và khôi phục trạng thái biến môi trường hoặc registry trong khối `finally:`.
+- **Hợp đồng bắt buộc chung cho mọi hồ sơ:** Cả Profile A lẫn Profile B đều phải khai báo đủ `sync_commit` (40 hex), `covered_paths`, `covered_sha256` (LF), `verification_mode: [scaffold, sync, verify]`, `features/INDEX.md`, `harness/run_verify_<suffix>.py` và `harness/test_<suffix>_suite.py`.
 
 ---
 

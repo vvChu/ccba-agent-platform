@@ -1,4 +1,4 @@
-# Quy Chuẩn Biểu Diễn Máy Trạng Thái & Đường Dẫn Phản Chứng (`stateDiagram-v2` — Pstack `statechart` v0.15.36)
+# Quy Chuẩn Biểu Diễn Máy Trạng Thái & Đường Dẫn Phản Chứng (`stateDiagram-v2` — Pstack `statechart` v0.15.42)
 
 > **Mục đích & Ngữ cảnh sử dụng:** Hướng dẫn thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`), phân vùng song song trực giao (`--`), quy tắc chống sơ đồ nói dối (Anti-Lie Pruning), và định dạng bàn giao đường dẫn lỗi (`bug_path`) đã được kiểm chứng hiển thị trên Antigravity IDE (và tuân thủ đặc tả trình phân tích cú pháp Mermaid $\ge 10.2$ của GitHub Markdown / Obsidian).
 
@@ -15,6 +15,8 @@ Khi sử dụng `stateDiagram-v2` để biểu diễn luồng trạng thái (ví
 | **Vùng song song (`--`)** | Chỉ được dùng làm dấu phân cách **bên trong** một trạng thái hợp thành (`state running_group { ... }`). Tuyệt đối không đặt `--` ở cấp độ gốc (root level). Mỗi vùng song song phải có điểm khởi đầu `[*]` riêng biệt và kiểm tra tính liên thông theo từng vùng. |
 | **Nhãn chuyển tiếp (`when ...`)** | Điều kiện chuyển trạng thái viết sau dấu hai chấm `:`, ưu tiên dùng từ khóa `when ...` bằng ngôn ngữ tự nhiên (ví dụ: `Idle --> Running: when work is queued`). Tránh dùng ngoặc vuông `[...]` hoặc ngoặc nhọn `{...}` trên nhãn cạnh của `stateDiagram-v2` để không bị bộ phân tích cú pháp cắt nhầm. |
 | **Đường dẫn lỗi (`bug_path`)** | Do `classDef` không tô màu được cho cạnh (mũi tên) và `linkStyle` chỉ thuộc về `flowchart`, nguồn chân lý (SSOT) của đường đi ngắn nhất dẫn tới lỗi là khối danh sách có thứ tự `bug_path: [{from, to, when}]` đi kèm dưới sơ đồ. |
+| **Cạnh vào trạng thái cha (`Single-Way-In Parent Entry`)** | Khi mọi mũi tên từ bên ngoài đi vào các trạng thái con của một trạng thái hợp thành (`Parent`) đều xuất phát từ cùng một điểm nguồn duy nhất, vẽ 1 mũi tên từ nguồn đó vào thẳng vỏ `Parent` và dùng `[*] --> Child` bên trong khối `state Parent { ... }` để tránh mũi tên cắt ngang thanh tiêu đề của `Parent` (`drawnEdges` v0.15.42). |
+| **Gộp cạnh thoát cấp cha (`Composite Exit Lifting`)** | Khi mọi trạng thái con bên trong `Parent` đều có chung bước chuyển thoát ra cùng một đích bên ngoài (`Parent --> Next`), vẽ 1 mũi tên thoát duy nhất từ vỏ `Parent` thay vì lặp lại trên từng trạng thái con (`liftToParents`). |
 
 ---
 
@@ -32,7 +34,7 @@ Khi sử dụng `stateDiagram-v2` để biểu diễn luồng trạng thái (ví
 Một sơ đồ trạng thái vượt quá **20 mũi tên (cạnh)** sẽ gây quá tải nhận thức cho người duyệt. Khi lược giản hoặc gom nhóm trạng thái, Agent bắt buộc tuân thủ **4 bất biến Anti-Lie**:
 
 1. **Cấm gộp làm mờ lỗi:** Tuyệt đối không gộp một trạng thái `breaks` (luôn lỗi) với trạng thái bình thường làm biến nó thành `mayBreak`, và không gộp hai trạng thái vi phạm hai quy tắc khác nhau vào cùng một nút. Nếu vượt ngân sách 20 cạnh, bắt buộc **tách thành các sơ đồ riêng** (ví dụ: sơ đồ luồng chuẩn *happy-path* và sơ đồ luồng phản chứng *bug-path* hoặc tách theo từng vùng), giữ nguyên vẹn các nút `breaks`.
-2. **Bảo toàn tính liên thông theo vùng:** Mọi trạng thái xuất hiện trên sơ đồ phải có đường đi hợp lệ từ điểm khởi đầu `[*]` của vùng chứa nó.
+2. **Bảo toàn tính liên thông theo vùng:** Mọi trạng thái xuất hiện trên sơ đồ phải có đường đi hợp lệ từ điểm khởi đầu `[*]` của vùng chứa nó. Chỉ tách vùng song song (`--`) khi tổ hợp các trạng thái khởi đầu `[*]` của từng vùng đều tồn tại trong thực tế, điều kiện liên vùng biểu diễn được bằng mệnh đề đơn (`when ...` hoặc `unless ...`), và không sinh ra bước chuyển tích Đề-các giả (`regionsLie`); nếu vi phạm, bắt buộc hạ cấp từ vùng song song (`--`) về trạng thái cha-con (`state Parent { ... }`).
 3. **Cấm tạo Deadlock giả (hoặc cạnh giả):** Mọi trạng thái không phải trạng thái kết thúc phải giữ lại ít nhất 1 mũi tên đi ra nếu trong thực tế nó còn lối thoát. Ngược lại, **trạng thái kết thúc hợp lệ (terminal state)** chỉ được phép có cạnh đi tới `[*]` (hoặc không có cạnh ra), tuyệt đối không vẽ thêm cạnh giả.
 4. **Minh bạch các bước đã ẩn:** Nếu ẩn các bước chuyển phụ (như `reset` hoặc `heartbeat` xuất hiện ở mọi trạng thái), bắt buộc liệt kê rõ danh sách các bước đã ẩn ngay bên dưới sơ đồ. Với trạng thái `repeats` có cạnh tự lặp (`Compute --> Compute`), phải giữ cạnh thoát hoặc ghi rõ cạnh thoát nằm trong danh sách bước ẩn.
 
