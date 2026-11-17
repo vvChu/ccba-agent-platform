@@ -172,14 +172,39 @@ def test_send_telegram_notification_mock() -> None:
 
 
 @pytest.mark.timeout(90)
-def test_daemon_dry_run_execution() -> None:
-    """Verify daemon executes dry run across discovered catalog without exceptions."""
-    daemon = NightlyTunerDaemon(root=project_root, max_iterations_low=1)
+def test_daemon_dry_run_execution(tmp_path: Path) -> None:
+    """Verify daemon executes dry run across isolated test skills without mutating repo files."""
+    import shutil
+
+    src_skills = project_root / ".agents" / "skills"
+    dst_skills = tmp_path / ".agents" / "skills"
+    for skill_name in ("bigbim-risk", "ccba-academic-writing"):
+        shutil.copytree(
+            src_skills / skill_name,
+            dst_skills / skill_name,
+            ignore=shutil.ignore_patterns(".skill_versions"),
+        )
+
+    src_cases = src_skills / "ccba-eval-gate" / "test_cases"
+    dst_cases = dst_skills / "ccba-eval-gate" / "test_cases"
+    dst_cases.mkdir(parents=True, exist_ok=True)
+    for ds_name in (
+        "eval_bigbim_risk.json",
+        "eval_academic_writing.json",
+        "eval_general_domain.json",
+    ):
+        shutil.copy2(src_cases / ds_name, dst_cases / ds_name)
+
+    daemon = NightlyTunerDaemon(
+        root=tmp_path,
+        max_iterations_low=1,
+        target_skills=["bigbim-risk", "ccba-academic-writing"],
+    )
     # Dry run should execute cleanly without git branch switching
     report = daemon.run_nightly_batch(dry_run=True)
 
     assert isinstance(report, NightlyDaemonReport)
-    assert report.total_skills_scanned > 0
+    assert report.total_skills_scanned == 2
     assert len(report.results) == report.total_skills_scanned
 
 
