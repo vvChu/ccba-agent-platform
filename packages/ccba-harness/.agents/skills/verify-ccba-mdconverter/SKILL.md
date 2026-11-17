@@ -17,12 +17,12 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "fbe8becb1d0ccb63ccdcb312425fd33e27f08553"
+sync_commit: "8910d48158606fc1a05e8256c37f6c5a63360689"
 covered_sha256:
   packages/mdconverter/src/mdconverter/__init__.py: "295ffe0863fc932c0533de5584bca21de5f58d966ee476e2b1fd53432dad8e55"
   packages/mdconverter/src/mdconverter/core/pipeline.py: "255479766ed61b6961869a73d3471d9bd02c241908de862a1aff1297f1d9a553"
   packages/mdconverter/src/mdconverter/core/registry.py: "5dac1677fd3c8562670265c83f2150236d922391cb969513840bf0e7c12ad934"
-  packages/mdconverter/src/mdconverter/core/cache.py: "03d37facc395c0fb812454e9f1acd5ebc691959c95d115d99094ca38f0d8ef9a"
+  packages/mdconverter/src/mdconverter/core/cache.py: "a012589430d84086dad31105f97384f2046d252d049a738b66b7287183b7e37c"
   packages/mdconverter/src/mdconverter/core/exceptions.py: "12ead9c54c3cb88b35e13008182f6890eccf109198a854ad0b898058c5cc8333"
 verification_mode:
   - scaffold
@@ -47,10 +47,10 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `mdconver
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp hợp đồng Seam `legal_markdown.v1` (`mdconverter:ConversionPipeline`, `ConverterRegistry`, `ConversionCache`, `ConversionResult`, `MDConvertError`) tương ứng với kỹ năng `ccba-markdown-document-processing`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `fbe8becb1d0ccb63ccdcb312425fd33e27f08553` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ toàn bộ `5` tệp `covered_paths`.
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `8910d48158606fc1a05e8256c37f6c5a63360689` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ toàn bộ `5` tệp `covered_paths`.
 - **Giới Hạn Phạm Vi (`Scope & Limitations`)**:
   - `mdconverter/core/analyzer.py` chỉ re-export `PDFAnalyzer`, `PDFReport`, `Segment` từ `ccba_pdf_prep`. Do đó luật phân loại tài liệu PDF (`drawing`, `hybrid`, `should_skip`) thuộc trách nhiệm kiểm thử của `ccba-pdf-prep`; bộ kiểm định này khóa nhánh rẽ tại `ConversionPipeline.process_file()` (`pdf_report.should_skip` trả `ConversionStatus.SKIPPED`).
-  - **Follow-up kỹ thuật ghi nhận từ code thật:** `ConversionCache` hiện không dùng file lock khi ghi đồng thời và `_save_index()` nuốt `OSError` âm thầm (`cache.py:61-62`); hành vi mất tệp `.md` cache nhưng giữ mục index cũ (`cache.py:119-122`) được khóa bằng `bug_path_4` bên dưới.
+  - **Hợp đồng đồng thời & giới hạn đã khóa:** `ConversionCache` đồng bộ ghi/đọc đồng thời qua `threading.RLock` + `FileMutexLock` (`cache.py:42-59`), ghi atomic tệp `.md` và ghi log cảnh báo khi gặp `OSError` (`cache.py:90-92`); hành vi mất tệp `.md` cache nhưng giữ mục index cũ (`cache.py:166-170`) vẫn được giữ nguyên và khóa bằng `bug_path_4` bên dưới.
 
 ---
 
