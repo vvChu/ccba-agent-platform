@@ -12276,7 +12276,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.3"
+  version: "1.3.4"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -12371,16 +12371,21 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
 
 ## 📤 Bước 2: Đẩy Mã Nguồn Lên Remote (Push & Set Upstream)
 
-1. **Lấy tên branch hiện tại:**
+1. **Lấy tên branch hiện tại & tiền kiểm quyền OAuth `workflow` khi chạm `.github/workflows/*` (`RULE-5.11`):**
    ```bash
    git branch --show-current
+   # Nếu remote origin dùng HTTPS và nhánh sửa tệp dưới .github/workflows/:
+   git remote get-url origin
+   git diff --name-only origin/<default_branch>..HEAD -- .github/workflows/
+   gh auth status
    ```
+   - Nếu `origin` dùng `https://` **và** commit trên nhánh có sửa `.github/workflows/*` nhưng `gh auth status` chưa liệt kê scope `workflow`: **DỪNG trước khi đẩy nhánh**, không tự đổi giao thức remote; hướng dẫn người dùng chạy `gh auth refresh -h github.com -s workflow` (hoặc chủ động dùng SSH) rồi tiếp tục.
 2. **Đẩy branch lên remote và thiết lập tracking:**
    ```bash
    git push -u origin <current_branch>
    ```
 
-- **Tiêu chí hoàn thành:** Branch đã được cập nhật đầy đủ trên remote repository (`origin`).
+- **Tiêu chí hoàn thành:** Đã xác nhận phạm vi OAuth `workflow` khi nhánh chạm `.github/workflows/*` trên remote HTTPS, `git push` thoát mã `0` và branch có mặt đầy đủ trên `origin`.
 
 ---
 
@@ -12446,7 +12451,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    ```
 2. **Theo dõi GitHub Actions CI (Cổng 1):**
    - Chạy kiểm tra: `gh pr checks <PR_NUMBER>`.
-   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu CI đang chạy, ưu tiên khởi chạy nền `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`) rồi **lập tức kết thúc lượt (End Turn)** để hệ thống đánh thức qua *Reactive Wakeup* đúng 1 lần khi hoàn tất. Nếu dùng `schedule` cho ma trận CI Hub (`~6–7` phút), bắt buộc áp dụng backoff phân tầng (`DurationSeconds: 240` lần đầu $\to$ `60` pha đuôi) thay vì đặt `60s` liên tiếp; **tuyệt đối không** gọi thêm tool nào khác trong cùng lượt với `schedule` và **tuyệt đối CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
+   - **Rào chắn Zero-Polling Policy (RULE-4.8):** Nếu `gh pr checks <PR_NUMBER>` báo `no checks reported` ngay sau khi vừa tạo PR do độ trễ webhook đăng ký CI của GitHub, coi như check đang khởi tạo và gọi **duy nhất** `schedule` (`DurationSeconds: 240`, không kèm tool khác trong cùng lượt) thay vì báo lỗi thiếu CI. Khi các check đã đăng ký và đang chạy, ưu tiên khởi chạy nền `gh pr checks <PR_NUMBER> --watch` (`WaitMsBeforeAsync: 500`) rồi **lập tức kết thúc lượt (End Turn)** để hệ thống đánh thức qua *Reactive Wakeup* đúng 1 lần khi hoàn tất. Nếu dùng `schedule` cho ma trận CI Hub (`~6–7` phút), bắt buộc áp dụng backoff phân tầng (`DurationSeconds: 240` lần đầu $\to$ `60` pha đuôi) thay vì đặt `60s` liên tiếp; **tuyệt đối không** gọi thêm tool nào khác trong cùng lượt với `schedule` và **tuyệt đối CẤM** vòng lặp `manage_task(status)` làm ô nhiễm context.
 3. **Theo dõi AI Code Reviewers (Copilot & Cursor Bugbot — Cổng 2):**
    - Kiểm tra bot review (tại Hub gọi trực tiếp `scripts/validation/audit_pr_comments.py`, tại Spoke gọi qua `CCBA_HUB_PATH`):
      ```bash
