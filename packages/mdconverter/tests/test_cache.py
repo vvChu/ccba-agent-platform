@@ -1,5 +1,6 @@
 """Tests for ConversionCache."""
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from mdconverter.core.cache import ConversionCache
@@ -146,3 +147,47 @@ class TestConversionCache:
         assert stats["hits"] == 1
         assert stats["misses"] == 2
         assert stats["hit_ratio"] == round(1 / 3, 3)
+
+    def test_concurrent_set_and_get_thread_safety(self, tmp_path: Path) -> None:
+        """Test concurrent set/get across threads preserves all entries in index.json."""
+        cache = ConversionCache(cache_dir=tmp_path / ".cache")
+        sources = []
+        for idx in range(16):
+            src = tmp_path / f"doc_{idx}.pdf"
+            src.write_bytes(f"%PDF-1.4 payload {idx}".encode())
+            sources.append((idx, src))
+
+        def _write_and_read(item: tuple[int, Path]) -> tuple[int, str | None]:
+            idx, path = item
+            expected = f"# Document {idx}\n\nBody {idx}"
+            cache.set(path, expected, "concurrent-tool")
+            return idx, cache.get(path)
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(_write_and_read, sources))
+
+        for idx, got in results:
+            assert got == f"# Document {idx}\n\nBody {idx}"
+
+        reloaded = ConversionCache(cache_dir=tmp_path / ".cache")
+        assert reloaded.stats()["entries"] == 16
+        for idx, path in sources:
+            assert reloaded.get(path) == f"# Document {idx}\n\nBody {idx}"
+
+    def test_multi_instance_shared_cache_dir_merges_index(self, tmp_path: Path) -> None:
+        """Test two independent ConversionCache instances merge index entries without lost updates."""
+        cache_dir = tmp_path / ".shared_cache"
+        cache_a = ConversionCache(cache_dir=cache_dir)
+        cache_b = ConversionCache(cache_dir=cache_dir)
+
+        file_a = tmp_path / "a.pdf"
+        file_b = tmp_path / "b.pdf"
+        file_a.write_bytes(b"content-a")
+        file_b.write_bytes(b"content-b")
+
+        cache_a.set(file_a, "# Alpha", "tool-a")
+        cache_b.set(file_b, "# Beta", "tool-b")
+
+        assert cache_a.get(file_b) == "# Beta"
+        assert cache_b.get(file_a) == "# Alpha"
+        assert cache_b.stats()["entries"] == 2

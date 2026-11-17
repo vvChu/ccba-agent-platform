@@ -118,14 +118,23 @@ def test_feat_mdc_002_converter_registry_priority_and_unknown_extension() -> Non
 
 
 def test_feat_mdc_003_conversion_cache_hit_miss_and_stale_index_replay(tmp_path: Path) -> None:
-    """Verify FEAT-MDC-003: ConversionCache hit/miss and bug_path_4 stale index behavior."""
+    """Verify FEAT-MDC-003: ConversionCache hit/miss, multi-instance merge, and bug_path_4 replay."""
+    cache_dir = tmp_path / "cache"
     src = tmp_path / "sample.txt"
+    peer_src = tmp_path / "peer.txt"
     src.write_text("content-v1", encoding="utf-8")
-    cache = ConversionCache(cache_dir=tmp_path / "cache")
+    peer_src.write_text("content-peer", encoding="utf-8")
+
+    cache = ConversionCache(cache_dir=cache_dir)
+    peer_cache = ConversionCache(cache_dir=cache_dir)
     assert cache.get(src) is None
 
     cache.set(src, "# Converted", tool_used="dummy")
+    peer_cache.set(peer_src, "# Peer", tool_used="dummy")
     assert cache.get(src) == "# Converted"
+    assert cache.get(peer_src) == "# Peer"
+    assert str(src.resolve()) in peer_cache._index
+    assert str(peer_src.resolve()) in cache._index
 
     resolved_key = str(src.resolve())
     cache_key = cache._get_cache_key(src)
