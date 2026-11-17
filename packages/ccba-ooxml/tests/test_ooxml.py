@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ccba_ooxml import pack_document, unpack_document
+from ccba_ooxml import OOXMLWorkspace, pack_document, unpack_document
+from ccba_ooxml.pack import condense_xml
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -52,3 +53,31 @@ def test_unpack_and_pack_cycle():
             assert "<body>Hello" in repacked_content
             # The condensed XML should not have excess indent spaces
             assert "  <body>" not in repacked_content
+
+
+def test_condense_xml_malformed_warns_and_preserves_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify condense_xml warns to stderr, preserves raw XML, and keeps OOXMLWorkspace safe."""
+    raw_malformed = "<document><body><unclosed></document>"
+    bad_xml = tmp_path / "malformed.xml"
+    bad_xml.write_text(raw_malformed, encoding="utf-8")
+
+    condense_xml(bad_xml)
+    assert "Warning: Could not condense" in capsys.readouterr().err
+    assert bad_xml.read_text(encoding="utf-8") == raw_malformed
+
+    broken_docx = tmp_path / "broken_roundtrip.docx"
+    with zipfile.ZipFile(broken_docx, "w") as zf:
+        zf.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types></Types>')
+        zf.writestr("word/document.xml", raw_malformed)
+
+    with OOXMLWorkspace(broken_docx, validate=False) as ws:
+        assert ws.working_dir is not None and ws.working_dir.exists()
+
+    err = capsys.readouterr().err
+    assert "Warning: Could not pretty print" in err
+    assert "Warning: Could not condense" in err
+    assert ws.working_dir is None
+    with zipfile.ZipFile(broken_docx) as zf:
+        assert zf.read("word/document.xml").decode("utf-8") == raw_malformed
