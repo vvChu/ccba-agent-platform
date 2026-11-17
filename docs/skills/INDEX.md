@@ -56,7 +56,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | [ccba-grilling](ccba-grilling.md) | `/ccba-grilling` | `kernel` | `User` | Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy chuẩn (... |
 | [ccba-implement](ccba-implement.md) | `/ccba-implement` | `orchestrator` | `User` | Implement a piece of work based on a spec or set of tickets. |
 | [ccba-issue-tree](ccba-issue-tree.md) | `/ccba-issue-tree` | `kernel` | `User` | Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và q... |
-| [ccba-mermaid-diagram](ccba-mermaid-diagram.md) | `/ccba-mermaid-diagram` | `kernel` | `User` | Tạo sơ đồ Mermaid đạt chuẩn học thuật Academic Grayscale, an toàn cú pháp (su... |
+| [ccba-mermaid-diagram](ccba-mermaid-diagram.md) | `/ccba-mermaid-diagram` | `kernel` | `User` | Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic Grayscale... |
 | [ccba-new-feature](ccba-new-feature.md) | `/ccba-new-feature` | `orchestrator` | `User` | Tạo feature branch mới với quy trình lập kế hoạch và phân tách session sạch (... |
 | [ccba-release-feature](ccba-release-feature.md) | `/ccba-release-feature` | `orchestrator` | `User` | Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough |
 | [ccba-session-retrospective](ccba-session-retrospective.md) | `/ccba-session-retrospective` | `kernel` | `User` | Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến hóa kỹ nă... |

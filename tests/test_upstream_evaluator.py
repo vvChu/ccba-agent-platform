@@ -1350,7 +1350,7 @@ def test_pstack_registered_with_baseline_ledger_and_aliases() -> None:
 
     pstack_entries = [e for e in gov["triage_ledger"] if e.get("source") == "pstack"]
     assert len(pstack_entries) == 61
-    assert all(e.get("reviewed_sha") == "97de40dc" for e in pstack_entries)
+    assert all(e.get("reviewed_sha") == "74bcc61b" for e in pstack_entries)
     existing_skills, existing_workflows = get_existing_elements()
     dup, matched = check_is_duplicate("interrogate", existing_skills, existing_workflows)
     assert dup is True and matched == "ccba-code-review"
