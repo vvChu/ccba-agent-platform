@@ -22,7 +22,7 @@ triggers:
   - zettelkasten-compiler
   - book-ingest
 metadata:
-  version: "1.5.1"
+  version: "1.5.2"
   author: "CCBA & VvC Second Brain"
 ---
 
@@ -64,7 +64,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ---
 
-## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.1)
+## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.2)
 
 ### Pha 1: Staging Chống Đua Daemon, Nén WebP & Metadata SSoT Gate
 1. **Chạy trình điều phối Staging lũy đẳng (`pipeline.book_staging`)**:
@@ -101,6 +101,11 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
      refresh_book_context_summary(workspace_dir, summary_str)
      ```
 2. **Quy tắc cấm ở Pha 2**: Tuyệt đối **KHÔNG** tạo tay tệp `MOC_*.md`, **KHÔNG** sửa tay `00 - Maps of Content/index.md`, và **KHÔNG** chạy `wiki_maintain.py` khi chưa có Concept Notes.
+3. **Liên kết Tùy chọn (On-Demand Hook) với `/ccba-notebooklm-connector`**: Với sách đồ sộ nhiều bảng biểu/sơ đồ, có thể gọi thủ công ngoài daemon (sau khi quét `ccba-maskara`) để làm giàu `<BOOK_CONTEXT>`; tuyệt đối cấm dùng bản tóm tắt đám mây thay cho Ground Truth Verbatim ở Pha 3:
+   ```bash
+   python -m ccba_notebooklm mindmap --source "<book_file>"
+   python -m ccba_notebooklm data-table --source "<book_file>" --instructions "<trích-bảng-cấu-trúc>"
+   ```
 - **Tiêu chí hoàn thành:** `Source Note` đạt chuẩn Schema `AGENTS.md §3.1`, cache `_vault_sources_cache.json` và `<BOOK_CONTEXT>` đã đồng bộ tóm tắt mới.
 
 ### Pha 3: Bóc Tách 12–16 Concept Notes Qua Seam Chính Thống & Batch `.npz`
@@ -142,10 +147,14 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
      ```bash
      scripts/.venv/bin/python scripts/wiki_maintain.py
      ```
+3. **Xuất bản Phái sinh Tùy chọn (Downstream Derivative Studio qua `/ccba-notebooklm-connector`)**: Sau khi hoàn tất biên dịch và quét `ccba-maskara`, có thể đẩy Source/Topic Notes lên NotebookLM theo yêu cầu để sinh `audio` (Podcast MP3), `slides`, `quiz`, hoặc `flashcards`:
+   ```bash
+   python -m ccba_notebooklm audio --source "04 - Permanent/sources/YYYY-MM-DD_<book_name_lower>.md"
+   ```
 - **Tiêu chí hoàn thành:** `MOC_<moc_slug>.md` và `index.md` được sinh tự động, khớp 100% liên kết hai chiều.
 
 ### Pha 6: Cổng Kiểm Định Tất Định C4 (`--verify-book`, `0 broken_body_links`, `0 invalid_embeds`) & Bàn Giao
-1. **Chạy cổng kiểm định C4 toàn diện** (kiểm tra corpus WebP, TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()`, chống tự nhúng / nhúng `.md` phi sơ đồ qua `find_invalid_concept_embeds()`, hộp bao Excalidraw `[1000..1150px]`, `fontSize >= 13`, và đối soát `broken_body_links == 0` đồng bộ `VaultLinter` + media embeds):
+1. **Chạy cổng kiểm định C4 toàn diện** (kiểm tra corpus WebP, TOC, hồ sơ `source`/`concept`/`topic`, `_validate_quality()`, chống Ground Truth rỗng `> (không có)`, chống rò rỉ ký tự Cyrillic, chống tự nhúng / nhúng `.md` phi sơ đồ qua `find_invalid_concept_embeds()`, hộp bao Excalidraw `[1000..1150px]`, `fontSize >= 13`, và đối soát `broken_body_links == 0` đồng bộ `VaultLinter` + media embeds):
    ```bash
    scripts/.venv/bin/python .agents/skills/ccba-book-compiler/scripts/compress_images_to_webp.py \
      --verify-book \
