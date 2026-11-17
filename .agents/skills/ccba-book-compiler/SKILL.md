@@ -22,7 +22,7 @@ triggers:
   - zettelkasten-compiler
   - book-ingest
 metadata:
-  version: "1.5.2"
+  version: "1.5.3"
   author: "CCBA & VvC Second Brain"
 ---
 
@@ -64,7 +64,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ---
 
-## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.2)
+## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.3)
 
 ### Pha 1: Staging Chống Đua Daemon, Nén WebP & Metadata SSoT Gate
 1. **Chạy trình điều phối Staging lũy đẳng (`pipeline.book_staging`)**:
