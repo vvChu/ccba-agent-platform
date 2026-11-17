@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -59,8 +60,12 @@ def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool
 
 def condense_xml(xml_file: str | Path) -> None:
     """Strip unnecessary whitespace and remove comments."""
-    with open(xml_file, encoding="utf-8") as f:
-        dom = defusedxml.minidom.parse(f)
+    try:
+        with open(xml_file, encoding="utf-8") as f:
+            dom = defusedxml.minidom.parse(f)
+    except Exception as e:
+        print(f"Warning: Could not condense {xml_file}: {e}", file=sys.stderr)
+        return
 
     # Process each element to remove whitespace and comments
     for element in dom.getElementsByTagName("*"):

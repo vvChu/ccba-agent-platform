@@ -17,10 +17,10 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "34631047b3dcccea78b8120a462cb9aacb082fda"
+sync_commit: "f2bc229da4ce3a794c86d9293d8280de04f26ab3"
 covered_sha256:
   packages/ccba-ooxml/src/ccba_ooxml/__init__.py: "0d19ac4db2ae5ea9e49f2fb76aebf4306177b772bea09e2cb7d757a1f74f0896"
-  packages/ccba-ooxml/src/ccba_ooxml/pack.py: "9764141d6db8d1ea5f25d1b6e7320c59a41304aa09a441ad8fa854dd3538ed5c"
+  packages/ccba-ooxml/src/ccba_ooxml/pack.py: "8b7aa154e114fadf2c518a7ccd3a568da3369d9ed89ed19b021b2989a3caa337"
   packages/ccba-ooxml/src/ccba_ooxml/tables.py: "14d4bf8ce6856adc6415531b49808a8079198b5ebe9d5394d1e324d850b97ed9"
   packages/ccba-ooxml/src/ccba_ooxml/unpack.py: "17315b9d99a83401aa22e7fe29eca44493c2d882636f52d4afb662c619b3bba2"
   packages/ccba-ooxml/src/ccba_ooxml/workspace.py: "aea6c061c0f99a065040126af7d971865d5cdf9b86db1e90a38b66cc5039dccb"
@@ -47,10 +47,10 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-oox
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp `64` lazy-loaded Public Deep Seams trong `ccba_ooxml.__all__` / `_LAZY_EXPORTS` tương ứng với kỹ năng `ccba-xu-ly-van-phong`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit `34631047b3dcccea78b8120a462cb9aacb082fda` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ `5` tệp lõi sạch `mypy --strict` (`__init__.py`, `pack.py`, `tables.py`, `unpack.py`, `workspace.py`).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit `f2bc229da4ce3a794c86d9293d8280de04f26ab3` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ `5` tệp lõi sạch `mypy --strict` (`__init__.py`, `pack.py`, `tables.py`, `unpack.py`, `workspace.py`).
 - **Giới Hạn Phạm Vi (`Scope & Limitations`)**:
   - Toàn bộ ca kiểm thử chạy 100% in-process trên fixture `.docx`/ZIP tạo trong `tmp_path` (`< 0.2s`), dùng `monkeypatch` cô lập `validate_document` và `calc.recalc_xlsx` để tuyệt đối không gọi tiến trình LibreOffice (`soffice`).
-  - **Known Tech Debt (`bug_path_4` — Asymmetric Malformed XML)**: `unpack_document()` (`unpack.py:35-37`) bắt ngoại lệ XML hỏng, chỉ in cảnh báo ra `stderr` và giữ nguyên tệp XML thô trên đĩa; ngược lại `condense_xml()` (`pack.py:60-63`) gọi `defusedxml.minidom.parse(f)` không bọc `try/except`, làm nổ `ExpatError` khi `OOXMLWorkspace.__exit__()` đóng gói (với thư mục tạm vẫn được dọn sạch trong `finally:` và tệp gốc được bảo toàn).
+  - **Symmetric Malformed-XML Handling (`bug_path_4`)**: Cả `unpack_document()` (`unpack.py:31-37`) lẫn `condense_xml()` (`pack.py:62-68`) đều bắt ngoại lệ XML hỏng, in cảnh báo (`Warning: Could not pretty print` / `Warning: Could not condense`) ra `stderr` và bảo toàn nguyên vẹn XML thô trên đĩa để `OOXMLWorkspace` đóng gói an toàn không ném `ExpatError`.
 
 ---
 
@@ -88,7 +88,7 @@ stateDiagram-v2
   state "BUG-PATH: WorkspaceActive - unpack_document Xong" as WorkspaceActive
   state "MAY-BREAK: NonXlsxSoftErrorDict - recalculate Trả Dict Lỗi" as NonXlsxSoftErrorDict
   state "BREAKS: ValidationRollbackValueError - Gói/Kiểm Định Thất Bại" as ValidationRollbackValueError
-  state "MAY-BREAK: MalformedXmlWarnThenCrash - Bất Đối Xứng Unpack/Pack" as MalformedXmlWarnThenCrash
+  state "MAY-BREAK: MalformedXmlWarnAndPreserve - Cảnh Báo & Giữ Nguyên XML Thô" as MalformedXmlWarnAndPreserve
   state "WorkspaceDone: Đóng Gói & Dọn Sạch Temp Thành Công" as WorkspaceDone
 
   [*] --> WorkspaceInit
@@ -101,17 +101,17 @@ stateDiagram-v2
     [*] --> XmlEntryIter
     XmlEntryIter --> XmlEntryIter: when condensing next xml or table row
   }
-  XmlCondenseLoop --> MalformedXmlWarnThenCrash: when unpack warned on malformed xml and condense parses it
+  XmlCondenseLoop --> MalformedXmlWarnAndPreserve: when unpack and condense warn on malformed xml and preserve raw file
   XmlCondenseLoop --> ValidationRollbackValueError: when validate_document returns False and unlinks output
   XmlCondenseLoop --> WorkspaceDone: when repacked archive copied and temp cleaned up
   InactiveRuntimeError --> [*]
   NonXlsxSoftErrorDict --> [*]
-  MalformedXmlWarnThenCrash --> [*]
+  MalformedXmlWarnAndPreserve --> [*]
   ValidationRollbackValueError --> [*]
   WorkspaceDone --> [*]
 
   class InactiveRuntimeError,ValidationRollbackValueError breaks
-  class NonXlsxSoftErrorDict,MalformedXmlWarnThenCrash mayBreak
+  class NonXlsxSoftErrorDict,MalformedXmlWarnAndPreserve mayBreak
   class WorkspaceActive bugPath
   class XmlEntryIter repeats
 ```
@@ -120,7 +120,7 @@ stateDiagram-v2
 - `bug_path_1` (Inactive Workspace `RuntimeError` Outside `with`): `[{"from": "WorkspaceInit", "to": "InactiveRuntimeError", "when": "validate or path helper called outside with"}]`
 - `bug_path_2` (Non-`.xlsx` `recalculate()` Returns Soft Error Dict): `[{"from": "WorkspaceInit", "to": "WorkspaceActive", "when": "__enter__ unpacks existing archive"}, {"from": "WorkspaceActive", "to": "NonXlsxSoftErrorDict", "when": "recalculate called on non-xlsx suffix"}]`
 - `bug_path_3` (Validation Failure Unlinks Temp Output & Raises `ValueError` Preserving Original): `[{"from": "WorkspaceActive", "to": "XmlCondenseLoop", "when": "__exit__ triggers pack_document"}, {"from": "XmlCondenseLoop", "to": "ValidationRollbackValueError", "when": "validate_document returns False and unlinks output"}]`
-- `bug_path_4` (Malformed XML Warning in `unpack_document` Then `ExpatError` in `condense_xml` With `finally` Cleanup): `[{"from": "WorkspaceActive", "to": "XmlCondenseLoop", "when": "__exit__ triggers pack_document"}, {"from": "XmlCondenseLoop", "to": "MalformedXmlWarnThenCrash", "when": "unpack warned on malformed xml and condense parses it"}]`
+- `bug_path_4` (Symmetric Malformed XML Warning & Raw Preservation Across Unpack + Condense): `[{"from": "WorkspaceActive", "to": "XmlCondenseLoop", "when": "__exit__ triggers pack_document"}, {"from": "XmlCondenseLoop", "to": "MalformedXmlWarnAndPreserve", "when": "unpack and condense warn on malformed xml and preserve raw file"}]`
 - `hidden_steps` (lược bỏ để giữ ngân sách $\le 20$ cạnh):
   - `WorkspaceInit -> FileNotFoundError` (khi `OOXMLWorkspace.__enter__` hoặc `unpack_document` gặp tệp nguồn không tồn tại).
   - `WorkspaceActive -> ValueError` (khi `get_file_path("../...")` phát hiện path traversal, hoặc `pack_document` gặp định dạng ngoài `.docx`/`.pptx`/`.xlsx`).

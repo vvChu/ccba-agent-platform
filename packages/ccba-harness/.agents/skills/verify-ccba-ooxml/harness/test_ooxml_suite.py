@@ -5,7 +5,7 @@ Covers all features declared in `verify-ccba-ooxml/features/INDEX.md`:
 - FEAT-OOX-002: unpack_document Pretty-Printing, pack_document & condense_xml Behavior
 - FEAT-OOX-003: OOXMLWorkspace Lifecycle, bug_path_1 (Inactive), bug_path_2 (Non-xlsx), bug_path_3 (Rollback)
 - FEAT-OOX-004: TableReconstructor, StructuredTable & make_descriptive_table_slug
-- FEAT-OOX-005: Statechart Anti-Lie, bug_path Parity & Asymmetric Malformed-XML (bug_path_4)
+- FEAT-OOX-005: Statechart Anti-Lie, bug_path Parity & Symmetric Malformed-XML Warning (bug_path_4)
 - FEAT-OOX-006: Surface Diff Parity, LF SHA-256 Provenance Lock & 4-State Drift Classifier
 """
 
@@ -15,7 +15,6 @@ import importlib.util
 import json
 import re
 import sys
-import xml.parsers.expat
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -247,7 +246,7 @@ def test_feat_oox_004_table_reconstructor_slugs_and_exports(tmp_path: Path) -> N
 def test_feat_oox_005_statechart_anti_lie_and_malformed_xml_bug_path_4(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Verify FEAT-OOX-005: Statechart Anti-Lie, bug_path parity & asymmetric XML replay (bug_path_4)."""
+    """Verify FEAT-OOX-005: Statechart Anti-Lie, bug_path parity & symmetric XML warning (bug_path_4)."""
     runner = _load_runner_module()
     if str(runner.REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(runner.REPO_ROOT))
@@ -260,25 +259,27 @@ def test_feat_oox_005_statechart_anti_lie_and_malformed_xml_bug_path_4(
     assert verify_statechart_anti_lie(_extract_statechart_lines(skill_md)) == []
     assert verify_bug_path_matches_statechart(skill_md.read_text(encoding="utf-8")) == []
 
-    # bug_path_4: unpack warns to stderr and keeps malformed XML, then condense_xml raises ExpatError
+    # bug_path_4: both unpack_document & condense_xml warn to stderr and preserve raw XML safely
+    raw_malformed = "<document><body><unclosed></document>"
     broken_docx = tmp_path / "broken_xml.docx"
-    _write_minimal_docx_zip(broken_docx, "<document><body><unclosed></document>")
-    original_bytes = broken_docx.read_bytes()
+    _write_minimal_docx_zip(broken_docx, raw_malformed)
 
     ws_broken = OOXMLWorkspace(broken_docx, validate=False)
     broken_dir_ref: Path | None = None
-    with pytest.raises(xml.parsers.expat.ExpatError):
-        with ws_broken:
-            assert ws_broken.working_dir is not None
-            broken_dir_ref = ws_broken.working_dir
-            assert broken_dir_ref.exists()
-            captured = capsys.readouterr()
-            assert "Warning: Could not pretty print" in captured.err
+    with ws_broken:
+        assert ws_broken.working_dir is not None
+        broken_dir_ref = ws_broken.working_dir
+        assert broken_dir_ref.exists()
 
-    # Safe rollback: temporary working directory is cleaned up and source file untouched
+    captured = capsys.readouterr()
+    assert "Warning: Could not pretty print" in captured.err
+    assert "Warning: Could not condense" in captured.err
+
+    # Safe cleanup and raw XML content preserved
     assert ws_broken.working_dir is None
     assert broken_dir_ref is not None and not broken_dir_ref.exists()
-    assert broken_docx.read_bytes() == original_bytes
+    with zipfile.ZipFile(broken_docx) as zf:
+        assert zf.read("word/document.xml").decode("utf-8") == raw_malformed
 
 
 def test_feat_oox_006_surface_diff_provenance_and_drift_modes() -> None:
