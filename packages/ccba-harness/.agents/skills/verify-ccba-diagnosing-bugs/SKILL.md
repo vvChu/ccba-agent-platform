@@ -16,10 +16,10 @@ gpi:
   p: 1.0
 metadata:
   author: CCBA
-  version: 1.0.1
+  version: 1.0.3
 sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
 covered_sha256:
-  .agents/skills/ccba-diagnosing-bugs/SKILL.md: "c94b18ef24609169bc861ebd414261da6a4a46748f6407709eaccaeb2418a8bd"
+  .agents/skills/ccba-diagnosing-bugs/SKILL.md: "4e6b7e02ea4651c9384554f7fd2b5d3e299e8d3e31d0cbc952a815860985223a"
   .agents/skills/ccba-diagnosing-bugs/references/mock_debugging_patterns.md: "0ae74b2d19482e5c5fef385a6632d160c369fe119ab29d3dbc20c659dbe98a06"
   scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
 verification_mode:
