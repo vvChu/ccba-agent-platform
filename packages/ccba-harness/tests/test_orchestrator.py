@@ -34,3 +34,31 @@ class TestEvalOrchestrator(unittest.TestCase):
         output = "Line 1\nLine 2\nValueError: Invalid setting\nLine 4"
         lines = self.orchestrator.extract_summary_traceback(output)
         self.assertTrue(any("ValueError: Invalid setting" in line for line in lines))
+
+    def test_ensure_single_instance_skips_in_xdist_worker_and_ci(self) -> None:
+        import os
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock, patch
+
+        fake_psutil = SimpleNamespace(
+            Process=MagicMock(),
+            process_iter=MagicMock(return_value=[]),
+            NoSuchProcess=RuntimeError,
+            AccessDenied=PermissionError,
+            ZombieProcess=RuntimeError,
+        )
+        clean_env = {"CI": "", "GITHUB_ACTIONS": "", "PYTEST_XDIST_WORKER": ""}
+
+        with patch.dict(sys.modules, {"psutil": fake_psutil}):
+            with patch.dict(os.environ, {**clean_env, "PYTEST_XDIST_WORKER": "gw0"}):
+                self.orchestrator.ensure_single_instance("run_safe_eval_wrapper.py")
+            fake_psutil.process_iter.assert_not_called()
+            fake_psutil.Process.assert_not_called()
+
+            with patch.dict(os.environ, {**clean_env, "CI": "1"}):
+                self.orchestrator.ensure_single_instance("run_safe_eval_wrapper.py")
+            fake_psutil.process_iter.assert_not_called()
+
+            with patch.dict(os.environ, clean_env):
+                self.orchestrator.ensure_single_instance("run_safe_eval_wrapper.py")
+            fake_psutil.process_iter.assert_called_once()

@@ -35,11 +35,45 @@ class EvalOrchestrator:
                 project_root = Path.cwd()
         self.project_root = project_root
 
+    @staticmethod
+    def _terminate_win32_wmic_duplicates(
+        script_keyword: str, current_pid: int, parent_pid: int | None
+    ) -> None:
+        """Fallback duplicate process cleanup on Windows using wmic and taskkill."""
+        try:
+            res = subprocess.run(
+                [
+                    "wmic",
+                    "process",
+                    "where",
+                    "name='python.exe'",
+                    "get",
+                    "processid,commandline",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            for line in res.stdout.splitlines():
+                if script_keyword not in line:
+                    continue
+                parts = line.strip().rsplit(maxsplit=1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    pid = int(parts[1])
+                    if pid != current_pid and (not parent_pid or pid != parent_pid):
+                        print(f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid}...")
+                        subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+        except Exception:
+            pass
+
     def ensure_single_instance(self, script_keyword: str = "run_safe_eval_wrapper.py") -> None:
         """Revoke duplicate instances of evaluation runner processes."""
         ci_env = os.environ.get("CI", "").strip().lower()
         gh_env = os.environ.get("GITHUB_ACTIONS", "").strip().lower()
         if ci_env in ("true", "1", "yes") or gh_env in ("true", "1", "yes"):
+            return
+        if os.environ.get("PYTEST_XDIST_WORKER", "").strip():
             return
 
         current_pid = os.getpid()
@@ -68,44 +102,11 @@ class EvalOrchestrator:
                             f"🧹 [AUTO-LOCK] Thu hồi tiến trình cũ PID {pid} ({script_keyword})..."
                         )
                         proc.terminate()
-                except (
-                    psutil.NoSuchProcess,
-                    psutil.AccessDenied,
-                    psutil.ZombieProcess,
-                ):
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     continue
         except ImportError:
             if sys.platform == "win32":
-                try:
-                    res = subprocess.run(
-                        [
-                            "wmic",
-                            "process",
-                            "where",
-                            "name='python.exe'",
-                            "get",
-                            "processid,commandline",
-                        ],
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                        errors="replace",
-                    )
-                    for line in res.stdout.splitlines():
-                        if script_keyword in line:
-                            parts = line.strip().rsplit(maxsplit=1)
-                            if len(parts) == 2 and parts[1].isdigit():
-                                pid = int(parts[1])
-                                if pid != current_pid:
-                                    print(
-                                        f"🧹 [AUTO-LOCK] Thu hồi tiến trình trùng lặp PID {pid}..."
-                                    )
-                                    subprocess.run(
-                                        ["taskkill", "/F", "/PID", str(pid)],
-                                        capture_output=True,
-                                    )
-                except Exception:
-                    pass
+                self._terminate_win32_wmic_duplicates(script_keyword, current_pid, parent_pid)
 
     def kill_process_tree(self, pid: int) -> None:
         """Recursively terminate process tree across platforms."""

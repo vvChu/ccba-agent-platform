@@ -7,6 +7,7 @@ Discovers target test files and runs pytest via DetachedExecutionEngine.
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add scripts directory to sys.path if needed
 scripts_dir = Path(__file__).resolve().parent
@@ -49,20 +50,28 @@ def main() -> int:
         action="store_true",
         help="Allow running pytest across entire workspace",
     )
+    parser.add_argument(
+        "--workers",
+        type=str,
+        default=None,
+        help="Opt-in pytest-xdist worker count (e.g. 'auto' or '4'; omit or '1' for single-process)",
+    )
     parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Additional pytest options")
 
     args = parser.parse_args()
 
-    return int(
-        DetachedExecutionEngine.run_safe_pytest(
-            target_file=args.file,
-            package=args.package,
-            fast=args.fast,
-            dry_run=args.dry_run,
-            allow_unscoped=args.allow_unscoped,
-            extra_args=args.extra_args,
-        )
-    )
+    run_kwargs: dict[str, Any] = {
+        "target_file": args.file,
+        "package": args.package,
+        "fast": args.fast,
+        "dry_run": args.dry_run,
+        "allow_unscoped": args.allow_unscoped,
+        "extra_args": args.extra_args,
+    }
+    if args.workers is not None:
+        run_kwargs["workers"] = args.workers
+
+    return int(DetachedExecutionEngine.run_safe_pytest(**run_kwargs))
 
 
 if __name__ == "__main__":

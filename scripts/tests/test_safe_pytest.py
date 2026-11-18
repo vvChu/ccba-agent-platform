@@ -56,3 +56,26 @@ def test_dry_run_mode_multiple_files(capsys):
         assert "[SafePytest DRY-RUN] Planned execution:" in captured.out
         assert "tests/test_demo1.py" in captured.out
         assert "tests/test_demo2.py" in captured.out
+
+
+def test_dry_run_workers_opt_in_and_backward_compatibility(capsys):
+    """Test --workers opt-in forwards workers and omitting --workers omits workers kwarg."""
+    import importlib.util
+
+    with patch.object(importlib.util, "find_spec", return_value=object()):
+        with patch(
+            "sys.argv",
+            ["safe_pytest.py", "--workers", "auto", "-f", "tests/test_demo.py", "--dry-run"],
+        ):
+            code = main()
+            assert code == 0
+            out = capsys.readouterr().out
+            assert "-n auto" in out
+            assert "--dist=loadfile" in out
+
+    with patch("safe_pytest.DetachedExecutionEngine.run_safe_pytest", return_value=0) as mock_run:
+        with patch("sys.argv", ["safe_pytest.py", "-f", "tests/test_demo.py", "--dry-run"]):
+            code = main()
+            assert code == 0
+            mock_run.assert_called_once()
+            assert "workers" not in mock_run.call_args.kwargs
