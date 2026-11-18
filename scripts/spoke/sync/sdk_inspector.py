@@ -79,6 +79,12 @@ class TestGuardrailCopier:
             "applies_to": ["python"],
         },
         {
+            "name": "_workspace_roots.py",
+            "src": "packages/ccba-harness/src/ccba_harness/_workspace_roots.py",
+            "dest": "scripts/_guardrails/_workspace_roots.py",
+            "applies_to": ["python"],
+        },
+        {
             "name": "pre-commit",
             "src": ".githooks/pre-commit",
             "dest": ".githooks/pre-commit",
