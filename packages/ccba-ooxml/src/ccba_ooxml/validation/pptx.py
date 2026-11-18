@@ -1,19 +1,52 @@
-"""
-Validator for PowerPoint presentation XML files against XSD schemas.
-"""
+"""Validator for PowerPoint presentation XML files against XSD schemas."""
 
+from __future__ import annotations
+
+import posixpath
 import re
+from pathlib import Path
 
+import lxml.etree
+
+from ._parsed_package import ValidationDiagnostic, extract_error_line, make_diagnostic
 from .base import BaseSchemaValidator
+
+_UUID_RE = re.compile(
+    r"^[\{\(]?[0-9A-Fa-f]{8}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{12}[\}\)]?$"
+)
+
+
+def _parse_exception_diag(rel_path: str, exc: BaseException) -> ValidationDiagnostic:
+    """Build a structured diagnostic from an XML parse or traversal exception."""
+    return make_diagnostic(
+        f"Error: {exc}",
+        rel_path,
+        extract_error_line(exc),
+        f"  {rel_path}: Error: {exc}",
+    )
+
+
+def _canonicalize_rels_target(rels_rel_path: str, target: str) -> str | None:
+    """Resolve an OOXML relationship ``Target`` to a canonical POSIX part path."""
+    clean = target.strip().replace("\\", "/")
+    if not clean or clean.lower().startswith(("http://", "https://", "mailto:")):
+        return None
+    if clean.startswith("/"):
+        return posixpath.normpath(clean.lstrip("/"))
+
+    rels_dir = posixpath.dirname(rels_rel_path)
+    source_dir = (
+        posixpath.dirname(rels_dir) if posixpath.basename(rels_dir) == "_rels" else rels_dir
+    )
+    joined = f"{source_dir}/{clean}" if source_dir else clean
+    return posixpath.normpath(joined)
 
 
 class PPTXSchemaValidator(BaseSchemaValidator):
     """Validator for PowerPoint presentation XML files against XSD schemas."""
 
-    # PowerPoint presentation namespace
     PRESENTATIONML_NAMESPACE = "http://schemas.openxmlformats.org/presentationml/2006/main"
 
-    # PowerPoint-specific element to relationship type mappings
     ELEMENT_RELATIONSHIP_TYPES = {
         "sldid": "slide",
         "sldmasterid": "slidemaster",
@@ -23,278 +56,218 @@ class PPTXSchemaValidator(BaseSchemaValidator):
         "tablestyleid": "tablestyles",
     }
 
-    def validate(self):
+    def validate(self) -> bool:
         """Run all validation checks and return True if all pass."""
-        # Test 0: XML well-formedness
+        self.reset_diagnostics()
         if not self.validate_xml():
             return False
 
-        # Test 1: Namespace declarations
+        checks = (
+            self.validate_namespaces,
+            self.validate_unique_ids,
+            self.validate_uuid_ids,
+            self.validate_file_references,
+            self.validate_slide_layout_ids,
+            self.validate_content_types,
+            self.validate_against_xsd,
+            self.validate_notes_slide_references,
+            self.validate_all_relationship_ids,
+            self.validate_no_duplicate_slide_layouts,
+        )
         all_valid = True
-        if not self.validate_namespaces():
-            all_valid = False
-
-        # Test 2: Unique IDs
-        if not self.validate_unique_ids():
-            all_valid = False
-
-        # Test 3: UUID ID validation
-        if not self.validate_uuid_ids():
-            all_valid = False
-
-        # Test 4: Relationship and file reference validation
-        if not self.validate_file_references():
-            all_valid = False
-
-        # Test 5: Slide layout ID validation
-        if not self.validate_slide_layout_ids():
-            all_valid = False
-
-        # Test 6: Content type declarations
-        if not self.validate_content_types():
-            all_valid = False
-
-        # Test 7: XSD schema validation
-        if not self.validate_against_xsd():
-            all_valid = False
-
-        # Test 8: Notes slide reference validation
-        if not self.validate_notes_slide_references():
-            all_valid = False
-
-        # Test 9: Relationship ID reference validation
-        if not self.validate_all_relationship_ids():
-            all_valid = False
-
-        # Test 10: Duplicate slide layout references validation
-        if not self.validate_no_duplicate_slide_layouts():
-            all_valid = False
-
+        for check in checks:
+            if not check():
+                all_valid = False
         return all_valid
 
-    def validate_uuid_ids(self):
-        """Validate that ID attributes that look like UUIDs contain only hex values."""
-        import lxml.etree
+    def _slide_master_files(self) -> list[Path]:
+        """Return slide master XML paths in deterministic POSIX order."""
+        masters_dir = self.unpacked_dir / "ppt" / "slideMasters"
+        return [p for p in self.xml_files if p.parent == masters_dir and p.suffix == ".xml"]
 
-        errors = []
-        # UUID pattern: 8-4-4-4-12 hex digits with optional braces/hyphens
-        uuid_pattern = re.compile(
-            r"^[\{\(]?[0-9A-Fa-f]{8}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{4}-?[0-9A-Fa-f]{12}[\}\)]?$"
+    def _slide_rels_files(self) -> list[Path]:
+        """Return slide relationship paths in deterministic POSIX order."""
+        slides_rels_dir = self.unpacked_dir / "ppt" / "slides" / "_rels"
+        return [
+            p
+            for p in self.parsed_package.rels_files
+            if p.parent == slides_rels_dir and p.name.endswith(".xml.rels")
+        ]
+
+    def _check_file_uuid_ids(self, xml_file: Path) -> list[ValidationDiagnostic]:
+        """Collect invalid UUID-like ID diagnostics for a single XML file."""
+        rel_path = self.parsed_package.rel_path_str(xml_file)
+        diagnostics: list[ValidationDiagnostic] = []
+        try:
+            root = self.parsed_package.get_root(xml_file)
+            for elem in root.iter():
+                for attr, value in elem.attrib.items():
+                    attr_name = str(attr).split("}")[-1].lower()
+                    if (attr_name == "id" or attr_name.endswith("id")) and self._looks_like_uuid(
+                        str(value)
+                    ):
+                        if not _UUID_RE.match(str(value)):
+                            msg = (
+                                f"ID '{value}' appears to be a UUID but contains "
+                                "invalid hex characters"
+                            )
+                            diagnostics.append(make_diagnostic(msg, rel_path, elem.sourceline))
+        except (lxml.etree.XMLSyntaxError, Exception) as exc:
+            diagnostics.append(_parse_exception_diag(rel_path, exc))
+        return diagnostics
+
+    def validate_uuid_ids(self) -> bool:
+        """Validate that ID attributes that look like UUIDs contain only hex values."""
+        diagnostics: list[ValidationDiagnostic] = []
+        for xml_file in self.xml_files:
+            diagnostics.extend(self._check_file_uuid_ids(xml_file))
+        return self._emit_result(
+            diagnostics,
+            f"FAILED - Found {len(diagnostics)} UUID ID validation errors:",
+            "PASSED - All UUID-like IDs contain valid hex values",
         )
 
-        for xml_file in self.xml_files:
-            try:
-                root = lxml.etree.parse(str(xml_file)).getroot()
-
-                # Check all elements for ID attributes
-                for elem in root.iter():
-                    for attr, value in elem.attrib.items():
-                        # Check if this is an ID attribute
-                        attr_name = attr.split("}")[-1].lower()
-                        if attr_name == "id" or attr_name.endswith("id"):
-                            # Check if value looks like a UUID (has the right length and pattern structure)
-                            if self._looks_like_uuid(value):
-                                # Validate that it contains only hex characters in the right positions
-                                if not uuid_pattern.match(value):
-                                    errors.append(
-                                        f"  {xml_file.relative_to(self.unpacked_dir)}: "
-                                        f"Line {elem.sourceline}: ID '{value}' appears to be a UUID but contains invalid hex characters"
-                                    )
-
-            except (lxml.etree.XMLSyntaxError, Exception) as e:
-                errors.append(f"  {xml_file.relative_to(self.unpacked_dir)}: Error: {e}")
-
-        if errors:
-            print(f"FAILED - Found {len(errors)} UUID ID validation errors:")
-            for error in errors:
-                print(error)
-            return False
-        else:
-            if self.verbose:
-                print("PASSED - All UUID-like IDs contain valid hex values")
-            return True
-
-    def _looks_like_uuid(self, value):
+    def _looks_like_uuid(self, value: str) -> bool:
         """Check if a value has the general structure of a UUID."""
-        # Remove common UUID delimiters
         clean_value = value.strip("{}()").replace("-", "")
-        # Check if it's 32 hex-like characters (could include invalid hex chars)
         return len(clean_value) == 32 and all(c.isalnum() for c in clean_value)
 
-    def validate_slide_layout_ids(self):
+    def _check_single_slide_master(self, slide_master: Path) -> list[ValidationDiagnostic]:
+        """Validate ``sldLayoutId`` relationship references for one slide master."""
+        rel_master = self.parsed_package.rel_path_str(slide_master)
+        rels_file = slide_master.parent / "_rels" / f"{slide_master.name}.rels"
+        rel_rels = self.parsed_package.rel_path_str(rels_file)
+        if not rels_file.exists():
+            msg = f"Missing relationships file: {rel_rels}"
+            return [make_diagnostic(msg, rel_master, None, f"  {rel_master}: {msg}")]
+
+        diagnostics: list[ValidationDiagnostic] = []
+        current_rel = rel_master
+        try:
+            root = self.parsed_package.get_root(slide_master)
+            current_rel = rel_rels
+            rels_root = self.parsed_package.get_root(rels_file)
+            rel_tag = f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
+            valid_rids = {
+                rel.get("Id")
+                for rel in rels_root.findall(rel_tag)
+                if "slideLayout" in rel.get("Type", "")
+            }
+            layout_tag = f".//{{{self.PRESENTATIONML_NAMESPACE}}}sldLayoutId"
+            r_id_attr = f"{{{self.OFFICE_RELATIONSHIPS_NAMESPACE}}}id"
+            for sld_layout_id in root.findall(layout_tag):
+                r_id = sld_layout_id.get(r_id_attr)
+                if r_id and r_id not in valid_rids:
+                    layout_id = sld_layout_id.get("id")
+                    msg = (
+                        f"sldLayoutId with id='{layout_id}' references r:id='{r_id}' "
+                        "which is not found in slide layout relationships"
+                    )
+                    diagnostics.append(make_diagnostic(msg, rel_master, sld_layout_id.sourceline))
+        except (lxml.etree.XMLSyntaxError, Exception) as exc:
+            diagnostics.append(_parse_exception_diag(current_rel, exc))
+        return diagnostics
+
+    def validate_slide_layout_ids(self) -> bool:
         """Validate that sldLayoutId elements in slide masters reference valid slide layouts."""
-        import lxml.etree
-
-        errors = []
-
-        # Find all slide master files
-        slide_masters = list(self.unpacked_dir.glob("ppt/slideMasters/*.xml"))
-
+        slide_masters = self._slide_master_files()
         if not slide_masters:
+            self.last_diagnostics = []
             if self.verbose:
                 print("PASSED - No slide masters found")
             return True
 
+        diagnostics: list[ValidationDiagnostic] = []
         for slide_master in slide_masters:
-            try:
-                # Parse the slide master file
-                root = lxml.etree.parse(str(slide_master)).getroot()
-
-                # Find the corresponding _rels file for this slide master
-                rels_file = slide_master.parent / "_rels" / f"{slide_master.name}.rels"
-
-                if not rels_file.exists():
-                    errors.append(
-                        f"  {slide_master.relative_to(self.unpacked_dir)}: "
-                        f"Missing relationships file: {rels_file.relative_to(self.unpacked_dir)}"
-                    )
-                    continue
-
-                # Parse the relationships file
-                rels_root = lxml.etree.parse(str(rels_file)).getroot()
-
-                # Build a set of valid relationship IDs that point to slide layouts
-                valid_layout_rids = set()
-                for rel in rels_root.findall(
-                    f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
-                ):
-                    rel_type = rel.get("Type", "")
-                    if "slideLayout" in rel_type:
-                        valid_layout_rids.add(rel.get("Id"))
-
-                # Find all sldLayoutId elements in the slide master
-                for sld_layout_id in root.findall(
-                    f".//{{{self.PRESENTATIONML_NAMESPACE}}}sldLayoutId"
-                ):
-                    r_id = sld_layout_id.get(f"{{{self.OFFICE_RELATIONSHIPS_NAMESPACE}}}id")
-                    layout_id = sld_layout_id.get("id")
-
-                    if r_id and r_id not in valid_layout_rids:
-                        errors.append(
-                            f"  {slide_master.relative_to(self.unpacked_dir)}: "
-                            f"Line {sld_layout_id.sourceline}: sldLayoutId with id='{layout_id}' "
-                            f"references r:id='{r_id}' which is not found in slide layout relationships"
-                        )
-
-            except (lxml.etree.XMLSyntaxError, Exception) as e:
-                errors.append(f"  {slide_master.relative_to(self.unpacked_dir)}: Error: {e}")
-
-        if errors:
-            print(f"FAILED - Found {len(errors)} slide layout ID validation errors:")
-            for error in errors:
-                print(error)
-            print(
+            diagnostics.extend(self._check_single_slide_master(slide_master))
+        return self._emit_result(
+            diagnostics,
+            f"FAILED - Found {len(diagnostics)} slide layout ID validation errors:",
+            "PASSED - All slide layout IDs reference valid slide layouts",
+            extra_footer=(
                 "Remove invalid references or add missing slide layouts to the relationships file."
-            )
-            return False
-        else:
-            if self.verbose:
-                print("PASSED - All slide layout IDs reference valid slide layouts")
-            return True
+            ),
+        )
 
-    def validate_no_duplicate_slide_layouts(self):
+    def validate_no_duplicate_slide_layouts(self) -> bool:
         """Validate that each slide has exactly one slideLayout reference."""
-        import lxml.etree
+        diagnostics: list[ValidationDiagnostic] = []
+        rel_tag = f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
+        for rels_file in self._slide_rels_files():
+            rel_path = self.parsed_package.rel_path_str(rels_file)
+            try:
+                root = self.parsed_package.get_root(rels_file)
+                layout_rels = [
+                    rel for rel in root.findall(rel_tag) if "slideLayout" in rel.get("Type", "")
+                ]
+                if len(layout_rels) > 1:
+                    msg = f"has {len(layout_rels)} slideLayout references"
+                    diagnostics.append(
+                        make_diagnostic(
+                            msg, rel_path, layout_rels[1].sourceline, f"  {rel_path}: {msg}"
+                        )
+                    )
+            except Exception as exc:
+                diagnostics.append(_parse_exception_diag(rel_path, exc))
+        return self._emit_result(
+            diagnostics,
+            "FAILED - Found slides with duplicate slideLayout references:",
+            "PASSED - All slides have exactly one slideLayout reference",
+        )
 
-        errors = []
-        slide_rels_files = list(self.unpacked_dir.glob("ppt/slides/_rels/*.xml.rels"))
+    def _collect_notes_slide_refs(
+        self, slide_rels_files: list[Path]
+    ) -> tuple[dict[str, list[tuple[str, str, int | None]]], list[ValidationDiagnostic]]:
+        """Collect canonical notesSlide targets mapped to ``(slide_name, rel_path, line)``."""
+        references: dict[str, list[tuple[str, str, int | None]]] = {}
+        parse_diags: list[ValidationDiagnostic] = []
+        rel_tag = f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
 
         for rels_file in slide_rels_files:
+            rel_path = self.parsed_package.rel_path_str(rels_file)
             try:
-                root = lxml.etree.parse(str(rels_file)).getroot()
+                root = self.parsed_package.get_root(rels_file)
+                slide_name = rels_file.stem.replace(".xml", "")
+                for rel in root.findall(rel_tag):
+                    if "notesSlide" not in rel.get("Type", ""):
+                        continue
+                    canon_target = _canonicalize_rels_target(rel_path, rel.get("Target", ""))
+                    if canon_target is not None:
+                        references.setdefault(canon_target, []).append(
+                            (slide_name, rel_path, rel.sourceline)
+                        )
+            except (lxml.etree.XMLSyntaxError, Exception) as exc:
+                parse_diags.append(_parse_exception_diag(rel_path, exc))
+        return references, parse_diags
 
-                # Find all slideLayout relationships
-                layout_rels = [
-                    rel
-                    for rel in root.findall(
-                        f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
-                    )
-                    if "slideLayout" in rel.get("Type", "")
-                ]
-
-                if len(layout_rels) > 1:
-                    errors.append(
-                        f"  {rels_file.relative_to(self.unpacked_dir)}: has {len(layout_rels)} slideLayout references"
-                    )
-
-            except Exception as e:
-                errors.append(f"  {rels_file.relative_to(self.unpacked_dir)}: Error: {e}")
-
-        if errors:
-            print("FAILED - Found slides with duplicate slideLayout references:")
-            for error in errors:
-                print(error)
-            return False
-        else:
-            if self.verbose:
-                print("PASSED - All slides have exactly one slideLayout reference")
-            return True
-
-    def validate_notes_slide_references(self):
+    def validate_notes_slide_references(self) -> bool:
         """Validate that each notesSlide file is referenced by only one slide."""
-        import lxml.etree
-
-        errors = []
-        notes_slide_references = {}  # Track which slides reference each notesSlide
-
-        # Find all slide relationship files
-        slide_rels_files = list(self.unpacked_dir.glob("ppt/slides/_rels/*.xml.rels"))
-
+        slide_rels_files = self._slide_rels_files()
         if not slide_rels_files:
+            self.last_diagnostics = []
             if self.verbose:
                 print("PASSED - No slide relationship files found")
             return True
 
-        for rels_file in slide_rels_files:
-            try:
-                # Parse the relationships file
-                root = lxml.etree.parse(str(rels_file)).getroot()
-
-                # Find all notesSlide relationships
-                for rel in root.findall(
-                    f".//{{{self.PACKAGE_RELATIONSHIPS_NAMESPACE}}}Relationship"
-                ):
-                    rel_type = rel.get("Type", "")
-                    if "notesSlide" in rel_type:
-                        target = rel.get("Target", "")
-                        if target:
-                            # Normalize the target path to handle relative paths
-                            normalized_target = target.replace("../", "")
-
-                            # Track which slide references this notesSlide
-                            slide_name = rels_file.stem.replace(".xml", "")  # e.g., "slide1"
-
-                            if normalized_target not in notes_slide_references:
-                                notes_slide_references[normalized_target] = []
-                            notes_slide_references[normalized_target].append(
-                                (slide_name, rels_file)
-                            )
-
-            except (lxml.etree.XMLSyntaxError, Exception) as e:
-                errors.append(f"  {rels_file.relative_to(self.unpacked_dir)}: Error: {e}")
-
-        # Check for duplicate references
-        for target, references in notes_slide_references.items():
-            if len(references) > 1:
-                slide_names = [ref[0] for ref in references]
-                errors.append(
-                    f"  Notes slide '{target}' is referenced by multiple slides: {', '.join(slide_names)}"
-                )
-                for _slide_name, rels_file in references:
-                    errors.append(f"    - {rels_file.relative_to(self.unpacked_dir)}")
-
-        if errors:
-            print(
-                f"FAILED - Found {len([e for e in errors if not e.startswith('    ')])} notes slide reference validation errors:"
+        notes_refs, diagnostics = self._collect_notes_slide_refs(slide_rels_files)
+        for target, references in notes_refs.items():
+            if len(references) <= 1:
+                continue
+            slide_names = [ref[0] for ref in references]
+            msg = (
+                f"Notes slide '{target}' is referenced by multiple slides: {', '.join(slide_names)}"
             )
-            for error in errors:
-                print(error)
-            print("Each slide may optionally have its own slide file.")
-            return False
-        else:
-            if self.verbose:
-                print("PASSED - All notes slide references are unique")
-            return True
+            legacy_lines = [f"  {msg}", *(f"    - {rel_p}" for _, rel_p, _ in references)]
+            diagnostics.append(
+                make_diagnostic(msg, references[1][1], references[1][2], "\n".join(legacy_lines))
+            )
+
+        return self._emit_result(
+            diagnostics,
+            f"FAILED - Found {len(diagnostics)} notes slide reference validation errors:",
+            "PASSED - All notes slide references are unique",
+            extra_footer="Each slide may optionally have its own slide file.",
+        )
 
 
 if __name__ == "__main__":

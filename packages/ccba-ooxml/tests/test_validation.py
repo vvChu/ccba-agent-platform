@@ -342,3 +342,308 @@ def test_redlining_validator_claude_tracked_changes_and_clone_isolation(
     assert capsys.readouterr().out == ""
     assert report.is_valid is False
     assert any(issue.file_path == "word/document.xml" for issue in report.issues)
+
+
+def _build_unpacked_pptx(base_dir: Path, name: str = "deck.pptx") -> tuple[Path, Path]:
+    """Create a 2-slide PPTX via DeckBuilder and unpack it into ``base_dir``."""
+    from ccba_ooxml import build_presentation_from_markdown
+
+    md_content = (
+        '---\ntitle: "Kiem Dinh PPTX"\nauthor: "CCBA"\n---\n\n'
+        "# Slide 1\n- Muc 1\n\n# Slide 2\n- Muc 2\n"
+    )
+    pptx_path = base_dir / name
+    build_presentation_from_markdown(md_content, pptx_path)
+    unpacked = base_dir / f"unpacked_{pptx_path.stem}"
+    unpack_document(str(pptx_path), str(unpacked))
+    return unpacked, pptx_path
+
+
+def _prewarm_pptx_schemas() -> None:
+    """Prewarm compiled XSD schemas for PPTX before attaching parse spies."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+
+    schemas_dir = Path(__file__).resolve().parents[1] / "src" / "ccba_ooxml" / "schemas"
+    for key in ("ppt", ".rels", "[Content_Types].xml", "theme", "app.xml", "core.xml"):
+        PPTXSchemaValidator.get_compiled_schema(
+            schemas_dir / PPTXSchemaValidator.SCHEMA_MAPPINGS[key], schemas_dir
+        )
+
+
+def _snapshot_slide_xml(unpacked_dir: Path) -> dict[str, bytes]:
+    """Read and serialize slide XML roots outside the measurement spy window."""
+    import lxml.etree
+
+    from ccba_ooxml.validation.base import make_secure_xml_parser
+
+    snapshots: dict[str, bytes] = {}
+    for slide_file in sorted((unpacked_dir / "ppt" / "slides").glob("slide*.xml")):
+        rel = slide_file.relative_to(unpacked_dir).as_posix()
+        root = lxml.etree.parse(str(slide_file), parser=make_secure_xml_parser()).getroot()
+        snapshots[rel] = lxml.etree.tostring(root)
+    return snapshots
+
+
+def _make_parse_spy(unpacked_dir: Path, unpacked_calls: list[str], none_parsers: list[str]):
+    """Build an ``lxml.etree.parse`` spy tracking unpacked calls and parser=None."""
+    import lxml.etree
+
+    real_parse = lxml.etree.parse
+    unpacked_prefix = str(unpacked_dir.resolve())
+
+    def spy_parse(source, parser=None, **kwargs):
+        src_str = str(getattr(source, "name", source))
+        if parser is None:
+            none_parsers.append(src_str)
+        if src_str.startswith(unpacked_prefix):
+            unpacked_calls.append(src_str)
+        return real_parse(source, parser=parser, **kwargs)
+
+    return spy_parse
+
+
+def _assert_ooxml_pptx_report_window(
+    unpacked: Path,
+    pptx_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    unpacked_calls: list[str],
+    none_parsers: list[str],
+) -> None:
+    """Measure OOXMLValidator.validate_report() capturing its single ParsedOOXMLPackage."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+    from ccba_ooxml.validation.base import ParsedOOXMLPackage
+
+    captured_pkgs: list[ParsedOOXMLPackage] = []
+    orig_init = PPTXSchemaValidator.__init__
+
+    def wrapped_init(self, *args, **kwargs):
+        orig_init(self, *args, **kwargs)
+        captured_pkgs.append(self.parsed_package)
+
+    monkeypatch.setattr(PPTXSchemaValidator, "__init__", wrapped_init)
+    report = OOXMLValidator(unpacked, pptx_path, verbose=False).validate_report()
+    assert capsys.readouterr().out == ""
+    assert len(captured_pkgs) == 1
+    assert none_parsers == []
+    assert len(unpacked_calls) <= len(captured_pkgs[0].xml_files)
+    assert report.is_valid is True
+    assert report.issues == []
+    assert "PPTXSchemaValidator" in report.validators_run
+
+
+@pytest.mark.fast
+def test_pptx_single_parse_oracle_and_clone_isolation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify PPTX validation runs <=N parses, 0 parser=None, quiet stdout, and clone safety."""
+    import lxml.etree
+
+    from ccba_ooxml.validation import PPTXSchemaValidator
+    from ccba_ooxml.validation.base import ParsedOOXMLPackage
+
+    unpacked, pptx_path = _build_unpacked_pptx(tmp_path)
+    _prewarm_pptx_schemas()
+    before_bytes = _snapshot_slide_xml(unpacked)
+    assert before_bytes
+
+    unpacked_calls: list[str] = []
+    none_parsers: list[str] = []
+    spy_parse = _make_parse_spy(unpacked, unpacked_calls, none_parsers)
+
+    # Window A: direct PPTXSchemaValidator with shared ParsedOOXMLPackage
+    pkg = ParsedOOXMLPackage(unpacked)
+    monkeypatch.setattr(lxml.etree, "parse", spy_parse)
+    validator = PPTXSchemaValidator(unpacked, pptx_path, verbose=False, parsed_package=pkg)
+    assert validator.validate() is True
+    assert capsys.readouterr().out == ""
+    assert none_parsers == []
+    assert len(unpacked_calls) <= len(pkg.xml_files)
+    for slide_rel, expected_bytes in before_bytes.items():
+        root_after = pkg.get_root(slide_rel)
+        assert root_after is pkg.get_root(slide_rel)
+        assert lxml.etree.tostring(root_after) == expected_bytes
+
+    # Window B: OOXMLValidator.validate_report() capturing its single internal package
+    unpacked_calls.clear()
+    none_parsers.clear()
+    _assert_ooxml_pptx_report_window(
+        unpacked, pptx_path, monkeypatch, capsys, unpacked_calls, none_parsers
+    )
+
+
+def _assert_uuid_and_duplicate_layout_diags(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify UUID hex validation and duplicate slideLayout diagnostics + verbose parity."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+
+    unpacked, pptx_path = _build_unpacked_pptx(tmp_path / "uuid_dup", "uuid_dup.pptx")
+    slide1 = unpacked / "ppt" / "slides" / "slide1.xml"
+    slide1.write_text(
+        slide1.read_text(encoding="utf-8").replace(
+            'id="1"', 'id="{12345678-1234-1234-1234-12345678901Z}"', 1
+        ),
+        encoding="utf-8",
+    )
+    slide_rels = unpacked / "ppt" / "slides" / "_rels" / "slide1.xml.rels"
+    extra_rel = (
+        '<Relationship Id="rId99" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" '
+        'Target="../slideLayouts/slideLayout1.xml"/>\n'
+    )
+    slide_rels.write_text(
+        slide_rels.read_text(encoding="utf-8").replace(
+            "</Relationships>", f"{extra_rel}</Relationships>"
+        ),
+        encoding="utf-8",
+    )
+
+    report = OOXMLValidator(unpacked, pptx_path, verbose=False).validate_report()
+    assert capsys.readouterr().out == ""
+    assert report.is_valid is False
+    uuid_issues = [i for i in report.issues if "invalid hex characters" in i.message]
+    assert uuid_issues and uuid_issues[0].file_path == "ppt/slides/slide1.xml"
+    assert uuid_issues[0].line_number is not None
+    dup_issues = [i for i in report.issues if "slideLayout references" in i.message]
+    assert dup_issues and dup_issues[0].file_path == "ppt/slides/_rels/slide1.xml.rels"
+    assert dup_issues[0].line_number is not None
+
+    v_loud = PPTXSchemaValidator(unpacked, pptx_path, verbose=True)
+    assert v_loud.validate_uuid_ids() is False
+    assert "FAILED - Found 1 UUID ID validation errors:" in capsys.readouterr().out
+    assert v_loud.validate_no_duplicate_slide_layouts() is False
+    dup_out = capsys.readouterr().out
+    assert "FAILED - Found slides with duplicate slideLayout references:" in dup_out
+    assert "  ppt/slides/_rels/slide1.xml.rels: has 2 slideLayout references" in dup_out
+
+
+def _assert_slide_layout_diagnostics(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify bad r:id, malformed .rels, and missing .rels diagnostics in slideMasters."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+
+    unpacked, pptx_path = _build_unpacked_pptx(tmp_path / "layout_case", "layout.pptx")
+    master = unpacked / "ppt" / "slideMasters" / "slideMaster1.xml"
+    master.write_text(
+        master.read_text(encoding="utf-8").replace('r:id="rId1"', 'r:id="rIdMissing99"', 1),
+        encoding="utf-8",
+    )
+    v_bad = PPTXSchemaValidator(unpacked, pptx_path, verbose=False)
+    assert v_bad.validate_slide_layout_ids() is False
+    assert capsys.readouterr().out == ""
+    assert v_bad.last_diagnostics[0].file_path == "ppt/slideMasters/slideMaster1.xml"
+    assert v_bad.last_diagnostics[0].line_number is not None
+
+    v_loud = PPTXSchemaValidator(unpacked, pptx_path, verbose=True)
+    assert v_loud.validate_slide_layout_ids() is False
+    out = capsys.readouterr().out
+    assert "FAILED - Found 1 slide layout ID validation errors:" in out
+    assert "Remove invalid references or add missing slide layouts" in out
+
+    master_rels = unpacked / "ppt" / "slideMasters" / "_rels" / "slideMaster1.xml.rels"
+    master_rels.write_text("<Relationships>\n  <unclosed>\n</Relationships>", encoding="utf-8")
+    v_mal = PPTXSchemaValidator(unpacked, pptx_path, verbose=False)
+    assert v_mal.validate_slide_layout_ids() is False
+    assert v_mal.last_diagnostics[0].file_path == "ppt/slideMasters/_rels/slideMaster1.xml.rels"
+    assert v_mal.last_diagnostics[0].line_number is not None
+
+    master_rels.unlink()
+    v_miss = PPTXSchemaValidator(unpacked, pptx_path, verbose=False)
+    assert v_miss.validate_slide_layout_ids() is False
+    assert capsys.readouterr().out == ""
+    assert v_miss.last_diagnostics[0].file_path == "ppt/slideMasters/slideMaster1.xml"
+    assert v_miss.last_diagnostics[0].line_number is None
+    assert (
+        "Missing relationships file: ppt/slideMasters/_rels/slideMaster1.xml.rels"
+        in v_miss.last_diagnostics[0].message
+    )
+
+
+def _build_notes_unpacked_fixture(base_dir: Path) -> Path:
+    """Create unpacked slide .rels testing 3 notesSlide path forms + external URLs."""
+    notes_dir = base_dir / "notes_unpacked"
+    rels_dir = notes_dir / "ppt" / "slides" / "_rels"
+    rels_dir.mkdir(parents=True)
+    rel_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
+    notes_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide"
+    targets = {
+        "slide1.xml.rels": [
+            "../notesSlides/notesSlide1.xml",
+            "https://example.com/notesSlide99.xml",
+        ],
+        "slide2.xml.rels": [
+            "/ppt/notesSlides/notesSlide1.xml",
+            "https://example.com/notesSlide99.xml",
+        ],
+        "slide3.xml.rels": ["../../ppt/notesSlides/notesSlide1.xml"],
+    }
+    for fname, tgt_list in targets.items():
+        items = "".join(
+            f'<Relationship Id="rId{i}" Type="{notes_type}" Target="{tgt}"/>\n'
+            for i, tgt in enumerate(tgt_list, start=1)
+        )
+        (rels_dir / fname).write_text(
+            f'<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="{rel_ns}">\n{items}</Relationships>\n',
+            encoding="utf-8",
+        )
+    return notes_dir
+
+
+def _assert_notes_canonicalization(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify notesSlide 3-form canonicalization and external URL exclusion."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+
+    notes_dir = _build_notes_unpacked_fixture(tmp_path)
+    v_quiet = PPTXSchemaValidator(notes_dir, tmp_path / "notes.pptx", verbose=False)
+    assert v_quiet.validate_notes_slide_references() is False
+    assert capsys.readouterr().out == ""
+    assert len(v_quiet.last_diagnostics) == 1
+    diag = v_quiet.last_diagnostics[0]
+    assert diag.file_path == "ppt/slides/_rels/slide2.xml.rels"
+    assert diag.line_number is not None
+    assert "ppt/notesSlides/notesSlide1.xml" in diag.message
+    assert "slide1, slide2, slide3" in diag.message
+    assert "https://" not in diag.message
+
+    v_loud = PPTXSchemaValidator(notes_dir, tmp_path / "notes.pptx", verbose=True)
+    assert v_loud.validate_notes_slide_references() is False
+    out = capsys.readouterr().out
+    assert "FAILED - Found 1 notes slide reference validation errors:" in out
+    assert "    - ppt/slides/_rels/slide1.xml.rels" in out
+    assert "    - ppt/slides/_rels/slide2.xml.rels" in out
+    assert "    - ppt/slides/_rels/slide3.xml.rels" in out
+    assert "Each slide may optionally have its own slide file." in out
+
+
+def _assert_pptx_empty_guards(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify empty slideMasters/notes guards preserve collected_diagnostics."""
+    from ccba_ooxml.validation import PPTXSchemaValidator
+
+    empty_dir = tmp_path / "empty_pptx"
+    empty_dir.mkdir()
+    v_empty = PPTXSchemaValidator(empty_dir, tmp_path / "empty.pptx", verbose=True)
+    assert v_empty.validate_content_types() is False
+    assert len(v_empty.collected_diagnostics) == 1
+    _ = capsys.readouterr()
+    assert v_empty.validate_slide_layout_ids() is True
+    assert v_empty.last_diagnostics == []
+    assert v_empty.validate_notes_slide_references() is True
+    assert v_empty.last_diagnostics == []
+    assert len(v_empty.collected_diagnostics) == 1
+    empty_out = capsys.readouterr().out
+    assert "PASSED - No slide masters found" in empty_out
+    assert "PASSED - No slide relationship files found" in empty_out
+
+
+@pytest.mark.fast
+def test_pptx_structured_diagnostics_notes_canonicalization_and_verbose_parity(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify PPTX structured diagnostics, notesSlide canonicalization, and verbose parity."""
+    _assert_uuid_and_duplicate_layout_diags(tmp_path, capsys)
+    _assert_slide_layout_diagnostics(tmp_path, capsys)
+    _assert_notes_canonicalization(tmp_path, capsys)
+    _assert_pptx_empty_guards(tmp_path, capsys)
