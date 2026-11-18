@@ -8,7 +8,7 @@ Complies with ADR 0044.
 from __future__ import annotations
 
 import argparse
-import os
+import importlib.util
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -18,6 +18,34 @@ from typing import Any
 _ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(_ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(_ROOT_DIR))
+
+
+def _load_workspace_roots_seam() -> Any:
+    """Load the pure-stdlib _workspace_roots seam via package, Tier-0 sibling, or Hub."""
+    try:
+        from ccba_harness import resolve_workspace_and_hub_roots as _seam_fn
+
+        _ = _seam_fn
+        return sys.modules["ccba_harness._workspace_roots"]
+    except ImportError:
+        pass
+    here = Path(__file__).resolve().parent
+    hub_fallback = here.parents[1] / "packages/ccba-harness/src/ccba_harness/_workspace_roots.py"
+    for candidate in (
+        here / "_workspace_roots.py",
+        here / "_guardrails" / "_workspace_roots.py",
+        hub_fallback,
+    ):
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_ccba_workspace_roots", candidate)
+            if spec is not None and spec.loader is not None:
+                mod = sys.modules.get(spec.name)
+                if mod is None:
+                    mod = importlib.util.module_from_spec(spec)
+                    sys.modules[spec.name] = mod
+                    spec.loader.exec_module(mod)
+                return mod
+    raise ImportError("Unable to locate stdlib _workspace_roots seam.")
 
 
 def _safe_load_yaml(filepath: Path) -> dict[str, Any]:
@@ -352,41 +380,11 @@ class SpokeBootstrapper:
             self.hub_root = self._resolve_hub_root()
 
     def _resolve_hub_root(self) -> Path:
-        """Dynamically resolves the Hub root repository path."""
-        # 1. Environment variable
-        env_hub = os.environ.get("CCBA_HUB_PATH")
-        if env_hub and Path(env_hub).exists():
-            return Path(env_hub).resolve()
-
-        # 2. Workspace context (lazy yaml — graceful fallback)
-        for ctx_dir in [self.spoke_root / ".agents", self.spoke_root / ".md"]:
-            ctx_file = ctx_dir / "workspace_context.yaml"
-            if ctx_file.exists():
-                data = _safe_load_yaml(ctx_file)
-                hub_config = (
-                    data.get("hub", {}).get("path")
-                    or data.get("hub_path")
-                    or data.get("project", {}).get("hub_path")
-                )
-                if isinstance(hub_config, dict):
-                    os_key = "windows" if os.name == "nt" else "linux"
-                    hub_config = hub_config.get(os_key) or hub_config.get("posix")
-                if hub_config and isinstance(hub_config, str):
-                    cand = Path(hub_config)
-                    if not cand.is_absolute():
-                        cand = (self.spoke_root / cand).resolve()
-                    if cand.exists() and (cand / "packages" / "ccba-harness").exists():
-                        return cand
-
-        # 3. Known relative / standard locations (no hardcoded paths — ADR 0044)
-        candidates = [
-            Path(__file__).resolve().parent.parent.parent,  # scripts/spoke/ -> hub root
-            self.spoke_root.parent / "ccba-agent-platform",
-        ]
-        for cand in candidates:
-            if cand.exists() and (cand / "packages" / "ccba-harness").exists():
-                return cand.resolve()
-
+        """Dynamically resolves the Hub root repository path via _workspace_roots seam."""
+        seam = _load_workspace_roots_seam()
+        ctx = seam.resolve_workspace_and_hub_roots(self.spoke_root, require_hub_packages=True)
+        if ctx.hub_root is not None:
+            return ctx.hub_root
         return Path(__file__).resolve().parent.parent.parent
 
     def read_workspace_context(self) -> dict[str, Any]:

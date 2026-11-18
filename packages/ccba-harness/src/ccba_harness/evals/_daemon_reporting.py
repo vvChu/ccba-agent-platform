@@ -55,15 +55,10 @@ def save_applied_strategies_hash(root: Path, current_hash: str) -> None:
 
 
 def find_project_root(start_dir: Path | None = None) -> Path:
-    """Discovers project root by walking upward until .git or .agents is found."""
-    current = (start_dir or Path.cwd()).resolve()
-    for p in [current, *current.parents]:
-        if (p / ".git").exists() or (p / ".agents").exists():
-            return p
-    pkg_ancestor = Path(__file__).resolve().parents[5]
-    if (pkg_ancestor / ".git").exists() or (pkg_ancestor / ".agents").exists():
-        return pkg_ancestor
-    return current
+    """Discovers project root by walking upward via shared workspace_roots seam."""
+    from .._workspace_roots import resolve_workspace_and_hub_roots
+
+    return resolve_workspace_and_hub_roots(start_dir, include_pyproject=False).workspace_root
 
 
 @dataclass

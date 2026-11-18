@@ -47,13 +47,17 @@ def test_delivery_spoke_without_git_ignores_nested_agents_md(tmp_path: Path) -> 
 
 
 def test_skips_internal_monorepo_pyproject_to_reach_hub_root() -> None:
-    """Verify walking upward from packages/ccba-legal-intel skips internal pyproject.toml."""
+    """Verify walking upward from subpackages skips internal pyproject.toml and .agents."""
     hub_root = Path(__file__).resolve().parents[3]
     legal_file = hub_root / "packages" / "ccba-legal-intel" / "src" / "ccba_legal" / "registry.py"
-    ctx = resolve_workspace_and_hub_roots(legal_file)
-    assert ctx.workspace_root == hub_root
-    assert ctx.hub_root == hub_root
-    assert ctx.is_hub_workspace is True
+    harness_file = (
+        hub_root / "packages" / "ccba-harness" / "src" / "ccba_harness" / "evals" / "daemon.py"
+    )
+    for target in (legal_file, harness_file):
+        ctx = resolve_workspace_and_hub_roots(target)
+        assert ctx.workspace_root == hub_root
+        assert ctx.hub_root == hub_root
+        assert ctx.is_hub_workspace is True
 
 
 def test_env_hub_path_is_evaluated_dynamically_across_calls(tmp_path: Path) -> None:
@@ -148,3 +152,26 @@ def test_stdlib_tier0_isolation_and_import_budget(tmp_path: Path) -> None:
     )
     in_proc_ms = float(res.stdout.strip())
     assert in_proc_ms < 15.0, f"ccba_harness import took {in_proc_ms:.2f} ms"
+
+
+def test_harness_adapters_resolve_delivery_spoke_without_parents5_or_agents_md(
+    tmp_path: Path,
+) -> None:
+    """Verify peer.find_workspace_root and _daemon_reporting.find_project_root resolve Delivery Spoke."""
+    from ccba_harness.cli.commands.peer import find_workspace_root
+    from ccba_harness.evals._daemon_reporting import find_project_root
+
+    spoke = tmp_path / "delivery_spoke"
+    sub = spoke / "nested" / "sub"
+    sub.mkdir(parents=True)
+    (sub / "AGENTS.md").write_text("# nested guide", encoding="utf-8")
+    (spoke / ".md").mkdir()
+    (spoke / ".md" / "workspace_context.yaml").write_text("project:\n  name: d\n", encoding="utf-8")
+
+    assert find_workspace_root(sub) == spoke.resolve()
+    assert find_project_root(sub) == spoke.resolve()
+
+    orphan = tmp_path / "orphan_dir"
+    orphan.mkdir()
+    assert find_workspace_root(orphan) == orphan.resolve()
+    assert find_project_root(orphan) == orphan.resolve()

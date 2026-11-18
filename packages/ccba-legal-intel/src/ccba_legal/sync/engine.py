@@ -187,29 +187,15 @@ class LegalSyncEngine:
 
     def _resolve_hub_from_workspace_ctx(self) -> Path | None:
         """Extracts hub_path from .md/workspace_context.yaml or .agents/workspace_context.yaml."""
-        for ctx_name in (".md/workspace_context.yaml", ".agents/workspace_context.yaml"):
-            local_ctx = self.project_root / ctx_name
-            if not local_ctx.is_file():
-                continue
-            try:
-                ctx_data = yaml.safe_load(local_ctx.read_text(encoding="utf-8")) or {}
-                proj_data = ctx_data.get("project", {}) if isinstance(ctx_data, dict) else {}
-                hub_val = ctx_data.get("hub_path") or (
-                    proj_data.get("hub_path") if isinstance(proj_data, dict) else None
-                )
-                hub_str = ""
-                if isinstance(hub_val, dict):
-                    os_k = "windows" if os.name == "nt" else "linux"
-                    hub_str = str(hub_val.get(os_k) or hub_val.get("posix") or "")
-                elif isinstance(hub_val, str):
-                    hub_str = hub_val
-                is_win_drive = bool(re.match(r"^[A-Za-z]:[\\/]", hub_str))
-                if hub_str and not (os.name != "nt" and is_win_drive):
-                    hub_p = Path(hub_str)
-                    return hub_p if hub_p.is_absolute() else (self.project_root / hub_p).resolve()
-            except (OSError, yaml.YAMLError) as e:
-                logger.debug("Lỗi khi đọc file cấu hình hub/workspace: %s", e)
-        return None
+        has_ctx = any(
+            (self.project_root / ctx_name).is_file()
+            for ctx_name in (".md/workspace_context.yaml", ".agents/workspace_context.yaml")
+        )
+        if not has_ctx:
+            return None
+        from ccba_harness import resolve_workspace_and_hub_roots
+
+        return resolve_workspace_and_hub_roots(self.project_root).hub_root
 
     def _find_corpus_in_default_candidates(self) -> Path | None:
         """Checks standard sibling and home directory locations for ccba-legal-knowledge."""

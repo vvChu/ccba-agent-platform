@@ -358,10 +358,12 @@ def strip_accents(text: str) -> str:
 
 def _find_project_root() -> Path:
     """Finds repository project root by checking for .agents/skills/platform-loader/catalog.yaml."""
-    cur = Path(__file__).resolve()
-    for parent in cur.parents:
-        if (parent / ".agents" / "skills" / "platform-loader" / "catalog.yaml").exists():
-            return parent
+    from .._workspace_roots import resolve_workspace_and_hub_roots
+
+    ctx = resolve_workspace_and_hub_roots(Path(__file__).resolve())
+    for cand in (ctx.workspace_root, ctx.hub_root):
+        if cand and (cand / ".agents" / "skills" / "platform-loader" / "catalog.yaml").exists():
+            return cand
     return Path.cwd()
 
 

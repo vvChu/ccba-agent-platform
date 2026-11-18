@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +14,7 @@ from ccba_legal.currency_resolver import (
     clear_resolver_cache,
     resolve_statutory_doc,
 )
+from ccba_legal.models import LegalDocStatus, normalize_doc_status
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -23,7 +26,8 @@ def test_statutory_roles_resolution_active_2026() -> None:
     grading = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, eval_date)
     assert grading.doc_number == "34/2026/TT-BXD"
     assert "cấp công trình" in grading.title.lower()
-    assert grading.status == "active"
+    assert grading.status.lower() in {"active", "current"}
+    assert normalize_doc_status(grading.status) == LegalDocStatus.ACTIVE
     assert grading.source_origin in {"master_registry", "local_registry", "currency_card"}
     assert "34/2026/TT-BXD" in grading.citation_str
 
@@ -136,3 +140,35 @@ def test_currency_card_discovery_outside_repo_root(monkeypatch: pytest.MonkeyPat
     doc = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_LAW, "2024-05-01")
     assert doc.doc_number == "50/2014/QH13"
     assert doc.source_origin == "currency_card"
+
+
+def test_hub_registry_resolution_without_external_corpus(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify CI-isolated Hub .md/data/legal_registry.yaml yields normalized ACTIVE status."""
+    orig_exists = Path.exists
+    orig_is_file = Path.is_file
+
+    def _mask_external(fn: object) -> object:
+        def _wrapper(self: Path) -> bool:
+            if "ccba-legal-knowledge" in str(self):
+                return False
+            return bool(fn(self))  # type: ignore[operator]
+
+        return _wrapper
+
+    clean_env = {k: v for k, v in os.environ.items() if not k.startswith("CCBA_LEGAL_")}
+    clear_resolver_cache()
+    try:
+        with (
+            patch.dict(os.environ, clean_env, clear=True),
+            patch("pathlib.Path.exists", _mask_external(orig_exists)),
+            patch("pathlib.Path.is_file", _mask_external(orig_is_file)),
+        ):
+            grading = resolve_statutory_doc(StatutoryRole.CONSTRUCTION_GRADING, "2026-09-26")
+        assert grading.doc_number == "34/2026/TT-BXD"
+        assert grading.status.lower() in {"active", "current"}
+        assert normalize_doc_status(grading.status) == LegalDocStatus.ACTIVE
+        assert grading.source_origin in {"master_registry", "local_registry"}
+    finally:
+        clear_resolver_cache()
