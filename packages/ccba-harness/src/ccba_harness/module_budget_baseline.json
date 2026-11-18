@@ -1,5 +1,4 @@
 {
-    "packages/ccba-ai/src/ccba_ai/client.py": 1216,
     "packages/ccba-harness/src/ccba_harness/_file_monitor.py": 1127,
     "packages/ccba-harness/src/ccba_harness/_process_monitor.py": 1185,
     "packages/ccba-harness/src/ccba_harness/fleet.py": 1024,
