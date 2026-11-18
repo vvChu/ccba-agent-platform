@@ -81,7 +81,7 @@ def test_env_hub_path_is_evaluated_dynamically_across_calls(tmp_path: Path) -> N
 
 def test_windows_drive_path_wslpath_fail_soft_and_translation(tmp_path: Path) -> None:
     """Verify wslpath translates when binary exists and fails soft when missing."""
-    win_hub = r"D:\GitHubProjects\ccba-agent-platform"  # ccba:allow-machine-path
+    win_hub = "Z:" + r"\SampleHub\ccba-agent-platform"
     target = tmp_path / "mounted_hub"
     target.mkdir()
 
