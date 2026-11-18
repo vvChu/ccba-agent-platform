@@ -44,7 +44,7 @@ class OOXMLValidator:
     def _instantiate_validators(
         self, file_extension: str
     ) -> tuple[list[Any], ParsedOOXMLPackage | None]:
-        """Instantiate format-specific validators sharing one cache for DOCX."""
+        """Instantiate format-specific validators sharing one ``ParsedOOXMLPackage`` cache."""
         match file_extension:
             case ".docx":
                 shared_pkg = ParsedOOXMLPackage(self.unpacked_dir)
@@ -63,9 +63,15 @@ class OOXMLValidator:
                     ),
                 ], shared_pkg
             case ".pptx":
+                shared_pkg = ParsedOOXMLPackage(self.unpacked_dir)
                 return [
-                    PPTXSchemaValidator(self.unpacked_dir, self.original_file, verbose=self.verbose)
-                ], None
+                    PPTXSchemaValidator(
+                        self.unpacked_dir,
+                        self.original_file,
+                        verbose=self.verbose,
+                        parsed_package=shared_pkg,
+                    )
+                ], shared_pkg
             case _:
                 return [], None
 
