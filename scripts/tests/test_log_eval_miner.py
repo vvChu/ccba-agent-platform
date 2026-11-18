@@ -55,6 +55,22 @@ def test_redact_sensitive_info():
     assert "user@example.com" not in redacted
     assert "0912345678" not in redacted
 
+    # Verify +84 phone, env-secret prefix preservation, and non-redaction of CCCD in bracket_suffix
+    secret_key = "MY_APP_" + "SECRET"
+    secret_pair = f"{secret_key}=" + "my_super_val"
+    expected_redacted = f"{secret_key}=[SECRET_REDACTED]"
+    plus84 = redact_sensitive_info(f"Tel +84912345678 {secret_pair} CCCD 001090123456")
+    assert "+84912345678" not in plus84
+    assert "[PHONE_REDACTED]" in plus84
+    assert expected_redacted in plus84
+    assert "001090123456" in plus84
+
+    from ccba_harness.evals._miner_catalog import _redact_sensitive_fallback
+
+    fb = _redact_sensitive_fallback(f"Tel +84912345678 {secret_pair}")
+    assert "[PHONE_REDACTED]" in fb
+    assert expected_redacted in fb
+
 
 def test_extract_clean_user_prompt():
     """Test extraction of clean prompt from XML envelopes and metadata tags."""

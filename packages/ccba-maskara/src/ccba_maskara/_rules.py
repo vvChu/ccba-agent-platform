@@ -88,6 +88,37 @@ REGEX_PATTERNS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Vietnamese PII patterns opted into by redaction helpers (kept outside pre-commit hook defaults)
+PII_REGEX_PATTERNS: dict[str, dict[str, Any]] = {
+    "email": {
+        "name": "Email address",
+        "severity": "medium",
+        "pattern": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
+    },
+    "phone": {
+        "name": "Vietnamese phone number",
+        "severity": "medium",
+        "pattern": re.compile(r"(?:\b0\d{9,10}|(?<!\w)\+84\d{9,10})\b"),
+    },
+    "cccd": {
+        "name": "Vietnamese Citizen ID (CCCD)",
+        "severity": "high",
+        "pattern": re.compile(r"(?<![-\w.])\d{12}(?![-\w.])"),
+    },
+    "cmnd": {
+        "name": "Vietnamese Legacy ID (CMND)",
+        "severity": "medium",
+        "pattern": re.compile(r"(?<![-\w.])\d{9}(?![-\w.])"),
+    },
+    "ip-private": {
+        "name": "Private / Tailscale IPv4",
+        "severity": "low",
+        "pattern": re.compile(
+            r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3})\b"
+        ),
+    },
+}
+
 SAFE_STRINGS: set[str] = {
     "mock-safe-test-key",
     "your-api-key",

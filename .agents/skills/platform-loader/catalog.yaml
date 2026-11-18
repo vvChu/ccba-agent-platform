@@ -1400,7 +1400,8 @@ seams:
   description: Security and privacy engine for detecting and redacting sensitive credentials
     and API keys.
   public_seams:
-  - '`from ccba_maskara import MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text`.'
+  - '`from ccba_maskara import MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text,
+    redact_secrets_and_pii, REGEX_PATTERNS, PII_REGEX_PATTERNS`.'
   contracts: Never persist unmasked API keys or secrets in logs, artifacts, or transcripts.
   tests: '`pytest packages/ccba-maskara/tests`'
 - package: ccba-notebooklm

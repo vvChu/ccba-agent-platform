@@ -171,6 +171,19 @@ def test_style_sanitization_and_metrics():
     assert "[REDACTED_PHONE]" in redacted
     assert "[REDACTED_CCCD]" in redacted
 
+    # Extended tokens closed in Maskara unification (sk-proj, sk-ant, github_pat, +84, UUID non-match)
+    sk_proj = "sk-" + "proj-abcdef1234567890abcdef1234"
+    sk_ant = "sk-" + "ant-api03-abcdef1234567890abcdef"
+    gh_pat = "github_" + "pat_1234567890abcdef123456"
+    extended = f"{sk_proj} {sk_ant} {gh_pat} +84912345678 00000000-0000-0000-0000-000000000000"
+    redacted_ext = redact_sensitive_info(extended)
+    assert sk_proj not in redacted_ext
+    assert sk_ant not in redacted_ext
+    assert gh_pat not in redacted_ext
+    assert "+84912345678" not in redacted_ext
+    assert "[REDACTED_PHONE]" in redacted_ext
+    assert "00000000-0000-0000-0000-000000000000" in redacted_ext
+
     metrics = analyze_style_metrics(
         "Đây là một câu văn mẫu. Câu văn thứ hai dùng để kiểm tra độ dài trung bình."
     )

@@ -13,9 +13,11 @@ import yaml
 
 try:
     from ccba_maskara import REGEX_PATTERNS as _MASKARA_PATTERNS
+    from ccba_maskara import redact_secrets_and_pii as _maskara_redact_secrets_and_pii
 
     MASKARA_REGEX_PATTERNS: dict[str, Any] = _MASKARA_PATTERNS
 except ImportError:
+    _maskara_redact_secrets_and_pii = None  # type: ignore[assignment]
     MASKARA_REGEX_PATTERNS = {
         "anthropic-api-key": {"pattern": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")},
         "openai-api-key": {"pattern": re.compile(r"\bsk-(?!ant-)(?:proj-)?[A-Za-z0-9_-]{20,}\b")},
@@ -55,24 +57,11 @@ except ImportError:
 
 PII_PATTERNS = [
     (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"), "[EMAIL_REDACTED]"),
-    (re.compile(r"\b(?:0\d{9,10}|\+84\d{9,10})\b"), "[PHONE_REDACTED]"),
+    (re.compile(r"(?:\b0\d{9,10}|(?<!\w)\+84\d{9,10})\b"), "[PHONE_REDACTED]"),
     (
         re.compile(
             r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3})\b"
         ),
-        "[IP_REDACTED]",
-    ),
-]
-
-SENSITIVE_PATTERNS = [
-    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL_REDACTED]"),
-    (r"\b(?:0\d{9,10}|\+84\d{9,10})\b", "[PHONE_REDACTED]"),
-    (
-        r"\b(?:sk-[A-Za-z0-9]{20,}|AIzaSy[A-Za-z0-9_-]{33}|ghp_[A-Za-z0-9]{36})\b",
-        "[API_KEY_REDACTED]",
-    ),
-    (
-        r"\b(?:100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3})\b",
         "[IP_REDACTED]",
     ),
 ]
@@ -294,10 +283,8 @@ LEGACY_SKILL_FILE_MAP: dict[str, str] = {
 DEFAULT_SCRATCH_DIR = Path(".md/scratch/eval_runs")
 
 
-def redact_sensitive_info(text: str) -> str:
-    """Redacts sensitive user credentials and PII using Maskara _rules.py standard."""
-    if not text:
-        return ""
+def _redact_sensitive_fallback(text: str) -> str:
+    """Fallback secret and PII redactor when optional ccba-maskara package is unavailable."""
     cleaned = text
     for rule_id, rule_spec in MASKARA_REGEX_PATTERNS.items():
         pattern = rule_spec["pattern"]
@@ -324,10 +311,18 @@ def redact_sensitive_info(text: str) -> str:
             cleaned = pattern.sub("[JWT_REDACTED]", cleaned)
         else:
             cleaned = pattern.sub(f"[{rule_id.upper().replace('-', '_')}_REDACTED]", cleaned)
-
     for p, r in PII_PATTERNS:
         cleaned = p.sub(r, cleaned)
     return cleaned.strip()
+
+
+def redact_sensitive_info(text: str) -> str:
+    """Redacts sensitive user credentials and PII via Maskara seam (with stdlib fallback)."""
+    if not text:
+        return ""
+    if _maskara_redact_secrets_and_pii is not None:
+        return _maskara_redact_secrets_and_pii(text, dialect="bracket_suffix").strip()
+    return _redact_sensitive_fallback(text)
 
 
 def extract_clean_user_prompt(raw_text: str) -> str:

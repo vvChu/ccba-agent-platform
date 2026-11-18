@@ -8,7 +8,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from ._locator import (
     AGENT_SPECS,
@@ -23,7 +23,66 @@ from ._redactor import (
 from ._redactor import (
     redact_findings as _redact_findings,
 )
-from ._rules import REGEX_PATTERNS, SAFE_STRINGS
+from ._rules import PII_REGEX_PATTERNS, REGEX_PATTERNS, SAFE_STRINGS
+
+RedactionDialect = Literal["maskara", "bracket_suffix", "bracket_prefix"]
+
+_API_KEY_RULE_IDS: frozenset[str] = frozenset(
+    {
+        "anthropic-api-key",
+        "openai-api-key",
+        "google-api-key",
+        "github-token",
+        "aws-access-key",
+        "slack-token",
+        "stripe-live-key",
+    }
+)
+_BRACKET_SUFFIX_TOKENS: dict[str, str | None] = {
+    "env-secret": "[SECRET_REDACTED]",
+    "database-url": "[DB_URL_REDACTED]",
+    "private-key": "[PRIVATE_KEY_REDACTED]",
+    "jwt": "[JWT_REDACTED]",
+    "email": "[EMAIL_REDACTED]",
+    "phone": "[PHONE_REDACTED]",
+    "ip-private": "[IP_REDACTED]",
+    "cccd": None,
+    "cmnd": None,
+}
+_BRACKET_PREFIX_TOKENS: dict[str, str | None] = {
+    "env-secret": "[REDACTED_SECRET]",
+    "database-url": "[REDACTED_SECRET]",
+    "private-key": "[REDACTED_SECRET]",
+    "jwt": "[REDACTED_SECRET]",
+    "email": "[REDACTED_EMAIL]",
+    "phone": "[REDACTED_PHONE]",
+    "cccd": "[REDACTED_CCCD]",
+    "cmnd": "[REDACTED_CMND]",
+    "ip-private": None,
+    "telegram-bot-token": "[REDACTED_API_KEY]",
+    "groq-api-key": "[REDACTED_API_KEY]",
+    "litellm-master-key": "[REDACTED_API_KEY]",
+}
+
+
+def format_redaction_token(rule_id: str, dialect: RedactionDialect = "maskara") -> str | None:
+    """Map a Maskara rule ID to its placeholder token for the selected dialect."""
+    if dialect == "maskara":
+        return f"[MASKARA_REDACTED:{rule_id}]"
+    if dialect == "bracket_suffix":
+        if rule_id in _API_KEY_RULE_IDS:
+            return "[API_KEY_REDACTED]"
+        if rule_id in _BRACKET_SUFFIX_TOKENS:
+            return _BRACKET_SUFFIX_TOKENS[rule_id]
+        return f"[{rule_id.upper().replace('-', '_')}_REDACTED]"
+    if dialect == "bracket_prefix":
+        if rule_id in _API_KEY_RULE_IDS:
+            return "[REDACTED_API_KEY]"
+        if rule_id in _BRACKET_PREFIX_TOKENS:
+            return _BRACKET_PREFIX_TOKENS[rule_id]
+        return "[REDACTED_SECRET]"
+    raise ValueError(f"Unsupported redaction dialect: {dialect!r}")
+
 
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
 
@@ -253,6 +312,7 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
         end: int,
         filepath: str,
         agent: str,
+        redaction: str | None = None,
     ) -> dict[str, Any]:
         """Construct a structured finding dictionary for a matched secret."""
         line, col = self.line_and_column(content, start)
@@ -272,15 +332,24 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
             "byte_end": byte_end,
             "preview": self.mask_value(val),
             "sha256": hashlib.sha256(val.encode("utf-8")).hexdigest(),
-            "redaction": f"[MASKARA_REDACTED:{rule_id}]",
+            "redaction": redaction or f"[MASKARA_REDACTED:{rule_id}]",
         }
 
-    def scan_text(
-        self, content: str, filepath: str = "", agent: str = "", use_llm: bool = False
+    def _collect_rule_findings(
+        self,
+        content: str,
+        rules: dict[str, dict[str, Any]],
+        filepath: str,
+        agent: str,
+        use_llm: bool,
+        dialect: RedactionDialect,
     ) -> list[dict[str, Any]]:
-        """Scan string content with regex pattern suite."""
-        findings: list[dict[str, Any]] = []
-        for rule_id, rule_spec in REGEX_PATTERNS.items():
+        """Evaluate a pattern dictionary and emit filtered findings."""
+        collected: list[dict[str, Any]] = []
+        for rule_id, rule_spec in rules.items():
+            placeholder = format_redaction_token(rule_id, dialect)
+            if placeholder is None:
+                continue
             for match in rule_spec["pattern"].finditer(content):
                 if rule_id == "env-secret":
                     val, start, end = match.group(1), match.start(1), match.end(1)
@@ -288,17 +357,43 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
                         continue
                 else:
                     val, start, end = match.group(0), match.start(), match.end()
-                if val in SAFE_STRINGS or "MASKARA_REDACTED" in val:
+                if val in SAFE_STRINGS or "MASKARA_REDACTED" in val or val.endswith("_REDACTED]"):
                     continue
                 finding = self._build_finding_record(
-                    content, rule_id, rule_spec, val, start, end, filepath, agent
+                    content,
+                    rule_id,
+                    rule_spec,
+                    val,
+                    start,
+                    end,
+                    filepath,
+                    agent,
+                    redaction=placeholder,
                 )
                 if use_llm and not self.ask_llm_gateway(
                     finding, self.extract_context(content, start, end)
                 ):
                     continue
-                findings.append(finding)
+                collected.append(finding)
+        return collected
 
+    def scan_text(
+        self,
+        content: str,
+        filepath: str = "",
+        agent: str = "",
+        use_llm: bool = False,
+        *,
+        include_pii: bool = False,
+        dialect: RedactionDialect = "maskara",
+    ) -> list[dict[str, Any]]:
+        """Scan string content with secret and optional Vietnamese PII pattern suites."""
+        active_rules = dict(REGEX_PATTERNS)
+        if include_pii:
+            active_rules.update(PII_REGEX_PATTERNS)
+        findings = self._collect_rule_findings(
+            content, active_rules, filepath, agent, use_llm, dialect
+        )
         findings.sort(key=lambda x: (x["file"], x["start"]))
         filtered: list[dict[str, Any]] = []
         for f in findings:
@@ -309,9 +404,22 @@ Is this a real sensitive credential that must be rotated? Reply with ONLY 'YES' 
                 filtered.append(f)
         return filtered
 
-    def redact_text(self, content: str, agent: str = "text") -> str:
-        """Scan and redact secret patterns in text content string."""
-        findings = self.scan_text(content, filepath="string", agent=agent)
+    def redact_text(
+        self,
+        content: str,
+        agent: str = "text",
+        *,
+        include_pii: bool = False,
+        dialect: RedactionDialect = "maskara",
+    ) -> str:
+        """Scan and redact secret and optional PII patterns in text content string."""
+        findings = self.scan_text(
+            content,
+            filepath="string",
+            agent=agent,
+            include_pii=include_pii,
+            dialect=dialect,
+        )
         if not findings:
             return content
 

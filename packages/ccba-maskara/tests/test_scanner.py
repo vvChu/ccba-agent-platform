@@ -131,3 +131,71 @@ def test_redact_text_multibyte_vietnamese_and_emojis(scanner: MaskaraScanner) ->
     rewritten_bytes, count = apply_raw_redactions(raw_bytes, findings)
     assert count == 1
     assert rewritten_bytes.decode("utf-8") == redacted
+
+
+def test_pii_redaction_three_dialects_and_uuid_guard(scanner: MaskaraScanner) -> None:
+    """Verify 3 dialect mappings, +84 phone boundary, CCCD/CMND ordering, and UUID exclusion."""
+    from ccba_maskara import PII_REGEX_PATTERNS, redact_secrets_and_pii
+
+    assert set(PII_REGEX_PATTERNS.keys()) == {"email", "phone", "cccd", "cmnd", "ip-private"}
+    gh_pat = "github_" + "pat_1234567890abcdefghijkl"
+    sk_proj = "sk-" + "proj-1234567890abcdefghij1234"
+    sample = (
+        f"OPENAI_API_KEY={sk_proj} PAT={gh_pat} "
+        "Email a@b.vn Phone +84912345678 or 0912345678 "
+        "CCCD 001090123456 CMND 123456789 IP 100.64.1.2 "
+        "UUID 00000000-0000-0000-0000-000000000000"
+    )
+
+    # Pre-commit default scan_text(include_pii=False) must NOT flag PII or UUID
+    default_findings = scanner.scan_text("Email a@b.vn CCCD 001090123456 Tel +84912345678")
+    assert default_findings == []
+
+    # Dialect 1: maskara
+    out_maskara = redact_secrets_and_pii(sample, dialect="maskara")
+    assert "[MASKARA_REDACTED:openai-api-key]" in out_maskara
+    assert "[MASKARA_REDACTED:github-token]" in out_maskara
+    assert "[MASKARA_REDACTED:email]" in out_maskara
+    assert out_maskara.count("[MASKARA_REDACTED:phone]") == 2
+    assert "[MASKARA_REDACTED:cccd]" in out_maskara
+    assert "[MASKARA_REDACTED:cmnd]" in out_maskara
+    assert "[MASKARA_REDACTED:ip-private]" in out_maskara
+    assert "00000000-0000-0000-0000-000000000000" in out_maskara
+
+    # Dialect 2: bracket_suffix (miner preserves env prefix, skips cccd/cmnd)
+    env_key = "MY_CUSTOM_" + "SECRET"
+    env_line = f"{env_key}=" + "super_val_99"
+    out_suffix = redact_secrets_and_pii(f"{sample} {env_line}", dialect="bracket_suffix")
+    assert f"{env_key}=[SECRET_REDACTED]" in out_suffix
+    assert "[API_KEY_REDACTED]" in out_suffix
+    assert "[EMAIL_REDACTED]" in out_suffix
+    assert out_suffix.count("[PHONE_REDACTED]") == 2
+    assert "[IP_REDACTED]" in out_suffix
+    assert "001090123456" in out_suffix
+    assert "123456789" in out_suffix
+
+    # Dialect 3: bracket_prefix (mdconverter skips ip-private, redacts CCCD/CMND)
+    out_prefix = redact_secrets_and_pii(sample, dialect="bracket_prefix")
+    assert "[REDACTED_API_KEY]" in out_prefix
+    assert "[REDACTED_EMAIL]" in out_prefix
+    assert out_prefix.count("[REDACTED_PHONE]") == 2
+    assert "[REDACTED_CCCD]" in out_prefix
+    assert "[REDACTED_CMND]" in out_prefix
+    assert "100.64.1.2" in out_prefix
+    assert sk_proj not in out_prefix
+    assert gh_pat not in out_prefix
+
+
+def test_lazy_default_scanner_not_created_at_import() -> None:
+    """Verify import ccba_maskara leaves _default_scanner uninstantiated until first use."""
+    import subprocess
+    import sys
+
+    code = (
+        "import ccba_maskara\n"
+        "assert ccba_maskara._default_scanner is None\n"
+        "out = ccba_maskara.redact_secrets_and_pii('tel +84912345678')\n"
+        "assert '[MASKARA_REDACTED:phone]' in out\n"
+        "assert ccba_maskara._default_scanner is not None\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)
