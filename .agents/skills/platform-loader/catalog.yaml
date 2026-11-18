@@ -1372,7 +1372,8 @@ seams:
     send_telegram_alert, send_telegram_document, SkillVersionStore, SkillVelocityTracker,
     RegressionGateVerdict, check_skill_mutation_allowed, evaluate_regression_gate,
     resolve_skill_stability_zone, FRONTMATTER_PATTERN, SkillFrontmatterSpec, parse_markdown_frontmatter,
-    ParameterViolation, is_statutory_clause_match, scan_parameter_cleanliness`.'
+    ParameterViolation, is_statutory_clause_match, scan_parameter_cleanliness, WorkspaceHubContext,
+    resolve_workspace_and_hub_roots`.'
   contracts: Evaluations must be deterministic and isolated with explicit timeout
     guards. Two-Stage Granularity Decision Framework and GPI calculation enforce RES-2026-ARCH-001
     v1.2 architecture rules. Fast unit tests must maintain SLA < 2.0s.
@@ -1553,6 +1554,11 @@ guardrails:
 - name: _parameter_cleanliness.py
   src: packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py
   dest: scripts/_guardrails/_parameter_cleanliness.py
+  applies_to:
+  - python
+- name: _workspace_roots.py
+  src: packages/ccba-harness/src/ccba_harness/_workspace_roots.py
+  dest: scripts/_guardrails/_workspace_roots.py
   applies_to:
   - python
 - name: pre-commit

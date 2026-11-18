@@ -139,8 +139,8 @@ IPV4_CANDIDATE_PATTERN = _CLEANLINESS_SEAM._IPV4_CANDIDATE_RE
 # System and Guardrail scripts that do NOT count towards the 15-file limit
 ALLOWLIST_SCRIPTS = set(
     "__init__.py conftest.py safe_pytest.py safe_runner.py check_hub_import_depth.py "
-    "check_spoke_cleanliness.py _parameter_cleanliness.py check_claudekit_updates.py "
-    "spoke_bootstrap.py spoke_bootstrap.ps1 setup_pre_commit.py sync.py".split()
+    "check_spoke_cleanliness.py _parameter_cleanliness.py _workspace_roots.py "
+    "check_claudekit_updates.py spoke_bootstrap.py spoke_bootstrap.ps1 setup_pre_commit.py sync.py".split()
 )
 
 # Prefix patterns indicating one-off or temporary scripts

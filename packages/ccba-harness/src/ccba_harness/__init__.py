@@ -32,6 +32,7 @@ if TYPE_CHECKING:
         parse_markdown_frontmatter,
     )
     from ._state import HarnessLocal, HarnessState
+    from ._workspace_roots import WorkspaceHubContext, resolve_workspace_and_hub_roots
     from .architecture import ADRMatch, WhyExplanation, explain_architecture_why
     from .backpressure import (
         BackpressureStatus,
@@ -124,6 +125,8 @@ __all__ = [
     "ParameterViolation",
     "is_statutory_clause_match",
     "scan_parameter_cleanliness",
+    "WorkspaceHubContext",
+    "resolve_workspace_and_hub_roots",
     "CommandResult",
     "PatchVerificationReport",
     "verify_patch_execution",
@@ -573,6 +576,8 @@ _LAZY_EXPORTS = {
     "ParameterViolation": "ccba_harness._parameter_cleanliness",
     "is_statutory_clause_match": "ccba_harness._parameter_cleanliness",
     "scan_parameter_cleanliness": "ccba_harness._parameter_cleanliness",
+    "WorkspaceHubContext": "ccba_harness._workspace_roots",
+    "resolve_workspace_and_hub_roots": "ccba_harness._workspace_roots",
     "AsyncTranscriptFollower": "ccba_harness.streamer",
     "OfflineBufferManager": "ccba_harness.streamer",
     "StreamingConfig": "ccba_harness.streamer",
