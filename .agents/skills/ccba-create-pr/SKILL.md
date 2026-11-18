@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.4"
+  version: "1.3.5"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -91,6 +91,8 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      python -m ccba_harness verify-patch --preset code
      # Nếu có sửa đổi dưới scripts/ (kiểm tra lại trần AST <= 50 dòng SAU khi chạy ruff format):
      python -m pytest scripts/tests/ -q
+     # Quét rò rỉ nhạy cảm trên raw unified diff trước khi đẩy nhánh (khớp cổng PR Danger Triage & Verifier Gate, quét cả tests/):
+     python scripts/governance/sanitize_review_diff.py --base origin/<default_branch> --head HEAD --check
      ```
    - **Tại Spoke (Pháp điển / Knowledge Corpus / Specialized Spokes):**
      ```bash
@@ -101,7 +103,7 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    - Nếu kiểm chuẩn trả về mã thoát `0`: Mã nguồn đạt chuẩn, chuyển sang Bước 2.
    - Nếu có lỗi kiểm thử hoặc vi phạm linting: **DỪNG LẠI NGAY LẬP TỨC**, sửa lỗi tại chỗ và commit lại trước khi đẩy lên remote.
 
-- **Tiêu chí hoàn thành:** Toàn bộ rào chắn kiểm chuẩn cục bộ đạt 100% PASS (Exit Code 0).
+- **Tiêu chí hoàn thành:** Toàn bộ rào chắn kiểm chuẩn cục bộ (gồm `verify-patch`, scoped pytest và `sanitize_review_diff.py --check`) đạt 100% PASS (Exit Code 0).
 
 ---
 
@@ -167,6 +169,8 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
    gh pr create --title "<Title>" -F <body_file> --base <default_branch> --head <current_branch> --assignee "@me"
    # Khi cần cập nhật mô tả PR hiện có (tránh lỗi GraphQL Classic Projects của gh pr edit):
    gh api repos/<owner>/<repo>/pulls/<PR_NUMBER> -X PATCH -F body=@<body_file>
+   # Khi cần gắn nhãn cho PR (ví dụ in-progress theo khóa đồng đẳng, tránh lỗi GraphQL Classic Projects của gh pr edit):
+   gh api repos/<owner>/<repo>/issues/<PR_NUMBER>/labels -f 'labels[]=in-progress' --silent
    ```
 4. **Fallback thủ công (nếu `gh` chưa cài hoặc chưa đăng nhập):**
    - Trích xuất URL tạo PR từ `git remote get-url origin`: `https://github.com/<owner>/<repo>/compare/<default_branch>...<current_branch>`.

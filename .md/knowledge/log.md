@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-18] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Làm Sâu Seam `_workspace_roots`, Maskara PII 3 Phương Ngữ, `ParsedOOXMLPackage` & Tiến Hóa `ccba-create-pr v1.3.5` (`PR #804`..`#809`, `RULE-1.13`, `RULE-2.20`, `RULE-5.11`, `RULE-5.13`, Mục 70)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`
+- **Summary**: Hoàn tất retrospective phiên `3f411160-92f4-4d91-baac-9ea09fc511ad` (`1,178` bước trước retrospective, `376` turns, `139,490,301` tokens, `175.32 USD`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `1` case vào `eval_ccba_wayfinder.json`; `12` bước `status == "ERROR"` đều tự phục hồi sạch, `0` bước `CLEARED`) bao phủ chuỗi `6` PR `#804..#809`: kết tinh vào `RULE-1.13`, `RULE-2.20`, `RULE-5.11`, `RULE-5.13` trong `.md/knowledge/session_learnings.md` (`9.98 KB <= 10.0 KB`, `0` dropped rules) cùng `Mục 70` tại `.md/knowledge/archive/session_learnings_history.md` (bẫy raw diff `sanitize_review_diff.py`, dotfile `Path("_rels/.rels").suffix == ""`, `gh api` labels & `door-triage` positional args, `min`/3 subprocess benchmark dưới `pytest-xdist`, chuỗi drive động trong `tests/`); đồng thời tiến hóa `.agents/skills/ccba-create-pr/SKILL.md` (`v1.3.4` $\to$ `v1.3.5`), chạy Recompilation Gate kép và neo `verify-ccba-create-pr` (`v1.0.5`).
+
+---
+
 ## [2026-11-18] [update] | Hoàn Tất Triển Khai 5 Micro-PRs (`#804..#808`) & Đóng Bản Đồ Wayfinder Làm Sâu Seam Workspace/Hub, Maskara PII & OOXML (`WF-01..WF-06`)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/_workspace_roots.py`, `packages/ccba-maskara/src/ccba_maskara/`, `packages/mdconverter/src/mdconverter/style.py`, `packages/ccba-ooxml/src/ccba_ooxml/validation/`, `packages/ccba-ooxml/src/ccba_ooxml/pack.py`, `packages/ccba-ooxml/src/ccba_ooxml/unpack.py`, `packages/ccba-harness/src/ccba_harness/module_budget_baseline.json`, `CONTEXT.md`, `.md/wayfinder/workspace-maskara-ooxml-deepening/map.md`, `.md/knowledge/decisions/2026-11-18_workspace_maskara_ooxml_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
