@@ -17,12 +17,12 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "ac677d467317a7b08453a6cebcdce5964964ad14"
+sync_commit: "646cf2d79b382ba8e33bb2540676c272bfc99435"
 covered_sha256:
-  packages/ccba-maskara/src/ccba_maskara/__init__.py: "49a0134ed464eb1b6ed3a99498a0d95977799796099e704e16db037bc7bacb67"
-  packages/ccba-maskara/src/ccba_maskara/_scanner.py: "dd6da8baa7e382e655486e63a1965c8ccbe914a540f3e0c8cea45a216f5525c4"
+  packages/ccba-maskara/src/ccba_maskara/__init__.py: "b91f469756a712b010193590ca7d524e318a8bafae181917014493b7370830ca"
+  packages/ccba-maskara/src/ccba_maskara/_scanner.py: "5dcd85fcd4f5c9e1ab6a0d610706c6d82f5090d0cb04fe2ee9444fd5e59d1536"
   packages/ccba-maskara/src/ccba_maskara/_redactor.py: "1384313848736d9569cc69d1d7bc13cb47b2da0382b838151c54d53e34b3e895"
-  packages/ccba-maskara/src/ccba_maskara/_rules.py: "a7654e6d9acd03a3496f386ecfc389c7cbd450409f515ef113e4f01d511016ae"
+  packages/ccba-maskara/src/ccba_maskara/_rules.py: "4afe8ba55d8ad0a1f2b6ad4e382637ed3cb788a17f8d3eb759aa101442d5e864"
   packages/ccba-maskara/src/ccba_maskara/_locator.py: "e568f2801703a890835675541fa3cd5a5c2d128b6e528063b6c21f677992891f"
 verification_mode:
   - scaffold
@@ -46,8 +46,8 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-mas
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp các Public Deep Seams của `ccba_maskara` (`MaskaraScanner`, `detect_secrets_in_text`, `redact_secrets_in_text`, `apply_raw_redactions`, `backup_and_write`, `is_binary`, `REGEX_PATTERNS`) tương ứng với kỹ năng `ccba-maskara`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `ac677d467317a7b08453a6cebcdce5964964ad14` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ toàn bộ `5` tệp `covered_paths`.
+- **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp các Public Deep Seams của `ccba_maskara` (`MaskaraScanner`, `detect_secrets_in_text`, `redact_secrets_in_text`, `redact_secrets_and_pii`, `apply_raw_redactions`, `backup_and_write`, `is_binary`, `REGEX_PATTERNS`, `PII_REGEX_PATTERNS`) tương ứng với kỹ năng `ccba-maskara`.
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit PR-2 `646cf2d79b382ba8e33bb2540676c272bfc99435` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ toàn bộ `5` tệp `covered_paths`.
 - **Giới Hạn Phạm Vi (`Scope & Limitations`)**:
   - Việc kiểm chứng bằng `use_llm=True` cô lập qua mock `ccba_ai.ai.chat` (`_scanner.py:213-237`), không gọi mạng tới LiteLLM Gateway thực.
   - Khi `scan_file` gặp symlink, thư mục, tệp nhị phân, tệp vượt `25 MB` (`MAX_FILE_SIZE`), hoặc tên tệp không thuộc nhóm session/config text (`_scanner.py:343-348`), hàm trả về `skipped=1` thay vì ném ngoại lệ (`bug_path_2`).
