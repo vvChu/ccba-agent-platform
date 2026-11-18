@@ -6,6 +6,5 @@
     "packages/ccba-legal-intel/src/ccba_legal/cli.py": 1455,
     "packages/ccba-legal-intel/src/ccba_legal/registry.py": 1260,
     "packages/ccba-ooxml/src/ccba_ooxml/pptx/deck_builder.py": 1586,
-    "packages/ccba-ooxml/src/ccba_ooxml/pptx/inventory.py": 1033,
-    "packages/ccba-ooxml/src/ccba_ooxml/validation/base.py": 949
+    "packages/ccba-ooxml/src/ccba_ooxml/pptx/inventory.py": 1033
 }
