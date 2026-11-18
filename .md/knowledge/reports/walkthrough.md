@@ -1,33 +1,34 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Statechart Anti-Lie, Strict Mypy & Profile-B Verifiers (`PR #784`)
-## Feature: `feat(harness,governance): harden statechart anti-lie, strict mypy, and Profile-B verifiers`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Di Trú `PPTXSchemaValidator` Lên `ParsedOOXMLPackage` (`PR #813`)
+## Feature: `feat(ooxml): migrate PPTXSchemaValidator onto ParsedOOXMLPackage`
 
-> **Pull Request Đã Hợp Nhất:** [#784](https://github.com/vvChu/ccba-agent-platform/pull/784) (`03d93a483f0f33a13a7e04ec91b5ac3cedfdabbc`)
-> **Branch Phát Hành:** `feat/statechart-anti-lie-and-harness-parity` (`709b3bea..faff4a5e` $\to$ `03d93a48`)
-> **Base Commit Trước Merge:** `fbe8becb` (`origin/main`)
-> **Trạng thái:** ✅ **PR #784 RELEASED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT), 8/8 CI CHECKS PASS, GROK ARCH_AUDIT APPROVE, 0 UNRESOLVED PR COMMENTS**
+> **Pull Request Đã Hợp Nhất:** [#813](https://github.com/vvChu/ccba-agent-platform/pull/813) (`6dca154785ac2478ce5ccb4d1455387d2b999cf5`)
+> **Branch Phát Hành:** `feat/pptx-parsed-package` (`92ef77ca` -> `6dca1547`)
+> **Base Commit Trước Merge:** `d016a67c` (`origin/main`)
+> **Trạng thái:** ✅ **PR #813 RELEASED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT), 8/8 CI CHECKS PASS, GROK AUDIT_PLAN APPROVE_PLAN, 0 UNRESOLVED PR COMMENTS**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kỹ Thuật (`PR #784`)
+## 1. Tổng Kết Thay Đổi Kỹ Thuật (`PR #813`)
 
 | Thành Phần | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **1. Statechart Anti-Lie & `bug_path` Parity** | [`tests/governance/test_statechart_anti_lie.py`](../../../tests/governance/test_statechart_anti_lie.py), [`tests/governance/test_skills_docs_integrity.py`](../../../tests/governance/test_skills_docs_integrity.py), [`.agents/skills/ccba-diagnosing-bugs/SKILL.md`](../../../.agents/skills/ccba-diagnosing-bugs/SKILL.md) | Trích xuất parser fail-closed (named groups `src_cls`/`dst_cls`, `in_note`, `declared_outside`, chặn `-->` lạ), kiểm định `verify_bug_path_matches_statechart()` qua 3 cửa hợp lệ và khóa `covered_sha256` trên `verify-ccba-diagnosing-bugs` (`v1.0.3`). | Verified |
-| **2. CI Workflows & Harness Evals Parity** | [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml), [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py) | Bổ sung `packages/ccba-diagram[dev]`, `ccba-notebooklm[dev]`, `ccba-ooxml[dev]` cho CI workflows; thêm `test_statechart_anti_lie.py` vào `deploy-pages.yml`; mở rộng `_build_all_pytest_targets()` phủ đủ 10 packages + 27 root `tests/test_*.py` (`50` targets, loại trừ `tests/spoke/`). | Verified |
-| **3. Profile B In-Process (`library\|skill`)** | [`.agents/skills/ccba-create-verification-skill/SKILL.md`](../../../.agents/skills/ccba-create-verification-skill/SKILL.md) | Nâng phiên bản `v1.4.0` (`GPI = 20.75`), bổ sung **Profile B (`--type library\|skill`)** 5 khối in-process không dựng HTTP dummy server, giữ nguyên Profile A cho 11 bộ `verify-ccba-*` hiện có. | Verified |
-| **4. Gỡ `ignore_errors` Trên 7 Module `ccba_harness._*`** | [`pyproject.toml`](../../../pyproject.toml), [`packages/ccba-harness/src/ccba_harness/_engine.py`](../../../packages/ccba-harness/src/ccba_harness/_engine.py) | Xóa toàn bộ 7 ngoại lệ `ignore_errors = true`, sửa sạch `mypy --strict` trên `_state.py`, `_mutex.py`, `_guard.py`, `_engine.py`, `_sql_monitor.py`, `_file_monitor.py` (`1127/1127` LOC), `_process_monitor.py` (`1185/1185` LOC). | Verified |
-| **5. `verify-ccba-mdconverter` (Profile B) & `verify-ccba-ai` + Hub Sync** | [`packages/ccba-harness/.agents/skills/verify-ccba-mdconverter/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-mdconverter/SKILL.md), [`packages/ccba-harness/.agents/skills/verify-ccba-ai/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-ai/SKILL.md), [`packages/ccba-harness/features/INDEX.md`](../../../packages/ccba-harness/features/INDEX.md), [`.agents/skills/platform-loader/catalog.yaml`](../../../.agents/skills/platform-loader/catalog.yaml), [`.md/knowledge/skills_compiled.md`](../../../.md/knowledge/skills_compiled.md) | Triển khai `verify-ccba-mdconverter` (`GPI = 19.50`, 20 cạnh statechart, 0 Dummy HTTP server, Semantic Mutation Proof trên `pipeline.py:180` bắt 2/6 lỗi), bổ sung `verify-ccba-ai` và đồng bộ 4 Hub writers (`compile_catalog.py`, `compile_knowledge.py`, `compile_skills_docs.py`, `sync_hub_adr_matrix.py`). | Verified |
+| **1. Chia sẻ `ParsedOOXMLPackage` cho `.pptx`** | [`packages/ccba-ooxml/src/ccba_ooxml/validation/validator.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/validation/validator.py) | `OOXMLValidator._instantiate_validators()` khởi tạo `shared_pkg = ParsedOOXMLPackage(self.unpacked_dir)` và truyền `parsed_package=shared_pkg` cho `PPTXSchemaValidator`, đối xứng hoàn toàn với nhánh `.docx`. | Verified |
+| **2. Di trú `PPTXSchemaValidator` (`301` -> `274 LOC`)** | [`packages/ccba-ooxml/src/ccba_ooxml/validation/pptx.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/validation/pptx.py) | Thay toàn bộ `5` lệnh `lxml.etree.parse(...)` truyền `parser=None` bằng `get_root()`; thay `3` `glob()` chưa sắp xếp bằng `_slide_master_files()` & `_slide_rels_files()` theo thứ tự POSIX; chuẩn hóa `notesSlide` qua `_canonicalize_rels_target()` (`posixpath.normpath`, loại bỏ `http://`/`https://`/`mailto:`); xuất `ValidationIssue(file_path, line_number)` qua `_emit_result()` + `make_diagnostic()`, khóa `stdout` khi `verbose=False`, giữ nhánh rỗng không xóa `collected_diagnostics`; toàn bộ hàm `<= 40 LOC` và đạt `mypy --strict`. | Verified |
+| **3. Kiểm thử Hợp đồng Single-Parse & Diagnostics** | [`packages/ccba-ooxml/tests/test_validation.py`](../../../packages/ccba-ooxml/tests/test_validation.py) | Bổ sung `test_pptx_single_parse_oracle_and_clone_isolation` (`<= N` parses, `0` `parser=None`, bảo toàn clone DOM) và `test_pptx_structured_diagnostics_notes_canonicalization_and_verbose_parity` (khóa `4` phép kiểm tra PPTX, 3 biến thể `notesSlide`, thiếu `.rels` `line_number is None`, nhánh rỗng và chuỗi `verbose=True`). | Verified |
 
 ---
 
 ## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Tự Động (`ADR-0058` & `ADR-0067`)
 
-- **Hermetic Pre-release Gate (TRIHT) trên PR #784 (`feat/statechart-anti-lie-and-harness-parity` @ `faff4a5e`):**
+- **Số đo Thực nghiệm `.pptx` (`[đo thực tế]`, `38` tệp XML/`.rels`):**
+  - Lượt `lxml.etree.parse` trên `unpacked_dir`: giảm từ `82` (`2.16x`) xuống **`38`** (`1.00x`, `-53.7%`); lượt `parser=None`: giảm từ `44` xuống **`0`**; thời gian `validate_report()`: `22.02 ms` -> `22.95 ms`; `0` byte `stdout` khi `verbose=False`.
+  - `verify-patch --preset code --target packages/ccba-ooxml`: `4/4` PASS (`2337.3 ms`); `mypy --strict` (`pptx.py`, `validator.py`): `0` issues; `run_verify_ooxml.py`: `6 passed` (`0.09s`, giữ nguyên `5/5` `covered_paths`).
+- **Hermetic Pre-release Gate (TRIHT) trên PR #813 (`feat/pptx-parsed-package` @ `92ef77ca`):**
   - Cổng 0.1 (`scripts/validation/check_release_cleanliness.py --phase pre`): `PASS` (working tree sạch 100%).
-  - Cổng 0.2 (`scripts/eval/run_isolated_tests.py --all --stress`): **12/12 test targets PASS** (`ccba-ai` 5.07s, `ccba-diagram` 0.35s, `ccba-harness` 10.90s, `ccba-legal-intel` 63.64s, `ccba-maskara` 0.30s, `ccba-notebooklm` 0.35s, `ccba-ooxml` 2.01s, `ccba-pdf-prep` 9.65s, `ccba-qc-core` 1.11s, `mdconverter` 1.91s, `scripts` 16.69s, `root-tests` 28.11s / 601 passed, 1 skipped).
+  - Cổng 0.2 (`scripts/eval/run_isolated_tests.py --all --stress`): **12/12 test targets PASS** (`ccba-ai` 4.77s, `ccba-diagram` 0.30s, `ccba-harness` 11.05s, `ccba-legal-intel` 47.26s, `ccba-maskara` 0.30s, `ccba-notebooklm` 0.40s, `ccba-ooxml` 2.11s, `ccba-pdf-prep` 9.70s, `ccba-qc-core` 1.11s, `mdconverter` 2.36s, `scripts` 15.12s, `root-tests` 28.04s / 602 passed, 1 skipped, 10 deselected).
   - Cổng 0.3 (`scripts/validation/check_release_cleanliness.py --phase post`): `PASS` (100% Hermetic).
-- **GitHub Actions CI, PR Comments Audit & Door Triage trên PR #784:**
-  - **8/8 CI Checks PASS:** `PR Danger Triage & Verifier Gate` (1m20s), `CI/Deterministic Parity & Schema Audit` (1m2s), `CI/Lint Markdown` (15s), `CI/Test - Python 3.10` (5m1s), `CI/Test - Python 3.11` (7m2s), `CI/Test - Python 3.12` (4m49s), `Security & Privacy Scan/scan` (16s), `Documentation Check/validate` (42s).
-  - **PR Comments & Copilot Gate:** `pending: []`, `reviewed: []`, `scripts/validation/audit_pr_comments.py --pr 784` trả về Exit Code `0` (comment IDs: `IC_kwDOQzfV088AAAABnY0Qlg`, `IC_kwDOQzfV088AAAABnY11mQ`); `door-triage` (`ONE_WAY_DOOR | DEPENDENCY_LICENSE, HUB_CONSTITUTION`, Tradeoff Card valid).
-  - **Post-Impl Grok Peer Audit:** `ccba-harness peer-dispatch` (`profile: arch_audit`, `session_id: 4a10e937-f7e5-49f1-81ea-141139c9c759`, biên bản `.md/peer_exchange/grok_impl_review_5_improvements.md`) trả về `APPROVE` (`risk_score: 2`, `conditions: []`).
-- **Hậu hợp nhất:** Nhánh cục bộ và nhánh remote `feat/statechart-anti-lie-and-harness-parity` đã được squash-merge vào `origin/main` (`03d93a483f0f33a13a7e04ec91b5ac3cedfdabbc`) và xóa sạch sẽ.
+- **GitHub Actions CI, PR Comments Audit & Door Triage trên PR #813:**
+  - **8/8 CI Checks PASS:** `PR Danger Triage & Verifier Gate` (1m14s), `CI/Deterministic Parity & Schema Audit` (1m26s), `CI/Lint Markdown` (10s), `CI/Test - Python 3.10` (2m30s), `CI/Test - Python 3.11` (2m43s), `CI/Test - Python 3.12` (2m16s), `Security & Privacy Scan/scan` (13s), `Documentation Check/validate` (23s).
+  - **PR Comments & Copilot Gate:** `pending: []`, `reviewed: []`, `scripts/validation/audit_pr_comments.py --pr 813` trả về Exit Code `0` (comment ID: `IC_kwDOQzfV088AAAABoBt39Q`); `door-triage` (`ONE_WAY_DOOR`, `cumulative_streak: 5`, `tradeoff_card_valid: true`).
+  - **Grok Plan Audit (`ADR-0067`):** `ccba-harness peer-dispatch` Pass 1 (`audit_plan`, `37ff73c2-c903-4e15-a5e0-7c7ff57e00e9`: `REVISE_PLAN`, `3` blocking) -> Pass 2 (`signoff_diff`, `b6383640-9e4a-416b-996f-12c73faf2b07`, biên bản `.md/peer_exchange/grok_pptx_parsed_package_plan_signoff_p2.md`) trả về `APPROVE_PLAN` (`risk_score: 2`, `blocking_conditions: 0`).
+- **Hậu hợp nhất:** Nhánh cục bộ và nhánh remote `feat/pptx-parsed-package` đã được squash-merge vào `origin/main` (`6dca154785ac2478ce5ccb4d1455387d2b999cf5`) và xóa sạch sẽ.
