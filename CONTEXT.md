@@ -187,6 +187,15 @@ Public Deep Seam tại `ccba_harness` hợp nhất phân tích YAML frontmatter 
 **Unified Stdlib Parameter Cleanliness Seam (`scan_parameter_cleanliness` / `ParameterViolation` / `is_statutory_clause_match`)**:
 Public Deep Seam thuần thư viện chuẩn (`_parameter_cleanliness.py`, 0 import bên thứ ba để đồng bộ Tier-0 sang Spoke `scripts/_guardrails/`) hợp nhất phát hiện raw model strings, hardcoded IPv4 (kèm miễn trừ tham chiếu điều khoản quy chuẩn `COND-11`) và hardcoded machine paths (Windows path có khoảng trắng, YAML không ngoặc kép, tùy chọn POSIX home) với cắt tỉa thư mục theo `Path.parts` (`os.walk` in-place).
 
+**Unified Workspace & Hub Root Seam (`WorkspaceHubContext` / `resolve_workspace_and_hub_roots`)**:
+Public Deep Seam thuần thư viện chuẩn (`_workspace_roots.py`, nạp `yaml` tùy chọn và đồng bộ Tier-0 sang Spoke `scripts/_guardrails/`) hợp nhất dò Workspace Root (`.md/workspace_context.yaml`, bỏ qua `packages/<pkg>/` nội bộ và không dừng ở `AGENTS.md`) cùng `CCBA_HUB_PATH` động và dịch `wslpath` fail-soft cho `ccba_legal`, `ccba_harness` và `scripts/spoke`.
+
+**Unified Secret & Vietnamese PII Redaction Seam (`redact_secrets_and_pii` / `PII_REGEX_PATTERNS`)**:
+Deep Seam tại `ccba_maskara` tách riêng `PII_REGEX_PATTERNS` (`email`, `phone` biên `\b` hai đầu, `cccd` 12 số / `cmnd` 9 số chống khớp UUID `(?<![-\w.])`, `ip-private`) khỏi mặc định pre-commit (`scan_text(include_pii=False)`), hỗ trợ 3 phương ngữ placeholder (`maskara`, `bracket_suffix`, `bracket_prefix`) cùng singleton nội bộ `_get_default_scanner()`.
+
+**Immutable OOXML Parse Cache & Deterministic ZIP (`ParsedOOXMLPackage` / `make_secure_xml_parser`)**:
+Bộ đệm DOM 1 lượt đọc theo thứ tự sắp xếp POSIX cho `OOXMLValidator` (`DOCXSchemaValidator`, `RedliningValidator`), dùng factory parser offline mới cho mỗi lần parse (`resolve_entities=False, no_network=True`), cô lập đột biến cây qua `clone_root()`, trả `ValidationIssue(file_path, line_number)` có cấu trúc, và đóng gói ZIP tất định với `ZipInfo.date_time=(1980, 1, 1, 0, 0, 0)`.
+
 ---
 
 ## 3. Hạ Tầng AI Gateway, LLM Prompting & Auto-Tuner
