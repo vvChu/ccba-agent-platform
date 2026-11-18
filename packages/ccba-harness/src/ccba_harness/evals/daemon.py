@@ -87,11 +87,10 @@ def _read_env_file_cached(env_path: Path) -> dict[str, str]:
 
 def _find_hub_root_candidate(source_file: Path | None = None) -> Path | None:
     """Resolves the Hub monorepo root from the editable installation path of ccba-harness."""
-    resolved = (source_file or Path(__file__)).resolve()
-    for hub_dir in resolved.parents[:7]:
-        if (hub_dir / "seam-contracts.yaml").is_file():
-            return hub_dir
-    return None
+    from .._workspace_roots import resolve_workspace_and_hub_roots
+
+    ctx = resolve_workspace_and_hub_roots(source_file or Path(__file__))
+    return ctx.workspace_root if ctx.is_hub_workspace else None
 
 
 def resolve_telegram_credentials(

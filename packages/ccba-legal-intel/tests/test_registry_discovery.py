@@ -99,3 +99,33 @@ def test_discovery_fallback_to_local_project():
                 with patch("pathlib.Path.exists", return_value=False):
                     resolved = discover_master_registry_path()
                     assert resolved == expected_fallback
+
+
+def test_resolve_project_root_skips_package_pyproject_to_hub() -> None:
+    """Verify resolve_project_root does not get stuck in packages/ccba-legal-intel."""
+    from ccba_legal.registry import resolve_project_root
+
+    root = resolve_project_root()
+    assert (root / "seam-contracts.yaml").is_file()
+    assert root.name != "ccba-legal-intel"
+
+
+def test_discovery_delivery_spoke_cwd_without_git(tmp_path: Path, monkeypatch) -> None:
+    """Verify CWD Delivery Spoke with only .md/workspace_context.yaml resolves master registry."""
+    spoke = tmp_path / "delivery_spoke"
+    nested = spoke / "reports" / "draft"
+    nested.mkdir(parents=True)
+    master = tmp_path / "external_master.yaml"
+    master.write_text("metadata: {}\n", encoding="utf-8")
+
+    md_dir = spoke / ".md"
+    md_dir.mkdir()
+    (md_dir / "workspace_context.yaml").write_text(
+        yaml.safe_dump({"master_registry_path": str(master)}),
+        encoding="utf-8",
+    )
+
+    clean_env = {k: v for k, v in os.environ.items() if not k.startswith("CCBA_LEGAL_")}
+    monkeypatch.chdir(nested)
+    with patch.dict(os.environ, clean_env, clear=True):
+        assert discover_master_registry_path() == master.resolve()

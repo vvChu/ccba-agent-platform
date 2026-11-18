@@ -19,10 +19,11 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib.util
 import os
-import re
 import sys
 from pathlib import Path
+from typing import Any
 
 # Canonical fallback Hub package import prefixes for Spoke environments where packages/ is absent
 FALLBACK_HUB_PACKAGES: tuple[str, ...] = (
@@ -39,96 +40,63 @@ FALLBACK_HUB_PACKAGES: tuple[str, ...] = (
 )
 
 
-_WIN_DRIVE_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
+def _load_workspace_roots_seam() -> Any:
+    """Load the pure-stdlib _workspace_roots seam via package, Tier-0 sibling, or Hub."""
+    try:
+        from ccba_harness import resolve_workspace_and_hub_roots as _seam_fn
+
+        _ = _seam_fn
+        return sys.modules["ccba_harness._workspace_roots"]
+    except ImportError:
+        pass
+    here = Path(__file__).resolve().parent
+    hub_fallback = here.parents[1] / "packages/ccba-harness/src/ccba_harness/_workspace_roots.py"
+    for candidate in (
+        here / "_workspace_roots.py",
+        here / "_guardrails" / "_workspace_roots.py",
+        hub_fallback,
+    ):
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_ccba_workspace_roots", candidate)
+            if spec is not None and spec.loader is not None:
+                mod = sys.modules.get(spec.name)
+                if mod is None:
+                    mod = importlib.util.module_from_spec(spec)
+                    sys.modules[spec.name] = mod
+                    spec.loader.exec_module(mod)
+                return mod
+    raise ImportError("Unable to locate stdlib _workspace_roots seam.")
 
 
 def _resolve_candidate_hub_path(raw: str, base_dir: Path) -> Path | None:
-    """Safely resolve a candidate hub path string across Windows and POSIX."""
-    raw = raw.strip().strip("'\"")
-    if not raw:
-        return None
-    if os.name != "nt" and _WIN_DRIVE_PATTERN.match(raw):
-        import shutil
-        import subprocess
-
-        if shutil.which("wslpath"):
-            try:
-                res = subprocess.run(
-                    ["wslpath", "-u", raw],
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    timeout=2,
-                    check=False,
-                )
-                if res.returncode == 0 and res.stdout.strip():
-                    cand = Path(res.stdout.strip())
-                    if cand.exists():
-                        return cand
-            except (OSError, subprocess.SubprocessError):
-                pass
-        return None
-
-    p = Path(raw)
-    if not p.is_absolute():
-        p = (base_dir / p).resolve()
-    else:
-        p = p.resolve()
-    return p
+    """Safely resolve a candidate hub path string via shared _workspace_roots seam."""
+    return _load_workspace_roots_seam().resolve_cross_platform_hub_path(
+        raw, base_dir, require_exists=False
+    )
 
 
 def _read_hub_path_from_dir(directory: Path) -> Path | None:
     """Extract Hub packages directory from workspace_context.yaml in directory."""
-    for rel in [
+    seam = _load_workspace_roots_seam()
+    ctx_candidates = (
         directory / ".agents" / "workspace_context.yaml",
         directory / ".md" / "workspace_context.yaml",
         directory / "workspace_context.yaml",
-    ]:
-        if rel.is_file():
-            try:
-                spoke_dir = (
-                    rel.parent.parent if rel.parent.name in (".agents", ".md") else rel.parent
-                )
-                content = rel.read_text(encoding="utf-8")
-                # Try parsing as YAML for multi-OS or complex structures
-                try:
-                    import yaml
-
-                    data = yaml.safe_load(content)
-                    if isinstance(data, dict):
-                        hub_val = data.get("hub_path")
-                        if not hub_val and isinstance(data.get("project"), dict):
-                            hub_val = data["project"].get("hub_path")
-                        if isinstance(hub_val, dict):
-                            os_key = "windows" if os.name == "nt" else "linux"
-                            raw = str(hub_val.get(os_key) or hub_val.get("posix") or "")
-                        elif isinstance(hub_val, str):
-                            raw = hub_val
-                        else:
-                            raw = ""
-                        if raw:
-                            hp = _resolve_candidate_hub_path(raw, spoke_dir)
-                            if hp:
-                                pkg_dir = hp if hp.name == "packages" else hp / "packages"
-                                if pkg_dir.is_dir():
-                                    return pkg_dir
-                except Exception:
-                    pass
-
-                # Fallback line-by-line parsing
-                for line in content.splitlines():
-                    line_s = line.strip()
-                    if line_s.startswith("hub_path:"):
-                        raw = line_s.split(":", 1)[1].split("#")[0].strip().strip("'\"")
-                        if raw:
-                            hp = _resolve_candidate_hub_path(raw, spoke_dir)
-                            if hp:
-                                pkg_dir = hp if hp.name == "packages" else hp / "packages"
-                                if pkg_dir.is_dir():
-                                    return pkg_dir
-            except OSError:
-                pass
+    )
+    for rel in ctx_candidates:
+        if not rel.is_file():
+            continue
+        spoke_dir = rel.parent.parent if rel.parent.name in (".agents", ".md") else rel.parent
+        data = seam.load_workspace_context_dict(rel)
+        raw = seam._extract_raw_hub_path(data)
+        if not raw:
+            continue
+        hp = _resolve_candidate_hub_path(raw, spoke_dir)
+        if hp is None:
+            continue
+        pkg_dir = hp if hp.name == "packages" else hp / "packages"
+        if pkg_dir.is_dir():
+            return pkg_dir
     return None
 
 

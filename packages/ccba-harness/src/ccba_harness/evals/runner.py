@@ -358,13 +358,12 @@ def _parse_raw_eval_items(raw: Any) -> list[EvalItem]:
 
 
 def _resolve_project_root(project_root: Path | None) -> Path:
+    """Resolve evaluation project root via shared workspace_roots seam."""
     if project_root is not None:
         return project_root
-    cur = Path.cwd().resolve()
-    for p in [cur, *cur.parents]:
-        if (p / ".agents").exists() or (p / "pyproject.toml").exists():
-            return p
-    return cur
+    from .._workspace_roots import resolve_workspace_and_hub_roots
+
+    return resolve_workspace_and_hub_roots(Path.cwd()).workspace_root
 
 
 def _load_items_from_path(target: Path) -> list[EvalItem]:

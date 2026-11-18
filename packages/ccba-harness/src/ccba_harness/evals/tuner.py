@@ -130,11 +130,9 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
         """Resolves repository root from explicit argument or target_file ancestors."""
         if effective_root is not None:
             return Path(effective_root).resolve()
-        cur = self.target_file.parent
-        for p in [cur, *cur.parents]:
-            if (p / ".git").exists() or (p / ".agents").exists() or (p / "pyproject.toml").exists():
-                return p
-        return Path.cwd().resolve()
+        from .._workspace_roots import resolve_workspace_and_hub_roots
+
+        return resolve_workspace_and_hub_roots(self.target_file.parent).workspace_root
 
     def _resolve_default_lock_path(self) -> Path:
         """Resolves default Git mutex lock path supporting both standard repos and git worktrees."""

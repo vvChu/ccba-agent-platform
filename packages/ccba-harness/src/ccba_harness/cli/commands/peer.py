@@ -15,17 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 def find_workspace_root(start_dir: Path | None = None) -> Path:
-    """Finds workspace root by walking upwards looking for .git, workspace_context.yaml, or AGENTS.md."""
-    current = (start_dir or Path.cwd()).resolve()
-    for parent in [current, *current.parents]:
-        if (
-            (parent / ".git").exists()
-            or (parent / "workspace_context.yaml").exists()
-            or (parent / ".md" / "workspace_context.yaml").exists()
-            or (parent / "AGENTS.md").exists()
-        ):
-            return parent
-    return current
+    """Finds workspace root by walking upwards via shared workspace_roots seam."""
+    from ..._workspace_roots import resolve_workspace_and_hub_roots
+
+    return resolve_workspace_and_hub_roots(
+        start_dir, include_pyproject=False, include_agents_dir=False
+    ).workspace_root
 
 
 def resolve_peer_exchange_dir(

@@ -157,14 +157,16 @@ def _discover_workspace_root(
         else raw
     )
     for parent in [current, *current.parents]:
-        if _find_workspace_context(parent) is not None or (parent / ".git").exists():
-            return parent
-        if include_agents_dir and (parent / ".agents").exists():
-            return parent
         if (
-            include_pyproject
-            and (parent / "pyproject.toml").exists()
-            and not any((anc / "seam-contracts.yaml").is_file() for anc in parent.parents)
+            _find_workspace_context(parent) is not None
+            or (parent / ".git").exists()
+            or (parent / "seam-contracts.yaml").is_file()
+        ):
+            return parent
+        has_hub_anc = any((anc / "seam-contracts.yaml").is_file() for anc in parent.parents)
+        if not has_hub_anc and (
+            (include_agents_dir and (parent / ".agents").exists())
+            or (include_pyproject and (parent / "pyproject.toml").exists())
         ):
             return parent
     return current
