@@ -252,3 +252,72 @@ def test_run_safe_pytest_extra_args_with_options_not_treated_as_targets(mock_fin
     assert ret == 0
     assert "Không phát hiện file test nào bị sửa đổi" in captured.out
     assert "Planned execution" not in captured.out
+
+
+def test_run_safe_pytest_allow_unscoped_stays_single_process_by_default(
+    capsys, tmp_path, monkeypatch
+):
+    (tmp_path / "tests").mkdir()
+    monkeypatch.chdir(tmp_path)
+    ret = DetachedExecutionEngine.run_safe_pytest(allow_unscoped=True, dry_run=True)
+    captured = capsys.readouterr()
+
+    assert ret == 0
+    assert "[SafePytest DRY-RUN]" in captured.out
+    assert " -n " not in captured.out
+    assert "--dist=loadfile" not in captured.out
+
+
+def test_run_safe_pytest_opt_in_workers_and_missing_xdist_fallback(capsys, monkeypatch):
+    import importlib.util
+
+    with patch.object(importlib.util, "find_spec", return_value=object()):
+        ret = DetachedExecutionEngine.run_safe_pytest(
+            target_file="tests/test_1.py",
+            workers="auto",
+            dry_run=True,
+        )
+    out_with_xdist = capsys.readouterr().out
+    assert ret == 0
+    assert "-n auto" in out_with_xdist
+    assert "--dist=loadfile" in out_with_xdist
+
+    ret_one = DetachedExecutionEngine.run_safe_pytest(
+        target_file="tests/test_1.py",
+        workers="1",
+        dry_run=True,
+    )
+    out_one = capsys.readouterr().out
+    assert ret_one == 0
+    assert " -n " not in out_one
+
+    with patch.object(importlib.util, "find_spec", return_value=None):
+        ret_missing = DetachedExecutionEngine.run_safe_pytest(
+            target_file="tests/test_1.py",
+            workers="auto",
+            dry_run=True,
+        )
+    captured = capsys.readouterr()
+    assert ret_missing == 0
+    assert "pytest-xdist is not installed" in captured.err
+    assert " -n " not in captured.out
+
+
+@patch.object(DetachedExecutionEngine, "find_modified_test_files", return_value=[])
+def test_run_safe_pytest_skips_two_token_flag_values_even_when_dirs_exist(
+    mock_find, tmp_path, capsys, monkeypatch
+):
+    (tmp_path / "auto").mkdir()
+    (tmp_path / "short").mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    ret = DetachedExecutionEngine.run_safe_pytest(
+        extra_args=["-n", "auto", "--tb", "short"],
+        dry_run=True,
+        allow_unscoped=False,
+    )
+    captured = capsys.readouterr()
+
+    assert ret == 0
+    assert "Không phát hiện file test nào bị sửa đổi" in captured.out
+    assert "Planned execution" not in captured.out

@@ -6,6 +6,7 @@ log resolution, and scoped test execution for Hub and Spokes.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shlex
@@ -15,6 +16,34 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any
+
+_TWO_TOKEN_PYTEST_FLAGS: frozenset[str] = frozenset(
+    {
+        "-n",
+        "--numprocesses",
+        "--maxprocesses",
+        "--dist",
+        "-m",
+        "-k",
+        "-c",
+        "-o",
+        "-p",
+        "-W",
+        "--tb",
+        "--maxfail",
+        "--rootdir",
+        "--confcutdir",
+        "--basetemp",
+        "--durations",
+        "--durations-min",
+        "--junitxml",
+        "--override-ini",
+        "--import-mode",
+        "--log-level",
+        "--log-cli-level",
+        "--capture",
+    }
+)
 
 
 class DetachedExecutionEngine:
@@ -242,6 +271,107 @@ class DetachedExecutionEngine:
             sys.stderr.write(f"[SafePytest Warning] Could not check git status: {e}\n")
             return []
 
+    @staticmethod
+    def _extract_extra_positional_targets(extra_args: list[str]) -> list[str]:
+        """Extract existing filesystem targets from extra_args while skipping flag values."""
+        extracted: list[str] = []
+        skip_next = False
+        for arg in extra_args:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg in _TWO_TOKEN_PYTEST_FLAGS:
+                skip_next = True
+                continue
+            if arg.startswith("-"):
+                continue
+            try:
+                p = Path(arg)
+                if p.exists():
+                    extracted.append(str(p))
+            except OSError:
+                pass
+        return extracted
+
+    @staticmethod
+    def _resolve_xdist_worker_args(workers: str | None, extra_args: list[str]) -> list[str]:
+        """Build opt-in pytest-xdist worker CLI flags when requested and available."""
+        if workers is None or str(workers).strip() in ("", "1"):
+            return []
+        if any(
+            a in ("-n", "--numprocesses") or a.startswith(("-n=", "--numprocesses="))
+            for a in extra_args
+        ):
+            return []
+        if importlib.util.find_spec("xdist") is None:
+            sys.stderr.write(
+                "[SafePytest Warning] pytest-xdist is not installed; falling back to single-process execution.\n"
+            )
+            return []
+        args = ["-n", str(workers).strip()]
+        if not any(a == "--dist" or a.startswith("--dist=") for a in extra_args):
+            args.append("--dist=loadfile")
+        return args
+
+    @classmethod
+    def _resolve_safe_pytest_targets(
+        cls,
+        target_file: str | list[str] | None,
+        package: str | None,
+        allow_unscoped: bool,
+        extra_targets: list[str],
+    ) -> tuple[list[str], set[str], int | None]:
+        """Resolve explicit, modified, or default unscoped pytest targets."""
+        targets: list[str] = []
+        if target_file:
+            targets.extend(target_file if isinstance(target_file, list) else [target_file])
+        elif package:
+            pkg_path = Path("packages") / package / "tests"
+            if not pkg_path.exists():
+                pkg_path = Path("packages") / f"ccba-{package}" / "tests"
+            if not pkg_path.exists():
+                print(f"[SafePytest Error] Package tests directory not found: {package}")
+                return [], set(), 1
+            targets.append(str(pkg_path))
+
+        added_from_extra: set[str] = set()
+        for t in extra_targets:
+            if t not in targets:
+                targets.append(t)
+                added_from_extra.add(t)
+
+        if targets:
+            return targets, added_from_extra, None
+        if not allow_unscoped:
+            git_targets = cls.find_modified_test_files()
+            if git_targets:
+                print(f"[SafePytest] Auto-detected modified test files: {', '.join(git_targets)}")
+                return git_targets, added_from_extra, None
+            print("[SafePytest] ℹ️ Không phát hiện file test nào bị sửa đổi qua git status.")
+            print(
+                "[SafePytest] 💡 Sử dụng '-f <file>', truyền tên package, hoặc '--allow-unscoped' để chạy toàn diện."
+            )
+            return [], added_from_extra, 0
+
+        default_paths = ["tests", "scripts/tests"] + [
+            p.as_posix() for p in sorted(Path("packages").glob("*/tests")) if p.is_dir()
+        ]
+        return [dp for dp in default_paths if Path(dp).exists()], added_from_extra, None
+
+    @staticmethod
+    def _targets_have_slow_marker(targets: list[str]) -> bool:
+        """Return True if any resolved target file declares pytest.mark.slow."""
+        for target in targets:
+            try:
+                p = Path(target)
+                files = [p] if p.is_file() else (list(p.glob("**/*.py")) if p.is_dir() else [])
+                for py_file in files:
+                    if "pytest.mark.slow" in py_file.read_text(encoding="utf-8", errors="ignore"):
+                        return True
+            except OSError:
+                pass
+        return False
+
     @classmethod
     def run_safe_pytest(
         cls,
@@ -252,108 +382,42 @@ class DetachedExecutionEngine:
         allow_unscoped: bool = False,
         extra_args: list[str] | None = None,
         scratch_dir: Path | None = None,
+        workers: str | None = None,
     ) -> int:
         """Executes scoped pytest via detached execution engine."""
         extra_args = extra_args or []
-        targets: list[str] = []
+        extra_targets = cls._extract_extra_positional_targets(extra_args)
+        targets, added_from_extra, early_rc = cls._resolve_safe_pytest_targets(
+            target_file, package, allow_unscoped, extra_targets
+        )
+        if early_rc is not None:
+            return early_rc
 
-        if target_file:
-            if isinstance(target_file, list):
-                targets.extend(target_file)
-            else:
-                targets.append(target_file)
-        elif package:
-            pkg_path = Path("packages") / package / "tests"
-            if not pkg_path.exists():
-                pkg_path = Path("packages") / f"ccba-{package}" / "tests"
-            if pkg_path.exists():
-                targets.append(str(pkg_path))
-            else:
-                print(f"[SafePytest Error] Package tests directory not found: {package}")
-                return 1
-
-        # Extract path targets from extra_args (e.g. positional file/dir arguments)
-        if extra_args:
-            for arg in extra_args:
-                if not arg.startswith("-"):
-                    try:
-                        p = Path(arg)
-                        if p.exists() and str(p) not in targets:
-                            targets.append(str(p))
-                    except Exception:
-                        pass
-
-        if not targets:
-            if not allow_unscoped:
-                git_targets = cls.find_modified_test_files()
-                if git_targets:
-                    targets.extend(git_targets)
-                    print(f"[SafePytest] Auto-detected modified test files: {', '.join(targets)}")
-                else:
-                    print("[SafePytest] ℹ️ Không phát hiện file test nào bị sửa đổi qua git status.")
-                    print(
-                        "[SafePytest] 💡 Sử dụng '-f <file>', truyền tên package, hoặc '--allow-unscoped' để chạy toàn diện."
-                    )
-                    return 0
-            else:
-                # Unscoped run across default test paths if no targets specified
-                default_paths = ["tests", "scripts/tests"] + [
-                    p.as_posix() for p in Path("packages").glob("*/tests") if p.is_dir()
-                ]
-                for dp in default_paths:
-                    if Path(dp).exists() and dp not in targets:
-                        targets.append(dp)
-
-        python_exec = sys.executable
-        cmd_parts = [python_exec, "-m", "pytest", "--maxfail=1"]
-
+        cmd_parts = [sys.executable, "-m", "pytest", "--maxfail=1"]
         if fast:
             cmd_parts.extend(
                 ["-m", "fast or (unit and not slow and not integration and not stress)"]
             )
-        elif not any(a.startswith("-m") for a in extra_args):
-            target_has_slow = False
-            for t in targets:
-                try:
-                    p = Path(t)
-                    if p.is_file() and (
-                        "pytest.mark.slow" in p.read_text(encoding="utf-8", errors="ignore")
-                    ):
-                        target_has_slow = True
-                        break
-                    elif p.is_dir():
-                        for py_file in p.glob("**/*.py"):
-                            if "pytest.mark.slow" in py_file.read_text(
-                                encoding="utf-8", errors="ignore"
-                            ):
-                                target_has_slow = True
-                                break
-                        if target_has_slow:
-                            break
-                except Exception:
-                    pass
-            if not target_has_slow:
-                cmd_parts.extend(["-m", "not slow and not stress"])
+        elif not any(a.startswith("-m") for a in extra_args) and not cls._targets_have_slow_marker(
+            targets
+        ):
+            cmd_parts.extend(["-m", "not slow and not stress"])
 
-        if targets:
-            cmd_parts.extend(targets)
+        cmd_parts.extend(cls._resolve_xdist_worker_args(workers, extra_args))
+        cmd_parts.extend(targets)
+        for ea in extra_args:
+            if ea not in added_from_extra and ea not in cmd_parts:
+                cmd_parts.append(ea)
 
-        if extra_args:
-            for ea in extra_args:
-                if ea not in cmd_parts:
-                    cmd_parts.append(ea)
-
-        def safe_quote(arg: str) -> str:
-            if sys.platform.startswith("win"):
-                return f'"{arg}"' if (" " in arg or "\t" in arg) else arg
-            return shlex.quote(arg)
-
-        cmd_str = " ".join(safe_quote(p) for p in cmd_parts)
-
+        cmd_str = " ".join(
+            (f'"{p}"' if (" " in p or "\t" in p) else p)
+            if sys.platform.startswith("win")
+            else shlex.quote(p)
+            for p in cmd_parts
+        )
         if dry_run:
             print(f"[SafePytest DRY-RUN] Planned execution:\n  Command: {cmd_str}")
             return 0
-
         print(f"[SafePytest] Executing detached runner:\n  Command: {cmd_str}")
         res = cls.run_detached(cmd_str, scratch_dir=scratch_dir)
         return int(res.get("return_code") or 0)

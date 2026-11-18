@@ -205,6 +205,7 @@ def test_conftest_resolves_safe_pytest_path_dynamically(
 
     monkeypatch.delenv("CI", raising=False)
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("PYTEST_XDIST_WORKER", raising=False)
 
     class _DummyConfig:
         def __init__(self, root: Path) -> None:
@@ -230,3 +231,56 @@ def test_conftest_resolves_safe_pytest_path_dynamically(
     assert root_conftest.pytest_cmdline_main(_DummyConfig(spoke_root)) == 1
     spoke_err = capsys.readouterr().err
     assert "python scripts/_guardrails/safe_pytest.py -f" in spoke_err
+
+
+def test_conftest_blocks_flag_value_bypass_and_allows_xdist_and_truthy_ci(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify conftest.py uses file_or_dir (blocking '-n auto' unscoped), allows xdist workers, and handles CI=1/yes."""
+    from types import SimpleNamespace
+
+    import conftest as root_conftest
+
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("PYTEST_XDIST_WORKER", raising=False)
+
+    class _ParsedConfig:
+        def __init__(self, root: Path, raw_args: list[str], file_or_dir: list[str]) -> None:
+            self.rootpath = root
+            self.invocation_params = SimpleNamespace(args=raw_args)
+            self.known_args_namespace = SimpleNamespace(file_or_dir=file_or_dir)
+
+        def getoption(self, name: str, default: bool = False) -> bool:
+            return default
+
+    # 1. Unscoped flags with two-token values (e.g. '-n auto', '-m fast', '-p no:cacheprovider') must be blocked
+    assert root_conftest.pytest_cmdline_main(_ParsedConfig(tmp_path, ["-n", "auto"], [])) == 1
+    capsys.readouterr()
+
+    # 2. Explicit target file in file_or_dir is allowed
+    assert (
+        root_conftest.pytest_cmdline_main(
+            _ParsedConfig(
+                tmp_path,
+                ["-n", "auto", "tests/governance/test_ci_telemetry_gate.py"],
+                ["tests/governance/test_ci_telemetry_gate.py"],
+            )
+        )
+        is None
+    )
+
+    # 3. Running inside pytest-xdist worker bypasses unscoped block cleanly
+    monkeypatch.setenv("PYTEST_XDIST_WORKER", "gw0")
+    assert root_conftest.pytest_cmdline_main(_ParsedConfig(tmp_path, ["-n", "auto"], [])) is None
+    monkeypatch.delenv("PYTEST_XDIST_WORKER", raising=False)
+
+    # 4. Truthy CI/GITHUB_ACTIONS variants ('1', 'YES') bypass unscoped block
+    monkeypatch.setenv("CI", "1")
+    assert root_conftest.pytest_cmdline_main(_ParsedConfig(tmp_path, [], [])) is None
+    monkeypatch.delenv("CI", raising=False)
+
+    monkeypatch.setenv("GITHUB_ACTIONS", "YES")
+    assert root_conftest.pytest_cmdline_main(_ParsedConfig(tmp_path, [], [])) is None
