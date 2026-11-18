@@ -2,6 +2,6 @@
 
 Security and privacy engine for detecting and redacting sensitive credentials and API keys.
 
-- **Public Deep Seams**: `from ccba_maskara import MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text`.
+- **Public Deep Seams**: `from ccba_maskara import MaskaraScanner, detect_secrets_in_text, redact_secrets_in_text, redact_secrets_and_pii, REGEX_PATTERNS, PII_REGEX_PATTERNS`.
 - **Contracts**: Never persist unmasked API keys or secrets in logs, artifacts, or transcripts.
 - **Scoped Tests**: `pytest packages/ccba-maskara/tests`

@@ -11,44 +11,19 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ccba_maskara import redact_secrets_and_pii
+
 
 def redact_sensitive_info(text: str) -> str:
-    """Sanitize and mask sensitive credentials and PII from text.
-
-    Masks:
-    - OpenAI / Generic API keys (sk-...)
-    - Google API keys (AIzaSy...)
-    - Emails
-    - Vietnamese phone numbers (10-11 digits, +84)
-    - Vietnamese citizen IDs (CMND 9 digits, CCCD 12 digits)
+    """Sanitize and mask sensitive credentials and Vietnamese PII via ccba_maskara seam.
 
     Args:
         text: Raw text to sanitize.
 
     Returns:
-        Sanitized text with redaction tokens.
+        Sanitized text with ``bracket_prefix`` redaction tokens.
     """
-    if not text:
-        return ""
-
-    # 1. API Keys
-    sanitized = re.sub(r"\b(sk-[a-zA-Z0-9]{32,})\b", "[REDACTED_API_KEY]", text)
-    sanitized = re.sub(r"\b(AIzaSy[a-zA-Z0-9-_]{33})\b", "[REDACTED_API_KEY]", sanitized)
-
-    # 2. Emails
-    sanitized = re.sub(
-        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[REDACTED_EMAIL]", sanitized
-    )
-
-    # 3. Vietnamese Phone Numbers
-    sanitized = re.sub(r"\b(0\d{9,10})\b", "[REDACTED_PHONE]", sanitized)
-    sanitized = re.sub(r"\b(\+84\d{9,10})\b", "[REDACTED_PHONE]", sanitized)
-
-    # 4. Vietnamese Citizen Identification (CMND / CCCD)
-    sanitized = re.sub(r"\b\d{12}\b", "[REDACTED_CCCD]", sanitized)
-    sanitized = re.sub(r"\b\d{9}\b", "[REDACTED_CMND]", sanitized)
-
-    return sanitized
+    return redact_secrets_and_pii(text, dialect="bracket_prefix")
 
 
 def analyze_style_metrics(text: str) -> dict[str, Any]:
