@@ -25,8 +25,9 @@ def unpack_document(input_file: str | Path, output_dir: str | Path) -> None:
     with zipfile.ZipFile(input_path) as zf:
         zf.extractall(output_path)
 
-    # Pretty print all XML files
-    xml_files = list(output_path.rglob("*.xml")) + list(output_path.rglob("*.rels"))
+    # Pretty print all XML and .rels files in deterministic order
+    raw_xml_files = [*output_path.rglob("*.xml"), *output_path.rglob("*.rels")]
+    xml_files = sorted(raw_xml_files, key=lambda p: p.relative_to(output_path).as_posix())
     for xml_file in xml_files:
         try:
             content = xml_file.read_text(encoding="utf-8")

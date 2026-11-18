@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import re
+import tempfile
+import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -216,6 +219,7 @@ def validate_single_file_xsd(
     allowed_namespaces: set[str],
     main_content_folders: set[str],
     mc_ns: str = MC_NAMESPACE,
+    error_lines_out: dict[str, int | None] | None = None,
 ) -> tuple[bool, set[str]]:
     """Run XSD validation on an independent cloned DOM for unpacked or original XML."""
     try:
@@ -231,9 +235,37 @@ def validate_single_file_xsd(
 
         if schema.validate(xml_doc):
             return True, set()
-        return False, {error.message for error in schema.error_log}
+        errors: set[str] = set()
+        for error in schema.error_log:
+            errors.add(error.message)
+            if error_lines_out is not None and error.message not in error_lines_out:
+                line_val = getattr(error, "line", None)
+                error_lines_out[error.message] = (
+                    line_val if isinstance(line_val, int) and line_val > 0 else None
+                )
+        return False, errors
     except Exception as exc:
         return False, {str(exc)}
+
+
+def get_original_file_errors(
+    xml_file: Path,
+    unpacked_dir: Path,
+    original_file: Path,
+    validate_fn: Callable[[Path, Path], tuple[bool | None, set[str] | None]],
+) -> set[str]:
+    """Extract corresponding XML from ``original_file`` and collect baseline XSD errors."""
+    resolved_xml = Path(xml_file).resolve()
+    relative_path = resolved_xml.relative_to(unpacked_dir)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        with zipfile.ZipFile(original_file, "r") as zip_ref:
+            zip_ref.extractall(temp_path)
+        original_xml_file = temp_path / relative_path
+        if not original_xml_file.exists():
+            return set()
+        _, errors = validate_fn(original_xml_file, temp_path)
+        return errors if errors else set()
 
 
 __all__ = [
@@ -244,6 +276,7 @@ __all__ = [
     "SCHEMA_MAPPINGS",
     "clean_ignorable_namespaces",
     "get_compiled_schema",
+    "get_original_file_errors",
     "preprocess_mc_ignorable",
     "remove_ignorable_elements",
     "remove_template_tags_from_text_nodes",

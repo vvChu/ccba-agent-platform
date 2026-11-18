@@ -81,3 +81,38 @@ def test_condense_xml_malformed_warns_and_preserves_file(
     assert ws.working_dir is None
     with zipfile.ZipFile(broken_docx) as zf:
         assert zf.read("word/document.xml").decode("utf-8") == raw_malformed
+
+
+def test_pack_document_produces_deterministic_sha256_bytes(tmp_path: Path) -> None:
+    """Verify repeated pack_document calls across distinct mtimes emit identical ZIP bytes."""
+    import hashlib
+    import os
+
+    unpacked = tmp_path / "unpacked_det"
+    (unpacked / "word").mkdir(parents=True)
+    ct_path = unpacked / "[Content_Types].xml"
+    doc_path = unpacked / "word" / "document.xml"
+    ct_path.write_text('<?xml version="1.0" encoding="UTF-8"?><Types></Types>', encoding="utf-8")
+    doc_path.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?><document><body>Det</body></document>',
+        encoding="utf-8",
+    )
+
+    out_1 = tmp_path / "det_1.docx"
+    out_2 = tmp_path / "det_2.docx"
+    assert pack_document(unpacked, out_1, validate=False) is True
+
+    future_ts = 1_893_456_000.0
+    os.utime(ct_path, (future_ts, future_ts))
+    os.utime(doc_path, (future_ts, future_ts))
+    assert pack_document(unpacked, out_2, validate=False) is True
+
+    sha_1 = hashlib.sha256(out_1.read_bytes()).hexdigest()
+    sha_2 = hashlib.sha256(out_2.read_bytes()).hexdigest()
+    assert sha_1 == sha_2
+    with zipfile.ZipFile(out_1) as zf:
+        assert [info.filename for info in zf.infolist()] == [
+            "[Content_Types].xml",
+            "word/document.xml",
+        ]
+        assert all(info.date_time == (1980, 1, 1, 0, 0, 0) for info in zf.infolist())

@@ -17,12 +17,12 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "f2bc229da4ce3a794c86d9293d8280de04f26ab3"
+sync_commit: "7259350d8020834c52ab88e4c5681e165612cc8b"
 covered_sha256:
   packages/ccba-ooxml/src/ccba_ooxml/__init__.py: "0d19ac4db2ae5ea9e49f2fb76aebf4306177b772bea09e2cb7d757a1f74f0896"
-  packages/ccba-ooxml/src/ccba_ooxml/pack.py: "8b7aa154e114fadf2c518a7ccd3a568da3369d9ed89ed19b021b2989a3caa337"
+  packages/ccba-ooxml/src/ccba_ooxml/pack.py: "46cd1ece159049aaad1f9b2c15cfeec1392a989c36adfbfce5b57704ff55d388"
   packages/ccba-ooxml/src/ccba_ooxml/tables.py: "14d4bf8ce6856adc6415531b49808a8079198b5ebe9d5394d1e324d850b97ed9"
-  packages/ccba-ooxml/src/ccba_ooxml/unpack.py: "17315b9d99a83401aa22e7fe29eca44493c2d882636f52d4afb662c619b3bba2"
+  packages/ccba-ooxml/src/ccba_ooxml/unpack.py: "f1b83adc3f345927f0c837ca06264b22689267452b5d50f2b9b043b06680414f"
   packages/ccba-ooxml/src/ccba_ooxml/workspace.py: "aea6c061c0f99a065040126af7d971865d5cdf9b86db1e90a38b66cc5039dccb"
 verification_mode:
   - scaffold
@@ -47,7 +47,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-oox
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp `64` lazy-loaded Public Deep Seams trong `ccba_ooxml.__all__` / `_LAZY_EXPORTS` tương ứng với kỹ năng `ccba-xu-ly-van-phong`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit `f2bc229da4ce3a794c86d9293d8280de04f26ab3` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ `5` tệp lõi sạch `mypy --strict` (`__init__.py`, `pack.py`, `tables.py`, `unpack.py`, `workspace.py`).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit PR-3b `7259350d8020834c52ab88e4c5681e165612cc8b` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ `5` tệp lõi sạch `mypy --strict` (`__init__.py`, `pack.py`, `tables.py`, `unpack.py`, `workspace.py`).
 - **Giới Hạn Phạm Vi (`Scope & Limitations`)**:
   - Toàn bộ ca kiểm thử chạy 100% in-process trên fixture `.docx`/ZIP tạo trong `tmp_path` (`< 0.2s`), dùng `monkeypatch` cô lập `validate_document` và `calc.recalc_xlsx` để tuyệt đối không gọi tiến trình LibreOffice (`soffice`).
   - **Symmetric Malformed-XML Handling (`bug_path_4`)**: Cả `unpack_document()` (`unpack.py:31-37`) lẫn `condense_xml()` (`pack.py:62-68`) đều bắt ngoại lệ XML hỏng, in cảnh báo (`Warning: Could not pretty print` / `Warning: Could not condense`) ra `stderr` và bảo toàn nguyên vẹn XML thô trên đĩa để `OOXMLWorkspace` đóng gói an toàn không ném `ExpatError`.

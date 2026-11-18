@@ -37,17 +37,17 @@ def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool
         temp_content_dir = Path(temp_dir) / "content"
         shutil.copytree(input_dir, temp_content_dir)
 
-        # Process XML files to remove pretty-printing whitespace
-        for pattern in ["*.xml", "*.rels"]:
-            for xml_file in temp_content_dir.rglob(pattern):
-                condense_xml(xml_file)
+        # Process XML files deterministically to remove pretty-printing whitespace
+        xml_candidates = sorted(
+            [*temp_content_dir.rglob("*.xml"), *temp_content_dir.rglob("*.rels")],
+            key=lambda p: p.relative_to(temp_content_dir).as_posix(),
+        )
+        for xml_file in xml_candidates:
+            condense_xml(xml_file)
 
-        # Create final Office file as zip archive
+        # Create final deterministic Office file as zip archive
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zf:
-            for f in temp_content_dir.rglob("*"):
-                if f.is_file():
-                    zf.write(f, f.relative_to(temp_content_dir))
+        _write_deterministic_zip(temp_content_dir, output_file)
 
         # Validate if requested
         if validate:
@@ -56,6 +56,20 @@ def pack_document(input_dir: str | Path, output_file: str | Path, validate: bool
                 return False
 
     return True
+
+
+def _write_deterministic_zip(content_dir: Path, output_file: Path) -> None:
+    """Write directory contents into a reproducible byte-identical ZIP archive."""
+    archive_files = sorted(
+        (f for f in content_dir.rglob("*") if f.is_file()),
+        key=lambda f: f.relative_to(content_dir).as_posix(),
+    )
+    with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in archive_files:
+            rel_posix = f.relative_to(content_dir).as_posix()
+            zinfo = zipfile.ZipInfo(rel_posix, date_time=(1980, 1, 1, 0, 0, 0))
+            zinfo.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(zinfo, f.read_bytes())
 
 
 def condense_xml(xml_file: str | Path) -> None:

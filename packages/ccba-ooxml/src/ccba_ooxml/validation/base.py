@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-import tempfile
-import zipfile
 from pathlib import Path
 from typing import Any
 
 import lxml.etree
 
+from . import _relationship_checks as _rel
+from . import _xsd_engine as _xsd
 from ._parsed_package import (
+    CONTENT_TYPES_NAMESPACE,
     ParsedOOXMLPackage,
     ValidationDiagnostic,
     _make_secure_xml_parser,
@@ -18,53 +19,28 @@ from ._parsed_package import (
     check_xml_wellformed,
     make_secure_xml_parser,
 )
-from ._relationship_checks import (
-    CONTENT_TYPES_NAMESPACE,
-    MC_NAMESPACE,
-    OFFICE_RELATIONSHIPS_NAMESPACE,
-    PACKAGE_RELATIONSHIPS_NAMESPACE,
-    UNIQUE_ID_REQUIREMENTS,
-    XML_NAMESPACE,
-    check_all_relationship_ids,
-    check_file_references,
-    check_unique_ids,
-    expected_relationship_type,
-)
-from ._xsd_engine import (
-    COMPILED_SCHEMA_CACHE,
-    MAIN_CONTENT_FOLDERS,
-    OOXML_NAMESPACES,
-    SCHEMA_MAPPINGS,
-    OfflineSchemaResolver,
-    clean_ignorable_namespaces,
-    get_compiled_schema,
-    preprocess_mc_ignorable,
-    remove_ignorable_elements,
-    remove_template_tags_from_text_nodes,
-    resolve_schema_path,
-    validate_single_file_xsd,
-)
+from ._xsd_engine import OfflineSchemaResolver
 
 
 class BaseSchemaValidator:
     """Base validator facade with common OOXML structural and XSD checks."""
 
-    _COMPILED_SCHEMA_CACHE = COMPILED_SCHEMA_CACHE
-    UNIQUE_ID_REQUIREMENTS = UNIQUE_ID_REQUIREMENTS
+    _COMPILED_SCHEMA_CACHE = _xsd.COMPILED_SCHEMA_CACHE
+    UNIQUE_ID_REQUIREMENTS = _rel.UNIQUE_ID_REQUIREMENTS
     ELEMENT_RELATIONSHIP_TYPES: dict[str, str] = {}
-    SCHEMA_MAPPINGS = SCHEMA_MAPPINGS
-    MC_NAMESPACE = MC_NAMESPACE
-    XML_NAMESPACE = XML_NAMESPACE
-    PACKAGE_RELATIONSHIPS_NAMESPACE = PACKAGE_RELATIONSHIPS_NAMESPACE
-    OFFICE_RELATIONSHIPS_NAMESPACE = OFFICE_RELATIONSHIPS_NAMESPACE
+    SCHEMA_MAPPINGS = _xsd.SCHEMA_MAPPINGS
+    MC_NAMESPACE = _rel.MC_NAMESPACE
+    XML_NAMESPACE = _rel.XML_NAMESPACE
+    PACKAGE_RELATIONSHIPS_NAMESPACE = _rel.PACKAGE_RELATIONSHIPS_NAMESPACE
+    OFFICE_RELATIONSHIPS_NAMESPACE = _rel.OFFICE_RELATIONSHIPS_NAMESPACE
     CONTENT_TYPES_NAMESPACE = CONTENT_TYPES_NAMESPACE
-    MAIN_CONTENT_FOLDERS = MAIN_CONTENT_FOLDERS
-    OOXML_NAMESPACES = OOXML_NAMESPACES
+    MAIN_CONTENT_FOLDERS = _xsd.MAIN_CONTENT_FOLDERS
+    OOXML_NAMESPACES = _xsd.OOXML_NAMESPACES
 
     @classmethod
     def get_compiled_schema(cls, schema_path: Path, schemas_dir: Path) -> lxml.etree.XMLSchema:
         """Load and compile an XMLSchema with offline resolution and caching."""
-        return get_compiled_schema(schema_path, schemas_dir, cache=cls._COMPILED_SCHEMA_CACHE)
+        return _xsd.get_compiled_schema(schema_path, schemas_dir, cache=cls._COMPILED_SCHEMA_CACHE)
 
     def __init__(
         self,
@@ -85,9 +61,16 @@ class BaseSchemaValidator:
         self.parsed_package = parsed_package or ParsedOOXMLPackage(self.unpacked_dir)
         self.xml_files = list(self.parsed_package.xml_files)
         self.last_diagnostics: list[ValidationDiagnostic] = []
+        self.collected_diagnostics: list[ValidationDiagnostic] = []
+        self._last_xsd_error_lines: dict[str, int | None] = {}
 
-        if not self.xml_files:
+        if not self.xml_files and self.verbose:
             print(f"Warning: No XML files found in {self.unpacked_dir}")
+
+    def reset_diagnostics(self) -> None:
+        """Clear accumulated validation diagnostics before a run."""
+        self.last_diagnostics = []
+        self.collected_diagnostics.clear()
 
     def validate(self) -> bool:
         """Run all validation checks and return True if all pass."""
@@ -100,14 +83,16 @@ class BaseSchemaValidator:
         pass_msg: str,
         extra_footer: str | None = None,
     ) -> bool:
-        """Store diagnostics, emit console output per legacy behavior, and return bool."""
+        """Record structured diagnostics, print only if verbose, and return bool."""
         self.last_diagnostics = list(diagnostics)
         if diagnostics:
-            print(fail_header)
-            for diag in diagnostics:
-                print(diag.legacy_line or f"  {diag.message}")
-            if extra_footer:
-                print(extra_footer)
+            self.collected_diagnostics.extend(diagnostics)
+            if self.verbose:
+                print(fail_header)
+                for diag in diagnostics:
+                    print(diag.legacy_line or f"  {diag.message}")
+                if extra_footer:
+                    print(extra_footer)
             return False
         if self.verbose:
             print(pass_msg)
@@ -133,7 +118,7 @@ class BaseSchemaValidator:
 
     def validate_unique_ids(self) -> bool:
         """Validate that specific IDs are unique according to OOXML requirements."""
-        diags = check_unique_ids(
+        diags = _rel.check_unique_ids(
             self.parsed_package, self.MC_NAMESPACE, self.UNIQUE_ID_REQUIREMENTS
         )
         return self._emit_result(
@@ -144,7 +129,7 @@ class BaseSchemaValidator:
 
     def validate_file_references(self) -> bool:
         """Validate that all .rels files reference existing files and no files are orphaned."""
-        has_rels, diags = check_file_references(
+        has_rels, diags = _rel.check_file_references(
             self.parsed_package, self.PACKAGE_RELATIONSHIPS_NAMESPACE
         )
         if not has_rels:
@@ -176,7 +161,7 @@ class BaseSchemaValidator:
 
     def validate_all_relationship_ids(self) -> bool:
         """Validate that all ``r:id`` attributes reference existing IDs in ``.rels``."""
-        diags = check_all_relationship_ids(
+        diags = _rel.check_all_relationship_ids(
             self.parsed_package,
             self.PACKAGE_RELATIONSHIPS_NAMESPACE,
             self.OFFICE_RELATIONSHIPS_NAMESPACE,
@@ -191,19 +176,20 @@ class BaseSchemaValidator:
 
     def _get_expected_relationship_type(self, element_name: str) -> str | None:
         """Return expected relationship type for ``element_name``."""
-        return expected_relationship_type(element_name, self.ELEMENT_RELATIONSHIP_TYPES)
+        return _rel.expected_relationship_type(element_name, self.ELEMENT_RELATIONSHIP_TYPES)
 
     def validate_content_types(self) -> bool:
         """Validate that all content files are declared in [Content_Types].xml."""
         exists, diags = check_content_types(self.parsed_package, self.CONTENT_TYPES_NAMESPACE)
         if not exists:
-            self.last_diagnostics = [
-                ValidationDiagnostic(
-                    message="[Content_Types].xml file not found",
-                    file_path="[Content_Types].xml",
-                )
-            ]
-            print("FAILED - [Content_Types].xml file not found")
+            missing = ValidationDiagnostic(
+                message="[Content_Types].xml file not found",
+                file_path="[Content_Types].xml",
+            )
+            self.last_diagnostics = [missing]
+            self.collected_diagnostics.append(missing)
+            if self.verbose:
+                print("FAILED - [Content_Types].xml file not found")
             return False
         return self._emit_result(
             diags,
@@ -256,16 +242,21 @@ class BaseSchemaValidator:
                     error_lines.append(f"    - {trunc}")
                     diags.append(
                         ValidationDiagnostic(
-                            message=err, file_path=rel_path, legacy_line=f"    - {trunc}"
+                            message=err,
+                            file_path=rel_path,
+                            line_number=self._last_xsd_error_lines.get(err),
+                            legacy_line=f"    - {trunc}",
                         )
                     )
         if self.verbose:
             self._print_xsd_summary(counts, error_lines)
         self.last_diagnostics = diags
         if error_lines:
-            print("\nFAILED - Found NEW validation errors:")
-            for line in error_lines:
-                print(line)
+            self.collected_diagnostics.extend(diags)
+            if self.verbose:
+                print("\nFAILED - Found NEW validation errors:")
+                for line in error_lines:
+                    print(line)
             return False
         if self.verbose:
             print("\nPASSED - No new XSD validation errors introduced")
@@ -283,21 +274,21 @@ class BaseSchemaValidator:
 
     def _get_schema_path(self, xml_file: Path) -> Path | None:
         """Determine the appropriate schema path for an XML file."""
-        return resolve_schema_path(
+        return _xsd.resolve_schema_path(
             xml_file, self.schemas_dir, self.SCHEMA_MAPPINGS, self.MAIN_CONTENT_FOLDERS
         )
 
     def _clean_ignorable_namespaces(self, xml_doc: Any) -> Any:
         """Remove attributes and elements not in allowed namespaces on a cloned tree."""
-        return clean_ignorable_namespaces(xml_doc, self.OOXML_NAMESPACES)
+        return _xsd.clean_ignorable_namespaces(xml_doc, self.OOXML_NAMESPACES)
 
     def _remove_ignorable_elements(self, root: Any) -> None:
         """Recursively remove all elements not in allowed namespaces."""
-        remove_ignorable_elements(root, self.OOXML_NAMESPACES)
+        _xsd.remove_ignorable_elements(root, self.OOXML_NAMESPACES)
 
     def _preprocess_for_mc_ignorable(self, xml_doc: Any) -> Any:
         """Preprocess XML to remove ``mc:Ignorable`` attribute before validation."""
-        return preprocess_mc_ignorable(xml_doc, mc_ns=self.MC_NAMESPACE)
+        return _xsd.preprocess_mc_ignorable(xml_doc, mc_ns=self.MC_NAMESPACE)
 
     def _validate_single_file_xsd(
         self, xml_file: Path, base_path: Path
@@ -307,7 +298,11 @@ class BaseSchemaValidator:
         if not schema_path:
             return None, None
         schema = self.get_compiled_schema(schema_path, self.schemas_dir)
-        return validate_single_file_xsd(
+        line_map: dict[str, int | None] | None = None
+        if Path(base_path).resolve() == self.unpacked_dir:
+            self._last_xsd_error_lines = {}
+            line_map = self._last_xsd_error_lines
+        return _xsd.validate_single_file_xsd(
             Path(xml_file),
             Path(base_path),
             schema,
@@ -315,25 +310,21 @@ class BaseSchemaValidator:
             self.OOXML_NAMESPACES,
             self.MAIN_CONTENT_FOLDERS,
             mc_ns=self.MC_NAMESPACE,
+            error_lines_out=line_map,
         )
 
     def _get_original_file_errors(self, xml_file: Path) -> set[str]:
         """Get XSD validation errors from a single file inside ``self.original_file``."""
-        resolved_xml = Path(xml_file).resolve()
-        relative_path = resolved_xml.relative_to(self.unpacked_dir)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            with zipfile.ZipFile(self.original_file, "r") as zip_ref:
-                zip_ref.extractall(temp_path)
-            original_xml_file = temp_path / relative_path
-            if not original_xml_file.exists():
-                return set()
-            _, errors = self._validate_single_file_xsd(original_xml_file, temp_path)
-            return errors if errors else set()
+        return _xsd.get_original_file_errors(
+            Path(xml_file),
+            self.unpacked_dir,
+            self.original_file,
+            self._validate_single_file_xsd,
+        )
 
     def _remove_template_tags_from_text_nodes(self, xml_doc: Any) -> tuple[Any, list[str]]:
         """Remove template tags from XML text nodes on a clone and collect warnings."""
-        return remove_template_tags_from_text_nodes(xml_doc)
+        return _xsd.remove_template_tags_from_text_nodes(xml_doc)
 
 
 __all__ = [

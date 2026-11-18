@@ -160,3 +160,185 @@ def test_cond_xsd_dual_path_bypasses_cache_for_original_file(
     assert any(
         str(unpacked_ct.resolve()) != src and "[Content_Types].xml" in src for src in parsed_sources
     )
+
+
+def _create_n_xml_docx_fixture(base_dir: Path, extra_parts: int = 13) -> tuple[Path, Path]:
+    """Create a synthetic unpacked+zipped .docx with 16 XML/.rels parts."""
+    unpacked = base_dir / "unpacked_16"
+    (unpacked / "_rels").mkdir(parents=True)
+    (unpacked / "word" / "_rels").mkdir(parents=True)
+    (unpacked / "customXml").mkdir(parents=True)
+
+    ct_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/word/document.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        "</Types>"
+    )
+    root_rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+        'Target="word/document.xml"/>'
+        "</Relationships>"
+    )
+    doc_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        "<w:body><w:p><w:r><w:t>Hello</w:t></w:r></w:p></w:body></w:document>"
+    )
+    word_rels_items = [
+        '<Relationship Id="rId'
+        + str(i)
+        + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" '
+        + f'Target="../customXml/item{i}.xml"/>'
+        for i in range(1, extra_parts + 1)
+    ]
+    word_rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        + "".join(word_rels_items)
+        + "</Relationships>"
+    )
+    files: dict[str, str] = {
+        "[Content_Types].xml": ct_xml,
+        "_rels/.rels": root_rels,
+        "word/_rels/document.xml.rels": word_rels,
+        "word/document.xml": doc_xml,
+    }
+    for i in range(1, extra_parts + 1):
+        files[f"customXml/item{i}.xml"] = '<?xml version="1.0" encoding="UTF-8"?><root/>'
+
+    # Exclude word/_rels/document.xml.rels or count carefully: 4 + 12 = 16 XML/.rels files
+    for rel, body in files.items():
+        target = unpacked / rel
+        target.write_text(body, encoding="utf-8")
+
+    orig_docx = base_dir / "fixture_16.docx"
+    with zipfile.ZipFile(orig_docx, "w") as zf:
+        for rel, body in files.items():
+            zf.writestr(rel, body)
+    return unpacked, orig_docx
+
+
+@pytest.mark.fast
+def test_ooxml_validator_16_xml_single_parse_and_quiet_stdout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify 16-file .docx runs <=16 unpacked parses, 0 parser=None, and emits no stdout."""
+    import lxml.etree
+
+    from ccba_ooxml.validation import DOCXSchemaValidator
+
+    unpacked, orig_docx = _create_n_xml_docx_fixture(tmp_path, extra_parts=12)
+    schemas_dir = Path(__file__).resolve().parents[1] / "src" / "ccba_ooxml" / "schemas"
+    for key in ("word", "[Content_Types].xml", ".rels"):
+        DOCXSchemaValidator.get_compiled_schema(
+            schemas_dir / DOCXSchemaValidator.SCHEMA_MAPPINGS[key], schemas_dir
+        )
+
+    real_parse = lxml.etree.parse
+    unpacked_calls: list[tuple[str, object]] = []
+    all_none_parsers: list[str] = []
+    unpacked_resolved = str(unpacked.resolve())
+
+    def spy_parse(source, parser=None, **kwargs):
+        src_str = str(getattr(source, "name", source))
+        if parser is None:
+            all_none_parsers.append(src_str)
+        if src_str.startswith(unpacked_resolved):
+            unpacked_calls.append((src_str, parser))
+        return real_parse(source, parser=parser, **kwargs)
+
+    monkeypatch.setattr(lxml.etree, "parse", spy_parse)
+    report = OOXMLValidator(unpacked, orig_docx, verbose=False).validate_report()
+    captured = capsys.readouterr()
+
+    assert captured.out == ""
+    assert all_none_parsers == []
+    assert len(unpacked_calls) <= 16
+    assert report.is_valid is True
+    assert report.issues == []
+
+
+@pytest.mark.fast
+def test_malformed_xml_reports_file_path_line_number_and_quiet_stdout(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify malformed word/document.xml reports file_path and line_number without stdout."""
+    unpacked, orig_docx = _create_n_xml_docx_fixture(tmp_path, extra_parts=2)
+    bad_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">\n'
+        "  <w:body>\n"
+        "    <w:p><w:unclosed></w:p>\n"
+        "  </w:body>\n"
+        "</w:document>\n"
+    )
+    (unpacked / "word" / "document.xml").write_text(bad_xml, encoding="utf-8")
+
+    report = OOXMLValidator(unpacked, orig_docx, verbose=False).validate_report()
+    captured = capsys.readouterr()
+
+    assert captured.out == ""
+    assert report.is_valid is False
+    assert any(
+        issue.file_path == "word/document.xml" and issue.line_number is not None
+        for issue in report.issues
+    )
+
+
+@pytest.mark.fast
+def test_redlining_validator_claude_tracked_changes_and_clone_isolation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify RedliningValidator strips Claude tracked changes on clones without stdout."""
+    from ccba_ooxml.validation import RedliningValidator
+    from ccba_ooxml.validation.base import ParsedOOXMLPackage
+
+    w_ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    orig_doc = (
+        f'<?xml version="1.0" encoding="UTF-8"?>'
+        f'<w:document xmlns:w="{w_ns}">'
+        "<w:body><w:p><w:r><w:t>Alpha Beta</w:t></w:r></w:p></w:body></w:document>"
+    )
+    orig_docx = tmp_path / "orig_redline.docx"
+    with zipfile.ZipFile(orig_docx, "w") as zf:
+        zf.writestr("word/document.xml", orig_doc)
+
+    unpacked = tmp_path / "unpacked_redline"
+    (unpacked / "word").mkdir(parents=True)
+    tracked_doc = (
+        f'<?xml version="1.0" encoding="UTF-8"?>'
+        f'<w:document xmlns:w="{w_ns}">'
+        "<w:body><w:p>"
+        "<w:r><w:t>Alpha </w:t></w:r>"
+        '<w:del w:id="1" w:author="Claude"><w:r><w:delText>Beta</w:delText></w:r></w:del>'
+        '<w:ins w:id="2" w:author="Claude"><w:r><w:t>Gamma</w:t></w:r></w:ins>'
+        "</w:p></w:body></w:document>"
+    )
+    doc_path = unpacked / "word" / "document.xml"
+    doc_path.write_text(tracked_doc, encoding="utf-8")
+
+    pkg = ParsedOOXMLPackage(unpacked)
+    validator = RedliningValidator(unpacked, orig_docx, verbose=False, parsed_package=pkg)
+    assert validator.validate() is True
+    assert capsys.readouterr().out == ""
+    cached_root = pkg.get_root("word/document.xml")
+    assert len(cached_root.findall(f".//{{{w_ns}}}ins")) == 1
+    assert len(cached_root.findall(f".//{{{w_ns}}}delText")) == 1
+
+    # Untracked text change alongside Claude edits must fail in RedliningValidator
+    doc_path.write_text(tracked_doc.replace("Alpha ", "UntrackedEdit "), encoding="utf-8")
+    report = OOXMLValidator(unpacked, orig_docx, verbose=False).validate_report()
+    assert capsys.readouterr().out == ""
+    assert report.is_valid is False
+    assert any(issue.file_path == "word/document.xml" for issue in report.issues)
