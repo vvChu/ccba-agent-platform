@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q5`) & Tối Ưu `nightly-slow-tests.yml` (Mở Đầu Đợt 1)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `.github/workflows/nightly-slow-tests.yml`, `.md/knowledge/decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling` chốt `5/5` quyết định `Q1`–`Q5` tách lộ trình `4` Waves thành `2` Đợt có Checkpoint (Đợt 1: xóa `6` nhánh remote đã merge + tối ưu `nightly-slow-tests.yml` với `fetch-depth: 0`, `actions/cache@v4`, 1-shot `uv pip install --system`, `CCBA_AI_MOCK: "1"` + cài runner ARM64 cho `vvc-second-brain` & chốt PR/commit `6/6` Spokes + Bước B Spoke CI qua Rollback Gate `>= 25%` / `0` flake; Đợt 2: Grok Peer Audit + phân rã `7` monoliths về `0/7`).
+
+---
+
 ## [2026-11-19] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Đồng Bộ SSOT 10 Tệp Skill Contract Tests Giữa Local & CI, Re-Anchor `verify-ccba-harness` (`--merge`) & Tiến Hóa `ccba-release-feature v1.3.7` (`PR #816`, `#818`, `RULE-2.21`, `RULE-4.21`, Mục 72)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`
