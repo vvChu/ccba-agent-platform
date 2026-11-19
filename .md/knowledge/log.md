@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-19] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Đồng Bộ SSOT 10 Tệp Skill Contract Tests Giữa Local & CI, Re-Anchor `verify-ccba-harness` (`--merge`) & Tiến Hóa `ccba-release-feature v1.3.7` (`PR #816`, `#818`, `RULE-2.21`, `RULE-4.21`, Mục 72)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `.agents/skills/ccba-release-feature/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`
+- **Summary**: Hoàn tất retrospective Mục 72 cho phiên `a6146ecf-40aa-416a-93db-bc30e46da24c` (tích lũy `694` bước, `268` turns, `48,749,160` tổng tokens, `61.43725 USD`; `3` lỗi `status == "ERROR"` tổng cả phiên, `0` `CLEARED`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `0` cases) bao phủ **PR #816** (`540c6d11` qua `--merge`: `SKILL_CONTRACT_TEST_PATHS` 10 tệp live-skill/AGENTS dùng chung cho `verify-patch --preset skill|ci` và `run_harness_evals.py`, chốt gốc `git toplevel` + `-c pyproject.toml` + `--self-heal`, TRIHT `12/12 PASS`, `8/8` CI PASS, Grok Pass 2 `APPROVE_PLAN` `c4ee0636`, `sync_commit` `68185e16` reachable trên `main`) và **PR #818** (`c851f5d0`: rebase/append giữ nguyên PR #817 trong `.md/knowledge/reports/walkthrough.md`): kết tinh vào `RULE-2.21` và `RULE-4.21` trong `.md/knowledge/session_learnings.md` (`9.88 KB <= 10.0 KB`, `0` dropped rules) + `Mục 72` trong `.md/knowledge/archive/session_learnings_history.md`; nâng cấp `.agents/skills/ccba-release-feature/SKILL.md` (`v1.3.6 -> v1.3.7`) bổ sung rào chắn `--merge` khi neo `verify-ccba-*` và nối bảo toàn khi đụng PR walkthrough song song, kèm Recompilation Gate kép.
+
+---
+
 ## [2026-11-19] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Di Trú `PPTXSchemaValidator` Lên `ParsedOOXMLPackage`, Chuẩn Hóa OPC `normpath`, Vá `RULE-1.10` & Tiến Hóa `ccba-new-feature v1.5.1` (`PR #813`, `#814`, `RULE-1.10`, `RULE-2.21`, `RULE-5.13`, Mục 71)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `scripts/governance/compact_session_learnings.py`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`
