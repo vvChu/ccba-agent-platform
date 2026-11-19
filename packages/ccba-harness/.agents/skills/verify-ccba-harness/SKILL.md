@@ -17,14 +17,14 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.2
-sync_commit: "fbe8becb1d0ccb63ccdcb312425fd33e27f08553"
+sync_commit: "68185e16a952134420da8726602f0b6f4973ec78"
 covered_sha256:
   packages/ccba-harness/src/ccba_harness/cli/core.py: "fd9d2db945faf2fdbfadf51700176d84cd4ab9940f81aff77b062f648c690d8f"
   packages/ccba-harness/src/ccba_harness/cli/_envelope.py: "1e69ea3b4558bc3e35fcbfd437a13e09866c3889655a40bb559092db2d1a4036"
-  packages/ccba-harness/src/ccba_harness/cli/commands/verifier.py: "d4796ecb53dbba1adbbcba36c8278c9bbf96732e0c2aa88a2f5cb80037e76fb8"
+  packages/ccba-harness/src/ccba_harness/cli/commands/verifier.py: "65c8efb485b9faeb8a74bc9df180d912ab3a3c67cbe94774bbb0cf9cb873cf16"
   packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py: "fef00fed7ef694c064bd4442e83177a40591e1ea4ae5a6ce9823be4b4d0209d6"
   packages/ccba-harness/src/ccba_harness/gpi.py: "aae45835ee736dd4cff77bfbbda47be46e6121b536a55f8b7621c444e488df92"
-  packages/ccba-harness/src/ccba_harness/verifier.py: "9ae31f14a82f957c145bb9ed74354c78567566bcf462c79d569d401ad90057e0"
+  packages/ccba-harness/src/ccba_harness/verifier.py: "825c7edcbb06c32704eee9ae6bd674764c69c73747e6b561d0878a971b0e152d"
   packages/ccba-harness/src/ccba_harness/door_policy.py: "32f2d036d0e67dc892805a5bfc652b02a0a16860bf8cbb7422bc4d972952f908"
   packages/ccba-harness/src/ccba_harness/skill_validator.py: "b17ad6d7419f32adce1b451426302914f70bb225df92bbbbe8c3bf99e555bb88"
   packages/ccba-harness/src/ccba_harness/_skill_frontmatter.py: "dd942032f5941b15a0704386791f34e9dd1ed7ec5be47c0accb0010ffc81687c"
@@ -59,7 +59,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-har
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định trực tiếp các Public Deep Seams của `ccba_harness` (`calculate_gpi`, `evaluate_two_stage_decision`, `verify_patch_execution`, `verify_document_artifact`, `classify_pr_door`, `SkillValidator`), bộ định tuyến CLI `ccba_harness.cli.core.main`, và hợp đồng Additive Flat JSON Envelope (`cli/_envelope.py`, `--semantic-exit-codes`, fail-closed `door-triage` thuộc `FEAT-007`).
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `fbe8becb1d0ccb63ccdcb312425fd33e27f08553` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `11` tệp `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit `68185e16a952134420da8726602f0b6f4973ec78` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `11` tệp `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

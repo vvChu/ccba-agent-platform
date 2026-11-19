@@ -31,7 +31,12 @@ from ccba_harness.gpi import (
     calculate_gpi,
     evaluate_two_stage_decision,
 )
-from ccba_harness.verifier import verify_document_artifact, verify_patch_execution
+from ccba_harness.verifier import (
+    SKILL_CONTRACT_TEST_PATHS,
+    resolve_preset_commands,
+    verify_document_artifact,
+    verify_patch_execution,
+)
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
 
@@ -132,6 +137,16 @@ def test_feat_003_verifier_document_and_patch_contracts(tmp_path: Path) -> None:
     assert report.all_passed
     assert report.passed_count == 1
     assert report.failed_count == 0
+
+    tmp_skill_cmds = resolve_preset_commands("skill", cwd=tmp_path)
+    assert not any(" -m pytest " in c for c in tmp_skill_cmds)
+
+    hub_root = Path(__file__).resolve().parents[6]
+    hub_skill_cmds = resolve_preset_commands("skill", cwd=hub_root)
+    hub_ci_cmds = resolve_preset_commands("ci", cwd=hub_root)
+    assert any(all(p in c for p in SKILL_CONTRACT_TEST_PATHS) for c in hub_skill_cmds)
+    assert any("pyproject.toml" in c and " -m pytest " in c for c in hub_skill_cmds)
+    assert any("tests/test_upstream_workflows.py" in c and " -m pytest " in c for c in hub_ci_cmds)
 
 
 def test_feat_004_one_way_door_classification_contracts() -> None:

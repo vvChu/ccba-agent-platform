@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import glob as glob_module
 import hashlib
+import os
 import shlex
 import shutil
 import subprocess
@@ -23,6 +24,28 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+
+SKILL_CONTRACT_TEST_PATHS: tuple[str, ...] = (
+    "tests/governance/test_skills_docs_integrity.py",
+    "tests/governance/test_statechart_anti_lie.py",
+    "tests/governance/test_skill_scaffolding_and_gpi.py",
+    "tests/governance/test_taxonomy_integrity.py",
+    "tests/governance/test_orchestrator_parity.py",
+    "tests/governance/test_skill_taxonomy_and_gates.py",
+    "tests/governance/test_workflow_script_parity.py",
+    "tests/test_upstream_workflows.py",
+    "tests/test_create_pr_workflow.py",
+    "tests/test_agent_execution_guardrails.py",
+)
+
+_GIT_ENV_STRIP_KEYS: tuple[str, ...] = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+)
 
 
 @dataclass
@@ -352,32 +375,127 @@ def _resolve_code_preset_commands(
     ]
 
 
-def _resolve_ci_preset_commands(python_exec: str) -> list[str]:
-    """Resolve the 'ci' verification preset including monorepo strict mypy."""
+def _git_clean_env() -> dict[str, str]:
+    """Return environment copy stripped of hook git variables for cwd isolation."""
+    return {k: v for k, v in os.environ.items() if k not in _GIT_ENV_STRIP_KEYS}
+
+
+def resolve_workspace_toplevel_and_hub(cwd: Path | str | None = None) -> tuple[Path, bool]:
+    """Resolve git toplevel root and detect whether the origin remote is the Hub repo."""
+    raw = Path(cwd).resolve() if cwd else Path.cwd().resolve()
+    probe_dir = raw if raw.is_dir() else raw.parent
+    if not probe_dir.is_dir():
+        return probe_dir, False
+
+    env = _git_clean_env()
+    try:
+        top_res = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=str(probe_dir),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return probe_dir, False
+
+    if top_res.returncode != 0 or not top_res.stdout.strip():
+        return probe_dir, False
+
+    ws_root = Path(top_res.stdout.strip()).resolve()
+    try:
+        remote_res = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=str(ws_root),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        is_hub = (remote_res.returncode == 0) and ("ccba-agent-platform" in remote_res.stdout)
+    except (OSError, subprocess.SubprocessError):
+        is_hub = False
+    return ws_root, is_hub
+
+
+def _resolve_skill_contract_targets(
+    ws_root: Path,
+    is_hub: bool,
+    paths: Sequence[str] = SKILL_CONTRACT_TEST_PATHS,
+) -> list[str]:
+    """Filter SSOT skill contract test paths, failing closed on Hub if any are absent."""
+    existing = [p for p in paths if (ws_root / p).is_file()]
+    missing = [p for p in paths if not (ws_root / p).is_file()]
+    if is_hub and missing:
+        raise ValueError(
+            f"Missing required Hub skill contract test path(s) at {ws_root}: {', '.join(missing)}"
+        )
+    if missing:
+        print(
+            f"[verify-patch] Skipping absent skill contract test path(s) under {ws_root}: {', '.join(missing)}",
+            file=sys.stderr,
+        )
+    return existing
+
+
+def _build_pytest_command(python_exec: str, ws_root: Path, targets: Sequence[str]) -> str:
+    """Build deterministic pytest command anchored to ws_root/pyproject.toml when present."""
+    pyproject = ws_root / "pyproject.toml"
+    cfg_part = f"-c {shlex.quote(pyproject.as_posix())} " if pyproject.is_file() else ""
+    target_args = " ".join(shlex.quote(t) for t in targets)
+    return f"{python_exec} -m pytest {cfg_part}{target_args} -q"
+
+
+def _resolve_ci_preset_commands(
+    python_exec: str,
+    cwd: Path | str | None = None,
+) -> list[str]:
+    """Resolve the 'ci' verification preset including monorepo strict mypy and SSOT tests."""
+    ws_root, is_hub = resolve_workspace_toplevel_and_hub(cwd)
+    verified_paths = _resolve_skill_contract_targets(ws_root, is_hub, SKILL_CONTRACT_TEST_PATHS)
+    root_skill_targets = [p for p in verified_paths if not p.startswith("tests/governance/")]
+    pytest_targets = [
+        "packages/ccba-harness/tests/test_telemetry.py",
+        "packages/ccba-harness/tests/test_verify_patch.py",
+        "tests/governance/",
+        *root_skill_targets,
+    ]
     return [
         f"{python_exec} -m ruff check packages/ scripts/governance/ tests/governance/",
         f"{python_exec} -m ruff format --check packages/ scripts/governance/ tests/governance/",
         f"{python_exec} -m mypy packages/*/src --follow-imports=silent",
-        f"{python_exec} -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q",
+        _build_pytest_command(python_exec, ws_root, pytest_targets),
         f"{python_exec} scripts/validate_skills.py --enforce-gpi",
         f"{python_exec} scripts/governance/compile_catalog.py --check",
         f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
     ]
 
 
-def _resolve_skill_preset_commands(target_str: str, python_exec: str) -> list[str]:
-    """Resolve the 'skill' verification preset into validator and registry checks."""
+def _resolve_skill_preset_commands(
+    target_str: str,
+    python_exec: str,
+    cwd: Path | str | None = None,
+) -> list[str]:
+    """Resolve the 'skill' verification preset into static checks and SSOT pytest contracts."""
     if target_str:
         t_path = Path(target_str)
         skill_file = (t_path / "SKILL.md").as_posix() if t_path.is_dir() else t_path.as_posix()
         validate_cmd = f"{python_exec} scripts/validate_skills.py --file {skill_file} --enforce-gpi"
     else:
         validate_cmd = f"{python_exec} scripts/validate_skills.py --enforce-gpi"
-    return [
+    cmds = [
         validate_cmd,
         f"{python_exec} scripts/governance/compile_catalog.py --check",
         f"{python_exec} scripts/sync_hub_adr_matrix.py --check",
     ]
+    ws_root, is_hub = resolve_workspace_toplevel_and_hub(cwd)
+    contract_targets = _resolve_skill_contract_targets(ws_root, is_hub, SKILL_CONTRACT_TEST_PATHS)
+    if contract_targets:
+        cmds.append(_build_pytest_command(python_exec, ws_root, contract_targets))
+    return cmds
 
 
 def _resolve_domain_preset_commands(p: str, target_str: str, python_exec: str) -> list[str] | None:
@@ -455,15 +573,43 @@ def resolve_preset_commands(
             doc_cmd += f' --required-headings "{",".join(required_headings)}"'
         return [doc_cmd]
     if p == "skill":
-        return _resolve_skill_preset_commands(target_str, python_exec)
+        return _resolve_skill_preset_commands(target_str, python_exec, cwd=cwd)
     if p == "ci":
-        return _resolve_ci_preset_commands(python_exec)
+        return _resolve_ci_preset_commands(python_exec, cwd=cwd)
     if (domain_cmds := _resolve_domain_preset_commands(p, target_str, python_exec)) is not None:
         return domain_cmds
 
     raise ValueError(
         f"Unknown verification preset: '{preset}'. Supported presets: 'code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon'."
     )
+
+
+def _collect_scheduled_commands(
+    commands: Sequence[str] | None,
+    preset: str | None,
+    target: Path | str | None,
+    min_bytes: int,
+    required_headings: Sequence[str] | None,
+    cwd: Path | str | None,
+) -> list[tuple[str, Path | str | None]]:
+    """Pair caller and preset commands with their appropriate execution working directories."""
+    scheduled: list[tuple[str, Path | str | None]] = [(cmd, cwd) for cmd in (commands or ())]
+    if not preset:
+        return scheduled
+    preset_cmds = resolve_preset_commands(
+        preset=preset,
+        target=target,
+        min_bytes=min_bytes,
+        required_headings=required_headings,
+        cwd=cwd,
+    )
+    preset_cwd: Path | str | None = (
+        resolve_workspace_toplevel_and_hub(cwd)[0]
+        if preset.strip().lower() in ("skill", "ci")
+        else cwd
+    )
+    scheduled.extend((cmd, preset_cwd) for cmd in preset_cmds)
+    return scheduled
 
 
 def verify_patch_execution(
@@ -476,48 +622,25 @@ def verify_patch_execution(
     timeout: float = 180.0,
     fail_fast: bool = False,
 ) -> PatchVerificationReport:
-    """Execute a sequence of verification commands and aggregate into a report.
-
-    Args:
-        commands: List of shell command strings to execute.
-        preset: Optional preset identifier ('code', 'doc', 'skill', 'adr', 'telemetry', 'ci', 'eval', 'lexicon').
-        target: Target path when using a preset.
-        min_bytes: Minimum bytes for 'doc' preset.
-        required_headings: Required headings for 'doc' preset.
-        cwd: Working directory for command execution.
-        timeout: Maximum execution timeout per command in seconds.
-        fail_fast: If True, stop executing remaining commands upon first failure.
-
-    Returns:
-        PatchVerificationReport containing all execution details and summary.
-    """
-    all_commands: list[str] = []
-
-    if commands:
-        all_commands.extend(commands)
-
-    if preset:
-        preset_cmds = resolve_preset_commands(
-            preset=preset,
-            target=target,
-            min_bytes=min_bytes,
-            required_headings=required_headings,
-            cwd=cwd,
-        )
-        all_commands.extend(preset_cmds)
-
+    """Execute verification commands and aggregate into a deterministic report."""
+    scheduled = _collect_scheduled_commands(
+        commands=commands,
+        preset=preset,
+        target=target,
+        min_bytes=min_bytes,
+        required_headings=required_headings,
+        cwd=cwd,
+    )
     results: list[CommandResult] = []
     total_duration_ms = 0.0
 
-    for cmd in all_commands:
+    for cmd, cmd_cwd in scheduled:
         cleaned_cmd = cmd.strip()
         if not cleaned_cmd:
             continue
-
-        res = _execute_single_command(cleaned_cmd, cwd=cwd, timeout=timeout)
+        res = _execute_single_command(cleaned_cmd, cwd=cmd_cwd, timeout=timeout)
         results.append(res)
         total_duration_ms += res.duration_ms
-
         if fail_fast and not res.passed:
             break
 
