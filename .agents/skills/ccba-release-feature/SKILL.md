@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.6"
+  version: "1.3.7"
   author: "CCBA Hub"
 triggers:
 - release
@@ -143,9 +143,18 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    - *Lưu ý quan trọng (ADR-0045 Spoke Leakage Guard & RULE-4.10):* Script `audit_pr_comments.py` tự động tìm kiếm đối soát theo thứ tự ưu tiên: `.md/knowledge/reports/walkthrough.md` (hoặc `walkthrough.md` tại gốc repo). Tuyệt đối KHÔNG lưu tại `.md/walkthrough.md` để tránh vi phạm rào chắn cấu trúc thư mục. BẮT BUỘC phải ghi nhận trực tiếp vào `.md/knowledge/reports/walkthrough.md` kèm mã `review_id` (`PRR_...`) hoặc comment `id` thay vì chỉ lưu trong thư mục brain artifact.
 
 6. **Tiến hành Merge khi 100% điều kiện đạt chuẩn:**
-   - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (sử dụng Squash and Merge để giữ lịch sử nhánh main tinh gọn):
+   - **Kiểm tra Chiến lược Merge cho `verify-ccba-*` Re-Anchor (`RULE-2.21` — Bắt buộc `--merge`):**
+     Trước khi merge, kiểm tra xem PR có chạm tệp neo `verify-ccba-*/SKILL.md` hay không:
      ```bash
+     git diff --name-only origin/<default_branch>..HEAD -- 'packages/ccba-harness/.agents/skills/verify-ccba-*/SKILL.md'
+     ```
+     Nếu có cập nhật `sync_commit` / `covered_sha256`: **BẮT BUỘC dùng `--merge` (`gh pr merge [PR_NUMBER] --merge --delete-branch`), TUYỆT ĐỐI CẤM `--squash`**, để mã commit trước đó được neo trong `sync_commit` còn tồn tại cho `git cat-file -e` trên nhánh chính; ngay sau khi `pull`, kiểm chứng `git cat-file -e <sync_commit>^{commit}` trả mã `0`.
+   - Nếu `gh` đã đăng nhập, CI pass (100% xanh) và Copilot review đã xử lý xong: Thực hiện merge và xóa remote branch tự động (mặc định dùng Squash and Merge để giữ lịch sử nhánh main tinh gọn, ngoại trừ ca re-anchor `RULE-2.21` ở trên phải dùng `--merge`):
+     ```bash
+     # Mặc định (không chạm verify-ccba-*/SKILL.md):
      gh pr merge --squash --delete-branch
+     # Ngoại lệ RULE-2.21 (PR có commit code + commit re-anchor sync_commit):
+     gh pr merge --merge --delete-branch
      ```
    - *Cơ chế Xử lý Linh hoạt khi CI đang chạy:*
      Kiểm tra thuộc tính `allow_auto_merge` của repository qua GitHub REST API (cảnh báo: `gh repo view --json autoMergeAllowed` lỗi `Unknown JSON field` trên `gh` CLI v2+) trước khi áp dụng cờ `--auto`:
@@ -153,11 +162,11 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
      # Bước 1: Tra cứu xem repo có cho phép auto-merge không qua REST API:
      gh api repos/{owner}/{repo} --jq .allow_auto_merge
      ```
-     - **Trường hợp A (Nếu kết quả là `true`):** Thực thi auto-merge:
+     - **Trường hợp A (Nếu kết quả là `true`):** Thực thi auto-merge (thay `--squash` bằng `--merge` nếu thuộc ngoại lệ `RULE-2.21`):
        ```bash
        gh pr merge [PR_NUMBER] --squash --delete-branch --auto
        ```
-     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup (hoặc `schedule` phân tầng `240s` lần đầu rồi `60s` pha đuôi; cấm gọi thêm tool khác trong cùng lượt với `schedule`) rồi merge:
+     - **Trường hợp B (Nếu kết quả là `false` — như Hub hiện tại):** Giám sát CI qua Reactive Wakeup (hoặc `schedule` phân tầng `240s` lần đầu rồi `60s` pha đuôi; cấm gọi thêm tool khác trong cùng lượt với `schedule`) rồi merge (dùng `--merge` nếu thuộc ngoại lệ `RULE-2.21`):
        ```bash
        gh pr checks [PR_NUMBER] --watch
        # Dừng gọi công cụ (End Turn). Khi Reactive Wakeup báo 100% checks xanh, thực hiện:
@@ -165,7 +174,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
        # Nếu đang đứng trên git worktree cô lập (RULE-4.21), tách HEAD trước khi merge rồi gỡ worktree để tránh chạm thư mục gốc đang bận hoặc đang ở nhánh đồng đẳng:
        git -C <worktree_path> checkout --detach && gh pr merge [PR_NUMBER] --squash && git push origin --delete [HEAD_BRANCH]
        ```
-   - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** -> **Confirm squash and merge** -> **Delete branch**.
+   - Nếu `gh` chưa đăng nhập: Sử dụng `browser_subagent` truy cập trang PR, chờ CI và Review hoàn tất rồi chọn **Squash and merge** (hoặc **Create a merge commit** nếu thuộc ngoại lệ `RULE-2.21`) -> **Confirm** -> **Delete branch**.
 
 ---
 
@@ -278,6 +287,8 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 
      # Trong nhánh docs/walkthrough-pr-[PR_NUMBER]: chỉ stage <tracked_paths> (hoặc tệp mới tại Hub);
      # tệp .md/knowledge/reports/walkthrough.md dẫn về gốc repo bằng ../../../ (RULE-2.4) và không chứa file:/// (RULE-3.5):
+     # Nếu có PR song song vừa cập nhật .md/knowledge/reports/walkthrough.md trên origin/main gây BEHIND/xung đột:
+     # reset/rebase nhánh lên origin/main để bảo toàn nguyên vẹn mục của PR đồng đẳng ở đầu tệp và nối mục PR hiện tại xuống dưới (cấm ghi đè xóa mất biên bản đồng đẳng), rồi đẩy bằng git push --force-with-lease.
      git add -- <tracked_paths>
      git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
      git push -u origin docs/walkthrough-pr-[PR_NUMBER]
