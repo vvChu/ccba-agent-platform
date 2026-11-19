@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-19] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Di Trú `PPTXSchemaValidator` Lên `ParsedOOXMLPackage`, Chuẩn Hóa OPC `normpath`, Vá `RULE-1.10` & Tiến Hóa `ccba-new-feature v1.5.1` (`PR #813`, `#814`, `RULE-1.10`, `RULE-2.21`, `RULE-5.13`, Mục 71)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `scripts/governance/compact_session_learnings.py`, `.agents/skills/ccba-new-feature/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`
+- **Summary**: Hoàn tất retrospective phiên `a6146ecf-40aa-416a-93db-bc30e46da24c` (`256` bước trước retrospective, `98` turns, `8,219,371` tokens, `10.47 USD`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `1` case vào `.md/scratch/eval_runs/`; `2` bước `status == "ERROR"` tự phục hồi sạch, `0` bước `CLEARED`) bao phủ **Chặng 2A** (`PR #813` `6dca1547` & `PR #814` `a9a3791b`: `.pptx` `38` XML/`.rels` giảm `82 -> 38` parses, `44 -> 0` `parser=None`, `12/12` TRIHT PASS, `8/8` CI PASS, Grok Pass 2 `APPROVE_PLAN` `b6383640`): kết tinh `RULE-1.10` (vá đường dẫn SSOT `seam-contracts.yaml`), `RULE-2.21` (kiểm `covered_paths` trước `--merge`) và `RULE-5.13` (`posixpath.normpath` OPC target, empty-guard `last_diagnostics=[]`, `1` `ParsedOOXMLPackage`/cửa sổ spy) vào `.md/knowledge/session_learnings.md` (`<= 10.0 KB`) cùng `Mục 71` tại `.md/knowledge/archive/session_learnings_history.md`; vá `scripts/governance/compact_session_learnings.py`; và nâng cấp `.agents/skills/ccba-new-feature/SKILL.md` (`v1.5.0 -> v1.5.1`) sửa vòng lặp Bash `if ... fi` tránh exit `1`, kèm Recompilation Gate kép.
+
+---
+
 ## [2026-11-18] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Làm Sâu Seam `_workspace_roots`, Maskara PII 3 Phương Ngữ, `ParsedOOXMLPackage` & Tiến Hóa `ccba-create-pr v1.3.5` (`PR #804`..`#809`, `RULE-1.13`, `RULE-2.20`, `RULE-5.11`, `RULE-5.13`, Mục 70)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`, `.agents/skills/ccba-create-pr/SKILL.md`, `packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md`, `.agents/skills/platform-loader/catalog.yaml`, `docs/skills/`, `.md/knowledge/skills_compiled.md`

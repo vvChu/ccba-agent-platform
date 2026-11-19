@@ -58,7 +58,7 @@ COMPACTED_WORKING_MEMORY_TEMPLATE = r"""# 🧠 CCBA Knowledge Base: Active Invar
 - **RULE-1.1 [ADR 0057]**: Gate 0→Seams (`packages/*/src/`); Gate 1→Tier 3. `GPI=2.5S+2.0K+2.0A-1.5P` (<12→2A; ≥12→2B; Rituals `A=1.0`).
 - *([DEPRECATED] Mục 23-38: RULE-1.2 [ADR 0053 — Single-Writer], RULE-1.3 [ADR 0035], RULE-1.4 [ADR 0033, ADR 0056], RULE-1.5 [ADR 0037, ADR 0051], RULE-1.6 [ADR 0044])*
 - **RULE-1.7 [ADR 0057/0058]**: `evaluate-gpi --json` (`ArchitectureTier.value`, `allow_standalone_skill`, `preserved_by_hysteresis`), `--existing-tier tier-2b` (`tier: kernel`, miễn `--s..--p`); `audit_skills_hygiene.py`; 3 writer (`compile_catalog.py`, `compile_skills_docs.py --write`, `sync_hub_adr_matrix.py`, Mục 57).
-- **RULE-1.10 [Platform KISS]**: Seams `packages/seam-contracts.yaml` (`find-seam`, `compile_catalog.py --query`); `_fault_tolerant`+1-line hooks (`QCAuditPipeline`, Mục 53, 63).
+- **RULE-1.10 [Platform KISS]**: Seams `seam-contracts.yaml` (`find-seam`, `compile_catalog.py --query`); `_fault_tolerant`+1-line hooks (`QCAuditPipeline`, Mục 53, 63, 71).
 - **RULE-1.12 [ADR 0060]**: Unignore `!.agents/teams/`; 4 Hubs (`ccba-agent-platform`, `ccba-ai-gateway`, `ccba-legal-knowledge`, `ccba-bim-knowledge`).
 - **RULE-1.13 [Externalization]**: Cấm raw model/IP/hằng (`CCBA_BRAIN_MIRROR_DIR`, `check_hardcoded_parameters.py --dir`); `choose_model()`→`tier-ocr|fast|reasoning|local`/`embedding-default` (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`, `scan_spoke_cleanliness()`, Mục 56, 63).
 - **RULE-1.14 [ADR 0062]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale; Kahn's sort (`spoke_bootstrap.py`).
