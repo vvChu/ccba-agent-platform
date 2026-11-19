@@ -22470,7 +22470,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-new-feature
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
   author: "CCBA Hub"
 triggers:
 - new feature
@@ -22518,8 +22518,9 @@ Dọn dẹp các branch cục bộ đã được tích hợp vào `main` (hỗ t
 - **Bash (Linux / macOS / Git Bash):**
   ```bash
   git fetch -p
-  git branch --merged main --format='%(refname:short)' | while read -r b; do [ "$b" != "main" ] && git branch -d "$b"; done
+  git branch --merged main --format='%(refname:short)' | while read -r b; do if [ "$b" != "main" ]; then git branch -d "$b"; fi; done
   ```
+  *(Dùng `if ... fi` thay vì `[ "$b" != "main" ] && ...` vì khi `main` là nhánh cuối cùng trong luồng, biểu thức điều kiện trả mã thoát `1` làm gãy chuỗi lệnh `&&` kế tiếp.)*
 - **Tiêu chí hoàn thành:** Toàn bộ branch cục bộ đã merge vào `main` được dọn dẹp sạch sẽ.
 
 ### Bước 3: Thu thập thông tin & Bóc tách Issue tự động (Hỗ trợ Offline Fallback)
