@@ -22,7 +22,7 @@ triggers:
   - zettelkasten-compiler
   - book-ingest
 metadata:
-  version: "1.5.3"
+  version: "1.5.4"
   author: "CCBA & VvC Second Brain"
 ---
 
@@ -34,14 +34,14 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/batch_helpers.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/pipeline/book_verification.py`, `scripts/pipeline/book_excalidraw_verifier.py`, `scripts/core/vault.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
+- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/pipeline/book_staging_recovery.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/batch_helpers.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/pipeline/book_verification.py`, `scripts/pipeline/book_link_verifier.py`, `scripts/pipeline/book_excalidraw_verifier.py`, `scripts/core/vault.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
   - Tra cứu hợp đồng năng lực trước khi sinh sơ đồ (dùng biến môi trường `CCBA_HUB_PATH`):
     ```bash
     python "${CCBA_HUB_PATH}/scripts/ccba_platform_cli.py" find-seam --in diagram --out layout --json
     ```
 - **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill (`disable-model-invocation: true` theo ADR-0040) với điểm $\mathbf{GPI} = (4.0 \times 2.5) + (4.5 \times 2.0) + (1.0 \times 2.0) - (1.0 \times 1.5) = \mathbf{19.5} \ge 12.0$.
 - **Bất biến Bắt buộc (Mandatory Invariants)**:
-  1. *Race-Free Staging & Dual-Path Contract*: Mọi sách mới hoặc sách ngoại lai BẮT BUỘC đi qua `pipeline.book_staging.stage_book_for_compilation()` theo đúng thứ tự: kiểm tra `check_cross_machine_lease()` $\rightarrow$ tạo workspace `05 - Fleeting/<Book_Stem>/` $\rightarrow$ đồng bộ khóa mức cuốn sách `.book_stage_<Book_Stem>.lock` (tách rời khóa sống còn `.book_ingest.lock` của daemon 24/7) để trích xuất hoặc phục hồi corpus Markdown & ảnh `.webp` (`quality=80, max_dim=1200`, nén trong RAM, scratch trên `state_dir` cục bộ) tại `03 - Resources/books/<Book_Stem>_MD/` với chốt lũy đẳng `_toc_original.json` + đủ chương $\rightarrow$ khởi tạo `Source Note` qua `safe_write_text()` + `update_source_cache()` $\rightarrow$ sinh `_toc.json` & `<BOOK_CONTEXT>` $\rightarrow$ chép sách ngoại lai vào `03 - Resources/books/` cuối cùng.
+  1. *Race-Free Staging & Dual-Path Contract*: Mọi sách mới, sách ngoại lai, hoặc corpus `<Book_Stem>_MD` sạch đã có sẵn trên đĩa (kể cả khi tệp `.epub`/`.pdf` gốc đã được lưu trữ) BẮT BUỘC đi qua `pipeline.book_staging.stage_book_for_compilation()` theo đúng thứ tự: giải mã target chỉ-đọc (`_resolve_stage_target`) $\rightarrow$ kiểm tra `check_cross_machine_lease()` $\rightarrow$ tạo workspace `05 - Fleeting/<Book_Stem>/` $\rightarrow$ đồng bộ khóa mức cuốn sách `.book_stage_<Book_Stem>.lock` (tách rời khóa sống còn `.book_ingest.lock` của daemon 24/7) để trích xuất hoặc tự động phục hồi `_toc_original.json` cho corpus `.md` sạch không mất dữ liệu (không ghi đè/xóa chương `.md` đã có; `.webp` `quality=80, max_dim=1200`, nén trong RAM, scratch trên `state_dir` cục bộ) tại `03 - Resources/books/<Book_Stem>_MD/` $\rightarrow$ khởi tạo `Source Note` qua `safe_write_text()` + `update_source_cache()` $\rightarrow$ sinh `_toc.json` & `<BOOK_CONTEXT>` $\rightarrow$ chép sách ngoại lai (nếu là file thật) vào `03 - Resources/books/` cuối cùng.
   2. *Metadata SSoT Gate*: Quét 5 tệp `.md` mở đầu trong `03 - Resources/books/<Book_Stem>_MD/` (`Title`, `Copyright`, `ISBN`, `Edition`, `Author`) để khóa chuẩn Full Title, Subtitle, Edition và Full Authors trước khi biên soạn.
   3. *Write-Through Concept Pipeline, Batch Helper & Batched Vector Flush*: Mọi Concept Note BẮT BUỘC chạy qua Stage 4 `verify_and_correct()` (`scripts/pipeline/self_correct.py`) và lưu qua `save_concept(..., book_name=book_name)` (`scripts/pipeline/post_process.py`) — hoặc qua seam hợp nhất `compile_book_concept()` (`scripts/pipeline/batch_helpers.py`) cho lô OCR sách — bên trong ngữ cảnh `with VectorStore.get_instance().batch():` (`scripts/core/vector_store.py`) để kích hoạt 5 cổng chất lượng, `arbitrate_and_merge()`, gắn sơ đồ NXB (`align_book_diagrams()`), chặn tự nhúng / nhúng `.md` phi sơ đồ qua `find_invalid_concept_embeds()` (`scripts/core/vault.py`), cập nhật `_vault_concepts_cache.json` v4 và chỉ ghi đĩa `.npz` đúng 1 lần.
   4. *MOC Lifecycle Discipline*: CẤM tạo tay `MOC_*.md` hoặc sửa tay `00 - Maps of Content/index.md` ở Pha 2 (vì `_cleanup_stale_mocs` sẽ xóa MOC khi `0` concepts). Chỉ chạy `scripts/wiki_maintain.py` ở cuối Pha 5 sau khi toàn bộ concepts đã lưu; tên MOC chuẩn do hệ thống sinh là `MOC_<normalize_moc_name(aliases[0])>.md` (`--check-only` dùng để kiểm tra không ghi đĩa).
@@ -56,7 +56,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 /ccba-book-compiler <đường-dẫn-sách> [--canonical-name <Ten_Sach.epub>] [--domain <lĩnh-vực>] [--apply-to <quy-trình>] [--max-concepts <N>]
 ```
 
-- `<đường-dẫn-sách>`: Đường dẫn tệp `.epub` hoặc `.pdf` (nội bộ `03 - Resources/books/` hoặc tệp tải lên từ bên ngoài).
+- `<đường-dẫn-sách>`: Đường dẫn tệp `.epub` hoặc `.pdf` (nội bộ `03 - Resources/books/` hoặc tệp tải lên từ bên ngoài), hoặc đường dẫn thư mục `<Book_Stem>_MD` sạch trong `03 - Resources/books/` (cho trường hợp sách gốc đã lưu trữ/gỡ bỏ).
 - `--canonical-name <Ten_Sach.epub>`: Tên tệp chuẩn hóa khi nạp sách từ đường dẫn tạm bên ngoài (ví dụ `The_Skills_Powered_Organization.epub`).
 - `--domain <lĩnh-vực>`: Nhãn domain MOC (`management`, `bim`, `law`, `lean`, `software`; mặc định: `management`).
 - `--apply-to <quy-trình>`: Quy trình doanh nghiệp mục tiêu để đóng gói Bộ công cụ thực chiến Pha 5.
@@ -64,7 +64,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ---
 
-## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.3)
+## 🔄 Quy Trình Thực Thi 6 Pha Chuẩn Hóa (6-Phase SOP v1.5.4)
 
 ### Pha 1: Staging Chống Đua Daemon, Nén WebP & Metadata SSoT Gate
 1. **Chạy trình điều phối Staging lũy đẳng (`pipeline.book_staging`)**:
@@ -180,7 +180,7 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 | Tệp Tham Chiếu / Script | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | [`scripts/compress_images_to_webp.py`](scripts/compress_images_to_webp.py) | Thin CLI wrapper (`<= 100 LOC`) nén WebP hồi tố & điều phối cổng `--verify-book` (ủy quyền sang `scripts/pipeline/book_excalidraw_verifier.py`) |
-| [`scripts/verify_book_artifacts.py`](scripts/verify_book_artifacts.py) | Thin adapter (`<= 100 LOC`) ủy quyền động cơ C4 sang `scripts/pipeline/book_verification.py` (TOC, profiles, `_validate_quality()`, `find_invalid_concept_embeds()`, `VaultLinter` parity) |
+| [`scripts/verify_book_artifacts.py`](scripts/verify_book_artifacts.py) | Thin adapter (`<= 100 LOC`) ủy quyền động cơ C4 sang `scripts/pipeline/book_verification.py` & `scripts/pipeline/book_link_verifier.py` (TOC, profiles, `_validate_quality()`, `find_invalid_concept_embeds()`, `VaultLinter` + `cfg.assets_dir` media parity) |
 | [`scripts/verify_excalidraw_map.py`](scripts/verify_excalidraw_map.py) | Thin adapter (`<= 100 LOC`) ủy quyền giải mã `compressed-json` LZString & kiểm định Excalidraw 16:9 sang `scripts/pipeline/book_excalidraw_verifier.py` |
 | [`references/canonical_v83_concept_note.md`](references/canonical_v83_concept_note.md) | Quy cách Frontmatter, Evidence Hook (VN) và Ground Truth (EN) |
 | [`references/visual_and_diagramming_rules.md`](references/visual_and_diagramming_rules.md) | Quy chuẩn Excalidraw 16:9, Executive Typography và Bảng Markdown bản địa |
