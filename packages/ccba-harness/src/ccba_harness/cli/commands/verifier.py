@@ -288,7 +288,7 @@ def _execute_verify_patch(args: argparse.Namespace) -> int:
             args, "No commands or preset specified for verification.", already_printed=not args.json
         )
 
-    from ccba_harness.verifier import verify_patch_execution
+    from ccba_harness.verifier import resolve_workspace_toplevel_and_hub, verify_patch_execution
 
     headings = (
         [h.strip() for h in args.required_headings.split(",") if h.strip()]
@@ -313,7 +313,10 @@ def _execute_verify_patch(args: argparse.Namespace) -> int:
     if not report.all_passed and args.self_heal:
         from ccba_harness.healing import SelfHealingEngine
 
-        target_base = Path(args.cwd).resolve() if args.cwd else Path.cwd()
+        if args.preset and args.preset.strip().lower() in ("skill", "ci"):
+            target_base = resolve_workspace_toplevel_and_hub(args.cwd)[0]
+        else:
+            target_base = Path(args.cwd).resolve() if args.cwd else Path.cwd()
         engine = SelfHealingEngine(base_dir=target_base, max_iterations=args.max_heal_iterations)
         healing_report = engine.attempt_closed_loop_healing(
             verify_commands=[r.command for r in report.results], timeout=args.timeout

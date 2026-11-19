@@ -16,8 +16,12 @@ import yaml
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
+_HARNESS_SRC = _PROJECT_ROOT / "packages" / "ccba-harness" / "src"
+if _HARNESS_SRC.is_dir() and str(_HARNESS_SRC) not in sys.path:
+    sys.path.insert(0, str(_HARNESS_SRC))
 
-from scripts.eval.process_safety import (
+from ccba_harness.verifier import SKILL_CONTRACT_TEST_PATHS  # noqa: E402
+from scripts.eval.process_safety import (  # noqa: E402
     ensure_single_instance,
     get_venv_python,
     kill_process_tree,
@@ -152,10 +156,24 @@ def _collect_verify_harness_targets(project_root: Path, modified_files: set[Path
             if harness_dir.is_dir():
                 targets.add(harness_dir.relative_to(project_root).as_posix())
             targets.add("tests/governance/test_verification_harness_dogfood.py")
-    if any(m.startswith((".agents/skills/", "docs/")) for m in rel_modified):
-        targets.add("tests/governance/test_skills_docs_integrity.py")
-        targets.add("tests/governance/test_statechart_anti_lie.py")
+    if any(
+        m == ".agents/AGENTS.md" or m.startswith((".agents/skills/", "docs/")) for m in rel_modified
+    ):
+        targets.update(SKILL_CONTRACT_TEST_PATHS)
     return targets
+
+
+def _dedupe_covered_test_targets(targets: set[str]) -> set[str]:
+    """Drop child test targets when an ancestor directory is already scheduled."""
+    normalized = {t.rstrip("/") for t in targets}
+    return {
+        t
+        for t in targets
+        if not any(
+            t.rstrip("/") != parent and t.rstrip("/").startswith(f"{parent}/")
+            for parent in normalized
+        )
+    }
 
 
 def _build_all_pytest_targets(project_root: Path) -> list[str]:
@@ -346,6 +364,7 @@ def main() -> None:
                         test_dirs.add("tests")
 
             test_dirs.update(_collect_verify_harness_targets(project_root, modified_files))
+            test_dirs = _dedupe_covered_test_targets(test_dirs)
             if test_dirs:
                 test_args = sorted(test_dirs)
                 print(f"ℹ️ Chỉ chạy test cho các package bị ảnh hưởng: {test_args}")

@@ -18,6 +18,7 @@ Tests:
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -496,3 +497,162 @@ def test_compute_file_lf_sha256_and_provenance_fail_closed(
     assert check_harness_git_provenance(
         tmp_path, bad_sha, ["doc_lf.md"], expected_sha256={"doc_lf.md": "0" * 64}
     ) == ["doc_lf.md"]
+
+
+def _init_fake_hub_repo(root: Path, files: tuple[str, ...]) -> None:
+    """Create an isolated Hub-like git repository with pyproject.toml and contract files."""
+    from ccba_harness.verifier import _git_clean_env
+
+    env = _git_clean_env()
+    subprocess.run(["git", "init"], cwd=str(root), env=env, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://github.com/vvChu/ccba-agent-platform.git"],
+        cwd=str(root),
+        env=env,
+        capture_output=True,
+        check=True,
+    )
+    (root / "pyproject.toml").write_text("[tool.pytest.ini_options]\n", encoding="utf-8")
+    for rel in files:
+        fpath = root / rel
+        fpath.parent.mkdir(parents=True, exist_ok=True)
+        fpath.write_text("# stub\n", encoding="utf-8")
+
+
+def test_skill_contract_ssot_paths_exist_on_hub() -> None:
+    """Verify all SSOT live-skill contract test files exist at the Hub repository root."""
+    from ccba_harness.verifier import SKILL_CONTRACT_TEST_PATHS
+
+    hub_root = Path(__file__).resolve().parents[3]
+    assert len(SKILL_CONTRACT_TEST_PATHS) == 10
+    for rel_path in SKILL_CONTRACT_TEST_PATHS:
+        assert (hub_root / rel_path).is_file(), f"Missing SSOT contract test: {rel_path}"
+
+
+def test_preset_skill_and_ci_include_ssot_and_pyproject(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify skill/ci presets include SSOT pytest targets on Hub and safely filter on non-Hub."""
+    from ccba_harness.verifier import SKILL_CONTRACT_TEST_PATHS, shell_command_to_argv
+
+    hub_root = Path(__file__).resolve().parents[3]
+    for target in (None, ".agents/skills/ccba-new-feature/SKILL.md"):
+        cmds = resolve_preset_commands("skill", target=target, cwd=hub_root)
+        pytest_cmds = [c for c in cmds if " -m pytest " in c]
+        assert len(pytest_cmds) == 1
+        argv = shell_command_to_argv(pytest_cmds[0], cwd=hub_root)
+        assert "-c" in argv and (hub_root / "pyproject.toml").as_posix() in argv
+        for rel in SKILL_CONTRACT_TEST_PATHS:
+            assert rel in argv
+
+    ci_cmds = resolve_preset_commands("ci", cwd=hub_root)
+    ci_pytest = [c for c in ci_cmds if " -m pytest " in c]
+    assert len(ci_pytest) == 1
+    ci_argv = shell_command_to_argv(ci_pytest[0], cwd=hub_root)
+    assert "-c" in ci_argv and (hub_root / "pyproject.toml").as_posix() in ci_argv
+    assert ci_argv.count("tests/governance/") == 1
+    for rel in SKILL_CONTRACT_TEST_PATHS:
+        if rel.startswith("tests/governance/"):
+            assert rel not in ci_argv
+        else:
+            assert ci_argv.count(rel) == 1
+
+    non_hub_cmds = resolve_preset_commands("skill", cwd=tmp_path)
+    assert not any(" -m pytest " in c for c in non_hub_cmds)
+    assert "Skipping absent skill contract test path(s)" in capsys.readouterr().err
+
+
+def test_preset_skill_and_ci_hub_fail_closed_on_missing_ssot(tmp_path: Path) -> None:
+    """Verify Hub repos fail closed when any SSOT skill or governance path is missing."""
+    from ccba_harness.verifier import SKILL_CONTRACT_TEST_PATHS
+
+    _init_fake_hub_repo(tmp_path, SKILL_CONTRACT_TEST_PATHS)
+    root_test = tmp_path / "tests" / "test_upstream_workflows.py"
+    root_test.unlink()
+
+    with pytest.raises(ValueError, match="tests/test_upstream_workflows.py"):
+        resolve_preset_commands("skill", cwd=tmp_path)
+
+    assert run_verify_patch_cli(["--preset", "skill", "--cwd", str(tmp_path)]) == 1
+    assert (
+        run_verify_patch_cli(
+            ["--preset", "skill", "--cwd", str(tmp_path), "--json", "--semantic-exit-codes"]
+        )
+        == 2
+    )
+
+    root_test.write_text("# restored\n", encoding="utf-8")
+    (tmp_path / "tests" / "governance" / "test_orchestrator_parity.py").unlink()
+    with pytest.raises(ValueError, match="tests/governance/test_orchestrator_parity.py"):
+        resolve_preset_commands("ci", cwd=tmp_path)
+
+
+def test_verify_patch_execution_runs_skill_preset_at_git_toplevel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify preset commands run at Hub toplevel even when invoked from a subdirectory."""
+    from ccba_harness import verifier
+
+    hub_root = Path(__file__).resolve().parents[3]
+    hub_subdir = hub_root / "packages" / "ccba-harness"
+    captured: list[tuple[str, Path | str | None]] = []
+
+    def _fake_exec(command: str, cwd: Path | str | None, timeout: float) -> CommandResult:
+        captured.append((command, cwd))
+        return CommandResult(command=command, exit_code=0, passed=True, duration_ms=1.0)
+
+    monkeypatch.setattr(verifier, "_execute_single_command", _fake_exec)
+    report = verify_patch_execution(
+        commands=['"python" -c "pass"'],
+        preset="skill",
+        cwd=hub_subdir,
+    )
+    assert report.all_passed is True
+    assert captured[0][1] == hub_subdir
+    assert len(captured) > 1
+    for _, exec_cwd in captured[1:]:
+        assert exec_cwd == hub_root
+
+
+def test_cli_verify_patch_self_heal_uses_hub_toplevel_from_subdir(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify --self-heal anchors SelfHealingEngine base_dir to git toplevel for skill/ci presets."""
+    from ccba_harness import healing, verifier
+
+    hub_root = Path(__file__).resolve().parents[3]
+    hub_subdir = hub_root / "packages" / "ccba-harness"
+    seen_base_dirs: list[Path] = []
+
+    def _fake_verify_patch(**_kwargs: object) -> PatchVerificationReport:
+        return PatchVerificationReport(
+            all_passed=False,
+            total_commands=1,
+            passed_count=0,
+            failed_count=1,
+            total_duration_ms=1.0,
+            results=[CommandResult(command="cmd", exit_code=1, passed=False, duration_ms=1.0)],
+        )
+
+    class _DummyHealResult:
+        final_verification_report = None
+
+        def to_dict(self) -> dict[str, object]:
+            return {"all_passed": False, "results": []}
+
+        def to_markdown(self) -> str:
+            return "# Heal Report\n"
+
+    class _DummyHealer:
+        def __init__(self, base_dir: Path, max_iterations: int = 3) -> None:
+            seen_base_dirs.append(base_dir)
+
+        def attempt_closed_loop_healing(self, **_kwargs: object) -> _DummyHealResult:
+            return _DummyHealResult()
+
+    monkeypatch.setattr(verifier, "verify_patch_execution", _fake_verify_patch)
+    monkeypatch.setattr(healing, "SelfHealingEngine", _DummyHealer)
+
+    code = run_verify_patch_cli(["--preset", "skill", "--self-heal", "--cwd", str(hub_subdir)])
+    assert code == 1
+    assert seen_base_dirs == [hub_root]
