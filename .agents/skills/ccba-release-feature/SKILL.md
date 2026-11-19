@@ -11,7 +11,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.6"
+  version: "1.3.7"
   author: "CCBA Hub"
 triggers:
 - release
@@ -54,15 +54,19 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    - **Tại Hub Platform (`ccba-agent-platform`):**
      ```bash
      python scripts/eval/run_isolated_tests.py --all --stress
+     # Nếu chạy trong isolated git worktree (không có .venv/ cục bộ — get_venv_python() trong
+     # scripts/eval/process_safety.py sẽ fallback về sys.executable hệ thống):
+     # Tìm thư mục gốc bằng `git rev-parse --path-format=absolute --git-common-dir` rồi chạy bằng `.venv` của repo gốc:
+     <main-repo>/.venv/bin/python scripts/eval/run_isolated_tests.py --all --stress
      ```
    - **Tại Spoke (Pháp điển / Knowledge Corpus / Specialized Spokes):**
      ```bash
      # Nếu spoke có script kiểm định chuyên sâu:
      python scripts/validate_legal_spoke.py
-     # hoặc chạy toàn bộ test cô lập cục bộ:
+     # hoặc chạy toàn bộ test cô lập cục bộ (dùng scripts/.venv/bin/python nếu .venv nằm trong scripts/):
      python scripts/eval/run_isolated_tests.py --all
      ```
-   - Nếu có bài test nào thất bại, Agent **phải dừng quy trình release ngay lập tức** để sửa lỗi.
+   - Nếu có bài test nào thất bại (hoặc xuất hiện lỗi thiếu module từ Python hệ thống do chạy trong `git worktree`), Agent **phải dừng quy trình release ngay lập tức** để kiểm tra interpreter `.venv` và sửa lỗi.
 
 3. **Cổng 0.3 — Hàng rào Thu hồi Tệp tạm Sau Kiểm thử (Post-Test Scoped Teardown Gate):**
    - *Bắt buộc kiểm tra:* Sau khi bài test chạy xong, đối soát delta trạng thái working tree. Tự động thu hồi an toàn các cache kiểm thử đã biết (`embeddings.npy`, `ci_log.txt`, `tmp_*.json`) và chặn đứng nếu có test suite sửa đổi mã nguồn:
@@ -73,7 +77,7 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
 
 ---
 
-**Tiêu chí hoàn thành:** Cổng 0.1 sạch 100%, 100% bài kiểm thử Cổng 0.2 pass, và Cổng 0.3 dọn dẹp buồng kín thành công.
+**Tiêu chí hoàn thành:** Cổng 0.1 sạch 100%, 100% bài kiểm thử Cổng 0.2 pass (xác minh chạy bằng Python của `.venv` repo gốc khi ở trong `git worktree`), và Cổng 0.3 dọn dẹp buồng kín thành công.
 
 ---
 
