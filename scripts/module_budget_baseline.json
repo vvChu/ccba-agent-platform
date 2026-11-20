@@ -1,0 +1,12 @@
+{
+  "scripts/governance/audit_skills_hygiene.py": 819,
+  "scripts/governance/compile_catalog.py": 1519,
+  "scripts/scaffolding/skill_generator.py": 801,
+  "scripts/spoke/ccba_m365_bridge.py": 829,
+  "scripts/spoke/check_spoke_cleanliness.py": 941,
+  "scripts/spoke/spoke_bootstrap.py": 867,
+  "scripts/spoke/sync/coordinator.py": 1837,
+  "scripts/spoke/sync/sdk_inspector.py": 838,
+  "scripts/spoke/upstream_evaluator.py": 1740,
+  "scripts/sync_hub_adr_matrix.py": 814
+}

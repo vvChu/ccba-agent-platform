@@ -85,6 +85,12 @@ class TestGuardrailCopier:
             "applies_to": ["python"],
         },
         {
+            "name": "_module_size_budget.py",
+            "src": "packages/ccba-harness/src/ccba_harness/_module_size_budget.py",
+            "dest": "scripts/_guardrails/_module_size_budget.py",
+            "applies_to": ["python"],
+        },
+        {
             "name": "pre-commit",
             "src": ".githooks/pre-commit",
             "dest": ".githooks/pre-commit",

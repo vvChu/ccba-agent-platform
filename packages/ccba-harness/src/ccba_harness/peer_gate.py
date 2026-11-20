@@ -29,6 +29,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._module_size_budget import (
+    DEFAULT_PRODUCTION_ROOTS,
+    evaluate_module_budgets,
+    iter_production_files,
+)
 from .peer import PeerVerdictBlock, render_verdict_header
 
 QUARANTINE_PATTERN = re.compile(
@@ -305,26 +310,53 @@ def _evaluate_module_line_budgets(
     ws: Path, py_files: list[Path], baseline: dict[str, int], hard_lines: int
 ) -> list[str]:
     """Evaluates line counts of package modules against baseline ratchet or hard limit."""
-    violations: list[str] = []
-    for py_file in py_files:
-        rel_posix = py_file.relative_to(ws).as_posix()
-        try:
-            line_count = len(py_file.read_text(encoding="utf-8").splitlines())
-        except Exception as exc:
-            violations.append(f"{rel_posix}: cannot read file: {exc}")
-            continue
+    return evaluate_module_budgets(ws, py_files, baseline, hard_lines)
 
-        if rel_posix in baseline:
-            allowed_baseline = baseline[rel_posix]
-            if line_count > allowed_baseline:
-                violations.append(
-                    f"{rel_posix}: ratchet violation ({line_count} lines > committed baseline {allowed_baseline})"
-                )
-        elif line_count > hard_lines:
-            violations.append(
-                f"{rel_posix}: hard cap exceeded ({line_count} lines > {hard_lines} LOC limit)"
-            )
-    return violations
+
+def _load_baseline_json(path: Path) -> tuple[dict[str, int], str | None]:
+    """Loads a module budget baseline JSON mapping cleanly or returns an error string."""
+    if not path.is_file():
+        return {}, None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {}, f"Failed to parse module budget baseline JSON: {exc}"
+    if not isinstance(raw, dict):
+        return {}, f"Failed to parse module budget baseline JSON: expected object at {path}"
+    return {str(k): int(v) for k, v in raw.items()}, None
+
+
+def _eval_budget_pairs(
+    ws: Path, scopes: list[tuple[tuple[str, ...], Path]], hard_lines: int
+) -> tuple[int, list[str], str | None]:
+    """Evaluates (roots, baseline_file) scopes and merges counts, violations, and errors."""
+    total_files = 0
+    violations: list[str] = []
+    for roots, base_file in scopes:
+        baseline, err = _load_baseline_json(base_file)
+        if err:
+            return total_files, violations, err
+        files = iter_production_files(ws, roots)
+        total_files += len(files)
+        violations.extend(evaluate_module_budgets(ws, files, baseline, hard_lines))
+    return total_files, violations, None
+
+
+def _resolve_budget_scopes(
+    ws: Path, baseline_path: Path | None
+) -> list[tuple[tuple[str, ...], Path]] | None:
+    """Resolves (roots, baseline_file) pairs for Hub, Spoke, or explicit baseline checks."""
+    if baseline_path is not None:
+        return [(DEFAULT_PRODUCTION_ROOTS, baseline_path.resolve())]
+    if (ws / "packages").is_dir():
+        scopes: list[tuple[tuple[str, ...], Path]] = [
+            (("packages/*/src",), Path(__file__).parent / "module_budget_baseline.json")
+        ]
+        if (ws / "scripts").is_dir():
+            scopes.append((("scripts",), ws / "scripts" / "module_budget_baseline.json"))
+        return scopes
+    spoke_base = ws / "scripts" / "_guardrails" / "module_budget_baseline.json"
+    return [(DEFAULT_PRODUCTION_ROOTS, spoke_base)] if spoke_base.is_file() else None
 
 
 def check_module_size_budget(
@@ -334,42 +366,27 @@ def check_module_size_budget(
     hard_lines: int = 800,
 ) -> GateCheck:
     """Enforces static module line budget and anti-god-module ratchet (ADR-0061 / ADR-0066)."""
+    _ = warn_lines
     t0 = time.time()
     ws = workspace_dir.resolve() if workspace_dir else Path.cwd().resolve()
-    base_file = (
-        baseline_path.resolve()
-        if baseline_path
-        else Path(__file__).parent / "module_budget_baseline.json"
-    )
-    baseline: dict[str, int] = {}
-    if base_file.exists():
-        try:
-            baseline = json.loads(base_file.read_text(encoding="utf-8"))
-        except Exception as exc:
-            err_msg = f"Failed to parse module budget baseline JSON: {exc}"
-            return GateCheck(
-                name="module_size_budget",
-                passed=False,
-                exit_code=1,
-                stdout_tail=err_msg,
-                duration_ms=int((time.time() - t0) * 1000),
-            )
-
-    packages_dir = ws / "packages"
-    if not packages_dir.exists():
+    scopes = _resolve_budget_scopes(ws, baseline_path)
+    if scopes is None:
         return GateCheck(
             name="module_size_budget",
             passed=True,
             exit_code=0,
-            stdout_tail="No packages directory found in workspace.",
+            stdout_tail="No Spoke module_budget_baseline.json found.",
             duration_ms=int((time.time() - t0) * 1000),
         )
-
-    py_files = sorted(packages_dir.glob("*/src/**/*.py"), key=lambda p: p.as_posix())
-    violations = _evaluate_module_line_budgets(ws, py_files, baseline, hard_lines)
-    passed = len(violations) == 0
-    ok_msg = f"All analyzed modules ({len(py_files)} files) satisfy module size budget (<= {hard_lines} LOC / ratchet)."
-    tail = "\n".join(violations[:10]) if violations else ok_msg
+    total_files, violations, parse_err = _eval_budget_pairs(ws, scopes, hard_lines)
+    passed = not parse_err and not violations
+    tail = (
+        parse_err
+        if parse_err
+        else "\n".join(violations[:10])
+        if violations
+        else f"All analyzed modules ({total_files} files) satisfy module size budget (<= {hard_lines} LOC / ratchet)."
+    )
     return GateCheck(
         name="module_size_budget",
         passed=passed,

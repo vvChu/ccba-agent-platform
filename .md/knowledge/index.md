@@ -33,6 +33,7 @@
 
 ## 🏗️ 3. Quyết Định Kiến Trúc & Thiết Kế (Architecture & ADRs)
 
+- [decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md](decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md): **[MỚI]** Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai Đợt 1 Xuyên Trục (`Q1`–`Q4`, `H1 + I1 + I2`): Tier-0 `_module_size_budget.py` Đa Layout Ratchet, Khóa Trần `30` PY + `2` JS Monoliths & Ruff 2 Tầng trên `IDOP-CCBA-WAY`, cùng `4` Định Lý `Hypothesis` QCTK 2815 Điều 11 (`0-flake`).
 - [decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md](decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md): **[COMPLETED]** Biên Bản Phỏng Vấn Grilling & Nghiệm Thu 2 Đợt (`Q1`–`Q5`, `PR #822..#830`): Hub Hygiene (`nightly-slow-tests.yml` + `6` nhánh), Cài Runner ARM64 `vvc-second-brain` & Sync `6/6` Spokes (`PR #253`/`#60`/`#145`), Bước B Spoke CI (`PR #254`/`#61`), và Hoàn Tất Wave 4 Monolith Zero (`0/7`, `module_budget_baseline.json == {}`, `8,670 -> 0 LOC` ratchet, đóng `[FOG-003]`).
 - [decisions/2026-11-18_workspace_maskara_ooxml_grilling_resolution.md](decisions/2026-11-18_workspace_maskara_ooxml_grilling_resolution.md): **[COMPLETED]** Biên Bản Phỏng Vấn Grilling & Nghiệm Thu Thực Thi 3 Ứng Viên Làm Sâu Seam Workspace/Hub, Maskara & OOXML (`PR #804..#808`: `resolve_workspace_and_hub_roots` `6.17 ms` / `10` adapters, `redact_secrets_and_pii` `3` dialects + `PII_REGEX_PATTERNS`, `ParsedOOXMLPackage` `16` unpacked parses / `0% parser=None` / `5.65 ms` & ZIP SHA-256 tất định).
 - [decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md](decisions/2026-11-16_harness_agent_envelope_grilling_resolution.md): **[MỚI]** Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai Clean-Room Agent-First JSON Envelope, `next_actions` & Semantic Exit Codes cho `ccba-harness` (`Q1`–`Q4`, `ADR-0067`).
@@ -121,6 +122,7 @@
 - [brainstorm_session_software_micro_agent.md](brainstorm_session_software_micro_agent.md): Biên bản thảo luận ý tưởng Micro-Agent phần mềm.
 - [brainstorm_session_tvpl_vip_knowledge_pipeline.md](brainstorm_session_tvpl_vip_knowledge_pipeline.md): Biên bản thảo luận pipeline tri thức TVPL VIP.
 - [brainstorm_skills_eval_legal_guardrails.md](brainstorm_skills_eval_legal_guardrails.md): Biên bản thảo luận rào chắn an toàn cho Legal Skills.
+- [brainstorm_session_lauren_tan_ccba_dune_idop.md](brainstorm_session_lauren_tan_ccba_dune_idop.md): Biên bản phiên brainstorming (Party Mode) đối chiếu triết lý "All Code Is Slop" (Lauren Tan) với 5 codebase CCBA/IBST, chiến lược cắt giảm prose SKILL.md và lộ trình 7 lát cắt P4 (Hub -> IDOP-CCBA-WAY).
 
 ---
 

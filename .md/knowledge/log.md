@@ -2,6 +2,20 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Đợt 1 Xuyên Trục `CCBA Dune × IDOP` (`H1 + I1 + I2`)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling`)
+- **Affected Files**: [decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md](decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling` và **Grok Peer Plan Audit 3 Pass** (`APPROVE_PLAN`, `blocking_conditions: 0`, session `43813d0a-22bd-4626-8dc1-b17d4f5b63ea`), khóa cứng `4/4` quyết định thiết kế (`Q1`–`Q4`) cho Đợt 1 xuyên trục (`PR-H1 -> PR-I1a -> PR-I1b -> PR-I2`): kiến trúc Pure-Stdlib Tier-0 Seam `_module_size_budget.py` (`6` root × `4` đuôi, tương thích ngược `--strict` đa Spoke), miễn trừ codegen `models.py` & khóa ratchet `.py/.js` (`scripts/_guardrails/module_budget_baseline.json` trên IDOP + `scripts/module_budget_baseline.json` trên Hub), chiến lược Ruff 2 tầng (ghim `ruff==0.16.8` + `I,UP` diff loại trừ `_guardrails/` ở `I1a`, bật `E,W,F,B,C4,TID251` + `67` sửa trong `I1b`), và `4` định lý `Hypothesis` (`hypothesis==6.170.17`, `derandomize=True, database=None, max_examples=100`) cho `split_vnd`, 3 tầng QCTK 2815, Gate 4 `90/10` + `A1` và `format_contract_composite_title`.
+
+---
+
+## [2026-11-20] [synthesize] | Tổng Hợp Phiên Brainstorming Lauren Tan ("All Code Is Slop") × Kiến Trúc 5 Codebase CCBA WAY (`P4: Hub -> IDOP`)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-ask` Party Mode)
+- **Affected Files**: [brainstorm_session_lauren_tan_ccba_dune_idop.md](brainstorm_session_lauren_tan_ccba_dune_idop.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Đúc kết phiên brainstorming 4 vòng đối chiếu bài nói của Lauren Tan (`O_zcc6Xl12g`) với số liệu thực đo trên 5 kho mã (`ccba-agent-platform`, `IDOP-CCBA-WAY`, `dgx-spark-toolkit`, `ccba-legal-knowledge`, `IBST_UNIFIED_ERP`); xác lập lộ trình 7 lát cắt nguyên tử `H1..H4` (Multi-layout module ratchet, `Ruff TID251` + Seam fix-hints, SHA-256 guardrail sync, cắt giảm prose `SKILL.md` & thi hành `scope` `ADR-0066`) và `I1..I3` (đóng băng 31 monoliths + `ruff` CI, `Hypothesis` bất biến dòng tiền QCTK 2815 & DLQ, Playwright Cockpit evidence cô lập).
+
+---
+
 ## [2026-11-20] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Đợt 1 Hub/Spoke CI & Đợt 2 Monolith Zero `0/7` (`PR #822..#831`, `RULE-2.1`, `RULE-2.20`, `RULE-5.11`, Mục 73)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
