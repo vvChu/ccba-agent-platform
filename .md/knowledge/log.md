@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-20] [update] | Hoàn Tất Đợt 2 Wave 4 — Monolith Zero (0/7) & Đóng `[FOG-003]` (`PR #823..#830`)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `packages/ccba-harness/src/ccba_harness/module_budget_baseline.json`, `packages/ccba-ooxml/src/ccba_ooxml/pptx/`, `packages/ccba-harness/src/ccba_harness/`, `packages/ccba-legal-intel/src/ccba_legal/`, `.md/knowledge/decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất Đợt 2 (Wave 4 Monolith Zero `0/7`, Grok Audit `APPROVE_PLAN` `blocking_conditions: 0` sessions `abed9168`/`8b01bb0c`/`7fe2756a`) qua `8` PR tuần tự merge về `main` với `8/8` CI xanh: `PR #823` (`_workspace_roots.py` mypy fix), `PR #824` (`inventory.py`), `PR #825` (`deck_builder.py`), `PR #826` (`fleet.py`), `PR #827` (`_file_monitor.py`), `PR #828` (`_process_monitor.py`), `PR #829` (`cli.py`), `PR #830` (`registry.py` + xóa mục cuối khỏi `module_budget_baseline.json` $\rightarrow$ `{}`, giảm `8,670 -> 0 LOC` ratchet, đóng `[FOG-003]`, `0` `# ccba:quarantine`, không chạm top-level `__init__.py`). Kiểm định toàn monorepo sau `PR #830` (`75683856`): `verify-patch --preset ci` `7/7 PASS` (`18.59s`), `run_verify_ooxml.py` `6 passed`, `run_verify_harness.py` `8 passed`, `run_verify_legal_intel.py` `6 passed`, `run_harness_evals.py --all --ci-matrix` `4/4 gates PASS`.
+
+---
+
 ## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q5`) & Tối Ưu `nightly-slow-tests.yml` (Mở Đầu Đợt 1)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `.github/workflows/nightly-slow-tests.yml`, `.md/knowledge/decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
