@@ -105,13 +105,16 @@ def load_workspace_context_dict(ctx_file: Path) -> dict[str, Any]:
         content = ctx_file.read_text(encoding="utf-8")
     except OSError:
         return {}
+    yaml_mod: Any = None
     try:
-        import yaml
+        import yaml as _yaml
+
+        yaml_mod = _yaml
     except ImportError:
-        yaml = None
-    if yaml is not None:
+        yaml_mod = None
+    if yaml_mod is not None:
         try:
-            loaded = yaml.safe_load(content)
+            loaded = yaml_mod.safe_load(content)
             return loaded if isinstance(loaded, dict) else {}
         except Exception:
             return {}
