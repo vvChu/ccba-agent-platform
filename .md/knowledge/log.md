@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-20] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Đợt 1 Hub/Spoke CI & Đợt 2 Monolith Zero `0/7` (`PR #822..#831`, `RULE-2.1`, `RULE-2.20`, `RULE-5.11`, Mục 73)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity
+- **Affected Files**: `.md/knowledge/session_learnings.md`, `.md/knowledge/archive/session_learnings_history.md`, `.md/knowledge/log.md`
+- **Summary**: Hoàn tất retrospective Mục 73 cho phiên `e62fa08f-42e0-4d2b-8257-4a24b7d2bf77` (`730` steps telemetry / `731` dòng log, `243` turns, `46,929,951` tổng tokens, `59.17791 USD`; `2` lỗi `status == "ERROR"` tự phục hồi sạch, `0` `CLEARED`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `0` cases) bao phủ trọn Đợt 1 (`PR #822` + runner ARM64 + `6/6` Spokes + Bước B CI `PR #254`/`#61`) và Đợt 2 (`PR #823..#831` Monolith Zero `0/7`, `module_budget_baseline.json == {}`, đóng `[FOG-003]`): kết tinh vào `RULE-2.1`, `RULE-2.20`, `RULE-5.11` trong `.md/knowledge/session_learnings.md` (`<= 10.0 KB`, `0` dropped rules) cùng `Mục 73` trong `.md/knowledge/archive/session_learnings_history.md`; kiểm toán tiến hóa kỹ năng giữ nguyên `0` sửa đổi `SKILL.md` theo bộ lọc `already-covered` và *Prefer Deterministic Checks*.
+
+---
+
 ## [2026-11-20] [update] | Hoàn Tất Đợt 2 Wave 4 — Monolith Zero (0/7) & Đóng `[FOG-003]` (`PR #823..#830`)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: `packages/ccba-harness/src/ccba_harness/module_budget_baseline.json`, `packages/ccba-ooxml/src/ccba_ooxml/pptx/`, `packages/ccba-harness/src/ccba_harness/`, `packages/ccba-legal-intel/src/ccba_legal/`, `.md/knowledge/decisions/2026-11-20_hub_hygiene_spoke_ci_monolith_zero_grilling_resolution.md`, `.md/knowledge/index.md`, `.md/knowledge/log.md`
