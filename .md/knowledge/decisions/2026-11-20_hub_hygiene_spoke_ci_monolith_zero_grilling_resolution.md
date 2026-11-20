@@ -37,3 +37,27 @@
   3. **Wave 3:** Thực thi Bước B tối ưu CI cục bộ cho `IDOP-CCBA-WAY`, `dgx-spark-toolkit` (`-n 4 --dist=loadfile` qua Rollback Gate `>= 25%` / `0` flake) và `ccba-legal-knowledge` (`uv` + cache `5` jobs).
 - **Checkpoint Đợt 1 $\to$ Đợt 2:** Báo cáo thực đo trạng thái sạch `6/6` Spokes và đối chiếu thời gian CI trước/sau.
 - **Đợt 2 (Wave 4 — `0/7` Monoliths):** Khởi chạy Grok Peer Audit (`audit_plan` $\to$ `signoff_diff`), sau đó triển khai `7` Micro-PRs + `1` Rollup PR qua 3 chặng `4A` (`inventory.py`, `deck_builder.py`) $\to$ `4B` (`fleet.py`, `_file_monitor.py`, `_process_monitor.py`) $\to$ `4C` (`cli.py`, `registry.py` `[FOG-003]`).
+
+---
+
+## 4. Nghiệm Thu Thực Thi (Đợt 1 & Đợt 2 — `COMPLETED`, Monolith Zero `0/7`)
+
+- **Trạng thái tổng thể:** `COMPLETED` — cả `Đợt 1` (Waves 1–3) và `Đợt 2` (Wave 4 Monolith Zero `0/7`, đóng `[FOG-003]`) đã hoàn tất và merge về `main` với `8/8` GitHub CI checks xanh.
+- **Đợt 1 (Waves 1–3):**
+  - `PR #822` (`e8f10c84`): Hub Hygiene ([nightly-slow-tests.yml](../../../.github/workflows/nightly-slow-tests.yml) + xóa `6` nhánh `origin/*` đã merge).
+  - Spoke Sync & Wave 3 CI: cài runner `actions-runner-vvc-second-brain.service` (`systemd --user`), đồng bộ `6/6` Spokes (`PR #253`, `#60`, `#145` + local commits trên `IBST_UNIFIED_ERP` & `ctymmt_ai_native_organization`) và tối ưu CI Spoke (`PR #254`, `#61`).
+- **Đợt 2 — Grok Peer Plan Audit:** `APPROVE_PLAN`, `blocking_conditions: 0` (sessions `abed9168`, `8b01bb0c`, `7fe2756a-8482-4d51-82b1-044cc4308b2f`; hồ sơ đối soát tại `.md/peer_exchange/grok_monolith_zero_wave4_signoff_p3.md`).
+- **Chuỗi Micro-PR Wave 4 (`PR-M0` .. `PR-M7`) đã merge vào `main`:**
+  - `PR #823` (`e89526a7`, `PR-M0`): sửa `mypy` upstream trong [_workspace_roots.py](../../../packages/ccba-harness/src/ccba_harness/_workspace_roots.py) (`yaml_mod: Any = None`).
+  - `PR #824` (`5df33743`, `PR-M1`): phân rã [inventory.py](../../../packages/ccba-ooxml/src/ccba_ooxml/pptx/inventory.py) (`1,033 LOC`) thành facade + `_inventory_models.py`, `_inventory_metrics.py`, `_inventory_geometry.py` (`7 -> 6`).
+  - `PR #825` (`3b26d6d8`, `PR-M2`): phân rã [deck_builder.py](../../../packages/ccba-ooxml/src/ccba_ooxml/pptx/deck_builder.py) (`1,586 LOC`) thành facade + `_deck_models.py`, `_deck_parser.py`, `_deck_render_basic.py`, `_deck_render_complex.py` (`6 -> 5`).
+  - `PR #826` (`bad936c8`, `PR-M3`): phân rã [fleet.py](../../../packages/ccba-harness/src/ccba_harness/fleet.py) (`1,024 LOC`) thành facade + `_fleet_scanner.py`, `_fleet_charts.py`, `_fleet_html.py` (`5 -> 4`).
+  - `PR #827` (`d9d81b17`, `PR-M4`): phân rã [_file_monitor.py](../../../packages/ccba-harness/src/ccba_harness/_file_monitor.py) (`1,127 LOC`, `AUTHZ_SECURITY`) thành facade + `_file_path_utils.py`, `_file_sensitive_eval.py`, `_file_ast_scanner.py` (`4 -> 3`).
+  - `PR #828` (`80a1303b`, `PR-M5`): phân rã [_process_monitor.py](../../../packages/ccba-harness/src/ccba_harness/_process_monitor.py) (`1,185 LOC`, `AUTHZ_SECURITY`) thành facade + `_proc_shell_parser.py`, `_proc_guard_checks.py`, `_proc_wrappers.py` (`3 -> 2`).
+  - `PR #829` (`4e91f75c`, `PR-M6`): phân rã [cli.py](../../../packages/ccba-legal-intel/src/ccba_legal/cli.py) (`1,455 LOC`, `CROSS_SPOKE_CONTRACT`) thành facade + `_cli_parser.py`, `_cli_crawl_handlers.py`, `_cli_pipeline_handlers.py`, `_cli_query_handlers.py` (`2 -> 1`).
+  - `PR #830` (`75683856`, `PR-M7`): phân rã [registry.py](../../../packages/ccba-legal-intel/src/ccba_legal/registry.py) (`1,242 LOC`, `CROSS_SPOKE_CONTRACT`) thành facade (`258 LOC`) + `_registry_discovery.py` (`181 LOC`), `_registry_lifecycle.py` (`461 LOC`), `_registry_query.py` (`350 LOC`) và đưa [module_budget_baseline.json](../../../packages/ccba-harness/src/ccba_harness/module_budget_baseline.json) về `{}` (`0/7`, `8,670 -> 0 LOC` ratchet, đóng `[FOG-003]`).
+- **Kết quả Kiểm định Toàn Monorepo sau `PR #830` (`75683856`):**
+  - Không chỉnh sửa bất kỳ top-level `__init__.py` nào (`0` `# ccba:quarantine`, `check_ast_function_length` & `check_module_size_budget` xanh).
+  - `verify-patch --preset ci`: **7/7 PASS** (`18,593.0 ms`: ruff check, ruff format, `mypy packages/*/src`, pytest, `validate_skills.py --enforce-gpi`, `compile_catalog.py --check`, `sync_hub_adr_matrix.py --check`).
+  - Profile-B Verifiers: `run_verify_ooxml.py` (**6 passed**, `0.07s`), `run_verify_harness.py` (**8 passed**, `0.30s`), `run_verify_legal_intel.py` (**6 passed**, `0.10s`).
+  - `scripts/eval/run_harness_evals.py --all --ci-matrix`: **4/4 gates PASS** (`Ruff Lint`, `Ruff Format`, `Mypy Typecheck`, `Pytest Unit Tests`).
