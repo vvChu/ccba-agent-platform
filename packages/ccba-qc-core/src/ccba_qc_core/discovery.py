@@ -13,7 +13,7 @@ from typing import Any
 
 from ccba_ai import async_ai, parse_llm_json
 from ccba_ai.routing import ModelArchetype
-from ccba_pdf_prep import PDFAnalyzer, PDFCategory, TitleBlockDetector
+from ccba_pdf_prep import PDFAnalyzer, PDFCategory, TitleBlockDetector, get_pdf_page_count
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class DiscoveryEngine:
     def find_index_pages(self, pdf_path: Path, search_limit: int = 15) -> list[int]:
         """Find pages containing a drawing index table."""
         os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
-        import pymupdf as fitz  # ccba:allow-raw-bypass (low-level drawing index text scan)
+        import pymupdf as fitz  # ccba:allow-raw-bypass (low-level drawing index text scan)  # noqa: TID251
 
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {pdf_path}")
@@ -107,12 +107,7 @@ class DiscoveryEngine:
         dpi: int = 200,
     ) -> list[tuple[int, Path]]:
         """Extract title block images from drawing pages."""
-        os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
-        import pymupdf as fitz  # ccba:allow-raw-bypass (low-level page count inspection)
-
-        doc = fitz.open(str(pdf_path))
-        total = len(doc)
-        doc.close()
+        total = get_pdf_page_count(pdf_path)
 
         pages = list(page_range) if page_range else list(range(total))
         results: list[tuple[int, Path]] = []

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def _get_fitz() -> Any:
     """Configure PYMUPDF_MESSAGE=fd:2 and lazily load pymupdf."""
     os.environ.setdefault("PYMUPDF_MESSAGE", "fd:2")
-    import pymupdf as fitz  # ccba:allow-raw-bypass (in-memory document cache for batch coordination)
+    import pymupdf as fitz  # ccba:allow-raw-bypass (in-memory document cache for batch coordination)  # noqa: TID251
 
     return fitz
 

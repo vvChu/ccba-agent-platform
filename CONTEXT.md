@@ -102,7 +102,7 @@ Mô thức thiết kế cốt lõi của CCBA Platform: một module công khai 
 _Avoid_: Facade (quá chung), Wrapper, Service layer
 
 **Polyglot Deep Module Enforcement (Cơ chế Cưỡng chế Module Sâu Đa Ngôn Ngữ)**:
-Chuẩn quản trị ranh giới module trong Monorepo: Đối với Python packages (`packages/*/`), bắt buộc chỉ xuất khẩu 2–3 Deep Seams qua `__all__` tại `__init__.py`, bảo vệ các submodule bằng tiền tố gạch dưới và linter (`Ruff SLF001`); đối với TypeScript packages, sử dụng `dependency-cruiser` cấm import sâu qua thư mục con `lib/`.
+Chuẩn quản trị ranh giới module trong Monorepo: Đối với Python packages (`packages/*/`), bắt buộc chỉ xuất khẩu 2–3 Deep Seams qua `__all__` tại `__init__.py`, bảo vệ các submodule tiền tố gạch dưới bằng `check_dependency_contracts.py` (`PrivateSubmoduleSeamViolation`), và cưỡng chế cấm import trực tiếp thư viện thay thế thô qua `Ruff TID251` (`banned-api`) kết hợp `check_dependency_contracts.py`; đối với TypeScript packages, sử dụng `dependency-cruiser` cấm import sâu qua thư mục con `lib/`.
 
 **Progressive Instruction Disclosure (Phân rã Chỉ dẫn Lũy tiến)**:
 Mô thức phân rã tập chỉ dẫn của Agent thành nhiều lớp độc lập: chỉ giữ mỏ neo định vị và bất biến cốt lõi tại `AGENTS.md` gốc, phân phối chi tiết nghiệp vụ và rào chắn kỹ thuật vào các tài liệu chuyên biệt (`docs/rules/*.md`) hoặc kỹ năng động để tối ưu hóa ngân sách chỉ dẫn.

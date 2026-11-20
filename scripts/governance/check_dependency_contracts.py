@@ -352,6 +352,27 @@ class DependencyASTVisitor(ast.NodeVisitor):
                 (self.current_file, line_number, root_mod, seam_id, until_str)
             )
 
+    def _format_raw_bypass(self, root_mod: str, r: SeamCardRestriction) -> str:
+        """Build violation message keeping legacy prefix and appending Seam Fix-Hints."""
+        msg = (
+            f"File '{self.current_file.name}' cannot directly import raw '{root_mod}'. "
+            f"Platform-Aware KISS requires using '{r.seam_replacement}' seam instead."
+        )
+        if ":" in r.seam_replacement:
+            pkg, sym = r.seam_replacement.split(":", 1)
+            msg += f"\n    Gợi ý thay thế: from {pkg.strip()} import {sym.strip()}"
+        card = self.card_map.get(r.seam_id)
+        cap = card.get("capability") if isinstance(card, dict) else None
+        if (
+            isinstance(cap, dict)
+            and isinstance(cap.get("in"), list)
+            and isinstance(cap.get("out"), list)
+        ):
+            if cap["in"] and cap["out"]:
+                ins, outs = ",".join(map(str, cap["in"])), ",".join(map(str, cap["out"]))
+                msg += f"\n    Tra cứu Seam: ccba-platform find-seam --in {ins} --out {outs} --json"
+        return msg
+
     def _check_raw_bypass(
         self, root_mod: str, module_name: str, line_number: int, end_line_number: int | None
     ) -> None:
@@ -372,12 +393,8 @@ class DependencyASTVisitor(ast.NodeVisitor):
             else:
                 self.legacy_bypasses.append((self.current_file, line_number, root_mod))
         else:
-            self._add_violation(
-                line_number,
-                module_name,
-                "RawThirdPartyBypassViolation",
-                f"File '{self.current_file.name}' cannot directly import raw '{root_mod}'. Platform-Aware KISS requires using '{restriction.seam_replacement}' seam instead.",
-            )
+            msg = self._format_raw_bypass(root_mod, restriction)
+            self._add_violation(line_number, module_name, "RawThirdPartyBypassViolation", msg)
 
     def _check_monorepo_boundaries(
         self, parts: list[str], root_mod: str, module_name: str, line_number: int

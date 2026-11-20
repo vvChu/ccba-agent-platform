@@ -69,12 +69,28 @@ select = [
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
+    "TID251",  # flake8-tidy-imports banned-api (ADR-0061 Seam Enforcement)
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # function call in argument defaults (Typer pattern)
     "E402",  # module level import not at top of file (pytestmark / sys.path pattern)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/ccba-ooxml/**" = ["TID251"]
+"packages/ccba-pdf-prep/**" = ["TID251"]
+"packages/ccba-legal-intel/**" = ["TID251"]
+"packages/mdconverter/**" = ["TID251"]
+"packages/ccba-diagram/**" = ["TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"fitz".msg = "Cấm import trực tiếp 'fitz'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
+"pymupdf".msg = "Cấm import trực tiếp 'pymupdf'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
+"openpyxl".msg = "Cấm import trực tiếp 'openpyxl'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' / module công khai của 'ccba_ooxml'."
+"docx".msg = "Cấm import trực tiếp 'docx'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' thay cho python-docx thô."
+"fpdf".msg = "Cấm import trực tiếp 'fpdf'. Hãy dùng Seam 'mdconverter:ConversionPipeline' hoặc 'ccba_ooxml'."
+"graphviz".msg = "Cấm import trực tiếp 'graphviz'. Hãy dùng Seam 'ccba_diagram:apply_smart_layout'."
 
 [tool.ruff.format]
 quote-style = "double"
