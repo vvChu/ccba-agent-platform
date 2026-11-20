@@ -115,17 +115,11 @@ def compile_skills(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
             "skill_path": skill_path,
         }
 
-        command = fm.get("command")
-        if command:
-            entry["command"] = str(command).strip()
-
-        package_path = fm.get("package_path")
-        if package_path:
+        for opt_key in ("command", "tier", "scope"):
+            if val := fm.get(opt_key):
+                entry[opt_key] = str(val).strip()
+        if package_path := fm.get("package_path"):
             entry["package_path"] = str(package_path).replace("\\", "/")
-
-        tier = fm.get("tier")
-        if tier:
-            entry["tier"] = str(tier).strip()
 
         compiled.append(entry)
 

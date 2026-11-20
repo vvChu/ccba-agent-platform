@@ -11,6 +11,7 @@ Covers:
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -118,9 +119,87 @@ def test_test_guardrail_copier_from_catalog(tmp_path: Path) -> None:
     assert (spoke_root / "scripts" / "custom_runner.py").exists()
     assert (spoke_root / ".githooks" / "pre-commit").exists()
 
-    # 3. Idempotent re-run
+    # 3. Idempotent re-run: manifest stays empty for non-_guardrails dests (COND-H3-UNCHANGED-FIXTURE)
     actions_idem = copier.copy_if_needed(dry_run=False)
     assert all(a["status"] == "UNCHANGED" for a in actions_idem)
+    manifest_file = spoke_root / "scripts" / "_guardrails" / "guardrails_manifest.json"
+    assert manifest_file.is_file()
+    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    assert manifest_data == {"schema_version": 1, "files": {}}
+
+
+def test_guardrail_manifest_idempotent_unchanged_and_exclusions(tmp_path: Path) -> None:
+    """Verify _guardrails/* SHA-256 stamping on NEW/UNCHANGED, exclusions, and Hub/dry_run guards."""
+    hub_root = tmp_path / "hub"
+    spoke_root = tmp_path / "spoke"
+    (hub_root / "scripts").mkdir(parents=True)
+    (hub_root / ".githooks").mkdir(parents=True)
+    (hub_root / "conftest.py").write_text("# conftest\n", encoding="utf-8")
+    (hub_root / "scripts" / "safe_pytest.py").write_text("# safe pytest\n", encoding="utf-8")
+    (hub_root / ".githooks" / "pre-commit").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    spoke_root.mkdir()
+    (spoke_root / "scripts" / "_guardrails").mkdir(parents=True)
+    (spoke_root / "scripts" / "_guardrails" / "module_budget_baseline.json").write_text(
+        "{}\n", encoding="utf-8"
+    )
+
+    catalog = {
+        "guardrails": [
+            {
+                "name": "conftest.py",
+                "src": "conftest.py",
+                "dest": "conftest.py",
+                "applies_to": ["python"],
+            },
+            {
+                "name": "safe_pytest.py",
+                "src": "scripts/safe_pytest.py",
+                "dest": "scripts/_guardrails/safe_pytest.py",
+                "applies_to": ["python"],
+            },
+            {
+                "name": "pre-commit",
+                "src": ".githooks/pre-commit",
+                "dest": ".githooks/pre-commit",
+                "applies_to": ["all"],
+            },
+            {
+                "name": "only_node.js",
+                "src": "scripts/safe_pytest.py",
+                "dest": "scripts/_guardrails/only_node.js",
+                "applies_to": ["node"],
+            },
+        ]
+    }
+    copier = TestGuardrailCopier(spoke_root, hub_root, "Phần mềm")
+    manifest_file = spoke_root / "scripts" / "_guardrails" / "guardrails_manifest.json"
+
+    # Dry run creates no manifest
+    copier.copy_if_needed(dry_run=True, catalog=catalog)
+    assert not manifest_file.exists()
+
+    # Apply records only scripts/_guardrails/safe_pytest.py
+    actions1 = copier.copy_if_needed(dry_run=False, catalog=catalog)
+    assert len(actions1) == 3
+    payload1 = json.loads(manifest_file.read_text(encoding="utf-8"))
+    assert list(payload1["files"].keys()) == ["scripts/_guardrails/safe_pytest.py"]
+
+    # Remove manifest and re-run with all UNCHANGED -> still regenerates identical digest
+    manifest_file.unlink()
+    actions2 = copier.copy_if_needed(dry_run=False, catalog=catalog)
+    assert all(a["status"] == "UNCHANGED" for a in actions2)
+    payload2 = json.loads(manifest_file.read_text(encoding="utf-8"))
+    assert payload2 == payload1
+
+    # Explicit empty guardrails leaves no new manifest
+    manifest_file.unlink()
+    assert copier.copy_if_needed(dry_run=False, catalog={"guardrails": []}) == []
+    assert not manifest_file.exists()
+
+    # Same hub/spoke root must never create scripts/_guardrails (COND-WS-TWIN)
+    hub_copier = TestGuardrailCopier(hub_root, hub_root, "Phần mềm")
+    assert hub_copier.copy_if_needed(dry_run=False, catalog=catalog) == []
+    assert not (hub_root / "scripts" / "_guardrails").exists()
 
 
 def test_test_guardrail_copier_tier0_fallback(tmp_path: Path) -> None:

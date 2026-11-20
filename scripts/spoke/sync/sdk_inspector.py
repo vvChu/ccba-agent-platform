@@ -13,6 +13,43 @@ from typing import Any
 import yaml
 
 from .base import are_text_files_identical
+from .scope_pruner import sync_guardrail_manifest
+
+_STD_GUARDRAIL_SPECS: tuple[tuple[str, str, str], ...] = (
+    ("conftest.py", "conftest.py", "conftest.py"),
+    ("safe_pytest.py", "scripts/safe_pytest.py", "scripts/_guardrails/safe_pytest.py"),
+    ("safe_runner.py", "scripts/safe_runner.py", "scripts/_guardrails/safe_runner.py"),
+    (
+        "check_hub_import_depth.py",
+        "scripts/spoke/check_hub_import_depth.py",
+        "scripts/_guardrails/check_hub_import_depth.py",
+    ),
+    (
+        "check_spoke_cleanliness.py",
+        "scripts/spoke/check_spoke_cleanliness.py",
+        "scripts/_guardrails/check_spoke_cleanliness.py",
+    ),
+    (
+        "_parameter_cleanliness.py",
+        "packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py",
+        "scripts/_guardrails/_parameter_cleanliness.py",
+    ),
+    (
+        "_workspace_roots.py",
+        "packages/ccba-harness/src/ccba_harness/_workspace_roots.py",
+        "scripts/_guardrails/_workspace_roots.py",
+    ),
+    (
+        "_module_size_budget.py",
+        "packages/ccba-harness/src/ccba_harness/_module_size_budget.py",
+        "scripts/_guardrails/_module_size_budget.py",
+    ),
+    (
+        "_guardrail_manifest.py",
+        "packages/ccba-harness/src/ccba_harness/_guardrail_manifest.py",
+        "scripts/_guardrails/_guardrail_manifest.py",
+    ),
+)
 
 
 def is_python_spoke(spoke_root: Path, project_type: str = "") -> bool:
@@ -42,70 +79,18 @@ class TestGuardrailCopier:
     # Used only when the catalog has no guardrails key (ADR-0062).
     # An explicit empty list must not fall back to this constant.
     TIER0_GUARDRAIL_FALLBACK: list[dict[str, Any]] = [
+        {"name": n, "src": s, "dest": d, "applies_to": ["python"]}
+        for n, s, d in _STD_GUARDRAIL_SPECS
+    ] + [
         {
-            "name": "conftest.py",
-            "src": "conftest.py",
-            "dest": "conftest.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "safe_pytest.py",
-            "src": "scripts/safe_pytest.py",
-            "dest": "scripts/_guardrails/safe_pytest.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "safe_runner.py",
-            "src": "scripts/safe_runner.py",
-            "dest": "scripts/_guardrails/safe_runner.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "check_hub_import_depth.py",
-            "src": "scripts/spoke/check_hub_import_depth.py",
-            "dest": "scripts/_guardrails/check_hub_import_depth.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "check_spoke_cleanliness.py",
-            "src": "scripts/spoke/check_spoke_cleanliness.py",
-            "dest": "scripts/_guardrails/check_spoke_cleanliness.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "_parameter_cleanliness.py",
-            "src": "packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py",
-            "dest": "scripts/_guardrails/_parameter_cleanliness.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "_workspace_roots.py",
-            "src": "packages/ccba-harness/src/ccba_harness/_workspace_roots.py",
-            "dest": "scripts/_guardrails/_workspace_roots.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "_module_size_budget.py",
-            "src": "packages/ccba-harness/src/ccba_harness/_module_size_budget.py",
-            "dest": "scripts/_guardrails/_module_size_budget.py",
-            "applies_to": ["python"],
-        },
-        {
-            "name": "pre-commit",
-            "src": ".githooks/pre-commit",
-            "dest": ".githooks/pre-commit",
+            "name": h,
+            "src": f".githooks/{h}",
+            "dest": f".githooks/{h}",
             "chmod": "0o755",
             "git_index": True,
             "applies_to": ["all"],
-        },
-        {
-            "name": "pre-push",
-            "src": ".githooks/pre-push",
-            "dest": ".githooks/pre-push",
-            "chmod": "0o755",
-            "git_index": True,
-            "applies_to": ["all"],
-        },
+        }
+        for h in ("pre-commit", "pre-push")
     ]
 
     def __init__(self, spoke_root: Path, hub_root: Path, project_type: str) -> None:
@@ -130,7 +115,9 @@ class TestGuardrailCopier:
              "status": "NEW" | "UPDATED" | "UNCHANGED" | "MISSING_SRC", "path": str}
         """
         actions: list[dict[str, Any]] = []
-        if not is_python_spoke(self.spoke_root, self.project_type):
+        if self._are_paths_identical(self.spoke_root, self.hub_root) or not is_python_spoke(
+            self.spoke_root, self.project_type
+        ):
             return actions
 
         guardrails_cfg = self._resolve_guardrails_config(catalog)
@@ -157,7 +144,7 @@ class TestGuardrailCopier:
         ).exists()
         if has_githooks or githooks_present:
             self._ensure_git_hook_activated(dry_run=dry_run, force=force)
-
+        sync_guardrail_manifest(self.spoke_root, self.hub_root, actions, dry_run=dry_run)
         return actions
 
     def _process_single_guardrail_entry(

@@ -33,6 +33,7 @@ from .graduation import (
     sync_layer2_rules,
 )
 from .registry import SpokeRegistrar
+from .scope_pruner import reconcile_existing_skills, should_sync_skill_to_spoke
 from .sdk_inspector import (
     LegalKnowledgeSyncOrchestrator,
     SharedSdkInspector,
@@ -842,7 +843,9 @@ class SpokeSynchronizer:
 
         for skill_entry in catalog.get("skills", []):
             skill_bundle = skill_entry.get("bundle")
-            if skill_bundle in required_bundles or skill_bundle == "_core":
+            if (
+                skill_bundle in required_bundles or skill_bundle == "_core"
+            ) and should_sync_skill_to_spoke(skill_entry):
                 skill_path_rel = skill_entry.get("skill_path")
                 skills_to_sync.append(
                     {
@@ -871,37 +874,19 @@ class SpokeSynchronizer:
         spoke_skills_dir: Path,
         synced_skill_folders: set[str],
         dry_run: bool,
+        catalog: dict[str, Any] | None = None,
+        prune_unscoped: bool = False,
     ) -> list[dict[str, Any]]:
-        """Preserve custom Spoke skills and remove deprecated skill aliases."""
-        actions: list[dict[str, Any]] = []
-        if not spoke_skills_dir.exists():
-            return actions
-        for existing_skill in sorted(spoke_skills_dir.iterdir(), key=lambda p: p.name):
-            if not existing_skill.is_dir() or existing_skill.name in synced_skill_folders:
-                continue
-            replacement = SKILL_DEPRECATION_ALIASES.get(existing_skill.name)
-            rel_path = str(existing_skill.relative_to(spoke_root))
-            if replacement and replacement in synced_skill_folders:
-                actions.append(
-                    {
-                        "type": "Skill",
-                        "name": existing_skill.name,
-                        "status": "DEPRECATED_REPLACED",
-                        "path": rel_path,
-                    }
-                )
-                if not dry_run:
-                    safe_remove(existing_skill)
-            else:
-                actions.append(
-                    {
-                        "type": "Skill",
-                        "name": existing_skill.name,
-                        "status": "PRESERVED",
-                        "path": rel_path,
-                    }
-                )
-        return actions
+        """Preserve custom Spoke skills, clean deprecated aliases, and prune hub-scoped skills."""
+        return reconcile_existing_skills(
+            spoke_root,
+            spoke_skills_dir,
+            synced_skill_folders,
+            SKILL_DEPRECATION_ALIASES,
+            catalog=catalog,
+            prune_unscoped=prune_unscoped,
+            dry_run=dry_run,
+        )
 
     def _sync_skills_phase(
         self,
@@ -909,44 +894,40 @@ class SpokeSynchronizer:
         spoke_skills_dir: Path,
         skills_to_sync: list[dict[str, Any]],
         dry_run: bool,
+        catalog: dict[str, Any] | None = None,
+        prune_unscoped: bool = False,
     ) -> tuple[set[str], list[dict[str, Any]]]:
         """Synchronize target skills into Spoke and return synced folder set and actions."""
         if not dry_run:
             spoke_skills_dir.mkdir(parents=True, exist_ok=True)
         synced_skill_folders = {sk["dest_name"] for sk in skills_to_sync}
         actions = self._reconcile_existing_skills(
-            spoke_root, spoke_skills_dir, synced_skill_folders, dry_run
+            spoke_root,
+            spoke_skills_dir,
+            synced_skill_folders,
+            dry_run,
+            catalog=catalog,
+            prune_unscoped=prune_unscoped,
         )
 
         for sk in skills_to_sync:
-            src = sk["src_dir"]
-            dest = spoke_skills_dir / sk["dest_name"]
+            src, dest = sk["src_dir"], spoke_skills_dir / sk["dest_name"]
             if not src.exists():
                 print(f"  - [Warning] Skill source path not found: {src}", file=sys.stderr)
                 continue
             rel_dest = str(dest.relative_to(spoke_root))
-            if src.resolve() == dest.resolve() or (dest.exists() and are_dirs_identical(src, dest)):
-                actions.append(
-                    {"type": "Skill", "name": sk["name"], "status": "UNCHANGED", "path": rel_dest}
-                )
-            elif not dest.exists():
-                actions.append(
-                    {"type": "Skill", "name": sk["name"], "status": "NEW", "path": rel_dest}
-                )
-                if not dry_run:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copytree(
-                        src, dest, dirs_exist_ok=True, ignore=SKILL_SYNC_IGNORE_PATTERNS
-                    )
-            else:
-                actions.append(
-                    {"type": "Skill", "name": sk["name"], "status": "UPDATED", "path": rel_dest}
-                )
-                if not dry_run:
+            same = src.resolve() == dest.resolve() or (
+                dest.exists() and are_dirs_identical(src, dest)
+            )
+            status = "UNCHANGED" if same else ("NEW" if not dest.exists() else "UPDATED")
+            actions.append(
+                {"type": "Skill", "name": sk["name"], "status": status, "path": rel_dest}
+            )
+            if status != "UNCHANGED" and not dry_run:
+                if status == "UPDATED":
                     safe_remove(dest)
-                    shutil.copytree(
-                        src, dest, dirs_exist_ok=True, ignore=SKILL_SYNC_IGNORE_PATTERNS
-                    )
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(src, dest, dirs_exist_ok=True, ignore=SKILL_SYNC_IGNORE_PATTERNS)
         return synced_skill_folders, actions
 
     def _reconcile_existing_workflows(
@@ -1238,6 +1219,7 @@ class SpokeSynchronizer:
         force: bool = False,
         archetype: str = "",
         pull_assets: bool = False,
+        prune_unscoped: bool = False,
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         canonical_type, req_bundles = self._resolve_required_bundles(
@@ -1247,14 +1229,11 @@ class SpokeSynchronizer:
             return 1
         agents_dir = spoke_root / ".agents"
         skills, wfs = self._collect_sync_targets(catalog, hub_root, req_bundles)
+        sk_dir, wf_dir = agents_dir / "skills", agents_dir / "workflows"
         synced_folders, actions = self._sync_skills_phase(
-            spoke_root, agents_dir / "skills", skills, dry_run
+            spoke_root, sk_dir, skills, dry_run, catalog, prune_unscoped
         )
-        actions.extend(
-            self._sync_workflows_phase(
-                spoke_root, agents_dir / "workflows", wfs, synced_folders, dry_run
-            )
-        )
+        actions.extend(self._sync_workflows_phase(spoke_root, wf_dir, wfs, synced_folders, dry_run))
         actions.extend(
             self._sync_constitution_and_rules_phase(
                 spoke_root, hub_root, canonical_type, dry_run, force
@@ -1268,11 +1247,12 @@ class SpokeSynchronizer:
             spoke_root, hub_root, canonical_type, archetype, bootstrap, dry_run, force, pull_assets
         )
         if boot_res == 0:
-            print(
-                "\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa."
-                if dry_run
-                else "\n=== Sync Completed Successfully ==="
-            )
+            done_msg = "\n=== Sync Completed Successfully ==="
+            if dry_run:
+                done_msg = (
+                    "\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa."
+                )
+            print(done_msg)
         return boot_res
 
     def _check_git_working_tree_guard(self, dry_run: bool, check_git: bool, force: bool) -> bool:
@@ -1472,6 +1452,7 @@ class SpokeSynchronizer:
         pull_hub: bool = True,
         pull_assets: bool = False,
         allow_stale_catalog: bool = False,
+        prune_unscoped: bool = False,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         print(f"\n=== CCBA Spoke Synchronization{' [DRY-RUN]' if dry_run else ''} ===")
@@ -1490,7 +1471,7 @@ class SpokeSynchronizer:
             return 1
         item = sync_item or only
         args = (self.spoke_root, hub_root, catalog)
-        b_opts = (dry_run, add_bundles, bootstrap, force, arch, pull_assets)
+        b_opts = (dry_run, add_bundles, bootstrap, force, arch, pull_assets, prune_unscoped)
         res = (
             self._sync_single_item(*args, item, dry_run=dry_run)
             if item
@@ -1635,6 +1616,7 @@ class SpokeSynchronizer:
         pull_hub: bool = True,
         pull_assets: bool = False,
         allow_stale_catalog: bool = False,
+        prune_unscoped: bool = False,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1649,6 +1631,7 @@ class SpokeSynchronizer:
             pull_hub=pull_hub,
             pull_assets=pull_assets,
             allow_stale_catalog=allow_stale_catalog,
+            prune_unscoped=prune_unscoped,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1685,6 +1668,7 @@ def sync_project(
     pull_hub: bool = True,
     pull_assets: bool = False,
     allow_stale_catalog: bool = False,
+    prune_unscoped: bool = False,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1699,6 +1683,7 @@ def sync_project(
         pull_hub=pull_hub,
         pull_assets=pull_assets,
         allow_stale_catalog=allow_stale_catalog,
+        prune_unscoped=prune_unscoped,
     )
 
 
@@ -1805,6 +1790,7 @@ def sync_all_spokes(
     verify: bool = False,
     pull_assets: bool = False,
     allow_stale_catalog: bool = False,
+    prune_unscoped: bool = False,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -1831,6 +1817,7 @@ def sync_all_spokes(
         "verify": verify,
         "pull_assets": pull_assets,
         "allow_stale_catalog": allow_stale_catalog,
+        "prune_unscoped": prune_unscoped,
     }
     results, total_exit_code = _run_batch_spoke_loop(spokes, _get_synchronizer_cls(), sync_kwargs)
     _print_batch_sync_summary(results, mode_str)

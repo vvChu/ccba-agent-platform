@@ -96,6 +96,15 @@ def build_parser() -> argparse.ArgumentParser:
             "Prints an audit line. Does not skip the dirty-tree guard. Default: refuse --apply."
         ),
     )
+    parser.add_argument(
+        "--prune-unscoped",
+        action="store_true",
+        default=False,
+        help=(
+            "Opt-in: prune Spoke skills tagged scope: hub in Hub catalog.yaml "
+            "(preserves Custom Spoke Skills and other bundle skills)."
+        ),
+    )
     return parser
 
 
@@ -131,6 +140,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
         success = rollback_project(args.spoke)
         return 0 if success else 1
 
+    extra: dict[str, bool] = {"prune_unscoped": True} if args.prune_unscoped else {}
     if args.all:
         if args.dry_run:
             return sync_all_spokes(
@@ -143,6 +153,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=args.verify,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
         elif args.apply:
             return sync_all_spokes(
@@ -155,6 +166,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=args.verify,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
         else:
             print(
@@ -170,6 +182,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=False,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
             if preview_code != 0:
                 return preview_code
@@ -190,6 +203,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             verify=args.verify,
                             pull_assets=args.pull_assets,
                             allow_stale_catalog=args.allow_stale_catalog,
+                            **extra,
                         )
                     else:
                         print(
@@ -218,6 +232,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=args.verify,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
         elif args.apply:
             return sync_project(
@@ -230,6 +245,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=args.verify,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
         else:
             # Phase 1: Preview simulation
@@ -244,6 +260,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                 verify=False,
                 pull_assets=args.pull_assets,
                 allow_stale_catalog=args.allow_stale_catalog,
+                **extra,
             )
             if preview_code != 0:
                 return preview_code
@@ -265,6 +282,7 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
                             verify=args.verify,
                             pull_assets=args.pull_assets,
                             allow_stale_catalog=args.allow_stale_catalog,
+                            **extra,
                         )
                     else:
                         print(

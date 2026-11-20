@@ -17,13 +17,13 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.3
-sync_commit: "0321c7b0e183fe843d24433f9952c41d9860611e"
+sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
 covered_sha256:
   .agents/skills/ccba-implement/SKILL.md: "7a4286d1b9155b3a392b946a5ac65215c5836b36b0d579770f5a8ab3648e2365"
   .agents/skills/ccba-implement/references/implement-spec.md: "9270269b622313826e15d9b9563d9dc649a467a1a1290b59292b87b9ac26c601"
   .agents/skills/ccba-implement/references/prototype_logic.md: "3f0ca646b4f1a686af637f65de0ee41b3b5a45b58559c5d070c3cefa7af20ca6"
   .agents/skills/ccba-implement/references/prototyping_patterns.md: "03bba3ace4cf31fb90130f40199689fbf02d55e41c9f21cc815b939c21eede49"
-  scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
+  scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
 verification_mode:
   - scaffold
   - sync

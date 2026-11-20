@@ -17,12 +17,12 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
 covered_sha256:
   .agents/skills/ccba-code-review/SKILL.md: "7fc474beba66df5b473a07f1780445504cb52dc2d2c16698223b2af593f7d150"
   .agents/skills/ccba-code-review/references/parallel-review-workflow.md: "e8cde906bac988b39eb232d08db83ec306bb3bd9dd07f18e92046e8257d57be5"
   .agents/skills/ccba-code-review/references/unslop_checklist.md: "2a2499376921b379d61a5cfc2bc9531ca823c484a5ffb714ef311a987df66084"
-  scripts/spoke/sync/coordinator.py: "5ed1d0785a30a5505b630786ef7450cee2e5127ed864aa5e80e381cdfb64988f"
+  scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
 verification_mode:
   - scaffold
   - sync
