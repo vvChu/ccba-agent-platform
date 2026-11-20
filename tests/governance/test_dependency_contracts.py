@@ -286,3 +286,105 @@ def test_probe_lazy_export_symbol_distinguishes_external_vs_internal_missing_dep
     assert internal_violation is not None
     assert internal_violation.rule_name == "UnboundAllExportViolation"
     assert "ccba_ooxml.nonexistent_submod" in internal_violation.message
+
+
+def _load_pyproject_toml(pyproject_path: Path) -> dict[str, object]:
+    """Load pyproject.toml across Python 3.10 (tomli) and 3.11+ (tomllib)."""
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python 3.10 CI path
+        import tomli as tomllib  # type: ignore[import-not-found,no-redef]
+
+    return tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+
+
+def test_pyproject_tid251_parity_with_seam_contracts() -> None:
+    """Verify Ruff TID251 banned-api and per-file-ignores match seam-contracts.yaml 100%."""
+    import yaml
+
+    pyproject_data = _load_pyproject_toml(PROJECT_ROOT / "pyproject.toml")
+    ruff_lint = pyproject_data["tool"]["ruff"]["lint"]  # type: ignore[index]
+    assert "TID251" in ruff_lint["select"]  # type: ignore[operator]
+
+    banned_api = ruff_lint["flake8-tidy-imports"]["banned-api"]  # type: ignore[index]
+    contracts_data = yaml.safe_load(
+        (PROJECT_ROOT / "seam-contracts.yaml").read_text(encoding="utf-8")
+    )
+    expected_forbidden = {
+        mod
+        for card in contracts_data.get("cards", [])
+        for mod in card.get("forbidden_substitute_imports", [])
+    }
+    expected_modules = {"fitz", "pymupdf", "openpyxl", "docx", "fpdf", "graphviz"}
+    assert expected_forbidden == expected_modules
+    assert set(banned_api.keys()) == expected_forbidden  # type: ignore[arg-type]
+    for mod, cfg in banned_api.items():  # type: ignore[union-attr]
+        assert isinstance(cfg, dict) and str(cfg.get("msg", "")).strip(), (
+            f"Missing TID251 remediation message for '{mod}'"
+        )
+
+    per_file = ruff_lint["per-file-ignores"]  # type: ignore[index]
+    tid251_globs = {glob for glob, rules in per_file.items() if "TID251" in rules}  # type: ignore[union-attr]
+    assert tid251_globs == {
+        "packages/ccba-ooxml/**",
+        "packages/ccba-pdf-prep/**",
+        "packages/ccba-legal-intel/**",
+        "packages/mdconverter/**",
+        "packages/ccba-diagram/**",
+    }
+
+
+def test_raw_bypass_violation_appends_fix_hints_from_seam_contracts() -> None:
+    """Verify RawThirdPartyBypassViolation keeps legacy prefix and appends 2 Seam Fix-Hint lines."""
+    from scripts.governance.check_dependency_contracts import load_seam_bypass_restrictions
+
+    restrictions, card_map = load_seam_bypass_restrictions(PROJECT_ROOT)
+    tree = ast.parse("import fitz\n")
+    visitor = DependencyASTVisitor(
+        current_package="ccba_qc_core",
+        current_file=Path("packages/ccba-qc-core/src/ccba_qc_core/sample.py"),
+        raw_lines=["import fitz"],
+        bypass_restrictions=restrictions,
+        card_map=card_map,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 1
+    msg = visitor.violations[0].message
+    assert (
+        "Platform-Aware KISS requires using 'ccba_pdf_prep:PDFProcessingPipeline' seam instead."
+        in msg
+    )
+    assert "Gợi ý thay thế: from ccba_pdf_prep import PDFProcessingPipeline" in msg
+    assert (
+        "Tra cứu Seam: ccba-platform find-seam --in pdf --out tiles,segments,text,png --json" in msg
+    )
+
+
+def test_raw_bypass_violation_fallback_without_card_map_or_colon() -> None:
+    """Verify fallback visitor with bypass_restrictions=None emits clean legacy prefix only."""
+    tree = ast.parse("import docx\n")
+    visitor = DependencyASTVisitor(
+        current_package=None,
+        current_file=Path("scripts/adhoc_sample.py"),
+        raw_lines=["import docx"],
+        bypass_restrictions=None,
+    )
+    visitor.visit(tree)
+
+    assert len(visitor.violations) == 1
+    msg = visitor.violations[0].message
+    assert "Platform-Aware KISS requires using 'ccba_ooxml' seam instead." in msg
+    assert "Gợi ý thay thế:" not in msg
+    assert "Tra cứu Seam:" not in msg
+
+    malformed_visitor = DependencyASTVisitor(
+        current_package=None,
+        current_file=Path("scripts/adhoc_sample.py"),
+        raw_lines=["import docx"],
+        bypass_restrictions=None,
+        card_map={"docx_legacy": {"capability": "invalid-non-dict"}},
+    )
+    malformed_visitor.visit(tree)
+    assert len(malformed_visitor.violations) == 1
+    assert "Tra cứu Seam:" not in malformed_visitor.violations[0].message

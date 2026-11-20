@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Đợt 2 Xuyên Trục `CCBA Dune × IDOP` (`H2 + H3 + I3`)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling Đợt 2`)
+- **Affected Files**: [decisions/2026-11-20_wave2_ccba_dune_idop_h2_h3_i3_grilling_resolution.md](decisions/2026-11-20_wave2_ccba_dune_idop_h2_h3_i3_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling Đợt 2` và **Grok Peer Plan Audit 2 Pass** (`APPROVE_PLAN`, `blocking_conditions: 0`, sessions `1e8a3518-b3f2-42a7-b5e7-08f742025992` / `abe360c3-e3b7-4f93-8160-51bea9bdd90c`), chốt `4/4` quyết định `Q1`–`Q4` cùng toàn bộ `8/8` (`Pass 1`) + `2/2` (`Pass 2`) điều kiện `[ADOPT_AS_IS]` cho lộ trình `3` PR nối tiếp (`PR-H2 -> PR-H3 -> PR-I3`, hoãn `H4` sang Đợt 3): kích hoạt `Ruff TID251` (`6` modules từ `seam-contracts.yaml`, `per-file-ignores` `5` glob) + CI parity test + Seam Fix-Hints (`PR-H2`), xây dựng Tier-0 stdlib `_guardrail_manifest.py` LF-SHA-256 + xuất `scope` & `scope_pruner.py --prune-unscoped` bảo toàn Custom Skills và trần ratchet Wave 1 (`PR-H3`), và hoàn thiện headless Playwright Cockpit evidence (`1440x900`, fail-closed) cô lập trong `.agents/skills/verify-idop/harness/` cùng đồng bộ `H3` xuống `IDOP-CCBA-WAY` (`PR-I3`). Đang chờ lệnh `proceed` trước khi sửa mã sản xuất.
+
+---
+
 ## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Đợt 1 Xuyên Trục `CCBA Dune × IDOP` (`H1 + I1 + I2`)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling`)
 - **Affected Files**: [decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md](decisions/2026-11-20_wave1_ccba_dune_idop_h1_i1_i2_grilling_resolution.md), [index.md](index.md), [log.md](log.md)

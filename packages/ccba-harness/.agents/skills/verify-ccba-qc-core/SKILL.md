@@ -17,12 +17,12 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "e24728d8826f49b74a981fe90e740f986c5afe4a"
+sync_commit: "fe94b96425a6bff08a5d9bc2172b958ae19ef330"
 covered_sha256:
   packages/ccba-qc-core/src/ccba_qc_core/__init__.py: "3225d2653f5970337a8d6a1f4415d9e0d80eac85fd7eb4d2e82fa8f3569da5b3"
-  packages/ccba-qc-core/src/ccba_qc_core/discovery.py: "9cd3b84d7d477850dcef8901e6272f42a224a8f29bca2ff4623ae7ee2d36f81b"
+  packages/ccba-qc-core/src/ccba_qc_core/discovery.py: "14d12fa3c60450a53a5fec59169e62ae47354a0a2c527936e61ca3120470b57a"
   packages/ccba-qc-core/src/ccba_qc_core/jurisdiction.py: "d8904b8fc7fcf50fd2cbe9c145ec695863a19211f167315d98ff3c5c73d850d8"
-  packages/ccba-qc-core/src/ccba_qc_core/pipeline.py: "039a5343643d1468192701126b15b97e1dd53a714a1b86ac84f7e76a603d7daf"
+  packages/ccba-qc-core/src/ccba_qc_core/pipeline.py: "36d821e6f8a0f44ee07459da04fb384d797a21181aa51f8a8b738ae64b8e9b9f"
   packages/ccba-qc-core/src/ccba_qc_core/reporter.py: "57bf167b55e30bd4320d06fc7e422390dd46a328aa7eaace47fd003f4c2d0774"
 verification_mode:
   - scaffold
