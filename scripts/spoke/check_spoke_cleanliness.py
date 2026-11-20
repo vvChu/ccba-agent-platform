@@ -15,7 +15,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib
 import importlib.util
+import json
 import os
 import re
 import sys
@@ -53,6 +55,34 @@ def _load_cleanliness_seam() -> Any:
     raise ImportError("Unable to locate stdlib _parameter_cleanliness seam.")
 
 
+def _load_budget_seam() -> Any | None:
+    """Load the pure-stdlib module size budget seam without importing peer_gate or pydantic."""
+    try:
+        return importlib.import_module("ccba_harness._module_size_budget")
+    except ImportError:
+        pass
+    here = Path(__file__).resolve().parent
+    candidates = (
+        here / "_module_size_budget.py",
+        here / "_guardrails" / "_module_size_budget.py",
+        here.parents[1] / "packages/ccba-harness/src/ccba_harness/_module_size_budget.py",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_ccba_module_size_budget", candidate)
+            if spec is not None and spec.loader is not None:
+                mod = sys.modules.get(spec.name)
+                if mod is None:
+                    mod = importlib.util.module_from_spec(spec)
+                    sys.modules[spec.name] = mod
+                    spec.loader.exec_module(mod)
+                return mod
+    return None
+
+
+_DEFAULT_BUDGET_ROOTS: tuple[str, ...] = tuple(
+    "packages/*/src tools services backend formulas scripts".split()
+)
 _CLEANLINESS_SEAM = _load_cleanliness_seam()
 
 APPROVED_MODEL_ALIASES = _CLEANLINESS_SEAM._APPROVED_MODEL_ALIASES
@@ -140,6 +170,7 @@ IPV4_CANDIDATE_PATTERN = _CLEANLINESS_SEAM._IPV4_CANDIDATE_RE
 ALLOWLIST_SCRIPTS = set(
     "__init__.py conftest.py safe_pytest.py safe_runner.py check_hub_import_depth.py "
     "check_spoke_cleanliness.py _parameter_cleanliness.py _workspace_roots.py "
+    "_module_size_budget.py "
     "check_claudekit_updates.py spoke_bootstrap.py spoke_bootstrap.ps1 setup_pre_commit.py sync.py".split()
 )
 
@@ -718,12 +749,93 @@ def _scan_scripts_dir(
     return has_errors, has_warnings
 
 
+def _resolve_budget_target(spoke_root: Path) -> tuple[Path, tuple[str, ...], bool]:
+    """Resolves baseline path, scan roots, and whether target is the Hub repository."""
+    if (spoke_root / "packages" / "ccba-harness").is_dir():
+        return spoke_root / "scripts" / "module_budget_baseline.json", ("scripts",), True
+    return (
+        spoke_root / "scripts" / "_guardrails" / "module_budget_baseline.json",
+        _DEFAULT_BUDGET_ROOTS,
+        False,
+    )
+
+
+def _load_budget_baseline_dict(base_file: Path) -> dict[str, int]:
+    """Loads baseline JSON dict from disk; raises ValueError on invalid format."""
+    raw = json.loads(base_file.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError(f"Expected JSON object in {base_file}")
+    return {str(k): int(v) for k, v in raw.items()}
+
+
+def _append_module_budget_violations(
+    spoke_root: Path, enforce_budget: bool, messages: list[str]
+) -> bool:
+    """Runs module size budget & ratchet check; skips old Spokes cleanly without warning."""
+    base_file, roots, is_hub = _resolve_budget_target(spoke_root)
+    if not base_file.is_file() and not enforce_budget and not is_hub:
+        messages.append(
+            "ℹ️  [Module Size Budget] Chưa có scripts/_guardrails/module_budget_baseline.json; bỏ qua kiểm tra."
+        )
+        return False
+    seam = _load_budget_seam()
+    if seam is None:
+        messages.append(
+            "❌ [Module Size Budget] Thiếu _module_size_budget.py; hãy chạy sync_spoke.py."
+        )
+        return True
+    baseline: dict[str, int] = {}
+    if base_file.is_file():
+        try:
+            baseline = _load_budget_baseline_dict(base_file)
+        except Exception as exc:
+            messages.append(f"❌ [Module Size Budget] Không đọc được baseline {base_file}: {exc}")
+            return True
+    files = seam.iter_production_files(spoke_root, roots)
+    violations = seam.evaluate_module_budgets(spoke_root, files, baseline)
+    if violations:
+        details = "\n".join(f"   - {v}" for v in violations[:20])
+        messages.append(
+            f"❌ [Module Size Budget] Phát hiện {len(violations)} tệp vượt trần 800 LOC / ratchet:\n"
+            f"{details}\n   💡 Hãy tách module nhỏ hơn hoặc kiểm tra codegen banner / baseline."
+        )
+        return True
+    messages.append(
+        f"✅ [Module Size Budget] {len(files)} tệp sản xuất đạt chuẩn (<= 800 LOC / ratchet)."
+    )
+    return False
+
+
+def _run_ratchet_update(spoke_root: Path) -> int:
+    """Computes and writes a monotonic module budget baseline JSON for the target workspace."""
+    seam = _load_budget_seam()
+    if seam is None:
+        print("❌ Missing _module_size_budget.py seam.", file=sys.stderr)
+        return 1
+    base_file, roots, _ = _resolve_budget_target(spoke_root)
+    existing: dict[str, int] | None = None
+    if base_file.is_file():
+        try:
+            existing = _load_budget_baseline_dict(base_file)
+        except Exception as exc:
+            print(f"❌ Cannot update corrupted baseline {base_file}: {exc}", file=sys.stderr)
+            return 1
+    files = seam.iter_production_files(spoke_root, roots)
+    updated = seam.compute_ratchet_baseline(spoke_root, files, existing=existing)
+    base_file.parent.mkdir(parents=True, exist_ok=True)
+    base_file.write_text(json.dumps(updated, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    rel = base_file.relative_to(spoke_root.resolve()).as_posix()
+    print(f"✅ Updated {rel}: {len(updated)} file(s) > 800 LOC across {len(files)} scanned files.")
+    return 0
+
+
 def scan_spoke_cleanliness(
     spoke_root: Path,
     max_scripts: int = 15,
     strict: bool = False,
     custom_allowlist: set[str] | None = None,
     role_allowlist: set[str] | None = None,
+    enforce_module_budget: bool = False,
 ) -> tuple[int, list[str]]:
     """Runs all cleanliness checks against a target Spoke workspace."""
     messages: list[str] = []
@@ -737,6 +849,9 @@ def scan_spoke_cleanliness(
         has_errors, has_warnings = _scan_scripts_dir(
             spoke_root, scripts_dir, max_scripts, effective_allowlist, effective_roles, messages
         )
+    has_errors = (
+        _append_module_budget_violations(spoke_root, enforce_module_budget, messages) or has_errors
+    )
     has_errors = _append_agents_debris_violations(spoke_root, messages) or has_errors
     has_errors = _append_living_doc_violations(spoke_root, messages) or has_errors
     return (1 if has_errors or (strict and has_warnings) else 0), messages
@@ -760,6 +875,16 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         "--strict",
         action="store_true",
         help="Fail (exit code 1) on warnings such as ephemeral script names",
+    )
+    parser.add_argument(
+        "--enforce-module-budget",
+        action="store_true",
+        help="Fail closed on >800 LOC handwritten files even without module_budget_baseline.json",
+    )
+    parser.add_argument(
+        "--ratchet-update",
+        action="store_true",
+        help="Update module_budget_baseline.json monotonically without raising existing ceilings",
     )
     parser.add_argument(
         "--allow-script",
@@ -786,6 +911,8 @@ def main() -> int:
 
     args = _build_arg_parser().parse_args()
     spoke_root = Path(args.path).resolve()
+    if args.ratchet_update:
+        return _run_ratchet_update(spoke_root)
     custom_allowlist = set(args.allow_script) if args.allow_script else None
     role_allowlist: set[str] = set()
     if args.allow_role:
@@ -798,6 +925,7 @@ def main() -> int:
         strict=args.strict,
         custom_allowlist=custom_allowlist,
         role_allowlist=role_allowlist if role_allowlist else None,
+        enforce_module_budget=args.enforce_module_budget,
     )
 
     print("=" * 80)
