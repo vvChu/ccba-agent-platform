@@ -169,6 +169,7 @@ skills:
   skill_path: .agents/skills/ccba-adr-lifecycle/SKILL.md
   command: /ccba-adr-lifecycle
   tier: kernel
+  scope: hub
 - name: ccba-ai-gateway-sdk
   bundle: _core
   description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud)
@@ -184,8 +185,8 @@ skills:
   - modelarchetype
   skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
   command: /ccba-ai-gateway-sdk
-  package_path: packages/ccba-ai
   tier: kernel
+  package_path: packages/ccba-ai
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
   description: 'Tiền xử lý PDF phức tạp/bản vẽ lớn: Phân đoạn (Segmenting), Chunking
@@ -199,8 +200,8 @@ skills:
   - segment pdf
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
   command: /ccba-ai-pdf-preprocessor
-  package_path: packages/ccba-pdf-prep
   tier: kernel
+  package_path: packages/ccba-pdf-prep
 - name: ccba-ai-qc
   bundle: _qc
   description: Điều phối toàn trình thẩm tra bản vẽ đa bộ môn (Discovery, Quad-View
@@ -220,8 +221,8 @@ skills:
   - heat map report
   skill_path: .agents/skills/ccba-ai-qc/SKILL.md
   command: /ccba-ai-qc
-  package_path: packages/ccba-qc-core
   tier: orchestrator
+  package_path: packages/ccba-qc-core
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
   description: Thẩm tra chuyên sâu hồ sơ thiết kế PCCC, MEP thoát nạn (QCVN 06, TCVN
@@ -566,8 +567,8 @@ skills:
   - skills-eval
   skill_path: .agents/skills/ccba-eval-gate/SKILL.md
   command: /ccba-eval-gate
-  package_path: packages/ccba-harness
   tier: kernel
+  package_path: packages/ccba-harness
 - name: ccba-excalidraw-diagram
   bundle: _core
   description: Tạo và tối ưu sơ đồ kiến trúc Excalidraw tất định 16:9 với 8 layout
@@ -827,8 +828,8 @@ skills:
   - tra cứu điều khoản
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
   command: /ccba-legal-intel
-  package_path: packages/ccba-legal-intel
   tier: kernel
+  package_path: packages/ccba-legal-intel
 - name: ccba-llm-pipeline-patterns
   bundle: _core
   description: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC
@@ -855,8 +856,8 @@ skills:
   - document processing
   skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
   command: /ccba-markdown-document-processing
-  package_path: packages/mdconverter
   tier: kernel
+  package_path: packages/mdconverter
 - name: ccba-maskara
   bundle: _core
   description: Phát hiện, che giấu (redact) thông tin nhạy cảm (API keys, passwords,
@@ -870,8 +871,8 @@ skills:
   - che giấu key
   skill_path: .agents/skills/ccba-maskara/SKILL.md
   command: /ccba-maskara
-  package_path: packages/ccba-maskara
   tier: kernel
+  package_path: packages/ccba-maskara
 - name: ccba-mermaid-diagram
   bundle: _core
   description: Tạo sơ đồ Mermaid & statechart (stateDiagram-v2) đạt chuẩn Academic
@@ -923,8 +924,8 @@ skills:
   - admin
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
-  package_path: packages/ccba-notebooklm
   tier: kernel
+  package_path: packages/ccba-notebooklm
 - name: ccba-platform
   bundle: _core
   description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho
@@ -1011,6 +1012,7 @@ skills:
   skill_path: .agents/skills/ccba-review-proposal/SKILL.md
   command: /ccba-review-proposal
   tier: kernel
+  scope: hub
 - name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
@@ -1308,8 +1310,8 @@ skills:
   - layout guard
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
   command: /ccba-xu-ly-van-phong
-  package_path: packages/ccba-ooxml
   tier: kernel
+  package_path: packages/ccba-ooxml
 - name: ccba-youtube-learn
   bundle: _core
   description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
@@ -1565,6 +1567,11 @@ guardrails:
 - name: _module_size_budget.py
   src: packages/ccba-harness/src/ccba_harness/_module_size_budget.py
   dest: scripts/_guardrails/_module_size_budget.py
+  applies_to:
+  - python
+- name: _guardrail_manifest.py
+  src: packages/ccba-harness/src/ccba_harness/_guardrail_manifest.py
+  dest: scripts/_guardrails/_guardrail_manifest.py
   applies_to:
   - python
 - name: pre-commit

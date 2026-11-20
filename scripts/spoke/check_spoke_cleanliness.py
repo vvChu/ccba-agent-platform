@@ -25,26 +25,20 @@ from pathlib import Path
 from typing import Any
 
 
-def _load_cleanliness_seam() -> Any:
-    """Load the pure-stdlib cleanliness seam via installed package, Tier-0 sibling, or Hub."""
-    try:
-        from ccba_harness import scan_parameter_cleanliness as _seam_scan
-
-        _ = _seam_scan
-        return sys.modules["ccba_harness._parameter_cleanliness"]
-    except ImportError:
-        pass
+def _load_tier0_seam(
+    filename: str, mod_name: str, pkg_mod: str | None = None, required: bool = False
+) -> Any | None:
+    """Load a pure-stdlib Tier-0 seam via package, sibling _guardrails/, or Hub source."""
+    if pkg_mod:
+        try:
+            return importlib.import_module(pkg_mod)
+        except ImportError:
+            pass
     here = Path(__file__).resolve().parent
-    hub_fallback = (
-        here.parents[1] / "packages/ccba-harness/src/ccba_harness/_parameter_cleanliness.py"
-    )
-    for candidate in (
-        here / "_parameter_cleanliness.py",
-        here / "_guardrails" / "_parameter_cleanliness.py",
-        hub_fallback,
-    ):
-        if candidate.is_file():
-            spec = importlib.util.spec_from_file_location("_ccba_parameter_cleanliness", candidate)
+    hub_src = here.parents[1] / "packages" / "ccba-harness" / "src" / "ccba_harness" / filename
+    for cand in (here / filename, here / "_guardrails" / filename, hub_src):
+        if cand.is_file():
+            spec = importlib.util.spec_from_file_location(mod_name, cand)
             if spec is not None and spec.loader is not None:
                 mod = sys.modules.get(spec.name)
                 if mod is None:
@@ -52,38 +46,32 @@ def _load_cleanliness_seam() -> Any:
                     sys.modules[spec.name] = mod
                     spec.loader.exec_module(mod)
                 return mod
-    raise ImportError("Unable to locate stdlib _parameter_cleanliness seam.")
+    if required:
+        raise ImportError(f"Unable to locate stdlib {filename} seam.")
+    return None
 
 
 def _load_budget_seam() -> Any | None:
-    """Load the pure-stdlib module size budget seam without importing peer_gate or pydantic."""
-    try:
-        return importlib.import_module("ccba_harness._module_size_budget")
-    except ImportError:
-        pass
-    here = Path(__file__).resolve().parent
-    candidates = (
-        here / "_module_size_budget.py",
-        here / "_guardrails" / "_module_size_budget.py",
-        here.parents[1] / "packages/ccba-harness/src/ccba_harness/_module_size_budget.py",
+    """Lazily load _module_size_budget seam without importing pydantic."""
+    return _load_tier0_seam(
+        "_module_size_budget.py", "_ccba_module_size_budget", "ccba_harness._module_size_budget"
     )
-    for candidate in candidates:
-        if candidate.is_file():
-            spec = importlib.util.spec_from_file_location("_ccba_module_size_budget", candidate)
-            if spec is not None and spec.loader is not None:
-                mod = sys.modules.get(spec.name)
-                if mod is None:
-                    mod = importlib.util.module_from_spec(spec)
-                    sys.modules[spec.name] = mod
-                    spec.loader.exec_module(mod)
-                return mod
-    return None
+
+
+def _load_manifest_seam() -> Any | None:
+    """Lazily load _guardrail_manifest seam without module-level static import."""
+    return _load_tier0_seam("_guardrail_manifest.py", "_ccba_guardrail_manifest")
 
 
 _DEFAULT_BUDGET_ROOTS: tuple[str, ...] = tuple(
     "packages/*/src tools services backend formulas scripts".split()
 )
-_CLEANLINESS_SEAM = _load_cleanliness_seam()
+_CLEANLINESS_SEAM = _load_tier0_seam(
+    "_parameter_cleanliness.py",
+    "_ccba_parameter_cleanliness",
+    "ccba_harness._parameter_cleanliness",
+    required=True,
+)
 
 APPROVED_MODEL_ALIASES = _CLEANLINESS_SEAM._APPROVED_MODEL_ALIASES
 DEPRECATED_GATEWAY_COMPAT_PREFIXES = _CLEANLINESS_SEAM._DEPRECATED_MODEL_PREFIXES
@@ -170,7 +158,7 @@ IPV4_CANDIDATE_PATTERN = _CLEANLINESS_SEAM._IPV4_CANDIDATE_RE
 ALLOWLIST_SCRIPTS = set(
     "__init__.py conftest.py safe_pytest.py safe_runner.py check_hub_import_depth.py "
     "check_spoke_cleanliness.py _parameter_cleanliness.py _workspace_roots.py "
-    "_module_size_budget.py "
+    "_module_size_budget.py _guardrail_manifest.py "
     "check_claudekit_updates.py spoke_bootstrap.py spoke_bootstrap.ps1 setup_pre_commit.py sync.py".split()
 )
 
@@ -829,6 +817,29 @@ def _run_ratchet_update(spoke_root: Path) -> int:
     return 0
 
 
+def _append_guardrail_manifest_violations(spoke_root: Path, messages: list[str]) -> bool:
+    """Verify Tier-0 guardrails LF-SHA-256 manifest fail-closed only when manifest exists."""
+    manifest_file = spoke_root / "scripts" / "_guardrails" / "guardrails_manifest.json"
+    if not manifest_file.is_file():
+        messages.append(
+            "ℹ️  [Guardrail Manifest] Chưa có guardrails_manifest.json; bỏ qua kiểm tra."
+        )
+        return False
+    seam = _load_manifest_seam()
+    if seam is None:
+        messages.append(
+            "❌ [Guardrail Manifest] Thiếu _guardrail_manifest.py; hãy chạy sync_spoke.py."
+        )
+        return True
+    violations = seam.verify_guardrail_manifest(spoke_root, manifest_file)
+    if violations:
+        details = "\n".join(f"   - {v}" for v in violations[:20])
+        messages.append(f"❌ [Guardrail Manifest] Phát hiện {len(violations)} sai lệch:\n{details}")
+        return True
+    messages.append("✅ [Guardrail Manifest] Toàn bộ scripts/_guardrails/* khớp SHA-256.")
+    return False
+
+
 def scan_spoke_cleanliness(
     spoke_root: Path,
     max_scripts: int = 15,
@@ -852,6 +863,7 @@ def scan_spoke_cleanliness(
     has_errors = (
         _append_module_budget_violations(spoke_root, enforce_module_budget, messages) or has_errors
     )
+    has_errors = _append_guardrail_manifest_violations(spoke_root, messages) or has_errors
     has_errors = _append_agents_debris_violations(spoke_root, messages) or has_errors
     has_errors = _append_living_doc_violations(spoke_root, messages) or has_errors
     return (1 if has_errors or (strict and has_warnings) else 0), messages
@@ -859,47 +871,16 @@ def scan_spoke_cleanliness(
 
 def _build_arg_parser() -> argparse.ArgumentParser:
     """Builds CLI argument parser for spoke cleanliness check."""
-    parser = argparse.ArgumentParser(
-        description="CCBA Spoke Cleanliness & Script Budget Checker (ADR 0044 / Issue #215)"
-    )
-    parser.add_argument(
-        "--path", "-p", default=".", help="Target Spoke root directory (default: current dir)"
-    )
-    parser.add_argument(
-        "--max-scripts",
-        type=int,
-        default=15,
-        help="Maximum number of core scripts in scripts/ folder (default: 15)",
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail (exit code 1) on warnings such as ephemeral script names",
-    )
-    parser.add_argument(
-        "--enforce-module-budget",
-        action="store_true",
-        help="Fail closed on >800 LOC handwritten files even without module_budget_baseline.json",
-    )
-    parser.add_argument(
-        "--ratchet-update",
-        action="store_true",
-        help="Update module_budget_baseline.json monotonically without raising existing ceilings",
-    )
-    parser.add_argument(
-        "--allow-script",
-        nargs="+",
-        default=None,
-        help="Additional script names to exclude from the script count budget",
-    )
-    parser.add_argument(
-        "--allow-role",
-        nargs="+",
-        default=None,
-        help="Script names exempted by role from ephemeral warnings (e.g. audits:audit_memory.py)",
-    )
-    parser.add_argument("files", nargs="*", help="Optional specific files passed by pre-commit")
-    return parser
+    p = argparse.ArgumentParser(description="CCBA Spoke Cleanliness & Script Budget Checker")
+    p.add_argument("--path", "-p", default=".", help="Target Spoke root directory")
+    p.add_argument("--max-scripts", type=int, default=15, help="Max core scripts in scripts/")
+    p.add_argument("--strict", action="store_true", help="Fail on ephemeral warnings")
+    p.add_argument("--enforce-module-budget", action="store_true", help="Enforce >800 LOC budget")
+    p.add_argument("--ratchet-update", action="store_true", help="Update monotonic LOC baseline")
+    p.add_argument("--allow-script", nargs="+", default=None, help="Exclude scripts from budget")
+    p.add_argument("--allow-role", nargs="+", default=None, help="Exempt scripts by role")
+    p.add_argument("files", nargs="*", help="Optional files passed by pre-commit")
+    return p
 
 
 def main() -> int:
