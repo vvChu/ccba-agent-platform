@@ -12,7 +12,7 @@ posture: seam-exempt
 seam_ids:
   - harness_verify.v1
 metadata:
-  version: "1.2.1"
+  version: "1.2.2"
   author: "CCBA Hub"
 triggers:
 - ccba-implement
@@ -51,6 +51,8 @@ Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ th
 1. Tạo hoặc cập nhật tệp kiểm thử chuyên biệt phản ánh đúng các tiêu chí nghiệm thu của spec.
 2. Viết các ca kiểm thử cho cả trường hợp bình thường (happy path) và các điều kiện biên (edge cases).
 3. Khi bổ sung middleware hoặc rate limiter chia sẻ trạng thái cấp module (như HTTP `429` bucket theo IP mặc định `"testclient"` của `TestClient`), bắt buộc đăng ký fixture `autouse=True` trong `conftest.py` xóa sạch `_buckets` giữa các test để ngăn rò rỉ trạng thái chéo.
+   - Khi Spoke tạo mới `tests/conftest.py`, bắt buộc kiểm tra `extend-exclude` trong `.ruff.toml` dùng đường dẫn neo gốc `"./conftest.py"` thay vì `"conftest.py"` để không âm thầm loại trừ `tests/conftest.py` khỏi `ruff check` / `ruff format` trong `verify-patch`.
+   - Khi viết test kiểm thử phân tích DSN (`DATABASE_URL`), dựng URL động qua `urllib.parse.urlunparse()` thay vì nhúng chuỗi DSN tĩnh (scheme `postgresql`) để tránh cảnh báo giả từ `ccba-maskara` pre-commit hook.
 4. Chạy kiểm thử ban đầu để xác nhận test thất bại đúng lý do mong đợi (Red phase).
 - **Tiêu chí hoàn thành:** Scoped unit test được viết hoàn tất và ghi nhận trạng thái Red ban đầu.
 
@@ -66,7 +68,7 @@ Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ th
    ```bash
    python -m ccba_harness verify-patch --preset code --target <package_or_dir>
    ```
-   *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`. Lưu ý: khi truyền lệnh tùy chỉnh qua `--cmd`, `verify-patch` phân tách bằng `shlex.split` (`shell=False`), nên mọi biến môi trường nội tuyến bắt buộc đi sau tiền tố `env` (ví dụ: `--cmd "env PYTHONPATH=services/rag-service pytest ..."`).*
+   *Lệnh này tự động thực thi chuỗi: `ruff check`, `mypy --follow-imports=silent`, và `pytest -q`. Lưu ý: khi truyền lệnh tùy chỉnh qua `--cmd`, `verify-patch` phân tách bằng `shlex.split` (`shell=False`), nên mọi biến môi trường nội tuyến bắt buộc đi sau tiền tố `env` (ví dụ: `--cmd "env PYTHONPATH=services/rag-service pytest ..."`). Với Spoke có `tests/conftest.py`, xác minh cổng lint bao phủ tệp này qua `ruff check --show-files --force-exclude tests/conftest.py` (đảm bảo `.ruff.toml` neo `"./conftest.py"`).*
 2. Chạy kiểm thử hồi quy cho các module lân cận nếu có ảnh hưởng liên vùng. Lưu ý: khi thao tác trên `git worktree` mới tách (chưa có thư mục untracked `node_modules`), các lệnh kiểm thử/build frontend (`npm test`, `npm run build`, `esbuild`) bắt buộc chạy từ workspace gốc đã cài dependencies hoặc sau khi chạy `npm ci`.
 3. Nếu phát hiện lỗi (Exit Code $\ne 0$), kích hoạt vòng lặp Fix Loop để giải quyết triệt để lỗi kiểu và linter.
 - **Tiêu chí hoàn thành:** Lệnh `python -m ccba_harness verify-patch --preset code --target <package_or_dir>` và các cổng kiểm thử frontend/regression liên quan đều trả về **Exit Code 0** (Overall Status: PASS, `0` lỗi `ENOENT node_modules` trên worktree, `0` lỗi rò rỉ HTTP `429` qua `TestClient`). Theo quy tắc Khóa Cứng (HUB-ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn thành hoặc chuyển sang Bước 5 nếu có bất kỳ lệnh nào fail.

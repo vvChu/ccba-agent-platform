@@ -19,6 +19,12 @@ Apply this overlay when any of these are true:
 - API keys or tokens exposed in URL query parameters (use headers)
 - Missing auth middleware on new routes
 - Batch/bulk endpoints without per-item authorization checks
+- **Active-Account Enforcement on Session Endpoints**: Session/profile routes (e.g., `GET /auth/me`) trusting stateless JWT claims without checking persisted `is_active = TRUE` / account revocation state
+- **Selective `401` Client Logout**: Client interceptors wiping the active session on every `401` response, including wrong-current-password failures on `change-password` instead of only invalid/expired session tokens
+
+### Startup Config & `.env` Bootstrap Order
+- Fail-closed ASGI/FastAPI config (`JWT_SECRET`, `CORS`, `BIND_HOST`) evaluated at import time or early in `lifespan` before `.env` is loaded (passes `pytest` via `monkeypatch.setenv` but crashes `uvicorn` on disk `.env`)
+- `load_dotenv(..., override=False)` must run exactly once at bootstrap before `create_app()` — never repeatedly inside `lifespan` (which breaks `monkeypatch.delenv` in tests); verify with a clean-env startup probe (`env -u <SECRET_VAR>`) against a real `.env` file
 
 ### Input Validation
 - Request body accepted without schema validation (missing Zod, Joi, Pydantic, etc.)
