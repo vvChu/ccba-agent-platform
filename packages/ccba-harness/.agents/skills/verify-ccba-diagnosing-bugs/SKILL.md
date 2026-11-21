@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.3
-sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-diagnosing-bugs/SKILL.md: "4e6b7e02ea4651c9384554f7fd2b5d3e299e8d3e31d0cbc952a815860985223a"
+  .agents/skills/ccba-diagnosing-bugs/SKILL.md: "6a6415a80d1b252210f0abedeccf0ab749aa65bc66609f4c860e90a0d6b9abe1"
   .agents/skills/ccba-diagnosing-bugs/references/mock_debugging_patterns.md: "0ae74b2d19482e5c5fef385a6632d160c369fe119ab29d3dbc20c659dbe98a06"
   scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
 verification_mode:
@@ -43,7 +43,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 6 pha của `.agents/skills/ccba-diagnosing-bugs/SKILL.md`, rào chắn che giấu bí mật `## Redact` (`<REDACTED>`), cổng kiểm chứng đột biến `git diff` tại Phase 5 (`v1.3.2 #1209`), tài liệu tham chiếu `references/mock_debugging_patterns.md`, cùng ánh xạ đồng bộ `scripts/spoke/sync/coordinator.py` và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

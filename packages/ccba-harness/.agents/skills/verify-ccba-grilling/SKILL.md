@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.5
-sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-grilling/SKILL.md: "0ed4811556093e99a3fae316a1974fe83cf076dc8bc28cb412e6f40c6dcfea4a"
+  .agents/skills/ccba-grilling/SKILL.md: "ca31f6971f983d177a717585f14401db29467ebc8864d24a7662797f5b33c9cf"
   .agents/skills/ccba-grilling/references/to-questionnaire.md: "0536d172206fcfd908e9b1c5b8223b927476fd5ab616ac50812bc0bccbc076e8"
   .agents/skills/ccba-grilling/references/workflow_looping.md: "69b935a69dc71e6495e7d62ba3af64e336b18689a1273cb4cee6eb1a28da0723"
   scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
@@ -45,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng Bước 0 (`in-your-own-words` & `sharpen`), 3 nhánh tác nghiệp (Standard Stress-Test, Rule Compliance Stress-Test, Visual Prototype Grilling), cấu trúc Cây thiết kế (`Design Tree`, `Frontier Questions`, `Facts vs. Decisions`), và tài liệu tham chiếu Tier 2A `references/to-questionnaire.md` (*"Grill the send, not the subject"*).
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `42db8f25ffd61a9d106312513ac980ae6bf1d088` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 
