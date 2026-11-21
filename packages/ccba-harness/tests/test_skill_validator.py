@@ -418,3 +418,35 @@ def test_boolean_string_normalization() -> None:
         issues = validator.audit_skill(file_path)
         # Should flag description too long since disable-model-invocation is effectively false
         assert any(i.category == "DESCRIPTION_TOO_LONG" for i in issues)
+
+
+def test_scope_posture_and_seam_ids_validation(tmp_path: Path) -> None:
+    """Verify optional/required ADR-0066 scope, posture, and seam_ids frontmatter checks."""
+    sf = tmp_path / "SKILL.md"
+    validator = SkillValidator(project_root=tmp_path)
+
+    # Default backward-compatible behavior ignores absent scope/posture
+    sf.write_text(_make_dummy_skill_content(extra_lines=35), encoding="utf-8")
+    assert validator.audit_skill(sf) == []
+
+    # Opt-in required flags detect missing scope & posture
+    req_issues = validator.audit_skill(sf, require_scope=True, require_posture=True)
+    cats = {i.category for i in req_issues}
+    assert {"MISSING_SCOPE_FIELD", "MISSING_POSTURE_FIELD"} <= cats
+
+    # Invalid enum values & malformed seam_ids are always caught
+    bad = _make_dummy_skill_content(extra_lines=35).replace(
+        "bundle: _core",
+        "bundle: _core\nscope: invalid_scope\nposture: bad_posture\nseam_ids: not-a-list",
+    )
+    sf.write_text(bad, encoding="utf-8")
+    bad_cats = {i.category for i in validator.audit_skill(sf)}
+    assert {"INVALID_SCOPE_FIELD", "INVALID_POSTURE_FIELD", "INVALID_SEAM_IDS_FIELD"} <= bad_cats
+
+    # Valid scope, posture, and seam_ids pass cleanly
+    good = _make_dummy_skill_content(extra_lines=35).replace(
+        "bundle: _core",
+        "bundle: _core\nscope: universal\nposture: package-bound\nseam_ids:\n  - pdf_preprocessor.v1",
+    )
+    sf.write_text(good, encoding="utf-8")
+    assert validator.audit_skill(sf, require_scope=True, require_posture=True) == []

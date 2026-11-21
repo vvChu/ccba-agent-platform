@@ -157,6 +157,9 @@ class SkillValidator:
         file_path: Path,
         check_shallow: bool = False,
         enforce_gpi: bool = False,
+        *,
+        require_scope: bool = False,
+        require_posture: bool = False,
     ) -> list[SkillAuditIssue]:
         """Audit a single SKILL.md file for CCBA compliance."""
         fp = str(file_path)
@@ -171,7 +174,14 @@ class SkillValidator:
         if fm_issues or match is None or meta is None:
             return fm_issues
 
-        issues = validate_skill_frontmatter_metadata(fp, content, meta, self.get_valid_bundles())
+        issues = validate_skill_frontmatter_metadata(
+            fp,
+            content,
+            meta,
+            self.get_valid_bundles(),
+            require_scope=require_scope,
+            require_posture=require_posture,
+        )
         issues.extend(
             self._audit_granularity_and_gpi(
                 file_path, meta.get("name"), meta, enforce_gpi, content=content

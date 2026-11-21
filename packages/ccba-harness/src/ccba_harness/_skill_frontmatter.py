@@ -20,6 +20,10 @@ except ImportError:
 FRONTMATTER_PATTERN = re.compile(r"\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)", re.DOTALL)
 FRONTMATTER_RE = FRONTMATTER_PATTERN
 DEFAULT_VALID_BUNDLES: set[str] = set("_core _software _qc _consulting _bim _governance".split())
+VALID_SKILL_SCOPES: frozenset[str] = frozenset({"hub", "spoke", "universal"})
+VALID_SKILL_POSTURES: frozenset[str] = frozenset(
+    {"seam-exempt", "package-bound", "skill-bound", "compose-existing"}
+)
 SHALLOW_SKILL_MIN_LINES = 35
 MAX_MODEL_INVOKED_PER_BUNDLE = 10
 
@@ -252,83 +256,52 @@ def validate_skill_name_field(fp: str, meta: dict[str, Any]) -> list[SkillAuditI
     """Validate skill `name` presence and ADR-0056 namespace contract."""
     name = meta.get("name")
     if not name or not isinstance(name, str):
-        return [
-            SkillAuditIssue(1, fp, "Missing or invalid 'name' in frontmatter", "MISSING_NAME", fp)
-        ]
-
+        return [_issue(fp, "Missing or invalid 'name' in frontmatter", "MISSING_NAME")]
     is_verify_cat = str(meta.get("category", "")).strip() == "verification"
-    is_valid_namespace = (
+    if (
         name.startswith(("ccba-", "bigbim-"))
         or name == "platform-loader"
         or (name.startswith("verify-") and is_verify_cat)
-    )
-    if is_valid_namespace:
+    ):
         return []
-
-    return [
-        SkillAuditIssue(
-            1,
-            fp,
-            f"Skill name '{name}' violates ADR-0056 namespace rules. "
-            "Must start with 'ccba-' (or 'bigbim-', 'verify-' with category: verification, or 'platform-loader')",
-            category="INVALID_NAMESPACE",
-            file_path=fp,
-        )
-    ]
+    msg = f"Skill name '{name}' violates ADR-0056 namespace rules. Must start with 'ccba-' (or 'bigbim-', 'verify-' with category: verification, or 'platform-loader')"
+    return [_issue(fp, msg, "INVALID_NAMESPACE")]
 
 
 def validate_skill_description_field(
-    fp: str,
-    meta: dict[str, Any],
-    disable_model_inv: Any,
+    fp: str, meta: dict[str, Any], disable_model_inv: Any
 ) -> list[SkillAuditIssue]:
     """Validate `description` presence and <= 180 char ceiling for model-invoked skills."""
     description = meta.get("description")
     if not description or not isinstance(description, str):
         return [
-            SkillAuditIssue(
-                1, fp, "Missing or invalid 'description' in frontmatter", "MISSING_DESCRIPTION", fp
-            )
+            _issue(fp, "Missing or invalid 'description' in frontmatter", "MISSING_DESCRIPTION")
         ]
     if not disable_model_inv and len(description) > 180:
-        return [
-            SkillAuditIssue(
-                1,
-                fp,
-                f"Description length ({len(description)}) exceeds 180 character limit "
-                "for model-invoked skill",
-                category="DESCRIPTION_TOO_LONG",
-                file_path=fp,
-            )
-        ]
+        msg = f"Description length ({len(description)}) exceeds 180 character limit for model-invoked skill"
+        return [_issue(fp, msg, "DESCRIPTION_TOO_LONG")]
     return []
 
 
 def validate_skill_bundle_field(
-    fp: str,
-    meta: dict[str, Any],
-    valid_bundles: set[str],
+    fp: str, meta: dict[str, Any], valid_bundles: set[str]
 ) -> list[SkillAuditIssue]:
     """Validate required `bundle` field against loaded taxonomy (ADR-0041 / ADR-0044)."""
     bundle = meta.get("bundle")
     if not bundle or not isinstance(bundle, str):
         return [
-            SkillAuditIssue(
-                1,
+            _issue(
                 fp,
                 "Skill is missing required 'bundle' field in frontmatter",
                 "MISSING_BUNDLE_FIELD",
-                fp,
             )
         ]
     if bundle not in valid_bundles:
         return [
-            SkillAuditIssue(
-                1,
+            _issue(
                 fp,
                 f"Skill bundle '{bundle}' is invalid. Must be one of: {sorted(valid_bundles)}",
-                category="INVALID_BUNDLE_FIELD",
-                file_path=fp,
+                "INVALID_BUNDLE_FIELD",
             )
         ]
     return []
@@ -338,28 +311,19 @@ def _check_command_prefix(fp: str, name: str, command: Any) -> list[SkillAuditIs
     """Check whether declared command matches canonical skill name slash prefixes."""
     cmd_base = str(command).strip().split()[0]
     expected_cmd = f"/{name}"
-    allowed_prefixes = (
+    allowed = (
         expected_cmd,
         f"/{name.replace('ccba-', '')}",
         f"/workflow_{name.replace('ccba-', '').replace('-', '_')}",
     )
-    if any(cmd_base == prefix for prefix in allowed_prefixes):
+    if any(cmd_base == prefix for prefix in allowed):
         return []
-    return [
-        SkillAuditIssue(
-            1,
-            fp,
-            f"Skill '{name}' command '{command}' does not match expected Slash Command name '{expected_cmd}'",
-            category="INVALID_COMMAND_FIELD",
-            file_path=fp,
-        )
-    ]
+    msg = f"Skill '{name}' command '{command}' does not match expected Slash Command name '{expected_cmd}'"
+    return [_issue(fp, msg, "INVALID_COMMAND_FIELD")]
 
 
 def validate_skill_command_contracts(
-    fp: str,
-    content: str,
-    meta: dict[str, Any],
+    fp: str, content: str, meta: dict[str, Any]
 ) -> list[SkillAuditIssue]:
     """Validate ADR-0056 slash command contract and ADR-0066 hub/spoke command distribution."""
     issues: list[SkillAuditIssue] = []
@@ -368,40 +332,64 @@ def validate_skill_command_contracts(
     user_invocable = normalize_bool_flag(meta.get("user-invocable", False))
     command = meta.get("command")
 
-    if user_invocable:
-        if not command:
-            expected_cmd = f"/{name}" if name else ""
-            issues.append(
-                SkillAuditIssue(
-                    1,
-                    fp,
-                    f"Skill '{name}' has 'user-invocable: true' but is missing "
-                    f"'command: {expected_cmd}' in frontmatter (ADR-0056 Slash Command contract)",
-                    category="MISSING_COMMAND_FIELD",
-                    file_path=fp,
-                )
-            )
-        elif name_str:
-            issues.extend(_check_command_prefix(fp, name_str, command))
+    if user_invocable and not command:
+        expected_cmd = f"/{name}" if name else ""
+        msg = f"Skill '{name}' has 'user-invocable: true' but is missing 'command: {expected_cmd}' in frontmatter (ADR-0056 Slash Command contract)"
+        issues.append(_issue(fp, msg, "MISSING_COMMAND_FIELD"))
     elif command and name_str:
         issues.extend(_check_command_prefix(fp, name_str, command))
 
     dist_invocable = normalize_bool_flag(
         meta.get("user-invocable", meta.get("user_invocable", False))
     )
-    bundle = meta.get("bundle")
-    if command and dist_invocable and bundle == "_governance":
+    if command and dist_invocable and meta.get("bundle") == "_governance":
         scope = str(meta.get("scope", "")).strip().lower()
         if scope != "hub" and "# ccba:allow-hub-only-command" not in content:
+            msg = (
+                f"Skill '{name}' declares interactive command '{command}' with 'bundle: _governance' "
+                "without 'scope: hub' (ADR-0066). Spoke developers will not get IDE slash command "
+                "autocomplete. Either promote to 'bundle: _core' or declare 'scope: hub' if Hub-only."
+            )
+            issues.append(_issue(fp, msg, "INVALID_COMMAND_DISTRIBUTION"))
+    return issues
+
+
+def validate_skill_scope_and_posture(
+    fp: str, meta: dict[str, Any], *, require_scope: bool = False, require_posture: bool = False
+) -> list[SkillAuditIssue]:
+    """Validate optional/required ADR-0066 scope, ADR-0061 posture, and seam_ids fields."""
+    issues: list[SkillAuditIssue] = []
+    checks = (
+        ("scope", VALID_SKILL_SCOPES, require_scope, "MISSING_SCOPE_FIELD", "INVALID_SCOPE_FIELD"),
+        (
+            "posture",
+            VALID_SKILL_POSTURES,
+            require_posture,
+            "MISSING_POSTURE_FIELD",
+            "INVALID_POSTURE_FIELD",
+        ),
+    )
+    for key, allowed, required, miss_cat, bad_cat in checks:
+        val = meta.get(key)
+        if val is None:
+            if required:
+                issues.append(_issue(fp, f"Skill is missing required '{key}' field", miss_cat))
+        elif not isinstance(val, str) or val.strip() not in allowed:
             issues.append(
-                SkillAuditIssue(
-                    1,
+                _issue(
+                    fp, f"Invalid skill {key} {val!r}. Must be one of: {sorted(allowed)}", bad_cat
+                )
+            )
+    if "seam_ids" in meta and meta.get("seam_ids") is not None:
+        seam_ids = meta.get("seam_ids")
+        if not isinstance(seam_ids, list) or not all(
+            isinstance(s, str) and s.strip() for s in seam_ids
+        ):
+            issues.append(
+                _issue(
                     fp,
-                    f"Skill '{name}' declares interactive command '{command}' with 'bundle: _governance' "
-                    "without 'scope: hub' (ADR-0066). Spoke developers will not get IDE slash command "
-                    "autocomplete. Either promote to 'bundle: _core' or declare 'scope: hub' if Hub-only.",
-                    category="INVALID_COMMAND_DISTRIBUTION",
-                    file_path=fp,
+                    "Field 'seam_ids' must be a list of non-empty strings",
+                    "INVALID_SEAM_IDS_FIELD",
                 )
             )
     return issues
@@ -412,12 +400,20 @@ def validate_skill_frontmatter_metadata(
     content: str,
     meta: dict[str, Any],
     valid_bundles: set[str],
+    *,
+    require_scope: bool = False,
+    require_posture: bool = False,
 ) -> list[SkillAuditIssue]:
-    """Validate skill frontmatter fields (name, description, bundle, slash commands)."""
+    """Validate skill frontmatter fields (name, description, bundle, slash commands, scope, posture)."""
     disable_model_inv = normalize_bool_flag(meta.get("disable-model-invocation", False))
     issues: list[SkillAuditIssue] = []
     issues.extend(validate_skill_name_field(fp, meta))
     issues.extend(validate_skill_description_field(fp, meta, disable_model_inv))
     issues.extend(validate_skill_bundle_field(fp, meta, valid_bundles))
     issues.extend(validate_skill_command_contracts(fp, content, meta))
+    issues.extend(
+        validate_skill_scope_and_posture(
+            fp, meta, require_scope=require_scope, require_posture=require_posture
+        )
+    )
     return issues

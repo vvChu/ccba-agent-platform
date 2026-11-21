@@ -20,6 +20,8 @@ from ccba_harness.economy import (
     SkillPromptMetrics,
     analyze_skill_prompt_density,
     calculate_role_aware_roi,
+    check_skill_token_budget,
+    count_skill_tokens_lf,
     detect_sentence_duplicates,
     generate_prompt_pruning_report,
 )
@@ -249,3 +251,86 @@ def test_cli_ccba_harness_economy() -> None:
     parsed = json.loads(res.stdout)
     assert "total_skills" in parsed
     assert "total_prompt_tokens_est" in parsed
+
+
+def test_real_codebase_skill_token_budget_ratchet() -> None:
+    """Verify all live Hub skills satisfy the one-way LF token ratchet baseline."""
+    repo_root = Path(__file__).resolve().parents[2]
+    res = check_skill_token_budget(
+        repo_root / ".agents" / "skills",
+        repo_root / "scripts" / "skill_token_budget_baseline.json",
+    )
+    assert res.checked_count >= 70
+    assert res.passed, f"Skill token ratchet violations: {res.violations}"
+    assert res.orphan_baseline_keys == []
+
+
+def test_skill_token_ratchet_lf_parity_orphan_and_no_upward_ratchet(tmp_path: Path) -> None:
+    """Verify CRLF==LF counts, orphan detection, downward pruning, and refusal to raise ceiling."""
+    skills_dir = tmp_path / "skills"
+    s_dir = skills_dir / "ccba-sample"
+    s_dir.mkdir(parents=True)
+    body = "---\nname: ccba-sample\ndisable-model-invocation: false\n---\n" + ("word " * 120)
+    s_file = s_dir / "SKILL.md"
+    s_file.write_bytes(body.replace("\n", "\r\n").encode("utf-8"))
+    assert count_skill_tokens_lf(body) == count_skill_tokens_lf(body.replace("\n", "\r\n"))
+
+    base_file = tmp_path / "baseline.json"
+    base_file.write_text(json.dumps({"ccba-sample": 4000, "ghost-skill": 4200}), encoding="utf-8")
+    res_orphan = check_skill_token_budget(skills_dir, base_file)
+    assert not res_orphan.passed
+    assert res_orphan.orphan_baseline_keys == ["ghost-skill"]
+
+    # Prune ghost + auto-prune sample because tokens <= 3500 ceiling
+    res_prune = check_skill_token_budget(skills_dir, base_file, update_baseline=True)
+    assert res_prune.passed
+    assert res_prune.updated_baseline == {}
+
+    # Bloat beyond 3500 -> check and update must BOTH fail without raising baseline
+    s_file.write_text(body + ("extra " * 3800), encoding="utf-8")
+    res_fail = check_skill_token_budget(skills_dir, base_file, update_baseline=True)
+    assert not res_fail.passed
+    assert res_fail.updated_baseline is None
+    assert json.loads(base_file.read_text(encoding="utf-8")) == {}
+
+
+def test_outside_check1_cli_blocks_500_token_bloat(tmp_path: Path) -> None:
+    """Outside Check 1: +500 injected tokens fails check-ratchet AND --ratchet-update exit 1."""
+    import shutil
+
+    repo_root = Path(__file__).resolve().parents[2]
+    tmp_skills = tmp_path / "skills"
+    shutil.copytree(repo_root / ".agents" / "skills", tmp_skills)
+    tmp_base = tmp_path / "baseline.json"
+    original_base = (repo_root / "scripts" / "skill_token_budget_baseline.json").read_text(
+        encoding="utf-8"
+    )
+    tmp_base.write_text(original_base, encoding="utf-8")
+
+    # platform-loader is ~2,485 tokens (< 3,500) -> +1,500 words (~1,875 tokens) breaches 3,500 ceiling
+    target = tmp_skills / "platform-loader" / "SKILL.md"
+    target.write_text(
+        target.read_text(encoding="utf-8") + "\n" + ("tokenbloat " * 1500),
+        encoding="utf-8",
+    )
+
+    for extra_args in ([], ["--ratchet-update"]):
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(repo_root / "scripts" / "governance" / "token_economy.py"),
+                "check-ratchet",
+                "--root",
+                str(tmp_skills),
+                "--baseline",
+                str(tmp_base),
+                *extra_args,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        assert proc.returncode == 1
+        assert "platform-loader" in proc.stderr
+    assert tmp_base.read_text(encoding="utf-8") == original_base
