@@ -134,47 +134,17 @@ Khi nhận yêu cầu phân loại hoặc đặt tên từ người dùng, Agent
 
 ## 📝 Định dạng đầu ra bắt buộc (Output Template)
 
-Kết quả phân loại phải được trả về dưới dạng bảng Markdown kèm theo định dạng JSON cấu trúc:
-
-```json
-[
-  {
-    "classification_id": "CLASS-001",
-    "project_type": "Building",
-    "uniclass_code": "SL_25_10_72",
-    "uniclass_table": "Spaces/locations (SL)",
-    "title_vi": "Không gian đọc sách công cộng",
-    "standard_mapping": {
-      "iso_12006": "Result",
-      "iso_19650_naming": "HLB-B1-L02-SL_25_10_72-005",
-      "wbs_level": "Level 4 - Room Space"
-    },
-    "metadata": {
-      "building_ref": "En_25_70_47",
-      "floor": "L02",
-      "zone": "Public Area"
-    }
-  }
-]
-```
+Kết quả phân loại trả về dạng **bảng Markdown** kèm **JSON cấu trúc** (`classification_id`, `project_type`, `uniclass_code`, `uniclass_table`, `title_vi`, `standard_mapping` gồm `iso_12006`/`iso_19650_naming`/`wbs_level`, và `metadata` — xem lược đồ mẫu tại `references/classification_examples.md`).
 
 ## 7. Rào Chắn Phân Định Bẫy Red-Team & Chuẩn Hóa Lỗi Viết Tắt
 * **Bẫy Hộp Kỹ Thuật (Hybrid Enclosure):** Phân loại vỏ hộp bao che là `EF_25_10` (Kiến trúc Result), chứa các hệ thống MEP con `Ss` bên trong.
 * **Bẫy Viết Tắt (Slang Normalization):** Tự động chuẩn hóa `btct` -> Bê tông cốt thép (`EF_20_20`), `san T3` -> `L03`.
 * **Bẫy Hai Góc Nhìn (Result vs Resource):** Bóc tách rõ `EF_25_30` (Mô hình BIM Object Result) vs `Pr_30_59_24` (Mua sắm BOQ Resource) bảo tồn Trí Nhớ Số.
 * **Bẫy Khoang Đệm Ngăn Cháy (Airlock Buffer):** Bắt buộc phân loại là `SL_25_30_70` (Không gian đệm an toàn/Air-lock).
-* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure và Trí Nhớ Số dọc tim tuyến (KM).
+* **Định danh Tuyến Hạ tầng IFC Alignment & ISO 19650:** Định danh cấu trúc không gian Spatial Structure (IFC4X3) và Trí Nhớ Số dọc tim tuyến (`KM`), tích hợp WBS ISO 21511 Level 1-4.
 
-## Quy Tắc Phân Tầng Uniclass & Chuẩn ISO Nền Tảng
-* **Bảng phân loại Uniclass 200:** Co (Complexes) -> En (Entities) -> SL (Spaces) -> EF (Elements) -> Ss (Systems) -> Pr (Products) -> PM (Project Management).
-* **Tuân thủ ISO 12006-2:2015 & ISO 22274:** Phân tách rõ ràng giữa Resources, Processes, Results, Properties.
-* **Quy ước đặt tên ISO 19650 & IFC Alignment:** Đảm bảo tính nhất quán định danh Container cho mọi BIM Object.
-* **Bảo tồn Trí Nhớ Số (Digital Memory):** Đảm bảo tính nhất quán định danh Container và cấu trúc dữ liệu cho mọi BIM Object.
+## Progressive Disclosure & Reference Index (Level 3)
 
-## Bất Biến Trí Nhớ Số (Digital Memory) & Cấu Trúc Không Gian (Spatial Structure)
-* **Trí Nhớ Số (Digital Memory):** Chuyển hóa toàn bộ dữ liệu mô hình BIM thành tài sản thông tin dài hạn kế thừa suốt vòng đời.
-* **IFC4X3 Spatial Hierarchy:** Ánh xạ cấu trúc không gian chuẩn xác từ Site -> Building -> Floor -> Space/Room.
-
-## Phân Rã WBS Chuẩn ISO 21511 & Ánh Xạ Thực Thể IFC4X3
-* **WBS Level 1-4:** Phân cấp cấu trúc công việc tích hợp mã phân loại chi phí và tiến độ.
-* **IFC Entity Alignment:** Đồng bộ các lớp IfcSystem, IfcProduct, IfcSpace theo tiêu chuẩn OpenBIM.
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/classification_examples.md` | Mẫu JSON đầu ra chuẩn (`Output Template`) và bảng đối chiếu Uniclass 200 / ISO 21511 / IFC4X3 mở rộng |

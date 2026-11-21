@@ -48,16 +48,8 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 ### Bước 2: Phỏng Vấn Làm Rõ Thích Ứng (Adaptive Diagnostic Interviewing)
 * **Nguyên tắc linh hoạt (Không giới hạn cứng):** Số lượng câu hỏi làm rõ phụ thuộc vào độ phức tạp của bài toán, nhưng **mỗi lượt hỏi tối đa 1–2 câu** để tránh làm người dùng mệt mỏi.
 * **Luôn kèm phương án chọn nhanh (A/B/C):** Đưa ra các gợi ý cụ thể để người dùng chỉ cần chọn hoặc gõ 1 chữ cái.
-* **Lối thoát giả định tham số công trình:** Ở mỗi lượt hỏi, nếu người dùng chưa có số liệu dự án, cho phép đưa ra tối đa 2 kịch bản giả định thông số (phải gắn nhãn `[GIẢ ĐỊNH DỰ ÁN]`).
-* **Gợi ý 4 Khung Mẫu Tương Tác Động (Dynamic Interaction Archetypes):**
-  1. *[Mẫu 1 — Thẩm định tham số]:* Kiểm tra thông số kỹ thuật cụ thể của công trình (Bậc chịu lửa, số thang, tải trọng...).
-  2. *[Mẫu 2 — Đối chiếu chuyển tiếp]:* So sánh quy định cũ vs mới để bảo vệ quyền lợi không hồi tố.
-  3. *[Mẫu 3 — Bảng Ma trận Checklist]:* Xuất bảng đối soát đa cột phục vụ báo cáo thẩm tra kỹ thuật.
-  4. *[Mẫu 4 — Bóc tách Biểu mẫu & Thủ tục]:* Hướng dẫn hồ sơ cấp phép xây dựng hoặc nghiệm thu hoàn công.
-* **Giao thức Ngôn ngữ Chung Ba Bề Mặt (Tri-Surface Ubiquitous Language — Quyết định 1812/QĐ-BXD & CCBA WAY):**
-  - *Bề mặt Giao tiếp Người dùng (Human / Statutory Surface):* Khi đặt câu hỏi làm rõ (A/B/C), sử dụng nguyên văn danh mục chuẩn hóa của Bộ Xây dựng (`1812/QĐ-BXD`): 5 nguồn vốn (`VONDAUTUCONG - Vốn đầu tư công`, `VONNHANUOC - Vốn nhà nước ngoài đầu tư công`, `PPP - Dự án PPP`, `KHAC - Vốn khác`, `HONHOP - Vốn hỗn hợp`), 4 kịch bản thủ tục công trình (`II.A` Dự án đầu tư xây dựng, `II.B` Công trình xây dựng yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, `II.C` Công trình xây dựng không yêu cầu thẩm định thiết kế xây dựng triển khai sau thiết kế cơ sở tại cơ quan chuyên môn về xây dựng, chỉ yêu cầu cấp giấy phép xây dựng, `II.D` Công trình xây dựng không yêu cầu lập dự án đầu tư xây dựng, chỉ yêu cầu cấp giấy phép xây dựng), 5 cấp công trình (`DACBIET - Cấp đặc biệt`, `I - Cấp I` .. `IV - Cấp IV`), và địa giới hành chính 2 cấp (`Tỉnh/Thành phố` + `Phường/Xã/Đặc khu` theo Quyết định 19/2025/QĐ-TTg).
-  - *Bề mặt Quản trị Nội bộ (CCBA WAY / ADR-0046 Surface):* Phân định rõ 3 tầng trách nhiệm trong Phiếu Giao Việc (PGV theo QCTK 2815): **Chủ trì Hợp đồng** (`CHU_TRI_HOP_DONG_PM` — cấp hợp đồng), **Chủ nhiệm theo hoạt động xây dựng** (`vaiTroChuTri` mã `1..9` theo Mục II.C.11 Quyết định 1812/QĐ-BXD: `1- Chủ nhiệm lập quy hoạch`, `3- Chủ nhiệm khảo sát xây dựng`, `4- Chủ nhiệm thiết kế`, `6- Chủ nhiệm thẩm tra thiết kế`, `8- Giám sát trưởng của đơn vị giám sát`, `9- Chỉ huy trưởng của nhà thầu thi công xây dựng công trình`), và **Chủ trì Bộ môn** (`CHU_TRI_BO_MON` — cấp bộ môn chuyên ngành: `2- Chủ trì bộ môn thiết kế`, `5- Chủ trì bộ môn thiết kế (thiết kế xây dựng)`, `7- Chủ trì thẩm tra các bộ môn thiết kế`).
-  - *Bề mặt Nội bộ Agent (Agent Internal State):* Ghi nhận song song khóa kỹ thuật chuẩn `camelCase` (`nguonVonDauTu`, `nhomDuAn`, `loaiDuAn`, `capCongTrinh`, `section_namespace`, `maTinh`, `maXa`, `vaiTroChuTri`) trong Mục 1 của Phiếu Giải Đáp Pháp Lý để sẵn sàng liên thông CSDL Quốc gia và `IDOPBridge`.
+* **Lối thoát giả định tham số công trình:** Cho phép đưa tối đa 2 kịch bản giả định thông số nếu thiếu số liệu dự án (phải gắn nhãn `[GIẢ ĐỊNH DỰ ÁN]`).
+* **Ngôn ngữ Ba Bề Mặt (`1812/QĐ-BXD` & CCBA WAY) và 4 Khung Mẫu Tương Tác Động:** Khi phỏng vấn A/B/C và lập Mục 1 của Phiếu, áp dụng chuẩn 5 nguồn vốn, 4 kịch bản (`II.A`–`II.D`), 5 cấp công trình, địa giới 2 cấp (`19/2025/QĐ-TTg`), 3 tầng PGV (`QCTK 2815`) và khóa `camelCase` (`nguonVonDauTu`, `nhomDuAn`, `loaiDuAn`, `capCongTrinh`, `maTinh`, `maXa`, `vaiTroChuTri`) — tra cứu danh mục chi tiết tại `references/legal_opinion_template_and_lookup.md`.
 - **Tiêu chí hoàn thành:** Thu thập đủ dữ liệu đầu vào cần thiết thông qua phỏng vấn thích ứng kèm gợi ý lựa chọn.
 
 ---
@@ -65,93 +57,44 @@ Khi tiếp nhận yêu cầu từ người dùng, Agent phân loại câu hỏi 
 ### Bước 3: Truy Xuất Tri Thức Pháp Lý OKF v2.4 (AST & Table Retrieval)
 
 > [!CRITICAL]
-> **MANDATORY GROUNDING INVARIANT (RÀO CHẮN BẮT BUỘC):**
-> Tuyệt đối **KHÔNG ĐƯỢC** xuất kết luận pháp lý chỉ dựa trên bộ nhớ mô hình (LLM parametric memory).
-> Agent **BẮT BUỘC** phải thực thi kiểm chứng thực tế và ưu tiên sử dụng Deep Seam CLI để chống cháy ngữ cảnh (tiết kiệm 95% token so với đọc file thô):
-> - **Lệnh trích xuất điều khoản trực tiếp (Ưu tiên số 1):**
->   ```bash
->   python -m ccba_legal get-clause --doc <doc_id> --clause <clause_id>
->   ```
-> - **Lệnh tìm kiếm ngữ nghĩa:**
->   ```bash
->   python -m ccba_legal query "<nội_dung_cần_tra_cứu>"
->   ```
-> 
-> Thứ tự phân giải đường dẫn 3 tầng tự động:
-> 1. **Tầng 1 (Virtual-First / Cục bộ Spoke):** Trích xuất qua Deep Seam CLI hoặc quét thư mục `.\.md\legal_docs\` tại Spoke. Khi cần cô lập ngoại tuyến, kéo chọn lọc đúng văn bản dự án: `python -m ccba_legal sync --pull-latest --doc <doc_id>`.
-> 2. **Tầng 2 (Spoke Tri Thức Gốc):** Tự động phát hiện vị trí `ccba-legal-knowledge` trên máy tính thông qua biến môi trường `CCBA_LEGAL_KNOWLEDGE_PATH` hoặc Registry Hub.
-> 3. **Tầng 3 (Danh mục SSOT):** Tra cứu qua `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đối soát trạng thái hiệu lực chuẩn hóa `ACTIVE` và các quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) nhằm loại bỏ triệt để văn bản đã hết hiệu lực hoặc bị thay thế.
+> **MANDATORY GROUNDING INVARIANT:** Cấm xuất kết luận pháp lý từ bộ nhớ mô hình; bắt buộc tra cứu qua Deep Seam CLI:
+> `python -m ccba_legal get-clause --doc <doc_id> --clause <clause_id>` và `python -m ccba_legal query "<nội_dung>"`.
 
-* **Cơ chế Điều hướng Ngữ nghĩa Hai Giai đoạn (Two-Stage Semantic Routing):**
-  1. **Giai đoạn 1 — Khoanh vùng Văn bản & Vành đai (Document & Ring Pruning):** Khi xử lý vấn đề liên quan đến văn bản hạt nhân (ví dụ: Luật Xây dựng 2025 số 135/2025/QH15), Agent gọi Seam CLI:
-     ```bash
-     python scripts/spoke_cli.py graph --doc <doc_id> [--json]
-     ```
-     để thu hẹp không gian tìm kiếm về đúng Vành đai tương ứng:
-     - *Vành đai 1 (Thi hành - `enacted_by`):* Nghị định chi tiết & hướng dẫn thi hành (cấp phép, quản lý dự án).
-     - *Vành đai 2 (Chế tài - `sanctioned_by`):* Nghị định xử phạt vi phạm hành chính (ví dụ: NĐ 339/2026/NĐ-CP).
-     - *Vành đai 3 (Liên đới - `interlocks_with`):* Luật/Nghị định chuyên ngành liên đới ngang (PCCC NĐ 105/2025/NĐ-CP, Môi trường, Đất đai).
-     - *Vành đai 4 (Quy chuẩn - `mandatory_codes`):* Quy chuẩn kỹ thuật quốc gia bắt buộc (QCVN 06:2022/BXD, QCVN 07:2023/BXD...).
-     - *Vành đai 5 (Ủy quyền địa phương - `local_delegations`):* Quyết định UBND phân cấp thẩm quyền (QĐ 38/2026/QĐ-UBND...).
-  2. **Giai đoạn 2 — Truy xuất Điều khoản & Dữ liệu Nguyên tử (Clause & Chunk Retrieval):** Sau khi xác định văn bản đích từ đồ thị, thực thi trích xuất chính xác cây điều khoản AST `clauses.json`, văn bản thuần khiết `<slug>.md`, bảng số liệu 2D `tables/csv/*.csv` hoặc biểu mẫu `templates/` của văn bản đó qua `get-clause` hoặc `query`.
-* Áp dụng **ADR 0024 (Dual-Track Provenance)**: Luôn trích dẫn nội dung hợp nhất kèm Footnote thông tư sửa đổi ban hành.
-* Mọi điều khoản, quy chuẩn đưa vào Bảng Ma trận ở Bước 4 **BẮT BUỘC phải kèm vết truy xuất nguồn gốc (Provenance Stamping)**: Ghi rõ document slug, mã băm `pdf_sha256` và đường dẫn tương đối trong repo tri thức (tuyệt đối không dùng link `file:///` tuyệt đối).
+Thứ tự phân giải đường dẫn 3 tầng: (1) Virtual-First / `.\.md\legal_docs\` (hoặc `python -m ccba_legal sync --pull-latest --doc <doc_id>`), (2) `CCBA_LEGAL_KNOWLEDGE_PATH` / Hub Registry, (3) `ccba_legal.registry` đối soát trạng thái `ACTIVE` và quan hệ `supersedes` / `replaces` / `replaced_docs`.
+
+* **Two-Stage Semantic Routing:**
+  1. **Giai đoạn 1 (Graph Pruning):** Chạy `python scripts/spoke_cli.py graph --doc <doc_id> [--json]` để thu hẹp 5 Vành đai: Vành đai 1 (`enacted_by`), Vành đai 2 (`sanctioned_by`, ví dụ NĐ 339/2026), Vành đai 3 (`interlocks_with` PCCC/Môi trường/Đất đai), Vành đai 4 (`mandatory_codes` QCVN 06/07), Vành đai 5 (`local_delegations` QĐ UBND).
+  2. **Giai đoạn 2 (Atomic Retrieval):** Trích xuất `clauses.json`, `<slug>.md`, `tables/csv/*.csv`, `templates/` kèm **ADR 0024 Dual-Track Provenance** (document slug, `pdf_sha256`, đường dẫn tương đối; cấm dùng `file:///`).
 - **Tiêu chí hoàn thành:** Truy xuất chính xác điều khoản, bảng số liệu kỹ thuật và biểu mẫu liên quan từ kho tri thức OKF qua cơ chế Two-Stage Routing kèm vết provenance xác thực.
 
 ---
 
 ### Bước 4: Trình Bày Theo Chuẩn Form "Phiếu Giải Đáp Pháp Lý CCBA"
-Mọi câu trả lời cuối cùng bắt buộc phải được định dạng theo cấu trúc 4 phần sau:
 
-```markdown
-# 🏛️ PHIẾU GIẢI ĐÁP PHÁP LÝ & QUY CHUẨN XÂY DỰNG (CCBA LEGAL OPINION)
+Mọi kết luận phải xuất đủ 4 phần theo mẫu tại `references/legal_opinion_template_and_lookup.md`:
+1. `Tóm Tắt Bối Cảnh & Vấn Đề Pháp Lý`
+2. `Kết Luận Pháp Lý Trọng Tâm`
+3. `Căn Cứ Pháp Lý & Ma Trận Đối Chiếu Chi Tiết` (kèm `pdf_sha256` + link nguồn)
+4. `Khuyến Nghị Kỹ Thuật & Cảnh Báo Rủi Ro`
 
-## 1. 📌 Tóm Tắt Bối Cảnh & Vấn Đề Pháp Lý
-- Loại công trình & Nhóm công năng: [Ví dụ: Khách sạn 12 tầng, F1.2]
-- Thông số kỹ thuật cốt lõi: [Chiều cao PCCC, diện tích sàn, cấp công trình...]
-- Yêu cầu pháp lý cần giải quyết: [Câu hỏi trọng tâm]
-
-## 2. ⚡ Kết Luận Pháp Lý Trọng Tâm (Executive Summary)
-- [Khẳng định dứt khoát: BẮT BUỘC / ĐƯỢC MIỄN / ĐẠT CHUẨN / CẦN ĐIỀU CHỈNH]
-- Thẩm quyền giải quyết (Sở Xây dựng / Cảnh sát PCCC / Chủ đầu tư tự duyệt).
-
-## 3. 🔍 Căn Cứ Pháp Lý & Ma Trận Đối Chiếu Chi Tiết
-| STT | Phân Hệ / Tiêu Chí | Quy Định Pháp Luật Bắt Buộc | Điều Khoản / Bảng Trích Dẫn | Vết Xác Thực Nguồn Gốc (Provenance) | Đánh Giá Áp Dụng |
-| :---: | :--- | :--- | :--- | :--- | :---: |
-| 1 | ... | ... | [Điều ... Luật Xây dựng 2025](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../metadata.yaml`) | 🟢 Đạt / 🔴 Chưa đạt |
-| 2 | ... | ... | [Bảng ... QCVN 06:2022](...) | `pdf_sha256: [hash]` (nguon: `legal_docs/.../clauses.json`) | ... |
-
-## 4. ⚠️ Khuyến Nghị Kỹ Thuật & Cảnh Báo Rủi Ro (Actionable Advice)
-- **Hồ sơ / Biểu mẫu cần chuẩn bị:** [Đính kèm biểu mẫu từ templates/]
-- **Rủi ro cần phòng tránh:** [Lưu ý về PCCC, điều khoản chuyển tiếp, chế tài phạt...]
-```
 - **Tiêu chí hoàn thành:** Xuất văn bản Phiếu Giải Đáp Pháp Lý CCBA lưu vào `.\.md\reports/` và vượt qua cổng kiểm định máy tính:
   ```bash
   python -m ccba_harness verify-patch --preset doc --target <đường_dẫn_tệp_kết_xuất> --min-bytes 300 --required-headings "Tóm Tắt Bối Cảnh,Kết Luận Pháp Lý,Căn Cứ Pháp Lý,Khuyến Nghị Kỹ Thuật"
   ```
-  Lệnh kiểm định trả về **Exit Code 0** (Overall Status: PASS). Theo quy tắc Khóa Cứng (ADR-0058): Cấm tuyệt đối Agent tuyên bố hoàn tất nếu tệp chưa được ghi ra đĩa hoặc thiếu các phân mục pháp lý cốt lõi.
+  Lệnh phải trả về **Exit Code 0** (`ADR-0058`). Cấm tuyên bố hoàn tất nếu thiếu phân mục hoặc chưa ghi ra đĩa.
 
 ---
 
-## 📋 Tiêu Chí Nghiệm Thu & Cổng Khóa Cứng (Completion Criteria & Hard Gate)
-- [x] Phát hiện chính xác câu hỏi mơ hồ và kích hoạt phỏng vấn thích ứng hoặc Fast-track.
-- [x] Lồng ghép linh hoạt 4 Khung Mẫu Tương Tác Động theo đúng bối cảnh của người dùng.
-- [x] Định dạng đầu ra tuân thủ 100% Cấu trúc 4 phần của Phiếu Giải Đáp Pháp Lý CCBA.
-- [x] Trích dẫn đúng 100% Điều khoản, Phụ lục và Bảng số liệu từ kho tri thức OKF v2.4 kèm link file nguồn thực tế.
-- [x] Tuân thủ Mandatory Grounding Invariant, cấm hoàn toàn suy đoán từ bộ nhớ tham số mà không có công cụ đọc file.
-- [x] Vượt qua cổng `ccba-harness verify-patch --preset doc` với Exit Code 0 trước khi bàn giao cho người dùng.
+## 📋 Tiêu Chí Nghiệm Thu & Rào Chắn Điểm Liệt (Hard Floor `ACTIVE`)
 
-## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
-* **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
-* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
-* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
+- **Hard Floor Invariant (Fail-Fast 0.0%):** Tuyệt đối không trích dẫn văn bản hết hiệu lực hoặc bị thay thế. Đối soát qua `python -m ccba_legal query` / `ccba_legal.registry`: đạt `ACTIVE` (`normalize_doc_status`), rỗng `superseded_by`/`replaced_by`/`replaced_by_docs` (kế nhiệm có `supersedes`/`replaces`/`replaced_docs`/`relations.*` hợp lệ).
+- **Checklist nghiệm thu:** Phân loại đúng độ phức tạp; dùng 4 Khung Mẫu Tương Tác; xuất đủ Form 4 phần; 100% trích dẫn kèm nguồn + `pdf_sha256` từ OKF v2.4 (không suy đoán); `verify-patch --preset doc` Exit Code 0.
 
 ---
 
 ## Progressive Disclosure & Reference Index (Level 3)
 
-Khi tư vấn chuyên sâu cho công trình sản xuất công nghiệp hoặc tổ hợp kỹ thuật phức tạp, Agent đọc tài liệu tham chiếu chuyên đề tại tầng Level 3:
-
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | [`references/industrial_f5_pccc_pitfalls.md`](references/industrial_f5_pccc_pitfalls.md) | Quy tắc tách bạch "3 Sổ Độc Lập" cho tầng lửng & sàn thao tác Catwalk/OHU, phòng máy chủ (`QCVN 10:2025/BCA`), trạm bơm & bể nước PCCC (`QCVN 02:2020/BCA`), khối tích Bảng 16 & lỗ mở mái 2,5% cho nhà máy công nghiệp nhóm `F5` |
+| [`references/legal_opinion_template_and_lookup.md`](references/legal_opinion_template_and_lookup.md) | Bộ danh mục Quyết định `1812/QĐ-BXD` ba bề mặt, 4 Khung Mẫu Tương Tác Động và biểu mẫu đầy đủ 4 phần Phiếu Giải Đáp Pháp Lý CCBA |

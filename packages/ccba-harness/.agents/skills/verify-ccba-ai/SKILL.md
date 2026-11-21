@@ -17,14 +17,14 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.0
-sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
+sync_commit: "84aadc9d618d976aba688d8a2df050909241e205"
 covered_sha256:
   packages/ccba-ai/src/ccba_ai/__init__.py: "c40f2edf7e9cc35ce55d01a31d6583a52fe269ca9def4b655d911da1bb99d09a"
   packages/ccba-ai/src/ccba_ai/circuit_breaker.py: "3cb4f63536d418b547a0e0c454871dd4ad0d47ead5e04b67a21bed477c721daa"
   packages/ccba-ai/src/ccba_ai/fallback.py: "eb10afcb743535763e1836eb6869ba88a75c20f9eda69457c4dfb02ea21c92d7"
   packages/ccba-ai/src/ccba_ai/routing.py: "44d2bd21c5d9d4db9f3a4f2aaa391603c0784778aa5dcede76488962362a463d"
   packages/ccba-ai/src/ccba_ai/client.py: "5790930bc2328351892c920ebabaacc7d965eb89c1ce678a83d4607cd1d9b2a3"
-  .agents/skills/ccba-ai-gateway-sdk/SKILL.md: "f3da3f68b4babc71c59ef891563255082ac7ef10d7ebecbb83a1f84e0fa396b3"
+  .agents/skills/ccba-ai-gateway-sdk/SKILL.md: "01b6663e90070946d3460df9017088064230c44ae9b7cf59c88416a4b29d8c8f"
 verification_mode:
   - scaffold
   - sync
@@ -49,7 +49,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-ai`
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định trực tiếp các Public Deep Seams của `ccba_ai` (`ai`, `AIClient`, `AsyncAIClient`, `choose_model`, `resolve_max_tokens`, `CircuitBreaker`, `CircuitState`, `CircuitBreakerOpenError`, `TieredFallbackRouter`, `map_model_for_tier`) cùng tài liệu kỹ năng `/ccba-ai-gateway-sdk`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `6` tệp `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit `84aadc9d618d976aba688d8a2df050909241e205` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `6` tệp `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

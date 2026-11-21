@@ -204,53 +204,12 @@ def hybrid_search(
 
 ---
 
-## Corpus Scoping (Optional nhưng quan trọng)
+## Corpus Scoping, Graceful Degradation & Caching
 
-Trước khi search, filter corpus theo metadata → tăng precision đáng kể.
-
-```python
-def scope_corpus_by_chapter(
-    full_corpus: list[dict],  # [{"text": "...", "chapter": 3, "page": 45}, ...]
-    target_chapter: int
-) -> list[str]:
-    """Lọc corpus theo chapter. Returns: list of text strings."""
-    return [doc["text"] for doc in full_corpus
-            if doc.get("chapter") == target_chapter]
-
-# Tương tự cho domain filtering (pháp lý, kỹ thuật, tài chính...)
-def scope_corpus_by_domain(full_corpus, domain: str) -> list[str]:
-    return [doc["text"] for doc in full_corpus
-            if doc.get("domain") == domain]
-
-# Lọc corpus theo Vành đai Quan hệ Pháp lý (5-Ring Legal Graph Pruning)
-def scope_corpus_by_legal_ring(
-    full_corpus: list[dict],
-    allowed_doc_ids: set[str]
-) -> list[str]:
-    """Lọc các đoạn trích chỉ thuộc các văn bản nằm trong vành đai quan hệ mục tiêu.
-    Danh sách allowed_doc_ids được truy xuất từ:
-    python scripts/spoke_cli.py graph --doc <doc_id> --json
-    """
-    return [
-        doc["text"] for doc in full_corpus
-        if doc.get("doc_id") in allowed_doc_ids
-    ]
-```
-
----
-
-## Graceful Degradation
-
-```python
-def hybrid_search_with_fallback(query, corpus, bm25_index, embedding_matrix=None, top_k=5):
-    """Fallback về BM25-only nếu embedding index không có sẵn."""
-    if embedding_matrix is not None:
-        return hybrid_search(query, corpus, bm25_index, embedding_matrix, top_k)
-    else:
-        # Fallback: BM25 only
-        results = search_bm25(bm25_index, query, corpus, top_k)
-        return [corpus[idx] for idx, _ in results]
-```
+- **Scoping:** Lọc theo `chapter`, `domain`, hoặc `doc_id in allowed_doc_ids` (5-Ring Legal Graph từ `python scripts/spoke_cli.py graph --doc <doc_id> --json`).
+- **Graceful Degradation:** Tự động fallback về `search_bm25(...)` khi `embedding_matrix is None`.
+- **Caching Strategy:** Lưu ma trận embedding nén tại `.rag_cache/<cache_name>_embeddings.npz` kèm `corpus_hash` metadata, chỉ rebuild khi stale.
+- Xem chi tiết implementation tại `references/hybrid_rag_recipes.md`.
 
 ---
 
@@ -265,46 +224,12 @@ def hybrid_search_with_fallback(query, corpus, bm25_index, embedding_matrix=None
 
 ---
 
-## Caching Strategy
-
-```python
-from pathlib import Path
-import numpy as np
-import json
-
-CACHE_PATH = Path(".rag_cache")
-
-def load_or_build_index(corpus: list[str], cache_name: str):
-    """Load embedding index từ cache, rebuild nếu stale."""
-    cache_file = CACHE_PATH / f"{cache_name}_embeddings.npz"
-    meta_file  = CACHE_PATH / f"{cache_name}_meta.json"
-
-    # Kiểm tra cache validity
-    if cache_file.exists() and meta_file.exists():
-        meta = json.loads(meta_file.read_text())
-        if meta.get("corpus_hash") == _hash_corpus(corpus):
-            return np.load(cache_file)["embeddings"]
-
-    # Rebuild
-    embeddings = build_embedding_index(corpus)
-    CACHE_PATH.mkdir(exist_ok=True)
-    np.savez_compressed(cache_file, embeddings=embeddings)
-    meta_file.write_text(json.dumps({"corpus_hash": _hash_corpus(corpus)}))
-    return embeddings
-
-def _hash_corpus(corpus: list[str]) -> str:
-    import hashlib
-    return hashlib.md5("|".join(corpus[:10]).encode()).hexdigest()
-```
-
----
-
 ## Reference Implementation
 
-Full production reference pattern (hybrid RAG + BM25 + Vector Embeddings + RRF):
+Full production reference: `$CCBA_HUB_PATH/scripts/services/rag_search.py` (VvC v6.2+, 2026).
 
-```bash
-$CCBA_HUB_PATH/scripts/services/rag_search.py
-```
+## Progressive Disclosure & Reference Index (Level 3)
 
-Đã vận hành trong production pipeline kể từ VvC v6.2 (2026).
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/hybrid_rag_recipes.md` | Helper mẫu cho Corpus Scoping (chapter/domain/5-Ring), Graceful Degradation BM25-only và `.rag_cache` |
