@@ -6,7 +6,9 @@ metadata:
   version: "1.1.2"
   author: "CCBA Hub"
 disable-model-invocation: true
-bundle: _core
+bundle: _governance
+scope: hub
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-sync-upstream
@@ -32,12 +34,6 @@ triggers:
 > Kỹ năng Radar này **chỉ vận hành tại Hub**. Tại Hub, hệ thống giám sát các kho chứa thượng nguồn, kiểm tra bản quyền, thẩm tra tính năng và hỗ trợ chuyển giao sang `/ccba-xia`. Các dự án Spoke không chạy radar này mà nhận các tính năng đã chuẩn hóa thông qua lệnh `/ccba-update-spoke`.
 
 Kỹ năng này vận hành hệ thống Radar tự động giám sát các kho chứa thượng nguồn (được cấu hình linh hoạt tại [`.md/knowledge/upstream_sources.yaml`](../../../.md/knowledge/upstream_sources.yaml)), kiểm tra bản quyền, thẩm tra tính năng mới theo **Thể chế ADR-0057 & RES-2026-ARCH-001 v1.2 (Khung Quyết Định Phân Rã Hai Giai Đoạn)** qua AI Gateway và tự động sinh lệnh **1-Click Porting** với `/ccba-xia`.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (Radar thượng nguồn Hub-only). Script `upstream_evaluator.py` đã import `ccba_harness.gpi` và `ccba_ai.routing.choose_model` để gọi AI Gateway ở nhịp thẩm tra; bản thân skill mang `disable-model-invocation: true` (trục A=1.0, kích hoạt tường minh qua `/ccba-sync-upstream`), trỏ và điều phối script trinh sát `scripts/spoke/check_claudekit_updates.py` mà không tự thân trở thành một seam GPI ứng dụng.
 
 ---
 

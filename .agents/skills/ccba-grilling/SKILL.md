@@ -21,6 +21,8 @@ keywords:
 - visual
 disable-model-invocation: true
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 metadata:
   version: "1.2.1"
@@ -46,11 +48,6 @@ triggers:
 # Grilling (Phỏng Vấn Dồn Dập & Đối Chiếu Quy Chuẩn)
 
 Kỹ năng này bắt buộc Agent phải chạy một vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) để stress-test kế hoạch thiết kế của người dùng hoặc đối chiếu tính tuân thủ của kế hoạch đó với các quy chuẩn tài liệu được chỉ định.
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối vòng lặp phỏng vấn Socrates dồn dập (Grilling Loop) qua 3 nhánh tác nghiệp: Nhánh A (Standard Stress-Test phỏng vấn thiết kế), Nhánh B (Rule Compliance Stress-Test đối soát quy chuẩn) và Nhánh C (Visual Prototype Grilling hội tụ UI). Danh mục Seam chuẩn hóa của Platform không quản lý logic tương tác phỏng vấn người dùng, do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 >= 12.0. Tệp tài liệu chuyên sâu duy nhất `references/workflow_looping.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
 
 ## Bước 0: Tiền Khởi Động — Diễn Đạt Lại Mục Tiêu & Mài Sắc Bài Toán (`in-your-own-words` & `sharpen` — Pstack v0.15.27)
 
@@ -129,7 +126,6 @@ Sử dụng khi người dùng muốn hội tụ về một thiết kế giao di
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

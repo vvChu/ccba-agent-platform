@@ -2,7 +2,11 @@
 name: ccba-book-compiler
 description: "Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten Canonical v8.3 kèm nén WebP in-memory, đối soát BGE-M3 và Excalidraw 16:9."
 role: kernel_skill
-bundle: _core
+bundle: _consulting
+scope: universal
+posture: package-bound
+seam_ids:
+  - diagram_layout.v1
 tier: kernel
 disable-model-invocation: true
 user-invocable: true
@@ -32,14 +36,8 @@ Kỹ năng này chuẩn hóa và tự động hóa 100% quy trình chuyển hóa
 
 ---
 
-## 🏛️ Platform-Aware Architecture Posture
+## 🛡️ Bất Biến Bắt Buộc (Mandatory Invariants)
 
-- **Seam Capability Posture**: `package-bound` kết hợp Orchestrator hạt nhân cấp cao. Kỹ năng liên kết trực tiếp với Public Deep Seam **`diagram_layout.v1`** (`ccba_diagram:apply_smart_layout`, `generate_markdown_spec_table`, CLI `ccba-diagram`) cho bố cục sơ đồ 16:9, đồng thời điều phối các seams nền tảng xác định của Spoke (`scripts/pipeline/book_staging.py`, `scripts/pipeline/book_staging_recovery.py`, `scripts/epub_convert.py`, `scripts/pdf_convert.py`, `scripts/pipeline/ground_truth.py`, `scripts/pipeline/book_assets.py`, `scripts/pipeline/batch_helpers.py`, `scripts/pipeline/self_correct.py`, `scripts/pipeline/post_process.py`, `scripts/pipeline/semantic_merger.py`, `scripts/pipeline/book_verification.py`, `scripts/pipeline/book_link_verifier.py`, `scripts/pipeline/book_excalidraw_verifier.py`, `scripts/core/vault.py`, `scripts/core/vector_store.py`, `scripts/services/excalidraw_worker.py`, `scripts/wiki_maintain.py`).
-  - Tra cứu hợp đồng năng lực trước khi sinh sơ đồ (dùng biến môi trường `CCBA_HUB_PATH`):
-    ```bash
-    python "${CCBA_HUB_PATH}/scripts/ccba_platform_cli.py" find-seam --in diagram --out layout --json
-    ```
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill (`disable-model-invocation: true` theo ADR-0040) với điểm $\mathbf{GPI} = (4.0 \times 2.5) + (4.5 \times 2.0) + (1.0 \times 2.0) - (1.0 \times 1.5) = \mathbf{19.5} \ge 12.0$.
 - **Bất biến Bắt buộc (Mandatory Invariants)**:
   1. *Race-Free Staging & Dual-Path Contract*: Mọi sách mới, sách ngoại lai, hoặc corpus `<Book_Stem>_MD` sạch đã có sẵn trên đĩa (kể cả khi tệp `.epub`/`.pdf` gốc đã được lưu trữ) BẮT BUỘC đi qua `pipeline.book_staging.stage_book_for_compilation()` theo đúng thứ tự: giải mã target chỉ-đọc (`_resolve_stage_target`) $\rightarrow$ kiểm tra `check_cross_machine_lease()` $\rightarrow$ tạo workspace `05 - Fleeting/<Book_Stem>/` $\rightarrow$ đồng bộ khóa mức cuốn sách `.book_stage_<Book_Stem>.lock` (tách rời khóa sống còn `.book_ingest.lock` của daemon 24/7) để trích xuất hoặc tự động phục hồi `_toc_original.json` cho corpus `.md` sạch không mất dữ liệu (không ghi đè/xóa chương `.md` đã có; `.webp` `quality=80, max_dim=1200`, nén trong RAM, scratch trên `state_dir` cục bộ) tại `03 - Resources/books/<Book_Stem>_MD/` $\rightarrow$ khởi tạo `Source Note` qua `safe_write_text()` + `update_source_cache()` $\rightarrow$ sinh `_toc.json` & `<BOOK_CONTEXT>` $\rightarrow$ chép sách ngoại lai (nếu là file thật) vào `03 - Resources/books/` cuối cùng.
   2. *Metadata SSoT Gate*: Quét 5 tệp `.md` mở đầu trong `03 - Resources/books/<Book_Stem>_MD/` (`Title`, `Copyright`, `ISBN`, `Edition`, `Author`) để khóa chuẩn Full Title, Subtitle, Edition và Full Authors trước khi biên soạn.

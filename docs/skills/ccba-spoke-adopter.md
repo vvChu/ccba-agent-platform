@@ -21,7 +21,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-spoke-a
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🚀 Khởi tạo, Điều hướng & Đồng bộ |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 3 (Orchestrator)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 
 ---

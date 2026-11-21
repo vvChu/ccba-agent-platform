@@ -11,6 +11,10 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+scope: universal
+posture: package-bound
+seam_ids:
+  - maskara_scanner.v1
 tier: kernel
 command: /ccba-maskara
 gpi:
@@ -31,13 +35,6 @@ package_path: packages/ccba-maskara
 # Maskara Privacy - Bảo mật thông tin nhạy cảm CCBA
 
 > **Vai trò**: Đây là kỹ năng bảo mật cốt lõi giúp phát hiện và che giấu (redact) các thông tin nhạy cảm (OpenAI API key, Google API key, AWS keys, JWT, Database URLs, Private key...) trong logs và files của dự án trước khi commit hoặc chia sẻ.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Phân loại**: Kỹ năng hạt nhân liên kết gói (package-bound kernel skill).
-- **Public Deep Seam**: `maskara_scanner.v1` thuộc gói hạ tầng `packages/ccba-maskara`, điểm nhập công khai `ccba_maskara:MaskaraScanner`.
-- **Đặc tính quản trị**: Kỹ năng vận hành quét và che giấu secrets tự động, định tuyến qua engine MaskaraScanner chuẩn hóa của nền tảng nhằm bảo vệ thông tin mật và logs dự án.
-- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=3.0, a=4.0, p=1.0) -> GPI = 20.0 (Tier 2B kernel), đáp ứng trọn vẹn yêu cầu kiểm định và cổng chất lượng nền tảng.
 
 ## 1. Cú pháp sử dụng lệnh
 

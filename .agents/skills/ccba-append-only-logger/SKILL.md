@@ -7,6 +7,8 @@ applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /ccba-append-only-logger
 metadata:
@@ -31,12 +33,6 @@ triggers:
 Thread-safe logging pattern cho các pipeline chạy nhiều daemon/process đồng thời. Thay thế pattern **read → regex → rewrite** (dễ corrupt) bằng **pure append** với thread lock.
 
 > **Nguồn**: VvC LLM OS v2.0 Logger (2026) — giải quyết 3 lỗi thực tế: mojibake tiếng Việt dưới `pythonw.exe`, race condition khi 2 daemon ghi đồng thời, và mất 70% pipeline events do cấu trúc log cũ.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (mẫu thiết kế tiện ích nhập xuất tệp mức hệ thống đa luồng/đa tiến trình). Không ràng buộc Seam Contract ứng dụng mà cung cấp pattern ghi log lũy kế bảo đảm tính toàn vẹn dữ liệu cho các daemon pipeline.
 
 ---
 

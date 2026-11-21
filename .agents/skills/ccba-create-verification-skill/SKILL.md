@@ -25,6 +25,8 @@ metadata:
   version: 1.4.1
 disable-model-invocation: true
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 triggers:
 - ccba-create-verification-skill
@@ -44,13 +46,6 @@ triggers:
 Kỹ năng này tự động thiết lập bộ kỹ năng kiểm định tự động chuyên biệt `verify-<app>` cho bất kỳ ứng dụng nào trong hệ sinh thái CCBA (Web, REST API, CLI, Worker, hoặc Spoke repository).
 
 Được kế thừa và nâng cấp từ triết lý `create-verification-skill` của Cursor `pstack`, bộ kiểm định này tuân thủ nghiêm ngặt nguyên tắc **Vệ Sinh Spoke (ADR-0044)**: toàn bộ mã kiểm thử và kịch bản thực thi được cô lập bên trong `.agents/skills/verify-<app>/harness/`, tuyệt đối không làm phình thư mục `scripts/` vượt quá giới hạn 15 kịch bản.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel khởi tạo và bảo trì bộ kiểm định ứng dụng `verify-<app>` qua 5 khối chức năng cốt lõi (Clean-Slate, Dual-Mode Server Lifecycle, Deterministic Health Barrier, Evidence-Capture Test Suite, Guaranteed Graceful Cleanup) với 2 chế độ `scaffold` và `maintain`. Kỹ năng cô lập harness trong `.agents/skills/verify-<app>/harness/` theo chuẩn vệ sinh Spoke, không thuộc các Seam dữ liệu ứng dụng.
-- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.5, K: 3.5, A: 2.0, P: 1.0) = 20.75 >= 12.0. Cả 2 tệp tài liệu chuyên sâu (`references/features_map_guide.md`, `references/maintain_drift_guide.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
-
----
 
 ## 5 Khối Chức Năng Cốt Lõi Trong Kỹ Năng Kiểm Định `verify-<app>`
 

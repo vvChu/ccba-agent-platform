@@ -4,6 +4,8 @@ description: Turn the current conversation into a spec and publish it to the pro
   issue tracker — no interview, just synthesis of what you've already discussed.
 disable-model-invocation: true
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-to-spec
@@ -30,14 +32,6 @@ triggers:
 This skill takes the current conversation context and codebase understanding and produces a spec (you may know this document as a PRD). Do NOT interview the user — just synthesize what you already know.
 
 The issue tracker and triage label vocabulary should have been provided to you — run `/ccba-setup-skills` if not.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
-- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel tổng hợp bối cảnh hội thoại và hiện trạng codebase thành tài liệu đặc tả kỹ thuật (Technical Specification / PRD), gán nhãn `ready-for-agent` và lưu trữ tại `.md/knowledge/specs/spec-{feature_slug}.md`. Khái niệm "seams" trong văn bản là phương pháp phân rã kiến trúc phần mềm và ranh giới kiểm thử tích hợp (testing seams), không sở hữu Seam đóng gói dữ liệu Python độc lập. Toàn bộ quy trình tuân thủ các nguyên tắc thiết kế tinh gọn và phân rã nhiệm vụ tất định.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 $\ge$ 12.0. Duy trì 2 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/spec_decomposition.md`, `references/interactive_questionnaire.md`).
 
 ---
 
@@ -128,9 +122,6 @@ To maintain high development velocity and prevent review fatigue (per Cursor 2,5
 4. **Context Hygiene & Clean Agent Execution**:
    - Each ticket is designed to be executed in a brand-new, clean Agent context window (`/ccba-implement` or `/ccba-tdd`) to eliminate hallucination caused by context window bloating.
 
-
-
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -139,4 +130,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/spec_decomposition.md` | Kỹ thuật phân rã tài liệu đặc tả thành danh mục nhiệm vụ (tickets) chi tiết |
 | `references/interactive_questionnaire.md` | Kỹ thuật xây dựng bảng khảo sát thu thập yêu cầu từ người dùng |
-

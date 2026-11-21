@@ -51,6 +51,8 @@ skills:
   skill_path: .agents/skills/platform-loader/SKILL.md
   command: /platform-loader
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: bigbim-classification
   bundle: _bim
   description: Tự động hóa viết bảng thực thể (En) và phân loại vật tư (PM) theo Uniclass
@@ -72,6 +74,11 @@ skills:
   skill_path: .agents/skills/bigbim-classification/SKILL.md
   command: /bigbim-classification
   tier: kernel
+  scope: universal
+  posture: seam-exempt
+  seam_ids:
+  - ai_embedding.v1
+  - model_routing.v1
 - name: bigbim-governance
   bundle: _bim
   description: Guardrails quản trị thông tin BIGBIM. Cưỡng chế tuân thủ Hiến pháp
@@ -93,6 +100,8 @@ skills:
   skill_path: .agents/skills/bigbim-governance/SKILL.md
   command: /bigbim-governance
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: bigbim-rase
   bundle: _bim
   description: Tự động phân tích RASE (Requirement, Applicability, Selection, Exception)
@@ -108,6 +117,8 @@ skills:
   skill_path: .agents/skills/bigbim-rase/SKILL.md
   command: /bigbim-rase
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: bigbim-risk
   bundle: _bim
   description: Phát hiện "Mâu thuẫn thông tin" (Information Conflict) phi hình học
@@ -126,6 +137,8 @@ skills:
   skill_path: .agents/skills/bigbim-risk/SKILL.md
   command: /bigbim-risk
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: bigbim-vbpl-digest
   bundle: _bim
   description: Tra cứu và tóm lược quy định pháp lý BIM Việt Nam (NĐ 175) cùng tiêu
@@ -142,6 +155,8 @@ skills:
   skill_path: .agents/skills/bigbim-vbpl-digest/SKILL.md
   command: /bigbim-vbpl-digest
   tier: kernel
+  scope: universal
+  posture: compose-existing
 - name: ccba-academic-writing
   bundle: _core
   description: Hướng dẫn, cấu trúc, và kiểm duyệt vi mô các bài báo nghiên cứu khoa
@@ -152,6 +167,8 @@ skills:
   skill_path: .agents/skills/ccba-academic-writing/SKILL.md
   command: /ccba-academic-writing
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-adr-lifecycle
   bundle: _governance
   description: Autonomous lifecycle governance for Architecture Decision Records (ADRs)
@@ -170,8 +187,9 @@ skills:
   command: /ccba-adr-lifecycle
   tier: kernel
   scope: hub
+  posture: seam-exempt
 - name: ccba-ai-gateway-sdk
-  bundle: _core
+  bundle: _software
   description: Kết nối AI Gateway trên Server Spark — Đa mô hình (local GPU + cloud)
     qua Python package ccba-ai. Không dùng để quản trị máy chủ vLLM/Inductor.
   triggers:
@@ -186,6 +204,13 @@ skills:
   skill_path: .agents/skills/ccba-ai-gateway-sdk/SKILL.md
   command: /ccba-ai-gateway-sdk
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - ai_chat.v1
+  - ai_embedding.v1
+  - ai_transcribe.v1
+  - model_routing.v1
   package_path: packages/ccba-ai
 - name: ccba-ai-pdf-preprocessor
   bundle: _qc
@@ -201,6 +226,10 @@ skills:
   skill_path: .agents/skills/ccba-ai-pdf-preprocessor/SKILL.md
   command: /ccba-ai-pdf-preprocessor
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - pdf_preprocessor.v1
   package_path: packages/ccba-pdf-prep
 - name: ccba-ai-qc
   bundle: _qc
@@ -222,6 +251,11 @@ skills:
   skill_path: .agents/skills/ccba-ai-qc/SKILL.md
   command: /ccba-ai-qc
   tier: orchestrator
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - pdf_preprocessor.v1
+  - qc_pipeline.v1
   package_path: packages/ccba-qc-core
 - name: ccba-ai-qc-pccc-audit
   bundle: _qc
@@ -243,8 +277,10 @@ skills:
   skill_path: .agents/skills/ccba-ai-qc-pccc-audit/SKILL.md
   command: /ccba-ai-qc-pccc-audit
   tier: kernel
+  scope: universal
+  posture: compose-existing
 - name: ccba-api-circuit-breaker
-  bundle: _core
+  bundle: _software
   description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batch
     pipelines. Tránh quota exhaustion, cascade failures, và infinite retry loops khi
     gọi AI Gateway hàng loạt.
@@ -262,6 +298,8 @@ skills:
   skill_path: .agents/skills/ccba-api-circuit-breaker/SKILL.md
   command: /ccba-api-circuit-breaker
   tier: kernel
+  scope: universal
+  posture: package-bound
 - name: ccba-append-only-logger
   bundle: _core
   description: Thread-safe, append-only logging pattern cho Python pipeline multi-daemon.
@@ -278,6 +316,8 @@ skills:
   skill_path: .agents/skills/ccba-append-only-logger/SKILL.md
   command: /ccba-append-only-logger
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-ask
   bundle: _core
   description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu
@@ -295,8 +335,10 @@ skills:
   skill_path: .agents/skills/ccba-ask/SKILL.md
   command: /ccba-ask
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-autoresearch
-  bundle: _core
+  bundle: _governance
   description: Khởi chạy vòng lặp tối ưu hóa kỹ năng AI tự động qua đêm (Git-Ratchet
     Auto-Tuner) lấy cảm hứng từ karpathy/autoresearch.
   triggers:
@@ -311,8 +353,10 @@ skills:
   skill_path: .agents/skills/ccba-autoresearch/SKILL.md
   command: /ccba-autoresearch
   tier: orchestrator
+  scope: hub
+  posture: seam-exempt
 - name: ccba-book-compiler
-  bundle: _core
+  bundle: _consulting
   description: Tự động hóa chuyển hóa sách/ebook (EPUB/PDF) thành tri thức Zettelkasten
     Canonical v8.3 kèm nén WebP in-memory, đối soát BGE-M3 và Excalidraw 16:9.
   triggers:
@@ -327,8 +371,12 @@ skills:
   skill_path: .agents/skills/ccba-book-compiler/SKILL.md
   command: /ccba-book-compiler
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - diagram_layout.v1
 - name: ccba-build-skill
-  bundle: _core
+  bundle: _governance
   description: Nghiên cứu tài liệu từ nhiều nguồn qua NotebookLM và tự động đóng gói
     sinh Skill mới đạt chuẩn CCBA.
   triggers:
@@ -341,6 +389,12 @@ skills:
   skill_path: .agents/skills/ccba-build-skill/SKILL.md
   command: /ccba-build-skill
   tier: kernel
+  scope: hub
+  posture: seam-exempt
+  seam_ids:
+  - maskara_scanner.v1
+  - model_routing.v1
+  - notebooklm_rag.v1
 - name: ccba-chrome-debug
   bundle: _software
   description: Quản trị vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, Persistent
@@ -355,6 +409,8 @@ skills:
   skill_path: .agents/skills/ccba-chrome-debug/SKILL.md
   command: /ccba-chrome-debug
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-code-review
   bundle: _software
   description: Rà soát chất lượng code song song trên hai trục Standards (Coding style/Smells)
@@ -375,8 +431,12 @@ skills:
   skill_path: .agents/skills/ccba-code-review/SKILL.md
   command: /ccba-code-review
   tier: kernel
+  scope: universal
+  posture: seam-exempt
+  seam_ids:
+  - harness_verify.v1
 - name: ccba-codebase-design
-  bundle: _core
+  bundle: _software
   description: Shared vocabulary for designing deep modules (locality, depth, leverage,
     seams) to improve testability and code quality. Reference skill.
   triggers:
@@ -398,6 +458,8 @@ skills:
   skill_path: .agents/skills/ccba-codebase-design/SKILL.md
   command: /ccba-codebase-design
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-completion-checklist
   bundle: _consulting
   description: Tạo và duy trì Danh Mục Hồ Sơ Hoàn Thành Công Trình theo VBPL hiện
@@ -413,6 +475,10 @@ skills:
   skill_path: .agents/skills/ccba-completion-checklist/SKILL.md
   command: /ccba-completion-checklist
   tier: kernel
+  scope: universal
+  posture: compose-existing
+  seam_ids:
+  - ooxml_processor.v1
 - name: ccba-contribute-to-hub
   bundle: _core
   description: Đóng gói mã nguồn, tests, proposal từ Spoke và mở PR lên Hub kèm Vòng
@@ -431,6 +497,8 @@ skills:
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
   command: /ccba-contribute-to-hub
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-copywriting
   bundle: _core
   description: Soạn thảo văn bản hành chính, thầu và hợp đồng từ template chuẩn hóa
@@ -451,6 +519,8 @@ skills:
   skill_path: .agents/skills/ccba-copywriting/SKILL.md
   command: /ccba-copywriting
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-create-pr
   bundle: _core
   description: Kiểm tra chất lượng code (Shift-Left), Main Branch Guard, đẩy code
@@ -465,6 +535,8 @@ skills:
   skill_path: .agents/skills/ccba-create-pr/SKILL.md
   command: /ccba-create-pr
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-create-verification-skill
   bundle: _core
   description: Khởi tạo và bảo trì kỹ năng kiểm định tự động verify-<app> cho dự án/spoke
@@ -483,6 +555,8 @@ skills:
   skill_path: .agents/skills/ccba-create-verification-skill/SKILL.md
   command: /ccba-create-verification-skill
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-design
   bundle: _consulting
   description: Design brand identity, web portals, UI/UX systems, logos, banners,
@@ -511,6 +585,11 @@ skills:
   skill_path: .agents/skills/ccba-design/SKILL.md
   command: /ccba-design
   tier: kernel
+  scope: universal
+  posture: compose-existing
+  seam_ids:
+  - ai_chat.v1
+  - model_routing.v1
 - name: ccba-diagnosing-bugs
   bundle: _software
   description: Diagnosis loop for hard bugs and performance regressions. Use when
@@ -526,6 +605,8 @@ skills:
   skill_path: .agents/skills/ccba-diagnosing-bugs/SKILL.md
   command: /ccba-diagnosing-bugs
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-docs-manager
   bundle: _software
   description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA Platform.
@@ -539,6 +620,8 @@ skills:
   skill_path: .agents/skills/ccba-docs-manager/SKILL.md
   command: /ccba-docs-manager
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-domain-modeling
   bundle: _software
   description: Build, refine, and maintain the project's domain model, ubiquitous
@@ -552,6 +635,8 @@ skills:
   skill_path: .agents/skills/ccba-domain-modeling/SKILL.md
   command: /ccba-domain-modeling
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-eval-gate
   bundle: _software
   description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự động và tự động
@@ -568,6 +653,10 @@ skills:
   skill_path: .agents/skills/ccba-eval-gate/SKILL.md
   command: /ccba-eval-gate
   tier: kernel
+  scope: universal
+  posture: seam-exempt
+  seam_ids:
+  - harness_eval.v1
   package_path: packages/ccba-harness
 - name: ccba-excalidraw-diagram
   bundle: _core
@@ -584,6 +673,10 @@ skills:
   skill_path: .agents/skills/ccba-excalidraw-diagram/SKILL.md
   command: /ccba-excalidraw-diagram
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - diagram_layout.v1
 - name: ccba-file-stability-guard
   bundle: _core
   description: Phát hiện file đã sync hoàn toàn trước khi xử lý. Kiểm tra kích thước
@@ -599,6 +692,8 @@ skills:
   skill_path: .agents/skills/ccba-file-stability-guard/SKILL.md
   command: /ccba-file-stability-guard
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-git-guardrails
   bundle: _software
   description: Guardrails to block or request explicit user permission before executing
@@ -614,8 +709,10 @@ skills:
   skill_path: .agents/skills/ccba-git-guardrails/SKILL.md
   command: /ccba-git-guardrails
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-graduate-rd
-  bundle: _core
+  bundle: _governance
   description: Quy trình cưỡng chế chuyển hóa mã nguồn R&D thành Deep Seam Production,
     tích hợp /boost, /teamwork và mở PR tự động.
   triggers:
@@ -629,6 +726,8 @@ skills:
   skill_path: .agents/skills/ccba-graduate-rd/SKILL.md
   command: /ccba-graduate-rd
   tier: orchestrator
+  scope: hub
+  posture: seam-exempt
 - name: ccba-grilling
   bundle: _software
   description: Phỏng vấn dồn dập người dùng về thiết kế (Stress-Test), đối chiếu quy
@@ -652,6 +751,8 @@ skills:
   skill_path: .agents/skills/ccba-grilling/SKILL.md
   command: /ccba-grilling
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-handoff
   bundle: _core
   description: Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff
@@ -664,6 +765,8 @@ skills:
   skill_path: .agents/skills/ccba-handoff/SKILL.md
   command: /ccba-handoff
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-hybrid-rag-search
   bundle: _core
   description: Tìm kiếm ngữ nghĩa kết hợp BM25 (keyword) + Embedding (semantic) +
@@ -681,6 +784,10 @@ skills:
   skill_path: .agents/skills/ccba-hybrid-rag-search/SKILL.md
   command: /ccba-hybrid-rag-search
   tier: kernel
+  scope: universal
+  posture: compose-existing
+  seam_ids:
+  - ai_embedding.v1
 - name: ccba-implement
   bundle: _core
   description: Implement a piece of work based on a spec or set of tickets.
@@ -695,8 +802,12 @@ skills:
   skill_path: .agents/skills/ccba-implement/SKILL.md
   command: /ccba-implement
   tier: orchestrator
+  scope: universal
+  posture: seam-exempt
+  seam_ids:
+  - harness_verify.v1
 - name: ccba-init-spoke
-  bundle: _core
+  bundle: _governance
   description: Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform
   triggers:
   - init spoke
@@ -709,6 +820,8 @@ skills:
   skill_path: .agents/skills/ccba-init-spoke/SKILL.md
   command: /ccba-init-spoke
   tier: kernel
+  scope: hub
+  posture: seam-exempt
 - name: ccba-issue-to-hub
   bundle: _core
   description: Soạn thảo và gửi đề xuất ý tưởng/tính năng/báo lỗi (RFC Proposal) từ
@@ -725,6 +838,8 @@ skills:
   skill_path: .agents/skills/ccba-issue-to-hub/SKILL.md
   command: /ccba-issue-to-hub
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-issue-tree
   bundle: _core
   description: Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What,
@@ -745,6 +860,8 @@ skills:
   skill_path: .agents/skills/ccba-issue-tree/SKILL.md
   command: /ccba-issue-tree
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-knowledge-loop
   bundle: _core
   description: Quy trình Vòng lặp Tri thức & Định hướng toàn trình (Recon → Brainstorm
@@ -756,6 +873,8 @@ skills:
   skill_path: .agents/skills/ccba-knowledge-loop/SKILL.md
   command: /ccba-knowledge-loop
   tier: orchestrator
+  scope: universal
+  posture: seam-exempt
 - name: ccba-legal-advisor
   bundle: _consulting
   description: 'Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ
@@ -776,6 +895,10 @@ skills:
   skill_path: .agents/skills/ccba-legal-advisor/SKILL.md
   command: /ccba-legal-advisor
   tier: kernel
+  scope: universal
+  posture: skill-bound
+  seam_ids:
+  - legal_advisor.v1
 - name: ccba-legal-document-tracker
   bundle: _consulting
   description: Quản lý vòng đời legal_registry.yaml, so sánh AST diff cũ-mới và hợp
@@ -794,6 +917,8 @@ skills:
   skill_path: .agents/skills/ccba-legal-document-tracker/SKILL.md
   command: /ccba-legal-document-tracker
   tier: kernel
+  scope: universal
+  posture: compose-existing
 - name: ccba-legal-ingest
   bundle: _consulting
   description: Thu thập văn bản pháp luật gốc từ TVPL, chuyển đổi chuẩn OKF v2.4 và
@@ -814,6 +939,13 @@ skills:
   skill_path: .agents/skills/ccba-legal-ingest/SKILL.md
   command: /ccba-legal-ingest
   tier: kernel
+  scope: universal
+  posture: skill-bound
+  seam_ids:
+  - legal_ingest.v1
+  - legal_markdown.v1
+  - ooxml_processor.v1
+  - pdf_preprocessor.v1
 - name: ccba-legal-intel
   bundle: _consulting
   description: Phân tích đồ thị quan hệ pháp luật, tra cứu điều khoản/bảng biểu (query,
@@ -829,9 +961,13 @@ skills:
   skill_path: .agents/skills/ccba-legal-intel/SKILL.md
   command: /ccba-legal-intel
   tier: kernel
+  scope: universal
+  posture: compose-existing
+  seam_ids:
+  - legal_ingest.v1
   package_path: packages/ccba-legal-intel
 - name: ccba-llm-pipeline-patterns
-  bundle: _core
+  bundle: _software
   description: Anti-patterns và best practices thiết kế LLM processing pipelines (VvC
     LLM OS). Không dùng để chạy tìm kiếm ngữ nghĩa BM25/Embedding.
   triggers:
@@ -844,6 +980,8 @@ skills:
   skill_path: .agents/skills/ccba-llm-pipeline-patterns/SKILL.md
   command: /ccba-llm-pipeline-patterns
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-markdown-document-processing
   bundle: _core
   description: Chuyển đổi và chuẩn hóa tài liệu thông thường từ Word/PDF sang Markdown
@@ -857,6 +995,10 @@ skills:
   skill_path: .agents/skills/ccba-markdown-document-processing/SKILL.md
   command: /ccba-markdown-document-processing
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - legal_markdown.v1
   package_path: packages/mdconverter
 - name: ccba-maskara
   bundle: _core
@@ -872,6 +1014,10 @@ skills:
   skill_path: .agents/skills/ccba-maskara/SKILL.md
   command: /ccba-maskara
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - maskara_scanner.v1
   package_path: packages/ccba-maskara
 - name: ccba-mermaid-diagram
   bundle: _core
@@ -891,6 +1037,8 @@ skills:
   skill_path: .agents/skills/ccba-mermaid-diagram/SKILL.md
   command: /ccba-mermaid-diagram
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-new-feature
   bundle: _core
   description: Tạo feature branch mới với quy trình lập kế hoạch và phân tách session
@@ -905,6 +1053,8 @@ skills:
   skill_path: .agents/skills/ccba-new-feature/SKILL.md
   command: /ccba-new-feature
   tier: orchestrator
+  scope: universal
+  posture: seam-exempt
 - name: ccba-notebooklm-connector
   bundle: _core
   description: Interact with Google NotebookLM to import YouTube, URLs, PDFs, and
@@ -925,6 +1075,10 @@ skills:
   skill_path: .agents/skills/ccba-notebooklm-connector/SKILL.md
   command: /ccba-notebooklm-connector
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - notebooklm_rag.v1
   package_path: packages/ccba-notebooklm
 - name: ccba-platform
   bundle: _core
@@ -941,6 +1095,10 @@ skills:
   skill_path: .agents/skills/ccba-platform/SKILL.md
   command: /ccba-platform
   tier: orchestrator
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - harness_verify.v1
 - name: ccba-pptx
   bundle: _core
   description: Công cụ tạo và chỉnh sửa file trình chiếu PowerPoint (.pptx) nâng cao
@@ -957,6 +1115,8 @@ skills:
   skill_path: .agents/skills/ccba-pptx/SKILL.md
   command: /ccba-pptx
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-promote-sandbox
   bundle: _core
   description: Thăng cấp và bàn giao sản phẩm từ Spoke Cá Nhân sang Spoke Dự Án hoặc
@@ -970,6 +1130,8 @@ skills:
   skill_path: .agents/skills/ccba-promote-sandbox/SKILL.md
   command: /ccba-promote-sandbox
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-release-feature
   bundle: _core
   description: Merge PR, cleanup branch, auto-close local issues và cập nhật walkthrough
@@ -980,6 +1142,8 @@ skills:
   skill_path: .agents/skills/ccba-release-feature/SKILL.md
   command: /ccba-release-feature
   tier: orchestrator
+  scope: universal
+  posture: seam-exempt
 - name: ccba-research
   bundle: _software
   description: Nghiên cứu chuyên sâu một vấn đề kỹ thuật hoặc pháp lý đối chiếu với
@@ -998,6 +1162,8 @@ skills:
   skill_path: .agents/skills/ccba-research/SKILL.md
   command: /ccba-research
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-review-proposal
   bundle: _governance
   description: Thẩm định toàn trình PR đề xuất từ Spoke lên Hub kèm Adaptive Tiered
@@ -1013,6 +1179,7 @@ skills:
   command: /ccba-review-proposal
   tier: kernel
   scope: hub
+  posture: seam-exempt
 - name: ccba-seminar-builder
   bundle: _consulting
   description: Chuẩn bị nội dung seminar/training nội bộ CCBA. Tạo recap, agenda,
@@ -1029,6 +1196,10 @@ skills:
   skill_path: .agents/skills/ccba-seminar-builder/SKILL.md
   command: /ccba-seminar-builder
   tier: kernel
+  scope: universal
+  posture: compose-existing
+  seam_ids:
+  - ooxml_processor.v1
 - name: ccba-session-retrospective
   bundle: _core
   description: Tự động tổng hợp tri thức cuối phiên làm việc (Retrospective), tiến
@@ -1046,6 +1217,8 @@ skills:
   skill_path: .agents/skills/ccba-session-retrospective/SKILL.md
   command: /ccba-session-retrospective
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-setup-skills
   bundle: _core
   description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu
@@ -1065,6 +1238,8 @@ skills:
   skill_path: .agents/skills/ccba-setup-skills/SKILL.md
   command: /ccba-setup-skills
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-sharepoint-iac
   bundle: _software
   description: Quản trị hạ tầng SharePoint Online, Power Apps, Power Automate & M365
@@ -1100,6 +1275,8 @@ skills:
   skill_path: .agents/skills/ccba-sharepoint-iac/SKILL.md
   command: /ccba-sharepoint-iac
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-skill-repair
   bundle: _core
   description: Phục hồi và sửa chữa kỹ năng AI theo thể chế ADR-0057 và bộ kiểm định
@@ -1113,8 +1290,10 @@ skills:
   skill_path: .agents/skills/ccba-skill-repair/SKILL.md
   command: /ccba-skill-repair
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-spoke-adopter
-  bundle: _core
+  bundle: _governance
   description: Đánh giá hiện trạng và tiếp nhận an toàn các codebase hiện hữu (Brownfield
     Spokes) vào CCBA Platform mà không phá hủy cấu trúc dữ liệu cũ.
   triggers:
@@ -1133,8 +1312,10 @@ skills:
   skill_path: .agents/skills/ccba-spoke-adopter/SKILL.md
   command: /ccba-spoke-adopter
   tier: orchestrator
+  scope: hub
+  posture: seam-exempt
 - name: ccba-sync-upstream
-  bundle: _core
+  bundle: _governance
   description: Kiểm tra cập nhật và thẩm tra tính năng thượng nguồn (ADR-0057 Radar)
     kết hợp kích hoạt 1-Click Port qua /ccba-xia.
   triggers:
@@ -1148,6 +1329,8 @@ skills:
   skill_path: .agents/skills/ccba-sync-upstream/SKILL.md
   command: /ccba-sync-upstream
   tier: kernel
+  scope: hub
+  posture: seam-exempt
 - name: ccba-tdd
   bundle: _software
   description: Phát triển hướng kiểm thử (Red-Green-Refactor) giúp tạo mã nguồn ổn
@@ -1160,6 +1343,8 @@ skills:
   skill_path: .agents/skills/ccba-tdd/SKILL.md
   command: /ccba-tdd
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-teamwork
   bundle: _core
   description: Điều phối đa tác nhân dài hạn (Teamwork Multi-Agent Framework) theo
@@ -1175,6 +1360,10 @@ skills:
   skill_path: .agents/skills/ccba-teamwork/SKILL.md
   command: /ccba-teamwork
   tier: orchestrator
+  scope: universal
+  posture: seam-exempt
+  seam_ids:
+  - harness_verify.v1
 - name: ccba-to-spec
   bundle: _core
   description: Turn the current conversation into a spec and publish it to the project
@@ -1192,6 +1381,8 @@ skills:
   skill_path: .agents/skills/ccba-to-spec/SKILL.md
   command: /ccba-to-spec
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-tvpl-vip-crawler
   bundle: _software
   description: Kỹ năng tự động cào và đóng gói văn bản pháp luật VIP TVPL qua Deep
@@ -1205,6 +1396,8 @@ skills:
   skill_path: .agents/skills/ccba-tvpl-vip-crawler/SKILL.md
   command: /ccba-tvpl-vip-crawler
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-update-spoke
   bundle: _core
   description: Đồng bộ hóa các kỹ năng và cập nhật phiên bản giữa Hub và các Spoke
@@ -1222,6 +1415,8 @@ skills:
   skill_path: .agents/skills/ccba-update-spoke/SKILL.md
   command: /ccba-update-spoke
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-vllm-manager
   bundle: _software
   description: Quản trị mô hình vLLM trên DGX Spark Blackwell GB10, tối ưu hóa AOT
@@ -1236,6 +1431,8 @@ skills:
   skill_path: .agents/skills/ccba-vllm-manager/SKILL.md
   command: /ccba-vllm-manager
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-wayfinder
   bundle: _core
   description: Lập bản đồ định hướng để giải quyết các bài toán lớn/mơ hồ thông qua
@@ -1249,6 +1446,8 @@ skills:
   skill_path: .agents/skills/ccba-wayfinder/SKILL.md
   command: /ccba-wayfinder
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-web-testing
   bundle: _software
   description: Web testing with Playwright, Vitest, k6. E2E, load, visual, and a11y
@@ -1271,6 +1470,8 @@ skills:
   skill_path: .agents/skills/ccba-web-testing/SKILL.md
   command: /ccba-web-testing
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-xia
   bundle: _software
   description: Trích xuất, so sánh, port hoặc thích ứng tính năng từ một repository
@@ -1289,6 +1490,8 @@ skills:
   skill_path: .agents/skills/ccba-xia/SKILL.md
   command: /ccba-xia
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 - name: ccba-xu-ly-van-phong
   bundle: _core
   description: Tạo, sửa, chuyển đổi file văn phòng (Word, Excel, Slide, PDF) theo
@@ -1311,9 +1514,13 @@ skills:
   skill_path: .agents/skills/ccba-xu-ly-van-phong/SKILL.md
   command: /ccba-xu-ly-van-phong
   tier: kernel
+  scope: universal
+  posture: package-bound
+  seam_ids:
+  - ooxml_processor.v1
   package_path: packages/ccba-ooxml
 - name: ccba-youtube-learn
-  bundle: _core
+  bundle: _consulting
   description: Khảo cổ học Niềm tin (Belief Archaeology) thông qua bóc tách phụ đề
     và hình ảnh slide học thuật từ các video YouTube/bài giảng.
   triggers:
@@ -1326,6 +1533,8 @@ skills:
   skill_path: .agents/skills/ccba-youtube-learn/SKILL.md
   command: /ccba-youtube-learn
   tier: kernel
+  scope: universal
+  posture: seam-exempt
 workflows: []
 seams:
 - package: ccba-ai

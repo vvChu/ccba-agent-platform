@@ -2,6 +2,10 @@
 name: ccba-platform
 description: Cổng điều phối toàn cục (Global Router) và kiểm tra môi trường cho CCBA Agent Services Platform. Tự động kiểm tra Hub/Spoke, Gateway/VPN, cấu trúc Spoke và điều hướng đúng kỹ năng.
 bundle: _core
+scope: universal
+posture: package-bound
+seam_ids:
+  - harness_verify.v1
 tier: orchestrator
 is-orchestrated: true
 user-invocable: true
@@ -28,12 +32,6 @@ metadata:
 ## Phân Giải Đường Dẫn Hub & Spoke Động
 * Đường dẫn gốc Platform Hub được tự động phân giải qua biến môi trường **`CCBA_HUB_PATH`** hoặc cấu hình trong `.md/workspace_context.yaml`.
 * Nếu chưa thiết lập, Agent tự động duyệt ngược từ thư mục làm việc hiện tại (CWD) lên các cấp cha để tìm thư mục có chứa `.agents` làm gốc Hub.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (cổng điều phối toàn cục và ma trận slash-command). Skill điều hướng các kỹ năng nghiệp vụ và thực thi kiểm tra môi trường tô-pô 5 bối cảnh. Dòng `python -m ccba_harness verify-patch` được bảo lưu như lệnh kiểm định hoàn tất (Hard Completion Lock); toàn bộ skill không nhận `package-bound` trên card `harness_verify.v1` vì import thực tế của card đó là `ccba_harness:auto_apply_and_verify_patch`.
 
 ---
 

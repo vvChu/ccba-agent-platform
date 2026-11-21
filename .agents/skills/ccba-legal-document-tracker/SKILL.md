@@ -6,6 +6,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _consulting
+scope: universal
+posture: compose-existing
 tier: kernel
 user-invocable: true
 command: /ccba-legal-document-tracker
@@ -33,14 +35,6 @@ triggers:
 # Legal Document Tracker
 
 Skill hỗ trợ theo dõi, phân tích và so sánh các Văn bản Pháp luật (VBPL) liên quan đến quản lý chất lượng công trình xây dựng tại Việt Nam kết hợp Deep Seam **`VBHNEngine`** ([`packages/ccba-legal-intel`](../../../packages/ccba-legal-intel)).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị văn bản đã có trong nền tảng:
-* **Hạ Tầng Hợp Nhất Văn Bản:** Sử dụng `LegislativeConsolidator` hoặc `VBHNEngine.merge_documents` của gói `ccba-legal-intel` (CLI `python -m ccba_legal consolidate`). Tuyệt đối không tự viết logic merge văn bản ad-hoc.
-* **SSOT Vòng Đời & Hiệu Lực:** Trạng thái hiệu lực chuẩn hóa và quan hệ thay thế đối soát qua lệnh `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry` (công nhận status chuẩn hóa `ACTIVE`, cùng các trường thay thế `supersedes`, `replaces`, `replaced_docs`, `relations.*`); tuyệt đối không dán cứng danh sách văn bản thay thế vào thân skill.
 
 ---
 
@@ -122,7 +116,6 @@ Khi cần đánh giá tác động:
 ## ⚠️ Disclaimer
 
 Skill này tạo **tài liệu phân tích VBPL**, KHÔNG phải tư vấn pháp lý. Luôn cần chuyên gia pháp lý xác nhận trước khi áp dụng vào dự án thực.
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

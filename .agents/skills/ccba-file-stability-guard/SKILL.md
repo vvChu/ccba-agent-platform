@@ -6,6 +6,8 @@ applies_to:
 - Phần mềm
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /ccba-file-stability-guard
 metadata:
@@ -32,12 +34,6 @@ Pattern phát hiện **file đã sync xong** trước khi pipeline xử lý. Gi�
 
 > [!IMPORTANT]
 > Áp dụng bất kỳ pipeline nào xử lý file đến từ: Google Drive Desktop, OneDrive, SharePoint Sync, hay bất kỳ cloud junction nào. **Bắt buộc** khi có `watchdog` / `FileSystemWatcher`.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (mẫu thiết kế tiện ích IO/đồng bộ file cấp hệ thống). Không kết nối trực tiếp với Seam Contract ứng dụng mà cung cấp thuật toán kiểm tra tính ổn định của tệp trước khi nạp vào các pipeline xử lý batch/watchdog.
 
 ---
 

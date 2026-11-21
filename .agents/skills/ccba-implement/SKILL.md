@@ -7,6 +7,10 @@ user-invocable: true
 command: /ccba-implement
 disable-model-invocation: true
 bundle: _core
+scope: universal
+posture: seam-exempt
+seam_ids:
+  - harness_verify.v1
 metadata:
   version: "1.2.1"
   author: "CCBA Hub"
@@ -23,12 +27,6 @@ triggers:
 # Quy Trình Hiện Thực Hóa Tính Năng & Mã Nguồn (/ccba-implement)
 
 Quy trình chuẩn hóa triển khai mã nguồn dựa trên đặc tả kỹ thuật (spec) hoặc danh sách công việc (tickets), kết hợp phương pháp Test-Driven Development (TDD) và kiểm soát nghiêm ngặt ngân sách ngữ cảnh (Context Budget).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green-Refactor và scoped test). Lệnh `python -m ccba_harness verify-patch --preset code` đóng vai trò caller kiểm định của `harness_verify.v1`; chữ "seam" trong skill là ranh giới module kiểm thử, không đóng gói pipeline chuyển đổi dữ liệu độc lập. Giữ nguyên `tier: orchestrator`.
 
 ---
 
@@ -79,7 +77,6 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho Red-Green
 3. Chạy lệnh `/ccba-code-review` để thực hiện phản biện đa chiều trước khi commit.
 4. Tạo git commit theo chuẩn Conventional Commits cục bộ.
 - **Tiêu chí hoàn thành:** Báo cáo kiểm toán kiến trúc cập nhật đầy đủ, mã nguồn được commit tại local và sẵn sàng bàn giao.
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

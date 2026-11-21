@@ -4,9 +4,10 @@ description: Autonomous lifecycle governance for Architecture Decision Records (
   - Scaffolding, status cascading, Living Traceability Matrix compilation, and CI
   parity validation.
 bundle: _governance
+scope: hub
+posture: seam-exempt
 tier: kernel
 layer: _governance
-scope: hub
 user-invocable: true
 command: /ccba-adr-lifecycle
 gpi:
@@ -36,13 +37,6 @@ metadata:
 # Skill: Quản Trị Vòng Đời Quyết Định Kiến Trúc (`ccba-adr-lifecycle`)
 
 Kỹ năng này hướng dẫn Agent tự động quản trị toàn bộ vòng đời của các **Quyết định Kiến trúc (ADR)** trên nền tảng CCBA Platform (cả Hub và Spoke): Từ khởi tạo ADR mới, lan truyền trạng thái thay thế (`SUPERSEDED`), tự động biên dịch bảng mục lục `README.md`, tự động quét radar cập nhật `TRACEABILITY_MATRIX.md`, và chạy cổng kiểm định chống lệch pha tài liệu.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel điều phối quy trình bốn bước quản trị vòng đời kiến trúc: scaffold `docs/adr/00XX-<slug>.md`, cascade `SUPERSEDED`, `scripts/sync_hub_adr_matrix.py` ở Hub và ở Spoke với `--spoke-dir .`, rồi cổng `--check`. 16 card trong `seam-contracts.yaml` không quản lý domain quản trị vòng đời ADRs, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
-- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 4.0, P: 1.0) = 22.5 >= 12.0. Tệp tài liệu chuyên sâu `references/architecture_sync_guide.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
-
----
 
 ## 🏛️ Vòng Đời 4 Bước Của Một Quyết Định Kiến Trúc (The ADR Loop)
 
@@ -131,7 +125,6 @@ python scripts/sync_hub_adr_matrix.py --check
   - 100% Khớp nối giữa các file ADR, bảng mục lục `README.md` và `TRACEABILITY_MATRIX.md`.
 
 **Tiêu chí hoàn thành:** Lệnh `python scripts/sync_hub_adr_matrix.py --check` thoát mã 0 với 0 lỗi parity.
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

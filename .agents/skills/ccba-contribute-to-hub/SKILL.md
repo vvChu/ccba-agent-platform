@@ -8,6 +8,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-contribute-to-hub
@@ -36,12 +38,6 @@ triggers:
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
 
 Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Lệnh: `/ccba-contribute-to-hub`)*
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP Git/PR chuẩn mực đóng góp từ Spoke lên Hub). Skill hướng dẫn quy trình 7 bước đóng gói mã nguồn, kiểm soát rò rỉ, mở Pull Request và vòng lặp tự làm xanh CI; không đóng gói pipeline chuyển đổi dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 
@@ -203,7 +199,6 @@ Sau khi PR được Squash Merge vào Hub `main`, thực thi chu trình 4 bướ
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -212,4 +207,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/propose_to_hub.md` | Quy trình đề xuất kỹ năng/tính năng mới từ Spoke lên Hub trung tâm |
 | `references/proposal_review_sop.md` | Quy trình chuẩn SOP thẩm định các đề xuất Pull Request từ Spoke gửi lên Hub |
-

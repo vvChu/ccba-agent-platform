@@ -7,6 +7,8 @@ applies_to:
 - Thiết kế
 - Tác vụ Admin
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-mermaid-diagram
@@ -193,16 +195,6 @@ sequenceDiagram
 
 ---
 
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (Miễn trừ Seam Platform):
-* **Lý do miễn trừ:** Sơ đồ Mermaid là dạng "Diagrams-as-Code" khai báo thuần túy (declarative Markdown), được phân tích cú pháp và kết xuất trực tiếp ở phía client (GitHub Markdown, Obsidian, IDE previews, trình duyệt). Nền tảng CCBA không sở hữu hay duy trì engine tính toán layout độc quyền cho Mermaid trong 10 package seams của Monorepo.
-* **Quy chuẩn vận hành:** Agent không thực hiện tra cứu `find-seam` cho Mermaid, không tạo script Python backend để sinh layout Mermaid.
-* **Quy ước Escape Cú Pháp Phân Biệt:** Nhãn node Mermaid bắt buộc escape ký tự đặc biệt theo quy chuẩn web: `#40;` / `#41;` cho ngoặc đơn, `#124;` cho dấu gạch đứng, `#quot;` cho ngoặc kép (phân biệt tuyệt đối với Excalidraw Spec Table vốn cấm các entity này và yêu cầu dùng ngoặc tròn thật `()`).
-* **Governance Compliance:** Đạt chuẩn Governance Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 4.0, A: 2.0, P: 1.0) = 18.0 >= 12.0. Tệp tài liệu chuyên sâu `references/statechart_verification_guide.md` được bảo tồn tại chỉ mục Level 3.
-
----
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`) hoặc biểu diễn đường dẫn phản chứng kiểm định giao thức, Agent sử dụng công cụ đọc tệp để nạp hướng dẫn chi tiết:
@@ -210,5 +202,3 @@ Khi thiết kế sơ đồ máy trạng thái (`stateDiagram-v2`) hoặc biểu 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | [`references/statechart_verification_guide.md`](references/statechart_verification_guide.md) | Hợp đồng cú pháp `stateDiagram-v2` đa trình xem, phân vùng song song (`--`), 4 lớp đánh dấu (`breaks`, `mayBreak`, `bugPath`, `repeats`), 4 quy tắc Anti-Lie Pruning ($\le 20$ cạnh) và định dạng bàn giao `bug_path` |
-
-

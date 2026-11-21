@@ -21,7 +21,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-book-co
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.5 | A=1.0 | P=1.0 (GPI: 19.50)` |
 

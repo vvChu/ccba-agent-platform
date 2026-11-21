@@ -7,6 +7,10 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _consulting
+scope: universal
+posture: compose-existing
+seam_ids:
+  - ooxml_processor.v1
 tier: kernel
 metadata:
   author: CCBA
@@ -32,14 +36,6 @@ triggers:
 # Seminar Content Builder
 
 Skill hỗ trợ chuẩn bị nội dung cho các buổi Seminar/Thảo luận/Training nội bộ của CCBA.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`compose-existing`**, hợp thành từ Deep Seam `ooxml_processor.v1` (`packages/ccba-ooxml`):
-* **Biên Dịch Trình Chiếu (.pptx):** Sử dụng trực tiếp `from ccba_ooxml import build_presentation_from_markdown` hoặc lệnh CLI `python -m ccba_ooxml build-deck`. Tuyệt đối không tự viết logic sinh XML presentation ad-hoc.
-* **Lưu Trữ Tri Thức (Archive):** Các tài liệu seminar hoàn thành được lưu trữ tập trung tại `.md/seminars/` của Spoke; tuyệt đối không ghi dữ liệu seminar vào `legal_registry.yaml` (vốn là SSOT dành riêng cho văn bản quy phạm pháp luật).
 
 ---
 
@@ -122,7 +118,6 @@ build_presentation_from_markdown("outline.md", "seminar.pptx")
 ## Source Documents
 
 Tài liệu seminar lưu tại: `.md/seminars/` (tuyệt đối không lưu rải rác ngoài Project Root).
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

@@ -867,7 +867,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ai-gate
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
@@ -1291,7 +1291,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-api-cir
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 
@@ -1608,7 +1608,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-autores
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 3 (Orchestrator)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 
 ---
@@ -1712,7 +1712,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-book-co
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=4.5 | A=1.0 | P=1.0 (GPI: 19.50)` |
 
@@ -1817,7 +1817,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-build-s
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=2.0 | P=1.0 (GPI: 14.00)` |
 
@@ -2132,7 +2132,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-codebas
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
@@ -3616,7 +3616,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-graduat
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 3 (Orchestrator)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 
 ---
@@ -4140,7 +4140,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-init-sp
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🚀 Khởi tạo, Điều hướng & Đồng bộ |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 14.50)` |
 
@@ -4984,7 +4984,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-llm-pip
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=4.0 | P=1.0 (GPI: 18.00)` |
 
@@ -6765,7 +6765,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-spoke-a
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🚀 Khởi tạo, Điều hướng & Đồng bộ |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 3 (Orchestrator)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 
 ---
@@ -6873,7 +6873,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-sync-up
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_governance` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=4.0 | K=3.0 | A=1.0 | P=1.0 (GPI: 16.50)` |
 
@@ -8028,7 +8028,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-youtube
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | 🛡️ Quản trị Nền tảng, AI Gateway & Nghiên cứu |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_consulting` |
 | **Phương Thức Triệu Hồi** | User-invoked (Chỉ lệnh Slash Command) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=2.0 | A=1.0 | P=1.0 (GPI: 12.00)` |
 

@@ -4,6 +4,8 @@ description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workf
   phát triển.
 disable-model-invocation: true
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-ask
@@ -34,15 +36,6 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 > [!IMPORTANT]
 > **Nguồn tin cậy (Source of Truth):**
 > Tất cả các Slash Command trong tài liệu này đều được định tuyến dựa trên danh mục dịch vụ tại [catalog.yaml](../platform-loader/catalog.yaml). Vui lòng kiểm tra danh mục này trước khi thực thi để đảm bảo lệnh đã được đăng ký thành công trong phân vùng (spoke) hiện tại.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Phân loại**: Kỹ năng hạt nhân định hướng quy trình (seam-exempt kernel skill).
-- **Lý do miễn trừ seam**: SOP điều phối và tư vấn Slash Command / Kỹ năng phù hợp cho người dùng và Agent, tích hợp quy trình động não (Brainstorming) và làm rõ ngữ cảnh (Wait-What), không trực tiếp ràng buộc API package runtime.
-- **Đặc tính quản trị**: Cung cấp bảng phân tuyến 3 chế độ hoạt động, bản đồ luồng công việc từ ý tưởng đến phát hành (Idea -> Ship) theo Factory Model và các luồng bổ trợ upkeep kiến trúc theo danh mục `catalog.yaml` chuẩn hóa.
-- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (s=3.0, k=3.0, a=1.0, p=1.0) -> GPI = 14.0 (Tier 2B kernel), tuân thủ phân lớp governance và hướng dẫn tương tác người dùng.
-
----
 
 ## 🧭 Bảng Phân Tuyến 3 Chế Độ Hoạt Động (3-Mode Intent Dispatch)
 
@@ -133,4 +126,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-

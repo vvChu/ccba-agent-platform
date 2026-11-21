@@ -4,6 +4,8 @@ description: Guardrails to block or request explicit user permission before exec
   dangerous git operations (force push, hard reset, clean, etc.) via terminal.
 disable-model-invocation: true
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-git-guardrails
@@ -39,13 +41,6 @@ Các câu lệnh sau bắt buộc phải có sự chấp thuận tường minh t
 
 ---
 
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách thiết lập rào chắn an toàn trong thời gian chạy (Runtime Guardrails) nhằm chặn hoặc yêu cầu phê duyệt tường minh từ người dùng trước khi thực thi các lệnh Git có tính chất hủy diệt (`push`, `reset --hard`, `clean`, `branch -D`, `checkout .`, `restore .`). Không có Seam card nào trong `seam-contracts.yaml` đảm nhiệm logic tương tác shell an toàn, do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 >= 12.0 (nằm trong vùng deadband [11.5, 12.5), duy trì Tier 2B theo nguyên tắc hysteresis). Tệp tham chiếu chuyên sâu duy nhất `references/merge_conflict_resolution.md` được bảo tồn nguyên vẹn tại chỉ mục Level 3.
-
----
-
 ## Các bước thực hiện
 
 ### Bước 1: Nhận diện và đánh chặn câu lệnh nguy hiểm (Command Interception)
@@ -73,7 +68,6 @@ Các câu lệnh sau bắt buộc phải có sự chấp thuận tường minh t
 4. Ghi nhận nhật ký thao tác an toàn vào hệ thống theo dõi kiểm toán.
 - **Tiêu chí hoàn thành:** Lệnh được thực thi thành công, kết quả được xác minh và nhật ký kiểm toán ghi nhận đầy đủ.
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -81,4 +75,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/merge_conflict_resolution.md` | Cẩm nang giải quyết xung đột mã nguồn Git merge an toàn |
-

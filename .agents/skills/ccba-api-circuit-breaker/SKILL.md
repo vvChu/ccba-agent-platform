@@ -6,7 +6,9 @@ description: Rate limiter + Circuit Breaker pattern cho LLM API calls trong batc
 applies_to:
 - Phần mềm
 - Kiểm định
-bundle: _core
+bundle: _software
+scope: universal
+posture: package-bound
 tier: kernel
 command: /ccba-api-circuit-breaker
 metadata:
@@ -37,14 +39,6 @@ triggers:
 Rate limiter + Circuit Breaker 3-trạng-thái cho LLM API calls. Thiết kế cho các pipeline gọi AI Gateway **hàng loạt** (batch QC, wiki healing, domain enrichment) và các kiến trúc Multi-Endpoint tự phục hồi (Self-Healing).
 
 > **Nguồn**: VvC Wiki Health v7.4 → LLM OS v8.15 (2026) — giải quyết lỗi quota exhaustion khi wiki healer gọi LLM cho 300+ concept stubs liên tiếp không throttle, và cơ chế Soft Cooldown tự động giáng cấp (Auto-Downgrade) khi Cổng Proxy chuyên biệt đạt giới hạn tài khoản.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào lớp `CircuitBreaker` đã được triển khai, kiểm thử và tích hợp sẵn trong package monorepo `packages/ccba-ai` (`from ccba_ai.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState`).
-
-Mọi quy trình xử lý theo lô (batch processing pipelines) bắt buộc tái sử dụng trực tiếp lớp `CircuitBreaker` từ package `ccba_ai`, không duy trì script ad-hoc cục bộ tại Spoke hay thư mục `resources/`. Mọi tương tác gọi LLM bên trong hàm lambda được bảo vệ bắt buộc định tuyến qua `choose_model()` hoặc `ModelArchetype`.
 
 ---
 

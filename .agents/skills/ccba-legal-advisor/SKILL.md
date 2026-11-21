@@ -3,6 +3,10 @@ name: ccba-legal-advisor
 description: "Tư vấn giải đáp tình huống pháp lý xây dựng: Phỏng vấn làm rõ ngữ cảnh và xuất Phiếu Ý kiến Pháp lý trích dẫn OKF v2.4. Không dùng để cào/nạp văn bản mới."
 argument-hint: "Nội dung câu hỏi pháp lý hoặc tình huống dự án cần tư vấn?"
 bundle: _consulting
+scope: universal
+posture: skill-bound
+seam_ids:
+  - legal_advisor.v1
 tier: kernel
 command: /ccba-legal-advisor
 disable-model-invocation: false
@@ -20,10 +24,8 @@ Kỹ năng này chịu trách nhiệm biến mọi câu hỏi pháp lý ban đ�
 
 ---
 
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
+## 🛡️ Cưỡng Chế Hiến Pháp ADR-0059 & Layer 07 Guard
 
-Skill này thuộc thế năng **`skill-bound`**, đóng vai trò điểm vào chính quy cho Seam Card **`legal_advisor.v1`** (`command: /ccba-legal-advisor`):
-* **Hợp Đồng Năng Lực:** Đầu vào `in: [legal_query, project_context]`, đầu ra `out: [legal_opinion_markdown]`.
 * **Cưỡng Chế Hiến Pháp ADR-0059 (Verbatim Grounding & Provenance Stamping):**
   - Mọi căn cứ pháp lý và bảng tra cứu bắt buộc phải trích xuất nguyên văn từ kho OKF v2.4 đã qua thẩm duyệt mã băm `pdf_sha256`.
   - **Ranh Giới Giả Định:** Giả định chỉ được phép áp dụng cho tham số công trình (ví dụ: giả định chiều cao công trình, diện tích sàn) khi người dùng chưa có số liệu và **BẮT BUỘC gắn nhãn rõ `[GIẢ ĐỊNH DỰ ÁN]`**. Tuyệt đối **CẤM giả định điều khoản pháp luật**.
@@ -153,4 +155,3 @@ Khi tư vấn chuyên sâu cho công trình sản xuất công nghiệp hoặc t
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | [`references/industrial_f5_pccc_pitfalls.md`](references/industrial_f5_pccc_pitfalls.md) | Quy tắc tách bạch "3 Sổ Độc Lập" cho tầng lửng & sàn thao tác Catwalk/OHU, phòng máy chủ (`QCVN 10:2025/BCA`), trạm bơm & bể nước PCCC (`QCVN 02:2020/BCA`), khối tích Bảng 16 & lỗ mở mái 2,5% cho nhà máy công nghiệp nhóm `F5` |
-

@@ -4,6 +4,8 @@ description: Diagnosis loop for hard bugs and performance regressions. Use when 
   user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
 disable-model-invocation: true
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-diagnosing-bugs
@@ -28,12 +30,6 @@ triggers:
 # Diagnosing Bugs
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP kernel chẩn đoán và khắc phục lỗi mã nguồn theo 6 pha trên đĩa: feedback loop, reproduce, hypothesise, instrument, fix, cleanup). GPI đạt (4.0, 2.0, 1.0, 1.0) = 14.5, vượt xa ngưỡng độc lập Tier 2B; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 
@@ -186,7 +182,6 @@ Required before declaring done:
 
 **Completion Criterion:** All debug instrumentation cleaned up, post-mortem documented, and prevention recommendations made.
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -194,4 +189,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/mock_debugging_patterns.md` | Mẫu hình mock dữ liệu và tạo ca kiểm thử mô phỏng khi chẩn đoán lỗi phần mềm |
-

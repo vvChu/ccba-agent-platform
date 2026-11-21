@@ -4,6 +4,8 @@ description: Tác nhân Quản lý Tài liệu Kỹ thuật và API của CCBA P
 applies_to:
 - Phần mềm
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 user-invocable: true
@@ -30,14 +32,6 @@ triggers:
 Kỹ năng này đóng vai trò là một **Technical Writer QA** chuyên biệt, chịu trách nhiệm duy trì tính nhất quán, bảo mật và chính xác của tài liệu kỹ thuật so với thực tế mã nguồn (codebase).
 
 Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
-
----
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
-- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel năm pha quản trị tài liệu kỹ thuật: đóng gói codebase (`repomix_pack.py`), che giấu thông tin nhạy cảm qua caller script nền tảng `scripts/maskara.py redact`, sao lưu an toàn vào `.md/scratch/backups/`, đồng bộ tài liệu và kiểm tra Architecture Drift qua `scripts/validate_docs.py`, vá liên kết qua `ccba-relative-link-patcher`, và dọn dẹp artifacts. Quy trình phối hợp các script quản trị và công cụ tệp tin, không phụ thuộc Seam đóng gói Python độc lập.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 $\ge$ 12.0. Duy trì 1 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/markdown_hallucination_check.md`).
 
 ---
 
@@ -97,7 +91,6 @@ Agent **bắt buộc** phải thực thi theo đúng quy trình 5 pha sau đây:
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -105,4 +98,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/markdown_hallucination_check.md` | Quy trình kiểm tra tính xác thực của tài liệu Markdown, ngăn ngừa ảo ảnh thông tin |
-
