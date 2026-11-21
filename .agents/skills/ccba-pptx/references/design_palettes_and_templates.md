@@ -82,5 +82,5 @@ template_mapping = [0, 34, 34, 50, 54]
 
 ## 5. Thumbnail Grids & PDF-to-JPEG Inspection Options
 
-- `python scripts/thumbnail.py template.pptx my-grid --cols 4` (`3` cols = `12` slides per grid, `4` = `20`, `5` = `30`, `6` = `42`).
+- Thumbnail grid columns (`--cols`, see `../scripts/thumbnail.py` invoked from the skill root): `3` cols = `12` slides per grid, `4` = `20`, `5` = `30`, `6` = `42` (`my-grid` custom prefix).
 - `soffice --headless --convert-to pdf template.pptx && pdftoppm -jpeg -r 150 -f 2 -l 5 template.pdf slide` (`-png` optional).

@@ -113,7 +113,7 @@ Tier 3 — LLM Arbitrator: cosine similarity >= 0.88 -> MERGE / SEPARATE / SUBSU
 
 - **Layer 1 — Constitution (`AGENTS.md`):** Nguồn quy tắc duy nhất (`Full schema`).
 - **Layer 2 — Quick Reference (`GEMINI.md` / `README.md`):** Pointer đến Layer 1, KHÔNG duplicate schema.
-- **Layer 3 — Scope Override (`scripts/GEMINI.md`):** Chỉ override BEHAVIOR theo chế độ, KHÔNG override schema.
+- **Layer 3 — Scope Override (`<subdir>/GEMINI.md`):** Chỉ override BEHAVIOR theo chế độ, KHÔNG override schema.
 
 ---
 
