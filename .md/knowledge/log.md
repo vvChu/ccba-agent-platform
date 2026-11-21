@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-21] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Đợt 3 (`H4`: Skill Prose Diet, Token Ratchet & `ADR-0066` Rollout)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling Đợt 3`)
+- **Affected Files**: [decisions/2026-11-21_wave3_ccba_dune_h4_skill_diet_scope_ratchet_grilling_resolution.md](decisions/2026-11-21_wave3_ccba_dune_h4_skill_diet_scope_ratchet_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling Đợt 3` và **Grok Peer Plan Audit 2 Pass** (`APPROVE_PLAN`, `risk_score: 2`, `blocking_conditions: 0`, sessions `dcd4f1b2-0984-49da-af48-f0cc7b8c4cfd` / `f044b30a-a7d8-4b5d-9f3a-ef1c03ca5eb3`), chốt `4/4` quyết định `Q1`–`Q4` cùng toàn bộ `5/5` (`Pass 1`) + `2/2` non-blocking + `1` non-blocking census (`Pass 2`) điều kiện `[ADOPT_AS_IS]` cho lộ trình `4` PR nối tiếp (`PR-H4a -> PR-H4b -> PR-H4c -> PR-I4`): dựng Token Ratchet 1 chiều chuẩn hóa LF (`3,500` MI / `4,000` DMI) tại `economy.py` + `token_economy.py` + `scripts/skill_token_budget_baseline.json` (`PR-H4a`); chuyển cả 2 biến thể `69.5 KB` `Platform-Aware Architecture Posture` sang YAML `posture`/`seam_ids` (bảo toàn rào chắn `Layer 07`/`ADR-0059`/`Mandatory Invariants` trên 12 skills), điền `scope` cho đủ `77` skills và thu gọn `_core` (`45 -> 33`, `MI: 10 -> 7`) theo ma trận `catalog.yaml` (`PR-H4b`); gọt Level-3 cho lô `10` skills (`6` `MI` về `<= 3,500` tok + top `4` `DMI > 7,000` về `<= 4,000` tok tôn trọng chuỗi ghim `ccba-skill-repair`) giữ nguyên 100% eval & routing (`PR-H4c`); đồng bộ `--prune-unscoped` sang `IDOP-CCBA-WAY` (`69 -> 63` skills, `PR-I4`). Đang chờ lệnh `proceed` trước khi sửa mã sản xuất.
+
+---
+
 ## [2026-11-20] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Đợt 2 Xuyên Trục `CCBA Dune × IDOP` (`H2 + H3 + I3`)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling Đợt 2`)
 - **Affected Files**: [decisions/2026-11-20_wave2_ccba_dune_idop_h2_h3_i3_grilling_resolution.md](decisions/2026-11-20_wave2_ccba_dune_idop_h2_h3_i3_grilling_resolution.md), [index.md](index.md), [log.md](log.md)

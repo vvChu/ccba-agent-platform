@@ -10,13 +10,18 @@ Implements architectural cost optimization and prompt hygiene (ADR-0030, ADR-005
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ccba_harness._skill_frontmatter import normalize_bool_flag, parse_frontmatter_dict
 from ccba_harness.telemetry import SubagentSessionMetrics, TokenEstimator
+
+DEFAULT_MI_TOKEN_CEILING = 3500
+DEFAULT_DMI_TOKEN_CEILING = 4000
 
 
 @dataclass
@@ -475,3 +480,148 @@ def generate_prompt_pruning_report(
         out.write_text(full_markdown, encoding="utf-8")
 
     return full_markdown
+
+
+@dataclass(frozen=True)
+class SkillTokenBudgetResult:
+    """Result of one-way skill token ratchet verification."""
+
+    passed: bool
+    checked_count: int
+    mi_ceiling: int
+    dmi_ceiling: int
+    violations: list[str] = field(default_factory=list)
+    orphan_baseline_keys: list[str] = field(default_factory=list)
+    measured_tokens: dict[str, int] = field(default_factory=dict)
+    updated_baseline: dict[str, int] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize ratchet check result for CLI JSON output."""
+        return asdict(self)
+
+
+def count_skill_tokens_lf(text: str) -> int:
+    """Count tokens on LF-normalized text so CRLF/LF differences never skew budgets."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return TokenEstimator.estimate_text(normalized)
+
+
+def _read_text_lf(path: Path) -> str:
+    """Read UTF-8 text from disk and normalize line endings strictly to LF."""
+    raw = path.read_bytes().decode("utf-8", errors="replace")
+    return raw.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def load_skill_token_baseline(baseline_path: Path | str) -> dict[str, int]:
+    """Load sorted per-skill token ceiling overrides from JSON baseline."""
+    path = Path(baseline_path)
+    if not path.is_file():
+        return {}
+    loaded = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError(f"Skill token baseline at '{path}' must be a JSON object.")
+    return {str(k): int(v) for k, v in sorted(loaded.items())}
+
+
+def _extract_is_dmi(skill_path: Path, lf_text: str) -> bool:
+    """Return True if SKILL.md declares disable-model-invocation: true."""
+    _, meta, _ = parse_frontmatter_dict(str(skill_path), lf_text)
+    if not isinstance(meta, dict):
+        return False
+    return bool(normalize_bool_flag(meta.get("disable-model-invocation", False)))
+
+
+def _scan_ratchet_entries(
+    skill_paths: list[Path],
+    baseline: dict[str, int],
+    mi_ceiling: int,
+    dmi_ceiling: int,
+) -> tuple[dict[str, int], dict[str, int], list[str]]:
+    """Measure LF tokens per skill and collect violations plus downward baseline candidates."""
+    measured: dict[str, int] = {}
+    violations: list[str] = []
+    next_baseline: dict[str, int] = {}
+    for sf in skill_paths:
+        name = sf.parent.name
+        lf_text = _read_text_lf(sf)
+        tokens = count_skill_tokens_lf(lf_text)
+        measured[name] = tokens
+        ceiling = dmi_ceiling if _extract_is_dmi(sf, lf_text) else mi_ceiling
+        prev = baseline.get(name)
+        allowed = max(ceiling, prev) if prev is not None else ceiling
+        if tokens > allowed:
+            violations.append(
+                f"{name}: {tokens} > allowed {allowed} (ceiling={ceiling}, baseline={prev})"
+            )
+        elif tokens > ceiling:
+            next_baseline[name] = tokens
+    return measured, next_baseline, violations
+
+
+def check_skill_token_budget(
+    skills_dir: Path | str,
+    baseline_path: Path | str,
+    *,
+    mi_ceiling: int = DEFAULT_MI_TOKEN_CEILING,
+    dmi_ceiling: int = DEFAULT_DMI_TOKEN_CEILING,
+    update_baseline: bool = False,
+) -> SkillTokenBudgetResult:
+    """Enforce one-way downward skill token ratchet across all skills/*/SKILL.md."""
+    base_file = Path(baseline_path)
+    baseline = load_skill_token_baseline(base_file)
+    skill_paths = sorted(Path(skills_dir).glob("*/SKILL.md"), key=lambda p: p.parent.name)
+    measured, next_baseline, violations = _scan_ratchet_entries(
+        skill_paths, baseline, mi_ceiling, dmi_ceiling
+    )
+    orphans = sorted(set(baseline) - set(measured))
+    if orphans and not update_baseline:
+        violations.extend(f"{key}: orphan entry in baseline not found on disk" for key in orphans)
+
+    written: dict[str, int] | None = None
+    if update_baseline and not violations:
+        sorted_out = {k: next_baseline[k] for k in sorted(next_baseline)}
+        base_file.parent.mkdir(parents=True, exist_ok=True)
+        base_file.write_text(
+            json.dumps(sorted_out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        written = sorted_out
+
+    return SkillTokenBudgetResult(
+        passed=len(violations) == 0,
+        checked_count=len(skill_paths),
+        mi_ceiling=mi_ceiling,
+        dmi_ceiling=dmi_ceiling,
+        violations=violations,
+        orphan_baseline_keys=[] if update_baseline else orphans,
+        measured_tokens=measured,
+        updated_baseline=written,
+    )
+
+
+def init_skill_token_baseline(
+    skills_dir: Path | str,
+    baseline_path: Path | str,
+    *,
+    mi_ceiling: int = DEFAULT_MI_TOKEN_CEILING,
+    dmi_ceiling: int = DEFAULT_DMI_TOKEN_CEILING,
+) -> dict[str, int]:
+    """Create initial sorted LF token baseline JSON; refuses to overwrite an existing baseline."""
+    base_file = Path(baseline_path)
+    if base_file.exists():
+        raise FileExistsError(
+            f"Baseline '{base_file}' already exists; use check_skill_token_budget(..., update_baseline=True)."
+        )
+    skill_paths = sorted(Path(skills_dir).glob("*/SKILL.md"), key=lambda p: p.parent.name)
+    entries: dict[str, int] = {}
+    for sf in skill_paths:
+        lf_text = _read_text_lf(sf)
+        tokens = count_skill_tokens_lf(lf_text)
+        ceiling = dmi_ceiling if _extract_is_dmi(sf, lf_text) else mi_ceiling
+        if tokens > ceiling:
+            entries[sf.parent.name] = tokens
+    sorted_out = {k: entries[k] for k in sorted(entries)}
+    base_file.parent.mkdir(parents=True, exist_ok=True)
+    base_file.write_text(
+        json.dumps(sorted_out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return sorted_out
