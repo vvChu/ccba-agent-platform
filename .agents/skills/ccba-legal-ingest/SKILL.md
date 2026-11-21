@@ -76,130 +76,69 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 
 ---
 
-### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (Giao thức "Một Cửa `tab=7`" - ADR 0035, ADR 0036, ADR 0039)
+### Bước 0: Thu Thập & Xác Thực Nguồn Gốc (ADR 0035, 0036, 0039, 0049)
 
-* **Kịch bản 1 — Nạp tự động toàn trình qua Hub Central Platform CLI (Unified Flywheel):**
+* **Auto TVPL / Offline Ingestion:**
   ```bash
   python scripts/ccba_platform_cli.py ingest-legal "<tvpl_url>" --category <01_vbpl|02_qcvn|03_tcvn> [--sync-cloud]
-  ```
-  *(Chu trình khép kín tự động: Chiếm `TVPLSessionMutex` ➔ Tải DOCX + PDF vào sandbox tạm ➔ Ghi `metadata_handoff.json` ➔ Chuyển giao sang `spoke_cli.py ingest` ➔ Sao chép đủ 2 tệp nhị phân vào `sources/` ➔ Cập nhật `legal_registry.yaml` bảo toàn `pdf_status` ➔ Chuyển đổi OKF v2.4 Bundle ➔ Kiểm định khoanh vùng Scoped 15-Gate CI `validate --bundle <slug>` với `CI=true` ➔ Tự động giải phóng sandbox SSOT)*.
-
-* **Kịch bản 1b — Nạp offline từ tệp có sẵn (Offline Local Files Ingestion):**
-  ```bash
-  python scripts/ccba_platform_cli.py ingest-legal "<slug_or_id>" --category <01_vbpl|02_qcvn|03_tcvn> --docx <path/to/file.docx> --pdf <path/to/file.pdf>
-  ```
-
-* **Kịch bản 2 — Xử lý khi cào tự động bị chặn (ADR-0059 Acquisition Barrier):**
-  Nếu việc cào tự động gặp trở ngại (Cloudflare/Captcha không thể vượt qua), Agent **BẮT BUỘC DỪNG LẠI** và thông báo yêu cầu người dùng cung cấp 2 tệp nguồn `.docx` và `.pdf` chính quy để đưa vào `legal_docs/<category>/<doc_slug>/sources/`. **Sau khi có file, BẮT BUỘC thực thi Bước 1 bằng lệnh `convert` — TUYỆT ĐỐI CẤM tự viết file Markdown bằng LLM.**
-
-* **Kịch bản 3 — Làm mới / Thay thế file scan mờ bằng bản nét (Force Refresh):**
-  Chạy lệnh tải đè bản đẹp vào `sources/` rồi chuyển sang Bước 1:
-  ```powershell
+  # Offline từ file có sẵn:
+  python scripts/ccba_platform_cli.py ingest-legal "<slug_or_id>" --category <01_vbpl|02_qcvn|03_tcvn> --docx <file.docx> --pdf <file.pdf>
+  # Làm mới file scan mờ:
   python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
   ```
-
-* **Kịch bản 4 — Lưu trữ kép khi PDF TVPL scan mờ / lỗi phông chữ (Dual-PDF Archive & Provenance Protocol - ADR 0049):**
-  Đối với các tiêu chuẩn cũ (như TCVN 4474:1987, TCVN 4513:1988, TCVN 9362:2012, TCVN 10304:2014) mà tệp PDF từ TVPL là bản photocopy scan mờ hoặc lỗi phông mã hóa chữ TCVN3/VNI:
-  - Lưu giữ nguyên vẹn bản scan gốc dưới tên `sources/<doc_slug>_raw_scan.pdf` để bảo toàn vết truy xuất nguồn gốc pháp lý.
-  - Sử dụng API xuất Vector PDF đa nền tảng `from ccba_ooxml import convert_to_pdf` xuất Vector PDF độ nét tuyệt đối (zero-OCR) từ tệp DOCX chính quy, lưu làm `sources/<doc_slug>.pdf` và khai báo cờ `pdf_origin: docx_vector_rendered` trong `metadata.yaml`. Cả 2 tệp đều được đồng bộ lên Google Drive Vault.
-
+* **Barrier & Dual-PDF Rule:** Nếu bị chặn cào tự động -> DỪNG và xin `.docx` + `.pdf` chính quy (cấm LLM viết Markdown). Với PDF scan mờ/TCVN3 cũ -> giữ `<slug>_raw_scan.pdf`, xuất Vector PDF qua `ccba_ooxml.convert_to_pdf` và gắn `pdf_origin: docx_vector_rendered` (chi tiết 4 kịch bản tại `references/ingest_scenarios_and_15_gates.md`).
 * **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/` kèm mã băm SHA-256 xác thực.
 
 ---
 
-### Bước 1: Chuyển Đổi Sang OKF v2.4 Bundle & Tiền Xử Lý Chuẩn Hóa DOM (DocxCanonicalSanitizer & Zero-LLM Deterministic AST - ADR 0037, ADR 0042)
+### Bước 1: Chuyển Đổi Sang OKF v2.4 Bundle (`DocxCanonicalSanitizer` — ADR 0037, 0042, 0044)
 
-* Thực thi lệnh chuyển đổi trích xuất nguyên văn $100\%$ từ DOCX gốc qua Động cơ Lai ghép DOCX-PDF Hai Tầng kết hợp `DocxCanonicalSanitizer` tiền xử lý 100% in-memory:
-  ```powershell
-  python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
-  ```
-* **Quy chuẩn bất biến (Core Invariants):**
-  - **Pha 1 (In-Memory Canonical DOM Sanitization - ADR 0042):** `DocxCanonicalSanitizer` tự động gọt bỏ thuộc tính `w:rsid*`, thẻ `<w:proofErr>`, gộp các run `<w:r>` phân mảnh (Unicode NFC), tiêm `xml:space="preserve"`, thăng cấp heading và unwrap các bảng bố cục dàn trang (Borderless Layout Tables) thành văn xuôi phẳng.
-  - **Pha 2 (Multimodal Verbatim AST Extraction - ADR 0037):** Thân văn bản Markdown trích xuất xác định $1:1$ từ DOCX (cấm LLM rewrite).
-  - **Pha 3 (Smart Fallbacks & Multi-Part Disambiguation - ADR 0044):**
-    * *Clause-Referenced Uncaptioned Tables:* Khi bảng số liệu không có heading `Bảng X` mà được dẫn chiếu trong câu trước (`blocks[i-1]` chứa `"theo bảng X"`), converter tự động gán nhãn bảng và xuất 2D CSV/JSON đầy đủ.
-    * *Single-Annex Normalization:* Nhận diện phụ lục đơn lẻ mang tên trần `Phụ lục` (không kèm chữ cái/số) với định danh `"1"`, tránh dồn phụ lục vào thân chính.
-    * *Multi-Part Table Disambiguation:* Đối với quy chuẩn đa phần (như QCVN 07:2023), tự động gắn tiền tố phần cho bảng (`bang_p01_01.csv`...) và đăng ký trường `part_id` trong `tables_catalog.json`.
-    * *KaTeX Multiline Tag Hierarchy:* Cho phép `\tag{X}` trong khối toán đơn dòng; cưỡng chế dùng `\qquad (X)` ở cuối dòng trong các môi trường đa dòng (`aligned`, `cases`, `gather`) để triệt tiêu lỗi bôi đỏ.
-  - Phân tách rạch ròi 4 ngăn kéo: `tables/`, `figures/`, `annexes/`, `templates/`.
-  - Toàn bộ file gốc DOCX + PDF nằm trong `sources/`.
-  - Tự động sinh cây điều khoản AST `clauses.json` và bộ câu hỏi `qa_benchmark.json`.
-- **Tiêu chí hoàn thành:** Tạo thành công bundle OKF v2.4 xác định nguyên văn 100% kèm đầy đủ các ngăn kéo và cây AST clauses.json.
+```powershell
+python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+```
+
+* **Pha 1 (`DocxCanonicalSanitizer`):** Gọt `w:rsid*`/`<w:proofErr>`, gộp run NFC, unwrap Borderless Layout Tables.
+* **Pha 2 (Verbatim AST):** Trích xuất Markdown $1:1$ từ DOCX (cấm LLM rewrite), tách 4 ngăn kéo `tables/`, `figures/`, `annexes/`, `templates/`, giữ gốc ở `sources/`, sinh `clauses.json` và `qa_benchmark.json`.
+* **Pha 3 (Smart Fallbacks):** Uncaptioned table tagging, Single-Annex `"1"`, Multi-Part `part_id`, KaTeX multiline `\qquad (X)`.
+* **Tiêu chí hoàn thành:** Tạo thành công bundle OKF v2.4 xác định nguyên văn 100% kèm đầy đủ các ngăn kéo và cây AST `clauses.json`.
 
 ---
 
-### Bước 1.5: Đối Soát Toàn Vẹn Số Lượng Đối Tượng (Ground Truth Reconciliation & Zero-Prune Invariant)
+### Bước 1.5: Đối Soát Toàn Vẹn & Zero-Prune Invariant
 
-Trước khi chuyển sang bước kiểm định hoặc kết luận hoàn thành, Agent **bắt buộc** thực hiện:
-
-1. **Đối soát số lượng Bảng (Table Reconciliation):**
-   * Đếm tổng số bảng thực tế trong tệp DOCX gốc: `total_doc_tables = len(doc.tables)`.
-   * Lưu ý: Các Bảng bố cục dàn trang (Borderless Layout Tables, như bảng quốc hiệu, tiêu ngữ, chữ ký, bảng khung công thức) đã được `DocxCanonicalSanitizer` unwrap thành văn bản phẳng ở Pha 1. Do đó, số lượng bảng trong `tables/csv/` và `tables_catalog.json` phản ánh chính xác số lượng bảng kỹ thuật quy phạm thực tế.
-   * Nếu có sự chênh lệch bất thường: **Nghiêm cấm** Agent tự ý chạy script xóa các tệp CSV/JSON bị coi là "mồ côi" (`clean_orphan_tables.py`). Agent bắt buộc phải đối soát cấu trúc gốc để đảm bảo không bỏ sót bảng số liệu quy phạm thực tế.
-2. **Đối soát số lượng Phụ lục (Annex Reconciliation):**
-   * Đối chiếu danh mục Phụ lục trong mục lục văn bản gốc (PDF/DOCX) với số lượng tệp `.md` trong `annexes/`.
-   * Tuyệt đối không để xảy ra trường hợp Phụ lục bị dồn vào thân văn bản chính.
-3. **Đối soát Sơ đồ Đồ họa (Multimodal Figure Fallback):**
-   * Nếu `figures/` ghi nhận 0 hình nhưng văn bản quy chuẩn có sơ đồ (như Hình H.1, Hình H.2 trong QCVN 10:2025/BCA), bắt buộc kiểm tra các trang PDF để trích xuất vector raster $\ge 300\text{ DPI}$.
-
-- **Tiêu chí hoàn thành:**
-   | Tiêu chí | Trạng thái | Yêu cầu kiểm tra |
-   | :--- | :---: | :--- |
-   | Zero-Prune Invariant | ✅/❌ | Không xóa bảng/hình mồ côi khi chưa đối soát gốc |
-   | Table Count Match | ✅/❌ | Số bảng `tables_catalog.json` khớp 100% bảng kỹ thuật gốc |
-   | Annex Count Match | ✅/❌ | Số file trong `annexes/` khớp 100% phụ lục ban hành |
-   | Multimodal Check | ✅/❌ | Đủ 100% sơ đồ đồ họa từ PDF/DOCX |
+* **Table Reconciliation:** So sánh `len(doc.tables)` với `tables/csv/` và `tables_catalog.json`. Cấm tự ý chạy `clean_orphan_tables.py` xóa tệp mồ côi khi chưa đối soát gốc.
+* **Annex & Figure Reconciliation:** Số tệp `annexes/` phải khớp mục lục gốc; trích xuất vector/raster $\ge 300\text{ DPI}$ từ PDF nếu quy chuẩn có sơ đồ mà `figures/` = 0.
+* **Tiêu chí hoàn thành:** Khớp 100% Bảng (`tables_catalog.json`), Phụ lục (`annexes/`), Sơ đồ đồ họa (`figures/`) và tuân thủ Zero-Prune Invariant.
 
 ---
 
-### Bước 2: Hợp Nhất Văn Bản Sửa Đổi (VBHN Engine — nếu có)
+### Bước 2: Hợp Nhất Văn Bản Sửa Đổi (`VBHNEngine` — nếu có)
 
-* Nếu văn bản có sửa đổi/bổ sung, thực thi lệnh hợp nhất AST:
-  ```powershell
-  python -m ccba_legal consolidate `
-    --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" `
-    --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" `
-    --output "legal_docs/<category>/<doc_slug>"
-  ```
-* Bắt buộc sinh ma trận so sánh đồng vị `bang_so_sanh_thay_doi.md` tại gốc bundle (ADR 0036).
-- **Tiêu chí hoàn thành:** Hợp nhất thành công các sửa đổi bổ sung và sinh ma trận so sánh thay đổi bang_so_sanh_thay_doi.md.
+```powershell
+python -m ccba_legal consolidate --manifest "legal_docs/<category>/<doc_slug>/patch_manifest.yaml" --base "legal_docs/<category>/<doc_slug>/sources/<doc_slug>_goc.md" --output "legal_docs/<category>/<doc_slug>"
+```
+
+* **Tiêu chí hoàn thành:** Hợp nhất thành công các sửa đổi bổ sung và sinh ma trận so sánh thay đổi `bang_so_sanh_thay_doi.md` tại gốc bundle (ADR 0036).
 
 ---
 
-### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu Master CI Gate (1-Command Automation)
+### Bước 3: Đăng Ký Sổ Bộ & Nghiệm Thu 15-Gate Master CI
 
-1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified` và khối `source_assets` vào `legal_registry.yaml` (hoàn toàn tự động khi dùng `spoke_cli.py ingest` hoặc `ccba-platform ingest-legal`).
-2. Chạy bộ kiểm định 15 Cổng Master Spoke CI Validator:
+1. Cập nhật `bundle_path`, `pdf_path`, `pdf_sha256`, `pdf_status: verified`, `source_assets` trong `legal_registry.yaml` (tự động qua `ingest-legal` / `spoke_cli.py ingest`).
+2. Chạy validator:
    ```bash
-   # Kiểm định khoanh vùng gói văn bản mới (Khuyến nghị):
    python scripts/validate_legal_spoke.py --bundle <slug>
-   # Hoặc kiểm định toàn diện repo:
-   python scripts/validate_legal_spoke.py
+   # Hoặc toàn bộ repo: python scripts/validate_legal_spoke.py
    ```
-3. **Tiêu chuẩn nghiệm thu:** `0 Errors, 0 Warnings, 100% Visual Parity, 100% Verbatim Match (Gate 11 >= 98.0%), 100% PDF SHA-256 Match`.
-
-- **Danh mục 15 Cổng Master CI Gates:**
-   | Cổng | Tên Kiểm Định | Tiêu Chuẩn Nghiệm Thu |
-   | :--- | :--- | :--- |
-   | Gate 1 | Registry Schema & Path Existence | `legal_registry.yaml` hợp lệ, bundle path tồn tại |
-   | Gate 2 | OKF Bundle Structure & Compartments | Đủ `index.md`, `metadata.yaml`, 4 ngăn kéo + `sources/` |
-   | Gate 3 | Attachment Integrity (tables/) | CSV/JSON khớp 100% `tables_catalog.json` (Sub-Gate 3.2: Table Reference & Multi-Part Disambiguation) |
-   | Gate 4 | Anchor Link Integrity | Không gãy liên kết anchor `#dieu-X`, `#khoan-Y` |
-   | Gate 5 | AST Jurisdiction & PDF Metadata | `clauses.json` đầy đủ cây điều khoản, SHA-256 (Sub-Gate 5.2: Dual-PDF Archive Invariant) |
-   | Gate 6 | Pure Normative Body & Noise Eradication | Loại sạch văn bản rác, căn lề hành chính |
-   | Gate 7 | Spoke Cleanliness & Script Count | Thư mục sạch, không để script rác tại root |
-   | Gate 8 | Atomic Form Templates Integrity | `templates/` nguyên tử, không rỗng, đúng cấu trúc |
-   | Gate 9 | 100% Visual Parity | Thoát ký tự `\- ` và `&nbsp;&nbsp;+ `, tách chú thích |
-   | Gate 10 | ADR Living Traceability & Self-Healing | Ma trận ADR đồng bộ 100% với kiến trúc hiện hành |
-   | Gate 11 | DOCX-to-Markdown Verbatim Parity | Tỷ lệ khớp nguyên văn quy phạm $\ge 98.0\%$ |
-   | Gate 12 | Multimodal Decoupled Asset & SVG/Cards | Zero stray WMF/EMF, đủ SVG/PNG $\ge 300\text{ DPI}$ và cards |
-   | Gate 13 | Table Knowledge Extraction & 2D Regularity | Zero ragged rows, phẳng hóa đa tầng, tách chú thích CSV |
-   | Gate 14 | KaTeX Math Syntax & Rendering Integrity | Công thức chuẩn KaTeX, không lỗi bôi đỏ (Sub-Gate 14.2: Multiline Tag Hierarchy) |
-   | Gate 15 | OKF Provenance & Version Attestation | Cấp tem bảo chứng OKF v2.4 Universal chuẩn phân tầng |
-
-- **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).
+3. **Ngưỡng đạt:** `0 Errors, 0 Warnings, 100% Visual Parity, Gate 11 >= 98.0%, 100% PDF SHA-256 Match` (chi tiết Bảng 15 Cổng tại `references/ingest_scenarios_and_15_gates.md`).
+* **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
 * **TUYỆT ĐỐI KHÔNG** trích dẫn các văn bản quy phạm pháp luật đã hết hiệu lực thi hành hoặc bị thay thế.
-* Mọi văn bản trích dẫn bắt buộc phải được đối soát qua lệnh SSOT `python -m ccba_legal query` hoặc thư viện `ccba_legal.registry`, đảm bảo đạt trạng thái hiệu lực chuẩn hóa `ACTIVE` (bao gồm `current`/`active` qua hàm `normalize_doc_status`) và không bị thay thế bởi văn bản khác (các trường bị thay thế `superseded_by`, `replaced_by`, `replaced_by_docs` trống và mã văn bản không nằm trong danh sách thay thế của bất kỳ văn bản kế nhiệm nào). Các văn bản kế nhiệm sở hữu quan hệ thay thế (`supersedes`, `replaces`, `replaced_docs`, `relations.*`) đối với văn bản cũ vẫn hoàn toàn hợp lệ để trích dẫn.
-* Mọi vi phạm trích dẫn văn bản hết hiệu lực sẽ bị đánh rớt ngay lập tức (Hard Floor Fail-Fast: 0.0%).
+* Mọi văn bản trích dẫn phải đối soát qua `python -m ccba_legal query` hoặc `ccba_legal.registry`: đạt trạng thái `ACTIVE` (`normalize_doc_status`), rỗng `superseded_by`/`replaced_by`/`replaced_by_docs` (kế nhiệm có `supersedes`/`replaces`/`replaced_docs`/`relations.*` hợp lệ). Vi phạm bị đánh rớt ngay (Hard Floor Fail-Fast: 0.0%).
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/ingest_scenarios_and_15_gates.md` | Chi tiết 4 kịch bản thu thập nguồn (`TVPLSessionMutex`, Dual-PDF ADR 0049), Pha 3 Fallbacks, ma trận Ground Truth Bước 1.5 và bảng đặc tả 15 Cổng Master CI Gates |

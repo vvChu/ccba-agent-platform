@@ -139,126 +139,29 @@ Khi kích hoạt, hệ thống lập tức chuyển thẳng sang Tier 2 hoặc T
 
 ---
 
-## Cách dùng
-
-### Option A — `ccba-ai` Package (Khuyến nghị cho Hub/Spoke)
+## Cách dùng & Model Routing Contract (ADR-0061)
 
 ```bash
 pip install -e "$CCBA_HUB_PATH/packages/ccba-ai"
-# Tùy chọn: cài đặt thêm ccba-harness nếu cần FileMutexLock cấp cao cho Plan/Team:
-# pip install -e "$CCBA_HUB_PATH/packages/ccba-harness"
 ```
 
 ```python
-from ccba_ai import ai, async_ai, ModelArchetype, choose_model, chat_with_metadata
+from ccba_ai import ModelArchetype, ai, choose_model, resolve_max_tokens
 
-# 1. Chat cơ bản (mặc định timeout=90.0s, strip_thinking=True)
-response = ai.chat(
-    "Tóm tắt các điểm chính trong tài liệu đính kèm...",
-    model=ModelArchetype.STANDARD  # Khóa tác vụ general
-)
-print(response)
-
-# 2. Deep reasoning (Tự động cấp phát max_tokens=16384 và tự làm sạch thẻ <think>)
-deep_res = ai.chat(
-    "Phân tích xung đột giữa Điều 12 và Điều 18 của dự thảo...",
-    model=ModelArchetype.REASONING  # Khóa tác vụ reasoning
-)
-print(deep_res)
-
-# 3. Đo lường Telemetry, Token Usage & Độ trễ (ChatResult)
-res = ai.chat_with_metadata("Kiểm tra pháp lý hợp đồng...", model=ModelArchetype.REASONING)
-print(f"Content: {res.content}")
-print(f"Model used: {res.model}")
-print(f"Tokens: prompt={res.usage.prompt_tokens}, completion={res.usage.completion_tokens}, total={res.usage.total_tokens}")
-print(f"Latency: {res.latency_ms} ms")
-
-# 4. Định tuyến tự động theo task
-model_name = choose_model("ocr")  # Seam model_routing.v1
+# SSOT routing tại packages/ccba-ai/src/ccba_ai/routing.py (Seam model_routing.v1)
+model_name = choose_model("reasoning")
+max_tok = resolve_max_tokens(model_name, 1024)  # Tự nâng lên 16384 cho reasoning models
+reply = ai.chat("Tóm tắt điều khoản...", model=ModelArchetype.STANDARD)
 ```
+
+- **Prompting & Resilience:** Dùng `xml_envelope`, `parse_xml_tags`, `evaluator_optimizer_loop`, `ai.chat_with_metadata`, và `CircuitBreaker` (3 trạng thái `CLOSED`/`OPEN`/`HALF_OPEN`, mặc định 3 lỗi -> fast-fail).
+- **Reasoning Models & Output Cleaning:** Mặc định `strip_thinking=True` và auto `max_tokens=16384`. Mọi raw LLM output trước khi lưu/parse phải qua `strip_think_tags`, `extract_json`, `is_valid_output`, `is_garbage_fetch`, `remove_ocr_artifacts` (xem chi tiết tại `references/sdk_recipes.md`).
 
 ---
 
-## 📦 Prompt Engineering & Evaluator-Optimizer Loop
+## Cấu hình (`.env`), Quick Test & Xử lý sự cố
 
-SDK `ccba-ai` cung cấp sẵn các module hỗ trợ kỹ thuật Prompting nâng cao (Technique 15 & Anthropic Best Practices):
-
-### 1. XML Prompt Envelopes (`xml_envelope`, `parse_xml_tags`)
-Đóng gói tài liệu, chỉ thị và ngữ cảnh vào các thẻ XML để phân định ranh giới ngữ cảnh rõ ràng và triệt tiêu prompt injection:
-
-```python
-from ccba_ai import ai, choose_model, parse_xml_tags, xml_envelope
-
-# Bọc có cấu trúc
-envelope_prompt = xml_envelope({
-    "instructions": "Soạn thảo văn bản thẩm tra PCCC theo chuẩn Nghị định 105/2025",
-    "context": {"decree": "105/2025/NĐ-CP", "standard": "QCVN 06:2022/BXD"},
-    "documents": ["Nội dung thuyết minh thiết kế công trình..."],
-})
-
-response = ai.chat(envelope_prompt, model=choose_model("reasoning"))
-tags = parse_xml_tags(response)
-print(tags.get("answer", response))
-```
-
-### 2. Evaluator-Optimizer Feedback Loop (`evaluator_optimizer_loop`)
-Vòng lặp tự động sửa lỗi giữa Generator $\leftrightarrow$ Evaluator:
-
-```python
-from ccba_ai import ai, evaluator_optimizer_loop
-
-result = evaluator_optimizer_loop(
-    generator_fn=lambda fb: ai.chat(f"Soạn thảo tài liệu. Phản hồi vòng trước: {fb}"),
-    evaluator_fn=lambda draft: (95.0, "Đạt") if "105/2025" in draft else (60.0, "Bổ sung viện dẫn NĐ 105/2025"),
-    max_iterations=3,
-    pass_score=85.0,
-)
-print(f"Hoàn tất: {result.passed} trong {result.iterations} vòng. Điểm: {result.score}")
-```
-
----
-
-## ⚡ Local Fast-Fail Circuit Breaker (Chống Treo Khi Mất Mạng)
-
-Để bảo vệ các batch processing pipelines không bị treo 60s timeout khi mạng Tailscale VPN rớt, `ccba-ai` tích hợp sẵn **`CircuitBreaker`**:
-
-- **3 Trạng thái**: `CLOSED` (bình thường), `OPEN` (ngắt nhanh fast-fail), `HALF_OPEN` (thử thăm dò phục hồi sau 30s cooldown).
-- **Ngưỡng kích hoạt**: Mặc định 3 lần lỗi kết nối liên tiếp sẽ ngắt kết nối (`CircuitBreakerOpenError`) tức thì ở các request sau.
-
-```python
-from ccba_ai import ai, CircuitBreaker
-
-# Tùy chỉnh Circuit Breaker cho batch pipeline
-custom_cb = CircuitBreaker(failure_threshold=2, recovery_timeout=15.0)
-ai.circuit_breaker = custom_cb
-```
-
----
-
-## 🧠 Đặc tính & Cách Xử lý Reasoning Models (Thinking Models)
-
-Một số model trên Gateway (như `gemini-3.8-flash-high`, `claude-sonnet-4-6-thinking`, `reasoning-gemma`, `qwen-local-primary`) sở hữu cơ chế tư duy nội suy. 
-
-**Bản chất:** Model sinh ra quá trình suy luận bên trong thẻ `<think>...</think>` trước khi đưa ra kết quả cuối cùng.
-
-### Cơ chế Tự động hóa trong `ccba-ai` SDK:
-
-1. **Auto Max-Tokens (16,384 tokens)**: 
-   Khi gọi reasoning model với `max_tokens` mặc định (`1024` hoặc `2048`), SDK tự động nâng ngân sách lên **`16,384` tokens** để chứa trọn vẹn cả thinking budget và câu trả lời mà không bị cắt cụt (truncated).
-2. **Auto Strip Thinking (`strip_thinking=True`)**:
-   Mặc định, `ai.chat()` và `ai.chat_multi()` tự động lọc sạch các thẻ `<think>` khỏi output trả về. Nếu muốn lấy toàn bộ nội dung suy luận thô, truyền `strip_thinking=False`.
-3. **Nhiệt độ khuyến nghị**: 
-   Đặt `temperature=0.1` hoặc `0.0` khi yêu cầu trích xuất JSON cấu trúc để giữ tính ổn định.
-
-### Khi nào nên dùng Reasoning Models?
-- **NÊN DÙNG:** Các bài toán phức tạp, đòi hỏi phân tích chéo, toán học, đối chiếu luật (như Semantic PCCC Audit), hoặc xử lý code quy mô lớn.
-- **KHÔNG NÊN DÙNG:** Các bài toán trích xuất NER cơ bản (đọc Name, Phone từ CV), định dạng lại chuỗi, hoặc các task cần phản hồi tốc độ cực cao (< 2s) vì quá trình `<think>` rất tốn thời gian.
-
----
-
-## Cấu hình (.env)
-
-Copy file `.env.ai-gateway` (cùng folder) vào project, đổi tên `.env`:
+Copy `.agents/skills/ccba-ai-gateway-sdk/.env.ai-gateway` sang `.env` project (thêm `.env` vào `.gitignore`, không commit API key):
 
 ```env
 AI_GATEWAY_URL=http://${CCBA_AI_GATEWAY_HOST}:8090/v1
@@ -266,155 +169,24 @@ AI_GATEWAY_KEY=<YOUR_AI_GATEWAY_KEY>
 AI_MODEL=general
 ```
 
----
-
-## Model Routing Logic per ADR-0061
-
-```python
-from ccba_ai.routing import choose_model, ModelArchetype
-
-# Định tuyến chuẩn theo tác vụ qua Seam model_routing.v1
-# SSOT mapping được quản trị tập trung tại packages/ccba-ai/src/ccba_ai/routing.py
-model_alias = choose_model("reasoning")
-```
-
----
-
-## Quick Test
-
-```bash
-# Verify gateway reachable
-curl http://${CCBA_AI_GATEWAY_HOST}:8090/v1/models \
-  -H "Authorization: Bearer <YOUR_AI_GATEWAY_KEY>"
-
-# Health check
-curl http://${CCBA_AI_GATEWAY_HOST}:8090/health
-```
-
----
-
-## Xử lý sự cố
-
 | Vấn đề | Giải pháp |
 |--------|-----------|
-| `Connection refused` | Kiểm tra Tailscale/VPN, hoặc dùng SSH tunnel |
-| `401 Unauthorized` | Sai API key — kiểm tra `AI_GATEWAY_KEY` |
-| `Model not found` | Kiểm tra tên model bằng `/v1/models` |
-| `504 Gateway Timeout` | Model đang load, chờ 2-3 phút rồi thử lại |
-| Qwen 3.6 35B chậm | Giảm `max_tokens`, hoặc dùng `rag-light` (9B AWQ, on-demand profile `vllm-light`) |
+| `Connection refused` | Kiểm tra Tailscale/VPN hoặc SSH tunnel |
+| `401 Unauthorized` | Kiểm tra `AI_GATEWAY_KEY` trong `.env` |
+| `Model not found` | Kiểm tra danh sách qua `/v1/models` |
+| `504 Gateway Timeout` | Chờ 2-3 phút khi model đang load |
+| Qwen 3.6 35B chậm | Giảm `max_tokens` hoặc dùng `rag-light` (9B AWQ) |
 
-## 🧹 Output Processing — Làm Sạch LLM Output
-
-> Áp dụng **TRƯỚC** khi parse, lưu hoặc hiển thị bất kỳ output LLM nào.  
-> Kinh nghiệm từ VvC Pipeline (v7.4+): 100% output phải đi qua các bước này.
-
-### 1. Think-Tag Stripping (Bắt buộc với Reasoning Models)
-
-LLM reasoning models (Qwen, DeepSeek-R1, Claude -thinking) có thể rò rỉ `<think>` tags vào output. **Phải strip unconditionally** — không phụ thuộc vào prompt hay model config.
-
-```python
-import re
-
-# 3 patterns xử lý toàn bộ edge cases
-_THINK_PATTERN  = re.compile(r"<think>.*?</think>\n*", re.DOTALL | re.IGNORECASE)
-_THINK_UNCLOSED = re.compile(r"<think>.*", re.DOTALL | re.IGNORECASE)   # tag chưa đóng
-_ORPHAN_END     = re.compile(r"^.*?</think>\n*", re.DOTALL | re.IGNORECASE)  # chỉ có </think>
-
-def strip_think_tags(text: str) -> str:
-    """Strip toàn bộ <think>...</think> blocks khỏi LLM output."""
-    text = _THINK_PATTERN.sub("", text)
-    text = _THINK_UNCLOSED.sub("", text)
-    text = _ORPHAN_END.sub("", text)
-    return text.strip()
-```
-
-> [!CAUTION]
-> Nếu bỏ qua bước này, toàn bộ chain-of-thought của LLM (có thể 200+ dòng) sẽ rò rỉ vào output thực tế — đã xảy ra trong thực tế (`deliberate_practice.md` chứa 210 dòng think-tag).
-
-### 2. JSON Extraction từ Markdown Code Fence
-
-LLM thường bọc JSON trong ` ```json ... ``` `. Phải extract trước khi `json.loads()`.
-
-```python
-def extract_json(raw: str) -> dict | None:
-    """Extract JSON từ LLM output, xử lý cả raw JSON và markdown-wrapped."""
-    clean = strip_think_tags(raw)
-    # Thử markdown fence trước
-    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean, flags=re.DOTALL)
-    if match:
-        return json.loads(match.group(1))
-    # Fallback: tìm raw JSON object
-    match = re.search(r"\{.*\}", clean, flags=re.DOTALL)
-    if match:
-        return json.loads(match.group(0))
-    return None
-```
-
-### 3. Timeout / Garbage Guard
-
-Luôn validate output trước khi dùng. Không có bước này → pipeline sẽ lưu error messages vào database.
-
-```python
-def is_valid_output(text: str, min_chars: int = 10) -> bool:
-    """Kiểm tra output LLM không phải timeout error hay rỗng."""
-    if not text or len(text.strip()) < min_chars:
-        return False
-    if text.strip().startswith("Error connecting"):
-        return False
-    return True
-```
-
-### 4. Web Fetch Garbage Detection
-
-Khi fetch URL để làm context, sites JS-heavy (Twitter, SPA) trả về error pages.
-
-```python
-_GARBAGE_PATTERNS = [
-    r"javascript is (?:disabled|not available)",
-    r"enable javascript",
-    r"something went wrong.*(?:try again|let.s give it another shot)",
-    r"we.ve detected that javascript",
-    r"please enable cookies",
-    r"access denied.*cloudflare",
-    r"noscript",
-    r"this browser is no longer supported",
-]
-
-def is_garbage_fetch(text: str, min_chars: int = 100) -> bool:
-    """True nếu fetched content là error page, không phải real content."""
-    if len(text.strip()) < min_chars:
-        return True
-    text_lower = text.lower()
-    return sum(1 for p in _GARBAGE_PATTERNS if re.search(p, text_lower)) >= 2
-```
-
-### 5. ALL-CAPS OCR Artifact Removal
-
-Khi OCR capture page headers/footers (thường in HOA), loại bỏ trước khi synthesis.
-
-```python
-def remove_ocr_artifacts(text: str) -> str:
-    """Loại bỏ các dòng ALL-CAPS dài (>15 chars) — thường là header/footer trang."""
-    return re.sub(r'^[A-ZÀ-Ỹ][A-ZÀ-Ỹ\s_]{14,}\.?\s*$', '', text,
-                  flags=re.MULTILINE).strip()
-```
-
----
-
-## Bảo mật
-
-1. **KHÔNG commit API key** vào git — thêm `.env` vào `.gitignore`
-2. **Dùng Tailscale** thay vì expose port ra public internet
-3. **Mỗi project** có `.env` riêng, không hardcode IP/key trong code
-
-## Files liên quan
-
-- **Package**: `packages/ccba-ai/` — pip install để dùng `from ccba_ai import ai`
-- **Env template**: `.agents/skills/ccba-ai-gateway-sdk/.env.ai-gateway`
-- **Server docs**: Xem thêm tại `AI_Gateway/playbooks/` (archived)
+- **Package & Docs:** `packages/ccba-ai/`, template `.agents/skills/ccba-ai-gateway-sdk/.env.ai-gateway`, server docs tại `AI_Gateway/playbooks/` (archived).
 
 ---
 
 ## Tiêu chí hoàn thành
 
 - [ ] **Completion Criterion:** Đã kết nối và xác thực thành công các Capability Seams (`ai_chat.v1`, `ai_embedding.v1`, `ai_transcribe.v1`, `model_routing.v1`) qua package `ccba_ai`, tuân thủ định tuyến mô hình chuẩn qua `choose_model()`.
+
+## Progressive Disclosure & Reference Index (Level 3)
+
+| Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
+| :--- | :--- |
+| `references/sdk_recipes.md` | Code mẫu Python (`chat_with_metadata`, `xml_envelope`, `evaluator_optimizer_loop`, `CircuitBreaker`), Quick Test `curl` và 5 hàm làm sạch LLM output |
