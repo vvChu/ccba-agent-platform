@@ -9,7 +9,13 @@ keywords:
 - research
 - notebooklm
 disable-model-invocation: true
-bundle: _core
+bundle: _governance
+scope: hub
+posture: seam-exempt
+seam_ids:
+  - maskara_scanner.v1
+  - model_routing.v1
+  - notebooklm_rag.v1
 tier: kernel
 command: /ccba-build-skill
 metadata:
@@ -35,13 +41,6 @@ Khi người dùng kích hoạt lệnh này dưới dạng:
 `/ccba-build-skill [<danh-sách-nguồn-hoặc-thư-mục> | --from-workflow] [--name <tên-skill>] [--local]`
 
 Agent tiếp nhận lệnh bắt buộc phải tự động thực thi chuỗi tác vụ sau:
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel tác tạo kỹ năng AI mới: kiểm tra môi trường Hub vs. Spoke, quét bảo mật qua `scripts/maskara.py` (Seam `maskara_scanner.v1`), nạp nguồn qua Cloud RAG (`notebooklm_rag.v1`), Local Fallback (`model_routing.v1`) hoặc chưng cất từ phiên làm việc (`--from-workflow`), áp dụng Cổng 0 (Determinism), Cổng 1 (Orchestration), định lượng chỉ số GPI qua `ccba-harness evaluate-gpi --json`, sinh `SKILL.md` và `eval_<stem>.json`, biên dịch `compile_catalog.py`, tự phục hồi lỗi theo Allowlist và kiểm định `verify-patch --preset skill`. Kỹ năng đóng vai trò caller điều phối, bản thân là quy trình tác tạo vận hành độc lập với các Seam dữ liệu ứng dụng.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Toàn bộ 4 tệp tài liệu chuyên sâu (`references/skill_authoring_guide.md`, `references/skill_review_checklist.md`, `references/skill_glossary.md`, `references/workflow_distillation_guide.md`) được bảo tồn nguyên vẹn tại chỉ mục Level 3.
-
----
 
 ## 🌐 0. Tiền Kiểm Tra Môi Trường & Phân Định Hub vs. Spoke
 Trước khi thực hiện bất kỳ thao tác nào, Agent bắt buộc phải xác định ngữ cảnh thực thi:

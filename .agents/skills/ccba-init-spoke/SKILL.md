@@ -9,7 +9,9 @@ applies_to:
 - BIM
 - Tác vụ Admin
 - Pháp điển
-bundle: _core
+bundle: _governance
+scope: hub
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-init-spoke
@@ -34,12 +36,6 @@ triggers:
 
 # Kỹ Năng: Khởi Tạo CCBA Spoke Workspace (/ccba-init-spoke)
 Kỹ năng này tự động hóa việc thiết lập không gian làm việc dự án mới theo chuẩn **CCBA Hub-and-Spoke** (ADR 0041, ADR 0044) và **Global Rules** qua cơ chế điều phối mỏng (Thin Orchestrator) tất định 100%.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP greenfield khởi tạo Spoke). Skill hướng dẫn quy trình khởi tạo dự án mới chuẩn cấu trúc CCBA; engine thực thi nằm ở `scripts/spoke/` và CLI unified `scripts/ccba_platform_cli.py init-spoke`. Không phụ thuộc Seam Contract ứng dụng hay card trong `seam-contracts.yaml`.
 
 ---
 
@@ -152,7 +148,6 @@ python "$env:CCBA_HUB_PATH\scripts\ccba_platform_cli.py" bootstrap-spoke --creat
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

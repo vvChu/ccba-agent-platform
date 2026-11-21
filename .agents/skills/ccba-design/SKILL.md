@@ -26,6 +26,11 @@ metadata:
   author: CCBA
   version: 2.6.0
 bundle: _consulting
+scope: universal
+posture: compose-existing
+seam_ids:
+  - ai_chat.v1
+  - model_routing.v1
 tier: kernel
 layer: _consulting
 disable-model-invocation: true
@@ -54,14 +59,6 @@ triggers:
 # Design
 
 Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam AI của nền tảng:
-* **Định Tuyến & Sinh Nội Dung:** Mọi tương tác văn bản và sáng tạo thiết kế bắt buộc định tuyến qua Seam `model_routing.v1` (`from ccba_ai import choose_model`) và `ai_chat.v1` (`from ccba_ai import ai`). Tuyệt đối không hardcode API key, không nhúng model slug trực tiếp.
-* **Hạ Tầng AI Gateway:** Sử dụng gateway tập trung trên máy chủ Spark (:8090) qua package `ccba-ai`. Khi gateway gặp sự cố, hệ thống dừng lại báo lỗi (Fail-Fast), không tự ý fallback vào các CLI cá nhân không kiểm soát.
 
 ---
 

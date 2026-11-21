@@ -21,7 +21,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-api-cir
 | :--- | :--- |
 | **Cổng Điều Hướng (Portal)** | ⚙️ Kỹ nghệ Phần mềm & Đa Tác nhân |
 | **Phân Tầng Kiến Trúc (Tier)** | `Tier 2B (Kernel)` |
-| **Gói Bundle** | `_core` |
+| **Gói Bundle** | `_software` |
 | **Phương Thức Triệu Hồi** | Model-invoked (Tự động kích hoạt qua bối cảnh) |
 | **Điểm Đánh Giá GPI (ADR-0057)** | `S=3.0 | K=3.0 | A=4.0 | P=1.0 (GPI: 20.00)` |
 

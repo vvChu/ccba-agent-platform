@@ -5,6 +5,8 @@ applies_to:
 - Phần mềm
 - Tác vụ Admin
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /ccba-vllm-manager
 metadata:
@@ -36,12 +38,6 @@ Kỹ năng này cung cấp cho Agents và Kỹ sư hạ tầng toàn bộ tri th
 
 > [!TIP]
 > **Quy tắc Bất Biến Routing**: LUÔN sử dụng functional aliases (`local-instruct`, `rag-core`, `local-coder`) thay vì nhúng tên mô hình vật lý trực tiếp vào mã nguồn.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (hạ tầng & vận hành container model serving cấp OS/Docker). Không kết nối trực tiếp với Seam Contract ứng dụng mà đóng vai trò hướng dẫn quản trị runtime cho cụm máy chủ suy luận vLLM trên DGX Spark.
 
 ---
 

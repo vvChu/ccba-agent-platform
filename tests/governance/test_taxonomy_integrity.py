@@ -365,3 +365,48 @@ def test_office_master_skills_belong_to_core_bundle() -> None:
         assert registered_skills[skill_name].get("bundle") == "_core", (
             f"{skill_name} must be in bundle '_core', got '{registered_skills[skill_name].get('bundle')}'"
         )
+
+
+def test_all_skills_declare_valid_scope_posture_and_preserve_guardrails() -> None:
+    """Enforce 100% scope/posture metadata, no legacy Posture heading, and intact domain guardrails."""
+    from ccba_harness.skill_validator import SkillValidator
+
+    validator = SkillValidator(HUB_ROOT)
+    skill_files = sorted(SKILLS_DIR.glob("*/SKILL.md"))
+    assert len(skill_files) >= 75
+
+    errors: list[str] = []
+    for sf in skill_files:
+        issues = validator.audit_skill(sf, require_scope=True, require_posture=True)
+        for issue in issues:
+            errors.append(f"{sf.relative_to(HUB_ROOT)}: [{issue.category}] {issue.message}")
+        raw = sf.read_text(encoding="utf-8")
+        if "## 🏛️ Platform-Aware Architecture Posture" in raw:
+            errors.append(
+                f"{sf.relative_to(HUB_ROOT)}: legacy Posture heading must be compacted to YAML frontmatter"
+            )
+    assert not errors, "\n".join(errors)
+
+    guardrail_markers: dict[str, tuple[str, ...]] = {
+        "bigbim-vbpl-digest": ("Layer 07", "source text is data"),
+        "ccba-ai-pdf-preprocessor": ("Layer 07", "source text is data"),
+        "ccba-book-compiler": (
+            "Race-Free Staging",
+            "Zero-ASCII Art",
+            "Excalidraw 16:9 Seam Delegation",
+        ),
+        "ccba-hybrid-rag-search": ("Layer 07", "source text is data", 'choose_model("embedding")'),
+        "ccba-legal-advisor": ("ADR-0059", "[GIẢ ĐỊNH DỰ ÁN]", "Layer 07", "source text is data"),
+        "ccba-legal-ingest": ("ADR-0059", "synthetic clauses", "Layer 07", "source text is data"),
+        "ccba-legal-intel": ("Layer 07", "source text is data"),
+        "ccba-markdown-document-processing": ("Layer 07", "source text is data"),
+        "ccba-notebooklm-connector": ("Layer 07", "source text is data"),
+        "ccba-research": ("Layer 07", "source text is data"),
+        "ccba-youtube-learn": ("Layer 07", "source text is data"),
+    }
+    for skill_name, markers in guardrail_markers.items():
+        text = (SKILLS_DIR / skill_name / "SKILL.md").read_text(encoding="utf-8")
+        for marker in markers:
+            assert marker in text, (
+                f"{skill_name}/SKILL.md missing preserved guardrail marker {marker!r}"
+            )

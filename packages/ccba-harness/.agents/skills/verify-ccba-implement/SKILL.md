@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.3
-sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-implement/SKILL.md: "7a4286d1b9155b3a392b946a5ac65215c5836b36b0d579770f5a8ab3648e2365"
+  .agents/skills/ccba-implement/SKILL.md: "2016e9680cad056c10b88ea2a9bb446fd5ab218ef0f35a5f794d3d8411d8af29"
   .agents/skills/ccba-implement/references/implement-spec.md: "9270269b622313826e15d9b9563d9dc649a467a1a1290b59292b87b9ac26c601"
   .agents/skills/ccba-implement/references/prototype_logic.md: "3f0ca646b4f1a686af637f65de0ee41b3b5a45b58559c5d070c3cefa7af20ca6"
   .agents/skills/ccba-implement/references/prototyping_patterns.md: "03bba3ace4cf31fb90130f40199689fbf02d55e41c9f21cc815b939c21eede49"
@@ -47,7 +47,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 5 bước triển khai trong `.agents/skills/ccba-implement/SKILL.md`, ngân sách chu kỳ sửa lỗi (Chu kỳ 3 Deep Problem Brief, Chu kỳ 5 `/boost`), quy trình Task Graph `references/implement-spec.md` (`COND-01` First-Unit Canary & Orchestrator Single-Writer), và tạo mẫu thử `references/prototype_logic.md` (`Shareable HTML`, `Guided Walkthroughs`, nhánh `prototype/<slug>`).
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `0321c7b0e183fe843d24433f9952c41d9860611e` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

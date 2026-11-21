@@ -115,9 +115,11 @@ def compile_skills(hub_root: Path = HUB_ROOT) -> list[dict[str, Any]]:
             "skill_path": skill_path,
         }
 
-        for opt_key in ("command", "tier", "scope"):
+        for opt_key in ("command", "tier", "scope", "posture"):
             if val := fm.get(opt_key):
                 entry[opt_key] = str(val).strip()
+        if isinstance(seam_ids := fm.get("seam_ids"), list) and seam_ids:
+            entry["seam_ids"] = [str(s).strip() for s in seam_ids if str(s).strip()]
         if package_path := fm.get("package_path"):
             entry["package_path"] = str(package_path).replace("\\", "/")
 

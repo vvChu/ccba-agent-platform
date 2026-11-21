@@ -8,6 +8,8 @@ disable-model-invocation: true
 user-invocable: true
 command: /ccba-skill-repair
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 gpi: {s: 3.0, k: 2.0, a: 1.0, p: 1.0}
 triggers:
@@ -20,11 +22,6 @@ triggers:
 # Kỹ năng Phục Hồi và Sửa Chữa Kỹ Năng (CCBA Skill Repair)
 
 Kỹ năng này điều phối quy trình khảo sát, phân loại kiến trúc và phục hồi chuẩn mực cho các tệp `SKILL.md` theo Khung Quyết Định Hai Giai Đoạn (ADR-0057 & RES-2026-ARCH-001 v1.2), cổng nghiệm thu tất định (ADR-0058) và nguyên tắc tái sử dụng hợp đồng Seam (ADR-0061) trên toàn hệ thống CCBA Agent Services Platform.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel chuyên trách chẩn đoán và phục hồi tệp `SKILL.md`, phối hợp trực tiếp với các CLI kiểm định chính thức (`validate_skills.py`, `ccba_harness validate-skill`, `evaluate-gpi`, `verify-patch --preset skill`). Các card trong `seam-contracts.yaml` không bao phủ nghiệp vụ sửa chữa đặc tả kỹ năng, do đó kỹ năng mang tư thế `seam-exempt` và tuyệt đối không sinh thêm script Python ad-hoc cục bộ.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (`s: 3.0, k: 2.0, a: 1.0, p: 1.0`) = `12.0 >= 12.0` (thuộc nhánh Tier 2B và nằm trong dải trễ hysteresis `[11.5, 12.5)`). Khối `gpi` một dòng được khóa bất biến và kỹ năng không sử dụng thư mục `references/` phụ trợ.
 
 ## 🤝 Hợp Đồng Phân Vai Với `/ccba-build-skill` v1.1.1
 

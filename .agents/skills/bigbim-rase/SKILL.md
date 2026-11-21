@@ -6,6 +6,8 @@ applies_to:
 - BIM
 - Thẩm tra thiết kế
 bundle: _bim
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /bigbim-rase
 layer: _bim
@@ -31,14 +33,6 @@ triggers:
 
 > **Vai trò**: Chuyên gia Phân tích & Kiểm duyệt RASE tối cao của BIGBIM.
 > **Sứ mệnh**: Tự động hóa quá trình phân tích yêu cầu kỹ thuật (Requirements), đối chiếu đối tượng áp dụng (Applicability), lựa chọn thuộc tính IFC tương ứng (Selection), và loại trừ ngoại lệ (Exception) theo chuẩn dữ liệu **IFC4X3** và bộ Quantity Take-Off (`Qto_xxx`).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`**:
-* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ phân tích RASE (RASE Analyzer) hay parser IDS (Information Delivery Specification) của buildingSMART. Thao tác phân tích RASE là quy trình logic suy luận cấu trúc dữ liệu IFC4X3.
-* **Cưỡng chế Grounding (Grounding Invariant):** Mọi trích xuất RASE bắt buộc dựa trên tài liệu yêu cầu kỹ thuật và schema ISO 16739-1:2024 (IFC4X3) có thực trên đĩa. Trường hợp thiếu tài liệu quy chuẩn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán hoặc tự bịa đặt thuộc tính Pset ngoài schema IFC chuẩn.
 
 ---
 

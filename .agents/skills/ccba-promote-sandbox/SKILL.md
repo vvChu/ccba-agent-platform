@@ -13,6 +13,8 @@ applies_to:
 - Kiểm định
 - Tác vụ Admin
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-promote-sandbox
@@ -32,13 +34,6 @@ triggers:
 # Workflow: Thăng Cấp & Bàn Giao Sản Phẩm Từ Sandbox (/ccba-promote-sandbox)
 
 Workflow này hướng dẫn kỹ sư thực hiện quy trình thăng cấp bàn giao 3 bước để chuyển giao sản phẩm nghiên cứu, bản tính hoặc báo cáo từ **Spoke Cá Nhân (`personal_sandbox`)** sang **Spoke Dự Án chính thức (`project_delivery`)** hoặc đề xuất lên Hub theo **ADR 0046** và **Quy chế CCBA 2026**.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel bàn giao `personal_sandbox`: xác thực sandbox, chọn tệp, Spoke đích và mã PGV, gọi `scripts/promote_sandbox.py` ba pha Cleanse, Target Ingestion, PGV Sign-off Staging, rồi in hướng dẫn nghiệm thu. 16 card trong `seam-contracts.yaml` không quản lý domain bàn giao sandbox, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
-- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 3.0, A: 1.0, P: 1.0) = 14.0 >= 12.0. Kỹ năng hiện chưa có thư mục `references/` phụ trợ.
-
----
 
 ## 🛡️ Bước 1: Khảo Sát & Xác Thực Môi Trường Nguồn
 

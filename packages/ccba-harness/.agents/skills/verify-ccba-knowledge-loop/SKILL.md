@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "6bd71548c72d04e9b7372f37961d5f43d13ddaa9"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-knowledge-loop/SKILL.md: "329ebe57fe485991da87186d44533ee9db53b841013ac8aa9dd8b741c4951a77"
+  .agents/skills/ccba-knowledge-loop/SKILL.md: "eaaed7a781c4e042c350645cac61354da0260fc1b48dc2e5dd3d2854911c7526"
   .agents/skills/ccba-knowledge-loop/references/llm-wiki.md: "6934759e1477845b0797061a353286500fdf64c818a8bef36eaa7a6917e9d444"
   packages/ccba-harness/src/ccba_harness/evals/simulators/platform_tooling.py: "5cc23a3f16e9855f4ab66b8d5218881fc30922f1864364e5e11f49d1d649cca2"
   packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml: "c79a9a5c7f4ac06ad86438ad5ec56141f982c41f3bc4832c98a637262bd60e6d"
@@ -45,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 4 pha điều phối của `.agents/skills/ccba-knowledge-loop/SKILL.md`, rào chắn Single-Writer Protocol (Orchestrator ghi chính thức, Subagent Read-Only Sandbox), và tài liệu tham chiếu `references/llm-wiki.md` (`COND-02` cô lập không gian tên `.md/knowledge/wiki/index.md`, chu trình `Ingest`/`Query`/`Lint`, quy tắc *"Write history, not the present"* gắn mốc `YYYY-MM-DD` + `ccba-agent-platform@<commit_sha>`).
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

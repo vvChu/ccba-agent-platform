@@ -11,6 +11,8 @@ applies_to:
 - Tác vụ Admin
 - Pháp điển
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-update-spoke
@@ -39,12 +41,6 @@ triggers:
 
 Kỹ năng này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
 Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution), bảo vệ Git working tree và tự động tạo snapshot sao lưu để có thể hoàn tác tức thì.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP downstream đồng bộ Hub sang Spoke). Skill hướng dẫn quy trình đồng bộ hóa kỹ năng, hiến pháp và rào chắn vệ sinh hai pha Safe-by-Default; hai parser đồng bộ (`scripts/ccba_platform_cli.py sync-spoke` cho các cờ cơ bản và wrapper `scripts/sync_spoke.py` cho rollback/backup/dirty) vận hành song song trên cùng engine `scripts/spoke/spoke_synchronizer.py`. Không phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 
@@ -232,7 +228,6 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 5. **Kiểm định Hồi quy & Packages (Hậu Đóng Góp):** Chạy `pip install -e "$CCBA_HUB_PATH/packages/[pkg]"` và chạy test cục bộ (`pytest`).
 6. **Kiểm tra sức khỏe tổng thể:** Chạy `python "$CCBA_HUB_PATH/scripts/ccba_platform_cli.py" spoke-status` xác nhận trạng thái xanh.
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -240,4 +235,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
 | `references/upstream_sync_guide.md` | Tài liệu chỉ dẫn chuyển tiếp (Pointer Guide). Để trinh sát và kéo cập nhật từ GitHub thượng nguồn về Hub, sử dụng lệnh độc lập `/ccba-sync-upstream`. |
-

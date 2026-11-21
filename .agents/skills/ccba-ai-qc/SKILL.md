@@ -6,6 +6,11 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _qc
+scope: universal
+posture: package-bound
+seam_ids:
+  - pdf_preprocessor.v1
+  - qc_pipeline.v1
 tier: orchestrator
 is-orchestrated: true
 category: engineering
@@ -82,33 +87,6 @@ flowchart LR
 
 ---
 
-## 🏛️ Platform-Aware Architecture Posture
-
-Skill này giữ vai trò Master Orchestrator, thuộc thế năng **`package-bound`** theo ADR-0061, gắn kết chặt chẽ với Public Deep Seam **`qc_pipeline.v1`** của gói `ccba-qc-core`:
-
-1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
-   Trước khi triển khai thẩm tra bản vẽ, Agent thực hiện tra cứu Seam qua CLI:
-   ```bash
-   python scripts/ccba_platform_cli.py find-seam --in drawing_set project_dir --out audit_report --json
-   ```
-   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_qc_core:QCAuditPipeline`). Ghi nhận `seam_id`, `status` vào plan của phiên làm việc.
-
-2. **Khởi Chạy Toàn Trình Qua Seam:**
-   Thực thi toàn bộ 3 pha (Discovery, Quad-View Vision, Reporter) qua Python API của Seam:
-   ```python
-   from ccba_qc_core import QCAuditPipeline
-
-   pipeline = QCAuditPipeline()
-   summary = pipeline.run_audit_sync(
-       project_dir="[target_project]",
-       output_dir="[target_project]/.md/extracts/audit_batch"
-   )
-   print(f"Audit completed: {summary.total_findings} findings across {len(summary.levels_audited)} levels.")
-   ```
-   *Lưu ý:* Tuyệt đối CẤM Agent tự viết script ad-hoc để bóc tách PDF hoặc ghép collage ảnh khi Seam `QCAuditPipeline` đã giải quyết khép kín từ đầu đến cuối. Mọi nhu cầu tiền xử lý hoặc bóc tách khối văn bản từ bản vẽ PDF bắt buộc định tuyến qua Seam `pdf_preprocessor.v1` (`from ccba_pdf_prep import PDFProcessingPipeline`).
-
----
-
 ## 📚 Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -119,4 +97,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | [`references/integrated_audit.md`](references/integrated_audit.md) | Pha 2: Thẩm tra tích hợp đa bộ môn và phân tích Quad-View Vision |
 | [`references/reporter.md`](references/reporter.md) | Pha 3: Tổng hợp báo cáo Heat Map ma trận phối hợp và rủi ro kỹ thuật |
 | [`references/batch_orchestrator.md`](references/batch_orchestrator.md) | Điều phối chạy hàng loạt dự án và tối ưu hóa tài nguyên batch pipeline |
-

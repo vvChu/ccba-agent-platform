@@ -8,6 +8,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /platform-loader
 user-invocable: true
@@ -29,12 +31,6 @@ triggers:
 
 > **Vai trò**: Đây là điểm khởi đầu duy nhất cho Agent để truy cập toàn bộ dịch vụ của CCBA Platform.
 > Đọc file này MỘT LẦN khi bắt đầu phiên để xác định tài nguyên khả dụng và route task chính xác.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (catalog và định tuyến toàn sàn). Skill đóng vai trò điểm khởi đầu bootstrap và discovery catalog toàn diện cho Platform, phân biệt rạch ròi giữa `catalog.yaml` (routing & triggers) với biên lai hợp đồng kiểm toán `--in/--out` (`seam-contracts.yaml`), không đóng gói pipeline chuyển đổi dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 

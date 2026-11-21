@@ -6,7 +6,9 @@ applies_to:
 - Phần mềm
 - Kiểm định
 - Thẩm tra thiết kế
-bundle: _core
+bundle: _governance
+scope: hub
+posture: seam-exempt
 tier: orchestrator
 is-orchestrated: true
 user-invocable: true
@@ -28,12 +30,6 @@ triggers:
 # Workflow: Tốt Nghiệp R&D → Deep Seam Production & Auto-PR (/ccba-graduate-rd)
 
 Quy trình tự động hóa toàn trình 7 bước (Full-Cycle Autonomous Pipeline) chuyển hóa mã nguồn thử nghiệm (scratch script, prototype) thành module Production chuẩn mực trong Hub (`packages/ccba-*/src/`), tự động đóng gói Proposal, tạo Pull Request và tự làm xanh CI (Self-Healing Dual-Gate).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator tốt nghiệp scratch script vào package có sẵn ở một phiên sau). Đợt 6 giữ nguyên `packages/` và 16 card seam; không đóng gói pipeline chuyển đổi dữ liệu độc lập hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: orchestrator`.
 
 ---
 

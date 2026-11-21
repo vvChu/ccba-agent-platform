@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-wayfinder/SKILL.md: "033f35de37ee78deb8fb93b3b3c83ab2ca7643e091a04f6fe8f852b81b414bed"
+  .agents/skills/ccba-wayfinder/SKILL.md: "48cd64aaa1e988b6aa68261aadd5d3af375e0e32a80fcdb5dc98f9cd2e615b6e"
   packages/ccba-harness/src/ccba_harness/evals/simulators/platform_tooling.py: "5cc23a3f16e9855f4ab66b8d5218881fc30922f1864364e5e11f49d1d649cca2"
   packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml: "c79a9a5c7f4ac06ad86438ad5ec56141f982c41f3bc4832c98a637262bd60e6d"
   scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
@@ -45,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng cấu trúc của `.agents/skills/ccba-wayfinder/SKILL.md` (5 mục bản đồ chuẩn, 4 phân loại Ticket `Research`/`Prototype`/`Grilling`/`Task`, quy tắc `Fog vs. Ticket Test`, `Parallel Research Dispatch`, và khóa nhận việc `Claiming`), kết hợp kiểm định `ccba_harness.SkillValidator`, `GitRatchetOptimizer`, `PlatformToolingDomainSimulator` và ánh xạ đồng bộ `scripts/spoke/sync/coordinator.py`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

@@ -6,6 +6,11 @@ applies_to:
 - BIM
 - Thiết kế
 bundle: _bim
+scope: universal
+posture: seam-exempt
+seam_ids:
+  - ai_embedding.v1
+  - model_routing.v1
 tier: kernel
 command: /bigbim-classification
 layer: _bim
@@ -37,15 +42,6 @@ triggers:
 
 > **Vai trò**: Chuyên gia Kiến trúc thông tin & Phân loại học tối cao của BIGBIM.
 > **Sứ mệnh**: Định hình "Trí Nhớ Số" (Digital Memory) cho mọi tài sản xây dựng, chuyển hóa các mô hình BIM từ chi phí trung gian thành tài sản dài hạn có khả năng kế thừa xuyên suốt vòng đời. Tự động hóa quá trình phân loại cấu kiện, đặt tên phòng phi tuyến tính (Dân dụng) và phân vùng tuyến tính định vị địa lý (Hạ tầng).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`**:
-* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho IFC, Uniclass hay hệ thống phân loại BIM. Các thư viện như `ifcopenshell` là công cụ chuyên ngành bên thứ ba, không phải Deep Seam trực thuộc monorepo CCBA.
-* **Định tuyến AI:** Khi thực hiện nhánh phân loại ngữ nghĩa bằng AI (Semantic Auto-Classification), các tác vụ nhúng vector và LLM bắt buộc đi qua Seam `ai_embedding.v1` hoặc `model_routing.v1` (`ccba_ai.routing:choose_model`), cấm gọi API mô hình độc lập.
-* **Rào chắn Tri thức Cục bộ (Self-Contained & Grounding Invariant):** Căn cứ phân loại bắt buộc đọc trực tiếp từ tài liệu phương pháp luận BIGBIM trên đĩa. Trường hợp thiếu tài liệu hoặc không có file đối soát, Agent bắt buộc dừng lại và thông báo cho người dùng; tuyệt đối CẤM suy đoán hoặc tự bịa đặt mã Uniclass / điều khoản ISO để điền vào chỗ trống.
 
 ---
 

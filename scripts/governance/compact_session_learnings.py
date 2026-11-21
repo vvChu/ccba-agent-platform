@@ -63,7 +63,7 @@ COMPACTED_WORKING_MEMORY_TEMPLATE = r"""# 🧠 CCBA Knowledge Base: Active Invar
 - **RULE-1.13 [Externalization]**: Cấm raw model/IP/hằng (`CCBA_BRAIN_MIRROR_DIR`, `check_hardcoded_parameters.py --dir`); `choose_model()`→`tier-ocr|fast|reasoning|local`/`embedding-default` (`# ccba:allow-raw-model`, `# ccba:allow-raw-ip`, `scan_spoke_cleanliness()`, Mục 56, 63).
 - **RULE-1.14 [ADR 0062]**: `assess_catalog_freshness` chặn `--apply` khi `catalog.yaml` stale; Kahn's sort (`spoke_bootstrap.py`).
 - **RULE-1.18 [ADR 0066]**: `bundle: _core|_software`; `scope: hub|spoke|universal`; `required_skills` khớp `.agents/skills/` (Mục 45).
-- **RULE-1.20 [ADR 0061]**: `## 🏛️ Platform-Aware Architecture Posture`; cấm token ADR thiếu file (`sync_hub_adr_matrix.py`).
+- **RULE-1.20 [ADR 0061]**: `posture:`/`seam_ids:` YAML frontmatter; cấm token ADR thiếu file (`sync_hub_adr_matrix.py`).
 - **RULE-1.23 [ADR 0067]**: `classify_pr_door`+`compute_cumulative_streak` (`K≥3`/72h|`>200`L→`ONE_WAY_DOOR`, cả `walkthrough.md`); `validate_tradeoff_card` (card & `#L<a>-L<b>` ≤30L, Mục 61, 63).
 - **RULE-1.24 [ADR 0046]**: 15 `ROLE_ID` (`IDOP-CCBA-WAY`, `ADR-0060`); Hub SSOT `idop_bridge.py`; cấm tiêm `ROLE_ID` vào System Prompt (`ADR-0040`).
 - **RULE-1.25 [24KB Cap]**: Rules ≤24,000B; `sync_layer2_rules` xóa `LEGACY_MONOLITHIC_RULES` qua `(is_symlink() or exists())`.

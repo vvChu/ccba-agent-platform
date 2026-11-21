@@ -5,6 +5,8 @@ description: Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ 
   Chạy một lần trước khi sử dụng các kỹ năng phát triển phần mềm.
 disable-model-invocation: true
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 metadata:
   version: "1.0.0"
@@ -39,13 +41,6 @@ Dựng khung cấu hình cho repository hiện tại để các kỹ năng phát
 - **Skills Governance** — Thể chế quản trị kỹ năng 3 tầng và Khung Quyết Định Hai Giai Đoạn (ADR-0057 & RES-2026-ARCH-001 v1.2).
 
 Đây là kỹ năng tương tác và tự động hóa. Agent sẽ trinh sát trước, đưa ra gợi ý, xác nhận với người dùng rồi tiến hành ghi cấu hình.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel phỏng vấn một lần: cấu hình issue tracker, nhãn triage, domain docs, thể chế skills governance, ghi nhận vào `AGENTS.md` và `.md/workspace_context.yaml`. 16 card trong `seam-contracts.yaml` không quản lý quy trình thiết lập repository, do đó kỹ năng nhận posture `seam-exempt` để hoạt động độc lập.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.5, K: 2.0, A: 2.0, P: 1.0) = 15.25 >= 12.0. Hai dòng Level 3 (`references/pre_commit_setup.md`, `references/ts_deep_modules.md`) cùng cây tài nguyên phụ trợ `resources/` và `templates/` được bảo tồn nguyên vẹn.
-
----
 
 ## Quy trình thực hiện (Process)
 
@@ -159,7 +154,6 @@ Thông báo cho người dùng việc thiết lập đã hoàn thành. Nhắc nh
 
 *Nội dung này được tạo bởi AI Agent và cần được xem xét bởi chuyên gia pháp lý và kỹ thuật trước khi áp dụng.*
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -168,4 +162,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | :--- | :--- |
 | `references/pre_commit_setup.md` | Hướng dẫn cấu hình pre-commit linter hooks và bảo vệ mã nguồn |
 | `references/ts_deep_modules.md` | Hướng dẫn thiết lập dependency-cruiser và kiểm soát ranh giới module sâu TypeScript |
-

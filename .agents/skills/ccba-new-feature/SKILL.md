@@ -5,6 +5,8 @@ description: Tạo feature branch mới với quy trình lập kế hoạch và 
 applies_to:
 - Phần mềm
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: orchestrator
 is-orchestrated: true
 user-invocable: true
@@ -24,12 +26,6 @@ triggers:
 # Kỹ năng: Tạo Feature Branch Mới & Phân Tách Session (Factory Model)
 
 Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch tính năng mới và cưỡng chế áp dụng mô hình Nhà máy (**The Factory Model**) tách biệt giữa **Planning** và **Coding** để tối ưu hóa chi phí Token (OpEx) và ngăn ngừa lỗi mã nguồn.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho feature branch, claim lock và Factory Model: planning, bàn giao session, coding). Tra cứu `catalog.yaml` theo nguyên tắc reuse-first; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: orchestrator`.
 
 ---
 

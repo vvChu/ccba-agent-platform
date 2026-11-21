@@ -17,9 +17,9 @@ gpi:
 metadata:
   author: CCBA
   version: 1.0.1
-sync_commit: "1df8b2c55d95f830e9f1642ef0646f7563989a2b"
+sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
-  .agents/skills/ccba-code-review/SKILL.md: "7fc474beba66df5b473a07f1780445504cb52dc2d2c16698223b2af593f7d150"
+  .agents/skills/ccba-code-review/SKILL.md: "5d760ef0b6447fce84b4677037f6a29db6d4338d0aebbb16772dea665466f98c"
   .agents/skills/ccba-code-review/references/parallel-review-workflow.md: "e8cde906bac988b39eb232d08db83ec306bb3bd9dd07f18e92046e8257d57be5"
   .agents/skills/ccba-code-review/references/unslop_checklist.md: "2a2499376921b379d61a5cfc2bc9531ca823c484a5ffb714ef311a987df66084"
   scripts/spoke/sync/coordinator.py: "1b2c3eb21f71025ed6921b5ec9d6a2e933cc8cd8be9cd5bd9777051f576dd94d"
@@ -45,7 +45,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho kỹ năng `/ccba
 ## 🏛️ Platform-Aware Architecture Posture
 
 - **Seam Capability Posture**: `package-bound`. Kỹ năng kiểm định hợp đồng 5 bước của `.agents/skills/ccba-code-review/SKILL.md`, chuyển giao tường minh các tệp tiêu chuẩn (`docs/rules/code_quality_standards.md` — `v1.3.2 #1208`), khởi tạo subagents với `fresh context window` (`v1.3.2 #1341`), phân loại `candidate` + `repro_command` $\to$ `Verified Findings` vs `Dropped / Unverified Notes`, cùng 14 tài liệu tham chiếu Level 3 và `ccba_harness.SkillValidator`.
-- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `6bd71548c72d04e9b7372f37961d5f43d13ddaa9` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
+- **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit trên `main` `778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2` kèm bảng băm SHA-256 chuẩn hóa LF (`covered_sha256`) bảo vệ toàn bộ `covered_paths` (chống xanh giả trên shallow clone hoặc squash-merge).
 
 ---
 

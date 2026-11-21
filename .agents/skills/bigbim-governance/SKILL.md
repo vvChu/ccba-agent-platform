@@ -6,6 +6,8 @@ applies_to:
 - BIM
 - Tác vụ Admin
 bundle: _bim
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /bigbim-governance
 layer: _bim
@@ -36,14 +38,6 @@ triggers:
 
 > **Vai trò**: Vệ binh Quản trị Thông tin (Guardian of Zettelkasten & AIM) tối cao của BIGBIM.
 > **Sứ mệnh**: Cưỡng chế các rào chắn kỹ thuật (Infra Guardrails) nhằm đảm bảo tính toàn vẹn dài hạn của thông tin tài sản, triệt tiêu 4 rủi ro thông tin cốt lõi, và bảo đảm tính nhất quán truy nguyên 3 chiều (Bản vẽ $\leftrightarrow$ FM vật lý $\leftrightarrow$ Biển hiệu thực tế).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`**:
-* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho quản trị thông tin BIM (BIM Information Governance) hay ma trận EIR/AIR/MIDP. Skill vận hành như một bộ guardrails kiểm duyệt quy chuẩn và chính sách thông tin dự án.
-* **Cưỡng chế Grounding (Grounding Invariant):** Rào chắn Golden Thread và Red Thread bắt buộc đối soát trực tiếp từ tài liệu quản trị dự án trên đĩa (thư mục `[bigbim_method_path]/.md/`). Nếu thiếu tài liệu nguồn, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM sinh giả lập mã rủi ro RK hoặc tiêu chí cổng V-Gates.
 
 ---
 

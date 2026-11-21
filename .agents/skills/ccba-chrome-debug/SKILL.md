@@ -24,6 +24,8 @@ metadata:
   version: 1.0.0
 disable-model-invocation: true
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 triggers:
 - ccba-chrome-debug
@@ -53,13 +55,6 @@ Kỹ năng này chuẩn hóa hạ tầng điều khiển và tương tác trình
    - Sử dụng một profile lưu trữ lâu dài dùng chung duy nhất cho toàn bộ hệ thống. Toàn bộ cookie, phiên đăng nhập (SharePoint `ibstbim.sharepoint.com`, Google, TVPL VIP) được bảo toàn vĩnh viễn.
 5. **Dừng An Toàn Có Chọn Lọc (Selective Safe Termination):**
    - Khi giải phóng cổng hoặc tắt phiên debug, script chỉ tắt các tiến trình Chrome thuộc AI Debug Mode, bảo vệ tuyệt đối các cửa sổ Chrome cá nhân thông thường của người dùng.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối vòng đời Chrome CDP (Port 9222), Chrome DevTools MCP, profile cục bộ và allowlist domain của Antigravity & CCBA Platform. Không có Seam card nào trong `seam-contracts.yaml` (16 card Seam chuẩn hóa tập trung vào Document Conversion, RAG Search, QC Vision và Legal/VBHN Pipeline), do đó kỹ năng được miễn trừ trực tiếp (seam-exempt) để vận hành độc lập hạ tầng trình duyệt devtools.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 4.0, K: 3.0, A: 2.0, P: 1.0) = 18.5 >= 12.0. Không có thư mục `references/` phụ trợ.
 
 ---
 

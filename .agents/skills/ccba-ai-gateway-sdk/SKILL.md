@@ -6,7 +6,14 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 - Kiểm định
-bundle: _core
+bundle: _software
+scope: universal
+posture: package-bound
+seam_ids:
+  - ai_chat.v1
+  - ai_embedding.v1
+  - ai_transcribe.v1
+  - model_routing.v1
 tier: kernel
 command: /ccba-ai-gateway-sdk
 metadata:
@@ -31,18 +38,6 @@ package_path: packages/ccba-ai
 # AI Gateway SDK
 
 Kết nối **AI Gateway** (LiteLLM) trên **Server Spark** (DGX). Một endpoint duy nhất cung cấp đa dạng mô hình thời gian thực qua `ai.models()` — từ Qwen 3.6 35B chạy local GPU đến Claude, Gemini trên cloud.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`package-bound`**, bám trực tiếp vào gói monorepo `packages/ccba-ai` cung cấp 4 Capability Seams nền tảng:
-- **`ai_chat.v1`**: Đàm thoại và sinh văn bản (`from ccba_ai import ai`).
-- **`ai_embedding.v1`**: Trích xuất vector ngữ nghĩa (`from ccba_ai import embed`).
-- **`ai_transcribe.v1`**: Chuyển giọng nói thành văn bản (`from ccba_ai import transcribe`).
-- **`model_routing.v1`**: Định tuyến mô hình theo tác vụ chuẩn (`from ccba_ai import choose_model, ModelArchetype`).
-
-Mọi tương tác LLM từ client (Hub/Spoke/CLI) BẮT BUỘC định tuyến qua Seam `model_routing.v1` bằng các khóa tác vụ chuẩn (`general`, `reasoning`, `coding`, `ocr`, `rag`, `private`). Tuyệt đối không hardcode API key, không nhúng chuỗi model thô của nhà cung cấp vào mã nguồn.
 
 ---
 
@@ -423,4 +418,3 @@ def remove_ocr_artifacts(text: str) -> str:
 ## Tiêu chí hoàn thành
 
 - [ ] **Completion Criterion:** Đã kết nối và xác thực thành công các Capability Seams (`ai_chat.v1`, `ai_embedding.v1`, `ai_transcribe.v1`, `model_routing.v1`) qua package `ccba_ai`, tuân thủ định tuyến mô hình chuẩn qua `choose_model()`.
-

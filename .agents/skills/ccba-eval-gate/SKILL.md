@@ -4,6 +4,10 @@ description: Thực hiện kiểm chứng mã nguồn thông qua CI Gates tự �
   lỗi (Self-Healing Loop).
 disable-model-invocation: true
 bundle: _software
+scope: universal
+posture: seam-exempt
+seam_ids:
+  - harness_eval.v1
 tier: kernel
 gpi:
   s: 3.0
@@ -30,13 +34,6 @@ package_path: packages/ccba-harness
 # 🛡️ Kỹ năng: eval-gate (Tự kiểm chứng & Sửa lỗi)
 
 Kỹ năng này bọc script [`scripts/eval/run_harness_evals.py`](../../../scripts/eval/run_harness_evals.py), tích hợp framework [`ccba_harness.evals`](../../../packages/ccba-harness/AGENTS.md) và chịu trách nhiệm bảo vệ codebase khỏi các lỗi cú pháp, kiểu dữ liệu, test cases thất bại, phá vỡ hợp đồng Seam, hoặc tài liệu bị ảo ảnh.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP Kernel chuyên trách điều phối quy trình tự kiểm chứng CI Gates và vòng lặp tự sửa lỗi (Self-Healing Loop) cho toàn bộ codebase và skills. Mặc dù kỹ năng đóng vai trò là client điều phối của harness eval (`scripts/eval/run_harness_evals.py` và Seam card `harness_eval.v1` thuộc `ccba-harness`), bản thân kỹ năng là một quy trình vận hành kiểm định tự động, do đó nhận posture `seam-exempt` để duy trì tính độc lập trong kiểm tra chất lượng.
-- **Governance Compliance**: Đạt chuẩn Governance ADR-0057 Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 2.0, P: 1.0) = 14.0 >= 12.0. Thuộc tính `package_path: packages/ccba-harness` và toàn bộ 2 tệp tài liệu Level 3 (`references/evaluations_guide.md`, `references/program_template.md`) được bảo tồn nguyên vẹn.
 
 ---
 
@@ -85,4 +82,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
-

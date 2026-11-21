@@ -7,6 +7,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-create-pr
@@ -31,12 +33,6 @@ triggers:
 # Kỹ năng: Tạo Pull Request Chuẩn CCBA Platform (CCBA Pull Request Flow)
 
 Quy trình tự động hóa kiểm định chất lượng mã nguồn tại chỗ (Shift-Left Gate), bảo vệ nhánh chính (`<default_branch>`), đẩy mã nguồn và khởi tạo GitHub Pull Request kèm vòng lặp theo dõi CI tích xanh và đối soát góp ý từ Copilot Review. *(Lệnh: `/ccba-create-pr`)*
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP kernel mở Pull Request trong repo hiện tại). GPI đạt (3.0, 3.0, 1.0, 1.0) = 14.0; kỹ năng `ccba-contribute-to-hub` đã kế thừa quy chuẩn này cho chiều đóng góp từ Spoke sang Hub. Không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: kernel`.
 
 ---
 

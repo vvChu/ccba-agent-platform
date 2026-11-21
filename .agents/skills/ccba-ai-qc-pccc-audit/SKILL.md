@@ -5,6 +5,8 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _qc
+scope: universal
+posture: compose-existing
 tier: kernel
 user-invocable: true
 command: /ccba-ai-qc-pccc-audit
@@ -33,14 +35,6 @@ triggers:
 # CCBA AI QC PCCC Audit
 
 Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo và gộp kết quả đánh giá kỹ thuật đối với hồ sơ PCCC lớn, giúp khắc phục giới hạn context window của LLM và hiện tượng sinh ảo giác.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine đã có trong nền tảng:
-* **Hạ Tầng Lõi:** Ủy quyền toàn bộ thuật toán Map-Reduce cho module `ccba_qc_core.pccc` (class `PcccMapReduceEngine`) thay vì viết mã xử lý phân tán ad-hoc.
-* **Định Tuyến Mô Hình Động:** Mọi tương tác AI trong pipeline thẩm tra tự động giải quyết qua Seam `ccba_ai.routing.choose_model("audit")`. Tuyệt đối CẤM truyền chuỗi model thô cứng.
 
 ---
 
@@ -114,4 +108,3 @@ Tuyệt đối **CẤM** Agent tự nhớ số liệu hoặc diễn giải lại
 - [ ] Cả 3 nhánh Map (`Legal & Specs`, `MEP Water`, `MEP Alarm vs Arch`) đã được chạy và hợp nhất không trùng lặp tại bước `Reduce`.
 - [ ] Lệnh `ccba-qc pccc` (hoặc `PCCCSemanticEngine`) kết thúc với mã thoát `0` và tạo ra tệp báo cáo Markdown đầu ra không rỗng.
 - [ ] Không trích dẫn bất kỳ văn bản quy phạm pháp luật nào đã hết hiệu lực (như NĐ 136/2020/NĐ-CP cũ).
-

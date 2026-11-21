@@ -21,7 +21,9 @@ keywords:
 - migration
 - schema-merge
 - hub-and-spoke
-bundle: _core
+bundle: _governance
+scope: hub
+posture: seam-exempt
 triggers:
 - spoke
 - adopt
@@ -39,12 +41,6 @@ triggers:
 # Kỹ Năng Tiếp Nhận Spoke Hiện Hữu (Brownfield Spoke Adopter)
 
 Kỹ năng này chịu trách nhiệm đánh giá hiện trạng, phân tích rủi ro và thực hiện tiếp nhận thích ứng (Adaptive Non-Destructive Onboarding) cho các codebase đã có sẵn vào mạng lưới CCBA Agent Platform.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP brownfield tiếp nhận dự án cũ). Skill hướng dẫn quy trình onboarding thích ứng bảo tồn dữ liệu; engine thực thi nằm ở `scripts/spoke/spoke_adopter.py` qua lệnh unified `ccba-platform adopt-spoke <path>` (hoặc script wrapper `scripts/adopt_spoke.py`). Giữ nguyên `tier: orchestrator`.
 
 ---
 

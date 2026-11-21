@@ -8,6 +8,8 @@ applies_to:
 - Thiết kế
 - Kiểm định
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 command: /ccba-issue-to-hub
@@ -34,12 +36,6 @@ triggers:
 # Workflow: Đề Xuất Ý Tưởng & Tính Năng Lên Hub (/ccba-issue-to-hub)
 
 Quy trình tự động hóa bóc tách ngữ cảnh thảo luận tại dự án Spoke, biên soạn bản đề xuất cải tiến (**RFC Proposal**) chuẩn chỉnh và tạo GitHub Issue trực tiếp lên repository trung tâm CCBA Hub (`ccba-agent-platform`).
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP tạo GitHub Issue chuẩn từ Spoke lên Hub). Skill hướng dẫn quy trình 5 bước trích xuất ngữ cảnh, kiểm tra trùng lặp và mở RFC Issue trên kho Hub; không đóng gói pipeline xử lý dữ liệu hay phụ thuộc Seam Contract ứng dụng cụ thể.
 
 ---
 
@@ -130,7 +126,6 @@ Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
 
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
 Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
@@ -140,4 +135,3 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/issue_triage_flow.md` | Quy trình phân loại, gắn nhãn và sàng lọc sự cố kỹ thuật (issues) |
 | `references/agent-brief.md` | Mẫu chỉ dẫn tóm tắt nhiệm vụ và phạm vi kỹ thuật (Agent Brief) cho Issue |
 | `references/out-of-scope.md` | Hướng dẫn nhận diện và cách ly các yêu cầu nằm ngoài phạm vi giải quyết (Out of Scope) |
-

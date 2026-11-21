@@ -4,6 +4,8 @@ description: Đóng gói và tổng hợp phiên làm việc hiện tại thành
   mực để Agent tiếp theo tiếp quản liền mạch.
 argument-hint: Mục tiêu hoặc nhiệm vụ trọng tâm cho phiên làm việc tiếp theo?
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 disable-model-invocation: true
 metadata:
@@ -27,13 +29,6 @@ triggers:
 Kỹ năng này chịu trách nhiệm nén toàn bộ ngữ cảnh, quyết định kiến trúc, tiến độ công việc và trạng thái môi trường của phiên hiện tại thành một tài liệu bàn giao chuẩn mực tại `.md/scratch/handoffs/handoff-<timestamp>.md`.
 
 Mục tiêu tối thượng là giúp **Agent ở phiên làm việc tiếp theo nắm bắt 100% ngữ cảnh trong 30 giây** mà không cần đọc lại toàn bộ hàng nghìn dòng lịch sử trò chuyện.
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Seam Capability Posture**: `seam-exempt`. Kỹ năng này là SOP kernel đóng gói và tổng hợp phiên làm việc thành tài liệu Handoff chuẩn 5 phần tại `.md/scratch/handoffs/handoff-<timestamp>.md` kèm bước che giấu thông tin nhạy cảm theo chuẩn Maskara. Quy trình bảo đảm tính liên tục của bộ nhớ làm việc giữa các AI Agent mà không phụ thuộc các Seam dữ liệu ứng dụng.
-- **Governance Compliance**: Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với điểm GPI (S: 3.0, K: 2.0, A: 1.0, P: 1.0) = 12.0 >= 12.0 (đi nhánh Tier 2B và nằm trong deadband [11.5, 12.5) được bảo toàn qua hysteresis). Kỹ năng hiện chưa có thư mục `references/` phụ trợ.
-
----
 
 ## 📋 Tiêu Chí Hoàn Thành (Completion Criteria)
 - [x] Tạo thành công tệp bàn giao tại: `.md/scratch/handoffs/handoff-<YYYY-MM-DD-HHMMSS>.md`.

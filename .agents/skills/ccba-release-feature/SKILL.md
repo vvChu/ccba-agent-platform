@@ -5,6 +5,8 @@ description: Merge PR, cleanup branch, auto-close local issues và cập nhật 
 applies_to:
 - Phần mềm
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: orchestrator
 is-orchestrated: true
 user-invocable: true
@@ -21,12 +23,6 @@ triggers:
 # Workflow: Release Feature
 
 Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot Review, tự động đóng issue và dọn dẹp môi trường.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, squash merge và đóng issue tự động). Lệnh `scripts/sync_spoke.py --spoke` giữ đúng mặt wrapper đã khóa ở Đợt 5; không đóng gói pipeline chuyển đổi dữ liệu độc lập hay phụ thuộc Seam Contract ứng dụng cụ thể. Giữ nguyên `tier: orchestrator`.
 
 ---
 
@@ -336,6 +332,5 @@ Skill này thuộc thế năng **`seam-exempt`** (SOP orchestrator cho TRIHT, sq
    - 🗑️ Branch cục bộ và remote đã được dọn dẹp sạch sẽ.
    - 📌 Issue liên quan đã được đóng (trên GitHub và CSDL cục bộ).
    - 📝 Lịch sử thay đổi `walkthrough.md` đã được lưu trữ hoàn tất.
-
 
 **Tiêu chí hoàn thành:** Toàn bộ trạng thái tích hợp, dọn dẹp và đóng issue được thông báo hoàn tất.

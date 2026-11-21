@@ -8,6 +8,10 @@ applies_to:
 - Thiết kế
 - Tác vụ Admin
 bundle: _core
+scope: universal
+posture: package-bound
+seam_ids:
+  - diagram_layout.v1
 tier: kernel
 user-invocable: true
 command: /ccba-excalidraw-diagram
@@ -69,40 +73,6 @@ Thư viện lõi `ccba-diagram` (`from ccba_diagram import apply_smart_layout`) 
    - Bắt buộc escape pipe trong wikilinks: `[[slug\|alias]]`.
    - Phân tầng 2 nhịp: `↳&nbsp;Target Node`.
    - Bắt buộc dùng ngoặc tròn `()`, tuyệt đối không rò rỉ `#40;`/`#41;` ra bảng Markdown.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture
-
-Skill này tuân thủ chuẩn hóa kiến trúc ADR-0061 theo thế năng **`package-bound`**, gắn kết chặt chẽ với Public Deep Seam **`diagram_layout.v1`** của gói `ccba-diagram`:
-
-1. **Tra Cứu Hợp Đồng Năng Lực (Seam Contract Verification):**
-   Trước khi triển khai bố cục sơ đồ mới, Agent thực hiện xác thực Seam qua CLI:
-   ```bash
-   python scripts/ccba_platform_cli.py find-seam --in diagram --out layout --json
-   ```
-   *Bắt buộc:* Trạng thái trả về phải là `status == "MATCH"`. Trích xuất `import_path` từ kết quả JSON (tương ứng `ccba_diagram:apply_smart_layout`). Khi làm việc trong phiên, ghi nhận `seam_id`, `status` vào plan của phiên (không commit `index_sha256` tĩnh vào file kỹ năng).
-
-2. **Rào Chắn Cấm Tính Toạ Độ Thủ Công (Determinism Invariant):**
-   Tuyệt đối **CẤM** Agent tự suy diễn toạ độ số học (x, y) hay xê dịch thủ công các elements Excalidraw qua prompting. Toàn bộ việc tính toán toạ độ, phân tầng DAG Sugiyama, toả tròn Radial, và cắt tỉa mũi tên theo hình khối phải ủy quyền 100% cho Seam `apply_smart_layout` hoặc CLI `ccba-diagram layout`.
-
-3. **Cách Vận Hành Qua Python API & CLI:**
-
-```python
-from ccba_diagram import apply_smart_layout, generate_markdown_spec_table
-
-# 1. Tối ưu hoá toạ độ elements in-place qua Seam
-engine_used = apply_smart_layout(elements)
-
-# 2. Sinh bảng Markdown chuẩn công thái học
-spec_table = generate_markdown_spec_table(elements)
-```
-
-Hoặc qua dòng lệnh:
-```bash
-ccba-diagram layout input.json -o output.json --engine auto
-ccba-diagram spec-table input.json
-```
 
 ---
 

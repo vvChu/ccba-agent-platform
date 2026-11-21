@@ -6,6 +6,10 @@ applies_to:
 - Thẩm tra thiết kế
 - Thiết kế
 bundle: _consulting
+scope: universal
+posture: compose-existing
+seam_ids:
+  - ooxml_processor.v1
 tier: kernel
 command: /ccba-completion-checklist
 metadata:
@@ -28,14 +32,6 @@ triggers:
 # Completion Checklist Generator
 
 Skill hỗ trợ tạo và duy trì **Danh Mục Hồ Sơ Hoàn Thành Công Trình** (Construction Completion Document Checklist) theo quy định VBPL hiện hành, phục vụ kỹ sư giám sát tại CCBA.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`compose-existing`**, hợp thành từ các Seam và engine quản trị nền tảng:
-* **Căn Cứ Pháp Lý & Tra Cứu:** Trích xuất và đối soát căn cứ nghiệm thu qua Deep Seam `LegalKnowledgeEngine` (CLI `python -m ccba_legal query`). Tệp `resources/checklist_master.yaml` giữ vai trò khung hạng mục phân loại, mọi căn cứ quy phạm trích dẫn bắt buộc phải kiểm định qua predicate SSOT tại Mục 5.
-* **Xuất Bản Văn Bản (.docx):** Bắt buộc sử dụng Seam `ooxml_processor.v1` (`from ccba_ooxml import DocxDocument`). Tuyệt đối cấm sử dụng trực tiếp thư viện `python-docx` không qua Seam cách ly. Trường hợp Seam chưa hỗ trợ mẫu checklist phức tạp, Agent xuất định dạng Markdown chuẩn và dừng lại.
 
 ---
 

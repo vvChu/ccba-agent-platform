@@ -10,7 +10,7 @@
 - **RULE-1.13 [Ext]**:≠raw model/IP/hằng(`CCBA_BRAIN_MIRROR_DIR`,`check_hardcoded_parameters.py --dir`;`"Z:"+r"\..."` `check_spoke_leakage`);`choose_model()`→`tier-ocr|fast|reasoning|local`/`embedding-default`;`_workspace_roots`;`redact_secrets_and_pii`(`PII_REGEX_PATTERNS`,3 dialects,`# ccba:allow-raw-model`,`# ccba:allow-raw-ip`,stdlib `_parameter_cleanliness` `is_py=True`,`scan_spoke_cleanliness()`,M56..70).
 - **RULE-1.14 [ADR 62]**:`assess_catalog_freshness` ≠`--apply` stale;Kahn(`spoke_bootstrap.py`).
 - **RULE-1.18 [ADR 66]**:`bundle: _core|_software`;`scope: hub|spoke|universal`;`required_skills`=` .agents/skills/`(M45).
-- **RULE-1.20 [ADR 61]**:`## 🏛️ Platform-Aware Architecture Posture`;≠ADR thiếu file(`sync_hub_adr_matrix.py`).
+- **RULE-1.20 [ADR 61]**:`posture:`/`seam_ids:` frontmatter;≠ADR thiếu file(`sync_hub_adr_matrix.py`).
 - **RULE-1.23 [ADR 67]**:`classify_pr_door`+`compute_cumulative_streak`(`K≥3`/72h|`>200`L→`ONE_WAY_DOOR`,+`walkthrough.md`);`validate_tradeoff_card`(`Core Invariant`,`Invalidation Condition`,`Git Hunk Reference` `#L<a>-L<b>`≤30L);`door-triage` `_evaluate_one_way_card`(`TRADEOFF_CARD_INVALID`,4/1,M61..67).
 - **RULE-1.24 [ADR 46]**:15 `ROLE_ID`(`IDOP-CCBA-WAY`,`ADR-0060`);SSOT `idop_bridge.py`;≠`ROLE_ID`→System Prompt(`ADR-0040`).
 - **RULE-1.25 [24KB]**:Rules≤24KB;`sync_layer2_rules` rm `LEGACY_MONOLITHIC_RULES`(`is_symlink() or exists()`).

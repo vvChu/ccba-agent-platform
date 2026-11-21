@@ -2,6 +2,8 @@
 name: ccba-issue-tree
 description: Phân rã bài toán phức tạp theo cây vấn đề McKinsey MECE (Why, What, How) và quản trị vòng đời kiểm chứng giả thuyết.
 bundle: _core
+scope: universal
+posture: seam-exempt
 tier: kernel
 role: master_skill
 user-invocable: true
@@ -33,14 +35,6 @@ triggers:
 # Kỹ Năng Phân Rã Bài Toán Bằng Cây Vấn Đề (McKinsey MECE Issue Tree)
 
 Kỹ năng master điều phối phân rã các bài toán phức tạp, sự cố kỹ thuật hoặc thách thức chiến lược theo phương pháp luận Cây Vấn Đề (Issue Tree) chuẩn **MECE (Mutually Exclusive, Collectively Exhaustive)** của McKinsey, tích hợp tầng vận hành **Governed Lifecycle** nhằm quản trị vòng đời kiểm chứng giả thuyết và gắn kết với các Ghế trách nhiệm Hiến chương CCBA.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Tư thế Kiến trúc (Architecture Posture):** `seam-exempt`
-- **Lý do Miễn trừ Seam (Exemption Rationale):** Kỹ năng đóng vai trò quy trình thao tác chuẩn (SOP) kernel master phân rã bài toán phức tạp theo phương pháp luận McKinsey MECE thuần nhận thức (Cognitive Discipline) với ba loại cây độc lập (Why-Tree chẩn đoán, How-Tree giải pháp, What-Tree kế hoạch hành động), chuỗi chuyển tiếp câu hỏi, và tầng vận hành Governed Lifecycle sáu trạng thái với thang đo bằng chứng và ghế chịu trách nhiệm CCBA Charter. Kỹ năng vận hành hoàn toàn trong ngữ cảnh đối thoại Markdown (Stateless) tuân thủ triệt để nguyên tắc KISS, không phụ thuộc Seam đóng gói Python độc lập.
-- **Tuân thủ Thể chế Quản trị (Governance Compliance):** Đạt chuẩn thể chế Tier 2B Standalone Kernel Skill với chỉ số GPI (S: 4.0, K: 2.0, A: 1.0, P: 1.0) = 14.5 $\ge$ 12.0. Duy trì vai trò `role: master_skill` và 2 tài liệu tham chiếu chuyên sâu tại tầng Level 3 (`references/tree_templates.md`, `references/governed_lifecycle_guide.md`).
 
 ---
 

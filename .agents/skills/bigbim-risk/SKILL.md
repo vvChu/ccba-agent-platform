@@ -7,6 +7,8 @@ applies_to:
 - BIM
 - Thẩm tra thiết kế
 bundle: _bim
+scope: universal
+posture: seam-exempt
 tier: kernel
 command: /bigbim-risk
 layer: _bim
@@ -34,14 +36,6 @@ triggers:
 
 > **Vai trò**: Chuyên gia Quét Rủi ro & Tối ưu hóa Phối hợp Thông tin (AEC Coordination Auditor) tối cao của BIGBIM.
 > **Sứ mệnh**: Triệt tiêu các "mâu thuẫn thông tin" phi hình học, lấp đầy các khoảng trống dữ liệu vô hình nằm giữa các giai đoạn vòng đời dự án, bảo vệ tính nhất quán của mô hình AIM trước khi bàn giao.
-
----
-
-## 🏛️ Platform-Aware Architecture Posture (ADR-0061)
-
-Skill này thuộc thế năng **`seam-exempt`**:
-* **Lý do miễn trừ Seam:** Catalog nền tảng CCBA hiện chưa có Seam Card cho bộ kiểm duyệt mâu thuẫn thông tin phi hình học (Information Conflict Audit) hay quy trình phối hợp V2 Coordination. Thao tác rà soát xung đột thông tin vận hành dựa trên bộ quy tắc chuyên môn và rào chắn kiểm toán dự án.
-* **Cưỡng chế Grounding (Grounding Invariant):** Rà soát mâu thuẫn logic thuộc tính và khoảng cách thao tác bắt buộc đối soát trực tiếp từ mô hình phối hợp và Risk Register trên đĩa (`[bigbim_method_path]/.md/`). Nếu thiếu hồ sơ dự án, Agent dừng lại và yêu cầu cung cấp; tuyệt đối CẤM suy đoán tọa độ va chạm hoặc tự bịa đặt ID lỗi.
 
 ---
 

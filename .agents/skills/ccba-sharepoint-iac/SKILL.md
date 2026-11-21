@@ -8,6 +8,8 @@ metadata:
   version: "1.4.0"
   author: "CCBA Hub"
 bundle: _software
+scope: universal
+posture: seam-exempt
 tier: kernel
 user-invocable: true
 command: /ccba-sharepoint-iac
@@ -55,15 +57,6 @@ triggers:
 # Kỹ Năng: SharePoint, Power Apps, Power Automate & M365 IaC (`sharepoint-iac`)
 
 Kỹ năng này hướng dẫn AI Agent thiết kế, kiểm định ngữ nghĩa và triển khai hạ tầng dữ liệu, giao diện 3 tầng bản địa và luồng tự động hóa trên **SharePoint Online, Power Apps (Canvas `.pa.yaml` & Code Apps), Power Automate và Microsoft 365** bằng phương pháp **Infrastructure-as-Code (IaC)** chuẩn hóa của CCBA Platform (áp dụng điển hình tại Spoke `IDOP-CCBA-WAY`).
-
-## 🏛️ Platform-Aware Architecture Posture
-
-- **Phân loại**: Kỹ năng quản trị hạ tầng dạng mã nguồn (seam-exempt kernel skill).
-- **Lý do miễn trừ seam**: SOP hướng dẫn thiết kế JSON schema, kiểm định quan hệ Lookups/Taxonomy/Index, kiểm chứng máy trạng thái phê duyệt đa cấp và vận hành kịch bản Python Validator + PnP PowerShell cho hạ tầng đám mây M365.
-- **Đặc tính quản trị**: Cưỡng chế kiến trúc Metadata-First (`<5GB` list quota), phân tách Master Storage (`Documents/iOPS/` vs `Documents/iCDE/`), bảo mật Dual-Zone (`Zone 1` vs `Zone 2`), giới hạn tối đa 20 cột lập chỉ mục mỗi bảng (`MAX_INDEXED_COLUMNS_PER_LIST = 20`) và kiểm chứng đồ thị phê duyệt BFS chống vượt cổng `ROLE_HEAD_ADMIN`.
-- **Chỉ số năng lực quản trị (GPI)**: Đạt mức điểm chuẩn hóa (`s=3.0, k=2.0, a=1.0, p=1.0`) $\to$ `GPI = 12.0` (Tier 2B kernel), tuân thủ phân lớp governance và năng lực tự động hóa hạ tầng.
-
----
 
 ## 🎯 1. Bốn Trụ Cột Thiết Kế & Kiểm Định Cốt Lõi (Core Invariants)
 
