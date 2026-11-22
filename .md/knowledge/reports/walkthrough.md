@@ -1,47 +1,41 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
-## Features: `.md`-Based Spoke Retrospective Gates & Lazy `ccba_ooxml.xlsx` Seam
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #854` (`#849`)
+## Docs: Phân Tách Cứng Operations OS (`IDOP-CCBA-WAY`) & Financial Ledger Spoke (`IBST_UNIFIED_ERP`) Trong `HUB-ADR-0060`
 
-> **PR `#845` Đã Hợp Nhất (`--squash`):** [#845](https://github.com/vvChu/ccba-agent-platform/pull/845) (`76f48be83790a24ec28817b7f8d3f5e8f44086e8`) | **Branch:** `fix/issue-844-md-spoke-retrospective-gates` (`e2a42753`) | **Issue:** [#844](https://github.com/vvChu/ccba-agent-platform/issues/844) (`CLOSED`)  
-> **PR `#848` Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#848](https://github.com/vvChu/ccba-agent-platform/pull/848) (`deeae22d7564f629f54298403cae9d24f0c71dd1`) | **Branch:** `feat/issue-842-ooxml-xlsx-seam` (`07c6549e`, rebased trên `76f48be8`) | **Issue:** [#842](https://github.com/vvChu/ccba-agent-platform/issues/842) (`CLOSED`)  
-> **Trạng thái chung:** ✅ **2/2 PRs MERGED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT x2), 8/8 CI CHECKS PASS x2, 0 UNRESOLVED PR COMMENTS, ISSUES #844 & #842 CLOSED**
+> **Pull Request Đã Hợp Nhất (`--squash`):** [#854](https://github.com/vvChu/ccba-agent-platform/pull/854) (`6d1d3f5e7e6dc671b7da2531f7c522f8fc64df56`) | **Branch:** `docs/issue-849-adr-0060-erp-sor-separation` (`1b85482c`) | **Base:** `609afbc1` | **Issue:** [#849](https://github.com/vvChu/ccba-agent-platform/issues/849) (`CLOSED`)  
+> **Trạng thái chung:** ✅ **PR #854 MERGED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT), 8/8 CI CHECKS PASS, 0 UNRESOLVED PR COMMENTS, ISSUE #849 CLOSED**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#845` (`#844`)
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#854` (`#849`)
 
 | Thành Phần | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **1. Spoke ADR Matrix No-Orphan & Exit Code** | [`sync_hub_adr_matrix.py`](../../../scripts/sync_hub_adr_matrix.py) | Bổ sung `resolve_target_adr_dir()`, `--adr-dir`, `--create-adr-dir` (ưu tiên `docs/adr` rồi `.md/adr`, tránh tạo thư mục mồ côi), sửa exit `1` khi `not success`, tách helper giữ `795 <= 800` LOC. | Verified |
-| **2. Profile `generic-spoke`** | [`compact_session_learnings.py`](../../../scripts/governance/compact_session_learnings.py) | Thêm `--profile generic-spoke`, `--max-lines` (mặc định `115` dòng) và chặn `--compact` dưới `generic-spoke`. | Verified |
-| **3. Skill `/ccba-session-retrospective` `v1.7.2`** | [`SKILL.md`](../../../.agents/skills/ccba-session-retrospective/SKILL.md) | Nâng `1.7.1` -> `1.7.2` (`6,507 / 6,584` tokens), cập nhật Bước 2/4/5 tương thích Spoke dùng `.md/`. | Verified |
-| **4. Kiểm thử đơn vị Governance** | [`test_sync_adr_matrix.py`](../../../tests/governance/test_sync_adr_matrix.py), [`test_compact_session_learnings.py`](../../../tests/governance/test_compact_session_learnings.py) | Bổ sung 5 ca kiểm thử tự động cho `.md/adr`, `--dry-run`, `--create-adr-dir`, `generic-spoke` và tương thích ngược. | Verified |
+| **1. Sơ đồ `FEDERATED SPOKES` & Mục 1** | [`0060-4hub-federated-spokes-architecture.md`](../../../docs/adr/0060-4hub-federated-spokes-architecture.md) | Giữ nguyên `bim-planner` và trục `┴` (`33` space lề trái, `33` ký tự lòng khung), thay `ibim_accounting` & `AC_IBSTBM2 / PP_IBSTBM` bằng IBST_UNIFIED_ERP (`31v` Ledger, `[Spoke PG16 loopback]`), thêm câu đếm `4 Hub nền tảng + Operations SOR + Federated Spokes` và cập nhật vai trò SOR của `IDOP-CCBA-WAY`. | Verified |
+| **2. Mục 7 Amendment 2026-11-22 & Consequences** | [`0060-4hub-federated-spokes-architecture.md`](../../../docs/adr/0060-4hub-federated-spokes-architecture.md#L184-L223) | Phân tách cứng SOR điều hành (`IDOP-CCBA-WAY`) khỏi SOR sổ cái `31v` (IBST_UNIFIED_ERP), ủy thác chi tiết vận hành Spoke về Spoke ADR-0011 (`Accepted`), đặt cầu Closed-Loop `IDOP → ERP` loopback-only (`127.0.0.1`) song song Mục 4, xác thực kép + taxonomy fail-closed SHA-256 (IBST_IDOP_TAXONOMY_DIR), 5 trục tương tác Viện KHCN Xây dựng (IBST), tách 2 cải tiến skill sang PR riêng. | Verified |
 
 ---
 
-## 2. Tổng Kết Thay Đổi Kỹ Thuật — PR `#848` (`#842`)
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
 
-| Thành Phần | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
-| :--- | :--- | :--- | :---: |
-| **1. Deep Subpackage `ccba_ooxml.xlsx`** | [`xlsx/__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/__init__.py), [`_safety.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_safety.py), [`_filler.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_filler.py), [`_writer.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_writer.py), [`_reader.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_reader.py), [`_models.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_models.py) | Triển khai `XlsxTemplateFiller`, `XlsxWorkbookWriter`, `XlsxReader`, `XlsxFillConfig`, `XlsxHeaderStyle`, `sanitize_xlsx_value`, `XlsxMediaLimitError`, `MergedCellWriteError`; preflight stdlib `RULE-5.13` trước mọi `load_workbook()`, chống formula injection & bảo vệ `MergedCell` / `TemplateProtectionError`. | Verified |
-| **2. PEP 562 Lazy Exports & `calc.py`** | [`__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/__init__.py), [`calc.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/calc.py), [`pyproject.toml`](../../../packages/ccba-ooxml/pyproject.toml), [`AGENTS.md`](../../../packages/ccba-ooxml/AGENTS.md) | Mở rộng exports `64 -> 72`, thêm `openpyxl>=3.1.0`, giữ import gốc `< 25 ms` không nạp `openpyxl`, và siết fallback `calc.recalc_xlsx` bằng preflight + `finally: wb.close()`. | Verified |
-| **3. Contracts, Linter, Portal & Anchor** | [`seam-contracts.yaml`](../../../seam-contracts.yaml), [`pyproject.toml`](../../../pyproject.toml), [`catalog.yaml`](../../../.agents/skills/platform-loader/catalog.yaml), [`index.html`](../../../docs/index.html), [`verify-ccba-ooxml/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-ooxml/SKILL.md), [`INDEX.md`](../../../packages/ccba-harness/features/INDEX.md) | Mở rộng `ooxml_processor.v1` (`out` thêm `xlsx`), cập nhật `TID251` & `ignore_missing_imports` (`openpyxl.*`), tái biên dịch catalog/portal, nâng chốt `64 -> 72` và re-anchor SHA-256 LF giữ `sync_commit` `7259350d`. | Verified |
-| **4. Kiểm thử Round-Trip & Isolation + Biên bản Grilling** | [`test_xlsx.py`](../../../packages/ccba-ooxml/tests/test_xlsx.py), [`test_phase1_ooxml_seams.py`](../../../packages/ccba-ooxml/tests/test_phase1_ooxml_seams.py), [`2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md`](../decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md) | Kiểm chứng XML DOM round-trip, 3 modes `on_merged`, preflight `xl/media/* > 2 MiB` trước `load_workbook()`, latency `< 25 ms`, và lưu biên bản Grilling + Grok Peer Plan Audit `APPROVE_PLAN`. | Verified |
+- **Grok Peer Audit (`arch_audit` + `signoff_diff`):** Pass 1 `APPROVE_WITH_CONDITIONS` (`risk_score: 3`, session `b4eb4062-5262-4f73-a50f-cb9d526e474d`) -> Pass 2 `APPROVE_PLAN` (`risk_score: 2`, `0` blocking conditions, `degraded_reasoning: false`, session `1c31283c-0587-4d77-99cc-013f0ff30599`).
+- **Local Shift-Left & TRIHT Cổng 0.1–0.3 trên PR `#854` (`1b85482c` trong `/home/vvc/ccba/wt-hub-849`):**
+  - `validate_docs.py . --src scripts,packages --changed`: exit `0` (0 hard errors, 0 warning mới), `sync_hub_adr_matrix.py --check`: `[PASS]` (61 ADRs), `check_spoke_leakage.py`: 0 violations, `sanitize_review_diff.py --check`: `[PASS]`, `maskara.py scan --root .`: exit `0`, `verify-patch --preset adr` & `--preset doc`: `PASS`, `door-triage --enforce-tradeoff-card`: `ONE_WAY_DOOR` / `HUB_CONSTITUTION`, `tradeoff_card_valid: true`.
+  - Cổng 0.1 & 0.3 (`check_release_cleanliness.py --phase pre/post`): `PASS` (100% Hermetic).
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` 5.28s, `ccba-diagram` 0.35s, `ccba-harness` 13.06s, `ccba-legal-intel` 48.85s, `ccba-maskara` 0.35s, `ccba-notebooklm` 0.40s, `ccba-ooxml` 2.56s, `ccba-pdf-prep` 9.66s, `ccba-qc-core` 1.15s, `mdconverter` 2.37s, `scripts` 15.98s, `root-tests` `614 passed, 1 skipped, 10 deselected` in 29.47s / total 30.00s).
+- **CI & Hậu hợp nhất trên `main` (`6d1d3f5e`, `--squash`):**
+  - `8/8` CI `SUCCESS`, `audit_pr_comments.py --pr 854` exit `0`, `reviewRequests` rỗng.
+  - `compile_catalog.py --check` PASS, `sync_hub_adr_matrix.py --check` PASS, Issue `#849` `CLOSED` (gỡ nhãn `in-progress`, comment `#issuecomment-7074500733`), nhánh feature local/remote & worktree đã dọn sạch.
 
 ---
 
-## 3. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+## 3. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
 
-- **TRIHT Cổng 0.1–0.3 trên PR `#845` (`e2a42753`):**
-  - Cổng 0.1 & 0.3 (`check_release_cleanliness.py --phase pre/post`): `PASS` (100% Hermetic).
-  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` 4.87s, `ccba-diagram` 0.35s, `ccba-harness` 11.60s, `ccba-legal-intel` 47.60s, `ccba-maskara` 0.35s, `ccba-notebooklm` 0.40s, `ccba-ooxml` 2.16s, `ccba-pdf-prep` 9.67s, `ccba-qc-core` 1.10s, `mdconverter` 2.36s, `scripts` 15.24s, `root-tests` `614 passed, 1 skipped, 10 deselected` in 29.52s).
-  - `8/8` CI `SUCCESS`, `audit_pr_comments.py --pr 845` exit `0`, merge `--squash` @ `76f48be8`, Issue `#844` `CLOSED`.
-- **TRIHT Cổng 0.1–0.3 trên PR `#848` đã rebase (`07c6549e`):**
-  - Cổng 0.1 & 0.3 (`check_release_cleanliness.py --phase pre/post`): `PASS` (100% Hermetic).
-  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ooxml` `103 passed, 1 deselected` in 2.46s; `root-tests` `614 passed, 1 skipped, 10 deselected` in 29.56s; cùng 10 package targets còn lại đều `PASS`).
-  - `8/8` CI `SUCCESS` trên commit `07c6549e`, `audit_pr_comments.py --pr 848` exit `0`, `door-triage` `tradeoff_card_valid: true`.
-- **Hậu hợp nhất trên `main` (`deeae22d`, `--merge` theo `RULE-2.21`):**
-  - `git cat-file -e 7259350d8020834c52ab88e4c5681e165612cc8b^{commit}` exit `0`.
-  - `compile_catalog.py --check` PASS, `test_verification_harness_dogfood.py` **5 passed** (`0.24s`), `run_verify_ooxml.py` **6 passed** (`0.24s`), Issue `#842` `CLOSED` (gỡ nhãn `in-progress`, comment `#issuecomment-7073929557`), nhánh feature local & remote đã dọn sạch.
+> **PR `#845` Đã Hợp Nhất (`--squash`):** [#845](https://github.com/vvChu/ccba-agent-platform/pull/845) (`76f48be83790a24ec28817b7f8d3f5e8f44086e8`) | **Issue:** [#844](https://github.com/vvChu/ccba-agent-platform/issues/844) (`CLOSED`) | **Branch:** `fix/issue-844-md-spoke-retrospective-gates` (`e2a42753`)  
+> **PR `#848` Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#848](https://github.com/vvChu/ccba-agent-platform/pull/848) (`deeae22d7564f629f54298403cae9d24f0c71dd1`) | **Issue:** [#842](https://github.com/vvChu/ccba-agent-platform/issues/842) (`CLOSED`) | **Branch:** `feat/issue-842-ooxml-xlsx-seam` (`07c6549e`, rebased trên `76f48be8`)
+
+- **Thành phần chính PR `#845`:** Bổ sung `resolve_target_adr_dir()`, `--adr-dir`, `--create-adr-dir` tại [`sync_hub_adr_matrix.py`](../../../scripts/sync_hub_adr_matrix.py); thêm `--profile generic-spoke` tại [`compact_session_learnings.py`](../../../scripts/governance/compact_session_learnings.py); nâng `/ccba-session-retrospective` `v1.7.2`; bổ sung 5 ca test tại [`test_sync_adr_matrix.py`](../../../tests/governance/test_sync_adr_matrix.py) và [`test_compact_session_learnings.py`](../../../tests/governance/test_compact_session_learnings.py).
+- **Thành phần chính PR `#848`:** Triển khai deep subpackage `ccba_ooxml.xlsx` ([`xlsx/__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/__init__.py), PEP 562 lazy exports tại [`__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/__init__.py), [`calc.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/calc.py), [`seam-contracts.yaml`](../../../seam-contracts.yaml), [`verify-ccba-ooxml/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-ooxml/SKILL.md), [`test_xlsx.py`](../../../packages/ccba-ooxml/tests/test_xlsx.py), [`2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md`](../decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md)).
+- **Nghiệm thu:** TRIHT Cổng 0.1–0.3 (`12/12 targets PASS` x2), `8/8` CI `SUCCESS` x2, `audit_pr_comments.py` exit `0`, `git cat-file -e 7259350d8020834c52ab88e4c5681e165612cc8b^{commit}` exit `0`, `compile_catalog.py --check` PASS, `test_verification_harness_dogfood.py` `5 passed`, `run_verify_ooxml.py` `6 passed`.
 
 ---
 
