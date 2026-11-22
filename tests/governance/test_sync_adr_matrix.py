@@ -13,6 +13,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 
@@ -25,8 +26,12 @@ from scripts.sync_hub_adr_matrix import (
     extract_preserved_sections,
     load_adrs_from_dir,
     parse_adr_file,
+    resolve_target_adr_dir,
     run_pipeline,
     scan_skill_radar,
+)
+from scripts.sync_hub_adr_matrix import (
+    main as sync_adr_main,
 )
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -540,3 +545,96 @@ def test_scan_skill_radar_filters_untracked_files() -> None:
         files = [item["file"] for item in matrix["0010"]]
         assert ".agents/skills/tracked-skill/SKILL.md" in files
         assert ".agents/skills/untracked-skill/SKILL.md" not in files
+
+
+def test_spoke_md_adr_auto_detection_and_check_mode(tmp_path: Path) -> None:
+    """Verify .md/adr auto-detection in Spoke mode without creating orphan docs/adr."""
+    hub_dir = tmp_path / "hub"
+    spoke_dir = tmp_path / "spoke"
+    (hub_dir / "docs" / "adr").mkdir(parents=True)
+    (spoke_dir / ".md" / "adr").mkdir(parents=True)
+
+    (hub_dir / "docs" / "adr" / "0001-hub-base.md").write_text(
+        "# ADR 0001: Hub Base\n\n## Status\n**ACCEPTED**\n", encoding="utf-8"
+    )
+    (spoke_dir / ".md" / "adr" / "0001-erp-auth.md").write_text(
+        "# ADR 0001: ERP Auth\n\n## Status\n**ACCEPTED**\n", encoding="utf-8"
+    )
+
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir) is True
+    assert not (spoke_dir / "docs").exists()
+
+    matrix_file = spoke_dir / ".md" / "adr" / "TRACEABILITY_MATRIX.md"
+    assert matrix_file.is_file()
+    content = matrix_file.read_text(encoding="utf-8")
+    assert "Hub Base" in content
+    assert "ERP Auth" in content
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, check_mode=True) is True
+
+
+def test_spoke_prefers_docs_adr_and_supports_explicit_adr_dir(tmp_path: Path) -> None:
+    """Verify docs/adr takes precedence over .md/adr and explicit adr_dir overrides both."""
+    hub_dir = tmp_path / "hub"
+    spoke_dir = tmp_path / "spoke"
+    (hub_dir / "docs" / "adr").mkdir(parents=True)
+    (spoke_dir / "docs" / "adr").mkdir(parents=True)
+    (spoke_dir / ".md" / "adr").mkdir(parents=True)
+    custom_dir = spoke_dir / "custom" / "adr"
+    custom_dir.mkdir(parents=True)
+
+    (hub_dir / "docs" / "adr" / "0001-hub-base.md").write_text(
+        "# ADR 0001: Hub Base\n\n## Status\n**ACCEPTED**\n", encoding="utf-8"
+    )
+    (custom_dir / "0002-custom-domain.md").write_text(
+        "# ADR 0002: Custom Domain\n\n## Status\n**ACCEPTED**\n", encoding="utf-8"
+    )
+
+    assert resolve_target_adr_dir(spoke_dir, is_spoke_mode=True) == spoke_dir / "docs" / "adr"
+    assert (
+        resolve_target_adr_dir(spoke_dir, is_spoke_mode=True, adr_dir=Path("custom/adr"))
+        == custom_dir
+    )
+
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, adr_dir=Path("custom/adr")) is True
+    custom_matrix = custom_dir / "TRACEABILITY_MATRIX.md"
+    assert custom_matrix.is_file()
+    assert "Custom Domain" in custom_matrix.read_text(encoding="utf-8")
+    assert not (spoke_dir / "docs" / "adr" / "TRACEABILITY_MATRIX.md").exists()
+
+
+def test_spoke_missing_adr_dir_no_orphan_and_dry_run_exit_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify missing Spoke ADR dir skips cleanly by default, fails dry-run/check, and honors create flag."""
+    hub_dir = tmp_path / "hub"
+    spoke_dir = tmp_path / "spoke"
+    (hub_dir / "docs" / "adr").mkdir(parents=True)
+    spoke_dir.mkdir(parents=True)
+    (hub_dir / "docs" / "adr" / "0001-hub-base.md").write_text(
+        "# ADR 0001: Hub Base\n\n## Status\n**ACCEPTED**\n", encoding="utf-8"
+    )
+
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir) is True
+    assert not (spoke_dir / "docs").exists()
+
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, dry_run=True) is False
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, check_mode=True) is False
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "sync_hub_adr_matrix.py",
+            "--hub-dir",
+            str(hub_dir),
+            "--spoke-dir",
+            str(spoke_dir),
+            "--dry-run",
+        ],
+    )
+    with pytest.raises(SystemExit) as exc:
+        sync_adr_main()
+    assert exc.value.code == 1
+
+    assert run_pipeline(hub_dir=hub_dir, spoke_dir=spoke_dir, create_adr_dir=True) is True
+    assert (spoke_dir / "docs" / "adr" / "TRACEABILITY_MATRIX.md").is_file()

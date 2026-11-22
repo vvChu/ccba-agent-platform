@@ -33,6 +33,18 @@ if sys.platform == "win32":
 HUB_REPO_URL = "https://github.com/vvChu/ccba-agent-platform"
 
 
+def _normalize_adr_status(raw_status: str) -> str:
+    """Map raw status string to canonical ACCEPTED/SUPERSEDED/DEPRECATED/PROPOSED."""
+    upper = raw_status.upper().strip()
+    if "SUPERSEDED" in upper:
+        return "SUPERSEDED"
+    if "DEPRECATED" in upper:
+        return "DEPRECATED"
+    if "PROPOSED" in upper or "DRAFT" in upper:
+        return "PROPOSED"
+    return "ACCEPTED"
+
+
 def parse_adr_file(adr_path: Path) -> dict[str, Any]:
     """Extract metadata from an ADR markdown file supporting YAML frontmatter and H1 fallback.
 
@@ -57,13 +69,14 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
             except Exception:
                 pass
 
+    fname_match = re.match(r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE)
+
     # 1. Number extraction
     adr_num = 0
     if "id" in fm_data:
         m = re.search(r"0*([0-9]+)", str(fm_data["id"]))
         if m:
             adr_num = int(m.group(1))
-
     if adr_num == 0:
         h1_match = re.search(
             r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*0*([0-9]+)[:\s\.\-]+(.*)$",
@@ -72,63 +85,37 @@ def parse_adr_file(adr_path: Path) -> dict[str, Any]:
         )
         if h1_match:
             adr_num = int(h1_match.group(1))
-        else:
-            fname_match = re.match(
-                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
-            )
-            if fname_match:
-                adr_num = int(fname_match.group(1))
+        elif fname_match:
+            adr_num = int(fname_match.group(1))
 
     # 2. Title extraction
-    adr_title = ""
     if "title" in fm_data and fm_data["title"]:
         adr_title = str(fm_data["title"]).strip()
     else:
-        h1_match = re.search(
+        h1_title = re.search(
             r"^#\s*(?:HUB-ADR|HUB_ADR|ADR)?[-\s]*(?:0*[0-9]+[:\s\.\-]+|[:\s\.\-]+)?(.*)$",
             body_content,
             re.MULTILINE | re.IGNORECASE,
         )
-        if h1_match and h1_match.group(1).strip():
-            adr_title = h1_match.group(1).strip()
+        if h1_title and h1_title.group(1).strip():
+            adr_title = h1_title.group(1).strip()
+        elif fname_match:
+            adr_title = fname_match.group(2).replace("-", " ").title()
         else:
-            fname_match = re.match(
-                r"^(?:HUB-ADR-)?0*([0-9]+)-(.*)\.md$", adr_path.name, re.IGNORECASE
-            )
-            if fname_match:
-                adr_title = fname_match.group(2).replace("-", " ").title()
-            else:
-                adr_title = adr_path.stem
+            adr_title = adr_path.stem
 
     # 3. Status extraction
     status = "ACCEPTED"
     if "status" in fm_data and fm_data["status"]:
-        raw_status = str(fm_data["status"]).upper().strip()
-        if "SUPERSEDED" in raw_status:
-            status = "SUPERSEDED"
-        elif "DEPRECATED" in raw_status:
-            status = "DEPRECATED"
-        elif "PROPOSED" in raw_status or "DRAFT" in raw_status:
-            status = "PROPOSED"
-        else:
-            status = "ACCEPTED"
+        status = _normalize_adr_status(str(fm_data["status"]))
     else:
-        # Check standard markdown patterns
         status_match = re.search(
             r"(?:##\s*(?:1\.\s*)?Trạng Thái\s*\(Status\)|\*?\s*\*\*\s*Status:\s*\*\*|\*?\s*\*\*\s*Trạng Thái\s*\(Status\)\s*\*\*|##\s*Status)\s*\n?\s*\*?\*?([A-Za-z_ ]+)",
             content,
             re.IGNORECASE,
         )
         if status_match:
-            raw_s = status_match.group(1).upper().strip()
-            if "SUPERSEDED" in raw_s:
-                status = "SUPERSEDED"
-            elif "DEPRECATED" in raw_s:
-                status = "DEPRECATED"
-            elif "PROPOSED" in raw_s or "DRAFT" in raw_s:
-                status = "PROPOSED"
-            else:
-                status = "ACCEPTED"
+            status = _normalize_adr_status(status_match.group(1))
         elif "DEPRECATED" in content[:600].upper():
             status = "DEPRECATED"
         elif "SUPERSEDED" in content[:600].upper():
@@ -361,23 +348,55 @@ def compile_hub_adr_readme(adr_list: list[dict[str, Any]], target_file: Path) ->
     return new_content
 
 
+def _render_adr_table_rows(
+    adr_list: list[dict[str, Any]],
+    matrix: dict[str, list[dict[str, str]]],
+    *,
+    label_prefix: str,
+    url_prefix: str = "",
+) -> list[str]:
+    """Render markdown table rows for an ADR traceability matrix section."""
+    rows: list[str] = []
+    for adr in adr_list:
+        num_str = adr["num_str"]
+        refs = matrix.get(num_str, [])
+        status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
+        ref_links = (
+            "<br>".join(f"`{r['file']}`" for r in refs) if refs else "*Chưa có liên kết trực tiếp*"
+        )
+        href = f"{url_prefix}{adr['filename']}"
+        rows.append(
+            f"| [{label_prefix} {num_str}]({href}) | **{adr['title']}** | {status_icon} | {ref_links} |"
+        )
+    return rows
+
+
+def _finalize_matrix_doc(lines: list[str], preserved_content: str, target_file: Path) -> str:
+    """Append preserved custom sections, normalize trailing newline, and optionally write target_file."""
+    if preserved_content:
+        lines.extend(
+            [
+                "---",
+                "",
+                "<!-- CUSTOM_SECTIONS_START -->",
+                preserved_content,
+                "<!-- CUSTOM_SECTIONS_END -->",
+                "",
+            ]
+        )
+    new_content = "\n".join(lines).strip() + "\n"
+    if str(target_file) and str(target_file) != ".":
+        target_file.write_text(new_content, encoding="utf-8")
+    return new_content
+
+
 def compile_hub_traceability_matrix(
     adr_list: list[dict[str, Any]],
     matrix: dict[str, list[dict[str, str]]],
     target_file: Path,
     preserved_content: str = "",
 ) -> str:
-    """Generate docs/adr/TRACEABILITY_MATRIX.md for Hub.
-
-    Args:
-        adr_list: Hub Platform ADRs.
-        matrix: Skill radar mapping.
-        target_file: Output path.
-        preserved_content: Custom preserved content.
-
-    Returns:
-        Generated content.
-    """
+    """Generate docs/adr/TRACEABILITY_MATRIX.md for Hub."""
     lines = [
         "# 🗺️ Living Architecture Traceability Matrix & Skill Radar",
         "",
@@ -391,35 +410,10 @@ def compile_hub_traceability_matrix(
         "",
         "| Mã ADR | Tiêu đề Quyết Định | Trạng thái | Tài Liệu & Skills Đang Tuân Thủ / Viện Dẫn |",
         "| :--- | :--- | :---: | :--- |",
+        *_render_adr_table_rows(adr_list, matrix, label_prefix="HUB-ADR"),
+        "",
     ]
-
-    for adr in adr_list:
-        num_str = adr["num_str"]
-        refs = matrix.get(num_str, [])
-        status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
-        if refs:
-            ref_links = "<br>".join([f"`{r['file']}`" for r in refs])
-        else:
-            ref_links = "*Chưa có liên kết trực tiếp*"
-
-        lines.append(
-            f"| [HUB-ADR {num_str}]({adr['filename']}) | **{adr['title']}** | {status_icon} | {ref_links} |"
-        )
-
-    lines.append("")
-
-    if preserved_content:
-        lines.append("---")
-        lines.append("")
-        lines.append("<!-- CUSTOM_SECTIONS_START -->")
-        lines.append(preserved_content)
-        lines.append("<!-- CUSTOM_SECTIONS_END -->")
-        lines.append("")
-
-    new_content = "\n".join(lines).strip() + "\n"
-    if str(target_file) and str(target_file) != ".":
-        target_file.write_text(new_content, encoding="utf-8")
-    return new_content
+    return _finalize_matrix_doc(lines, preserved_content, target_file)
 
 
 def compile_two_tier_adr_matrix(
@@ -430,23 +424,7 @@ def compile_two_tier_adr_matrix(
     target_file: Path,
     preserved_content: str = "",
 ) -> str:
-    """Generate docs/adr/TRACEABILITY_MATRIX.md for Spoke with Two-Tier Architecture.
-
-    Tier 1: Platform Constitution (Hub ADRs)
-    Tier 2: Domain-Specific Architecture Decisions (Spoke ADRs)
-    Preserves any existing Spoke custom sections.
-
-    Args:
-        hub_adrs: Platform ADRs from Hub.
-        spoke_adrs: Domain ADRs from Spoke.
-        hub_matrix: Skill radar mapping for Hub ADRs.
-        spoke_matrix: Skill radar mapping for Spoke ADRs.
-        target_file: Output path.
-        preserved_content: Custom content to preserve.
-
-    Returns:
-        Generated content.
-    """
+    """Generate Two-Tier TRACEABILITY_MATRIX.md for Spoke preserving custom sections."""
     lines = [
         "# 🗺️ Living Architecture Traceability Matrix & Skill Radar",
         "",
@@ -462,63 +440,25 @@ def compile_two_tier_adr_matrix(
         "",
         "| Mã ADR | Tiêu đề Quyết Định | Trạng thái | Tài Liệu & Skills Đang Tuân Thủ / Viện Dẫn |",
         "| :--- | :--- | :---: | :--- |",
+        *_render_adr_table_rows(
+            hub_adrs,
+            hub_matrix,
+            label_prefix="HUB-ADR",
+            url_prefix=f"{HUB_REPO_URL}/blob/main/docs/adr/",
+        ),
+        "",
+        "---",
+        "",
+        "## 🌐 Tier 2 — Domain-Specific Architecture Decisions (Spoke ADRs)",
+        "",
+        "> Các quyết định kiến trúc nghiệp vụ đặc thù được ban hành và quản trị độc lập tại Spoke.",
+        "",
+        "| Mã ADR | Tiêu đề Quyết Định | Trạng thái | Tài Liệu & Skills Đang Tuân Thủ / Viện Dẫn |",
+        "| :--- | :--- | :---: | :--- |",
+        *_render_adr_table_rows(spoke_adrs, spoke_matrix, label_prefix="Domain ADR"),
+        "",
     ]
-
-    for adr in hub_adrs:
-        num_str = adr["num_str"]
-        refs = hub_matrix.get(num_str, [])
-        status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
-        if refs:
-            ref_links = "<br>".join([f"`{r['file']}`" for r in refs])
-        else:
-            ref_links = "*Chưa có liên kết trực tiếp*"
-
-        hub_adr_url = f"{HUB_REPO_URL}/blob/main/docs/adr/{adr['filename']}"
-        lines.append(
-            f"| [HUB-ADR {num_str}]({hub_adr_url}) | **{adr['title']}** | {status_icon} | {ref_links} |"
-        )
-
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-    lines.append("## 🌐 Tier 2 — Domain-Specific Architecture Decisions (Spoke ADRs)")
-    lines.append("")
-    lines.append(
-        "> Các quyết định kiến trúc nghiệp vụ đặc thù được ban hành và quản trị độc lập tại Spoke."
-    )
-    lines.append("")
-    lines.append(
-        "| Mã ADR | Tiêu đề Quyết Định | Trạng thái | Tài Liệu & Skills Đang Tuân Thủ / Viện Dẫn |"
-    )
-    lines.append("| :--- | :--- | :---: | :--- |")
-
-    for adr in spoke_adrs:
-        num_str = adr["num_str"]
-        refs = spoke_matrix.get(num_str, [])
-        status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
-        if refs:
-            ref_links = "<br>".join([f"`{r['file']}`" for r in refs])
-        else:
-            ref_links = "*Chưa có liên kết trực tiếp*"
-
-        lines.append(
-            f"| [Domain ADR {num_str}]({adr['filename']}) | **{adr['title']}** | {status_icon} | {ref_links} |"
-        )
-
-    lines.append("")
-
-    if preserved_content:
-        lines.append("---")
-        lines.append("")
-        lines.append("<!-- CUSTOM_SECTIONS_START -->")
-        lines.append(preserved_content)
-        lines.append("<!-- CUSTOM_SECTIONS_END -->")
-        lines.append("")
-
-    new_content = "\n".join(lines).strip() + "\n"
-    if str(target_file) and str(target_file) != ".":
-        target_file.write_text(new_content, encoding="utf-8")
-    return new_content
+    return _finalize_matrix_doc(lines, preserved_content, target_file)
 
 
 def detect_environment(root_dir: Path) -> tuple[str, Path, Path | None]:
@@ -597,11 +537,112 @@ def load_adrs_from_dir(adr_dir: Path) -> list[dict[str, Any]]:
     return adr_list
 
 
+def resolve_target_adr_dir(
+    target_root: Path,
+    is_spoke_mode: bool,
+    adr_dir: Path | None = None,
+) -> Path | None:
+    """Resolve the target ADR directory for Hub or Spoke without creating orphan folders.
+
+    Args:
+        target_root: Repository root directory.
+        is_spoke_mode: Whether running in Spoke mode.
+        adr_dir: Optional explicit ADR directory override (absolute or relative to target_root).
+
+    Returns:
+        Resolved Path if explicit or auto-detected, or None in Spoke mode when neither
+        ``docs/adr`` nor ``.md/adr`` exists.
+    """
+    if adr_dir is not None:
+        return adr_dir if adr_dir.is_absolute() else (target_root / adr_dir)
+    if not is_spoke_mode:
+        return target_root / "docs" / "adr"
+
+    docs_adr = target_root / "docs" / "adr"
+    if docs_adr.is_dir():
+        return docs_adr
+    md_adr = target_root / ".md" / "adr"
+    if md_adr.is_dir():
+        return md_adr
+    return None
+
+
+def _sync_output_file(
+    target_path: Path,
+    existing: str,
+    new_content: str,
+    *,
+    check_mode: bool,
+    dry_run: bool,
+    dry_run_msg: str,
+    update_msg: str,
+) -> bool:
+    """Check, dry-run, or write a compiled ADR documentation artifact."""
+    if check_mode:
+        if existing != new_content:
+            print(f"[FAIL] {target_path} is out of sync!")
+            diff = difflib.unified_diff(
+                existing.splitlines(keepends=True),
+                new_content.splitlines(keepends=True),
+                fromfile="existing",
+                tofile="expected",
+            )
+            sys.stdout.writelines(diff)
+            return False
+        print(f"[PASS] {target_path} is in sync.")
+        return True
+    if dry_run:
+        print(dry_run_msg)
+        return True
+    target_path.write_text(new_content, encoding="utf-8")
+    print(update_msg)
+    return True
+
+
+def _ensure_target_adr_dir(
+    target_root: Path,
+    is_spoke_mode: bool,
+    adr_dir: Path | None,
+    check_mode: bool,
+    dry_run: bool,
+    create_adr_dir: bool,
+) -> tuple[Path | None, bool]:
+    """Resolve and validate target ADR directory; returns (resolved_dir, should_continue)."""
+    target_adr_dir = resolve_target_adr_dir(target_root, is_spoke_mode, adr_dir=adr_dir)
+    if target_adr_dir is None:
+        if dry_run or check_mode:
+            print(
+                f"[ERROR] Target ADR directory not found (checked docs/adr and .md/adr) under: {target_root}"
+            )
+            return None, False
+        if create_adr_dir:
+            target_adr_dir = target_root / "docs" / "adr"
+            target_adr_dir.mkdir(parents=True, exist_ok=True)
+            return target_adr_dir, True
+        print(
+            f"[WARN] Target ADR directory not found (checked docs/adr and .md/adr) under: {target_root} — skipping without creating orphan directory."
+        )
+        return None, True
+    if not target_adr_dir.exists():
+        if dry_run or check_mode:
+            print(f"[ERROR] Target ADR directory not found at: {target_adr_dir}")
+            return None, False
+        if is_spoke_mode and not create_adr_dir:
+            print(
+                f"[ERROR] Specified ADR directory not found at: {target_adr_dir} (pass --create-adr-dir to initialize)."
+            )
+            return None, False
+        target_adr_dir.mkdir(parents=True, exist_ok=True)
+    return target_adr_dir, True
+
+
 def run_pipeline(
     hub_dir: Path,
     spoke_dir: Path | None = None,
     check_mode: bool = False,
     dry_run: bool = False,
+    adr_dir: Path | None = None,
+    create_adr_dir: bool = False,
 ) -> bool:
     """Run ADR Matrix compilation pipeline.
 
@@ -610,161 +651,84 @@ def run_pipeline(
         spoke_dir: Optional path to Spoke root.
         check_mode: If True, do not modify files, return False if changes detected.
         dry_run: If True, preview generated content without writing.
+        adr_dir: Optional explicit ADR directory override.
+        create_adr_dir: If True, allow creating missing target ADR directory.
 
     Returns:
         True if successful / clean, False if check failed or error occurred.
     """
     is_spoke_mode = spoke_dir is not None and spoke_dir.resolve() != hub_dir.resolve()
     target_root = spoke_dir if is_spoke_mode and spoke_dir else hub_dir
-    target_adr_dir = target_root / "docs" / "adr"
-
-    if not target_adr_dir.exists():
-        if dry_run or check_mode:
-            print(f"[ERROR] Target ADR directory not found at: {target_adr_dir}")
-            return False
-        target_adr_dir.mkdir(parents=True, exist_ok=True)
+    target_adr_dir, ok = _ensure_target_adr_dir(
+        target_root, is_spoke_mode, adr_dir, check_mode, dry_run, create_adr_dir
+    )
+    if target_adr_dir is None:
+        return ok
 
     hub_adr_dir = hub_dir / "docs" / "adr"
     hub_adrs = load_adrs_from_dir(hub_adr_dir)
-
     all_in_sync = True
 
     if not is_spoke_mode:
-        # =====================================================================
-        # HUB MODE EXECUTION
-        # =====================================================================
         print(f"[sync_hub_adr_matrix] Running in HUB mode ({len(hub_adrs)} ADRs found)")
-
-        # 1. README.md
         readme_path = hub_adr_dir / "README.md"
         existing_readme = readme_path.read_text(encoding="utf-8") if readme_path.exists() else ""
-        first_num = hub_adrs[0]["num_str"] if hub_adrs else "0001"
-        last_num = hub_adrs[-1]["num_str"] if hub_adrs else "0001"
+        new_readme = compile_hub_adr_readme(hub_adrs, Path(""))
+        all_in_sync &= _sync_output_file(
+            readme_path,
+            existing_readme,
+            new_readme,
+            check_mode=check_mode,
+            dry_run=dry_run,
+            dry_run_msg=f"[DRY-RUN] Would update {readme_path} ({len(hub_adrs)} ADRs)",
+            update_msg=f"[sync_hub_adr_matrix] Updated {readme_path}",
+        )
 
-        readme_lines = [
-            "# 🏛️ CCBA Agent Services Platform — Architectural Decision Records (ADRs)",
-            "",
-            "Tài liệu này lưu trữ toàn bộ các Quyết định Kiến trúc (ADRs) định hình nền tảng **CCBA Agent Services Platform (Hub)**, bao gồm Skills Framework, AI Gateway, Monorepo Packages, Governance, và Hub-Spoke Ecosystem.",
-            "",
-            "*(Tệp này được biên dịch tự động bởi `scripts/sync_hub_adr_matrix.py` — Không chỉnh sửa thủ công)*",
-            "",
-            "---",
-            "",
-            f"## 📑 Danh Mục Quyết Định Kiến Trúc ({first_num} — {last_num})",
-            "",
-            "| Mã ADR | Tiêu đề | Trạng thái |",
-            "| :--- | :--- | :---: |",
-        ]
-        for adr in hub_adrs:
-            status_icon = "✅ ACCEPTED" if adr["status"] == "ACCEPTED" else f"⚠️ {adr['status']}"
-            readme_lines.append(
-                f"| [HUB-ADR {adr['num_str']}]({adr['filename']}) | {adr['title']} | {status_icon} |"
-            )
-        readme_lines.append("")
-        new_readme = "\n".join(readme_lines).strip() + "\n"
-
-        if check_mode:
-            if existing_readme != new_readme:
-                print(f"[FAIL] {readme_path} is out of sync!")
-                diff = difflib.unified_diff(
-                    existing_readme.splitlines(keepends=True),
-                    new_readme.splitlines(keepends=True),
-                    fromfile="existing",
-                    tofile="expected",
-                )
-                sys.stdout.writelines(diff)
-                all_in_sync = False
-            else:
-                print(f"[PASS] {readme_path} is in sync.")
-        elif not dry_run:
-            readme_path.write_text(new_readme, encoding="utf-8")
-            print(f"[sync_hub_adr_matrix] Updated {readme_path}")
-        else:
-            print(f"[DRY-RUN] Would update {readme_path} ({len(hub_adrs)} ADRs)")
-
-        # 2. TRACEABILITY_MATRIX.md
         matrix_path = hub_adr_dir / "TRACEABILITY_MATRIX.md"
         existing_matrix = matrix_path.read_text(encoding="utf-8") if matrix_path.exists() else ""
         preserved = extract_preserved_sections(existing_matrix)
-
         radar = scan_skill_radar(hub_adrs, hub_dir, is_hub=True)
-        new_matrix = compile_hub_traceability_matrix(
-            hub_adrs, radar, matrix_path if not (dry_run or check_mode) else Path(""), preserved
+        new_matrix = compile_hub_traceability_matrix(hub_adrs, radar, Path(""), preserved)
+        all_in_sync &= _sync_output_file(
+            matrix_path,
+            existing_matrix,
+            new_matrix,
+            check_mode=check_mode,
+            dry_run=dry_run,
+            dry_run_msg=f"[DRY-RUN] Would update {matrix_path}",
+            update_msg=f"[sync_hub_adr_matrix] Updated {matrix_path}",
         )
-
-        if check_mode:
-            if existing_matrix != new_matrix:
-                print(f"[FAIL] {matrix_path} is out of sync!")
-                diff = difflib.unified_diff(
-                    existing_matrix.splitlines(keepends=True),
-                    new_matrix.splitlines(keepends=True),
-                    fromfile="existing",
-                    tofile="expected",
-                )
-                sys.stdout.writelines(diff)
-                all_in_sync = False
-            else:
-                print(f"[PASS] {matrix_path} is in sync.")
-        elif not dry_run:
-            matrix_path.write_text(new_matrix, encoding="utf-8")
-            print(f"[sync_hub_adr_matrix] Updated {matrix_path}")
-        else:
-            print(f"[DRY-RUN] Would update {matrix_path}")
-
     else:
-        # =====================================================================
-        # SPOKE MODE EXECUTION (Two-Tier Preservation)
-        # =====================================================================
         assert spoke_dir is not None
-        spoke_adr_dir = spoke_dir / "docs" / "adr"
-        spoke_adrs = load_adrs_from_dir(spoke_adr_dir)
-
+        spoke_adrs = load_adrs_from_dir(target_adr_dir)
         print(
             f"[sync_hub_adr_matrix] Running in SPOKE mode (Hub: {len(hub_adrs)} ADRs, Spoke: {len(spoke_adrs)} Domain ADRs)"
         )
-
-        matrix_path = spoke_adr_dir / "TRACEABILITY_MATRIX.md"
+        matrix_path = target_adr_dir / "TRACEABILITY_MATRIX.md"
         existing_matrix = matrix_path.read_text(encoding="utf-8") if matrix_path.exists() else ""
         preserved = extract_preserved_sections(existing_matrix)
-
-        # Radar scanning across Spoke and Hub
         spoke_radar = scan_skill_radar(spoke_adrs, spoke_dir, is_hub=False)
         hub_radar = scan_skill_radar(
             hub_adrs, spoke_dir, extra_roots=[hub_dir], is_hub=True, strict_hub_prefix=True
         )
-
         new_matrix = compile_two_tier_adr_matrix(
-            hub_adrs,
-            spoke_adrs,
-            hub_radar,
-            spoke_radar,
-            matrix_path if not (dry_run or check_mode) else Path(""),
-            preserved,
+            hub_adrs, spoke_adrs, hub_radar, spoke_radar, Path(""), preserved
         )
-
-        if check_mode:
-            if existing_matrix != new_matrix:
-                print(f"[FAIL] {matrix_path} is out of sync!")
-                diff = difflib.unified_diff(
-                    existing_matrix.splitlines(keepends=True),
-                    new_matrix.splitlines(keepends=True),
-                    fromfile="existing",
-                    tofile="expected",
-                )
-                sys.stdout.writelines(diff)
-                all_in_sync = False
-            else:
-                print(f"[PASS] {matrix_path} is in sync.")
-        elif not dry_run:
-            matrix_path.write_text(new_matrix, encoding="utf-8")
-            print(f"[sync_hub_adr_matrix] Updated Spoke Two-Tier Matrix: {matrix_path}")
-        else:
-            print(f"[DRY-RUN] Would update Spoke Two-Tier Matrix: {matrix_path}")
+        all_in_sync &= _sync_output_file(
+            matrix_path,
+            existing_matrix,
+            new_matrix,
+            check_mode=check_mode,
+            dry_run=dry_run,
+            dry_run_msg=f"[DRY-RUN] Would update Spoke Two-Tier Matrix: {matrix_path}",
+            update_msg=f"[sync_hub_adr_matrix] Updated Spoke Two-Tier Matrix: {matrix_path}",
+        )
 
     return all_in_sync
 
 
-def main() -> None:
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Build CLI argument parser for sync_hub_adr_matrix."""
     parser = argparse.ArgumentParser(
         description="CCBA ADR Matrix Compiler & Living Traceability Engine (ADR 0037, ADR 0051)"
     )
@@ -781,6 +745,17 @@ def main() -> None:
         help="Path to Spoke root directory (enables Two-Tier Spoke mode).",
     )
     parser.add_argument(
+        "--adr-dir",
+        type=Path,
+        default=None,
+        help="Optional explicit ADR directory override (defaults to auto-detect docs/adr or .md/adr on Spoke).",
+    )
+    parser.add_argument(
+        "--create-adr-dir",
+        action="store_true",
+        help="Explicitly create target ADR directory if missing.",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="CI Gate mode: check if README and TRACEABILITY_MATRIX are in sync without writing.",
@@ -790,8 +765,12 @@ def main() -> None:
         action="store_true",
         help="Preview generated files without modifying files on disk.",
     )
+    return parser
 
-    args = parser.parse_args()
+
+def main() -> None:
+    """CLI entrypoint for ADR Matrix compilation."""
+    args = _build_arg_parser().parse_args()
 
     root_dir = Path.cwd()
     detected_mode, detected_hub, detected_spoke = detect_environment(root_dir)
@@ -804,9 +783,11 @@ def main() -> None:
         spoke_dir=spoke_dir,
         check_mode=args.check,
         dry_run=args.dry_run,
+        adr_dir=args.adr_dir,
+        create_adr_dir=args.create_adr_dir,
     )
 
-    if args.check and not success:
+    if not success:
         sys.exit(1)
 
 
