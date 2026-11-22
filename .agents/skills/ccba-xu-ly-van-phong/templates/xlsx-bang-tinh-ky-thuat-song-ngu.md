@@ -27,7 +27,7 @@
    - **Mục B — Bảng Tính toán Chi tiết (`sections`):** Phân nhóm theo chương `code`, công thức Excel sống qua cú pháp `{key}` (như `=ROUND({area}*{rate}, 2)`), phân cấp style `calc` / `subtotal` / `key_result` / `grand_total`.
    - **Mục C — Tổng hợp KPI 3 thẻ (`summary_kpis`) + Khối Ký 3 cấp (`signoff`) + Footer 3 màu CCBA.**
 2. **`02-References` (4 cột, tổng rộng `116` đơn vị, khổ A4 Portrait):** `[15, 36, 13, 52]`
-   - **Bảng 1:** Quy chuẩn & Tiêu chuẩn áp dụng (đọc `scope_vi`/`scope_en` hoặc `discipline_vi`/`discipline_en`, có thể kèm trích dẫn điều khoản đã kiểm chứng nguyên văn).
+   - **Bảng 1:** Quy chuẩn & Tiêu chuẩn áp dụng (đọc `scope_vi`/`scope_en` trên từng mục, mặc định kế thừa `document.discipline_vi`/`document.discipline_en`, có thể kèm trích dẫn điều khoản đã kiểm chứng nguyên văn).
    - **Bảng 2:** Chú giải Ký hiệu & Đơn vị (`symbol`, `meaning_vi`, `unit`, `meaning_en`).
    - **Bảng 3:** Quy ước Bảng tính (màu Input / Formula / Total).
    - **Bảng 4 (tùy chọn):** Ghi chú Kỹ thuật & Phạm vi Áp dụng (`technical_notes`, mã `GC-01`, `GC-02`...).

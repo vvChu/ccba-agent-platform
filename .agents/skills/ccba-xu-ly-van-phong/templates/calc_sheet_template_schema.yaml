@@ -49,8 +49,8 @@ inputs:
     unit_vi: "L/(s·m²)"
     unit_en: "L/(s·m²)"
     num_fmt: "#,##0.00"
-    ref_vi: "TCVN 4513"
-    ref_en: "TCVN 4513"
+    ref_vi: "TCVN XXXX:YYYY (mẫu)"
+    ref_en: "TCVN XXXX:YYYY (sample)"
 
   - id: "duration"
     item_no: "1.3"
@@ -78,8 +78,8 @@ sections:
         unit_vi: "L/s"
         unit_en: "L/s"
         num_fmt: "#,##0.00"
-        ref_vi: "Mục 4.1"
-        ref_en: "Clause 4.1"
+        ref_vi: "Mục X.Y (mẫu)"
+        ref_en: "Clause X.Y (sample)"
         style: "subtotal"
 
       - id: "v_total"
@@ -130,13 +130,13 @@ signoff:
 
 references:
   standards:
-    - code: "TCVN 4513"
-      title_vi: "Cấp nước bên trong — Tiêu chuẩn thiết kế"
-      title_en: "Internal water supply — Design standard"
+    - code: "TCVN XXXX:YYYY"
+      title_vi: "Tiêu chuẩn thiết kế thủy lực mẫu (thay bằng mã QCVN/TCVN đã đối soát theo ADR-0059)"
+      title_en: "Sample hydraulic design standard (replace with ADR-0059 verified code)"
       scope_vi: "Thủy lực"
       scope_en: "Hydraulics"
-      clauses_vi: "Điều 4.1 — Căn cứ xác định lưu lượng tính toán cấp nước"
-      clauses_en: "Clause 4.1 — Basis for design water flow calculation"
+      clauses_vi: "Mục X.Y — Thay bằng trích dẫn điều khoản nguyên văn đã đối soát qua ccba-legal-intel"
+      clauses_en: "Clause X.Y — Replace with verbatim clause verified via ccba-legal-intel"
 
   glossary:
     - symbol: "A"
@@ -147,6 +147,10 @@ references:
       meaning_vi: "Cường độ thiết kế đơn vị"
       unit: "L/(s·m²)"
       meaning_en: "Unit design flow rate"
+    - symbol: "t"
+      meaning_vi: "Thời gian dự trữ tính toán"
+      unit: "giờ / h"
+      meaning_en: "Design storage duration"
     - symbol: "Q"
       meaning_vi: "Tổng lưu lượng thiết kế"
       unit: "L/s"

@@ -89,7 +89,7 @@ Tuân thủ **ADR-0061 (`TID251`)**: bên ngoài `packages/ccba-ooxml`, tuyệt 
 1. **Bẫy `no:` của YAML 1.1:** PyYAML `safe_load` tự chuyển khóa `no:` không có dấu ngoặc kép thành boolean `False`. Schema bảng tính kỹ thuật bắt buộc dùng khóa **`item_no:`** (bộ dựng có dự phòng đọc fallback nhưng YAML chuẩn phải tránh `no:`).
 2. **Bẫy `fitToHeight > 0` đè mất ngắt trang `Break`:** Đặt `fitToHeight >= 1` khiến Microsoft Excel bỏ qua toàn bộ `Break` ngang thủ công, gây mồ côi tiêu đề mục ở cuối trang 1. Luôn giữ **`fitToHeight = 0`**, `fitToWidth = 1`, `print_title_rows = "1:5"` kết hợp `Break` tường minh.
 3. **Bẫy cột hẹp ở Ma trận Kiểm soát Dự án:** Không đặt nhãn tiếng Việt dài trong cột `STT` (`width = 4..7`); luôn gộp ngang (`A:C`, `D:F`) bằng `CellRichText` nhãn đậm + giá trị.
-4. **Song ngữ xếp dọc (`CellRichText`):** Dùng `openpyxl.cell.rich_text.CellRichText` + `InlineFont` (dòng Việt + dòng Anh nghiêng `#595959`) giúp bảng in vừa gọn **A4 Portrait** thay vì mở rộng gấp đôi số cột.
+4. **Song ngữ xếp dọc (`CellRichText`):** Cơ chế `CellRichText` + `InlineFont` (đóng gói sẵn trong `CalculationSheetBuilder`, dòng Việt + dòng Anh nghiêng `#595959`) giúp bảng in vừa gọn **A4 Portrait** thay vì mở rộng gấp đôi số cột.
 5. **Đối soát pháp lý & kiểm định ảnh PDF→PNG (`ADR-0059`):** Mọi bảng tính kỹ thuật có viện dẫn QCVN/TCVN phải đối soát điều khoản thực tế qua `ccba-legal-intel` (hoặc thu thập nguyên văn bằng `ccba-legal-ingest` nếu kho tri thức chưa có), sau đó chạy `recalc_xlsx(..., check_errors=True)` và chuyển PDF sang PNG kiểm tra trực quan 100% trang trước khi phát hành.
 
 <!-- NDT-0904004920 -->
