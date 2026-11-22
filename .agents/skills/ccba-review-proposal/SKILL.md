@@ -12,7 +12,7 @@ disable-model-invocation: true
 command: /ccba-review-proposal
 user-invocable: true
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "CCBA Hub Lead Maintainer"
 gpi:
   s: 4.0
@@ -64,24 +64,31 @@ Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm
 Điều phối 3 luồng kiểm tra song song (tự động chạy script hoặc phân bổ Subagents tương ứng theo Tier):
 
 1. **Worker 1 — Spoke Leakage & Privacy Guard (ADR 0045):**
-   - Chạy rào chắn rò rỉ và quét Maskara credentials:
+   - Chạy rào chắn rò rỉ và quét Maskara credentials trên diff nhánh:
      ```bash
      python scripts/governance/check_spoke_leakage.py
+     python scripts/governance/sanitize_review_diff.py --check --base origin/main --head HEAD
      ```
    - *Chốt chặn (Zero Tolerance):* Không chứa `.md/teach/`, `.tmp/`, cache, đường dẫn tuyệt đối Windows `D:\...`. Tệp proposal bắt buộc có đủ 4 trường metadata (`proposal_id`, `type`, `status`, `name`).
 
 2. **Worker 2 — Deep Seams & Scoped Tests Verification:**
    - Kiểm tra ranh giới Module Sâu: Mã nguồn nghiệp vụ nằm gọn trong `packages/[pkg]/src/`, entry points công khai khai báo trong `__all__` tại `__init__.py`.
-   - Chạy kiểm thử tự động và linter:
+   - Chạy kiểm thử tự động và linter (với PR gói Python trong `packages/`):
      ```bash
      uv run pytest packages/[package-name]/tests
      uv run ruff check packages/[package-name]
      ```
+   - Với PR Tier 2A chỉ sửa skill hoặc template (không sửa mã nguồn `packages/`): chạy `python scripts/validate_skills.py --enforce-gpi`, `pytest tests/governance/ -q`, kiểm tra thuật ngữ, và smoke-test trực tiếp YAML hoặc template mới với Deep Seam Tầng 1 tương ứng.
    - *Tiêu chí:* $100\%$ Passed, 0 errors, 0 warnings.
 
 3. **Worker 3 — Proposal Lifecycle & Catalog Governance (ADR 0047):**
-   - Soát chiếu metadata frontmatter của skill/workflow mới đề xuất.
-   - Kiểm tra tính tương thích của `catalog.yaml` và Traceability Matrix.
+   - Soát chiếu metadata frontmatter của skill hoặc workflow mới đề xuất và kiểm tra liên kết tài liệu bằng `python scripts/validate_docs.py . --src scripts,packages --changed`.
+   - Kiểm tra đồng bộ `catalog.yaml`, Web Docs Portal và Traceability Matrix qua bộ 3 cờ `--check`:
+     ```bash
+     python scripts/governance/compile_catalog.py --check
+     python scripts/governance/compile_skills_docs.py --check
+     python scripts/sync_hub_adr_matrix.py --check
+     ```
 
 **Tiêu chí hoàn thành:** Cả 3 worker hoàn thành kiểm tra với 100% checks đạt chuẩn.
 
@@ -99,15 +106,16 @@ Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm
      gh pr view <PR_NUMBER> --json reviewRequests,reviews --jq '{pending: [.reviewRequests[]?.login], reviewed: [.reviews[]?.user.login]}'
      ```
    - Nếu `pending` còn chứa `copilot-pull-request-reviewer`, Agent tạm dừng chờ Copilot hoàn tất.
-3. **Bóc tách nhận xét kỹ thuật từ GitHub Copilot:**
+3. **Bóc tách và kiểm toán nhận xét kỹ thuật từ GitHub Copilot:**
    ```bash
+   python scripts/validation/audit_pr_comments.py --repo <owner>/<repo> <PR_NUMBER>
    gh api repos/:owner/:repo/pulls/<PR_NUMBER>/comments --jq ".[] | {path: .path, line: .line, body: .body}"
    ```
 4. **Phân loại nhận xét:**
    - *Lỗi kỹ thuật rõ ràng / Đường dẫn vi phạm:* Chuyển sang Bước 4 để tự động khắc phục (Self-Healing).
    - *Góp ý thiết kế / Tài liệu:* Báo cáo Maintainer xem xét.
 
-**Tiêu chí hoàn thành:** Nhận xét từ Copilot và trạng thái CI được rà soát đầy đủ.
+**Tiêu chí hoàn thành:** 100% CI checks đạt `SUCCESS`, `reviewRequests` không chứa `copilot-pull-request-reviewer`, và `audit_pr_comments.py` trả về Exit Code `0`.
 
 ---
 
@@ -131,17 +139,29 @@ Quy trình chuẩn hóa toàn trình dành riêng cho Hub Maintainer (có thẩm
 
 ## 🏛️ Bước 5: Quản Trị Vòng Đời Hậu Merge (Post-Merge Governance)
 
-1. **Cập nhật Proposal Header:**
-   - Mở tệp `.agents/proposals/[YYYY-MM-DD]_[name].md`, đổi `status: "open"` $\rightarrow$ `status: "merged"`, ghi nhận `merged_commit` hash và `merged_date`.
-2. **Đăng ký Hệ Sinh Thái (ADR 0047):**
-   - Tự động tái biên dịch Catalog SSoT:
+Khi nhánh `main` áp dụng ruleset bắt buộc qua Pull Request và `required_status_checks`, mọi cập nhật hậu merge thực thi trên `git worktree` cô lập và hợp nhất qua follow-up PR:
+
+1. **Khởi tạo Worktree Hậu Merge:**
+   - Đồng bộ `main` (`git fetch origin && git pull --ff-only origin main`) và tạo worktree trên nhánh `docs/walkthrough-pr-<PR_NUMBER>`.
+2. **Cập nhật Proposal Header & Walkthrough:**
+   - Mở `.agents/proposals/[YYYY-MM-DD]_[name].md`, đổi `status: "open"` $\rightarrow$ `status: "merged"`, bổ sung `merged_pr`, `merged_commit` hash và `merged_date`, đồng thời cập nhật `.md/knowledge/reports/walkthrough.md`.
+3. **Đăng ký Hệ Sinh Thái & Kiểm Định Triage (ADR 0047 & ADR 0067):**
+   - Chạy kiểm định đồng bộ (hoặc tái biên dịch nếu có thay đổi frontmatter):
      ```bash
-     python scripts/governance/compile_catalog.py
+     python scripts/governance/compile_catalog.py --check
+     python scripts/governance/compile_skills_docs.py --check
+     python scripts/sync_hub_adr_matrix.py --check
+     python scripts/validate_docs.py . --src scripts,packages --changed
+     python scripts/governance/sanitize_review_diff.py --check --base origin/main --head HEAD
+     python -m ccba_harness door-triage <changed_files> --enforce-tradeoff-card --pr-body-file <pr_body.md>
      ```
-3. **Gợi ý Spoke Sync (Closed-Loop Sync):**
+   - Nếu `cumulative_streak >= 3` trên `.agents` và `.md` làm `door-triage` leo thang `ONE_WAY_DOOR`, bắt buộc đính kèm `Tradeoff Card` hợp lệ (`Git Hunk Reference <= 30` dòng) trong mô tả follow-up PR.
+4. **Hợp Nhất Follow-Up PR & Đồng Bộ Local:**
+   - Mở follow-up PR, chờ 100% CI `SUCCESS` và `audit_pr_comments.py` trả Exit Code `0`, gỡ worktree rồi chạy `gh pr merge <followup_pr> --squash --delete-branch` và `git pull --ff-only origin main`.
+5. **Gợi ý Spoke Sync (Closed-Loop Sync):**
    - Thông báo cho Spoke đề xuất kích hoạt `/ccba-update-spoke` để nạp tính năng mới và hoàn tất đóng vòng đóng góp thượng nguồn.
 
-**Tiêu chí hoàn thành:** Proposal cập nhật status merged, compile catalog thành công.
+**Tiêu chí hoàn thành:** Proposal chuyển `status: "merged"`, `walkthrough.md` & catalog đồng bộ 100%, follow-up PR hợp nhất xanh, worktree dọn sạch.
 
 ---
 
