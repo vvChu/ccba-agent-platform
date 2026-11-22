@@ -223,3 +223,36 @@ def test_spoke_tier0_isolation_with_and_without_budget_seam(tmp_path: Path) -> N
     code_with_seam, msgs_with_seam = _run_isolated_spoke_checker(tmp_path, checker)
     assert code_with_seam == 1
     assert any("tools/big.py: hard cap exceeded" in m for m in msgs_with_seam)
+
+
+def test_frontend_src_tsx_enforced_and_roots_parity(tmp_path: Path) -> None:
+    """frontend/src/*.tsx is enforced by default while node_modules is pruned and roots match SSOT."""
+    from scripts.spoke.check_spoke_cleanliness import _DEFAULT_BUDGET_ROOTS, scan_spoke_cleanliness
+
+    mod = _load_isolated_seam()
+    assert "frontend/src" in mod.DEFAULT_PRODUCTION_ROOTS
+    assert _DEFAULT_BUDGET_ROOTS == mod.DEFAULT_PRODUCTION_ROOTS
+
+    (tmp_path / "scripts").mkdir(parents=True)
+    tsx_file = tmp_path / "frontend" / "src" / "app" / "oversized.tsx"
+    tsx_file.parent.mkdir(parents=True)
+    tsx_file.write_text("\n".join(["export const x = 1;"] * 850) + "\n", encoding="utf-8")
+
+    vendor_file = tmp_path / "frontend" / "src" / "node_modules" / "vendor.ts"
+    vendor_file.parent.mkdir(parents=True)
+    vendor_file.write_text("\n".join(["export const v = 1;"] * 900) + "\n", encoding="utf-8")
+
+    rels = [f.relative_to(tmp_path).as_posix() for f in mod.iter_production_files(tmp_path)]
+    assert rels == ["frontend/src/app/oversized.tsx"]
+
+    rc_fail, msgs_fail = scan_spoke_cleanliness(
+        tmp_path, max_scripts=15, strict=False, enforce_module_budget=True
+    )
+    assert rc_fail == 1
+    assert any("frontend/src/app/oversized.tsx" in m for m in msgs_fail)
+
+    base_file = tmp_path / "scripts" / "_guardrails" / "module_budget_baseline.json"
+    base_file.parent.mkdir(parents=True)
+    base_file.write_text(json.dumps({"frontend/src/app/oversized.tsx": 850}), encoding="utf-8")
+    rc_ok, _ = scan_spoke_cleanliness(tmp_path, max_scripts=15, strict=False)
+    assert rc_ok == 0

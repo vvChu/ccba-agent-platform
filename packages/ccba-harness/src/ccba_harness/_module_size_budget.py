@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 DEFAULT_PRODUCTION_ROOTS: tuple[str, ...] = tuple(
-    "packages/*/src tools services backend formulas scripts".split()
+    "packages/*/src tools services backend frontend/src formulas scripts".split()
 )
 TRACKED_EXTENSIONS: frozenset[str] = frozenset(".py .js .ts .tsx".split())
 PRUNED_DIRS: frozenset[str] = frozenset(
