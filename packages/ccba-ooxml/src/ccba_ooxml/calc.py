@@ -140,8 +140,8 @@ def audit_xlsx_formula_errors(filename: str | Path) -> list[dict[str, str]]:
             for r_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
                 for c_idx, val in enumerate(row, start=1):
                     if isinstance(val, str):
-                        token = val.strip().upper()
-                        if token in EXCEL_ERROR_TOKENS:
+                        err_code = val.strip().upper()
+                        if err_code in EXCEL_ERROR_TOKENS:
                             findings.append(
                                 {
                                     "sheet": str(sheet_name),
