@@ -87,7 +87,7 @@ ignore = [
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "fitz".msg = "Cấm import trực tiếp 'fitz'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
 "pymupdf".msg = "Cấm import trực tiếp 'pymupdf'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
-"openpyxl".msg = "Cấm import trực tiếp 'openpyxl'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' / module công khai của 'ccba_ooxml'."
+"openpyxl".msg = "Cấm import trực tiếp 'openpyxl'. Hãy dùng Seam 'ccba_ooxml:XlsxTemplateFiller', 'ccba_ooxml:XlsxWorkbookWriter', hoặc 'ccba_ooxml:XlsxReader'."
 "docx".msg = "Cấm import trực tiếp 'docx'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' thay cho python-docx thô."
 "fpdf".msg = "Cấm import trực tiếp 'fpdf'. Hãy dùng Seam 'mdconverter:ConversionPipeline' hoặc 'ccba_ooxml'."
 "graphviz".msg = "Cấm import trực tiếp 'graphviz'. Hãy dùng Seam 'ccba_diagram:apply_smart_layout'."
@@ -152,6 +152,8 @@ module = [
     "tiktoken.*",
     "pptx.*",
     "docx.*",
+    "openpyxl",
+    "openpyxl.*",
     "PIL.*",
     "defusedxml.*",
     "mcp.*",

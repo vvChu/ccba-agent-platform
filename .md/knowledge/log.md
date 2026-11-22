@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-22] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) & Thẩm Định Peer Audit Issue `#842` (`ooxml_processor.v1` `.xlsx` Seam)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` Issue `#842`)
+- **Affected Files**: [decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md](decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling` (`Q1`–`Q4`) và **Grok Peer Plan Audit 2 Pass** (`APPROVE_PLAN`, `risk_score: 2`, `blocking_conditions: 0`, sessions `057a8692-01cb-4ddc-91dd-6a2e99d0c26d` / `f23eb1b1-cbc1-41a7-bb73-7342184a4ef4`): khóa kiến trúc deep subpackage `ccba_ooxml.xlsx` với `8` public symbols mới (`XlsxTemplateFiller`, `XlsxWorkbookWriter`, `XlsxReader`, `XlsxFillConfig`, `XlsxHeaderStyle`, `sanitize_xlsx_value`, `XlsxMediaLimitError`, `MergedCellWriteError` — nâng `64 -> 72` lazy exports), khai báo `"openpyxl>=3.1.0"` trong `packages/ccba-ooxml/pyproject.toml` giữ import gốc `< 25 ms`, preflight `RULE-5.13` dùng chung (`xl/media/* <= 2 MiB`, entry `<= 50 MiB`, tổng `<= 150 MiB`, `<= 400` entries, `posixpath.normpath`, kiểm tra `PK` & `EncryptionInfo`), chống formula injection & bảo vệ `MergedCell`/`TemplateProtectionError`, và đồng bộ `seam-contracts.yaml`, `pyproject.toml`, `verify-ccba-ooxml`. Đang chờ lệnh `proceed` trước khi chỉnh sửa mã sản xuất.
+
+---
+
 ## [2026-11-21] [update] | Hoàn Tất Đợt 3 (`H4`) & Toàn Bộ Lộ Trình `P4: Hub -> IDOP` (`PR #836..#838` + `IDOP` `I4` Sync)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity
 - **Affected Files**: [decisions/2026-11-21_wave3_ccba_dune_h4_skill_diet_scope_ratchet_grilling_resolution.md](decisions/2026-11-21_wave3_ccba_dune_h4_skill_diet_scope_ratchet_grilling_resolution.md), [brainstorm_session_lauren_tan_ccba_dune_idop.md](brainstorm_session_lauren_tan_ccba_dune_idop.md), [index.md](index.md), [log.md](log.md)

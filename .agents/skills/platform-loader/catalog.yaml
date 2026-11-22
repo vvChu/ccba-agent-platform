@@ -1633,7 +1633,9 @@ seams:
   - '`from ccba_ooxml import pack_document, unpack_document, validate_document, OOXMLWorkspace,
     recalc_xlsx, DocxDocument, StructuredTable, TableReconstructor, make_descriptive_table_slug,
     DeckBuilder, SlideSpec, SlideType, CardItem, CCBAPresentationTheme, build_presentation_from_markdown,
-    WordFormFiller, FormFillConfig, TableRule, TemplateProtectionError`.'
+    WordFormFiller, FormFillConfig, TableRule, TemplateProtectionError, XlsxTemplateFiller,
+    XlsxWorkbookWriter, XlsxReader, XlsxFillConfig, XlsxHeaderStyle, sanitize_xlsx_value,
+    XlsxMediaLimitError, MergedCellWriteError`.'
   contracts: Follow CCBA Brand Identity Guidelines ver 3.4, WCAG 2.1 contrast rules,
     and Decree 30 administrative document formatting standards.
   tests: '`pytest packages/ccba-ooxml/tests`'

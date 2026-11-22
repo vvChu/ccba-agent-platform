@@ -20,10 +20,10 @@ cards:
     kind: package
     binding:
       mode: local_import
-    import_path: ccba_ooxml:DocxDocument
+    import_path: ccba_ooxml:DocxDocument,XlsxTemplateFiller,XlsxWorkbookWriter,XlsxReader
     capability:
       in: [docx, xlsx, pptx, markdown]
-      out: [docx, structured_table, markdown]
+      out: [docx, xlsx, structured_table, markdown]
     hardware: [any]
     failure_modes: [corrupted_zip, schema_mismatch]
     owner: hub-core
