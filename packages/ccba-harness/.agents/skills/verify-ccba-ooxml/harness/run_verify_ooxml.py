@@ -72,7 +72,7 @@ def verify_seam_import_barrier(env: Mapping[str, str]) -> None:
     """Block 3: Deterministically verify ccba_ooxml PEP 562 seam loading in clean interpreter."""
     probe_code = (
         "import ccba_ooxml as o; "
-        "assert len(o.__all__) == 78; "
+        "assert len(o.__all__) == 81; "
         "assert set(o.__all__) == set(o._LAZY_EXPORTS.keys()); "
         "assert all(hasattr(o, s) for s in ('OOXMLWorkspace', 'pack_document', "
         "'unpack_document', 'TableReconstructor', 'StructuredTable', 'make_descriptive_table_slug'))"

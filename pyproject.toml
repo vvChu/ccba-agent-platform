@@ -88,7 +88,7 @@ ignore = [
 "fitz".msg = "Cấm import trực tiếp 'fitz'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
 "pymupdf".msg = "Cấm import trực tiếp 'pymupdf'. Hãy dùng Seam 'ccba_pdf_prep:PDFProcessingPipeline' hoặc 'ccba_pdf_prep.get_pdf_page_count'."
 "openpyxl".msg = "Cấm import trực tiếp 'openpyxl'. Hãy dùng Seam 'ccba_ooxml:XlsxTemplateFiller', 'ccba_ooxml:XlsxWorkbookWriter', 'ccba_ooxml:XlsxReader', hoặc 'ccba_ooxml:CalculationSheetBuilder'."
-"docx".msg = "Cấm import trực tiếp 'docx'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' thay cho python-docx thô."
+"docx".msg = "Cấm import trực tiếp 'docx'. Hãy dùng Seam 'ccba_ooxml:DocxDocument' hoặc 'ccba_ooxml:TechnicalReportBuilder' thay cho python-docx thô."
 "fpdf".msg = "Cấm import trực tiếp 'fpdf'. Hãy dùng Seam 'mdconverter:ConversionPipeline' hoặc 'ccba_ooxml'."
 "graphviz".msg = "Cấm import trực tiếp 'graphviz'. Hãy dùng Seam 'ccba_diagram:apply_smart_layout'."
 
