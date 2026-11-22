@@ -20,7 +20,7 @@ cards:
     kind: package
     binding:
       mode: local_import
-    import_path: ccba_ooxml:DocxDocument,XlsxTemplateFiller,XlsxWorkbookWriter,XlsxReader
+    import_path: ccba_ooxml:DocxDocument,XlsxTemplateFiller,XlsxWorkbookWriter,XlsxReader,CalculationSheetBuilder,build_calc_sheet_from_yaml
     capability:
       in: [docx, xlsx, pptx, markdown]
       out: [docx, xlsx, structured_table, markdown]

@@ -1635,7 +1635,8 @@ seams:
     DeckBuilder, SlideSpec, SlideType, CardItem, CCBAPresentationTheme, build_presentation_from_markdown,
     WordFormFiller, FormFillConfig, TableRule, TemplateProtectionError, XlsxTemplateFiller,
     XlsxWorkbookWriter, XlsxReader, XlsxFillConfig, XlsxHeaderStyle, sanitize_xlsx_value,
-    XlsxMediaLimitError, MergedCellWriteError`.'
+    XlsxMediaLimitError, MergedCellWriteError, xlsx_to_pdf, audit_xlsx_formula_errors,
+    CCBAExcelTheme, CalculationSheetBuilder, build_calc_sheet_from_yaml, resolve_formula`.'
   contracts: Follow CCBA Brand Identity Guidelines ver 3.4, WCAG 2.1 contrast rules,
     and Decree 30 administrative document formatting standards.
   tests: '`pytest packages/ccba-ooxml/tests`'

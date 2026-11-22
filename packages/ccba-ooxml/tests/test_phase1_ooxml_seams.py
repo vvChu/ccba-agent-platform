@@ -261,7 +261,7 @@ def test_format_docx_chapter_cover_page():
 
 
 def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
-    """Verify PEP 562 _LAZY_EXPORTS AST, TYPE_CHECKING, and runtime parity for all 72 exports."""
+    """Verify PEP 562 _LAZY_EXPORTS AST, TYPE_CHECKING, and runtime parity for all 78 exports."""
     import ccba_ooxml
 
     init_path = Path(ccba_ooxml.__file__)
@@ -273,8 +273,8 @@ def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
     }
     assert "_LAZY_EXPORTS" in assigns, "_LAZY_EXPORTS must be an unannotated ast.Assign"
     lazy_map: dict[str, str] = ast.literal_eval(assigns["_LAZY_EXPORTS"])
-    assert len(ccba_ooxml.__all__) == 72
-    assert len(lazy_map) == 72
+    assert len(ccba_ooxml.__all__) == 78
+    assert len(lazy_map) == 78
     assert set(ccba_ooxml.__all__) == set(lazy_map)
     assert all(mod.startswith("ccba_ooxml.") for mod in lazy_map.values())
 

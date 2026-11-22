@@ -79,7 +79,7 @@ class WinwordEngine(BaseFormFillerEngine):
         """Initializes Word COM application and opens working document copy."""
         if self._word is None:
             try:
-                import win32com.client  # type: ignore[import-untyped]
+                import win32com.client
             except ImportError as e:
                 raise EngineUnavailableError(
                     "win32com.client (pywin32) is not available. WinwordEngine requires Windows and pywin32."
