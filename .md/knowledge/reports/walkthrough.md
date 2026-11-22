@@ -1,34 +1,44 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #853` (`Part 2 of #851`)
-## Docs/Standards: Bilingual XLSX Calculation Sheet Tier 2A Template, YAML IR Schema & Brand v3.4 Palette X4
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #861` (`Part 1 of #856`)
+## Feat(ooxml): Bộ Dựng Báo Cáo Đánh Giá Kỹ Thuật DOCX CCBA Brand v3.4 (`TechnicalReportBuilder`) & CLI `tech-report`
 
-> **Pull Request Đã Hợp Nhất (`--squash`):** [#853](https://github.com/vvChu/ccba-agent-platform/pull/853) (`22dc01a372ec8d58e9a87564015be17831a86b79`) | **Branch:** `proposal/xu-ly-van-phong-xlsx-calc-standards` (`718e5e05` -> `8fe88b44`, đồng bộ `19f8ece7`) | **Base:** `19f8ece7` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851) (`CLOSED`)  
-> **Trạng thái chung:** ✅ **PR #853 MERGED, 77/77 SKILLS VALIDATED (`GPI = 9.50`), 106 GOVERNANCE TESTS PASS, 8/8 CI CHECKS PASS, 0 UNRESOLVED PR COMMENTS, ISSUE #851 CLOSED**
+> **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#861](https://github.com/vvChu/ccba-agent-platform/pull/861) (`42e15a42eab82252cd4209189ff96f57f90e32e6`) | **Branch:** `feat/issue-856-docx-tech-report-builder` (`d708cae6`) | **Base:** `4b699aa4` | **Issue:** [#856](https://github.com/vvChu/ccba-agent-platform/issues/856) (`OPEN` — `Part 1/2`, giữ mở cho PR 2 Tier 2A)  
+> **Trạng thái chung:** ✅ **PR #861 MERGED (`--merge`), 12/12 TRIHT TARGETS PASS (`614` ROOT TESTS), `119` OOXML TESTS PASS, `8/8` CI CHECKS PASS, 0 UNRESOLVED PR COMMENTS, 3-PAGE PDF VISUAL QA PASS**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#853` (`Part 2 of #851`)
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#861` (`Part 1 of #856`)
 
 | Thành Phần | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **1. Template & YAML IR Chuẩn** | [`xlsx-bang-tinh-ky-thuat-song-ngu.md`](../../../.agents/skills/ccba-xu-ly-van-phong/templates/xlsx-bang-tinh-ky-thuat-song-ngu.md), [`calc_sheet_template_schema.yaml`](../../../.agents/skills/ccba-xu-ly-van-phong/templates/calc_sheet_template_schema.yaml) | Chuẩn hóa quy trình 6 bước A4 Portrait 2 sheet (`01-Calculation` / `02-References`), schema `CCBA-CALC-SAMPLE-01` dùng `item_no:`, `{key}`, `technical_notes`; Self-Heal làm rõ kế thừa `document.discipline_*`, dùng placeholder `TCVN XXXX:YYYY` chuẩn `ADR-0059`, và bổ sung ký hiệu `t` vào glossary. | Verified |
-| **2. Palette X4 & Cấu trúc A4** | [`xlsx-palettes.md`](../../../.agents/skills/ccba-xu-ly-van-phong/standards/color/xlsx-palettes.md), [`xlsx-structure.md`](../../../.agents/skills/ccba-xu-ly-van-phong/standards/structure/xlsx-structure.md) | Bổ sung **Palette X4** (CCBA Brand Identity v3.4: `#363883`, `#DA251C`, `#0093DD`, `#005A9C`, `Segoe UI` + `RULE-6.1`), thông số cột `[6, 44, 21, 11, 9, 25]` / `[15, 36, 13, 52]`, ghép ma trận `A:C`/`D:F`, và hợp đồng in `fitToHeight = 0` + `Break`. | Verified |
-| **3. Deep Seam Routing & Master Skill** | [`xlsx.md`](../../../.agents/skills/ccba-xu-ly-van-phong/resources/xlsx.md), [`SKILL.md`](../../../.agents/skills/ccba-xu-ly-van-phong/SKILL.md) | Định tuyến Deep Seam `ccba_ooxml` (`CalculationSheetBuilder`, `recalc_xlsx`, `audit_xlsx_formula_errors`, `xlsx_to_pdf`) theo `ADR-0061` (`TID251`), đúc rút 5 bẫy thực chiến (kèm đóng gói `CellRichText` trong `CalculationSheetBuilder`), và nâng `ccba-xu-ly-van-phong` lên `v2.2.0`. | Verified |
-| **4. Hồ sơ Proposal & Lifecycle** | [`2026-11-22_xu-ly-van-phong-xlsx-calc-standards.md`](../../../.agents/proposals/2026-11-22_xu-ly-van-phong-xlsx-calc-standards.md) | Đăng ký đề xuất Tier 2A (`GPI = 9.50 < 12.0` theo `ADR-0057`), không tạo Standalone Skill mới; cập nhật `status: "merged"` (`22dc01a3`) hậu merge. | Verified |
+| **1. Theme, Hình Học A4 & XSD Helpers** | [`_report_theme.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/docx/_report_theme.py) | Bổ sung `CCBADocxTheme` (Brand v3.4: `#363883`, `#DA251C`, `#0093DD`, `#005A9C`), hằng số A4 (`11906 × 16838` DXA, `CONTENT_WIDTH = 9071` DXA), `apply_rfonts()` 4 khe `Segoe UI`, `normalize_hex()` idempotent, `wcag_safe_text_hex()` (`#0093DD → #005A9C`), `normalize_col_widths()`, `set_table_fixed_grid()`, `set_row_cant_split()`, `set_row_tbl_header()`, và XML fields `PAGE`/`NUMPAGES`. | Verified |
+| **2. Cover, Chrome, KPIs & Atomic Sign-off** | [`_report_chrome.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/docx/_report_chrome.py) | Triển khai Page 1 cover (`different_first_page_header_footer = True`), logo động `logo_ccba_full.png`, khối cơ quan 2 cấp `RULE-6.1`, Document Control Matrix, running header 1 dòng `[3571, 5500]` DXA + tri-color footer `Trang PAGE / NUMPAGES`, KPI strip chuẩn WCAG, và khối ký đối xứng 2/3 cột (`4535 + 4536` / `3024 + 3023 + 3024` DXA). | Verified |
+| **3. Section-Agnostic Builder & CLI** | [`_tech_report.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/docx/_tech_report.py), [`cli.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/cli.py) | Bổ sung `TechnicalReportBuilder`, `load_report_spec()`, `build_tech_report_from_yaml()` hỗ trợ schema động `sections: [...]` (`kpis`, `paragraphs`, `bullets`, `callouts`, `tables` đa hàng tiêu đề, `subsections`), xuất Vector PDF qua `docx_to_pdf`, và subcommand CLI `ccba-ooxml tech-report`. | Verified |
+| **4. Exports, Contracts, Anchors & Tests** | [`__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/__init__.py), [`seam-contracts.yaml`](../../../seam-contracts.yaml), [`verify-ccba-ooxml/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-ooxml/SKILL.md), [`test_docx_tech_report.py`](../../../packages/ccba-ooxml/tests/test_docx_tech_report.py) | Mở rộng PEP 562 lazy exports (`78 → 81`), tái biên dịch [`catalog.yaml`](../../../.agents/skills/platform-loader/catalog.yaml) & [`docs/index.html`](../../../docs/index.html), cập nhật 6 neo `verify-ccba-ooxml` (`LF SHA-256 ca1c57e8...`) & Ruff TID251 (`pyproject.toml`), kèm `4` unit/XML DOM tests mới. | Verified |
 
 ---
 
 ## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
 
-- **Tier 2 Deep Review & Self-Healing (`8fe88b44` trong worktree cô lập `wt-pr-853`):**
-  - `validate_skills.py --enforce-gpi`: **77/77 PASSED**; `check_spoke_leakage.py`: **0 critical / 0 warnings**; `sanitize_review_diff.py --check`: **`[PASS]`**; `compile_catalog.py --check`, `compile_skills_docs.py --check`, `sync_hub_adr_matrix.py --check`: **all in sync**.
-  - `pytest tests/governance/test_skills_docs_integrity.py tests/governance/test_catalog_compiler.py tests/governance/test_skill_scaffolding_and_gpi.py tests/governance/test_audit_skills_hygiene.py tests/governance/test_lint_construction_terminology.py -q`: **106 passed** (`2.46s`); `ruff check .` & `ruff format --check .`: **PASS** (`908 files`); `lint_construction_terminology`: **0 violations**.
-  - **Runtime Smoke Test & PDF Visual QA:** `build_calc_sheet_from_yaml(..., recalculate=True, export_pdf=..., check_errors=True)` trên `calc_sheet_template_schema.yaml` đạt `success=True`, `method="LibreOffice"`, `formulas_evaluated=True`, `formula_errors=[]`, `Q=18`, `V=64.8`, `KPIs=[18, 64.8, 1]`, xuất PDF A4 Portrait **4 trang** (`595.3x841.9pt`) hiển thị đầy đủ `TCVN XXXX:YYYY` và ký hiệu `t`.
-- **CI, Hợp nhất & Closed-Loop (`22dc01a3`, `--squash --delete-branch`):**
-  - `8/8` CI `SUCCESS`, `audit_pr_comments.py --repo vvChu/ccba-agent-platform 853` exit `0`, `reviewRequests` rỗng, Issue `#851` `CLOSED` (kèm bình luận nghiệm thu cả PR `#852` & `#853` và nhắc Spoke `ccba-engineering-calc` chạy `/ccba-update-spoke`).
+- **Shift-Left & Visual QA Gate (`d708cae6`):**
+  - `pytest packages/ccba-ooxml/tests -q`: **119 passed**, 1 deselected (`3.31s`); `run_verify_ooxml.py`: **6 passed** (`0.21s`, 81 lazy exports parity); `pytest tests/governance/{test_module_budget_ratchet,test_dependency_contracts,test_seam_contracts_cli,test_catalog_compiler}.py -q`: **50 passed** (`2.48s`).
+  - `ruff check`, `ruff format --check`, `mypy packages/ccba-ooxml/src --follow-imports=silent` (`69` source files clean), `check_ast_function_length` (`<= 50` LOC pass), `check_spoke_leakage.py` (`0` violations across `18` files), `check_hardcoded_parameters.py` (`0` violations), `sanitize_review_diff.py --check` (`[PASS]`), `verify-patch --preset ci`: **7/7 PASSED** (`17880.2 ms`).
+  - **Visual QA Gate (LibreOffice `/usr/bin/soffice` + `ccba_pdf_prep`):** Xuất PDF `3` trang (`150 DPI` PNG) kiểm chứng Page 1 cover cân đối không tràn trang, header trang 2+ 1 dòng `[3571, 5500]`, metric `#005A9C` dưới viền `#0093DD`, bảng lặp `<w:tblHeader/>` ở trang 3, và khối ký nguyên tử 2 cột không lặp email/org.
+- **TRIHT Pre-Release (`Cổng 0.1–0.3`), CI & Merge (`42e15a42`, `--merge --delete-branch` theo `RULE-2.21`):**
+  - Cổng 0.1 (`--phase pre`) `PASS`; Cổng 0.2 `run_isolated_tests.py --all --stress` **12/12 targets PASS** (`ccba-ooxml` `3.52s`, `scripts` `15.51s`, `root-tests`: `614 passed, 1 skipped, 10 deselected` in `29.16s` / `29.67s`); Cổng 0.3 (`--phase post`) `PASS`.
+  - GitHub CI `8/8` `SUCCESS`, `audit_pr_comments.py --pr 861` exit `0`, `reviewRequests` rỗng, `door-triage` `ONE_WAY_DOOR` (`tradeoff_card_valid: true`), `git cat-file -e 7259350d8020834c52ab88e4c5681e165612cc8b^{commit}` exit `0`, `compile_catalog.py --check` `[OK]`, `run_verify_ooxml.py` `6 passed`. Issue `#856` giữ `OPEN` kèm comment tiến độ (`#issuecomment-7079679808`) chờ PR 2/2.
 
 ---
 
-## 3. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Bảng Tính Song Ngữ & Windows Excel COM Engine (`PR #852` / `Part 1 of #851`)
+## 3. Lưu Trữ Phát Hành Trước Đó — Bộ Quy Chuẩn & Mẫu YAML IR Bảng Tính Song Ngữ XLSX (`PR #853` / `Part 2 of #851`)
+
+> **Pull Request Đã Hợp Nhất (`--squash`):** [#853](https://github.com/vvChu/ccba-agent-platform/pull/853) (`22dc01a372ec8d58e9a87564015be17831a86b79`) | **Branch:** `proposal/xu-ly-van-phong-xlsx-calc-standards` (`718e5e05` -> `8fe88b44`, đồng bộ `19f8ece7`) | **Base:** `19f8ece7` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851) (`CLOSED`)
+
+- **Thành phần chính:** Bổ sung [`xlsx-bang-tinh-ky-thuat-song-ngu.md`](../../../.agents/skills/ccba-xu-ly-van-phong/templates/xlsx-bang-tinh-ky-thuat-song-ngu.md), [`calc_sheet_template_schema.yaml`](../../../.agents/skills/ccba-xu-ly-van-phong/templates/calc_sheet_template_schema.yaml), **Palette X4** trong [`xlsx-palettes.md`](../../../.agents/skills/ccba-xu-ly-van-phong/standards/color/xlsx-palettes.md), [`xlsx-structure.md`](../../../.agents/skills/ccba-xu-ly-van-phong/standards/structure/xlsx-structure.md), định tuyến Deep Seam & 5 bẫy thực chiến trong [`xlsx.md`](../../../.agents/skills/ccba-xu-ly-van-phong/resources/xlsx.md), nâng [`SKILL.md`](../../../.agents/skills/ccba-xu-ly-van-phong/SKILL.md) `v2.2.0`, kèm [`2026-11-22_xu-ly-van-phong-xlsx-calc-standards.md`](../../../.agents/proposals/2026-11-22_xu-ly-van-phong-xlsx-calc-standards.md).
+- **Nghiệm thu:** `validate_skills.py --enforce-gpi` `77/77 PASSED` (`GPI = 9.50 < 12.0`), `106` governance tests pass, `ruff check`/`format` pass (`908` files), PDF smoke test A4 Portrait 4 trang (`Q=18`, `V=64.8`, `formula_errors=[]`), `8/8` CI `SUCCESS`, `audit_pr_comments.py` exit `0`, Issue `#851` `CLOSED`.
+
+---
+
+## 4. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Bảng Tính Song Ngữ & Windows Excel COM Engine (`PR #852` / `Part 1 of #851`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#852](https://github.com/vvChu/ccba-agent-platform/pull/852) (`e7530dd0dbe564453efa64a7a2ad57492f3884d4`) | **Branch:** `proposal/ooxml-xlsx-calc-sheet-and-excel-com` (`9cc97214` -> `978b46e2`, rebased trên `8b1ace7e`) | **Base:** `8b1ace7e` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851)
 
@@ -37,7 +47,7 @@
 
 ---
 
-## 4. Lưu Trữ Phát Hành Trước Đó — Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp Chuẩn `ADR-0062` (`PR #846`)
+## 5. Lưu Trữ Phát Hành Trước Đó — Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp Chuẩn `ADR-0062` (`PR #846`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#846](https://github.com/vvChu/ccba-agent-platform/pull/846) (`ad4dc12c7b76d698ef728b5c0b641b1359dec37a`) | **Branch:** `chore/sync-windows-spoke-registry-adr0062` (`bb5f7d50` -> `9cc07fca`, rebased trên `4083d561`) | **Base:** `4083d561` | **Issue:** N/A
 
@@ -46,7 +56,7 @@
 
 ---
 
-## 5. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
+## 6. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#854](https://github.com/vvChu/ccba-agent-platform/pull/854) (`6d1d3f5e7e6dc671b7da2531f7c522f8fc64df56`) | **Branch:** `docs/issue-849-adr-0060-erp-sor-separation` (`1b85482c`) | **Base:** `609afbc1` | **Issue:** [#849](https://github.com/vvChu/ccba-agent-platform/issues/849) (`CLOSED`)
 
@@ -55,7 +65,7 @@
 
 ---
 
-## 6. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
+## 7. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
 
 > **PR `#845` Đã Hợp Nhất (`--squash`):** [#845](https://github.com/vvChu/ccba-agent-platform/pull/845) (`76f48be83790a24ec28817b7f8d3f5e8f44086e8`) | **Issue:** [#844](https://github.com/vvChu/ccba-agent-platform/issues/844) (`CLOSED`) | **Branch:** `fix/issue-844-md-spoke-retrospective-gates` (`e2a42753`)  
 > **PR `#848` Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#848](https://github.com/vvChu/ccba-agent-platform/pull/848) (`deeae22d7564f629f54298403cae9d24f0c71dd1`) | **Issue:** [#842](https://github.com/vvChu/ccba-agent-platform/issues/842) (`CLOSED`) | **Branch:** `feat/issue-842-ooxml-xlsx-seam` (`07c6549e`, rebased trên `76f48be8`)
@@ -66,7 +76,7 @@
 
 ---
 
-## 7. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
+## 8. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#841](https://github.com/vvChu/ccba-agent-platform/pull/841) (`3d582834d0e652f7932318daa3cc83456dabe778`) | **Issue Đã Đóng:** [#840](https://github.com/vvChu/ccba-agent-platform/issues/840) (`CLOSED`) | **Branch:** `docs/issue-840-harden-asgi-env-conftest-ruff` (`f9e3e71f` -> `c3ce5041`) | **Base:** `a0282a9e`
 
@@ -75,7 +85,7 @@
 
 ---
 
-## 8. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
+## 9. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#817](https://github.com/vvChu/ccba-agent-platform/pull/817) (`1de529cb5a47274d6d570f310b87bff193274140`) | **Nhánh:** `feat/book-compiler-v154` (`ba079377` -> `1de529cb`) | **Base:** `170c04f3`
 
