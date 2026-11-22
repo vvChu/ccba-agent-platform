@@ -70,8 +70,8 @@ def _write_minimal_docx_zip(target: Path, doc_xml: str) -> None:
 
 
 def test_feat_oox_001_lazy_exports_and_dir_parity() -> None:
-    """Verify FEAT-OOX-001: PEP 562 _LAZY_EXPORTS (78 symbols), __all__ & __dir__ parity."""
-    assert len(ccba_ooxml.__all__) == 78
+    """Verify FEAT-OOX-001: PEP 562 _LAZY_EXPORTS (81 symbols), __all__ & __dir__ parity."""
+    assert len(ccba_ooxml.__all__) == 81
     assert set(ccba_ooxml.__all__) == set(ccba_ooxml._LAZY_EXPORTS.keys())
 
     dir_names = set(dir(ccba_ooxml))
@@ -88,6 +88,9 @@ def test_feat_oox_001_lazy_exports_and_dir_parity() -> None:
         "XlsxTemplateFiller",
         "XlsxWorkbookWriter",
         "XlsxReader",
+        "CCBADocxTheme",
+        "TechnicalReportBuilder",
+        "build_tech_report_from_yaml",
     ):
         assert getattr(ccba_ooxml, sym) is not None
 

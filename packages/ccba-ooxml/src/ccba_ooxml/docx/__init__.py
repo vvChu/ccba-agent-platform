@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._report_theme import CCBADocxTheme
+from ._tech_report import TechnicalReportBuilder, build_tech_report_from_yaml
 from .change_engine import revert_deletion, revert_insertion, suggest_deletion, suggest_paragraph
 from .cleanup import (
     clone_xml_text,
@@ -16,6 +18,9 @@ from .document import Document, DocxDocument, DocxXMLEditor
 from .utilities import XMLEditor
 
 __all__ = [
+    "CCBADocxTheme",
+    "TechnicalReportBuilder",
+    "build_tech_report_from_yaml",
     "DocxDocument",
     "Document",
     "DocxXMLEditor",

@@ -68,6 +68,43 @@ def _run_calc_sheet_cli(args: argparse.Namespace) -> None:
     print(f"SUCCESS: Generated CCBA calculation workbook at '{summary['xlsx_path']}'")
 
 
+def _add_tech_report_subparser(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    """Register the ``tech-report`` subcommand on the OOXML CLI parser."""
+    rpt_p = subparsers.add_parser(
+        "tech-report",
+        help="Build a CCBA Brand v3.4 A4 technical evaluation report (.docx) from YAML IR",
+    )
+    rpt_p.add_argument("config", type=str, help="Path to YAML technical report specification")
+    rpt_p.add_argument("-o", "--out", type=str, default=None, help="Output .docx file path")
+    rpt_p.add_argument("--pdf", type=str, default=None, help="Optional output PDF preview path")
+    rpt_p.add_argument(
+        "--output", type=str, default=None, help="Optional JSON report path (File-First)"
+    )
+
+
+def _run_tech_report_cli(args: argparse.Namespace) -> None:
+    """Execute the ``tech-report`` subcommand and optionally write a JSON summary report."""
+    from .docx import build_tech_report_from_yaml
+
+    cfg_path = Path(args.config)
+    if not cfg_path.is_file():
+        print(f"Error: YAML config '{args.config}' does not exist.", file=sys.stderr)
+        sys.exit(1)
+
+    out_docx = Path(args.out) if args.out else cfg_path.with_suffix(".docx")
+    summary = build_tech_report_from_yaml(cfg_path, out_docx, export_pdf=args.pdf)
+    if args.output:
+        rep_path = Path(args.output)
+        rep_path.parent.mkdir(parents=True, exist_ok=True)
+        rep_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    if not summary.get("success", False):
+        print(f"Error: {summary.get('error', 'tech-report failed')}", file=sys.stderr)
+        sys.exit(1)
+    print(f"SUCCESS: Generated CCBA technical report at '{summary['docx_path']}'")
+
+
 def main() -> None:
     """Main CLI entrypoint for ccba-ooxml."""
     parser = argparse.ArgumentParser(
@@ -179,6 +216,7 @@ def main() -> None:
     )
 
     _add_calc_sheet_subparser(subparsers)
+    _add_tech_report_subparser(subparsers)
 
     args = parser.parse_args()
 
@@ -298,6 +336,9 @@ def main() -> None:
 
     elif args.command == "calc-sheet":
         _run_calc_sheet_cli(args)
+
+    elif args.command == "tech-report":
+        _run_tech_report_cli(args)
 
 
 if __name__ == "__main__":

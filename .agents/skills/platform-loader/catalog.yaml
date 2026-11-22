@@ -1636,7 +1636,8 @@ seams:
     WordFormFiller, FormFillConfig, TableRule, TemplateProtectionError, XlsxTemplateFiller,
     XlsxWorkbookWriter, XlsxReader, XlsxFillConfig, XlsxHeaderStyle, sanitize_xlsx_value,
     XlsxMediaLimitError, MergedCellWriteError, xlsx_to_pdf, audit_xlsx_formula_errors,
-    CCBAExcelTheme, CalculationSheetBuilder, build_calc_sheet_from_yaml, resolve_formula`.'
+    CCBAExcelTheme, CalculationSheetBuilder, build_calc_sheet_from_yaml, resolve_formula,
+    CCBADocxTheme, TechnicalReportBuilder, build_tech_report_from_yaml`.'
   contracts: Follow CCBA Brand Identity Guidelines ver 3.4, WCAG 2.1 contrast rules,
     and Decree 30 administrative document formatting standards.
   tests: '`pytest packages/ccba-ooxml/tests`'

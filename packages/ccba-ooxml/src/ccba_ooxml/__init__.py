@@ -12,11 +12,14 @@ if TYPE_CHECKING:
     from .calc import audit_xlsx_formula_errors, recalc_xlsx, setup_libreoffice_macro
     from .converter import convert_to_pdf, docx_to_pdf, xlsx_to_pdf
     from .docx import (
+        CCBADocxTheme,
         CommentEngine,
         Document,
         DocxDocument,
         DocxXMLEditor,
+        TechnicalReportBuilder,
         XMLEditor,
+        build_tech_report_from_yaml,
         clone_xml_text,
         get_authors_from_docx,
         get_tracked_change_authors,
@@ -178,6 +181,10 @@ __all__ = [
     "CalculationSheetBuilder",
     "build_calc_sheet_from_yaml",
     "resolve_formula",
+    # Technical evaluation report builder (Issue #856)
+    "CCBADocxTheme",
+    "TechnicalReportBuilder",
+    "build_tech_report_from_yaml",
 ]
 
 # Unannotated ast.Assign so check_init_lazy_exports_parity inspects all keys.
@@ -260,6 +267,9 @@ _LAZY_EXPORTS = {
     "CalculationSheetBuilder": "ccba_ooxml.xlsx",
     "build_calc_sheet_from_yaml": "ccba_ooxml.xlsx",
     "resolve_formula": "ccba_ooxml.xlsx",
+    "CCBADocxTheme": "ccba_ooxml.docx",
+    "TechnicalReportBuilder": "ccba_ooxml.docx",
+    "build_tech_report_from_yaml": "ccba_ooxml.docx",
 }
 
 
