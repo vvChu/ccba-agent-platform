@@ -82,18 +82,21 @@ Hệ sinh thái CCBA vận hành trên máy chủ AI chuyên dụng NVIDIA DGX S
                                  ┌────────────────┴────────────────┐
                                  │        FEDERATED SPOKES         │
                                  │  - bim-planner                  │
-                                 │  - ibim_accounting              │
-                                 │  - AC_IBSTBM2 / PP_IBSTBM       │
+                                 │  - IBST_UNIFIED_ERP (31v Ledger)│
+                                 │    [Spoke PG16 loopback]        │
                                  │  - Multi-Developers (tta, tat..)│
                                  └─────────────────────────────────┘
 ```
 
 ### 1. Phân Định Ranh Giới 4-Hubs × Federated Spokes (Separation of Concerns)
+Kiến trúc gồm **4 Hub nền tảng** (Compute, Governance & Intelligence, Legal Data, Synthesis), kết nối với **Operations SOR** (IDOP-CCBA-WAY trên Microsoft 365 Enterprise) và tầng **Federated Spokes** (trong đó có Spoke sổ cái tài chính IBST_UNIFIED_ERP).
+
 - **Compute Hub (`dgx-spark-toolkit`)**: Quản trị hạ tầng máy chủ, Docker containers, vLLM, Speaches Whisper, LiteLLM Gateway, Milvus và Neo4j.
 - **Governance & Intelligence Hub (`ccba-agent-platform`)**: Trung tâm ban hành Hiến pháp Layer 1, Skills Catalog SSOT, khung điều phối đa tác tử Teamwork (ADR 0053), harness kiểm định tự động (ADR 0058), và SDK `ccba-ai`.
 - **Legal Data Hub (`ccba-legal-knowledge`)**: Kho dữ liệu chuẩn mực OKF v2.4, AST điều khoản `clauses.json`, văn bản gốc PDF/DOCX có chữ ký băm mật mã SHA-256 (ADR 0059), và TVPL VIP crawler (ADR 0031).
 - **Synthesis Hub (`VvC_Notes`)**: Kho tri thức cá nhân, tổng kết phương pháp luận VvC LLM OS, các playbooks chiến lược và mô hình nhận thức.
-- **Operations Hub (`IDOP-CCBA-WAY`)**: Nền tảng điều hành nghiệp vụ thực tế của Viện KHCN Xây dựng (IBST) và CCBA trên Microsoft 365 Enterprise.
+- **Operations Hub (`IDOP-CCBA-WAY`)**: System of Record (SOR) điều hành nghiệp vụ thực tế của Viện KHCN Xây dựng (IBST) và CCBA trên Microsoft 365 Enterprise (SharePoint Online: CDE, CRM, hợp đồng, PGV, OKRs), tách cứng SOR khỏi sổ cái tài chính theo Spoke ADR-0011 (Accepted).
+- **Financial Ledger & Reconciliation Spoke (IBST_UNIFIED_ERP)**: Federated Spoke chuyên trách sổ cái tài chính & đối soát phạm vi `31v` (CCBA 31v Financial Ledger & Reconciliation Spoke) chạy PostgreSQL 16 loopback trên máy Spoke (tách biệt với Postgres LiteLLM `:15432` của Compute Hub), thay thế hoàn toàn `ibim_accounting` và `AC_IBSTBM2 / PP_IBSTBM`, tách cứng SOR khỏi IDOP-CCBA-WAY theo Spoke ADR-0011 (Accepted).
 
 ### 2. Chuẩn Mực An Ninh OS Topology: POSIX ACLs Pin-Hole Traversal
 - **Cấm Tuyệt Đối:** Sử dụng `chmod o+x /home/vvc`.
@@ -178,6 +181,27 @@ Nhằm giải quyết triệt để vấn đề phân phối tri thức quản t
   2. Nếu không có Hub filesystem: Đọc snapshot từ con trỏ `current` trong cache Spoke.
   3. Nếu không tìm thấy cả Hub lẫn snapshot `current`: Ném mã lỗi `CatalogSnapshotMissing` (yêu cầu chạy `ccba-init-spoke` hoặc tải snapshot), tuyệt đối không ngụy trang thành `RAW_BYPASS_RESTRICTIONS`.
 
+### 7. Phân Định Cứng SOR (IDOP-CCBA-WAY ↔ IBST_UNIFIED_ERP) & Closed-Loop Bridge v2
+*(Bổ sung theo Amendment 2026-11-22 — Issue #849; dẫn chiếu Spoke ADR-0011 (Accepted) làm SSOT cho chi tiết triển khai Spoke)*
+
+#### A. Phân Định Cứng System of Record (Hard SOR Separation)
+- IDOP-CCBA-WAY (Operations Hub / OS trên SharePoint Online) giữ vai trò SOR duy nhất cho điều hành nghiệp vụ (CDE, CRM, hợp đồng, PGV, OKRs).
+- IBST_UNIFIED_ERP (CCBA 31v Financial Ledger & Reconciliation Spoke, PostgreSQL 16 loopback trên máy Spoke) giữ vai trò SOR duy nhất cho sổ cái kế toán phạm vi `31v` và đối soát tài chính qua bề mặt Excel/UI tối giản (KISS), thay thế hoàn toàn hệ thống kế thừa `ibim_accounting` và `AC_IBSTBM2 / PP_IBSTBM`.
+- Mọi thông số vận hành và số liệu đặc thù của Spoke (tọa độ cổng dịch vụ, mã commit, mã wave, số lượng danh mục chi tiết, danh sách ngoại lệ hợp đồng và quy tắc điều chỉnh kế toán nội bộ) được quản trị độc lập tại Spoke ADR-0011 (Accepted), không nhân bản vào Hiến pháp Hub để tránh Dual-SSOT.
+
+#### B. Kiến Trúc Cô Lập Mạng & Closed-Loop Bridge v2 (IDOP → ERP)
+- **Định vị song song Mục 4:** Cầu Closed-Loop chiều IDOP → ERP vận hành song song và **không thay thế** Python Outbound Bridge (Mục 4, chiều DGX Spark → Microsoft 365 SharePoint).
+- **Mặt phẳng Loopback-Only & RBAC:** Toàn bộ dịch vụ web/API và cơ sở dữ liệu PostgreSQL 16 của Spoke IBST_UNIFIED_ERP chỉ lắng nghe nội bộ trên loopback (`127.0.0.1`) của máy Spoke với RBAC tăng cường; gỡ bỏ hoàn toàn sidecar công khai `idop-tunnel-bridge`, không mở rộng bề mặt mạng và không dùng chung Postgres `:15432` của Compute Hub.
+- **Xác thực kép & Hợp đồng dữ liệu:** Yêu cầu đồng thời header xác thực dịch vụ (`X-IDOP-Service-Token`) và khóa idempotency (`X-Idempotency-Key`); hỗ trợ hợp đồng PgvDocumentPayload theo phiên bản (`v1`/`v2`), cổng kiểm soát `HO-02`, chuẩn tách tường minh doanh thu thuần (`net_revenue`) và thuế GTGT phân bổ (`vat_allocated`) theo `C-S22-VAT`, cùng endpoint đối soát khép kín (`GET .../reconciliation-status`).
+- **Quản trị Taxonomy Fail-Closed:** Xác thực chữ ký băm SHA-256 đối với `taxonomy_manifest.json` nạp qua biến môi trường IBST_IDOP_TAXONOMY_DIR theo cơ chế fail-closed trước khi đồng bộ.
+
+#### C. 5 Trục Tương Tác Bảo Toàn Với Viện KHCN Xây dựng (IBST)
+1. Khóa hợp đồng SOHD (quy tắc loại trừ các nhóm dữ liệu phi chuẩn quy định tại Spoke ADR-0011).
+2. Phạm vi đơn vị `31v` và danh mục phòng/ban (`departments`).
+3. Danh mục đối tác theo mã số thuế (`partners.tax_code`) và bảng ánh xạ đối tác kế thừa (`legacy_partner_mappings`).
+4. Ánh xạ mã nhân sự (CBxxx ↔ `employee_idop_map`).
+5. Hệ thống tài khoản thanh toán nội bộ (`TK 136/336`) và tiểu mục kế toán (`accounting_subitems`).
+
 ---
 
 ## Consequences
@@ -188,10 +212,12 @@ Nhằm giải quyết triệt để vấn đề phân phối tri thức quản t
 - **Tự Động Hóa Vận Hành Doanh Nghiệp:** Cầu nối Python M365 Outbound Bridge cho phép đưa dữ liệu kiểm định BIM và tiến độ CDE từ DGX Spark lên trực tiếp 59 danh mục SharePoint mà không cần can thiệp thủ công.
 - **Kiểm Soát Chi Phí Minh Bạch:** Quản trị hạn mức API từng Spoke qua Virtual Keys, ngăn ngừa rủi ro cạn kiệt ngân sách hoặc lỗi cascade failures.
 - **Phân Phối Catalog Đa Tầng Không Xung Đột (ADR-0060 Mục 6):** Cho phép các Spoke hoạt động độc lập và ngoại tuyến 100% với độ trễ < 2ms, đồng thời phát hiện cập nhật tự động khi có mạng mà không bao giờ bị treo bởi blocking DNS/Tailscale.
+- **Phân Tách SOR & Cô Lập Mạng Spoke Tài Chính (ADR-0060 Mục 7):** Tách rạch ròi SOR điều hành (IDOP-CCBA-WAY) khỏi SOR sổ cái `31v` (IBST_UNIFIED_ERP) và thu hẹp hoàn toàn bề mặt mạng Spoke về loopback-only sau khi gỡ sidecar công khai `idop-tunnel-bridge`.
 
 ### Tiêu Cực & Thách Thức (Trade-offs & Mitigations)
 - **Yêu Cầu Quyền Quản Trị Hệ Thống Cho POSIX ACLs:** Script `setup_ccba_devs_acls.sh` yêu cầu quyền `sudo` để gán nhóm và quyền trên `/home/vvc`. *Biện pháp:* Đóng gói script độc lập có cơ chế kiểm tra an toàn và chạy thẩm định `bash -n` trước khi thực thi.
 - **Giới Hạn Tốc Độ Microsoft Graph API:** Việc giới hạn 5 req/s có thể kéo dài thời gian đồng bộ ban đầu khi nạp hàng ngàn hồ sơ CDE. *Biện pháp:* Kết hợp cơ chế lọc Delta Query và chỉ đồng bộ các tệp có cập nhật mới.
 - **Độ Phức Tạp Quản Lý Snapshot Cache Trên Spoke:** Cần cơ chế dọn dẹp các snapshot cũ hơn để không chiếm dụng dung lượng đĩa. *Biện pháp:* Giữ tối đa 2 snapshot gần nhất (bản `current` và bản trước đó) tại `.agents/cache/hub-catalog/snapshots/`.
+- **Phối Hợp Đồng Bộ Taxonomy Fail-Closed Giữa IDOP Và ERP:** Thay đổi danh mục chuẩn đòi hỏi cập nhật đồng bộ chữ ký băm SHA-256 của `taxonomy_manifest.json` giữa hai hệ thống. *Biện pháp:* Quản trị manifest tập trung qua biến môi trường IBST_IDOP_TAXONOMY_DIR và giám sát trạng thái đối soát khép kín qua endpoint `GET .../reconciliation-status`.
 
 > *Erratum (RULE-6.1): Chuẩn hóa thuật ngữ hiển thị sang "Viện KHCN Xây dựng (IBST)" (không thay đổi nội dung quyết định kiến trúc; nguyên văn lịch sử được bảo lưu trong Git history).*
