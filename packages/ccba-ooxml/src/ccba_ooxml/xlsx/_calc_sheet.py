@@ -381,6 +381,7 @@ class CalculationSheetBuilder:
 
             errs = audit_xlsx_formula_errors(out_path)
             summary["formula_errors"] = errs
+            summary["formulas_evaluated"] = False
             if errs:
                 summary["success"], summary["error"] = (
                     False,

@@ -168,14 +168,19 @@ def _recalc_via_excel_com(abs_path: str, pdf_path: Path | None = None) -> dict[s
         excel.Visible = False
         excel.DisplayAlerts = False
         excel.ScreenUpdating = False
+        excel.AutomationSecurity = 3  # msoAutomationSecurityForceDisable
 
-        wb = excel.Workbooks.Open(abs_path)
+        wb = excel.Workbooks.Open(abs_path, UpdateLinks=0)
         excel.CalculateFullRebuild()
         wb.Save()
         if pdf_path is not None:
             pdf_path.parent.mkdir(parents=True, exist_ok=True)
             wb.ExportAsFixedFormat(0, str(pdf_path.resolve()))
-        result: dict[str, Any] = {"success": True, "method": "ExcelCOM"}
+        result: dict[str, Any] = {
+            "success": True,
+            "method": "ExcelCOM",
+            "formulas_evaluated": True,
+        }
         if pdf_path is not None:
             result["pdf_path"] = str(pdf_path.resolve())
         return result
@@ -228,7 +233,7 @@ def _recalc_via_libreoffice(abs_path: str, timeout: int) -> dict[str, Any] | Non
         ]
         res = subprocess.run(cmd, capture_output=True, timeout=timeout)
         if res.returncode == 0:
-            return {"success": True, "method": "LibreOffice"}
+            return {"success": True, "method": "LibreOffice", "formulas_evaluated": True}
     except (subprocess.SubprocessError, FileNotFoundError):
         pass
     return None
@@ -245,7 +250,11 @@ def _fallback_recalc_with_openpyxl(file_path: Path) -> dict[str, Any]:
         verify_xlsx_zip_safety(file_path)
         wb = load_workbook(file_path, data_only=False)
         wb.save(file_path)
-        return {"success": True, "method": "openpyxl (Save-back only)"}
+        return {
+            "success": True,
+            "method": "openpyxl (Save-back only)",
+            "formulas_evaluated": False,
+        }
     except ImportError:
         return {"error": "Failed recalculation: Neither LibreOffice nor openpyxl is available."}
     except Exception as e:
@@ -295,6 +304,14 @@ def _dispatch_recalc(
         if prefer_engine == "libreoffice":
             return {"error": "LibreOffice recalculation failed or is unavailable."}
 
+    if pdf_out is not None:
+        return {
+            "success": False,
+            "error": (
+                "PDF export requested, but neither Excel COM nor LibreOffice is available "
+                "(openpyxl save-back cannot export PDF)."
+            ),
+        }
     return _fallback_recalc_with_openpyxl(file_path)
 
 

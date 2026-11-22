@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import types
+import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -156,9 +157,39 @@ def test_convert_to_pdf_auto_routes_xlsx_to_excel_com_not_word(tmp_path: Path) -
         res = convert_to_pdf(in_xlsx, out_pdf, prefer_engine="auto")
 
     mock_word.assert_not_called()
+    assert mock_excel.AutomationSecurity == 3
+    mock_excel.Workbooks.Open.assert_called_once_with(
+        str(in_xlsx.resolve()), UpdateLinks=0, ReadOnly=True
+    )
     assert res == out_pdf.resolve()
     assert out_pdf.is_file()
     mock_excel.Quit.assert_called_once()
+
+
+def test_convert_via_excel_rejects_corrupted_xlsx_before_com(tmp_path: Path) -> None:
+    """Verify _convert_via_excel runs RULE-5.13 ZIP safety preflight before invoking COM."""
+    bad_xlsx = tmp_path / "corrupt.xlsx"
+    bad_xlsx.write_bytes(b"NOT_A_ZIP")
+
+    fake_client = MagicMock()
+    fake_win32com = types.ModuleType("win32com")
+    fake_win32com.client = fake_client  # type: ignore[attr-defined]
+    fake_pythoncom = MagicMock()
+
+    with (
+        patch.dict(
+            sys.modules,
+            {
+                "pythoncom": fake_pythoncom,
+                "win32com": fake_win32com,
+                "win32com.client": fake_client,
+            },
+        ),
+        pytest.raises(zipfile.BadZipFile),
+    ):
+        convert_to_pdf(bad_xlsx, prefer_engine="winexcel")
+
+    fake_client.DispatchEx.assert_not_called()
 
 
 def test_xlsx_to_pdf_win32_auto_falls_back_to_soffice(tmp_path: Path) -> None:

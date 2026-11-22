@@ -117,10 +117,13 @@ def test_recalc_via_mocked_excel_com_and_pdf_export(tmp_path: Path) -> None:
 
     assert res["success"] is True
     assert res["method"] == "ExcelCOM"
+    assert res["formulas_evaluated"] is True
     assert Path(res["pdf_path"]) == pdf_path.resolve()
     assert pdf_path.is_file()
     assert res["formula_errors"] == []
     fake_pythoncom.CoInitialize.assert_called_once()
+    assert mock_excel.AutomationSecurity == 3
+    mock_excel.Workbooks.Open.assert_called_once_with(str(xlsx_path.resolve()), UpdateLinks=0)
     mock_excel.CalculateFullRebuild.assert_called_once()
     mock_wb.Save.assert_called_once()
     mock_wb.Close.assert_called_once_with(SaveChanges=False)
@@ -138,7 +141,22 @@ def test_recalc_excel_com_fallback_to_openpyxl(tmp_path: Path) -> None:
     ):
         res = recalc_xlsx(xlsx_path, prefer_engine="auto")
     assert res["success"] is True
+    assert res["formulas_evaluated"] is False
     assert "openpyxl" in res["method"]
+
+
+def test_recalc_xlsx_fails_loud_when_export_pdf_requested_without_engine(tmp_path: Path) -> None:
+    """Verify recalc_xlsx fails loud if PDF export is requested but only openpyxl is available."""
+    xlsx_path = _make_sample_xlsx(tmp_path / "no_pdf_engine.xlsx", [10])
+    out_pdf = tmp_path / "out.pdf"
+    with (
+        patch("platform.system", return_value="Linux"),
+        patch("ccba_ooxml.calc.setup_libreoffice_macro", return_value=False),
+    ):
+        res = recalc_xlsx(xlsx_path, prefer_engine="auto", export_pdf=out_pdf)
+    assert res["success"] is False
+    assert "PDF export requested" in res["error"]
+    assert not out_pdf.exists()
 
 
 def test_recalc_excel_engine_rejected_on_non_windows(tmp_path: Path) -> None:

@@ -75,7 +75,7 @@ def solid_fill(hex_rgb: str) -> PatternFill:
 
 def make_side(style: str | None = "thin", color: str = "CBD5E1") -> Side:
     """Create a worksheet cell border ``Side`` helper."""
-    return Side(style=style, color=color) if style else Side(style=None)
+    return Side(style=style, color=color.lstrip("#").upper()) if style else Side(style=None)
 
 
 def grid_border(color: str = "CBD5E1") -> Border:
@@ -93,12 +93,13 @@ def theme_font(
     color: str | None = None,
 ) -> Font:
     """Create an openpyxl ``Font`` configured with the theme font family."""
+    resolved_color = (color or theme.text_dark).lstrip("#").upper()
     return Font(
         name=theme.font_name,
         size=size,
         bold=bold,
         italic=italic,
-        color=color or theme.text_dark,
+        color=resolved_color,
     )
 
 
@@ -263,6 +264,11 @@ def set_column_widths(ws: Worksheet, widths: Sequence[int]) -> None:
         ws.column_dimensions[get_column_letter(idx)].width = width
 
 
+def _escape_excel_footer(value: object) -> str:
+    """Strip illegal XML chars and escape ``&`` for Excel header/footer strings."""
+    return str(sanitize_xlsx_value(value, allow_formulas=True)).replace("&", "&&")
+
+
 def configure_a4_portrait(
     ws: Worksheet,
     theme: CCBAExcelTheme,
@@ -285,9 +291,10 @@ def configure_a4_portrait(
     ws.views.sheetView[0].showGridLines = True
     if repeat_rows:
         ws.print_title_rows = repeat_rows
-    fn = theme.font_name
-    ws.oddFooter.left.text = f'&"{fn},Regular"&8{doc["doc_no"]} ({doc["revision"]})'
-    ws.oddFooter.center.text = (
-        f'&"{fn},Italic"&8{doc["consultant"]} — Standard Engineering Calculation'
-    )
+    fn = _escape_excel_footer(theme.font_name)
+    doc_no = _escape_excel_footer(doc["doc_no"])
+    revision = _escape_excel_footer(doc["revision"])
+    consultant = _escape_excel_footer(doc["consultant"])
+    ws.oddFooter.left.text = f'&"{fn},Regular"&8{doc_no} ({revision})'
+    ws.oddFooter.center.text = f'&"{fn},Italic"&8{consultant} — Standard Engineering Calculation'
     ws.oddFooter.right.text = f'&"{fn},Regular"&8Page &P / &N'

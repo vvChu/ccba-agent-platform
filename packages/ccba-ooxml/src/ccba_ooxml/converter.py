@@ -73,6 +73,11 @@ def _convert_via_winword(docx_path: Path, output_pdf_path: Path) -> Path:
 
 def _convert_via_excel(xlsx_path: Path, output_pdf_path: Path) -> Path:
     """Converts an Excel workbook (.xlsx/.xls/.xlsm) to PDF via MS Excel COM."""
+    if xlsx_path.suffix.lower() in {".xlsx", ".xlsm"}:
+        from ccba_ooxml.xlsx._safety import verify_xlsx_zip_safety
+
+        verify_xlsx_zip_safety(xlsx_path)
+
     try:
         import pythoncom
         import win32com.client
@@ -89,8 +94,9 @@ def _convert_via_excel(xlsx_path: Path, output_pdf_path: Path) -> Path:
         excel.Visible = False
         excel.DisplayAlerts = False
         excel.ScreenUpdating = False
+        excel.AutomationSecurity = 3  # msoAutomationSecurityForceDisable
 
-        wb = excel.Workbooks.Open(str(xlsx_path.resolve()), ReadOnly=True)
+        wb = excel.Workbooks.Open(str(xlsx_path.resolve()), UpdateLinks=0, ReadOnly=True)
         # xlTypePDF = 0
         wb.ExportAsFixedFormat(0, str(output_pdf_path.resolve()))
         return output_pdf_path

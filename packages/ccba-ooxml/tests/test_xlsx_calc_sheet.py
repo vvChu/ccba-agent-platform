@@ -10,6 +10,8 @@ from unittest.mock import patch
 import openpyxl
 import pytest
 import yaml
+from openpyxl.utils.units import pixels_to_EMU
+from PIL import Image as PILImage
 
 from ccba_ooxml import (
     CalculationSheetBuilder,
@@ -280,6 +282,7 @@ def test_build_calc_sheet_from_yaml_and_cli(tmp_path: Path) -> None:
     out_xlsx = tmp_path / "from_yaml.xlsx"
     res = build_calc_sheet_from_yaml(cfg_path, out_xlsx, recalculate=False, check_errors=True)
     assert res["success"] is True
+    assert res["formulas_evaluated"] is False
     assert res["formula_errors"] == []
     assert Path(res["xlsx_path"]).is_file()
 
@@ -302,3 +305,34 @@ def test_build_calc_sheet_from_yaml_and_cli(tmp_path: Path) -> None:
     payload = json.loads(report_json.read_text(encoding="utf-8"))
     assert payload["success"] is True
     assert Path(payload["xlsx_path"]) == cli_out.resolve()
+
+
+def test_theme_hash_colors_footer_ampersand_and_custom_logo_aspect(tmp_path: Path) -> None:
+    """Verify #-prefixed theme/KPI colors, escaped footer '&', and dynamic logo aspect ratio."""
+    spec = _sample_spec()
+    doc = spec["document"]
+    assert isinstance(doc, dict)
+    doc["consultant"] = "IBST & CCBA"
+    kpis = spec["summary_kpis"]
+    assert isinstance(kpis, list)
+    for kpi in kpis:
+        assert isinstance(kpi, dict)
+        kpi["accent"] = f"#{str(kpi['accent']).lstrip('#')}"
+
+    logo_path = tmp_path / "custom_logo.png"
+    PILImage.new("RGB", (200, 100), color=(54, 56, 131)).save(logo_path)
+
+    out_xlsx = tmp_path / "custom_theme.xlsx"
+    theme = CCBAExcelTheme(dark_blue="#363883", ibst_red="#DA251C", bim_blue="#0093DD")
+    CalculationSheetBuilder(theme=theme, logo_path=logo_path).build(spec, out_xlsx)
+
+    wb = openpyxl.load_workbook(out_xlsx, data_only=False)
+    try:
+        ws1 = wb["01-Calculation"]
+        assert "IBST && CCBA" in (ws1.oddFooter.center.text or "")
+        assert len(ws1._images) == 1
+        img = ws1._images[0]
+        assert img.anchor.ext.cx == pixels_to_EMU(132)
+        assert img.anchor.ext.cy == pixels_to_EMU(66)
+    finally:
+        wb.close()

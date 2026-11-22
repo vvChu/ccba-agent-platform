@@ -82,7 +82,8 @@ def embed_ccba_logo(
         return
     img = XLImage(str(logo_path))
     w = 132
-    h = round(w * (558 / 1024))
+    ratio = (img.height / img.width) if (img.width and img.height) else (558 / 1024)
+    h = round(w * ratio)
     img.width, img.height = w, h
     off_x = max(6, int(sum(col_widths[logo_col_idx:]) * 7.2 - w - 10))
     marker = AnchorMarker(
