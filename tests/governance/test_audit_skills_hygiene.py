@@ -609,3 +609,72 @@ def test_cli_no_check_returns_zero_on_violations(tmp_path: Path) -> None:
 
     exit_code = main(["--file", str(skill_md), "--no-check"])
     assert exit_code == 0
+
+
+def test_audit_catches_living_doc_ssot_drift_and_honors_allow_marker(tmp_path: Path) -> None:
+    """Verify Living Doc SSoT Drift flags deprecated tokens in SKILL.md & references/ and honors allow marker."""
+    skill_dir = tmp_path / "skill-drift"
+    skill_md = _create_minimal_valid_skill(skill_dir, "skill-drift")
+
+    bad_model = "gemini-3.7-" + "flash-high"
+    bad_path = ".agent/" + "skills/demo"
+
+    ref_dir = skill_dir / "references"
+    ref_dir.mkdir()
+    ref_guide = ref_dir / "guide.md"
+    ref_guide.write_text(f"# Guide\nUse `{bad_path}` for legacy lookup.\n", encoding="utf-8")
+
+    base_text = skill_md.read_text(encoding="utf-8")
+    l3_index = (
+        "\n## Progressive Disclosure\n\n"
+        "| Tài liệu | Vai trò |\n"
+        "| :--- | :--- |\n"
+        "| `references/guide.md` | Guide |\n"
+    )
+    skill_md.write_text(
+        f'{base_text}{l3_index}\n```bash\nccba-qc pccc --model "{bad_model}"\n```\n',
+        encoding="utf-8",
+    )
+
+    res = audit_skill(skill_dir)
+    assert res.status == "RED"
+    drift_issues = [i for i in res.issues if i.category == "Living Doc SSoT Drift"]
+    assert len(drift_issues) == 2
+    assert any(
+        i.file_rel == "skill-drift/SKILL.md" and bad_model[:11] in i.detail for i in drift_issues
+    )
+    assert any(
+        i.file_rel == "skill-drift/references/guide.md" and ".agent/skills/" in i.detail
+        for i in drift_issues
+    )
+
+    skill_md.write_text(
+        f'{base_text}{l3_index}\n```bash\nccba-qc pccc --model "{bad_model}"  # ccba:allow-doc-drift\n```\n',
+        encoding="utf-8",
+    )
+    ref_guide.write_text(
+        f"# Guide\nUse `{bad_path}` for legacy lookup. <!-- ccba:allow-doc-drift -->\n",
+        encoding="utf-8",
+    )
+
+    clean_res = audit_skill(skill_dir)
+    assert clean_res.status == "GREEN", f"Unexpected issues: {[i.detail for i in clean_res.issues]}"
+    assert not any(i.category == "Living Doc SSoT Drift" for i in clean_res.issues)
+
+
+def test_hub_skills_zero_living_doc_drift_parity_with_spoke_checker() -> None:
+    """Verify Hub .agents/skills/ passes check_living_doc_drift with zero violations (Hub <-> Spoke parity)."""
+    from scripts.spoke.check_spoke_cleanliness import check_living_doc_drift
+
+    skills_root = (PROJECT_ROOT / ".agents" / "skills").resolve()
+    skill_drift = [
+        (fpath, line_no, reason)
+        for fpath, line_no, reason in check_living_doc_drift(PROJECT_ROOT)
+        if fpath.resolve().is_relative_to(skills_root)
+    ]
+    assert skill_drift == [], (
+        "Hub .agents/skills/ has Living Doc SSoT Drift violations:\n"
+        + "\n".join(
+            f"  - {fp.relative_to(PROJECT_ROOT)}:{ln}: {msg}" for fp, ln, msg in skill_drift
+        )
+    )
