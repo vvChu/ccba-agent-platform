@@ -302,6 +302,10 @@ def test_reader_lifecycle_and_recalc_fallback_preflight(tmp_path: Path) -> None:
         b"\x00" * (2 * 1024 * 1024 + 1),
     )
     with (
+        patch(
+            "ccba_ooxml.calc._recalc_via_excel_com",
+            side_effect=ImportError("Excel COM disabled in fallback test"),
+        ),
         patch("ccba_ooxml.calc.setup_libreoffice_macro", return_value=False),
         patch("openpyxl.load_workbook") as mock_lw,
     ):
@@ -310,7 +314,13 @@ def test_reader_lifecycle_and_recalc_fallback_preflight(tmp_path: Path) -> None:
         mock_lw.assert_not_called()
 
     # Valid workbook fallback succeeds
-    with patch("ccba_ooxml.calc.setup_libreoffice_macro", return_value=False):
+    with (
+        patch(
+            "ccba_ooxml.calc._recalc_via_excel_com",
+            side_effect=ImportError("Excel COM disabled in fallback test"),
+        ),
+        patch("ccba_ooxml.calc.setup_libreoffice_macro", return_value=False),
+    ):
         ok_res = recalc_xlsx(out_xlsx)
     assert ok_res.get("success") is True
     assert "openpyxl" in str(ok_res.get("method", ""))

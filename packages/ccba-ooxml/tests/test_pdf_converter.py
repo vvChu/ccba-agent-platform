@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import subprocess
+import sys
+import types
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import openpyxl
 import pytest
 
-from ccba_ooxml import convert_to_pdf, docx_to_pdf
+from ccba_ooxml import convert_to_pdf, docx_to_pdf, xlsx_to_pdf
 from ccba_ooxml.form_filler.exceptions import EngineUnavailableError, FormFillerError
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -113,3 +116,70 @@ def test_convert_to_pdf_auto_winword_fallback_to_soffice(tmp_path: Path):
         res = convert_to_pdf(in_docx, prefer_engine="auto")
         assert res == expected_pdf.resolve()
         assert expected_pdf.exists()
+
+
+def test_convert_to_pdf_auto_routes_xlsx_to_excel_com_not_word(tmp_path: Path) -> None:
+    """Verify Windows auto engine routes .xlsx to Excel COM rather than Word COM."""
+    in_xlsx = tmp_path / "calc.xlsx"
+    wb = openpyxl.Workbook()
+    wb.save(in_xlsx)
+    wb.close()
+    out_pdf = tmp_path / "calc.pdf"
+
+    mock_wb = MagicMock()
+    mock_excel = MagicMock()
+    mock_excel.Workbooks.Open.return_value = mock_wb
+
+    def _fake_export(fmt: int, target_str: str) -> None:
+        assert fmt == 0
+        Path(target_str).write_bytes(b"%PDF-1.6\n")
+
+    mock_wb.ExportAsFixedFormat.side_effect = _fake_export
+    fake_client = MagicMock()
+    fake_client.DispatchEx.return_value = mock_excel
+    fake_win32com = types.ModuleType("win32com")
+    fake_win32com.client = fake_client  # type: ignore[attr-defined]
+    fake_pythoncom = MagicMock()
+
+    with (
+        patch("sys.platform", "win32"),
+        patch("ccba_ooxml.converter._convert_via_winword") as mock_word,
+        patch.dict(
+            sys.modules,
+            {
+                "pythoncom": fake_pythoncom,
+                "win32com": fake_win32com,
+                "win32com.client": fake_client,
+            },
+        ),
+    ):
+        res = convert_to_pdf(in_xlsx, out_pdf, prefer_engine="auto")
+
+    mock_word.assert_not_called()
+    assert res == out_pdf.resolve()
+    assert out_pdf.is_file()
+    mock_excel.Quit.assert_called_once()
+
+
+def test_xlsx_to_pdf_win32_auto_falls_back_to_soffice(tmp_path: Path) -> None:
+    """Verify xlsx_to_pdf alias falls back to LibreOffice when Excel COM raises on Windows."""
+    in_xlsx = tmp_path / "calc_fallback.xlsx"
+    in_xlsx.write_bytes(b"PK")
+    expected_pdf = tmp_path / "calc_fallback.pdf"
+
+    def fake_run_soffice(args, **kwargs):
+        expected_pdf.write_bytes(b"%PDF-1.5 xlsx fallback")
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+    with (
+        patch("sys.platform", "win32"),
+        patch.dict(
+            sys.modules, {"win32com": types.ModuleType("win32com"), "win32com.client": MagicMock()}
+        ),
+        patch("ccba_ooxml.converter._convert_via_excel", side_effect=RuntimeError("Excel error")),
+        patch("ccba_ooxml.converter.find_soffice_bin", return_value="/usr/bin/soffice"),
+        patch("ccba_ooxml.converter.run_soffice", side_effect=fake_run_soffice),
+    ):
+        res = xlsx_to_pdf(in_xlsx)
+    assert res == expected_pdf.resolve()
+    assert expected_pdf.exists()

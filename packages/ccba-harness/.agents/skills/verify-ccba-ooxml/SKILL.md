@@ -19,7 +19,7 @@ metadata:
   version: 1.0.0
 sync_commit: "7259350d8020834c52ab88e4c5681e165612cc8b"
 covered_sha256:
-  packages/ccba-ooxml/src/ccba_ooxml/__init__.py: "00e338c6155558983ecd190a6cfa6c5a00841000efe97cc605f1071698b6a665"
+  packages/ccba-ooxml/src/ccba_ooxml/__init__.py: "b4f7dc05fcdcf74bdea5d1286bc0d4e6dce61a0259c77102949eb9c7928edf35"
   packages/ccba-ooxml/src/ccba_ooxml/pack.py: "46cd1ece159049aaad1f9b2c15cfeec1392a989c36adfbfce5b57704ff55d388"
   packages/ccba-ooxml/src/ccba_ooxml/tables.py: "14d4bf8ce6856adc6415531b49808a8079198b5ebe9d5394d1e324d850b97ed9"
   packages/ccba-ooxml/src/ccba_ooxml/unpack.py: "f1b83adc3f345927f0c837ca06264b22689267452b5d50f2b9b043b06680414f"
@@ -46,7 +46,7 @@ Bộ kỹ năng kiểm định tự động chuyên biệt cho package `ccba-oox
 
 ## 🏛️ Platform-Aware Architecture Posture
 
-- **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp `72` lazy-loaded Public Deep Seams trong `ccba_ooxml.__all__` / `_LAZY_EXPORTS` tương ứng với kỹ năng `ccba-xu-ly-van-phong`.
+- **Seam Capability Posture**: `package-bound`. Bảo vệ trực tiếp `78` lazy-loaded Public Deep Seams trong `ccba_ooxml.__all__` / `_LAZY_EXPORTS` tương ứng với kỹ năng `ccba-xu-ly-van-phong`.
 - **Version Anchor (`sync_commit` & `covered_sha256`)**: Neo tại commit PR-3b `7259350d8020834c52ab88e4c5681e165612cc8b` kèm mã băm SHA-256 chuẩn hóa LF bảo vệ `5` tệp lõi sạch `mypy --strict` (`__init__.py`, `pack.py`, `tables.py`, `unpack.py`, `workspace.py`).
 - **Giới Hạn Phạm Vi (`Scope & Limitations`)**:
   - Toàn bộ ca kiểm thử chạy 100% in-process trên fixture `.docx`/ZIP tạo trong `tmp_path` (`< 0.2s`), dùng `monkeypatch` cô lập `validate_document` và `calc.recalc_xlsx` để tuyệt đối không gọi tiến trình LibreOffice (`soffice`).
@@ -71,7 +71,7 @@ flowchart TD
 - Khởi tạo vùng làm việc tạm `TemporaryDirectory(prefix="verify_ccba_ooxml_")`, thiết lập `PYTHONPATH` và biến `CCBA_OOXML_SANDBOX` trong process thuần **không mở cổng TCP hay khởi chạy tiến trình LibreOffice (`soffice`)**.
 
 ### 3. Deterministic Seam Readiness Barrier
-- Kiểm tra nạp thẳng `72` Public Deep Seams trong `ccba_ooxml.__all__` khớp 1:1 với `_LAZY_EXPORTS`, cùng khả năng phân giải `OOXMLWorkspace`, `pack_document`, `unpack_document`, `TableReconstructor`, `StructuredTable` bằng lệnh con Python sạch; cấm dùng `time.sleep(N)`.
+- Kiểm tra nạp thẳng `78` Public Deep Seams trong `ccba_ooxml.__all__` khớp 1:1 với `_LAZY_EXPORTS`, cùng khả năng phân giải `OOXMLWorkspace`, `pack_document`, `unpack_document`, `TableReconstructor`, `StructuredTable` bằng lệnh con Python sạch; cấm dùng `time.sleep(N)`.
 
 ### 4. Evidence-Capture Pytest & Statechart `v0.15.42` (`Bug-Path Replay`)
 - Thực thi `test_ooxml_suite.py` đối chiếu toàn bộ `6` tính năng trong `features/INDEX.md` và mô hình hóa luồng chuyển trạng thái bằng `stateDiagram-v2` ($15 \le 20$ cạnh, đủ 4 lớp kiểm định):

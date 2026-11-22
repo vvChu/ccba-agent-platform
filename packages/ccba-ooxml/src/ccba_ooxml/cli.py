@@ -9,6 +9,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -16,6 +17,55 @@ from .pack import pack_document, validate_document
 from .pptx import CCBAPresentationTheme, DeckBuilder
 from .unpack import unpack_document
 from .validation import OOXMLValidator
+
+
+def _add_calc_sheet_subparser(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    """Register the ``calc-sheet`` subcommand on the OOXML CLI parser."""
+    calc_p = subparsers.add_parser(
+        "calc-sheet",
+        help="Build a CCBA bilingual A4 engineering calculation workbook (.xlsx) from YAML IR",
+    )
+    calc_p.add_argument("config", type=str, help="Path to YAML calculation specification")
+    calc_p.add_argument("-o", "--out", type=str, default=None, help="Output .xlsx file path")
+    calc_p.add_argument("--pdf", type=str, default=None, help="Optional output PDF preview path")
+    calc_p.add_argument(
+        "--recalculate", action="store_true", help="Recalculate formulas via COM/LibreOffice"
+    )
+    calc_p.add_argument(
+        "--check-errors", action="store_true", help="Audit workbook for #REF!/#DIV/0! errors"
+    )
+    calc_p.add_argument(
+        "--output", type=str, default=None, help="Optional JSON report path (File-First)"
+    )
+
+
+def _run_calc_sheet_cli(args: argparse.Namespace) -> None:
+    """Execute the ``calc-sheet`` subcommand and optionally write a JSON summary report."""
+    from .xlsx import build_calc_sheet_from_yaml
+
+    cfg_path = Path(args.config)
+    if not cfg_path.is_file():
+        print(f"Error: YAML config '{args.config}' does not exist.", file=sys.stderr)
+        sys.exit(1)
+
+    out_xlsx = Path(args.out) if args.out else cfg_path.with_suffix(".xlsx")
+    summary = build_calc_sheet_from_yaml(
+        cfg_path,
+        out_xlsx,
+        recalculate=args.recalculate,
+        export_pdf=args.pdf,
+        check_errors=args.check_errors,
+    )
+    if args.output:
+        rep_path = Path(args.output)
+        rep_path.parent.mkdir(parents=True, exist_ok=True)
+        rep_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    if not summary.get("success", False):
+        print(f"Error: {summary.get('error', 'calc-sheet failed')}", file=sys.stderr)
+        sys.exit(1)
+    print(f"SUCCESS: Generated CCBA calculation workbook at '{summary['xlsx_path']}'")
 
 
 def main() -> None:
@@ -127,6 +177,8 @@ def main() -> None:
         default="",
         help="Optional server base URL for web hosting and QR code",
     )
+
+    _add_calc_sheet_subparser(subparsers)
 
     args = parser.parse_args()
 
@@ -243,6 +295,9 @@ def main() -> None:
                 target = out_dir / f"{stem}.email.html"
                 target.write_text(render_email_table(data), encoding="utf-8")
                 print(f"SUCCESS: Generated Email table at '{target}'")
+
+    elif args.command == "calc-sheet":
+        _run_calc_sheet_cli(args)
 
 
 if __name__ == "__main__":
