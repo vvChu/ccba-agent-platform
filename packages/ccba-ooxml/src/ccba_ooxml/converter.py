@@ -1,6 +1,6 @@
 """converter.py - Standalone Cross-Platform Document to Vector PDF Converter.
 
-Supports Windows Word COM automation when available, with automatic headless
+Supports Windows Word/Excel COM automation when available, with automatic headless
 fallback to LibreOffice (soffice) on Linux/WSL or headless CI/CD environments.
 Complies with ADR 0049.
 """
@@ -18,14 +18,17 @@ from ccba_ooxml.soffice import find_soffice_bin, run_soffice
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["convert_to_pdf", "docx_to_pdf"]
+_EXCEL_SUFFIXES = frozenset({".xlsx", ".xls", ".xlsm", ".xlsb"})
+_WORD_SUFFIXES = frozenset({".docx", ".doc", ".rtf"})
+
+__all__ = ["convert_to_pdf", "docx_to_pdf", "xlsx_to_pdf"]
 
 
 def _convert_via_winword(docx_path: Path, output_pdf_path: Path) -> Path:
     """Converts a DOCX/DOC file to PDF using Microsoft Word COM on Windows."""
     try:
-        import pythoncom  # type: ignore[import-untyped]
-        import win32com.client  # type: ignore[import-untyped]
+        import pythoncom
+        import win32com.client
     except ImportError as e:
         raise EngineUnavailableError(
             "win32com.client is not installed. Run on Windows with pywin32 installed."
@@ -66,6 +69,74 @@ def _convert_via_winword(docx_path: Path, output_pdf_path: Path) -> Path:
             pythoncom.CoUninitialize()
         except Exception:
             pass
+
+
+def _convert_via_excel(xlsx_path: Path, output_pdf_path: Path) -> Path:
+    """Converts an Excel workbook (.xlsx/.xls/.xlsm) to PDF via MS Excel COM."""
+    if xlsx_path.suffix.lower() in {".xlsx", ".xlsm"}:
+        from ccba_ooxml.xlsx._safety import verify_xlsx_zip_safety
+
+        verify_xlsx_zip_safety(xlsx_path)
+
+    try:
+        import pythoncom
+        import win32com.client
+    except ImportError as e:
+        raise EngineUnavailableError(
+            "win32com.client is not installed. Run on Windows with pywin32 installed."
+        ) from e
+
+    pythoncom.CoInitialize()
+    excel = None
+    wb = None
+    try:
+        excel = win32com.client.DispatchEx("Excel.Application")
+        excel.Visible = False
+        excel.DisplayAlerts = False
+        excel.ScreenUpdating = False
+        excel.AutomationSecurity = 3  # msoAutomationSecurityForceDisable
+
+        wb = excel.Workbooks.Open(str(xlsx_path.resolve()), UpdateLinks=0, ReadOnly=True)
+        # xlTypePDF = 0
+        wb.ExportAsFixedFormat(0, str(output_pdf_path.resolve()))
+        return output_pdf_path
+    finally:
+        if wb is not None:
+            try:
+                wb.Close(SaveChanges=False)
+            except Exception:
+                pass
+        if excel is not None:
+            try:
+                excel.Quit()
+            except Exception:
+                pass
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+
+
+def _resolve_pdf_engine(
+    in_path: Path,
+    prefer_engine: Literal["auto", "winword", "winexcel", "soffice"],
+) -> str:
+    """Select the appropriate PDF conversion engine for the current OS and file suffix."""
+    if prefer_engine != "auto":
+        return prefer_engine
+    if sys.platform != "win32":
+        return "soffice"
+    try:
+        import win32com.client  # noqa: F401
+    except ImportError:
+        return "soffice"
+
+    suffix = in_path.suffix.lower()
+    if suffix in _EXCEL_SUFFIXES:
+        return "winexcel"
+    if suffix in _WORD_SUFFIXES:
+        return "winword"
+    return "soffice"
 
 
 def _convert_via_soffice(input_path: Path, output_pdf_path: Path, timeout: int = 120) -> Path:
@@ -121,7 +192,7 @@ def _convert_via_soffice(input_path: Path, output_pdf_path: Path, timeout: int =
 def convert_to_pdf(
     input_file: Path | str,
     output_path: Path | str | None = None,
-    prefer_engine: Literal["auto", "winword", "soffice"] = "auto",
+    prefer_engine: Literal["auto", "winword", "winexcel", "soffice"] = "auto",
     timeout: int = 120,
 ) -> Path:
     """Converts a document (.docx, .doc, .pptx, .xlsx) to high-precision Vector PDF.
@@ -129,7 +200,7 @@ def convert_to_pdf(
     Args:
         input_file: Source document path.
         output_path: Target PDF output path. Defaults to input_file with .pdf extension.
-        prefer_engine: 'auto', 'winword' (MS Word COM), or 'soffice' (headless LibreOffice).
+        prefer_engine: 'auto', 'winword' (MS Word COM), 'winexcel' (MS Excel COM), or 'soffice'.
         timeout: Subprocess timeout in seconds for LibreOffice.
 
     Returns:
@@ -144,37 +215,25 @@ def convert_to_pdf(
     if not in_path.exists() or not in_path.is_file():
         raise FileNotFoundError(f"Source file not found: '{in_path}'")
 
-    if output_path is None:
-        out_pdf = in_path.with_suffix(".pdf")
-    else:
-        out_pdf = Path(output_path).resolve()
-
+    out_pdf = in_path.with_suffix(".pdf") if output_path is None else Path(output_path).resolve()
     out_pdf.parent.mkdir(parents=True, exist_ok=True)
 
-    # Determine execution engine
-    use_engine = prefer_engine
-    if use_engine == "auto":
-        if sys.platform == "win32":
-            try:
-                import win32com.client  # noqa: F401
-
-                use_engine = "winword"
-            except ImportError:
-                use_engine = "soffice"
-        else:
-            use_engine = "soffice"
-
-    if use_engine == "winword":
+    use_engine = _resolve_pdf_engine(in_path, prefer_engine)
+    if use_engine in ("winword", "winexcel"):
+        com_fn = _convert_via_excel if use_engine == "winexcel" else _convert_via_winword
         try:
-            return _convert_via_winword(in_path, out_pdf)
+            return com_fn(in_path, out_pdf)
         except Exception as e:
             if prefer_engine == "auto":
-                logger.warning(f"Word COM conversion failed ({e}), falling back to LibreOffice.")
+                logger.warning(
+                    f"{use_engine} conversion failed ({e}), falling back to LibreOffice."
+                )
                 return _convert_via_soffice(in_path, out_pdf, timeout=timeout)
             raise
 
     return _convert_via_soffice(in_path, out_pdf, timeout=timeout)
 
 
-# Convenient alias for legal and document pipelines
+# Convenient aliases for legal, document, and calculation pipelines
 docx_to_pdf = convert_to_pdf
+xlsx_to_pdf = convert_to_pdf

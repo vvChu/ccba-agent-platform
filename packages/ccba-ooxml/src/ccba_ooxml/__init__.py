@@ -9,8 +9,8 @@ import importlib
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .calc import recalc_xlsx, setup_libreoffice_macro
-    from .converter import convert_to_pdf, docx_to_pdf
+    from .calc import audit_xlsx_formula_errors, recalc_xlsx, setup_libreoffice_macro
+    from .converter import convert_to_pdf, docx_to_pdf, xlsx_to_pdf
     from .docx import (
         CommentEngine,
         Document,
@@ -75,6 +75,8 @@ if TYPE_CHECKING:
     from .unpack import unpack_document
     from .workspace import OOXMLWorkspace
     from .xlsx import (
+        CalculationSheetBuilder,
+        CCBAExcelTheme,
         MergedCellWriteError,
         XlsxFillConfig,
         XlsxHeaderStyle,
@@ -82,6 +84,8 @@ if TYPE_CHECKING:
         XlsxReader,
         XlsxTemplateFiller,
         XlsxWorkbookWriter,
+        build_calc_sheet_from_yaml,
+        resolve_formula,
         sanitize_xlsx_value,
     )
 
@@ -93,9 +97,11 @@ __all__ = [
     "OOXMLWorkspace",
     "convert_to_pdf",
     "docx_to_pdf",
+    "xlsx_to_pdf",
     # Spreadsheet calculation
     "recalc_xlsx",
     "setup_libreoffice_macro",
+    "audit_xlsx_formula_errors",
     # Docx DOM manipulation & tracking
     "DocxDocument",
     "Document",
@@ -167,14 +173,21 @@ __all__ = [
     "sanitize_xlsx_value",
     "XlsxMediaLimitError",
     "MergedCellWriteError",
+    # Bilingual calculation sheet builder (Issue #851)
+    "CCBAExcelTheme",
+    "CalculationSheetBuilder",
+    "build_calc_sheet_from_yaml",
+    "resolve_formula",
 ]
 
 # Unannotated ast.Assign so check_init_lazy_exports_parity inspects all keys.
 _LAZY_EXPORTS = {
+    "audit_xlsx_formula_errors": "ccba_ooxml.calc",
     "recalc_xlsx": "ccba_ooxml.calc",
     "setup_libreoffice_macro": "ccba_ooxml.calc",
     "convert_to_pdf": "ccba_ooxml.converter",
     "docx_to_pdf": "ccba_ooxml.converter",
+    "xlsx_to_pdf": "ccba_ooxml.converter",
     "CommentEngine": "ccba_ooxml.docx",
     "Document": "ccba_ooxml.docx",
     "DocxDocument": "ccba_ooxml.docx",
@@ -243,6 +256,10 @@ _LAZY_EXPORTS = {
     "XlsxTemplateFiller": "ccba_ooxml.xlsx",
     "XlsxWorkbookWriter": "ccba_ooxml.xlsx",
     "sanitize_xlsx_value": "ccba_ooxml.xlsx",
+    "CCBAExcelTheme": "ccba_ooxml.xlsx",
+    "CalculationSheetBuilder": "ccba_ooxml.xlsx",
+    "build_calc_sheet_from_yaml": "ccba_ooxml.xlsx",
+    "resolve_formula": "ccba_ooxml.xlsx",
 }
 
 
