@@ -136,4 +136,19 @@ Bảng 3 cột với traffic light:
 | Fill xanh `#D5F5E3` | ✅ OK | Mô tả xác nhận |
 | Fill đỏ `#FADBD8` | ❌ ERROR | Mô tả lỗi |
 
+---
+
+## Bố cục Bảng tính Kỹ thuật Song ngữ A4 Portrait (CCBA Engineering Calc Sheet)
+
+Áp dụng cho bảng tính kỹ thuật song ngữ phát hành in PDF A4 đứng (chi tiết khung mẫu tại `templates/xlsx-bang-tinh-ky-thuat-song-ngu.md`):
+
+1. **Cấu trúc 2 sheet cố định:**
+   - `01-Calculation`: Header 2 cấp RULE-6.1 + Logo, Ma trận Kiểm soát Dự án, Mục A (Đầu vào), Mục B (Tính toán chi tiết), Mục C (3 thẻ KPI + Khối ký 3 cấp + Footer).
+   - `02-References`: Bảng Tiêu chuẩn áp dụng (có cột Lĩnh vực linh hoạt), Chú giải Ký hiệu, Quy ước màu bảng tính, và Ghi chú kỹ thuật (tùy chọn).
+2. **Tổng độ rộng cột chuẩn A4 Portrait (116 đơn vị):**
+   - Sheet `01-Calculation`: `[6, 44, 21, 11, 9, 25]` (`TT`, `Hạng mục / Diễn giải`, `Ký hiệu / Công thức`, `Giá trị`, `Đơn vị`, `Căn cứ`).
+   - Sheet `02-References`: `[15, 36, 13, 52]` (`Mã hiệu`, `Tiêu chuẩn`, `Lĩnh vực`, `Điều khoản / Diễn giải`).
+3. **Ma trận Kiểm soát Dự án (`A:C` | `D:F`):** Không đặt nhãn metadata vào cột A đơn lẻ hẹp (`width = 6`); ghép ngang 2 khối rộng bằng nhau dùng `CellRichText` nhãn đậm + giá trị.
+4. **Quy tắc phân trang PDF chuẩn xác:** Giữ `fitToWidth = 1`, **`fitToHeight = 0`**, lặp Header `print_title_rows = "1:5"`, kết hợp chèn `Break` tường minh trước Mục B và trước phần Quy ước/Ghi chú khi in nhiều trang.
+
 <!-- NDT-0904004920 -->

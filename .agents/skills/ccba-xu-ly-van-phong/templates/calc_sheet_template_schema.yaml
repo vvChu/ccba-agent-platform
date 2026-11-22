@@ -1,0 +1,166 @@
+# ==============================================================================
+# CCBA Bilingual Engineering Calculation Sheet — YAML IR Canonical Schema
+# Tuân thủ: RULE-6.1, CCBA Brand Identity v3.4 (Palette X4), ADR-0057 / ADR-0061
+# LƯU Ý YAML 1.1: Bắt buộc dùng khóa `item_no:` (KHÔNG dùng `no:` tránh parse thành False)
+# ==============================================================================
+
+document:
+  doc_no: "CCBA-CALC-SAMPLE-01"
+  revision: "Rev. 01"
+  date: "22/11/2026"
+  title_vi: "BẢNG TÍNH LƯU LƯỢNG THỦY LỰC MẪU"
+  title_en: "SAMPLE HYDRAULIC FLOW CALCULATION SHEET"
+  project_vi: "Dự án Hạ tầng Kỹ thuật Mẫu"
+  project_en: "Sample Technical Infrastructure Project"
+  client_vi: "Chủ đầu tư Mẫu"
+  client_en: "Sample Client Corp."
+  pmc: "Ban Quản lý Dự án Mẫu"
+  location_vi: "Khu công nghiệp Mẫu, Việt Nam"
+  location_en: "Sample Industrial Park, Vietnam"
+  consultant: "IBST - CCBA"
+  discipline_vi: "Cấp thoát nước"
+  discipline_en: "Hydraulics & MEP"
+
+organization:
+  parent_vi: "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG"
+  parent_en: "Institute for Building Science and Technology"
+  unit_vi: "TRUNG TÂM TƯ VẤN VÀ ỨNG DỤNG BIM TRONG XÂY DỰNG"
+  unit_en: "Center for Consulting Services and BIM Application in Construction (CCBA)"
+
+inputs:
+  - id: "area"
+    item_no: "1.1"
+    desc_vi: "Diện tích khu vực phục vụ tính toán"
+    desc_en: "Served design zone area"
+    symbol: "A"
+    value: 120.0
+    unit_vi: "m²"
+    unit_en: "m²"
+    num_fmt: "#,##0.00"
+    ref_vi: "Mặt bằng thiết kế"
+    ref_en: "Design Layout"
+
+  - id: "rate"
+    item_no: "1.2"
+    desc_vi: "Cường độ thiết kế đơn vị"
+    desc_en: "Unit design flow rate"
+    symbol: "q"
+    value: 0.15
+    unit_vi: "L/(s·m²)"
+    unit_en: "L/(s·m²)"
+    num_fmt: "#,##0.00"
+    ref_vi: "TCVN XXXX:YYYY (mẫu)"
+    ref_en: "TCVN XXXX:YYYY (sample)"
+
+  - id: "duration"
+    item_no: "1.3"
+    desc_vi: "Thời gian dự trữ tính toán"
+    desc_en: "Design storage duration"
+    symbol: "t"
+    value: 1.0
+    unit_vi: "giờ"
+    unit_en: "h"
+    num_fmt: "#,##0.00"
+    ref_vi: "Tiêu chuẩn thiết kế"
+    ref_en: "Design Standard"
+
+sections:
+  - code: "I"
+    title_vi: "XÁC ĐỊNH LƯU LƯỢNG VÀ THỂ TÍCH BỂ DỰ TRỮ"
+    title_en: "DESIGN FLOW RATE & STORAGE TANK VOLUME"
+    rows:
+      - id: "q_total"
+        item_no: "1"
+        desc_vi: "Tổng lưu lượng tính toán thiết kế"
+        desc_en: "Total design flow rate"
+        formula_display: "Q = A × q"
+        formula: "=ROUND({area}*{rate}, 2)"
+        unit_vi: "L/s"
+        unit_en: "L/s"
+        num_fmt: "#,##0.00"
+        ref_vi: "Mục X.Y (mẫu)"
+        ref_en: "Clause X.Y (sample)"
+        style: "subtotal"
+
+      - id: "v_total"
+        item_no: "2"
+        desc_vi: "Thể tích hữu ích tối thiểu của bể dự trữ"
+        desc_en: "Minimum effective storage volume"
+        formula_display: "V = Q × 3.6 × t"
+        formula: "=ROUND({q_total}*3.6*{duration}, 2)"
+        unit_vi: "m³"
+        unit_en: "m³"
+        num_fmt: "#,##0.00"
+        ref_vi: "Tổng hợp thiết kế"
+        ref_en: "Design Summary"
+        style: "grand_total"
+
+summary_kpis:
+  - label_vi: "LƯU LƯỢNG THIẾT KẾ (Q)"
+    label_en: "TOTAL DESIGN FLOW RATE"
+    target_id: "q_total"
+    num_fmt: "#,##0.00\" L/s\""
+    accent: "363883"
+
+  - label_vi: "THỂ TÍCH BỂ TỐI THIỂU (V)"
+    label_en: "MINIMUM STORAGE VOLUME"
+    target_id: "v_total"
+    num_fmt: "#,##0.00\" m³\""
+    accent: "DA251C"
+
+  - label_vi: "THỜI GIAN DỰ TRỮ (t)"
+    label_en: "STORAGE DURATION"
+    target_id: "duration"
+    num_fmt: "#,##0.00\" h\""
+    accent: "0093DD"
+
+signoff:
+  - title_vi: "NGƯỜI LẬP BẢNG TÍNH"
+    title_en: "PREPARED BY"
+    role_vi: "Kỹ sư Thiết kế"
+    role_en: "Design Engineer"
+  - title_vi: "NGƯỜI KIỂM TRA"
+    title_en: "CHECKED BY"
+    role_vi: "Chủ trì Bộ môn"
+    role_en: "Lead Engineer"
+  - title_vi: "PHÊ DUYỆT"
+    title_en: "APPROVED BY"
+    role_vi: "Lãnh đạo Đơn vị"
+    role_en: "Division Director"
+
+references:
+  standards:
+    - code: "TCVN XXXX:YYYY"
+      title_vi: "Tiêu chuẩn thiết kế thủy lực mẫu (thay bằng mã QCVN/TCVN đã đối soát theo ADR-0059)"
+      title_en: "Sample hydraulic design standard (replace with ADR-0059 verified code)"
+      scope_vi: "Thủy lực"
+      scope_en: "Hydraulics"
+      clauses_vi: "Mục X.Y — Thay bằng trích dẫn điều khoản nguyên văn đã đối soát qua ccba-legal-intel"
+      clauses_en: "Clause X.Y — Replace with verbatim clause verified via ccba-legal-intel"
+
+  glossary:
+    - symbol: "A"
+      meaning_vi: "Diện tích khu vực phục vụ"
+      unit: "m²"
+      meaning_en: "Served zone area"
+    - symbol: "q"
+      meaning_vi: "Cường độ thiết kế đơn vị"
+      unit: "L/(s·m²)"
+      meaning_en: "Unit design flow rate"
+    - symbol: "t"
+      meaning_vi: "Thời gian dự trữ tính toán"
+      unit: "giờ / h"
+      meaning_en: "Design storage duration"
+    - symbol: "Q"
+      meaning_vi: "Tổng lưu lượng thiết kế"
+      unit: "L/s"
+      meaning_en: "Total design flow rate"
+    - symbol: "V"
+      meaning_vi: "Thể tích bể dự trữ hữu ích tối thiểu"
+      unit: "m³"
+      meaning_en: "Minimum effective storage tank volume"
+
+  technical_notes:
+    - code: "GC-01"
+      note_vi: "Các giá trị ở bảng này là dữ liệu mẫu trung tính dùng kiểm chứng schema YAML IR."
+      note_en: "Values in this sample illustrate the canonical YAML IR schema without project-specific data."
