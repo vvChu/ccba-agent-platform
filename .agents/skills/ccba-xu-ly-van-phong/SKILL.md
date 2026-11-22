@@ -38,7 +38,7 @@ triggers:
 - layout guard
 metadata:
   author: CCBA
-  version: 2.2.0
+  version: 2.3.0
 ---
 
 # Xử lý Văn phòng
@@ -99,6 +99,7 @@ Gắn thêm khi cần trình bày đẹp. Mỗi bộ là một "skin" độc l�
 | `color/docx-modern-blue.md` | Hiện đại | DOCX startup, SME |
 | `color/docx-editorial-burgundy.md` | Editorial | DOCX review, phản biện |
 | `color/docx-technical-multicolor.md` | Kỹ thuật | DOCX dài, heading phân cấp bằng màu |
+| `color/docx-ccba-brand.md` | CCBA Brand v3.4 | Báo cáo đánh giá kỹ thuật IBST - CCBA (WCAG AA/AAA) |
 | `color/xlsx-palettes.md` | 4 bộ XLSX | Bảng tính: X1 Dark, X2 Green, X3 Blue, X4 CCBA Brand v3.4 + Traffic Light |
 | `color/pptx-palettes.md` | 10 bộ PPTX | Slide thuyết trình |
 
@@ -129,6 +130,8 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 | `templates/docx-ky-thuat-rfi.md` | Mẫu Phiếu Yêu cầu Cung cấp Thông tin Kỹ thuật (RFI) theo ISO 19650/FIDIC (4-column response grid 9071 DXA, Formal Navy) |
 | `templates/docx-hop-tac-mou-song-ngu.md` | Mẫu Biên bản Ghi nhớ Hợp tác Kinh doanh Song ngữ Anh–Việt (2-column 4535/4536 DXA + Exhibit A RACI Matrix, Formal Navy) |
 | `templates/rfi_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho biểu mẫu RFI kỹ thuật |
+| `templates/docx-ky-thuat-bao-cao-danh-gia.md` | Quy chuẩn & quy trình 6 bước lập Báo cáo Đánh giá Kỹ thuật DOCX (`RULE-6.1` + Brand v3.4) |
+| `templates/tech_report_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho báo cáo đánh giá kỹ thuật (`TechnicalReportBuilder`) |
 | `templates/xlsx-bang-tinh-ky-thuat-song-ngu.md` | Quy chuẩn & quy trình 6 bước lập Bảng tính Toán Kỹ thuật Song ngữ Việt–Anh A4 Portrait (`RULE-6.1` + Palette X4) |
 | `templates/calc_sheet_template_schema.yaml` | Mô hình dữ liệu chuẩn YAML IR cho bảng tính kỹ thuật song ngữ (`CalculationSheetBuilder`) |
 | `examples/docx-bao-cao-formal-navy.docx` | DOCX báo cáo — palette Formal Navy |
@@ -145,6 +148,7 @@ Templates (mẫu khung nội dung) và Examples (file output tham chiếu) dùng
 | Công văn NĐ 30 | `nd30.md` | Không (đen trắng) | `docx.md` |
 | Đề xuất sang trọng | `page-setup` + `heading` + `table` + `cover-page` | `formal-navy.md` | `docx.md` |
 | Thuyết minh kỹ thuật | `page-setup` + `heading` (9 cấp) + `caption-reference` | `technical-multicolor.md` | `docx.md` |
+| Báo cáo đánh giá kỹ thuật DOCX | `templates/docx-ky-thuat-bao-cao-danh-gia.md` + `docx-page-setup` | `color/docx-ccba-brand.md` | `docx.md` / `TechnicalReportBuilder` |
 | Báo cáo nội bộ nhanh | `page-setup` + `heading` + `table` | Không (đen trắng) | `docx.md` |
 | Bảng tính tracking | `table.md` | Không hoặc tùy chọn | `xlsx.md` |
 | Bảng tính kỹ thuật song ngữ | `xlsx-structure.md` + `templates/xlsx-bang-tinh-ky-thuat-song-ngu.md` | `color/xlsx-palettes.md` (Palette X4) | `xlsx.md` / `CalculationSheetBuilder` |
@@ -193,6 +197,9 @@ Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_f
 | `references/ooxml.md` | Hướng dẫn phân giải, thao tác trực tiếp với cấu trúc Office Open XML (OOXML) |
 | `templates/xlsx-bang-tinh-ky-thuat-song-ngu.md` | Quy trình 6 bước & quy chuẩn thiết kế Bảng tính Kỹ thuật Song ngữ Việt–Anh A4 Portrait |
 | `templates/calc_sheet_template_schema.yaml` | Lược đồ YAML IR mẫu trung tính phục vụ `ccba-ooxml calc-sheet` |
+| `standards/color/docx-ccba-brand.md` | Bảng màu CCBA Brand v3.4 DOCX và quy tắc tương phản WCAG 2.1 AA/AAA |
+| `templates/docx-ky-thuat-bao-cao-danh-gia.md` | Quy trình 6 bước & rào chắn lập Báo cáo Đánh giá Kỹ thuật DOCX (`9071 DXA`) |
+| `templates/tech_report_template_schema.yaml` | Lược đồ YAML IR mẫu trung tính phục vụ `ccba-ooxml tech-report` |
 
 ## Bộc Lộ Dần & Cấu Trúc Tinh Gọn (Progressive Disclosure)
 * **Cấu trúc tài liệu Level 3:** Phân tách rõ ràng giữa quy trình cốt lõi và tài liệu hướng dẫn chuyên sâu qua bảng chỉ mục Level 3.
