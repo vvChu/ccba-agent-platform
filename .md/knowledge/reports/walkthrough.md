@@ -1,36 +1,46 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #846`
-## Chore: Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp 4 Windows Spokes Lên Chuẩn `ADR-0062`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #852` (`Part 1 of #851`)
+## Feature: Bilingual XLSX Calculation Sheet Deep Seam & Windows Excel COM Engine
 
-> **Pull Request Đã Hợp Nhất (`--squash`):** [#846](https://github.com/vvChu/ccba-agent-platform/pull/846) (`ad4dc12c7b76d698ef728b5c0b641b1359dec37a`) | **Branch:** `chore/sync-windows-spoke-registry-adr0062` (`bb5f7d50` -> `9cc07fca`, rebased trên `4083d561`) | **Base:** `4083d561` | **Issue:** N/A  
-> **Trạng thái chung:** ✅ **PR #846 MERGED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT x2), 8/8 CI CHECKS PASS, 0 UNRESOLVED PR COMMENTS, 14/14 SPOKES CHUẨN ADR-0062**
+> **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#852](https://github.com/vvChu/ccba-agent-platform/pull/852) (`e7530dd0dbe564453efa64a7a2ad57492f3884d4`) | **Branch:** `proposal/ooxml-xlsx-calc-sheet-and-excel-com` (`9cc97214` -> `978b46e2`, rebased trên `8b1ace7e`) | **Base:** `8b1ace7e` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851) (`OPEN`, chờ `PR #853` đóng)  
+> **Trạng thái chung:** ✅ **PR #852 MERGED, 12/12 ISOLATED TEST TARGETS PASS (TRIHT), 8/8 CI CHECKS PASS, 0 UNRESOLVED PR COMMENTS, 78 PUBLIC DEEP SEAMS VERIFIED**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#846`
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#852` (`Part 1 of #851`)
 
 | Thành Phần | Tệp Thay Đổi Chính | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **1. Đăng ký Spoke mới `SDS for Data Center`** | [`spoke_registry.yaml`](../../../.md/data/spoke_registry.yaml) | Nâng tổng số spoke đăng ký từ `13` -> `14`; bổ sung bản ghi mã hóa RSA-2048 (`spoke_id`: `b35979ec03bf...`, `project_type`: `Thiết kế`, `archetype`: `project_delivery`) kèm `static_hash` theo chuẩn `ADR-0062` (không lộ đường dẫn cục bộ plain-text). | Verified |
-| **2. Nâng cấp 4 Windows Spokes lên `ADR-0062`** | [`spoke_registry.yaml`](../../../.md/data/spoke_registry.yaml) | Cập nhật schema (`static_hash` + `archetype`, tách `last_sync` sang telemetry cục bộ) cho `2026-04 DH Viet Nhat` (`d4267226284a`), `IDOP-CCBA-WAY` (`4b6b5545f00e`), `vvc-second-brain` (`99ac46032a12`) và `Zalo_Bot_Free` (`a933f55f1eb8`), bảo toàn toàn bộ `13/13` `spoke_id` cũ và đạt `14/14` (`100%`) chuẩn `ADR-0062`. | Verified |
+| **1. Định tuyến PDF Excel COM (`win32`)** | [`converter.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/converter.py) | Bổ sung `_convert_via_excel`, `_resolve_pdf_engine`, và `xlsx_to_pdf` chuyển `.xlsx/.xls/.xlsm/.xlsb` sang `Excel.Application` trên `win32` (fallback `soffice`); Self-Healing khóa `AutomationSecurity=3`, `UpdateLinks=0`, và kiểm tra `verify_xlsx_zip_safety` cho `.xlsx/.xlsm`. | Verified |
+| **2. Tính lại Công thức & Quét Lỗi** | [`calc.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/calc.py) | Giữ pure-stdlib ở top-level; thêm `_recalc_via_excel_com` (`AutomationSecurity=3`, `UpdateLinks=0`, `CalculateFullRebuild`), `audit_xlsx_formula_errors()`, `prefer_engine`/`export_pdf`/`check_errors`, cờ `formulas_evaluated`, và fail-loud khi thiếu engine xuất PDF. | Verified |
+| **3. Bộ dựng Bảng tính Song ngữ & CLI** | [`_calc_sheet.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_calc_sheet.py), [`_theme.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_theme.py), [`_calc_chrome.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/xlsx/_calc_chrome.py), [`cli.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/cli.py) | Triển khai `CCBAExcelTheme` (Brand v3.4 + chuẩn hóa `#HEX` trong `make_side`/`theme_font`), `CalculationSheetBuilder`, `build_calc_sheet_from_yaml`, `resolve_formula`, `RULE-6.1` header + tỷ lệ logo động, footer escape `&` -> `&&`, A4 Portrait (`fitToHeight=0`), và CLI `ccba-ooxml calc-sheet`. | Verified |
+| **4. Hợp đồng Seam, Harness & Proposal** | [`__init__.py`](../../../packages/ccba-ooxml/src/ccba_ooxml/__init__.py), [`seam-contracts.yaml`](../../../seam-contracts.yaml), [`SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-ooxml/SKILL.md), [`2026-11-22_ooxml-xlsx-calc-sheet-and-excel-com.md`](../../../.agents/proposals/2026-11-22_ooxml-xlsx-calc-sheet-and-excel-com.md) | Mở rộng `ccba_ooxml.__all__` / `_LAZY_EXPORTS` (`72 -> 78`), cập nhật `seam-contracts.yaml`, `covered_sha256` trong `verify-ccba-ooxml` (`sync_commit` `7259350d`), và chuyển proposal sang `status: "merged"`. | Verified |
 
 ---
 
-## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0062` / `ADR-0067`)
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
 
-- **Kiểm định mật mã học & Rò rỉ Spoke (`ADR-0045` / `ADR-0062`):**
-  - Toàn bộ `14/14` mục trong [`spoke_registry.yaml`](../../../.md/data/spoke_registry.yaml) có `spoke_id` và `static_hash` chuẩn SHA-256 `64` ký tự hex cùng ciphertext RSA-OAEP `256 bytes` khớp khóa công khai `2048-bit` tại [`registry_public_key.pem`](../../../.agents/resources/registry_public_key.pem) (`0` xóa, `0` trùng lặp).
-  - `sanitize_review_diff.py --base origin/main --head bb5f7d50 --check`: `[PASS]` (`0` secrets), `check_spoke_leakage.py`: `0` violations, `door-triage .md/data/spoke_registry.yaml`: `PAVED_ROAD` (`0 LOC` logic diff).
-  - *Phạm vi kiểm chứng trên Linux:* Khóa bí mật `~/.gemini/antigravity/keys/registry_private_key.pem` ([`decrypt_spoke_registry.py`](../../../scripts/spoke/decrypt_spoke_registry.py)) không tồn tại trên máy trạm Linux nên không giải mã plaintext; nội dung bên trong 5 payload cập nhật/mới dựa trên đối soát đồng bộ thực tế trên Windows (`sync_spoke.py --all --dry-run` và `spoke-status` báo `🟢 ACTIVE`).
-- **Local TRIHT Cổng 0.1–0.3 trên PR `#846` (đã chạy trên `bb5f7d50` và chạy lại đầy đủ trên commit rebased `9cc07fca` trong `/home/vvc/ccba/wt-hub-846`):**
+- **Tier 2 Boost Review & Self-Healing (`978b46e2` trong `/home/vvc/ccba/wt-hub-852`):**
+  - `pytest packages/ccba-ooxml/tests packages/ccba-harness/.agents/skills/verify-ccba-ooxml/harness/test_ooxml_suite.py`: **121 passed, 1 deselected** (`2.43s`); `run_verify_ooxml.py`: **6 passed** (`0.20s`).
+  - `mypy packages/ccba-ooxml/src --follow-imports=silent`: `Success: no issues found in 66 source files`; `ruff check` & `ruff format --check`: PASS (`82` files); AST function lengths: `over_50=[]` trên cả 5 module sửa đổi; `validate_skills.py --enforce-gpi`: **77/77 PASSED**.
+- **Local TRIHT Cổng 0.1–0.3 trên PR `#852` (`978b46e2` trong `/home/vvc/ccba/wt-hub-852-release`):**
   - Cổng 0.1 & 0.3 (`check_release_cleanliness.py --phase pre/post`): `PASS` (`100%` Hermetic).
-  - Cổng 0.2 (`run_isolated_tests.py --all --stress` trên `9cc07fca`): **12/12 targets PASS** (`ccba-ai` `5.38s`, `ccba-diagram` `0.30s`, `ccba-harness` `13.06s`, `ccba-legal-intel` `48.89s`, `ccba-maskara` `0.35s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `2.56s`, `ccba-pdf-prep` `9.63s`, `ccba-qc-core` `1.11s`, `mdconverter` `2.36s`, `scripts` `15.57s`, `root-tests` `614 passed, 1 skipped, 10 deselected` in `29.61s` / total `30.26s`).
-- **CI & Hậu hợp nhất trên `main` (`ad4dc12c`, `--squash`):**
-  - `8/8` CI `SUCCESS` trên `9cc07fca`, `audit_pr_comments.py --pr 846` exit `0`, `reviewRequests` rỗng, đã gỡ nhãn `in-progress`, nhánh remote `chore/sync-windows-spoke-registry-adr0062` & worktree đã dọn sạch.
-  - `compile_catalog.py --check`: `[OK]` (`100% in-sync`).
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` `5.43s`, `ccba-diagram` `0.35s`, `ccba-harness` `13.15s`, `ccba-legal-intel` `48.31s`, `ccba-maskara` `0.30s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `2.86s`, `ccba-pdf-prep` `9.74s`, `ccba-qc-core` `1.16s`, `mdconverter` `2.31s`, `scripts` `15.73s`, `root-tests` `614 passed, 1 skipped, 10 deselected` in `29.34s` / total `30.00s`).
+- **CI & Hậu hợp nhất trên `main` (`e7530dd0`, `--merge` theo `RULE-2.21`):**
+  - `8/8` CI `SUCCESS`, `audit_pr_comments.py --pr 852` exit `0`, `reviewRequests` rỗng, nhánh remote `proposal/ooxml-xlsx-calc-sheet-and-excel-com` & worktree đã dọn sạch.
+  - `git cat-file -e 7259350d8020834c52ab88e4c5681e165612cc8b^{commit}` exit `0`, `compile_catalog.py --check` PASS, `test_verification_harness_dogfood.py`: **5 passed**, `run_verify_ooxml.py`: **6 passed**.
 
 ---
 
-## 3. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
+## 3. Lưu Trữ Phát Hành Trước Đó — Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp Chuẩn `ADR-0062` (`PR #846`)
+
+> **Pull Request Đã Hợp Nhất (`--squash`):** [#846](https://github.com/vvChu/ccba-agent-platform/pull/846) (`ad4dc12c7b76d698ef728b5c0b641b1359dec37a`) | **Branch:** `chore/sync-windows-spoke-registry-adr0062` (`bb5f7d50` -> `9cc07fca`, rebased trên `4083d561`) | **Base:** `4083d561` | **Issue:** N/A
+
+- **Thành phần chính:** Cập nhật [`spoke_registry.yaml`](../../../.md/data/spoke_registry.yaml) (`13 -> 14` spokes): đăng ký mới `SDS for Data Center` (`b35979ec03bf`, `project_delivery`) và nâng cấp 4 Windows spokes lên `ADR-0062` (`static_hash` + `archetype`, đạt `14/14` = `100%` chuẩn `ADR-0062`, `256-byte` RSA-2048 ciphertexts).
+- **Nghiệm thu:** `sanitize_review_diff.py` `[PASS]`, `check_spoke_leakage.py` `0` violations, `door-triage` `PAVED_ROAD`, TRIHT Cổng 0.1–0.3 (`12/12` targets PASS trên `9cc07fca`), `8/8` CI `SUCCESS`, `audit_pr_comments.py --pr 846` exit `0`, `compile_catalog.py --check` `[OK]`.
+
+---
+
+## 4. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#854](https://github.com/vvChu/ccba-agent-platform/pull/854) (`6d1d3f5e7e6dc671b7da2531f7c522f8fc64df56`) | **Branch:** `docs/issue-849-adr-0060-erp-sor-separation` (`1b85482c`) | **Base:** `609afbc1` | **Issue:** [#849](https://github.com/vvChu/ccba-agent-platform/issues/849) (`CLOSED`)
 
@@ -39,7 +49,7 @@
 
 ---
 
-## 4. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
+## 5. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
 
 > **PR `#845` Đã Hợp Nhất (`--squash`):** [#845](https://github.com/vvChu/ccba-agent-platform/pull/845) (`76f48be83790a24ec28817b7f8d3f5e8f44086e8`) | **Issue:** [#844](https://github.com/vvChu/ccba-agent-platform/issues/844) (`CLOSED`) | **Branch:** `fix/issue-844-md-spoke-retrospective-gates` (`e2a42753`)  
 > **PR `#848` Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#848](https://github.com/vvChu/ccba-agent-platform/pull/848) (`deeae22d7564f629f54298403cae9d24f0c71dd1`) | **Issue:** [#842](https://github.com/vvChu/ccba-agent-platform/issues/842) (`CLOSED`) | **Branch:** `feat/issue-842-ooxml-xlsx-seam` (`07c6549e`, rebased trên `76f48be8`)
@@ -50,7 +60,7 @@
 
 ---
 
-## 5. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
+## 6. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#841](https://github.com/vvChu/ccba-agent-platform/pull/841) (`3d582834d0e652f7932318daa3cc83456dabe778`) | **Issue Đã Đóng:** [#840](https://github.com/vvChu/ccba-agent-platform/issues/840) (`CLOSED`) | **Branch:** `docs/issue-840-harden-asgi-env-conftest-ruff` (`f9e3e71f` -> `c3ce5041`) | **Base:** `a0282a9e`
 
@@ -59,7 +69,7 @@
 
 ---
 
-## 6. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
+## 7. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#817](https://github.com/vvChu/ccba-agent-platform/pull/817) (`1de529cb5a47274d6d570f310b87bff193274140`) | **Nhánh:** `feat/book-compiler-v154` (`ba079377` -> `1de529cb`) | **Base:** `170c04f3`
 
