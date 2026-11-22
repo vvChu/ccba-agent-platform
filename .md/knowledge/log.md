@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-22] [synthesize] | Tổng Kết Phiên Thẩm Định PR #853 / #859 (Đóng Issue #851) & Tiến Hóa `ccba-review-proposal` v1.1.0
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
+- **Affected Files**: [archive/session_learnings_history.md](archive/session_learnings_history.md), [log.md](log.md), [reports/walkthrough.md](reports/walkthrough.md), [SKILL.md](../../.agents/skills/ccba-review-proposal/SKILL.md)
+- **Summary**: Đúc kết phiên `264a8272-26db-4bc2-88cf-be7fc59d8cd1` (`164` bước, `55` turns, `0` lỗi runtime): hoàn tất thẩm định Tier 2 + Self-Heal (`8fe88b44`) và squash-merge `PR #853` (`22dc01a3`, đóng Issue `#851`), đồng bộ hậu merge qua `PR #859` (`fb775d94`), giữ `session_learnings.md` ở `9.97 KB`, ghi Mục 74 vào [archive/session_learnings_history.md](archive/session_learnings_history.md), và tiến hóa `ccba-review-proposal` (`v1.0.0 -> v1.1.0`) với kiểm định Tier 2A, `audit_pr_comments.py`, và quy trình follow-up PR hậu merge trên `main` bảo vệ kèm `door-triage --enforce-tradeoff-card`.
+
+---
+
 ## [2026-11-22] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) & Thẩm Định Peer Audit Issue `#842` (`ooxml_processor.v1` `.xlsx` Seam)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` Issue `#842`)
 - **Affected Files**: [decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md](decisions/2026-11-22_issue_842_ooxml_xlsx_seam_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
