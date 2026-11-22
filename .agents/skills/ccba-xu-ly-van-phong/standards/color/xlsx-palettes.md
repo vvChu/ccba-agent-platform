@@ -48,6 +48,30 @@ Dùng cho bảng tổng hợp, phiếu khảo sát, dashboard.
 
 ---
 
+## Palette X4 — CCBA Brand Identity v3.4 (Bảng tính Kỹ thuật Song ngữ & RULE-6.1)
+
+Dùng mặc định cho các bảng tính kỹ thuật song ngữ Việt – Anh phát hành dưới danh nghĩa `IBST - CCBA` (kết hợp `ccba_ooxml:CCBAExcelTheme` và font thống nhất `Segoe UI`).
+
+| Vai trò | Mã HEX | Mô tả |
+|---|---|---|
+| Dark Navy Primary (Header / Banner / Viền khung) | `#363883` | Xanh tím đậm CCBA Brand v3.4 |
+| Accent Red (Đường gạch Header / Grand Total / KPI) | `#DA251C` | Đỏ cờ IBST chuẩn Brand v3.4 |
+| Bright Cyan Blue (KPI Accent / Slogan *Better*) | `#0093DD` | Xanh sáng BIM Brand v3.4 |
+| Input Text / Font xanh nhập liệu | `#005A9C` | Xanh dương phân biệt ô nhập tay |
+| Input Cell Fill | `#F0F6FC` | Xanh rất nhạt đánh dấu ô sửa được |
+| Section Banner Fill | `#E8EAF6` | Tím xanh rất nhạt cho tiêu đề mục lớn |
+| Sub-banner Fill | `#F1F5F9` | Xám xanh nhẹ cho nhóm tính toán con |
+| Subtotal Fill | `#EBF5FB` | Xanh nhạt cho kết quả trung gian (`subtotal`) |
+| Key Result Fill | `#E6F4FA` | Xanh nhấn nhẹ cho kết quả nhánh (`key_result`) |
+| Grand Total Fill / Note Code Fill | `#FEF9E7` | Vàng nhạt nhấn mạnh kết quả chi phối (`grand_total`) |
+| Metadata / Sign-off Header Fill | `#F8FAFC` | Nền trung tính sạch cho ma trận dự án |
+| Body Text Dark / Muted | `#1A202C` / `#595959` | Tiếng Việt chính / phụ đề tiếng Anh nghiêng |
+| Grid Border Light | `#CBD5E1` | Đường kẻ mảnh dễ đọc cả màn hình và bản in |
+
+> **Slogan footer 3 màu:** `Smarter` (`#363883`) `Faster` (`#DA251C`) `Better` (`#0093DD`) kèm dòng ghi nhận `IBST - CCBA`.
+
+---
+
 ## Traffic Light (dùng chung cho mọi palette)
 
 | Mức | Fill | Text/Icon | Dùng cho |
