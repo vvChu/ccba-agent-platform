@@ -2,7 +2,10 @@
 proposal_id: "2026-11-22_module-budget-frontend-src"
 type: "tool"
 name: "module-budget-frontend-src"
-status: "open"
+status: "merged"
+merged_pr: "#866"
+merged_commit: "ac6f83dc"
+merged_date: "2026-11-22"
 priority: "Trung bình"
 related_issue: "#865"
 proposed_by_project: "IBST_UNIFIED_ERP"
@@ -36,7 +39,7 @@ applies_to:
 |---|---|---|
 | **Giá trị (Value)** | Cao | Kích hoạt chuẩn trần 800 LOC / ratchet cho mọi Spoke Next.js/React dùng `frontend/src/` mà không cần script cục bộ |
 | **Độ phức tạp (Complexity)** | Rất thấp | Thêm 1 token `"frontend/src"` và ưu tiên `seam.DEFAULT_PRODUCTION_ROOTS` làm SSOT khi chạy trên Spoke |
-| **Rủi ro (Risk)** | Thấp / Có kiểm soát | Spoke có tệp `.tsx` di sản > 800 dòng chỉ cần cập nhật `scripts/_guardrails/module_budget_baseline.json` qua `--update-budget-baseline` khi đồng bộ |
+| **Rủi ro (Risk)** | Thấp / Có kiểm soát | Spoke có tệp `.tsx` di sản > 800 dòng chỉ cần cập nhật `scripts/_guardrails/module_budget_baseline.json` qua `--ratchet-update` khi đồng bộ |
 | **KISS** | Đạt 100% | Không thêm config mới, không sửa signature công khai, giữ `_module_size_budget.py` <= 120 LOC |
 
 ---
