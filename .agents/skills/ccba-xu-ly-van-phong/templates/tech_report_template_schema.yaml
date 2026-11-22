@@ -1,0 +1,102 @@
+# ==============================================================================
+# CCBA Technical Evaluation Report (DOCX) — YAML IR Canonical Schema
+# Tuân thủ: RULE-6.1, CCBA Brand Identity v3.4 (WCAG 2.1 AA/AAA), ADR-0057 / ADR-0061
+# ==============================================================================
+
+document:
+  doc_no: "CCBA-RPT-SAMPLE-01"
+  revision: "Rev. 01"
+  date: "22/11/2026"
+  category: "BÁO CÁO ĐÁNH GIÁ KỸ THUẬT  •  TECHNICAL EVALUATION REPORT"
+  title_vi: "BÁO CÁO ĐÁNH GIÁ KỸ THUẬT HỆ THỐNG MẪU"
+  title_en: "SAMPLE TECHNICAL EVALUATION REPORT"
+  short_title: "CCBA-PROJ-MEP-RPT-001 Technical Evaluation"
+  project_vi: "Dự án Hạ tầng Kỹ thuật Mẫu (CCBA-PROJ-MEP-RPT-001)"
+  project_en: "Sample Technical Infrastructure Project"
+  client_vi: "Chủ đầu tư Mẫu"
+  client_en: "Sample Client Corp."
+  location_vi: "Khu công nghiệp Mẫu, Việt Nam"
+  location_en: "Sample Industrial Park, Vietnam"
+  discipline_vi: "Cơ điện & Thủy lực"
+  discipline_en: "MEP & Hydraulics"
+  consultant: "IBST - CCBA"
+  status: "Bản phát hành mẫu / Sample Issue"
+  contact_email: "contact@example.com"
+
+organization:
+  parent_vi: "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG"
+  parent_en: "Institute for Building Science and Technology"
+  unit_vi: "TRUNG TÂM TƯ VẤN VÀ ỨNG DỤNG BIM TRONG XÂY DỰNG"
+  unit_en: "Center for Consulting Services and BIM Application in Construction (CCBA)"
+
+kpis:
+  - label_vi: "TỔNG HẠNG MỤC"
+    label_en: "TOTAL ITEMS"
+    value: "24"
+    accent: "#363883"
+  - label_vi: "TỶ LỆ ĐẠT CHUẨN"
+    label_en: "COMPLIANCE RATE"
+    value: "95.8%"
+    accent: "#0093DD"
+  - label_vi: "CẦN LƯU Ý"
+    label_en: "OPEN ALERTS"
+    value: "1"
+    accent: "#DA251C"
+
+sections:
+  - code: "I"
+    title_vi: "TÓM TẮT BÁO CÁO"
+    title_en: "EXECUTIVE SUMMARY"
+    paragraphs:
+      - "Báo cáo tổng hợp kết quả đánh giá kỹ thuật độc lập đối với hồ sơ thiết kế hệ thống mẫu theo thông số định mức và khung kiểm tra hình học OpenXML chuẩn CCBA Brand v3.4."
+    callouts:
+      - tone: "recommendation"
+        title: "Đề xuất của Tư vấn"
+        body: "Ưu tiên hoàn thiện 01 điểm lưu ý về van giảm áp nhánh phụ trước khi phát hành hồ sơ thi công."
+
+  - code: "II"
+    title_vi: "KẾT QUẢ ĐÁNH GIÁ KỸ THUẬT"
+    title_en: "TECHNICAL EVALUATION FINDINGS"
+    bullets:
+      - label: "Phạm vi rà soát"
+        text: "Kiểm tra thông số thiết kế, lưu lượng tính toán và chỉ tiêu an toàn vận hành mẫu."
+      - "Mọi dẫn chiếu tiêu chuẩn trong hồ sơ thực tế phải đối soát nguyên văn theo ADR-0059."
+    tables:
+      - caption: "Bảng 1. Tổng hợp kết quả đánh giá các hạng mục chính"
+        header_rows:
+          - ["TT", "Hạng mục đánh giá", "Tiêu chuẩn tham chiếu", "Kết quả"]
+          - ["No.", "Evaluation Item", "Reference Standard", "Status"]
+        rows:
+          - ["1", "Lưu lượng thiết kế cấp nước", "TCVN XXXX:YYYY (mẫu)", "Đạt"]
+          - ["2", "Áp suất tĩnh tại điểm bất lợi", "QCVN XX:YYYY (mẫu)", "Đạt"]
+          - ["3", "Cấu hình van giảm áp nhánh phụ", "TCVN XXXX:YYYY (mẫu)", "Cần lưu ý"]
+        col_widths: [8, 42, 30, 20]
+        alignments: ["center", "left", "left", "center"]
+    subsections:
+      - code: "2.1"
+        title_vi: "Phân tích sai lệch thông số"
+        title_en: "Parameter Deviation Analysis"
+        paragraphs:
+          - "Không phát hiện sai lệch vượt ngưỡng giới hạn cho phép tại các tuyến trục chính."
+
+  - code: "III"
+    title_vi: "KẾT LUẬN VÀ KIẾN NGHỊ"
+    title_en: "CONCLUSIONS & RECOMMENDATIONS"
+    paragraphs:
+      - "Hồ sơ mẫu đáp ứng yêu cầu kỹ thuật tổng thể; các ghi chú chi tiết được tổng hợp tại bảng kiểm định trước khi trình phê duyệt."
+    callouts:
+      - tone: "warn"
+        title: "Lưu ý triển khai"
+        body: "Thay thế toàn bộ mã tiêu chuẩn mẫu TCVN XXXX:YYYY bằng trích dẫn văn bản gốc đã đối soát qua ccba-legal-intel."
+
+signoff:
+  - title_vi: "NGƯỜI LẬP BÁO CÁO"
+    title_en: "PREPARED BY"
+    name: "Nguyen Van A"
+    role_vi: "Kỹ sư Đánh giá"
+    role_en: "Engineer"
+  - title_vi: "PHÊ DUYỆT"
+    title_en: "APPROVED BY"
+    name: "Tran Van B"
+    role_vi: "Giám đốc"
+    role_en: "Director"

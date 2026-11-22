@@ -108,6 +108,26 @@ const CONTENT_WIDTH = 9071; // PAGE_WIDTH - LEFT - RIGHT
 
 ---
 
+## CCBA Deep Seam (`ccba-ooxml`) & 4 Rào chắn Thực chiến
+
+Tuân thủ **ADR-0061 (`TID251`)**: bên ngoài `packages/ccba-ooxml`, không tự viết wrapper `import docx` thô mà định tuyến qua các Deep Seam công khai của `ccba_ooxml`:
+
+| Nhu cầu | Deep Seam `ccba_ooxml` chuẩn | Ghi chú |
+|---|---|---|
+| Dựng báo cáo đánh giá kỹ thuật chuẩn Brand v3.4 + RULE-6.1 | `TechnicalReportBuilder`, `build_tech_report_from_yaml`, `CCBADocxTheme` | CLI: `ccba-ooxml tech-report <spec.yaml>` |
+| Điền form Word bảo toàn bố cục & chống vỡ trang | `WordFormFiller`, `FormFillConfig`, `TableRule` | Dual-Engine Word COM / LibreOffice |
+| Thao tác DOM / comments / tracked changes & format NĐ 30 | `DocxDocument`, `CommentEngine`, `format_docx`, `convert_md_to_docx` | Giữ nguyên cấu trúc XML gốc khi cần |
+| Xuất Vector PDF trên Windows / Linux | `docx_to_pdf` (`convert_to_pdf`) | Tự động tuyến `.docx` sang `Word.Application` trên `win32` |
+
+### 4 Rào Chắn Biên Tập & Bố Cục Thực Chiến
+
+1. **Tiêu đề tóm tắt tiếng Việt tự nhiên:** Dùng `TÓM TẮT BÁO CÁO / EXECUTIVE SUMMARY` (hoặc `TÓM TẮT ĐÁNH GIÁ`); tránh cụm dịch máy `"TÓM TẮT ĐIỀU HÀNH"`.
+2. **Khối ký đối xứng nguyên tử (`4535 + 4536 = 9071 DXA`, `<w:cantSplit/>`):** Không lặp `contact_email` hay tên cơ quan vào ô chữ ký (email chỉ đặt tại Page 1 Document Control Matrix và Footer chạy trang); mỗi ô ký chỉ gồm Role Header VI/EN, `(Ký, ghi rõ họ tên)`, khoảng trống ký tươi, Họ tên, và Chức danh (`Giám đốc / Director`).
+3. **Tuân thủ `RULE-6.1` & WCAG 2.1 (`#005A9C` vs `#0093DD`):** Header trang bìa tối đa 2 cấp (cấm `"Bộ Xây dựng"`, cấm đuôi `(IBST)`/`(CCBA)` trên dòng tiếng Việt), ghi `IBST - CCBA` không dùng dấu gạch chéo; dùng `#005A9C` cho chữ metric trên nền sáng thay cho cyan `#0093DD`.
+4. **Visual QA Gate bắt buộc:** Xuất PDF qua `ccba_ooxml.docx_to_pdf`, render từng trang sang PNG và kiểm định trực quan: Page 1 không tràn sang trang 2, running header trang 2+ gọn 1 dòng, 0 heading mồ côi, khối ký không bị cắt đôi.
+
+---
+
 ## Dependencies
 
 ```
