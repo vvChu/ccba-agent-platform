@@ -20,7 +20,7 @@ keywords:
 argument-hint: '[#PR | COMMIT | --pending | codebase [parallel]]'
 metadata:
   author: CCBA
-  version: 1.8.0
+  version: 1.8.1
 disable-model-invocation: true
 bundle: _software
 scope: universal
