@@ -64,7 +64,7 @@ def _load_manifest_seam() -> Any | None:
 
 
 _DEFAULT_BUDGET_ROOTS: tuple[str, ...] = tuple(
-    "packages/*/src tools services backend formulas scripts".split()
+    "packages/*/src tools services backend frontend/src formulas scripts".split()
 )
 _CLEANLINESS_SEAM = _load_tier0_seam(
     "_parameter_cleanliness.py",
@@ -756,6 +756,14 @@ def _load_budget_baseline_dict(base_file: Path) -> dict[str, int]:
     return {str(k): int(v) for k, v in raw.items()}
 
 
+def _iter_budget_files(
+    spoke_root: Path, seam: Any, roots: tuple[str, ...], is_hub: bool
+) -> list[Path]:
+    """Enumerate production files using the seam's canonical roots on Spokes."""
+    scan_roots = roots if is_hub else tuple(getattr(seam, "DEFAULT_PRODUCTION_ROOTS", roots))
+    return list(seam.iter_production_files(spoke_root, scan_roots))
+
+
 def _append_module_budget_violations(
     spoke_root: Path, enforce_budget: bool, messages: list[str]
 ) -> bool:
@@ -779,7 +787,7 @@ def _append_module_budget_violations(
         except Exception as exc:
             messages.append(f"❌ [Module Size Budget] Không đọc được baseline {base_file}: {exc}")
             return True
-    files = seam.iter_production_files(spoke_root, roots)
+    files = _iter_budget_files(spoke_root, seam, roots, is_hub)
     violations = seam.evaluate_module_budgets(spoke_root, files, baseline)
     if violations:
         details = "\n".join(f"   - {v}" for v in violations[:20])
@@ -800,7 +808,7 @@ def _run_ratchet_update(spoke_root: Path) -> int:
     if seam is None:
         print("❌ Missing _module_size_budget.py seam.", file=sys.stderr)
         return 1
-    base_file, roots, _ = _resolve_budget_target(spoke_root)
+    base_file, roots, is_hub = _resolve_budget_target(spoke_root)
     existing: dict[str, int] | None = None
     if base_file.is_file():
         try:
@@ -808,7 +816,7 @@ def _run_ratchet_update(spoke_root: Path) -> int:
         except Exception as exc:
             print(f"❌ Cannot update corrupted baseline {base_file}: {exc}", file=sys.stderr)
             return 1
-    files = seam.iter_production_files(spoke_root, roots)
+    files = _iter_budget_files(spoke_root, seam, roots, is_hub)
     updated = seam.compute_ratchet_baseline(spoke_root, files, existing=existing)
     base_file.parent.mkdir(parents=True, exist_ok=True)
     base_file.write_text(json.dumps(updated, indent=2, sort_keys=True) + "\n", encoding="utf-8")
