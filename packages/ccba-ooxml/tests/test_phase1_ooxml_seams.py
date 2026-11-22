@@ -261,7 +261,7 @@ def test_format_docx_chapter_cover_page():
 
 
 def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
-    """Verify PEP 562 _LAZY_EXPORTS AST parity and runtime lookup for all 64 exports."""
+    """Verify PEP 562 _LAZY_EXPORTS AST, TYPE_CHECKING, and runtime parity for all 72 exports."""
     import ccba_ooxml
 
     init_path = Path(ccba_ooxml.__file__)
@@ -273,10 +273,23 @@ def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
     }
     assert "_LAZY_EXPORTS" in assigns, "_LAZY_EXPORTS must be an unannotated ast.Assign"
     lazy_map: dict[str, str] = ast.literal_eval(assigns["_LAZY_EXPORTS"])
-    assert len(ccba_ooxml.__all__) == 64
-    assert len(lazy_map) == 64
+    assert len(ccba_ooxml.__all__) == 72
+    assert len(lazy_map) == 72
     assert set(ccba_ooxml.__all__) == set(lazy_map)
     assert all(mod.startswith("ccba_ooxml.") for mod in lazy_map.values())
+
+    type_checking_names = {
+        alias.asname or alias.name
+        for node in tree.body
+        if isinstance(node, ast.If)
+        and isinstance(node.test, ast.Name)
+        and node.test.id == "TYPE_CHECKING"
+        for sub in node.body
+        if isinstance(sub, ast.ImportFrom)
+        for alias in sub.names
+    }
+    assert type_checking_names == set(ccba_ooxml.__all__)
+
     for sym in ccba_ooxml.__all__:
         assert getattr(ccba_ooxml, sym) is not None
         assert sym in dir(ccba_ooxml)
@@ -285,9 +298,27 @@ def test_ccba_ooxml_lazy_exports_ast_and_runtime_parity() -> None:
 
 
 def test_ccba_ooxml_root_and_leaf_subprocess_isolation() -> None:
-    """Verify bare root import and pure-stdlib leaves do not import lxml, docx, or pptx."""
-    blocked = ("lxml", "docx", "pptx")
+    """Verify bare root import and pure-stdlib leaves do not import lxml, docx, pptx, or openpyxl."""
+    blocked = ("lxml", "docx", "pptx", "openpyxl")
     for stmt in ("import ccba_ooxml", "import ccba_ooxml.soffice", "import ccba_ooxml.calc"):
         script = f"import sys; {stmt}; hits = [m for m in {blocked!r} if m in sys.modules]; assert not hits, hits"
         proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
         assert proc.returncode == 0, f"{stmt} failed: {proc.stderr}"
+
+
+def test_ccba_ooxml_root_import_latency_under_25ms() -> None:
+    """Verify PEP 562 root import latency minimum across 3 subprocesses stays under 25 ms."""
+    probe = (
+        "import time; t0 = time.perf_counter(); import ccba_ooxml; "
+        "print((time.perf_counter() - t0) * 1000.0)"
+    )
+    samples_ms: list[float] = []
+    for _ in range(3):
+        proc = subprocess.run(
+            [sys.executable, "-c", probe],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        samples_ms.append(float(proc.stdout.strip()))
+    assert min(samples_ms) < 25.0, f"Minimum import latency too slow: {samples_ms}"

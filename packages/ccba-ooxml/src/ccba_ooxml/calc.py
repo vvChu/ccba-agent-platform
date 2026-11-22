@@ -89,6 +89,27 @@ def setup_libreoffice_macro() -> bool:
         return False
 
 
+def _fallback_recalc_with_openpyxl(file_path: Path) -> dict[str, Any]:
+    """Run RULE-5.13 ZIP safety preflight and save-back via lazy-imported openpyxl."""
+    wb: Any = None
+    try:
+        from openpyxl import load_workbook
+
+        from ccba_ooxml.xlsx._safety import verify_xlsx_zip_safety
+
+        verify_xlsx_zip_safety(file_path)
+        wb = load_workbook(file_path, data_only=False)
+        wb.save(file_path)
+        return {"success": True, "method": "openpyxl (Save-back only)"}
+    except ImportError:
+        return {"error": "Failed recalculation: Neither LibreOffice nor openpyxl is available."}
+    except Exception as e:
+        return {"error": f"Failed recalculation: {e}"}
+    finally:
+        if wb is not None:
+            wb.close()
+
+
 def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
     """Recalculate formulas in Excel file using LibreOffice or fall back to openpyxl.
 
@@ -138,14 +159,4 @@ def recalc_xlsx(filename: str | Path, timeout: int = 30) -> dict[str, Any]:
         except (subprocess.SubprocessError, FileNotFoundError):
             pass
 
-    # Fallback to openpyxl (Lazy Import to prevent crash if openpyxl not installed)
-    try:
-        from openpyxl import load_workbook  # type: ignore[import-untyped]
-
-        wb = load_workbook(filename, data_only=False)
-        wb.save(filename)
-        return {"success": True, "method": "openpyxl (Save-back only)"}
-    except ImportError:
-        return {"error": "Failed recalculation: Neither LibreOffice nor openpyxl is available."}
-    except Exception as e:
-        return {"error": f"Failed recalculation: {e}"}
+    return _fallback_recalc_with_openpyxl(file_path)

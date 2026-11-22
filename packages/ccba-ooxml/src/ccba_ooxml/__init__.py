@@ -74,6 +74,16 @@ if TYPE_CHECKING:
     )
     from .unpack import unpack_document
     from .workspace import OOXMLWorkspace
+    from .xlsx import (
+        MergedCellWriteError,
+        XlsxFillConfig,
+        XlsxHeaderStyle,
+        XlsxMediaLimitError,
+        XlsxReader,
+        XlsxTemplateFiller,
+        XlsxWorkbookWriter,
+        sanitize_xlsx_value,
+    )
 
 __all__ = [
     # Document operations
@@ -148,6 +158,15 @@ __all__ = [
     "TemplateNotFoundError",
     "TemplateProtectionError",
     "LayoutGuardError",
+    # Excel (.xlsx) safe reader, writer, and template filler (Issue #842)
+    "XlsxTemplateFiller",
+    "XlsxWorkbookWriter",
+    "XlsxReader",
+    "XlsxFillConfig",
+    "XlsxHeaderStyle",
+    "sanitize_xlsx_value",
+    "XlsxMediaLimitError",
+    "MergedCellWriteError",
 ]
 
 # Unannotated ast.Assign so check_init_lazy_exports_parity inspects all keys.
@@ -216,6 +235,14 @@ _LAZY_EXPORTS = {
     "vietnamese_to_ascii": "ccba_ooxml.tables",
     "unpack_document": "ccba_ooxml.unpack",
     "OOXMLWorkspace": "ccba_ooxml.workspace",
+    "MergedCellWriteError": "ccba_ooxml.xlsx",
+    "XlsxFillConfig": "ccba_ooxml.xlsx",
+    "XlsxHeaderStyle": "ccba_ooxml.xlsx",
+    "XlsxMediaLimitError": "ccba_ooxml.xlsx",
+    "XlsxReader": "ccba_ooxml.xlsx",
+    "XlsxTemplateFiller": "ccba_ooxml.xlsx",
+    "XlsxWorkbookWriter": "ccba_ooxml.xlsx",
+    "sanitize_xlsx_value": "ccba_ooxml.xlsx",
 }
 
 
