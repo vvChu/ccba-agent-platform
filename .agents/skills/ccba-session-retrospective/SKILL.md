@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.1"
+  version: "1.7.2"
 bundle: _core
 scope: universal
 posture: seam-exempt
@@ -102,11 +102,11 @@ Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằn
   ```bash
   # Tại Hub:
   python scripts/sync_hub_adr_matrix.py
-  # Tại Spoke (chế độ Two-Tier Matrix qua CCBA_HUB_PATH):
+  # Tại Spoke (auto-detect docs/adr -> .md/adr hoặc --adr-dir <path>; bỏ qua nếu chưa có ADR):
   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/sync_hub_adr_matrix.py" --spoke-dir .
   ```
-- Giữ nguyên cấu trúc phân loại theo 6 Miền Kiến Trúc, sử dụng đúng bộ từ vựng thiết kế Deep Modules (`/ccba-codebase-design`).
-- **Tiêu chí hoàn thành:** Tệp `session_learnings.md` duy trì kích thước $\le 10.0\text{ KB}$ mà không làm mất điều kiện biên của các `RULE-X.Y`, `log.md` và Living Traceability Matrix (`docs/adr/TRACEABILITY_MATRIX.md`, `docs/adr/README.md`) được cập nhật đầy đủ, không tạo orphan notes.
+- Giữ nguyên phân loại 6 Miền Kiến Trúc, dùng bộ từ vựng Deep Modules (`/ccba-codebase-design`).
+- **Tiêu chí hoàn thành:** `session_learnings.md` $\le 10.0\text{ KB}$ giữ nguyên điều kiện biên `RULE-X.Y`; `log.md` và `TRACEABILITY_MATRIX.md` (`docs/adr/` hoặc `.md/adr/`) đồng bộ, không tạo orphan notes/thư mục mồ côi.
 
 ### Bước 3: Tiến hóa Kỹ năng Trực tiếp (Direct Skill Evolution Loop) & Recompilation Gate
 - **Nguyên tắc "Học đi đôi với Hành":** Không dừng lại ở việc ghi nhận thụ động vào `session_learnings.md`. Nếu bài học ở Bước 2 chỉ ra một quy trình trong `SKILL.md` (như `ccba-improve-codebase-architecture`, `ccba-code-review`, `ccba-tvpl-vip-crawler`...) còn thiếu rào chắn hoặc gây sai lệch:
@@ -130,9 +130,9 @@ Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằn
 ### Bước 4: Rào chắn Kiểm định Quản trị & ADR-0058 Hard Completion Lock
 Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy trình kiểm định quản trị đa tầng:
 
-1. **Cập nhật số liệu kiến trúc:**
+1. **Cập nhật số liệu kiến trúc (`# Chỉ chạy trên Hub`):**
    ```bash
-   python scripts/update_arch_stats.py
+   python scripts/update_arch_stats.py  # Chỉ chạy trên Hub
    ```
 2. **Bộ 4 lệnh kiểm tra cốt lõi:**
    - Kiểm tra tính hợp lệ & chỉ số GPI của Skills:
@@ -153,15 +153,15 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
      ```bash
      # Trên Hub:
      python scripts/governance/compact_session_learnings.py --profile hub --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
-     # Trên Spoke (dùng --profile spoke cho ccba-legal-knowledge; với Spoke hạ tầng riêng dùng --stats + kiểm tra <= 10240 bytes):
-     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile spoke --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
+     # Trên Spoke (--profile spoke cho ccba-legal-knowledge; Spoke khác dùng --profile generic-spoke kiểm tra <= 10.0 KB & <= 115 dòng):
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/governance/compact_session_learnings.py" --profile generic-spoke --file .md/knowledge/session_learnings.md --max-size-kb 10.0 --check
      ```
    - Kiểm tra tài liệu, biến môi trường & Architecture Drift (khớp cờ `.github/workflows/validate-docs.yml`):
      ```bash
      # Trên Hub:
      python scripts/validate_docs.py . --src scripts,packages --changed
-     # Trên Spoke:
-     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validate_docs.py" --changed
+     # Trên Spoke (truyền [docs_dir]: docs hoặc .md):
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validate_docs.py" .md --changed
      ```
      *Nếu phát hiện cảnh báo Structural Drift hoặc thiếu biến môi trường, Agent phải cập nhật ngay `README.md`, `PLATFORM.md`, và `.env.example` trước khi tiếp tục.*
 3. **Bộ test quản trị scoped nhanh (< 20s):**
@@ -178,16 +178,14 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
    # Trên Spoke (do --preset skill giả định scripts/* tại gốc Hub, dùng --preset doc kết hợp --cmd trỏ qua CCBA_HUB_PATH):
    python -m ccba_harness verify-patch --preset doc --target .md/knowledge/session_learnings.md
    ```
-- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm tra cốt lõi, scoped test suite/guardrails và khóa cứng `verify-patch` đều trả về Exit code 0 (100% PASS). Agent nghiêm cấm báo cáo hoàn thành hoặc yêu cầu người dùng nghiệm thu nếu có bất kỳ kiểm định nào thất bại. Lưu ý: `validate_docs.py` có thể trả về Exit code 0 kèm cảnh báo `[WARN]` — đây là chấp nhận được; chỉ khi Exit code 1 (`[ERROR]`) mới chặn hoàn tất.
+- **Tiêu chí hoàn thành:** Cả 4 lệnh kiểm tra cốt lõi, scoped test suite/guardrails và khóa cứng `verify-patch` đều trả về Exit code 0 (100% PASS). Cấm báo cáo hoàn thành nếu có kiểm định fail. `validate_docs.py` trả Exit 0 kèm `[WARN]` là hợp lệ; chỉ Exit 1 (`[ERROR]`) mới chặn.
 
 ### Bước 5: Dọn dẹp Tự động & Commit Bypass (Workspace & Git Clean)
-- **Dọn dẹp tự động qua công cụ nền tảng:**
-  Chạy lệnh dọn dẹp để tự động rà soát và xóa các tệp nháp, log tạm, cache và artifacts không cần thiết:
+- **Dọn dẹp tự động qua công cụ nền tảng (`# Chỉ chạy trên Hub`):**
   ```bash
-  python scripts/session_cleanup.py --execute
+  python scripts/session_cleanup.py --execute  # Chỉ chạy trên Hub (Spoke dùng git status & guardrails tương ứng)
   ```
-- **Bảo tồn Cấu trúc Nhóm Tác tử Canonical (`.agents/teams/`):**
-  Công cụ dọn dẹp `session_cleanup.py` tuyệt đối bảo tồn thư mục canonical `.agents/teams/` (nơi lưu trữ các team sheets `*_team_sheet.md` theo ADR-0053 và ADR-0060), không coi là ephemeral artifacts.
+- **Bảo tồn `.agents/teams/`:** `session_cleanup.py` tuyệt đối bảo tồn thư mục canonical `.agents/teams/` (`*_team_sheet.md` theo ADR-0053, ADR-0060).
 - **Phân phối tài liệu thô (nếu có):** Di chuyển các file tài liệu đã xử lý từ `input_documents/` sang `.md/extracted_docs/` hoặc vị trí lưu trữ phù hợp theo quy định của dự án.
 - **Vượt cổng `simplify_gate` an toàn (Commit Bypass Protocol — RULE-2.10):**
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.

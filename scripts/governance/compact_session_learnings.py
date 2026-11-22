@@ -27,6 +27,7 @@ DEFAULT_FILE = HUB_ROOT / ".md" / "knowledge" / "session_learnings.md"
 DEFAULT_ARCHIVE_DIR = HUB_ROOT / ".md" / "knowledge" / "archive"
 DEFAULT_MAX_SIZE_KB = 15.0
 SOFT_TARGET_SIZE_KB = 10.0
+DEFAULT_SPOKE_MAX_LINES = 115
 
 
 REQUIRED_INVARIANTS = [
@@ -329,8 +330,9 @@ def run_check(
     max_size_kb: float,
     invariants: list[str] | None = None,
     soft_target_kb: float = SOFT_TARGET_SIZE_KB,
+    max_lines: int | None = None,
 ) -> int:
-    """CI check mode: Return 0 if file is within size budget, 1 otherwise."""
+    """CI check mode: Return 0 if file is within size/line budgets, 1 otherwise."""
     metrics = get_file_metrics(file_path)
     if not metrics["exists"]:
         print(f"[FAIL] Target file does not exist: {file_path}", file=sys.stderr)
@@ -340,6 +342,14 @@ def run_check(
     if kb > max_size_kb:
         print(
             f"[FAIL] File size ({kb} KB) exceeds maximum allowed budget ({max_size_kb} KB).",
+            file=sys.stderr,
+        )
+        return 1
+
+    lines = int(metrics["lines"])
+    if max_lines is not None and lines > max_lines:
+        print(
+            f"[FAIL] Line count ({lines} lines) exceeds maximum allowed budget ({max_lines} lines).",
             file=sys.stderr,
         )
         return 1
@@ -456,9 +466,9 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--profile",
-        choices=["hub", "spoke"],
+        choices=["hub", "spoke", "generic-spoke"],
         default="hub",
-        help="Profile to use (hub or spoke, default: hub).",
+        help="Profile to use (hub, spoke, or generic-spoke; default: hub).",
     )
     parser.add_argument("--target-dir", type=Path, default=None, help="Custom root directory.")
     parser.add_argument("--file", type=Path, default=None, help="Path to session_learnings.md.")
@@ -468,6 +478,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         type=float,
         default=DEFAULT_MAX_SIZE_KB,
         help=f"Maximum size allowed in KB (default: {DEFAULT_MAX_SIZE_KB}).",
+    )
+    parser.add_argument(
+        "--max-lines",
+        type=int,
+        default=None,
+        help=f"Optional maximum line count for --check (defaults to {DEFAULT_SPOKE_MAX_LINES} for generic-spoke).",
     )
     parser.add_argument("--check", action="store_true", help="Check size and invariants.")
     parser.add_argument("--stats", action="store_true", help="Display file metrics.")
@@ -495,6 +511,12 @@ def _resolve_profile_targets(
         target_archive = args.archive_dir or (spoke_root / ".md" / "knowledge" / "archive")
         return target_file, target_archive, SPOKE_COMPACTED_TEMPLATE, SPOKE_REQUIRED_INVARIANTS
 
+    if args.profile == "generic-spoke":
+        spoke_root = args.target_dir.resolve() if args.target_dir else Path.cwd().resolve()
+        target_file = args.file or (spoke_root / ".md" / "knowledge" / "session_learnings.md")
+        target_archive = args.archive_dir or (spoke_root / ".md" / "knowledge" / "archive")
+        return target_file, target_archive, "", []
+
     hub_root = args.target_dir.resolve() if args.target_dir else HUB_ROOT
     target_file = args.file or (hub_root / ".md" / "knowledge" / "session_learnings.md")
     target_archive = args.archive_dir or (hub_root / ".md" / "knowledge" / "archive")
@@ -512,8 +534,20 @@ def main() -> int:
     target_file, target_archive, target_template, target_invariants = _resolve_profile_targets(args)
 
     if args.check:
-        return run_check(target_file, args.max_size_kb, target_invariants)
+        max_lines = (
+            args.max_lines
+            if args.max_lines is not None
+            else (DEFAULT_SPOKE_MAX_LINES if args.profile == "generic-spoke" else None)
+        )
+        return run_check(target_file, args.max_size_kb, target_invariants, max_lines=max_lines)
     if args.compact:
+        if args.profile == "generic-spoke":
+            print(
+                "[Error] --compact template overwrite is not supported for generic-spoke; "
+                "compact in-place and validate with --check.",
+                file=sys.stderr,
+            )
+            return 1
         allowed_ids = [r for r in str(args.allow_rule_drop_ids).split(",") if r.strip()]
         return run_compact(
             target_file,

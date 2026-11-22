@@ -8,13 +8,16 @@ Verifies:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
+import pytest
 from scripts.governance.compact_session_learnings import (
     COMPACTED_WORKING_MEMORY_TEMPLATE,
     DEFAULT_ARCHIVE_DIR,
     DEFAULT_FILE,
     DEFAULT_MAX_SIZE_KB,
+    DEFAULT_SPOKE_MAX_LINES,
     REQUIRED_INVARIANTS,
     SOFT_TARGET_SIZE_KB,
     SPOKE_COMPACTED_TEMPLATE,
@@ -25,6 +28,9 @@ from scripts.governance.compact_session_learnings import (
     run_check,
     run_compact,
     verify_invariants,
+)
+from scripts.governance.compact_session_learnings import (
+    main as compact_main,
 )
 
 
@@ -270,3 +276,115 @@ def test_compacted_working_memory_template_six_domains() -> None:
     assert "RULE-2.22" in COMPACTED_WORKING_MEMORY_TEMPLATE
     assert "RULE-4.20" in COMPACTED_WORKING_MEMORY_TEMPLATE
     assert "RULE-4.21" in COMPACTED_WORKING_MEMORY_TEMPLATE
+
+
+def test_run_check_generic_spoke_line_and_size_budgets(tmp_path: Path) -> None:
+    """Verify generic-spoke size + line budgets pass without legal tokens and fail when exceeded."""
+    learnings = tmp_path / "session_learnings.md"
+
+    learnings.write_text("# ERP Learnings\n- **RULE-1.1**: Short rule.\n", encoding="utf-8")
+    assert (
+        run_check(learnings, max_size_kb=10.0, invariants=[], max_lines=DEFAULT_SPOKE_MAX_LINES)
+        == 0
+    )
+
+    too_many_lines = "\n".join(f"- line {idx}" for idx in range(DEFAULT_SPOKE_MAX_LINES + 1)) + "\n"
+    learnings.write_text(too_many_lines, encoding="utf-8")
+    assert len(too_many_lines.encode("utf-8")) < 10 * 1024
+    assert (
+        run_check(learnings, max_size_kb=10.0, invariants=[], max_lines=DEFAULT_SPOKE_MAX_LINES)
+        == 1
+    )
+
+    oversized = ("X" * 11_000) + "\n"
+    learnings.write_text(oversized, encoding="utf-8")
+    assert (
+        run_check(learnings, max_size_kb=10.0, invariants=[], max_lines=DEFAULT_SPOKE_MAX_LINES)
+        == 1
+    )
+
+
+def test_cli_generic_spoke_profile_and_spoke_backward_compat(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify CLI --profile generic-spoke enforces KB + 115 lines while keeping --profile spoke legal checks."""
+    learnings = tmp_path / "session_learnings.md"
+    learnings.write_text("# Generic Spoke\n- Note A\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compact_session_learnings.py",
+            "--profile",
+            "generic-spoke",
+            "--file",
+            str(learnings),
+            "--max-size-kb",
+            "10.0",
+            "--check",
+        ],
+    )
+    assert compact_main() == 0
+
+    # Rejects --compact template overwrite under generic-spoke without touching file
+    original = learnings.read_text(encoding="utf-8")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compact_session_learnings.py",
+            "--profile",
+            "generic-spoke",
+            "--file",
+            str(learnings),
+            "--compact",
+        ],
+    )
+    assert compact_main() == 1
+    assert learnings.read_text(encoding="utf-8") == original
+
+    # Fails when lines > 115 even below 10 KB
+    learnings.write_text(
+        "\n".join(f"- line {idx}" for idx in range(DEFAULT_SPOKE_MAX_LINES + 1)) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compact_session_learnings.py",
+            "--profile",
+            "generic-spoke",
+            "--file",
+            str(learnings),
+            "--max-size-kb",
+            "10.0",
+            "--check",
+        ],
+    )
+    assert compact_main() == 1
+
+    # Fails when size > 10 KB even with <= 115 lines
+    learnings.write_text(("X" * 11_000) + "\n", encoding="utf-8")
+    assert compact_main() == 1
+
+    # Backward compatibility: --profile spoke still enforces SPOKE_REQUIRED_INVARIANTS
+    learnings.write_text("# Missing legal tokens\n", encoding="utf-8")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compact_session_learnings.py",
+            "--profile",
+            "spoke",
+            "--file",
+            str(learnings),
+            "--max-size-kb",
+            "10.0",
+            "--check",
+        ],
+    )
+    assert compact_main() == 1
+    learnings.write_text(SPOKE_COMPACTED_TEMPLATE, encoding="utf-8")
+    assert compact_main() == 0
