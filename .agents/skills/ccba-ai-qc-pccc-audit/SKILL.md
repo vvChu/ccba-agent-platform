@@ -11,7 +11,7 @@ tier: kernel
 user-invocable: true
 command: /ccba-ai-qc-pccc-audit
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: "CCBA Hub"
 gpi:
   s: 2.0
@@ -66,11 +66,11 @@ Skill này sử dụng cơ chế **Semantic Map-Reduce** để phân tích chéo
 Toàn bộ tài liệu PDF phải được chạy qua `ccba-ai-pdf-preprocessor` để chuyển đổi sang định dạng văn bản `.md`.
 
 ### 2. Lệnh thực thi qua Package CLI (`ccba-qc`):
-*   **Định tuyến mô hình:** CLI package mặc định sử dụng model local (`ModelArchetype.LOCAL`). Để kích hoạt năng lực thẩm tra chuyên sâu, BẮT BUỘC giải quyết model alias qua Seam `choose_model("audit")` (kết thúc ở `ModelArchetype.REASONING` tương ứng alias `gemini-3.7-flash-high`) và truyền vào tham số `--model`:
+*   **Định tuyến mô hình:** CLI package mặc định sử dụng model local (`ModelArchetype.LOCAL`). Để kích hoạt năng lực thẩm tra chuyên sâu, BẮT BUỘC giải quyết model alias qua Seam `choose_model("audit")` (kết thúc ở `ModelArchetype.TIER_REASONING` tương ứng alias `"tier-reasoning"`) và truyền vào tham số `--model`:
 
 ```bash
 ccba-qc pccc \
-    --model "gemini-3.7-flash-high" \
+    --model "tier-reasoning" \
     --tm "đường/dẫn/đến/thuyet_minh.md" \
     --arch "đường/dẫn/đến/kien_truc.md" \
     --mep "đường/dẫn/đến/mep.md" \

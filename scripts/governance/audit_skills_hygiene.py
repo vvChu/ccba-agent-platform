@@ -26,12 +26,16 @@ from typing import Any
 
 import yaml
 
-HUB_ROOT = Path(__file__).resolve().parent.parent.parent
-_HARNESS_SRC = HUB_ROOT / "packages" / "ccba-harness" / "src"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+HUB_ROOT = _REPO_ROOT
+_HARNESS_SRC = _REPO_ROOT / "packages" / "ccba-harness" / "src"
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 if str(_HARNESS_SRC) not in sys.path:
     sys.path.insert(0, str(_HARNESS_SRC))
 
 from ccba_harness import parse_markdown_frontmatter  # noqa: E402
+from scripts.spoke.check_spoke_cleanliness import LIVING_DOC_BANNED_TOKENS  # noqa: E402
 
 SKILLS_DIR = HUB_ROOT / ".agents" / "skills"
 PORTALS_FILE = HUB_ROOT / "docs" / "skills" / "portals.yaml"
@@ -223,6 +227,13 @@ class SkillAuditResult:
         return "GREEN"
 
 
+def _add_issue(
+    result: SkillAuditResult, sev: str, cat: str, rel: str, line_no: int, detail: str
+) -> None:
+    """Append a structured hygiene Issue to a SkillAuditResult."""
+    result.issues.append(Issue(sev, cat, rel, line_no, detail))
+
+
 def load_portals(
     portals_path: Path | None = None,
 ) -> tuple[dict[str, tuple[str, str]], dict[str, str]]:
@@ -254,57 +265,37 @@ def _check_directory_hygiene(
     skill_dir: Path, sname: str, ref_dir: Path, result: SkillAuditResult
 ) -> None:
     """Validates ADR-0057 directory hygiene (no stray root .md, no non-.md in references/)."""
+    cat = "Directory Hygiene (ADR-0057)"
     try:
         dir_items = sorted(skill_dir.iterdir(), key=lambda p: p.name.lower())
     except Exception:
         dir_items = []
     for item in dir_items:
         if item.is_file() and item.suffix.lower() == ".md" and item.name != "SKILL.md":
-            result.issues.append(
-                Issue(
-                    "RED",
-                    "Directory Hygiene (ADR-0057)",
-                    f"{sname}/{item.name}",
-                    1,
-                    f"Stray markdown file at skill root: {item.name}. Must be moved to references/.",
-                )
-            )
+            msg = f"Stray markdown file at skill root: {item.name}. Must be moved to references/."
+            _add_issue(result, "RED", cat, f"{sname}/{item.name}", 1, msg)
     if ref_dir.is_dir():
         for item in sorted(ref_dir.rglob("*"), key=lambda p: p.as_posix()):
             if item.is_file() and item.suffix.lower() != ".md":
                 rel_ref = item.relative_to(skill_dir).as_posix()
-                result.issues.append(
-                    Issue(
-                        "RED",
-                        "Directory Hygiene (ADR-0057)",
-                        f"{sname}/{rel_ref}",
-                        1,
-                        f"Non-markdown file in references/: {item.name}. Must be moved to resources/ or scripts/.",
-                    )
+                msg = (
+                    f"Non-markdown file in references/: {item.name}. "
+                    "Must be moved to resources/ or scripts/."
                 )
+                _add_issue(result, "RED", cat, f"{sname}/{rel_ref}", 1, msg)
 
 
 def _check_frontmatter_metadata(skill_content: str, sname: str, result: SkillAuditResult) -> None:
     """Validates SKILL.md YAML frontmatter and mandatory metadata.version / metadata.author."""
-    rel = f"{sname}/SKILL.md"
+    rel, cat = f"{sname}/SKILL.md", "Governance Metadata"
     spec = parse_markdown_frontmatter(skill_content)
     if not spec.has_frontmatter:
-        result.issues.append(
-            Issue("RED", "Governance Metadata", rel, 1, "Missing YAML frontmatter in SKILL.md")
-        )
+        _add_issue(result, "RED", cat, rel, 1, "Missing YAML frontmatter in SKILL.md")
         fm: dict[str, Any] = {}
     else:
         fm = spec.metadata if spec.error is None else {}
         if not fm:
-            result.issues.append(
-                Issue(
-                    "RED",
-                    "Governance Metadata",
-                    rel,
-                    1,
-                    "Invalid or empty YAML frontmatter in SKILL.md",
-                )
-            )
+            _add_issue(result, "RED", cat, rel, 1, "Invalid or empty YAML frontmatter in SKILL.md")
 
     meta = fm.get("metadata", {})
     if isinstance(meta, dict):
@@ -314,24 +305,15 @@ def _check_frontmatter_metadata(skill_content: str, sname: str, result: SkillAud
     result.bundle = str(fm.get("bundle", "N/A"))
 
     if result.version in ("N/A", "None", ""):
-        result.issues.append(
-            Issue(
-                "YELLOW",
-                "Governance Metadata",
-                rel,
-                1,
-                "Missing metadata.version in frontmatter",
-            )
-        )
+        _add_issue(result, "YELLOW", cat, rel, 1, "Missing metadata.version in frontmatter")
     if result.author in ("N/A", "None", ""):
-        result.issues.append(
-            Issue(
-                "RED",
-                "Governance Metadata",
-                rel,
-                1,
-                "Missing or empty metadata.author in frontmatter (mandatory)",
-            )
+        _add_issue(
+            result,
+            "RED",
+            cat,
+            rel,
+            1,
+            "Missing or empty metadata.author in frontmatter (mandatory)",
         )
 
 
@@ -344,15 +326,10 @@ def _check_stability_zone(skill_content: str, sname: str, result: SkillAuditResu
     if raw_zone is not None and (
         not isinstance(raw_zone, str) or raw_zone.strip().lower() not in ("evolvable", "locked")
     ):
-        result.issues.append(
-            Issue(
-                "RED",
-                "Governance Metadata",
-                f"{sname}/SKILL.md",
-                1,
-                f"Invalid stability_zone '{raw_zone}' in frontmatter (must be 'evolvable' or 'locked')",
-            )
+        msg = (
+            f"Invalid stability_zone '{raw_zone}' in frontmatter (must be 'evolvable' or 'locked')"
         )
+        _add_issue(result, "RED", "Governance Metadata", f"{sname}/SKILL.md", 1, msg)
 
 
 def _check_level3_index(
@@ -370,31 +347,17 @@ def _check_level3_index(
         or ("references/" in skill_content and "| :---" in skill_content)
     )
     result.has_level3_index = has_index
-    rel = f"{sname}/SKILL.md"
+    rel, cat = f"{sname}/SKILL.md", "Progressive Disclosure"
     last_line = len(skill_content.splitlines())
     if not has_index:
-        result.issues.append(
-            Issue(
-                "YELLOW",
-                "Progressive Disclosure",
-                rel,
-                last_line,
-                f"Has {result.num_references} reference files but lacks Level 3 Reference Index in SKILL.md",
-            )
-        )
+        msg = f"Has {result.num_references} reference files but lacks Level 3 Reference Index in SKILL.md"
+        _add_issue(result, "YELLOW", cat, rel, last_line, msg)
         return
     uncovered = resolve_uncovered_references(skill_content, ref_dir, ref_files)
     if uncovered:
         suffix = f" (+{len(uncovered) - 3} more)" if len(uncovered) > 3 else ""
-        result.issues.append(
-            Issue(
-                "YELLOW",
-                "Progressive Disclosure",
-                rel,
-                last_line,
-                f"Reference files not indexed in Level 3 table: {', '.join(uncovered[:3])}{suffix}",
-            )
-        )
+        msg = f"Reference files not indexed in Level 3 table: {', '.join(uncovered[:3])}{suffix}"
+        _add_issue(result, "YELLOW", cat, rel, last_line, msg)
 
 
 def _scan_bashisms_in_lines(lines: list[str], rel_path: str, result: SkillAuditResult) -> None:
@@ -423,21 +386,37 @@ def _scan_bashisms_in_lines(lines: list[str], rel_path: str, result: SkillAuditR
                 if is_table_row and "`grep" not in stripped:
                     continue
             if pattern.search(line):
-                result.issues.append(
-                    Issue(
-                        "RED",
-                        "Windows Bashism",
-                        rel_path,
-                        idx,
-                        f"Found {label}: `{stripped[:60]}`",
-                    )
+                _add_issue(
+                    result,
+                    "RED",
+                    "Windows Bashism",
+                    rel_path,
+                    idx,
+                    f"Found {label}: `{stripped[:60]}`",
+                )
+
+
+def _scan_living_doc_drift(lines: list[str], rel_path: str, result: SkillAuditResult) -> None:
+    """Scans skill markdown lines against SSOT LIVING_DOC_BANNED_TOKENS from Spoke cleanliness."""
+    for idx, line in enumerate(lines, start=1):
+        if "ccba:allow-doc-drift" in line:
+            continue
+        for token, reason in LIVING_DOC_BANNED_TOKENS:
+            if token in line:
+                _add_issue(
+                    result,
+                    "RED",
+                    "Living Doc SSoT Drift",
+                    rel_path,
+                    idx,
+                    f"{reason} (matched '{token}')",
                 )
 
 
 def _scan_markdown_file(
     md_file: Path, sname: str, skill_dir: Path, result: SkillAuditResult
 ) -> None:
-    """Scans a single markdown file for broken links, dead wood, bashisms, and unsafe Start-Process."""
+    """Scans a single markdown file for broken links, dead wood, bashisms, drift, and Start-Process."""
     rel_path = f"{sname}/{md_file.relative_to(skill_dir).as_posix()}"
     text = md_file.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
@@ -445,43 +424,29 @@ def _scan_markdown_file(
     if "references" in md_file.parts:
         for idx, line in enumerate(lines, start=1):
             if RE_BROKEN_SKILL_LINK.search(line):
-                result.issues.append(
-                    Issue(
-                        "RED",
-                        "Relative Link Broken",
-                        rel_path,
-                        idx,
-                        "Broken link [SKILL.md](SKILL.md) in references/. Must be [SKILL.md](../SKILL.md).",
-                    )
-                )
+                msg = "Broken link [SKILL.md](SKILL.md) in references/. Must be [SKILL.md](../SKILL.md)."
+                _add_issue(result, "RED", "Relative Link Broken", rel_path, idx, msg)
 
     for pattern, label in RE_DEAD_WOOD:
         for idx, line in enumerate(lines, start=1):
             if pattern.search(line):
-                result.issues.append(
-                    Issue(
-                        "RED",
-                        "Dead Wood Remnant",
-                        rel_path,
-                        idx,
-                        f"Found {label}: `{line.strip()[:60]}`",
-                    )
+                _add_issue(
+                    result,
+                    "RED",
+                    "Dead Wood Remnant",
+                    rel_path,
+                    idx,
+                    f"Found {label}: `{line.strip()[:60]}`",
                 )
 
     _scan_bashisms_in_lines(lines, rel_path, result)
+    _scan_living_doc_drift(lines, rel_path, result)
 
     for match in RE_START_PROCESS.finditer(text):
         if not is_start_process_protected(text, match.start(), match.end()):
             line_no = text[: match.start()].count("\n") + 1
-            result.issues.append(
-                Issue(
-                    "RED",
-                    "Safe Headless Process",
-                    rel_path,
-                    line_no,
-                    "Start-Process without try/catch fallback block. May fail in headless/CI environment.",
-                )
-            )
+            msg = "Start-Process without try/catch fallback block. May fail in headless/CI environment."
+            _add_issue(result, "RED", "Safe Headless Process", rel_path, line_no, msg)
 
 
 def audit_skill(
@@ -498,9 +463,7 @@ def audit_skill(
 
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.exists():
-        result.issues.append(
-            Issue("RED", "Directory Hygiene (ADR-0057)", sname, 0, "Missing SKILL.md")
-        )
+        _add_issue(result, "RED", "Directory Hygiene (ADR-0057)", sname, 0, "Missing SKILL.md")
         return result
 
     ref_dir = skill_dir / "references"
