@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.3"
+  version: "1.7.4"
 bundle: _core
 scope: universal
 posture: seam-exempt
@@ -92,13 +92,13 @@ Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằn
   * **Bất biến Bảo toàn Điều kiện Biên (Scope Qualifier Preservation):** Khi rút gọn một `RULE-X.Y`, **bắt buộc** giữ nguyên phạm vi áp dụng cụ thể (tên cờ CLI như `--deny`, tên module, hoặc hệ điều hành) và đối chiếu chéo với bản ghi gốc trong `session_learnings_history.md`. Tuyệt đối không lược bỏ phạm vi hẹp khiến quy tắc bị khái quát hóa quá mức (over-generalization) và xung đột với các ADR nền tảng (như ADR-0060).
 - Ghi nhận nhật ký dòng thời gian vào [`.md/knowledge/log.md`](../../../.md/knowledge/log.md) theo chuẩn `## [YYYY-MM-DD] [operation] | Title` nếu phiên làm việc có nạp/sửa đổi/ban hành tài liệu mới.
 - Cập nhật mục lục danh mục [`.md/knowledge/index.md`](../../../.md/knowledge/index.md) nếu có thêm tệp tài liệu mới.
-- **Tự động đồng bộ Living Traceability Matrix cho ADRs:**
+- **Đồng bộ ADR Traceability Matrix:**
   ```bash
-  # Tại Hub:
+  # Hub:
   python scripts/sync_hub_adr_matrix.py
-  # Tại Spoke có ADR sync SSOT cục bộ (vd. ccba-legal-knowledge): CHỈ chạy cục bộ, KHÔNG chạy sync_hub_adr_matrix.py --spoke-dir .
+  # Spoke có scripts/sync_adr_matrix.py (SSOT cục bộ; cấm chạy sync_hub_adr_matrix.py --spoke-dir .):
   python scripts/sync_adr_matrix.py
-  # Spoke không có script riêng (auto-detect docs/adr -> .md/adr):
+  # Spoke khác (auto-detect docs/adr -> .md/adr):
   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/sync_hub_adr_matrix.py" --spoke-dir .
   ```
 - Giữ nguyên phân loại 6 Miền Kiến Trúc, dùng bộ từ vựng Deep Modules (`/ccba-codebase-design`).
