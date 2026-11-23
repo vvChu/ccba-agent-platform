@@ -1,12 +1,16 @@
 """Unit tests for deterministic downloader, lock cleanup, and resilience hardening."""
 
 import shutil
+import threading
 import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from ccba_legal.cdp import MockChromeCDP, cleanup_zombie_locks
+import pytest
+
+from ccba_legal.cdp import ChromeCDP, MockChromeCDP, cleanup_zombie_locks
 from ccba_legal.crawler.tier_downloader import _wait_for_download, trigger_download
+from ccba_legal.session import resolve_download_timeouts
 
 
 def test_cleanup_zombie_locks_removes_dead_locks(tmp_path: Path) -> None:
@@ -181,3 +185,69 @@ def test_permission_error_retry_on_file_move(tmp_path: Path) -> None:
 
         assert res.get("success") is True
         assert attempt_count == 2
+
+
+def test_wait_for_download_extends_while_crdownload_grows(tmp_path: Path) -> None:
+    """Active growing .crdownload extends deadline past initial timeout in fallback watcher."""
+    watch_dir = tmp_path / "downloads"
+    watch_dir.mkdir(parents=True, exist_ok=True)
+    part_file = watch_dir / "large_268.pdf.crdownload"
+    final_file = watch_dir / "large_268.pdf"
+
+    def writer() -> None:
+        time.sleep(0.1)
+        part_file.write_bytes(b"chunk1")
+        for idx in range(2, 6):
+            time.sleep(0.15)
+            part_file.write_bytes(b"chunk" * idx)
+        time.sleep(0.1)
+        part_file.unlink(missing_ok=True)
+        final_file.write_bytes(b"%PDF-1.4 large completed")
+
+    t = threading.Thread(target=writer, daemon=True)
+    t.start()
+    found = _wait_for_download([watch_dir], set(), [".pdf"], timeout=0.6, max_timeout=3.0)
+    t.join(timeout=3.0)
+
+    assert found is not None
+    assert found.name == "large_268.pdf"
+
+
+def test_cdp_wait_for_download_completion_extends_while_crdownload_grows(tmp_path: Path) -> None:
+    """ChromeCDP.wait_for_download_completion extends deadline while .crdownload grows."""
+    cdp = ChromeCDP()
+    watch_dir = tmp_path / "cdp_dl"
+    watch_dir.mkdir(parents=True, exist_ok=True)
+    part_file = watch_dir / "large_cdp.pdf.crdownload"
+    final_file = watch_dir / "large_cdp.pdf"
+
+    def writer() -> None:
+        time.sleep(0.1)
+        part_file.write_bytes(b"part1")
+        for idx in range(2, 6):
+            time.sleep(0.15)
+            part_file.write_bytes(b"part" * idx)
+        time.sleep(0.1)
+        part_file.unlink(missing_ok=True)
+        final_file.write_bytes(b"%PDF-1.4 cdp completed")
+
+    t = threading.Thread(target=writer, daemon=True)
+    t.start()
+    found = cdp.wait_for_download_completion(
+        [watch_dir], [".pdf"], set(), timeout=0.6, max_timeout=3.0
+    )
+    t.join(timeout=3.0)
+
+    assert found is not None
+    assert found.name == "large_cdp.pdf"
+
+
+def test_resolve_download_timeouts_defaults_and_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default download timeout is 60s (300s cap) and supports env overrides."""
+    monkeypatch.delenv("CCBA_LEGAL_DOWNLOAD_TIMEOUT", raising=False)
+    monkeypatch.delenv("CCBA_LEGAL_DOWNLOAD_MAX_TIMEOUT", raising=False)
+    assert resolve_download_timeouts() == (60.0, 300.0)
+
+    monkeypatch.setenv("CCBA_LEGAL_DOWNLOAD_TIMEOUT", "95")
+    monkeypatch.setenv("CCBA_LEGAL_DOWNLOAD_MAX_TIMEOUT", "420")
+    assert resolve_download_timeouts() == (95.0, 420.0)

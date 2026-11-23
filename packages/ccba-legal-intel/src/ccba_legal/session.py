@@ -296,3 +296,88 @@ def get_browser_executable_path() -> str | None:
             return p
 
     return None
+
+
+DEFAULT_DOWNLOAD_TIMEOUT = 60.0
+DEFAULT_DOWNLOAD_MAX_TIMEOUT = 300.0
+_PARTIAL_DOWNLOAD_SUFFIXES = (".crdownload", ".tmp", ".part")
+
+
+def _pick_timeout(override: float | None, env_var: str, fallback: float) -> float:
+    if override is not None and override > 0:
+        return float(override)
+    try:
+        val = float(os.environ.get(env_var, ""))
+        return val if val > 0 else fallback
+    except (TypeError, ValueError):
+        return fallback
+
+
+def resolve_download_timeouts(
+    timeout: float | None = None, max_timeout: float | None = None
+) -> tuple[float, float]:
+    """Resolve initial and hard-cap download timeouts from args or environment."""
+    eff_t = _pick_timeout(timeout, "CCBA_LEGAL_DOWNLOAD_TIMEOUT", DEFAULT_DOWNLOAD_TIMEOUT)
+    eff_m = _pick_timeout(
+        max_timeout, "CCBA_LEGAL_DOWNLOAD_MAX_TIMEOUT", DEFAULT_DOWNLOAD_MAX_TIMEOUT
+    )
+    return eff_t, max(eff_t, eff_m)
+
+
+def snapshot_in_progress_downloads(watch_dirs: list[Path]) -> dict[str, int]:
+    """Capture current byte sizes of partial downloads (.crdownload/.tmp/.part)."""
+    sizes: dict[str, int] = {}
+    for d in watch_dirs:
+        if not d.exists():
+            continue
+        for f in d.glob("*"):
+            try:
+                if f.is_file() and f.name.lower().endswith(_PARTIAL_DOWNLOAD_SUFFIXES):
+                    sizes[str(f.resolve())] = f.stat().st_size
+            except OSError:
+                continue
+    return sizes
+
+
+def has_active_download_progress(watch_dirs: list[Path], prev_sizes: dict[str, int]) -> bool:
+    """Return True if any partial download was newly created (>0B) or grew since prev_sizes."""
+    current = snapshot_in_progress_downloads(watch_dirs)
+    progressed = any(
+        (size > 0 if key not in prev_sizes else size > prev_sizes[key])
+        for key, size in current.items()
+    )
+    prev_sizes.clear()
+    prev_sizes.update(current)
+    return progressed
+
+
+def find_stable_completed_file(
+    watch_dirs: list[Path],
+    expected_exts: list[str],
+    existing_files: set[str],
+    start_time: float,
+) -> Path | None:
+    """Return a newly stabilized completed file matching expected_exts with size > 0."""
+    for d in watch_dirs:
+        if not d.exists():
+            continue
+        try:
+            for f in d.glob("*"):
+                lname = f.name.lower()
+                if (
+                    not f.is_file()
+                    or lname.endswith(_PARTIAL_DOWNLOAD_SUFFIXES)
+                    or not any(lname.endswith(ext) for ext in expected_exts)
+                ):
+                    continue
+                st = f.stat()
+                if str(f.resolve()) in existing_files and st.st_mtime < (start_time - 1.0):
+                    continue
+                if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
+                    sz1 = st.st_size
+                    time.sleep(0.5)
+                    if sz1 == f.stat().st_size and sz1 > 0:
+                        return f
+        except OSError:
+            continue
+    return None

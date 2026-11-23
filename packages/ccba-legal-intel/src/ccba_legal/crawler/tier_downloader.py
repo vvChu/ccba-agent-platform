@@ -14,7 +14,14 @@ from ccba_legal.cdp import ChromeCDP, HeadlessEnvironmentError, _check_is_headle
 from ccba_legal.crawler.selectors import TVPLSelectors
 from ccba_legal.registry import load_relation_synonyms as _load_relation_synonyms
 from ccba_legal.registry import resolve_project_root
-from ccba_legal.session import TVPLRateLimiter, sleep_with_jitter
+from ccba_legal.session import (
+    TVPLRateLimiter,
+    find_stable_completed_file,
+    has_active_download_progress,
+    resolve_download_timeouts,
+    sleep_with_jitter,
+    snapshot_in_progress_downloads,
+)
 from ccba_legal.storage import (
     _check_aws_s3,
     _check_google_drive,
@@ -86,13 +93,14 @@ def _wait_for_download(
     watch_dirs: list[Path],
     existing_downloads: set[str],
     expected_exts: list[str],
-    timeout: float = 30.0,
+    timeout: float | None = None,
     start_time: float | None = None,
     cdp: ChromeCDP | None = None,
+    max_timeout: float | None = None,
 ) -> Path | None:
-    """Wait for newly downloaded file matching expected_exts with size > 0 and no .crdownload."""
-    if start_time is None:
-        start_time = time.time()
+    """Wait for newly downloaded file matching expected_exts with progress-aware deadline."""
+    start = time.time() if start_time is None else start_time
+    eff_timeout, eff_max = resolve_download_timeouts(timeout, max_timeout)
     valid_watch_dirs = []
     for d in dict.fromkeys(watch_dirs):
         try:
@@ -101,41 +109,29 @@ def _wait_for_download(
         except OSError:
             pass
 
-    # Delegate to CDP wait_for_download_completion if available
     if cdp is not None and hasattr(cdp, "wait_for_download_completion"):
+        wait_kwargs: dict[str, Any] = {"timeout": eff_timeout, "start_time": start}
+        if max_timeout is not None:
+            wait_kwargs["max_timeout"] = eff_max
         found = cdp.wait_for_download_completion(
-            valid_watch_dirs,
-            expected_exts,
-            existing_downloads,
-            timeout=timeout,
-            start_time=start_time,
+            valid_watch_dirs, expected_exts, existing_downloads, **wait_kwargs
         )
         if found:
             return found
 
-    # Fallback to local File Stability Guard loop
-    while time.time() - start_time < timeout:
-        for d in valid_watch_dirs:
-            try:
-                for f in d.glob("*"):
-                    if not f.is_file() or not any(
-                        f.name.lower().endswith(ext) for ext in expected_exts
-                    ):
-                        continue
-                    if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
-                        continue
-                    st = f.stat()
-                    if str(f.resolve()) in existing_downloads and st.st_mtime < (start_time - 1.0):
-                        continue
-                    if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
-                        sz1 = st.st_size
-                        time.sleep(0.5)
-                        sz2 = f.stat().st_size
-                        if sz1 == sz2 and sz1 > 0:
-                            return f
-            except OSError:
-                continue
-        time.sleep(0.5)
+    deadline = start + eff_timeout
+    hard_deadline = start + eff_max
+    poll_interval = min(0.5, max(0.05, eff_timeout / 4))
+    prev_sizes = snapshot_in_progress_downloads(valid_watch_dirs)
+    while time.time() < deadline:
+        found = find_stable_completed_file(
+            valid_watch_dirs, expected_exts, existing_downloads, start
+        )
+        if found:
+            return found
+        if has_active_download_progress(valid_watch_dirs, prev_sizes):
+            deadline = min(hard_deadline, max(deadline, time.time() + eff_timeout))
+        time.sleep(poll_interval)
     return None
 
 
@@ -190,8 +186,10 @@ def trigger_download(
     format_type: str = "both",
     download_attachments: bool = True,
     doc_url: str = "",
+    download_timeout: float | None = None,
 ) -> Any:
     """Trigger multi-asset download via Single-Door tab=7 architecture and relocate downloaded files."""
+    eff_timeout, _ = resolve_download_timeouts(download_timeout)
     downloads_path = Path.home() / "Downloads"
     if not downloads_path.exists():
         downloads_path.mkdir(parents=True, exist_ok=True)
@@ -495,7 +493,7 @@ def trigger_download(
                 watch_dirs,
                 existing_before_docx,
                 [".docx", ".doc"],
-                timeout=30.0,
+                timeout=eff_timeout,
                 start_time=docx_start_time,
                 cdp=cdp,
             )
@@ -525,7 +523,7 @@ def trigger_download(
                         docx_path = str(downloaded_docx.resolve())
                 print(f"[LegalIntel] [Phase 1] DOCX successfully acquired: {docx_path}")
             else:
-                print("[LegalIntel] [Phase 1] DOCX download timed out after 30s.")
+                print(f"[LegalIntel] [Phase 1] DOCX download timed out after {eff_timeout:.0f}s.")
         else:
             print("[LegalIntel] [Phase 1] Could not trigger DOCX click.")
 
@@ -565,7 +563,7 @@ def trigger_download(
                 watch_dirs,
                 existing_before_pdf,
                 [".pdf"],
-                timeout=30.0,
+                timeout=eff_timeout,
                 start_time=pdf_start_time,
                 cdp=cdp,
             )
@@ -594,7 +592,7 @@ def trigger_download(
                         pdf_path = str(downloaded_pdf.resolve())
                 print(f"[LegalIntel] [Phase 3] PDF successfully acquired: {pdf_path}")
             else:
-                print("[LegalIntel] [Phase 3] PDF download timed out after 30s.")
+                print(f"[LegalIntel] [Phase 3] PDF download timed out after {eff_timeout:.0f}s.")
         else:
             print("[LegalIntel] [Phase 3] Could not trigger PDF click.")
 
