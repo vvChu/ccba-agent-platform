@@ -39,25 +39,19 @@ triggers:
 ---
 # Quy trình Tổng kết Phiên làm việc (Session Retrospective)
 
-Kỹ năng này được kích hoạt ở cuối mỗi phiên làm việc để:
-- Chắt lọc tri thức thực chiến (Evidence-Backed Learnings) và cập nhật vào Knowledge Base trung tâm.
-- **Tiến hóa Kỹ năng Trực tiếp (Skill Evolution Loop):** Sửa đổi, nâng cấp và bump version các tệp `SKILL.md` liên quan ngay khi phát hiện khiếm khuyết trong phiên.
-- **Đồng bộ Ma Trận ADR & Tái Biên Dịch Tài Liệu:** Duy trì Living Traceability Matrix và đồng bộ hóa Service Catalog/Web Documentation Portal.
-- Kích hoạt **Governance & Architecture Drift Gate** và **ADR-0058 Hard Completion Lock** nhằm bảo đảm tài liệu, môi trường và test suite hoàn toàn đồng bộ trước khi đóng phiên.
-- Dọn dẹp tệp tin rác trong workspace và quản lý commit an toàn qua Bypass Protocol.
+Kỹ năng kích hoạt cuối phiên để:
+- Chắt lọc tri thức thực chiến (Evidence-Backed Learnings) vào Knowledge Base trung tâm.
+- **Tiến hóa Kỹ năng Trực tiếp (Skill Evolution Loop):** Nâng cấp & bump version `SKILL.md` khi phát hiện khiếm khuyết.
+- **Đồng bộ ADR Matrix & Tài liệu:** Duy trì Traceability Matrix và tái biên dịch Service Catalog/Portal.
+- Kích hoạt **Governance Gate** & **ADR-0058 Hard Completion Lock** bảo đảm đồng bộ trước khi đóng phiên.
+- Dọn dẹp workspace và commit an toàn qua Bypass Protocol.
 
 ---
 
 ## Quy trình Thực hiện (Process)
 
 ### Bước 1: Thu thập & Chắt lọc Tri thức (Evidence-Backed Learnings)
-- Đọc [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) để nắm context 6 Miền Kiến Trúc (ADR-0057, ADR-0060) hiện tại và chống trùng lặp:
-  1. **Architecture & Governance** (Miền 1)
-  2. **Code Quality & Testing** (Miền 2)
-  3. **Legal & Data Standards** (Miền 3)
-  4. **Workflows & Review** (Miền 4)
-  5. **Windows & Tooling** (Miền 5)
-  6. **Context Graph & Institutional Identity** (Miền 6)
+- Đọc [`.md/knowledge/session_learnings.md`](../../../.md/knowledge/session_learnings.md) đối chiếu 6 Miền Kiến Trúc (ADR-0057, ADR-0060) chống trùng lặp: **1. Architecture & Governance**, **2. Code Quality & Testing**, **3. Legal & Data Standards**, **4. Workflows & Review**, **5. Windows & Tooling**, **6. Context Graph & Institutional Identity**.
 - **Quy chuẩn Tiered Memory Model (ADR-0030, ADR-0057):**
   * Ngân sách trần cứng của `session_learnings.md` là $\le 10.0\text{ KB}$ (10,240 bytes).
   * Chỉ ghi nhận các quy tắc cô đọng dạng `RULE-X.Y` (ngắn gọn, tập trung vào Invariants).
@@ -170,8 +164,9 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
    ```bash
    # Trên Hub:
    python -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q
-   # Trên Spoke:
-   python scripts/_guardrails/check_spoke_cleanliness.py && python scripts/_guardrails/check_hub_import_depth.py
+   # Trên Spoke (nếu có scripts/_guardrails/ cục bộ thì dùng, mặc định trỏ Hub):
+   HUB="${CCBA_HUB_PATH:-../ccba-agent-platform}"
+   python "$HUB/scripts/spoke/check_spoke_cleanliness.py" --path . && python "$HUB/scripts/spoke/check_hub_import_depth.py" --path .
    ```
 4. **Khóa cứng hoàn tất tất định (ADR-0058 Hard Completion Lock):**
    ```bash
@@ -193,7 +188,8 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
 - **Commit & Nộp PR tuân thủ Rào chắn Nhánh Bảo vệ (`RULE-4.21`):**
-  * Tại Spoke không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
+  * Tại Spoke **non-git** (như thư mục `project_delivery` trên OneDrive chưa có `.git`): bỏ qua `git`, kiểm tra Root sạch, dọn `.md/scratch/eval_runs/` và đạt Exit `0` cho `wiki_health_linter.py`, `compact_session_learnings.py --check`, `verify-patch`.
+  * Tại Spoke dùng Git không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
   * Tại Hub (`ccba-agent-platform`) hoặc Protected Spoke có `.githooks/pre-push` chặn đẩy thẳng lên `main`/`master` (như `dgx-spark-toolkit`): thực thi trên `git worktree` cô lập tách từ `origin/<default_branch>` với nhánh PR riêng (`docs/session-retrospective-...` hoặc `chore/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create --body-file <body_file>` (nếu `gh pr edit`/`merge` gặp lỗi GraphQL `projectCards` thì chuyển sang REST `gh api repos/<owner>/<repo>/issues/<id>/assignees` và `PUT /pulls/<id>/merge`; bỏ `git push origin --delete` nếu repo tự xóa nhánh sau merge). Nếu nhánh gốc cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, tuyệt đối không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận.
 - **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status --short --branch` chỉ còn `## <default_branch>...origin/<default_branch>`, `0` tệp untracked/dirty, tài nguyên canonical `.agents/teams/` và `.env` nguyên vẹn), toàn bộ CI checks trên PR đạt `SUCCESS` (Exit Code `0`), và commit/PR hoàn tất tuân thủ `simplify_gate` cùng `pre-push`.
 

@@ -108,7 +108,7 @@ const CONTENT_WIDTH = 9071; // PAGE_WIDTH - LEFT - RIGHT
 
 ---
 
-## CCBA Deep Seam (`ccba-ooxml`) & 4 Rào chắn Thực chiến
+## CCBA Deep Seam (`ccba-ooxml`) & 5 Rào chắn Thực chiến
 
 Tuân thủ **ADR-0061 (`TID251`)**: bên ngoài `packages/ccba-ooxml`, không tự viết wrapper `import docx` thô mà định tuyến qua các Deep Seam công khai của `ccba_ooxml`:
 
@@ -119,12 +119,13 @@ Tuân thủ **ADR-0061 (`TID251`)**: bên ngoài `packages/ccba-ooxml`, không t
 | Thao tác DOM / comments / tracked changes & format NĐ 30 | `DocxDocument`, `CommentEngine`, `format_docx`, `convert_md_to_docx` | Giữ nguyên cấu trúc XML gốc khi cần |
 | Xuất Vector PDF trên Windows / Linux | `docx_to_pdf` (`convert_to_pdf`) | Tự động tuyến `.docx` sang `Word.Application` trên `win32` |
 
-### 4 Rào Chắn Biên Tập & Bố Cục Thực Chiến
+### 5 Rào Chắn Biên Tập & Bố Cục Thực Chiến
 
 1. **Tiêu đề tóm tắt tiếng Việt tự nhiên:** Dùng `TÓM TẮT BÁO CÁO / EXECUTIVE SUMMARY` (hoặc `TÓM TẮT ĐÁNH GIÁ`); tránh cụm dịch máy `"TÓM TẮT ĐIỀU HÀNH"`.
-2. **Khối ký đối xứng nguyên tử (`4535 + 4536 = 9071 DXA`, `<w:cantSplit/>`):** Không lặp `contact_email` hay tên cơ quan vào ô chữ ký (email chỉ đặt tại Page 1 Document Control Matrix và Footer chạy trang); mỗi ô ký chỉ gồm Role Header VI/EN, `(Ký, ghi rõ họ tên)`, khoảng trống ký tươi, Họ tên, và Chức danh (`Giám đốc / Director`).
+2. **Khối ký đối xứng nguyên tử (`4535 + 4536 = 9071 DXA`, `<w:cantSplit/>`):** Không lặp `contact_email` hay tên cơ quan vào ô chữ ký (email chỉ đặt tại Page 1 Document Control Matrix và Footer chạy trang); mỗi ô ký chỉ gồm Role Header VI/EN, `(Ký, ghi rõ họ tên)`, khoảng trống ký tươi, Họ tên, và Chức danh (`Giám đốc / Director`). Dòng tiêu đề phía trên bảng ký là tùy chọn (có thể bỏ qua nếu khách hàng ưa trình bày tối giản ngay dưới mục kết luận).
 3. **Tuân thủ `RULE-6.1` & WCAG 2.1 (`#005A9C` vs `#0093DD`):** Header trang bìa tối đa 2 cấp (cấm `"Bộ Xây dựng"`, cấm đuôi `(IBST)`/`(CCBA)` trên dòng tiếng Việt), ghi `IBST - CCBA` không dùng dấu gạch chéo; dùng `#005A9C` cho chữ metric trên nền sáng thay cho cyan `#0093DD`.
 4. **Visual QA Gate bắt buộc:** Xuất PDF qua `ccba_ooxml.docx_to_pdf`, render từng trang sang PNG và kiểm định trực quan: Page 1 không tràn sang trang 2, running header trang 2+ gọn 1 dòng, 0 heading mồ côi, khối ký không bị cắt đôi.
+5. **Kiểm định hậu chỉnh tay Microsoft Word (Post-Manual-Word-Edit Hygiene):** Khi tệp `.docx` sinh tự động bị chỉnh sửa thủ công trên Word qua các lần hiệu đính (`Rev. N`), ưu tiên đồng bộ ngược nội dung vào YAML IR rồi tái sinh qua `TechnicalReportBuilder` (hoặc kiểm tra XML bắt buộc trước phát hành) để loại bỏ 4 thoái hóa thường gặp: (i) lệch phiên bản ở `word/header*.xml` so với Trang bìa (khi header có mã `Rev.`); (ii) Word gỡ bỏ `<w:tblLayout w:val="fixed"/>` khiến bảng xô lệch độ rộng cột; (iii) hàng bảng thêm tay bị mất màu zebra xen kẽ; (iv) sót tên thư viện gốc (`python-docx`) trong `docProps/core.xml` — **bắt buộc gán/kiểm định tường minh** `doc.core_properties.author = "IBST - CCBA"` và `doc.core_properties.comments = ""` cả khi tái sinh qua `TechnicalReportBuilder` lẫn sau chỉnh tay Word. *Tiêu chí hoàn thành:* `word/header*.xml` khớp `Rev.` trên Trang bìa (nếu hiển thị), 100% bảng giữ `<w:tblLayout w:val="fixed"/>` với tổng `gridCol = 9071 DXA` và `<w:cantSplit/>`, và `docProps/core.xml` ghi nhận tác giả `IBST - CCBA` (không còn `python-docx`).
 
 ---
 
