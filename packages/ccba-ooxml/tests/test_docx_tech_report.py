@@ -296,8 +296,17 @@ def test_technical_report_openxml_invariants_and_chrome(tmp_path: Path) -> None:
     with zipfile.ZipFile(saved) as zf:
         hdr_root = etree.fromstring(zf.read("word/header1.xml"))
         ftr_root = etree.fromstring(zf.read("word/footer1.xml"))
+        core_xml = zf.read("docProps/core.xml").decode("utf-8")
         doc_xml_str = zf.read("word/document.xml").decode("utf-8")
         assert any(name.startswith("word/media/") for name in zf.namelist())
+    assert "python-docx" not in core_xml.lower()
+    assert doc.core_properties.author == "IBST - CCBA"
+    assert doc.core_properties.comments == ""
+    assert doc.core_properties.title == spec["document"]["title_vi"]
+    assert "XÁC NHẬN & PHÊ DUYỆT / APPROVAL SIGN-OFF" in [p.text for p in doc.paragraphs]
+    hdr_text = "".join(hdr_root.itertext())
+    assert "CCBA-RPT-SAMPLE-01  |  IBST - CCBA" in hdr_text
+    assert "(Rev. 01)" not in hdr_text
     assert [
         int(gc.get(f"{_W}w")) for gc in hdr_root.findall(f".//{_W}tblGrid/{_W}gridCol")
     ] == list(HEADER_COL_WIDTHS_DXA)
@@ -378,3 +387,46 @@ def test_build_tech_report_from_yaml_and_cli_with_pdf(tmp_path: Path) -> None:
         )
     assert err_res["success"] is False
     assert "no soffice" in err_res["error"]
+
+
+def test_core_properties_optional_signoff_title_and_header_revision(tmp_path: Path) -> None:
+    """Verify optional signoff heading, header revision flag, and IBST/CCBA normalization."""
+    spec = _sample_report_spec(num_sections=1, signoff_cols=2)
+    spec["show_signoff_title"] = False
+    spec["document"]["consultant"] = "IBST/CCBA"
+    spec["document"]["header_include_revision"] = True
+    out_hidden = tmp_path / "hidden_signoff_hdr_rev.docx"
+    TechnicalReportBuilder().build(spec, out_hidden)
+    assert validate_document(out_hidden) is True
+
+    doc = Document(str(out_hidden))
+    assert "XÁC NHẬN & PHÊ DUYỆT / APPROVAL SIGN-OFF" not in [p.text for p in doc.paragraphs]
+    sign_tbl = doc.tables[-1]
+    sign_cols = [int(gc.get(f"{_W}w")) for gc in sign_tbl._tbl.findall(f"{_W}tblGrid/{_W}gridCol")]
+    assert sign_cols == [4535, 4536]
+    assert sign_tbl.rows[0]._tr.find(f"{_W}trPr/{_W}cantSplit") is not None
+    assert "IBST/CCBA" not in "\n".join(c.text for r in doc.tables[1].rows for c in r.cells)
+    with zipfile.ZipFile(out_hidden) as zf:
+        core_xml = zf.read("docProps/core.xml").decode("utf-8")
+        hdr_text = "".join(etree.fromstring(zf.read("word/header1.xml")).itertext())
+        ftr_text = "".join(etree.fromstring(zf.read("word/footer1.xml")).itertext())
+    assert "python-docx" not in core_xml.lower() and "IBST - CCBA" in core_xml
+    assert "CCBA-RPT-SAMPLE-01 (Rev. 01) | IBST - CCBA" in hdr_text
+    assert "IBST - CCBA" in ftr_text and "IBST/CCBA" not in ftr_text
+
+    cases = ((None, None), ("", None), ("PHÊ DUYỆT / APPROVAL", "PHÊ DUYỆT / APPROVAL"))
+    for idx, (title_val, expected) in enumerate(cases):
+        custom = _sample_report_spec(num_sections=1, signoff_cols=2)
+        custom["signoff_title"] = title_val
+        custom["document"]["doc_no"] = "CCBA-RPT-01-Rev. 01"
+        custom["document"]["header_include_revision"] = True
+        out_p = tmp_path / f"signoff_case_{idx}.docx"
+        TechnicalReportBuilder().build(custom, out_p)
+        assert validate_document(out_p) is True
+        p_texts = [p.text for p in Document(str(out_p)).paragraphs]
+        assert "XÁC NHẬN & PHÊ DUYỆT / APPROVAL SIGN-OFF" not in p_texts
+        if expected:
+            assert expected in p_texts
+        with zipfile.ZipFile(out_p) as zf:
+            hdr_dup = "".join(etree.fromstring(zf.read("word/header1.xml")).itertext())
+        assert "CCBA-RPT-01-Rev. 01  |  IBST - CCBA" in hdr_dup
