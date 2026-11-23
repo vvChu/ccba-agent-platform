@@ -29,7 +29,7 @@ jobs:
           cache: "pip"
 
       - name: Cache uv wheels and git checkouts
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-3.12-${{ hashFiles('pyproject.toml', 'packages/**/pyproject.toml') }}
