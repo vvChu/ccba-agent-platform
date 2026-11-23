@@ -22,6 +22,9 @@ document:
   consultant: "IBST - CCBA"
   status: "Bản phát hành mẫu / Sample Issue"
   contact_email: "contact@example.com"
+  # header_include_revision: true  # Tùy chọn: ghép (Rev. XX) vào running header Pages 2+
+  # show_signoff_title: false      # Tùy chọn: ẩn dòng tiêu đề phía trên khối ký
+  # signoff_title: null            # Hoặc đặt chuỗi tiêu đề khối ký tùy chỉnh
 
 organization:
   parent_vi: "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG"

@@ -38,21 +38,32 @@ from ._report_theme import (
 )
 
 __all__ = [
+    "DEFAULT_SIGNOFF_TITLE",
     "configure_a4_section",
+    "normalize_consultant_name",
     "render_cover_page",
     "render_kpi_cards",
     "render_running_header_footer",
     "render_signoff_block",
 ]
 
+DEFAULT_SIGNOFF_TITLE = "XÁC NHẬN & PHÊ DUYỆT / APPROVAL SIGN-OFF"
 _DEFAULT_ORG = {
     "parent_vi": "VIỆN KHOA HỌC CÔNG NGHỆ XÂY DỰNG",
     "parent_en": "Institute for Building Science and Technology",
     "unit_vi": "TRUNG TÂM TƯ VẤN VÀ ỨNG DỤNG BIM TRONG XÂY DỰNG",
     "unit_en": "Center for Consulting Services and BIM Application in Construction (CCBA)",
 }
+_IBST_CCBA_SLASH_RE = re.compile(r"\bIBST\s*/\s*CCBA\b", re.IGNORECASE)
 _MINISTRY_RE = re.compile(r"bộ\s+xây\s+dựng", re.IGNORECASE)
 _VI_SUFFIX_RE = re.compile(r"\s*\((?:IBST|CCBA)\)\s*$", re.IGNORECASE)
+
+
+def normalize_consultant_name(raw: object, default: str = "IBST - CCBA") -> str:
+    """Normalize consultant label per RULE-6.1 (disallow IBST/CCBA slash)."""
+    cleaned = sanitize_xml_text(raw).strip() or default
+    cleaned = _IBST_CCBA_SLASH_RE.sub("IBST - CCBA", cleaned)
+    return cleaned.replace(" / ", " - ")
 
 
 def _clean_vi_org(raw: object, default_val: str) -> str:
@@ -156,9 +167,7 @@ def _render_cover_org_banner(
 
 def _cover_matrix_rows(doc_meta: Mapping[str, Any]) -> list[tuple[str, str]]:
     """Build Document Control Matrix key-value rows."""
-    consultant = sanitize_xml_text(doc_meta.get("consultant") or "IBST - CCBA").replace(
-        " / ", " - "
-    )
+    consultant = normalize_consultant_name(doc_meta.get("consultant"))
     rows: list[tuple[str, str]] = [
         ("Mã hồ sơ / Document No.", sanitize_xml_text(doc_meta.get("doc_no") or "CCBA-RPT-001")),
         ("Phiên bản / Revision", sanitize_xml_text(doc_meta.get("revision") or "Rev. 01")),
@@ -269,7 +278,13 @@ def render_cover_page(
 
 
 def _render_running_header(
-    section: Any, theme: CCBADocxTheme, doc_no: str, consultant: str, short_title: str
+    section: Any,
+    theme: CCBADocxTheme,
+    doc_no: str,
+    consultant: str,
+    short_title: str,
+    *,
+    revision: str | None = None,
 ) -> None:
     """Render Pages 2+ single-line fixed-width running header."""
     hdr = section.header
@@ -278,10 +293,15 @@ def _render_running_header(
     set_table_fixed_grid(h_tbl, list(HEADER_COL_WIDTHS_DXA))
     set_row_cant_split(h_tbl.rows[0])
     _drop_empty_first_paragraph(hdr)
+    left_label = (
+        f"{doc_no} ({revision}) | {consultant}"
+        if revision and revision.lower() not in doc_no.lower()
+        else f"{doc_no}  |  {consultant}"
+    )
     specs = (
         (
             h_tbl.rows[0].cells[0],
-            f"{doc_no}  |  {consultant}",
+            left_label,
             WD_ALIGN_PARAGRAPH.LEFT,
             True,
             theme.dark_blue,
@@ -337,12 +357,14 @@ def render_running_header_footer(
     section: Any, theme: CCBADocxTheme, doc_meta: Mapping[str, Any]
 ) -> None:
     """Render Pages 2+ single-line header ([3571, 5500] DXA) and tri-color footer."""
-    consultant = sanitize_xml_text(doc_meta.get("consultant") or "IBST - CCBA")
+    consultant = normalize_consultant_name(doc_meta.get("consultant"))
     doc_no = sanitize_xml_text(doc_meta.get("doc_no") or "CCBA-RPT")
+    raw_rev = sanitize_xml_text(doc_meta.get("revision") or "").strip()
+    revision = raw_rev or None if doc_meta.get("header_include_revision") else None
     short_title = _truncate_line(
         doc_meta.get("short_title") or doc_meta.get("title_vi") or doc_meta.get("title_en") or ""
     )
-    _render_running_header(section, theme, doc_no, consultant, short_title)
+    _render_running_header(section, theme, doc_no, consultant, short_title, revision=revision)
     _render_running_footer(section, theme, doc_meta, consultant)
 
 
@@ -418,22 +440,28 @@ def _populate_signer_cell(cell: Any, theme: CCBADocxTheme, signer: Mapping[str, 
 
 
 def render_signoff_block(
-    doc: Any, theme: CCBADocxTheme, signoff: Sequence[Mapping[str, Any]]
+    doc: Any,
+    theme: CCBADocxTheme,
+    signoff: Sequence[Mapping[str, Any]],
+    *,
+    title: str | None = DEFAULT_SIGNOFF_TITLE,
 ) -> None:
     """Render atomic 2-col or 3-col sign-off grid without duplicating org/email info."""
     if not signoff:
         return
-    p_hdr = doc.add_paragraph()
-    p_hdr.paragraph_format.space_before, p_hdr.paragraph_format.space_after = Pt(14), Pt(6)
-    p_hdr.paragraph_format.keep_with_next = True
-    add_styled_run(
-        p_hdr,
-        "XÁC NHẬN & PHÊ DUYỆT / APPROVAL SIGN-OFF",
-        theme,
-        size_pt=10.5,
-        bold=True,
-        color=theme.dark_blue,
-    )
+    cleaned_title = sanitize_xml_text(title).strip() if title is not None else ""
+    if cleaned_title:
+        p_hdr = doc.add_paragraph()
+        p_hdr.paragraph_format.space_before, p_hdr.paragraph_format.space_after = Pt(14), Pt(6)
+        p_hdr.paragraph_format.keep_with_next = True
+        add_styled_run(
+            p_hdr,
+            cleaned_title,
+            theme,
+            size_pt=10.5,
+            bold=True,
+            color=theme.dark_blue,
+        )
     widths = normalize_col_widths(len(signoff), total_dxa=theme.content_width_dxa)
     tbl = doc.add_table(rows=1, cols=len(signoff))
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER

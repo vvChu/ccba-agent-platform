@@ -13,7 +13,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, Twips
 
 from ._report_chrome import (
+    DEFAULT_SIGNOFF_TITLE,
     configure_a4_section,
+    normalize_consultant_name,
     render_cover_page,
     render_kpi_cards,
     render_running_header_footer,
@@ -75,6 +77,39 @@ def load_report_spec(config_path: str | Path) -> dict[str, Any]:
     spec: dict[str, Any] = {str(k): v for k, v in raw.items()}
     _validate_spec(spec, str(path))
     return spec
+
+
+def _configure_core_properties(doc: Any, doc_meta: Mapping[str, Any]) -> None:
+    """Populate OpenXML docProps/core.xml metadata and strip python-docx defaults."""
+    author = normalize_consultant_name(doc_meta.get("author") or doc_meta.get("consultant"))
+    props = doc.core_properties
+    props.author = author
+    props.last_modified_by = author
+    props.comments = sanitize_xml_text(doc_meta.get("description") or "").strip()
+    title_vi = sanitize_xml_text(doc_meta.get("title_vi") or "").strip()
+    if title_vi:
+        props.title = title_vi
+    subject = sanitize_xml_text(doc_meta.get("subtitle") or doc_meta.get("title_en") or "").strip()
+    if subject:
+        props.subject = subject
+
+
+def _resolve_signoff_title(spec: Mapping[str, Any]) -> str | None:
+    """Resolve optional sign-off heading from top-level spec or document metadata."""
+    doc_meta = spec["document"]
+    show_flag = spec.get("show_signoff_title", doc_meta.get("show_signoff_title", True))
+    if show_flag is False:
+        return None
+    if "signoff_title" in spec:
+        raw_title = spec["signoff_title"]
+    elif "signoff_title" in doc_meta:
+        raw_title = doc_meta["signoff_title"]
+    else:
+        return DEFAULT_SIGNOFF_TITLE
+    if raw_title is None:
+        return None
+    cleaned = sanitize_xml_text(raw_title).strip()
+    return cleaned or None
 
 
 class TechnicalReportBuilder:
@@ -281,6 +316,7 @@ class TechnicalReportBuilder:
         """Construct an in-memory ``python-docx`` Document from a report specification."""
         _validate_spec(spec)
         doc = Document()
+        _configure_core_properties(doc, spec["document"])
         configure_normal_style(doc, self.theme)
         section = configure_a4_section(doc, self.theme)
         render_cover_page(doc, self.theme, spec["organization"], spec["document"], self.logo_path)
@@ -290,7 +326,9 @@ class TechnicalReportBuilder:
         for sec in spec["sections"]:
             self._render_section(doc, sec)
         if spec.get("signoff"):
-            render_signoff_block(doc, self.theme, spec["signoff"])
+            render_signoff_block(
+                doc, self.theme, spec["signoff"], title=_resolve_signoff_title(spec)
+            )
         return doc
 
     def build(self, spec: Mapping[str, Any], output_docx: str | Path) -> Path:
