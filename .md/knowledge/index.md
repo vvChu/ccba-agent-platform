@@ -58,6 +58,7 @@
 
 ## 🔬 4. Nghiên Cứu Chuyên Sâu & Phân Tích Upstream (Research & Studies)
 
+- [research_and_studies/research-hub-spoke-idop-ccba-way-next-steps.md](research_and_studies/research-hub-spoke-idop-ccba-way-next-steps.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`Dual-Agent Adversarial`): Kiểm Toán Hoạt Động Song Song Hai Spoke (`ERP` Sóng 4 × `IDOP` Bridge Sóng 3) & Lộ Trình R&D Tiếp Theo Cho Mô Hình Hub-Spoke Vận Hành CCBA WAY Trên Nền Tảng IDOP.
 - [research_and_studies/research-tose-sh-public-architecture.md](research_and_studies/research-tose-sh-public-architecture.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`Dual-Agent Adversarial`): Giải Phẫu Kiến Trúc Công Khai Của TOSE (`tose.sh`) & Bản Đồ Đối Sánh Cho Hệ Sinh Thái CCBA.
 - [research_and_studies/research-3-tier-portal-progressive-disclosure.md](research_and_studies/research-3-tier-portal-progressive-disclosure.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép (`RES-2026-UX-3TIER-001`): Kiến Trúc Cổng Thông Tin 3 Tầng ("Tối Giản & Hé Lộ Dần" / 3-Tier Progression of Attention) & Định Tuyến 14 Kho Mã Nguồn Mở UI/UX.
 - [research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md](research_and_studies/research-reverse-engineer-anything-and-hub-spoke-applications.md): **[MỚI]** Báo cáo Nghiên cứu & Phản biện Kép: Hệ Sinh Thái "Reverse Engineer Anything" (`morluto/rea`, `kong`, `replica-skill`, `unbrowse`) & Ứng Dụng Vào Kiến Trúc `4-Hubs × Federated Spokes`.
