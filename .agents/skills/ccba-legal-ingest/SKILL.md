@@ -13,7 +13,7 @@ tier: kernel
 command: /ccba-legal-ingest
 layer: _consulting
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -87,6 +87,7 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
   ```
 * **Barrier & Dual-PDF Rule:** Nếu bị chặn cào tự động -> DỪNG và xin `.docx` + `.pdf` chính quy (cấm LLM viết Markdown). Với PDF scan mờ/TCVN3 cũ -> giữ `<slug>_raw_scan.pdf`, xuất Vector PDF qua `ccba_ooxml.convert_to_pdf` và gắn `pdf_origin: docx_vector_rendered` (chi tiết 4 kịch bản tại `references/ingest_scenarios_and_15_gates.md`).
+* **Timeout Tệp Lớn & Kiểm Tra Tải Muộn:** `tier_downloader` mặc định chờ `60s` (tự gia hạn tối đa `300s` khi `.crdownload` đang tăng dung lượng; cấu hình qua `CCBA_LEGAL_DOWNLOAD_TIMEOUT` và `CCBA_LEGAL_DOWNLOAD_MAX_TIMEOUT`) và `SpokeHydrator` mặc định `rclone --timeout 120s` (`CCBA_HYDRATOR_RCLONE_TIMEOUT`). Nếu PDF dung lượng lớn hoàn tất muộn sau khi lệnh báo timeout, kiểm tra `~/Downloads/<tvpl_id>.*` để thu hồi trực tiếp vào `sources/` thay vì tải lại.
 * **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/` kèm mã băm SHA-256 xác thực.
 
 ---
@@ -94,12 +95,12 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
 ### Bước 1: Chuyển Đổi Sang OKF v2.4 Bundle (`DocxCanonicalSanitizer` — ADR 0037, 0042, 0044)
 
 ```powershell
-python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>"
+python -m ccba_legal convert --docx-path "legal_docs/<category>/<doc_slug>/sources/<doc_slug>.docx" --target-bundle-dir "legal_docs/<category>/<doc_slug>" [--archetype VBPL_ADMIN]
 ```
 
 * **Pha 1 (`DocxCanonicalSanitizer`):** Gọt `w:rsid*`/`<w:proofErr>`, gộp run NFC, unwrap Borderless Layout Tables.
 * **Pha 2 (Verbatim AST):** Trích xuất Markdown $1:1$ từ DOCX (cấm LLM rewrite), tách 4 ngăn kéo `tables/`, `figures/`, `annexes/`, `templates/`, giữ gốc ở `sources/`, sinh `clauses.json` và `qa_benchmark.json`.
-* **Pha 3 (Smart Fallbacks):** Uncaptioned table tagging, Single-Annex `"1"`, Multi-Part `part_id`, KaTeX multiline `\qquad (X)`.
+* **Pha 3 (Smart Fallbacks):** Uncaptioned table tagging, Single-Annex `"1"`, Multi-Part `part_id`, KaTeX multiline `\qquad (X)`. Dùng `--archetype VBPL_ADMIN` để ép rõ profile hành chính nếu xử lý văn bản ngoại lệ có nhiều mục thập phân (Thông tư ngắn sửa đổi QCVN/TCVN mặc định được scanner nhận diện tự động).
 * **Tiêu chí hoàn thành:** Tạo thành công bundle OKF v2.4 xác định nguyên văn 100% kèm đầy đủ các ngăn kéo và cây AST `clauses.json`.
 
 ---
