@@ -1,37 +1,41 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #877`
-## Fix(legal-intel): Gia Cố Nhận Diện `VBPL_ADMIN`, Cắt `Nơi nhận:`, `legal_basis` & Timeout Tải/Hydrate (`#873`)
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #876`
+## Docs(skills): Gia Cố Rào Chắn Hậu Chỉnh Tay Word (`ccba-xu-ly-van-phong` v2.3.1) & Đường Dẫn Guardrails Spoke (`ccba-session-retrospective` v1.7.3)
 
-> **Pull Request Đã Hợp Nhất (`--squash --delete-branch`):** [#877](https://github.com/vvChu/ccba-agent-platform/pull/877) (`8d6ff9a1b47c84a32586001c3921b7944cb84dcb`, hợp nhất `2026-11-23T14:41:53Z`) | **Branch:** `fix/issue-873-harden-vbpl-ingest` (`58ac8f6c` -> `93a50e70` -> `386bcab9`, đã xóa local & remote) | **Base:** `ee9dbe71` | **Issue Đã Đóng:** [#873](https://github.com/vvChu/ccba-agent-platform/issues/873) (`CLOSED`, `2026-11-23T14:41:55Z`)  
-> **Trạng thái chung:** ✅ **PR #877 MERGED (`--squash`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `root-tests` `616 passed, 1 skipped, 10 deselected` in `29.62s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS, `door-triage` `ONE_WAY_DOOR` (Tradeoff Card Valid), `compile_catalog.py --check` `[OK]`**
+> **Pull Request Đã Hợp Nhất (`--squash --delete-branch`):** [#876](https://github.com/vvChu/ccba-agent-platform/pull/876) (`843032defd57d1279e9c9e25b7a3c5d42ade2323`, hợp nhất `2026-11-23T15:12:58Z`) | **Branch:** `proposal/harden-docx-post-edit-and-spoke-retrospective-cli` (`99f10474` -> `f4b791af` -> rebased & cập nhật Option A tại `8f1ec7ab`, đã xóa local & remote) | **Base:** `65d91fc0` | **Refs:** [#874](https://github.com/vvChu/ccba-agent-platform/issues/874)  
+> **Trạng thái chung:** ✅ **PR #876 MERGED (`--squash`), Tier 2 Boost (`bundle: _core`, `77/77` skills `GREEN`, `verify-patch --preset skill` `4/4 PASSED`, `79 passed in 2.94s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS, `door-triage` `ONE_WAY_DOOR` (Tradeoff Card Valid), `compile_catalog.py --check` `[OK]`**
 
 ---
 
-## 1. Tổng Kết Thay Đổi Mã Nguồn, Kỹ Năng & Kiểm Thử — PR `#877`
+## 1. Tổng Kết Thay Đổi Đề Xuất & Kỹ Năng — PR `#876`
 
-| Thành Phần | Tệp Thay Đổi Chính (`10 files, +582/-149`, `+194` net logic LOC) | Nội Dung Cốt Lõi | Trạng Thái |
+| Thành Phần | Tệp Thay Đổi Chính (`4 files, +49/-21`, `0` logic LOC) | Nội Dung Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
-| **1. Fast-Path `VBPL_ADMIN` & Sửa Bộ Đếm Định Mức** | [`archetype_scanner.py`](../../../packages/ccba-legal-intel/src/ccba_legal/converters/archetype_scanner.py) | Bổ sung `_ADMIN_NUM_RE`, `_ADMIN_TYPES` và `_is_vbpl_admin_hint()` trước ngưỡng `decimal_sec_count >= 10` (giữ ưu tiên `norm_code_count >= 5 -> CIRCULAR_COST_NORM`), đồng thời sửa lỗi byte `\x08` thành `\b[A-Z]{2}\.\d{5}\b`. | Verified |
-| **2. Footer Strip, `legal_basis`, Khử Alias YAML & Suy Luận `type`** | [`vbpl_admin.py`](../../../packages/ccba-legal-intel/src/ccba_legal/converters/vbpl_admin.py) | Chia sẻ `_BODY_START_RE` để chặn `extract_legal_basis_graph()` trong lời mở đầu và giữ số hiệu thập phân (`66.18/2026/NQ-CP`); duyệt xuôi `sig_pattern` (nuốt `__`/`__*`/`\xa0` trước `Nơi nhận:`) trong `_build_pure_normative_body()`; bổ sung `_dump_yaml_no_aliases()`, `copy.deepcopy()` và `_infer_vbpl_doc_type()`. | Verified |
-| **3. Timeout Tải Xuống Thích Ứng `.crdownload` & `rclone`** | [`session.py`](../../../packages/ccba-legal-intel/src/ccba_legal/session.py), [`cdp.py`](../../../packages/ccba-legal-intel/src/ccba_legal/cdp.py), [`tier_downloader.py`](../../../packages/ccba-legal-intel/src/ccba_legal/crawler/tier_downloader.py), [`hydrator.py`](../../../packages/ccba-legal-intel/src/ccba_legal/hydrator.py) | Nâng mặc định tải Chrome lên `60s` (`CCBA_LEGAL_DOWNLOAD_TIMEOUT`, trần `300s`), tự gia hạn khi `.crdownload`/`.tmp`/`.part` hoặc `receivedBytes` tăng; nâng `SpokeHydrator` mặc định `--timeout 120s` / `--contimeout 10s` (`timeout=135`, cấu hình qua env/args). | Verified |
-| **4. Tài Liệu Kỹ Năng & Unit Tests Hồi Quy** | [`SKILL.md`](../../../.agents/skills/ccba-legal-ingest/SKILL.md), [`test_vbpl_admin_templates.py`](../../../packages/ccba-legal-intel/tests/test_vbpl_admin_templates.py), [`test_deterministic_downloader.py`](../../../packages/ccba-legal-intel/tests/test_deterministic_downloader.py), [`test_hydrator.py`](../../../packages/ccba-legal-intel/tests/test_hydrator.py) | Nâng `ccba-legal-ingest` lên `v1.3.1` (`GPI 24.50`), ghi chú `--archetype VBPL_ADMIN` và `~/Downloads/<tvpl_id>.*`; bổ sung unit tests hồi quy cho cả 4 lỗi. | Verified |
+| **1. Rào chắn hậu chỉnh tay Word (`ccba-xu-ly-van-phong` v2.3.1)** | [`SKILL.md`](../../../.agents/skills/ccba-xu-ly-van-phong/SKILL.md), [`docx.md`](../../../.agents/skills/ccba-xu-ly-van-phong/resources/docx.md) | Nâng `2.3.0 -> 2.3.1`; bổ sung **Rào chắn #5 (`Post-Manual-Word-Edit Hygiene`)** kèm tiêu chí `word/header*.xml`, `<w:tblLayout w:val="fixed"/>` (`9071 DXA`), `<w:cantSplit/>`, màu zebra và **gán/kiểm định tường minh** `doc.core_properties.author = "IBST - CCBA"` / `comments = ""` (Option A Maintainer review); làm rõ tính tùy chọn dòng tiêu đề khối ký ở Rào chắn #2. | Verified |
+| **2. Đường dẫn Guardrails & Non-Git Spoke (`ccba-session-retrospective` v1.7.3)** | [`SKILL.md`](../../../.agents/skills/ccba-session-retrospective/SKILL.md) | Nâng `1.7.2 -> 1.7.3`; sửa Bước 4 mục 3 dùng `${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_spoke_cleanliness.py --path .` và `check_hub_import_depth.py --path .`; bổ sung nhánh Spoke **non-git** tại Bước 5; tinh gọn câu chữ Bước 1 giữ trần token budget ratchet (`6584`). | Verified |
+| **3. Hồ sơ Đề xuất Spoke (`ADR-0045` / `ADR-0047`)** | [`2026-11-23_harden-docx-post-edit-and-spoke-retrospective-cli.md`](../../../.agents/proposals/2026-11-23_harden-docx-post-edit-and-spoke-retrospective-cli.md) | Đủ 4 trường metadata chuẩn (`proposal_id`, `type`, `status`, `name`), liên kết `Refs #874` (giữ `#874` mở cho phần còn lại), chuyển `status: "merged"` (`843032de`) hậu hợp nhất. | Verified |
 
 ---
 
-## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0045` / `ADR-0047` / `ADR-0058` / `ADR-0067`)
 
-- **Kiểm định Cục Bộ, Tái Chuyển Đổi 4 Mẫu DOCX Thực Tế & Bảo Mật:**
-  - `pytest -c pyproject.toml packages/ccba-legal-intel/tests -q`: `467 passed, 2 skipped, 20 deselected`; `verify-patch --preset code` (`4/4 PASSED`), `verify-patch --preset skill` (`4/4 PASSED`), `evaluate-gpi --existing-tier tier-2b` (`24.50`), `check_dependency_contracts.py` (`561` files clean), `sanitize_review_diff.py --check` (`[PASS] No secrets detected`), `door-triage --enforce-tradeoff-card` (`ONE_WAY_DOOR`, `Git Hunk Reference`: `vbpl_admin.py#L208-L234`).
-  - Tái chuyển đổi 4 mẫu DOCX thực tế (`31/2026/TT-BXD`, `267/2025/NĐ-CP`, `268/2025/NĐ-CP`, `20/2026/TT-BKHCN`) trong thư mục tạm không sửa tay hay ép `--archetype`: `LegalSpokeValidator` đạt `0 Errors, 0 Warnings` trên cả 4 văn bản.
-- **Giao thức TRIHT (Cổng 0.1–0.3 trên `fix/issue-873-harden-vbpl-ingest` @ `93a50e70`):**
-  - Cổng 0.1 (`check_release_cleanliness.py --phase pre`): exit `0` (`Working tree sạch sẽ 100%`).
-  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` `5.27s`, `ccba-diagram` `0.35s`, `ccba-harness` `11.69s`, `ccba-legal-intel` `48.37s`, `ccba-maskara` `0.35s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `3.51s`, `ccba-pdf-prep` `9.69s`, `ccba-qc-core` `1.10s`, `mdconverter` `2.41s`, `scripts` `15.87s`, `root-tests` **`616 passed, 1 skipped, 10 deselected` in `29.62s`** / `30.25s`).
-  - Cổng 0.3 (`check_release_cleanliness.py --phase post`): exit `0` (`100% Hermetic`).
-- **CI, Copilot & Post-Merge (`8d6ff9a1b47c84a32586001c3921b7944cb84dcb`, `--squash --delete-branch`):**
-  - GitHub CI trên commit rebase `386bcab9` **`8/8` PASS** (`PR Danger Triage & Verifier Gate` `1m22s`, `Deterministic Parity` `1m3s`, `Lint Markdown` `8s`, `Test - Python 3.10/3.11/3.12` `2m44s`/`2m21s`/`2m6s`, `Security & Privacy Scan` `12s`, `Documentation Check` `31s`); `audit_pr_comments.py --pr 877` exit `0` (`reviewRequests: []`, `reviews: []`), Issue `#873` `CLOSED`, `compile_catalog.py --check` `[OK]`.
+- **Thẩm định Tier 2 Boost & Rebase Option A (`8f1ec7ab` trên `origin/main` @ `65d91fc0`):**
+  - `check_spoke_leakage.py` (`4` files, `0` violations, `0` warnings), `sanitize_review_diff.py --check` (`[PASS] No secrets detected`), `validate_skills.py --enforce-gpi` (`77/77`), `audit_skills_hygiene.py --check` (`77 GREEN / 0 YELLOW / 0 RED`), `compile_catalog.py --check` (`[OK]`), `compile_skills_docs.py --check` (`[OK]`), `sync_hub_adr_matrix.py --check` (`61` ADRs `[PASS]`), `validate_docs.py . --src scripts,packages --changed` (exit `0`, `8` `[WARN]` hợp lệ).
+  - `ccba_harness verify-patch --preset skill` (`4/4 PASSED` in `4212.4 ms`), `pytest tests/governance/test_telemetry_economy.py tests/governance/test_skills_docs_integrity.py tests/governance/test_workflow_script_parity.py tests/governance/test_audit_skills_hygiene.py -q` (`79 passed in 2.94s`; trước Option A trên `f4b791af` toàn bộ `tests/governance/` đạt `367 passed, 1 skipped, 9 deselected in 12.74s`), smoke-test `build_tech_report_from_yaml` (`success: True`, `section_count: 3`).
+- **CI, Copilot & Post-Merge (`843032defd57d1279e9c9e25b7a3c5d42ade2323`, `--squash --delete-branch`):**
+  - GitHub CI trên commit `8f1ec7ab` **`8/8` PASS** (`PR Danger Triage & Verifier Gate` `1m19s`, `Deterministic Parity` `1m22s`, `Lint Markdown` `12s`, `Test - Python 3.10/3.11/3.12` `2m45s`/`2m8s`/`2m25s`, `Security & Privacy Scan` `10s`, `Documentation Check` `27s`); `audit_pr_comments.py` exit `0` (`reviewRequests: []`, `reviews: []`), `door-triage` `ONE_WAY_DOOR` (`tradeoff_card_valid: true`).
 
 ---
 
-## 3. Lưu Trữ Phát Hành Trước Đó — Chuẩn Hóa Phát Hiện `GENERIC` `ERROR` & Chống False Positive `SYSTEM_MESSAGE` Trong `evals.miner` (`PR #875`)
+## 3. Lưu Trữ Phát Hành Trước Đó — Gia Cố Nhận Diện `VBPL_ADMIN`, Cắt `Nơi nhận:`, `legal_basis` & Timeout Tải/Hydrate (`PR #877` / `#873`)
+
+> **Pull Request Đã Hợp Nhất (`--squash --delete-branch`):** [#877](https://github.com/vvChu/ccba-agent-platform/pull/877) (`8d6ff9a1b47c84a32586001c3921b7944cb84dcb`, hợp nhất `2026-11-23T14:41:53Z`) | **Branch:** `fix/issue-873-harden-vbpl-ingest` (`58ac8f6c` -> `93a50e70` -> `386bcab9`, đã xóa local & remote) | **Base:** `ee9dbe71` | **Issue Đã Đóng:** [#873](https://github.com/vvChu/ccba-agent-platform/issues/873) (`CLOSED`, `2026-11-23T14:41:55Z`)
+
+- **Thành phần chính (`10 files, +582/-149`, `+194` net logic LOC):** Bổ sung `_ADMIN_NUM_RE`, `_ADMIN_TYPES` và `_is_vbpl_admin_hint()` tại [`archetype_scanner.py`](../../../packages/ccba-legal-intel/src/ccba_legal/converters/archetype_scanner.py) kèm sửa `\x08` -> `\b`; chia sẻ `_BODY_START_RE`, sửa `sig_pattern`, `_dump_yaml_no_aliases()` và `_infer_vbpl_doc_type()` tại [`vbpl_admin.py`](../../../packages/ccba-legal-intel/src/ccba_legal/converters/vbpl_admin.py); nâng timeout tải Chrome/hydrator tại [`session.py`](../../../packages/ccba-legal-intel/src/ccba_legal/session.py), [`cdp.py`](../../../packages/ccba-legal-intel/src/ccba_legal/cdp.py), [`tier_downloader.py`](../../../packages/ccba-legal-intel/src/ccba_legal/crawler/tier_downloader.py), [`hydrator.py`](../../../packages/ccba-legal-intel/src/ccba_legal/hydrator.py); nâng [`SKILL.md`](../../../.agents/skills/ccba-legal-ingest/SKILL.md) `v1.3.1` (`GPI 24.50`) và bổ sung unit tests hồi quy.
+- **Nghiệm thu:** `467 passed, 2 skipped, 20 deselected`, tái chuyển đổi `4` mẫu DOCX đạt `0 Errors, 0 Warnings`, TRIHT Cổng 0.1–0.3 (**12/12 targets PASS**, `root-tests` `616 passed, 1 skipped, 10 deselected` in `29.62s`), `8/8` CI `SUCCESS`, `audit_pr_comments.py` exit `0`, walkthrough PR [#879](https://github.com/vvChu/ccba-agent-platform/pull/879) (`65d91fc0`).
+
+---
+
+## 4. Lưu Trữ Phát Hành Trước Đó — Chuẩn Hóa Phát Hiện `GENERIC` `ERROR` & Chống False Positive `SYSTEM_MESSAGE` Trong `evals.miner` (`PR #875`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#875](https://github.com/vvChu/ccba-agent-platform/pull/875) (`8a9f47c63fcbb274e7779ab449469d1d3e827831`, hợp nhất `2026-11-23T14:03:36Z`) | **Branch:** `fix/miner-generic-error-and-system-msg` (`a2e6aff4`, đã xóa local & remote) | **Base:** `badce709` | **Issue:** N/A
 
@@ -40,7 +44,7 @@
 
 ---
 
-## 4. Lưu Trữ Phát Hành Trước Đó — Kiểm Toán Song Song Hai Spoke (`ERP` Sóng 4 × `IDOP` Bridge Sóng 3) & Lộ Trình R&D Hub-Spoke CCBA WAY (`PR #871`)
+## 5. Lưu Trữ Phát Hành Trước Đó — Kiểm Toán Song Song Hai Spoke (`ERP` Sóng 4 × `IDOP` Bridge Sóng 3) & Lộ Trình R&D Hub-Spoke CCBA WAY (`PR #871`)
 
 > **Pull Request Đã Hợp Nhất (`--squash --delete-branch`):** [#871](https://github.com/vvChu/ccba-agent-platform/pull/871) (`67b6cb3ef97449aa4dadf47dee833741b9951f91`, hợp nhất `2026-11-23T04:43:20Z`) | **Branch:** `docs/hub-spoke-idop-ccba-way-research` (`585a106c` -> `bd4d8d75`) | **Base:** `e5dc4bf6` | **Issue:** N/A
 
@@ -49,7 +53,7 @@
 
 ---
 
-## 5. Lưu Trữ Phát Hành Trước Đó — Bổ Sung `frontend/src` Vào `DEFAULT_PRODUCTION_ROOTS` & SSOT Module Size Budget (`PR #866` / `#865`)
+## 6. Lưu Trữ Phát Hành Trước Đó — Bổ Sung `frontend/src` Vào `DEFAULT_PRODUCTION_ROOTS` & SSOT Module Size Budget (`PR #866` / `#865`)
 
 > **Pull Request Đã Hợp Nhất (`--squash --delete-branch` theo `RULE-2.21`):** [#866](https://github.com/vvChu/ccba-agent-platform/pull/866) (`ac6f83dc9b5931426728ffa9d5e78ea1d908eb02`, hợp nhất `2026-11-22T14:41:33Z`) | **Branch:** `proposal/module-budget-frontend-src` (`97bae48e` -> `fb2fcd53`) | **Base:** `368cdbd1` | **Issue:** [#865](https://github.com/vvChu/ccba-agent-platform/issues/865) (`CLOSED`)
 
@@ -58,7 +62,7 @@
 
 ---
 
-## 6. Lưu Trữ Phát Hành Trước Đó — Thay `gemini-3.7-flash-high` Trong `ccba-ai-qc-pccc-audit` & Living Doc SSoT Parity (`PR #867` / `#847`)
+## 7. Lưu Trữ Phát Hành Trước Đó — Thay `gemini-3.7-flash-high` Trong `ccba-ai-qc-pccc-audit` & Living Doc SSoT Parity (`PR #867` / `#847`)
 
 > **Pull Request Đã Hợp Nhất (`--squash --delete-branch`):** [#867](https://github.com/vvChu/ccba-agent-platform/pull/867) (`368cdbd13c80b16f976b1ebb2a6a033c4f83814b`, hợp nhất `2026-11-22T14:35:28Z`) | **Branch:** `fix/issue-847-pccc-audit-living-doc-drift` (`42aac9ae`) | **Base:** `ccf3ab44` | **Issue:** [#847](https://github.com/vvChu/ccba-agent-platform/issues/847) (`CLOSED`)
 
@@ -67,7 +71,7 @@
 
 ---
 
-## 7. Lưu Trữ Phát Hành Trước Đó — Bộ Chuẩn Bảng Màu, Template Tier 2A & YAML Schema Báo Cáo Đánh Giá Kỹ Thuật DOCX CCBA Brand v3.4 (`PR #863` / `Part 2 of #856`)
+## 8. Lưu Trữ Phát Hành Trước Đó — Bộ Chuẩn Bảng Màu, Template Tier 2A & YAML Schema Báo Cáo Đánh Giá Kỹ Thuật DOCX CCBA Brand v3.4 (`PR #863` / `Part 2 of #856`)
 
 > **Pull Request Đã Hợp Nhất (`--squash --delete-branch` theo `RULE-2.21`):** [#863](https://github.com/vvChu/ccba-agent-platform/pull/863) (`478991cc8c65d5fc0bb3fe97f2bcc3d6de8786d0`, hợp nhất `2026-11-22T13:59:41Z`) | **Branch:** `docs/issue-856-docx-tech-report-standards` (`91d1f8e3`) | **Base:** `357520a0` | **Issue:** [#856](https://github.com/vvChu/ccba-agent-platform/issues/856) (`CLOSED`)
 
@@ -76,7 +80,7 @@
 
 ---
 
-## 8. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Báo Cáo Đánh Giá Kỹ Thuật DOCX CCBA Brand v3.4 & CLI `tech-report` (`PR #861` / `Part 1 of #856`)
+## 9. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Báo Cáo Đánh Giá Kỹ Thuật DOCX CCBA Brand v3.4 & CLI `tech-report` (`PR #861` / `Part 1 of #856`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#861](https://github.com/vvChu/ccba-agent-platform/pull/861) (`42e15a42eab82252cd4209189ff96f57f90e32e6`) | **Branch:** `feat/issue-856-docx-tech-report-builder` (`d708cae6`) | **Base:** `4b699aa4` | **Issue:** [#856](https://github.com/vvChu/ccba-agent-platform/issues/856) (`CLOSED` sau PR `#863`)
 
@@ -85,7 +89,7 @@
 
 ---
 
-## 9. Lưu Trữ Phát Hành Trước Đó — Bộ Quy Chuẩn & Mẫu YAML IR Bảng Tính Song Ngữ XLSX (`PR #853` / `Part 2 of #851`)
+## 10. Lưu Trữ Phát Hành Trước Đó — Bộ Quy Chuẩn & Mẫu YAML IR Bảng Tính Song Ngữ XLSX (`PR #853` / `Part 2 of #851`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#853](https://github.com/vvChu/ccba-agent-platform/pull/853) (`22dc01a372ec8d58e9a87564015be17831a86b79`) | **Branch:** `proposal/xu-ly-van-phong-xlsx-calc-standards` (`718e5e05` -> `8fe88b44`, đồng bộ `19f8ece7`) | **Base:** `19f8ece7` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851) (`CLOSED`)
 
@@ -94,7 +98,7 @@
 
 ---
 
-## 10. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Bảng Tính Song Ngữ & Windows Excel COM Engine (`PR #852` / `Part 1 of #851`)
+## 11. Lưu Trữ Phát Hành Trước Đó — Bộ Dựng Bảng Tính Song Ngữ & Windows Excel COM Engine (`PR #852` / `Part 1 of #851`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#852](https://github.com/vvChu/ccba-agent-platform/pull/852) (`e7530dd0dbe564453efa64a7a2ad57492f3884d4`) | **Branch:** `proposal/ooxml-xlsx-calc-sheet-and-excel-com` (`9cc97214` -> `978b46e2`, rebased trên `8b1ace7e`) | **Base:** `8b1ace7e` | **Issue:** [#851](https://github.com/vvChu/ccba-agent-platform/issues/851)
 
@@ -103,7 +107,7 @@
 
 ---
 
-## 11. Lưu Trữ Phát Hành Trước Đó — Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp Chuẩn `ADR-0062` (`PR #846`)
+## 12. Lưu Trữ Phát Hành Trước Đó — Đăng Ký Spoke `SDS for Data Center` & Nâng Cấp Chuẩn `ADR-0062` (`PR #846`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#846](https://github.com/vvChu/ccba-agent-platform/pull/846) (`ad4dc12c7b76d698ef728b5c0b641b1359dec37a`) | **Branch:** `chore/sync-windows-spoke-registry-adr0062` (`bb5f7d50` -> `9cc07fca`, rebased trên `4083d561`) | **Base:** `4083d561` | **Issue:** N/A
 
@@ -112,7 +116,7 @@
 
 ---
 
-## 12. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
+## 13. Lưu Trữ Phát Hành Trước Đó — Phân Tách Operations OS & Financial Ledger Trong `HUB-ADR-0060` (`PR #854` / `#849`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#854](https://github.com/vvChu/ccba-agent-platform/pull/854) (`6d1d3f5e7e6dc671b7da2531f7c522f8fc64df56`) | **Branch:** `docs/issue-849-adr-0060-erp-sor-separation` (`1b85482c`) | **Base:** `609afbc1` | **Issue:** [#849](https://github.com/vvChu/ccba-agent-platform/issues/849) (`CLOSED`)
 
@@ -121,7 +125,7 @@
 
 ---
 
-## 13. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
+## 14. Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #845` (`#844`) & `PR #848` (`#842`)
 
 > **PR `#845` Đã Hợp Nhất (`--squash`):** [#845](https://github.com/vvChu/ccba-agent-platform/pull/845) (`76f48be83790a24ec28817b7f8d3f5e8f44086e8`) | **Issue:** [#844](https://github.com/vvChu/ccba-agent-platform/issues/844) (`CLOSED`) | **Branch:** `fix/issue-844-md-spoke-retrospective-gates` (`e2a42753`)  
 > **PR `#848` Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#848](https://github.com/vvChu/ccba-agent-platform/pull/848) (`deeae22d7564f629f54298403cae9d24f0c71dd1`) | **Issue:** [#842](https://github.com/vvChu/ccba-agent-platform/issues/842) (`CLOSED`) | **Branch:** `feat/issue-842-ooxml-xlsx-seam` (`07c6549e`, rebased trên `76f48be8`)
@@ -132,7 +136,7 @@
 
 ---
 
-## 14. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
+## 15. Lưu Trữ Phát Hành Trước Đó — Siết Chặt Startup `.env` ASGI & Neo `.ruff.toml` `conftest.py` (`PR #841`)
 
 > **Pull Request Đã Hợp Nhất (`--merge` theo `RULE-2.21`):** [#841](https://github.com/vvChu/ccba-agent-platform/pull/841) (`3d582834d0e652f7932318daa3cc83456dabe778`) | **Issue Đã Đóng:** [#840](https://github.com/vvChu/ccba-agent-platform/issues/840) (`CLOSED`) | **Branch:** `docs/issue-840-harden-asgi-env-conftest-ruff` (`f9e3e71f` -> `c3ce5041`) | **Base:** `a0282a9e`
 
@@ -141,7 +145,7 @@
 
 ---
 
-## 15. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
+## 16. Lưu Trữ Phát Hành Trước Đó — Nâng Cấp `/ccba-book-compiler` v1.5.4 (`PR #817`)
 
 > **Pull Request Đã Hợp Nhất (`--squash`):** [#817](https://github.com/vvChu/ccba-agent-platform/pull/817) (`1de529cb5a47274d6d570f310b87bff193274140`) | **Nhánh:** `feat/book-compiler-v154` (`ba079377` -> `1de529cb`) | **Base:** `170c04f3`
 
