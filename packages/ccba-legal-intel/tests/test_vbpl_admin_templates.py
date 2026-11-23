@@ -6,8 +6,15 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import yaml
+from docx import Document
+
+from ccba_legal.converters.archetype_scanner import DocumentArchetype, FullDocStructuralScanner
 from ccba_legal.converters.vbpl_admin import (
+    _build_pure_normative_body,
     _extract_and_export_templates,
+    _generate_vbpl_frontmatter,
+    _write_bundle_metadata_and_index,
     extract_legal_basis_graph,
 )
 
@@ -90,3 +97,118 @@ def test_vbpl_bundle_exports_backward_compatibility():
     assert callable(process_vbpl_bundle)
     assert process_vbpl_bundle_okf_v24 is process_vbpl_bundle
     assert process_vbpl_bundle_okf_v22 is process_vbpl_bundle
+
+
+def test_archetype_scanner_vbpl_admin_short_circular_and_cost_norm(tmp_path: Path):
+    """Short administrative circulars with >=10 decimal sections stay VBPL_ADMIN unless norm codes >= 5."""
+    docx_short = tmp_path / "tt_31.docx"
+    doc = Document()
+    doc.add_paragraph("Điều 1. Ban hành sửa đổi QCVN")
+    doc.add_paragraph("Điều 2. Hiệu lực thi hành")
+    for idx in range(1, 17):
+        doc.add_paragraph(f"1.{idx} Quy định kỹ thuật mục {idx}")
+    doc.save(str(docx_short))
+
+    assert (
+        FullDocStructuralScanner(docx_short, "31/2026/TT-BXD", "Thông tư").scan()
+        == DocumentArchetype.VBPL_ADMIN
+    )
+    assert (
+        FullDocStructuralScanner(docx_short, "14/VBHN-BGDĐT", "Văn bản hợp nhất").scan()
+        == DocumentArchetype.VBPL_ADMIN
+    )
+    assert (
+        FullDocStructuralScanner(docx_short, "QCVN 04:2021/BXD", "").scan()
+        == DocumentArchetype.TECHNICAL_QCVN
+    )
+
+    docx_norm = tmp_path / "tt_dinh_muc.docx"
+    norm_doc = Document()
+    for idx in range(6):
+        norm_doc.add_paragraph(f"Mã hiệu AA.1000{idx} công tác đào đất")
+    norm_doc.save(str(docx_norm))
+    assert (
+        FullDocStructuralScanner(docx_norm, "12/2021/TT-BXD", "Thông tư").scan()
+        == DocumentArchetype.CIRCULAR_COST_NORM
+    )
+
+
+def test_build_pure_normative_body_strips_orphan_noi_nhan_and_preserves_annex():
+    """Forward signature matching removes orphan emphasis/Nơi nhận: and trailing WMF while keeping attached QCVN."""
+    raw_decree = (
+        "__Điều 1.__ Phạm vi điều chỉnh.\n\n"
+        "__Điều 2.__ Thi hành Nghị định này.\n\n"
+        "__  \n"
+        "*Nơi nhận:  \n"
+        "*__- Thủ tướng Chính phủ;\n- Lưu: VT.\n\n"
+        "__TM. CHÍNH PHỦ__\n__Nguyễn Chí Dũng__\n\n"
+        "__FILE ĐƯỢC ĐÍNH KÈM THEO VĂN BẢN__\n__![](data:image/x-wmf;base64,AAAA)__"
+    )
+    cleaned = _build_pure_normative_body(raw_decree)
+    assert "Nơi nhận" not in cleaned
+    assert "Nguyễn Chí Dũng" not in cleaned
+    assert "FILE ĐƯỢC ĐÍNH KÈM" not in cleaned
+    assert cleaned.rstrip().endswith("Thi hành Nghị định này.")
+
+    raw_tt_qcvn = (
+        "__Điều 1.__ Ban hành kèm theo Thông tư này Sửa đổi QCVN.\n\n"
+        "__*  \nNơi nhận:  \n*__- Văn phòng Chính phủ;\n\n"
+        "__KT. BỘ TRƯỞNG__\n\n"
+        "SỬA ĐỔI 01:2026 QCVN 04:2021/BXD\n"
+        "__1. QUY ĐỊNH CHUNG__\n__3.5__ Giám sát 24/24 giờ."
+    )
+    cleaned_qcvn = _build_pure_normative_body(raw_tt_qcvn)
+    assert "QUY ĐỊNH CHUNG" in cleaned_qcvn
+    assert "Giám sát 24/24 giờ." in cleaned_qcvn
+
+
+def test_extract_legal_basis_graph_stops_at_body_and_preserves_dotted_numbers():
+    """extract_legal_basis_graph stops at Chương I/Điều 1 and preserves decimal doc numbers like 66.18."""
+    sample = (
+        "*Căn cứ Nghị quyết số **66.18/2026/NQ-CP của Chính phủ quy định cắt giảm TTHC;*\n\n"
+        "# __Chương I__\n"
+        "## __Điều 1.__ Sửa đổi khoản 1\n"
+        "“1. Căn cứ Nghị định số 99/2025/NĐ-CP và Thông báo kế hoạch, tổ chức gửi hồ sơ.”\n"
+    )
+    basis = extract_legal_basis_graph(sample, {"66.18/2026/NQ-CP": "nghi_quyet_66_18_2026_nq_cp"})
+    assert len(basis) == 1
+    assert basis[0]["doc_id"] == "nghi_quyet_66_18_2026_nq_cp"
+    assert "66.18/2026/NQ-CP" in basis[0]["title"]
+
+
+def test_metadata_and_frontmatter_no_yaml_aliases_and_infers_type(tmp_path: Path):
+    """Metadata and frontmatter avoid &id001/*id001 YAML aliases and infer doc type from document_number."""
+    shared_replaces = ["08/2014/NĐ-CP", "70/2018/NĐ-CP"]
+    for slug, doc_num, expected_type in [
+        ("thong_tu_20_2026_tt_bkhcn", "20/2026/TT-BKHCN", "Thông tư"),
+        ("luat_93_2025_qh15", "93/2025/QH15", "Luật"),
+        ("quyet_dinh_258_qd_ttg", "258/QĐ-TTg", "Quyết định"),
+        ("14_vbhn_bgddt", "14/VBHN-BGDĐT", "Văn bản hợp nhất"),
+    ]:
+        bdir = tmp_path / slug
+        bdir.mkdir(parents=True, exist_ok=True)
+        doc_meta = {
+            "id": slug,
+            "document_number": doc_num,
+            "type": "",
+            "relations": {"replaces": shared_replaces},
+            "replaces": shared_replaces,
+        }
+        _write_bundle_metadata_and_index(
+            bundle_dir=bdir,
+            target_md_name=f"{slug}.md",
+            doc_meta=doc_meta,
+            legal_basis=[],
+            clauses_cnt=1,
+            qa_cnt=0,
+            templates_cnt=0,
+            tables_cnt=0,
+        )
+        raw_meta = (bdir / "metadata.yaml").read_text(encoding="utf-8")
+        assert "&id" not in raw_meta and "*id" not in raw_meta
+        loaded = yaml.safe_load(raw_meta)
+        assert loaded["type"] == expected_type
+
+        fm = _generate_vbpl_frontmatter(doc_meta, bdir, f"{slug}.md")
+        assert "&id" not in fm and "*id" not in fm
+        assert f"document_type: {expected_type}" in fm

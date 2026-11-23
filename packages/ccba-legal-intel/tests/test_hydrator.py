@@ -298,3 +298,49 @@ def test_push_asset_rclone_not_available(mock_spoke: Path, monkeypatch: pytest.M
     res = hydrator.push_asset(b1_dir, pdf_asset)
     assert res.status == AssetStatus.ERROR
     assert "Failed to upload to Cloud Vault" in res.message
+
+
+def test_hydrator_default_and_configurable_rclone_timeouts(
+    mock_spoke: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """SpokeHydrator defaults to rclone --timeout 120s / --contimeout 10s and supports env/arg overrides."""
+    monkeypatch.delenv("CCBA_HYDRATOR_RCLONE_TIMEOUT", raising=False)
+    monkeypatch.delenv("CCBA_HYDRATOR_RCLONE_CONTIMEOUT", raising=False)
+
+    hydrator = SpokeHydrator(spoke_root=mock_spoke)
+    b2_dir = mock_spoke / "legal_docs" / "01_vbpl" / "nd_test_02"
+    pdf_asset = hydrator.inspect_bundle_assets(b2_dir)[0]
+    content = b"%PDF-1.4 Large Hydrated File"
+    pdf_asset.expected_sha256 = compute_sha256(content)
+
+    recorded: list[tuple[list[str], int]] = []
+
+    def mock_run(cmd, capture_output=True, text=False, timeout=0):
+        recorded.append((list(cmd), timeout))
+        if cmd[0] == "rclone" and cmd[1] == "copyto" and str(cmd[-1]).endswith(".tmp_download"):
+            Path(cmd[-1]).write_bytes(content)
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"", stderr=b"")
+
+    with patch("subprocess.run", side_effect=mock_run):
+        res = hydrator.hydrate_asset(b2_dir, pdf_asset)
+        assert res.status == AssetStatus.DOWNLOADED
+        assert recorded[0][1] == 135
+        assert "--timeout" in recorded[0][0]
+        assert recorded[0][0][recorded[0][0].index("--timeout") + 1] == "120s"
+        assert recorded[0][0][recorded[0][0].index("--contimeout") + 1] == "10s"
+
+        monkeypatch.setenv("CCBA_HYDRATOR_RCLONE_TIMEOUT", "180")
+        monkeypatch.setenv("CCBA_HYDRATOR_RCLONE_CONTIMEOUT", "12")
+        env_hydrator = SpokeHydrator(spoke_root=mock_spoke)
+        push_res = env_hydrator.push_asset(b2_dir, pdf_asset)
+        assert push_res.status == AssetStatus.UPLOADED
+        assert recorded[1][1] == 195
+        assert recorded[1][0][recorded[1][0].index("--timeout") + 1] == "180s"
+        assert recorded[1][0][recorded[1][0].index("--contimeout") + 1] == "12s"
+
+        custom_hydrator = SpokeHydrator(
+            spoke_root=mock_spoke, rclone_timeout=240, rclone_contimeout=15
+        )
+        assert custom_hydrator.rclone_timeout == 240
+        assert custom_hydrator.rclone_contimeout == 15
+        assert custom_hydrator._subprocess_timeout == 255

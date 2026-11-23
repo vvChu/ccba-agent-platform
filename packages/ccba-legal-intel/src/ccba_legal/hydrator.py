@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 import shutil
 import subprocess
 from enum import Enum
@@ -18,6 +19,21 @@ import yaml
 from ccba_legal.gdrive_vault import GoogleDriveVault, compute_file_sha256
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_RCLONE_TIMEOUT = 120
+DEFAULT_RCLONE_CONTIMEOUT = 10
+
+
+def _resolve_positive_int_env(env_var: str, default: int) -> int:
+    """Parse positive integer override from environment variable with safe fallback."""
+    raw = os.environ.get(env_var)
+    if raw is None:
+        return default
+    try:
+        val = int(raw)
+        return val if val > 0 else default
+    except (TypeError, ValueError):
+        return default
 
 
 class AssetStatus(str, Enum):
@@ -91,6 +107,8 @@ class SpokeHydrator:
         spoke_root: Path | str,
         vault_client: GoogleDriveVault | None = None,
         rclone_remote: str = "gdrive:",
+        rclone_timeout: int | None = None,
+        rclone_contimeout: int | None = None,
     ) -> None:
         """Initialize the SpokeHydrator.
 
@@ -98,11 +116,26 @@ class SpokeHydrator:
             spoke_root: Root directory of the Spoke repository.
             vault_client: Optional GoogleDriveVault instance.
             rclone_remote: Name of the rclone remote for Cloud Vault fallback.
+            rclone_timeout: Optional rclone I/O timeout in seconds (default 120s).
+            rclone_contimeout: Optional rclone connect timeout in seconds (default 10s).
         """
         self.spoke_root = Path(spoke_root).resolve()
         self.legal_docs_dir = self.spoke_root / "legal_docs"
         self.vault_client = vault_client or GoogleDriveVault()
         self.rclone_remote = rclone_remote
+        self.rclone_timeout = (
+            rclone_timeout
+            if rclone_timeout is not None and rclone_timeout > 0
+            else _resolve_positive_int_env("CCBA_HYDRATOR_RCLONE_TIMEOUT", DEFAULT_RCLONE_TIMEOUT)
+        )
+        self.rclone_contimeout = (
+            rclone_contimeout
+            if rclone_contimeout is not None and rclone_contimeout > 0
+            else _resolve_positive_int_env(
+                "CCBA_HYDRATOR_RCLONE_CONTIMEOUT", DEFAULT_RCLONE_CONTIMEOUT
+            )
+        )
+        self._subprocess_timeout = self.rclone_timeout + 15
         self._rclone_available = shutil.which("rclone") is not None
         if self._rclone_available:
             self._auto_configure_remote()
@@ -331,15 +364,15 @@ class SpokeHydrator:
                 "rclone",
                 "copyto",
                 "--contimeout",
-                "5s",
+                f"{self.rclone_contimeout}s",
                 "--timeout",
-                "15s",
+                f"{self.rclone_timeout}s",
                 rclone_src,
                 str(tmp_file),
             ]
             logger.debug(f"Running rclone: {' '.join(cmd)}")
             try:
-                res = subprocess.run(cmd, capture_output=True, timeout=20)
+                res = subprocess.run(cmd, capture_output=True, timeout=self._subprocess_timeout)
                 if res.returncode == 0 and tmp_file.exists() and tmp_file.stat().st_size > 0:
                     download_success = True
             except (subprocess.TimeoutExpired, Exception) as e:
@@ -354,14 +387,16 @@ class SpokeHydrator:
                     "copyto",
                     "--drive-shared-with-me",
                     "--contimeout",
-                    "5s",
+                    f"{self.rclone_contimeout}s",
                     "--timeout",
-                    "15s",
+                    f"{self.rclone_timeout}s",
                     rclone_src,
                     str(tmp_file),
                 ]
                 try:
-                    res = subprocess.run(cmd_shared, capture_output=True, timeout=20)
+                    res = subprocess.run(
+                        cmd_shared, capture_output=True, timeout=self._subprocess_timeout
+                    )
                     if res.returncode == 0 and tmp_file.exists() and tmp_file.stat().st_size > 0:
                         download_success = True
                 except (subprocess.TimeoutExpired, Exception) as e:
@@ -483,12 +518,14 @@ class SpokeHydrator:
                 str(local_file),
                 remote_target,
                 "--contimeout",
-                "5s",
+                f"{self.rclone_contimeout}s",
                 "--timeout",
-                "15s",
+                f"{self.rclone_timeout}s",
             ]
             try:
-                res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+                res = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=self._subprocess_timeout
+                )
                 if res.returncode == 0:
                     upload_success = True
             except (subprocess.TimeoutExpired, Exception) as e:

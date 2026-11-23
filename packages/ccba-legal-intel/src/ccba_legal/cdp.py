@@ -13,7 +13,20 @@ import requests
 import websocket
 
 from ccba_legal.crawler.selectors import TVPLSelectors
-from ccba_legal.session import get_tvpl_credentials, sleep_with_jitter
+from ccba_legal.session import (
+    DEFAULT_DOWNLOAD_MAX_TIMEOUT as DEFAULT_DOWNLOAD_MAX_TIMEOUT,
+)
+from ccba_legal.session import (
+    DEFAULT_DOWNLOAD_TIMEOUT as DEFAULT_DOWNLOAD_TIMEOUT,
+)
+from ccba_legal.session import (
+    find_stable_completed_file,
+    get_tvpl_credentials,
+    has_active_download_progress,
+    resolve_download_timeouts,
+    sleep_with_jitter,
+    snapshot_in_progress_downloads,
+)
 
 
 class ChromeCDPError(Exception):
@@ -421,85 +434,83 @@ class ChromeCDP:
         existing_files: set[str],
     ) -> Path | None:
         """Check whether a downloaded file in watch_dirs has finished writing and stabilized."""
-        for d in watch_dirs:
-            if not d.exists():
-                continue
-            try:
-                candidates = [
-                    f
-                    for f in d.glob("*")
-                    if f.is_file() and any(f.name.lower().endswith(ext) for ext in expected_exts)
-                ]
-            except OSError:
-                continue
+        return find_stable_completed_file(watch_dirs, expected_exts, existing_files, start_time)
 
-            for f in candidates:
-                try:
-                    resolved_str = str(f.resolve())
-                    if f.name.endswith(".crdownload") or f.name.endswith(".tmp"):
-                        continue
-                    st = f.stat()
-                    if resolved_str in existing_files and st.st_mtime < (start_time - 1.0):
-                        continue
-                    if st.st_size > 0 and st.st_mtime >= (start_time - 2.0):
-                        sz1 = st.st_size
-                        time.sleep(0.5)
-                        sz2 = f.stat().st_size
-                        if sz1 == sz2 and sz1 > 0:
-                            return f
-                except OSError:
-                    continue
-        return None
+    def _poll_ws_download_event(
+        self,
+        watch_dirs: list[Path],
+        expected_exts: list[str],
+        start_time: float,
+        existing_files: set[str],
+        deadline: float,
+        last_ws_bytes: int,
+    ) -> tuple[Path | None, bool, int, bool]:
+        """Inspect one WebSocket downloadProgress frame; returns (found, canceled, bytes, progressed)."""
+        if not self.ws:
+            return (None, False, last_ws_bytes, False)
+        try:
+            self.ws.settimeout(min(2.0, max(0.5, deadline - time.time())))
+            raw = self.ws.recv()
+            msg = json.loads(raw) if raw else {}
+            if msg.get("method") != "Browser.downloadProgress":
+                return (None, False, last_ws_bytes, False)
+            params = msg.get("params", {})
+            state = params.get("state")
+            received = int(params.get("receivedBytes") or 0)
+            progressed = (received > last_ws_bytes) if last_ws_bytes >= 0 else (received > 0)
+            new_bytes = max(last_ws_bytes, received)
+            if state == "completed":
+                return (
+                    find_stable_completed_file(
+                        watch_dirs, expected_exts, existing_files, start_time
+                    ),
+                    False,
+                    new_bytes,
+                    progressed,
+                )
+            return (
+                None,
+                state == "canceled",
+                new_bytes,
+                False if state == "canceled" else progressed,
+            )
+        except Exception:
+            return (None, False, last_ws_bytes, False)
 
     def wait_for_download_completion(
         self,
         watch_dirs: list[Path],
         expected_exts: list[str],
         existing_files: set[str],
-        timeout: float = 30.0,
+        timeout: float | None = None,
         start_time: float | None = None,
+        max_timeout: float | None = None,
     ) -> Path | None:
-        """Deterministic two-tier download watcher: Layer-1 WebSocket events with Layer-2 File Stability Guard."""
-        if start_time is None:
-            start_time = time.time()
-
-        ws = self.ws
-        while time.time() - start_time < timeout:
-            # Layer 1: WebSocket event inspection if active
-            if ws:
-                remaining = max(0.5, timeout - (time.time() - start_time))
-                try:
-                    ws.settimeout(min(2.0, remaining))
-                    raw = ws.recv()
-                    if raw:
-                        msg = json.loads(raw)
-                        method = msg.get("method", "")
-                        params = msg.get("params", {})
-                        if method == "Browser.downloadProgress":
-                            state = params.get("state")
-                            if state == "completed":
-                                # Immediate file stability check upon event
-                                found = self._check_file_stability(
-                                    watch_dirs, expected_exts, start_time, existing_files
-                                )
-                                if found:
-                                    return found
-                            elif state == "canceled":
-                                return None
-                except (websocket.WebSocketTimeoutException, TimeoutError):
-                    pass
-                except Exception:
-                    pass
-
-            # Layer 2: File Stability Guard fallback
-            found = self._check_file_stability(
-                watch_dirs, expected_exts, start_time, existing_files
-            )
+        """Deterministic two-tier download watcher with progress-aware deadline extension."""
+        start = time.time() if start_time is None else start_time
+        eff_timeout, eff_max = resolve_download_timeouts(timeout, max_timeout)
+        deadline = start + eff_timeout
+        hard_deadline = start + eff_max
+        prev_sizes = snapshot_in_progress_downloads(watch_dirs)
+        poll_interval = min(0.5, max(0.05, eff_timeout / 4))
+        last_ws_bytes = -1
+        while time.time() < deadline:
+            if self.ws:
+                found, canceled, last_ws_bytes, ws_prog = self._poll_ws_download_event(
+                    watch_dirs, expected_exts, start, existing_files, deadline, last_ws_bytes
+                )
+                if canceled:
+                    return None
+                if found:
+                    return found
+                if ws_prog:
+                    deadline = min(hard_deadline, max(deadline, time.time() + eff_timeout))
+            found = self._check_file_stability(watch_dirs, expected_exts, start, existing_files)
             if found:
                 return found
-
-            time.sleep(0.5)
-
+            if has_active_download_progress(watch_dirs, prev_sizes):
+                deadline = min(hard_deadline, max(deadline, time.time() + eff_timeout))
+            time.sleep(poll_interval)
         return None
 
     def handle_login(self) -> bool:
@@ -700,8 +711,9 @@ class MockChromeCDP(ChromeCDP):
         watch_dirs: list[Path],
         expected_exts: list[str],
         existing_files: set[str],
-        timeout: float = 30.0,
+        timeout: float | None = None,
         start_time: float | None = None,
+        max_timeout: float | None = None,
     ) -> Path | None:
         for d in watch_dirs:
             if not d.exists():

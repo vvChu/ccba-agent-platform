@@ -17,6 +17,24 @@ class DocumentArchetype(str, Enum):
     INTERNATIONAL_ISO = "INTERNATIONAL_ISO"  # Tiêu chuẩn quốc tế (ISO, BS EN)
 
 
+_ADMIN_NUM_RE = re.compile(
+    r"(?:/(?:TT|TTLT|NĐ|ND|QĐ|QD|NQ|PL|VBHN)(?:[-_]|$)|/QH\d+\b"
+    r"|(?:^|[-_])(?:TT|TTLT|NĐ|ND|QĐ|QD|NQ|PL|VBHN)[-_]"
+    r"|(?:^|_)(?:THONG_TU|NGHI_DINH|QUYET_DINH|LUAT|NGHI_QUYET|PHAP_LENH)_)",
+    re.IGNORECASE,
+)
+_ADMIN_TYPES = (
+    "THÔNG TƯ",
+    "NGHỊ ĐỊNH",
+    "LUẬT",
+    "QUYẾT ĐỊNH",
+    "NGHỊ QUYẾT",
+    "PHÁP LỆNH",
+    "VĂN BẢN HỢP NHẤT",
+    "VBPL",
+)
+
+
 class FullDocStructuralScanner:
     """Performs deep full-document structural skimming to detect document archetype."""
 
@@ -24,6 +42,12 @@ class FullDocStructuralScanner:
         self.docx_path = docx_path
         self.doc_num = doc_num_str.upper()
         self.doc_type = doc_type_str.upper()
+
+    def _is_vbpl_admin_hint(self) -> bool:
+        """Return True if doc number/slug or type explicitly identifies an administrative legal doc."""
+        return bool(_ADMIN_NUM_RE.search(self.doc_num)) or any(
+            t in self.doc_type for t in _ADMIN_TYPES
+        )
 
     def scan(self) -> DocumentArchetype:
         """Scan 100% of document elements and return detected Archetype."""
@@ -56,11 +80,14 @@ class FullDocStructuralScanner:
                 decimal_sec_count += 1
             if re.match(r"^(?:Điều\s+\d+|Chương\s+[IVXLCDM\d]+)", text, re.IGNORECASE):
                 admin_article_count += 1
-            if re.search(r"[A-Z]{2}\.\d{5}", text):
+            if re.search(r"\b[A-Z]{2}\.\d{5}\b", text):
                 norm_code_count += 1
 
         if norm_code_count >= 5:
             return DocumentArchetype.CIRCULAR_COST_NORM
+
+        if self._is_vbpl_admin_hint():
+            return DocumentArchetype.VBPL_ADMIN
 
         if decimal_sec_count > admin_article_count and decimal_sec_count >= 10:
             if "QCVN" in self.doc_num:

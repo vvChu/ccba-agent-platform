@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 import shutil
@@ -27,17 +28,50 @@ from ccba_legal.converters.unit_normalizer import (
 from ccba_legal.gold_standard import generate_bundle_ast_and_qa, inject_semantic_anchors
 from ccba_legal.table_cleaner import clean_markdown_tables_and_notes
 
+_BODY_START_RE = re.compile(
+    r"(?:^|\n)((?:#+\s*)?(?:__|\*\*)?\s*(?:Chương\s+[IVXLCDM0-9]+|Phần\s+thứ\s+[a-z0-9]+|Điều\s+1\b))",
+    flags=re.IGNORECASE,
+)
+
+
+def _dump_yaml_no_aliases(payload: dict[str, Any]) -> str:
+    """Serialize mapping to UTF-8 YAML without emitting &id001/*id001 anchors."""
+    dumper_cls = type(
+        "_NoAliasSafeDumper", (yaml.SafeDumper,), {"ignore_aliases": lambda self, data: True}
+    )
+    return str(yaml.dump(payload, Dumper=dumper_cls, allow_unicode=True, sort_keys=False, indent=2))
+
+
+def _infer_vbpl_doc_type(doc_num: str, bundle_name: str = "") -> str:
+    """Infer canonical Vietnamese document type from document_number or bundle slug."""
+    probe = f"{doc_num} {bundle_name}".upper()
+    rules = (
+        (r"(?:/VBHN(?:[-_]|$)|_VBHN_|VĂN\s*BẢN\s*HỢP\s*NHẤT)", "Văn bản hợp nhất"),
+        (r"(?:/TT(?:LT)?(?:[-_]|$)|(?:^|_)THONG_TU_)", "Thông tư"),
+        (r"(?:/N[ĐD](?:[-_]|$)|(?:^|_)NGHI_DINH_)", "Nghị định"),
+        (r"(?:/QH\d+\b|(?:^|_)LUAT_)", "Luật"),
+        (r"(?:/Q[ĐD](?:[-_]|$)|(?:^|_)QUYET_DINH_)", "Quyết định"),
+        (r"(?:/NQ(?:[-_]|$)|(?:^|_)NGHI_QUYET_)", "Nghị quyết"),
+        (r"(?:/PL(?:[-_]|$)|(?:^|_)PHAP_LENH_)", "Pháp lệnh"),
+    )
+    for pat, label in rules:
+        if re.search(pat, probe):
+            return label
+    return "Văn bản quy phạm pháp luật"
+
 
 def extract_legal_basis_graph(
     raw_text: str, registry_lookup: dict[str, str]
 ) -> list[dict[str, str]]:
-    """Extract legal basis citations and resolve to canonical doc_ids."""
+    """Extract legal basis citations from preamble and resolve to canonical doc_ids."""
+    body_match = _BODY_START_RE.search(raw_text)
+    preamble = raw_text[: body_match.start()] if body_match else raw_text[:4000]
     basis_list: list[dict[str, str]] = []
     pattern = re.compile(
-        r"căn\s+cứ\s+([^;\n\.]+?)(?:số\s+([\d\w\-/]+))?(?:\s+đã\s+được\s+sửa\s+đổi[^;\n\.]*)?[;\n\.]",
+        r"căn\s+cứ\s+((?:[^;\n.]|\.(?=\d))+?)(?:số\s+([\d\w.\-/]+))?(?:\s+đã\s+được\s+sửa\s+đổi(?:[^;\n.]|\.(?=\d))*)?(?:[;\n]|\.(?!\d))",
         re.IGNORECASE,
     )
-    for match in pattern.finditer(raw_text[:4000]):
+    for match in pattern.finditer(preamble):
         title_clean = re.sub(
             r"^căn\s+cứ\s+", "", match.group(0).strip(" ;.\r\n*"), flags=re.IGNORECASE
         ).strip()
@@ -53,11 +87,11 @@ def extract_legal_basis_graph(
             for k in ["luật", "nghị định", "pháp lệnh", "nghị quyết", "thông tư"]
         ):
             continue
-        doc_num = match.group(2) if match.group(2) else ""
+        doc_num = match.group(2).rstrip(".") if match.group(2) else ""
         if not doc_num:
-            m_num = re.search(r"số\s+([\d\w\-/]+)", title_clean, re.IGNORECASE)
+            m_num = re.search(r"số\s+([\d\w.\-/]+)", title_clean, re.IGNORECASE)
             if m_num:
-                doc_num = m_num.group(1)
+                doc_num = m_num.group(1).rstrip(".")
         doc_id = registry_lookup.get(
             doc_num, re.sub(r"[^\w\d]+", "_", title_clean.lower()).strip("_")[:50]
         )
@@ -173,19 +207,14 @@ def _extract_and_export_templates(
 
 def _build_pure_normative_body(pure_body_raw: str) -> str:
     """Strip administrative preamble headers, trailing footer signatures, and apply strict bullet indentation formatting."""
-    m = re.search(
-        r"(?:^|\n)((?:#+\s*)?(?:__|\*\*)?\s*(?:Chương\s+[IVXLCDM0-9]+|Phần\s+thứ\s+[a-z0-9]+|Điều\s+1\b))",
-        pure_body_raw,
-        flags=re.IGNORECASE,
-    )
+    m = _BODY_START_RE.search(pure_body_raw)
     pure_body = pure_body_raw[m.start(1) :] if m else pure_body_raw
     # Strip trailing administrative signature blocks / distribution footers
     sig_pattern = re.compile(
-        r"(?:\n\s*__\*?\s*Nơi nhận\s*:|\n\s*\*+Nơi nhận\s*:|\n\s*Nơi nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
+        r"(?:\n(?:[ \t\xa0]*\n)*[ \t\xa0]*(?:(?:__+|\*\*+)\*?[ \t]*\n[ \t\xa0]*)?(?:__+|\*+)?[ \t]*Nơi\s+nhận\s*:|\n\s*__KT\.\s+BỘ\s+TRƯỞNG|\n\s*KT\.\s+BỘ\s+TRƯỞNG\s*\n|\n\s*__BỘ\s+TRƯỞNG__|\n\s*__THỨ\s+TRƯỞNG__|\n\s*__CHỦ\s+TỊCH\s+QUỐC\s+HỘI|\n\s*CHỦ\s+TỊCH\s+QUỐC\s+HỘI\s*\n|\n\s*__TM\.\s+QUỐC\s+HỘI|\n\s*__TM\.\s+CHÍNH\s+PHỦ|\n\s*__THỦ\s+TƯỚNG__|\n\s*\*+Luật\s+này\s+được\s+Quốc\s+hội|\n\s*Luật\s+này\s+được\s+Quốc\s+hội)",
         re.IGNORECASE,
     )
-    sig_matches = list(sig_pattern.finditer(pure_body))
-    for sm in reversed(sig_matches):
+    for sm in sig_pattern.finditer(pure_body):
         rest = pure_body[sm.end() :]
         has_more_articles = bool(
             re.search(
@@ -241,12 +270,25 @@ def _build_merged_bundle_metadata(
         doc_meta.get("pdf_path") or existing.get("pdf_path") or f"sources/{bundle_dir.name}.pdf"
     ).replace("\\", "/")
 
+    relations_val = doc_meta.get("relations")
+    if isinstance(relations_val, dict) and "replaces" in relations_val:
+        raw_replaces = relations_val.get("replaces") or []
+    elif "replaces" in doc_meta:
+        raw_replaces = doc_meta.get("replaces") or []
+    else:
+        raw_replaces = existing.get("replaces") or []
+    replaces_list = list(raw_replaces) if isinstance(raw_replaces, list) else []
+
     merged: dict[str, Any] = dict(existing)
     merged.update(
         {
             "id": doc_meta.get("id") or existing.get("id") or bundle_dir.name,
             "document_number": doc_num,
-            "type": doc_meta.get("type") or existing.get("type") or "Nghị định",
+            "type": (
+                doc_meta.get("type")
+                or existing.get("type")
+                or _infer_vbpl_doc_type(str(doc_num), bundle_dir.name)
+            ),
             "title": doc_title,
             "status": doc_meta.get("status") or existing.get("status") or "active",
             "effective_date": str(
@@ -257,9 +299,7 @@ def _build_merged_bundle_metadata(
             "pdf_sha256": doc_meta.get("pdf_sha256") or existing.get("pdf_sha256") or "UNVERIFIED",
             "pdf_status": doc_meta.get("pdf_status") or existing.get("pdf_status") or "verified",
             "legal_basis": legal_basis,
-            "replaces": doc_meta.get("relations", {}).get("replaces", [])
-            if isinstance(doc_meta.get("relations"), dict)
-            else doc_meta.get("replaces", existing.get("replaces", [])),
+            "replaces": replaces_list,
             "okf_spec": spec_version,
             "converter_version": CURRENT_CONVERTER_VERSION,
             "schema_uri": CURRENT_OKF_SCHEMA_URI,
@@ -283,7 +323,7 @@ def _build_merged_bundle_metadata(
     ):
         val = doc_meta.get(keep_key) if keep_key in doc_meta else existing.get(keep_key)
         if val is not None:
-            merged[keep_key] = val
+            merged[keep_key] = copy.deepcopy(val) if isinstance(val, (dict, list)) else val
     return merged
 
 
@@ -300,8 +340,7 @@ def _write_bundle_metadata_and_index(
 ) -> None:
     """Write metadata.yaml and human-readable index.md for the OKF bundle."""
     metadata_obj = _build_merged_bundle_metadata(bundle_dir, doc_meta, legal_basis, spec_version)
-    with open(bundle_dir / "metadata.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(metadata_obj, f, allow_unicode=True, sort_keys=False, indent=2)
+    (bundle_dir / "metadata.yaml").write_text(_dump_yaml_no_aliases(metadata_obj), encoding="utf-8")
 
     issued_by = str(metadata_obj.get("issued_by", "")).strip()
     signer = str(metadata_obj.get("signer", "")).strip()
@@ -352,7 +391,7 @@ def _generate_vbpl_frontmatter(
     doc_id = doc_meta.get("id", bundle_dir.name)
     doc_num = doc_meta.get("document_number", bundle_dir.name.upper())
     title = doc_meta.get("title", f"Văn bản quy phạm pháp luật {doc_num}")
-    doc_type = doc_meta.get("type", "Nghị định")
+    doc_type = doc_meta.get("type") or _infer_vbpl_doc_type(str(doc_num), bundle_dir.name)
     issued_by = doc_meta.get("issued_by", "")
     signer = doc_meta.get("signer", "")
     issued_date = doc_meta.get("issued_date", "")
@@ -413,11 +452,7 @@ def _generate_vbpl_frontmatter(
             if isinstance(replaces, list)
             else replaces
         )
-    return (
-        "---\n"
-        + str(yaml.dump(fm_dict, allow_unicode=True, sort_keys=False, indent=2)).strip()
-        + "\n---\n\n"
-    )
+    return "---\n" + _dump_yaml_no_aliases(fm_dict).strip() + "\n---\n\n"
 
 
 def process_vbpl_bundle(
