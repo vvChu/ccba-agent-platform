@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.2"
+  version: "1.7.3"
 bundle: _core
 scope: universal
 posture: seam-exempt
@@ -168,8 +168,8 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
    ```bash
    # Trên Hub:
    python -m pytest packages/ccba-harness/tests/test_telemetry.py packages/ccba-harness/tests/test_verify_patch.py tests/governance/ -q
-   # Trên Spoke:
-   python scripts/_guardrails/check_spoke_cleanliness.py && python scripts/_guardrails/check_hub_import_depth.py
+   # Trên Spoke (dùng scripts/_guardrails/ cục bộ nếu có; mặc định gọi thẳng qua CCBA_HUB_PATH):
+   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_spoke_cleanliness.py" --path . && python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/spoke/check_hub_import_depth.py" --path .
    ```
 4. **Khóa cứng hoàn tất tất định (ADR-0058 Hard Completion Lock):**
    ```bash
@@ -191,7 +191,8 @@ Trước khi kết thúc phiên, Agent **bắt buộc** phải thực hiện quy
   * Rào chắn `simplify_gate` (`scripts/hooks/simplify.py`) tự động chặn các commit có quy mô lớn (> 400 LOC, > 8 files) hoặc chứa động từ nhạy cảm.
   * Khi phiên làm việc sinh diff lớn do tái biên dịch tài liệu web portal tự động (`docs/skills/`, `catalog.yaml`), sử dụng tiền tố `# APPROVED: <lý do>` trong câu lệnh commit hoặc chú thích (ví dụ: `git commit -m "docs(skills): update portal # APPROVED: recompilation gate"`). Điều này kích hoạt `context.is_approved = True` cho phép commit an toàn.
 - **Commit & Nộp PR tuân thủ Rào chắn Nhánh Bảo vệ (`RULE-4.21`):**
-  * Tại Spoke không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
+  * Tại Spoke **non-git** (ví dụ thư mục dự án tư vấn đồng bộ OneDrive chưa khởi tạo `.git`): bỏ qua các lệnh `git status`/`git commit`; kiểm tra Project Root không có tệp rác phát sinh, dọn thư mục nháp `.md/scratch/eval_runs/` sau `--dry-run`, và xác nhận `.md/knowledge/` đạt Exit `0` với `wiki_health_linter.py`, `compact_session_learnings.py --check` và `verify-patch`.
+  * Tại Spoke dùng Git không khóa nhánh mặc định: tạo commit trực tiếp với message chuẩn `docs(knowledge): session retrospective ...`.
   * Tại Hub (`ccba-agent-platform`) hoặc Protected Spoke có `.githooks/pre-push` chặn đẩy thẳng lên `main`/`master` (như `dgx-spark-toolkit`): thực thi trên `git worktree` cô lập tách từ `origin/<default_branch>` với nhánh PR riêng (`docs/session-retrospective-...` hoặc `chore/session-retrospective-...`), đẩy nhánh và mở PR qua `gh pr create --body-file <body_file>` (nếu `gh pr edit`/`merge` gặp lỗi GraphQL `projectCards` thì chuyển sang REST `gh api repos/<owner>/<repo>/issues/<id>/assignees` và `PUT /pulls/<id>/merge`; bỏ `git push origin --delete` nếu repo tự xóa nhánh sau merge). Nếu nhánh gốc cục bộ đang chứa commit chưa đẩy của phiên đồng đẳng, tuyệt đối không chạy `session_cleanup.py --execute` hoặc `git checkout` trên thư mục gốc đang bận.
 - **Tiêu chí hoàn thành:** Workspace sạch sẽ (`git status --short --branch` chỉ còn `## <default_branch>...origin/<default_branch>`, `0` tệp untracked/dirty, tài nguyên canonical `.agents/teams/` và `.env` nguyên vẹn), toàn bộ CI checks trên PR đạt `SUCCESS` (Exit Code `0`), và commit/PR hoàn tất tuân thủ `simplify_gate` cùng `pre-push`.
 

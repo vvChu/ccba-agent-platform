@@ -38,7 +38,7 @@ triggers:
 - layout guard
 metadata:
   author: CCBA
-  version: 2.3.0
+  version: 2.3.1
 ---
 
 # Xử lý Văn phòng
