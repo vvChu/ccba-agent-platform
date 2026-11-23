@@ -6,6 +6,8 @@ scoped teardown gate (Cổng 0.3) for release workflows.
 
 from __future__ import annotations
 
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +16,7 @@ from unittest.mock import patch
 from scripts.validation.check_release_cleanliness import (
     get_porcelain_status,
     is_known_artifact,
+    resolve_repo_root,
     run_post_check,
     run_pre_check,
 )
@@ -146,6 +149,61 @@ class TestCheckReleaseCleanliness(unittest.TestCase):
             self.assertEqual(code, 0)
             # Outside file must remain untouched
             self.assertTrue(outside_file.exists())
+
+    def test_resolve_repo_root_detects_nested_git_dir_from_cwd(self) -> None:
+        """resolve_repo_root finds nested repo root via .git dir without falling back to Hub."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir) / "spoke_repo"
+            nested = repo_root / "sub" / "dir"
+            (repo_root / ".git").mkdir(parents=True)
+            nested.mkdir(parents=True)
+            self.assertEqual(resolve_repo_root(start_dir=nested), repo_root.resolve())
+
+    def test_resolve_repo_root_supports_git_worktree_file(self) -> None:
+        """resolve_repo_root supports git worktrees whose .git marker is a file."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            wt_root = Path(tmp_dir) / "wt_repo"
+            sub = wt_root / "packages"
+            sub.mkdir(parents=True)
+            (wt_root / ".git").write_text("gitdir: /tmp/main/.git/worktrees/wt\n", encoding="utf-8")
+            self.assertEqual(resolve_repo_root(start_dir=sub), wt_root.resolve())
+
+    def test_resolve_repo_root_fails_closed_outside_git_repo(self) -> None:
+        """Outside any Git repo without --repo-root, resolve/pre/post gates fail closed."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            outside = Path(tmp_dir).resolve()
+            with self.assertRaises(FileNotFoundError):
+                resolve_repo_root(start_dir=outside)
+            with patch("pathlib.Path.cwd", return_value=outside):
+                self.assertEqual(run_pre_check(), 1)
+                self.assertEqual(run_post_check(), 1)
+
+    def test_cli_pre_check_scans_calling_spoke_repo_not_hub(self) -> None:
+        """CLI invocation from a Spoke cwd scans that Spoke repo rather than Hub."""
+        script = Path(__file__).resolve().parents[1] / "validation" / "check_release_cleanliness.py"
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo = Path(tmp_dir)
+            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+            dirty = repo / "spoke_dirty.txt"
+            dirty.write_text("untracked\n", encoding="utf-8")
+
+            res_dirty = subprocess.run(
+                [sys.executable, str(script), "--phase", "pre"],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_dirty.returncode, 1)
+            self.assertIn("spoke_dirty.txt", res_dirty.stdout)
+
+            dirty.unlink()
+            res_clean = subprocess.run(
+                [sys.executable, str(script), "--phase", "pre"],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_clean.returncode, 0)
 
 
 if __name__ == "__main__":

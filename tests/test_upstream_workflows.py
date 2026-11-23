@@ -66,8 +66,9 @@ def test_ccba_new_feature_workflow_structure() -> None:
     content = skill_path.read_text(encoding="utf-8")
     frontmatter = yaml.safe_load(content.split("---", 2)[1])
     version_parts = tuple(int(part) for part in str(frontmatter["metadata"]["version"]).split("."))
-    assert version_parts >= (1, 5, 1)
-    assert 'if [ "$b" != "main" ]; then git branch -d "$b"; fi' in content
+    assert version_parts >= (1, 5, 2)
+    assert "git symbolic-ref --short refs/remotes/origin/HEAD" in content
+    assert 'if [ "$b" != "<default_branch>" ]; then git branch -d "$b"; fi' in content
     assert "triage" in content
     assert "backlog" in content
     assert "claim issue" in content

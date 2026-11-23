@@ -30,16 +30,47 @@ KNOWN_TEST_ARTIFACTS: list[str] = [
 ]
 
 
+def resolve_repo_root(
+    repo_root: Path | None = None,
+    start_dir: Path | None = None,
+) -> Path:
+    """Xác định thư mục gốc Git repo từ --repo-root hoặc dò ngược từ cwd (Fail-Closed).
+
+    Args:
+        repo_root: Đường dẫn gốc chỉ định tường minh (ưu tiên cao nhất).
+        start_dir: Thư mục bắt đầu dò ngược `.git` khi `repo_root` là None (mặc định `Path.cwd()`).
+
+    Returns:
+        Đường dẫn tuyệt đối tới thư mục gốc của Git repository.
+
+    Raises:
+        FileNotFoundError: Khi đứng ngoài mọi Git repository và không truyền `repo_root`.
+    """
+    if repo_root is not None:
+        return repo_root.resolve()
+    base = (start_dir or Path.cwd()).resolve()
+    for candidate in (base, *base.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    raise FileNotFoundError(
+        f"Không tìm thấy Git repository từ '{base}'; vui lòng truyền --repo-root <path>."
+    )
+
+
 def get_porcelain_status(repo_root: Path | None = None) -> list[tuple[str, str]]:
     """Lấy danh sách các mục thay đổi qua git status --porcelain -z.
 
     Args:
-        repo_root: Thư mục gốc của repository (mặc định là root của project).
+        repo_root: Thư mục gốc của repository (mặc định tự dò từ cwd).
 
     Returns:
         Danh sách các cặp (status_code, file_path).
     """
-    cwd = repo_root or Path(__file__).resolve().parents[2]
+    try:
+        cwd = resolve_repo_root(repo_root)
+    except FileNotFoundError as e:
+        print(f"❌ [ERROR] {e}", file=sys.stderr)
+        return [("!!", f"GIT_REPO_NOT_FOUND: {e}")]
     try:
         res = subprocess.run(
             ["git", "status", "--porcelain", "-z"],
@@ -132,7 +163,11 @@ def run_post_check(repo_root: Path | None = None) -> int:
     Returns:
         0 nếu sạch hoặc đã thu hồi an toàn cache kiểm thử, 1 nếu mã nguồn bị sửa đổi.
     """
-    root = repo_root or Path(__file__).resolve().parents[2]
+    try:
+        root = resolve_repo_root(repo_root)
+    except FileNotFoundError as e:
+        print(f"❌ [POST-TEST GATE BLOCKED] {e}", file=sys.stderr)
+        return 1
     entries = get_porcelain_status(root)
     if not entries:
         print("✅ [POST-TEST GATE] Bộ kiểm thử hoàn toàn buồng kín (100% Hermetic).")
