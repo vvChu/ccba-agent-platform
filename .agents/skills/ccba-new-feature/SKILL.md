@@ -37,17 +37,16 @@ Quy trình tự động hóa dọn dẹp các branch cũ, khởi tạo branch t�
   git status --short
   ```
   *Nếu có uncommitted changes dở dang, yêu cầu `git commit` hoặc `git stash` trước khi chuyển nhánh.*
-- **Xác định nhánh chính mặc định (`<default_branch>`, ví dụ `main` hoặc `master`) và kéo code mới nhất:**
+- **Xác định `<default_branch>` (`main`/`master`) và kéo code mới nhất:**
   ```bash
   git symbolic-ref --short refs/remotes/origin/HEAD
   git checkout <default_branch> && git pull origin <default_branch>
   ```
-- **Bảo toàn Cấu trúc Nhóm Tác tử Canonical (`.agents/teams/`):**
-  Thư mục `.agents/teams/` lưu trữ các đặc tả nhóm tác tử (`*_team_sheet.md` theo ADR-0053 và ADR-0060) là tài nguyên canonical chính thức của nền tảng. Tuyệt đối không xóa bỏ hay di dời trong các chu kỳ chuẩn bị và dọn dẹp.
-- **Tiêu chí hoàn thành:** Working tree sạch sẽ, nhánh chính `<default_branch>` được cập nhật code mới nhất từ remote, và thư mục canonical `.agents/teams/` được bảo tồn nguyên vẹn.
+- **Bảo toàn `.agents/teams/`:** Giữ nguyên đặc tả `*_team_sheet.md` (ADR-0053, ADR-0060), không xóa hay di dời khi chuẩn bị/dọn dẹp.
+- **Tiêu chí hoàn thành:** Working tree sạch, `<default_branch>` cập nhật mới nhất và `.agents/teams/` nguyên vẹn.
 
 ### Bước 2: Dọn dẹp các branch cũ đã merge
-Dọn dẹp các branch cục bộ đã được tích hợp vào `<default_branch>` (hỗ trợ cả merge thông thường và dọn dẹp prune):
+Dọn branch cục bộ đã merge vào `<default_branch>`:
 - **Windows PowerShell:**
   ```powershell
   git fetch -p
@@ -58,8 +57,8 @@ Dọn dẹp các branch cục bộ đã được tích hợp vào `<default_bran
   git fetch -p
   git branch --merged <default_branch> --format='%(refname:short)' | while read -r b; do if [ "$b" != "<default_branch>" ]; then git branch -d "$b"; fi; done
   ```
-  *(Dùng `if ... fi` thay vì `[ "$b" != "<default_branch>" ] && ...` vì khi `<default_branch>` là nhánh cuối cùng trong luồng, biểu thức điều kiện trả mã thoát `1` làm gãy chuỗi lệnh `&&` kế tiếp.)*
-- **Tiêu chí hoàn thành:** Toàn bộ branch cục bộ đã merge vào `<default_branch>` được dọn dẹp sạch sẽ.
+  *(Dùng `if ... fi` thay `&&` vì khi nhánh cuối khớp `<default_branch>`, test `[ ... ]` trả exit `1` làm gãy chuỗi lệnh.)*
+- **Tiêu chí hoàn thành:** Branch cục bộ đã merge vào `<default_branch>` được dọn sạch.
 
 ### Bước 3: Thu thập thông tin & Bóc tách Issue tự động (Hỗ trợ Offline Fallback)
 - **Trường hợp 1 (Có mã Issue, ví dụ `/ccba-new-feature #228`):**
