@@ -22,7 +22,7 @@ keywords:
 - kiểm định quản trị
 metadata:
   author: CCBA
-  version: "1.7.2"
+  version: "1.7.3"
 bundle: _core
 scope: universal
 posture: seam-exempt
@@ -102,7 +102,9 @@ Trước khi đúc kết `RULE-X.Y`, sử dụng đúng vai trò 3 nguồn bằn
   ```bash
   # Tại Hub:
   python scripts/sync_hub_adr_matrix.py
-  # Tại Spoke (auto-detect docs/adr -> .md/adr hoặc --adr-dir <path>; bỏ qua nếu chưa có ADR):
+  # Tại Spoke có ADR sync SSOT cục bộ (vd. ccba-legal-knowledge): CHỈ chạy cục bộ, KHÔNG chạy sync_hub_adr_matrix.py --spoke-dir .
+  python scripts/sync_adr_matrix.py
+  # Spoke không có script riêng (auto-detect docs/adr -> .md/adr):
   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/sync_hub_adr_matrix.py" --spoke-dir .
   ```
 - Giữ nguyên phân loại 6 Miền Kiến Trúc, dùng bộ từ vựng Deep Modules (`/ccba-codebase-design`).

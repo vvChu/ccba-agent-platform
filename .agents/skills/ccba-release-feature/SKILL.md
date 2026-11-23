@@ -13,7 +13,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.7"
+  version: "1.3.8"
   author: "CCBA Hub"
 triggers:
 - release
@@ -31,9 +31,9 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 *Quy tắc bắt buộc:* Trước khi thực hiện merge PR, Agent **bắt buộc phải tuân thủ Giao thức TRIHT (Tiered Release Integrity & Hermetic Teardown)** gồm 3 giai đoạn để ngăn chặn hoàn toàn nguy cơ mất mã nguồn và chống gián đoạn chuyển nhánh:
 
 1. **Cổng 0.1 — Khóa Sạch Sẽ Tiền Kiểm Tra (Pre-Flight Cleanliness Lock):**
-   - *Bắt buộc kiểm tra:* Repository phải ở trạng thái sạch sẽ 100% (không có tệp modified hoặc untracked chưa commit). Tuyệt đối cấm release khi mã nguồn cục bộ chưa được commit vào PR (tại Spoke định tuyến qua `CCBA_HUB_PATH`):
+   - *Bắt buộc kiểm tra:* Repository phải ở trạng thái sạch sẽ 100% (không có tệp modified hoặc untracked chưa commit). Tuyệt đối cấm release khi mã nguồn cục bộ chưa được commit vào PR (tại Spoke định tuyến qua `CCBA_HUB_PATH`; bắt buộc truyền `--repo-root .` để kiểm tra đúng working tree của Spoke/worktree hiện hành thay vì mặc định trỏ gốc Hub):
      ```bash
-     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase pre
+     python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase pre --repo-root .
      ```
    - Nếu phát hiện tệp chưa commit thuộc tác vụ song song khác:
      1. Thực hiện stash có định danh rõ ràng kèm cả tệp untracked:
@@ -52,7 +52,7 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 
 3. **Cổng 0.3 — Post-Test Scoped Teardown Gate:**
    ```bash
-   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase post
+   python "${CCBA_HUB_PATH:-../ccba-agent-platform}/scripts/validation/check_release_cleanliness.py" --phase post --repo-root .
    ```
    Dừng khẩn cấp nếu exit code 1.
 
