@@ -23,14 +23,14 @@ Chỉ được phép chuyển sang mô phỏng CI cục bộ trên bản sao s�
 ```bash
 git fetch --prune
 git ls-remote --heads origin "*[feature_keyword]*"
-# CHỈ xóa nếu git log origin/main..origin/[orphan_branch_name] --oneline trả về rỗng:
-git log origin/main..origin/[orphan_branch_name] --oneline
+# CHỈ xóa nếu git log origin/<default_branch>..origin/[orphan_branch_name] --oneline trả về rỗng:
+git log origin/<default_branch>..origin/[orphan_branch_name] --oneline
 git push origin --delete [orphan_branch_name]
 ```
 
 ## 3. Quy Trình Tạo PR Lưu Trữ `walkthrough.md` (Bước 3.5)
 
-Hook `pre-push` cấm push thẳng lên `main`. Chỉ stage các đường dẫn được git track trên repo hiện tại (Hub hoặc Spoke):
+Hook `pre-push` cấm push thẳng lên `<default_branch>` (`main`/`master`). Chỉ stage các đường dẫn được git track trên repo hiện tại (Hub hoặc Spoke):
 
 ```bash
 python -c '
@@ -48,8 +48,8 @@ print(f"is_hub={is_hub} tracked={tracked}")
 ```
 
 Khi `is_hub=True` hoặc `len(tracked) > 0`:
-- Nếu `main` sạch (`ahead == 0`): tạo nhánh `docs/walkthrough-pr-[PR_NUMBER]` từ `main`. Nếu thư mục gốc bận phiên song song (`RULE-4.21`): `git fetch --prune origin main:main && git worktree add -b docs/walkthrough-pr-[PR_NUMBER] <walkthrough_wt> origin/main`.
-- Lưu ý: `.md/knowledge/reports/walkthrough.md` dẫn về gốc bằng `../../../` (`RULE-2.4`) và không chứa `file:///` (`RULE-3.5`). Nếu có PR đồng đẳng cập nhật cùng file -> rebase lên `origin/main` giữ nguyên mục PR đồng đẳng ở đầu, rồi đẩy bằng `git push --force-with-lease`.
+- Nếu `<default_branch>` sạch (`ahead == 0`): tạo nhánh `docs/walkthrough-pr-[PR_NUMBER]` từ `<default_branch>`. Nếu thư mục gốc bận phiên song song (`RULE-4.21`): `git fetch --prune origin <default_branch>:<default_branch> && git worktree add -b docs/walkthrough-pr-[PR_NUMBER] <walkthrough_wt> origin/<default_branch>`.
+- Lưu ý: `.md/knowledge/reports/walkthrough.md` dẫn về gốc bằng `../../../` (`RULE-2.4`) và không chứa `file:///` (`RULE-3.5`). Nếu có PR đồng đẳng cập nhật cùng file -> rebase lên `origin/<default_branch>` giữ nguyên mục PR đồng đẳng ở đầu, rồi đẩy bằng `git push --force-with-lease`.
 - Kiểm định & mở PR:
 
 ```bash
@@ -57,17 +57,17 @@ git add -- <tracked_paths>
 git commit -m "docs(walkthrough): record release feature PR #[PR_NUMBER] completion and review matrix"
 git push -u origin docs/walkthrough-pr-[PR_NUMBER]
 python -m ccba_harness door-triage <tracked_paths> --pr-body-file /tmp/pr_walkthrough_body.md --enforce-tradeoff-card
-gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base main --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F /tmp/pr_walkthrough_body.md
+gh pr create --head docs/walkthrough-pr-[PR_NUMBER] --base <default_branch> --assignee "@me" --title "docs(walkthrough): record release feature PR #[PR_NUMBER] completion" -F /tmp/pr_walkthrough_body.md
 gh pr checks --watch
 ```
 
-Nếu dùng worktree cô lập, tách HEAD (`git -C <walkthrough_wt> checkout --detach && git worktree remove <walkthrough_wt> && git worktree prune`) rồi mới chạy `gh pr merge [WALKTHROUGH_PR_NUMBER] --squash && git push origin --delete docs/walkthrough-pr-[PR_NUMBER]`.
+Nếu dùng worktree cô lập, tách HEAD (`git -C <walkthrough_wt> checkout --detach && git worktree remove <walkthrough_wt> && git worktree prune`) rồi mới chạy `gh pr merge [WALKTHROUGH_PR_NUMBER] --squash && git push origin --delete docs/walkthrough-pr-[PR_NUMBER]` (hoặc REST fallback `gh api repos/{owner}/{repo}/pulls/<WALKTHROUGH_PR_NUMBER>/merge -X PUT -f merge_method=squash -f sha=<head_sha>` khi gặp lỗi GraphQL `projectCards`, và bỏ `--delete` nếu repo bật `delete_branch_on_merge: true`).
 
 ## 4. Khôi Phục Tác Vụ Song Song Đã Stash (Bước 3.6)
 
 ```bash
 git stash list --grep="wip: concurrent work before release PR #[PR_NUMBER]"
 git stash pop stash@{N}
-# Nếu xung đột merge khi pop lên main, lập tức làm sạch working tree và giữ bản stash:
+# Nếu xung đột merge khi pop lên <default_branch>, lập tức làm sạch working tree và giữ bản stash:
 git reset --merge && git clean -df
 ```
