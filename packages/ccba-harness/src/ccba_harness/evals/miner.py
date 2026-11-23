@@ -228,11 +228,29 @@ def _parse_json_session_file(
                 last_user_prompt = None
 
 
+_TRACEBACK_MARKER = "Traceback (most recent call last)"
+
+
+def _classify_jsonl_step_response(stype: str, status: str, content_str: str) -> tuple[str, bool]:
+    """Classify one JSONL transcript step into ``(response_snippet, is_error)``."""
+    if stype == "PLANNER_RESPONSE" and content_str:
+        return content_str, False
+    if stype == "GENERIC":
+        if status == "ERROR":
+            return (content_str or "Tool execution step failed (status=ERROR)."), True
+        return "", False
+    if stype in ("TOOL_EXECUTION", "RUN_COMMAND", "SYSTEM_MESSAGE"):
+        if status == "ERROR" or _TRACEBACK_MARKER in content_str:
+            return (content_str or f"{stype} failed (status={status})."), True
+    return "", False
+
+
 def _parse_jsonl_transcript_file(
     log_file: Path, content_text: str, conv_id: str, interactions: list[dict[str, Any]]
 ) -> None:
     """Parse a JSON Lines transcript file (e.g. transcript.jsonl)."""
-    last_user_prompt: str | None = None
+    active_user_prompt: str | None = None
+    pending_planner_prompt: str | None = None
     for line in content_text.splitlines():
         if not line.strip():
             continue
@@ -242,42 +260,33 @@ def _parse_jsonl_transcript_file(
             continue
         if not isinstance(data, dict):
             continue
-        stype = data.get("type", "")
-        content = data.get("content", "")
-        status = data.get("status", "")
+        stype = str(data.get("type", ""))
+        raw_content = data.get("content")
+        content_str = str(raw_content) if raw_content is not None else ""
         if stype == "USER_INPUT":
-            clean_p = extract_clean_user_prompt(str(content))
+            clean_p = extract_clean_user_prompt(content_str)
             if len(clean_p) >= 5 and clean_p.lower() not in IGNORABLE_CONTROL_COMMANDS:
-                last_user_prompt = clean_p
-        elif last_user_prompt:
-            has_error = False
-            response_snippet = ""
-            content_str = str(content)
-            if stype == "PLANNER_RESPONSE" and content:
-                response_snippet = content_str
-            elif stype in ("TOOL_EXECUTION", "RUN_COMMAND") and (
-                status == "ERROR" or "Traceback" in content_str
-            ):
-                response_snippet = content_str
-                has_error = True
-            elif stype == "SYSTEM_MESSAGE" and (
-                "Traceback" in content_str or "error" in content_str.lower()
-            ):
-                response_snippet = content_str
-                has_error = True
-            if response_snippet:
-                interactions.append(
-                    {
-                        "conversation_id": conv_id,
-                        "source_file": log_file.name,
-                        "step_index": data.get("step_index", 0),
-                        "user_prompt": last_user_prompt,
-                        "planner_response": response_snippet,
-                        "is_error": has_error,
-                    }
-                )
-                if stype == "PLANNER_RESPONSE" and content:
-                    last_user_prompt = None
+                active_user_prompt = clean_p
+                pending_planner_prompt = clean_p
+            continue
+        snippet, is_err = _classify_jsonl_step_response(
+            stype, str(data.get("status", "")), content_str
+        )
+        prompt = pending_planner_prompt if stype == "PLANNER_RESPONSE" else active_user_prompt
+        if not (prompt and snippet):
+            continue
+        interactions.append(
+            {
+                "conversation_id": conv_id,
+                "source_file": log_file.name,
+                "step_index": data.get("step_index", 0),
+                "user_prompt": prompt,
+                "planner_response": snippet,
+                "is_error": is_err,
+            }
+        )
+        if stype == "PLANNER_RESPONSE":
+            pending_planner_prompt = None
 
 
 def parse_transcript_logs(log_dir: Path) -> list[dict[str, Any]]:

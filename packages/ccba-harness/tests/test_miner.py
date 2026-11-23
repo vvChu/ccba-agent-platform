@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,9 @@ from ccba_harness.evals.miner import (
     classify_target_skill,
     extract_clean_user_prompt,
     generate_eval_spec_item,
+    identify_failures,
     mine_logs_and_export,
+    parse_transcript_logs,
     redact_sensitive_info,
     to_canonical_skill_name,
     to_legacy_skill_name,
@@ -85,3 +88,106 @@ def test_mine_logs_and_export_dry_run(tmp_path: Path):
     assert count == 1
     assert not out_dir.exists()
     assert scratch_dir.exists()
+
+
+def test_system_message_with_benign_error_word_not_flagged(tmp_path: Path):
+    log_file = tmp_path / "transcript.jsonl"
+    rows = [
+        {
+            "type": "USER_INPUT",
+            "content": "Kiểm tra quy trình nghiệm thu thiết kế",
+            "step_index": 1,
+        },
+        {
+            "type": "SYSTEM_MESSAGE",
+            "status": "DONE",
+            "content": "Plan mode is off. Verify 0 console errors before completion.",
+            "step_index": 2,
+        },
+        {
+            "type": "SYSTEM_MESSAGE",
+            "status": "ERROR",
+            "content": "System dispatch failed",
+            "step_index": 3,
+        },
+    ]
+    log_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    failures = identify_failures(parse_transcript_logs(tmp_path), taxonomy_filter="TOOL_EXCEPTION")
+    assert [f["step_index"] for f in failures] == [3]
+
+
+def test_generic_done_with_traceback_text_not_flagged(tmp_path: Path):
+    log_file = tmp_path / "transcript.jsonl"
+    rows = [
+        {
+            "type": "USER_INPUT",
+            "content": "Kiểm tra source code của harness miner",
+            "step_index": 1,
+        },
+        {
+            "type": "GENERIC",
+            "status": "DONE",
+            "content": '259: if status == "ERROR" or "Traceback (most recent call last)" in s:',
+            "step_index": 2,
+        },
+    ]
+    log_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    failures = identify_failures(parse_transcript_logs(tmp_path), taxonomy_filter="TOOL_EXCEPTION")
+    assert failures == []
+
+
+def test_generic_error_captured_across_control_commands(tmp_path: Path):
+    log_file = tmp_path / "transcript.jsonl"
+    prompt = "/ccba-grilling Chốt phạm vi và thiết kế nghiệp vụ Sóng 4"
+    rows = [
+        {"type": "USER_INPUT", "content": prompt, "step_index": 1},
+        {"type": "PLANNER_RESPONSE", "content": "Bạn đồng ý phương án Q1 không?", "step_index": 2},
+        {"type": "USER_INPUT", "content": "đồng ý", "step_index": 3},
+        {"type": "USER_INPUT", "content": "proceed", "step_index": 4},
+        {
+            "type": "GENERIC",
+            "status": "ERROR",
+            "content": "Encountered error in step execution: file does not exist",
+            "step_index": 5,
+        },
+    ]
+    log_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    failures = identify_failures(parse_transcript_logs(tmp_path), taxonomy_filter="TOOL_EXCEPTION")
+    assert len(failures) == 1
+    assert failures[0]["step_index"] == 5
+    assert failures[0]["user_prompt"] == prompt
+
+
+def test_legacy_tool_execution_and_planner_response_backwards_compat(tmp_path: Path):
+    log_file = tmp_path / "transcript.jsonl"
+    rows = [
+        {"type": "USER_INPUT", "content": "Thẩm định bậc chịu lửa nhà cao tầng", "step_index": 1},
+        {
+            "type": "TOOL_EXECUTION",
+            "status": "ERROR",
+            "content": "Tool timed out",
+            "step_index": 2,
+        },
+        {
+            "type": "RUN_COMMAND",
+            "status": "DONE",
+            "content": "Traceback (most recent call last):\n  File x.py\nRuntimeError: boom",
+            "step_index": 3,
+        },
+        {
+            "type": "PLANNER_RESPONSE",
+            "content": "Tôi là trợ lý AI, không hỗ trợ tư vấn PCCC.",
+            "step_index": 4,
+        },
+    ]
+    log_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    failures = identify_failures(parse_transcript_logs(tmp_path))
+    assert [(f["step_index"], f["failure_type"]) for f in failures] == [
+        (2, "TOOL_EXCEPTION"),
+        (3, "TOOL_EXCEPTION"),
+        (4, "ROUTER_DISCLAIMER"),
+    ]
