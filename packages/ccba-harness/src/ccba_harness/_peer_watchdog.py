@@ -123,10 +123,14 @@ VERDICT_RESERVE_TURNS: int = 2
 
 BOUNDED_TOOL_BUDGET_PROMPT: str = (
     "You have read-only tools (read_file, grep, list_dir) to inspect cross-file invariants, "
-    "AST structures, and linters. Budget your tool usage strictly: complete repository exploration "
-    f"with at least {VERDICT_RESERVE_TURNS} turns remaining before max_turns, and in your final synthesis "
-    "turn (containing zero tool calls) emit your complete YAML frontmatter verdict enclosed in '---' "
-    "with risk_score as an integer 1..5 and conditions items containing id, description, and blocking."
+    "AST structures, and linters. Batch multiple parallel read_file/grep calls in the same turn "
+    "instead of reading one file per turn, and rely on supplied file:line anchors first. "
+    "Budget your tool usage strictly: complete repository exploration "
+    f"with at least {VERDICT_RESERVE_TURNS} turns remaining before max_turns (if max_turns is reached, "
+    "an intentional 2-phase Explore-Then-Synthesize turn will collect your final verdict), "
+    "and in your final synthesis turn (containing zero tool calls) emit your complete YAML "
+    "frontmatter verdict enclosed in '---' with risk_score as an integer 1..5 and conditions "
+    "items containing id, description, and blocking."
 )
 
 AUDIT_BASE_SYSTEM_PROMPT: str = (
@@ -135,7 +139,11 @@ AUDIT_BASE_SYSTEM_PROMPT: str = (
     "enclosed in '---' containing request_id, verdict "
     "(APPROVE | APPROVE_WITH_CONDITIONS | APPROVE_PLAN | REVISE_PLAN | REJECT_PLAN | REJECT | FINAL_ACCEPT | HANDOFF), "
     "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
-    "followed by your structured audit findings. " + BOUNDED_TOOL_BUDGET_PROMPT
+    "followed by your structured audit findings. "
+    "Mark a condition blocking: true ONLY for 4 real defect classes: (1) logic or data-contract error, "
+    "(2) security, data-loss, or PII leak, (3) CI/linter/OS compatibility breakage, or "
+    "(4) false codebase assumption; style polish, optional hardening, or out-of-scope suggestions "
+    "MUST use blocking: false. " + BOUNDED_TOOL_BUDGET_PROMPT
 )
 
 SYNTHESIS_FALLBACK_PROMPT: str = (
@@ -150,7 +158,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
     "audit_plan": {
         "model": "grok-4.7",  # ccba:allow-raw-model
         "fallback_model": "gemini-38-flash",  # ccba:allow-raw-model
-        "max_turns": 12,
+        "max_turns": 9,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": list(READ_ONLY_DISALLOW_LIST),
         "deny": ["Bash", "Write", "Edit", "WebFetch"],
@@ -198,9 +206,9 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         ),
     },
     "code_review": {
-        "model": "gemini-38-flash",  # ccba:allow-raw-model
+        "model": "grok-4.7",  # ccba:allow-raw-model
         "fallback_model": "grok-4.7-build-fast",  # ccba:allow-raw-model
-        "max_turns": 10,
+        "max_turns": 8,
         "tools": ["read_file", "grep", "list_dir"],
         "disallowed_tools": list(READ_ONLY_DISALLOW_LIST),
         "deny": ["Bash", "Write", "Edit", "WebFetch"],
@@ -208,7 +216,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "reasoning_effort": "high",
         "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
-        "timeout": 300.0,
+        "timeout": 450.0,
     },
     "arch_audit": {
         "model": "grok-4.7",  # ccba:allow-raw-model

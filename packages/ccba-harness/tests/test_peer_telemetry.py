@@ -243,8 +243,70 @@ def test_extract_grok_session_telemetry_estimated_cost_gateway(monkeypatch):
     assert telemetry.session_id == "sess-test-2"
     assert telemetry.primary_model == "gemini-38-flash"
     assert telemetry.cost_mode == "estimated"
-    # rate card: $1.25/1M in + $5.00/1M out = $6.25
-    assert telemetry.cost_usd == pytest.approx(6.25, abs=0.01)
+    # flash rate card (uncached): $0.30/1M in + $2.50/1M out = $2.80
+    assert telemetry.cost_usd == pytest.approx(2.80, abs=0.01)
+
+
+def test_extract_grok_session_telemetry_estimated_cost_cached_and_default(monkeypatch):
+    """Validates cachedReadTokens discount on flash family and default fallback pricing."""
+    payloads = [
+        {
+            "session": {
+                "primaryModelId": "gemini-38-flash",
+                "inputTokens": 1_000_000,
+                "outputTokens": 1_000_000,
+                "reasoningTokens": 0,
+                "cachedReadTokens": 700_000,
+                "totalTokens": 2_000_000,
+                "modelCalls": 2,
+                "turnCount": 2,
+            }
+        },
+        {
+            "session": {
+                "primaryModelId": "custom-gateway-model",
+                "inputTokens": 1_000_000,
+                "outputTokens": 1_000_000,
+                "reasoningTokens": 0,
+                "cachedReadTokens": 0,
+                "totalTokens": 2_000_000,
+                "modelCalls": 1,
+                "turnCount": 1,
+            }
+        },
+    ]
+
+    def fake_run(cmd, **kwargs):
+        data = payloads.pop(0)
+        return subprocess.CompletedProcess(
+            args=cmd, returncode=0, stdout=json.dumps(data), stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    t_flash_cached = extract_grok_session_telemetry(
+        session_id="sess-flash-cached",
+        timeout=2.0,
+        fallback_prompt_text="Prompt",
+        fallback_resp_text="Resp",
+        duration_seconds=1.5,
+        fallback_model="gemini-38-flash",
+    )
+    assert t_flash_cached.cost_mode == "estimated"
+    # 0.3M * $0.30 + 0.7M * $0.075 + 1.0M * $2.50 = $2.6425
+    assert t_flash_cached.cost_usd == pytest.approx(2.6425, abs=0.001)
+
+    t_default = extract_grok_session_telemetry(
+        session_id="sess-default",
+        timeout=2.0,
+        fallback_prompt_text="Prompt",
+        fallback_resp_text="Resp",
+        duration_seconds=1.5,
+        fallback_model="custom-gateway-model",
+    )
+    assert t_default.cost_mode == "estimated"
+    # default rate card: $1.25/1M in + $5.00/1M out = $6.25
+    assert t_default.cost_usd == pytest.approx(6.25, abs=0.01)
 
 
 def test_extract_grok_session_telemetry_fallback_graceful_degradation(monkeypatch):

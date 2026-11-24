@@ -327,12 +327,26 @@ def test_swarm_telemetry_audit_and_cli(tmp_path: Path, capsys: pytest.CaptureFix
 
 
 def test_resolve_model_token_rates_edge_cases():
-    """Verifies that empty string or None safely falls back to default rates."""
+    """Verifies tiered family token rate resolution, local priority, and safe fallback."""
     from ccba_harness.telemetry import (
         PRICE_PER_M_INPUT,
         PRICE_PER_M_OUTPUT,
         resolve_model_token_rates,
+        resolve_model_token_rates_detailed,
     )
 
     assert resolve_model_token_rates("") == (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
     assert resolve_model_token_rates(None) == (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
+    assert resolve_model_token_rates_detailed(None) == (
+        PRICE_PER_M_INPUT,
+        round(PRICE_PER_M_INPUT * 0.25, 4),
+        PRICE_PER_M_OUTPUT,
+    )
+    assert resolve_model_token_rates("qwen-local") == (0.0, 0.0)
+    assert resolve_model_token_rates_detailed("qwen-local-primary") == (0.0, 0.0, 0.0)
+    assert resolve_model_token_rates_detailed("local-flash-test") == (0.0, 0.0, 0.0)
+    assert resolve_model_token_rates("gemini-38-flash") == (0.30, 2.50)
+    assert resolve_model_token_rates_detailed("gemini-38-flash") == (0.30, 0.075, 2.50)
+    assert resolve_model_token_rates("claude-sonnet-4-6") == (3.00, 15.00)
+    assert resolve_model_token_rates_detailed("claude-sonnet-4-6") == (3.00, 0.30, 15.00)
+    assert resolve_model_token_rates("unknown-model") == (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
