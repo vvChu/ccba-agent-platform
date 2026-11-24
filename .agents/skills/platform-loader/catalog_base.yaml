@@ -145,6 +145,8 @@ package_bindings:
   tier0:
     - ccba-harness
     - ccba-ai
+    # Phục vụ .githooks/pre-commit (fail-closed scan --staged trên mọi Spoke Python)
+    - ccba-maskara
   archetypes:
     knowledge_corpus:
       - name: ccba-legal-intel

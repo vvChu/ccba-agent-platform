@@ -1806,6 +1806,7 @@ package_bindings:
   tier0:
   - ccba-harness
   - ccba-ai
+  - ccba-maskara
   archetypes:
     knowledge_corpus:
     - name: ccba-legal-intel
