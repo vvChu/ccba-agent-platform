@@ -19,6 +19,14 @@ _ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(_ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(_ROOT_DIR))
 
+from scripts.spoke._bootstrap_deps import (  # noqa: E402
+    DEFAULT_PACKAGE_TOPOLOGY_ORDER,
+    discover_package_topology,
+    expand_internal_hub_deps,
+    read_workspace_dep_graph,
+    topo_sort_dep_graph,
+)
+
 
 def _load_workspace_roots_seam() -> Any:
     """Load the pure-stdlib _workspace_roots seam via package, Tier-0 sibling, or Hub."""
@@ -83,110 +91,6 @@ SPOKE_HYGIENE_GITIGNORE_RULES: tuple[str, ...] = (
     ".skill_versions/",
     "**/.skill_versions/",
 )
-
-
-DEFAULT_PACKAGE_TOPOLOGY_ORDER: list[str] = [
-    "ccba-harness",
-    "ccba-ai",
-    "ccba-legal-intel",
-    "ccba-qc-core",
-    "ccba-ooxml",
-    "ccba-pdf-prep",
-    "mdconverter",
-    "ccba-notebooklm",
-    "ccba-maskara",
-]
-
-
-def discover_package_topology(hub_root: Path | None = None) -> list[str]:
-    """Dynamically discovers all packages under packages/ and resolves their topological dependency order (ADR-0062).
-
-    Guarantees (Grok Condition 2):
-    1. ccba-harness is always position 0 (if present).
-    2. ccba-ai is always position 1 (if present).
-    3. Domain packages are ordered via Kahn's Topological Sort based on internal monorepo dependencies.
-    4. Robust fallback to static DEFAULT_PACKAGE_TOPOLOGY_ORDER if topological sort encounters circular deps or IO error.
-    """
-    if hub_root is None:
-        hub_root = Path(__file__).resolve().parents[2]
-
-    pkg_dir = hub_root / "packages"
-    if not pkg_dir.is_dir():
-        return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
-
-    try:
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib  # type: ignore
-
-        all_pkgs: dict[str, str] = {}
-        dep_graph: dict[str, set[str]] = {}
-
-        for p in sorted(pkg_dir.iterdir(), key=lambda x: x.name):
-            if not p.is_dir() or not (p / "pyproject.toml").exists():
-                continue
-            folder_name = p.name
-            try:
-                data = tomllib.loads((p / "pyproject.toml").read_text(encoding="utf-8"))
-                proj_name = data.get("project", {}).get("name", folder_name)
-                raw_deps = data.get("project", {}).get("dependencies", [])
-            except Exception:
-                proj_name = folder_name
-                raw_deps = []
-
-            all_pkgs[folder_name] = proj_name
-            internal_deps = set()
-            for d in raw_deps:
-                clean_d = (
-                    d.split(">=")[0]
-                    .split("<=")[0]
-                    .split("==")[0]
-                    .split("<")[0]
-                    .split(">")[0]
-                    .split("~=")[0]
-                    .split(";")[0]
-                    .strip()
-                )
-                internal_deps.add(clean_d)
-            dep_graph[folder_name] = internal_deps
-
-        in_degree: dict[str, int] = dict.fromkeys(dep_graph, 0)
-        adj: dict[str, list[str]] = {p: [] for p in dep_graph}
-
-        name_to_folder = {name: folder for folder, name in all_pkgs.items()}
-        name_to_folder.update({folder: folder for folder in all_pkgs})
-
-        for folder, deps in dep_graph.items():
-            for d in deps:
-                dep_folder = name_to_folder.get(d)
-                if dep_folder and dep_folder != folder and dep_folder in dep_graph:
-                    adj[dep_folder].append(folder)
-                    in_degree[folder] += 1
-
-        ordered: list[str] = []
-        # Tier-0 Anchor: ccba-harness, then ccba-ai
-        for anchor in ("ccba-harness", "ccba-ai"):
-            if anchor in in_degree and anchor not in ordered:
-                ordered.append(anchor)
-                for neighbor in adj[anchor]:
-                    in_degree[neighbor] -= 1
-
-        zero_in = sorted([p for p in in_degree if in_degree[p] <= 0 and p not in ordered])
-        while zero_in:
-            curr = zero_in.pop(0)
-            ordered.append(curr)
-            for neighbor in sorted(adj[curr]):
-                in_degree[neighbor] -= 1
-                if in_degree[neighbor] == 0 and neighbor not in ordered and neighbor not in zero_in:
-                    zero_in.append(neighbor)
-        if not dep_graph or len(ordered) < len(dep_graph):
-            # Circular dependency detected or no packages found! Fail-closed to static default order (ADR-0062 / ADR-0065 COND-04)
-            return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
-
-        return ordered
-    except Exception:
-        return list(DEFAULT_PACKAGE_TOPOLOGY_ORDER)
 
 
 def get_package_topology_order(hub_root: Path | None = None) -> list[str]:
@@ -341,7 +245,9 @@ def resolve_install_set(
             for bundle_name in _resolved_bundle_names(data, project_type, additional_bundles):
                 selected.update(_binding_names(bundle_map.get(bundle_name)))
 
-    return _order_by_topology(selected, discover_package_topology(hub_root))
+    graph = read_workspace_dep_graph(hub_root)
+    expanded = expand_internal_hub_deps(selected, graph)
+    return _order_by_topology(expanded, topo_sort_dep_graph(graph.deps))
 
 
 PROJECT_TYPE_TO_ARCHETYPE: dict[str, str] = {
@@ -474,6 +380,25 @@ class SpokeBootstrapper:
             return posix_pip
         return win_pip
 
+    def _resolve_legacy_target_packages(
+        self,
+        archetype: str,
+        declared: Sequence[str],
+        legal_related: bool,
+    ) -> list[str]:
+        """Resolve Tier 0/1/declared packages when catalog package_bindings are absent."""
+        target_set: set[str] = {"ccba-harness", "ccba-ai"}
+        if declared:
+            target_set.update(declared)
+        elif archetype in ARCHETYPE_TIER1_DEFAULTS:
+            for default_pkg in ARCHETYPE_TIER1_DEFAULTS[archetype]:
+                if default_pkg == "ccba-legal-intel" and not legal_related:
+                    continue
+                target_set.add(default_pkg)
+        graph = read_workspace_dep_graph(self.hub_root)
+        expanded = expand_internal_hub_deps(target_set, graph)
+        return _order_by_topology(expanded, topo_sort_dep_graph(graph.deps))
+
     def resolve_target_packages(self) -> list[str]:
         """Resolves target packages according to Tier 0 + Tier 1 + Tier 2 rules.
 
@@ -483,78 +408,27 @@ class SpokeBootstrapper:
         proj = context.get("project", {})
         if not isinstance(proj, dict):
             proj = {}
-        archetype = proj.get("archetype", "")
+        archetype = str(proj.get("archetype", "") or "")
         if not archetype:
             raw_type = str(proj.get("type", "")).strip().lower()
             archetype = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type, "")
 
-        declared_raw = context.get("hub_packages", [])
-        declared_list: list[str] = []
-        if isinstance(declared_raw, list):
-            declared_list = [
-                pkg.strip() for pkg in declared_raw if isinstance(pkg, str) and pkg.strip()
-            ]
-        elif isinstance(declared_raw, str) and declared_raw.strip():
-            declared_list = [declared_raw.strip()]
-
+        declared_list = list(_coerce_name_sequence(context.get("hub_packages", [])))
         raw_proj_type = str(proj.get("type", "") or context.get("project_type", "")).strip()
         from scripts.spoke.sync.sdk_inspector import is_legal_related_spoke
 
+        legal_related = is_legal_related_spoke(self.spoke_root, raw_proj_type)
         bound = resolve_install_set(
             self.hub_root,
-            archetype=str(archetype or ""),
+            archetype=archetype,
             project_type=raw_proj_type,
             additional_bundles=_context_additional_bundles(context, proj),
             declared_packages=tuple(declared_list),
-            legal_related=is_legal_related_spoke(self.spoke_root, raw_proj_type),
+            legal_related=legal_related,
         )
         if bound is not None:
             return bound
-
-        target_set: set[str] = set()
-
-        # Tier 0: Core platform packages (always required for Python projects)
-        target_set.add("ccba-harness")
-        target_set.add("ccba-ai")
-
-        context = self.read_workspace_context()
-        proj = context.get("project", {})
-        archetype = proj.get("archetype", "")
-        if not archetype:
-            raw_type = str(proj.get("type", "")).strip().lower()
-            archetype = PROJECT_TYPE_TO_ARCHETYPE.get(raw_type, "")
-
-        # Declared packages in workspace_context.yaml
-        declared = context.get("hub_packages", [])
-        if isinstance(declared, list):
-            for pkg in declared:
-                if isinstance(pkg, str) and pkg.strip():
-                    target_set.add(pkg.strip())
-        elif isinstance(declared, str) and declared.strip():
-            target_set.add(declared.strip())
-
-        # Archetype Tier 1 defaults if not explicitly disabled
-        if not declared and archetype in ARCHETYPE_TIER1_DEFAULTS:
-            raw_proj_type = str(proj.get("type", "") or context.get("project_type", "")).strip()
-            for default_pkg in ARCHETYPE_TIER1_DEFAULTS[archetype]:
-                if default_pkg == "ccba-legal-intel":
-                    from scripts.spoke.sync.sdk_inspector import is_legal_related_spoke
-
-                    if not is_legal_related_spoke(self.spoke_root, raw_proj_type):
-                        continue
-                target_set.add(default_pkg)
-
-        # Sort according to topology order (ADR-0062 Dynamic Package Topo-Discovery)
-        topo_order = discover_package_topology(self.hub_root)
-        ordered: list[str] = []
-        for pkg in topo_order:
-            if pkg in target_set:
-                ordered.append(pkg)
-                target_set.remove(pkg)
-
-        # Any extra packages not in predefined list
-        ordered.extend(sorted(target_set))
-        return ordered
+        return self._resolve_legacy_target_packages(archetype, declared_list, legal_related)
 
     def ensure_gitignore_rule(self, dry_run: bool = False) -> bool:
         """Ensures requirements-hub.txt and Spoke Leakage Guard rules are included in .gitignore."""
