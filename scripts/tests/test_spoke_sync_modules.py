@@ -1190,9 +1190,11 @@ def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
     sync = SpokeSynchronizer(spoke_dir, hub_root)
 
     captured_cmds: list[str] = []
+    captured_timeouts: list[float] = []
 
-    def mock_verify_execution(commands, cwd, fail_fast=True):
+    def mock_verify_execution(commands, cwd, fail_fast=True, timeout=180.0):
         captured_cmds.extend(commands)
+        captured_timeouts.append(timeout)
         from ccba_harness.verifier import CommandResult, PatchVerificationReport
 
         return PatchVerificationReport(
@@ -1222,6 +1224,7 @@ def test_verify_spoke_multi_dir_and_venv(tmp_path: Path) -> None:
         assert code == 0
 
     assert len(captured_cmds) > 0
+    assert captured_timeouts == [180.0]
     pytest_cmd = next(c for c in captured_cmds if "-m pytest" in c)
     assert mock_py.as_posix() in pytest_cmd or "python" in pytest_cmd
     assert scripts_tests.as_posix() in pytest_cmd

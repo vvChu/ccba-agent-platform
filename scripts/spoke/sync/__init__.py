@@ -16,13 +16,17 @@ from __future__ import annotations
 
 from .backup import GitWorkingTreeGuard, SpokeBackupManager
 from .base import (
+    DEFAULT_VERIFY_TIMEOUT,
     HAS_CRYPTOGRAPHY,
     PLATFORM_ROOT,
+    VERIFY_TIMEOUT_ENV_VAR,
     HubNotFoundError,
     are_dirs_identical,
     are_files_identical,
     are_text_files_identical,
     load_yaml,
+    parse_positive_verify_timeout,
+    resolve_verify_timeout,
     safe_remove,
 )
 from .catalog import CatalogMerger
@@ -95,6 +99,10 @@ __all__ = [
     "are_text_files_identical",
     "are_dirs_identical",
     "safe_remove",
+    "DEFAULT_VERIFY_TIMEOUT",
+    "VERIFY_TIMEOUT_ENV_VAR",
+    "parse_positive_verify_timeout",
+    "resolve_verify_timeout",
     "HAS_CRYPTOGRAPHY",
     "PLATFORM_ROOT",
 ]

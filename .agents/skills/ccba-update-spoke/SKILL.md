@@ -39,8 +39,8 @@ triggers:
 
 # Cập Nhật & Đồng Bộ Hóa CCBA Spoke Workspace (/ccba-update-spoke)
 
-Kỹ năng này đồng bộ hóa các bản cập nhật mới nhất (kịch bản lệnh, kỹ năng, hiến pháp `AGENTS.md`, rào chắn test) từ **CCBA Agent Platform (Hub)** sang các dự án **Spoke**, hỗ trợ đồng bộ đơn lẻ, tải On-Demand và đồng bộ hàng loạt.
-Quy trình áp dụng cơ chế **Safe-by-Default** 2 pha (Two-Phase Execution), bảo vệ Git working tree và tự động tạo snapshot sao lưu để có thể hoàn tác tức thì.
+Đồng bộ các bản cập nhật mới nhất (scripts, skills, hiến pháp `AGENTS.md`, test guardrails) từ **CCBA Hub** sang **Spoke** (đơn lẻ, On-Demand hoặc hàng loạt).
+Áp dụng **Safe-by-Default** 2 pha, bảo vệ Git working tree và sao lưu snapshot để hoàn tác tức thì.
 
 ---
 
@@ -96,7 +96,7 @@ CCBA_SKIP_GIT_PULL=1 python scripts/sync_spoke.py --all --apply
 python scripts/sync_spoke.py --all --apply --verify
 ```
 > [!IMPORTANT]
-> Cờ `--dry-run` bỏ qua `GitWorkingTreeGuard` nên vẫn báo `SUCCESS` ngay cả khi Spoke đang có thay đổi chưa commit trong `.agents`. Nếu bước tiền kiểm phát hiện thay đổi chưa commit tại Spoke, Agent **bắt buộc** hỏi xác nhận người dùng trước khi truyền `--force` (hệ thống vẫn tạo snapshot sao lưu tự động tại `.md/backups/agents_backup_<timestamp>` trước khi ghi đè).
+> `--dry-run` bỏ qua `GitWorkingTreeGuard` nên vẫn báo `SUCCESS` dù `.agents` có thay đổi chưa commit. Nếu tiền kiểm phát hiện thay đổi chưa commit, Agent **bắt buộc** hỏi xác nhận người dùng trước khi truyền `--force` (luôn tạo backup snapshot trước khi ghi đè).
 
 - **Tiêu chí hoàn thành:** Lệnh `--all --apply` thoát với mã `0` trên toàn bộ Spoke mục tiêu, lượt chạy hậu kiểm `--all --dry-run` ghi nhận `0 mới, 0 cập nhật`, và `spoke-status` hiển thị trạng thái `🟢 ACTIVE`.
 
@@ -172,11 +172,7 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 - **Lệnh đồng bộ pháp lý độc lập:** `python -m ccba_legal sync --pull-latest` hoặc tải lẻ: `python -m ccba_legal sync --doc <doc_id>`.
 
 ### 🤝 Chế độ 7: Đồng Bộ Khung Giao Thức Phối Hợp Ngang Hàng (Peer Coordination Protocol Scaffold — ADR-0067)
-- **Tự động hóa toàn diện:** Mỗi lần chạy `sync_spoke.py --apply`, hệ thống tự động khởi tạo hoặc đồng bộ thư mục `.md/peer_exchange/` gồm hai tệp chuẩn thức: `PEER_HANDSHAKE.md` và `README.md`.
-- **Cơ chế Smart-Sync & Bảo toàn bản thảo:**
-  - Tự động chuẩn hóa dấu xuống dòng (`CRLF` $\to$ `LF`) trước khi so sánh tránh cập nhật giả.
-  - Tự động sao lưu phiên bản cũ vào `.md/backups/peer_exchange/` trước khi ghi đè bản mới từ Hub (tên tệp sao lưu chuẩn hóa không chứa dấu `:` tương thích 100% Windows NTFS/FAT32).
-  - Bảo toàn tuyệt đối mọi bản thảo trao đổi hiện hành của Agent và người dùng (`prompt_grok_*.md`, `grok_*.md`, `.bridge_cache.json`).
+- **Tự động hóa:** `sync_spoke.py --apply` khởi tạo/đồng bộ `.md/peer_exchange/{PEER_HANDSHAKE.md, README.md}`, chuẩn hóa `CRLF` $\to$ `LF`, sao lưu bản cũ vào `.md/backups/peer_exchange/` (tương thích Windows NTFS/FAT32, không chứa `:`), và bảo toàn nguyên vẹn `prompt_grok_*.md`, `grok_*.md`, `.bridge_cache.json`.
 - **Khuyến nghị lệnh đồng bộ chuẩn (All-in-One):**
   ```bash
   # POSIX:
@@ -205,19 +201,21 @@ python "$env:CCBA_HUB_PATH\scripts\sync_spoke.py" --spoke . --rollback
 | `--apply` | `-y` | Áp dụng thay đổi trực tiếp lên đĩa (bỏ qua bước hỏi xác nhận TTY). |
 | `--force` | `--ignore-dirty` | Bỏ qua cảnh báo uncommitted changes trong thư mục `.agents/`. |
 | `--bootstrap` | `-b` | Tự động cài đặt liên kết editable (`pip install -e`) từ Hub monorepo cho Spoke venv. |
-| `--verify` | | Chạy kiểm tra tự động tại Spoke hậu đồng bộ: kiểm định liên kết Markdown in-process (`LinkAuditor` trên `.agents/AGENTS.md` và `.md/INDEX.md`), `scripts/_guardrails/check_spoke_cleanliness.py`, `scripts/_guardrails/check_hub_import_depth.py`, và `pytest`. |
+| `--verify` | | Chạy kiểm tra tự động hậu đồng bộ: `LinkAuditor` (`.agents/AGENTS.md`, `.md/INDEX.md`), `scripts/_guardrails/check_spoke_cleanliness.py`, `scripts/_guardrails/check_hub_import_depth.py`, và `pytest`. |
+| `--verify-timeout` | `SECONDS` | Giới hạn thời gian (giây, áp dụng cho **từng lệnh**) của `--verify` trên `scripts/sync_spoke.py` (ưu tiên cao hơn `CCBA_VERIFY_TIMEOUT`, mặc định `180`s). |
 | `--rollback` | `--undo` | Khôi phục thư mục `.agents/` từ snapshot sao lưu gần nhất. |
 | `--pull-assets` | | Kéo bản sao vật lý các gói tri thức pháp lý OKF v2.4 về Spoke (mặc định: `False`). |
 | `--allow-stale-catalog` | | Cho phép thực thi `--apply` ngay cả khi `catalog.yaml` chưa được biên dịch lại (Emergency Override). |
 | `CCBA_SKIP_GIT_PULL` | Env var (`=1`) | Bỏ qua bước tự động gọi `git pull` trên repo Hub khi thực thi đồng bộ (chỉ nhận đúng giá trị `"1"`; gán khác `"1"` như `"true"` vẫn sẽ kích hoạt pull). |
+| `CCBA_VERIFY_TIMEOUT` | Env var (`SECONDS`) | Timeout mặc định (giây) cho `--verify`; giá trị rỗng/khoảng trắng hoặc không hợp lệ sẽ fail-closed — gỡ override bằng `unset CCBA_VERIFY_TIMEOUT`. |
 
 ---
 
 ## 📋 Báo Cáo Kết Quả & Dọn Dẹp:
-1. **Báo cáo đồng bộ:** Báo cáo chi tiết: `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`, `🗑️ DEPRECATED`.
-2. **Đồng bộ Layer 2 Rules & Thu hồi Bản thảo Tốt nghiệp (Issue #520):**
-   * Tự động đồng bộ các quy tắc Layer 2 (`execution_runtime_guardrails.md`, `execution_coordination_guardrails.md`, `git_conventions.md`, `code_quality_standards.md`, `code_quality_verification.md`, `knowledge_research_protocol.md`, `bugbot-rules.md`) xuống `.agents/rules/` và chuẩn hóa liên kết trong `.agents/AGENTS.md` (cùng `.md/INDEX.md`).
-   * Tự động lưu trữ các bản thảo `.md/knowledge/*` đã tốt nghiệp lên Hub vào `.md/knowledge/archive/` (hỗ trợ phân nhánh mã băm SHA-256 nếu có chỉnh sửa mới) và ghi đè **Canonical Pointer Stub** (`<!-- CCBA_GRADUATED_STUB -->`).
+1. **Báo cáo đồng bộ:** `🟢 NEW`, `🔄 UPDATED`, `⚪ UNCHANGED`, `🛡️ PRESERVED`, `🗑️ DEPRECATED`.
+2. **Layer 2 Rules & Thu hồi Bản thảo Tốt nghiệp (Issue #520):**
+   * Đồng bộ Layer 2 rules (`execution_runtime_guardrails.md`, `execution_coordination_guardrails.md`, `git_conventions.md`, `code_quality_standards.md`, `code_quality_verification.md`, `knowledge_research_protocol.md`, `bugbot-rules.md`) xuống `.agents/rules/` và chuẩn hóa liên kết trong `.agents/AGENTS.md`, `.md/INDEX.md`.
+   * Lưu trữ `.md/knowledge/*` đã tốt nghiệp vào `.md/knowledge/archive/` (phân nhánh SHA-256 nếu có sửa đổi) và ghi đè **Canonical Pointer Stub** (`<!-- CCBA_GRADUATED_STUB -->`).
 3. **Đồng bộ Pre-commit Hooks & Cleanliness Gate (Tự động hóa 100% qua `--apply` — ADR 0044 §7):**
    * Lệnh `sync_spoke.py --apply` tự động đồng bộ và kích hoạt toàn bộ guardrails bảo vệ tại Spoke:
      - `.githooks/pre-commit` (Khiên bảo vệ quét secret/credentials tự động của Maskara v1.2.0, tự động cấu hình `core.hooksPath=.githooks`, `chmod +x`, và `.gitattributes` chuẩn hóa LF)
