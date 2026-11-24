@@ -88,7 +88,7 @@ _PENDING_THREADS: list[threading.Thread] = []
 DEFAULT_GROK_SPEC: dict[str, Any] = {
     "model": DEFAULT_PRIMARY_AUDITOR_MODEL,
     "fallback_model": DEFAULT_FALLBACK_AUDITOR_MODEL,
-    "max_turns": 12,
+    "max_turns": 9,
     "tools": ["read_file", "grep", "list_dir"],
     "disallowed_tools": list(READ_ONLY_DISALLOW_LIST),
     "deny": ["Bash", "Write", "Edit", "WebFetch"],

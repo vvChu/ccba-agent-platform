@@ -937,14 +937,28 @@ def test_run_apply_anchor_patch_cli_flows(tmp_path, capsys, monkeypatch):
 
 
 def test_new_peer_profiles_specs():
-    from ccba_harness.peer import PROFILE_SPECS
+    from ccba_harness._peer_watchdog import AUDIT_BASE_SYSTEM_PROMPT, BOUNDED_TOOL_BUDGET_PROMPT
+    from ccba_harness.peer import DEFAULT_GROK_SPEC, PROFILE_SPECS
+
+    assert "audit_plan" in PROFILE_SPECS
+    ap = PROFILE_SPECS["audit_plan"]
+    assert ap["max_turns"] == 9
+    assert ap["reasoning_effort"] == "xhigh"
+    assert ap["timeout"] == 900.0
+    assert DEFAULT_GROK_SPEC["max_turns"] == 9
 
     assert "code_review" in PROFILE_SPECS
     cr = PROFILE_SPECS["code_review"]
-    assert cr["max_turns"] == 10
+    assert cr["model"] == "grok-4.7"
+    assert cr["fallback_model"] == "grok-4.7-build-fast"
+    assert cr["max_turns"] == 8
     assert cr["reasoning_effort"] == "high"
+    assert cr["timeout"] == 450.0
     assert "write_file" in cr["disallowed_tools"]
     assert "read_file" in cr["tools"]
+
+    assert "Batch multiple parallel read_file/grep calls" in BOUNDED_TOOL_BUDGET_PROMPT
+    assert "ONLY for 4 real defect classes" in AUDIT_BASE_SYSTEM_PROMPT
 
     assert "arch_audit" in PROFILE_SPECS
     aa = PROFILE_SPECS["arch_audit"]

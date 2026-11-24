@@ -91,12 +91,12 @@ def _enforce_single_verdict_guardrails(verdict: PeerVerdictBlock) -> bool:
 
 
 def _compute_session_cost(
-    s_data: dict[str, Any], primary_model: str, inp: int, outp: int
+    s_data: dict[str, Any], primary_model: str, inp: int, outp: int, cached: int = 0
 ) -> tuple[float, CostMode]:
     """Computes normalized USD cost and cost mode from session usage dictionary."""
-    from .telemetry import resolve_model_token_rates
+    from .telemetry import resolve_model_token_rates_detailed
 
-    rate_in, rate_out = resolve_model_token_rates(primary_model)
+    rate_in, rate_cached, rate_out = resolve_model_token_rates_detailed(primary_model)
     if "costUsdTicks" in s_data:
         cost = (
             0.0
@@ -104,7 +104,13 @@ def _compute_session_cost(
             else round(float(s_data["costUsdTicks"]) / 1e10, 4)
         )
         return cost, "exact"
-    return round((inp / 1e6 * rate_in) + (outp / 1e6 * rate_out), 4), "estimated"
+    eff_cached = min(max(cached, 0), max(inp, 0))
+    uncached_in = max(0, inp - eff_cached)
+    est = round(
+        (uncached_in / 1e6 * rate_in) + (eff_cached / 1e6 * rate_cached) + (outp / 1e6 * rate_out),
+        4,
+    )
+    return est, "estimated"
 
 
 _SUMMABLE_TURN_KEYS: tuple[str, ...] = (
@@ -180,7 +186,7 @@ def _build_telemetry_from_usage_json(
     rsn, cached = int(s_data.get("reasoningTokens", 0)), int(s_data.get("cachedReadTokens", 0))
     total = int(s_data.get("totalTokens", inp + outp))
     calls = int(s_data.get("modelCalls", 1))
-    cost_usd, mode_typed = _compute_session_cost(s_data, primary_model, inp, outp)
+    cost_usd, mode_typed = _compute_session_cost(s_data, primary_model, inp, outp, cached=cached)
 
     return PeerVerdictTelemetry(
         session_id=session_id,

@@ -21,23 +21,36 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-# Default token pricing estimation (e.g. Gemini 1.5 Pro / Flash baseline USD per 1M tokens)
+# Default token pricing estimation (USD per 1M tokens)
 PRICE_PER_M_INPUT = 1.25  # $1.25 / 1M input tokens
 PRICE_PER_M_OUTPUT = 5.00  # $5.00 / 1M output tokens
+
+# Declarative per-family fallback rate cards: (uncached_input, cached_read, output) USD / 1M tokens.
+# Checked in order; local GPU aliases are handled first to guarantee $0.00 cost.
+_MODEL_FAMILY_RATE_CARDS: tuple[tuple[tuple[str, ...], tuple[float, float, float]], ...] = (
+    (("qwen-local", "local"), (0.0, 0.0, 0.0)),
+    (("flash",), (0.30, 0.075, 2.50)),
+    (("sonnet",), (3.00, 0.30, 15.00)),
+)
+
+
+def resolve_model_token_rates_detailed(model_id: str | None = None) -> tuple[float, float, float]:
+    """Resolve (input, cached_read, output) USD rates per 1M tokens for a model ID (ADR-0063..0065)."""
+    default_rates = (PRICE_PER_M_INPUT, round(PRICE_PER_M_INPUT * 0.25, 4), PRICE_PER_M_OUTPUT)
+    if not model_id:
+        return default_rates
+
+    m_lower = model_id.lower()
+    for tokens, rates in _MODEL_FAMILY_RATE_CARDS:
+        if any(tok in m_lower for tok in tokens):
+            return rates
+    return default_rates
 
 
 def resolve_model_token_rates(model_id: str | None = None) -> tuple[float, float]:
     """Resolves input and output price per 1M tokens for a given model ID (ADR-0063/ADR-0064)."""
-    if not model_id:
-        return (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
-
-    m_lower = model_id.lower()
-    # Local GPU models running on DGX Spark Blackwell GB10 are 100% free of token costs
-    if "qwen-local" in m_lower or "local" in m_lower:
-        return (0.0, 0.0)
-
-    # Default platform fallback constants ($1.25 / $5.00)
-    return (PRICE_PER_M_INPUT, PRICE_PER_M_OUTPUT)
+    rate_in, _rate_cached, rate_out = resolve_model_token_rates_detailed(model_id)
+    return (rate_in, rate_out)
 
 
 @dataclass
