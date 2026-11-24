@@ -22,7 +22,7 @@ covered_sha256:
   .agents/skills/ccba-wayfinder/SKILL.md: "48cd64aaa1e988b6aa68261aadd5d3af375e0e32a80fcdb5dc98f9cd2e615b6e"
   packages/ccba-harness/src/ccba_harness/evals/simulators/platform_tooling.py: "5cc23a3f16e9855f4ab66b8d5218881fc30922f1864364e5e11f49d1d649cca2"
   packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml: "c79a9a5c7f4ac06ad86438ad5ec56141f982c41f3bc4832c98a637262bd60e6d"
-  scripts/spoke/sync/coordinator.py: "529a0035b205cfdbb6b8504e494f90ca5204fbae8845cb9e39d3b2c33641c9a3"
+  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
 verification_mode:
   - scaffold
   - sync

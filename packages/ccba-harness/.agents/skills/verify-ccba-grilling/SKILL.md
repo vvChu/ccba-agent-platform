@@ -22,7 +22,7 @@ covered_sha256:
   .agents/skills/ccba-grilling/SKILL.md: "ca31f6971f983d177a717585f14401db29467ebc8864d24a7662797f5b33c9cf"
   .agents/skills/ccba-grilling/references/to-questionnaire.md: "0536d172206fcfd908e9b1c5b8223b927476fd5ab616ac50812bc0bccbc076e8"
   .agents/skills/ccba-grilling/references/workflow_looping.md: "69b935a69dc71e6495e7d62ba3af64e336b18689a1273cb4cee6eb1a28da0723"
-  scripts/spoke/sync/coordinator.py: "529a0035b205cfdbb6b8504e494f90ca5204fbae8845cb9e39d3b2c33641c9a3"
+  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
 verification_mode:
   - scaffold
   - sync

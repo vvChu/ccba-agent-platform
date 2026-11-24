@@ -14,18 +14,17 @@ GLOBAL_SKILL_PATH = Path.home() / ".gemini" / "config" / "skills" / "ccba-platfo
 
 
 def test_global_ccba_platform_skill_has_no_dead_links() -> None:
-    """Verify all [hub_path] and relative links in ccba-platform/SKILL.md exist on disk."""
+    """Verify all [hub_path] and $CCBA_HUB_PATH links in ccba-platform/SKILL.md exist on disk."""
     if not GLOBAL_SKILL_PATH.exists():
         pytest.skip(f"Global skill not found at {GLOBAL_SKILL_PATH}")
 
     content = GLOBAL_SKILL_PATH.read_text(encoding="utf-8")
 
-    # Match markdown links: [text](file:///[hub_path]/path or [hub_path]/path)
-    # Also match table rows with `[hub_path]/...`
-    pattern = re.compile(r"\[hub_path\]/([^\s\)\`\|\"]+)")
+    # Match markdown links and table rows using [hub_path]/... or $CCBA_HUB_PATH/...
+    pattern = re.compile(r"(?:\[hub_path\]|\$CCBA_HUB_PATH)/([^\s\)\`\|\"]+)")
     matches = pattern.findall(content)
 
-    assert len(matches) > 0, "No [hub_path] references found in global skill"
+    assert len(matches) > 0, "No [hub_path] or $CCBA_HUB_PATH references found in global skill"
 
     dead_links: list[str] = []
     for rel_path_str in matches:
@@ -34,7 +33,7 @@ def test_global_ccba_platform_skill_has_no_dead_links() -> None:
             continue
         target = HUB_ROOT / clean_rel
         if not target.exists():
-            dead_links.append(f"[hub_path]/{clean_rel} -> {target} DOES NOT EXIST")
+            dead_links.append(f"hub link '{clean_rel}' -> {target} DOES NOT EXIST")
 
     assert not dead_links, (
         f"Found {len(dead_links)} dead link(s) in {GLOBAL_SKILL_PATH}:\n" + "\n".join(dead_links)
