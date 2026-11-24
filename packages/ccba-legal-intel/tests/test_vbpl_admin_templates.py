@@ -3,15 +3,20 @@
 
 from __future__ import annotations
 
+import io
 import re
 from pathlib import Path
 
 import yaml
 from docx import Document
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
 
 from ccba_legal.converters.archetype_scanner import DocumentArchetype, FullDocStructuralScanner
+from ccba_legal.converters.unit_normalizer import normalize_docx_markdown
 from ccba_legal.converters.vbpl_admin import (
     _build_pure_normative_body,
+    _convert_docx_to_clean_markdown,
     _extract_and_export_templates,
     _generate_vbpl_frontmatter,
     _write_bundle_metadata_and_index,
@@ -212,3 +217,80 @@ def test_metadata_and_frontmatter_no_yaml_aliases_and_infers_type(tmp_path: Path
         fm = _generate_vbpl_frontmatter(doc_meta, bdir, f"{slug}.md")
         assert "&id" not in fm and "*id" not in fm
         assert f"document_type: {expected_type}" in fm
+
+
+def test_normalize_docx_markdown_merges_split_bold_glue_and_preserves_blanks():
+    """Bookmark anchors splitting bold/italic runs merge cleanly while form blanks stay intact."""
+    assert (
+        normalize_docx_markdown('__Sửa đổi __<a id="dieu_14"></a>__Điều 14\\. Quy định__')
+        == "__Sửa đổi Điều 14. Quy định__"
+    )
+    assert (
+        normalize_docx_markdown('__Sửa đổi __<a id="bm1"></a><a id="bm2"></a>__khoản 4__')
+        == "__Sửa đổi khoản 4__"
+    )
+    assert (
+        normalize_docx_markdown('__*Sửa đổi *__<a id="bm1"></a>__*khoản 4*__')
+        == "__*Sửa đổi khoản 4*__"
+    )
+    assert normalize_docx_markdown('**Sửa đổi **<a id="s1"></a>**Điều 1**') == "**Sửa đổi Điều 1**"
+    assert (
+        normalize_docx_markdown('*Ghi chú *<a id="i1"></a>*quan trọng*') == "*Ghi chú quan trọng*"
+    )
+    assert normalize_docx_markdown('__Kh__<a id="_GoBack"></a>__oản 4__') == "__Khoản 4__"
+    assert normalize_docx_markdown('<a id="d1"></a>__Điều 1__') == "__Điều 1__"
+    assert (
+        normalize_docx_markdown(r"Tên cơ quan: \_\_\_\_\_ [ghi tên cơ quan]")
+        == "Tên cơ quan: _____ [ghi tên cơ quan]"
+    )
+    assert (
+        normalize_docx_markdown("Tên cơ quan: _____ [ghi tên cơ quan]")
+        == "Tên cơ quan: _____ [ghi tên cơ quan]"
+    )
+
+
+def test_convert_docx_to_clean_markdown_avoids_bold_glue_on_bookmarks():
+    """End-to-end Mammoth DOCX conversion produces zero ____ bold-glue on split bold bookmarks."""
+    w_ns = nsdecls("w")
+    doc = Document()
+    doc.element.body.append(
+        parse_xml(
+            f"""
+            <w:p {w_ns}>
+              <w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Sửa đổi </w:t></w:r>
+              <w:bookmarkStart w:id="0" w:name="dieu_14"/><w:bookmarkEnd w:id="0"/>
+              <w:r><w:rPr><w:b/></w:rPr><w:t>Điều 14. Quy định</w:t></w:r>
+            </w:p>
+            """
+        )
+    )
+    doc.element.body.append(
+        parse_xml(
+            f"""
+            <w:p {w_ns}>
+              <w:r><w:rPr><w:b/><w:i/></w:rPr><w:t xml:space="preserve">Sửa đổi </w:t></w:r>
+              <w:bookmarkStart w:id="1" w:name="khoan_4"/><w:bookmarkEnd w:id="1"/>
+              <w:r><w:rPr><w:b/><w:i/></w:rPr><w:t>khoản 4</w:t></w:r>
+            </w:p>
+            """
+        )
+    )
+    doc.element.body.append(
+        parse_xml(
+            f"""
+            <w:p {w_ns}>
+              <w:r><w:t>Tên cơ quan: _____ [ghi tên cơ quan]</w:t></w:r>
+            </w:p>
+            """
+        )
+    )
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    cleaned = _convert_docx_to_clean_markdown(buf)
+
+    assert "____Điều" not in cleaned
+    assert "____khoản" not in cleaned
+    assert "__Sửa đổi Điều 14. Quy định__" in cleaned
+    assert "__*Sửa đổi khoản 4*__" in cleaned
+    assert r"Tên cơ quan: _____ \[ghi tên cơ quan\]" in cleaned

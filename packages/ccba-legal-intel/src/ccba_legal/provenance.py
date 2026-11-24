@@ -13,6 +13,7 @@ import argparse
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -77,6 +78,7 @@ _GREEK_LATEX_TO_UNICODE = {
 
 def normalize_text(text: str) -> str:
     """Clean and normalize whitespace and special punctuation for comparison."""
+    text = unicodedata.normalize("NFC", text)
     for k, v in _GREEK_LATEX_TO_UNICODE.items():
         text = text.replace(k, v)
     text = re.sub(r"\s+", " ", text)
@@ -250,7 +252,7 @@ def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> 
     """Compute verbatim text parity rate between DOCX paragraphs and normalized Markdown text."""
 
     def norm_words(text: str) -> str:
-        text = text.lower()
+        text = unicodedata.normalize("NFC", text).lower()
         for k, v in _GREEK_LATEX_TO_UNICODE.items():
             text = text.replace(k, v)
         text = re.sub(r"\(#[^)]+\)", " ", text)
@@ -295,7 +297,7 @@ def compute_docx_to_markdown_parity(docx_paras: list[str], combined_md: str) -> 
             effective_docx_paras += 1
         else:
             # Check if paragraph is administrative enacting preamble (conforming to ADR 0021 Pure Body)
-            p_low = re.sub(r"\s+", " ", p.strip().lower())
+            p_low = re.sub(r"\s+", " ", unicodedata.normalize("NFC", p).strip().lower())
             if (
                 p_low.startswith("căn cứ ")
                 or p_low.startswith("theo đề nghị ")

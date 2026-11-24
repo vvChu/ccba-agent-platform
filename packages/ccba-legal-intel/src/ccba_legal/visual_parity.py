@@ -13,6 +13,7 @@ Audits all Markdown documents in legal_docs/ for:
 10. Broken markdown table rows.
 11. Monotonic footnote numbering sequence.
 12. Inverted footnote hierarchy (Cell footnotes placed under general CHÚ THÍCH legend).
+13. Malformed bold-glue artifacts (____Điều, ____khoản).
 """
 
 from __future__ import annotations
@@ -20,6 +21,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Any
+
+_MALFORMED_BOLD_GLUE_RE = re.compile(r"(?:\s|^)____(?=[A-Za-zÀ-ỹ0-9])")
+
+
+def _is_bold_glue_exempt(md_path: Path) -> bool:
+    """Return True for directory scopes exempt from MALFORMED_BOLD_GLUE linting."""
+    return any(part.lower() in ("templates", "sources") for part in md_path.parts)
 
 
 def lint_document(md_path: Path) -> list[str]:
@@ -32,9 +40,18 @@ def lint_document(md_path: Path) -> list[str]:
 
     lines = text.splitlines()
     in_display_math = False
+    in_code_fence = False
+    skip_bold_glue = _is_bold_glue_exempt(md_path)
 
     for idx, line in enumerate(lines, 1):
         stripped = line.strip()
+
+        if stripped.startswith("```"):
+            in_code_fence = not in_code_fence
+            continue
+
+        if in_code_fence:
+            continue
 
         if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 2:
             pass
@@ -44,6 +61,10 @@ def lint_document(md_path: Path) -> list[str]:
 
         if in_display_math:
             continue
+
+        # 13. Check malformed bold-glue artifacts (e.g. ____Điều 14, ____khoản 4)
+        if not skip_bold_glue and _MALFORMED_BOLD_GLUE_RE.search(line):
+            errors.append(f"Line {idx}: MALFORMED_BOLD_GLUE: '{stripped[:80]}'")
 
         # 1. Check double bullets
         if re.match(r"^\s*[-*]\s+[-*]\s+", line):

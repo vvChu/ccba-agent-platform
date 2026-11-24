@@ -130,8 +130,7 @@ def _convert_docx_to_clean_markdown(docx_input: Path | BinaryIO) -> str:
     else:
         docx_input.seek(0)
         raw_md = str(mammoth.convert_to_markdown(docx_input).value)
-    cleaned = re.sub(r'<a id="[^"]+"></a>', "", raw_md)
-    return normalize_docx_markdown(cleaned)
+    return normalize_docx_markdown(raw_md)
 
 
 def _export_single_template(
