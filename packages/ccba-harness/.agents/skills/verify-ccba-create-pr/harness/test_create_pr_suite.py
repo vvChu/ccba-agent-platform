@@ -5,7 +5,7 @@ Covers all features declared in `verify-ccba-create-pr/features/INDEX.md`:
 - FEAT-PR-002: Bước 0 Main Branch Guard & Bước 1 Local Shift-Left Gate (verify-patch Exit 0)
 - FEAT-PR-003: Bước 3 Show-Me Visual & Merge Danger (## Summary, ## Evidence, ## Merge Danger)
 - FEAT-PR-004: Bước 4-5 Dual-Gate CI & Copilot Review (audit_pr_comments.py, Zero-Polling RULE-4.8, .md/knowledge/reports/walkthrough.md)
-- FEAT-PR-005: Spoke Sync Alias (create-pr -> ccba-contribute-to-hub) & PlatformToolingDomainSimulator Registration
+- FEAT-PR-005: Spoke Sync Alias (create-pr -> ccba-create-pr) & PlatformToolingDomainSimulator Registration
 - FEAT-PR-006: 5-Block Lifecycle, Statechart Bug-Path Replay & Drift Modes
 - FEAT-PR-007: Surface Diff Parity, Git Provenance & Domain Eval Ratchet Optimizer (100.0%)
 """
@@ -138,8 +138,8 @@ def test_feat_pr_005_spoke_sync_alias_and_simulator_registration() -> None:
     runner = _load_runner_module()
     repo_root: Path = runner.REPO_ROOT  # type: ignore[attr-defined]
 
-    assert SKILL_DEPRECATION_ALIASES.get("create-pr") == "ccba-contribute-to-hub"
-    assert SKILL_DEPRECATION_ALIASES.get("ccba-create-pr") == "ccba-contribute-to-hub"
+    assert SKILL_DEPRECATION_ALIASES.get("create-pr") == "ccba-create-pr"
+    assert "ccba-create-pr" not in SKILL_DEPRECATION_ALIASES
     assert "ccba-create-pr" in _PLATFORM_TOOLING_SKILLS
 
     catalog_path = (

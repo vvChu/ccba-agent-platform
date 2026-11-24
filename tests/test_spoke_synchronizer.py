@@ -183,6 +183,32 @@ def test_sync_single_item_on_demand(mock_spoke: Path, mock_hub: Path) -> None:
     assert not (mock_spoke / ".agents" / "skills" / "core-skill").exists()
 
 
+def test_sync_single_item_create_pr_not_redirected_to_contribute(
+    mock_spoke: Path, mock_hub: Path
+) -> None:
+    """Verify --sync-item ccba-create-pr and alias create-pr install ccba-create-pr directly."""
+    catalog_path = mock_hub / ".agents" / "skills" / "platform-loader" / "catalog.yaml"
+    catalog = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    for name in ("ccba-create-pr", "ccba-contribute-to-hub"):
+        catalog["skills"].append(
+            {"name": name, "bundle": "_core", "skill_path": f".agents/skills/{name}/SKILL.md"}
+        )
+        skill_dir = mock_hub / ".agents" / "skills" / name
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(f"# {name}", encoding="utf-8")
+    catalog_path.write_text(yaml.safe_dump(catalog), encoding="utf-8")
+
+    synchronizer = SpokeSynchronizer(str(mock_spoke))
+    assert synchronizer.sync(sync_item="ccba-create-pr", dry_run=False) == 0
+    assert (mock_spoke / ".agents" / "skills" / "ccba-create-pr" / "SKILL.md").exists()
+    assert not (mock_spoke / ".agents" / "skills" / "ccba-contribute-to-hub").exists()
+
+    (mock_spoke / ".agents" / "skills" / "ccba-create-pr" / "SKILL.md").unlink()
+    assert synchronizer.sync(sync_item="create-pr", dry_run=False) == 0
+    assert (mock_spoke / ".agents" / "skills" / "ccba-create-pr" / "SKILL.md").exists()
+    assert not (mock_spoke / ".agents" / "skills" / "ccba-contribute-to-hub").exists()
+
+
 def test_sync_creates_backup_snapshot(mock_spoke: Path, mock_hub: Path) -> None:
     """Verifies that actual sync automatically creates a snapshot backup of .agents/."""
     spoke_agents_dir = mock_spoke / ".agents"
