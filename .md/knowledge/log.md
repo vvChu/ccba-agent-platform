@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-24] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Phân Tách `/ccba-create-pr` & `/ccba-contribute-to-hub`, Đồng Bộ Global Skill & 7 Harness (`PR #897..#900`, `RULE-1.26`, `RULE-2.21`, `RULE-4.16`, Mục 75)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
+- **Affected Files**: [session_learnings.md](session_learnings.md), [archive/session_learnings_history.md](archive/session_learnings_history.md), [log.md](log.md)
+- **Summary**: Đúc kết phiên `1a713191-7dd8-44ba-b3b8-9ae89f017a64` (`527` bước, `155` turns, `18,367,122` tổng tokens, `23.25996 USD`; `1` lỗi `status == "ERROR"` tại `step_index: 132` do lệch target `edit_file` tự phục hồi, `0` `CLEARED`; `log_eval_miner.py --taxonomy TOOL_EXCEPTION --dry-run`: `1` case trùng `step_index: 132`): hoàn tất `PR #897` (`c750eed2`, `--merge`) + `PR #898` (`10d6934a`) phân tách định tuyến `/ccba-create-pr` vs `/ccba-contribute-to-hub` trên `5` universal skills (Grok 2-Pass `APPROVE_PLAN`, khóa `test_universal_skills_pr_routing_contract()`, re-anchor `verify-ccba-code-review`) và `PR #899` (`23bdaf90`, `--merge`) + `PR #900` (`61ea1535`) đồng bộ `~/.gemini/config/skills/ccba-platform/SKILL.md`, cập nhật `$CCBA_HUB_PATH` tại `test_global_skills_integrity.py`, gỡ redirect di sản trong `coordinator.py` (`"create-pr": "ccba-create-pr"`, `FEAT-PR-005`) và tái neo `7` `verify-ccba-*` harnesses; kết tinh `RULE-1.26`, `RULE-2.21`, `RULE-4.16` vào [session_learnings.md](session_learnings.md) (`9.97 KB <= 10.0 KB`, `0` dropped rules) cùng Mục 75 vào [archive/session_learnings_history.md](archive/session_learnings_history.md); giữ nguyên `0` sửa đổi `SKILL.md` theo bộ lọc `already-covered` và *Prefer Deterministic Checks*.
+
+---
+
 ## [2026-11-22] [synthesize] | Tổng Kết Phiên Thẩm Định PR #853 / #859 (Đóng Issue #851) & Tiến Hóa `ccba-review-proposal` v1.1.0
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
 - **Affected Files**: [archive/session_learnings_history.md](archive/session_learnings_history.md), [log.md](log.md), [reports/walkthrough.md](reports/walkthrough.md), [SKILL.md](../../.agents/skills/ccba-review-proposal/SKILL.md)
