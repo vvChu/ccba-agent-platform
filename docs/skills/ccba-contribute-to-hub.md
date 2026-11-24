@@ -53,8 +53,6 @@ Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mự
 - `ccba-contribute-to-hub`
 - `ccba-propose-to-hub`
 - `propose-to-hub`
-- `ccba-create-pr`
-- `create-pr`
 
 ### Ngữ Cảnh Khuyến Nghị Triệu Hồi
 - Khi cần thực thi nghiệp vụ liên quan trực tiếp đến vai trò: Quy trình đóng gói và gửi đóng góp từ dự án vệ tinh về kho trung tâm Hub.

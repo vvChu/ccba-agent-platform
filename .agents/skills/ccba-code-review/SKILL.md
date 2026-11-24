@@ -127,12 +127,12 @@ Khi cần phản biện độc lập cho các thay đổi quan trọng hoặc ki
 ## Tích hợp hệ thống (System Integration)
 
 - **Trước khi tạo PR:** Chạy `/ccba-code-review --pending` sau khi hoàn thành code bằng `/ccba-tdd` để rà soát lại toàn bộ diff cục bộ.
-- **Trước khi Merge PR:** Chạy `/ccba-code-review #PR_NUMBER` trong quá trình thực thi `/ccba-release-feature` để kiểm soát chất lượng và rà soát lỗi trước khi merge vào nhánh `main`.
+- **Trước khi Merge PR:** Chạy `/ccba-code-review #PR_NUMBER` trong `/ccba-release-feature` trước khi merge vào `main`.
 
 ## Vị trí trong Luồng công việc (Workflow Position)
 
 - **Thường chạy sau:** `/ccba-tdd` (Rà soát sau khi code hướng kiểm thử).
-- **Thường chạy trước:** `/ccba-contribute-to-hub` (Push và tạo PR), `/ccba-release-feature` (Merge và đóng tính năng).
+- **Thường chạy trước:** `/ccba-create-pr` (PR repo hiện tại), `/ccba-contribute-to-hub` (Spoke→Hub), `/ccba-release-feature` (Merge).
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

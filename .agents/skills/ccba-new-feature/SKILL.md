@@ -214,10 +214,10 @@ Coding Agent thực hiện nhiệm vụ:
   - `python scripts/safe_pytest.py -f tests/test_xxx.py` (chạy scoped test an toàn).
   - `ruff check packages/ scripts/ tests/` (linter & format).
   - `mypy packages/ scripts/` (static type checker).
-  - `python scripts/spoke/check_hub_import_depth.py` & `check_spoke_cleanliness.py` (ADR 0044).
+  - `python scripts/spoke/check_hub_import_depth.py` & `check_spoke_cleanliness.py` (ADR 0044, tại Spoke).
   - `python scripts/eval/run_harness_evals.py` (hoặc `/ccba-eval-gate`).
 - Nếu phát hiện linter hoặc type check báo lỗi, tự động kích hoạt **Self-Healing Loop** tối đa 3 lần.
-- Khi tất cả các Gates đều vượt qua thành công (PASS), bàn giao kết quả qua tệp `walkthrough.md` cho người dùng nghiệm thu trước khi tạo PR (`/ccba-contribute-to-hub`).
+- Khi tất cả Gates PASS, bàn giao `walkthrough.md` để nghiệm thu trước khi tạo PR: dùng `/ccba-create-pr` cho repo hiện tại (Hub hoặc nội bộ Spoke); chỉ dùng `/ccba-contribute-to-hub` khi đóng góp ngược từ Spoke lên Hub.
 - **Tiêu chí hoàn thành:** Mã nguồn hoàn thiện vượt qua 100% các cổng kiểm định tự động và artifact walkthrough.md được bàn giao.
 
 ---

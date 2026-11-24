@@ -31,13 +31,11 @@ triggers:
 - ccba-contribute-to-hub
 - ccba-propose-to-hub
 - propose-to-hub
-- ccba-create-pr
-- create-pr
 ---
 
 # Workflow: Contribute to Hub (Đóng Góp Mã Nguồn Ngược Lên Hub Chuẩn OKF v2.0)
 
-Quy trình chuẩn hóa để đóng gói mã nguồn, tests, proposal và mở GitHub Pull Request (PR) kèm hoàn tất thẩm định tự động từ Spoke lên Platform Hub (`ccba-agent-platform`). *(Lệnh: `/ccba-contribute-to-hub`)*
+Đóng gói mã nguồn, tests, proposal và mở PR kèm CI/Review từ **Spoke lên Hub** (`ccba-agent-platform`). *PR trực tiếp trên Hub hoặc nội bộ Spoke dùng `/ccba-create-pr`.* *(Lệnh: `/ccba-contribute-to-hub`)*
 
 ---
 
