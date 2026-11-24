@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import re
 
+_ANCHOR_TAG_RE = re.compile(r'<a id="[^"]+"></a>')
+_BOLD_ITALIC_GLUE_RE = re.compile(r'\*__(?:<a id="[^"]+"></a>)+__\*')
+_STRONG_STAR_GLUE_RE = re.compile(r'\*\*(?:<a id="[^"]+"></a>)+\*\*')
+_BOLD_GLUE_RE = re.compile(r'(?:__(?:<a id="[^"]+"></a>)+)+__')
+_ITALIC_GLUE_RE = re.compile(r'\*(?:<a id="[^"]+"></a>)+\*')
+
 
 def normalize_units_and_math(t_str: str) -> str:
     """Auto-converts raw unit strings with exponents into proper LaTeX notation."""
@@ -34,9 +40,18 @@ def normalize_clause_numbers(text: str) -> str:
     return "\n".join(processed)
 
 
+def _strip_mammoth_anchors_and_glue(md_text: str) -> str:
+    """Merge bold/italic runs split by Mammoth bookmark anchors before removing anchors."""
+    cleaned = _BOLD_ITALIC_GLUE_RE.sub("", md_text)
+    cleaned = _STRONG_STAR_GLUE_RE.sub("", cleaned)
+    cleaned = _BOLD_GLUE_RE.sub("", cleaned)
+    cleaned = _ITALIC_GLUE_RE.sub("", cleaned)
+    return _ANCHOR_TAG_RE.sub("", cleaned)
+
+
 def normalize_docx_markdown(md_text: str) -> str:
     """Normalize raw Mammoth output markdown."""
-    md_text = re.sub(r'<a id="[^"]+"></a>', "", md_text)
+    md_text = _strip_mammoth_anchors_and_glue(md_text)
     return (
         md_text.replace(r"\.", ".")
         .replace(r"\-", "-")
