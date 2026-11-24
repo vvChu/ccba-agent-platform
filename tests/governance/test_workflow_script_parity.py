@@ -26,6 +26,7 @@ PACKAGES_DIR = HUB_ROOT / "packages"
 # Recognized Spoke-specific scripts executed within Spoke context
 SPOKE_SPECIFIC_SCRIPTS = {
     "scripts/validate_legal_spoke.py",
+    "scripts/hydrate_sources_from_vault.py",
     "scripts/verify_docx_against_pdf.py",
     "scripts/sync_notebooklm_knowledge.py",
     "scripts/check_spoke_cleanliness.py",

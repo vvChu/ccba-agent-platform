@@ -13,7 +13,7 @@ tier: kernel
 command: /ccba-legal-ingest
 layer: _consulting
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   author: "CCBA Hub"
 gpi:
   s: 4.0
@@ -86,6 +86,7 @@ Bất kỳ khi nào tiếp nhận một văn bản mới, Agent thực hiện th
   # Làm mới file scan mờ:
   python -m ccba_legal fetch "<tvpl_url>" -o "legal_docs/<category>/<doc_slug>/sources"
   ```
+* **Kiểm Chứng URL Kế Thừa (`legal_registry.yaml`):** Trước khi chạy `fetch` hoặc `ingest-legal` từ `tvpl_url` kế thừa trong `legal_registry.yaml`, **BẮT BUỘC** đối chiếu tiêu đề và số hiệu văn bản thực tế tại trang đích; nếu ID TVPL cũ trỏ nhầm sang văn bản khác, dừng ngay và tra lại URL chuẩn trước khi tải.
 * **Barrier & Dual-PDF Rule:** Nếu bị chặn cào tự động -> DỪNG và xin `.docx` + `.pdf` chính quy (cấm LLM viết Markdown). Với PDF scan mờ/TCVN3 cũ -> giữ `<slug>_raw_scan.pdf`, xuất Vector PDF qua `ccba_ooxml.convert_to_pdf` và gắn `pdf_origin: docx_vector_rendered` (chi tiết 4 kịch bản tại `references/ingest_scenarios_and_15_gates.md`).
 * **Timeout Tệp Lớn & Kiểm Tra Tải Muộn:** `tier_downloader` mặc định chờ `60s` (tự gia hạn tối đa `300s` khi `.crdownload` đang tăng dung lượng; cấu hình qua `CCBA_LEGAL_DOWNLOAD_TIMEOUT` và `CCBA_LEGAL_DOWNLOAD_MAX_TIMEOUT`) và `SpokeHydrator` mặc định `rclone --timeout 120s` (`CCBA_HYDRATOR_RCLONE_TIMEOUT`). Nếu PDF dung lượng lớn hoàn tất muộn sau khi lệnh báo timeout, kiểm tra `~/Downloads/<tvpl_id>.*` để thu hồi trực tiếp vào `sources/` thay vì tải lại.
 * **Tiêu chí hoàn thành:** Thu thập đầy đủ tệp DOCX gốc và PDF công báo số hóa vào thư mục `sources/` kèm mã băm SHA-256 xác thực.
@@ -131,7 +132,12 @@ python -m ccba_legal consolidate --manifest "legal_docs/<category>/<doc_slug>/pa
    python scripts/validate_legal_spoke.py --bundle <slug>
    # Hoặc toàn bộ repo: python scripts/validate_legal_spoke.py
    ```
-3. **Ngưỡng đạt:** `0 Errors, 0 Warnings, 100% Visual Parity, Gate 11 >= 98.0%, 100% PDF SHA-256 Match` (chi tiết Bảng 15 Cổng tại `references/ingest_scenarios_and_15_gates.md`).
+3. **Đồng Bộ Vault Có Phạm Vi (`--bundle` Bắt Buộc):** Khi đẩy tệp nguồn đã kiểm định lên Drive Vault, **BẮT BUỘC** truyền cờ `--bundle <slug>`:
+   ```bash
+   python scripts/hydrate_sources_from_vault.py --push --bundle <slug>
+   ```
+   Tuyệt đối **CẤM** chạy `--push` toàn cục không kèm `--bundle` để tránh đồng bộ nhầm hàng loạt nguồn chưa kiểm chứng.
+4. **Ngưỡng đạt:** `0 Errors, 0 Warnings, 100% Visual Parity, Gate 11 >= 98.0%, 100% PDF SHA-256 Match` (chi tiết Bảng 15 Cổng tại `references/ingest_scenarios_and_15_gates.md`).
 * **Tiêu chí hoàn thành:** Đăng ký sổ bộ thành công và toàn bộ 15 Cổng Master Spoke CI Validator đạt trạng thái PASSED (0 Errors, 0 Warnings).
 
 ## 5. Rào Chắn Điểm Liệt & Cập Nhật Hiệu Lực Văn Bản (Hard Floor Invariant)
