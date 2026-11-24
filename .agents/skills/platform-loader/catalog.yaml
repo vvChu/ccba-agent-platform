@@ -492,8 +492,6 @@ skills:
   - ccba-contribute-to-hub
   - ccba-propose-to-hub
   - propose-to-hub
-  - ccba-create-pr
-  - create-pr
   skill_path: .agents/skills/ccba-contribute-to-hub/SKILL.md
   command: /ccba-contribute-to-hub
   tier: kernel

@@ -19,7 +19,7 @@ metadata:
   version: 1.0.1
 sync_commit: "a0282a9ef90cbd7bc3bf0649b165e12253a612a2"
 covered_sha256:
-  .agents/skills/ccba-code-review/SKILL.md: "4609deef56aa64a6d80837af875adb0b468191dd9dd5991136fd04c6ac767fb3"
+  .agents/skills/ccba-code-review/SKILL.md: "761cecadad2f569d17eead982e386cdf84ee6bbb2b158a2540c14f9f54760548"
   .agents/skills/ccba-code-review/references/parallel-review-workflow.md: "e8cde906bac988b39eb232d08db83ec306bb3bd9dd07f18e92046e8257d57be5"
   .agents/skills/ccba-code-review/references/unslop_checklist.md: "2a2499376921b379d61a5cfc2bc9531ca823c484a5ffb714ef311a987df66084"
   scripts/spoke/sync/coordinator.py: "529a0035b205cfdbb6b8504e494f90ca5204fbae8845cb9e39d3b2c33641c9a3"

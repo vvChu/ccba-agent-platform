@@ -102,3 +102,66 @@ def test_catalog_registers_upstream_workflows() -> None:
         skill_entry = skills[skill_name]
         skill_file = REPO_ROOT / skill_entry["skill_path"]
         assert skill_file.exists(), f"Skill file for {skill_name} must exist at {skill_file}"
+
+
+SPOKE_ONLY_UPSTREAM_UNIVERSAL_SKILLS = frozenset(
+    {
+        "ccba-contribute-to-hub",
+        "ccba-issue-to-hub",
+        "ccba-promote-sandbox",
+        "ccba-update-spoke",
+    }
+)
+
+
+def test_universal_skills_pr_routing_contract() -> None:
+    """Lock Hub-vs-Spoke PR routing semantics on scope: universal SKILL.md files.
+
+    Out of scope by design:
+    - scope: hub skills (ccba-graduate-rd line 130, ccba-build-skill lines 53 & 200)
+    - references/ subdirectories
+    """
+    nf_text = (SKILLS_DIR / "ccba-new-feature" / "SKILL.md").read_text(encoding="utf-8")
+    assert (
+        "dùng `/ccba-create-pr` cho repo hiện tại (Hub hoặc nội bộ Spoke); "
+        "chỉ dùng `/ccba-contribute-to-hub` khi đóng góp ngược từ Spoke lên Hub"
+    ) in nf_text
+
+    ask_text = (SKILLS_DIR / "ccba-ask" / "SKILL.md").read_text(encoding="utf-8")
+    assert (
+        "repo hiện tại (Hub/nội bộ Spoke) qua [`/ccba-create-pr`](../ccba-create-pr/SKILL.md); "
+        "chỉ đóng góp ngược Spoke → Hub qua [`/ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md)"
+    ) in ask_text
+
+    cr_text = (SKILLS_DIR / "ccba-code-review" / "SKILL.md").read_text(encoding="utf-8")
+    assert (
+        "Thường chạy trước:** `/ccba-create-pr` (PR repo hiện tại), "
+        "`/ccba-contribute-to-hub` (Spoke→Hub)"
+    ) in cr_text
+
+    plat_text = (SKILLS_DIR / "ccba-platform" / "SKILL.md").read_text(encoding="utf-8")
+    assert "| **Bối cảnh 5 & Hub Monorepo** | `/ccba-create-pr` |" in plat_text
+    assert "| **Bối cảnh 5 (Spoke → Hub)** | `/ccba-contribute-to-hub` |" in plat_text
+    assert "| **Bối cảnh 5 & Hub Monorepo** | `/ccba-contribute-to-hub` |" not in plat_text
+
+    cth_text = (SKILLS_DIR / "ccba-contribute-to-hub" / "SKILL.md").read_text(encoding="utf-8")
+    cth_fm = yaml.safe_load(cth_text.split("---", 2)[1]) or {}
+    cth_triggers = set(cth_fm.get("triggers", []))
+    assert "ccba-create-pr" not in cth_triggers
+    assert "create-pr" not in cth_triggers
+    assert "PR trực tiếp trên Hub hoặc nội bộ Spoke dùng `/ccba-create-pr`" in cth_text
+
+    offenders: list[str] = []
+    for skill_md in sorted(SKILLS_DIR.glob("*/SKILL.md")):
+        content = skill_md.read_text(encoding="utf-8")
+        if "/ccba-contribute-to-hub" not in content:
+            continue
+        fm = yaml.safe_load(content.split("---", 2)[1]) or {}
+        if str(fm.get("scope", "")).strip().lower() != "universal":
+            continue
+        name = str(fm.get("name", skill_md.parent.name))
+        if name not in SPOKE_ONLY_UPSTREAM_UNIVERSAL_SKILLS and "/ccba-create-pr" not in content:
+            offenders.append(name)
+    assert not offenders, (
+        f"Universal skill(s) suggest /ccba-contribute-to-hub without /ccba-create-pr: {offenders}"
+    )

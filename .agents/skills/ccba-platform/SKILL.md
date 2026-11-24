@@ -25,9 +25,7 @@ metadata:
 
 # CCBA Platform — Global Entry Point & Orchestrator
 
-> Đây là Global Skill khả dụng từ **mọi dự án** trong hệ sinh thái CCBA Agent Services Platform.
-> Khi người dùng yêu cầu một trong các tác vụ dưới đây, Agent nạp định nghĩa kỹ năng tương ứng rồi điều phối thực thi.
-> Output và thành phẩm luôn lưu về thư mục dự án (Spoke) hiện tại để đảm bảo tính độc lập dữ liệu.
+> Global Skill cho mọi dự án CCBA: nạp kỹ năng tương ứng và lưu thành phẩm về dự án hiện tại.
 
 ## Phân Giải Đường Dẫn Hub & Spoke Động
 * Đường dẫn gốc Platform Hub được tự động phân giải qua biến môi trường **`CCBA_HUB_PATH`** hoặc cấu hình trong `.md/workspace_context.yaml`.
@@ -104,7 +102,8 @@ Căn cứ vào kết quả nhận diện 5 bối cảnh ở Pha 1, Agent chủ �
 | **Bối cảnh 5 & Hub Monorepo** | `/ccba-new-feature` | Khởi tạo feature branch mới & lập kế hoạch Factory Model | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-new-feature/SKILL.md` |
 | **Bối cảnh 5 & Hub Monorepo** | `/ccba-implement` | Hiện thực hóa tính năng theo TDD Red-Green-Refactor & Scoped Tests | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-implement/SKILL.md` |
 | **Bối cảnh 5 & Hub Monorepo** | `/ccba-code-review` | Rà soát chất lượng code song song 2 trục (Standards & Spec) | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-code-review/SKILL.md` |
-| **Bối cảnh 5 & Hub Monorepo** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal và mở PR đóng góp lên Hub | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
+| **Bối cảnh 5 & Hub Monorepo** | `/ccba-create-pr` | Kiểm chuẩn Shift-Left, mở PR repo hiện tại & Dual-Gate CI/Copilot | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-create-pr/SKILL.md` |
+| **Bối cảnh 5 (Spoke → Hub)** | `/ccba-contribute-to-hub` | Đóng gói mã nguồn, tests, proposal & mở PR đóng góp lên Hub | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-contribute-to-hub/SKILL.md` |
 | **Bối cảnh 5 & Hub Monorepo** | `/ccba-release-feature` | Chạy slow integration tests, squash merge PR & đóng issue tự động | Slash command hoặc `$CCBA_HUB_PATH/.agents/skills/ccba-release-feature/SKILL.md` |
 | **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc` | Thẩm tra chất lượng thiết kế đa bộ môn (Discovery, Quad-View, Heat Map) | `$CCBA_HUB_PATH/.agents/skills/ccba-ai-qc/SKILL.md` |
 | **Nghiệp Vụ Thẩm Tra (`_qc`)** | `/ccba-ai-qc-pccc-audit` | Thẩm tra an toàn PCCC, MEP và thoát nạn theo QCVN 06:2022 | `$CCBA_HUB_PATH/.agents/skills/ccba-ai-qc-pccc-audit/SKILL.md` |

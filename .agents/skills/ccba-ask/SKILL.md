@@ -35,7 +35,7 @@ Kỹ năng này giúp định tuyến, định hướng cho cả AI Agent và Nh
 
 > [!IMPORTANT]
 > **Nguồn tin cậy (Source of Truth):**
-> Tất cả các Slash Command trong tài liệu này đều được định tuyến dựa trên danh mục dịch vụ tại [catalog.yaml](../platform-loader/catalog.yaml). Vui lòng kiểm tra danh mục này trước khi thực thi để đảm bảo lệnh đã được đăng ký thành công trong phân vùng (spoke) hiện tại.
+> Mọi Slash Command định tuyến theo [catalog.yaml](../platform-loader/catalog.yaml); kiểm tra trước khi chạy để đảm bảo lệnh hợp lệ trong repo hiện tại.
 
 ## 🧭 Bảng Phân Tuyến 3 Chế Độ Hoạt Động (3-Mode Intent Dispatch)
 
@@ -69,8 +69,8 @@ Khi người dùng gọi `/ccba-ask`, Agent **BẮT BUỘC** nhận diện ý đ
 5. **Kiểm soát chất lượng & Cổng Kiểm định Tự động (QC & Deterministic Verification):**
    - Với mã nguồn/kỹ năng: Chạy [`/ccba-eval-gate`](../ccba-eval-gate/SKILL.md) (hoặc `python -m ccba_harness verify-patch`).
    - Với hồ sơ thiết kế xây dựng đa bộ môn: Chạy [`/ccba-ai-qc`](../ccba-ai-qc/SKILL.md) và [`/ccba-ai-qc-pccc-audit`](../ccba-ai-qc-pccc-audit/SKILL.md).
-6. **Đóng góp PR & Đúc kết cuối phiên (Ship & Retrospective):**
-   - Đóng gói Pull Request và tự động làm xanh CI/Review qua [`/ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md).
+6. **Tạo PR & Đúc kết cuối phiên (Ship & Retrospective):**
+   - Mở PR và làm xanh CI/Review cho repo hiện tại (Hub/nội bộ Spoke) qua [`/ccba-create-pr`](../ccba-create-pr/SKILL.md); chỉ đóng góp ngược Spoke → Hub qua [`/ccba-contribute-to-hub`](../ccba-contribute-to-hub/SKILL.md).
    - Kết thúc phiên làm việc bằng [`/ccba-session-retrospective`](../ccba-session-retrospective/SKILL.md) để đúc kết bài học vào `session_learnings.md` và dọn sạch workspace.
 
 > [!TIP]
