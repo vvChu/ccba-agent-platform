@@ -16,11 +16,14 @@ from typing import Any
 
 from .backup import GitWorkingTreeGuard, SpokeBackupManager
 from .base import (
+    DEFAULT_VERIFY_TIMEOUT,
     SKILL_SYNC_IGNORE_PATTERNS,
     HubNotFoundError,
     are_dirs_identical,
     are_files_identical,
+    format_verify_failure_lines,
     load_yaml,
+    resolve_verify_timeout_or_report,
     safe_remove,
 )
 from .discovery import HubDiscoverer
@@ -1453,6 +1456,7 @@ class SpokeSynchronizer:
         pull_assets: bool = False,
         allow_stale_catalog: bool = False,
         prune_unscoped: bool = False,
+        verify_timeout: float | None = None,
     ) -> int:
         """Main entrypoint for Spoke synchronization."""
         print(f"\n=== CCBA Spoke Synchronization{' [DRY-RUN]' if dry_run else ''} ===")
@@ -1477,9 +1481,9 @@ class SpokeSynchronizer:
             if item
             else self._sync_full_bundle(*args, proj_type, proj_name, *b_opts)
         )
-        return (
-            self.verify_spoke(hub_root=hub_root) if (res == 0 and not dry_run and verify) else res
-        )
+        if res == 0 and not dry_run and verify:
+            return self.verify_spoke(hub_root=hub_root, verify_timeout=verify_timeout)
+        return res
 
     def _discover_spoke_test_dirs(self) -> list[Path]:
         """Locate configured or standard pytest directories in Spoke workspace."""
@@ -1538,32 +1542,31 @@ class SpokeSynchronizer:
         dirs_str = " ".join(f'"{d.as_posix()}"' for d in target_test_dirs)
         return f'"{test_runtime.as_posix()}" -m pytest {dirs_str} -q'
 
-    def _execute_verification_commands(self, cmds: list[str]) -> int:
+    def _execute_verification_commands(
+        self, cmds: list[str], timeout: float = DEFAULT_VERIFY_TIMEOUT
+    ) -> int:
         """Execute post-sync verification commands via ccba_harness verifier."""
         try:
             from ccba_harness.verifier import verify_patch_execution
 
-            res = verify_patch_execution(commands=cmds, cwd=self.spoke_root, fail_fast=True)
+            res = verify_patch_execution(
+                commands=cmds, cwd=self.spoke_root, fail_fast=True, timeout=timeout
+            )
             if res.all_passed:
                 print("✅ SUCCESS: Spoke post-sync verification passed 100% deterministically.")
                 return 0
             first_failed = next((r for r in res.results if not r.passed), None)
             exit_code: int = first_failed.exit_code if first_failed else 1
-            print(
-                f"❌ FAILED: Spoke post-sync verification failed with exit code {exit_code}.",
-                file=sys.stderr,
-            )
-            if first_failed:
-                print(f"  ↳ Failed Command: {first_failed.command}", file=sys.stderr)
-                snippet = (first_failed.stderr or first_failed.stdout or "").strip()
-                if snippet:
-                    print(f"  ↳ Output Snippet:\n{snippet[:600]}", file=sys.stderr)
+            for line in format_verify_failure_lines(first_failed, exit_code):
+                print(line, file=sys.stderr)
             return exit_code
         except Exception as e:
             print(f"  ❌ Lỗi khi thực hiện post-sync verification: {e}", file=sys.stderr)
             return 1
 
-    def verify_spoke(self, hub_root: Path | None = None) -> int:
+    def verify_spoke(
+        self, hub_root: Path | None = None, verify_timeout: float | None = None
+    ) -> int:
         """Run deterministic ADR-0058 verification on synced spoke."""
         resolved_hub = hub_root or self.hub_root or Path(__file__).resolve().parents[3]
         cleanliness_script = resolved_hub / "scripts" / "spoke" / "check_spoke_cleanliness.py"
@@ -1584,15 +1587,15 @@ class SpokeSynchronizer:
                 print(f"  - {err}", file=sys.stderr)
             return 1
 
-        cmds: list[str] = []
-        if cleanliness_script.exists():
-            cmds.append(
-                f'"{sys.executable}" "{cleanliness_script.as_posix()}" --path "{self.spoke_root.as_posix()}"'
-            )
-        if import_depth_script.exists():
-            cmds.append(
-                f'"{sys.executable}" "{import_depth_script.as_posix()}" --path "{self.spoke_root.as_posix()}"'
-            )
+        resolved_timeout = resolve_verify_timeout_or_report(verify_timeout)
+        if resolved_timeout is None:
+            return 1
+
+        cmds = [
+            f'"{sys.executable}" "{sp.as_posix()}" --path "{self.spoke_root.as_posix()}"'
+            for sp in (cleanliness_script, import_depth_script)
+            if sp.exists()
+        ]
 
         pytest_cmd = self._resolve_spoke_test_command(resolved_hub)
         if pytest_cmd:
@@ -1601,7 +1604,7 @@ class SpokeSynchronizer:
         if not cmds:
             print("[Verify] Không có lệnh kiểm tra nào cần thực thi.")
             return 0
-        return self._execute_verification_commands(cmds)
+        return self._execute_verification_commands(cmds, timeout=resolved_timeout)
 
     def sync(
         self,
@@ -1617,6 +1620,7 @@ class SpokeSynchronizer:
         pull_assets: bool = False,
         allow_stale_catalog: bool = False,
         prune_unscoped: bool = False,
+        verify_timeout: float | None = None,
     ) -> int:
         """Deep Seam entry point for syncing spoke bundle."""
         return self.sync_spoke_bundle(
@@ -1632,6 +1636,7 @@ class SpokeSynchronizer:
             pull_assets=pull_assets,
             allow_stale_catalog=allow_stale_catalog,
             prune_unscoped=prune_unscoped,
+            verify_timeout=verify_timeout,
         )
 
     def rollback(self, backup_path: Path | None = None) -> bool:
@@ -1669,6 +1674,7 @@ def sync_project(
     pull_assets: bool = False,
     allow_stale_catalog: bool = False,
     prune_unscoped: bool = False,
+    verify_timeout: float | None = None,
 ) -> int:
     """Helper procedural delegate for spoke synchronization."""
     engine = _get_synchronizer_cls()(str(spoke_path))
@@ -1684,6 +1690,7 @@ def sync_project(
         pull_assets=pull_assets,
         allow_stale_catalog=allow_stale_catalog,
         prune_unscoped=prune_unscoped,
+        verify_timeout=verify_timeout,
     )
 
 
@@ -1791,6 +1798,7 @@ def sync_all_spokes(
     pull_assets: bool = False,
     allow_stale_catalog: bool = False,
     prune_unscoped: bool = False,
+    verify_timeout: float | None = None,
 ) -> int:
     """Batch synchronize all registered active Spokes found in Hub Registry."""
     root = hub_root or Path(__file__).resolve().parents[3]
@@ -1818,6 +1826,7 @@ def sync_all_spokes(
         "pull_assets": pull_assets,
         "allow_stale_catalog": allow_stale_catalog,
         "prune_unscoped": prune_unscoped,
+        "verify_timeout": verify_timeout,
     }
     results, total_exit_code = _run_batch_spoke_loop(spokes, _get_synchronizer_cls(), sync_kwargs)
     _print_batch_sync_summary(results, mode_str)

@@ -6,6 +6,7 @@ Created by CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng.
 from __future__ import annotations
 
 import importlib.util
+import math
 import os
 import shutil
 import sys
@@ -208,3 +209,78 @@ def prune_ephemeral_heartbeats(heartbeats: dict[str, Any]) -> dict[str, Any]:
         for k, v in heartbeats.items()
         if isinstance(v, dict) and not is_ephemeral_spoke_path(str(v.get("path", "")))
     }
+
+
+DEFAULT_VERIFY_TIMEOUT: float = 180.0
+VERIFY_TIMEOUT_ENV_VAR: str = "CCBA_VERIFY_TIMEOUT"
+
+
+def parse_positive_verify_timeout(
+    value: float | int | str,
+    source: str = "--verify-timeout",
+) -> float:
+    """Validate that a verify timeout value is a finite positive number of seconds."""
+    if isinstance(value, bool):
+        raise ValueError(f"{source} must be a positive number of seconds, got bool: {value!r}")
+    raw: float | int | str = value
+    if isinstance(raw, str):
+        raw = raw.strip()
+        if not raw:
+            raise ValueError(f"{source} cannot be empty or whitespace")
+    try:
+        parsed = float(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{source} must be a positive number of seconds, got {value!r}") from exc
+    if not math.isfinite(parsed) or parsed <= 0.0:
+        raise ValueError(f"{source} must be a finite number greater than 0, got {value!r}")
+    return parsed
+
+
+def resolve_verify_timeout(verify_timeout: float | None = None) -> float:
+    """Resolve post-sync verify timeout with precedence: CLI > CCBA_VERIFY_TIMEOUT > 180.0s."""
+    if verify_timeout is not None:
+        return parse_positive_verify_timeout(verify_timeout, source="--verify-timeout")
+    if VERIFY_TIMEOUT_ENV_VAR in os.environ:
+        return parse_positive_verify_timeout(
+            os.environ[VERIFY_TIMEOUT_ENV_VAR],
+            source=VERIFY_TIMEOUT_ENV_VAR,
+        )
+    return DEFAULT_VERIFY_TIMEOUT
+
+
+def resolve_verify_timeout_or_report(verify_timeout: float | None = None) -> float | None:
+    """Resolve verify timeout, printing a clear stderr diagnostic and returning None if invalid."""
+    try:
+        return resolve_verify_timeout(verify_timeout)
+    except ValueError as exc:
+        print(f"❌ FAILED: Invalid verify timeout configuration: {exc}", file=sys.stderr)
+        return None
+
+
+def format_verify_failure_lines(failed: Any, exit_code: int) -> list[str]:
+    """Build deterministic stderr diagnostic lines for a failed verification command."""
+    lines = [f"❌ FAILED: Spoke post-sync verification failed with exit code {exit_code}."]
+    if failed is None:
+        return lines
+    lines.append(f"  ↳ Failed Command: {getattr(failed, 'command', '')}")
+    timed_out = bool(getattr(failed, "timed_out", False))
+    err_msg = str(getattr(failed, "error_message", None) or "").strip()
+    if timed_out or err_msg:
+        raw_dur = getattr(failed, "duration_ms", 0.0)
+        valid_dur = (
+            isinstance(raw_dur, (int, float))
+            and not isinstance(raw_dur, bool)
+            and math.isfinite(raw_dur)
+        )
+        dur = float(raw_dur) if valid_dur else 0.0
+        reason = err_msg or "Command timed out"
+        lines.append(f"  ↳ Reason: {reason} (duration: {dur:.0f}ms)")
+    if timed_out:
+        lines.append(
+            "  ↳ Hint: Run `pytest --durations=15` to identify slow tests, "
+            "or increase timeout via `--verify-timeout <seconds>` / `CCBA_VERIFY_TIMEOUT`."
+        )
+    snippet = str(getattr(failed, "stderr", "") or getattr(failed, "stdout", "") or "").strip()
+    if snippet:
+        lines.append(f"  ↳ Output Snippet:\n{snippet[:600]}")
+    return lines

@@ -8,8 +8,18 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import datetime
+from typing import Any
 
+from .base import DEFAULT_VERIFY_TIMEOUT, VERIFY_TIMEOUT_ENV_VAR, parse_positive_verify_timeout
 from .coordinator import list_project_backups, rollback_project, sync_all_spokes, sync_project
+
+
+def _parse_cli_verify_timeout(raw: str) -> float:
+    """Parse --verify-timeout CLI value into positive finite seconds or fail-closed."""
+    try:
+        return parse_positive_verify_timeout(raw, source="--verify-timeout")
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,6 +73,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--verify",
         action="store_true",
         help="Run deterministic ccba-harness verify-patch in Spoke post-sync (ADR-0058 Hard Completion Lock).",
+    )
+    parser.add_argument(
+        "--verify-timeout",
+        type=_parse_cli_verify_timeout,
+        default=None,
+        metavar="SECONDS",
+        help=(
+            f"Per-command timeout in seconds for --verify "
+            f"(overrides {VERIFY_TIMEOUT_ENV_VAR}; default: {DEFAULT_VERIFY_TIMEOUT:.0f}s)."
+        ),
     )
     parser.add_argument(
         "--no-backup",
@@ -140,7 +160,9 @@ def run_spoke_sync_cli(args_list: list[str] | None = None) -> int:
         success = rollback_project(args.spoke)
         return 0 if success else 1
 
-    extra: dict[str, bool] = {"prune_unscoped": True} if args.prune_unscoped else {}
+    extra: dict[str, Any] = {"prune_unscoped": True} if args.prune_unscoped else {}
+    if args.verify_timeout is not None:
+        extra["verify_timeout"] = args.verify_timeout
     if args.all:
         if args.dry_run:
             return sync_all_spokes(
