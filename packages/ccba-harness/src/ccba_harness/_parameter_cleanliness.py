@@ -10,6 +10,7 @@ import ast
 import ipaddress
 import os
 import re
+import subprocess
 from collections.abc import Iterable, Sequence
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
@@ -440,3 +441,43 @@ def scan_parameter_cleanliness(
         all_violations.extend(scanner.scan_file(filepath, text))
     all_violations.sort(key=lambda v: (v.file_path.as_posix(), v.line_number, v.rule_name))
     return all_violations
+
+
+_PEER_EXCHANGE_TRACKED_ALLOWLIST: frozenset[str] = frozenset(
+    {"PEER_HANDSHAKE.md", "README.md", ".gitkeep"}
+)
+
+
+def _run_git_ro(repo_root: Path, args: Sequence[str]) -> str | None:
+    """Run a read-only git command under a 5s timeout, returning stdout or None on failure."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=5.0,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def find_tracked_peer_exchange_drafts(spoke_root: Path) -> list[str]:
+    """Return sorted git-tracked non-protocol files in .md/peer_exchange/ on Spokes (silent on Hub)."""
+    if not (spoke_root / ".git").exists():
+        return []
+    origin = _run_git_ro(spoke_root, ("remote", "get-url", "origin"))
+    if origin is not None and "ccba-agent-platform" in origin.lower():
+        return []
+    listed = _run_git_ro(spoke_root, ("ls-files", ".md/peer_exchange/"))
+    if listed is None:
+        return []
+    drafts = [
+        line.strip()
+        for line in listed.splitlines()
+        if line.strip() and Path(line.strip()).name not in _PEER_EXCHANGE_TRACKED_ALLOWLIST
+    ]
+    return sorted(drafts)

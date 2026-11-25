@@ -874,6 +874,15 @@ def scan_spoke_cleanliness(
     has_errors = _append_guardrail_manifest_violations(spoke_root, messages) or has_errors
     has_errors = _append_agents_debris_violations(spoke_root, messages) or has_errors
     has_errors = _append_living_doc_violations(spoke_root, messages) or has_errors
+    draft_fn = getattr(_CLEANLINESS_SEAM, "find_tracked_peer_exchange_drafts", None)
+    drafts = draft_fn(spoke_root) if callable(draft_fn) else []
+    if drafts:
+        has_warnings = True
+        head = ", ".join(drafts[:4])
+        messages.append(
+            f"⚠️  [Peer Exchange Git Hygiene] {len(drafts)} tệp nháp bị Git track ({head}); "
+            "hãy chạy `git rm --cached`."
+        )
     return (1 if has_errors or (strict and has_warnings) else 0), messages
 
 

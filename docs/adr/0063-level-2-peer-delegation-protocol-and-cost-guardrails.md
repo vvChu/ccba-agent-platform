@@ -1,18 +1,18 @@
 # HUB-ADR 0063: Level-2 Peer Agent Delegation Protocol and Cost Guardrails (Grok ↔ Antigravity)
 
-- **Trạng thái**: ✅ ACCEPTED
+- **Trạng thái**: ✅ ACCEPTED *(Cập nhật v2.6 ngày 2026-11-25)*
 - **Ngày quyết định**: 2026-10-05
 - **Tác giả**: CCBA Core Architecture & Antigravity Agent
-- **Người phản biện**: Grok Peer Reviewer (`APPROVE_WITH_CONDITIONS`, req-level2-discuss-001)
-- **Tương thích**: ADR-0007 (Peer Exchange), ADR-0009 (Pstack Disciplines), ADR-0058 (Live Collaboration), ADR-0061 (Platform-Aware KISS v2), ADR-0062 (Declarative Sync Registry)
+- **Người phản biện**: Grok Peer Reviewer (`APPROVE_WITH_CONDITIONS`, req-level2-discuss-001; `APPROVE_PLAN` v2.6, `3ed0be38`)
+- **Tương thích**: ADR-0007 (Peer Exchange), ADR-0009 (Pstack Disciplines), ADR-0058 (Live Collaboration), ADR-0061 (Platform-Aware KISS v2), ADR-0062 (Declarative Sync Registry), ADR-0064..0067
 
 ---
 
 ## 1. Bối Cảnh (Context)
 
-Trong đợt nâng cấp ADR-0062 vừa qua, mô hình cộng tác giữa **Antigravity (Orchestrator)** và **Grok CLI (Reasoning & Implementation Engine)** đã chứng minh hiệu quả phân tầng vượt trội: Antigravity gánh 100% các công việc Git/PR/CI/Verification, Grok tập trung vào logic và code TDD.
+Trong đợt nâng cấp ADR-0062 vừa qua và xuyên suốt **57 ngày vận hành thực tế (`2026-09-29` → `2026-11-24`, `1,072` biên bản trên 7 repo)**, mô hình cộng tác đã hội tụ rõ nét về kiến trúc **"Antigravity Build + Grok Adversarial Gatekeeper"**: Antigravity gánh toàn bộ thiết kế, viết mã, Git/PR/CI và verification, còn Grok chuyên trách thẩm định phản biện kế hoạch (`audit_plan`), kiến trúc (`arch_audit`), nghiệm thu delta (`signoff_diff`) và review mã nguồn (`code_review`) với `99.4%` lưu lượng chạy theo luồng Gatekeeper (chi phí trung vị chỉ `\$0.52`/chuỗi nhờ `80.6%` Prefix KV-Cache). Các nhánh ủy thác viết mã (`agentic_code`, `patch_fast` dùng `qwen-local`) gần như không phát sinh trong vận hành thực tế nên được hạ cấp thành **tùy chọn / thực nghiệm** thay vì KPI bắt buộc.
 
-Tuy nhiên, khi đối soát chi phí thực tế qua `grok usage`:
+Tuy nhiên, trong giai đoạn khởi đầu trước khi có trần turns (`grok usage`):
 - Chuỗi 4 phiên tiêu tốn **$10.49 USD** cho **151 model calls** (Planning: $4.87, PR-1: $2.51, PR-2: $1.19, PR-3: $1.92).
 - Mặc dù prompt caching của xAI đạt 91–95%, nhưng do Grok CLI chạy ở chế độ ReAct loop không trần vòng lặp (`--max-turns` vô hạn), Grok tự kích hoạt từ 30 đến 54 calls/PR (tự scan thư mục, đọc từng đoạn file lặp lại, chạy pytest nhiều lần).
 - Đồng thời, Grok CLI trên hệ thống đã được tích hợp sẵn sàng với **AI Gateway (Server Spark :8090)** và cụm GPU **DGX Spark Blackwell GB10**, cung cấp các mô hình:
@@ -25,15 +25,15 @@ Tuy nhiên, khi đối soát chi phí thực tế qua `grok usage`:
 
 ## 2. Quyết Định Kiến Trúc (Decision)
 
-Hệ thống thiết lập **Level-2 Peer Agent Delegation Protocol (ADR-0063)** với 4 trụ cột cốt lõi:
+Hệ thống thiết lập **Level-2 Peer Agent Delegation Protocol (ADR-0063)** với trọng tâm chính thức là **Antigravity Build + Grok Adversarial Gatekeeper**, gồm 4 trụ cột kỹ thuật (xem thêm `ADR-0064..0067` cho 8 profiles chuẩn hóa đầy đủ):
 
-### 2.1. Phân Tầng 3 Execution Profiles Chuẩn Hóa
+### 2.1. Phân Tầng Execution Profiles Cốt Lõi (Gatekeeper Chính + Coding Tùy Chọn)
 
 | Profile | Model CLI (`-m`) | Trần Turns | Danh Mục Tool Cho Phép | Nhiệm Vụ & Ranh Giới |
 | :--- | :--- | :---: | :--- | :--- |
-| **`AUDIT_PLAN`** | `grok-4.7` (high/xhigh). *Fallback*: `gemini-38-flash` / `claude-opus-4-6` | **12** | `read_file`, `grep`, `list_dir` *(Chặn terminal, write, subagent)* | Thẩm định kiến trúc, lập plan, rà soát pháp lý |
-| **`AGENTIC_CODE`** | `grok-4.7-build-fast` hoặc `claude-sonnet-4-6` | **8** | Đọc file, `search_replace`, scoped `pytest` | Viết mã logic theo test đỏ TDD có sẵn |
-| **`PATCH_FAST`** | `qwen-local` (0 USD) hoặc `grok-4.7-build-fast` | **1** | **Không dùng tool** (`--max-turns 1`) | Sinh Anchor Replacement cho task nhỏ $\le 100$ LOC |
+| **`AUDIT_PLAN`** *(Chính)* | `grok-4.7` (`xhigh`). *Fallback*: `gemini-38-flash` | **9** | `read_file`, `grep`, `list_dir` *(Chặn terminal, write, subagent)* | Thẩm định kế hoạch, kiến trúc, rà soát pháp lý (kèm Bản đồ `file:line` & batching song song) |
+| **`AGENTIC_CODE`** *(Tùy chọn)* | `grok-4.7-build-fast` hoặc `claude-sonnet-4-6` | **8** | Đọc file, `search_replace`, scoped `pytest` | Tùy chọn: viết mã logic theo test đỏ TDD có sẵn khi cần ủy thác cục bộ |
+| **`PATCH_FAST`** *(Tùy chọn)* | `qwen-local` (0 USD) hoặc `grok-4.7-build-fast` | **1** | **Không dùng tool** (`--max-turns 1`) | Tùy chọn thực nghiệm: sinh Anchor Replacement cho task nhỏ $\le 100$ LOC |
 
 ### 2.2. Hợp Đồng Neo Cho 1-Turn Patch Mode (Anchor Replacement Contract)
 
@@ -82,8 +82,8 @@ Bộ áp dụng `apply_anchor_patch()` thực hiện kiểm chứng nghiêm ng�
 ## 3. Hệ Quả & Đánh Giá (Consequences)
 
 ### 3.1. Điểm Tích Cực
-- **Giảm 85% – 100% Chi Phí Viết Mã (Coding Cost)**: Đưa các thay đổi nhỏ sang `qwen-local` (0 USD) trên DGX Spark GB10 hoặc khống chế trần 8 turns trên `grok-4.7-build-fast`.
-- **Ngăn Chặn Bão Token**: Trần cứng 8 turns chặn đứng nguy cơ ReAct loop lặp 30–54 calls vô tận.
+- **Hiệu Quả Kinh Tế Gatekeeper Tối Ưu**: Với Prefix KV-Cache `> 80%` và trần 8–9 turns (`audit_plan = 9`, `arch_audit = 8`, `signoff_diff = 8`, `code_review = 8`), chi phí trung vị mỗi chuỗi đa vòng chỉ `~$0.52 USD` trong khi giữ nguyên khả năng bắt lỗi chặn sâu (các chế độ tùy chọn `qwen-local`/`PATCH_FAST` vẫn sẵn sàng khi cần).
+- **Ngăn Chặn Bão Token**: Trần cứng 8–9 turns kết hợp 2 pha `Explore-Then-Synthesize` chặn đứng nguy cơ ReAct loop lặp 30–54 calls vô tận.
 - **Tính Tất Định Tuyệt Đối**: Hợp đồng neo SHA-256 triệt tiêu hoàn toàn lỗi lệch dòng khi áp patch code tự động.
 - **Bảo Toàn Vai Trò Giám Sát**: Antigravity giữ quyền điều phối git, branch, claim lock, và cưỡng chế `verify-patch` (ADR-0058).
 
