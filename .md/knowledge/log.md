@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-24] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q5`) & Thẩm Định Peer Audit Nâng Cấp Peer Collaboration `v2.6`
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` Peer Collaboration `v2.6`)
+- **Affected Files**: [decisions/2026-11-24_peer_collaboration_v26_grilling_resolution.md](decisions/2026-11-24_peer_collaboration_v26_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất vòng phỏng vấn `/ccba-grilling` (`Q1`–`Q5`) dựa trên bằng chứng đối soát `1,072` biên bản trên 7 repo & `1,224` phiên `~/.grok/sessions/` và **Grok Peer Plan Audit 2 Pass** (`APPROVE_PLAN`, `risk_score: 2`, `blocking_conditions: 0`, sessions `a5b1d735-c8d8-4960-9cb9-9001bbd9e810` / `3ed0be38-746a-4780-8a27-c51c4382b192`): chốt 2 Atomic Micro-PRs (`PR-1` hạ `audit_plan` `12 -> 9` turns + ép batch tool & khóa `blocking: true` 4 nhóm lỗi thật trong `_peer_watchdog.py` / `peer.py`, sửa FinOps chiết khấu `cachedReadTokens` trong `telemetry.py` / `_peer_telemetry.py`, chuyển `code_review` sang `grok-4.7` `high` `8`t `450s` giữ fallback `grok-4.7-build-fast`; `PR-2` cập nhật `ADR-0063..0065`, `execution_coordination_guardrails.md`, `PEER_HANDSHAKE.md`, `README.md`, và thêm `find_tracked_peer_exchange_drafts` vào `_parameter_cleanliness.py` / `check_spoke_cleanliness.py` $\le 941$ LOC) cùng `Phase 3` `sync_spoke.py --all --apply` & `git rm --cached` an toàn trên 5 Spoke. Đang chờ lệnh `proceed` trước khi chỉnh sửa mã sản xuất.
+
+---
+
 ## [2026-11-24] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Phân Tách `/ccba-create-pr` & `/ccba-contribute-to-hub`, Đồng Bộ Global Skill & 7 Harness (`PR #897..#900`, `RULE-1.26`, `RULE-2.21`, `RULE-4.16`, Mục 75)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
 - **Affected Files**: [session_learnings.md](session_learnings.md), [archive/session_learnings_history.md](archive/session_learnings_history.md), [log.md](log.md)

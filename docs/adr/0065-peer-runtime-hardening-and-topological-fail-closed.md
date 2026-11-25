@@ -81,9 +81,9 @@ ADR-0065 thiết lập 4 quy chuẩn cương xương kỹ thuật nhằm giải 
 
 ### 2.7. Chuẩn Hóa Thang Đo Ticks Telemetry ($10^{10}$) & Biểu Phí Động Phân Tầng
 - **Sửa lỗi hệ số chia ticks**: Thay đổi ước số tính toán `cost_usd` từ `costUsdTicks` của xAI CLI từ `10_000.0` sang hằng số chuẩn `10_000_000_000.0` ($10^{10}$ ticks = $1.00 USD), khắc phục triệt để hiện tượng chi phí hiển thị bị phóng đại $10^6$ lần.
-- **Biểu phí động phân tầng (`resolve_model_token_rates`)**:
-  - Gán biểu phí `(0.0, 0.0)` ($0.00 USD) cho các mô hình chạy GPU cục bộ trên máy chủ DGX Spark Blackwell GB10 (`qwen-local-*`, `local-*`).
-  - Fallback an toàn về biểu phí nền tảng ($1.25 input / $5.00 output cho 1M tokens) đối với các mô hình định tuyến qua Cloud/Gateway.
+- **Biểu phí động phân tầng có chiết khấu cache (`resolve_model_token_rates_detailed`)**:
+  - Kiểm tra GPU cục bộ trước (`qwen-local*`, `local*` $\to$ `(0.0, 0.0, 0.0)`), kế tiếp các họ Gateway khai báo (`flash` `(0.30, 0.075, 2.50)`, `sonnet` `(3.00, 0.30, 15.00)`).
+  - Fallback an toàn về biểu phí nền tảng `(1.25, 0.3125, 5.00)` (input / cached-read / output cho 1M tokens) đối với các mô hình khác, và luôn khấu trừ `cachedReadTokens` khỏi `inputTokens` khi tính nhánh `estimated`.
 - **Chuẩn hóa sổ cái lịch sử**: Kịch bản `scripts/governance/normalize_peer_telemetry_costs.py` tự động di trú 21 tệp trao đổi lịch sử trong `.md/peer_exchange/`, đưa tổng chi phí thực tế toàn sàn về con số chính xác $7.5809 USD.
 
 ---

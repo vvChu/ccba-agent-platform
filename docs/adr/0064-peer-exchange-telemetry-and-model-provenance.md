@@ -74,8 +74,8 @@ class PeerVerdictBlock(BaseModel):
 - Lệnh gọi Grok được gán `--session-id <uuid>`. Sau khi tiến trình Grok hoàn tất, harness gọi `grok usage <session_id>`.
 - **Bounded Retry Loop**: Thử lại tối đa 2 lần (khoảng cách 100ms) trong ngân sách 3.0 giây để phòng ngừa độ trễ I/O đóng tệp của Grok daemon trên các hệ thống tệp có tải cao.
 - **Phân định nguồn gốc chi phí (COND-2)**:
-  + Nếu có trường `costUsdTicks` (native models): tính `cost_usd = costUsdTicks / 10000.0`, gán `cost_mode = "exact"`.
-  + Nếu khuyết `costUsdTicks` (gateway models): áp dụng biểu giá từ `ccba_harness.telemetry` (`PRICE_PER_M_INPUT`, `PRICE_PER_M_OUTPUT`), gán `cost_mode = "estimated"`.
+  + Nếu có trường `costUsdTicks` (native models): tính `cost_usd = costUsdTicks / 10_000_000_000.0` ($10^{10}$ ticks = `$1.00` USD, ngoại trừ local GPU = `0.0`), gán `cost_mode = "exact"`.
+  + Nếu khuyết `costUsdTicks` (gateway models): áp dụng biểu giá phân tầng theo họ model từ `ccba_harness.telemetry.resolve_model_token_rates_detailed()` kèm chiết khấu `cachedReadTokens` (lưu ý `cachedReadTokens` là tập con nằm trong `inputTokens`, nên `uncached_in = inp - min(cached, inp)` nhân giá uncached và phần `cached` nhân giá cache-read), gán `cost_mode = "estimated"`.
 - **Cơ chế suy thoái nhẹ nhàng (COND-1)**: Nếu lệnh CLI gặp lỗi, timeout $\ge 3.0$s hoặc phiên không tồn tại, tự động fallback sang `TokenEstimator.estimate_text()` trên nội dung prompt & response trong bộ nhớ, gán `cost_mode = "estimated"`. Tuyệt đối không làm gián đoạn luồng phán quyết chính.
 
 ### 2.3. Cưỡng Chế Vòng Đời Headless & Triệt Tiêu Treo Terminal (Zero-Hang Invariant)

@@ -412,3 +412,53 @@ def test_session_debris_md_scripts_and_systemd_service_scanning(tmp_path: Path) 
     systemd_unit.write_text("[Service]\nWorkingDirectory=@PROJECT_ROOT@\n", encoding="utf-8")
     rc_clean, _ = scan_spoke_cleanliness(tmp_path)
     assert rc_clean == 0
+
+
+def test_peer_exchange_git_hygiene_spoke_vs_hub_and_strict(tmp_path: Path) -> None:
+    """Warns on git-tracked .md/peer_exchange drafts on Spokes, silent on Hub and allowlist."""
+    import subprocess
+
+    from scripts.spoke.check_spoke_cleanliness import scan_spoke_cleanliness
+
+    def _git(repo: Path, *args: str) -> None:
+        subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+
+    # 1. Non-git tmp_path stays clean
+    (tmp_path / "non_git" / ".md" / "peer_exchange").mkdir(parents=True)
+    (tmp_path / "non_git" / ".md" / "peer_exchange" / "prompt_grok_x.md").write_text("hi")
+    rc_nongit, msgs_nongit = scan_spoke_cleanliness(tmp_path / "non_git", strict=True)
+    assert rc_nongit == 0
+    assert not any("Peer Exchange Git Hygiene" in m for m in msgs_nongit)
+
+    # 2. Spoke git repo with allowlisted files only -> clean even under strict=True
+    spoke = tmp_path / "spoke_repo"
+    (spoke / ".md" / "peer_exchange").mkdir(parents=True)
+    _git(spoke, "init")
+    _git(spoke, "config", "user.email", "test@ccba.local")
+    _git(spoke, "config", "user.name", "Test")
+    for fname in ("PEER_HANDSHAKE.md", "README.md", ".gitkeep"):
+        (spoke / ".md" / "peer_exchange" / fname).write_text("ok\n", encoding="utf-8")
+    _git(spoke, "add", ".md/peer_exchange/")
+    _git(spoke, "commit", "-m", "init allowlist")
+
+    rc_allow, msgs_allow = scan_spoke_cleanliness(spoke, strict=True)
+    assert rc_allow == 0
+    assert not any("Peer Exchange Git Hygiene" in m for m in msgs_allow)
+
+    # 3. Spoke tracking a draft file -> warn (exit 0 default, exit 1 --strict)
+    (spoke / ".md" / "peer_exchange" / "prompt_grok_secret.md").write_text("secret\n")
+    _git(spoke, "add", ".md/peer_exchange/prompt_grok_secret.md")
+    _git(spoke, "commit", "-m", "track draft")
+
+    rc_warn, msgs_warn = scan_spoke_cleanliness(spoke, strict=False)
+    assert rc_warn == 0
+    assert any("Peer Exchange Git Hygiene" in m for m in msgs_warn)
+
+    rc_strict, _ = scan_spoke_cleanliness(spoke, strict=True)
+    assert rc_strict == 1
+
+    # 4. Hub repo (origin contains ccba-agent-platform) stays silent
+    _git(spoke, "remote", "add", "origin", "https://github.com/vvChu/ccba-agent-platform.git")
+    rc_hub, msgs_hub = scan_spoke_cleanliness(spoke, strict=True)
+    assert rc_hub == 0
+    assert not any("Peer Exchange Git Hygiene" in m for m in msgs_hub)
