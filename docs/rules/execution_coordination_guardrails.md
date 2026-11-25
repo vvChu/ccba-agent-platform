@@ -122,10 +122,9 @@ python scripts/governance/compile_catalog.py --in <input_types> --out <output_ty
 - Mọi Pull Request mã nguồn logic nghiệp vụ phải khống chế trong ngân sách **$\le 200$ LOC diff** (không tính tests và `.md`) và tác động tối đa **1 Public Deep Seam** mỗi PR.
 - Các PR chạm vào 7 danh mục Cửa Một Chiều (`door_policy.py`) hoặc vượt chuỗi tích lũy $K \ge 3$ PRs `"PAVED_ROAD"` trong 72h trên cùng `packages/<pkg>` bắt buộc đính kèm **Tradeoff Card** (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference` $\le 30$ dòng) được kiểm định tự động qua `ccba-harness door-triage` (`backpressure.py`).
 
-### 19.2. Rào Chắn AI Review Chỉ Đọc & 10 Invariants Kiểm Tra Tự Động (`.github/bugbot-rules.md`)
-- Các AI Reviewers tự động (Bugbot, Copilot Reviewer) chỉ vận hành ở chế độ **Chỉ Đọc & Tư Vấn (Read-Only Advisory)** — nghiêm cấm tự động gửi trạng thái `"APPROVE"` hoặc auto-merge mã nguồn.
-- Toàn bộ 10 quy tắc kiểm tra tự động (từ Invariant #1 Seam Reuse đến Invariant #10 Atomic Micro-PR) được định nghĩa đầy đủ tại SSOT [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md).
-- **Chống bão Quota:** AI Review trên PR chỉ kích hoạt opt-in qua nhãn `ai-review-requested` hoặc lệnh `/ccba-ai-review` (bỏ qua PR của bots) sau khi đã lọc qua `redact_secrets_in_text`.
+### 19.2. Rào Chắn AI Review Chỉ Đọc & Mô Hình Lai `$0/tháng` (`.github/bugbot-rules.md` SSOT)
+- Các AI PR Reviewers (CodeRabbit trên repo `PUBLIC` qua `.coderabbit.yaml`, hoặc Grok `code_review` cho Spoke `PRIVATE`/local) vận hành ở chế độ **Read-Only Advisory** — cấm tự gửi `"APPROVE"` hay auto-merge; 10 invariants SSOT nằm tại [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md).
+- Kiểm toán hậu-PR qua `audit_pr_comments.py` nhận cả `coderabbitai[bot]` & `copilot` (kiểm `Actionable comments posted: [1-9]\d*` trước marker tóm tắt), trả `NO_AI_REVIEW` + `[WARN]` (`exit 0` mặc định; `--require-review` $\to$ `exit 3`). PR `fix:` vá lỗi từ PR tiền nhiệm (`Escaped-From-PR: #<id>`) bắt buộc kèm $\ge 1$ regression test/static guard cho `verify-patch` (`Incident-to-Eval`).
 
 ---
 
@@ -162,6 +161,8 @@ Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc C
   2. **`[ADOPT_ADAPTED]`:** Trích dẫn điều kiện gốc cạnh ràng buộc `file:line` của linter/guardrail nội bộ và phương án hiệu chỉnh.
   3. **`[REBUT_WITH_EVIDENCE]`:** Giả định lệch mã nguồn hoặc gợi ý ngoài phạm vi/vi phạm KISS/ADR — trích dẫn `file:line` phản biện thẳng thắn tại vòng `signoff_diff`.
 - **Chốt chặn Zero-Blocking & Trần Hội Tụ 3 Vòng (`Max 3 Passes`):** Chừng nào `blocking_conditions > 0` (kể cả khi `verdict` là `APPROVE_WITH_CONDITIONS`), sau khi cập nhật theo bảng thẩm định §20.3, Agent **bắt buộc** chạy vòng `--profile signoff_diff --resume <session_id> --fork-session` tối đa đến hết **Pass 3**. Chỉ trình User xin `proceed` khi `blocking_conditions == 0` hoặc sau **Pass 3** (leo thang Taste-Holder kèm đối chứng `file:line`).
+
+- **Ngưỡng `peer-co-review` & Đo lường A/B:** Mặc định dùng đơn luồng `peer-dispatch`; chỉ bật `ccba-harness peer-co-review --profiles code_review arch_audit` cho hậu-code của `AUTHZ_SECURITY`, `SCHEMA_MIGRATION` hoặc `CROSS_SPOKE_CONTRACT` với diff `> 200 LOC`. Đo `Pre/Post-v2.6` & *Escaped Defects* 14 ngày qua `scripts/governance/audit_peer_effectiveness.py`.
 
 ### 20.4. Phong Bì Truy Vết Lineage & Bất Biến Pydantic "extra=forbid" (Grok COND-09 & ADR-0067)
 - **Bảo Vệ Chuỗi Parse & KV-Cache (`extra="forbid"` Invariant):** CẤM TUYỆT ĐỐI cấu hình `extra="ignore"` trên `PeerPromptEnvelope`. Do `parse_envelope_from_md` gọi `model_validate(raw)` trước, `extra="ignore"` sẽ nuốt mất alias `session_id` $\to$ `resume_session_id` ở các prompt Stage 3, làm gãy ngữ cảnh nối tiếp phiên trên Grok CLI.
