@@ -411,6 +411,37 @@ class TestAuditPRComments(unittest.TestCase):
         self.assertEqual(cm_strict.exception.code, 3)
         self.assertIn("[WARN]", stderr_strict.getvalue())
 
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments", return_value=[])
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_coderabbit_command_reply_benign_and_fail_closed(
+        self, mock_ov, _mock_in
+    ):
+        """Command-ack reply is CLEAN unless actionable>=1; plain reply fails closed."""
+        base_ack = (
+            "<!-- This is an auto-generated reply by CodeRabbit -->\n"
+            "<!-- CodeRabbit review command invocation: v2:abc -->\nReview finished."
+        )
+        cases = [
+            ("CR_ACK_CLEAN", base_ack, 0, "CLEAN"),
+            ("CR_ACK_ACT", f"{base_ack}\nActionable comments posted: 1", 1, "CHANGES_RECOMMENDED"),
+            (
+                "CR_PLAIN_REPLY",
+                "<!-- This is an auto-generated reply by CodeRabbit -->\nHere is a bug in line 10.",
+                1,
+                "CHANGES_RECOMMENDED",
+            ),
+        ]
+        for cid, body, expected_code, expected_status in cases:
+            with self.subTest(cid=cid):
+                mock_ov.return_value = {
+                    "reviewRequests": [],
+                    "reviews": [],
+                    "comments": [{"id": cid, "user": {"login": "coderabbitai"}, "body": body}],
+                }
+                code, res = audit_pull_request(906)
+                self.assertEqual(code, expected_code)
+                self.assertEqual(res["status"], expected_status)
+
 
 if __name__ == "__main__":
     unittest.main()

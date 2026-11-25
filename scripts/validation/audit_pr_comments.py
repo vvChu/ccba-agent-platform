@@ -236,13 +236,19 @@ def _has_coderabbit_actionable(body: str, state: str = "") -> bool:
 
 
 def _is_benign_coderabbit_summary(body: str, state: str = "") -> bool:
-    """Return True only for CodeRabbit walkthrough summaries with zero actionable items."""
+    """Return True only for benign CodeRabbit walkthrough, status, or command-ack comments."""
     if _has_coderabbit_actionable(body, state):
         return False
     lowered = body.lower()
-    return (
+    if (
         "auto-generated comment: summarize by coderabbit.ai" in lowered
         or "<!-- walkthrough_start -->" in lowered
+        or "auto-generated comment by coderabbit for review status" in lowered
+    ):
+        return True
+    return (
+        "auto-generated reply by coderabbit" in lowered
+        and "<!-- coderabbit review command invocation:" in lowered
     )
 
 
