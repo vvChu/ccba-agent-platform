@@ -1,0 +1,93 @@
+# Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai `v2.7`: Closed-Loop Measurement & Hybrid `$0/month` Advisory PR Review
+
+> **Ngày chốt Grilling:** `2026-11-25` | **Baseline Hub:** `main` @ `fd4a52dd` (hậu `PR #902` & `PR #903`) | **Trạng thái:** `PR-1 MERGED (#904 @ 222420ec) — PR-2 IN_PROGRESS`  
+> **Biên lai Đối soát Seam ([ADR-0061](../../../docs/adr/0061-platform-aware-kiss-v2-and-quarantine-governance.md)):**
+> - `.venv/bin/python scripts/ccba_platform_cli.py find-seam --in markdown,jsonl --out json,report --json` $\rightarrow$ `status: "NO_MATCH"` (`count: 0`, `index_sha256: 29d4ee1aa2efb369ce154585cd65e1c44ec31efed8ec4096a8f603b8944b6c49`)
+> - Tái sử dụng trực tiếp Public Deep Seam hiện hữu: `ccba_harness.peer.{parse_envelope_from_md, parse_verdict_from_md, extract_frontmatter}` ([`peer.py`](../../../packages/ccba-harness/src/ccba_harness/peer.py#L41-L42)), mở rộng phẫu thuật [`audit_pr_comments.py`](../../../scripts/validation/audit_pr_comments.py) (`371` LOC), và giữ nguyên `0` dòng sửa mã ở [`_peer_co_review.py`](../../../packages/ccba-harness/src/ccba_harness/_peer_co_review.py) (`370` LOC).
+> **Impact-Based Handoff Gate ([ADR-0067](../../../docs/adr/0067-one-way-door-manifest-and-backpressure-circuit-breaker.md)):** `ONE_WAY_DOOR` (`HUB_CONSTITUTION` — chạm `docs/rules/execution_coordination_guardrails.md`, `.agents/rules/release_gate.md`, và `covered_sha256` của `verify-ccba-create-pr/SKILL.md`) $\rightarrow$ đã qua **Grok Peer Plan Audit (`3` vòng tối đa theo `PEER_HANDSHAKE.md`, Pass 2 `APPROVE_PLAN`, Pass 3 Delta Q2 `APPROVE_WITH_CONDITIONS` `1` điều kiện `COND-07` & `COND-08` tiếp nhận `100% [ADOPT_AS_IS]`)**; dừng chờ lệnh `proceed` của người dùng trước khi sửa mã sản xuất hoặc ruleset GitHub.
+
+---
+
+## 1. Bước 0 — Mài Sắc Bài Toán & Bảng Kiểm Kê Trực Tiếp 7 Repos (`[đo thực tế — GitHub API]`)
+
+1. **Mục tiêu thực chất (`in-your-own-words`):** Khép kín vòng phản hồi chất lượng ở cả hai đầu SDLC (**Pre-Code Plan** + **Post-Code PR**) cho cơ chế hợp tác Antigravity ⟷ Grok (`v2.6`), đo lường định lượng hiệu quả sau `v2.6` (bao gồm *Escaped Defects*), và chuyển đổi tầng AI review PR sang kiến trúc lai **`$0/tháng`** phù hợp thực tế tài khoản GitHub Free (thay vì cố khôi phục Copilot Pro đã ngừng gia hạn).
+2. **Dữ kiện gốc kiểm chứng trực tiếp qua GitHub API trên Hub & 6 Spokes (`2026-11-25`):**
+
+| Repository | GitHub Slug | Visibility | Lần cuối Copilot review | Trạng thái GitHub Rulesets | Định hướng tầng PR Reviewer (`Q2` Mới) |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| **Hub: `ccba-agent-platform`** | `vvChu/ccba-agent-platform` | `PUBLIC` | `2026-10-12` (`PR #517`) | `#11593010` (`copilot_code_review` `active`) | Gỡ rule Copilot chết; cài **CodeRabbit Free** + `.coderabbit.yaml` |
+| **Spoke 1: `ccba-legal-knowledge`** | `vvChu/ccba-legal-knowledge` | `PUBLIC` | `2026-10-04` (`PR #30`) | `#23696513` (`copilot_code_review` `active`) | Gỡ rule Copilot chết; cài **CodeRabbit Free** + `.coderabbit.yaml` |
+| **Spoke 2: `IDOP-CCBA-WAY`** | `vvChu/idop-ccba-way` | `PRIVATE` | `2026-09-16` (`PR #6`) | `HTTP 403` *(yêu cầu GitHub Pro)* | **Grok `code_review`** + `verify-patch` *(không sync `.coderabbit.yaml`)* |
+| **Spoke 3: `dgx-spark-toolkit`** | `vvChu/dgx-spark-toolkit` | `PRIVATE` | `2026-10-10` (`PR #133`) | `HTTP 403` *(yêu cầu GitHub Pro)* | **Grok `code_review`** + `verify-patch` *(không sync `.coderabbit.yaml`)* |
+| **Spoke 4: `VvC_Notes`** | `vvChu/vvc-second-brain-scripts` | `PRIVATE` | `2026-10-12` (`PR #40`) | `HTTP 403` *(yêu cầu GitHub Pro)* | **Grok `code_review`** + `verify-patch` *(không sync `.coderabbit.yaml`)* |
+| **Spoke 5: `IBST_UNIFIED_ERP`** | *(local / non-GitHub)* | Local | `None` | `NO_GITHUB` | **Grok `code_review`** + `verify-patch` |
+| **Spoke 6: `ctymmt_ai_native_organization`** | *(local / non-GitHub)* | Local | `None` | `NO_GITHUB` | **Grok `code_review`** + `verify-patch` |
+
+3. **Các bất biến codebase đã kiểm chứng trực tiếp:**
+   - Lỗ hổng *False Green*: [`audit_pr_comments.py`](../../../scripts/validation/audit_pr_comments.py#L317-L323) trả `exit 0` + `CLEAN` khi mọi counter đều bằng `0`.
+   - Ràng buộc CLI & Provenance: [`test_audit_pr_comments.py`](../../../scripts/tests/test_audit_pr_comments.py#L168-L192) khóa `parse_cli_args()` 2-tuple; [`.github/pull_request_template.md`](../../../.github/pull_request_template.md) nằm trong `covered_sha256` của [`verify-ccba-create-pr/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md#L20-L32); [`execution_coordination_guardrails.md`](../../../docs/rules/execution_coordination_guardrails.md) dài `23,098` bytes (trần `RULE-1.25` `<= 24,576` bytes).
+   - Xác nhận từ User: **không gia hạn GitHub Pro / Copilot Pro** $\rightarrow$ loại bỏ Option C đồng loạt 6 Spoke và hủy hướng khôi phục Copilot.
+4. **Kiểm chứng độc lập bên ngoài (*outside check*):**
+   - `.venv/bin/python scripts/validation/audit_pr_comments.py --pr 902` $\to$ in `[WARN]` `NO_AI_REVIEW` (exit `0`), `--require-review` exit `3`, `--pr 517` đọc sạch dữ liệu Copilot lịch sử.
+   - `.venv/bin/python scripts/governance/audit_peer_effectiveness.py --format markdown` xuất báo cáo tất định Pre/Post-`v2.6`, `verify-patch --preset code`, và `run_harness_evals.py --all --ci-matrix` xanh 100%.
+
+---
+
+## 2. Bảng Chốt `5/5` Quyết Định Thiết Kế (`Q1`–`Q5`)
+
+| Mã | Chủ đề Frontier | Quyết định đã khóa | Căn cứ |
+| :---: | :--- | :--- | :--- |
+| **`Q1`** | **Phạm vi KISS 3 mũi nhọn** | Triển khai đồng thời: (1) Khung đo A/B hậu-`v2.6` + *Escaped Defects*, (2) Chuyển tầng Post-Code PR Reviewer sang kiến trúc lai `$0/tháng`, (3) Quy định ngưỡng hẹp cho `peer-co-review`; không xây Graph Indexer hay DB mới. | Thu thập số liệu đối chứng `v2.6` ngay từ run đầu tiên mà vẫn giữ tối giản hạ tầng. |
+| **`Q2`** | **Post-Code Advisory PR Reviewer (Đã xoay trục `$0/tháng`)** | Gỡ rule chết `copilot_code_review` khỏi 2 ruleset `PUBLIC` (`#11593010`, `#23696513`). Bật **CodeRabbit Free** cho `2` repo `PUBLIC` (`ccba-agent-platform` + `ccba-legal-knowledge`) qua `.coderabbit.yaml` gắn 10 invariants từ [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md) (SSOT); mở rộng [`audit_pr_comments.py`](../../../scripts/validation/audit_pr_comments.py) nhận diện cả `coderabbitai[bot]` & `copilot` (giữ `is_copilot_user()` tương thích ngược). `3` Spoke `PRIVATE` + `2` repo local dùng **Grok `code_review`** + `verify-patch`. | Tài khoản ở GitHub Free (`HTTP 403` trên Spoke private rulesets); giữ 3 họ model độc lập (Gemini + Grok + CodeRabbit) với `$0/tháng` cho repo Public. |
+| **`Q3`** | **Chuẩn đo A/B, *Escaped Defects* & *Incident-to-Eval*** | *Escaped Defect* = PR `fix:`/`revert` trong **14 ngày** vá lỗi PR code tiền nhiệm; truy vết 2 lớp (`Escaped-From-PR: #<id>` + `Prior-Reviewed-By:` trong PR template chỉ cho `fix:` chấp nhận `grok \| coderabbit \| copilot \| grok+coderabbit \| none`, kết hợp `git log` 14 ngày tách rõ `confirmed_tagged` vs. `candidate_untagged`); `Escaped-From-PR != none` bắt buộc kèm `>= 1` regression test/guard; viết `scripts/governance/audit_peer_effectiveness.py` đo 5 KPI `Pre/Post-v2.6` (cutoff `2026-11-25T07:08:00+07:00` @ `fd4a52dd`). | Đo lường khách quan chất lượng `v2.6` và khóa lỗi lặp bằng regression test tất định thay vì LLM replay đắt đỏ. |
+| **`Q4`** | **Vai trò `peer-co-review`** | **0 dòng Python sửa mới** ở `_peer_co_review.py`; thêm 3–4 dòng khuyến nghị `ccba-harness peer-co-review --profiles code_review arch_audit` cho hậu-code của `AUTHZ_SECURITY`, `SCHEMA_MIGRATION`, `CROSS_SPOKE_CONTRACT` khi diff `> 200 LOC`. | Bảo toàn Public Seam sẵn có mà không nhân đôi độ trễ cho task thường. |
+| **`Q5`** | **Khử *False Green* & Rollout** | `audit_pr_comments.py` trả `NO_AI_REVIEW` + `[WARN]` ra `stderr` khi có `0` review/comment (mặc định `exit 0`, `--require-review` trả `exit 3`). Cập nhật ruleset chỉ cho `2` repo `PUBLIC`; đồng bộ Layer-2 rules & `PEER_HANDSHAKE.md` xuống 6 Spokes qua `sync_spoke.py --all --apply` (tuyệt đối không sync `.coderabbit.yaml` xuống Spoke `PRIVATE`). | Duy trì Read-Only Advisory Fail-Open không chặn merge khẩn và triệt tiêu điểm mù "xanh giả". |
+
+---
+
+## 3. Thẩm Định Độc Lập Ngang Hàng (`Grok Peer Plan Audit — ADR-0067`, Đạt Trần `Max 3 Passes`)
+
+| Vòng | Profile | Session ID | Phán quyết | Risk | Blocking | Chi phí / Thời gian | Tóm tắt Kết quả |
+| :---: | :--- | :--- | :---: | :-: | :-: | :---: | :--- |
+| **Pass 1** | `audit_plan` | `46854cf9-6337-461c-be0e-521d62de0056` | `APPROVE_WITH_CONDITIONS` | `3` | `2` | `\$0.2036` / `408.25s` | Khóa đường parse `--require-review` trong `main()` (`COND-01`) và hợp đồng UTC/`CombinedTelemetry.wall_seconds` (`COND-02`) + `COND-03..04`. |
+| **Pass 2** | `signoff_diff` | `8bbe8aea-881a-4a9e-a3e1-cac004ab88ff` | **`APPROVE_PLAN`** | `2` | **`0`** | `\$0.1428` / `174.22s` | Nghiệm thu sạch `COND-01..04`, bổ sung `COND-05..06` (`blocking: false`). |
+| **Pass 3** | `signoff_diff` *(Delta Q2)* | `58895492-cf37-442a-a89e-52211fb24b22` | `APPROVE_WITH_CONDITIONS` | `3` | `1` | `\$0.2113` / `192.34s` | Xác nhận kiến trúc lai CodeRabbit Free + Grok & `NO_AI_REVIEW`; bắt lỗ *False Green* nếu comment walkthrough chứa sẵn `Actionable comments posted: N` (`COND-07`) + `COND-08` (`blocking: false`). Cả `COND-07` & `COND-08` được tiếp nhận **100% `[ADOPT_AS_IS]`** theo trần `Max 3 Passes`. |
+
+### Ma trận Phân loại Điều kiện (`§20.3` 3-Label Triage Matrix)
+
+| ID | Vòng | Phân loại | Đối chứng mã nguồn (`file:line`) & Quyết định Áp dụng |
+| :--- | :---: | :--- | :--- |
+| `COND-01` | Pass 1 | `[ADOPT_AS_IS]` | [`audit_pr_comments.py`](../../../scripts/validation/audit_pr_comments.py#L64-L106): `main()` (`L342-344`) gọi `parse_cli_options()`, truyền `pr_number` và `require_review`; giữ `parse_cli_args()` 2-tuple + fail-closed cho [`test_audit_pr_comments.py`](../../../scripts/tests/test_audit_pr_comments.py#L168-L192); `get_current_pr_number(repo=None, pr_number=None)` trả ngay `pr_number` khi đã có; nhánh `counts == 0` chỉ đặt tại `return CLEAN` (`L317-323`) sau `PENDING` (`exit 2`) và `CHANGES_RECOMMENDED` (`exit 1`), in `[WARN]` ra `stderr` (exit `0` mặc định, `exit 3` khi `--require-review`). |
+| `COND-02` | Pass 1 | `[ADOPT_AS_IS]` | [`_peer_models.py`](../../../packages/ccba-harness/src/ccba_harness/_peer_models.py#L355-L423): Parse `verdict.timestamp` quy đổi UTC so với `--cutoff`, bỏ `mtime`, đẩy bản ghi thiếu/lỗi vào `undated_excluded`; khử trùng theo `request_id` (verdict thắng prompt); `CombinedTelemetry` đọc `wall_seconds`, `PeerVerdictTelemetry` đọc `duration_seconds`, Auto-Synthesis đọc `"max_turns_reached"` trong `events.jsonl`; `confirmed_tagged` chỉ đếm `Escaped-From-PR:\s*#(\d+)`; `candidate_untagged` loại high-churn (`AGENTS.md`, `*catalog*`, `*.lock`, `.github/`, `docs/rules/`, `.md/`). |
+| `COND-03` | Pass 1 | `[ADOPT_AS_IS]` | Thêm bộ đếm warn-only `confirmed_missing_regression_test` trong `audit_peer_effectiveness.py`, giữ `audit_pr_comments.py` `exit 0` mặc định. |
+| `COND-04` | Pass 1 | `[ADOPT_ADAPTED]` | Đo `wc -c` [`execution_coordination_guardrails.md`](../../../docs/rules/execution_coordination_guardrails.md) (`<= 24,576` B); cập nhật [`.agents/rules/release_gate.md`](../../../.agents/rules/release_gate.md#L16-L18); giữ nguyên [`.agents/skills/ccba-create-pr/SKILL.md`](../../../.agents/skills/ccba-create-pr/SKILL.md#L204-L206) (chỉ yêu cầu `exit code 0`); `PR-1` merge bằng `--merge --delete-branch` theo `RULE-2.21` vì cập nhật `covered_sha256` trong [`verify-ccba-create-pr/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md#L20-L32). |
+| `COND-05` | Pass 2 | `[ADOPT_AS_IS]` | `parse_cli_options()` tái dụng `_parse_positive_int`, `_validate_repo_slug`, `_assign_pr_number`; `get_current_pr_number()` không gọi `parse_cli_args()` khi `pr_number is not None`; giữ `--pr 0 -> SystemExit(1)` và zero-arg `get_current_pr_number()`. |
+| `COND-06` | Pass 2 | `[ADOPT_AS_IS]` | Chuẩn hóa hậu tố `"Z" -> "+00:00"` cho Python 3.10; fallback `turn_count >= 2` chỉ áp dụng cho `PeerVerdictTelemetry`; đọc đúng `"max_turns_reached"` trong `events.jsonl`; mẫu template & regex thống nhất `#123`. |
+| `COND-07` | Pass 3 *(blocking)* | **`[ADOPT_AS_IS]`** | Trên comment hội thoại của CodeRabbit, chạy regex `Actionable comments posted:\s*[1-9]\d*` và kiểm tra `state == "CHANGES_REQUESTED"` **trước** khi bỏ qua marker `auto-generated comment: summarize by coderabbit.ai` / `<!-- walkthrough_start -->`; chỉ coi là tóm tắt lành tính khi **cả hai** vắng mặt (`prc_cnt` vẫn đếm cả tóm tắt lành tính). Mọi body có `Actionable comments posted: 2` (dù nằm trong walkthrough) phải thành `CHANGES_RECOMMENDED` (`exit 1`) trừ khi đã khớp `check_if_resolved_in_code_or_walkthrough()` (`audit_pr_comments.py:210-213, 257`). Áp dụng đồng nhất cổng walkthrough cho `latest_by_bot` reviews, inline comments, và PR comments không lành tính; giữ predicate Copilot (`L204-206`) và `reviewRequests` nhận cả `copilot` lẫn `coderabbit` (`L271-273`). |
+| `COND-08` | Pass 3 | `[ADOPT_AS_IS]` | `.coderabbit.yaml` dùng `path_instructions` dạng list `{path, instructions}` và `path_filters` tiền tố `!`; đo `wc -c execution_coordination_guardrails.md <= 24,576`; `Phase 3` `GET` ruleset `#11593010` & `#23696513` chỉ xóa item `type == "copilot_code_review"` (nếu mảng rỗng thì disable/xóa thay vì `PUT rules: []`); không sync `.coderabbit.yaml` xuống Spoke `PRIVATE`; `Prior-Reviewed-By` chuẩn hóa 5 token `grok \| coderabbit \| copilot \| grok+coderabbit \| none`; tách helper để `_collect_unaddressed_reviews` giữ `<= 50` LOC. |
+
+---
+
+## 4. Kế Hoạch Triển Khai Chi Tiết (`PR-1` $\to$ `PR-2` $\to$ `Phase 3`)
+
+### 4.1. `PR-1` — CodeRabbit OSS Config, Multi-Bot `audit_pr_comments.py` & PR Template (`PAVED_ROAD`, Merge `--merge`)
+1. **`.coderabbit.yaml`** (tạo mới tại gốc Hub, không sửa `.github/copilot-instructions.md`, giữ [`.github/bugbot-rules.md`](../../../.github/bugbot-rules.md) làm SSOT):
+   - Schema v2, `reviews.profile: "chill"`, `request_changes_workflow: false`, `auto_review` (`enabled: true`, `drafts: false`, `auto_incremental_review: false`, `ignore_title_keywords: ["docs(walkthrough)", "WIP", "Draft", "[skip review]"]`), `path_filters` loại `.md/peer_exchange/**`, `.md/knowledge/reports/walkthrough.md`, `.md/extracted_docs/**`, và `path_instructions` (list `{path, instructions}`) ánh xạ 10 invariants từ `.github/bugbot-rules.md`.
+2. **[`scripts/validation/audit_pr_comments.py`](../../../scripts/validation/audit_pr_comments.py)** (`371 -> ~460` LOC; hàm `<= 50` LOC; `main <= 40` LOC):
+   - Giữ `is_copilot_user()`, thêm `is_coderabbit_user()` & `is_ai_reviewer_user()`.
+   - Tách helper `_review_has_actionable_changes(review, is_coderabbit)` để `_collect_unaddressed_reviews` (`latest_by_bot`) giữ `<= 50` LOC; áp dụng `COND-07` check-before-skip trên `_collect_unaddressed_pr_comments`, `reviewRequests` khớp `copilot`/`coderabbit`, đổi status 0-count sang `NO_AI_REVIEW` (`[WARN]` ra `stderr`, `exit 0` mặc định, `--require-review` trả `exit 3`) với đầy đủ `COND-01` & `COND-05`.
+3. **[`scripts/tests/test_audit_pr_comments.py`](../../../scripts/tests/test_audit_pr_comments.py)**: bổ sung tests cho `is_coderabbit_user`, `is_ai_reviewer_user`, CodeRabbit walkthrough lành tính (`CLEAN` `exit 0`), walkthrough kèm `Actionable comments posted: 2` (`CHANGES_RECOMMENDED` `exit 1` & biến thể resolved trong walkthrough `exit 0`), `Actionable comments posted: 0` (`CLEAN`), inline comment, `NO_AI_REVIEW` (`exit 0` / `--require-review` `exit 3`), `[WARN]` `stderr`, và bảo toàn `--pr 0 -> SystemExit(1)`.
+4. **[`.github/pull_request_template.md`](../../../.github/pull_request_template.md)** + re-anchor **[`packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md#L20-L32)**:
+   - Thêm `- **Escaped-From-PR**: \`none\` <!-- or #123 -->`, `- **Prior-Reviewed-By**: \`none\` <!-- grok | coderabbit | copilot | grok+coderabbit | none -->` dưới `## Type of Change`, checkbox `Incident-to-Eval` dưới `## Quality & CI Verification Checklist`, cập nhật đúng `covered_sha256[".github/pull_request_template.md"]`, và merge bằng `--merge --delete-branch` (`RULE-2.21`).
+
+### 4.2. `PR-2` — `audit_peer_effectiveness.py` & Guardrails (`ONE_WAY_DOOR`: `HUB_CONSTITUTION` + Tradeoff Card)
+1. **`scripts/governance/audit_peer_effectiveness.py`** (`<= 210` LOC, hàm `<= 50` LOC) & **`scripts/tests/test_audit_peer_effectiveness.py`** (`< 2s`):
+   - Tái dùng `parse_envelope_from_md` & `parse_verdict_from_md`, chuẩn hóa UTC Python 3.10+, dedup verdict thắng prompt theo `request_id`, tách `CombinedTelemetry.wall_seconds` vs. `PeerVerdictTelemetry.duration_seconds`, `"max_turns_reached"` trong `events.jsonl`, `confirmed_tagged` (hỗ trợ đủ 5 token `Prior-Reviewed-By`) vs. `candidate_untagged` (loại path churn trong 14 ngày), và warn-only `confirmed_missing_regression_test`.
+2. **[`docs/rules/execution_coordination_guardrails.md`](../../../docs/rules/execution_coordination_guardrails.md)** (`wc -c <= 24,576` B), **[`.agents/rules/release_gate.md`](../../../.agents/rules/release_gate.md#L16-L18)**, **[`.md/peer_exchange/PEER_HANDSHAKE.md`](../../../.md/peer_exchange/PEER_HANDSHAKE.md#L51-L80)**: đồng bộ mô hình lai `$0/tháng` (CodeRabbit Free trên 2 repo `PUBLIC` + Grok `code_review` trên `PRIVATE`/local Spokes), `NO_AI_REVIEW` exit `0`/`3`, `Incident-to-Eval`, ngưỡng `peer-co-review`, và `audit_peer_effectiveness.py`.
+3. **Tradeoff Card (`PR-2` — `ADR-0067`):** Bảo toàn `_peer_co_review.py` & `parse_cli_args()` 2-tuple, giữ `execution_coordination_guardrails.md <= 24,576` B, tách dữ kiện kiểm chứng khỏi heuristic `git log`; đánh giá lại sau 20–30 run `v2.6`.
+
+### 4.3. `Phase 3` — Vận Hành Hub + `ccba-legal-knowledge` & Outside Checks
+1. Gỡ rule `"type": "copilot_code_review"` khỏi `#11593010` (`vvChu/ccba-agent-platform`) và `#23696513` (`vvChu/ccba-legal-knowledge`) qua `gh api GET -> PUT` (giữ nguyên mọi rule khác).
+2. Cài `.coderabbit.yaml` gọn cho `vvChu/ccba-legal-knowledge` (bước riêng cho repo Public, không qua `sync_spoke.py`) và hướng dẫn User bấm **Install CodeRabbit App** (1-click) chỉ cho `2` repo `PUBLIC`.
+3. Chạy `python scripts/sync_spoke.py --all --apply` đồng bộ Layer-2 rules (`execution_coordination_guardrails.md`, `release_gate.md`) & `PEER_HANDSHAKE.md` xuống 6 Spokes (không sync `.coderabbit.yaml` xuống Spoke `PRIVATE`).
+4. Chạy Outside Checks: `audit_peer_effectiveness.py --format markdown`, `audit_pr_comments.py --pr 902` (`[WARN] NO_AI_REVIEW`, `exit 0`), `--pr 902 --require-review` (`exit 3`), `--pr 517`, `verify-patch --preset code`, và `run_harness_evals.py`.
