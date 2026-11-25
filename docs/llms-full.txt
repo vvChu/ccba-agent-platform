@@ -1481,7 +1481,7 @@ python scripts/validate_skills.py --file .agents/skills/ccba-append-only-logger/
 <!-- SKILL 15/77: ccba-ask -->
 # ccba-ask
 
-> **Mô tả ngắn**: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
+> **Mô tả ngắn**: Tư vấn định hướng kỹ năng theo trạng thái phiên, điều phối động não và giải thích đơn giản hóa.
 
 ---
 
@@ -1511,7 +1511,7 @@ python "$CCBA_HUB_PATH/scripts/sync_spoke.py" --spoke . --sync-item ccba-ask --a
 ## 2. Mục Đích & Rào Chắn Bất Biến (Defining Constraints)
 
 ### Mục Đích Hoạt Động
-Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát triển.
+Tư vấn định hướng kỹ năng theo trạng thái phiên, điều phối động não và giải thích đơn giản hóa.
 
 Kỹ năng này hoạt động như một giao diện nhận thức chuẩn mực cho AI Agent và kỹ sư, đảm bảo tính tất định và khả năng tái lập trong toàn bộ vòng đời dự án.
 

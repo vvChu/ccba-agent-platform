@@ -320,8 +320,8 @@ skills:
   posture: seam-exempt
 - name: ccba-ask
   bundle: _core
-  description: Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu
-    cầu phát triển.
+  description: Tư vấn định hướng kỹ năng theo trạng thái phiên, điều phối động não
+    và giải thích đơn giản hóa.
   triggers:
   - ccba-ask
   - tư vấn
