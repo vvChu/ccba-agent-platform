@@ -1349,8 +1349,15 @@ def test_pstack_registered_with_baseline_ledger_and_aliases() -> None:
     assert aliases["unslop"] == "ccba-code-review"
 
     pstack_entries = [e for e in gov["triage_ledger"] if e.get("source") == "pstack"]
-    assert len(pstack_entries) == 61
-    assert all(e.get("reviewed_sha") == "74bcc61b" for e in pstack_entries)
+    assert len(pstack_entries) == 62
+    baseline_pstack = [e for e in pstack_entries if e.get("upstream_path") != "reframe"]
+    reframe_entries = [e for e in pstack_entries if e.get("upstream_path") == "reframe"]
+    assert len(baseline_pstack) == 61
+    assert all(e.get("reviewed_sha") == "74bcc61b" for e in baseline_pstack)
+    assert len(reframe_entries) == 1
+    assert reframe_entries[0]["target"] == "ccba-ask"
+    assert reframe_entries[0]["status"] == "ADOPTED"
+    assert reframe_entries[0]["reviewed_sha"] == "2a562168"
     existing_skills, existing_workflows = get_existing_elements()
     dup, matched = check_is_duplicate("interrogate", existing_skills, existing_workflows)
     assert dup is True and matched == "ccba-code-review"
