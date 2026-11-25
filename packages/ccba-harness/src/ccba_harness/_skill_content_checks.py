@@ -41,7 +41,7 @@ COMMON_PATH_SEGMENTS: set[str] = set(
 )
 
 ALLOWED_HOST_COMMANDS: set[str] = set(
-    "/boost /browser /clear /compact /goal /grill-me /init /learn /schedule /ship /skill-repair /teamwork-preview /ui-ux-pro-max".split()
+    "/boost /browser /clear /compact /goal /grill-me /init /learn /plan /schedule /ship /skill-repair /swarm /teamwork /teamwork-preview /ui-ux-pro-max".split()
 )
 
 GITLAB_QUICK_ACTIONS: set[str] = set(

@@ -11,7 +11,7 @@ scope: universal
 posture: seam-exempt
 command: /ccba-knowledge-loop
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "CCBA Hub"
 triggers:
 - knowledge-loop
@@ -20,7 +20,9 @@ triggers:
 ---
 # Quy trình Vòng lặp Tri thức & Định hướng (/ccba-knowledge-loop)
 
-Quy trình này hướng dẫn Agent cách kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-ask/references/brainstorm_templates.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
+Quy trình này hướng dẫn Agent kết hợp đồng bộ 4 kỹ năng cốt lõi của CCBA Agent Services Platform: [YouTube-Learn](../ccba-youtube-learn/SKILL.md) (Trinh sát tri thức video), [Research](../ccba-research/SKILL.md) (Nghiên cứu ngầm), [Brainstorm](../ccba-ask/references/brainstorm_templates.md) (Hội chẩn giải pháp) và [Wayfinder](../ccba-wayfinder/SKILL.md) (Lập lộ trình) để giải quyết một bài toán kỹ thuật/nghiệp vụ lớn và mơ hồ (Foggy Problem) mà không gây block phiên làm việc hoặc làm tràn ngữ cảnh (token bloating).
+
+> **Ranh giới với [`/ccba-ask`](../ccba-ask/SKILL.md):** Dùng `/ccba-ask` (Chế độ B) cho phiên tư vấn/brainstorm gọn trong **1 phiên** với 1 URL YouTube hoặc 1 ghi chú đơn lẻ. Dùng `/ccba-knowledge-loop` khi cần **orchestrator đa nguồn / đa phiên**, chạy subagent nghiên cứu ngầm song song, nuôi kho tri thức dài hạn `.md/knowledge/wiki/` và điều phối Frontier Tickets trên `map.md`.
 
 ## 📋 Tiêu chí hoàn thành (Completion Criteria)
 
@@ -52,7 +54,7 @@ Khi đối mặt với yêu cầu mới hoặc vùng tri thức chưa được �
 
 ### Phase 2: Hội chẩn & Sáng tạo Phương án (Brainstorming)
 Sau khi có dữ liệu trinh sát, Agent cùng User thống nhất phương án triển khai thô:
-1. **Nạp tri thức:** Kích hoạt [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md). Đảm bảo các ghi chú và báo cáo nghiên cứu ở Phase 1 nằm trong thư mục `input_documents/` để làm nền tảng tri thức.
+1. **Nạp tri thức:** Kích hoạt [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md). Đọc trực tiếp các tệp ghi chú và báo cáo nghiên cứu sinh ra từ Phase 1 (hoặc đường dẫn ghi chú bên ngoài) tại chỗ — không bắt buộc sao chép sang `input_documents/` (chỉ dùng `input_documents/` tùy chọn khi cần chuyển đổi hàng loạt `.docx`/PDF).
 2. **Hybrid Rhythm:** Thực hiện thảo luận hai chiều tuân thủ nghiêm ngặt 4 nhịp:
    * **Prompt:** Agent đặt đúng 1 câu hỏi mở.
    * **User first:** Chờ user trả lời, giữ nguyên văn với tag `(user)`.
@@ -84,8 +86,9 @@ Giải quyết các Frontier Tickets và mở rộng bản đồ:
 2. **Tự động cập nhật:** Khi subagent nghiên cứu hoàn thành và xuất báo cáo (xác nhận file báo cáo thực sự tồn tại), Agent chính hấp thụ kết quả, đóng (close) ticket tương ứng, cập nhật vào mục **Quyết định đã chốt (Decisions so far)** trên bản đồ.
 3. **Mở rộng biên giới:** Dựa trên kết quả vừa chốt, chuyển đổi các vùng mờ trong mục *Not yet specified* thành các ticket Frontier mới.
 4. **Giải quyết vùng mờ đột xuất:** Nếu biên giới bản đồ gặp sương mù quá dày không thể tự quyết, Agent đề xuất chạy một phiên [/ccba-ask (brainstorm)](../ccba-ask/references/brainstorm_templates.md) mini với User để thống nhất hướng đi tiếp theo.
+5. **Vòng lặp Hậu Ma sát (After-Friction Hook — thích ứng từ `chief-of-staff`, MIT):** Sau khi chuyển tiếp kết quả của một ticket hoặc subagent từng gặp ma sát (workaround, thử lại nhiều lần, bị chặn bởi quy ước cũ), chủ động đề xuất 1 cải tiến môi trường/quy chuẩn gốc (interface hẹp hơn, lint rule, nguồn dữ liệu chẩn đoán hoặc sửa convention gốc) thay vì chắp vá tạm — mọi thay đổi công cụ/quy chuẩn đều chờ người dùng đồng ý trước khi ủy quyền triển khai.
 
-- **Tiêu chí hoàn thành:** Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết và lộ trình đạt tới Điểm đích hoàn toàn.
+- **Tiêu chí hoàn thành:** Mọi ticket trên bản đồ được chuyển sang trạng thái đóng (closed), không còn Frontier ticket nào chưa giải quyết, các cải tiến hậu ma sát (nếu có) đã được đề xuất cho người dùng và lộ trình đạt tới Điểm đích hoàn toàn.
 
 ## Progressive Disclosure & Reference Index (Level 3)
 

@@ -28,7 +28,7 @@ covered_sha256:
   packages/ccba-harness/src/ccba_harness/door_policy.py: "32f2d036d0e67dc892805a5bfc652b02a0a16860bf8cbb7422bc4d972952f908"
   packages/ccba-harness/src/ccba_harness/skill_validator.py: "83050cc32d1eb2e7e22a4489c651f3517fbb97c0431206b35063d1cb89b2709f"
   packages/ccba-harness/src/ccba_harness/_skill_frontmatter.py: "2d61abbd32b78d5ec462c34a3bb28d5e62849217cff1bf7e4b2c7ab8568ddcbc"
-  packages/ccba-harness/src/ccba_harness/_skill_content_checks.py: "3466c71af32907e62d59b9598b0df124730b008b7a0fe78e37a34886f6847c17"
+  packages/ccba-harness/src/ccba_harness/_skill_content_checks.py: "e3fd35f2994c5fb5600a44e088106b0faad528db5548a7f6fd71c4ad9f57a0c4"
   packages/ccba-harness/src/ccba_harness/_skill_gpi_gates.py: "c53cb5ea86b46351b0ebcfa02f126b7517be15f34c70a40d521da479c7c01546"
 verification_mode:
   - scaffold
