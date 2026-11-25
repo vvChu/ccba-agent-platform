@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# SSOT for CCBA architectural & code quality invariants remains .github/bugbot-rules.md
+language: "en-US"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: false
+    ignore_title_keywords:
+      - "docs(walkthrough)"
+      - "WIP"
+      - "Draft"
+      - "[skip review]"
+  path_filters:
+    - "!.md/peer_exchange/**"
+    - "!.md/knowledge/reports/walkthrough.md"
+    - "!.md/extracted_docs/**"
+  path_instructions:
+    - path: "packages/**"
+      instructions: |
+        Enforce CCBA Read-Only Advisory invariants (SSOT: .github/bugbot-rules.md):
+        - [RULE-01] SEAM_REUSE: Flag duplicate ad-hoc utilities when a Seam exists in .agents/skills/platform-loader/catalog.yaml.
+        - [RULE-02] DECOUPLED_CONNECTION: Keep connection clients (*_client.py, ccba_ai/ai.py) as pure leaf dependencies without upstream imports.
+        - [RULE-03] AST_SPAN_INSPECTION: Ensure bypass/quarantine comments cover the full multi-line AST node span.
+        - [RULE-04] MULTI_KEY_SORT: Forbid blanket reverse=True on mixed-order sorts; require explicit negation with round(score, 4).
+        - [RULE-05] INODE_INVARIANCE: Sort Path.glob()/os.scandir() results deterministically by unique stem before ingestion.
+        - [RULE-06] POSIX_PERMISSIONS: Preserve executable bit (stat.S_IXUSR) on chmod/atomic writes.
+        - [RULE-07] MACHINE_STATE_DECOUPLING: Flag unexempted hardcoded Windows/home paths or raw Tailscale IPs.
+        - [RULE-08] PRIVACY_MASKARA: Report exposed credentials or env leaks in source or logs.
+        - [RULE-09] VERIFIER_TEST_PARITY: Require unit test updates in packages/<pkg>/tests/ for new/changed public functions or Seams.
+        - [RULE-10] ATOMIC_MICRO_PR: Suggest slicing if non-test logic diff exceeds 300 LOC.
+    - path: "scripts/**"
+      instructions: |
+        Check determinism, Windows UTF-8 subprocess safety (encoding="utf-8", errors="replace"), AST function length <= 50 LOC,
+        zero hardcoded secrets/raw IPs/absolute Windows paths, and matching unit tests under scripts/tests/.
+    - path: "tests/**"
+      instructions: |
+        Verify deterministic offline execution (<2s fast unit tests), isolated tmp_path/monkeypatch usage, and no reliance on live external secrets.
+    - path: ".agents/skills/**"
+      instructions: |
+        Enforce GPI/Two-Stage Gate boundaries: deterministic Python belongs in packages/*/src (not skills); preserve repo-relative links (no file:///).

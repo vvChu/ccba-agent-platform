@@ -12,6 +12,10 @@
 - [ ] chore: Maintenance or dependency updates
 - [ ] ci: CI/CD pipeline or governance workflow changes
 
+<!-- Optional — fill ONLY for fix:/revert PRs patching a bug from a prior merged PR -->
+- **Escaped-From-PR**: `none` <!-- or #123 -->
+- **Prior-Reviewed-By**: `none` <!-- grok | coderabbit | copilot | grok+coderabbit | none -->
+
 ---
 
 ## Merge Danger Assessment
@@ -74,3 +78,4 @@ ccba-harness evaluate-gpi --file .agents/skills/<skill-name>/SKILL.md
 - [ ] **Type Safety**: python -m mypy passes on modified packages.
 - [ ] **Automated Tests**: pytest passes 100% for all affected modules.
 - [ ] **Hub-Spoke Compatibility**: Non-destructive merge and deprecation aliases preserved if renaming/retiring legacy skills.
+- [ ] **Incident-to-Eval (if Escaped-From-PR != none)**: Added >= 1 regression test or static guard verified by `verify-patch`.

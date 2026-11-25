@@ -6,6 +6,7 @@ and inline comments from GitHub Copilot.
 
 from __future__ import annotations
 
+import io
 import unittest
 from unittest.mock import patch
 
@@ -14,8 +15,11 @@ from scripts.validation.audit_pr_comments import (
     fetch_inline_comments,
     fetch_pr_overview,
     get_current_pr_number,
+    is_ai_reviewer_user,
+    is_coderabbit_user,
     is_copilot_user,
     parse_cli_args,
+    parse_cli_options,
     run_command,
 )
 from scripts.validation.audit_pr_comments import (
@@ -262,6 +266,150 @@ class TestAuditPRComments(unittest.TestCase):
         ):
             audit_main()
         self.assertEqual(cm.exception.code, 1)
+
+    def test_is_coderabbit_and_ai_reviewer_user(self):
+        """Test CodeRabbit and combined AI reviewer user detection."""
+        self.assertTrue(is_coderabbit_user({"login": "coderabbitai[bot]"}))
+        self.assertTrue(is_coderabbit_user({"login": "coderabbitai"}))
+        self.assertFalse(is_coderabbit_user({"login": "copilot-pull-request-reviewer"}))
+        self.assertTrue(is_ai_reviewer_user({"login": "coderabbitai[bot]"}))
+        self.assertTrue(is_ai_reviewer_user({"login": "copilot-pull-request-reviewer"}))
+        self.assertFalse(is_ai_reviewer_user({"login": "vvChu"}))
+
+    def test_parse_cli_options_require_review_keeps_legacy_parse_cli_args(self):
+        """parse_cli_options supports --require-review while parse_cli_args stays strict 2-tuple."""
+        self.assertEqual(
+            parse_cli_options(
+                ["--pr", "902", "--repo", "vvChu/ccba-agent-platform", "--require-review"]
+            ),
+            (902, "vvChu/ccba-agent-platform", True),
+        )
+        self.assertEqual(parse_cli_options(["--pr", "902"]), (902, None, False))
+        with self.assertRaises(ValueError):
+            parse_cli_args(["--pr", "902", "--require-review"])
+
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments")
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_coderabbit_summary_and_actionable_variants(self, mock_ov, mock_in):
+        """COND-07: benign CodeRabbit summary is CLEAN, but summary with Actionable>=1 fails unless resolved."""
+        mock_in.return_value = []
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [
+                {
+                    "id": "CR_REV_0",
+                    "author": {"login": "coderabbitai[bot]"},
+                    "state": "COMMENTED",
+                    "body": "Actionable comments posted: 0\n\nLooks clean.",
+                }
+            ],
+            "comments": [
+                {
+                    "id": "CR_SUM_BENIGN",
+                    "user": {"login": "coderabbitai[bot]"},
+                    "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- walkthrough_start -->\nSummary",
+                }
+            ],
+        }
+        code, res = audit_pull_request(910)
+        self.assertEqual(code, 0)
+        self.assertEqual(res["status"], "CLEAN")
+        self.assertEqual(res["pr_comments_count"], 1)
+
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [],
+            "comments": [
+                {
+                    "id": "CR_SUM_ACT_911",
+                    "user": {"login": "coderabbitai[bot]"},
+                    "body": (
+                        "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n"
+                        "<!-- walkthrough_start -->\nActionable comments posted: 2\nFix null guard."
+                    ),
+                }
+            ],
+        }
+        code, res = audit_pull_request(911)
+        self.assertEqual(code, 1)
+        self.assertEqual(res["status"], "CHANGES_RECOMMENDED")
+        self.assertEqual(len(res["pr_comment_issues"]), 1)
+
+        with patch(
+            "scripts.validation.audit_pr_comments.check_if_resolved_in_code_or_walkthrough",
+            return_value=True,
+        ):
+            code, res = audit_pull_request(911)
+        self.assertEqual(code, 0)
+        self.assertEqual(res["status"], "CLEAN")
+
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [
+                {
+                    "id": "CR_REV_2",
+                    "author": {"login": "coderabbitai[bot]"},
+                    "state": "COMMENTED",
+                    "body": "Actionable comments posted: 2\n\nPlease fix issue.",
+                }
+            ],
+            "comments": [],
+        }
+        code, res = audit_pull_request(912)
+        self.assertEqual(code, 1)
+        self.assertEqual(res["status"], "CHANGES_RECOMMENDED")
+
+        mock_ov.return_value = {"reviewRequests": [], "reviews": [], "comments": []}
+        mock_in.return_value = [
+            {
+                "id": "CR_INL_1",
+                "user": {"login": "coderabbitai[bot]"},
+                "path": "scripts/foo.py",
+                "line": 12,
+                "body": "Missing error check.",
+            }
+        ]
+        code, res = audit_pull_request(913)
+        self.assertEqual(code, 1)
+        self.assertEqual(len(res["inline_issues"]), 1)
+
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments")
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_no_ai_review_advisory_and_strict(self, mock_ov, mock_in):
+        """Zero AI comments/reviews yields NO_AI_REVIEW: exit 0 default, exit 3 with --require-review, [WARN] stderr."""
+        mock_ov.return_value = {"reviewRequests": [], "reviews": [], "comments": []}
+        mock_in.return_value = []
+
+        code, res = audit_pull_request(902)
+        self.assertEqual(code, 0)
+        self.assertEqual(res["status"], "NO_AI_REVIEW")
+
+        code_strict, res_strict = audit_pull_request(902, require_review=True)
+        self.assertEqual(code_strict, 3)
+        self.assertEqual(res_strict["status"], "NO_AI_REVIEW")
+
+        stderr_buf = io.StringIO()
+        stdout_buf = io.StringIO()
+        with (
+            patch("sys.argv", ["audit_pr_comments.py", "--pr", "902"]),
+            patch("sys.stderr", stderr_buf),
+            patch("sys.stdout", stdout_buf),
+            self.assertRaises(SystemExit) as cm_default,
+        ):
+            audit_main()
+        self.assertEqual(cm_default.exception.code, 0)
+        self.assertIn("[WARN]", stderr_buf.getvalue())
+        self.assertNotIn("[OK]", stdout_buf.getvalue())
+
+        stderr_strict = io.StringIO()
+        with (
+            patch("sys.argv", ["audit_pr_comments.py", "--pr", "902", "--require-review"]),
+            patch("sys.stderr", stderr_strict),
+            self.assertRaises(SystemExit) as cm_strict,
+        ):
+            audit_main()
+        self.assertEqual(cm_strict.exception.code, 3)
+        self.assertIn("[WARN]", stderr_strict.getvalue())
 
 
 if __name__ == "__main__":

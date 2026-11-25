@@ -20,7 +20,7 @@ metadata:
 sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
   .agents/skills/ccba-create-pr/SKILL.md: "937dead50240191648e97b739be4d938b13e6715dda2292215fe923dc439db34"
-  .github/pull_request_template.md: "70abccce9ce922f3aced6b306aea7e34a4b1c7a6b548ca7f10c4166e18d8b6db"
+  .github/pull_request_template.md: "0ba93316462fe7a08c4a637dbd6d80bf89a64f577319bc6d76c1735cb8f20918"
   scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
 verification_mode:
   - scaffold
