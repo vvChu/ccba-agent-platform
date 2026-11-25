@@ -25,7 +25,7 @@ Xem bản web trực quan tại [docs/index.html](../index.html) hoặc tóm t�
 | Kỹ Năng | Slash Command | Phân Tầng | Triệu Hồi | Tóm Tắt Nhiệm Vụ |
 | :--- | :--- | :--- | :--- | :--- |
 | [platform-loader](platform-loader.md) | `/platform-loader` | `kernel` | `Both` | Bootstrap skill cho CCBA Agent Services Platform. Đọc file này để biết toàn b... |
-| [ccba-ask](ccba-ask.md) | `/ccba-ask` | `kernel` | `User` | Tư vấn và định hướng lựa chọn kỹ năng hoặc workflow phù hợp với nhu cầu phát ... |
+| [ccba-ask](ccba-ask.md) | `/ccba-ask` | `kernel` | `User` | Tư vấn định hướng kỹ năng theo trạng thái phiên, điều phối động não và giải t... |
 | [ccba-handoff](ccba-handoff.md) | `/ccba-handoff` | `kernel` | `User` | Đóng gói và tổng hợp phiên làm việc hiện tại thành tài liệu Handoff chuẩn mực... |
 | [ccba-init-spoke](ccba-init-spoke.md) | `/ccba-init-spoke` | `kernel` | `User` | Khởi tạo một dự án (Spoke) tuân thủ kiến trúc CCBA Agent Platform |
 | [ccba-setup-skills](ccba-setup-skills.md) | `/ccba-setup-skills` | `kernel` | `User` | Thiết lập cấu hình dự án (Spoke/Hub) cho các công cụ kỹ thuật — cấu hình issu... |

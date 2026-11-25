@@ -6,13 +6,15 @@
 
 ## Hướng dẫn chọn kỹ thuật
 
-| Tình huống | Nhóm đề xuất |
-|------------|-------------|
-| Chủ đề mới, chưa có ý tưởng nào | Structured |
-| Đã có ý tưởng ban đầu, cần mở rộng | Creative |
-| Bí ý tưởng, cần phá vỡ lối mòn | Creative hoặc Provocative |
-| Cần đào sâu 1 hướng cụ thể | Deep Exploration |
-| Cần nhiều góc nhìn đa chiều | Collaborative |
+| Tình huống | Nhóm / Kỹ thuật đề xuất |
+|------------|-------------------------|
+| Chủ đề mới, chưa có ý tưởng nào | Structured (SCAMPER, Mind Mapping) |
+| Đã có ý tưởng ban đầu, cần mở rộng | Creative (Reversal, Analogical, What-if) |
+| Bí ý tưởng, cần phá vỡ lối mòn | Creative hoặc Reversal |
+| Người dùng đưa giải pháp định sẵn, cần kiểm tra bài toán gốc | Deep Exploration — **Problem-First Inversion** |
+| Bài toán mơ hồ thuật ngữ, cần ngôn ngữ chuyên gia liên ngành | Deep Exploration — **Expert Vocabulary Reframing (`Reframe`)** |
+| Cần đào sâu 1 hướng cụ thể | Deep Exploration (5 Whys, Question Storming, Assumption Mapping) |
+| Cần nhiều góc nhìn đa chiều | Collaborative (Role Playing / Party Mode, Round Robin) |
 
 ---
 
@@ -56,6 +58,24 @@ Thay vì sinh ý tưởng, sinh **câu hỏi** về chủ đề. Mục tiêu: 15
 ### Assumption Mapping (Liệt kê giả định)
 Liệt kê mọi giả định đang ngầm chấp nhận, sau đó thách thức từng cái: "Giả định này có đúng không? Nếu sai thì sao?" Phù hợp khi cần đánh giá lại nền tảng của dự án.
 
+### Problem-First Inversion (Đảo ngược Nhảy thẳng Giải pháp)
+> *Tổng hợp nguyên lý từ tư duy đảo ngược bài toán (`@nurijanian`).*
+
+Dùng khi phiên bắt đầu từ một tính năng/giải pháp đã bị ấn định sẵn (*"Cần xây tính năng X"*, *"Nên thêm công cụ Y?"*). Thay vì tranh luận ngay cách triển khai, thực hiện 4 bước bóc tách ngắn:
+1. **Giải nén bài toán gốc:** Tín hiệu, nỗi đau hoặc điểm nghẽn thực sự nào khiến đội ngũ muốn đề xuất giải pháp đó? Phát biểu lại bài toán mà **không nhắc tên giải pháp đề xuất**.
+2. **Đánh giá mức bằng chứng:** Phân loại trung thực độ tin cậy (`Chưa có / Cảm tính` $\to$ `Yếu / 1 phản hồi lẻ` $\to$ `Trung bình / Tín hiệu lặp lại` $\to$ `Mạnh / Dữ liệu định lượng + định tính`). Ý tưởng ở mức *Cảm tính* cần thí nghiệm rẻ trước khi cam kết xây dựng.
+3. **Ba khung nhìn thay thế (3 Alternative Framings):** Diễn giải cùng nỗi đau dưới 3 góc tiếp cận khác nhau (mỗi khung mở ra 1 không gian giải pháp riêng biệt).
+4. **Kế hoạch kiểm chứng tối thiểu:** Dữ liệu nào cần đo và điều kiện nào sẽ bác bỏ ý tưởng này?
+
+### Expert Vocabulary Reframing (`Reframe`)
+> *Thích ứng từ `reframe` của `backnotprop/pstack` (MIT License).*
+
+Dùng khi người dùng mô tả bài toán bằng ngôn ngữ phổ thông và cần hệ thuật ngữ kỹ thuật chuẩn để tìm đúng giải pháp hoặc ra lệnh chính xác cho AI Agent:
+1. **Phân định bài toán:** Nếu mô tả có thể khớp 2–3 lớp bài toán khác nhau, nêu rõ dấu hiệu phân biệt rồi chọn lớp khả dĩ nhất kèm lý do.
+2. **8–12 thuật ngữ chuyên gia xếp hạng theo tác động:** Với mỗi thuật ngữ, trình bày: nghĩa gọn trong 1 câu, phần mô tả tương ứng, 1 hệ thống/bài báo thực tế dùng đúng nghĩa đó (chỉ trích dẫn nguồn đã kiểm chứng), và cách dùng thuật ngữ đó để chỉ thị Agent chính xác hơn.
+3. **Mượn từ 2–3 ngành lân cận:** Chỉ ra ngành khác đã giải hình dạng bài toán tương tự dưới tên gọi nào, phần nào áp dụng được, và **điểm gãy của phép tương tự** ở đâu.
+4. **Điểm mù & Viết lại đề bài:** Nêu 1–3 yếu tố người dùng chưa nhắc nhưng mang tính sống còn, rồi viết lại bản mô tả bài toán bằng bộ thuật ngữ mới.
+
 ---
 
 ## Nhóm 4: Collaborative (Cộng tác đa vai)
@@ -76,6 +96,6 @@ Viết ý tưởng ra giấy (hoặc text) thay vì nói. Sau mỗi vòng, trao 
 Agent đọc file này khi cần gợi ý kỹ thuật cho phiên brainstorm. Chọn dựa trên:
 1. Bảng "Hướng dẫn chọn kỹ thuật" ở trên
 2. `suggested_techniques` trong `brainstorm_topics.yaml` (nếu có)
-3. Tình trạng hiện tại của phiên (stuck → Creative, cần sâu → Deep, cần đa chiều → Collaborative)
+3. Tình trạng hiện tại của phiên (nhảy giải pháp sớm $\to$ Problem-First, thiếu thuật ngữ chuẩn $\to$ Reframe, bí ý tưởng $\to$ Creative, cần đa chiều $\to$ Collaborative)
 
-Mỗi kỹ thuật chạy theo Hybrid Rhythm: Agent gợi ý technique → giải thích 1-2 câu → bắt đầu vòng đầu tiên.
+Mỗi kỹ thuật chạy theo Hybrid Rhythm: Agent gợi ý technique $\to$ giải thích 1–2 câu $\to$ bắt đầu vòng đầu tiên.
