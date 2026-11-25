@@ -154,6 +154,56 @@ class TestAuditPeerEffectiveness(unittest.TestCase):
         self.assertEqual(res["confirmed_missing_regression_test"], 1)
         self.assertEqual(res["candidate_untagged_count"], 1)
 
+    def test_timestamp_fallback_prompt_and_session_events_never_mtime(self):
+        """Fallback order: verdict.timestamp -> prompt.timestamp -> events.jsonl ts; never mtime."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            sessions = Path(tmp) / "sessions"
+            _write_md(
+                root / ".md" / "peer_exchange" / "prompt_post.md",
+                (
+                    "---\nrequest_id: req-post\nfrom_agent: antigravity\nto_agent: grok\n"
+                    "request_type: plan\nsubject: Post\ntimestamp: '2026-11-25T08:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_post.md\n---\nPrompt"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_post.md",
+                (
+                    "---\nrequest_id: req-post\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "telemetry:\n  session_id: s-post\n  cost_usd: 0.2\n  duration_seconds: 80.0\n"
+                    "---\nNo verdict ts"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_sess_only.md",
+                (
+                    "---\nrequest_id: req-sess\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "telemetry:\n  session_id: s-pre\n  cost_usd: 0.1\n  duration_seconds: 50.0\n"
+                    "---\nSession ts only"
+                ),
+            )
+            ev_pre = sessions / "proj" / "s-pre" / "events.jsonl"
+            ev_pre.parent.mkdir(parents=True, exist_ok=True)
+            ev_pre.write_text(
+                '{"ts":"2026-11-24T12:00:00Z","type":"turn_ended","outcome":"completed"}\n',
+                encoding="utf-8",
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_truly_undated.md",
+                "---\nrequest_id: req-none\nverdict: APPROVE_PLAN\nconditions: []\n---\nStill undated",
+            )
+
+            rep = evaluate_peer_effectiveness(
+                [root],
+                cutoff="2026-11-25T07:08:00+07:00",
+                sessions_dir=sessions,
+                use_git=False,
+            )
+            self.assertEqual(rep["post_v26"]["runs"], 1)
+            self.assertEqual(rep["pre_v26"]["runs"], 1)
+            self.assertEqual(rep["undated_excluded"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

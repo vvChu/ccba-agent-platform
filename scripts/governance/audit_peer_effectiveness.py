@@ -64,38 +64,65 @@ def _discover_exchange_files(roots: Sequence[Path]) -> list[Path]:
     return files
 
 
-def _index_session_max_turns(sessions_dir: Path | None) -> dict[str, bool]:
-    """Index Grok session_id -> whether events.jsonl recorded max_turns_reached."""
+def _extract_last_event_ts(text: str) -> datetime.datetime | None:
+    """Return the latest valid UTC timestamp from an events.jsonl payload."""
+    for raw in reversed(text.splitlines()):
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        try:
+            obj = json.loads(stripped)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            ts = parse_utc_timestamp(obj.get("ts"))
+            if ts is not None:
+                return ts
+    return None
+
+
+def _index_session_events(
+    sessions_dir: Path | None,
+) -> dict[str, tuple[bool, datetime.datetime | None]]:
+    """Index Grok session_id -> (max_turns_reached_seen, last_event_utc_ts)."""
     if sessions_dir is None or not sessions_dir.is_dir():
         return {}
-    result: dict[str, bool] = {}
+    result: dict[str, tuple[bool, datetime.datetime | None]] = {}
     for ev_path in sorted(sessions_dir.rglob("events.jsonl"), key=lambda p: str(p)):
         sid = ev_path.parent.name
         try:
             text = ev_path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        result[sid] = '"max_turns_reached"' in text
+        result[sid] = ('"max_turns_reached"' in text, _extract_last_event_ts(text))
     return result
 
 
 def _extract_telemetry_metrics(
     tel: Any,
-    session_max_turns: dict[str, bool],
+    session_events: dict[str, tuple[bool, datetime.datetime | None]],
 ) -> dict[str, Any]:
-    """Extract duration, cost, tokens, and Auto-Synthesis flags across telemetry union."""
+    """Extract duration, cost, tokens, Auto-Synthesis, and session timestamp."""
     if tel is None:
-        return {"dur": 0.0, "cost": 0.0, "inp": 0, "cached": 0, "auto_synth": False, "src": "none"}
+        return {
+            "dur": 0.0,
+            "cost": 0.0,
+            "inp": 0,
+            "cached": 0,
+            "auto_synth": False,
+            "src": "none",
+            "session_ts": None,
+        }
+    session_ts: datetime.datetime | None = None
     if hasattr(tel, "wall_seconds"):
         dur = float(getattr(tel, "wall_seconds", 0.0) or 0.0)
-        sid = ""
         auto_synth = False
         src = "combined"
     else:
         dur = float(getattr(tel, "duration_seconds", 0.0) or 0.0)
         sid = str(getattr(tel, "session_id", "") or "")
-        if sid and sid in session_max_turns:
-            auto_synth = session_max_turns[sid]
+        if sid and sid in session_events:
+            auto_synth, session_ts = session_events[sid]
             src = "session_events"
         else:
             auto_synth = int(getattr(tel, "turn_count", 1) or 1) >= 2
@@ -107,12 +134,13 @@ def _extract_telemetry_metrics(
         "cached": int(getattr(tel, "cached_read_tokens", 0) or 0),
         "auto_synth": auto_synth,
         "src": src,
+        "session_ts": session_ts,
     }
 
 
 def _collect_verdict_records(
     roots: Sequence[Path],
-    session_max_turns: dict[str, bool],
+    session_events: dict[str, tuple[bool, datetime.datetime | None]],
 ) -> tuple[list[dict[str, Any]], int, dict[str, int]]:
     """Parse exchange files ensuring verdict overrides prompt per request_id."""
     from ccba_harness.peer import parse_envelope_from_md, parse_verdict_from_md
@@ -126,7 +154,7 @@ def _collect_verdict_records(
             triage_counts[tok] += text.count(tok)
         verdict = parse_verdict_from_md(text)
         if verdict is not None:
-            tel_meta = _extract_telemetry_metrics(verdict.telemetry, session_max_turns)
+            tel_meta = _extract_telemetry_metrics(verdict.telemetry, session_events)
             verdicts[verdict.request_id] = {
                 "request_id": verdict.request_id,
                 "ts": parse_utc_timestamp(verdict.timestamp),
@@ -141,6 +169,10 @@ def _collect_verdict_records(
             prompts[env.request_id] = env
     for rid, rec in verdicts.items():
         env = prompts.get(rid)
+        if rec["ts"] is None and env is not None:
+            rec["ts"] = parse_utc_timestamp(getattr(env, "timestamp", None))
+        if rec["ts"] is None:
+            rec["ts"] = rec.get("session_ts")
         resume_id = getattr(env, "resume_session_id", None) if env is not None else None
         rec["resume_id"] = resume_id
         rec["is_pass2_plus"] = bool(resume_id and resume_id != "new")
@@ -317,7 +349,7 @@ def evaluate_peer_effectiveness(
     cutoff_utc = parse_utc_timestamp(cutoff)
     if cutoff_utc is None:
         raise ValueError(f"Invalid timezone-aware ISO cutoff timestamp: {cutoff!r}")
-    sess_map = _index_session_max_turns(sessions_dir)
+    sess_map = _index_session_events(sessions_dir)
     verdicts, prompt_only_cnt, triage_counts = _collect_verdict_records(roots, sess_map)
     pre_recs: list[dict[str, Any]] = []
     post_recs: list[dict[str, Any]] = []
