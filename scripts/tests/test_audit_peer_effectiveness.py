@@ -154,6 +154,121 @@ class TestAuditPeerEffectiveness(unittest.TestCase):
         self.assertEqual(res["confirmed_missing_regression_test"], 1)
         self.assertEqual(res["candidate_untagged_count"], 1)
 
+    def test_timestamp_fallback_prompt_and_session_events_never_mtime(self):
+        """Fallback order: verdict.timestamp -> prompt.timestamp -> events.jsonl ts; never mtime."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            sessions = Path(tmp) / "sessions"
+            _write_md(
+                root / ".md" / "peer_exchange" / "prompt_post.md",
+                (
+                    "---\nrequest_id: req-post\nfrom_agent: antigravity\nto_agent: grok\n"
+                    "request_type: plan\nsubject: Post\ntimestamp: '2026-11-25T08:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_post.md\n---\nPrompt"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_post.md",
+                (
+                    "---\nrequest_id: req-post\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "telemetry:\n  session_id: s-post\n  cost_usd: 0.2\n  duration_seconds: 80.0\n"
+                    "---\nNo verdict ts"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_sess_only.md",
+                (
+                    "---\nrequest_id: req-sess\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "telemetry:\n  session_id: s-pre\n  cost_usd: 0.1\n  duration_seconds: 50.0\n"
+                    "---\nSession ts only"
+                ),
+            )
+            ev_pre = sessions / "proj" / "s-pre" / "events.jsonl"
+            ev_pre.parent.mkdir(parents=True, exist_ok=True)
+            ev_pre.write_text(
+                '{"ts":"2026-11-24T12:00:00Z","type":"turn_ended","outcome":"completed"}\n',
+                encoding="utf-8",
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_truly_undated.md",
+                "---\nrequest_id: req-none\nverdict: APPROVE_PLAN\nconditions: []\n---\nStill undated",
+            )
+
+            rep = evaluate_peer_effectiveness(
+                [root],
+                cutoff="2026-11-25T07:08:00+07:00",
+                sessions_dir=sessions,
+                use_git=False,
+            )
+            self.assertEqual(rep["post_v26"]["runs"], 1)
+            self.assertEqual(rep["pre_v26"]["runs"], 1)
+            self.assertEqual(rep["undated_excluded"], 1)
+
+    def test_verdict_timestamp_overrides_prompt_and_session(self):
+        """Dated verdict on post side overrides pre-cutoff prompt and session event timestamps."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            sessions = Path(tmp) / "sessions"
+            _write_md(
+                root / ".md" / "peer_exchange" / "prompt_p.md",
+                (
+                    "---\nrequest_id: req-verdict-wins\nfrom_agent: antigravity\nto_agent: grok\n"
+                    "request_type: plan\nsubject: V\ntimestamp: '2026-11-24T10:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_v.md\n---\nPrompt"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_v.md",
+                (
+                    "---\nrequest_id: req-verdict-wins\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "timestamp: '2026-11-25T08:00:00+07:00'\n"
+                    "telemetry:\n  session_id: s-v\n  cost_usd: 0.2\n  duration_seconds: 60.0\n"
+                    "---\nVerdict wins"
+                ),
+            )
+            ev = sessions / "proj" / "s-v" / "events.jsonl"
+            ev.parent.mkdir(parents=True, exist_ok=True)
+            ev.write_text('{"ts":"2026-11-24T09:00:00Z","type":"turn_ended"}\n', encoding="utf-8")
+
+            rep = evaluate_peer_effectiveness(
+                [root], cutoff="2026-11-25T07:08:00+07:00", sessions_dir=sessions, use_git=False
+            )
+            self.assertEqual(rep["post_v26"]["runs"], 1)
+            self.assertEqual(rep["pre_v26"]["runs"], 0)
+            self.assertEqual(rep["undated_excluded"], 0)
+
+    def test_prompt_timestamp_overrides_session(self):
+        """Dated prompt overrides pre-cutoff session event timestamp when verdict is undated."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            sessions = Path(tmp) / "sessions"
+            _write_md(
+                root / ".md" / "peer_exchange" / "prompt_p.md",
+                (
+                    "---\nrequest_id: req-prompt-wins\nfrom_agent: antigravity\nto_agent: grok\n"
+                    "request_type: plan\nsubject: P\ntimestamp: '2026-11-25T08:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_p.md\n---\nPrompt"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_p.md",
+                (
+                    "---\nrequest_id: req-prompt-wins\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "telemetry:\n  session_id: s-p\n  cost_usd: 0.2\n  duration_seconds: 60.0\n"
+                    "---\nPrompt wins"
+                ),
+            )
+            ev = sessions / "proj" / "s-p" / "events.jsonl"
+            ev.parent.mkdir(parents=True, exist_ok=True)
+            ev.write_text('{"ts":"2026-11-24T09:00:00Z","type":"turn_ended"}\n', encoding="utf-8")
+
+            rep = evaluate_peer_effectiveness(
+                [root], cutoff="2026-11-25T07:08:00+07:00", sessions_dir=sessions, use_git=False
+            )
+            self.assertEqual(rep["post_v26"]["runs"], 1)
+            self.assertEqual(rep["pre_v26"]["runs"], 0)
+            self.assertEqual(rep["undated_excluded"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
