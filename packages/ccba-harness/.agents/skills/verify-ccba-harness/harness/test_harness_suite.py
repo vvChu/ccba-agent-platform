@@ -275,3 +275,9 @@ def test_feat_007_agent_json_envelope_and_semantic_exit_codes(
 
     assert run_door_triage_cli([seam_file, "--json"]) == 0
     capsys.readouterr()
+
+    non_json_fail = run_door_triage_cli([seam_file, "--enforce-tradeoff-card"])
+    non_json_cap = capsys.readouterr()
+    assert non_json_fail == 1
+    assert "Tradeoff Card validation failed:" in non_json_cap.err
+    assert "Missing --pr-body-file" in non_json_cap.err

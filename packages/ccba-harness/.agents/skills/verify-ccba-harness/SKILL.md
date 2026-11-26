@@ -22,7 +22,7 @@ covered_sha256:
   packages/ccba-harness/src/ccba_harness/cli/core.py: "fd9d2db945faf2fdbfadf51700176d84cd4ab9940f81aff77b062f648c690d8f"
   packages/ccba-harness/src/ccba_harness/cli/_envelope.py: "1e69ea3b4558bc3e35fcbfd437a13e09866c3889655a40bb559092db2d1a4036"
   packages/ccba-harness/src/ccba_harness/cli/commands/verifier.py: "65c8efb485b9faeb8a74bc9df180d912ab3a3c67cbe94774bbb0cf9cb873cf16"
-  packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py: "fef00fed7ef694c064bd4442e83177a40591e1ea4ae5a6ce9823be4b4d0209d6"
+  packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py: "7fbf0de6c0077baf1b9cd273561fb02b1d8a749ff990d8704cba6e62813f0b43"
   packages/ccba-harness/src/ccba_harness/gpi.py: "aae45835ee736dd4cff77bfbbda47be46e6121b536a55f8b7621c444e488df92"
   packages/ccba-harness/src/ccba_harness/verifier.py: "825c7edcbb06c32704eee9ae6bd674764c69c73747e6b561d0878a971b0e152d"
   packages/ccba-harness/src/ccba_harness/door_policy.py: "32f2d036d0e67dc892805a5bfc652b02a0a16860bf8cbb7422bc4d972952f908"

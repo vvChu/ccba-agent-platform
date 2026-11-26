@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -136,6 +137,15 @@ def _execute_door_triage(args: argparse.Namespace) -> int:
         print(
             f"Door: {res.door_type} | Categories: {cats} | Streak: {res.cumulative_streak} | Sampled: {res.sampled_for_audit}"
         )
+        if args.enforce_tradeoff_card and card_errors:
+            print("Tradeoff Card validation failed:", file=sys.stderr)
+            for err in card_errors:
+                print(f"  - {err}", file=sys.stderr)
+            print(
+                "Required Tradeoff Card fields: "
+                "Core Invariant, Invalidation Condition, Git Hunk Reference.",
+                file=sys.stderr,
+            )
     passed = err_code != "TRADEOFF_CARD_INVALID"
     return resolve_exit_code(passed=passed, semantic=args.semantic_exit_codes, error_code=err_code)
 
