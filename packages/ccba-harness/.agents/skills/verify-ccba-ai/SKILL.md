@@ -22,7 +22,7 @@ covered_sha256:
   packages/ccba-ai/src/ccba_ai/__init__.py: "c40f2edf7e9cc35ce55d01a31d6583a52fe269ca9def4b655d911da1bb99d09a"
   packages/ccba-ai/src/ccba_ai/circuit_breaker.py: "3cb4f63536d418b547a0e0c454871dd4ad0d47ead5e04b67a21bed477c721daa"
   packages/ccba-ai/src/ccba_ai/fallback.py: "eb10afcb743535763e1836eb6869ba88a75c20f9eda69457c4dfb02ea21c92d7"
-  packages/ccba-ai/src/ccba_ai/routing.py: "44d2bd21c5d9d4db9f3a4f2aaa391603c0784778aa5dcede76488962362a463d"
+  packages/ccba-ai/src/ccba_ai/routing.py: "7021260d77e110106f7004929298991281e486c052ed6b4d14f2320444c21086"
   packages/ccba-ai/src/ccba_ai/client.py: "5790930bc2328351892c920ebabaacc7d965eb89c1ce678a83d4607cd1d9b2a3"
   .agents/skills/ccba-ai-gateway-sdk/SKILL.md: "01b6663e90070946d3460df9017088064230c44ae9b7cf59c88416a4b29d8c8f"
 verification_mode:
