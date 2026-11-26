@@ -34,6 +34,27 @@ def test_ccba_issue_to_hub_workflow_structure() -> None:
     assert "gh issue create" in content
     assert "gh issue list" in content
     assert "Acceptance Criteria" in content
+    assert "/ccba-new-feature #[ISSUE_ID]" in content
+    assert "/ccba-create-pr" in content
+    assert "/ccba-release-feature" in content
+    assert "/ccba-contribute-to-hub --issue #[ISSUE_ID]" in content
+
+
+def test_ccba_release_feature_software_spoke_gates() -> None:
+    """Verify /ccba-release-feature separates Software Spoke gates and guards process_safety."""
+    skill_path = SKILLS_DIR / "ccba-release-feature" / "SKILL.md"
+    assert skill_path.exists(), "ccba-release-feature SKILL.md must exist"
+
+    content = skill_path.read_text(encoding="utf-8")
+    assert "scripts/validate_legal_spoke.py" in content
+    assert ".agents/skills/verify-<spoke>/harness/runner.py" in content
+    assert "scripts/_guardrails/check_spoke_cleanliness.py" in content
+    assert "CCBA_HUB_PATH" in content
+    assert "scripts/eval/process_safety.py" in content
+    assert (
+        "Spoke:** `python scripts/validate_legal_spoke.py` hoặc `python scripts/eval/run_isolated_tests.py --all`"
+        not in content
+    )
 
 
 def test_ccba_contribute_to_hub_workflow_structure() -> None:

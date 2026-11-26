@@ -15,7 +15,7 @@ disable-model-invocation: true
 command: /ccba-issue-to-hub
 user-invocable: true
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -118,10 +118,12 @@ Cung cấp toàn bộ nội dung markdown đã định dạng kèm đường d�
 ### Bước 5: Báo Cáo & Hướng Dẫn Vòng Đời Tiếp Theo
 Sau khi tạo thành công, Agent gửi phản hồi tổng kết:
 1. **Mã số & Link Issue:** Ví dụ `#209 - https://github.com/vvChu/ccba-agent-platform/issues/209`.
-2. **Hướng dẫn chu trình khép kín tiếp theo:**
-   - Khi có prototype/script nháp tại Spoke $\to$ Tốt nghiệp mã nguồn: `/ccba-graduate-rd --issue #[ISSUE_ID]`
-   - Khi mở PR chính thức lên Hub $\to$ Đóng gói & mở PR: `/ccba-contribute-to-hub --issue #[ISSUE_ID]` (Tự động gắn mã `Closes #[ISSUE_ID]`).
-- **Tiêu chí hoàn thành:** Hiển thị mã số Issue, link GitHub và hướng dẫn các bước tiếp theo của vòng đời đề xuất.
+2. **Hướng dẫn chu trình khép kín tiếp theo (phân tách rõ 2 ngữ cảnh):**
+   - **Triển khai trực tiếp tại Hub (`ccba-agent-platform`)** *(khi Issue sửa trực tiếp `packages/`, `scripts/`, hoặc core `.agents/skills/`)*: dùng `/ccba-new-feature #[ISSUE_ID]` $\to$ `/ccba-create-pr` $\to$ `/ccba-release-feature`.
+   - **Đóng góp mã nguồn đã có sẵn từ Spoke lên Hub:**
+     - Tốt nghiệp prototype/script nháp tại Spoke: `/ccba-graduate-rd --issue #[ISSUE_ID]`
+     - Đóng gói & mở PR đóng góp ngược lên Hub: `/ccba-contribute-to-hub --issue #[ISSUE_ID]` (tự động gắn mã `Closes #[ISSUE_ID]`).
+- **Tiêu chí hoàn thành:** Hiển thị mã số Issue, link GitHub và phân tách rõ vòng đời tiếp theo giữa triển khai trực tiếp tại Hub (`/ccba-new-feature #[ISSUE_ID]`) và đóng góp từ Spoke (`/ccba-contribute-to-hub --issue #[ISSUE_ID]`).
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*
