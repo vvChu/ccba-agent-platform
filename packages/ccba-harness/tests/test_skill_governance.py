@@ -302,6 +302,7 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
         "FEAT-NLM-",
         "FEAT-QCC-",
         "FEAT-LEG-",
+        "FEAT-CBD-",
     )
     for prefix in expected_prefixes:
         assert prefix in central_text, f"Missing {prefix} in central features/INDEX.md"
@@ -326,6 +327,7 @@ def test_five_block_verification_skills_mirror_parity_and_registry() -> None:
         ("verify-ccba-tdd", "ccba-tdd", "tdd"),
         ("verify-ccba-code-review", "ccba-code-review", "code_review"),
         ("verify-ccba-create-pr", "ccba-create-pr", "create_pr"),
+        ("verify-ccba-codebase-design", "ccba-codebase-design", "codebase_design"),
     ]
     for verify_name, target_name, mod_suffix in skill_pairs:
         v_dir = pkg_skills_root / verify_name

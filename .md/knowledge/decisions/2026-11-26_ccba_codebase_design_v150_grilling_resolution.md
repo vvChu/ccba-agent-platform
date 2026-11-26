@@ -1,7 +1,7 @@
 # Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai v1.1: Nâng Cấp `/ccba-codebase-design` `v1.5.0` & Bộ Kiểm Định `verify-ccba-codebase-design`
 
 > **Ngày chốt Grilling:** `2026-11-26` | **Phiên bản Kế hoạch:** `v1.1` *(Pass 1 `39058d39` `REVISE_PLAN` $\to$ Pass 2 `d426e9a2-5579-45ad-b3d7-a042b1ddfe19` **`APPROVE_PLAN`**, `risk_score: 2`, `blocking_conditions: 0`)*  
-> **Trạng thái Thực thi:** `IN_PROGRESS — PR-1` *(Chờ Kỹ sư xác nhận `proceed` để mở nhánh `/ccba-new-feature` triển khai `PR-1` -> `PR-2`)*  
+> **Trạng thái Thực thi:** `PR-1 MERGED (#914 @ a338d14e) — PR-2 IN_PROGRESS` *(Đã hợp nhất `PR-1` lên `main`; đang triển khai `PR-2` tạo Profile-B `verify-ccba-codebase-design` neo `sync_commit: a338d14eeb94d5539386e6c56622277f70dc2340`)*  
 > **Biên lai Đối soát Seam (`ADR-0061`):** `harness_verify.v1` $\to$ `ccba_harness:auto_apply_and_verify_patch` (`--in verify_preset --out verification_report`, `MATCH`) | `index_sha256`: `29d4ee1aa2efb369ce154585cd65e1c44ec31efed8ec4096a8f603b8944b6c49`
 
 ---
