@@ -11,7 +11,7 @@ from ._fleet_charts import (
     generate_fleet_comparison_chart_svg,
     generate_fleet_domain_breakdown_svg,
 )
-from ._fleet_scanner import FleetTelemetryReport, SpokeTelemetrySummary
+from ._fleet_scanner import FleetTelemetryReport, SpokeTelemetrySummary, sanitize_telemetry_text
 
 
 def _render_tool_rows_html(fleet_tool_counts: dict[str, int]) -> str:
@@ -46,16 +46,17 @@ def _spoke_row_html(spoke: SpokeTelemetrySummary) -> str:
         else "bg-slate-500/10 text-slate-400 border-slate-500/20"
     )
     budget_color = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-    if spoke.budget_status == "Exceeded":
+    if spoke.budget_status in ("Exceeded", "PARSE_ERROR"):
         budget_color = "bg-rose-500/10 text-rose-400 border-rose-500/20"
-    elif spoke.budget_status == "Warning":
+    elif spoke.budget_status in ("Warning", "NO_DATA"):
         budget_color = "bg-amber-500/10 text-amber-400 border-amber-500/20"
     sync_date = spoke.last_sync[:10] if spoke.last_sync else "Never"
+    spoke_label = html.escape(spoke.anonymized_spoke_id)
     return f"""
             <tr class="border-b border-[var(--border)] hover:bg-[var(--card)]/60 text-xs transition-colors spoke-row" data-domain="{html.escape(spoke.project_type)}">
               <td class="py-3 px-3">
-                <div class="font-semibold text-sm text-[var(--foreground)]">{html.escape(spoke.project_name)}</div>
-                <div class="font-mono text-[10px] text-[var(--muted-foreground)] truncate max-w-xs">{html.escape(spoke.project_path)}</div>
+                <div class="font-mono font-semibold text-sm text-[var(--foreground)]">{spoke_label}</div>
+                <div class="font-mono text-[10px] text-[var(--muted-foreground)]">SHA-256 anonymized</div>
               </td>
               <td class="py-3 px-3">
                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -81,7 +82,7 @@ def _spoke_row_html(spoke: SpokeTelemetrySummary) -> str:
 
 def _render_spoke_rows_html(spokes: list[SpokeTelemetrySummary]) -> str:
     """Render all Spoke matrix rows sorted by token consumption."""
-    ordered = sorted(spokes, key=lambda x: (-x.total_tokens, x.project_name))
+    ordered = sorted(spokes, key=lambda x: (-x.total_tokens, x.anonymized_spoke_id))
     return "\n".join(_spoke_row_html(spoke) for spoke in ordered)
 
 
@@ -295,7 +296,7 @@ def _render_html_spokes_table(report: FleetTelemetryReport, spoke_rows_html: str
       <table class="w-full text-left text-xs">
         <thead class="text-[11px] text-[var(--muted-foreground)] uppercase border-b border-[var(--border)]">
           <tr>
-            <th class="py-2.5 px-3">Project / Location</th><th class="py-2.5 px-3">Domain</th>
+            <th class="py-2.5 px-3">Spoke ID</th><th class="py-2.5 px-3">Domain</th>
             <th class="py-2.5 px-3 text-center">Status</th><th class="py-2.5 px-3 text-right">Tokens Consumed</th>
             <th class="py-2.5 px-3 text-right">Estimated Cost</th><th class="py-2.5 px-3 text-right">Last Sync</th>
             <th class="py-2.5 px-3 text-center">Budget Status</th>
@@ -394,15 +395,17 @@ def generate_fleet_dashboard_html(
     spoke_rows_html = _render_spoke_rows_html(report.spokes)
     innov_rows_html = _render_innovation_rows_html(report.get_top_spoke_innovations())
 
-    return "\n".join(
-        [
-            _render_html_head(display_title),
-            '<body class="bg-[var(--background)] text-[var(--foreground)] antialiased min-h-full flex flex-col p-4 md:p-6 transition-colors duration-200">',
-            _render_html_header(report, report_json_str),
-            _render_html_kpi_cards(report),
-            _render_html_charts_section(comparison_chart_svg, domain_chart_svg, tool_rows_html),
-            _render_html_spokes_table(report, spoke_rows_html),
-            _render_html_innovations_table(innov_rows_html),
-            _render_html_footer_and_scripts(),
-        ]
+    return sanitize_telemetry_text(
+        "\n".join(
+            [
+                _render_html_head(display_title),
+                '<body class="bg-[var(--background)] text-[var(--foreground)] antialiased min-h-full flex flex-col p-4 md:p-6 transition-colors duration-200">',
+                _render_html_header(report, report_json_str),
+                _render_html_kpi_cards(report),
+                _render_html_charts_section(comparison_chart_svg, domain_chart_svg, tool_rows_html),
+                _render_html_spokes_table(report, spoke_rows_html),
+                _render_html_innovations_table(innov_rows_html),
+                _render_html_footer_and_scripts(),
+            ]
+        )
     )
