@@ -422,10 +422,11 @@ def run_pre_eval_governance_guards(
     """Runs Regression Gate and single-skill CI Ratchet gate before LLM evaluation."""
     from .skill_governance import evaluate_regression_gate, has_explicit_stability_zone
 
+    enforce = has_explicit_stability_zone(baseline_content)
     gate_verdict = evaluate_regression_gate(
         baseline_content,
         mutated_content,
-        enforce_token_ratio=has_explicit_stability_zone(baseline_content),
+        enforce_token_ratio=enforce,
     )
     if not gate_verdict.passed:
         if hasattr(optimizer, "velocity_tracker") and not optimizer.dry_run_git:

@@ -62,8 +62,9 @@ def test_ratchet_frontmatter_preservation():
 def test_ratchet_full_run_dry_run(tmp_path: Path):
     """Test full execution of GitRatchetTuner in dry-run mode."""
     target_skill = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     target_skill.write_text(
-        "---\nname: test-skill\n---\n# Original skill prompt instructions\n",
+        f"---\nname: test-skill\nstability_zone: evolvable\n---\n# Original skill prompt instructions\n{pad}\n",
         encoding="utf-8",
     )
 
@@ -91,17 +92,33 @@ def test_ratchet_full_run_dry_run(tmp_path: Path):
 def test_ratchet_critical_failure_triggers_revert(tmp_path: Path):
     """Test that any critical failure strictly forces a REVERT even if overall score is high."""
     target_skill = tmp_path / "SKILL.md"
-    target_skill.write_text("# Target Content", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target_skill.write_text(
+        f"---\nname: test-crit-skill\nstability_zone: evolvable\n---\n# Target Content\n{pad}\n",
+        encoding="utf-8",
+    )
 
     config = RatchetConfig(
         target_file=target_skill,
-        target_score=90.0,
+        target_score=100.0,
         max_iterations=1,
     )
     tuner = GitRatchetTuner(config, dry_run_git=True)
 
-    # Mock evaluate_content returning 95% score but with 1 critical failure
+    calls = 0
+
     def mock_eval_with_crit_fail(content: str) -> EvalReport:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return EvalReport(
+                total_items=1,
+                passed_items=0,
+                failed_items=1,
+                overall_score=70.0,
+                pass_rate=0.0,
+                item_results=[],
+            )
         item_res = EvalItemResult(
             item_id="t1",
             task_output="Bad output",

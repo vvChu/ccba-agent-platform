@@ -521,7 +521,7 @@ def evaluate_static_lint_gate(
             for k in PROHIBITION_DIRECTIVE_KEYS
             if base_counts[k] > 0
         }
-    delta_ratio = _compute_token_delta_ratio(
+    delta = _compute_token_delta_ratio(
         baseline_content, mutated_content, min_baseline_words, min_baseline_chars
     )
     if dropped:
@@ -531,21 +531,21 @@ def evaluate_static_lint_gate(
             failed_tier=1,
             failure_code="TIER1_NORMATIVE_DIRECTIVE_DELETED",
             reason=f"Tier 1 Static Gate: mutation deleted all prohibition directives: {details}",
-            token_delta_ratio=delta_ratio,
+            token_delta_ratio=delta,
             dropped_directives=dropped,
         )
-    if enforce_token_ratio and delta_ratio > max_token_delta_ratio:
+    if enforce_token_ratio and delta > max_token_delta_ratio:
         return RegressionGateVerdict(
             passed=False,
             failed_tier=1,
             failure_code="TIER1_TOKEN_BLOAT_EXCEEDED",
             reason=(
-                f"Tier 1 Static Gate: token delta +{delta_ratio * 100:.1f}% exceeds "
+                f"Tier 1 Static Gate: token delta +{delta * 100:.1f}% exceeds "
                 f"+{max_token_delta_ratio * 100:.1f}% ceiling"
             ),
-            token_delta_ratio=delta_ratio,
+            token_delta_ratio=delta,
         )
-    return RegressionGateVerdict(passed=True, token_delta_ratio=delta_ratio)
+    return RegressionGateVerdict(passed=True, token_delta_ratio=delta)
 
 
 def evaluate_dual_run_replay_gate(
@@ -643,10 +643,10 @@ def evaluate_regression_gate(
     tier1 = evaluate_static_lint_gate(
         baseline_content,
         mutated_content,
-        max_token_delta_ratio=max_token_delta_ratio,
-        enforce_token_ratio=enforce_token_ratio,
-        min_baseline_words=min_baseline_words,
-        min_baseline_chars=min_baseline_chars,
+        max_token_delta_ratio,
+        enforce_token_ratio,
+        min_baseline_words,
+        min_baseline_chars,
     )
     if not tier1.passed:
         return tier1
