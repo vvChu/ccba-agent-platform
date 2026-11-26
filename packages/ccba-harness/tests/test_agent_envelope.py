@@ -355,10 +355,14 @@ def test_door_triage_complete_five_row_matrix(
         patch("ccba_harness.door_policy.classify_pr_door", return_value=mock_res),
     ):
         code_def = run_door_triage_cli(base_args)
-        data_def = json.loads(capsys.readouterr().out)
+        cap_def = capsys.readouterr()
+        data_def = json.loads(cap_def.out)
         code_sem = run_door_triage_cli([*base_args, "--semantic-exit-codes"])
-        data_sem = json.loads(capsys.readouterr().out)
+        cap_sem = capsys.readouterr()
+        data_sem = json.loads(cap_sem.out)
 
+    assert cap_def.err == ""
+    assert cap_sem.err == ""
     assert code_def == exp_def
     assert code_sem == exp_sem
     assert data_def == data_sem
@@ -371,3 +375,147 @@ def test_door_triage_complete_five_row_matrix(
     else:
         assert data_def["error"]["code"] == "TRADEOFF_CARD_INVALID"
         assert len(data_def["tradeoff_card_errors"]) >= 1
+
+
+def _build_triage_body_args(tmp_path: Path, body_mode: str) -> list[str]:
+    """Create fixture PR body file for door-triage CLI test scenarios."""
+    target_body = tmp_path / "pr_body.md"
+    if body_mode == "none":
+        return []
+    if body_mode == "missing":
+        return ["--pr-body-file", str(tmp_path / "does_not_exist.md")]
+    if body_mode == "oserror":
+        target_body.mkdir()
+        return ["--pr-body-file", str(target_body)]
+    if body_mode == "missing_card":
+        target_body.write_text("# PR Summary\nNo tradeoff card here.\n", encoding="utf-8")
+        return ["--pr-body-file", str(target_body)]
+    if body_mode == "invalid_fields":
+        target_body.write_text(
+            "- **Core Invariant**: TBD\n"
+            "- **Invalidation Condition**: N/A\n"
+            "- **Git Hunk Reference**: `pkg/mod.py#L1-L80`\n",
+            encoding="utf-8",
+        )
+        return ["--pr-body-file", str(target_body)]
+    target_body.write_text(
+        "- **Core Invariant**: Preserve JSON schema.\n"
+        "- **Invalidation Condition**: Output format breaks.\n"
+        "- **Git Hunk Reference**: `pkg/mod.py#L1-L10`\n",
+        encoding="utf-8",
+    )
+    return ["--pr-body-file", str(target_body)]
+
+
+@pytest.mark.parametrize(
+    ("body_mode", "expected_substrings"),
+    [
+        ("none", ["Missing --pr-body-file for --enforce-tradeoff-card on ONE_WAY_DOOR."]),
+        ("missing", ["Cannot read --pr-body-file"]),
+        ("oserror", ["Cannot read --pr-body-file"]),
+        ("missing_card", ["Missing Tradeoff Card section"]),
+        (
+            "invalid_fields",
+            [
+                "Tradeoff Card field 'Core Invariant' is missing or contains a placeholder.",
+                "Tradeoff Card field 'Invalidation Condition' is missing or contains a placeholder.",
+                "Git Hunk Reference line span exceeds 30 lines",
+            ],
+        ),
+    ],
+)
+def test_door_triage_non_json_prints_tradeoff_card_errors_to_stderr(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    body_mode: str,
+    expected_substrings: list[str],
+) -> None:
+    """Issue #917: non-JSON door-triage prints card errors & required fields to stderr on enforce failure."""
+    mock_res = DoorClassificationResult(
+        door_type="ONE_WAY_DOOR",
+        matched_categories=[OneWayDoorCategory.PUBLIC_API_SEAM],
+        cumulative_streak=7,
+        sampled_for_audit=False,
+    )
+    cli_args = [
+        "pkg/mod.py",
+        "--enforce-tradeoff-card",
+        *_build_triage_body_args(tmp_path, body_mode),
+    ]
+
+    with (
+        patch("ccba_harness.door_policy.load_recent_merges_from_git", return_value=[]),
+        patch("ccba_harness.door_policy.classify_pr_door", return_value=mock_res),
+    ):
+        code_def = run_door_triage_cli(cli_args)
+        cap_def = capsys.readouterr()
+        code_sem = run_door_triage_cli([*cli_args, "--semantic-exit-codes"])
+        cap_sem = capsys.readouterr()
+        code_json = run_door_triage_cli([*cli_args, "--json"])
+        cap_json = capsys.readouterr()
+
+    assert code_def == 1
+    assert code_sem == 1
+    assert code_json == 1
+    assert cap_def.out.strip() == (
+        "Door: ONE_WAY_DOOR | Categories: PUBLIC_API_SEAM | Streak: 7 | Sampled: False"
+    )
+    assert cap_def.err == cap_sem.err
+    assert "Tradeoff Card validation failed:" in cap_def.err
+    for sub in expected_substrings:
+        assert sub in cap_def.err
+    for field in ("Core Invariant", "Invalidation Condition", "Git Hunk Reference"):
+        assert field in cap_def.err
+
+    # Verify --json output remains unchanged and does not write to stderr
+    assert cap_json.err == ""
+    json_payload = json.loads(cap_json.out)
+    assert json_payload["status"] == "error"
+    assert json_payload["error"]["code"] == "TRADEOFF_CARD_INVALID"
+    assert json_payload["tradeoff_card_valid"] is False
+    assert len(json_payload["tradeoff_card_errors"]) == len(expected_substrings)
+
+
+@pytest.mark.parametrize(
+    ("door_type", "enforce", "body_mode", "exp_def", "exp_sem"),
+    [
+        ("ONE_WAY_DOOR", True, "valid", 0, 4),
+        ("ONE_WAY_DOOR", False, "missing_card", 0, 4),
+        ("PAVED_ROAD", True, "missing", 0, 0),
+        ("TWO_WAY_DOOR", True, "none", 0, 0),
+    ],
+)
+def test_door_triage_non_json_stderr_empty_when_not_failing_enforce(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    door_type: str,
+    enforce: bool,
+    body_mode: str,
+    exp_def: int,
+    exp_sem: int,
+) -> None:
+    """Issue #917: non-JSON door-triage keeps stderr empty when valid, unenforced, or non-ONE_WAY_DOOR."""
+    cats = [OneWayDoorCategory.PUBLIC_API_SEAM] if door_type == "ONE_WAY_DOOR" else []
+    mock_res = DoorClassificationResult(
+        door_type=door_type,  # type: ignore[arg-type]
+        matched_categories=cats,
+        sampled_for_audit=False,
+    )
+    cli_args = ["pkg/mod.py", *_build_triage_body_args(tmp_path, body_mode)]
+    if enforce:
+        cli_args.append("--enforce-tradeoff-card")
+
+    with (
+        patch("ccba_harness.door_policy.load_recent_merges_from_git", return_value=[]),
+        patch("ccba_harness.door_policy.classify_pr_door", return_value=mock_res),
+    ):
+        code_def = run_door_triage_cli(cli_args)
+        cap_def = capsys.readouterr()
+        code_sem = run_door_triage_cli([*cli_args, "--semantic-exit-codes"])
+        cap_sem = capsys.readouterr()
+
+    assert code_def == exp_def
+    assert code_sem == exp_sem
+    assert cap_def.err == ""
+    assert cap_sem.err == ""
+    assert cap_def.out.startswith(f"Door: {door_type} |")
