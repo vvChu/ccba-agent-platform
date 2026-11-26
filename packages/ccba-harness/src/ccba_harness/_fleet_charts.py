@@ -57,7 +57,7 @@ def _render_comparison_row(
 ) -> list[str]:
     """Render one horizontal stacked SVG bar row for a single Spoke."""
     y = idx * row_height + 40
-    name = spoke.project_name
+    name = spoke.anonymized_spoke_id
     display_name = f"{name[:16]}..." if len(name) > 18 else name
     total_w = (spoke.total_tokens / max_tokens) * bar_max_width if max_tokens > 0 else 0.0
     prompt_ratio = spoke.prompt_tokens / spoke.total_tokens if spoke.total_tokens > 0 else 0.0
@@ -105,7 +105,7 @@ def generate_fleet_comparison_chart_svg(
     if not spokes:
         return _empty_svg(chart_width, "No registered Spokes found in fleet", 13)
 
-    sorted_spokes = sorted(spokes, key=lambda s: (-s.total_tokens, s.project_name))
+    sorted_spokes = sorted(spokes, key=lambda s: (-s.total_tokens, s.anonymized_spoke_id))
     max_tokens = max((s.total_tokens for s in sorted_spokes), default=1) or 1
     label_width, value_width = 150, 90
     bar_max_width = chart_width - label_width - value_width - 20

@@ -16,6 +16,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 HUB_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -35,19 +36,13 @@ except ImportError:
     )
 
 
-def main() -> int:
-    """CLI Entry point for cross_spoke_analytics."""
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser for cross_spoke_analytics."""
     parser = argparse.ArgumentParser(
         description="Cross-Spoke Enterprise Fleet Telemetry & Analytics Engine (ADR-0046, ADR-0058)."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # Subcommand: scan
     scan_parser = subparsers.add_parser(
         "scan", help="Scan and summarize token consumption across all registered Spokes"
     )
@@ -60,13 +55,9 @@ def main() -> int:
         help="Filter output strictly to Top Spoke Innovations and Hub Ingestion Candidates",
     )
     scan_parser.add_argument(
-        "--out",
-        type=Path,
-        default=None,
-        help="File path to save the Markdown or JSON report",
+        "--out", type=Path, default=None, help="File path to save the Markdown or JSON report"
     )
 
-    # Subcommand: dashboard
     dash_parser = subparsers.add_parser(
         "dashboard", help="Generate interactive HTML Cross-Spoke Fleet Dashboard"
     )
@@ -76,14 +67,8 @@ def main() -> int:
         default=None,
         help="File path to save the HTML dashboard (default: .md/reports/cross_spoke_fleet_dashboard.html)",
     )
-    dash_parser.add_argument(
-        "--title",
-        type=str,
-        default=None,
-        help="Custom dashboard title",
-    )
+    dash_parser.add_argument("--title", type=str, default=None, help="Custom dashboard title")
 
-    # Subcommand: export-spoke-summary
     export_parser = subparsers.add_parser(
         "export-spoke-summary",
         help="Export a sanitized telemetry summary for a single Spoke (ADR-0046)",
@@ -100,96 +85,118 @@ def main() -> int:
         default=None,
         help="Target file path (default: <spoke>/.md/data/telemetry_summary.json)",
     )
+    return parser
 
-    args = parser.parse_args()
 
-    if args.command == "dashboard":
-        try:
-            out_file, report = render_fleet_dashboard(
-                output_path=args.out,
-                title=args.title,
-                hub_root=HUB_ROOT,
-            )
+def _format_innovations_markdown(innovations: list[dict[str, Any]]) -> str:
+    """Render Top Spoke Innovations list into Markdown table format."""
+    lines = [
+        "# 🚀 Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045)",
+        "",
+        "| Tool / Skill | Invocations | Source Spokes | Status | Recommendation |",
+        "| :--- | :---: | :--- | :---: | :--- |",
+    ]
+    for item in innovations:
+        spokes_str = ", ".join(item["source_spokes"])
+        lines.append(
+            f"| `{item['tool_or_skill']}` | {item['total_calls']} | {spokes_str} | "
+            f"{item['promotion_status']} | {item['recommendation']} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _handle_dashboard(args: argparse.Namespace) -> int:
+    """Execute the `dashboard` subcommand."""
+    try:
+        out_file, report = render_fleet_dashboard(
+            output_path=args.out, title=args.title, hub_root=HUB_ROOT
+        )
+        innovations = report.get_top_spoke_innovations()
+        candidates = [
+            i for i in innovations if i.get("promotion_status") == "Candidate for Hub Ingestion"
+        ]
+        print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_file.resolve()}")
+        print(f"  Fleet Hub: {report.hub_name}")
+        print(f"  Spokes: {report.total_spokes} ({report.online_spokes} Online)")
+        print(f"  Total Fleet Tokens: {report.total_fleet_tokens:,}")
+        print(f"  Total Fleet Cost: ${report.total_fleet_cost_usd:.4f} USD")
+        print(
+            f"  Top Spoke Innovations: {len(innovations)} detected ({len(candidates)} Candidate(s) for Hub Ingestion)"
+        )
+        return 0
+    except Exception as err:
+        print(f"[Error] Failed to render fleet dashboard: {err}", file=sys.stderr)
+        return 1
+
+
+def _handle_scan(args: argparse.Namespace) -> int:
+    """Execute the `scan` subcommand."""
+    try:
+        report = aggregate_fleet_telemetry(hub_root=HUB_ROOT)
+        if args.innovations_only:
             innovations = report.get_top_spoke_innovations()
-            candidates = [
-                i for i in innovations if i.get("promotion_status") == "Candidate for Hub Ingestion"
-            ]
-            print(f"[Success] Generated Cross-Spoke Fleet Dashboard at: {out_file.resolve()}")
-            print(f"  Fleet Hub: {report.hub_name}")
-            print(f"  Spokes: {report.total_spokes} ({report.online_spokes} Online)")
-            print(f"  Total Fleet Tokens: {report.total_fleet_tokens:,}")
-            print(f"  Total Fleet Cost: ${report.total_fleet_cost_usd:.4f} USD")
-            print(
-                f"  Top Spoke Innovations: {len(innovations)} detected ({len(candidates)} Candidate(s) for Hub Ingestion)"
+            out_content = (
+                json.dumps(innovations, indent=2, ensure_ascii=False)
+                if args.json
+                else _format_innovations_markdown(innovations)
             )
-            return 0
-        except Exception as err:
-            print(f"[Error] Failed to render fleet dashboard: {err}", file=sys.stderr)
-            return 1
-
-    elif args.command == "scan":
-        try:
-            report = aggregate_fleet_telemetry(hub_root=HUB_ROOT)
-            if args.innovations_only:
-                innovations = report.get_top_spoke_innovations()
-                if args.json:
-                    out_content = json.dumps(innovations, indent=2, ensure_ascii=False)
-                else:
-                    lines = [
-                        "# 🚀 Top Spoke Innovations & Candidates for Hub Ingestion (ADR-0045)",
-                        "",
-                        "| Tool / Skill | Invocations | Source Spokes | Status | Recommendation |",
-                        "| :--- | :---: | :--- | :---: | :--- |",
-                    ]
-                    for item in innovations:
-                        spokes_str = ", ".join(item["source_spokes"])
-                        lines.append(
-                            f"| `{item['tool_or_skill']}` | {item['total_calls']} | {spokes_str} | "
-                            f"{item['promotion_status']} | {item['recommendation']} |"
-                        )
-                    out_content = "\n".join(lines) + "\n"
-            else:
-                out_content = (
-                    json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
-                    if args.json
-                    else report.to_markdown()
-                )
-
-            if args.out:
-                args.out.parent.mkdir(parents=True, exist_ok=True)
-                args.out.write_text(out_content, encoding="utf-8")
-                print(f"[Success] Saved fleet telemetry report to {args.out}")
-            else:
-                print(out_content)
-            return 0
-        except Exception as err:
-            print(f"[Error] Failed to scan fleet telemetry: {err}", file=sys.stderr)
-            return 1
-
-    elif args.command == "export-spoke-summary":
-        try:
-            spoke_dir = args.target.resolve()
-            spoke_dict = {
-                "name": spoke_dir.name,
-                "path": str(spoke_dir),
-                "project_type": "Auto-detected",
-            }
-            summary = scan_spoke_telemetry(spoke_dict)
-            out_path = args.out or (spoke_dir / ".md" / "data" / "telemetry_summary.json")
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(
-                json.dumps(summary.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+        else:
+            out_content = (
+                json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+                if args.json
+                else report.to_markdown()
             )
-            print(f"[Success] Exported sanitized spoke telemetry summary to: {out_path.resolve()}")
-            print(f"  Project: {summary.project_name}")
-            print(f"  Total Tokens: {summary.total_tokens:,}")
-            print(f"  Estimated Cost: ${summary.total_cost_usd:.4f} USD")
-            return 0
-        except Exception as err:
-            print(f"[Error] Failed to export spoke summary: {err}", file=sys.stderr)
-            return 1
+        if args.out:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(out_content, encoding="utf-8")
+            print(f"[Success] Saved fleet telemetry report to {args.out}")
+        else:
+            print(out_content)
+        return 0
+    except Exception as err:
+        print(f"[Error] Failed to scan fleet telemetry: {err}", file=sys.stderr)
+        return 1
 
-    return 0
+
+def _handle_export_spoke_summary(args: argparse.Namespace) -> int:
+    """Execute the `export-spoke-summary` subcommand."""
+    try:
+        spoke_dir = args.target.resolve()
+        spoke_dict = {
+            "name": spoke_dir.name,
+            "path": str(spoke_dir),
+            "project_type": "Auto-detected",
+        }
+        summary = scan_spoke_telemetry(spoke_dict)
+        out_path = args.out or (spoke_dir / ".md" / "data" / "telemetry_summary.json")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(
+            json.dumps(summary.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(f"[Success] Exported sanitized spoke telemetry summary to: {out_path.resolve()}")
+        print(f"  Spoke ID: {summary.anonymized_spoke_id}")
+        print(f"  Total Tokens: {summary.total_tokens:,}")
+        print(f"  Estimated Cost: ${summary.total_cost_usd:.4f} USD")
+        return 0
+    except Exception as err:
+        print(f"[Error] Failed to export spoke summary: {err}", file=sys.stderr)
+        return 1
+
+
+def main() -> int:
+    """CLI Entry point for cross_spoke_analytics."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    args = _build_parser().parse_args()
+    handlers = {
+        "dashboard": _handle_dashboard,
+        "scan": _handle_scan,
+        "export-spoke-summary": _handle_export_spoke_summary,
+    }
+    handler = handlers.get(args.command)
+    return handler(args) if handler is not None else 0
 
 
 if __name__ == "__main__":

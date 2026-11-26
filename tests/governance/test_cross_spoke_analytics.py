@@ -124,9 +124,12 @@ def test_data_privacy_sanitization(tmp_path: Path) -> None:
 
 
 def test_aggregate_fleet_telemetry(tmp_path: Path) -> None:
-    """Verify fleet-wide aggregation across multiple Spokes."""
+    """Verify fleet-wide aggregation, fail-closed NO_DATA, and SHA-256 spoke_id anonymization."""
     spoke_1 = tmp_path / "spoke_1"
-    spoke_1.mkdir()
+    (spoke_1 / ".md" / "data").mkdir(parents=True)
+    (spoke_1 / ".md" / "data" / "telemetry_summary.json").write_text(
+        json.dumps({"total_tokens": 12000, "total_sessions": 2}), encoding="utf-8"
+    )
     spoke_2 = tmp_path / "spoke_2"
     spoke_2.mkdir()
 
@@ -147,22 +150,28 @@ def test_aggregate_fleet_telemetry(tmp_path: Path) -> None:
 
     report = aggregate_fleet_telemetry(hub_root=tmp_path, spokes_list=spokes_list)
     assert report.total_spokes == 2
-    assert report.online_spokes == 2
+    assert report.online_spokes == 1
+    assert report.spokes[0].is_online is True
+    assert report.spokes[1].is_online is False
+    assert report.spokes[1].budget_status == "NO_DATA"
     assert report.spokes_by_type.get("Thiết kế") == 1
     assert report.spokes_by_type.get("Pháp điển") == 1
 
     md = report.to_markdown()
-    assert "Project 1" in md
-    assert "Project 2" in md
+    assert report.spokes[0].anonymized_spoke_id in md
+    assert report.spokes[1].anonymized_spoke_id in md
+    assert "Project 1" not in md
+    assert "Project 2" not in md
+    assert str(spoke_1) not in md
     assert "Enterprise Fleet Rollup" in md
 
 
 def test_generate_fleet_dashboard_html() -> None:
-    """Verify HTML generation, Tailwind script, pure SVG charts, and embedded JSON."""
+    """Verify HTML generation, Tailwind script, pure SVG charts, and zero project name/path leakage."""
     s1 = SpokeTelemetrySummary(
         spoke_id="s1",
         project_name="DH Viet Nhat",
-        project_path="D:/Works/DH Viet Nhat",
+        project_path="D:/Works/DH Viet Nhat",  # ccba:allow-machine-path
         project_type="Thiết kế",
         total_tokens=250000,
         prompt_tokens=220000,
@@ -189,7 +198,9 @@ def test_generate_fleet_dashboard_html() -> None:
     assert "--background:" in html_out
     assert "--card:" in html_out
     assert "Enterprise Test Fleet" in html_out
-    assert "DH Viet Nhat" in html_out
+    assert s1.anonymized_spoke_id in html_out
+    assert "DH Viet Nhat" not in html_out
+    assert "D:/Works/DH Viet Nhat" not in html_out  # ccba:allow-machine-path
     assert '<script id="fleet-telemetry-data" type="application/json">' in html_out
     assert "<svg" in html_out
 
@@ -408,3 +419,96 @@ def test_proposal_template_passes_leakage_audit() -> None:
     auditor = SpokeLeakageAuditor(Path.cwd(), strict=True)
     assert auditor.audit_proposal_file(template_file) is True
     assert len(auditor.errors) == 0
+
+
+def test_scan_spoke_telemetry_fail_closed_no_data_and_parse_error(tmp_path: Path) -> None:
+    """Verify empty Spoke returns NO_DATA and corrupt telemetry returns PARSE_ERROR (is_online=False)."""
+    empty_spoke = tmp_path / "empty_spoke"
+    empty_spoke.mkdir()
+    res_empty = scan_spoke_telemetry({"name": "Empty", "path": str(empty_spoke)})
+    assert res_empty.is_online is False
+    assert res_empty.budget_status == "NO_DATA"
+    assert res_empty.spoke_id.startswith("spoke-")
+
+    corrupt_json_spoke = tmp_path / "corrupt_json"
+    (corrupt_json_spoke / ".md" / "data").mkdir(parents=True)
+    (corrupt_json_spoke / ".md" / "data" / "telemetry_summary.json").write_text(
+        "{not valid json", encoding="utf-8"
+    )
+    res_corrupt = scan_spoke_telemetry({"name": "Corrupt", "path": str(corrupt_json_spoke)})
+    assert res_corrupt.is_online is False
+    assert res_corrupt.budget_status == "PARSE_ERROR"
+
+    corrupt_html_spoke = tmp_path / "corrupt_html"
+    (corrupt_html_spoke / ".md" / "reports").mkdir(parents=True)
+    (corrupt_html_spoke / ".md" / "reports" / "swarm_telemetry_dashboard.html").write_text(
+        "<html><body>no json script tag</body></html>", encoding="utf-8"
+    )
+    res_html_err = scan_spoke_telemetry({"name": "BadHtml", "path": str(corrupt_html_spoke)})
+    assert res_html_err.is_online is False
+    assert res_html_err.budget_status == "PARSE_ERROR"
+
+
+def test_fleet_export_maskara_privacy_and_zero_path_leakage(tmp_path: Path) -> None:
+    """Verify COND-PII-EXPORT & COND-SPOKE-HASH: zero project_name/path and Maskara redaction."""
+    fake_key = "sk-ant-api03-" + "1234567890abcdef1234567890"
+    spoke_dir = tmp_path / "Secret_Client_Project"
+    (spoke_dir / ".md" / "data").mkdir(parents=True)
+    (spoke_dir / ".md" / "data" / "telemetry_summary.json").write_text(
+        json.dumps(
+            {
+                "total_tokens": 42000,
+                "tool_counts": {f"custom_tool:{fake_key}": 6, "read_file": 20, "edit_file": 10},
+            }
+        ),
+        encoding="utf-8",
+    )
+    summary = scan_spoke_telemetry(
+        {
+            "name": "Secret Client Alpha",
+            "path": str(spoke_dir),
+            "project_type": "Contact ceo@secretclient.vn",
+        }
+    )
+    payload = summary.to_dict()
+    serialized = json.dumps(payload, ensure_ascii=False)
+    assert "project_name" not in payload
+    assert "project_path" not in payload
+    assert payload["spoke_id"].startswith("spoke-")
+    assert len(payload["spoke_id"]) == len("spoke-") + 16
+    assert "Secret Client Alpha" not in serialized
+    assert str(spoke_dir) not in serialized
+    assert "ceo@secretclient.vn" not in serialized
+    assert fake_key not in serialized
+
+
+def test_classify_innovations_excludes_modern_builtins_and_retry_loops() -> None:
+    """Verify updated STANDARD_BUILTIN_TOOLS and retry/error loop exclusion in innovations."""
+    spoke = SpokeTelemetrySummary(
+        spoke_id="spoke-retry-test",
+        project_name="Internal Project",
+        project_path="/home/vvc/secret/internal",
+        project_type="Software",
+        tool_counts={
+            "read_file": 40,
+            "edit_file": 25,
+            "write_file": 15,
+            "broken_converter": 8,
+            "solid_bim_checker": 6,
+        },
+        tool_error_counts={"broken_converter": 6},
+    )
+    report = FleetTelemetryReport(hub_name="Hub", spokes=[spoke], total_spokes=1, online_spokes=1)
+    innovations = report.get_top_spoke_innovations()
+    tool_names = {i["tool_or_skill"] for i in innovations}
+    assert "read_file" not in tool_names
+    assert "edit_file" not in tool_names
+    assert "write_file" not in tool_names
+
+    broken = next(i for i in innovations if i["tool_or_skill"] == "broken_converter")
+    assert broken["promotion_status"] == "Retry / Error Loop (Excluded)"
+    assert "Internal Project" not in broken["source_spokes"]
+    assert all(s.startswith("spoke-") for s in broken["source_spokes"])
+
+    solid = next(i for i in innovations if i["tool_or_skill"] == "solid_bim_checker")
+    assert solid["promotion_status"] == "Candidate for Hub Ingestion"
