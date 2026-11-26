@@ -1,6 +1,6 @@
 # Biên Bản Phỏng Vấn Grilling & Kế Hoạch Triển Khai `v3`: Cải Tổ Hệ Thống Tự Thu Thập Dữ Liệu & Cơ Chế Tự Cải Tiến (Issue `#910` + Wave 0–2)
 
-> **Ngày chốt:** `2026-11-26` · **Trạng thái:** `[APPROVED — AWAITING proceed]` (Đã chốt 4/4 Grilling Frontiers; Grok Peer Plan Audit 3 Pass: `944e1b6e` `REVISE_PLAN` $\to$ `ae11f49e` `APPROVE_WITH_CONDITIONS` $\to$ `358fac61-4cf0-4b0d-b6cb-71efe233b308` **`APPROVE_PLAN`**, `risk_score: 2`, **`blocking_conditions: 0`**; đã tiếp thu cả ghi chú non-blocking `COND-VERDICT-SINGLE-FN`)  
+> **Ngày chốt:** `2026-11-26` · **Trạng thái:** `[COMPLETED — PR #919 (25c8cffe), PR #920 (dc9cdca5), PR #922 (cdfd62e3) MERGED; Issue #910 CLOSED]` (Đã chốt 4/4 Grilling Frontiers; Grok Peer Plan Audit 3 Pass: `944e1b6e` `REVISE_PLAN` $\to$ `ae11f49e` `APPROVE_WITH_CONDITIONS` $\to$ `358fac61-4cf0-4b0d-b6cb-71efe233b308` **`APPROVE_PLAN`**, `risk_score: 2`, **`blocking_conditions: 0`**; đã tiếp thu cả ghi chú non-blocking `COND-VERDICT-SINGLE-FN`)  
 > **Nguồn sơ cấp:** Báo cáo phản biện kép [`research-self-telemetry-and-self-improvement-lessons.md`](../research_and_studies/research-self-telemetry-and-self-improvement-lessons.md) · Issue [#910](https://github.com/vvChu/ccba-agent-platform/issues/910) · `Mục 77` trong [`session_learnings_history.md`](../archive/session_learnings_history.md)  
 > **Biên lai Reuse-First Gate (`ADR-0061`):** `compile_catalog.py --in telemetry --out json --json` & `--in transcript --out json --json` $\to$ `NO_MATCH` (`index_sha256: 29d4ee1aa2efb369ce154585cd65e1c44ec31efed8ec4096a8f603b8944b6c49`).
 
