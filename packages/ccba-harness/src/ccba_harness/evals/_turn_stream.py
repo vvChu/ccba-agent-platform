@@ -612,3 +612,34 @@ def record_skill_invocations(
     with ledger_path.open("a", encoding="utf-8") as fh:
         fh.write("\n".join(new_lines) + "\n")
     return len(new_lines)
+
+
+def load_invocation_events(
+    ledger_path: Path | None = None,
+    transcript_dir: Path | None = None,
+    catalog_path: Path | str | None = None,
+) -> list[dict[str, Any]]:
+    """Load sanitized invocation events from `--transcript-dir` or JSONL ledger."""
+    if transcript_dir is not None:
+        turns = collect_turns_from_dir(transcript_dir, catalog_path=catalog_path)
+        by_key: dict[str, list[str]] = {}
+        for p in detect_behavioral_probes(turns, catalog_path=catalog_path):
+            by_key.setdefault(f"{p.conversation_id}:{p.turn_index}", []).append(p.probe_type)
+        return [
+            build_invocation_event(t, by_key.get(f"{t.conversation_id}:{t.turn_index}", []))
+            for t in turns
+        ]
+    target = ledger_path or DEFAULT_INVOCATION_LEDGER_PATH
+    if not target.is_file():
+        return []
+    out: list[dict[str, Any]] = []
+    for line in target.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict):
+            out.append(row)
+    return out
