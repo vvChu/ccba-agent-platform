@@ -321,6 +321,8 @@ class RatchetConfig:
     max_concurrency: int = cast(Any, _UNSET)
     max_failure_patches: int = cast(Any, _UNSET)
     baseline_score: float | None = None
+    require_holdout_for_keep: bool = False
+    verify_only: bool = False
 
     def _init_paths_and_model(self, exec_cfg: dict[str, Any]) -> None:
         """Normalizes file paths, skill_name, LLM engine flag, model, and baseline_score."""
@@ -566,6 +568,7 @@ class _RatchetLoopState:
     stagnant_trials: int = 0
     seen_hashes: set[str] = field(default_factory=set)
     history: list[RatchetTrialResult] = field(default_factory=list)
+    best_holdout_score: float | None = None
     finalize_error: str | None = None
 
 

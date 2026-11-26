@@ -72,7 +72,9 @@ def test_zero_token_short_circuit_on_exhausted_skill_sync(tmp_path: Path) -> Non
     coding_strategies = all_strategies.get("coding", [])
 
     skill_file = tmp_path / "SKILL.md"
-    body = "# Exhausted Skill\n"
+    body = (
+        "---\nname: ccba-file-stability-guard\nstability_zone: evolvable\n---\n# Exhausted Skill\n"
+    )
     for _, s_content in coding_strategies:
         body += f"\n{s_content}\n"
     skill_file.write_text(body, encoding="utf-8")
@@ -103,7 +105,7 @@ async def test_zero_token_short_circuit_on_exhausted_skill_async(tmp_path: Path)
     coding_strategies = all_strategies.get("coding", [])
 
     skill_file = tmp_path / "SKILL.md"
-    body = "# Exhausted Skill Async\n"
+    body = "---\nname: ccba-file-stability-guard\nstability_zone: evolvable\n---\n# Exhausted Skill Async\n"
     for _, s_content in coding_strategies:
         body += f"\n{s_content}\n"
     skill_file.write_text(body, encoding="utf-8")
@@ -129,7 +131,10 @@ async def test_zero_token_short_circuit_on_exhausted_skill_async(tmp_path: Path)
 def test_hard_max_token_ceiling_blocks_after_baseline(tmp_path: Path) -> None:
     """Verify optimizer halts before iteration 1 if baseline evaluation alone hits hard_max_tokens_per_skill."""
     skill_file = tmp_path / "SKILL.md"
-    skill_file.write_text("# Minimal Skill\n\nInstructions.\n", encoding="utf-8")
+    skill_file.write_text(
+        "---\nname: test-skill\nstability_zone: evolvable\n---\n# Minimal Skill\n\nInstructions.\n",
+        encoding="utf-8",
+    )
 
     config = RatchetConfig(
         target_file=skill_file,
@@ -207,6 +212,9 @@ def test_daemon_skips_exhausted_skills_until_yaml_hash_changes(tmp_path: Path) -
     skills_dir.mkdir(parents=True, exist_ok=True)
     maskara_dir = skills_dir / "ccba-maskara"
     maskara_dir.mkdir(parents=True, exist_ok=True)
+    tc_dir = skills_dir / "ccba-eval-gate" / "test_cases"
+    tc_dir.mkdir(parents=True, exist_ok=True)
+    (tc_dir / "eval_codebase_engineering.json").write_text("[]", encoding="utf-8")
 
     all_strategies = load_mutation_strategies()
     coding_strategies = all_strategies.get("coding", [])
@@ -244,6 +252,9 @@ def test_daemon_does_not_skip_exhausted_when_yaml_hash_changes(tmp_path: Path) -
     skills_dir.mkdir(parents=True, exist_ok=True)
     maskara_dir = skills_dir / "ccba-maskara"
     maskara_dir.mkdir(parents=True, exist_ok=True)
+    tc_dir = skills_dir / "ccba-eval-gate" / "test_cases"
+    tc_dir.mkdir(parents=True, exist_ok=True)
+    (tc_dir / "eval_codebase_engineering.json").write_text("[]", encoding="utf-8")
 
     all_strategies = load_mutation_strategies()
     coding_strategies = all_strategies.get("coding", [])

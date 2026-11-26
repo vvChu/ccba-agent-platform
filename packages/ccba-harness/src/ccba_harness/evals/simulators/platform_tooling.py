@@ -12,7 +12,6 @@ from .base import BaseDomainSimulator, SimulationContext
 
 _PLATFORM_TOOLING_SKILLS: frozenset[str] = frozenset(
     {
-        "ccba-ask",
         "ccba-autoresearch",
         "ccba-build-skill",
         "ccba-contribute-to-hub",

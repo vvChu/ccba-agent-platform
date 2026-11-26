@@ -371,6 +371,7 @@ def test_propose_mutation_preserves_frontmatter(tmp_path: Path):
     initial_text = """---
 name: ccba-copywriting
 version: 1.0.0
+stability_zone: evolvable
 ---
 
 # CCBA Copywriting
@@ -408,7 +409,11 @@ def test_evaluate_content_domain_simulation():
 def test_ratchet_keep_on_improvement(tmp_path: Path):
     """Test that improved score with 0 critical failures results in KEEP decision."""
     target = tmp_path / "SKILL.md"
-    target.write_text("---\nname: my-skill\n---\n# Baseline\n", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target.write_text(
+        f"---\nname: my-skill\nstability_zone: evolvable\n---\n# Baseline\n{pad}\n",
+        encoding="utf-8",
+    )
 
     cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=2)
     tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
@@ -449,7 +454,10 @@ def test_ratchet_keep_on_improvement(tmp_path: Path):
 def test_ratchet_revert_on_degraded_score(tmp_path: Path):
     """Test that degraded score triggers a REVERT and restores file content."""
     target = tmp_path / "SKILL.md"
-    initial_content = "---\nname: my-skill\n---\n# Baseline High Quality\n"
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    initial_content = (
+        f"---\nname: my-skill\nstability_zone: evolvable\n---\n# Baseline High Quality\n{pad}\n"
+    )
     target.write_text(initial_content, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=1)
@@ -493,7 +501,10 @@ def test_ratchet_revert_on_degraded_score(tmp_path: Path):
 def test_ratchet_revert_on_critical_failure_even_with_high_score(tmp_path: Path):
     """Test that a critical failure strictly causes REVERT even if overall score is high."""
     target = tmp_path / "SKILL.md"
-    initial_content = "# Initial Baseline"
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    initial_content = (
+        f"---\nname: crit-skill\nstability_zone: evolvable\n---\n# Initial Baseline\n{pad}\n"
+    )
     target.write_text(initial_content, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=1)
@@ -557,7 +568,8 @@ def test_ratchet_revert_on_critical_failure_even_with_high_score(tmp_path: Path)
 def test_ratchet_exception_during_iteration_recovers_safely(tmp_path: Path):
     """Test that an exception during mutation/evaluation cleanly rolls back target file."""
     target = tmp_path / "SKILL.md"
-    initial_content = "---\nname: safe\n---\n# Unbroken State\n"
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    initial_content = f"---\nname: safe\nstability_zone: evolvable\n---\n# Unbroken State\n{pad}\n"
     target.write_text(initial_content, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=1)
@@ -683,23 +695,33 @@ def test_run_eval_pipeline_auto_tune_integration(tmp_path: Path):
     skills_dir = tmp_path / ".agents" / "skills" / "ccba-copywriting"
     skills_dir.mkdir(parents=True, exist_ok=True)
     skill_file = skills_dir / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: ccba-copywriting\n---\n# Copywriting Guidelines\nInitial content\n",
+        f"---\nname: ccba-copywriting\nstability_zone: evolvable\n---\n# Copywriting Guidelines\nInitial content\n{pad}\n",
         encoding="utf-8",
     )
 
     dataset_file = tmp_path / "cases.json"
     dataset_file.write_text(
         json.dumps(
-            [{"id": "c1", "input_prompt": "Soạn thảo văn bản hành chính theo Nghị định 30"}]
+            [
+                {
+                    "id": "c1",
+                    "input_prompt": "Soạn thảo văn bản hành chính theo Nghị định 30",
+                    "golden_answer": "Căn cứ Nghị định 30/2020/NĐ-CP Điều 8 thể thức văn bản hành chính.",
+                },
+                {
+                    "id": "c2",
+                    "input_prompt": "Bổ sung phụ lục chuẩn hóa",
+                    "golden_answer": "UNMATCHED_TARGET_FOR_SUBOPTIMAL_BASELINE",
+                },
+            ]
         ),
         encoding="utf-8",
     )
 
     async def mock_task(item: EvalItem) -> str:
-        return (
-            "Căn cứ Nghị định 30/2020/NĐ-CP Điều 8 và Điều 10 quy định thể thức văn bản hành chính."
-        )
+        return "Căn cứ Nghị định 30/2020/NĐ-CP Điều 8 thể thức văn bản hành chính."
 
     rep = run_eval_pipeline(
         skill="copywriting",
@@ -769,7 +791,9 @@ def test_ratchet_config_auto_infers_skill_name(tmp_path: Path):
 def test_propose_mutation_distinct_enhancements_across_iterations(tmp_path: Path):
     """Test that propose_mutation produces distinct changes across iterations and halts cleanly without HTML comment junk."""
     target = tmp_path / "SKILL.md"
-    initial_text = "---\nname: ccba-codebase-design\n---\n# Baseline\nInitial text."
+    initial_text = (
+        "---\nname: ccba-codebase-design\nstability_zone: evolvable\n---\n# Baseline\nInitial text."
+    )
     target.write_text(initial_text, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=target, skill_name="ccba-codebase-design")
@@ -1039,14 +1063,15 @@ def test_tuner_with_real_llm_adapter_telemetry(tmp_path: Path):
     from types import SimpleNamespace
 
     skill_file = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: test-llm-skill\n---\n# Test Skill\nCăn cứ Luật Xây dựng...",
+        f"---\nname: test-llm-skill\nstability_zone: evolvable\n---\n# Test Skill\nCăn cứ Luật Xây dựng...\n{pad}\n",
         encoding="utf-8",
     )
 
     mock_client = MagicMock()
     mock_res = SimpleNamespace(
-        content="Nghị định 105/2025/NĐ-CP và Luật Xây dựng quy định...",
+        content="Nghị định 105/2025/NĐ-CP và Luật Xây dựng quy định chi tiết quy trình chuẩn mực.",
         usage=SimpleNamespace(prompt_tokens=40, completion_tokens=60, total_tokens=100),
     )
     mock_client.chat_with_metadata.return_value = mock_res
@@ -1058,10 +1083,15 @@ def test_tuner_with_real_llm_adapter_telemetry(tmp_path: Path):
         max_iterations=2,
         token_budget=10000,
     )
+    ds = [
+        EvalItem(id="llm_1", input_prompt="Kiểm tra quy trình", rubric="Đủ cấu trúc"),
+        EvalItem(id="llm_2", input_prompt="Kiểm tra tiêu chuẩn", rubric="Đủ cấu trúc"),
+    ]
 
     opt = GitRatchetOptimizer(
         config=cfg,
         client=mock_client,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
@@ -1078,8 +1108,9 @@ def test_tuner_with_real_llm_adapter_telemetry(tmp_path: Path):
 def test_tuner_circuit_breaker_halt(tmp_path: Path):
     """Verify GitRatchetOptimizer halts gracefully without crashing when CircuitBreaker is open."""
     skill_file = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: test-cb-skill\n---\n# Skill Content",
+        f"---\nname: test-cb-skill\nstability_zone: evolvable\n---\n# Skill Content\n{pad}\n",
         encoding="utf-8",
     )
 
@@ -1088,7 +1119,7 @@ def test_tuner_circuit_breaker_halt(tmp_path: Path):
     from types import SimpleNamespace
 
     mock_res_ok = SimpleNamespace(
-        content="Valid content",
+        content="Valid content with sufficient length for scoring baseline.",
         usage=SimpleNamespace(prompt_tokens=10, completion_tokens=10, total_tokens=20),
     )
     # Iteration fails with CircuitBreakerOpenError
@@ -1103,10 +1134,15 @@ def test_tuner_circuit_breaker_halt(tmp_path: Path):
         use_real_llm=True,
         max_iterations=5,
     )
+    ds = [
+        EvalItem(id="cb_1", input_prompt="Prompt 1", rubric="Rubric 1"),
+        EvalItem(id="cb_2", input_prompt="Prompt 2", rubric="Rubric 2"),
+    ]
 
     opt = GitRatchetOptimizer(
         config=cfg,
         client=mock_client,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
@@ -1124,15 +1160,15 @@ def test_tuner_token_budget_exceeded_halt(tmp_path: Path):
     from types import SimpleNamespace
 
     skill_file = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: test-budget-skill\n---\n# Skill Content",
+        f"---\nname: test-budget-skill\nstability_zone: evolvable\n---\n# Skill Content\n{pad}\n",
         encoding="utf-8",
     )
 
     mock_client = MagicMock()
-    # Returns 100 tokens per call, while budget ceiling is only 50
     mock_res = SimpleNamespace(
-        content="Content...",
+        content="Valid content with sufficient length for scoring baseline.",
         usage=SimpleNamespace(prompt_tokens=50, completion_tokens=50, total_tokens=100),
     )
     mock_client.chat_with_metadata.return_value = mock_res
@@ -1143,10 +1179,15 @@ def test_tuner_token_budget_exceeded_halt(tmp_path: Path):
         max_iterations=5,
         token_budget=250,  # Allows baseline (200 tokens) but exhausts on iteration 1
     )
+    ds = [
+        EvalItem(id="tb_1", input_prompt="Prompt 1", rubric="Rubric 1"),
+        EvalItem(id="tb_2", input_prompt="Prompt 2", rubric="Rubric 2"),
+    ]
 
     opt = GitRatchetOptimizer(
         config=cfg,
         client=mock_client,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
@@ -1164,7 +1205,7 @@ def test_tuner_token_budget_exceeded_during_baseline(tmp_path: Path):
 
     skill_file = tmp_path / "SKILL.md"
     skill_file.write_text(
-        "---\nname: test-budget-baseline-skill\n---\n# Skill Content",
+        "---\nname: test-budget-baseline-skill\nstability_zone: evolvable\n---\n# Skill Content",
         encoding="utf-8",
     )
 
@@ -1181,10 +1222,12 @@ def test_tuner_token_budget_exceeded_during_baseline(tmp_path: Path):
         max_iterations=5,
         token_budget=50,  # Smaller than 1 call (100 tokens)
     )
+    ds = [EvalItem(id="tbb_1", input_prompt="Prompt 1", rubric="Rubric 1")]
 
     opt = GitRatchetOptimizer(
         config=cfg,
         client=mock_client,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
@@ -1243,6 +1286,7 @@ def test_bigbim_risk_eval_dataset_and_scorer(tmp_path: Path):
     skill_file.write_text(
         """---
 name: bigbim-risk
+stability_zone: evolvable
 triggers:
 - mâu thuẫn thông tin
 - information conflict
@@ -1289,6 +1333,7 @@ def test_bigbim_governance_eval_dataset_and_scorer(tmp_path: Path):
     skill_file.write_text(
         """---
 name: bigbim-governance
+stability_zone: evolvable
 triggers:
 - sợi chỉ vàng
 - sợi chỉ đỏ
@@ -1342,6 +1387,7 @@ def test_bigbim_rase_eval_dataset_and_scorer(tmp_path: Path):
     skill_file.write_text(
         """---
 name: bigbim-rase
+stability_zone: evolvable
 triggers:
 - rase
 - phân tích rase
@@ -1544,7 +1590,7 @@ def test_code_review_skill_routing_and_mutation(tmp_path: Path):
     # ccba-review-proposal -> eval_general_domain.json or platform
     assert daemon._resolve_dataset_file("ccba-review-proposal") != "eval_codebase_engineering.json"
 
-    initial_text = "# Code Review Skill\nInstructions here."
+    initial_text = "---\nname: ccba-code-review\nstability_zone: evolvable\n---\n# Code Review Skill\nInstructions here."
     mutated = mutate_skill(initial_text, 1, skill_name="ccba-code-review")
     # Must apply Hard Completion Lock (Coding strategy), NOT Single-Writer (Orchestration strategy)
     assert "Bất Biến Vận Hành & Khóa Cứng Hoàn Tất" in mutated
@@ -1650,11 +1696,12 @@ def test_fallback_skill_tuning_without_hard_lock(tmp_path: Path):
     """Test generic fallback skill runs auto-tuning without requiring Hard Completion Lock."""
     skill_file = tmp_path / "SKILL.md"
     skill_file.write_text(
-        "---\nname: ccba-generic-sample\n---\n# Generic Skill\nTham chiếu [Mẫu](references/template.md).\n",
+        "---\nname: ccba-generic-sample\nstability_zone: evolvable\n---\n# Generic Skill\nTham chiếu [Mẫu](references/template.md).\n",
         encoding="utf-8",
     )
+    ds = [EvalItem(id="fb_1", input_prompt="Tạo tài liệu chuẩn", rubric="Có liên kết tham chiếu")]
     cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-generic-sample", max_iterations=1)
-    tuner = GitRatchetOptimizer(cfg, dry_run_git=True)
+    tuner = GitRatchetOptimizer(cfg, dataset=ds, dry_run_git=True)
     scorers = tuner.scorers
     assert not any(s.is_critical for s in scorers)
     rep = tuner.evaluate_content(skill_file.read_text(encoding="utf-8"))
@@ -1964,23 +2011,19 @@ def test_tuner_per_skill_mutation_budget_halt(tmp_path: Path):
     from types import SimpleNamespace
 
     skill_file = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: test-mutation-budget-skill\n---\n# Skill Content",
+        f"---\nname: test-mutation-budget-skill\nstability_zone: evolvable\n---\n# Skill Content\n{pad}\n",
         encoding="utf-8",
     )
 
     mock_client = MagicMock()
-    # Baseline: 2 default items * 50_000 tokens = 100_000 baseline tokens
-    # Iteration 1: 2 items * 50_000 tokens = 100_000 mutation tokens
-    # Iteration 2: 2 items * 50_000 tokens = 200_000 cumulative mutation tokens
     mock_res = SimpleNamespace(
-        content="Normal output",
+        content="Normal valid output text with sufficient length for scoring.",
         usage=SimpleNamespace(prompt_tokens=25_000, completion_tokens=25_000, total_tokens=50_000),
     )
     mock_client.chat_with_metadata.return_value = mock_res
 
-    # Even with very small per_skill_mutation_budget (e.g. 50_000),
-    # the >= 2 trials invariant guarantees trial 1 completes without early halting.
     cfg = RatchetConfig(
         target_file=skill_file,
         use_real_llm=True,
@@ -1988,10 +2031,15 @@ def test_tuner_per_skill_mutation_budget_halt(tmp_path: Path):
         token_budget=10_000_000,
         per_skill_mutation_budget=50_000,
     )
+    ds = [
+        EvalItem(id="mb_1", input_prompt="Prompt 1", rubric="Rubric 1"),
+        EvalItem(id="mb_2", input_prompt="Prompt 2", rubric="Rubric 2"),
+    ]
 
     opt = GitRatchetOptimizer(
         config=cfg,
         client=mock_client,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
@@ -2005,8 +2053,9 @@ def test_tuner_per_skill_mutation_budget_halt(tmp_path: Path):
 def test_tuner_skip_holdout_re_evaluation_when_unchanged(tmp_path: Path):
     """Verify final holdout re-evaluation is skipped when kept_count == 0."""
     skill_file = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(900))
     skill_file.write_text(
-        "---\nname: test-holdout-skill\n---\n# Skill Content",
+        f"---\nname: test-holdout-skill\nstability_zone: evolvable\n---\n# Skill Content\n{pad}\n",
         encoding="utf-8",
     )
 
@@ -2014,13 +2063,19 @@ def test_tuner_skip_holdout_re_evaluation_when_unchanged(tmp_path: Path):
         target_file=skill_file,
         max_iterations=1,
     )
+    ds = [EvalItem(id="tune_1", input_prompt="Tuning prompt", golden_answer="Valid tuning output")]
 
     opt = GitRatchetOptimizer(
         config=cfg,
+        dataset=ds,
         dry_run_git=True,
         project_root=tmp_path,
     )
-    opt.holdout_dataset = [EvalItem(id="holdout_1", input_prompt="Holdout prompt")]
+    opt.holdout_dataset = [
+        EvalItem(
+            id="holdout_1", input_prompt="Holdout prompt", golden_answer="Valid holdout output"
+        )
+    ]
 
     # Force propose_mutation to produce content that does not improve score
     opt.propose_mutation = lambda content, i: content + "\n<!-- non-improving mutation -->"
@@ -2033,6 +2088,8 @@ def test_tuner_skip_holdout_re_evaluation_when_unchanged(tmp_path: Path):
         rep = orig_eval(content, dataset=dataset)
         if "<!-- non-improving mutation -->" in content:
             rep.overall_score = 10.0  # lower than baseline -> REVERT
+        else:
+            rep.overall_score = 60.0  # non-zero sub-optimal baseline
         return rep
 
     opt.evaluate_content = spy_eval  # type: ignore[assignment]
@@ -2100,7 +2157,7 @@ def test_archetype_ssot_resolution():
         resolve_domain_dataset,
     )
 
-    assert len(DOMAIN_ARCHETYPES) == 17
+    assert len(DOMAIN_ARCHETYPES) == 18
 
     # Check each archetype has non-empty keywords and valid dataset
     for arch in DOMAIN_ARCHETYPES:
@@ -2196,7 +2253,11 @@ def test_flagship_redteam_overrides():
 def test_ratchet_fast_fail_guard_reverts_mutation_on_broken_links(tmp_path: Path):
     """Test that improved score is REVERTED if mutation introduces broken link (ADR-0058 Fast-Fail Guard)."""
     target = tmp_path / "SKILL.md"
-    target.write_text("---\nname: my-skill\n---\n# Baseline\n", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target.write_text(
+        f"---\nname: my-skill\nstability_zone: evolvable\n---\n# Baseline\n{pad}\n",
+        encoding="utf-8",
+    )
 
     cfg = RatchetConfig(target_file=target, target_score=90.0, max_iterations=2)
     tuner = GitRatchetOptimizer(cfg, dry_run_git=True)

@@ -31,6 +31,7 @@ from .scorers import (
     get_orchestration_scorers,
     get_pccc_scorers,
     get_platform_tooling_scorers,
+    get_router_advisor_scorers,
     get_skill_repair_scorers,
     get_visual_design_scorers,
     get_visual_diagram_scorers,
@@ -67,6 +68,7 @@ SCORER_FACTORIES: dict[str, Callable[[], list[BaseScorer]]] = {
     "get_orchestration_scorers": get_orchestration_scorers,
     "get_pccc_scorers": get_pccc_scorers,
     "get_platform_tooling_scorers": get_platform_tooling_scorers,
+    "get_router_advisor_scorers": get_router_advisor_scorers,
     "get_skill_repair_scorers": get_skill_repair_scorers,
     "get_visual_design_scorers": get_visual_design_scorers,
     "get_visual_diagram_scorers": get_visual_diagram_scorers,
@@ -153,6 +155,7 @@ BIM_GOVERNANCE_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim_governa
 BIM_RASE_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim_rase"].keywords
 BIM_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["bim"].keywords
 CODING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["coding"].keywords
+ROUTER_ADVISOR_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["router_advisor"].keywords
 PLATFORM_TOOLING_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["platform_tooling"].keywords
 ORCHESTRATION_ARCHETYPE_KEYWORDS: tuple[str, ...] = _ARCHETYPE_MAP["orchestration"].keywords
 
@@ -198,9 +201,88 @@ def resolve_domain_archetype(skill_name: str) -> DomainArchetype | None:
             "codebase-design" in sname_core_hyphen or "codebase-design" in sname_hyphen
         ):
             continue
+        if arch.name == "router_advisor":
+            if any(
+                re.search(rf"(?:^|[-_]){re.escape(k)}(?:$|[-_])", sname_hyphen)
+                for k in arch.keywords
+            ):
+                return arch
+            continue
         if any(k in sname_core or k in sname_core_hyphen for k in arch.keywords):
             return arch
     return None
+
+
+@dataclass(frozen=True)
+class DatasetContractResolution:
+    """Fail-closed dataset resolution outcome for production evaluation runners (Issue #910)."""
+
+    status: str
+    tier: str
+    dataset_path: Path | None = None
+    dataset_file: str | None = None
+    archetype_name: str | None = None
+    reason: str = ""
+
+
+def _resolve_tier1_skill_dataset(skill_name: str, dir_path: Path) -> Path | None:
+    """Finds a skill-specific dataset file in dir_path without archetype fallback."""
+    clean_skill = (
+        skill_name.strip().lower().removeprefix("ccba-").removeprefix("bigbim-").replace("-", "_")
+    )
+    canonical_skill = skill_name.strip().lower().replace("-", "_")
+    for candidate in (
+        f"eval_{clean_skill}.json",
+        f"{clean_skill}.json",
+        f"eval_{canonical_skill}.json",
+    ):
+        cand_path = dir_path / candidate
+        if cand_path.is_file():
+            return cand_path.resolve()
+    return None
+
+
+def _unconfigured_contract(reason: str, arch_name: str | None = None) -> DatasetContractResolution:
+    """Constructs a fail-closed UNCONFIGURED DatasetContractResolution."""
+    return DatasetContractResolution("UNCONFIGURED", "unconfigured", None, None, arch_name, reason)
+
+
+def resolve_domain_dataset_contract(
+    skill_name: str,
+    test_cases_dir: Path | str | None = None,
+) -> DatasetContractResolution:
+    """Fail-closed 2-tier dataset resolution without silent eval_general_domain.json fallback."""
+    if test_cases_dir is None:
+        return _unconfigured_contract("test_cases_dir is not provided.")
+    dir_path = Path(test_cases_dir)
+    if not dir_path.is_dir():
+        return _unconfigured_contract(f"test_cases_dir does not exist: {dir_path}")
+
+    arch = resolve_domain_archetype(skill_name)
+    tier1_path = _resolve_tier1_skill_dataset(skill_name, dir_path)
+    if tier1_path is not None:
+        return DatasetContractResolution(
+            "CONFIGURED", "tier1_skill", tier1_path, tier1_path.name, arch.name if arch else None
+        )
+
+    if arch is not None:
+        arch_path = dir_path / arch.dataset_file
+        if arch_path.is_file():
+            return DatasetContractResolution(
+                "CONFIGURED",
+                "tier2_explicit_archetype",
+                arch_path.resolve(),
+                arch.dataset_file,
+                arch.name,
+            )
+        return _unconfigured_contract(
+            f"Archetype '{arch.name}' dataset '{arch.dataset_file}' not found.", arch.name
+        )
+
+    return _unconfigured_contract(
+        f"No skill-specific dataset or explicit archetype for '{skill_name}' "
+        "(silent eval_general_domain.json fallback disabled)."
+    )
 
 
 def resolve_domain_dataset(

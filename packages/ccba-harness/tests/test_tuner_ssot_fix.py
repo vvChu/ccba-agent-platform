@@ -55,7 +55,9 @@ def test_bigbim_skills_ssot_archetype_routing() -> None:
 def test_propose_mutation_coding_no_unsolicited_adr_matrix_token(tmp_path: Path) -> None:
     """Verify propose_mutation for coding skills does not inject raw ADR-0058 token in heading."""
     target = tmp_path / "SKILL.md"
-    base_content = "---\nname: ccba-append-only-logger\n---\n# Logger Pattern\n"
+    base_content = (
+        "---\nname: ccba-append-only-logger\nstability_zone: evolvable\n---\n# Logger Pattern\n"
+    )
     target.write_text(base_content, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=str(target), skill_name="ccba-append-only-logger")
@@ -73,7 +75,7 @@ def test_propose_mutation_coding_no_unsolicited_adr_matrix_token(tmp_path: Path)
 def test_propose_mutation_headings_have_no_hardcoded_numbers(tmp_path: Path) -> None:
     """Verify all domain strategy headings use semantic headings without numeric prefixes."""
     target = tmp_path / "SKILL.md"
-    base_content = "---\nname: test-skill\n---\n# Test Skill\n"
+    base_content = "---\nname: test-skill\nstability_zone: evolvable\n---\n# Test Skill\n"
     target.write_text(base_content, encoding="utf-8")
 
     domains = [
@@ -390,7 +392,7 @@ async def test_legal_tooling_simulation_mock_task_and_scoring() -> None:
 
 
 def test_platform_tooling_ssot_archetype_routing() -> None:
-    """Verify all 23 developer utility skills route to platform_tooling archetype and eval_platform_tooling.json."""
+    """Verify developer utility skills route to platform_tooling and ccba-ask routes to router_advisor."""
     from ccba_harness.evals.archetypes import (
         get_default_domain_scorers,
         resolve_domain_archetype,
@@ -398,8 +400,15 @@ def test_platform_tooling_ssot_archetype_routing() -> None:
     )
     from ccba_harness.evals.runner import load_eval_dataset
 
+    # Disjoint routing (Issue #910): ccba-ask -> router_advisor; ccba-maskara -> coding; *task* != router_advisor
+    ask_arch = resolve_domain_archetype("ccba-ask")
+    assert ask_arch is not None and ask_arch.name == "router_advisor"
+    assert resolve_domain_dataset("ccba-ask") == "eval_ccba_ask.json"
+    maskara_arch = resolve_domain_archetype("ccba-maskara")
+    assert maskara_arch is not None and maskara_arch.name == "coding"
+    assert resolve_domain_archetype("ccba-task-runner") is None
+
     tooling_skills = [
-        "ccba-ask",
         "ccba-autoresearch",
         "ccba-build-skill",
         "ccba-contribute-to-hub",

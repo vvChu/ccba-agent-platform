@@ -1,0 +1,148 @@
+[
+  {
+    "id": "test_ccba_ask_bare_state_aware_next_step",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask tiếp theo nên làm gì?",
+    "golden_answer": {
+      "mode": "Mode A (State-Aware Next-Step)",
+      "read_only": true,
+      "must_recommend_one_action": true,
+      "must_include_copy_paste_command": true,
+      "must_check_phase_boundary": "Tiếp tục tại đây hay mở phiên mới"
+    },
+    "rubric": "Phải phản hồi ở chế độ chỉ đọc (read-only), chốt 1 khuyến nghị chính kèm trạng thái phiên (tiếp tục vs mở phiên mới) và 1 khối lệnh /ccba-* copy-paste 1-click."
+  },
+  {
+    "id": "test_ccba_ask_mention_plan_read_only_lock",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask tôi dùng lệnh /plan trong tình huống này được không?",
+    "golden_answer": {
+      "mode": "Mode A (Mention != Invoke)",
+      "read_only": true,
+      "mutating_tool_calls": 0,
+      "must_not_create_implementation_plan": true,
+      "recommended_comparison": "/plan (built-in) vs /ccba-new-feature + /ccba-to-spec"
+    },
+    "rubric": "Tuyệt đối chỉ đọc (read-only, KHÔNG gọi write_file, KHÔNG tự tạo implementation_plan.md); giải thích so sánh /plan với /ccba-new-feature và /ccba-to-spec rồi xuất lệnh gợi ý."
+  },
+  {
+    "id": "test_ccba_ask_mention_implement_no_side_effect",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask nên chạy thẳng /ccba-implement cho Issue #910 hay đi qua /ccba-new-feature trước?",
+    "golden_answer": {
+      "mode": "Mode A (Mention != Invoke)",
+      "read_only": true,
+      "mutating_tool_calls": 0,
+      "canonical_entry_point": "/ccba-new-feature #910"
+    },
+    "rubric": "Chỉ đọc (không sửa code), khẳng định khi đã có Issue ID luôn vào qua /ccba-new-feature #910 (không nhảy thẳng /ccba-implement), xuất khối lệnh copy-paste."
+  },
+  {
+    "id": "test_ccba_ask_builtin_plan_vs_ccba_spec",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask khác nhau giữa built-in /plan của Antigravity và /ccba-to-spec + /ccba-grilling là gì?",
+    "golden_answer": {
+      "mode": "Mode A (Built-in vs CCBA)",
+      "read_only": true,
+      "reference": "references/builtin_vs_ccba.md",
+      "distinction": "/plan là kế hoạch nhanh cục bộ; /ccba-grilling + /ccba-to-spec là phỏng vấn stress-test, Grok Peer Audit và lưu spec chuẩn CCBA"
+    },
+    "rubric": "Phân biệt chính xác /plan (built-in) vs /ccba-grilling + /ccba-to-spec, dẫn chiếu tài liệu Level 3 references/builtin_vs_ccba.md và chốt khuyến nghị."
+  },
+  {
+    "id": "test_ccba_ask_builtin_grill_me_vs_ccba_grilling",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask nên dùng /grill-me có sẵn hay /ccba-grilling cho thiết kế One-Way Door?",
+    "golden_answer": {
+      "mode": "Mode A (Built-in vs CCBA)",
+      "read_only": true,
+      "recommended_command": "/ccba-grilling",
+      "rationale": "/ccba-grilling hỗ trợ Design Tree, ADR-0067 và cổng Grok Peer Audit"
+    },
+    "rubric": "Khuyến nghị /ccba-grilling cho thay đổi One-Way Door vì tích hợp ADR-0067 và Grok Peer Audit, giữ chế độ chỉ đọc và có lệnh copy-paste."
+  },
+  {
+    "id": "test_ccba_ask_builtin_learn_vs_retrospective",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask cuối phiên xong PR rồi thì gọi /learn hay /ccba-session-retrospective?",
+    "golden_answer": {
+      "mode": "Mode A (Built-in vs CCBA)",
+      "read_only": true,
+      "recommended_command": "/ccba-session-retrospective",
+      "rationale": "Đóng vòng session_learnings.md <= 10KB, log.md, ADR Matrix và 4 Governance Gates"
+    },
+    "rubric": "Chốt khuyến nghị /ccba-session-retrospective (phân biệt với /learn), xác nhận trạng thái phiên và cung cấp lệnh 1-click."
+  },
+  {
+    "id": "test_ccba_ask_phase_boundary_clear_context",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask vừa xong pha thiết kế dài 60 lượt, nên code tiếp ở phiên này hay mở phiên mới?",
+    "golden_answer": {
+      "mode": "Mode A (Phase Boundary)",
+      "read_only": true,
+      "reference": "references/phase_boundaries.md",
+      "recommendation": "Nên mở phiên mới (Clear Context) với prompt bàn giao gọn hoặc /ccba-handoff"
+    },
+    "rubric": "Đánh giá ranh giới pha theo references/phase_boundaries.md, khuyến nghị mở phiên mới để tránh nhiễu ngữ cảnh và cung cấp prompt/lệnh bàn giao copy-paste."
+  },
+  {
+    "id": "test_ccba_ask_ship_routing_create_pr_vs_release",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask PR đã xanh CI 8/8 trên GitHub, tiếp theo gọi /ccba-create-pr, /ccba-contribute-to-hub hay /ccba-release-feature?",
+    "golden_answer": {
+      "mode": "Mode A (Ship Routing)",
+      "read_only": true,
+      "recommended_command": "/ccba-release-feature",
+      "distinction": "/ccba-create-pr tạo PR repo hiện tại; /ccba-contribute-to-hub đóng góp Spoke -> Hub; /ccba-release-feature chạy TRIHT, merge và lưu walkthrough"
+    },
+    "rubric": "Phân biệt rành mạch 3 lệnh và chốt /ccba-release-feature kèm khối lệnh copy-paste, giữ chế độ chỉ đọc."
+  },
+  {
+    "id": "test_ccba_ask_spoke_sync_routing",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask tôi đang ở Spoke và muốn kéo bản nâng cấp skill mới nhất từ Hub về thì dùng lệnh nào?",
+    "golden_answer": {
+      "mode": "Mode A (Spoke Sync)",
+      "read_only": true,
+      "recommended_command": "/ccba-update-spoke"
+    },
+    "rubric": "Chốt chính xác /ccba-update-spoke (phân biệt với /ccba-sync-upstream chỉ dành cho Hub), xuất lệnh 1-click ở chế độ chỉ đọc."
+  },
+  {
+    "id": "test_ccba_ask_mode_b_youtube_brainstorm_intake",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask brainstorm ý tưởng từ video YouTube https://youtu.be/example123 để áp dụng vào CCBA",
+    "golden_answer": {
+      "mode": "Mode B (Interactive Brainstorm Coach)",
+      "read_only": true,
+      "intake_routing": "/ccba-youtube-learn",
+      "rhythm": "Hybrid Rhythm / Party Mode",
+      "no_spoke_leakage": true
+    },
+    "rubric": "Nhận diện Mode B với đầu vào YouTube URL, điều phối trích xuất qua /ccba-youtube-learn hoặc đọc trích lược trước khi mở vòng thảo luận Hybrid Rhythm, không rò rỉ tham chiếu nội bộ Spoke."
+  },
+  {
+    "id": "test_ccba_ask_mode_b_reframe_and_neutral_handoff",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask brainstorm: làm sao viết thêm thật nhiều prompt rule vào AGENTS.md để agent bớt sai?",
+    "golden_answer": {
+      "mode": "Mode B (Reframe & Neutral Handoff)",
+      "read_only": true,
+      "technique": "Reframe (lật ngược giả định — ưu tiên kiểm tra tất định thay vì phình prompt)",
+      "handoff_targets": ["/ccba-wayfinder", "/ccba-grilling", "/ccba-to-spec"]
+    },
+    "rubric": "Áp dụng kỹ thuật Reframe lật ngược giả định, đề xuất chuyển giao trung lập (/ccba-wayfinder, /ccba-grilling hoặc /ccba-to-spec), tuyệt đối không nhắc tham chiếu riêng của Spoke."
+  },
+  {
+    "id": "test_ccba_ask_mode_c_explain_skill_and_session",
+    "domain": "router_advisor",
+    "input_prompt": "/ccba-ask giải thích giúp tôi /ccba-wayfinder hoạt động thế nào và khi nào dùng nó thay vì /ccba-grilling?",
+    "golden_answer": {
+      "mode": "Mode C (Clarify & Explain)",
+      "read_only": true,
+      "reference": "references/clarification_patterns.md",
+      "distinction": "/ccba-wayfinder lập bản đồ map.md cho bài toán mơ hồ/đa sóng; /ccba-grilling stress-test quyết định thiết kế cụ thể"
+    },
+    "rubric": "Phản hồi theo Mode C giải thích rõ vai trò /ccba-wayfinder vs /ccba-grilling ở chế độ chỉ đọc, không gọi tool ghi file, chốt 1 lệnh gợi ý."
+  }
+]

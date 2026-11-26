@@ -679,3 +679,33 @@ def get_visual_design_scorers(
         ],
         override_config,
     )
+
+
+def get_router_advisor_scorers(
+    override_config: dict[str, Any] | None = None,
+) -> list[BaseScorer]:
+    """Returns the standard scorer suite for read-only routing and advisory skills (e.g. ccba-ask)."""
+    return _build_quad_regex_scorers(
+        "router_advisor",
+        [
+            (
+                "router_advisor_canonical_routing",
+                r"(/ccba-[a-z0-9-]+|State-Aware|Built-in|Reframe|Hybrid Rhythm|Phase Boundary)",
+                0.35,
+                False,
+            ),
+            (
+                "router_advisor_read_only_hard_floor",
+                r"(read-only|chỉ đọc|không ghi|mention\s*!=\s*invoke|không thực thi)",
+                0.35,
+                True,
+            ),
+            (
+                "router_advisor_actionable_handoff",
+                r"(khuyến nghị|copy-paste|1-click|phiên mới|clear context|references/)",
+                0.20,
+                False,
+            ),
+        ],
+        override_config,
+    )

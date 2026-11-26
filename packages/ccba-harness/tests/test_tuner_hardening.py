@@ -25,7 +25,10 @@ from ccba_harness.evals.tuner import GitRatchetOptimizer, RatchetConfig
 def test_tuner_fast_halt_on_duplicate_mutation_hash(tmp_path: Path) -> None:
     """Verify seen_hashes fast-halt stops execution immediately when a duplicate mutation is proposed."""
     target = tmp_path / "SKILL.md"
-    initial_text = "# Initial Skill Content\nSome body text."
+    pad = " ".join(f"rule_{i}" for i in range(200))
+    initial_text = (
+        f"---\nname: test-skill\nstability_zone: evolvable\n---\n# Initial Skill Content\n{pad}\n"
+    )
     target.write_text(initial_text, encoding="utf-8")
 
     config = RatchetConfig(
@@ -36,7 +39,7 @@ def test_tuner_fast_halt_on_duplicate_mutation_hash(tmp_path: Path) -> None:
         patience=5,
         full_sweep=True,
     )
-    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path, dry_run_git=True)
 
     # Mock evaluate_content so baseline is 50.0%, iteration 1 evaluates to 40.0% (reverted)
     optimizer.evaluate_content = MagicMock()
@@ -68,7 +71,7 @@ def test_tuner_fast_halt_on_duplicate_mutation_hash(tmp_path: Path) -> None:
     optimizer.evaluate_content.side_effect = [baseline_report, reverted_report]
 
     # Propose mutation returns the EXACT same mutated text on both iteration 1 and iteration 2
-    duplicate_mutation = "# Initial Skill Content\nSome body text.\n\n## Mutation Attempt"
+    duplicate_mutation = initial_text + "\n## Mutation Attempt"
     optimizer.propose_mutation = MagicMock(return_value=duplicate_mutation)
 
     # Mock git operations
@@ -91,7 +94,7 @@ def test_tuner_fast_halt_on_duplicate_mutation_hash(tmp_path: Path) -> None:
 def test_tuner_fast_halt_when_propose_mutation_returns_unchanged(tmp_path: Path) -> None:
     """Verify optimizer halts with HALT_NO_FURTHER_STRATEGIES when propose_mutation returns unchanged content."""
     target = tmp_path / "SKILL.md"
-    initial_text = "# Existing Skill"
+    initial_text = "---\nname: test-skill\nstability_zone: evolvable\n---\n# Existing Skill"
     target.write_text(initial_text, encoding="utf-8")
 
     config = RatchetConfig(
@@ -100,7 +103,7 @@ def test_tuner_fast_halt_when_propose_mutation_returns_unchanged(tmp_path: Path)
         max_iterations=5,
         target_score=100.0,
     )
-    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path, dry_run_git=True)
     optimizer.evaluate_content = MagicMock(
         return_value=EvalReport(
             total_items=1,
@@ -125,7 +128,10 @@ def test_tuner_fast_halt_when_mutation_matches_baseline_after_kept_iteration(
 ) -> None:
     """Verify optimizer halts when mutation matches initial baseline content after a kept iteration."""
     target = tmp_path / "SKILL.md"
-    initial_text = "# Baseline Content"
+    pad = " ".join(f"rule_{i}" for i in range(200))
+    initial_text = (
+        f"---\nname: test-skill\nstability_zone: evolvable\n---\n# Baseline Content\n{pad}\n"
+    )
     target.write_text(initial_text, encoding="utf-8")
 
     config = RatchetConfig(
@@ -135,7 +141,7 @@ def test_tuner_fast_halt_when_mutation_matches_baseline_after_kept_iteration(
         target_score=100.0,
         full_sweep=True,
     )
-    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path, dry_run_git=True)
 
     baseline_report = EvalReport(
         total_items=1,
@@ -166,9 +172,7 @@ def test_tuner_fast_halt_when_mutation_matches_baseline_after_kept_iteration(
     optimizer.git_commit_improvement = MagicMock(return_value=True)
     optimizer.git_rollback_target = MagicMock()
 
-    # Iteration 1 proposes "# Baseline Content\nMutation 1" (kept)
-    # Iteration 2 proposes "# Baseline Content" (exact match to initial baseline)
-    mutation_1 = "# Baseline Content\nMutation 1"
+    mutation_1 = initial_text + "\nMutation 1"
     optimizer.propose_mutation = MagicMock(side_effect=[mutation_1, initial_text])
 
     report = optimizer.run()
@@ -182,7 +186,10 @@ def test_tuner_fast_halt_when_mutation_matches_baseline_after_kept_iteration(
 def test_propose_mutation_orchestration_archetype_keywords(tmp_path: Path) -> None:
     """Verify ccba-teamwork and orchestration archetype skills receive the orchestration template."""
     target = tmp_path / "SKILL.md"
-    base_content = "---\nname: ccba-teamwork\ndescription: Test\n---\n# Teamwork Workflow\n"
+    base_content = (
+        "---\nname: ccba-teamwork\ndescription: Test\nstability_zone: evolvable\n---\n"
+        "# Teamwork Workflow\n"
+    )
     target.write_text(base_content, encoding="utf-8")
 
     config = RatchetConfig(
@@ -302,6 +309,7 @@ def test_semantic_dedup_recognizes_headers_with_adr_tags(tmp_path: Path) -> None
     target = tmp_path / "SKILL.md"
     base_content = """---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -333,6 +341,7 @@ def test_header_replacement_preserves_existing_adr_tags(tmp_path: Path) -> None:
     target = tmp_path / "SKILL.md"
     base_content = """---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -365,6 +374,7 @@ def test_monotonic_token_guard_rejects_mutations_dropping_adr_tags(tmp_path: Pat
     target = tmp_path / "SKILL.md"
     initial_content = """---
 name: test-skill
+stability_zone: evolvable
 ---
 # Skill Documentation
 
@@ -396,6 +406,7 @@ name: test-skill
     # Mutation drops ADR-0058 (keeps HUB-ADR-0057)
     bad_mutation = """---
 name: test-skill
+stability_zone: evolvable
 ---
 # Skill Documentation
 
@@ -438,6 +449,7 @@ def test_header_replacement_preserves_multiple_and_complex_adr_tags(tmp_path: Pa
     for label, header_line in cases:
         base_content = f"""---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -470,6 +482,7 @@ def test_semantic_dedup_recognizes_complex_adr_tags(tmp_path: Path) -> None:
     target = tmp_path / "SKILL.md"
     base_content = """---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -496,6 +509,7 @@ def test_monotonic_token_guard_padding_and_underscore_invariance(tmp_path: Path)
     target = tmp_path / "SKILL.md"
     initial_content = """---
 name: test-skill
+stability_zone: evolvable
 ---
 # Skill Documentation
 
@@ -534,6 +548,7 @@ name: test-skill
     # Mutation uses unpadded ADR-58 and keeps HUB_ADR-0057
     valid_mutation = """---
 name: test-skill
+stability_zone: evolvable
 ---
 # Skill Documentation
 
@@ -563,6 +578,7 @@ def test_header_replacement_preserves_lowercase_adr_tags(tmp_path: Path) -> None
     for label, header_line in cases:
         base_content = f"""---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -603,6 +619,7 @@ def test_header_replacement_preserves_no_whitespace_before_parenthesis(tmp_path:
     for label, header_line in cases:
         base_content = f"""---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -637,6 +654,7 @@ def test_header_replacement_prevents_duplicate_tag_when_strategy_has_adr_tag(
     target = tmp_path / "SKILL.md"
     base_content = """---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -712,6 +730,7 @@ def test_semantic_dedup_recognizes_zero_whitespace_and_lowercase_tags(tmp_path: 
     for header in test_headers:
         base_content = f"""---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -739,6 +758,7 @@ def test_header_replacement_preserves_multiple_tags_zero_whitespace(tmp_path: Pa
     header_line = "## Bất Biến Vận Hành & Khóa Cứng Hoàn Tất(adr-0058)(hub-adr-0057)"
     base_content = f"""---
 name: ccba-coding-skill
+stability_zone: evolvable
 ---
 # Coding Skill
 
@@ -902,7 +922,10 @@ async def test_llm_task_adapter_reservation_barrier_and_safe_release() -> None:
 def test_hard_max_tokens_per_skill_halts_even_if_improvements_kept(tmp_path: Path) -> None:
     """Verify GitRatchetOptimizer halts with HARD_MAX_SKILL_TOKEN_LIMIT_EXCEEDED when hard ceiling is reached."""
     target = tmp_path / "SKILL.md"
-    initial_text = "# Initial Skill"
+    pad = " ".join(f"rule_{i}" for i in range(200))
+    initial_text = (
+        f"---\nname: test-skill\nstability_zone: evolvable\n---\n# Initial Skill\n{pad}\n"
+    )
     target.write_text(initial_text, encoding="utf-8")
 
     config = RatchetConfig(
@@ -914,7 +937,7 @@ def test_hard_max_tokens_per_skill_halts_even_if_improvements_kept(tmp_path: Pat
         per_skill_mutation_budget=None,
         hard_max_tokens_per_skill=1000,
     )
-    optimizer = GitRatchetOptimizer(config=config, root=tmp_path)
+    optimizer = GitRatchetOptimizer(config=config, root=tmp_path, dry_run_git=True)
 
     # Baseline evaluation consumes 0 mutation tokens
     baseline_rep = EvalReport(
@@ -936,7 +959,7 @@ def test_hard_max_tokens_per_skill_halts_even_if_improvements_kept(tmp_path: Pat
     )
 
     optimizer.evaluate_content = MagicMock(side_effect=[baseline_rep, iter1_rep])
-    optimizer.propose_mutation = MagicMock(return_value="# Mutated Skill 1")
+    optimizer.propose_mutation = MagicMock(return_value=initial_text + "\n# Mutated Skill 1")
     optimizer.git_commit_improvement = MagicMock(return_value=True)
 
     # Simulate token consumption of 1200 tokens during iteration 1
@@ -1000,7 +1023,7 @@ async def test_eval_runner_and_item_result_exception_preservation() -> None:
 async def test_async_event_loop_decoupling_native_coroutines(tmp_path: Path) -> None:
     """Verify evaluate_content_async and run_async execute seamlessly inside existing event loops without deadlock."""
     target = tmp_path / "SKILL.md"
-    initial_text = "# Test Async Skill"
+    initial_text = "---\nname: test-skill\nstability_zone: evolvable\n---\n# Test Async Skill"
     target.write_text(initial_text, encoding="utf-8")
 
     config = RatchetConfig(
@@ -1088,7 +1111,11 @@ async def test_run_async_with_holdout_dataset_re_eval_and_reuse(tmp_path: Path) 
     from ccba_harness.evals.tuner import RatchetReport
 
     target = tmp_path / "SKILL.md"
-    target.write_text("# Test Holdout Skill", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target.write_text(
+        f"---\nname: test-holdout\nstability_zone: evolvable\n---\n# Test Holdout Skill\n{pad}\n",
+        encoding="utf-8",
+    )
 
     cfg = RatchetConfig(target_file=str(target), max_iterations=1, target_score=100.0)
     opt = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
@@ -1173,7 +1200,11 @@ async def test_run_async_with_holdout_dataset_re_eval_and_reuse(tmp_path: Path) 
 async def test_run_async_holdout_error_graceful_handling(tmp_path: Path) -> None:
     """Verify run_async gracefully handles holdout scoring exceptions without crashing."""
     target = tmp_path / "SKILL.md"
-    target.write_text("# Test Error Skill", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target.write_text(
+        f"---\nname: test-error-skill\nstability_zone: evolvable\n---\n# Test Error Skill\n{pad}\n",
+        encoding="utf-8",
+    )
 
     cfg = RatchetConfig(target_file=str(target), max_iterations=1, target_score=100.0)
     opt = GitRatchetOptimizer(cfg, root=tmp_path, dry_run_git=True)
@@ -1201,16 +1232,18 @@ async def test_run_async_holdout_error_graceful_handling(tmp_path: Path) -> None
 def test_pre_eval_guard_rejects_skill_hygiene_violation(tmp_path: Path) -> None:
     """Verify _run_pre_eval_guards fast-fails on newly introduced skill hygiene violations (e.g. bashisms) before LLM eval."""
     target = tmp_path / "SKILL.md"
+    pad = " ".join(f"rule_{i}" for i in range(200))
     clean_baseline = (
         "---\n"
         "name: ccba-test-hygiene\n"
         "description: Test skill\n"
+        "stability_zone: evolvable\n"
         "metadata:\n"
         "  version: '1.0.0'\n"
         "  author: ccba\n"
         "---\n"
         "# Clean Skill\n"
-        "Safe instructions.\n"
+        f"Safe instructions.\n{pad}\n"
     )
     target.write_text(clean_baseline, encoding="utf-8")
 

@@ -277,14 +277,25 @@ def test_feat_bug_007_surface_diff_and_domain_eval_parity() -> None:
     )
     assert changed == []
 
+    from ccba_harness.evals.archetypes import resolve_domain_dataset_contract
+
     skill_file = repo_root / ".agents" / "skills" / "ccba-diagnosing-bugs" / "SKILL.md"
-    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-diagnosing-bugs")
+    contract = resolve_domain_dataset_contract(
+        "ccba-diagnosing-bugs", repo_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
+    )
+    assert contract.status == "CONFIGURED" and contract.dataset_path is not None
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        skill_name="ccba-diagnosing-bugs",
+        eval_dataset_file=contract.dataset_path,
+    )
     opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=repo_root)
     orig = skill_file.read_text(encoding="utf-8")
     base_rep = opt.evaluate_content(orig)
-    assert base_rep.total_items == 2
-    mut1 = opt.propose_mutation(orig, 1)
+    assert base_rep.total_items >= 5
+    orig_ev = orig.replace("---\n", "---\nstability_zone: evolvable\n", 1)
+    mut1 = opt.propose_mutation(orig_ev, 1)
     mut2 = opt.propose_mutation(mut1, 2)
     ratcheted_rep = opt.evaluate_content(mut2)
     assert ratcheted_rep.overall_score == 100.0
-    assert ratcheted_rep.passed_items == 2
+    assert ratcheted_rep.passed_items == base_rep.total_items

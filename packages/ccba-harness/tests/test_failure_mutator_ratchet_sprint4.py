@@ -51,7 +51,10 @@ def test_01_max_failure_patches_config_parsing(tmp_path):
 def test_02_propose_mutation_prioritizes_failure_patch_for_legal_archetype(tmp_path):
     """Case 2: propose_mutation injects failure card from ledger before YAML strategies."""
     skill_file = tmp_path / "SKILL.md"
-    initial_content = "---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n\nGuidelines here.\n"
+    initial_content = (
+        "---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n"
+        "# Legal Advisor\n\nGuidelines here.\n"
+    )
     skill_file.write_text(initial_content, encoding="utf-8")
 
     sig = FailureSignal(
@@ -82,7 +85,9 @@ def test_02_propose_mutation_prioritizes_failure_patch_for_legal_archetype(tmp_p
 def test_03_propose_mutation_caps_at_max_failure_patches(tmp_path):
     """Case 3: propose_mutation does not exceed max_failure_patches."""
     skill_file = tmp_path / "SKILL.md"
-    initial_content = "---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n"
+    initial_content = (
+        "---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n# Legal Advisor\n"
+    )
     skill_file.write_text(initial_content, encoding="utf-8")
 
     sigs = [
@@ -124,9 +129,7 @@ def test_04_short_circuit_unlocked_when_failure_signals_exist(tmp_path):
 
     all_strats = load_mutation_strategies()
     legal_enhancements = "\n\n".join(s[1] for s in all_strats.get("legal", []))
-    initial_content = (
-        f"---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n\n{legal_enhancements}\n"
-    )
+    initial_content = f"---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n# Legal Advisor\n\n{legal_enhancements}\n"
     skill_file.write_text(initial_content, encoding="utf-8")
 
     # Confirm YAML strategies are exhausted
@@ -171,7 +174,9 @@ def test_04_short_circuit_unlocked_when_failure_signals_exist(tmp_path):
 def test_05_baseline_seeds_ledger_for_legal_skill(tmp_path):
     """Case 5: Baseline evaluation seeds ledger for legal archetype skill (ADR-0059)."""
     skill_file = tmp_path / "SKILL.md"
-    initial_content = "---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n"
+    initial_content = (
+        "---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n# Legal Advisor\n"
+    )
     skill_file.write_text(initial_content, encoding="utf-8")
 
     score_res = ScoreResult(
@@ -330,7 +335,9 @@ def test_09_priority_queue_does_not_deprioritize_exhausted_with_signals():
 def test_10_ratchet_loop_avoids_duplicate_fingerprints_in_same_session(tmp_path):
     """Case 10: Optimizer tracks applied fingerprints to avoid proposing duplicate cards."""
     skill_file = tmp_path / "SKILL.md"
-    initial_content = "---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n"
+    initial_content = (
+        "---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n# Legal Advisor\n"
+    )
     skill_file.write_text(initial_content, encoding="utf-8")
 
     sig = FailureSignal(
@@ -505,7 +512,9 @@ def test_14_targeted_boost_does_not_cap_max_iter_to_1_on_needs_ledger_seed(
         ]
 
     # 1. Untargeted nightly batch sweep -> caps max_iter to 1
-    daemon_batch = NightlyTunerDaemon(root=tmp_path, max_iterations_low=3, no_telegram=True)
+    daemon_batch = NightlyTunerDaemon(
+        root=tmp_path, max_iterations_low=3, no_telegram=True, allow_mock_simulator=True
+    )
     monkeypatch.setattr(daemon_batch, "discover_skills_and_datasets", _fake_discover)
     daemon_batch.run_nightly_batch(dry_run=True)
     assert captured_max_iters[-1] == 1
@@ -516,6 +525,7 @@ def test_14_targeted_boost_does_not_cap_max_iter_to_1_on_needs_ledger_seed(
         max_iterations_low=3,
         target_skills=["ccba-legal-advisor"],
         no_telegram=True,
+        allow_mock_simulator=True,
     )
     monkeypatch.setattr(daemon_boost, "discover_skills_and_datasets", _fake_discover)
     daemon_boost.run_nightly_batch(dry_run=True)
@@ -530,7 +540,11 @@ def test_15_run_real_llm_single_event_loop_and_aclose(tmp_path: Path):
     from ccba_harness.evals.models import EvalItem
 
     skill_file = tmp_path / "SKILL.md"
-    skill_file.write_text("---\nname: ccba-legal-advisor\n---\n# Legal Advisor\n", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    skill_file.write_text(
+        f"---\nname: ccba-legal-advisor\nstability_zone: evolvable\n---\n# Legal Advisor\n{pad}\n",
+        encoding="utf-8",
+    )
 
     observed_loops: list[int] = []
     aclose_called = False

@@ -28,6 +28,7 @@ from .legal_tooling import LegalToolingDomainSimulator
 from .office import OfficeDomainSimulator
 from .orchestration import OrchestrationDomainSimulator
 from .platform_tooling import PlatformToolingDomainSimulator
+from .router_advisor import RouterAdvisorDomainSimulator
 from .skill_repair import SkillRepairDomainSimulator
 from .tech_qc import TechQCDomainSimulator
 from .visual_design import VisualDesignDomainSimulator
@@ -55,6 +56,7 @@ class SimulatorDispatcher:
             "bim_rase": BimRaseDomainSimulator(),
             "bim": BimClassificationDomainSimulator(),
             "coding": CodingDomainSimulator(),
+            "router_advisor": RouterAdvisorDomainSimulator(),
             "platform_tooling": PlatformToolingDomainSimulator(),
             "orchestration": OrchestrationDomainSimulator(),
         }
@@ -70,6 +72,7 @@ class SimulatorDispatcher:
             self.simulators["bim_rase"],
             self.simulators["visual_design"],
             self.simulators["legal_tooling"],
+            self.simulators["router_advisor"],
             self.simulators["platform_tooling"],
             self.simulators["office"],
             self.simulators["bim"],

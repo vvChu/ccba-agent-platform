@@ -9,7 +9,6 @@ import json
 import logging
 import mimetypes
 import os
-import subprocess
 import urllib.error
 import urllib.request
 import uuid
@@ -29,6 +28,14 @@ from ._daemon_reporting import (
     get_last_applied_strategies_hash,
     get_mutation_strategies_hash,
     save_applied_strategies_hash,
+)
+from ._eval_guards import (
+    build_chatops_boost_payload,
+    build_daemon_summary_from_report,
+    is_eligible_for_boost_escalation,
+    resolve_daemon_dataset_path,
+    resolve_daemon_target_ref,
+    should_skip_daemon_mock_engine,
 )
 from .archetypes import resolve_domain_archetype, resolve_domain_dataset
 from .failure_mutator import get_unapplied_failure_signals, load_failure_ledger
@@ -338,6 +345,8 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         skip_cooldown: bool = True,
         concurrency: int = cast(Any, _UNSET),
         hard_max_tokens_per_skill: int | None = cast(Any, _UNSET),
+        allow_mock_simulator: bool = False,
+        verify_only: bool = False,
     ) -> None:
         self.root = (root or find_project_root()).resolve()
         self.max_iterations_low, self.max_iterations_perfect = (
@@ -345,6 +354,7 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             max_iterations_perfect,
         )
         self.early_stopping_patience, self.use_real_llm = early_stopping_patience, use_real_llm
+        self.allow_mock_simulator, self.verify_only = allow_mock_simulator, verify_only
         self.concurrency = _resolve_daemon_env_int(concurrency, "CCBA_TUNER_CONCURRENCY", 5)
         self.token_budget, self.model = token_budget, model
         self.per_skill_mutation_budget = _resolve_daemon_env_int(
@@ -359,17 +369,10 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         self.skip_cooldown = (
             env_sc.lower() in ("1", "true", "yes") if env_sc is not None else skip_cooldown
         )
-        if target_ref == "origin/main":
-            chk = subprocess.run(
-                ["git", "rev-parse", "--verify", "origin/main"],
-                cwd=str(self.root),
-                capture_output=True,
-                check=False,
-            )
-            target_ref = "main" if chk.returncode != 0 else target_ref
-        self.target_ref = target_ref
+        self.target_ref = resolve_daemon_target_ref(self.root, target_ref)
         self.skills_dir = self.root / ".agents" / "skills"
         self.test_cases_dir = self.skills_dir / "ccba-eval-gate" / "test_cases"
+        self._unconfigured_skills: list[dict[str, Any]] = []
 
     def _inspect_skill_status(
         self, skill_path: Path, skill_name: str
@@ -423,7 +426,8 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         strat_hash_unchanged = bool(curr_strat_hash and curr_strat_hash == last_strat_hash)
 
         discovered: list[dict[str, Any]] = []
-        for skill_path in self.skills_dir.glob("*/SKILL.md"):
+        unconfigured: list[dict[str, Any]] = []
+        for skill_path in sorted(self.skills_dir.glob("*/SKILL.md"), key=lambda p: p.parent.name):
             skill_name = skill_path.parent.name
             skip, is_exhausted, has_unapplied_signals, needs_ledger_seed = (
                 self._inspect_skill_status(skill_path, skill_name)
@@ -431,12 +435,13 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             if skip:
                 continue
 
-            dataset_file = FLAGSHIP_REDTEAM_DATASET_OVERRIDES.get(
-                skill_name, self._resolve_dataset_file(skill_name)
+            full_dataset_path, unconf_reason = resolve_daemon_dataset_path(
+                skill_name, self.test_cases_dir, FLAGSHIP_REDTEAM_DATASET_OVERRIDES
             )
-            full_dataset_path = self.test_cases_dir / dataset_file
-            if not full_dataset_path.exists():
-                full_dataset_path = self.test_cases_dir / "eval_general_domain.json"
+            if full_dataset_path is None:
+                logger.info(f"⏭️ [UNCONFIGURED] Bỏ qua {skill_name}: {unconf_reason}")
+                unconfigured.append({"skill_name": skill_name, "target_file": skill_path})
+                continue
 
             discovered.append(
                 {
@@ -456,6 +461,10 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
 
         if self.target_skills:
             discovered = [d for d in discovered if d["skill_name"].lower() in self.target_skills]
+            unconfigured = [
+                u for u in unconfigured if u["skill_name"].lower() in self.target_skills
+            ]
+        self._unconfigured_skills = unconfigured
         return discovered
 
     @staticmethod
@@ -464,21 +473,21 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
     ) -> SkillEvolutionSummary:
         """Creates a zero-token SkillEvolutionSummary for skipped or exhausted skills."""
         return SkillEvolutionSummary(
-            skill_name=skill_name,
-            target_file=target_file,
-            baseline_score=baseline_val,
-            final_score=baseline_val,
-            commits_kept=0,
-            rollbacks=0,
-            status=status,
-            total_tokens=0,
-            prompt_tokens=0,
-            completion_tokens=0,
-            halt_reason=halt_reason,
-            slicing_tier=None,
-            holdout_score=baseline_val,
-            tuning_size=0,
-            holdout_size=0,
+            skill_name,
+            target_file,
+            baseline_val,
+            baseline_val,
+            0,
+            0,
+            status,
+            0,
+            0,
+            0,
+            halt_reason,
+            None,
+            baseline_val,
+            0,
+            0,
         )
 
     def _check_batch_item_skip(self, item: dict[str, Any]) -> SkillEvolutionSummary | None:
@@ -525,11 +534,12 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         self, item: dict[str, Any], remaining_budget: int
     ) -> RatchetConfig:
         """Constructs RatchetConfig for a single skill batch item."""
-        max_iter = (
-            1
-            if (item.get("needs_ledger_seed") and not self.target_skills)
-            else self.max_iterations_low
-        )
+        if self.verify_only:
+            max_iter = self.max_iterations_perfect
+        elif item.get("needs_ledger_seed") and not self.target_skills:
+            max_iter = 1
+        else:
+            max_iter = self.max_iterations_low
         return RatchetConfig(
             target_file=item["target_file"],
             eval_dataset_file=item["dataset_file"],
@@ -544,6 +554,8 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             per_skill_mutation_budget=self.per_skill_mutation_budget,
             hard_max_tokens_per_skill=self.hard_max_tokens_per_skill,
             max_concurrency=self.concurrency,
+            require_holdout_for_keep=True,
+            verify_only=self.verify_only,
         )
 
     @staticmethod
@@ -551,31 +563,11 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         skill_name: str, target_file: Path, result: RatchetReport
     ) -> SkillEvolutionSummary:
         """Converts a RatchetReport into a SkillEvolutionSummary."""
-        status = "IMPROVED" if result.final_score > result.initial_score else "UNCHANGED"
-        if result.final_score == 100.0 and result.initial_score == 100.0:
-            status = "PERFECT_VERIFIED"
-        if result.halt_reason:
-            status = (
-                result.halt_reason
-                if result.halt_reason.startswith("HALT_")
-                else f"HALT_{result.halt_reason}"
-            )
-        return SkillEvolutionSummary(
-            skill_name=skill_name,
-            target_file=target_file,
-            baseline_score=result.initial_score,
-            final_score=result.final_score,
-            commits_kept=result.kept_commits,
-            rollbacks=result.reverted_trials,
-            status=status,
-            total_tokens=result.total_tokens,
-            prompt_tokens=result.prompt_tokens,
-            completion_tokens=result.completion_tokens,
-            halt_reason=result.halt_reason,
-            slicing_tier=result.slicing_tier,
-            holdout_score=result.holdout_score,
-            tuning_size=result.tuning_size,
-            holdout_size=result.holdout_size,
+        return cast(
+            SkillEvolutionSummary,
+            build_daemon_summary_from_report(
+                skill_name, target_file, result, SkillEvolutionSummary
+            ),
         )
 
     def _run_single_skill_batch_item(
@@ -583,13 +575,18 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
     ) -> tuple[SkillEvolutionSummary, bool]:
         """Executes GitRatchetTuner on a single skill item and returns (summary, should_halt_batch)."""
         skill_name, target_file = item["skill_name"], item["target_file"]
+        if should_skip_daemon_mock_engine(self.use_real_llm, self.allow_mock_simulator):
+            logger.warning(f"🛑 [MOCK_SIMULATOR_FORBIDDEN] Bỏ qua {skill_name} (cấm Mock Engine).")
+            return self._make_skip_summary(
+                skill_name, target_file, 0.0, "MOCK_SIMULATOR_FORBIDDEN", "MOCK_SIMULATOR_FORBIDDEN"
+            ), False
         logger.info(f"\n⚡ --- Tối ưu hóa Kỹ năng: {skill_name} ---")
         config = self._build_skill_ratchet_config(item, remaining_budget)
         try:
             tuner = GitRatchetTuner(config, dry_run_git=dry_run)
             result: RatchetReport = tuner.run()
             summary = self._summary_from_ratchet_report(skill_name, target_file, result)
-            if not dry_run and result.final_score < 90.0 and result.kept_commits == 0:
+            if not dry_run and is_eligible_for_boost_escalation(summary):
                 self._save_plateau_brief(skill_name, target_file, result)
             elif not dry_run and (result.final_score >= 90.0 or result.kept_commits > 0):
                 self._remove_stale_plateau_brief(skill_name)
@@ -639,23 +636,18 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         if not self.no_telegram and not dry_run:
             report.telegram_notified = self.send_telegram_notification(report)
 
-    def run_nightly_batch(self, dry_run: bool = False) -> NightlyDaemonReport:
-        """Executes the full nightly optimization sweep across all prioritized skills."""
-        now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        branch_name = f"auto-tune/nightly-{now_str}"
-        logger.info(f"🚀 Khởi chạy Nightly Auto-Tuner Daemon: {branch_name}")
-        if not dry_run:
-            self._cleanup_old_empty_branches(days=7)
-            self._create_git_branch(branch_name)
-
-        skills_info = self.discover_skills_and_datasets()
-        logger.info(f"🔍 Đã phát hiện {len(skills_info)} kỹ năng trong catalog.")
-        ranked_skills = WeightedPriorityQueue.rank_skills(skills_info)
-
-        summaries: list[SkillEvolutionSummary] = []
+    def _execute_ranked_skills(
+        self, ranked_skills: list[dict[str, Any]], dry_run: bool
+    ) -> tuple[list[SkillEvolutionSummary], int, int, int, int]:
+        """Executes batch items in priority order, respecting skip rules and token budgets."""
+        summaries: list[SkillEvolutionSummary] = [
+            self._make_skip_summary(
+                u["skill_name"], u["target_file"], 0.0, "UNCONFIGURED", "UNCONFIGURED"
+            )
+            for u in getattr(self, "_unconfigured_skills", [])
+        ]
         total_commits, total_tokens, total_p_tok, total_c_tok = 0, 0, 0, 0
         remaining_budget = self.token_budget
-
         for item in ranked_skills:
             skip_summary = self._check_batch_item_skip(item)
             if skip_summary is not None:
@@ -672,7 +664,23 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             remaining_budget = max(0, remaining_budget - summary.total_tokens)
             if should_halt:
                 break
+        return summaries, total_commits, total_tokens, total_p_tok, total_c_tok
 
+    def run_nightly_batch(self, dry_run: bool = False) -> NightlyDaemonReport:
+        """Executes the full nightly optimization sweep across all prioritized skills."""
+        now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        branch_name = f"auto-tune/nightly-{now_str}"
+        logger.info(f"🚀 Khởi chạy Nightly Auto-Tuner Daemon: {branch_name}")
+        if not dry_run:
+            self._cleanup_old_empty_branches(days=7)
+            self._create_git_branch(branch_name)
+
+        skills_info = self.discover_skills_and_datasets()
+        logger.info(f"🔍 Đã phát hiện {len(skills_info)} kỹ năng trong catalog.")
+        ranked_skills = WeightedPriorityQueue.rank_skills(skills_info)
+        summaries, total_commits, total_tokens, total_p_tok, total_c_tok = (
+            self._execute_ranked_skills(ranked_skills, dry_run)
+        )
         report = NightlyDaemonReport(
             timestamp=now_str,
             branch_name=branch_name,
@@ -697,23 +705,7 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
     ) -> bool:
         """Dispatches report and interactive /boost buttons to local ChatOps Gateway."""
         try:
-            actions = [
-                {
-                    "action_id": f"boost_{s.skill_name}",
-                    "label": f"🚀 /boost {s.skill_name}",
-                    "command": "ccba.skill.boost",
-                    "params": {"skill": s.skill_name},
-                    "ttl_seconds": 86400,
-                    "timeout": 600,
-                }
-                for s in stagnant[:3]
-            ]
-            payload = {
-                "title": "CCBA NIGHTLY AUTO-TUNER REPORT",
-                "body": message,
-                "severity": "WARNING",
-                "actions": actions,
-            }
+            payload = build_chatops_boost_payload(message, stagnant)
             req = urllib.request.Request(
                 f"{chatops_url.rstrip('/')}/api/v1/notify",
                 data=json.dumps(payload).encode("utf-8"),
@@ -725,7 +717,7 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
                     logger.info(
-                        "✅ Đã gửi báo cáo Nightly Tuner kèm nút /boost qua ChatOps Gateway thành công."
+                        "✅ Đã gửi báo cáo Nightly Tuner kèm nút /boost qua ChatOps Gateway."
                     )
                     return True
                 logger.warning(f"⚠️ ChatOps Gateway phản hồi mã: {resp.status}")
@@ -755,11 +747,7 @@ class NightlyTunerDaemon(_DaemonReportingAndGitMixin):
         else:
             message += "• Không có kỹ năng nào tăng điểm.\n"
 
-        stagnant = [
-            s
-            for s in report.results
-            if s.baseline_score < 90.0 and s.commits_kept == 0 and s.final_score < 90.0
-        ]
+        stagnant = [s for s in report.results if is_eligible_for_boost_escalation(s)]
         if stagnant:
             message += "\n⚠️ *Cần Can Thiệp (/boost):*\n"
             for s in stagnant[:3]:

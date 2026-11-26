@@ -19,7 +19,7 @@ from ccba_harness.evals.simulators import (
 
 
 def test_dispatcher_registry_all_17_archetypes() -> None:
-    """Verify SimulatorDispatcher registers exactly all 17 domain archetypes plus fallback."""
+    """Verify SimulatorDispatcher registers exactly all 18 domain archetypes plus fallback."""
     dispatcher = SimulatorDispatcher()
     expected_archetypes = {
         "grilling",
@@ -37,6 +37,7 @@ def test_dispatcher_registry_all_17_archetypes() -> None:
         "bim_rase",
         "bim",
         "coding",
+        "router_advisor",
         "platform_tooling",
         "orchestration",
     }
@@ -162,11 +163,11 @@ def test_simulation_context_wrapping() -> None:
 
 
 def test_tuner_mutators_all_17_archetypes() -> None:
-    """Verify GitRatchetOptimizer proposes specialized mutation strategies across all 17 archetypes."""
+    """Verify GitRatchetOptimizer proposes specialized mutation strategies across all 18 archetypes."""
     from ccba_harness.evals.archetypes import DOMAIN_ARCHETYPES
     from ccba_harness.evals.tuner import GitRatchetOptimizer, RatchetConfig
 
-    base_skill = "# Test Skill Content\n\nBasic instructions."
+    base_skill = "---\nname: test-skill\nstability_zone: evolvable\n---\n# Test Skill Content\n\nBasic instructions."
 
     for arch in DOMAIN_ARCHETYPES:
         representative_skill = f"ccba-{arch.keywords[0]}"
