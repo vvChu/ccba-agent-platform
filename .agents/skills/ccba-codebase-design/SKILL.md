@@ -22,7 +22,7 @@ keywords:
 - locality
 metadata:
   author: CCBA
-  version: 1.4.1
+  version: "1.5.0"
 bundle: _software
 scope: universal
 posture: seam-exempt
@@ -47,8 +47,10 @@ triggers:
 
 # Codebase Design
 
-> **Loại Kỹ Năng:** **Reference Skill (Kỹ Năng Tham Chiếu & Từ Điển Chuẩn Mực)**  
-> **Quy Tắc Dừng Cứng (Hard Stopping Rule):** Kỹ năng này không phải là Driver Workflow tự hành. Khi được gọi độc lập mà không chỉ định rõ module mục tiêu, Agent chỉ hiển thị bộ từ vựng và dừng lại để định hướng sang Driver Skills phù hợp (`/ccba-implement`, `/ccba-grilling`).
+| Chế độ (Mode) | Điều kiện kích hoạt | Hành động bắt buộc |
+| :--- | :--- | :--- |
+| **Reference Mode** | Gọi trần `/ccba-codebase-design` không kèm mục tiêu hoặc động từ hành động | **Hard Stopping Rule (`ADR-0035`):** Chỉ hiển thị 7 thuật ngữ cốt lõi bên dưới + gợi ý nhanh 2 hướng (gọi kèm *"nghiên cứu cải tiến kiến trúc"* hoặc chuyển `/ccba-grilling` / `/ccba-implement`) rồi dừng. |
+| **Driver Mode** | Gọi kèm động từ *nghiên cứu / rà soát / cải tiến / tối ưu* hoặc tên phân vùng/module | Nạp thẳng `references/codebase_refactor_guide.md` và thực thi Bước 1 → Bước 3 (5 Cổng Phản Biện + Báo cáo HTML `<= 3` ứng viên) mà không dừng hỏi thừa. |
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
@@ -74,27 +76,8 @@ Use these terms exactly — don't substitute "component," "service," "API," or "
 
 ## Deep vs shallow
 
-**Deep module** = small interface + lots of implementation:
-
-```
-┌─────────────────────┐
-│   Small Interface   │  ← Few methods, simple params
-├─────────────────────┤
-│                     │
-│  Deep Implementation│  ← Complex logic hidden
-│                     │
-└─────────────────────┘
-```
-
-**Shallow module** = large interface + little implementation (avoid):
-
-```
-┌─────────────────────────────────┐
-│       Large Interface           │  ← Many methods, complex params
-├─────────────────────────────────┤
-│  Thin Implementation            │  ← Just passes through
-└─────────────────────────────────┘
-```
+- **Deep module** = small interface (few methods, simple params) + lots of hidden implementation.
+- **Shallow module** = large interface + thin pass-through implementation (avoid).
 
 When designing an interface, ask:
 
@@ -208,24 +191,18 @@ class ShallowAuditService:
 - **"Interface" as the TypeScript `interface` keyword or a class's public methods**: too narrow — interface here includes every fact a caller must know.
 - **"Boundary"**: overloaded with DDD's bounded context. Say **seam** or **interface**.
 
-## Going deeper
-
-- **Deepening a cluster given its dependencies** — see [deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
-- **Exploring alternative interfaces** — see [design_it_twice.md](references/design_it_twice.md): spin up parallel sub-agents (max 3) to design the interface several radically different ways, then compare on depth, locality, and seam placement.
-- **Designing an autonomous software factory** — see [software_factory.md](references/software_factory.md): canonical vocabulary (Tasks, Triggers, Runs, Runners, 6 Service Slots), Three Brakes, and 9 factory task patterns.
-- **Statechart & concurrency verification (`statechart v0.15.42`)** — see [statechart_verification_guide.md](../ccba-mermaid-diagram/references/statechart_verification_guide.md): khi thiết kế module có $\ge 2$ trạng thái chuyển tiếp, vòng lặp retry-fallback hoặc xử lý đồng thời (concurrency, lock, circuit-breaker), đọc hướng dẫn này để trích xuất sơ đồ `stateDiagram-v2` phân loại theo 4 lớp rủi ro (`breaks`, `mayBreak`, `bugPath`, `repeats`) thay vì chỉ mô tả bằng văn xuôi.
-
 ## Progressive Disclosure & Reference Index (Level 3)
 
-Khi thực thi các tác vụ chuyên sâu, Agent sử dụng công cụ `view_file` để nạp hướng dẫn chi tiết theo nhu cầu:
+Khi thực thi tác vụ chuyên sâu, Agent nạp tài liệu chi tiết theo ngữ cảnh (không tự nạp các tệp không liên quan):
 
 | Tệp Tham Chiếu | Ngữ Cảnh Triệu Hồi & Mục Đích Sử Dụng |
 | :--- | :--- |
-| `references/codebase_refactor_guide.md` | Cẩm nang rà soát module sâu và 5 Cổng phản biện kiến trúc mã nguồn |
-| `references/deepening.md` | Phân loại dependency và kỷ luật làm sâu module |
-| `references/design_it_twice.md` | Thiết kế 2-3 phương án giao diện đối chiếu (max 3 subagents) |
-| `references/html_report_template.md` | Mẫu HTML báo cáo trực quan với Tailwind & Mermaid |
-| `references/software_factory.md` | Ngôn ngữ chung thiết kế Software Factory (Tasks, Triggers, Runs, Runners, 6 Service Slots & Three Brakes) |
+| `references/codebase_refactor_guide.md` | Cẩm nang Driver Mode: quét codebase, 5 Cổng Phản Biện, báo cáo HTML `<= 3` ứng viên và nối mạch Bước 4 |
+| `references/deepening.md` | Phân loại dependency (in-process, local-substitutable, ports/adapters, mock) và kỷ luật replace-don't-layer |
+| `references/design_it_twice.md` | Chỉ kích hoạt cho **1** ứng viên `ONE_WAY_DOOR` / Public Seam có `>= 2` phương án interface cạnh tranh (tối đa 3 `research` subagent) |
+| `references/html_report_template.md` | Mẫu HTML báo cáo trực quan với Tailwind & Mermaid `@11.6.0` |
+| `references/software_factory.md` | Chỉ nạp khi người dùng chủ đích thiết kế pipeline tự động hóa CI/Runner (*Software Factory*); không nạp khi refactor codebase thường |
+| `../ccba-mermaid-diagram/references/statechart_verification_guide.md` | Trích xuất `stateDiagram-v2` phân loại theo 4 lớp rủi ro (`breaks`, `mayBreak`, `bugPath`, `repeats`) khi module có `>= 2` chuyển tiếp trạng thái hoặc concurrency |
 
 ---
 *Tạo bởi CCBA — Trung tâm Tư vấn và Ứng dụng BIM trong Xây dựng*

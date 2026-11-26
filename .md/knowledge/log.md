@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-26] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Nâng Cấp `/ccba-codebase-design` `v1.5.0` & Bộ Kiểm Định `verify-ccba-codebase-design`
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` `ccba-codebase-design v1.5.0`)
+- **Affected Files**: [decisions/2026-11-26_ccba_codebase_design_v150_grilling_resolution.md](decisions/2026-11-26_ccba_codebase_design_v150_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Dựa trên bằng chứng thực nghiệm `553` transcripts (`21` phiên `/ccba-codebase-design` trên `5` repo, `21` HTML reports, `79` PR đã merge, `68.4%` duyệt `3/3` ứng viên, chuyển tiếp #1 sang `/ccba-wayfinder` `8x`, `software_factory.md` `0/553` lượt đọc), chốt `4/4` quyết định `Q1`–`Q4` (`P1`–`P4`) và hoàn tất **Grok Peer Plan Audit 2 Pass** (`39058d39` `REVISE_PLAN` $\to$ `d426e9a2` **`APPROVE_PLAN`**, `risk_score: 2`, `0` blocking, `COND-01..06` `100%` `[ADOPT_AS_IS]`): phân tách tường minh `Reference Mode` (Hard Stop ADR-0035) vs `Driver Mode` trong `SKILL.md` (`<= 3,850` tokens), thay `"Explore"` $\to$ `research` và bổ sung mở HTML đa nền tảng (`xdg-open`/`open`/`Start-Process`), hợp nhất cổng Bước 4 (`/ccba-wayfinder` cho `>= 2` ứng viên, trần Pass 3, `/ccba-handoff` cho nhánh Kiến trúc), thu hẹp `design_it_twice.md` dùng `research` subagent cho `1` seam `ONE_WAY_DOOR`, giữ `software_factory.md` làm MIT provenance và gom bảng Level 3, đồng thời chia `2` Micro-PR tuần tự (`PR-1` nâng cấp skill + `eval_codebase_engineering.json`, `PR-2` tạo Profile-B `verify-ccba-codebase-design` với statechart `18` cạnh & `sync_commit` neo commit merge `PR-1`). Đang triển khai `PR-1`.
+
+---
+
 ## [2026-11-25] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Kiểm Toán & Nâng Cấp `/ccba-ask` v1.4.0, Host Slash Contracts & `ccba-knowledge-loop` v1.2.0 (`PR #909`, `#911`, `#912`, Issue `#910`, `RULE-2.21`, `RULE-4.2`, `RULE-4.18`, Mục 77)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
 - **Affected Files**: [session_learnings.md](session_learnings.md), [archive/session_learnings_history.md](archive/session_learnings_history.md), [log.md](log.md)
