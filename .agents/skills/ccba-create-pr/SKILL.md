@@ -14,7 +14,7 @@ disable-model-invocation: true
 command: /ccba-create-pr
 user-invocable: true
 metadata:
-  version: "1.3.5"
+  version: "1.3.6"
   author: "CCBA Hub"
 gpi:
   s: 3.0
@@ -43,7 +43,7 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
    git branch --show-current
    git symbolic-ref --short refs/remotes/origin/HEAD
    ```
-   *Agent xác định nhánh hiện tại (`<current_branch>`) và nhánh chính mặc định của repository (`<default_branch>`, ví dụ: `main` hoặc `master`, trích xuất từ `origin/HEAD` hoặc fallback kiểm tra `origin/main` / `origin/master`).*
+   *Xác định `<current_branch>` và `<default_branch>` (`main`/`master` từ `origin/HEAD`, fallback `origin/main` / `origin/master`).*
 2. **Nếu đang ở nhánh chính (`<default_branch>`)**: Kiểm tra xem có commit nào chưa được push lên remote không:
    ```bash
    git log origin/<default_branch>..<default_branch> --oneline
@@ -53,11 +53,8 @@ Quy trình tự động hóa kiểm định chất lượng mã nguồn tại ch
    - Gợi ý tên branch chuẩn (ví dụ: `feat/improve-pr-automation` hoặc `fix/query-timeout`).
    - Sau khi người dùng đồng ý, thực hiện tách nhánh an toàn:
      ```bash
-     # Tạo feature branch tại vị trí hiện tại (giữ nguyên commits)
      git branch <tên-branch>
-     # Reset nhánh chính về origin sạch sẽ
      git reset --hard origin/<default_branch>
-     # Chuyển sang feature branch vừa tạo
      git checkout <tên-branch>
      ```
 4. **Nếu đang ở nhánh chính nhưng KHÔNG có commit mới**:
@@ -90,11 +87,15 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      # Quét rò rỉ nhạy cảm trên raw unified diff trước khi đẩy nhánh (khớp cổng PR Danger Triage & Verifier Gate, quét cả tests/):
      python scripts/governance/sanitize_review_diff.py --base origin/<default_branch> --head HEAD --check
      ```
-   - **Tại Spoke (Pháp điển / Knowledge Corpus / Specialized Spokes):**
+   - **Tại Legal / Knowledge Corpus Spokes:** `python scripts/validate_legal_spoke.py`
+   - **Tại Software / Enterprise Governance Spokes** *(không giả định `scripts/validate_legal_spoke.py` hay `scripts/eval/*` tồn tại cục bộ)*:
      ```bash
-     python scripts/validate_legal_spoke.py
+     # Harness đặc thù của Spoke (ví dụ verify-idop, verify-erp) nếu có:
+     python .agents/skills/verify-<spoke>/harness/runner.py
+     # Hoặc scoped pytest (nếu có bộ test) kèm cổng vệ sinh Spoke:
+     python -m pytest tests/ -q && python scripts/_guardrails/check_spoke_cleanliness.py
      ```
-   - **Nếu nhánh chính cục bộ đang có commit hoặc file dở dang của phiên đồng đẳng (`RULE-4.21`):** Thực thi kiểm định, tách nhánh và mở PR trên một `git worktree` cô lập tách trực tiếp từ `origin/<default_branch>`.
+   - **Nhánh chính bận (`RULE-4.21`):** Kiểm định, tách nhánh và mở PR trên `git worktree` cô lập từ `origin/<default_branch>`.
 3. **Quy tắc chặn lỗi tại nguồn:**
    - Nếu kiểm chuẩn trả về mã thoát `0`: Mã nguồn đạt chuẩn, chuyển sang Bước 2.
    - Nếu có lỗi kiểm thử hoặc vi phạm linting: **DỪNG LẠI NGAY LẬP TỨC**, sửa lỗi tại chỗ và commit lại trước khi đẩy lên remote.
@@ -159,13 +160,10 @@ Trước khi đẩy mã nguồn lên remote, Agent **BẮT BUỘC** thực hiệ
      ```
 3. **Kiểm tra chống trùng lặp & Khởi tạo Pull Request bằng GitHub CLI (`RULE-4.21`, `RULE-5.11`):**
    ```bash
-   # Kiểm tra trạng thái remote trước khi tạo để chống sinh PR trùng lặp:
+   # Chống trùng PR, tạo PR qua -F, và cập nhật body/label qua REST (tránh lỗi GraphQL gh pr edit):
    gh pr list --head <current_branch> --json number,url
-   # Tạo PR qua tệp mô tả (-F) và gán người phụ trách:
    gh pr create --title "<Title>" -F <body_file> --base <default_branch> --head <current_branch> --assignee "@me"
-   # Khi cần cập nhật mô tả PR hiện có (tránh lỗi GraphQL Classic Projects của gh pr edit):
    gh api repos/<owner>/<repo>/pulls/<PR_NUMBER> -X PATCH -F body=@<body_file>
-   # Khi cần gắn nhãn cho PR (ví dụ in-progress theo khóa đồng đẳng, tránh lỗi GraphQL Classic Projects của gh pr edit):
    gh api repos/<owner>/<repo>/issues/<PR_NUMBER>/labels -f 'labels[]=in-progress' --silent
    ```
 4. **Fallback thủ công (nếu `gh` chưa cài hoặc chưa đăng nhập):**

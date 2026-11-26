@@ -18,3 +18,14 @@ def test_ccba_create_pr_workflow_has_local_ci_first() -> None:
     assert ci_pos != -1, "ccba-create-pr SKILL.md must reference verification gate"
     assert push_pos != -1, "ccba-create-pr SKILL.md must reference git push"
     assert ci_pos < push_pos, "Local CI check must appear BEFORE git push in workflow"
+
+
+def test_ccba_create_pr_distinguishes_legal_and_software_spoke_gates() -> None:
+    """Verify ccba-create-pr Bước 1.2 covers both Legal and Software/Enterprise Governance Spokes."""
+    hub_root = Path(__file__).resolve().parent.parent
+    content = (hub_root / ".agents" / "skills" / "ccba-create-pr" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "scripts/validate_legal_spoke.py" in content
+    assert ".agents/skills/verify-<spoke>/harness/runner.py" in content
+    assert "scripts/_guardrails/check_spoke_cleanliness.py" in content

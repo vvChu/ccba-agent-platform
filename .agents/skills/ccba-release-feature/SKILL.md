@@ -13,7 +13,7 @@ user-invocable: true
 disable-model-invocation: true
 command: /ccba-release-feature
 metadata:
-  version: "1.3.8"
+  version: "1.3.9"
   author: "CCBA Hub"
 triggers:
 - release
@@ -48,7 +48,8 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 
 2. **Cổng 0.2 — Thực thi Kiểm thử Toàn diện Slow Integration Tests:**
    - **Hub:** `python scripts/eval/run_isolated_tests.py --all --stress` (nếu chạy trong isolated `git worktree`, trỏ tới `.venv` của repo gốc qua `git rev-parse --path-format=absolute --git-common-dir`: `<main-repo>/.venv/bin/python scripts/eval/run_isolated_tests.py --all --stress`).
-   - **Spoke:** `python scripts/validate_legal_spoke.py` hoặc `python scripts/eval/run_isolated_tests.py --all`. Dừng ngay nếu test fail.
+   - **Legal / Knowledge Corpus Spokes:** `python scripts/validate_legal_spoke.py`.
+   - **Software / Enterprise Governance Spokes** *(không giả định `scripts/validate_legal_spoke.py` hay `scripts/eval/*` tồn tại cục bộ)*: chạy harness đặc thù `python .agents/skills/verify-<spoke>/harness/runner.py` (nếu có), hoặc scoped `python -m pytest tests/ -q` (nếu có bộ test) kèm `python scripts/_guardrails/check_spoke_cleanliness.py`. Dừng ngay nếu bất kỳ cổng nào fail.
 
 3. **Cổng 0.3 — Post-Test Scoped Teardown Gate:**
    ```bash
@@ -104,13 +105,16 @@ Quy trình tự động hóa tích hợp mã nguồn (merge), kiểm tra Copilot
 1. **Kiểm tra working tree & thu hồi `pytest` mồ côi, đồng bộ `<default_branch>` (`RULE-4.21`):**
    ```bash
    git status --porcelain
+   # Tại Hub:
    python -c "from scripts.eval.process_safety import ensure_single_instance; ensure_single_instance('pytest')"
+   # Tại Spoke (điều hướng qua $CCBA_HUB_PATH nếu có; không giả định scripts/eval/* tồn tại cục bộ):
+   python -c "import os, pathlib, sys; hub = pathlib.Path(os.environ.get('CCBA_HUB_PATH', '../ccba-agent-platform')).resolve(); (hub / 'scripts/eval/process_safety.py').is_file() and (sys.path.extend([str(hub), str(hub / 'packages/ccba-harness/src')]) or __import__('scripts.eval.process_safety', fromlist=['ensure_single_instance']).ensure_single_instance('pytest'))"
    # Nếu <default_branch> sạch (ahead == 0): git --no-pager checkout <default_branch> && git pull origin <default_branch>
    # Nếu đứng ở nhánh khác / ahead > 0: git fetch --prune origin <default_branch>:<default_branch>
    git branch -D [feature_branch_name] && git fetch --prune
    ```
 2. **Dọn nhánh remote đã merge 100% & Sync Spoke (nếu tại Hub):** Xác minh `git log origin/<default_branch>..origin/<branch>` rỗng trước khi `git push origin --delete`; chạy `python scripts/sync_spoke.py --spoke [spoke_path] --sync-item ccba-release-feature --apply`.
-3. **Đóng Issue cục bộ & Tái biên dịch Catalog:** Đặt `status: closed` tại `.md/knowledge/issues/issue-XXX.md`, cập nhật `.agents/proposals/` nếu có (`status: "merged"`, `merged_pr`, `merged_commit`, `merged_date`), và chạy `python scripts/governance/compile_catalog.py`.
+3. **Đóng Issue cục bộ & Tái biên dịch Catalog:** Đặt `status: closed` tại `.md/knowledge/issues/issue-XXX.md`, cập nhật `.agents/proposals/` nếu có (`status: "merged"`, `merged_pr`, `merged_commit`, `merged_date`), và chạy `python scripts/governance/compile_catalog.py` (nếu tại Hub).
 4. **PR lưu trữ Walkthrough & Khôi phục Stash:** Kiểm tra từng đường dẫn theo logic OR (`git ls-files --error-unmatch`); nếu `is_hub=True` hoặc có file được track -> mở PR `docs/walkthrough-pr-[PR_NUMBER]` kèm `door-triage --enforce-tradeoff-card` và `validate_docs.py`; ngược lại giữ Artifact tại `<appDataDir>/brain/...`. Khôi phục `git stash pop stash@{N}` (nếu conflict dùng `git reset --merge && git clean -df`) — xem script đầy đủ tại `references/release_scripts_and_recovery.md`.
 
 **Tiêu chí hoàn thành:** Nhánh `<default_branch>` cục bộ đồng bộ, nhánh feature xóa, issue cục bộ closed, `validate_docs.py` & `door-triage` PASS (nếu tạo PR walkthrough) và stash song song được khôi phục an toàn.
