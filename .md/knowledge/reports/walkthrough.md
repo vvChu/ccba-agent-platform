@@ -1,5 +1,41 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #921` (`#917`)
-## Fix(harness): In `tradeoff_card_errors` Ra `sys.stderr` Trong Nhánh Non-JSON Của `door-triage`
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #926` (`#918`)
+## Docs(skills): Chuẩn Hóa Cổng Kiểm Chuẩn Software Spoke & Điều Hướng Hub-vs-Spoke
+
+> **Pull Request Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#926](https://github.com/vvChu/ccba-agent-platform/pull/926) (`fb9e1939f96ebe7ac503774a6c3c9cde1f2bad6b`, hợp nhất `2026-11-26T23:26:24Z`) | **Branch:** `docs/issue-918-software-spoke-gates` (`d3af801a` + `ca5d36fd`, đã xóa local & remote) | **Base:** `a120c433` | **Issue Đã Đóng:** [#918](https://github.com/vvChu/ccba-agent-platform/issues/918) (`CLOSED`, gỡ `in-progress`, `#issuecomment-7205553726`)  
+> **Trạng thái chung:** ✅ **PR #926 MERGED (`--merge`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `root-tests` `634 passed, 1 skipped, 10 deselected` in `31.30s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS (`audit_pr_comments.py` Exit `0`), `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), `sync_commit` `d3af801a` REACHABLE (`git cat-file -e` Exit `0`), `compile_catalog.py --check` `[OK]`, `sync_spoke.py --all --apply` (`3/6` SUCCESS, `3/6` dirty-tree guarded), ISSUE #918 CLOSED**
+
+---
+
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#926` (`#918`)
+
+| Thành Phần | Tệp Thay Đổi Chính (`6` files, `+60/-24`) | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
+| :--- | :--- | :--- | :---: |
+| **1. Software Spoke Shift-Left Gate** | [`ccba-create-pr/SKILL.md`](../../../.agents/skills/ccba-create-pr/SKILL.md) (`1.3.5` $\to$ `1.3.6`) | Tách Bước 1.2 thành **Legal / Knowledge Corpus Spokes** (`scripts/validate_legal_spoke.py`) và **Software / Enterprise Governance Spokes** (`.agents/skills/verify-<spoke>/harness/runner.py` hoặc scoped `pytest` + `scripts/_guardrails/check_spoke_cleanliness.py`); tinh gọn chú thích thừa để hạ dung lượng xuống `4331/4394` LF tokens (`-63` tokens). | Verified |
+| **2. Software Spoke Release Gate & `CCBA_HUB_PATH` Guard** | [`ccba-release-feature/SKILL.md`](../../../.agents/skills/ccba-release-feature/SKILL.md) (`1.3.8` $\to$ `1.3.9`) | Tách Cổng 0.2 cho Legal vs Software/Enterprise Governance Spokes; bọc `ensure_single_instance('pytest')` ở Bước 3.1 theo Hub vs Spoke qua `CCBA_HUB_PATH` (0 bashism, tự bỏ qua an toàn khi không có `scripts/eval/*`); ghi rõ `(nếu tại Hub)` cho `compile_catalog.py` ở Bước 3.3 (`3335/4000` LF tokens). | Verified |
+| **3. Phân Tách Vòng Đời Hub vs Spoke** | [`ccba-issue-to-hub/SKILL.md`](../../../.agents/skills/ccba-issue-to-hub/SKILL.md) (`1.1.0` $\to$ `1.1.1`) | Phân tách Bước 5 giữa **Triển khai trực tiếp tại Hub** (`/ccba-new-feature #[ISSUE_ID]` $\to$ `/ccba-create-pr` $\to$ `/ccba-release-feature`) và **Đóng góp mã nguồn từ Spoke lên Hub** (`/ccba-graduate-rd --issue #[ISSUE_ID]` $\to$ `/ccba-contribute-to-hub --issue #[ISSUE_ID]`) (`2521/4000` LF tokens). | Verified |
+| **4. Provenance Lock & Contract Tests** | [`verify-ccba-create-pr/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-create-pr/SKILL.md) (`1.0.5` $\to$ `1.0.6`), [`test_create_pr_workflow.py`](../../../tests/test_create_pr_workflow.py), [`test_upstream_workflows.py`](../../../tests/test_upstream_workflows.py) | Re-anchor `sync_commit` sang `d3af801a6b732dc4452ae57587ba4ee89d2dfab9` và cập nhật LF SHA-256 `covered_sha256` của `ccba-create-pr/SKILL.md` (`69c93da3...`) ở Commit 2 (`ca5d36fd`); bổ sung contract tests cho cả 3 kỹ năng. | Verified |
+
+---
+
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+
+- **Shift-Left & Scoped Verification (`d3af801a` + `ca5d36fd`):**
+  - `validate_skills.py --enforce-gpi`: PASS 3/3 skills; `compile_catalog.py --check`, `compile_skills_docs.py --check`, `scripts/sync_hub_adr_matrix.py --check`: PASS `0` drift.
+  - Token ratchet (`test_real_codebase_skill_token_budget_ratchet`): PASS (`ccba-create-pr` `4331 <= 4394`); `verify-patch --preset skill`: **4/4 PASSED** (`4223.1ms`).
+  - 5-Block `verify-ccba-create-pr/harness/run_verify_create_pr.py`: **7/7 passed** (`0.72s`); `sanitize_review_diff.py --check`: `[PASS]`; `sync_spoke.py --all --dry-run`: **6/6 Spokes SUCCESS**.
+- **Giao thức TRIHT Pre-Release (Cổng 0.1–0.3):**
+  - Cổng 0.1 (`check_release_cleanliness.py --phase pre`): stash tác vụ song song (`wip: concurrent work before release PR #926`) $\to$ `PASS` (`100%` sạch sẽ).
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` `6.23s`, `ccba-diagram` `0.35s`, `ccba-harness` `12.45s`, `ccba-legal-intel` `51.00s`, `ccba-maskara` `0.30s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `6.78s`, `ccba-pdf-prep` `9.75s`, `ccba-qc-core` `1.15s`, `mdconverter` `3.06s`, `scripts` `16.77s`, `root-tests` **`634 passed, 1 skipped, 10 deselected` in `31.30s`**).
+  - Cổng 0.3 (`check_release_cleanliness.py --phase post`): `PASS` (`100% Hermetic`).
+- **CI, AI Review & Hậu Hợp Nhất (`fb9e1939`, `--merge` theo `RULE-2.21`):**
+  - GitHub Actions CI: **8/8 PASS** (Python `3.10`/`3.11`/`3.12`, Deterministic Parity, Lint Markdown, PR Danger Triage & Verifier `7/7`, Security & Privacy Scan, Documentation Check); `audit_pr_comments.py --pr 926` Exit `0` (CodeRabbit auto-review skipped do repo `<10` sao).
+  - Hậu hợp nhất: merge `--merge --delete-branch` tại `fb9e1939`, xóa nhánh `docs/issue-918-software-spoke-gates` local & remote, `git cat-file -e d3af801a6b732dc4452ae57587ba4ee89d2dfab9^{commit}` Exit `0`, Issue [#918](https://github.com/vvChu/ccba-agent-platform/issues/918) `CLOSED` & gỡ nhãn `in-progress`, `compile_catalog.py --check` `[OK]`.
+  - Đồng bộ Spokes (`sync_spoke.py --all --apply`): `IDOP-CCBA-WAY`, `ccba-legal-knowledge`, `dgx-spark-toolkit` **SUCCESS**; 3 Spokes (`IBST_UNIFIED_ERP`, `ctymmt_ai_native_organization`, `vvc-second-brain`) được bộ khóa dirty-tree giữ nguyên do có thay đổi `.agents/` chưa commit.
+
+---
+
+## Lưu Trữ Phát Hành Trước Đó — Phát Hành `PR #921` (`#917`)
+### Fix(harness): In `tradeoff_card_errors` Ra `sys.stderr` Trong Nhánh Non-JSON Của `door-triage`
 
 > **Pull Request Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#921](https://github.com/vvChu/ccba-agent-platform/pull/921) (`b1df59f14c502651f5f35049e4a0d6b70ffe5c5c`, hợp nhất `2026-11-26T14:51:15Z`) | **Branch:** `fix/issue-917-door-triage-stderr` (`cacd81de`, đã xóa local & remote) | **Base:** `cdfd62e3` | **Issue Đã Đóng:** [#917](https://github.com/vvChu/ccba-agent-platform/issues/917) (`CLOSED`, `#issuecomment-7195435414`)  
 > **Trạng thái chung:** ✅ **PR #921 MERGED (`--merge`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `ccba-harness` `11.79s`, `root-tests` `626 passed, 1 skipped, 10 deselected` in `29.29s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS (`audit_pr_comments.py` Exit `0`), `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), `sync_commit` `13bec7b4` REACHABLE (`git cat-file -e` Exit `0`), `compile_catalog.py --check` `[OK]`, ISSUE #917 CLOSED**
