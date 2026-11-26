@@ -31,6 +31,9 @@ class ModelArchetype:
     GEMINI_4_HYDROGEN_MEDIUM = "gemini-4-hydrogen-medium"  # ccba:allow-raw-model
     GEMINI_4_HYDROGEN_LOW = "gemini-4-hydrogen-low"  # ccba:allow-raw-model
     GEMINI_4_CARBON_LOW = "gemini-4-carbon-low"  # ccba:allow-raw-model
+    GEMINI_4_NEON = "gemini-4-neon"  # ccba:allow-raw-model
+    GEMINI_4_NEON_MEDIUM = "gemini-4-neon-medium"  # ccba:allow-raw-model
+    GEMINI_4_NEON_LOW = "gemini-4-neon-low"  # ccba:allow-raw-model
     GPT_OSS_120B = "gpt-oss-120b"
     CLAUDE_SONNET_46 = "claude-sonnet-4-6"
     TIER_FAST = "tier-fast"
@@ -46,6 +49,8 @@ class ModelArchetype:
     GEMINI_4_CARBON = "gemini-4-carbon"  # ccba:allow-raw-model
     GEMINI_4_CARBON_MEDIUM = "gemini-4-carbon-medium"  # ccba:allow-raw-model
     GEMINI_4_CARBON_HIGH = "gemini-4-carbon-high"  # ccba:allow-raw-model
+    GEMINI_4_NEON_HIGH = "gemini-4-neon-high"  # ccba:allow-raw-model
+    GEMINI_4_NEON_XHIGH = "gemini-4-neon-xhigh"  # ccba:allow-raw-model
     CLAUDE_OPUS_46 = "claude-opus-4-6"
     CLAUDE_SONNET_55 = "claude-sonnet-5-5"
     CLAUDE_SONNET_55_HIGH = "claude-sonnet-5-5-high"
