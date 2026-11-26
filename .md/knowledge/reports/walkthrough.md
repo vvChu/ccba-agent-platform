@@ -1,13 +1,45 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành Đợt Kép `PR #909` & `PR #911`
-## Feat(skills,harness): Nâng Cấp `/ccba-ask` v1.4.0, Khóa Hợp Đồng Slash Host & Tinh Chỉnh `ccba-knowledge-loop` v1.2.0
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #921` (`#917`)
+## Fix(harness): In `tradeoff_card_errors` Ra `sys.stderr` Trong Nhánh Non-JSON Của `door-triage`
+
+> **Pull Request Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#921](https://github.com/vvChu/ccba-agent-platform/pull/921) (`b1df59f14c502651f5f35049e4a0d6b70ffe5c5c`, hợp nhất `2026-11-26T14:51:15Z`) | **Branch:** `fix/issue-917-door-triage-stderr` (`cacd81de`, đã xóa local & remote) | **Base:** `cdfd62e3` | **Issue Đã Đóng:** [#917](https://github.com/vvChu/ccba-agent-platform/issues/917) (`CLOSED`, `#issuecomment-7195435414`)  
+> **Trạng thái chung:** ✅ **PR #921 MERGED (`--merge`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `ccba-harness` `11.79s`, `root-tests` `626 passed, 1 skipped, 10 deselected` in `29.29s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS (`audit_pr_comments.py` Exit `0`), `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), `sync_commit` `13bec7b4` REACHABLE (`git cat-file -e` Exit `0`), `compile_catalog.py --check` `[OK]`, ISSUE #917 CLOSED**
+
+---
+
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#921` (`#917`)
+
+| Thành Phần | Tệp Thay Đổi Chính (`4` files, `+167/-3`) | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
+| :--- | :--- | :--- | :---: |
+| **1. Non-JSON `stderr` Diagnostics (`_execute_door_triage`)** | [`architecture.py`](../../../packages/ccba-harness/src/ccba_harness/cli/commands/architecture.py) | Trong nhánh non-JSON của `_execute_door_triage`, khi `args.enforce_tradeoff_card` được bật và `card_errors` không rỗng, in tiêu đề lỗi, danh sách lỗi `card_errors` và gợi ý 3 trường bắt buộc (`Core Invariant`, `Invalidation Condition`, `Git Hunk Reference`) ra `sys.stderr`; giữ nguyên 100% `stdout`, schema `--json` và exit codes (`0\|1\|4`). | Verified |
+| **2. Unit Tests Matrix & JSON Parity** | [`test_agent_envelope.py`](../../../packages/ccba-harness/tests/test_agent_envelope.py) | Bổ sung kiểm tra `stderr == ""` trên toàn bộ ma trận `--json`; thêm unit tests cho 5 kịch bản lỗi non-JSON (`none`, `missing`, `oserror`, `missing_card`, `invalid_fields`) và 4 kịch bản không phát `stderr` (`valid`, unenforced, `PAVED_ROAD`, `TWO_WAY_DOOR`). | Verified |
+| **3. Provenance Lock & Harness Suite (`FEAT-007`)** | [`verify-ccba-harness/SKILL.md`](../../../packages/ccba-harness/.agents/skills/verify-ccba-harness/SKILL.md), [`test_harness_suite.py`](../../../packages/ccba-harness/.agents/skills/verify-ccba-harness/harness/test_harness_suite.py) | Cập nhật LF SHA-256 `covered_sha256` cho `architecture.py` (`7fbf0de6...`, giữ nguyên `sync_commit` `13bec7b4...` trên `main`) và bổ sung kiểm tra non-JSON `stderr` trong `test_feat_007_agent_json_envelope_and_semantic_exit_codes`. | Verified |
+
+---
+
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+
+- **Shift-Left & Scoped Verification (`wt-issue-917`, `cacd81de`):**
+  - `pytest packages/ccba-harness/tests -q`: **`782 passed, 6 skipped, 81 deselected`** in `11.56s`.
+  - `pytest packages/ccba-harness/.agents/skills/verify-ccba-harness/harness/test_harness_suite.py -q`: **`8 passed`** in `0.36s`.
+  - `python -m ccba_harness verify-patch --preset code`: **3/3 PASS** (`ruff check`, `ruff format --check`, `pytest tests/ -q` in `30.6s`).
+  - `mypy packages/ccba-harness/src --follow-imports=silent`: **0 issues in 109 source files**; `compile_catalog.py --check` `[OK]`; `check_dependency_contracts.py` (`566` files, 0 vi phạm); `sanitize_review_diff.py --check` `[PASS]`.
+- **Giao thức TRIHT Pre-Release (Cổng 0.1–0.3 trên `wt-issue-917`):**
+  - Cổng 0.1 (`check_release_cleanliness.py --phase pre`): `PASS` (`100%` sạch sẽ).
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` `4.97s`, `ccba-diagram` `0.35s`, `ccba-harness` `11.79s`, `ccba-legal-intel` `51.33s`, `ccba-maskara` `0.35s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `6.07s`, `ccba-pdf-prep` `9.68s`, `ccba-qc-core` `1.21s`, `mdconverter` `2.36s`, `scripts` `16.51s`, `root-tests` **`626 passed, 1 skipped, 10 deselected` in `29.29s`**).
+  - Cổng 0.3 (`check_release_cleanliness.py --phase post`): `PASS` (`100% Hermetic`).
+- **CI, AI Review & Hậu Hợp Nhất (`b1df59f1`, `--merge` theo `RULE-2.21`):**
+  - GitHub Actions CI: **8/8 PASS** (Python `3.10`/`3.11`/`3.12`, Deterministic Parity & Schema Audit, Lint Markdown, PR Danger Triage & Verifier Gate `7/7`, Security & Privacy Scan, Documentation Check); `audit_pr_comments.py --pr 921` Exit `0` (CodeRabbit auto-review skipped do repo `<10` sao).
+  - Hậu hợp nhất: tháo worktree `wt-issue-917`, merge `--merge` tại `b1df59f1`, xóa nhánh `fix/issue-917-door-triage-stderr` local & remote, fast-forward `main`, `git cat-file -e 13bec7b4720d6562e1d8ca56f391e767da706017^{commit}` Exit `0`, đóng Issue [#917](https://github.com/vvChu/ccba-agent-platform/issues/917) (gỡ nhãn `in-progress`), `compile_catalog.py --check` `[OK]`.
+
+---
+
+## Lưu Trữ Phát Hành Trước Đó — Phát Hành Đợt Kép `PR #909` & `PR #911` (Nâng Cấp `/ccba-ask` v1.4.0, Khóa Hợp Đồng Slash Host & `ccba-knowledge-loop` v1.2.0)
 
 > **PR `#909` Đã Hợp Nhất (`--squash --delete-branch`):** [#909](https://github.com/vvChu/ccba-agent-platform/pull/909) (`ce2a424ef113b0af68d6036ef5f2fd9eb70191be`, hợp nhất `2026-11-25T14:32:25Z`) | **Branch:** `feat/ccba-ask-v140` (đã xóa local & remote) | **Base:** `9096e22d`  
 > **PR `#911` Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#911](https://github.com/vvChu/ccba-agent-platform/pull/911) (`d731dfbd9a39645ea2c8f2419d3943ffcf1fa116`, hợp nhất `2026-11-25T14:53:00Z`) | **Branch:** `feat/ccba-ask-contracts-and-knowledge-loop` (`76e698bb`, đã xóa local & remote) | **Base:** `ce2a424e` | **Backlog Issue:** [#910](https://github.com/vvChu/ccba-agent-platform/issues/910) (`OPEN`)  
 > **Trạng thái chung:** ✅ **2/2 PRs MERGED, TRIHT CỔNG 0.1–0.3 PASS x2 (`12/12` TARGETS, `root-tests` `618` -> `623 passed, 1 skipped, 10 deselected` in `29.57s` / `29.75s`), `8/8` CI CHECKS PASS x2, `0` UNRESOLVED PR COMMENTS x2, `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), `verify-ccba-*` + `dogfood` + contracts `63 passed in 2.30s`, `compile_catalog.py --check` `[OK]`**
 
----
-
-## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#909` & PR `#911`
+### Tổng Kết Thay Đổi Kỹ Thuật — PR `#909` & PR `#911`
 
 | Thành Phần | Tệp Thay Đổi Chính (`12` + `8` files) | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
 | :--- | :--- | :--- | :---: |
@@ -17,7 +49,7 @@
 
 ---
 
-## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+### Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất — PR `#909` & PR `#911`
 
 - **Kiểm toán Thực nghiệm & Phản biện Ngang hàng (Grok Peer Audit):**
   - Kiểm toán `543` transcripts (`2026-10-07` -> `2026-11-25`, `3,093` lượt `USER_INPUT`, `/ccba-ask` Top `#4/77`, `62T/46C`, `85.5%` hiệu quả hành vi); chốt 4/4 Frontiers qua `/ccba-grilling` và tạo Issue backlog [#910](https://github.com/vvChu/ccba-agent-platform/issues/910) (`RED_QUARANTINE_LOCKED` 61/77 skills & `eval_ccba_ask.json`).
