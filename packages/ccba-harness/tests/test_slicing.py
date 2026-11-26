@@ -161,7 +161,7 @@ def test_git_ratchet_optimizer_three_tier_adaptive_slicing_integration(tmp_path:
     """Verify GitRatchetOptimizer splits dataset and records slicing metadata and holdout score."""
     skill_file = tmp_path / "SKILL.md"
     skill_file.write_text(
-        "---\nname: ccba-ai-qc-pccc-audit\n---\n# PCCC Audit Skill\nĐạt chuẩn QCVN 06:2022/BXD.",
+        "---\nname: ccba-ai-qc-pccc-audit\nstability_zone: evolvable\n---\n# PCCC Audit Skill\nĐạt chuẩn QCVN 06:2022/BXD.",
         encoding="utf-8",
     )
 

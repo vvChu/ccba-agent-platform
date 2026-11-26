@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ccba_harness.evals.models import EvalReport
 from ccba_harness.evals.tuner import GitMutexLock, GitRatchetOptimizer, RatchetConfig
 
 pytestmark = [pytest.mark.fast, pytest.mark.unit]
@@ -33,9 +34,19 @@ def lock_path(tmp_path: Path) -> Path:
 @pytest.fixture()
 def minimal_config(tmp_path: Path) -> RatchetConfig:
     target = tmp_path / "SKILL.md"
-    target.write_text("# Skill\n\nContent.", encoding="utf-8")
+    pad = " ".join(f"rule_{i}" for i in range(900))
+    target.write_text(
+        f"---\nname: test-lock-skill\nstability_zone: evolvable\n---\n# Skill\n\nContent.\n{pad}\n",
+        encoding="utf-8",
+    )
+    ds_file = tmp_path / "eval_lock.json"
+    ds_file.write_text(
+        '[{"id": "l1", "input_prompt": "Test lock", "rubric": "Must pass"}]',
+        encoding="utf-8",
+    )
     return RatchetConfig(
         target_file=target,
+        eval_dataset_file=ds_file,
         max_iterations=1,
         enable_adaptive_slicing=False,
     )
@@ -345,9 +356,20 @@ def test_optimizer_finalize_disk_failure_raises_runtime_error(
     def mock_rollback(*args: object, **kwargs: object) -> None:
         raise OSError("Permission denied or disk full")
 
+    def mock_eval_and_dirty_disk(content: str, dataset: object = None) -> EvalReport:
+        minimal_config.target_file.write_text("externally modified", encoding="utf-8")
+        return EvalReport(
+            total_items=1,
+            passed_items=0,
+            failed_items=1,
+            overall_score=50.0,
+            pass_rate=0.0,
+            item_results=[],
+        )
+
     monkeypatch.setattr(opt, "git_rollback_target", mock_rollback)
-    # Target file differs from initial
-    minimal_config.target_file.write_text("different content", encoding="utf-8")
+    monkeypatch.setattr(opt, "_eval_sync", mock_eval_and_dirty_disk)
+    monkeypatch.setattr(opt, "propose_mutation", lambda c, i: c)
 
     with pytest.raises(RuntimeError, match="Failed to finalize disk state"):
         opt.run()

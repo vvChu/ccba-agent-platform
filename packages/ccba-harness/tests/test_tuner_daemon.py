@@ -703,7 +703,7 @@ def test_daemon_no_telegram_flag_skips_notification(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Verify no_telegram=True suppresses telegram notification in run_nightly_batch."""
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
 
     telegram_called = False
 
@@ -724,7 +724,7 @@ def test_daemon_run_nightly_batch_cleans_empty_branch_when_total_commits_zero(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Verify run_nightly_batch cleans up empty branch when not dry_run and total_commits == 0."""
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
 
     cleaned_branches: list[str] = []
     monkeypatch.setattr(daemon, "_cleanup_old_empty_branches", lambda days: 0)
@@ -744,7 +744,7 @@ def test_daemon_run_nightly_batch_dry_run_preserves_plateau_brief(
     """Verify run_nightly_batch does not delete plateau briefs in dry-run mode even if score >= 90%."""
     from ccba_harness.evals.tuner import RatchetReport
 
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
 
     escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
     escalations_dir.mkdir(parents=True)
@@ -795,7 +795,7 @@ def test_daemon_run_nightly_batch_dry_run_does_not_create_plateau_brief(
     """Verify run_nightly_batch does not generate new plateau briefs when stagnant in dry-run mode."""
     from ccba_harness.evals.tuner import RatchetReport
 
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
 
     mock_stagnant_report = RatchetReport(
         target_file=str(tmp_path / "SKILL.md"),
@@ -838,7 +838,7 @@ def test_daemon_run_nightly_batch_live_run_removes_stale_plateau_brief(
     """Verify run_nightly_batch removes stale plateau brief in live mode when score >= 90%."""
     from ccba_harness.evals.tuner import RatchetReport
 
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
 
     escalations_dir = tmp_path / ".md" / "knowledge" / "escalations"
     escalations_dir.mkdir(parents=True)
@@ -887,7 +887,9 @@ def test_daemon_skip_cooldown_skips_in_cooldown_skills(
     """Verify that skip_cooldown=True bypasses in_cooldown skills and marks them SKIPPED_COOLDOWN."""
     from ccba_harness.evals.tuner import RatchetReport
 
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, skip_cooldown=True)
+    daemon = NightlyTunerDaemon(
+        root=tmp_path, no_telegram=True, skip_cooldown=True, allow_mock_simulator=True
+    )
 
     tuned_skills: list[str] = []
 
@@ -945,7 +947,7 @@ def test_daemon_save_plateau_brief_adr0052_five_fields(tmp_path: Path) -> None:
     """Verify _save_plateau_brief generates a Deep Problem Brief conforming to ADR-0052 Section 3.B."""
     from ccba_harness.evals.tuner import RatchetReport
 
-    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True)
+    daemon = NightlyTunerDaemon(root=tmp_path, no_telegram=True, allow_mock_simulator=True)
     mock_report = RatchetReport(
         target_file=str(tmp_path / "SKILL.md"),
         initial_score=65.0,

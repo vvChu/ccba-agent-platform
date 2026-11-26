@@ -186,7 +186,9 @@ def test_load_mutation_strategies_singleton_caching_and_latency() -> None:
 def test_propose_mutation_declarative_and_general_fallback(tmp_path: Path) -> None:
     """Verifies propose_mutation uses declarative strategies and falls back to general for unmapped skills."""
     target = tmp_path / "SKILL.md"
-    base_content = "---\nname: unmapped-domain-skill\n---\n# Unmapped Skill\n"
+    base_content = (
+        "---\nname: unmapped-domain-skill\nstability_zone: evolvable\n---\n# Unmapped Skill\n"
+    )
     target.write_text(base_content, encoding="utf-8")
 
     cfg = RatchetConfig(target_file=str(target), skill_name="unmapped-domain-skill")

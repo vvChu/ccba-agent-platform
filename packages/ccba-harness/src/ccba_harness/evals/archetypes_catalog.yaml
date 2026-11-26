@@ -165,6 +165,14 @@ archetypes:
     dataset_file: eval_codebase_engineering.json
     scorer_factory: get_coding_scorers
 
+  # 5b. Read-Only Router & Advisory Consultation Domain (Issue #910)
+  - name: router_advisor
+    keywords:
+      - ask
+      - router-advisor
+    dataset_file: eval_ccba_ask.json
+    scorer_factory: get_router_advisor_scorers
+
   # 6. Platform Tooling & Developer Utilities Domain
   - name: platform_tooling
     keywords:
@@ -175,7 +183,6 @@ archetypes:
       - hub
       - upstream
       - sync
-      - ask
       - wayfinder
       - issue-tree
       - xia

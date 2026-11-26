@@ -8,8 +8,9 @@ Provides 4 defense-in-depth governance primitives for SKILL.md evolution:
 3. Phase 3 (Velocity Signal): Consecutive failure patch tracking (`SkillVelocityTracker`) with
    Amber (>= 3 failures -> draft buffer) and Red (>= 5 failures -> circuit-breaker lock).
 4. Phase 4 (3-Tier Regression Gate):
-   - Tier 1 (Static Linting Gate): +15% token bloat cap and zero silent deletion of normative
-     directives (`MUST`, `MUST NOT`, `BẮT BUỘC`, `TUYỆT ĐỐI KHÔNG`, `NGHIÊM CẤM`).
+   - Tier 1 (Static Linting Gate): +15% token bloat cap and prohibition-coverage preservation
+     (prevents total deletion of prohibition directives while permitting non-destructive
+     deduplication of repeated phrasing).
    - Tier 2 (Dual-Run Replay Gate): Fail-closed comparison of baseline vs candidate eval reports.
    - Tier 3 (Negative Constraint Gate): Rejects single-patch instruction growth > 20%.
 """
@@ -28,10 +29,16 @@ from pathlib import Path
 from typing import Any, Literal
 
 from ccba_harness._skill_frontmatter import parse_markdown_frontmatter
+from ccba_harness.evals._eval_guards import (
+    QUARANTINE_COUNTING_FAILURES,
+    FailureKind,
+    compute_lf_sha256,
+)
 from ccba_harness.evals.models import EvalReport
 
 VALID_STABILITY_ZONES: tuple[str, str] = ("evolvable", "locked")
 SKILL_LOCKED_HALT_REASON = "SKILL_LOCKED_STABILITY_ZONE"
+VELOCITY_SCHEMA_VERSION = 2
 AMBER_VELOCITY_THRESHOLD = 3
 RED_CIRCUIT_BREAKER_THRESHOLD = 5
 DEFAULT_MAX_TOKEN_DELTA_RATIO = 0.15
@@ -50,7 +57,15 @@ NORMATIVE_DIRECTIVE_PATTERNS: dict[str, re.Pattern[str]] = {
     "BAT_BUOC": re.compile(r"\bBẮT\s+BUỘC\b", re.IGNORECASE),
     "TUYET_DOI_KHONG": re.compile(r"\bTUYỆT\s+ĐỐI\s+KHÔNG\b", re.IGNORECASE),
     "NGHIEM_CAM": re.compile(r"\bNGHIÊM\s+CẤM\b", re.IGNORECASE),
+    "CAM": re.compile(r"\bCẤM\b", re.IGNORECASE),
+    "KHONG_DUOC": re.compile(r"\bKHÔNG\s+ĐƯỢC\b", re.IGNORECASE),
+    "NEVER": re.compile(r"\bNEVER\b"),
+    "READ_ONLY": re.compile(r"\bREAD[-\s]?ONLY\b", re.IGNORECASE),
 }
+
+PROHIBITION_DIRECTIVE_KEYS: frozenset[str] = frozenset(
+    {"MUST_NOT", "TUYET_DOI_KHONG", "NGHIEM_CAM", "CAM", "KHONG_DUOC", "NEVER", "READ_ONLY"}
+)
 
 
 @dataclass(frozen=True)
@@ -70,15 +85,19 @@ class SkillVersionSnapshot:
 
 @dataclass
 class VelocitySignalState:
-    """Tracks consecutive failed autonomous patches and circuit-breaker status."""
+    """Tracks consecutive failed autonomous patches and circuit-breaker status (v2 schema)."""
 
     skill_name: str
+    schema_version: int = VELOCITY_SCHEMA_VERSION
     consecutive_failure_patches: int = 0
     total_keeps: int = 0
     total_failures: int = 0
     quarantined: bool = False
     zone_status: Literal["GREEN", "AMBER_DRAFT_BUFFER", "RED_QUARANTINE_LOCKED"] = "GREEN"
     draft_buffer_path: str | None = None
+    content_sha256: str = ""
+    dataset_sha256: str = ""
+    last_failure_reason: str = ""
     updated_at: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -160,7 +179,7 @@ def resolve_skill_stability_zone(
             return "locked"
         if norm == "evolvable":
             return "evolvable"
-    return "evolvable"
+    return "locked"
 
 
 def _atomic_write_text(target_path: Path, text: str) -> None:
@@ -313,27 +332,90 @@ class SkillVelocityTracker:
         self.red_threshold = red_threshold
         self.state_path = self.version_store.store_dir / "velocity_state.json"
 
-    def load_state(self) -> VelocitySignalState:
-        """Loads current VelocitySignalState from sidecar JSON."""
+    def _reconcile_velocity_state(
+        self,
+        state: VelocitySignalState,
+        content_sha256: str | None,
+        dataset_sha256: str | None,
+        persist_on_reset: bool,
+    ) -> VelocitySignalState:
+        """Applies one-time v1->v2 migration and SHA-256 drift auto-reset on loaded state."""
+        dirty = False
+        if state.schema_version < VELOCITY_SCHEMA_VERSION:
+            state.schema_version = VELOCITY_SCHEMA_VERSION
+            state.consecutive_failure_patches = 0
+            state.quarantined = False
+            state.zone_status = "GREEN"
+            state.draft_buffer_path = None
+            state.last_failure_reason = ""
+            if content_sha256:
+                state.content_sha256 = content_sha256
+            if dataset_sha256:
+                state.dataset_sha256 = dataset_sha256
+            dirty = True
+        elif content_sha256 and dataset_sha256:
+            hash_changed = (
+                bool(state.content_sha256) and state.content_sha256 != content_sha256
+            ) or (bool(state.dataset_sha256) and state.dataset_sha256 != dataset_sha256)
+            if hash_changed:
+                state.consecutive_failure_patches = 0
+                state.quarantined = False
+                state.zone_status = "GREEN"
+                state.draft_buffer_path = None
+                state.last_failure_reason = ""
+                state.content_sha256 = content_sha256
+                state.dataset_sha256 = dataset_sha256
+                dirty = True
+            elif not state.content_sha256 or not state.dataset_sha256:
+                state.content_sha256 = state.content_sha256 or content_sha256
+                state.dataset_sha256 = state.dataset_sha256 or dataset_sha256
+                dirty = True
+        if dirty and persist_on_reset:
+            return self.save_state(state)
+        return state
+
+    def load_state(
+        self,
+        content_sha256: str | None = None,
+        dataset_sha256: str | None = None,
+        *,
+        persist_on_reset: bool = True,
+    ) -> VelocitySignalState:
+        """Loads VelocitySignalState with v1->v2 migration and optional SHA-256 auto-reset."""
         if not self.state_path.is_file():
-            return VelocitySignalState(skill_name=self.skill_name)
+            return VelocitySignalState(
+                skill_name=self.skill_name,
+                schema_version=VELOCITY_SCHEMA_VERSION,
+                content_sha256=content_sha256 or "",
+                dataset_sha256=dataset_sha256 or "",
+            )
         try:
             raw = json.loads(self.state_path.read_text(encoding="utf-8"))
-            return VelocitySignalState(
+            state = VelocitySignalState(
                 skill_name=str(raw.get("skill_name", self.skill_name)),
+                schema_version=int(raw.get("schema_version", 1)),
                 consecutive_failure_patches=int(raw.get("consecutive_failure_patches", 0)),
                 total_keeps=int(raw.get("total_keeps", 0)),
                 total_failures=int(raw.get("total_failures", 0)),
                 quarantined=bool(raw.get("quarantined", False)),
                 zone_status=raw.get("zone_status", "GREEN"),
                 draft_buffer_path=raw.get("draft_buffer_path"),
+                content_sha256=str(raw.get("content_sha256", "")),
+                dataset_sha256=str(raw.get("dataset_sha256", "")),
+                last_failure_reason=str(raw.get("last_failure_reason", "")),
                 updated_at=str(raw.get("updated_at", "")),
             )
+            return self._reconcile_velocity_state(
+                state, content_sha256, dataset_sha256, persist_on_reset
+            )
         except Exception:
-            return VelocitySignalState(skill_name=self.skill_name)
+            return VelocitySignalState(
+                skill_name=self.skill_name, schema_version=VELOCITY_SCHEMA_VERSION
+            )
 
     def save_state(self, state: VelocitySignalState) -> VelocitySignalState:
         """Atomically persists VelocitySignalState to sidecar JSON."""
+        state.schema_version = VELOCITY_SCHEMA_VERSION
         state.updated_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         _atomic_write_text(
             self.state_path, json.dumps(state.to_dict(), ensure_ascii=False, indent=2)
@@ -347,17 +429,25 @@ class SkillVelocityTracker:
         state = self.load_state()
         state.consecutive_failure_patches = 0
         state.total_keeps += 1
+        state.last_failure_reason = ""
         if not state.quarantined:
             state.zone_status = "GREEN"
         if green_content is not None:
+            state.content_sha256 = compute_lf_sha256(green_content)
             self.version_store.snapshot_green(green_content, score=score)
         return self.save_state(state)
 
     def record_patch_failure(
-        self, candidate_content: str | None = None, reason: str = ""
+        self,
+        candidate_content: str | None = None,
+        reason: str = "",
+        failure_kind: str = FailureKind.MUTATION_REGRESSION.value,
     ) -> VelocitySignalState:
-        """Increments consecutive failure counter and triggers Amber draft or Red quarantine."""
+        """Records a failed trial; only MUTATION_REGRESSION/HOLDOUT_REGRESSION count toward quarantine."""
         state = self.load_state()
+        state.last_failure_reason = reason
+        if failure_kind not in QUARANTINE_COUNTING_FAILURES:
+            return self.save_state(state)
         state.consecutive_failure_patches += 1
         state.total_failures += 1
         if state.consecutive_failure_patches >= self.red_threshold:
@@ -419,13 +509,19 @@ def evaluate_static_lint_gate(
     min_baseline_words: int = 1,
     min_baseline_chars: int = 1,
 ) -> RegressionGateVerdict:
-    """Tier 1 Static Linting Gate: checks normative directive preservation and +15% token delta."""
+    """Tier 1 Static Linting Gate: checks prohibition coverage preservation and +15% token delta."""
     base_counts = count_normative_directives(baseline_content)
     mut_counts = count_normative_directives(mutated_content)
-    dropped: dict[str, tuple[int, int]] = {
-        k: (base_counts[k], mut_counts[k]) for k in base_counts if mut_counts[k] < base_counts[k]
-    }
-    delta_ratio = _compute_token_delta_ratio(
+    base_prohib = sum(base_counts[k] for k in PROHIBITION_DIRECTIVE_KEYS)
+    mut_prohib = sum(mut_counts[k] for k in PROHIBITION_DIRECTIVE_KEYS)
+    dropped: dict[str, tuple[int, int]] = {}
+    if base_prohib > 0 and mut_prohib == 0:
+        dropped = {
+            k: (base_counts[k], mut_counts[k])
+            for k in PROHIBITION_DIRECTIVE_KEYS
+            if base_counts[k] > 0
+        }
+    delta = _compute_token_delta_ratio(
         baseline_content, mutated_content, min_baseline_words, min_baseline_chars
     )
     if dropped:
@@ -434,22 +530,22 @@ def evaluate_static_lint_gate(
             passed=False,
             failed_tier=1,
             failure_code="TIER1_NORMATIVE_DIRECTIVE_DELETED",
-            reason=f"Tier 1 Static Gate: mutation silently deleted normative directives: {details}",
-            token_delta_ratio=delta_ratio,
+            reason=f"Tier 1 Static Gate: mutation deleted all prohibition directives: {details}",
+            token_delta_ratio=delta,
             dropped_directives=dropped,
         )
-    if enforce_token_ratio and delta_ratio > max_token_delta_ratio:
+    if enforce_token_ratio and delta > max_token_delta_ratio:
         return RegressionGateVerdict(
             passed=False,
             failed_tier=1,
             failure_code="TIER1_TOKEN_BLOAT_EXCEEDED",
             reason=(
-                f"Tier 1 Static Gate: token delta +{delta_ratio * 100:.1f}% exceeds "
+                f"Tier 1 Static Gate: token delta +{delta * 100:.1f}% exceeds "
                 f"+{max_token_delta_ratio * 100:.1f}% ceiling"
             ),
-            token_delta_ratio=delta_ratio,
+            token_delta_ratio=delta,
         )
-    return RegressionGateVerdict(passed=True, token_delta_ratio=delta_ratio)
+    return RegressionGateVerdict(passed=True, token_delta_ratio=delta)
 
 
 def evaluate_dual_run_replay_gate(
@@ -533,15 +629,13 @@ def evaluate_regression_gate(
     min_baseline_chars: int = 1,
 ) -> RegressionGateVerdict:
     """Executes all 3 tiers of the Skill Regression Gate in fail-fast order."""
-    eff_min_words = min_baseline_words if enforce_token_ratio else 1500
-    eff_min_chars = min_baseline_chars if enforce_token_ratio else 8000
     tier3 = evaluate_negative_constraint_gate(
         baseline_content,
         mutated_content,
         max_single_patch_growth_ratio=max_single_patch_growth_ratio,
-        enforce_growth_ratio=True,
-        min_baseline_words=eff_min_words,
-        min_baseline_chars=eff_min_chars,
+        enforce_growth_ratio=enforce_token_ratio,
+        min_baseline_words=min_baseline_words,
+        min_baseline_chars=min_baseline_chars,
     )
     if not tier3.passed:
         return tier3
@@ -549,10 +643,10 @@ def evaluate_regression_gate(
     tier1 = evaluate_static_lint_gate(
         baseline_content,
         mutated_content,
-        max_token_delta_ratio=max_token_delta_ratio,
-        enforce_token_ratio=True,
-        min_baseline_words=eff_min_words,
-        min_baseline_chars=eff_min_chars,
+        max_token_delta_ratio,
+        enforce_token_ratio,
+        min_baseline_words,
+        min_baseline_chars,
     )
     if not tier1.passed:
         return tier1
@@ -576,6 +670,7 @@ __all__ = [
     "DEFAULT_MAX_SINGLE_PATCH_GROWTH_RATIO",
     "DEFAULT_MAX_TOKEN_DELTA_RATIO",
     "NORMATIVE_DIRECTIVE_PATTERNS",
+    "PROHIBITION_DIRECTIVE_KEYS",
     "RED_CIRCUIT_BREAKER_THRESHOLD",
     "RegressionGateVerdict",
     "SKILL_LOCKED_HALT_REASON",
@@ -584,6 +679,7 @@ __all__ = [
     "SkillVersionSnapshot",
     "SkillVersionStore",
     "VALID_STABILITY_ZONES",
+    "VELOCITY_SCHEMA_VERSION",
     "VelocitySignalState",
     "check_skill_mutation_allowed",
     "count_normative_directives",

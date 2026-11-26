@@ -275,3 +275,19 @@ suites:
       min_length: 20
       max_length: 20000
       is_critical: false
+
+  router_advisor:
+    router_advisor_canonical_routing:
+      weight: 0.35
+      is_critical: false
+    router_advisor_read_only_hard_floor:
+      weight: 0.35
+      is_critical: true
+    router_advisor_actionable_handoff:
+      weight: 0.20
+      is_critical: false
+    depth:
+      weight: 0.10
+      min_length: 20
+      max_length: 20000
+      is_critical: false

@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-26] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) & Nghiên Cứu Phản Biện Kép Cải Tổ Hệ Thống Tự Thu Thập Dữ Liệu & Tự Cải Tiến (Issue `#910` + Wave 0–2)
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-research` + `/ccba-grilling`)
+- **Affected Files**: [research_and_studies/research-self-telemetry-and-self-improvement-lessons.md](research_and_studies/research-self-telemetry-and-self-improvement-lessons.md), [decisions/2026-11-26_self_telemetry_and_eval_overhaul_grilling_resolution.md](decisions/2026-11-26_self_telemetry_and_eval_overhaul_grilling_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất nghiên cứu đối kháng kép (`Dual-Agent Adversarial`) kiểm toán `10` mô-đun cốt lõi của `ccba-harness` cùng đội hình thực tế (`70/77` `velocity_state.json` với `61` `RED_QUARANTINE_LOCKED`, `9` `GREEN` đều mang `45` mock keeps, `74` `*_plateau.md`, `tuner_heartbeat.json` đóng băng từ `2026-09-24`), chốt `4/4` Grilling Frontiers (`Q1`–`Q4`) và vượt qua **Grok Peer Plan Audit 3 Pass** (`944e1b6e` $\to$ `ae11f49e` $\to$ `358fac61-4cf0-4b0d-b6cb-71efe233b308` **`APPROVE_PLAN`**, `risk_score: 2`, `0` blocking): triển khai tuần tự `3` Atomic Micro-PRs (PR 1 Wave 0 đóng Issue `#910` với `_eval_guards.py`, `router_advisor` + `eval_ccba_ask.json` `12` ca `TIER_B`, `skill_governance` `v2` SHA-256 auto-reset + `locked` mặc định + Hard Holdout Gate trước commit + tái neo `verify-ccba-knowledge-loop` & `verify-ccba-wayfinder`; PR 2 Wave 1 `_turn_stream.py` + `SIDE_EFFECT_VIOLATION` + `skill_invocations.jsonl` + `_fleet_scanner.py` Maskara/`spoke_id`; PR 3 Wave 2 `audit_skill_effectiveness.py` Pre/Post A/B + `--drift-check`).
+
+---
+
 ## [2026-11-26] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q4`) Nâng Cấp `/ccba-codebase-design` `v1.5.0` & Bộ Kiểm Định `verify-ccba-codebase-design`
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` `ccba-codebase-design v1.5.0`)
 - **Affected Files**: [decisions/2026-11-26_ccba_codebase_design_v150_grilling_resolution.md](decisions/2026-11-26_ccba_codebase_design_v150_grilling_resolution.md), [index.md](index.md), [log.md](log.md)

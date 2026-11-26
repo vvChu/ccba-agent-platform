@@ -276,9 +276,19 @@ def test_feat_wf_007_surface_diff_and_domain_eval_parity() -> None:
     )
     assert changed == []
 
+    from ccba_harness.evals.archetypes import resolve_domain_dataset_contract
+
     skill_file = repo_root / ".agents" / "skills" / "ccba-wayfinder" / "SKILL.md"
-    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-wayfinder")
+    contract = resolve_domain_dataset_contract(
+        "ccba-wayfinder", repo_root / ".agents" / "skills" / "ccba-eval-gate" / "test_cases"
+    )
+    assert contract.status == "CONFIGURED" and contract.dataset_path is not None
+    cfg = RatchetConfig(
+        target_file=skill_file,
+        skill_name="ccba-wayfinder",
+        eval_dataset_file=contract.dataset_path,
+    )
     opt = GitRatchetOptimizer(config=cfg, dry_run_git=True, project_root=repo_root)
     eval_rep = opt.evaluate_content(skill_file.read_text(encoding="utf-8"))
     assert eval_rep.overall_score == 100.0
-    assert eval_rep.passed_items == eval_rep.total_items == 2
+    assert eval_rep.passed_items == eval_rep.total_items >= 5

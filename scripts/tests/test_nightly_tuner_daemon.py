@@ -102,7 +102,7 @@ def test_save_plateau_brief(tmp_path: Path) -> None:
     content = brief_path.read_text(encoding="utf-8")
     assert "# ⚠️ CCBA Plateau Escalation Brief (ADR-0052)" in content
     assert "75.0%" in content
-    assert "gemini-3.8-flash-high" in content
+    assert "tier-reasoning" in content
 
 
 def test_generate_evolution_report_markdown() -> None:
@@ -370,20 +370,25 @@ def test_cleanup_old_empty_branches_logic(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_tuner_tiered_budget_and_early_stopping(tmp_path: Path) -> None:
-    """Verify GitRatchetOptimizer sets correct effective budget and early stops."""
+    """Verify GitRatchetOptimizer sets correct effective budget, baseline sanity gate, and early stops."""
     from ccba_harness.evals import EvalItem, ExactMatchScorer, GitRatchetOptimizer, RatchetConfig
 
+    pad = " ".join(f"rule_{i}" for i in range(400))
     dataset = [EvalItem(id="item1", input_prompt="Hello", golden_answer="Pass")]
     scorers = [ExactMatchScorer()]
 
-    # 1. Test 100% baseline budget clamping to 1 iteration
+    # 1. Test 100% baseline with verify_only=True clamps to 1 iteration
     perfect_skill = tmp_path / "perfect_skill.md"
-    perfect_skill.write_text("# Perfect Skill\n", encoding="utf-8")
+    perfect_skill.write_text(
+        f"---\nname: perfect-skill\nstability_zone: evolvable\n---\n# Perfect Skill\n{pad}\n",
+        encoding="utf-8",
+    )
     cfg_perfect = RatchetConfig(
         target_file=perfect_skill,
         max_iterations=10,
         patience=3,
         target_score=100.0,
+        verify_only=True,
     )
     opt_perfect = GitRatchetOptimizer(
         cfg_perfect,
@@ -397,9 +402,16 @@ def test_tuner_tiered_budget_and_early_stopping(tmp_path: Path) -> None:
     assert report_perfect.initial_score == 100.0
     assert report_perfect.total_iterations == 1
 
-    # 2. Test early stopping when mutations are stagnant (patience=2)
+    # 2. Test early stopping when mutations are stagnant (patience=2) on non-zero baseline (50%)
+    stagnant_ds = [
+        EvalItem(id="item1", input_prompt="PassPrompt", golden_answer="Pass"),
+        EvalItem(id="item2", input_prompt="FailPrompt", golden_answer="Pass"),
+    ]
     stagnant_skill = tmp_path / "stagnant_skill.md"
-    stagnant_skill.write_text("# Stagnant Skill\n", encoding="utf-8")
+    stagnant_skill.write_text(
+        f"---\nname: stagnant-skill\nstability_zone: evolvable\n---\n# Stagnant Skill\n{pad}\n",
+        encoding="utf-8",
+    )
     cfg_stagnant = RatchetConfig(
         target_file=stagnant_skill,
         max_iterations=10,
@@ -410,9 +422,9 @@ def test_tuner_tiered_budget_and_early_stopping(tmp_path: Path) -> None:
         cfg_stagnant,
         root=tmp_path,
         dry_run_git=True,
-        dataset=dataset,
+        dataset=stagnant_ds,
         scorers=scorers,
-        task=lambda item: "Fail",
+        task=lambda item: "Pass" if item.id == "item1" else "Fail",
     )
     report_stagnant = opt_stagnant.run()
     # Should halt after effective_patience (2) iterations instead of running all 10

@@ -16,6 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
+from ._eval_guards import evaluate_candidate_holdout_async
 from ._tuner_llm import (
     AdaptiveRateLimiter,
     AIClient,
@@ -211,7 +212,7 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
         self.velocity_tracker = SkillVelocityTracker(gov_name, version_store=self.version_store)
 
     def _load_dataset(self) -> list[EvalItem]:
-        """Loads evaluation dataset from JSON or creates synthetic items."""
+        """Loads evaluation dataset from JSON (fail-closed: no synthetic statutory fallback)."""
         items: list[EvalItem] = []
         if self.config.eval_dataset_file and self.config.eval_dataset_file.exists():
             try:
@@ -237,19 +238,6 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
                 except Exception as e:
                     logger.error(f"Lỗi đọc raw JSON dataset: {e}")
 
-        if not items:
-            items = [
-                EvalItem(
-                    id="default_01",
-                    input_prompt="Soạn thảo văn bản hành chính theo Nghị định 30/2020/NĐ-CP",
-                    rubric="Phải tuân thủ thể thức Nghị định 30.",
-                ),
-                EvalItem(
-                    id="default_02",
-                    input_prompt="Kiểm tra bậc chịu lửa công trình theo QCVN 06:2022/BXD",
-                    rubric="Phải xác định đúng bậc chịu lửa.",
-                ),
-            ]
         return items
 
     def _build_eval_task(self, content: str) -> Callable[[EvalItem], Any]:
@@ -511,6 +499,21 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
                     break
         return halt_reason
 
+    async def _eval_async_holdout_if_improved(
+        self, eval_report: EvalReport, mutated: str, state: _RatchetLoopState
+    ) -> Any:
+        """Evaluates holdout asynchronously only when tuning improved with zero critical failures."""
+        crit_fails = sum(1 for r in eval_report.item_results if r.critical_failed)
+        if eval_report.overall_score > state.best_score and crit_fails == 0:
+            return await evaluate_candidate_holdout_async(
+                self._eval_async,
+                mutated,
+                self.holdout_dataset,
+                state.best_holdout_score,
+                require_holdout_for_keep=self.config.require_holdout_for_keep,
+            )
+        return None
+
     async def _run_async_iterations(
         self,
         effective_max_iter: int,
@@ -530,7 +533,12 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
                 if not mutated or self._run_pre_eval_guards(mutated, i, t0, prev_tokens, state):
                     continue
                 eval_report = await self._eval_async(mutated)
-                self._apply_trial_verdict(i, eval_report, mutated, t0, prev_tokens, state)
+                holdout_decision = await self._eval_async_holdout_if_improved(
+                    eval_report, mutated, state
+                )
+                self._apply_trial_verdict(
+                    i, eval_report, mutated, t0, prev_tokens, state, holdout_decision
+                )
                 should_stop, stop_reason = self._check_budget_and_early_stop(
                     i, effective_patience, baseline_tokens, state
                 )
@@ -584,6 +592,7 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
             return early_rep
 
         initial_holdout_score = self._eval_holdout_base_sync(initial_content)
+        state.best_holdout_score = initial_holdout_score
         try:
             halt_reason = self._run_sync_iterations(max_it, pat, base_tok, state)
         finally:
@@ -592,9 +601,7 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
         if state.finalize_error:
             raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
 
-        final_holdout_score = self._eval_holdout_final_sync(
-            state.best_content, initial_holdout_score, state.kept_count
-        )
+        final_holdout_score = state.best_holdout_score
         return self._build_final_report(
             base_sc, initial_holdout_score, final_holdout_score, halt_reason, state
         )
@@ -622,6 +629,7 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
                 return early_rep
 
             initial_holdout_score = await self._eval_holdout_base_async(initial_content)
+            state.best_holdout_score = initial_holdout_score
             try:
                 halt_reason = await self._run_async_iterations(max_it, pat, base_tok, state)
             finally:
@@ -630,9 +638,7 @@ class GitRatchetOptimizer(_RatchetMutationGitMixin):
             if state.finalize_error:
                 raise RuntimeError(f"Failed to finalize disk state: {state.finalize_error}")
 
-            final_holdout_score = await self._eval_holdout_final_async(
-                state.best_content, initial_holdout_score, state.kept_count
-            )
+            final_holdout_score = state.best_holdout_score
             return self._build_final_report(
                 base_sc, initial_holdout_score, final_holdout_score, halt_reason, state
             )

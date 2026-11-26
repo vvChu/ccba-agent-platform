@@ -21,8 +21,8 @@ sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
   .agents/skills/ccba-knowledge-loop/SKILL.md: "aa04be52312b85bd54385fa82d50fbfa25e4b8a8874ed8c92c55344efd717c24"
   .agents/skills/ccba-knowledge-loop/references/llm-wiki.md: "6934759e1477845b0797061a353286500fdf64c818a8bef36eaa7a6917e9d444"
-  packages/ccba-harness/src/ccba_harness/evals/simulators/platform_tooling.py: "5cc23a3f16e9855f4ab66b8d5218881fc30922f1864364e5e11f49d1d649cca2"
-  packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml: "c79a9a5c7f4ac06ad86438ad5ec56141f982c41f3bc4832c98a637262bd60e6d"
+  packages/ccba-harness/src/ccba_harness/evals/simulators/platform_tooling.py: "79cea186141dfd100b496d589051c4ed43a3a8e4101c97cd7476ad52de32fc5d"
+  packages/ccba-harness/src/ccba_harness/evals/archetypes_catalog.yaml: "b189f12d245b7185841d5749f1c3343d8b0681bc714f9e7099f34046b480de48"
 verification_mode:
   - scaffold
   - sync

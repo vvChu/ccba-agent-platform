@@ -49,7 +49,7 @@ def test_phase1_stability_zone_validation_and_defaults(tmp_path: Path) -> None:
     assert resolve_skill_stability_zone(valid_evolvable) == "evolvable"
     assert resolve_skill_stability_zone(valid_locked) == "locked"
     assert resolve_skill_stability_zone(gov_default) == "locked"
-    assert resolve_skill_stability_zone(general_default) == "evolvable"
+    assert resolve_skill_stability_zone(general_default) == "locked"
 
     gov_override_attempt = (
         "---\nname: platform-loader\nbundle: _governance\nstability_zone: evolvable\n---\n# Body\n"
@@ -232,15 +232,30 @@ def test_phase4_regression_gate_all_three_tiers() -> None:
 
 def test_tuner_pre_eval_rejects_deleted_normative_directive(tmp_path: Path) -> None:
     """Verifies GitRatchetOptimizer._run_pre_eval_guards rejects mutations that drop MUST NOT."""
+    from ccba_harness.evals.models import EvalItem
+
     skill_file = tmp_path / "SKILL.md"
     initial_content = (
-        "---\nname: ccba-normative\nbundle: _core\n---\n"
+        "---\nname: ccba-normative\nbundle: _core\nstability_zone: evolvable\n---\n"
         "# Normative Skill\nAgent MUST NOT bypass verification.\n"
     )
     skill_file.write_text(initial_content, encoding="utf-8")
 
-    cfg = RatchetConfig(target_file=skill_file, skill_name="ccba-normative", max_iterations=1)
-    optimizer = GitRatchetOptimizer(cfg, dry_run_git=True, project_root=tmp_path)
+    cfg = RatchetConfig(
+        target_file=skill_file, skill_name="ccba-normative", max_iterations=1, target_score=100.0
+    )
+    ds = [EvalItem(id="n1", input_prompt="Verify normative guard", golden_answer="MUST NOT bypass")]
+    optimizer = GitRatchetOptimizer(
+        cfg, dry_run_git=True, project_root=tmp_path, dataset=ds, task=lambda _it: "partial"
+    )
+    optimizer.evaluate_content = lambda content, dataset=None: EvalReport(  # type: ignore[method-assign]
+        total_items=1,
+        passed_items=0,
+        failed_items=1,
+        overall_score=50.0,
+        pass_rate=0.0,
+        item_results=[],
+    )
     optimizer.propose_mutation = lambda content, iteration: content.replace(  # type: ignore[method-assign]
         "MUST NOT", "may"
     )

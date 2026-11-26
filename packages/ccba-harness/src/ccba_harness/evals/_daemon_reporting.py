@@ -252,17 +252,20 @@ class _DaemonReportingAndGitMixin:
         matched_in_file: set[str] = set()
 
         for match in pattern_7.finditer(content):
-            s_name = match.group(1).strip()
-            s_final = float(match.group(3))
-            commits = int(match.group(4))
-            status_str = match.group(5).strip().upper()
+            s_name, s_final, commits, status_str = (
+                match.group(1).strip(),
+                float(match.group(3)),
+                int(match.group(4)),
+                match.group(5).strip().upper(),
+            )
             matched_in_file.add(s_name)
-            if s_name not in scores:
-                scores[s_name] = s_final
+            if any(t in status_str for t in ("ERROR", "UNCONFIGURED", "MOCK_SIMULATOR", "ORACLE")):
+                continue
+            scores.setdefault(s_name, s_final)
             if "SKIPPED_COOLDOWN" in status_str:
                 continue
-            if r_date is not None and s_name not in last_scanned_dates:
-                last_scanned_dates[s_name] = r_date
+            if r_date is not None:
+                last_scanned_dates.setdefault(s_name, r_date)
             if is_within_cooldown and is_real_llm and s_name not in evaluated_recent:
                 evaluated_recent.add(s_name)
                 if commits == 0 and (
@@ -274,11 +277,9 @@ class _DaemonReportingAndGitMixin:
             s_name = match.group(1).strip()
             if s_name in matched_in_file:
                 continue
-            s_final = float(match.group(3))
-            if s_name not in scores:
-                scores[s_name] = s_final
-            if r_date is not None and s_name not in last_scanned_dates:
-                last_scanned_dates[s_name] = r_date
+            scores.setdefault(s_name, float(match.group(3)))
+            if r_date is not None:
+                last_scanned_dates.setdefault(s_name, r_date)
 
     def _load_historical_metrics(
         self, cooldown_days: int = 3
@@ -436,7 +437,7 @@ class _DaemonReportingAndGitMixin:
             "Kỹ năng này đã cạn kiệt ngân sách kiên nhẫn (`patience`) trên mô hình cục bộ mà không vượt qua được điểm nghẽn.",
             "Theo quy chuẩn **ADR-0052 (Boost Deep Reasoning Protocol)**, kỹ sư CCBA hãy chủ động can thiệp ban ngày:\n",
             f"1. **Khởi chạy Interactive Boost trên Worktree cô lập:**\n   ```bash\n   bash scripts/eval/run_boost_worktree.sh {skill_name}\n   ```",
-            f"2. **Khởi chạy Daemon với mô hình suy luận cao cấp:**\n   ```bash\n   python scripts/eval/nightly_tuner_daemon.py --skill {skill_name} --use-real-llm --model gemini-3.8-flash-high --max-iter 3\n   ```",
+            f"2. **Khởi chạy Daemon với mô hình suy luận cao cấp:**\n   ```bash\n   python scripts/eval/nightly_tuner_daemon.py --skill {skill_name} --use-real-llm --model tier-reasoning --max-iter 3\n   ```",
             "3. **Kích hoạt qua Antigravity Chat:** Gõ `/boost` kèm nội dung brief này để rà soát Instruction Conflicts giữa `SKILL.md` và Scorer.\n",
         ]
         return "\n".join(lines)
@@ -716,6 +717,7 @@ class _DaemonReportingAndGitMixin:
             "gh",
             "pr",
             "create",
+            "--draft",
             "--head",
             branch_name,
             "--title",

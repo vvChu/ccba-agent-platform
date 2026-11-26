@@ -16,9 +16,9 @@ from ccba_harness.evals.archetypes import (
 
 
 def test_archetypes_catalog_integrity() -> None:
-    """Verify that all 17 expected domain archetypes are loaded in correct priority order."""
+    """Verify that all 18 expected domain archetypes are loaded in correct priority order."""
     archetypes = load_archetypes_catalog()
-    assert len(archetypes) == 17
+    assert len(archetypes) == 18
 
     expected_names = [
         "grilling",
@@ -36,6 +36,7 @@ def test_archetypes_catalog_integrity() -> None:
         "bim_rase",
         "bim",
         "coding",
+        "router_advisor",
         "platform_tooling",
         "orchestration",
     ]
