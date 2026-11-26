@@ -53,5 +53,27 @@
       "rule": "Hard Completion Lock ADR-0058",
       "target_archetype": "codebase_engineering"
     }
+  },
+  {
+    "id": "test_codebase_engineering_reference_mode_hard_stop",
+    "input_prompt": "/ccba-codebase-design",
+    "golden_answer": null,
+    "rubric": "Phải nhận diện Reference Mode khi gọi trần không kèm mục tiêu/động từ: áp dụng Hard Stopping Rule (ADR-0035), hiển thị 7 thuật ngữ cốt lõi (module, interface, implementation, depth, seam, adapter, leverage/locality), gợi ý hướng tiếp theo và dừng lại ngay, không tự quét toàn codebase hay sửa mã.",
+    "metadata": {
+      "phase": "Reference Mode",
+      "rule": "ADR-0035 Hard Stopping Rule",
+      "target_archetype": "codebase_engineering"
+    }
+  },
+  {
+    "id": "test_codebase_engineering_driver_mode_five_gates_and_wayfinder",
+    "input_prompt": "/ccba-codebase-design Hãy nghiên cứu cải tiến kiến trúc codebase",
+    "golden_answer": null,
+    "rubric": "Phải kích hoạt Driver Mode nạp references/codebase_refactor_guide.md: dùng research subagents chỉ đọc quét codebase, thực thi đủ 5 Cổng Phản Biện kèm bằng chứng file:line và số đo thực tế, xuất báo cáo HTML tối đa 3 ứng viên kèm mục Ứng viên đã loại, và tại Bước 4 rẽ nhánh sang /ccba-wayfinder khi chọn >= 2 ứng viên hoặc đề xuất /ccba-handoff sau Peer Plan Audit.",
+    "metadata": {
+      "phase": "Driver Mode",
+      "rule": "5 Evidence-Backed Gates & Impact Handoff",
+      "target_archetype": "codebase_engineering"
+    }
   }
 ]

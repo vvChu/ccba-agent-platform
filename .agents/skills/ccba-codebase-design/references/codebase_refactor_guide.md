@@ -19,7 +19,7 @@ Quy trình này được định hướng bởi domain model của dự án và 
 
 ### Bước 1: Khám phá & Quét Thực Chiến (Explore & Ground-Truth Sweep)
 - Đọc bảng thuật ngữ domain (`CONTEXT.md`) và bất kỳ tài liệu quyết định thiết kế (ADRs) liên quan đến phân vùng mã nguồn chuẩn bị tác động.
-- Sử dụng subagent thuộc kiểu `Explore` để quét codebase một cách tự nhiên. Ghi chép lại các điểm gây cản trở lập trình thực tế (architectural friction):
+- Sử dụng tối đa 3 subagent chỉ đọc `research` (`workspace="inherit"`, tuân thủ `ADR-0035`) để quét song song theo phân vùng codebase. Ghi chép lại các điểm gây cản trở lập trình thực tế (architectural friction):
   * **Xung đột Định danh Toàn Cục (Cross-Package Symbol Collision - P6.21):** Quét phát hiện các class/function/module có tên trùng lặp giữa các package khác nhau nhưng thực hiện nghiệp vụ khác nhau (như `TableReconstructor` vs `AppendixExtractor`).
   * **Xâm phạm Ranh giới Seam (Private Submodule Import Violation - P6.16, P6.17):** Nơi code bên ngoài package vượt qua `__init__.py` public interface để import trực tiếp vào file private `_internal.py` hoặc submodule lõi (`from ccba_pkg._core import ...`). *Lưu ý:* Absolute import hợp lệ bên trong cùng một package (`from pkg.core import X` trong `pkg/cli/cmd.py`) theo PEP 328 **không phải** là import drift.
   * **Script Dùng Một Lần Tồn Dư (Legacy One-off Scripts):** Các script di trú ticket cũ (`execute_ticket*.py`) nằm rải rác trong các thư mục vận hành thay vì được lưu trữ tại `.md/knowledge/archive/`.
@@ -68,14 +68,17 @@ Quy trình này được định hướng bởi domain model của dự án và 
 ### Bước 3: Trình bày Báo cáo dưới dạng HTML (Present candidates as an HTML report)
 - Cấu trúc trang HTML tuân thủ mẫu chuẩn tại [html_report_template.md](html_report_template.md).
 - Viết một file HTML đơn lẻ (single-file) vào thư mục tạm của dự án: `.md/scratch/architecture-review/architecture-review-<timestamp>.html` (tự động tạo thư mục nếu chưa tồn tại).
-- Kích hoạt mở tệp tin báo cáo bằng trình duyệt mặc định trên hệ thống Windows của kỹ sư, kèm cơ chế xử lý lỗi an toàn cho môi trường headless:
-  ```powershell
-  try {
-      Start-Process "<absolute-path-to-file>"
-  } catch {
-      Write-Warning "Headless environment detected or browser unavailable. Please open manually: file:///<absolute-path-to-file>"
-  }
-  ```
+- Mở tệp tin báo cáo bằng trình duyệt mặc định theo hệ điều hành hiện tại, kèm cơ chế xử lý an toàn cho môi trường headless:
+  - **Linux / WSL:** `xdg-open "<absolute-path-to-file>" || echo "Headless: open <absolute-path-to-file>"`
+  - **macOS:** `open "<absolute-path-to-file>"`
+  - **Windows PowerShell:**
+    ```powershell
+    try {
+        Start-Process "<absolute-path-to-file>"
+    } catch {
+        Write-Warning "Headless environment detected or browser unavailable. Please open manually: <absolute-path-to-file>"
+    }
+    ```
 - Trình bày đường dẫn tuyệt đối của tệp tin vừa tạo cho người dùng trên chat.
 - **Đặc trưng thiết kế báo cáo:**
   * Sử dụng **Tailwind CSS qua CDN** để dàn trang và **Mermaid JS qua CDN** để vẽ sơ đồ trực quan (quan hệ call graphs, dependencies, sequences).
@@ -99,17 +102,19 @@ Quy trình này được định hướng bởi domain model của dự án và 
   * **Danh sách ứng viên đã loại (Eliminated Candidates):** Bảng gồm tên ứng viên, cổng bắn hạ, lý do 1 câu. Đây là bộ nhớ cho các đợt quét tương lai.
 - **Tiêu chí hoàn thành:** Báo cáo HTML được ghi thành công vào thư mục tạm `.md/scratch/`, mở được trên trình duyệt mặc định mà không gặp lỗi CLI, hiển thị đầy đủ các thẻ ứng viên, sơ đồ Before/After, và danh sách ứng viên bị loại.
 
-### Bước 4: Vòng lặp Chất vấn (Grilling loop)
-- Sau khi người dùng chọn một ứng viên cải tiến, kích hoạt kỹ năng `/ccba-grilling` để tiến hành phỏng vấn sâu với Kỹ sư về: các ràng buộc (constraints), dependency, cấu trúc của module được làm sâu, logic nằm sau seam, và các test case được bảo toàn.
+### Bước 4: Rẽ Nhánh Theo Số Ứng Viên, Chất vấn (`/ccba-grilling`) & Cổng Bàn Giao (`Impact-Based Handoff Gate`)
+- **Tầng 1 — Rẽ nhánh theo số lượng ứng viên (xét số ứng viên trước khi chọn lối đi):**
+  * Chọn **`>= 2` ứng viên** hoặc chiến dịch đa module / nhiều Micro-PR $\rightarrow$ đề xuất lập bản đồ & đồ thị ticket qua `/ccba-wayfinder` trước (`WF-01 Grilling [HITL]` $\to$ `WF-02 Peer Plan Audit` $\to$ `WF-03..N Task`), rồi thực hiện `/ccba-grilling` trong `WF-01`.
+  * Chọn **`1` ứng viên** $\rightarrow$ kích hoạt thẳng `/ccba-grilling` để phỏng vấn sâu về ràng buộc, dependency, cấu trúc module sâu, logic sau seam và các test case được bảo toàn.
 - Cập nhật domain model và tài liệu tri thức song song:
   * Nếu đặt tên module làm sâu theo một khái niệm mới chưa có trong `CONTEXT.md` $\rightarrow$ Thêm thuật ngữ đó vào `CONTEXT.md`.
   * Nếu làm sắc nét thêm một thuật ngữ mập mờ $\rightarrow$ Cập nhật định nghĩa trực tiếp vào `CONTEXT.md`.
   * Nếu người dùng từ chối đề xuất vì một lý do kỹ thuật nền tảng quan trọng $\rightarrow$ Đề xuất ghi nhận thành tài liệu ADR trong thư mục `.md/knowledge/` để tránh các đợt quét sau đề xuất lại trùng lặp.
-  * Nếu muốn so sánh các thiết kế interface khác nhau cho module sâu $\rightarrow$ Kích hoạt kỹ năng `/ccba-codebase-design` và chạy cơ chế parallel sub-agent (thiết kế hai phương án độc lập để đối chiếu).
-  * **Cổng Phân Nhánh Bàn Giao Theo Tác Động Kiến Trúc (Impact-Based Handoff Gate — đồng bộ ADR-0067 & ADR 0010):** Cấm tự động nhảy sang sửa mã sản xuất ngay trong lượt chốt câu hỏi cuối của `ccba-grilling`. Áp dụng thống nhất 2 nhánh cho cả Hub và Spokes:
-    - *Nhánh Kiến trúc / Đa module* (`> 3` tệp mã nguồn, ước lượng diff `> 200` LOC, ứng viên hạng `Strong`, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam `__init__.py`, Schema, AuthZ, Hub Constitution): bắt buộc xuất bản Kế hoạch triển khai, thực thi cổng Peer Plan Audit (`audit_plan` → `signoff_diff` đạt `blocking_conditions == 0` hoặc chạm trần Pass 3) và nhận xác nhận `proceed` từ Kỹ sư trước khi sửa mã sản xuất (với Core Hub có thể dựng thêm mô phỏng qua `ccba-implement`).
-    - *Nhánh Cục bộ Fast-Path* ($\le 3$ tệp mã nguồn, $\le 200$ LOC, housekeeping nội bộ không đổi Public Seam): xuất tóm tắt Decision Log ngắn gọn và chờ Kỹ sư xác nhận thực thi trước khi viết mã và chạy kiểm thử.
-- **Tiêu chí hoàn thành:** Phiên chất vấn grilling kết thúc, thống nhất được phương án triển khai cụ thể, và các tài liệu tri thức (`CONTEXT.md`, ADRs) được cập nhật đồng bộ.
+  * Chỉ kích hoạt [design_it_twice.md](design_it_twice.md) (tối đa 3 `research` subagent song song) khi **1** ứng viên `ONE_WAY_DOOR` / Public Seam có `>= 2` hình thái interface cạnh tranh thực sự.
+- **Tầng 2 — Cổng Phân Nhánh Bàn Giao Theo Tác Động Kiến Trúc (`Impact-Based Handoff Gate` — đồng bộ `ADR-0067` & `ADR-0010`):** Cấm tự động nhảy sang sửa mã sản xuất ngay trong lượt chốt câu hỏi cuối của `/ccba-grilling`. Áp dụng thống nhất 2 nhánh cho cả Hub và Spokes:
+  * *Nhánh Kiến trúc / Đa module* (`> 3` tệp mã nguồn, ước lượng diff `> 200` LOC, ứng viên hạng `Strong`, hoặc chạm danh mục `ONE_WAY_DOOR` như Public Seam `__init__.py`, Schema, AuthZ, Hub Constitution): xuất bản Kế hoạch triển khai, thực thi cổng Peer Plan Audit (`audit_plan` $\to$ `signoff_diff` đạt `blocking_conditions == 0` hoặc chạm **trần Pass 3** để báo cáo điểm bất đồng kèm `[REBUT_WITH_EVIDENCE]` cho Kỹ sư phán quyết), nhận xác nhận `proceed` từ Kỹ sư, và **mặc định đề xuất đóng gói `/ccba-handoff` để mở phiên sạch thực thi `/ccba-implement`** (người dùng giữ quyền ghi đè bằng lệnh `"tiếp tục tại đây"`).
+  * *Nhánh Cục bộ Fast-Path* (`<= 3` tệp mã nguồn, `<= 200` LOC, housekeeping nội bộ không đổi Public Seam): xuất tóm tắt Decision Log ngắn gọn, chờ Kỹ sư xác nhận thực thi, và cho phép `Continue` ngay trong phiên hiện tại trước khi viết mã và chạy kiểm thử.
+- **Tiêu chí hoàn thành:** Đúng nhánh điều phối (`/ccba-wayfinder` hoặc `/ccba-grilling`), phiên chất vấn kết thúc với Decision Log / Kế hoạch đạt Peer Audit (`blocking_conditions == 0` hoặc trần Pass 3), tài liệu tri thức (`CONTEXT.md`, ADRs) đồng bộ, và có xác nhận `proceed` + chọn ranh giới phiên (`/ccba-handoff` hoặc `Continue`) trước khi sửa mã.
 
 ### Bước 5: Khóa Cứng Nghiệm Thu Khách Quan (Deterministic Verification Gate - ADR-0058)
 - Trước khi tuyên bố hoàn thành tái cấu trúc hoặc đề xuất merge, bắt buộc kiểm tra **Bảng Xác Nhận 4 Cổng Hoàn Tất (Exit Criteria Matrix)**:
