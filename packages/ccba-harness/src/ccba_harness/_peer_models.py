@@ -21,6 +21,7 @@ from ._peer_watchdog import (
     RequestType,
     VerdictType,
 )
+from ._peer_yaml import safe_load_frontmatter_yaml
 
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
 INLINE_FRONTMATTER_PATTERN = re.compile(
@@ -545,7 +546,7 @@ def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any
         match = FRONTMATTER_PATTERN.match(content)
         if match:
             try:
-                data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+                data = _unwrap_nested_verdict_dict(safe_load_frontmatter_yaml(match.group(1)))
                 if data is not None:
                     blocks.append((data, content[match.end() :]))
                     consumed_until = match.end()
@@ -555,7 +556,7 @@ def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any
         if match.start() < consumed_until or (blocks and match.start() == 0):
             continue
         try:
-            data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+            data = _unwrap_nested_verdict_dict(safe_load_frontmatter_yaml(match.group(1)))
             if data is not None and any(k in data for k in _FRONTMATTER_KEYS):
                 closing_end = match.end() + len(match.group(2))
                 blocks.append((data, content[closing_end:]))
@@ -565,7 +566,7 @@ def _extract_all_frontmatter_blocks(md_content: str) -> list[tuple[dict[str, Any
     if not blocks:
         for match in FENCED_YAML_PATTERN.finditer(md_content):
             try:
-                data = _unwrap_nested_verdict_dict(yaml.safe_load(match.group(1)))
+                data = _unwrap_nested_verdict_dict(safe_load_frontmatter_yaml(match.group(1)))
                 if data is not None and any(k in data for k in _FRONTMATTER_KEYS):
                     blocks.append((data, md_content[match.end() :]))
             except Exception:
