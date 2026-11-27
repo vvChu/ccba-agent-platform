@@ -23,7 +23,7 @@ covered_sha256:
   .agents/skills/ccba-implement/references/implement-spec.md: "9270269b622313826e15d9b9563d9dc649a467a1a1290b59292b87b9ac26c601"
   .agents/skills/ccba-implement/references/prototype_logic.md: "3f0ca646b4f1a686af637f65de0ee41b3b5a45b58559c5d070c3cefa7af20ca6"
   .agents/skills/ccba-implement/references/prototyping_patterns.md: "03bba3ace4cf31fb90130f40199689fbf02d55e41c9f21cc815b939c21eede49"
-  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
+  scripts/spoke/sync/coordinator.py: "ed83238f7f73667d23fa0ae7e1bf8300d1fbb52b2e2792be2798efaa6795882b"
 verification_mode:
   - scaffold
   - sync
