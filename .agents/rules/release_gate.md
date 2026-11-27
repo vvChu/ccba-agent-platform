@@ -9,7 +9,7 @@
 
 ## 2. Cổng Kiểm Toán AI Review Tùy Chọn (Hybrid Read-Only Advisory Gate)
 * Theo Mục 19.2 của `docs/rules/execution_coordination_guardrails.md`, các trình duyệt mã nguồn AI (**CodeRabbit Free** qua `.coderabbit.yaml` trên repo `PUBLIC`, hoặc **Grok `code_review`** trên Spoke `PRIVATE`/local) vận hành ở chế độ **Read-Only Advisory (Chỉ đọc & Tư vấn)**.
-* **Lưu ý vận hành CodeRabbit OSS (`< 10 stars`):** Repo `PUBLIC` dưới 10 stars bị CodeRabbit bỏ qua auto-review; khi cần AI review trên PR, comment `@coderabbitai review` thủ công (hạn mức miễn phí OSS: **1 review/giờ**; commit push thêm trong cùng giờ sẽ được đánh dấu `SKIPPED`).
+* **Lưu ý vận hành CodeRabbit OSS (`< 10 stars`):** Repo `PUBLIC` dưới 10 stars bị CodeRabbit bỏ qua auto-review (comment `skip review by coderabbit.ai` được `audit_pr_comments.py` loại khỏi `prc_cnt` để trả đúng `[WARN] NO_AI_REVIEW`, không báo xanh giả `CLEAN`); khi cần AI review có chọn lọc trên PR lõi/`ONE_WAY_DOOR`, comment `@coderabbitai review` thủ công (hạn mức miễn phí OSS: **1 review/giờ**; commit push thêm trong cùng giờ sẽ được đánh dấu `SKIPPED`).
 * Để đối soát nhận xét AI trên PR (nhận diện cả `coderabbitai[bot]` lẫn `copilot`), Agent chạy:
   ```bash
   python scripts/validation/audit_pr_comments.py

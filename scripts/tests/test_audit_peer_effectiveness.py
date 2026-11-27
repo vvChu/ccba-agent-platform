@@ -269,6 +269,162 @@ class TestAuditPeerEffectiveness(unittest.TestCase):
             self.assertEqual(rep["pre_v26"]["runs"], 0)
             self.assertEqual(rep["undated_excluded"], 0)
 
+    def test_baseline_since_filtering_all_and_invalid_raises(self):
+        """baseline_since filters legacy pre-v2.5 rows, supports 'all', and rejects invalid ISO."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_legacy.md",
+                (
+                    "---\nrequest_id: req-legacy\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "timestamp: '2026-10-15T10:00:00+07:00'\n"
+                    "telemetry:\n  session_id: s-old\n  cost_usd: 0.05\n  duration_seconds: 30.0\n"
+                    "---\nOld run"
+                ),
+            )
+            _write_md(
+                root / ".md" / "peer_exchange" / "grok_v25.md",
+                (
+                    "---\nrequest_id: req-v25\nverdict: APPROVE_PLAN\nconditions: []\n"
+                    "timestamp: '2026-11-20T10:00:00+07:00'\n"
+                    "telemetry:\n  session_id: s-v25\n  cost_usd: 0.25\n  duration_seconds: 200.0\n"
+                    "---\nv2.5 run"
+                ),
+            )
+            rep_default = evaluate_peer_effectiveness([root], use_git=False)
+            self.assertIsNone(rep_default["baseline_since_utc"])
+            self.assertEqual(rep_default["pre_baseline_excluded"], 0)
+            self.assertEqual(rep_default["pre_v26"]["runs"], 2)
+
+            rep_v25 = evaluate_peer_effectiveness(
+                [root], baseline_since="2026-11-11T00:00:00+07:00", use_git=False
+            )
+            self.assertEqual(rep_v25["pre_baseline_excluded"], 1)
+            self.assertEqual(rep_v25["pre_v26"]["runs"], 1)
+            self.assertEqual(rep_v25["pre_v26"]["median_chain_s"], 200.0)
+            self.assertIsInstance(rep_v25["baseline_since_utc"], str)
+            json.dumps(rep_v25)
+
+            rep_all = evaluate_peer_effectiveness([root], baseline_since="all", use_git=False)
+            self.assertEqual(rep_all["pre_baseline_excluded"], 0)
+            self.assertEqual(rep_all["pre_v26"]["runs"], 2)
+
+            with self.assertRaises(ValueError):
+                evaluate_peer_effectiveness([root], baseline_since="not-a-timestamp", use_git=False)
+
+    def test_inferred_pass2_chain_respects_opt_out_repo_isolation_and_plan_code_boundary(self):
+        """Infer CLI-resumed Pass 2 in same repo <=12h; block opt-out, cross-repo, and Plan->Code."""
+        with TemporaryDirectory() as tmp:
+            repo_a = Path(tmp) / "repo_a"
+            repo_b = Path(tmp) / "repo_b"
+            # Pass 1 plan in repo_a
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "prompt_grok_feature_alpha_plan.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-001\nfrom_agent: antigravity\n"
+                    "to_agent: grok\nrequest_type: plan\nprofile: audit_plan\nsubject: Alpha P1\n"
+                    "timestamp: '2026-11-26T09:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_feature_alpha_plan.md\n---\nPlan"
+                ),
+            )
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "grok_feature_alpha_plan.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-001\nverdict: REVISE_PLAN\n"
+                    "conditions:\n  - id: C1\n    description: fix\n    blocking: true\n"
+                    "timestamp: '2026-11-26T09:05:00+07:00'\n"
+                    "telemetry:\n  session_id: sess-p1\n  cost_usd: 0.20\n  duration_seconds: 300.0\n"
+                    "---\nP1"
+                ),
+            )
+            # Pass 2 signoff_diff in repo_a missing resume_session_id -> MUST link to sess-p1
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "prompt_grok_feature_alpha_plan_signoff_p2.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-002\nfrom_agent: antigravity\n"
+                    "to_agent: grok\nrequest_type: verify\nprofile: signoff_diff\nsubject: Alpha P2\n"
+                    "timestamp: '2026-11-26T09:15:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_feature_alpha_plan_signoff_p2.md\n---\nP2"
+                ),
+            )
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "grok_feature_alpha_plan_signoff_p2.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-002\nverdict: APPROVE_PLAN\n"
+                    "conditions: []\ntimestamp: '2026-11-26T09:18:00+07:00'\n"
+                    "telemetry:\n  session_id: sess-p2\n  cost_usd: 0.12\n  duration_seconds: 100.0\n"
+                    "---\nP2 ok"
+                ),
+            )
+            # Post-impl code_review in repo_a (same stem, round marker -003) -> MUST NOT link to Plan parent
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "prompt_grok_feature_alpha_impl_003.md",
+                (
+                    "---\nrequest_id: req-20261126-feature-alpha-003\nfrom_agent: antigravity\n"
+                    "to_agent: grok\nrequest_type: review\nprofile: code_review\nsubject: Alpha Impl\n"
+                    "timestamp: '2026-11-26T10:00:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_feature_alpha_impl_003.md\n---\nImpl"
+                ),
+            )
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "grok_feature_alpha_impl_003.md",
+                (
+                    "---\nrequest_id: req-20261126-feature-alpha-003\nverdict: APPROVE\n"
+                    "conditions: []\ntimestamp: '2026-11-26T10:05:00+07:00'\n"
+                    "telemetry:\n  session_id: sess-code\n  cost_usd: 0.18\n  duration_seconds: 250.0\n"
+                    "---\nCode ok"
+                ),
+            )
+            # Explicit opt-out resume_session_id: "new" -> MUST NOT link
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "prompt_grok_feature_alpha_plan_signoff_p4.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-004\nfrom_agent: antigravity\n"
+                    "to_agent: grok\nrequest_type: verify\nprofile: signoff_diff\nresume_session_id: new\n"
+                    "subject: Alpha Fresh\ntimestamp: '2026-11-26T10:20:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_feature_alpha_plan_signoff_p4.md\n---\nFresh"
+                ),
+            )
+            _write_md(
+                repo_a / ".md" / "peer_exchange" / "grok_feature_alpha_plan_signoff_p4.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-004\nverdict: APPROVE_PLAN\n"
+                    "conditions: []\ntimestamp: '2026-11-26T10:22:00+07:00'\n"
+                    "telemetry:\n  session_id: sess-optout\n  cost_usd: 0.10\n  duration_seconds: 90.0\n"
+                    "---\nFresh ok"
+                ),
+            )
+            # Same stem signoff in repo_b -> MUST NOT link across repos
+            _write_md(
+                repo_b / ".md" / "peer_exchange" / "prompt_grok_feature_alpha_plan_signoff_p2.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-b-002\nfrom_agent: antigravity\n"
+                    "to_agent: grok\nrequest_type: verify\nprofile: signoff_diff\nsubject: RepoB\n"
+                    "timestamp: '2026-11-26T09:30:00+07:00'\n"
+                    "output_path: .md/peer_exchange/grok_feature_alpha_plan_signoff_p2.md\n---\nRepoB"
+                ),
+            )
+            _write_md(
+                repo_b / ".md" / "peer_exchange" / "grok_feature_alpha_plan_signoff_p2.md",
+                (
+                    "---\nrequest_id: req-20261126-plan-feature-alpha-b-002\nverdict: APPROVE_PLAN\n"
+                    "conditions: []\ntimestamp: '2026-11-26T09:32:00+07:00'\n"
+                    "telemetry:\n  session_id: sess-b2\n  cost_usd: 0.11\n  duration_seconds: 80.0\n"
+                    "---\nRepoB ok"
+                ),
+            )
+
+            rep = evaluate_peer_effectiveness([repo_a, repo_b], use_git=False)
+            self.assertEqual(rep["inferred_chain_links"], 1)
+            self.assertEqual(rep["post_v26"]["runs"], 5)
+            # 5 runs -> 4 chains because only repo_a P2 linked to repo_a P1
+            self.assertEqual(rep["post_v26"]["chains"], 4)
+            # Pass 1 runs: P1 (blocking=1), impl (0), opt-out (0), repo_b (0) => 1/4 = 0.25
+            self.assertEqual(rep["post_v26"]["pass1_blocking_rate"], 0.25)
+            # Pass 2 runs: repo_a P2 (blocking=0) => 0.0
+            self.assertEqual(rep["post_v26"]["pass2_blocking_rate"], 0.0)
+            json.dumps(rep)
+
 
 if __name__ == "__main__":
     unittest.main()

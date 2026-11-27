@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 
 _DEFAULT_CUTOFF = "2026-11-25T07:08:00+07:00"
+_DEFAULT_BASELINE_SINCE = "2026-11-11T00:00:00+07:00"
+_MAX_INFER_RESUME_AGE_S = 43_200.0
 _ESCAPED_PR_RE = re.compile(r"Escaped-From-PR:\s*#(\d+)", re.IGNORECASE)
 _PRIOR_BY_RE = re.compile(
     r"Prior-Reviewed-By:\s*(grok\+coderabbit|grok|coderabbit|copilot|none)",
@@ -26,6 +28,29 @@ _HIGH_CHURN_PREFIXES = (".github/", "docs/rules/", ".md/")
 _HIGH_CHURN_EXACT = ("AGENTS.md", "uv.lock")
 _GUARD_PREFIXES = ("tests/", "scripts/tests/")
 _GUARD_EXACT = ("_parameter_cleanliness.py", "peer_gate.py")
+_STAGE_PREFIX_RE = re.compile(
+    r"^(?:final[-_])?(?:signoff|acceptance|review[-_]plan|review[-_]walkthrough|review|discuss|plan|arch[-_]audit|arch|audit)[-_]+",
+    re.IGNORECASE,
+)
+_ROUND_SUFFIX_RE = re.compile(
+    r"(?:[-_](?:v\d+|r\d+|round\d*|pass\d+|turn\d+|supplemental|followup|follow[-_]up|recheck|reverify|re[-_]verify|signoff|final[-_]?signoff|final[-_]?acceptance|retry|stage\d+|audit|plan|\d{3}))+$",
+    re.IGNORECASE,
+)
+_FOLLOWUP_HINT_RE = re.compile(
+    r"(?:^|[-_])(?:v[2-9]\d*|r[2-9]\d*|round[2-9]\d*|pass[2-9]\d*|turn[2-9]\d*|supplemental|followup|follow[-_]up|recheck|reverify|re[-_]verify|signoff|final[-_]?signoff|final[-_]?acceptance|retry|stage[23]|00[2-9])(?:[-_]|$)",
+    re.IGNORECASE,
+)
+_PREFIX_ROLE_RE = re.compile(
+    r"^(?:prompt_grok_review_|prompt_grok_|prompt_|grok_response_|grok_review_|grok_implementation_|grok_implement_|grok_|response_|verdict_|req[-_])+",
+    re.IGNORECASE,
+)
+_OPT_OUT_RESUME_TOKENS: frozenset[str] = frozenset({"new", "none", "false", "0"})
+_CODE_AUDIT_PROFILES: frozenset[str] = frozenset(
+    {"arch_audit", "code_review", "audit_direct", "agentic_code", "patch_fast"}
+)
+_PLAN_AUDIT_PROFILES: frozenset[str] = frozenset({"audit_plan", "deep_spec_audit"})
+_PLAN_PHASE_RE = re.compile(r"(?:^|[-_.])plan(?:[-_.]|$)", re.IGNORECASE)
+_NON_PHASE_PLAN_RE = re.compile(r"(?:floor|site|master|key|roof)[-_]plan", re.IGNORECASE)
 
 
 def parse_utc_timestamp(raw: Any) -> datetime.datetime | None:
@@ -138,10 +163,159 @@ def _extract_telemetry_metrics(
     }
 
 
+def _normalize_thread_stem(value: str) -> str:
+    """Normalize a request_id or filename stem by stripping prefixes, dates, and round suffixes."""
+    cleaned = Path(value).stem.strip().lower()
+    cleaned = _PREFIX_ROLE_RE.sub("", cleaned)
+    cleaned = re.sub(r"^\d{8}[-_]+", "", cleaned)
+    cleaned = _STAGE_PREFIX_RE.sub("", cleaned)
+    cleaned = _ROUND_SUFFIX_RE.sub("", cleaned)
+    return re.sub(r"[-_]+", "_", cleaned).strip("_")
+
+
+def _has_round_suffix(value: str) -> bool:
+    """Return True if a request_id or filename stem carries a follow-up round marker."""
+    return bool(_FOLLOWUP_HINT_RE.search(Path(value).stem.strip()))
+
+
+def _has_plan_phase_token(*texts: str) -> bool:
+    """Return True if any identifier contains a phase-level plan segment (excluding AEC nouns)."""
+    for raw in texts:
+        cleaned = _NON_PHASE_PLAN_RE.sub("", str(raw or ""))
+        if _PLAN_PHASE_RE.search(cleaned):
+            return True
+    return False
+
+
+def _is_opt_out_resume(raw_resume: Any) -> bool:
+    """Return True when resume_session_id explicitly opts out of chaining (None-safe)."""
+    return raw_resume is not None and str(raw_resume).strip().lower() in _OPT_OUT_RESUME_TOKENS
+
+
+def _is_prior_plan_record(rec: dict[str, Any]) -> bool:
+    """Return True when a verdict record dict belongs to the Plan Audit phase."""
+    p_prof, p_req, v_type = rec.get("profile"), rec.get("request_type"), rec.get("verdict")
+    if v_type in ("APPROVE_PLAN", "REVISE_PLAN", "REJECT_PLAN") or p_prof in _PLAN_AUDIT_PROFILES:
+        return True
+    if p_prof in _CODE_AUDIT_PROFILES:
+        return False
+    if p_req == "plan":
+        return True
+    has_tok = _has_plan_phase_token(
+        str(rec.get("file_name") or ""), str(rec.get("request_id") or "")
+    )
+    if p_req == "discuss" or v_type in ("FINAL_ACCEPT", "APPROVE_WITH_CONDITIONS", "APPROVE"):
+        return has_tok
+    return False
+
+
+def _is_code_phase_record(rec: dict[str, Any]) -> bool:
+    """Return True when a verdict record dict targets post-implementation code review/audit."""
+    prof = rec.get("profile")
+    if prof in _CODE_AUDIT_PROFILES:
+        return True
+    if prof in _PLAN_AUDIT_PROFILES or prof == "signoff_diff":
+        return False
+    if rec.get("request_type") in ("review", "audit", "implement"):
+        return not _has_plan_phase_token(
+            str(rec.get("request_id") or ""), str(rec.get("file_name") or "")
+        )
+    return False
+
+
+def _matches_parent_stem(cur: dict[str, Any], prev: dict[str, Any]) -> bool:
+    """Match file stems by equality and request stems by equality or >=8-char containment."""
+    req_stem = _normalize_thread_stem(str(cur.get("request_id") or ""))
+    file_stem = _normalize_thread_stem(str(cur.get("file_name") or ""))
+    vr_stem = _normalize_thread_stem(str(prev.get("request_id") or ""))
+    vf_stem = _normalize_thread_stem(str(prev.get("file_name") or ""))
+    if (req_stem and vr_stem == req_stem) or (file_stem and vf_stem == file_stem):
+        return True
+    return bool(
+        req_stem
+        and vr_stem
+        and (req_stem in vr_stem or vr_stem in req_stem)
+        and min(len(req_stem), len(vr_stem)) >= 8
+    )
+
+
+def _find_inferred_parent_session(
+    cur: dict[str, Any], prior_bucket: Sequence[dict[str, Any]]
+) -> str | None:
+    """Find the nearest prior same-dir parent session within 12h blocking Plan->Code leaks."""
+    cur_sid = str(cur.get("session_id") or "").strip()
+    block_plan = _is_code_phase_record(cur)
+    for prev in reversed(prior_bucket):
+        if prev["request_id"] == cur["request_id"]:
+            continue
+        prev_sid = str(prev.get("session_id") or "").strip()
+        if not prev_sid or prev_sid.lower() in ("none", "unknown") or prev_sid == cur_sid:
+            continue
+        delta = (cur["ts"] - prev["ts"]).total_seconds()
+        if delta <= 0:
+            continue
+        if delta > _MAX_INFER_RESUME_AGE_S:
+            break
+        if block_plan and _is_prior_plan_record(prev):
+            continue
+        if _matches_parent_stem(cur, prev):
+            return prev_sid
+    return None
+
+
+def _infer_missing_resume_links(records: list[dict[str, Any]]) -> int:
+    """Deterministically infer missing CLI-resumed Pass 2+ parent links per exchange directory."""
+    by_dir: dict[str, list[dict[str, Any]]] = {}
+    for rec in records:
+        if rec.get("ts") is not None:
+            by_dir.setdefault(str(rec.get("exchange_dir") or ""), []).append(rec)
+    inferred = 0
+    for bucket in by_dir.values():
+        bucket.sort(key=lambda r: (r["ts"], r["request_id"]))
+        for idx, cur in enumerate(bucket):
+            if cur.get("resume_id") or cur.get("opt_out_resume"):
+                continue
+            is_fu = (
+                cur.get("profile") == "signoff_diff"
+                or _has_round_suffix(str(cur.get("request_id") or ""))
+                or _has_round_suffix(str(cur.get("file_name") or ""))
+            )
+            if not is_fu:
+                continue
+            parent_sid = _find_inferred_parent_session(cur, bucket[:idx])
+            if parent_sid:
+                cur["resume_id"] = parent_sid
+                cur["is_pass2_plus"] = True
+                inferred += 1
+    return inferred
+
+
+def _attach_prompt_metadata(verdicts: dict[str, dict[str, Any]], prompts: dict[str, Any]) -> None:
+    """Join prompt timestamps, profiles, request types, and resume_session_id onto verdicts."""
+    for rid, rec in verdicts.items():
+        env = prompts.get(rid)
+        if rec["ts"] is None and env is not None:
+            rec["ts"] = parse_utc_timestamp(getattr(env, "timestamp", None))
+        if rec["ts"] is None:
+            rec["ts"] = rec.get("session_ts")
+        raw_resume = getattr(env, "resume_session_id", None) if env is not None else None
+        opt_out = _is_opt_out_resume(raw_resume)
+        clean_res = (
+            None
+            if (raw_resume is None or opt_out or not str(raw_resume).strip())
+            else str(raw_resume).strip()
+        )
+        rec["profile"] = getattr(env, "profile", None) if env is not None else None
+        rec["request_type"] = getattr(env, "request_type", None) if env is not None else None
+        rec["opt_out_resume"] = opt_out
+        rec["resume_id"] = clean_res
+        rec["is_pass2_plus"] = bool(clean_res)
+
+
 def _collect_verdict_records(
     roots: Sequence[Path],
     session_events: dict[str, tuple[bool, datetime.datetime | None]],
-) -> tuple[list[dict[str, Any]], int, dict[str, int]]:
+) -> tuple[list[dict[str, Any]], int, dict[str, int], int]:
     """Parse exchange files ensuring verdict overrides prompt per request_id."""
     from ccba_harness.peer import parse_envelope_from_md, parse_verdict_from_md
 
@@ -157,6 +331,8 @@ def _collect_verdict_records(
             tel_meta = _extract_telemetry_metrics(verdict.telemetry, session_events)
             verdicts[verdict.request_id] = {
                 "request_id": verdict.request_id,
+                "file_name": md_path.name,
+                "exchange_dir": str(md_path.parent.resolve()),
                 "ts": parse_utc_timestamp(verdict.timestamp),
                 "blocking": sum(1 for c in verdict.conditions if c.blocking),
                 "session_id": getattr(verdict.telemetry, "session_id", None),
@@ -167,17 +343,11 @@ def _collect_verdict_records(
         env = parse_envelope_from_md(text, prompt_path=md_path)
         if env is not None:
             prompts[env.request_id] = env
-    for rid, rec in verdicts.items():
-        env = prompts.get(rid)
-        if rec["ts"] is None and env is not None:
-            rec["ts"] = parse_utc_timestamp(getattr(env, "timestamp", None))
-        if rec["ts"] is None:
-            rec["ts"] = rec.get("session_ts")
-        resume_id = getattr(env, "resume_session_id", None) if env is not None else None
-        rec["resume_id"] = resume_id
-        rec["is_pass2_plus"] = bool(resume_id and resume_id != "new")
+    _attach_prompt_metadata(verdicts, prompts)
+    verdict_list = list(verdicts.values())
+    inferred_links = _infer_missing_resume_links(verdict_list)
     prompt_only = sum(1 for rid in prompts if rid not in verdicts)
-    return list(verdicts.values()), prompt_only, triage_counts
+    return verdict_list, prompt_only, triage_counts, inferred_links
 
 
 def _summarize_cohort(records: list[dict[str, Any]]) -> dict[str, Any]:
@@ -337,10 +507,44 @@ def _analyze_escaped_defects(
     }
 
 
+def _parse_baseline_since_utc(baseline_since: str | None) -> datetime.datetime | None:
+    """Parse optional timezone-aware baseline_since lower bound ('all' or None disables)."""
+    if baseline_since is None or baseline_since.strip().lower() == "all":
+        return None
+    parsed = parse_utc_timestamp(baseline_since)
+    if parsed is None:
+        raise ValueError(f"Invalid timezone-aware ISO baseline_since timestamp: {baseline_since!r}")
+    return parsed
+
+
+def _partition_verdicts_by_window(
+    verdicts: Sequence[dict[str, Any]],
+    cutoff_utc: datetime.datetime,
+    baseline_utc: datetime.datetime | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int, int]:
+    """Split verdicts into pre/post cohorts while counting undated and pre-baseline exclusions."""
+    pre_recs: list[dict[str, Any]] = []
+    post_recs: list[dict[str, Any]] = []
+    undated_excluded = 0
+    pre_baseline_excluded = 0
+    for rec in verdicts:
+        ts = rec["ts"]
+        if ts is None:
+            undated_excluded += 1
+        elif ts >= cutoff_utc:
+            post_recs.append(rec)
+        elif baseline_utc is not None and ts < baseline_utc:
+            pre_baseline_excluded += 1
+        else:
+            pre_recs.append(rec)
+    return pre_recs, post_recs, undated_excluded, pre_baseline_excluded
+
+
 def evaluate_peer_effectiveness(
     roots: Sequence[Path],
     *,
     cutoff: str = _DEFAULT_CUTOFF,
+    baseline_since: str | None = None,
     window_days: int = 14,
     sessions_dir: Path | None = None,
     use_git: bool = True,
@@ -349,19 +553,14 @@ def evaluate_peer_effectiveness(
     cutoff_utc = parse_utc_timestamp(cutoff)
     if cutoff_utc is None:
         raise ValueError(f"Invalid timezone-aware ISO cutoff timestamp: {cutoff!r}")
+    baseline_utc = _parse_baseline_since_utc(baseline_since)
     sess_map = _index_session_events(sessions_dir)
-    verdicts, prompt_only_cnt, triage_counts = _collect_verdict_records(roots, sess_map)
-    pre_recs: list[dict[str, Any]] = []
-    post_recs: list[dict[str, Any]] = []
-    undated_excluded = 0
-    for rec in verdicts:
-        ts = rec["ts"]
-        if ts is None:
-            undated_excluded += 1
-        elif ts >= cutoff_utc:
-            post_recs.append(rec)
-        else:
-            pre_recs.append(rec)
+    verdicts, prompt_only_cnt, triage_counts, inferred_links = _collect_verdict_records(
+        roots, sess_map
+    )
+    pre_recs, post_recs, undated_excluded, pre_baseline_excluded = _partition_verdicts_by_window(
+        verdicts, cutoff_utc, baseline_utc
+    )
     commits = _parse_git_commits(roots[0]) if use_git and roots else []
     escaped = (
         _analyze_escaped_defects(commits, cutoff_utc, window_days)
@@ -375,7 +574,10 @@ def evaluate_peer_effectiveness(
     )
     return {
         "cutoff_utc": cutoff_utc.isoformat(),
+        "baseline_since_utc": baseline_utc.isoformat() if baseline_utc is not None else None,
+        "pre_baseline_excluded": pre_baseline_excluded,
         "undated_excluded": undated_excluded,
+        "inferred_chain_links": inferred_links,
         "prompt_only_count": prompt_only_cnt,
         "pre_v26": _summarize_cohort(pre_recs),
         "post_v26": _summarize_cohort(post_recs),
@@ -387,9 +589,15 @@ def evaluate_peer_effectiveness(
 def render_markdown_report(report: dict[str, Any]) -> str:
     """Render effectiveness audit report in concise GitHub Markdown."""
     pre, post, esc = report["pre_v26"], report["post_v26"], report["escaped_defects"]
+    baseline_label = report.get("baseline_since_utc") or "all"
     lines = [
-        f"# Peer Collaboration v2.6 A/B & Escaped-Defect Audit (Cutoff `{report['cutoff_utc']}`)",
-        f"- Undated verdicts excluded: `{report['undated_excluded']}` | Prompt-only files: `{report['prompt_only_count']}`",
+        f"# Peer Collaboration v2.6 A/B & Escaped-Defect Audit (Cutoff `{report['cutoff_utc']}`, Baseline `>= {baseline_label}`)",
+        (
+            f"- Pre-baseline excluded: `{report.get('pre_baseline_excluded', 0)}` | "
+            f"Undated excluded: `{report['undated_excluded']}` | "
+            f"Inferred Pass 2+ links: `{report.get('inferred_chain_links', 0)}` | "
+            f"Prompt-only: `{report['prompt_only_count']}`"
+        ),
         "",
         "| KPI | Pre-v2.6 | Post-v2.6 |",
         "| :--- | ---: | ---: |",
@@ -411,6 +619,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Audit Pre/Post v2.6 peer effectiveness.")
     parser.add_argument("--roots", nargs="+", type=Path, default=[Path.cwd()])
     parser.add_argument("--cutoff", default=_DEFAULT_CUTOFF)
+    parser.add_argument(
+        "--baseline-since",
+        default=_DEFAULT_BASELINE_SINCE,
+        help="ISO-8601 UTC/TZ lower bound for Pre-v2.6 cohort, or 'all' for unfiltered history.",
+    )
     parser.add_argument("--git-window-days", type=int, default=14)
     parser.add_argument("--sessions-dir", type=Path, default=Path.home() / ".grok" / "sessions")
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
@@ -419,6 +632,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = evaluate_peer_effectiveness(
         args.roots,
         cutoff=args.cutoff,
+        baseline_since=args.baseline_since,
         window_days=args.git_window_days,
         sessions_dir=args.sessions_dir,
         use_git=not args.no_git,

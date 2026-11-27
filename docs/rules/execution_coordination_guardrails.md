@@ -124,7 +124,7 @@ python scripts/governance/compile_catalog.py --in <input_types> --out <output_ty
 
 ### 19.2. Rào Chắn AI Review Chỉ Đọc & Mô Hình Lai `$0/tháng` (`.github/bugbot-rules.md` SSOT)
 - Các AI PR Reviewers (CodeRabbit trên repo `PUBLIC` qua `.coderabbit.yaml`, hoặc Grok `code_review` cho Spoke `PRIVATE`/local) vận hành ở chế độ **Read-Only Advisory** — cấm tự gửi `"APPROVE"` hay auto-merge; 10 invariants SSOT nằm tại [`.github/bugbot-rules.md`](../../.github/bugbot-rules.md).
-- Kiểm toán hậu-PR qua `audit_pr_comments.py` nhận cả `coderabbitai[bot]` & `copilot` (kiểm `Actionable comments posted: [1-9]\d*` trước marker tóm tắt), trả `NO_AI_REVIEW` + `[WARN]` (`exit 0` mặc định; `--require-review` $\to$ `exit 3`). PR `fix:` vá lỗi từ PR tiền nhiệm (`Escaped-From-PR: #<id>`) bắt buộc kèm $\ge 1$ regression test/static guard cho `verify-patch` (`Incident-to-Eval`).
+- Kiểm toán hậu-PR qua `audit_pr_comments.py` nhận cả `coderabbitai[bot]` & `copilot` (kiểm `Actionable comments posted: [1-9]\d*` trước marker tóm tắt; loại trừ comment `skip review by coderabbit.ai` trên repo `< 10★` không có `walkthrough_start` khỏi `prc_cnt`), trả `NO_AI_REVIEW` + `[WARN]` (`exit 0` mặc định; `--require-review` $\to$ `exit 3`). PR `fix:` vá lỗi từ PR tiền nhiệm (`Escaped-From-PR: #<id>`) bắt buộc kèm $\ge 1$ regression test/static guard cho `verify-patch` (`Incident-to-Eval`).
 
 ---
 
@@ -136,8 +136,8 @@ Mọi lệnh gọi Grok CLI bắt buộc đi qua Seam `invoke_grok_cli` hoặc C
 2. **`audit_plan`:** $\le 9$ turns, `reasoning_effort: xhigh`, `timeout: 900s`, chỉ đọc.
 3. **`signoff_diff` (Stage 3 Post-Code Sign-off):** $\le 8$ turns, `reasoning_effort: high`, `output_format: json`, `fork_session: True`, `timeout: 600s`; hỗ trợ `--resume <session_id> --fork-session` kế thừa KV-Cache từ Stage 1 (dùng chung tiền tố `AUDIT_BASE_SYSTEM_PROMPT`), bật Read-Only Tools (`read_file`, `grep`, `list_dir`).
 4. **`arch_audit`:** $\le 8$ turns, `reasoning_effort: xhigh`, `timeout: 600s`, chỉ đọc.
-5. **`code_review`:** $\le 8$ turns, `grok-4.7` (`reasoning_effort: high`, fallback `grok-4.7-build-fast`), `timeout: 450s`, chỉ đọc (bảo toàn phản biện chéo họ mô hình).
-6. **`audit_direct`:** $\le 3$ turns, `reasoning_effort: high`, `timeout: 120s`, khóa toàn bộ built-in tools (`--deny "*"`).
+5. **`code_review`:** $\le 8$ turns, `grok-4.7` (`reasoning_effort: high`, fallback `grok-4.7-build-fast`), `timeout: 600s`, chỉ đọc (bảo toàn phản biện chéo họ mô hình).
+6. **`audit_direct`:** $\le 3$ turns, `reasoning_effort: high`, `timeout: 120s`, khóa toàn bộ built-in tools (`--deny "*"`); ưu tiên cho diff hậu-code khép kín $\le 100$ LOC và $\le 3$ tệp đã nhúng trọn hunk trong prompt.
 7. **`agentic_code` *(tùy chọn)*:** $\le 8$ turns, `reasoning_effort: high`, `timeout: 600s`, cho phép `read_file`, `search_replace`, `list_dir`.
 8. **`patch_fast` *(tùy chọn)*:** Đúng **1 turn** (`--max-turns 1`), `timeout: 120s`, khóa toàn bộ built-in tools (`--deny "*"`), sinh bản ghi neo để `apply_anchor_patch` áp dụng (xác thực SHA-256 trước khi ghi).
 

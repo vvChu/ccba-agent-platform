@@ -41,8 +41,8 @@ output_path: ".md/peer_exchange/grok_review_peer_coordination_sync_plan.md"
 | Plan lớn | `audit_plan` | `grok-4.7` (`xhigh`) | 9 turns, 900s |
 | Kiến trúc vừa | `arch_audit` | `grok-4.7` (`xhigh`) | 8 turns, 600s |
 | Nghiệm thu vòng 2 | `signoff_diff` | `grok-4.7` (`high`), `fork_session` | 8 turns, 600s |
-| Review code chéo họ | `code_review` | `grok-4.7` (`high`) | 8 turns, 450s |
-| Audit khép kín (nhanh) | `audit_direct` | `grok-4.7` (`high`), `--no-tools` | 3 turns, 120s |
+| Review code chéo họ | `code_review` | `grok-4.7` (`high`) | 8 turns, 600s |
+| Audit khép kín (diff $\le 100$ LOC, $\le 3$ tệp) | `audit_direct` | `grok-4.7` (`high`), `--no-tools` | 3 turns, 120s |
 
 Các profile còn lại (`patch_fast`, `deep_spec_audit`, `agentic_code`) xem tại `docs/rules/execution_coordination_guardrails.md` (§20.1); `peer.PROFILE_SPECS` là SSOT khi thông số lệch nhau. Prompt Pass 1 bắt buộc kèm Bản đồ `file:line` trọng yếu (5–10 điểm neo).
 
