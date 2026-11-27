@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -155,3 +157,86 @@ def topo_sort_dep_graph(dep_graph: dict[str, set[str]]) -> list[str]:
 def discover_package_topology(hub_root: Path | None = None) -> list[str]:
     """Discover all Hub packages and resolve their topological dependency order (ADR-0062)."""
     return topo_sort_dep_graph(read_workspace_dep_graph(hub_root).deps)
+
+
+_HUB_COMMIT_RE = re.compile(r"^#\s*hub_commit:\s*([0-9a-fA-F]{7,40})\b")
+_EDITABLE_RE = re.compile(r"^(?:-e\s+|--editable(?:=|\s+))(.+)$")
+
+
+def parse_requirements_hub_lockfile(req_file: Path) -> tuple[str | None, list[str]]:
+    """Parse hub_commit and editable package names from requirements-hub.txt."""
+    if not req_file.is_file():
+        return None, []
+    try:
+        lines = req_file.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None, []
+    hub_commit: str | None = None
+    packages: list[str] = []
+    seen: set[str] = set()
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        if hub_commit is None and (m := _HUB_COMMIT_RE.match(stripped)):
+            hub_commit = m.group(1)
+            continue
+        if stripped.startswith("#") or not (em := _EDITABLE_RE.match(stripped)):
+            continue
+        cleaned = em.group(1).strip().strip('"').strip("'").replace("\\", "/").rstrip("/")
+        pkg_name = cleaned.rsplit("/", 1)[-1].split("[", 1)[0].strip()
+        if pkg_name and pkg_name not in seen:
+            seen.add(pkg_name)
+            packages.append(pkg_name)
+    return hub_commit, packages
+
+
+def _run_hub_git(hub_root: Path, args: list[str]) -> tuple[int, str, str | None]:
+    """Execute a bounded read-only git command inside hub_root."""
+    try:
+        res = subprocess.run(
+            ["git", *args],
+            cwd=str(hub_root),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=5,
+        )
+        return res.returncode, res.stdout.strip(), None
+    except (OSError, subprocess.SubprocessError) as exc:
+        return 1, "", str(exc)
+
+
+def inspect_hub_git_pyproject_drift(
+    hub_root: Path,
+    locked_commit: str,
+    target_packages: Sequence[str],
+) -> tuple[list[str], str | None]:
+    """Check Hub git diff for packages/*/pyproject.toml changes since locked_commit."""
+    if not (hub_root / ".git").exists():
+        return [], f"Hub không có metadata .git để đối chiếu hub_commit '{locked_commit}'."
+    rc, head_sha, err = _run_hub_git(hub_root, ["rev-parse", "HEAD"])
+    if rc != 0 or not head_sha:
+        suffix = f": {err}" if err else ""
+        return [], f"Không thể xác định Hub HEAD để đối chiếu hub_commit '{locked_commit}'{suffix}."
+    if head_sha.lower().startswith(locked_commit.lower()):
+        return [], None
+    diff_args = ["diff", "--name-only", f"{locked_commit}..HEAD", "--", "packages/*/pyproject.toml"]
+    rc, diff_out, err = _run_hub_git(hub_root, diff_args)
+    if rc != 0:
+        reason = err or "shallow clone hoặc commit không còn trong lịch sử"
+        return [], (
+            f"Không thể đối chiếu git diff từ hub_commit '{locked_commit}' "
+            f"tới Hub HEAD '{head_sha[:12]}' ({reason})."
+        )
+    target_set = set(target_packages)
+    changed = {
+        parts[1]
+        for line in diff_out.splitlines()
+        if len(parts := line.strip().replace("\\", "/").split("/")) == 3
+        and parts[0] == "packages"
+        and parts[2] == "pyproject.toml"
+        and (not target_set or parts[1] in target_set)
+    }
+    return sorted(changed), None

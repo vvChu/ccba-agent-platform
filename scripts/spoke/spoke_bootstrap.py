@@ -23,6 +23,8 @@ from scripts.spoke._bootstrap_deps import (  # noqa: E402
     DEFAULT_PACKAGE_TOPOLOGY_ORDER,
     discover_package_topology,
     expand_internal_hub_deps,
+    inspect_hub_git_pyproject_drift,
+    parse_requirements_hub_lockfile,
     read_workspace_dep_graph,
     topo_sort_dep_graph,
 )
@@ -706,6 +708,54 @@ class SpokeBootstrapper:
                 file=sys.stderr,
             )
             return 1
+
+
+def check_bootstrap_lockfile_drift(
+    spoke_root: Path,
+    hub_root: Path,
+    *,
+    bootstrapper: SpokeBootstrapper | None = None,
+) -> str | None:
+    """Return a warn-only diagnostic when Spoke requirements-hub.txt drifted from Hub."""
+    try:
+        if spoke_root.resolve() == hub_root.resolve():
+            return None
+    except OSError:
+        pass
+
+    req_file = spoke_root / "requirements-hub.txt"
+    if not req_file.is_file():
+        return None
+
+    bs = bootstrapper or SpokeBootstrapper(spoke_root, hub_root)
+    locked_commit, locked_packages = parse_requirements_hub_lockfile(req_file)
+    target_packages = bs.resolve_target_packages()
+    locked_set = set(locked_packages)
+    new_packages = [pkg for pkg in target_packages if pkg not in locked_set]
+    changed_pyprojects, unverifiable = (
+        inspect_hub_git_pyproject_drift(hub_root, locked_commit, target_packages)
+        if locked_commit
+        else ([], None)
+    )
+    if not new_packages and not changed_pyprojects and not unverifiable:
+        return None
+
+    details: list[str] = []
+    if new_packages:
+        details.append(f"   - Target package mới chưa có trong lockfile: {', '.join(new_packages)}")
+    if changed_pyprojects:
+        details.append(
+            f"   - Thay đổi packages/*/pyproject.toml từ {locked_commit}: {', '.join(changed_pyprojects)}"
+        )
+    if unverifiable:
+        details.append(f"   - {unverifiable}")
+    details.append(
+        "   👉 Chạy lại lệnh với cờ '--bootstrap' (-b) để đồng bộ dependencies và cập nhật requirements-hub.txt."
+    )
+    return (
+        "⚠️ [Bootstrap Drift] requirements-hub.txt tại Spoke có thể đã lệch so với Hub:\n"
+        + "\n".join(details)
+    )
 
 
 def main() -> int:

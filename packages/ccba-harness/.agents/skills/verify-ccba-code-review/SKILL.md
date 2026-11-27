@@ -22,7 +22,7 @@ covered_sha256:
   .agents/skills/ccba-code-review/SKILL.md: "761cecadad2f569d17eead982e386cdf84ee6bbb2b158a2540c14f9f54760548"
   .agents/skills/ccba-code-review/references/parallel-review-workflow.md: "e8cde906bac988b39eb232d08db83ec306bb3bd9dd07f18e92046e8257d57be5"
   .agents/skills/ccba-code-review/references/unslop_checklist.md: "2a2499376921b379d61a5cfc2bc9531ca823c484a5ffb714ef311a987df66084"
-  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
+  scripts/spoke/sync/coordinator.py: "ed83238f7f73667d23fa0ae7e1bf8300d1fbb52b2e2792be2798efaa6795882b"
 verification_mode:
   - scaffold
   - sync

@@ -21,7 +21,7 @@ sync_commit: "d3af801a6b732dc4452ae57587ba4ee89d2dfab9"
 covered_sha256:
   .agents/skills/ccba-create-pr/SKILL.md: "69c93da33a71bc58536310cbbef9a2d998eed0a8038a55942582d054005003ce"
   .github/pull_request_template.md: "0ba93316462fe7a08c4a637dbd6d80bf89a64f577319bc6d76c1735cb8f20918"
-  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
+  scripts/spoke/sync/coordinator.py: "ed83238f7f73667d23fa0ae7e1bf8300d1fbb52b2e2792be2798efaa6795882b"
 verification_mode:
   - scaffold
   - sync

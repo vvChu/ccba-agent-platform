@@ -22,7 +22,7 @@ covered_sha256:
   .agents/skills/ccba-codebase-design/SKILL.md: "ec0e3c624d303cd21bd8e232f5376134a35f652eb201f2c04baef6e2aa075e1c"
   .agents/skills/ccba-codebase-design/references/codebase_refactor_guide.md: "5973d47eab0f0acab57ba7776e49b7e622eb1e047623dc3e58a9d0be49145a3f"
   .agents/skills/ccba-codebase-design/references/design_it_twice.md: "921640bcc2e24c5cfc0d62cbec61e65abb9b197eb97ecb4b5ca7a1f67b396e8f"
-  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
+  scripts/spoke/sync/coordinator.py: "ed83238f7f73667d23fa0ae7e1bf8300d1fbb52b2e2792be2798efaa6795882b"
 verification_mode:
   - scaffold
   - sync

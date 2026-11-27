@@ -467,7 +467,7 @@ def check_spoke_runtime_health(spoke_root: Path, hub_root: Path) -> str | None:
     Exit code remains 0 (warn-only).
     """
     try:
-        from scripts.spoke.spoke_bootstrap import SpokeBootstrapper
+        from scripts.spoke.spoke_bootstrap import SpokeBootstrapper, check_bootstrap_lockfile_drift
 
         bootstrapper = SpokeBootstrapper(spoke_root, hub_root)
         if not bootstrapper.is_python_project():
@@ -501,7 +501,7 @@ def check_spoke_runtime_health(spoke_root: Path, hub_root: Path) -> str | None:
                 "   Cơ chế Grok Peer Dispatch và các cổng kiểm định CLI sẽ không hoạt động.\n"
                 "   👉 Chạy lại lệnh với cờ '--bootstrap' (-b) để tự động cài đặt liên kết 1-chạm."
             )
-        return None
+        return check_bootstrap_lockfile_drift(spoke_root, hub_root, bootstrapper=bootstrapper)
     except Exception as exc:
         return f"⚠️ [Runtime Warning] Lỗi khi kiểm tra Spoke runtime health: {exc}"
 
@@ -728,6 +728,7 @@ class SpokeSynchronizer:
         catalog: dict[str, Any],
         sync_item: str,
         dry_run: bool = False,
+        backup: bool = True,
     ) -> int:
         """On-Demand synchronization for a single skill or workflow."""
         canonical_item = SKILL_DEPRECATION_ALIASES.get(sync_item, sync_item)
@@ -738,31 +739,34 @@ class SpokeSynchronizer:
         mode_str = " [DRY-RUN]" if dry_run else ""
         print(f"Mode: On-Demand Synchronization for '{sync_item}'{mode_str}")
         spoke_agents_dir = spoke_root / ".agents"
+        mgr = SpokeBackupManager(spoke_root)
+        snap = mgr.stage_backup_if_enabled(dry_run=dry_run, backup=backup)
 
         found, err_code = self._sync_single_skill_entry(
             spoke_root, hub_root, spoke_agents_dir / "skills", catalog, sync_item, dry_run
         )
-        if err_code != 0:
-            return err_code
-
-        if not found:
+        if err_code == 0 and not found:
             found, err_code = self._sync_single_workflow_entry(
                 spoke_root, hub_root, spoke_agents_dir / "workflows", catalog, sync_item, dry_run
             )
-            if err_code != 0:
-                return err_code
-
-        if not found:
-            print(
-                f"[Sync] Error: Item '{sync_item}' not found in Hub catalog.yaml.", file=sys.stderr
-            )
-            return 1
+        if err_code != 0 or not found:
+            if err_code == 0:
+                print(
+                    f"[Sync] Error: Item '{sync_item}' not found in Hub catalog.yaml.",
+                    file=sys.stderr,
+                )
+                err_code = 1
+            mgr.finalize_if_mutated(snap)
+            return err_code
 
         self._sync_single_item_constitution(spoke_root, hub_root, spoke_agents_dir, dry_run)
-        if dry_run:
-            print("\n=== [DRY-RUN] On-Demand Sync Simulation Completed ===")
-        else:
-            print("\n=== Sync Completed Successfully ===")
+        mgr.finalize_if_mutated(snap)
+        msg = (
+            "\n=== [DRY-RUN] On-Demand Sync Simulation Completed ==="
+            if dry_run
+            else "\n=== Sync Completed Successfully ==="
+        )
+        print(msg)
         return 0
 
     def _expand_additional_bundles(
@@ -1222,6 +1226,7 @@ class SpokeSynchronizer:
         archetype: str = "",
         pull_assets: bool = False,
         prune_unscoped: bool = False,
+        backup: bool = True,
     ) -> int:
         """Full synchronization with Non-Destructive Selective Merge."""
         canonical_type, req_bundles = self._resolve_required_bundles(
@@ -1229,18 +1234,20 @@ class SpokeSynchronizer:
         )
         if not canonical_type:
             return 1
-        agents_dir = spoke_root / ".agents"
+        mgr = SpokeBackupManager(spoke_root)
+        snap = mgr.stage_backup_if_enabled(dry_run=dry_run, backup=backup)
         skills, wfs = self._collect_sync_targets(catalog, hub_root, req_bundles)
-        sk_dir, wf_dir = agents_dir / "skills", agents_dir / "workflows"
+        sk_dir = spoke_root / ".agents" / "skills"
+        wf_dir = spoke_root / ".agents" / "workflows"
         synced_folders, actions = self._sync_skills_phase(
             spoke_root, sk_dir, skills, dry_run, catalog, prune_unscoped
         )
         actions.extend(self._sync_workflows_phase(spoke_root, wf_dir, wfs, synced_folders, dry_run))
-        actions.extend(
-            self._sync_constitution_and_rules_phase(
-                spoke_root, hub_root, canonical_type, dry_run, force
-            )
+        const_acts = self._sync_constitution_and_rules_phase(
+            spoke_root, hub_root, canonical_type, dry_run, force
         )
+        actions.extend(const_acts)
+        mgr.finalize_if_mutated(snap, actions)
         self._refresh_telemetry_and_register(
             spoke_root, hub_root, project_name, canonical_type, archetype, dry_run
         )
@@ -1249,12 +1256,8 @@ class SpokeSynchronizer:
             spoke_root, hub_root, canonical_type, archetype, bootstrap, dry_run, force, pull_assets
         )
         if boot_res == 0:
-            done_msg = "\n=== Sync Completed Successfully ==="
-            if dry_run:
-                done_msg = (
-                    "\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa."
-                )
-            print(done_msg)
+            done = "\n[DRY-RUN] Quá trình mô phỏng hoàn tất. 0 tệp tin nào bị sửa đổi trên đĩa."
+            print(done if dry_run else "\n=== Sync Completed Successfully ===")
         return boot_res
 
     def _check_git_working_tree_guard(self, dry_run: bool, check_git: bool, force: bool) -> bool:
@@ -1400,7 +1403,8 @@ class SpokeSynchronizer:
         backup: bool,
         pull_hub: bool,
     ) -> Path | None:
-        """Discover Hub root, create Spoke snapshot backup if requested, and pull Hub repo."""
+        """Discover Hub root and pull Hub repo (backups are staged post-catalog gate)."""
+        _ = backup
         if self.hub_root and self.hub_root.exists():
             hub_root = self.hub_root
         else:
@@ -1411,15 +1415,6 @@ class SpokeSynchronizer:
                 return None
 
         print(f"Hub Location: {hub_root}")
-        if not dry_run and backup:
-            snapshot_dir = SpokeBackupManager(self.spoke_root).create_backup()
-            if snapshot_dir:
-                try:
-                    rel_backup = snapshot_dir.relative_to(self.spoke_root)
-                except ValueError:
-                    rel_backup = snapshot_dir
-                print(f"[Sync] 🛡️  Đã tạo snapshot sao lưu an toàn: {rel_backup}")
-
         self._try_pull_hub_repo(hub_root, dry_run, pull_hub)
         return hub_root
 
@@ -1476,9 +1471,9 @@ class SpokeSynchronizer:
         args = (self.spoke_root, hub_root, catalog)
         b_opts = (dry_run, add_bundles, bootstrap, force, arch, pull_assets, prune_unscoped)
         res = (
-            self._sync_single_item(*args, item, dry_run=dry_run)
+            self._sync_single_item(*args, item, dry_run=dry_run, backup=backup)
             if item
-            else self._sync_full_bundle(*args, proj_type, proj_name, *b_opts)
+            else self._sync_full_bundle(*args, proj_type, proj_name, *b_opts, backup=backup)
         )
         if res == 0 and not dry_run and verify:
             return self.verify_spoke(hub_root=hub_root, verify_timeout=verify_timeout)

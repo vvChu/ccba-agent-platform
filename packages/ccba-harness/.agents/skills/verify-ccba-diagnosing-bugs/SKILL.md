@@ -21,7 +21,7 @@ sync_commit: "778c25d5e9d30f28c3ec1049b3d531bb5e12b9c2"
 covered_sha256:
   .agents/skills/ccba-diagnosing-bugs/SKILL.md: "6a6415a80d1b252210f0abedeccf0ab749aa65bc66609f4c860e90a0d6b9abe1"
   .agents/skills/ccba-diagnosing-bugs/references/mock_debugging_patterns.md: "0ae74b2d19482e5c5fef385a6632d160c369fe119ab29d3dbc20c659dbe98a06"
-  scripts/spoke/sync/coordinator.py: "23defb1acf19383e8f13ed19596b31b6eb12e8e8dc8a8b1e3a3d3cad3f19c7e0"
+  scripts/spoke/sync/coordinator.py: "ed83238f7f73667d23fa0ae7e1bf8300d1fbb52b2e2792be2798efaa6795882b"
 verification_mode:
   - scaffold
   - sync
