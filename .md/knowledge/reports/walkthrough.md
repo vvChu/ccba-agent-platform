@@ -1,5 +1,40 @@
-# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #926` (`#918`)
-## Docs(skills): Chuẩn Hóa Cổng Kiểm Chuẩn Software Spoke & Điều Hướng Hub-vs-Spoke
+# Báo Cáo Nghiệm Thu Hoàn Thành (Walkthrough) — Phát Hành `PR #929` (`#928`)
+## Refactor(spoke-sync): Guarded Staged Backup Snapshots & Warn-Only Bootstrap Lockfile Drift
+
+> **Pull Request Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#929](https://github.com/vvChu/ccba-agent-platform/pull/929) (`1e4b5c38623c324c682831012ea8e728fecb02f4`, hợp nhất `2026-11-27T13:46:00Z`) | **Branch:** `refactor/issue-928-skip-noop-backup-bootstrap-drift` (`9bff1fde` + `0828a71a`, đã xóa local & remote) | **Base:** `1918cebd` | **Issue Đã Đóng:** [#928](https://github.com/vvChu/ccba-agent-platform/issues/928) (`CLOSED`, gỡ `in-progress`, `#issuecomment-7219921208`)  
+> **Trạng thái chung:** ✅ **PR #929 MERGED (`--merge`), GROK PLAN AUDIT PASS 3 `APPROVE` (`Risk: 2`, `0` blocking, `25c5bc42`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `root-tests` `634 passed, 1 skipped, 10 deselected` in `31.45s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS (`audit_pr_comments.py` Exit `0`), `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), ALL `verify-ccba-*` `sync_commit` REACHABLE (`git cat-file -e` Exit `0`), `compile_catalog.py --check` `[OK]`, ISSUE #928 CLOSED**
+
+---
+
+## 1. Tổng Kết Thay Đổi Kỹ Thuật — PR `#929` (`#928`)
+
+| Thành Phần | Tệp Thay Đổi Chính (`13` files, `+741/-53`) | Nội Dung Kỹ Thuật Cốt Lõi | Trạng Thái |
+| :--- | :--- | :--- | :---: |
+| **1. Guarded Staged Backup Engine** | [`backup.py`](../../../scripts/spoke/sync/backup.py) (`259/800` LOC), [`coordinator.py`](../../../scripts/spoke/sync/coordinator.py) (`1827/1837` LOC) | Gỡ `create_backup()` khỏi `_prepare_hub_and_backup()` để `catalog_stale` / lỗi cấu hình thoát sớm trước khi tạo snapshot; thêm `create_backup(*, prune: bool = True)`, `stage_backup_if_enabled()`, `should_keep_snapshot()` (so cả action `.agents/*` lẫn byte diff `are_dirs_identical` bắt trọn `audit_spoke_markdown_links` và `--sync-item`), `finalize_backup()` (kiểm `is_relative_to(backup_root)`, nuốt `OSError` khi `rmdir`, chỉ `prune_backups()` khi `keep=True`); luồn `backup=backup` bằng keyword vào cả `_sync_full_bundle` và `_sync_single_item`. | Verified |
+| **2. Warn-Only Bootstrap Lockfile Drift** | [`_bootstrap_deps.py`](../../../scripts/spoke/_bootstrap_deps.py) (`242/800` LOC), [`spoke_bootstrap.py`](../../../scripts/spoke/spoke_bootstrap.py) (`791/867` LOC), [`coordinator.py`](../../../scripts/spoke/sync/coordinator.py) | Thêm `parse_requirements_hub_lockfile()` (đa nền tảng `\` $\to$ `/`, `[extras]`, regex chặt `# hub_commit:`), `inspect_hub_git_pyproject_drift()` (`git rev-parse HEAD` & `git diff --name-only <locked>..HEAD -- packages/*/pyproject.toml` với `timeout=5`, cảnh báo riêng khi commit không xác minh được), và `check_bootstrap_lockfile_drift()` nối vào nhánh `import ccba_harness` PASS của `check_spoke_runtime_health()` (`stderr`, `exit code 0`). | Verified |
+| **3. Test Suite & Harness Provenance Lock** | [`test_spoke_sync_backup_and_drift.py`](../../../scripts/tests/test_spoke_sync_backup_and_drift.py) (`11` tests), 8 tệp `verify-ccba-*/SKILL.md` | Phủ đủ `catalog_stale`, 3× no-op giữ nguyên 5 snapshot cũ, mutating update/REMOVED/link-fix/`--sync-item`, `dry_run` & `backup=False`, đường dẫn Windows, và 3 trạng thái drift (`exit code 0`); đồng bộ LF SHA-256 `covered_sha256` mới của `coordinator.py` (`ed83238f...`, giữ `sync_commit` trên `main`) trên cả 8 bộ `verify-ccba-*`. | Verified |
+
+---
+
+## 2. Bằng Chứng Kiểm Chứng Thực Nghiệm & Hậu Hợp Nhất (`ADR-0058` / `ADR-0067`)
+
+- **Phản biện Kế hoạch (`ONE_WAY_DOOR` / `CROSS_SPOKE_CONTRACT`):** Grok `audit_plan` Pass 1 (`REVISE_PLAN`, 5 blocking) $\to$ `signoff_diff` Pass 2 (`APPROVE_WITH_CONDITIONS`, 1 blocking) $\to$ Pass 3 **`APPROVE`** (`Risk: 2`, `0` blocking, session `25c5bc42-b619-484b-843e-c7e4ea472a8b`).
+- **Shift-Left & Scoped Verification (`9bff1fde` + `0828a71a`):**
+  - `verify-patch --preset code`: **3/3 PASSED** (`ruff check .`, `ruff format --check .`, `pytest tests/ -q` `635` items); `pytest scripts/tests/ -q`: **`481 passed`** in `10.36s`.
+  - AST `<= 50 LOC` (`check_ast_function_length` trên `backup.py`, `coordinator.py`, `_bootstrap_deps.py`): PASS; Module Size Budget (`evaluate_module_budgets`): `0/573` vi phạm.
+  - `sanitize_review_diff.py --check`: `[PASS]`; `compile_catalog.py --check`: `[OK]`; `check_dependency_contracts.py` (`567` files): PASS; `door-triage --enforce-tradeoff-card`: PASS (`ONE_WAY_DOOR`).
+- **Giao thức TRIHT Pre-Release (Cổng 0.1–0.3):**
+  - Cổng 0.1 (`check_release_cleanliness.py --phase pre`): stash tác vụ song song (`wip: concurrent work before release PR #929`) $\to$ `PASS` (`100%` sạch sẽ).
+  - Cổng 0.2 (`run_isolated_tests.py --all --stress`): **12/12 targets PASS** (`ccba-ai` `5.07s`, `ccba-diagram` `0.30s`, `ccba-harness` `11.95s`, `ccba-legal-intel` `49.50s`, `ccba-maskara` `0.30s`, `ccba-notebooklm` `0.40s`, `ccba-ooxml` `6.18s`, `ccba-pdf-prep` `9.70s`, `ccba-qc-core` `1.11s`, `mdconverter` `2.51s`, `scripts` `16.52s`, `root-tests` **`634 passed, 1 skipped, 10 deselected` in `31.45s`**).
+  - Cổng 0.3 (`check_release_cleanliness.py --phase post`): `PASS` (`100% Hermetic`).
+- **CI, AI Review & Hậu Hợp Nhất (`1e4b5c38`, `--merge` theo `RULE-2.21`):**
+  - GitHub Actions CI: **8/8 PASS** (Python `3.10`/`3.11`/`3.12`, Deterministic Parity, Lint Markdown, PR Danger Triage & Verifier `7/7`, Security & Privacy Scan, Documentation Check); `audit_pr_comments.py --pr 929` (và `--require-review`) Exit `0` (CodeRabbit auto-review skipped do repo `<10` sao).
+  - Hậu hợp nhất: merge `--merge --delete-branch` tại `1e4b5c38`, xóa nhánh `refactor/issue-928-skip-noop-backup-bootstrap-drift` local & remote, `git cat-file -e` PASS cho toàn bộ `verify-ccba-*` `sync_commit`, `compile_catalog.py --check` `[OK]`, Issue [#928](https://github.com/vvChu/ccba-agent-platform/issues/928) `CLOSED` & gỡ nhãn `in-progress`.
+
+---
+
+## Lưu Trữ Phát Hành Trước Đó — Phát Hành `PR #926` (`#918`)
+### Docs(skills): Chuẩn Hóa Cổng Kiểm Chuẩn Software Spoke & Điều Hướng Hub-vs-Spoke
 
 > **Pull Request Đã Hợp Nhất (`--merge --delete-branch` theo `RULE-2.21`):** [#926](https://github.com/vvChu/ccba-agent-platform/pull/926) (`fb9e1939f96ebe7ac503774a6c3c9cde1f2bad6b`, hợp nhất `2026-11-26T23:26:24Z`) | **Branch:** `docs/issue-918-software-spoke-gates` (`d3af801a` + `ca5d36fd`, đã xóa local & remote) | **Base:** `a120c433` | **Issue Đã Đóng:** [#918](https://github.com/vvChu/ccba-agent-platform/issues/918) (`CLOSED`, gỡ `in-progress`, `#issuecomment-7205553726`)  
 > **Trạng thái chung:** ✅ **PR #926 MERGED (`--merge`), TRIHT CỔNG 0.1–0.3 PASS (`12/12` TARGETS, `root-tests` `634 passed, 1 skipped, 10 deselected` in `31.30s`), `8/8` CI CHECKS PASS, `0` UNRESOLVED PR COMMENTS (`audit_pr_comments.py` Exit `0`), `door-triage` PASS (`ONE_WAY_DOOR`, Tradeoff Card Valid), `sync_commit` `d3af801a` REACHABLE (`git cat-file -e` Exit `0`), `compile_catalog.py --check` `[OK]`, `sync_spoke.py --all --apply` (`3/6` SUCCESS, `3/6` dirty-tree guarded), ISSUE #918 CLOSED**
