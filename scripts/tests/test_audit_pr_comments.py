@@ -442,6 +442,91 @@ class TestAuditPRComments(unittest.TestCase):
                 self.assertEqual(code, expected_code)
                 self.assertEqual(res["status"], expected_status)
 
+    @patch("scripts.validation.audit_pr_comments.fetch_inline_comments", return_value=[])
+    @patch("scripts.validation.audit_pr_comments.fetch_pr_overview")
+    def test_audit_pull_request_coderabbit_skip_review_false_green_variants(
+        self, mock_ov, _mock_in
+    ):
+        """Pure <10-star skip-review yields NO_AI_REVIEW (0/3); walkthrough/review/actionable behave safely."""
+        skip_body = (
+            "<!-- coderabbit-ai-generated:v1 -->\n"
+            "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n"
+            "<!-- This is an auto-generated comment: skip review by coderabbit.ai -->\n"
+            "This repository does not receive automatic reviews because it has fewer than 10 stars."
+        )
+        # 1. Pure dual-marker skip-review -> NO_AI_REVIEW (exit 0 default, exit 3 strict, hint included)
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [],
+            "comments": [
+                {"id": "CR_SKIP_1", "user": {"login": "coderabbitai[bot]"}, "body": skip_body}
+            ],
+        }
+        code, res = audit_pull_request(929)
+        self.assertEqual(code, 0)
+        self.assertEqual(res["status"], "NO_AI_REVIEW")
+        self.assertEqual(res["pr_comments_count"], 0)
+        self.assertIn("@coderabbitai review", res["message"])
+
+        code_strict, res_strict = audit_pull_request(929, require_review=True)
+        self.assertEqual(code_strict, 3)
+        self.assertEqual(res_strict["status"], "NO_AI_REVIEW")
+
+        # 2. Skip-review + separate real walkthrough -> CLEAN (count == 1)
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [],
+            "comments": [
+                {"id": "CR_SKIP_1", "user": {"login": "coderabbitai[bot]"}, "body": skip_body},
+                {
+                    "id": "CR_WT_1",
+                    "user": {"login": "coderabbitai[bot]"},
+                    "body": "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- walkthrough_start -->\nSummary",
+                },
+            ],
+        }
+        code_wt, res_wt = audit_pull_request(929)
+        self.assertEqual(code_wt, 0)
+        self.assertEqual(res_wt["status"], "CLEAN")
+        self.assertEqual(res_wt["pr_comments_count"], 1)
+
+        # 3. Skip-review + real clean top-level review -> CLEAN (reviews_count == 1)
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [
+                {
+                    "id": "CR_REV_CLEAN",
+                    "author": {"login": "coderabbitai[bot]"},
+                    "state": "COMMENTED",
+                    "body": "Actionable comments posted: 0\nClean.",
+                }
+            ],
+            "comments": [
+                {"id": "CR_SKIP_1", "user": {"login": "coderabbitai[bot]"}, "body": skip_body}
+            ],
+        }
+        code_rev, res_rev = audit_pull_request(929)
+        self.assertEqual(code_rev, 0)
+        self.assertEqual(res_rev["status"], "CLEAN")
+        self.assertEqual(res_rev["reviews_count"], 1)
+        self.assertEqual(res_rev["pr_comments_count"], 0)
+
+        # 4. Skip-review marker combined with Actionable >= 1 -> fail-closed CHANGES_RECOMMENDED
+        mock_ov.return_value = {
+            "reviewRequests": [],
+            "reviews": [],
+            "comments": [
+                {
+                    "id": "CR_SKIP_ACT",
+                    "user": {"login": "coderabbitai[bot]"},
+                    "body": f"{skip_body}\nActionable comments posted: 1\nNull bug.",
+                }
+            ],
+        }
+        code_act, res_act = audit_pull_request(929)
+        self.assertEqual(code_act, 1)
+        self.assertEqual(res_act["status"], "CHANGES_RECOMMENDED")
+
 
 if __name__ == "__main__":
     unittest.main()

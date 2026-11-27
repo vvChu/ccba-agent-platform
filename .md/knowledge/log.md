@@ -2,6 +2,13 @@
 
 > **Mô tả:** Nhật ký dòng thời gian bất biến (Append-Only Journal) ghi nhận toàn bộ các đợt nạp tài liệu (`[ingest]`), tổng hợp tri thức (`[synthesize]`), ban hành quy chuẩn (`[guideline]`), quyết định kiến trúc (`[adr]`), và bảo trì linter (`[linter]`) trong LLM-Wiki.
 
+## [2026-11-27] [adr] | Chốt Biên Bản Grilling (`Q1`–`Q5`) & Thẩm Định Peer Audit `v2.7.1`: Hardening Cơ Chế Phối Hợp Peer Hậu Kiểm Toán `75` Lượt Thực Tế
+- **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-grilling` Peer Collaboration `v2.7.1`)
+- **Affected Files**: [decisions/2026-11-27_peer_v27_post_upgrade_hardening_resolution.md](decisions/2026-11-27_peer_v27_post_upgrade_hardening_resolution.md), [index.md](index.md), [log.md](log.md)
+- **Summary**: Hoàn tất kiểm toán thực chiến `75` lượt hậu-`v2.6`/`v2.7` trên Hub & `6` Spokes (`73` phiên `~/.grok/sessions/`, `9/9` PR Hub `#914..#929`), chốt `5/5` quyết định Grilling (`Q1`–`Q5`) và vượt qua **Grok Peer Plan Audit 2 Pass** (`1d5b5afb-e210-4c36-829e-a6ec12d4677c` `REVISE_PLAN` $\to$ `a986055b-9822-4732-8ac9-afd524e29e8c` **`APPROVE_PLAN`**, `risk_score: 2`, `0` blocking, `94.2%` KV-cache): khóa `2` Atomic Micro-PRs (`PR-1` tách helper nội bộ `_peer_yaml.py` strict-first/fail-closed + block-scalar tracker `|`/`>` cứu `3/3` ca `ScannerError` lịch sử trong khi giữ `_peer_models.py <= 789/800` LOC, đồng thời nâng `code_review.timeout` `450s -> 600s` & thêm nhắc quote YAML; `PR-2` chặn False Green comment `skip review by coderabbit.ai` `< 10★` trong `audit_pr_comments.py` chỉ đọc, thêm `--baseline-since` mặc định `2026-11-11` + port chuẩn predicate `_peer_telemetry.py` ghép chuỗi Pass 2+ `12h` cùng repo vào `audit_peer_effectiveness.py`, đồng bộ `execution_coordination_guardrails.md <= 24,576 B`, `release_gate.md`, `PEER_HANDSHAKE.md`, `README.md` với ngưỡng ưu tiên `audit_direct <= 100 LOC / <= 3` tệp) và `Phase 3` `sync_spoke.py --all --apply`. Đang dừng chờ lệnh `proceed` trước khi sửa mã sản xuất.
+
+---
+
 ## [2026-11-26] [synthesize] | Tổng Kết Phiên (`/ccba-session-retrospective`): Cải Tổ Hệ Thống Tự Thu Thập Dữ Liệu & Cơ Chế Tự Cải Tiến (`Issue #910`, `PR #919`, `#920`, `#922`, Mục 79)
 - **Author / Agent**: Kỹ sư trưởng & Antigravity (`/ccba-session-retrospective`)
 - **Affected Files**: [session_learnings.md](session_learnings.md), [archive/session_learnings_history.md](archive/session_learnings_history.md), [decisions/2026-11-26_self_telemetry_and_eval_overhaul_grilling_resolution.md](decisions/2026-11-26_self_telemetry_and_eval_overhaul_grilling_resolution.md), [log.md](log.md)

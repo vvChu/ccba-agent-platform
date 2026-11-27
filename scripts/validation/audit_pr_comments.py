@@ -235,6 +235,29 @@ def _has_coderabbit_actionable(body: str, state: str = "") -> bool:
     return state == "CHANGES_REQUESTED" or bool(_ACTIONABLE_CODERABBIT_RE.search(body))
 
 
+def _is_coderabbit_skip_review_comment(body: str) -> bool:
+    """Return True for CodeRabbit <10-star auto-skip notices lacking walkthrough or findings."""
+    if _has_coderabbit_actionable(body):
+        return False
+    lowered = body.lower()
+    return (
+        "auto-generated comment: skip review by coderabbit.ai" in lowered
+        and "<!-- walkthrough_start -->" not in lowered
+    )
+
+
+def _has_coderabbit_skip_review_comments(pr_comments: Any) -> bool:
+    """Return True if any CodeRabbit conversation comment is a pure auto-skip notice."""
+    if not isinstance(pr_comments, list):
+        return False
+    return any(
+        isinstance(c, dict)
+        and is_coderabbit_user(_extract_ai_user(c))
+        and _is_coderabbit_skip_review_comment(str(c.get("body", "")))
+        for c in pr_comments
+    )
+
+
 def _is_benign_coderabbit_summary(body: str, state: str = "") -> bool:
     """Return True only for benign CodeRabbit walkthrough, status, or command-ack comments."""
     if _has_coderabbit_actionable(body, state):
@@ -318,15 +341,19 @@ def _collect_unaddressed_pr_comments(pr_comments: Any) -> tuple[list[dict[str, A
         c for c in pr_comments if isinstance(c, dict) and _extract_ai_user(c) is not None
     ]
     issues: list[dict[str, Any]] = []
+    effective_count = 0
     for c in ai_comments:
         user_obj = _extract_ai_user(c)
         c_id = str(c.get("id", ""))
         c_body = str(c.get("body", ""))
+        if is_coderabbit_user(user_obj) and _is_coderabbit_skip_review_comment(c_body):
+            continue
+        effective_count += 1
         if is_coderabbit_user(user_obj) and _is_benign_coderabbit_summary(c_body):
             continue
         if not check_if_resolved_in_code_or_walkthrough(c_id, c_body[:30]):
             issues.append({"id": c_id, "body": c_body})
-    return issues, len(ai_comments)
+    return issues, effective_count
 
 
 def _fetch_pr_audit_inputs(
@@ -356,14 +383,22 @@ def _build_zero_issue_result(
     inl_cnt: int,
     prc_cnt: int,
     require_review: bool,
+    *,
+    has_skipped_review: bool = False,
 ) -> tuple[int, dict[str, Any]]:
     """Build CLEAN or NO_AI_REVIEW payload when zero unresolved issues remain."""
     if rev_cnt == 0 and inl_cnt == 0 and prc_cnt == 0:
+        hint = (
+            "CodeRabbit skipped auto-review (e.g., < 10 stars); comment '@coderabbitai review' "
+            "to trigger manually or use Grok code_review."
+            if has_skipped_review
+            else "Verify CodeRabbit App installation or use Grok code_review if private."
+        )
         return (3 if require_review else 0), {
             "status": "NO_AI_REVIEW",
             "message": (
                 f"No AI reviewer (CodeRabbit/Copilot) review or comment found on PR #{pr_number} "
-                "(0 reviews). Verify CodeRabbit App installation or use Grok code_review if private."
+                f"(0 reviews). {hint}"
             ),
             "reviews_count": 0,
             "inline_comments_count": 0,
@@ -404,9 +439,10 @@ def audit_pull_request(
             "reviewRequests": overview.get("reviewRequests", []),
         }
 
+    pr_comments = overview.get("comments", [])
     review_issues, rev_cnt = _collect_unaddressed_reviews(overview.get("reviews", []))
     inline_issues, inl_cnt = _collect_unaddressed_inline_comments(inline_comments)
-    pr_comment_issues, prc_cnt = _collect_unaddressed_pr_comments(overview.get("comments", []))
+    pr_comment_issues, prc_cnt = _collect_unaddressed_pr_comments(pr_comments)
     if review_issues or inline_issues or pr_comment_issues:
         return 1, {
             "status": "CHANGES_RECOMMENDED",
@@ -415,7 +451,14 @@ def audit_pull_request(
             "inline_issues": inline_issues,
             "pr_comment_issues": pr_comment_issues,
         }
-    return _build_zero_issue_result(pr_number, rev_cnt, inl_cnt, prc_cnt, require_review)
+    return _build_zero_issue_result(
+        pr_number,
+        rev_cnt,
+        inl_cnt,
+        prc_cnt,
+        require_review,
+        has_skipped_review=_has_coderabbit_skip_review_comments(pr_comments),
+    )
 
 
 def _configure_windows_utf8_stdio() -> None:
