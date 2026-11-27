@@ -140,6 +140,7 @@ AUDIT_BASE_SYSTEM_PROMPT: str = (
     "(APPROVE | APPROVE_WITH_CONDITIONS | APPROVE_PLAN | REVISE_PLAN | REJECT_PLAN | REJECT | FINAL_ACCEPT | HANDOFF), "
     "risk_score (integer 1..5), conditions (list of {id, description, blocking}), and summary, "
     "followed by your structured audit findings. "
+    "Double-quote YAML string values containing ': ' or backslashes. "
     "Mark a condition blocking: true ONLY for 4 real defect classes: (1) logic or data-contract error, "
     "(2) security, data-loss, or PII leak, (3) CI/linter/OS compatibility breakage, or "
     "(4) false codebase assumption; style polish, optional hardening, or out-of-scope suggestions "
@@ -151,7 +152,8 @@ SYNTHESIS_FALLBACK_PROMPT: str = (
     "Emit zero tool calls. Start your response with YAML frontmatter enclosed in '---' containing "
     "request_id, verdict (APPROVE | APPROVE_WITH_CONDITIONS | APPROVE_PLAN | REVISE_PLAN | REJECT | FINAL_ACCEPT | HANDOFF), "
     "risk_score (integer 1..5), conditions (list of items with id, description, and blocking), and summary, "
-    "followed by your structured findings."
+    "followed by your structured findings. "
+    "Double-quote YAML string values containing ': ' or backslashes."
 )
 
 PROFILE_SPECS: dict[str, dict[str, Any]] = {
@@ -216,7 +218,7 @@ PROFILE_SPECS: dict[str, dict[str, Any]] = {
         "verbatim": True,
         "reasoning_effort": "high",
         "system_prompt": AUDIT_BASE_SYSTEM_PROMPT,
-        "timeout": 450.0,
+        "timeout": 600.0,
     },
     "arch_audit": {
         "model": "grok-4.7",  # ccba:allow-raw-model

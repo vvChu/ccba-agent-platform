@@ -115,6 +115,91 @@ def test_invalid_and_missing_frontmatter_handled_gracefully():
     assert parse_verdict_from_md("") is None
 
 
+def test_parse_verdict_recovers_proven_llm_yaml_scanner_errors_and_stays_fail_closed():
+    # 1. Unquoted ': ' inside single-line plain description (IBST wave7b 12f4dfd4 pattern)
+    md_colon = (
+        "---\n"
+        "request_id: req-20261126-erp-wave7b-impl-audit-001\n"
+        "verdict: APPROVE\n"
+        "conditions:\n"
+        "- id: W7B-IMPL-CSP-DEV-WS\n"
+        "  description: frontend/next.config.ts:17 set connect-src 'self' and ' ws: wss:' dev\n"
+        "  blocking: false\n"
+        "risk_score: 2\n"
+        "summary: Clean implementation.\n"
+        "---\n\nBody\n"
+    )
+    v_colon = parse_verdict_from_md(md_colon)
+    assert v_colon is not None
+    assert v_colon.verdict == "APPROVE"
+    assert len(v_colon.conditions) == 1
+    assert v_colon.conditions[0].id == "W7B-IMPL-CSP-DEV-WS"
+    assert "ws: wss:" in v_colon.conditions[0].description
+    assert v_colon.conditions[0].blocking is False
+
+    # 2. Unquoted ': ' inside one-key sequence condition (IBST deac9dd6 pattern)
+    md_seq_map = (
+        "---\n"
+        "request_id: req-20261101-service-account\n"
+        "verdict: APPROVE_WITH_CONDITIONS\n"
+        "risk_score: 6.8\n"
+        "conditions:\n"
+        "  - COND-06: Duy tri phan dinh tai cong viec: toan bo tien trinh qua Python daemon\n"
+        'summary: "Approved with condition."\n'
+        "---\n\nDetails\n"
+    )
+    v_seq = parse_verdict_from_md(md_seq_map)
+    assert v_seq is not None
+    assert v_seq.verdict == "APPROVE_WITH_CONDITIONS"
+    assert len(v_seq.conditions) == 1
+    assert v_seq.conditions[0].id == "COND-06"
+    assert "tai cong viec: toan bo" in v_seq.conditions[0].description
+
+    # 3. Unknown backslash escapes inside double-quoted scalar (VvC_Notes c6d7e142 pattern)
+    md_escape = (
+        "---\n"
+        'request_id: "req-20261018-vvc-wiki"\n'
+        "verdict: APPROVE_WITH_CONDITIONS\n"
+        "risk_score: 2\n"
+        "conditions:\n"
+        '  - "Condition 4: Use r\'\\[\\[\' regex and keep \\le 350 lines\\nwith \\"quotes\\" and \\x41"\n'
+        'summary: "Valid summary."\n'
+        "---\n\nBody\n"
+    )
+    v_esc = parse_verdict_from_md(md_escape)
+    assert v_esc is not None
+    assert len(v_esc.conditions) == 1
+    assert v_esc.conditions[0].id == "COND-01"
+    assert r"\[\[" in v_esc.conditions[0].description
+    assert r"\le 350" in v_esc.conditions[0].description
+    assert '\nwith "quotes" and A' in v_esc.conditions[0].description
+
+    # 4. Block scalar literal/folded lines are NEVER rewritten even when another line needs repair
+    md_block = (
+        "---\n"
+        "request_id: req-block-keep\n"
+        "verdict: APPROVE\n"
+        "conditions:\n"
+        "- id: C1\n"
+        "  description: plain scalar with foo: bar value\n"
+        "  blocking: false\n"
+        "summary: |\n"
+        "  note: keep: this\n"
+        "  second line\n"
+        "risk_score: 2\n"
+        "---\n\nBody\n"
+    )
+    v_block = parse_verdict_from_md(md_block)
+    assert v_block is not None
+    assert v_block.summary == "note: keep: this\nsecond line\n"
+
+    # 5. Broken hex escape and truly malformed YAML remain fail-closed (return None)
+    md_bad_hex = (
+        '---\nrequest_id: req-bad-hex\nverdict: APPROVE\nsummary: "Broken hex \\xZZ"\n---\n'
+    )
+    assert parse_verdict_from_md(md_bad_hex) is None
+
+
 def test_publish_peer_message_and_flush(tmp_path):
     envelope = PeerPromptEnvelope(
         request_id="req-pub-1",
@@ -953,12 +1038,13 @@ def test_new_peer_profiles_specs():
     assert cr["fallback_model"] == "grok-4.7-build-fast"
     assert cr["max_turns"] == 8
     assert cr["reasoning_effort"] == "high"
-    assert cr["timeout"] == 450.0
+    assert cr["timeout"] == 600.0
     assert "write_file" in cr["disallowed_tools"]
     assert "read_file" in cr["tools"]
 
     assert "Batch multiple parallel read_file/grep calls" in BOUNDED_TOOL_BUDGET_PROMPT
     assert "ONLY for 4 real defect classes" in AUDIT_BASE_SYSTEM_PROMPT
+    assert "Double-quote YAML string values" in AUDIT_BASE_SYSTEM_PROMPT
 
     assert "arch_audit" in PROFILE_SPECS
     aa = PROFILE_SPECS["arch_audit"]
